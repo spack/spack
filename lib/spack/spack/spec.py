@@ -3683,6 +3683,8 @@ class Spec(object):
             return True
 
     def _satisfies_dependencies(self, other):
+        # If we enter this function, other is an abstract spec, and for
+        # abstract specs we don't have yet a defined DAG structure
         other = self._autospec(other)
 
         # If there are no constraints to satisfy, we're done.
