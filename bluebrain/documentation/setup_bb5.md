@@ -34,14 +34,14 @@ software and modules will be installed into `${HOME}/spack_install`.
 To customise this, use the following commands:
 
     $ spack config add config:install_tree:root:${HOME}/my_software
-    $ spack config add config:module_roots:tcl:${HOME}/my_modules
+    $ spack config add modules:default:roots:tcl:${HOME}/my_modules
 
 ## Generating Custom Modules
 
 To generate a module for the package `my_package`,
-modify the whitelist with the following command:
+modify the include list with the following command:
 
-    $ spack config add "modules:tcl:whitelist:[my_package]"
+    $ spack config add "modules:default:tcl:include:[my_package]"
 
 And use
 

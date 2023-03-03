@@ -64,18 +64,18 @@
 <details>
   <summary>Expand answer</summary>
 
-  The `spack module tcl refresh` command respects a blacklist that can be
+  The `spack module tcl refresh` command respects a exclude list that can be
   found via:
 
       $ spack config blame modules
 
-  This blacklist is overruled by a corresponding whitelist.
+  This exclude list is overruled by a corresponding include list.
   If your software is not listed in the latter, no modules will be
   generated for it.
 
   Use
 
-      $ spack config add "modules:tcl:whitelist:[my_package]"
+      $ spack config add "modules:default:tcl:include:[my_package]"
       $ spack module tcl refresh my_package
 
   To produce an up-to-date module for `my_package` (adjust as needed).

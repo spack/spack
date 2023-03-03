@@ -31,7 +31,7 @@ Version specifications are only required if the deployed version should be
 static and not change with updates to the package file.
 Please ensure that:
 
-* If a module is required, the list `spack:modules:tcl:whitelist` contains
+* If a module is required, the list `spack:modules:default:tcl:include` contains
   the name of the package (no version information required normally)
 * The package name is listed under `spack:specs` with required variants or
   special dependencies.
