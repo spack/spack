@@ -10,9 +10,16 @@ class PyWheel(Package, PythonExtension):
     """A built-package format for Python."""
 
     homepage = "https://github.com/pypa/wheel"
-    url = "https://files.pythonhosted.org/packages/py3/w/wheel/wheel-0.38.4-py3-none-any.whl"
+    url = "https://files.pythonhosted.org/packages/py2.py3/w/wheel/wheel-0.34.2-py2.py3-none-any.whl"
     list_url = "https://pypi.org/simple/wheel/"
 
+    version(
+        "0.38.4",
+        url="https://files.pythonhosted.org/packages/py3/w/wheel/wheel-0.38.4-py3-none-any.whl",
+        sha256="4bdcd7d840138086126cd09254dc6195fb4fc6f01c050a1d7236f2630db1d22a",
+        expand=False,
+    )
+    
     version(
         "0.37.1",
         sha256="4bdcd7d840138086126cd09254dc6195fb4fc6f01c050a1d7236f2630db1d22a",
