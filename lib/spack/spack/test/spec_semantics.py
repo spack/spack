@@ -33,13 +33,6 @@ def make_spec(spec_like, concrete):
     return spec
 
 
-def check_can_constrain(lhs, rhs):
-    target = make_spec(lhs, True)
-    constraint = Spec(rhs)
-    assert target.intersects(constraint)
-    constraint.copy().constrain(target)
-
-
 def check_cannot_constrain(target_spec, constraint_spec, target_concrete=False):
     target = make_spec(target_spec, target_concrete)
     constraint = Spec(constraint_spec)
@@ -239,19 +232,31 @@ class TestSpecSemantics(object):
         assert c1 == c2
         assert c1 == expected
 
-    def test_empty_satisfies(self):
-        # Concrete (strict) satisfaction
-        check_can_constrain("libelf", Spec())
-        check_can_constrain("libdwarf", Spec())
-        check_can_constrain("%intel", Spec())
-        check_can_constrain("^mpi", Spec())
-        # TODO: Variants can't be called concrete while anonymous
-        # check_satisfies('+debug', Spec(), True)
-        check_can_constrain("@3:", Spec())
+    @pytest.mark.parametrize('lhs,rhs', [
+        ("libelf", Spec()),
+        ("libelf", "@0:1"),
+        ("libelf", "@0:1 %gcc"),
+    ])
+    def test_concrete_specs_which_satisfies_abstract(self, lhs, rhs, default_mock_concretization):
+        """Test that constraining an abstract spec by a compatible concrete one makes the
+        abstract spec concrete, and equal to the one it was constrained with.
+        """
+        lhs, rhs = default_mock_concretization(lhs), Spec(rhs)
+
+        assert lhs.intersects(rhs)
+        assert rhs.intersects(lhs)
+        assert lhs.satisfies(rhs)
+        assert not rhs.satisfies(lhs)
+
+        assert lhs.constrain(rhs) is False
+        assert rhs.constrain(lhs) is True
+
+        assert rhs.concrete
+        assert lhs.satisfies(rhs)
+        assert rhs.satisfies(lhs)
+        assert lhs == rhs
 
     def test_satisfies_namespace(self):
-        # TODO: only works for deps now, but shouldn't we allow for root spec?
-        # check_can_constrain('builtin.mock.mpich', 'mpi')
         check_cannot_constrain("builtin.mock.mpich", "builtin.mpich")
 
     def test_satisfies_namespaced_dep(self):
