@@ -138,23 +138,21 @@ class OmegaH(CMakePackage, CudaPackage):
 
         return (None, None, flags)
 
-    def test(self):
-        if self.spec.version < Version("9.34.1"):
-            print("Skipping tests since only relevant for versions > 9.34.1")
-            return
+    def test_mesh(self):
+        """test construction, adaptation, and conversion of a mesh"""
+        if self.spec.satisfies("@:9.34.0"):
+            raise SkipTest("Tests only available for v9.34.1 on")
 
-        exe = join_path(self.prefix.bin, "osh_box")
-        options = ["1", "1", "1", "2", "2", "2", "box.osh"]
-        description = "testing mesh construction"
-        self.run_test(exe, options, purpose=description)
+        with test_part(self, "test_mesh_create", purpose="mesh construction"):
+            osh_box = which(self.prefix.bin.osh_box)
+            osh_box("1", "1", "1", "2", "2", "2", "box.osh")
 
-        exe = join_path(self.prefix.bin, "osh_scale")
-        options = ["box.osh", "100", "box_100.osh"]
-        expected = "adapting took"
-        description = "testing mesh adaptation"
-        self.run_test(exe, options, expected, purpose=description)
+        with test_part(self, "test_mesh_adapt", purpose="mesh adaptation"):
+            osh_scale = which(self.prefix.bin.osh_scale)
+            out = osh_scale("box.osh", "100", "box_100.osh", output=str.split, error=str.split)
 
-        exe = join_path(self.prefix.bin, "osh2vtk")
-        options = ["box_100.osh", "box_100_vtk"]
-        description = "testing mesh to vtu conversion"
-        self.run_test(exe, options, purpose=description)
+            assert "adapting took" in out
+
+        with test_part(self, "test_mesh_convert", purpose="mesh to vtu conversion"):
+            osh2vtk = which(self.prefix.bin.osh2vtk)
+            osh2vtk("box_100.osh", "box_100_vtk")
