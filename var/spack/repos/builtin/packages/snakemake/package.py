@@ -57,10 +57,11 @@ class Snakemake(PythonPackage):
 
     variant("reports", default=False, description="Generate self-contained HTML reports")
     with when("+reports"):
-        depends_on("py-jinja2", type=("build", "run"))
-        depends_on("py-networkx", type=("build", "run"))
+        depends_on("py-jinja2", type=("build", "run"), when="@:7.19.1")
         depends_on("py-pygments", type=("build", "run"))
-        depends_on("py-pygraphviz", type=("build", "run"))
+        # https://github.com/snakemake/snakemake/pull/1470
+        depends_on("py-networkx", type=("build", "run"), when="@:7.1.1")
+        depends_on("py-pygraphviz", type=("build", "run"), when="@:7.1.1")
 
     variant("google-cloud", default=False, description="Enable Google Cloud execution")
     with when("+google-cloud"):
