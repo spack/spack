@@ -21,7 +21,7 @@ class Sphng(MakefilePackage):
 
     depends_on("mpi")
 
-    parallel=False
+    parallel=True
 
     def edit(self, spec, prefix):
 
@@ -41,7 +41,7 @@ class Sphng(MakefilePackage):
             env['ENDIANFLAGBIG'] = "-convert big_endian"
             env['ENDIANFLAGLITTLE'] = "-convert little_endian"
         elif self.compiler.name == 'gcc':
-            env['FFLAGS'] = "-m64 -mcmodel=medium -O3 -I. -Wall -Wno-conversion -Wno-unused-dummy-argument -Wno-maybe-uninitialized -Warray-temporaries"
+            env['FFLAGS'] = "-m64 -mcmodel=large -O3 -I. -Wall -Wno-conversion -Wno-unused-dummy-argument -Wno-maybe-uninitialized -Warray-temporaries"
             env['DBLFLAG'] = "-fdefault-real-8 -fdefault-double-8"
             env['DEBUGFLAG'] = "-g"
             env['ENDIANFLAGBIG'] = "-fconvert=big-endian"
