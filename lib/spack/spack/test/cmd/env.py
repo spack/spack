@@ -57,6 +57,7 @@ if spack.util.atomic_update.use_renameat2():
 else:
     use_renameat2 = [False]
 
+
 @pytest.fixture(params=use_renameat2)
 def atomic_update_implementations(request, monkeypatch):
     monkeypatch.setattr(spack.util.atomic_update, "use_renameat2", lambda: request.param)
@@ -2181,7 +2182,7 @@ def test_view_link_type(
     mock_packages,
     mock_archive,
     install_mockery,
-    atomic_update_implementations
+    atomic_update_implementations,
 ):
     filename = str(tmpdir.join("spack.yaml"))
     viewdir = str(tmpdir.join("view"))
