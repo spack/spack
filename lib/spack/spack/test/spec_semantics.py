@@ -14,7 +14,6 @@ from spack.spec import (
     Spec,
     SpecFormatSigilError,
     SpecFormatStringError,
-    UnconstrainableDependencySpecError,
     UnsupportedCompilerError,
 )
 from spack.variant import (
@@ -32,13 +31,6 @@ def check_constrain_changed(spec, constraint):
 def check_constrain_not_changed(spec, constraint):
     spec = Spec(spec)
     assert not spec.constrain(constraint)
-
-
-def check_invalid_constraint(spec, constraint):
-    spec = Spec(spec)
-    constraint = Spec(constraint)
-    with pytest.raises((UnsatisfiableSpecError, UnconstrainableDependencySpecError)):
-        spec.constrain(constraint)
 
 
 @pytest.mark.usefixtures("config", "mock_packages")
@@ -312,6 +304,13 @@ class TestSpecSemantics(object):
             ("mpich foo==True", "mpich foo==False"),
             ('mpich cppflags="-O3"', 'mpich cppflags="-O2"'),
             ('mpich cppflags="-O3"', 'mpich cppflags=="-O3"'),
+            ("libelf@0:2.0", "libelf@2.1:3"),
+            ("libelf@0:2.5%gcc@4.8:4.9", "libelf@2.1:3%gcc@4.5:4.7"),
+            ("libelf+debug", "libelf~debug"),
+            ("libelf+debug~foo", "libelf+debug+foo"),
+            ("libelf debug=True", "libelf debug=False"),
+            ('libelf cppflags="-O3"', 'libelf cppflags="-O2"'),
+            ("libelf platform=test target=be os=be", "libelf target=fe os=fe"),
         ],
     )
     def test_constraining_abstract_specs_with_empty_intersection(self, lhs, rhs):
@@ -558,18 +557,6 @@ class TestSpecSemantics(object):
     # ========================================================================
     # Constraints
     # ========================================================================
-    def test_invalid_constraint(self):
-        check_invalid_constraint("libelf@0:2.0", "libelf@2.1:3")
-        check_invalid_constraint("libelf@0:2.5%gcc@4.8:4.9", "libelf@2.1:3%gcc@4.5:4.7")
-
-        check_invalid_constraint("libelf+debug", "libelf~debug")
-        check_invalid_constraint("libelf+debug~foo", "libelf+debug+foo")
-        check_invalid_constraint("libelf debug=True", "libelf debug=False")
-
-        check_invalid_constraint('libelf cppflags="-O3"', 'libelf cppflags="-O2"')
-        check_invalid_constraint("libelf platform=test target=be os=be", "libelf target=fe os=fe")
-        check_invalid_constraint("libdwarf", "^%gcc")
-
     def test_constrain_changed(self):
         check_constrain_changed("libelf", "@1.0")
         check_constrain_changed("libelf", "@1.0:5.0")
