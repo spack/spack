@@ -142,14 +142,14 @@ def test_git_user_supplied_reference_satisfaction(
 
     format_info = {"commit0": commits[0]}
 
-    s1, s2, s3, s4 = [Spec(x.format(**format_info)) for x in specs]
+    hash_eq_ver, just_hash, just_ver, hash_eq_other_ver = [Spec(x.format(**format_info)) for x in specs]
 
-    assert s1.satisfies(s2)
-    assert not s2.satisfies(s1)
-    assert s1.satisfies(s3)
-    assert not s3.satisfies(s1)
-    assert not s1.satisfies(s4)
-    assert not s4.satisfies(s1)
+    assert hash_eq_ver.satisfies(just_hash)
+    assert not just_hash.satisfies(hash_eq_ver)
+    assert hash_eq_ver.satisfies(just_ver)
+    assert not just_ver.satisfies(hash_eq_ver)
+    assert not hash_eq_ver.satisfies(hash_eq_other_ver)
+    assert not hash_eq_other_ver.satisfies(hash_eq_ver)
 
 
 def test_requirement_adds_new_version(
