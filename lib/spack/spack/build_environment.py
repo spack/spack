@@ -1049,7 +1049,7 @@ def modifications_from_dag(
 
         if should_setup_run_env & flag:
             # TODO: remove setup_dependent_run_environment...
-            for spec in dspec.dependents():
+            for spec in dspec.dependents(deptype=("run")):
                 pkg.setup_dependent_run_environment(env, spec)
             pkg.setup_run_environment(env)
 
