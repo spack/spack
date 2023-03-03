@@ -903,7 +903,6 @@ class TestStage(object):
             _file.read() == _readme_contents
 
 
-@pytest.mark.skipif(sys.platform == "win32", reason="Not supported on Windows (yet)")
 def test_stage_create_replace_path(tmp_build_stage_dir):
     """Ensure stage creation replaces a non-directory path."""
     _, test_stage_path = tmp_build_stage_dir
@@ -920,7 +919,6 @@ def test_stage_create_replace_path(tmp_build_stage_dir):
     assert os.path.isdir(stage.path)
 
 
-@pytest.mark.skipif(sys.platform == "win32", reason="Not supported on Windows (yet)")
 def test_cannot_access(capsys):
     """Ensure can_access dies with the expected error."""
     with pytest.raises(SystemExit):

@@ -26,6 +26,7 @@ import copy
 import functools
 import os
 import os.path
+import pathlib
 import re
 import shutil
 import urllib.parse
@@ -1600,6 +1601,19 @@ def from_url_scheme(url, *args, **kwargs):
     in the given url."""
 
     url = kwargs.get("url", url)
+
+    # in order to get allow the lines below to parse
+    # Windows absolute file urls correctly, we pass them through
+    # pathlib. If pathlib raises a value error there,
+    # we likely passed it a valid url or a relative
+    # path, both of which urlparse will handly perfectly fine
+    # for all other cases, the uri call will fail and this
+    # is effectively a no-op
+    if is_windows:
+        try:
+            url = pathlib.Path(url).as_uri()
+        except ValueError:
+            pass
     parsed_url = urllib.parse.urlparse(url, scheme="file")
 
     scheme_mapping = kwargs.get("scheme_mapping") or {
