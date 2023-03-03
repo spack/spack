@@ -43,7 +43,7 @@ def _specify(spec_like):
     return Spec(spec_like)
 
 
-def constrain_or_raise(target_spec, constraint_spec, target_concrete=False):
+def check_can_constrain(target_spec, constraint_spec, target_concrete=False):
     target = make_spec(target_spec, target_concrete)
     constraint = _specify(constraint_spec)
 
@@ -97,107 +97,107 @@ class TestSpecSematics(object):
     """
 
     def test_satisfies(self):
-        constrain_or_raise("libelf@0.8.13", "@0:1")
-        constrain_or_raise("libdwarf^libelf@0.8.13", "^libelf@0:1")
+        check_can_constrain("libelf@0.8.13", "@0:1")
+        check_can_constrain("libdwarf^libelf@0.8.13", "^libelf@0:1")
 
     def test_empty_satisfies(self):
         # Basic satisfaction
-        constrain_or_raise("libelf", Spec())
-        constrain_or_raise("libdwarf", Spec())
-        constrain_or_raise("%intel", Spec())
-        constrain_or_raise("^mpi", Spec())
-        constrain_or_raise("+debug", Spec())
-        constrain_or_raise("@3:", Spec())
+        check_can_constrain("libelf", Spec())
+        check_can_constrain("libdwarf", Spec())
+        check_can_constrain("%intel", Spec())
+        check_can_constrain("^mpi", Spec())
+        check_can_constrain("+debug", Spec())
+        check_can_constrain("@3:", Spec())
 
         # Concrete (strict) satisfaction
-        constrain_or_raise("libelf", Spec(), True)
-        constrain_or_raise("libdwarf", Spec(), True)
-        constrain_or_raise("%intel", Spec(), True)
-        constrain_or_raise("^mpi", Spec(), True)
+        check_can_constrain("libelf", Spec(), True)
+        check_can_constrain("libdwarf", Spec(), True)
+        check_can_constrain("%intel", Spec(), True)
+        check_can_constrain("^mpi", Spec(), True)
         # TODO: Variants can't be called concrete while anonymous
         # check_satisfies('+debug', Spec(), True)
-        constrain_or_raise("@3:", Spec(), True)
+        check_can_constrain("@3:", Spec(), True)
 
         # Reverse (non-strict) satisfaction
-        constrain_or_raise(Spec(), "libelf")
-        constrain_or_raise(Spec(), "libdwarf")
-        constrain_or_raise(Spec(), "%intel")
-        constrain_or_raise(Spec(), "^mpi")
+        check_can_constrain(Spec(), "libelf")
+        check_can_constrain(Spec(), "libdwarf")
+        check_can_constrain(Spec(), "%intel")
+        check_can_constrain(Spec(), "^mpi")
         # TODO: Variant matching is auto-strict
         # we should rethink this
         # check_satisfies(Spec(), '+debug')
-        constrain_or_raise(Spec(), "@3:")
+        check_can_constrain(Spec(), "@3:")
 
     def test_satisfies_namespace(self):
-        constrain_or_raise("builtin.mpich", "mpich")
-        constrain_or_raise("builtin.mock.mpich", "mpich")
+        check_can_constrain("builtin.mpich", "mpich")
+        check_can_constrain("builtin.mock.mpich", "mpich")
 
         # TODO: only works for deps now, but shouldn't we allow for root spec?
         # check_satisfies('builtin.mock.mpich', 'mpi')
 
-        constrain_or_raise("builtin.mock.mpich", "builtin.mock.mpich")
+        check_can_constrain("builtin.mock.mpich", "builtin.mock.mpich")
 
         check_cannot_constrain("builtin.mock.mpich", "builtin.mpich")
 
     def test_satisfies_namespaced_dep(self):
         """Ensure spec from same or unspecified namespace satisfies namespace
         constraint."""
-        constrain_or_raise("mpileaks ^builtin.mock.mpich", "^mpich")
+        check_can_constrain("mpileaks ^builtin.mock.mpich", "^mpich")
 
-        constrain_or_raise("mpileaks ^builtin.mock.mpich", "^mpi")
-        constrain_or_raise("mpileaks ^builtin.mock.mpich", "^builtin.mock.mpich")
+        check_can_constrain("mpileaks ^builtin.mock.mpich", "^mpi")
+        check_can_constrain("mpileaks ^builtin.mock.mpich", "^builtin.mock.mpich")
 
         check_cannot_constrain("mpileaks ^builtin.mock.mpich", "^builtin.mpich")
 
     def test_satisfies_compiler(self):
-        constrain_or_raise("foo%gcc", "%gcc")
-        constrain_or_raise("foo%intel", "%intel")
+        check_can_constrain("foo%gcc", "%gcc")
+        check_can_constrain("foo%intel", "%intel")
         check_cannot_constrain("foo%intel", "%gcc")
         check_cannot_constrain("foo%intel", "%pgi")
 
     def test_satisfies_compiler_version(self):
-        constrain_or_raise("foo%gcc", "%gcc@4.7.2")
-        constrain_or_raise("foo%intel", "%intel@4.7.2")
+        check_can_constrain("foo%gcc", "%gcc@4.7.2")
+        check_can_constrain("foo%intel", "%intel@4.7.2")
 
-        constrain_or_raise("foo%pgi@4.5", "%pgi@4.4:4.6")
-        constrain_or_raise("foo@2.0%pgi@4.5", "@1:3%pgi@4.4:4.6")
+        check_can_constrain("foo%pgi@4.5", "%pgi@4.4:4.6")
+        check_can_constrain("foo@2.0%pgi@4.5", "@1:3%pgi@4.4:4.6")
 
         check_cannot_constrain("foo%pgi@4.3", "%pgi@4.4:4.6")
         check_cannot_constrain("foo@4.0%pgi", "@1:3%pgi")
         check_cannot_constrain("foo@4.0%pgi@4.5", "@1:3%pgi@4.4:4.6")
 
-        constrain_or_raise("foo %gcc@4.7.3", "%gcc@4.7")
+        check_can_constrain("foo %gcc@4.7.3", "%gcc@4.7")
 
     def test_satisfies_architecture(self):
-        constrain_or_raise("foo platform=test", "platform=test")
-        constrain_or_raise("foo platform=linux", "platform=linux")
-        constrain_or_raise("foo platform=test", "platform=test target=frontend")
-        constrain_or_raise("foo platform=test", "platform=test os=frontend target=frontend")
-        constrain_or_raise("foo platform=test os=frontend target=frontend", "platform=test")
+        check_can_constrain("foo platform=test", "platform=test")
+        check_can_constrain("foo platform=linux", "platform=linux")
+        check_can_constrain("foo platform=test", "platform=test target=frontend")
+        check_can_constrain("foo platform=test", "platform=test os=frontend target=frontend")
+        check_can_constrain("foo platform=test os=frontend target=frontend", "platform=test")
 
         check_cannot_constrain("foo platform=linux", "platform=test os=redhat6 target=x86")
         check_cannot_constrain("foo os=redhat6", "platform=test os=debian6 target=x86_64")
         check_cannot_constrain("foo target=x86_64", "platform=test os=redhat6 target=x86")
 
-        constrain_or_raise("foo arch=test-None-None", "platform=test")
-        constrain_or_raise("foo arch=test-None-frontend", "platform=test target=frontend")
-        constrain_or_raise(
+        check_can_constrain("foo arch=test-None-None", "platform=test")
+        check_can_constrain("foo arch=test-None-frontend", "platform=test target=frontend")
+        check_can_constrain(
             "foo arch=test-frontend-frontend", "platform=test os=frontend target=frontend"
         )
-        constrain_or_raise("foo arch=test-frontend-frontend", "platform=test")
+        check_can_constrain("foo arch=test-frontend-frontend", "platform=test")
         check_cannot_constrain(
             "foo arch=test-frontend-frontend", "platform=test os=frontend target=backend"
         )
 
-        constrain_or_raise(
+        check_can_constrain(
             "foo platform=test target=frontend os=frontend",
             "platform=test target=frontend os=frontend",
         )
-        constrain_or_raise(
+        check_can_constrain(
             "foo platform=test target=backend os=backend",
             "platform=test target=backend os=backend",
         )
-        constrain_or_raise(
+        check_can_constrain(
             "foo platform=test target=default_target os=default_os", "platform=test os=default_os"
         )
         check_cannot_constrain(
@@ -205,85 +205,85 @@ class TestSpecSematics(object):
         )
 
     def test_satisfies_dependencies(self):
-        constrain_or_raise("mpileaks^mpich", "^mpich")
-        constrain_or_raise("mpileaks^zmpi", "^zmpi")
+        check_can_constrain("mpileaks^mpich", "^mpich")
+        check_can_constrain("mpileaks^zmpi", "^zmpi")
 
         check_cannot_constrain("mpileaks^mpich", "^zmpi")
         check_cannot_constrain("mpileaks^zmpi", "^mpich")
 
     def test_satisfies_dependency_versions(self):
-        constrain_or_raise("mpileaks^mpich@2.0", "^mpich@1:3")
+        check_can_constrain("mpileaks^mpich@2.0", "^mpich@1:3")
         check_cannot_constrain("mpileaks^mpich@1.2", "^mpich@2.0")
 
-        constrain_or_raise("mpileaks^mpich@2.0^callpath@1.5", "^mpich@1:3^callpath@1.4:1.6")
+        check_can_constrain("mpileaks^mpich@2.0^callpath@1.5", "^mpich@1:3^callpath@1.4:1.6")
         check_cannot_constrain("mpileaks^mpich@4.0^callpath@1.5", "^mpich@1:3^callpath@1.4:1.6")
         check_cannot_constrain("mpileaks^mpich@2.0^callpath@1.7", "^mpich@1:3^callpath@1.4:1.6")
         check_cannot_constrain("mpileaks^mpich@4.0^callpath@1.7", "^mpich@1:3^callpath@1.4:1.6")
 
     def test_satisfies_virtual_dependencies(self):
-        constrain_or_raise("mpileaks^mpi", "^mpi")
-        constrain_or_raise("mpileaks^mpi", "^mpich")
+        check_can_constrain("mpileaks^mpi", "^mpi")
+        check_can_constrain("mpileaks^mpi", "^mpich")
 
-        constrain_or_raise("mpileaks^mpi", "^zmpi")
+        check_can_constrain("mpileaks^mpi", "^zmpi")
         check_cannot_constrain("mpileaks^mpich", "^zmpi")
 
     def test_satisfies_virtual_dependency_versions(self):
-        constrain_or_raise("mpileaks^mpi@1.5", "^mpi@1.2:1.6")
+        check_can_constrain("mpileaks^mpi@1.5", "^mpi@1.2:1.6")
         check_cannot_constrain("mpileaks^mpi@3", "^mpi@1.2:1.6")
 
-        constrain_or_raise("mpileaks^mpi@2:", "^mpich")
-        constrain_or_raise("mpileaks^mpi@2:", "^mpich@3.0.4")
-        constrain_or_raise("mpileaks^mpi@2:", "^mpich2@1.4")
+        check_can_constrain("mpileaks^mpi@2:", "^mpich")
+        check_can_constrain("mpileaks^mpi@2:", "^mpich@3.0.4")
+        check_can_constrain("mpileaks^mpi@2:", "^mpich2@1.4")
 
-        constrain_or_raise("mpileaks^mpi@1:", "^mpich2")
-        constrain_or_raise("mpileaks^mpi@2:", "^mpich2")
+        check_can_constrain("mpileaks^mpi@1:", "^mpich2")
+        check_can_constrain("mpileaks^mpi@2:", "^mpich2")
 
         check_cannot_constrain("mpileaks^mpi@3:", "^mpich2@1.4")
         check_cannot_constrain("mpileaks^mpi@3:", "^mpich2")
         check_cannot_constrain("mpileaks^mpi@3:", "^mpich@1.0")
 
     def test_satisfies_matching_variant(self):
-        constrain_or_raise("mpich+foo", "mpich+foo")
-        constrain_or_raise("mpich++foo", "mpich++foo")
-        constrain_or_raise("mpich~foo", "mpich~foo")
-        constrain_or_raise("mpich~~foo", "mpich~~foo")
-        constrain_or_raise("mpich foo=1", "mpich foo=1")
-        constrain_or_raise("mpich foo==1", "mpich foo==1")
+        check_can_constrain("mpich+foo", "mpich+foo")
+        check_can_constrain("mpich++foo", "mpich++foo")
+        check_can_constrain("mpich~foo", "mpich~foo")
+        check_can_constrain("mpich~~foo", "mpich~~foo")
+        check_can_constrain("mpich foo=1", "mpich foo=1")
+        check_can_constrain("mpich foo==1", "mpich foo==1")
 
         # confirm that synonymous syntax works correctly
-        constrain_or_raise("mpich+foo", "mpich foo=True")
-        constrain_or_raise("mpich++foo", "mpich foo=True")
-        constrain_or_raise("mpich foo=true", "mpich+foo")
-        constrain_or_raise("mpich foo==true", "mpich++foo")
-        constrain_or_raise("mpich~foo", "mpich foo=FALSE")
-        constrain_or_raise("mpich~~foo", "mpich foo=FALSE")
-        constrain_or_raise("mpich foo=False", "mpich~foo")
-        constrain_or_raise("mpich foo==False", "mpich~foo")
-        constrain_or_raise("mpich foo=*", "mpich~foo")
-        constrain_or_raise("mpich+foo", "mpich foo=*")
+        check_can_constrain("mpich+foo", "mpich foo=True")
+        check_can_constrain("mpich++foo", "mpich foo=True")
+        check_can_constrain("mpich foo=true", "mpich+foo")
+        check_can_constrain("mpich foo==true", "mpich++foo")
+        check_can_constrain("mpich~foo", "mpich foo=FALSE")
+        check_can_constrain("mpich~~foo", "mpich foo=FALSE")
+        check_can_constrain("mpich foo=False", "mpich~foo")
+        check_can_constrain("mpich foo==False", "mpich~foo")
+        check_can_constrain("mpich foo=*", "mpich~foo")
+        check_can_constrain("mpich+foo", "mpich foo=*")
 
     def test_satisfies_multi_value_variant(self):
         # Check quoting
-        constrain_or_raise('multivalue-variant foo="bar,baz"', 'multivalue-variant foo="bar,baz"')
-        constrain_or_raise("multivalue-variant foo=bar,baz", "multivalue-variant foo=bar,baz")
-        constrain_or_raise('multivalue-variant foo="bar,baz"', "multivalue-variant foo=bar,baz")
+        check_can_constrain('multivalue-variant foo="bar,baz"', 'multivalue-variant foo="bar,baz"')
+        check_can_constrain("multivalue-variant foo=bar,baz", "multivalue-variant foo=bar,baz")
+        check_can_constrain('multivalue-variant foo="bar,baz"', "multivalue-variant foo=bar,baz")
 
         # A more constrained spec satisfies a less constrained one
-        constrain_or_raise('multivalue-variant foo="bar,baz"', "multivalue-variant foo=*")
+        check_can_constrain('multivalue-variant foo="bar,baz"', "multivalue-variant foo=*")
 
-        constrain_or_raise("multivalue-variant foo=*", 'multivalue-variant foo="bar,baz"')
+        check_can_constrain("multivalue-variant foo=*", 'multivalue-variant foo="bar,baz"')
 
-        constrain_or_raise('multivalue-variant foo="bar,baz"', 'multivalue-variant foo="bar"')
+        check_can_constrain('multivalue-variant foo="bar,baz"', 'multivalue-variant foo="bar"')
 
-        constrain_or_raise('multivalue-variant foo="bar,baz"', 'multivalue-variant foo="baz"')
+        check_can_constrain('multivalue-variant foo="bar,baz"', 'multivalue-variant foo="baz"')
 
-        constrain_or_raise(
+        check_can_constrain(
             'multivalue-variant foo="bar,baz,barbaz"', 'multivalue-variant foo="bar,baz"'
         )
 
-        constrain_or_raise('multivalue-variant foo="bar,baz"', 'foo="bar,baz"')
+        check_can_constrain('multivalue-variant foo="bar,baz"', 'foo="bar,baz"')
 
-        constrain_or_raise('multivalue-variant foo="bar,baz"', 'foo="bar"')
+        check_can_constrain('multivalue-variant foo="bar,baz"', 'foo="bar"')
 
     def test_satisfies_single_valued_variant(self):
         """Tests that the case reported in
@@ -408,20 +408,20 @@ class TestSpecSematics(object):
 
     def test_satisfies_unconstrained_variant(self):
         # only asked for mpich, no constraints.  Either will do.
-        constrain_or_raise("mpich+foo", "mpich")
-        constrain_or_raise("mpich~foo", "mpich")
-        constrain_or_raise("mpich foo=1", "mpich")
+        check_can_constrain("mpich+foo", "mpich")
+        check_can_constrain("mpich~foo", "mpich")
+        check_can_constrain("mpich foo=1", "mpich")
 
     def test_unsatisfiable_variants(self):
         # This case is different depending on whether the specs are concrete.
 
         # 'mpich' is not concrete:
-        constrain_or_raise("mpich", "mpich+foo", False)
-        constrain_or_raise("mpich", "mpich~foo", False)
-        constrain_or_raise("mpich", "mpich foo=1", False)
-        constrain_or_raise("mpich", "mpich++foo", False)
-        constrain_or_raise("mpich", "mpich~~foo", False)
-        constrain_or_raise("mpich", "mpich foo==1", False)
+        check_can_constrain("mpich", "mpich+foo", False)
+        check_can_constrain("mpich", "mpich~foo", False)
+        check_can_constrain("mpich", "mpich foo=1", False)
+        check_can_constrain("mpich", "mpich++foo", False)
+        check_can_constrain("mpich", "mpich~~foo", False)
+        check_can_constrain("mpich", "mpich foo==1", False)
 
         # 'mpich' is concrete:
         check_cannot_constrain("mpich", "mpich+foo", True)
@@ -441,20 +441,20 @@ class TestSpecSematics(object):
         check_cannot_constrain("mpich foo==True", "mpich foo==False")
 
     def test_satisfies_matching_compiler_flag(self):
-        constrain_or_raise('mpich cppflags="-O3"', 'mpich cppflags="-O3"')
-        constrain_or_raise('mpich cppflags="-O3 -Wall"', 'mpich cppflags="-O3 -Wall"')
-        constrain_or_raise('mpich cppflags=="-O3"', 'mpich cppflags=="-O3"')
-        constrain_or_raise('mpich cppflags=="-O3 -Wall"', 'mpich cppflags=="-O3 -Wall"')
+        check_can_constrain('mpich cppflags="-O3"', 'mpich cppflags="-O3"')
+        check_can_constrain('mpich cppflags="-O3 -Wall"', 'mpich cppflags="-O3 -Wall"')
+        check_can_constrain('mpich cppflags=="-O3"', 'mpich cppflags=="-O3"')
+        check_can_constrain('mpich cppflags=="-O3 -Wall"', 'mpich cppflags=="-O3 -Wall"')
 
     def test_satisfies_unconstrained_compiler_flag(self):
         # only asked for mpich, no constraints.  Any will do.
-        constrain_or_raise('mpich cppflags="-O3"', "mpich")
+        check_can_constrain('mpich cppflags="-O3"', "mpich")
 
     def test_unsatisfiable_compiler_flag(self):
         # This case is different depending on whether the specs are concrete.
 
         # 'mpich' is not concrete:
-        constrain_or_raise("mpich", 'mpich cppflags="-O3"', False)
+        check_can_constrain("mpich", 'mpich cppflags="-O3"', False)
 
         # 'mpich' is concrete:
         check_cannot_constrain("mpich", 'mpich cppflags="-O3"', True)
