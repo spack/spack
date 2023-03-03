@@ -775,19 +775,22 @@ class FlagMap(lang.HashableMap):
         self.spec = spec
 
     def satisfies(self, other):
-        return all(f in self and set(self[f]) == set(other[f]) for f in other)
+        return all(f in self and self[f] == other[f] for f in other)
 
     def intersects(self, other):
-        if not all(set(self[f]) == set(other[f]) for f in other if (other[f] != [] and f in self)):
-            return False
+        common_types = set(self) & set(other)
+        for flag_type in common_types:
+            if not self[flag_type] or not other[flag_type]:
+                # At least one of the two is empty
+                continue
 
-        # Check that the propagation values match
-        for flag_type in other:
+            if self[flag_type] != other[flag_type]:
+                return False
+
             if not all(
-                other[flag_type][i].propagate == self[flag_type][i].propagate
-                for i in range(len(other[flag_type]))
-                if flag_type in self
+                f1.propagate == f2.propagate for f1, f2 in zip(self[flag_type], other[flag_type])
             ):
+                # At least one propagation flag didn't match
                 return False
         return True
 

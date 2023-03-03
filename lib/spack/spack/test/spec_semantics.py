@@ -328,7 +328,9 @@ class TestSpecSemantics(object):
             ("mpich", "mpich~~foo", True),
             ("mpich", "mpich foo==1", True),
             # Flags semantics is currently different from other variant
-            # ("mpich", 'mpich cppflags="-O3"', False),
+            ("mpich", 'mpich cflags="-O3"', True),
+            ("mpich cflags=-O3", 'mpich cflags="-O3 -Ofast"', False),
+            ("mpich cflags=-O2", 'mpich cflags="-O3"', False),
             ("multivalue-variant foo=bar", "multivalue-variant +foo", False),
             ("multivalue-variant foo=bar", "multivalue-variant ~foo", False),
             ("multivalue-variant fee=bar", "multivalue-variant fee=baz", False),
@@ -457,22 +459,18 @@ class TestSpecSemantics(object):
             assert s.satisfies(copy[s.name])
             assert copy[s.name].satisfies(s)
 
-    def test_satisfies_virtual(self):
-        # Don't use check_satisfies: it checks constrain() too, and
-        # you can't constrain a non-virtual by a virtual.
+    def test_intersects_virtual(self):
         assert Spec("mpich").intersects(Spec("mpi"))
         assert Spec("mpich2").intersects(Spec("mpi"))
         assert Spec("zmpi").intersects(Spec("mpi"))
 
-    def test_satisfies_virtual_dep_with_virtual_constraint(self):
-        """Ensure we can satisfy virtual constraints when there are multiple
-        vdep providers in the specs."""
+    def test_intersects_virtual_dep_with_virtual_constraint(self):
         assert Spec("netlib-lapack ^openblas").intersects("netlib-lapack ^openblas")
         assert not Spec("netlib-lapack ^netlib-blas").intersects("netlib-lapack ^openblas")
         assert not Spec("netlib-lapack ^openblas").intersects("netlib-lapack ^netlib-blas")
         assert Spec("netlib-lapack ^netlib-blas").intersects("netlib-lapack ^netlib-blas")
 
-    def test_satisfies_same_spec_with_different_hash(self):
+    def test_intersectable_concrete_specs_must_have_the_same_hash(self):
         """Ensure that concrete specs are matched *exactly* by hash."""
         s1 = Spec("mpileaks").concretized()
         s2 = s1.copy()
@@ -1195,15 +1193,15 @@ def test_package_hash_affects_dunder_and_dag_hash(mock_packages, default_mock_co
     assert a1.process_hash() != a2.process_hash()
 
 
-def test_satisfies_is_commutative_with_concrete_specs(default_mock_concretization):
+def test_intersects_and_satisfies_on_concretized_spec(default_mock_concretization):
+    """Test that a spec obtained by concretizing an abstract spec, satisfies the abstract spec
+    but not vice-versa.
+    """
     a1 = default_mock_concretization("a@1.0")
     a2 = Spec("a@1.0")
 
-    # Spec.intersects is commutative.
     assert a1.intersects(a2)
     assert a2.intersects(a1)
-
-    # Spec.satisfies means set inclusion, which is not commutative.
     assert a1.satisfies(a2)
     assert not a2.satisfies(a1)
 
