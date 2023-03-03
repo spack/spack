@@ -3,8 +3,6 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-import os
-
 from spack.package import *
 
 
@@ -65,21 +63,18 @@ class Parflow(CMakePackage):
 
     examples_dir = "examples"
 
-    def test(self):
-        """Perform smoke test on installed ParFlow package."""
-        # Run the single phase flow test
-        run_path = join_path(self.spec.prefix, self.examples_dir)
-        if os.path.isdir(run_path):
-            with working_dir(run_path):
-                self.run_test(
-                    "{0}/tclsh".format(self.spec["tcl"].prefix.bin),
-                    ["default_single.tcl", "1", "1" "1"],
-                )
-        else:
-            # If examples are not installed test if exe executes
-            exes = ["parflow"]
-            for exe in exes:
-                reason = "test version of {0} is {1}".format(exe, self.spec.version)
-                self.run_test(
-                    exe, ["-v"], [self.spec.version.string], installed=True, purpose=reason
-                )
+    def test_phase_flow(self):
+        """run single phase flow test"""
+        test_root = self.test_suite.test_dir_for_spec(self.spec)
+        install_tree(join_path(self.spec.prefix, self.examples_dir), test_root)
+
+        with working_dir(test_root):
+            tclsh = which(self.spec["tcl"].prefix.bin.tclsh)
+            tclsh("default_single.tcl", "1", "1" "1")
+
+    def test_version(self):
+        """test parflow version"""
+        parflow = which(self.prefix.bin.parflow)
+        out = parflow("-v", output=str.split, error=str.split)
+        vers = str(self.spec.version)
+        assert vers in out
