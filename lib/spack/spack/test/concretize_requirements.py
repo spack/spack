@@ -124,6 +124,34 @@ packages:
         Spec("x@1.1").concretize()
 
 
+def test_git_user_supplied_reference_satisfaction(
+    concretize_scope, test_repo, mock_git_version_info, monkeypatch
+):
+    repo_path, filename, commits = mock_git_version_info
+
+    monkeypatch.setattr(
+        spack.package_base.PackageBase, "git", "file://%s" % repo_path, raising=False
+    )
+
+    specs = [
+        "v@{commit0}=2.2",
+        "v@{commit0}",
+        "v@2.2",
+        "v@{commit0}=2.3"
+    ]
+
+    format_info = {"commit0": commits[0]}
+
+    s1, s2, s3, s4 = [Spec(x.format(**format_info)) for x in specs]
+
+    assert s1.satisfies(s2)
+    assert not s2.satisfies(s1)
+    assert s1.satisfies(s3)
+    assert not s3.satisfies(s1)
+    assert not s1.satisfies(s4)
+    assert not s4.satisfies(s1)
+
+
 def test_requirement_adds_new_version(
     concretize_scope, test_repo, mock_git_version_info, monkeypatch
 ):
