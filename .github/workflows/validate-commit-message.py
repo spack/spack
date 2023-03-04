@@ -38,9 +38,7 @@ def get_changed_packages(changed_files: list[str]) -> list[str]:
     return changed_packages
 
 
-def get_unmentioned_packages(
-    prefixes: list[str], changed_files: list[str]
-) -> list[str]:
+def get_unmentioned_packages(prefixes: list[str], changed_files: list[str]) -> list[str]:
     unmentioned_packages = []
 
     changed_packages = get_changed_packages(changed_files)
@@ -152,22 +150,16 @@ def main(title: str, changed_files: list[str], commits: int) -> None:
     title_issue = None
     warning = ""
 
-    docs_changed = any(
-        "documentation" in changed_file for changed_file in changed_files
-    )
+    docs_changed = any("documentation" in changed_file for changed_file in changed_files)
     deploy_changed = any(
         changed_file.endswith("yml") or changed_file.endswith("yaml")
         for changed_file in changed_files
     )
 
     if commits > 1:
-        title_issue = process_message(
-            title, changed_files, docs_changed, deploy_changed
-        )
+        title_issue = process_message(title, changed_files, docs_changed, deploy_changed)
     else:
-        title_issue = process_message(
-            title, changed_files, docs_changed, deploy_changed
-        )
+        title_issue = process_message(title, changed_files, docs_changed, deploy_changed)
 
         commit = next(repo.iter_commits())
         logger.info(f"Checking commit: {commit.message} (parents: {commit.parents})")
@@ -192,6 +184,7 @@ def main(title: str, changed_files: list[str], commits: int) -> None:
             f"""\
             There are one or more issues with the commit message of commit {commit.hexsha}.
             Commit message:
+
             {quoted_commit_message}
             """
         )

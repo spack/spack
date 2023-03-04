@@ -97,13 +97,12 @@ def list_files(args):
 OLD_LICENSE, SPDX_MISMATCH, GENERAL_MISMATCH = range(1, 4)
 
 #: Latest year that copyright applies. UPDATE THIS when bumping copyright.
-latest_year = 2022
+latest_year = 2023
 strict_date = r"Copyright 2013-%s" % latest_year
 
 #: regexes for valid license lines at tops of files
 license_line_regexes = [
-    r"Copyright 2013-(%d|%d) Lawrence Livermore National Security, LLC and other"
-    % (latest_year - 1, latest_year),  # allow a little leeway: current or last year
+    r"Copyright 2013-202\d Lawrence Livermore National Security, LLC and other",
     r"Spack Project Developers\. See the top-level COPYRIGHT file for details.",
     r"SPDX-License-Identifier: \(Apache-2\.0 OR MIT\)",
 ]
