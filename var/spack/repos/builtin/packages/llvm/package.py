@@ -669,12 +669,14 @@ class Llvm(CMakePackage, CudaPackage):
                 from_variant("LLVM_BUILD_LLVM_DYLIB", "llvm_dylib"),
                 from_variant("LLVM_LINK_LLVM_DYLIB", "link_llvm_dylib"),
                 from_variant("LLVM_USE_SPLIT_DWARF", "split_dwarf"),
-                # By default on Linux, libc++.so is a ldscript. CMake fails to add
-                # CMAKE_INSTALL_RPATH to it, which fails. Statically link libc++abi.a
-                # into libc++.so, linking with -lc++ or -stdlib=libc++ is enough.
-                define("LIBCXX_ENABLE_STATIC_ABI_LIBRARY", True),
             ]
         )
+
+        # By default on Linux, libc++.so is a ldscript. CMake fails to add
+        # CMAKE_INSTALL_RPATH to it, which fails. Statically link libc++abi.a
+        # into libc++.so, linking with -lc++ or -stdlib=libc++ is enough.
+        if sys.platform != "darwin":
+            cmake_args.append(define("LIBCXX_ENABLE_STATIC_ABI_LIBRARY", True))
 
         cmake_args.append(define("LLVM_TARGETS_TO_BUILD", get_llvm_targets_to_build(spec)))
 
