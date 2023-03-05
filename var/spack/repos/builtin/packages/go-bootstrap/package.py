@@ -30,9 +30,9 @@ class GoBootstrap(Package):
     executables = ["^go$"]
 
     # List binary go releases for multiple operating systems and architectures.
-    # These binary versions are not intended to stay up-to-date. Instead we should
-    # update these binary releases on a yearly schedule as bootstrapping requirements
-    # are modified by new releases of go.
+    # These binary versions are not intended to stay up-to-date. Instead we
+    # should update these binary releases on a yearly schedule as
+    # bootstrapping requirements are modified by new releases of go.
     go_releases = {
         "1.17.13": {
             "darwin": {
@@ -47,9 +47,13 @@ class GoBootstrap(Package):
         }
     }
 
+    # Normalize architectures returned by platform to those used by the
+    # Go project.
+    go_targets = {"aarch64": "arm64", "arm64": "arm64", "ppc64le": "ppc64le", "x86_64": "amd64"}
+
     # determine system os and architecture/target
     os = platform.system().lower()
-    target = platform.machine().lower()
+    target = go_targets[platform.machine().lower()]
 
     # construct releases for current system configuration
     for release in go_releases:
