@@ -24,44 +24,204 @@ class Curl(NMakePackage, AutotoolsPackage):
     executables = ["^curl$"]
     tags = ["build-tools", "windows"]
 
-    version("7.87.0", sha256="5d6e128761b7110946d1276aff6f0f266f2b726f5e619f7e0a057a474155f307")
-    version("7.86.0", sha256="f5ca69db03eea17fa8705bdfb1a9f58d76a46c9010518109bb38f313137e0a28")
-    version("7.85.0", sha256="21a7e83628ee96164ac2b36ff6bf99d467c7b0b621c1f7e317d8f0d96011539c")
-    version("7.84.0", sha256="702fb26e73190a3bd77071aa146f507b9817cc4dfce218d2ab87f00cd3bc059d")
-    version("7.83.0", sha256="247c7ec7521c4258e65634e529270d214fe32969971cccb72845e7aa46831f96")
-    version("7.82.0", sha256="46d9a0400a33408fd992770b04a44a7434b3036f2e8089ac28b57573d59d371f")
-    version("7.81.0", sha256="1e7a38d7018ec060f1f16df839854f0889e94e122c4cfa5d3a37c2dc56f1e258")
-    version("7.80.0", sha256="dd0d150e49cd950aff35e16b628edf04927f0289df42883750cf952bb858189c")
-    version("7.79.1", sha256="de62c4ab9a9316393962e8b94777a570bb9f71feb580fb4475e412f2f9387851")
-    version("7.79.0", sha256="d607a677f473f79f96c964100327125a6204a39d835dc00dab7fc0129b959f42")
-    version("7.78.0", sha256="98530b317dc95ccb324bbe4f834f07bb642fbc393b794ddf3434f246a71ea44a")
-    version("7.77.0", sha256="6c0c28868cb82593859fc43b9c8fdb769314c855c05cf1b56b023acf855df8ea")
-    version("7.76.1", sha256="7a8e184d7d31312c4ebf6a8cb59cd757e61b2b2833a9ed4f9bf708066e7695e9")
-    version("7.76.0", sha256="e29bfe3633701590d75b0071bbb649ee5ca4ca73f00649268bd389639531c49a")
-    version("7.75.0", sha256="50552d4501c178e4cc68baaecc487f466a3d6d19bbf4e50a01869effb316d026")
-    version("7.74.0", sha256="0f4d63e6681636539dc88fa8e929f934cd3a840c46e0bf28c73be11e521b77a5")
-    version("7.73.0", sha256="cf34fe0b07b800f1c01a499a6e8b2af548f6d0e044dca4a29d88a4bee146d131")
-    version("7.72.0", sha256="ad91970864102a59765e20ce16216efc9d6ad381471f7accceceab7d905703ef")
-    version("7.71.0", sha256="600f00ac2481a89548a4141ddf983fd9386165e1960bac91d0a1c81dca5dd341")
-    version("7.68.0", sha256="207f54917dd6a2dc733065ccf18d61bb5bebeaceb5df49cd9445483e8623eeb9")
-    version("7.64.0", sha256="d573ba1c2d1cf9d8533fadcce480d778417964e8d04ccddcc76e591d544cf2eb")
-    version("7.63.0", sha256="9bab7ed4ecff77020a312d84cc5fb7eb02d58419d218f267477a724a17fd8dd8")
-    version("7.60.0", sha256="897dfb2204bd99be328279f88f55b7c61592216b0542fcbe995c60aa92871e9b")
-    version("7.59.0", sha256="b5920ffd6a8c95585fb95070e0ced38322790cb335c39d0dab852d12e157b5a0")
-    version("7.56.0", sha256="de60a4725a3d461c70aa571d7d69c788f1816d9d1a8a2ef05f864ce8f01279df")
-    version("7.54.0", sha256="f50ebaf43c507fa7cc32be4b8108fa8bbd0f5022e90794388f3c7694a302ff06")
-    version("7.53.1", sha256="1c7207c06d75e9136a944a2e0528337ce76f15b9ec9ae4bb30d703b59bf530e8")
-    version("7.52.1", sha256="d16185a767cb2c1ba3d5b9096ec54e5ec198b213f45864a38b3bda4bbf87389b")
-    version("7.50.3", sha256="7b7347d976661d02c84a1f4d6daf40dee377efdc45b9e2c77dedb8acf140d8ec")
-    version("7.50.2", sha256="0c72105df4e9575d68bcf43aea1751056c1d29b1040df6194a49c5ac08f8e233")
-    version("7.50.1", sha256="3c12c5f54ccaa1d40abc65d672107dcc75d3e1fcb38c267484334280096e5156")
-    version("7.49.1", sha256="eb63cec4bef692eab9db459033f409533e6d10e20942f4b060b32819e81885f1")
-    version("7.47.1", sha256="ddc643ab9382e24bbe4747d43df189a0a6ce38fcb33df041b9cb0b3cd47ae98f")
-    version("7.46.0", sha256="b7d726cdd8ed4b6db0fa1b474a3c59ebbbe4dcd4c61ac5e7ade0e0270d3195ad")
-    version("7.45.0", sha256="65154e66b9f8a442b57c436904639507b4ac37ec13d6f8a48248f1b4012b98ea")
-    version("7.44.0", sha256="1e2541bae6582bb697c0fbae49e1d3e6fad5d05d5aa80dbd6f072e0a44341814")
-    version("7.43.0", sha256="baa654a1122530483ccc1c58cc112fec3724a82c11c6a389f1e6a37dc8858df9")
-    version("7.42.1", sha256="e2905973391ec2dfd7743a8034ad10eeb58dab8b3a297e7892a41a7999cac887")
+    maintainers("alecbcs")
+
+    version("7.88.1", sha256="8224b45cce12abde039c12dc0711b7ea85b104b9ad534d6e4c5b4e188a61c907")
+
+    # Deprecated versions due to CVEs
+    # https://nvd.nist.gov/vuln/detail/CVE-2022-43551
+    version(
+        "7.87.0",
+        sha256="5d6e128761b7110946d1276aff6f0f266f2b726f5e619f7e0a057a474155f307",
+        deprecated=True,
+    )
+    # https://nvd.nist.gov/vuln/detail/CVE-2022-32221
+    version(
+        "7.86.0",
+        sha256="f5ca69db03eea17fa8705bdfb1a9f58d76a46c9010518109bb38f313137e0a28",
+        deprecated=True,
+    )
+    version(
+        "7.85.0",
+        sha256="21a7e83628ee96164ac2b36ff6bf99d467c7b0b621c1f7e317d8f0d96011539c",
+        deprecated=True,
+    )
+    version(
+        "7.84.0",
+        sha256="702fb26e73190a3bd77071aa146f507b9817cc4dfce218d2ab87f00cd3bc059d",
+        deprecated=True,
+    )
+    # https://nvd.nist.gov/vuln/detail/CVE-2022-32206
+    version(
+        "7.83.0",
+        sha256="247c7ec7521c4258e65634e529270d214fe32969971cccb72845e7aa46831f96",
+        deprecated=True,
+    )
+    version(
+        "7.82.0",
+        sha256="46d9a0400a33408fd992770b04a44a7434b3036f2e8089ac28b57573d59d371f",
+        deprecated=True,
+    )
+    version(
+        "7.81.0",
+        sha256="1e7a38d7018ec060f1f16df839854f0889e94e122c4cfa5d3a37c2dc56f1e258",
+        deprecated=True,
+    )
+    version(
+        "7.80.0",
+        sha256="dd0d150e49cd950aff35e16b628edf04927f0289df42883750cf952bb858189c",
+        deprecated=True,
+    )
+    version(
+        "7.79.1",
+        sha256="de62c4ab9a9316393962e8b94777a570bb9f71feb580fb4475e412f2f9387851",
+        deprecated=True,
+    )
+    version(
+        "7.79.0",
+        sha256="d607a677f473f79f96c964100327125a6204a39d835dc00dab7fc0129b959f42",
+        deprecated=True,
+    )
+    version(
+        "7.78.0",
+        sha256="98530b317dc95ccb324bbe4f834f07bb642fbc393b794ddf3434f246a71ea44a",
+        deprecated=True,
+    )
+    version(
+        "7.77.0",
+        sha256="6c0c28868cb82593859fc43b9c8fdb769314c855c05cf1b56b023acf855df8ea",
+        deprecated=True,
+    )
+    version(
+        "7.76.1",
+        sha256="7a8e184d7d31312c4ebf6a8cb59cd757e61b2b2833a9ed4f9bf708066e7695e9",
+        deprecated=True,
+    )
+    version(
+        "7.76.0",
+        sha256="e29bfe3633701590d75b0071bbb649ee5ca4ca73f00649268bd389639531c49a",
+        deprecated=True,
+    )
+    version(
+        "7.75.0",
+        sha256="50552d4501c178e4cc68baaecc487f466a3d6d19bbf4e50a01869effb316d026",
+        deprecated=True,
+    )
+    version(
+        "7.74.0",
+        sha256="0f4d63e6681636539dc88fa8e929f934cd3a840c46e0bf28c73be11e521b77a5",
+        deprecated=True,
+    )
+    version(
+        "7.73.0",
+        sha256="cf34fe0b07b800f1c01a499a6e8b2af548f6d0e044dca4a29d88a4bee146d131",
+        deprecated=True,
+    )
+    version(
+        "7.72.0",
+        sha256="ad91970864102a59765e20ce16216efc9d6ad381471f7accceceab7d905703ef",
+        deprecated=True,
+    )
+    version(
+        "7.71.0",
+        sha256="600f00ac2481a89548a4141ddf983fd9386165e1960bac91d0a1c81dca5dd341",
+        deprecated=True,
+    )
+    version(
+        "7.68.0",
+        sha256="207f54917dd6a2dc733065ccf18d61bb5bebeaceb5df49cd9445483e8623eeb9",
+        deprecated=True,
+    )
+    version(
+        "7.64.0",
+        sha256="d573ba1c2d1cf9d8533fadcce480d778417964e8d04ccddcc76e591d544cf2eb",
+        deprecated=True,
+    )
+    version(
+        "7.63.0",
+        sha256="9bab7ed4ecff77020a312d84cc5fb7eb02d58419d218f267477a724a17fd8dd8",
+        deprecated=True,
+    )
+    version(
+        "7.60.0",
+        sha256="897dfb2204bd99be328279f88f55b7c61592216b0542fcbe995c60aa92871e9b",
+        deprecated=True,
+    )
+    version(
+        "7.59.0",
+        sha256="b5920ffd6a8c95585fb95070e0ced38322790cb335c39d0dab852d12e157b5a0",
+        deprecated=True,
+    )
+    version(
+        "7.56.0",
+        sha256="de60a4725a3d461c70aa571d7d69c788f1816d9d1a8a2ef05f864ce8f01279df",
+        deprecated=True,
+    )
+    version(
+        "7.54.0",
+        sha256="f50ebaf43c507fa7cc32be4b8108fa8bbd0f5022e90794388f3c7694a302ff06",
+        deprecated=True,
+    )
+    version(
+        "7.53.1",
+        sha256="1c7207c06d75e9136a944a2e0528337ce76f15b9ec9ae4bb30d703b59bf530e8",
+        deprecated=True,
+    )
+    version(
+        "7.52.1",
+        sha256="d16185a767cb2c1ba3d5b9096ec54e5ec198b213f45864a38b3bda4bbf87389b",
+        deprecated=True,
+    )
+    version(
+        "7.50.3",
+        sha256="7b7347d976661d02c84a1f4d6daf40dee377efdc45b9e2c77dedb8acf140d8ec",
+        deprecated=True,
+    )
+    version(
+        "7.50.2",
+        sha256="0c72105df4e9575d68bcf43aea1751056c1d29b1040df6194a49c5ac08f8e233",
+        deprecated=True,
+    )
+    version(
+        "7.50.1",
+        sha256="3c12c5f54ccaa1d40abc65d672107dcc75d3e1fcb38c267484334280096e5156",
+        deprecated=True,
+    )
+    version(
+        "7.49.1",
+        sha256="eb63cec4bef692eab9db459033f409533e6d10e20942f4b060b32819e81885f1",
+        deprecated=True,
+    )
+    version(
+        "7.47.1",
+        sha256="ddc643ab9382e24bbe4747d43df189a0a6ce38fcb33df041b9cb0b3cd47ae98f",
+        deprecated=True,
+    )
+    version(
+        "7.46.0",
+        sha256="b7d726cdd8ed4b6db0fa1b474a3c59ebbbe4dcd4c61ac5e7ade0e0270d3195ad",
+        deprecated=True,
+    )
+    version(
+        "7.45.0",
+        sha256="65154e66b9f8a442b57c436904639507b4ac37ec13d6f8a48248f1b4012b98ea",
+        deprecated=True,
+    )
+    version(
+        "7.44.0",
+        sha256="1e2541bae6582bb697c0fbae49e1d3e6fad5d05d5aa80dbd6f072e0a44341814",
+        deprecated=True,
+    )
+    version(
+        "7.43.0",
+        sha256="baa654a1122530483ccc1c58cc112fec3724a82c11c6a389f1e6a37dc8858df9",
+        deprecated=True,
+    )
+    version(
+        "7.42.1",
+        sha256="e2905973391ec2dfd7743a8034ad10eeb58dab8b3a297e7892a41a7999cac887",
+        deprecated=True,
+    )
 
     default_tls = "openssl"
     if sys.platform == "darwin":
