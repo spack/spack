@@ -13,6 +13,7 @@ class Awscli(PythonPackage):
 
     pypi = "awscli/awscli-1.16.308.tar.gz"
 
+    version("1.27.84", sha256="a27a7d1f3efa9dd2acf9d8bd72b939337d53da4ac71721cde6d5dff94aa446f7")
     version("1.27.56", sha256="58fd7122547db71646c053c914bd4f9b673356dd8c9520ae6d35560a8aec208b")
     version("1.16.308", sha256="3632fb1db2538128509a7b5e89f2a2c4ea3426bec139944247bddc4d79bf7603")
     version("1.16.179", sha256="6a87114d1325358d000abe22b2103baae7b91f053ff245b9fde33cb0affb5e4f")
