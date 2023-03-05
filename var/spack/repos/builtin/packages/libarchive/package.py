@@ -12,16 +12,53 @@ class Libarchive(AutotoolsPackage):
 
     homepage = "https://www.libarchive.org"
     url = "https://www.libarchive.org/downloads/libarchive-3.1.2.tar.gz"
+
     maintainers("haampie")
 
-    version("3.5.2", sha256="5f245bd5176bc5f67428eb0aa497e09979264a153a074d35416521a5b8e86189")
-    version("3.5.1", sha256="9015d109ec00bb9ae1a384b172bf2fc1dff41e2c66e5a9eeddf933af9db37f5a")
-    version("3.4.1", sha256="fcf87f3ad8db2e4f74f32526dee62dd1fb9894782b0a503a89c9d7a70a235191")
-    version("3.3.2", sha256="ed2dbd6954792b2c054ccf8ec4b330a54b85904a80cef477a1c74643ddafa0ce")
-    version("3.2.1", sha256="72ee1a4e3fd534525f13a0ba1aa7b05b203d186e0c6072a8a4738649d0b3cfd2")
-    version("3.1.2", sha256="eb87eacd8fe49e8d90c8fdc189813023ccc319c5e752b01fb6ad0cc7b2c53d5e")
-    version("3.1.1", sha256="4968f9a3f2405ec7e07d5f6e78b36f21bceee6196df0a795165f89774bbbc6d8")
-    version("3.1.0", sha256="64b15dfa623b323da8fc9c238b5bca962ec3b38dcdfd2ed86f5f509e578a3524")
+    version("3.6.2", sha256="ba6d02f15ba04aba9c23fd5f236bb234eab9d5209e95d1c4df85c44d5f19b9b3")
+
+    # Deprecated versions
+    # https://nvd.nist.gov/vuln/detail/CVE-2021-31566
+    version(
+        "3.5.2",
+        sha256="5f245bd5176bc5f67428eb0aa497e09979264a153a074d35416521a5b8e86189",
+        deprecated=True,
+    )
+    version(
+        "3.5.1",
+        sha256="9015d109ec00bb9ae1a384b172bf2fc1dff41e2c66e5a9eeddf933af9db37f5a",
+        deprecated=True,
+    )
+    version(
+        "3.4.1",
+        sha256="fcf87f3ad8db2e4f74f32526dee62dd1fb9894782b0a503a89c9d7a70a235191",
+        deprecated=True,
+    )
+    version(
+        "3.3.2",
+        sha256="ed2dbd6954792b2c054ccf8ec4b330a54b85904a80cef477a1c74643ddafa0ce",
+        deprecated=True,
+    )
+    version(
+        "3.2.1",
+        sha256="72ee1a4e3fd534525f13a0ba1aa7b05b203d186e0c6072a8a4738649d0b3cfd2",
+        deprecated=True,
+    )
+    version(
+        "3.1.2",
+        sha256="eb87eacd8fe49e8d90c8fdc189813023ccc319c5e752b01fb6ad0cc7b2c53d5e",
+        deprecated=True,
+    )
+    version(
+        "3.1.1",
+        sha256="4968f9a3f2405ec7e07d5f6e78b36f21bceee6196df0a795165f89774bbbc6d8",
+        deprecated=True,
+    )
+    version(
+        "3.1.0",
+        sha256="64b15dfa623b323da8fc9c238b5bca962ec3b38dcdfd2ed86f5f509e578a3524",
+        deprecated=True,
+    )
 
     variant(
         "libs",
