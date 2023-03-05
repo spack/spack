@@ -13,9 +13,6 @@ import llnl.util.tty as tty
 import spack.config
 import spack.util.path as sup
 
-is_windows = sys.platform == "win32"
-
-
 #: Some lines with lots of placeholders
 padded_lines = [
     "==> [2021-06-23-15:59:05.020387] './configure' '--prefix=/Users/gamblin2/padding-log-test/opt/__spack_path_placeholder__/__spack_path_placeholder__/__spack_path_placeholder__/__spack_path_placeholder__/__spack_path_placeholder__/__spack_path_placeholder__/__spack_path_placeholder__/__spack_path_placeholder__/__spack_path_placeholder__/__spack_path_placeholder__/__spack_path_placeholder__/__spack_path_placeholder__/__spack_path_placeholder__/__spack_path_placeholder__/__spack_path_placeholder__/__spack_path_placeholder__/__spack_path_placeholder__/__spack_path_pla/darwin-bigsur-skylake/apple-clang-12.0.5/zlib-1.2.11-74mwnxgn6nujehpyyalhwizwojwn5zga",  # noqa: E501
@@ -36,7 +33,7 @@ def test_sanitze_file_path(tmpdir):
     """Test filtering illegal characters out of potential file paths"""
     # *nix illegal files characters are '/' and none others
     illegal_file_path = str(tmpdir) + "//" + "abcdefghi.txt"
-    if is_windows:
+    if sys.platform == "win32":
         # Windows has a larger set of illegal characters
         illegal_file_path = os.path.join(tmpdir, 'a<b>cd?e:f"g|h*i.txt')
     real_path = sup.sanitize_file_path(illegal_file_path)
@@ -46,7 +43,7 @@ def test_sanitze_file_path(tmpdir):
 # This class pertains to path string padding manipulation specifically
 # which is used for binary caching. This functionality is not supported
 # on Windows as of yet.
-@pytest.mark.skipif(is_windows, reason="Padding funtionality unsupported on Windows")
+@pytest.mark.skipif(sys.platform == "win32", reason="Padding funtionality unsupported on Windows")
 class TestPathPadding:
     @pytest.mark.parametrize("padded,fixed", zip(padded_lines, fixed_lines))
     def test_padding_substitution(self, padded, fixed):
@@ -122,7 +119,7 @@ def test_path_debug_padded_filter(debug, monkeypatch):
     string = fmt.format(prefix, os.sep, os.sep.join([sup.SPACK_PATH_PADDING_CHARS] * 2), suffix)
     expected = (
         fmt.format(prefix, os.sep, "[padded-to-{0}-chars]".format(72), suffix)
-        if debug <= 1 and not is_windows
+        if debug <= 1 and sys.platform != "win32"
         else string
     )
 

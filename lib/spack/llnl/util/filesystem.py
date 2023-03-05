@@ -16,7 +16,6 @@ import stat
 import sys
 import tempfile
 from contextlib import contextmanager
-from sys import platform as _platform
 from typing import Callable, List, Match, Optional, Tuple, Union
 
 from llnl.util import tty
@@ -26,9 +25,7 @@ from llnl.util.symlink import islink, symlink
 from spack.util.executable import Executable, which
 from spack.util.path import path_to_os_path, system_path_filter
 
-is_windows = _platform == "win32"
-
-if not is_windows:
+if sys.platform != "win32":
     import grp
     import pwd
 else:
@@ -154,7 +151,7 @@ if sys.version_info < (3, 7, 4):
 
 
 def getuid():
-    if is_windows:
+    if sys.platform == "win32":
         import ctypes
 
         if ctypes.windll.shell32.IsUserAnAdmin() == 0:
@@ -167,7 +164,7 @@ def getuid():
 @system_path_filter
 def rename(src, dst):
     # On Windows, os.rename will fail if the destination file already exists
-    if is_windows:
+    if sys.platform == "win32":
         # Windows path existence checks will sometimes fail on junctions/links/symlinks
         # so check for that case
         if os.path.exists(dst) or os.path.islink(dst):
@@ -196,7 +193,7 @@ def _get_mime_type():
     """Generate method to call `file` system command to aquire mime type
     for a specified path
     """
-    if is_windows:
+    if sys.platform == "win32":
         # -h option (no-dereference) does not exist in Windows
         return file_command("-b", "--mime-type")
     else:
@@ -551,7 +548,7 @@ def get_owner_uid(path, err_msg=None):
     else:
         p_stat = os.stat(path)
 
-    if _platform != "win32":
+    if sys.platform != "win32":
         owner_uid = p_stat.st_uid
     else:
         sid = win32security.GetFileSecurity(
@@ -584,7 +581,7 @@ def group_ids(uid=None):
     Returns:
         (list of int): gids of groups the user is a member of
     """
-    if is_windows:
+    if sys.platform == "win32":
         tty.warn("Function is not supported on Windows")
         return []
 
@@ -604,7 +601,7 @@ def group_ids(uid=None):
 @system_path_filter(arg_slice=slice(1))
 def chgrp(path, group, follow_symlinks=True):
     """Implement the bash chgrp function on a single path"""
-    if is_windows:
+    if sys.platform == "win32":
         raise OSError("Function 'chgrp' is not supported on Windows")
 
     if isinstance(group, str):
@@ -1131,7 +1128,7 @@ def open_if_filename(str_or_file, mode="r"):
 @system_path_filter
 def touch(path):
     """Creates an empty file at the specified path."""
-    if is_windows:
+    if sys.platform == "win32":
         perms = os.O_WRONLY | os.O_CREAT
     else:
         perms = os.O_WRONLY | os.O_CREAT | os.O_NONBLOCK | os.O_NOCTTY
@@ -1193,7 +1190,7 @@ def temp_cwd():
             yield tmp_dir
     finally:
         kwargs = {}
-        if is_windows:
+        if sys.platform == "win32":
             kwargs["ignore_errors"] = False
             kwargs["onerror"] = readonly_file_handler(ignore_errors=True)
         shutil.rmtree(tmp_dir, **kwargs)
@@ -1438,7 +1435,7 @@ def visit_directory_tree(root, visitor, rel_path="", depth=0):
         try:
             isdir = f.is_dir()
         except OSError as e:
-            if is_windows and hasattr(e, "winerror") and e.winerror == 5 and islink:
+            if sys.platform == "win32" and hasattr(e, "winerror") and e.winerror == 5 and islink:
                 # if path is a symlink, determine destination and
                 # evaluate file vs directory
                 link_target = resolve_link_target_relative_to_the_link(f)
@@ -1547,11 +1544,11 @@ def readonly_file_handler(ignore_errors=False):
     """
 
     def error_remove_readonly(func, path, exc):
-        if not is_windows:
+        if sys.platform != "win32":
             raise RuntimeError("This method should only be invoked on Windows")
         excvalue = exc[1]
         if (
-            is_windows
+            sys.platform == "win32"
             and func in (os.rmdir, os.remove, os.unlink)
             and excvalue.errno == errno.EACCES
         ):
@@ -1581,7 +1578,7 @@ def remove_linked_tree(path):
 
     # Windows readonly files cannot be removed by Python
     # directly.
-    if is_windows:
+    if sys.platform == "win32":
         kwargs["ignore_errors"] = False
         kwargs["onerror"] = readonly_file_handler(ignore_errors=True)
 
@@ -2095,7 +2092,7 @@ class LibraryList(FileList):
             # on non Windows platform
             # Windows valid library extensions are:
             # ['.dll', '.lib']
-            valid_exts = [".dll", ".lib"] if is_windows else [".dylib", ".so", ".a"]
+            valid_exts = [".dll", ".lib"] if sys.platform == "win32" else [".dylib", ".so", ".a"]
             for ext in valid_exts:
                 i = name.rfind(ext)
                 if i != -1:
@@ -2243,7 +2240,7 @@ def find_libraries(libraries, root, shared=True, recursive=False, runtime=True):
         message = message.format(find_libraries.__name__, type(libraries))
         raise TypeError(message)
 
-    if is_windows:
+    if sys.platform == "win32":
         static_ext = "lib"
         # For linking (runtime=False) you need the .lib files regardless of
         # whether you are doing a shared or static link
@@ -2275,7 +2272,7 @@ def find_libraries(libraries, root, shared=True, recursive=False, runtime=True):
     # finally search all of root recursively. The search stops when the first
     # match is found.
     common_lib_dirs = ["lib", "lib64"]
-    if is_windows:
+    if sys.platform == "win32":
         common_lib_dirs.extend(["bin", "Lib"])
 
     for subdir in common_lib_dirs:
@@ -2410,7 +2407,7 @@ class WindowsSimulatedRPath(object):
             # For py2 compatibility, we have to catch the specific Windows error code
             # associate with trying to create a file that already exists (winerror 183)
             except OSError as e:
-                if e.winerror == 183:
+                if sys.platform == "win32" and e.winerror == 183:
                     # We have either already symlinked or we are encoutering a naming clash
                     # either way, we don't want to overwrite existing libraries
                     already_linked = islink(dest_file)

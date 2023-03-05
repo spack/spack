@@ -6,8 +6,6 @@ import sys
 
 from spack.package import *
 
-is_windows = sys.platform == "win32"
-
 
 class Scons(PythonPackage):
     """SCons is a software construction tool"""
@@ -55,7 +53,7 @@ class Scons(PythonPackage):
         env.prepend_path("PYTHONPATH", self.prefix.lib.scons)
 
     def setup_dependent_package(self, module, dspec):
-        if is_windows:
+        if sys.platform == "win32":
             module.scons = Executable(self.spec.prefix.Scripts.scons)
         else:
             module.scons = Executable(self.spec.prefix.bin.scons)

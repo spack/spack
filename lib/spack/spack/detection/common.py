@@ -29,7 +29,6 @@ import spack.spec
 import spack.util.spack_yaml
 import spack.util.windows_registry
 
-is_windows = sys.platform == "win32"
 #: Information on a package that has been detected
 DetectedPackage = collections.namedtuple("DetectedPackage", ["spec", "prefix"])
 
@@ -184,7 +183,7 @@ def library_prefix(library_dir):
     elif "lib" in lowered_components:
         idx = lowered_components.index("lib")
         return os.sep.join(components[:idx])
-    elif is_windows and "bin" in lowered_components:
+    elif sys.platform == "win32" and "bin" in lowered_components:
         idx = lowered_components.index("bin")
         return os.sep.join(components[:idx])
     else:
@@ -260,13 +259,13 @@ class WindowsCompilerExternalPaths(object):
 
 
 class WindowsKitExternalPaths(object):
-    if is_windows:
+    if sys.platform == "win32":
         plat_major_ver = str(winOs.windows_version()[0])
 
     @staticmethod
     def find_windows_kit_roots():
         """Return Windows kit root, typically %programfiles%\\Windows Kits\\10|11\\"""
-        if not is_windows:
+        if sys.platform != "win32":
             return []
         program_files = os.environ["PROGRAMFILES(x86)"]
         kit_base = os.path.join(
@@ -359,7 +358,7 @@ def compute_windows_program_path_for_package(pkg):
         pkg (spack.package_base.PackageBase): package for which
                            Program Files location is to be computed
     """
-    if not is_windows:
+    if sys.platform != "win32":
         return []
     # note windows paths are fine here as this method should only ever be invoked
     # to interact with Windows
@@ -379,7 +378,7 @@ def compute_windows_user_path_for_package(pkg):
     installs see:
     https://learn.microsoft.com/en-us/dotnet/api/system.environment.specialfolder?view=netframework-4.8
     """
-    if not is_windows:
+    if sys.platform != "win32":
         return []
 
     # Current user directory

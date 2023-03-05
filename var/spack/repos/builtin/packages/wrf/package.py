@@ -5,18 +5,16 @@
 
 import glob
 import re
+import sys
 import time
 from os.path import basename
 from subprocess import PIPE, Popen
-from sys import platform, stdout
 
 from llnl.util import tty
 
 from spack.package import *
 
-is_windows = platform == "win32"
-
-if not is_windows:
+if sys.platform != "win32":
     from fcntl import F_GETFL, F_SETFL, fcntl
     from os import O_NONBLOCK
 
@@ -333,7 +331,7 @@ class Wrf(Package):
             )
 
         p = Popen("./configure", stdin=PIPE, stdout=PIPE, stderr=PIPE)
-        if not is_windows:
+        if sys.platform != "win32":
             setNonBlocking(p.stdout)
             setNonBlocking(p.stderr)
 
@@ -358,7 +356,7 @@ class Wrf(Package):
                 time.sleep(0.1)  # Try to do a bit of rate limiting
                 stallcounter += 1
                 continue
-            stdout.write(line)
+            sys.stdout.write(line)
             stallcounter = 0
             outputbuf += line
             if "Enter selection" in outputbuf or "Compile for nesting" in outputbuf:

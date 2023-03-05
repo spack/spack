@@ -7,8 +7,6 @@ import sys
 
 from spack.package import *
 
-is_windows = sys.platform == "win32"
-
 
 class Re2c(Package):
     """re2c: a free and open-source lexer generator for C and C++"""
@@ -33,7 +31,7 @@ class Re2c(Package):
 
     @property
     def make_tool(self):
-        if is_windows:
+        if sys.platform == "win32":
             return ninja
         else:
             return make

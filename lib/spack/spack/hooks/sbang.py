@@ -30,8 +30,7 @@ else:
 
 #: Groupdb does not exist on Windows, prevent imports
 #: on supported systems
-is_windows = sys.platform == "win32"
-if not is_windows:
+if sys.platform != "win32":
     import grp
 
 #: Spack itself also limits the shebang line to at most 4KB, which should be plenty.

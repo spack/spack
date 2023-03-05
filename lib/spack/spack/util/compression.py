@@ -28,8 +28,6 @@ ALLOWED_ARCHIVE_TYPES = (
 
 ALLOWED_SINGLE_EXT_ARCHIVE_TYPES = PRE_EXTS + EXTS + NOTAR_EXTS
 
-is_windows = sys.platform == "win32"
-
 try:
     import bz2  # noqa
 
@@ -158,7 +156,7 @@ def _unzip(archive_file):
         archive_file (str): absolute path of the file to be decompressed
     """
     extracted_file = os.path.basename(strip_extension(archive_file, "zip"))
-    if is_windows:
+    if sys.platform == "win32":
         return _untar(archive_file)
     else:
         exe = "unzip"
@@ -170,7 +168,7 @@ def _unzip(archive_file):
 
 
 def _unZ(archive_file):
-    if is_windows:
+    if sys.platform == "win32":
         result = _7zip(archive_file)
     else:
         result = _system_gunzip(archive_file)
@@ -189,7 +187,7 @@ def _lzma_decomp(archive_file):
             with lzma.open(archive_file) as lar:
                 shutil.copyfileobj(lar, ar)
     else:
-        if is_windows:
+        if sys.platform == "win32":
             return _7zip(archive_file)
         else:
             return _xz(archive_file)
@@ -227,7 +225,7 @@ def _xz(archive_file):
     """Decompress lzma compressed .xz files via xz command line
     tool. Available only on Unix
     """
-    if is_windows:
+    if sys.platform == "win32":
         raise RuntimeError("XZ tool unavailable on Windows")
     decompressed_file = os.path.basename(strip_extension(archive_file, "xz"))
     working_dir = os.getcwd()
@@ -310,7 +308,7 @@ unrecognized file extension: '%s'"
     # Catch tar.xz/tar.Z files here for Windows
     # as the tar utility on Windows cannot handle such
     # compression types directly
-    if ("xz" in extension or "Z" in extension) and is_windows:
+    if ("xz" in extension or "Z" in extension) and sys.platform == "win32":
         return _win_compressed_tarball_handler
 
     return _untar

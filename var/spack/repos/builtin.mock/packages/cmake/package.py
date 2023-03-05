@@ -8,8 +8,6 @@ import sys
 
 from spack.package import *
 
-is_windows = sys.platform == "win32"
-
 
 def check(condition, msg):
     """Raise an install error if condition is False."""
@@ -59,7 +57,7 @@ class Cmake(Package):
             os.environ["for_install"] == "for_install",
             "Couldn't read env var set in compile envieonmnt",
         )
-        cmake_exe_ext = ".exe" if is_windows else ""
+        cmake_exe_ext = ".exe" if sys.platform == "win32" else ""
         cmake_exe = join_path(prefix.bin, "cmake{}".format(cmake_exe_ext))
         touch(cmake_exe)
         set_executable(cmake_exe)
