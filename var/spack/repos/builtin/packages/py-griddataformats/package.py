@@ -41,7 +41,7 @@ class PyGriddataformats(PythonPackage):
 
     depends_on("py-setuptools", type="build")
 
-    depends_on("python@3.8:", when="@1.0.1:")
+    depends_on("python@3.8:", when="@1.0.1:", type=("build", "run"))
 
     depends_on("py-numpy@1.19:", when="@1.0.1", type=("build", "run"))
     depends_on("py-scipy", when="@1.0.1", type=("build", "run"))
