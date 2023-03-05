@@ -26,4 +26,4 @@ class PyGsd(PythonPackage):
     depends_on("py-setuptools", type="build")
     depends_on("py-setuptools@42:", type="build", when="@2.8.0:")
     depends_on("py-cython", type="build")
-    depends_on("py-numpy@1.9.3:19", type=("build", "run"))
+    depends_on("py-numpy@1.9.3:", type=("build", "run"))
