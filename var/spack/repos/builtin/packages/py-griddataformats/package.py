@@ -48,6 +48,6 @@ class PyGriddataformats(PythonPackage):
     depends_on("py-mrcfile", when="@1.0.1", type=("build", "run"))
 
     # Deprecated
-    depends_on("python@2.7:", when="@:0.5.0")
+    depends_on("python@2.7:", when="@:0.5.0", type=("build", "run"))
     depends_on("py-numpy@1.0.3:", type=("build", "run"), when="@:0.5.0")
     depends_on("py-six", type=("build", "run"), when="@:0.5.0")
