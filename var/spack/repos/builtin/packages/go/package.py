@@ -4,7 +4,6 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import os
-import platform
 import re
 
 import llnl.util.tty as tty
@@ -68,7 +67,7 @@ class Go(Package):
         with working_dir("src"):
             bash("{0}.bash".format("all" if self.run_tests else "make"))
 
-        install_tree(wd, prefix)
+        install_tree(".", prefix)
 
     def setup_build_environment(self, env):
         env.set("GOROOT_FINAL", self.spec.prefix)
