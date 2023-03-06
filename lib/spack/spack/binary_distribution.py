@@ -823,6 +823,7 @@ def _url_etag_group(url):
 
     return "{0}://{1}".format(parsed_url.sheme, parsed_url.netloc)
 
+
 def select_signing_key(key=None):
     if key is None:
         keys = spack.util.gpg.signing_keys()

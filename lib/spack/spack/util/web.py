@@ -118,7 +118,7 @@ def read_from_url(url, accept_content_type=None):
 
 def push_to_url(local_file_path, remote_path, keep_original=True, extra_args=None):
     """Push file to URL and get back the ETag of the remote file if supported by
-       remote location.
+    remote location.
     """
     remote_url = urllib.parse.urlparse(remote_path)
     if remote_url.scheme == "file":
@@ -154,7 +154,8 @@ def push_to_url(local_file_path, remote_path, keep_original=True, extra_args=Non
             Body=open(local_file_path, "rb"),
             Bucket=remote_url.netloc,
             Key=remote_path,
-            **extra_args)
+            **extra_args,
+        )
 
         if not keep_original:
             os.remove(local_file_path)
