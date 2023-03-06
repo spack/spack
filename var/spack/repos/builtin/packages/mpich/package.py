@@ -430,11 +430,11 @@ spack package at this time.""",
     def setup_dependent_build_environment(self, env, dependent_spec):
         self.setup_run_environment(env)
 
-        env.set("MPICH_CC", dependent_spec.spack_cc)
-        env.set("MPICH_CXX", dependent_spec.spack_cxx)
-        env.set("MPICH_F77", dependent_spec.spack_f77)
-        env.set("MPICH_F90", dependent_spec.spack_fc)
-        env.set("MPICH_FC", dependent_spec.spack_fc)
+        env.set("MPICH_CC", spack_cc)
+        env.set("MPICH_CXX", spack_cxx)
+        env.set("MPICH_F77", spack_f77)
+        env.set("MPICH_F90", spack_fc)
+        env.set("MPICH_FC", spack_fc)
 
     def setup_dependent_package(self, module, dependent_spec):
         spec = self.spec
