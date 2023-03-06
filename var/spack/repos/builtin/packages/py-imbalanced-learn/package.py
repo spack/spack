@@ -34,4 +34,4 @@ class PyImbalancedLearn(PythonPackage):
     # From https://imbalanced-learn.org/stable/install.html#getting-started:
     depends_on("py-joblib@1.1.1:", type=("build", "run"))
     depends_on("py-threadpoolctl@2.0.0:", type=("build", "run"))
-    depends_on("py-cython@0.29.24:", type=("build", "run"))i
+    depends_on("py-cython@0.29.24:", type=("build", "run"))
