@@ -1026,7 +1026,7 @@ def modifications_from_dag(
             pkg = dspec.package
 
             if should_populate_package_py_globals & flag:
-                if context == "build" and (Mode.ROOT | Mode.BUILDTIME_DIRECT) in flag:
+                if context == "build" and (Mode.ROOT | Mode.BUILDTIME_DIRECT) & flag:
                     set_module_variables_for_package(pkg, context="build")
                 else:
                     set_module_variables_for_package(pkg, context="run")
