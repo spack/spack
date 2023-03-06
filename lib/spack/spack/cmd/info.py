@@ -5,7 +5,6 @@
 
 from __future__ import print_function
 
-import inspect
 import textwrap
 from itertools import zip_longest
 
@@ -17,7 +16,7 @@ import spack.cmd.common.arguments as arguments
 import spack.fetch_strategy as fs
 import spack.repo
 import spack.spec
-from spack.install_test import test_functions, virtuals
+from spack.install_test import test_functions
 from spack.package_base import preferred_version
 
 description = "get detailed information on a particular package"

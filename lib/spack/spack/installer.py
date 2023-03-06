@@ -278,7 +278,7 @@ def _print_installed_pkg(message):
     print(colorize("@*g{[+]} ") + spack.util.path.debug_padded_filter(message))
 
 
-def _print_install_test_log(pkg: "spack.package.PackageBase", verbose: bool):
+def _print_install_test_log(pkg: "spack.package_base.PackageBase", verbose: bool):
     """Output install test log file information.
 
     Args:
@@ -807,7 +807,7 @@ class PackageInstaller(object):
                 associated dependents
         """
         packages = _packages_needed_to_bootstrap_compiler(compiler, architecture, pkgs)
-        for (comp_pkg, is_compiler) in packages:
+        for comp_pkg, is_compiler in packages:
             pkgid = package_id(comp_pkg)
             if pkgid not in self.build_tasks:
                 self._add_init_task(comp_pkg, request, is_compiler, all_deps)

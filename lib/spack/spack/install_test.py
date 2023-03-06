@@ -185,7 +185,7 @@ def package_class(spec):
     """
     try:
         cls = spec.package.__class__
-    except AssertionError as e:
+    except AssertionError:
         try:
             cls = spec.package_class
         except spack.repo.UnknownPackageError as e:
@@ -551,7 +551,9 @@ def copy_test_files(pkg, test_spec):
     # copy test data into test stage data dir
     pkg_cls = package_class(test_spec)
     if not pkg_cls:
-        tty.debug("{0}: skipping test data copy since no package class found".format(spec.name))
+        tty.debug(
+            "{0}: skipping test data copy since no package class found".format(test_specspec.name)
+        )
         return
 
     package_dir = spack.package_base.package_directory(pkg_cls)
@@ -879,8 +881,7 @@ class TestSuite(object):
         for spec in self.specs:
             print(
                 "\nSee {0} test results at:\n  {1}".format(
-                    spec.format("{name}-{version}-{hash:7}"),
-                    self.log_file_for_spec(spec),
+                    spec.format("{name}-{version}-{hash:7}"), self.log_file_for_spec(spec)
                 )
             )
 

@@ -187,13 +187,7 @@ def test_get_test_suite_too_many(mock_packages, mock_test_stage):
 
 
 @pytest.mark.parametrize(
-    "virtuals,names",
-    [
-        (False, False),
-        (False, True),
-        (True, False),
-        (True, True),
-    ],
+    "virtuals,names", [(False, False), (False, True), (True, False), (True, True)]
 )
 def test_test_functions(mock_packages, install_mockery, virtuals, names):
     spec = spack.spec.Spec("printing-package").concretized()
@@ -208,8 +202,6 @@ def test_test_functions(mock_packages, install_mockery, virtuals, names):
     check_results(fns)
 
     fns = spack.install_test.test_functions(
-        spec.package.__class__,
-        add_virtuals=virtuals,
-        names=names,
+        spec.package.__class__, add_virtuals=virtuals, names=names
     )
     check_results(fns)

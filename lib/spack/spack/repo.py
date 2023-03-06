@@ -1067,7 +1067,6 @@ class Repo(object):
         fs.mkdirp(path)
         try:
             for patch in itertools.chain.from_iterable(spec.package.patches.values()):
-
                 if patch.path:
                     if os.path.exists(patch.path):
                         fs.install(patch.path, path)
