@@ -126,11 +126,15 @@ class MSBuildBuilder(MSBuildBuilder):
             else:
                 libs_to_find.append("*.lib")
             for lib in libs_to_find:
-                libs_to_install = glob.glob(os.path.join(self.build_directory, "**", lib), recursive=True)
+                libs_to_install = glob.glob(
+                    os.path.join(self.build_directory, "**", lib), recursive=True
+                )
                 for l in libs_to_install:
                     install(l, prefix.lib)
             for lib in dlls_to_find:
-                dlls_to_install = glob.glob(os.path.join(self.build_directory, "**", lib), recursive=True)
+                dlls_to_install = glob.glob(
+                    os.path.join(self.build_directory, "**", lib), recursive=True
+                )
                 for l in dlls_to_install:
                     install(l, prefix.bin)
 
