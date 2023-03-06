@@ -3677,15 +3677,8 @@ class Spec(object):
             return False
 
         # If we need to descend into dependencies, do it, otherwise we're done.
-        if deps:
-            return self._satisfies_dependencies(other)
-        else:
+        if not deps:
             return True
-
-    def _satisfies_dependencies(self, other):
-        # If we enter this function, other is an abstract spec, and for
-        # abstract specs we don't have yet a defined DAG structure
-        other = self._autospec(other)
 
         # If there are no constraints to satisfy, we're done.
         if not other._dependencies:
@@ -3695,53 +3688,12 @@ class Spec(object):
         if not self._dependencies:
             return False
 
-        # use list to prevent double-iteration
-        selfdeps = list(self.traverse(root=False))
-        otherdeps = list(other.traverse(root=False))
-        if not all(any(d.satisfies(dep) for d in selfdeps) for dep in otherdeps):
-            return False
-
-        # Handle first-order constraints directly
-        for name in self.common_dependencies(other):
-            if not self[name].satisfies(other[name], deps=False):
-                return False
-
-        if self.concrete:
-            # Here we already checked that common dependencies are compatible, so if there are no
-            # nodes in other that are not in self return True, otherwise return False
-            try:
-                _ = [self[x.name] for x in other.traverse() if x.name is not None]
-            except KeyError:
-                # If self is concrete, and some node is not in self, then return False
-                # (since self is immutable and can't satisfy other)
-                return False
-            else:
-                return True
-
-        # For virtual dependencies, we need to dig a little deeper.
-        self_index = spack.provider_index.ProviderIndex(
-            repository=spack.repo.path, specs=self.traverse(), restrict=True
+        # If we arrived here, then rhs is abstract. At the moment we don't care about the edge
+        # structure of an abstract DAG - hence the deps=False parameter.
+        return all(
+            any(lhs.satisfies(rhs, deps=False) for lhs in self.traverse(root=False))
+            for rhs in other.traverse(root=False)
         )
-        other_index = spack.provider_index.ProviderIndex(
-            repository=spack.repo.path, specs=other.traverse(), restrict=True
-        )
-
-        # This handles cases where there are already providers for both vpkgs
-        if not self_index.satisfies(other_index):
-            return False
-
-        # These two loops handle cases where there is an overly restrictive
-        # vpkg in one spec for a provider in the other (e.g., mpi@3: is not
-        # compatible with mpich2)
-        for spec in self.virtual_dependencies():
-            if spec.name in other_index and not other_index.providers_for(spec):
-                return False
-
-        for spec in other.virtual_dependencies():
-            if spec.name in self_index and not self_index.providers_for(spec):
-                return False
-
-        return True
 
     def virtual_dependencies(self):
         """Return list of any virtual deps in this spec."""
