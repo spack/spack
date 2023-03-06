@@ -129,14 +129,14 @@ class MSBuildBuilder(MSBuildBuilder):
                 libs_to_install = glob.glob(
                     os.path.join(self.build_directory, "**", lib), recursive=True
                 )
-                for l in libs_to_install:
-                    install(l, prefix.lib)
-            for lib in dlls_to_find:
+                for lib_to_install in libs_to_install:
+                    install(lib_to_install, prefix.lib)
+            for dll in dlls_to_find:
                 dlls_to_install = glob.glob(
-                    os.path.join(self.build_directory, "**", lib), recursive=True
+                    os.path.join(self.build_directory, "**", dll), recursive=True
                 )
-                for l in dlls_to_install:
-                    install(l, prefix.bin)
+                for dll_to_install in dlls_to_install:
+                    install(dll_to_install, prefix.bin)
 
         with working_dir(pkg.stage.source_path):
             install_tree(os.path.join("src", "liblzma", "api"), prefix.include)
