@@ -19,6 +19,7 @@ class Gdb(AutotoolsPackage, GNUMirrorPackage):
 
     maintainers("robertu94")
 
+    version("13.1", sha256="4cc3d7143d6d54d289d227b1e7289dbc0fa4cbd46131ab87136e1ea831cf46d4")
     version("12.1", sha256="87296a3a9727356b56712c793704082d5df0ff36a34ca9ec9734fc9a8bdfdaab")
     version("11.2", sha256="b558b66084835e43b6361f60d60d314c487447419cdf53adf83a87020c367290")
     version("11.1", sha256="cc2903474e965a43d09c3b263952d48ced39dd22ce2d01968f3aa181335fcb9c")
