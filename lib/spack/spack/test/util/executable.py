@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -14,13 +14,11 @@ import spack
 import spack.util.executable as ex
 from spack.hooks.sbang import filter_shebangs_in_directory
 
-is_windows = sys.platform == "win32"
-
 
 def test_read_unicode(tmpdir, working_env):
     script_name = "print_unicode.py"
     # read the unicode back in and see whether things work
-    if is_windows:
+    if sys.platform == "win32":
         script = ex.Executable("%s %s" % (sys.executable, script_name))
     else:
         script = ex.Executable("./%s" % script_name)

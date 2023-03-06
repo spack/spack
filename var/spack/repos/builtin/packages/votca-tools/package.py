@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -19,7 +19,7 @@ class VotcaTools(CMakePackage):
     homepage = "https://www.votca.org"
     url = "https://github.com/votca/tools/tarball/v1.4"
     git = "https://github.com/votca/tools.git"
-    maintainers = ["junghans"]
+    maintainers("junghans")
 
     version("stable", branch="stable", deprecated=True)
     version(

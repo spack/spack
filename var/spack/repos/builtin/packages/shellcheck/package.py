@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -13,7 +13,7 @@ _versions = {
         "linux-aarch64": "179c579ef3481317d130adebede74a34dbbc2df961a70916dd4039ebf0735fae",
         "linux-armv6hf": "03deed9ded9dd66434ccf9649815bcde7d275d6c9f6dcf665b83391673512c75",
         "linux-x86_64": "700324c6dd0ebea0117591c6cc9d7350d9c7c5c287acbad7630fa17b1d4d9e2f",
-    },
+    }
 }
 
 
@@ -27,7 +27,7 @@ class Shellcheck(Package):
     homepage = "https://www.shellcheck.net"
     url = "https://github.com/koalaman/shellcheck/releases/download/v0.9.0/shellcheck-v0.9.0.linux.x86_64.tar.xz"
 
-    maintainers = ["aphedges"]
+    maintainers("aphedges")
 
     # The following installs the binaries for shellcheck. The reason for
     # installing binaries is that shellcheck is a Haskell package and the

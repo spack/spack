@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -17,7 +17,7 @@ class Heffte(CMakePackage, CudaPackage, ROCmPackage):
     url = "https://bitbucket.org/icl/heffte/get/v1.0.tar.gz"
     git = "https://bitbucket.org/icl/heffte.git"
 
-    maintainers = ["mkstoyanov"]
+    maintainers("mkstoyanov")
     tags = ["e4s", "ecp"]
 
     test_requires_compiler = True
@@ -141,9 +141,7 @@ class Heffte(CMakePackage, CudaPackage, ROCmPackage):
         # using the tests copied from <prefix>/share/heffte/testing
         cmake_dir = self.test_suite.current_test_cache_dir.testing
 
-        options = [
-            cmake_dir,
-        ]
+        options = [cmake_dir]
         if "+rocm" in self.spec:
             options.append(
                 "-Dhip_DIR=" + join_path(self.spec["hip"].prefix, "lib", "cmake", "hip")

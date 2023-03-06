@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -92,7 +92,7 @@ class NMakeBuilder(BaseBuilder):
         This path is relative to the root of the extracted tarball,
         not to the ``build_directory``. Defaults to the current directory.
         """
-        return self.stage.source_dir
+        return self.stage.source_path
 
     @property
     def nmakefile_name(self):

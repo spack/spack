@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -19,7 +19,7 @@ class Jdk(Package):
 
     homepage = "https://www.oracle.com/technetwork/java/javase/downloads/index.html"
 
-    maintainers = ["justintoo"]
+    maintainers("justintoo")
 
     # Oracle requires that you accept their License Agreement in order
     # to access the Java packages in download.oracle.com. In order to

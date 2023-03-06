@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -69,13 +69,13 @@ from spack.error import NoHeadersError, NoLibrariesError
 from spack.installer import InstallError
 from spack.util.cpus import cpus_available
 from spack.util.environment import (
+    SYSTEM_DIRS,
     EnvironmentModifications,
     env_flag,
     filter_system_paths,
     get_path,
     inspect_path,
     is_system_path,
-    system_dirs,
     validate,
 )
 from spack.util.executable import Executable
@@ -397,7 +397,7 @@ def set_compiler_environment_variables(pkg, env):
 
     env.set("SPACK_COMPILER_SPEC", str(spec.compiler))
 
-    env.set("SPACK_SYSTEM_DIRS", ":".join(system_dirs))
+    env.set("SPACK_SYSTEM_DIRS", ":".join(SYSTEM_DIRS))
 
     compiler.setup_custom_environment(pkg, env)
 
@@ -1016,7 +1016,6 @@ def get_cmake_prefix_path(pkg):
 def _setup_pkg_and_run(
     serialized_pkg, function, kwargs, child_pipe, input_multiprocess_fd, jsfd1, jsfd2
 ):
-
     context = kwargs.get("context", "build")
 
     try:

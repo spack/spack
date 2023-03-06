@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -13,7 +13,7 @@ class PyStrawberryfields(PythonPackage):
     homepage = "https://github.com/XanaduAI/StrawberryFields"
     pypi = "StrawberryFields/StrawberryFields-0.23.0.tar.gz"
 
-    maintainers = PythonPackage.maintainers + ["marcodelapierre"]
+    maintainers("marcodelapierre")
 
     version("0.23.0", sha256="bfe94867cdee8e2904752573f1ff46b78d9f373da16a1cfa31e1bd6cdf2e3cb0")
 

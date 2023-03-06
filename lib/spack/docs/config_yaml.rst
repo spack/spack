@@ -1,4 +1,4 @@
-.. Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+.. Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
    Spack Project Developers. See the top-level COPYRIGHT file for details.
 
    SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -222,7 +222,7 @@ and location. (See the *Configuration settings* section of ``man
 ccache`` to learn more about the default settings and how to change
 them). Please note that we currently disable ccache's ``hash_dir``
 feature to avoid an issue with the stage directory (see
-https://github.com/LLNL/spack/pull/3761#issuecomment-294352232).
+https://github.com/spack/spack/pull/3761#issuecomment-294352232).
 
 -----------------------
 ``shared_linking:type``

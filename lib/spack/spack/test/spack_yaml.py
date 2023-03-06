@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -31,7 +31,6 @@ config_file:
 
 
 def test_parse(data):
-
     expected = {
         "config_file": syaml.syaml_dict(
             [
@@ -52,7 +51,6 @@ def test_parse(data):
 
 
 def test_dict_order(data):
-
     expected_order = ["x86_64", "some_list", "another_list", "some_key"]
     assert list(data["config_file"].keys()) == expected_order
 

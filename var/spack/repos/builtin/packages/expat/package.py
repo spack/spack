@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -114,10 +114,7 @@ class Expat(AutotoolsPackage):
 
     def configure_args(self):
         spec = self.spec
-        args = [
-            "--without-docbook",
-            "--enable-static",
-        ]
+        args = ["--without-docbook", "--enable-static"]
         if "+libbsd" in spec and "@2.2.1:" in spec:
             args.append("--with-libbsd")
         return args

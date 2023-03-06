@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -24,7 +24,7 @@ class Redis(MakefilePackage):
     ]
     git = "https://github.com/redis/redis.git"
 
-    maintainers = ["lpottier"]
+    maintainers("lpottier")
 
     version("7.0.5", sha256="67054cc37b58c125df93bd78000261ec0ef4436a26b40f38262c780e56315cc3")
     version("7.0.4", sha256="f0e65fda74c44a3dd4fa9d512d4d4d833dd0939c934e946a5c622a630d057f2f")
@@ -63,10 +63,7 @@ class Redis(MakefilePackage):
     def build_targets(self):
         use_tls = "yes" if "+tls" in self.spec else "no"
         use_systemd = "yes" if "+systemd" in self.spec else "no"
-        return [
-            "BUILD_TLS={0}".format(use_tls),
-            "USE_SYSTEMD={0}".format(use_systemd),
-        ]
+        return ["BUILD_TLS={0}".format(use_tls), "USE_SYSTEMD={0}".format(use_systemd)]
 
     @property
     def install_targets(self):

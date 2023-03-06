@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -27,8 +27,6 @@ from spack.util.environment import filter_system_paths
 from spack.util.path import system_path_filter
 
 __all__ = ["Compiler"]
-
-is_windows = sys.platform == "win32"
 
 
 @llnl.util.lang.memoized
@@ -598,7 +596,7 @@ class Compiler(object):
         suffixes = [""]
         # Windows compilers generally have an extension of some sort
         # as do most files on Windows, handle that case here
-        if is_windows:
+        if sys.platform == "win32":
             ext = r"\.(?:exe|bat)"
             cls_suf = [suf + ext for suf in cls.suffixes]
             ext_suf = [ext]

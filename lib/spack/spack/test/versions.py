@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -16,14 +16,7 @@ from llnl.util.filesystem import working_dir
 
 import spack.package_base
 import spack.spec
-from spack.version import (
-    GitVersion,
-    Version,
-    VersionBase,
-    VersionList,
-    VersionRange,
-    ver,
-)
+from spack.version import GitVersion, Version, VersionBase, VersionList, VersionRange, ver
 
 
 def assert_ver_lt(a, b):
