@@ -54,7 +54,6 @@ class Mesa(MesonPackage):
     depends_on("unwind")
     depends_on("expat")
     depends_on("zlib@1.2.3:")
-    depends_on("libxml2")
 
     # Override the build type variant so we can default to release
     variant(
