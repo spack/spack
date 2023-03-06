@@ -13,7 +13,7 @@ class PyImbalancedLearn(PythonPackage):
     projects."""
 
     homepage = "https://github.com/scikit-learn-contrib/imbalanced-learn"
-    pypi     = "imbalanced-learn/imbalanced-learn-0.10.1.tar.gz"
+    pypi = "imbalanced-learn/imbalanced-learn-0.10.1.tar.gz"
 
     maintainers("meyersbs")
 
