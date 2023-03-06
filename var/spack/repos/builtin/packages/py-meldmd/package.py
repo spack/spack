@@ -48,7 +48,7 @@ class PyMeldmd(CMakePackage, PythonExtension, CudaPackage):
 
     @run_after("install")
     def install_python(self):
-        args = std_pip_args + ['--prefix=' + prefix, '.']
+        args = std_pip_args + ["--prefix=" + prefix, "."]
         pip(*args)
         with working_dir(join_path(self.build_directory, "python")):
             make("MeldPluginPatch")
@@ -57,7 +57,7 @@ class PyMeldmd(CMakePackage, PythonExtension, CudaPackage):
             for f in files:
                 os.symlink(
                     join_path(self.spec["openmm"].prefix.lib.plugins, f),
-                    join_path(self.prefix.lib.plugins, f)
+                    join_path(self.prefix.lib.plugins, f),
                 )
 
     def patch(self):
@@ -65,24 +65,16 @@ class PyMeldmd(CMakePackage, PythonExtension, CudaPackage):
             "# Compile the Python module.",
             '# Compile the Python module.\nadd_custom_target(MeldPluginPatch DEPENDS "${WRAP_FILE}")',
             "plugin/python/CMakeLists.txt",
-            string=True
+            string=True,
         )
         # Fixed, but not versioned yet:
         # https://github.com/maccallumlab/meld/commit/afe4b0c199e3562d112af7825f8839e76067039c
         filter_file(
-            "MAXFLOAT",
-            "FLT_MAX",
-            "plugin/platforms/cuda/src/kernels/computeMeld.cu",
-            string=True
+            "MAXFLOAT", "FLT_MAX", "plugin/platforms/cuda/src/kernels/computeMeld.cu", string=True
         )
         # API Change: https://github.com/openmm/openmm/releases/tag/7.6.0
         if self.spec.satisfies("^openmm@7.6.0:"):
-            filter_file(
-                "simtk.openmm",
-                "openmm",
-                "plugin/python/meldplugin.i",
-                string=True
-            )
+            filter_file("simtk.openmm", "openmm", "plugin/python/meldplugin.i", string=True)
 
     def setup_run_environment(self, env):
         env.set("OPENMM_PLUGIN_DIR", self.prefix.lib.plugins)
