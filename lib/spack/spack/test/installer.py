@@ -24,8 +24,6 @@ import spack.spec
 import spack.store
 import spack.util.lock as lk
 
-is_windows = sys.platform == "win32"
-
 
 def _mock_repo(root, namespace):
     """Create an empty repository at the specified root
@@ -528,7 +526,7 @@ def test_dump_packages_deps_errs(install_mockery, tmpdir, monkeypatch, capsys):
 
     # The call to install_tree will raise the exception since not mocking
     # creation of dependency package files within *install* directories.
-    with pytest.raises(IOError, match=path if not is_windows else ""):
+    with pytest.raises(IOError, match=path if sys.platform != "win32" else ""):
         inst.dump_packages(spec, path)
 
     # Now try the error path, which requires the mock directory structure
@@ -879,7 +877,7 @@ def test_setup_install_dir_grp(install_mockery, monkeypatch, capfd):
     metadatadir = spack.store.layout.metadata_path(spec)
     # Regex matching with Windows style paths typically fails
     # so we skip the match check here
-    if is_windows:
+    if sys.platform == "win32":
         metadatadir = None
     # Should fail with a "not a directory" error
     with pytest.raises(OSError, match=metadatadir):

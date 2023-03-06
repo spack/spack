@@ -1332,7 +1332,7 @@ def nodes_to_be_packaged(specs, root=True, dependencies=True):
         return list(filter(packageable, nodes))
 
 
-def push(specs, push_url, include_root=True, include_dependencies=True, **kwargs):
+def push(specs, push_url, include_root: bool = True, include_dependencies: bool = True, **kwargs):
     """Create a binary package for each of the specs passed as input and push them
     to a given push URL.
 
@@ -1345,6 +1345,10 @@ def push(specs, push_url, include_root=True, include_dependencies=True, **kwargs
         **kwargs: TODO
 
     """
+    # Be explicit about the arugment type
+    if type(include_root) != bool or type(include_dependencies) != bool:
+        raise ValueError("Expected include_root/include_dependencies to be True/False")
+
     nodes = nodes_to_be_packaged(specs, root=include_root, dependencies=include_dependencies)
 
     # TODO: This seems to be an easy target for task

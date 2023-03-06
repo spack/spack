@@ -25,7 +25,7 @@ class Bufr(CMakePackage):
     version("11.5.0", sha256="d154839e29ef1fe82e58cf20232e9f8a4f0610f0e8b6a394b7ca052e58f97f43")
 
     def _setup_bufr_environment(self, env, suffix):
-        libname = "libufr_{0}".format(suffix)
+        libname = "libbufr_{0}".format(suffix)
         lib = find_libraries(libname, root=self.prefix, shared=False, recursive=True)
         lib_envname = "BUFR_LIB{0}".format(suffix)
         inc_envname = "BUFR_INC{0}".format(suffix)

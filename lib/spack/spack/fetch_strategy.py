@@ -28,7 +28,6 @@ import os
 import os.path
 import re
 import shutil
-import sys
 import urllib.parse
 from typing import List, Optional
 
@@ -53,7 +52,6 @@ from spack.util.string import comma_and, quote
 
 #: List of all fetch strategies, created by FetchStrategy metaclass.
 all_strategies = []
-is_windows = sys.platform == "win32"
 
 CONTENT_TYPE_MISMATCH_WARNING_TEMPLATE = (
     "The contents of {subject} look like {content_type}.  Either the URL"
