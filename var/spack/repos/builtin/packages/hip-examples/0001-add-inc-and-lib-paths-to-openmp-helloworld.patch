@@ -1,0 +1,19 @@
+diff --git a/openmp-helloworld/CMakeLists.txt b/openmp-helloworld/CMakeLists.txt
+index a4abb76..1ce1dc7 100644
+--- a/openmp-helloworld/CMakeLists.txt
++++ b/openmp-helloworld/CMakeLists.txt
+@@ -38,11 +38,14 @@ endif()
+ # Source files.
+ set(CPP_SOURCES ${CMAKE_SOURCE_DIR}/openmp_helloworld.cpp)
+
++link_directories(${ROCM_OPENMP_EXTRAS_DIR}/lib)
+ # Preparing the executable.
+ add_executable(test_openmp_helloworld ${CPP_SOURCES})
+
+ # Link Libraries - HIP Device and OpenMP.
+ target_compile_options(test_openmp_helloworld PRIVATE ${OpenMP_CXX_FLAGS})
++target_include_directories(test_openmp_helloworld PUBLIC "${ROCM_OPENMP_EXTRAS_DIR}/include")
++target_link_libraries(test_openmp_helloworld PUBLIC omp)
+ target_link_libraries(test_openmp_helloworld PRIVATE hip::device ${OpenMP_CXX_FLAGS})
+
+ if(WIN32)
