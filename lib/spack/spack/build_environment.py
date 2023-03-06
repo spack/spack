@@ -69,13 +69,13 @@ from spack.error import NoHeadersError, NoLibrariesError
 from spack.installer import InstallError
 from spack.util.cpus import cpus_available
 from spack.util.environment import (
+    SYSTEM_DIRS,
     EnvironmentModifications,
     env_flag,
     filter_system_paths,
     get_path,
     inspect_path,
     is_system_path,
-    system_dirs,
     validate,
 )
 from spack.util.executable import Executable
@@ -397,7 +397,7 @@ def set_compiler_environment_variables(pkg, env):
 
     env.set("SPACK_COMPILER_SPEC", str(spec.compiler))
 
-    env.set("SPACK_SYSTEM_DIRS", ":".join(system_dirs))
+    env.set("SPACK_SYSTEM_DIRS", ":".join(SYSTEM_DIRS))
 
     compiler.setup_custom_environment(pkg, env)
 

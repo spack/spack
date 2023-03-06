@@ -62,8 +62,7 @@ import llnl.util.lock as lk
 import llnl.util.multiproc as mp
 from llnl.util.filesystem import getuid, touch
 
-is_windows = sys.platform == "win32"
-if not is_windows:
+if sys.platform != "win32":
     import fcntl
 
 pytestmark = pytest.mark.skipif(sys.platform == "win32", reason="does not run on windows")
@@ -127,7 +126,7 @@ def make_readable(*paths):
     # stat.S_IREAD constants or a corresponding integer value). All other
     # bits are ignored."
     for path in paths:
-        if not is_windows:
+        if sys.platform != "win32":
             mode = 0o555 if os.path.isdir(path) else 0o444
         else:
             mode = stat.S_IREAD
@@ -136,7 +135,7 @@ def make_readable(*paths):
 
 def make_writable(*paths):
     for path in paths:
-        if not is_windows:
+        if sys.platform != "win32":
             mode = 0o755 if os.path.isdir(path) else 0o744
         else:
             mode = stat.S_IWRITE
@@ -616,7 +615,7 @@ def test_read_lock_read_only_dir_writable_lockfile(lock_dir, lock_path):
             pass
 
 
-@pytest.mark.skipif(False if is_windows else getuid() == 0, reason="user is root")
+@pytest.mark.skipif(False if sys.platform == "win32" else getuid() == 0, reason="user is root")
 def test_read_lock_no_lockfile(lock_dir, lock_path):
     """read-only directory, no lockfile (so can't create)."""
     with read_only(lock_dir):
