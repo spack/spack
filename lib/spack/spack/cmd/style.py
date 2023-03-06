@@ -69,7 +69,9 @@ def is_package(f):
     packages, since we allow `from spack import *` and poking globals
     into packages.
     """
-    return f.startswith("var/spack/repos/") and f.endswith("package.py")
+    return (f.startswith("var/spack/repos/") or f.startswith("bluebrain/repo-")) and f.endswith(
+        "package.py"
+    )
 
 
 #: decorator for adding tools to the list

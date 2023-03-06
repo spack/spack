@@ -29,6 +29,7 @@ class PythonDev(BundlePackage):
     depends_on("py-numpy", type=("build", "run"))
     depends_on("py-pandas", type=("build", "run"))
     depends_on("py-pyyaml", type=("build", "run"))
+    depends_on("py-requests", type=("build", "run"))
     depends_on("py-scipy", type=("build", "run"))
     depends_on("py-sympy", type=("build", "run"))
 
