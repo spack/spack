@@ -32,7 +32,7 @@ class Httpie(PythonPackage):
     depends_on("py-charset-normalizer@2:", when="@2.6:", type=("build", "run"))
     depends_on("py-colorama@0.2.4:", when="os=windows", type=("build", "run"))
     depends_on("py-defusedxml@0.6:", when="@2.5:", type=("build", "run"))
-    depends_on("py-importlib-metadata@1.4.0:", when="^python@:3.8", type=("build", "run"))
+    depends_on("py-importlib-metadata@1.4.0:", when="@3: ^python@:3.8", type=("build", "run"))
     depends_on("py-multidict@4.7.0:", when="@3.2.1:", type=("build", "run"))
     depends_on("py-pygments@2.1.3:", type=("build", "run"))
     depends_on("py-pygments@2.5.2:", when="@2.5:", type=("build", "run"))
