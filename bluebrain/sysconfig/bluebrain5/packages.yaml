@@ -127,9 +127,6 @@ packages:
     variants: ~ssl~sql~tools
   range-v3:
     variants: ~doc
-  reportinglib:
-    require:
-    - one_of: ["%intel", "%gcc"]
   slurm:
     buildable: false
     version: [21.08.3]
