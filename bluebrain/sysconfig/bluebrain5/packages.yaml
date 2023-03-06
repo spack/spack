@@ -83,6 +83,9 @@ packages:
   neuron:
     require:
       - one_of: ["%intel", "%nvhpc"]
+  nmodl:
+    require:
+      - one_of: ["%gcc", "%intel", "%nvhpc"]
   omega-h:
     variants: ~kokkos~trilinos
   opencv:
