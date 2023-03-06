@@ -72,7 +72,7 @@ class SuperluDist(CMakePackage, CudaPackage, ROCmPackage):
 
     patch("xl-611.patch", when="@:6.1.1 %xl")
     patch("xl-611.patch", when="@:6.1.1 %xl_r")
-    patch("superlu-cray-ftn-case.patch", when="@7.1.1: %cce")
+    patch("superlu-cray-ftn-case.patch", when="@7.1.1 %cce")
     patch("CMAKE_INSTALL_LIBDIR.patch", when="@7.0.0:7.2.0")
 
     def cmake_args(self):
