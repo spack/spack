@@ -19,4 +19,4 @@ class PyNumpyStl(PythonPackage):
 
     depends_on("py-numpy", type=("build", "run"))
     depends_on("py-python-utils@1.6.2:", when="@2.10.1", type=("build", "run"))
-    depends_on("py-python-utils@3.4.5:", type=("build", "run"))
+    depends_on("py-python-utils@3.4.5:", when="@3:", type=("build", "run"))
