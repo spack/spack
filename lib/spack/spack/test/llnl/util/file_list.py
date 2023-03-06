@@ -13,8 +13,6 @@ from llnl.util.filesystem import HeaderList, LibraryList, find, find_headers, fi
 
 import spack.paths
 
-is_windows = sys.platform == "win32"
-
 
 @pytest.fixture()
 def library_list():
@@ -28,7 +26,7 @@ def library_list():
             "/dir3/libz.so",
             "libmpi.so.20.10.1",  # shared object libraries may be versioned
         ]
-        if not is_windows
+        if sys.platform != "win32"
         else [
             "/dir1/liblapack.lib",
             "/dir2/libpython3.6.dll",
@@ -59,10 +57,10 @@ def header_list():
 
 
 # TODO: Remove below when llnl.util.filesystem.find_libraries becomes spec aware
-plat_static_ext = "lib" if is_windows else "a"
+plat_static_ext = "lib" if sys.platform == "win32" else "a"
 
 
-plat_shared_ext = "dll" if is_windows else "so"
+plat_shared_ext = "dll" if sys.platform == "win32" else "so"
 
 
 plat_apple_shared_ext = "dylib"
@@ -78,7 +76,8 @@ class TestLibraryList(object):
         expected = " ".join(
             [
                 "/dir1/liblapack.%s" % plat_static_ext,
-                "/dir2/libpython3.6.%s" % (plat_apple_shared_ext if not is_windows else "dll"),
+                "/dir2/libpython3.6.%s"
+                % (plat_apple_shared_ext if sys.platform != "win32" else "dll"),
                 "/dir1/libblas.%s" % plat_static_ext,
                 "/dir3/libz.%s" % plat_shared_ext,
                 "libmpi.%s.20.10.1" % plat_shared_ext,
@@ -93,7 +92,8 @@ class TestLibraryList(object):
         expected = ";".join(
             [
                 "/dir1/liblapack.%s" % plat_static_ext,
-                "/dir2/libpython3.6.%s" % (plat_apple_shared_ext if not is_windows else "dll"),
+                "/dir2/libpython3.6.%s"
+                % (plat_apple_shared_ext if sys.platform != "win32" else "dll"),
                 "/dir1/libblas.%s" % plat_static_ext,
                 "/dir3/libz.%s" % plat_shared_ext,
                 "libmpi.%s.20.10.1" % plat_shared_ext,
