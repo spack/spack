@@ -1026,9 +1026,10 @@ def modifications_from_dag(
             pkg = dspec.package
 
             if should_populate_package_py_globals & flag:
-                set_module_variables_for_package(
-                    pkg, context="build" if Mode.ROOT in flag and context == "build" else "run"
-                )
+                if context == "build" and (Mode.ROOT | Mode.BUILDTIME_DIRECT) in flag:
+                    set_module_variables_for_package(pkg, context="build")
+                else:
+                    set_module_variables_for_package(pkg, context="run")
 
             for spec in dspec.dependents():
                 if id(spec) not in nodes_in_subdag:
