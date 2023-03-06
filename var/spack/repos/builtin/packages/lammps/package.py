@@ -513,6 +513,14 @@ class Lammps(CMakePackage, CudaPackage, ROCmPackage):
         values=("single", "double"),
         multi=False,
     )
+    variant(
+        "gpu_precision",
+        default="mixed",
+        when="~kokkos",
+        description="Select GPU precision (used by GPU package)",
+        values=("double", "mixed", "single"),
+        multi=False,
+    )
 
     depends_on("mpi", when="+mpi")
     depends_on("mpi", when="+mpiio")
@@ -570,6 +578,7 @@ class Lammps(CMakePackage, CudaPackage, ROCmPackage):
     extends("python", when="+python")
 
     conflicts("+cuda", when="+opencl")
+    conflicts("+rocm", when="+opencl")
     conflicts("+body", when="+poems@:20180628")
     conflicts("+latte", when="@:20170921")
     conflicts("+python", when="~lib")
@@ -645,6 +654,7 @@ class Lammps(CMakePackage, CudaPackage, ROCmPackage):
             if "+cuda" in spec:
                 args.append(self.define("PKG_GPU", True))
                 args.append(self.define("GPU_API", "cuda"))
+                args.append(self.define_from_variant("GPU_PREC", "gpu_precision"))
                 cuda_arch = spec.variants["cuda_arch"].value
                 if cuda_arch != "none":
                     args.append(self.define("GPU_ARCH", "sm_{0}".format(cuda_arch[0])))
@@ -654,9 +664,11 @@ class Lammps(CMakePackage, CudaPackage, ROCmPackage):
                 args.append(self.define("USE_STATIC_OPENCL_LOADER", False))
                 args.append(self.define("PKG_GPU", True))
                 args.append(self.define("GPU_API", "opencl"))
+                args.append(self.define_from_variant("GPU_PREC", "gpu_precision"))
             elif "+rocm" in spec:
                 args.append(self.define("PKG_GPU", True))
                 args.append(self.define("GPU_API", "hip"))
+                args.append(self.define_from_variant("GPU_PREC", "gpu_precision"))
                 args.append(self.define_from_variant("HIP_ARCH", "amdgpu_target"))
             else:
                 args.append(self.define("PKG_GPU", False))
