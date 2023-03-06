@@ -191,6 +191,12 @@ class Neuron(CMakePackage):
                 "+tests",
             ]
         ]
+        if self.spec.satisfies("+tests"):
+            # The +tests variant is used in CI pipelines that run the tests
+            # directly from the build directory, not via Spack's --test=X
+            # option. This overrides the implicit CMake argument that Spack
+            # injects.
+            args.append(self.define("BUILD_TESTING", True))
         if self.spec.satisfies("@9.0.a3:+tests"):
             # The +tests variant is primarily used for CI pipelines, which do
             # not run on exclusive resources and do not give reliable results
