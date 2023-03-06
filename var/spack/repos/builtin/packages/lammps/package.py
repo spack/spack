@@ -9,7 +9,7 @@ import archspec
 from spack.package import *
 
 
-class Lammps(CMakePackage, CudaPackage):
+class Lammps(CMakePackage, CudaPackage, ROCmPackage):
     """LAMMPS stands for Large-scale Atomic/Molecular Massively
     Parallel Simulator.
     """
@@ -561,6 +561,8 @@ class Lammps(CMakePackage, CudaPackage):
     depends_on("n2p2+shared", when="+lib ^n2p2")
     depends_on("vtk", when="+user-vtk")
     depends_on("vtk", when="+vtk")
+    depends_on("hipcub", when="~kokkos +rocm")
+    depends_on("llvm-amdgpu +openmp", when="+rocm +openmp", type="build")
 
     depends_on("googletest", type="test")
     depends_on("libyaml", type="test")
@@ -605,6 +607,7 @@ class Lammps(CMakePackage, CudaPackage):
         when="^adios2+mpi",
         msg="With +adios, mpi setting for adios2 and lammps must be the same",
     )
+    conflicts("~kokkos+rocm", when="@:20220602", msg="ROCm builds of the GPU package were not supported by this spackage prior to version 20220623")
 
     patch("lib.patch", when="@20170901")
     patch("660.patch", when="@20170922")
@@ -614,6 +617,7 @@ class Lammps(CMakePackage, CudaPackage):
         sha256="e6f1b62bbfdc79d632f4cea98019202d0dd25aa4ae61a70df1164cb4f290df79",
         when="@20200721 +cuda",
     )
+    patch("hip_cmake.patch", when="@20220623:20221222 ~kokkos+rocm")
 
     root_cmakelists_dir = "cmake"
 
@@ -650,6 +654,10 @@ class Lammps(CMakePackage, CudaPackage):
                 args.append(self.define("USE_STATIC_OPENCL_LOADER", False))
                 args.append(self.define("PKG_GPU", True))
                 args.append(self.define("GPU_API", "opencl"))
+            elif "+rocm" in spec:
+                args.append(self.define("PKG_GPU", True))
+                args.append(self.define("GPU_API", "hip"))
+                args.append(self.define_from_variant("HIP_ARCH", "amdgpu_target"))
             else:
                 args.append(self.define("PKG_GPU", False))
 
@@ -711,6 +719,9 @@ class Lammps(CMakePackage, CudaPackage):
         if "+user-hdnnp" in spec or "+ml-hdnnp" in spec:
             args.append(self.define("DOWNLOAD_N2P2", False))
             args.append(self.define("N2P2_DIR", self.spec["n2p2"].prefix))
+
+        if "+rocm" in spec:
+            args.append(self.define("CMAKE_CXX_COMPILER", spec["hip"].hipcc))
 
         return args
 
