@@ -55,6 +55,11 @@ class PySetuptools(Package, PythonExtension):
         expand=False,
     )
     version(
+        "59.2.0",
+        sha256="157d21de9d055ab9e8ea3186d91e7f4f865e11f42deafa952d90842671fc2576",
+        expand=False,
+    )
+    version(
         "58.2.0",
         sha256="2551203ae6955b9876741a26ab3e767bb3242dafe86a32a749ea0d78b6792f11",
         expand=False,
