@@ -3,7 +3,6 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-
 import os
 
 from spack.package import *
@@ -26,12 +25,10 @@ class HipExamples(Package):
     patch("0001-add-inc-and-lib-paths-to-openmp-helloworld.patch")
     depends_on("hip")
     depends_on("rocm-openmp-extras")
-    depends_on("cmake", type='build')
+    depends_on("cmake", type="build")
 
     def install(self, spec, prefix):
         stage = os.getcwd()
-
-        os.environ["ROCM_OPENMP_EXTRAS_DIR"] = self.spec["rocm-openmp-extras"].prefix
 
         for root, dirs, files in os.walk(stage):
             if "Makefile" in files or "CMakeLists.txt" in files:
