@@ -23,7 +23,7 @@ class Awscli(PythonPackage):
 
     # py-botocore is pinned to the patch version number
     depends_on("py-botocore@1.29.84", when="@1.27.84", type=("build", "run"))
-    depends_on("py-botocore@1.29.56", when="@1.27", type=("build", "run"))
+    depends_on("py-botocore@1.29.56", when="@1.27.56", type=("build", "run"))
     depends_on("py-botocore@1.13.44", when="@1.16.308", type=("build", "run"))
     depends_on("py-botocore@1.12.169", when="@1.16.179", type=("build", "run"))
 
