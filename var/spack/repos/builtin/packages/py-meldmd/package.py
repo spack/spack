@@ -63,7 +63,8 @@ class PyMeldmd(CMakePackage, PythonExtension, CudaPackage):
     def patch(self):
         filter_file(
             "# Compile the Python module.",
-            '# Compile the Python module.\nadd_custom_target(MeldPluginPatch DEPENDS "${WRAP_FILE}")',
+            "# Compile the Python module.\n"
+            'add_custom_target(MeldPluginPatch DEPENDS "${WRAP_FILE}")',
             "plugin/python/CMakeLists.txt",
             string=True,
         )
