@@ -2,6 +2,7 @@
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
+import copy
 import os
 import sys
 
@@ -329,6 +330,24 @@ class TestConcretize(object):
         cmake = client["cmake"]
         for spec in [client, cmake]:
             assert spec.compiler_flags["cflags"] == ["-O3", "-g"]
+
+    def test_compiler_flags_differ_identical_compilers(self):
+        # Correct arch to use test compiler that has flags
+        spec = Spec("a %clang@12.2.0 platform=test os=fe target=fe")
+
+        # Get the compiler that matches the spec (
+        compiler = spack.compilers.compiler_for_spec("clang@12.2.0", spec.architecture)
+        # Clear cache for compiler config since it has its own cache mechanism outside of config
+        spack.compilers._cache_config_file = []
+
+        # Configure spack to have two identical compilers with different flags
+        default_dict = spack.compilers._to_dict(compiler)
+        different_dict = copy.deepcopy(default_dict)
+        different_dict["compiler"]["flags"] = {"cflags": "-O2"}
+
+        with spack.config.override("compilers", [different_dict]):
+            spec.concretize()
+            assert spec.satisfies("cflags=-O2")
 
     def test_concretize_compiler_flag_propagate(self):
         spec = Spec("hypre cflags=='-g' ^openblas")
