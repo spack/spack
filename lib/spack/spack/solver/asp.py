@@ -1402,7 +1402,12 @@ class SpackSolverSetup(object):
 
         # flags from compilers.yaml
         compilers = all_compilers_in_config()
+        seen = set()
         for compiler in compilers:
+            # if there are multiple with the same spec, only use the first
+            if compiler.spec in seen:
+                continue
+            seen.add(compiler.spec)
             for name, flags in compiler.flags.items():
                 for flag in flags:
                     self.gen.fact(
@@ -2287,7 +2292,8 @@ class SpecBuilder(object):
         The solver determines wihch flags are on nodes; this routine
         imposes order afterwards.
         """
-        compilers = dict((c.spec, c) for c in all_compilers_in_config())
+        # reverse compilers so we get highest priority compilers that share a spec
+        compilers = dict((c.spec, c) for c in reversed(all_compilers_in_config()))
         cmd_specs = dict((s.name, s) for spec in self._command_line_specs for s in spec.traverse())
 
         for spec in self._specs.values():
