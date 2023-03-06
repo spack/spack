@@ -100,7 +100,7 @@ spack:
         - kokkos +cuda cuda_arch=70
         - raja +cuda cuda_arch=70
         runner-attributes:
-          tags: [ "nvidia-515.65.01", "cuda-11.7", "v100"]
+          tags: [ "nvidia-525.85.12", "cuda-12.0", "v100"]
           variables:
             CI_JOB_SIZE: large
 
