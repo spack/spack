@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -26,7 +26,7 @@ class DocbookXml(Package):
 
     @property
     def catalog(self):
-        return join_path(self.prefix, "catalog")
+        return join_path(self.prefix, "xml-catalog")
 
     @run_after("install")
     def config_docbook(self):
@@ -340,15 +340,7 @@ class DocbookXml(Package):
         )
 
         # map all versions to current version
-        dtversions = [
-            "4.1",
-            "4.1.1",
-            "4.1.2",
-            "4.2",
-            "4.3",
-            "4.4",
-            "4.5",
-        ]
+        dtversions = ["4.1", "4.1.1", "4.1.2", "4.2", "4.3", "4.4", "4.5"]
         for dtversion in dtversions:
             xmlcatalog(
                 "--noout",

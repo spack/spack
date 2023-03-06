@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -9,13 +9,7 @@ import spack.cmd.common.arguments as arguments
 import spack.config
 import spack.environment as ev
 import spack.store
-from spack.graph import (
-    DAGWithDependencyTypes,
-    SimpleDAG,
-    graph_ascii,
-    graph_dot,
-    static_graph_dot,
-)
+from spack.graph import DAGWithDependencyTypes, SimpleDAG, graph_ascii, graph_dot, static_graph_dot
 
 description = "generate graphs of package dependency relationships"
 section = "basic"

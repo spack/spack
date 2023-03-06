@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -29,7 +29,7 @@ class Gasnet(Package, CudaPackage, ROCmPackage):
     url = "https://gasnet.lbl.gov/EX/GASNet-2021.3.0.tar.gz"
     git = "https://bitbucket.org/berkeleylab/gasnet.git"
 
-    maintainers = ["PHHargrove", "bonachea"]
+    maintainers("PHHargrove", "bonachea")
 
     tags = ["e4s", "ecp"]
 

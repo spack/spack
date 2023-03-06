@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -15,10 +15,10 @@ class Rocsolver(CMakePackage):
 
     homepage = "https://github.com/ROCmSoftwarePlatform/rocSOLVER"
     git = "https://github.com/ROCmSoftwarePlatform/rocSOLVER.git"
-    url = "https://github.com/ROCmSoftwarePlatform/rocSOLVER/archive/rocm-5.3.3.tar.gz"
+    url = "https://github.com/ROCmSoftwarePlatform/rocSOLVER/archive/rocm-5.4.3.tar.gz"
     tags = ["rocm"]
 
-    maintainers = ["cgmb", "srekolam", "renjithravindrankannath", "haampie"]
+    maintainers("cgmb", "srekolam", "renjithravindrankannath", "haampie")
     libraries = ["librocsolver"]
 
     amdgpu_targets = ROCmPackage.amdgpu_targets
@@ -35,6 +35,8 @@ class Rocsolver(CMakePackage):
     version("develop", branch="develop")
     version("master", branch="master")
 
+    version("5.4.3", sha256="5308b68ea72f465239a4bb2ed1a0507f0df7c98d3df3fd1f392e6d9ed7975232")
+    version("5.4.0", sha256="69690839cb649dee43353b739d3e6b2312f3d965dfe66705c0ea910e57c6a8cb")
     version("5.3.3", sha256="d2248b5e2e0b20e08dd1ee5408e38deb02ecd28096dc7c7f2539351df6cb6ad5")
     version("5.3.0", sha256="4569f860d240d50e94e77d498050f5cafe5ad11daddaead3e7e9eaa1957878a7")
     version("5.2.3", sha256="b278a1640f31fb1905f18dc5127d57e2b1d36fd2b4f39ae811b5537fa6ce87d4")
@@ -168,6 +170,8 @@ class Rocsolver(CMakePackage):
         "5.2.3",
         "5.3.0",
         "5.3.3",
+        "5.4.0",
+        "5.4.3",
     ]:
         depends_on("hip@" + ver, when="@" + ver)
         depends_on("rocblas@" + ver, when="@" + ver)

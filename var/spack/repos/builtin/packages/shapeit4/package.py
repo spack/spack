@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -15,7 +15,7 @@ class Shapeit4(MakefilePackage):
 
     version("4.1.3", sha256="d209731277b00bca1e3478b7e0a0cbe40fbe23826c3d640ad12e0dd6033cbbb8")
 
-    maintainers = ["ilbiondo"]
+    maintainers("ilbiondo")
 
     depends_on("htslib")
     depends_on("boost+exception+container+iostreams+program_options")
@@ -23,7 +23,6 @@ class Shapeit4(MakefilePackage):
     depends_on("xz")
 
     def edit(self, spec, prefix):
-
         makefile = FileFilter("makefile")
         makefile.filter("CXX=.*", "CXX = c++")
 
@@ -49,7 +48,6 @@ class Shapeit4(MakefilePackage):
         )
 
     def install(self, spec, prefix):
-
         install_tree("bin", prefix.bin)
         install_tree("test", join_path(self.prefix, "test"))
         install_tree("docs", join_path(self.prefix, "docs"))

@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -283,7 +283,7 @@ class SpecParser:
                 if root_spec.concrete:
                     raise spack.spec.RedundantSpecError(root_spec, "^" + str(dependency))
 
-                root_spec._add_dependency(dependency, ())
+                root_spec._add_dependency(dependency, deptypes=())
 
             else:
                 break

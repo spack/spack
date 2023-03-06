@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -47,9 +47,7 @@ class Bowtie2(MakefilePackage):
         match = "^#!/usr/bin/env perl"
         perl = spec["perl"].command
         substitute = "#!{perl}".format(perl=perl)
-        files = [
-            "bowtie2",
-        ]
+        files = ["bowtie2"]
         filter_file(match, substitute, *files, **kwargs)
 
         match = "^#!/usr/bin/env python.*"

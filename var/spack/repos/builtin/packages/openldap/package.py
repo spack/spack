@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -62,11 +62,7 @@ class Openldap(AutotoolsPackage):
     # Ref: https://www.linuxfromscratch.org/blfs/view/svn/server/openldap.html
     @when("+client_only")
     def configure_args(self):
-        args = [
-            "CPPFLAGS=-D_GNU_SOURCE",
-            "--disable-debug",
-            "--disable-slapd",
-        ]
+        args = ["CPPFLAGS=-D_GNU_SOURCE", "--disable-debug", "--disable-slapd"]
         args += self.with_or_without("cyrus-sasl", variant="sasl")
         args += self.enable_or_disable("static")
         args += self.enable_or_disable("shared")

@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -190,13 +190,11 @@ class Silo(AutotoolsPackage):
         if is_system_path(zlib_prefix):
             config_args.append("--with-zlib=yes")
         else:
-            config_args.append(
-                "--with-zlib=%s,%s" % (zlib_prefix.include, zlib_prefix.lib),
-            )
+            config_args.append("--with-zlib=%s,%s" % (zlib_prefix.include, zlib_prefix.lib))
 
         if "+hdf5" in spec:
             config_args.append(
-                "--with-hdf5=%s,%s" % (spec["hdf5"].prefix.include, spec["hdf5"].prefix.lib),
+                "--with-hdf5=%s,%s" % (spec["hdf5"].prefix.include, spec["hdf5"].prefix.lib)
             )
 
         if "+silex" in spec:

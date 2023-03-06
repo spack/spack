@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -39,7 +39,6 @@ class Pexsi(MakefilePackage):
     parallel = False
 
     def edit(self, spec, prefix):
-
         substitutions = [
             ("@MPICC", self.spec["mpi"].mpicc),
             ("@MPICXX_LIB", self.spec["mpi:cxx"].libs.joined()),
@@ -79,7 +78,6 @@ class Pexsi(MakefilePackage):
             make("-C", "fortran")
 
     def install(self, spec, prefix):
-
         # 'make install' does not exist, despite what documentation says
         mkdirp(self.prefix.lib)
 

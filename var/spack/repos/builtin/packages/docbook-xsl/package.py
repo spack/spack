@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -29,7 +29,7 @@ class DocbookXsl(Package):
 
     @property
     def catalog(self):
-        return join_path(self.prefix, "catalog")
+        return join_path(self.prefix, "xsl-catalog")
 
     @run_after("install")
     def config_docbook(self):

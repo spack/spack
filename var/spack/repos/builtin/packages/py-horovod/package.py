@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -14,7 +14,7 @@ class PyHorovod(PythonPackage, CudaPackage):
     homepage = "https://github.com/horovod"
     git = "https://github.com/horovod/horovod.git"
 
-    maintainers = ["adamjstewart", "aweits", "tgaddair"]
+    maintainers("adamjstewart", "aweits", "tgaddair")
 
     version("master", branch="master", submodules=True)
     version("0.26.1", tag="v0.26.1", submodules=True)

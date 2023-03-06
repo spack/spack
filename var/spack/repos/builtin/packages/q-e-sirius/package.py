@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -15,7 +15,7 @@ class QESirius(CMakePackage):
     url = "https://github.com/electronic-structure/q-e-sirius/archive/v6.5-rc4-sirius.tar.gz"
     git = "https://github.com/electronic-structure/q-e-sirius.git"
 
-    maintainers = ["simonpintarelli"]
+    maintainers("simonpintarelli")
 
     version("develop-ristretto", branch="ristretto", submodules=True)
     version("6.7-rc1-sirius", tag="v6.7-rc1-sirius", submodules=True)

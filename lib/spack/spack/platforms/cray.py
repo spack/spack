@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -37,7 +37,7 @@ _xc_craype_dir = "/opt/cray/pe/cdt"
 
 
 def slingshot_network():
-    return os.path.exists("/lib64/libcxi.so")
+    return os.path.exists("/opt/cray/pe") and os.path.exists("/lib64/libcxi.so")
 
 
 def _target_name_from_craype_target_name(name):

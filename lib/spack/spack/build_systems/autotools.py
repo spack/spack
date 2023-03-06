@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -110,11 +110,7 @@ class AutotoolsBuilder(BaseBuilder):
     phases = ("autoreconf", "configure", "build", "install")
 
     #: Names associated with package methods in the old build-system format
-    legacy_methods = (
-        "configure_args",
-        "check",
-        "installcheck",
-    )
+    legacy_methods = ("configure_args", "check", "installcheck")
 
     #: Names associated with package attributes in the old build-system format
     legacy_attributes = (

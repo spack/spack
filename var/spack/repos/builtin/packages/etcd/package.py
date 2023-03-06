@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -13,7 +13,7 @@ class Etcd(Package):
     homepage = "https://etcd.io/"
     url = "https://github.com/etcd-io/etcd/archive/v3.4.7.tar.gz"
 
-    maintainers = ["alecbcs"]
+    maintainers("alecbcs")
 
     version("3.4.23", sha256="055c608c4898d25f23aefbc845ff074bf5e8a07e61ed41dbd5cc4d4f59c93093")
 

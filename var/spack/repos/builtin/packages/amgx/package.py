@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -19,7 +19,7 @@ class Amgx(CMakePackage, CudaPackage):
     homepage = "https://developer.nvidia.com/amgx"
     url = "https://github.com/nvidia/amgx/archive/v2.1.0.tar.gz"
 
-    maintainers = ["js947"]
+    maintainers("js947")
 
     version("2.1.0", sha256="6245112b768a1dc3486b2b3c049342e232eb6281a6021fffa8b20c11631f63cc")
     version("2.0.1", sha256="6f9991f1836fbf4ba2114ce9f49febd0edc069a24f533bd94fd9aa9be72435a7")

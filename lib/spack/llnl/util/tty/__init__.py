@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -108,7 +108,6 @@ class SuppressOutput:
     """Class for disabling output in a scope using 'with' keyword"""
 
     def __init__(self, msg_enabled=True, warn_enabled=True, error_enabled=True):
-
         self._msg_enabled_initial = _msg_enabled
         self._warn_enabled_initial = _warn_enabled
         self._error_enabled_initial = _error_enabled

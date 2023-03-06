@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -41,10 +41,7 @@ def provider(request):
     return request.param
 
 
-@pytest.mark.usefixtures(
-    "config",
-    "mock_packages",
-)
+@pytest.mark.usefixtures("config", "mock_packages")
 class TestLmod(object):
     def test_file_layout(self, compiler, provider, factory, module_configuration):
         """Tests the layout of files in the hierarchy is the one expected."""
@@ -240,7 +237,7 @@ class TestLmod(object):
         module_configuration("missing_core_compilers")
 
         # Our mock paths must be detected as system paths
-        monkeypatch.setattr(spack.util.environment, "system_dirs", ["/path/to"])
+        monkeypatch.setattr(spack.util.environment, "SYSTEM_DIRS", ["/path/to"])
 
         # We don't want to really write into user configuration
         # when running tests
@@ -254,12 +251,7 @@ class TestLmod(object):
         assert writer.conf.core_compilers
 
     @pytest.mark.parametrize(
-        "spec_str",
-        [
-            "mpileaks target=nocona",
-            "mpileaks target=core2",
-            "mpileaks target=x86_64",
-        ],
+        "spec_str", ["mpileaks target=nocona", "mpileaks target=core2", "mpileaks target=x86_64"]
     )
     @pytest.mark.regression("13005")
     def test_only_generic_microarchitectures_in_root(

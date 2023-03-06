@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -59,10 +59,7 @@ class Pixman(AutotoolsPackage):
         return find_libraries("libpixman-1", self.prefix, shared=True, recursive=True)
 
     def configure_args(self):
-        args = [
-            "--enable-libpng",
-            "--disable-gtk",
-        ]
+        args = ["--enable-libpng", "--disable-gtk"]
 
         if sys.platform == "darwin":
             args.append("--disable-mmx")

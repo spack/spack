@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -15,7 +15,7 @@ class Haccabana(CMakePackage):
     homepage = "https://github.com/ECP-CoPA/HACCabana"
     git = "https://github.com/ECP-CoPA/HACCabana.git"
 
-    maintainers = ["steverangel", "adrianpope", "streeve", "junghans"]
+    maintainers("steverangel", "adrianpope", "streeve", "junghans")
 
     tags = ["proxy-app", "ecp-proxy-app"]
 

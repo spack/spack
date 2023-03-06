@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -89,6 +89,7 @@ sphinx_apidoc(apidoc_args + ["_spack_root/lib/spack/llnl"])
 # Enable todo items
 todo_include_todos = True
 
+
 #
 # Disable duplicate cross-reference warnings.
 #
@@ -163,7 +164,7 @@ master_doc = "index"
 
 # General information about the project.
 project = "Spack"
-copyright = "2013-2021, Lawrence Livermore National Laboratory."
+copyright = "2013-2023, Lawrence Livermore National Laboratory."
 
 # The version info for the project you're documenting, acts as replacement for
 # |version| and |release|, also used in various other places throughout the
@@ -353,9 +354,7 @@ latex_elements = {
 
 # Grouping the document tree into LaTeX files. List of tuples
 # (source start file, target name, title, author, documentclass [howto/manual]).
-latex_documents = [
-    ("index", "Spack.tex", "Spack Documentation", "Todd Gamblin", "manual"),
-]
+latex_documents = [("index", "Spack.tex", "Spack Documentation", "Todd Gamblin", "manual")]
 
 # The name of an image file (relative to this directory) to place at the top of
 # the title page.
@@ -402,7 +401,7 @@ texinfo_documents = [
         "Spack",
         "One line description of project.",
         "Miscellaneous",
-    ),
+    )
 ]
 
 # Documents to append as an appendix to all manuals.
@@ -418,6 +417,4 @@ texinfo_documents = [
 # -- Extension configuration -------------------------------------------------
 
 # sphinx.ext.intersphinx
-intersphinx_mapping = {
-    "python": ("https://docs.python.org/3", None),
-}
+intersphinx_mapping = {"python": ("https://docs.python.org/3", None)}

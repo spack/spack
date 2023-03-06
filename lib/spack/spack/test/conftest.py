@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -53,8 +53,6 @@ import spack.util.url as url_util
 from spack.fetch_strategy import FetchStrategyComposite, URLFetchStrategy
 from spack.util.pattern import Bunch
 from spack.util.web import FetchError
-
-is_windows = sys.platform == "win32"
 
 
 def ensure_configuration_fixture_run_before(request):
@@ -621,7 +619,7 @@ def ensure_debug(monkeypatch):
     tty.set_debug(current_debug_level)
 
 
-@pytest.fixture(autouse=is_windows, scope="session")
+@pytest.fixture(autouse=sys.platform == "win32", scope="session")
 def platform_config():
     spack.config.add_default_platform_scope(spack.platforms.real_host().name)
 
@@ -633,7 +631,7 @@ def default_config():
     This ensures we can test the real default configuration without having
     tests fail when the user overrides the defaults that we test against."""
     defaults_path = os.path.join(spack.paths.etc_path, "defaults")
-    if is_windows:
+    if sys.platform == "win32":
         defaults_path = os.path.join(defaults_path, "windows")
     with spack.config.use_configuration(defaults_path) as defaults_config:
         yield defaults_config
@@ -690,7 +688,7 @@ def configuration_dir(tmpdir_factory, linux_os):
     tmpdir.ensure("user", dir=True)
 
     # Slightly modify config.yaml and compilers.yaml
-    if is_windows:
+    if sys.platform == "win32":
         locks = False
     else:
         locks = True
@@ -716,9 +714,7 @@ def configuration_dir(tmpdir_factory, linux_os):
 
 def _create_mock_configuration_scopes(configuration_dir):
     """Create the configuration scopes used in `config` and `mutable_config`."""
-    scopes = [
-        spack.config.InternalConfigScope("_builtin", spack.config.config_defaults),
-    ]
+    scopes = [spack.config.InternalConfigScope("_builtin", spack.config.config_defaults)]
     scopes += [
         spack.config.ConfigScope(name, str(configuration_dir.join(name)))
         for name in ["site", "system", "user"]
@@ -1277,12 +1273,7 @@ def mock_cvs_repository(tmpdir_factory):
         return format_date(timestamp)
 
     checks = {
-        "default": Bunch(
-            file=r1_file,
-            branch=None,
-            date=None,
-            args={"cvs": url},
-        ),
+        "default": Bunch(file=r1_file, branch=None, date=None, args={"cvs": url}),
         "branch": Bunch(
             file=r1_file,
             branch="mock-branch",
@@ -1298,11 +1289,7 @@ def mock_cvs_repository(tmpdir_factory):
     }
 
     test = Bunch(
-        checks=checks,
-        url=url,
-        get_branch=get_branch,
-        get_date=get_date,
-        path=str(repodir),
+        checks=checks, url=url, get_branch=get_branch, get_date=get_date, path=str(repodir)
     )
 
     yield test
@@ -1402,12 +1389,7 @@ def mock_git_repository(git, tmpdir_factory):
         git("tag", tag)
 
         try:
-            default_branch = git(
-                "config",
-                "--get",
-                "init.defaultBranch",
-                output=str,
-            ).strip()
+            default_branch = git("config", "--get", "init.defaultBranch", output=str).strip()
         except Exception:
             default_branch = "master"
         git("checkout", default_branch)
@@ -1551,14 +1533,14 @@ def mock_svn_repository(tmpdir_factory):
     yield t
 
 
-@pytest.fixture()
-def mutable_mock_env_path(tmpdir_factory):
+@pytest.fixture(scope="function")
+def mutable_mock_env_path(tmpdir_factory, mutable_config):
     """Fixture for mocking the internal spack environments directory."""
-    saved_path = ev.environment.env_path
+    saved_path = ev.environment.default_env_path
     mock_path = tmpdir_factory.mktemp("mock-env-path")
-    ev.environment.env_path = str(mock_path)
+    ev.environment.default_env_path = str(mock_path)
     yield mock_path
-    ev.environment.env_path = saved_path
+    ev.environment.default_env_path = saved_path
 
 
 @pytest.fixture()
@@ -1691,11 +1673,11 @@ def mock_executable(tmpdir):
     """
     import jinja2
 
-    shebang = "#!/bin/sh\n" if not is_windows else "@ECHO OFF"
+    shebang = "#!/bin/sh\n" if sys.platform != "win32" else "@ECHO OFF"
 
     def _factory(name, output, subdir=("bin",)):
         f = tmpdir.ensure(*subdir, dir=True).join(name)
-        if is_windows:
+        if sys.platform == "win32":
             f += ".bat"
         t = jinja2.Template("{{ shebang }}{{ output }}\n")
         f.write(t.render(shebang=shebang, output=output))

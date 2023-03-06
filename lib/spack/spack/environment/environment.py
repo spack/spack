@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -18,7 +18,9 @@ import ruamel.yaml as yaml
 
 import llnl.util.filesystem as fs
 import llnl.util.tty as tty
+import llnl.util.tty.color as clr
 from llnl.util.lang import dedupe
+from llnl.util.link_tree import ConflictingSpecsError
 from llnl.util.symlink import symlink
 
 import spack.compilers
@@ -45,11 +47,7 @@ import spack.util.path
 import spack.util.spack_json as sjson
 import spack.util.spack_yaml as syaml
 import spack.util.url
-from spack.filesystem_view import (
-    SimpleFilesystemView,
-    inverse_view_func_parser,
-    view_func_parser,
-)
+from spack.filesystem_view import SimpleFilesystemView, inverse_view_func_parser, view_func_parser
 from spack.installer import PackageInstaller
 from spack.spec import Spec
 from spack.spec_list import InvalidSpecConstraintError, SpecList
@@ -64,8 +62,8 @@ spack_env_var = "SPACK_ENV"
 _active_environment = None
 
 
-#: path where environments are stored in the spack tree
-env_path = os.path.join(spack.paths.var_path, "environments")
+#: default path where environments are stored in the spack tree
+default_env_path = os.path.join(spack.paths.var_path, "environments")
 
 
 #: Name of the input yaml file for an environment
@@ -78,6 +76,26 @@ lockfile_name = "spack.lock"
 
 #: Name of the directory where environments store repos, logs, views
 env_subdir_name = ".spack-env"
+
+
+def env_root_path():
+    """Override default root path if the user specified it"""
+    return spack.util.path.canonicalize_path(
+        spack.config.get("config:environments_root", default=default_env_path)
+    )
+
+
+def check_disallowed_env_config_mods(scopes):
+    for scope in scopes:
+        with spack.config.use_configuration(scope):
+            if spack.config.get("config:environments_root"):
+                raise SpackEnvironmentError(
+                    "Spack environments are prohibited from modifying 'config:environments_root' "
+                    "because it can make the definition of the environment ill-posed. Please "
+                    "remove from your environment and place it in a permanent scope such as "
+                    "defaults, system, site, etc."
+                )
+    return scopes
 
 
 def default_manifest_yaml():
@@ -103,6 +121,15 @@ valid_environment_name_re = r"^\w[\w-]*$"
 
 #: version of the lockfile format. Must increase monotonically.
 lockfile_format_version = 4
+
+
+READER_CLS = {
+    1: spack.spec.SpecfileV1,
+    2: spack.spec.SpecfileV1,
+    3: spack.spec.SpecfileV2,
+    4: spack.spec.SpecfileV3,
+}
+
 
 # Magic names
 # The name of the standalone spec list in the manifest yaml
@@ -207,7 +234,7 @@ def active_environment():
 
 def _root(name):
     """Non-validating version of root(), to be used internally."""
-    return os.path.join(env_path, name)
+    return os.path.join(env_root_path(), name)
 
 
 def root(name):
@@ -242,10 +269,12 @@ def read(name):
 
 
 def create(name, init_file=None, with_view=None, keep_relative=False):
-    """Create a named environment in Spack."""
+    """Create a managed environment in Spack."""
+    if not os.path.isdir(env_root_path()):
+        fs.mkdirp(env_root_path())
     validate_env_name(name)
     if exists(name):
-        raise SpackEnvironmentError("'%s': environment already exists" % name)
+        raise SpackEnvironmentError("'%s': environment already exists at %s" % (name, root(name)))
     return Environment(root(name), init_file, with_view, keep_relative)
 
 
@@ -259,10 +288,10 @@ def all_environment_names():
     """List the names of environments that currently exist."""
     # just return empty if the env path does not exist.  A read-only
     # operation like list should not try to create a directory.
-    if not os.path.exists(env_path):
+    if not os.path.exists(env_root_path()):
         return []
 
-    candidates = sorted(os.listdir(env_path))
+    candidates = sorted(os.listdir(env_root_path()))
     names = []
     for candidate in candidates:
         yaml_path = os.path.join(_root(candidate), manifest_name)
@@ -272,7 +301,7 @@ def all_environment_names():
 
 
 def all_environments():
-    """Generator for all named Environments."""
+    """Generator for all managed Environments."""
     for name in all_environment_names():
         yield read(name)
 
@@ -295,12 +324,7 @@ def _write_yaml(data, str_or_file):
 def _eval_conditional(string):
     """Evaluate conditional definitions using restricted variable scope."""
     valid_variables = spack.util.environment.get_host_environment()
-    valid_variables.update(
-        {
-            "re": re,
-            "env": os.environ,
-        }
-    )
+    valid_variables.update({"re": re, "env": os.environ})
     return eval(string, valid_variables)
 
 
@@ -384,7 +408,8 @@ class ViewDescriptor(object):
         link_type="symlink",
     ):
         self.base = base_path
-        self.root = spack.util.path.canonicalize_path(root)
+        self.raw_root = root
+        self.root = spack.util.path.canonicalize_path(root, default_wd=base_path)
         self.projections = projections
         self.select = select
         self.exclude = exclude
@@ -410,7 +435,7 @@ class ViewDescriptor(object):
         )
 
     def to_dict(self):
-        ret = syaml.syaml_dict([("root", self.root)])
+        ret = syaml.syaml_dict([("root", self.raw_root)])
         if self.projections:
             # projections guaranteed to be ordered dict if true-ish
             # for python2.6, may be syaml or ruamel.yaml implementation
@@ -602,7 +627,24 @@ class ViewDescriptor(object):
                 os.unlink(tmp_symlink_name)
             except (IOError, OSError):
                 pass
-            raise e
+
+            # Give an informative error message for the typical error case: two specs, same package
+            # project to same prefix.
+            if isinstance(e, ConflictingSpecsError):
+                spec_a = e.args[0].format(color=clr.get_color_when())
+                spec_b = e.args[1].format(color=clr.get_color_when())
+                raise SpackEnvironmentViewError(
+                    f"The environment view in {self.root} could not be created, "
+                    "because the following two specs project to the same prefix:\n"
+                    f"    {spec_a}, and\n"
+                    f"    {spec_b}.\n"
+                    "    To resolve this issue:\n"
+                    "        a. use `concretization:unify:true` to ensure there is only one "
+                    "package per spec in the environment, or\n"
+                    "        b. disable views with `view:false`, or\n"
+                    "        c. create custom view projections."
+                ) from e
+            raise
 
         # Remove the old root when it's in the same folder as the new root. This guards
         # against removal of an arbitrary path when the original symlink in self.root
@@ -839,14 +881,14 @@ class Environment(object):
     @property
     def internal(self):
         """Whether this environment is managed by Spack."""
-        return self.path.startswith(env_path)
+        return self.path.startswith(env_root_path())
 
     @property
     def name(self):
         """Human-readable representation of the environment.
 
         This is the path for directory environments, and just the name
-        for named environments.
+        for managed environments.
         """
         if self.internal:
             return os.path.basename(self.path)
@@ -963,9 +1005,7 @@ class Environment(object):
                         config_path = os.path.join(config_path, basename)
                 else:
                     staged_path = spack.config.fetch_remote_configs(
-                        config_path,
-                        self.config_stage_dir,
-                        skip_existing=True,
+                        config_path, self.config_stage_dir, skip_existing=True
                     )
                     if not staged_path:
                         raise SpackEnvironmentError(
@@ -1026,7 +1066,9 @@ class Environment(object):
 
     def config_scopes(self):
         """A list of all configuration scopes for this environment."""
-        return self.included_config_scopes() + [self.env_file_config_scope()]
+        return check_disallowed_env_config_mods(
+            self.included_config_scopes() + [self.env_file_config_scope()]
+        )
 
     def destroy(self):
         """Remove this environment from Spack entirely."""
@@ -1435,7 +1477,7 @@ class Environment(object):
                         if test_dependency in current_spec[node.name]:
                             continue
                         current_spec[node.name].add_dependency_edge(
-                            test_dependency.copy(), deptype="test"
+                            test_dependency.copy(), deptypes="test"
                         )
 
         results = [
@@ -1941,7 +1983,7 @@ class Environment(object):
             "_meta": {
                 "file-type": "spack-lockfile",
                 "lockfile-version": lockfile_format_version,
-                "specfile-version": spack.spec.specfile_format_version,
+                "specfile-version": spack.spec.SPECFILE_FORMAT_VERSION,
             },
             # users specs + hashes are the 'roots' of the environment
             "roots": [{"hash": h, "spec": str(s)} for h, s in hash_spec_list],
@@ -1974,10 +2016,19 @@ class Environment(object):
 
         # Track specs by their DAG hash, allows handling DAG hash collisions
         first_seen = {}
+        current_lockfile_format = d["_meta"]["lockfile-version"]
+        try:
+            reader = READER_CLS[current_lockfile_format]
+        except KeyError:
+            msg = (
+                f"Spack {spack.__version__} cannot read environment lockfiles using the "
+                f"v{current_lockfile_format} format"
+            )
+            raise RuntimeError(msg)
 
         # First pass: Put each spec in the map ignoring dependencies
         for lockfile_key, node_dict in json_specs_by_hash.items():
-            spec = Spec.from_node_dict(node_dict)
+            spec = reader.from_node_dict(node_dict)
             if not spec._hash:
                 # in v1 lockfiles, the hash only occurs as a key
                 spec._hash = lockfile_key
@@ -1986,8 +2037,11 @@ class Environment(object):
         # Second pass: For each spec, get its dependencies from the node dict
         # and add them to the spec
         for lockfile_key, node_dict in json_specs_by_hash.items():
-            for _, dep_hash, deptypes, _ in Spec.dependencies_from_node_dict(node_dict):
-                specs_by_hash[lockfile_key]._add_dependency(specs_by_hash[dep_hash], deptypes)
+            name, data = reader.name_and_data(node_dict)
+            for _, dep_hash, deptypes, _ in reader.dependencies_from_node_dict(data):
+                specs_by_hash[lockfile_key]._add_dependency(
+                    specs_by_hash[dep_hash], deptypes=deptypes
+                )
 
         # Traverse the root specs one at a time in the order they appear.
         # The first time we see each DAG hash, that's the one we want to
@@ -2127,7 +2181,7 @@ class Environment(object):
         # Construct YAML representation of view
         default_name = default_view_name
         if self.views and len(self.views) == 1 and default_name in self.views:
-            path = self.default_view.root
+            path = self.default_view.raw_root
             if self.default_view == ViewDescriptor(self.path, self.view_path_default):
                 view = True
             elif self.default_view == ViewDescriptor(self.path, path):

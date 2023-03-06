@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -459,7 +459,7 @@ def make_argument_parser(**kwargs):
         dest="env_dir",
         metavar="DIR",
         action="store",
-        help="run with an environment directory (ignore named environments)",
+        help="run with an environment directory (ignore managed environments)",
     )
     env_group.add_argument(
         "-E",
@@ -575,7 +575,7 @@ def setup_main_options(args):
     if args.debug:
         spack.util.debug.register_interrupt_handler()
         spack.config.set("config:debug", True, scope="command_line")
-        spack.util.environment.tracing_enabled = True
+        spack.util.environment.TRACING_ENABLED = True
 
     if args.timestamp:
         tty.set_timestamp(True)

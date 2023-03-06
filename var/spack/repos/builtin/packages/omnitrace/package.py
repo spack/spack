@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -13,7 +13,7 @@ class Omnitrace(CMakePackage):
 
     homepage = "https://amdresearch.github.io/omnitrace"
     git = "https://github.com/AMDResearch/omnitrace.git"
-    maintainers = ["jrmadsen"]
+    maintainers("jrmadsen")
 
     version("main", branch="main", submodules=True)
     version("1.7.4", commit="12001d9633328f9f56210c7ebffce065bff06310", submodules=True)

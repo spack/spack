@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -65,7 +65,7 @@ class EcpDataVisSdk(BundlePackage, CudaPackage, ROCmPackage):
     homepage = "https://ecp-data-vis-sdk.github.io/"
 
     tags = ["ecp"]
-    maintainers = ["kwryankrattiger", "svenevs"]
+    maintainers("kwryankrattiger", "svenevs")
 
     version("1.0")
 
@@ -114,10 +114,7 @@ class EcpDataVisSdk(BundlePackage, CudaPackage, ROCmPackage):
 
     dav_sdk_depends_on("hdf5@1.12: +shared+mpi", when="+hdf5", propagate=["fortran"])
     # hdf5-vfd-gds needs cuda@11.7.1 or later, only enable when 11.7.1+ available.
-    depends_on(
-        "hdf5-vfd-gds@1.0.2:",
-        when="+cuda+hdf5^cuda@11.7.1:",
-    )
+    depends_on("hdf5-vfd-gds@1.0.2:", when="+cuda+hdf5^cuda@11.7.1:")
     for cuda_arch in cuda_arch_variants:
         depends_on(
             "hdf5-vfd-gds@1.0.2: {0}".format(cuda_arch),

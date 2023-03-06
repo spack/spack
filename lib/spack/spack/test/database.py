@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -32,8 +32,6 @@ import spack.spec
 import spack.store
 from spack.schema.database_index import schema
 from spack.util.executable import Executable
-
-is_windows = sys.platform == "win32"
 
 pytestmark = pytest.mark.db
 
@@ -451,7 +449,7 @@ def test_005_db_exists(database):
     lock_file = os.path.join(database.root, ".spack-db", "lock")
     assert os.path.exists(str(index_file))
     # Lockfiles not currently supported on Windows
-    if not is_windows:
+    if sys.platform != "win32":
         assert os.path.exists(str(lock_file))
 
     with open(index_file) as fd:

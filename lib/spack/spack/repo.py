@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -1066,7 +1066,6 @@ class Repo(object):
         # Install patch files needed by the package.
         fs.mkdirp(path)
         for patch in itertools.chain.from_iterable(spec.package.patches.values()):
-
             if patch.path:
                 if os.path.exists(patch.path):
                     fs.install(patch.path, path)

@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -31,7 +31,6 @@ def cmake_cache_option(name, boolean_value, comment=""):
 
 
 class CachedCMakeBuilder(CMakeBuilder):
-
     #: Phases of a Cached CMake package
     #: Note: the initconfig phase is used for developer builds as a final phase to stop on
     phases: Tuple[str, ...] = ("initconfig", "cmake", "build", "install")

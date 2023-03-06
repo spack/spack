@@ -1,19 +1,17 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 import errno
 import os
 import shutil
+import sys
 import tempfile
 from os.path import exists, join
-from sys import platform as _platform
 
 from llnl.util import lang
 
-is_windows = _platform == "win32"
-
-if is_windows:
+if sys.platform == "win32":
     from win32file import CreateHardLink
 
 
@@ -23,7 +21,7 @@ def symlink(real_path, link_path):
 
     On Windows, use junctions if os.symlink fails.
     """
-    if not is_windows:
+    if sys.platform != "win32":
         os.symlink(real_path, link_path)
     elif _win32_can_symlink():
         # Windows requires target_is_directory=True when the target is a dir.
@@ -99,7 +97,7 @@ def _win32_is_junction(path):
     if os.path.islink(path):
         return False
 
-    if is_windows:
+    if sys.platform == "win32":
         import ctypes.wintypes
 
         GetFileAttributes = ctypes.windll.kernel32.GetFileAttributesW

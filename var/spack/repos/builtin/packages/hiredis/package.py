@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -13,7 +13,7 @@ class Hiredis(MakefilePackage, CMakePackage):
     url = "https://github.com/redis/hiredis/archive/refs/tags/v1.1.0.tar.gz"
     git = "https://github.com/redis/hiredis.git"
 
-    maintainers = ["lpottier", "rblake-llnl"]
+    maintainers("lpottier", "rblake-llnl")
 
     version("1.1.0", sha256="fe6d21741ec7f3fc9df409d921f47dfc73a4d8ff64f4ac6f1d95f951bf7f53d6")
     version("1.0.2", sha256="e0ab696e2f07deb4252dda45b703d09854e53b9703c7d52182ce5a22616c3819")
@@ -25,9 +25,7 @@ class Hiredis(MakefilePackage, CMakePackage):
     version("0.13.2", sha256="b0cf73ebe039fe25ecaaa881acdda8bdc393ed997e049b04fc20865835953694")
 
     build_system(
-        conditional("cmake", when="@1:"),
-        conditional("makefile", when="@:0"),
-        default="cmake",
+        conditional("cmake", when="@1:"), conditional("makefile", when="@:0"), default="cmake"
     )
 
     variant("ssl", default=False, description="Builds with SSL enabled")
@@ -45,10 +43,7 @@ class MakefileBuilder(spack.build_systems.makefile.MakefileBuilder):
     def build_targets(self):
         use_ssl = 1 if "+ssl" in self.spec else 0
         run_test_async = 1 if "+test_async" in self.spec else 0
-        return [
-            "USE_SSL={0}".format(use_ssl),
-            "TEST_ASYNC={0}".format(run_test_async),
-        ]
+        return ["USE_SSL={0}".format(use_ssl), "TEST_ASYNC={0}".format(run_test_async)]
 
     def install(self, pkg, spec, prefix):
         make("PREFIX={0}".format(prefix), "install")
