@@ -26,8 +26,8 @@ spack:
           - gmake
           - graphviz
           - hpe-mpi
-          - intel-mpi
           - intel-oneapi-mkl
+          - intel-oneapi-tbb
           - ispc
           - julia
           - likwid
@@ -112,6 +112,7 @@ spack:
     # #providers
     # - intel-mpi
     - intel-oneapi-mkl@2021.4.0
+    - intel-oneapi-tbb@2021.4.0
     - ispc
     - julia@1.6  # As requested by Polina S.
     - libxslt
