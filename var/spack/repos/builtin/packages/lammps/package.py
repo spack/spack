@@ -572,6 +572,15 @@ class Lammps(CMakePackage, CudaPackage, ROCmPackage):
     depends_on("hipcub", when="~kokkos +rocm")
     depends_on("llvm-amdgpu +openmp", when="+rocm +openmp", type="build")
 
+    # propagate CUDA and ROCm architecture when +kokkos
+    for arch in CudaPackage.cuda_arch_values:
+        depends_on("kokkos+cuda cuda_arch=%s" % arch, when="+kokkos+cuda cuda_arch=%s" % arch)
+
+    for arch in ROCmPackage.amdgpu_targets:
+        depends_on(
+            "kokkos+rocm amdgpu_target=%s" % arch, when="+kokkos+rocm amdgpu_target=%s" % arch
+        )
+
     depends_on("googletest", type="test")
     depends_on("libyaml", type="test")
 
@@ -616,7 +625,11 @@ class Lammps(CMakePackage, CudaPackage, ROCmPackage):
         when="^adios2+mpi",
         msg="With +adios, mpi setting for adios2 and lammps must be the same",
     )
-    conflicts("~kokkos+rocm", when="@:20220602", msg="ROCm builds of the GPU package were not supported by this spackage prior to version 20220623")
+    conflicts(
+        "~kokkos+rocm",
+        when="@:20220602",
+        msg="ROCm builds of the GPU package not maintained prior to version 20220623",
+    )
 
     patch("lib.patch", when="@20170901")
     patch("660.patch", when="@20170922")
