@@ -24,7 +24,7 @@ class PyElasticsearch(PythonPackage):
     depends_on("py-setuptools", type="build")
     depends_on("python@3.7:3", when="@7.6.0:", type=("build", "run"))
     depends_on("py-urllib3@1.8:1", when="@:5.2.0", type=("build", "run"))
-    depends_on("py-urllib3@1.21.1:7.6.0", type=("build", "run"))
+    depends_on("py-urllib3@1.21.1:", when="@6:7", type=("build", "run"))
     depends_on("py-elastic-transport@8.0:8", when="@8.6.2:", type=("build", "run"))
     depends_on("py-aiohttp@3.0:3", when="+async", type=("build", "run"))
 
