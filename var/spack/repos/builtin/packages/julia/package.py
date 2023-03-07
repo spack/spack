@@ -26,7 +26,7 @@ class Julia(MakefilePackage):
     maintainers("glennpj", "vchuravy", "haampie", "giordano")
 
     version("master", branch="master")
-    version("1.9.0-beta4", sha256="860263e4c8e3782cc1c39dc8e529e6adc02864e4f258dc4529d3717598a92810")
+    version("1.9.0-rc1", sha256="482b0ec15e643650919a56c27049d6d1a6b4effe1f5fdd7c5cd3cf2f2361e46e")
     version("1.8.5", sha256="d31026cc6b275d14abce26fd9fd5b4552ac9d2ce8bde4291e494468af5743031",
             preferred=True)
     version("1.8.4", sha256="b7b8ee64fb947db8d61104f231e1b25342fe330d29e0d2273f93c264f32c5333")
@@ -190,7 +190,6 @@ class Julia(MakefilePackage):
     patch("julia-1.6-system-libwhich-and-p7zip-symlink.patch", when="@1.6.0:1.6")
     patch("use-add-rpath.patch", when="@:1.8.0")
     patch("use-add-rpath-2.patch", when="@1.8.1:1.8")
-    patch("use-add-rpath-3.patch", when="@1.9.0-beta4:")
 
     # Fix gfortran abi detection https://github.com/JuliaLang/julia/pull/44026
     patch("fix-gfortran.patch", when="@1.7.0:1.7.2")
@@ -298,6 +297,8 @@ class Julia(MakefilePackage):
             "override USE_LLVM_SHLIB:=1",
             # make rebuilds a bit faster for now, not sure if this should be kept
             "JULIA_PRECOMPILE:={0}".format("1" if spec.variants["precompile"].value else "0"),
+            # we want to use `patchelf --add-rpath` instead of `patchelf --set-rpath`
+            "override PATCHELF_SET_RPATH_ARG:=--add-rpath", # @1.9:
         ]
 
         options.append("USEGCC:={}".format("1" if "%gcc" in spec else "0"))
