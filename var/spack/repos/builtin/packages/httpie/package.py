@@ -39,4 +39,4 @@ class Httpie(PythonPackage):
     depends_on("py-setuptools", type=("build", "run"))
     depends_on("py-importlib-metadata@1.4.0:", when="@3: ^python@:3.7", type=("build", "run"))
     depends_on("py-rich@9.10.0:", when="@3.2.1:", type=("build", "run"))
-    depends_on("py-colorama@0.2.4:", when="os=windows", type=("build", "run"))
+    depends_on("py-colorama@0.2.4:", when="platform=windows", type=("build", "run"))
