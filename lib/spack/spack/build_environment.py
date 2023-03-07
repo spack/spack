@@ -81,7 +81,6 @@ from spack.util.environment import (
     env_flag,
     filter_system_paths,
     get_path,
-    inspect_path,
     is_system_path,
     validate,
 )
@@ -784,15 +783,6 @@ def setup_package(pkg, dirty, context: Context = Context.BUILD):
                 " includes and omit it when invoked with '--cflags'."
             )
     elif context == Context.TEST:
-        tty.debug("setup_package: setup test environment for root")
-        env_mods.extend(
-            inspect_path(
-                pkg.spec.prefix,
-                spack.user_environment.prefix_inspections(pkg.spec.platform),
-                exclude=is_system_path,
-            )
-        )
-        pkg.setup_run_environment(env_mods)
         env_mods.prepend_path("PATH", ".")
 
     # First apply the clean environment changes
