@@ -75,7 +75,7 @@ class Daos(SConsPackage):
         for i in alt_prefix:
             if i != "/usr":
                 alt_prefix_clean.append(i)
-                alt_prefix_clean.append("/usr")
+        alt_prefix_clean.append("/usr")
         args.extend(
             [
                 "WARNING_LEVEL=warning",
