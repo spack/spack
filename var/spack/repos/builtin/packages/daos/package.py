@@ -15,6 +15,8 @@ class Daos(SConsPackage):
     git = "https://github.com/daos-stack/daos.git"
     maintainers("hyoklee")
 
+    patch("0001-LIBPATH-fix-for-ALT_PREFIX.2.patch", when="2.2.0:")
+
     version("master", branch="master", submodules=True)
     version("2.2.0", tag="v2.2.0", submodules=True)
     variant(
