@@ -297,11 +297,11 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage):
 
     # Newlib version table
     newlib_shasum = {
-        "3.0.0.20180831":"3ad3664f227357df15ff34e954bfd9f501009a647667cd307bf0658aefd6eb5b",
-        "3.3.0":"58dd9e3eaedf519360d92d84205c3deef0b3fc286685d1c562e245914ef72c66",
-        "4.1.0":"f296e372f51324224d387cc116dc37a6bd397198756746f93a2b02e9a5d40154",
-        "4.2.0.20211231":"c3a0e8b63bc3bef1aeee4ca3906b53b3b86c8d139867607369cb2915ffc54435",
-        "4.3.0.20230120":"83a62a99af59e38eb9b0c58ed092ee24d700fff43a22c03e433955113ef35150",
+        "3.0.0.20180831": "3ad3664f227357df15ff34e954bfd9f501009a647667cd307bf0658aefd6eb5b",
+        "3.3.0": "58dd9e3eaedf519360d92d84205c3deef0b3fc286685d1c562e245914ef72c66",
+        "4.1.0": "f296e372f51324224d387cc116dc37a6bd397198756746f93a2b02e9a5d40154",
+        "4.2.0.20211231": "c3a0e8b63bc3bef1aeee4ca3906b53b3b86c8d139867607369cb2915ffc54435",
+        "4.3.0.20230120": "83a62a99af59e38eb9b0c58ed092ee24d700fff43a22c03e433955113ef35150",
     }
 
     with when("+nvptx"):
@@ -338,7 +338,7 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage):
     with when("+amdgcn"):
         # Building LLVM requires CMake
         depends_on("cmake", type="build")
-        llvm_src_ver = {"@:11":"9.0.1", "@12:":"13.0.1"}
+        llvm_src_ver = {"@:11": "9.0.1", "@12:": "13.0.1"}
         for k, v in llvm_src_ver.items():
             with when(k):
                 resource(
@@ -348,16 +348,17 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage):
                     destination="llvmsource",
                 )
         # The Newlib version needs to be contemporaenous with GCC
-        newlib_ver = {"@10.1.0":"3.3.0", # GCC: 2020-05-07, Newlib: 2020-01-22
-                      "@10.2.0":"3.3.0", # GCC: 2020-07-23, Newlib: 2020-01-22
-                      "@10.3.0":"4.1.0", # GCC: 2021-04-08, Newlib: 2020-12-18
-                      "@10.4.0":"4.2.0.20211231", # GCC: 2022-06-28, Newlib: 2021-12-31
-                      "@11.1.0":"4.1.0", # GCC: 2021-04-27, Newlib: 2020-12-18
-                      "@11.2.0":"4.1.0", # GCC: 2021-07-28, Newlib: 2020-12-18
-                      "@11.3.0":"4.2.0.20211231", # GCC: 2022-04-21, Newlib: 2021-12-31
-                      "@12.1.0":"4.2.0.20211231", # GCC: 2022-05-06, Newlib: 2021-12-31
-                      "@12.2.0":"4.2.0.20211231", # GCC: 2022-08-19, Newlib: 2021-12-31
-                      "@develop":"4.3.0.20230120", # Newest version of Newlib
+        newlib_ver = {
+            "@10.1.0": "3.3.0",  # GCC: 2020-05-07, Newlib: 2020-01-22
+            "@10.2.0": "3.3.0",  # GCC: 2020-07-23, Newlib: 2020-01-22
+            "@10.3.0": "4.1.0",  # GCC: 2021-04-08, Newlib: 2020-12-18
+            "@10.4.0": "4.2.0.20211231",  # GCC: 2022-06-28, Newlib: 2021-12-31
+            "@11.1.0": "4.1.0",  # GCC: 2021-04-27, Newlib: 2020-12-18
+            "@11.2.0": "4.1.0",  # GCC: 2021-07-28, Newlib: 2020-12-18
+            "@11.3.0": "4.2.0.20211231",  # GCC: 2022-04-21, Newlib: 2021-12-31
+            "@12.1.0": "4.2.0.20211231",  # GCC: 2022-05-06, Newlib: 2021-12-31
+            "@12.2.0": "4.2.0.20211231",  # GCC: 2022-08-19, Newlib: 2021-12-31
+            "@develop": "4.3.0.20230120",  # Newest version of Newlib
         }
         for k, v in newlib_ver.items():
             with when(k):
@@ -907,7 +908,7 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage):
         files = glob.glob(pattern)
         if files:
             symlink(join_path(files[0], "newlib"), "newlib")
-        
+
     # run configure/make/make(install) for the nvptx-none target
     # before running the host compiler phases
     @run_before("configure")
@@ -1004,11 +1005,26 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage):
         # Symlink LLVM utils
         llvm_bin_path = join_path("llvmsource", "bin")
         llvm_util_path = join_path(prefix, "usr", "local", "amdgcn-amdhsa", "bin")
-        symlink("{0}".format(join_path(llvm_bin_path, "llvm-ar")), "{0}".format(join_path(llvm_util_path, "ar")))
-        symlink("{0}".format(join_path(llvm_bin_path, "llvm-ar")), "{0}".format(join_path(llvm_util_path, "ranlib")))
-        symlink("{0}".format(join_path(llvm_bin_path, "llvm-mc")), "{0}".format(join_path(llvm_util_path, "as")))
-        symlink("{0}".format(join_path(llvm_bin_path, "llvm-nm")), "{0}".format(join_path(llvm_util_path, "nm")))
-        symlink("{0}".format(join_path(llvm_bin_path, "lld")), "{0}".format(join_path(llvm_util_path, "ld")))
+        symlink(
+            "{0}".format(join_path(llvm_bin_path, "llvm-ar")),
+            "{0}".format(join_path(llvm_util_path, "ar")),
+        )
+        symlink(
+            "{0}".format(join_path(llvm_bin_path, "llvm-ar")),
+            "{0}".format(join_path(llvm_util_path, "ranlib")),
+        )
+        symlink(
+            "{0}".format(join_path(llvm_bin_path, "llvm-mc")),
+            "{0}".format(join_path(llvm_util_path, "as")),
+        )
+        symlink(
+            "{0}".format(join_path(llvm_bin_path, "llvm-nm")),
+            "{0}".format(join_path(llvm_util_path, "nm")),
+        )
+        symlink(
+            "{0}".format(join_path(llvm_bin_path, "lld")),
+            "{0}".format(join_path(llvm_util_path, "ld")),
+        )
 
         self.link_newlib()
 
@@ -1031,7 +1047,6 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage):
             configure(*options)
             make()
             make("install")
-        
 
     @property
     def build_targets(self):
