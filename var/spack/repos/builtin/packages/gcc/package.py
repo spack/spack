@@ -301,6 +301,7 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage):
         "3.3.0":"58dd9e3eaedf519360d92d84205c3deef0b3fc286685d1c562e245914ef72c66",
         "4.1.0":"f296e372f51324224d387cc116dc37a6bd397198756746f93a2b02e9a5d40154",
         "4.2.0.20211231":"c3a0e8b63bc3bef1aeee4ca3906b53b3b86c8d139867607369cb2915ffc54435",
+        "4.3.0.20230120":"83a62a99af59e38eb9b0c58ed092ee24d700fff43a22c03e433955113ef35150",
     }
 
     with when("+nvptx"):
@@ -356,6 +357,7 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage):
                       "@11.3.0":"4.2.0.20211231", # GCC: 2022-04-21, Newlib: 2021-12-31
                       "@12.1.0":"4.2.0.20211231", # GCC: 2022-05-06, Newlib: 2021-12-31
                       "@12.2.0":"4.2.0.20211231", # GCC: 2022-08-19, Newlib: 2021-12-31
+                      "@develop":"4.3.0.20230120", # Newest version of Newlib
         }
         for k, v in newlib_ver:
             with when(k):
