@@ -18,12 +18,17 @@ class Stream(MakefilePackage):
 
     variant("openmp", default=False, description="Build with OpenMP support")
 
+    variant("stream_array_size", default="none", description="Size of work arrays in elements")
+    variant("ntimes", default="none", description="STREAM runs each kernel \"NTIMES\" times and reports the *best* result")
+    variant("offset", default="none", description="Relative alignment between arrays")
+    variant("stream_type", default="none", description="Datatype of arrays elements")
+    
     def edit(self, spec, prefix):
         makefile = FileFilter("Makefile")
 
         # Use the Spack compiler wrappers
-        makefile.filter("CC = .*", "CC = cc")
-        makefile.filter("FC = .*", "FC = f77")
+        makefile.filter("CC = .*", "CC = {0}".format(spack_cc))
+        makefile.filter("FC = .*", "FC = {0}".format(spack_f77))
 
         cflags = "-O2"
         fflags = "-O2"
@@ -32,6 +37,23 @@ class Stream(MakefilePackage):
             fflags += " " + self.compiler.openmp_flag
         if "%aocc" in self.spec:
             cflags += " -mcmodel=large -ffp-contract=fast -fnt-store"
+
+        if self.compiler.name in { 'oneapi', 'intel' }:
+            if self.spec.target.name in { 'haswell', 'broadwell', 'skylake' }:
+                cflags += " -xCORE-AVX2"
+                fflags += " -xCORE-AVX2"
+            elif self.spec.target.name in { 'skylake_avx512', 'cascadelake', 'icelake' }:
+                cflags += " -xCORE-AVX512"
+                fflags += " -xCORE-AVX512"
+
+        if self.spec.variants["stream_array_size"].value != "none":
+            cflags += " -DSTREAM_ARRAY_SIZE={0}".format(self.spec.variants["stream_array_size"].value)
+        if self.spec.variants["ntimes"].value != "none":
+            cflags += " -DNTIMES={0}".format(self.spec.variants["ntimes"].value)
+        if self.spec.variants["offset"].value != "none":
+            cflags += " -DOFFSET={0}".format(self.spec.variants["offset"].value)
+        if self.spec.variants["stream_type"].value != "none":
+            cflags += " -DSTREAM_TYPE={0}".format(self.spec.variants["stream_type"].value)
 
         # Set the appropriate flags for this compiler
         makefile.filter("CFLAGS = .*", "CFLAGS = {0}".format(cflags))
