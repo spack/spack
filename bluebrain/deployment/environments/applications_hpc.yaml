@@ -38,8 +38,10 @@ spack:
   specs:
     - neuron+tests+coreneuron
     - neuron+tests+nmodl+sympy+coreneuron
-    # - neuron%nvhpc+tests+gpu+openmp+coreneuron
-    # - neuron%nvhpc+tests+gpu+openmp+nmodl+sympy+coreneuron
+    # Try +rx3d after https://github.com/neuronsimulator/nrn/pull/2235?
+    - neuron%nvhpc+caliper+coreneuron+gpu~rx3d+tests+openmp
+    - neuron%nvhpc+caliper+coreneuron+gpu~rx3d+tests~openmp+nmodl
+    - neuron%nvhpc+caliper+coreneuron+gpu~rx3d+tests+openmp+nmodl+sympy
     - nest@2.20.1
     - neurodamus-core~common~~coreneuron
     - neurodamus-core+common~~coreneuron

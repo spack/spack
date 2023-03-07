@@ -24,9 +24,8 @@ setup_environment:
     # Global default, as long as we have a 9.x.x, environment-modules picks
     # the wrong one as default :(
     DEFAULT_GCC_VERSION: "12.2.0"
-    # Needed for Intel compilers, which may re-use some libraries from a
-    # legacy GCC
-    LEGACY_GCC_VERSION: "9.4.0"
+    # Used by the Intel compilers
+    LEGACY_GCC_VERSION: "11.3.0"
     # Used for cloning Spack
     DEPLOYMENT_BRANCH: "$DEPLOYMENT_DEFAULT_BRANCH"
     # Proprietary sources

@@ -25,14 +25,14 @@ DEFAULT_GCC_DIR=$(spack -E location --install-dir ${DEFAULT_GCC_HASH:-gcc@${DEFA
 # Use the Spack configuration to grab the matching module for GCC;
 # requires GCC to be compiler found beforehand.
 GCC_MODULES="$(spack -E config get compilers|sed -n "
-    /^\s*spec: gcc@${DEFAULT_GCC_VERSION}/,/^\s*modules:/ {
+    /^\s*spec: gcc@${LEGACY_GCC_VERSION}/,/^\s*modules:/ {
         /^\s*modules:/ {
             s/^\s*modules: \[\(.*\)\]\$/\1/;
             p;
         }
     }")"
-log "...using gcc ${LEGACY_GCC_VERSION} from ${LEGACY_GCC_DIR} for Intel (legacy)"
-log "...using gcc ${DEFAULT_GCC_VERSION} from ${DEFAULT_GCC_DIR} for modern Intel and NVHPC with module(s) ${GCC_MODULES}"
+log "...using gcc ${LEGACY_GCC_VERSION} from ${LEGACY_GCC_DIR} for Intel (legacy) and NVHPC with module(s) ${GCC_MODULES}"
+log "...using gcc ${DEFAULT_GCC_VERSION} from ${DEFAULT_GCC_DIR} for modern Intel"
 
 while read -r line; do
     sha="${line%% *}"    # Remove everything after and including the first space
@@ -110,28 +110,6 @@ while read -r line; do
                 done
             done
         fi
-    elif [[ ${line} = *"nvhpc"* ]]; then
-        # Configure NVHPC compilers to use an up to date version of the C++
-        # standard library from the deployed version of GCC.
-        NVHPC_DIR=$(dirname $(which makelocalrc))
-        NVHPC_TMPDIR=$(mktemp -d -p .)
-        # Try and avoid autoloaded dependencies of other compilers (looking
-        # at you, LLVM) polluting the localrc of the NVIDIA compilers
-        (
-            module purge
-            ${cmd}
-            makelocalrc ${NVHPC_DIR} -d "${NVHPC_TMPDIR}" -gcc ${DEFAULT_GCC_DIR}/bin/gcc -gpp ${DEFAULT_GCC_DIR}/bin/g++ -g77 ${DEFAULT_GCC_DIR}/bin/gfortran -x
-        )
-        # olupton 2021-10-15: is this still needed? Not sure.
-        echo "set PREOPTIONS=-D__GCC_ATOMIC_TEST_AND_SET_TRUEVAL=1;" >> "${NVHPC_TMPDIR}/localrc"
-        log "NVIDIA localrc template"
-        cat "${NVHPC_TMPDIR}/localrc"
-        if [[ "${NVHPC_DIR}" != "${DEPLOYMENT_ROOT}"* ]]; then
-            log "...installation does not match install prefix, skipping modification of files"
-        else
-            cp -v "${NVHPC_TMPDIR}/localrc" "${NVHPC_DIR}/localrc"
-        fi
-        rm -rf "${NVHPC_TMPDIR}"
     fi
     cmd=${cmd/load/unload}
     echo "${cmd}"

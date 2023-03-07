@@ -13,15 +13,18 @@ packages:
     variants: +gas+gold+ld+plugins~libiberty
   boost:
     variants: +filesystem+pic+test
+  caliper:
+    # Allow GCC != 12 for things that depend on CUDA
+    require: "%gcc target=skylake"
   coreneuron:
     # Keep this aligned with NEURON, otherwise the Spack solver may decide that
     # rolling back to NEURON 8.2.2 with external CoreNEURON is a net win
     require:
       - one_of: ["%intel", "%nvhpc"]
   cuda:
-    # Should match what is provided by NVHPC, too
-    # version: [11.6.1]
-    require: "%gcc"
+    # Pin 11.8.0 to avoid 12.0.0, which is too new for BB5
+    # Pin GCC 11 because CUDA 11.8.0 is incompatible with GCC 12
+    require: "@11.8.0%gcc@11.3.0 target=skylake"
   curl:
     version: [7.29.0]
     externals:
@@ -56,6 +59,9 @@ packages:
     externals:
     - spec: libtool@2.4.2
       prefix: /usr
+  llvm:
+    # Allow GCC != 12 for things that depend on CUDA
+    require: "%gcc target=skylake"
   m4:
     version: [1.4.16]
     externals:
@@ -91,6 +97,9 @@ packages:
   nmodl:
     require:
       - one_of: ["%gcc", "%intel", "%nvhpc"]
+  nvhpc:
+    # Consistently use GCC 11.3.0 for CUDA/NVIDIA
+    require: "%gcc@11.3.0 target=skylake"
   omega-h:
     variants: ~kokkos~trilinos
   opencv:
