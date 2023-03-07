@@ -125,6 +125,7 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage):
     )
     variant("strip", default=False, description="Strip executables to reduce installation size")
     variant("nvptx", default=False, description="Target nvptx offloading to NVIDIA GPUs")
+    variant("amdgcn", default=False, description="Target amdgcn offloading to AMD GPUs")
     variant("bootstrap", default=True, description="Enable 3-stage bootstrap")
     variant(
         "graphite", default=False, description="Enable Graphite loop optimizations (requires ISL)"
@@ -294,12 +295,21 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage):
                 msg="'gcc@12: languages=d' requires '%gcc@9:' with the D language support",
             )
 
+    # Newlib version table
+    newlib_shasum = {
+        "3.0.0.20180831":"3ad3664f227357df15ff34e954bfd9f501009a647667cd307bf0658aefd6eb5b",
+        "3.3.0":"58dd9e3eaedf519360d92d84205c3deef0b3fc286685d1c562e245914ef72c66",
+        "4.1.0":"f296e372f51324224d387cc116dc37a6bd397198756746f93a2b02e9a5d40154",
+        "4.2.0.20211231":"c3a0e8b63bc3bef1aeee4ca3906b53b3b86c8d139867607369cb2915ffc54435",
+    }
+
     with when("+nvptx"):
         depends_on("cuda")
+        newlib_ver = "3.0.0.20180831"
         resource(
             name="newlib",
-            url="ftp://sourceware.org/pub/newlib/newlib-3.0.0.20180831.tar.gz",
-            sha256="3ad3664f227357df15ff34e954bfd9f501009a647667cd307bf0658aefd6eb5b",
+            url="ftp://sourceware.org/pub/newlib/newlib-{0}.tar.gz".format{newlib_ver},
+            sha256=newlib_shasum[newlib_ver],
             destination="newlibsource",
             fetch_options=timeout,
         )
@@ -322,6 +332,51 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage):
         conflicts("languages=obj-c++")
         conflicts("languages=d")
         # NVPTX build disables bootstrap
+        conflicts("+bootstrap")
+
+    with when("+amdgcn"):
+        # Building LLVM requires CMake
+        depends_on("cmake", type="build")
+        llvm_src_ver = {"@:11":"9.0.1", "@12:":"13.0.1"}
+        for k, v in llvm_src_ver:
+            with when(k):
+                resource(
+                    name="llvm-src",
+                    git="https://github.com/llvm/llvm-project.git",
+                    tag="llvmorg-{0}".format(v),
+                    destination="llvmsource",
+                )
+        # The Newlib version needs to be contemporaenous with GCC
+        newlib_ver = {"@10.1.0":"3.3.0", # GCC: 2020-05-07, Newlib: 2020-01-22
+                      "@10.2.0":"3.3.0", # GCC: 2020-07-23, Newlib: 2020-01-22
+                      "@10.3.0":"4.1.0", # GCC: 2021-04-08, Newlib: 2020-12-18
+                      "@10.4.0":"4.2.0.20211231", # GCC: 2022-06-28, Newlib: 2021-12-31
+                      "@11.1.0":"4.1.0", # GCC: 2021-04-27, Newlib: 2020-12-18
+                      "@11.2.0":"4.1.0", # GCC: 2021-07-28, Newlib: 2020-12-18
+                      "@11.3.0":"4.2.0.20211231", # GCC: 2022-04-21, Newlib: 2021-12-31
+                      "@12.1.0":"4.2.0.20211231", # GCC: 2022-05-06, Newlib: 2021-12-31
+                      "@12.2.0":"4.2.0.20211231", # GCC: 2022-08-19, Newlib: 2021-12-31
+        }
+        for k, v in newlib_ver:
+            with when(k):
+                resource(
+                    name="newlib",
+                    url="ftp://sourceware.org/pub/newlib/newlib-{0}.tar.gz".format(v),
+                    sha256=newlib_shasum[v],
+                    destination="newlibsource",
+                    fetch_options=timeout,
+                )
+        # AMDGCN offloading supported in 10 and later by limited languages
+        conflicts("@:9", msg="AMDGCN only supported in gcc 10 and above")
+        conflicts("languages=ada")
+        conflicts("languages=brig")
+        conflicts("languages=go")
+        conflicts("languages=java")
+        conflicts("languages=jit")
+        conflicts("languages=objc")
+        conflicts("languages=obj-c++")
+        conflicts("languages=d")
+        # AMDGCN build disables bootstrap
         conflicts("+bootstrap")
 
     # Binutils can't build ld on macOS
@@ -790,15 +845,27 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage):
                 ]
             )
 
-        # nvptx-none offloading for host compiler
+        # Offload targets
+        offload_targets = []
+        if spec.satisfies("+nvptx"):
+            offload_targets.append("nvptx-none")
+        if spec.satisfies("+amdgcn"):
+            offload_targets.append("amdgcn-amdhsa")
+        if offload_targets:
+            options.extend(
+                [
+                    "--enable-offload-targets={0}".format(",".join(offload_targets)),
+                    "--disable-bootstrap",
+                    "--disable-multilib",
+                ]
+            )
+
+        # arguments for nvptx-none offloading
         if spec.satisfies("+nvptx"):
             options.extend(
                 [
-                    "--enable-offload-targets=nvptx-none",
                     "--with-cuda-driver-include={0}".format(spec["cuda"].prefix.include),
                     "--with-cuda-driver-lib={0}".format(spec["cuda"].libs.directories[0]),
-                    "--disable-bootstrap",
-                    "--disable-multilib",
                 ]
             )
 
@@ -832,6 +899,13 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage):
 
         return options
 
+    # Common code for nvptx and amdgcn to build newlib
+    def link_newlib(self):
+        pattern = join_path(self.stage.source_path, "newlibsource", "*")
+        files = glob.glob(pattern)
+        if files:
+            symlink(join_path(files[0], "newlib"), "newlib")
+        
     # run configure/make/make(install) for the nvptx-none target
     # before running the host compiler phases
     @run_before("configure")
@@ -860,11 +934,7 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage):
             make()
             make("install")
 
-        pattern = join_path(self.stage.source_path, "newlibsource", "*")
-        files = glob.glob(pattern)
-
-        if files:
-            symlink(join_path(files[0], "newlib"), "newlib")
+        self.link_newlib()
 
         # self.build_directory = 'spack-build-nvptx'
         with working_dir("spack-build-nvptx", create=True):
@@ -884,6 +954,82 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage):
             configure(*options)
             make()
             make("install")
+
+    # run configure/make/make(install) for the amdgcn-amdhsa target
+    # before running the host compiler phases
+    @run_before("configure")
+    def amdgcn_install(self):
+        spec = self.spec
+        prefix = self.prefix
+
+        if not spec.satisfies("+amdgcn"):
+            return
+
+        # config.guess returns the host triple, e.g. "x86_64-pc-linux-gnu"
+        guess = Executable("./config.guess")
+        targetguess = guess(output=str).rstrip("\n")
+
+        options = getattr(self, "configure_flag_args", [])
+        options += ["--prefix={0}".format(prefix)]
+
+        # Determine LLVM host target
+        llvm_targets = set()
+        if spec.target.family in ("x86", "x86_64"):
+            llvm_targets.add("X86")
+        elif spec.target.family == "arm":
+            llvm_targets.add("ARM")
+        elif spec.target.family == "aarch64":
+            llvm_targets.add("AArch64")
+        elif spec.target.family in ("sparc", "sparc64"):
+            llvm_targets.add("Sparc")
+        elif spec.target.family in ("ppc64", "ppc64le", "ppc", "ppcle"):
+            llvm_targets.add("PowerPC")
+
+        # Add AMDGPU target
+        llvm_targets.add("AMDGPU")
+
+        # Set up CMake arguments for LLVM
+        cmake_args = [
+            self.define("LLVM_TARGETS_TO_BUILD", list(llvm_targets)),
+            self.define("LLVM_ENABLE_PROJECTS", "lld",
+        ]
+
+        # Build LLVM utils
+        with working_dir("llvmsource"):
+            cmake = Executable(spec["cmake"].executables)
+            cmake(cmake_args)
+
+        # Symlink LLVM utils
+        llvm_bin_path = join_path("llvmsource", "bin")
+        llvm_util_path = join_path(prefix, "usr", "local", "amdgcn-amdhsa", "bin")
+        symlink("{0}".format(join_path(llvm_bin_path, "llvm-ar")), "{0}".format(join_path(llvm_util_path, "ar")))
+        symlink("{0}".format(join_path(llvm_bin_path, "llvm-ar")), "{0}".format(join_path(llvm_util_path, "ranlib")))
+        symlink("{0}".format(join_path(llvm_bin_path, "llvm-mc")), "{0}".format(join_path(llvm_util_path, "as")))
+        symlink("{0}".format(join_path(llvm_bin_path, "llvm-nm")), "{0}".format(join_path(llvm_util_path, "nm")))
+        symlink("{0}".format(join_path(llvm_bin_path, "lld")), "{0}".format(join_path(llvm_util_path, "ld")))
+
+        self.link_newlib()
+
+        # self.build_directory = 'spack-build-amdgcn'
+        with working_dir("spack-build-amdgcn", create=True):
+            options = [
+                "--prefix={0}".format(prefix),
+                "--enable-languages={0}".format(",".join(spec.variants["languages"].value)),
+                "--with-mpfr={0}".format(spec["mpfr"].prefix),
+                "--with-gmp={0}".format(spec["gmp"].prefix),
+                "--target=amdgcn-amdhsa",
+                "--with-build-time-tools={0}".format(llvm_util_path),
+                "--enable-as-accelerator-for={0}".format(targetguess),
+                "--disable-sjlj-exceptions",
+                "--enable-newlib-io-long-long",
+                "--disable-libquadmath",
+            ]
+
+            configure = Executable("../configure")
+            configure(*options)
+            make()
+            make("install")
+        
 
     @property
     def build_targets(self):
