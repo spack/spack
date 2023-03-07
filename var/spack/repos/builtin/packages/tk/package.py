@@ -118,6 +118,17 @@ class Tk(AutotoolsPackage, SourceforgePackage):
             ["libtk{0}".format(self.version.up_to(2))], root=self.prefix, recursive=True
         )
 
+    def _find_script_dir(self):
+        # Put more-specific prefixes first
+        check_prefixes = [
+            join_path(self.prefix, "share", "tk{0}".format(self.version.up_to(2))),
+            self.prefix,
+        ]
+        for prefix in check_prefixes:
+            result = find(prefix, "tk.tcl")
+            if result:
+                return os.path.dirname(sorted(result)[0])
+
     def setup_run_environment(self, env):
         """Set TK_LIBRARY to the directory containing tk.tcl.
 
@@ -127,7 +138,7 @@ class Tk(AutotoolsPackage, SourceforgePackage):
         """
         # When using tkinter from within spack provided python+tkinter,
         # python will not be able to find Tk unless TK_LIBRARY is set.
-        env.set("TK_LIBRARY", os.path.dirname(sorted(find(self.prefix, "tk.tcl"))[0]))
+        env.set("TK_LIBRARY", self._find_script_dir())
 
     def setup_dependent_build_environment(self, env, dependent_spec):
         """Set TK_LIBRARY to the directory containing tk.tcl.
@@ -136,4 +147,4 @@ class Tk(AutotoolsPackage, SourceforgePackage):
 
         * https://www.tcl-lang.org/man/tcl/TkCmd/tkvars.htm
         """
-        env.set("TK_LIBRARY", os.path.dirname(sorted(find(self.prefix, "tk.tcl"))[0]))
+        env.set("TK_LIBRARY", self._find_script_dir())
