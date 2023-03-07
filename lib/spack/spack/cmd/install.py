@@ -51,7 +51,6 @@ def install_kwargs_from_args(args):
         "fail_fast": args.fail_fast,
         "keep_prefix": args.keep_prefix,
         "keep_stage": args.keep_stage,
-        "cmake_stage": args.cmake_external_stage,
         "restage": not args.dont_restage,
         "install_source": args.install_source,
         "verbose": args.verbose or args.install_verbose,
