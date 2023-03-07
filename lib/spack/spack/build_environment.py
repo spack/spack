@@ -41,9 +41,9 @@ import sys
 import traceback
 import types
 from collections import defaultdict
-from enum import Flag, auto
+from enum import Enum, Flag, auto
 from itertools import chain
-from typing import List, Tuple, Union
+from typing import List, Tuple
 
 import llnl.util.tty as tty
 from llnl.string import plural
@@ -113,6 +113,25 @@ SPACK_DEBUG_LOG_ID = "SPACK_DEBUG_LOG_ID"
 SPACK_DEBUG_LOG_DIR = "SPACK_DEBUG_LOG_DIR"
 SPACK_CCACHE_BINARY = "SPACK_CCACHE_BINARY"
 SPACK_SYSTEM_DIRS = "SPACK_SYSTEM_DIRS"
+
+
+class Context(Enum):
+    BUILD = 1
+    RUN = 2
+    TEST = 3
+
+    def __str__(self):
+        return ("build", "run", "test")[self.value - 1]
+
+    @classmethod
+    def from_string(cls, s: str):
+        if s == "build":
+            return Context.BUILD
+        elif s == "run":
+            return Context.RUN
+        elif s == "test":
+            return Context.TEST
+        raise ValueError(f"context should be one of 'build', 'run', 'test', got {s}")
 
 
 # Platform-specific library suffix.
@@ -541,7 +560,8 @@ def set_wrapper_variables(pkg, env):
     env.set(SPACK_INCLUDE_DIRS, ":".join(include_dirs))
     env.set(SPACK_RPATH_DIRS, ":".join(rpath_dirs))
 
-def set_module_variables_for_package(pkg, context="build"):
+
+def set_module_variables_for_package(pkg, context: Context = Context.BUILD):
     """Populate the Python module of a package with some useful global names.
     This makes things easier for package writers.
     """
@@ -549,7 +569,7 @@ def set_module_variables_for_package(pkg, context="build"):
 
     m = module
 
-    if context == "build":
+    if context == Context.BUILD:
         jobs = determine_number_of_jobs(parallel=pkg.parallel)
         m.make_jobs = jobs
 
@@ -725,10 +745,10 @@ def load_external_modules(pkg):
             load_module(external_module)
 
 
-def setup_package(pkg, dirty, context="build"):
+def setup_package(pkg, dirty, context: Context = Context.BUILD):
     """Execute all environment setup routines."""
-    if context not in ["build", "test"]:
-        raise ValueError("'context' must be one of ['build', 'test'] - got: {0}".format(context))
+    if context not in (Context.BUILD, Context.TEST):
+        raise ValueError(f"'context' must be Context.BUILD or Context.TEST - got {context}")
 
     # Keep track of env changes from packages separately, since we want to
     # issue warnings when packages make "suspicious" modifications.
@@ -736,13 +756,15 @@ def setup_package(pkg, dirty, context="build"):
     env_mods = EnvironmentModifications()
 
     # setup compilers for build contexts
-    need_compiler = context == "build" or (context == "test" and pkg.test_requires_compiler)
+    need_compiler = context == Context.BUILD or (
+        context == Context.TEST and pkg.test_requires_compiler
+    )
     if need_compiler:
         set_compiler_environment_variables(pkg, env_mods)
         set_wrapper_variables(pkg, env_mods)
 
     tty.debug("setup_package: grabbing modifications from dependencies")
-    env_mods.extend(modifications_from_dag(pkg.spec, context, custom_mods_only=False))
+    env_mods.extend(modifications_from_dag(pkg.spec, context=context, custom_mods_only=False))
     tty.debug("setup_package: collected all modifications from dependencies")
 
     # architecture specific setup
@@ -750,7 +772,7 @@ def setup_package(pkg, dirty, context="build"):
     target = platform.target(pkg.spec.architecture.target)
     platform.setup_platform_environment(pkg, env_mods)
 
-    if context == "build":
+    if context == Context.BUILD:
         tty.debug("setup_package: setup build environment for root")
         builder = spack.builder.create(pkg)
         builder.setup_build_environment(env_mods)
@@ -761,7 +783,7 @@ def setup_package(pkg, dirty, context="build"):
                 "config to assume that the package is part of the system"
                 " includes and omit it when invoked with '--cflags'."
             )
-    elif context == "test":
+    elif context == Context.TEST:
         tty.debug("setup_package: setup test environment for root")
         env_mods.extend(
             inspect_path(
@@ -810,23 +832,21 @@ def setup_package(pkg, dirty, context="build"):
 
 
 class EnvironmentVisitor:
-    def __init__(self, roots: list, context: str):
+    def __init__(self, *roots: spack.spec.Spec, context: Context):
         # For the roots (well, marked specs) we follow different edges
         # than for their deps, depending on the context.
         self.root_hashes = set(s.dag_hash() for s in roots)
 
-        if context == "build":
+        if context == Context.BUILD:
             # Drop direct run deps in build context
             # We don't really distinguish between install and build time test deps,
             # so we include them here as build-time test deps.
             self.root_deptypes = ["build", "test", "link"]
-        elif context == "test":
+        elif context == Context.TEST:
             # This is more of an extended run environment
             self.root_deptypes = ["test", "run", "link"]
-        elif context == "run":
+        elif context == Context.RUN:
             self.root_deptypes = ["run", "link"]
-        else:
-            raise ValueError(f"Unknown context {context}. Should be one of build, test, run")
 
     def neighbors(self, item):
         spec = item.edge.spec
@@ -857,7 +877,7 @@ class Mode(Flag):
     ADDED = auto()
 
 
-def effective_deptypes(specs: list, context="build"):
+def effective_deptypes(*specs: spack.spec.Spec, context: Context = Context.BUILD):
     """
     Given a list of input specs and a context, return a list of tuples of
     all specs that contribute to (environment) modifications, together with
@@ -865,10 +885,11 @@ def effective_deptypes(specs: list, context="build"):
     from root to leaf, meaning that environment modifications should be applied
     in reverse so that dependents override dependencies, not the other way around.
     """
-    assert context in ("build", "run", "test")
-
     visitor = traverse.TopoVisitor(
-        EnvironmentVisitor(specs, context), key=lambda x: x.dag_hash(), root=True, all_edges=True
+        EnvironmentVisitor(*specs, context=context),
+        key=lambda x: x.dag_hash(),
+        root=True,
+        all_edges=True,
     )
     traverse.traverse_depth_first_with_visitor(traverse.with_artificial_edges(specs), visitor)
 
@@ -891,19 +912,19 @@ def effective_deptypes(specs: list, context="build"):
 
         # Dependending on the context, include particular deps from the root.
         if Mode.ROOT in mode:
-            if context == "build":
+            if context == Context.BUILD:
                 if "build" in edge.deptypes or "test" in edge.deptypes:
                     modes[key] |= Mode.BUILDTIME_DIRECT
                 if "link" in edge.deptypes:
                     modes[key] |= Mode.BUILDTIME
 
-            elif context == "test":
+            elif context == Context.TEST:
                 if "run" in edge.deptypes or "test" in edge.deptypes:
                     modes[key] |= Mode.RUNTIME_EXECUTABLE
                 elif "link" in edge.deptypes:
                     modes[key] |= Mode.RUNTIME
 
-            elif context == "run":
+            elif context == Context.RUN:
                 if "run" in edge.deptypes:
                     modes[key] |= Mode.RUNTIME_EXECUTABLE
                 elif "link" in edge.deptypes:
@@ -937,10 +958,7 @@ def effective_deptypes(specs: list, context="build"):
 
 
 def modifications_from_dag(
-    specs: Union[spack.spec.Spec, List[spack.spec.Spec]],
-    context,
-    custom_mods_only=True,
-    set_package_py_globals=True,
+    *specs: spack.spec.Spec, context: Context, custom_mods_only=True, set_package_py_globals=True
 ):
     """Returns the environment modifications that are required by the input specs and also
     applies modifications to this spec's package at module scope, if need be.
@@ -959,27 +977,20 @@ def modifications_from_dag(
 
     Args:
         specs (list or spack.spec.Spec): specs that induce the dag
-        context (str): either 'build' for build-time modifications or 'run'
-            for run-time modifications
+        context (Context): build, run, or test modifications
         custom_mods_only (bool): if True returns only custom modifications, if False
             returns custom and default modifications
         set_package_py_globals (bool): whether or not to set the global variables in the
             package.py files. Warning: never use this, as setup_run_environment and others
             may depend on package.py globals.
     """
-    if context not in ("build", "run", "test"):
-        raise ValueError(f"Expecting context to be one of build, run, test. Got {context}")
-
-    if not isinstance(specs, list):
-        specs = [specs]
-
-    if context == "build" and not len(specs) == 1:
+    if context == Context.BUILD and not len(specs) == 1:
         raise ValueError("Cannot setup build environment for multiple specs")
 
     env = EnvironmentModifications()
 
     # Reverse so we go from leaf to root
-    specs_with_type = effective_deptypes(specs, context)
+    specs_with_type = effective_deptypes(*specs, context=context)
 
     nodes_in_subdag = set(id(s) for s, _ in specs_with_type)
 
@@ -990,7 +1001,7 @@ def modifications_from_dag(
     should_setup_dependent_build_env = Mode.BUILDTIME | Mode.BUILDTIME_DIRECT
     should_setup_run_env = Mode.RUNTIME | Mode.RUNTIME_EXECUTABLE
 
-    if context in ("run", "test"):
+    if context == Context.RUN or context == Context.TEST:
         should_setup_run_env |= Mode.ROOT
         should_be_runnable |= Mode.ROOT
 
@@ -1026,10 +1037,10 @@ def modifications_from_dag(
             pkg = dspec.package
 
             if should_populate_package_py_globals & flag:
-                if context == "build" and (Mode.ROOT | Mode.BUILDTIME_DIRECT) & flag:
-                    set_module_variables_for_package(pkg, context="build")
+                if context == Context.BUILD and (Mode.ROOT | Mode.BUILDTIME_DIRECT) & flag:
+                    set_module_variables_for_package(pkg, context=Context.BUILD)
                 else:
-                    set_module_variables_for_package(pkg, context="run")
+                    set_module_variables_for_package(pkg, context=Context.RUN)
 
             for spec in dspec.dependents():
                 if id(spec) not in nodes_in_subdag:
@@ -1093,7 +1104,7 @@ def get_cmake_prefix_path(pkg):
 def _setup_pkg_and_run(
     serialized_pkg, function, kwargs, write_pipe, input_multiprocess_fd, jsfd1, jsfd2
 ):
-    context = kwargs.get("context", "build")
+    context: str = kwargs.get("context", "build")
 
     try:
         # We are in the child process. Python sets sys.stdin to
@@ -1109,7 +1120,7 @@ def _setup_pkg_and_run(
         if not kwargs.get("fake", False):
             kwargs["unmodified_env"] = os.environ.copy()
             kwargs["env_modifications"] = setup_package(
-                pkg, dirty=kwargs.get("dirty", False), context=context
+                pkg, dirty=kwargs.get("dirty", False), context=Context.from_string(context)
             )
         return_value = function(pkg, kwargs)
         write_pipe.send(return_value)

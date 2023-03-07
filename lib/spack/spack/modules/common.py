@@ -56,6 +56,7 @@ import spack.util.environment
 import spack.util.file_permissions as fp
 import spack.util.path
 import spack.util.spack_yaml as syaml
+from spack.build_environment import Context
 
 
 #: config section for this file
@@ -722,7 +723,7 @@ class BaseContext(tengine.Context):
         # for that to work, globals have to be set on the package modules, and the
         # whole chain of setup_dependent_package has to be followed from leaf to spec.
         # So: just run it here, but don't collect env mods.
-        spack.build_environment.modifications_from_dag(spec, context="run")
+        spack.build_environment.modifications_from_dag(spec, context=Context.RUN)
 
         # Then run setup_dependent_run_environment before setup_run_environment.
         for dep in spec.dependencies(deptype=("link", "run")):

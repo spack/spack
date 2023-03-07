@@ -1693,7 +1693,7 @@ class Environment:
     def _env_modifications_for_view(self, view: ViewDescriptor, reverse: bool = False):
         roots = [r for _, r in self.concretized_specs()]
         try:
-            mods = uenv.environment_modifications_for_specs(roots, view)
+            mods = uenv.environment_modifications_for_specs(*roots, view=view)
         except Exception as e:
             # Failing to setup spec-specific changes shouldn't be a hard error.
             tty.warn(

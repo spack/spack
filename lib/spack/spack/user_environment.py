@@ -5,7 +5,6 @@
 import os
 import sys
 from contextlib import contextmanager
-from typing import List, Union
 
 from llnl.util.lang import nullcontext
 
@@ -15,6 +14,7 @@ import spack.spec
 import spack.util.environment as environment
 import spack.util.prefix as prefix
 from spack import traverse
+from spack.build_environment import Context
 
 #: Environment variable name Spack uses to track individually loaded packages
 spack_loaded_hashes_var = "SPACK_LOADED_HASHES"
@@ -84,7 +84,7 @@ def projected_prefix(specs, projection):
 
 
 def environment_modifications_for_specs(
-    specs: Union[spack.spec.Spec, List[spack.spec.Spec]], view=None, set_package_py_globals=True
+    *specs: spack.spec.Spec, view=None, set_package_py_globals=True
 ):
     """List of environment (shell) modifications to be processed for spec.
 
@@ -92,15 +92,12 @@ def environment_modifications_for_specs(
     the view.
 
     Args:
-        specs (list or spack.spec.Spec): spec(s) for which to list the environment modifications
+        specs (spack.spec.Spec): spec(s) for which to list the environment modifications
         view: view associated with the spec passed as first argument
         set_package_py_globals (bool): whether or not to set the global variables in the
             package.py files (this may be problematic when using buildcaches that have
             been built on a different but compatible OS)
     """
-    if not isinstance(specs, list):
-        specs = [specs]
-
     env = environment.EnvironmentModifications()
     topo_ordered = traverse.traverse_nodes(specs, root=True, deptype=("run", "link"), order="topo")
 
@@ -114,8 +111,8 @@ def environment_modifications_for_specs(
 
         # Dynamic environment changes (setup_run_environment etc)
         dynamic = spack.build_environment.modifications_from_dag(
-            specs,
-            context="run",
+            *specs,
+            context=Context.RUN,
             set_package_py_globals=set_package_py_globals,
             custom_mods_only=False,
         )
