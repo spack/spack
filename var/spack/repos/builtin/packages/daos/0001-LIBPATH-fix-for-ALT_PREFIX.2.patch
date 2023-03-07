@@ -25,7 +25,7 @@ index 4df1347be..da32d3dd1 100644
 +                lp = os.path.join(path, lib)
 +                if os.path.exists(lp):
 +                    lpaths.append(lp)
-+            if not ipath and not lpath:
++            if not ipath and not lpaths:
                  continue
              env = self.__env.Clone()
              if ipath:
