@@ -37,6 +37,7 @@ class PyMatplotlib(PythonPackage):
         "pylab",
     ]
 
+    version("3.7.1", sha256="7b73305f25eab4541bd7ee0b96d87e53ae9c9f1823be5659b806cd85786fe882")
     version("3.7.0", sha256="8f6efd313430d7ef70a38a3276281cb2e8646b3a22b3b21eb227da20e15e6813")
     version("3.6.3", sha256="1f4d69707b1677560cd952544ee4962f68ff07952fb9069ff8c12b56353cb8c9")
     version("3.6.2", sha256="b03fd10a1709d0101c054883b550f7c4c5e974f751e2680318759af005964990")
