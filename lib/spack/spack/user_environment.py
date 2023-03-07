@@ -5,7 +5,7 @@
 import os
 import sys
 from contextlib import contextmanager
-from typing import Callable, List
+from typing import Callable
 
 from llnl.util.lang import nullcontext
 
@@ -70,7 +70,7 @@ def unconditional_environment_modifications(view):
 
 
 @contextmanager
-def projected_prefix(specs: List[spack.spec.Spec], projection: Callable[[spack.spec.Spec], str]):
+def projected_prefix(*specs: spack.spec.Spec, projection: Callable[[spack.spec.Spec], str]):
     """Temporarily replace every Spec's prefix with projection(s)"""
     prefixes = dict()
     for s in traverse.traverse_nodes(specs, key=lambda s: s.dag_hash()):
@@ -104,7 +104,7 @@ def environment_modifications_for_specs(
     topo_ordered = traverse.traverse_nodes(specs, root=True, deptype=("run", "link"), order="topo")
 
     if view:
-        maybe_projected = projected_prefix(specs, view.get_projection_for_spec)
+        maybe_projected = projected_prefix(*specs, projection=view.get_projection_for_spec)
     else:
         maybe_projected = nullcontext()
 
