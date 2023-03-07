@@ -342,10 +342,10 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage):
         for k, v in llvm_src_ver.items():
             with when(k):
                 resource(
-                    name="llvm-src",
+                    name="llvm-project",
                     git="https://github.com/llvm/llvm-project.git",
                     tag="llvmorg-{0}".format(v),
-                    destination="llvmsource",
+                    destination="llvm-source",
                 )
         # The Newlib version needs to be contemporaenous with GCC
         newlib_ver = {
@@ -902,7 +902,7 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage):
 
         return options
 
-    # Common code for nvptx and amdgcn to build newlib
+    # Common code for nvptx and amdgcn to link newlib source directory
     def link_newlib(self):
         pattern = join_path(self.stage.source_path, "newlibsource", "*")
         files = glob.glob(pattern)
@@ -992,36 +992,45 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage):
         llvm_targets.add("AMDGPU")
 
         # Set up CMake arguments for LLVM
-        cmake_args = [
-            self.define("LLVM_TARGETS_TO_BUILD", list(llvm_targets)),
-            self.define("LLVM_ENABLE_PROJECTS", "lld"),
-        ]
+        cmake_dict = {
+            "LLVM_TARGETS_TO_BUILD": ';'.join(list(llvm_targets)),
+            "LLVM_ENABLE_PROJECTS": "lld",
+        }
+        cmake_args = []
+        for k, v in cmake_dict.items():
+            cmake_args.append("-D{0}={1}".format(k, v))
+
+        pattern = join_path(self.stage.source_path, "llvm-source", "*")
+        files = glob.glob(pattern)
+        if files:
+            cmake_args.append(join_path(files[0], "llvm"))
 
         # Build LLVM utils
-        with working_dir("llvmsource"):
-            cmake = Executable(spec["cmake"].executables)
-            cmake(cmake_args)
+        with working_dir("llvm-build", create=True):
+            cmake = Executable(spec["cmake"].prefix.bin.cmake)
+            cmake(*cmake_args)
+            make()
 
-        # Symlink LLVM utils
-        llvm_bin_path = join_path("llvmsource", "bin")
+        # Copy LLVM utils
+        llvm_bin_path = join_path("llvm-build", "bin")
         llvm_util_path = join_path(prefix, "usr", "local", "amdgcn-amdhsa", "bin")
-        symlink(
+        copy(
             "{0}".format(join_path(llvm_bin_path, "llvm-ar")),
             "{0}".format(join_path(llvm_util_path, "ar")),
         )
-        symlink(
+        copy(
             "{0}".format(join_path(llvm_bin_path, "llvm-ar")),
             "{0}".format(join_path(llvm_util_path, "ranlib")),
         )
-        symlink(
+        copy(
             "{0}".format(join_path(llvm_bin_path, "llvm-mc")),
             "{0}".format(join_path(llvm_util_path, "as")),
         )
-        symlink(
+        copy(
             "{0}".format(join_path(llvm_bin_path, "llvm-nm")),
             "{0}".format(join_path(llvm_util_path, "nm")),
         )
-        symlink(
+        copy(
             "{0}".format(join_path(llvm_bin_path, "lld")),
             "{0}".format(join_path(llvm_util_path, "ld")),
         )
