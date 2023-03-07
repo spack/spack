@@ -25,15 +25,15 @@ class Ramses(MakefilePackage):
 
     def edit(self, spec, prefix):
 
-        env['PREFIX'] = prefix
-        env['F90'] = spack_fc if "~mpi" in spec else spec["mpi"].mpifc
+        os.chdir(os.path.join(os.getcwd(),'SRC','bin'))
+        makefile = FileFilter("Makefile")
+        makefile.filter(r'^PREFIX := .*', f'PREFIX = {prefix}')
         if self.compiler.name == 'intel':
-            env['FFLAGS'] = "-O3 -cpp -fpe0 -ftrapuv -ipo -DNOSYSTEM"
+            env['I_MPI_F90'] = spack_fc
+            fc = spec['mpi'].mpifc
+            makefile.filter(r'^F90 = .*', f'F90 = {fc}')
         elif self.compiler.name == 'gcc':
-            if 'mpiifort' in spec["mpi"].mpifc:
-                env['F90'] = "mpif90".join(spec["mpi"].mpifc.rsplit('mpiifort', 1))
-            env['FFLAGS'] = "-O3 -cpp -march=core-avx2 -fomit-frame-pointer -ffree-line-length-none"
-            # env['OLD_MPI_SUPPORT'] = "1"
+            makefile.filter(r'^\s*FFLAGS\s*= .*', f'FFLAGS = -O3 -cpp -march=core-avx2 -fomit-frame-pointer -ffree-line-length-none')
         else:
             msg  = "The compiler you are building with, "
             msg += "'{0}', is not supported by ramses yet."
@@ -41,7 +41,6 @@ class Ramses(MakefilePackage):
 
     def build(self, spec, prefix):
 
-        os.chdir(os.path.join(os.getcwd(),'SRC','bin'))
         make()
 
     def install(self, spec, prefix):
