@@ -20,9 +20,7 @@ class Coreneuron(CMakePackage):
     # This simplifies testing the gitlab-pipelines repository:
     git = "ssh://git@bbpgitlab.epfl.ch/hpc/coreneuron.git"
 
-    version(
-        "develop", preferred=True, commit="a1631e6eb1745dc602a522ab8a06e791d13bca13"
-    )  # old: branch='master'
+    version("develop", branch="master")
     version("8.2.2", tag="8.2.2")
     version("8.2.1", tag="8.2.1")
     version("8.2.0", tag="8.2.0")

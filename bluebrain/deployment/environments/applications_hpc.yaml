@@ -41,13 +41,13 @@ spack:
     # - neuron%nvhpc+tests+gpu+openmp+coreneuron
     # - neuron%nvhpc+tests+gpu+openmp+nmodl+sympy+coreneuron
     - nest@2.20.1
-    - neurodamus-core~common
-    - neurodamus-core+common
+    - neurodamus-core~common~~coreneuron
+    - neurodamus-core+common~~coreneuron
     - neurodamus-hippocampus+coreneuron+caliper
     - neurodamus-mousify+coreneuron+caliper
-    - neurodamus-neocortex+coreneuron+caliper
+    - neurodamus-neocortex~plasticity+coreneuron+caliper
     - neurodamus-neocortex+plasticity+coreneuron+caliper
-    - neurodamus-neocortex+ngv+metabolism+caliper
+    - neurodamus-neocortex+ngv+metabolism+caliper~~coreneuron
     - neurodamus-thalamus+coreneuron+caliper
     - neuron+coreneuron build_type=Debug
     - neuron+coreneuron build_type=FastDebug

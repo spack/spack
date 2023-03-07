@@ -13,6 +13,11 @@ packages:
     variants: +gas+gold+ld+plugins~libiberty
   boost:
     variants: +filesystem+pic+test
+  coreneuron:
+    # Keep this aligned with NEURON, otherwise the Spack solver may decide that
+    # rolling back to NEURON 8.2.2 with external CoreNEURON is a net win
+    require:
+      - one_of: ["%intel", "%nvhpc"]
   cuda:
     # Should match what is provided by NVHPC, too
     # version: [11.6.1]
