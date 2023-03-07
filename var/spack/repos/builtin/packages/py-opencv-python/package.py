@@ -37,8 +37,8 @@ class PyOpencvPython(PythonPackage):
         depends_on("py-numpy@1.19.3", when="^python@:3.9 platform=linux")
         depends_on("py-numpy@1.21.0", when="^python@:3.9 platform=darwin")
 
-    for platform in ["cray", "linux", "windows"]:
-        depends_on("py-numpy@1.21.2", when=f"^python@3.10 platform={platform}")
+    for supported_platform in ["cray", "linux", "windows"]:
+        depends_on("py-numpy@1.21.2", when=f"^python@3.10 platform={supported_platform}")
     depends_on("py-numpy@1.21.4", when="@4.7.0.72 ^python@3.10 platform=darwin")
     depends_on("py-numpy@1.21.2", when="@4.6.0.66 ^python@3.10:")
     depends_on("py-numpy@1.22.0", when="@4.7.0.72 ^python@3.11:")
