@@ -309,7 +309,7 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage):
         newlib_ver = "3.0.0.20180831"
         resource(
             name="newlib",
-            url="ftp://sourceware.org/pub/newlib/newlib-{0}.tar.gz".format{newlib_ver},
+            url="ftp://sourceware.org/pub/newlib/newlib-{0}.tar.gz".format(newlib_ver),
             sha256=newlib_shasum[newlib_ver],
             destination="newlibsource",
             fetch_options=timeout,
@@ -339,7 +339,7 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage):
         # Building LLVM requires CMake
         depends_on("cmake", type="build")
         llvm_src_ver = {"@:11":"9.0.1", "@12:":"13.0.1"}
-        for k, v in llvm_src_ver:
+        for k, v in llvm_src_ver.items():
             with when(k):
                 resource(
                     name="llvm-src",
@@ -359,7 +359,7 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage):
                       "@12.2.0":"4.2.0.20211231", # GCC: 2022-08-19, Newlib: 2021-12-31
                       "@develop":"4.3.0.20230120", # Newest version of Newlib
         }
-        for k, v in newlib_ver:
+        for k, v in newlib_ver.items():
             with when(k):
                 resource(
                     name="newlib",
@@ -993,7 +993,7 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage):
         # Set up CMake arguments for LLVM
         cmake_args = [
             self.define("LLVM_TARGETS_TO_BUILD", list(llvm_targets)),
-            self.define("LLVM_ENABLE_PROJECTS", "lld",
+            self.define("LLVM_ENABLE_PROJECTS", "lld"),
         ]
 
         # Build LLVM utils
