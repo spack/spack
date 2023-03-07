@@ -312,9 +312,9 @@ class Stage(object):
 
         # Use the provided path or construct an optionally named stage path.
         if path is not None:
-            self.path = path
+            self._path = Path(path)
         else:
-            self.path = os.path.join(get_stage_root(), self.name)
+            self._path = Path(get_stage_root(), self.name)
 
         # Flag to decide whether to delete the stage folder on exit or not
         self.keep = keep
@@ -387,7 +387,7 @@ class Stage(object):
         if self.mirror_paths:
             fnames.extend(os.path.basename(x) for x in self.mirror_paths)
 
-        paths.extend(os.path.join(self.path, f) for f in fnames)
+        paths.extend(str(self._path / f) for f in fnames)
         if not expanded:
             # If the download file is not compressed, the "archive" is a
             # single file placed in Stage.source_path
@@ -419,9 +419,24 @@ class Stage(object):
         return os.path.exists(self.source_path)
 
     @property
+    def path(self):
+        return str(self._path)
+
+    @property
     def source_path(self):
         """Returns the well-known source directory path."""
-        return os.path.join(self.path, _source_path_subdir)
+        return str(self._path / _source_path_subdir)
+
+    @property
+    def build_directory(self):
+        """Returns a potential build directory, defaulting to in source build"""
+        return self.source_path
+
+    def contains(self, file_path):
+        return os.path.realpath(self.path) in file_path
+
+    def path_rel_to_stage(self, glob_expr):
+        os.path.relpath(glob_expr, self.path)
 
     def fetch(self, mirror_only=False, err_msg=None):
         """Retrieves the code or archive
@@ -626,9 +641,9 @@ class Stage(object):
         downloaded."""
         if not self.expanded:
             self.fetcher.expand()
-            tty.debug("Created stage in {0}".format(self.path))
+            tty.debug("Created stage in {0}".format(self._path))
         else:
-            tty.debug("Already staged {0} in {1}".format(self.name, self.path))
+            tty.debug("Already staged {0} in {1}".format(self.name, self._path))
 
     def restage(self):
         """Removes the expanded archive path if it exists, then re-expands
@@ -641,14 +656,14 @@ class Stage(object):
         Ensures the top-level (config:build_stage) directory exists.
         """
         # User has full permissions and group has only read permissions
-        if not os.path.exists(self.path):
+        if not self._path.exists():
             mkdirp(self.path, mode=stat.S_IRWXU | stat.S_IRGRP | stat.S_IXGRP)
-        elif not os.path.isdir(self.path):
-            os.remove(self.path)
+        elif not self._path.is_dir():
+            self._path.unlink()
             mkdirp(self.path, mode=stat.S_IRWXU | stat.S_IRGRP | stat.S_IXGRP)
 
         # Make sure we can actually do something with the stage we made.
-        ensure_access(self.path)
+        ensure_access(self._path)
         self.created = True
 
     def destroy(self):
@@ -660,7 +675,7 @@ class Stage(object):
             os.getcwd()
         except OSError as e:
             tty.debug(e)
-            os.chdir(os.path.dirname(self.path))
+            os.chdir(self._path.parent)
 
         # mark as destroyed
         self.created = False
@@ -728,7 +743,7 @@ class ResourceStage(Stage):
                     install(src, destination_path)
 
 
-class CMakeBuildStage:
+class CMakeBuildStage(Stage):
     """Interface abstracting a CMake build tree at a location outside
     of a Spack stage directory but still managed by Spack.
 
@@ -752,27 +767,48 @@ class CMakeBuildStage:
 
     dispatch: Dict[str, str] = {}
 
-    def __init__(self, hash, name, keep=False):
+    def __init__(self, hash, fetcher, **kwargs):
         # Users can override external cmake build dir, default is %USERPROFILE%
         # overrides can come from command line or config, command line will override all
+        super(CMakeBuildStage, self).__init__(fetcher, **kwargs)
         self._hash = hash
-        self._path = Path(get_stage_root(), name)
         self._remote_stage = None
-        self.keep = keep
-        self._root = Path(spack.config.get("config:cmake_ext_build"))
+        self._remote_root = Path(spack.config.get("config:cmake_ext_build"))
 
-    def __enter__(self):
-        self.create()
-        return self
+    @property
+    def root_stage_context(self):
+        return self._path / ("spack-build-%s" % self._hash)
+
+    @property
+    def build_directory(self):
+        return self._remote_stage
 
     def __exit__(self, exc_type, exc_val, exc_tb):
-        self.destroy()
+        """
+        Exiting from a stage context will delete the stage directory unless:
+        - it was explicitly requested not to do so
+        - an exception has been raised
+
+        Args:
+            exc_type: exception type
+            exc_val: exception value
+            exc_tb: exception traceback
+
+        Returns:
+            Boolean
+        """
+        # Always delete this external stage (and implictly return content to real stage)
+        # then pass off to parent stage class
+        # to control root stage
+        self._return_destroy_remote()
+        super(CMakeBuildStage, self).__exit__(exc_type, exc_val, exc_tb)
+
 
     def _establish_context_link(self):
-        symlink(str(self._remote_stage), str(self._path / ("spack-build-%s" % self._hash)))
+        symlink(str(self._remote_stage), str(self.root_stage_context))
 
     def _remove_context_link(self):
-        Path(self._path, "spack-build-%s" % self._hash).unlink()
+        self.root_stage_context.unlink()
 
     def _rebuild_remote_stage(self):
         full_subdir = Path(CMakeBuildStage.dispatch[self._hash])
@@ -785,15 +821,19 @@ class CMakeBuildStage:
 
     def _setup_remote_build_stage(self):
         # try to create root if it doesn't exist
-        self._root.mkdir(parents=True, exist_ok=True)
+        self._remote_root.mkdir(parents=True, exist_ok=True)
         sub_dir = self._compute_next_open_subdir()
-        full_subdir = self._root / sub_dir
-        try:
-            full_subdir.mkdir()
-        except FileExistsError:
-            # another process must have created the same directory as us
-            # try again
-            return self._setup_remote_build_stage()
+        full_subdir = self._remote_root / sub_dir
+        attempts = 0
+        while True and attempts < 200:
+            try:
+                full_subdir.mkdir()
+                break
+            except FileExistsError:
+                # another process must have created the same directory as us
+                # try again
+                attempts += 1
+
         CMakeBuildStage.dispatch[self._hash] = str(full_subdir)
         return full_subdir
 
@@ -806,7 +846,7 @@ class CMakeBuildStage:
             return c[:-1] + chr(curr + 1)
 
         sort_key = lambda x: (len(x.name), x.name)
-        current_ext_stages = list(Path(self._root).iterdir())
+        current_ext_stages = list(self._remote_root.iterdir())
         if not current_ext_stages:
             # no currently extant external stages, start enumerating with 'a'
             return "a"
@@ -815,8 +855,8 @@ class CMakeBuildStage:
 
     def _return_to_stage(self):
         """Copy external build tree back to stage in normal CMake build dir location"""
-        dest = Path(self._path, "spack-build-%s" % self._hash)
-        install_tree(str(self._remote_stage), str(dest))
+
+        install_tree(str(self._remote_stage), str(self.root_stage_context))
 
     def _teardown_remote_stage(self):
         """Destroy external build tree if not keep-stage
@@ -830,8 +870,9 @@ class CMakeBuildStage:
                     sub_item.unlink()
             pth.rmdir()
 
-        if self._remote_stage:
+        if self._remote_stage.exists():
             teardown(self._remote_stage)
+        self._remote_stage = None
 
     def _reclaim_remote_stage(self):
         # another Spack process or build has taken this directory
@@ -851,7 +892,7 @@ class CMakeBuildStage:
             )
         self._remote_stage.mkdir()
 
-    def destroy(self):
+    def _return_destroy_remote(self):
         # copy back to stage may fail in event of error, make sure we clean up the
         # associated external build dir in that event unless we're keeping the
         # parent stage on cleanup
@@ -864,6 +905,32 @@ class CMakeBuildStage:
             finally:
                 self._teardown_remote_stage()
 
+    def contains(self, file_path):
+        cont = super(CMakeBuildStage, self).contains(file_path)
+        if not cont:
+            return str(self._remote_stage) in file_path
+        return cont
+
+    def create(self):
+        if not self.created:
+            # Establish typical root stage
+            super(CMakeBuildStage, self).create()
+            # Now establish remote build stage
+            try:
+                self._remote_stage = self._setup_remote_build_stage()
+                self._establish_context_link()
+            except Exception:
+                self._teardown_remote_stage()
+                self.created = False
+                raise
+
+    def destroy(self):
+        self._return_destroy_remote()
+        super(CMakeBuildStage, self).destroy()
+
+    def path_rel_to_stage(self, glob_expr):
+        os.path.relpath(glob_expr, self._remote_stage)
+
     def restage(self):
         if self._hash in CMakeBuildStage.dispatch:
             self._remote_stage = Path(CMakeBuildStage.dispatch[self._hash])
@@ -871,44 +938,6 @@ class CMakeBuildStage:
                 self._reclaim_remote_stage()
         else:
             self.create()
-
-    def create(self):
-        if not self.created:
-            try:
-                self._remote_stage = self._setup_remote_build_stage()
-                self._establish_context_link()
-            except Exception:
-                self._teardown_remote_stage()
-                raise
-
-    def steal_source(self, dest):
-        if not self._remote_stage:
-            self.create()
-
-        self._path = Path(dest)
-
-    @property
-    def created(self):
-        return bool(self._remote_stage) and self._remote_stage.exists()
-
-    @property
-    def managed_by_spack(self):
-        return True
-
-    def fetch(self, mirror_only=False, err_msg=None):
-        pass
-
-    def cache_local(self):
-        pass
-
-    def cache_mirror(self):
-        pass
-
-    def check(self):
-        pass
-
-    def expand_archive(self):
-        pass
 
 
 class StageComposite(pattern.Composite):
@@ -965,6 +994,16 @@ class StageComposite(pattern.Composite):
     @property
     def archive_file(self):
         return self[0].archive_file
+
+    @property
+    def build_directory(self):
+        return self[0].build_directory
+
+    def contains(self, file_path):
+        return self[0].contains(file_path)
+
+    def path_rel_to_stage(self, glob_expr):
+        return self[0].path_rel_to_stage(glob_expr)
 
 
 class DIYStage(object):
