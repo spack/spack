@@ -11,10 +11,6 @@ class Libxc(AutotoolsPackage, CudaPackage):
     density-functional theory."""
 
     homepage = "https://tddft.org/programs/libxc/"
-
-    # The webserver at https://tddft.org/programs/libxc/download is unreliable,
-    # see https://gitlab.com/libxc/libxc/-/issues/453. For the time being use
-    # GitLab release tarballs.
     url = "https://gitlab.com/libxc/libxc/-/archive/6.1.0/libxc-6.1.0.tar.gz"
 
     version("6.1.0", sha256="f593745fa47ebfb9ddc467aaafdc2fa1275f0d7250c692ce9761389a90dd8eaf")
@@ -38,9 +34,12 @@ class Libxc(AutotoolsPackage, CudaPackage):
     conflicts("+shared +cuda", msg="Only ~shared supported with +cuda")
     conflicts("+cuda", when="@:4", msg="CUDA support only in libxc 5.0.0 and above")
 
-    depends_on("autoconf", type="build")
-    depends_on("automake", type="build")
-    depends_on("libtool", type="build")
+    # Remove this when the release tarballs become available for 6.0.0 and above.
+    with when("@6.0.0:"):
+        depends_on("autoconf", type="build")
+        depends_on("automake", type="build")
+        depends_on("libtool", type="build")
+
     depends_on("perl", type="build")
 
     patch("0001-Bugfix-avoid-implicit-pointer-cast-to-make-libxc-com.patch", when="@5.0.0")
@@ -53,6 +52,14 @@ class Libxc(AutotoolsPackage, CudaPackage):
 
     patch("nvhpc-configure.patch", when="%nvhpc")
     patch("nvhpc-libtool.patch", when="@develop %nvhpc")
+
+    def url_for_version(self, version):
+        # The webserver at https://tddft.org/programs/libxc/download is unreliable,
+        # see https://gitlab.com/libxc/libxc/-/issues/453. The pre 6.0.0 release tarballs
+        # ar available in our source mirror, but the latest versions are not.
+        if version < Version("6"):
+            return f"https://www.tddft.org/programs/libxc/down/{version}/libxc-{version}.tar.gz"
+        return f"https://gitlab.com/libxc/libxc/-/archive/{version}/libxc-{version}.tar.gz"
 
     @property
     def libs(self):
