@@ -1898,7 +1898,7 @@ class Spec(object):
         if not spec_by_hash._satisfies(self):
             raise InvalidHashError(self, spec_by_hash.abstract_hash)
 
-        if spec_by_hash != self:
+        if spec_by_hash != self or not self.eq_dag(spec_by_hash):
             self._dup(spec_by_hash)
 
     def to_node_dict(self, hash=ht.dag_hash):
@@ -2861,8 +2861,11 @@ class Spec(object):
 
         self.replace_hash()
 
-        if not self.name:
-            raise spack.error.SpecError("Spec has no name; cannot concretize an anonymous spec")
+        for node in self.traverse():
+            if not node.name:
+                raise spack.error.SpecError(
+                    f"Spec {node} has no name; cannot concretize an anonymous spec"
+                )
 
         if self._concrete:
             return
