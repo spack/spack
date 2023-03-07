@@ -21,7 +21,7 @@ class Stream(MakefilePackage):
     variant("stream_array_size", default="none", description="Size of work arrays in elements")
     variant("ntimes", default="none", description="STREAM runs each kernel \"NTIMES\" times and reports the *best* result")
     variant("offset", default="none", description="Relative alignment between arrays")
-    variant("stream_type", default="none", description="Datatype of arrays elements")
+    variant("stream_type", default="none", values=( "none", "float", "double", "int", "long" ), description="Datatype of arrays elements")
     
     def edit(self, spec, prefix):
         makefile = FileFilter("Makefile")
