@@ -3,4 +3,4 @@ config:
   concretizer: clingo
   build_stage::
     - '$spack/.staging'
-  cmake_ext_build: "C:/test/spack"
+  cmake_ext_build: "C:/sp-build"
