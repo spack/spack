@@ -128,6 +128,8 @@ class PyPytorchLightning(PythonPackage):
     depends_on("py-torchtext@0.7:", when="@1.5+extra", type=("build", "run"))
     depends_on("py-torchtext@0.5:", when="@:1.4+extra", type=("build", "run"))
 
+    # https://github.com/Lightning-AI/lightning/issues/16637
+    conflicts("^py-torch~distributed", when="@1.9.0")
     # https://github.com/Lightning-AI/lightning/issues/15494
     conflicts("^py-torch~distributed", when="@1.8.0")
     # https://github.com/Lightning-AI/lightning/issues/10348
