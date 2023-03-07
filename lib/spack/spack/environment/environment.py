@@ -1856,12 +1856,13 @@ class Environment(object):
         and multiple dependency specs match, then this raises an error
         and reports all matching specs.
         """
-        env_roots = [root for _, root in self.concretized_specs()]
-        by_hash = lambda s: s.dag_hash()
+        env_root_to_user = {root.dag_hash(): user for user, root in self.concretized_specs()}
         root_matches, dep_matches = [], []
 
-        for i, env_spec in enumerate(
-            spack.traverse.traverse_nodes(specs=env_roots, key=by_hash, order="breadth")
+        for env_spec in spack.traverse.traverse_nodes(
+            specs=[root for _, root in self.concretized_specs()],
+            key=lambda s: s.dag_hash(),
+            order="breadth",
         ):
             if not env_spec.satisfies(spec):
                 continue
@@ -1873,8 +1874,9 @@ class Environment(object):
 
             # Distinguish between environment roots and deps. Specs that are both
             # are classified as environment roots.
-            if i < len(env_roots):
-                root_matches.append((env_spec, self.concretized_user_specs[i]))
+            user_spec = env_root_to_user.get(env_spec.dag_hash())
+            if user_spec:
+                root_matches.append((env_spec, user_spec))
             else:
                 dep_matches.append(env_spec)
 
@@ -1882,7 +1884,7 @@ class Environment(object):
         if not root_matches and not dep_matches:
             return None
 
-        # Single root spec, any number of dep specs => return root spec. (Quite surprising?)
+        # Single root spec, any number of dep specs => return root spec.
         if len(root_matches) == 1:
             return root_matches[0][0]
 
