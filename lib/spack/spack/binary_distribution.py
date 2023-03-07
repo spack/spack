@@ -40,6 +40,8 @@ import spack.platforms
 import spack.relocate as relocate
 import spack.repo
 import spack.store
+import spack.traverse as traverse
+import spack.util.crypto
 import spack.util.file_cache as file_cache
 import spack.util.gpg
 import spack.util.spack_json as sjson
@@ -209,10 +211,7 @@ class BinaryCacheIndex(object):
                         break
                 else:
                     self._mirrors_for_spec[dag_hash].append(
-                        {
-                            "mirror_url": mirror_url,
-                            "spec": indexed_spec,
-                        }
+                        {"mirror_url": mirror_url, "spec": indexed_spec}
                     )
         finally:
             shutil.rmtree(tmpdir)
@@ -295,10 +294,7 @@ class BinaryCacheIndex(object):
                         break
                 else:
                     current_list.append(
-                        {
-                            "mirror_url": new_entry["mirror_url"],
-                            "spec": new_entry["spec"],
-                        }
+                        {"mirror_url": new_entry["mirror_url"], "spec": new_entry["spec"]}
                     )
 
     def update(self, with_cooldown=False):
@@ -366,8 +362,7 @@ class BinaryCacheIndex(object):
                     # May need to fetch the index and update the local caches
                     try:
                         needs_regen = self._fetch_and_cache_index(
-                            cached_mirror_url,
-                            cache_entry=cache_entry,
+                            cached_mirror_url, cache_entry=cache_entry
                         )
                         self._last_fetch_times[cached_mirror_url] = (now, True)
                         all_methods_failed = False
@@ -559,7 +554,12 @@ class NoChecksumException(spack.error.SpackError):
     Raised if file fails checksum verification.
     """
 
-    pass
+    def __init__(self, path, size, contents, algorithm, expected, computed):
+        super(NoChecksumException, self).__init__(
+            f"{algorithm} checksum failed for {path}",
+            f"Expected {expected} but got {computed}. "
+            f"File size = {size} bytes. Contents = {contents!r}",
+        )
 
 
 class NewLayoutException(spack.error.SpackError):
@@ -1308,57 +1308,48 @@ def _build_tarball(
     return None
 
 
-def nodes_to_be_packaged(specs, include_root=True, include_dependencies=True):
+def nodes_to_be_packaged(specs, root=True, dependencies=True):
     """Return the list of nodes to be packaged, given a list of specs.
 
     Args:
         specs (List[spack.spec.Spec]): list of root specs to be processed
-        include_root (bool): include the root of each spec in the nodes
-        include_dependencies (bool): include the dependencies of each
+        root (bool): include the root of each spec in the nodes
+        dependencies (bool): include the dependencies of each
             spec in the nodes
     """
-    if not include_root and not include_dependencies:
-        return set()
+    if not root and not dependencies:
+        return []
+    elif dependencies:
+        nodes = traverse.traverse_nodes(specs, root=root, deptype="all")
+    else:
+        nodes = set(specs)
 
-    def skip_node(current_node):
-        if current_node.external or current_node.virtual:
-            return True
-        return spack.store.db.query_one(current_node) is None
+    # Limit to installed non-externals.
+    packageable = lambda n: not n.external and n.installed
 
-    expanded_set = set()
-    for current_spec in specs:
-        if not include_dependencies:
-            nodes = [current_spec]
-        else:
-            nodes = [
-                n
-                for n in current_spec.traverse(
-                    order="post", root=include_root, deptype=("link", "run")
-                )
-            ]
-
-        for node in nodes:
-            if not skip_node(node):
-                expanded_set.add(node)
-
-    return expanded_set
+    # Mass install check
+    with spack.store.db.read_transaction():
+        return list(filter(packageable, nodes))
 
 
-def push(specs, push_url, specs_kwargs=None, **kwargs):
+def push(specs, push_url, include_root: bool = True, include_dependencies: bool = True, **kwargs):
     """Create a binary package for each of the specs passed as input and push them
     to a given push URL.
 
     Args:
         specs (List[spack.spec.Spec]): installed specs to be packaged
         push_url (str): url where to push the binary package
-        specs_kwargs (dict): dictionary with two possible boolean keys, "include_root"
-            and "include_dependencies", which determine which part of each spec is
-            packaged and pushed to the mirror
+        include_root (bool): include the root of each spec in the nodes
+        include_dependencies (bool): include the dependencies of each
+            spec in the nodes
         **kwargs: TODO
 
     """
-    specs_kwargs = specs_kwargs or {"include_root": True, "include_dependencies": True}
-    nodes = nodes_to_be_packaged(specs, **specs_kwargs)
+    # Be explicit about the arugment type
+    if type(include_root) != bool or type(include_dependencies) != bool:
+        raise ValueError("Expected include_root/include_dependencies to be True/False")
+
+    nodes = nodes_to_be_packaged(specs, root=include_root, dependencies=include_dependencies)
 
     # TODO: This seems to be an easy target for task
     # TODO: distribution using a parallel pool
@@ -1782,14 +1773,15 @@ def _extract_inner_tarball(spec, filename, extract_to, unsigned, remote_checksum
             raise UnsignedPackageException(
                 "To install unsigned packages, use the --no-check-signature option."
             )
-    # get the sha256 checksum of the tarball
+
+    # compute the sha256 checksum of the tarball
     local_checksum = checksum_tarball(tarfile_path)
+    expected = remote_checksum["hash"]
 
     # if the checksums don't match don't install
-    if local_checksum != remote_checksum["hash"]:
-        raise NoChecksumException(
-            "Package tarball failed checksum verification.\n" "It cannot be installed."
-        )
+    if local_checksum != expected:
+        size, contents = fsys.filesummary(tarfile_path)
+        raise NoChecksumException(tarfile_path, size, contents, "sha256", expected, local_checksum)
 
     return tarfile_path
 
@@ -1847,12 +1839,14 @@ def extract_tarball(spec, download_result, allow_root=False, unsigned=False, for
 
         # compute the sha256 checksum of the tarball
         local_checksum = checksum_tarball(tarfile_path)
+        expected = bchecksum["hash"]
 
         # if the checksums don't match don't install
-        if local_checksum != bchecksum["hash"]:
+        if local_checksum != expected:
+            size, contents = fsys.filesummary(tarfile_path)
             _delete_staged_downloads(download_result)
             raise NoChecksumException(
-                "Package tarball failed checksum verification.\n" "It cannot be installed."
+                tarfile_path, size, contents, "sha256", expected, local_checksum
             )
 
     new_relative_prefix = str(os.path.relpath(spec.prefix, spack.store.layout.root))
@@ -1943,8 +1937,11 @@ def install_root_node(spec, allow_root, unsigned=False, force=False, sha256=None
         tarball_path = download_result["tarball_stage"].save_filename
         msg = msg.format(tarball_path, sha256)
         if not checker.check(tarball_path):
+            size, contents = fsys.filesummary(tarball_path)
             _delete_staged_downloads(download_result)
-            raise spack.binary_distribution.NoChecksumException(msg)
+            raise NoChecksumException(
+                tarball_path, size, contents, checker.hash_name, sha256, checker.sum
+            )
         tty.debug("Verified SHA256 checksum of the build cache")
 
     # don't print long padded paths while extracting/relocating binaries
@@ -2018,12 +2015,7 @@ def try_direct_fetch(spec, mirrors=None):
             fetched_spec = Spec.from_json(specfile_contents)
         fetched_spec._mark_concrete()
 
-        found_specs.append(
-            {
-                "mirror_url": mirror.fetch_url,
-                "spec": fetched_spec,
-            }
-        )
+        found_specs.append({"mirror_url": mirror.fetch_url, "spec": fetched_spec})
 
     return found_specs
 
@@ -2325,11 +2317,7 @@ def download_single_spec(concrete_spec, destination, mirror_url=None):
     local_tarball_path = os.path.join(destination, tarball_dir_name)
 
     files_to_fetch = [
-        {
-            "url": [tarball_path_name],
-            "path": local_tarball_path,
-            "required": True,
-        },
+        {"url": [tarball_path_name], "path": local_tarball_path, "required": True},
         {
             "url": [
                 tarball_name(concrete_spec, ".spec.json.sig"),
@@ -2450,12 +2438,7 @@ class DefaultIndexFetcher:
                 response.headers.get("Etag", None) or response.headers.get("etag", None)
             )
 
-        return FetchIndexResult(
-            etag=etag,
-            hash=computed_hash,
-            data=result,
-            fresh=False,
-        )
+        return FetchIndexResult(etag=etag, hash=computed_hash, data=result, fresh=False)
 
 
 class EtagIndexFetcher:

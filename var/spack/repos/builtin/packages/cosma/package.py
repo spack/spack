@@ -72,7 +72,7 @@ class Cosma(CMakePackage):
                 [("^blis", "BLIS"), ("^amdblis", "BLIS"), ("^atlas", "ATLAS")]
             )
 
-        for (query, cmake_arg) in query_to_cmake_arg:
+        for query, cmake_arg in query_to_cmake_arg:
             if query in self.spec:
                 return cmake_arg
 

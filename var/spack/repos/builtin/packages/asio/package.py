@@ -42,17 +42,9 @@ class Asio(AutotoolsPackage):
         description="Use the specified C++ standard when building.",
     )
 
-    variant(
-        "separate_compilation",
-        default=False,
-        description="Compile Asio sources separately",
-    )
+    variant("separate_compilation", default=False, description="Compile Asio sources separately")
 
-    variant(
-        "boost_coroutine",
-        default=False,
-        description="Enable support for Boost.Coroutine.",
-    )
+    variant("boost_coroutine", default=False, description="Enable support for Boost.Coroutine.")
     depends_on("boost +context +coroutine", when="+boost_coroutine")
 
     variant("boost_regex", default=False, description="Enable support for Boost.Regex.")
@@ -64,9 +56,7 @@ class Asio(AutotoolsPackage):
     def configure_args(self):
         variants = self.spec.variants
 
-        args = [
-            "CXXFLAGS=-std=c++{0}".format(variants["cxxstd"].value),
-        ]
+        args = ["CXXFLAGS=-std=c++{0}".format(variants["cxxstd"].value)]
 
         if variants["separate_compilation"].value:
             args.append("--enable-separate-compilation")

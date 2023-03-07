@@ -30,8 +30,7 @@ else:
 
 #: Groupdb does not exist on Windows, prevent imports
 #: on supported systems
-is_windows = sys.platform == "win32"
-if not is_windows:
+if sys.platform != "win32":
     import grp
 
 #: Spack itself also limits the shebang line to at most 4KB, which should be plenty.
@@ -212,8 +211,7 @@ def install_sbang():
 
     # copy over the fresh copy of `sbang`
     sbang_tmp_path = os.path.join(
-        os.path.dirname(sbang_path),
-        ".%s.tmp" % os.path.basename(sbang_path),
+        os.path.dirname(sbang_path), ".%s.tmp" % os.path.basename(sbang_path)
     )
     shutil.copy(spack.paths.sbang_script, sbang_tmp_path)
 

@@ -472,11 +472,7 @@ class Paraview(CMakePackage, CudaPackage, ROCmPackage):
         # The assumed qt version changed to QT5 (as of paraview 5.2.1),
         # so explicitly specify which QT major version is actually being used
         if "+qt" in spec:
-            cmake_args.extend(
-                [
-                    "-DPARAVIEW_QT_VERSION=%s" % spec["qt"].version[0],
-                ]
-            )
+            cmake_args.extend(["-DPARAVIEW_QT_VERSION=%s" % spec["qt"].version[0]])
 
         if "+fortran" in spec:
             cmake_args.append("-DPARAVIEW_USE_FORTRAN:BOOL=ON")
@@ -563,10 +559,7 @@ class Paraview(CMakePackage, CudaPackage, ROCmPackage):
 
         if "darwin" in spec.architecture:
             cmake_args.extend(
-                [
-                    "-DVTK_USE_X:BOOL=OFF",
-                    "-DPARAVIEW_DO_UNIX_STYLE_INSTALLS:BOOL=ON",
-                ]
+                ["-DVTK_USE_X:BOOL=OFF", "-DPARAVIEW_DO_UNIX_STYLE_INSTALLS:BOOL=ON"]
             )
 
         if "+kits" in spec:

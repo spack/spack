@@ -112,8 +112,7 @@ version_origin_str = {i: name for i, name in enumerate(version_origin_fields)}
 
 #: Enumeration like object to mark version provenance
 version_provenance = collections.namedtuple(  # type: ignore
-    "VersionProvenance",
-    version_origin_fields,
+    "VersionProvenance", version_origin_fields
 )(**{name: i for i, name in enumerate(version_origin_fields)})
 
 #: Named tuple to contain information on declared versions
@@ -1138,8 +1137,7 @@ class SpackSolverSetup(object):
 
         # virtual preferences
         self.virtual_preferences(
-            pkg.name,
-            lambda v, p, i: self.gen.fact(fn.pkg_provider_preference(pkg.name, v, p, i)),
+            pkg.name, lambda v, p, i: self.gen.fact(fn.pkg_provider_preference(pkg.name, v, p, i))
         )
 
         self.package_requirement_rules(pkg)
@@ -1248,8 +1246,7 @@ class SpackSolverSetup(object):
         )
         assert self.possible_virtuals is not None, msg
         self.virtual_preferences(
-            "all",
-            lambda v, p, i: self.gen.fact(fn.default_provider_preference(v, p, i)),
+            "all", lambda v, p, i: self.gen.fact(fn.default_provider_preference(v, p, i))
         )
 
     def provider_requirements(self):
@@ -1405,7 +1402,12 @@ class SpackSolverSetup(object):
 
         # flags from compilers.yaml
         compilers = all_compilers_in_config()
+        seen = set()
         for compiler in compilers:
+            # if there are multiple with the same spec, only use the first
+            if compiler.spec in seen:
+                continue
+            seen.add(compiler.spec)
             for name, flags in compiler.flags.items():
                 for flag in flags:
                     self.gen.fact(
@@ -1427,12 +1429,7 @@ class SpackSolverSetup(object):
         return clauses
 
     def _spec_clauses(
-        self,
-        spec,
-        body=False,
-        transitive=True,
-        expand_hashes=False,
-        concrete_build_deps=False,
+        self, spec, body=False, transitive=True, expand_hashes=False, concrete_build_deps=False
     ):
         """Return a list of clauses for a spec mandates are true.
 
@@ -2295,7 +2292,8 @@ class SpecBuilder(object):
         The solver determines wihch flags are on nodes; this routine
         imposes order afterwards.
         """
-        compilers = dict((c.spec, c) for c in all_compilers_in_config())
+        # reverse compilers so we get highest priority compilers that share a spec
+        compilers = dict((c.spec, c) for c in reversed(all_compilers_in_config()))
         cmd_specs = dict((s.name, s) for spec in self._command_line_specs for s in spec.traverse())
 
         for spec in self._specs.values():
@@ -2521,15 +2519,7 @@ class Solver(object):
                 pass
         return reusable_specs
 
-    def solve(
-        self,
-        specs,
-        out=None,
-        timers=False,
-        stats=False,
-        tests=False,
-        setup_only=False,
-    ):
+    def solve(self, specs, out=None, timers=False, stats=False, tests=False, setup_only=False):
         """
         Arguments:
           specs (list): List of ``Spec`` objects to solve for.
@@ -2549,14 +2539,7 @@ class Solver(object):
         result, _, _ = self.driver.solve(setup, specs, reuse=reusable_specs, output=output)
         return result
 
-    def solve_in_rounds(
-        self,
-        specs,
-        out=None,
-        timers=False,
-        stats=False,
-        tests=False,
-    ):
+    def solve_in_rounds(self, specs, out=None, timers=False, stats=False, tests=False):
         """Solve for a stable model of specs in multiple rounds.
 
         This relaxes the assumption of solve that everything must be consistent and

@@ -270,9 +270,7 @@ class Mivisionx(CMakePackage):
     def cmake_args(self):
         spec = self.spec
         protobuf = spec["protobuf"].prefix.include
-        args = [
-            self.define("CMAKE_CXX_FLAGS", "-I{0}".format(protobuf)),
-        ]
+        args = [self.define("CMAKE_CXX_FLAGS", "-I{0}".format(protobuf))]
         if self.spec.satisfies("+opencl"):
             args.append(self.define("BACKEND", "OPENCL"))
             args.append(self.define("HSA_PATH", spec["hsa-rocr-dev"].prefix))

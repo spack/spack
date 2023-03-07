@@ -193,9 +193,7 @@ class Tasmanian(CMakePackage, CudaPackage, ROCmPackage):
         # using the tests copied from <prefix>/share/Tasmanian/testing
         cmake_dir = self.test_suite.current_test_cache_dir.testing
 
-        options = [
-            cmake_dir,
-        ]
+        options = [cmake_dir]
         if "+rocm" in self.spec:
             options.append(
                 "-DAMDDeviceLibs_DIR="

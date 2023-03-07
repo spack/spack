@@ -142,7 +142,6 @@ class Tau(Package):
     filter_compiler_wrappers("Makefile.tau*", relative_root="lib64")
 
     def set_compiler_options(self, spec):
-
         useropt = ["-O2 -g", self.rpath_args]
 
         ##########

@@ -75,7 +75,7 @@ repo:
         )
 
     packages_dir = tmpdir.join("packages")
-    for (pkg_name, pkg_str) in [_pkgx, _pkgy, _pkgv]:
+    for pkg_name, pkg_str in [_pkgx, _pkgy, _pkgv]:
         pkg_dir = packages_dir.ensure(pkg_name, dir=True)
         pkg_file = pkg_dir.join("package.py")
         with open(str(pkg_file), "w") as f:
@@ -372,11 +372,7 @@ packages:
 
 @pytest.mark.parametrize(
     "mpi_requirement,specific_requirement",
-    [
-        ("mpich", "@3.0.3"),
-        ("mpich2", "%clang"),
-        ("zmpi", "%gcc"),
-    ],
+    [("mpich", "@3.0.3"), ("mpich2", "%clang"), ("zmpi", "%gcc")],
 )
 def test_requirements_on_virtual_and_on_package(
     mpi_requirement, specific_requirement, concretize_scope, mock_packages

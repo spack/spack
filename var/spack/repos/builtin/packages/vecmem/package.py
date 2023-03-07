@@ -11,10 +11,20 @@ class Vecmem(CMakePackage, CudaPackage):
 
     homepage = "https://github.com/acts-project/vecmem"
     url = "https://github.com/acts-project/vecmem/archive/refs/tags/v0.5.0.tar.gz"
-    list_url = "https://github.com/acts-project/vecmem/releases"
+    list_url = "https://github.com/acts-project/vecmem/tags"
 
     maintainers("wdconinc", "HadrienG2")
 
+    version("0.22.0", sha256="b8811723bee60b0ea289d4c8b73363883e7c856859baf4cb6276b38816b0b258")
+    version("0.21.0", sha256="97df3beb9a59b89b65c51ceb7e7c9b09172b3875b25f2d8fc070e4f9b061b631")
+    version("0.20.0", sha256="1361aa180255d38a15b9d674cbb9411f8565c660f918a536479a21f3856b1fd8")
+    version("0.19.0", sha256="9c56d17dbb122fa8b81e392f6c00b132ca07b8f0107e25a6fff798295b58a193")
+    version("0.18.0", sha256="5cba44e8a8baadf224ee377206dfb91ebc66fb5c299baf00e1638ba47a28f2a2")
+    version("0.17.0", sha256="5b85b5891b16efe1e53081fec002607c154e0faeb6974616102f5c6354cc3617")
+    version("0.16.0", sha256="5e76c519fba0ae7f1cdac40bd9e85dcc843e5d8a28550eafe21eee3f493d24e3")
+    version("0.15.0", sha256="acb8170e0c5454fd06bea2fb1e3ae97a5dbf55d1d6f470f2550ab0e2dd98c9fb")
+    version("0.14.0", sha256="e6f396818e72a18ca6c277b3feec0af7794b020ba880c35a3372162e2c3a2b9a")
+    version("0.13.0", sha256="084f279d88ff15951c3653a21c45f94c671902c86dfad88bcf257f604dfdbe9b")
     version("0.12.0", sha256="aab017e5df5f4251c53313aecf63f550c43890ec4845f138e3d46aa4113b8609")
     version("0.11.0", sha256="4bed7f2cdcad376ee3e2f744aba95497c837b6a9807a069245f66e02c78b745a")
     version("0.10.0", sha256="b872835dde943ec5ef88799db7846b3bdac5f36d1254f74116ec4e4615e35bb1")
@@ -34,6 +44,7 @@ class Vecmem(CMakePackage, CudaPackage):
     depends_on("cmake@3.17:", type="build")
     depends_on("hip", when="+hip")
     depends_on("sycl", when="+sycl")
+    depends_on("googletest", type="test")
 
     def cmake_args(self):
         args = [
@@ -41,6 +52,7 @@ class Vecmem(CMakePackage, CudaPackage):
             self.define_from_variant("VECMEM_BUILD_HIP_LIBRARY", "hip"),
             self.define_from_variant("VECMEM_BUILD_SYCL_LIBRARY", "sycl"),
             self.define("VECMEM_BUILD_TESTING", self.run_tests),
+            self.define("VECMEM_USE_SYSTEM_GOOGLETEST", True),
         ]
 
         if "+cuda" in self.spec:

@@ -80,11 +80,7 @@ class QuantumEspresso(CMakePackage, Package):
     # Add Cuda Fortran support
     # depends on NVHPC compiler, not directly on CUDA toolkit
     with when("%nvhpc"):
-        variant(
-            "cuda",
-            default=False,
-            description="Build with CUDA Fortran",
-        )
+        variant("cuda", default=False, description="Build with CUDA Fortran")
         with when("+cuda"):
             # GPUs are enabled since v6.6
             conflicts("@:6.5")
@@ -258,6 +254,13 @@ class QuantumEspresso(CMakePackage, Package):
     # NOTE: *SOME* third-party patches will require deactivation of
     # upstream patches using `~patch` variant
 
+    # Only CMake will work for @6.8: %aocc
+    conflicts(
+        "build_system=generic", when="@6.8: %aocc", msg="Please use CMake to build with AOCC"
+    )
+
+    conflicts("~openmp", when="^amdlibflame", msg="amdlibflame requires OpenMP")
+
     # QMCPACK converter patches for QE 6.8, 6.7, 6.4.1, 6.4, and 6.3
     conflicts(
         "@:6.2,6.5:6.6",
@@ -366,8 +369,8 @@ class QuantumEspresso(CMakePackage, Package):
         when="+patch@6.4.1:6.5.0",
     )
 
-    # Configure updated to work with AOCC compilers
-    patch("configure_aocc.patch", when="@6.7:6.8 %aocc")
+    # Patch automake configure for AOCC compilers
+    patch("configure_aocc.patch", when="@6.7 %aocc")
 
     # Configure updated to work with NVIDIA compilers
     patch("nvhpc.patch", when="@6.5 %nvhpc")
@@ -535,7 +538,6 @@ class GenericBuilder(spack.build_systems.generic.GenericBuilder):
             options.append("--with-libxc-prefix={0}".format(spec["libxc"].prefix))
 
         if "+elpa" in spec:
-
             # Spec for elpa
             elpa = spec["elpa"]
 

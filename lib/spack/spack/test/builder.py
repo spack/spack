@@ -63,32 +63,12 @@ def builder_test_repository():
         # Generate custom phases using a GenericBuilder
         (
             "custom-phases",
-            [
-                ("CONFIGURE_CALLED", "1"),
-                ("INSTALL_CALLED", "1"),
-                ("LAST_PHASE", "INSTALL"),
-            ],
+            [("CONFIGURE_CALLED", "1"), ("INSTALL_CALLED", "1"), ("LAST_PHASE", "INSTALL")],
         ),
         # Old-style package, with phase defined in base builder
-        (
-            "old-style-autotools@1.0",
-            [
-                ("AFTER_AUTORECONF_1_CALLED", "1"),
-            ],
-        ),
-        (
-            "old-style-autotools@2.0",
-            [
-                ("AFTER_AUTORECONF_2_CALLED", "1"),
-            ],
-        ),
-        (
-            "old-style-custom-phases",
-            [
-                ("AFTER_CONFIGURE_CALLED", "1"),
-                ("TEST_VALUE", "0"),
-            ],
-        ),
+        ("old-style-autotools@1.0", [("AFTER_AUTORECONF_1_CALLED", "1")]),
+        ("old-style-autotools@2.0", [("AFTER_AUTORECONF_2_CALLED", "1")]),
+        ("old-style-custom-phases", [("AFTER_CONFIGURE_CALLED", "1"), ("TEST_VALUE", "0")]),
     ],
 )
 @pytest.mark.usefixtures("builder_test_repository", "config")

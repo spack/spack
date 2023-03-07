@@ -65,9 +65,7 @@ from spack.util.web import FetchError
 from spack.version import GitVersion, Version, VersionBase
 
 FLAG_HANDLER_RETURN_TYPE = Tuple[
-    Optional[Iterable[str]],
-    Optional[Iterable[str]],
-    Optional[Iterable[str]],
+    Optional[Iterable[str]], Optional[Iterable[str]], Optional[Iterable[str]]
 ]
 FLAG_HANDLER_TYPE = Callable[[str, Iterable[str]], FLAG_HANDLER_RETURN_TYPE]
 
@@ -92,9 +90,6 @@ _spack_times_log = "install_times.json"
 
 # Filename for the Spack configure args file.
 _spack_configure_argsfile = "spack-configure-args.txt"
-
-
-is_windows = sys.platform == "win32"
 
 
 def deprecated_version(pkg, version):
@@ -167,7 +162,7 @@ class WindowsRPath(object):
 
         Performs symlinking to incorporate rpath dependencies to Windows runtime search paths
         """
-        if is_windows:
+        if sys.platform == "win32":
             self.win_rpath.add_library_dependent(*self.win_add_library_dependent())
             self.win_rpath.add_rpath(*self.win_add_rpath())
             self.win_rpath.establish_link()
@@ -212,7 +207,7 @@ class DetectablePackageMeta(object):
                 plat_exe = []
                 if hasattr(cls, "executables"):
                     for exe in cls.executables:
-                        if is_windows:
+                        if sys.platform == "win32":
                             exe = to_windows_exe(exe)
                         plat_exe.append(exe)
                 return plat_exe
@@ -1705,11 +1700,7 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
             "don't know how to make {0}. Stop",
         ]
 
-        kwargs = {
-            "fail_on_error": False,
-            "output": os.devnull,
-            "error": str,
-        }
+        kwargs = {"fail_on_error": False, "output": os.devnull, "error": str}
 
         stderr = make("-n", target, **kwargs)
 
@@ -2220,10 +2211,7 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
 
         if not force:
             dependents = spack.store.db.installed_relatives(
-                spec,
-                direction="parents",
-                transitive=True,
-                deptype=("link", "run"),
+                spec, direction="parents", transitive=True, deptype=("link", "run")
             )
             if dependents:
                 raise PackageStillNeededError(spec, dependents)
@@ -2236,7 +2224,6 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
 
         # Pre-uninstall hook runs first.
         with spack.store.db.prefix_write_lock(spec):
-
             if pkg is not None:
                 try:
                     spack.hooks.pre_uninstall(spec)
@@ -2399,11 +2386,7 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
 
         try:
             return spack.util.web.find_versions_of_archive(
-                self.all_urls,
-                self.list_url,
-                self.list_depth,
-                concurrency,
-                reference_package=self,
+                self.all_urls, self.list_url, self.list_depth, concurrency, reference_package=self
             )
         except spack.util.web.NoNetworkConnectionError as e:
             tty.die("Package.fetch_versions couldn't connect to:", e.url, e.message)
@@ -2415,7 +2398,7 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
 
         # on Windows, libraries of runtime interest are typically
         # stored in the bin directory
-        if is_windows:
+        if sys.platform == "win32":
             rpaths = [self.prefix.bin]
             rpaths.extend(d.prefix.bin for d in deps if os.path.isdir(d.prefix.bin))
         else:

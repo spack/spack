@@ -416,11 +416,7 @@ def test_spec_needs_rebuild(monkeypatch, tmpdir):
     assert rebuild
 
 
-@pytest.mark.usefixtures(
-    "install_mockery_mutable_config",
-    "mock_packages",
-    "mock_fetch",
-)
+@pytest.mark.usefixtures("install_mockery_mutable_config", "mock_packages", "mock_fetch")
 def test_generate_index_missing(monkeypatch, tmpdir, mutable_config):
     """Ensure spack buildcache index only reports available packages"""
 
@@ -889,3 +885,70 @@ def test_default_index_json_404():
 
     with pytest.raises(bindist.FetchIndexError, match="Could not fetch index"):
         fetcher.conditional_fetch()
+
+
+@pytest.mark.parametrize(
+    "root,deps,expected",
+    [
+        (
+            True,
+            True,
+            [
+                "dttop",
+                "dtbuild1",
+                "dtbuild2",
+                "dtlink2",
+                "dtrun2",
+                "dtlink1",
+                "dtlink3",
+                "dtlink4",
+                "dtrun1",
+                "dtlink5",
+                "dtrun3",
+                "dtbuild3",
+            ],
+        ),
+        (
+            False,
+            True,
+            [
+                "dtbuild1",
+                "dtbuild2",
+                "dtlink2",
+                "dtrun2",
+                "dtlink1",
+                "dtlink3",
+                "dtlink4",
+                "dtrun1",
+                "dtlink5",
+                "dtrun3",
+                "dtbuild3",
+            ],
+        ),
+        (True, False, ["dttop"]),
+        (False, False, []),
+    ],
+)
+def test_correct_specs_are_pushed(
+    root, deps, expected, default_mock_concretization, tmpdir, temporary_store, monkeypatch
+):
+    # Concretize dttop and add it to the temporary database (without prefixes)
+    spec = default_mock_concretization("dttop")
+    temporary_store.db.add(spec, directory_layout=None)
+
+    # Create a mirror push url
+    push_url = spack.mirror.Mirror.from_local_path(str(tmpdir)).push_url
+
+    packages_to_push = []
+
+    def fake_build_tarball(node, push_url, **kwargs):
+        assert push_url == push_url
+        assert not kwargs
+        assert isinstance(node, Spec)
+        packages_to_push.append(node.name)
+
+    monkeypatch.setattr(bindist, "_build_tarball", fake_build_tarball)
+
+    bindist.push([spec], push_url, include_root=root, include_dependencies=deps)
+
+    assert packages_to_push == expected

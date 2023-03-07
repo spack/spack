@@ -54,7 +54,6 @@ import io
 import itertools
 import os
 import re
-import sys
 import warnings
 from typing import Tuple
 
@@ -118,7 +117,6 @@ __all__ = [
     "SpecDeprecatedError",
 ]
 
-is_windows = sys.platform == "win32"
 #: Valid pattern for an identifier in Spack
 
 identifier_re = r"\w[\w-]*"
@@ -229,6 +227,7 @@ class ArchSpec(object):
                 Otherwise information on platform, OS and target should be
                 passed in either as a spec string or as a tuple.
         """
+
         # If the argument to __init__ is a spec string, parse it
         # and construct an ArchSpec
         def _string_or_none(s):
@@ -731,7 +730,6 @@ _valid_compiler_flags = ["cflags", "cxxflags", "fflags", "ldflags", "ldlibs", "c
 
 
 class FlagMap(lang.HashableMap):
-
     __slots__ = ("spec",)
 
     def __init__(self, spec):
@@ -1221,7 +1219,6 @@ class SpecBuildInterface(lang.ObjectWrapper):
 
 @lang.lazy_lexicographic_ordering(set_hash=False)
 class Spec(object):
-
     #: Cache for spec's prefix, computed lazily in the corresponding property
     _prefix = None
 
@@ -1550,12 +1547,7 @@ class Spec(object):
                 "Cannot depend on incompatible specs '%s' and '%s'" % (dspec.spec, spec)
             )
 
-    def add_dependency_edge(
-        self,
-        dependency_spec: "Spec",
-        *,
-        deptypes: dp.DependencyArgument,
-    ):
+    def add_dependency_edge(self, dependency_spec: "Spec", *, deptypes: dp.DependencyArgument):
         """Add a dependency edge to this spec.
 
         Args:
@@ -2241,7 +2233,6 @@ class Spec(object):
 
             # Recurse on dependencies
             for s, s_dependencies in dep_like.items():
-
                 if isinstance(s, str):
                     dag_node, dependency_types = name_and_dependency_types(s)
                 else:
@@ -2897,7 +2888,6 @@ class Spec(object):
         try:
             deptree = self.traverse(root=False)
             for spec in deptree:
-
                 if spec.name not in flat_deps:
                     if copy:
                         spec = spec.copy(deps=False)
@@ -3459,25 +3449,38 @@ class Spec(object):
             return spec_like
         return Spec(spec_like)
 
-    def satisfies(self, other, deps=True, strict=False, strict_deps=False):
+    def satisfies(self, other, deps=True, strict=False):
         """Determine if this spec satisfies all constraints of another.
 
-        There are two senses for satisfies:
+        There are two senses for satisfies, depending on the ``strict``
+        argument.
 
-          * `loose` (default): the absence of a constraint in self
-            implies that it *could* be satisfied by other, so we only
-            check that there are no conflicts with other for
-            constraints that this spec actually has.
+          * ``strict=False``: the left-hand side and right-hand side have
+            non-empty intersection. For example ``zlib`` satisfies
+            ``zlib@1.2.3`` and ``zlib@1.2.3`` satisfies ``zlib``. In this
+            sense satisfies is a commutative operation: ``x.satisfies(y)``
+            if and only if ``y.satisfies(x)``.
 
-          * `strict`: strict means that we *must* meet all the
-            constraints specified on other.
+          * ``strict=True``: the left-hand side is a subset of the right-hand
+            side. For example ``zlib@1.2.3`` satisfies ``zlib``, but ``zlib``
+            does not satisfy ``zlib@1.2.3``. In this sense satisfies is not
+            commutative: the left-hand side should be at least as constrained
+            as the right-hand side.
         """
 
         other = self._autospec(other)
 
-        # The only way to satisfy a concrete spec is to match its hash exactly.
+        # Optimizations for right-hand side concrete:
+        # 1. For subset (strict=True) tests this means the left-hand side must
+        # be the same singleton with identical hash. Notice that package hashes
+        # can be different for otherwise indistinguishable concrete Spec objects.
+        # 2. For non-empty intersection (strict=False) we only have a fast path
+        # when the left-hand side is also concrete.
         if other.concrete:
-            return self.concrete and self.dag_hash() == other.dag_hash()
+            if strict:
+                return self.concrete and self.dag_hash() == other.dag_hash()
+            elif self.concrete:
+                return self.dag_hash() == other.dag_hash()
 
         # If the names are different, we need to consider virtuals
         if self.name != other.name and self.name and other.name:
@@ -5245,7 +5248,6 @@ class ConflictsInSpecError(spack.error.SpecError, RuntimeError):
         match_fmt_custom = '{0}. "{1}" conflicts with "{2}" [{3}]\n'
 
         for idx, (s, c, w, msg) in enumerate(matches):
-
             if s not in visited:
                 visited.add(s)
                 long_message += "List of matching conflicts for spec:\n\n"

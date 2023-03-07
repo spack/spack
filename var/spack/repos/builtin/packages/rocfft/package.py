@@ -176,9 +176,7 @@ class Rocfft(CMakePackage):
         return ver
 
     def cmake_args(self):
-        args = [
-            self.define("BUILD_CLIENTS_TESTS", self.run_tests),
-        ]
+        args = [self.define("BUILD_CLIENTS_TESTS", self.run_tests)]
         tgt = self.spec.variants["amdgpu_target"]
 
         if "auto" not in tgt:

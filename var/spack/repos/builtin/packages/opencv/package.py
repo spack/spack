@@ -21,82 +21,25 @@ class Opencv(CMakePackage, CudaPackage):
     version("master", branch="master")
     version("4.6.0", sha256="1ec1cba65f9f20fe5a41fda1586e01c70ea0c9a6d7b67c9e13edf0cfe2239277")
     version("4.5.5", sha256="a1cfdcf6619387ca9e232687504da996aaa9f7b5689986b8331ec02cb61d28ad")
-    version(
-        "4.5.4",
-        sha256="c20bb83dd790fc69df9f105477e24267706715a9d3c705ca1e7f613c7b3bad3d",
-    )
-    version(
-        "4.5.2",
-        sha256="ae258ed50aa039279c3d36afdea5c6ecf762515836b27871a8957c610d0424f8",
-    )
-    version(
-        "4.5.1",
-        sha256="e27fe5b168918ab60d58d7ace2bd82dd14a4d0bd1d3ae182952c2113f5637513",
-    )
-    version(
-        "4.5.0",
-        sha256="dde4bf8d6639a5d3fe34d5515eab4a15669ded609a1d622350c7ff20dace1907",
-    )
-    version(
-        "4.2.0",
-        sha256="9ccb2192d7e8c03c58fee07051364d94ed7599363f3b0dce1c5e6cc11c1bb0ec",
-    )
-    version(
-        "4.1.2",
-        sha256="385dd0a9c25e67ef0dd60e022d2a2d7b17e2f36819cf3cb46aa8cdff5c5282c9",
-    )
-    version(
-        "4.1.1",
-        sha256="5de5d96bdfb9dad6e6061d70f47a0a91cee96bb35afb9afb9ecb3d43e243d217",
-    )
-    version(
-        "4.1.0",
-        sha256="8f6e4ab393d81d72caae6e78bd0fd6956117ec9f006fba55fcdb88caf62989b7",
-    )
-    version(
-        "4.0.1",
-        sha256="7b86a0ee804244e0c407321f895b15e4a7162e9c5c0d2efc85f1cadec4011af4",
-    )
-    version(
-        "4.0.0",
-        sha256="3787b3cc7b21bba1441819cb00c636911a846c0392ddf6211d398040a1e4886c",
-    )
-    version(
-        "3.4.12",
-        sha256="c8919dfb5ead6be67534bf794cb0925534311f1cd5c6680f8164ad1813c88d13",
-    )
-    version(
-        "3.4.6",
-        sha256="e7d311ff97f376b8ee85112e2b536dbf4bdf1233673500175ed7cf21a0089f6d",
-    )
-    version(
-        "3.4.5",
-        sha256="0c57d9dd6d30cbffe68a09b03f4bebe773ee44dc8ff5cd6eaeb7f4d5ef3b428e",
-    )
-    version(
-        "3.4.4",
-        sha256="a35b00a71d77b484f73ec485c65fe56c7a6fa48acd5ce55c197aef2e13c78746",
-    )
-    version(
-        "3.4.3",
-        sha256="4eef85759d5450b183459ff216b4c0fa43e87a4f6aa92c8af649f89336f002ec",
-    )
-    version(
-        "3.4.1",
-        sha256="f1b87684d75496a1054405ae3ee0b6573acaf3dad39eaf4f1d66fdd7e03dc852",
-    )
-    version(
-        "3.4.0",
-        sha256="678cc3d2d1b3464b512b084a8cca1fad7de207c7abdf2caa1fed636c13e916da",
-    )
-    version(
-        "3.3.1",
-        sha256="5dca3bb0d661af311e25a72b04a7e4c22c47c1aa86eb73e70063cd378a2aa6ee",
-    )
-    version(
-        "3.3.0",
-        sha256="8bb312b9d9fd17336dc1f8b3ac82f021ca50e2034afc866098866176d985adc6",
-    )
+    version("4.5.4", sha256="c20bb83dd790fc69df9f105477e24267706715a9d3c705ca1e7f613c7b3bad3d")
+    version("4.5.2", sha256="ae258ed50aa039279c3d36afdea5c6ecf762515836b27871a8957c610d0424f8")
+    version("4.5.1", sha256="e27fe5b168918ab60d58d7ace2bd82dd14a4d0bd1d3ae182952c2113f5637513")
+    version("4.5.0", sha256="dde4bf8d6639a5d3fe34d5515eab4a15669ded609a1d622350c7ff20dace1907")
+    version("4.2.0", sha256="9ccb2192d7e8c03c58fee07051364d94ed7599363f3b0dce1c5e6cc11c1bb0ec")
+    version("4.1.2", sha256="385dd0a9c25e67ef0dd60e022d2a2d7b17e2f36819cf3cb46aa8cdff5c5282c9")
+    version("4.1.1", sha256="5de5d96bdfb9dad6e6061d70f47a0a91cee96bb35afb9afb9ecb3d43e243d217")
+    version("4.1.0", sha256="8f6e4ab393d81d72caae6e78bd0fd6956117ec9f006fba55fcdb88caf62989b7")
+    version("4.0.1", sha256="7b86a0ee804244e0c407321f895b15e4a7162e9c5c0d2efc85f1cadec4011af4")
+    version("4.0.0", sha256="3787b3cc7b21bba1441819cb00c636911a846c0392ddf6211d398040a1e4886c")
+    version("3.4.12", sha256="c8919dfb5ead6be67534bf794cb0925534311f1cd5c6680f8164ad1813c88d13")
+    version("3.4.6", sha256="e7d311ff97f376b8ee85112e2b536dbf4bdf1233673500175ed7cf21a0089f6d")
+    version("3.4.5", sha256="0c57d9dd6d30cbffe68a09b03f4bebe773ee44dc8ff5cd6eaeb7f4d5ef3b428e")
+    version("3.4.4", sha256="a35b00a71d77b484f73ec485c65fe56c7a6fa48acd5ce55c197aef2e13c78746")
+    version("3.4.3", sha256="4eef85759d5450b183459ff216b4c0fa43e87a4f6aa92c8af649f89336f002ec")
+    version("3.4.1", sha256="f1b87684d75496a1054405ae3ee0b6573acaf3dad39eaf4f1d66fdd7e03dc852")
+    version("3.4.0", sha256="678cc3d2d1b3464b512b084a8cca1fad7de207c7abdf2caa1fed636c13e916da")
+    version("3.3.1", sha256="5dca3bb0d661af311e25a72b04a7e4c22c47c1aa86eb73e70063cd378a2aa6ee")
+    version("3.3.0", sha256="8bb312b9d9fd17336dc1f8b3ac82f021ca50e2034afc866098866176d985adc6")
 
     contrib_vers = [
         "3.3.0",
@@ -235,10 +178,7 @@ class Opencv(CMakePackage, CudaPackage):
 
     # These need additional spack packages
     # js needs Emscripten
-    modules_pending = [
-        "js",
-        "js_bindings_generator",
-    ]
+    modules_pending = ["js", "js_bindings_generator"]
 
     # Define the list of libraries objects that may be used
     # to find an external installation and its variants
@@ -770,11 +710,7 @@ class Opencv(CMakePackage, CudaPackage):
     component_and_module = ["freetype", "julia", "matlab"]
 
     for component in components:
-        variant(
-            component,
-            default=False,
-            description="Include {0} support".format(component),
-        )
+        variant(component, default=False, description="Include {0} support".format(component))
 
     # Other (variants)
     variant("shared", default=True, description="Enables the build of shared libraries")
@@ -924,9 +860,7 @@ class Opencv(CMakePackage, CudaPackage):
 
     def cmake_args(self):
         spec = self.spec
-        args = [
-            self.define("BUILD_opencv_core", "on"),
-        ]
+        args = [self.define("BUILD_opencv_core", "on")]
 
         if self.spec.satisfies("+contrib"):
             args.append(
@@ -1094,10 +1028,7 @@ class Opencv(CMakePackage, CudaPackage):
             )
         else:
             args.extend(
-                [
-                    self.define("PYTHON2_EXECUTABLE", ""),
-                    self.define("PYTHON3_EXECUTABLE", ""),
-                ]
+                [self.define("PYTHON2_EXECUTABLE", ""), self.define("PYTHON3_EXECUTABLE", "")]
             )
 
         return args

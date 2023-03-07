@@ -27,10 +27,7 @@ class Mesquite(AutotoolsPackage):
     depends_on("mpi", when="+mpi")
 
     def configure_args(self):
-        args = [
-            "--enable-release",
-            "--enable-shared",
-        ]
+        args = ["--enable-release", "--enable-shared"]
 
         if "+mpi" in self.spec:
             args.append("CC=%s" % self.spec["mpi"].mpicc)
