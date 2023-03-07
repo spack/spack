@@ -993,7 +993,7 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage):
 
         # Set up CMake arguments for LLVM
         cmake_dict = {
-            "LLVM_TARGETS_TO_BUILD": ';'.join(list(llvm_targets)),
+            "LLVM_TARGETS_TO_BUILD": ";".join(list(llvm_targets)),
             "LLVM_ENABLE_PROJECTS": "lld",
         }
         cmake_args = []
