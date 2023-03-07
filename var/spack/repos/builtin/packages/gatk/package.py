@@ -19,6 +19,7 @@ class Gatk(Package):
     list_url = "https://github.com/broadinstitute/gatk/releases"
     maintainers("snehring")
 
+    version("4.3.0.0", sha256="e2c27229b34c3e22445964adf00639a0909887bbfcc040f6910079177bc6e2dd")
     version("4.2.6.1", sha256="1125cfc862301d437310506c8774d36c3a90d00d52c7b5d6b59dac7241203628")
     version("4.2.2.0", sha256="ddd902441d1874493796566159288e9df178714ac18216ba05092136db1497fd")
     version("4.1.8.1", sha256="42e6de5059232df1ad5785c68c39a53dc1b54afe7bb086d0129f4dc95fb182bc")
