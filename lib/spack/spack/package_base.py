@@ -92,9 +92,6 @@ _spack_times_log = "install_times.json"
 _spack_configure_argsfile = "spack-configure-args.txt"
 
 
-is_windows = sys.platform == "win32"
-
-
 def deprecated_version(pkg, version):
     """Return True if the version is deprecated, False otherwise.
 
@@ -165,7 +162,7 @@ class WindowsRPath(object):
 
         Performs symlinking to incorporate rpath dependencies to Windows runtime search paths
         """
-        if is_windows:
+        if sys.platform == "win32":
             self.win_rpath.add_library_dependent(*self.win_add_library_dependent())
             self.win_rpath.add_rpath(*self.win_add_rpath())
             self.win_rpath.establish_link()
@@ -210,7 +207,7 @@ class DetectablePackageMeta(object):
                 plat_exe = []
                 if hasattr(cls, "executables"):
                     for exe in cls.executables:
-                        if is_windows:
+                        if sys.platform == "win32":
                             exe = to_windows_exe(exe)
                         plat_exe.append(exe)
                 return plat_exe
@@ -2401,7 +2398,7 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
 
         # on Windows, libraries of runtime interest are typically
         # stored in the bin directory
-        if is_windows:
+        if sys.platform == "win32":
             rpaths = [self.prefix.bin]
             rpaths.extend(d.prefix.bin for d in deps if os.path.isdir(d.prefix.bin))
         else:
