@@ -108,10 +108,7 @@ class Halide(CMakePackage, PythonExtension):
             args += [
                 self.define("Python3_EXECUTABLE", spec["python"].command.path),
                 self.define("PYBIND11_USE_FETCHCONTENT", False),
-                self.define(
-                    "Halide_INSTALL_PYTHONDIR",
-                    python_platlib,
-                ),
+                self.define("Halide_INSTALL_PYTHONDIR", python_platlib),
             ]
         return args
 
