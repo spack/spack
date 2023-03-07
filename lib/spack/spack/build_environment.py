@@ -926,11 +926,12 @@ class SetupContext:
     """This class encapsulates the logic to determine environment modifications, and is used as
     well to set globals in modules of package.py."""
 
-    def __init__(self, *specs: spack.spec.Spec, context: Context) -> None:
+    def __init__(self, *specs: spack.spec.Spec, context: Context, run_root: bool = True) -> None:
         """Construct a ModificationsFromDag object.
         Args:
             specs: single root spec for build/test context, possibly more for run context
-            context: build, run, or test"""
+            context: build, run, or test
+            run_root: whether root spec should be runnable"""
         if (context == Context.BUILD or context == Context.TEST) and not len(specs) == 1:
             raise ValueError("Cannot setup build environment for multiple specs")
         specs_with_type = effective_deptypes(*specs, context=context)
@@ -953,7 +954,7 @@ class SetupContext:
         self.should_setup_dependent_build_env = UseMode.BUILDTIME | UseMode.BUILDTIME_DIRECT
         self.should_setup_build_env = UseMode.ROOT if context == Context.BUILD else UseMode(0)
 
-        if context == Context.RUN or context == Context.TEST:
+        if (context == Context.RUN or context == Context.TEST) and run_root:
             self.should_be_runnable |= UseMode.ROOT
             self.should_setup_run_env |= UseMode.ROOT
 

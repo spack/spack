@@ -31,6 +31,20 @@ class TestTcl:
 
         assert "module-whatis {mpich @3.0.4}" in content
 
+    def test_autoload_run(self, modulefile_content, module_configuration):
+        """Tests the automatic loading of run dependencies."""
+
+        module_configuration("autoload_run")
+
+        # dtbuild1 has
+        # - 1 ('run',) dependency
+        # - 1 ('build','link') dependency
+        # - 1 ('build',) dependency
+        # Just make sure the 'build' dependency is not there
+        content = modulefile_content("dtbuild1")
+
+        assert len([x for x in content if "module load " in x]) == 1
+
     def test_autoload_direct(self, modulefile_content, module_configuration):
         """Tests the automatic loading of direct dependencies."""
 

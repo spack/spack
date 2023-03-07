@@ -125,16 +125,16 @@ def dependencies(spec, request="all"):
 
     Args:
         spec: spec to be analyzed
-        request: either 'none', 'direct' or 'all'
+        request: either 'none', 'run', 'direct' or 'all'
 
     Returns:
         list of dependencies
 
         The return list will be empty if request is 'none', will contain
-        the direct dependencies if request is 'direct', or the entire DAG
-        if request is 'all'.
+        the run dependencies if request is 'run', the direct dependencies
+        if request is 'direct', or the entire DAG if request is 'all'.
     """
-    if request not in ("none", "direct", "all"):
+    if request not in ("none", "run", "direct", "all"):
         message = "Wrong value for argument 'request' : "
         message += "should be one of ('none', 'direct', 'all')"
         raise tty.error(message + " [current value is '%s']" % request)
@@ -144,6 +144,24 @@ def dependencies(spec, request="all"):
 
     if request == "direct":
         return spec.dependencies(deptype=("link", "run"))
+
+    if request == "run":
+        r_deps = []
+        deps_with_type = spack.build_environment.effective_deptypes(spec, context=Context.RUN)
+
+        for dep, dep_type in deps_with_type:
+            if dep_type & spack.build_environment.UseMode.RUNTIME_EXECUTABLE:
+                r_deps.append(dep)
+            elif dep_type & spack.build_environment.UseMode.RUNTIME:
+                context = spack.build_environment.SetupContext(
+                    dep, context=Context.RUN, run_root=False
+                )
+                context.set_all_package_py_globals()
+
+                if len(context.get_env_modifications()) > 0:
+                    r_deps.append(dep)
+
+        return r_deps
 
     # FIXME : during module file creation nodes seem to be visited multiple
     # FIXME : times even if cover='nodes' is given. This work around permits
@@ -183,7 +201,7 @@ def merge_config_rules(configuration, spec):
     # Transform keywords for dependencies or prerequisites into a list of spec
 
     # Which modulefiles we want to autoload
-    autoload_strategy = spec_configuration.get("autoload", "direct")
+    autoload_strategy = spec_configuration.get("autoload", "run")
     spec_configuration["autoload"] = dependencies(spec, autoload_strategy)
 
     # Which instead we want to mark as prerequisites
