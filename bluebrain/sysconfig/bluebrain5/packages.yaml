@@ -133,6 +133,8 @@ packages:
     externals:
     - spec: slurm@21.08.3
       prefix: /usr
+  spdlog:
+    variants: +fmt_external
   steps:
     variants: +lapack+petsc+mpi
   superlu-dist:
