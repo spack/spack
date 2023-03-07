@@ -883,6 +883,7 @@ def effective_deptypes(*specs: spack.spec.Spec, context: Context = Context.BUILD
     )
     traverse.traverse_depth_first_with_visitor(traverse.with_artificial_edges(specs), visitor)
 
+    # Dictionary with "no mode" as default value, so it's easy to write modes[x] |= flag.
     modes = defaultdict(lambda: Mode(0))
     nodes_with_type = []
 
