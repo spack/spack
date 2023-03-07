@@ -7,7 +7,7 @@
 from spack.package import *
 
 
-class PyPennylaneLightningKokkos(CMakePackage, PythonExtension):
+class PyPennylaneLightningKokkos(CMakePackage, PythonExtension, CudaPackage, ROCmPackage):
     """The PennyLane-Lightning-Kokkos plugin provides a fast state-vector simulator with Kokkos kernels."""
 
     homepage = "https://docs.pennylane.ai/projects/lightning-kokkos"
@@ -22,6 +22,7 @@ class PyPennylaneLightningKokkos(CMakePackage, PythonExtension):
     version("main", branch="main")
     version("develop", commit="fd6feb9b2c961d6f8d93f31b6015b37e9aeac759")
 
+    # kokkos backends
     backends = {
         "cuda": [False, "Whether to build CUDA backend"],
         "openmp": [False, "Whether to build OpenMP backend"],
@@ -36,7 +37,23 @@ class PyPennylaneLightningKokkos(CMakePackage, PythonExtension):
         deflt_bool, descr = backends[backend]
         variant(backend.lower(), default=deflt_bool, description=descr)
         depends_on(f"kokkos+{backend.lower()}", when=f"+{backend.lower()}", type=("run", "build"))
+        depends_on(f"kokkos~{backend.lower()}", when=f"~{backend.lower()}", type=("run", "build"))
 
+    # CUDA
+    for val in CudaPackage.cuda_arch_values:
+        depends_on("kokkos cuda_arch={0}".format(val), when="cuda_arch={0}".format(val))
+    depends_on("kokkos+wrapper", when="+cuda")
+
+    # ROCm
+    for val in ROCmPackage.amdgpu_targets:
+        depends_on("kokkos amdgpu_target={0}".format(val), when="amdgpu_target={0}".format(val))
+
+    conflicts(
+        "+cuda", when="+rocm", msg="CUDA and ROCm are not compatible in PennyLane-Lightning-Kokkos."
+    )
+
+    # build options
+    extends("python")
     variant(
         "build_type",
         default="Release",
@@ -48,8 +65,6 @@ class PyPennylaneLightningKokkos(CMakePackage, PythonExtension):
     variant("native", default=False, description="Build natively for given hardware")
     variant("sanitize", default=False, description="Build with address sanitization")
     variant("verbose", default=False, description="Build with full verbosity")
-
-    extends("python")
 
     # hard dependencies
     depends_on("cmake@3.21:3.24,3.25.2:", type="build")
@@ -87,7 +102,7 @@ class CMakeBuilder(spack.build_systems.cmake.CMakeBuilder):
         ]
         args.append("-DCMAKE_PREFIX_PATH=" + self.spec["kokkos"].prefix)
         if "+rocm" in self.spec:
-            args.append("-DCMAKE_CXX_COMPILER=" + self.spec["hip"].prefix.bin.hipcc)
+            args.append(self.define("CMAKE_CXX_COMPILER", self.spec["hip"].hipcc))
         args.append(
             "-DPLKOKKOS_ENABLE_WARNINGS=OFF"
         )  # otherwise build might fail due to Kokkos::InitArguments deprecated
