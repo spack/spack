@@ -996,8 +996,7 @@ def modifications_from_dag(
         should_setup_run_env |= Mode.ROOT
         should_be_runnable |= Mode.ROOT
 
-    # I guess everything that calls setup_run_environemnt and setup_dependent_* should have our
-    # horrible globals available too.
+    # Everything that calls setup_run_environemnt and setup_dependent_* needs globals set.
     should_populate_package_py_globals = (
         should_setup_dependent_build_env | should_setup_run_env | Mode.ROOT
     )
