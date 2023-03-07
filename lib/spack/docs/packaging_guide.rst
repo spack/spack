@@ -18,14 +18,16 @@ have at least some familiarity with Python, and that you've read the
 There are two key parts of Spack:
 
 #. **Specs**: expressions for describing builds of software, and
-#. **Packages**: Python modules that describe how to build
-   software according to a spec.
+#. **Packages**: Python modules that describe how to build and
+   test software according to a spec.
 
 Specs allow a user to describe a *particular* build in a way that a
 package author can understand.  Packages allow the packager to
 encapsulate the build logic for different versions, compilers,
 options, platforms, and dependency combinations in one place.
-Essentially, a package translates a spec into build logic.
+Essentially, a package translates a spec into build logic. It
+also allow the packager to write spec-specific tests of the
+installed software.
 
 Packages in Spack are written in pure Python, so you can do anything
 in Spack that you can do in Python.  Python was chosen as the
@@ -40,7 +42,7 @@ easy.
    The only exception is for proprietary software (e.g., vendor compilers).
 
    If a special build system needs to be added in order to support building
-   a package from source, then the associated code and recipe need to be added
+   a package from source, then the associated code and recipe should be added
    first.
 
 
@@ -1463,6 +1465,9 @@ For example:
 Go cannot be used to fetch a particular commit or branch, it always
 downloads the head of the repository. This download method is untrusted,
 and is not recommended. Use another fetch strategy whenever possible.
+
+
+.. _variants:
 
 --------
 Variants
@@ -4096,6 +4101,8 @@ special parameters to ``configure``, like
 need to supply special compiler flags depending on the compiler.  All
 of this information is available in the spec.
 
+.. _testing-specs:
+
 ^^^^^^^^^^^^^^^^^^^^^^^^
 Testing spec constraints
 ^^^^^^^^^^^^^^^^^^^^^^^^
@@ -4963,53 +4970,52 @@ be left in the build stage directory as illustrated below:
 
 .. _cmd-spack-test:
 
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-Stand-alone (or smoke) tests
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^
+Stand-alone tests
+^^^^^^^^^^^^^^^^^
 
 While build-time tests are integrated with the installation process,
-stand-alone tests are independent of that process.  Consequently, such
-tests can be performed days, even weeks, after the software is installed.
-
-Stand-alone tests are checks that should run relatively quickly -- as
-in on the order of at most a few minutes -- and ideally execute all
-aspects of the installed software, or at least key functionality.
+stand-alone tests are independent, allowing them to run days and weeks
+after the software is installed. Tests are defined in the package using
+methods whose names begin ``test_``, allowing for multiple independent
+checks. The methods themselves can contain embedded test parts. Files
+from the installation process can be saved off for use by the tests
+(e.g., compilation). Extra files, such as source, data, and expected
+outputs, can also be stored with the package. Both sets of files are
+automatically copied to the spec's test stage directory prior to execution
+of the test methods.
 
 .. note::
 
-    Execution speed is important because these tests are intended
-    to quickly assess whether the installed software works on the
-    system.
+    Execution speed is important because these tests are intended to
+    quickly assess whether the installed spec works on the system.
+    Consequently, they should run relatively quickly -- as in on the
+    order of at most a few minutes while ideally executing all, or at
+    least key, aspects of the installed software.
 
-    Failing stand-alone tests indicate that there is no reason to
-    proceed with more resource-intensive tests.
+    Failing stand-alone tests are an indicator that there is an issue
+    with the installation and, therefore, no reason to proceed with more
+    resource-intensive tests.
 
-    Passing stand-alone (or smoke) tests can lead to more thorough
-    testing, such as extensive unit or regression tests, or tests
-    that run at scale.
-
-Stand-alone tests have their own test stage directory, which can be
-configured. These tests can compile or build software with the compiler
-used to build the package. They can use files cached from the build for
-testing the installation. Custom files, such as source, data, or expected
-outputs can be added for use in these tests.
+    Passing stand-alone tests can indicate that more thorough testing,
+    such as extensive unit or regression tests, or tests that run at
+    scale are in order.
 
 """"""""""""""""""""""""""""""""""""
 Configuring the test stage directory
 """"""""""""""""""""""""""""""""""""
 
-Stand-alone tests rely on a stage directory for building, running,
-and tracking results.
-The default directory, ``~/.spack/test``, is defined in
-:ref:`etc/spack/defaults/config.yaml <config-yaml>`.
-You can configure the location in the high-level ``config`` by adding
-or changing the ``test_stage`` path in the appropriate ``config.yaml``
-file such that:
+Stand-alone tests rely on a test stage directory for building, running,
+and tracking results in the same way Spack relies on a stage directory
+during builds. The default test stage, ``~/.spack/test``, is defined in
+:ref:`etc/spack/defaults/config.yaml <config-yaml>`. You can configure
+the location in the high-level ``config`` by adding or changing the
+``test_stage`` path in the appropriate ``config.yaml`` file such that:
 
 .. code-block:: yaml
 
    config:
-     test_stage: /path/to/stage
+     test_stage: /path/to/test/stage
 
 The package can access this path **during test processing** using
 `self.test_suite.stage`.
@@ -5017,35 +5023,172 @@ The package can access this path **during test processing** using
 .. note::
 
    The test stage path is established for the entire suite. That
-   means it is the root directory for all specs being installed
-   with the same `spack test run` command. Each spec gets its
-   own stage subdirectory.
+   means it is the root directory for **all specs** being tested
+   with the same `spack test run` command and each spec gets its
+   own subdirectory.
 
-"""""""""""""""""""""""""
-Enabling test compilation
-"""""""""""""""""""""""""
+   Use ``self.test_suite.test_dir_for_spec(self.spec)`` to access
+   the stage directory for the spec currently being tested. Refer to
+   :ref:`accessing staged files <_accessing-files>` for more information.
 
-Some stand-alone tests will require access to the compiler with which
-the package was built, especially for library-only packages. You must
-enable loading the package's compiler configuration by setting the
-``test_requires_compiler`` property to ``True`` for your package.
-For example:
+
+""""""""""""""""""""""""
+Adding stand-alone tests
+""""""""""""""""""""""""
+
+Tests are defined in the package using methods with names beginning
+``test_``, which means multiple independent tests can be implemented
+to check the installation. The tests can be customized to the source
+build since Spack tracks options, compilers, and dependencies. Standard
+python ``assert`` statements and other error reporting mechanisms can
+be used in these methods. Spack will report such errors as test failures.
+
+Each test method is an implicit test part whose name is the name of
+the method and whose purpose is the method's docstring. The purpose is 
+provides context that can be helpful during debugging. Spack will output
+the test name and purpose prior to running the test part.
+
+For example, the ``MyPackage`` package below provides a skeleton for
+the test method.
 
 .. code-block:: python
 
    class MyPackage(Package):
        ...
 
-       test_requires_compiler = True
+       def test_always_fails(self):
+           """use assert to always fail"""
+           assert False
 
-Setting this property to ``True`` makes the compiler available in the
-test environment through the canonical environment variables (e.g.,
-``CC``, ``CXX``, ``FC``, ``F77``).
+       def test_example(self):
+           """run installed example"""
+           example = which(self.prefix.bin.example)
+           example()
+
+You can implement multiple test parts within a stand-alone test method
+using the ``test_part`` context manager. Each test part is treated as
+an independent check with subsequent test executed even after a failure.
+
+.. _test-part:
+
+The signature for ``test_part`` is:
+
+.. code-block:: python
+
+   @contextlib.contextmanager
+   def test_part(pkg, test_name, purpose, work_dir=".", verbose=False):
+
+where each argument has the following meaning:
+
+* ``pkg`` is an instance of the package for the spec under test.
+
+* ``test_name`` is the name of the test part and needs to start with ``test_``
+
+  The name of every ``test_`` method is automatically the name of
+  its implicit test part. 
+  
+  It is recommended that embedded test parts extend the name of the test
+  method. For example, if there are examples called ``ex10`` and ``ex51``
+  run within the ``test_example`` method, then the test parts would be
+  called ``test_example_ex10`` and ``test_example_ex51``, respectively.
+
+* ``purpose`` is the heading describing the test part.
+
+  The docstring of every ``test_`` method is automatically the name of
+  its implicit test part.
+
+  Output from the test is written to a test log file so this argument
+  serves as a searchable heading in text logs to highlight the start
+  of the test part. 
+  
+  Having a description can be helpful when debugging failing tests.
+
+* ``work_dir`` is the path to the directory from which the executable
+  will run.
+
+  The default of ``None`` corresponds to the current directory (``"."``),
+  which is the spec's test stage (i.e.,
+  ``self.test_suite.test_dir_for_spec(self.spec)``).
+
+.. admonition:: Tests should **not** run under the installation directory.
+
+   Use of the package spec's installation directory for building and running
+   tests is **strongly** discouraged. Doing so causes permission errors for
+   shared spack instances *and* facilities that install the software in
+   read-only file systems or directories.
+
+Suppose ``MyPackage`` actually installs two examples we want to use for tests.
+These checks could be embedded test parts implemented below.
+
+.. code-block:: python
+
+   class MyPackage(Package):
+       ...
+
+       def test_example(self):
+           """run installed examples"""
+           for example in ["ex1", "ex2"]:
+               with test_part(
+                   self,
+                   "test_example_{0}".format(example),
+                   purpose="run installed {0}".format(example),
+                ):
+                    exe = which(join_path(self.prefix.bin, example))
+                    exe()
+
+Stand-alone tests run in an environment that provides access to information
+Spack has on how the software was built, such as build options, dependencies,
+and compilers. Build options and dependencies are accessed with the normal
+spec checks. Examples of checking :ref:`variant settings <_variants>` and
+:ref:`spec constraints <_testing-specs>` can be found at those links.
+Accessing compilers used by the build in stand-alone tests requires another
+step described :ref:`below <_test-compilation>`.
+
+
+.. _test-compilation:
+
+"""""""""""""""""""""""""
+Enabling test compilation
+"""""""""""""""""""""""""
+
+If you want to build tests before running them, then you'll want to tell
+Spack to load the package's compiler configuration. This is accomplished
+by setting the package's ``test_requires_compiler`` property to ``True``.
+Doing so allows you to access the compiler through the canonical environment
+variables (e.g., ``CC``, ``CXX``, ``FC``, ``F77``). If appropriate, it
+also gives access to build dependencies like ``cmake`` through
+``self.spec["cmake"].prefix.bin.cmake``.
 
 .. note::
 
    We recommend adding the property at the top of the package with the
    other attributes, such as ``homepage`` and ``url``.
+
+Below is an example using this feature to compile an example.
+
+.. code-block:: python
+
+   class MyLibrary(Package):
+       ...
+
+       test_requires_compiler = True
+       ...
+
+       def test_cxx_example(self):
+           """build and run cxx-example"""
+           exe = "cxx-example"
+           ...
+           cxx = which(os.environ["CXX"])
+           cxx(
+               "-L{0}".format(self.prefix.lib),
+               "-I{0}".format(self.prefix.include),
+               "{0}.cpp".format(exe),
+               "-o",
+               exe
+           )
+           cxx_example = which(exe)
+           cxx_example()
+
 
 .. _cache_extra_test_sources:
 
@@ -5061,8 +5204,8 @@ Adding build-time files
     than maintaining custom install test files with the Spack package.
 
 You can use the ``cache_extra_test_sources`` method to copy directories
-and or files from the build stage directory to the package's installation
-directory.
+and or files from the source build stage directory to the package's
+installation directory.
 
 The signature for ``cache_extra_test_sources`` is:
 
@@ -5070,7 +5213,7 @@ The signature for ``cache_extra_test_sources`` is:
 
    def cache_extra_test_sources(self, srcs):
 
-where ``srcs`` is a string or a list of strings corresponding to
+where ``srcs`` is a string *or* a list of strings corresponding to
 the paths for the files and or subdirectories, relative to the staged
 source, that are to be copied to the corresponding relative test path
 under the prefix. All of the contents within each subdirectory will
@@ -5079,6 +5222,32 @@ also be copied.
 For example, a package method for copying everything in the ``tests``
 subdirectory plus the ``foo.c`` and ``bar.c`` files from ``examples``
 can be implemented as shown below.
+
+.. code-block:: python
+
+   class MyLibPackage(Package):
+       ...
+
+       @run_after("install")
+       def copy_test_sources(self):
+           srcs = ["tests",
+                   join_path("examples", "foo.c"),
+                   join_path("examples", "bar.c")]
+           self.cache_extra_test_sources(srcs)
+
+       def test_foo(self):
+           exe = "foo"
+           src_dir = join_path(
+               self.test_suite.current_test_cache_dir, "examples"
+           )
+           ...
+           # TODO: Compile foo using source in src_dir
+           foo = which(exe)
+           foo()
+
+In this case, the method copies the associated files from the build
+stage **after** the software is installed to the package's metadata
+directory. 
 
 .. note::
 
@@ -5090,34 +5259,17 @@ can be implemented as shown below.
    is use of the ``run_after`` directive, which ensures the associated
    files are copied **after** the provided build stage.
 
-.. code-block:: python
-
-   class MyPackage(Package):
-       ...
-
-       @run_after("install")
-       def copy_test_sources(self):
-           srcs = ["tests",
-                   join_path("examples", "foo.c"),
-                   join_path("examples", "bar.c")]
-           self.cache_extra_test_sources(srcs)
-
-In this case, the method copies the associated files from the build
-stage **after** the software is installed to the package's metadata
-directory. The result is the directory and files will be cached in
-a special test subdirectory under the installation prefix.
-
 These paths are **automatically copied** to the test stage directory
-during stand-alone testing. The package's ``test`` method can access
+during stand-alone testing. The package's stand-alone test method can access
 them using the ``self.test_suite.current_test_cache_dir`` property.
-In our example, the method would use the following paths to reference
+In our example, the method can use the following paths to reference
 the copy of each entry listed in ``srcs``, respectively:
 
 * ``join_path(self.test_suite.current_test_cache_dir, "tests")``
 * ``join_path(self.test_suite.current_test_cache_dir, "examples", "foo.c")``
 * ``join_path(self.test_suite.current_test_cache_dir, "examples", "bar.c")``
 
-.. note::
+.. admonition:: Library packages should build stand-alone tests
 
     Library developers will want to build the associated tests
     against their **installed** libraries before running them.
@@ -5130,13 +5282,26 @@ the copy of each entry listed in ``srcs``, respectively:
     would be appropriate for ensuring the installed software continues
     to work as the underlying system evolves.
 
+.. note::
+
+    If one or more of the copied files needs to be modified to the
+    installation, it is recommended that those changes are made
+    **once** in the ``copy_test_sources`` method after the call to
+    ``self.cache_extra_test_sources()``.  This will reduce the 
+    amount of unnecessary work in the test method **and** avoid
+    problems testing shared instances and facility deployments.
+
+    The ``filter_file`` function can be quite useful for such
+    changes. See :ref:`file manipulation <_file-manipulation>`.
+
+
 .. _cache_custom_files:
 
 """""""""""""""""""
 Adding custom files
 """""""""""""""""""
 
-Some tests may require additional files not available from the build.
+Some tests may require additional files not available from the (source) build.
 Examples include:
 
 - test source files
@@ -5148,9 +5313,30 @@ These extra files should be added to the ``test`` subdirectory of the
 package in the Spack repository.
 
 Spack will **automatically copy** the contents of that directory to the
-test staging directory for stand-alone testing. The ``test`` method can
+test staging directory prior to running stand-alone tests, which can
 access those files using the ``self.test_suite.current_test_data_dir``
-property.
+property as shown below.
+
+.. code-block:: python
+
+   class MyLibrary(Package):
+       ...
+
+       test_requires_compiler = True
+       ...
+
+       def test_example(self):
+           """build and run custom-example"""
+           data_dir = self.test_suite.current_test_data_dir
+           exe = "custom-example"
+           src = datadir.join("{0}.cpp".format(exe))
+
+           ...
+           # TODO: Compile foo using source in src_dir
+
+           custom_example = which(exe)
+           custom_example()
+
 
 .. _expected_test_output_from_file:
 
@@ -5160,7 +5346,7 @@ Reading expected output from a file
 
 The helper function ``get_escaped_text_output`` is available for packages
 to retrieve and properly format the text from a file that contains the
-output that is expected when an executable is run using ``self.run_test``.
+expected output from running an executable.
 
 The signature for ``get_escaped_text_output`` is:
 
@@ -5179,26 +5365,29 @@ package check:
    class Sqlite(AutotoolsPackage):
        ...
 
-       def test(self):
+       def test_example(self):
+           """check example table dump"""
            test_data_dir = self.test_suite.current_test_data_dir
            db_filename = test_data_dir.join("packages.db")
            ..
 
            expected = get_escaped_text_output(test_data_dir.join("dump.out"))
-           self.run_test("sqlite3",
-                         [db_filename, ".dump"],
-                         expected,
-                         installed=True,
-                         purpose="test: checking dump output",
-                         skip_missing=False)
+           sqlite3 = which(self.prefix.bin.sqlite3)
+           out = sqlite3(
+               db_filename, ".dump", output=str.split, error=str.split
+           )
+           check_outputs(expected, out)
 
-Expected outputs do not have to be stored with the Spack package.
-Maintaining them with the source is actually preferable.
+
+.. note::
+
+    Expected outputs do not have to be stored with the Spack package.
+    Maintaining them with the source is actually preferable.
 
 Suppose a package's source has ``examples/foo.c`` and ``examples/foo.out``
 files that are copied for stand-alone test purposes using
 :ref:`cache_extra_test_sources <cache_extra_test_sources>` and the
-`run_test` method builds the executable ``examples/foo``. The package
+stand-alone test method builds the executable ``examples/foo``. The package
 can retrieve the expected output from ``examples/foo.out`` using:
 
 .. code-block:: python
@@ -5206,14 +5395,15 @@ can retrieve the expected output from ``examples/foo.out`` using:
    class MyFooPackage(Package):
        ...
 
-       def test(self):
+       def test_foo_example(self):
            ..
-           filename = join_path(self.test_suite.current_test_cache_dir,
-                                "examples", "foo.out")
+           filename = join_path(
+               self.test_suite.current_test_cache_dir, "examples", "foo.out"
+           )
            expected = get_escaped_text_output(filename)
            ..
 
-Alternatively, suppose ``MyFooPackage`` installs tests in ``share/tests``
+Alternatively, suppose ``MyFooPackage`` **installs** tests in ``share/tests``
 and their outputs in ``share/tests/outputs``. The expected output for
 ``foo``, assuming it is still called ``foo.out``, can be retrieved as
 follows:
@@ -5223,142 +5413,14 @@ follows:
    class MyFooPackage(Package):
        ...
 
-       def test(self):
+       def test_foo(self):
            ..
            filename = join_path(self.prefix.share.tests.outputs, "foo.out")
            expected = get_escaped_text_output(filename)
            ..
 
 
-""""""""""""""""""""""""
-Adding stand-alone tests
-""""""""""""""""""""""""
-
-Stand-alone tests are defined in the package's ``test`` method. The
-default ``test`` method is a no-op so you'll want to override it to
-implement the tests.
-
-.. note::
-
-   Any package method named ``test`` is automatically executed by
-   Spack when the ``spack test run`` command is performed.
-
-For example, the ``MyPackage`` package below provides a skeleton for
-the test method.
-
-.. code-block:: python
-
-   class MyPackage(Package):
-       ...
-
-       def test(self):
-           # TODO: Add quick checks of the installed software
-           pass
-
-Stand-alone tests run in an environment that provides access to the
-package and all of its dependencies, including ``test``-type
-dependencies.
-
-Standard python ``assert`` statements and other error reporting
-mechanisms can be used in the ``test`` method. Spack will report
-such errors as test failures.
-
-You can implement multiple tests (or test parts) within the ``test``
-method using the ``run_test`` method. Each invocation is run separately
-in a manner that allows testing to continue after failures.
-
-The signature for ``run_test`` is:
-
-.. code-block:: python
-
-   def run_test(self, exe, options=[], expected=[], status=0,
-                installed=False, purpose="", skip_missing=False,
-                work_dir=None):
-
-where each argument has the following meaning:
-
-* ``exe`` is the executable to run.
-
-  If a name, the ``exe`` is required to be found in one of the paths
-  in the ``PATH`` environment variable **unless** ``skip_missing`` is
-  ``True``. Alternatively, a relative (to ``work_dir``) or fully
-  qualified path for the executable can be provided in ``exe``.
-
-  The test will fail if the resulting path is not within the prefix
-  of the package being tested **unless** ``installed`` is ``False``.
-
-* ``options`` is a list of the command line options.
-
-  Options are a list of strings to be passed to the executable when
-  it runs.
-
-  The default is ``[]``, which means no options are provided to the
-  executable.
-
-* ``expected`` is an optional list of expected output strings.
-
-  Spack requires every string in ``expected`` to be a regex matching
-  part of the output from the test run (e.g.,
-  ``expected=["completed successfully", "converged in"]``).  The
-  output can also include expected failure outputs (e.g.,
-  ``expected=["failed to converge"]``).
-
-  The expected output can be :ref:`read from a file
-  <expected_test_output_from_file>`.
-
-  The default is ``expected=[]``, so Spack will not check the output.
-
-* ``status`` is the optional expected return code(s).
-
-  A list of return codes corresponding to successful execution can
-  be provided (e.g., ``status=[0,3,7]``). Support for non-zero return
-  codes allows for basic **expected failure** tests as well as different
-  return codes across versions of the software.
-
-  The default is ``status=[0]``, which corresponds to **successful**
-  execution in the sense that the executable does not exit with a
-  failure code or raise an exception.
-
-* ``installed`` is used to require ``exe`` to be within the package
-  prefix.
-
-  If ``True``, then the path for ``exe`` is required to be within the
-  package prefix; otherwise, the path is not constrained.
-
-  The default is ``False``, so the fully qualified path for ``exe``
-  does **not** need to be within the installation directory.
-
-* ``purpose`` is an optional heading describing the the test part.
-
-  Output from the test is written to a test log file so this argument
-  serves as a searchable heading in text logs to highlight the start
-  of the test part. Having a description can be helpful when debugging
-  failing tests.
-
-* ``skip_missing`` is used to determine if the test should be skipped.
-
-  If ``True``, then the test part should be skipped if the executable
-  is missing; otherwise, the executable must exist. This option can
-  be useful when test executables are removed or change as the software
-  evolves in subsequent versions.
-
-  The default is ``False``, which means the test executable must be
-  present for any installable version of the software.
-
-* ``work_dir`` is the path to the directory from which the executable
-  will run.
-
-  The default of ``None`` corresponds to the current directory (``"."``).
-  Each call starts with the working directory set to the spec's test stage
-  directory (i.e., ``self.test_suite.test_dir_for_spec(self.spec)``).
-
-.. warning::
-
-   Use of the package spec's installation directory for building and running
-   tests is **strongly** discouraged. Doing so has caused permission errors
-   for shared spack instances *and* for facilities that install the software
-   in read-only file systems or directories.
-
+.. _accessing-files:
 
 """""""""""""""""""""""""""""""""""""""""
 Accessing package- and test-related files
@@ -5402,7 +5464,7 @@ Inheriting stand-alone tests
 """"""""""""""""""""""""""""
 
 Stand-alone tests defined in parent (.e.g., :ref:`build-systems`) and
-virtual (e.g., :ref:`virtual-dependencies`) packages are available to
+virtual (e.g., :ref:`virtual-dependencies`) packages are executed by
 packages that inherit from or provide interfaces for those packages,
 respectively. The table below summarizes the tests that will be included
 with those provided in the package itself when executing stand-alone tests.
@@ -5425,7 +5487,9 @@ with those provided in the package itself when executing stand-alone tests.
        <https://github.com/spack/spack/blob/develop/var/spack/repos/builtin/packages/mpi>`_
      - Compiles and runs ``mpi_hello`` (``c``, ``fortran``)
    * - :ref:`PythonPackage <pythonpackage>`
-     - Imports installed modules
+     - Imports modules listed in the ``self.import_modules`` property with defaults derived from the tarball
+   * - :ref:`SipPackage <sippackage>`
+     - Imports modules listed in the ``self.import_modules`` property with defaults derived from the tarball
 
 These tests are very generic so it is important that package
 developers and maintainers provide additional stand-alone tests
@@ -5500,12 +5564,6 @@ where only the outputs for the first of each set are shown:
    ...
 
 
-.. warning::
-
-   The API for adding and running stand-alone tests is not yet considered
-   stable and may change drastically in future releases. Packages with
-   stand-alone tests will be refactored to match changes to the API.
-
 .. _cmd-spack-test-list:
 
 """""""""""""""""""
@@ -5514,10 +5572,10 @@ where only the outputs for the first of each set are shown:
 
 Packages available for install testing can be found using the
 ``spack test list`` command. The command outputs all installed
-packages that have defined ``test`` methods.
+packages that have defined stand-alone test methods.
 
 Alternatively you can use the ``--all`` option to get a list of
-all packages that have defined ``test`` methods even if they are
+all packages that have stand-alone methods even if they are
 not installed.
 
 For more information, refer to `spack test list
