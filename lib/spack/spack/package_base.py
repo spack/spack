@@ -1030,20 +1030,32 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
         s = self.spec
         stage_name = "{0}{1}-{2}-{3}".format(stage_prefix, s.name, s.version, s.dag_hash())
 
-        stage = Stage(
-            fetcher,
-            mirror_paths=mirror_paths,
-            name=stage_name,
-            path=self.path,
-            search_fn=self._download_search,
-        )
-        return stage
 
-    def _make_cmake_build_stage(self):
-        root_stage_name = "{0}{1}-{2}-{3}".format(
-            stage_prefix, self.spec.name, self.spec.version, self.spec.dag_hash()
-        )
-        stage = CMakeBuildStage(self.spec.dag_hash(7), root_stage_name, root=self.cmake_stage_dir)
+        # if we're building a CMake package on Windows
+        # and the user set the requsite config option, setup a
+        # custom CMake build stage to relocate the cmake build dir to
+        # add here to take advantage of stage cleanup
+        if (
+            is_windows
+            and self.spec.variants["build_system"].value == "cmake"
+            and spack.config.get("config:cmake_ext_build", "")
+        ):
+            stage = CMakeBuildStage(
+                self.spec.dag_hash(7),
+                fetcher,
+                mirror_paths=mirror_paths,
+                name=stage_name,
+                path=self.path,
+                search_fn=self._download_search,
+            )
+        else:
+            stage = Stage(
+                fetcher,
+                mirror_paths=mirror_paths,
+                name=stage_name,
+                path=self.path,
+                search_fn=self._download_search,
+            )
         return stage
 
     def _make_stage(self):
@@ -1066,18 +1078,6 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
                 stage = self._make_resource_stage(composite_stage[0], fetcher, resource)
             # Append the item to the composite
             composite_stage.append(stage)
-
-        # if we're building a CMake package on Windows
-        # and the user set the requsite config option, setup a
-        # custom CMake build stage to relocate the cmake build dir to
-        # add here to take advantage of stage cleanup
-        if (
-            is_windows
-            and self.spec.variants["build_system"].value == "cmake"
-            and spack.config.get("config:cmake_ext_build", False)
-        ):
-            composite_stage.append(self._make_cmake_build_stage())
-
         return composite_stage
 
     @property
