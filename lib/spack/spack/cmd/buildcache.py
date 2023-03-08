@@ -52,10 +52,7 @@ def setup_parser(subparser):
     )
     push.add_argument("-f", "--force", action="store_true", help="overwrite tarball if it exists.")
     push.add_argument(
-        "-u",
-        "--unsigned",
-        action="store_true",
-        help="push unsigned buildcache tarballs",
+        "-u", "--unsigned", action="store_true", help="push unsigned buildcache tarballs"
     )
     push.add_argument(
         "-a",
