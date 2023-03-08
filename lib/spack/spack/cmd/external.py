@@ -18,6 +18,7 @@ import spack.cmd.common.arguments
 import spack.cray_manifest as cray_manifest
 import spack.detection
 import spack.error
+import spack.util.editor
 import spack.util.environment
 
 description = "manage external packages in Spack configuration"
@@ -65,7 +66,15 @@ def setup_parser(subparser):
     )
 
     list_parser = sp.add_parser("list", help="list detectable packages, by repository and name")
-    list_parser.add_argument("--detected", "-d", action="store_true", default=False, required=False, help="list detectable packages that have been detected externally and are present in packages.yaml")
+    list_parser.add_argument(
+        "--detected",
+        "-d",
+        action="store_true",
+        default=False,
+        required=False,
+        help=('list detectable packages that have been'
+              'detected externally and are present in packages.yaml')
+    )
 
     read_cray_manifest = sp.add_parser(
         "read-cray-manifest",
@@ -92,6 +101,14 @@ def setup_parser(subparser):
         help=("if a manifest file cannot be parsed, fail and report the " "full stack trace"),
     )
 
+    edit_parser = sp.add_parser("edit", help="open packages.yaml in $EDITOR")
+    edit_parser.add_argument(
+        "--scope",
+        choices=scopes,
+        metavar=scopes_metavar,
+        default=spack.config.default_modify_scope("packages"),
+        help="configuration scope to modify",
+    )
 
 def external_find(args):
     if args.all or not (args.tags or args.packages):
@@ -246,11 +263,17 @@ def external_list(args):
             colify.colify(pkgs, indent=4, output=sys.stdout)
 
 
+def external_edit(args):
+    ext_packages_yaml_path = spack.config.config.get_config_filename(args.scope, "packages")
+    spack.util.editor.editor(ext_packages_yaml_path)
+
+
 def external(parser, args):
     action = {
         "find": external_find,
         "list": external_list,
         "read-cray-manifest": external_read_cray_manifest,
+        "edit" : external_edit,
     }
     action[args.external_command](args)
 
