@@ -56,7 +56,7 @@ import spack.util.environment
 import spack.util.file_permissions as fp
 import spack.util.path
 import spack.util.spack_yaml as syaml
-from spack.build_environment import Context
+from spack.context import Context
 
 
 #: config section for this file

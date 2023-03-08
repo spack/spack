@@ -41,7 +41,7 @@ import sys
 import traceback
 import types
 from collections import defaultdict
-from enum import Enum, Flag, auto
+from enum import Flag, auto
 from itertools import chain
 from typing import List, Tuple
 
@@ -71,6 +71,7 @@ import spack.user_environment
 import spack.util.path
 import spack.util.pattern
 from spack import traverse
+from spack.context import Context
 from spack.error import NoHeadersError, NoLibrariesError
 from spack.install_test import spack_install_test_log
 from spack.installer import InstallError
@@ -112,26 +113,6 @@ SPACK_DEBUG_LOG_ID = "SPACK_DEBUG_LOG_ID"
 SPACK_DEBUG_LOG_DIR = "SPACK_DEBUG_LOG_DIR"
 SPACK_CCACHE_BINARY = "SPACK_CCACHE_BINARY"
 SPACK_SYSTEM_DIRS = "SPACK_SYSTEM_DIRS"
-
-
-class Context(Enum):
-    BUILD = 1
-    RUN = 2
-    TEST = 3
-
-    def __str__(self):
-        return ("build", "run", "test")[self.value - 1]
-
-    @classmethod
-    def from_string(cls, s: str):
-        if s == "build":
-            return Context.BUILD
-        elif s == "run":
-            return Context.RUN
-        elif s == "test":
-            return Context.TEST
-        raise ValueError(f"context should be one of 'build', 'run', 'test', got {s}")
-
 
 # Platform-specific library suffix.
 if sys.platform == "darwin":

@@ -15,7 +15,7 @@ import spack.spec
 import spack.util.environment as environment
 import spack.util.prefix as prefix
 from spack import traverse
-from spack.build_environment import Context
+from spack.context import Context
 
 #: Environment variable name Spack uses to track individually loaded packages
 spack_loaded_hashes_var = "SPACK_LOADED_HASHES"

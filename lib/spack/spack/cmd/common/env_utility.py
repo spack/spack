@@ -15,7 +15,7 @@ import spack.paths
 import spack.spec
 import spack.store
 from spack import build_environment, traverse
-from spack.build_environment import Context
+from spack.context import Context
 from spack.util.environment import dump_environment, pickle_environment
 
 
