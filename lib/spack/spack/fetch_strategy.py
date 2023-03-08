@@ -29,6 +29,7 @@ import os.path
 import pathlib
 import re
 import shutil
+import sys
 import urllib.parse
 from typing import List, Optional
 
@@ -1609,7 +1610,7 @@ def from_url_scheme(url, *args, **kwargs):
     # path, both of which urlparse will handly perfectly fine
     # for all other cases, the uri call will fail and this
     # is effectively a no-op
-    if is_windows:
+    if sys.platform == "win32":
         try:
             url = pathlib.Path(url).as_uri()
         except ValueError:

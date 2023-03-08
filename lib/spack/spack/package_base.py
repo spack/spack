@@ -57,13 +57,7 @@ import spack.util.web
 from spack.filesystem_view import YamlFilesystemView
 from spack.install_test import TestFailure, TestSuite
 from spack.installer import InstallError, PackageInstaller
-from spack.stage import (
-    CMakeBuildStage,
-    ResourceStage,
-    Stage,
-    StageComposite,
-    stage_prefix,
-)
+from spack.stage import CMakeBuildStage, ResourceStage, Stage, StageComposite, stage_prefix
 from spack.util.executable import ProcessError, which
 from spack.util.package_hash import package_hash
 from spack.util.prefix import Prefix
@@ -1035,7 +1029,7 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
         # custom CMake build stage to relocate the cmake build dir to
         # add here to take advantage of stage cleanup
         if (
-            is_windows
+            sys.platform == "win32"
             and self.spec.variants["build_system"].value == "cmake"
             and spack.config.get("config:cmake_ext_build", "")
         ):
