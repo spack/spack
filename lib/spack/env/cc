@@ -581,6 +581,7 @@ while [ $# -ne 0 ]; do
                 # -Xlinker without value: let the compiler error about it.
                 append other_args_list -Xlinker
                 xlinker_expect_rpath=no
+                break
             elif [ "$xlinker_expect_rpath" = yes ]; then
                 # Register the path of -Xlinker -rpath <other args> -Xlinker <path>
                 rp="$1"
