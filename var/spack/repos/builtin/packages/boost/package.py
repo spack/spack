@@ -27,6 +27,7 @@ class Boost(Package):
     maintainers("hainest")
 
     version("develop", branch="develop", submodules=True)
+    version("1.81.0", sha256="71feeed900fbccca04a3b4f2f84a7c217186f28a940ed8b7ed4725986baf99fa")
     version("1.80.0", sha256="1e19565d82e43bc59209a168f5ac899d3ba471d55c7610c677d4ccf2c9c500c0")
     version("1.79.0", sha256="475d589d51a7f8b3ba2ba4eda022b170e562ca3b760ee922c146b6c65856ef39")
     version("1.78.0", sha256="8681f175d4bdb26c52222665793eef08490d7758529330f98d3b29dd0735bccc")
