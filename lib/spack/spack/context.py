@@ -8,6 +8,9 @@ from enum import Enum
 
 
 class Context(Enum):
+    """Enum used to indicate the context in which an environment has to be setup: build,
+    run or test."""
+
     BUILD = 1
     RUN = 2
     TEST = 3

@@ -949,7 +949,7 @@ def modifications_from_dag(
 
     Args:
         specs (list or spack.spec.Spec): specs that induce the dag
-        context (Context): build, run, or test modifications
+        context (spack.context.Context): build, run, or test modifications
         custom_mods_only (bool): if True returns only custom modifications, if False
             returns custom and default modifications
         set_package_py_globals (bool): whether or not to set the global variables in the
