@@ -207,7 +207,7 @@ def merge_config_rules(configuration, spec):
     # evaluated in order of appearance in the module file
     spec_configuration = module_specific_configuration.pop("all", {})
     for constraint, action in module_specific_configuration.items():
-        if spec.satisfies(constraint, strict=True):
+        if spec.satisfies(constraint):
             if hasattr(constraint, "override") and constraint.override:
                 spec_configuration = {}
             update_dictionary_extending_lists(spec_configuration, action)

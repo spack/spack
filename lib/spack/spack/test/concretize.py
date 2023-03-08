@@ -293,11 +293,11 @@ class TestConcretize(object):
         we ask for some advanced version.
         """
         repo = spack.repo.path
-        assert not any(s.satisfies("mpich2@:1.0") for s in repo.providers_for("mpi@2.1"))
-        assert not any(s.satisfies("mpich2@:1.1") for s in repo.providers_for("mpi@2.2"))
-        assert not any(s.satisfies("mpich@:1") for s in repo.providers_for("mpi@2"))
-        assert not any(s.satisfies("mpich@:1") for s in repo.providers_for("mpi@3"))
-        assert not any(s.satisfies("mpich2") for s in repo.providers_for("mpi@3"))
+        assert not any(s.intersects("mpich2@:1.0") for s in repo.providers_for("mpi@2.1"))
+        assert not any(s.intersects("mpich2@:1.1") for s in repo.providers_for("mpi@2.2"))
+        assert not any(s.intersects("mpich@:1") for s in repo.providers_for("mpi@2"))
+        assert not any(s.intersects("mpich@:1") for s in repo.providers_for("mpi@3"))
+        assert not any(s.intersects("mpich2") for s in repo.providers_for("mpi@3"))
 
     def test_provides_handles_multiple_providers_of_same_version(self):
         """ """
@@ -1462,7 +1462,7 @@ class TestConcretize(object):
         with spack.config.override("concretizer:reuse", True):
             s = spack.spec.Spec(spec_str).concretized()
         assert s.installed is expect_installed
-        assert s.satisfies(spec_str, strict=True)
+        assert s.satisfies(spec_str)
 
     @pytest.mark.regression("26721,19736")
     def test_sticky_variant_in_package(self):

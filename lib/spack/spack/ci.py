@@ -361,7 +361,7 @@ def _compute_spec_deps(spec_list, check_index_only=False, mirrors_to_check=None)
 
 
 def _spec_matches(spec, match_string):
-    return spec.satisfies(match_string)
+    return spec.intersects(match_string)
 
 
 def _remove_attributes(src_dict, dest_dict):
@@ -938,7 +938,7 @@ def generate_gitlab_ci_yaml(
                         bs_arch = c_spec.architecture
                         bs_arch_family = bs_arch.target.microarchitecture.family
                         if (
-                            c_spec.satisfies(compiler_pkg_spec)
+                            c_spec.intersects(compiler_pkg_spec)
                             and bs_arch_family == spec_arch_family
                         ):
                             # We found the bootstrap compiler this release spec

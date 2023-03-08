@@ -721,7 +721,7 @@ def _version_constraints_are_satisfiable_by_some_version_in_repo(pkgs, error_cls
             dependency_pkg_cls = None
             try:
                 dependency_pkg_cls = spack.repo.path.get_pkg_class(s.name)
-                assert any(v.satisfies(s.versions) for v in list(dependency_pkg_cls.versions))
+                assert any(v.intersects(s.versions) for v in list(dependency_pkg_cls.versions))
             except Exception:
                 summary = (
                     "{0}: dependency on {1} cannot be satisfied " "by known versions of {1.name}"

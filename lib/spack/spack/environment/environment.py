@@ -349,7 +349,8 @@ def _is_dev_spec_and_has_changed(spec):
 
 def _spec_needs_overwrite(spec, changed_dev_specs):
     """Check whether the current spec needs to be overwritten because either it has
-    changed itself or one of its dependencies have changed"""
+    changed itself or one of its dependencies have changed
+    """
     # if it's not installed, we don't need to overwrite it
     if not spec.installed:
         return False
@@ -2313,7 +2314,7 @@ def _concretize_from_constraints(spec_constraints, tests=False):
             invalid_deps = [
                 c
                 for c in spec_constraints
-                if any(c.satisfies(invd, strict=True) for invd in invalid_deps_string)
+                if any(c.satisfies(invd) for invd in invalid_deps_string)
             ]
             if len(invalid_deps) != len(invalid_deps_string):
                 raise e

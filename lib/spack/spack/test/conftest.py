@@ -157,7 +157,9 @@ def mock_git_version_info(git, tmpdir, override_git_repos_cache_path):
             return git("rev-list", "-n1", "HEAD", output=str, error=str).strip()
 
         # Add two commits on main branch
-        write_file(filename, "[]")
+
+        # A commit without a previous version counts as "0"
+        write_file(filename, "[0]")
         git("add", filename)
         commit("first commit")
         commits.append(latest_commit())

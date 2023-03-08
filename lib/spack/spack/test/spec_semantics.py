@@ -9,280 +9,348 @@ import spack.directives
 import spack.error
 from spack.error import SpecError, UnsatisfiableSpecError
 from spack.spec import (
+    ArchSpec,
+    CompilerSpec,
     Spec,
     SpecFormatSigilError,
     SpecFormatStringError,
-    UnconstrainableDependencySpecError,
     UnsupportedCompilerError,
 )
 from spack.variant import (
     InvalidVariantValueError,
     MultipleValuesInExclusiveVariantError,
     UnknownVariantError,
-    substitute_abstract_variants,
 )
 
 
-def make_spec(spec_like, concrete):
-    if isinstance(spec_like, Spec):
-        return spec_like
-
-    spec = Spec(spec_like)
-    if concrete:
-        spec._mark_concrete()
-        substitute_abstract_variants(spec)
-    return spec
-
-
-def _specify(spec_like):
-    if isinstance(spec_like, Spec):
-        return spec_like
-
-    return Spec(spec_like)
-
-
-def check_satisfies(target_spec, constraint_spec, target_concrete=False):
-    target = make_spec(target_spec, target_concrete)
-    constraint = _specify(constraint_spec)
-
-    # Satisfies is one-directional.
-    assert target.satisfies(constraint)
-
-    # If target satisfies constraint, then we should be able to constrain
-    # constraint by target.  Reverse is not always true.
-    constraint.copy().constrain(target)
-
-
-def check_unsatisfiable(target_spec, constraint_spec, target_concrete=False):
-    target = make_spec(target_spec, target_concrete)
-    constraint = _specify(constraint_spec)
-
-    assert not target.satisfies(constraint)
-
-    with pytest.raises(UnsatisfiableSpecError):
-        constraint.copy().constrain(target)
-
-
-def check_constrain(expected, spec, constraint):
-    exp = Spec(expected)
-    spec = Spec(spec)
-    constraint = Spec(constraint)
-    spec.constrain(constraint)
-    assert exp == spec
-
-
-def check_constrain_changed(spec, constraint):
-    spec = Spec(spec)
-    assert spec.constrain(constraint)
-
-
-def check_constrain_not_changed(spec, constraint):
-    spec = Spec(spec)
-    assert not spec.constrain(constraint)
-
-
-def check_invalid_constraint(spec, constraint):
-    spec = Spec(spec)
-    constraint = Spec(constraint)
-    with pytest.raises((UnsatisfiableSpecError, UnconstrainableDependencySpecError)):
-        spec.constrain(constraint)
-
-
 @pytest.mark.usefixtures("config", "mock_packages")
-class TestSpecSematics(object):
-    """This tests satisfies(), constrain() and other semantic operations
-    on specs.
-    """
+class TestSpecSemantics(object):
+    """Test satisfies(), intersects(), constrain() and other semantic operations on specs."""
 
-    def test_satisfies(self):
-        check_satisfies("libelf@0.8.13", "@0:1")
-        check_satisfies("libdwarf^libelf@0.8.13", "^libelf@0:1")
+    @pytest.mark.parametrize(
+        "lhs,rhs,expected",
+        [
+            ("libelf@0.8.13", "@0:1", "libelf@0.8.13"),
+            ("libdwarf^libelf@0.8.13", "^libelf@0:1", "libdwarf^libelf@0.8.13"),
+            ("libelf", Spec(), "libelf"),
+            ("libdwarf", Spec(), "libdwarf"),
+            ("%intel", Spec(), "%intel"),
+            ("^mpi", Spec(), "^mpi"),
+            ("+debug", Spec(), "+debug"),
+            ("@3:", Spec(), "@3:"),
+            # Versions
+            ("libelf@0:2.5", "libelf@2.1:3", "libelf@2.1:2.5"),
+            ("libelf@0:2.5%gcc@2:4.6", "libelf@2.1:3%gcc@4.5:4.7", "libelf@2.1:2.5%gcc@4.5:4.6"),
+            # Namespaces
+            ("builtin.mpich", "mpich", "builtin.mpich"),
+            ("builtin.mock.mpich", "mpich", "builtin.mock.mpich"),
+            ("builtin.mpich", "builtin.mpich", "builtin.mpich"),
+            ("mpileaks ^builtin.mock.mpich", "^mpich", "mpileaks ^builtin.mock.mpich"),
+            # Virtual dependencies are fully resolved during concretization, so we can constrain
+            # abstract specs but that would result in a new node
+            ("mpileaks ^builtin.mock.mpich", "^mpi", "mpileaks ^mpi ^builtin.mock.mpich"),
+            (
+                "mpileaks ^builtin.mock.mpich",
+                "^builtin.mock.mpich",
+                "mpileaks ^builtin.mock.mpich",
+            ),
+            # Compilers
+            ("foo%gcc", "%gcc", "foo%gcc"),
+            ("foo%intel", "%intel", "foo%intel"),
+            ("foo%gcc", "%gcc@4.7.2", "foo%gcc@4.7.2"),
+            ("foo%intel", "%intel@4.7.2", "foo%intel@4.7.2"),
+            ("foo%pgi@4.5", "%pgi@4.4:4.6", "foo%pgi@4.5"),
+            ("foo@2.0%pgi@4.5", "@1:3%pgi@4.4:4.6", "foo@2.0%pgi@4.5"),
+            ("foo %gcc@4.7.3", "%gcc@4.7", "foo %gcc@4.7.3"),
+            ("libelf %gcc@4.4.7", "libelf %gcc@4.4.7", "libelf %gcc@4.4.7"),
+            ("libelf", "libelf %gcc@4.4.7", "libelf %gcc@4.4.7"),
+            # Architecture
+            ("foo platform=test", "platform=test", "foo platform=test"),
+            ("foo platform=linux", "platform=linux", "foo platform=linux"),
+            (
+                "foo platform=test",
+                "platform=test target=frontend",
+                "foo platform=test target=frontend",
+            ),
+            (
+                "foo platform=test",
+                "platform=test os=frontend target=frontend",
+                "foo platform=test os=frontend target=frontend",
+            ),
+            (
+                "foo platform=test os=frontend target=frontend",
+                "platform=test",
+                "foo platform=test os=frontend target=frontend",
+            ),
+            ("foo arch=test-None-None", "platform=test", "foo platform=test"),
+            (
+                "foo arch=test-None-frontend",
+                "platform=test target=frontend",
+                "foo platform=test target=frontend",
+            ),
+            (
+                "foo arch=test-frontend-frontend",
+                "platform=test os=frontend target=frontend",
+                "foo platform=test os=frontend target=frontend",
+            ),
+            (
+                "foo arch=test-frontend-frontend",
+                "platform=test",
+                "foo platform=test os=frontend target=frontend",
+            ),
+            (
+                "foo platform=test target=backend os=backend",
+                "platform=test target=backend os=backend",
+                "foo platform=test target=backend os=backend",
+            ),
+            (
+                "libelf target=default_target os=default_os",
+                "libelf target=default_target os=default_os",
+                "libelf target=default_target os=default_os",
+            ),
+            # Dependencies
+            ("mpileaks ^mpich", "^mpich", "mpileaks ^mpich"),
+            ("mpileaks ^mpich@2.0", "^mpich@1:3", "mpileaks ^mpich@2.0"),
+            (
+                "mpileaks ^mpich@2.0 ^callpath@1.5",
+                "^mpich@1:3 ^callpath@1.4:1.6",
+                "mpileaks^mpich@2.0^callpath@1.5",
+            ),
+            ("mpileaks ^mpi", "^mpi", "mpileaks ^mpi"),
+            ("mpileaks ^mpi", "^mpich", "mpileaks ^mpi ^mpich"),
+            ("mpileaks^mpi@1.5", "^mpi@1.2:1.6", "mpileaks^mpi@1.5"),
+            ("mpileaks^mpi@2:", "^mpich", "mpileaks^mpi@2: ^mpich"),
+            ("mpileaks^mpi@2:", "^mpich@3.0.4", "mpileaks^mpi@2: ^mpich@3.0.4"),
+            # Variants
+            ("mpich+foo", "mpich+foo", "mpich+foo"),
+            ("mpich++foo", "mpich++foo", "mpich++foo"),
+            ("mpich~foo", "mpich~foo", "mpich~foo"),
+            ("mpich~~foo", "mpich~~foo", "mpich~~foo"),
+            ("mpich foo=1", "mpich foo=1", "mpich foo=1"),
+            ("mpich foo==1", "mpich foo==1", "mpich foo==1"),
+            ("mpich+foo", "mpich foo=True", "mpich+foo"),
+            ("mpich++foo", "mpich foo=True", "mpich+foo"),
+            ("mpich foo=true", "mpich+foo", "mpich+foo"),
+            ("mpich foo==true", "mpich++foo", "mpich+foo"),
+            ("mpich~foo", "mpich foo=FALSE", "mpich~foo"),
+            ("mpich~~foo", "mpich foo=FALSE", "mpich~foo"),
+            ("mpich foo=False", "mpich~foo", "mpich~foo"),
+            ("mpich foo==False", "mpich~foo", "mpich~foo"),
+            ("mpich foo=*", "mpich~foo", "mpich~foo"),
+            ("mpich+foo", "mpich foo=*", "mpich+foo"),
+            (
+                'multivalue-variant foo="bar,baz"',
+                "multivalue-variant foo=bar,baz",
+                "multivalue-variant foo=bar,baz",
+            ),
+            (
+                'multivalue-variant foo="bar,baz"',
+                "multivalue-variant foo=*",
+                "multivalue-variant foo=bar,baz",
+            ),
+            (
+                'multivalue-variant foo="bar,baz"',
+                "multivalue-variant foo=bar",
+                "multivalue-variant foo=bar,baz",
+            ),
+            (
+                'multivalue-variant foo="bar,baz"',
+                "multivalue-variant foo=baz",
+                "multivalue-variant foo=bar,baz",
+            ),
+            (
+                'multivalue-variant foo="bar,baz,barbaz"',
+                "multivalue-variant foo=bar,baz",
+                "multivalue-variant foo=bar,baz,barbaz",
+            ),
+            (
+                'multivalue-variant foo="bar,baz"',
+                'foo="baz,bar"',  # Order of values doesn't matter
+                "multivalue-variant foo=bar,baz",
+            ),
+            ("mpich+foo", "mpich", "mpich+foo"),
+            ("mpich~foo", "mpich", "mpich~foo"),
+            ("mpich foo=1", "mpich", "mpich foo=1"),
+            ("mpich", "mpich++foo", "mpich+foo"),
+            ("libelf+debug", "libelf+foo", "libelf+debug+foo"),
+            ("libelf+debug", "libelf+debug+foo", "libelf+debug+foo"),
+            ("libelf debug=2", "libelf foo=1", "libelf debug=2 foo=1"),
+            ("libelf debug=2", "libelf debug=2 foo=1", "libelf debug=2 foo=1"),
+            ("libelf+debug", "libelf~foo", "libelf+debug~foo"),
+            ("libelf+debug", "libelf+debug~foo", "libelf+debug~foo"),
+            ("libelf++debug", "libelf+debug+foo", "libelf++debug++foo"),
+            ("libelf debug==2", "libelf foo=1", "libelf debug==2 foo==1"),
+            ("libelf debug==2", "libelf debug=2 foo=1", "libelf debug==2 foo==1"),
+            ("libelf++debug", "libelf++debug~foo", "libelf++debug~~foo"),
+            ("libelf foo=bar,baz", "libelf foo=*", "libelf foo=bar,baz"),
+            ("libelf foo=*", "libelf foo=bar,baz", "libelf foo=bar,baz"),
+            (
+                'multivalue-variant foo="bar"',
+                'multivalue-variant foo="baz"',
+                'multivalue-variant foo="bar,baz"',
+            ),
+            (
+                'multivalue-variant foo="bar,barbaz"',
+                'multivalue-variant foo="baz"',
+                'multivalue-variant foo="bar,baz,barbaz"',
+            ),
+            # Flags
+            ("mpich ", 'mpich cppflags="-O3"', 'mpich cppflags="-O3"'),
+            (
+                'mpich cppflags="-O3 -Wall"',
+                'mpich cppflags="-O3 -Wall"',
+                'mpich cppflags="-O3 -Wall"',
+            ),
+            ('mpich cppflags=="-O3"', 'mpich cppflags=="-O3"', 'mpich cppflags=="-O3"'),
+            (
+                'libelf cflags="-O3"',
+                'libelf cppflags="-Wall"',
+                'libelf cflags="-O3" cppflags="-Wall"',
+            ),
+            (
+                'libelf cflags="-O3"',
+                'libelf cppflags=="-Wall"',
+                'libelf cflags="-O3" cppflags=="-Wall"',
+            ),
+            (
+                'libelf cflags=="-O3"',
+                'libelf cppflags=="-Wall"',
+                'libelf cflags=="-O3" cppflags=="-Wall"',
+            ),
+            (
+                'libelf cflags="-O3"',
+                'libelf cflags="-O3" cppflags="-Wall"',
+                'libelf cflags="-O3" cppflags="-Wall"',
+            ),
+        ],
+    )
+    def test_abstract_specs_can_constrain_each_other(self, lhs, rhs, expected):
+        """Test that lhs and rhs intersect with each other, and that they can be constrained
+        with each other. Also check that the constrained result match the expected spec.
+        """
+        lhs, rhs, expected = Spec(lhs), Spec(rhs), Spec(expected)
 
-    def test_empty_satisfies(self):
-        # Basic satisfaction
-        check_satisfies("libelf", Spec())
-        check_satisfies("libdwarf", Spec())
-        check_satisfies("%intel", Spec())
-        check_satisfies("^mpi", Spec())
-        check_satisfies("+debug", Spec())
-        check_satisfies("@3:", Spec())
+        assert lhs.intersects(rhs)
+        assert rhs.intersects(lhs)
 
-        # Concrete (strict) satisfaction
-        check_satisfies("libelf", Spec(), True)
-        check_satisfies("libdwarf", Spec(), True)
-        check_satisfies("%intel", Spec(), True)
-        check_satisfies("^mpi", Spec(), True)
-        # TODO: Variants can't be called concrete while anonymous
-        # check_satisfies('+debug', Spec(), True)
-        check_satisfies("@3:", Spec(), True)
+        c1, c2 = lhs.copy(), rhs.copy()
+        c1.constrain(rhs)
+        c2.constrain(lhs)
+        assert c1 == c2
+        assert c1 == expected
 
-        # Reverse (non-strict) satisfaction
-        check_satisfies(Spec(), "libelf")
-        check_satisfies(Spec(), "libdwarf")
-        check_satisfies(Spec(), "%intel")
-        check_satisfies(Spec(), "^mpi")
-        # TODO: Variant matching is auto-strict
-        # we should rethink this
-        # check_satisfies(Spec(), '+debug')
-        check_satisfies(Spec(), "@3:")
+    @pytest.mark.parametrize(
+        "lhs,rhs", [("libelf", Spec()), ("libelf", "@0:1"), ("libelf", "@0:1 %gcc")]
+    )
+    def test_concrete_specs_which_satisfies_abstract(self, lhs, rhs, default_mock_concretization):
+        """Test that constraining an abstract spec by a compatible concrete one makes the
+        abstract spec concrete, and equal to the one it was constrained with.
+        """
+        lhs, rhs = default_mock_concretization(lhs), Spec(rhs)
 
-    def test_satisfies_namespace(self):
-        check_satisfies("builtin.mpich", "mpich")
-        check_satisfies("builtin.mock.mpich", "mpich")
+        assert lhs.intersects(rhs)
+        assert rhs.intersects(lhs)
+        assert lhs.satisfies(rhs)
+        assert not rhs.satisfies(lhs)
 
-        # TODO: only works for deps now, but shouldn't we allow for root spec?
-        # check_satisfies('builtin.mock.mpich', 'mpi')
+        assert lhs.constrain(rhs) is False
+        assert rhs.constrain(lhs) is True
 
-        check_satisfies("builtin.mock.mpich", "builtin.mock.mpich")
+        assert rhs.concrete
+        assert lhs.satisfies(rhs)
+        assert rhs.satisfies(lhs)
+        assert lhs == rhs
 
-        check_unsatisfiable("builtin.mock.mpich", "builtin.mpich")
+    @pytest.mark.parametrize(
+        "lhs,rhs",
+        [
+            ("foo platform=linux", "platform=test os=redhat6 target=x86"),
+            ("foo os=redhat6", "platform=test os=debian6 target=x86_64"),
+            ("foo target=x86_64", "platform=test os=redhat6 target=x86"),
+            ("foo arch=test-frontend-frontend", "platform=test os=frontend target=backend"),
+            ("foo%intel", "%gcc"),
+            ("foo%intel", "%pgi"),
+            ("foo%pgi@4.3", "%pgi@4.4:4.6"),
+            ("foo@4.0%pgi", "@1:3%pgi"),
+            ("foo@4.0%pgi@4.5", "@1:3%pgi@4.4:4.6"),
+            ("builtin.mock.mpich", "builtin.mpich"),
+            ("mpileaks ^builtin.mock.mpich", "^builtin.mpich"),
+            ("mpileaks^mpich", "^zmpi"),
+            ("mpileaks^zmpi", "^mpich"),
+            ("mpileaks^mpich@1.2", "^mpich@2.0"),
+            ("mpileaks^mpich@4.0^callpath@1.5", "^mpich@1:3^callpath@1.4:1.6"),
+            ("mpileaks^mpich@2.0^callpath@1.7", "^mpich@1:3^callpath@1.4:1.6"),
+            ("mpileaks^mpich@4.0^callpath@1.7", "^mpich@1:3^callpath@1.4:1.6"),
+            ("mpileaks^mpich", "^zmpi"),
+            ("mpileaks^mpi@3", "^mpi@1.2:1.6"),
+            ("mpileaks^mpi@3:", "^mpich2@1.4"),
+            ("mpileaks^mpi@3:", "^mpich2"),
+            ("mpileaks^mpi@3:", "^mpich@1.0"),
+            ("mpich~foo", "mpich+foo"),
+            ("mpich+foo", "mpich~foo"),
+            ("mpich foo=True", "mpich foo=False"),
+            ("mpich~~foo", "mpich++foo"),
+            ("mpich++foo", "mpich~~foo"),
+            ("mpich foo==True", "mpich foo==False"),
+            ('mpich cppflags="-O3"', 'mpich cppflags="-O2"'),
+            ('mpich cppflags="-O3"', 'mpich cppflags=="-O3"'),
+            ("libelf@0:2.0", "libelf@2.1:3"),
+            ("libelf@0:2.5%gcc@4.8:4.9", "libelf@2.1:3%gcc@4.5:4.7"),
+            ("libelf+debug", "libelf~debug"),
+            ("libelf+debug~foo", "libelf+debug+foo"),
+            ("libelf debug=True", "libelf debug=False"),
+            ('libelf cppflags="-O3"', 'libelf cppflags="-O2"'),
+            ("libelf platform=test target=be os=be", "libelf target=fe os=fe"),
+        ],
+    )
+    def test_constraining_abstract_specs_with_empty_intersection(self, lhs, rhs):
+        """Check that two abstract specs with an empty intersection cannot be constrained
+        with each other.
+        """
+        lhs, rhs = Spec(lhs), Spec(rhs)
 
-    def test_satisfies_namespaced_dep(self):
-        """Ensure spec from same or unspecified namespace satisfies namespace
-        constraint."""
-        check_satisfies("mpileaks ^builtin.mock.mpich", "^mpich")
+        assert not lhs.intersects(rhs)
+        assert not rhs.intersects(lhs)
 
-        check_satisfies("mpileaks ^builtin.mock.mpich", "^mpi")
-        check_satisfies("mpileaks ^builtin.mock.mpich", "^builtin.mock.mpich")
+        with pytest.raises(UnsatisfiableSpecError):
+            lhs.constrain(rhs)
 
-        check_unsatisfiable("mpileaks ^builtin.mock.mpich", "^builtin.mpich")
+        with pytest.raises(UnsatisfiableSpecError):
+            rhs.constrain(lhs)
 
-    def test_satisfies_compiler(self):
-        check_satisfies("foo%gcc", "%gcc")
-        check_satisfies("foo%intel", "%intel")
-        check_unsatisfiable("foo%intel", "%gcc")
-        check_unsatisfiable("foo%intel", "%pgi")
+    @pytest.mark.parametrize(
+        "lhs,rhs,intersection_expected",
+        [
+            ("mpich", "mpich +foo", True),
+            ("mpich", "mpich~foo", True),
+            ("mpich", "mpich foo=1", True),
+            ("mpich", "mpich++foo", True),
+            ("mpich", "mpich~~foo", True),
+            ("mpich", "mpich foo==1", True),
+            # Flags semantics is currently different from other variant
+            ("mpich", 'mpich cflags="-O3"', True),
+            ("mpich cflags=-O3", 'mpich cflags="-O3 -Ofast"', False),
+            ("mpich cflags=-O2", 'mpich cflags="-O3"', False),
+            ("multivalue-variant foo=bar", "multivalue-variant +foo", False),
+            ("multivalue-variant foo=bar", "multivalue-variant ~foo", False),
+            ("multivalue-variant fee=bar", "multivalue-variant fee=baz", False),
+        ],
+    )
+    def test_concrete_specs_which_do_not_satisfy_abstract(
+        self, lhs, rhs, intersection_expected, default_mock_concretization
+    ):
+        lhs, rhs = default_mock_concretization(lhs), Spec(rhs)
 
-    def test_satisfies_compiler_version(self):
-        check_satisfies("foo%gcc", "%gcc@4.7.2")
-        check_satisfies("foo%intel", "%intel@4.7.2")
+        assert lhs.intersects(rhs) is intersection_expected
+        assert rhs.intersects(lhs) is intersection_expected
+        assert not lhs.satisfies(rhs)
+        assert not rhs.satisfies(lhs)
 
-        check_satisfies("foo%pgi@4.5", "%pgi@4.4:4.6")
-        check_satisfies("foo@2.0%pgi@4.5", "@1:3%pgi@4.4:4.6")
+        with pytest.raises(UnsatisfiableSpecError):
+            assert lhs.constrain(rhs)
 
-        check_unsatisfiable("foo%pgi@4.3", "%pgi@4.4:4.6")
-        check_unsatisfiable("foo@4.0%pgi", "@1:3%pgi")
-        check_unsatisfiable("foo@4.0%pgi@4.5", "@1:3%pgi@4.4:4.6")
-
-        check_satisfies("foo %gcc@4.7.3", "%gcc@4.7")
-        check_unsatisfiable("foo %gcc@4.7", "%gcc@4.7.3")
-
-    def test_satisfies_architecture(self):
-        check_satisfies("foo platform=test", "platform=test")
-        check_satisfies("foo platform=linux", "platform=linux")
-        check_satisfies("foo platform=test", "platform=test target=frontend")
-        check_satisfies("foo platform=test", "platform=test os=frontend target=frontend")
-        check_satisfies("foo platform=test os=frontend target=frontend", "platform=test")
-
-        check_unsatisfiable("foo platform=linux", "platform=test os=redhat6 target=x86")
-        check_unsatisfiable("foo os=redhat6", "platform=test os=debian6 target=x86_64")
-        check_unsatisfiable("foo target=x86_64", "platform=test os=redhat6 target=x86")
-
-        check_satisfies("foo arch=test-None-None", "platform=test")
-        check_satisfies("foo arch=test-None-frontend", "platform=test target=frontend")
-        check_satisfies(
-            "foo arch=test-frontend-frontend", "platform=test os=frontend target=frontend"
-        )
-        check_satisfies("foo arch=test-frontend-frontend", "platform=test")
-        check_unsatisfiable(
-            "foo arch=test-frontend-frontend", "platform=test os=frontend target=backend"
-        )
-
-        check_satisfies(
-            "foo platform=test target=frontend os=frontend",
-            "platform=test target=frontend os=frontend",
-        )
-        check_satisfies(
-            "foo platform=test target=backend os=backend",
-            "platform=test target=backend os=backend",
-        )
-        check_satisfies(
-            "foo platform=test target=default_target os=default_os", "platform=test os=default_os"
-        )
-        check_unsatisfiable(
-            "foo platform=test target=x86 os=redhat6", "platform=linux target=x86 os=redhat6"
-        )
-
-    def test_satisfies_dependencies(self):
-        check_satisfies("mpileaks^mpich", "^mpich")
-        check_satisfies("mpileaks^zmpi", "^zmpi")
-
-        check_unsatisfiable("mpileaks^mpich", "^zmpi")
-        check_unsatisfiable("mpileaks^zmpi", "^mpich")
-
-    def test_satisfies_dependency_versions(self):
-        check_satisfies("mpileaks^mpich@2.0", "^mpich@1:3")
-        check_unsatisfiable("mpileaks^mpich@1.2", "^mpich@2.0")
-
-        check_satisfies("mpileaks^mpich@2.0^callpath@1.5", "^mpich@1:3^callpath@1.4:1.6")
-        check_unsatisfiable("mpileaks^mpich@4.0^callpath@1.5", "^mpich@1:3^callpath@1.4:1.6")
-        check_unsatisfiable("mpileaks^mpich@2.0^callpath@1.7", "^mpich@1:3^callpath@1.4:1.6")
-        check_unsatisfiable("mpileaks^mpich@4.0^callpath@1.7", "^mpich@1:3^callpath@1.4:1.6")
-
-    def test_satisfies_virtual_dependencies(self):
-        check_satisfies("mpileaks^mpi", "^mpi")
-        check_satisfies("mpileaks^mpi", "^mpich")
-
-        check_satisfies("mpileaks^mpi", "^zmpi")
-        check_unsatisfiable("mpileaks^mpich", "^zmpi")
-
-    def test_satisfies_virtual_dependency_versions(self):
-        check_satisfies("mpileaks^mpi@1.5", "^mpi@1.2:1.6")
-        check_unsatisfiable("mpileaks^mpi@3", "^mpi@1.2:1.6")
-
-        check_satisfies("mpileaks^mpi@2:", "^mpich")
-        check_satisfies("mpileaks^mpi@2:", "^mpich@3.0.4")
-        check_satisfies("mpileaks^mpi@2:", "^mpich2@1.4")
-
-        check_satisfies("mpileaks^mpi@1:", "^mpich2")
-        check_satisfies("mpileaks^mpi@2:", "^mpich2")
-
-        check_unsatisfiable("mpileaks^mpi@3:", "^mpich2@1.4")
-        check_unsatisfiable("mpileaks^mpi@3:", "^mpich2")
-        check_unsatisfiable("mpileaks^mpi@3:", "^mpich@1.0")
-
-    def test_satisfies_matching_variant(self):
-        check_satisfies("mpich+foo", "mpich+foo")
-        check_satisfies("mpich++foo", "mpich++foo")
-        check_satisfies("mpich~foo", "mpich~foo")
-        check_satisfies("mpich~~foo", "mpich~~foo")
-        check_satisfies("mpich foo=1", "mpich foo=1")
-        check_satisfies("mpich foo==1", "mpich foo==1")
-
-        # confirm that synonymous syntax works correctly
-        check_satisfies("mpich+foo", "mpich foo=True")
-        check_satisfies("mpich++foo", "mpich foo=True")
-        check_satisfies("mpich foo=true", "mpich+foo")
-        check_satisfies("mpich foo==true", "mpich++foo")
-        check_satisfies("mpich~foo", "mpich foo=FALSE")
-        check_satisfies("mpich~~foo", "mpich foo=FALSE")
-        check_satisfies("mpich foo=False", "mpich~foo")
-        check_satisfies("mpich foo==False", "mpich~foo")
-        check_satisfies("mpich foo=*", "mpich~foo")
-        check_satisfies("mpich+foo", "mpich foo=*")
-
-    def test_satisfies_multi_value_variant(self):
-        # Check quoting
-        check_satisfies('multivalue-variant foo="bar,baz"', 'multivalue-variant foo="bar,baz"')
-        check_satisfies("multivalue-variant foo=bar,baz", "multivalue-variant foo=bar,baz")
-        check_satisfies('multivalue-variant foo="bar,baz"', "multivalue-variant foo=bar,baz")
-
-        # A more constrained spec satisfies a less constrained one
-        check_satisfies('multivalue-variant foo="bar,baz"', "multivalue-variant foo=*")
-
-        check_satisfies("multivalue-variant foo=*", 'multivalue-variant foo="bar,baz"')
-
-        check_satisfies('multivalue-variant foo="bar,baz"', 'multivalue-variant foo="bar"')
-
-        check_satisfies('multivalue-variant foo="bar,baz"', 'multivalue-variant foo="baz"')
-
-        check_satisfies(
-            'multivalue-variant foo="bar,baz,barbaz"', 'multivalue-variant foo="bar,baz"'
-        )
-
-        check_satisfies('multivalue-variant foo="bar,baz"', 'foo="bar,baz"')
-
-        check_satisfies('multivalue-variant foo="bar,baz"', 'foo="bar"')
+        with pytest.raises(UnsatisfiableSpecError):
+            assert rhs.constrain(lhs)
 
     def test_satisfies_single_valued_variant(self):
         """Tests that the case reported in
@@ -322,11 +390,11 @@ class TestSpecSematics(object):
         spec.concretize()
         assert "a@1.0" not in spec
 
-    def test_unsatisfiable_multi_value_variant(self):
+    def test_unsatisfiable_multi_value_variant(self, default_mock_concretization):
         # Semantics for a multi-valued variant is different
         # Depending on whether the spec is concrete or not
 
-        a = make_spec('multivalue-variant foo="bar"', concrete=True)
+        a = default_mock_concretization('multivalue-variant foo="bar"')
         spec_str = 'multivalue-variant foo="bar,baz"'
         b = Spec(spec_str)
         assert not a.satisfies(b)
@@ -344,7 +412,7 @@ class TestSpecSematics(object):
         # An abstract spec can instead be constrained
         assert a.constrain(b)
 
-        a = make_spec('multivalue-variant foo="bar,baz"', concrete=True)
+        a = default_mock_concretization('multivalue-variant foo="bar,baz"')
         spec_str = 'multivalue-variant foo="bar,baz,quux"'
         b = Spec(spec_str)
         assert not a.satisfies(b)
@@ -357,8 +425,8 @@ class TestSpecSematics(object):
         spec_str = 'multivalue-variant foo="bar,baz,quux"'
         b = Spec(spec_str)
         # The specs are abstract and they **could** be constrained
-        assert a.satisfies(b)
-        assert a.satisfies(spec_str)
+        assert a.intersects(b)
+        assert a.intersects(spec_str)
         # An abstract spec can instead be constrained
         assert a.constrain(b)
         # ...but will fail during concretization if there are
@@ -373,8 +441,8 @@ class TestSpecSematics(object):
         # The specs are abstract and they **could** be constrained,
         # as before concretization I don't know which type of variant
         # I have (if it is not a BV)
-        assert a.satisfies(b)
-        assert a.satisfies(spec_str)
+        assert a.intersects(b)
+        assert a.intersects(spec_str)
         # A variant cannot be parsed as single-valued until we try to
         # concretize. This means that we can constrain the variant above
         assert a.constrain(b)
@@ -382,81 +450,6 @@ class TestSpecSematics(object):
         # multiple values set
         with pytest.raises(MultipleValuesInExclusiveVariantError):
             a.concretize()
-
-    def test_unsatisfiable_variant_types(self):
-        # These should fail due to incompatible types
-
-        # FIXME: these needs to be checked as the new relaxed
-        # FIXME: semantic makes them fail (constrain does not raise)
-        # check_unsatisfiable('multivalue-variant +foo',
-        #                     'multivalue-variant foo="bar"')
-        # check_unsatisfiable('multivalue-variant ~foo',
-        #                     'multivalue-variant foo="bar"')
-
-        check_unsatisfiable(
-            target_spec='multivalue-variant foo="bar"',
-            constraint_spec="multivalue-variant +foo",
-            target_concrete=True,
-        )
-
-        check_unsatisfiable(
-            target_spec='multivalue-variant foo="bar"',
-            constraint_spec="multivalue-variant ~foo",
-            target_concrete=True,
-        )
-
-    def test_satisfies_unconstrained_variant(self):
-        # only asked for mpich, no constraints.  Either will do.
-        check_satisfies("mpich+foo", "mpich")
-        check_satisfies("mpich~foo", "mpich")
-        check_satisfies("mpich foo=1", "mpich")
-
-    def test_unsatisfiable_variants(self):
-        # This case is different depending on whether the specs are concrete.
-
-        # 'mpich' is not concrete:
-        check_satisfies("mpich", "mpich+foo", False)
-        check_satisfies("mpich", "mpich~foo", False)
-        check_satisfies("mpich", "mpich foo=1", False)
-        check_satisfies("mpich", "mpich++foo", False)
-        check_satisfies("mpich", "mpich~~foo", False)
-        check_satisfies("mpich", "mpich foo==1", False)
-
-        # 'mpich' is concrete:
-        check_unsatisfiable("mpich", "mpich+foo", True)
-        check_unsatisfiable("mpich", "mpich~foo", True)
-        check_unsatisfiable("mpich", "mpich foo=1", True)
-        check_unsatisfiable("mpich", "mpich++foo", True)
-        check_unsatisfiable("mpich", "mpich~~foo", True)
-        check_unsatisfiable("mpich", "mpich foo==1", True)
-
-    def test_unsatisfiable_variant_mismatch(self):
-        # No matchi in specs
-        check_unsatisfiable("mpich~foo", "mpich+foo")
-        check_unsatisfiable("mpich+foo", "mpich~foo")
-        check_unsatisfiable("mpich foo=True", "mpich foo=False")
-        check_unsatisfiable("mpich~~foo", "mpich++foo")
-        check_unsatisfiable("mpich++foo", "mpich~~foo")
-        check_unsatisfiable("mpich foo==True", "mpich foo==False")
-
-    def test_satisfies_matching_compiler_flag(self):
-        check_satisfies('mpich cppflags="-O3"', 'mpich cppflags="-O3"')
-        check_satisfies('mpich cppflags="-O3 -Wall"', 'mpich cppflags="-O3 -Wall"')
-        check_satisfies('mpich cppflags=="-O3"', 'mpich cppflags=="-O3"')
-        check_satisfies('mpich cppflags=="-O3 -Wall"', 'mpich cppflags=="-O3 -Wall"')
-
-    def test_satisfies_unconstrained_compiler_flag(self):
-        # only asked for mpich, no constraints.  Any will do.
-        check_satisfies('mpich cppflags="-O3"', "mpich")
-
-    def test_unsatisfiable_compiler_flag(self):
-        # This case is different depending on whether the specs are concrete.
-
-        # 'mpich' is not concrete:
-        check_satisfies("mpich", 'mpich cppflags="-O3"', False)
-
-        # 'mpich' is concrete:
-        check_unsatisfiable("mpich", 'mpich cppflags="-O3"', True)
 
     def test_copy_satisfies_transitive(self):
         spec = Spec("dttop")
@@ -466,33 +459,25 @@ class TestSpecSematics(object):
             assert s.satisfies(copy[s.name])
             assert copy[s.name].satisfies(s)
 
-    def test_unsatisfiable_compiler_flag_mismatch(self):
-        # No match in specs
-        check_unsatisfiable('mpich cppflags="-O3"', 'mpich cppflags="-O2"')
-        check_unsatisfiable('mpich cppflags="-O3"', 'mpich cppflags=="-O3"')
+    def test_intersects_virtual(self):
+        assert Spec("mpich").intersects(Spec("mpi"))
+        assert Spec("mpich2").intersects(Spec("mpi"))
+        assert Spec("zmpi").intersects(Spec("mpi"))
 
-    def test_satisfies_virtual(self):
-        # Don't use check_satisfies: it checks constrain() too, and
-        # you can't constrain a non-virtual by a virtual.
-        assert Spec("mpich").satisfies(Spec("mpi"))
-        assert Spec("mpich2").satisfies(Spec("mpi"))
-        assert Spec("zmpi").satisfies(Spec("mpi"))
+    def test_intersects_virtual_dep_with_virtual_constraint(self):
+        assert Spec("netlib-lapack ^openblas").intersects("netlib-lapack ^openblas")
+        assert not Spec("netlib-lapack ^netlib-blas").intersects("netlib-lapack ^openblas")
+        assert not Spec("netlib-lapack ^openblas").intersects("netlib-lapack ^netlib-blas")
+        assert Spec("netlib-lapack ^netlib-blas").intersects("netlib-lapack ^netlib-blas")
 
-    def test_satisfies_virtual_dep_with_virtual_constraint(self):
-        """Ensure we can satisfy virtual constraints when there are multiple
-        vdep providers in the specs."""
-        assert Spec("netlib-lapack ^openblas").satisfies("netlib-lapack ^openblas")
-        assert not Spec("netlib-lapack ^netlib-blas").satisfies("netlib-lapack ^openblas")
-        assert not Spec("netlib-lapack ^openblas").satisfies("netlib-lapack ^netlib-blas")
-        assert Spec("netlib-lapack ^netlib-blas").satisfies("netlib-lapack ^netlib-blas")
-
-    def test_satisfies_same_spec_with_different_hash(self):
+    def test_intersectable_concrete_specs_must_have_the_same_hash(self):
         """Ensure that concrete specs are matched *exactly* by hash."""
         s1 = Spec("mpileaks").concretized()
         s2 = s1.copy()
 
         assert s1.satisfies(s2)
         assert s2.satisfies(s1)
+        assert s1.intersects(s2)
 
         # Simulate specs that were installed before and after a change to
         # Spack's hashing algorithm.  This just reverses s2's hash.
@@ -500,6 +485,7 @@ class TestSpecSematics(object):
 
         assert not s1.satisfies(s2)
         assert not s2.satisfies(s1)
+        assert not s1.intersects(s2)
 
     # ========================================================================
     # Indexing specs
@@ -553,155 +539,67 @@ class TestSpecSematics(object):
         for spec in [s, s_mpich, s_mpich2, s_zmpi]:
             assert "mpi" in spec
 
-    # ========================================================================
-    # Constraints
-    # ========================================================================
-    def test_constrain_variants(self):
-        check_constrain("libelf@2.1:2.5", "libelf@0:2.5", "libelf@2.1:3")
-        check_constrain(
-            "libelf@2.1:2.5%gcc@4.5:4.6", "libelf@0:2.5%gcc@2:4.6", "libelf@2.1:3%gcc@4.5:4.7"
-        )
-        check_constrain("libelf+debug+foo", "libelf+debug", "libelf+foo")
-        check_constrain("libelf+debug+foo", "libelf+debug", "libelf+debug+foo")
-        check_constrain("libelf debug=2 foo=1", "libelf debug=2", "libelf foo=1")
-        check_constrain("libelf debug=2 foo=1", "libelf debug=2", "libelf debug=2 foo=1")
+    @pytest.mark.parametrize(
+        "lhs,rhs",
+        [
+            ("libelf", "@1.0"),
+            ("libelf", "@1.0:5.0"),
+            ("libelf", "%gcc"),
+            ("libelf%gcc", "%gcc@4.5"),
+            ("libelf", "+debug"),
+            ("libelf", "debug=*"),
+            ("libelf", "~debug"),
+            ("libelf", "debug=2"),
+            ("libelf", 'cppflags="-O3"'),
+            ("libelf", 'cppflags=="-O3"'),
+            ("libelf^foo", "libelf^foo@1.0"),
+            ("libelf^foo", "libelf^foo@1.0:5.0"),
+            ("libelf^foo", "libelf^foo%gcc"),
+            ("libelf^foo%gcc", "libelf^foo%gcc@4.5"),
+            ("libelf^foo", "libelf^foo+debug"),
+            ("libelf^foo", "libelf^foo~debug"),
+            ("libelf", "^foo"),
+        ],
+    )
+    def test_lhs_is_changed_when_constraining(self, lhs, rhs):
+        lhs, rhs = Spec(lhs), Spec(rhs)
 
-        check_constrain("libelf+debug~foo", "libelf+debug", "libelf~foo")
-        check_constrain("libelf+debug~foo", "libelf+debug", "libelf+debug~foo")
+        assert lhs.intersects(rhs)
+        assert rhs.intersects(lhs)
+        assert not lhs.satisfies(rhs)
 
-        check_constrain("libelf++debug++foo", "libelf++debug", "libelf+debug+foo")
-        check_constrain("libelf debug==2 foo==1", "libelf debug==2", "libelf foo=1")
-        check_constrain("libelf debug==2 foo==1", "libelf debug==2", "libelf debug=2 foo=1")
+        assert lhs.constrain(rhs) is True
+        assert lhs.satisfies(rhs)
 
-        check_constrain("libelf++debug~~foo", "libelf++debug", "libelf++debug~foo")
-
-    def test_constrain_multi_value_variant(self):
-        check_constrain(
-            'multivalue-variant foo="bar,baz"',
-            'multivalue-variant foo="bar"',
-            'multivalue-variant foo="baz"',
-        )
-
-        check_constrain(
-            'multivalue-variant foo="bar,baz,barbaz"',
-            'multivalue-variant foo="bar,barbaz"',
-            'multivalue-variant foo="baz"',
-        )
-
-        check_constrain("libelf foo=bar,baz", "libelf foo=bar,baz", "libelf foo=*")
-        check_constrain("libelf foo=bar,baz", "libelf foo=*", "libelf foo=bar,baz")
-
-    def test_constrain_compiler_flags(self):
-        check_constrain(
-            'libelf cflags="-O3" cppflags="-Wall"',
-            'libelf cflags="-O3"',
-            'libelf cppflags="-Wall"',
-        )
-        check_constrain(
-            'libelf cflags="-O3" cppflags="-Wall"',
-            'libelf cflags="-O3"',
-            'libelf cflags="-O3" cppflags="-Wall"',
-        )
-
-        check_constrain(
-            'libelf cflags="-O3" cppflags=="-Wall"',
-            'libelf cppflags=="-Wall"',
-            'libelf cflags="-O3"',
-        )
-        check_constrain(
-            'libelf cflags=="-O3" cppflags=="-Wall"',
-            'libelf cflags=="-O3"',
-            'libelf cflags=="-O3" cppflags=="-Wall"',
-        )
-
-    def test_constrain_architecture(self):
-        check_constrain(
-            "libelf target=default_target os=default_os",
-            "libelf target=default_target os=default_os",
-            "libelf target=default_target os=default_os",
-        )
-        check_constrain(
-            "libelf target=default_target os=default_os",
-            "libelf",
-            "libelf target=default_target os=default_os",
-        )
-
-    def test_constrain_compiler(self):
-        check_constrain("libelf %gcc@4.4.7", "libelf %gcc@4.4.7", "libelf %gcc@4.4.7")
-        check_constrain("libelf %gcc@4.4.7", "libelf", "libelf %gcc@4.4.7")
-
-    def test_invalid_constraint(self):
-        check_invalid_constraint("libelf@0:2.0", "libelf@2.1:3")
-        check_invalid_constraint("libelf@0:2.5%gcc@4.8:4.9", "libelf@2.1:3%gcc@4.5:4.7")
-
-        check_invalid_constraint("libelf+debug", "libelf~debug")
-        check_invalid_constraint("libelf+debug~foo", "libelf+debug+foo")
-        check_invalid_constraint("libelf debug=True", "libelf debug=False")
-
-        check_invalid_constraint('libelf cppflags="-O3"', 'libelf cppflags="-O2"')
-        check_invalid_constraint("libelf platform=test target=be os=be", "libelf target=fe os=fe")
-        check_invalid_constraint("libdwarf", "^%gcc")
-
-    def test_constrain_changed(self):
-        check_constrain_changed("libelf", "@1.0")
-        check_constrain_changed("libelf", "@1.0:5.0")
-        check_constrain_changed("libelf", "%gcc")
-        check_constrain_changed("libelf%gcc", "%gcc@4.5")
-        check_constrain_changed("libelf", "+debug")
-        check_constrain_changed("libelf", "debug=*")
-        check_constrain_changed("libelf", "~debug")
-        check_constrain_changed("libelf", "debug=2")
-        check_constrain_changed("libelf", 'cppflags="-O3"')
-        check_constrain_changed("libelf", 'cppflags=="-O3"')
-
-        platform = spack.platforms.host()
-        check_constrain_changed("libelf", "target=" + platform.target("default_target").name)
-        check_constrain_changed("libelf", "os=" + platform.operating_system("default_os").name)
-
-    def test_constrain_not_changed(self):
-        check_constrain_not_changed("libelf", "libelf")
-        check_constrain_not_changed("libelf@1.0", "@1.0")
-        check_constrain_not_changed("libelf@1.0:5.0", "@1.0:5.0")
-        check_constrain_not_changed("libelf%gcc", "%gcc")
-        check_constrain_not_changed("libelf%gcc@4.5", "%gcc@4.5")
-        check_constrain_not_changed("libelf+debug", "+debug")
-        check_constrain_not_changed("libelf~debug", "~debug")
-        check_constrain_not_changed("libelf debug=2", "debug=2")
-        check_constrain_not_changed("libelf debug=2", "debug=*")
-        check_constrain_not_changed('libelf cppflags="-O3"', 'cppflags="-O3"')
-        check_constrain_not_changed('libelf cppflags=="-O3"', 'cppflags=="-O3"')
-
-        platform = spack.platforms.host()
-        default_target = platform.target("default_target").name
-        check_constrain_not_changed("libelf target=" + default_target, "target=" + default_target)
-
-    def test_constrain_dependency_changed(self):
-        check_constrain_changed("libelf^foo", "libelf^foo@1.0")
-        check_constrain_changed("libelf^foo", "libelf^foo@1.0:5.0")
-        check_constrain_changed("libelf^foo", "libelf^foo%gcc")
-        check_constrain_changed("libelf^foo%gcc", "libelf^foo%gcc@4.5")
-        check_constrain_changed("libelf^foo", "libelf^foo+debug")
-        check_constrain_changed("libelf^foo", "libelf^foo~debug")
-        check_constrain_changed("libelf", "^foo")
-
-        platform = spack.platforms.host()
-        default_target = platform.target("default_target").name
-        check_constrain_changed("libelf^foo", "libelf^foo target=" + default_target)
-
-    def test_constrain_dependency_not_changed(self):
-        check_constrain_not_changed("libelf^foo@1.0", "libelf^foo@1.0")
-        check_constrain_not_changed("libelf^foo@1.0:5.0", "libelf^foo@1.0:5.0")
-        check_constrain_not_changed("libelf^foo%gcc", "libelf^foo%gcc")
-        check_constrain_not_changed("libelf^foo%gcc@4.5", "libelf^foo%gcc@4.5")
-        check_constrain_not_changed("libelf^foo+debug", "libelf^foo+debug")
-        check_constrain_not_changed("libelf^foo~debug", "libelf^foo~debug")
-        check_constrain_not_changed('libelf^foo cppflags="-O3"', 'libelf^foo cppflags="-O3"')
-
-        platform = spack.platforms.host()
-        default_target = platform.target("default_target").name
-        check_constrain_not_changed(
-            "libelf^foo target=" + default_target, "libelf^foo target=" + default_target
-        )
+    @pytest.mark.parametrize(
+        "lhs,rhs",
+        [
+            ("libelf", "libelf"),
+            ("libelf@1.0", "@1.0"),
+            ("libelf@1.0:5.0", "@1.0:5.0"),
+            ("libelf%gcc", "%gcc"),
+            ("libelf%gcc@4.5", "%gcc@4.5"),
+            ("libelf+debug", "+debug"),
+            ("libelf~debug", "~debug"),
+            ("libelf debug=2", "debug=2"),
+            ("libelf debug=2", "debug=*"),
+            ('libelf cppflags="-O3"', 'cppflags="-O3"'),
+            ('libelf cppflags=="-O3"', 'cppflags=="-O3"'),
+            ("libelf^foo@1.0", "libelf^foo@1.0"),
+            ("libelf^foo@1.0:5.0", "libelf^foo@1.0:5.0"),
+            ("libelf^foo%gcc", "libelf^foo%gcc"),
+            ("libelf^foo%gcc@4.5", "libelf^foo%gcc@4.5"),
+            ("libelf^foo+debug", "libelf^foo+debug"),
+            ("libelf^foo~debug", "libelf^foo~debug"),
+            ('libelf^foo cppflags="-O3"', 'libelf^foo cppflags="-O3"'),
+        ],
+    )
+    def test_lhs_is_not_changed_when_constraining(self, lhs, rhs):
+        lhs, rhs = Spec(lhs), Spec(rhs)
+        assert lhs.intersects(rhs)
+        assert rhs.intersects(lhs)
+        assert lhs.satisfies(rhs)
+        assert lhs.constrain(rhs) is False
 
     def test_exceptional_paths_for_constructor(self):
         with pytest.raises(TypeError):
@@ -1093,7 +991,7 @@ class TestSpecSematics(object):
     @pytest.mark.regression("13111")
     def test_target_constraints(self, spec, constraint, expected_result):
         s = Spec(spec)
-        assert s.satisfies(constraint) is expected_result
+        assert s.intersects(constraint) is expected_result
 
     @pytest.mark.regression("13124")
     def test_error_message_unknown_variant(self):
@@ -1106,7 +1004,7 @@ class TestSpecSematics(object):
         d = Spec("zmpi ^fake")
         s = Spec("mpileaks")
         s._add_dependency(d, deptypes=())
-        assert s.satisfies("mpileaks ^zmpi ^fake", strict=True)
+        assert s.satisfies("mpileaks ^zmpi ^fake")
 
     @pytest.mark.parametrize("transitive", [True, False])
     def test_splice_swap_names(self, default_mock_concretization, transitive):
@@ -1295,14 +1193,131 @@ def test_package_hash_affects_dunder_and_dag_hash(mock_packages, default_mock_co
     assert a1.process_hash() != a2.process_hash()
 
 
-def test_satisfies_is_commutative_with_concrete_specs(mock_packages, default_mock_concretization):
+def test_intersects_and_satisfies_on_concretized_spec(default_mock_concretization):
+    """Test that a spec obtained by concretizing an abstract spec, satisfies the abstract spec
+    but not vice-versa.
+    """
     a1 = default_mock_concretization("a@1.0")
     a2 = Spec("a@1.0")
 
-    # strict=False means non-empty intersection, which is commutative.
+    assert a1.intersects(a2)
+    assert a2.intersects(a1)
     assert a1.satisfies(a2)
-    assert a2.satisfies(a1)
+    assert not a2.satisfies(a1)
 
-    # strict=True means set inclusion, which is not commutative.
-    assert a1.satisfies(a2, strict=True)
-    assert not a2.satisfies(a1, strict=True)
+
+@pytest.mark.parametrize(
+    "abstract_spec,spec_str",
+    [
+        ("v1-provider", "v1-consumer ^conditional-provider+disable-v1"),
+        ("conditional-provider", "v1-consumer ^conditional-provider+disable-v1"),
+        ("^v1-provider", "v1-consumer ^conditional-provider+disable-v1"),
+        ("^conditional-provider", "v1-consumer ^conditional-provider+disable-v1"),
+    ],
+)
+@pytest.mark.regression("35597")
+def test_abstract_provider_in_spec(abstract_spec, spec_str, default_mock_concretization):
+    s = default_mock_concretization(spec_str)
+    assert abstract_spec in s
+
+
+@pytest.mark.parametrize(
+    "lhs,rhs,expected", [("a", "a", True), ("a", "a@1.0", True), ("a@1.0", "a", False)]
+)
+def test_abstract_contains_semantic(lhs, rhs, expected, mock_packages):
+    s, t = Spec(lhs), Spec(rhs)
+    result = s in t
+    assert result is expected
+
+
+@pytest.mark.parametrize(
+    "factory,lhs_str,rhs_str,results",
+    [
+        # Architecture
+        (ArchSpec, "None-ubuntu20.04-None", "None-None-x86_64", (True, False, False)),
+        (ArchSpec, "None-ubuntu20.04-None", "linux-None-x86_64", (True, False, False)),
+        (ArchSpec, "None-None-x86_64:", "linux-None-haswell", (True, False, True)),
+        (ArchSpec, "None-None-x86_64:haswell", "linux-None-icelake", (False, False, False)),
+        (ArchSpec, "linux-None-None", "linux-None-None", (True, True, True)),
+        (ArchSpec, "darwin-None-None", "linux-None-None", (False, False, False)),
+        (ArchSpec, "None-ubuntu20.04-None", "None-ubuntu20.04-None", (True, True, True)),
+        (ArchSpec, "None-ubuntu20.04-None", "None-ubuntu22.04-None", (False, False, False)),
+        # Compiler
+        (CompilerSpec, "gcc", "clang", (False, False, False)),
+        (CompilerSpec, "gcc", "gcc@5", (True, False, True)),
+        (CompilerSpec, "gcc@5", "gcc@5.3", (True, False, True)),
+        (CompilerSpec, "gcc@5", "gcc@5-tag", (True, False, True)),
+        # Flags (flags are a map, so for convenience we initialize a full Spec)
+        # Note: the semantic is that of sv variants, not mv variants
+        (Spec, "cppflags=-foo", "cppflags=-bar", (False, False, False)),
+        (Spec, "cppflags='-bar -foo'", "cppflags=-bar", (False, False, False)),
+        (Spec, "cppflags=-foo", "cppflags=-foo", (True, True, True)),
+        (Spec, "cppflags=-foo", "cflags=-foo", (True, False, False)),
+        # Versions
+        (Spec, "@0.94h", "@:0.94i", (True, True, False)),
+        # Different virtuals intersect if there is at least package providing both
+        (Spec, "mpi", "lapack", (True, False, False)),
+        (Spec, "mpi", "pkgconfig", (False, False, False)),
+    ],
+)
+def test_intersects_and_satisfies(factory, lhs_str, rhs_str, results):
+    lhs = factory(lhs_str)
+    rhs = factory(rhs_str)
+
+    intersects, lhs_satisfies_rhs, rhs_satisfies_lhs = results
+
+    assert lhs.intersects(rhs) is intersects
+    assert rhs.intersects(lhs) is lhs.intersects(rhs)
+
+    assert lhs.satisfies(rhs) is lhs_satisfies_rhs
+    assert rhs.satisfies(lhs) is rhs_satisfies_lhs
+
+
+@pytest.mark.parametrize(
+    "factory,lhs_str,rhs_str,result,constrained_str",
+    [
+        # Architecture
+        (ArchSpec, "None-ubuntu20.04-None", "None-None-x86_64", True, "None-ubuntu20.04-x86_64"),
+        (ArchSpec, "None-None-x86_64", "None-None-x86_64", False, "None-None-x86_64"),
+        (
+            ArchSpec,
+            "None-None-x86_64:icelake",
+            "None-None-x86_64:icelake",
+            False,
+            "None-None-x86_64:icelake",
+        ),
+        (ArchSpec, "None-ubuntu20.04-None", "linux-None-x86_64", True, "linux-ubuntu20.04-x86_64"),
+        (
+            ArchSpec,
+            "None-ubuntu20.04-nocona:haswell",
+            "None-None-x86_64:icelake",
+            False,
+            "None-ubuntu20.04-nocona:haswell",
+        ),
+        (
+            ArchSpec,
+            "None-ubuntu20.04-nocona,haswell",
+            "None-None-x86_64:icelake",
+            False,
+            "None-ubuntu20.04-nocona,haswell",
+        ),
+        # Compiler
+        (CompilerSpec, "gcc@5", "gcc@5-tag", True, "gcc@5-tag"),
+        (CompilerSpec, "gcc@5", "gcc@5", False, "gcc@5"),
+        # Flags
+        (Spec, "cppflags=-foo", "cppflags=-foo", False, "cppflags=-foo"),
+        (Spec, "cppflags=-foo", "cflags=-foo", True, "cppflags=-foo cflags=-foo"),
+    ],
+)
+def test_constrain(factory, lhs_str, rhs_str, result, constrained_str):
+    lhs = factory(lhs_str)
+    rhs = factory(rhs_str)
+
+    assert lhs.constrain(rhs) is result
+    assert lhs == factory(constrained_str)
+
+    # The intersection must be the same, so check that invariant too
+    lhs = factory(lhs_str)
+    rhs = factory(rhs_str)
+    rhs.constrain(lhs)
+    assert rhs == factory(constrained_str)
