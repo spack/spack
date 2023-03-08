@@ -49,7 +49,13 @@ class GoBootstrap(Package):
 
     # Normalize architectures returned by platform to those used by the
     # Go project.
-    go_targets = {"aarch64": "arm64", "arm64": "arm64", "ppc64le": "ppc64le", "x86_64": "amd64"}
+    go_targets = {
+        "aarch64": "arm64",
+        "arm64": "arm64",
+        "ppc64le": "ppc64le",
+        "amd64": "amd64",
+        "x86_64": "amd64",
+    }
 
     # determine system os and architecture/target
     os = platform.system().lower()
