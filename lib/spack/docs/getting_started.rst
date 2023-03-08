@@ -1560,6 +1560,14 @@ As Spack is a Python-based package, an installation of Python will be needed to 
 Python 3 can be downloaded and installed from the Windows Store, and will be automatically added
 to your ``PATH`` in this case.
 
+Additionally, the python module ``pywin32`` is required but not always installed from the Windows Store.
+
+To get this module you may run the following from a PowerShell or CMD terminal.
+
+.. code-block:: python
+  python.exe -m pip install --upgrade pip
+  python.exe -m pip install pywin32
+
 .. note::
    Spack currently supports Python versions later than 3.2 inclusive.
 
