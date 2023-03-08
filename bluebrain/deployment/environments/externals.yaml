@@ -47,6 +47,10 @@ spack:
           - ilmbase
           - openblas
           - openexr
+        hpe-mpi:
+          environment:
+            set:
+              LD_LIBRARY_PATH: '{prefix}/lib'
   packages:
     all:
       providers:
