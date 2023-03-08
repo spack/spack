@@ -114,7 +114,8 @@ class PyTorchvision(PythonPackage):
     depends_on("jpeg")  # seems to be required for all backends
 
     depends_on("ffmpeg@3.1:4.4", when="@0.4.2:0.12.0")
-    depends_on("ffmpeg@3.1:", when="@0.13.0:")
+    # https://github.com/pytorch/vision/pull/7378
+    depends_on("ffmpeg@3.1:5", when="@0.13.0:")
 
     # Many of the datasets require additional dependencies to use.
     # These can be installed after the fact.
