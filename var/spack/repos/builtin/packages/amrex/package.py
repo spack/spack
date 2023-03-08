@@ -14,7 +14,7 @@ class Amrex(CMakePackage, CudaPackage, ROCmPackage):
     mesh refinement (AMR) applications."""
 
     homepage = "https://amrex-codes.github.io/amrex/"
-    url = "https://github.com/AMReX-Codes/amrex/releases/download/23.02/amrex-23.02.tar.gz"
+    url = "https://github.com/AMReX-Codes/amrex/releases/download/23.03/amrex-23.03.tar.gz"
     git = "https://github.com/AMReX-Codes/amrex.git"
 
     test_requires_compiler = True
@@ -24,6 +24,7 @@ class Amrex(CMakePackage, CudaPackage, ROCmPackage):
     maintainers("WeiqunZhang", "asalmgren", "etpalmer63")
 
     version("develop", branch="development")
+    version("23.03", sha256="e17c721b1aba4f66e467723f61b59e56c02cf1b72cab5a2680b13ff6e79ef903")
     version("23.02", sha256="f443c5eb4b89f4a74bf0e1b8a5943da18ab81cdc76aff12e8282ca43ffd06412")
     version("23.01", sha256="3b1770653a7c6d3e6167bc3cce98cbf838962102c510d1f872ab08f1115933b7")
     version("22.12", sha256="7b11e547e70bdd6f4b36682708a755d173eaecd8738536306d4217df4dd1be3d")
@@ -123,11 +124,13 @@ class Amrex(CMakePackage, CudaPackage, ROCmPackage):
     depends_on("python@2.7:", type="build", when="@:20.04")
     depends_on("cmake@3.5:", type="build", when="@:18.10")
     depends_on("cmake@3.13:", type="build", when="@18.11:19.03")
-    depends_on("cmake@3.14:", type="build", when="@19.04:")
+    depends_on("cmake@3.14:", type="build", when="@19.04:22.05")
+    depends_on("cmake@3.17:", type="build", when="@22.06:23.01")
+    depends_on("cmake@3.18:", type="build", when="@23.02:")
     # cmake @3.17: is necessary to handle cuda @11: correctly
     depends_on("cmake@3.17:", type="build", when="^cuda @11:")
-    depends_on("cmake@3.17:", type="build", when="@22.06:")
     depends_on("cmake@3.20:", type="build", when="+rocm")
+    depends_on("cmake@3.22:", type="build", when="+sycl")
     depends_on("hdf5@1.10.4: +mpi", when="+hdf5")
     depends_on("rocrand", type="build", when="+rocm")
     depends_on("rocprim", type="build", when="@21.05: +rocm")
@@ -135,7 +138,6 @@ class Amrex(CMakePackage, CudaPackage, ROCmPackage):
     depends_on("hypre@2.19.0:", type="link", when="@21.03: ~cuda +hypre")
     depends_on("hypre@2.20.0:", type="link", when="@21.03: +cuda +hypre")
     depends_on("petsc", type="link", when="+petsc")
-    depends_on("cmake@3.22:", type="build", when="+sycl")
     depends_on("intel-oneapi-compilers@2023.0.0:", type="build", when="@23.01: +sycl")
     depends_on("intel-oneapi-mkl", type=("build", "link"), when="+sycl")
 
