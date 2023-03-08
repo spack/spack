@@ -49,7 +49,7 @@ spack:
           - openexr
         hpe-mpi:
           environment:
-            set:
+            prepend_path:
               LD_LIBRARY_PATH: '{prefix}/lib'
   packages:
     all:
