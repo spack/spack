@@ -438,16 +438,29 @@ parse_Wl() {
     shift
     while [ $# -ne 0 ]; do
     if [ "$wl_expect_rpath" = yes ]; then
-        rp="$1"
+        if system_dir "$1"; then
+            append system_rpath_dirs_list "$1"
+        else
+            append rpath_dirs_list "$1"
+        fi
         wl_expect_rpath=no
     else
-        rp=""
         case "$1" in
             -rpath=*)
-                rp="${1#-rpath=}"
+                arg="${1#-rpath=}"
+                if system_dir "$arg"; then
+                    append system_rpath_dirs_list "$arg"
+                else
+                    append rpath_dirs_list "$arg"
+                fi
                 ;;
             --rpath=*)
-                rp="${1#--rpath=}"
+                arg="${1#--rpath=}"
+                if system_dir "$arg"; then
+                    append system_rpath_dirs_list "$arg"
+                else
+                    append rpath_dirs_list "$arg"
+                fi
                 ;;
             -rpath|--rpath)
                 wl_expect_rpath=yes
@@ -459,17 +472,8 @@ parse_Wl() {
                 ;;
         esac
     fi
-    if [ -n "$rp" ]; then
-        if system_dir "$rp"; then
-            append system_rpath_dirs_list "$rp"
-        else
-            append rpath_dirs_list "$rp"
-        fi
-    fi
     shift
     done
-    # By lack of local variables, always set this to empty string.
-    rp=""
 }
 
 
@@ -584,15 +588,29 @@ while [ $# -ne 0 ]; do
                 break
             elif [ "$xlinker_expect_rpath" = yes ]; then
                 # Register the path of -Xlinker -rpath <other args> -Xlinker <path>
-                rp="$1"
+                if system_dir "$1"; then
+                    append system_rpath_dirs_list "$1"
+                else
+                    append rpath_dirs_list "$1"
+                fi
                 xlinker_expect_rpath=no
             else
                 case "$1" in
                     -rpath=*)
-                        rp="${1#-rpath=}"
+                        arg="${1#-rpath=}"
+                        if system_dir "$arg"; then
+                            append system_rpath_dirs_list "$arg"
+                        else
+                            append rpath_dirs_list "$arg"
+                        fi
                         ;;
                     --rpath=*)
-                        rp="${1#--rpath=}"
+                        arg="${1#--rpath=}"
+                        if system_dir "$arg"; then
+                            append system_rpath_dirs_list "$arg"
+                        else
+                            append rpath_dirs_list "$arg"
+                        fi
                         ;;
                     -rpath|--rpath)
                         xlinker_expect_rpath=yes
@@ -612,15 +630,6 @@ while [ $# -ne 0 ]; do
             append other_args_list "$1"
             ;;
     esac
-
-    # test rpaths against system directories in one place.
-    if [ -n "$rp" ]; then
-        if system_dir "$rp"; then
-            append system_rpath_dirs_list "$rp"
-        else
-            append rpath_dirs_list "$rp"
-        fi
-    fi
     shift
 done
 
