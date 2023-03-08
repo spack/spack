@@ -816,18 +816,7 @@ node_target_compatible(Package, Target)
  :- attr("node_target", Package, MyTarget),
     target_compatible(Target, MyTarget).
 
-% target_compatible(T1, T2) means code for T2 can run on T1
-% This order is dependent -> dependency in the node DAG, which
-% is contravariant with the target DAG.
-target_compatible(Target, Target) :- target(Target).
-target_compatible(Child, Parent) :- target_parent(Child, Parent).
-target_compatible(Descendent, Ancestor)
-  :- target_parent(Target, Ancestor),
-     target_compatible(Descendent, Target),
-     target(Target).
-
 #defined target_satisfies/2.
-#defined target_parent/2.
 
 % can't use targets on node if the compiler for the node doesn't support them
 error(2, "{0} compiler '{2}@{3}' incompatible with 'target={1}'", Package, Target, Compiler, Version)

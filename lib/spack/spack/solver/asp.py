@@ -1820,8 +1820,10 @@ class SpackSolverSetup(object):
         for target in candidate_targets:
             self.gen.fact(fn.target(target.name))
             self.gen.fact(fn.target_family(target.name, target.family.name))
-            for parent in sorted(target.parents):
-                self.gen.fact(fn.target_parent(target.name, parent.name))
+            self.gen.fact(fn.target_compatible(target.name, target.name))
+            # Code for ancestor can run on target
+            for ancestor in target.ancestors:
+                self.gen.fact(fn.target_compatible(target.name, ancestor.name))
 
             # prefer best possible targets; weight others poorly so
             # they're not used unless set explicitly
@@ -1832,9 +1834,9 @@ class SpackSolverSetup(object):
                 i += 1
             else:
                 self.default_targets.append((100, target.name))
-
-            self.default_targets = list(sorted(set(self.default_targets)))
             self.gen.newline()
+
+        self.default_targets = list(sorted(set(self.default_targets)))
 
     def virtual_providers(self):
         self.gen.h2("Virtual providers")
