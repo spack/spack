@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -23,9 +23,10 @@ class Julia(MakefilePackage):
     url = "https://github.com/JuliaLang/julia/releases/download/v1.7.0/julia-1.7.0.tar.gz"
     git = "https://github.com/JuliaLang/julia.git"
 
-    maintainers = ["glennpj", "vchuravy", "haampie"]
+    maintainers("glennpj", "vchuravy", "haampie")
 
     version("master", branch="master")
+    version("1.8.3", sha256="4d8d460fcae5c6f8306a3e3c14371635c1a26f47c3ce62b2950cf9234b6ec849")
     version("1.8.2", sha256="3e2cea35bf5df963ed7b75a83e8febfc000acf1e664ecd657a0772508eb1fb5d")
     version("1.8.1", sha256="066f4ca7a2ad39b003e2af77dbecfbfb9b0a1cb1664033f657ffdbe2f374d956")
     version("1.8.0", sha256="0fa980286d6d912f24ed9f90a02930560d985e0ada8233a4ae5610884feb2438")
@@ -62,7 +63,7 @@ class Julia(MakefilePackage):
         depends_on("libblastrampoline@5.1.0:5")
         depends_on("libgit2@1.3.0:1.3")
         depends_on("libssh2@1.10.0:1.10")
-        depends_on("llvm@13.0.1 shlib_symbol_version=jl")
+        depends_on("llvm@13.0.1 shlib_symbol_version=JL_LLVM_13.0")
         depends_on("mbedtls@2.28.0:2.28")
         depends_on("openlibm@0.8.1:0.8", when="+openlibm")
         depends_on("nghttp2@1.47.0:1.47")
@@ -276,6 +277,14 @@ class Julia(MakefilePackage):
         options.append("USEGCC:={}".format("1" if "%gcc" in spec else "0"))
         options.append("USECLANG:={}".format("1" if "%clang" in spec else "0"))
 
+        options.extend(
+            [
+                "override CC:={0}".format(spack_cc),
+                "override CXX:={0}".format(spack_cxx),
+                "override FC:={0}".format(spack_fc),
+            ]
+        )
+
         # libm or openlibm?
         if spec.variants["openlibm"].value:
             options.append("USE_SYSTEM_LIBM=0")
@@ -286,3 +295,12 @@ class Julia(MakefilePackage):
 
         with open("Make.user", "w") as f:
             f.write("\n".join(options) + "\n")
+
+    @run_after("install")
+    def copy_certificates(self):
+        # mbedtls depends on openssl, which provides a certificate file.  Copy the
+        # certificates to where Julia expects them to be.  This allows users to install
+        # software that otherwise may fail at their download stage.
+        copy(
+            join_path(self.spec["openssl"].prefix.etc.openssl, "cert.pem"), self.prefix.share.julia
+        )
