@@ -27,6 +27,7 @@ default:
     SPACK_BUILDCACHE_DESTINATION: "s3://spack-binaries-prs/${CI_COMMIT_REF_NAME}/${SPACK_CI_STACK_NAME}"
     SPACK_PIPELINE_TYPE: "spack_pull_request"
     SPACK_PRUNE_UNTOUCHED: "True"
+    SPACK_UNTOUCHED_PRUNING_DEPENDENT_DEPTH: 1
 
 .protected-refs:
   only:
