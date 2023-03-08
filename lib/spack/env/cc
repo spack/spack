@@ -579,7 +579,7 @@ while [ $# -ne 0 ]; do
             shift
             if [ $# -eq 0 ]; then
                 # -Xlinker without value: let the compiler error about it.
-                append other_args_list "-Xlinker"
+                append other_args_list -Xlinker
             elif [ "$xlinker_expect_rpath" = yes ]; then
                 # Register the path of -Xlinker -rpath <other args> -Xlinker <path>
                 rp="$1"
@@ -598,7 +598,7 @@ while [ $# -ne 0 ]; do
                     "$dtags_to_strip")
                         ;;
                     *)
-                        append other_args_list "-Xlinker"
+                        append other_args_list -Xlinker
                         append other_args_list "$1"
                         ;;
                 esac
@@ -621,6 +621,19 @@ while [ $# -ne 0 ]; do
     fi
     shift
 done
+
+# We found `-Xlinker -rpath` but no matching value `-Xlinker /path`. Just append
+# `-Xlinker -rpath` again and let the compiler or linker handle the error during arg
+# parsing.
+if [ "$xlinker_expect_rpath" = yes ]; then
+    append other_args_list -Xlinker
+    append other_args_list -rpath
+fi
+
+# Same, but for -Wl flags.
+if [ "$wl_expect_rpath" = yes ]; then
+    append other_args_list -Wl,-rpath
+fi
 
 #
 # Add flags from Spack's cppflags, cflags, cxxflags, fcflags, fflags, and

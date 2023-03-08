@@ -384,6 +384,21 @@ def test_Xlinker_parsing(wrapper_environment):
     )
 
 
+def test_rpath_without_value(wrapper_environment):
+    # cc -Wl,-rpath without a value shouldn't drop -Wl,-rpath;
+    # same for -Xlinker
+    check_args(
+        cc,
+        ["-Wl,-rpath", "-O3", "-g"],
+        [real_cc] + target_args + ["-Wl,--disable-new-dtags", "-O3", "-g", "-Wl,-rpath"],
+    )
+    check_args(
+        cc,
+        ["-Xlinker", "-rpath", "-O3", "-g"],
+        [real_cc] + target_args + ["-Wl,--disable-new-dtags", "-O3", "-g", "-Xlinker", "-rpath"],
+    )
+
+
 def test_dep_rpath(wrapper_environment):
     """Ensure RPATHs for root package are added."""
     check_args(cc, test_args, [real_cc] + target_args + common_compile_args)
