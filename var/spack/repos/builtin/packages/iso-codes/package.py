@@ -13,6 +13,7 @@ class IsoCodes(AutotoolsPackage):
     homepage = "https://salsa.debian.org/iso-codes-team/iso-codes"
     url = "https://deb.debian.org/debian/pool/main/i/iso-codes/iso-codes_4.3.orig.tar.xz"
 
+    version("4.13.0", sha256="2d4d0e5c02327f52cf7c029202da72f2074348472c26904b7104d2be3e0750ef")
     version("4.3", sha256="643eb83b2d714e8650ed7112706968d057bf5b101ba71c8ef219e20f1737b141")
 
     depends_on("m4", type="build")

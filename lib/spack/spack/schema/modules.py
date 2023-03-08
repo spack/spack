@@ -110,10 +110,7 @@ module_config_properties = {
     "arch_folder": {"type": "boolean"},
     "roots": {
         "type": "object",
-        "properties": {
-            "tcl": {"type": "string"},
-            "lmod": {"type": "string"},
-        },
+        "properties": {"tcl": {"type": "string"}, "lmod": {"type": "string"}},
     },
     "enable": {
         "type": "array",
@@ -165,7 +162,7 @@ properties = {
                     # prefix-relative path to be inspected for existence
                     r"^[\w-]*": array_of_strings
                 },
-            },
+            }
         },
         "patternProperties": {
             valid_module_set_name: {
@@ -173,7 +170,7 @@ properties = {
                 "default": {},
                 "additionalProperties": False,
                 "properties": module_config_properties,
-            },
+            }
         },
     }
 }

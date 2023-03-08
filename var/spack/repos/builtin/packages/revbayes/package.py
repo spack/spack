@@ -52,12 +52,7 @@ class Revbayes(CMakePackage):
     def cmake_args(self):
         args = []
         if "+mpi" in self.spec:
-            args.extend(
-                [
-                    self.define("MPI", "ON"),
-                    self.define("RB_EXEC_NAME", "rb-mpi"),
-                ]
-            )
+            args.extend([self.define("MPI", "ON"), self.define("RB_EXEC_NAME", "rb-mpi")])
         return args
 
     @run_before("cmake")

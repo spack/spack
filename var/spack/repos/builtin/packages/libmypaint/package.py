@@ -41,10 +41,7 @@ class Libmypaint(AutotoolsPackage):
 
         if "+introspection" in self.spec:
             args.extend(
-                [
-                    "--enable-introspection=yes",
-                    "--with-glib={0}".format(self.spec["glib"].prefix),
-                ]
+                ["--enable-introspection=yes", "--with-glib={0}".format(self.spec["glib"].prefix)]
             )
 
         return args

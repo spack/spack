@@ -23,6 +23,7 @@ class Cp2k(MakefilePackage, CudaPackage):
 
     maintainers("dev-zero")
 
+    version("2023.1", sha256="dff343b4a80c3a79363b805429bdb3320d3e1db48e0ff7d20a3dfd1c946a51ce")
     version("2022.2", sha256="1a473dea512fe264bb45419f83de432d441f90404f829d89cbc3a03f723b8354")
     version("2022.1", sha256="2c34f1a7972973c62d471cd35856f444f11ab22f2ff930f6ead20f3454fd228b")
     version("9.1", sha256="fedb4c684a98ad857cd49b69a3ae51a73f85a9c36e9cb63e3b02320c74454ce6")
@@ -151,10 +152,12 @@ class Cp2k(MakefilePackage, CudaPackage):
         depends_on("libxc@4.0.3:4", when="@6.0:6.9", type="build")
         depends_on("libxc@4.0.3:4", when="@7.0:8.1")
         depends_on("libxc@5.1.3:5.1", when="@8.2:8")
-        depends_on("libxc@5.1.7:5.1", when="@9:")
+        depends_on("libxc@5.1.7:5.1", when="@9:2022")
+        depends_on("libxc@6:6.1", when="@2023:")
 
     with when("+mpi"):
         depends_on("mpi@2:")
+        depends_on("mpi@3:", when="@2023.1:")
         depends_on("scalapack")
 
     with when("+cosma"):
@@ -271,43 +274,18 @@ class Cp2k(MakefilePackage, CudaPackage):
     def edit(self, spec, prefix):
         pkgconf = which("pkg-config")
 
-        if "^fftw" in spec:
-            fftw = spec["fftw:openmp" if "+openmp" in spec else "fftw"]
-            fftw_header_dir = fftw.headers.directories[0]
-        elif "^amdfftw" in spec:
-            fftw = spec["amdfftw:openmp" if "+openmp" in spec else "amdfftw"]
-            fftw_header_dir = fftw.headers.directories[0]
-        elif "^armpl-gcc" in spec:
-            fftw = spec["armpl-gcc:openmp" if "+openmp" in spec else "armpl-gcc"]
-            fftw_header_dir = fftw.headers.directories[0]
-        elif "^intel-mkl" in spec:
-            fftw = spec["intel-mkl"]
-            fftw_header_dir = fftw.headers.directories[0] + "/fftw"
-        elif "^intel-oneapi-mkl" in spec:
-            fftw = spec["intel-oneapi-mkl"]
-            fftw_header_dir = fftw.headers.directories[0] + "/fftw"
-        elif "^intel-parallel-studio+mkl" in spec:
-            fftw = spec["intel-parallel-studio"]
-            fftw_header_dir = "<NOTFOUND>"
-            for incdir in [join_path(f, "fftw") for f in fftw.headers.directories]:
-                if os.path.exists(incdir):
-                    fftw_header_dir = incdir
-                    break
-        elif "^cray-fftw" in spec:
-            fftw = spec["cray-fftw"]
-            fftw_header_dir = fftw.headers.directories[0]
+        fftw = spec["fftw-api"]
+        fftw_header_dir = fftw.headers.directories[0]
+
+        # some providers (mainly Intel) keep the fftw headers in a subdirectory, find it
+        for incdir in [join_path(f, "fftw") for f in fftw.headers.directories]:
+            if os.path.exists(incdir):
+                fftw_header_dir = incdir
+                break
 
         optimization_flags = {
-            "gcc": [
-                "-O2",
-                "-funroll-loops",
-                "-ftree-vectorize",
-            ],
-            "intel": [
-                "-O2",
-                "-pc64",
-                "-unroll",
-            ],
+            "gcc": ["-O2", "-funroll-loops", "-ftree-vectorize"],
+            "intel": ["-O2", "-pc64", "-unroll"],
             "pgi": ["-fast"],
             "nvhpc": ["-fast"],
             "cce": ["-O2"],
@@ -316,15 +294,15 @@ class Cp2k(MakefilePackage, CudaPackage):
         }
 
         dflags = ["-DNDEBUG"]
-        cppflags = [
-            "-D__FFTW3",
-            "-I{0}".format(fftw_header_dir),
-        ]
+        cppflags = ["-D__FFTW3", "-I{0}".format(fftw_header_dir)]
 
-        if "^mpi@3:" in spec:
-            cppflags.append("-D__MPI_VERSION=3")
-        elif "^mpi@2:" in spec:
-            cppflags.append("-D__MPI_VERSION=2")
+        # CP2K requires MPI 3 starting at version 2023.1
+        # and __MPI_VERSION is not supported anymore.
+        if "@:2022.2" in spec:
+            if "^mpi@3:" in spec:
+                cppflags.append("-D__MPI_VERSION=3")
+            elif "^mpi@2:" in spec:
+                cppflags.append("-D__MPI_VERSION=2")
 
         cflags = optimization_flags[self.spec.compiler.name][:]
         cxxflags = optimization_flags[self.spec.compiler.name][:]
@@ -334,15 +312,14 @@ class Cp2k(MakefilePackage, CudaPackage):
         libs = []
         gpuver = ""
 
+        # CP2K Makefile doesn't set C standard, but the source code uses
+        # C99-style for-loops with inline definition of iterating variable.
+        cflags.append(self.compiler.c99_flag)
+
         if "%intel" in spec:
             cflags.append("-fp-model precise")
             cxxflags.append("-fp-model precise")
-            fcflags += [
-                "-fp-model precise",
-                "-heap-arrays 64",
-                "-g",
-                "-traceback",
-            ]
+            fcflags += ["-fp-model precise", "-heap-arrays 64", "-g", "-traceback"]
         elif "%gcc" in spec:
             fcflags += [
                 "-ffree-form",
@@ -350,10 +327,7 @@ class Cp2k(MakefilePackage, CudaPackage):
                 "-ggdb",  # make sure we get proper Fortran backtraces
             ]
         elif "%aocc" in spec:
-            fcflags += [
-                "-ffree-form",
-                "-Mbackslash",
-            ]
+            fcflags += ["-ffree-form", "-Mbackslash"]
         elif "%pgi" in spec or "%nvhpc" in spec:
             fcflags += ["-Mfreeform", "-Mextend"]
         elif "%cce" in spec:
@@ -401,13 +375,7 @@ class Cp2k(MakefilePackage, CudaPackage):
 
         # Intel
         if "%intel" in spec:
-            cppflags.extend(
-                [
-                    "-D__INTEL",
-                    "-D__HAS_ISO_C_BINDING",
-                    "-D__USE_CP2K_TRACE",
-                ]
-            )
+            cppflags.extend(["-D__INTEL", "-D__HAS_ISO_C_BINDING", "-D__USE_CP2K_TRACE"])
             fcflags.extend(["-diag-disable 8290,8291,10010,10212,11060", "-free", "-fpp"])
 
         # FFTW, LAPACK, BLAS
@@ -416,11 +384,12 @@ class Cp2k(MakefilePackage, CudaPackage):
         ldflags.append((lapack + blas).search_flags)
         libs.extend([str(x) for x in (fftw.libs, lapack, blas)])
 
-        if any(
-            p in spec for p in ("^intel-mkl", "^intel-parallel-studio+mkl", "^intel-oneapi-mkl")
-        ):
+        if self.spec.satisfies("platform=darwin"):
+            cppflags.extend(["-D__NO_STATM_ACCESS"])
+
+        if spec["blas"].name in ("intel-mkl", "intel-parallel-studio", "intel-oneapi-mkl"):
             cppflags += ["-D__MKL"]
-        elif "^accelerate" in spec:
+        elif spec["blas"].name == "accelerate":
             cppflags += ["-D__ACCELERATE"]
 
         if "+cosma" in spec:
@@ -433,15 +402,15 @@ class Cp2k(MakefilePackage, CudaPackage):
         if "+mpi" in spec:
             cppflags.extend(["-D__parallel", "-D__SCALAPACK"])
 
-            if "^intel-oneapi-mpi" in spec:
+            if spec["mpi"].name == "intel-oneapi-mpi":
                 mpi = [join_path(spec["intel-oneapi-mpi"].libs.directories[0], "libmpi.so")]
             else:
                 mpi = spec["mpi:cxx"].libs
 
             # while intel-mkl has a mpi variant and adds the scalapack
             # libs to its libs, intel-oneapi-mkl does not.
-            if "^intel-oneapi-mkl" in spec:
-                mpi_impl = "openmpi" if "^openmpi" in spec else "intelmpi"
+            if spec["scalapack"].name == "intel-oneapi-mkl":
+                mpi_impl = "openmpi" if spec["mpi"] == "openmpi" else "intelmpi"
                 scalapack = [
                     join_path(
                         spec["intel-oneapi-mkl"].libs.directories[0], "libmkl_scalapack_lp64.so"
@@ -468,10 +437,7 @@ class Cp2k(MakefilePackage, CudaPackage):
             cppflags += ["-D__LIBINT"]
 
             if "@:6.9" in spec:
-                cppflags += [
-                    "-D__LIBINT_MAX_AM=6",
-                    "-D__LIBDERIV_MAX_AM1=5",
-                ]
+                cppflags += ["-D__LIBINT_MAX_AM=6", "-D__LIBDERIV_MAX_AM1=5"]
 
                 # libint-1.x.y has to be linked statically to work around
                 # inconsistencies in its Fortran interface definition
@@ -583,11 +549,7 @@ class Cp2k(MakefilePackage, CudaPackage):
 
                 acc_compiler_var = "OFFLOAD_CC"
                 acc_flags_var = "OFFLOAD_FLAGS"
-                cppflags += [
-                    "-D__DBCSR_ACC",
-                    "-D__GRID_CUDA",
-                    "-DOFFLOAD_TARGET=cuda",
-                ]
+                cppflags += ["-D__DBCSR_ACC", "-D__GRID_CUDA", "-DOFFLOAD_TARGET=cuda"]
                 libs += ["-lcublas"]
 
                 if spec.satisfies("+cuda_fft"):
@@ -614,12 +576,7 @@ class Cp2k(MakefilePackage, CudaPackage):
 
             cuda_arch = spec.variants["cuda_arch"].value[0]
             if cuda_arch:
-                gpuver = {
-                    "35": "K40",
-                    "37": "K80",
-                    "60": "P100",
-                    "70": "V100",
-                }[cuda_arch]
+                gpuver = {"35": "K40", "37": "K80", "60": "P100", "70": "V100"}[cuda_arch]
 
                 if cuda_arch == "35" and spec.satisfies("+cuda_arch_35_k20x"):
                     gpuver = "K20X"
@@ -639,12 +596,7 @@ class Cp2k(MakefilePackage, CudaPackage):
                     "The file LIBSMM_PATH pointed to does not "
                     "exist. Note that it must be absolute path."
                 )
-            cppflags.extend(
-                [
-                    "-D__HAS_smm_dnn",
-                    "-D__HAS_smm_vec",
-                ]
-            )
+            cppflags.extend(["-D__HAS_smm_dnn", "-D__HAS_smm_vec"])
             libs.append("-lsmm")
 
         elif "smm=libxsmm" in spec:
@@ -694,10 +646,10 @@ class Cp2k(MakefilePackage, CudaPackage):
                 #
                 # and use `-fpp` instead
                 mkf.write("CPP = # {0} -P\n".format(spack_cc))
-                mkf.write("AR  = {0}/xiar -r\n".format(intel_bin_dir))
+                mkf.write("AR  = {0}/xiar -qs\n".format(intel_bin_dir))
             else:
                 mkf.write("CPP = # {0} -E\n".format(spack_cc))
-                mkf.write("AR  = ar -r\n")
+                mkf.write("AR  = ar -qs\n")  # r = qs is a GNU extension
 
             if "+cuda" in spec:
                 mkf.write(
@@ -794,7 +746,7 @@ class Cp2k(MakefilePackage, CudaPackage):
                 content += " " + self.spec["lapack"].libs.ld_flags
                 content += " " + self.spec["fftw-api"].libs.ld_flags
 
-                if "^fftw+openmp" in self.spec:
+                if (self.spec["fftw-api"].name == "fftw") and ("+openmp" in self.spec["fftw"]):
                     content += " -lfftw3_omp"
 
                 content += "\n"

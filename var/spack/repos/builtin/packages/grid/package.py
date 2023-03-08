@@ -89,12 +89,7 @@ class Grid(AutotoolsPackage):
             # and what linker to use.  In many case it'd end up building the
             # code with support for MPI but without using `mpicxx` or linking to
             # `-lmpi`, wreaking havoc.  Forcing `CXX` to be mpicxx should help.
-            args.extend(
-                [
-                    "CC={0}".format(spec["mpi"].mpicc),
-                    "CXX={0}".format(spec["mpi"].mpicxx),
-                ]
-            )
+            args.extend(["CC={0}".format(spec["mpi"].mpicc), "CXX={0}".format(spec["mpi"].mpicxx)])
 
         args += self.enable_or_disable("timers")
         args += self.enable_or_disable("chroma")

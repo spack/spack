@@ -51,16 +51,7 @@ class Mlirmiopen(CMakePackage):
     depends_on("half")
     depends_on("pkgconfig", type="build")
 
-    for ver in [
-        "5.1.0",
-        "5.1.3",
-        "5.2.0",
-        "5.2.1",
-        "5.2.3",
-        "5.3.0",
-        "5.3.3",
-        "5.4.0",
-    ]:
+    for ver in ["5.1.0", "5.1.3", "5.2.0", "5.2.1", "5.2.3", "5.3.0", "5.3.3", "5.4.0"]:
         depends_on("hip@" + ver, when="@" + ver)
         depends_on("llvm-amdgpu@" + ver, when="@" + ver)
         depends_on("hsa-rocr-dev@" + ver, when="@" + ver)
