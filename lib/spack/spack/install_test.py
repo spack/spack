@@ -552,7 +552,7 @@ def copy_test_files(pkg, test_spec):
     pkg_cls = package_class(test_spec)
     if not pkg_cls:
         tty.debug(
-            "{0}: skipping test data copy since no package class found".format(test_specspec.name)
+            "{0}: skipping test data copy since no package class found".format(test_spec.name)
         )
         return
 
@@ -570,7 +570,7 @@ def test_functions(spec_or_pkg, add_virtuals=False, names=False):
 
     Args:
         spec_or_pkg (spack.spec.Spec or spack.package_base.PackageBase): spec or package (class)
-        add_virtuals (bool): True will add any test methods of provided virtuals when a package is provided
+        add_virtuals (bool): True to add test methods of provided package virtual
         names (bool): True results in the return of test function names
 
     Returns: list of test functions or function names
