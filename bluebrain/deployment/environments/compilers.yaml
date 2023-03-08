@@ -9,6 +9,7 @@ spack:
           filter:
             exclude_env_vars: ['CPATH', 'LIBRARY_PATH']
         include:
+          - binutils
           - gcc
           - intel-oneapi-compilers
   packages:
@@ -17,6 +18,7 @@ spack:
     intel-parallel-studio:
       variants: +advisor+daal+gdb+inspector+ipp~mkl~mpi+rpath+shared~tbb+vtune
   specs:
+    - binutils
     - gcc@11.3.0
     - gcc@12.2.0
     - intel-oneapi-compilers@2022.2.1
