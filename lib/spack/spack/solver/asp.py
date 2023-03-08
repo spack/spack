@@ -946,26 +946,16 @@ class SpackSolverSetup(object):
         """Facts about available compilers."""
 
         self.gen.h2("Available compilers")
-        compilers = self.possible_compilers
-
-        compiler_versions = collections.defaultdict(lambda: set())
-        for compiler in compilers:
-            compiler_versions[compiler.name].add(compiler.version)
-
-        for compiler in sorted(compiler_versions):
-            for v in sorted(compiler_versions[compiler]):
-                self.gen.fact(fn.compiler_version(compiler, v))
-
+        for compiler_id, compiler in enumerate(self.possible_compilers):
+            self.gen.fact(fn.compiler_version(compiler.name, compiler.version))
             self.gen.newline()
 
     def compiler_defaults(self):
         """Set compiler defaults, given a list of possible compilers."""
         self.gen.h2("Default compiler preferences")
 
-        compiler_list = self.possible_compilers.copy()
-        compiler_list = sorted(compiler_list, key=lambda x: (x.name, x.version), reverse=True)
         ppk = spack.package_prefs.PackagePrefs("all", "compiler", all=False)
-        matches = sorted(compiler_list, key=ppk)
+        matches = sorted(self.possible_compilers, key=ppk)
 
         for i, cspec in enumerate(matches):
             f = fn.default_compiler_preference(cspec.name, cspec.version, i)
@@ -1874,9 +1864,12 @@ class SpackSolverSetup(object):
                     # is already built
                 else:
                     cspecs.add(s.compiler)
+                    # FIXME (COMPILERS)
                     self.gen.fact(fn.allow_compiler(s.compiler.name, s.compiler.version))
 
-        return cspecs
+        return list(
+            sorted(cspecs, key=lambda compiler: (compiler.name, compiler.version), reverse=True)
+        )
 
     def define_version_constraints(self):
         """Define what version_satisfies(...) means in ASP logic."""
