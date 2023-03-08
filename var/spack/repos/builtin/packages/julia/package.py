@@ -177,6 +177,9 @@ class Julia(MakefilePackage):
     # Make sure Julia sets -DNDEBUG when including LLVM header files.
     patch("llvm-NDEBUG.patch", when="@1.7.0:1.7")
 
+    # Fix KeyError when compiling with GCC@12
+    patch("gcc12.patch", when="@:1.6")
+
     def patch(self):
         # The system-libwhich-libblastrampoline.patch causes a rebuild of docs as it
         # touches the main Makefile, so we reset the a/m-time to doc/_build's.
