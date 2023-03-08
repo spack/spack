@@ -1258,6 +1258,9 @@ class TestConcretize(object):
         assert root.dag_hash() != new_root_without_reuse.dag_hash()
 
     def test_reuse_with_flags(self, mutable_database, mutable_config):
+        if spack.config.get("config:concretizer") == "original":
+            pytest.xfail("Original concretizer does not reuse")
+
         spack.config.set("concretizer:reuse", True)
         spec = Spec("a cflags=-g cxxflags=-g").concretized()
         spack.store.db.add(spec, None)
