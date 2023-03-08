@@ -3,24 +3,20 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
+from spack.package import *
 
 
 class PyPipTools(PythonPackage):
     """pip-tools keeps your pinned dependencies fresh."""
 
-    homepage = "https://pip-tools.rtfd.io"
-    pypi = "pip-tools/pip-tools-6.10.0.tar.gz"
+    homepage = "https://github.com/jazzband/pip-tools/"
+    pypi = "pip-tools/pip-tools-6.12.3.tar.gz"
 
-    # FIXME: Add a list of GitHub accounts to
-    # notify when the package is updated.
-    # maintainers = ['github_user1', 'github_user2']
+    version("6.12.3", sha256="480d44fae6e09fad3f9bd3d0a7e8423088715d10477e8ef0663440db25e3114f")
 
-    version("6.3.0", sha256="1835a1848bdfb22b2b6e5d10d630844ff5ee15e24b6c3bf92319c76f205d347f")
-
-    depends_on("py-click@7:")
-    depends_on("py-setuptools@45:", type="build")
-    depends_on("py-setuptools-scm+toml@6.2:", type="build")
-    depends_on("py-pip@20.3:")
-    depends_on("py-build")
-    depends_on("py-wheel")
+    depends_on("py-click@8:", type=("build", "run"))
+    depends_on("py-setuptools@63:", type=("build", "run"))
+    depends_on("py-setuptools-scm+toml@7:", type="build")
+    depends_on("py-pip@22.2:", type=("build", "run"))
+    depends_on("py-build", type=("build", "run"))
+    depends_on("py-wheel", type=("build", "run"))
