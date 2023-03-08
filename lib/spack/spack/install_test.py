@@ -312,7 +312,8 @@ class PackageTest(object):
             builder.pkg.test_suite.current_test_spec = builder.pkg.spec
             builder.pkg.test_suite.current_base_spec = builder.pkg.spec
 
-            if "test" in method_names:
+            have_tests = any(name.startswith("test") for name in method_names)
+            if have_tests:
                 copy_test_files(builder.pkg, builder.pkg.spec)
 
             for name in method_names:
@@ -333,7 +334,7 @@ class PackageTest(object):
                     if fail_fast:
                         break
 
-            if "test" in method_names:
+            if have_tests:
                 print_message(logger, "Completed testing", True)
 
             # Raise any collected failures here
@@ -427,6 +428,12 @@ def test_part(pkg, test_name, purpose, work_dir=".", verbose=False):
     assert test_name and test_name.startswith(
         "test"
     ), "Test name must start with 'test' but {0} was provided".format(test_name)
+
+    if test_name == "test":
+        tty.warn(
+            "{0}: the 'test' method is deprecated. Convert stand-alone "
+            "test(s) to methods with names starting 'test_'.".format(pkg.name)
+        )
 
     title = "test: {0}: {1}".format(test_name, purpose or "")
     with fs.working_dir(wdir, create=True):
