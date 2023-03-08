@@ -31,6 +31,7 @@ class Neuron(CMakePackage):
     patch("patch-v800-cmake-nvhpc.patch", when="@8.0.0%nvhpc^cmake@3.20:")
 
     version("develop", branch="master")
+    version("9.0.a5", commit="522c866")
     version("9.0.a4", commit="de2c927")
     version("9.0.a3", commit="afce1ef")
     version("9.0.a2", commit="89f7dab")
@@ -136,8 +137,8 @@ class Neuron(CMakePackage):
     # (as PYTHONPATH) during build time
     depends_on("py-sympy@1.3:", type=("build", "run"))
     # Next two needed in versions containing neuronsimulator/nrn#2235.
-    depends_on("py-pip", type=("build"), when="@develop")
-    depends_on("py-packaging", type=("run"), when="@develop")
+    depends_on("py-pip", type=("build"), when="@9.0.a5:")
+    depends_on("py-packaging", type=("run"), when="@9.0.a5:")
 
     # dependency on coreneuron via submodule
     depends_on("coreneuron+legacy-unit~caliper", when="@:8.99+coreneuron+legacy-unit~caliper")
