@@ -10,7 +10,7 @@ class PyFireworks(PythonPackage):
     """FireWorks stores, executes, and manages calculation workflows."""
 
     homepage = "https://github.com/materialsproject/fireworks"
-    pypi     = "FireWorks/FireWorks-2.0.3.tar.gz"
+    pypi = "FireWorks/FireWorks-2.0.3.tar.gz"
 
     maintainers("meyersbs")
 

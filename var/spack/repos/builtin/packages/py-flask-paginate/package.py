@@ -11,7 +11,7 @@ class PyFlaskPaginate(PythonPackage):
     framework, supports bootstrap2&3 and foundation."""
 
     homepage = "https://github.com/lixxu/flask-paginate"
-    pypi     = "flask-paginate/flask-paginate-2022.1.8.tar.gz"
+    pypi = "flask-paginate/flask-paginate-2022.1.8.tar.gz"
 
     maintainers("meyersbs")
 
