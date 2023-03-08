@@ -14,7 +14,7 @@ class PyCustodian(PythonPackage):
     for different applications."""
 
     homepage = "https://github.com/materialsproject/custodian"
-    pypi     = "custodian/custodian-2022.5.26.tar.gz"
+    pypi = "custodian/custodian-2022.5.26.tar.gz"
 
     maintainers("meyersbs")
 
