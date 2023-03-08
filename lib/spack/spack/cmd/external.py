@@ -64,7 +64,8 @@ def setup_parser(subparser):
         "package Spack knows how to find."
     )
 
-    sp.add_parser("list", help="list detectable packages, by repository and name")
+    list_parser = sp.add_parser("list", help="list detectable packages, by repository and name")
+    list_parser.add_argument("--detected", "-d", action="store_true", default=False, required=False, help="list detectable packages that have been detected externally and are present in packages.yaml")
 
     read_cray_manifest = sp.add_parser(
         "read-cray-manifest",
@@ -231,13 +232,18 @@ def _collect_and_consume_cray_manifest_files(
 
 
 def external_list(args):
-    # Trigger a read of all packages, might take a long time.
-    list(spack.repo.path.all_package_classes())
-    # Print all the detectable packages
-    tty.msg("Detectable packages per repository")
-    for namespace, pkgs in sorted(spack.package_base.detectable_packages.items()):
-        print("Repository:", namespace)
-        colify.colify(pkgs, indent=4, output=sys.stdout)
+    if args.detected:
+        # Only list specs currently in packages.yaml
+        present_externals = spack.detection.common._externals_in_packages_yaml()
+        spack.cmd.display_specs(present_externals)
+    else:
+        # Trigger a read of all packages, might take a long time.
+        list(spack.repo.path.all_package_classes())
+        # Print all the detectable packages
+        tty.msg("Detectable packages per repository")
+        for namespace, pkgs in sorted(spack.package_base.detectable_packages.items()):
+            print("Repository:", namespace)
+            colify.colify(pkgs, indent=4, output=sys.stdout)
 
 
 def external(parser, args):
