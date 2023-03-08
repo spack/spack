@@ -255,8 +255,7 @@ class Octave(AutotoolsPackage, GNUMirrorPackage):
                     [
                         "--with-fftw3-includedir=%s" % spec[fftw_string].prefix.include,
                         "--with-fftw3-libdir=%s" % spec[fftw_string].prefix.lib,
-                        "--with-fftw3f-includedir=%s" 
-                        % spec[fftw_string].prefix.include,
+                        "--with-fftw3f-includedir=%s" % spec[fftw_string].prefix.include,
                         "--with-fftw3f-libdir=%s" % spec[fftw_string].prefix.lib,
                     ]
                 )
