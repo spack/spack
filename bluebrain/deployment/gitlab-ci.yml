@@ -247,6 +247,9 @@ github_information:
     -     echo "Modifying MKL module in ${MKL_MODULE}"
     -     echo "# This avoids a missing symbol 'omp_get_num_procs' when calling anything that needs MKL" >> "${MKL_MODULE}"
     -     echo "append-path      LD_LIBRARY_PATH $(module show intel-oneapi-compilers|&grep LD_LIBRARY_PATH|grep -oe '/gpfs[^:]*linux/compiler/lib/intel64_lin')" >> "${MKL_MODULE}"
+    # The Intel® Oneapi™ OpenMP library needs a modern libgcc, otherwise it will pick up
+    # the default one in /usr and RPATHed libgcc will be ignored.
+    -     echo "append-path      LD_LIBRARY_PATH $(module show gcc|&sed -ne '/\bCC\b/{s/.*CC //g;s/bin\/gcc/lib64/g;p}')" >> "${MKL_MODULE}"
     - fi
     # Fail if software fails to build!
     - if grep -q -m1 -l -R '<failure' "spack_tests"; then exit 1; fi
