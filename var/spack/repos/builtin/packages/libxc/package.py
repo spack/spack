@@ -11,11 +11,10 @@ class Libxc(AutotoolsPackage, CudaPackage):
     density-functional theory."""
 
     homepage = "https://tddft.org/programs/libxc/"
-    url = "https://www.tddft.org/programs/libxc/down/2.2.2/libxc-2.2.2.tar.gz"
+    url = "https://gitlab.com/libxc/libxc/-/archive/6.1.0/libxc-6.1.0.tar.gz"
 
-    # Get checksum from latest release package at https://tddft.org/programs/libxc/download/
-    version("6.1.0", sha256="a3aa16915942543031a5d9c4a92c439ce54249bdcda8c91c4e69e65329dc9a54")
-    version("6.0.0", sha256="c2ca205a762200dfba2e6c9e8ca2061aaddc6b7cf42048859fe717a7aa07de7c")
+    version("6.1.0", sha256="f593745fa47ebfb9ddc467aaafdc2fa1275f0d7250c692ce9761389a90dd8eaf")
+    version("6.0.0", sha256="0c774e8e195dd92800b9adf3df5f5721e29acfe9af4b191a9937c7de4f9aa9f6")
     version("5.2.3", sha256="7b7a96d8eeb472c7b8cca7ac38eae27e0a8113ef44dae5359b0eb12592b4bcf2")
     version("5.1.7", sha256="1a818fdfe5c5f74270bc8ef0c59064e8feebcd66b8f642c08aecc1e7d125be34")
     version("5.1.5", sha256="02e4615a22dc3ec87a23efbd3d9be5bfad2445337140bad1720699571c45c3f9")
@@ -35,6 +34,12 @@ class Libxc(AutotoolsPackage, CudaPackage):
     conflicts("+shared +cuda", msg="Only ~shared supported with +cuda")
     conflicts("+cuda", when="@:4", msg="CUDA support only in libxc 5.0.0 and above")
 
+    # Remove this when the release tarballs become available for 6.0.0 and above.
+    with when("@6.0.0:"):
+        depends_on("autoconf", type="build")
+        depends_on("automake", type="build")
+        depends_on("libtool", type="build")
+
     depends_on("perl", type="build")
 
     patch("0001-Bugfix-avoid-implicit-pointer-cast-to-make-libxc-com.patch", when="@5.0.0")
@@ -47,6 +52,14 @@ class Libxc(AutotoolsPackage, CudaPackage):
 
     patch("nvhpc-configure.patch", when="%nvhpc")
     patch("nvhpc-libtool.patch", when="@develop %nvhpc")
+
+    def url_for_version(self, version):
+        # The webserver at https://tddft.org/programs/libxc/download is unreliable,
+        # see https://gitlab.com/libxc/libxc/-/issues/453. The pre 6.0.0 release tarballs
+        # ar available in our source mirror, but the latest versions are not.
+        if version < Version("6"):
+            return f"https://www.tddft.org/programs/libxc/down/{version}/libxc-{version}.tar.gz"
+        return f"https://gitlab.com/libxc/libxc/-/archive/{version}/libxc-{version}.tar.gz"
 
     @property
     def libs(self):
