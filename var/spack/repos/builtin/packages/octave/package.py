@@ -230,7 +230,7 @@ class Octave(AutotoolsPackage, GNUMirrorPackage):
                         "--with-fftw3f={0}".format(spec[fftw_string].libs.ld_flags),
                     ]
                 )
-            elif ("^amdfftw" in spec):
+            elif "^amdfftw" in spec:
                 specAmdfftw = spec[fftw_string].token[0]
                 AMD_FFTW3_LIBS = "-lfftw3"
                 AMD_FFTW3F_LIBS = "-lfftw3f"
@@ -243,8 +243,10 @@ class Octave(AutotoolsPackage, GNUMirrorPackage):
               
                 config_args.extend(
                     [
-                        "--with-fftw3=-L{0} {1}".format(spec[fftw_string].libs.directories[0],AMD_FFTW3_LIBS),
-                        "--with-fftw3f=-L{0} {1}".format(spec[fftw_string].libs.directories[0],AMD_FFTW3F_LIBS),
+                        "--with-fftw3=-L{0} {1}".format(
+                           spec[fftw_string].libs.directories[0],AMD_FFTW3_LIBS),
+                        "--with-fftw3f=-L{0} {1}".format(
+                           spec[fftw_string].libs.directories[0],AMD_FFTW3F_LIBS),
                     ]
                 )
             else:
@@ -252,7 +254,8 @@ class Octave(AutotoolsPackage, GNUMirrorPackage):
                     [
                         "--with-fftw3-includedir=%s" % spec[fftw_string].prefix.include,
                         "--with-fftw3-libdir=%s" % spec[fftw_string].prefix.lib,
-                        "--with-fftw3f-includedir=%s" % spec[fftw_string].prefix.include,
+                        "--with-fftw3f-includedir=%s" 
+                        % spec[fftw_string].prefix.include,
                         "--with-fftw3f-libdir=%s" % spec[fftw_string].prefix.lib,
                     ]
                 )
