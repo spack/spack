@@ -583,6 +583,21 @@ def test_nag_flags():
     supported_flag_test("opt_flags", ["-O", "-O0", "-O1", "-O2", "-O3", "-O4"], "nag@1.0")
 
 
+def test_nec_flags():
+    supported_flag_test("openmp_flag", "-fopenmp", "nec@4.0.0")
+    supported_flag_test("cxx11_flag", "-std=c++11", "nec@4.0.0")
+    supported_flag_test("cxx14_flag", "-std=c++14", "nec@4.0.0")
+    supported_flag_test("cxx17_flag", "-std=c++17", "nec@4.0.0")
+    supported_flag_test("c99_flag", "-std=c99", "nec@4.0.0")
+    supported_flag_test("c11_flag", "-std=c11", "nec@4.0.0")
+    supported_flag_test("cc_pic_flag", "-fPIC", "nec@4.0.0")
+    supported_flag_test("cxx_pic_flag", "-fPIC", "nec@4.0.0")
+    supported_flag_test("f77_pic_flag", "-fPIC", "nec@4.0.0")
+    supported_flag_test("fc_pic_flag", "-fPIC", "nec@4.0.0")
+    supported_flag_test("opt_flags", ["-O0", "-O1", "-O2", "-O3", "-O4"], "nec@4.0.0")
+    supported_flag_test("debug_flags", "-g", "nec@4.0.0")
+
+
 def test_nvhpc_flags():
     supported_flag_test("openmp_flag", "-mp", "nvhpc@20.9")
     supported_flag_test("cxx11_flag", "--c++11", "nvhpc@20.9")
