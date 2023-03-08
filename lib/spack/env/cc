@@ -430,6 +430,9 @@ other_args_list=""
 # Global state for keeping track of -Wl,-rpath -Wl,/path
 wl_expect_rpath=no
 
+# Same, but for -Xlinker -rpath -Xlinker /path
+xlinker_expect_rpath=no
+
 parse_Wl() {
     # drop -Wl
     shift
@@ -573,24 +576,38 @@ while [ $# -ne 0 ]; do
             unset IFS
             ;;
         -Xlinker)
-            if [ "$2" = "-rpath" ]; then
-                if [ "$3" != "-Xlinker" ]; then
-                    die "-Xlinker,-rpath was not followed by -Xlinker,*"
-                fi
-                shift 3;
+            shift
+            if [ $# -eq 0 ]; then
+                # -Xlinker without value: let the compiler error about it.
+                append other_args_list "-Xlinker"
+            elif [ "$xlinker_expect_rpath" = yes ]; then
+                # Register the path of -Xlinker -rpath <other args> -Xlinker <path>
                 rp="$1"
-            elif [ "$2" = "$dtags_to_strip" ]; then
-                shift  # We want to remove explicitly this flag
+                xlinker_expect_rpath=no
             else
-                append other_args_list "$1"
+                case "$1" in
+                    -rpath=*)
+                        rp="${1#-rpath=}"
+                        ;;
+                    --rpath=*)
+                        rp="${1#--rpath=}"
+                        ;;
+                    -rpath|--rpath)
+                        xlinker_expect_rpath=yes
+                        ;;
+                    "$dtags_to_strip")
+                        ;;
+                    *)
+                        append other_args_list "-Xlinker"
+                        append other_args_list "$1"
+                        ;;
+                esac
             fi
             ;;
+        "$dtags_to_strip")
+            ;;
         *)
-            if [ "$1" = "$dtags_to_strip" ]; then
-                :  # We want to remove explicitly this flag
-            else
-                append other_args_list "$1"
-            fi
+            append other_args_list "$1"
             ;;
     esac
 
