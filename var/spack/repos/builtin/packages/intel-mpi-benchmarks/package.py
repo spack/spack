@@ -51,20 +51,16 @@ class IntelMpiBenchmarks(MakefilePackage):
     patch("reorder_benchmark_macros.patch", when="@2019.1:2019.6")
 
     variant("mpi1", default=True, description="Build MPI1 benchmark")
-    variant("ext", default=True, description="Build MPI1 benchmark")
-    variant("io", default=True, description="Build MPI1 benchmark")
-    variant("nbc", default=True, description="Build MPI1 benchmark")
-    variant("p2p", default=True, description="Build MPI1 benchmark", when="@2018")
-    variant("rma", default=True, description="Build MPI1 benchmark")
-    variant("mt", default=True, description="Build MPI1 benchmark")
+    variant("ext", default=True, description="Build EXT benchmark")
+    variant("io", default=True, description="Build IO benchmark")
+    variant("nbc", default=True, description="Build NBC benchmark")
+    variant("p2p", default=True, description="Build P2P benchmark", when="@2018")
+    variant("rma", default=True, description="Build RMA benchmark")
+    variant("mt", default=True, description="Build MT benchmark")
 
     # Handle missing variants in previous versions
     conflicts("+p2p", when="@:2019")
     conflicts("+mt", when="@:2019")
-
-    # No parallel build before 2019
-    with when("@:2019"):
-        parallel = False
 
     def url_for_version(self, version):
         if version <= Version("2019.1"):
@@ -79,6 +75,12 @@ class IntelMpiBenchmarks(MakefilePackage):
             return "src"
         else:
             return "."
+
+    @property
+    def parallel(self):
+        if self.spec.satisfies("@:2019"):
+            return False
+        return True
 
     @property
     def build_targets(self):
