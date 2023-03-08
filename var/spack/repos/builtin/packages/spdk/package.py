@@ -60,7 +60,7 @@ class Spdk(AutotoolsPackage):
     )
 
     depends_on("dpdk@22.11:", when="+dpdk")
-    depends_on("fio@3.3", when="+fio")
+    depends_on("fio@3.33", when="+fio")
     depends_on("libaio")
     depends_on("meson")
     depends_on("nasm@2.12.02:", type="build")
