@@ -27,6 +27,7 @@ class Spdk(AutotoolsPackage):
     version("22.01.1", tag="v22.01.1", submodules=True)
 
     variant("crypto", default=False, description="Build vbdev crypto module")
+    variant("dpdk", default=False, description="Build with dpdk")
     variant("fio", default=False, description="Build fio plugin")
     variant("iscsi-initiator", default=False, description="Build with iscsi bdev module")
     variant("ocf", default=False, description="Build OCF library and bdev module")
@@ -45,6 +46,7 @@ class Spdk(AutotoolsPackage):
 
     mods = (
         "crypto",
+        "dpdk",
         "iscsi-initiator",
         "ocf",
         "pmdk",
@@ -57,7 +59,7 @@ class Spdk(AutotoolsPackage):
         "vtune",
     )
 
-    depends_on("dpdk@22.11:")
+    depends_on("dpdk@22.11:", when="+dpdk")
     depends_on("fio@3.3", when="+fio")
     depends_on("libaio")
     depends_on("meson")
