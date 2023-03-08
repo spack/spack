@@ -1143,7 +1143,9 @@ def generate_key_index(key_prefix, tmpdir=None):
 def gzip_compressed_tarfile(path):
     """Create a reproducible, compressed tarfile"""
     # Create gzip compressed tarball of the install prefix
-    # 1) Use explicit empty filename and mtime 0 for gzip header reproducibility
+    # 1) Use explicit empty filename and mtime 0 for gzip header reproducibility.
+    #    If the filename="" is dropped, Python will use fileobj.name instead.
+    #    This should effectively mimick `gzip --no-name`.
     # 2) On AMD Ryzen 3700X and an SSD disk, we have the following on compression speed:
     # compresslevel=6 gzip default: llvm takes 4mins, roughly 2.1GB
     # compresslevel=9 python default: llvm takes 12mins, roughly 2.1GB
