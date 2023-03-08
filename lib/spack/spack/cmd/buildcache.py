@@ -63,8 +63,8 @@ def setup_parser(subparser):
     push.add_argument(
         "-k", "--key", metavar="key", type=str, default=None, help="Key for signing."
     )
-    # TODO: remove from Spack 0.21
     output = push.add_mutually_exclusive_group(required=True)
+    # TODO: remove from Spack 0.21
     output.add_argument(
         "-d",
         "--directory",
