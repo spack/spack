@@ -23,11 +23,18 @@ class Qwt(QMakePackage):
     version("5.2.2", sha256="36bf2ee51ca9c74fde1322510ffd39baac0db60d5d410bb157968a78d9c1464b")
 
     variant("designer", default=False, description="Build extensions to QT designer")
+    variant("opengl", default=False, description="Build OpenGL plot canvas")
 
     patch("no-designer.patch", when="~designer")
+    patch("no-opengl_6_1.patch", when="@6.1 ~opengl")
 
-    depends_on("qt@:5.14.2+opengl")
     depends_on("qt+tools", when="+designer")
+    depends_on("qt+opengl", when="+opengl")
+
+    depends_on("qt")
+    # the qt@5.14.2 limitation was lifted in qwt@6.1.5
+    # https://sourceforge.net/p/qwt/code/HEAD/tree/tags/qwt-6.1.6/CHANGES-6.1
+    depends_on("qt@:5.14.2", when="@:6.1.4")
     # Qwt 6.1.1 and older use a constant that was removed in Qt 5.4
     # https://bugs.launchpad.net/ubuntu/+source/qwt-qt5/+bug/1485213
     depends_on("qt@:5.3", when="@:6.1.1")
