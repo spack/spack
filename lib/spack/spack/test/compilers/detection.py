@@ -491,21 +491,23 @@ def test_aocc_version_detection(version_str, expected_version):
 
 
 @pytest.mark.regression("33901")
-@pytest.mark.parametrize("version_str", [
-    (
-        "Apple clang version 11.0.0 (clang-1100.0.33.8)\n"
-        "Target: x86_64-apple-darwin18.7.0\n"
-        "Thread model: posix\n"
-        "InstalledDir: "
-        "/Applications/Xcode.app/Contents/Developer/Toolchains/"
-        "XcodeDefault.xctoolchain/usr/bin\n"
-    ),
-    (
-        "Apple LLVM version 7.0.2 (clang-700.1.81)\n"
-        "Target: x86_64-apple-darwin15.2.0\n"
-        "Thread model: posix\n"
-    ),
-])
+@pytest.mark.parametrize("version_str",
+    [
+        (
+            "Apple clang version 11.0.0 (clang-1100.0.33.8)\n"
+            "Target: x86_64-apple-darwin18.7.0\n"
+            "Thread model: posix\n"
+            "InstalledDir: "
+            "/Applications/Xcode.app/Contents/Developer/Toolchains/"
+            "XcodeDefault.xctoolchain/usr/bin\n"
+        ),
+        (
+            "Apple LLVM version 7.0.2 (clang-700.1.81)\n"
+            "Target: x86_64-apple-darwin15.2.0\n"
+            "Thread model: posix\n"
+        ),
+    ],
+)
 def test_apple_clang_not_detected_as_cce(version_str):
     version = spack.compilers.cce.Cce.extract_version_from_output(version_str)
     assert version == "unknown"
