@@ -1466,7 +1466,6 @@ Go cannot be used to fetch a particular commit or branch, it always
 downloads the head of the repository. This download method is untrusted,
 and is not recommended. Use another fetch strategy whenever possible.
 
-
 .. _variants:
 
 --------
@@ -5029,7 +5028,7 @@ The package can access this path **during test processing** using
 
    Use ``self.test_suite.test_dir_for_spec(self.spec)`` to access
    the stage directory for the spec currently being tested. Refer to
-   :ref:`accessing staged files <_accessing-files>` for more information.
+   :ref:`accessing staged files <accessing-files>` for more information.
 
 
 """"""""""""""""""""""""
@@ -5139,10 +5138,10 @@ These checks could be embedded test parts implemented below.
 Stand-alone tests run in an environment that provides access to information
 Spack has on how the software was built, such as build options, dependencies,
 and compilers. Build options and dependencies are accessed with the normal
-spec checks. Examples of checking :ref:`variant settings <_variants>` and
-:ref:`spec constraints <_testing-specs>` can be found at those links.
+spec checks. Examples of checking :ref:`variant settings <variants>` and
+:ref:`spec constraints <testing-specs>` can be found at those links.
 Accessing compilers used by the build in stand-alone tests requires another
-step described :ref:`below <_test-compilation>`.
+step described :ref:`below <test-compilation>`.
 
 
 .. _test-compilation:
@@ -5292,7 +5291,7 @@ the copy of each entry listed in ``srcs``, respectively:
     problems testing shared instances and facility deployments.
 
     The ``filter_file`` function can be quite useful for such
-    changes. See :ref:`file manipulation <_file-manipulation>`.
+    changes. See :ref:`file manipulation <file-manipulation>`.
 
 
 .. _cache_custom_files:
@@ -5418,7 +5417,6 @@ follows:
            filename = join_path(self.prefix.share.tests.outputs, "foo.out")
            expected = get_escaped_text_output(filename)
            ..
-
 
 .. _accessing-files:
 
