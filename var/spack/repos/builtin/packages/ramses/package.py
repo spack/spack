@@ -14,7 +14,7 @@ class Ramses(MakefilePackage):
 
     maintainers = ["TomMelt"]
 
-    version("v1.0.0", branch="update-makefile")
+    version("v1.0.0", branch="main")
     # version("v1.0.0", tag="v1.0.0")
 
     executables = [r"^ramses3d$"]
