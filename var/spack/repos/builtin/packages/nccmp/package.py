@@ -37,11 +37,6 @@ class Nccmp(CMakePackage):
             nc_flags = Executable("nc-config")("--static", "--libs", output=str).strip()
             args.append(self.define("CMAKE_EXE_LINKER_FLAGS", nc_flags))
             if "+mpi" in nc:
-                args.append(
-                  self.define(
-                    "CMAKE_C_COMPILER",
-                    self.spec["mpi"].mpicc
-                  )
-                )
+                args.append(self.define("CMAKE_C_COMPILER", self.spec["mpi"].mpicc))
 
         return args
