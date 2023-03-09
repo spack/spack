@@ -113,7 +113,7 @@ class Tcl(AutotoolsPackage, SourceforgePackage):
         """
         # When using tkinter from within spack provided python+tkinter,
         # python will not be able to find Tcl unless TCL_LIBRARY is set.
-        env.set('TCL_LIBRARY', self._find_script_dir())
+        env.set("TCL_LIBRARY", self._find_script_dir())
 
     def setup_dependent_build_environment(self, env, dependent_spec):
         """Set TCL_LIBRARY to the directory containing init.tcl.
@@ -125,7 +125,7 @@ class Tcl(AutotoolsPackage, SourceforgePackage):
         * https://wiki.tcl-lang.org/page/TCL_LIBRARY
         * https://wiki.tcl-lang.org/page/TCLLIBPATH
         """
-        env.set('TCL_LIBRARY', self._find_script_dir())
+        env.set("TCL_LIBRARY", self._find_script_dir())
 
         # If we set TCLLIBPATH, we must also ensure that the corresponding
         # tcl is found in the build environment. This to prevent cases
