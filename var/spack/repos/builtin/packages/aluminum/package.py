@@ -25,7 +25,12 @@ class Aluminum(CMakePackage, CudaPackage, ROCmPackage):
     maintainers("bvanessen")
 
     version("master", branch="master")
-    version("1.2.2", sha256="c01d9dd98be4cab9b944bae99b403abe76d65e9e1750e7f23bf0105636ad5485")
+    version("1.2.3", sha256="9b214bdf30f9b7e8e017f83e6615db6be2631f5be3dd186205dbe3aa62f4018a")
+    version(
+        "1.2.2",
+        sha256="c01d9dd98be4cab9b944bae99b403abe76d65e9e1750e7f23bf0105636ad5485",
+        deprecated=True,
+    )
     version(
         "1.2.1",
         sha256="869402708c8a102a67667b83527b4057644a32b8cdf4990bcd1a5c4e5f0e30af",
