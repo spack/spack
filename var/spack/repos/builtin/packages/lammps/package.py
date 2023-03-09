@@ -570,7 +570,6 @@ class Lammps(CMakePackage, CudaPackage, ROCmPackage):
     depends_on("vtk", when="+user-vtk")
     depends_on("vtk", when="+vtk")
     depends_on("hipcub", when="~kokkos +rocm")
-    depends_on("llvm-amdgpu +openmp", when="+rocm +openmp", type="build")
 
     # propagate CUDA and ROCm architecture when +kokkos
     for arch in CudaPackage.cuda_arch_values:
