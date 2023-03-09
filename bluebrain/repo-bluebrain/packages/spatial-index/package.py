@@ -29,7 +29,7 @@ class SpatialIndex(PythonPackage):
 
     depends_on("py-setuptools")
     depends_on("cmake@3.2:", type="build")
-    depends_on("boost@1.79.0: +filesystem")
+    depends_on("boost@1.79.0: +filesystem+serialization")
     depends_on("py-docopt", type=("build", "run"))
     # `py-libsonata@0.1.15` contains a regression that throws
     # on empty selections. Therefore, SpatialIndex can't use
