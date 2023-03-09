@@ -221,7 +221,6 @@ class Bazel(Package):
             "--color=no --host_javabase=@local_jdk//:jdk"
             # Enable verbose output for failures
             " --verbose_failures"
-            # Show (formatted) subcommands being executed
             " --jobs={0}".format(make_jobs),
         )
 

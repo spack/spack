@@ -70,11 +70,6 @@ class PyTensorflowProbability(Package):
             # Enable verbose output for failures
             "--verbose_failures",
             "--spawn_strategy=local",
-            # Ask bazel to explain what it's up to
-            # Needs a filename as argument
-            "--explain=explainlogfile.txt",
-            # Increase verbosity of explanation,
-            "--verbose_explanations",
             # bazel uses system PYTHONPATH instead of spack paths
             "--action_env",
             "PYTHONPATH={0}".format(env["PYTHONPATH"]),
