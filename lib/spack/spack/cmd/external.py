@@ -25,6 +25,8 @@ description = "manage external packages in Spack configuration"
 section = "config"
 level = "short"
 
+display_args = {"long": True, "show_flags": False, "variants": False, "indent": 4}
+
 
 def setup_parser(subparser):
     sp = subparser.add_subparsers(metavar="SUBCOMMAND", dest="external_command")
@@ -72,8 +74,10 @@ def setup_parser(subparser):
         action="store_true",
         default=False,
         required=False,
-        help=('list detectable packages that have been'
-              'detected externally and are present in packages.yaml')
+        help=(
+            "list detectable packages that have been"
+            "detected externally and are present in packages.yaml"
+        ),
     )
 
     read_cray_manifest = sp.add_parser(
@@ -109,6 +113,24 @@ def setup_parser(subparser):
         default=spack.config.default_modify_scope("packages"),
         help="configuration scope to modify",
     )
+
+    remove_parser = sp.add_parser("remove", help="remove external packages from packages.yaml")
+    remove_parser.add_argument(
+        "--scope",
+        choices=scopes,
+        metavar=scopes_metavar,
+        default=spack.config.default_modify_scope("packages"),
+        help="configuration scope to modify",
+    )
+    remove_parser.add_argument(
+        "-a",
+        "--all",
+        action="store_true",
+        dest="all",
+        help="remove ALL installed packages that match each supplied spec",
+    )
+    spack.cmd.common.arguments.add_common_arguments(remove_parser, ["yes_to_all", "specs"])
+
 
 def external_find(args):
     if args.all or not (args.tags or args.packages):
@@ -268,12 +290,42 @@ def external_edit(args):
     spack.util.editor.editor(ext_packages_yaml_path)
 
 
+def _report_removed(path, specs):
+    tty.msg("The following packages have been removed from {}:".format(path))
+    spack.cmd.display_specs(specs, display_args)
+
+
+def external_remove(args):
+    if args.specs:
+        specs = set(spack.cmd.parse_specs(args.specs))
+    else:
+        if not args.all:
+            tty.die(
+                "spack external remove requires at least one package to remove. "
+                "Specify --all to remove ALL externally detected packages"
+            )
+        specs = [any]
+    specs_to_rm = spack.detection.get_matching_external_specs(specs, args.scope)
+    path = spack.config.config.get_config_filename(args.scope, "packages")
+    if not specs_to_rm:
+        tty.die(
+            "No specs matching {} were found in {}.".format(
+                ",".join([str(x) for x in specs]), path
+            )
+        )
+    if not args.yes_to_all:
+        spack.cmd.confirm_removal(specs_to_rm, display_args)
+    rmd_specs = spack.detection.remove_specs_from_configuration(specs_to_rm, args.scope)
+    _report_removed(path, rmd_specs)
+
+
 def external(parser, args):
     action = {
         "find": external_find,
         "list": external_list,
         "read-cray-manifest": external_read_cray_manifest,
-        "edit" : external_edit,
+        "edit": external_edit,
+        "remove": external_remove,
     }
     action[args.external_command](args)
 

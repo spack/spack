@@ -33,9 +33,9 @@ import spack.util.windows_registry
 DetectedPackage = collections.namedtuple("DetectedPackage", ["spec", "prefix"])
 
 
-def _externals_in_packages_yaml():
+def _externals_in_packages_yaml(scope=None):
     """Return all the specs mentioned as externals in packages.yaml"""
-    packages_yaml = spack.config.get("packages")
+    packages_yaml = spack.config.get("packages", scope=scope)
     already_defined_specs = set()
     for pkg_name, package_configuration in packages_yaml.items():
         for item in package_configuration.get("externals", []):
@@ -215,6 +215,51 @@ def update_configuration(detected_packages, scope=None, buildable=True):
     spack.config.set("packages", pkgs_cfg, scope=scope)
 
     return all_new_specs
+
+
+def _get_matching_specs(query_spec, specs):
+    matched = []
+    for spec in specs:
+        if spec is any or spec.satisfies(query_spec):
+            matched.append(spec)
+    return matched
+
+
+def get_matching_external_specs(specs, scope):
+    ext_specs = _externals_in_packages_yaml(scope=scope)
+    if any in specs:
+        return ext_specs
+    matched = []
+    for spec in specs:
+        matched.extend(_get_matching_specs(spec, ext_specs))
+    return matched
+
+
+def remove_specs_from_configuration(specs, scope):
+    removed_specs = []
+    # get all packages from provided scope
+    pkg_cfg = spack.config.get("packages", scope=scope)
+    # iterate over specs to be removed
+    for spec in specs:
+        # checking external packages for package with spec to be
+        # removed name == package name
+        for ext_spec_entry in pkg_cfg[spec.name].get("externals", []):
+            # if spec to be removed matches an external spec,
+            # remove from config
+            ext_spec = spack.spec.Spec(ext_spec_entry["spec"])
+            if ext_spec.satisfies(spec):
+                pkg_cfg[spec.name]["externals"].remove(ext_spec_entry)
+                removed_specs.append(ext_spec)
+        # if we're done iterating over specs related to this package
+        # check if the package still has any information,
+        # if not, remove it from the config altogether
+        # *pkg_cfg[spec.name].values() will unpack to
+        # nothing if there is not a single defined element of the cfg
+        # for that package
+        if not list(*pkg_cfg[spec.name].values()):
+            pkg_cfg.pop(spec.name)
+    spack.config.set("packages", pkg_cfg, scope=scope)
+    return removed_specs
 
 
 def _windows_drive():

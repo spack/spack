@@ -502,6 +502,21 @@ def display_specs(specs, args=None, **kwargs):
     output.flush()
 
 
+def confirm_removal(specs, display_args):
+    """Display the list of specs to be removed and ask for confirmation.
+
+    Args:
+        specs (list): specs to be removed
+    """
+    tty.msg("The following packages will be uninstalled:\n")
+    display_specs(specs, **display_args)
+    print("")
+    answer = tty.get_yes_or_no("Do you want to proceed?", default=False)
+    if not answer:
+        tty.msg("Aborting uninstallation")
+        sys.exit(0)
+
+
 def filter_loaded_specs(specs):
     """Filter a list of specs returning only those that are
     currently loaded."""
