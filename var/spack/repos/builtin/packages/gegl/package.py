@@ -18,6 +18,7 @@ class Gegl(MesonPackage):
 
     maintainers("benkirk")
 
+    version("0.4.42", sha256="aba83a0cbaa6c56edc29ea22f2e8172950a53b96daa51592083d59222bdde02d")
     version("0.4.40", sha256="cdde80d15a49dab9a614ef98f804c8ce6e4cfe1339a3c240c34f3fb45436b85d")
     version("0.4.38", sha256="e4a33c8430a5042fba8439b595348e71870f0d95fbf885ff553f9020c1bed750")
     version("0.4.36", sha256="6fd58a0cdcc7702258adaeffb573a389228ae8f0eff47578efda2309b61b2ca6")

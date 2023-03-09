@@ -114,6 +114,15 @@ class Gromacs(CMakePackage):
     )
     variant("openmp", default=True, description="Enables OpenMP at configure time")
     variant(
+        "sve",
+        default=True,
+        description="Enable SVE on aarch64 if available",
+        when="target=neoverse_v1",
+    )
+    variant(
+        "sve", default=True, description="Enable SVE on aarch64 if available", when="target=a64fx"
+    )
+    variant(
         "relaxed_double_precision",
         default=False,
         description="GMX_RELAXED_DOUBLE_PRECISION, use only for Fujitsu PRIMEHPC",
@@ -272,6 +281,15 @@ class Gromacs(CMakePackage):
                 "#include <queue>",
                 "#include <queue>\n#include <limits>",
                 "src/gromacs/modularsimulator/modularsimulator.h",
+            )
+        # Ref: https://gitlab.com/gromacs/gromacs/-/merge_requests/3504
+        if self.spec.satisfies("@2023"):
+            filter_file(
+                "        if (std::filesystem::equivalent(searchPath, buildBinPath))",
+                "        if (std::error_code c; std::filesystem::equivalent(searchPath,"
+                " buildBinPath, c))",
+                "src/gromacs/commandline/cmdlineprogramcontext.cpp",
+                string=True,
             )
 
         if "+plumed" in self.spec:
@@ -441,6 +459,8 @@ class Gromacs(CMakePackage):
             # ARMv8
             if self.spec.satisfies("%nvhpc"):
                 options.append("-DGMX_SIMD=None")
+            elif "sve" in target.features and "+sve" in self.spec:
+                options.append("-DGMX_SIMD=ARM_SVE")
             else:
                 options.append("-DGMX_SIMD=ARM_NEON_ASIMD")
         elif target == "mic_knl":

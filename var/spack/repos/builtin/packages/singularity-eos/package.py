@@ -106,6 +106,16 @@ class SingularityEos(CMakePackage, CudaPackage):
         depends_on("py-h5py" + _flag, when="@:1.6.2 " + _flag)
         depends_on("kokkos-nvcc-wrapper" + _flag, when="+cuda+kokkos" + _flag)
 
+    def flag_handler(self, name, flags):
+        if name == "fflags":
+            if self.spec.satisfies("%cce+fortran"):
+                # The Cray fortran compiler generates module files with
+                # uppercase names by default, which is not handled by the
+                # CMake scripts. The following flag forces the compiler to
+                # produce module files with lowercase names.
+                flags.append("-ef")
+        return (flags, None, None)
+
     def cmake_args(self):
         args = [
             self.define("SINGULARITY_PATCH_MPARK_VARIANT", False),
