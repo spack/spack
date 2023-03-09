@@ -9,7 +9,7 @@ class PyParseType(PythonPackage):
     """parse_type extends the parse module (opposite of string.format())."""
 
     homepage = "https://github.com/jenisys/parse_type"
-    pypi = "parse-type/parse_type-0.5.2.tar.gz"
+    pypi = "parse-type/parse_type-0.6.0.tar.gz"
 
     version("0.6.0", sha256="20b43c660e48ed47f433bce5873a2a3d4b9b6a7ba47bd7f7d2a7cec4bec5551f")
 
