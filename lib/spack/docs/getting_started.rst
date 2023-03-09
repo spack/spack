@@ -1518,6 +1518,7 @@ Required:
 * Microsoft Visual Studio
 * Python
 * Git
+* 7z
 
 Optional:
 * Intel Fortran (needed for some packages)
@@ -1560,13 +1561,14 @@ As Spack is a Python-based package, an installation of Python will be needed to 
 Python 3 can be downloaded and installed from the Windows Store, and will be automatically added
 to your ``PATH`` in this case.
 
-Additionally, the python module ``pywin32`` is required but not always installed from the Windows Store.
+Additionally, the python module ``pywin32`` and ``clingo`` are required but not always installed from the Windows Store.
 
 To get this module you may run the following from a PowerShell or CMD terminal.
 
 .. code-block:: python
   python.exe -m pip install --upgrade pip
   python.exe -m pip install pywin32
+  python.exe -m pip install clingo
 
 .. note::
    Spack currently supports Python versions later than 3.2 inclusive.
@@ -1587,6 +1589,13 @@ Spack support on Windows is currently dependent on installing the Git for Window
 as the project providing Git support on Windows. This is additionally the recommended method
 for installing Git on Windows, a link to which can be found above. Spack requires the
 utilities vendored by this project.
+
+"""
+7z
+"""
+
+A tool for extracting ``.xz`` files is required for extracting source tarballs. 7z
+can be downloaded from the Windows Store.
 
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 Step 2: Install and setup Spack
