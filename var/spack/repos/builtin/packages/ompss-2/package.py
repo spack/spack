@@ -31,6 +31,8 @@ class Ompss2(Package):
     depends_on("python", type="build")
     depends_on("cmake", type="build")
     depends_on("extrae", when="+extrae")
+    depends_on("boost@1.59.0:")
+    depends_on("numactl")
 
     resource(
         name="jemalloc",
@@ -105,6 +107,8 @@ class Ompss2(Package):
             "--prefix=%s" % prefix,
             "--with-jemalloc=%s" % prefix,
             "--with-hwloc=%s" % spec["hwloc"].prefix,
+            "--with-boost=%s" % spec["boost"].prefix,
+            "--with-libnuma=%s" % spec["numactl"].prefix,
             "--disable-stats-instrumentation",
             "--disable-verbose-instrumentation",
             "--disable-lint-instrumentation",

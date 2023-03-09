@@ -6,6 +6,7 @@ import pickle
 
 import pytest
 
+import spack.error
 from spack.main import SpackCommand
 
 build_env = SpackCommand("build-env")
@@ -48,3 +49,10 @@ def test_pickle(tmpdir):
         environment = pickle.load(open(_out_file, "rb"))
         assert type(environment) == dict
         assert "PATH" in environment
+
+
+def test_failure_when_uninstalled_deps(config, mock_packages):
+    with pytest.raises(
+        spack.error.SpackError, match="Not all dependencies of dttop are installed"
+    ):
+        build_env("dttop")

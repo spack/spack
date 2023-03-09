@@ -498,11 +498,11 @@ def list_fn(args):
 
     if not args.allarch:
         arch = spack.spec.Spec.default_arch()
-        specs = [s for s in specs if s.satisfies(arch)]
+        specs = [s for s in specs if s.intersects(arch)]
 
     if args.specs:
         constraints = set(args.specs)
-        specs = [s for s in specs if any(s.satisfies(c) for c in constraints)]
+        specs = [s for s in specs if any(s.intersects(c) for c in constraints)]
     if sys.stdout.isatty():
         builds = len(specs)
         tty.msg("%s." % plural(builds, "cached build"))

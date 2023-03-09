@@ -86,13 +86,13 @@ def test_env_change_spec_in_definition(tmpdir, mock_packages, config, mutable_mo
     e.concretize()
     e.write()
 
-    assert any(x.satisfies("mpileaks@2.1%gcc") for x in e.user_specs)
+    assert any(x.intersects("mpileaks@2.1%gcc") for x in e.user_specs)
 
     e.change_existing_spec(spack.spec.Spec("mpileaks@2.2"), list_name="desired_specs")
     e.write()
 
-    assert any(x.satisfies("mpileaks@2.2%gcc") for x in e.user_specs)
-    assert not any(x.satisfies("mpileaks@2.1%gcc") for x in e.user_specs)
+    assert any(x.intersects("mpileaks@2.2%gcc") for x in e.user_specs)
+    assert not any(x.intersects("mpileaks@2.1%gcc") for x in e.user_specs)
 
 
 def test_env_change_spec_in_matrix_raises_error(
@@ -143,3 +143,21 @@ def test_user_view_path_is_not_canonicalized_in_yaml(tmpdir, config):
         snd = ev.Environment(env_path)
         assert snd.yaml["spack"]["view"] == view
         assert os.path.samefile(snd.default_view.root, absolute_view)
+
+
+def test_environment_cant_modify_environments_root(tmpdir):
+    filename = str(tmpdir.join("spack.yaml"))
+    with open(filename, "w") as f:
+        f.write(
+            """\
+ spack:
+   config:
+     environments_root: /a/black/hole
+   view: false
+   specs: []
+ """
+        )
+    with tmpdir.as_cwd():
+        with pytest.raises(ev.SpackEnvironmentError):
+            e = ev.Environment(tmpdir.strpath)
+            ev.activate(e)

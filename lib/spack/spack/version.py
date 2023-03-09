@@ -133,6 +133,9 @@ class VersionStrComponent(object):
     def __str__(self):
         return self.data
 
+    def __repr__(self):
+        return f"VersionStrComponent('{self.data}')"
+
     def __eq__(self, other):
         if isinstance(other, VersionStrComponent):
             return self.data == other.data
@@ -242,9 +245,9 @@ class VersionBase(object):
         if string and not VALID_VERSION.match(string):
             raise ValueError("Bad characters in version string: %s" % string)
 
-        self.separators, self.version = self._generate_seperators_and_components(string)
+        self.separators, self.version = self._generate_separators_and_components(string)
 
-    def _generate_seperators_and_components(self, string):
+    def _generate_separators_and_components(self, string):
         segments = SEGMENT_REGEX.findall(string)
         components = tuple(int(m[0]) if m[0] else VersionStrComponent(m[1]) for m in segments)
         separators = tuple(m[2] for m in segments)
@@ -348,11 +351,26 @@ class VersionBase(object):
         return False
 
     @coerced
-    def satisfies(self, other):
-        """A Version 'satisfies' another if it is at least as specific and has
-        a common prefix.  e.g., we want gcc@4.7.3 to satisfy a request for
-        gcc@4.7 so that when a user asks to build with gcc@4.7, we can find
-        a suitable compiler.
+    def intersects(self, other: "VersionBase") -> bool:
+        """Return True if self intersects with other, False otherwise.
+
+        Two versions intersect if one can be constrained by the other. For instance
+        @4.7 and @4.7.3 intersect (the intersection being @4.7.3).
+
+        Arg:
+            other: version to be checked for intersection
+        """
+        n = min(len(self.version), len(other.version))
+        return self.version[:n] == other.version[:n]
+
+    @coerced
+    def satisfies(self, other: "VersionBase") -> bool:
+        """Return True if self is at least as specific and share a common prefix with other.
+
+        For instance, @4.7.3 satisfies @4.7 but not vice-versa.
+
+        Arg:
+            other: version to be checked for intersection
         """
         nself = len(self.version)
         nother = len(other.version)
@@ -466,9 +484,8 @@ class VersionBase(object):
     def is_successor(self, other):
         return other.is_predecessor(self)
 
-    @coerced
     def overlaps(self, other):
-        return self in other or other in self
+        return self.intersects(other)
 
     @coerced
     def union(self, other):
@@ -548,7 +565,7 @@ class GitVersion(VersionBase):
 
         if "=" in pruned_string:
             self.ref, self.ref_version_str = pruned_string.split("=")
-            _, self.ref_version = self._generate_seperators_and_components(self.ref_version_str)
+            _, self.ref_version = self._generate_separators_and_components(self.ref_version_str)
             self.user_supplied_reference = True
         else:
             self.ref = pruned_string
@@ -578,6 +595,9 @@ class GitVersion(VersionBase):
             if ref_info:
                 prev_version, distance = ref_info
 
+                if prev_version is None:
+                    prev_version = "0"
+
                 # Extend previous version by empty component and distance
                 # If commit is exactly a known version, no distance suffix
                 prev_tuple = VersionBase(prev_version).version if prev_version else ()
@@ -588,13 +608,21 @@ class GitVersion(VersionBase):
         return self.version
 
     @coerced
+    def intersects(self, other):
+        # If they are both references, they must match exactly
+        if self.is_ref and other.is_ref:
+            return self.version == other.version
+
+        # Otherwise the ref_version of the reference must intersect with the version of the other
+        v1 = self.ref_version if self.is_ref else self.version
+        v2 = other.ref_version if other.is_ref else other.version
+        n = min(len(v1), len(v2))
+        return v1[:n] == v2[:n]
+
+    @coerced
     def satisfies(self, other):
-        """A Version 'satisfies' another if it is at least as specific and has
-        a common prefix.  e.g., we want gcc@4.7.3 to satisfy a request for
-        gcc@4.7 so that when a user asks to build with gcc@4.7, we can find
-        a suitable compiler. In the case of two GitVersions we require the ref_versions
-        to satisfy one another and the versions to be an exact match.
-        """
+        # In the case of two GitVersions we require the ref_versions
+        # to satisfy one another and the versions to be an exact match.
 
         self_cmp = self._cmp(other.ref_lookup)
         other_cmp = other._cmp(self.ref_lookup)
@@ -731,7 +759,7 @@ class VersionRange(object):
         # means the range [1.2.3, 1.3), which is non-empty.
         min_len = min(len(start), len(end))
         if end.up_to(min_len) < start.up_to(min_len):
-            raise ValueError("Invalid Version range: %s" % self)
+            raise ValueError(f"Invalid Version range: {self}")
 
     def lowest(self):
         return self.start
@@ -805,25 +833,31 @@ class VersionRange(object):
         )
         return in_upper
 
-    @coerced
-    def satisfies(self, other):
-        """
-        x.satisfies(y) in general means that x and y have a
-        non-zero intersection. For VersionRange this means they overlap.
+    def intersects(self, other) -> bool:
+        """Return two if two version ranges overlap with each other, False otherwise.
 
-        `satisfies` is a commutative binary operator, meaning that
-        x.satisfies(y) if and only if y.satisfies(x).
+        This is a commutative operation.
 
-        Note: in some cases we have the keyword x.satisfies(y, strict=True)
-        to mean strict set inclusion, which is not commutative. However, this
-        lacks in VersionRange for unknown reasons.
-
-        Examples
+        Examples:
         - 1:3 satisfies 2:4, as their intersection is 2:3.
         - 1:2 does not satisfy 3:4, as their intersection is empty.
         - 4.5:4.7 satisfies 4.7.2:4.8, as their intersection is 4.7.2:4.7
+
+        Args:
+            other: version range to be checked for intersection
         """
         return self.overlaps(other)
+
+    @coerced
+    def satisfies(self, other):
+        """A version range satisfies another if it is a subset of the other.
+
+        Examples:
+        - 1:2 does not satisfy 3:4, as their intersection is empty.
+        - 1:3 does not satisfy 2:4, as they overlap but neither is a subset of the other
+        - 1:3 satisfies 1:4.
+        """
+        return self.intersection(other) == self
 
     @coerced
     def overlaps(self, other):
@@ -882,33 +916,32 @@ class VersionRange(object):
 
     @coerced
     def intersection(self, other):
-        if self.overlaps(other):
-            if self.start is None:
-                start = other.start
-            else:
-                start = self.start
-                if other.start is not None:
-                    if other.start > start or other.start in start:
-                        start = other.start
-
-            if self.end is None:
-                end = other.end
-            else:
-                end = self.end
-                # TODO: does this make sense?
-                # This is tricky:
-                #     1.6.5 in 1.6 = True  (1.6.5 is more specific)
-                #     1.6 < 1.6.5  = True  (lexicographic)
-                # Should 1.6 NOT be less than 1.6.5?  Hmm.
-                # Here we test (not end in other.end) first to avoid paradox.
-                if other.end is not None and end not in other.end:
-                    if other.end < end or other.end in end:
-                        end = other.end
-
-            return VersionRange(start, end)
-
-        else:
+        if not self.overlaps(other):
             return VersionList()
+
+        if self.start is None:
+            start = other.start
+        else:
+            start = self.start
+            if other.start is not None:
+                if other.start > start or other.start in start:
+                    start = other.start
+
+        if self.end is None:
+            end = other.end
+        else:
+            end = self.end
+            # TODO: does this make sense?
+            # This is tricky:
+            #     1.6.5 in 1.6 = True  (1.6.5 is more specific)
+            #     1.6 < 1.6.5  = True  (lexicographic)
+            # Should 1.6 NOT be less than 1.6.5?  Hmm.
+            # Here we test (not end in other.end) first to avoid paradox.
+            if other.end is not None and end not in other.end:
+                if other.end < end or other.end in end:
+                    end = other.end
+
+        return VersionRange(start, end)
 
     def __hash__(self):
         return hash((self.start, self.end))
@@ -1022,6 +1055,9 @@ class VersionList(object):
                 o += 1
         return False
 
+    def intersects(self, other):
+        return self.overlaps(other)
+
     def to_dict(self):
         """Generate human-readable dict for YAML."""
         if self.concrete:
@@ -1040,31 +1076,10 @@ class VersionList(object):
             raise ValueError("Dict must have 'version' or 'versions' in it.")
 
     @coerced
-    def satisfies(self, other, strict=False):
-        """A VersionList satisfies another if some version in the list
-        would satisfy some version in the other list.  This uses
-        essentially the same algorithm as overlaps() does for
-        VersionList, but it calls satisfies() on member Versions
-        and VersionRanges.
-
-        If strict is specified, this version list must lie entirely
-        *within* the other in order to satisfy it.
-        """
-        if not other or not self:
-            return False
-
-        if strict:
-            return self in other
-
-        s = o = 0
-        while s < len(self) and o < len(other):
-            if self[s].satisfies(other[o]):
-                return True
-            elif self[s] < other[o]:
-                s += 1
-            else:
-                o += 1
-        return False
+    def satisfies(self, other) -> bool:
+        # This exploits the fact that version lists are "reduced" and normalized, so we can
+        # never have a list like [1:3, 2:4] since that would be normalized to [1:4]
+        return all(any(lhs.satisfies(rhs) for rhs in other) for lhs in self)
 
     @coerced
     def update(self, other):
