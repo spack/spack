@@ -873,24 +873,6 @@ class CMakeBuildStage(Stage):
             teardown(self._remote_stage)
         self._remote_stage = None
 
-    def _reclaim_remote_stage(self):
-        # another Spack process or build has taken this directory
-        # the cmake build will not work from a different dir
-        # so wait until we can take it - try five times
-        # waiting a little longer each time.
-        # This will cause a hang but this should only be called if we're trying
-        # to rebuild a pre-existing stage, so we need to get the previous
-        # build dir or CMake will error
-        ii = 0
-        while self._remote_stage.exists() and ii < 5:
-            time.sleep(0.5)
-            ii += 1
-        if ii == 5:
-            raise StageError(
-                "Could not re-create external CMake stage, one exists for this package already"
-            )
-        self._remote_stage.mkdir()
-
     def _return_destroy_remote(self):
         # copy back to stage may fail in event of error, make sure we clean up the
         # associated external build dir in that event unless we're keeping the

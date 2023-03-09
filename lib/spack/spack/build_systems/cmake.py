@@ -372,12 +372,10 @@ class CMakeBuilder(BaseBuilder):
     @property
     def build_directory(self):
         """Full-path to the directory to use when building the package."""
-        stage_build_path = self.pkg.stage.build_directory
-        # default build stage is in source, if this is the case
-        # establish in stage build dir. If stage returns a non
-        # source build directory, we know it's out of source
-        # so it's an acceptable build stage for CMake
-        if stage_build_path in self.pkg.stage.source_path:
+        stage_build_path = getattr(self.pkg.stage, "build_directory", None)
+        # If build directory is not defined by the stage we are free to define our own here
+        # Note: build_directory is only defined by a CMakeBuildStage
+        if not stage_build_path:
             stage_build_path = os.path.join(self.pkg.stage.path, self.build_dirname)
         return stage_build_path
 

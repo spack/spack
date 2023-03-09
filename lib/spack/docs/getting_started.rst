@@ -1696,6 +1696,14 @@ Spack console via:
 
 If in the previous step, you did not have CMake or Ninja installed, running the command above should boostrap both packages
 
+.. note:: Long paths
+   In the process of intalling software via Spack on Windows, paths longer than 260 characters may become an
+   issue, as support for such paths is optional on Windows and individual pieces of software may not vendor
+   support. In order to build software (with a cmake build system) that produces paths longer
+   than 260 characters during the build, you can set the config option `cmake_ext_build` to any path on your
+   filesystem for which you have write permissions, and CMake will use this path as the build directory.
+   This sidesteps the package's stage path and reduces the number of characters overall (assuming a shorter path was chosen)
+
 """""""""""""""""""""""""""
 Windows Compatible Packages
 """""""""""""""""""""""""""
