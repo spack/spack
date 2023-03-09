@@ -12,7 +12,7 @@ class PyBbpWorkflow(PythonPackage):
     homepage = "https://bbpgitlab.epfl.ch/nse/bbp-workflow"
     git = "ssh://git@bbpgitlab.epfl.ch/nse/bbp-workflow.git"
 
-    version("3.1.13", tag="bbp-workflow-v3.1.13")
+    version("3.1.19", tag="bbp-workflow-v3.1.19")
 
     depends_on("py-setuptools", type=("build"))
 
@@ -22,7 +22,7 @@ class PyBbpWorkflow(PythonPackage):
     depends_on("py-luigi", type="run")
     depends_on("py-jsonschema", type="run")
     depends_on("py-luigi-tools", type="run")
-    depends_on("py-sh", type="run")
+    depends_on("py-sh@:1", type="run")
     depends_on("py-matplotlib", type="run")
     depends_on("py-bluepy", type="run")
     depends_on("py-bluepy-configfile", type="run")
