@@ -209,6 +209,16 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage):
         provides("go-or-gccgo-bootstrap@1.14.6:", when="@10:")
         provides("go-or-gccgo-bootstrap@1.16.3:1.16.5", when="@11:")
 
+        provides("golang@1.0:", when="@4.7.1:")
+        provides("golang@1.2:", when="@4.9:")
+        provides("golang@1.4:", when="@5:")
+        provides("golang@1.6.1:", when="@6:")
+        provides("golang@1.8.1:", when="@7:")
+        provides("golang@1.10.1:", when="@8:")
+        provides("golang@1.12.2:", when="@9:")
+        provides("golang@1.14.6:", when="@10:")
+        provides("golang@1.16.3:1.16.5", when="@11:")
+
         # GCC 4.7.1 added full support for the Go 1.x programming language.
         conflicts("@:4.7.1")
 
