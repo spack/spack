@@ -397,11 +397,12 @@ class Boost(Package):
     patch("intel-oneapi-linux-jam.patch", when="@1.76: %oneapi")
 
     # https://github.com/boostorg/phoenix/issues/111
-    patch('https://patch-diff.githubusercontent.com/raw/boostorg/phoenix/pull/112.patch',
-          sha256='7f5054a6dfaddba7659f75981e2397237e260910d96a736bfef8170f4c8b10a1', level=2,
-          when="@1.81.0")
-
-
+    patch(
+        "https://patch-diff.githubusercontent.com/raw/boostorg/phoenix/pull/112.patch",
+        sha256="7f5054a6dfaddba7659f75981e2397237e260910d96a736bfef8170f4c8b10a1",
+        level=2,
+        when="@1.81.0",
+    )
 
     def patch(self):
         # Disable SSSE3 and AVX2 when using the NVIDIA compiler
