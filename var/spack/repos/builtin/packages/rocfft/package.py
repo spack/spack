@@ -120,7 +120,6 @@ class Rocfft(CMakePackage):
     depends_on("googletest@1.10.0:", type="test")
     depends_on("fftw@3.3.8:", type="test")
     depends_on("boost@1.64.0: +program_options", type="test")
-    depends_on("llvm-amdgpu", type="test")
     depends_on("rocm-openmp-extras", type="test")
 
     def check(self):

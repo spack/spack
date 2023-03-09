@@ -225,6 +225,7 @@ class RocmOpenmpExtras(Package):
         depends_on("hsakmt-roct@" + ver, when="@" + ver)
         depends_on("comgr@" + ver, when="@" + ver)
         depends_on("hsa-rocr-dev@" + ver, when="@" + ver)
+        depends_on("llvm-amdgpu@" + ver, when="@" + ver)
 
         # tag changed to 'rocm-' in 4.0.0
         if ver == "3.9.0" or ver == "3.10.0":
