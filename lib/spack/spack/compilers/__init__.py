@@ -83,7 +83,11 @@ def _to_dict(compiler):
     """Return a dict version of compiler suitable to insert in YAML."""
     d = {}
     d["spec"] = str(compiler.spec)
-    d["paths"] = dict((attr, getattr(compiler, attr, None)) for attr in _path_instance_vars)
+    d["paths"] = dict(
+        (attr, getattr(compiler, attr))
+        for attr in _path_instance_vars
+        if hasattr(compiler, attr)
+    )
     d["flags"] = dict((fname, " ".join(fvals)) for fname, fvals in compiler.flags.items())
     d["flags"].update(
         dict(
@@ -92,11 +96,17 @@ def _to_dict(compiler):
             if hasattr(compiler, attr)
         )
     )
+    if not d["flags"]:
+        del d["flags"]
     d["operating_system"] = str(compiler.operating_system)
-    d["target"] = str(compiler.target)
-    d["modules"] = compiler.modules or []
-    d["environment"] = compiler.environment or {}
-    d["extra_rpaths"] = compiler.extra_rpaths or []
+    if compiler.target:
+        d["target"] = str(compiler.target)
+    if compiler.modules:
+        d["modules"] = compiler.modules
+    if compiler.environment:
+        d["environment"] = compiler.environment
+    if compiler.extra_rpaths:
+        d["extra_rpaths"] = compiler.extra_rpaths
     if compiler.enable_implicit_rpaths is not None:
         d["implicit_rpaths"] = compiler.enable_implicit_rpaths
 
@@ -386,20 +396,20 @@ def compiler_from_dict(items):
     os = items.get("operating_system", None)
     target = items.get("target", None)
 
-    if not ("paths" in items and all(n in items["paths"] for n in _path_instance_vars)):
+    if not ("paths" in items and any(n in items["paths"] for n in _path_instance_vars)):
         raise InvalidCompilerConfigurationError(cspec)
 
     cls = class_for_compiler_name(cspec.name)
 
     compiler_paths = []
     for c in _path_instance_vars:
-        compiler_path = items["paths"][c]
+        compiler_path = items["paths"].get(c, "None")
         if compiler_path != "None":
             compiler_paths.append(compiler_path)
         else:
             compiler_paths.append(None)
 
-    mods = items.get("modules")
+    mods = items.get("modules", "None")
     if mods == "None":
         mods = []
 
@@ -810,7 +820,7 @@ class InvalidCompilerConfigurationError(spack.error.SpackError):
     def __init__(self, compiler_spec):
         super(InvalidCompilerConfigurationError, self).__init__(
             'Invalid configuration for [compiler "%s"]: ' % compiler_spec,
-            "Compiler configuration must contain entries for all compilers: %s"
+            "Compiler configuration must contain entries for compilers: %s"
             % _path_instance_vars,
         )
 
