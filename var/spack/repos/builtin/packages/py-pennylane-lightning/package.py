@@ -19,7 +19,7 @@ class PyPennylaneLightning(CMakePackage, PythonExtension):
 
     version("master", branch="master")
 
-    version("0.29.0", sha256="d9cb0886f78c71923b6be2e0001ed368763af565f82e8fa529e3fe80425344cb")
+    version("0.29.0", sha256="da9912f0286d1a54051cc19cf8bdbdcd732795636274c95f376db72a88e52d85")
     version("0.28.2", sha256="c9b3afed0585681ccaf4df09fb12f2b7f09a8a1ba97a9b979139fe4a24509f31", deprecated=True)
     version(
         "0.28.0",
