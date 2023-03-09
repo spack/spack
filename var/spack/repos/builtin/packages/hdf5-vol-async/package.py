@@ -23,6 +23,8 @@ class Hdf5VolAsync(CMakePackage):
     version("1.2", tag="v1.2")
     version("1.1", tag="v1.1")
     version("1.0", tag="v1.0")
+    
+    variant("memcpy", default=False, description="Enable buffer copy for asynchronous dataset write")
 
     depends_on("mpi")
     depends_on("argobots@main")
@@ -42,6 +44,7 @@ class Hdf5VolAsync(CMakePackage):
             self.define("CMAKE_C_COMPILER", self.spec["mpi"].mpicc),
             self.define("BUILD_SHARED_LIBS", True),
             self.define("BUILD_TESTING", self.run_tests),
+            self.define_from_variant('ENABLE_WRITE_MEMCPY', 'memcpy'),
         ]
         return args
 
