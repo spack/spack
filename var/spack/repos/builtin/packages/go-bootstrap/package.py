@@ -65,7 +65,7 @@ class GoBootstrap(Package):
     for release in go_releases:
         if os in go_releases[release] and target in go_releases[release][os]:
             version(release, sha256=go_releases[release][os][target])
-            provides("go-or-gccgo-bootstrap@{}".format(release), when="@{}".format(release))
+            provides(f"go-or-gccgo-bootstrap@{release}", when=f"@{release}")
 
     # When the user adds a go compiler using ``spack external find go-bootstrap``,
     # this lets us get the version for packages.yaml. Then, the solver can avoid
