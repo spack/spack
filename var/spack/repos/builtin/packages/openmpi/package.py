@@ -954,7 +954,7 @@ class Openmpi(AutotoolsPackage, CudaPackage):
             config_args.extend(self.with_or_without("schedulers"))
 
         config_args.extend(self.enable_or_disable("memchecker"))
-        if spec.satisfies("+memchecker", strict=True):
+        if spec.satisfies("+memchecker"):
             config_args.extend(["--enable-debug"])
 
         # Package dependencies
