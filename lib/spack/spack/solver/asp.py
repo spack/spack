@@ -942,7 +942,7 @@ class SpackSolverSetup(object):
                 self.gen.fact(fn.conflict(pkg.name, trigger_id, constraint_id, conflict_msg))
                 self.gen.newline()
 
-    def available_compilers(self):
+    def compiler_facts(self):
         """Facts about available compilers."""
 
         self.gen.h2("Available compilers")
@@ -950,8 +950,7 @@ class SpackSolverSetup(object):
             self.gen.fact(fn.compiler_version(compiler.name, compiler.version))
             self.gen.newline()
 
-    def compiler_defaults(self):
-        """Set compiler defaults, given a list of possible compilers."""
+        # Set compiler defaults, given a list of possible compilers
         self.gen.h2("Default compiler preferences")
 
         ppk = spack.package_prefs.PackagePrefs("all", "compiler", all=False)
@@ -966,19 +965,15 @@ class SpackSolverSetup(object):
         for entry in spack.compilers.all_compilers_config():
             compiler_entry = entry["compiler"]
             cspec = spack.spec.CompilerSpec(compiler_entry["spec"])
+            operating_system = compiler_entry["operating_system"]
+            self.gen.fact(fn.compiler_supports_os(cspec.name, cspec.version, operating_system))
+
             if not compiler_entry.get("target", None):
                 continue
 
             self.gen.fact(
                 fn.compiler_supports_target(cspec.name, cspec.version, compiler_entry["target"])
             )
-
-    def compiler_supports_os(self):
-        compilers_yaml = spack.compilers.all_compilers_config()
-        for entry in compilers_yaml:
-            c = spack.spec.CompilerSpec(entry["compiler"]["spec"])
-            operating_system = entry["compiler"]["operating_system"]
-            self.gen.fact(fn.compiler_supports_os(c.name, c.version, operating_system))
 
     def package_compiler_defaults(self, pkg):
         """Facts about packages' compiler prefs."""
@@ -2095,9 +2090,7 @@ class SpackSolverSetup(object):
                 self._facts_from_concrete_spec(reusable_spec, possible)
 
         self.gen.h1("General Constraints")
-        self.available_compilers()
-        self.compiler_defaults()
-        self.compiler_supports_os()
+        self.compiler_facts()
 
         # architecture defaults
         self.platform_defaults()
