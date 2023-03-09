@@ -53,6 +53,7 @@ class Bison(AutotoolsPackage, GNUMirrorPackage):
 
     provides("yacc")
 
+    depends_on("gettext")
     depends_on("diffutils", type="build")
     depends_on("m4", type=("build", "run"))
     depends_on("perl", type="build")
