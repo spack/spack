@@ -31,6 +31,7 @@ class Gftl(CMakePackage):
 
     homepage = "https://github.com/Goddard-Fortran-Ecosystem/gFTL"
     url = "https://github.com/Goddard-Fortran-Ecosystem/gFTL/archive/refs/tags/v1.5.5.tar.gz"
+    list_url = "https://github.com/Goddard-Fortran-Ecosystem/gFTL/tags"
     git = "https://github.com/Goddard-Fortran-Ecosystem/gFTL.git"
 
     maintainers("mathomp4", "tclune")

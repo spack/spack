@@ -12,6 +12,7 @@ class Pflogger(CMakePackage):
 
     homepage = "https://github.com/Goddard-Fortran-Ecosystem/pFlogger"
     url = "https://github.com/Goddard-Fortran-Ecosystem/pFlogger/archive/refs/tags/v1.6.1.tar.gz"
+    list_url = "https://github.com/Goddard-Fortran-Ecosystem/pFlogger/tags"
     git = "https://github.com/Goddard-Fortran-Ecosystem/pFlogger.git"
 
     maintainers("mathomp4", "tclune")
