@@ -820,8 +820,7 @@ class InvalidCompilerConfigurationError(spack.error.SpackError):
     def __init__(self, compiler_spec):
         super(InvalidCompilerConfigurationError, self).__init__(
             'Invalid configuration for [compiler "%s"]: ' % compiler_spec,
-            "Compiler configuration must contain entries for compilers: %s"
-            % _path_instance_vars,
+            f"Compiler configuration must contain entries for compilers: {_path_instance_vars}",
         )
 
 
