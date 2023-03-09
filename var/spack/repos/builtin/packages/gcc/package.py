@@ -220,7 +220,7 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage):
         provides("golang@1.16.3:1.16.5", when="@11:")
 
         # GCC 4.7.1 added full support for the Go 1.x programming language.
-        conflicts("@:4.7.1")
+        conflicts("@:4.7.0")
 
         # Go is not supported on macOS
         conflicts("platform=darwin", msg="GCC cannot build Go support on MacOS")
