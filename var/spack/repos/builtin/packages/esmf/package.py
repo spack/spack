@@ -34,7 +34,7 @@ class Esmf(MakefilePackage):
     version(
         "8.3.0",
         sha256="0ff43ede83d1ac6beabd3d5e2a646f7574174b28a48d1b9f2c318a054ba268fd",
-        deprecated=True
+        deprecated=True,
     )
     version("8.3.0b09", commit="5b7e546c4b", deprecated=True)
     version("8.2.0", sha256="3693987aba2c8ae8af67a0e222bea4099a48afe09b8d3d334106f9d7fc311485")
@@ -42,18 +42,18 @@ class Esmf(MakefilePackage):
     version(
         "8.1.0",
         sha256="367dc89ab8e273f6fbe3d63a64a9a6735cbaa77d5f144ebae4af198fee5bb203",
-        deprecated=True
+        deprecated=True,
     )
     version("8.0.1", sha256="9172fb73f3fe95c8188d889ee72fdadb4f978b1d969e1d8e401e8d106def1d84")
     version(
         "8.0.0",
         sha256="051dca45f9803d7e415c0ea146df15ce487fb55f0fce18ca61d96d4dba0c8774",
-        deprecated=True
+        deprecated=True,
     )
     version(
         "7.1.0r",
         sha256="ae9a5edb8d40ae97a35cbd4bd00b77061f995c77c43d36334dbb95c18b00a889",
-        deprecated=True
+        deprecated=True,
     )
 
     variant("mpi", default=True, description="Build with MPI support")
@@ -65,7 +65,7 @@ class Esmf(MakefilePackage):
         "external-parallelio",
         default=True,
         description="Build with external parallelio library",
-        when="@8.3.1:+mpi"
+        when="@8.3.1:+mpi",
     )
     variant("debug", default=False, description="Build with debugging symbols and options enabled")
     variant("shared", default=True, description="Build shared library")
