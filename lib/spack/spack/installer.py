@@ -84,9 +84,6 @@ STATUS_DEQUEUED = "dequeued"
 #: queue invariants).
 STATUS_REMOVED = "removed"
 
-is_windows = sys.platform == "win32"
-is_osx = sys.platform == "darwin"
-
 
 class InstallAction(object):
     #: Don't perform an install
@@ -169,9 +166,9 @@ def _do_fake_install(pkg):
     if not pkg.name.startswith("lib"):
         library = "lib" + library
 
-    plat_shared = ".dll" if is_windows else ".so"
-    plat_static = ".lib" if is_windows else ".a"
-    dso_suffix = ".dylib" if is_osx else plat_shared
+    plat_shared = ".dll" if sys.platform == "win32" else ".so"
+    plat_static = ".lib" if sys.platform == "win32" else ".a"
+    dso_suffix = ".dylib" if sys.platform == "darwin" else plat_shared
 
     # Install fake command
     fs.mkdirp(pkg.prefix.bin)

@@ -575,7 +575,7 @@ def setup_main_options(args):
     if args.debug:
         spack.util.debug.register_interrupt_handler()
         spack.config.set("config:debug", True, scope="command_line")
-        spack.util.environment.tracing_enabled = True
+        spack.util.environment.TRACING_ENABLED = True
 
     if args.timestamp:
         tty.set_timestamp(True)

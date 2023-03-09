@@ -16,7 +16,7 @@ import spack.build_environment
 import spack.config
 import spack.spec
 from spack.paths import build_env_path
-from spack.util.environment import set_env, system_dirs
+from spack.util.environment import SYSTEM_DIRS, set_env
 from spack.util.executable import Executable, ProcessError
 
 #
@@ -160,7 +160,7 @@ def wrapper_environment(working_env):
         SPACK_DEBUG_LOG_ID="foo-hashabc",
         SPACK_COMPILER_SPEC="gcc@4.4.7",
         SPACK_SHORT_SPEC="foo@1.2 arch=linux-rhel6-x86_64 /hashabc",
-        SPACK_SYSTEM_DIRS=":".join(system_dirs),
+        SPACK_SYSTEM_DIRS=":".join(SYSTEM_DIRS),
         SPACK_CC_RPATH_ARG="-Wl,-rpath,",
         SPACK_CXX_RPATH_ARG="-Wl,-rpath,",
         SPACK_F77_RPATH_ARG="-Wl,-rpath,",
@@ -339,6 +339,16 @@ def test_fc_flags(wrapper_environment, wrapper_flags):
         + spack_ldflags
         + common_compile_args
         + spack_ldlibs,
+    )
+
+
+def test_Wl_parsing(wrapper_environment):
+    check_args(
+        cc,
+        ["-Wl,-rpath,/a,--enable-new-dtags,-rpath=/b,--rpath", "-Wl,/c"],
+        [real_cc]
+        + target_args
+        + ["-Wl,--disable-new-dtags", "-Wl,-rpath,/a", "-Wl,-rpath,/b", "-Wl,-rpath,/c"],
     )
 
 

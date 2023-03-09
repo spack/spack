@@ -24,6 +24,8 @@ class Dd4hep(CMakePackage):
     tags = ["hep"]
 
     version("master", branch="master")
+    version("1.25.1", sha256="6267e76c74fbb346aa881bc44de84434ebe788573f2997a189996252fc5b271b")
+    version("1.25", sha256="102a049166a95c2f24fc1c03395a819fc4501c175bf7915d69ccc660468d094d")
     version("1.24", sha256="361a932b9af2479458c0759281fef0161439d8bd119da426ce462a0467adc679")
     version("1.23", sha256="64e4f213e500147e4067301b03143b872381e2ae33710cb6eea8c578529dd596")
     version("1.22", sha256="0e729b8897b7a9c348bc3304c63d4efd1a88e032a2ff5a8c4daf6c927fd7f8ee")
@@ -140,7 +142,10 @@ class Dd4hep(CMakePackage):
     depends_on("boost +iostreams", when="+ddg4")
     depends_on("boost +system +filesystem", when="%gcc@:7")
     depends_on("root @6.08: +gdml +math +python")
-    depends_on("root @6.08: +gdml +math +python +x +opengl", when="+ddeve")
+    with when("+ddeve"):
+        depends_on("root @6.08: +x +opengl")
+        depends_on("root +webgui", when="^root@6.28:")
+        depends_on("root @:6.27", when="@:1.23")
     depends_on("root @6.08: +gdml +math +python +x +opengl", when="+utilityapps")
 
     extends("python")

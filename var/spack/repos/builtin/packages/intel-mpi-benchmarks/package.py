@@ -51,12 +51,16 @@ class IntelMpiBenchmarks(MakefilePackage):
     patch("reorder_benchmark_macros.patch", when="@2019.1:2019.6")
 
     variant("mpi1", default=True, description="Build MPI1 benchmark")
-    variant("ext", default=True, description="Build MPI1 benchmark")
-    variant("io", default=True, description="Build MPI1 benchmark")
-    variant("nbc", default=True, description="Build MPI1 benchmark")
-    variant("p2p", default=True, description="Build MPI1 benchmark", when="@2018")
-    variant("rma", default=True, description="Build MPI1 benchmark")
-    variant("mt", default=True, description="Build MPI1 benchmark")
+    variant("ext", default=True, description="Build EXT benchmark")
+    variant("io", default=True, description="Build IO benchmark")
+    variant("nbc", default=True, description="Build NBC benchmark")
+    variant("p2p", default=True, description="Build P2P benchmark", when="@2018")
+    variant("rma", default=True, description="Build RMA benchmark")
+    variant("mt", default=True, description="Build MT benchmark")
+
+    # Handle missing variants in previous versions
+    conflicts("+p2p", when="@:2019")
+    conflicts("+mt", when="@:2019")
 
     def url_for_version(self, version):
         if version <= Version("2019.1"):
@@ -73,22 +77,28 @@ class IntelMpiBenchmarks(MakefilePackage):
             return "."
 
     @property
+    def parallel(self):
+        if self.spec.satisfies("@:2019"):
+            return False
+        return True
+
+    @property
     def build_targets(self):
         spec = self.spec
         targets = []
         if "+mpi1" in spec:
             targets.append("MPI1")
-        elif "+ext" in spec:
+        if "+ext" in spec:
             targets.append("EXT")
-        elif "+io" in spec:
+        if "+io" in spec:
             targets.append("IO")
-        elif "+nbc" in spec:
+        if "+nbc" in spec:
             targets.append("NBC")
-        elif "+p2p" in spec:
+        if "+p2p" in spec:
             targets.append("P2P")
-        elif "+rma" in spec:
+        if "+rma" in spec:
             targets.append("RMA")
-        elif "+mt" in spec:
+        if "+mt" in spec:
             targets.append("MT")
 
         if self.spec.satisfies("@2019:"):
@@ -106,15 +116,15 @@ class IntelMpiBenchmarks(MakefilePackage):
         with working_dir(self.build_directory):
             if "+mpi1" in spec:
                 install("IMB-MPI1", prefix.bin)
-            elif "+ext" in spec:
+            if "+ext" in spec:
                 install("IMB-EXT", prefix.bin)
-            elif "+io" in spec:
+            if "+io" in spec:
                 install("IMB-IO", prefix.bin)
-            elif "+nbc" in spec:
+            if "+nbc" in spec:
                 install("IMB-NBC", prefix.bin)
-            elif "+p2p" in spec:
+            if "+p2p" in spec:
                 install("IMB-P2P", prefix.bin)
-            elif "+rma" in spec:
+            if "+rma" in spec:
                 install("IMB-RMA", prefix.bin)
-            elif "+mt" in spec:
+            if "+mt" in spec:
                 install("IMB-MT", prefix.bin)
