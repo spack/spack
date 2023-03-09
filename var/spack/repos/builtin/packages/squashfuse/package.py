@@ -10,14 +10,23 @@ class Squashfuse(AutotoolsPackage):
     """squashfuse - Mount SquashFS archives using FUSE"""
 
     homepage = "https://github.com/vasi/squashfuse"
-    url = "https://github.com/vasi/squashfuse/releases/download/0.1.104/squashfuse-0.1.104.tar.gz"
+    url = "https://github.com/vasi/squashfuse/archive/refs/tags/0.1.105.tar.gz"
     git = "https://github.com/vasi/squashfuse.git"
 
     maintainers("haampie")
 
     version("master", branch="master")
-    version("0.1.104", sha256="aa52460559e0d0b1753f6b1af5c68cfb777ca5a13913285e93f4f9b7aa894b3a")
-    version("0.1.103", sha256="42d4dfd17ed186745117cfd427023eb81effff3832bab09067823492b6b982e7")
+    version("0.1.105", sha256="3f776892ab2044ecca417be348e482fee2839db75e35d165b53737cb8153ab1e")
+    version(
+        "0.1.104",
+        sha256="aa52460559e0d0b1753f6b1af5c68cfb777ca5a13913285e93f4f9b7aa894b3a",
+        url="https://github.com/vasi/squashfuse/releases/download/0.1.104/squashfuse-0.1.104.tar.gz",
+    )
+    version(
+        "0.1.103",
+        sha256="42d4dfd17ed186745117cfd427023eb81effff3832bab09067823492b6b982e7",
+        url="https://github.com/vasi/squashfuse/releases/download/0.1.103/squashfuse-0.1.103.tar.gz",
+    )
 
     variant("shared", default=True, description="Enable shared libraries")
     variant("static", default=True, description="Enable static libraries")
@@ -46,10 +55,10 @@ class Squashfuse(AutotoolsPackage):
     depends_on("xz", when="+xz")
     depends_on("zstd", when="+zstd")
 
-    depends_on("m4", type="build", when="@master")
-    depends_on("autoconf", type="build", when="@master")
-    depends_on("automake", type="build", when="@master")
-    depends_on("libtool", type="build", when="@master")
+    depends_on("m4", type="build", when="@0.1.105:")
+    depends_on("autoconf", type="build", when="@0.1.105:")
+    depends_on("automake", type="build", when="@0.1.105:")
+    depends_on("libtool", type="build", when="@0.1.105:")
 
     def flag_handler(self, name, flags):
         if name == "cflags" and "+min_size" in self.spec:
