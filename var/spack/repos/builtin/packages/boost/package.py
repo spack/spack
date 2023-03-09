@@ -398,7 +398,7 @@ class Boost(Package):
 
     # https://github.com/boostorg/phoenix/issues/111
     patch(
-        "https://patch-diff.githubusercontent.com/raw/boostorg/phoenix/pull/112.patch",
+        "https://patch-diff.githubusercontent.com/raw/boostorg/phoenix/pull/112.patch?full_index=1",
         sha256="7f5054a6dfaddba7659f75981e2397237e260910d96a736bfef8170f4c8b10a1",
         level=2,
         when="@1.81.0",
