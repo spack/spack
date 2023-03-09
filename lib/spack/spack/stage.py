@@ -803,7 +803,6 @@ class CMakeBuildStage(Stage):
         self._return_destroy_remote()
         super(CMakeBuildStage, self).__exit__(exc_type, exc_val, exc_tb)
 
-
     def _establish_context_link(self):
         symlink(str(self._remote_stage), str(self.root_stage_context))
 

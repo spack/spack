@@ -372,12 +372,14 @@ class CMakeBuilder(BaseBuilder):
     @property
     def build_directory(self):
         """Full-path to the directory to use when building the package."""
-        stage_path = (
-            os.path.join(self.pkg.stage.path, self.build_dirname)
-            if not self.pkg.spec.dag_hash(7) in spack.stage.CMakeBuildStage.dispatch
-            else spack.stage.CMakeBuildStage.dispatch[self.pkg.spec.dag_hash(7)]
-        )
-        return stage_path
+        stage_build_path = self.pkg.stage.build_directory
+        # default build stage is in source, if this is the case
+        # establish in stage build dir. If stage returns a non
+        # source build directory, we know it's out of source
+        # so it's an acceptable build stage for CMake
+        if stage_build_path in self.pkg.stage.source_path:
+            stage_build_path = os.path.join(self.pkg.stage.path, self.build_dirname)
+        return stage_build_path
 
     def cmake_args(self):
         """List of all the arguments that must be passed to cmake, except:

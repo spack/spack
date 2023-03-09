@@ -1030,7 +1030,6 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
         s = self.spec
         stage_name = "{0}{1}-{2}-{3}".format(stage_prefix, s.name, s.version, s.dag_hash())
 
-
         # if we're building a CMake package on Windows
         # and the user set the requsite config option, setup a
         # custom CMake build stage to relocate the cmake build dir to
