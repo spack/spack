@@ -12,6 +12,7 @@ class Bitmap(AutotoolsPackage, XorgPackage):
     homepage = "https://cgit.freedesktop.org/xorg/app/bitmap"
     xorg_mirror_path = "app/bitmap-1.0.8.tar.gz"
 
+    version("1.1.0", sha256="60ca941e8e38e1f8f9c61d3e86c098878113fd11eac4e07177c111f0bf00779e")
     version("1.0.8", sha256="1a2fbd10a2ca5cd93f7b77bbb0555b86d8b35e0fc18d036b1607c761755006fc")
 
     depends_on("libx11")

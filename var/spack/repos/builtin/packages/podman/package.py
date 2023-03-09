@@ -60,9 +60,7 @@ class Podman(Package):
         )
         # Use the podman install prefix as fallback path for finding container.conf
         filter_file(
-            r"/usr",
-            self.prefix,
-            "vendor/github.com/containers/common/pkg/config/config.go",
+            r"/usr", self.prefix, "vendor/github.com/containers/common/pkg/config/config.go"
         )
 
     def install(self, spec, prefix):

@@ -16,12 +16,7 @@ class RedisPlusPlus(CMakePackage):
 
     maintainers("lpottier")
 
-    variant(
-        "cxxstd",
-        values=("11", "14", "17"),
-        default="14",
-        description="C++ standard used",
-    )
+    variant("cxxstd", values=("11", "14", "17"), default="14", description="C++ standard used")
     variant("shared", default=True, description="Enables the build of a shared library")
     variant("static", default=True, description="Enables the build of a static library")
     variant(
@@ -44,7 +39,6 @@ class RedisPlusPlus(CMakePackage):
     conflicts("+tls", when="+static", msg="Static libraries cannot be built with TLS support.")
 
     def cmake_args(self):
-
         cxxstd = self.spec.variants["cxxstd"].value
         use_fpic = ("+static" in self.spec) and ("+fpic" in self.spec)
 

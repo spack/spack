@@ -230,16 +230,6 @@ def test_path_manipulation(env):
     assert os.environ["PATH_LIST_WITH_DUPLICATES"].count("/duplicate") == 1
 
 
-def test_extra_arguments(env):
-    """Tests that we can attach extra arguments to any command."""
-    env.set("A", "dummy value", who="Pkg1")
-    for x in env:
-        assert "who" in x.args
-
-    env.apply_modifications()
-    assert "dummy value" == os.environ["A"]
-
-
 def test_extend(env):
     """Tests that we can construct a list of environment modifications
     starting from another list.
@@ -362,7 +352,6 @@ def test_preserve_environment(prepare_environment_for_tests):
 )
 @pytest.mark.usefixtures("prepare_environment_for_tests")
 def test_environment_from_sourcing_files(files, expected, deleted):
-
     env = environment.environment_after_sourcing_files(*files)
 
     # Test that variables that have been modified are still there and contain
@@ -393,7 +382,6 @@ def test_clear(env):
     ],
 )
 def test_sanitize_literals(env, exclude, include):
-
     after = environment.sanitize(env, exclude, include)
 
     # Check that all the included variables are there
@@ -430,7 +418,6 @@ def test_sanitize_literals(env, exclude, include):
     ],
 )
 def test_sanitize_regex(env, exclude, include, expected, deleted):
-
     after = environment.sanitize(env, exclude, include)
 
     assert all(x in after for x in expected)
@@ -481,15 +468,11 @@ def test_sanitize_regex(env, exclude, include, expected, deleted):
         (
             {"FOO": "foo", "BAR": "bar"},
             {"FOO": "baz", "BAR": "baz"},
-            [
-                environment.SetEnv("FOO", "baz"),
-                environment.SetEnv("BAR", "baz"),
-            ],
+            [environment.SetEnv("FOO", "baz"), environment.SetEnv("BAR", "baz")],
         ),
     ],
 )
 def test_from_environment_diff(before, after, search_list):
-
     mod = environment.EnvironmentModifications.from_environment_diff(before, after)
 
     for item in search_list:

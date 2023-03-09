@@ -25,9 +25,7 @@ class Hiredis(MakefilePackage, CMakePackage):
     version("0.13.2", sha256="b0cf73ebe039fe25ecaaa881acdda8bdc393ed997e049b04fc20865835953694")
 
     build_system(
-        conditional("cmake", when="@1:"),
-        conditional("makefile", when="@:0"),
-        default="cmake",
+        conditional("cmake", when="@1:"), conditional("makefile", when="@:0"), default="cmake"
     )
 
     variant("ssl", default=False, description="Builds with SSL enabled")
@@ -45,10 +43,7 @@ class MakefileBuilder(spack.build_systems.makefile.MakefileBuilder):
     def build_targets(self):
         use_ssl = 1 if "+ssl" in self.spec else 0
         run_test_async = 1 if "+test_async" in self.spec else 0
-        return [
-            "USE_SSL={0}".format(use_ssl),
-            "TEST_ASYNC={0}".format(run_test_async),
-        ]
+        return ["USE_SSL={0}".format(use_ssl), "TEST_ASYNC={0}".format(run_test_async)]
 
     def install(self, pkg, spec, prefix):
         make("PREFIX={0}".format(prefix), "install")

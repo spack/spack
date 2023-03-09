@@ -35,7 +35,6 @@ class SimpleDftd3(MesonPackage):
     extends("python", when="+python")
 
     def meson_args(self):
-
         return [
             "-Dopenmp={0}".format(str("+openmp" in self.spec).lower()),
             "-Dpython={0}".format(str("+python" in self.spec).lower()),

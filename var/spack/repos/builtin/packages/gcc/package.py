@@ -438,6 +438,11 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage):
     )
     patch("patch-745dae5923aba02982563481d75a21595df22ff8.patch", when="@10.1.0:10.3.0,11.1.0")
 
+    # Backport libsanitizer patch for glibc >= 2.36
+    # https://reviews.llvm.org/D129471
+    patch("glibc-2.36-libsanitizer-gcc-5-9.patch", when="@5.1:5.5,6.1:6.5,7.1:7.5,8.1:8.5,9.1:9.5")
+    patch("glibc-2.36-libsanitizer-gcc-10-12.patch", when="@10.1:10.4,11.1:11.3,12.1.0")
+
     # Older versions do not compile with newer versions of glibc
     # https://gcc.gnu.org/bugzilla/show_bug.cgi?id=81712
     patch("ucontext_t.patch", when="@4.9,5.1:5.4,6.1:6.4,7.1")
@@ -575,7 +580,7 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage):
             "languages=d": "d",
             "languages=fortran": "fortran",
         }.items():
-            if spec.satisfies(constraint, strict=True):
+            if spec.satisfies(constraint):
                 msg = "{0} not in {1}"
                 assert key in compilers, msg.format(key, spec)
 
@@ -765,17 +770,9 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage):
 
         # enable_bootstrap
         if spec.satisfies("+bootstrap"):
-            options.extend(
-                [
-                    "--enable-bootstrap",
-                ]
-            )
+            options.extend(["--enable-bootstrap"])
         else:
-            options.extend(
-                [
-                    "--disable-bootstrap",
-                ]
-            )
+            options.extend(["--disable-bootstrap"])
 
         # Configure include and lib directories explicitly for these
         # dependencies since the short GCC option assumes that libraries
@@ -876,7 +873,6 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage):
 
         # self.build_directory = 'spack-build-nvptx'
         with working_dir("spack-build-nvptx", create=True):
-
             options = [
                 "--prefix={0}".format(prefix),
                 "--enable-languages={0}".format(",".join(spec.variants["languages"].value)),

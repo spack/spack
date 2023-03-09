@@ -403,9 +403,7 @@ def specfile_for(default_mock_concretization):
         # Key value pairs with ":" and "," in the value
         (
             r"target=:broadwell,icelake",
-            [
-                Token(TokenType.KEY_VALUE_PAIR, value="target=:broadwell,icelake"),
-            ],
+            [Token(TokenType.KEY_VALUE_PAIR, value="target=:broadwell,icelake")],
             r"arch=None-None-:broadwell,icelake",
         ),
         # Hash pair version followed by a variant
@@ -480,13 +478,7 @@ def specfile_for(default_mock_concretization):
             [Token(TokenType.VERSION, value="@1.2 : 1.4 , 1.6")],
             "@1.2:1.4,1.6",
         ),
-        (
-            "@1.2 :   develop",
-            [
-                Token(TokenType.VERSION, value="@1.2 :   develop"),
-            ],
-            "@1.2:develop",
-        ),
+        ("@1.2 :   develop", [Token(TokenType.VERSION, value="@1.2 :   develop")], "@1.2:develop"),
         (
             "@1.2 :   develop   = foo",
             [
@@ -522,10 +514,7 @@ def specfile_for(default_mock_concretization):
         ),
         (
             "@:0.4 % nvhpc",
-            [
-                Token(TokenType.VERSION, value="@:0.4"),
-                Token(TokenType.COMPILER, value="% nvhpc"),
-            ],
+            [Token(TokenType.VERSION, value="@:0.4"), Token(TokenType.COMPILER, value="% nvhpc")],
             "@:0.4%nvhpc",
         ),
     ],
@@ -847,39 +836,23 @@ def test_error_conditions(text, exc_cls):
     [
         # Specfile related errors
         pytest.param(
-            "/bogus/path/libdwarf.yaml",
-            spack.spec.NoSuchSpecFileError,
-            marks=FAIL_ON_WINDOWS,
+            "/bogus/path/libdwarf.yaml", spack.spec.NoSuchSpecFileError, marks=FAIL_ON_WINDOWS
         ),
-        pytest.param(
-            "../../libdwarf.yaml",
-            spack.spec.NoSuchSpecFileError,
-            marks=FAIL_ON_WINDOWS,
-        ),
-        pytest.param(
-            "./libdwarf.yaml",
-            spack.spec.NoSuchSpecFileError,
-            marks=FAIL_ON_WINDOWS,
-        ),
+        pytest.param("../../libdwarf.yaml", spack.spec.NoSuchSpecFileError, marks=FAIL_ON_WINDOWS),
+        pytest.param("./libdwarf.yaml", spack.spec.NoSuchSpecFileError, marks=FAIL_ON_WINDOWS),
         pytest.param(
             "libfoo ^/bogus/path/libdwarf.yaml",
             spack.spec.NoSuchSpecFileError,
             marks=FAIL_ON_WINDOWS,
         ),
         pytest.param(
-            "libfoo ^../../libdwarf.yaml",
-            spack.spec.NoSuchSpecFileError,
-            marks=FAIL_ON_WINDOWS,
+            "libfoo ^../../libdwarf.yaml", spack.spec.NoSuchSpecFileError, marks=FAIL_ON_WINDOWS
         ),
         pytest.param(
-            "libfoo ^./libdwarf.yaml",
-            spack.spec.NoSuchSpecFileError,
-            marks=FAIL_ON_WINDOWS,
+            "libfoo ^./libdwarf.yaml", spack.spec.NoSuchSpecFileError, marks=FAIL_ON_WINDOWS
         ),
         pytest.param(
-            "/bogus/path/libdwarf.yamlfoobar",
-            spack.spec.SpecFilenameError,
-            marks=FAIL_ON_WINDOWS,
+            "/bogus/path/libdwarf.yamlfoobar", spack.spec.SpecFilenameError, marks=FAIL_ON_WINDOWS
         ),
         pytest.param(
             "libdwarf^/bogus/path/libelf.yamlfoobar ^/path/to/bogus.yaml",
@@ -887,34 +860,20 @@ def test_error_conditions(text, exc_cls):
             marks=FAIL_ON_WINDOWS,
         ),
         pytest.param(
-            "c:\\bogus\\path\\libdwarf.yaml",
-            spack.spec.NoSuchSpecFileError,
-            marks=FAIL_ON_UNIX,
+            "c:\\bogus\\path\\libdwarf.yaml", spack.spec.NoSuchSpecFileError, marks=FAIL_ON_UNIX
         ),
-        pytest.param(
-            "..\\..\\libdwarf.yaml",
-            spack.spec.NoSuchSpecFileError,
-            marks=FAIL_ON_UNIX,
-        ),
-        pytest.param(
-            ".\\libdwarf.yaml",
-            spack.spec.NoSuchSpecFileError,
-            marks=FAIL_ON_UNIX,
-        ),
+        pytest.param("..\\..\\libdwarf.yaml", spack.spec.NoSuchSpecFileError, marks=FAIL_ON_UNIX),
+        pytest.param(".\\libdwarf.yaml", spack.spec.NoSuchSpecFileError, marks=FAIL_ON_UNIX),
         pytest.param(
             "libfoo ^c:\\bogus\\path\\libdwarf.yaml",
             spack.spec.NoSuchSpecFileError,
             marks=FAIL_ON_UNIX,
         ),
         pytest.param(
-            "libfoo ^..\\..\\libdwarf.yaml",
-            spack.spec.NoSuchSpecFileError,
-            marks=FAIL_ON_UNIX,
+            "libfoo ^..\\..\\libdwarf.yaml", spack.spec.NoSuchSpecFileError, marks=FAIL_ON_UNIX
         ),
         pytest.param(
-            "libfoo ^.\\libdwarf.yaml",
-            spack.spec.NoSuchSpecFileError,
-            marks=FAIL_ON_UNIX,
+            "libfoo ^.\\libdwarf.yaml", spack.spec.NoSuchSpecFileError, marks=FAIL_ON_UNIX
         ),
         pytest.param(
             "c:\\bogus\\path\\libdwarf.yamlfoobar",
@@ -1081,18 +1040,44 @@ def test_compare_abstract_specs():
         assert a <= b or b < a
 
 
-def test_git_ref_spec_equivalences(mock_packages):
-    spec_hash_fmt = "develop-branch-version@git.{hash}=develop"
-    s1 = SpecParser(spec_hash_fmt.format(hash="a" * 40)).next_spec()
-    s2 = SpecParser(spec_hash_fmt.format(hash="b" * 40)).next_spec()
-    s3 = SpecParser("develop-branch-version@git.0.2.15=develop").next_spec()
-    s_no_git = SpecParser("develop-branch-version@develop").next_spec()
+@pytest.mark.parametrize(
+    "lhs_str,rhs_str,expected",
+    [
+        # Git shasum vs generic develop
+        (
+            f"develop-branch-version@git.{'a' * 40}=develop",
+            "develop-branch-version@develop",
+            (True, True, False),
+        ),
+        # Two different shasums
+        (
+            f"develop-branch-version@git.{'a' * 40}=develop",
+            f"develop-branch-version@git.{'b' * 40}=develop",
+            (False, False, False),
+        ),
+        # Git shasum vs. git tag
+        (
+            f"develop-branch-version@git.{'a' * 40}=develop",
+            "develop-branch-version@git.0.2.15=develop",
+            (False, False, False),
+        ),
+        # Git tag vs. generic develop
+        (
+            "develop-branch-version@git.0.2.15=develop",
+            "develop-branch-version@develop",
+            (True, True, False),
+        ),
+    ],
+)
+def test_git_ref_spec_equivalences(mock_packages, lhs_str, rhs_str, expected):
+    lhs = SpecParser(lhs_str).next_spec()
+    rhs = SpecParser(rhs_str).next_spec()
+    intersect, lhs_sat_rhs, rhs_sat_lhs = expected
 
-    assert s1.satisfies(s_no_git)
-    assert s2.satisfies(s_no_git)
-    assert not s_no_git.satisfies(s1)
-    assert not s2.satisfies(s1)
-    assert not s3.satisfies(s1)
+    assert lhs.intersects(rhs) is intersect
+    assert rhs.intersects(lhs) is intersect
+    assert lhs.satisfies(rhs) is lhs_sat_rhs
+    assert rhs.satisfies(lhs) is rhs_sat_lhs
 
 
 @pytest.mark.regression("32471")

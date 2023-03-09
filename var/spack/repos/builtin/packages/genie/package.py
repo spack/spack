@@ -154,8 +154,4 @@ class Genie(Package):
 
     @property
     def _make_args(self):
-        return [
-            "CC=c++",
-            "CXX=c++",
-            "LD=c++",
-        ]
+        return ["CC=c++", "CXX=c++", "LD=c++"]

@@ -17,14 +17,16 @@ class Qgis(CMakePackage):
 
     maintainers("adamjstewart", "Sinan81")
 
-    version("3.22.0", sha256="cf0c169863f332aab67d8c4943e14b73a564f0254bf54015f5826c6427e6785b")
-    version("3.18.2", sha256="1913e4d5596bbc8b7d143f3defb18bf376f750a71f334f69d76af5deca7ecc5d")
+    version("3.28.3", sha256="a09124f46465a520f6d735306ba3954c339b84aa396d6f52b476b82edcc4fe0e")
     # Prefer latest long term release
     version(
-        "3.16.12",
-        sha256="65e9634b5c885c98f3555cf77bc2e3fae5e19279aa17e3f6626ff5d7455fd2b9",
+        "3.22.16",
+        sha256="dbd1f8a639291bb2492eea61e4ef96079d7b27d3dfa538dab8cd98f31429254a",
         preferred=True,
     )
+    version("3.22.0", sha256="cf0c169863f332aab67d8c4943e14b73a564f0254bf54015f5826c6427e6785b")
+    version("3.18.2", sha256="1913e4d5596bbc8b7d143f3defb18bf376f750a71f334f69d76af5deca7ecc5d")
+    version("3.16.12", sha256="65e9634b5c885c98f3555cf77bc2e3fae5e19279aa17e3f6626ff5d7455fd2b9")
     version("3.16.5", sha256="525f469ad6e40dd7a8f09ebab5eb6a2dffc45939b99b7d937750cc04ed78d61c")
     version("3.14.16", sha256="c9915c2e577f1812a2b35b678b123c58407e07824d73e5ec0dda13db7ca75c04")
     version("3.14.0", sha256="1b76c5278def0c447c3d354149a2afe2562ac26cf0bcbe69b9e0528356d407b8")
@@ -99,6 +101,7 @@ class Qgis(CMakePackage):
     depends_on("exiv2")
     depends_on("expat@1.95:")
     depends_on("gdal@2.1.0: +python", type=("build", "link", "run"))
+    depends_on("gdal@3.2.0: +python", type=("build", "link", "run"), when="@3.28:")
     depends_on("geos@3.4.0:")
     depends_on("libspatialindex")
     depends_on("libspatialite@4.2.0:")
@@ -106,6 +109,7 @@ class Qgis(CMakePackage):
     depends_on("libtasn1")
     depends_on("proj@4.4.0:")
     depends_on("proj@4.9.3:", when="@3.8.2:")
+    depends_on("proj@7.2:", when="@3.28:")
     depends_on("py-psycopg2", type=("build", "run"))  # TODO: is build dependency necessary?
     depends_on("py-pyqt4", when="@2")
     depends_on("py-pyqt5@5.3:", when="@3")
@@ -118,11 +122,13 @@ class Qgis(CMakePackage):
     depends_on("qscintilla +python")
     depends_on("qt+dbus")
     depends_on("qt+dbus@5.12.0:", when="@3.20:")
+    depends_on("qt+dbus@5.14.0:", when="@3.28:")
     depends_on("qtkeychain@0.5:", when="@3:")
     depends_on("qwt@5:")
     depends_on("qwtpolar")
     depends_on("sqlite@3.0.0: +column_metadata")
     depends_on("protobuf", when="@3.16.4:")
+    depends_on("zstd", when="@3.22:")
 
     # Runtime python dependencies, not mentioned in install instructions
     depends_on("py-pyyaml", type="run")
@@ -145,6 +151,7 @@ class Qgis(CMakePackage):
     # build
     depends_on("cmake@3.0.0:", type="build")
     depends_on("cmake@3.10.0:", type="build", when="@3.16:")
+    depends_on("cmake@3.12.0:", type="build", when="@3.28:")
     depends_on("flex@2.5.6:", type="build")
     depends_on("bison@2.4:", type="build")
     depends_on("pkgconfig", type="build")
@@ -159,7 +166,8 @@ class Qgis(CMakePackage):
     depends_on("py-pyqt5@5.3: +qsci_api", when="@3")
 
     patch("pyqt5.patch", when="@:3.14 ^qt@5")
-    patch("pyqt5_3165x.patch", when="@3.16.5: ^qt@5")
+    patch("pyqt5_3165x.patch", when="@3.16.5:3.21 ^qt@5")
+    patch("pyqt5_322x.patch", when="@3.22: ^qt@5")
 
     def cmake_args(self):
         spec = self.spec

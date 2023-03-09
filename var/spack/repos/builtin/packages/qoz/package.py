@@ -21,8 +21,5 @@ class Qoz(CMakePackage):
     depends_on("pkgconfig")
 
     def cmake_args(self):
-        args = [
-            "-DQoZ_USE_BUNDLED_ZSTD=OFF",
-            "-DQoZ_DEBUG_TIMINGS=OFF",
-        ]
+        args = ["-DQoZ_USE_BUNDLED_ZSTD=OFF", "-DQoZ_DEBUG_TIMINGS=OFF"]
         return args
