@@ -223,7 +223,13 @@ class BinaryCacheIndex:
                 )
                 raise BuildcacheIndexError(msg) from e
 
+            # All specs for which tarballs are available
             spec_list = db.query_local(installed=False, in_buildcache=True)
+
+            # and externals.
+            spec_list += [
+                s for s in db.query_local(installed=False, in_buildcache=False) if s.external
+            ]
 
             for indexed_spec in spec_list:
                 dag_hash = indexed_spec.dag_hash()

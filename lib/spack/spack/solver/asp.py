@@ -2921,6 +2921,37 @@ def _develop_specs_from_env(spec, env):
     spec.constrain(dev_info["spec"])
 
 
+def _is_reusable_external(packages, spec):
+    pkg_cfg = packages.get(spec.name)
+    if not pkg_cfg:
+        return False
+    externals = pkg_cfg.get("externals")
+    if not externals:
+        return False
+
+    for entry in externals:
+        # Should satisify abstract Spec
+        if not spec.satisfies(spack.spec.Spec(entry["spec"])):
+            continue
+
+        # If a prefix is set, config should have the same.
+        if spec.external_modules:
+            prefix = entry.get("prefix")
+            if (
+                prefix is None
+                or spack.util.path.canonicalize_path(prefix) != spec.external_modules
+            ):
+                continue
+
+        # If modules are specified, config should have them.
+        if spec.external_modules and not spec.external_modules == entry.get("modules"):
+            continue
+
+        return True
+
+    return False
+
+
 class Solver:
     """This is the main external interface class for solving.
 
@@ -2968,7 +2999,12 @@ class Solver:
 
             # Specs from buildcaches
             try:
-                index = spack.binary_distribution.update_cache_and_get_specs()
+                packages = spack.config.get("packages")
+                index = [
+                    s
+                    for s in spack.binary_distribution.update_cache_and_get_specs()
+                    if not s.external or _is_reusable_external(packages, s)
+                ]
                 reusable_specs.extend(index)
             except (spack.binary_distribution.FetchCacheError, IndexError):
                 # this is raised when no mirrors had indices.
