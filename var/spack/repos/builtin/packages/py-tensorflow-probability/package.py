@@ -69,8 +69,6 @@ class PyTensorflowProbability(Package):
             "--jobs={0}".format(make_jobs),
             # Enable verbose output for failures
             "--verbose_failures",
-            # Show (formatted) subcommands being executed
-            "--subcommands=pretty_print",
             "--spawn_strategy=local",
             # Ask bazel to explain what it's up to
             # Needs a filename as argument

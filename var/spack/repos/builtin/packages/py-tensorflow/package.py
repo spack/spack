@@ -951,8 +951,6 @@ def protobuf_deps():
             "--config=opt",
             # Enable verbose output for failures
             "--verbose_failures",
-            # Show (formatted) subcommands being executed
-            "--subcommands=pretty_print",
             # Ask bazel to explain what it's up to
             # Needs a filename as argument
             "--explain=explainlogfile.txt",
