@@ -12,8 +12,8 @@ class PyPennylaneLightning(CMakePackage, PythonExtension):
 
     homepage = "https://docs.pennylane.ai/projects/lightning"
     git = "https://github.com/PennyLaneAI/pennylane-lightning.git"
-    url = "https://github.com/PennyLaneAI/pennylane-lightning/archive/refs/tags/v0.29.0.tar.gz"
-    tag = "v0.29.0"
+    url = "https://github.com/PennyLaneAI/pennylane-lightning/archive/refs/tags/v0.28.2.tar.gz"
+    tag = "v0.28.2"
 
     maintainers("mlxd", "AmintorDusko")
 
@@ -21,6 +21,7 @@ class PyPennylaneLightning(CMakePackage, PythonExtension):
 
     version("0.29.0", sha256="da9912f0286d1a54051cc19cf8bdbdcd732795636274c95f376db72a88e52d85")
     version("0.28.2", sha256="c9b3afed0585681ccaf4df09fb12f2b7f09a8a1ba97a9b979139fe4a24509f31", deprecated=True)
+
     version(
         "0.28.0",
         sha256="f5849c2affb5fb57aca20feb40ca829d171b07db2304fde0a37c2332c5b09e18",
