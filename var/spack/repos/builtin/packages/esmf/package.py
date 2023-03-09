@@ -46,7 +46,7 @@ class Esmf(MakefilePackage):
     variant("pnetcdf", default=True, description="Build with pNetCDF support", when="+mpi")
     variant("xerces", default=False, description="Build with Xerces support")
     variant("external-parallelio", default=True,
-        description="Build with external parallelio library", when="@8.3.1:+mpi")
+            description="Build with external parallelio library", when="@8.3.1:+mpi")
     variant("debug", default=False, description="Build with debugging symbols and options enabled")
     variant("shared", default=True, description="Build shared library")
     # 'esmf_os', 'esmf_comm', 'esmf_pio' variants allow override values for their corresponding
@@ -204,7 +204,7 @@ class Esmf(MakefilePackage):
             env.set("ESMF_BOPT", "O")
 
         if self.compiler.name in ["gcc", "clang", "apple-clang"] and gfortran_major_version >= 10 \
-        and self.version < Version("8.3.0"):
+           and self.version < Version("8.3.0"):
             env.set("ESMF_F90COMPILEOPTS", "-fallow-argument-mismatch")
 
         #######
