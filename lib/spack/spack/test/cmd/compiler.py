@@ -213,13 +213,16 @@ def test_compiler_find_mixed_suffixes(no_compilers_yaml, working_env, clangdir):
 
     gfortran_path = str(clangdir.join("gfortran-8"))
 
-    assert clang["paths"] == {
-        "cc": str(clangdir.join("clang")),
-        "cxx": str(clangdir.join("clang++")),
-        # we only auto-detect mixed clang on macos
-        "f77": gfortran_path if sys.platform == "darwin" else None,
-        "fc": gfortran_path if sys.platform == "darwin" else None,
-    }
+    assert clang["paths"]["cc"] == str(clangdir.join("clang"))
+    assert clang["paths"]["cxx"] == str(clangdir.join("clang++"))
+
+    # we only auto-detect mixed clang on macos
+    if sys.platform == "darwin":
+        assert clang["paths"]["f77"] == gfortran_path
+        assert clang["paths"]["fc"] == gfortran_path
+    else:
+        assert "f77" not in clang["paths"]
+        assert "fc" not in clang["paths"]
 
     assert gcc["paths"] == {
         "cc": str(clangdir.join("gcc-8")),
