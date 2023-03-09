@@ -501,7 +501,7 @@ class Result(object):
                 key = providers[0]
             candidate = answer.get(key)
 
-            if candidate and candidate.satisfies(input_spec):
+            if candidate and candidate.intersects(input_spec):
                 self._concrete_specs.append(answer[key])
                 self._concrete_specs_by_input[input_spec] = answer[key]
             else:
@@ -1878,7 +1878,7 @@ class SpackSolverSetup(object):
         for pkg_name, versions in sorted(self.version_constraints):
             # version must be *one* of the ones the spec allows.
             allowed_versions = [
-                v for v in sorted(self.possible_versions[pkg_name]) if v.satisfies(versions)
+                v for v in sorted(self.possible_versions[pkg_name]) if v.intersects(versions)
             ]
 
             # This is needed to account for a variable number of
