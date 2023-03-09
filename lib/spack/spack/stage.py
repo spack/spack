@@ -431,7 +431,7 @@ class Stage(object):
         return os.path.realpath(self.path) in file_path
 
     def path_rel_to_stage(self, glob_expr):
-        os.path.relpath(glob_expr, self.path)
+        return os.path.relpath(glob_expr, self.path)
 
     def fetch(self, mirror_only=False, err_msg=None):
         """Retrieves the code or archive
@@ -760,7 +760,6 @@ class CMakeBuildStage(Stage):
     when MSVC fully supports the LongPath feature on Windows.
     """
 
-    dispatch: Dict[str, str] = {}
 
     def __init__(self, hash, fetcher, **kwargs):
         # Users can override external cmake build dir, default is %USERPROFILE%
@@ -778,40 +777,11 @@ class CMakeBuildStage(Stage):
     def build_directory(self):
         return self._remote_stage
 
-    def __exit__(self, exc_type, exc_val, exc_tb):
-        """
-        Exiting from a stage context will delete the stage directory unless:
-        - it was explicitly requested not to do so
-        - an exception has been raised
-
-        Args:
-            exc_type: exception type
-            exc_val: exception value
-            exc_tb: exception traceback
-
-        Returns:
-            Boolean
-        """
-        # Always delete this external stage (and implictly return content to real stage)
-        # then pass off to parent stage class
-        # to control root stage
-        self._return_destroy_remote()
-        super(CMakeBuildStage, self).__exit__(exc_type, exc_val, exc_tb)
-
     def _establish_context_link(self):
         symlink(str(self._remote_stage), str(self.root_stage_context))
 
     def _remove_context_link(self):
         self.root_stage_context.unlink()
-
-    def _rebuild_remote_stage(self):
-        full_subdir = Path(CMakeBuildStage.dispatch[self._hash])
-        if not full_subdir.exists():
-            try:
-                full_subdir.mkdir()
-            except FileExistsError:
-                full_subdir = self._setup_remote_build_stage()
-        return full_subdir
 
     def _setup_remote_build_stage(self):
         # try to create root if it doesn't exist
@@ -828,7 +798,6 @@ class CMakeBuildStage(Stage):
                 # try again
                 attempts += 1
 
-        CMakeBuildStage.dispatch[self._hash] = str(full_subdir)
         return full_subdir
 
     def _compute_next_open_subdir(self, last=None):
@@ -846,11 +815,6 @@ class CMakeBuildStage(Stage):
             return "a"
         last = sorted(current_ext_stages, key=sort_key)[-1]
         return inc(last.name)
-
-    def _return_to_stage(self):
-        """Copy external build tree back to stage in normal CMake build dir location"""
-
-        install_tree(str(self._remote_stage), str(self.root_stage_context))
 
     def _teardown_remote_stage(self):
         """Destroy external build tree if not keep-stage
@@ -877,7 +841,6 @@ class CMakeBuildStage(Stage):
         if self._remote_stage:
             try:
                 self._remove_context_link()
-                self._return_to_stage()
             finally:
                 self._teardown_remote_stage()
 
@@ -892,20 +855,24 @@ class CMakeBuildStage(Stage):
             # Establish typical root stage
             super(CMakeBuildStage, self).create()
             # Now establish remote build stage
-            try:
-                self._remote_stage = self._setup_remote_build_stage()
-                self._establish_context_link()
-            except Exception:
-                self._teardown_remote_stage()
-                self.created = False
-                raise
+            # or pick up extant stage
+            if not self.root_stage_context.exists():
+                try:
+                    self._remote_stage = self._setup_remote_build_stage()
+                    self._establish_context_link()
+                except Exception:
+                    self._teardown_remote_stage()
+                    self.created = False
+                    raise
+            else:
+                self._remote_stage = self.root_stage_context.resolve()
 
     def destroy(self):
         self._return_destroy_remote()
         super(CMakeBuildStage, self).destroy()
 
     def path_rel_to_stage(self, glob_expr):
-        os.path.relpath(glob_expr, self._remote_stage)
+        return os.path.relpath(glob_expr, self._remote_stage)
 
     def restage(self):
         self._return_destroy_remote()
