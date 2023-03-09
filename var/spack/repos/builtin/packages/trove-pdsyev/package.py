@@ -38,11 +38,13 @@ class TrovePdsyev(MakefilePackage):
 
         env['DESTDIR'] = ''
         env['PREFIX'] = prefix
-        env['FC'] = self.fc
+        env['I_MPI_F90'] = spack_fc
 
         makefile = FileFilter("Makefile")
         makefile.filter(r'PLAT\s*=.*', 'PLAT = _generic')
-        makefile.filter(r'FOR\s*= .*', 'FOR = mpiifort')
+        makefile.filter(r'FOR\s*= .*', f'FOR = {self.fc}')
+        LIB = '-lmkl_scalapack_lp64 -lmkl_intel_lp64 -lmkl_intel_thread -lmkl_core -lmkl_blacs_intelmpi_lp64 -liomp5 -lpthread -lm -ldl'
+        makefile.filter(r'LIB\s*= .*', f'LIB = {LIB}')
 
         if "~ipp" in spec:
             makefile.filter(r'(.*) -use-intel-optimized-headers (.*)', r'\1 \2')
