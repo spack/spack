@@ -427,11 +427,6 @@ class Stage(object):
         """Returns the well-known source directory path."""
         return str(self._path / _source_path_subdir)
 
-    @property
-    def build_directory(self):
-        """Returns a potential build directory, defaulting to in source build"""
-        return self.source_path
-
     def contains(self, file_path):
         return os.path.realpath(self.path) in file_path
 
@@ -913,12 +908,9 @@ class CMakeBuildStage(Stage):
         os.path.relpath(glob_expr, self._remote_stage)
 
     def restage(self):
-        if self._hash in CMakeBuildStage.dispatch:
-            self._remote_stage = Path(CMakeBuildStage.dispatch[self._hash])
-            if self._remote_stage.exists():
-                self._reclaim_remote_stage()
-        else:
-            self.create()
+        self._return_destroy_remote()
+        super(CMakeBuildStage, self).restage()
+        self.create()
 
 
 class StageComposite(pattern.Composite):
@@ -1060,6 +1052,14 @@ def purge():
                     remove_linked_tree(stage_path)
                 else:
                     os.remove(stage_path)
+    # Remove all external build directories spack is aware of as well
+    ext_build_dir = spack.config.get("config:cmake_ext_build", None)
+    if ext_build_dir and os.path.exists(ext_build_dir):
+        for ext_build in os.listdir(ext_build_dir):
+            if os.path.isdir(ext_build):
+                remove_linked_tree(ext_build)
+            else:
+                os.remove(ext_build)
 
 
 def get_checksums_for_versions(url_dict, name, **kwargs):
