@@ -14,7 +14,7 @@ class OsgCaCerts(Package):
     url = "https://github.com/opensciencegrid/osg-certificates/archive/v1.109.igtf.1.117/osg-certificates-1.109.igtf.1.117.tar.gz"
 
     _osg_base_url = "https://github.com/opensciencegrid/osg-certificates/archive/v{osg_version}.igtf.{igtf_version}/osg-certificates-{osg_version}.igtf.{igtf_version}.tar.gz"
-    _igtf_base_url = "https://dist.eugridpma.info/distribution/igtf/current/igtf-policy-installation-bundle-{igtf_version}.tar.gz"
+    _igtf_base_url = "https://dist.eugridpma.info/distribution/igtf/{igtf_version}/igtf-policy-installation-bundle-{igtf_version}.tar.gz"
     _letsencrypt_base_url = "https://github.com/opensciencegrid/letsencrypt-certificates/archive/v{letsencrypt_version}/letsencrypt-certificates.tar.gz"
 
     maintainers("wdconinc")
