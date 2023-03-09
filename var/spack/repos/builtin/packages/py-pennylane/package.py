@@ -40,7 +40,7 @@ class PyPennylane(PythonPackage):
 
     # Test deps
     depends_on("py-pytest", type="test")
-    depends_on("py-pytest-xdist", type="test")
+    depends_on("py-pytest-xdist@3.2:", type="test")
     depends_on("py-pytest-mock", type="test")
     depends_on("py-flaky", type="test")
 
