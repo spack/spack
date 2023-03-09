@@ -86,7 +86,7 @@ def _to_dict(compiler):
     d["paths"] = dict(
         (attr, getattr(compiler, attr))
         for attr in _path_instance_vars
-        if hasattr(compiler, attr)
+        if getattr(compiler, attr) is not None
     )
     d["flags"] = dict((fname, " ".join(fvals)) for fname, fvals in compiler.flags.items())
     d["flags"].update(
