@@ -1755,6 +1755,12 @@ spack:
                 mirror_url
             )
         )
+
+    # Dependency graph rooted at callpath
+    # callpath -> dyninst -> libelf
+    #                     -> libdwarf -> libelf
+    #          -> mpich
+
     with tmpdir.as_cwd():
         env_cmd("create", "test", "./spack.yaml")
         outputfile = str(tmpdir.join(".gitlab-ci.yml"))
@@ -1765,19 +1771,96 @@ spack:
         def fake_stack_changed(env_path, rev1="HEAD^", rev2="HEAD"):
             return False
 
-        with ev.read("test"):
+        env_hashes = {}
+
+        with ev.read("test") as active_env:
             monkeypatch.setattr(ci, "compute_affected_packages", fake_compute_affected)
             monkeypatch.setattr(ci, "get_stack_changed", fake_stack_changed)
+
+            active_env.concretize()
+
+            for s in active_env.all_specs():
+                env_hashes[s.name] = s.dag_hash()
+
             ci_cmd("generate", "--output-file", outputfile)
 
         with open(outputfile) as f:
             contents = f.read()
+            print(contents)
             yaml_contents = syaml.load(contents)
 
+            generated_hashes = []
+
             for ci_key in yaml_contents.keys():
-                if "archive-files" in ci_key:
-                    print("Error: archive-files should have been pruned")
-                    assert False
+                if ci_key.startswith("(specs)"):
+                    generated_hashes.append(
+                        yaml_contents[ci_key]["variables"]["SPACK_JOB_SPEC_DAG_HASH"]
+                    )
+
+            assert env_hashes["archive-files"] not in generated_hashes
+            for spec_name in ["callpath", "dyninst", "mpich", "libdwarf", "libelf"]:
+                assert env_hashes[spec_name] in generated_hashes
+
+
+def test_ci_generate_prune_env_vars(
+    tmpdir, mutable_mock_env_path, install_mockery, mock_packages, ci_base_environment, monkeypatch
+):
+    """Make sure environment variables controlling untouched spec
+    pruning behave as expected."""
+    os.environ.update(
+        {
+            "SPACK_PRUNE_UNTOUCHED": "TRUE",  # enables pruning of untouched specs
+        }
+    )
+    filename = str(tmpdir.join("spack.yaml"))
+    with open(filename, "w") as f:
+        f.write(
+            """\
+spack:
+  specs:
+    - libelf
+  gitlab-ci:
+    mappings:
+      - match:
+          - arch=test-debian6-core2
+        runner-attributes:
+          tags:
+            - donotcare
+          image: donotcare
+"""
+        )
+
+    with tmpdir.as_cwd():
+        env_cmd("create", "test", "./spack.yaml")
+
+        def fake_compute_affected(r1=None, r2=None):
+            return ["libdwarf"]
+
+        def fake_stack_changed(env_path, rev1="HEAD^", rev2="HEAD"):
+            return False
+
+        expected_depth_param = None
+
+        def check_get_spec_filter_list(env, affected_pkgs, dependent_traverse_depth=None):
+            assert dependent_traverse_depth == expected_depth_param
+            return set()
+
+        monkeypatch.setattr(ci, "compute_affected_packages", fake_compute_affected)
+        monkeypatch.setattr(ci, "get_stack_changed", fake_stack_changed)
+        monkeypatch.setattr(ci, "get_spec_filter_list", check_get_spec_filter_list)
+
+        expectations = {"-1": -1, "0": 0, "True": None}
+
+        for key, val in expectations.items():
+            with ev.read("test"):
+                os.environ.update({"SPACK_PRUNE_UNTOUCHED_DEPENDENT_DEPTH": key})
+                expected_depth_param = val
+                # Leaving out the mirror in the spack.yaml above means the
+                # pipeline generation command will fail, pretty much immediately.
+                # But for this test, we only care how the environment variables
+                # for pruning are handled, the faster the better.  So allow the
+                # spack command to fail.
+                ci_cmd("generate", fail_on_error=False)
 
 
 def test_ci_subcommands_without_mirror(

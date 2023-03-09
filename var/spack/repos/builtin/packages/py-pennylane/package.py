@@ -21,6 +21,7 @@ class PyPennylane(PythonPackage):
     version("0.29.0", sha256="055fc22a2624cceddbb8bd25d7eda14d2dd7e0afa08ea8555c23bc75eff007a5", deprecated=True)
     version("0.28.0", sha256="2a6100c00277c1eb59eab6856cdad7b1237e9d1fbda98b1e15020bd5a64b10a8", deprecated=True)
 
+
     depends_on("python@3.8:", type=("build", "run"))
     depends_on("py-setuptools", type="build")
 
