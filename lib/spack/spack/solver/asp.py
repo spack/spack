@@ -818,6 +818,9 @@ class SpackSolverSetup(object):
         self.compiler_version_constraints = set()
         self.post_facts = []
 
+        # (ID, CompilerSpec) -> dictionary of attributes
+        self.compiler_info = collections.defaultdict(dict)
+
         # hashes we've already added facts for
         self.seen_hashes = set()
         self.reusable_and_possible = {}
@@ -945,35 +948,58 @@ class SpackSolverSetup(object):
     def compiler_facts(self):
         """Facts about available compilers."""
 
+        # Build a dictionary mapping a compiler spec to supported OS and targets
+        for entry in spack.compilers.all_compilers_config():
+            compiler_entry = entry["compiler"]
+            key = spack.spec.CompilerSpec(compiler_entry["spec"])
+
+            # FIXME: same spec with multiple OS and targets?
+            if key in self.compiler_info:
+                warnings.warn(
+                    f"compiler {key} has duplicate entries, only the first one will be considered"
+                )
+                continue
+
+            self.compiler_info[key]["os"] = compiler_entry["operating_system"]
+            self.compiler_info[key]["target"] = compiler_entry.get("target", None)
+            self.compiler_info[key]["compiler_obj"] = spack.compilers.compiler_from_dict(
+                compiler_entry
+            )
+
         self.gen.h2("Available compilers")
-        for compiler_id, compiler in enumerate(self.possible_compilers):
-            self.gen.fact(fn.compiler_version(compiler.name, compiler.version))
+        indexed_possible_compilers = list(enumerate(self.possible_compilers))
+        for compiler_id, compiler in indexed_possible_compilers:
+            self.gen.fact(fn.compiler_id(compiler_id))
+            self.gen.fact(fn.compiler_name(compiler_id, compiler.name))
+            self.gen.fact(fn.compiler_version(compiler_id, compiler.version))
+
+            compiler_entry = self.compiler_info[compiler]
+            # Use "get" to allow concretizing even when copiler existence checks are disabled
+            operating_system = compiler_entry.get("os")
+            if operating_system:
+                self.gen.fact(fn.compiler_os(compiler_id, operating_system))
+
+            target = compiler_entry.get("target")
+            if target is not None:
+                self.gen.fact(fn.compiler_target(compiler_id, target))
+
+            compiler_obj = compiler_entry.get("compiler_obj")
+            if compiler_obj:
+                for flag_type, flags in compiler_obj.flags.items():
+                    for flag in flags:
+                        self.gen.fact(fn.compiler_flag(compiler_id, flag_type, flag))
+
             self.gen.newline()
 
         # Set compiler defaults, given a list of possible compilers
-        self.gen.h2("Default compiler preferences")
+        self.gen.h2("Default compiler preferences (CompilerID, Weight)")
 
         ppk = spack.package_prefs.PackagePrefs("all", "compiler", all=False)
-        matches = sorted(self.possible_compilers, key=ppk)
+        matches = sorted(indexed_possible_compilers, key=lambda x: ppk(x[1]))
 
-        for i, cspec in enumerate(matches):
-            f = fn.default_compiler_preference(cspec.name, cspec.version, i)
+        for weight, (compiler_id, cspec) in enumerate(matches):
+            f = fn.default_compiler_preference(compiler_id, weight)
             self.gen.fact(f)
-
-        # Enumerate target families. This may be redundant, but compilers with
-        # custom versions will be able to concretize properly.
-        for entry in spack.compilers.all_compilers_config():
-            compiler_entry = entry["compiler"]
-            cspec = spack.spec.CompilerSpec(compiler_entry["spec"])
-            operating_system = compiler_entry["operating_system"]
-            self.gen.fact(fn.compiler_supports_os(cspec.name, cspec.version, operating_system))
-
-            if not compiler_entry.get("target", None):
-                continue
-
-            self.gen.fact(
-                fn.compiler_supports_target(cspec.name, cspec.version, compiler_entry["target"])
-            )
 
     def package_compiler_defaults(self, pkg):
         """Facts about packages' compiler prefs."""
@@ -1377,28 +1403,6 @@ class SpackSolverSetup(object):
                 fn.target_weight(pkg_name, str(preferred.architecture.target), i + offset)
             )
 
-    def flag_defaults(self):
-        self.gen.h2("Compiler flag defaults")
-
-        # types of flags that can be on specs
-        for flag in spack.spec.FlagMap.valid_compiler_flags():
-            self.gen.fact(fn.flag_type(flag))
-        self.gen.newline()
-
-        # flags from compilers.yaml
-        compilers = all_compilers_in_config()
-        seen = set()
-        for compiler in compilers:
-            # if there are multiple with the same spec, only use the first
-            if compiler.spec in seen:
-                continue
-            seen.add(compiler.spec)
-            for name, flags in compiler.flags.items():
-                for flag in flags:
-                    self.gen.fact(
-                        fn.compiler_version_flag(compiler.name, compiler.version, name, flag)
-                    )
-
     def spec_clauses(self, *args, **kwargs):
         """Wrap a call to `_spec_clauses()` into a try/except block that
         raises a comprehensible error message in case of failure.
@@ -1755,8 +1759,6 @@ class SpackSolverSetup(object):
         if granularity == "generic":
             candidate_targets = [t for t in candidate_targets if t.vendor == "generic"]
 
-        compilers = self.possible_compilers
-
         # Add targets explicitly requested from specs
         for spec in specs:
             if not spec.architecture or not spec.architecture.target:
@@ -1774,7 +1776,7 @@ class SpackSolverSetup(object):
                         candidate_targets.append(ancestor)
 
         best_targets = set([uarch.family.name])
-        for compiler in sorted(compilers):
+        for compiler_id, compiler in enumerate(self.possible_compilers):
             supported = self._supported_targets(compiler.name, compiler.version, candidate_targets)
 
             # If we can't find supported targets it may be due to custom
@@ -1793,13 +1795,10 @@ class SpackSolverSetup(object):
 
             for target in supported:
                 best_targets.add(target.name)
-                self.gen.fact(
-                    fn.compiler_supports_target(compiler.name, compiler.version, target.name)
-                )
+                self.gen.fact(fn.compiler_supports_target(compiler_id, target.name))
 
-            self.gen.fact(
-                fn.compiler_supports_target(compiler.name, compiler.version, uarch.family.name)
-            )
+            self.gen.fact(fn.compiler_supports_target(compiler_id, uarch.family.name))
+            self.gen.newline()
 
         i = 0  # TODO compute per-target offset?
         for target in candidate_targets:
@@ -1859,7 +1858,6 @@ class SpackSolverSetup(object):
                     # is already built
                 else:
                     cspecs.add(s.compiler)
-                    # FIXME (COMPILERS)
                     self.gen.fact(fn.allow_compiler(s.compiler.name, s.compiler.version))
 
         return list(
@@ -1921,14 +1919,12 @@ class SpackSolverSetup(object):
                 self.possible_versions[pkg_name].add(version)
 
     def define_compiler_version_constraints(self):
-        compiler_list = spack.compilers.all_compiler_specs()
-        compiler_list = list(sorted(set(compiler_list)))
         for constraint in sorted(self.compiler_version_constraints):
-            for compiler in compiler_list:
+            for compiler_id, compiler in enumerate(self.possible_compilers):
                 if compiler.satisfies(constraint):
                     self.gen.fact(
                         fn.compiler_version_satisfies(
-                            constraint.name, constraint.versions, compiler.version
+                            constraint.name, constraint.versions, compiler_id
                         )
                     )
         self.gen.newline()
@@ -2089,6 +2085,11 @@ class SpackSolverSetup(object):
             for reusable_spec in reuse:
                 self._facts_from_concrete_spec(reusable_spec, possible)
 
+        self.gen.h1("Possible flags on nodes")
+        for flag in spack.spec.FlagMap.valid_compiler_flags():
+            self.gen.fact(fn.flag_type(flag))
+        self.gen.newline()
+
         self.gen.h1("General Constraints")
         self.compiler_facts()
 
@@ -2101,7 +2102,6 @@ class SpackSolverSetup(object):
         self.provider_defaults()
         self.provider_requirements()
         self.external_packages()
-        self.flag_defaults()
 
         self.gen.h1("Package Constraints")
         for pkg in sorted(self.pkgs):
@@ -2282,7 +2282,7 @@ class SpecBuilder(object):
         flags will appear last on the compile line, in the order they
         were specified.
 
-        The solver determines wihch flags are on nodes; this routine
+        The solver determines which flags are on nodes; this routine
         imposes order afterwards.
         """
         # reverse compilers so we get highest priority compilers that share a spec
