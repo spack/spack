@@ -20,6 +20,7 @@ spack:
           - py-mpi4py
           - py-notebook
           - py-numpy
+          - py-pip
           - py-poisson-recon-pybind
           - py-pytest
           - py-rtree
@@ -50,6 +51,7 @@ spack:
     - py-mpi4py
     - py-notebook
     - py-numpy
+    - py-pip
     - py-poisson-recon-pybind
     - py-rtree
     - py-scikit-learn
