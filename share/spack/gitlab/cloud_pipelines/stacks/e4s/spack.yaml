@@ -277,6 +277,7 @@ spack:
           - llvm-amdgpu
           - rocblas
           - paraview
+          - py-tensorflow
           - py-torch
         runner-attributes:
           tags: [ "spack", "huge", "x86_64" ]
@@ -302,7 +303,6 @@ spack:
           - openturns
           - plumed
           - precice
-          - py-tensorflow
           - qt
           - raja
           - rocfft
