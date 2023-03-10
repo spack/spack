@@ -352,7 +352,7 @@ class Python(Package):
         # Fix for following issues for python with aocc%3.2.0:
         # https://github.com/spack/spack/issues/29115
         # https://github.com/spack/spack/pull/28708
-        if self.spec.satisfies("%aocc@3.2.0", strict=True):
+        if self.spec.satisfies("%aocc@3.2.0"):
             if name == "cflags":
                 flags.extend(["-mllvm", "-disable-indvar-simplify=true"])
 
@@ -473,7 +473,7 @@ class Python(Package):
                 config_args.append("--with-lto")
             config_args.append("--with-computed-gotos")
 
-        if spec.satisfies("@3.7 %intel", strict=True):
+        if spec.satisfies("@3.7 %intel"):
             config_args.append("--with-icc={0}".format(spack_cc))
 
         if "+debug" in spec:

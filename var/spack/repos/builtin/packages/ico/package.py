@@ -15,6 +15,7 @@ class Ico(AutotoolsPackage, XorgPackage):
     homepage = "https://cgit.freedesktop.org/xorg/app/ico"
     xorg_mirror_path = "app/ico-1.0.4.tar.gz"
 
+    version("1.0.6", sha256="dc59589044d71e3ef4dacf5a62a7b0f69b543386d2a12fb8b5558caee5b1e22f")
     version("1.0.4", sha256="eb8609c3b43dc2e575272f2702590525fe13229e022c4aff8b9a0cc2a3f3205d")
 
     depends_on("libx11@0.99.1:")
