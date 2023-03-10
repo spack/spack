@@ -3,6 +3,32 @@ stages: [ "generate", "build", "publish" ]
 default:
   image: { "name": "ghcr.io/spack/e4s-ubuntu-18.04:v2021-10-18", "entrypoint": [""] }
 
+# CI Platform-Arch
+.darwin_x86_64:
+  variables:
+    SPACK_TARGET_PLATFORM: "darwin"
+    SPACK_TARGET_ARCH: "x86_64"
+
+.linux_x86_64:
+  variables:
+    SPACK_TARGET_PLATFORM: "linux"
+    SPACK_TARGET_ARCH: "x86_64"
+
+.linux_x86_64_v4:
+  variables:
+    SPACK_TARGET_PLATFORM: "linux"
+    SPACK_TARGET_ARCH: "x86_64_v4"
+
+.linux_aarch64:
+  variables:
+    SPACK_TARGET_PLATFORM: "linux"
+    SPACK_TARGET_ARCH: "aarch64"
+
+.linux_power:
+  variables:
+    SPACK_TARGET_PLATFORM: "linux"
+    SPACK_TARGET_ARCH: "ppc64le"
+
 ########################################
 # Job templates
 ########################################
@@ -52,7 +78,13 @@ default:
     - spack --version
     - cd share/spack/gitlab/cloud_pipelines/stacks/${SPACK_CI_STACK_NAME}
     - spack env activate --without-view .
-    - spack ci generate --check-index-only
+    - export SPACK_CI_CONFIG_ROOT="${SPACK_ROOT}/share/spack/gitlab/cloud_pipelines/configs"
+    - spack
+      --config-scope "${SPACK_CI_CONFIG_ROOT}"
+      --config-scope "${SPACK_CI_CONFIG_ROOT}/${SPACK_TARGET_PLATFORM}"
+      --config-scope "${SPACK_CI_CONFIG_ROOT}/${SPACK_TARGET_PLATFORM}/${SPACK_TARGET_ARCH}"
+      ${CI_STACK_CONFIG_SCOPES}
+      ci generate --check-index-only
       --buildcache-destination "${SPACK_BUILDCACHE_DESTINATION}"
       --artifacts-root "${CI_PROJECT_DIR}/jobs_scratch_dir"
       --output-file "${CI_PROJECT_DIR}/jobs_scratch_dir/cloud-ci-pipeline.yml"
@@ -137,6 +169,7 @@ protected-publish:
 # My Super Cool Pipeline
 ########################################
 # .my-super-cool-stack:
+#   extends: [ ".linux_x86_64" ]
 #   variables:
 #     SPACK_CI_STACK_NAME: my-super-cool-stack
 #     tags: [ "all", "tags", "your", "job", "needs"]
@@ -291,6 +324,7 @@ protected-publish:
 # E4S pipeline
 ########################################
 .e4s:
+  extends: [ ".linux_x86_64" ]
   variables:
     SPACK_CI_STACK_NAME: e4s
 
@@ -365,6 +399,7 @@ gpu-tests-protected-build:
 # E4S OneAPI Pipeline
 ########################################
 .e4s-oneapi:
+  extends: [ ".linux_x86_64" ]
   variables:
     SPACK_CI_STACK_NAME: e4s-oneapi
 
@@ -406,6 +441,7 @@ e4s-oneapi-protected-build:
   tags: ["spack", "public", "large", "ppc64le"]
 
 .e4s-power:
+  extends: [".linux_power"]
   variables:
     SPACK_CI_STACK_NAME: e4s-power
 
@@ -441,6 +477,7 @@ e4s-power-protected-build:
 # Build tests for different build-systems
 #########################################
 .build_systems:
+  extends: [ ".linux_x86_64" ]
   variables:
     SPACK_CI_STACK_NAME: build_systems
 
@@ -476,6 +513,7 @@ build_systems-protected-build:
 # RADIUSS
 #########################################
 .radiuss:
+  extends: [ ".linux_x86_64" ]
   variables:
     SPACK_CI_STACK_NAME: radiuss
 
@@ -523,6 +561,7 @@ radiuss-protected-build:
   image: { "name": "ghcr.io/spack/e4s-amazonlinux-2:v2022-03-21", "entrypoint": [""] }
 
 .radiuss-aws:
+  extends: [ ".linux_x86_64_v4" ]
   variables:
     SPACK_CI_STACK_NAME: radiuss-aws
 
@@ -558,6 +597,7 @@ radiuss-aws-protected-build:
 # Parallel Pipeline for aarch64 (reuses override image, but generates and builds on aarch64)
 
 .radiuss-aws-aarch64:
+  extends: [ ".linux_aarch64" ]
   variables:
     SPACK_CI_STACK_NAME: radiuss-aws-aarch64
 
@@ -593,6 +633,7 @@ radiuss-aws-aarch64-protected-build:
 # ECP Data & Vis SDK
 ########################################
 .data-vis-sdk:
+  extends: [ ".linux_x86_64" ]
   variables:
     SPACK_CI_STACK_NAME: data-vis-sdk
 
@@ -637,6 +678,7 @@ data-vis-sdk-protected-build:
   image: { "name": "ghcr.io/spack/e4s-amazonlinux-2:v2022-03-21", "entrypoint": [""] }
 
 .aws-ahug:
+  extends: [ ".linux_x86_64_v4" ]
   variables:
     SPACK_CI_STACK_NAME: aws-ahug
 
@@ -671,6 +713,7 @@ aws-ahug-protected-build:
 
 # Parallel Pipeline for aarch64 (reuses override image, but generates and builds on aarch64)
 .aws-ahug-aarch64:
+  extends: [ ".linux_aarch64" ]
   variables:
     SPACK_CI_STACK_NAME: aws-ahug-aarch64
 
@@ -713,6 +756,7 @@ aws-ahug-aarch64-protected-build:
   image: { "name": "ghcr.io/spack/e4s-amazonlinux-2:v2022-03-21", "entrypoint": [""] }
 
 .aws-isc:
+  extends: [ ".linux_x86_64_v4" ]
   variables:
     SPACK_CI_STACK_NAME: aws-isc
 
@@ -748,6 +792,7 @@ aws-isc-protected-build:
 # Parallel Pipeline for aarch64 (reuses override image, but generates and builds on aarch64)
 
 .aws-isc-aarch64:
+  extends: [ ".linux_aarch64" ]
   variables:
     SPACK_CI_STACK_NAME: aws-isc-aarch64
 
@@ -784,6 +829,7 @@ aws-isc-aarch64-protected-build:
 # Spack Tutorial
 ########################################
 .tutorial:
+  extends: [ ".linux_x86_64" ]
   variables:
     SPACK_CI_STACK_NAME: tutorial
 
@@ -819,6 +865,7 @@ tutorial-protected-build:
 # Machine Learning - Linux x86_64 (CPU)
 #######################################
 .ml-linux-x86_64-cpu:
+  extends: [ ".linux_x86_64_v4" ]
   variables:
     SPACK_CI_STACK_NAME: ml-linux-x86_64-cpu
 
@@ -858,6 +905,7 @@ ml-linux-x86_64-cpu-protected-build:
 # Machine Learning - Linux x86_64 (CUDA)
 ########################################
 .ml-linux-x86_64-cuda:
+  extends: [ ".linux_x86_64_v4" ]
   variables:
     SPACK_CI_STACK_NAME: ml-linux-x86_64-cuda
 
@@ -897,6 +945,7 @@ ml-linux-x86_64-cuda-protected-build:
 # Machine Learning - Linux x86_64 (ROCm)
 ########################################
 .ml-linux-x86_64-rocm:
+  extends: [ ".linux_x86_64_v4" ]
   variables:
     SPACK_CI_STACK_NAME: ml-linux-x86_64-rocm
 
