@@ -27,6 +27,7 @@ class Paraview(CMakePackage, CudaPackage, ROCmPackage):
     tags = ["e4s"]
 
     version("master", branch="master", submodules=True)
+    version("5.11.1-RC1", sha256="80c3fe2ae1062abf56456f52518bd670f9ec3917b7f85e152b347ac6b6faf880")
     version(
         "5.11.0",
         sha256="9a0b8fe8b1a2cdfd0ace9a87fa87e0ec21ee0f6f0bcb1fdde050f4f585a25165",
