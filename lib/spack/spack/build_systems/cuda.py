@@ -85,8 +85,8 @@ class CudaPackage(PackageBase):
 
     depends_on("cuda@5.0:10.2", when="cuda_arch=30")
     depends_on("cuda@5.0:10.2", when="cuda_arch=32")
-    depends_on("cuda@5.0:", when="cuda_arch=35")
-    depends_on("cuda@6.5:", when="cuda_arch=37")
+    depends_on("cuda@5.0:11.8", when="cuda_arch=35")
+    depends_on("cuda@6.5:11.8", when="cuda_arch=37")
 
     depends_on("cuda@6.0:", when="cuda_arch=50")
     depends_on("cuda@6.5:", when="cuda_arch=52")
