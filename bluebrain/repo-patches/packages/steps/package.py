@@ -102,6 +102,8 @@ class Steps(CMakePackage):
         args = []
         spec = self.spec
 
+        args.append(self.define_from_variant("BUILD_TESTING", "codechecks"))
+
         use_bundle = "ON" if "+bundle" in spec else "OFF"
         bundles = ["EASYLOGGINGPP", "OMEGA_H", "RANDOM123", "SUNDIALS", "SUPERLU_DIST"]
         args.extend("-DUSE_BUNDLE_{0}:BOOL={1}".format(bundle, use_bundle) for bundle in bundles)
