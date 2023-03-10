@@ -614,8 +614,10 @@ class GitVersion(VersionBase):
             elif other.user_supplied_reference:
                 return False
             else:
-                # In this case, neither supplies a version equivalence with "="
-                # and the commit strings are equal
+                # In this case, 'other' does not supply a version equivalence
+                # with "=" and the commit strings are equal. 'self' may specify
+                # a version equivalence, but that is extra info and will
+                # satisfy no matter what it is.
                 return True
         elif other.is_ref:
             # if other is a ref then satisfaction requires an exact version match
