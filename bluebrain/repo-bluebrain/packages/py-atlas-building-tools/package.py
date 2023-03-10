@@ -13,7 +13,7 @@ class PyAtlasBuildingTools(PythonPackage):
     git = "ssh://git@bbpgitlab.epfl.ch/nse/atlas-building-tools.git"
 
     version("develop", branch="main")
-    version("0.1.9", tag="atlas-building-tools-v0.1.9")
+    version("0.1.10", tag="atlas-building-tools-v0.1.10")
 
     depends_on("py-atlas-densities@0.1.3:", type=("build", "run"))
     depends_on("py-atlas-direction-vectors@0.1.1:", type=("build", "run"))
