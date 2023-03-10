@@ -1603,18 +1603,18 @@ def from_url_scheme(url, *args, **kwargs):
 
     url = kwargs.get("url", url)
 
-    # in order to parse Windows absolute file urls correctly,
-    # we pass them through pathlib, which has support for parsing
-    # absolute file urls out of Windows paths.
-    # If pathlib raises a value error during the parsing,
-    # we likely passed it a valid url, a relative
-    # path, or something completely invalid.
-    # In each of those cases we can reliably fall back on
-    # urlparse's behavior and this extra parsing step is a no-op
     if sys.platform == "win32":
         try:
             url = pathlib.Path(url).as_uri()
         except ValueError:
+            # in order to parse Windows absolute file urls correctly,
+            # we pass them through pathlib, which has support for parsing
+            # absolute file urls out of Windows paths.
+            # If pathlib raises a value error during the parsing,
+            # we likely passed it a valid url, a relative
+            # path, or something completely invalid.
+            # In each of those cases we can reliably fall back on
+            # urlparse's behavior and this extra parsing step is a no-op
             pass
     parsed_url = urllib.parse.urlparse(url, scheme="file")
 

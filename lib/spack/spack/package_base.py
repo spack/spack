@@ -1673,16 +1673,6 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
         return b32_hash
 
     @property
-    def cmake_stage_dir(self):
-        if not getattr(self, "_cmake_build_stage", False):
-            return ""
-        return self._cmake_build_stage
-
-    @cmake_stage_dir.setter
-    def cmake_stage_dir(self, val):
-        self._cmake_build_stage = val
-
-    @property
     def cmake_prefix_paths(self):
         return [self.prefix]
 
