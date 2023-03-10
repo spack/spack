@@ -1,5 +1,4 @@
 config:
-  build_jobs: 32
   concretizer: clingo
   db_lock_timeout: 120
   install_tree:
