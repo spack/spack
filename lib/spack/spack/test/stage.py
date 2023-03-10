@@ -8,6 +8,7 @@ import collections
 import errno
 import getpass
 import os
+from pathlib import Path
 import shutil
 import stat
 import sys
@@ -22,7 +23,7 @@ import spack.stage
 import spack.util.executable
 import spack.util.url as url_util
 from spack.resource import Resource
-from spack.stage import DIYStage, CMakeBuildStage, ResourceStage, Stage, StageComposite
+from spack.stage import CMakeBuildStage, DIYStage, ResourceStage, Stage, StageComposite
 from spack.util.path import canonicalize_path
 from spack.util.web import FetchError
 
@@ -357,6 +358,7 @@ def cmake_ext_build(tmpdir):
     cmake_ext = tmpdir.mkdir("spack-build")
     with spack.config.override("config:cmake_ext_build", str(cmake_ext)):
         yield cmake_ext
+
 
 @pytest.fixture
 def populated_cmake_ext_build(cmake_ext_build):
@@ -923,35 +925,38 @@ class TestStage(object):
         with CMakeBuildStage("jk6dj", archive.url, name=self.stage_name) as stage:
             # external build dir should already have been created at this point
             # ensure symlink to build dir exists
-            assert str(stage.root_stage_context.name) == "spack-build-jk6dj"
+            assert str(stage._root_stage_context.name) == "spack-build-jk6dj"
             assert "spack-build-jk6dj" in os.listdir(stage.path)
             # check symlink points to the right place
-            assert str(stage.root_stage_context.resolve()) == str(cmake_ext_build / "a")
+            assert str(stage._root_stage_context.resolve()) == str(cmake_ext_build / "a")
+            # check build_directory points to the right place
+            assert stage._root_stage_context.resolve() == stage.build_directory
             # ensure ext build dir was set honoring config
-            assert spack.config.get("config:cmake_ext_build") == str(stage._remote_stage.parent)
+            assert  stage._remote_build_dir.parent == Path(spack.config.get("config:cmake_ext_build"))
 
             # ensure actual external build dir is present
-            assert stage._remote_stage
-            assert str(stage._remote_stage.name) in os.listdir(cmake_ext_build)
-            assert str(stage._remote_stage) == str(cmake_ext_build / "a")
+            assert stage._remote_build_dir
+            assert str(stage._remote_build_dir.name) in os.listdir(cmake_ext_build)
+            assert str(stage._remote_build_dir) == str(cmake_ext_build / "a")
 
         # ensure ext build stage is destroyed on cleanup
-        assert not "a" is os.listdir(cmake_ext_build)
+        assert not "a" in os.listdir(cmake_ext_build)
 
     def test_create_cmakebuildstage_non_empty(self, populated_cmake_ext_build, mock_stage_archive):
         """Test that cmake external build dir can handle ext build dir with other builds
         already present"""
         archive = mock_stage_archive()
-        with CMakeBuildStage("jk6dj", archive.url, name=self.stage_name) as stage:
+        stage = CMakeBuildStage("jk6dj", archive.url, name=self.stage_name)
+        with stage as stage:
             # external build dir should already have been created at this point
             # ensure symlink to build dir exists
             assert "spack-build-jk6dj" in os.listdir(stage.path)
             # ensure actual external build dir is present
-            assert str(stage._remote_stage.name) in os.listdir(populated_cmake_ext_build)
+            assert str(stage._remote_build_dir.name) in os.listdir(populated_cmake_ext_build)
             # ensure remote stage has correct name based on already present stages
             # the actual name matters less here than avoiding colisions between already
             # present build dirs
-            assert str(stage._remote_stage) == str(populated_cmake_ext_build / "b")
+            assert str(stage._remote_build_dir) == str(populated_cmake_ext_build / "b")
 
         # ensure ext build stage is destroyed on cleanup
         assert not "b" is os.listdir(populated_cmake_ext_build)
@@ -963,33 +968,32 @@ class TestStage(object):
         stage = CMakeBuildStage("jk6dj", archive.url, name=self.stage_name, keep=True)
         with stage:
             # basic checks to make sure ext build dir was created properly
-            assert str(stage.root_stage_context.resolve()) == str(cmake_ext_build / "a")
-            assert str(stage._remote_stage.name) in os.listdir(cmake_ext_build)
+            assert str(stage._root_stage_context.resolve()) == str(cmake_ext_build / "a")
+            assert str(stage._remote_build_dir.name) in os.listdir(cmake_ext_build)
 
         path = get_stage_path(stage, self.stage_name)
-        assert stage._remote_stage
-        assert stage._remote_stage.exists()
-        assert stage._remote_stage.is_dir()
+        assert stage._remote_build_dir
+        assert stage._remote_build_dir.exists()
+        assert stage._remote_build_dir.is_dir()
         ext_build_link = os.path.join(path, "spack-build-jk6dj")
         assert os.path.exists(ext_build_link)
-        assert ext_build_link == str(stage.root_stage_context)
-        assert os.path.realpath(ext_build_link) == str(stage._remote_stage)
+        assert ext_build_link == str(stage._root_stage_context)
+        assert os.path.realpath(ext_build_link) == str(stage._remote_build_dir)
 
     def test_cmakebuildstage_restage(self, cmake_ext_build, mock_stage_archive):
         """Test CMakeBuildStage recreates build dir on restage"""
         archive = mock_stage_archive()
         with CMakeBuildStage("jk6dj", archive.url, name=self.stage_name, keep=True) as stage:
-            assert str(stage._remote_stage.name) in os.listdir(cmake_ext_build)
-            assert str(stage.root_stage_context.resolve()) == str(cmake_ext_build / "a")
+            assert str(stage._remote_build_dir.name) in os.listdir(cmake_ext_build)
+            assert str(stage._root_stage_context.resolve()) == str(cmake_ext_build / "a")
             ext_build = cmake_ext_build / "a"
             f1 = ext_build.join("tmpfile")
             f1.write("testing")
-            assert "tmpfile" in os.listdir(stage._remote_stage)
+            assert "tmpfile" in os.listdir(stage._remote_build_dir)
             stage.fetch()
             stage.expand_archive()
             stage.restage()
-            assert "tmpfile" not in os.listdir(stage._remote_stage)
-
+            assert "tmpfile" not in os.listdir(stage._remote_build_dir)
 
     def test_cmakebuildstage_purge(self, populated_cmake_ext_build, tmpdir, mock_stage_archive):
         """Test purging stages removes hanging build stages"""
