@@ -24,7 +24,6 @@ class Spdk(AutotoolsPackage):
 
     version("master", branch="master", submodules=True)
     version("23.01", tag="v23.01", submodules=True)
-    version("22.01.1", tag="v22.01.1", submodules=True)
 
     variant("crypto", default=False, description="Build vbdev crypto module")
     variant("dpdk", default=False, description="Build with dpdk")
@@ -60,7 +59,7 @@ class Spdk(AutotoolsPackage):
     )
 
     depends_on("dpdk@22.11:", when="+dpdk")
-    depends_on("fio@3.33", when="+fio")
+    depends_on("fio@3.3", when="+fio")
     depends_on("libaio")
     depends_on("meson")
     depends_on("nasm@2.12.02:", type="build")
@@ -85,15 +84,20 @@ class Spdk(AutotoolsPackage):
 
     @run_after("install")
     def install_additional_files(self):
+        spec = self.spec
         prefix = self.prefix
+        dpdk_build_dir = join_path(spec["dpdk"].prefix, "lib")
 
-        dpdk_build_dir = join_path(self.stage.source_path, "dpdk", "build", "lib")
         install_tree(join_path(dpdk_build_dir, "pkgconfig"), join_path(prefix.lib, "pkgconfig"))
+
         for file in os.listdir(dpdk_build_dir):
-            if os.path.isfile(join_path("dpdk", "build", "lib", file)):
-                install(join_path("dpdk", "build", "lib", file), prefix.lib)
+            f = join_path(dpdk_build_dir, file)
+            print(f)
+            if os.path.isfile(f):
+                install(f, prefix.lib)
+
         mkdir(join_path(prefix.include, "dpdk"))
-        install_tree("dpdk/build/include", join_path(prefix.include, "dpdk"))
+        install_tree(join_path(spec["dpdk"].prefix, "include"), join_path(prefix.include, "dpdk"))
 
         # Copy the config.h file, as some packages might require it.
         mkdir(prefix.share)
