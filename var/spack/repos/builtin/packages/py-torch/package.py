@@ -353,7 +353,7 @@ class PyTorch(PythonPackage, CudaPackage, ROCmPackage):
     patch(
         "https://github.com/facebookincubator/gloo/commit/10909297fedab0a680799211a299203e53515032.patch?full_index=1",
         sha256="8e6e9a44e0533ba4303a95a651b1934e5d73632cab08cc7d5a9435e1e64aa424",
-        when="@:2.0.0",
+        when="@:1",
         working_dir="third_party/gloo",
     )
 
