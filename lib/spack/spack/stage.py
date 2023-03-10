@@ -832,7 +832,7 @@ class CMakeBuildStage(Stage):
             teardown(self._remote_stage)
         self._remote_stage = None
 
-    def _return_destroy_remote(self):
+    def _destroy_remote(self):
         # copy back to stage may fail in event of error, make sure we clean up the
         # associated external build dir in that event unless we're keeping the
         # parent stage on cleanup
@@ -855,7 +855,7 @@ class CMakeBuildStage(Stage):
             # Establish typical root stage
             super(CMakeBuildStage, self).create()
             # Now establish remote build stage
-            # or pick up extant stage
+            # or pick up extant stage from existing  symlink
             if not self.root_stage_context.exists():
                 try:
                     self._remote_stage = self._setup_remote_build_stage()
@@ -868,14 +868,14 @@ class CMakeBuildStage(Stage):
                 self._remote_stage = self.root_stage_context.resolve()
 
     def destroy(self):
-        self._return_destroy_remote()
+        self._destroy_remote()
         super(CMakeBuildStage, self).destroy()
 
     def path_rel_to_stage(self, glob_expr):
         return os.path.relpath(glob_expr, self._remote_stage)
 
     def restage(self):
-        self._return_destroy_remote()
+        self._destroy_remote()
         super(CMakeBuildStage, self).restage()
         self.create()
 
@@ -1023,10 +1023,10 @@ def purge():
     ext_build_dir = spack.config.get("config:cmake_ext_build", None)
     if ext_build_dir and os.path.exists(ext_build_dir):
         for ext_build in os.listdir(ext_build_dir):
-            if os.path.isdir(ext_build):
-                remove_linked_tree(ext_build)
+            if os.path.isdir(os.path.join(ext_build_dir, ext_build)):
+                remove_linked_tree(os.path.join(ext_build_dir, ext_build))
             else:
-                os.remove(ext_build)
+                os.remove(os.path.join(ext_build_dir, ext_build))
 
 
 def get_checksums_for_versions(url_dict, name, **kwargs):
