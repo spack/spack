@@ -14,6 +14,8 @@ class PyExarl(PythonPackage):
     homepage = "https://github.com/exalearn/EXARL"
     git = "https://github.com/exalearn/EXARL.git"
 
+    maintainers("cmahrens")
+
     version("master", branch="master")
     version("develop", branch="develop")
     version("update-spack", branch="update-spack")
