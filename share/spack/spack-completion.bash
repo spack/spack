@@ -1024,7 +1024,7 @@ _spack_external() {
     then
         SPACK_COMPREPLY="-h --help"
     else
-        SPACK_COMPREPLY="find list read-cray-manifest"
+        SPACK_COMPREPLY="find list read-cray-manifest edit remove"
     fi
 }
 
@@ -1038,11 +1038,24 @@ _spack_external_find() {
 }
 
 _spack_external_list() {
-    SPACK_COMPREPLY="-h --help"
+    SPACK_COMPREPLY="-h --help --detected -d"
 }
 
 _spack_external_read_cray_manifest() {
     SPACK_COMPREPLY="-h --help --file --directory --dry-run --fail-on-error"
+}
+
+_spack_external_edit() {
+    SPACK_COMPREPLY="-h --help --scope"
+}
+
+_spack_external_remove() {
+    if $list_options
+    then
+        SPACK_COMPREPLY="-h --help --scope -a --all -y --yes-to-all"
+    else
+        _all_packages
+    fi
 }
 
 _spack_fetch() {
