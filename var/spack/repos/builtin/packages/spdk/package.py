@@ -59,7 +59,7 @@ class Spdk(AutotoolsPackage):
     )
 
     depends_on("dpdk@22.11:", when="+dpdk")
-    depends_on("fio@3.3", when="+fio")
+    depends_on("fio@3.33", when="+fio")
     depends_on("libaio")
     depends_on("meson")
     depends_on("nasm@2.12.02:", type="build")
@@ -92,7 +92,6 @@ class Spdk(AutotoolsPackage):
 
         for file in os.listdir(dpdk_build_dir):
             f = join_path(dpdk_build_dir, file)
-            print(f)
             if os.path.isfile(f):
                 install(f, prefix.lib)
 
