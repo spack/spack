@@ -947,7 +947,6 @@ def protobuf_deps():
             "build",
             # Spack logs don't handle colored output well
             "--color=no",
-            "--jobs={0}".format(make_jobs),
             "--config=opt",
             # Enable verbose output for failures
             "--verbose_failures",
