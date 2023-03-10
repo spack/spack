@@ -8,10 +8,10 @@ import collections
 import errno
 import getpass
 import os
-from pathlib import Path
 import shutil
 import stat
 import sys
+from pathlib import Path
 
 import pytest
 
@@ -932,7 +932,9 @@ class TestStage(object):
             # check build_directory points to the right place
             assert stage._root_stage_context.resolve() == stage.build_directory
             # ensure ext build dir was set honoring config
-            assert  stage._remote_build_dir.parent == Path(spack.config.get("config:cmake_ext_build"))
+            assert stage._remote_build_dir.parent == Path(
+                spack.config.get("config:cmake_ext_build")
+            )
 
             # ensure actual external build dir is present
             assert stage._remote_build_dir
@@ -940,13 +942,14 @@ class TestStage(object):
             assert str(stage._remote_build_dir) == str(cmake_ext_build / "a")
 
         # ensure ext build stage is destroyed on cleanup
-        assert not "a" in os.listdir(cmake_ext_build)
+        assert "a" not in os.listdir(cmake_ext_build)
 
     def test_create_cmakebuildstage_non_empty(self, populated_cmake_ext_build, mock_stage_archive):
         """Test that cmake external build dir can handle ext build dir with other builds
         already present"""
         archive = mock_stage_archive()
         stage = CMakeBuildStage("jk6dj", archive.url, name=self.stage_name)
+        build_directory = None
         with stage as stage:
             # external build dir should already have been created at this point
             # ensure symlink to build dir exists
@@ -957,9 +960,10 @@ class TestStage(object):
             # the actual name matters less here than avoiding colisions between already
             # present build dirs
             assert str(stage._remote_build_dir) == str(populated_cmake_ext_build / "b")
+            build_directory = stage.build_directory
 
         # ensure ext build stage is destroyed on cleanup
-        assert not "b" is os.listdir(populated_cmake_ext_build)
+        assert build_directory not in os.listdir(populated_cmake_ext_build)
         assert "a" in os.listdir(populated_cmake_ext_build)
 
     def test_cmakebuildstage_keep(self, cmake_ext_build, mock_stage_archive):
