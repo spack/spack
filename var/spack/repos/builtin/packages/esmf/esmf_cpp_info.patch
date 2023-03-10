@@ -5,7 +5,7 @@
  	-@echo "--------------------------------------------------------------"
  	-@echo "Preprocessor version:"
 -	@$(ESMF_CPP) --version $(ESMF_DIR)/scripts/empty.C
-+	-@echo "SKIP DUE TO PERMISSION DENIED ERRORS WITH SPACK"
++	-@echo `$(ESMF_CPP) --version $(ESMF_DIR)/scripts/empty.C`
  ifeq ($(pathtype),abs)
  	-@echo "--------------------------------------------------------------"
  	-@echo "NetCDF library version: `$(ESMF_NETCDF) --version`"
