@@ -5,7 +5,6 @@
 
 from spack.package import *
 
-
 class Dbcsr(CMakePackage, CudaPackage, ROCmPackage):
     """Distributed Block Compressed Sparse Row matrix library."""
 
@@ -66,6 +65,8 @@ class Dbcsr(CMakePackage, CudaPackage, ROCmPackage):
     # properties, since the parent class defines constraints for different archs
     # Instead just mark all unsupported cuda archs as conflicting.
     dbcsr_cuda_archs = ("35", "37", "60", "70")
+    with when("@2.3.0:"): # Optimised A100 parameters only for @2.5.0:
+        dbcsr_cuda_archs = (*dbcsr_cuda_archs, "80")
     cuda_msg = "dbcsr only supports cuda_arch {0}".format(dbcsr_cuda_archs)
 
     for arch in CudaPackage.cuda_arch_values:
@@ -75,6 +76,10 @@ class Dbcsr(CMakePackage, CudaPackage, ROCmPackage):
     conflicts("+cuda", when="cuda_arch=none", msg=cuda_msg)
 
     dbcsr_amdgpu_targets = "gfx906"
+    with when("@2.1.0"):
+        dbcsr_amdgpu_targets = (*dbcsr_amdgpu_targets, "gfx908") # Mi100
+    with when("@2.3.0"):
+        dbcsr_amdgpu_targets = (*dbcsr_amdgpu_targets, "gfx90a") # Mi250
     amd_msg = "DBCSR only supports amdgpu_target {0}".format(dbcsr_amdgpu_targets)
 
     for arch in ROCmPackage.amdgpu_targets:
@@ -139,7 +144,13 @@ class Dbcsr(CMakePackage, CudaPackage, ROCmPackage):
         if self.spec.satisfies("+rocm"):
             amd_arch = self.spec.variants["amdgpu_target"].value[0]
 
-            gpuver = {"gfx906": "Mi50"}[amd_arch]
+            gpu_map = {"gfx906": "Mi50"}
+            if "@2.1:" in spec:
+                gpu_map["gfx908"] = "Mi100"
+            if "@2.3:" in spec:
+                gpu_map["gfx90a"] = "Mi250"
+
+            gpuver = gpu_map[amd_arch]
 
             args += ["-DWITH_GPU={0}".format(gpuver), "-DUSE_ACCEL=hip"]
 
