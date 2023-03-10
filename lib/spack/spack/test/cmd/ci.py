@@ -1846,11 +1846,12 @@ def test_ci_generate_prune_env_vars(
 spack:
   specs:
     - libelf
-  gitlab-ci:
-    mappings:
+  ci:
+    pipeline-gen:
+    - submapping:
       - match:
           - arch=test-debian6-core2
-        runner-attributes:
+        build-job:
           tags:
             - donotcare
           image: donotcare
