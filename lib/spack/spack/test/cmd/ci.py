@@ -1834,11 +1834,7 @@ def test_ci_generate_prune_env_vars(
 ):
     """Make sure environment variables controlling untouched spec
     pruning behave as expected."""
-    os.environ.update(
-        {
-            "SPACK_PRUNE_UNTOUCHED": "TRUE",  # enables pruning of untouched specs
-        }
-    )
+    os.environ.update({"SPACK_PRUNE_UNTOUCHED": "TRUE"})  # enables pruning of untouched specs
     filename = str(tmpdir.join("spack.yaml"))
     with open(filename, "w") as f:
         f.write(
