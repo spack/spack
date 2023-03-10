@@ -39,6 +39,15 @@ class PyGevent(PythonPackage):
     # Deprecated compiler options. upstream PR: https://github.com/gevent/gevent/pull/1896
     patch("icc.patch", when="%intel")
 
+    @run_before("install")
+    def recythonize(self):
+        # Clean pre-generated cython files -- we've seen issues with Python 3.8 due to
+        # an old cython that was used to generate the C sources.
+        # On top of that, they specify a prerequisite on a file in cython's prefix,
+        # meaning that cython runs again depending on whether it was installed before e.g.
+        # 2020... So, just clean and re-run from scratch instead.
+        python("setup.py", "clean")
+
     def flag_handler(self, name, flags):
         if name == "cflags":
             if self.spec.satisfies("%oneapi@2023:"):

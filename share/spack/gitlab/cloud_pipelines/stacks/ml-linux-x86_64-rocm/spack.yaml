@@ -91,7 +91,7 @@ spack:
   ci:
     pipeline-gen:
     - build-job:
-        image: { "name": "ghcr.io/spack/e4s-amazonlinux-2:v2022-03-21", "entrypoint": [""] }
+        image: { "name": "ghcr.io/spack/e4s-amazonlinux-2:v2023-03-09", "entrypoint": [""] }
 
   cdash:
     build-group: Machine Learning

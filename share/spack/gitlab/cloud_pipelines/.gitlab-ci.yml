@@ -558,7 +558,7 @@ radiuss-protected-build:
 .radiuss-aws-overrides:
   # This controls image for generate step; build step is controlled by spack.yaml
   # Note that generator emits OS info for build so these should be the same.
-  image: { "name": "ghcr.io/spack/e4s-amazonlinux-2:v2022-03-21", "entrypoint": [""] }
+  image: { "name": "ghcr.io/spack/e4s-amazonlinux-2:v2023-03-09", "entrypoint": [""] }
 
 .radiuss-aws:
   extends: [ ".linux_x86_64_v4" ]
@@ -675,7 +675,7 @@ data-vis-sdk-protected-build:
 .aws-ahug-overrides:
   # This controls image for generate step; build step is controlled by spack.yaml
   # Note that generator emits OS info for build so these should be the same.
-  image: { "name": "ghcr.io/spack/e4s-amazonlinux-2:v2022-03-21", "entrypoint": [""] }
+  image: { "name": "ghcr.io/spack/e4s-amazonlinux-2:v2023-03-09", "entrypoint": [""] }
 
 .aws-ahug:
   extends: [ ".linux_x86_64_v4" ]
@@ -753,7 +753,7 @@ aws-ahug-aarch64-protected-build:
 .aws-isc-overrides:
   # This controls image for generate step; build step is controlled by spack.yaml
   # Note that generator emits OS info for build so these should be the same.
-  image: { "name": "ghcr.io/spack/e4s-amazonlinux-2:v2022-03-21", "entrypoint": [""] }
+  image: { "name": "ghcr.io/spack/e4s-amazonlinux-2:v2023-03-09", "entrypoint": [""] }
 
 .aws-isc:
   extends: [ ".linux_x86_64_v4" ]
@@ -871,7 +871,7 @@ tutorial-protected-build:
 
 .ml-linux-x86_64-cpu-generate:
   extends: [ .ml-linux-x86_64-cpu, ".tags-x86_64_v4" ]
-  image: ghcr.io/spack/e4s-amazonlinux-2:v2022-03-21
+  image: ghcr.io/spack/e4s-amazonlinux-2:v2023-03-09
 
 ml-linux-x86_64-cpu-pr-generate:
   extends: [ ".pr-generate", ".ml-linux-x86_64-cpu-generate" ]
@@ -911,7 +911,7 @@ ml-linux-x86_64-cpu-protected-build:
 
 .ml-linux-x86_64-cuda-generate:
   extends: [ .ml-linux-x86_64-cuda, ".tags-x86_64_v4" ]
-  image: ghcr.io/spack/e4s-amazonlinux-2:v2022-03-21
+  image: ghcr.io/spack/e4s-amazonlinux-2:v2023-03-09
 
 ml-linux-x86_64-cuda-pr-generate:
   extends: [ ".pr-generate", ".ml-linux-x86_64-cuda-generate" ]
@@ -951,7 +951,7 @@ ml-linux-x86_64-cuda-protected-build:
 
 .ml-linux-x86_64-rocm-generate:
   extends: [ .ml-linux-x86_64-rocm, ".tags-x86_64_v4" ]
-  image: ghcr.io/spack/e4s-amazonlinux-2:v2022-03-21
+  image: ghcr.io/spack/e4s-amazonlinux-2:v2023-03-09
 
 ml-linux-x86_64-rocm-pr-generate:
   extends: [ ".pr-generate", ".ml-linux-x86_64-rocm-generate" ]
