@@ -107,6 +107,7 @@ class Paraview(CMakePackage, CudaPackage, ROCmPackage):
         ' "default" lets the build_edition make the decision.'
         ' "on" or "off" will always override the build_edition.',
     )
+    variant("rebuild_me_please", default=True, description="ci testing")
 
     conflicts("~hdf5", when="+visitbridge")
     conflicts("+adios2", when="@:5.10 ~mpi")
