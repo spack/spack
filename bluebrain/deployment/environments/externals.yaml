@@ -119,7 +119,9 @@ spack:
     - intel-oneapi-mkl@2021.4.0
     - intel-oneapi-tbb@2021.4.0
     - ispc
-    - julia@1.6  # As requested by Polina S.
+    # If julia's curl does not match what they normally ship, downloading behind a proxy
+    # will break.
+    - julia@1.6^curl@7.73  # As requested by Polina S.
     - libxslt
     - libzmq+libsodium
     - likwid
