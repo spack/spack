@@ -1274,6 +1274,18 @@ class TestConcretize(object):
         # Structure and package hash will be different without reuse
         assert root.dag_hash() != new_root_without_reuse.dag_hash()
 
+    def test_reuse_with_flags(self, mutable_database, mutable_config):
+        if spack.config.get("config:concretizer") == "original":
+            pytest.xfail("Original concretizer does not reuse")
+
+        spack.config.set("concretizer:reuse", True)
+        spec = Spec("a cflags=-g cxxflags=-g").concretized()
+        spack.store.db.add(spec, None)
+
+        testspec = Spec("a cflags=-g")
+        testspec.concretize()
+        assert testspec == spec
+
     @pytest.mark.regression("20784")
     def test_concretization_of_test_dependencies(self):
         # With clingo we emit dependency_conditions regardless of the type
