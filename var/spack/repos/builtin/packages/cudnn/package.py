@@ -9,6 +9,24 @@ import platform
 from spack.package import *
 
 _versions = {
+    # cuDNN 8.7.0
+    "8.7.0.84-11.8": {
+        "Linux-x86_64": "976c4cba7233c97ae74006afab5172976300ba40f5b250a21f8cf71f59c9f76d",
+        "Linux-ppc64le": "0433d6d8b6841298e049e8a542750aa330a6e046a52ad95fae0c2f75dabe5575",
+        "Linux-aarch64": "cf967f78dbf6c075243cc83aa18759e370db3754aa15b12a0a14e8bf67a3a9d4",
+    },
+    # cuDNN 8.6.0
+    "8.6.0.163-11.8": {
+        "Linux-x86_64": "bbc396df47294c657edc09c600674d608cb1bfc80b82dcf4547060c21711159e",
+        "Linux-ppc64le": "c8a25e7e3df1bb9c4e18a4f24dd5f25cfd4bbe8b7054e34008e53b2be4f58a80",
+        "Linux-aarch64": "a0202278d3cbd4f3adc3f7816bff6071621cb042b0903698b477acac8928ac06",
+    },
+    # cuDNN 8.5.0
+    "8.5.0.96-11.7": {
+        "Linux-x86_64": "5454a6fd94f008728caae9adad993c4e85ef36302e26bce43bea7d458a5e7b6d",
+        "Linux-ppc64le": "00373c3d5e0b536a5557d0d0eb50706777f213a222b4030e1b71b1bec43d205f",
+        "Linux-aarch64": "86780abbecd4634e7363fad1d000ae23b7905a5f8383bddbf7332c6934791dde",
+    },
     # cuDNN 8.4.0
     "8.4.0.27-11.6": {
         "Linux-x86_64": "d19bdafd9800c79d29e6f6fffa9f9e2c10d1132d6c2ff10b1593e057e74dd050",
@@ -298,8 +316,12 @@ class Cudnn(Package):
             ver = version[:2]
             cuda = version[2:]
 
+        # 8.5.0 removed minor from cuda version
+        if version >= Version("8.5.0"):
+            url = "https://developer.download.nvidia.com/compute/redist/cudnn/v{0}/cudnn-{1}-{2}_cuda{3}-archive.tar.xz"
+            return url.format(directory, sys_key, ver, cuda.up_to(1))
         # 8.3.1 switched to xzip tarballs and reordered url parts.
-        if version >= Version("8.3.1"):
+        elif version >= Version("8.3.1"):
             url = "https://developer.download.nvidia.com/compute/redist/cudnn/v{0}/cudnn-{1}-{2}_cuda{3}-archive.tar.xz"
             return url.format(directory, sys_key, ver, cuda)
         else:
