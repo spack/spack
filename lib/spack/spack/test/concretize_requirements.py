@@ -172,6 +172,7 @@ packages:
 
     s1 = Spec("v").concretized()
     assert s1.satisfies("@2.2")
+    assert s1.satisfies("@{0}".format(a_commit_hash))
     # Make sure the git commit info is retained
     assert isinstance(s1.version, spack.version.GitVersion)
     assert s1.version.ref == a_commit_hash
