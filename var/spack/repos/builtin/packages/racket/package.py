@@ -11,7 +11,7 @@ class Racket(MakefilePackage):
 
     homepage = "https://www.racket-lang.org"
 
-    maintainers = ["arjunguha", "elfprince13"]
+    maintainers("arjunguha", "elfprince13")
 
     version("8.3", "3b963cd29ae119e1acc2c6dc4781bd9f25027979589caaae3fdfc021aac2324b")
 
@@ -34,7 +34,6 @@ class Racket(MakefilePackage):
 
 
 class MakefileBuilder(spack.build_systems.makefile.MakefileBuilder):
-
     build_directory = "src"
 
     def toggle(self, spec, variant):

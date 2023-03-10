@@ -11,7 +11,7 @@ class OphidiaIoServer(AutotoolsPackage):
 
     homepage = "https://github.com/OphidiaBigData/ophidia-io-server"
     url = "https://github.com/OphidiaBigData/ophidia-io-server/archive/refs/tags/v1.7.2.tar.gz"
-    maintainers = ["eldoo", "SoniaScard"]
+    maintainers("eldoo", "SoniaScard")
     version("1.7.2", sha256="8b203c44e0e5497c00f1fdb2322f0b0a41f36900b62a33d95a4570ae1ccc2971")
 
     depends_on("autoconf", type="build")

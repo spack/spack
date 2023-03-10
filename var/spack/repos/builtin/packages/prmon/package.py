@@ -14,7 +14,7 @@ class Prmon(CMakePackage):
     url = "https://github.com/HSF/prmon/archive/refs/tags/v3.0.1.zip"
     git = "https://github.com/HSF/prmon.git"
 
-    maintainers = ["graeme-a-stewart", "amete", "vvolkl"]
+    maintainers("graeme-a-stewart", "amete", "vvolkl")
 
     version("main", branch="main")
     version("3.0.2", sha256="ea9ff521689fecb8c395e35e9540be18c7ab37812354c4a5c0ba505e2ab467c1")

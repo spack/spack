@@ -14,7 +14,7 @@ class Easi(CMakePackage):
     homepage = "https://easyinit.readthedocs.io"
     git = "https://github.com/SeisSol/easi.git"
 
-    maintainers = ["ravil-mobile", "Thomas-Ulrich", "krenzland", "ThrudPrimrose"]
+    maintainers("ravil-mobile", "Thomas-Ulrich", "krenzland", "ThrudPrimrose")
 
     version("develop", branch="master")
     version("1.2.0", tag="v1.2.0")
@@ -45,7 +45,6 @@ class Easi(CMakePackage):
     conflicts("jit=impalajit", when="target=riscv64:")
 
     def cmake_args(self):
-
         args = []
         args.append(self.define_from_variant("ASAGI", "asagi"))
         spec = self.spec

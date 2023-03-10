@@ -22,7 +22,7 @@ properties = {
             r"project": {"type": "string"},
             r"site": {"type": "string"},
         },
-    },
+    }
 }
 
 

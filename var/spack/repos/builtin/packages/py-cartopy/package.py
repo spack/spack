@@ -12,7 +12,7 @@ class PyCartopy(PythonPackage):
     homepage = "https://scitools.org.uk/cartopy/docs/latest/"
     pypi = "Cartopy/Cartopy-0.20.2.tar.gz"
 
-    maintainers = ["adamjstewart"]
+    maintainers("adamjstewart")
     skip_modules = ["cartopy.tests"]
 
     version("0.21.1", sha256="89d5649712c8582231c6e11825a04c85f6f0cee94dbb89e4db23eabca1cc250a")

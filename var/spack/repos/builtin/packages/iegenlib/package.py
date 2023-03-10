@@ -14,7 +14,7 @@ class Iegenlib(CMakePackage):
     git = "https://github.com/CompOpt4Apps/IEGenLib.git"
     url = "https://github.com/CompOpt4Apps/IEGenLib/archive/fc479ee6ff01dba26beffc1dc6bacdba03262138.zip"
 
-    maintainers = ["dhuth"]
+    maintainers("dhuth")
 
     version("master", branch="master")
     version(

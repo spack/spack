@@ -12,7 +12,7 @@ class MparkVariant(CMakePackage):
     homepage = "https://github.com/mpark/variant"
     url = "https://github.com/mpark/variant/archive/v1.4.0.tar.gz"
     git = "https://github.com/mpark/variant.git"
-    maintainers = ["ax3l"]
+    maintainers("ax3l")
 
     tags = ["e4s"]
 

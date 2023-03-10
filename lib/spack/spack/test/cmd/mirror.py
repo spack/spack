@@ -159,13 +159,7 @@ def test_mirror_crud(mutable_config, capsys):
         assert "Removed mirror" in output
 
         # Test S3 connection info token
-        mirror(
-            "add",
-            "--s3-access-token",
-            "aaaaaazzzzz",
-            "mirror",
-            "s3://spack-public",
-        )
+        mirror("add", "--s3-access-token", "aaaaaazzzzz", "mirror", "s3://spack-public")
 
         output = mirror("remove", "mirror")
         assert "Removed mirror" in output
@@ -334,12 +328,7 @@ class TestMirrorCreate(object):
         specs = spack.cmd.mirror.concrete_specs_from_user(MockMirrorArgs(**cli_args))
         assert not any(s.satisfies(y) for s in specs for y in not_expected)
 
-    @pytest.mark.parametrize(
-        "abstract_specs",
-        [
-            ("bowtie", "callpath"),
-        ],
-    )
+    @pytest.mark.parametrize("abstract_specs", [("bowtie", "callpath")])
     def test_specs_from_cli_are_the_same_as_from_file(self, abstract_specs, config, tmpdir):
         args = MockMirrorArgs(specs=" ".join(abstract_specs))
         specs_from_cli = spack.cmd.mirror.concrete_specs_from_user(args)
@@ -353,12 +342,7 @@ class TestMirrorCreate(object):
 
     @pytest.mark.parametrize(
         "input_specs,nversions",
-        [
-            ("callpath", 1),
-            ("mpich", 4),
-            ("callpath mpich", 3),
-            ("callpath mpich", "all"),
-        ],
+        [("callpath", 1), ("mpich", 4), ("callpath mpich", 3), ("callpath mpich", "all")],
     )
     def test_versions_per_spec_produces_concrete_specs(self, input_specs, nversions, config):
         args = MockMirrorArgs(specs=input_specs, versions_per_spec=nversions)

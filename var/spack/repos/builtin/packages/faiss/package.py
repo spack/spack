@@ -22,7 +22,7 @@ class Faiss(AutotoolsPackage, CMakePackage, CudaPackage):
     homepage = "https://github.com/facebookresearch/faiss"
     url = "https://github.com/facebookresearch/faiss/archive/v1.6.3.tar.gz"
 
-    maintainers = ["bhatiaharsh", "rblake-llnl", "lpottier"]
+    maintainers("bhatiaharsh", "rblake-llnl", "lpottier")
 
     build_system(
         conditional("cmake", when="@1.7:"), conditional("autotools", when="@:1.6"), default="cmake"
@@ -128,7 +128,6 @@ class AutotoolsBuilder(spack.build_systems.autotools.AutotoolsBuilder):
         return args
 
     def build(self, pkg, spec, prefix):
-
         make()
 
         if "+python" in self.spec:
@@ -148,7 +147,6 @@ class AutotoolsBuilder(spack.build_systems.autotools.AutotoolsBuilder):
                 make("demo_ivfpq_indexing_gpu")
 
     def install(self, pkg, spec, prefix):
-
         make("install")
 
         if "+python" in self.spec:
@@ -185,7 +183,6 @@ class AutotoolsBuilder(spack.build_systems.autotools.AutotoolsBuilder):
 
     @run_after("configure")
     def _fix_makefile(self):
-
         # spack injects its own optimization flags
         makefile = FileFilter("makefile.inc")
         makefile.filter("CPUFLAGS     = -mavx2 -mf16c", "#CPUFLAGS     = -mavx2 -mf16c")

@@ -16,7 +16,7 @@ class PyDrep(PythonPackage):
     homepage = "https://github.com/MrOlm/drep"
     pypi = "drep/drep-3.4.0.tar.gz"
 
-    maintainers = ["MrOlm"]
+    maintainers("MrOlm")
 
     version("3.4.0", sha256="a6533eb585122c1ee66ae622b1b97450a3e1e493a3c3c1d55e79a580d5c46d40")
 

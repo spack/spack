@@ -11,7 +11,7 @@ class Su2(MesonPackage):
     the numerical solution of partial differential equations (PDE) and
     performing PDE constrained optimization."""
 
-    maintainers = ["kjrstory"]
+    maintainers("kjrstory")
     homepage = "https://su2code.github.io"
     url = "https://github.com/su2code/SU2/archive/v7.0.3.tar.gz"
     git = "https://github.com/su2code/SU2.git"

@@ -14,7 +14,7 @@ class RStringfish(RPackage):
 
     cran = "stringfish"
 
-    maintainers = ["dorton21"]
+    maintainers("dorton21")
 
     version("0.15.7", sha256="34b1703a8876a40860d35f88a94e069832a7d2bc86189ff07af84ff04fd4b735")
     version("0.15.5", sha256="9df21146a7710e5a9ab4bb53ebc231a580c798b7e541b8d78df53207283f8129")

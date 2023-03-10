@@ -12,8 +12,11 @@ class PyTorchmetrics(PythonPackage):
     homepage = "https://github.com/PyTorchLightning/metrics"
     pypi = "torchmetrics/torchmetrics-0.3.1.tar.gz"
 
-    maintainers = ["adamjstewart"]
+    maintainers("adamjstewart")
 
+    version("0.11.3", sha256="6a2bcc17361f0e4c1668c92595b12ef30ccf9ef1d03263bee7c6136a882afe30")
+    version("0.11.2", sha256="5a1f5fff9b1fb695bbcab6442d768e2e9b9535d00f4b4dea9ce03d40c866be07")
+    version("0.11.1", sha256="de2e9feb3316f798ab08b318302ff04e764f47e691f0847f780044279fa176ca")
     version("0.11.0", sha256="c838e0491d80775daadd0802e27ae3af112a52086c9ba8cbcd1e2807243c89ac")
     version("0.10.3", sha256="9e6ab66175f2dc13e246c37485b2c27c77931dfe47fc2b81c76217b8efdc1e57")
     version("0.10.2", sha256="daa29d96bff5cff04d80eec5b9f5076993d6ac9c2d2163e88b6b31f8d38f7c25")

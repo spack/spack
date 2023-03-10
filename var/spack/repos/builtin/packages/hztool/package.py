@@ -15,7 +15,7 @@ class Hztool(AutotoolsPackage):
     url = "https://hztool.hepforge.org/downloads/?f=hztool-4.3.2.tar.gz"
     list_url = "https://hztool.hepforge.org/downloads/"
 
-    maintainers = ["wdconinc"]
+    maintainers("wdconinc")
 
     tags = ["hep"]
 

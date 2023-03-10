@@ -19,6 +19,7 @@ class WinSdk(Package):
 
     homepage = "https://developer.microsoft.com/en-us/windows/downloads/windows-sdk/"
     has_code = False
+    tags = ["windows"]
 
     # The sdk has many libraries and executables. Record one for detection purposes
     libraries = ["rcdll.dll"]

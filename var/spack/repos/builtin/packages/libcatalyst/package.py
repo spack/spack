@@ -14,7 +14,7 @@ class Libcatalyst(CMakePackage):
     git = "https://gitlab.kitware.com/paraview/catalyst.git"
     url = "https://gitlab.kitware.com/api/v4/projects/paraview%2Fcatalyst/packages/generic/catalyst/v2.0.0/catalyst-v2.0.0.tar.gz"
 
-    maintainers = ["mathstuf"]
+    maintainers("mathstuf")
 
     version("2.0.0-rc3", sha256="8862bd0a4d0be2176b4272f9affda1ea4e5092087acbb99a2fe2621c33834e05")
 

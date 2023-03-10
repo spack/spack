@@ -148,8 +148,7 @@ def env_activate(args):
 
     if not args.shell:
         spack.cmd.common.shell_init_instructions(
-            "spack env activate",
-            "    eval `spack env activate {sh_arg} [...]`",
+            "spack env activate", "    eval `spack env activate {sh_arg} [...]`"
         )
         return 1
 
@@ -166,7 +165,7 @@ def env_activate(args):
         short_name = os.path.basename(env_path)
         ev.Environment(env).write(regenerate=False)
 
-    # Named environment
+    # Managed environment
     elif ev.exists(env_name_or_dir) and not args.dir:
         env_path = ev.root(env_name_or_dir)
         short_name = env_name_or_dir
@@ -238,8 +237,7 @@ def env_deactivate_setup_parser(subparser):
 def env_deactivate(args):
     if not args.shell:
         spack.cmd.common.shell_init_instructions(
-            "spack env deactivate",
-            "    eval `spack env deactivate {sh_arg}`",
+            "spack env deactivate", "    eval `spack env deactivate {sh_arg}`"
         )
         return 1
 
@@ -291,7 +289,11 @@ def env_create_setup_parser(subparser):
 
 def env_create(args):
     if args.with_view:
-        with_view = args.with_view
+        # Expand relative paths provided on the command line to the current working directory
+        # This way we interpret `spack env create --with-view ./view --dir ./env` as
+        # a view in $PWD/view, not $PWD/env/view. This is different from specifying a relative
+        # path in spack.yaml, which is resolved relative to the environment file.
+        with_view = os.path.abspath(args.with_view)
     elif args.without_view:
         with_view = False
     else:

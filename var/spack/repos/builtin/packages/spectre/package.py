@@ -24,11 +24,17 @@ class Spectre(CMakePackage):
     url = "https://github.com/sxs-collaboration/spectre/archive/v2021.12.15.tar.gz"
     git = "https://github.com/sxs-collaboration/spectre.git"
 
-    maintainers = ["nilsvu"]
+    maintainers("nilsvu")
 
     generator = "Ninja"
 
     version("develop", branch="develop")
+    version(
+        "2023.03.09", sha256="d8cd3512a8477b0b9ac83141d18fc7c55280bd886c6d97b60e8ae26c16c648ab"
+    )
+    version(
+        "2023.02.09", sha256="cdd85aed10ea7d372a7989da16a379e684276978c1e53438cb562910601fd471"
+    )
     version(
         "2023.01.13", sha256="fa1392015e4a8900483e0428e6b7b51a6c129f3d64f7ff862d810cfea0e04b40"
     )
