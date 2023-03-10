@@ -44,6 +44,7 @@ class Cgns(CMakePackage):
     variant("testing", default=False, description="Build CGNS testing")
     variant("legacy", default=False, description="Enable legacy options")
     variant("mem_debug", default=False, description="Enable memory debugging option")
+    variant("tools", default=False, description="Enable CGNS tools")
 
     depends_on("cmake@3.12:", when="@4.3:", type="build")
     depends_on("cmake@3.8:", when="@4.2:", type="build")
@@ -51,6 +52,18 @@ class Cgns(CMakePackage):
     depends_on("hdf5~mpi", when="+hdf5~mpi")
     depends_on("hdf5+mpi", when="+hdf5+mpi")
     depends_on("mpi", when="+mpi")
+
+    # cgnsview requires tk to run
+    depends_on("tk", when="+tools", type=("build", "link", "run"))
+    depends_on("tcl", when="+tools")
+    depends_on("gl", when="+tools")
+    depends_on("glu", when="+tools")
+    depends_on("libxmu", when="+tools")
+    depends_on("libsm", when="+tools")
+
+    # patch for error undefined reference to `matherr, see
+    # https://bugs.gentoo.org/662210
+    patch("no-matherr.patch", when="@:3.3.1 +tools")
 
     def cmake_args(self):
         spec = self.spec
@@ -63,7 +76,7 @@ class Cgns(CMakePackage):
                 self.define_from_variant("CGNS_ENABLE_PARALLEL", "mpi"),
                 "-DCGNS_ENABLE_TESTS:BOOL=OFF",
                 self.define_from_variant("CGNS_BUILD_TESTING", "testing"),
-                "-DCGNS_BUILD_CGNSTOOLS:BOOL=OFF",
+                self.define_from_variant("CGNS_BUILD_CGNSTOOLS", "tools"),
                 self.define_from_variant("CGNS_BUILD_SHARED", "shared"),
                 self.define_from_variant("CGNS_BUILD_STATIC", "static"),
                 self.define_from_variant("CGNS_ENABLE_BASE_SCOPE", "base_scope"),
