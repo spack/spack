@@ -21,6 +21,8 @@ class Lhapdfsets(BundlePackage):
     version("6.3.0")
 
     depends_on("lhapdf", type="build")
+    depends_on("tar", type="build")
+    depends_on("curl", type="build")
 
     phases = ["install"]
 
@@ -37,6 +39,8 @@ class Lhapdfsets(BundlePackage):
     def install(self, spec, prefix):
         mkdirp(self.prefix.share.lhapdfsets)
         lhapdf = which("lhapdf")
+        tar = which("tar")
+        curl = which("curl")
         sets = self.spec.variants["sets"].value
         if sets == "all":
             # parse set names from index file
@@ -50,7 +54,11 @@ class Lhapdfsets(BundlePackage):
         elif sets == "default":
             default_sets = ["MMHT2014lo68cl", "MMHT2014nlo68cl", "CT14lo", "CT14nlo"]
             sets = default_sets
-        lhapdf("--pdfdir=" + self.prefix.share.lhapdfsets, "install", *sets)
+        with working_dir(self.prefix.share.lhapdfsets):
+            for s in sets:
+                curl("-L", "-o", s + ".tar.gz", "http://lhapdfsets.web.cern.ch/lhapdfsets/current/%s.tar.gz" % s)
+                tar("xfz", s + ".tar.gz")
+                os.remove(s + ".tar.gz")
 
     def setup_dependent_build_environment(self, env, dependent_spec):
         env.set("LHAPDF_DATA_PATH", self.prefix.share.lhapdfsets)
