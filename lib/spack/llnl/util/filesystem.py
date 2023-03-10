@@ -2407,7 +2407,11 @@ class WindowsSimulatedRPath(object):
             # For py2 compatibility, we have to catch the specific Windows error code
             # associate with trying to create a file that already exists (winerror 183)
             except OSError as e:
-                if sys.platform == "win32" and (e.winerror == 183 or e.errno == errno.EEXIST):
+                if sys.platform == "win32" and (
+                    e.winerror == 183
+                    or e.errno == errno.EEXIST
+                    or isinstance(e, shutil.SameFileError)
+                ):
                     # We have either already symlinked or we are encoutering a naming clash
                     # either way, we don't want to overwrite existing libraries
                     already_linked = islink(dest_file)
