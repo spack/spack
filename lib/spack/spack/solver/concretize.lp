@@ -522,7 +522,7 @@ error(2, "{0} and {1} cannot both propagate variant '{2}' to package {3} with va
   attr("variant_propagate", Package, Variant, Value1, Source1),
   attr("variant_propagate", Package, Variant, Value2, Source2),
   variant(Package, Variant),
-  Value1 != Value2.
+  Value1 < Value2.
 
 % a variant cannot be set if it is not a variant on the package
 error(2, "Cannot set variant '{0}' for package '{1}' because the variant condition cannot be satisfied for the given spec", Variant, Package)
@@ -869,7 +869,7 @@ node_compiler(Package, CompilerID)
      attr("node", Package),
      compiler_name(CompilerID, CompilerName),
      compiler_version(CompilerID, CompilerVersion),
-     not build(Package).
+     concrete(Package).
 
 % Expand the internal attribute into "attr("node_compiler_version")
 attr("node_compiler_version", Package, CompilerName, CompilerVersion)
@@ -883,7 +883,7 @@ attr("node_compiler", Package, CompilerName)
 
 error(2, "No valid compiler version found for '{0}'", Package)
   :- attr("node", Package),
-     not attr("node_compiler_version", Package, _, _).
+     not node_compiler(Package, _).
 
 error(2, "Cannot concretize {0} with two compilers {1}@{2} and {3}@{4}", Package, C1, V1, C2, V2)
   :- attr("node", Package),
@@ -1019,7 +1019,7 @@ error(2, "{0} and {1} cannot both propagate compiler flags '{2}' to {3}", Source
   attr("node_flag_propagate", Source2, FlagType),
   can_inherit_flags(Source1, Package, FlagType),
   can_inherit_flags(Source2, Package, FlagType),
-  Source1 != Source2.
+  Source1 < Source2.
 
 % remember where flags came from
 attr("node_flag_source", Package, FlagType, Package) :- attr("node_flag_set", Package, FlagType, _).
@@ -1070,7 +1070,7 @@ attr("no_flags", Package, FlagType)
 % You can't install a hash, if it is not installed
 :- attr("hash", Package, Hash), not installed_hash(Package, Hash).
 % This should be redundant given the constraint above
-:- attr("hash", Package, Hash1), attr("hash", Package, Hash2), Hash1 != Hash2.
+:- attr("hash", Package, Hash1), attr("hash", Package, Hash2), Hash1 < Hash2.
 
 % if a hash is selected, we impose all the constraints that implies
 impose(Hash) :- attr("hash", Package, Hash).
@@ -1327,15 +1327,30 @@ opt_criterion(5, "non-preferred targets").
 %-----------------
 % Domain heuristic
 %-----------------
-#heuristic attr("version", Package, Version) : version_declared(Package, Version, 0), attr("node", Package). [10, true]
-#heuristic version_weight(Package, 0) : version_declared(Package, Version, 0), attr("node", Package). [10, true]
-#heuristic attr("node_target", Package, Target) : package_target_weight(Target, Package, 0), attr("node", Package). [10, true]
-#heuristic node_target_weight(Package, 0) : attr("node", Package). [10, true]
+#heuristic literal_solved(ID) : literal(ID). [1, sign]
+#heuristic literal_solved(ID) : literal(ID). [50, init]
+#heuristic attr("hash", Package, Hash) : attr("root", Package). [45, init]
+
+#heuristic attr("version", Package, Version) : version_declared(Package, Version, 0), attr("root", Package). [40, true]
+#heuristic version_weight(Package, 0) : version_declared(Package, Version, 0), attr("root", Package). [40, true]
+#heuristic attr("variant_value", Package, Variant, Value) : variant_default_value(Package, Variant, Value), attr("root", Package). [40, true]
+#heuristic attr("node_target", Package, Target) : package_target_weight(Target, Package, 0), attr("root", Package). [40, true]
+#heuristic node_target_weight(Package, 0) : attr("root", Package). [40, true]
+#heuristic node_compiler(Package, CompilerID) : default_compiler_preference(ID, 0), compiler_id(ID), attr("root", Package). [40, true]
+
+#heuristic provider(Package, Virtual) : possible_provider_weight(Package, Virtual, 0, _), attr("virtual_node", Virtual). [30, true]
+#heuristic provider_weight(Package, Virtual, 0, R) : possible_provider_weight(Package, Virtual, 0, R), attr("virtual_node", Virtual). [30, true]
+#heuristic attr("node", Package) : possible_provider_weight(Package, Virtual, 0, _), attr("virtual_node", Virtual). [30, true]
+
+#heuristic attr("version", Package, Version) : version_declared(Package, Version, 0), attr("node", Package). [20, true]
+#heuristic version_weight(Package, 0) : version_declared(Package, Version, 0), attr("node", Package). [20, true]
+
+#heuristic attr("node_target", Package, Target) : package_target_weight(Target, Package, 0), attr("node", Package). [20, true]
+#heuristic node_target_weight(Package, 0) : attr("node", Package). [20, true]
+#heuristic node_compiler(Package, CompilerID) : default_compiler_preference(ID, 0), compiler_id(ID), attr("node", Package). [15, true]
+
 #heuristic attr("variant_value", Package, Variant, Value) : variant_default_value(Package, Variant, Value), attr("node", Package). [10, true]
-#heuristic provider(Package, Virtual) : possible_provider_weight(Package, Virtual, 0, _), attr("virtual_node", Virtual). [10, true]
-#heuristic attr("node", Package) : possible_provider_weight(Package, Virtual, 0, _), attr("virtual_node", Virtual). [10, true]
 #heuristic attr("node_os", Package, OS) : buildable_os(OS). [10, true]
-#heuristic attr("node_compiler_version", Package, Compiler, Version) : default_compiler_preference(ID, 0), compiler_name(ID, Compiler), compiler_version(ID, Version), attr("node", Package). [10, true]
 
 %-----------
 % Notes
