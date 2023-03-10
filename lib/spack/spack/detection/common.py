@@ -256,7 +256,13 @@ def remove_specs_from_configuration(specs, scope):
         # *pkg_cfg[spec.name].values() will unpack to
         # nothing if there is not a single defined element of the cfg
         # for that package
-        if not list(*pkg_cfg[spec.name].values()):
+
+        def entry_empty(pkg_entry):
+            for x in pkg_entry.values():
+                if x:
+                    return False
+
+        if entry_empty(pkg_cfg[spec.name]):
             pkg_cfg.pop(spec.name)
     spack.config.set("packages", pkg_cfg, scope=scope)
     return removed_specs
