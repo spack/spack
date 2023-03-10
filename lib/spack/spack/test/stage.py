@@ -960,7 +960,7 @@ class TestStage(object):
             # the actual name matters less here than avoiding colisions between already
             # present build dirs
             assert str(stage._remote_build_dir) == str(populated_cmake_ext_build / "b")
-            build_directory = stage.build_directory
+            build_directory = stage.build_directory.name
 
         # ensure ext build stage is destroyed on cleanup
         assert build_directory not in os.listdir(populated_cmake_ext_build)
