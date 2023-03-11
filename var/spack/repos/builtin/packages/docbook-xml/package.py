@@ -14,6 +14,7 @@ class DocbookXml(Package):
     list_url = "https://www.oasis-open.org/docbook/xml/"
     list_depth = 1
 
+    version("4.5b1", sha256="6d994df8f7c73e4fe492d1bb1ae3fa6fd3d556e5a084d95ed7546145bcf646f8")
     version("4.5", sha256="4e4e037a2b83c98c6c94818390d4bdd3f6e10f6ec62dd79188594e26190dc7b4")
     version("4.4", sha256="02f159eb88c4254d95e831c51c144b1863b216d909b5ff45743a1ce6f5273090")
     version("4.3", sha256="23068a94ea6fd484b004c5a73ec36a66aa47ea8f0d6b62cc1695931f5c143464")
