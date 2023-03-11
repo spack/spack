@@ -425,6 +425,7 @@ def ensure_expected(output, expected):
 def test_part(pkg, test_name, purpose, work_dir=".", verbose=False):
     wdir = "." if work_dir is None else work_dir
     tester = pkg.tester
+    # TODO: Replace "test" with "test_" when remove run_test, etc.
     assert test_name and test_name.startswith(
         "test"
     ), "Test name must start with 'test' but {0} was provided".format(test_name)
