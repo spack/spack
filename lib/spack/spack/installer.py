@@ -278,19 +278,18 @@ def _print_installed_pkg(message):
     print(colorize("@*g{[+]} ") + spack.util.path.debug_padded_filter(message))
 
 
-def _print_install_test_log(pkg: "spack.package_base.PackageBase", verbose: bool):
-    """Output install test log file information.
+def _print_install_test_log(pkg: "spack.package_base.PackageBase"):
+    """Output install test log file information but onlly if have test failures.
 
     Args:
         pkg: package of interest
-        verbose:  True if the test log contents are to be printed
     """
-    if not pkg.run_tests:
-        # The tests were not run
+    if not pkg.run_tests or not pkg.test_failures:
+        # The tests were not run or there were no test failures
         return
 
     try:
-        pkg.tester.print_log()
+        pkg.tester.print_log_path()
     except Exception as e:
         # TODO/TLD: Narrow the exceptions
         tty.error("{0} was not tested: {1}".format(package_id(pkg), str(e)))

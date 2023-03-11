@@ -1358,6 +1358,16 @@ class ChildError(InstallError):
             out.write("See {0} log for details:\n".format(self.log_type))
             out.write("  {0}\n".format(self.log_name))
 
+        # # TODO: Ensure this is the process when rebase to include 35315
+        # # Also output the test log path IF it exists
+        # if self.context != "test":
+        #     test_log = join_path(
+        #         os.path.dirname(self.log_name), spack.package_base.spack_install_test_log
+        #     )
+        #     if os.path.isfile(test_log):
+        #         out.write("\nSee test log for details:\n")
+        #         out.write("  {0}n".format(test_log))
+
         return out.getvalue()
 
     def __str__(self):

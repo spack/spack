@@ -205,9 +205,9 @@ def print_message(logger, msg, verbose=False):
     """
     if verbose:
         with logger.force_echo():
-            tty.info(msg, format="*g")
+            tty.info(msg, format="g")
     else:
-        tty.info(msg, format="*g")
+        tty.info(msg, format="g")
 
 
 class PackageTest(object):
@@ -238,6 +238,7 @@ class PackageTest(object):
             self.pkg_id = pkg.spec.format("{name}-{version}-{hash:7}")
 
         fs.touch(self.test_log_file)  # otherwise log_parse complains
+        fs.set_install_permissions(self.test_log_file)
 
         # Internal logger for test part processing
         self._logger = None
@@ -262,7 +263,7 @@ class PackageTest(object):
         """
         with tty.log.log_output(self.test_log_file, verbose) as logger:
             with logger.force_echo():
-                tty.msg("Testing package {0}".format(self.pkg_id))
+                tty.msg("Testing package " + colorize(r"@*g{" + self.pkg_id + r"}"))
 
             # use debug print levels for log file to record commands
             old_debug = tty.is_debug()
@@ -308,7 +309,7 @@ class PackageTest(object):
 
         with self.test_logger(verbose=verbose, externals=False) as logger:
             # Report running each of the methods in the build log
-            print_message(logger, "Running {0}-time tests".format(phase_name), True)
+            print_message(logger, "Running {0}-time tests".format(phase_name), verbose)
             builder.pkg.test_suite.current_test_spec = builder.pkg.spec
             builder.pkg.test_suite.current_base_spec = builder.pkg.spec
 
@@ -321,21 +322,21 @@ class PackageTest(object):
                     fn = getattr(builder, name)
 
                     msg = "RUN-TESTS: {0}-time tests [{1}]".format(phase_name, name)
-                    print_message(logger, msg, True)
+                    print_message(logger, msg, verbose)
 
                     fn()
 
                 # TODO/TLD: Catch other exception to support test_* methods
                 except AttributeError as e:
                     msg = "RUN-TESTS: method not implemented [{0}]".format(name)
-                    print_message(logger, msg, True)
+                    print_message(logger, msg, verbose)
 
                     self.add_failure(e, msg)
                     if fail_fast:
                         break
 
             if have_tests:
-                print_message(logger, "Completed testing", True)
+                print_message(logger, "Completed testing", verbose)
 
             # Raise any collected failures here
             if self.test_failures:
@@ -361,28 +362,16 @@ class PackageTest(object):
             total = sum(nums)
         return total
 
-    def print_log(self, verbose: bool = False):
-        """Print the test log file location and, optionally, contents
-
-        Args:
-            verbose (bool):  True if want to print log file contents
-        """
+    def print_log_path(self):
+        """Print the test log file location and, optionally, contents"""
         log = self.archived_install_test_log
-        if not os.path.exists(log):
+        if not os.path.isfile(log):
             log = self.test_log_file
-            if not os.path.exists(log):
-                tty.debug("The test results log {0} does not exist".format(self.test_log_file))
+            if not (log and os.path.isfile(log)):
+                tty.debug("There is no test log file (staged or installed)")
             return
 
-        if verbose:
-            with open(log, "r") as f:
-                for ln in f.readlines():
-                    if ln.startswith("==>"):
-                        ln = colorize("@*g{==>}") + ln[3:]
-                    print(ln.strip("\n"))
-
-        if self.test_failures:
-            print("\nSee test results at:\n  {0}".format(log))
+        print("\nSee test results at:\n  {0}".format(log))
 
     def ran_tests(self):
         """True if ran tests, False otherwise."""
@@ -442,7 +431,7 @@ def test_part(pkg, test_name, purpose, work_dir=".", verbose=False):
             status = TestStatus.PASSED
             context = tester.logger.force_echo if verbose else nullcontext
             with context():
-                tty.msg(title)
+                tty.info(title, format="g")
                 yield
             print("{0}: {1}".format(status, test_name))
             tester.status(test_name, status)
@@ -676,8 +665,9 @@ def test_parts_process(pkg, test_specs, logger, verbose=False):
             lines = tester.summarize()
             tty.msg("\n{0}".format("\n".join(lines)))
 
-            # Print the test log file path
-            tty.msg("\n\nSee test results at:\n  {0}".format(tester.test_log_file))
+            if tester.test_failures:
+                # Print the test log file path
+                tty.msg("\n\nSee test results at:\n  {0}".format(tester.test_log_file))
         else:
             tty.msg("No tests to run")
 
@@ -886,12 +876,13 @@ class TestSuite(object):
 
         write_test_summary(self.counts)
 
-        for spec in self.specs:
-            print(
-                "\nSee {0} test results at:\n  {1}".format(
-                    spec.format("{name}-{version}-{hash:7}"), self.log_file_for_spec(spec)
+        if self.counts[TestStatus.FAILED]:
+            for spec in self.specs:
+                print(
+                    "\nSee {0} test results at:\n  {1}".format(
+                        spec.format("{name}-{version}-{hash:7}"), self.log_file_for_spec(spec)
+                    )
                 )
-            )
 
         failures = self.counts[TestStatus.FAILED]
         if failures:

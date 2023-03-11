@@ -2004,7 +2004,7 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
         options = [options] if isinstance(options, str) else options
 
         if purpose:
-            tty.msg(purpose)
+            tty.info(purpose, format="g")
         else:
             tty.debug("test: {0}: expect command status in {1}".format(runner.name, status))
 
