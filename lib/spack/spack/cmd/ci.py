@@ -552,7 +552,7 @@ def ci_rebuild(args):
 
     commands = [
         # apparently there's a race when spack bootstraps? do it up front once
-        [SPACK_COMMAND, "-e", env.path, "bootstrap", "now", "--dev"],
+        [SPACK_COMMAND, "-e", env.path, "bootstrap", "now"],
         [
             SPACK_COMMAND,
             "-e",
