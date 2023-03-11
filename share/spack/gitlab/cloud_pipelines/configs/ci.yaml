@@ -24,7 +24,7 @@ ci:
       - - cat /proc/loadavg || true
       variables:
         CI_JOB_SIZE: "default"
-        SPACK_VERBOSE_SCRIPT: "1"
+        # SPACK_VERBOSE_SCRIPT: "1"
 
   - signing-job:
       image: { "name": "ghcr.io/spack/notary:latest", "entrypoint": [""] }
