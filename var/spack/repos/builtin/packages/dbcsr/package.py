@@ -76,10 +76,10 @@ class Dbcsr(CMakePackage, CudaPackage, ROCmPackage):
 
     conflicts("+cuda", when="cuda_arch=none", msg=cuda_msg)
 
-    dbcsr_amdgpu_targets = "gfx906"
-    with when("@2.1.0"):
-        dbcsr_amdgpu_targets = (dbcsr_amdgpu_targets, "gfx908")  # Mi100
-    with when("@2.3.0"):
+    dbcsr_amdgpu_targets = ("gfx906",)
+    with when("@2.1.0:"):
+        dbcsr_amdgpu_targets = (*dbcsr_amdgpu_targets, "gfx908")  # Mi100
+    with when("@2.3.0:"):
         dbcsr_amdgpu_targets = (*dbcsr_amdgpu_targets, "gfx90a")  # Mi250
     amd_msg = "DBCSR only supports amdgpu_target {0}".format(dbcsr_amdgpu_targets)
 
