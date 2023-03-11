@@ -15,6 +15,5 @@ class PySphinxRtdDarkMode(PythonPackage):
     version("1.2.4", sha256="935bc1f3e62fc76eadd7d2760ac7f48bab907a97e44beda749a48a2706aeed63")
 
     depends_on("py-setuptools", type="build")
-    depends_on("py-sphinx", type=("build", "run"))
     depends_on("py-sphinx-rtd-theme", type=("build", "run"))
     depends_on("python@3.4:", type=("build", "run"))
