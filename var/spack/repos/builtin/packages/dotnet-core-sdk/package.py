@@ -14,6 +14,7 @@ class DotnetCoreSdk(Package):
 
     homepage = "https://www.microsoft.com/net/"
 
+    version("6.0.102", sha256="9bdd4dacdf9a23d386f207ec19260afd36a7fb7302233c9abc0b47e65ffc3119")
     version(
         "6.0.2",
         url="https://download.visualstudio.microsoft.com/download/pr/e7acb87d-ab08-4620-9050-b3e80f688d36/e93bbadc19b12f81e3a6761719f28b47/dotnet-sdk-6.0.102-linux-x64.tar.gz",
