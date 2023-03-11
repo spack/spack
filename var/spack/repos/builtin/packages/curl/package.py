@@ -273,7 +273,7 @@ class Curl(NMakePackage, AutotoolsPackage):
     conflicts("platform=linux", when="tls=secure_transport", msg="Only supported on macOS")
 
     depends_on("gnutls", when="tls=gnutls")
-    depends_on("mbedtls@3: +pic", when="@7.79: tls=mbedtls")
+    depends_on("mbedtls@2: +pic", when="@7.79: tls=mbedtls")
     depends_on("mbedtls@:2 +pic", when="@:7.78 tls=mbedtls")
     depends_on("nss", when="tls=nss")
     depends_on("openssl", when="tls=openssl")
