@@ -17,6 +17,7 @@ class Cdd(Package):
     homepage = "https://www.inf.ethz.ch/personal/fukudak/cdd_home/cdd.html"
     url = "https://www.cs.mcgill.ca/~fukuda/download/cdd/cdd-061a.tar.gz"
 
+    version("061a", sha256="637a1909bbd8aa4d32667da08f9e9ac687bf7d3ef1b8af5bd227e91a3cd4019b")
     version("0.61a", sha256="637a1909bbd8aa4d32667da08f9e9ac687bf7d3ef1b8af5bd227e91a3cd4019b")
 
     depends_on("libtool", type="build")
