@@ -50,19 +50,19 @@ class PyJaxlib(PythonPackage, CudaPackage):
     def patch(self):
         self.tmp_path = tempfile.mkdtemp(prefix="spack")
         self.buildtmp = tempfile.mkdtemp(prefix="spack")
-        # triple quotes necessary because of a variety
-        # of other embedded quote(s)
         filter_file(
-            """f"--output_path={output_path}",""",
-            """f"--output_path={output_path}","""
-            """f"--sources_path=%s","""
-            """f"--nohome_rc'","""
-            """f"--nosystem_rc'",""" % self.tmp_path,
+            'f"--output_path={output_path}",',
+            'f"--output_path={output_path}",'
+            f' "--sources_path={self.tmp_path}",'
+            ' "--nohome_rc",'
+            ' "--nosystem_rc",'
+            f' "--jobs={make_jobs}",',
             "build/build.py",
+            string=True,
         )
         filter_file(
             "args = parser.parse_args()",
-            "args,junk = parser.parse_known_args()",
+            "args, junk = parser.parse_known_args()",
             "build/build_wheel.py",
             string=True,
         )
