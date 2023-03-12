@@ -18,6 +18,7 @@ class Hugo(Package):
 
     maintainers("alecbcs")
 
+    version("0.111.2", sha256="66500ae3a03cbf51a6ccf7404d01f42fdc454aa1eaea599c934860bbf0aa2fc5")
     version("0.111.1", sha256="a71d4e1f49ca7156d3811c0b10957816b75ff2e01b35ef326e7af94dfa554ec0")
     version("0.110.0", sha256="eeb137cefcea1a47ca27dc5f6573df29a8fe0b7f1ed0362faf7f73899e313770")
     version("0.109.0", sha256="35a5ba92057fe2c20b2218c374e762887021e978511d19bbe81ce4d9c21f0c78")
