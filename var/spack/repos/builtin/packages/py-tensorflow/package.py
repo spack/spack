@@ -145,7 +145,6 @@ class PyTensorflow(Package, CudaPackage, ROCmPackage, PythonExtension):
     variant(
         "dynamic_kernels", default=False, description="Build kernels into separate shared objects"
     )
-    variant("rebuild_me_please", default=True, description="ci testing")
 
     extends("python")
     depends_on("python@3:", type=("build", "run"), when="@2.1:")
