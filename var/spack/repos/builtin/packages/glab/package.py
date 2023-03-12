@@ -12,6 +12,9 @@ class Glab(Package):
     homepage = "https://gitlab.com/gitlab-org/cli"
     url = "https://gitlab.com/gitlab-org/cli/-/archive/v1.22.0/cli-v1.22.0.tar.gz"
 
+    maintainers("alecbcs")
+
+    version("1.26.0", sha256="af1820a7872d53c7119a23317d6c80497374ac9529fc2ab1ea8b1ca033a9b4da")
     version("1.22.0", sha256="4d9bceb6818c8bf9f681119dae3a65f1c895fa21e9da6b38e8f88d245f524e10")
     version("1.21.1", sha256="8bb35c5cf6b011ff14d1eaa9ab70ec052d296978792984250e9063b006ee4d50")
     version("1.20.0", sha256="6beb0186fa50d0dea3b05fcfe6e4bc1f9be0c07aa5fa15b37ca2047b16980412")
