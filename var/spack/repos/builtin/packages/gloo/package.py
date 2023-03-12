@@ -25,6 +25,14 @@ class Gloo(CMakePackage, CudaPackage):
     version("2018-05-29", commit="69eef748cc1dfbe0fefed69b34e6545495f67ac5")  # py-torch@0.4.1
     version("2018-04-06", commit="aad0002fb40612e991390d8e807f247ed23f13c5")  # py-torch@:0.4.0
 
+    # Gloo does not build on Linux >=6.0.3 (fixed in master)
+    # See: https://github.com/facebookincubator/gloo/issues/345
+    patch(
+        "https://github.com/facebookincubator/gloo/commit/10909297fedab0a680799211a299203e53515032.patch?full_index=1",
+        sha256="8e6e9a44e0533ba4303a95a651b1934e5d73632cab08cc7d5a9435e1e64aa424",
+        when="@:2023-01-16",
+    )
+
     depends_on("cmake@2.8.12:", type="build")
     depends_on("ninja", type="build")
 
