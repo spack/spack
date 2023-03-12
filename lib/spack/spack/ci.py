@@ -756,7 +756,13 @@ def generate_gitlab_ci_yaml(
     ci_config = cfg.get("ci")
 
     if not ci_config:
-        tty.die('Environment yaml does not have "ci" section')
+        tty.warning('Environment yaml does not have "ci" section')
+        gitlabci_config = yaml_root.get("gitlab-ci")
+        if not gitlabci_config:
+            tty.die("Environment yaml does not have CI config section")
+
+        tty.warning("The `gitlab-ci` configuration is deprecated in favor of `ci`.")
+        ci_config = translate_deprecated_config(gitlabci_config)
 
     # Default target is gitlab...and only target is gitlab
     if "target" in ci_config and ci_config["target"] != "gitlab":
@@ -2471,3 +2477,60 @@ class CDashHandler(object):
         )
         reporter = CDash(configuration=configuration)
         reporter.test_skipped_report(directory_name, spec, reason)
+
+def translate_deprecated_config(config):
+    ci_config = {}
+
+    ci_config["target"] = "gitlab"
+
+    ci_config["bootstrap"] = config["bootstrap"]
+
+    if "enable-artifacts-buildcache" in config:
+        ci_config["enable-artifacts-buildcache"] = config["enable-artifacts-buildcache"]
+    elif "temporary-storage-url-prefix" in config:
+        ci_config["temporary-storage-url-prefix"] = config.get("temporary-storage-url-prefix")
+
+    ci_config["rebuild-index"] = config.get("rebuild-index", True)
+    ci_config["broken-specs-url"] = config.get("broken-specs-url", None)
+    ci_config["broken-tests-packages"] = config.get("broken-tests-packages", [])
+
+    ci_config["pipeline-gen"] = []
+    pipeline_gen = ci_config["pipeline-gen"]
+
+    # Build Job
+    mappings = config["mappings"]
+    match_behavior = config.get("match_behavior", "first")
+    submapping = []
+    for section in mappings:
+        submapping_section = {"match": section["match"]}
+        if "runner-attributes" in section:
+            submapping_section["build-job"] = section["runner-attributes"]
+        if "remove-attributes" in section:
+            submapping_section["build-job-remove"] = section["remove-attributes"]
+        submapping.append(submapping_section)
+    pipeline_gen.append({
+        "submapping" : submapping,
+        "match_behavior": match_behavior,
+    })
+
+    build_job = {}
+    build_job["image"] = config.get("image", None)
+    build_job["tags"] = config.get("tags", None)
+    build_job["variables"] = config.get("variables", None)
+    build_job["before_script"] = config.get("before_script", None)
+    build_job["script"] = config.get("script", None)
+    build_job["after_script"] = config.get("after_script", None)
+    pipeline_gen.append({"build-job": build_job})
+
+    # Signing Job
+    if "signing-job-attributes" in config:
+        signing_job = {"signing-job": config["signing-job-attributes"]}
+        pipeline_gen.append(signing_job)
+
+    # Service Jobs
+    if "service-job-attributes" in config:
+        pipeline_gen.append({"reindex-job": config["service-job-attributes"]})
+        pipeline_gen.append({"noop-job": config["service-job-attributes"]})
+        pipeline_gen.append({"cleanup-job": config["service-job-attributes"]})
+
+    return ci_config

@@ -13,6 +13,7 @@ from llnl.util.lang import union_dicts
 import spack.schema.merged
 import spack.schema.packages
 import spack.schema.projections
+import spack.schema.gitlab_ci # DEPRECATED
 
 #: legal first keys in the schema
 keys = ("spack", "env")
@@ -52,6 +53,8 @@ schema = {
             "default": {},
             "additionalProperties": False,
             "properties": union_dicts(
+                # Include deprecated "gitlab-ci" section
+                spack.schema.gitlab_ci.properties,
                 # merged configuration scope schemas
                 spack.schema.merged.properties,
                 # extra environment schema properties
