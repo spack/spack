@@ -73,7 +73,7 @@ class PackagePrefs(object):
         # integer is the index of the first spec in order that satisfies
         # spec, or it's a number larger than any position in the order.
         match_index = next(
-            (i for i, s in enumerate(spec_order) if spec.satisfies(s)), len(spec_order)
+            (i for i, s in enumerate(spec_order) if spec.intersects(s)), len(spec_order)
         )
         if match_index < len(spec_order) and spec_order[match_index] == spec:
             # If this is called with multiple specs that all satisfy the same
@@ -185,7 +185,7 @@ def spec_externals(spec):
                 ),
                 extra_attributes=entry.get("extra_attributes", {}),
             )
-            if external_spec.satisfies(spec):
+            if external_spec.intersects(spec):
                 external_specs.append(external_spec)
 
     # Defensively copy returned specs

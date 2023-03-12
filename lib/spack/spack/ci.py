@@ -361,7 +361,7 @@ def _compute_spec_deps(spec_list, check_index_only=False, mirrors_to_check=None)
 
 
 def _spec_matches(spec, match_string):
-    return spec.satisfies(match_string)
+    return spec.intersects(match_string)
 
 
 def _remove_attributes(src_dict, dest_dict):
@@ -490,16 +490,28 @@ def compute_affected_packages(rev1="HEAD^", rev2="HEAD"):
     return spack.repo.get_all_package_diffs("ARC", rev1=rev1, rev2=rev2)
 
 
-def get_spec_filter_list(env, affected_pkgs):
+def get_spec_filter_list(env, affected_pkgs, dependent_traverse_depth=None):
     """Given a list of package names and an active/concretized
        environment, return the set of all concrete specs from the
        environment that could have been affected by changing the
        list of packages.
 
+       If a ``dependent_traverse_depth`` is given, it is used to limit
+       upward (in the parent direction) traversal of specs of touched
+       packages.  E.g. if 1 is provided, then only direct dependents
+       of touched package specs are traversed to produce specs that
+       could have been affected by changing the package, while if 0 is
+       provided, only the changed specs themselves are traversed. If ``None``
+       is given, upward traversal of touched package specs is done all
+       the way to the environment roots.  Providing a negative number
+       results in no traversals at all, yielding an empty set.
+
     Arguments:
 
         env (spack.environment.Environment): Active concrete environment
         affected_pkgs (List[str]): Affected package names
+        dependent_traverse_depth: Optional integer to limit dependent
+            traversal, or None to disable the limit.
 
     Returns:
 
@@ -516,10 +528,11 @@ def get_spec_filter_list(env, affected_pkgs):
     visited = set()
     dag_hash = lambda s: s.dag_hash()
     for match in env_matches:
-        for parent in match.traverse(direction="parents", key=dag_hash):
-            affected_specs.update(
-                parent.traverse(direction="children", visited=visited, key=dag_hash)
-            )
+        for dep_level, parent in match.traverse(direction="parents", key=dag_hash, depth=True):
+            if dependent_traverse_depth is None or dep_level <= dependent_traverse_depth:
+                affected_specs.update(
+                    parent.traverse(direction="children", visited=visited, key=dag_hash)
+                )
     return affected_specs
 
 
@@ -580,6 +593,18 @@ def generate_gitlab_ci_yaml(
     cdash_handler = CDashHandler(yaml_root.get("cdash")) if "cdash" in yaml_root else None
     build_group = cdash_handler.build_group if cdash_handler else None
 
+    dependent_depth = os.environ.get("SPACK_PRUNE_UNTOUCHED_DEPENDENT_DEPTH", None)
+    if dependent_depth is not None:
+        try:
+            dependent_depth = int(dependent_depth)
+        except (TypeError, ValueError):
+            tty.warn(
+                "Unrecognized value ({0}) ".format(dependent_depth),
+                "provide forSPACK_PRUNE_UNTOUCHED_DEPENDENT_DEPTH, ",
+                "ignoring it.",
+            )
+            dependent_depth = None
+
     prune_untouched_packages = False
     spack_prune_untouched = os.environ.get("SPACK_PRUNE_UNTOUCHED", None)
     if spack_prune_untouched is not None and spack_prune_untouched.lower() == "true":
@@ -595,7 +620,9 @@ def generate_gitlab_ci_yaml(
                 tty.debug("affected pkgs:")
                 for p in affected_pkgs:
                     tty.debug("  {0}".format(p))
-                affected_specs = get_spec_filter_list(env, affected_pkgs)
+                affected_specs = get_spec_filter_list(
+                    env, affected_pkgs, dependent_traverse_depth=dependent_depth
+                )
                 tty.debug("all affected specs:")
                 for s in affected_specs:
                     tty.debug("  {0}/{1}".format(s.name, s.dag_hash()[:7]))
@@ -938,7 +965,7 @@ def generate_gitlab_ci_yaml(
                         bs_arch = c_spec.architecture
                         bs_arch_family = bs_arch.target.microarchitecture.family
                         if (
-                            c_spec.satisfies(compiler_pkg_spec)
+                            c_spec.intersects(compiler_pkg_spec)
                             and bs_arch_family == spec_arch_family
                         ):
                             # We found the bootstrap compiler this release spec
