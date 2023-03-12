@@ -66,6 +66,7 @@ class PyTensorflowProbability(Package):
             "build",
             # Spack logs don't handle colored output well
             "--color=no",
+            "--jobs={0}".format(make_jobs),
             # Enable verbose output for failures
             "--verbose_failures",
             # Show (formatted) subcommands being executed

@@ -5,7 +5,6 @@
 
 import re
 
-from spack.build_environment import MakeExecutable, determine_number_of_jobs
 from spack.package import *
 
 
@@ -270,14 +269,12 @@ java_binary(
                 )
 
             # Spack's logs don't handle colored output well
-            bazel = MakeExecutable(
-                self.spec.command.path,
-                determine_number_of_jobs(parallel=dependent_spec.package.parallel),
-            )
+            bazel = Executable(self.spec.command.path)
             bazel(
                 "--output_user_root=/tmp/spack/bazel/spack-test",
                 "build",
                 "--color=no",
+                f"--jobs={make_jobs}",
                 "//:bazel-test",
             )
 
@@ -285,10 +282,7 @@ java_binary(
             assert exe(output=str) == "Hi!\n"
 
     def setup_dependent_package(self, module, dependent_spec):
-        module.bazel = MakeExecutable(
-            self.spec.command.path,
-            determine_number_of_jobs(parallel=dependent_spec.package.parallel),
-        )
+        module.bazel = Executable(self.spec.command.path)
 
     @property
     def parallel(self):
