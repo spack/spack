@@ -132,11 +132,11 @@ class PyMdanalysis(PythonPackage):
     depends_on("py-netcdf4@1.0:", when="+amber", type=("build", "run"))
     depends_on("hdf5", when="+amber", type=("run"))
     depends_on("py-netcdf4@1.0:", when="+extra_formats", type=("build", "run"))
-    depends_on("hdf5", when="+extra_formats", type=("run"))
+    depends_on("hdf5", when="+extra_formats", type=("build", "run"))
 
-    depends_on("py-pytng", when="@2.4.0:+extra_formats")
-    depends_on("py-chemfiles", when="@2.4.0:+extra_formats")
-    depends_on("py-pyedr", when="@2.4.0:+extra_formats")
+    depends_on("py-pytng", when="@2.4.0:+extra_formats", type=("build", "run"))
+    depends_on("py-chemfiles", when="@2.4.0:+extra_formats", type=("build", "run"))
+    depends_on("py-pyedr", when="@2.4.0:+extra_formats", type=("build", "run"))
 
     depends_on("py-fasteners", when="@2.4.2:", type=("build", "run"))
     depends_on("py-packaging", when="@2.4.2:", type=("build", "run"))
