@@ -43,7 +43,7 @@ class Pexsi(MakefilePackage, CMakePackage):
         depends_on("cmake@3.10:", type="build")
         depends_on("cmake@3.17:", type="build", when="@2:")
 
-    variant("openmp", default=False, description="Build with OpenMP support", when="@1.2")
+    variant("openmp", default=False, description="Build with OpenMP support", when="@1.2:")
     variant("fortran", default=False, description="Builds the Fortran interface")
 
     parallel = False
