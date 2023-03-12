@@ -24,19 +24,71 @@ class Lbann(CMakePackage, CudaPackage, ROCmPackage):
 
     version("develop", branch="develop")
     version("0.102", sha256="3734a76794991207e2dd2221f05f0e63a86ddafa777515d93d99d48629140f1a")
-    version("0.101", sha256="69d3fe000a88a448dc4f7e263bcb342c34a177bd9744153654528cd86335a1f7")
-    version("0.100", sha256="d1bab4fb6f1b80ae83a7286cc536a32830890f6e5b0c3107a17c2600d0796912")
-    version("0.99", sha256="3358d44f1bc894321ce07d733afdf6cb7de39c33e3852d73c9f31f530175b7cd")
-    version("0.98.1", sha256="9a2da8f41cd8bf17d1845edf9de6d60f781204ebd37bffba96d8872036c10c66")
-    version("0.98", sha256="8d64b9ac0f1d60db553efa4e657f5ea87e790afe65336117267e9c7ae6f68239")
-    version("0.97.1", sha256="2f2756126ac8bb993202cf532d72c4d4044e877f4d52de9fdf70d0babd500ce4")
-    version("0.97", sha256="9794a706fc7ac151926231efdf74564c39fbaa99edca4acb745ee7d20c32dae7")
-    version("0.96", sha256="97af78e9d3c405e963361d0db96ee5425ee0766fa52b43c75b8a5670d48e4b4a")
-    version("0.95", sha256="d310b986948b5ee2bedec36383a7fe79403721c8dc2663a280676b4e431f83c2")
-    version("0.94", sha256="567e99b488ebe6294933c98a212281bffd5220fc13a0a5cd8441f9a3761ceccf")
-    version("0.93", sha256="77bfd7fe52ee7495050f49bcdd0e353ba1730e3ad15042c678faa5eeed55fb8c")
-    version("0.92", sha256="9187c5bcbc562c2828fe619d53884ab80afb1bcd627a817edb935b80affe7b84")
-    version("0.91", sha256="b69f470829f434f266119a33695592f74802cff4b76b37022db00ab32de322f5")
+    version(
+        "0.101",
+        sha256="69d3fe000a88a448dc4f7e263bcb342c34a177bd9744153654528cd86335a1f7",
+        deprecated=True,
+    )
+    version(
+        "0.100",
+        sha256="d1bab4fb6f1b80ae83a7286cc536a32830890f6e5b0c3107a17c2600d0796912",
+        deprecated=True,
+    )
+    version(
+        "0.99",
+        sha256="3358d44f1bc894321ce07d733afdf6cb7de39c33e3852d73c9f31f530175b7cd",
+        deprecated=True,
+    )
+    version(
+        "0.98.1",
+        sha256="9a2da8f41cd8bf17d1845edf9de6d60f781204ebd37bffba96d8872036c10c66",
+        deprecated=True,
+    )
+    version(
+        "0.98",
+        sha256="8d64b9ac0f1d60db553efa4e657f5ea87e790afe65336117267e9c7ae6f68239",
+        deprecated=True,
+    )
+    version(
+        "0.97.1",
+        sha256="2f2756126ac8bb993202cf532d72c4d4044e877f4d52de9fdf70d0babd500ce4",
+        deprecated=True,
+    )
+    version(
+        "0.97",
+        sha256="9794a706fc7ac151926231efdf74564c39fbaa99edca4acb745ee7d20c32dae7",
+        deprecated=True,
+    )
+    version(
+        "0.96",
+        sha256="97af78e9d3c405e963361d0db96ee5425ee0766fa52b43c75b8a5670d48e4b4a",
+        deprecated=True,
+    )
+    version(
+        "0.95",
+        sha256="d310b986948b5ee2bedec36383a7fe79403721c8dc2663a280676b4e431f83c2",
+        deprecated=True,
+    )
+    version(
+        "0.94",
+        sha256="567e99b488ebe6294933c98a212281bffd5220fc13a0a5cd8441f9a3761ceccf",
+        deprecated=True,
+    )
+    version(
+        "0.93",
+        sha256="77bfd7fe52ee7495050f49bcdd0e353ba1730e3ad15042c678faa5eeed55fb8c",
+        deprecated=True,
+    )
+    version(
+        "0.92",
+        sha256="9187c5bcbc562c2828fe619d53884ab80afb1bcd627a817edb935b80affe7b84",
+        deprecated=True,
+    )
+    version(
+        "0.91",
+        sha256="b69f470829f434f266119a33695592f74802cff4b76b37022db00ab32de322f5",
+        deprecated=True,
+    )
 
     variant("al", default=True, description="Builds with support for Aluminum Library")
     variant(
@@ -157,7 +209,7 @@ class Lbann(CMakePackage, CudaPackage, ROCmPackage):
     depends_on("aluminum@0.5.0:", when="@:0.90,0.102: +al")
 
     # Add Aluminum variants
-    depends_on("aluminum +cuda +nccl +cuda_rma", when="+al +cuda")
+    depends_on("aluminum +cuda +nccl", when="+al +cuda")
     depends_on("aluminum +rocm +rccl", when="+al +rocm")
 
     depends_on("dihydrogen@0.2.0:", when="@:0.90,0.102:")
