@@ -13,8 +13,9 @@ class PyPymatgen(PythonPackage):
     analysis code powering the Materials Project."""
 
     homepage = "http://www.pymatgen.org/"
-    pypi = "pymatgen/pymatgen-4.7.2.tar.gz"
+    pypi = "pymatgen/pymatgen-2023.3.10.tar.gz"
 
+    version("2023.3.10", sha256="20a5d1681e2951d2710d5358197b5b58992e2b0ec4217a5ba966cf28513c1283")
     version("2021.3.9", sha256="a6f22d69133a48b7801bfd5e6a2878b47b4b4b2ef1a377b87c6c573be14cbf16")
     version(
         "2020.12.31", sha256="5002490facd47c55d2dae42c35712e061c1f5d881180485c0543a899589856d6"
@@ -22,6 +23,17 @@ class PyPymatgen(PythonPackage):
 
     extends("python@3.7:", ignore="bin/tabulate")
 
+    # pymatgen does not support new recent python versions automatically.
+    # Update below when support for 3.12 arrives in newer versions:
+    conflicts("python@3.12:")
+    # See https://pymatgen.org/change_log.html for python version support:
+    conflicts("python@3.11:", when="@:2023.2.22")
+    # pymatgen@:2022.1.8 does not support python@3.10:
+    conflicts("python@3.10:", when="@:2022.1.08")
+    # This conflict only applies to older, not checksummed versions:
+    conflicts("python@3.9:", when="@:2020.10.9")
+
+    depends_on("py-cython", type="build", when="@2022.1.08:")
     depends_on("py-setuptools@18.0:", type="build")
 
     depends_on("py-numpy@1.9:", type=("build", "run"))
