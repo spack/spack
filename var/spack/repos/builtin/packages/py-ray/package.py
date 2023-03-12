@@ -83,7 +83,7 @@ class PyRay(PythonPackage):
             'bazel_flags = ["--verbose_failures"]',
             f'bazel_flags = ["--verbose_failures", "--jobs={make_jobs}"]',
             join_path("python", "setup.py"),
-            string=True
+            string=True,
         )
 
     def setup_build_environment(self, env):
