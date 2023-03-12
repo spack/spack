@@ -17,8 +17,8 @@ ci:
         tags: [ "spack", "huge" ]
         variables:
           CI_JOB_SIZE: huge
-          SPACK_BUILD_JOBS: "16"
-          KUBERNETES_CPU_REQUEST: 16000m
+          SPACK_BUILD_JOBS: "12"
+          KUBERNETES_CPU_REQUEST: 12000m
           KUBERNETES_MEMORY_REQUEST: 42G
 
     - match:
