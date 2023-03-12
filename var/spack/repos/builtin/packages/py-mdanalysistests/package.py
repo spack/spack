@@ -16,6 +16,7 @@ class PyMdanalysistests(PythonPackage):
 
     version("2.4.2", sha256="6e8fb210a4268691c77717ea5157e82d85874a4f7ee0f8f177718451a44ee793")
 
+    # Version need to match MDAnalysis'
     depends_on("py-mdanalysis@2.4.2", when="@2.4.2", type=("build", "run"))
 
     depends_on("python@3.8:", type=("build", "run"))
