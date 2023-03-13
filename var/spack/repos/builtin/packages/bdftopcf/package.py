@@ -17,6 +17,7 @@ class Bdftopcf(AutotoolsPackage, XorgPackage):
     homepage = "https://cgit.freedesktop.org/xorg/app/bdftopcf"
     xorg_mirror_path = "app/bdftopcf-1.0.5.tar.gz"
 
+    version("1.1", sha256="699d1a62012035b1461c7f8e3f05a51c8bd6f28f348983249fb89bbff7309b47")
     version("1.0.5", sha256="78a5ec945de1d33e6812167b1383554fda36e38576849e74a9039dc7364ff2c3")
 
     depends_on("libxfont")

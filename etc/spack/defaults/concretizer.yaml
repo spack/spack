@@ -20,9 +20,10 @@ concretizer:
   # needed to reach a solution increases noticeably with the number of targets
   # considered.
   targets:
-    # Determine whether we want to target specific or generic microarchitectures.
-    # An example of the first kind might be for instance "skylake" or "bulldozer",
-    # while generic microarchitectures are for instance "aarch64" or "x86_64_v4".
+    # Determine whether we want to target specific or generic
+    # microarchitectures. Valid values are: "microarchitectures" or "generic".
+    # An example of "microarchitectures" would be "skylake" or "bulldozer",
+    # while an example of "generic" would be "aarch64" or "x86_64_v4".
     granularity: microarchitectures
     # If "false" allow targets that are incompatible with the current host (for
     # instance concretize with target "icelake" while running on "haswell").

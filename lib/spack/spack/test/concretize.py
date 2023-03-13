@@ -293,11 +293,11 @@ class TestConcretize(object):
         we ask for some advanced version.
         """
         repo = spack.repo.path
-        assert not any(s.satisfies("mpich2@:1.0") for s in repo.providers_for("mpi@2.1"))
-        assert not any(s.satisfies("mpich2@:1.1") for s in repo.providers_for("mpi@2.2"))
-        assert not any(s.satisfies("mpich@:1") for s in repo.providers_for("mpi@2"))
-        assert not any(s.satisfies("mpich@:1") for s in repo.providers_for("mpi@3"))
-        assert not any(s.satisfies("mpich2") for s in repo.providers_for("mpi@3"))
+        assert not any(s.intersects("mpich2@:1.0") for s in repo.providers_for("mpi@2.1"))
+        assert not any(s.intersects("mpich2@:1.1") for s in repo.providers_for("mpi@2.2"))
+        assert not any(s.intersects("mpich@:1") for s in repo.providers_for("mpi@2"))
+        assert not any(s.intersects("mpich@:1") for s in repo.providers_for("mpi@3"))
+        assert not any(s.intersects("mpich2") for s in repo.providers_for("mpi@3"))
 
     def test_provides_handles_multiple_providers_of_same_version(self):
         """ """
@@ -1274,6 +1274,18 @@ class TestConcretize(object):
         # Structure and package hash will be different without reuse
         assert root.dag_hash() != new_root_without_reuse.dag_hash()
 
+    def test_reuse_with_flags(self, mutable_database, mutable_config):
+        if spack.config.get("config:concretizer") == "original":
+            pytest.xfail("Original concretizer does not reuse")
+
+        spack.config.set("concretizer:reuse", True)
+        spec = Spec("a cflags=-g cxxflags=-g").concretized()
+        spack.store.db.add(spec, None)
+
+        testspec = Spec("a cflags=-g")
+        testspec.concretize()
+        assert testspec == spec
+
     @pytest.mark.regression("20784")
     def test_concretization_of_test_dependencies(self):
         # With clingo we emit dependency_conditions regardless of the type
@@ -1462,7 +1474,7 @@ class TestConcretize(object):
         with spack.config.override("concretizer:reuse", True):
             s = spack.spec.Spec(spec_str).concretized()
         assert s.installed is expect_installed
-        assert s.satisfies(spec_str, strict=True)
+        assert s.satisfies(spec_str)
 
     @pytest.mark.regression("26721,19736")
     def test_sticky_variant_in_package(self):

@@ -2,6 +2,9 @@
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
+import os
+import time
+
 from spack.package import *
 
 
@@ -19,11 +22,15 @@ class LibuvJulia(AutotoolsPackage):
     version("1.42.0", commit="3a63bf71de62c64097989254e4f03212e3bf5fc8")
 
     def autoreconf(self, spec, prefix):
-        # @haampie: Configure files are checked in, but git does not restore mtime
-        # by design. Therefore, touch files to avoid regenerating those.
-        touch("aclocal.m4")
-        touch("Makefile.in")
-        touch("configure")
+        # @haampie: Configure files are checked in, but git does not restore
+        # mtime by design. Therefore, touch files to avoid regenerating those.
+        # Make sure to set them all to the same time, otherwise weird problems
+        # might occur (https://github.com/spack/spack/pull/35945).
+        cur = time.time()
+        times = (cur, cur)
+        os.utime("aclocal.m4", times)
+        os.utime("Makefile.in", times)
+        os.utime("configure", times)
 
     @property
     def libs(self):
