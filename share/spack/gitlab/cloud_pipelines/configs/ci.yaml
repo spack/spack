@@ -12,6 +12,7 @@ ci:
       - - spack compiler find
         - cd ${SPACK_CONCRETE_ENV_DIR}
         - spack env activate --without-view .
+        - if [ -n "$SPACK_BUILD_JOBS" ]; then spack config add "config:build_jobs:$SPACK_BUILD_JOBS"; fi
         - spack config add "config:install_tree:projections:${SPACK_JOB_SPEC_PKG_NAME}:'morepadding/{architecture}/{compiler.name}-{compiler.version}/{name}-{version}-{hash}'"
         - mkdir -p ${SPACK_ARTIFACTS_ROOT}/user_data
         # AWS runners mount E4S public key (verification), UO runners mount public/private (signing/verification)
@@ -24,7 +25,7 @@ ci:
       - - cat /proc/loadavg || true
       variables:
         CI_JOB_SIZE: "default"
-        SPACK_VERBOSE_SCRIPT: "1"
+        # SPACK_VERBOSE_SCRIPT: "1"
 
   - signing-job:
       image: { "name": "ghcr.io/spack/notary:latest", "entrypoint": [""] }
@@ -33,7 +34,7 @@ ci:
       - - aws s3 sync --exclude "*" --include "*spec.json*" ${SPACK_REMOTE_MIRROR_OVERRIDE}/build_cache /tmp
         - /sign.sh
         - aws s3 sync --exclude "*" --include "*spec.json.sig*" /tmp ${SPACK_REMOTE_MIRROR_OVERRIDE}/build_cache
-        - aws s3 cp /tmp/public_keys ${SPACK_REMOTE_MIRROR_OVERRIDE}/build_cache/_pgp --recursive --exclude "*"" --include "*.pub"
+        - aws s3 cp /tmp/public_keys ${SPACK_REMOTE_MIRROR_OVERRIDE}/build_cache/_pgp --recursive --exclude "*" --include "*.pub"
 
   - any-job:
       image: "ghcr.io/spack/e4s-ubuntu-18.04:v2021-10-18"
