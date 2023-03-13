@@ -31,9 +31,6 @@ class Touchdetector(CMakePackage):
     version("5.3.1", tag="5.3.1")
     version("5.3.0", tag="5.3.0")
     version("5.2.0", tag="5.2.0")
-    version("5.1.0", tag="5.1.0")
-    version("5.0.1", tag="5.0.1")
-    version("5.0.0", tag="5.0.0")
 
     variant("caliper", default=True, description="Enables profiling with Caliper")
     variant("asan", default=False, description="Enables AdressSanitizer")
@@ -68,10 +65,7 @@ class Touchdetector(CMakePackage):
     #    https://www.boost.org/users/history/version_1_79_0.html
     conflicts("boost@1.79.0", when="@:5.6.1")
 
-    depends_on("morphio@2.0.8:", when="@:5.1")
-    depends_on("mvdtool@2.1.0:", when="@5.1.1:5.5.999")
-    depends_on("mvdtool@1.5.1:2.0.0", when="@:5.1")
-
+    depends_on("mvdtool@2.1.0:", when="@:5.5")
     depends_on("highfive+mpi", when="@5.3.0:5.6.1")
     depends_on("boost@1.50:", when="@:5.6.1")
 

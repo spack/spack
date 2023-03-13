@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -16,8 +16,11 @@ class Meson(PythonPackage):
 
     tags = ["build-tools"]
 
-    maintainers = ["eli-schwartz", "michaelkuhn"]
+    maintainers("eli-schwartz", "michaelkuhn")
 
+    version("1.0.0", sha256="a2ada84d43c7e57400daee80a880a1f5003d062b2cb6c9be1747b0db38f2eb8d")
+    version("0.64.1", sha256="1d12a4bc1cf3ab18946d12cf0b6452e5254ada1ad50aacc97f87e2cccd7da315")
+    version("0.64.0", sha256="6477993d781b6efea93091616a6d6a0766c0e026076dbeb11249bf1c9b49a347")
     version("0.63.3", sha256="7c516c2099b762203e8a0a22412aa465b7396e6f9b1ab728bad6e6db44dc2659")
     version("0.63.2", sha256="023a3f7c74e68991154c3205a6975705861eedbf8130e013d15faa1df1af216e")
     version("0.63.1", sha256="f355829f0e8c714423f03a06604c04c216d4cbe3586f3154cb2181076b19207a")
@@ -66,12 +69,13 @@ class Meson(PythonPackage):
     patch("rpath-0.49.patch", when="@0.49:0.53")
     patch("rpath-0.54.patch", when="@0.54:0.55")
     patch("rpath-0.56.patch", when="@0.56:0.57")
-    patch("rpath-0.58.patch", when="@0.58:")
+    patch("rpath-0.58.patch", when="@0.58:0.63")
+    patch("rpath-0.64.patch", when="@0.64:")
 
     # Intel OneAPI compiler support
     # https://github.com/mesonbuild/meson/pull/10909
     # https://github.com/mesonbuild/meson/pull/9850
-    patch("oneapi.patch", when="@0.62: %oneapi")
+    patch("oneapi.patch", when="@0.62:0.63 %oneapi")
 
     executables = ["^meson$"]
 

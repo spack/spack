@@ -27,7 +27,6 @@ class Coreneuron(CMakePackage):
     # 1.0.1 > 1.0.0.20220304 > 1.0 as far as Spack is concerned
     version("1.0.0.20220304", commit="2d08705")
     version("1.0", tag="1.0")
-    version("0.22", tag="0.22", submodules=True)
 
     variant("gpu", default=False, description="Enable GPU build")
     variant("unified", default=False, description="Enable Unified Memory with GPU build")
@@ -77,7 +76,6 @@ class Coreneuron(CMakePackage):
     # nmodl specific dependency
     depends_on("nmodl@0.4.0:", when="@8.2:+nmodl")
     depends_on("nmodl@0.3.0:", when="@1.0:+nmodl")
-    depends_on("nmodl@0.3b", when="@:0.22+nmodl")
 
     # Old versions. Required by previous neurodamus package.
     version("master", git=url, submodules=True)
@@ -102,12 +100,6 @@ class Coreneuron(CMakePackage):
 
     # Caliper instrumentation is only supported after 1.0
     conflicts("+caliper", when="@:1.0")
-
-    # An old comment said "PGI compiler not able to compile nrnreport.cpp when
-    # enabled OpenMP, OpenACC and Reporting. Disable ReportingLib for GPU", but
-    # with the contemporary develop version it seems to work. Encode this
-    # knowledge as a conflict between +report and +gpu for older versions.
-    conflicts("+report", when="coreneuron@:0.22+gpu+openmp")
 
     # raise conflict when trying to install '+gpu' without PGI compiler
     gpu_compiler_message = "For gpu build use %pgi or %nvhpc"
