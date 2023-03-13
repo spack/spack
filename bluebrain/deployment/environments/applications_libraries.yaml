@@ -32,7 +32,7 @@ spack:
           all: '{name}/{version}'
           'omega-h+gmsh': '{name}/{version}-gmsh'
   specs:
-    - boost+python
+    - boost+atomic+chrono+date_time+filesystem+json+locale+log+math+program_options+python+random+regex+serialization+shared+signals+stacktrace+system+test+timer+type_erasure
     - caliper+cuda cuda_arch=70
     - gmsh+metis+mpi+openmp+shared
     - hdf5+mpi
