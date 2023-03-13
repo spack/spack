@@ -2740,7 +2740,6 @@ class FindFile:
         return self.results
 
     def find_first_file(self, rel_path, depth, max_depth):
-
         try:
             entries = os.scandir(os.path.join(self.root, rel_path))
         except OSError:
