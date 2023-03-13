@@ -218,7 +218,8 @@ class TestSpecList(object):
     def test_spec_list_broadcast(self, mock_packages):
         matrix = {
             "matrix": [["mpileaks"], ["^callpath"]],
-            "broadcast": [["%gcc", "%clang"], ["+debug", "~debug"]]}
+            "broadcast": [["%gcc", "%clang"], ["+debug", "~debug"]],
+        }
         speclist = SpecList("specs", [matrix])
 
         assert len(speclist) == 4
