@@ -18,6 +18,7 @@ class Crmc(CMakePackage):
 
     # Version 1.7.0 has issues linking phojet, devs contacted but no response
     # version('1.7.0', sha256='59086f4e654d775a4f6c3974ae89bbfd995391c4677f266881604878b47563d1')
+    version("2.0.1", sha256="c607733c7534b188c9aede9e18cd7d4eac4f0a37d6728c1f406c434f74aed743")
     version("1.6.0", sha256="ae2ba5aa2a483d20aa60bef35080f555b365715d1a8fae54b473c275813345c1")
     version("1.5.7", sha256="ec7456c08b60a40665e9ff31d6029e0151b0cdf2ca98bd09a8b570b1e33f6053")
     version("1.5.6", sha256="a546a9352dcbdb8a1df3d63530eacf16f8b64a190e224b72afd434f78388a8a0")
