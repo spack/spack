@@ -2730,7 +2730,7 @@ class FindFile:
 
     def __init__(self, root, name):
         self.root = root
-        self.regex = re.compile(fnmatch.translate(name)).match
+        self.match = re.compile(fnmatch.translate(name)).match
         self.results = []
 
     def run(self):
@@ -2756,5 +2756,5 @@ class FindFile:
 
     def find_matches(self, rel_path, entries):
         for f in entries:
-            if self.regex(f.name):
+            if self.match(f.name):
                 self.results.append(os.path.join(rel_path, f.name))
