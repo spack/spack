@@ -103,6 +103,7 @@ class Tcl(AutotoolsPackage, SourceforgePackage):
             result = find(prefix, "init.tcl")
             if result:
                 return os.path.dirname(sorted(result)[0])
+        raise RuntimeError("Cannot locate init.tcl")
 
     def setup_run_environment(self, env):
         """Set TCL_LIBRARY to the directory containing init.tcl.
