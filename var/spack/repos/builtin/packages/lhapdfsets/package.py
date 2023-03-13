@@ -38,7 +38,6 @@ class Lhapdfsets(BundlePackage):
 
     def install(self, spec, prefix):
         mkdirp(self.prefix.share.lhapdfsets)
-        lhapdf = which("lhapdf")
         tar = which("tar")
         curl = which("curl")
         sets = self.spec.variants["sets"].value
@@ -56,7 +55,12 @@ class Lhapdfsets(BundlePackage):
             sets = default_sets
         with working_dir(self.prefix.share.lhapdfsets):
             for s in sets:
-                curl("-L", "-o", s + ".tar.gz", "http://lhapdfsets.web.cern.ch/lhapdfsets/current/%s.tar.gz" % s)
+                curl(
+                    "-L",
+                    "-o",
+                    "%s.tar.gz" % s,
+                    "http://lhapdfsets.web.cern.ch/lhapdfsets/current/%s.tar.gz" % s,
+                )
                 tar("xfz", s + ".tar.gz")
                 os.remove(s + ".tar.gz")
 
