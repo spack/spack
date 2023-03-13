@@ -21,7 +21,7 @@ class PyPytestXdist(PythonPackage):
     version("1.16.0", sha256="42e5a1e5da9d7cff3e74b07f8692598382f95624f234ff7e00a3b1237e0feba2")
 
     depends_on("python@2.7:2.8,3.4:", type=("build", "run"))
-    depends_on("py-setuptools@45.0:", type="build", when="@3.2.0:"")
+    depends_on("py-setuptools@45.0:", type="build", when="@3.2.0:")
     depends_on("py-setuptools", type="build", when="@:1.30.0")
     depends_on("py-setuptools-scm@6.2.3: +toml", type="build", when="@3.2.0:")
     depends_on("py-execnet@1.1:", type=("build", "run"))
