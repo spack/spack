@@ -8,8 +8,8 @@ from spack.package import *
 
 class DoubleBatchedFftLibrary(CMakePackage):
     """A library for computing the Discrete Fourier Transform;
-       targeting Graphics Processing Units; supporting OpenCL,
-       Level Zero, and SYCL; with double-batching."""
+    targeting Graphics Processing Units; supporting OpenCL,
+    Level Zero, and SYCL; with double-batching."""
 
     homepage = "https://github.com/intel/double-batched-fft-library"
     url = "https://github.com/intel/double-batched-fft-library/archive/refs/tags/v0.3.6.tar.gz"
@@ -26,16 +26,18 @@ class DoubleBatchedFftLibrary(CMakePackage):
     variant("level-zero", default=True, when="~sycl", description="Build bbfft-level-zero")
     variant("opencl", default=True, when="~sycl", description="Build bbfft-opencl")
 
-    depends_on('cmake@3.23.0:', type='build')
-    depends_on('oneapi-level-zero', when='+sycl')
-    depends_on('oneapi-level-zero', when='+level-zero')
-    depends_on('opencl', when='+opencl')
+    depends_on("cmake@3.23.0:", type="build")
+    depends_on("oneapi-level-zero", when="+sycl")
+    depends_on("oneapi-level-zero", when="+level-zero")
+    depends_on("opencl", when="+opencl")
 
     def cmake_args(self):
-        return [self.define_from_variant('BUILD_SHARED_LIBS', 'shared'),
-                self.define_from_variant('BUILD_SYCL', 'sycl'),
-                self.define_from_variant('BUILD_LEVEL_ZERO', 'level-zero'),
-                self.define_from_variant('BUILD_OPENCL', 'opencl'),
-                self.define('BUILD_BENCHMARK', False),
-                self.define('BUILD_EXAMPLE', False),
-                self.define('BUILD_TESTING', False)]
+        return [
+            self.define_from_variant("BUILD_SHARED_LIBS", "shared"),
+            self.define_from_variant("BUILD_SYCL", "sycl"),
+            self.define_from_variant("BUILD_LEVEL_ZERO", "level-zero"),
+            self.define_from_variant("BUILD_OPENCL", "opencl"),
+            self.define("BUILD_BENCHMARK", False),
+            self.define("BUILD_EXAMPLE", False),
+            self.define("BUILD_TESTING", False),
+        ]
