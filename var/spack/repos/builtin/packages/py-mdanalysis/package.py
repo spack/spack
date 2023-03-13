@@ -134,7 +134,7 @@ class PyMdanalysis(PythonPackage):
     depends_on("py-netcdf4@1.0:", when="+extra_formats", type=("build", "run"))
     depends_on("py-h5py@2.10:", when="+extra_formats", type=("build", "run"))
 
-    depends_on("py-pytng", when="@2.4.0:+extra_formats", type=("build", "run"))
+    depends_on("py-pytng@0.2.3:", when="@2.4.0:+extra_formats", type=("build", "run"))
     depends_on("py-chemfiles@0.10:", when="@2.4.0:+extra_formats", type=("build", "run"))
     depends_on("py-pyedr@0.7.0:", when="@2.4.0:+extra_formats", type=("build", "run"))
 
