@@ -31,7 +31,7 @@ class PyJaxlib(PythonPackage, CudaPackage):
     depends_on("py-scipy@1.5:", type=("build", "run"))
 
     # .bazelversion
-    depends_on("bazel@5.1.1:", when="@0.3:", type="build")
+    depends_on("bazel@5.1.1:5.9", when="@0.3:", type="build")
     # https://github.com/google/jax/issues/8440
     depends_on("bazel@4.1:4", when="@0.1", type="build")
 
