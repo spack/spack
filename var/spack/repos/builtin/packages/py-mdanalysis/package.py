@@ -135,7 +135,7 @@ class PyMdanalysis(PythonPackage):
     depends_on("py-h5py@2.10:", when="+extra_formats", type=("build", "run"))
 
     depends_on("py-pytng", when="@2.4.0:+extra_formats", type=("build", "run"))
-    depends_on("py-chemfiles", when="@2.4.0:+extra_formats", type=("build", "run"))
+    depends_on("py-chemfiles@0.10:", when="@2.4.0:+extra_formats", type=("build", "run"))
     depends_on("py-pyedr", when="@2.4.0:+extra_formats", type=("build", "run"))
 
     depends_on("py-fasteners", when="@2.4.2:", type=("build", "run"))
