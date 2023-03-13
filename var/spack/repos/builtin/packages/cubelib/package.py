@@ -13,6 +13,7 @@ class Cubelib(AutotoolsPackage):
     url = "https://apps.fz-juelich.de/scalasca/releases/cube/4.4/dist/cubelib-4.4.tar.gz"
 
     version("4.8", sha256="171c93ac5afd6bc74c50a9a58efdaf8589ff5cc1e5bd773ebdfb2347b77e2f68")
+    version("4.7.1", sha256="62cf33a51acd9a723fff9a4a5411cd74203e24e0c4ffc5b9e82e011778ed4f2f")
     version("4.7", sha256="e44352c80a25a49b0fa0748792ccc9f1be31300a96c32de982b92477a8740938")
     version("4.6", sha256="36eaffa7688db8b9304c9e48ca5dc4edc2cb66538aaf48657b9b5ccd7979385b")
     version(
