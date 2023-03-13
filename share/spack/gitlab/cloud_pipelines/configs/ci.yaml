@@ -12,6 +12,7 @@ ci:
       - - spack compiler find
         - cd ${SPACK_CONCRETE_ENV_DIR}
         - spack env activate --without-view .
+        - if [ -n "$SPACK_BUILD_JOBS" ]; then spack config add "config:build_jobs:$SPACK_BUILD_JOBS"; fi
         - spack config add "config:install_tree:projections:${SPACK_JOB_SPEC_PKG_NAME}:'morepadding/{architecture}/{compiler.name}-{compiler.version}/{name}-{version}-{hash}'"
         - mkdir -p ${SPACK_ARTIFACTS_ROOT}/user_data
         # AWS runners mount E4S public key (verification), UO runners mount public/private (signing/verification)
