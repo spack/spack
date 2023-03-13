@@ -13,9 +13,9 @@ from spack.package import *
 class Heffte(CMakePackage, CudaPackage, ROCmPackage):
     """Highly Efficient FFT for Exascale"""
 
-    homepage = "https://bitbucket.org/icl/heffte"
-    url = "https://bitbucket.org/icl/heffte/get/v1.0.tar.gz"
-    git = "https://bitbucket.org/icl/heffte.git"
+    homepage = "https://github.com/icl-utk-edu/heffte/"
+    url = "https://github.com/icl-utk-edu/heffte/archive/refs/tags/v2.3.0.tar.gz"
+    git = "https://github.com/icl-utk-edu/heffte/"
 
     maintainers("mkstoyanov")
     tags = ["e4s", "ecp"]
@@ -26,10 +26,8 @@ class Heffte(CMakePackage, CudaPackage, ROCmPackage):
     version("2.3.0", sha256="27c0a8da8f7bc91c8715ecb640721ab7e0454e22f6e3f521fe5acc45c28d60a9")
     version("2.2.0", sha256="aff4f5111d3d05b269a1378bb201271c40b39e9c960c05c4ef247a31a039be58")
     version("2.1.0", sha256="527a3e21115231715a0342afdfaf6a8878d2dd0f02f03c92b53692340fd940b9")
-    version("2.0.0", sha256="12f2b49a1a36c416eac174cf0cc50e729d56d68a9f68886d8c34bd45a0be26b6")
-    version("1.0", sha256="0902479fb5b1bad01438ca0a72efd577a3529c3d8bad0028f3c18d3a4935ca74")
-    version("0.2", sha256="4e76ae60982b316c2e873b2e5735669b22620fefa1fc82f325cdb6989bec78d1")
-    version("0.1", sha256="d279a03298d2dc76574b1ae1031acb4ea964348cf359273d1afa4668b5bfe748")
+    version("2.0.0", sha256="12f2b49a1a36c416eac174cf0cc50e729d56d68a9f68886d8c34bd45a0be26b6", deprecated=True)
+    version("1.0", sha256="0902479fb5b1bad01438ca0a72efd577a3529c3d8bad0028f3c18d3a4935ca74", deprecated=True)
 
     patch("threads10.patch", when="@1.0")
     patch("fortran200.patch", when="@2.0.0")
@@ -86,12 +84,9 @@ class Heffte(CMakePackage, CudaPackage, ROCmPackage):
             self.define_from_variant("Heffte_ENABLE_MAGMA", "magma"),
             self.define_from_variant("Heffte_ENABLE_FORTRAN", "fortran"),
             self.define_from_variant("Heffte_ENABLE_PYTHON", "python"),
-            "-DBUILD_GPU={0:1s}".format(
-                "ON" if ("+cuda" in self.spec and "+fftw" in self.spec) else "OFF"
-            ),
         ]
 
-        if "+cuda" in self.spec:
+        if "+cuda" in self.spec and self.spec.satisfies("@:2.3.0"):
             cuda_arch = self.spec.variants["cuda_arch"].value
             if len(cuda_arch) > 0 or cuda_arch[0] != "none":
                 nvcc_flags = ""
@@ -100,7 +95,7 @@ class Heffte(CMakePackage, CudaPackage, ROCmPackage):
 
                 args.append("-DCUDA_NVCC_FLAGS={0}".format(nvcc_flags))
 
-        if "+rocm" in self.spec:
+        if "+rocm" in self.spec and self.spec.satisfies("@:2.3.0"):
             args.append("-DCMAKE_CXX_COMPILER={0}".format(self.spec["hip"].hipcc))
 
             rocm_arch = self.spec.variants["amdgpu_target"].value
@@ -113,10 +108,10 @@ class Heffte(CMakePackage, CudaPackage, ROCmPackage):
 
         return args
 
-    def cmake_bin(self, set=True):
+    def cmake_bin(self, set_path=True):
         """(Hack) Set/get cmake dependency path. Sync with Tasmanian."""
         filepath = join_path(self.install_test_root, "cmake_bin_path.txt")
-        if set:
+        if set_path:
             with open(filepath, "w") as out_file:
                 cmake_bin = join_path(self.spec["cmake"].prefix.bin, "cmake")
                 out_file.write("{0}\n".format(cmake_bin))
@@ -129,10 +124,10 @@ class Heffte(CMakePackage, CudaPackage, ROCmPackage):
         install_tree(
             self.prefix.share.heffte.testing, join_path(self.install_test_root, "testing")
         )
-        self.cmake_bin(set=True)
+        self.cmake_bin(set_path=True)
 
     def test(self):
-        cmake_bin = self.cmake_bin(set=False)
+        cmake_bin = self.cmake_bin(set_path=False)
 
         if not cmake_bin:
             tty.msg("Skipping heffte test: cmake_bin_path.txt not found")
