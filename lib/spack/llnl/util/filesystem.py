@@ -5,6 +5,7 @@
 import collections
 import collections.abc
 import errno
+import fnmatch
 import glob
 import hashlib
 import itertools
@@ -2720,3 +2721,40 @@ def filesummary(path, print_bytes=16) -> Tuple[int, bytes]:
         return size, short_contents
     except OSError:
         return 0, b""
+
+
+class FindFile:
+    """Uses iterative deepening to locate the first matching file(s).
+    This effectively follows a BFS order with DFS memory footprint
+    as the cost of repeated visits of low depth directories."""
+
+    def __init__(self, root, name):
+        self.root = root
+        self.regex = re.compile(fnmatch.translate(name)).match
+        self.results = []
+
+    def run(self):
+        i = 0
+        while self.find_first_file(".", 0, i) and not self.results:
+            i += 1
+        return self.results
+
+    def find_first_file(self, rel_path, depth, max_depth):
+        found_dir = False
+        with os.scandir(os.path.join(self.root, rel_path)) as entries:
+            if depth == max_depth:
+                self.find_matches(rel_path, entries)
+                return True
+
+            for f in entries:
+                if not f.is_symlink() and f.is_dir():
+                    found_dir |= self.find_first_file(
+                        os.path.join(rel_path, f.name), depth + 1, max_depth
+                    )
+
+        return found_dir
+
+    def find_matches(self, rel_path, entries):
+        for f in entries:
+            if not f.is_dir() and self.regex(f.name):
+                self.results.append(os.path.join(rel_path, f.name))
