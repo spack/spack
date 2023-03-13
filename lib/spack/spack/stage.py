@@ -427,9 +427,11 @@ class Stage(object):
         return str(self._path / _source_path_subdir)
 
     def contains(self, file_path):
+        """Returns true if file_path is within the stage"""
         return os.path.realpath(self.path) in file_path
 
     def path_rel_to_stage(self, glob_expr):
+        """Returns relative path from glob expr to root of stage"""
         return os.path.relpath(glob_expr, self.path)
 
     def fetch(self, mirror_only=False, err_msg=None):
@@ -834,9 +836,13 @@ class CMakeBuildStage(Stage):
                 self._teardown_remote_build_dir()
 
     def contains(self, file_path):
+        """Returns true if file_path is in root stage
+        or the remote build dir"""
+        # Check if file is in root stage
         cont = super(CMakeBuildStage, self).contains(file_path)
+        # if not, check if it's in remote build dir
         if not cont:
-            return str(self._remote_build_dir) in file_path
+            cont = str(self._remote_build_dir) in file_path
         return cont
 
     def create(self):
@@ -861,7 +867,19 @@ class CMakeBuildStage(Stage):
         super(CMakeBuildStage, self).destroy()
 
     def path_rel_to_stage(self, glob_expr):
-        return os.path.relpath(glob_expr, self._remote_build_dir)
+        """Returns path of archive files relative to the root stage dir
+        from the remote build dir transparently as if there was a normal
+        build directory"""
+        rel_to_stage = os.path.relpath(
+            os.path.join(
+                self._root_stage_context, os.path.relpath(glob_expr, self._remote_build_dir)
+            ),
+            self.path,
+        )
+        stage_root = super(CMakeBuildStage, self)
+        if stage_root.contains(os.path.realpath(glob_expr)):
+            rel_to_stage = stage_root.path_rel_to_stage(stage_root)
+        return rel_to_stage
 
     def restage(self):
         self._destroy_remote()
