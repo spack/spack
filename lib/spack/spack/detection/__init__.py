@@ -2,7 +2,7 @@
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
-from .common import DetectedPackage, executable_prefix, update_configuration
+from .common import DetectedPackage, executable_prefix, update_database
 from .path import by_path, executables_in_path
 
 __all__ = [
@@ -10,5 +10,5 @@ __all__ = [
     "by_path",
     "executables_in_path",
     "executable_prefix",
-    "update_configuration",
+    "update_database",
 ]

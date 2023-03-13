@@ -30,7 +30,9 @@ def setup_parser(subparser):
 
     scopes = spack.config.scopes()
 
-    find_parser = sp.add_parser("find", help="add external packages to packages.yaml")
+    find_parser = sp.add_parser(
+        "find", help="search for external packages and add them to the local DB"
+    )
     find_parser.add_argument(
         "--not-buildable",
         action="store_true",
@@ -139,13 +141,9 @@ def external_find(args):
         candidate_packages, path_hints=args.path, max_workers=args.jobs
     )
 
-    new_entries = spack.detection.update_configuration(
-        detected_packages, scope=args.scope, buildable=not args.not_buildable
-    )
+    new_entries = spack.detection.update_database(detected_packages)
     if new_entries:
-        path = spack.config.CONFIG.get_config_filename(args.scope, "packages")
-        msg = "The following specs have been detected on this system and added to {0}"
-        tty.msg(msg.format(path))
+        tty.msg("The following specs have been detected on this system and added to the local DB")
         spack.cmd.display_specs(new_entries)
     else:
         tty.msg("No new external packages detected")

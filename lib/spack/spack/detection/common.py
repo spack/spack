@@ -218,38 +218,28 @@ def library_prefix(library_dir: str) -> str:
         return library_dir
 
 
-def update_configuration(
-    detected_packages: Dict[str, List[DetectedPackage]],
-    scope: Optional[str] = None,
-    buildable: bool = True,
-) -> List[spack.spec.Spec]:
-    """Add the packages passed as arguments to packages.yaml
+def update_database(detected_packages: Dict[str, List[DetectedPackage]]) -> List[spack.spec.Spec]:
+    """Add the packages that have been detected to the database as externals.
 
     Args:
         detected_packages: list of DetectedPackage objects to be added
-        scope: configuration scope where to add the detected packages
-        buildable: whether the detected packages are buildable or not
     """
-    predefined_external_specs = _externals_in_packages_yaml()
-    pkg_to_cfg, all_new_specs = {}, []
+    new_specs = []
+    database = spack.store.store.db
     for package_name, entries in detected_packages.items():
-        new_entries = [e for e in entries if (e.spec not in predefined_external_specs)]
+        for entry in entries:
+            s = entry.spec
+            s.external_path = entry.prefix
+            s._finalize_concretization()
 
-        pkg_config = _pkg_config_dict(new_entries)
-        external_entries = pkg_config.get("externals", [])
-        assert not isinstance(external_entries, bool), "unexpected value for external entry"
+            rec = database.query(s)
+            if rec:
+                continue
 
-        all_new_specs.extend([spack.spec.Spec(x["spec"]) for x in external_entries])
-        if buildable is False:
-            pkg_config["buildable"] = False
-        pkg_to_cfg[package_name] = pkg_config
+            database.add(s, spack.store.layout, explicit=False)
+            new_specs.append(s)
 
-    pkgs_cfg = spack.config.get("packages", scope=scope)
-
-    pkgs_cfg = spack.config.merge_yaml(pkgs_cfg, pkg_to_cfg)
-    spack.config.set("packages", pkgs_cfg, scope=scope)
-
-    return all_new_specs
+    return new_specs
 
 
 def _windows_drive() -> str:
