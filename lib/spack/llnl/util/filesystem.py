@@ -2740,18 +2740,27 @@ class FindFile:
         return self.results
 
     def find_first_file(self, rel_path, depth, max_depth):
+
+        try:
+            entries = os.scandir(os.path.join(self.root, rel_path))
+        except OSError:
+            return False
+
         found_dir = False
-        with os.scandir(os.path.join(self.root, rel_path)) as entries:
+        with entries:
             if depth == max_depth:
                 self.find_matches(rel_path, entries)
                 return True
 
             for f in entries:
-                if not f.is_symlink() and f.is_dir():
+                try:
+                    is_dir = not f.is_symlink() and f.is_dir()
+                except OSError:
+                    is_dir = False
+                if is_dir:
                     found_dir |= self.find_first_file(
                         os.path.join(rel_path, f.name), depth + 1, max_depth
                     )
-
         return found_dir
 
     def find_matches(self, rel_path, entries):
