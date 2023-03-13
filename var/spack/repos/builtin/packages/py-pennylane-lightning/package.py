@@ -64,6 +64,7 @@ class PyPennylaneLightning(CMakePackage, PythonExtension):
     depends_on("py-pybind11", type=("build"))
     depends_on("py-pip", type="build")
     depends_on("py-wheel", type="build")
+    # depends_on("py-pennylane@0.28:", type=("build", "run"))  # circular dependency
 
 
 class CMakeBuilder(spack.build_systems.cmake.CMakeBuilder):
