@@ -651,10 +651,10 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage):
             )
 
         if spec.satisfies("+nvptx"):
-            # backport of 383400a6078d upstream to allow support of cuda@11, and now cuda@12:
+            # backport of 383400a6078d upstream to allow support of cuda@11:
             filter_file(
                 '#define ASM_SPEC "%{misa=*:-m %*}"',
-                '#define ASM_SPEC "%{misa=*:-m %*; :-m sm_50}"',
+                '#define ASM_SPEC "%{misa=*:-m %*; :-m sm_35}"',
                 "gcc/config/nvptx/nvptx.h",
                 string=True,
             )
@@ -662,7 +662,7 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage):
                 "Target RejectNegative ToLower Joined "
                 "Enum(ptx_isa) Var(ptx_isa_option) Init(PTX_ISA_SM30)",
                 "Target RejectNegative ToLower Joined "
-                "Enum(ptx_isa) Var(ptx_isa_option) Init(PTX_ISA_SM50)",
+                "Enum(ptx_isa) Var(ptx_isa_option) Init(PTX_ISA_SM35)",
                 "gcc/config/nvptx/nvptx.opt",
                 string=True,
             )
