@@ -34,6 +34,7 @@ class PyPymatgen(PythonPackage):
     conflicts("python@3.9:", when="@:2020.10.9")
 
     depends_on("py-cython@0.29.23:", type="build", when="@2022.1.08:")
+    depends_on("py-setuptools@43:", when="@2023:", type="build")
     depends_on("py-setuptools@18.0:", type="build")
 
     depends_on("py-numpy@1.9:", type=("build", "run"))
