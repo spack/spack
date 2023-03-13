@@ -84,7 +84,7 @@ class Go(Package):
     depends_on("go-or-gccgo-bootstrap@1.17.13:", type="build", when="@1.20:")
 
     def url_for_version(self, version):
-        return f"https://dl.google.com/go/go{version}.src.tar.gz"
+        return f"https://go.dev/dl/go{version}.src.tar.gz"
 
     @classmethod
     def determine_version(cls, exe):
