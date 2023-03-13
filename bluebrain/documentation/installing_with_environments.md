@@ -11,11 +11,14 @@ We can start by creating an environment:
 
     $ spack env create -d spamhameggs
 
-and then activating it, and fixing the configuration to consider all
-software together:
+and then activating it:
 
     $ spack env activate -d spamhameggs
-    $ spack config add config:spack:concretization=together
+
+After the first activation, finish the configuration by explicitly stating that all
+software should be considered together:
+
+    $ spack config add concretizer:unify:true
 
 This will make sure that every package is only built once, in the specified
 version.
