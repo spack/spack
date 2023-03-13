@@ -61,7 +61,7 @@ class Cce(Compiler):
         return version >= ver("9.0") and "classic" not in str(version)
 
     version_argument = "--version"
-    version_regex = r"[Vv]ersion.*?(\d+(\.\d+)+)"
+    version_regex = r"[Cc]ray (?:clang|C :|C\+\+ :|Fortran :) [Vv]ersion.*?(\d+(\.\d+)+)"
 
     @property
     def verbose_flag(self):

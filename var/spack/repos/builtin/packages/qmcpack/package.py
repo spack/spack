@@ -23,6 +23,7 @@ class Qmcpack(CMakePackage, CudaPackage):
     # can occasionally change.
     # NOTE: 12/19/2017 QMCPACK 3.0.0 does not build properly with Spack.
     version("develop")
+    version("3.16.0", tag="v3.16.0")
     version("3.15.0", tag="v3.15.0")
     version("3.14.0", tag="v3.14.0")
     version("3.13.0", tag="v3.13.0")
@@ -169,6 +170,7 @@ class Qmcpack(CMakePackage, CudaPackage):
     depends_on("cmake@3.4.3:", when="@:3.5.0", type="build")
     depends_on("cmake@3.6.0:", when="@3.6.0:", type="build")
     depends_on("cmake@3.14.0:", when="@3.10.0:", type="build")
+    depends_on("cmake@3.17.0:", when="@3.16.0:", type="build")
     depends_on("boost+exception+serialization+random", type="build")
     depends_on("boost@1.61.0:+exception+serialization+random", when="@3.6.0:", type="build")
     depends_on("libxml2")

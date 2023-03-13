@@ -19,6 +19,7 @@ class Libiberty(AutotoolsPackage, GNUMirrorPackage):
     gnu_mirror_path = "binutils/binutils-2.31.1.tar.xz"
     maintainers("mwkrentel")
 
+    version("2.40", sha256="0f8a4c272d7f17f369ded10a4aca28b8e304828e95526da482b0ccc4dfc9d8e1")
     version("2.37", sha256="820d9724f020a3e69cb337893a0b63c2db161dadcb0e06fc11dc29eb1e84a32c")
     version("2.36.1", sha256="e81d9edf373f193af428a0f256674aea62a9d74dfe93f65192d4eae030b0f3b0")
     version("2.36", sha256="5788292cc5bbcca0848545af05986f6b17058b105be59e99ba7d0f9eb5336fb8")

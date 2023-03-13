@@ -11,10 +11,11 @@ class Scons(PythonPackage):
     """SCons is a software construction tool"""
 
     homepage = "https://scons.org"
-    pypi = "SCons/SCons-4.4.0.tar.gz"
+    pypi = "SCons/SCons-4.5.1.tar.gz"
 
     tags = ["build-tools", "windows"]
 
+    version("4.5.1", sha256="9daeabe4d87ba2bd4ea15410765fc1ed2d931b723e4dc730a487a3911b9a1738")
     version("4.4.0", sha256="7703c4e9d2200b4854a31800c1dbd4587e1fa86e75f58795c740bcfa7eca7eaa")
     version("4.3.0", sha256="d47081587e3675cc168f1f54f0d74a69b328a2fc90ec4feb85f728677419b879")
     version("4.2.0", sha256="691893b63f38ad14295f5104661d55cb738ec6514421c6261323351c25432b0a")

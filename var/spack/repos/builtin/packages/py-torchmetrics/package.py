@@ -14,6 +14,7 @@ class PyTorchmetrics(PythonPackage):
 
     maintainers("adamjstewart")
 
+    version("0.11.4", sha256="1fe45a14b44dd65d90199017dd5a4b5a128d56a8a311da7916c402c18c671494")
     version("0.11.3", sha256="6a2bcc17361f0e4c1668c92595b12ef30ccf9ef1d03263bee7c6136a882afe30")
     version("0.11.2", sha256="5a1f5fff9b1fb695bbcab6442d768e2e9b9535d00f4b4dea9ce03d40c866be07")
     version("0.11.1", sha256="de2e9feb3316f798ab08b318302ff04e764f47e691f0847f780044279fa176ca")

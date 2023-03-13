@@ -19,12 +19,15 @@ class Yafyaml(CMakePackage):
 
     homepage = "https://github.com/Goddard-Fortran-Ecosystem/yaFyaml"
     url = "https://github.com/Goddard-Fortran-Ecosystem/yaFyaml/archive/refs/tags/v1.0.4.tar.gz"
+    list_url = "https://github.com/Goddard-Fortran-Ecosystem/yaFyaml/tags"
     git = "https://github.com/Goddard-Fortran-Ecosystem/yaFyaml.git"
 
     maintainers("mathomp4", "tclune")
 
     version("main", branch="main")
 
+    version("1.0.7", sha256="54f5c87e86c12e872e615fbc9540610ae38053f844f1e75d1e753724fea85c64")
+    version("1.0.6", sha256="8075e1349d900985f5b5a81159561568720f21c5f011c43557c46f5bbedd0661")
     version("1.0.5", sha256="84abad01cdcfe387240844c35e5fb36d5099f657b57a50d5d5909cc567e72200")
     version("1.0.4", sha256="93ba67c87cf96be7ebe479907ca5343251aa48072b2671b8630bd244540096d3")
     version("1.0.3", sha256="cfbc6b6db660c5688e37da56f9f0091e5cafeeaec395c2a038469066c83b0c65")

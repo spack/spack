@@ -4,7 +4,6 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import os
-import platform
 import re
 
 import llnl.util.tty as tty
@@ -26,10 +25,6 @@ from spack.package import *
 # - on CentOS 7 systems (and possibly others) you need to have the
 #   glibc package installed or various static cgo tests fail.
 #
-# - When building on a *large* machine (144 cores, 1.5TB RAM) I need
-#   to run `ulimit -u 8192` to bump up the max number of user processes.
-#   Failure to do so results in an explosion in one of the tests and an
-#   epic stack trace....
 
 
 class Go(Package):
@@ -57,29 +52,8 @@ class Go(Package):
     provides("golang")
 
     depends_on("git", type=("build", "link", "run"))
-
-    # aarch64 machines (including Macs with Apple silicon) can't use
-    # go-bootstrap because it pre-dates aarch64 support in Go.  These machines
-    # have to rely on Go support in gcc (which may require compiling a version
-    # of gcc with Go support just to satisfy this requirement) or external go:
-
-    # #27769: On M1/MacOS, platform.machine() may return arm64:
-    if platform.machine() in ["arm64", "aarch64"]:
-        # Use an external go compiler from packages.yaml/`spack external find go-bootstrap`,
-        # but fallback to build go-bootstrap@1.4 or to gcc with languages=go (for aarch64):
-        depends_on("go-external-or-gccgo-bootstrap", type="build")
-    else:
-        depends_on("go-bootstrap", type="build")
-
-    # https://github.com/golang/go/issues/17545
-    patch("time_test.patch", when="@1.6.4:1.7.4")
-
-    # https://github.com/golang/go/issues/17986
-    # The fix for this issue has been merged into the 1.8 tree.
-    patch("misc-cgo-testcshared.patch", level=0, when="@1.6.4:1.7.5")
-
-    # Unrecognized option '-fno-lto'
-    conflicts("%gcc@:4", when="@1.17:")
+    depends_on("go-or-gccgo-bootstrap", type="build")
+    depends_on("go-or-gccgo-bootstrap@1.17.13:", type="build", when="@1.20:")
 
     @classmethod
     def determine_version(cls, exe):
@@ -87,28 +61,13 @@ class Go(Package):
         match = re.search(r"go version go(\S+)", output)
         return match.group(1) if match else None
 
-    # NOTE: Older versions of Go attempt to download external files that have
-    # since been moved while running the test suite.  This patch modifies the
-    # test files so that these tests don't cause false failures.
-    # See: https://github.com/golang/go/issues/15694
-    @when("@:1.4.3")
-    def patch(self):
-        test_suite_file = FileFilter(join_path("src", "run.bash"))
-        test_suite_file.filter(r"^(.*)(\$GOROOT/src/cmd/api/run.go)(.*)$", r"# \1\2\3")
-
     def install(self, spec, prefix):
         bash = which("bash")
 
-        wd = "."
-
-        # 1.11.5 directory structure is slightly different
-        if self.version == Version("1.11.5"):
-            wd = "go"
-
-        with working_dir(join_path(wd, "src")):
+        with working_dir("src"):
             bash("{0}.bash".format("all" if self.run_tests else "make"))
 
-        install_tree(wd, prefix)
+        install_tree(".", prefix)
 
     def setup_build_environment(self, env):
         env.set("GOROOT_FINAL", self.spec.prefix)

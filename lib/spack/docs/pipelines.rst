@@ -9,27 +9,32 @@
 CI Pipelines
 ============
 
-Spack provides commands that support generating and running automated build
-pipelines designed for Gitlab CI.  At the highest level it works like this:
-provide a spack environment describing the set of packages you care about,
-and include within that environment file a description of how those packages
-should be mapped to Gitlab runners.  Spack can then generate a ``.gitlab-ci.yml``
-file containing job descriptions for all your packages that can be run by a
-properly configured Gitlab CI instance.  When run, the generated pipeline will
-build and deploy binaries, and it can optionally report to a CDash instance
+Spack provides commands that support generating and running automated build pipelines in CI instances.  At the highest
+level it works like this: provide a spack environment describing the set of packages you care about, and include a
+description of how those packages should be mapped to Gitlab runners.  Spack can then generate a ``.gitlab-ci.yml``
+file containing job descriptions for all your packages that can be run by a properly configured CI instance.  When
+run, the generated pipeline will build and deploy binaries, and it can optionally report to a CDash instance
 regarding the health of the builds as they evolve over time.
 
 ------------------------------
 Getting started with pipelines
 ------------------------------
 
-It is fairly straightforward to get started with automated build pipelines.  At
-a minimum, you'll need to set up a Gitlab instance (more about Gitlab CI
-`here <https://about.gitlab.com/product/continuous-integration/>`_) and configure
-at least one `runner <https://docs.gitlab.com/runner/>`_.  Then the basic steps
-for setting up a build pipeline are as follows:
+To get started with automated build pipelines a Gitlab instance with version ``>= 12.9``
+(more about Gitlab CI `here <https://about.gitlab.com/product/continuous-integration/>`_)
+with at least one `runner <https://docs.gitlab.com/runner/>`_ configured is required. This
+can be done quickly by setting up a local Gitlab instance.
 
-#. Create a repository on your gitlab instance
+It is possible to set up pipelines on gitlab.com, but the builds there are limited to
+60 minutes and generic hardware.  It is possible to
+`hook up <https://about.gitlab.com/blog/2018/04/24/getting-started-gitlab-ci-gcp>`_
+Gitlab to Google Kubernetes Engine (`GKE <https://cloud.google.com/kubernetes-engine/>`_)
+or Amazon Elastic Kubernetes Service (`EKS <https://aws.amazon.com/eks>`_), though those
+topics are outside the scope of this document.
+
+After setting up a Gitlab instance for running CI, the basic steps for setting up a build pipeline are as follows:
+
+#. Create a repository in the Gitlab instance with CI and a runner enabled.
 #. Add a ``spack.yaml`` at the root containing your pipeline environment
 #. Add a ``.gitlab-ci.yml`` at the root containing two jobs (one to generate
    the pipeline dynamically, and one to run the generated jobs).
@@ -39,13 +44,6 @@ for setting up a build pipeline are as follows:
 See the :ref:`functional_example` section for a minimal working example.  See also
 the :ref:`custom_Workflow` section for a link to an example of a custom workflow
 based on spack pipelines.
-
-While it is possible to set up pipelines on gitlab.com, as illustrated above, the
-builds there are limited to 60 minutes and generic hardware.  It is also possible to
-`hook up <https://about.gitlab.com/blog/2018/04/24/getting-started-gitlab-ci-gcp>`_
-Gitlab to Google Kubernetes Engine (`GKE <https://cloud.google.com/kubernetes-engine/>`_)
-or Amazon Elastic Kubernetes Service (`EKS <https://aws.amazon.com/eks>`_), though those
-topics are outside the scope of this document.
 
 Spack's pipelines are now making use of the
 `trigger <https://docs.gitlab.com/ee/ci/yaml/#trigger>`_ syntax to run
@@ -132,28 +130,34 @@ And here's the spack environment built by the pipeline represented as a
 
      mirrors: { "mirror": "s3://spack-public/mirror" }
 
-     gitlab-ci:
-       before_script:
-         - git clone ${SPACK_REPO}
-         - pushd spack && git checkout ${SPACK_CHECKOUT_VERSION} && popd
-         - . "./spack/share/spack/setup-env.sh"
-       script:
-         - pushd ${SPACK_CONCRETE_ENV_DIR} && spack env activate --without-view . && popd
-         - spack -d ci rebuild
-       mappings:
-         - match: ["os=ubuntu18.04"]
-           runner-attributes:
-             image:
-               name: ghcr.io/scottwittenburg/ecpe4s-ubuntu18.04-runner-x86_64:2020-09-01
-               entrypoint: [""]
-             tags:
-               - docker
+     ci:
        enable-artifacts-buildcache: True
        rebuild-index: False
+       pipeline-gen:
+       - any-job:
+           before_script:
+             - git clone ${SPACK_REPO}
+             - pushd spack && git checkout ${SPACK_CHECKOUT_VERSION} && popd
+             - . "./spack/share/spack/setup-env.sh"
+       - build-job:
+           tags: [docker]
+           image:
+             name: ghcr.io/scottwittenburg/ecpe4s-ubuntu18.04-runner-x86_64:2020-09-01
+             entrypoint: [""]
+
 
 The elements of this file important to spack ci pipelines are described in more
 detail below, but there are a couple of things to note about the above working
 example:
+
+.. note::
+   There is no ``script`` attribute specified for here. The reason for this is
+   Spack CI will automatically generate reasonable default scripts. More
+   detail on what is in these scripts can be found below.
+
+   Also notice the ``before_script`` section. It is required when using any of the
+   default scripts to source the ``setup-env.sh`` script in order to inform
+   the default scripts where to find the ``spack`` executable.
 
 Normally ``enable-artifacts-buildcache`` is not recommended in production as it
 results in large binary artifacts getting transferred back and forth between
@@ -174,7 +178,7 @@ during subsequent pipeline runs.
    With the addition of reproducible builds (#22887) a previously working
    pipeline will require some changes:
 
-   * In the build jobs (``runner-attributes``), the environment location changed.
+   * In the build-jobs, the environment location changed.
      This will typically show as a ``KeyError`` in the failing job. Be sure to
      point to ``${SPACK_CONCRETE_ENV_DIR}``.
 
@@ -196,9 +200,9 @@ ci pipelines.  These commands are covered in more detail in this section.
 
 .. _cmd-spack-ci:
 
-^^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^
 ``spack ci``
-^^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^
 
 Super-command for functionality related to generating pipelines and executing
 pipeline jobs.
@@ -227,7 +231,7 @@ Using ``--prune-dag`` or ``--no-prune-dag`` configures whether or not jobs are
 generated for specs that are already up to date on the mirror.   If enabling
 DAG pruning using ``--prune-dag``, more information may be required in your
 ``spack.yaml`` file, see the :ref:`noop_jobs` section below regarding
-``service-job-attributes``.
+``noop-job``.
 
 The optional ``--check-index-only`` argument can be used to speed up pipeline
 generation by telling spack to consider only remote buildcache indices when
@@ -263,11 +267,11 @@ generated by jobs in the pipeline.
 
 .. _cmd-spack-ci-rebuild:
 
-^^^^^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^^
 ``spack ci rebuild``
-^^^^^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^^
 
-The purpose of ``spack ci rebuild`` is straightforward: take its assigned
+The purpose of ``spack ci rebuild`` is to take an assigned
 spec and ensure a binary of a successful build exists on the target mirror.
 If the binary does not already exist, it is built from source and pushed
 to the mirror. The associated stand-alone tests are optionally run against
@@ -280,7 +284,7 @@ directory. The script is run in a job to install the spec from source. The
 resulting binary package is pushed to the mirror. If ``cdash`` is configured
 for the environment, then the build results will be uploaded to the site.
 
-Environment variables and values in the ``gitlab-ci`` section of the
+Environment variables and values in the ``ci::pipeline-gen`` section of the
 ``spack.yaml`` environment file provide inputs to this process. The
 two main sources of environment variables are variables written into
 ``.gitlab-ci.yml`` by ``spack ci generate`` and the GitLab CI runtime.
@@ -298,21 +302,23 @@ A snippet from an example ``spack.yaml`` file illustrating use of this
 option *and* specification of a package with broken tests is given below.
 The inclusion of a spec for building ``gptune`` is not shown here. Note
 that ``--tests`` is passed to ``spack ci rebuild`` as part of the
-``gitlab-ci`` script.
+``build-job`` script.
 
 .. code-block:: yaml
 
-  gitlab-ci:
-    script:
-      - . "./share/spack/setup-env.sh"
-      - spack --version
-      - cd ${SPACK_CONCRETE_ENV_DIR}
-      - spack env activate --without-view .
-      - spack config add "config:install_tree:projections:${SPACK_JOB_SPEC_PKG_NAME}:'morepadding/{architecture}/{compiler.name}-{compiler.version}/{name}-{version}-{hash}'"
-       - mkdir -p ${SPACK_ARTIFACTS_ROOT}/user_data
-       - if [[ -r /mnt/key/intermediate_ci_signing_key.gpg ]]; then spack gpg trust /mnt/key/intermediate_ci_signing_key.gpg; fi
-       - if [[ -r /mnt/key/spack_public_key.gpg ]]; then spack gpg trust /mnt/key/spack_public_key.gpg; fi
-       - spack -d ci rebuild --tests > >(tee ${SPACK_ARTIFACTS_ROOT}/user_data/pipeline_out.txt) 2> >(tee ${SPACK_ARTIFACTS_ROOT}/user_data/pipeline_err.txt >&2)
+  ci:
+    pipeline-gen:
+    - build-job
+        script:
+          - . "./share/spack/setup-env.sh"
+          - spack --version
+          - cd ${SPACK_CONCRETE_ENV_DIR}
+          - spack env activate --without-view .
+          - spack config add "config:install_tree:projections:${SPACK_JOB_SPEC_PKG_NAME}:'morepadding/{architecture}/{compiler.name}-{compiler.version}/{name}-{version}-{hash}'"
+           - mkdir -p ${SPACK_ARTIFACTS_ROOT}/user_data
+           - if [[ -r /mnt/key/intermediate_ci_signing_key.gpg ]]; then spack gpg trust /mnt/key/intermediate_ci_signing_key.gpg; fi
+           - if [[ -r /mnt/key/spack_public_key.gpg ]]; then spack gpg trust /mnt/key/spack_public_key.gpg; fi
+           - spack -d ci rebuild --tests > >(tee ${SPACK_ARTIFACTS_ROOT}/user_data/pipeline_out.txt) 2> >(tee ${SPACK_ARTIFACTS_ROOT}/user_data/pipeline_err.txt >&2)
 
      broken-tests-packages:
        - gptune
@@ -354,113 +360,31 @@ arguments you can pass to ``spack ci reproduce-build`` in order to reproduce
 a particular build locally.
 
 ------------------------------------
-A pipeline-enabled spack environment
+Job Types
 ------------------------------------
 
-Here's an example of a spack environment file that has been enhanced with
-sections describing a build pipeline:
+^^^^^^^^^^^^^^^
+Rebuild (build)
+^^^^^^^^^^^^^^^
 
-.. code-block:: yaml
+Rebuild jobs, denoted as ``build-job``'s in the ``pipeline-gen`` list, are jobs
+associated with concrete specs that have been marked for rebuild. By default a simple
+script for doing rebuild is generated, but may be modified as needed.
 
-   spack:
-     definitions:
-     - pkgs:
-       - readline@7.0
-     - compilers:
-       - '%gcc@5.5.0'
-     - oses:
-       - os=ubuntu18.04
-       - os=centos7
-     specs:
-     - matrix:
-       - [$pkgs]
-       - [$compilers]
-       - [$oses]
-     mirrors:
-       cloud_gitlab: https://mirror.spack.io
-     gitlab-ci:
-       mappings:
-         - match:
-             - os=ubuntu18.04
-           runner-attributes:
-             tags:
-               - spack-kube
-             image: spack/ubuntu-bionic
-         - match:
-             - os=centos7
-           runner-attributes:
-             tags:
-               - spack-kube
-             image: spack/centos7
-     cdash:
-       build-group: Release Testing
-       url: https://cdash.spack.io
-       project: Spack
-       site: Spack AWS Gitlab Instance
+The default script does three main steps, change directories to the pipelines concrete
+environment, activate the concrete environment, and run the ``spack ci rebuild`` command:
 
-Hopefully, the ``definitions``, ``specs``, ``mirrors``, etc. sections are already
-familiar, as they are part of spack :ref:`environments`.  So let's take a more
-in-depth look some of the pipeline-related sections in that environment file
-that might not be as familiar.
+.. code-block:: bash
 
-The ``gitlab-ci`` section is used to configure how the pipeline workload should be
-generated, mainly how the jobs for building specs should be assigned to the
-configured runners on your instance.  Each entry within the list of ``mappings``
-corresponds to a known gitlab runner, where the ``match`` section is used
-in assigning a release spec to one of the runners, and the ``runner-attributes``
-section is used to configure the spec/job for that particular runner.
-
-Both the top-level ``gitlab-ci`` section as well as each ``runner-attributes``
-section can also contain the following keys: ``image``, ``tags``, ``variables``,
-``before_script``, ``script``, and ``after_script``.  If any of these keys are
-provided at the ``gitlab-ci`` level, they will be used as the defaults for any
-``runner-attributes``, unless they are overridden in those sections.  Specifying
-any of these keys at the ``runner-attributes`` level generally overrides the
-keys specified at the higher level, with a couple exceptions.  Any ``variables``
-specified at both levels result in those dictionaries getting merged in the
-resulting generated job, and any duplicate variable names get assigned the value
-provided in the specific ``runner-attributes``.  If ``tags`` are specified both
-at the ``gitlab-ci`` level as well as the ``runner-attributes`` level, then the
-lists of tags are combined, and any duplicates are removed.
-
-See the section below on using a custom spack for an example of how these keys
-could be used.
-
-There are other pipeline options you can configure within the ``gitlab-ci`` section
-as well.
-
-The ``bootstrap`` section allows you to specify lists of specs from
-your ``definitions`` that should be staged ahead of the environment's ``specs`` (this
-section is described in more detail below).  The ``enable-artifacts-buildcache`` key
-takes a boolean and determines whether the pipeline uses artifacts to store and
-pass along the buildcaches from one stage to the next (the default if you don't
-provide this option is ``False``).
-
-The optional ``broken-specs-url`` key tells Spack to check against a list of
-specs that are known to be currently broken in ``develop``. If any such specs
-are found, the ``spack ci generate`` command will fail with an error message
-informing the user what broken specs were encountered. This allows the pipeline
-to fail early and avoid wasting compute resources attempting to build packages
-that will not succeed.
-
-The optional ``cdash`` section provides information that will be used by the
-``spack ci generate`` command (invoked by ``spack ci start``) for reporting
-to CDash.  All the jobs generated from this environment will belong to a
-"build group" within CDash that can be tracked over time.  As the release
-progresses, this build group may have jobs added or removed. The url, project,
-and site are used to specify the CDash instance to which build results should
-be reported.
-
-Take a look at the
-`schema <https://github.com/spack/spack/blob/develop/lib/spack/spack/schema/gitlab_ci.py>`_
-for the gitlab-ci section of the spack environment file, to see precisely what
-syntax is allowed there.
+  cd ${concrete_environment_dir}
+  spack env activate --without-view .
+  spack ci rebuild
 
 .. _rebuild_index:
 
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-Note about rebuilding buildcache index
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^^^^
+Update Index (reindex)
+^^^^^^^^^^^^^^^^^^^^^^
 
 By default, while a pipeline job may rebuild a package, create a buildcache
 entry, and push it to the mirror, it does not automatically re-generate the
@@ -475,21 +399,44 @@ not correctly reflect the mirror's contents at the end of a pipeline.
 To make sure the buildcache index is up to date at the end of your pipeline,
 spack generates a job to update the buildcache index of the target mirror
 at the end of each pipeline by default.  You can disable this behavior by
-adding ``rebuild-index: False`` inside the ``gitlab-ci`` section of your
-spack environment.  Spack will assign the job any runner attributes found
-on the ``service-job-attributes``, if you have provided that in your
-``spack.yaml``.
+adding ``rebuild-index: False`` inside the ``ci`` section of your
+spack environment.
+
+Reindex jobs do not allow modifying the ``script`` attribute since it is automatically
+generated using the target mirror listed in the ``mirrors::mirror`` configuration.
+
+^^^^^^^^^^^^^^^^^
+Signing (signing)
+^^^^^^^^^^^^^^^^^
+
+This job is run after all of the rebuild jobs are completed and is intended to be used
+to sign the package binaries built by a protected CI run. Signing jobs are generated
+only if a signing job ``script`` is specified and the spack CI job type is protected.
+Note, if an ``any-job`` section contains a script, this will not implicitly create a
+``signing`` job, a signing job may only exist if it is explicitly specified in the
+configuration with a ``script`` attribute. Specifying a signing job without a script
+does not create a signing job and the job configuration attributes will be ignored.
+Signing jobs are always assigned the runner tags ``aws``, ``protected``, and ``notary``.
+
+^^^^^^^^^^^^^^^^^
+Cleanup (cleanup)
+^^^^^^^^^^^^^^^^^
+
+When using ``temporary-storage-url-prefix`` the cleanup job will destroy the mirror
+created for the associated Gitlab pipeline. Cleanup jobs do not allow modifying the
+script, but do expect that the spack command is in the path and require a
+``before_script`` to be specified that sources the ``setup-env.sh`` script.
 
 .. _noop_jobs:
 
-^^^^^^^^^^^^^^^^^^^^^^^
-Note about "no-op" jobs
-^^^^^^^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^
+No Op (noop)
+^^^^^^^^^^^^
 
 If no specs in an environment need to be rebuilt during a given pipeline run
 (meaning all are already up to date on the mirror), a single successful job
 (a NO-OP) is still generated to avoid an empty pipeline (which GitLab
-considers to be an error).  An optional ``service-job-attributes`` section
+considers to be an error).  The ``noop-job*`` sections
 can be added to your ``spack.yaml`` where you can provide ``tags`` and
 ``image`` or ``variables`` for the generated NO-OP job.  This section also
 supports providing ``before_script``, ``script``, and ``after_script``, in
@@ -499,51 +446,100 @@ Following is an example of this section added to a ``spack.yaml``:
 
 .. code-block:: yaml
 
-   spack:
-     specs:
-       - openmpi
-     mirrors:
-       cloud_gitlab: https://mirror.spack.io
-     gitlab-ci:
-       mappings:
-         - match:
-             - os=centos8
-           runner-attributes:
-             tags:
-               - custom
-               - tag
-             image: spack/centos7
-       service-job-attributes:
-         tags: ['custom', 'tag']
-         image:
-           name: 'some.image.registry/custom-image:latest'
-           entrypoint: ['/bin/bash']
-         script:
-           - echo "Custom message in a custom script"
+  spack:
+     ci:
+       pipeline-gen:
+       - noop-job:
+           tags: ['custom', 'tag']
+           image:
+             name: 'some.image.registry/custom-image:latest'
+             entrypoint: ['/bin/bash']
+           script::
+             - echo "Custom message in a custom script"
 
 The example above illustrates how you can provide the attributes used to run
 the NO-OP job in the case of an empty pipeline.  The only field for the NO-OP
 job that might be generated for you is ``script``, but that will only happen
-if you do not provide one yourself.
+if you do not provide one yourself. Notice in this example the ``script``
+uses the ``::`` notation to prescribe override behavior. Without this, the
+``echo`` command would have been prepended to the automatically generated script
+rather than replacing it.
 
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-Assignment of specs to runners
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+------------------------------------
+ci.yaml
+------------------------------------
 
-The ``mappings`` section corresponds to a list of runners, and during assignment
-of specs to runners, the list is traversed in order looking for matches, the
-first runner that matches a release spec is assigned to build that spec.  The
-``match`` section within each runner mapping section is a list of specs, and
-if any of those specs match the release spec (the ``spec.satisfies()`` method
-is used), then that runner is considered a match.
+Here's an example of a spack configuration file describing a build pipeline:
 
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-Configuration of specs/jobs for a runner
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+.. code-block:: yaml
 
-Once a runner has been chosen to build a release spec, the ``runner-attributes``
-section provides information determining details of the job in the context of
-the runner.  The ``runner-attributes`` section must have a ``tags`` key, which
+  ci:
+    target: gitlab
+
+    rebuild_index: True
+
+    broken-specs-url: https://broken.specs.url
+
+    broken-tests-packages:
+    - gptune
+
+    pipeline-gen:
+    - submapping:
+      - match:
+          - os=ubuntu18.04
+        build-job:
+          tags:
+            - spack-kube
+          image: spack/ubuntu-bionic
+      - match:
+          - os=centos7
+        build-job:
+          tags:
+            - spack-kube
+          image: spack/centos7
+
+  cdash:
+    build-group: Release Testing
+    url: https://cdash.spack.io
+    project: Spack
+    site: Spack AWS Gitlab Instance
+
+The ``ci`` config section is used to configure how the pipeline workload should be
+generated, mainly how the jobs for building specs should be assigned to the
+configured runners on your instance. The main section for configuring pipelines
+is ``pipeline-gen``, which is a list of job attribute sections that are merged,
+using the same rules as Spack configs (:ref:`config-scope-precedence`), from the bottom up.
+The order sections are applied is to be consistent with how spack orders scope precedence when merging lists.
+There are two main section types, ``<type>-job`` sections and ``submapping``
+sections.
+
+
+^^^^^^^^^^^^^^^^^^^^^^
+Job Attribute Sections
+^^^^^^^^^^^^^^^^^^^^^^
+
+Each type of job may have attributes added or removed via sections in the ``pipeline-gen``
+list. Job type specific attributes may be specified using the keys ``<type>-job`` to
+add attributes to all jobs of type ``<type>`` or ``<type>-job-remove`` to remove attributes
+of type ``<type>``. Each section may only contain one type of job attribute specification, ie. ,
+``build-job`` and ``noop-job`` may not coexist but ``build-job`` and ``build-job-remove`` may.
+
+.. note::
+    The ``*-remove`` specifications are applied before the additive attribute specification.
+    For example, in the case where both ``build-job`` and ``build-job-remove`` are listed in
+    the same ``pipeline-gen`` section, the value will still exist in the merged build-job after
+    applying the section.
+
+All of the attributes specified are forwarded to the generated CI jobs, however special
+treatment is applied to the attributes ``tags``, ``image``, ``variables``, ``script``,
+``before_script``, and ``after_script`` as they are components recognized explicitly by the
+Spack CI generator. For the ``tags`` attribute, Spack will remove reserved tags
+(:ref:`reserved_tags`) from all jobs specified in the config. In some cases, such as for
+``signing`` jobs, reserved tags will be added back based on the type of CI that is being run.
+
+Once a runner has been chosen to build a release spec, the ``build-job*``
+sections provide information determining details of the job in the context of
+the runner.  At lease one of the ``build-job*`` sections must contain a ``tags`` key, which
 is a list containing at least one tag used to select the runner from among the
 runners known to the gitlab instance.  For Docker executor type runners, the
 ``image`` key is used to specify the Docker image used to build the release spec
@@ -554,7 +550,7 @@ information on to the runner that it needs to do its work (e.g. scheduler
 parameters, etc.).  Any ``variables`` provided here will be added, verbatim, to
 each job.
 
-The ``runner-attributes`` section also allows users to supply custom ``script``,
+The ``build-job`` section also allows users to supply custom ``script``,
 ``before_script``, and ``after_script`` sections to be applied to every job
 scheduled on that runner.  This allows users to do any custom preparation or
 cleanup tasks that fit their particular workflow, as well as completely
@@ -565,46 +561,45 @@ environment directory is located within your ``--artifacts_root`` (or if not
 provided, within your ``$CI_PROJECT_DIR``), activates that environment for
 you, and invokes ``spack ci rebuild``.
 
-.. _staging_algorithm:
+Sections that specify scripts (``script``, ``before_script``, ``after_script``) are all
+read as lists of commands or lists of lists of commands. It is recommended to write scripts
+as lists of lists if scripts will be composed via merging. The default behavior of merging
+lists will remove duplicate commands and potentially apply unwanted reordering, whereas
+merging lists of lists will preserve the local ordering and never removes duplicate
+commands. When writing commands to the CI target script, all lists are expanded and
+flattened into a single list.
 
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-Summary of ``.gitlab-ci.yml`` generation algorithm
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^
+Submapping Sections
+^^^^^^^^^^^^^^^^^^^
 
-All specs yielded by the matrix (or all the specs in the environment) have their
-dependencies computed, and the entire resulting set of specs are staged together
-before being run through the ``gitlab-ci/mappings`` entries, where each staged
-spec is assigned a runner.  "Staging" is the name given to the process of
-figuring out in what order the specs should be built, taking into consideration
-Gitlab CI rules about jobs/stages.  In the staging process the goal is to maximize
-the number of jobs in any stage of the pipeline, while ensuring that the jobs in
-any stage only depend on jobs in previous stages (since those jobs are guaranteed
-to have completed already).  As a runner is determined for a job, the information
-in the ``runner-attributes`` is used to populate various parts of the job
-description that will be used by Gitlab CI. Once all the jobs have been assigned
-a runner, the ``.gitlab-ci.yml`` is written to disk.
+A special case of attribute specification is the ``submapping`` section which may be used
+to apply job attributes to build jobs based on the package spec associated with the rebuild
+job. Submapping is specified as a list of spec ``match`` lists associated with
+``build-job``/``build-job-remove`` sections. There are two options for ``match_behavior``,
+either ``first`` or ``merge`` may be specified. In either case, the ``submapping`` list is
+processed from the bottom up, and then each ``match`` list is searched for a string that
+satisfies the check ``spec.satisfies({match_item})`` for each concrete spec.
 
-The short example provided above would result in the ``readline``, ``ncurses``,
-and ``pkgconf`` packages getting staged and built on the runner chosen by the
-``spack-k8s`` tag.  In this example, spack assumes the runner is a Docker executor
-type runner, and thus certain jobs will be run in the ``centos7`` container,
-and others in the ``ubuntu-18.04`` container.  The resulting ``.gitlab-ci.yml``
-will contain 6 jobs in three stages.  Once the jobs have been generated, the
-presence of a ``SPACK_CDASH_AUTH_TOKEN`` environment variable during the
-``spack ci generate`` command would result in all of the jobs being put in a
-build group on CDash called "Release Testing" (that group will be created if
-it didn't already exist).
+The the case of ``match_behavior: first``, the first ``match`` section in the list of
+``submappings`` that contains a string that satisfies the spec will apply it's
+``build-job*`` attributes to the rebuild job associated with that spec. This is the
+default behavior and will be the method if no ``match_behavior`` is specified.
 
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-Optional compiler bootstrapping
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+The the case of ``merge`` match, all of the ``match`` sections in the list of
+``submappings`` that contain a string that satisfies the spec will have the associated
+``build-job*`` attributes applied to the rebuild job associated with that spec. Again,
+the attributes will be merged starting from the bottom match going up to the top match.
 
-Spack pipelines also have support for bootstrapping compilers on systems that
-may not already have the desired compilers installed. The idea here is that
-you can specify a list of things to bootstrap in your ``definitions``, and
-spack will guarantee those will be installed in a phase of the pipeline before
-your release specs, so that you can rely on those packages being available in
-the binary mirror when you need them later on in the pipeline.  At the moment
+In the case that no match is found in a submapping section, no additional attributes will be applied.
+
+^^^^^^^^^^^^^
+Bootstrapping
+^^^^^^^^^^^^^
+
+
+The ``bootstrap`` section allows you to specify lists of specs from
+your ``definitions`` that should be staged ahead of the environment's ``specs``. At the moment
 the only viable use-case for bootstrapping is to install compilers.
 
 Here's an example of what bootstrapping some compilers might look like:
@@ -680,6 +675,86 @@ environment/stack file, and in that case no bootstrapping will be done (only the
 specs will be staged for building) and the runners will be expected to already
 have all needed compilers installed and configured for spack to use.
 
+^^^^^^^^^^^^^^^^^^^
+Pipeline Buildcache
+^^^^^^^^^^^^^^^^^^^
+
+The ``enable-artifacts-buildcache`` key
+takes a boolean and determines whether the pipeline uses artifacts to store and
+pass along the buildcaches from one stage to the next (the default if you don't
+provide this option is ``False``).
+
+^^^^^^^^^^^^^^^^
+Broken Specs URL
+^^^^^^^^^^^^^^^^
+
+The optional ``broken-specs-url`` key tells Spack to check against a list of
+specs that are known to be currently broken in ``develop``. If any such specs
+are found, the ``spack ci generate`` command will fail with an error message
+informing the user what broken specs were encountered. This allows the pipeline
+to fail early and avoid wasting compute resources attempting to build packages
+that will not succeed.
+
+^^^^^
+CDash
+^^^^^
+
+The optional ``cdash`` section provides information that will be used by the
+``spack ci generate`` command (invoked by ``spack ci start``) for reporting
+to CDash.  All the jobs generated from this environment will belong to a
+"build group" within CDash that can be tracked over time.  As the release
+progresses, this build group may have jobs added or removed. The url, project,
+and site are used to specify the CDash instance to which build results should
+be reported.
+
+Take a look at the
+`schema <https://github.com/spack/spack/blob/develop/lib/spack/spack/schema/ci.py>`_
+for the gitlab-ci section of the spack environment file, to see precisely what
+syntax is allowed there.
+
+.. _reserved_tags:
+
+^^^^^^^^^^^^^
+Reserved Tags
+^^^^^^^^^^^^^
+
+Spack has a subset of tags (``public``, ``protected``, and ``notary``) that it reserves
+for classifying runners that may require special permissions or access. The tags
+``public`` and ``protected`` are used to distinguish between runners that use public
+permissions and runners with protected permissions. The ``notary`` tag is a special tag
+that is used to indicate runners that have access to the highly protected information
+used for signing binaries using the ``signing`` job.
+
+.. _staging_algorithm:
+
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Summary of ``.gitlab-ci.yml`` generation algorithm
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+All specs yielded by the matrix (or all the specs in the environment) have their
+dependencies computed, and the entire resulting set of specs are staged together
+before being run through the ``ci/pipeline-gen`` entries, where each staged
+spec is assigned a runner.  "Staging" is the name given to the process of
+figuring out in what order the specs should be built, taking into consideration
+Gitlab CI rules about jobs/stages.  In the staging process the goal is to maximize
+the number of jobs in any stage of the pipeline, while ensuring that the jobs in
+any stage only depend on jobs in previous stages (since those jobs are guaranteed
+to have completed already).  As a runner is determined for a job, the information
+in the merged ``any-job*`` and ``build-job*`` sections is used to populate various parts of the job
+description that will be used by the target CI pipelines. Once all the jobs have been assigned
+a runner, the ``.gitlab-ci.yml`` is written to disk.
+
+The short example provided above would result in the ``readline``, ``ncurses``,
+and ``pkgconf`` packages getting staged and built on the runner chosen by the
+``spack-k8s`` tag.  In this example, spack assumes the runner is a Docker executor
+type runner, and thus certain jobs will be run in the ``centos7`` container,
+and others in the ``ubuntu-18.04`` container.  The resulting ``.gitlab-ci.yml``
+will contain 6 jobs in three stages.  Once the jobs have been generated, the
+presence of a ``SPACK_CDASH_AUTH_TOKEN`` environment variable during the
+``spack ci generate`` command would result in all of the jobs being put in a
+build group on CDash called "Release Testing" (that group will be created if
+it didn't already exist).
+
 -------------------------------------
 Using a custom spack in your pipeline
 -------------------------------------
@@ -726,23 +801,21 @@ generated by ``spack ci generate``.  You also want your generated rebuild jobs
 
    spack:
      ...
-     gitlab-ci:
-       mappings:
-         - match:
-             - os=ubuntu18.04
-           runner-attributes:
-             tags:
-               - spack-kube
-             image: spack/ubuntu-bionic
-             before_script:
-               - git clone ${SPACK_REPO}
-               - pushd spack && git checkout ${SPACK_REF} && popd
-               - . "./spack/share/spack/setup-env.sh"
-             script:
-               - spack env activate --without-view ${SPACK_CONCRETE_ENV_DIR}
-               - spack -d ci rebuild
-             after_script:
-               - rm -rf ./spack
+     ci:
+       pipeline-gen:
+       - build-job:
+           tags:
+             - spack-kube
+           image: spack/ubuntu-bionic
+           before_script:
+             - git clone ${SPACK_REPO}
+             - pushd spack && git checkout ${SPACK_REF} && popd
+             - . "./spack/share/spack/setup-env.sh"
+           script:
+             - spack env activate --without-view ${SPACK_CONCRETE_ENV_DIR}
+             - spack -d ci rebuild
+           after_script:
+             - rm -rf ./spack
 
 Now all of the generated rebuild jobs will use the same shell script to clone
 spack before running their actual workload.
@@ -831,3 +904,4 @@ verify binary packages (when installing or creating buildcaches).  You could
 also have already trusted a key spack know about, or if no key is present anywhere,
 spack will install specs using ``--no-check-signature`` and create buildcaches
 using ``-u`` (for unsigned binaries).
+

@@ -651,7 +651,7 @@ class Mfem(Package, CudaPackage, ROCmPackage):
             all_hypre_libs = hypre.libs + hypre["lapack"].libs + hypre["blas"].libs
             hypre_gpu_libs = ""
             if "+cuda" in hypre:
-                hypre_gpu_libs = " -lcusparse -lcurand"
+                hypre_gpu_libs = " -lcusparse -lcurand -lcublas"
             elif "+rocm" in hypre:
                 hypre_rocm_libs = LibraryList([])
                 if "^rocsparse" in hypre:

@@ -408,19 +408,36 @@ def test_get_spec_filter_list(mutable_mock_env_path, config, mutable_mock_repo):
 
     touched = ["libdwarf"]
 
-    # traversing both directions from libdwarf in the graphs depicted
-    # above (and additionally including dependencies of dependents of
-    # libdwarf) results in the following possibly affected env specs:
-    # mpileaks, callpath, dyninst, libdwarf, libelf, and mpich.
-    # Unaffected specs are hypre and it's dependencies.
+    # Make sure we return the correct set of possibly affected specs,
+    # given a dependent traversal depth and the fact that the touched
+    # package is libdwarf.  Passing traversal depth of None or something
+    # equal to or larger than the greatest depth in the graph are
+    # equivalent and result in traversal of all specs from the touched
+    # package to the root.  Passing negative traversal depth results in
+    # no spec traversals.  Passing any other number yields differing
+    # numbers of possibly affected specs.
 
-    affected_specs = ci.get_spec_filter_list(e1, touched)
-    affected_pkg_names = set([s.name for s in affected_specs])
-    expected_affected_pkg_names = set(
-        ["mpileaks", "mpich", "callpath", "dyninst", "libdwarf", "libelf"]
-    )
+    full_set = set(["mpileaks", "mpich", "callpath", "dyninst", "libdwarf", "libelf"])
+    empty_set = set([])
+    depth_2_set = set(["mpich", "callpath", "dyninst", "libdwarf", "libelf"])
+    depth_1_set = set(["dyninst", "libdwarf", "libelf"])
+    depth_0_set = set(["libdwarf", "libelf"])
 
-    assert affected_pkg_names == expected_affected_pkg_names
+    expectations = {
+        None: full_set,
+        3: full_set,
+        100: full_set,
+        -1: empty_set,
+        0: depth_0_set,
+        1: depth_1_set,
+        2: depth_2_set,
+    }
+
+    for key, val in expectations.items():
+        affected_specs = ci.get_spec_filter_list(e1, touched, dependent_traverse_depth=key)
+        affected_pkg_names = set([s.name for s in affected_specs])
+        print(f"{key}: {affected_pkg_names}")
+        assert affected_pkg_names == val
 
 
 @pytest.mark.regression("29947")

@@ -28,6 +28,7 @@ class Gawk(AutotoolsPackage, GNUMirrorPackage):
 
     tags = ["build-tools", "core-packages"]
 
+    version("5.2.1", sha256="673553b91f9e18cc5792ed51075df8d510c9040f550a6f74e09c9add243a7e4f")
     version("5.1.1", sha256="d87629386e894bbea11a5e00515fc909dc9b7249529dad9e6a3a2c77085f7ea2")
     version("5.1.0", sha256="cf5fea4ac5665fd5171af4716baab2effc76306a9572988d5ba1078f196382bd")
     version("5.0.1", sha256="8e4e86f04ed789648b66f757329743a0d6dfb5294c3b91b756a474f1ce05a794")

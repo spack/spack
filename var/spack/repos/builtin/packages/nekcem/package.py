@@ -39,7 +39,7 @@ class Nekcem(Package):
             raise RuntimeError(msg)
 
     @run_after("install")
-    def test_install(self):
+    def check_install(self):
         nekcem_test = join_path(self.prefix.bin, "NekCEM", "tests", "2dboxpec")
         with working_dir(nekcem_test):
             makenek = Executable(join_path(self.prefix.bin, "makenek"))

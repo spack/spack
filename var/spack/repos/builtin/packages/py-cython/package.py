@@ -14,10 +14,11 @@ class PyCython(PythonPackage):
 
     version("3.0.0a9", sha256="23931c45877432097cef9de2db2dc66322cbc4fc3ebbb42c476bb2c768cecff0")
     version(
-        "0.29.32",
-        sha256="8733cf4758b79304f2a4e39ebfac5e92341bce47bcceb26c1254398b2f8c1af7",
+        "0.29.33",
+        sha256="5040764c4a4d2ce964a395da24f0d1ae58144995dab92c6b96f44c3f4d72286a",
         preferred=True,
     )
+    version("0.29.32", sha256="8733cf4758b79304f2a4e39ebfac5e92341bce47bcceb26c1254398b2f8c1af7")
     version("0.29.30", sha256="2235b62da8fe6fa8b99422c8e583f2fb95e143867d337b5c75e4b9a1a865f9e3")
     version("0.29.24", sha256="cdf04d07c3600860e8c2ebaad4e8f52ac3feb212453c1764a49ac08c827e8443")
     version("0.29.23", sha256="6a0d31452f0245daacb14c979c77e093eb1a546c760816b5eed0047686baad8e")
@@ -41,6 +42,14 @@ class PyCython(PythonPackage):
 
     depends_on("python@2.7:2,3.4:", when="@3:", type=("build", "link", "run"))
     depends_on("python@2.6:2,3.3:", type=("build", "link", "run"))
+
+    # https://github.com/cython/cython/commit/1cd24026e9cf6d63d539b359f8ba5155fd48ae21
+    # collections.Iterable was removed in Python 3.10
+    depends_on("python@:3.9", when="@:0.29.14", type=("build", "link", "run"))
+
+    # https://github.com/cython/cython/commit/430e2ca220c8fed49604daf578df98aadb33a87d
+    depends_on("python@:3.8", when="@:0.29.13", type=("build", "link", "run"))
+
     depends_on("py-setuptools", type=("build", "run"))
     depends_on("gdb@7.2:", type="test")
 

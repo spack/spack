@@ -25,6 +25,8 @@ class Ispc(CMakePackage):
     executables = ["^ispc$"]
 
     version("main", branch="main")
+    version("1.18.0", sha256="ecf1fc6ad5e39242e555b8e0ac539489939a9e475722eaa9da5caa4651cecf05")
+    version("1.17.0", sha256="1d47365febd2e17c84c22501aa63b1eafbc1ef826d6f5deadafe14783b8388a5")
     version("1.16.1", sha256="b32dbd374eea5f1b5f535bfd79c5cc35591c0df2e7bf1f86dec96b74e4ebf661")
     version("1.16.0", sha256="12db1a90046b51752a65f50426e1d99051c6d55e30796ddd079f7bc97d5f6faf")
     version("1.15.0", sha256="3b634aaa10c9bf0e82505d1af69cb307a3a00182d57eae019680ccfa62338af9")
@@ -38,10 +40,13 @@ class Ispc(CMakePackage):
     depends_on("ncurses", type="link")
     depends_on("zlib", type="link")
     depends_on("llvm+clang")
-    depends_on("llvm@:12", when="@:1.16")
+    depends_on("llvm@:13", when="@:1.18")
+    depends_on("llvm@:12", when="@:1.17")
     depends_on("llvm@11:", when="@1.16.0:")
     depends_on("llvm@10:11", when="@1.15.0:1.15")
     depends_on("llvm@10.0:10", when="@1.13:1.14")
+
+    conflicts("@1.17:", msg="Link error with ncurses")
 
     patch(
         "don-t-assume-that-ncurses-zlib-are-system-libraries.patch",

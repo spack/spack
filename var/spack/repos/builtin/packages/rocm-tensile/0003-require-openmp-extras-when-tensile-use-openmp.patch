@@ -1,0 +1,24 @@
+From 2567ef30dea031fb1b894b74294c82856e47b2a6 Mon Sep 17 00:00:00 2001
+From: Renjith Ravindran <Renjith.RavindranKannath@amd.com>
+Date: Wed, 1 Mar 2023 17:38:17 +0000
+Subject: [PATCH] Include rocm-openmp-extras headers when tensile using openmp
+
+---
+ Tensile/Source/client/CMakeLists.txt | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/Tensile/Source/client/CMakeLists.txt b/Tensile/Source/client/CMakeLists.txt
+index c04a6b7..7001364 100644
+--- a/Tensile/Source/client/CMakeLists.txt
++++ b/Tensile/Source/client/CMakeLists.txt
+@@ -76,6 +76,7 @@ if(NOT WIN32)
+ endif()
+ 
+ if(TENSILE_USE_OPENMP)
++    target_include_directories(TensileClient PUBLIC "${ROCM_OPENMP_EXTRAS_DIR}/include")
+     target_link_libraries(TensileClient PRIVATE custom_openmp_cxx)
+ endif()
+ 
+-- 
+2.31.1
+

@@ -1463,6 +1463,7 @@ class SpackSolverSetup(object):
             node_compiler = fn.attr("node_compiler_set")
             node_compiler_version = fn.attr("node_compiler_version_set")
             node_flag = fn.attr("node_flag_set")
+            node_flag_source = fn.attr("node_flag_source")
             node_flag_propagate = fn.attr("node_flag_propagate")
             variant_propagate = fn.attr("variant_propagate")
 
@@ -1476,6 +1477,7 @@ class SpackSolverSetup(object):
             node_compiler = fn.attr("node_compiler")
             node_compiler_version = fn.attr("node_compiler_version")
             node_flag = fn.attr("node_flag")
+            node_flag_source = fn.attr("node_flag_source")
             node_flag_propagate = fn.attr("node_flag_propagate")
             variant_propagate = fn.attr("variant_propagate")
 
@@ -1557,6 +1559,7 @@ class SpackSolverSetup(object):
         for flag_type, flags in spec.compiler_flags.items():
             for flag in flags:
                 clauses.append(f.node_flag(spec.name, flag_type, flag))
+                clauses.append(f.node_flag_source(spec.name, flag_type, spec.name))
                 if not spec.concrete and flag.propagate is True:
                     clauses.append(f.node_flag_propagate(spec.name, flag_type))
 
@@ -2181,6 +2184,7 @@ class SpecBuilder(object):
         self._specs = {}
         self._result = None
         self._command_line_specs = specs
+        self._hash_specs = []
         self._flag_sources = collections.defaultdict(lambda: set())
         self._flag_compiler_defaults = set()
 
@@ -2191,6 +2195,7 @@ class SpecBuilder(object):
     def hash(self, pkg, h):
         if pkg not in self._specs:
             self._specs[pkg] = self._hash_lookup[h]
+        self._hash_specs.append(pkg)
 
     def node(self, pkg):
         if pkg not in self._specs:
@@ -2316,8 +2321,8 @@ class SpecBuilder(object):
                     )
 
                     # add flags from each source, lowest to highest precedence
-                    for source_name in sorted_sources:
-                        source = cmd_specs[source_name]
+                    for name in sorted_sources:
+                        source = self._specs[name] if name in self._hash_specs else cmd_specs[name]
                         extend_flag_list(from_sources, source.compiler_flags.get(flag_type, []))
 
                 # compiler flags from compilers config are lowest precedence
@@ -2392,10 +2397,12 @@ class SpecBuilder(object):
                     continue
 
                 # if we've already gotten a concrete spec for this pkg,
-                # do not bother calling actions on it.
+                # do not bother calling actions on it except for node_flag_source,
+                # since node_flag_source is tracking information not in the spec itself
                 spec = self._specs.get(pkg)
                 if spec and spec.concrete:
-                    continue
+                    if name != "node_flag_source":
+                        continue
 
             action(*args)
 

@@ -2,11 +2,13 @@
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
+import filecmp
 import glob
 import io
 import os
 import platform
 import sys
+import tarfile
 import urllib.error
 import urllib.request
 import urllib.response
@@ -952,3 +954,81 @@ def test_correct_specs_are_pushed(
     bindist.push([spec], push_url, include_root=root, include_dependencies=deps)
 
     assert packages_to_push == expected
+
+
+def test_reproducible_tarball_is_reproducible(tmpdir):
+    p = tmpdir.mkdir("prefix")
+    p.mkdir("bin")
+    p.mkdir(".spack")
+
+    app = p.join("bin", "app")
+
+    tarball_1 = str(tmpdir.join("prefix-1.tar.gz"))
+    tarball_2 = str(tmpdir.join("prefix-2.tar.gz"))
+
+    with open(app, "w") as f:
+        f.write("hello world")
+
+    buildinfo = {"metadata": "yes please"}
+
+    # Create a tarball with a certain mtime of bin/app
+    os.utime(app, times=(0, 0))
+    bindist._do_create_tarball(tarball_1, binaries_dir=p, pkg_dir="pkg", buildinfo=buildinfo)
+
+    # Do it another time with different mtime of bin/app
+    os.utime(app, times=(10, 10))
+    bindist._do_create_tarball(tarball_2, binaries_dir=p, pkg_dir="pkg", buildinfo=buildinfo)
+
+    # They should be bitwise identical:
+    assert filecmp.cmp(tarball_1, tarball_2, shallow=False)
+
+    # Sanity check for contents:
+    with tarfile.open(tarball_1, mode="r") as f:
+        for m in f.getmembers():
+            assert m.uid == m.gid == m.mtime == 0
+            assert m.uname == m.gname == ""
+
+        assert set(f.getnames()) == {
+            "pkg",
+            "pkg/bin",
+            "pkg/bin/app",
+            "pkg/.spack",
+            "pkg/.spack/binary_distribution",
+        }
+
+
+def test_tarball_normalized_permissions(tmpdir):
+    p = tmpdir.mkdir("prefix")
+    p.mkdir("bin")
+    p.mkdir("share")
+    p.mkdir(".spack")
+
+    app = p.join("bin", "app")
+    data = p.join("share", "file")
+    tarball = str(tmpdir.join("prefix.tar.gz"))
+
+    # Everyone can write & execute. This should turn into 0o755 when the tarball is
+    # extracted (on a different system).
+    with open(app, "w", opener=lambda path, flags: os.open(path, flags, 0o777)) as f:
+        f.write("hello world")
+
+    # User doesn't have execute permissions, but group/world have; this should also
+    # turn into 0o644 (user read/write, group&world only read).
+    with open(data, "w", opener=lambda path, flags: os.open(path, flags, 0o477)) as f:
+        f.write("hello world")
+
+    bindist._do_create_tarball(tarball, binaries_dir=p, pkg_dir="pkg", buildinfo={})
+
+    with tarfile.open(tarball) as tar:
+        path_to_member = {member.name: member for member in tar.getmembers()}
+
+    # directories should have 0o755
+    assert path_to_member["pkg"].mode == 0o755
+    assert path_to_member["pkg/bin"].mode == 0o755
+    assert path_to_member["pkg/.spack"].mode == 0o755
+
+    # executable-by-user files should be 0o755
+    assert path_to_member["pkg/bin/app"].mode == 0o755
+
+    # not-executable-by-user files should be 0o644
+    assert path_to_member["pkg/share/file"].mode == 0o644
