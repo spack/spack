@@ -108,7 +108,7 @@ class PyMdanalysis(PythonPackage):
     depends_on("py-numpy@1.5.0:", when="@:0.15.0", type=("build", "run"))
     depends_on("py-numpy@1.10.4:", when="@0.16.0:0.19.2", type=("build", "run"))
     depends_on("py-numpy@1.13.3:", when="@0.20.1:1.0.0", type=("build", "run"))
-    depends_on("py-numpy@1.21.0:", when="@2.4.0:", type=("build", "run"))
+    depends_on("py-numpy@1.20.0:", when="@2.4.0:", type=("build", "run"))
 
     depends_on("py-biopython@1.59:", when="@:0.17.0", type=("build", "run"))
     depends_on("py-biopython@1.71:", when="@0.18.0:1.0.0", type=("build", "run"))
