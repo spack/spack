@@ -33,7 +33,7 @@ class PyPymatgen(PythonPackage):
     # This conflict only applies to older, not checksummed versions:
     conflicts("python@3.9:", when="@:2020.10.9")
 
-    depends_on("py-cython", type="build", when="@2022.1.08:")
+    depends_on("py-cython@0.29.23:", type="build", when="@2022.1.08:")
     depends_on("py-setuptools@18.0:", type="build")
 
     depends_on("py-numpy@1.9:", type=("build", "run"))
