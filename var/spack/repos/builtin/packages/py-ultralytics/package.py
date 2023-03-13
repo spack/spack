@@ -21,7 +21,7 @@ class PyUltralytics(PythonPackage):
     depends_on("py-setuptools", type=("build", "run"))
     depends_on("py-matplotlib@3.2.2:", type=("build", "run"))
     depends_on("py-numpy@1.18.5:", type=("build", "run"))
-    depends_on("opencv@4.6.0:", type=("build", "run"))
+    depends_on("opencv@4.6.0:+python3", type=("build", "run"))
     depends_on("pil@7.1.2:", type=("build", "run"))
     depends_on("py-pyyaml@5.3.1:", type=("build", "run"))
     depends_on("py-requests@2.23.0:", type=("build", "run"))
