@@ -56,7 +56,7 @@ class Julia(MakefilePackage):
 
     # Do not use internal unwind.  We need to use a conflict, because
     # `internal_unwind` is defined only when `+clang`.
-    conflicts("llvm+internal_unwind")
+    conflicts("^llvm+internal_unwind")
 
     with when("@1.8.0:1.8"):
         # libssh2.so.1, libpcre2-8.so.0, mbedtls.so.14, mbedcrypto.so.7, mbedx509.so.1
