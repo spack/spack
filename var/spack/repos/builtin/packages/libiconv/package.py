@@ -26,6 +26,8 @@ class Libiconv(AutotoolsPackage, GNUMirrorPackage):
         description="Build shared libs, static libs or both",
     )
 
+    variant("rebuild_me", default=True, description="remove me")
+
     # We cannot set up a warning for gets(), since gets() is not part
     # of C11 any more and thus might not exist.
     patch("gets.patch", when="@1.14")
