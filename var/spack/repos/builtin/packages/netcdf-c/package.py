@@ -4,6 +4,7 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import os
+import sys
 
 from spack.build_systems.autotools import AutotoolsBuilder
 from spack.build_systems.cmake import CMakeBuilder
@@ -151,7 +152,9 @@ class NetcdfC(CMakePackage, AutotoolsPackage):
 
     filter_compiler_wrappers("nc-config", relative_root="bin")
 
-    build_system("cmake", "autotools", default="cmake")
+    default_build_system = "cmake" if sys.platform == "win32" else "autotools"
+
+    build_system("cmake", "autotools", default=default_build_system)
 
     def setup_run_environment(self, env):
         if "+zstd" in self.spec:
