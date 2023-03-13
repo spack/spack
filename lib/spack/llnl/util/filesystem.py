@@ -2756,5 +2756,5 @@ class FindFile:
 
     def find_matches(self, rel_path, entries):
         for f in entries:
-            if not f.is_dir() and self.regex(f.name):
+            if self.regex(f.name):
                 self.results.append(os.path.join(rel_path, f.name))
