@@ -26,4 +26,4 @@ class PyPyshacl(PythonPackage):
 
     def patch(self):
         if self.spec.satisfies("@0.17.2"):
-            filter_file(r"\^5.2.3,<7", ">=5.2.3,<7", "pyproject.toml")
+            filter_file("^5.2.3,<7", ">=5.2.3,<7", "pyproject.toml", string=True)
