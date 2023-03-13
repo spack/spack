@@ -11,7 +11,7 @@ class PyMatminer(PythonPackage):
     materials science."""
 
     homepage = "https://github.com/hackingmaterials/matminer"
-    pypi     = "matminer/matminer-0.8.0.tar.gz"
+    pypi = "matminer/matminer-0.8.0.tar.gz"
 
     maintainers("meyersbs")
 
