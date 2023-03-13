@@ -193,7 +193,8 @@ def test_unload(install_mockery, mock_fetch, mock_archive, mock_packages, workin
 
     # Set so unload has something to do
     os.environ["FOOBAR"] = "mpileaks"
-    os.environ[uenv.spack_loaded_hashes_var] = "%s:%s" % (mpileaks_spec.dag_hash(), "garbage")
+    os.environ[uenv.spack_loaded_hashes_var] = "%s%c%s" % (mpileaks_spec.dag_hash(),
+                                                           os.pathsep, "garbage")
 
     if sys.platform == 'win32':
         bat_out = unload("--bat", "mpileaks")
