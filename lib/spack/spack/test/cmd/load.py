@@ -5,8 +5,6 @@
 import os
 import re
 
-import pytest
-
 import spack.spec
 import spack.user_environment as uenv
 from spack.main import SpackCommand
@@ -26,7 +24,7 @@ def test_manpath_trailing_colon(
     manpath search path via a trailing colon"""
     install("mpileaks")
 
-    if sys.platform == 'win32':
+    if sys.platform == "win32":
         bat_out = load("--bat", "--only", "package", "mpileaks")
         lines = bat_out.split("\n")
         assert any(re.match(r'set "MANPATH=.*:"', ln) for ln in lines)
@@ -60,7 +58,7 @@ def test_load(install_mockery, mock_fetch, mock_archive, mock_packages):
     print(install_out)
     mpileaks_spec = spack.spec.Spec("mpileaks").concretized()
 
-    if sys.platform == 'win32':
+    if sys.platform == "win32":
         bat_out = load("--bat", "--only", "package", "mpileaks")
 
         # Test prefix inspections
@@ -95,7 +93,7 @@ def test_load_recursive(install_mockery, mock_fetch, mock_archive, mock_packages
     install("mpileaks")
     mpileaks_spec = spack.spec.Spec("mpileaks").concretized()
 
-    if sys.platform == 'win32':
+    if sys.platform == "win32":
         bat_out = load("--bat", "mpileaks")
 
         # Test prefix inspections
@@ -143,7 +141,7 @@ def test_load_includes_run_env(install_mockery, mock_fetch, mock_archive, mock_p
     `setup_run_environment` method are added to the user environment in
     addition to the prefix inspections"""
     install("mpileaks")
-    if sys.platform == 'win32':
+    if sys.platform == "win32":
         bat_out = load("--bat", "mpileaks")
         assert 'set "FOOBAR=mpileaks"' in bat_out
     else:
@@ -159,7 +157,7 @@ def test_load_first(install_mockery, mock_fetch, mock_archive, mock_packages):
     install("libelf@0.8.12")
     install("libelf@0.8.13")
 
-    if sys.platform == 'win32':
+    if sys.platform == "win32":
         # Now there are two versions of libelf, which should cause an error
         out = load("--bat", "libelf", fail_on_error=False)
         assert "matches multiple packages" in out
@@ -193,10 +191,12 @@ def test_unload(install_mockery, mock_fetch, mock_archive, mock_packages, workin
 
     # Set so unload has something to do
     os.environ["FOOBAR"] = "mpileaks"
-    os.environ[uenv.spack_loaded_hashes_var] = "%s%c%s" % (mpileaks_spec.dag_hash(),
-                                                           os.pathsep, "garbage")
-
-    if sys.platform == 'win32':
+    os.environ[uenv.spack_loaded_hashes_var] = "%s%c%s" % (
+        mpileaks_spec.dag_hash(),
+        os.pathsep,
+        "garbage",
+    )
+    if sys.platform == "win32":
         bat_out = unload("--bat", "mpileaks")
         assert 'set "FOOBAR="' in bat_out
 
