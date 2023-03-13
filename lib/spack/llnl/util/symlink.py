@@ -32,10 +32,10 @@ def symlink(real_path, link_path):
             _win32_junction(real_path, link_path)
         except OSError as e:
             if e.errno == errno.EEXIST:
-                # we manually raised this error, we know shutil will fail the copy
-                # due to a same file error
-                # skip and report
-                raise e
+                # EEXIST error indicates that file we're trying to "link"
+                # is already present, don't bother trying to copy which will also fail
+                # just raise
+                raise
             else:
                 # If all else fails, fall back to copying files
                 shutil.copyfile(real_path, link_path)
