@@ -756,12 +756,16 @@ def generate_gitlab_ci_yaml(
     ci_config = cfg.get("ci")
 
     if not ci_config:
-        tty.warning('Environment yaml does not have "ci" section')
+        tty.warning("Environment does not have `ci` a configuration")
         gitlabci_config = yaml_root.get("gitlab-ci")
         if not gitlabci_config:
-            tty.die("Environment yaml does not have CI config section")
+            tty.die("Environment yaml does not have `gitlab-ci` config section.")
 
-        tty.warning("The `gitlab-ci` configuration is deprecated in favor of `ci`.")
+        tty.warning(
+            "The `gitlab-ci` configuration is deprecated in favor of `ci`.\n",
+            "To update first change the section key from `gitlab-ci` to `ci`\n",
+            "Then run \n\t$ spack config update ci",
+        )
         ci_config = translate_deprecated_config(gitlabci_config)
 
     # Default target is gitlab...and only target is gitlab
@@ -2478,18 +2482,18 @@ class CDashHandler(object):
         reporter = CDash(configuration=configuration)
         reporter.test_skipped_report(directory_name, spec, reason)
 
+
 def translate_deprecated_config(config):
     ci_config = {}
 
     ci_config["target"] = "gitlab"
-
-    ci_config["bootstrap"] = config["bootstrap"]
 
     if "enable-artifacts-buildcache" in config:
         ci_config["enable-artifacts-buildcache"] = config["enable-artifacts-buildcache"]
     elif "temporary-storage-url-prefix" in config:
         ci_config["temporary-storage-url-prefix"] = config.get("temporary-storage-url-prefix")
 
+    ci_config["bootstrap"] = config.get("bootstrap", [])
     ci_config["rebuild-index"] = config.get("rebuild-index", True)
     ci_config["broken-specs-url"] = config.get("broken-specs-url", None)
     ci_config["broken-tests-packages"] = config.get("broken-tests-packages", [])
@@ -2508,10 +2512,7 @@ def translate_deprecated_config(config):
         if "remove-attributes" in section:
             submapping_section["build-job-remove"] = section["remove-attributes"]
         submapping.append(submapping_section)
-    pipeline_gen.append({
-        "submapping" : submapping,
-        "match_behavior": match_behavior,
-    })
+    pipeline_gen.append({"submapping": submapping, "match_behavior": match_behavior})
 
     build_job = {}
     build_job["image"] = config.get("image", None)

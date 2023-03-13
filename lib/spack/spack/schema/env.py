@@ -10,10 +10,10 @@
 """
 from llnl.util.lang import union_dicts
 
+import spack.schema.gitlab_ci  # DEPRECATED
 import spack.schema.merged
 import spack.schema.packages
 import spack.schema.projections
-import spack.schema.gitlab_ci # DEPRECATED
 
 #: legal first keys in the schema
 keys = ("spack", "env")

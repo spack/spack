@@ -11,6 +11,8 @@
 
 from llnl.util.lang import union_dicts
 
+import spack.schema.gitlab_ci
+
 # Schema for script fields
 # List of lists and/or strings
 # This is similar to what is allowed in
@@ -20,24 +22,27 @@ script_schema = {
     "items": {"anyOf": [{"type": "string"}, {"type": "array", "items": {"type": "string"}}]},
 }
 
+# Schema for CI image
+image_schema = {
+    "oneOf": [
+        {"type": "string"},
+        {
+            "type": "object",
+            "properties": {
+                "name": {"type": "string"},
+                "entrypoint": {"type": "array", "items": {"type": "string"}},
+            },
+        },
+    ]
+}
+
 # Additional attributes are allow
 # and will be forwarded directly to the
 # CI target YAML for each job.
 attributes_schema = {
     "type": "object",
     "properties": {
-        "image": {
-            "oneOf": [
-                {"type": "string"},
-                {
-                    "type": "object",
-                    "properties": {
-                        "name": {"type": "string"},
-                        "entrypoint": {"type": "array", "items": {"type": "string"}},
-                    },
-                },
-            ]
-        },
+        "image": image_schema,
         "tags": {"type": "array", "items": {"type": "string"}},
         "variables": {
             "type": "object",
@@ -165,6 +170,8 @@ ci_properties = {
                 core_shared_properties, {"temporary-storage-url-prefix": {"type": "string"}}
             ),
         },
+        # Allow legacy format for update
+        spack.schema.gitlab_ci.properties,
     ]
 }
 
@@ -179,3 +186,28 @@ schema = {
     "additionalProperties": False,
     "properties": properties,
 }
+
+
+def update(data):
+    import llnl.util.tty as tty
+
+    import spack.ci
+    import spack.environment as ev
+
+    # Warn if deprecated section is still in the environment
+    ci_env = ev.active_environment()
+    if ci_env:
+        env_config = ev.config_dict(ci_env.yaml)
+        if "gitlab-ci" in env_config:
+            tty.warning(
+                "Updating CI section requires manually renameing the `gitlab-ci` section to `ci`"
+            )
+
+    # Detect if the ci section is using the new pipeline-gen
+    # If it is, assume it has already been converted
+    if "pipeline-gen" in data:
+        return False
+    else:
+        data = spack.ci.translate_deprecated_config(data)
+
+    return True
