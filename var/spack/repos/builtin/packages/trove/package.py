@@ -20,7 +20,7 @@ class Trove(MakefilePackage):
     executables = [r"^j-trove.x$"]
 
     depends_on("mpi")
-    depends_on("intel-oneapi-mkl")
+    depends_on("mkl")
 
     parallel=True
 
@@ -31,11 +31,11 @@ class Trove(MakefilePackage):
         env['PREFIX'] = prefix
 
         env['FOR'] = self.fc
-        env['LAPACK'] = "-qmkl=parallel -lmkl_scalapack_lp64 -lmkl_blacs_intelmpi_lp64"
+        env['LAPACK'] = "-mkl=parallel -lmkl_scalapack_lp64 -lmkl_blacs_intelmpi_lp64 -lmkl_intel_lp64"
         if self.compiler.name == 'intel':
             env['FFLAGS'] = self.compiler.openmp_flag +" -mavx2 -mfma -O3 -ip -Ofast"
             if 'openmpi' in spec:
-                env['LAPACK'] = "-qmkl=parallel -lmkl_scalapack_lp64 -lmkl_blacs_openmpi_lp64"
+                env['LAPACK'] = "-mkl=parallel -lmkl_scalapack_lp64 -lmkl_blacs_openmpi_lp64 -lmkl_intel_lp64"
         elif self.compiler.name == 'gcc':
             env['FFLAGS'] = self.compiler.openmp_flag +" -ffree-line-length-none -march=native -O3 -fcray-pointer -g3"
             if 'openmpi' in spec:
