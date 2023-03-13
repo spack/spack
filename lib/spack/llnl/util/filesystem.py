@@ -2724,45 +2724,70 @@ def filesummary(path, print_bytes=16) -> Tuple[int, bytes]:
 
 
 class FindFile:
-    """Uses iterative deepening to locate the first matching file(s).
-    This effectively follows a BFS order with DFS memory footprint
-    as the cost of repeated visits of low depth directories."""
+    """Uses hybrid iterative deepening to locate the first matching
+    file(s). Up to depth 2 it is BFS with iterative deepening, then
+    it switches to normal DFS."""
 
-    def __init__(self, root, name):
+    def __init__(self, root, name, switchover=2):
         self.root = root
         self.match = re.compile(fnmatch.translate(name)).match
-        self.results = []
+        self.result = None
+        self.switchover = switchover
 
     def run(self):
-        i = 0
-        while self.find_first_file(".", 0, i) and not self.results:
-            i += 1
-        return self.results
+        self.result = None
+        if not self._find_iterative_deepening():
+            return self._find_dfs()
+        return self.result
 
-    def find_first_file(self, rel_path, depth, max_depth):
+    def _find_iterative_deepening(self):
+        """Returns True when search is done. Notice
+        search can be over when nothing is found too."""
+        for i in range(self.switchover):
+            if not self._find_at_depth(".", 0, i):
+                return True
+        return False
+
+    def _find_dfs(self):
+        """Returns match or None"""
+        for dirpath, _, filenames in os.walk(self.root):
+            for file in filenames:
+                if self.match(file):
+                    return os.path.join(dirpath, file)
+
+        return None
+
+    def _find_at_depth(self, rel_path, depth, max_depth):
+        """Returns True when search should continue"""
         try:
             entries = os.scandir(os.path.join(self.root, rel_path))
         except OSError:
             return False
 
-        found_dir = False
+        should_continue = False
         with entries:
             if depth == max_depth:
-                self.find_matches(rel_path, entries)
+                self._find_matches(rel_path, entries)
                 return True
 
             for f in entries:
                 try:
-                    is_dir = not f.is_symlink() and f.is_dir()
+                    if f.is_symlink() or not f.is_dir():
+                        continue
                 except OSError:
-                    is_dir = False
-                if is_dir:
-                    found_dir |= self.find_first_file(
-                        os.path.join(rel_path, f.name), depth + 1, max_depth
-                    )
-        return found_dir
+                    continue
 
-    def find_matches(self, rel_path, entries):
+                should_continue |= self._find_at_depth(
+                    os.path.join(rel_path, f.name), depth + 1, max_depth
+                )
+
+                # early exit on match.
+                if self.result:
+                    return False
+        return should_continue
+
+    def _find_matches(self, rel_path, entries):
         for f in entries:
             if self.match(f.name):
-                self.results.append(os.path.join(rel_path, f.name))
+                self.result = os.path.join(rel_path, f.name)
+                return
