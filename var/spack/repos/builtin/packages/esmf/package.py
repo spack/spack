@@ -16,7 +16,7 @@ class Esmf(MakefilePackage):
     composing complex, coupled modeling systems and includes data structures
     and utilities for developing individual models."""
 
-    homepage = "https://www.earthsystemcog.org/projects/esmf/"
+    homepage = "https://earthsystemmodeling.org/"
     url = "https://github.com/esmf-org/esmf/archive/ESMF_8_0_1.tar.gz"
     git = "https://github.com/esmf-org/esmf.git"
 
