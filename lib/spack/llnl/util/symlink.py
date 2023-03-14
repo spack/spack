@@ -57,11 +57,11 @@ def symlink(real_path, link_path):
             link_path = os.path.abspath(link_path)
         # os.symlink will fail if link exists, emulate the behavior here
         if os.path.exists(link_path):
-            raise OSError(errno.EEXIST, "Link exists: %s" % (link_path))
+            raise OSError(errno.EEXIST, "Link exists: %s" % link_path)
         else:
             windows_non_symlink(real_path, link_path)
             if not os.path.exists(link_path):
-                raise OSError("Failed to create link: %s" % (link_path))
+                raise OSError("Failed to create link: %s" % link_path)
 
 
 def islink(path):
@@ -175,7 +175,7 @@ def windows_non_symlink(path, link):
             cmd = ["cmd", "/C", "mklink", "/J", link, path]
             result = subprocess.check_output(cmd).decode()
             if "Junction created" not in result:
-                raise OSError(errno.EEXIST, "Junction exists: %s" % (link))
+                raise OSError(errno.EEXIST, "Junction exists: %s" % link)
         except subprocess.CalledProcessError as e:
             tty.error("[symlink] Junction {} not created for directory {}. "
                       "error was: {}".format(link, path, str(e)))
