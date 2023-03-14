@@ -242,3 +242,6 @@ class QtBase(QtPackage):
             define("FEATURE_system_" + k, v)
 
         return args
+
+    def setup_dependent_package(self, module, dependent_spec):
+        module.qmake = Executable(self.spec.prefix.bin.qmake)
