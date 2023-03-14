@@ -874,7 +874,7 @@ def test_filesummary(tmpdir):
 
 
 def test_find_first_file(tmpdir):
-    # Create a structure: a/b/c/d
+    # Create a structure: a/a/a/{file1,file2}, b/a, c/a, d/{a,file1}
     tmpdir.join("a").ensure(dir=True).join("a").ensure(dir=True).join("a").ensure(dir=True)
     tmpdir.join("b").ensure(dir=True).join("a").ensure(dir=True)
     tmpdir.join("c").ensure(dir=True).join("a").ensure(dir=True)
@@ -895,6 +895,10 @@ def test_find_first_file(tmpdir):
     assert os.path.samefile(fs.find_first(root, "file*"), os.path.join(root, "d", "file1"))
 
     assert fs.find_first(root, "nonexisting") is None
+
+    assert os.path.samefile(
+        fs.find_first(root, "nonexisting", "file2"), os.path.join(root, "a", "a", "a", "file2")
+    )
 
     # Should find first dir
     assert os.path.samefile(fs.find_first(root, "a"), os.path.join(root, "a"))
