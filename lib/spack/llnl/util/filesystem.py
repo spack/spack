@@ -2789,8 +2789,9 @@ class FindFirstFile:
         return self._find_dfs()
 
     def _find_at_depth(self, path, max_depth, depth=0):
-        """Returns True when done. Notice it can be done
-        without"""
+        """Returns True when done. Notice search can be done
+        either because a file was found, or because it recursed
+        through all directories."""
         try:
             entries = os.scandir(path)
         except OSError:
