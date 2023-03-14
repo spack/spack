@@ -1863,6 +1863,7 @@ class Environment(object):
         assert len(hash_matches) == 1
         return hash_matches[0]
 
+    @spack.repo.autospec
     def matching_spec(self, spec):
         """
         Given a spec (likely not concretized), find a matching concretized
@@ -1880,59 +1881,60 @@ class Environment(object):
         and multiple dependency specs match, then this raises an error
         and reports all matching specs.
         """
-        # Root specs will be keyed by concrete spec, value abstract
-        # Dependency-only specs will have value None
-        matches = {}
+        env_root_to_user = {root.dag_hash(): user for user, root in self.concretized_specs()}
+        root_matches, dep_matches = [], []
 
-        if not isinstance(spec, spack.spec.Spec):
-            spec = spack.spec.Spec(spec)
-
-        for user_spec, concretized_user_spec in self.concretized_specs():
-            # Deal with concrete specs differently
-            if spec.concrete:
-                if spec in concretized_user_spec:
-                    matches[spec] = spec
+        for env_spec in spack.traverse.traverse_nodes(
+            specs=[root for _, root in self.concretized_specs()],
+            key=lambda s: s.dag_hash(),
+            order="breadth",
+        ):
+            if not env_spec.satisfies(spec):
                 continue
 
-            if concretized_user_spec.satisfies(spec):
-                matches[concretized_user_spec] = user_spec
-            for dep_spec in concretized_user_spec.traverse(root=False):
-                if dep_spec.satisfies(spec):
-                    # Don't overwrite the abstract spec if present
-                    # If not present already, set to None
-                    matches[dep_spec] = matches.get(dep_spec, None)
+            # If the spec is concrete, then there is no possibility of multiple matches,
+            # and we immediately return the single match
+            if spec.concrete:
+                return env_spec
 
-        if not matches:
+            # Distinguish between environment roots and deps. Specs that are both
+            # are classified as environment roots.
+            user_spec = env_root_to_user.get(env_spec.dag_hash())
+            if user_spec:
+                root_matches.append((env_spec, user_spec))
+            else:
+                dep_matches.append(env_spec)
+
+        # No matching spec
+        if not root_matches and not dep_matches:
             return None
-        elif len(matches) == 1:
-            return list(matches.keys())[0]
 
-        root_matches = dict(
-            (concrete, abstract) for concrete, abstract in matches.items() if abstract
-        )
-
+        # Single root spec, any number of dep specs => return root spec.
         if len(root_matches) == 1:
-            return list(root_matches.items())[0][0]
+            return root_matches[0][0]
+
+        if not root_matches and len(dep_matches) == 1:
+            return dep_matches[0]
 
         # More than one spec matched, and either multiple roots matched or
         # none of the matches were roots
         # If multiple root specs match, it is assumed that the abstract
         # spec will most-succinctly summarize the difference between them
         # (and the user can enter one of these to disambiguate)
-        match_strings = []
         fmt_str = "{hash:7}  " + spack.spec.default_format
-        for concrete, abstract in matches.items():
-            if abstract:
-                s = "Root spec %s\n  %s" % (abstract, concrete.format(fmt_str))
-            else:
-                s = "Dependency spec\n  %s" % concrete.format(fmt_str)
-            match_strings.append(s)
+        color = clr.get_color_when()
+        match_strings = [
+            f"Root spec {abstract.format(color=color)}\n  {concrete.format(fmt_str, color=color)}"
+            for concrete, abstract in root_matches
+        ]
+        match_strings.extend(
+            f"Dependency spec\n  {s.format(fmt_str, color=color)}" for s in dep_matches
+        )
         matches_str = "\n".join(match_strings)
 
-        msg = "{0} matches multiple specs in the environment {1}: \n" "{2}".format(
-            str(spec), self.name, matches_str
+        raise SpackEnvironmentError(
+            f"{spec} matches multiple specs in the environment {self.name}: \n{matches_str}"
         )
-        raise SpackEnvironmentError(msg)
 
     def removed_specs(self):
         """Tuples of (user spec, concrete spec) for all specs that will be
