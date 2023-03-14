@@ -3,10 +3,11 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-
 import inspect
 import os.path
 
+import spack.build_systems.cmake
+import spack.build_systems.makefile
 from spack.package import *
 
 
@@ -43,10 +44,8 @@ class Pexsi(MakefilePackage, CMakePackage):
         depends_on("cmake@3.10:", type="build")
         depends_on("cmake@3.17:", type="build", when="@2:")
 
-    variant("openmp", default=False, description="Build with OpenMP support", when="@1.2:")
+    variant("openmp", default=False, description="Build with OpenMP support", when="@1.2")
     variant("fortran", default=False, description="Builds the Fortran interface")
-
-    parallel = False
 
     def url_for_version(self, version):
         if version == Version("0"):
@@ -54,60 +53,64 @@ class Pexsi(MakefilePackage, CMakePackage):
 
         return f"https://bitbucket.org/berkeleylab/pexsi/downloads/pexsi_v{version}.tar.gz"
 
-    def edit(self, spec, prefix):
+
+class MakefileBuilder(spack.build_systems.makefile.MakefileBuilder):
+    parallel = False
+
+    def edit(self, pkg, spec, prefix):
         substitutions = [
-            ("@MPICC", self.spec["mpi"].mpicc),
-            ("@MPICXX_LIB", self.spec["mpi:cxx"].libs.joined()),
-            ("@MPICXX", self.spec["mpi"].mpicxx),
-            ("@MPIFC", self.spec["mpi"].mpifc),
+            ("@MPICC", spec["mpi"].mpicc),
+            ("@MPICXX_LIB", spec["mpi:cxx"].libs.joined()),
+            ("@MPICXX", spec["mpi"].mpicxx),
+            ("@MPIFC", spec["mpi"].mpifc),
             ("@RANLIB", "ranlib"),
-            ("@PEXSI_STAGE", self.stage.source_path),
-            ("@SUPERLU_PREFIX", self.spec["superlu-dist"].prefix),
-            ("@METIS_PREFIX", self.spec["metis"].prefix),
-            ("@PARMETIS_PREFIX", self.spec["parmetis"].prefix),
-            ("@LAPACK_PREFIX", self.spec["lapack"].prefix),
-            ("@BLAS_PREFIX", self.spec["blas"].prefix),
-            ("@LAPACK_LIBS", self.spec["lapack"].libs.joined()),
-            ("@BLAS_LIBS", self.spec["blas"].libs.joined()),
+            ("@PEXSI_STAGE", pkg.stage.source_path),
+            ("@SUPERLU_PREFIX", spec["superlu-dist"].prefix),
+            ("@METIS_PREFIX", spec["metis"].prefix),
+            ("@PARMETIS_PREFIX", spec["parmetis"].prefix),
+            ("@LAPACK_PREFIX", spec["lapack"].prefix),
+            ("@BLAS_PREFIX", spec["blas"].prefix),
+            ("@LAPACK_LIBS", spec["lapack"].libs.joined()),
+            ("@BLAS_LIBS", spec["blas"].libs.joined()),
             # FIXME : what to do with compiler provided libraries ?
-            ("@STDCXX_LIB", " ".join(self.compiler.stdcxx_libs)),
+            ("@STDCXX_LIB", " ".join(pkg.compiler.stdcxx_libs)),
         ]
 
         fldflags = ""
-        if "@0.9.2" in self.spec:
+        if "@0.9.2" in spec:
             fldflags += " -Wl,--allow-multiple-definition"
 
-        if "^superlu +openmp" in self.spec or "^openblas threads=openmp" in self.spec:
-            fldflags += " " + self.compiler.openmp_flag
+        if "^superlu +openmp" in spec or "^openblas threads=openmp" in spec:
+            fldflags += " " + pkg.compiler.openmp_flag
 
         substitutions.append(("@FLDFLAGS", fldflags.lstrip()))
 
         template = join_path(os.path.dirname(inspect.getmodule(self).__file__), "make.inc")
-        makefile = join_path(self.stage.source_path, "make.inc")
+        makefile = join_path(pkg.stage.source_path, "make.inc")
         copy(template, makefile)
         for key, value in substitutions:
             filter_file(key, value, makefile)
 
-    def build(self, spec, prefix):
-        super(Pexsi, self).build(spec, prefix)
-        if "+fortran" in self.spec:
+    def build(self, pkg, spec, prefix):
+        super().build(pkg, spec, prefix)
+        if "+fortran" in spec:
             make("-C", "fortran")
 
-    def install(self, spec, prefix):
+    def install(self, pkg, spec, prefix):
         # 'make install' does not exist, despite what documentation says
-        mkdirp(self.prefix.lib)
+        mkdirp(pkg.prefix.lib)
 
         install(
-            join_path(self.stage.source_path, "src", "libpexsi_linux.a"),
-            join_path(self.prefix.lib, "libpexsi.a"),
+            join_path(pkg.stage.source_path, "src", "libpexsi_linux.a"),
+            join_path(pkg.prefix.lib, "libpexsi.a"),
         )
 
-        install_tree(join_path(self.stage.source_path, "include"), self.prefix.include)
+        install_tree(join_path(pkg.stage.source_path, "include"), pkg.prefix.include)
 
         # fortran "interface"
-        if "+fortran" in self.spec:
+        if "+fortran" in spec:
             install_tree(
-                join_path(self.stage.source_path, "fortran"), join_path(self.prefix, "fortran")
+                join_path(pkg.stage.source_path, "fortran"), join_path(pkg.prefix, "fortran")
             )
 
 
