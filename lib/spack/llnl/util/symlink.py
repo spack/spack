@@ -6,7 +6,6 @@ import errno
 import os
 import shutil
 import tempfile
-from os.path import exists, join
 from sys import platform as _platform
 
 from llnl.util import lang, tty
@@ -47,14 +46,9 @@ def symlink(real_path, link_path):
     letter) but not to a remote directory. Don't need
     System Administrator privileges.
     """
-    if not is_windows:
-        return os.symlink(real_path, link_path)
-
-    # If we get here, we are on Windows
-    if windows_can_symlink():
-        # Windows requires target_is_directory=True when
-        # the target is a dir.
-        return os.symlink(real_path, link_path, target_is_directory=os.path.isdir(real_path))
+    if not is_windows or windows_can_symlink():
+        os.symlink(real_path, link_path,
+                   target_is_directory=os.path.isdir(real_path))
     else:
         # If windows can not make normal symbolic links
         # we try junction for a directory or hardlink
@@ -62,7 +56,7 @@ def symlink(real_path, link_path):
         if not os.path.isabs(link_path):
             link_path = os.path.abspath(link_path)
         # os.symlink will fail if link exists, emulate the behavior here
-        if exists(link_path):
+        if os.path.exists(link_path):
             raise OSError(errno.EEXIST, "Link exists: %s" % (link_path))
         else:
             windows_non_symlink(real_path, link_path)
@@ -142,11 +136,11 @@ def windows_can_symlink():
 
     tempdir = tempfile.mkdtemp()
 
-    dpath = join(tempdir, "dpath")
-    fpath = join(tempdir, "fpath.txt")
+    dpath = os.path.join(tempdir, "dpath")
+    fpath = os.path.join(tempdir, "fpath.txt")
 
-    dlink = join(tempdir, "dlink")
-    flink = join(tempdir, "flink.txt")
+    dlink = os.path.join(tempdir, "dlink")
+    flink = os.path.join(tempdir, "flink.txt")
 
     import llnl.util.filesystem as fs
 
@@ -184,8 +178,7 @@ def windows_non_symlink(path, link):
                 raise OSError(errno.EEXIST, "Junction exists: %s" % (link))
         except subprocess.CalledProcessError as e:
             tty.error("[symlink] Junction {} not created for directory {}. "
-                      "error was: {}".format(link, path, str(e))
-            )
+                      "error was: {}".format(link, path, str(e)))
     if os.path.isfile(path):
         tty.warn("[symlink] Junction fallback to create HardLink {} for "
                  "file {}".format(link, path))
