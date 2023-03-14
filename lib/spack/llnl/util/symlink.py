@@ -9,14 +9,12 @@ import tempfile
 from os.path import exists, join
 from sys import platform as _platform
 
-import llnl.util.tty as console
-from llnl.util import lang
+from llnl.util import lang, tty
 
 is_windows = _platform == "win32"
 
 if is_windows:
     import subprocess
-
     from win32file import CreateHardLink
 
 
@@ -103,10 +101,10 @@ def windows_is_hardlink(path):
         elif len(lines) > 1:
             return True
         else:
-            console.msg("[symlink] Cannot determine if hardlink. Returning false.")
+            tty.msg("[symlink] Cannot determine if hardlink. Returning false.")
             return False
     except subprocess.CalledProcessError as e:
-        console.msg("[symlink] Check on hardlink failed with error: " + str(e))
+        tty.msg("[symlink] Check on hardlink failed with error: " + str(e))
         return False
 
 
@@ -139,7 +137,7 @@ def windows_can_symlink():
     the system configuration and the level of the user's permissions.
     """
     if not is_windows:
-        console.msg("[symlink] WARNING: window_can_symlink called on non-windows")
+        tty.msg("[symlink] WARNING: window_can_symlink called on non-windows")
         return False
 
     tempdir = tempfile.mkdtemp()
@@ -185,13 +183,10 @@ def windows_non_symlink(path, link):
             if "Junction created" not in result:
                 raise OSError(errno.EEXIST, "Junction exists: %s" % (link))
         except subprocess.CalledProcessError as e:
-            console.msg(
-                "[symlink] Junction {} not created for directory "
-                "{}. error was {}".format(link, path, str(e))
+            tty.error("[symlink] Junction {} not created for directory {}. "
+                      "error was: {}".format(link, path, str(e))
             )
     if os.path.isfile(path):
-        print("[symlink] Calling CreateHardLink(" + link + "," + path + ")")
-        console.msg(
-            "[symlink] Junction fallback to create HardLink {} for file {}".format(link, path)
-        )
+        tty.warn("[symlink] Junction fallback to create HardLink {} for "
+                 "file {}".format(link, path))
         CreateHardLink(link, path)
