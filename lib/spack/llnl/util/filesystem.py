@@ -2781,7 +2781,7 @@ class FindFirstFile:
         self.file = None
 
         # First do iterative deepening (i.e. bfs through limited depth dfs)
-        for i in range(self.bfs_depth):
+        for i in range(self.bfs_depth + 1):
             if self._find_at_depth(self.root, i):
                 return self.file
 
