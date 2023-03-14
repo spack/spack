@@ -770,9 +770,9 @@ def generate_gitlab_ci_yaml(
             dependent_depth = int(dependent_depth)
         except (TypeError, ValueError):
             tty.warn(
-                "Unrecognized value ({0}) ".format(dependent_depth),
-                "provide forSPACK_PRUNE_UNTOUCHED_DEPENDENT_DEPTH, ",
-                "ignoring it.",
+                f"Unrecognized value ({dependent_depth}) "
+                "provided for SPACK_PRUNE_UNTOUCHED_DEPENDENT_DEPTH, "
+                "ignoring it."
             )
             dependent_depth = None
 
