@@ -2777,12 +2777,10 @@ class FindFirstFile:
         # normcase is trivial on posix
         regex = re.compile("|".join(fnmatch.translate(os.path.normcase(p)) for p in file_patterns))
 
-        if os.path is posixpath:
-            # On posix use filenames as is.
-            self.match = regex.match
-        else:
-            # On case sensitive filesystems match against normcase'd paths.
-            self.match = lambda p: regex.match(os.path.normcase(p))
+        # On case sensitive filesystems match against normcase'd paths.
+        self.match = (
+            lambda p: regex.match(os.path.normcase(p)) if os.path is posixpath else regex.match
+        )
 
     def find(self) -> Optional[str]:
         """Run the file search
