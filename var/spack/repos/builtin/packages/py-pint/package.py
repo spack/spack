@@ -28,7 +28,10 @@ class PyPint(PythonPackage):
     version("0.8.1", sha256="afcf31443a478c32bbac4b00337ee9026a13d0e2ac83d30c79151462513bb0d4")
 
     depends_on("python@3.8:", type=("build", "run"), when="@0.20.1:")
-    depends_on("py-setuptools", type=("build", "run"))
-    depends_on("py-setuptools-scm", type=("build"))
+    depends_on("py-setuptools@41:", when="@0.16:", type="build")
+    depends_on("py-setuptools@41:", when="@0.11:0.15", type=("build", "run"))
+    depends_on("py-setuptools", when="@:0.10", type=("build", "run"))
+    depends_on("py-setuptools-scm@3.4.3:+toml", when="@0.11:", type="build")
+    depends_on("py-setuptools-scm", when="@0.10", type="build")
     depends_on("py-packaging", type=("build", "run"), when="@0.17:")
     depends_on("py-importlib-metadata", type=("build", "run"), when="@0.17: ^python@:3.7")
