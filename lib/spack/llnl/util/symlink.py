@@ -102,26 +102,34 @@ def windows_is_hardlink(path):
         return False
 
 
-def windows_is_junction(path):
-    """
-    Determines if a path is a windows junction.
-    """
-    if not is_windows:
-        return False
+def windows_is_junction(path) -> bool:
+    """ Determines if a path is a windows junction. A junction can be
+    determined using a bitwise AND operation between the file's
+    attribute bitmask and the known junction bitmask (0x400).
 
-    if os.path.islink(path):
+    Args:
+        path (str): A non-file path
+
+    Returns:
+        bool - whether the path is a junction or not.
+    """
+    if not is_windows or os.path.islink(path) or os.path.isfile(path):
         return False
 
     import ctypes.wintypes
 
-    GetFileAttributes = ctypes.windll.kernel32.GetFileAttributesW
-    GetFileAttributes.argtypes = (ctypes.wintypes.LPWSTR,)
-    GetFileAttributes.restype = ctypes.wintypes.DWORD
+    get_file_attributes = ctypes.windll.kernel32.GetFileAttributesW
+    get_file_attributes.argtypes = (ctypes.wintypes.LPWSTR,)
+    get_file_attributes.restype = ctypes.wintypes.DWORD
 
-    INVALID_FILE_ATTRIBUTES = 0xFFFFFFFF
-    FILE_ATTRIBUTE_REPARSE_POINT = 0x400
-    res = GetFileAttributes(path)
-    return res != INVALID_FILE_ATTRIBUTES and bool(res & FILE_ATTRIBUTE_REPARSE_POINT)
+    invalid_file_attributes: hex = 0xFFFFFFFF
+    reparse_point: hex = 0x400
+    file_attr: hex = get_file_attributes(path)
+
+    if file_attr == invalid_file_attributes:
+        return False
+
+    return file_attr & reparse_point > 0
 
 
 @lang.memoized
