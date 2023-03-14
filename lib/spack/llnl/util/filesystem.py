@@ -11,6 +11,7 @@ import hashlib
 import itertools
 import numbers
 import os
+import posixpath
 import re
 import shutil
 import stat
@@ -2771,8 +2772,17 @@ class FindFirstFile:
                 when no match is found, the mode is switched to depth-first search.
         """
         self.root = root
-        self.match = re.compile("|".join(fnmatch.translate(p) for p in file_patterns)).match
         self.bfs_depth = bfs_depth
+
+        # normcase is trivial on posix
+        regex = re.compile("|".join(fnmatch.translate(os.path.normcase(p)) for p in file_patterns))
+
+        if os.path is posixpath:
+            # On posix use filenames as is.
+            self.match = regex.match
+        else:
+            # On case sensitive filesystems match against normcase'd paths.
+            self.match = lambda p: regex.match(os.path.normcase(p))
 
     def find(self) -> Optional[str]:
         """Run the file search
