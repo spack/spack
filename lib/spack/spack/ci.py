@@ -38,6 +38,7 @@ import spack.util.gpg as gpg_util
 import spack.util.spack_yaml as syaml
 import spack.util.url as url_util
 import spack.util.web as web_util
+from spack import traverse
 from spack.error import SpackError
 from spack.reporters import CDash, CDashConfiguration
 from spack.reporters.cdash import build_stamp as cdash_build_stamp
@@ -471,15 +472,16 @@ def get_spec_filter_list(env, affected_pkgs, dependent_traverse_depth=None):
     tty.debug("All concrete environment specs:")
     for s in all_concrete_specs:
         tty.debug("  {0}/{1}".format(s.name, s.dag_hash()[:7]))
-    env_matches = [s for s in all_concrete_specs if s.name in frozenset(affected_pkgs)]
+    affected_pkgs = frozenset(affected_pkgs)
+    env_matches = [s for s in all_concrete_specs if s.name in affected_pkgs]
     visited = set()
     dag_hash = lambda s: s.dag_hash()
-    for match in env_matches:
-        for dep_level, parent in match.traverse(direction="parents", key=dag_hash, depth=True):
-            if dependent_traverse_depth is None or dep_level <= dependent_traverse_depth:
-                affected_specs.update(
-                    parent.traverse(direction="children", visited=visited, key=dag_hash)
-                )
+    for depth, parent in traverse.traverse_nodes(
+        env_matches, direction="parents", key=dag_hash, depth=True, order="breadth"
+    ):
+        if dependent_traverse_depth is not None and depth > dependent_traverse_depth:
+            break
+        affected_specs.update(parent.traverse(direction="children", visited=visited, key=dag_hash))
     return affected_specs
 
 
