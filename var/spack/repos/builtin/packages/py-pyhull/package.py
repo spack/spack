@@ -13,7 +13,7 @@ class PyPyhull(PythonPackage):
     interfaces to qhull."""
 
     homepage = "https://github.com/materialsvirtuallab/pyhull"
-    pypi     = "pyhull/pyhull-2015.2.1.tar.gz"
+    pypi = "pyhull/pyhull-2015.2.1.tar.gz"
 
     maintainers("meyersbs")
 
