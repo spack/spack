@@ -859,13 +859,13 @@ def test_error_conditions(text, exc_cls):
     [
         # Specfile related errors
         pytest.param(
-            "/bogus/path/libdwarf.yaml", spack.spec.NoSuchSpecFileError, marks=FAIL_ON_WINDOWS
+            "/bogus/path/libdwarf.yaml", spack.spec.RedundantSpecError, marks=FAIL_ON_WINDOWS
         ),
         pytest.param("../../libdwarf.yaml", spack.spec.NoSuchSpecFileError, marks=FAIL_ON_WINDOWS),
         pytest.param("./libdwarf.yaml", spack.spec.NoSuchSpecFileError, marks=FAIL_ON_WINDOWS),
         pytest.param(
             "libfoo ^/bogus/path/libdwarf.yaml",
-            spack.spec.NoSuchSpecFileError,
+            spack.spec.RedundantSpecError,
             marks=FAIL_ON_WINDOWS,
         ),
         pytest.param(
@@ -875,11 +875,11 @@ def test_error_conditions(text, exc_cls):
             "libfoo ^./libdwarf.yaml", spack.spec.NoSuchSpecFileError, marks=FAIL_ON_WINDOWS
         ),
         pytest.param(
-            "/bogus/path/libdwarf.yamlfoobar", spack.spec.SpecFilenameError, marks=FAIL_ON_WINDOWS
+            "/bogus/path/libdwarf.yamlfoobar", spack.spec.RedundantSpecError, marks=FAIL_ON_WINDOWS
         ),
         pytest.param(
             "libdwarf^/bogus/path/libelf.yamlfoobar ^/path/to/bogus.yaml",
-            spack.spec.SpecFilenameError,
+            spack.spec.RedundantSpecError,
             marks=FAIL_ON_WINDOWS,
         ),
         pytest.param(

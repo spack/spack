@@ -389,7 +389,12 @@ class SpecNodeParser:
                 name = name.strip("'\" ")
                 value = value.strip("'\" ")
                 initial_spec._add_flag(name, value, propagate=True)
-            elif not self.has_hash and self.ctx.accept(TokenType.DAG_HASH):
+            elif self.ctx.accept(TokenType.DAG_HASH):
+                if initial_spec.abstract_hash:
+                    msg = (f"Parsed multiple hashes /{initial_spec.abstract_hash}and "
+                           "/{self.current_token}. If you were attempting to specify a file path,"
+                           " check that it was formatted properly")
+                    raise spack.spec.RedundantSpecError(msg, self.ctx.current_token.value)
                 initial_spec.abstract_hash = self.ctx.current_token.value[1:]
                 self.has_hash = True
             else:
