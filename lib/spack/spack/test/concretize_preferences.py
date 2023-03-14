@@ -265,13 +265,13 @@ mpileaks:
         spec.concretize()
         assert spec.version == Version("0.2.15.develop")
 
-    def test_external_mpi(self):
+    def test_external_mpi(self, external_spec, clean_store):
         # make sure this doesn't give us an external first.
-        spec = Spec("mpi")
-        spec.concretize()
+        spec = Spec("mpi").concretized()
         assert not spec["mpi"].external
 
         # load config
+        external_spec("mpich@3.0.4", prefix="/dummy/path")
         conf = syaml.load_config(
             """\
 all:
@@ -279,9 +279,6 @@ all:
         mpi: [mpich]
 mpich:
     buildable: false
-    externals:
-    - spec: mpich@3.0.4
-      prefix: /dummy/path
 """
         )
         spack.config.set("packages", conf, scope="concretize")
@@ -291,11 +288,12 @@ mpich:
         spec.concretize()
         assert spec["mpich"].external_path == os.path.sep + os.path.join("dummy", "path")
 
-    def test_external_module(self, monkeypatch):
+    def test_external_module(self, external_spec, clean_store, monkeypatch):
         """Test that packages can find externals specified by module
 
         The specific code for parsing the module is tested elsewhere.
-        This just tests that the preference is accounted for"""
+        This just tests that the preference is accounted for
+        """
 
         # make sure this doesn't give us an external first.
         def mock_module(cmd, module):
@@ -303,10 +301,10 @@ mpich:
 
         monkeypatch.setattr(spack.util.module_cmd, "module", mock_module)
 
-        spec = Spec("mpi")
-        spec.concretize()
+        spec = Spec("mpi").concretized()
         assert not spec["mpi"].external
 
+        external_spec("mpich@3.0.4", modules=["dummy"])
         # load config
         conf = syaml.load_config(
             """\
@@ -315,16 +313,12 @@ all:
         mpi: [mpich]
 mpi:
     buildable: false
-    externals:
-    - spec: mpich@3.0.4
-      modules: [dummy]
 """
         )
         spack.config.set("packages", conf, scope="concretize")
 
         # ensure that once config is in place, external is used
-        spec = Spec("mpi")
-        spec.concretize()
+        spec = Spec("mpi").concretized()
         assert spec["mpich"].external_path == os.path.sep + os.path.join("dummy", "path")
 
     def test_buildable_false(self):

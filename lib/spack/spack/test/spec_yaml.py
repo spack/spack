@@ -83,9 +83,6 @@ def test_invalid_json_spec(invalid_json, error_message):
 @pytest.mark.parametrize(
     "abstract_spec",
     [
-        # Externals
-        "externaltool",
-        "externaltest",
         # Ambiguous version spec
         "mpileaks@1.0:5.0,6.1,7.3+debug~opt",
         # Variants

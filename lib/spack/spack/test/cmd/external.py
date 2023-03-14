@@ -43,7 +43,7 @@ def define_plat_exe(exe):
 
 
 @pytest.mark.xfail(sys.platform == "win32", reason="https://github.com/spack/spack/pull/39850")
-def test_find_external_single_package(mock_executable):
+def test_find_external_single_package(mock_executable, config):
     cmake_path = mock_executable("cmake", output="echo cmake version 1.foo")
     search_dir = cmake_path.parent.parent
 
@@ -51,10 +51,10 @@ def test_find_external_single_package(mock_executable):
 
     assert len(specs_by_package) == 1 and "cmake" in specs_by_package
     detected_spec = specs_by_package["cmake"]
-    assert len(detected_spec) == 1 and detected_spec[0].spec == Spec("cmake@1.foo")
+    assert len(detected_spec) == 1 and detected_spec[0].spec.satisfies("cmake@1.foo")
 
 
-def test_find_external_two_instances_same_package(mock_executable, _platform_executables):
+def test_find_external_two_instances_same_package(mock_executable, _platform_executables, config):
     # Each of these cmake instances is created in a different prefix
     # In Windows, quoted strings are echo'd with quotes includes
     # we need to avoid that for proper regex.
@@ -66,31 +66,24 @@ def test_find_external_two_instances_same_package(mock_executable, _platform_exe
     detected_specs = finder.find(pkg_name="cmake", initial_guess=search_paths)
 
     assert len(detected_specs) == 2
-    spec_to_path = {e.spec: e.prefix for e in detected_specs}
-    assert spec_to_path[Spec("cmake@1.foo")] == (
-        spack.detection.executable_prefix(str(cmake1.parent))
-    )
-    assert spec_to_path[Spec("cmake@3.17.2")] == (
-        spack.detection.executable_prefix(str(cmake2.parent))
-    )
+    spec_to_path = {e.spec.format("{name}{@version}"): e.prefix for e in detected_specs}
+    assert spec_to_path["cmake@1.foo"] == (spack.detection.executable_prefix(str(cmake1.parent)))
+    assert spec_to_path["cmake@3.17.2"] == (spack.detection.executable_prefix(str(cmake2.parent)))
 
 
-def test_find_external_update_config(mutable_config):
-    entries = [
-        spack.detection.DetectedPackage(Spec.from_detection("cmake@1.foo"), "/x/y1/"),
-        spack.detection.DetectedPackage(Spec.from_detection("cmake@3.17.2"), "/x/y2/"),
-    ]
-    pkg_to_entries = {"cmake": entries}
+def test_find_external_update_config(mutable_config, clean_store):
+    pkg_to_entries = {
+        "cmake": [
+            spack.detection.DetectedPackage(Spec.from_detection("cmake@1.foo"), "/x/y1/"),
+            spack.detection.DetectedPackage(Spec.from_detection("cmake@3.17.2"), "/x/y2/"),
+        ]
+    }
+    spack.detection.update_database(pkg_to_entries)
 
-    scope = spack.config.default_modify_scope("packages")
-    spack.detection.update_configuration(pkg_to_entries, scope=scope, buildable=True)
-
-    pkgs_cfg = spack.config.get("packages")
-    cmake_cfg = pkgs_cfg["cmake"]
-    cmake_externals = cmake_cfg["externals"]
-
-    assert {"spec": "cmake@1.foo", "prefix": "/x/y1/"} in cmake_externals
-    assert {"spec": "cmake@3.17.2", "prefix": "/x/y2/"} in cmake_externals
+    results = clean_store.db.query("cmake@1.foo")
+    assert len(results) == 1 and str(results[0].prefix) == "/x/y1/"
+    results = clean_store.db.query("cmake@3.17.2")
+    assert len(results) == 1 and str(results[0].prefix) == "/x/y2/"
 
 
 def test_get_executables(working_env, mock_executable):
@@ -249,27 +242,21 @@ def test_list_detectable_packages(mutable_config, mutable_mock_repo):
 
 
 @pytest.mark.xfail(sys.platform == "win32", reason="https://github.com/spack/spack/pull/39850")
-def test_packages_yaml_format(mock_executable, mutable_config, monkeypatch, _platform_executables):
-    # Prepare an environment to detect a fake gcc
+def test_spec_properties_external(
+    mock_executable, mutable_config, clean_store, monkeypatch, _platform_executables
+):
     gcc_exe = mock_executable("gcc", output="echo 4.2.1")
     prefix = os.path.dirname(gcc_exe)
     monkeypatch.setenv("PATH", prefix)
 
-    # Find the external spec
     external("find", "gcc")
 
-    # Check entries in 'packages.yaml'
-    packages_yaml = spack.config.get("packages")
-    assert "gcc" in packages_yaml
-    assert "externals" in packages_yaml["gcc"]
-    externals = packages_yaml["gcc"]["externals"]
-    assert len(externals) == 1
-    external_gcc = externals[0]
-    assert external_gcc["spec"] == "gcc@4.2.1 languages=c"
-    assert external_gcc["prefix"] == os.path.dirname(prefix)
-    assert "extra_attributes" in external_gcc
-    extra_attributes = external_gcc["extra_attributes"]
-    assert "prefix" not in extra_attributes
+    results = clean_store.db.query("gcc")
+    assert len(results) == 1
+    gcc = results[0]
+    assert gcc.external and str(gcc.prefix) == os.path.dirname(prefix)
+    assert gcc.satisfies("gcc@4.2.1 languages=c")
+    extra_attributes = gcc.extra_attributes
     assert extra_attributes["compilers"]["c"] == str(gcc_exe)
 
 

@@ -340,9 +340,10 @@ class TestLmod:
         assert "Override even better!" in content
 
     @pytest.mark.usefixtures("config")
-    def test_external_configure_args(self, factory):
+    def test_external_configure_args(self, factory, external_spec):
         # If this package is detected as an external, its configure option line
         # in the module file starts with 'unknown'
+        external_spec("externaltool@1.0%gcc@10.2.1", prefix="/usr")
         writer, spec = factory("externaltool")
 
         assert "unknown" in writer.context.configure_options

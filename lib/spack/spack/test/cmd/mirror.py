@@ -27,7 +27,8 @@ pytestmark = pytest.mark.not_on_windows("does not run on windows")
 
 @pytest.mark.disable_clean_stage_check
 @pytest.mark.regression("8083")
-def test_regression_8083(tmpdir, capfd, mock_packages, mock_fetch, config):
+def test_regression_8083(tmpdir, capfd, mock_fetch, external_spec):
+    external_spec("externaltool@1.0%gcc@10.2.1", prefix="/usr")
     with capfd.disabled():
         output = mirror("create", "-d", str(tmpdir), "externaltool")
     assert "Skipping" in output

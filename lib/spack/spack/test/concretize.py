@@ -326,11 +326,15 @@ class TestConcretize:
         assert not set(cmake.compiler_flags["fflags"])
 
     def test_compiler_flags_from_compiler_and_dependent(self):
-        client = Spec("cmake-client %clang@12.2.0 platform=test os=fe target=fe cflags==-g")
+        """Tests that flags from the command line are composed with flags from
+        compilers.yaml
+        """
+        client = Spec("cmake-client platform=test os=fe target=fe cflags==-from-cli")
         client.concretize()
-        cmake = client["cmake"]
-        for spec in [client, cmake]:
-            assert spec.compiler_flags["cflags"] == ["-O3", "-g"]
+
+        for spec in client.traverse():
+            assert spec.satisfies("%gcc@11.1.0")
+            assert spec.compiler_flags["cflags"] == ["-O0", "-g", "-from-cli"]
 
     def test_compiler_flags_differ_identical_compilers(self):
         # Correct arch to use test compiler that has flags
@@ -528,14 +532,14 @@ class TestConcretize:
         assert spec["libdwarf"].compiler.satisfies(compiler_str)
         assert spec["libelf"].compiler.satisfies(compiler_str)
 
-    def test_external_package(self):
-        spec = Spec("externaltool%gcc")
-        spec.concretize()
-        assert spec["externaltool"].external_path == os.path.sep + os.path.join(
-            "path", "to", "external_tool"
-        )
-        assert "externalprereq" not in spec
-        assert spec["externaltool"].compiler.satisfies("gcc")
+    def test_external_package(self, external_spec):
+        external_spec("externaltool@=1.0%gcc", prefix="/tmp/external")
+
+        spec = Spec("externaltool%gcc").concretized()
+
+        assert spec.external
+        assert not spec.dependencies()
+        assert spec.satisfies("@1.0 %gcc")
 
     def test_external_package_module(self):
         # No tcl modules on darwin/linux machines
@@ -559,17 +563,20 @@ class TestConcretize:
         with pytest.raises(spack.error.SpecError):
             spec.concretize()
 
-    def test_external_and_virtual(self):
-        spec = Spec("externaltest")
-        spec.concretize()
-        assert spec["externaltool"].external_path == os.path.sep + os.path.join(
-            "path", "to", "external_tool"
-        )
-        assert spec["stuff"].external_path == os.path.sep + os.path.join(
-            "path", "to", "external_virtual_gcc"
-        )
-        assert spec["externaltool"].compiler.satisfies("gcc")
-        assert spec["stuff"].compiler.satisfies("gcc")
+    def test_external_and_virtual(self, external_spec):
+        # Normal package
+        external_spec("externaltool@=1.0", prefix="/path/to/externaltool")
+
+        # Virtual package (provides 'stuff')
+        external_spec("externalvirtual@=2.0%clang@=12.0.0", prefix="/usr")
+        external_spec("externalvirtual@=1.0%gcc@=10.2.1", prefix="/usr")
+
+        spec = Spec("externaltest").concretized()
+
+        real_dependency = spec["externaltool"]
+        virtual_dependency = spec["stuff"]
+        assert real_dependency.external and real_dependency.satisfies("%gcc")
+        assert virtual_dependency.external and virtual_dependency.satisfies("%gcc")
 
     def test_find_spec_parents(self):
         """Tests the spec finding logic used by concretization."""
@@ -628,14 +635,14 @@ class TestConcretize:
         with pytest.raises(spack.error.SpackError):
             s.concretize()
 
-    @pytest.mark.parametrize("spec_str", ["conflict@10.0%clang+foo"])
-    def test_no_conflict_in_external_specs(self, spec_str):
+    @pytest.mark.parametrize("spec_str", ["conflict@=10.0%clang+foo"])
+    def test_no_conflict_in_external_specs(self, spec_str, external_spec):
         # Modify the configuration to have the spec with conflict
         # registered as an external
-        ext = Spec(spec_str)
-        data = {"externals": [{"spec": spec_str, "prefix": "/fake/path"}]}
-        spack.config.set("packages::{0}".format(ext.name), data)
-        ext.concretize()  # failure raises exception
+        # Modify the configuration to have the spec with conflict registered as an external
+        external_spec(spec_str, prefix="/usr")
+        s = Spec(spec_str).concretized()  # failure raises exception
+        assert s.external
 
     def test_regression_issue_4492(self):
         # Constructing a spec which has no dependencies, but is otherwise
@@ -905,10 +912,18 @@ class TestConcretize:
     @pytest.mark.regression("4635")
     @pytest.mark.parametrize(
         "spec_str,expected",
-        [("cmake", ["%clang"]), ("cmake %gcc", ["%gcc"]), ("cmake %clang", ["%clang"])],
+        [
+            ("cmake-client", ["%clang", "^cmake %clang"]),
+            ("cmake-client %gcc", ["%gcc", "^cmake %clang"]),
+            ("cmake-client %clang", ["%clang", "^cmake %clang"]),
+        ],
     )
     @pytest.mark.only_clingo("Use case not supported by the original concretizer")
     def test_external_package_and_compiler_preferences(self, spec_str, expected):
+        """Tests that we reuse an external spec, when it's not buildable, no matter what is the
+        compiler setting of the dependent. In this case CMake will always be registered with
+        %clang in the DB.
+        """
         packages_yaml = {
             "all": {"compiler": ["clang", "gcc"]},
             "cmake": {
@@ -919,7 +934,8 @@ class TestConcretize:
         spack.config.set("packages", packages_yaml)
         s = Spec(spec_str).concretized()
 
-        assert s.external
+        assert s["cmake"].external
+        assert str(s["cmake"].prefix) == "/usr"
         for condition in expected:
             assert s.satisfies(condition)
 
@@ -1024,19 +1040,23 @@ class TestConcretize:
 
         assert s.dag_hash() == t.dag_hash()
 
-    def test_external_that_would_require_a_virtual_dependency(self):
+    def test_external_that_would_require_a_virtual_dependency(self, external_spec):
+        """External nodes are currently trimmed, so we can't expect to find a virtual
+        among dependencies.
+        """
+        external_spec("requires-virtual@2.0", prefix="/usr")
         s = Spec("requires-virtual").concretized()
-
         assert s.external
         assert "stuff" not in s
 
-    def test_transitive_conditional_virtual_dependency(self):
+    def test_transitive_conditional_virtual_dependency(self, external_spec):
+        """Tests that reusable virtual providers are preferred."""
+        external_spec("externalvirtual@2.0", prefix="/usr")
         s = Spec("transitive-conditional-virtual-dependency").concretized()
 
         # The default for conditional-virtual-dependency is to have
         # +stuff~mpi, so check that these defaults are respected
-        assert "+stuff" in s["conditional-virtual-dependency"]
-        assert "~mpi" in s["conditional-virtual-dependency"]
+        assert s["conditional-virtual-dependency"].satisfies("+stuff~mpi")
 
         # 'stuff' is provided by an external package, so check it's present
         assert "externalvirtual" in s
@@ -1137,28 +1157,74 @@ class TestConcretize:
 
     @pytest.mark.regression("20244,20736")
     @pytest.mark.parametrize(
-        "spec_str,is_external,expected",
+        "spec_str,is_external,externals,expected",
         [
             # These are all externals, and 0_8 is a version not in package.py
-            ("externaltool@1.0", True, "@1.0"),
-            ("externaltool@0.9", True, "@0.9"),
-            ("externaltool@0_8", True, "@0_8"),
+            (
+                "externaltool@1.0",
+                True,
+                ["externaltool@1.0%gcc@10.2.1", "externaltool@0_8%gcc@10.2.1"],
+                "@1.0",
+            ),
+            (
+                "externaltool@0_8",
+                True,
+                ["externaltool@1.0%gcc@10.2.1", "externaltool@0_8%gcc@10.2.1"],
+                "@0_8",
+            ),
             # This external package is buildable, has a custom version
             # in packages.yaml that is greater than the ones in package.py
             # and specifies a variant
-            ("external-buildable-with-variant +baz", True, "@1.1.special +baz"),
-            ("external-buildable-with-variant ~baz", False, "@1.0 ~baz"),
-            ("external-buildable-with-variant@1.0: ~baz", False, "@1.0 ~baz"),
+            (
+                "external-buildable-with-variant +baz",
+                True,
+                [
+                    "external-buildable-with-variant@1.1.special +baz",
+                    "external-buildable-with-variant@0.9 +baz",
+                ],
+                "@1.1.special +baz",
+            ),
+            (
+                "external-buildable-with-variant ~baz",
+                False,
+                [
+                    "external-buildable-with-variant@1.1.special +baz",
+                    "external-buildable-with-variant@0.9 +baz",
+                ],
+                "@1.0 ~baz",
+            ),
+            (
+                "external-buildable-with-variant@1.0: ~baz",
+                False,
+                [
+                    "external-buildable-with-variant@1.1.special +baz",
+                    "external-buildable-with-variant@0.9 +baz",
+                ],
+                "@1.0 ~baz",
+            ),
             # This uses an external version that meets the condition for
             # having an additional dependency, but the dependency shouldn't
             # appear in the answer set
-            ("external-buildable-with-variant@0.9 +baz", True, "@0.9"),
+            (
+                "external-buildable-with-variant@0.9 +baz",
+                True,
+                [
+                    "external-buildable-with-variant@1.1.special +baz",
+                    "external-buildable-with-variant@0.9 +baz",
+                ],
+                "@0.9",
+            ),
             # This package has an external version declared that would be
             # the least preferred if Spack had to build it
-            ("old-external", True, "@1.0.0"),
+            ("old-external", True, ["old-external@1.0.0"], "@1.0.0"),
         ],
     )
-    def test_external_package_versions(self, spec_str, is_external, expected):
+    def test_external_package_versions(
+        self, spec_str, is_external, externals, expected, external_spec
+    ):
+        for external_str in externals:
+            external_spec(external_str, prefix="/usr")
+
         s = Spec(spec_str).concretized()
         assert s.external == is_external
         assert s.satisfies(expected)
@@ -1297,13 +1363,12 @@ class TestConcretize:
         assert set(s.variants["file_systems"].value) == set(["ufs", "nfs"])
 
     @pytest.mark.regression("22596")
-    def test_external_with_non_default_variant_as_dependency(self):
+    def test_external_with_non_default_variant_as_dependency(self, external_spec):
         # This package depends on another that is registered as an external
         # with 'buildable: true' and a variant with a non-default value set
+        external_spec("external-non-default-variant@3.8.7~foo~bar", prefix="/usr")
         s = Spec("trigger-external-non-default-variant").concretized()
-
-        assert "~foo" in s["external-non-default-variant"]
-        assert "~bar" in s["external-non-default-variant"]
+        assert s["external-non-default-variant"].satisfies("~foo~bar")
         assert s["external-non-default-variant"].external
 
     @pytest.mark.regression("22871")
@@ -1878,11 +1943,11 @@ class TestConcretize:
         [
             "python@configured",
             "python@configured platform=test",
-            "python@configured os=debian",
+            "python@configured os=debian6",
             "python@configured target=%s" % target,
         ],
     )
-    def test_external_python_extension_find_dependency_from_config(self, python_spec):
+    def test_external_python_extension_find_dependency_from_config(self, clean_store, python_spec):
         fake_path = os.path.sep + "fake"
 
         external_conf = {
@@ -1902,41 +1967,33 @@ class TestConcretize:
         # namespace and an external prefix before marking concrete
         assert spec["python"].satisfies(python_spec)
 
-    def test_external_python_extension_find_dependency_from_installed(self, monkeypatch):
+    def test_external_python_extension_find_dependency_from_installed(
+        self, external_spec, monkeypatch
+    ):
+        """Tests that an external python in packages.yaml can find a Python extension from
+        an external installed in the local store.
+        """
         fake_path = os.path.sep + "fake"
 
+        external_spec("python@3.8", prefix=fake_path)
         external_conf = {
             "py-extension1": {
                 "buildable": False,
                 "externals": [{"spec": "py-extension1@2.0", "prefix": fake_path}],
-            },
-            "python": {
-                "buildable": False,
-                "externals": [{"spec": "python@installed", "prefix": fake_path}],
-            },
+            }
         }
-        spack.config.set("packages", external_conf)
-
-        # install python external
-        python = Spec("python").concretized()
-        monkeypatch.setattr(spack.store.STORE.db, "query", lambda x: [python])
-
-        # ensure that we can't be faking this by getting it from config
-        external_conf.pop("python")
         spack.config.set("packages", external_conf)
 
         spec = Spec("py-extension1").concretized()
 
         assert "python" in spec["py-extension1"]
         assert spec["python"].prefix == fake_path
-        # The spec is not equal to Spec("python@configured") because it gets a
-        # namespace and an external prefix before marking concrete
-        assert spec["python"].satisfies(python)
+        assert spec["python"].satisfies("python@3.8")
 
-    def test_external_python_extension_find_dependency_from_detection(self, monkeypatch):
-        """Test that python extensions have access to a python dependency
-
-        when python isn't otherwise in the DAG"""
+    def test_external_python_extension_find_dependency_from_detection(
+        self, clean_store, monkeypatch
+    ):
+        """Tests that a python extensions can search for a python interpreter, as a last resort."""
         python_spec = Spec("python@=detected")
         prefix = os.path.sep + "fake"
 

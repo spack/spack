@@ -309,19 +309,13 @@ def test_installed_upstream_external(install_upstream, mock_fetch):
     """Check that when a dependency package is recorded as installed in
     an upstream database that it is not reinstalled.
     """
-    store_root, _ = install_upstream("externaltool")
-    with spack.store.use_store(store_root):
-        dependent = spack.spec.Spec("externaltest")
-        dependent.concretize()
-
-        new_dependency = dependent["externaltool"]
-        assert new_dependency.external
-        assert new_dependency.prefix == os.path.sep + os.path.join("path", "to", "external_tool")
-
+    s, _ = install_upstream("libelf")
+    with spack.store.use_store(s) as store:
+        dependent = spack.spec.Spec("libdwarf").concretized()
+        new_dependency = dependent["libelf"]
+        assert store.db.query(new_dependency) and not store.db.query_local(new_dependency)
         dependent.package.do_install()
-
-        assert not os.path.exists(new_dependency.prefix)
-        assert os.path.exists(dependent.prefix)
+        assert store.db.query(new_dependency) and not store.db.query_local(new_dependency)
 
 
 def test_installed_upstream(install_upstream, mock_fetch):

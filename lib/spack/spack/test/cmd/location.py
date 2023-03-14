@@ -26,9 +26,11 @@ env = SpackCommand("env")
 
 
 @pytest.fixture
-def mock_spec():
+def mock_spec(external_spec):
+    external_spec("externaltool@1.0%gcc@10.2.1", prefix="/usr")
     # Make it look like the source was actually expanded.
     s = spack.spec.Spec("externaltest").concretized()
+    s.package.do_install(fake=True)
     source_path = s.package.stage.source_path
     mkdirp(source_path)
     yield s, s.package

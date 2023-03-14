@@ -115,7 +115,10 @@ def test_view_multiple_projections_all_first(
     assert os.path.exists(extendee_prefix)
 
 
-def test_view_external(tmpdir, mock_packages, mock_archive, mock_fetch, config, install_mockery):
+def test_view_external(
+    tmpdir, mock_packages, mock_archive, mock_fetch, external_spec, install_mockery
+):
+    external_spec("externaltool@1.0%gcc@10.2.1", prefix="/usr")
     install("externaltool")
     viewpath = str(tmpdir.mkdir("view"))
     output = view("symlink", viewpath, "externaltool")
