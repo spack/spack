@@ -115,13 +115,12 @@ class HsakmtRoct(CMakePackage):
     depends_on("cmake@3:", type="build")
     depends_on("numactl")
     depends_on("libdrm", when="@4.5.0:")
-    depends_on("llvm-amdgpu", when="@5.3.0:")
+    depends_on("llvm-amdgpu", type="test", when="@5.3.0:")
 
     # See https://github.com/RadeonOpenCompute/ROCT-Thunk-Interface/issues/72
     # and https://github.com/spack/spack/issues/28398
     patch("0001-Remove-compiler-support-libraries-and-libudev-as-req.patch", when="@4.5.0:5.2")
     patch("0002-Remove-compiler-support-libraries-and-libudev-as-req-5.3.patch", when="@5.3.0:")
-    patch("0003-Adding-numactl-path-to-kfdtest.patch", when="@5.3.0:")
 
     @property
     def install_targets(self):
@@ -133,21 +132,13 @@ class HsakmtRoct(CMakePackage):
     def cmake_args(self):
         return [self.define_from_variant("BUILD_SHARED_LIBS", "shared")]
 
-    test_src_dir = "tests/kfdtest"
-
     @run_after("install")
-    def cache_test_sources(self):
-        """Copy the tests source files after the package is installed to an
-        install test subdirectory for use during `spack test run`."""
-        if self.spec.satisfies("@:5.3.0"):
-            return
-        self.cache_extra_test_sources([self.test_src_dir, "include"])
-
-    def test(self):
+    @on_package_attributes(run_tests=True)
+    def check_install(self):
         if self.spec.satisfies("@:5.3.0"):
             print("Skipping: stand-alone tests")
             return
-        test_dir = join_path(self.test_suite.current_test_cache_dir, self.test_src_dir)
+        test_dir = "tests/kfdtest"
         with working_dir(test_dir, create=True):
             cmake_bin = join_path(self.spec["cmake"].prefix.bin, "cmake")
             prefixes = ";".join(
@@ -162,15 +153,14 @@ class HsakmtRoct(CMakePackage):
                 ]
             )
             hsakmt_path = ";".join([self.spec["hsakmt-roct"].prefix])
-            drm_lib_path = join_path(self.spec["libdrm"].prefix, "lib")
             cc_options = [
                 "-DCMAKE_PREFIX_PATH=" + prefixes,
                 "-DLIBHSAKMT_PATH=" + hsakmt_path,
                 ".",
             ]
-            os.environ["NUMA_PATH"] = self.spec["numactl"].prefix
             self.run_test(cmake_bin, cc_options)
             make()
-            os.environ["LD_LIBRARY_PATH"] = drm_lib_path + os.pathsep + hsakmt_path
-            self.run_test("kfdtest")
+            os.environ["LD_LIBRARY_PATH"] = hsakmt_path
+            os.environ["BIN_DIR"] = os.getcwd()
+            self.run_test("scripts/run_kfdtest.sh")
             make("clean")
