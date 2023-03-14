@@ -26,7 +26,7 @@ Using module files via Spack
 ----------------------------
 
 If you have installed a supported module system you should be able to
-run either ``module avail`` to see what module
+run ``module avail`` to see what module
 files have been installed. Here is sample output of those programs,
 showing lots of installed packages:
 
@@ -51,7 +51,7 @@ showing lots of installed packages:
    help2man-1.47.4-gcc-4.8-kcnqmau     lua-luaposix-33.4.0-gcc-4.8-mdod2ry        netlib-scalapack-2.0.2-gcc-6.3.0-rgqfr6d    py-scipy-0.19.0-gcc-6.3.0-kr7nat4        zlib-1.2.11-gcc-6.3.0-7cqp6cj
 
 The names should look familiar, as they resemble the output from ``spack find``.
-For example, you could type either the following command to load the ``cmake`` module:
+For example, you could type the following command to load the ``cmake`` module:
 
 .. code-block:: console
 
