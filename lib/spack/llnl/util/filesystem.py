@@ -1672,6 +1672,36 @@ def fix_darwin_install_name(path):
                     break
 
 
+def find_first(root: str, *file_patterns: str, bfs_depth: int = 2) -> Optional[str]:
+    """Find the first file matching a pattern.
+
+    The following
+
+    .. code-block:: console
+
+       $ find /usr -name 'abc*' -o -name 'def*' -quit
+
+    is equivalent to:
+
+    >>> find_first("/usr", "abc*", "def*")
+
+    Any glob pattern supported by fnmatch can be used.
+
+    The search order of this method is breadth-first over directories,
+    until depth bfs_depth, after which depth-first search is used.
+
+    Parameters:
+        root (str): The root directory to start searching from
+        files (str or Iterable): Library name(s) to search for
+        bfs_depth (int): (advanced) parameter that specifies at which
+            depth to switch to depth-first search.
+
+    Returns:
+        str or None: The matching file or None when no file is found.
+    """
+    return FindFirstFile(root, *file_patterns, bfs_depth=bfs_depth).find()
+
+
 def find(root, files, recursive=True):
     """Search for ``files`` starting from the ``root`` directory.
 
@@ -2723,71 +2753,91 @@ def filesummary(path, print_bytes=16) -> Tuple[int, bytes]:
         return 0, b""
 
 
-class FindFile:
+class FindFirstFile:
     """Uses hybrid iterative deepening to locate the first matching
-    file(s). Up to depth 2 it is BFS with iterative deepening, then
+    file. Up to depth 2 it is BFS with iterative deepening, then
     it switches to normal DFS."""
 
-    def __init__(self, root, name, switchover=2):
+    def __init__(self, root: str, *file_patterns: str, bfs_depth: int = 2):
+        """Create a small summary of the given file. Does not error
+        when file does not exist.
+
+        Args:
+            root (str): directory in which to recursively search
+            file_patterns (str): glob file patterns understood by fnmatch
+            bfs_depth (int): until this depth breadth-first traversal is used,
+                when no match is found, the mode is switched to depth-first search.
+        """
         self.root = root
-        self.match = re.compile(fnmatch.translate(name)).match
-        self.result = None
-        self.switchover = switchover
+        self.match = re.compile("|".join(fnmatch.translate(p) for p in file_patterns)).match
+        self.bfs_depth = bfs_depth
 
-    def run(self):
-        self.result = None
-        if not self._find_iterative_deepening():
-            return self._find_dfs()
-        return self.result
+    def find(self) -> Optional[str]:
+        """Run the file search
 
-    def _find_iterative_deepening(self):
-        """Returns True when search is done. Notice
-        search can be over when nothing is found too."""
-        for i in range(self.switchover):
-            if not self._find_at_depth(".", 0, i):
-                return True
-        return False
+        Returns:
+            str or None: path of the matching file
+        """
+        self.file = None
 
-    def _find_dfs(self):
+        # First do iterative deepening (i.e. bfs through limited depth dfs)
+        for i in range(self.bfs_depth):
+            if self._find_at_depth(self.root, i):
+                return self.file
+
+        # Then fall back to depth-first search
+        return self._find_dfs()
+
+    def _find_at_depth(self, path, max_depth, depth=0):
+        """Returns True when done. Notice it can be done
+        without"""
+        try:
+            entries = os.scandir(path)
+        except OSError:
+            return True
+
+        done = True
+
+        with entries:
+            # At max depth we look for matching files.
+            if depth == max_depth:
+                for f in entries:
+                    # Exit on match
+                    if self.match(f.name):
+                        self.file = os.path.join(path, f.name)
+                        return True
+
+                    # is_dir should not require a stat call, so it's a good optimization.
+                    if self._is_dir(f):
+                        done = False
+                return done
+
+            # At lower depth only recurse into subdirs
+            for f in entries:
+                if not self._is_dir(f):
+                    continue
+
+                # If any subdir is not fully traversed, we're not done yet.
+                if not self._find_at_depth(os.path.join(path, f.name), max_depth, depth + 1):
+                    done = False
+
+                # Early exit when we've found something.
+                if self.file:
+                    return True
+
+            return done
+
+    def _is_dir(self, f: os.DirEntry) -> bool:
+        """Returns True when f is dir we can enter (and not a symlink)."""
+        try:
+            return f.is_dir(follow_symlinks=False)
+        except OSError:
+            return False
+
+    def _find_dfs(self) -> Optional[str]:
         """Returns match or None"""
         for dirpath, _, filenames in os.walk(self.root):
             for file in filenames:
                 if self.match(file):
                     return os.path.join(dirpath, file)
-
         return None
-
-    def _find_at_depth(self, rel_path, depth, max_depth):
-        """Returns True when search should continue"""
-        try:
-            entries = os.scandir(os.path.join(self.root, rel_path))
-        except OSError:
-            return False
-
-        should_continue = False
-        with entries:
-            if depth == max_depth:
-                self._find_matches(rel_path, entries)
-                return True
-
-            for f in entries:
-                try:
-                    if f.is_symlink() or not f.is_dir():
-                        continue
-                except OSError:
-                    continue
-
-                should_continue |= self._find_at_depth(
-                    os.path.join(rel_path, f.name), depth + 1, max_depth
-                )
-
-                # early exit on match.
-                if self.result:
-                    return False
-        return should_continue
-
-    def _find_matches(self, rel_path, entries):
-        for f in entries:
-            if self.match(f.name):
-                self.result = os.path.join(rel_path, f.name)
-                return

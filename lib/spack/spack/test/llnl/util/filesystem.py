@@ -871,3 +871,30 @@ def test_filesummary(tmpdir):
     assert fs.filesummary(p, print_bytes=8) == (26, b"abcdefgh...stuvwxyz")
     assert fs.filesummary(p, print_bytes=13) == (26, b"abcdefghijklmnopqrstuvwxyz")
     assert fs.filesummary(p, print_bytes=100) == (26, b"abcdefghijklmnopqrstuvwxyz")
+
+
+def test_find_first_file(tmpdir):
+    # Create a structure: a/b/c/d
+    tmpdir.join("a").ensure(dir=True).join("a").ensure(dir=True).join("a").ensure(dir=True)
+    tmpdir.join("b").ensure(dir=True).join("a").ensure(dir=True)
+    tmpdir.join("c").ensure(dir=True).join("a").ensure(dir=True)
+    tmpdir.join("d").ensure(dir=True).join("a").ensure(dir=True)
+
+    with open(tmpdir.join("a", "a", "a", "file1"), "w") as f:
+        f.write("contents")
+
+    with open(tmpdir.join("a", "a", "a", "file2"), "w") as f:
+        f.write("contents")
+
+    with open(tmpdir.join("d", "file1"), "w") as f:
+        f.write("contents")
+
+    root = str(tmpdir)
+
+    # Iterative deepening: should find low-depth file1.
+    assert os.path.samefile(fs.find_first(root, "file*"), os.path.join(root, "d", "file1"))
+
+    assert fs.find_first(root, "nonexisting") is None
+
+    # Should find first dir
+    assert os.path.samefile(fs.find_first(root, "a"), os.path.join(root, "a"))
