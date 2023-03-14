@@ -2755,8 +2755,10 @@ def filesummary(path, print_bytes=16) -> Tuple[int, bytes]:
 
 class FindFirstFile:
     """Uses hybrid iterative deepening to locate the first matching
-    file. Up to depth 2 it is BFS with iterative deepening, then
-    it switches to normal DFS."""
+    file. Up to depth ``bfs_depth`` it uses iterative deepening, which
+    mimics breadth-first with the same memory footprint as depth-first
+    search, after which it switches to ordinary depth-first search using
+    ``os.walk``."""
 
     def __init__(self, root: str, *file_patterns: str, bfs_depth: int = 2):
         """Create a small summary of the given file. Does not error
@@ -2788,7 +2790,7 @@ class FindFirstFile:
         # Then fall back to depth-first search
         return self._find_dfs()
 
-    def _find_at_depth(self, path, max_depth, depth=0):
+    def _find_at_depth(self, path, max_depth, depth=0) -> bool:
         """Returns True when done. Notice search can be done
         either because a file was found, or because it recursed
         through all directories."""
