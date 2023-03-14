@@ -139,7 +139,7 @@ def windows_can_symlink():
     the system configuration and the level of the user's permissions.
     """
     if not is_windows:
-        tty.msg("[symlink] WARNING: window_can_symlink called on non-windows")
+        tty.warn("[symlink] window_can_symlink called on non-windows")
         return False
 
     tempdir = tempfile.mkdtemp()
