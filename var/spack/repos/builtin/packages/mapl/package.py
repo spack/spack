@@ -24,6 +24,7 @@ class Mapl(CMakePackage):
 
     maintainers = ["mathomp4", "kgerheiser", "climbfuji", "edwardhartnett", "Hang-Lei-NOAA"]
 
+    version("2.35.2", sha256="12d2c3fa264b702253e4792d858f67002fa04ce1c60db341803bc000abb3b7a2")
     version("2.22.0", sha256="3356b8d29813431d272c5464e265f3fe3ce1ac7f49ae6d41da34fe4b82aa691a")
     version("2.12.3", sha256="e849eff291939509e74830f393cb2670c2cc96f6160d8060dbeb1742639c7d41")
     version("2.11.0", sha256="76351e026c17e2044b89085db639e05ba0e7439a174d14181e01874f0f93db44")
@@ -34,8 +35,13 @@ class Mapl(CMakePackage):
     version("2.7.1", sha256="8239fdbebd2caa47a232c24927f7a91196704e35c8b7909e1bbbefccf0647ea6")
 
     # Versions later than 3.14 remove FindESMF.cmake
-    # from ESMA_CMake. This works with mapl@2.22.0
-    # and latest Apple M1 and M2 processors.
+    # from ESMA_CMake.
+    resource(
+        name="esma_cmake",
+        git="https://github.com/GEOS-ESM/ESMA_cmake.git",
+        tag="v3.24.0",
+        when="@2.34.0:",
+    )
     resource(
         name="esma_cmake",
         git="https://github.com/GEOS-ESM/ESMA_cmake.git",
@@ -61,6 +67,7 @@ class Mapl(CMakePackage):
 
     variant("flap", default=False)
     variant("pflogger", default=False)
+    variant("fargparse", default=False, description="Build with fArgParse support")
     variant("esma_gfe_namespace", default=True)
     variant("shared", default=True)
     variant("debug", default=False, description="Make a debuggable version of the library")
@@ -73,12 +80,17 @@ class Mapl(CMakePackage):
     depends_on("netcdf-c")
     depends_on("netcdf-fortran")
     depends_on("parallel-netcdf", when="+pnetcdf")
+    depends_on("esmf@8.4:", when="@2.34:")
     depends_on("esmf@8.3:", when="@2.22:")
     depends_on("esmf", when="@:2.12.99")
     depends_on("esmf~debug", when="~debug")
     depends_on("esmf+debug", when="+debug")
     depends_on("yafyaml@:0.5.1")
     depends_on("gftl-shared@1.3.1:")
+
+    # fArgParse not yet available
+    conflicts("+fargparse")
+
     depends_on("ecbuild")
 
     def cmake_args(self):
@@ -86,6 +98,7 @@ class Mapl(CMakePackage):
             self.define_from_variant("BUILD_WITH_FLAP", "flap"),
             self.define_from_variant("BUILD_WITH_PFLOGGER", "pflogger"),
             self.define_from_variant("ESMA_USE_GFE_NAMESPACE", "esma_gfe_namespace"),
+            self.define_from_variant("BUILD_WITH_FARGPARSE", "fargparse"),
             self.define_from_variant("BUILD_SHARED_MAPL", "shared"),
             self.define_from_variant("USE_EXTDATA2G", "extdata2g"),
             "-DCMAKE_C_COMPILER=%s" % self.spec["mpi"].mpicc,
