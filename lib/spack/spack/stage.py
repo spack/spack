@@ -756,7 +756,7 @@ class CMakeBuildStage(Stage):
     the build tree is first relocated to what would be its proper place in the stage.
     and a symlink is placed in place of the build tree pointing at the external directory
 
-    Note: This is not, nor should it be, used on *nix platforms and is intended as a solution to
+    Note: This is not, nor should it be, used on unix like platforms and is intended as a solution to
     reduce file path lengths on Windows during compilation/linking. This class should be removed
     when MSVC fully supports the LongPath feature on Windows.
     """
