@@ -33,12 +33,6 @@ def setup_parser(subparser):
     find_parser = sp.add_parser(
         "find", help="search for external packages and add them to the local DB"
     )
-    find_parser.add_argument(
-        "--not-buildable",
-        action="store_true",
-        default=False,
-        help="packages with detected externals won't be built with Spack",
-    )
     find_parser.add_argument("--exclude", action="append", help="packages to exclude from search")
     find_parser.add_argument(
         "-p",
