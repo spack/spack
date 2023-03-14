@@ -783,7 +783,7 @@ class CMakeBuildStage(Stage):
     def _remove_context_link(self):
         self._root_stage_context.unlink()
 
-    def _setup_remote_build_stage(self):
+    def _setup_remote_build_dir(self):
         # try to create root if it doesn't exist
         self._remote_root.mkdir(parents=True, exist_ok=True)
         sub_dir = self._compute_next_open_subdir()
@@ -820,7 +820,7 @@ class CMakeBuildStage(Stage):
             pth.rmdir()
 
         if self._remote_build_dir.exists():
-            teardown(self._remote_build_dir)
+            shutil.rmtree(self._remote_build_dir)
         self._remote_build_dir = None
 
     def _destroy_remote(self):
@@ -846,21 +846,19 @@ class CMakeBuildStage(Stage):
         return cont
 
     def create(self):
-        if not self.created:
-            # Establish typical root stage
-            super(CMakeBuildStage, self).create()
-            # Now establish remote build stage
-            # or pick up extant stage from existing  symlink
-            if not self._root_stage_context.exists():
-                try:
-                    self._remote_build_dir = self._setup_remote_build_stage()
-                    self._establish_context_link()
-                except Exception:
-                    self._teardown_remote_build_dir()
-                    self.created = False
-                    raise
-            else:
-                self._remote_build_dir = self._root_stage_context.resolve()
+        # Establish typical root stage
+        super(CMakeBuildStage, self).create()
+        # Now establish remote build stage
+        # or pick up extant stage from existing  symlink
+        if not self._root_stage_context.exists():
+            try:
+                self._remote_build_dir = self._setup_remote_build_dir()
+                self._establish_context_link()
+            except Exception:
+                self._teardown_remote_build_dir()
+                raise
+        else:
+            self._remote_build_dir = self._root_stage_context.resolve()
 
     def destroy(self):
         self._destroy_remote()
@@ -870,15 +868,24 @@ class CMakeBuildStage(Stage):
         """Returns path of archive files relative to the root stage dir
         from the remote build dir transparently as if there was a normal
         build directory"""
-        rel_to_stage = os.path.relpath(
-            os.path.join(
-                self._root_stage_context, os.path.relpath(glob_expr, self._remote_build_dir)
-            ),
-            self.path,
-        )
+
         stage_root = super(CMakeBuildStage, self)
+        # Check if glob_expr is in root stage
+        # if so, return relative path to stage root
         if stage_root.contains(os.path.realpath(glob_expr)):
             rel_to_stage = stage_root.path_rel_to_stage(stage_root)
+        else:
+            # otherwise assume glob_expr is in build directory
+            # compute path of glob_expr relative to stage root
+            # as if context symlink were a standard directory
+            # i.e. essentially replacing _remote_build_dir with
+            # _root_stage_context
+            rel_to_stage = os.path.relpath(
+                os.path.join(
+                    self._root_stage_context, os.path.relpath(glob_expr, self._remote_build_dir)
+                ),
+                self.path,
+            )
         return rel_to_stage
 
     def restage(self):
