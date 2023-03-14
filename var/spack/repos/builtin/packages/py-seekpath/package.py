@@ -11,7 +11,7 @@ class PySeekpath(PythonPackage):
     structures."""
 
     homepage = "http://github.com/giovannipizzi/seekpath"
-    pypi     = "seekpath/seekpath-2.0.1.tar.gz"
+    pypi = "seekpath/seekpath-2.0.1.tar.gz"
 
     maintainers("meyersbs")
 
