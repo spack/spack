@@ -53,6 +53,9 @@ class PyCython(PythonPackage):
     depends_on("py-setuptools", type=("build", "run"))
     depends_on("gdb@7.2:", type="test")
 
+    # Backports CYTHON_FORCE_REGEN environment variable
+    patch("5307.patch", when="@0.29")
+
     @property
     def command(self):
         """Returns the Cython command"""
@@ -70,8 +73,9 @@ class PyCython(PythonPackage):
         # https://github.com/cython/cython/issues/5089
 
         # Backport for support for this variable in 0.29 is pending
-        # https://github.com/cython/cython/pull/5307
-        if self.spec.version >= Version("3"):
+        # https://github.com/cython/cython/pull/5307, we apply a patch in
+        # Spack to use it already.
+        if self.spec.version >= Version("0.29"):
             env.set("CYTHON_FORCE_REGEN", "1")
 
     @run_after("install")
