@@ -33,5 +33,5 @@ class PyPint(PythonPackage):
     depends_on("py-setuptools", when="@:0.10", type=("build", "run"))
     depends_on("py-setuptools-scm@3.4.3:+toml", when="@0.11:", type="build")
     depends_on("py-setuptools-scm", when="@0.10", type="build")
-    depends_on("py-packaging", type=("build", "run"), when="@0.17:")
-    depends_on("py-importlib-metadata", type=("build", "run"), when="@0.17: ^python@:3.7")
+    depends_on("py-packaging", type=("build", "run"), when="@0.13:18")
+    depends_on("py-importlib-metadata", type=("build", "run"), when="@0.13:18 ^python@:3.7")
