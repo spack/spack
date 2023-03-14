@@ -43,6 +43,7 @@ class Crtm(CMakePackage):
     depends_on("netcdf-fortran", when="@v2.3-jedi.4")
     depends_on("netcdf-fortran", when="@v2.4-jedi.1")
     depends_on("netcdf-fortran", when="@v2.4-jedi.2")
+    depends_on("netcdf-fortran", when="@v3.0.0-rc.1")
 
     depends_on("crtm-fix@2.3.0_emc", when="@2.3.0 +fix")
     depends_on("crtm-fix@2.4.0_emc", when="@2.4.0 +fix")
@@ -50,11 +51,9 @@ class Crtm(CMakePackage):
     depends_on("ecbuild", type=("build"), when="@v2.3-jedi.4")
     depends_on("ecbuild", type=("build"), when="@v2.4-jedi.1")
     depends_on("ecbuild", type=("build"), when="@v2.4-jedi.2")
+    depends_on("ecbuild", type=("build"), when="@v3.0.0-rc.1")
 
-    # ecbuild release v2.4.0 is broken
-    # add ecbuild dependency for next release with fix
-    # depends_on("ecbuild", when="@2.4.0:", type=("build"))
-
+    version("v3.0.0-rc.1", commit="b64fa71")
     # REL-2.4.0_emc (v2.4.0 ecbuild does not work)
     version("2.4.0", commit="5ddd0d6")
     # Uses the tip of REL-2.3.0_emc branch
@@ -65,3 +64,9 @@ class Crtm(CMakePackage):
     # Branch release/crtm_jedi_v2.4.0
     version("v2.4-jedi.1", commit="8222341")
     version("v2.4-jedi.2", commit="62831cb")
+
+    def url_for_version(self, version):
+        if version < Version("3.0.0"):
+            return "https://github.com/JCSDA/crtm/archive/refs/tags/{}.tar.gz".format(version)
+        else:
+            return "https://github.com/JCSDA/crtmv3/archive/refs/tags/{}.tar.gz".format(version)
