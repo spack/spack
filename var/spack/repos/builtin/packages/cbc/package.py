@@ -18,6 +18,7 @@ class Cbc(AutotoolsPackage):
     depends_on("osi")
     depends_on("cgl")
 
+    version("2.10.8", sha256="8525abb541ee1b8e6ff03b00411b66e98bbc58f95be1aefd49d2bca571be2eaf")
     version("2.10.5", sha256="cc44c1950ff4615e7791d7e03ea34318ca001d3cac6dc3f7f5ee392459ce6719")
 
     build_directory = "spack-build"
