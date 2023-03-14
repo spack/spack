@@ -472,6 +472,7 @@ def get_spec_filter_list(env, affected_pkgs, dependent_traverse_depth=None):
     tty.debug("All concrete environment specs:")
     for s in all_concrete_specs:
         tty.debug("  {0}/{1}".format(s.name, s.dag_hash()[:7]))
+    affected_pkgs = frozenset(affected_pkgs)
     env_matches = [s for s in all_concrete_specs if s.name in affected_pkgs]
     visited = set()
     dag_hash = lambda s: s.dag_hash()
