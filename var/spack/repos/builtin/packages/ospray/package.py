@@ -24,7 +24,7 @@ class Ospray(CMakePackage):
     version("2.6.0", sha256="5efccd7eff5774b77f8894e68a6b803b535a0d12f32ab49edf13b954e2848f2e")
 
     variant("apps", default=False, description="Enable building OSPRay Apps")
-    variant("denoiser", default=False, description="Enable denoiser image operation")
+    variant("denoiser", default=True, description="Enable denoiser image operation")
     variant("glm", default=False, description="Build ospray_cpp GLM tests/tutorial")
     variant("mpi", default=True, description="Enable MPI support")
 
