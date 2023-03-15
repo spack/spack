@@ -3695,7 +3695,6 @@ class Spec(object):
         return lhs._satisfies(rhs, deps=deps)
 
     def _intersects_dependencies(self, other):
-
         if not other._dependencies or not self._dependencies:
             # one spec *could* eventually satisfy the other
             return True
