@@ -19,7 +19,7 @@ class Mvapich(AutotoolsPackage):
     url = "https://mvapich.cse.ohio-state.edu/download/mvapich/mv2/mvapich2-3.0a.tar.gz"
     list_url = "https://mvapich.cse.ohio-state.edu/downloads/"
 
-    maintainers("natshineman", "harisubramoni", "ndcontini")
+    maintainers("natshineman", "harisubramoni", "MatthewLieber"
 
     executables = ["^mpiname$", "^mpichversion$"]
 
@@ -62,9 +62,10 @@ class Mvapich(AutotoolsPackage):
     variant(
         "process_managers",
         description="List of the process managers to activate",
-        values=disjoint_sets(("auto",), ("slurm",),("pbs",), ("hydra", "gforker", "remshell"))
+        values=disjoint_sets(("auto",), ("slurm",), ("pbs",), ("hydra", "gforker", "remshell"))
         .prohibit_empty_set()
-        .with_error("'slurm','pbs' or 'auto' cannot be activated along with " "other process managers")
+        .with_error("'slurm','pbs' or 'auto' cannot be activated along with " 
+        "other process managers")
         .with_default("auto")
         .with_non_feature_values("auto"),
     )
