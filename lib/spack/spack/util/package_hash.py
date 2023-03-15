@@ -178,7 +178,7 @@ class TagMultiMethods(ast.NodeVisitor):
                         conditions.append(None)
                     else:
                         # Check statically whether spec satisfies the condition
-                        conditions.append(self.spec.satisfies(cond_spec, strict=True))
+                        conditions.append(self.spec.satisfies(cond_spec))
 
                 except AttributeError:
                     # In this case the condition for the 'when' decorator is

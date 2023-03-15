@@ -578,9 +578,9 @@ add a line like this in the package class:
 
        url = "http://example.com/foo-1.0.tar.gz"
 
-       version('8.2.1', '4136d7b4c04df68b686570afa26988ac')
-       version('8.2.0', '1c9f62f0778697a09d36121ead88e08e')
-       version('8.1.2', 'd47dd09ed7ae6e7fd6f9a816d7f5fdf6')
+       version("8.2.1", "4136d7b4c04df68b686570afa26988ac")
+       version("8.2.0", "1c9f62f0778697a09d36121ead88e08e")
+       version("8.1.2", "d47dd09ed7ae6e7fd6f9a816d7f5fdf6")
 
 Versions should be listed in descending order, from newest to oldest.
 
@@ -654,11 +654,11 @@ For example:
 
 .. code-block:: python
 
-   >>> version = Version('1.2.3')
+   >>> version = Version("1.2.3")
    >>> version.up_to(2).dashed
-   Version('1-2')
+   Version("1-2")
    >>> version.underscored.up_to(2)
-   Version('1_2')
+   Version("1_2")
 
 
 As you can see, order is not important. Just keep in mind that ``up_to()`` and
@@ -669,8 +669,8 @@ of its versions, you can add an explicit URL for a particular version:
 
 .. code-block:: python
 
-   version('8.2.1', '4136d7b4c04df68b686570afa26988ac',
-           url='http://example.com/foo-8.2.1-special-version.tar.gz')
+   version("8.2.1", "4136d7b4c04df68b686570afa26988ac",
+           url="http://example.com/foo-8.2.1-special-version.tar.gz")
 
 
 When you supply a custom URL for a version, Spack uses that URL
@@ -703,8 +703,8 @@ the ``urls`` attribute:
   class Foo(Package):
 
     urls = [
-        'http://example.com/foo-1.0.tar.gz',
-        'http://mirror.com/foo-1.0.tar.gz'
+        "http://example.com/foo-1.0.tar.gz",
+        "http://mirror.com/foo-1.0.tar.gz"
     ]
 
 instead of just a single ``url``. This attribute is a list of possible URLs that
@@ -731,8 +731,8 @@ executables and other custom archive types), you can add ``expand=False`` to a
 
 .. code-block:: python
 
-   version('8.2.1', '4136d7b4c04df68b686570afa26988ac',
-           url='http://example.com/foo-8.2.1-special-version.sh', expand=False)
+   version("8.2.1", "4136d7b4c04df68b686570afa26988ac",
+           url="http://example.com/foo-8.2.1-special-version.sh", expand=False)
 
 When ``expand`` is set to ``False``, Spack sets the current working
 directory to the directory containing the downloaded archive before it
@@ -748,7 +748,7 @@ it executable, then runs it with some arguments.
    def install(self, spec, prefix):
        set_executable(self.stage.archive_file)
        installer = Executable(self.stage.archive_file)
-       installer('--prefix=%s' % prefix, 'arg1', 'arg2', 'etc.')
+       installer("--prefix=%s" % prefix, "arg1", "arg2", "etc.")
 
 .. _deprecate:
 
@@ -775,7 +775,7 @@ you should first deprecate them using the following syntax:
 
 .. code-block:: python
 
-   version('1.2.3', sha256='...', deprecated=True)
+   version("1.2.3", sha256="...", deprecated=True)
 
 
 This has two effects. First, ``spack info`` will no longer advertise that
@@ -929,10 +929,10 @@ file:
 .. code-block:: console
 
    ==> Checksummed new versions of libelf:
-       version('0.8.13', '4136d7b4c04df68b686570afa26988ac')
-       version('0.8.12', 'e21f8273d9f5f6d43a59878dc274fec7')
-       version('0.8.11', 'e931910b6d100f6caa32239849947fbf')
-       version('0.8.10', '9db4d36c283d9790d8fa7df1f4d7b4d9')
+       version("0.8.13", "4136d7b4c04df68b686570afa26988ac")
+       version("0.8.12", "e21f8273d9f5f6d43a59878dc274fec7")
+       version("0.8.11", "e931910b6d100f6caa32239849947fbf")
+       version("0.8.10", "9db4d36c283d9790d8fa7df1f4d7b4d9")
 
 By default, Spack will search for new tarball downloads by scraping
 the parent directory of the tarball you gave it.  So, if your tarball
@@ -1084,11 +1084,11 @@ class-level tarball URL and VCS. For example:
        url      = "https://github.com/trilinos/Trilinos/archive/trilinos-release-12-12-1.tar.gz"
        git      = "https://github.com/trilinos/Trilinos.git"
 
-       version('develop', branch='develop')
-       version('master',  branch='master')
-       version('12.12.1', 'ecd4606fa332212433c98bf950a69cc7')
-       version('12.10.1', '667333dbd7c0f031d47d7c5511fd0810')
-       version('12.8.1',  '9f37f683ee2b427b5540db8a20ed6b15')
+       version("develop", branch="develop")
+       version("master",  branch="master")
+       version("12.12.1", "ecd4606fa332212433c98bf950a69cc7")
+       version("12.10.1", "667333dbd7c0f031d47d7c5511fd0810")
+       version("12.8.1",  "9f37f683ee2b427b5540db8a20ed6b15")
 
 If a package contains both a ``url`` and ``git`` class-level attribute,
 Spack decides which to use based on the arguments to the ``version()``
@@ -1112,8 +1112,8 @@ than the default repo, it can be overridden with a version-specific argument.
 
           homepage = "https://bitbucket.org/gfcstanford/rockstar"
 
-          version('develop', git='https://bitbucket.org/gfcstanford/rockstar.git')
-          version('yt', hg='https://bitbucket.org/MatthewTurk/rockstar')
+          version("develop", git="https://bitbucket.org/gfcstanford/rockstar.git")
+          version("yt", hg="https://bitbucket.org/MatthewTurk/rockstar")
 
 
 .. _git-fetch:
@@ -1151,7 +1151,7 @@ Default branch
 
          git = "https://github.com/example-project/example.git"
 
-         version('develop')
+         version("develop")
 
   This download method is untrusted, and is not recommended. Aside from HTTPS,
   there is no way to verify that the repository has not been compromised, and
@@ -1164,7 +1164,7 @@ Branches
 
   .. code-block:: python
 
-     version('experimental', branch='experimental')
+     version("experimental", branch="experimental")
 
   This download method is untrusted, and is not recommended. Branches are
   moving targets, so the commit you get when you install the package likely
@@ -1175,7 +1175,7 @@ Tags
 
   .. code-block:: python
 
-     version('1.0.1', tag='v1.0.1')
+     version("1.0.1", tag="v1.0.1")
 
   This download method is untrusted, and is not recommended. Although tags
   are generally more stable than branches, Git allows tags to be moved.
@@ -1187,14 +1187,14 @@ Commits
 
   .. code-block:: python
 
-     version('2014-10-08', commit='9d38cd4e2c94c3cea97d0e2924814acc')
+     version("2014-10-08", commit="9d38cd4e2c94c3cea97d0e2924814acc")
 
   This doesn't have to be a full hash; you can abbreviate it as you'd
   expect with git:
 
   .. code-block:: python
 
-     version('2014-10-08', commit='9d38cd')
+     version("2014-10-08", commit="9d38cd")
 
   This download method *is trusted*.  It is the recommended way to
   securely download from a Git repository.
@@ -1212,7 +1212,7 @@ Submodules
 
   .. code-block:: python
 
-     version('1.0.1', tag='v1.0.1', submodules=True)
+     version("1.0.1", tag="v1.0.1", submodules=True)
 
   If a package has needs more fine-grained control over submodules, define
   ``submodules`` to be a callable function that takes the package instance as
@@ -1250,8 +1250,8 @@ checksum.
 
 .. code-block:: python
 
-       version('1.9.5.1.1', 'd035e4bc704d136db79b43ab371b27d2',
-               url='https://www.github.com/jswhit/pyproj/tarball/0be612cc9f972e38b50a90c946a9b353e2ab140f')
+       version("1.9.5.1.1", "d035e4bc704d136db79b43ab371b27d2",
+               url="https://www.github.com/jswhit/pyproj/tarball/0be612cc9f972e38b50a90c946a9b353e2ab140f")
 
 .. _hg-fetch:
 
@@ -1272,7 +1272,7 @@ Default branch
 
          hg = "https://bitbucket.org/example-project/example"
 
-         version('develop')
+         version("develop")
 
   This download method is untrusted, and is not recommended. As with
   Git's default fetching strategy, there is no way to verify the
@@ -1283,7 +1283,7 @@ Revisions
 
   .. code-block:: python
 
-     version('1.0', revision='v1.0')
+     version("1.0", revision="v1.0")
 
   Unlike ``git``, which has special parameters for different types of
   revisions, you can use ``revision`` for branches, tags, and commits
@@ -1311,7 +1311,7 @@ Fetching the head
 
          svn = "https://outreach.scidac.gov/svn/example/trunk"
 
-         version('develop')
+         version("develop")
 
   This download method is untrusted, and is not recommended for the
   same reasons as mentioned above.
@@ -1322,7 +1322,7 @@ Fetching a revision
 
   .. code-block:: python
 
-     version('develop', revision=128)
+     version("develop", revision=128)
 
   This download method is untrusted, and is not recommended.
 
@@ -1357,7 +1357,7 @@ Fetching the head
 
          cvs = ":pserver:outreach.scidac.gov/cvsroot%module=modulename"
 
-         version('1.1.2.4')
+         version("1.1.2.4")
 
   CVS repository locations are described using an older syntax that
   is different from today's ubiquitous URL syntax. ``:pserver:``
@@ -1376,7 +1376,7 @@ Fetching a date
 
   .. code-block:: python
 
-     version('2021.4.22', branch='branchname', date='2021-04-22')
+     version("2021.4.22", branch="branchname", date="2021-04-22")
 
   Unfortunately, CVS does not identify repository-wide commits via a
   revision or hash like Subversion, Git, or Mercurial do. This makes
@@ -1406,7 +1406,7 @@ For example:
        homepage = "https://github.com/monochromegane/the_platinum_searcher"
        go       = "github.com/monochromegane/the_platinum_searcher/..."
 
-       version('head')
+       version("head")
 
 Go cannot be used to fetch a particular commit or branch, it always
 downloads the head of the repository. This download method is untrusted,
@@ -1435,7 +1435,7 @@ level:
     class Hdf5(AutotoolsPackage):
         ...
         variant(
-            'shared', default=True, description='Builds a shared version of the library'
+            "shared", default=True, description="Builds a shared version of the library"
         )
 
 with a default value and a description of their meaning / use in the package.
@@ -1448,11 +1448,11 @@ its value:
 
     def configure_args(self):
         ...
-        if '+shared' in self.spec:
-            extra_args.append('--enable-shared')
+        if "+shared" in self.spec:
+            extra_args.append("--enable-shared")
         else:
-            extra_args.append('--disable-shared')
-            extra_args.append('--enable-static-exec')
+            extra_args.append("--disable-shared")
+            extra_args.append("--enable-static-exec")
 
 As explained in :ref:`basic-variants` the constraint ``+shared`` means
 that the boolean variant is set to ``True``, while ``~shared`` means it is set
@@ -1465,8 +1465,8 @@ which requires to use the variant in the ``when`` argument of
 
     class Hdf5(AutotoolsPackage):
         ...
-        variant('szip', default=False, description='Enable szip support')
-        depends_on('szip', when='+szip')
+        variant("szip", default=False, description="Enable szip support")
+        depends_on("szip", when="+szip")
 
 as shown in the snippet above where ``szip`` is modeled to be an optional
 dependency of ``hdf5``.
@@ -1486,8 +1486,8 @@ directive as a tuple:
     class Blis(Package):
         ...
         variant(
-            'threads', default='none', description='Multithreading support',
-            values=('pthreads', 'openmp', 'none'), multi=False
+            "threads", default="none", description="Multithreading support",
+            values=("pthreads", "openmp", "none"), multi=False
         )
 
 In the example above the argument ``multi`` is set to ``False`` to indicate
@@ -1508,13 +1508,13 @@ specifies two or more values at the same time:
 
 Another useful note is that *Python's* ``None`` *is not allowed as a default value*
 and therefore it should not be used to denote that no feature was selected.
-Users should instead select another value, like ``'none'``, and handle it explicitly
+Users should instead select another value, like ``"none"``, and handle it explicitly
 within the package recipe if need be:
 
   .. code-block:: python
 
-      if self.spec.variants['threads'].value == 'none':
-         options.append('--no-threads')
+      if self.spec.variants["threads"].value == "none":
+         options.append("--no-threads")
 
 In cases where multiple values can be selected at the same time ``multi`` should
 be set to ``True``:
@@ -1524,19 +1524,19 @@ be set to ``True``:
     class Gcc(AutotoolsPackage):
         ...
         variant(
-            'languages', default='c,c++,fortran',
-            values=('ada', 'brig', 'c', 'c++', 'fortran',
-                    'go', 'java', 'jit', 'lto', 'objc', 'obj-c++'),
+            "languages", default="c,c++,fortran",
+            values=("ada", "brig", "c", "c++", "fortran",
+                    "go", "java", "jit", "lto", "objc", "obj-c++"),
             multi=True,
-            description='Compilers and runtime libraries to build'
+            description="Compilers and runtime libraries to build"
         )
 
 Within a package recipe a multi-valued variant is tested using a ``key=value`` syntax:
 
   .. code-block:: python
 
-    if 'languages=jit' in spec:
-        options.append('--enable-host-shared')
+    if "languages=jit" in spec:
+        options.append("--enable-host-shared")
 
 """""""""""""""""""""""""""""""""""""""""""
 Complex validation logic for variant values
@@ -1554,13 +1554,13 @@ This class is used to implement a few convenience functions, like
     class Adios(AutotoolsPackage):
         ...
         variant(
-            'staging',
-            values=any_combination_of('flexpath', 'dataspaces'),
-            description='Enable dataspaces and/or flexpath staging transports'
+            "staging",
+            values=any_combination_of("flexpath", "dataspaces"),
+            description="Enable dataspaces and/or flexpath staging transports"
         )
 
 that allows any combination of the specified values, and also allows the
-user to specify ``'none'`` (as a string) to choose none of them.
+user to specify ``"none"`` (as a string) to choose none of them.
 The objects returned by these functions can be modified at will by chaining
 method calls to change the default value, customize the error message or
 other similar operations:
@@ -1570,14 +1570,14 @@ other similar operations:
     class Mvapich2(AutotoolsPackage):
         ...
         variant(
-            'process_managers',
-            description='List of the process managers to activate',
+            "process_managers",
+            description="List of the process managers to activate",
             values=disjoint_sets(
-                ('auto',), ('slurm',), ('hydra', 'gforker', 'remshell')
+                ("auto",), ("slurm",), ("hydra", "gforker", "remshell")
             ).prohibit_empty_set().with_error(
                 "'slurm' or 'auto' cannot be activated along with "
                 "other process managers"
-            ).with_default('auto').with_non_feature_values('auto'),
+            ).with_default("auto").with_non_feature_values("auto"),
         )
 
 """""""""""""""""""""""""""
@@ -1594,16 +1594,16 @@ To model a similar situation we can use *conditional possible values* in the var
 .. code-block:: python
 
    variant(
-       'cxxstd', default='98',
+       "cxxstd", default="98",
        values=(
-           '98', '11', '14',
+           "98", "11", "14",
            # C++17 is not supported by Boost < 1.63.0.
-           conditional('17', when='@1.63.0:'),
+           conditional("17", when="@1.63.0:"),
            # C++20/2a is not support by Boost < 1.73.0
-           conditional('2a', '2b', when='@1.73.0:')
+           conditional("2a", "2b", when="@1.73.0:")
        ),
        multi=False,
-       description='Use the specified C++ standard when building.',
+       description="Use the specified C++ standard when building.",
    )
 
 The snippet above allows ``98``, ``11`` and ``14`` as unconditional possible values for the
@@ -1624,7 +1624,7 @@ be present on specs that otherwise satisfy the spec listed as the
 
    class Foo(Package):
        ...
-       variant('bar', default=False, when='@2.0:', description='help message')
+       variant("bar", default=False, when="@2.0:", description="help message")
 
 The ``when`` clause follows the same syntax and accepts the same
 values as the ``when`` argument of
@@ -1639,7 +1639,7 @@ corresponding argument:
 
 .. code-block:: python
 
-   variant('bar', default=False, sticky=True)
+   variant("bar", default=False, sticky=True)
 
 A ``sticky`` variant differs from a regular one in that it is always set
 to either:
@@ -1677,8 +1677,8 @@ For example, consider the following package:
 
    class Foo(Package):
        ...
-       variant('bar', default=False, when='@1.0', description='help1')
-       variant('bar', default=True, when='platform=darwin', description='help2')
+       variant("bar", default=False, when="@1.0", description="help1")
+       variant("bar", default=True, when="platform=darwin", description="help2")
        ...
 
 This package ``foo`` has a variant ``bar`` when the spec satisfies
@@ -1702,10 +1702,10 @@ possible to describe such a need with the ``resource`` directive :
   .. code-block:: python
 
      resource(
-        name='cargo',
-        git='https://github.com/rust-lang/cargo.git',
-        tag='0.10.0',
-        destination='cargo'
+        name="cargo",
+        git="https://github.com/rust-lang/cargo.git",
+        tag="0.10.0",
+        destination="cargo"
      )
 
 Based on the keywords present among the arguments the appropriate ``FetchStrategy``
@@ -1766,10 +1766,10 @@ For example, let's take a look at the package for the PGI compilers.
 
    # Licensing
    license_required = True
-   license_comment  = '#'
-   license_files    = ['license.dat']
-   license_vars     = ['PGROUPD_LICENSE_FILE', 'LM_LICENSE_FILE']
-   license_url      = 'http://www.pgroup.com/doc/pgiinstall.pdf'
+   license_comment  = "#"
+   license_files    = ["license.dat"]
+   license_vars     = ["PGROUPD_LICENSE_FILE", "LM_LICENSE_FILE"]
+   license_url      = "http://www.pgroup.com/doc/pgiinstall.pdf"
 
 As you can see, PGI requires a license. Its license manager, FlexNet, uses
 the ``#`` symbol to denote a comment. It expects the license file to be
@@ -1861,7 +1861,7 @@ directive.  ``patch`` looks like this:
 
    class Mvapich2(Package):
        ...
-       patch('ad_lustre_rwcontig_open_source.patch', when='@1.9:')
+       patch("ad_lustre_rwcontig_open_source.patch", when="@1.9:")
 
 The first argument can be either a URL or a filename.  It specifies a
 patch file that should be applied to your source.  If the patch you
@@ -1881,8 +1881,8 @@ If you supply a URL instead of a filename, you need to supply a
 
 .. code-block:: python
 
-   patch('http://www.nwchem-sw.org/images/Tddft_mxvec20.patch',
-         sha256='252c0af58be3d90e5dc5e0d16658434c9efa5d20a5df6c10bf72c2d77f780866')
+   patch("http://www.nwchem-sw.org/images/Tddft_mxvec20.patch",
+         sha256="252c0af58be3d90e5dc5e0d16658434c9efa5d20a5df6c10bf72c2d77f780866")
 
 Spack includes the hashes of patches in its versioning information, so
 that the same package with different patches applied will have different
@@ -1905,9 +1905,9 @@ checked when patch archives are downloaded.
 
 .. code-block:: python
 
-   patch('http://www.nwchem-sw.org/images/Tddft_mxvec20.patch.gz',
-         sha256='252c0af58be3d90e5dc5e0d16658434c9efa5d20a5df6c10bf72c2d77f780866',
-         archive_sha256='4e8092a161ec6c3a1b5253176fcf33ce7ba23ee2ff27c75dbced589dabacd06e')
+   patch("http://www.nwchem-sw.org/images/Tddft_mxvec20.patch.gz",
+         sha256="252c0af58be3d90e5dc5e0d16658434c9efa5d20a5df6c10bf72c2d77f780866",
+         archive_sha256="4e8092a161ec6c3a1b5253176fcf33ce7ba23ee2ff27c75dbced589dabacd06e")
 
 ``patch`` keyword arguments are described below.
 
@@ -1996,7 +1996,7 @@ it can only be downloaded in the following form:
     #include "ad_lustre.h"
 
 Hence, the patch needs to applied in the ``src/mpi`` subdirectory, and the
-``working_dir='src/mpi'`` option would exactly do that.
+``working_dir="src/mpi"`` option would exactly do that.
 
 ^^^^^^^^^^^^^^^^^^^^^
 Patch functions
@@ -2090,7 +2090,7 @@ patches. For example, when ``dealii`` is built with ``boost@1.68.0``, it
 has to patch boost to work correctly.  If you didn't know this, you might
 wonder where the extra boost patches are coming from::
 
-  $ spack spec dealii ^boost@1.68.0 ^hdf5+fortran | grep '\^boost'
+  $ spack spec dealii ^boost@1.68.0 ^hdf5+fortran | grep "\^boost"
       ^boost@1.68.0
           ^boost@1.68.0%apple-clang@9.0.0+atomic+chrono~clanglibcpp cxxstd=default +date_time~debug+exception+filesystem+graph~icu+iostreams+locale+log+math~mpi+multithreaded~numpy patches=2ab6c72d03dec6a4ae20220a9dfd5c8c572c5294252155b85c6874d97c323199,b37164268f34f7133cbc9a4066ae98fda08adf51e1172223f6a969909216870f ~pic+program_options~python+random+regex+serialization+shared+signals~singlethreaded+system~taggedlayout+test+thread+timer~versionedlayout+wave arch=darwin-highsierra-x86_64
   $ spack resource show b37164268
@@ -2141,9 +2141,9 @@ RPATHs in Spack are handled in one of three ways:
       class MyPackage(Package):
           ...
           def install(self, spec, prefix):
-              cmake('..', *std_cmake_args)
+              cmake("..", *std_cmake_args)
               make()
-              make('install')
+              make("install")
 
 #. If you need to modify the build to add your own RPATHs, you can
    use the ``self.rpath`` property of your package, which will
@@ -2186,7 +2186,7 @@ looks like this:
        homepage = "http://www.openssl.org"
        url      = "http://www.openssl.org/source/openssl-1.0.1h.tar.gz"
 
-       version('1.0.1h', '8d6d684a9430d5cc98a62a5d8fbda8cf')
+       version("1.0.1h", "8d6d684a9430d5cc98a62a5d8fbda8cf")
        depends_on("zlib")
 
        parallel = False
@@ -2283,7 +2283,7 @@ Spack makes this relatively easy.  Let's take a look at the
        url      = "http://www.prevanders.net/libdwarf-20130729.tar.gz"
        list_url = homepage
 
-       version('20130729', '4cc5e48693f7b93b7aa0261e63c0e21d')
+       version("20130729", "4cc5e48693f7b93b7aa0261e63c0e21d")
        ...
 
        depends_on("libelf")
@@ -2295,7 +2295,7 @@ Spack makes this relatively easy.  Let's take a look at the
 ``depends_on()``
 ^^^^^^^^^^^^^^^^
 
-The highlighted ``depends_on('libelf')`` call tells Spack that it
+The highlighted ``depends_on("libelf")`` call tells Spack that it
 needs to build and install the ``libelf`` package before it builds
 ``libdwarf``.  This means that in your ``install()`` method, you are
 guaranteed that ``libelf`` has been built and installed successfully,
@@ -2312,7 +2312,7 @@ with. For example, suppose that in the ``libdwarf`` package you write:
 
 .. code-block:: python
 
-   depends_on('libelf@0.8')
+   depends_on("libelf@0.8")
 
 Now ``libdwarf`` will require ``libelf`` at *exactly* version ``0.8``.
 You can also specify a requirement for a particular variant or for
@@ -2320,9 +2320,9 @@ specific compiler flags:
 
 .. code-block:: python
 
-   depends_on('libelf@0.8+debug')
-   depends_on('libelf debug=True')
-   depends_on('libelf cppflags="-fPIC"')
+   depends_on("libelf@0.8+debug")
+   depends_on("libelf debug=True")
+   depends_on("libelf cppflags='-fPIC'")
 
 Both users *and* package authors can use the same spec syntax to refer
 to different package configurations. Users use the spec syntax on the
@@ -2341,7 +2341,7 @@ writing a package for a legacy Python module that only works with Python
 
 .. code-block:: python
 
-   depends_on('python@2.4:2.6')
+   depends_on("python@2.4:2.6")
 
 Version ranges in Spack are *inclusive*, so ``2.4:2.6`` means any version
 greater than or equal to ``2.4`` and up to and including any ``2.6.x``. If
@@ -2350,14 +2350,14 @@ higher), this would look like:
 
 .. code-block:: python
 
-   depends_on('python@3:')
+   depends_on("python@3:")
 
 Here we leave out the upper bound. If you want to say that a package
 requires Python 2, you can similarly leave out the lower bound:
 
 .. code-block:: python
 
-   depends_on('python@:2')
+   depends_on("python@:2")
 
 Notice that we didn't use ``@:3``. Version ranges are *inclusive*, so
 ``@:3`` means "up to and including any 3.x version".
@@ -2367,7 +2367,7 @@ inclined to use:
 
 .. code-block:: python
 
-   depends_on('python@2.7')
+   depends_on("python@2.7")
 
 However, this would be wrong. Spack assumes that all version constraints
 are exact, so it would try to install Python not at ``2.7.18``, but
@@ -2376,7 +2376,7 @@ specify this would be:
 
 .. code-block:: python
 
-   depends_on('python@2.7.0:2.7')
+   depends_on("python@2.7.0:2.7")
 
 A spec can contain a version list of ranges and individual versions
 separated by commas. For example, if you need Boost 1.59.0 or newer,
@@ -2384,7 +2384,7 @@ but there are known issues with 1.64.0, 1.65.0, and 1.66.0, you can say:
 
 .. code-block:: python
 
-   depends_on('boost@1.59.0:1.63,1.65.1,1.67.0:')
+   depends_on("boost@1.59.0:1.63,1.65.1,1.67.0:")
 
 
 .. _dependency-types:
@@ -2398,10 +2398,10 @@ exactly what kind of a dependency you need. For example:
 
 .. code-block:: python
 
-   depends_on('cmake', type='build')
-   depends_on('py-numpy', type=('build', 'run'))
-   depends_on('libelf', type=('build', 'link'))
-   depends_on('py-pytest', type='test')
+   depends_on("cmake", type="build")
+   depends_on("py-numpy", type=("build", "run"))
+   depends_on("libelf", type=("build", "link"))
+   depends_on("py-pytest", type="test")
 
 The following dependency types are available:
 
@@ -2436,9 +2436,9 @@ build dependencies in the hash, but this has been
 .. _Spack v0.18: https://github.com/spack/spack/releases/tag/v0.18.0
 
 If the dependency type is not specified, Spack uses a default of
-``('build', 'link')``. This is the common case for compiler languages.
+``("build", "link")``. This is the common case for compiler languages.
 Non-compiled packages like Python modules commonly use
-``('build', 'run')``. This means that the compiler wrappers don't need to
+``("build", "run")``. This means that the compiler wrappers don't need to
 inject the dependency's ``prefix/lib`` directory, but the package needs to
 be in ``PATH`` and ``PYTHONPATH`` during the build process and later when
 a user wants to run the package.
@@ -2454,9 +2454,9 @@ package. In that case, you could say something like:
 
 .. code-block:: python
 
-   variant('mpi', default=False, description='Enable MPI support')
+   variant("mpi", default=False, description="Enable MPI support")
 
-   depends_on('mpi', when='+mpi')
+   depends_on("mpi", when="+mpi")
 
 ``when`` can include constraints on the variant, version, compiler, etc. and
 the :mod:`syntax<spack.spec>` is the same as for Specs written on the command
@@ -2486,7 +2486,7 @@ take a patch or list of patches:
 
     class SpecialTool(Package):
         ...
-        depends_on('binutils', patches='special-binutils-feature.patch')
+        depends_on("binutils", patches="special-binutils-feature.patch")
         ...
 
 Here, the ``special-tool`` package requires a special feature in
@@ -2504,11 +2504,11 @@ If you need something more sophisticated than this, you can simply nest a
     class SpecialTool(Package):
         ...
         depends_on(
-            'binutils',
-            patches=patch('special-binutils-feature.patch',
+            "binutils",
+            patches=patch("special-binutils-feature.patch",
                           level=3,
-                          when='@:1.3'),   # condition on binutils
-            when='@2.0:')                  # condition on special-tool
+                          when="@:1.3"),   # condition on binutils
+            when="@2.0:")                  # condition on special-tool
         ...
 
 Note that there are two optional ``when`` conditions here -- one on the
@@ -2526,14 +2526,14 @@ a list for ``patches``, e.g.:
     class SpecialTool(Package):
         ...
         depends_on(
-            'binutils',
+            "binutils",
             patches=[
-                'binutils-bugfix1.patch',
-                'binutils-bugfix2.patch',
-                patch('https://example.com/special-binutils-feature.patch',
-                      sha256='252c0af58be3d90e5dc5e0d16658434c9efa5d20a5df6c10bf72c2d77f780866',
-                      when='@:1.3')],
-            when='@2.0:')
+                "binutils-bugfix1.patch",
+                "binutils-bugfix2.patch",
+                patch("https://example.com/special-binutils-feature.patch",
+                      sha256="252c0af58be3d90e5dc5e0d16658434c9efa5d20a5df6c10bf72c2d77f780866",
+                      when="@:1.3")],
+            when="@2.0:")
         ...
 
 As with ``patch`` directives, patches are applied in the order they
@@ -2597,7 +2597,7 @@ like the following:
 .. code-block:: python
 
    def install(self, spec, prefix):
-       setup_py('install', '--prefix={0}'.format(prefix))
+       setup_py("install", "--prefix={0}".format(prefix))
 
 Finally the Python package takes also care of the modifications to ``PYTHONPATH``
 to allow dependencies to run correctly:
@@ -2621,9 +2621,9 @@ Adding the following to a package:
 
 .. code-block:: python
 
-    conflicts('%intel', when='@:1.2',
-              msg='<myNicePackage> <= v1.2 cannot be built with Intel ICC, '
-                  'please use a newer release.')
+    conflicts("%intel", when="@:1.2",
+              msg="<myNicePackage> <= v1.2 cannot be built with Intel ICC, "
+                  "please use a newer release.")
 
 we express the fact that the current package *cannot be built* with the Intel
 compiler when we are trying to install a version "<=1.2". The ``when`` argument
@@ -2632,6 +2632,16 @@ Conflicts are always evaluated after the concretization step has been performed,
 and if any match is found a detailed error message is shown to the user.
 You can add an additional message via the ``msg=`` parameter to a conflict that
 provideds more specific instructions for users.
+
+Similarly, packages that only build on a subset of platforms can use the
+``conflicts`` directive to express that limitation, for example:
+
+.. code-block:: python
+
+    for platform in ["cray", "darwin", "windows"]:
+        conflicts("platform={0}".format(platform), msg="Only 'linux' is supported")
+
+
 
 .. _packaging_extensions:
 
@@ -2661,7 +2671,7 @@ extendable package:
 
    class PyNumpy(Package):
        ...
-       extends('python')
+       extends("python")
        ...
 
 This accomplishes a few things. Firstly, the Python package can set special
@@ -2681,9 +2691,9 @@ either lua or luajit, but not both:
 
    class LuaLpeg(Package):
        ...
-       variant('use_lua', default=True)
-       extends('lua', when='+use_lua')
-       extends('lua-luajit', when='~use_lua')
+       variant("use_lua", default=True)
+       extends("lua", when="+use_lua")
+       extends("lua-luajit", when="~use_lua")
        ...
 
 Now, a user can install, and activate, the ``lua-lpeg`` package for either
@@ -2701,8 +2711,8 @@ declaration:
 .. code-block:: python
 
    class Icebin(Package):
-       extends('python', when='+python')
-       depends_on('python@3:', when='+python')
+       extends("python", when="+python")
+       depends_on("python@3:", when="+python")
 
 Many packages produce Python extensions for *some* variants, but not
 others: they should extend ``python`` only if the appropriate
@@ -2712,8 +2722,8 @@ variant(s) are selected.  This may be accomplished with conditional
 .. code-block:: python
 
    class FooLib(Package):
-       variant('python', default=True, description='Build the Python extension Module')
-       extends('python', when='+python')
+       variant("python", default=True, description="Build the Python extension Module")
+       extends("python", when="+python")
        ...
 
 Sometimes, certain files in one package will conflict with those in
@@ -2725,8 +2735,8 @@ same time.  In this case, you can tell Spack to ignore those files:
    class PySncosmo(Package):
        ...
        # py-sncosmo binaries are duplicates of those from py-astropy
-       extends('python', ignore=r'bin/.*')
-       depends_on('py-astropy')
+       extends("python", ignore=r"bin/.*")
+       depends_on("py-astropy")
        ...
 
 The code above will prevent everything in the ``$prefix/bin/`` directory
@@ -2736,7 +2746,7 @@ from being linked in a view.
 
    You can call *either* ``depends_on`` or ``extends`` on any one
    package, but not both.  For example you cannot both
-   ``depends_on('python')`` and ``extends(python)`` in the same
+   ``depends_on("python")`` and ``extends("python")`` in the same
    package.  ``extends`` implies ``depends_on``.
 
 -----
@@ -2795,7 +2805,7 @@ supplying a ``depends_on`` call in the package definition.  For example:
        homepage = "https://github.com/hpc/mpileaks"
        url = "https://github.com/hpc/mpileaks/releases/download/v1.0/mpileaks-1.0.tar.gz"
 
-       version('1.0', '8838c574b39202a57d7c2d68692718aa')
+       version("1.0", "8838c574b39202a57d7c2d68692718aa")
 
        depends_on("mpi")
        depends_on("adept-utils")
@@ -2810,12 +2820,12 @@ say MPICH, we'll see something like this:
 .. code-block:: python
 
    class Mpich(Package):
-       provides('mpi')
+       provides("mpi")
        ...
 
 The ``provides("mpi")`` call tells Spack that the ``mpich`` package
 can be used to satisfy the dependency of any package that
-``depends_on('mpi')``.
+``depends_on("mpi")``.
 
 ^^^^^^^^^^^^^^^^^^^^
 Versioned Interfaces
@@ -2851,8 +2861,8 @@ how ``mpich`` calls ``provides``:
 
 .. code-block:: python
 
-   provides('mpi@:3', when='@3:')
-   provides('mpi@:1', when='@1:')
+   provides("mpi@:3", when="@3:")
+   provides("mpi@:1", when="@1:")
 
 The ``when`` argument to ``provides`` allows you to specify optional
 constraints on the *providing* package, or the *provider*.  The
@@ -2872,7 +2882,7 @@ the package ``foo`` declares this:
 
    class Foo(Package):
        ...
-       depends_on('mpi@2')
+       depends_on("mpi@2")
 
 Suppose a user invokes ``spack install`` like this:
 
@@ -2927,7 +2937,7 @@ as a ``@property`` in the package's class:
        @property
        def libs(self):
            # The library provided by Foo is libMyFoo.so
-           return find_libraries('libMyFoo', root=self.home, recursive=True)
+           return find_libraries("libMyFoo", root=self.home, recursive=True)
 
 A package may also provide a custom implementation of each attribute
 for the virtual packages it provides by implementing the
@@ -2971,32 +2981,32 @@ follows:
 
    class Foo(Package):
        ...
-       variant('bar', default=False, description='Enable the Foo implementation of bar')
-       variant('baz', default=False, description='Enable the Foo implementation of baz')
+       variant("bar", default=False, description="Enable the Foo implementation of bar")
+       variant("baz", default=False, description="Enable the Foo implementation of baz")
        ...
-       provides('bar', when='+bar')
-       provides('baz', when='+baz')
+       provides("bar", when="+bar")
+       provides("baz", when="+baz")
        ....
 
        # Just the foo headers
        @property
        def headers(self):
-           return find_headers('foo', root=self.home.include, recursive=False)
+           return find_headers("foo", root=self.home.include, recursive=False)
 
        # Just the foo libraries
        @property
        def libs(self):
-           return find_libraries('libFoo', root=self.home, recursive=True)
+           return find_libraries("libFoo", root=self.home, recursive=True)
 
        # The header provided by the bar virutal package
        @property
        def bar_headers(self):
-           return find_headers('bar/bar.h', root=self.home.include, recursive=False)
+           return find_headers("bar/bar.h", root=self.home.include, recursive=False)
 
        # The libary provided by the bar virtual package
        @property
        def bar_libs(self):
-           return find_libraries('libFooBar', root=sef.home, recursive=True)
+           return find_libraries("libFooBar", root=sef.home, recursive=True)
 
        # The baz virtual package home
        @property
@@ -3006,12 +3016,12 @@ follows:
        # The header provided by the baz virtual package
        @property
        def baz_headers(self):
-           return find_headers('baz/baz', root=self.baz_home.include, recursive=False)
+           return find_headers("baz/baz", root=self.baz_home.include, recursive=False)
 
        # The library provided by the baz virtual package
        @property
        def baz_libs(self):
-           return find_libraries('libFooBaz', root=self.baz_home, recursive=True)
+           return find_libraries("libFooBaz", root=self.baz_home, recursive=True)
 
 Now consider another package, ``foo-app``, depending on all three:
 
@@ -3020,9 +3030,9 @@ Now consider another package, ``foo-app``, depending on all three:
 
    class FooApp(CMakePackage):
        ...
-       depends_on('foo')
-       depends_on('bar')
-       depends_on('baz')
+       depends_on("foo")
+       depends_on("bar")
+       depends_on("baz")
 
 The resulting spec objects for it's dependencies shows the result of
 the above attribute implementations:
@@ -3031,106 +3041,106 @@ the above attribute implementations:
 
    # The core headers and libraries of the foo package
 
-   >>> spec['foo']
+   >>> spec["foo"]
    foo@1.0%gcc@11.3.1+bar+baz arch=linux-fedora35-haswell
-   >>> spec['foo'].prefix
-   '/opt/spack/linux-fedora35-haswell/gcc-11.3.1/foo-1.0-ca3rczp5omy7dfzoqw4p7oc2yh3u7lt6'
+   >>> spec["foo"].prefix
+   "/opt/spack/linux-fedora35-haswell/gcc-11.3.1/foo-1.0-ca3rczp5omy7dfzoqw4p7oc2yh3u7lt6"
 
    # home defaults to the package install prefix without an explicit implementation
-   >>> spec['foo'].home
-   '/opt/spack/linux-fedora35-haswell/gcc-11.3.1/foo-1.0-ca3rczp5omy7dfzoqw4p7oc2yh3u7lt6'
+   >>> spec["foo"].home
+   "/opt/spack/linux-fedora35-haswell/gcc-11.3.1/foo-1.0-ca3rczp5omy7dfzoqw4p7oc2yh3u7lt6"
 
    # foo headers from the foo prefix
-   >>> spec['foo'].headers
+   >>> spec["foo"].headers
    HeaderList([
-       '/opt/spack/linux-fedora35-haswell/gcc-11.3.1/foo-1.0-ca3rczp5omy7dfzoqw4p7oc2yh3u7lt6/include/foo.h',
+       "/opt/spack/linux-fedora35-haswell/gcc-11.3.1/foo-1.0-ca3rczp5omy7dfzoqw4p7oc2yh3u7lt6/include/foo.h",
    ])
 
    # foo include directories from the foo prefix
-   >>> spec['foo'].headers.directories
-   ['/opt/spack/linux-fedora35-haswell/gcc-11.3.1/foo-1.0-ca3rczp5omy7dfzoqw4p7oc2yh3u7lt6/include']
+   >>> spec["foo"].headers.directories
+   ["/opt/spack/linux-fedora35-haswell/gcc-11.3.1/foo-1.0-ca3rczp5omy7dfzoqw4p7oc2yh3u7lt6/include"]
 
    # foo libraries from the foo prefix
-   >>> spec['foo'].libs
+   >>> spec["foo"].libs
    LibraryList([
-       '/opt/spack/linux-fedora35-haswell/gcc-11.3.1/foo-1.0-ca3rczp5omy7dfzoqw4p7oc2yh3u7lt6/lib64/libFoo.so',
+       "/opt/spack/linux-fedora35-haswell/gcc-11.3.1/foo-1.0-ca3rczp5omy7dfzoqw4p7oc2yh3u7lt6/lib64/libFoo.so",
    ])
 
    # foo library directories from the foo prefix
-   >>> spec['foo'].libs.directories
-   ['/opt/spack/linux-fedora35-haswell/gcc-11.3.1/foo-1.0-ca3rczp5omy7dfzoqw4p7oc2yh3u7lt6/lib64']
+   >>> spec["foo"].libs.directories
+   ["/opt/spack/linux-fedora35-haswell/gcc-11.3.1/foo-1.0-ca3rczp5omy7dfzoqw4p7oc2yh3u7lt6/lib64"]
 
 .. code-block:: python
 
    # The virtual bar package in the same prefix as foo
 
    # bar resolves to the foo package
-   >>> spec['bar']
+   >>> spec["bar"]
    foo@1.0%gcc@11.3.1+bar+baz arch=linux-fedora35-haswell
-   >>> spec['bar'].prefix
-   '/opt/spack/linux-fedora35-haswell/gcc-11.3.1/foo-1.0-ca3rczp5omy7dfzoqw4p7oc2yh3u7lt6'
+   >>> spec["bar"].prefix
+   "/opt/spack/linux-fedora35-haswell/gcc-11.3.1/foo-1.0-ca3rczp5omy7dfzoqw4p7oc2yh3u7lt6"
 
    # home defaults to the foo prefix without either a Foo.bar_home
    # or Foo.home implementation
-   >>> spec['bar'].home
-   '/opt/spack/linux-fedora35-haswell/gcc-11.3.1/foo-1.0-ca3rczp5omy7dfzoqw4p7oc2yh3u7lt6'
+   >>> spec["bar"].home
+   "/opt/spack/linux-fedora35-haswell/gcc-11.3.1/foo-1.0-ca3rczp5omy7dfzoqw4p7oc2yh3u7lt6"
 
    # bar header in the foo prefix
-   >>> spec['bar'].headers
+   >>> spec["bar"].headers
    HeaderList([
-       '/opt/spack/linux-fedora35-haswell/gcc-11.3.1/foo-1.0-ca3rczp5omy7dfzoqw4p7oc2yh3u7lt6/include/bar/bar.h'
+       "/opt/spack/linux-fedora35-haswell/gcc-11.3.1/foo-1.0-ca3rczp5omy7dfzoqw4p7oc2yh3u7lt6/include/bar/bar.h"
    ])
 
    # bar include dirs from the foo prefix
-   >>> spec['bar'].headers.directories
-   ['/opt/spack/linux-fedora35-haswell/gcc-11.3.1/foo-1.0-ca3rczp5omy7dfzoqw4p7oc2yh3u7lt6/include']
+   >>> spec["bar"].headers.directories
+   ["/opt/spack/linux-fedora35-haswell/gcc-11.3.1/foo-1.0-ca3rczp5omy7dfzoqw4p7oc2yh3u7lt6/include"]
 
    # bar library from the foo prefix
-   >>> spec['bar'].libs
+   >>> spec["bar"].libs
    LibraryList([
-       '/opt/spack/linux-fedora35-haswell/gcc-11.3.1/foo-1.0-ca3rczp5omy7dfzoqw4p7oc2yh3u7lt6/lib64/libFooBar.so'
+       "/opt/spack/linux-fedora35-haswell/gcc-11.3.1/foo-1.0-ca3rczp5omy7dfzoqw4p7oc2yh3u7lt6/lib64/libFooBar.so"
    ])
 
    # bar library directories from the foo prefix
-   >>> spec['bar'].libs.directories
-   ['/opt/spack/linux-fedora35-haswell/gcc-11.3.1/foo-1.0-ca3rczp5omy7dfzoqw4p7oc2yh3u7lt6/lib64']
+   >>> spec["bar"].libs.directories
+   ["/opt/spack/linux-fedora35-haswell/gcc-11.3.1/foo-1.0-ca3rczp5omy7dfzoqw4p7oc2yh3u7lt6/lib64"]
 
 .. code-block:: python
 
    # The virtual baz package in a subdirectory of foo's prefix
 
    # baz resolves to the foo package
-   >>> spec['baz']
+   >>> spec["baz"]
    foo@1.0%gcc@11.3.1+bar+baz arch=linux-fedora35-haswell
-   >>> spec['baz'].prefix
-   '/opt/spack/linux-fedora35-haswell/gcc-11.3.1/foo-1.0-ca3rczp5omy7dfzoqw4p7oc2yh3u7lt6'
+   >>> spec["baz"].prefix
+   "/opt/spack/linux-fedora35-haswell/gcc-11.3.1/foo-1.0-ca3rczp5omy7dfzoqw4p7oc2yh3u7lt6"
 
    # baz_home implementation provides the subdirectory inside the foo prefix
-   >>> spec['baz'].home
-   '/opt/spack/linux-fedora35-haswell/gcc-11.3.1/foo-1.0-ca3rczp5omy7dfzoqw4p7oc2yh3u7lt6/baz'
+   >>> spec["baz"].home
+   "/opt/spack/linux-fedora35-haswell/gcc-11.3.1/foo-1.0-ca3rczp5omy7dfzoqw4p7oc2yh3u7lt6/baz"
 
    # baz headers in the baz subdirectory of the foo prefix
-   >>> spec['baz'].headers
+   >>> spec["baz"].headers
    HeaderList([
-       '/opt/spack/linux-fedora35-haswell/gcc-11.3.1/foo-1.0-ca3rczp5omy7dfzoqw4p7oc2yh3u7lt6/baz/include/baz/baz.h'
+       "/opt/spack/linux-fedora35-haswell/gcc-11.3.1/foo-1.0-ca3rczp5omy7dfzoqw4p7oc2yh3u7lt6/baz/include/baz/baz.h"
    ])
 
    # baz include directories in the baz subdirectory of the foo prefix
-   >>> spec['baz'].headers.directories
+   >>> spec["baz"].headers.directories
    [
-       '/opt/spack/linux-fedora35-haswell/gcc-11.3.1/foo-1.0-ca3rczp5omy7dfzoqw4p7oc2yh3u7lt6/baz/include'
+       "/opt/spack/linux-fedora35-haswell/gcc-11.3.1/foo-1.0-ca3rczp5omy7dfzoqw4p7oc2yh3u7lt6/baz/include"
    ]
 
    # baz libraries in the baz subdirectory of the foo prefix
-   >>> spec['baz'].libs
+   >>> spec["baz"].libs
    LibraryList([
-       '/opt/spack/linux-fedora35-haswell/gcc-11.3.1/foo-1.0-ca3rczp5omy7dfzoqw4p7oc2yh3u7lt6/baz/lib/libFooBaz.so'
+       "/opt/spack/linux-fedora35-haswell/gcc-11.3.1/foo-1.0-ca3rczp5omy7dfzoqw4p7oc2yh3u7lt6/baz/lib/libFooBaz.so"
    ])
 
    # baz library directories in the baz subdirectory of the foo porefix
-   >>> spec['baz'].libs.directories
+   >>> spec["baz"].libs.directories
    [
-       '/opt/spack/linux-fedora35-haswell/gcc-11.3.1/foo-1.0-ca3rczp5omy7dfzoqw4p7oc2yh3u7lt6/baz/lib'
+       "/opt/spack/linux-fedora35-haswell/gcc-11.3.1/foo-1.0-ca3rczp5omy7dfzoqw4p7oc2yh3u7lt6/baz/lib"
    ]
 
 .. _abstract-and-concrete:
@@ -3283,12 +3293,12 @@ under a context manager:
 
    class Gcc(AutotoolsPackage):
 
-       with when('+nvptx'):
-           depends_on('cuda')
-           conflicts('@:6', msg='NVPTX only supported in gcc 7 and above')
-           conflicts('languages=ada')
-           conflicts('languages=brig')
-           conflicts('languages=go')
+       with when("+nvptx"):
+           depends_on("cuda")
+           conflicts("@:6", msg="NVPTX only supported in gcc 7 and above")
+           conflicts("languages=ada")
+           conflicts("languages=brig")
+           conflicts("languages=go")
 
 The snippet above is equivalent to the more verbose:
 
@@ -3296,25 +3306,25 @@ The snippet above is equivalent to the more verbose:
 
    class Gcc(AutotoolsPackage):
 
-       depends_on('cuda', when='+nvptx')
-       conflicts('@:6', when='+nvptx', msg='NVPTX only supported in gcc 7 and above')
-       conflicts('languages=ada', when='+nvptx')
-       conflicts('languages=brig', when='+nvptx')
-       conflicts('languages=go', when='+nvptx')
+       depends_on("cuda", when="+nvptx")
+       conflicts("@:6", when="+nvptx", msg="NVPTX only supported in gcc 7 and above")
+       conflicts("languages=ada", when="+nvptx")
+       conflicts("languages=brig", when="+nvptx")
+       conflicts("languages=go", when="+nvptx")
 
 Constraints stemming from the context are added to what is explicitly present in the
 ``when=`` argument of a directive, so:
 
 .. code-block:: python
 
-   with when('+elpa'):
-       depends_on('elpa+openmp', when='+openmp')
+   with when("+elpa"):
+       depends_on("elpa+openmp", when="+openmp")
 
 is equivalent to:
 
 .. code-block:: python
 
-   depends_on('elpa+openmp', when='+openmp+elpa')
+   depends_on("elpa+openmp", when="+openmp+elpa")
 
 Constraints from nested context managers are also combined together, but they are rarely
 needed or recommended.
@@ -3333,15 +3343,15 @@ cannot be loaded together in the same Python runtime:
 .. code-block:: python
 
     class A(Package):
-        variant('python', default=True, 'enable python bindings')
-        depends_on('python@2.7', when='+python')
+        variant("python", default=True, "enable python bindings")
+        depends_on("python@2.7", when="+python")
         def install(self, spec, prefix):
             # do whatever is necessary to enable/disable python
             # bindings according to variant
 
     class B(Package):
-        variant('python', default=True, 'enable python bindings')
-        depends_on('python@3.2:', when='+python')
+        variant("python", default=True, "enable python bindings")
+        depends_on("python@3.2:", when="+python")
         def install(self, spec, prefix):
             # do whatever is necessary to enable/disable python
             # bindings according to variant
@@ -3353,8 +3363,8 @@ should simply depend on the ``~python`` variant of A and B:
 .. code-block:: python
 
     class C(Package):
-        depends_on('A~python')
-        depends_on('B~python')
+        depends_on("A~python")
+        depends_on("B~python")
 
 This may require that A or B be built twice, if the user wishes to use
 the Python extensions provided by them: once for ``+python`` and once
@@ -3455,7 +3465,7 @@ the build system. The build systems currently supported by Spack are:
         for a package, as ``spack create`` will make the appropriate choice on their behalf. In those
         rare cases where manual intervention is needed we need to stress that a
         package base class depends on the *build system* being used, not the language of the package.
-        For example, a Python extension installed with CMake would ``extends('python')`` and
+        For example, a Python extension installed with CMake would ``extends("python")`` and
         subclass from :class:`~spack.build_systems.cmake.CMakePackage`.
 
 ^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -3735,8 +3745,8 @@ condition is true.  You can explicitly cause the build to fail from
 
 .. code-block:: python
 
-   if spec.architecture.startswith('darwin'):
-       raise InstallError('This package does not build on Mac OS X!')
+   if spec.architecture.startswith("darwin"):
+       raise InstallError("This package does not build on Mac OS X!")
 
 .. _shell-wrappers:
 
@@ -3756,7 +3766,7 @@ to execute shell commands:
 .. code-block:: python
 
    import subprocess
-   subprocess.check_call('configure', '--prefix={0}'.format(prefix))
+   subprocess.check_call("configure", "--prefix={0}".format(prefix))
 
 We've tried to make this a bit easier by providing callable wrapper
 objects for some shell commands.  By default, ``configure``,
@@ -3767,8 +3777,8 @@ If you need other commands, you can use ``which`` to get them:
 
 .. code-block:: python
 
-   sed = which('sed')
-   sed('s/foo/bar/', filename)
+   sed = which("sed")
+   sed("s/foo/bar/", filename)
 
 The ``which`` function will search the ``PATH`` for the application.
 
@@ -3800,7 +3810,7 @@ built-in flag_handlers. The built-in flag_handlers are named
 ``inject_flags``, ``env_flags``, and ``build_system_flags``. The
 ``inject_flags`` method is the default. The ``env_flags`` method puts
 all of the flags into the environment variables that ``make`` uses as
-implicit variables ('CFLAGS', 'CXXFLAGS', etc.). The
+implicit variables ("CFLAGS", "CXXFLAGS", etc.). The
 ``build_system_flags`` method adds the flags as
 arguments to the invocation of ``configure`` or ``cmake``,
 respectively.
@@ -3861,15 +3871,15 @@ following flag handler method accomplishes that.
 .. code-block:: python
 
    def flag_handler(self, name, flags):
-       if name in ['cflags', 'cxxflags', 'cppflags']:
+       if name in ["cflags", "cxxflags", "cppflags"]:
            return (None, flags, None)
-       elif name == 'ldlibs':
-           flags.append('-lbar')
+       elif name == "ldlibs":
+           flags.append("-lbar")
        return (flags, None, None)
 
 Because these methods can pass values through environment variables,
 it is important not to override these variables unnecessarily
-(E.g. setting ``env['CFLAGS']``) in other package methods when using
+(E.g. setting ``env["CFLAGS"]``) in other package methods when using
 non-default flag handlers. In the ``setup_environment`` and
 ``setup_dependent_environment`` methods, use the ``append_flags``
 method of the ``EnvironmentModifications`` class to append values to a
@@ -3896,7 +3906,7 @@ is handy when a package supports additional variants like
 
 .. code-block:: python
 
-   variant('openmp', default=True, description="Enable OpenMP support.")
+   variant("openmp", default=True, description="Enable OpenMP support.")
 
 .. _blas_lapack_scalapack:
 
@@ -3919,28 +3929,28 @@ Package developers are requested to use this interface. Common usage cases are:
 
 .. code-block:: python
 
-   lapack_blas = spec['lapack'].libs + spec['blas'].libs
+   lapack_blas = spec["lapack"].libs + spec["blas"].libs
    options.append(
-      '--with-blas-lapack-lib={0}'.format(lapack_blas.joined())
+      "--with-blas-lapack-lib={0}".format(lapack_blas.joined())
    )
 
 2. Names of libraries and directories which contain them
 
 .. code-block:: python
 
-   blas = spec['blas'].libs
+   blas = spec["blas"].libs
    options.extend([
-     '-DBLAS_LIBRARY_NAMES={0}'.format(';'.join(blas.names)),
-     '-DBLAS_LIBRARY_DIRS={0}'.format(';'.join(blas.directories))
+     "-DBLAS_LIBRARY_NAMES={0}".format(";".join(blas.names)),
+     "-DBLAS_LIBRARY_DIRS={0}".format(";".join(blas.directories))
    ])
 
 3. Search and link flags
 
 .. code-block:: python
 
-   math_libs = spec['scalapack'].libs + spec['lapack'].libs + spec['blas'].libs
+   math_libs = spec["scalapack"].libs + spec["lapack"].libs + spec["blas"].libs
    options.append(
-     '-DMATH_LIBS:STRING={0}'.format(math_libs.ld_flags)
+     "-DMATH_LIBS:STRING={0}".format(math_libs.ld_flags)
    )
 
 
@@ -3961,7 +3971,7 @@ e.g.:
 
 .. code-block:: python
 
-   configure('--prefix={0}'.format(prefix))
+   configure("--prefix={0}".format(prefix))
 
 For the most part, prefix objects behave exactly like strings.  For
 packages that do not have their own install target, or for those that
@@ -3974,13 +3984,13 @@ yourself, e.g.:
 
    def install(self, spec, prefix):
        mkdirp(prefix.bin)
-       install('foo-tool', prefix.bin)
+       install("foo-tool", prefix.bin)
 
        mkdirp(prefix.include)
-       install('foo.h', prefix.include)
+       install("foo.h", prefix.include)
 
        mkdirp(prefix.lib)
-       install('libfoo.a', prefix.lib)
+       install("libfoo.a", prefix.lib)
 
 
 Attributes of this object are created on the fly when you request them,
@@ -4001,7 +4011,7 @@ variable name. If your file or directory contains dashes or dots, use
 
 .. code-block:: python
 
-   prefix.lib.join('libz.a')
+   prefix.lib.join("libz.a")
 
 
 .. _spec-objects:
@@ -4037,10 +4047,10 @@ do that, e.g.:
 .. code-block:: python
 
    configure_args = [
-       '--prefix={0}'.format(prefix)
+       "--prefix={0}".format(prefix)
    ]
 
-   if spec.satisfies('@1.2:1.4'):
+   if spec.satisfies("@1.2:1.4"):
        configure_args.append("CXXFLAGS='-DWITH_FEATURE'")
 
    configure(*configure_args)
@@ -4049,35 +4059,35 @@ This works for compilers, too:
 
 .. code-block:: python
 
-   if spec.satisfies('%gcc'):
-       configure_args.append('CXXFLAGS="-g3 -O3"')
-   if spec.satisfies('%intel'):
-       configure_args.append('CXXFLAGS="-xSSE2 -fast"')
+   if spec.satisfies("%gcc"):
+       configure_args.append("CXXFLAGS='-g3 -O3'")
+   if spec.satisfies("%intel"):
+       configure_args.append("CXXFLAGS='-xSSE2 -fast'")
 
 Or for combinations of spec constraints:
 
 .. code-block:: python
 
-   if spec.satisfies('@1.2%intel'):
+   if spec.satisfies("@1.2%intel"):
        tty.error("Version 1.2 breaks when using Intel compiler!")
 
 You can also do similar satisfaction tests for dependencies:
 
 .. code-block:: python
 
-   if spec.satisfies('^dyninst@8.0'):
-       configure_args.append('CXXFLAGS=-DSPECIAL_DYNINST_FEATURE')
+   if spec.satisfies("^dyninst@8.0"):
+       configure_args.append("CXXFLAGS=-DSPECIAL_DYNINST_FEATURE")
 
 This could allow you to easily work around a bug in a particular
 dependency version.
 
 You can use ``satisfies()`` to test for particular dependencies,
-e.g. ``foo.satisfies('^openmpi@1.2')`` or ``foo.satisfies('^mpich')``,
+e.g. ``foo.satisfies("^openmpi@1.2")`` or ``foo.satisfies("^mpich")``,
 or you can use Python's built-in ``in`` operator:
 
 .. code-block:: python
 
-   if 'libelf' in spec:
+   if "libelf" in spec:
        print "this package depends on libelf"
 
 This is useful for virtual dependencies, as you can easily see what
@@ -4085,12 +4095,12 @@ implementation was selected for this build:
 
 .. code-block:: python
 
-   if 'openmpi' in spec:
-       configure_args.append('--with-openmpi')
-   elif 'mpich' in spec:
-       configure_args.append('--with-mpich')
-   elif 'mvapich' in spec:
-       configure_args.append('--with-mvapich')
+   if "openmpi" in spec:
+       configure_args.append("--with-openmpi")
+   elif "mpich" in spec:
+       configure_args.append("--with-mpich")
+   elif "mvapich" in spec:
+       configure_args.append("--with-mvapich")
 
 It's also a bit more concise than satisfies.  The difference between
 the two functions is that ``satisfies()`` tests whether spec
@@ -4115,9 +4125,9 @@ platform we are installing for. If that is the case we can use conditionals:
 
 .. code-block:: python
 
-   if spec.platform == 'darwin':
+   if spec.platform == "darwin":
        # Actions that are specific to Darwin
-       args.append('--darwin-specific-flag')
+       args.append("--darwin-specific-flag")
 
 and branch based on the current spec platform. If we need to make a package directive
 conditional on the platform we can instead employ the usual spec syntax and pass the
@@ -4127,7 +4137,7 @@ corresponding constraint to the appropriate argument of that directive:
 
    class Libnl(AutotoolsPackage):
 
-       conflicts('platform=darwin', msg='libnl requires FreeBSD or Linux')
+       conflicts("platform=darwin", msg="libnl requires FreeBSD or Linux")
 
 Similar considerations are also valid for the ``os`` part of a spec's architecture.
 For instance:
@@ -4136,7 +4146,7 @@ For instance:
 
    class Glib(AutotoolsPackage)
 
-       patch('old-kernels.patch', when='os=centos6')
+       patch("old-kernels.patch", when="os=centos6")
 
 will apply the patch only when the operating system is Centos 6.
 
@@ -4147,9 +4157,9 @@ will apply the patch only when the operating system is Centos 6.
 
    .. code-block:: python
 
-      if sys.platform == 'darwin':
+      if sys.platform == "darwin":
           # Actions that are specific to Darwin
-          args.append('--darwin-specific-flag')
+          args.append("--darwin-specific-flag")
 
    querying the spec architecture's platform should be considered the preferred. The key difference
    is that a query on ``sys.platform``, or anything similar, is always bound to the host on which the
@@ -4191,8 +4201,8 @@ for supported features, for instance:
 
 .. code-block:: python
 
-   if 'avx512' in spec.target:
-       args.append('--with-avx512')
+   if "avx512" in spec.target:
+       args.append("--with-avx512")
 
 The snippet above will append the ``--with-avx512`` item to a list of arguments only if the corresponding
 feature is supported by the current target. Sometimes we need to take different actions based
@@ -4201,8 +4211,8 @@ we can check the ``family`` attribute:
 
 .. code-block:: python
 
-   if spec.target.family == 'ppc64le':
-       args.append('--enable-power')
+   if spec.target.family == "ppc64le":
+       args.append("--enable-power")
 
 Possible values for the ``family`` attribute are displayed by ``spack arch --known-targets``
 under the "Generic architectures (families)" header.
@@ -4211,8 +4221,8 @@ is compatible with a known one:
 
 .. code-block:: python
 
-   if spec.target > 'haswell':
-       args.append('--needs-at-least-haswell')
+   if spec.target > "haswell":
+       args.append("--needs-at-least-haswell")
 
 The snippet above will add an item to a list of configure options only if the current
 architecture is a superset of ``haswell`` or, said otherwise, only if the current
@@ -4238,7 +4248,7 @@ the spec:
 
 .. code-block:: python
 
-   spec['mpi']
+   spec["mpi"]
 
 The value in the brackets needs to be some package name, and spec
 needs to depend on that package, or the operation will fail.  For
@@ -4249,8 +4259,8 @@ own spec:
 
 .. code-block:: python
 
-   spec['mpi'].prefix.bin
-   spec['mpi'].version
+   spec["mpi"].prefix.bin
+   spec["mpi"].version
 
 .. _multimethods:
 
@@ -4274,12 +4284,12 @@ example:
        def install(self, prefix):
            # Do default install
 
-       @when('arch=chaos_5_x86_64_ib')
+       @when("arch=chaos_5_x86_64_ib")
        def install(self, prefix):
            # This will be executed instead of the default install if
            # the package's sys_type() is chaos_5_x86_64_ib.
 
-       @when('arch=linux-debian7-x86_64')
+       @when("arch=linux-debian7-x86_64")
        def install(self, prefix):
            # This will be executed if the package's sys_type() is
            # linux-debian7-x86_64.
@@ -4298,13 +4308,13 @@ could do something more like this:
       ...
        # virtual dependence on MPI.
        # could resolve to mpich, mpich2, OpenMPI
-       depends_on('mpi')
+       depends_on("mpi")
 
        def setup(self):
            # do nothing in the default case
            pass
 
-       @when('^openmpi')
+       @when("^openmpi")
        def setup(self):
            # do something special when this is built with OpenMPI for
            # its MPI implementations.
@@ -4321,23 +4331,23 @@ for example:
 
    class SomePackage(Package):
        ...
-       depends_on('mpi')
+       depends_on("mpi")
 
        def setup_mpi(self):
            # the default, called when no @when specs match
            pass
 
-       @when('^mpi@3:')
+       @when("^mpi@3:")
        def setup_mpi(self):
            # this will be called when mpi is version 3 or higher
            pass
 
-       @when('^mpi@2:')
+       @when("^mpi@2:")
        def setup_mpi(self):
            # this will be called when mpi is version 2 or higher
            pass
 
-       @when('^mpi@1:')
+       @when("^mpi@1:")
        def setup_mpi(self):
            # this will be called when mpi is version 1 or higher
            pass
@@ -4426,7 +4436,7 @@ It is common for high performance computing software/packages to use the
 Message Passing Interface ( ``MPI``).  As a result of conretization, a
 given package can be built using different implementations of MPI such as
 ``Openmpi``, ``MPICH`` or ``IntelMPI``.  That is, when your package
-declares that it ``depends_on('mpi')``, it can be built with any of these
+declares that it ``depends_on("mpi")``, it can be built with any of these
 ``mpi`` implementations. In some scenarios, to configure a package, one
 has to provide it with appropriate MPI compiler wrappers such as
 ``mpicc``, ``mpic++``.  However different implementations of ``MPI`` may
@@ -4438,10 +4448,10 @@ use MPI wrappers to compile your whole build, do this in your
 
 .. code-block:: python
 
-   env['CC'] = spec['mpi'].mpicc
-   env['CXX'] = spec['mpi'].mpicxx
-   env['F77'] = spec['mpi'].mpif77
-   env['FC'] = spec['mpi'].mpifc
+   env["CC"] = spec["mpi"].mpicc
+   env["CXX"] = spec["mpi"].mpicxx
+   env["F77"] = spec["mpi"].mpif77
+   env["FC"] = spec["mpi"].mpifc
 
 That's all.  A longer explanation of why this works is below.
 
@@ -4496,19 +4506,19 @@ wrappers.  All it takes some lines like this:
 
 .. code-block:: python
 
-   env['CC'] = spec['mpi'].mpicc
-   env['CXX'] = spec['mpi'].mpicxx
-   env['F77'] = spec['mpi'].mpif77
-   env['FC'] = spec['mpi'].mpifc
+   env["CC"] = spec["mpi"].mpicc
+   env["CXX"] = spec["mpi"].mpicxx
+   env["F77"] = spec["mpi"].mpif77
+   env["FC"] = spec["mpi"].mpifc
 
 Or, if you pass CC, CXX, etc. directly to your build with, e.g.,
-`--with-cc=<path>`, you'll want to substitute `spec['mpi'].mpicc` in
+`--with-cc=<path>`, you'll want to substitute `spec["mpi"].mpicc` in
 there instead, e.g.:
 
 .. code-block:: python
 
-   configure('—prefix=%s' % prefix,
-             '—with-cc=%s' % spec['mpi'].mpicc)
+   configure("—prefix=%s" % prefix,
+             "—with-cc=%s" % spec["mpi"].mpicc)
 
 Now, you may think that doing this will lose the includes, library paths,
 and RPATHs that Spack's compiler wrapper get you, but we've actually set
@@ -4517,13 +4527,13 @@ when run from within Spack. So using the MPI wrappers should really be as
 simple as the code above.
 
 ^^^^^^^^^^^^^^^^^^^^^
-``spec['mpi']``
+``spec["mpi"]``
 ^^^^^^^^^^^^^^^^^^^^^
 
 Ok, so how does all this work?
 
 If your package has a virtual dependency like ``mpi``, then referring to
-``spec['mpi']`` within ``install()`` will get you the concrete ``mpi``
+``spec["mpi"]`` within ``install()`` will get you the concrete ``mpi``
 implementation in your dependency DAG.  That is a spec object just like
 the one passed to install, only the MPI implementations all set some
 additional properties on it to help you out.  E.g., in mvapich2, you'll
@@ -4535,7 +4545,7 @@ find this:
 That code allows the mvapich2 package to associate an ``mpicc`` property
 with the ``mvapich2`` node in the DAG, so that dependents can access it.
 ``openmpi`` and ``mpich`` do similar things.  So, no matter what MPI
-you're using, spec['mpi'].mpicc gets you the location of the MPI
+you're using, spec["mpi"].mpicc gets you the location of the MPI
 compilers. This allows us to have a fairly simple polymorphic interface
 for information about virtual dependencies like MPI.
 
@@ -4575,16 +4585,16 @@ which function like MPI wrappers.  On Cray systems, the ``CC``, ``cc``,
 and ``ftn`` wrappers ARE the MPI compiler wrappers, and it's assumed that
 you'll use them for all of your builds.  So on Cray we don't bother with
 ``mpicc``, ``mpicxx``, etc, Spack MPI implementations set
-``spec['mpi'].mpicc`` to point to Spack's wrappers, which wrap the Cray
+``spec["mpi"].mpicc`` to point to Spack's wrappers, which wrap the Cray
 wrappers, which wrap the regular compilers and include MPI flags.  That
 may seem complicated, but for packagers, that means the same code for
 using MPI wrappers will work, even on even on a Cray:
 
 .. code-block:: python
 
-   env['CC'] = spec['mpi'].mpicc
+   env["CC"] = spec["mpi"].mpicc
 
-This is because on Cray, ``spec['mpi'].mpicc`` is just ``spack_cc``.
+This is because on Cray, ``spec["mpi"].mpicc`` is just ``spack_cc``.
 
 .. _checking_an_installation:
 
@@ -4670,9 +4680,9 @@ that eight paths must exist within the installation prefix after the
        ...
 
        # sanity check
-       sanity_check_is_file = [join_path('bin', 'reframe')]
-       sanity_check_is_dir  = ['bin', 'config', 'docs', 'reframe', 'tutorials',
-                               'unittests', 'cscs-checks']
+       sanity_check_is_file = [join_path("bin", "reframe")]
+       sanity_check_is_dir  = ["bin", "config", "docs", "reframe", "tutorials",
+                               "unittests", "cscs-checks"]
 
 Spack will then ensure the installation created the **file**:
 
@@ -4796,13 +4806,13 @@ phases based on the skeleton provided below.
    class YourMakefilePackage(MakefilePackage):
        ...
 
-       @run_after('build')
+       @run_after("build")
        @on_package_attributes(run_tests=True)
        def check_build(self):
             # Add your custom post-build phase tests
             pass
 
-       @run_after('install')
+       @run_after("install")
        @on_package_attributes(run_tests=True)
        def check_install(self):
             # Add your custom post-install phase tests
@@ -4823,12 +4833,12 @@ installed executable. The check is implemented as follows:
        ...
 
        # check if we can run reframe
-       @run_after('install')
+       @run_after("install")
        @on_package_attributes(run_tests=True)
        def check_list(self):
             with working_dir(self.stage.source_path):
-                reframe = Executable(join_path(self.prefix, 'bin', 'reframe'))
-                reframe('-l')
+                reframe = Executable(join_path(self.prefix, "bin", "reframe"))
+                reframe("-l")
 
 .. warning::
 
@@ -4970,11 +4980,11 @@ can be implemented as shown below.
    class MyPackage(Package):
        ...
 
-       @run_after('install')
+       @run_after("install")
        def copy_test_sources(self):
-           srcs = ['tests',
-                   join_path('examples', 'foo.c'),
-                   join_path('examples', 'bar.c')]
+           srcs = ["tests",
+                   join_path("examples", "foo.c"),
+                   join_path("examples", "bar.c")]
            self.cache_extra_test_sources(srcs)
 
 In this case, the method copies the associated files from the build
@@ -4988,9 +4998,9 @@ them using the ``self.test_suite.current_test_cache_dir`` property.
 In our example, the method would use the following paths to reference
 the copy of each entry listed in ``srcs``, respectively:
 
-* ``join_path(self.test_suite.current_test_cache_dir, 'tests')``
-* ``join_path(self.test_suite.current_test_cache_dir, 'examples', 'foo.c')``
-* ``join_path(self.test_suite.current_test_cache_dir, 'examples', 'bar.c')``
+* ``join_path(self.test_suite.current_test_cache_dir, "tests")``
+* ``join_path(self.test_suite.current_test_cache_dir, "examples", "foo.c")``
+* ``join_path(self.test_suite.current_test_cache_dir, "examples", "bar.c")``
 
 .. note::
 
@@ -5056,15 +5066,15 @@ package check:
 
        def test(self):
            test_data_dir = self.test_suite.current_test_data_dir
-           db_filename = test_data_dir.join('packages.db')
+           db_filename = test_data_dir.join("packages.db")
            ..
 
-           expected = get_escaped_text_output(test_data_dir.join('dump.out'))
-           self.run_test('sqlite3',
-                         [db_filename, '.dump'],
+           expected = get_escaped_text_output(test_data_dir.join("dump.out"))
+           self.run_test("sqlite3",
+                         [db_filename, ".dump"],
                          expected,
                          installed=True,
-                         purpose='test: checking dump output',
+                         purpose="test: checking dump output",
                          skip_missing=False)
 
 Expected outputs do not have to be stored with the Spack package.
@@ -5084,7 +5094,7 @@ can retrieve the expected output from ``examples/foo.out`` using:
        def test(self):
            ..
            filename = join_path(self.test_suite.current_test_cache_dir,
-                                'examples', 'foo.out')
+                                "examples", "foo.out")
            expected = get_escaped_text_output(filename)
            ..
 
@@ -5100,7 +5110,7 @@ follows:
 
        def test(self):
            ..
-           filename = join_path(self.prefix.share.tests.outputs, 'foo.out')
+           filename = join_path(self.prefix.share.tests.outputs, "foo.out")
            expected = get_escaped_text_output(filename)
            ..
 
@@ -5147,7 +5157,7 @@ The signature for ``run_test`` is:
 .. code-block:: python
 
    def run_test(self, exe, options=[], expected=[], status=0,
-                installed=False, purpose='', skip_missing=False,
+                installed=False, purpose="", skip_missing=False,
                 work_dir=None):
 
 where each argument has the following meaning:
@@ -5174,9 +5184,9 @@ where each argument has the following meaning:
 
   Spack requires every string in ``expected`` to be a regex matching
   part of the output from the test run (e.g.,
-  ``expected=['completed successfully', 'converged in']``).  The
+  ``expected=["completed successfully", "converged in"]``).  The
   output can also include expected failure outputs (e.g.,
-  ``expected=['failed to converge']``).
+  ``expected=["failed to converge"]``).
 
   The expected output can be :ref:`read from a file
   <expected_test_output_from_file>`.
@@ -5223,7 +5233,7 @@ where each argument has the following meaning:
 * ``work_dir`` is the path to the directory from which the executable
   will run.
 
-  The default of ``None`` corresponds to the current directory (``'.'``).
+  The default of ``None`` corresponds to the current directory (``"."``).
   Each call starts with the working directory set to the spec's test stage
   directory (i.e., ``self.test_suite.test_dir_for_spec(self.spec)``).
 
@@ -5257,20 +5267,20 @@ directory paths are provided in the table below.
      - ``self.prefix``
      - ``self.prefix.include``, ``self.prefix.lib``
    * - Dependency Installation
-     - ``self.spec['<dependency-package>'].prefix``
-     - ``self.spec['trilinos'].prefix.include``
+     - ``self.spec["<dependency-package>"].prefix``
+     - ``self.spec["trilinos"].prefix.include``
    * - Test Suite Stage
      - ``self.test_suite.stage``
-     - ``join_path(self.test_suite.stage, 'results.txt')``
+     - ``join_path(self.test_suite.stage, "results.txt")``
    * - Spec's Test Stage
      - ``self.test_suite.test_dir_for_spec``
      - ``self.test_suite.test_dir_for_spec(self.spec)``
    * - Current Spec's Build-time Files
      - ``self.test_suite.current_test_cache_dir``
-     - ``join_path(self.test_suite.current_test_cache_dir, 'examples', 'foo.c')``
+     - ``join_path(self.test_suite.current_test_cache_dir, "examples", "foo.c")``
    * - Current Spec's Custom Test Files
      - ``self.test_suite.current_test_data_dir``
-     - ``join_path(self.test_suite.current_test_data_dir, 'hello.f90')``
+     - ``join_path(self.test_suite.current_test_data_dir, "hello.f90")``
 
 """"""""""""""""""""""""""""
 Inheriting stand-alone tests
@@ -5299,7 +5309,7 @@ with those provided in the package itself when executing stand-alone tests.
    * - `Mpi
        <https://github.com/spack/spack/blob/develop/var/spack/repos/builtin/packages/mpi>`_
      - Compiles and runs ``mpi_hello`` (``c``, ``fortran``)
-   * - `PythonPackage <build_systems/pythonpackage>`
+   * - :ref:`PythonPackage <pythonpackage>`
      - Imports installed modules
 
 These tests are very generic so it is important that package
@@ -5330,11 +5340,11 @@ where only the outputs for the first of each set are shown:
    $ spack test results -l openmpi-4.0.5
    ==> Spack test openmpi-4.0.5
    ==> Testing package openmpi-4.0.5-eygjgve
-   ==> Results for test suite 'openmpi-4.0.5':
+   ==> Results for test suite "openmpi-4.0.5":
    ==>   openmpi-4.0.5-eygjgve PASSED
    ==> Testing package openmpi-4.0.5-eygjgve
    ==> [2021-04-26-17:35:20.259650] test: ensuring version of mpiCC is 8.3.1
-   ==> [2021-04-26-17:35:20.260155] '$SPACK_ROOT/opt/spack/linux-rhel7-broadwell/gcc-8.3.1/openmpi-4.0.5-eygjgvek35awfor2qaljltjind2oa67r/bin/mpiCC' '--version'
+   ==> [2021-04-26-17:35:20.260155] "$SPACK_ROOT/opt/spack/linux-rhel7-broadwell/gcc-8.3.1/openmpi-4.0.5-eygjgvek35awfor2qaljltjind2oa67r/bin/mpiCC" "--version"
    g++ (GCC) 8.3.1 20190311 (Red Hat 8.3.1-3)
    Copyright (C) 2018 Free Software Foundation, Inc.
    This is free software; see the source for copying conditions.  There is NO
@@ -5343,13 +5353,13 @@ where only the outputs for the first of each set are shown:
    PASSED
    ...
    ==> [2021-04-26-17:35:20.493921] test: checking mpirun output
-   ==> [2021-04-26-17:35:20.494461] '$SPACK_ROOT/opt/spack/linux-rhel7-broadwell/gcc-8.3.1/openmpi-4.0.5-eygjgvek35awfor2qaljltjind2oa67r/bin/mpirun' '-n' '1' 'ls' '..'
+   ==> [2021-04-26-17:35:20.494461] "$SPACK_ROOT/opt/spack/linux-rhel7-broadwell/gcc-8.3.1/openmpi-4.0.5-eygjgvek35awfor2qaljltjind2oa67r/bin/mpirun" "-n" "1" "ls" ".."
    openmpi-4.0.5-eygjgve           repo     test_suite.lock
    openmpi-4.0.5-eygjgve-test-out.txt  results.txt
    PASSED
    ...
    ==> [2021-04-26-17:35:20.630452] test: ensuring ability to build the examples
-   ==> [2021-04-26-17:35:20.630943] '/usr/bin/make' 'all'
+   ==> [2021-04-26-17:35:20.630943] "/usr/bin/make" "all"
    mpicc -g  hello_c.c  -o hello_c
    mpicc -g  ring_c.c  -o ring_c
    mpicc -g  connectivity_c.c  -o connectivity_c
@@ -5357,19 +5367,19 @@ where only the outputs for the first of each set are shown:
    ...
    PASSED
    ==> [2021-04-26-17:35:23.291214] test: checking hello_c example output and status (0)
-   ==> [2021-04-26-17:35:23.291841] './hello_c'
+   ==> [2021-04-26-17:35:23.291841] "./hello_c"
    Hello, world, I am 0 of 1, (Open MPI v4.0.5, package: Open MPI dahlgren@quartz2300 Distribution, ident: 4.0.5, repo rev: v4.0.5, Aug 26, 2020, 114)
    PASSED
    ...
    ==> [2021-04-26-17:35:24.603152] test: ensuring copied examples cleaned up
-   ==> [2021-04-26-17:35:24.603807] '/usr/bin/make' 'clean'
+   ==> [2021-04-26-17:35:24.603807] "/usr/bin/make" "clean"
    rm -f hello_c hello_cxx hello_mpifh hello_usempi hello_usempif08 hello_oshmem hello_oshmemcxx hello_oshmemfh Hello.class ring_c ring_cxx ring_mpifh ring_usempi ring_usempif08 ring_oshmem ring_oshmemfh Ring.class connectivity_c oshmem_shmalloc oshmem_circular_shift oshmem_max_reduction oshmem_strided_puts oshmem_symmetric_data spc_example *~ *.o
    PASSED
    ==> [2021-04-26-17:35:24.643360] test: mpicc: expect command status in [0]
-   ==> [2021-04-26-17:35:24.643834] '$SPACK_ROOT/opt/spack/linux-rhel7-broadwell/gcc-8.3.1/openmpi-4.0.5-eygjgvek35awfor2qaljltjind2oa67r/bin/mpicc' '-o' 'mpi_hello_c' '$HOME/.spack/test/hyzq5eqlqfog6fawlzxwg3prqy5vjhms/openmpi-4.0.5-eygjgve/data/mpi/mpi_hello.c'
+   ==> [2021-04-26-17:35:24.643834] "$SPACK_ROOT/opt/spack/linux-rhel7-broadwell/gcc-8.3.1/openmpi-4.0.5-eygjgvek35awfor2qaljltjind2oa67r/bin/mpicc" "-o" "mpi_hello_c" "$HOME/.spack/test/hyzq5eqlqfog6fawlzxwg3prqy5vjhms/openmpi-4.0.5-eygjgve/data/mpi/mpi_hello.c"
    PASSED
    ==> [2021-04-26-17:35:24.776765] test: mpirun: expect command status in [0]
-   ==> [2021-04-26-17:35:24.777194] '$SPACK_ROOT/opt/spack/linux-rhel7-broadwell/gcc-8.3.1/openmpi-4.0.5-eygjgvek35awfor2qaljltjind2oa67r/bin/mpirun' '-np' '1' 'mpi_hello_c'
+   ==> [2021-04-26-17:35:24.777194] "$SPACK_ROOT/opt/spack/linux-rhel7-broadwell/gcc-8.3.1/openmpi-4.0.5-eygjgvek35awfor2qaljltjind2oa67r/bin/mpirun" "-np" "1" "mpi_hello_c"
    Hello world! From rank 0 of 1
    PASSED
    ...
@@ -5515,32 +5525,32 @@ Filtering functions
 
      .. code-block:: python
 
-        filter_file(r'^\s*CC\s*=.*',  'CC = '  + spack_cc,  'Makefile')
-        filter_file(r'^\s*CXX\s*=.*', 'CXX = ' + spack_cxx, 'Makefile')
-        filter_file(r'^\s*F77\s*=.*', 'F77 = ' + spack_f77, 'Makefile')
-        filter_file(r'^\s*FC\s*=.*',  'FC = '  + spack_fc,  'Makefile')
+        filter_file(r"^\s*CC\s*=.*",  "CC = "  + spack_cc,  "Makefile")
+        filter_file(r"^\s*CXX\s*=.*", "CXX = " + spack_cxx, "Makefile")
+        filter_file(r"^\s*F77\s*=.*", "F77 = " + spack_f77, "Makefile")
+        filter_file(r"^\s*FC\s*=.*",  "FC = "  + spack_fc,  "Makefile")
 
   #. Replacing ``#!/usr/bin/perl`` with ``#!/usr/bin/env perl`` in ``bib2xhtml``:
 
      .. code-block:: python
 
-        filter_file(r'#!/usr/bin/perl',
-                    '#!/usr/bin/env perl', prefix.bin.bib2xhtml)
+        filter_file(r"#!/usr/bin/perl",
+                    "#!/usr/bin/env perl", prefix.bin.bib2xhtml)
 
   #. Switching the compilers used by ``mpich``'s MPI wrapper scripts from
      ``cc``, etc. to the compilers used by the Spack build:
 
      .. code-block:: python
 
-        filter_file('CC="cc"', 'CC="%s"' % self.compiler.cc,
+        filter_file("CC='cc'", "CC='%s'" % self.compiler.cc,
                     prefix.bin.mpicc)
 
-        filter_file('CXX="c++"', 'CXX="%s"' % self.compiler.cxx,
+        filter_file("CXX='c++'", "CXX='%s'" % self.compiler.cxx,
                     prefix.bin.mpicxx)
 
 :py:func:`change_sed_delimiter(old_delim, new_delim, *filenames) <llnl.util.filesystem.change_sed_delimiter>`
     Some packages, like TAU, have a build system that can't install
-    into directories with, e.g. '@' in the name, because they use
+    into directories with, e.g. "@" in the name, because they use
     hard-coded ``sed`` commands in their build.
 
     ``change_sed_delimiter`` finds all ``sed`` search/replace commands
@@ -5552,9 +5562,9 @@ Filtering functions
 
     .. code-block:: python
 
-       change_sed_delimiter('@', ';', 'configure')
-       change_sed_delimiter('@', ';', 'utils/FixMakefile')
-       change_sed_delimiter('@', ';', 'utils/FixMakefile.sed.default')
+       change_sed_delimiter("@", ";", "configure")
+       change_sed_delimiter("@", ";", "utils/FixMakefile")
+       change_sed_delimiter("@", ";", "utils/FixMakefile.sed.default")
 
 ^^^^^^^^^^^^^^
 File functions
@@ -5573,7 +5583,7 @@ File functions
 
   .. code-block:: python
 
-     install('my-header.h', prefix.include)
+     install("my-header.h", prefix.include)
 
 :py:func:`join_path(*paths) <llnl.util.filesystem.join_path>`
   An alias for ``os.path.join``. This joins paths using the OS path separator.
@@ -5600,10 +5610,10 @@ File functions
 
      .. code-block:: python
 
-        with working_dir('libdwarf'):
+        with working_dir("libdwarf"):
             configure("--prefix=" + prefix, "--enable-shared")
             make()
-            install('libdwarf.a',  prefix.lib)
+            install("libdwarf.a",  prefix.lib)
 
   #. Many CMake builds require that you build "out of source", that
      is, in a subdirectory.  You can handle creating and ``cd``'ing to
@@ -5611,12 +5621,12 @@ File functions
 
      .. code-block:: python
 
-        with working_dir('spack-build', create=True):
-            cmake('..',
-                  '-DLLVM_REQUIRES_RTTI=1',
-                  '-DPYTHON_EXECUTABLE=/usr/bin/python',
-                  '-DPYTHON_INCLUDE_DIR=/usr/include/python2.6',
-                  '-DPYTHON_LIBRARY=/usr/lib64/libpython2.6.so',
+        with working_dir("spack-build", create=True):
+            cmake("..",
+                  "-DLLVM_REQUIRES_RTTI=1",
+                  "-DPYTHON_EXECUTABLE=/usr/bin/python",
+                  "-DPYTHON_INCLUDE_DIR=/usr/include/python2.6",
+                  "-DPYTHON_LIBRARY=/usr/lib64/libpython2.6.so",
                   *std_cmake_args)
             make()
             make("install")
@@ -5650,13 +5660,13 @@ specify a package level ``executables`` attribute:
 
    class Foo(Package):
        # Each string provided here is treated as a regular expression, and
-       # would match for example 'foo', 'foobar', and 'bazfoo'.
-       executables = ['foo']
+       # would match for example "foo", "foobar", and "bazfoo".
+       executables = ["foo"]
 
 This attribute must be a list of strings. Each string is a regular
-expression (e.g. 'gcc' would match 'gcc', 'gcc-8.3', 'my-weird-gcc', etc.) to
+expression (e.g. "gcc" would match "gcc", "gcc-8.3", "my-weird-gcc", etc.) to
 determine a set of system executables that might be part or this package. Note
-that to match only executables named 'gcc' the regular expression ``'^gcc$'``
+that to match only executables named "gcc" the regular expression ``"^gcc$"``
 must be used.
 
 Finally to determine the version of each executable the ``determine_version``
@@ -5732,7 +5742,7 @@ would look like:
    packages:
      gcc:
        externals:
-       - spec: 'gcc@9.0.1 languages=c,c++,fortran'
+       - spec: "gcc@9.0.1 languages=c,c++,fortran"
          prefix: /usr
          extra_attributes:
            compilers:
@@ -5744,7 +5754,7 @@ This allows us, for instance, to keep track of executables that would be named
 differently if built by Spack (e.g. ``x86_64-linux-gnu-gcc-9``
 instead of just ``gcc``).
 
-.. TODO: we need to gather some more experience on overriding 'prefix'
+.. TODO: we need to gather some more experience on overriding "prefix"
    and other special keywords in extra attributes, but as soon as we are
    confident that this is the way to go we should document the process.
    See https://github.com/spack/spack/pull/16526#issuecomment-653783204
@@ -5781,10 +5791,10 @@ would be quite complicated to do using regex only. Employing the
 .. code-block:: python
 
    class Gcc(Package):
-      executables = ['g++']
+      executables = ["g++"]
 
       def filter_detected_exes(cls, prefix, exes_in_prefix):
-         return [x for x in exes_in_prefix if 'clang' not in x]
+         return [x for x in exes_in_prefix if "clang" not in x]
 
 Another possibility that this method opens is to apply certain
 filtering logic when specific conditions are met (e.g. take some
@@ -5817,10 +5827,10 @@ in the extra attributes can implement this method like this:
 
    @classmethod
    def validate_detected_spec(cls, spec, extra_attributes):
-       """Check that 'compilers' is in the extra attributes."""
-       msg = ('the extra attribute "compilers" must be set for '
-              'the detected spec "{0}"'.format(spec))
-       assert 'compilers' in extra_attributes, msg
+       """Check that "compilers" is in the extra attributes."""
+       msg = ("the extra attribute "compilers" must be set for "
+              "the detected spec '{0}'".format(spec))
+       assert "compilers" in extra_attributes, msg
 
 or like this:
 
@@ -5828,10 +5838,10 @@ or like this:
 
    @classmethod
    def validate_detected_spec(cls, spec, extra_attributes):
-       """Check that 'compilers' is in the extra attributes."""
-       if 'compilers' not in extra_attributes:
-           msg = ('the extra attribute "compilers" must be set for '
-                  'the detected spec "{0}"'.format(spec))
+       """Check that "compilers" is in the extra attributes."""
+       if "compilers" not in extra_attributes:
+           msg = ("the extra attribute 'compilers' must be set for "
+                  "the detected spec '{0}'".format(spec))
            raise InvalidSpecDetected(msg)
 
 .. _determine_spec_details:
@@ -5876,22 +5886,22 @@ follows:
        version(...)
 
        # Each string provided here is treated as a regular expression, and
-       # would match for example 'foo', 'foobar', and 'bazfoo'.
-       executables = ['foo']
+       # would match for example "foo", "foobar", and "bazfoo".
+       executables = ["foo"]
 
        @classmethod
        def determine_spec_details(cls, prefix, exes_in_prefix):
            candidates = list(x for x in exes_in_prefix
-                             if os.path.basename(x) == 'foo')
+                             if os.path.basename(x) == "foo")
            if not candidates:
                return
            # This implementation is lazy and only checks the first candidate
            exe_path = candidates[0]
            exe = Executable(exe_path)
-           output = exe('--version', output=str, error=str)
+           output = exe("--version", output=str, error=str)
            version_str = ...  # parse output for version string
            return Spec.from_detection(
-               'foo-package@{0}'.format(version_str)
+               "foo-package@{0}".format(version_str)
            )
 
 .. _package-lifecycle:
@@ -5945,7 +5955,7 @@ location on disk where a concrete package resides, ``home`` is the `logical`
 location that a package resides, which may be different than ``prefix`` in
 the case of virtual packages or other special circumstances.  For most use
 cases inside a package, it's dependency locations can be accessed via either
-``self.spec['foo'].home`` or ``self.spec['foo'].prefix``.  Specific packages
+``self.spec["foo"].home`` or ``self.spec["foo"].prefix``.  Specific packages
 that should be consumed by dependents via ``.home`` instead of ``.prefix``
 should be noted in their respective documentation.
 

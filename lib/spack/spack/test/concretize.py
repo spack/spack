@@ -2,6 +2,7 @@
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
+import copy
 import os
 import sys
 
@@ -24,8 +25,6 @@ from spack.concretize import find_spec
 from spack.solver.asp import UnsatisfiableSpecError
 from spack.spec import Spec
 from spack.version import ver
-
-is_windows = sys.platform == "win32"
 
 
 def check_spec(abstract, concrete):
@@ -294,11 +293,11 @@ class TestConcretize(object):
         we ask for some advanced version.
         """
         repo = spack.repo.path
-        assert not any(s.satisfies("mpich2@:1.0") for s in repo.providers_for("mpi@2.1"))
-        assert not any(s.satisfies("mpich2@:1.1") for s in repo.providers_for("mpi@2.2"))
-        assert not any(s.satisfies("mpich@:1") for s in repo.providers_for("mpi@2"))
-        assert not any(s.satisfies("mpich@:1") for s in repo.providers_for("mpi@3"))
-        assert not any(s.satisfies("mpich2") for s in repo.providers_for("mpi@3"))
+        assert not any(s.intersects("mpich2@:1.0") for s in repo.providers_for("mpi@2.1"))
+        assert not any(s.intersects("mpich2@:1.1") for s in repo.providers_for("mpi@2.2"))
+        assert not any(s.intersects("mpich@:1") for s in repo.providers_for("mpi@2"))
+        assert not any(s.intersects("mpich@:1") for s in repo.providers_for("mpi@3"))
+        assert not any(s.intersects("mpich2") for s in repo.providers_for("mpi@3"))
 
     def test_provides_handles_multiple_providers_of_same_version(self):
         """ """
@@ -331,6 +330,24 @@ class TestConcretize(object):
         cmake = client["cmake"]
         for spec in [client, cmake]:
             assert spec.compiler_flags["cflags"] == ["-O3", "-g"]
+
+    def test_compiler_flags_differ_identical_compilers(self):
+        # Correct arch to use test compiler that has flags
+        spec = Spec("a %clang@12.2.0 platform=test os=fe target=fe")
+
+        # Get the compiler that matches the spec (
+        compiler = spack.compilers.compiler_for_spec("clang@12.2.0", spec.architecture)
+        # Clear cache for compiler config since it has its own cache mechanism outside of config
+        spack.compilers._cache_config_file = []
+
+        # Configure spack to have two identical compilers with different flags
+        default_dict = spack.compilers._to_dict(compiler)
+        different_dict = copy.deepcopy(default_dict)
+        different_dict["compiler"]["flags"] = {"cflags": "-O2"}
+
+        with spack.config.override("compilers", [different_dict]):
+            spec.concretize()
+            assert spec.satisfies("cflags=-O2")
 
     def test_concretize_compiler_flag_propagate(self):
         spec = Spec("hypre cflags=='-g' ^openblas")
@@ -1138,7 +1155,7 @@ class TestConcretize(object):
     def test_all_patches_applied(self):
         uuidpatch = (
             "a60a42b73e03f207433c5579de207c6ed61d58e4d12dd3b5142eb525728d89ea"
-            if not is_windows
+            if sys.platform != "win32"
             else "d0df7988457ec999c148a4a2af25ce831bfaad13954ba18a4446374cb0aef55e"
         )
         localpatch = "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
@@ -1256,6 +1273,18 @@ class TestConcretize(object):
 
         # Structure and package hash will be different without reuse
         assert root.dag_hash() != new_root_without_reuse.dag_hash()
+
+    def test_reuse_with_flags(self, mutable_database, mutable_config):
+        if spack.config.get("config:concretizer") == "original":
+            pytest.xfail("Original concretizer does not reuse")
+
+        spack.config.set("concretizer:reuse", True)
+        spec = Spec("a cflags=-g cxxflags=-g").concretized()
+        spack.store.db.add(spec, None)
+
+        testspec = Spec("a cflags=-g")
+        testspec.concretize()
+        assert testspec == spec
 
     @pytest.mark.regression("20784")
     def test_concretization_of_test_dependencies(self):
@@ -1445,7 +1474,7 @@ class TestConcretize(object):
         with spack.config.override("concretizer:reuse", True):
             s = spack.spec.Spec(spec_str).concretized()
         assert s.installed is expect_installed
-        assert s.satisfies(spec_str, strict=True)
+        assert s.satisfies(spec_str)
 
     @pytest.mark.regression("26721,19736")
     def test_sticky_variant_in_package(self):

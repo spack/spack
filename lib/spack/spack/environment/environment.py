@@ -62,8 +62,8 @@ spack_env_var = "SPACK_ENV"
 _active_environment = None
 
 
-#: path where environments are stored in the spack tree
-env_path = os.path.join(spack.paths.var_path, "environments")
+#: default path where environments are stored in the spack tree
+default_env_path = os.path.join(spack.paths.var_path, "environments")
 
 
 #: Name of the input yaml file for an environment
@@ -76,6 +76,26 @@ lockfile_name = "spack.lock"
 
 #: Name of the directory where environments store repos, logs, views
 env_subdir_name = ".spack-env"
+
+
+def env_root_path():
+    """Override default root path if the user specified it"""
+    return spack.util.path.canonicalize_path(
+        spack.config.get("config:environments_root", default=default_env_path)
+    )
+
+
+def check_disallowed_env_config_mods(scopes):
+    for scope in scopes:
+        with spack.config.use_configuration(scope):
+            if spack.config.get("config:environments_root"):
+                raise SpackEnvironmentError(
+                    "Spack environments are prohibited from modifying 'config:environments_root' "
+                    "because it can make the definition of the environment ill-posed. Please "
+                    "remove from your environment and place it in a permanent scope such as "
+                    "defaults, system, site, etc."
+                )
+    return scopes
 
 
 def default_manifest_yaml():
@@ -214,7 +234,7 @@ def active_environment():
 
 def _root(name):
     """Non-validating version of root(), to be used internally."""
-    return os.path.join(env_path, name)
+    return os.path.join(env_root_path(), name)
 
 
 def root(name):
@@ -249,10 +269,12 @@ def read(name):
 
 
 def create(name, init_file=None, with_view=None, keep_relative=False):
-    """Create a named environment in Spack."""
+    """Create a managed environment in Spack."""
+    if not os.path.isdir(env_root_path()):
+        fs.mkdirp(env_root_path())
     validate_env_name(name)
     if exists(name):
-        raise SpackEnvironmentError("'%s': environment already exists" % name)
+        raise SpackEnvironmentError("'%s': environment already exists at %s" % (name, root(name)))
     return Environment(root(name), init_file, with_view, keep_relative)
 
 
@@ -266,10 +288,10 @@ def all_environment_names():
     """List the names of environments that currently exist."""
     # just return empty if the env path does not exist.  A read-only
     # operation like list should not try to create a directory.
-    if not os.path.exists(env_path):
+    if not os.path.exists(env_root_path()):
         return []
 
-    candidates = sorted(os.listdir(env_path))
+    candidates = sorted(os.listdir(env_root_path()))
     names = []
     for candidate in candidates:
         yaml_path = os.path.join(_root(candidate), manifest_name)
@@ -279,7 +301,7 @@ def all_environment_names():
 
 
 def all_environments():
-    """Generator for all named Environments."""
+    """Generator for all managed Environments."""
     for name in all_environment_names():
         yield read(name)
 
@@ -327,7 +349,8 @@ def _is_dev_spec_and_has_changed(spec):
 
 def _spec_needs_overwrite(spec, changed_dev_specs):
     """Check whether the current spec needs to be overwritten because either it has
-    changed itself or one of its dependencies have changed"""
+    changed itself or one of its dependencies have changed
+    """
     # if it's not installed, we don't need to overwrite it
     if not spec.installed:
         return False
@@ -859,14 +882,14 @@ class Environment(object):
     @property
     def internal(self):
         """Whether this environment is managed by Spack."""
-        return self.path.startswith(env_path)
+        return self.path.startswith(env_root_path())
 
     @property
     def name(self):
         """Human-readable representation of the environment.
 
         This is the path for directory environments, and just the name
-        for named environments.
+        for managed environments.
         """
         if self.internal:
             return os.path.basename(self.path)
@@ -1044,7 +1067,9 @@ class Environment(object):
 
     def config_scopes(self):
         """A list of all configuration scopes for this environment."""
-        return self.included_config_scopes() + [self.env_file_config_scope()]
+        return check_disallowed_env_config_mods(
+            self.included_config_scopes() + [self.env_file_config_scope()]
+        )
 
     def destroy(self):
         """Remove this environment from Spack entirely."""
@@ -1838,6 +1863,7 @@ class Environment(object):
         assert len(hash_matches) == 1
         return hash_matches[0]
 
+    @spack.repo.autospec
     def matching_spec(self, spec):
         """
         Given a spec (likely not concretized), find a matching concretized
@@ -1855,59 +1881,60 @@ class Environment(object):
         and multiple dependency specs match, then this raises an error
         and reports all matching specs.
         """
-        # Root specs will be keyed by concrete spec, value abstract
-        # Dependency-only specs will have value None
-        matches = {}
+        env_root_to_user = {root.dag_hash(): user for user, root in self.concretized_specs()}
+        root_matches, dep_matches = [], []
 
-        if not isinstance(spec, spack.spec.Spec):
-            spec = spack.spec.Spec(spec)
-
-        for user_spec, concretized_user_spec in self.concretized_specs():
-            # Deal with concrete specs differently
-            if spec.concrete:
-                if spec in concretized_user_spec:
-                    matches[spec] = spec
+        for env_spec in spack.traverse.traverse_nodes(
+            specs=[root for _, root in self.concretized_specs()],
+            key=lambda s: s.dag_hash(),
+            order="breadth",
+        ):
+            if not env_spec.satisfies(spec):
                 continue
 
-            if concretized_user_spec.satisfies(spec):
-                matches[concretized_user_spec] = user_spec
-            for dep_spec in concretized_user_spec.traverse(root=False):
-                if dep_spec.satisfies(spec):
-                    # Don't overwrite the abstract spec if present
-                    # If not present already, set to None
-                    matches[dep_spec] = matches.get(dep_spec, None)
+            # If the spec is concrete, then there is no possibility of multiple matches,
+            # and we immediately return the single match
+            if spec.concrete:
+                return env_spec
 
-        if not matches:
+            # Distinguish between environment roots and deps. Specs that are both
+            # are classified as environment roots.
+            user_spec = env_root_to_user.get(env_spec.dag_hash())
+            if user_spec:
+                root_matches.append((env_spec, user_spec))
+            else:
+                dep_matches.append(env_spec)
+
+        # No matching spec
+        if not root_matches and not dep_matches:
             return None
-        elif len(matches) == 1:
-            return list(matches.keys())[0]
 
-        root_matches = dict(
-            (concrete, abstract) for concrete, abstract in matches.items() if abstract
-        )
-
+        # Single root spec, any number of dep specs => return root spec.
         if len(root_matches) == 1:
-            return list(root_matches.items())[0][0]
+            return root_matches[0][0]
+
+        if not root_matches and len(dep_matches) == 1:
+            return dep_matches[0]
 
         # More than one spec matched, and either multiple roots matched or
         # none of the matches were roots
         # If multiple root specs match, it is assumed that the abstract
         # spec will most-succinctly summarize the difference between them
         # (and the user can enter one of these to disambiguate)
-        match_strings = []
         fmt_str = "{hash:7}  " + spack.spec.default_format
-        for concrete, abstract in matches.items():
-            if abstract:
-                s = "Root spec %s\n  %s" % (abstract, concrete.format(fmt_str))
-            else:
-                s = "Dependency spec\n  %s" % concrete.format(fmt_str)
-            match_strings.append(s)
+        color = clr.get_color_when()
+        match_strings = [
+            f"Root spec {abstract.format(color=color)}\n  {concrete.format(fmt_str, color=color)}"
+            for concrete, abstract in root_matches
+        ]
+        match_strings.extend(
+            f"Dependency spec\n  {s.format(fmt_str, color=color)}" for s in dep_matches
+        )
         matches_str = "\n".join(match_strings)
 
-        msg = "{0} matches multiple specs in the environment {1}: \n" "{2}".format(
-            str(spec), self.name, matches_str
+        raise SpackEnvironmentError(
+            f"{spec} matches multiple specs in the environment {self.name}: \n{matches_str}"
         )
-        raise SpackEnvironmentError(msg)
 
     def removed_specs(self):
         """Tuples of (user spec, concrete spec) for all specs that will be
@@ -2168,6 +2195,7 @@ class Environment(object):
             view = dict((name, view.to_dict()) for name, view in self.views.items())
         else:
             view = False
+
         yaml_dict["view"] = view
 
         if self.dev_specs:
@@ -2289,7 +2317,7 @@ def _concretize_from_constraints(spec_constraints, tests=False):
             invalid_deps = [
                 c
                 for c in spec_constraints
-                if any(c.satisfies(invd, strict=True) for invd in invalid_deps_string)
+                if any(c.satisfies(invd) for invd in invalid_deps_string)
             ]
             if len(invalid_deps) != len(invalid_deps_string):
                 raise e

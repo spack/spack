@@ -82,8 +82,8 @@ def test_change_match_spec():
 
         change("--match-spec", "mpileaks@2.2", "mpileaks@2.3")
 
-    assert not any(x.satisfies("mpileaks@2.2") for x in e.user_specs)
-    assert any(x.satisfies("mpileaks@2.3") for x in e.user_specs)
+    assert not any(x.intersects("mpileaks@2.2") for x in e.user_specs)
+    assert any(x.intersects("mpileaks@2.3") for x in e.user_specs)
 
 
 def test_change_multiple_matches():
@@ -97,8 +97,8 @@ def test_change_multiple_matches():
 
         change("--match-spec", "mpileaks", "-a", "mpileaks%gcc")
 
-    assert all(x.satisfies("%gcc") for x in e.user_specs if x.name == "mpileaks")
-    assert any(x.satisfies("%clang") for x in e.user_specs if x.name == "libelf")
+    assert all(x.intersects("%gcc") for x in e.user_specs if x.name == "mpileaks")
+    assert any(x.intersects("%clang") for x in e.user_specs if x.name == "libelf")
 
 
 def test_env_add_virtual():
@@ -111,7 +111,7 @@ def test_env_add_virtual():
     hashes = e.concretized_order
     assert len(hashes) == 1
     spec = e.specs_by_hash[hashes[0]]
-    assert spec.satisfies("mpi")
+    assert spec.intersects("mpi")
 
 
 def test_env_add_nonexistant_fails():
@@ -687,7 +687,7 @@ env:
     with e:
         e.concretize()
 
-    assert any(x.satisfies("mpileaks@2.2") for x in e._get_environment_specs())
+    assert any(x.intersects("mpileaks@2.2") for x in e._get_environment_specs())
 
 
 def test_with_config_bad_include():
@@ -1630,9 +1630,9 @@ env:
             assert concrete.concrete
             assert not user.concrete
             if user.name == "libelf":
-                assert not concrete.satisfies("^mpi", strict=True)
+                assert not concrete.satisfies("^mpi")
             elif user.name == "mpileaks":
-                assert concrete.satisfies("^mpi", strict=True)
+                assert concrete.satisfies("^mpi")
 
 
 def test_stack_concretize_extraneous_variants(tmpdir, config, mock_packages):
@@ -3222,3 +3222,20 @@ def test_relative_view_path_on_command_line_is_made_absolute(tmpdir, config):
         env("create", "--with-view", "view", "--dir", "env")
         environment = ev.Environment(os.path.join(".", "env"))
         assert os.path.samefile("view", environment.default_view.root)
+
+
+def test_environment_created_in_users_location(mutable_config, tmpdir):
+    """Test that an environment is created in a location based on the config"""
+    spack.config.set("config:environments_root", str(tmpdir.join("envs")))
+    env_dir = spack.config.get("config:environments_root")
+
+    assert tmpdir.strpath in env_dir
+    assert not os.path.isdir(env_dir)
+
+    dir_name = "user_env"
+    env("create", dir_name)
+    out = env("list")
+
+    assert dir_name in out
+    assert env_dir in ev.root(dir_name)
+    assert os.path.isdir(os.path.join(env_dir, dir_name))
