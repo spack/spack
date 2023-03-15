@@ -204,23 +204,33 @@ class Cdo(AutotoolsPackage):
             # Note that the argument of --with-hdf5 is not passed to the
             # configure script of libcdi, therefore we have to provide
             # additional flags regardless of whether hdf5 support is enabled.
-            hdf5_spec = self.spec["hdf5"]
-            if not is_system_path(hdf5_spec.prefix):
-                flags["LDFLAGS"].append(self.spec["hdf5"].libs.search_flags)
+            netcdfc_spec = self.spec["netcdf-c"]
+            if not is_system_path(netcdfc_spec.prefix):
+                if netcdfc_spec.satisfies("+shared"):
+                    flags["LDFLAGS"].append(netcdfc_spec.libs.search_flags)
+                    flags["LIBS"].append(netcdfc_spec.libs.link_flags)
+                else:
+                    ncconfig = which("nc-config")
+                    flags["LDFLAGS"].append(ncconfig("--cflags", output=str).strip())
+                    flags["LIBS"].append(ncconfig("--libs", output=str).strip())
         else:
             config_args.append("--without-netcdf")
 
         if self.spec.variants["grib2"].value == "eccodes":
-            if self.spec.satisfies("@1.9:"):
+            eccodes_spec = self.spec["eccodes"]
+            if self.spec.satisfies("@1.9:") and eccodes_spec.satisfies("+shared"):
                 config_args.append("--with-eccodes=" + yes_or_prefix("eccodes"))
                 config_args.append("--without-grib_api")
             else:
                 config_args.append("--with-grib_api=yes")
-                eccodes_spec = self.spec["eccodes"]
                 eccodes_libs = eccodes_spec.libs
                 flags["LIBS"].append(eccodes_libs.link_flags)
                 if not is_system_path(eccodes_spec.prefix):
                     flags["LDFLAGS"].append(eccodes_libs.search_flags)
+                    if eccodes_spec.satisfies("~shared"):
+                        jpeglib = eccodes_spec.variants["jp2k"].value
+                        flags["LIBS"].append(self.spec[jpeglib].libs.link_flags)
+                        flags["LDFLAGS"].append(self.spec[jpeglib].libs.ld_flags)
         elif self.spec.variants["grib2"].value == "grib-api":
             config_args.append("--with-grib_api=" + yes_or_prefix("grib-api"))
             if self.spec.satisfies("@1.9:"):
