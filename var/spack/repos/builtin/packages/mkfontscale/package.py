@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -21,3 +21,14 @@ class Mkfontscale(AutotoolsPackage, XorgPackage):
     depends_on("xproto@7.0.25:")
     depends_on("pkgconfig", type="build")
     depends_on("util-macros", type="build")
+
+    def configure_args(self):
+        args = []
+        ldflags = []
+        libs = []
+        for lib in ["libpng", "bzip2"]:
+            ldflags.append(self.spec[lib].libs.ld_flags)
+            libs.append(self.spec[lib].libs.link_flags)
+        args.append("LDFLAGS=%s" % " ".join(ldflags))
+        args.append("LIBS=%s" % " ".join(libs))
+        return args
