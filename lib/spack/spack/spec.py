@@ -3685,7 +3685,7 @@ class Spec(object):
 
         return lhs._satisfies(rhs, deps=deps, strict=strict)
 
-    def satisfies_dependencies(self, other, strict=False):
+    def _intersects_dependencies(self, other):
         """
         This checks constraints on common dependencies against each other.
         """
