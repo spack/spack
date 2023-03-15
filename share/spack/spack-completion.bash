@@ -1114,14 +1114,23 @@ _spack_external() {
     then
         SPACK_COMPREPLY="-h --help"
     else
-        SPACK_COMPREPLY="find list read-cray-manifest"
+        SPACK_COMPREPLY="find import list read-cray-manifest"
     fi
 }
 
 _spack_external_find() {
     if $list_options
     then
-        SPACK_COMPREPLY="-h --help --exclude -p --path --scope --all -t --tag -j --jobs"
+        SPACK_COMPREPLY="-h --help --exclude -p --path --all -t --tag -j --jobs"
+    else
+        _all_packages
+    fi
+}
+
+_spack_external_import() {
+    if $list_options
+    then
+        SPACK_COMPREPLY="-h --help --scope --exclude"
     else
         _all_packages
     fi

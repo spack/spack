@@ -21,7 +21,7 @@ spack:
     python:
       buildable: false
       externals:
-        - spec: "{{ python_spec }}"
+        - spec: "{{ python_spec }} target={{ architecture }}"
           prefix: "{{ python_prefix }}"
 
     py-typed-ast:

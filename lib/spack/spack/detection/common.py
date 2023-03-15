@@ -3,11 +3,11 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 """Define a common data structure to represent external packages and a
-function to update packages.yaml given a list of detected packages.
+function to update the DB given a list of external packages.
 
 Ideally, each detection method should be placed in a specific subpackage
 and implement at least a function that returns a list of DetectedPackage
-objects. The update in packages.yaml can then be done using the function
+objects. The update in to the DB can then be done using the function
 provided here.
 
 The module also contains other functions that might be useful across different
@@ -218,28 +218,47 @@ def library_prefix(library_dir: str) -> str:
         return library_dir
 
 
-def update_database(detected_packages: Dict[str, List[DetectedPackage]]) -> List[spack.spec.Spec]:
-    """Add the packages that have been detected to the database as externals.
+def ensure_architecture_and_compiler(abstract_spec: spack.spec.Spec):
+    """Adds a fully concrete architecture and compiler to the spec passed as
+    input, if not already present.
+    """
+    c = spack.concretize.Concretizer()
+    c.concretize_architecture(spec=abstract_spec)
+    c.concretize_compiler(spec=abstract_spec)
+
+
+def update_database(
+    externals: Dict[str, List[DetectedPackage]]
+) -> Tuple[List[spack.spec.Spec], List[spack.spec.Spec]]:
+    """Add the external packages passed as input to the database.
 
     Args:
-        detected_packages: list of DetectedPackage objects to be added
+        externals: mapping from package name to the external package that needs to be added.
+
+    Returns:
+        The list of all externals that have been considered and the list of
+        the ones newly added to the DB
     """
-    new_specs = []
-    database = spack.store.store.db
-    for package_name, entries in detected_packages.items():
+    all_specs, new_specs = [], []
+    database = spack.store.STORE.db
+    for package_name, entries in externals.items():
         for entry in entries:
             s = entry.spec
             s.external_path = entry.prefix
             s._finalize_concretization()
 
-            rec = database.query(s)
-            if rec:
-                continue
+            # This traversal accounts for externals with detected dependencies
+            for node in s.traverse():
+                all_specs.append(node)
+                rec = database.query(node)
+                if rec:
+                    continue
+                new_specs.append(node)
 
-            database.add(s, spack.store.layout, explicit=False)
-            new_specs.append(s)
+        for node in new_specs:
+            database.add(node, spack.store.STORE.layout, explicit=False)
 
-    return new_specs
+    return all_specs, new_specs
 
 
 def _windows_drive() -> str:

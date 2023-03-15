@@ -2845,7 +2845,10 @@ class Solver:
         return reusable
 
     def _reusable_specs(self, specs):
-        reusable_specs = []
+        # We always reuse unconditionally external specs that are is user config
+        externals = spack.detection.import_externals()
+        reusable_specs, _ = spack.detection.update_database(externals)
+
         if self.reuse:
             # Specs from the local Database
             with spack.store.STORE.db.read_transaction():
@@ -2870,7 +2873,9 @@ class Solver:
         # If we only want to reuse dependencies, remove the root specs
         if self.reuse == "dependencies":
             reusable_specs = [
-                spec for spec in reusable_specs if not any(root in spec for root in specs)
+                spec
+                for spec in reusable_specs
+                if spec.external or not any(root in spec for root in specs)
             ]
 
         return reusable_specs
