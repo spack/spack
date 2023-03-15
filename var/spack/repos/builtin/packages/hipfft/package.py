@@ -73,6 +73,18 @@ class Hipfft(CMakePackage, CudaPackage, ROCmPackage):
         deprecated=True,
     )
 
+    # default to an 'auto' variant until amdgpu_targets can be given a better default than 'none'
+    amdgpu_targets = ROCmPackage.amdgpu_targets
+    variant(
+        "amdgpu_target",
+        values=spack.variant.DisjointSetsOfValues(("auto",), ("none",), amdgpu_targets)
+        .with_default("auto")
+        .with_error(
+            "the values 'auto' and 'none' are mutually exclusive with any of the other values"
+        )
+        .with_non_feature_values("auto", "none"),
+        sticky=True,
+    )
     variant("rocm", default=True, description="Enable ROCm support")
     conflicts("+cuda +rocm", msg="CUDA and ROCm support are mutually exclusive")
     conflicts("~cuda ~rocm", msg="CUDA or ROCm support is required")
@@ -116,9 +128,7 @@ class Hipfft(CMakePackage, CudaPackage, ROCmPackage):
         )
 
     def cmake_args(self):
-        args = [
-            self.define("BUILD_CLIENTS_SAMPLES", "OFF")
-        ]
+        args = [self.define("BUILD_CLIENTS_SAMPLES", "OFF")]
 
         if self.spec.satisfies("+rocm"):
             args.append(self.define("BUILD_WITH_LIB", "ROCM"))
