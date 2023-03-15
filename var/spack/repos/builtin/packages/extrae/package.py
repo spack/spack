@@ -40,6 +40,7 @@ class Extrae(AutotoolsPackage):
     homepage = "https://tools.bsc.es/extrae"
     url = "https://ftp.tools.bsc.es/extrae/extrae-3.4.1-src.tar.bz2"
 
+    version("4.0.3", sha256="b5139a07dbb1f4aa9758c1d62d54e42c01125bcfa9aa0cb9ee4f863afae93db1")
     version("3.8.3", sha256="c3bf27fb6f18e66200e40a0b4c35bc257766e5c1a525dc5725f561879e88bf32")
     version("3.7.1", sha256="c83ddd18a380c9414d64ee5de263efc6f7bac5fe362d5b8374170c7f18360378")
     version("3.4.1", sha256="77bfec16d6b5eee061fbaa879949dcef4cad28395d6a546b1ae1b9246f142725")
