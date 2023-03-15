@@ -23,9 +23,11 @@ class Julia(MakefilePackage):
     url = "https://github.com/JuliaLang/julia/releases/download/v1.7.0/julia-1.7.0.tar.gz"
     git = "https://github.com/JuliaLang/julia.git"
 
-    maintainers("glennpj", "vchuravy", "haampie")
+    maintainers("glennpj", "vchuravy", "haampie", "giordano")
 
     version("master", branch="master")
+    version("1.8.5", sha256="d31026cc6b275d14abce26fd9fd5b4552ac9d2ce8bde4291e494468af5743031")
+    version("1.8.4", sha256="b7b8ee64fb947db8d61104f231e1b25342fe330d29e0d2273f93c264f32c5333")
     version("1.8.3", sha256="4d8d460fcae5c6f8306a3e3c14371635c1a26f47c3ce62b2950cf9234b6ec849")
     version("1.8.2", sha256="3e2cea35bf5df963ed7b75a83e8febfc000acf1e664ecd657a0772508eb1fb5d")
     version("1.8.1", sha256="066f4ca7a2ad39b003e2af77dbecfbfb9b0a1cb1664033f657ffdbe2f374d956")
@@ -47,14 +49,14 @@ class Julia(MakefilePackage):
     # Note, we just use link_llvm_dylib so that we not only get a libLLVM,
     # but also so that llvm-config --libfiles gives only the dylib. Without
     # it it also gives static libraries, and breaks Julia's build.
-    depends_on(
-        "llvm"
-        " targets=amdgpu,bpf,nvptx,webassembly"
-        " version_suffix=jl +link_llvm_dylib ~internal_unwind"
-    )
+    depends_on("llvm targets=amdgpu,bpf,nvptx,webassembly version_suffix=jl +link_llvm_dylib")
     depends_on("libuv", when="@:1.7")
     depends_on("libuv-julia@1.42.0", when="@1.8.0:1.8.1")
     depends_on("libuv-julia@1.44.2", when="@1.8.2:")
+
+    # Do not use internal unwind.  We need to use a conflict, because
+    # `internal_unwind` is defined only when `+clang`.
+    conflicts("^llvm+internal_unwind")
 
     with when("@1.8.0:1.8"):
         # libssh2.so.1, libpcre2-8.so.0, mbedtls.so.14, mbedcrypto.so.7, mbedx509.so.1
@@ -67,6 +69,7 @@ class Julia(MakefilePackage):
         depends_on("mbedtls@2.28.0:2.28")
         depends_on("openlibm@0.8.1:0.8", when="+openlibm")
         depends_on("nghttp2@1.47.0:1.47")
+        depends_on("curl@7.84.0:7")
 
     with when("@1.7.0:1.7"):
         # libssh2.so.1, libpcre2-8.so.0, mbedtls.so.13, mbedcrypto.so.5, mbedx509.so.1
@@ -78,6 +81,7 @@ class Julia(MakefilePackage):
         depends_on("llvm@12.0.1")
         depends_on("mbedtls@2.24.0:2.24")
         depends_on("openlibm@0.7.0:0.7", when="+openlibm")
+        depends_on("curl@7.73.0:7")
 
     with when("@1.6.0:1.6"):
         # libssh2.so.1, libpcre2-8.so.0, mbedtls.so.13, mbedcrypto.so.5, mbedx509.so.1
@@ -88,6 +92,7 @@ class Julia(MakefilePackage):
         depends_on("llvm@11.0.1")
         depends_on("mbedtls@2.24.0:2.24")
         depends_on("openlibm@0.7.0:0.7", when="+openlibm")
+        depends_on("curl@7.73.0:7")
 
     # Patches for llvm
     depends_on("llvm", patches="llvm7-symver-jlprefix.patch", when="@:1.7")
