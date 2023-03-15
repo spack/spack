@@ -60,7 +60,7 @@ def symlink(real_path, link_path):
         if os.path.exists(link_path):
             raise OSError(errno.EEXIST, "Link exists: %s" % link_path)
         else:
-            windows_non_symlink(real_path, link_path)
+            windows_create_link(real_path, link_path)
             if not os.path.exists(link_path):
                 raise OSError("Failed to create link: %s" % link_path)
 
@@ -182,7 +182,7 @@ def windows_can_symlink():
     return can_symlink_directories and can_symlink_files
 
 
-def windows_non_symlink(path, link):
+def windows_create_link(path, link):
     """
     Attempts to create a Hard Link or Junction as an alternative
     to a symbolic link. This is called when symbolic links cannot
