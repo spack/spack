@@ -241,15 +241,6 @@ github_information:
     # move afterwards
     -     spack export --scope=user --module tcl --explicit --unbuildable cuda intel-oneapi-mkl likwid llvm openscenegraph optix --exclude 'neuron|hdf5|nvhpc' ${shas} > "spack_config/packages.yaml.tmp"
     -     sed -e "/:':/{s/'//g}" "spack_config/packages.yaml.tmp" > "spack_config/packages.yaml"
-    # The Intel® Oneapi™ MKL module requires an OpenMP library in LD_LIBRARY_PATH,
-    # manually add it in:
-    -     MKL_MODULE=$(unset MODULEPATH; module use ${DEPLOYMENT_ROOT}/stage_${CI_JOB_STAGE}/modules_tcl${DEPLOYMENT_SUFFIX}/linux*; module show intel-oneapi-mkl|&sed -ne '2{s/:$//g;p}')
-    -     echo "Modifying MKL module in ${MKL_MODULE}"
-    -     echo "# This avoids a missing symbol 'omp_get_num_procs' when calling anything that needs MKL" >> "${MKL_MODULE}"
-    -     echo "append-path      LD_LIBRARY_PATH $(module show intel-oneapi-compilers|&grep LD_LIBRARY_PATH|grep -oe '/gpfs[^:]*linux/compiler/lib/intel64_lin')" >> "${MKL_MODULE}"
-    # The Intel® Oneapi™ OpenMP library needs a modern libgcc, otherwise it will pick up
-    # the default one in /usr and RPATHed libgcc will be ignored.
-    -     echo "append-path      LD_LIBRARY_PATH $(module show gcc|&sed -ne '/\bCC\b/{s/.*CC //g;s/bin\/gcc/lib64/g;p}')" >> "${MKL_MODULE}"
     - fi
     # Fail if software fails to build!
     - if grep -q -m1 -l -R '<failure' "spack_tests"; then exit 1; fi

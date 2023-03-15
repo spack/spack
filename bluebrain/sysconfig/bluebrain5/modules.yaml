@@ -28,6 +28,12 @@ modules:
             MPICC_CC: icc
             MPICXX_CXX: icpc
             MPIF90_F90: ifort
+      # Overriding this value may require setting LD_LIBRARY_PATH
+      # to point to the correct TBB/OpenMP implementation
+      intel-oneapi-mkl:
+        environment:
+          set:
+            MKL_THREADING_LAYER: SEQUENTIAL
       llvm:
         environment:
           set:
