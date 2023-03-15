@@ -3,7 +3,6 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-import itertools
 import os.path
 import re
 import sys
@@ -20,7 +19,7 @@ class Mvapich(AutotoolsPackage):
     url = "https://mvapich.cse.ohio-state.edu/download/mvapich/mv2/mvapich2-3.0a.tar.gz"
     list_url = "https://mvapich.cse.ohio-state.edu/downloads/"
 
-    maintainers("natshineman", "harisubramoni", "MatthewLieber")
+    maintainers("natshineman", "harisubramoni", "ndcontini")
 
     executables = ["^mpiname$", "^mpichversion$"]
 
@@ -63,9 +62,9 @@ class Mvapich(AutotoolsPackage):
     variant(
         "process_managers",
         description="List of the process managers to activate",
-        values=disjoint_sets(("auto",), ("slurm",), ("hydra", "gforker", "remshell"))
+        values=disjoint_sets(("auto",), ("slurm",),("pbs",), ("hydra", "gforker", "remshell"))
         .prohibit_empty_set()
-        .with_error("'slurm' or 'auto' cannot be activated along with " "other process managers")
+        .with_error("'slurm','pbs' or 'auto' cannot be activated along with " "other process managers")
         .with_default("auto")
         .with_non_feature_values("auto"),
     )
@@ -100,6 +99,7 @@ class Mvapich(AutotoolsPackage):
     depends_on("cuda", when="+cuda")
     depends_on("libfabric", when="netmod=ofi")
     depends_on("slurm", when="process_managers=slurm")
+    depends_on("openpbs", when="process_managers=pbs")
     depends_on("ucx", when="netmod=ucx")
 
     filter_compiler_wrappers("mpicc", "mpicxx", "mpif77", "mpif90", "mpifort", relative_root="bin")
@@ -145,7 +145,10 @@ class Mvapich(AutotoolsPackage):
                 "--with-slurm={0}".format(spec["slurm"].prefix),
                 "CFLAGS=-I{0}/include/slurm".format(spec["slurm"].prefix),
             ]
-
+        if "process_managers=pbs" in spec:
+            opts = [
+                "--with-pbs={0}".format(spec["pbs"].prefix),
+            ]
         return opts
 
     @property
@@ -285,11 +288,6 @@ class Mvapich(AutotoolsPackage):
         else:
             args.append("--disable-registration-cache")
 
-        ld = ""
-        for path in itertools.chain(self.compiler.extra_rpaths, self.compiler.implicit_rpaths()):
-            ld += "-Wl,-rpath," + path + " "
-        if ld != "":
-            args.append("LDFLAGS=" + ld)
         args.extend(self.process_manager_options)
         args.extend(self.network_options)
         args.extend(self.file_system_options)
