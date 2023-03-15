@@ -392,7 +392,7 @@ class SpecNodeParser:
             elif self.ctx.accept(TokenType.DAG_HASH):
                 if initial_spec.abstract_hash:
                     msg = (
-                        f"Parsed multiple hashes /{initial_spec.abstract_hash}and "
+                        f"Parsed multiple hashes /{initial_spec.abstract_hash} and "
                         "/{self.current_token}. If you were attempting to specify a file path,"
                         " check that it was formatted properly"
                     )

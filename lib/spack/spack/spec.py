@@ -3600,6 +3600,15 @@ class Spec(object):
         return Spec(spec_like)
 
     def intersects(self, other: "Spec", deps: bool = True) -> bool:
+
+        other = self._autospec(other)
+
+        lhs = self.lookup_hash() or self
+        rhs = other.lookup_hash() or other
+
+        return lhs._intersects(rhs, deps)
+
+    def _intersects(self, other: "Spec", deps: bool = True) -> bool:
         """Return True if there exists at least one concrete spec that matches both
         self and other, otherwise False.
 
@@ -3677,13 +3686,13 @@ class Spec(object):
         else:
             return True
 
-    def satisfies(self, other, deps=True, strict=False):
+    def satisfies(self, other, deps=True):
         other = self._autospec(other)
 
         lhs = self.lookup_hash() or self
         rhs = other.lookup_hash() or other
 
-        return lhs._satisfies(rhs, deps=deps, strict=strict)
+        return lhs._satisfies(rhs, deps=deps)
 
     def _intersects_dependencies(self, other):
         """
@@ -3725,7 +3734,7 @@ class Spec(object):
 
         return True
 
-    def satisfies(self, other: "Spec", deps: bool = True) -> bool:
+    def _satisfies(self, other: "Spec", deps: bool = True) -> bool:
         """Return True if all concrete specs matching self also match other, otherwise False.
 
         Args:
