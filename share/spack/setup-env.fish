@@ -38,7 +38,7 @@
 
 # prevent infinite recursion when spack shells out (e.g., on cray for modules)
 if test -n "$_sp_initializing"
-    return 0
+    exit 0
 end
 set -x _sp_initializing true
 
