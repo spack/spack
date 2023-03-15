@@ -160,14 +160,14 @@ class Cdo(AutotoolsPackage):
     depends_on("netcdf-c", when="+netcdf")
     # The internal library of CDO implicitly links to hdf5.
     # We also need the backend of netcdf to be thread safe.
-    depends_on("hdf5+threadsafe", when="+netcdf")
+    depends_on("hdf5+threadsafe", when="+netcdf +openmp")
 
     depends_on("grib-api", when="grib2=grib-api")
     depends_on("eccodes", when="grib2=eccodes")
 
     depends_on("szip", when="+szip")
 
-    depends_on("hdf5+threadsafe", when="+hdf5")
+    depends_on("hdf5+threadsafe", when="+hdf5 +openmp")
 
     depends_on("udunits", when="+udunits2")
     depends_on("libxml2", when="+libxml2")
