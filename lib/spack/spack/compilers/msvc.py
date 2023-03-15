@@ -103,15 +103,38 @@ class Msvc(Compiler):
         """
         This is the shorthand VCToolset version of form
         MSVC<short-ver> *NOT* the full version, for that see
-        Msvc.msvc_version
+        Msvc.msvc_version or MSVC.platform_toolset_ver for the
+        raw platform toolset version
         """
-        ver = self.msvc_version[:2].joined.string[:3]
+        ver = self.platform_toolset_ver
         return "MSVC" + ver
+
+    @property
+    def platform_toolset_ver(self):
+        """
+        This is the platform toolset version of current MSVC compiler
+        i.e. 142.
+        This is different from the VC toolset version as established
+        by `short_msvc_version`
+        """
+        return self.msvc_version[:2].joined.string[:3]
 
     @property
     def cl_version(self):
         """Cl toolset version"""
-        return spack.compiler.get_compiler_version_output(self.cc)
+        return Version(
+            re.search(
+                Msvc.version_regex,
+                spack.compiler.get_compiler_version_output(self.cc, version_arg=None),
+            ).group(1)
+        )
+
+    @property
+    def vs_root(self):
+        # The MSVC install root is located at a fix level above the compiler
+        # and is referenceable idiomatically via the pattern below
+        # this should be consistent accross versions
+        return os.path.abspath(os.path.join(self.cc, "../../../../../../../.."))
 
     def setup_custom_environment(self, pkg, env):
         """Set environment variables for MSVC using the

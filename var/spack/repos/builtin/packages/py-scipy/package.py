@@ -18,9 +18,10 @@ class PyScipy(PythonPackage):
     pypi = "scipy/scipy-1.5.4.tar.gz"
     git = "https://github.com/scipy/scipy.git"
 
-    maintainers = ["adamjstewart", "rgommers"]
+    maintainers("adamjstewart", "rgommers")
 
     version("master", branch="master")
+    version("1.10.1", sha256="2cf9dfb80a7b4589ba4c40ce7588986d6d5cebc5457cad2c2880f6bc2d42f3a5")
     version("1.10.0", sha256="c8b3cbc636a87a89b770c6afc999baa6bcbb01691b5ccbbc1b1791c7c0a07540")
     version("1.9.3", sha256="fbc5c05c85c1a02be77b1ff591087c83bc44579c6d2bd9fb798bb64ea5e1a027")
     version("1.9.2", sha256="99e7720caefb8bca6ebf05c7d96078ed202881f61e0c68bd9e0f3e8097d6f794")
@@ -56,7 +57,8 @@ class PyScipy(PythonPackage):
     # https://github.com/mesonbuild/meson-python/pull/167
     depends_on("py-build", when="@1.9:", type="build")
 
-    depends_on("py-meson-python@0.11", when="@1.10:", type="build")
+    depends_on("py-meson-python@0.11:0.12", when="@1.10.1:", type="build")
+    depends_on("py-meson-python@0.11", when="@1.10.0", type="build")
     depends_on("py-meson-python@0.9:", when="@1.9.2:1.9", type="build")
     depends_on("py-meson-python@0.8.1:", when="@1.9.1", type="build")
     depends_on("py-meson-python@0.7", when="@1.9.0", type="build")
@@ -100,10 +102,10 @@ class PyScipy(PythonPackage):
     depends_on("python@3.8:3.10", when="@1.8", type=("build", "link", "run"))
     depends_on("python@3.7:3.10", when="@1.7.2:1.7", type=("build", "link", "run"))
     depends_on("python@3.7:3.9", when="@1.6.2:1.7.1", type=("build", "link", "run"))
-    depends_on("python@3.7:", when="@1.6:1.6.1", type=("build", "link", "run"))
-    depends_on("python@3.6:", when="@1.5.0:1.5", type=("build", "link", "run"))
-    depends_on("python@3.5:", when="@1.3:1.4", type=("build", "link", "run"))
-    depends_on("python@2.7:2.8,3.4:", when="@:1.2", type=("build", "link", "run"))
+    depends_on("python@3.7:3.10.0", when="@1.6:1.6.1", type=("build", "link", "run"))
+    depends_on("python@3.6:3.10.0", when="@1.5.0:1.5", type=("build", "link", "run"))
+    depends_on("python@3.5:3.10.0", when="@1.3:1.4", type=("build", "link", "run"))
+    depends_on("python@2.7:2.8,3.4:3.10.0", when="@:1.2", type=("build", "link", "run"))
     depends_on("py-pytest", type="test")
 
     # NOTE: scipy should use the same BLAS/LAPACK as numpy.

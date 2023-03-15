@@ -14,15 +14,12 @@ class Qoz(CMakePackage):
 
     version("2022.04.26", commit="d28a7a8c9f703075441b700202b8a1ee185ded00")
 
-    maintainers = ["disheng222"]
+    maintainers("disheng222")
 
     depends_on("zstd")
     depends_on("gsl")
     depends_on("pkgconfig")
 
     def cmake_args(self):
-        args = [
-            "-DQoZ_USE_BUNDLED_ZSTD=OFF",
-            "-DQoZ_DEBUG_TIMINGS=OFF",
-        ]
+        args = ["-DQoZ_USE_BUNDLED_ZSTD=OFF", "-DQoZ_DEBUG_TIMINGS=OFF"]
         return args

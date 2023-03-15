@@ -134,7 +134,7 @@ class Concretizer(object):
 
             externals = spec_externals(cspec)
             for ext in externals:
-                if ext.satisfies(spec):
+                if ext.intersects(spec):
                     usable.append(ext)
 
         # If nothing is in the usable list now, it's because we aren't
@@ -200,7 +200,7 @@ class Concretizer(object):
 
         # List of versions we could consider, in sorted order
         pkg_versions = spec.package_class.versions
-        usable = [v for v in pkg_versions if any(v.satisfies(sv) for sv in spec.versions)]
+        usable = [v for v in pkg_versions if any(v.intersects(sv) for sv in spec.versions)]
 
         yaml_prefs = PackagePrefs(spec.name, "version")
 
@@ -344,7 +344,7 @@ class Concretizer(object):
                     new_target_arch = spack.spec.ArchSpec((None, None, str(new_target)))
                     curr_target_arch = spack.spec.ArchSpec((None, None, str(curr_target)))
 
-                    if not new_target_arch.satisfies(curr_target_arch):
+                    if not new_target_arch.intersects(curr_target_arch):
                         # new_target is an incorrect guess based on preferences
                         # and/or default
                         valid_target_ranges = str(curr_target).split(",")
@@ -743,9 +743,7 @@ def _concretize_specs_together_new(*abstract_specs, **kwargs):
     import spack.solver.asp
 
     solver = spack.solver.asp.Solver()
-    solver.tests = kwargs.get("tests", False)
-
-    result = solver.solve(abstract_specs)
+    result = solver.solve(abstract_specs, tests=kwargs.get("tests", False))
     result.raise_if_unsat()
     return [s.copy() for s in result.specs]
 

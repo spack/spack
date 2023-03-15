@@ -21,7 +21,7 @@ class IntelOneapiIpp(IntelOneApiLibraryPackage):
 
     """
 
-    maintainers = ["rscohn2"]
+    maintainers("rscohn2")
 
     homepage = (
         "https://software.intel.com/content/www/us/en/develop/tools/oneapi/components/ipp.html"

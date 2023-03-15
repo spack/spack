@@ -14,7 +14,7 @@ class Mpitrampoline(CMakePackage):
     url = "https://github.com/eschnett/MPItrampoline/archive/v1.0.1.tar.gz"
     git = "https://github.com/eschnett/MPItrampoline.git"
 
-    maintainers = ["eschnett"]
+    maintainers("eschnett")
 
     version("develop", branch="main")
     version("5.2.0", sha256="5f89c61f7b93d8f249ffc8de1abad7acab34c5f980e5d74915e4e041c461aeb4")

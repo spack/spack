@@ -12,7 +12,7 @@ class Openfast(CMakePackage):
     homepage = "https://openfast.readthedocs.io/en/latest/"
     git = "https://github.com/OpenFAST/openfast.git"
 
-    maintainers = ["jrood-nrel"]
+    maintainers("jrood-nrel")
 
     version("develop", branch="dev")
     version("master", branch="main")
@@ -98,18 +98,10 @@ class Openfast(CMakePackage):
                 options.extend([self.define("NETCDF_ROOT", spec["netcdf-c"].prefix)])
 
         if "~shared" in spec:
-            options.extend(
-                [
-                    self.define("HDF5_USE_STATIC_LIBRARIES", True),
-                ]
-            )
+            options.extend([self.define("HDF5_USE_STATIC_LIBRARIES", True)])
 
         if "+openmp" in spec:
-            options.extend(
-                [
-                    self.define("OPENMP", True),
-                ]
-            )
+            options.extend([self.define("OPENMP", True)])
 
         return options
 

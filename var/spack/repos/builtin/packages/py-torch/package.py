@@ -17,7 +17,7 @@ class PyTorch(PythonPackage, CudaPackage, ROCmPackage):
     homepage = "https://pytorch.org/"
     git = "https://github.com/pytorch/pytorch.git"
 
-    maintainers = ["adamjstewart"]
+    maintainers("adamjstewart")
 
     # Exact set of modules is version- and variant-specific, just attempt to import the
     # core libraries to ensure that the package was successfully installed.
@@ -74,7 +74,8 @@ class PyTorch(PythonPackage, CudaPackage, ROCmPackage):
     variant("nccl", default=True, description="Use NCCL", when="+cuda platform=cray")
     variant("nccl", default=True, description="Use NCCL", when="+rocm platform=linux")
     variant("nccl", default=True, description="Use NCCL", when="+rocm platform=cray")
-    variant("nnpack", default=True, description="Use NNPACK")
+    # Requires AVX2: https://discuss.pytorch.org/t/107518
+    variant("nnpack", default=True, description="Use NNPACK", when="target=x86_64_v3:")
     variant("numa", default=True, description="Use NUMA", when="platform=linux")
     variant("numa", default=True, description="Use NUMA", when="platform=cray")
     variant("numpy", default=True, description="Use NumPy")

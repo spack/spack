@@ -18,10 +18,7 @@ from spack.schema.cray_manifest import schema as manifest_schema
 #: packages here.
 default_path = "/opt/cray/pe/cpe-descriptive-manifest/"
 
-compiler_name_translation = {
-    "nvidia": "nvhpc",
-    "rocm": "rocmcc",
-}
+compiler_name_translation = {"nvidia": "nvhpc", "rocm": "rocmcc"}
 
 
 def translated_compiler_name(manifest_compiler_name):
@@ -162,7 +159,7 @@ def entries_to_specs(entries):
                     continue
                 parent_spec = spec_dict[entry["hash"]]
                 dep_spec = spec_dict[dep_hash]
-                parent_spec._add_dependency(dep_spec, deptypes)
+                parent_spec._add_dependency(dep_spec, deptypes=deptypes)
 
     return spec_dict
 

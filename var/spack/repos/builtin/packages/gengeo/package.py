@@ -17,7 +17,7 @@ class Gengeo(AutotoolsPackage):
     homepage = "https://launchpad.net/esys-particle/gengeo"
     url = "https://launchpad.net/esys-particle/trunk/3.0-alpha/+download/gengeo-163.tar.gz"
 
-    maintainers = ["dorton21"]
+    maintainers("dorton21")
 
     version("163", sha256="9c896d430d8f315a45379d2b82e7d374f36259af66a745bfdee4c022a080d34d")
 

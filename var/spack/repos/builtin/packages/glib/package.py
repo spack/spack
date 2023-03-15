@@ -23,8 +23,9 @@ class Glib(Package):
     list_url = "https://download.gnome.org/sources/glib"
     list_depth = 1
 
-    maintainers = ["michaelkuhn"]
+    maintainers("michaelkuhn")
 
+    version("2.74.6", sha256="069cf7e51cd261eb163aaf06c8d1754c6835f31252180aff5814e5afc7757fbc")
     version("2.74.3", sha256="e9bc41ecd9690d9bc6a970cc7380119b828e5b6a4b16c393c638b3dc2b87cbcb")
     version("2.74.1", sha256="0ab981618d1db47845e56417b0d7c123f81a3427b2b9c93f5a46ff5bbb964964")
     version("2.74.0", sha256="3652c7f072d7b031a6b5edd623f77ebc5dcd2ae698598abcc89ff39ca75add30")
@@ -126,6 +127,7 @@ class Glib(Package):
     depends_on("perl", type=("build", "run"))
     depends_on("python", type=("build", "run"), when="@2.53.4:")
     depends_on("pcre2", when="@2.73.2:")
+    depends_on("pcre2@10.34:", when="@2.74:")
     depends_on("pcre+utf", when="@2.48:2.73.1")
     depends_on("uuid", when="+libmount")
     depends_on("util-linux", when="+libmount")

@@ -12,7 +12,7 @@ class PyMapclassify(PythonPackage):
     homepage = "https://github.com/pysal/mapclassify"
     pypi = "mapclassify/mapclassify-2.4.2.tar.gz"
 
-    maintainers = ["adamjstewart"]
+    maintainers("adamjstewart")
 
     version("2.4.2", sha256="bc20954aa433466f5fbc572e3f23b05f9606b59209f40b0ded93ac1ca983d24e")
 

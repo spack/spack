@@ -17,7 +17,7 @@ class OmeFilesCpp(CMakePackage):
     url = "https://gitlab.com/codelibre/ome/ome-files-cpp/-/archive/v0.6.0/ome-files-cpp-v0.6.0.tar.gz"
     git = "https://gitlab.com/codelibre/ome/ome-files-cpp.git"
 
-    maintainers = ["omsai"]
+    maintainers("omsai")
 
     version("master", branch="master")
     version("0.6.0", sha256="e0baf3eeb2ea639f426292a36b58adcaa42ce61a4a0f15f34690602f3f5d47c1")
@@ -28,7 +28,4 @@ class OmeFilesCpp(CMakePackage):
     depends_on("googletest", type="test")
 
     def cmake_args(self):
-        return [
-            "-DCMAKE_CXX_STANDARD=17",
-            "-DCMAKE_CXX_STANDARD_REQUIRED=ON",
-        ]
+        return ["-DCMAKE_CXX_STANDARD=17", "-DCMAKE_CXX_STANDARD_REQUIRED=ON"]

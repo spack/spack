@@ -22,7 +22,7 @@ class Fortrilinos(CMakePackage):
     )
     git = "https://github.com/trilinos/ForTrilinos.git"
 
-    maintainers = ["sethrj", "aprokop"]
+    maintainers("sethrj", "aprokop")
 
     tags = ["e4s"]
     test_requires_compiler = True

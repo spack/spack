@@ -61,7 +61,7 @@ class Cce(Compiler):
         return version >= ver("9.0") and "classic" not in str(version)
 
     version_argument = "--version"
-    version_regex = r"[Vv]ersion.*?(\d+(\.\d+)+)"
+    version_regex = r"[Cc]ray (?:clang|C :|C\+\+ :|Fortran :) [Vv]ersion.*?(\d+(\.\d+)+)"
 
     @property
     def verbose_flag(self):
@@ -88,6 +88,11 @@ class Cce(Compiler):
         if self.is_clang_based:
             return "-std=c++14"
         return "-h std=c++14"
+
+    @property
+    def cxx17_flag(self):
+        if self.is_clang_based:
+            return "-std=c++17"
 
     @property
     def c99_flag(self):

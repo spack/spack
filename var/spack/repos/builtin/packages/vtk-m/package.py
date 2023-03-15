@@ -19,7 +19,7 @@ class VtkM(CMakePackage, CudaPackage, ROCmPackage):
     architectures."""
 
     homepage = "https://m.vtk.org/"
-    maintainers = ["kmorel", "vicentebolea"]
+    maintainers("kmorel", "vicentebolea")
 
     url = "https://gitlab.kitware.com/vtk/vtk-m/-/archive/v1.5.1/vtk-m-v1.5.1.tar.gz"
     git = "https://gitlab.kitware.com/vtk/vtk-m.git"

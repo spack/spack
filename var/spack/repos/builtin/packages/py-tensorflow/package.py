@@ -27,7 +27,7 @@ class PyTensorflow(Package, CudaPackage, ROCmPackage, PythonExtension):
     homepage = "https://www.tensorflow.org"
     url = "https://github.com/tensorflow/tensorflow/archive/v2.3.1.tar.gz"
 
-    maintainers = ["adamjstewart", "aweits"]
+    maintainers("adamjstewart", "aweits")
     import_modules = ["tensorflow"]
 
     version("2.10.1", sha256="622a92e22e6f3f4300ea43b3025a0b6122f1cc0e2d9233235e4c628c331a94a3")
@@ -604,10 +604,7 @@ class PyTensorflow(Package, CudaPackage, ROCmPackage, PythonExtension):
             # Please specify which gcc nvcc should use as the host compiler
             env.set("GCC_HOST_COMPILER_PATH", spack_cc)
 
-            cuda_paths = [
-                spec["cuda"].prefix,
-                spec["cudnn"].prefix,
-            ]
+            cuda_paths = [spec["cuda"].prefix, spec["cudnn"].prefix]
 
             # Do you wish to build TensorFlow with TensorRT support?
             if "+tensorrt" in spec:

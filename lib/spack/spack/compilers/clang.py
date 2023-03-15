@@ -128,10 +128,23 @@ class Clang(Compiler):
 
     @property
     def c11_flag(self):
-        if self.real_version < ver("6.1.0"):
-            raise UnsupportedCompilerFlag(self, "the C11 standard", "c11_flag", "< 6.1.0")
-        else:
-            return "-std=c11"
+        if self.real_version < ver("3.0"):
+            raise UnsupportedCompilerFlag(self, "the C11 standard", "c11_flag", "< 3.0")
+        if self.real_version < ver("3.1"):
+            return "-std=c1x"
+        return "-std=c11"
+
+    @property
+    def c17_flag(self):
+        if self.real_version < ver("6.0"):
+            raise UnsupportedCompilerFlag(self, "the C17 standard", "c17_flag", "< 6.0")
+        return "-std=c17"
+
+    @property
+    def c23_flag(self):
+        if self.real_version < ver("9.0"):
+            raise UnsupportedCompilerFlag(self, "the C23 standard", "c23_flag", "< 9.0")
+        return "-std=c2x"
 
     @property
     def cc_pic_flag(self):

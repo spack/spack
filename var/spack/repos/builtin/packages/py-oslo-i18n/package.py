@@ -16,7 +16,7 @@ class PyOsloI18n(PythonPackage):
     homepage = "https://docs.openstack.org/oslo.i18n"
     pypi = "oslo.i18n/oslo.i18n-5.0.1.tar.gz"
 
-    maintainers = ["haampie"]
+    maintainers("haampie")
 
     version("5.0.1", sha256="3484b71e30f75c437523302d1151c291caf4098928269ceec65ce535456e035b")
 

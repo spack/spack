@@ -13,7 +13,7 @@ class Mesa(MesonPackage):
     - a system for rendering interactive 3D graphics."""
 
     homepage = "https://www.mesa3d.org"
-    maintainers = ["chuckatkins", "v-dobrev"]
+    maintainers("chuckatkins", "v-dobrev")
 
     git = "https://gitlab.freedesktop.org/mesa/mesa.git"
     url = "https://archive.mesa3d.org/mesa-20.2.1.tar.xz"
@@ -73,14 +73,7 @@ class Mesa(MesonPackage):
     variant(
         "swr",
         values=spack.variant.DisjointSetsOfValues(
-            ("none",),
-            ("auto",),
-            (
-                "avx",
-                "avx2",
-                "knl",
-                "skx",
-            ),
+            ("none",), ("auto",), ("avx", "avx2", "knl", "skx")
         )
         .with_non_feature_values("auto")
         .with_non_feature_values("none")
@@ -155,8 +148,10 @@ class Mesa(MesonPackage):
 
     # ROCm 5.3.0 is providing llvm15. Gallivm coroutine is disabled in mesa upstream version
     # for llvm-15. Until mesa release is available with this changes below patch is required
-    # in order to move on with ROCm 5.3.0.
-    patch("disable-gallivm-coroutine-for-libllvm15.patch", when="@22.1.2: ^libllvm@15:")
+    # in order to move on with ROCm 5.3.0 and ROCm 5.4.0.
+    # The revised patch was part of https://gitlab.freedesktop.org/mesa/mesa/-/merge_requests/17518/diffs.
+
+    patch("0001-disable-gallivm-coroutine-for-libllvm15.patch", when="@22.1.2: ^libllvm@15:")
 
     # Explicitly use the llvm-config tool
     def patch(self):

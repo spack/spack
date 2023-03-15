@@ -24,7 +24,7 @@ class Octave(AutotoolsPackage, GNUMirrorPackage):
 
     homepage = "https://www.gnu.org/software/octave/"
     gnu_mirror_path = "octave/octave-4.0.0.tar.gz"
-    maintainers = ["mtmiller", "siko1056"]
+    maintainers("mtmiller", "siko1056")
 
     extendable = True
 
@@ -89,7 +89,7 @@ class Octave(AutotoolsPackage, GNUMirrorPackage):
     # Optional dependencies
     depends_on("arpack-ng", when="+arpack")
     depends_on("curl", when="+curl")
-    depends_on("fftw", when="+fftw")
+    depends_on("fftw-api@3", when="+fftw")
     depends_on("fltk", when="+fltk")
     depends_on("fontconfig", when="+fontconfig")
     depends_on("freetype", when="+freetype")
@@ -222,14 +222,43 @@ class Octave(AutotoolsPackage, GNUMirrorPackage):
             config_args.append("--without-curl")
 
         if "+fftw" in spec:
-            config_args.extend(
-                [
-                    "--with-fftw3-includedir=%s" % spec["fftw"].prefix.include,
-                    "--with-fftw3-libdir=%s" % spec["fftw"].prefix.lib,
-                    "--with-fftw3f-includedir=%s" % spec["fftw"].prefix.include,
-                    "--with-fftw3f-libdir=%s" % spec["fftw"].prefix.lib,
-                ]
-            )
+            fftw_string = "fftw-api"
+            if ("^intel-mkl" in spec) or ("^intel-oneapi-mkl" in spec):
+                config_args.extend(
+                    [
+                        "--with-fftw3={0}".format(spec[fftw_string].libs.ld_flags),
+                        "--with-fftw3f={0}".format(spec[fftw_string].libs.ld_flags),
+                    ]
+                )
+            elif "^amdfftw" in spec:
+                specAmdfftw = spec[fftw_string].token[0]
+                AMD_FFTW3_LIBS = "-lfftw3"
+                AMD_FFTW3F_LIBS = "-lfftw3f"
+                if "+openmp" in specAmdfftw:
+                    AMD_FFTW3_LIBS += " -lfftw3_omp"
+                    AMD_FFTW3F_LIBS += " -lfftw3f_omp"
+                if "+threads" in specAmdfftw:
+                    AMD_FFTW3_LIBS += " -lfftw3_threads"
+                    AMD_FFTW3F_LIBS += " -lfftw3f_threads"
+                config_args.extend(
+                    [
+                        "--with-fftw3=-L{0} {1}".format(
+                            spec[fftw_string].libs.directories[0], AMD_FFTW3_LIBS
+                        ),
+                        "--with-fftw3f=-L{0} {1}".format(
+                            spec[fftw_string].libs.directories[0], AMD_FFTW3F_LIBS
+                        ),
+                    ]
+                )
+            else:
+                config_args.extend(
+                    [
+                        "--with-fftw3-includedir=%s" % spec[fftw_string].prefix.include,
+                        "--with-fftw3-libdir=%s" % spec[fftw_string].prefix.lib,
+                        "--with-fftw3f-includedir=%s" % spec[fftw_string].prefix.include,
+                        "--with-fftw3f-libdir=%s" % spec[fftw_string].prefix.lib,
+                    ]
+                )
         else:
             config_args.extend(["--without-fftw3", "--without-fftw3f"])
 

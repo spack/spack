@@ -16,7 +16,7 @@ class GobjectIntrospection(MesonPackage, AutotoolsPackage):
     homepage = "https://wiki.gnome.org/Projects/GObjectIntrospection"
     url = "https://download.gnome.org/sources/gobject-introspection/1.72/gobject-introspection-1.72.0.tar.xz"
 
-    maintainers = ["michaelkuhn"]
+    maintainers("michaelkuhn")
 
     version("1.72.0", sha256="02fe8e590861d88f83060dd39cda5ccaa60b2da1d21d0f95499301b186beaabc")
     version("1.56.1", sha256="5b2875ccff99ff7baab63a34b67f8c920def240e178ff50add809e267d9ea24b")
@@ -42,7 +42,7 @@ class GobjectIntrospection(MesonPackage, AutotoolsPackage):
     depends_on("glib@2.48.1", when="@1.48.0")
     depends_on("libffi")
     # https://gitlab.gnome.org/GNOME/gobject-introspection/-/merge_requests/283
-    depends_on("libffi@:3.3", when="@:1.70")  # libffi 3.4 caused seg faults
+    depends_on("libffi@:3.3", when="@:1.72")  # libffi 3.4 caused seg faults
     depends_on("python")
 
     # This package creates several scripts from

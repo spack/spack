@@ -6,6 +6,7 @@
 
 import argparse
 import os.path
+import textwrap
 
 from llnl.util.lang import stable_partition
 
@@ -415,6 +416,40 @@ the build yourself.  Format: %%Y%%m%%d-%%H%%M-[cdash-track]"""
     cdash_subgroup.add_argument("--cdash-buildstamp", default=None, help=cdash_help["buildstamp"])
 
 
+def print_cdash_help():
+    parser = argparse.ArgumentParser(
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+        epilog=textwrap.dedent(
+            """\
+environment variables:
+SPACK_CDASH_AUTH_TOKEN
+                    authentication token to present to CDash
+                    """
+        ),
+    )
+    add_cdash_args(parser, True)
+    parser.print_help()
+
+
+def sanitize_reporter_options(namespace: argparse.Namespace):
+    """Sanitize options that affect generation and configuration of reports, like
+    CDash or JUnit.
+
+    Args:
+        namespace: options parsed from cli
+    """
+    has_any_cdash_option = (
+        namespace.cdash_upload_url or namespace.cdash_build or namespace.cdash_site
+    )
+    if namespace.log_format == "junit" and has_any_cdash_option:
+        raise argparse.ArgumentTypeError("cannot pass any cdash option when --log-format=junit")
+
+    # If any CDash option is passed, assume --log-format=cdash is implied
+    if namespace.log_format is None and has_any_cdash_option:
+        namespace.log_format = "cdash"
+        namespace.reporter = _cdash_reporter(namespace)
+
+
 class ConfigSetAction(argparse.Action):
     """Generic action for setting spack config options from CLI.
 
@@ -479,7 +514,15 @@ def add_concretizer_args(subparser):
         dest="concretizer:reuse",
         const=True,
         default=None,
-        help="reuse installed dependencies/buildcaches when possible",
+        help="reuse installed packages/buildcaches when possible",
+    )
+    subgroup.add_argument(
+        "--reuse-deps",
+        action=ConfigSetAction,
+        dest="concretizer:reuse",
+        const="dependencies",
+        default=None,
+        help="reuse installed dependencies only",
     )
 
 

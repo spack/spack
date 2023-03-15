@@ -22,7 +22,7 @@ class Itk(CMakePackage):
     homepage = "https://itk.org/"
     url = "https://github.com/InsightSoftwareConsortium/ITK/releases/download/v5.1.1/InsightToolkit-5.1.1.tar.gz"
 
-    maintainers = ["glennpj"]
+    maintainers("glennpj")
 
     version("5.3.0", sha256="57a4471133dc8f76bde3d6eb45285c440bd40d113428884a1487472b7b71e383")
     version("5.3rc02", sha256="163aaf4a6cecd5b70ff718c1a986c746581797212fd1b629fa81f12ae4756d14")
@@ -38,6 +38,7 @@ class Itk(CMakePackage):
     variant("review", default=False, description="enable modules under review")
     variant("rtk", default=False, description="build the RTK (Reconstruction Toolkit module")
     variant("minc", default=False, description="enable support for MINC files")
+    variant("antspy", default=False, description="enable support features for antspy")
 
     # TODO: This will not work if the resource is pulled from a spack mirror.
     # The build process will checkout the appropriate commit but it needs to be
@@ -76,6 +77,9 @@ class Itk(CMakePackage):
             self.define_from_variant("Module_RTK", "rtk"),
             self.define_from_variant("Module_ITKIOMINC", "minc"),
             self.define_from_variant("Module_ITKIOTransformMINC", "minc"),
+            self.define_from_variant("Module_MGHIO", "antspy"),
+            self.define_from_variant("Module_GenericLabelInterpolator", "antspy"),
+            self.define_from_variant("Module_AdaptiveDenoising", "antspy"),
         ]
 
         if not use_mkl:

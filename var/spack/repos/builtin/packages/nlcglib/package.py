@@ -13,7 +13,7 @@ class Nlcglib(CMakePackage, CudaPackage):
     git = "https://github.com/simonpintarelli/nlcglib.git"
     url = "https://github.com/simonpintarelli/nlcglib/archive/v0.9.tar.gz"
 
-    maintainers = ["simonpintarelli"]
+    maintainers("simonpintarelli")
 
     version("master", branch="master")
     version("develop", branch="develop")

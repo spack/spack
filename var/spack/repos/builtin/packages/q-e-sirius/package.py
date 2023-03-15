@@ -15,7 +15,7 @@ class QESirius(CMakePackage):
     url = "https://github.com/electronic-structure/q-e-sirius/archive/v6.5-rc4-sirius.tar.gz"
     git = "https://github.com/electronic-structure/q-e-sirius.git"
 
-    maintainers = ["simonpintarelli"]
+    maintainers("simonpintarelli")
 
     version("develop-ristretto", branch="ristretto", submodules=True)
     version("6.7-rc1-sirius", tag="v6.7-rc1-sirius", submodules=True)
