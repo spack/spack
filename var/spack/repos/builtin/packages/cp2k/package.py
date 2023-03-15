@@ -259,12 +259,13 @@ class Cp2k(MakefilePackage, CudaPackage, CMakePackage, ROCmPackage):
     # from the parent class, since the parent class defines constraints for all
     # versions. Instead just mark all unsupported cuda archs as conflicting.
 
-    supported_cuda_arch_list = ("35", "37", "60", "70")
+    supported_cuda_arch_list = ("35", "37", "60", "70", "80")
     gpu_map = {
         "35": "K40",
         "37": "K80",
         "60": "P100",
         "70": "V100",
+        "80": "A100",
         "gfx906": "Mi50",
         "gfx908": "Mi100",
         "gfx90a": "Mi250x",
