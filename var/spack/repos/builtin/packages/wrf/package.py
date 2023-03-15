@@ -150,11 +150,15 @@ class Wrf(Package):
     patch("patches/4.2/var.gen_be.Makefile.patch", when="@4.2:")
     patch("patches/4.2/Makefile.patch", when="@4.2")
     patch("patches/4.2/tirpc_detect.patch", when="@4.2")
-    patch("patches/4.2/add_aarch64.patch", when="@4.2:")
+    patch("patches/4.2/add_aarch64.patch", when="@4.2:4.3.1 %gcc")
+    patch("patches/4.2/add_aarch64_acfl.patch", when="@4.2:4.3.1 %arm")
     patch("patches/4.2/configure_aocc_2.3.patch", when="@4.2 %aocc@:2.4.0")
     patch("patches/4.2/configure_aocc_3.0.patch", when="@4.2: %aocc@3.0.0:3.2.0")
     patch("patches/4.2/hdf5_fix.patch", when="@4.2: %aocc")
     patch("patches/4.2/derf_fix.patch", when="@4.2 %aocc")
+
+    patch("patches/4.3/add_aarch64.patch", when="@4.3.2: %gcc")
+    patch("patches/4.3/add_aarch64_acfl.patch", when="@4.3.2: %arm")
 
     patch("patches/4.4/arch.postamble.patch", when="@4.4:")
     patch("patches/4.4/configure.patch", when="@4.4:")
@@ -325,7 +329,7 @@ class Wrf(Package):
         # Remove broken default options...
         self.do_configure_fixup()
 
-        if self.spec.compiler.name not in ["intel", "gcc", "aocc", "fj"]:
+        if self.spec.compiler.name not in ["intel", "gcc", "aocc", "fj", "arm"]:
             raise InstallError(
                 "Compiler %s not currently supported for WRF build." % self.spec.compiler.name
             )

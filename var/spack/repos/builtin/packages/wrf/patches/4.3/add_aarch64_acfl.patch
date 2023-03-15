@@ -1,31 +1,40 @@
 diff --git a/arch/configure.defaults b/arch/configure.defaults
-index 6e98941a..17a94e48 100644
+index 6aa210d7..45630015 100644
 --- a/arch/configure.defaults
 +++ b/arch/configure.defaults
-@@ -44,7 +44,7 @@ RLFLAGS		=
- CC_TOOLS        =      cc 
- 
+@@ -45,7 +45,7 @@ CC_TOOLS        =      cc
+ NETCDFPAR_BUILD	=      CONFIGURE_NETCDFPAR_BUILD
+
  ###########################################################
 -#ARCH    Linux i486 i586 i686 armv7l aarch64, gfortran compiler with gcc #serial smpar dmpar dm+sm
 +#ARCH    Linux i486 i586 i686, gfortran compiler with gcc #serial smpar dmpar dm+sm
  #
  DESCRIPTION     =       GNU ($SFC/$SCC)
  DMPARALLEL      =       # 1
-@@ -1981,6 +1981,49 @@ LIB_BUNDLED     = \
-                      $(WRF_SRC_ROOT_DIR)/frame/module_internal_header_util.o \
+@@ -2023,7 +2023,7 @@ LIB_BUNDLED     = \
                       $(WRF_SRC_ROOT_DIR)/frame/pack_utils.o
- 
+
+ ###########################################################
+-#ARCH   Linux   armv7l aarch64, gnu OpenMPI #serial smpar dmpar dm+sm
++#ARCH   Linux   , gnu OpenMPI #serial smpar dmpar dm+sm
+ #
+ DESCRIPTION     =       GNU ($SFC/$SCC)
+ DMPARALLEL      =       # 1
+@@ -2066,4 +2066,47 @@ RLFLAGS         =
+ CC_TOOLS        =      $(SCC)
+ NETCDFPAR_BUILD	=      CONFIGURE_NETCDFPAR_BUILD
+
 +###########################################################
-+#ARCH    Linux aarch64, gfortran compiler with gcc  #serial smpar dmpar dm+sm
++#ARCH    Linux aarch64, armflang compiler #serial smpar dmpar dm+sm
 +#
 +DESCRIPTION     =       Arm GNU ($SFC/$SCC): Aarch64
 +DMPARALLEL      =       # 1
 +OMPCPP          =       # -D_OPENMP
 +OMP             =       # -fopenmp
 +OMPCC           =       # -fopenmp
-+SFC             =       gfortran
-+SCC             =       gcc
-+CCOMP           =       gcc
++SFC             =       armflang
++SCC             =       armclang
++CCOMP           =       armclang
 +DM_FC           =       mpif90
 +DM_CC           =       mpicc -DMPI2_SUPPORT
 +FC              =       CONFIGURE_FC
@@ -38,15 +47,15 @@ index 6e98941a..17a94e48 100644
 +DFLAGS_LOCAL   =
 +CPLUSPLUSLIB    =
 +ESMF_LDFLAG     =       $(CPLUSPLUSLIB)
-+FCOPTIM         =       -Ofast -fno-expensive-optimizations -fno-reciprocal-math -fsigned-zeros -fno-unsafe-math-optimizations -funroll-loops
-+FCREDUCEDOPT   =       $(FCOPTIM)
-+FCNOOPT                =       -O0
++FCOPTIM         =       -Ofast -funroll-loops
++FCREDUCEDOPT	=       $(FCOPTIM)
++FCNOOPT		=       -O0
 +FCDEBUG         =       -g # -g $(FCNOOPT) # -ggdb -fbacktrace -fcheck=bounds,do,mem,pointer -ffpe-trap=invalid,zero,overflow
 +FORMAT_FIXED    =       -ffixed-form
-+FORMAT_FREE     =       -ffree-form -ffree-line-length-none
++FORMAT_FREE     =       -ffree-form -ffree-line-length-0
 +FCCOMPAT        =
-+BYTESWAPIO      =       -fconvert=big-endian -frecord-marker=4
-+FCBASEOPTS_NO_G =       -w $(FORMAT_FREE) $(BYTESWAPIO) $(FCCOMPAT)
++BYTESWAPIO      =       -fconvert=big-endian
++FCBASEOPTS_NO_G =       -w $(OMP) $(FORMAT_FREE) $(BYTESWAPIO) $(FCCOMPAT)
 +FCBASEOPTS      =       $(FCBASEOPTS_NO_G) $(FCDEBUG)
 +MODULE_SRCH_FLAG =
 +TRADFLAG        =      CONFIGURE_TRADFLAG
@@ -55,9 +64,9 @@ index 6e98941a..17a94e48 100644
 +ARFLAGS         =      ru
 +M4              =      m4 -G
 +RANLIB          =      ranlib
-+RLFLAGS                =
++RLFLAGS		=
 +CC_TOOLS        =      $(SCC)
 +
  #insert new stanza here
- 
+
  ###########################################################

@@ -1,5 +1,5 @@
 diff --git a/arch/configure.defaults b/arch/configure.defaults
-index 6e98941a..17a94e48 100644
+index 6e98941a..85d96019 100644
 --- a/arch/configure.defaults
 +++ b/arch/configure.defaults
 @@ -44,7 +44,7 @@ RLFLAGS		=
@@ -16,16 +16,16 @@ index 6e98941a..17a94e48 100644
                       $(WRF_SRC_ROOT_DIR)/frame/pack_utils.o
  
 +###########################################################
-+#ARCH    Linux aarch64, gfortran compiler with gcc  #serial smpar dmpar dm+sm
++#ARCH    Linux aarch64, armflang compiler  #serial smpar dmpar dm+sm
 +#
 +DESCRIPTION     =       Arm GNU ($SFC/$SCC): Aarch64
 +DMPARALLEL      =       # 1
 +OMPCPP          =       # -D_OPENMP
 +OMP             =       # -fopenmp
 +OMPCC           =       # -fopenmp
-+SFC             =       gfortran
-+SCC             =       gcc
-+CCOMP           =       gcc
++SFC             =       armflang
++SCC             =       armclang
++CCOMP           =       armclang
 +DM_FC           =       mpif90
 +DM_CC           =       mpicc -DMPI2_SUPPORT
 +FC              =       CONFIGURE_FC
@@ -38,15 +38,15 @@ index 6e98941a..17a94e48 100644
 +DFLAGS_LOCAL   =
 +CPLUSPLUSLIB    =
 +ESMF_LDFLAG     =       $(CPLUSPLUSLIB)
-+FCOPTIM         =       -Ofast -fno-expensive-optimizations -fno-reciprocal-math -fsigned-zeros -fno-unsafe-math-optimizations -funroll-loops
++FCOPTIM         =       -Ofast -funroll-loops
 +FCREDUCEDOPT   =       $(FCOPTIM)
 +FCNOOPT                =       -O0
 +FCDEBUG         =       -g # -g $(FCNOOPT) # -ggdb -fbacktrace -fcheck=bounds,do,mem,pointer -ffpe-trap=invalid,zero,overflow
 +FORMAT_FIXED    =       -ffixed-form
-+FORMAT_FREE     =       -ffree-form -ffree-line-length-none
++FORMAT_FREE     =       -ffree-form -ffree-line-length-0
 +FCCOMPAT        =
-+BYTESWAPIO      =       -fconvert=big-endian -frecord-marker=4
-+FCBASEOPTS_NO_G =       -w $(FORMAT_FREE) $(BYTESWAPIO) $(FCCOMPAT)
++BYTESWAPIO      =       -fconvert=big-endian
++FCBASEOPTS_NO_G =       -w $(OMP) $(FORMAT_FREE) $(BYTESWAPIO) $(FCCOMPAT)
 +FCBASEOPTS      =       $(FCBASEOPTS_NO_G) $(FCDEBUG)
 +MODULE_SRCH_FLAG =
 +TRADFLAG        =      CONFIGURE_TRADFLAG
