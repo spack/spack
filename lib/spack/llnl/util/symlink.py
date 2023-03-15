@@ -8,6 +8,7 @@ import shutil
 import tempfile
 from sys import platform as _platform
 
+from spack.error import SpackError
 from llnl.util import lang, tty
 
 is_windows = _platform == "win32"
@@ -77,29 +78,26 @@ def islink(path):
     return windows_is_junction(path) or windows_is_hardlink(path)
 
 
-def windows_is_hardlink(path):
-    """
-    Determines if a path is a windows hardlink
+def windows_is_hardlink(path: str) -> bool:
+    """ Determines if a path is a windows hard link. This is accomplished
+    by looking at the number of links using os.stat. A non-hard-linked file
+    will have a st_nlink value of 1, whereas a hard link will have a value
+    larger than 1. Note that both the original and hard-linked file will
+    return True because they share the same inode.
+
+    Args:
+        path (str): Windows path to check
+
+    Returns:
+         bool - Whether the path is a hard link or not.
     """
     if not is_windows or os.path.islink(path) or not os.path.exists(path):
         return False
 
     try:
-        cmd = ["fsutil", "hardlink", "list", path]
-        ret = subprocess.check_output(cmd)
-        lines = ret.decode().splitlines()
-        # We expect output of fsutil call to have at least
-        # two lines if the path is a hardlink
-        if len(lines) == 1:
-            return False
-        elif len(lines) > 1:
-            return True
-        else:
-            tty.msg("[symlink] Cannot determine if hardlink. Returning false.")
-            return False
-    except subprocess.CalledProcessError as e:
-        tty.msg("[symlink] Check on hardlink failed with error: " + str(e))
-        return False
+        return os.stat(path).st_nlink > 1
+    except Exception as e:
+        raise SymlinkError('Could not determine if path is a hard link') from e
 
 
 def windows_is_junction(path) -> bool:
@@ -181,8 +179,10 @@ def windows_non_symlink(path, link):
     if os.path.isdir(path):
         try:
             cmd = ["cmd", "/C", "mklink", "/J", link, path]
-            result = subprocess.check_output(cmd).decode()
-            if "Junction created" not in result:
+            proc = subprocess.run(cmd, capture_output=True)
+            if proc.returncode != 0:
+                # TODO: How do we know that this only happens if the
+                #  junction already exists?
                 raise OSError(errno.EEXIST, "Junction exists: %s" % link)
         except subprocess.CalledProcessError as e:
             tty.error("[symlink] Junction {} not created for directory {}. "
@@ -191,3 +191,7 @@ def windows_non_symlink(path, link):
         tty.warn("[symlink] Junction fallback to create HardLink {} for "
                  "file {}".format(link, path))
         CreateHardLink(link, path)
+
+
+class SymlinkError(SpackError):
+    ...
