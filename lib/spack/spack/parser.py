@@ -271,6 +271,8 @@ class SpecParser:
         root_spec = SpecNodeParser(self.ctx).parse(initial_spec)
         while True:
             if self.ctx.accept(TokenType.DEPENDENCY):
+                if root_spec.abstract_hash:
+                    raise spack.spec.RedundantSpecError(root_spec, self.ctx.current_token)
                 dependency = SpecNodeParser(self.ctx).parse(spack.spec.Spec())
 
                 if dependency == spack.spec.Spec():
@@ -390,15 +392,23 @@ class SpecNodeParser:
                 value = value.strip("'\" ")
                 initial_spec._add_flag(name, value, propagate=True)
             elif self.ctx.accept(TokenType.DAG_HASH):
-                if initial_spec.abstract_hash:
-                    msg = (
-                        f"Parsed multiple hashes /{initial_spec.abstract_hash} and "
-                        "/{self.current_token}. If you were attempting to specify a file path,"
-                        " check that it was formatted properly"
-                    )
-                    raise spack.spec.RedundantSpecError(msg, self.ctx.current_token.value)
+                # if initial_spec.abstract_hash:
+                #     msg = (
+                #         f"Parsed multiple hashes /{initial_spec.abstract_hash} and "
+                #         "/{self.current_token}. If you were attempting to specify a file path,"
+                #         " check that it was formatted properly"
+                #     )
+                #     raise spack.spec.RedundantSpecError(msg, self.ctx.current_token.value)
                 initial_spec.abstract_hash = self.ctx.current_token.value[1:]
-                self.has_hash = True
+                if self.ctx.next_token and self.ctx.next_token.kind not in [
+                    TokenType.UNQUALIFIED_PACKAGE_NAME,
+                    TokenType.FULLY_QUALIFIED_PACKAGE_NAME,
+                    TokenType.DAG_HASH,
+                    TokenType.FILENAME,
+                    TokenType.DEPENDENCY,
+                ]:
+                    raise spack.spec.RedundantSpecError(initial_spec, self.ctx.next_token)
+                break
             else:
                 break
 
