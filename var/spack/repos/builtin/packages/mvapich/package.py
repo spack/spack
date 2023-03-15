@@ -147,7 +147,7 @@ class Mvapich(AutotoolsPackage):
                 "CFLAGS=-I{0}/include/slurm".format(spec["slurm"].prefix),
             ]
         if "process_managers=pbs" in spec:
-            opts = ["--with-pbs={0}".format(spec["pbs"].prefix),]
+            opts = ["--with-pbs={0}".format(spec["pbs"].prefix)]
         return opts
 
     @property
