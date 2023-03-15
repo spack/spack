@@ -35,22 +35,6 @@ class PyNeurodamus(PythonPackage):
     version("2.10.1", tag="2.10.1", submodules=True)
     version("2.10.0", tag="2.10.0", submodules=True)
     version("2.9.0", tag="2.9.0", submodules=True)
-    version("2.8.1", commit="6b66cba")
-    version("2.8.0", tag="2.8.0")
-    version("2.7.1", tag="2.7.1")
-    version("2.7.0", tag="2.7.0")
-    version("2.6.0", tag="2.6.0")
-    version("2.5.3", tag="2.5.3")
-    version("2.5.0", tag="2.5.0")
-    version("2.4.0", tag="2.4.0")
-    version("2.3.1", tag="2.3.1")
-    version("1.3.2", tag="1.3.2")
-
-    variant(
-        "all_deps",
-        default=False,
-        description="Add more dependencies to support advanced use cases",
-    )
 
     # Note: we depend on Neurodamus but let the user decide which one.
     # Note: avoid Neuron/py-mvdtool dependency due to Intel-GCC conflicts.
@@ -59,10 +43,9 @@ class PyNeurodamus(PythonPackage):
     depends_on("py-h5py", type=("build", "run"))
     depends_on("py-numpy@:1.22", type=("build", "run"))
     depends_on("py-docopt", type=("build", "run"))
-    depends_on("py-libsonata", type=("build", "run"), when="@2.5.3:")
-    depends_on("py-morphio", type=("build", "run"), when="@2.6.0:")
-    # Scipy is optional. Latest won't build well %intel, only @1.5.4 will
-    depends_on("py-scipy", type=("build", "run"), when="+all_deps@2.5.3:")
+    depends_on("py-libsonata", type=("build", "run"))
+    depends_on("py-morphio", type=("build", "run"))
+    depends_on("py-scipy", type=("build", "run"))
     depends_on("py-psutil", type=("build", "run"), when="@2.12.1:")
 
     @run_after("install")
@@ -72,10 +55,9 @@ class PyNeurodamus(PythonPackage):
         mkdirp(self.prefix.share)
         for script in ("init.py", "_debug.py"):
             copy(script, self.prefix.share)
-        if self.spec.satisfies("@2.9.0:"):
-            install_tree("core/hoc", self.prefix.lib.hoc)
-            install_tree("core/mod", self.prefix.lib.mod)
-            install_tree("core/python", self.prefix.lib.python)
+        install_tree("core/hoc", self.prefix.lib.hoc)
+        install_tree("core/mod", self.prefix.lib.mod)
+        install_tree("core/python", self.prefix.lib.python)
 
     def setup_run_environment(self, env):
         PythonPackage.setup_run_environment(self, env)

@@ -5,11 +5,7 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 from spack.package import *
 
-from .neurodamus_model import (
-    NeurodamusModel,
-    version_from_model_core_dep,
-    version_from_model_ndpy_dep,
-)
+from .neurodamus_model import NeurodamusModel, version_from_model_ndpy_dep
 
 
 class NeurodamusMousify(NeurodamusModel):
@@ -24,7 +20,6 @@ class NeurodamusMousify(NeurodamusModel):
     # IMPORTANT: Register new versions only using version_from_model_*
     # Final version name is combined e.g. "1.0-3.0.1"
     version_from_model_ndpy_dep("1.6")
-    version_from_model_core_dep("1.4", "3.3.4")
 
     version("develop", branch="main", submodules=True, get_full_repo=False)
     version("1.0", tag="1.0", submodules=True, get_full_repo=False)

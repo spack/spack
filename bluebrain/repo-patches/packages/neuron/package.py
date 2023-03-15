@@ -137,8 +137,8 @@ class Neuron(CMakePackage):
     # (as PYTHONPATH) during build time
     depends_on("py-sympy@1.3:", type=("build", "run"))
     # Next two needed in versions containing neuronsimulator/nrn#2235.
-    depends_on("py-pip", type=("build"), when="@9.0.a5:")
-    depends_on("py-packaging", type=("run"), when="@9.0.a5:")
+    depends_on("py-pip", type=("build"), when="@9:")
+    depends_on("py-packaging", type=("run"), when="@9:")
 
     # dependency on coreneuron via submodule
     depends_on("coreneuron+legacy-unit~caliper", when="@:8.99+coreneuron+legacy-unit~caliper")
