@@ -41,7 +41,7 @@
 
 # prevent infinite recursion when spack shells out (e.g., on cray for modules)
 if [ -n "${_sp_initializing:-}" ]; then
-    exit 0
+    return 0
 fi
 export _sp_initializing=true
 
