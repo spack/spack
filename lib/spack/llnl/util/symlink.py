@@ -65,17 +65,29 @@ def symlink(real_path, link_path):
                 raise OSError("Failed to create link: %s" % link_path)
 
 
-def islink(path):
-    """
-    Override os.islink to give correct answer for spack logic
-    """
-    if not is_windows:
-        return os.path.islink(path)
+def islink(path: str) -> bool:
+    """ Override os.islink to give correct answer for spack logic.
 
-    if windows_can_symlink():
-        return os.path.islink(path)
+    For Non-Windows: a link can be determined with the os.path.islink method.
+    Windows-only methods will return false for other operating systems.
 
-    return windows_is_junction(path) or windows_is_hardlink(path)
+    For Windows: spack considers symlinks, hard links, and junctions to
+    all be links, so if any of those are True, return True.
+
+    Args:
+        path (str): path to check if it is a link.
+
+    Returns:
+         bool - whether the path is any kind link or not.
+    """
+    try:
+        return any([
+            os.path.islink(path),
+            windows_is_junction(path),
+            windows_is_hardlink(path),
+        ])
+    except Exception as e:
+        raise SymlinkError('Could not determine if given path is a link') from e
 
 
 def windows_is_hardlink(path: str) -> bool:
@@ -86,7 +98,7 @@ def windows_is_hardlink(path: str) -> bool:
     return True because they share the same inode.
 
     Args:
-        path (str): Windows path to check
+        path (str): Windows path to check for a hard link
 
     Returns:
          bool - Whether the path is a hard link or not.
