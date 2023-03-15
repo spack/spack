@@ -23,6 +23,7 @@ class Namd(MakefilePackage, CudaPackage):
 
     version("master", branch="master")
     version("2.15a1", branch="master", tag="release-2-15-alpha-1")
+    version("2.15a1.manual", sha256="474006e98e32dddae59616b3b75f13a2bb149deaf7a0d617ce7fb9fd5a56a33a")
     version(
         "2.14",
         sha256="34044d85d9b4ae61650ccdba5cda4794088c3a9075932392dd0752ef8c049235",
