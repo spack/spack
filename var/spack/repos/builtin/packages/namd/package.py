@@ -23,6 +23,7 @@ class Namd(MakefilePackage, CudaPackage):
 
     version("master", branch="master")
     version("2.15a1", branch="master", tag="release-2-15-alpha-1")
+    # Same as above, but lets you use a local file instead of git
     version("2.15a1.manual", sha256="474006e98e32dddae59616b3b75f13a2bb149deaf7a0d617ce7fb9fd5a56a33a")
     version(
         "2.14",
