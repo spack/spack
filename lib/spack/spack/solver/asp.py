@@ -974,7 +974,7 @@ class SpackSolverSetup(object):
             self.gen.fact(fn.compiler_version(compiler_id, compiler.version))
 
             compiler_entry = self.compiler_info[compiler]
-            # Use "get" to allow concretizing even when copiler existence checks are disabled
+            # Use "get" to allow concretizing even when compiler existence checks are disabled
             operating_system = compiler_entry.get("os")
             if operating_system:
                 self.gen.fact(fn.compiler_os(compiler_id, operating_system))
