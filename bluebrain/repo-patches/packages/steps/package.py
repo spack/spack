@@ -68,7 +68,7 @@ class Steps(CMakePackage):
     depends_on("mpi", when="+mpi")
     depends_on("petsc~debug+int64+mpi", when="+petsc+mpi")
     depends_on("petsc~debug+int64~mpi", when="+petsc~mpi")
-    depends_on("pkg-config", type="build")
+    depends_on("pkgconfig", type="build")
     depends_on("py-build", type="build", when="@5:")
     depends_on("py-cython")
     depends_on("py-h5py", type=("build", "test", "run"))
