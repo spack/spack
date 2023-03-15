@@ -82,7 +82,7 @@ class Fms(CMakePackage):
         when="@2022.02:",
     )
     variant(
-        "fpic", default=False, description="Build with position independent code", when="@2022.02:"
+        "pic", default=False, description="Build with position independent code", when="@2022.02:"
     )
 
     depends_on("netcdf-c")
@@ -104,7 +104,7 @@ class Fms(CMakePackage):
             self.define_from_variant("ENABLE_QUAD_PRECISION", "quad_precision"),
             self.define_from_variant("WITH_YAML", "yaml"),
             self.define_from_variant("CONSTANTS"),
-            self.define_from_variant("FPIC"),
+            self.define_from_variant("FPIC", "pic"),
         ]
 
         args.append(self.define("CMAKE_C_COMPILER", self.spec["mpi"].mpicc))
