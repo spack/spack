@@ -2502,7 +2502,7 @@ class Solver(object):
                 spack.spec.Spec.ensure_valid_variants(s)
         return reusable
 
-    def _reusable_specs(self):
+    def _reusable_specs(self, specs):
         reusable_specs = []
         if self.reuse:
             # Specs from the local Database
@@ -2524,6 +2524,13 @@ class Solver(object):
                 # TODO: update mirror configuration so it can indicate that the
                 # TODO: source cache (or any mirror really) doesn't have binaries.
                 pass
+
+        # If we only want to reuse dependencies, remove the root specs
+        if self.reuse == "dependencies":
+            reusable_specs = [
+                spec for spec in reusable_specs if not any(root in spec for root in specs)
+            ]
+
         return reusable_specs
 
     def solve(self, specs, out=None, timers=False, stats=False, tests=False, setup_only=False):
@@ -2540,7 +2547,7 @@ class Solver(object):
         """
         # Check upfront that the variants are admissible
         reusable_specs = self._check_input_and_extract_concrete_specs(specs)
-        reusable_specs.extend(self._reusable_specs())
+        reusable_specs.extend(self._reusable_specs(specs))
         setup = SpackSolverSetup(tests=tests)
         output = OutputConfiguration(timers=timers, stats=stats, out=out, setup_only=setup_only)
         result, _, _ = self.driver.solve(setup, specs, reuse=reusable_specs, output=output)
@@ -2563,7 +2570,7 @@ class Solver(object):
             tests (bool): add test dependencies to the solve
         """
         reusable_specs = self._check_input_and_extract_concrete_specs(specs)
-        reusable_specs.extend(self._reusable_specs())
+        reusable_specs.extend(self._reusable_specs(specs))
         setup = SpackSolverSetup(tests=tests)
 
         # Tell clingo that we don't have to solve all the inputs at once
