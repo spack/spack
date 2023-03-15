@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -27,6 +27,8 @@ class Fontconfig(AutotoolsPackage):
     depends_on("uuid", when="@2.13.1:")
     depends_on("python@3:", type="build", when="@2.13.93:")
 
+    variant("pic", default=False, description="Enable position-independent code (PIC)")
+
     def patch(self):
         """Make test/run-test.sh compatible with dash"""
         filter_file("SIGINT SIGTERM SIGABRT EXIT", "2 15 6 0", "test/run-test.sh")
@@ -39,8 +41,20 @@ class Fontconfig(AutotoolsPackage):
 
     def configure_args(self):
         font_path = join_path(self.spec["font-util"].prefix, "share", "fonts")
-
-        return ["--enable-libxml2", "--disable-docs", "--with-default-fonts={0}".format(font_path)]
+        args = ["--enable-libxml2", "--disable-docs", "--with-default-fonts={0}".format(font_path)]
+        ldflags = []
+        libs = []
+        for lib in ["libpng", "bzip2"]:
+            ldflags.append(self.spec[lib].libs.ld_flags)
+            libs.append(self.spec[lib].libs.link_flags)
+        args.append("LDFLAGS=-fPIC %s" % " ".join(ldflags))
+        args.append("LIBS=-fPIC %s" % " ".join(libs))
+        if self.spec.satisfies("+pic"):
+            args.append("CFLAGS=-fPIC")
+            args.append("FFLAGS=-fPIC")
+            args.append("--with-pic")
+        return args
+        
 
     @run_after("install")
     def system_fonts(self):
