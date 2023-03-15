@@ -52,7 +52,7 @@ class Silo(AutotoolsPackage):
     depends_on("automake", type="build", when="+shared")
     depends_on("libtool", type="build", when="+shared")
     depends_on("mpi", when="+mpi")
-    depends_on("hdf5@1.8", when="@:4.10+hdf5")
+    depends_on("hdf5@1.8:", when="@:4.10+hdf5")
     depends_on("hdf5@1.12:", when="@4.11:+hdf5")
     depends_on("qt+gui~framework@4.8:4.9", when="+silex")
     depends_on("libx11", when="+silex")
