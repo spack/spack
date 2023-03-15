@@ -17,3 +17,4 @@ class Libraqm(MesonPackage):
 
     depends_on("freetype")
     depends_on("harfbuzz")
+    depends_on("fribidi@1.0.6:")
