@@ -54,7 +54,7 @@ class ClingoBootstrap(Clingo):
         args.extend(
             [
                 # Avoid building the clingo executable
-                self.define("CLINGO_BUILD_APPS", "OFF"),
+                self.define("CLINGO_BUILD_APPS", "OFF")
             ]
         )
         return args

@@ -18,6 +18,11 @@ class PyPip(Package, PythonExtension):
     maintainers("adamjstewart", "pradyunsg")
 
     version(
+        "23.0",
+        sha256="b5f88adff801f5ef052bcdef3daa31b55eb67b0fccd6d0106c206fa248e0463c",
+        expand=False,
+    )
+    version(
         "22.2.2",
         sha256="b61a374b5bc40a6e982426aede40c9b5a08ff20e640f5b56977f4f91fed1e39a",
         expand=False,

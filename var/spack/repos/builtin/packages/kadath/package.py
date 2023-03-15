@@ -64,7 +64,7 @@ class Kadath(CMakePackage):
     def cmake_args(self):
         return [
             # kadath uses a non-standard option to enable MPI
-            self.define_from_variant("PAR_VERSION", "mpi"),
+            self.define_from_variant("PAR_VERSION", "mpi")
         ]
 
     def cmake(self, spec, prefix):

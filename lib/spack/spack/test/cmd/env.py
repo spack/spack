@@ -627,7 +627,6 @@ packages:
 
     test_scope = spack.config.InternalConfigScope("env-external-test", data=external_config_dict)
     with spack.config.override(test_scope):
-
         e = ev.create("test", initial_yaml)
         e.concretize()
         # Note: normally installing specs in a test environment requires doing
@@ -1201,7 +1200,7 @@ def test_env_view_fails(tmpdir, mock_packages, mock_stage, mock_fetch, install_m
         add("libelf")
         add("libelf cflags=-g")
         with pytest.raises(
-            llnl.util.link_tree.MergeConflictSummary, match=spack.store.layout.metadata_dir
+            ev.SpackEnvironmentViewError, match="two specs project to the same prefix"
         ):
             install("--fake")
 
@@ -2763,12 +2762,7 @@ def test_query_develop_specs():
 
 @pytest.mark.parametrize("method", [spack.cmd.env.env_activate, spack.cmd.env.env_deactivate])
 @pytest.mark.parametrize(
-    "env,no_env,env_dir",
-    [
-        ("b", False, None),
-        (None, True, None),
-        (None, False, "path/"),
-    ],
+    "env,no_env,env_dir", [("b", False, None), (None, True, None), (None, False, "path/")]
 )
 def test_activation_and_deactiviation_ambiguities(method, env, no_env, env_dir, capsys):
     """spack [-e x | -E | -D x/]  env [activate | deactivate] y are ambiguous"""
@@ -2836,10 +2830,10 @@ def test_failed_view_cleanup(tmpdir, mock_stage, mock_fetch, install_mockery):
     all_views = os.path.dirname(resolved_view)
     views_before = os.listdir(all_views)
 
-    # Add a spec that results in MergeConflictError's when creating a view
+    # Add a spec that results in view clash when creating a view
     with ev.read("env"):
         add("libelf cflags=-O3")
-        with pytest.raises(llnl.util.link_tree.MergeConflictError):
+        with pytest.raises(ev.SpackEnvironmentViewError):
             install("--fake")
 
     # Make sure there is no broken view in the views directory, and the current
@@ -3071,15 +3065,7 @@ def test_read_legacy_lockfile_and_reconcretize(mock_stage, mock_fetch, install_m
         # This prunes all build deps
         (
             ["--use-buildcache=only"],
-            [
-                "dtlink1",
-                "dtlink3",
-                "dtlink4",
-                "dtlink5",
-                "dtrun1",
-                "dtrun3",
-                "dttop",
-            ],
+            ["dtlink1", "dtlink3", "dtlink4", "dtlink5", "dtrun1", "dtrun3", "dttop"],
         ),
         # Test whether pruning of build deps is correct if we explicitly include one
         # that is also a dependency of a root.

@@ -16,6 +16,10 @@ class Libdrm(Package):
 
     maintainers("wdconinc")
 
+    version("2.4.114", sha256="3049cf843a47d12e5eeefbc3be3496d782fa09f42346bf0b7defe3d1e598d026")
+    version("2.4.113", sha256="7fd7eb2967f63beb4606f22d50e277d993480d05ef75dd88a9bd8e677323e5e1")
+    version("2.4.112", sha256="00b07710bd09b35cd8d80eaf4f4497fe27f4becf467a9830f1f5e8324f8420ff")
+    version("2.4.111", sha256="1ad7164f77424de6f4ecba7c262bde196a214c6e19a6fbf497f0815f4d7ab2a9")
     version("2.4.110", sha256="eecee4c4b47ed6d6ce1a9be3d6d92102548ea35e442282216d47d05293cf9737")
     version("2.4.109", sha256="629352e08c1fe84862ca046598d8a08ce14d26ab25ee1f4704f993d074cb7f26")
     version("2.4.108", sha256="a1d7948cbc536763fde14b4beb5e4da7867607966d4cf46301087e8b8fe3d6a0")
@@ -54,7 +58,10 @@ class Libdrm(Package):
             return self.list_url + "libdrm-%s.tar.xz" % version
 
     def meson_args(self):
-        return ["-Dman-pages=" + ("true" if "+docs" in self.spec else "false")]
+        if self.version <= Version("2.4.112"):
+            return ["-Dman-pages=" + ("true" if "+docs" in self.spec else "false")]
+        else:
+            return ["-Dman-pages=" + ("enabled" if "+docs" in self.spec else "disabled")]
 
     def install(self, spec, prefix):
         with working_dir("spack-build", create=True):
