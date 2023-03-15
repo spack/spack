@@ -3,7 +3,9 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
+import os
+
+from spack.package import *
 
 
 class Met(AutotoolsPackage):
@@ -12,10 +14,11 @@ class Met(AutotoolsPackage):
     configurable methods to compute statistics and diagnostics"""
 
     homepage = "https://dtcenter.org/community-code/model-evaluation-tools-met"
-    url      = "https://github.com/dtcenter/MET/releases/download/v10.1.0/met-10.1.0.20220314.tar.gz"
+    url      = "https://github.com/dtcenter/MET/archive/refs/tags/v11.0.1.tar.gz"
 
     maintainers = ['kgerheiser']
 
+    version('11.0.1', sha256='48d471ad4634f1b969d9358c51925ce36bf0a1cec5312a6755203a4794b81646')
     version('10.1.1', sha256='9827e65fbd1c64e776525bae072bc2d37d14465e85a952778dcc32a26d8b5c9e')
     version('10.1.0', sha256='8d4c1fb2311d8481ffd24e30e407a1b1bc72a6add9658d76b9c323f1733db336')
     version('10.0.1', sha256='8e965bb0eb8353229a730af511c5fa62bad9744606ab6a218d741d29eb5f3acd')
@@ -63,8 +66,12 @@ class Met(AutotoolsPackage):
             '10.0.0': '20210510',
             '9.1.3':  '20210319'
         }
-        url = "https://github.com/dtcenter/MET/releases/download/v{0}/met-{0}.{1}.tar.gz"
-        return url.format(version, release_date[str(version)])
+        if version in release_date.keys():
+            url = "https://github.com/dtcenter/MET/releases/download/v{0}/met-{0}.{1}.tar.gz"
+            return url.format(version, release_date[str(version)])
+        else:
+            url = "https://github.com/dtcenter/MET/archive/refs/tags/v{0}.tar.gz"
+            return url.format(version)
 
     def setup_build_environment(self, env):
         spec = self.spec
@@ -75,20 +82,25 @@ class Met(AutotoolsPackage):
         gsl = spec['gsl']
         env.set('MET_GSL', gsl.prefix)
 
-        netcdfc = spec['netcdf-c']
         netcdfcxx = spec['netcdf-cxx4']
+        cppflags.append(netcdfcxx.libs.search_flags)
+        ldflags.append(netcdfcxx.libs.ld_flags)
+        libs.append(netcdfcxx.libs.link_flags)
+
+        netcdfc = spec['netcdf-c']
+        if netcdfc.satisfies("+shared"):
+            cppflags.append('-I' + netcdfc.prefix.include)
+            ldflags.append('-L' + netcdfc.prefix.lib)
+            libs.append(netcdfc.libs.link_flags)
+        else:
+            nc_config = which(os.path.join(netcdfc.prefix.bin, "nc-config"))
+            cppflags.append(nc_config("--cflags", output=str).strip())
+            ldflags.append(nc_config("--libs", "--static", output=str).strip())
+            libs.append(nc_config("--libs", "--static", output=str).strip())
+
         zlib = spec['zlib']
-
-        cppflags.append('-I' + netcdfc.prefix.include)
-        cppflags.append('-I' + netcdfcxx.prefix.include)
         cppflags.append('-D__64BIT__')
-
-        ldflags.append('-L' + netcdfc.prefix.lib)
-        ldflags.append('-L' + netcdfcxx.prefix.lib)
         ldflags.append('-L' + zlib.prefix.lib)
-
-        libs.append('-lnetcdf')
-        libs.append('-lnetcdf_c++4')
         libs.append('-lz')
 
         bufr = spec['bufr']
@@ -111,7 +123,13 @@ class Met(AutotoolsPackage):
             python = spec['python']
             env.set('MET_PYTHON', python.command.path)
             env.set('MET_PYTHON_CC', '-I' + python.headers.directories[0])
-            env.set('MET_PYTHON_LD', python.libs.ld_flags)
+            py_ld = [python.libs.ld_flags]
+            if spec["python"].satisfies("~shared"):
+                py_ld.append(spec["gettext"].libs.ld_flags)
+                py_ld.append(spec["gettext"].libs.ld_flags)
+                py_ld.append(spec["libiconv"].libs.ld_flags)
+                py_ld.append("-lutil")
+            env.set('MET_PYTHON_LD', " ".join(py_ld))
 
         if '+lidar2nc' in spec or '+modis' in spec:
             hdf = spec['hdf']
