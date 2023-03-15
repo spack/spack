@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -35,6 +35,7 @@ class Lz4(MakefilePackage):
         multi=True,
         description="Build shared libs, static libs or both",
     )
+    variant("pic", default=False, description="PIC")
 
     def url_for_version(self, version):
         url = "https://github.com/lz4/lz4/archive"
@@ -43,6 +44,10 @@ class Lz4(MakefilePackage):
             return "{0}/v{1}.tar.gz".format(url, version)
         else:
             return "{0}/r{1}.tar.gz".format(url, version.joined)
+
+    def setup_build_environment(self, env):
+        if self.spec.satisfies("+pic"):
+            env.set("CFLAGS", "-fPIC")
 
     def build(self, spec, prefix):
         par = True
