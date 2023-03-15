@@ -1585,33 +1585,27 @@ def configure_compilers(compiler_action, scope=None):
     return None
 
 
-def _push_mirror_contents(env, specfile_path, sign_binaries, mirror_url):
+def _push_mirror_contents(input_spec, sign_binaries, mirror_url):
     """Unchecked version of the public API, for easier mocking"""
     unsigned = not sign_binaries
     tty.debug("Creating buildcache ({0})".format("unsigned" if unsigned else "signed"))
-    hashes = env.all_hashes() if env else None
-    matches = spack.store.specfile_matches(specfile_path, hashes=hashes)
     push_url = spack.mirror.Mirror.from_url(mirror_url).push_url
     kwargs = {"force": True, "allow_root": True, "unsigned": unsigned}
-    bindist.push(matches, push_url, include_root=True, include_dependencies=False, **kwargs)
+    return bindist.push(input_spec, push_url, **kwargs)
 
 
-def push_mirror_contents(env, specfile_path, mirror_url, sign_binaries):
+def push_mirror_contents(input_spec: spack.spec.Spec, mirror_url, sign_binaries):
     """Push one or more binary packages to the mirror.
 
     Arguments:
 
-        env (spack.environment.Environment): Optional environment.  If
-            provided, it is used to make sure binary package to push
-            exists in the environment.
-        specfile_path (str): Path to spec.json corresponding to built pkg
-            to push.
+        input_spec(spack.spec.Spec): Installed spec to push
         mirror_url (str): Base url of target mirror
         sign_binaries (bool): If True, spack will attempt to sign binary
             package before pushing.
     """
     try:
-        _push_mirror_contents(env, specfile_path, sign_binaries, mirror_url)
+        return _push_mirror_contents(input_spec, sign_binaries, mirror_url)
     except Exception as inst:
         # If the mirror we're pushing to is on S3 and there's some
         # permissions problem, for example, we can't just target
@@ -2131,39 +2125,61 @@ def process_command(name, commands, repro_dir):
     return exit_code
 
 
-def create_buildcache(**kwargs):
+def create_buildcache(input_spec: spack.spec.Spec, **kwargs):
     """Create the buildcache at the provided mirror(s).
 
     Arguments:
-       kwargs (dict): dictionary of arguments used to create the buildcache
+        input_spec: Installed spec to package and push
+        kwargs (dict): dictionary of arguments used to create the buildcache
 
     List of recognized keys:
-
-    * "env" (spack.environment.Environment): the active environment
     * "buildcache_mirror_url" (str or None): URL for the buildcache mirror
     * "pipeline_mirror_url" (str or None): URL for the pipeline mirror
     * "pr_pipeline" (bool): True if the CI job is for a PR
-    * "json_path" (str): path the the spec's JSON file
+
+    Returns:
+        List of objects indicating success or failure for each attempted
+        push.  Each object has the form:
+
+        .. code-block:: JSON
+
+           {
+              "success": True|False,
+              "url": mirror_url of attempted push
+           }
+
     """
-    env = kwargs.get("env")
     buildcache_mirror_url = kwargs.get("buildcache_mirror_url")
     pipeline_mirror_url = kwargs.get("pipeline_mirror_url")
     pr_pipeline = kwargs.get("pr_pipeline")
-    json_path = kwargs.get("json_path")
 
     sign_binaries = pr_pipeline is False and can_sign_binaries()
+
+    results = []
 
     # Create buildcache in either the main remote mirror, or in the
     # per-PR mirror, if this is a PR pipeline
     if buildcache_mirror_url:
-        push_mirror_contents(env, json_path, buildcache_mirror_url, sign_binaries)
+        results.append(
+            {
+                "success": push_mirror_contents(input_spec, buildcache_mirror_url, sign_binaries),
+                "url": buildcache_mirror_url,
+            }
+        )
 
     # Create another copy of that buildcache in the per-pipeline
     # temporary storage mirror (this is only done if either
     # artifacts buildcache is enabled or a temporary storage url
     # prefix is set)
     if pipeline_mirror_url:
-        push_mirror_contents(env, json_path, pipeline_mirror_url, sign_binaries)
+        results.append(
+            {
+                "success": push_mirror_contents(input_spec, pipeline_mirror_url, sign_binaries),
+                "url": pipeline_mirror_url,
+            }
+        )
+
+    return results
 
 
 def write_broken_spec(url, pkg_name, stack_name, job_url, pipeline_url, spec_dict):

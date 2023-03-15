@@ -1365,8 +1365,6 @@ def _build_tarball_in_stage_dir(
         keep_original=False,
     )
 
-    tty.debug('Buildcache for "{0}" written to \n {1}'.format(spec, remote_spackfile_path))
-
     # push the key to the build cache's _pgp directory so it can be
     # imported
     if not unsigned:
@@ -1404,32 +1402,26 @@ def nodes_to_be_packaged(specs, root=True, dependencies=True):
         return list(filter(packageable, nodes))
 
 
-def push(specs, push_url, include_root: bool = True, include_dependencies: bool = True, **kwargs):
-    """Create a binary package for each of the specs passed as input and push them
-    to a given push URL.
+def push(input_spec: spack.spec.Spec, mirror_url, **kwargs):
+    """Create and push binary package for a single spec to the specified
+    mirror url.
 
     Args:
-        specs (List[spack.spec.Spec]): installed specs to be packaged
-        push_url (str): url where to push the binary package
-        include_root (bool): include the root of each spec in the nodes
-        include_dependencies (bool): include the dependencies of each
-            spec in the nodes
-        **kwargs: TODO
+        input_spec (spack.spec.Spec): Spec to package and push
+        mirror_url (str): Desired destination url for binary package
+        kwargs: Passed through to _build_tarball(...)
+
+    Returns:
+        True if package was pushed, False otherwise.
 
     """
-    # Be explicit about the arugment type
-    if type(include_root) != bool or type(include_dependencies) != bool:
-        raise ValueError("Expected include_root/include_dependencies to be True/False")
+    try:
+        _build_tarball(input_spec, mirror_url, **kwargs)
+    except NoOverwriteException as e:
+        warnings.warn(str(e))
+        return False
 
-    nodes = nodes_to_be_packaged(specs, root=include_root, dependencies=include_dependencies)
-
-    # TODO: This seems to be an easy target for task
-    # TODO: distribution using a parallel pool
-    for node in nodes:
-        try:
-            _build_tarball(node, push_url, **kwargs)
-        except NoOverwriteException as e:
-            warnings.warn(str(e))
+    return True
 
 
 def try_verify(specfile_path):

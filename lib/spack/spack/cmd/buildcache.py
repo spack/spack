@@ -455,10 +455,12 @@ def create_fn(args):
 
     url = mirror.push_url
 
-    matches = _matching_specs(specs, args.spec_file)
+    nodes = bindist.nodes_to_be_packaged(
+        _matching_specs(specs, args.spec_file),
+        root="package" in args.things_to_install,
+        dependencies="dependencies" in args.things_to_install,
+    )
 
-    msg = "Pushing binary packages to {0}/build_cache".format(url)
-    tty.msg(msg)
     kwargs = {
         "key": args.key,
         "force": args.force,
@@ -467,13 +469,16 @@ def create_fn(args):
         "allow_root": args.allow_root,
         "regenerate_index": args.rebuild_index,
     }
-    bindist.push(
-        matches,
-        url,
-        include_root="package" in args.things_to_install,
-        include_dependencies="dependencies" in args.things_to_install,
-        **kwargs,
-    )
+
+    for node in nodes:
+        pushed = bindist.push(node, url, **kwargs)
+        message = "{0} buildcache for {1}/{2} to {3}".format(
+            "Successfully pushed" if pushed else "Failed to push",
+            node.name,
+            node.dag_hash()[:7],
+            url,
+        )
+        tty.msg(message)
 
 
 def install_fn(args):
