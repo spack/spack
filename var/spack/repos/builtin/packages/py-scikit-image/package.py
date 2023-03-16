@@ -92,7 +92,9 @@ class PyScikitImage(PythonPackage):
     depends_on("py-cloudpickle@0.2.1:", when="@0.14.0:0.14", type=("build", "run"))
 
     def url_for_version(self, version):
-        url = "https://files.pythonhosted.org/packages/source/s/scikit-image/scikit{}image-{}.tar.gz"
+        url = (
+            "https://files.pythonhosted.org/packages/source/s/scikit-image/scikit{}image-{}.tar.gz"
+        )
         if version >= Version("0.20"):
             sep = "_"
         else:
