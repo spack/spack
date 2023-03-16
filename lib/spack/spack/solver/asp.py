@@ -948,46 +948,22 @@ class SpackSolverSetup(object):
     def compiler_facts(self):
         """Facts about available compilers."""
 
-        # Build a dictionary mapping a compiler spec to supported OS and targets
-        for entry in spack.compilers.all_compilers_config():
-            compiler_entry = entry["compiler"]
-            key = spack.spec.CompilerSpec(compiler_entry["spec"])
-
-            # FIXME: same spec with multiple OS and targets?
-            if key in self.compiler_info:
-                warnings.warn(
-                    f"compiler {key} has duplicate entries, only the first one will be considered"
-                )
-                continue
-
-            self.compiler_info[key]["os"] = compiler_entry["operating_system"]
-            self.compiler_info[key]["target"] = compiler_entry.get("target", None)
-            self.compiler_info[key]["compiler_obj"] = spack.compilers.compiler_from_dict(
-                compiler_entry
-            )
-
         self.gen.h2("Available compilers")
         indexed_possible_compilers = list(enumerate(self.possible_compilers))
         for compiler_id, compiler in indexed_possible_compilers:
             self.gen.fact(fn.compiler_id(compiler_id))
-            self.gen.fact(fn.compiler_name(compiler_id, compiler.name))
-            self.gen.fact(fn.compiler_version(compiler_id, compiler.version))
+            self.gen.fact(fn.compiler_name(compiler_id, compiler.spec.name))
+            self.gen.fact(fn.compiler_version(compiler_id, compiler.spec.version))
 
-            compiler_entry = self.compiler_info[compiler]
-            # Use "get" to allow concretizing even when compiler existence checks are disabled
-            operating_system = compiler_entry.get("os")
-            if operating_system:
-                self.gen.fact(fn.compiler_os(compiler_id, operating_system))
+            if compiler.operating_system:
+                self.gen.fact(fn.compiler_os(compiler_id, compiler.operating_system))
 
-            target = compiler_entry.get("target")
-            if target is not None:
-                self.gen.fact(fn.compiler_target(compiler_id, target))
+            if compiler.target is not None:
+                self.gen.fact(fn.compiler_target(compiler_id, compiler.target))
 
-            compiler_obj = compiler_entry.get("compiler_obj")
-            if compiler_obj:
-                for flag_type, flags in compiler_obj.flags.items():
-                    for flag in flags:
-                        self.gen.fact(fn.compiler_flag(compiler_id, flag_type, flag))
+            for flag_type, flags in compiler.flags.items():
+                for flag in flags:
+                    self.gen.fact(fn.compiler_flag(compiler_id, flag_type, flag))
 
             self.gen.newline()
 
@@ -995,7 +971,7 @@ class SpackSolverSetup(object):
         self.gen.h2("Default compiler preferences (CompilerID, Weight)")
 
         ppk = spack.package_prefs.PackagePrefs("all", "compiler", all=False)
-        matches = sorted(indexed_possible_compilers, key=lambda x: ppk(x[1]))
+        matches = sorted(indexed_possible_compilers, key=lambda x: ppk(x[1].spec))
 
         for weight, (compiler_id, cspec) in enumerate(matches):
             f = fn.default_compiler_preference(compiler_id, weight)
@@ -1009,14 +985,16 @@ class SpackSolverSetup(object):
         if not pkg_prefs or "compiler" not in pkg_prefs:
             return
 
-        compiler_list = self.possible_compilers.copy()
+        compiler_list = self.possible_compilers
         compiler_list = sorted(compiler_list, key=lambda x: (x.name, x.version), reverse=True)
         ppk = spack.package_prefs.PackagePrefs(pkg.name, "compiler", all=False)
-        matches = sorted(compiler_list, key=ppk)
+        matches = sorted(compiler_list, key=lambda x: ppk(x.spec))
 
-        for i, cspec in enumerate(reversed(matches)):
+        for i, compiler in enumerate(reversed(matches)):
             self.gen.fact(
-                fn.node_compiler_preference(pkg.name, cspec.name, cspec.version, -i * 100)
+                fn.node_compiler_preference(
+                    pkg.name, compiler.spec.name, compiler.spec.version, -i * 100
+                )
             )
 
     def package_requirement_rules(self, pkg):
@@ -1775,8 +1753,14 @@ class SpackSolverSetup(object):
                     if ancestor not in candidate_targets:
                         candidate_targets.append(ancestor)
 
-        best_targets = set([uarch.family.name])
+        best_targets = {uarch.family.name}
         for compiler_id, compiler in enumerate(self.possible_compilers):
+            # Stub support for cross-compilation, to be expanded later
+            if compiler.target is not None and compiler.target != str(uarch.family):
+                self.gen.fact(fn.compiler_supports_target(compiler_id, compiler.target))
+                self.gen.newline()
+                continue
+
             supported = self._supported_targets(compiler.name, compiler.version, candidate_targets)
 
             # If we can't find supported targets it may be due to custom
@@ -1837,6 +1821,22 @@ class SpackSolverSetup(object):
 
     def generate_possible_compilers(self, specs):
         compilers = all_compilers_in_config()
+
+        # Search for compilers which differs only by aspects that are
+        # not selectable by users using the spec syntax
+        seen, sanitized_list = set(), []
+        for compiler in compilers:
+            key = compiler.spec, compiler.operating_system, compiler.target
+            if key in seen:
+                warnings.warn(
+                    f"duplicate found for {compiler.spec} on "
+                    f"{compiler.operating_system}/{compiler.target}. "
+                    f"Edit your compilers.yaml configuration to remove it."
+                )
+                continue
+            sanitized_list.append(compiler)
+            seen.add(key)
+
         cspecs = set([c.spec for c in compilers])
 
         # add compiler specs from the input line to possibilities if we
@@ -1857,11 +1857,20 @@ class SpackSolverSetup(object):
                     # Allow unknown compilers to exist if the associated spec
                     # is already built
                 else:
-                    cspecs.add(s.compiler)
+                    compiler_cls = spack.compilers.class_for_compiler_name(s.compiler.name)
+                    compilers.append(
+                        compiler_cls(
+                            s.compiler, operating_system=None, target=None, paths=[None] * 4
+                        )
+                    )
                     self.gen.fact(fn.allow_compiler(s.compiler.name, s.compiler.version))
 
         return list(
-            sorted(cspecs, key=lambda compiler: (compiler.name, compiler.version), reverse=True)
+            sorted(
+                compilers,
+                key=lambda compiler: (compiler.spec.name, compiler.spec.version),
+                reverse=True,
+            )
         )
 
     def define_version_constraints(self):
@@ -1921,7 +1930,7 @@ class SpackSolverSetup(object):
     def define_compiler_version_constraints(self):
         for constraint in sorted(self.compiler_version_constraints):
             for compiler_id, compiler in enumerate(self.possible_compilers):
-                if compiler.satisfies(constraint):
+                if compiler.spec.satisfies(constraint):
                     self.gen.fact(
                         fn.compiler_version_satisfies(
                             constraint.name, constraint.versions, compiler_id
