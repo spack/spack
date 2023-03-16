@@ -2773,14 +2773,16 @@ class FindFirstFile:
         """
         self.root = root
         self.bfs_depth = bfs_depth
+        self.match: Callable
 
         # normcase is trivial on posix
         regex = re.compile("|".join(fnmatch.translate(os.path.normcase(p)) for p in file_patterns))
 
         # On case sensitive filesystems match against normcase'd paths.
-        self.match = (
-            regex.match if os.path is posixpath else lambda p: regex.match(os.path.normcase(p))
-        )
+        if os.path is posixpath:
+            self.match = regex.match
+        else:
+            self.match = lambda p: regex.match(os.path.normcase(p))
 
     def find(self) -> Optional[str]:
         """Run the file search
