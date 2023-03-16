@@ -545,8 +545,20 @@ class Llvm(CMakePackage, CudaPackage):
         cmake_args = [
             define("LLVM_REQUIRES_RTTI", True),
             define("LLVM_ENABLE_RTTI", True),
-            define("LLVM_ENABLE_EH", True),
             define("LLVM_ENABLE_LIBXML2", False),
+        ]
+
+        # Flang does not support exceptions from core llvm.
+        # LLVM_ENABLE_EH=True when building flang will soon
+        # fail (with changes at the llvm-project level).
+        # Only enable exceptions in LLVM if we are *not*
+        # building flang.  FYI: LLVM <= 16.x will build flang
+        # successfully but the executable will suffer from
+        # link errors looking for C++ EH support.
+        if "+flang" not in spec:
+            cmake_args.append(define("LLVM_ENABLE_EH", True))
+
+        cmake_args = cmake_args + [
             define("CLANG_DEFAULT_OPENMP_RUNTIME", "libomp"),
             define("PYTHON_EXECUTABLE", python.command.path),
             define("LIBOMP_USE_HWLOC", True),
