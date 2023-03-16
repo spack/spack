@@ -1343,7 +1343,11 @@ def _build_tarball_in_stage_dir(
     spec_dict["buildinfo"] = buildinfo
 
     with open(specfile_path, "w") as outfile:
-        outfile.write(sjson.dump(spec_dict))
+        # Note: when using gpg clear sign, we need to avoid long lines (19995 chars).
+        # If lines are longer, they are truncated without error. Thanks GPG!
+        # So, here we still add newlines, but no indent, so save on file size and
+        # line length.
+        json.dump(spec_dict, outfile, indent=0, separators=(",", ":"))
 
     # sign the tarball and spec file with gpg
     if not unsigned:
