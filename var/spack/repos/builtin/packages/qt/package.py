@@ -335,7 +335,7 @@ class Qt(Package):
         env.prepend_path("QT_PLUGIN_PATH", self.prefix.plugins)
 
     def setup_dependent_package(self, module, dependent_spec):
-        module.qmake = Executable(join_path(self.spec.prefix.bin, "qmake"))
+        module.qmake = Executable(self.spec.prefix.bin.qmake)
 
     def get_mkspec(self):
         """Determine the mkspecs root directory and QT platform."""
