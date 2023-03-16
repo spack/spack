@@ -187,6 +187,9 @@ class Scorep(AutotoolsPackage):
         elif spec.satisfies("^openmpi"):
             config_args.append("--with-mpi=openmpi")
 
+        if spec.satisfies("^binutils"):
+            config_args.append("--with-libbfd=%s" % spec["binutils"].prefix)
+
         config_args.extend(
             [
                 "CFLAGS={0}".format(self.compiler.cc_pic_flag),
