@@ -5,18 +5,14 @@
 import errno
 import os
 import shutil
+import sys
 import tempfile
-from sys import platform as _platform
 
 from llnl.util import lang, tty
 
 from spack.error import SpackError
 
-is_windows = _platform == "win32"
-
-if is_windows:
-    import subprocess
-
+if sys.platform == "win32":
     from win32file import CreateHardLink
 
 
@@ -56,7 +52,7 @@ def symlink(real_path: str, link_path: str):
         raise SymlinkError(f"Link path ({link_path}) already exists. Cannot create link.")
     elif not os.path.exists(real_path):
         raise SymlinkError(f"Source path ({real_path}) does not exist. Cannot create link.")
-    elif is_windows and not windows_can_symlink():
+    elif sys.platform == "win32" and not windows_can_symlink():
         windows_create_link(real_path, link_path)
     else:
         os.symlink(real_path, link_path, target_is_directory=os.path.isdir(real_path))
@@ -99,7 +95,7 @@ def windows_is_hardlink(path: str) -> bool:
     Returns:
          bool - Whether the path is a hard link or not.
     """
-    if not is_windows or os.path.islink(path) or not os.path.exists(path):
+    if sys.platform != "win32" or os.path.islink(path) or not os.path.exists(path):
         return False
 
     try:
@@ -119,7 +115,7 @@ def windows_is_junction(path: str) -> bool:
     Returns:
         bool - whether the path is a junction or not.
     """
-    if not is_windows or os.path.islink(path) or os.path.isfile(path):
+    if sys.platform != "win32" or os.path.islink(path) or os.path.isfile(path):
         return False
 
     import ctypes.wintypes
@@ -144,8 +140,8 @@ def windows_can_symlink() -> bool:
     Determines if windows is able to make a symlink depending on
     the system configuration and the level of the user's permissions.
     """
-    if not is_windows:
-        tty.warn("[symlink] window_can_symlink called on non-windows")
+    if sys.platform != "win32":
+        tty.warn("windows_can_symlink method can't be used on non-Windows OS.")
         return False
 
     tempdir = tempfile.mkdtemp()
@@ -184,6 +180,10 @@ def windows_create_link(path: str, link: str):
     to a symbolic link. This is called when symbolic links cannot
     be created.
     """
+    if sys.platform != "win32":
+        tty.warn("windows_create_link method can't be used on non-Windows OS.")
+        return
+
     if os.path.isdir(path):
         windows_create_junction(path=path, link=link)
     elif os.path.isfile(path):
@@ -198,6 +198,11 @@ def windows_create_junction(path: str, link: str):
     """Duly verify that the path and link are eligible to create a junction,
     then create the junction.
     """
+    if sys.platform != "win32":
+        tty.warn("windows_create_junction method can't be used on non-Windows OS.")
+        return
+    import subprocess
+
     try:
         cmd = ["cmd", "/C", "mklink", "/J", link, path]
         proc = subprocess.run(cmd, capture_output=True)
@@ -207,7 +212,7 @@ def windows_create_junction(path: str, link: str):
             raise OSError(errno.EEXIST, "Junction exists: %s" % link)
     except subprocess.CalledProcessError as e:
         tty.error(
-            "[symlink] Junction {} not created for directory {}. "
+            "Junction {} not created for directory {}. "
             "error was: {}".format(link, path, str(e))
         )
 
@@ -216,8 +221,8 @@ def windows_create_hard_link(path: str, link: str):
     """Duly verify that the path and link are eligible to create a hard
     link, then create the hard link.
     """
-    if not is_windows:
-        tty.warn("[symlink] windows_create_hard_link called on non-windows OS")
+    if sys.platform != "win32":
+        tty.warn("windows_create_hard_link method can't be used on non-Windows OS.")
         return
     elif not os.path.exists(path):
         raise SymlinkError(f"File path {path} does not exist. Cannot create hard link.")
