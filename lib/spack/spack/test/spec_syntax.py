@@ -914,7 +914,7 @@ def test_error_conditions(text, exc_cls):
 )
 def test_specfile_error_conditions_windows(text, exc_cls):
     with pytest.raises(exc_cls):
-        SpecParser(text).next_spec()
+        SpecParser(text).all_specs()
 
 
 @pytest.mark.parametrize(
