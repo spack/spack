@@ -1343,7 +1343,7 @@ def _build_tarball_in_stage_dir(
     spec_dict["buildinfo"] = buildinfo
 
     with open(specfile_path, "w") as outfile:
-        outfile.write(json.dumps(spec_dict))
+        outfile.write(sjson.dump(spec_dict))
 
     # sign the tarball and spec file with gpg
     if not unsigned:
