@@ -30,6 +30,5 @@ class PyPytestXdist(PythonPackage):
     depends_on("py-pytest@3.6.0:", type=("build", "run"), when="@1.25.0:1.27.0")
     depends_on("py-pytest@3.0.0:", type=("build", "run"), when="@1.18.0:1.24.0")
     depends_on("py-pytest@2.7.0:", type=("build", "run"), when="@1.16.0:1.17.0")
-    depends_on("py-pytest-forked", type=("build", "run"), when="@1.19.0:")
-    depends_on("py-six", type=("build", "run"), when="@1.23.0:")
-    depends_on("py-wheel", type="build", when="@3.20.0:")
+    depends_on("py-pytest-forked", type=("build", "run"), when="@1.19.0:1")
+    depends_on("py-six", type=("build", "run"), when="@1.23.0:1")

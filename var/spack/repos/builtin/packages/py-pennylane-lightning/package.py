@@ -75,7 +75,6 @@ class CMakeBuilder(spack.build_systems.cmake.CMakeBuilder):
         Here we specify all variant options that can be dynamicaly specified at build time
         """
         args = [
-            self.define_from_variant("CMAKE_BUILD_TYPE", "build_type"),
             self.define_from_variant("ENABLE_OPENMP", "openmp"),
             self.define_from_variant("ENABLE_NATIVE", "native"),
             self.define_from_variant("ENABLE_BLAS", "blas"),
@@ -85,7 +84,7 @@ class CMakeBuilder(spack.build_systems.cmake.CMakeBuilder):
             self.define_from_variant("ENABLE_GATE_DISPATCHER", "dispatcher"),
         ]
 
-        if self.spec.variants["kokkos"].value:
+        if "+kokkos" in self.spec:
             args += [
                 "-DENABLE_KOKKOS=ON",
                 f"-DKokkos_Core_DIR={self.spec['kokkos'].home}",
@@ -118,7 +117,5 @@ class CMakeBuilder(spack.build_systems.cmake.CMakeBuilder):
     @on_package_attributes(run_tests=True)
     def test_lightning_build(self):
         with working_dir(self.stage.source_path):
-            pl_runner = Executable(
-                join_path(self.prefix, "bin", "pennylane_lightning_test_runner")
-            )
+            pl_runner = Executable(self.prefix.bin.pennylane_lightning_test_runner)
             pl_runner()
