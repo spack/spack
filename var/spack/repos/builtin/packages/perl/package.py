@@ -12,7 +12,6 @@
 # Date: September 6, 2015
 #
 import os
-import platform
 import re
 import sys
 from contextlib import contextmanager
@@ -227,7 +226,7 @@ class Perl(Package):  # Perl doesn't use Autotools, it should subclass Package
         return args
 
     def is_64bit(self):
-        return platform.machine().endswith("64")
+        return "64" in self.pkg.spec.target.family
 
     def configure_args(self):
         spec = self.spec
