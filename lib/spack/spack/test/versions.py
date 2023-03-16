@@ -788,6 +788,7 @@ def test_version_intersects_satisfies_semantic(lhs_str, rhs_str, expected):
         ),
     ],
 )
+@pytest.mark.skipif(sys.platform == "win32", reason="Not supported on Windows (yet)")
 def test_git_versions_without_explicit_reference(
     spec_str,
     tested_intersects,
