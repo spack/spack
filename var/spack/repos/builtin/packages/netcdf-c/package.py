@@ -217,7 +217,7 @@ class AutotoolsBuilder(AutotoolsBuilder, BackupStep, Setup):
         # The patch for 4.7.0 touches configure.ac.
         return self.spec.satisfies("@4.7.0")
 
-    def autoreconf(self, spec, prefix):
+    def autoreconf(self, pkg, spec, prefix):
         if not os.path.exists(self.configure_abs_path):
             Executable("./bootstrap")()
 
