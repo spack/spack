@@ -501,7 +501,7 @@ class Result(object):
                 key = providers[0]
             candidate = answer.get(key)
 
-            if candidate and candidate.satisfies(input_spec):
+            if candidate and candidate.intersects(input_spec):
                 self._concrete_specs.append(answer[key])
                 self._concrete_specs_by_input[input_spec] = answer[key]
             else:
@@ -1402,7 +1402,12 @@ class SpackSolverSetup(object):
 
         # flags from compilers.yaml
         compilers = all_compilers_in_config()
+        seen = set()
         for compiler in compilers:
+            # if there are multiple with the same spec, only use the first
+            if compiler.spec in seen:
+                continue
+            seen.add(compiler.spec)
             for name, flags in compiler.flags.items():
                 for flag in flags:
                     self.gen.fact(
@@ -1458,6 +1463,7 @@ class SpackSolverSetup(object):
             node_compiler = fn.attr("node_compiler_set")
             node_compiler_version = fn.attr("node_compiler_version_set")
             node_flag = fn.attr("node_flag_set")
+            node_flag_source = fn.attr("node_flag_source")
             node_flag_propagate = fn.attr("node_flag_propagate")
             variant_propagate = fn.attr("variant_propagate")
 
@@ -1471,6 +1477,7 @@ class SpackSolverSetup(object):
             node_compiler = fn.attr("node_compiler")
             node_compiler_version = fn.attr("node_compiler_version")
             node_flag = fn.attr("node_flag")
+            node_flag_source = fn.attr("node_flag_source")
             node_flag_propagate = fn.attr("node_flag_propagate")
             variant_propagate = fn.attr("variant_propagate")
 
@@ -1552,6 +1559,7 @@ class SpackSolverSetup(object):
         for flag_type, flags in spec.compiler_flags.items():
             for flag in flags:
                 clauses.append(f.node_flag(spec.name, flag_type, flag))
+                clauses.append(f.node_flag_source(spec.name, flag_type, spec.name))
                 if not spec.concrete and flag.propagate is True:
                     clauses.append(f.node_flag_propagate(spec.name, flag_type))
 
@@ -1873,7 +1881,7 @@ class SpackSolverSetup(object):
         for pkg_name, versions in sorted(self.version_constraints):
             # version must be *one* of the ones the spec allows.
             allowed_versions = [
-                v for v in sorted(self.possible_versions[pkg_name]) if v.satisfies(versions)
+                v for v in sorted(self.possible_versions[pkg_name]) if v.intersects(versions)
             ]
 
             # This is needed to account for a variable number of
@@ -2176,6 +2184,7 @@ class SpecBuilder(object):
         self._specs = {}
         self._result = None
         self._command_line_specs = specs
+        self._hash_specs = []
         self._flag_sources = collections.defaultdict(lambda: set())
         self._flag_compiler_defaults = set()
 
@@ -2186,6 +2195,7 @@ class SpecBuilder(object):
     def hash(self, pkg, h):
         if pkg not in self._specs:
             self._specs[pkg] = self._hash_lookup[h]
+        self._hash_specs.append(pkg)
 
     def node(self, pkg):
         if pkg not in self._specs:
@@ -2287,7 +2297,8 @@ class SpecBuilder(object):
         The solver determines wihch flags are on nodes; this routine
         imposes order afterwards.
         """
-        compilers = dict((c.spec, c) for c in all_compilers_in_config())
+        # reverse compilers so we get highest priority compilers that share a spec
+        compilers = dict((c.spec, c) for c in reversed(all_compilers_in_config()))
         cmd_specs = dict((s.name, s) for spec in self._command_line_specs for s in spec.traverse())
 
         for spec in self._specs.values():
@@ -2310,8 +2321,8 @@ class SpecBuilder(object):
                     )
 
                     # add flags from each source, lowest to highest precedence
-                    for source_name in sorted_sources:
-                        source = cmd_specs[source_name]
+                    for name in sorted_sources:
+                        source = self._specs[name] if name in self._hash_specs else cmd_specs[name]
                         extend_flag_list(from_sources, source.compiler_flags.get(flag_type, []))
 
                 # compiler flags from compilers config are lowest precedence
@@ -2386,10 +2397,12 @@ class SpecBuilder(object):
                     continue
 
                 # if we've already gotten a concrete spec for this pkg,
-                # do not bother calling actions on it.
+                # do not bother calling actions on it except for node_flag_source,
+                # since node_flag_source is tracking information not in the spec itself
                 spec = self._specs.get(pkg)
                 if spec and spec.concrete:
-                    continue
+                    if name != "node_flag_source":
+                        continue
 
             action(*args)
 
@@ -2489,7 +2502,7 @@ class Solver(object):
                 spack.spec.Spec.ensure_valid_variants(s)
         return reusable
 
-    def _reusable_specs(self):
+    def _reusable_specs(self, specs):
         reusable_specs = []
         if self.reuse:
             # Specs from the local Database
@@ -2511,6 +2524,13 @@ class Solver(object):
                 # TODO: update mirror configuration so it can indicate that the
                 # TODO: source cache (or any mirror really) doesn't have binaries.
                 pass
+
+        # If we only want to reuse dependencies, remove the root specs
+        if self.reuse == "dependencies":
+            reusable_specs = [
+                spec for spec in reusable_specs if not any(root in spec for root in specs)
+            ]
+
         return reusable_specs
 
     def solve(self, specs, out=None, timers=False, stats=False, tests=False, setup_only=False):
@@ -2527,7 +2547,7 @@ class Solver(object):
         """
         # Check upfront that the variants are admissible
         reusable_specs = self._check_input_and_extract_concrete_specs(specs)
-        reusable_specs.extend(self._reusable_specs())
+        reusable_specs.extend(self._reusable_specs(specs))
         setup = SpackSolverSetup(tests=tests)
         output = OutputConfiguration(timers=timers, stats=stats, out=out, setup_only=setup_only)
         result, _, _ = self.driver.solve(setup, specs, reuse=reusable_specs, output=output)
@@ -2550,7 +2570,7 @@ class Solver(object):
             tests (bool): add test dependencies to the solve
         """
         reusable_specs = self._check_input_and_extract_concrete_specs(specs)
-        reusable_specs.extend(self._reusable_specs())
+        reusable_specs.extend(self._reusable_specs(specs))
         setup = SpackSolverSetup(tests=tests)
 
         # Tell clingo that we don't have to solve all the inputs at once

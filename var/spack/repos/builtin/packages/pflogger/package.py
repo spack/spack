@@ -12,6 +12,7 @@ class Pflogger(CMakePackage):
 
     homepage = "https://github.com/Goddard-Fortran-Ecosystem/pFlogger"
     url = "https://github.com/Goddard-Fortran-Ecosystem/pFlogger/archive/refs/tags/v1.6.1.tar.gz"
+    list_url = "https://github.com/Goddard-Fortran-Ecosystem/pFlogger/tags"
     git = "https://github.com/Goddard-Fortran-Ecosystem/pFlogger.git"
 
     maintainers("mathomp4", "tclune")
@@ -19,6 +20,7 @@ class Pflogger(CMakePackage):
     version("develop", branch="develop")
     version("main", branch="main")
 
+    version("1.9.3", sha256="f300fab515a25b728889ef6c2ab64aa90e7f94c98fd8190dd11a9b1ebd38117a")
     version("1.9.2", sha256="783879eb1326a911f6e22c016e8530644ed0d315660405f2b43df42ba8670acc")
     version("1.9.1", sha256="918965f5a748a3a62e54751578f5935a820407b988b8455f7f25c266b5b7fe3c")
     version("1.9.0", sha256="aacd9b7e188bee3a54a4e681adde32e3bd95bb556cbbbd2c725c81aca5008003")

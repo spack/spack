@@ -102,6 +102,10 @@ class Esmf(MakefilePackage):
     # https://trac.macports.org/ticket/57493
     patch("cstddef.patch", when="@7.1.0r %gcc@8:")
 
+    # Skip info print of ESMF_CPP due to permission denied errors
+    # https://github.com/spack/spack/issues/35957
+    patch("esmf_cpp_info.patch")
+
     # Make script from mvapich2.patch executable
     @when("@:7.0")
     @run_before("build")
@@ -200,8 +204,8 @@ class Esmf(MakefilePackage):
             env.set("ESMF_CXX", spec["mpi"].mpicxx)
             env.set("ESMF_F90", spec["mpi"].mpifc)
         else:
-            env.set("ESMF_CXX", env["CXX"])
-            env.set("ESMF_F90", env["FC"])
+            env.set("ESMF_CXX", spack_cxx)
+            env.set("ESMF_F90", spack_fc)
 
         # This environment variable controls the build option.
         if "+debug" in spec:

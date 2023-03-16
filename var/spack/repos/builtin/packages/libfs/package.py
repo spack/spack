@@ -15,6 +15,7 @@ class Libfs(AutotoolsPackage, XorgPackage):
     homepage = "https://cgit.freedesktop.org/xorg/lib/libFS"
     xorg_mirror_path = "lib/libFS-1.0.7.tar.gz"
 
+    version("1.0.9", sha256="8bc2762f63178905228a28670539badcfa2c8793f7b6ce3f597b7741b932054a")
     version("1.0.7", sha256="91bf1c5ce4115b7dbf4e314fdbee54052708e8f7b6a2ec6e82c309bcbe40ef3d")
 
     depends_on("xproto@7.0.17:")
