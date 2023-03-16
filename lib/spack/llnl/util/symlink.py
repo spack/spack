@@ -211,10 +211,7 @@ def _windows_create_junction(path: str, link: str):
             #  junction already exists?
             raise OSError(errno.EEXIST, "Junction exists: %s" % link)
     except subprocess.CalledProcessError as e:
-        tty.error(
-            "Junction {} not created for directory {}. "
-            "error was: {}".format(link, path, str(e))
-        )
+        raise SymlinkError(f"Failed to make junction {link} from directory {path}") from e
 
 
 def _windows_create_hard_link(path: str, link: str):
