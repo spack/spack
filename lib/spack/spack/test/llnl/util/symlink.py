@@ -85,7 +85,7 @@ def test_symlink__link_exists(stage):
         ...
 
 
-@pytest.mark.skipif(not symlink._windows_can_symlink(), reason="Test requires elevated permissions")
+@pytest.mark.skipif(not symlink._windows_can_symlink(), reason="Test requires elevated privileges")
 @pytest.mark.skipif(sys.platform != "win32", reason="Test is only for Windows")
 def test_symlink__win_file(stage):
     """Check that symlink.symlink makes a symlink file when run with elevated permissions"""
@@ -106,7 +106,7 @@ def test_symlink__win_file(stage):
         os.close(fd)
 
 
-@pytest.mark.skipif(not symlink._windows_can_symlink(), reason="Test requires elevated permissions")
+@pytest.mark.skipif(not symlink._windows_can_symlink(), reason="Test requires elevated privileges")
 @pytest.mark.skipif(sys.platform != "win32", reason="Test is only for Windows")
 def test_symlink__win_dir(stage):
     """Check that symlink.symlink makes a symlink dir when run with elevated permissions"""
