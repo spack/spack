@@ -20,11 +20,12 @@ ci:
         # UO runners mount intermediate ci public key (verification), AWS runners mount public/private (signing/verification)
         - if [[ -r /mnt/key/intermediate_ci_signing_key.gpg ]]; then spack gpg trust /mnt/key/intermediate_ci_signing_key.gpg; fi
         - if [[ -r /mnt/key/spack_public_key.gpg ]]; then spack gpg trust /mnt/key/spack_public_key.gpg; fi
-        - spack --color=always --backtrace ci rebuild --tests > >(tee ${SPACK_ARTIFACTS_ROOT}/user_data/pipeline_out.txt) 2> >(tee ${SPACK_ARTIFACTS_ROOT}/user_data/pipeline_err.txt >&2)
+        - spack --color=always --backtrace ci rebuild --tests > >(tee ${SPACK_ARTIFACTS_ROOT}/user_data/pipeline_out.txt) 2> >(tee ${SPACK_ARTIFACTS_ROOT}/user_data/pipeline_err.txt >&2) | head -c ${SPACK_CI_LOGGER_BYTES}
       after_script:
       - - cat /proc/loadavg || true
       variables:
         CI_JOB_SIZE: "default"
+        SPACK_CI_LOGGER_BYTES: 2000000
         # SPACK_VERBOSE_SCRIPT: "1"
 
   - signing-job:

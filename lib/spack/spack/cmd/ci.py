@@ -729,7 +729,7 @@ If this project does not have public pipelines, you will need to first:
             repro_job_url
         )
 
-        print(reproduce_msg)
+        tty.error(reproduce_msg)
 
     # Tie job success/failure to the success/failure of building the spec
     return install_exit_code
