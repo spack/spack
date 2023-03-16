@@ -189,19 +189,45 @@ def windows_create_link(path, link):
     be created.
     """
     if os.path.isdir(path):
-        try:
-            cmd = ["cmd", "/C", "mklink", "/J", link, path]
-            proc = subprocess.run(cmd, capture_output=True)
-            if proc.returncode != 0:
-                # TODO: How do we know that this only happens if the
-                #  junction already exists?
-                raise OSError(errno.EEXIST, "Junction exists: %s" % link)
-        except subprocess.CalledProcessError as e:
-            tty.error("[symlink] Junction {} not created for directory {}. "
-                      "error was: {}".format(link, path, str(e)))
-    if os.path.isfile(path):
-        tty.warn("[symlink] Junction fallback to create HardLink {} for "
-                 "file {}".format(link, path))
+        _windows_create_junction(path=path, link=link)
+    elif os.path.isfile(path):
+        _windows_create_hard_link(path=path, link=link)
+
+
+def _windows_create_junction(path: str, link: str):
+    """ Duly verify that the path and link are eligible to create a junction,
+    then create the junction.
+    """
+    try:
+        cmd = ["cmd", "/C", "mklink", "/J", link, path]
+        proc = subprocess.run(cmd, capture_output=True)
+        if proc.returncode != 0:
+            # TODO: How do we know that this only happens if the
+            #  junction already exists?
+            raise OSError(errno.EEXIST, "Junction exists: %s" % link)
+    except subprocess.CalledProcessError as e:
+        tty.error("[symlink] Junction {} not created for directory {}. "
+                  "error was: {}".format(link, path, str(e)))
+
+
+def _windows_create_hard_link(path: str, link: str):
+    """ Duly verify that the path and link are eligible to create a hard
+    link, then create the hard link.
+    """
+    if not is_windows:
+        tty.warn('[symlink] windows_create_hard_link called on non-windows OS')
+        return
+    elif not os.path.exists(path):
+        raise SymlinkError(
+            f'File path {path} does not exist. Cannot create hard link.')
+    elif os.path.exists(link):
+        raise SymlinkError(
+            f'Link path ({link}) already exists. Cannot create hard link.')
+    elif not os.path.isfile(path):
+        raise SymlinkError(
+            f'File path ({link}) is not a file. Cannot create hard link.')
+    else:
+        tty.debug(f'Creating hard link {link} pointing to {path}')
         CreateHardLink(link, path)
 
 
