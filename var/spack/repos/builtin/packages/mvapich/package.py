@@ -287,7 +287,6 @@ class Mvapich(AutotoolsPackage):
             args.append("--enable-registration-cache")
         else:
             args.append("--disable-registration-cache")
-            
         ld = ""
         for path in itertools.chain(self.compiler.extra_rpaths, self.compiler.implicit_rpaths()):
             ld += "-Wl,-rpath," + path + " "
