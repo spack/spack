@@ -48,6 +48,9 @@ class Mfem(Package, CudaPackage, ROCmPackage):
     # other version.
     version("develop", branch="master")
 
+    # FIXME: replace branch with tarball when v4.5.2 is released
+    version("4.5.2", branch="mfem-4.5.2-dev")
+
     version(
         "4.5.0",
         sha256="4f201bec02fc5460a902596697b6c1deb7b15ac57c71f615b2ab4a8eb65665f7",
@@ -372,7 +375,8 @@ class Mfem(Package, CudaPackage, ROCmPackage):
     depends_on("raja@0.7.0:0.9.0", when="@4.0.0+raja")
     depends_on("raja@0.10.0:0.12.1", when="@4.0.1:4.2.0+raja")
     depends_on("raja@0.13.0", when="@4.3.0+raja")
-    depends_on("raja@0.14.0:", when="@4.4.0:+raja")
+    depends_on("raja@0.14.0:2022.03", when="@4.4.0:4.5.0+raja")
+    depends_on("raja@2022.10.3:", when="@4.5.2:+raja")
     for sm_ in CudaPackage.cuda_arch_values:
         depends_on(
             "raja+cuda cuda_arch={0}".format(sm_), when="+raja+cuda cuda_arch={0}".format(sm_)
@@ -528,7 +532,7 @@ class Mfem(Package, CudaPackage, ROCmPackage):
             else:
                 mfem_mpiexec = "jsrun"
                 mfem_mpiexec_np = "-p"
-        elif "FLUX_JOB_ID" in os.environ:
+        elif "FLUX_EXEC_PATH" in os.environ:
             mfem_mpiexec = "flux mini run"
             mfem_mpiexec_np = "-n"
 

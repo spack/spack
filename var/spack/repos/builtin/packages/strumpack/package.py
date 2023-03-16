@@ -155,6 +155,12 @@ class Strumpack(CMakePackage, CudaPackage, ROCmPackage):
                 hipcc_flags.append("--amdgpu-target={0}".format(",".join(rocm_archs)))
             args.append("-DHIP_HIPCC_FLAGS={0}".format(" ".join(hipcc_flags)))
 
+        if "%cce" in spec:
+            # Assume the proper Cray CCE module (cce) is loaded:
+            craylibs_path = env["CRAYLIBS_" + env["MACHTYPE"].capitalize()]
+            env.setdefault("LDFLAGS", "")
+            env["LDFLAGS"] += " -Wl,-rpath," + craylibs_path
+
         return args
 
     test_src_dir = "test"
