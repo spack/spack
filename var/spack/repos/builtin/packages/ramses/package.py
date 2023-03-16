@@ -6,6 +6,7 @@
 from spack import *
 import os
 
+
 class Ramses(MakefilePackage):
     """Ramses benchmark for DiRAC.
 
@@ -26,21 +27,24 @@ class Ramses(MakefilePackage):
 
     depends_on("mpi")
 
-    parallel=False
+    parallel = False
 
     def edit(self, spec, prefix):
 
-        os.chdir(os.path.join(os.getcwd(),'SRC','bin'))
+        os.chdir(os.path.join(os.getcwd(), "SRC", "bin"))
         makefile = FileFilter("Makefile")
-        makefile.filter(r'^PREFIX := .*', f'PREFIX = {prefix}')
-        if self.compiler.name == 'intel':
-            env['I_MPI_F90'] = spack_fc
-            fc = spec['mpi'].mpifc
-            makefile.filter(r'^F90 = .*', f'F90 = {fc}')
-        elif self.compiler.name == 'gcc':
-            makefile.filter(r'^\s*FFLAGS\s*= .*', f'FFLAGS = -O3 -cpp -march=core-avx2 -fomit-frame-pointer -ffree-line-length-none')
+        makefile.filter(r"^PREFIX := .*", f"PREFIX = {prefix}")
+        if self.compiler.name == "intel":
+            env["I_MPI_F90"] = spack_fc
+            fc = spec["mpi"].mpifc
+            makefile.filter(r"^F90 = .*", f"F90 = {fc}")
+        elif self.compiler.name == "gcc":
+            makefile.filter(
+                r"^\s*FFLAGS\s*= .*",
+                f"FFLAGS = -O3 -cpp -march=core-avx2 -fomit-frame-pointer -ffree-line-length-none",
+            )
         else:
-            msg  = "The compiler you are building with, "
+            msg = "The compiler you are building with, "
             msg += "'{0}', is not supported by ramses yet."
             raise InstallError(msg.format(self.compiler.name))
 
@@ -50,4 +54,4 @@ class Ramses(MakefilePackage):
 
     def install(self, spec, prefix):
 
-        make('install')
+        make("install")
