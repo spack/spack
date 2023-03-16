@@ -7,7 +7,13 @@ from spack import *
 import os
 
 class Sphng(MakefilePackage):
-    """sphNG benchmark for DiRAC."""
+    """sphNG benchmark for DiRAC.
+
+    The source code for this benchmark is stored in a private repository. To
+    gain access please contact the RSE team at the University of Leicester or
+    contact via github from our organization page
+    https://github.com/UniOfLeicester
+    """
 
     homepage = "https://github.com/UniOfLeicester/benchmark-sphng"
     git = "ssh://git@github.com/UniOfLeicester/benchmark-sphng.git"
@@ -15,13 +21,12 @@ class Sphng(MakefilePackage):
     maintainers = ["TomMelt"]
 
     version("v1.0.0", branch="update-makefile")
-    # version("v1.0.0", tag="v1.0.0")
 
     executables = [r"^sph_tree_rk_gradh$"]
 
     depends_on("mpi")
 
-    parallel=True
+    parallel=False
 
     def edit(self, spec, prefix):
 

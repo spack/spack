@@ -7,7 +7,13 @@ from spack import *
 import os
 
 class TrovePdsyev(MakefilePackage):
-    """trove-pdsyev benchmark for DiRAC."""
+    """trove-pdsyev benchmark for DiRAC.
+
+    The source code for this benchmark is stored in a private repository. To
+    gain access please contact the RSE team at the University of Leicester or
+    contact via github from our organization page
+    https://github.com/UniOfLeicester
+    """
 
     homepage = "https://github.com/UniOfLeicester/benchmark-trove-pdsyev"
     git = "ssh://git@github.com/UniOfLeicester/benchmark-trove-pdsyev.git"
@@ -15,7 +21,6 @@ class TrovePdsyev(MakefilePackage):
     maintainers = ["TomMelt"]
 
     version("v1.0.0", branch="main")
-    # version("v1.0.0", tag="v1.0.0")
 
     variant("ipp", default=True, description="enable use of intel optimized headers")
 
