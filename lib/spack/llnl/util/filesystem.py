@@ -739,13 +739,13 @@ def resolve_link_target_relative_to_the_link(link):
     the link, we need to construct a pathname that is valid from
     our cwd (which may not be the same as the link's directory)
     """
+    # cannot use pathlib to resolve the link
+    # as pathlib cannot handle invalid Windows directory links
     target = os.readlink(link)
     if PurePath(target).is_absolute():
         return target
 
-    # TODO: cleanup
-
-    link_dir = link.resolve().parent
+    link_dir = link.parent
     return link_dir / target
 
 
@@ -1440,11 +1440,11 @@ def visit_directory_tree(root, visitor, rel_path="", depth=0):
         rel_path (str): current relative path from the root
         depth (str): current depth from the root
     """
-    dir = PurePath(root, rel_path)
-    dir_entries = sorted(os.scandir(dir), key=lambda d: d.name)
+    dir = Path(root, rel_path)
+    dir_entries = sorted(dir.iterdir(), key=lambda d: d.name)
 
     for f in dir_entries:
-        rel_child = PurePath(rel_path, f.name)
+        rel_child = Path(rel_path, f.name)
         islink = f.is_symlink()
         # On Windows, symlinks to directories are distinct from
         # symlinks to files, and it is possible to create a
@@ -1466,7 +1466,14 @@ def visit_directory_tree(root, visitor, rel_path="", depth=0):
                 # will ensure that if so, that it is relative
                 # to the CWD and therefore
                 # makes sense
-                isdir = link_target.is_dir()
+                # if the target of a symlink is another malformed directory symlink
+                # is_dir will throw again. Instead, check to see if the file is a symlink first
+                # if it's a symlink, even if a symlink to a dir, it's still pointing
+                # to a symlink and is therefor itself, not a dir
+                # if it's pointing to a valid symlink to a dir, previous behavior would
+                # return false, so if link_target is a symlink, we should always report false
+                # this keeps behavior consistent with previous os.path approach
+                isdir = False if link_target.is_symlink() else link_target.is_dir()
             else:
                 raise e
 
