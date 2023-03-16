@@ -2779,7 +2779,7 @@ class FindFirstFile:
 
         # On case sensitive filesystems match against normcase'd paths.
         self.match = (
-            lambda p: regex.match(os.path.normcase(p)) if os.path is posixpath else regex.match
+            regex.match if os.path is posixpath else lambda p: regex.match(os.path.normcase(p))
         )
 
     def find(self) -> Optional[str]:
