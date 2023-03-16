@@ -204,9 +204,9 @@ class CMakeBuilder(CMakeBuilder, BackupStep, Setup):
             self.define_from_variant("ENABLE_FSYNC", "fsync"),
             self.define("ENABLE_LARGE_FILE_SUPPORT", True),
         ]
-        if "+parallel-netcdf" in self.spec:
+        if "+parallel-netcdf" in self.pkg.spec:
             base_cmake_args.append(self.define("ENABLE_PNETCDF", True))
-        if self.spec.satisfies("@4.3.1:"):
+        if self.pkg.spec.satisfies("@4.3.1:"):
             base_cmake_args.append(self.define("ENABLE_DYNAMIC_LOADING", True))
         return base_cmake_args
 
@@ -215,7 +215,7 @@ class AutotoolsBuilder(AutotoolsBuilder, BackupStep, Setup):
     @property
     def force_autoreconf(self):
         # The patch for 4.7.0 touches configure.ac.
-        return self.spec.satisfies("@4.7.0")
+        return self.pkg.spec.satisfies("@4.7.0")
 
     def autoreconf(self, pkg, spec, prefix):
         if not os.path.exists(self.configure_abs_path):
@@ -235,57 +235,57 @@ class AutotoolsBuilder(AutotoolsBuilder, BackupStep, Setup):
             "--enable-netcdf-4",
         ]
 
-        if "+optimize" in self.spec:
+        if "+optimize" in self.pkg.spec:
             cflags.append("-O2")
 
         config_args.extend(self.enable_or_disable("fsync"))
 
         # The flag was introduced in version 4.3.1
-        if self.spec.satisfies("@4.3.1:"):
+        if self.pkg.spec.satisfies("@4.3.1:"):
             config_args.append("--enable-dynamic-loading")
 
         config_args += self.enable_or_disable("shared")
 
-        if "+pic" in self.spec:
-            cflags.append(self.compiler.cc_pic_flag)
+        if "+pic" in self.pkg.spec:
+            cflags.append(self.pkg.compiler.cc_pic_flag)
 
         config_args += self.enable_or_disable("dap")
         # config_args += self.enable_or_disable('cdmremote')
 
-        # if '+dap' in self.spec or '+cdmremote' in self.spec:
-        if "+dap" in self.spec:
+        # if '+dap' in self.pkg.spec or '+cdmremote' in self.pkg.spec:
+        if "+dap" in self.pkg.spec:
             # Make sure Netcdf links against Spack's curl, otherwise it may
             # pick up system's curl, which can give link errors, e.g.:
             # undefined reference to `SSL_CTX_use_certificate_chain_file
-            curl = self.spec["curl"]
+            curl = self.pkg.spec["curl"]
             curl_libs = curl.libs
             libs.append(curl_libs.link_flags)
             ldflags.append(curl_libs.search_flags)
             # TODO: figure out how to get correct flags via headers.cpp_flags
             cppflags.append("-I" + curl.prefix.include)
-        elif self.spec.satisfies("@4.8.0:"):
+        elif self.pkg.spec.satisfies("@4.8.0:"):
             # Prevent overlinking to a system installation of libcurl:
             config_args.append("ac_cv_lib_curl_curl_easy_setopt=no")
 
-        if self.spec.satisfies("@4.4:"):
-            if "+mpi" in self.spec:
+        if self.pkg.spec.satisfies("@4.4:"):
+            if "+mpi" in self.pkg.spec:
                 config_args.append("--enable-parallel4")
             else:
                 config_args.append("--disable-parallel4")
 
-        if self.spec.satisfies("@4.3.2:"):
+        if self.pkg.spec.satisfies("@4.3.2:"):
             config_args += self.enable_or_disable("jna")
 
         # Starting version 4.1.3, --with-hdf5= and other such configure options
         # are removed. Variables CPPFLAGS, LDFLAGS, and LD_LIBRARY_PATH must be
         # used instead.
-        hdf5_hl = self.spec["hdf5:hl"]
+        hdf5_hl = self.pkg.spec["hdf5:hl"]
         cppflags.append(hdf5_hl.headers.cpp_flags)
         ldflags.append(hdf5_hl.libs.search_flags)
 
-        if "+parallel-netcdf" in self.spec:
+        if "+parallel-netcdf" in self.pkg.spec:
             config_args.append("--enable-pnetcdf")
-            pnetcdf = self.spec["parallel-netcdf"]
+            pnetcdf = self.pkg.spec["parallel-netcdf"]
             cppflags.append(pnetcdf.headers.cpp_flags)
             # TODO: change to pnetcdf.libs.search_flags once 'parallel-netcdf'
             # package gets custom implementation of 'libs'
@@ -293,17 +293,17 @@ class AutotoolsBuilder(AutotoolsBuilder, BackupStep, Setup):
         else:
             config_args.append("--disable-pnetcdf")
 
-        if "+mpi" in self.spec or "+parallel-netcdf" in self.spec:
-            config_args.append("CC=%s" % self.spec["mpi"].mpicc)
+        if "+mpi" in self.pkg.spec or "+parallel-netcdf" in self.pkg.spec:
+            config_args.append("CC=%s" % self.pkg.spec["mpi"].mpicc)
 
         config_args += self.enable_or_disable("hdf4")
-        if "+hdf4" in self.spec:
-            hdf4 = self.spec["hdf"]
+        if "+hdf4" in self.pkg.spec:
+            hdf4 = self.pkg.spec["hdf"]
             cppflags.append(hdf4.headers.cpp_flags)
             # TODO: change to hdf4.libs.search_flags once 'hdf'
             # package gets custom implementation of 'libs' property.
             ldflags.append("-L" + hdf4.prefix.lib)
-            # TODO: change to self.spec['jpeg'].libs.link_flags once the
+            # TODO: change to self.pkg.spec['jpeg'].libs.link_flags once the
             # implementations of 'jpeg' virtual package get 'jpeg_libs'
             # property.
             libs.append("-ljpeg")
@@ -313,12 +313,12 @@ class AutotoolsBuilder(AutotoolsBuilder, BackupStep, Setup):
             if "+external-xdr" in hdf4 and hdf4["rpc"].name != "libc":
                 libs.append(hdf4["rpc"].libs.link_flags)
 
-        if "+zstd" in self.spec:
-            zstd = self.spec["zstd"]
+        if "+zstd" in self.pkg.spec:
+            zstd = self.pkg.spec["zstd"]
             cppflags.append(zstd.headers.cpp_flags)
             ldflags.append(zstd.libs.search_flags)
             config_args.append("--with-plugin-dir={}".format(self.prefix.plugins))
-        elif "~zstd" in self.spec:
+        elif "~zstd" in self.pkg.spec:
             # Prevent linking to system zstd.
             # There is no explicit option to disable zstd.
             config_args.append("ac_cv_lib_zstd_ZSTD_compress=no")
