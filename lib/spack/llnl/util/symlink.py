@@ -52,7 +52,11 @@ def symlink(real_path, link_path):
     real_path = os.path.abspath(real_path)
     link_path = os.path.abspath(link_path)
 
-    if is_windows and not windows_can_symlink():
+    if os.path.exists(link_path):
+        raise SymlinkError(f"Link path ({link_path}) already exists. Cannot create link.")
+    elif not os.path.exists(real_path):
+        raise SymlinkError(f"Source path ({real_path}) does not exist. Cannot create link.")
+    elif is_windows and not windows_can_symlink():
         windows_create_link(real_path, link_path)
     else:
         os.symlink(real_path, link_path, target_is_directory=os.path.isdir(real_path))
