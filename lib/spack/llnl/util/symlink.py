@@ -47,22 +47,17 @@ def symlink(real_path, link_path):
     letter) but not to a remote directory. Don't need
     System Administrator privileges.
     """
-    if not is_windows or windows_can_symlink():
+    real_path = os.path.abspath(real_path)
+    link_path = os.path.abspath(link_path)
+
+    if is_windows and not windows_can_symlink():
+        windows_create_link(real_path, link_path)
+    else:
         os.symlink(real_path, link_path,
                    target_is_directory=os.path.isdir(real_path))
-    else:
-        # If windows can not make normal symbolic links
-        # we try junction for a directory or hardlink
-        # for a file.
-        if not os.path.isabs(link_path):
-            link_path = os.path.abspath(link_path)
-        # os.symlink will fail if link exists, emulate the behavior here
-        if os.path.exists(link_path):
-            raise OSError(errno.EEXIST, "Link exists: %s" % link_path)
-        else:
-            windows_create_link(real_path, link_path)
-            if not os.path.exists(link_path):
-                raise OSError("Failed to create link: %s" % link_path)
+
+    if not os.path.exists(link_path):
+        raise SymlinkError(f'Failed to create link: {link_path}')
 
 
 def islink(path: str) -> bool:
@@ -192,6 +187,9 @@ def windows_create_link(path, link):
         _windows_create_junction(path=path, link=link)
     elif os.path.isfile(path):
         _windows_create_hard_link(path=path, link=link)
+    else:
+        raise SymlinkError(f'Cannot create link from {path}. It is neither '
+                           f'a file nor a directory.')
 
 
 def _windows_create_junction(path: str, link: str):
