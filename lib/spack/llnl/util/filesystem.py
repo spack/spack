@@ -812,7 +812,6 @@ def copy_tree(
             )
 
         mkdirp(abs_dest)
-        # import pdb; pdb.set_trace()
         for s, d in traverse_tree(
             abs_src,
             abs_dest,
@@ -1479,14 +1478,14 @@ def visit_directory_tree(root, visitor, rel_path="", depth=0):
 
         if not isdir and not islink:
             # handle non-symlink files
-            visitor.visit_file(root, rel_child, depth)
+            visitor.visit_file(root, str(rel_child), depth)
         elif not isdir:
-            visitor.visit_symlinked_file(root, rel_child, depth)
-        elif not islink and visitor.before_visit_dir(root, rel_child, depth):
+            visitor.visit_symlinked_file(root, str(rel_child), depth)
+        elif not islink and visitor.before_visit_dir(root, str(rel_child), depth):
             # Handle ordinary directories
             visit_directory_tree(root, visitor, rel_child, depth + 1)
-            visitor.after_visit_dir(root, rel_child, depth)
-        elif islink and visitor.before_visit_symlinked_dir(root, rel_child, depth):
+            visitor.after_visit_dir(root, str(rel_child), depth)
+        elif islink and visitor.before_visit_symlinked_dir(root, str(rel_child), depth):
             # Handle symlinked directories
             visit_directory_tree(root, visitor, rel_child, depth + 1)
             visitor.after_visit_symlinked_dir(root, rel_child, depth)
@@ -2464,7 +2463,7 @@ class WindowsSimulatedRPath(object):
         perspective, and will cause an error when Developer
         mode is not enabled"""
         file_name = path.name
-        dest_file = PurePath(dest_dir, file_name)
+        dest_file = Path(dest_dir, file_name)
         if dest_dir.exists() and not dest_file == path:
             try:
                 symlink(path, dest_file)
@@ -2549,7 +2548,8 @@ def files_in(*search_paths):
                 [(f, d / f) for f in list(d.iterdir())],
             )
         )
-    return files
+    # prevent pathlib Path from leaking out into rest of codebase
+    return [(str(f[0]), str(f[1])) for f in files]
 
 
 @pathlib_filter
@@ -2577,11 +2577,11 @@ def search_paths_for_executables(*path_hints):
             continue
 
         path = path.resolve()
-        executable_paths.append(path)
+        executable_paths.append(str(path))
 
         bin_dir = path / "bin"
         if bin_dir.is_dir():
-            executable_paths.append(bin_dir)
+            executable_paths.append(str(bin_dir))
 
     return executable_paths
 
