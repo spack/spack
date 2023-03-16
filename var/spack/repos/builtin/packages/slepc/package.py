@@ -52,6 +52,7 @@ class Slepc(Package, CudaPackage, ROCmPackage):
 
     variant("arpack", default=True, description="Enables Arpack wrappers")
     variant("blopex", default=False, description="Enables BLOPEX wrappers")
+    variant("hpddm", default=False, description="Enables HPDDM wrappers")
 
     # NOTE: make sure PETSc and SLEPc use the same python.
     depends_on("python@2.6:2.8,3.4:", type="build")
@@ -79,6 +80,8 @@ class Slepc(Package, CudaPackage, ROCmPackage):
     # Arpack can not be used with 64bit integers.
     conflicts("+arpack", when="@:3.12 ^petsc+int64")
     conflicts("+blopex", when="^petsc+int64")
+    # HPDDM cannot be used in both PETSc and SLEPc prior to 3.19.0
+    conflicts("+hpddm", when="@:3.18 ^petsc+hpddm")
 
     resource(
         name="blopex",
@@ -146,6 +149,11 @@ class Slepc(Package, CudaPackage, ROCmPackage):
         # BLOPEX has to be downloaded with SLEPc at configure time
         if "+blopex" in spec:
             options.append("--download-blopex")
+
+        # For the moment, HPDDM does not work as a dependency
+        # using download instead
+        if "+hpddm" in spec:
+            options.append("--download-hpddm")
 
         python("configure", "--prefix=%s" % prefix, *options)
 
