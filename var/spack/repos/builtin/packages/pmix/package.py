@@ -35,6 +35,7 @@ class Pmix(AutotoolsPackage):
     git = "https://github.com/openpmix/openpmix.git"
     maintainers("rhc54")
 
+    # Branches 4.2 & 5.0 will also need submodules
     version("master", branch="master", submodules=True)
     version("4.1.2", sha256="670d3a02b39fb2126fe8084174cf03c484e027b5921b5c98a851108134e2597a")
     version("4.1.1", sha256="0527a15d616637b95975d238bbc100b244894518fbba822cd8f46589ca61ccec")
