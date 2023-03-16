@@ -8,13 +8,15 @@ import shutil
 import tempfile
 from sys import platform as _platform
 
-from spack.error import SpackError
 from llnl.util import lang, tty
+
+from spack.error import SpackError
 
 is_windows = _platform == "win32"
 
 if is_windows:
     import subprocess
+
     from win32file import CreateHardLink
 
 
@@ -53,15 +55,14 @@ def symlink(real_path, link_path):
     if is_windows and not windows_can_symlink():
         windows_create_link(real_path, link_path)
     else:
-        os.symlink(real_path, link_path,
-                   target_is_directory=os.path.isdir(real_path))
+        os.symlink(real_path, link_path, target_is_directory=os.path.isdir(real_path))
 
     if not os.path.exists(link_path):
-        raise SymlinkError(f'Failed to create link: {link_path}')
+        raise SymlinkError(f"Failed to create link: {link_path}")
 
 
 def islink(path: str) -> bool:
-    """ Override os.islink to give correct answer for spack logic.
+    """Override os.islink to give correct answer for spack logic.
 
     For Non-Windows: a link can be determined with the os.path.islink method.
     Windows-only methods will return false for other operating systems.
@@ -76,17 +77,13 @@ def islink(path: str) -> bool:
          bool - whether the path is any kind link or not.
     """
     try:
-        return any([
-            os.path.islink(path),
-            windows_is_junction(path),
-            windows_is_hardlink(path),
-        ])
+        return any([os.path.islink(path), windows_is_junction(path), windows_is_hardlink(path)])
     except Exception as e:
-        raise SymlinkError('Could not determine if given path is a link') from e
+        raise SymlinkError("Could not determine if given path is a link") from e
 
 
 def windows_is_hardlink(path: str) -> bool:
-    """ Determines if a path is a windows hard link. This is accomplished
+    """Determines if a path is a windows hard link. This is accomplished
     by looking at the number of links using os.stat. A non-hard-linked file
     will have a st_nlink value of 1, whereas a hard link will have a value
     larger than 1. Note that both the original and hard-linked file will
@@ -104,11 +101,11 @@ def windows_is_hardlink(path: str) -> bool:
     try:
         return os.stat(path).st_nlink > 1
     except Exception as e:
-        raise SymlinkError('Could not determine if path is a hard link') from e
+        raise SymlinkError("Could not determine if path is a hard link") from e
 
 
 def windows_is_junction(path) -> bool:
-    """ Determines if a path is a windows junction. A junction can be
+    """Determines if a path is a windows junction. A junction can be
     determined using a bitwise AND operation between the file's
     attribute bitmask and the known junction bitmask (0x400).
 
@@ -123,13 +120,13 @@ def windows_is_junction(path) -> bool:
 
     import ctypes.wintypes
 
-    get_file_attributes = ctypes.windll.kernel32.GetFileAttributesW
+    get_file_attributes = ctypes.windll.kernel32.GetFileAttributesW  # type: ignore[attr-defined]
     get_file_attributes.argtypes = (ctypes.wintypes.LPWSTR,)
     get_file_attributes.restype = ctypes.wintypes.DWORD
 
-    invalid_file_attributes: hex = 0xFFFFFFFF
-    reparse_point: hex = 0x400
-    file_attr: hex = get_file_attributes(path)
+    invalid_file_attributes = 0xFFFFFFFF
+    reparse_point = 0x400
+    file_attr = get_file_attributes(path)
 
     if file_attr == invalid_file_attributes:
         return False
@@ -188,12 +185,13 @@ def windows_create_link(path, link):
     elif os.path.isfile(path):
         _windows_create_hard_link(path=path, link=link)
     else:
-        raise SymlinkError(f'Cannot create link from {path}. It is neither '
-                           f'a file nor a directory.')
+        raise SymlinkError(
+            f"Cannot create link from {path}. It is neither a file nor a directory."
+        )
 
 
 def _windows_create_junction(path: str, link: str):
-    """ Duly verify that the path and link are eligible to create a junction,
+    """Duly verify that the path and link are eligible to create a junction,
     then create the junction.
     """
     try:
@@ -204,28 +202,27 @@ def _windows_create_junction(path: str, link: str):
             #  junction already exists?
             raise OSError(errno.EEXIST, "Junction exists: %s" % link)
     except subprocess.CalledProcessError as e:
-        tty.error("[symlink] Junction {} not created for directory {}. "
-                  "error was: {}".format(link, path, str(e)))
+        tty.error(
+            "[symlink] Junction {} not created for directory {}. "
+            "error was: {}".format(link, path, str(e))
+        )
 
 
 def _windows_create_hard_link(path: str, link: str):
-    """ Duly verify that the path and link are eligible to create a hard
+    """Duly verify that the path and link are eligible to create a hard
     link, then create the hard link.
     """
     if not is_windows:
-        tty.warn('[symlink] windows_create_hard_link called on non-windows OS')
+        tty.warn("[symlink] windows_create_hard_link called on non-windows OS")
         return
     elif not os.path.exists(path):
-        raise SymlinkError(
-            f'File path {path} does not exist. Cannot create hard link.')
+        raise SymlinkError(f"File path {path} does not exist. Cannot create hard link.")
     elif os.path.exists(link):
-        raise SymlinkError(
-            f'Link path ({link}) already exists. Cannot create hard link.')
+        raise SymlinkError(f"Link path ({link}) already exists. Cannot create hard link.")
     elif not os.path.isfile(path):
-        raise SymlinkError(
-            f'File path ({link}) is not a file. Cannot create hard link.')
+        raise SymlinkError(f"File path ({link}) is not a file. Cannot create hard link.")
     else:
-        tty.debug(f'Creating hard link {link} pointing to {path}')
+        tty.debug(f"Creating hard link {link} pointing to {path}")
         CreateHardLink(link, path)
 
 
