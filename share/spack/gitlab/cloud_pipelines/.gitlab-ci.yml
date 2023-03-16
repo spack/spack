@@ -362,6 +362,7 @@ e4s-protected-build:
 # GPU Testing Pipeline
 ########################################
 .gpu-tests:
+  extends: [ ".linux_x86_64" ]
   variables:
     SPACK_CI_STACK_NAME: gpu-tests
 
