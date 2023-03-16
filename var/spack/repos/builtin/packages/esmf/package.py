@@ -102,6 +102,10 @@ class Esmf(MakefilePackage):
     # https://trac.macports.org/ticket/57493
     patch("cstddef.patch", when="@7.1.0r %gcc@8:")
 
+    # Skip info print of ESMF_CPP due to permission denied errors
+    # https://github.com/spack/spack/issues/35957
+    patch("esmf_cpp_info.patch")
+
     # Make script from mvapich2.patch executable
     @when("@:7.0")
     @run_before("build")
