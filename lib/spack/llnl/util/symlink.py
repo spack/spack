@@ -181,16 +181,16 @@ def windows_create_link(path, link):
     be created.
     """
     if os.path.isdir(path):
-        _windows_create_junction(path=path, link=link)
+        windows_create_junction(path=path, link=link)
     elif os.path.isfile(path):
-        _windows_create_hard_link(path=path, link=link)
+        windows_create_hard_link(path=path, link=link)
     else:
         raise SymlinkError(
             f"Cannot create link from {path}. It is neither a file nor a directory."
         )
 
 
-def _windows_create_junction(path: str, link: str):
+def windows_create_junction(path: str, link: str):
     """Duly verify that the path and link are eligible to create a junction,
     then create the junction.
     """
@@ -208,7 +208,7 @@ def _windows_create_junction(path: str, link: str):
         )
 
 
-def _windows_create_hard_link(path: str, link: str):
+def windows_create_hard_link(path: str, link: str):
     """Duly verify that the path and link are eligible to create a hard
     link, then create the hard link.
     """
