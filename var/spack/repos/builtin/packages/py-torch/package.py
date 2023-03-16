@@ -351,6 +351,7 @@ class PyTorch(PythonPackage, CudaPackage, ROCmPackage):
         sha256="a54db63640b90e5833cc1099c0935572f5297d2d8625f62f01ac1fda79ed4569",
         when="@1.13 arch=ppc64le:",
     )
+    conflicts("arch=ppc64le:", when="@:1.9,2:")
 
     # Cherry-pick a patch to allow earlier versions of PyTorch to work with CUDA 11.4
     patch(
