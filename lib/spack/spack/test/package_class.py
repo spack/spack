@@ -61,11 +61,7 @@ def test_possible_dependencies(mock_packages, mpileaks_possible_deps):
 def test_possible_direct_dependencies(mock_packages, mpileaks_possible_deps):
     pkg_cls = spack.repo.path.get_pkg_class("mpileaks")
     deps = pkg_cls.possible_dependencies(transitive=False, expand_virtuals=False)
-    assert {
-        "callpath": set(),
-        "mpi": set(),
-        "mpileaks": {"callpath", "mpi"},
-    } == deps
+    assert {"callpath": set(), "mpi": set(), "mpileaks": {"callpath", "mpi"}} == deps
 
 
 def test_possible_dependencies_virtual(mock_packages, mpi_names):
@@ -101,10 +97,9 @@ def test_possible_dependencies_with_deptypes(mock_packages):
         "dtlink2": set(),
     } == dtbuild1.possible_dependencies(deptype=("build"))
 
-    assert {
-        "dtbuild1": {"dtlink2"},
-        "dtlink2": set(),
-    } == dtbuild1.possible_dependencies(deptype=("link"))
+    assert {"dtbuild1": {"dtlink2"}, "dtlink2": set()} == dtbuild1.possible_dependencies(
+        deptype=("link")
+    )
 
 
 def test_possible_dependencies_with_multiple_classes(mock_packages, mpileaks_possible_deps):

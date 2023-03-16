@@ -209,10 +209,7 @@ class Vtk(CMakePackage):
         # spack-built versions whenever possible but there are exceptions.
         if spec.satisfies("@:8"):
             cmake_args.extend(
-                [
-                    "-DVTK_USE_SYSTEM_LIBRARIES:BOOL=ON",
-                    "-DVTK_USE_SYSTEM_LIBHARU=OFF",
-                ]
+                ["-DVTK_USE_SYSTEM_LIBRARIES:BOOL=ON", "-DVTK_USE_SYSTEM_LIBHARU=OFF"]
             )
             if spec.satisfies("@:8.0"):
                 cmake_args.append("-DVTK_USE_SYSTEM_GL2PS=OFF")

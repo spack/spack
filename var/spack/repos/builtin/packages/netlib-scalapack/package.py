@@ -44,6 +44,8 @@ class ScalapackBase(CMakePackage):
         sha256="072b006e485f0ca4cba56096912a986e4d3da73aae51c2205928aa5eb842cefd",
         when="@2.2.0",
     )
+    # From Homebrew, integrated @upstream in different form over multiple commits
+    patch("fix-build-macos.patch", when="@2.2.0")
 
     def flag_handler(self, name, flags):
         iflags = []

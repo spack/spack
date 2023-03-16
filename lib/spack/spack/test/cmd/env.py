@@ -82,8 +82,8 @@ def test_change_match_spec():
 
         change("--match-spec", "mpileaks@2.2", "mpileaks@2.3")
 
-    assert not any(x.satisfies("mpileaks@2.2") for x in e.user_specs)
-    assert any(x.satisfies("mpileaks@2.3") for x in e.user_specs)
+    assert not any(x.intersects("mpileaks@2.2") for x in e.user_specs)
+    assert any(x.intersects("mpileaks@2.3") for x in e.user_specs)
 
 
 def test_change_multiple_matches():
@@ -97,8 +97,8 @@ def test_change_multiple_matches():
 
         change("--match-spec", "mpileaks", "-a", "mpileaks%gcc")
 
-    assert all(x.satisfies("%gcc") for x in e.user_specs if x.name == "mpileaks")
-    assert any(x.satisfies("%clang") for x in e.user_specs if x.name == "libelf")
+    assert all(x.intersects("%gcc") for x in e.user_specs if x.name == "mpileaks")
+    assert any(x.intersects("%clang") for x in e.user_specs if x.name == "libelf")
 
 
 def test_env_add_virtual():
@@ -111,7 +111,7 @@ def test_env_add_virtual():
     hashes = e.concretized_order
     assert len(hashes) == 1
     spec = e.specs_by_hash[hashes[0]]
-    assert spec.satisfies("mpi")
+    assert spec.intersects("mpi")
 
 
 def test_env_add_nonexistant_fails():
@@ -627,7 +627,6 @@ packages:
 
     test_scope = spack.config.InternalConfigScope("env-external-test", data=external_config_dict)
     with spack.config.override(test_scope):
-
         e = ev.create("test", initial_yaml)
         e.concretize()
         # Note: normally installing specs in a test environment requires doing
@@ -688,7 +687,7 @@ env:
     with e:
         e.concretize()
 
-    assert any(x.satisfies("mpileaks@2.2") for x in e._get_environment_specs())
+    assert any(x.intersects("mpileaks@2.2") for x in e._get_environment_specs())
 
 
 def test_with_config_bad_include():
@@ -1201,7 +1200,7 @@ def test_env_view_fails(tmpdir, mock_packages, mock_stage, mock_fetch, install_m
         add("libelf")
         add("libelf cflags=-g")
         with pytest.raises(
-            llnl.util.link_tree.MergeConflictSummary, match=spack.store.layout.metadata_dir
+            ev.SpackEnvironmentViewError, match="two specs project to the same prefix"
         ):
             install("--fake")
 
@@ -1631,9 +1630,9 @@ env:
             assert concrete.concrete
             assert not user.concrete
             if user.name == "libelf":
-                assert not concrete.satisfies("^mpi", strict=True)
+                assert not concrete.satisfies("^mpi")
             elif user.name == "mpileaks":
-                assert concrete.satisfies("^mpi", strict=True)
+                assert concrete.satisfies("^mpi")
 
 
 def test_stack_concretize_extraneous_variants(tmpdir, config, mock_packages):
@@ -2763,12 +2762,7 @@ def test_query_develop_specs():
 
 @pytest.mark.parametrize("method", [spack.cmd.env.env_activate, spack.cmd.env.env_deactivate])
 @pytest.mark.parametrize(
-    "env,no_env,env_dir",
-    [
-        ("b", False, None),
-        (None, True, None),
-        (None, False, "path/"),
-    ],
+    "env,no_env,env_dir", [("b", False, None), (None, True, None), (None, False, "path/")]
 )
 def test_activation_and_deactiviation_ambiguities(method, env, no_env, env_dir, capsys):
     """spack [-e x | -E | -D x/]  env [activate | deactivate] y are ambiguous"""
@@ -2836,10 +2830,10 @@ def test_failed_view_cleanup(tmpdir, mock_stage, mock_fetch, install_mockery):
     all_views = os.path.dirname(resolved_view)
     views_before = os.listdir(all_views)
 
-    # Add a spec that results in MergeConflictError's when creating a view
+    # Add a spec that results in view clash when creating a view
     with ev.read("env"):
         add("libelf cflags=-O3")
-        with pytest.raises(llnl.util.link_tree.MergeConflictError):
+        with pytest.raises(ev.SpackEnvironmentViewError):
             install("--fake")
 
     # Make sure there is no broken view in the views directory, and the current
@@ -3071,15 +3065,7 @@ def test_read_legacy_lockfile_and_reconcretize(mock_stage, mock_fetch, install_m
         # This prunes all build deps
         (
             ["--use-buildcache=only"],
-            [
-                "dtlink1",
-                "dtlink3",
-                "dtlink4",
-                "dtlink5",
-                "dtrun1",
-                "dtrun3",
-                "dttop",
-            ],
+            ["dtlink1", "dtlink3", "dtlink4", "dtlink5", "dtrun1", "dtrun3", "dttop"],
         ),
         # Test whether pruning of build deps is correct if we explicitly include one
         # that is also a dependency of a root.
@@ -3236,3 +3222,20 @@ def test_relative_view_path_on_command_line_is_made_absolute(tmpdir, config):
         env("create", "--with-view", "view", "--dir", "env")
         environment = ev.Environment(os.path.join(".", "env"))
         assert os.path.samefile("view", environment.default_view.root)
+
+
+def test_environment_created_in_users_location(mutable_config, tmpdir):
+    """Test that an environment is created in a location based on the config"""
+    spack.config.set("config:environments_root", str(tmpdir.join("envs")))
+    env_dir = spack.config.get("config:environments_root")
+
+    assert tmpdir.strpath in env_dir
+    assert not os.path.isdir(env_dir)
+
+    dir_name = "user_env"
+    env("create", dir_name)
+    out = env("list")
+
+    assert dir_name in out
+    assert env_dir in ev.root(dir_name)
+    assert os.path.isdir(os.path.join(env_dir, dir_name))

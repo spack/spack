@@ -235,14 +235,13 @@ class QtBase(QtPackage):
                 ("textmarkdownreader", False),
             ]
             with when("platform=linux"):
-                sys_features += [
-                    ("xcb_xinput", True),
-                ]
+                sys_features += [("xcb_xinput", True)]
         if "+network" in spec:
-            sys_features += [
-                ("proxies", True),
-            ]
+            sys_features += [("proxies", True)]
         for k, v in sys_features:
             define("FEATURE_system_" + k, v)
 
         return args
+
+    def setup_dependent_package(self, module, dependent_spec):
+        module.qmake = Executable(self.spec.prefix.bin.qmake)

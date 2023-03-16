@@ -114,6 +114,15 @@ class Gromacs(CMakePackage):
     )
     variant("openmp", default=True, description="Enables OpenMP at configure time")
     variant(
+        "sve",
+        default=True,
+        description="Enable SVE on aarch64 if available",
+        when="target=neoverse_v1",
+    )
+    variant(
+        "sve", default=True, description="Enable SVE on aarch64 if available", when="target=a64fx"
+    )
+    variant(
         "relaxed_double_precision",
         default=False,
         description="GMX_RELAXED_DOUBLE_PRECISION, use only for Fujitsu PRIMEHPC",
@@ -143,16 +152,8 @@ class Gromacs(CMakePackage):
         when="+cp2k",
         msg="GROMACS and CP2K should use the same blas, please disable bundled blas",
     )
-    conflicts(
-        "%intel",
-        when="@2022:",
-        msg="GROMACS %intel support was removed in version 2022",
-    )
-    conflicts(
-        "%gcc@:8",
-        when="@2023:",
-        msg="GROMACS requires GCC 9 or later since version 2023",
-    )
+    conflicts("%intel", when="@2022:", msg="GROMACS %intel support was removed in version 2022")
+    conflicts("%gcc@:8", when="@2023:", msg="GROMACS requires GCC 9 or later since version 2023")
     conflicts(
         "intel-oneapi-mkl@:2021.2",
         when="@2023:",
@@ -281,6 +282,15 @@ class Gromacs(CMakePackage):
                 "#include <queue>\n#include <limits>",
                 "src/gromacs/modularsimulator/modularsimulator.h",
             )
+        # Ref: https://gitlab.com/gromacs/gromacs/-/merge_requests/3504
+        if self.spec.satisfies("@2023"):
+            filter_file(
+                "        if (std::filesystem::equivalent(searchPath, buildBinPath))",
+                "        if (std::error_code c; std::filesystem::equivalent(searchPath,"
+                " buildBinPath, c))",
+                "src/gromacs/commandline/cmdlineprogramcontext.cpp",
+                string=True,
+            )
 
         if "+plumed" in self.spec:
             self.spec["plumed"].package.apply_patch(self)
@@ -326,7 +336,6 @@ class Gromacs(CMakePackage):
                 )
 
     def cmake_args(self):
-
         options = []
 
         if "+mpi" in self.spec:
@@ -428,7 +437,10 @@ class Gromacs(CMakePackage):
 
         # Activate SIMD based on properties of the target
         target = self.spec.target
-        if target >= "zen2":
+        if target >= "zen4":
+            # AMD Family 17h (EPYC Genoa)
+            options.append("-DGMX_SIMD=AVX_512")
+        elif target >= "zen2":
             # AMD Family 17h (EPYC Rome)
             options.append("-DGMX_SIMD=AVX2_256")
         elif target >= "zen":
@@ -447,6 +459,8 @@ class Gromacs(CMakePackage):
             # ARMv8
             if self.spec.satisfies("%nvhpc"):
                 options.append("-DGMX_SIMD=None")
+            elif "sve" in target.features and "+sve" in self.spec:
+                options.append("-DGMX_SIMD=ARM_SVE")
             else:
                 options.append("-DGMX_SIMD=ARM_NEON_ASIMD")
         elif target == "mic_knl":

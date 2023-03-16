@@ -13,6 +13,7 @@ class Htop(AutotoolsPackage):
     url = "https://github.com/htop-dev/htop/archive/refs/tags/3.2.1.tar.gz"
     maintainers("sethrj")
 
+    version("3.2.2", sha256="3829c742a835a0426db41bb039d1b976420c21ec65e93b35cd9bfd2d57f44ac8")
     version("3.2.1", sha256="b5ffac1949a8daaabcffa659c0964360b5008782aae4dfa7702d2323cfb4f438")
     version("3.2.0", sha256="1a1dd174cc828521fe5fd0e052cff8c30aa50809cf80d3ce3a481c37d476ac54")
     version("3.1.2", sha256="fe9559637c8f21f5fd531a4c072048a404173806acbdad1359c6b82fd87aa001")

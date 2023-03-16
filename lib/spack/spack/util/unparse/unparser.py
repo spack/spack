@@ -614,12 +614,7 @@ class Unparser:
         """Write string literal value w/a best effort attempt to avoid backslashes."""
         string, quote_types = self._str_literal_helper(string, quote_types=quote_types)
         quote_type = quote_types[0]
-        self.write(
-            "{quote_type}{string}{quote_type}".format(
-                quote_type=quote_type,
-                string=string,
-            )
-        )
+        self.write("{quote_type}{string}{quote_type}".format(quote_type=quote_type, string=string))
 
     # expr
     def visit_Bytes(self, node):
@@ -664,12 +659,7 @@ class Unparser:
             new_buffer.append(value)
         value = "".join(new_buffer)
         quote_type = quote_types[0]
-        self.write(
-            "{quote_type}{value}{quote_type}".format(
-                quote_type=quote_type,
-                value=value,
-            )
-        )
+        self.write("{quote_type}{value}{quote_type}".format(quote_type=quote_type, value=value))
 
     def visit_FormattedValue(self, node):
         # FormattedValue(expr value, int? conversion, expr? format_spec)
@@ -698,10 +688,7 @@ class Unparser:
         write("{")
 
         expr = StringIO()
-        unparser = type(self)(
-            py_ver_consistent=self._py_ver_consistent,
-            _avoid_backslashes=True,
-        )
+        unparser = type(self)(py_ver_consistent=self._py_ver_consistent, _avoid_backslashes=True)
         unparser.set_precedence(pnext(_Precedence.TEST), node.value)
         unparser.visit(node.value, expr)
         expr = expr.getvalue().rstrip("\n")
@@ -940,15 +927,9 @@ class Unparser:
                 self.write(" " + self.cmpops[o.__class__.__name__] + " ")
                 self.dispatch(e)
 
-    boolops = {
-        "And": "and",
-        "Or": "or",
-    }
+    boolops = {"And": "and", "Or": "or"}
 
-    boolop_precedence = {
-        "and": _Precedence.AND,
-        "or": _Precedence.OR,
-    }
+    boolop_precedence = {"and": _Precedence.AND, "or": _Precedence.OR}
 
     def visit_BoolOp(self, node):
         operator = self.boolops[node.op.__class__.__name__]
@@ -1224,11 +1205,7 @@ class Unparser:
 
         with self.delimit("{", "}"):
             keys = node.keys
-            interleave(
-                lambda: self.write(", "),
-                write_key_pattern_pair,
-                zip(keys, node.patterns),
-            )
+            interleave(lambda: self.write(", "), write_key_pattern_pair, zip(keys, node.patterns))
             rest = node.rest
             if rest is not None:
                 if keys:
@@ -1252,9 +1229,7 @@ class Unparser:
                 if patterns:
                     self.write(", ")
                 interleave(
-                    lambda: self.write(", "),
-                    write_attr_pattern,
-                    zip(attrs, node.kwd_patterns),
+                    lambda: self.write(", "), write_attr_pattern, zip(attrs, node.kwd_patterns)
                 )
 
     def visit_MatchAs(self, node):

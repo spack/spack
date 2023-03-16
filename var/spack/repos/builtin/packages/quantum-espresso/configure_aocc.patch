@@ -38,7 +38,7 @@ index 66337d1..d2c04af 100755
          try_cflags="-O3"
          ;;
 +x86_64:* )
-+        try_cflags="-Ofast -Mstack_arrays"
++        try_cflags=" -Mstack_arrays"
 +        try_dflags="-D__OPENMP"
 +        ;;
  ppc64-bg:* )
@@ -49,9 +49,9 @@ index 66337d1..d2c04af 100755
          have_cpp=0
          ;;
 +*:*mpif90 )
-+        try_fflags="-Ofast -Mstack_arrays"
++        try_fflags="-Mstack_arrays"
 +        try_fflags_openmp="-fopenmp"
-+        try_f90flags=" \$(FFLAGS) -cpp -Ofast -Mpreprocess -Mstack_arrays"
++        try_f90flags=" \$(FFLAGS) -cpp -Mpreprocess -Mstack_arrays"
 +        try_foxflags="-D__PGI"
 +        try_fflags_noopt="-O0"
 +        try_ldflags=""

@@ -6,6 +6,8 @@
 import codecs
 import collections
 import hashlib
+import io
+import itertools
 import json
 import multiprocessing.pool
 import os
@@ -20,7 +22,8 @@ import urllib.error
 import urllib.parse
 import urllib.request
 import warnings
-from contextlib import closing
+from contextlib import closing, contextmanager
+from gzip import GzipFile
 from urllib.error import HTTPError, URLError
 
 import ruamel.yaml as yaml
@@ -39,8 +42,10 @@ import spack.mirror
 import spack.platforms
 import spack.relocate as relocate
 import spack.repo
+import spack.stage
 import spack.store
 import spack.traverse as traverse
+import spack.util.crypto
 import spack.util.file_cache as file_cache
 import spack.util.gpg
 import spack.util.spack_json as sjson
@@ -210,10 +215,7 @@ class BinaryCacheIndex(object):
                         break
                 else:
                     self._mirrors_for_spec[dag_hash].append(
-                        {
-                            "mirror_url": mirror_url,
-                            "spec": indexed_spec,
-                        }
+                        {"mirror_url": mirror_url, "spec": indexed_spec}
                     )
         finally:
             shutil.rmtree(tmpdir)
@@ -296,10 +298,7 @@ class BinaryCacheIndex(object):
                         break
                 else:
                     current_list.append(
-                        {
-                            "mirror_url": new_entry["mirror_url"],
-                            "spec": new_entry["spec"],
-                        }
+                        {"mirror_url": new_entry["mirror_url"], "spec": new_entry["spec"]}
                     )
 
     def update(self, with_cooldown=False):
@@ -367,8 +366,7 @@ class BinaryCacheIndex(object):
                     # May need to fetch the index and update the local caches
                     try:
                         needs_regen = self._fetch_and_cache_index(
-                            cached_mirror_url,
-                            cache_entry=cache_entry,
+                            cached_mirror_url, cache_entry=cache_entry
                         )
                         self._last_fetch_times[cached_mirror_url] = (now, True)
                         all_methods_failed = False
@@ -560,7 +558,12 @@ class NoChecksumException(spack.error.SpackError):
     Raised if file fails checksum verification.
     """
 
-    pass
+    def __init__(self, path, size, contents, algorithm, expected, computed):
+        super(NoChecksumException, self).__init__(
+            f"{algorithm} checksum failed for {path}",
+            f"Expected {expected} but got {computed}. "
+            f"File size = {size} bytes. Contents = {contents!r}",
+        )
 
 
 class NewLayoutException(spack.error.SpackError):
@@ -740,34 +743,31 @@ def get_buildfile_manifest(spec):
     return data
 
 
-def write_buildinfo_file(spec, workdir, rel=False):
-    """
-    Create a cache file containing information
-    required for the relocation
-    """
+def prefixes_to_hashes(spec):
+    return {
+        str(s.prefix): s.dag_hash()
+        for s in itertools.chain(
+            spec.traverse(root=True, deptype="link"), spec.dependencies(deptype="run")
+        )
+    }
+
+
+def get_buildinfo_dict(spec, rel=False):
+    """Create metadata for a tarball"""
     manifest = get_buildfile_manifest(spec)
 
-    prefix_to_hash = dict()
-    prefix_to_hash[str(spec.package.prefix)] = spec.dag_hash()
-    deps = spack.build_environment.get_rpath_deps(spec.package)
-    for d in deps + spec.dependencies(deptype="run"):
-        prefix_to_hash[str(d.prefix)] = d.dag_hash()
-
-    # Create buildinfo data and write it to disk
-    buildinfo = {}
-    buildinfo["sbang_install_path"] = spack.hooks.sbang.sbang_install_path()
-    buildinfo["relative_rpaths"] = rel
-    buildinfo["buildpath"] = spack.store.layout.root
-    buildinfo["spackprefix"] = spack.paths.prefix
-    buildinfo["relative_prefix"] = os.path.relpath(spec.prefix, spack.store.layout.root)
-    buildinfo["relocate_textfiles"] = manifest["text_to_relocate"]
-    buildinfo["relocate_binaries"] = manifest["binary_to_relocate"]
-    buildinfo["relocate_links"] = manifest["link_to_relocate"]
-    buildinfo["hardlinks_deduped"] = manifest["hardlinks_deduped"]
-    buildinfo["prefix_to_hash"] = prefix_to_hash
-    filename = buildinfo_file_name(workdir)
-    with open(filename, "w") as outfile:
-        outfile.write(syaml.dump(buildinfo, default_flow_style=True))
+    return {
+        "sbang_install_path": spack.hooks.sbang.sbang_install_path(),
+        "relative_rpaths": rel,
+        "buildpath": spack.store.layout.root,
+        "spackprefix": spack.paths.prefix,
+        "relative_prefix": os.path.relpath(spec.prefix, spack.store.layout.root),
+        "relocate_textfiles": manifest["text_to_relocate"],
+        "relocate_binaries": manifest["binary_to_relocate"],
+        "relocate_links": manifest["link_to_relocate"],
+        "hardlinks_deduped": manifest["hardlinks_deduped"],
+        "prefix_to_hash": prefixes_to_hashes(spec),
+    }
 
 
 def tarball_directory_name(spec):
@@ -1140,6 +1140,68 @@ def generate_key_index(key_prefix, tmpdir=None):
                 shutil.rmtree(tmpdir)
 
 
+@contextmanager
+def gzip_compressed_tarfile(path):
+    """Create a reproducible, compressed tarfile"""
+    # Create gzip compressed tarball of the install prefix
+    # 1) Use explicit empty filename and mtime 0 for gzip header reproducibility.
+    #    If the filename="" is dropped, Python will use fileobj.name instead.
+    #    This should effectively mimick `gzip --no-name`.
+    # 2) On AMD Ryzen 3700X and an SSD disk, we have the following on compression speed:
+    # compresslevel=6 gzip default: llvm takes 4mins, roughly 2.1GB
+    # compresslevel=9 python default: llvm takes 12mins, roughly 2.1GB
+    # So we follow gzip.
+    with open(path, "wb") as fileobj, closing(
+        GzipFile(filename="", mode="wb", compresslevel=6, mtime=0, fileobj=fileobj)
+    ) as gzip_file, tarfile.TarFile(name="", mode="w", fileobj=gzip_file) as tar:
+        yield tar
+
+
+def deterministic_tarinfo(tarinfo: tarfile.TarInfo):
+    # We only add files, symlinks, hardlinks, and directories
+    # No character devices, block devices and FIFOs should ever enter a tarball.
+    if tarinfo.isdev():
+        return None
+
+    # For distribution, it makes no sense to user/group data; since (a) they don't exist
+    # on other machines, and (b) they lead to surprises as `tar x` run as root will change
+    # ownership if it can. We want to extract as the current user. By setting owner to root,
+    # root will extract as root, and non-privileged user will extract as themselves.
+    tarinfo.uid = 0
+    tarinfo.gid = 0
+    tarinfo.uname = ""
+    tarinfo.gname = ""
+
+    # Reset mtime to epoch time, our prefixes are not truly immutable, so files may get
+    # touched; as long as the content does not change, this ensures we get stable tarballs.
+    tarinfo.mtime = 0
+
+    # Normalize mode
+    if tarinfo.isfile() or tarinfo.islnk():
+        # If user can execute, use 0o755; else 0o644
+        # This is to avoid potentially unsafe world writable & exeutable files that may get
+        # extracted when Python or tar is run with privileges
+        tarinfo.mode = 0o644 if tarinfo.mode & 0o100 == 0 else 0o755
+    else:  # symbolic link and directories
+        tarinfo.mode = 0o755
+
+    return tarinfo
+
+
+def tar_add_metadata(tar: tarfile.TarFile, path: str, data: dict):
+    # Serialize buildinfo for the tarball
+    bstring = syaml.dump(data, default_flow_style=True).encode("utf-8")
+    tarinfo = tarfile.TarInfo(name=path)
+    tarinfo.size = len(bstring)
+    tar.addfile(deterministic_tarinfo(tarinfo), io.BytesIO(bstring))
+
+
+def _do_create_tarball(tarfile_path, binaries_dir, pkg_dir, buildinfo):
+    with gzip_compressed_tarfile(tarfile_path) as tar:
+        tar.add(name=binaries_dir, arcname=pkg_dir, filter=deterministic_tarinfo)
+        tar_add_metadata(tar, buildinfo_file_name(pkg_dir), buildinfo)
+
+
 def _build_tarball(
     spec,
     out_url,
@@ -1157,15 +1219,37 @@ def _build_tarball(
     if not spec.concrete:
         raise ValueError("spec must be concrete to build tarball")
 
-    # set up some paths
-    tmpdir = tempfile.mkdtemp()
-    cache_prefix = build_cache_prefix(tmpdir)
+    with tempfile.TemporaryDirectory(dir=spack.stage.get_stage_root()) as tmpdir:
+        _build_tarball_in_stage_dir(
+            spec,
+            out_url,
+            stage_dir=tmpdir,
+            force=force,
+            relative=relative,
+            unsigned=unsigned,
+            allow_root=allow_root,
+            key=key,
+            regenerate_index=regenerate_index,
+        )
 
+
+def _build_tarball_in_stage_dir(
+    spec,
+    out_url,
+    stage_dir,
+    force=False,
+    relative=False,
+    unsigned=False,
+    allow_root=False,
+    key=None,
+    regenerate_index=False,
+):
+    cache_prefix = build_cache_prefix(stage_dir)
     tarfile_name = tarball_name(spec, ".spack")
     tarfile_dir = os.path.join(cache_prefix, tarball_directory_name(spec))
     tarfile_path = os.path.join(tarfile_dir, tarfile_name)
     spackfile_path = os.path.join(cache_prefix, tarball_path_name(spec, ".spack"))
-    remote_spackfile_path = url_util.join(out_url, os.path.relpath(spackfile_path, tmpdir))
+    remote_spackfile_path = url_util.join(out_url, os.path.relpath(spackfile_path, stage_dir))
 
     mkdirp(tarfile_dir)
     if web_util.url_exists(remote_spackfile_path):
@@ -1184,7 +1268,7 @@ def _build_tarball(
     signed_specfile_path = "{0}.sig".format(specfile_path)
 
     remote_specfile_path = url_util.join(
-        out_url, os.path.relpath(specfile_path, os.path.realpath(tmpdir))
+        out_url, os.path.relpath(specfile_path, os.path.realpath(stage_dir))
     )
     remote_signed_specfile_path = "{0}.sig".format(remote_specfile_path)
 
@@ -1200,7 +1284,7 @@ def _build_tarball(
         raise NoOverwriteException(url_util.format(remote_specfile_path))
 
     pkg_dir = os.path.basename(spec.prefix.rstrip(os.path.sep))
-    workdir = os.path.join(tmpdir, pkg_dir)
+    workdir = os.path.join(stage_dir, pkg_dir)
 
     # TODO: We generally don't want to mutate any files, but when using relative
     # mode, Spack unfortunately *does* mutate rpaths and links ahead of time.
@@ -1218,39 +1302,22 @@ def _build_tarball(
         os.remove(temp_tarfile_path)
     else:
         binaries_dir = spec.prefix
-        mkdirp(os.path.join(workdir, ".spack"))
 
     # create info for later relocation and create tar
-    write_buildinfo_file(spec, workdir, relative)
+    buildinfo = get_buildinfo_dict(spec, relative)
 
     # optionally make the paths in the binaries relative to each other
     # in the spack install tree before creating tarball
-    try:
-        if relative:
-            make_package_relative(workdir, spec, allow_root)
-        elif not allow_root:
-            ensure_package_relocatable(workdir, binaries_dir)
-    except Exception as e:
-        shutil.rmtree(workdir)
-        shutil.rmtree(tarfile_dir)
-        shutil.rmtree(tmpdir)
-        tty.die(e)
+    if relative:
+        make_package_relative(workdir, spec, buildinfo, allow_root)
+    elif not allow_root:
+        ensure_package_relocatable(buildinfo, binaries_dir)
 
-    # create gzip compressed tarball of the install prefix
-    # On AMD Ryzen 3700X and an SSD disk, we have the following on compression speed:
-    # compresslevel=6 gzip default: llvm takes 4mins, roughly 2.1GB
-    # compresslevel=9 python default: llvm takes 12mins, roughly 2.1GB
-    # So we follow gzip.
-    with closing(tarfile.open(tarfile_path, "w:gz", compresslevel=6)) as tar:
-        tar.add(name=binaries_dir, arcname=pkg_dir)
-        if not relative:
-            # Add buildinfo file
-            buildinfo_path = buildinfo_file_name(workdir)
-            buildinfo_arcname = buildinfo_file_name(pkg_dir)
-            tar.add(name=buildinfo_path, arcname=buildinfo_arcname)
+    _do_create_tarball(tarfile_path, binaries_dir, pkg_dir, buildinfo)
 
     # remove copy of install directory
-    shutil.rmtree(workdir)
+    if relative:
+        shutil.rmtree(workdir)
 
     # get the sha256 checksum of the tarball
     checksum = checksum_tarball(tarfile_path)
@@ -1293,18 +1360,15 @@ def _build_tarball(
 
     tty.debug('Buildcache for "{0}" written to \n {1}'.format(spec, remote_spackfile_path))
 
-    try:
-        # push the key to the build cache's _pgp directory so it can be
-        # imported
-        if not unsigned:
-            push_keys(out_url, keys=[key], regenerate_index=regenerate_index, tmpdir=tmpdir)
+    # push the key to the build cache's _pgp directory so it can be
+    # imported
+    if not unsigned:
+        push_keys(out_url, keys=[key], regenerate_index=regenerate_index, tmpdir=stage_dir)
 
-        # create an index.json for the build_cache directory so specs can be
-        # found
-        if regenerate_index:
-            generate_package_index(url_util.join(out_url, os.path.relpath(cache_prefix, tmpdir)))
-    finally:
-        shutil.rmtree(tmpdir)
+    # create an index.json for the build_cache directory so specs can be
+    # found
+    if regenerate_index:
+        generate_package_index(url_util.join(out_url, os.path.relpath(cache_prefix, stage_dir)))
 
     return None
 
@@ -1333,7 +1397,7 @@ def nodes_to_be_packaged(specs, root=True, dependencies=True):
         return list(filter(packageable, nodes))
 
 
-def push(specs, push_url, include_root=True, include_dependencies=True, **kwargs):
+def push(specs, push_url, include_root: bool = True, include_dependencies: bool = True, **kwargs):
     """Create a binary package for each of the specs passed as input and push them
     to a given push URL.
 
@@ -1346,6 +1410,10 @@ def push(specs, push_url, include_root=True, include_dependencies=True, **kwargs
         **kwargs: TODO
 
     """
+    # Be explicit about the arugment type
+    if type(include_root) != bool or type(include_dependencies) != bool:
+        raise ValueError("Expected include_root/include_dependencies to be True/False")
+
     nodes = nodes_to_be_packaged(specs, root=include_root, dependencies=include_dependencies)
 
     # TODO: This seems to be an easy target for task
@@ -1533,13 +1601,12 @@ def download_tarball(spec, unsigned=False, mirrors_for_spec=None):
     return None
 
 
-def make_package_relative(workdir, spec, allow_root):
+def make_package_relative(workdir, spec, buildinfo, allow_root):
     """
     Change paths in binaries to relative paths. Change absolute symlinks
     to relative symlinks.
     """
     prefix = spec.prefix
-    buildinfo = read_buildinfo_file(workdir)
     old_layout_root = buildinfo["buildpath"]
     orig_path_names = list()
     cur_path_names = list()
@@ -1563,9 +1630,8 @@ def make_package_relative(workdir, spec, allow_root):
     relocate.make_link_relative(cur_path_names, orig_path_names)
 
 
-def ensure_package_relocatable(workdir, binaries_dir):
+def ensure_package_relocatable(buildinfo, binaries_dir):
     """Check if package binaries are relocatable."""
-    buildinfo = read_buildinfo_file(workdir)
     binaries = [os.path.join(binaries_dir, f) for f in buildinfo["relocate_binaries"]]
     relocate.ensure_binaries_are_relocatable(binaries)
 
@@ -1770,14 +1836,15 @@ def _extract_inner_tarball(spec, filename, extract_to, unsigned, remote_checksum
             raise UnsignedPackageException(
                 "To install unsigned packages, use the --no-check-signature option."
             )
-    # get the sha256 checksum of the tarball
+
+    # compute the sha256 checksum of the tarball
     local_checksum = checksum_tarball(tarfile_path)
+    expected = remote_checksum["hash"]
 
     # if the checksums don't match don't install
-    if local_checksum != remote_checksum["hash"]:
-        raise NoChecksumException(
-            "Package tarball failed checksum verification.\n" "It cannot be installed."
-        )
+    if local_checksum != expected:
+        size, contents = fsys.filesummary(tarfile_path)
+        raise NoChecksumException(tarfile_path, size, contents, "sha256", expected, local_checksum)
 
     return tarfile_path
 
@@ -1835,12 +1902,14 @@ def extract_tarball(spec, download_result, allow_root=False, unsigned=False, for
 
         # compute the sha256 checksum of the tarball
         local_checksum = checksum_tarball(tarfile_path)
+        expected = bchecksum["hash"]
 
         # if the checksums don't match don't install
-        if local_checksum != bchecksum["hash"]:
+        if local_checksum != expected:
+            size, contents = fsys.filesummary(tarfile_path)
             _delete_staged_downloads(download_result)
             raise NoChecksumException(
-                "Package tarball failed checksum verification.\n" "It cannot be installed."
+                tarfile_path, size, contents, "sha256", expected, local_checksum
             )
 
     new_relative_prefix = str(os.path.relpath(spec.prefix, spack.store.layout.root))
@@ -1931,8 +2000,11 @@ def install_root_node(spec, allow_root, unsigned=False, force=False, sha256=None
         tarball_path = download_result["tarball_stage"].save_filename
         msg = msg.format(tarball_path, sha256)
         if not checker.check(tarball_path):
+            size, contents = fsys.filesummary(tarball_path)
             _delete_staged_downloads(download_result)
-            raise spack.binary_distribution.NoChecksumException(msg)
+            raise NoChecksumException(
+                tarball_path, size, contents, checker.hash_name, sha256, checker.sum
+            )
         tty.debug("Verified SHA256 checksum of the build cache")
 
     # don't print long padded paths while extracting/relocating binaries
@@ -2006,12 +2078,7 @@ def try_direct_fetch(spec, mirrors=None):
             fetched_spec = Spec.from_json(specfile_contents)
         fetched_spec._mark_concrete()
 
-        found_specs.append(
-            {
-                "mirror_url": mirror.fetch_url,
-                "spec": fetched_spec,
-            }
-        )
+        found_specs.append({"mirror_url": mirror.fetch_url, "spec": fetched_spec})
 
     return found_specs
 
@@ -2313,11 +2380,7 @@ def download_single_spec(concrete_spec, destination, mirror_url=None):
     local_tarball_path = os.path.join(destination, tarball_dir_name)
 
     files_to_fetch = [
-        {
-            "url": [tarball_path_name],
-            "path": local_tarball_path,
-            "required": True,
-        },
+        {"url": [tarball_path_name], "path": local_tarball_path, "required": True},
         {
             "url": [
                 tarball_name(concrete_spec, ".spec.json.sig"),
@@ -2438,12 +2501,7 @@ class DefaultIndexFetcher:
                 response.headers.get("Etag", None) or response.headers.get("etag", None)
             )
 
-        return FetchIndexResult(
-            etag=etag,
-            hash=computed_hash,
-            data=result,
-            fresh=False,
-        )
+        return FetchIndexResult(etag=etag, hash=computed_hash, data=result, fresh=False)
 
 
 class EtagIndexFetcher:
