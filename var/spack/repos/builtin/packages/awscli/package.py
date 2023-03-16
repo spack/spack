@@ -13,6 +13,7 @@ class Awscli(PythonPackage):
 
     pypi = "awscli/awscli-1.16.308.tar.gz"
 
+    version("1.27.84", sha256="a27a7d1f3efa9dd2acf9d8bd72b939337d53da4ac71721cde6d5dff94aa446f7")
     version("1.27.56", sha256="58fd7122547db71646c053c914bd4f9b673356dd8c9520ae6d35560a8aec208b")
     version("1.16.308", sha256="3632fb1db2538128509a7b5e89f2a2c4ea3426bec139944247bddc4d79bf7603")
     version("1.16.179", sha256="6a87114d1325358d000abe22b2103baae7b91f053ff245b9fde33cb0affb5e4f")
@@ -21,7 +22,8 @@ class Awscli(PythonPackage):
     depends_on("python@3.7:", when="@1.25:", type=("build", "run"))
 
     # py-botocore is pinned to the patch version number
-    depends_on("py-botocore@1.29.56", when="@1.27", type=("build", "run"))
+    depends_on("py-botocore@1.29.84", when="@1.27.84", type=("build", "run"))
+    depends_on("py-botocore@1.29.56", when="@1.27.56", type=("build", "run"))
     depends_on("py-botocore@1.13.44", when="@1.16.308", type=("build", "run"))
     depends_on("py-botocore@1.12.169", when="@1.16.179", type=("build", "run"))
 

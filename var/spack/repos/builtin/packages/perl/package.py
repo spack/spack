@@ -23,8 +23,6 @@ from llnl.util.symlink import symlink
 from spack.operating_systems.mac_os import macos_version
 from spack.package import *
 
-is_windows = sys.platform == "win32"
-
 
 class Perl(Package):  # Perl doesn't use Autotools, it should subclass Package
     """Perl 5 is a highly capable, feature-rich programming language with over
@@ -76,7 +74,7 @@ class Perl(Package):  # Perl doesn't use Autotools, it should subclass Package
 
     extendable = True
 
-    if not is_windows:
+    if sys.platform != "win32":
         depends_on("gdbm@:1.23")
         # Bind us below gdbm-1.20 due to API change: https://github.com/Perl/perl5/issues/18915
         depends_on("gdbm@:1.19", when="@:5.35")
@@ -277,13 +275,13 @@ class Perl(Package):  # Perl doesn't use Autotools, it should subclass Package
         return config_args
 
     def configure(self, spec, prefix):
-        if is_windows:
+        if sys.platform == "win32":
             return
         configure = Executable("./Configure")
         configure(*self.configure_args())
 
     def build(self, spec, prefix):
-        if is_windows:
+        if sys.platform == "win32":
             pass
         else:
             make()
@@ -291,7 +289,7 @@ class Perl(Package):  # Perl doesn't use Autotools, it should subclass Package
     @run_after("build")
     @on_package_attributes(run_tests=True)
     def build_test(self):
-        if is_windows:
+        if sys.platform == "win32":
             win32_dir = os.path.join(self.stage.source_path, "win32")
             with working_dir(win32_dir):
                 nmake("test", ignore_quotes=True)
@@ -299,7 +297,7 @@ class Perl(Package):  # Perl doesn't use Autotools, it should subclass Package
             make("test")
 
     def install(self, spec, prefix):
-        if is_windows:
+        if sys.platform == "win32":
             win32_dir = os.path.join(self.stage.source_path, "win32")
             with working_dir(win32_dir):
                 nmake("install", *self.nmake_arguments, ignore_quotes=True)
@@ -308,7 +306,7 @@ class Perl(Package):  # Perl doesn't use Autotools, it should subclass Package
 
     @run_after("install")
     def symlink_windows(self):
-        if not is_windows:
+        if sys.platform != "win32":
             return
         win_install_path = os.path.join(self.prefix.bin, "MSWin32")
         if self.is_64bit():
@@ -331,7 +329,7 @@ class Perl(Package):  # Perl doesn't use Autotools, it should subclass Package
         spec = self.spec
         maker = make
         cpan_dir = join_path("cpanm", "cpanm")
-        if is_windows:
+        if sys.platform == "win32":
             maker = nmake
             cpan_dir = join_path(self.stage.source_path, cpan_dir)
         if "+cpanm" in spec:
@@ -352,7 +350,7 @@ class Perl(Package):  # Perl doesn't use Autotools, it should subclass Package
         if perl_lib_dirs:
             perl_lib_path = ":".join(perl_lib_dirs)
             env.prepend_path("PERL5LIB", perl_lib_path)
-        if is_windows:
+        if sys.platform == "win32":
             env.append_path("PATH", self.prefix.bin)
 
     def setup_dependent_build_environment(self, env, dependent_spec):
@@ -382,7 +380,7 @@ class Perl(Package):  # Perl doesn't use Autotools, it should subclass Package
             mkdirp(module.perl_lib_dir)
 
     def setup_build_environment(self, env):
-        if is_windows:
+        if sys.platform == "win32":
             env.append_path("PATH", self.prefix.bin)
             return
 
@@ -410,7 +408,7 @@ class Perl(Package):  # Perl doesn't use Autotools, it should subclass Package
         frustrates filter_file on some filesystems (NFSv4), so make them
         temporarily writable.
         """
-        if is_windows:
+        if sys.platform == "win32":
             return
         kwargs = {"ignore_absent": True, "backup": False, "string": False}
 
@@ -478,7 +476,7 @@ class Perl(Package):  # Perl doesn't use Autotools, it should subclass Package
         """
         for ver in ("", self.spec.version):
             ext = ""
-            if is_windows:
+            if sys.platform == "win32":
                 ext = ".exe"
             path = os.path.join(self.prefix.bin, "{0}{1}{2}".format(self.spec.name, ver, ext))
             if os.path.exists(path):

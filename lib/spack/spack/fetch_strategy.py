@@ -28,7 +28,6 @@ import os
 import os.path
 import re
 import shutil
-import sys
 import urllib.parse
 from typing import List, Optional
 
@@ -53,7 +52,6 @@ from spack.util.string import comma_and, quote
 
 #: List of all fetch strategies, created by FetchStrategy metaclass.
 all_strategies = []
-is_windows = sys.platform == "win32"
 
 CONTENT_TYPE_MISMATCH_WARNING_TEMPLATE = (
     "The contents of {subject} look like {content_type}.  Either the URL"
@@ -1503,7 +1501,7 @@ def _from_merged_attrs(fetcher, pkg, version):
     return fetcher(**attrs)
 
 
-def for_package_version(pkg, version):
+def for_package_version(pkg, version=None):
     """Determine a fetch strategy based on the arguments supplied to
     version() in the package description."""
 
@@ -1514,8 +1512,18 @@ def for_package_version(pkg, version):
 
     check_pkg_attributes(pkg)
 
-    if not isinstance(version, spack.version.VersionBase):
-        version = spack.version.Version(version)
+    if version is not None:
+        assert not pkg.spec.concrete, "concrete specs should not pass the 'version=' argument"
+        # Specs are initialized with the universe range, if no version information is given,
+        # so here we make sure we always match the version passed as argument
+        if not isinstance(version, spack.version.VersionBase):
+            version = spack.version.Version(version)
+
+        version_list = spack.version.VersionList()
+        version_list.add(version)
+        pkg.spec.versions = version_list
+    else:
+        version = pkg.version
 
     # if it's a commit, we must use a GitFetchStrategy
     if isinstance(version, spack.version.GitVersion):

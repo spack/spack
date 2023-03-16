@@ -227,6 +227,9 @@ You can get the name to use for ``<platform>`` by running ``spack arch
 --platform``. The system config scope has a ``<platform>`` section for
 sites at which ``/etc`` is mounted on multiple heterogeneous machines.
 
+
+.. _config-scope-precedence:
+
 ----------------
 Scope Precedence
 ----------------
@@ -238,6 +241,11 @@ list-valued settings, Spack *prepends* higher-precedence settings to
 lower-precedence settings. Completely ignoring higher-level configuration
 options is supported with the ``::`` notation for keys (see
 :ref:`config-overrides` below).
+
+There are also special notations for string concatenation and precendense override.
+Using the ``+:`` notation  can be used to force *prepending* strings or lists. For lists, this is identical
+to the default behavior. Using the ``-:`` works similarly, but for *appending* values.
+:ref:`config-prepend-append`
 
 ^^^^^^^^^^^
 Simple keys
@@ -277,6 +285,47 @@ command:
      build_stage:
        - $tempdir/$user/spack-stage
        - ~/.spack/stage
+
+
+.. _config-prepend-append:
+
+^^^^^^^^^^^^^^^^^^^^
+String Concatenation
+^^^^^^^^^^^^^^^^^^^^
+
+Above, the user ``config.yaml`` *completely* overrides specific settings in the
+default ``config.yaml``. Sometimes, it is useful to add a suffix/prefix
+to a path or name. To do this, you can use the ``-:`` notation for *append*
+string concatentation at the end of a key in a configuration file. For example:
+
+.. code-block:: yaml
+   :emphasize-lines: 1
+   :caption: ~/.spack/config.yaml
+
+   config:
+     install_tree-: /my/custom/suffix/
+
+Spack will then append to the lower-precedence configuration under the
+``install_tree-:`` section:
+
+.. code-block:: console
+
+   $ spack config get config
+   config:
+     install_tree: /some/other/directory/my/custom/suffix
+     build_stage:
+       - $tempdir/$user/spack-stage
+       - ~/.spack/stage
+
+
+Similarly, ``+:`` can be used to *prepend* to a path or name:
+
+.. code-block:: yaml
+   :emphasize-lines: 1
+   :caption: ~/.spack/config.yaml
+
+   config:
+     install_tree+: /my/custom/suffix/
 
 
 .. _config-overrides:

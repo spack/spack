@@ -38,6 +38,7 @@ class Itk(CMakePackage):
     variant("review", default=False, description="enable modules under review")
     variant("rtk", default=False, description="build the RTK (Reconstruction Toolkit module")
     variant("minc", default=False, description="enable support for MINC files")
+    variant("antspy", default=False, description="enable support features for antspy")
 
     # TODO: This will not work if the resource is pulled from a spack mirror.
     # The build process will checkout the appropriate commit but it needs to be
@@ -76,6 +77,9 @@ class Itk(CMakePackage):
             self.define_from_variant("Module_RTK", "rtk"),
             self.define_from_variant("Module_ITKIOMINC", "minc"),
             self.define_from_variant("Module_ITKIOTransformMINC", "minc"),
+            self.define_from_variant("Module_MGHIO", "antspy"),
+            self.define_from_variant("Module_GenericLabelInterpolator", "antspy"),
+            self.define_from_variant("Module_AdaptiveDenoising", "antspy"),
         ]
 
         if not use_mkl:

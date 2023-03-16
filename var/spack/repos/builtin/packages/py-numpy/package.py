@@ -315,11 +315,17 @@ class PyNumpy(PythonPackage):
                     f.write("include_dirs = {0}\n".format(lapack_header_dirs))
                     f.write("extra_link_args = {0}\n".format(self.spec["lapack"].libs.ld_flags))
 
-            if "^armpl-gcc" in spec:
-                f.write("[blas]\n")
-                f.write("libraries = {0}\n".format(lapackblas_lib_names))
-                write_library_dirs(f, lapackblas_lib_dirs)
-                f.write("include_dirs = {0}\n".format(lapackblas_header_dirs))
+            if "^armpl-gcc" in spec or "^acfl" in spec:
+                if spec.satisfies("+blas"):
+                    f.write("[blas]\n")
+                    f.write("libraries = {0}\n".format(blas_lib_names))
+                    write_library_dirs(f, blas_lib_dirs)
+                    f.write("include_dirs = {0}\n".format(blas_header_dirs))
+                if spec.satisfies("+lapack"):
+                    f.write("[lapack]\n")
+                    f.write("libraries = {0}\n".format(lapack_lib_names))
+                    write_library_dirs(f, lapack_lib_dirs)
+                    f.write("include_dirs = {0}\n".format(lapack_header_dirs))
 
     def setup_build_environment(self, env):
         # Tell numpy which BLAS/LAPACK libraries we want to use.
