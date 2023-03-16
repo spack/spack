@@ -287,7 +287,12 @@ class Mvapich(AutotoolsPackage):
             args.append("--enable-registration-cache")
         else:
             args.append("--disable-registration-cache")
-
+            
+        ld = ""
+        for path in itertools.chain(self.compiler.extra_rpaths, self.compiler.implicit_rpaths()):
+            ld += "-Wl,-rpath," + path + " "
+        if ld != "":
+            args.append("LDFLAGS=" + ld)
         args.extend(self.process_manager_options)
         args.extend(self.network_options)
         args.extend(self.file_system_options)
