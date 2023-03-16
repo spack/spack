@@ -23,17 +23,17 @@ class Heffte(CMakePackage, CudaPackage, ROCmPackage):
     test_requires_compiler = True
 
     version("develop", branch="master")
-    version("2.3.0", sha256="27c0a8da8f7bc91c8715ecb640721ab7e0454e22f6e3f521fe5acc45c28d60a9")
-    version("2.2.0", sha256="aff4f5111d3d05b269a1378bb201271c40b39e9c960c05c4ef247a31a039be58")
-    version("2.1.0", sha256="527a3e21115231715a0342afdfaf6a8878d2dd0f02f03c92b53692340fd940b9")
+    version("2.3.0", sha256="63db8c9a8822211d23e29f7adf5aa88bb462c91d7a18c296c3ef3a06be8d6171")
+    version("2.2.0", sha256="332346d5c1d1032288d09839134c79e4a9704e213a2d53051e96c3c414c74df0")
+    version("2.1.0", sha256="63b8ea45a220afc4fa0b14769c0dd291e614a2fe9d5a91c50d28f16ee29b3f1c")
     version(
         "2.0.0",
-        sha256="12f2b49a1a36c416eac174cf0cc50e729d56d68a9f68886d8c34bd45a0be26b6",
+        sha256="b575fafe19a635265904ca302d48e778341b1567c055ea7f2939c8c6718f7212",
         deprecated=True,
     )
     version(
         "1.0",
-        sha256="0902479fb5b1bad01438ca0a72efd577a3529c3d8bad0028f3c18d3a4935ca74",
+        sha256="00e66cdff664ba90eeb26b4824f2a7341ba791b1d7220ece8180aba7623d36d5",
         deprecated=True,
     )
 
@@ -84,6 +84,7 @@ class Heffte(CMakePackage, CudaPackage, ROCmPackage):
 
     def cmake_args(self):
         args = [
+            "-DHeffte_SEQUENTIAL_TESTING=ON",
             self.define_from_variant("BUILD_SHARED_LIBS", "shared"),
             self.define_from_variant("Heffte_ENABLE_CUDA", "cuda"),
             self.define_from_variant("Heffte_ENABLE_ROCM", "rocm"),
