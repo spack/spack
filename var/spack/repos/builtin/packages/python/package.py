@@ -908,7 +908,6 @@ class RunAfter(object):
                 os.path.join(prefix.bin, "python-config"),
             )
 
-
     @run_after("install")
     def install_python_gdb(self):
         # https://devguide.python.org/gdb/
