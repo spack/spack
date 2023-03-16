@@ -30,11 +30,11 @@ def stage(tmpdir_factory):
 
 def test_symlink__file(stage):
     """Test the symlink.symlink functionality on all operating systems for a file"""
-    test_dir = stage
-    fd, real_file = tempfile.mkstemp(prefix="symlink_test_", suffix=".txt", dir=test_dir)
+    test_dir = tempfile.mkdtemp(dir=stage)
+    fd, real_file = tempfile.mkstemp(prefix="real", suffix=".txt", dir=test_dir)
     try:
         assert os.path.exists(real_file)
-        link_file = tempfile.mktemp(prefix="symlink_test_", suffix=".txt", dir=test_dir)
+        link_file = tempfile.mktemp(prefix="link", suffix=".txt", dir=test_dir)
         assert os.path.exists(link_file) is False
         symlink.symlink(real_path=real_file, link_path=link_file)
         assert os.path.exists(link_file)
@@ -45,7 +45,7 @@ def test_symlink__file(stage):
 
 def test_symlink__dir(stage):
     """Test the symlink.symlink functionality on all operating systems for a directory"""
-    test_dir = stage
+    test_dir = tempfile.mkdtemp(dir=stage)
     real_dir = os.path.join(test_dir, "real_dir")
     link_dir = os.path.join(test_dir, "link_dir")
     os.mkdir(real_dir)
@@ -55,12 +55,42 @@ def test_symlink__dir(stage):
     assert symlink.islink(link_dir)
 
 
+def test_symlink__source_not_exists(stage):
+    """Test the symlink.symlink method for the case where a source path does not exist"""
+    test_dir = tempfile.mkdtemp(dir=stage)
+    real_dir = os.path.join(test_dir, "real_dir")
+    link_dir = os.path.join(test_dir, "link_dir")
+    assert not os.path.exists(real_dir)
+    assert not os.path.exists(link_dir)
+    try:
+        symlink.symlink(real_path=real_dir, link_path=link_dir)
+        assert False, "symlink command succeeded when it should have failed."
+    except symlink.SymlinkError:
+        ...
+
+
+def test_symlink__link_exists(stage):
+    """Test the symlink.symlink method for the case where a link already exists"""
+    test_dir = tempfile.mkdtemp(dir=stage)
+    real_dir = os.path.join(test_dir, "real_dir")
+    link_dir = os.path.join(test_dir, "link_dir")
+    os.mkdir(real_dir)
+    symlink.symlink(real_dir, link_dir)
+    assert os.path.exists(real_dir)
+    assert os.path.exists(link_dir)
+    try:
+        symlink.symlink(real_path=real_dir, link_path=link_dir)
+        assert False, "symlink command succeeded when it should have failed."
+    except symlink.SymlinkError:
+        ...
+
+
 @pytest.mark.skipif(sys.platform != "win32", reason="Test is only for Windows")
 def test_windows_create_junction(stage):
     """Test the symlink._windows_create_junction method"""
-    test_dir = stage
-    junction_real_dir = os.path.join(test_dir, "junction_real_dir")
-    junction_link_dir = os.path.join(test_dir, "junction_link_dir")
+    test_dir = tempfile.mkdtemp(dir=stage)
+    junction_real_dir = os.path.join(test_dir, "real_dir")
+    junction_link_dir = os.path.join(test_dir, "link_dir")
     os.mkdir(junction_real_dir)
     assert os.path.exists(junction_real_dir)
     assert not os.path.exists(junction_link_dir)
@@ -79,11 +109,11 @@ def test_windows_create_junction(stage):
 @pytest.mark.skipif(sys.platform != "win32", reason="Test is only for Windows")
 def test_windows_create_hard_link(stage):
     """Test the symlink._windows_create_hard_link method"""
-    test_dir = stage
-    fd, real_file = tempfile.mkstemp(prefix="hardlink_real_", suffix=".txt", dir=test_dir)
+    test_dir = tempfile.mkdtemp(dir=stage)
+    fd, real_file = tempfile.mkstemp(prefix="real", suffix=".txt", dir=test_dir)
     try:
         assert os.path.exists(real_file)
-        link_file = tempfile.mktemp(prefix="hardlink_link_", suffix=".txt", dir=test_dir)
+        link_file = tempfile.mktemp(prefix="link", suffix=".txt", dir=test_dir)
         assert os.path.exists(link_file) is False
         symlink.windows_create_hard_link(real_file, link_file)
         # Result should exist
@@ -105,9 +135,9 @@ def test_windows_create_link_dir(stage):
     """Test the functionality of the windows_create_link method with a directory
     which should result in making a junction.
     """
-    test_dir = stage
-    real_dir = os.path.join(test_dir, "win_create_link_dir__real")
-    link_dir = os.path.join(test_dir, "win_create_link_dir__link")
+    test_dir = tempfile.mkdtemp(dir=stage)
+    real_dir = os.path.join(test_dir, "real")
+    link_dir = os.path.join(test_dir, "link")
     os.mkdir(real_dir)
     assert os.path.exists(real_dir)
     assert not os.path.exists(link_dir)
@@ -131,11 +161,11 @@ def test_windows_create_link_file(stage):
     """Test the functionality of the windows_create_link method with a file
     which should result in the creation of a hard link.
     """
-    test_dir = stage
-    fd, real_file = tempfile.mkstemp(prefix="win_create_link__real_", suffix=".txt", dir=test_dir)
+    test_dir = tempfile.mkdtemp(dir=stage)
+    fd, real_file = tempfile.mkstemp(prefix="real", suffix=".txt", dir=test_dir)
     try:
         assert os.path.exists(real_file)
-        link_file = tempfile.mktemp(prefix="win_create_link__link_", suffix=".txt", dir=test_dir)
+        link_file = tempfile.mktemp(prefix="link", suffix=".txt", dir=test_dir)
         assert os.path.exists(link_file) is False
         symlink.windows_create_link(real_file, link_file)
         # Result should exist
@@ -158,11 +188,11 @@ def test_windows_create_link_file(stage):
 @pytest.mark.skipif(sys.platform != "win32", reason="Test is only for Windows")
 def test_windows_symlink_file(stage):
     """Check that symlink.symlink makes a symlink file when run with elevated permissions"""
-    test_dir = stage
-    fd, real_file = tempfile.mkstemp(prefix="symlink_perms_test_", suffix=".txt", dir=test_dir)
+    test_dir = tempfile.mkdtemp(dir=stage)
+    fd, real_file = tempfile.mkstemp(prefix='real', suffix=".txt", dir=test_dir)
     try:
         assert os.path.exists(real_file)
-        link_file = tempfile.mktemp(prefix="symlink_perms_test_", suffix=".txt", dir=test_dir)
+        link_file = tempfile.mktemp(prefix='link', suffix=".txt", dir=test_dir)
         assert os.path.exists(link_file) is False
         symlink.symlink(real_path=real_file, link_path=link_file)
         # Result should exist
@@ -183,9 +213,9 @@ def test_windows_symlink_file(stage):
 @pytest.mark.skipif(sys.platform != "win32", reason="Test is only for Windows")
 def test_windows_symlink_dir(stage):
     """Check that symlink.symlink makes a symlink dir when run with elevated permissions"""
-    test_dir = stage
-    real_dir = os.path.join(test_dir, "win_symlink_dir__real")
-    link_dir = os.path.join(test_dir, "win_symlink_dir__link")
+    test_dir = tempfile.mkdtemp(dir=stage)
+    real_dir = os.path.join(test_dir, "real")
+    link_dir = os.path.join(test_dir, "link")
     os.mkdir(real_dir)
     assert os.path.exists(real_dir)
     symlink.symlink(real_path=real_dir, link_path=link_dir)
