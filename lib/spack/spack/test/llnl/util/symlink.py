@@ -189,10 +189,10 @@ def test_windows_create_link_file(stage):
 def test_windows_symlink_file(stage):
     """Check that symlink.symlink makes a symlink file when run with elevated permissions"""
     test_dir = tempfile.mkdtemp(dir=stage)
-    fd, real_file = tempfile.mkstemp(prefix='real', suffix=".txt", dir=test_dir)
+    fd, real_file = tempfile.mkstemp(prefix="real", suffix=".txt", dir=test_dir)
     try:
         assert os.path.exists(real_file)
-        link_file = tempfile.mktemp(prefix='link', suffix=".txt", dir=test_dir)
+        link_file = tempfile.mktemp(prefix="link", suffix=".txt", dir=test_dir)
         assert os.path.exists(link_file) is False
         symlink.symlink(real_path=real_file, link_path=link_file)
         # Result should exist
