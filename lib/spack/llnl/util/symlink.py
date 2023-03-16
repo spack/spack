@@ -52,8 +52,8 @@ def symlink(real_path: str, link_path: str):
         raise SymlinkError(f"Link path ({link_path}) already exists. Cannot create link.")
     elif not os.path.exists(real_path):
         raise SymlinkError(f"Source path ({real_path}) does not exist. Cannot create link.")
-    elif sys.platform == "win32" and not windows_can_symlink():
-        windows_create_link(real_path, link_path)
+    elif sys.platform == "win32" and not _windows_can_symlink():
+        _windows_create_link(real_path, link_path)
     else:
         os.symlink(real_path, link_path, target_is_directory=os.path.isdir(real_path))
 
@@ -77,12 +77,12 @@ def islink(path: str) -> bool:
          bool - whether the path is any kind link or not.
     """
     try:
-        return any([os.path.islink(path), windows_is_junction(path), windows_is_hardlink(path)])
+        return any([os.path.islink(path), _windows_is_junction(path), _windows_is_hardlink(path)])
     except Exception as e:
         raise SymlinkError("Could not determine if given path is a link") from e
 
 
-def windows_is_hardlink(path: str) -> bool:
+def _windows_is_hardlink(path: str) -> bool:
     """Determines if a path is a windows hard link. This is accomplished
     by looking at the number of links using os.stat. A non-hard-linked file
     will have a st_nlink value of 1, whereas a hard link will have a value
@@ -104,7 +104,7 @@ def windows_is_hardlink(path: str) -> bool:
         raise SymlinkError("Could not determine if path is a hard link") from e
 
 
-def windows_is_junction(path: str) -> bool:
+def _windows_is_junction(path: str) -> bool:
     """Determines if a path is a windows junction. A junction can be
     determined using a bitwise AND operation between the file's
     attribute bitmask and the known junction bitmask (0x400).
@@ -135,7 +135,7 @@ def windows_is_junction(path: str) -> bool:
 
 
 @lang.memoized
-def windows_can_symlink() -> bool:
+def _windows_can_symlink() -> bool:
     """
     Determines if windows is able to make a symlink depending on
     the system configuration and the level of the user's permissions.
@@ -174,7 +174,7 @@ def windows_can_symlink() -> bool:
     return can_symlink_directories and can_symlink_files
 
 
-def windows_create_link(path: str, link: str):
+def _windows_create_link(path: str, link: str):
     """
     Attempts to create a Hard Link or Junction as an alternative
     to a symbolic link. This is called when symbolic links cannot
@@ -185,16 +185,16 @@ def windows_create_link(path: str, link: str):
         return
 
     if os.path.isdir(path):
-        windows_create_junction(path=path, link=link)
+        _windows_create_junction(path=path, link=link)
     elif os.path.isfile(path):
-        windows_create_hard_link(path=path, link=link)
+        _windows_create_hard_link(path=path, link=link)
     else:
         raise SymlinkError(
             f"Cannot create link from {path}. It is neither a file nor a directory."
         )
 
 
-def windows_create_junction(path: str, link: str):
+def _windows_create_junction(path: str, link: str):
     """Duly verify that the path and link are eligible to create a junction,
     then create the junction.
     """
@@ -217,7 +217,7 @@ def windows_create_junction(path: str, link: str):
         )
 
 
-def windows_create_hard_link(path: str, link: str):
+def _windows_create_hard_link(path: str, link: str):
     """Duly verify that the path and link are eligible to create a hard
     link, then create the hard link.
     """
@@ -236,4 +236,6 @@ def windows_create_hard_link(path: str, link: str):
 
 
 class SymlinkError(SpackError):
-    ...
+    """Exception class for errors raised while creating symlinks,
+    junctions and hard links
+    """

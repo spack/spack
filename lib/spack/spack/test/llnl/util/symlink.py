@@ -85,7 +85,7 @@ def test_symlink__link_exists(stage):
         ...
 
 
-@pytest.mark.skipif(not symlink.windows_can_symlink(), reason="Test requires elevated permissions")
+@pytest.mark.skipif(not symlink._windows_can_symlink(), reason="Test requires elevated permissions")
 @pytest.mark.skipif(sys.platform != "win32", reason="Test is only for Windows")
 def test_symlink__win_file(stage):
     """Check that symlink.symlink makes a symlink file when run with elevated permissions"""
@@ -100,13 +100,13 @@ def test_symlink__win_file(stage):
         assert os.path.exists(link_file)
         assert symlink.islink(link_file)
         assert os.path.islink(link_file)
-        assert not symlink.windows_is_hardlink(link_file)
-        assert not symlink.windows_is_junction(link_file)
+        assert not symlink._windows_is_hardlink(link_file)
+        assert not symlink._windows_is_junction(link_file)
     finally:
         os.close(fd)
 
 
-@pytest.mark.skipif(not symlink.windows_can_symlink(), reason="Test requires elevated permissions")
+@pytest.mark.skipif(not symlink._windows_can_symlink(), reason="Test requires elevated permissions")
 @pytest.mark.skipif(sys.platform != "win32", reason="Test is only for Windows")
 def test_symlink__win_dir(stage):
     """Check that symlink.symlink makes a symlink dir when run with elevated permissions"""
@@ -120,8 +120,8 @@ def test_symlink__win_dir(stage):
     assert os.path.exists(link_dir)
     assert symlink.islink(link_dir)
     assert os.path.islink(link_dir)
-    assert not symlink.windows_is_hardlink(link_dir)
-    assert not symlink.windows_is_junction(link_dir)
+    assert not symlink._windows_is_hardlink(link_dir)
+    assert not symlink._windows_is_junction(link_dir)
 
 
 @pytest.mark.skipif(sys.platform != "win32", reason="Test is only for Windows")
@@ -133,11 +133,11 @@ def test_windows_create_junction(stage):
     os.mkdir(junction_real_dir)
     assert os.path.exists(junction_real_dir)
     assert not os.path.exists(junction_link_dir)
-    assert symlink.windows_is_junction(junction_real_dir) is False
-    symlink.windows_create_junction(junction_real_dir, junction_link_dir)
+    assert symlink._windows_is_junction(junction_real_dir) is False
+    symlink._windows_create_junction(junction_real_dir, junction_link_dir)
     # Verify that all expected conditions are met
     assert os.path.exists(junction_link_dir)
-    assert symlink.windows_is_junction(junction_link_dir)
+    assert symlink._windows_is_junction(junction_link_dir)
     assert symlink.islink(junction_link_dir)
     assert not os.path.islink(junction_link_dir)
 
@@ -151,11 +151,11 @@ def test_windows_create_hard_link(stage):
         assert os.path.exists(real_file)
         link_file = tempfile.mktemp(prefix="link", suffix=".txt", dir=test_dir)
         assert os.path.exists(link_file) is False
-        symlink.windows_create_hard_link(real_file, link_file)
+        symlink._windows_create_hard_link(real_file, link_file)
         # Verify that all expected conditions are met
         assert os.path.exists(link_file)
-        assert symlink.windows_is_hardlink(real_file)
-        assert symlink.windows_is_hardlink(link_file)
+        assert symlink._windows_is_hardlink(real_file)
+        assert symlink._windows_is_hardlink(link_file)
         assert symlink.islink(link_file)
         assert not os.path.islink(link_file)
     finally:
@@ -173,13 +173,13 @@ def test_windows_create_link__dir(stage):
     os.mkdir(real_dir)
     assert os.path.exists(real_dir)
     assert not os.path.exists(link_dir)
-    symlink.windows_create_link(real_dir, link_dir)
+    symlink._windows_create_link(real_dir, link_dir)
     # Verify that all expected conditions are met
     assert os.path.exists(real_dir)
     assert os.path.exists(link_dir)
     assert symlink.islink(link_dir)
-    assert not symlink.windows_is_hardlink(link_dir)
-    assert symlink.windows_is_junction(link_dir)
+    assert not symlink._windows_is_hardlink(link_dir)
+    assert symlink._windows_is_junction(link_dir)
     assert not os.path.islink(link_dir)
 
 
@@ -194,13 +194,13 @@ def test_windows_create_link__file(stage):
         assert os.path.exists(real_file)
         link_file = tempfile.mktemp(prefix="link", suffix=".txt", dir=test_dir)
         assert os.path.exists(link_file) is False
-        symlink.windows_create_link(real_file, link_file)
+        symlink._windows_create_link(real_file, link_file)
         # Verify that all expected conditions are met
         assert os.path.exists(link_file)
-        assert symlink.windows_is_hardlink(real_file)
-        assert symlink.windows_is_hardlink(link_file)
+        assert symlink._windows_is_hardlink(real_file)
+        assert symlink._windows_is_hardlink(link_file)
         assert symlink.islink(link_file)
-        assert not symlink.windows_is_junction(link_file)
+        assert not symlink._windows_is_junction(link_file)
         assert not os.path.islink(link_file)
     finally:
         os.close(fd)
