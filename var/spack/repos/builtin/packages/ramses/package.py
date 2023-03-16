@@ -42,12 +42,11 @@ class Ramses(MakefilePackage):
         elif self.compiler.name == "gcc":
             makefile.filter(
                 r"^\s*FFLAGS\s*= .*",
-                f"FFLAGS = -O3 -cpp -march=core-avx2 -fomit-frame-pointer -ffree-line-length-none",
+                "FFLAGS = -O3 -cpp -march=core-avx2 -fomit-frame-pointer -ffree-line-length-none",
             )
         else:
-            msg = "The compiler you are building with, "
-            msg += "'{0}', is not supported by ramses yet."
-            raise InstallError(msg.format(self.compiler.name))
+            msg = "The compiler [{self.compiler.name}] is not supported yet."
+            raise InstallError(msg)
 
     def build(self, spec, prefix):
 

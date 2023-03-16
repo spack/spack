@@ -3,8 +3,6 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-import os
-
 from spack.package import *
 
 
@@ -36,30 +34,30 @@ class Trove(MakefilePackage):
         self.fc = spack_fc if "~mpi" in spec else spec["mpi"].mpifc
 
         env["PREFIX"] = prefix
-
         env["FOR"] = self.fc
-        env[
-            "LAPACK"
-        ] = "-mkl=parallel -lmkl_scalapack_lp64 -lmkl_blacs_intelmpi_lp64 -lmkl_intel_lp64"
+        lapack = "-mkl=parallel -lmkl_scalapack_lp64 " "-lmkl_blacs_intelmpi_lp64 -lmkl_intel_lp64"
+
         if self.compiler.name == "intel":
-            env["FFLAGS"] = self.compiler.openmp_flag + " -mavx2 -mfma -O3 -ip -Ofast"
+            fflags = " -mavx2 -mfma -O3 -ip -Ofast"
             if "openmpi" in spec:
-                env[
-                    "LAPACK"
-                ] = "-mkl=parallel -lmkl_scalapack_lp64 -lmkl_blacs_openmpi_lp64 -lmkl_intel_lp64"
+                lapack = (
+                    "-mkl=parallel -lmkl_scalapack_lp64 -lmkl_blacs_openmpi_lp64 -lmkl_intel_lp64"
+                )
+
         elif self.compiler.name == "gcc":
-            env["FFLAGS"] = (
-                self.compiler.openmp_flag
-                + " -ffree-line-length-none -march=native -O3 -fcray-pointer -g3"
-            )
+            fflags = " -ffree-line-length-none -march=native -O3 " "-fcray-pointer -g3"
+
             if "openmpi" in spec:
-                env[
-                    "LAPACK"
-                ] = "-lmkl_scalapack_lp64 -lmkl_blacs_openmpi_lp64 -lmkl_gf_lp64 -lmkl_gnu_thread -lmkl_core"
+                lapack = (
+                    "-lmkl_scalapack_lp64 -lmkl_blacs_openmpi_lp64 -lmkl_gf_lp64 -lmkl_gnu_thread "
+                    "-lmkl_core"
+                )
         else:
-            msg = "The compiler you are building with, "
-            msg += "'{0}', is not supported by sphng yet."
-            raise InstallError(msg.format(self.compiler.name))
+            msg = "The compiler [{self.compiler.name}] is not supported yet."
+            raise InstallError(msg)
+
+        env["FFLAGS"] = self.compiler.openmp_flag + fflags
+        env["LAPACK"] = lapack
 
     def build(self, spec, prefix):
 

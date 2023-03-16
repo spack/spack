@@ -3,8 +3,6 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-import os
-
 from spack.package import *
 
 
@@ -42,25 +40,28 @@ class Sphng(MakefilePackage):
         env["FC"] = self.fc
         env["OMPFLAG"] = self.compiler.openmp_flag
         if self.compiler.name == "intel":
-            env[
-                "FFLAGS"
-            ] = "-O3 -mavx2 -mfma -mcmodel=medium -warn uninitialized -warn truncated_source -warn interfaces -nogen-interfaces -DINCMPI"
+            fflags = (
+                "-O3 -mavx2 -mfma -mcmodel=medium -warn uninitialized -warn truncated_source "
+                "-warn interfaces -nogen-interfaces -DINCMPI"
+            )
             env["DBLFLAG"] = "-r8"
             env["DEBUGFLAG"] = "-check all -traceback -g -fpe0 -fp-stack-check -heap-arrays -O0"
             env["ENDIANFLAGBIG"] = "-convert big_endian"
             env["ENDIANFLAGLITTLE"] = "-convert little_endian"
         elif self.compiler.name == "gcc":
-            env[
-                "FFLAGS"
-            ] = "-m64 -mcmodel=large -O3 -I. -Wall -Wno-conversion -Wno-unused-dummy-argument -Wno-maybe-uninitialized -Warray-temporaries"
+            fflags = (
+                "-m64 -mcmodel=large -O3 -I. -Wall -Wno-conversion -Wno-unused-dummy-argument "
+                "-Wno-maybe-uninitialized -Warray-temporaries"
+            )
             env["DBLFLAG"] = "-fdefault-real-8 -fdefault-double-8"
             env["DEBUGFLAG"] = "-g"
             env["ENDIANFLAGBIG"] = "-fconvert=big-endian"
             env["ENDIANFLAGLITTLE"] = "-fconvert=little-endian"
         else:
-            msg = "The compiler you are building with, "
-            msg += "'{0}', is not supported by sphng yet."
-            raise InstallError(msg.format(self.compiler.name))
+            msg = "The compiler [{self.compiler.name}] is not supported yet."
+            raise InstallError(msg)
+
+        env["FFLAGS"] = fflags
 
     def build(self, spec, prefix):
 
