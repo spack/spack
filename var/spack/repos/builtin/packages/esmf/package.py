@@ -327,8 +327,9 @@ class Esmf(MakefilePackage):
             # NetCDF format.
             env.set("ESMF_NETCDF", "nc-config")
             env.set("ESMF_NFCONFIG", "nf-config")
-            if spec["netcdf-c"].satisfies("~shared"):
-                nc_config = which("nc-config")
+            netcdfc = spec["netcdf-c"]
+            if netcdfc.satisfies("~shared"):
+                nc_config = which(os.path.join(netcdfc.prefix.bin, "nc-config"))
                 nc_flags = nc_config("--libs", output=str).strip()
                 env.set("ESMF_NETCDF_LIBS", nc_flags)
 
