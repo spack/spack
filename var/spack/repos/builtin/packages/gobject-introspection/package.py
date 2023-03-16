@@ -42,7 +42,7 @@ class GobjectIntrospection(MesonPackage, AutotoolsPackage):
     depends_on("glib@2.48.1", when="@1.48.0")
     depends_on("libffi")
     # https://gitlab.gnome.org/GNOME/gobject-introspection/-/merge_requests/283
-    depends_on("libffi@:3.3", when="@:1.70")  # libffi 3.4 caused seg faults
+    depends_on("libffi@:3.3", when="@:1.72")  # libffi 3.4 caused seg faults
     depends_on("python")
 
     # This package creates several scripts from

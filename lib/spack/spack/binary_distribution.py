@@ -42,6 +42,7 @@ import spack.mirror
 import spack.platforms
 import spack.relocate as relocate
 import spack.repo
+import spack.stage
 import spack.store
 import spack.traverse as traverse
 import spack.util.crypto
@@ -1218,15 +1219,37 @@ def _build_tarball(
     if not spec.concrete:
         raise ValueError("spec must be concrete to build tarball")
 
-    # set up some paths
-    tmpdir = tempfile.mkdtemp()
-    cache_prefix = build_cache_prefix(tmpdir)
+    with tempfile.TemporaryDirectory(dir=spack.stage.get_stage_root()) as tmpdir:
+        _build_tarball_in_stage_dir(
+            spec,
+            out_url,
+            stage_dir=tmpdir,
+            force=force,
+            relative=relative,
+            unsigned=unsigned,
+            allow_root=allow_root,
+            key=key,
+            regenerate_index=regenerate_index,
+        )
 
+
+def _build_tarball_in_stage_dir(
+    spec,
+    out_url,
+    stage_dir,
+    force=False,
+    relative=False,
+    unsigned=False,
+    allow_root=False,
+    key=None,
+    regenerate_index=False,
+):
+    cache_prefix = build_cache_prefix(stage_dir)
     tarfile_name = tarball_name(spec, ".spack")
     tarfile_dir = os.path.join(cache_prefix, tarball_directory_name(spec))
     tarfile_path = os.path.join(tarfile_dir, tarfile_name)
     spackfile_path = os.path.join(cache_prefix, tarball_path_name(spec, ".spack"))
-    remote_spackfile_path = url_util.join(out_url, os.path.relpath(spackfile_path, tmpdir))
+    remote_spackfile_path = url_util.join(out_url, os.path.relpath(spackfile_path, stage_dir))
 
     mkdirp(tarfile_dir)
     if web_util.url_exists(remote_spackfile_path):
@@ -1245,7 +1268,7 @@ def _build_tarball(
     signed_specfile_path = "{0}.sig".format(specfile_path)
 
     remote_specfile_path = url_util.join(
-        out_url, os.path.relpath(specfile_path, os.path.realpath(tmpdir))
+        out_url, os.path.relpath(specfile_path, os.path.realpath(stage_dir))
     )
     remote_signed_specfile_path = "{0}.sig".format(remote_specfile_path)
 
@@ -1261,7 +1284,7 @@ def _build_tarball(
         raise NoOverwriteException(url_util.format(remote_specfile_path))
 
     pkg_dir = os.path.basename(spec.prefix.rstrip(os.path.sep))
-    workdir = os.path.join(tmpdir, pkg_dir)
+    workdir = os.path.join(stage_dir, pkg_dir)
 
     # TODO: We generally don't want to mutate any files, but when using relative
     # mode, Spack unfortunately *does* mutate rpaths and links ahead of time.
@@ -1285,14 +1308,10 @@ def _build_tarball(
 
     # optionally make the paths in the binaries relative to each other
     # in the spack install tree before creating tarball
-    try:
-        if relative:
-            make_package_relative(workdir, spec, buildinfo, allow_root)
-        elif not allow_root:
-            ensure_package_relocatable(buildinfo, binaries_dir)
-    except Exception as e:
-        shutil.rmtree(tmpdir)
-        tty.die(e)
+    if relative:
+        make_package_relative(workdir, spec, buildinfo, allow_root)
+    elif not allow_root:
+        ensure_package_relocatable(buildinfo, binaries_dir)
 
     _do_create_tarball(tarfile_path, binaries_dir, pkg_dir, buildinfo)
 
@@ -1324,7 +1343,11 @@ def _build_tarball(
     spec_dict["buildinfo"] = buildinfo
 
     with open(specfile_path, "w") as outfile:
-        outfile.write(sjson.dump(spec_dict))
+        # Note: when using gpg clear sign, we need to avoid long lines (19995 chars).
+        # If lines are longer, they are truncated without error. Thanks GPG!
+        # So, here we still add newlines, but no indent, so save on file size and
+        # line length.
+        json.dump(spec_dict, outfile, indent=0, separators=(",", ":"))
 
     # sign the tarball and spec file with gpg
     if not unsigned:
@@ -1341,18 +1364,15 @@ def _build_tarball(
 
     tty.debug('Buildcache for "{0}" written to \n {1}'.format(spec, remote_spackfile_path))
 
-    try:
-        # push the key to the build cache's _pgp directory so it can be
-        # imported
-        if not unsigned:
-            push_keys(out_url, keys=[key], regenerate_index=regenerate_index, tmpdir=tmpdir)
+    # push the key to the build cache's _pgp directory so it can be
+    # imported
+    if not unsigned:
+        push_keys(out_url, keys=[key], regenerate_index=regenerate_index, tmpdir=stage_dir)
 
-        # create an index.json for the build_cache directory so specs can be
-        # found
-        if regenerate_index:
-            generate_package_index(url_util.join(out_url, os.path.relpath(cache_prefix, tmpdir)))
-    finally:
-        shutil.rmtree(tmpdir)
+    # create an index.json for the build_cache directory so specs can be
+    # found
+    if regenerate_index:
+        generate_package_index(url_util.join(out_url, os.path.relpath(cache_prefix, stage_dir)))
 
     return None
 
