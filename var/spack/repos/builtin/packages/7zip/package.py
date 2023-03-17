@@ -70,7 +70,7 @@ class _7zip(SourceforgePackage, Package):
         return arch
 
     def is_64bit(self):
-        return platform.machine().endswith("64")
+        return "64" in self.pkg.spec.target.family
 
     def build(self, spec, prefix):
         link_type = "1" if "static" in spec.variants["link_type"].value else "0"

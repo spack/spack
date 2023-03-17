@@ -24,6 +24,8 @@ class Ospray(CMakePackage):
     version("2.6.0", sha256="5efccd7eff5774b77f8894e68a6b803b535a0d12f32ab49edf13b954e2848f2e")
 
     variant("apps", default=False, description="Enable building OSPRay Apps")
+    variant("denoiser", default=True, description="Enable denoiser image operation")
+    variant("glm", default=False, description="Build ospray_cpp GLM tests/tutorial")
     variant("mpi", default=True, description="Enable MPI support")
 
     depends_on("rkcommon@1.5:")
@@ -36,7 +38,7 @@ class Ospray(CMakePackage):
     depends_on("openvkl@1.0.1:", when="@2.7.0:")
     depends_on("openvkl@1.2.0:", when="@2.9.0:")
     depends_on("openvkl@1.3.0:", when="@2.10.0:")
-    depends_on("openimagedenoise@1.2.3:")
+    depends_on("openimagedenoise@1.2.3:", when="+denoiser")
     depends_on("ispc@1.14.1:", type=("build"))
     depends_on("ispc@1.16.0:", when="@2.7.0:", type=("build"))
     depends_on("ispc@1.18.0:", when="@2.10.0:", type=("build"))
@@ -47,12 +49,13 @@ class Ospray(CMakePackage):
 
     def cmake_args(self):
         args = [
-            self.define("OSPRAY_MODULE_DENOISER", True),
+            self.define_from_variant("OSPRAY_MODULE_DENOISER", "denoiser"),
             self.define("OSPRAY_ENABLE_MODULES", True),
             self.define("OSPRAY_ENABLE_APPS", False),
             self.define_from_variant("OSPRAY_MODULE_MPI", "mpi"),
             self.define("OSPRAY_MPI_BUILD_TUTORIALS", False),
             self.define("OSPRAY_ISPC_DIRECTORY", self.spec["ispc"].prefix.bin),
+            self.define_from_variant("OSPRAY_APPS_ENABLE_GLM", "glm"),
         ]
 
         # Apps
