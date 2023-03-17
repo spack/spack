@@ -59,7 +59,7 @@ class Esmf(MakefilePackage):
     variant("mpi", default=True, description="Build with MPI support")
     variant("external-lapack", default=False, description="Build with external LAPACK library")
     variant("netcdf", default=True, description="Build with NetCDF support")
-    variant("pnetcdf", default=True, description="Build with pNetCDF support", when="+mpi")
+    variant("pnetcdf", default=False, description="Build with pNetCDF support")
     variant("xerces", default=False, description="Build with Xerces support")
     variant(
         "external-parallelio",
@@ -83,12 +83,18 @@ class Esmf(MakefilePackage):
     depends_on("netcdf-fortran@3.6:", when="+netcdf")
     depends_on("parallel-netcdf@1.2.0:", when="+pnetcdf")
     depends_on("xerces-c@3.1.0:", when="+xerces")
-    depends_on("parallelio@2.5.7: +mpi", when="@8.3.0:8.3.99+external-parallelio+mpi")
-    depends_on("parallelio@2.5.7: ~mpi", when="@8.3.0:8.3.99+external-parallelio~mpi")
-    depends_on("parallelio@2.5.9: +mpi", when="@8.4.0:8.4.99+external-parallelio+mpi")
-    depends_on("parallelio@2.5.9: ~mpi", when="@8.4.0:8.4.99+external-parallelio~mpi")
-    depends_on("parallelio@2.5.10: +mpi", when="@8.5.0:+external-parallelio+mpi")
-    depends_on("parallelio@2.5.10: ~mpi", when="@8.5.0:+external-parallelio~mpi")
+    depends_on("parallelio@2.5.7: +mpi+pnetcdf", when="@8.3.0:8.3.99+external-parallelio+mpi+pnetcdf")
+    depends_on("parallelio@2.5.7: +mpi~pnetcdf", when="@8.3.0:8.3.99+external-parallelio+mpi~pnetcdf")
+    depends_on("parallelio@2.5.7: ~mpi+pnetcdf", when="@8.3.0:8.3.99+external-parallelio~mpi+pnetcdf")
+    depends_on("parallelio@2.5.7: ~mpi~pnetcdf", when="@8.3.0:8.3.99+external-parallelio~mpi~pnetcdf")
+    depends_on("parallelio@2.5.9: +mpi+pnetcdf", when="@8.4.0:8.4.99+external-parallelio+mpi+pnetcdf")
+    depends_on("parallelio@2.5.9: +mpi~pnetcdf", when="@8.4.0:8.4.99+external-parallelio+mpi~pnetcdf")
+    depends_on("parallelio@2.5.9: ~mpi+pnetcdf", when="@8.4.0:8.4.99+external-parallelio~mpi+pnetcdf")
+    depends_on("parallelio@2.5.9: ~mpi~pnetcdf", when="@8.4.0:8.4.99+external-parallelio~mpi~pnetcdf")
+    depends_on("parallelio@2.5.10: +mpi+pnetcdf", when="@8.5.0:+external-parallelio+mpi+pnetcdf")
+    depends_on("parallelio@2.5.10: +mpi~pnetcdf", when="@8.5.0:+external-parallelio+mpi~pnetcdf")
+    depends_on("parallelio@2.5.10: ~mpi+pnetcdf", when="@8.5.0:+external-parallelio~mpi+pnetcdf")
+    depends_on("parallelio@2.5.10: ~mpi~pnetcdf", when="@8.5.0:+external-parallelio~mpi~pnetcdf")
 
     # Testing dependencies
     depends_on("perl", type="test")
