@@ -12,15 +12,16 @@ class PyPennylaneLightningKokkos(CMakePackage, PythonExtension, CudaPackage, ROC
 
     homepage = "https://docs.pennylane.ai/projects/lightning-kokkos"
     git = "https://github.com/PennyLaneAI/pennylane-lightning-kokkos.git"
+    tag = "v0.29.1"
     url = (
-        "https://github.com/PennyLaneAI/pennylane-lightning-kokkos/archive/refs/tags/v0.29.0.tar.gz"
+        f"https://github.com/PennyLaneAI/pennylane-lightning-kokkos/archive/refs/tags/{tag}.tar.gz"
     )
-    tag = "v0.29.0"
 
     maintainers("vincentmr")
 
     version("main", branch="main")
     version("develop", commit="fd6feb9b2c961d6f8d93f31b6015b37e9aeac759")
+    version("0.29.1", sha256="96ba290809873856e28eb1939754cc20b6bce47fd30cee706217f1849955c044")
 
     # kokkos backends
     backends = {
@@ -94,7 +95,6 @@ class CMakeBuilder(spack.build_systems.cmake.CMakeBuilder):
         Here we specify all variant options that can be dynamically specified at build time
         """
         args = [
-            self.define_from_variant("CMAKE_BUILD_TYPE", "build_type"),
             self.define_from_variant("CMAKE_VERBOSE_MAKEFILE:BOOL", "verbose"),
             self.define_from_variant("PLKOKKOS_ENABLE_NATIVE", "native"),
             self.define_from_variant("PLKOKKOS_BUILD_TESTS", "cpptests"),
@@ -112,8 +112,7 @@ class CMakeBuilder(spack.build_systems.cmake.CMakeBuilder):
         super().build(pkg, spec, prefix)
         cm_args = ";".join([s[2:] for s in self.cmake_args()])
         args = ["-i", f"--define={cm_args}"]
-        build_ext = Executable(f"{self.spec['python'].command.path} setup.py build_ext")
-        build_ext(*args)
+        python("setup.py", "build_ext", *args)
 
     def install(self, pkg, spec, prefix):
         pip_args = std_pip_args + [f"--prefix={prefix}", "."]
@@ -126,5 +125,5 @@ class CMakeBuilder(spack.build_systems.cmake.CMakeBuilder):
         pytest = which("pytest")
         pytest("tests")
         # with working_dir(self.stage.source_path):
-        #     pl_runner = Executable(join_path(self.prefix, "bin", "pl-device-test"))
+        #     pl_runner = Executable(self.prefix.bin.pl-device-test)
         #     pl_runner("--device", "lightning.kokkos", "--shots", "None", "--skip-ops")
