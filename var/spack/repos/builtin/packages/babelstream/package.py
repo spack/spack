@@ -342,8 +342,6 @@ class Babelstream(CMakePackage, CudaPackage, ROCmPackage):
         if "+rocm" in self.spec:
             hip_comp = self.spec["rocm"].prefix + "/bin/hipcc"
             args.append("-DCMAKE_CXX_COMPILER=" + hip_comp)
-
-            rocm_archs = self.spec.variants["amdgpu_target"].value
             args.append(
                 "-DCXX_EXTRA_FLAGS= --offload-arch="
                 + self.spec.variants["amdgpu_target"].value
@@ -499,10 +497,8 @@ class Babelstream(CMakePackage, CudaPackage, ROCmPackage):
                     args.append("-DKokkos_ENABLE_OPENMP=ON")
 
         # not in ["kokkos", "raja", "acc", "hip"] then compiler forced true
-        if bool(
-            set(model_list).intersection(
-                ["kokkos", "raja", "acc", "hip"]) == False
-        ):
+        if set(model_list).intersection(
+                ["kokkos", "raja", "acc", "hip"]) is True:
             args.append("-DCMAKE_CXX_COMPILER_FORCED=True")
 
         return args
