@@ -17,8 +17,7 @@ from llnl.util.filesystem import is_nonsymlink_exe_with_shebang, path_contains_s
 from llnl.util.lang import dedupe
 
 from spack.build_environment import dso_suffix, stat_suffix
-from spack.build_systems.autotools import AutotoolsBuilder
-from spack.build_systems.generic import GenericBuilder
+from spack.build_systems import autotools, generic
 from spack.package import *
 from spack.util.environment import is_system_path
 from spack.util.prefix import Prefix
@@ -105,6 +104,8 @@ class Python(AutotoolsPackage, Package):
     version("3.7.2", sha256="f09d83c773b9cc72421abba2c317e4e6e05d919f9bcf34468e192b6a6c8e328d")
     version("3.7.1", sha256="36c1b81ac29d0f8341f727ef40864d99d8206897be96be73dc34d4739c9c9f06")
     version("3.7.0", sha256="85bb9feb6863e04fb1700b018d9d42d1caac178559ffa453d7e6a436e259fd0d")
+
+    build_system(conditional("generic", when="platform=windows"), "autotools", default="autotools")
 
     extendable = True
 
@@ -233,7 +234,6 @@ class Python(AutotoolsPackage, Package):
 
     executables = [r"^python[\d.]*[mw]?$"]
 
-    build_system(conditional("generic", when="platform=windows"), "autotools", default="autotools")
 
     @classmethod
     def determine_version(cls, exe):
@@ -340,20 +340,10 @@ class Python(AutotoolsPackage, Package):
         # allow flags to be passed through compiler wrapper
         return (flags, None, None)
 
-    # ========================================================================
-    # Set up environment to make install easy for python extensions.
-    # ========================================================================
-
     @property
     def command(self):
         """Returns the Python command, which may vary depending
         on the version of Python and how it was installed.
-
-        In general, Python 2 comes with ``python`` and ``python2`` commands,
-        while Python 3 only comes with a ``python3`` command. However, some
-        package managers will symlink ``python`` to ``python3``, while others
-        may contain ``python3.6``, ``python3.5``, and ``python3.4`` in the
-        same directory.
 
         Returns:
             Executable: the Python command
@@ -389,9 +379,7 @@ class Python(AutotoolsPackage, Package):
 
         .. code-block:: console
 
-        # https://docs.python.org/3.8/library/sqlite3.html#f1
-        if spec.satisfies("+sqlite3 ^sqlite+dynamic_extensions"):
-            config_args.append("--enable-loadable-sqlite-extensions")
+        python -m sysconfig
 
         Returns:
             dict: variable definitions
@@ -762,7 +750,7 @@ print(json.dumps(config))
         )
 
 
-class BuildEnvironment(object):
+class BuildEnvironment:
     def setup_build_environment(self, env):
         spec = self.pkg.spec
 
@@ -876,7 +864,7 @@ class BuildEnvironment(object):
                 env.set(link_var, new_link)
 
 
-class RunAfter(object):
+class RunAfter:
     @run_after("install")
     def filter_compilers(self):
         """Run after install to tell the configuration files and Makefiles
@@ -888,18 +876,18 @@ class RunAfter(object):
             return
         kwargs = {"ignore_absent": True, "backup": False, "string": True}
 
-        filenames = [self.get_sysconfigdata_name(), self.config_vars["makefile_filename"]]
+        filenames = [self.pkg.get_sysconfigdata_name(), self.config_vars["makefile_filename"]]
 
-        filter_file(spack_cc, self.compiler.cc, *filenames, **kwargs)
-        if spack_cxx and self.compiler.cxx:
-            filter_file(spack_cxx, self.compiler.cxx, *filenames, **kwargs)
+        filter_file(spack_cc, self.pkg.compiler.cc, *filenames, **kwargs)
+        if spack_cxx and self.pkg.compiler.cxx:
+            filter_file(spack_cxx, self.pkg.compiler.cxx, *filenames, **kwargs)
 
     @run_after("install")
     def symlink(self):
         if sys.platform == "win32":
             return
         spec = self.spec
-        prefix = self.prefix
+        prefix = self.pkg.prefix
 
         if spec.satisfies("+pythoncmd"):
             os.symlink(os.path.join(prefix.bin, "python3"), os.path.join(prefix.bin, "python"))
@@ -987,7 +975,7 @@ class RunAfter(object):
                 self.command("-c", "import crypt")
 
 
-class AutotoolsBuilder(AutotoolsBuilder, RunAfter, BuildEnvironment):
+class AutotoolsBuilder(autotools.AutotoolsBuilder, RunAfter, BuildEnvironment):
     # An in-source build with --enable-optimizations fails for python@3.X
     build_directory = "spack-build"
 
@@ -1078,7 +1066,7 @@ class AutotoolsBuilder(AutotoolsBuilder, RunAfter, BuildEnvironment):
             make(*self.install_targets, parllel=False)
 
 
-class GenericBuilder(GenericBuilder, RunAfter, BuildEnvironment):
+class GenericBuilder(generic.GenericBuilder, RunAfter, BuildEnvironment):
     phases = ("build", "install")
 
     @property
@@ -1121,9 +1109,6 @@ class GenericBuilder(GenericBuilder, RunAfter, BuildEnvironment):
         return args
 
     def build(self, pkg, spec, prefix):
-        """Makes the build targets specified by
-        :py:attr:``~.AutotoolsPackage.build_targets``
-        """
         # Windows builds use a batch script to drive
         # configure and build in one step
         with working_dir(self.stage.source_path):
