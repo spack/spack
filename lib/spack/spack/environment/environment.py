@@ -13,7 +13,7 @@ import sys
 import time
 import urllib.parse
 import urllib.request
-from typing import Optional
+from typing import List, Optional
 
 import ruamel.yaml as yaml
 
@@ -1864,6 +1864,15 @@ class Environment(object):
         hash_matches = self.get_by_hash(dag_hash)
         assert len(hash_matches) == 1
         return hash_matches[0]
+
+    def all_matching_specs(self, *specs: spack.spec.Spec) -> List[spack.spec.Spec]:
+        """Returns all concretized specs in the environment satisfying any of the input specs"""
+        key = lambda s: s.dag_hash()
+        return [
+            s
+            for s in spack.traverse.traverse_nodes(self.concrete_roots(), key=key)
+            if any(s.satisfies(t) for t in specs)
+        ]
 
     @spack.repo.autospec
     def matching_spec(self, spec):

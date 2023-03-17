@@ -23,7 +23,6 @@ import spack.paths
 import spack.report
 import spack.spec
 import spack.store
-import spack.traverse as traverse
 from spack.error import SpackError
 from spack.installer import PackageInstaller
 
@@ -369,17 +368,6 @@ def install(parser, args):
         raise
 
 
-# Install inside environments
-
-
-def _filter_specs_in_env(env: ev.Environment, abstract_specs: List[spack.spec.Spec]):
-    return [
-        s
-        for s in traverse.traverse_nodes(env.concrete_roots(), key=lambda s: s.dag_hash())
-        if any(s.satisfies(t) for t in abstract_specs)
-    ]
-
-
 def _maybe_add_and_concretize(args, env, specs):
     """Handle the overloaded spack install behavior of adding
     and automatically concretizing specs"""
@@ -423,7 +411,7 @@ def install_with_active_env(env: ev.Environment, args, install_kwargs, reporter_
 
     # `spack install x y z` without --add is installing matching specs in the env.
     else:
-        specs_to_install = _filter_specs_in_env(env, specs)
+        specs_to_install = env.all_matching_specs(specs)
         if not specs_to_install:
             msg = (
                 "Cannot install '{0}' because no matching specs are in the current environment."
@@ -446,9 +434,6 @@ def install_with_active_env(env: ev.Environment, args, install_kwargs, reporter_
         # views and modules to be generated.
         with env.write_transaction():
             env.write(regenerate=True)
-
-
-# Install directly from the command line
 
 
 def concrete_specs_from_cli(args, install_kwargs):
