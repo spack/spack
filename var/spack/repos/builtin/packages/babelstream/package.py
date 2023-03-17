@@ -2,6 +2,7 @@
 # ==============================================================
 
 import re  # To get the variant name after (+)
+
 from spack.package import *
 
 
@@ -19,9 +20,7 @@ class Babelstream(CMakePackage, CudaPackage, ROCmPackage):
     homepage = "https://github.com/UoB-HPC/BabelStream"
     url = "https://github.com/UoB-HPC/BabelStream/archive/refs/tags/v4.0.tar.gz"
     git = "https://github.com/UoB-HPC/BabelStream.git"
-    version(
-        "4.0", sha256="a9cd39277fb15d977d468435eb9b894f79f468233f0131509aa540ffda4f5953"
-    )
+    version("4.0", sha256="a9cd39277fb15d977d468435eb9b894f79f468233f0131509aa540ffda4f5953")
     version("main", branch="main")
     version("develop", branch="develop")
     maintainers = ["tomdeakin", "kaanolgu" "tom91136", "robj0nes"]
@@ -37,46 +36,27 @@ class Babelstream(CMakePackage, CudaPackage, ROCmPackage):
     variant("thrust", default=False, description="Enable THRUST support")
     variant("raja", default=False, description="Enable RAJA support")
     variant("stddata", default=False, description="Enable STD-data support")
-    variant("stdindices", default=False,
-            description="Enable STD-indices support")
-    variant("stdranges", default=False,
-            description="Enable STD-ranges support")
+    variant("stdindices", default=False, description="Enable STD-indices support")
+    variant("stdranges", default=False, description="Enable STD-ranges support")
 
     # Some models need to have the programming model abstraction downloaded -
     # this variant enables a path to be provided.
-    variant("dir", values=str, default="none",
-            description="Enable Directory support")
+    variant("dir", values=str, default="none", description="Enable Directory support")
 
     # Kokkos conflict and variant
     conflicts(
-        "dir=none",
-        when="+kokkos",
-        msg="KOKKKOS requires architecture to be specfied by dir=",
+        "dir=none", when="+kokkos", msg="KOKKKOS requires architecture to be specfied by dir="
     )
     variant("kokkos", default=False, description="Enable KOKKOS support")
 
     # ACC conflict
-    variant(
-        "cpu_arch", values=str, default="none", description="Enable CPU Target for ACC"
-    )
-    variant(
-        "target", values=str, default="none", description="Enable CPU Target for ACC"
-    )
+    variant("cpu_arch", values=str, default="none", description="Enable CPU Target for ACC")
+    variant("target", values=str, default="none", description="Enable CPU Target for ACC")
 
     # STD conflicts
-    conflicts(
-        "+stddata", when="%gcc@:10.1.0", msg="STD-data requires newer version of GCC"
-    )
-    conflicts(
-        "+stdindices",
-        when="%gcc@:10.1.0",
-        msg="STD-indices requires newer version of GCC",
-    )
-    conflicts(
-        "+stdranges",
-        when="%gcc@:10.1.0",
-        msg="STD-ranges requires newer version of GCC",
-    )
+    conflicts("+stddata", when="%gcc@:10.1.0", msg="STD-data requires newer version of GCC")
+    conflicts("+stdindices", when="%gcc@:10.1.0", msg="STD-indices requires newer version of GCC")
+    conflicts("+stdranges", when="%gcc@:10.1.0", msg="STD-ranges requires newer version of GCC")
 
     # CUDA conflict
     conflicts(
@@ -84,15 +64,10 @@ class Babelstream(CMakePackage, CudaPackage, ROCmPackage):
         when="+cuda",
         msg="CUDA requires architecture to be specfied by cuda_arch=",
     )
-    variant(
-        "mem", values=str, default="DEFAULT", description="Enable MEM Target for CUDA"
-    )
+    variant("mem", values=str, default="DEFAULT", description="Enable MEM Target for CUDA")
     # Raja Conflict
     variant(
-        "offload",
-        values=str,
-        default="none",
-        description="Enable RAJA Target [CPU or NVIDIA]",
+        "offload", values=str, default="none", description="Enable RAJA Target [CPU or NVIDIA]"
     )
     conflicts(
         "offload=none",
@@ -151,26 +126,15 @@ class Babelstream(CMakePackage, CudaPackage, ROCmPackage):
             backend, dpdncy, descr = item
             backend_vals.append(backend.lower())
 
-    variant(
-        "backend",
-        values=backend_vals,
-        default="none",
-        description="Enable backend support",
-    )
+    variant("backend", values=backend_vals, default="none", description="Enable backend support")
 
     for lang in backends:
         for item in backends[lang]:
             backend, dpdncy, descr = item
             if dpdncy.lower() != "none":
-                depends_on("%s" % dpdncy.lower(), when="backend=%s" %
-                           backend.lower())
+                depends_on("%s" % dpdncy.lower(), when="backend=%s" % backend.lower())
     # this flag could be used in all required languages
-    variant(
-        "flags",
-        values=str,
-        default="none",
-        description="Additional CXX flags to be provided",
-    )
+    variant("flags", values=str, default="none", description="Additional CXX flags to be provided")
 
     # comp_impl_vals=["ONEAPI-DPCPP","DPCPP","HIPSYCL","COMPUTECPP"]
     variant(
@@ -203,9 +167,7 @@ class Babelstream(CMakePackage, CudaPackage, ROCmPackage):
 
         # take only the first portion of the spec until space
         spec_string_truncate = spec_string.split(" ", 1)[0]
-        model_list = find_model_flag(
-            spec_string_truncate
-        )  # Prints out ['cuda', 'thrust']
+        model_list = find_model_flag(spec_string_truncate)  # Prints out ['cuda', 'thrust']
 
         if len(model_list) > 1:
             ignore_list = ["cuda"]  # if +acc is provided ignore the cuda model
@@ -250,11 +212,7 @@ class Babelstream(CMakePackage, CudaPackage, ROCmPackage):
         #             CUDA
         # ===================================
 
-        if (
-            ("+cuda" in self.spec)
-            and ("~kokkos" in self.spec)
-            and ("~acc" in self.spec)
-        ):
+        if ("+cuda" in self.spec) and ("~kokkos" in self.spec) and ("~acc" in self.spec):
             # Set up the cuda macros needed by the build
             cuda_arch_list = self.spec.variants["cuda_arch"].value
             # the architecture value is only number so append sm_ to the name
@@ -265,19 +223,14 @@ class Babelstream(CMakePackage, CudaPackage, ROCmPackage):
             args.append("-DCMAKE_CUDA_COMPILER=" + cuda_comp)
             args.append("-DMEM=" + self.spec.variants["mem"].value)
             if self.spec.variants["flags"].value != "none":
-                args.append("-DCUDA_EXTRA_FLAGS=" +
-                            self.spec.variants["flags"].value)
+                args.append("-DCUDA_EXTRA_FLAGS=" + self.spec.variants["flags"].value)
 
         # ===================================
         #             OMP
         # ===================================
         # `~kokkos` option is there to prevent +kokkos +omp setting to use omp directly from here
         # Same applies for raja
-        if (
-            ("+omp" in self.spec)
-            and ("~kokkos" in self.spec)
-            and ("~raja" in self.spec)
-        ):
+        if ("+omp" in self.spec) and ("~kokkos" in self.spec) and ("~raja" in self.spec):
             args.append("-DCMAKE_CXX_COMPILER=" + self.compiler.cxx)
             if "cuda_arch" in self.spec.variants:
                 cuda_arch_list = self.spec.variants["cuda_arch"].value
@@ -296,14 +249,10 @@ class Babelstream(CMakePackage, CudaPackage, ROCmPackage):
         # ===================================
 
         if "+sycl" in self.spec:
-            args.append(
-                "-DSYCL_COMPILER=" +
-                self.spec.variants["implementation"].value.upper()
-            )
+            args.append("-DSYCL_COMPILER=" + self.spec.variants["implementation"].value.upper())
             if self.spec.variants["implementation"].value.upper() != "ONEAPI-DPCPP":
                 args.append(
-                    "-DSYCL_COMPILER_DIR="
-                    + self.spec.variants["implementation"].value.upper()
+                    "-DSYCL_COMPILER_DIR=" + self.spec.variants["implementation"].value.upper()
                 )
                 if self.spec.variants["implementation"].value.upper() == "COMPUTE-CPP":
                     args.append("-DOpenCL_LIBRARY=")
@@ -321,18 +270,13 @@ class Babelstream(CMakePackage, CudaPackage, ROCmPackage):
                 args.append("-DSYCL_COMPILER=ONEAPI-ICPX")
             else:
                 args.append(
-                    "-DSYCL_COMPILER="
-                    + self.spec.variants["implementation"].value.upper()
+                    "-DSYCL_COMPILER=" + self.spec.variants["implementation"].value.upper()
                 )
                 if self.spec.variants["implementation"].value.upper() != "ONEAPI-DPCPP":
                     args.append(
-                        "-DSYCL_COMPILER_DIR="
-                        + self.spec.variants["implementation"].value.upper()
+                        "-DSYCL_COMPILER_DIR=" + self.spec.variants["implementation"].value.upper()
                     )
-                    if (
-                        self.spec.variants["implementation"].value.upper()
-                        == "COMPUTE-CPP"
-                    ):
+                    if self.spec.variants["implementation"].value.upper() == "COMPUTE-CPP":
                         args.append("-DOpenCL_LIBRARY=")
 
         # ===================================
@@ -355,12 +299,8 @@ class Babelstream(CMakePackage, CudaPackage, ROCmPackage):
         # ===================================
 
         if "+tbb" in self.spec:
-            args.append("-DONE_TBB_DIR=" +
-                        self.spec["tbb"].prefix + "/tbb/latest/")
-            args.append(
-                "-DPARTITIONER=" +
-                self.spec.variants["partitioner"].value.upper()
-            )
+            args.append("-DONE_TBB_DIR=" + self.spec["tbb"].prefix + "/tbb/latest/")
+            args.append("-DPARTITIONER=" + self.spec.variants["partitioner"].value.upper())
 
         # ===================================
         #             OpenCL (ocl)
@@ -369,12 +309,10 @@ class Babelstream(CMakePackage, CudaPackage, ROCmPackage):
             if "backend" in self.spec.variants:
                 if "cuda" in self.spec.variants["backend"].value:
                     cuda_dir = self.spec["cuda"].prefix
-                    args.append("-DOpenCL_LIBRARY=" +
-                                cuda_dir + "/lib64/libOpenCL.so")
+                    args.append("-DOpenCL_LIBRARY=" + cuda_dir + "/lib64/libOpenCL.so")
                 elif "amd" in self.spec.variants["backend"].value:
                     rocm_dir = self.spec["rocm-opencl"].prefix
-                    args.append("-DOpenCL_LIBRARY=" +
-                                rocm_dir + "/lib64/libOpenCL.so")
+                    args.append("-DOpenCL_LIBRARY=" + rocm_dir + "/lib64/libOpenCL.so")
                 elif "intel" in self.spec.variants["backend"].value:
                     intel_lib = (
                         self.spec["intel-oneapi-compilers"].prefix
@@ -404,13 +342,9 @@ class Babelstream(CMakePackage, CudaPackage, ROCmPackage):
                     cuda_arch = "sm_" + cuda_arch_list[0]
                     args.append("-DCUDA_ARCH=" + cuda_arch)
 
-                    args.append("DCUDA_TOOLKIT_ROOT_DIR=" +
-                                self.spec["cuda"].prefix)
+                    args.append("DCUDA_TOOLKIT_ROOT_DIR=" + self.spec["cuda"].prefix)
                     if self.spec.variants["flags"].value != "none":
-                        args.append(
-                            "-DCUDA_EXTRA_FLAGS=" +
-                            self.spec.variants["flags"].value
-                        )
+                        args.append("-DCUDA_EXTRA_FLAGS=" + self.spec.variants["flags"].value)
                 # if("cpu" in self.spec.variants['offload'].value):
 
             if "omp" in self.spec.variants["backend"].value:
@@ -423,12 +357,8 @@ class Babelstream(CMakePackage, CudaPackage, ROCmPackage):
         # ===================================
         if "+thrust" in self.spec:
             if "cuda" in self.spec.variants["implementation"].value:
-                args.append(
-                    "-DTHRUST_IMPL="
-                    + self.spec.variants["implementation"].value.upper()
-                )
-                args.append(
-                    "-SDK_DIR=" + self.spec["thrust"].prefix + "/include")
+                args.append("-DTHRUST_IMPL=" + self.spec.variants["implementation"].value.upper())
+                args.append("-SDK_DIR=" + self.spec["thrust"].prefix + "/include")
                 cuda_arch_list = self.spec.variants["cuda_arch"].value
                 # the architecture value is only number so append sm_ to the name
                 cuda_arch = "sm_" + cuda_arch_list[0]
@@ -436,22 +366,14 @@ class Babelstream(CMakePackage, CudaPackage, ROCmPackage):
                 cuda_dir = self.spec["cuda"].prefix
                 cuda_comp = cuda_dir + "/bin/nvcc"
                 args.append("-DCMAKE_CUDA_COMPILER=" + cuda_comp)
-                args.append("-DBACKEND=" +
-                            self.spec.variants["backend"].value.upper())
+                args.append("-DBACKEND=" + self.spec.variants["backend"].value.upper())
                 if self.spec.variants["flags"].value != "none":
-                    args.append(
-                        "-DCUDA_EXTRA_FLAGS=" +
-                        self.spec.variants["flags"].value
-                    )
+                    args.append("-DCUDA_EXTRA_FLAGS=" + self.spec.variants["flags"].value)
 
             if "rocm" in self.spec.variants["implementation"].value:
-                args.append(
-                    "-DTHRUST_IMPL="
-                    + self.spec.variants["implementation"].value.upper()
-                )
+                args.append("-DTHRUST_IMPL=" + self.spec.variants["implementation"].value.upper())
                 args.append("-SDK_DIR=" + self.spec["rocthrust"].prefix)
-                args.append("-DBACKEND=" +
-                            self.spec.variants["backend"].value.upper())
+                args.append("-DBACKEND=" + self.spec.variants["backend"].value.upper())
 
         # ===================================
         #             kokkos
@@ -469,36 +391,23 @@ class Babelstream(CMakePackage, CudaPackage, ROCmPackage):
                     int_cuda_arch = int(cuda_arch_list[0])
                     # arhitecture kepler optimisations
                     if int_cuda_arch in (30, 32, 35, 37):
-                        args.append(
-                            "-D" + "Kokkos_ARCH_KEPLER" +
-                            str(int_cuda_arch) + "=ON"
-                        )
+                        args.append("-D" + "Kokkos_ARCH_KEPLER" + str(int_cuda_arch) + "=ON")
                     # arhitecture maxwell optimisations
                     if int_cuda_arch in (50, 52, 53):
-                        args.append(
-                            "-D" + "Kokkos_ARCH_MAXWELL" +
-                            str(int_cuda_arch) + "=ON"
-                        )
+                        args.append("-D" + "Kokkos_ARCH_MAXWELL" + str(int_cuda_arch) + "=ON")
                     # arhitecture pascal optimisations
                     if int_cuda_arch in (60, 61):
-                        args.append(
-                            "-D" + "Kokkos_ARCH_PASCAL" +
-                            str(int_cuda_arch) + "=ON"
-                        )
+                        args.append("-D" + "Kokkos_ARCH_PASCAL" + str(int_cuda_arch) + "=ON")
                     # architecture volta optimisations
                     if int_cuda_arch in (70, 72):
-                        args.append(
-                            "-D" + "Kokkos_ARCH_VOLTA" +
-                            str(int_cuda_arch) + "=ON"
-                        )
+                        args.append("-D" + "Kokkos_ARCH_VOLTA" + str(int_cuda_arch) + "=ON")
                     if int_cuda_arch == 75:
                         args.append("-DKokkos_ARCH_TURING75=ON")
                 if "omp" in self.spec.variants["backend"].value:
                     args.append("-DKokkos_ENABLE_OPENMP=ON")
 
         # not in ["kokkos", "raja", "acc", "hip"] then compiler forced true
-        if set(model_list).intersection(
-                ["kokkos", "raja", "acc", "hip"]) is True:
+        if set(model_list).intersection(["kokkos", "raja", "acc", "hip"]) is True:
             args.append("-DCMAKE_CXX_COMPILER_FORCED=True")
 
         return args
