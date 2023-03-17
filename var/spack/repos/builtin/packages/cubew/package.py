@@ -52,6 +52,8 @@ class Cubew(AutotoolsPackage):
 
     def configure_args(self):
         configure_args = ["--enable-shared"]
+        configure_args.append("--with-frontend-zlib=%s" % self.spec["zlib"].prefix.lib)
+        configure_args.append("--with-backend-zlib=%s" % self.spec["zlib"].prefix.lib)
 
         return configure_args
 

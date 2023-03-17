@@ -3,10 +3,11 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+from spack.build_systems.cmake import CMakeBuilder
 from spack.package import *
 
 
-class Libpng(AutotoolsPackage):
+class Libpng(CMakePackage):
     """libpng is the official PNG reference library."""
 
     homepage = "http://www.libpng.org/pub/png/libpng.html"
@@ -36,19 +37,12 @@ class Libpng(AutotoolsPackage):
         description="Build shared libs, static libs or both",
     )
 
-    def configure_args(self):
-        args = [
-            # not honored, see
-            #   https://sourceforge.net/p/libpng/bugs/210/#33f1
-            # '--with-zlib=' + self.spec['zlib'].prefix,
-            f"CPPFLAGS={self.spec['zlib'].headers.include_flags}",
-            f"LDFLAGS={self.spec['zlib'].libs.search_flags}",
+
+class CMakeBuilder(CMakeBuilder):
+    def cmake_args(self):
+        return [
+            self.define("CMAKE_CXX_FLAGS", self.spec["zlib"].headers.include_flags),
+            self.define("ZLIB_ROOT", self.spec["zlib"].prefix),
+            self.define("PNG_SHARED", "shared" in self.spec.variants["libs"].value),
+            self.define("PNG_STATIC", "static" in self.spec.variants["libs"].value),
         ]
-
-        args += self.enable_or_disable("libs")
-        return args
-
-    def check(self):
-        # Libpng has both 'check' and 'test' targets that are aliases.
-        # Only need to run the tests once.
-        make("check")
