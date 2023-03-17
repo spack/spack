@@ -309,14 +309,7 @@ def test_buildcache_create_install(
     ],
 )
 def test_correct_specs_are_pushed(
-    things_to_install,
-    expected,
-    install_mockery,
-    mock_fetch,
-    tmpdir,
-    monkeypatch,
-    default_mock_concretization,
-    temporary_store,
+    things_to_install, expected, tmpdir, monkeypatch, default_mock_concretization, temporary_store
 ):
     # Concretize dttop and add it to the temporary database (without prefixes)
     spec = default_mock_concretization("dttop")
@@ -328,7 +321,6 @@ def test_correct_specs_are_pushed(
     def fake_push(node, push_url, **kwargs):
         assert isinstance(node, Spec)
         packages_to_push.append(node.name)
-        return True
 
     monkeypatch.setattr(spack.binary_distribution, "safe_push", fake_push)
 
