@@ -58,7 +58,6 @@ class Fontconfig(AutotoolsPackage):
         if self.spec.satisfies("+pic"):
             args.append("CFLAGS=-fPIC")
             args.append("FFLAGS=-fPIC")
-            args.append("--with-pic")
         return args
 
     @run_after("install")
