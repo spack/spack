@@ -234,7 +234,6 @@ class Python(AutotoolsPackage, Package):
 
     executables = [r"^python[\d.]*[mw]?$"]
 
-
     @classmethod
     def determine_version(cls, exe):
         # Newer versions of Python support `--version`,
