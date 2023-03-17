@@ -215,11 +215,11 @@ class Esmf(MakefilePackage):
 
         if "+mpi" in spec:
             env.set("ESMF_CXX", spec["mpi"].mpicxx)
-            env.set("ESMF_CC", spec["mpi"].mpicc)
+            env.set("ESMF_C", spec["mpi"].mpicc)
             env.set("ESMF_F90", spec["mpi"].mpifc)
         else:
             env.set("ESMF_CXX", spack_cxx)
-            env.set("ESMF_CC", spack_cc)
+            env.set("ESMF_C", spack_cc)
             env.set("ESMF_F90", spack_fc)
 
         # This environment variable controls the build option.
