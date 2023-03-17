@@ -17,6 +17,7 @@ class PerlCgi(PerlPackage):
 
     maintainers("cessenat")
 
+    version("4.56", sha256="2d36d930b89ecdfbcc7d6d4740821bd466a0218abf1bd413568640b2f43799b7")
     version("4.54", sha256="9608a044ae2e87cefae8e69b113e3828552ddaba0d596a02f9954c6ac17fa294")
     version("4.53", sha256="c67e732f3c96bcb505405fd944f131fe5c57b46e5d02885c00714c452bf14e60")
     version("4.40", sha256="10efff3061b3c31a33b3cc59f955aef9c88d57d12dbac46389758cef92f24f56")
