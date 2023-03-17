@@ -771,3 +771,40 @@ def test_version_intersects_satisfies_semantic(lhs_str, rhs_str, expected):
     assert lhs.intersects(rhs) is rhs.intersects(lhs)
     assert lhs.satisfies(rhs) is lhs_sat_rhs
     assert rhs.satisfies(lhs) is rhs_sat_lhs
+
+
+@pytest.mark.parametrize(
+    "spec_str,tested_intersects,tested_satisfies",
+    [
+        (
+            "git-test-commit@git.1.x",
+            [("@:2", True), ("@:1", True), ("@:0", False), ("@1.3:", False)],
+            [("@:2", True), ("@:1", True), ("@:0", False), ("@1.3:", False)],
+        ),
+        (
+            "git-test-commit@git.v2.0",
+            [("@:2", True), ("@:1", False), ("@:0", False), ("@1.3:", True)],
+            [("@:2", True), ("@:1", False), ("@:0", False), ("@1.3:", True)],
+        ),
+    ],
+)
+@pytest.mark.skipif(sys.platform == "win32", reason="Not supported on Windows (yet)")
+def test_git_versions_without_explicit_reference(
+    spec_str,
+    tested_intersects,
+    tested_satisfies,
+    mock_git_version_info,
+    mock_packages,
+    monkeypatch,
+):
+    repo_path, filename, commits = mock_git_version_info
+    monkeypatch.setattr(
+        spack.package_base.PackageBase, "git", "file://%s" % repo_path, raising=False
+    )
+    spec = spack.spec.Spec(spec_str)
+
+    for test_str, expected in tested_intersects:
+        assert spec.intersects(test_str) is expected, test_str
+
+    for test_str, expected in tested_intersects:
+        assert spec.intersects(test_str) is expected, test_str

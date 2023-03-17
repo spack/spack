@@ -109,6 +109,7 @@ class Rocprim(CMakePackage):
     depends_on("cmake@3.10.2:", type="build", when="@4.2.0:")
     depends_on("cmake@3.5.1:", type="build")
     depends_on("numactl", type="link", when="@3.7.0:")
+    depends_on("googletest@1.10.0:", type="test")
 
     for ver in [
         "3.5.0",
@@ -149,8 +150,8 @@ class Rocprim(CMakePackage):
 
     def cmake_args(self):
         args = [
-            self.define("ONLY_INSTALL", "ON"),
-            self.define("BUILD_TEST", "OFF"),
+            self.define("ONLY_INSTALL", (not self.run_tests)),
+            self.define("BUILD_TEST", self.run_tests),
             self.define("BUILD_BENCHMARK", "OFF"),
             self.define("BUILD_EXAMPLE", "OFF"),
         ]
