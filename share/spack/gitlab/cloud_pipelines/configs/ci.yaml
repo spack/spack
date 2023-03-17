@@ -25,7 +25,7 @@ ci:
       - - cat /proc/loadavg || true
       variables:
         CI_JOB_SIZE: "default"
-        SPACK_CI_LOGGER_BYTES: 2000000
+        SPACK_CI_LOGGER_BYTES: "2000000"
         # SPACK_VERBOSE_SCRIPT: "1"
 
   - signing-job:
