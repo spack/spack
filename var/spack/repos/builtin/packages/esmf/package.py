@@ -65,7 +65,7 @@ class Esmf(MakefilePackage):
         "external-parallelio",
         default=True,
         description="Build with external parallelio library",
-        when="@8.3.1:+mpi",
+        when="@8.3.1:",
     )
     variant("debug", default=False, description="Build with debugging symbols and options enabled")
     variant("shared", default=True, description="Build shared library")
@@ -83,9 +83,12 @@ class Esmf(MakefilePackage):
     depends_on("netcdf-fortran@3.6:", when="+netcdf")
     depends_on("parallel-netcdf@1.2.0:", when="+pnetcdf")
     depends_on("xerces-c@3.1.0:", when="+xerces")
-    depends_on("parallelio@2.5.7:", when="@8.3.0:8.3.99+external-parallelio")
-    depends_on("parallelio@2.5.9:", when="@8.4.0:8.4.99+external-parallelio")
-    depends_on("parallelio@2.5.10:", when="@8.5.0:+external-parallelio")
+    depends_on("parallelio@2.5.7: +mpi", when="@8.3.0:8.3.99+external-parallelio+mpi")
+    depends_on("parallelio@2.5.7: ~mpi", when="@8.3.0:8.3.99+external-parallelio~mpi")
+    depends_on("parallelio@2.5.9: +mpi", when="@8.4.0:8.4.99+external-parallelio+mpi")
+    depends_on("parallelio@2.5.9: ~mpi", when="@8.4.0:8.4.99+external-parallelio~mpi")
+    depends_on("parallelio@2.5.10: +mpi", when="@8.5.0:+external-parallelio+mpi")
+    depends_on("parallelio@2.5.10: ~mpi", when="@8.5.0:+external-parallelio~mpi")
 
     # Testing dependencies
     depends_on("perl", type="test")
