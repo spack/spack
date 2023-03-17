@@ -10,10 +10,8 @@ class Universal(CMakePackage):
     """Universal: a header-only C++ template library for universal number arithmetic"""
 
     homepage = "https://github.com/stillwater-sc/universal"
-    url = "https://github.com/stillwater-sc/universal"
+    url = "https://github.com/stillwater-sc/universal/archive/refs/tags/v3.68.tar.gz"
 
     maintainers("eschnett")
 
-    # The release file "3.58b" contains version 3.59.1
-    version("3.59.1", sha256="771d64cf51862fdc7c54de585eafac67",
-            url="https://github.com/stillwater-sc/universal/archive/refs/tags/v3.58b.tar.gz")
+    version("3.68", sha256="67de4e0a3276b873a298ab98f1237ff3fd23240178e71405bf813ee38e4b1f62")
