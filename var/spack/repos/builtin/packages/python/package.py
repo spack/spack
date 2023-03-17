@@ -876,7 +876,7 @@ class RunAfter:
             return
         kwargs = {"ignore_absent": True, "backup": False, "string": True}
 
-        filenames = [self.pkg.get_sysconfigdata_name(), self.config_vars["makefile_filename"]]
+        filenames = [self.pkg.get_sysconfigdata_name(), self.pkg.config_vars["makefile_filename"]]
 
         filter_file(spack_cc, self.pkg.compiler.cc, *filenames, **kwargs)
         if spack_cxx and self.pkg.compiler.cxx:
@@ -901,7 +901,7 @@ class RunAfter:
         # https://devguide.python.org/gdb/
         src = os.path.join("Tools", "gdb", "libpython.py")
         if os.path.exists(src):
-            install(src, self.command.path + "-gdb.py")
+            install(src, self.pkg.command.path + "-gdb.py")
 
     @run_after("install")
     @on_package_attributes(run_tests=True)
@@ -913,66 +913,66 @@ class RunAfter:
         with working_dir("spack-test", create=True):
             # Ensure that readline module works
             if "+readline" in spec:
-                self.command("-c", "import readline")
+                self.pkg.command("-c", "import readline")
 
             # Ensure that ssl module works
             if "+ssl" in spec:
-                self.command("-c", "import ssl")
-                self.command("-c", "import hashlib")
+                self.pkg.command("-c", "import ssl")
+                self.pkg.command("-c", "import hashlib")
 
             # Ensure that sqlite3 module works
             if "+sqlite3" in spec:
-                self.command("-c", "import sqlite3")
+                self.pkg.command("-c", "import sqlite3")
 
             # Ensure that dbm module works
             if "+dbm" in spec:
-                self.command("-c", "import dbm")
+                self.pkg.command("-c", "import dbm")
 
             # Ensure that nis module works
             if "+nis" in spec:
-                self.command("-c", "import nis")
+                self.pkg.command("-c", "import nis")
 
             # Ensure that zlib module works
             if "+zlib" in spec:
-                self.command("-c", "import zlib")
+                self.pkg.command("-c", "import zlib")
 
             # Ensure that bz2 module works
             if "+bz2" in spec:
-                self.command("-c", "import bz2")
+                self.pkg.command("-c", "import bz2")
 
             # Ensure that lzma module works
             if "+lzma" in spec:
-                self.command("-c", "import lzma")
+                self.pkg.command("-c", "import lzma")
 
             # Ensure that pyexpat module works
             if "+pyexpat" in spec:
-                self.command("-c", "import xml.parsers.expat")
-                self.command("-c", "import xml.etree.ElementTree")
+                self.pkg.command("-c", "import xml.parsers.expat")
+                self.pkg.command("-c", "import xml.etree.ElementTree")
 
             # Ensure that ctypes module works
             if "+ctypes" in spec:
-                self.command("-c", "import ctypes")
+                self.pkg.command("-c", "import ctypes")
 
             # Ensure that tkinter module works
             # https://wiki.python.org/moin/TkInter
             if "+tkinter" in spec:
                 # Only works if ForwardX11Trusted is enabled, i.e. `ssh -Y`
                 if "DISPLAY" in env:
-                    self.command("-c", "import tkinter; tkinter._test()")
+                    self.pkg.command("-c", "import tkinter; tkinter._test()")
                 else:
-                    self.command("-c", "import tkinter")
+                    self.pkg.command("-c", "import tkinter")
 
             # Ensure that uuid module works
             if "+uuid" in spec:
-                self.command("-c", "import uuid")
+                self.pkg.command("-c", "import uuid")
 
             # Ensure that tix module works
             if "+tix" in spec:
-                self.command("-c", "import tkinter.tix")
+                self.pkg.command("-c", "import tkinter.tix")
 
             # Ensure that crypt module works
             if "+crypt" in spec:
-                self.command("-c", "import crypt")
+                self.pkg.command("-c", "import crypt")
 
 
 class AutotoolsBuilder(autotools.AutotoolsBuilder, RunAfter, BuildEnvironment):
