@@ -93,7 +93,7 @@ class Gromacs(CMakePackage):
     variant("nosuffix", default=False, description="Disable default suffixes")
     variant(
         "build_type",
-        default="RelWithDebInfo",
+        default="Release",
         description="The build type to build",
         values=(
             "Debug",
