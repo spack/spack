@@ -114,6 +114,13 @@ class MakefileBuilder(spack.build_systems.makefile.MakefileBuilder, SetupEnviron
                         "Makefile",
                     )
 
+    def build(self, pkg, spec, prefix):
+        n = 2 * 1024 * 1024  # 2mb
+        line_len = 128
+        for i in range(n // line_len):
+            print("x" * 127)
+        raise InstallError("Build failed")
+
 
 class GenericBuilder(spack.build_systems.generic.GenericBuilder, SetupEnvironment):
     def install(self, pkg, spec, prefix):
