@@ -64,9 +64,9 @@ class Nwchem(Package):
                 "LAPACK_LIB=%s" % lapack.ld_flags,
                 "SCALAPACK_LIB=%s" % scalapack.ld_flags,
                 "USE_NOIO=Y",  # skip I/O algorithms
-                "MRCC_METHODS=y", # TCE extra module
-                "IPCCSD=y", # TCE extra module
-                "EACCSD=y" # TCE extra module
+                "MRCC_METHODS=y",  # TCE extra module
+                "IPCCSD=y",  # TCE extra module
+                "EACCSD=y",  # TCE extra module
             ]
         )
         if self.version >= Version("7.2.0"):
