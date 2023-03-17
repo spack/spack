@@ -38,6 +38,7 @@ class Perl(Package):  # Perl doesn't use Autotools, it should subclass Package
     # explanation of version numbering scheme
 
     # Development releases (odd numbers)
+    version("5.37.9", sha256="9884fa8a4958bf9434b50f01cbfd187f9e2738f38fe1ae37f844e9950c5117c1")
     version("5.35.0", sha256="d6c0eb4763d1c73c1d18730664d43fcaf6100c31573c3b81e1504ec8f5b22708")
     version("5.33.3", sha256="4f4ba0aceb932e6cf7c05674d05e51ef759d1c97f0685dee65a8f3d190f737cd")
     version("5.31.7", sha256="d05c4e72128f95ef6ffad42728ecbbd0d9437290bf0f88268b51af011f26b57d")
