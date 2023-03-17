@@ -1865,7 +1865,7 @@ class Environment(object):
         assert len(hash_matches) == 1
         return hash_matches[0]
 
-    def all_matching_specs(self, *specs: spack.spec.Spec) -> List[spack.spec.Spec]:
+    def all_matching_specs(self, *specs: spack.spec.Spec) -> List[Spec]:
         """Returns all concretized specs in the environment satisfying any of the input specs"""
         key = lambda s: s.dag_hash()
         return [
