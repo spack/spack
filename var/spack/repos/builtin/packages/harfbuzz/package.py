@@ -126,14 +126,16 @@ class SetupEnvironment(object):
     def setup_build_environment(self, env):
         ldflags = []
         libs = []
-        ldflags.append(self.spec["bzip2"].libs.ld_flags)
-        ldflags.append(self.spec["zlib"].libs.ld_flags)
-        ldflags.append(self.spec["libpng"].libs.ld_flags)
-        libs.append(self.spec["bzip2"].libs.link_flags)
-        libs.append(self.spec["zlib"].libs.link_flags)
-        libs.append(self.spec["libpng"].libs.link_flags)
-        env.set("LDFLAGS", " ".join(ldflags))
-        env.set("LIBS", " ".join(libs))
+        for lib in ["bzip2", "zlib", "libpng"]:
+            spec = self.spec[lib]
+            if spec.satisfies("~shared") or (
+                spec.satisfies("libs=static") and not spec.satisfies("libs=shared")
+            ):
+                ldflags.append(spec.libs.ld_flags)
+                libs.append(spec.libs.link_flags)
+        if ldflags:
+            env.set("LDFLAGS", " ".join(ldflags))
+            env.set("LIBS", " ".join(libs))
 
 
 class MesonBuilder(spack.build_systems.meson.MesonBuilder, SetupEnvironment):
