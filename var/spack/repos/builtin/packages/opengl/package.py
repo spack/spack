@@ -83,15 +83,20 @@ class Opengl(BundlePackage):
         _ = self.fetcher
 
     @property
+    def headers(self):
+        return self.gl_headers
+
+    @property
     def libs(self):
         return self.gl_libs
 
     @property
     def gl_headers(self):
-        if "platform=darwin":
-            header_name = "OpenGL/gl.h"
+        spec = self.spec
+        if "platform=darwin" in spec:
+            header_name = "OpenGL/gl"
         else:
-            header_name = "GL/gl.h"
+            header_name = "GL/gl"
         return find_headers(header_name, root=self.prefix, recursive=True)
 
     @property
