@@ -411,7 +411,7 @@ def install_with_active_env(env: ev.Environment, args, install_kwargs, reporter_
 
     # `spack install x y z` without --add is installing matching specs in the env.
     else:
-        specs_to_install = env.all_matching_specs(specs)
+        specs_to_install = env.all_matching_specs(*specs)
         if not specs_to_install:
             msg = (
                 "Cannot install '{0}' because no matching specs are in the current environment."
