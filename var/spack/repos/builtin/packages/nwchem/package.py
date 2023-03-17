@@ -63,14 +63,16 @@ class Nwchem(Package):
                 "BLASOPT=%s" % ((lapack + blas).ld_flags),
                 "LAPACK_LIB=%s" % lapack.ld_flags,
                 "SCALAPACK_LIB=%s" % scalapack.ld_flags,
-                "NWCHEM_MODULES=all python gwmol",
-#                "NWCHEM_MODULES=tinyqmpw python",# faster build for testing
                 "USE_NOIO=Y",  # skip I/O algorithms
                 "MRCC_METHODS=y", # TCE extra module
                 "IPCCSD=y", # TCE extra module
                 "EACCSD=y" # TCE extra module
             ]
         )
+        if self.version >= Version("7.2.0"):
+            args.extend(["NWCHEM_MODULES=all python gwmol"])
+        else:
+            args.extend(["NWCHEM_MODULES=all python"])
 
         # TODO: query if blas/lapack/scalapack uses 64bit Ints
         # A flag to distinguish between 32bit and 64bit integers in linear
