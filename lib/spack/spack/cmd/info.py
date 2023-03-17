@@ -283,7 +283,7 @@ def print_tests(pkg):
     c_names = ("gcc", "intel", "intel-parallel-studio", "pgi")
     if pkg.name in c_names:
         v_names.extend(["c", "cxx", "fortran"])
-    if pkg.spec.satisfies("llvm+clang"):
+    if pkg.spec.intersects("llvm+clang"):
         v_names.extend(["c", "cxx"])
     # TODO Refactor END
 

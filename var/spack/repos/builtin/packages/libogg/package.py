@@ -3,10 +3,13 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+import os
+
+from spack.build_systems.generic import GenericBuilder
 from spack.package import *
 
 
-class Libogg(AutotoolsPackage):
+class Libogg(CMakePackage, AutotoolsPackage, Package):
     """Ogg is a multimedia container format, and the native file and stream
     format for the Xiph.org multimedia codecs."""
 
@@ -24,3 +27,35 @@ class Libogg(AutotoolsPackage):
         sha256="0f4d289aecb3d5f7329d51f1a72ab10c04c336b25481a40d6d841120721be485",
         when="@1.3.4 platform=darwin",
     )
+    build_system(
+        conditional("cmake", when="@1.3.4:"),
+        conditional("generic", when="@1.3.2 platform=windows"),
+        "autotools",
+        default="autotools",
+    )
+
+
+class GenericBuilder(GenericBuilder):
+    phases = ["build", "install"]
+
+    def is_64bit(self):
+        return "64" in self.pkg.spec.target.family
+
+    def build(self, spec, prefix):
+        if spec.satisfies("%msvc"):
+            plat_tools = self.pkg.compiler.msvc_version
+        else:
+            raise RuntimeError("Package does not support non MSVC compilers on Windows")
+        ms_build_args = ["libogg_static.vcxproj", "/p:PlatformToolset=v%s" % plat_tools]
+        msbuild(*ms_build_args)
+
+    def install(self, spec, prefix):
+        mkdirp(prefix.include.ogg)
+        mkdirp(prefix.lib)
+        mkdirp(prefix.share)
+        install(
+            os.path.join(self.pkg.stage.source_path, "include", "ogg", "*.h"), prefix.include.ogg
+        )
+        plat_prefix = "x64" if self.is_64bit() else "x86"
+        install(os.path.join(plat_prefix, "Debug", "*.lib"), prefix.lib)
+        install_tree(os.path.join(self.pkg.stage.source_path, "doc"), prefix.share)

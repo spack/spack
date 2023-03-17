@@ -16,6 +16,7 @@ class Autodiff(CMakePackage):
 
     maintainers("wdconinc", "HadrienG2")
 
+    version("1.0.0", sha256="112c6f5740071786b3f212c96896abc2089a74bca16b57bb46ebf4cec79dca43")
     version("0.6.12", sha256="3e9d667b81bba8e43bbe240a0321e25f4be248d1761097718664445306882dcc")
     version("0.6.11", sha256="ac7a52387a10ecb8ba77ce5385ffb23893ff9a623467b4392bd204422a3b5c09")
     version("0.6.10", sha256="d6bc2f44cab5fd132deabdcb2a9e914b4959660c80a40a2c3f20dde79fc113d9")
