@@ -1626,6 +1626,7 @@ def push_mirror_contents(input_spec: spack.spec.Spec, mirror_url, sign_binaries)
         if any(x in err_msg for x in ["Access Denied", "InvalidAccessKeyId"]):
             tty.msg("Permission problem writing to {0}".format(mirror_url))
             tty.msg(err_msg)
+            return False
         else:
             raise inst
 
