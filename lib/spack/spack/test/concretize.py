@@ -2076,3 +2076,24 @@ class TestConcretize(object):
         abstract_specs = [spack.spec.Spec(s) for s in ["py-extension1", "python"]]
         specs = spack.concretize.concretize_specs_together(*abstract_specs)
         assert specs[0]["python"] == specs[1]["python"]
+
+    @pytest.mark.regression("36190")
+    @pytest.mark.parametrize(
+        "specs",
+        [
+            ["mpileaks^ callpath ^dyninst@8.1.1:8 ^mpich2@1.3:1"],
+            ["multivalue-variant ^a@2:2"],
+            ["v1-consumer ^conditional-provider@1:1 +disable-v1"],
+        ],
+    )
+    def test_result_specs_is_not_empty(self, specs):
+        """Check that the implementation of "result.specs" is correct in cases where we
+        know a concretization exists.
+        """
+        specs = [spack.spec.Spec(s) for s in specs]
+        solver = spack.solver.asp.Solver()
+        setup = spack.solver.asp.SpackSolverSetup()
+        result, _, _ = solver.driver.solve(setup, specs, reuse=[])
+
+        assert result.specs
+        assert not result.unsolved_specs
