@@ -3,8 +3,9 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack.package import *
 import os
+
+from spack.package import *
 
 
 class DoubleBatchedFftLibrary(CMakePackage):
@@ -35,7 +36,9 @@ class DoubleBatchedFftLibrary(CMakePackage):
     def cmake_args(self):
         cxx_compiler = os.path.basename(self.compiler.cxx)
         if self.spec.satisfies("+sycl") and cxx_compiler not in ["icpx", "dpcpp"]:
-            raise InstallError("The Double-Batched FFT Library requires the oneapi DPC++/C++ Compiler")
+            raise InstallError(
+                "The Double-Batched FFT Library requires the oneapi DPC++/C++ Compiler"
+            )
 
         return [
             self.define_from_variant("BUILD_SHARED_LIBS", "shared"),
