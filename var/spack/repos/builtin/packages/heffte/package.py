@@ -47,7 +47,6 @@ class Heffte(CMakePackage, CudaPackage, ROCmPackage):
         deprecated=True,
     )
 
-
     patch("threads10.patch", when="@1.0")
     patch("fortran200.patch", when="@2.0.0")
 
