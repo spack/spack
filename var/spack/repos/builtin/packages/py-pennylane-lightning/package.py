@@ -105,8 +105,7 @@ class CMakeBuilder(spack.build_systems.cmake.CMakeBuilder):
             ]
         )
         args = ["-i", f"--define={cm_args}"]
-        build_ext = Executable(f"{self.spec['python'].command.path}" + " setup.py build_ext")
-        build_ext(*args)
+        python("setup.py", "build_ext", *args)
 
     def install(self, pkg, spec, prefix):
         pip_args = std_pip_args + ["--prefix=" + prefix, "."]
