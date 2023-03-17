@@ -1063,20 +1063,15 @@ class Repo(object):
                 "Repository %s does not contain package %s." % (self.namespace, spec.fullname)
             )
 
-        # Install patch files needed by the package.
+        # Install patch files needed by the (concrete) package.
         fs.mkdirp(path)
-        try:
+        if spec.concrete:
             for patch in itertools.chain.from_iterable(spec.package.patches.values()):
                 if patch.path:
                     if os.path.exists(patch.path):
                         fs.install(patch.path, path)
                     else:
                         tty.warn("Patch file did not exist: %s" % patch.path)
-        except AssertionError as e:
-            # virtual specs won't have patches to install
-            tty.debug(
-                "Could not copy patch files for virtual package {0}: {1}".format(spec.name, str(e))
-            )
 
         # Install the package.py file itself, if it exists.
         try:

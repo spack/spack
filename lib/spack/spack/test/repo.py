@@ -157,12 +157,10 @@ def test_repo_dump_virtuals(tmpdir, mutable_mock_repo, mock_packages, ensure_deb
     vspec = spack.spec.Spec("something")
     mutable_mock_repo.dump_provenance(vspec, tmpdir)
     captured = capsys.readouterr()[1]
-    assert "Could not copy patch files" in captured
     assert "Could not copy package" in captured
 
     # Now with a virtual with a package
     vspec = spack.spec.Spec("externalvirtual")
     mutable_mock_repo.dump_provenance(vspec, tmpdir)
     captured = capsys.readouterr()[1]
-    assert "Could not copy patch files" in captured
     assert "package.py" in os.listdir(tmpdir), "Expected the virtual's package to be copied"

@@ -222,9 +222,8 @@ def test_test_functions_error_or_none(mock_packages):
     with pytest.raises(ValueError):
         _ = spack.install_test.test_functions(flag)
 
-    assert not spack.install_test.test_functions(
-        flag.__class__
-    ), "Expected no test methods for a class that doesn't have any"
+    with pytest.raises(ValueError):
+        _ = spack.install_test.test_functions(flag.__class__)
 
 
 # TODO: This test should go away when compilers as dependencies is supported

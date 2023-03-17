@@ -8,6 +8,7 @@ import inspect
 import os
 import re
 import shutil
+from typing import Optional, Type, Union
 
 import llnl.util.filesystem as fs
 import llnl.util.tty as tty
@@ -111,14 +112,18 @@ def get_test_suite(name):
     return names[0]
 
 
-def package_class(spec_or_pkg):
+PkgClass = Type["spack.package_base.PackageBase"]
+SpecPkgType = Union[Spec, "spack.package_base.PackageBase", PkgClass]
+
+
+def package_class(spec_or_pkg: SpecPkgType) -> Optional[PkgClass]:
     """Return the package class for the spec or package.
 
     Args:
-        spec_or_pkg (spack.spec.Spec or spack.package_base.PackageBase): spec or
-            package (class)
+        spec_or_pkg: spec or package (class)
 
-    Raises: ValueError: If not given a spec, package, or class
+    Raises:
+        ValueError: If not given a spec, package, or class
     """
     if isinstance(spec_or_pkg, spack.spec.Spec):
         spec = spec_or_pkg
@@ -134,11 +139,17 @@ def package_class(spec_or_pkg):
     elif isinstance(spec_or_pkg, spack.package_base.PackageBase):
         cls = spec_or_pkg.__class__
 
-    elif inspect.isclass(spec_or_pkg):
-        cls = spec_or_pkg
-
     else:
-        raise ValueError("Cannot retrieve package class for {0}".format(spec_or_pkg))
+        try:
+            if issubclass(spec_or_pkg, spack.package_base.PackageBase):
+                cls = spec_or_pkg
+            else:
+                cls = None
+        except TypeError:
+            cls = None
+
+        if cls is None:
+            raise ValueError("Cannot retrieve package class for {0}".format(spec_or_pkg))
 
     return cls
 
@@ -167,7 +178,7 @@ def test_functions(spec_or_pkg, add_virtuals=False, names=False):
         return methods
 
     cls = package_class(spec_or_pkg)
-    if not cls:
+    if cls is None:
         name = (
             "{0}: ".format(spec_or_pkg.name)
             if isinstance(spec_or_pkg, (spack.package_base.PackageBase, spack.spec.Spec))
