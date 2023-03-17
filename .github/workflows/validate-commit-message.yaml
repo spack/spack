@@ -1,10 +1,10 @@
-name: Commit message validation
+name: Commit message & PR title validation
 
 on:
   pull_request:
 
 jobs:
-  validate-commit-messages:
+  validate:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
@@ -22,7 +22,7 @@ jobs:
           echo "changed-files=\"${CHANGED_FILES}\"" >> $GITHUB_OUTPUT
 
 
-      - name: Validate commit messages
+      - name: Validate commit messages & PR title
         id: commit-message-validator
         continue-on-error: true
         run: |
