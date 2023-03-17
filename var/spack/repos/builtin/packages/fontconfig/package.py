@@ -47,8 +47,8 @@ class Fontconfig(AutotoolsPackage):
         for lib in ["libpng", "bzip2"]:
             ldflags.append(self.spec[lib].libs.ld_flags)
             libs.append(self.spec[lib].libs.link_flags)
-        args.append("LDFLAGS=-fPIC %s" % " ".join(ldflags))
-        args.append("LIBS=-fPIC %s" % " ".join(libs))
+            args.append("LDFLAGS=%s" % " ".join(ldflags))
+            args.append("LIBS=%s" % " ".join(libs))
         if self.spec.satisfies("+pic"):
             args.append("CFLAGS=-fPIC")
             args.append("FFLAGS=-fPIC")
