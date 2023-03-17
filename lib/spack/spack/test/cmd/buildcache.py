@@ -330,7 +330,7 @@ def test_correct_specs_are_pushed(
         packages_to_push.append(node.name)
         return True
 
-    monkeypatch.setattr(spack.binary_distribution, "push", fake_push)
+    monkeypatch.setattr(spack.binary_distribution, "safe_push", fake_push)
 
     buildcache_create_args = ["create", "-d", str(tmpdir), "--unsigned"]
 
