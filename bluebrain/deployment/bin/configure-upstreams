@@ -22,20 +22,24 @@ chain() {
 EOF
 }
 
-header="upstreams:\n"
-if [[ "$CI_JOB_STAGE" == "externals" ]]; then
-    echo -ne "$header"
-    header=""
-    chain compilers
-fi
-
-if [[ "$DEPLOYMENT_ROOT" != "$DEPLOYMENT_UPSTREAM" ]]; then
-    echo -ne "$header"
-    header=""
+header=""
+if [ -d ${DEPLOYMENT_UPSTREAM} ]
+then
+    header="upstreams:\n"
     if [[ "$CI_JOB_STAGE" == "externals" ]]; then
-        chain compilers upstream
+        echo -ne "$header"
+        header=""
+        chain compilers
     fi
-    chain "$CI_JOB_STAGE" upstream
+
+    if [[ "$DEPLOYMENT_ROOT" != "$DEPLOYMENT_UPSTREAM" ]]; then
+        echo -ne "$header"
+        header=""
+        if [[ "$CI_JOB_STAGE" == "externals" ]]; then
+            chain compilers upstream
+        fi
+        chain "$CI_JOB_STAGE" upstream
+    fi
 fi
 
 # We didn't print anything, set empty upstreams.
