@@ -16,6 +16,7 @@ class PyTorchtext(PythonPackage):
     maintainers("adamjstewart")
 
     version("main", branch="main", submodules=True)
+    version("0.15.1", tag="v0.15.1", submodules=True)
     version("0.14.1", tag="v0.14.1", submodules=True)
     version("0.14.0", tag="v0.14.0", submodules=True)
     version("0.13.1", tag="v0.13.1", submodules=True)
@@ -31,24 +32,30 @@ class PyTorchtext(PythonPackage):
     version("0.5.0", tag="0.5.0", submodules=True)
 
     # https://github.com/pytorch/text#installation
-    depends_on("python@3.7:3.10", when="@0.13:", type=("build", "link", "run"))
+    depends_on("python@3.8:3.11", when="@2:", type=("build", "link", "run"))
+    depends_on("python@3.7:3.10", when="@0.13:1", type=("build", "link", "run"))
     depends_on("python@3.6:3.9", when="@0.8.1:0.12", type=("build", "link", "run"))
     depends_on("python@3.6:3.8", when="@0.7:0.8.0", type=("build", "link", "run"))
     depends_on("python@3.5:3.8", when="@0.6", type=("build", "link", "run"))
     depends_on("python@2.7,3.5:3.8", when="@:0.5", type=("build", "link", "run"))
 
+    # CMakelists.txt
     depends_on("cmake@3.18:", when="@0.13:", type="build")
     depends_on("ninja", when="@0.13:", type="build")
-    depends_on("py-pybind11", when="@0.8:", type=("build", "link"))
+
+    # setup.py
     depends_on("py-setuptools", type="build")
     depends_on("py-tqdm", type=("build", "run"))
     depends_on("py-requests", type=("build", "run"))
     depends_on("py-numpy", type=("build", "run"))
+    depends_on("py-torchdata@0.6:", when="@0.15:", type=("build", "run"))
+    depends_on("py-pybind11", when="@0.8:", type=("build", "link"))
     depends_on("py-six", when="@:0.6", type=("build", "run"))
     depends_on("py-sentencepiece", when="@:0.7", type=("build", "run"))
 
     # https://github.com/pytorch/text#installation
     depends_on("py-torch@master", when="@main", type=("build", "link", "run"))
+    depends_on("py-torch@2.0.0", when="@0.15.1", type=("build", "link", "run"))
     depends_on("py-torch@1.13.1", when="@0.14.1", type=("build", "link", "run"))
     depends_on("py-torch@1.13.0", when="@0.14.0", type=("build", "link", "run"))
     depends_on("py-torch@1.12.1", when="@0.13.1", type=("build", "link", "run"))

@@ -24,6 +24,7 @@ class PyTorch(PythonPackage, CudaPackage, ROCmPackage):
     import_modules = ["torch", "torch.autograd", "torch.nn", "torch.utils"]
 
     version("master", branch="master", submodules=True)
+    version("2.0.0", tag="v2.0.0", submodules=True)
     version("1.13.1", tag="v1.13.1", submodules=True)
     version("1.13.0", tag="v1.13.0", submodules=True)
     version("1.12.1", tag="v1.12.1", submodules=True)
@@ -119,12 +120,20 @@ class PyTorch(PythonPackage, CudaPackage, ROCmPackage):
 
     # Required dependencies
     # See python_min_version in setup.py
-    depends_on("python@3.7:", when="@1.11:", type=("build", "link", "run"))
-    depends_on("python@3.6.2:", when="@1.7.1:", type=("build", "link", "run"))
-    depends_on("python@3.6.1:", when="@1.6:1.7.0", type=("build", "link", "run"))
-    depends_on("python@3.5:", when="@1.5", type=("build", "link", "run"))
-    depends_on("python@2.7:2,3.5:", when="@1.4", type=("build", "link", "run"))
+    # Upper bounds come from wheel availability on PyPI
+    depends_on("python@3.8:3.11", when="@2:", type=("build", "link", "run"))
+    depends_on("python@3.7:3.10", when="@1.11:1", type=("build", "link", "run"))
+    depends_on("python@3.6.2:3.9", when="@1.7.1:1.10", type=("build", "link", "run"))
+    depends_on("python@3.6.1:3.8", when="@1.6:1.7.0", type=("build", "link", "run"))
+    depends_on("python@3.5:3.8", when="@1.5", type=("build", "link", "run"))
+    depends_on("python@2.7:2,3.5:3.8", when="@1.4", type=("build", "link", "run"))
     depends_on("python@2.7:2,3.5:3.7", when="@:1.3", type=("build", "link", "run"))
+
+    # CMakelists.txt
+    depends_on("cmake@3.18:", when="@2:", type="build")
+    depends_on("cmake@3.13:", when="@1.11:", type="build")
+    depends_on("cmake@3.10:", when="@1.10:", type="build")
+    depends_on("cmake@3.5:", type="build")
 
     # pyproject.toml
     depends_on("py-setuptools", type=("build", "run"))
@@ -132,14 +141,17 @@ class PyTorch(PythonPackage, CudaPackage, ROCmPackage):
     depends_on("py-numpy@1.16.6:", type=("build", "run"))
     depends_on("ninja@1.5:", when="@1.1:", type="build")
     depends_on("py-pyyaml", type=("build", "run"))
-    depends_on("cmake@3.13:", when="@1.11:", type="build")
-    depends_on("cmake@3.10:", when="@1.10:", type="build")
-    depends_on("cmake@3.5:", type="build")
-    depends_on("py-cffi", type=("build", "run"))
-    depends_on("py-typing-extensions@3.6.2.1:", when="@1.7:", type=("build", "run"))
-    depends_on("py-future", when="@1.5:", type=("build", "run"))
-    depends_on("py-six", when="@1.13:", type=("build", "run"))
     depends_on("py-requests", when="@1.13:", type=("build", "run"))
+    depends_on("py-cffi", when="@:1", type=("build", "run"))
+    depends_on("py-future", when="@1.5:1", type=("build", "run"))
+    depends_on("py-six", when="@1.13:1", type=("build", "run"))
+
+    # setup.py
+    depends_on("py-filelock", when="@2:", type=("build", "run"))
+    depends_on("py-typing-extensions@3.6.2.1:", when="@1.7:", type=("build", "run"))
+    depends_on("py-sympy", when="@2:", type=("build", "run"))
+    depends_on("py-networkx", when="@2:", type=("build", "run"))
+    depends_on("py-jinja2", when="@2:", type=("build", "run"))
 
     # Undocumented dependencies
     depends_on("py-tqdm", type="run")
@@ -147,7 +159,8 @@ class PyTorch(PythonPackage, CudaPackage, ROCmPackage):
     depends_on("lapack")
 
     # third_party
-    depends_on("py-pybind11@2.10.0", when="@1.13:", type=("build", "link", "run"))
+    depends_on("py-pybind11@2.10.1", when="@2:", type=("build", "link", "run"))
+    depends_on("py-pybind11@2.10.0", when="@1.13:1", type=("build", "link", "run"))
     depends_on("py-pybind11@2.6.2", when="@1.8:1.12", type=("build", "link", "run"))
     depends_on("py-pybind11@2.3.0", when="@1.1:1.7", type=("build", "link", "run"))
     depends_on("py-pybind11@2.2.4", when="@:1.0", type=("build", "link", "run"))
@@ -178,14 +191,17 @@ class PyTorch(PythonPackage, CudaPackage, ROCmPackage):
     depends_on("benchmark", when="@1.6:+test")
 
     # Optional dependencies
+    # https://github.com/pytorch/pytorch#prerequisites
+    depends_on("cuda@11:", when="@2:+cuda", type=("build", "link", "run"))
+    depends_on("cuda@10.2:", when="@1.11:1+cuda", type=("build", "link", "run"))
     # https://discuss.pytorch.org/t/compiling-1-10-1-from-source-with-gcc-11-and-cuda-11-5/140971
-    depends_on("cuda@9.2:", when="@1.11:+cuda", type=("build", "link", "run"))
-    depends_on("cuda@9.2:11.4", when="@1.6:1.10+cuda", type=("build", "link", "run"))
-    depends_on("cuda@9:11.4", when="@1.1:1.5+cuda", type=("build", "link", "run"))
-    depends_on("cuda@7.5:11.4", when="@:1.0+cuda", type=("build", "link", "run"))
-    depends_on("cudnn@6:7", when="@:1.0+cudnn")
-    depends_on("cudnn@7.0:7", when="@1.1:1.5+cudnn")
+    depends_on("cuda@10.2:11.4", when="@1.10+cuda", type=("build", "link", "run"))
+    depends_on("cuda@9.2:11.4", when="@1.6:1.9+cuda", type=("build", "link", "run"))
+    depends_on("cuda@9:11.4", when="@1.2:1.5+cuda", type=("build", "link", "run"))
+    depends_on("cuda@7.5:11.4", when="@:1.1+cuda", type=("build", "link", "run"))
     depends_on("cudnn@7:", when="@1.6:+cudnn")
+    depends_on("cudnn@7", when="@1.2:1.5+cudnn")
+    depends_on("cudnn@6.5:7", when="@:1.1+cudnn")
     depends_on("magma+cuda", when="+magma+cuda")
     depends_on("magma+rocm", when="+magma+rocm")
     depends_on("nccl", when="+nccl+cuda")
@@ -208,19 +224,22 @@ class PyTorch(PythonPackage, CudaPackage, ROCmPackage):
         depends_on("miopen-hip")
         depends_on("rocminfo")
     # https://github.com/pytorch/pytorch/issues/60332
-    # depends_on("xnnpack@2022-02-16", when="@1.12:+xnnpack")
+    # depends_on("xnnpack@2022-12-21", when="@2:+xnnpack")
+    # depends_on("xnnpack@2022-02-16", when="@1.12:1+xnnpack")
     # depends_on("xnnpack@2021-06-21", when="@1.10:1.11+xnnpack")
     # depends_on("xnnpack@2021-02-22", when="@1.8:1.9+xnnpack")
     # depends_on("xnnpack@2020-03-23", when="@1.6:1.7+xnnpack")
     depends_on("mpi", when="+mpi")
     # https://github.com/pytorch/pytorch/issues/60270
-    # depends_on("gloo@2022-05-18", when="@1.13:+gloo")
+    # depends_on("gloo@2023-01-17", when="@2:+gloo")
+    # depends_on("gloo@2022-05-18", when="@1.13:1+gloo")
     # depends_on("gloo@2021-05-21", when="@1.10:1.12+gloo")
     # depends_on("gloo@2021-05-04", when="@1.9+gloo")
     # depends_on("gloo@2020-09-18", when="@1.7:1.8+gloo")
     # depends_on("gloo@2020-03-17", when="@1.6+gloo")
     # https://github.com/pytorch/pytorch/issues/60331
-    # depends_on("onnx!1.12.0", when="@1.13:+onnx_ml")
+    # depends_on("onnx@1.13.1", when="@2:+onnx_ml")
+    # depends_on("onnx@1.12.0", when="@1.13:1+onnx_ml")
     # depends_on("onnx@1.11.0", when="@1.12+onnx_ml")
     # depends_on("onnx@1.10.1_2021-10-08", when="@1.11+onnx_ml")
     # depends_on("onnx@1.10.1", when="@1.10+onnx_ml")
@@ -332,6 +351,7 @@ class PyTorch(PythonPackage, CudaPackage, ROCmPackage):
         sha256="a54db63640b90e5833cc1099c0935572f5297d2d8625f62f01ac1fda79ed4569",
         when="@1.13 arch=ppc64le:",
     )
+    conflicts("arch=ppc64le:", when="@:1.9,2:")
 
     # Cherry-pick a patch to allow earlier versions of PyTorch to work with CUDA 11.4
     patch(
@@ -340,12 +360,12 @@ class PyTorch(PythonPackage, CudaPackage, ROCmPackage):
         when="@:1.9.1 ^cuda@11.4.100:",
     )
 
-    # PyTorch does not build with GCC 12 (fixed on master)
+    # PyTorch does not build with GCC 12 (fixed in 2.0)
     # See: https://github.com/pytorch/pytorch/issues/77614
     patch(
         "https://github.com/facebookincubator/gloo/commit/4a5e339b764261d20fc409071dc7a8b8989aa195.patch?full_index=1",
         sha256="dc8b3a9bea4693f32d6850ea2ce6ce75e1778538bfba464b50efca92bac425e3",
-        when="@:1.13 %gcc@12:",
+        when="@:1 %gcc@12:",
         working_dir="third_party/gloo",
     )
 
