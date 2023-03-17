@@ -695,8 +695,11 @@ def _ensure_variant_defaults_are_parsable(pkgs, error_cls):
             try:
                 variant.validate_or_raise(vspec, pkg_cls=pkg_cls)
             except spack.variant.InvalidVariantValueError:
-                error_msg = "The variant '{}' default value in package '{}' cannot be validated"
-                errors.append(error_cls(error_msg.format(variant_name, pkg_name), []))
+                error_msg = (
+                    "The default value of the variant '{}' in package '{}' failed validation"
+                )
+                question = "Is it among the allowed values?"
+                errors.append(error_cls(error_msg.format(variant_name, pkg_name), [question]))
 
     return errors
 
