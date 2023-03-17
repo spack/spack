@@ -54,6 +54,7 @@ class Dyninst(CMakePackage):
     depends_on("boost@1.61.0:" + boost_libs, when="@10.1.0:")
     depends_on("boost@1.61.0:1.69" + boost_libs, when="@:10.0")
     depends_on("boost@1.67.0:" + boost_libs, when="@11.0.0:")
+    depends_on("boost@1.70.0:" + boost_libs, when="@12:")
 
     depends_on("libiberty+pic")
 

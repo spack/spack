@@ -727,14 +727,13 @@ class Boost(Package):
         # Disable find package's config mode for versions of Boost that
         # didn't provide it. See https://github.com/spack/spack/issues/20169
         # and https://cmake.org/cmake/help/latest/module/FindBoost.html
-        is_cmake = isinstance(dependent_spec.package, CMakePackage)
-        if self.spec.satisfies("boost@:1.69.0") and is_cmake:
-            args_fn = type(dependent_spec.package).cmake_args
+        if self.spec.satisfies("boost@:1.69.0") and dependent_spec.satisfies("build_system=cmake"):
+            args_fn = type(dependent_spec.package.builder).cmake_args
 
             def _cmake_args(self):
                 return ["-DBoost_NO_BOOST_CMAKE=ON"] + args_fn(self)
 
-            type(dependent_spec.package).cmake_args = _cmake_args
+            type(dependent_spec.package.builder).cmake_args = _cmake_args
 
     def setup_dependent_build_environment(self, env, dependent_spec):
         if "+context" in self.spec and "context-impl" in self.spec.variants:
