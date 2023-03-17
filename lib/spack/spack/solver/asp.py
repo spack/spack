@@ -1877,8 +1877,9 @@ class SpackSolverSetup(object):
         """Define what version_satisfies(...) means in ASP logic."""
         for pkg_name, versions in sorted(self.version_constraints):
             # version must be *one* of the ones the spec allows.
+            # Also, "possible versions" contain only concrete versions, so satisfies is appropriate
             allowed_versions = [
-                v for v in sorted(self.possible_versions[pkg_name]) if v.intersects(versions)
+                v for v in sorted(self.possible_versions[pkg_name]) if v.satisfies(versions)
             ]
 
             # This is needed to account for a variable number of
