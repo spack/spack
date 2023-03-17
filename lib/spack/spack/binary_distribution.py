@@ -24,7 +24,7 @@ import urllib.request
 import warnings
 from contextlib import closing, contextmanager
 from gzip import GzipFile
-from typing import Union
+from typing import List, Union
 from urllib.error import HTTPError, URLError
 
 import ruamel.yaml as yaml
@@ -509,13 +509,11 @@ binary_index: Union[BinaryCacheIndex, llnl.util.lang.Singleton] = llnl.util.lang
 
 
 class NoOverwriteException(spack.error.SpackError):
-    """
-    Raised when a file exists and must be overwritten.
-    """
+    """Raised when a file would be overwritten"""
 
     def __init__(self, file_path):
         super(NoOverwriteException, self).__init__(
-            '"{}" exists in buildcache. Use --force flag to overwrite.'.format(file_path)
+            f"Refusing to overwrite the following file: {file_path}"
         )
 
 
@@ -1205,7 +1203,7 @@ def _do_create_tarball(tarfile_path, binaries_dir, pkg_dir, buildinfo):
         tar_add_metadata(tar, buildinfo_file_name(pkg_dir), buildinfo)
 
 
-def _build_tarball(
+def safe_push(
     spec,
     out_url,
     force=False,
@@ -1218,6 +1216,9 @@ def _build_tarball(
     """
     Build a tarball from given spec and put it into the directory structure
     used at the mirror (following <tarball_directory_name>).
+
+    This method raises NoOverwriteException when force=False and the tarball or
+    spec.json file already exist in the buildcache.
     """
     if not spec.concrete:
         raise ValueError("spec must be concrete to build tarball")
@@ -1378,7 +1379,7 @@ def _build_tarball_in_stage_dir(
     return None
 
 
-def nodes_to_be_packaged(specs, root=True, dependencies=True):
+def specs_to_be_packaged(specs, root=True, dependencies=True) -> List[Spec]:
     """Return the list of nodes to be packaged, given a list of specs.
 
     Args:
@@ -1402,21 +1403,21 @@ def nodes_to_be_packaged(specs, root=True, dependencies=True):
         return list(filter(packageable, nodes))
 
 
-def push(input_spec: spack.spec.Spec, mirror_url, **kwargs):
+def push(spec: Spec, mirror_url, **kwargs):
     """Create and push binary package for a single spec to the specified
     mirror url.
 
     Args:
-        input_spec (spack.spec.Spec): Spec to package and push
+        spec (spack.spec.Spec): Spec to package and push
         mirror_url (str): Desired destination url for binary package
-        kwargs: Passed through to _build_tarball(...)
+        kwargs: Passed through to safe_push(...)
 
     Returns:
         True if package was pushed, False otherwise.
 
     """
     try:
-        _build_tarball(input_spec, mirror_url, **kwargs)
+        safe_push(spec, mirror_url, **kwargs)
     except NoOverwriteException as e:
         warnings.warn(str(e))
         return False

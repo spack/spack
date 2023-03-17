@@ -10,6 +10,8 @@ import sys
 import tempfile
 
 import llnl.util.tty as tty
+import llnl.util.tty.color as clr
+from llnl.util.lang import elide_list
 
 import spack.binary_distribution as bindist
 import spack.cmd
@@ -449,36 +451,67 @@ def create_fn(args):
 
     # TODO: remove this in 0.21. If we have mirror_flag, the first
     # spec is in the positional mirror arg due to argparse limitations.
-    specs = args.specs
+    input_specs = args.specs
     if args.mirror_flag and args.mirror:
-        specs.insert(0, args.mirror)
+        input_specs.insert(0, args.mirror)
 
     url = mirror.push_url
 
-    nodes = bindist.nodes_to_be_packaged(
-        _matching_specs(specs, args.spec_file),
+    specs = bindist.specs_to_be_packaged(
+        _matching_specs(input_specs, args.spec_file),
         root="package" in args.things_to_install,
         dependencies="dependencies" in args.things_to_install,
     )
 
-    kwargs = {
-        "key": args.key,
-        "force": args.force,
-        "relative": args.rel,
-        "unsigned": args.unsigned,
-        "allow_root": args.allow_root,
-        "regenerate_index": args.rebuild_index,
-    }
+    # When pushing multiple specs, print the url once ahead of time, as well as how
+    # many specs are being pushed.
+    if len(specs) > 1:
+        tty.info(f"Selected {len(specs)} specs to push to {url}")
 
-    for node in nodes:
-        pushed = bindist.push(node, url, **kwargs)
-        message = "{0} buildcache for {1}/{2} to {3}".format(
-            "Successfully pushed" if pushed else "Failed to push",
-            node.name,
-            node.dag_hash()[:7],
-            url,
-        )
-        tty.msg(message)
+    skipped = []
+
+    # tty printing
+    color = clr.get_color_when()
+    format_spec = lambda s: s.format("{name}{@version}{/hash:7}", color=color)
+    total_specs = len(specs)
+    digits = len(str(total_specs))
+
+    for i, spec in enumerate(specs):
+        try:
+            bindist.safe_push(
+                spec,
+                url,
+                force=args.force,
+                relative=args.rel,
+                unsigned=args.unsigned,
+                allow_root=args.allow_root,
+                key=args.key,
+                regenerate_index=args.rebuild_index,
+            )
+
+            if total_specs > 1:
+                msg = f"[{i+1:{digits}}/{total_specs}] Pushed {format_spec(spec)}"
+            else:
+                msg = f"Pushed {format_spec(spec)} to {url}"
+
+            tty.info(msg)
+
+        except bindist.NoOverwriteException:
+            skipped.append(format_spec(spec))
+
+    if skipped:
+        if len(specs) == 1:
+            tty.info("The spec is already in the buildcache. Use --force to overwrite it.")
+        elif len(skipped) == len(specs):
+            tty.info("All specs are already in the buildcache. Use --force to overwite them.")
+        else:
+            tty.info(
+                "The following {} specs were skipped as they already exist in the buildcache:\n"
+                "    {}\n"
+                "    Use --force to overwrite them.".format(
+                    len(skipped), ", ".join(elide_list(skipped, 5))
+                )
+            )
 
 
 def install_fn(args):

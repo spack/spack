@@ -26,12 +26,12 @@ def test_build_tarball_overwrite(install_mockery, mock_fetch, monkeypatch, tmpdi
 
         # Runs fine the first time, throws the second time
         out_url = spack.util.url.path_to_file_url(str(tmpdir))
-        spack.binary_distribution._build_tarball(spec, out_url, unsigned=True)
+        spack.binary_distribution.safe_push(spec, out_url, unsigned=True)
         with pytest.raises(spack.binary_distribution.NoOverwriteException):
-            spack.binary_distribution._build_tarball(spec, out_url, unsigned=True)
+            spack.binary_distribution.safe_push(spec, out_url, unsigned=True)
 
         # Should work fine with force=True
-        spack.binary_distribution._build_tarball(spec, out_url, force=True, unsigned=True)
+        spack.binary_distribution.safe_push(spec, out_url, force=True, unsigned=True)
 
         # Remove the tarball and try again.
         # This must *also* throw, because of the existing .spec.json file
@@ -44,4 +44,4 @@ def test_build_tarball_overwrite(install_mockery, mock_fetch, monkeypatch, tmpdi
         )
 
         with pytest.raises(spack.binary_distribution.NoOverwriteException):
-            spack.binary_distribution._build_tarball(spec, out_url, unsigned=True)
+            spack.binary_distribution.safe_push(spec, out_url, unsigned=True)
