@@ -27,7 +27,5 @@ class Libmbd(CMakePackage):
     depends_on("scalapack", when="+scalapack", type="link")
 
     def cmake_args(self):
-        args = [
-            self.define_from_variant("ENABLE_SCALAPACK_MPI", variant="scalapack"),
-        ]
+        args = [self.define_from_variant("ENABLE_SCALAPACK_MPI", variant="scalapack")]
         return args
