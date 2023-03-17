@@ -16,7 +16,7 @@ def is_CrayXC():
 
 
 def is_CrayEX():
-    return (spack.platforms.host().name == "cray") and (
+    return (spack.platforms.host().name in ["linux", "cray"]) and (
         os.environ.get("CRAYPE_NETWORK_TARGET") in ["ofi", "ucx"]
     )
 
