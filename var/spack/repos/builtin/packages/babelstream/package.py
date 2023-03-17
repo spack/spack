@@ -4,10 +4,11 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 
+from spack.package import *
+
 # =============================
 #   Babelstream Spack Package
 # =============================
-
 import re  # To get the variant name after (+)
 
 from spack.package import *
