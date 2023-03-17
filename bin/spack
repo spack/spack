@@ -29,8 +29,8 @@ from __future__ import print_function
 
 import os
 import os.path
-import sys
 import signal
+import sys
 
 signal.signal(signal.SIGPIPE, signal.SIG_DFL)
 
