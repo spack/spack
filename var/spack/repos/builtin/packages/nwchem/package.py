@@ -13,10 +13,15 @@ class Nwchem(Package):
     """High-performance computational chemistry software"""
 
     homepage = "https://nwchemgit.github.io"
-    url = "https://github.com/nwchemgit/nwchem/releases/download/v7.0.2-release/nwchem-7.0.2-release.revision-b9985dfa-srconly.2020-10-12.tar.bz2"
+    url = "https://github.com/nwchemgit/nwchem/releases/download/v7.2.0-release/nwchem-7.2.0-release.revision-d0d141fd-srconly.2023-03-10.tar.bz2"
 
     tags = ["ecp", "ecp-apps"]
 
+    version(
+        "7.2.0",
+        sha256="28ea70947e77886337c84e6fae3bdf88f25f0acfdeaf95e722615779c19f7a7e",
+        url="https://github.com/nwchemgit/nwchem/releases/download/v7.2.0-release/nwchem-7.2.0-release.revision-d0d141fd-srconly.2023-03-10.tar.bz2",
+    )
     version(
         "7.0.2",
         sha256="9bf913b811b97c8ed51bc5a02bf1c8e18456d0719c0a82b2e71223a596d945a7",
@@ -81,9 +86,9 @@ class Nwchem(Package):
         use_32_bit_lin_alg = True
 
         if use_32_bit_lin_alg:
-            args.extend(["USE_64TO32=y", "BLAS_SIZE=4", "LAPACK_SIZE=4", "SCALAPACK_SIZE=4"])
+            args.extend(["USE_64TO32=y", "BLAS_SIZE=4", "SCALAPACK_SIZE=4"])
         else:
-            args.extend(["BLAS_SIZE=8", "LAPACK_SIZE=8" "SCALAPACK_SIZE=8"])
+            args.extend(["BLAS_SIZE=8", "SCALAPACK_SIZE=8"])
 
         if sys.platform == "darwin":
             target = "MACX64"
@@ -113,6 +118,7 @@ class Nwchem(Package):
 
             install_tree("data", share_path)
             install_tree(join_path("basis", "libraries"), join_path(share_path, "libraries"))
+            install_tree(join_path("basis", "libraries.bse"), join_path(share_path, "libraries"))
             install_tree(join_path("nwpw", "libraryps"), join_path(share_path, "libraryps"))
 
             b_path = join_path(self.stage.source_path, "bin", target, "nwchem")

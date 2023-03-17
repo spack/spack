@@ -270,11 +270,12 @@ java_binary(
                 )
 
             # Spack's logs don't handle colored output well
-            bazel = Executable(self.prefix.bin.bazel)
+            bazel = Executable(self.spec["bazel"].command.path)
             bazel(
                 "--output_user_root=/tmp/spack/bazel/spack-test",
                 "build",
                 "--color=no",
+                f"--jobs={make_jobs}",
                 "//:bazel-test",
             )
 
@@ -282,7 +283,7 @@ java_binary(
             assert exe(output=str) == "Hi!\n"
 
     def setup_dependent_package(self, module, dependent_spec):
-        module.bazel = Executable("bazel")
+        module.bazel = Executable(self.spec["bazel"].command.path)
 
     @property
     def parallel(self):

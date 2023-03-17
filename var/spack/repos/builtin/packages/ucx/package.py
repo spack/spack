@@ -19,8 +19,12 @@ class Ucx(AutotoolsPackage, CudaPackage):
 
     # Current
     version("1.14.0", sha256="9bd95e2059de5dece9dddd049aacfca3d21bfca025748a6a0b1be4486e28afdd")
+
+    # Still supported
     version("1.13.1", sha256="efc37829b68e131d2acc82a3fd4334bfd611156a756837ffeb650ab9a9dd3828")
     version("1.13.0", sha256="8a3881f21fe2788113789f5bae1c8174e931f7542de0a934322a96ef354e5e3d")
+
+    # Retired
     version("1.12.1", sha256="40b447c8e7da94a253f2828001b2d76021eb4ad39647107d433d62d61e18ae8e")
     version("1.12.0", sha256="93e994de2d1a4df32381ea92ba4c98a249010d1720eb0f6110dc72c9a7d25db6")
     version("1.11.2", sha256="deebf86a5344fc2bd9e55449f88c650c4514928592807c9bc6fe4190e516c6df")
@@ -39,8 +43,6 @@ class Ucx(AutotoolsPackage, CudaPackage):
     version("1.5.1", sha256="567119cd80ad2ae6968ecaa4bd1d2a80afadd037ccc988740f668de10d2fdb7e")
     version("1.5.0", sha256="84f6e4fa5740afebb9b1c8bb405c07206e58c56f83120dcfcd8dc89e4b7d7458")
     version("1.4.0", sha256="99891a98476bcadc6ac4ef9c9f083bc6ffb188a96b3c3bc89c8bbca64de2c76e")
-
-    # Still supported
     version("1.3.1", sha256="e058c8ec830d2f50d9db1e3aaaee105cd2ad6c1e6df20ae58b9b4179de7a8992")
     version("1.3.0", sha256="71e69e6d78a4950cc5a1edcbe59bf7a8f8e38d59c9f823109853927c4d442952")
     version("1.2.2", sha256="914d10fee8f970d4fb286079dd656cf8a260ec7d724d5f751b3109ed32a6da63")

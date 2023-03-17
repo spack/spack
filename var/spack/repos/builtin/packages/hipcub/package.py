@@ -124,6 +124,8 @@ class Hipcub(CMakePackage, CudaPackage, ROCmPackage):
 
     depends_on("hip +cuda", when="+cuda")
 
+    depends_on("googletest@1.10.0:", type="test")
+
     for ver in [
         "3.5.0",
         "3.7.0",
@@ -157,7 +159,7 @@ class Hipcub(CMakePackage, CudaPackage, ROCmPackage):
             env.set("CXX", self.spec["hip"].hipcc)
 
     def cmake_args(self):
-        args = []
+        args = [self.define("BUILD_TEST", self.run_tests)]
 
         if self.spec.satisfies("+rocm ^cmake@3.21.0:3.21.2"):
             args.append(self.define("__skip_rocmclang", "ON"))

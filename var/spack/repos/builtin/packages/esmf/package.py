@@ -4,6 +4,7 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import os
+import sys
 
 from spack.build_environment import dso_suffix, stat_suffix
 from spack.package import *
@@ -101,6 +102,10 @@ class Esmf(MakefilePackage):
     # Missing include file for newer gcc compilers
     # https://trac.macports.org/ticket/57493
     patch("cstddef.patch", when="@7.1.0r %gcc@8:")
+
+    # Skip info print of ESMF_CPP due to permission denied errors
+    # https://github.com/spack/spack/issues/35957
+    patch("esmf_cpp_info.patch")
 
     # Make script from mvapich2.patch executable
     @when("@:7.0")
@@ -348,12 +353,15 @@ class Esmf(MakefilePackage):
     @run_after("install")
     def post_install(self):
         install_tree("cmake", self.prefix.cmake)
-        # Several applications using ESMF are affected by CMake capitalization
-        # issue. The following fix allows all apps to use as-is.
-        for prefix in [dso_suffix, stat_suffix]:
-            library_path = os.path.join(self.prefix.lib, "libesmf.%s" % prefix)
-            if os.path.exists(library_path):
-                os.symlink(library_path, os.path.join(self.prefix.lib, "libESMF.%s" % prefix))
+        # Several applications using ESMF are affected by CMake
+        # capitalization issue. The following fix allows all apps
+        # to use as-is. Note that since the macOS file system is
+        # case-insensitive, this step is not allowed on macOS.
+        if sys.platform != "darwin":
+            for prefix in [dso_suffix, stat_suffix]:
+                library_path = os.path.join(self.prefix.lib, "libesmf.%s" % prefix)
+                if os.path.exists(library_path):
+                    os.symlink(library_path, os.path.join(self.prefix.lib, "libESMF.%s" % prefix))
 
     def check(self):
         make("check", parallel=False)
