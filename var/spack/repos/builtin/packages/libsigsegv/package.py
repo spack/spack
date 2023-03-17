@@ -13,6 +13,7 @@ class Libsigsegv(AutotoolsPackage, GNUMirrorPackage):
     homepage = "https://www.gnu.org/software/libsigsegv/"
     gnu_mirror_path = "libsigsegv/libsigsegv-2.13.tar.gz"
 
+    version("2.14", sha256="cdac3941803364cf81a908499beb79c200ead60b6b5b40cad124fd1e06caa295")
     version("2.13", sha256="be78ee4176b05f7c75ff03298d84874db90f4b6c9d5503f0da1226b3a3c48119")
     version("2.12", sha256="3ae1af359eebaa4ffc5896a1aee3568c052c99879316a1ab57f8fe1789c390b6")
     version("2.11", sha256="dd7c2eb2ef6c47189406d562c1dc0f96f2fc808036834d596075d58377e37a18")
