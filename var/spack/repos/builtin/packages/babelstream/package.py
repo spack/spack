@@ -7,11 +7,13 @@ import re  # To get the variant name after (+)
 
 from spack.package import *
 
+
 def find_model_flag(str):
     res = re.findall(r"\+(\w+)", str)
     if not res:
         return ""
     return res
+
 
 class Babelstream(CMakePackage, CudaPackage, ROCmPackage):
     """Measure memory transfer rates to/from global device memory on GPUs.
