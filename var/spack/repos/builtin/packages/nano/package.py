@@ -14,6 +14,8 @@ class Nano(AutotoolsPackage):
     list_url = "https://www.nano-editor.org/dist/"
     list_depth = 1
 
+    # 7.x
+    version("7.2", sha256="86f3442768bd2873cec693f83cdf80b4b444ad3cc14760b74361474fc87a4526")
     # 6.x
     version("6.3", sha256="eb532da4985672730b500f685dbaab885a466d08fbbf7415832b95805e6f8687")
     version("6.2", sha256="2bca1804bead6aaf4ad791f756e4749bb55ed860eec105a97fba864bc6a77cb3")
