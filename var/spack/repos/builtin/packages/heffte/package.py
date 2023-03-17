@@ -36,6 +36,17 @@ class Heffte(CMakePackage, CudaPackage, ROCmPackage):
         sha256="00e66cdff664ba90eeb26b4824f2a7341ba791b1d7220ece8180aba7623d36d5",
         deprecated=True,
     )
+    version(
+        "0.2",
+        sha256="6e606aa9de91912925ec49f463de4369459e509e0e21a97ca72dfa07651056e5",
+        deprecated=True,
+    )
+    version(
+        "0.1",
+        sha256="bcdc940c4cb254b178446d16c969b85ea6b5c69fdf4b6332bb3c8fbce00bccdf",
+        deprecated=True,
+    )
+
 
     patch("threads10.patch", when="@1.0")
     patch("fortran200.patch", when="@2.0.0")
