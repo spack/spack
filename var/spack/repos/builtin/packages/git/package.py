@@ -411,6 +411,13 @@ class Git(AutotoolsPackage):
                 env.append_flags("EXTLIBS", "-L{0} -lintl".format(self.spec["gettext"].prefix.lib))
             env.append_flags("CFLAGS", "-I{0}".format(self.spec["gettext"].prefix.include))
 
+        if self.spec["curl"].satisfies("libs=static"):
+            curlconfig = which(os.path.join(self.spec["curl"].prefix.bin, "curl-config"))
+            # For configure step:
+            env.append_flags("LIBS", curlconfig("--static-libs", output=str).strip())
+            # For build step:
+            env.append_flags("EXTLIBS", curlconfig("--static-libs", output=str).strip())
+
         if "~perl" in self.spec:
             env.append_flags("NO_PERL", "1")
 
