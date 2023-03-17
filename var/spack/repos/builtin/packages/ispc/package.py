@@ -25,6 +25,7 @@ class Ispc(CMakePackage):
     executables = ["^ispc$"]
 
     version("main", branch="main")
+    version("1.19.0", sha256="c1aeae4bdfb28004a6949394ea1b3daa3fdf12f646e17fcc0614861077dc8b6a")
     version("1.18.0", sha256="ecf1fc6ad5e39242e555b8e0ac539489939a9e475722eaa9da5caa4651cecf05")
     version("1.17.0", sha256="1d47365febd2e17c84c22501aa63b1eafbc1ef826d6f5deadafe14783b8388a5")
     version("1.16.1", sha256="b32dbd374eea5f1b5f535bfd79c5cc35591c0df2e7bf1f86dec96b74e4ebf661")
@@ -40,14 +41,18 @@ class Ispc(CMakePackage):
     depends_on("ncurses", type="link")
     depends_on("zlib", type="link")
     depends_on("llvm+clang")
-    depends_on("llvm@:13", when="@:1.18")
-    depends_on("llvm@:12", when="@:1.17")
-    depends_on("llvm@11:", when="@1.16.0:")
+    depends_on("llvm@11:14", when="@1.18")
+    depends_on("llvm@:12", when="@:1.16")
+    depends_on("llvm@11:", when="@1.16")
+    depends_on("llvm@11.0:13.0,14", when="@1.17")
     depends_on("llvm@10:11", when="@1.15.0:1.15")
     depends_on("llvm@10.0:10", when="@1.13:1.14")
 
-    conflicts("@1.17:", msg="Link error with ncurses")
-
+   # failed attempts to change the linking order
+   #filter_file("target_link_libraries(${PROJECT_NAME} pthread ${ZLIB_LIBRARIES} ${CURSES_CURSES_LIBRARY})",
+   #            "target_link_libraries(${PROJECT_NAME} pthread ${ZLIB_LIBRARIES} ${CURSES_CURSES_LIBRARY} ${LLVM_LIBRARY_LIST} ${CMAKE_DL_LIBS})",
+   #            "spack-src/CMakeLists.txt",
+   #            string=True)
     patch(
         "don-t-assume-that-ncurses-zlib-are-system-libraries.patch",
         when="@1.14.0:1.14",
@@ -59,6 +64,12 @@ class Ispc(CMakePackage):
         when="@1.13.0:1.13",
         sha256="d3ccf547d3ba59779fd375e10417a436318f2200d160febb9f830a26f0daefdc",
     )
+
+   # inspired by https://zhangboyi.gitlab.io/post/2020-09-14-resolve-dso-missing-from-command-line-error/
+   # leads to a different error though :(
+   #def setup_build_environment(self, env):
+   #    if self.spec.version == Version("1.19.0"):
+   #        env.append_flags("LDFLAGS", "-Wl,--copy-dt-needed-entries")
 
     def patch(self):
         with open("check-m32.c", "w") as f:
