@@ -670,23 +670,19 @@ def ci_rebuild(args):
     # outside of the pipeline environment.
     if install_exit_code == 0:
         if buildcache_mirror_url or pipeline_mirror_url:
-            results = spack_ci.create_buildcache(
+            for result in spack_ci.create_buildcache(
                 input_spec=job_spec,
                 buildcache_mirror_url=buildcache_mirror_url,
                 pipeline_mirror_url=pipeline_mirror_url,
                 pr_pipeline=spack_is_pr_pipeline,
-            )
-
-            for result in results:
-                success = result["success"]
-                url = result["url"]
-                message = "{0} buildcache for {1}/{2} to {3}".format(
-                    "Successfully pushed" if success else "Failed to push",
-                    job_spec.name,
-                    job_spec.dag_hash()[:7],
-                    url,
+            ):
+                tty.msg(
+                    "{} buildcache for {} to {}".format(
+                        "Successfully pushed" if result.success else "Failed to push",
+                        job_spec.format("{name}{hash:7}"),
+                        result.url,
+                    )
                 )
-                tty.msg(message)
 
         # If this is a develop pipeline, check if the spec that we just built is
         # on the broken-specs list. If so, remove it.

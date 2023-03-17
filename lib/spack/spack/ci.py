@@ -16,6 +16,8 @@ import sys
 import tempfile
 import time
 import zipfile
+from collections import namedtuple
+from typing import List, Optional
 from urllib.error import HTTPError, URLError
 from urllib.parse import urlencode
 from urllib.request import HTTPHandler, Request, build_opener
@@ -33,6 +35,7 @@ import spack.main
 import spack.mirror
 import spack.paths
 import spack.repo
+import spack.spec
 import spack.util.git
 import spack.util.gpg as gpg_util
 import spack.util.spack_yaml as syaml
@@ -51,6 +54,8 @@ SHARED_PR_MIRROR_URL = "s3://spack-binaries-prs/shared_pr_mirror"
 
 spack_gpg = spack.main.SpackCommand("gpg")
 spack_compiler = spack.main.SpackCommand("compiler")
+
+PushResult = namedtuple("PushResult", "success url")
 
 
 class TemporaryDirectory(object):
@@ -1590,8 +1595,7 @@ def _push_mirror_contents(input_spec, sign_binaries, mirror_url):
     unsigned = not sign_binaries
     tty.debug("Creating buildcache ({0})".format("unsigned" if unsigned else "signed"))
     push_url = spack.mirror.Mirror.from_url(mirror_url).push_url
-    kwargs = {"force": True, "allow_root": True, "unsigned": unsigned}
-    return bindist.push(input_spec, push_url, **kwargs)
+    return bindist.push(input_spec, push_url, force=True, allow_root=True, unsigned=unsigned)
 
 
 def push_mirror_contents(input_spec: spack.spec.Spec, mirror_url, sign_binaries):
@@ -2125,34 +2129,22 @@ def process_command(name, commands, repro_dir):
     return exit_code
 
 
-def create_buildcache(input_spec: spack.spec.Spec, **kwargs):
+def create_buildcache(
+    input_spec: spack.spec.Spec,
+    pr_pipeline: bool,
+    pipeline_mirror_url: Optional[str] = None,
+    buildcache_mirror_url: Optional[str] = None,
+) -> List[PushResult]:
     """Create the buildcache at the provided mirror(s).
 
     Arguments:
         input_spec: Installed spec to package and push
-        kwargs (dict): dictionary of arguments used to create the buildcache
+        buildcache_mirror_url (str or None): URL for the buildcache mirror
+        pipeline_mirror_url (str or None): URL for the pipeline mirror
+        pr_pipeline (bool): True if the CI job is for a PR
 
-    List of recognized keys:
-    * "buildcache_mirror_url" (str or None): URL for the buildcache mirror
-    * "pipeline_mirror_url" (str or None): URL for the pipeline mirror
-    * "pr_pipeline" (bool): True if the CI job is for a PR
-
-    Returns:
-        List of objects indicating success or failure for each attempted
-        push.  Each object has the form:
-
-        .. code-block:: JSON
-
-           {
-              "success": True|False,
-              "url": mirror_url of attempted push
-           }
-
+    Returns: A list of PushResults, indicating success or failure.
     """
-    buildcache_mirror_url = kwargs.get("buildcache_mirror_url")
-    pipeline_mirror_url = kwargs.get("pipeline_mirror_url")
-    pr_pipeline = kwargs.get("pr_pipeline")
-
     sign_binaries = pr_pipeline is False and can_sign_binaries()
 
     results = []
@@ -2161,10 +2153,10 @@ def create_buildcache(input_spec: spack.spec.Spec, **kwargs):
     # per-PR mirror, if this is a PR pipeline
     if buildcache_mirror_url:
         results.append(
-            {
-                "success": push_mirror_contents(input_spec, buildcache_mirror_url, sign_binaries),
-                "url": buildcache_mirror_url,
-            }
+            PushResult(
+                success=push_mirror_contents(input_spec, buildcache_mirror_url, sign_binaries),
+                url=buildcache_mirror_url,
+            )
         )
 
     # Create another copy of that buildcache in the per-pipeline
@@ -2173,10 +2165,10 @@ def create_buildcache(input_spec: spack.spec.Spec, **kwargs):
     # prefix is set)
     if pipeline_mirror_url:
         results.append(
-            {
-                "success": push_mirror_contents(input_spec, pipeline_mirror_url, sign_binaries),
-                "url": pipeline_mirror_url,
-            }
+            PushResult(
+                success=push_mirror_contents(input_spec, pipeline_mirror_url, sign_binaries),
+                url=pipeline_mirror_url,
+            )
         )
 
     return results

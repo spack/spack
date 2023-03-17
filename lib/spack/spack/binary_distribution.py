@@ -1403,7 +1403,16 @@ def specs_to_be_packaged(specs, root=True, dependencies=True) -> List[Spec]:
         return list(filter(packageable, nodes))
 
 
-def push(spec: Spec, mirror_url, **kwargs):
+def push(
+    spec: Spec,
+    mirror_url,
+    force=False,
+    relative=False,
+    unsigned=False,
+    allow_root=False,
+    key=None,
+    regenerate_index=False,
+):
     """Create and push binary package for a single spec to the specified
     mirror url.
 
@@ -1417,7 +1426,16 @@ def push(spec: Spec, mirror_url, **kwargs):
 
     """
     try:
-        safe_push(spec, mirror_url, **kwargs)
+        safe_push(
+            spec,
+            mirror_url,
+            force=force,
+            relative=relative,
+            unsigned=unsigned,
+            allow_root=allow_root,
+            key=key,
+            regenerate_index=regenerate_index,
+        )
     except NoOverwriteException as e:
         warnings.warn(str(e))
         return False
