@@ -35,6 +35,8 @@ _definitions = {
     }
 }
 
+_samples = {}
+
 
 class Eccodes(CMakePackage):
     """ecCodes is a package developed by ECMWF for processing meteorological
@@ -81,17 +83,15 @@ class Eccodes(CMakePackage):
     variant("shared", default=True, description="Build shared versions of the libraries")
 
     variant(
-        "definitions",
-        values=disjoint_sets(("auto",), ("default",) + tuple(_definitions.keys())).with_default(
-            "auto"
-        ),
-        description="List of definitions to install",
+        "extra_definitions",
+        values=any_combination_of(*_definitions.keys()),
+        description="List of extra definitions to install",
     )
 
     variant(
-        "samples",
-        values=disjoint_sets(("auto",), ("default",)).with_default("auto"),
-        description="List of samples to install",
+        "extra_samples",
+        values=any_combination_of(*_samples.keys()),
+        description="List of extra samples to install",
     )
 
     depends_on("netcdf-c", when="+netcdf")
@@ -132,7 +132,7 @@ class Eccodes(CMakePackage):
     for center, definitions in _definitions.items():
         kwargs = definitions.get("conflicts", None)
         if kwargs:
-            conflicts("definitions={0}".format(center), **kwargs)
+            conflicts("extra_definitions={0}".format(center), **kwargs)
         for kwargs in definitions.get("resources", []):
             resource(
                 name=center,
@@ -355,25 +355,12 @@ class Eccodes(CMakePackage):
         if "^python" in self.spec:
             args.append(self.define("PYTHON_EXECUTABLE", python.path))
 
-        definitions = self.spec.variants["definitions"].value
-
-        if "auto" not in definitions:
-            args.append(
-                self.define("ENABLE_INSTALL_ECCODES_DEFINITIONS", "default" in definitions)
-            )
-
-        samples = self.spec.variants["samples"].value
-
-        if "auto" not in samples:
-            args.append(self.define("ENABLE_INSTALL_ECCODES_SAMPLES", "default" in samples))
-
         return args
 
     @run_after("install")
     def install_extra_definitions(self):
-        noop = set(["auto", "none", "default"])
-        for center in self.spec.variants["definitions"].value:
-            if center not in noop:
+        for center in self.spec.variants["extra_definitions"].value:
+            if center != "none":
                 center_dir = "definitions.{0}".format(center)
                 install_tree(
                     join_path(self.stage.source_path, "spack-definitions", center_dir),
