@@ -59,7 +59,7 @@ class PyPybind11(CMakePackage, PythonExtension):
     extends("python")
 
     with when("build_system=cmake"):
-        depends_on("ninja", type="build")
+        generator("ninja")
         depends_on("cmake@3.13:", type="build")
         depends_on("cmake@3.18:", type="build", when="@2.6.0:")
 

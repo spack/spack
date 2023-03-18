@@ -23,7 +23,7 @@ class Dealii(CMakePackage, CudaPackage):
     # only add for immediate deps.
     transitive_rpaths = False
 
-    generator = "Ninja"
+    generator("ninja")
 
     version("master", branch="master")
     version("9.4.0", sha256="238677006cd9173658e5b69cdd1861f800556982db6005a3cc5eb8329cc1e36c")
@@ -140,7 +140,6 @@ class Dealii(CMakePackage, CudaPackage):
     # See https://github.com/spack/spack/pull/22303 for reference
     depends_on(Boost.with_default_variants)
     depends_on("lapack")
-    depends_on("ninja", type="build")
     depends_on("suite-sparse")
     depends_on("zlib")
 

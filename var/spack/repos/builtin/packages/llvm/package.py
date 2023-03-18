@@ -30,7 +30,7 @@ class Llvm(CMakePackage, CudaPackage):
 
     tags = ["e4s"]
 
-    generator = "Ninja"
+    generator("ninja")
 
     family = "compiler"  # Used by lmod
 
@@ -212,7 +212,6 @@ class Llvm(CMakePackage, CudaPackage):
     # Build dependency
     depends_on("cmake@3.4.3:", type="build")
     depends_on("cmake@3.13.4:", type="build", when="@12:")
-    depends_on("ninja", type="build")
     depends_on("python", when="~python", type="build")
     depends_on("pkgconfig", type="build")
 

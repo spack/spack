@@ -32,7 +32,6 @@ class Xgboost(CMakePackage, CudaPackage):
 
     depends_on("cmake@3.13:", type="build")
     depends_on("cmake@3.16:", when="platform=darwin", type="build")
-    depends_on("ninja", type="build")
     depends_on("cuda@10:", when="+cuda")
     # https://github.com/dmlc/xgboost/pull/7379
     depends_on("cuda@10:11.4", when="@:1.5.0+cuda")
@@ -52,7 +51,7 @@ class Xgboost(CMakePackage, CudaPackage):
         "https://developer.nvidia.com/cuda-gpus",
     )
 
-    generator = "Ninja"
+    generator("ninja")
 
     def cmake_args(self):
         # https://xgboost.readthedocs.io/en/latest/build.html

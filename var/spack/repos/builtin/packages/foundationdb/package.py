@@ -30,8 +30,7 @@ class Foundationdb(CMakePackage):
     # for instance depends_on('boost +filesystem')
     # See https://github.com/spack/spack/pull/22303 for reference
     depends_on(Boost.with_default_variants)
-    generator = "Ninja"
-    depends_on("ninja", type="build")
+    generator("ninja")
 
     def cmake_args(self):
         args = ["-DUSE_WERROR=ON"]

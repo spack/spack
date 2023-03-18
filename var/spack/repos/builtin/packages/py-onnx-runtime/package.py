@@ -28,7 +28,6 @@ class PyOnnxRuntime(CMakePackage, PythonExtension):
     variant("cuda", default=False, description="Build with CUDA support")
 
     depends_on("cmake@3.1:", type="build")
-    depends_on("ninja", type="build")
     depends_on("python", type=("build", "run"))
     depends_on("py-pip", type="build")
     depends_on("protobuf")
@@ -74,7 +73,7 @@ class PyOnnxRuntime(CMakePackage, PythonExtension):
         description="AVX support level",
     )
 
-    generator = "Ninja"
+    generator("ninja")
     root_cmakelists_dir = "cmake"
     build_directory = "."
 

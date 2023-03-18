@@ -31,13 +31,11 @@ class QtPackage(CMakePackage):
         _list_url = "https://github.com/qt/{}/tags"
         return _list_url.format(qualname.lower())
 
-    generator = "Ninja"
-
     maintainers("wdconinc", "sethrj")
 
     # Default dependencies for all qt-* components
+    generator("ninja")
     depends_on("cmake@3.16:", type="build")
-    depends_on("ninja", type="build")
     depends_on("pkgconfig", type="build")
     depends_on("python", type="build")
 
