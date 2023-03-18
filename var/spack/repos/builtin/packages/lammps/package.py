@@ -3,6 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 import datetime as dt
+from typing import Dict
 
 import archspec
 
@@ -343,7 +344,7 @@ class Lammps(CMakePackage, CudaPackage, ROCmPackage):
     # with the pre-existing `openmp` variant
     # version ranges generates using utility script:
     # https://gist.github.com/rbberger/fdaa38ff08e5961c4741624a4719cdb6
-    supported_packages = {
+    supported_packages: Dict[str, dict] = {
         "adios": {"when": "@20210702:"},
         "amoeba": {"when": "@20220803:"},
         "asphere": {},
