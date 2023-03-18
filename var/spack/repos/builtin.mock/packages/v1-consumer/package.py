@@ -16,3 +16,5 @@ class V1Consumer(Package):
 
     depends_on("v2")
     depends_on("v1")
+
+    provides("somelang")
