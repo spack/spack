@@ -501,7 +501,7 @@ class Result(object):
                 key = providers[0]
             candidate = answer.get(key)
 
-            if candidate and candidate.intersects(input_spec):
+            if candidate and candidate.satisfies(input_spec):
                 self._concrete_specs.append(answer[key])
                 self._concrete_specs_by_input[input_spec] = answer[key]
             else:
