@@ -38,6 +38,7 @@ class Libxml2(AutotoolsPackage):
     version("2.7.8", sha256="cda23bc9ebd26474ca8f3d67e7d1c4a1f1e7106364b690d822e009fdc3c417ec")
 
     variant("python", default=False, description="Enable Python support")
+    variant("shared", default=True, description="Build shared library")
 
     depends_on("pkgconfig@0.9.0:", type="build")
     depends_on("iconv")
@@ -104,6 +105,8 @@ class Libxml2(AutotoolsPackage):
             )
         else:
             args.append("--without-python")
+
+        args.extend(self.enable_or_disable("shared"))
 
         return args
 
