@@ -51,10 +51,8 @@ class Sleef(CMakePackage):
         values=("Debug", "Release", "RelWithDebInfo", "MinSizeRel"),
     )
 
+    generator("ninja")
     depends_on("cmake@3.4.3:", type="build")
-    depends_on("ninja", type="build")
-
-    generator = "Ninja"
 
     def cmake_args(self):
         return [

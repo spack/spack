@@ -26,7 +26,7 @@ class Spectre(CMakePackage):
 
     maintainers("nilsvu")
 
-    generator = "Ninja"
+    generator("ninja")
 
     version("develop", branch="develop")
     version(
@@ -146,7 +146,6 @@ class Spectre(CMakePackage):
 
     # Build dependencies
     depends_on("cmake@3.12:", type="build")
-    depends_on("ninja", type="build")
     depends_on("python@2.7:", type="build")
 
     # Link dependencies

@@ -17,7 +17,7 @@ class LlvmAmdgpu(CMakePackage):
     git = "https://github.com/RadeonOpenCompute/llvm-project.git"
     url = "https://github.com/RadeonOpenCompute/llvm-project/archive/rocm-5.4.3.tar.gz"
     tags = ["rocm"]
-    generator = "Ninja"
+    generator("ninja")
 
     maintainers("srekolam", "renjithravindrankannath", "haampie")
 
@@ -141,7 +141,6 @@ class LlvmAmdgpu(CMakePackage):
     depends_on("z3", type="link")
     depends_on("zlib", type="link")
     depends_on("ncurses+termlib", type="link")
-    depends_on("ninja", type="build")
     depends_on("pkgconfig", type="build")
 
     # openmp dependencies

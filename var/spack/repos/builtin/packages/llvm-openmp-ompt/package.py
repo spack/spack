@@ -48,7 +48,7 @@ class LlvmOpenmpOmpt(CMakePackage):
     depends_on("elf", when="+libomptarget")
     depends_on("libffi", when="+libomptarget")
 
-    generator = "Ninja"
+    generator("ninja")
 
     def cmake_args(self):
         cmake_args = [

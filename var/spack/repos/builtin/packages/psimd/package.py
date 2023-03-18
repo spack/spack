@@ -18,7 +18,5 @@ class Psimd(CMakePackage):
     version("2018-09-06", commit="90a938f30ba414ada2f4b00674ee9631d7d85e19")  # py-torch@1.0:1.4
     version("2017-10-26", commit="4ac61b112252778b174575931c641bef661ab3cd")  # py-torch@0.4
 
+    generator("ninja")
     depends_on("cmake@2.8.12:", type="build")
-    depends_on("ninja", type="build")
-
-    generator = "Ninja"

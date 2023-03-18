@@ -32,11 +32,8 @@ class Gloo(CMakePackage, CudaPackage):
         sha256="8e6e9a44e0533ba4303a95a651b1934e5d73632cab08cc7d5a9435e1e64aa424",
         when="@:2023-01-16",
     )
-
+    generator("ninja")
     depends_on("cmake@2.8.12:", type="build")
-    depends_on("ninja", type="build")
-
-    generator = "Ninja"
 
     def cmake_args(self):
         return [self.define_from_variant("USE_CUDA", "cuda")]
