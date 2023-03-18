@@ -47,6 +47,7 @@ class Proj(AutotoolsPackage):
 
     variant("tiff", default=True, description="Enable TIFF support")
     variant("curl", default=True, description="Enable curl support")
+    variant("shared", default=True, description="Enable shared libraries")
 
     # https://github.com/OSGeo/PROJ#distribution-files-and-format
     # https://github.com/OSGeo/PROJ-data
@@ -96,15 +97,14 @@ class Proj(AutotoolsPackage):
             args.append("--with-external-gtest")
 
         if self.spec.satisfies("@7:"):
-            if "+tiff" in self.spec:
-                args.append("--enable-tiff")
-            else:
-                args.append("--disable-tiff")
+            args.extend(self.enable_or_disable("tiff"))
 
             if "+curl" in self.spec:
                 args.append("--with-curl=" + self.spec["curl"].prefix.bin.join("curl-config"))
             else:
                 args.append("--without-curl")
+
+        args.extend(self.enable_or_disable("shared"))
 
         return args
 
