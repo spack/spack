@@ -23,7 +23,7 @@ class WaylandProtocols(MesonPackage, AutotoolsPackage):
     build_system(
         conditional("autotools", when="@:1.23"),
         conditional("meson", when="@1.21:"),
-        default="meson"
+        default="meson",
     )
 
     version("1.31", sha256="04d3f66eca99d638ec8dbfdfdf79334290e22028f7d0b04c7034d9ef18a3248a")

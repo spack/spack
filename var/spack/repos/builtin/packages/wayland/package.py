@@ -24,7 +24,7 @@ class Wayland(MesonPackage, AutotoolsPackage):
     build_system(
         conditional("autotools", when="@:1.19"),
         conditional("meson", when="@1.18:"),
-        default="meson"
+        default="meson",
     )
 
     version("1.21.0", sha256="53b7fa67142e653820030ec049971bcb5e84ac99e05cba5bcb9cb55f43fae4b3")
