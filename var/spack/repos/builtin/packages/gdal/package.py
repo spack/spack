@@ -470,7 +470,7 @@ class CMakeBuilder(CMakeBuilder):
     def cmake_args(self):
         # https://gdal.org/build_hints.html
         args = [
-            self.define_from_variant("BUILD_SHARED_LIBS", "shared")
+            self.define_from_variant("BUILD_SHARED_LIBS", "shared"),
             # Only use Spack-installed dependencies
             self.define("GDAL_USE_EXTERNAL_LIBS", False),
             self.define("GDAL_USE_INTERNAL_LIBS", False),
