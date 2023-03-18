@@ -227,6 +227,8 @@ class Gdal(CMakePackage, AutotoolsPackage, PythonExtension):
     variant("perl", default=False, when="@:3.4", description="Build Perl bindings")
     variant("php", default=False, when="@:2.3", description="Build PHP bindings")
 
+    variant("shared", default=True, description="Build shared libraries")
+
     # Build system
     build_system(
         conditional("cmake", when="@3.5:"),
@@ -468,6 +470,7 @@ class CMakeBuilder(CMakeBuilder):
     def cmake_args(self):
         # https://gdal.org/build_hints.html
         args = [
+            self.define_from_variant("BUILD_SHARED_LIBS", "shared")
             # Only use Spack-installed dependencies
             self.define("GDAL_USE_EXTERNAL_LIBS", False),
             self.define("GDAL_USE_INTERNAL_LIBS", False),
@@ -595,6 +598,7 @@ class AutotoolsBuilder(AutotoolsBuilder):
         # https://trac.osgeo.org/gdal/wiki/BuildHints
         args = [
             "--prefix={}".format(self.prefix),
+            self.enable_or_disable("shared"),
             # Required dependencies
             "--with-geotiff={}".format(self.spec["libgeotiff"].prefix),
             "--with-libjson-c={}".format(self.spec["json-c"].prefix),
