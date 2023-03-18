@@ -45,6 +45,8 @@ class Fontconfig(AutotoolsPackage):
         ldflags = []
         libs = []
         for lib in ["libpng", "bzip2"]:
+            if self.spec[lib].satisfies("+shared") or self.spec[lib].satisfies("libs=shared"):
+                continue
             ldflags.append(self.spec[lib].libs.ld_flags)
             libs.append(self.spec[lib].libs.link_flags)
             args.append("LDFLAGS=%s" % " ".join(ldflags))
