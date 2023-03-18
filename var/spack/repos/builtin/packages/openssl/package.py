@@ -3,6 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+#import glob
 import os
 import re
 
@@ -322,9 +323,11 @@ class Openssl(Package):  # Uses Fake Autotools, should subclass Package
         ),
     )
     variant("docs", default=False, description="Install docs and manpages")
-    variant("shared", default=False, description="Build shared library version")
+    with when("platform=linux"):
+        variant("shared", default=True, description="Build shared library version")
     with when("platform=windows"):
         variant("dynamic", default=False, description="Link with MSVC's dynamic runtime library")
+        variant("shared", default=False, description="Build shared library version")
 
     depends_on("zlib")
     depends_on("perl@5.14.0:", type=("build", "test"))
@@ -396,8 +399,6 @@ class Openssl(Package):  # Uses Fake Autotools, should subclass Package
                     "VC-WIN64A",
                 ]
             )
-            if spec.satisfies("~shared"):
-                base_args.append("no-shared")
         else:
             base_args.extend(
                 [
@@ -406,6 +407,10 @@ class Openssl(Package):  # Uses Fake Autotools, should subclass Package
                 ]
             )
             base_args.extend(options)
+
+        if spec.satisfies("~shared"):
+            base_args.append("no-shared")
+
         # On Windows, we use perl for configuration and build through MSVC
         # nmake.
         if spec.satisfies("platform=windows"):
@@ -488,6 +493,12 @@ class Openssl(Package):  # Uses Fake Autotools, should subclass Package
         mozilla_pem = self.spec["ca-certificates-mozilla"].pem_path
         pkg_cert = join_path(pkg_dir, "cert.pem")
         install(mozilla_pem, pkg_cert)
+
+#    @run_after("install")
+#    @when("~shared")
+#    def static_only(self):
+#        for sharedlibpath in glob.glob(os.path.join(self.spec.prefix.lib, "*.so"):
+#            os.remove(sharedlibpath)
 
     def patch(self):
         if self.spec.satisfies("%nvhpc"):
