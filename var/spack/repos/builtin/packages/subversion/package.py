@@ -116,8 +116,6 @@ class Subversion(AutotoolsPackage):
             args.append("--disable-nls")
 
         args.append("CFLAGS=-fPIC")
-        args.append("FFLAGS=-fPIC")
-        args.append("--with-pic")
 
         return args
 
