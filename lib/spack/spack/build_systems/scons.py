@@ -3,6 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 import inspect
+from typing import Tuple
 
 import spack.builder
 import spack.package_base
@@ -43,7 +44,7 @@ class SConsBuilder(BaseBuilder):
     """
 
     #: Phases of a SCons package
-    phases = ("build", "install")
+    phases: Tuple[str, ...] = ("build", "install")
 
     #: Names associated with package methods in the old build-system format
     legacy_methods = ("build_test",)

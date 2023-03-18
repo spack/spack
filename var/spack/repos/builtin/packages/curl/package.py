@@ -414,7 +414,7 @@ class AutotoolsBuilder(AutotoolsBuilder):
 
 
 class NMakeBuilder(NMakeBuilder):
-    phases = ["install"]
+    phases = ("install",)
 
     def nmake_args(self):
         args = []

@@ -4,6 +4,7 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 import inspect
 from typing import List  # novm
+from typing import Tuple
 
 import llnl.util.filesystem as fs
 
@@ -59,7 +60,7 @@ class MSBuildBuilder(BaseBuilder):
         +-----------------------------------------------+---------------------+
     """
 
-    phases = ("build", "install")
+    phases: Tuple[str, ...] = ("build", "install")
 
     #: Targets for ``make`` during the :py:meth:`~.MSBuildBuilder.build` phase
     build_targets: List[str] = []

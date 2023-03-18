@@ -3,7 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 import inspect
-from typing import List
+from typing import List, Tuple
 
 import llnl.util.filesystem as fs
 
@@ -62,7 +62,7 @@ class MakefileBuilder(BaseBuilder):
         +-----------------------------------------------+--------------------+
     """
 
-    phases = ("edit", "build", "install")
+    phases: Tuple[str, ...] = ("edit", "build", "install")
 
     #: Names associated with package methods in the old build-system format
     legacy_methods = ("check", "installcheck")

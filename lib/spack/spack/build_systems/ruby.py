@@ -4,6 +4,7 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 import glob
 import inspect
+from typing import Tuple
 
 import spack.builder
 import spack.package_base
@@ -36,7 +37,7 @@ class RubyBuilder(BaseBuilder):
     #. :py:meth:`~.RubyBuilder.install`
     """
 
-    phases = ("build", "install")
+    phases: Tuple[str, ...] = ("build", "install")
 
     #: Names associated with package methods in the old build-system format
     legacy_methods = ()

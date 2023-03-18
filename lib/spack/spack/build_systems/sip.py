@@ -5,6 +5,7 @@
 import inspect
 import os
 import re
+from typing import Tuple
 
 import llnl.util.tty as tty
 from llnl.util.filesystem import find, join_path, working_dir
@@ -113,7 +114,7 @@ class SIPBuilder(BaseBuilder):
     options, run ``python configure.py --help``.
     """
 
-    phases = ("configure", "build", "install")
+    phases: Tuple[str, ...] = ("configure", "build", "install")
 
     #: Names associated with package methods in the old build-system format
     legacy_methods = ("configure_file", "configure_args", "build_args", "install_args")

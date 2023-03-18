@@ -4,7 +4,7 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 import inspect
 import os
-from typing import List
+from typing import List, Tuple
 
 import llnl.util.filesystem as fs
 
@@ -80,7 +80,7 @@ class MesonBuilder(BaseBuilder):
         +-----------------------------------------------+--------------------+
     """
 
-    phases = ("meson", "build", "install")
+    phases: Tuple[str, ...] = ("meson", "build", "install")
 
     #: Names associated with package methods in the old build-system format
     legacy_methods = ("meson_args", "check")

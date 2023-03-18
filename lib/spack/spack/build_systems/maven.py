@@ -2,6 +2,8 @@
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
+from typing import Tuple
+
 import llnl.util.filesystem as fs
 
 import spack.builder
@@ -42,7 +44,7 @@ class MavenBuilder(BaseBuilder):
         2. :py:meth:`~.MavenBuilder.install`
     """
 
-    phases = ("build", "install")
+    phases: Tuple[str, ...] = ("build", "install")
 
     #: Names associated with package methods in the old build-system format
     legacy_methods = ("build_args",)

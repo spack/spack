@@ -32,7 +32,7 @@ class GenericBuilder(BaseBuilder):
     """
 
     #: A generic package has only the "install" phase
-    phases = ("install",)
+    phases: Tuple[str, ...] = ("install",)
 
     #: Names associated with package methods in the old build-system format
     legacy_methods: Tuple[str, ...] = ()
