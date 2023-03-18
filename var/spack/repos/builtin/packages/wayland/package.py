@@ -15,7 +15,7 @@ class Wayland(AutotoolsPackage):
     X servers(rootless or fullscreen) or other display servers."""
 
     homepage = "https://wayland.freedesktop.org/"
-    url = "https://github.com/wayland-project/wayland/archive/1.18.0.tar.gz"
+    url = "https://gitlab.freedesktop.org/wayland/wayland/-/archive/1.18.0/wayland-1.18.0.tar.gz"
 
     version("1.18.0", sha256="8d375719ebfa36b6f2968096fdf0bfa7d39ba110b7956c0032e395e7e012f332")
     version("1.17.93", sha256="293536ad23bfed15fc34e2a63bbb511167e8b096c0eba35e805cb64d46ad62ae")
