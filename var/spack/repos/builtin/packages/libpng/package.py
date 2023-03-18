@@ -50,7 +50,6 @@ class Libpng(AutotoolsPackage):
 
         if self.spec.satisfies("+pic"):
             args.append("CFLAGS=-fPIC")
-            args.append("FFLAGS=-fPIC")
 
         return args
 
