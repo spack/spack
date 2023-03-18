@@ -18,7 +18,7 @@ your Spack mirror and then downloaded and installed by others.
 
 Whenever a mirror provides prebuilt packages, Spack will take these packages
 into account during concretization and installation, making ``spack install``
-signficantly faster.
+significantly faster.
 
 
 .. note::

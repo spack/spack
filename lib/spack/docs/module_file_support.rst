@@ -529,7 +529,7 @@ installed to ``/spack/prefix/foo``, if ``foo`` installs executables to
 update ``MANPATH``.
 
 The default list of environment variables in this config section
-inludes ``PATH``, ``MANPATH``, ``ACLOCAL_PATH``, ``PKG_CONFIG_PATH``
+includes ``PATH``, ``MANPATH``, ``ACLOCAL_PATH``, ``PKG_CONFIG_PATH``
 and ``CMAKE_PREFIX_PATH``, as well as ``DYLD_FALLBACK_LIBRARY_PATH``
 on macOS. On Linux however, the corresponding ``LD_LIBRARY_PATH``
 variable is *not* set, because it affects the behavior of
