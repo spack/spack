@@ -128,11 +128,10 @@ class SetupEnvironment(object):
         libs = []
         for lib in ["bzip2", "zlib", "libpng"]:
             spec = self.spec[lib]
-            if spec.satisfies("~shared") or (
-                spec.satisfies("libs=static") and not spec.satisfies("libs=shared")
-            ):
-                ldflags.append(spec.libs.ld_flags)
-                libs.append(spec.libs.link_flags)
+            if spec.satisfies("+shared") or spec.satisfies("libs=shared"):
+                continue
+            ldflags.append(spec.libs.ld_flags)
+            libs.append(spec.libs.link_flags)
         if ldflags:
             env.set("LDFLAGS", " ".join(ldflags))
             env.set("LIBS", " ".join(libs))
