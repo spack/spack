@@ -3,7 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-"""This module implements the classes necessary to generate TCL
+"""This module implements the classes necessary to generate Tcl
 non-hierarchical modules.
 """
 import posixpath
@@ -19,7 +19,7 @@ import spack.tengine as tengine
 from .common import BaseConfiguration, BaseContext, BaseFileLayout, BaseModuleFileWriter
 
 
-#: TCL specific part of the configuration
+#: Tcl specific part of the configuration
 def configuration(module_set_name):
     config_path = "modules:%s:tcl" % module_set_name
     config = spack.config.get(config_path, {})

@@ -55,7 +55,7 @@ def test_modules_written_with_proper_permissions(
     spec = spack.spec.Spec("mpileaks").concretized()
 
     # The code tested is common to all module types, but has to be tested from
-    # one. TCL picked at random
+    # one. Tcl picked at random
     generator = spack.modules.tcl.TclModulefileWriter(spec, "default")
     generator.write()
 

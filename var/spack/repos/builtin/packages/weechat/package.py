@@ -19,7 +19,7 @@ class Weechat(CMakePackage):
     variant("perl", default=False, description="Include perl support")
     variant("lua", default=False, description="Include lua support")
     variant("ruby", default=False, description="Include ruby support")
-    variant("tcl", default=False, description="Include TCL support")
+    variant("tcl", default=False, description="Include Tcl support")
     variant("guile", default=False, description="Include guile support")
     variant("php", default=False, description="Include php support")
 
