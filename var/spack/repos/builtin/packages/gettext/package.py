@@ -32,6 +32,7 @@ class Gettext(AutotoolsPackage, GNUMirrorPackage):
     variant("tar", default=True, description="Enable tar support")
     variant("bzip2", default=True, description="Enable bzip2 support")
     variant("xz", default=True, description="Enable xz support")
+    variant("shared", default=True, description="Build shared libraries")
 
     # Optional variants
     variant("libunistring", default=False, description="Use libunistring")
@@ -86,6 +87,8 @@ class Gettext(AutotoolsPackage, GNUMirrorPackage):
             "--with-lispdir=%s/emacs/site-lisp/gettext" % self.prefix.share,
             "--without-cvs",
         ]
+
+        config_args.extend(self.enable_or_disable("shared"))
 
         if "+curses" in spec:
             config_args.append("--with-ncurses-prefix={0}".format(spec["ncurses"].prefix))
