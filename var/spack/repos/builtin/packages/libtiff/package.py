@@ -72,6 +72,8 @@ class Libtiff(CMakePackage, AutotoolsPackage):
     variant("zstd", default=False, description="use libzstd", when="@4.0.10:")
     variant("webp", default=False, description="use libwebp", when="@4.0.10:")
 
+    variant("shared", default=True, description="Build shared")
+
     build_system(
         conditional("cmake", when="@4.0.5:"),
         "autotools",
@@ -114,6 +116,7 @@ class Libtiff(CMakePackage, AutotoolsPackage):
 class CMakeBuilder(CMakeBuilder):
     def cmake_args(self):
         args = [self.define_from_variant(var) for var in VARIANTS]
+        args += [self.define_from_variant("BUILD_SHARED_LIBS", "shared")]
 
         # Remove empty strings
         args = [arg for arg in args if arg]
@@ -126,5 +129,6 @@ class AutotoolsBuilder(AutotoolsBuilder):
         args = []
         for var in VARIANTS:
             args.extend(self.enable_or_disable(var))
+        args.extend(self.enable_or_disable("shared"))
 
         return args
