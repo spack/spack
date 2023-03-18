@@ -478,7 +478,7 @@ class Git(AutotoolsPackage):
             if not is_system_path(spec["gettext"].prefix):
                 env.append_flags("CFLAGS", spec["gettext"].headers.include_flags)
 
-        if self.spec["curl"].satisfies("libs=static"):
+        if not self.spec["curl"].satisfies("libs=shared"):
             curlconfig = which(os.path.join(self.spec["curl"].prefix.bin, "curl-config"))
             # For configure step:
             env.append_flags("LIBS", curlconfig("--static-libs", output=str).strip())
