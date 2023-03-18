@@ -55,6 +55,8 @@ class Geos(CMakePackage):
     depends_on("cmake@3.8:", type="build")
     depends_on("ninja", type="build")
 
+    variant("shared", default=True, description="Build shared library")
+
     generator = "Ninja"
 
     patch(
@@ -73,5 +75,7 @@ class Geos(CMakePackage):
         # https://github.com/libgeos/geos/issues/460
         if "%intel" in self.spec:
             args.append(self.define("BUILD_ASTYLE", False))
+
+        args.extend(self.define_from_variant("BUILD_SHARED_LIBS", "shared"))
 
         return args
