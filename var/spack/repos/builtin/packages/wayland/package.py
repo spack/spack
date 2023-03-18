@@ -21,6 +21,8 @@ class Wayland(MesonPackage, AutotoolsPackage):
     list_url = "https://gitlab.freedesktop.org/wayland/wayland/-/tags"
     git = "https://gitlab.freedesktop.org/wayland/wayland/"
 
+    maintainers("wdconinc")
+
     build_system(
         conditional("autotools", when="@:1.19"),
         conditional("meson", when="@1.18:"),
