@@ -107,12 +107,28 @@ def fake_installs(monkeypatch, tmpdir):
     )
 
 
+def test_one_package_multiple_reqs(concretize_scope, test_repo):
+    if spack.config.get("config:concretizer") == "original":
+        pytest.skip("Original concretizer does not support configuration requirements")
+
+    conf_str = """\
+packages:
+  y:
+    require:
+    - "@2.4"
+    - "~shared"
+"""
+    update_packages_config(conf_str)
+    y_spec = Spec("y").concretized()
+    assert y_spec.satisfies("@2.4~shared")
+
+
 def test_requirement_isnt_optional(concretize_scope, test_repo):
     """If a user spec requests something that directly conflicts
     with a requirement, make sure we get an error.
     """
     if spack.config.get("config:concretizer") == "original":
-        pytest.skip("Original concretizer does not support configuration" " requirements")
+        pytest.skip("Original concretizer does not support configuration requirements")
 
     conf_str = """\
 packages:
