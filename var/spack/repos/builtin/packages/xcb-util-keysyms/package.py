@@ -14,12 +14,22 @@ class XcbUtilKeysyms(AutotoolsPackage):
     libraries also provide client-side code which is not strictly part of
     the X protocol but which have traditionally been provided by Xlib."""
 
-    homepage = "https://xcb.freedesktop.org/"
-    url = "https://xcb.freedesktop.org/dist/xcb-util-keysyms-0.4.0.tar.gz"
+    homepage = "https://gitlab.freedesktop.org/xorg/lib/libxcb-keysyms"
+    url = "https://xorg.freedesktop.org/archive/individual/lib/xcb-util-keysyms-0.4.1.tar.xz"
 
+    version("0.4.1", sha256="7c260a5294412aed429df1da2f8afd3bd07b7cba3fec772fba15a613a6d5c638")
     version("0.4.0", sha256="0807cf078fbe38489a41d755095c58239e1b67299f14460dec2ec811e96caa96")
 
     depends_on("libxcb@1.4:")
 
     depends_on("xproto@7.0.8:")
     depends_on("pkgconfig", type="build")
+
+    def url_for_version(self, version):
+        if version >= Version("0.4.1"):
+            url = "https://xorg.freedesktop.org/archive/individual/lib/xcb-util-keysyms-{0}.tar.xz"
+        else:
+            url = "https://xcb.freedesktop.org/dist/xcb-util-keysyms-{0}.tar.gz"
+
+        return url.format(version)
+

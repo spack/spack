@@ -14,11 +14,20 @@ class XcbUtilRenderutil(AutotoolsPackage):
     libraries also provide client-side code which is not strictly part of
     the X protocol but which have traditionally been provided by Xlib."""
 
-    homepage = "https://xcb.freedesktop.org/"
-    url = "https://xcb.freedesktop.org/dist/xcb-util-renderutil-0.3.9.tar.gz"
+    homepage = "https://gitlab.freedesktop.org/xorg/lib/libxcb-renderutil"
+    url = "https://xorg.freedesktop.org/archive/individual/lib/xcb-util-renderutil-0.3.10.tar.xz"
 
+    version("0.3.10", sha256="3e15d4f0e22d8ddbfbb9f5d77db43eacd7a304029bf25a6166cc63caa96d04ba")
     version("0.3.9", sha256="55eee797e3214fe39d0f3f4d9448cc53cffe06706d108824ea37bb79fcedcad5")
 
     depends_on("libxcb@1.4:")
 
     depends_on("pkgconfig", type="build")
+
+    def url_for_version(self, version):
+        if version >= Version("0.3.10"):
+            url = "https://xorg.freedesktop.org/archive/individual/lib/xcb-util-renderutil-{0}.tar.xz"
+        else:
+            url = "https://xcb.freedesktop.org/dist/xcb-util-renderutil-{0}.tar.gz"
+
+        return url.format(version)

@@ -14,9 +14,10 @@ class XcbUtilCursor(AutotoolsPackage):
     libraries also provide client-side code which is not strictly part of
     the X protocol but which have traditionally been provided by Xlib."""
 
-    homepage = "https://xcb.freedesktop.org/"
-    url = "https://xcb.freedesktop.org/dist/xcb-util-cursor-0.1.3.tar.gz"
+    homepage = "https://gitlab.freedesktop.org/xorg/lib/libxcb-cursor"
+    url = "https://xorg.freedesktop.org/archive/individual/lib/xcb-util-cursor-0.1.4.tar.xz"
 
+    version("0.1.4", sha256="28dcfe90bcab7b3561abe0dd58eb6832aa9cc77cfe42fcdfa4ebe20d605231fb")
     version("0.1.3", sha256="a322332716a384c94d3cbf98f2d8fe2ce63c2fe7e2b26664b6cea1d411723df8")
 
     depends_on("libxcb@1.4:")
@@ -25,3 +26,11 @@ class XcbUtilCursor(AutotoolsPackage):
 
     depends_on("m4", type="build")
     depends_on("pkgconfig", type="build")
+
+    def url_for_version(self, version):
+        if version >= Version("0.1.4"):
+            url = "https://xorg.freedesktop.org/archive/individual/lib/xcb-util-cursor-{0}.tar.xz"
+        else:
+            url = "https://xcb.freedesktop.org/dist/xcb-util-cursor-{0}.tar.gz"
+
+        return url.format(version)
