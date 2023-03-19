@@ -18,7 +18,7 @@ class XorgProto(MesonPackage, AutotoolsPackage, XorgPackage):
     homepage = "https://gitlab.freedesktop.org/xorg/proto/xorgproto"
     xorg_mirror_path = "proto/xorgproto-2022.2.tar.gz"
 
-    maintainers("adamjstewart", "wdconinc")
+    maintainers("wdconinc")
 
     build_system(
         "autotools",
