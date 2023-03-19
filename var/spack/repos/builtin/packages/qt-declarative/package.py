@@ -14,6 +14,7 @@ class QtDeclarative(QtPackage):
     url = QtPackage.get_url(__qualname__)
     list_url = QtPackage.get_list_url(__qualname__)
 
+    version("6.4.3", sha256="9549668f8ec28199ba19d73fb535855dc5bea690097f43c2f91954bc27ee0fa3")
     version("6.4.2", sha256="dec3599b55f75cff044cc6384fa2f7e9505f8a48af1b4c185c2789e2dafabda6")
     version("6.4.1", sha256="23b5c91e98ec2b8a4118a3d3ace0c2e61b355cc8f2ccb87d189708b69446f917")
     version("6.4.0", sha256="daf7b97be51451af5afa35e1c0421fb8964003852088b0293c144a12bd664cd1")
