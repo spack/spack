@@ -20,11 +20,7 @@ class XorgProto(MesonPackage, AutotoolsPackage, XorgPackage):
 
     maintainers("wdconinc")
 
-    build_system(
-        "autotools",
-        "meson",
-        default="meson",
-    )
+    build_system("autotools", "meson", default="meson")
 
     version("2022.2", sha256="da351a403d07a7006d7bdc8dcfc14ddc1b588b38fb81adab9989a8eef605757b")
     version("2022.1", sha256="2a399e77d98fe53e9056726a1934b62cbaa6c41d7b1f41a354911b0925363343")
