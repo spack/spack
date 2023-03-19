@@ -213,6 +213,7 @@ class Llvm(CMakePackage, CudaPackage):
     # Build dependency
     depends_on("cmake@3.4.3:", type="build")
     depends_on("cmake@3.13.4:", type="build", when="@12:")
+    depends_on("cmake@3.20:", type="build", when="@16:")
     depends_on("python", when="~python", type="build")
     depends_on("pkgconfig", type="build")
 
@@ -245,6 +246,10 @@ class Llvm(CMakePackage, CudaPackage):
     depends_on("binutils+gold+ld+plugins", when="+gold")
 
     # Older LLVM do not build with newer compilers, and vice versa
+    with when("@16:"):
+        conflicts("%gcc@:7.0")
+        conflicts("%clang@:4")
+        conflicts("%apple-clang@:9")
     conflicts("%gcc@8:", when="@:5")
     conflicts("%gcc@:5.0", when="@8:")
     # Internal compiler error on gcc 8.4 on aarch64 https://bugzilla.redhat.com/show_bug.cgi?id=1958295
