@@ -12,6 +12,7 @@ class Xtrap(AutotoolsPackage, XorgPackage):
     homepage = "https://cgit.freedesktop.org/xorg/app/xtrap"
     xorg_mirror_path = "app/xtrap-1.0.2.tar.gz"
 
+    version("1.0.3", sha256="c6b86b921a748acbf1d82590fbd9c4575f970220760088f0e0efac6fd93d6dc3")
     version("1.0.2", sha256="e8916e05bfb0d72a088aaaac0feaf4ad7671d0f509d1037fb3c0c9ea131b93d2")
 
     depends_on("libx11")

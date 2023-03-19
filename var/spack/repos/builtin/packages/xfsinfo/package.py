@@ -16,6 +16,8 @@ class Xfsinfo(AutotoolsPackage, XorgPackage):
     homepage = "https://cgit.freedesktop.org/xorg/app/xfsinfo"
     xorg_mirror_path = "app/xfsinfo-1.0.5.tar.gz"
 
+    version("1.0.7", sha256="df874933710c9c38640496a2121d73272501b9620bdb95784e9e67b913788151")
+    version("1.0.6", sha256="a817e553703748fe2d721b1fe8ea95687ee78f7aef25427ed72d9584494d91e1")
     version("1.0.5", sha256="56a0492ed2cde272dc8f4cff4ba0970ccb900e51c10bb8ec62747483d095fd69")
 
     depends_on("libfs")
