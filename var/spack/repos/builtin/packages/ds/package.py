@@ -31,7 +31,7 @@ class Ds(AutotoolsPackage):
     depends_on("tk")
 
     def patch(self):
-        # the package provides it's own TCL utilities
+        # the package provides it's own Tcl utilities
         # compiling and manually setting paths for all of them is contrived
         # (most of the utilities are small and not included in spack)
 

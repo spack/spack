@@ -24,7 +24,7 @@ pytestmark = pytest.mark.skipif(sys.platform == "win32", reason="does not run on
 @pytest.mark.usefixtures("config", "mock_packages", "mock_module_filename")
 class TestTcl(object):
     def test_simple_case(self, modulefile_content, module_configuration):
-        """Tests the generation of a simple TCL module file."""
+        """Tests the generation of a simple Tcl module file."""
 
         module_configuration("autoload_direct")
         content = modulefile_content(mpich_spec_string)
@@ -318,7 +318,7 @@ class TestTcl(object):
 
         assert 'puts stderr "sentence from package"' in content
 
-        short_description = 'module-whatis "This package updates the context for TCL modulefiles."'
+        short_description = 'module-whatis "This package updates the context for Tcl modulefiles."'
         assert short_description in content
 
     @pytest.mark.regression("4400")

@@ -22,7 +22,7 @@ class Plplot(CMakePackage):
     variant("lua", default=False, description="Enable Lua binding")
     variant("pango", default=False, description="Enable Pango")
     variant("qt", default=False, description="Enable QT binding")
-    variant("tcl", default=True, description="Enable TCL binding")
+    variant("tcl", default=True, description="Enable Tcl binding")
     variant("wx", default=False, description="Enable WxWidgets")
     variant("wxold", default=False, description="Use WxWidgets old interface")
 

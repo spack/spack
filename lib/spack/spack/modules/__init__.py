@@ -4,7 +4,7 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 """This package contains code for creating environment modules, which can
-include TCL non-hierarchical modules, LUA hierarchical modules, and others.
+include Tcl non-hierarchical modules, Lua hierarchical modules, and others.
 """
 
 from __future__ import absolute_import

@@ -942,7 +942,7 @@ first ``libelf`` above, you would run:
 
    $ spack load /qmm4kso
 
-To see which packages that you have loaded to your enviornment you would
+To see which packages that you have loaded to your environment you would
 use ``spack find --loaded``.
 
 .. code-block:: console

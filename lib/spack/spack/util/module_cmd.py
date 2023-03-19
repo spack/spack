@@ -98,7 +98,7 @@ def get_path_args_from_module_line(line):
         words_and_symbols = line.split(lua_quote)
         path_arg = words_and_symbols[-2]
     else:
-        # The path arg is the 3rd "word" of the line in a TCL module
+        # The path arg is the 3rd "word" of the line in a Tcl module
         # OPERATION VAR_NAME PATH_ARG
         words = line.split()
         if len(words) > 2:
@@ -111,7 +111,7 @@ def get_path_args_from_module_line(line):
 
 
 def path_from_modules(modules):
-    """Inspect a list of TCL modules for entries that indicate the absolute
+    """Inspect a list of Tcl modules for entries that indicate the absolute
     path at which the library supported by said module can be found.
 
     Args:

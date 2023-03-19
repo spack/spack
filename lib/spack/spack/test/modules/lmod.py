@@ -88,7 +88,7 @@ class TestLmod(object):
         assert provides["compiler"] == spack.spec.CompilerSpec("oneapi@3.0")
 
     def test_simple_case(self, modulefile_content, module_configuration):
-        """Tests the generation of a simple TCL module file."""
+        """Tests the generation of a simple Tcl module file."""
 
         module_configuration("autoload_direct")
         content = modulefile_content(mpich_spec_string)
