@@ -83,5 +83,5 @@ unsetenv("{{ cmd.name }}")
 {% endblock %}
 
 {% block footer %}
-{# In case the module needs to be extended with custom LUA code #}
+{# In case the module needs to be extended with custom Lua code #}
 {% endblock %}

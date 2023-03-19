@@ -2998,12 +2998,12 @@ follows:
        def libs(self):
            return find_libraries("libFoo", root=self.home, recursive=True)
 
-       # The header provided by the bar virutal package
+       # The header provided by the bar virtual package
        @property
        def bar_headers(self):
            return find_headers("bar/bar.h", root=self.home.include, recursive=False)
 
-       # The libary provided by the bar virtual package
+       # The library provided by the bar virtual package
        @property
        def bar_libs(self):
            return find_libraries("libFooBar", root=sef.home, recursive=True)

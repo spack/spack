@@ -296,7 +296,7 @@ String Concatenation
 Above, the user ``config.yaml`` *completely* overrides specific settings in the
 default ``config.yaml``. Sometimes, it is useful to add a suffix/prefix
 to a path or name. To do this, you can use the ``-:`` notation for *append*
-string concatentation at the end of a key in a configuration file. For example:
+string concatenation at the end of a key in a configuration file. For example:
 
 .. code-block:: yaml
    :emphasize-lines: 1
