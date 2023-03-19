@@ -28,7 +28,7 @@ class PyEsmpy(PythonPackage):
     for v in ["develop", "8.4.0", "8.3.1", "8.3.0", "8.2.0", "8.1.1", "8.0.1", "8.0.0"]:
         depends_on(f"esmf@{v}", when=f"@{v}", type=("build", "run"))
 
-    depends_on("py-setuptools", type="build")
+    depends_on("py-setuptools@41:", type="build")
     depends_on("py-build", when="@:8.3.1", type="build")
     depends_on("py-setuptools-git-versioning", when="@8.4.0:", type="build")
     depends_on("py-numpy", type="run")
