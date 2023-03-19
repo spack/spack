@@ -80,6 +80,9 @@ class Krb5(AutotoolsPackage):
         if "%gcc@10:" in self.spec:
             args.append("CFLAGS=-fcommon")
 
+        if self.spec["openssl"].satisfies("~shared"):
+            args.append("LDFLAGS=-L%s -lz" % self.spec["zlib"].prefix.lib)
+
         return args
 
     def flag_handler(self, name, flags):
