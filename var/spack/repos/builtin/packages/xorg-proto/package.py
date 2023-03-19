@@ -111,11 +111,11 @@ class XorgProto(MesonPackage, AutotoolsPackage, XorgPackage):
     with when("build_system=meson"):
         depends_on("meson@0.56:")
 
+
 class MesonBuilder(spack.build_systems.meson.MesonBuilder):
     def meson_args(self):
-        return [
-            "-Dlegacy=" + str(self.spec.satisfies("+legacy")),
-        ]
+        return ["-Dlegacy=" + str(self.spec.satisfies("+legacy"))]
+
 
 class AutotoolsBuilder(spack.build_systems.autotools.AutotoolsBuilder):
     def configure_args(self):
