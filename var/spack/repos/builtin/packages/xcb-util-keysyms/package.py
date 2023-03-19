@@ -32,4 +32,3 @@ class XcbUtilKeysyms(AutotoolsPackage):
             url = "https://xcb.freedesktop.org/dist/xcb-util-keysyms-{0}.tar.gz"
 
         return url.format(version)
-
