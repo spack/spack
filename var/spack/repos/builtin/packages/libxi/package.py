@@ -14,6 +14,11 @@ class Libxi(AutotoolsPackage, XorgPackage):
 
     license("MIT AND X11")
 
+    version("1.8", sha256="c80fd200a1190e4406bb4cc6958839d9651638cb47fa546a595d4bebcd3b9e2d")
+    version("1.7.10", sha256="b51e106c445a49409f3da877aa2f9129839001b24697d75a54e5c60507e9a5e3")
+    version("1.7.9", sha256="463cc5370191404bc0f8a450fdbf6d9159efbbf274e5e0f427a60191fed9cf4b")
+    version("1.7.8", sha256="7466d0c626a9cc2e53fd78c811815e82924cd7582236a82401df3d282a9c2889")
+    version("1.7.7", sha256="501f49e9c85609da17614d711aa4931fd128011042ff1cae53a16ce03e51ff5e")
     version("1.7.6", sha256="4e88fa7decd287e58140ea72238f8d54e4791de302938c83695fc0c9ac102b7e")
 
     depends_on("pkgconfig", type="build")
@@ -23,7 +28,8 @@ class Libxi(AutotoolsPackage, XorgPackage):
     depends_on("fixesproto@5.0:")
     depends_on("xproto@7.0.13:")
     depends_on("xextproto@7.0.3:")
-    depends_on("inputproto@2.2.99.1:")
+    depends_on("inputproto@2.2.99.1:", when="@1.7:")
+    depends_on("inputproto@2.3.99.1:", when="@1.8:")
 
     @property
     def libs(self):

@@ -14,6 +14,9 @@ class Libxpm(AutotoolsPackage, XorgPackage):
 
     license("X11")
 
+    version("3.5.15", sha256="2a9bd419e31270593e59e744136ee2375ae817322447928d2abb6225560776f9")
+    version("3.5.14", sha256="18861cc64dfffc0e7fe317b0eeb935adf64858fd5d82004894c4906d909dabf8")
+    version("3.5.13", sha256="e3dfb0fb8c1f127432f2a498c7856b37ce78a61e8da73f1aab165a73dd97ad00")
     version("3.5.12", sha256="2523acc780eac01db5163267b36f5b94374bfb0de26fc0b5a7bee76649fd8501")
     version("3.5.11", sha256="53ddf924441b7ed2de994d4934358c13d9abf4828b1b16e1255ade5032b31df7")
     version("3.5.10", sha256="f73f06928a140fd2090c439d1d55c6682095044495af6bf886f8e66cf21baee5")
