@@ -2,7 +2,8 @@
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
-
+import spack.build_systems.autotools
+import spack.build_systems.meson
 from spack.package import *
 
 
@@ -109,3 +110,13 @@ class XorgProto(MesonPackage, AutotoolsPackage, XorgPackage):
 
     with when("build_system=meson"):
         depends_on("meson@0.56:")
+
+class MesonBuilder(spack.build_systems.meson.MesonBuilder):
+    def meson_args(self):
+        return [
+            "-Dlegacy=" + str(self.spec.satisfies("+legacy")),
+        ]
+
+class AutotoolsBuilder(spack.build_systems.autotools.AutotoolsBuilder):
+    def configure_args(self):
+        return self.enable_or_disable("legacy")
