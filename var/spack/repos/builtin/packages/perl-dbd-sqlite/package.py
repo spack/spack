@@ -12,6 +12,7 @@ class PerlDbdSqlite(PerlPackage):
     homepage = "https://metacpan.org/pod/DBD::SQLite"
     url = "https://cpan.metacpan.org/authors/id/I/IS/ISHIGAKI/DBD-SQLite-1.58.tar.gz"
 
+    version("1.72", sha256="5ca41e61eb52b52bd862a3088b912a75fe70910ac789b9a9983e0a449e94f551")
     version("1.59_01", sha256="b6f331e4054688572c2010e72c355f7ba3f30d86051e50d9925d34d9df1001e2")
     version("1.58", sha256="7120dd99d0338dea2802fda8bfe3fbf10077d5af559f6c67ae35e9270d1a1d3b")
     version("1.57_01", sha256="fa7fb111fa8bfc257c3208f8980ac802a9cac4531ab98afc1988b88929672184")
