@@ -24,6 +24,8 @@ class QtQuick3d(QtPackage):
     version("6.2.4", sha256="7292ed4373a92913c6811f2faa5191f0426f84bd93a3f6eb7d54b62626b56db5")
     version("6.2.3", sha256="35d06edbdd83b7d781b70e0bada18911fa9b774b6403589d5b21813a73584d80")
 
+    depends_on("qt-base +network", when="@6.3.0:")
+
     depends_on("assimp@5.0.1:")
     depends_on("embree", when="@6.4:")
 
