@@ -16,3 +16,4 @@ class Bumpversion(PythonPackage):
     version("0.5.0", sha256="030832b9b46848e1c1ac6678dba8242a021e35e908b65565800c9650291117dc")
 
     depends_on("py-setuptools", type="build")
+    depends_on("bump2version", type=("build", "run"), when="@0.6:")
