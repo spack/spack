@@ -20,6 +20,7 @@ class Setxkbmap(AutotoolsPackage, XorgPackage):
 
     depends_on("libxkbfile")
     depends_on("libx11")
+    depends_on("libxrandr", when="@1.3.3:")
 
     depends_on("pkgconfig", type="build")
     depends_on("util-macros", type="build")
