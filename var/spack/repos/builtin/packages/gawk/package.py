@@ -53,4 +53,10 @@ class Gawk(AutotoolsPackage, GNUMirrorPackage):
         return match.group(1) if match else None
 
     def configure_args(self):
-        return self.enable_or_disable("nls")
+        args = self.enable_or_disable("nls")
+
+        # https://github.com/Homebrew/homebrew-core/blob/5b93511fd6b87789871e30c9fe0790949bd6634c/Formula/gawk.rb#L38,L42
+        if self.spec.satisfies("platform=darwin target=aarch64:"):
+            args.append("--disable-pma")
+
+        return args
