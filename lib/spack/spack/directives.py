@@ -66,6 +66,7 @@ __all__ = [
     "variant",
     "resource",
     "build_system",
+    "requires",
 ]
 
 #: These are variant names used by Spack internally; packages can't use them
@@ -862,6 +863,24 @@ def maintainers(*names: str):
         pkg.maintainers = list(sorted(set(maintainers_from_base + list(names))))
 
     return _execute_maintainer
+
+
+@directive("requirements")
+def requires(requirement_spec):
+    """Allows a package to request a configuration to be present in all valid solutions.
+
+    For instance, a package that is known to compile only with GCC can declare:
+
+        requires("%gcc")
+
+    Args:
+        requirement_spec: spec expressing the requirement
+    """
+
+    def _execute_requires(pkg):
+        pkg.requirements.setdefault(requirement_spec, None)
+
+    return _execute_requires
 
 
 class DirectiveError(spack.error.SpackError):

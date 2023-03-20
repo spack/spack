@@ -13,6 +13,7 @@ import pprint
 import re
 import types
 import warnings
+from typing import List, Tuple
 
 import archspec.cpu
 
@@ -1012,6 +1013,14 @@ class SpackSolverSetup(object):
             )
 
     def package_requirement_rules(self, pkg):
+        self.package_requirement_from_package_py(pkg)
+        self.package_requirement_from_packages_yaml(pkg)
+
+    def package_requirement_from_package_py(self, pkg):
+        rules = [self._rule_from_str(pkg.name, requirement) for requirement in pkg.requirements]
+        self.emit_facts_from_requirement_rules(rules, virtual=False, raise_on_failure=True)
+
+    def package_requirement_from_packages_yaml(self, pkg):
         pkg_name = pkg.name
         config = spack.config.get("packages")
         requirements, raise_on_failure = config.get(pkg_name, {}).get("require", []), True
@@ -1027,7 +1036,7 @@ class SpackSolverSetup(object):
         with a uniform structure (name, policy, requirements).
         """
         if isinstance(requirements, str):
-            rules = [(pkg_name, "one_of", [requirements])]
+            rules = [self._rule_from_str(pkg_name, requirements)]
         else:
             rules = []
             for requirement in requirements:
@@ -1040,6 +1049,9 @@ class SpackSolverSetup(object):
                         if policy in requirement:
                             rules.append((pkg_name, policy, requirement[policy]))
         return rules
+
+    def _rule_from_str(self, pkg_name: str, requirements: str) -> Tuple[str, str, List[str]]:
+        return pkg_name, "one_of", [requirements]
 
     def pkg_rules(self, pkg, tests):
         pkg = packagize(pkg)

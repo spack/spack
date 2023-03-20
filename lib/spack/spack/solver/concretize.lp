@@ -494,7 +494,7 @@ requirement_weight(Package, Group, W) :-
   requirement_policy(Package, Group, "any_of"),
   requirement_group_satisfied(Package, Group).
 
-error(100, "Cannot satisfy the requirements in packages.yaml for package '{0}'. You may want to delete them to proceed with concretization. To check where the requirements are defined run 'spack config blame packages'", Package) :-
+error(100, "cannot satisfy a requirement for package '{0}'.", Package) :-
   activate_requirement_rules(Package),
   requirement_group(Package, X),
   not requirement_group_satisfied(Package, X).
