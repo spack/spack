@@ -19,6 +19,7 @@ class Lrzip(Package):
     git = "https://github.com/ckolivas/lrzip.git"
 
     version("master", branch="master")
+    version("0.651", sha256="f4c84de778a059123040681fd47c17565fcc4fec0ccc68fcf32d97fad16cd892")
     version("0.630", sha256="7b9bf6415fb2294a8e83a5a1c6a8d7da17a19f4730567c8fa16e3016d79250a6")
     version("0.621", sha256="4bf93c1df076b6e6a57f32c0c4b7790b4d25d724c259394e1d32b680c0657121")
     version("0.616", sha256="6ef50bfec15d7585e5b085067c9fe91a87246ccd14a3165acd08b147bba26a2e")
