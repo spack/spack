@@ -13,6 +13,8 @@ class Xwininfo(AutotoolsPackage, XorgPackage):
     homepage = "https://cgit.freedesktop.org/xorg/app/xwininfo"
     xorg_mirror_path = "app/xwininfo-1.1.3.tar.gz"
 
+    version("1.1.5", sha256="aaa915909bb509320c3c775c79babaccc063fd3edc39e520a3c0352e265e9f58")
+    version("1.1.4", sha256="3561f6c37eec416ad306f41ff24172b86cbed00854dff8912915e97d2cc17c34")
     version("1.1.3", sha256="784f8b9c9ddab24ce4faa65fde6430a8d7cf3c0564573582452cc99c599bd941")
 
     depends_on("libxcb@1.6:")
