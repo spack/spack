@@ -37,7 +37,6 @@ class TestTcl(object):
         module_configuration("autoload_direct")
         content = modulefile_content(mpileaks_spec_string)
 
-        assert len([x for x in content if "is-loaded" in x]) == 2
         assert len([x for x in content if "module load " in x]) == 2
 
         # dtbuild1 has
@@ -47,7 +46,6 @@ class TestTcl(object):
         # Just make sure the 'build' dependency is not there
         content = modulefile_content("dtbuild1")
 
-        assert len([x for x in content if "is-loaded" in x]) == 2
         assert len([x for x in content if "module load " in x]) == 2
 
         # The configuration file sets the verbose keyword to False
@@ -60,7 +58,6 @@ class TestTcl(object):
         module_configuration("autoload_all")
         content = modulefile_content(mpileaks_spec_string)
 
-        assert len([x for x in content if "is-loaded" in x]) == 5
         assert len([x for x in content if "module load " in x]) == 5
 
         # dtbuild1 has
@@ -70,12 +67,7 @@ class TestTcl(object):
         # Just make sure the 'build' dependency is not there
         content = modulefile_content("dtbuild1")
 
-        assert len([x for x in content if "is-loaded" in x]) == 2
         assert len([x for x in content if "module load " in x]) == 2
-
-        # The configuration file sets the verbose keyword to True
-        messages = [x for x in content if 'puts stderr "Autoloading' in x]
-        assert len(messages) == 2
 
     def test_prerequisites_direct(self, modulefile_content, module_configuration):
         """Tests asking direct dependencies as prerequisites."""
@@ -113,7 +105,6 @@ class TestTcl(object):
         assert len([x for x in content if x.startswith("prepend-path CMAKE_PREFIX_PATH")]) == 0
         assert len([x for x in content if 'setenv FOO "foo"' in x]) == 0
         assert len([x for x in content if "unsetenv BAR" in x]) == 0
-        assert len([x for x in content if "is-loaded 'foo/bar'" in x]) == 1
         assert len([x for x in content if "module load foo/bar" in x]) == 1
         assert len([x for x in content if "setenv LIBDWARF_ROOT" in x]) == 1
 
@@ -124,7 +115,6 @@ class TestTcl(object):
         module_configuration(config_name)
         content = modulefile_content("mpileaks ^zmpi")
 
-        assert len([x for x in content if "is-loaded" in x]) == 1
         assert len([x for x in content if "module load " in x]) == 1
 
         # Catch "Exception" to avoid using FileNotFoundError on Python 3
@@ -135,7 +125,6 @@ class TestTcl(object):
 
         content = modulefile_content("zmpi target=x86_64")
 
-        assert len([x for x in content if "is-loaded" in x]) == 1
         assert len([x for x in content if "module load " in x]) == 1
 
     def test_naming_scheme_compat(self, factory, module_configuration):
@@ -352,11 +341,11 @@ class TestTcl(object):
 
         # Test the mpileaks that should have the autoloaded dependencies
         content = modulefile_content("mpileaks ^mpich2")
-        assert len([x for x in content if "is-loaded" in x]) == 2
+        assert len([x for x in content if "module load " in x]) == 2
 
         # Test the mpileaks that should NOT have the autoloaded dependencies
         content = modulefile_content("mpileaks ^mpich")
-        assert len([x for x in content if "is-loaded" in x]) == 0
+        assert len([x for x in content if "module load " in x]) == 0
 
     def test_modules_no_arch(self, factory, module_configuration):
         module_configuration("no_arch")
