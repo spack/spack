@@ -35,6 +35,7 @@ class Llvm(CMakePackage, CudaPackage):
     family = "compiler"  # Used by lmod
 
     version("main", branch="main")
+    version("16.0.0", sha256="cba969a0782a3a398658d439f047b5e548ea04724f4fbfdbe17cfc946f4cd3ed")
     version("15.0.7", sha256="42a0088f148edcf6c770dfc780a7273014a9a89b66f357c761b4ca7c8dfa10ba")
     version("15.0.6", sha256="4d857d7a180918bdacd09a5910bf9743c9861a1e49cb065a85f7a990f812161d")
     version("15.0.5", sha256="c47640269e0251e009ae18a25162df4e20e175885286e21d28c054b084b991a4")
@@ -212,6 +213,7 @@ class Llvm(CMakePackage, CudaPackage):
     # Build dependency
     depends_on("cmake@3.4.3:", type="build")
     depends_on("cmake@3.13.4:", type="build", when="@12:")
+    depends_on("cmake@3.20:", type="build", when="@16:")
     depends_on("python", when="~python", type="build")
     depends_on("pkgconfig", type="build")
 
@@ -244,6 +246,10 @@ class Llvm(CMakePackage, CudaPackage):
     depends_on("binutils+gold+ld+plugins", when="+gold")
 
     # Older LLVM do not build with newer compilers, and vice versa
+    with when("@16:"):
+        conflicts("%gcc@:7.0")
+        conflicts("%clang@:4")
+        conflicts("%apple-clang@:9")
     conflicts("%gcc@8:", when="@:5")
     conflicts("%gcc@:5.0", when="@8:")
     # Internal compiler error on gcc 8.4 on aarch64 https://bugzilla.redhat.com/show_bug.cgi?id=1958295
