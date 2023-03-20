@@ -38,9 +38,9 @@ properties = {
                                             "properties": {
                                                 "one_of": {"type": "array"},
                                                 "any_of": {"type": "array"},
-                                            }
+                                            },
                                         },
-                                        {"type": "string"}
+                                        {"type": "string"},
                                     ]
                                 },
                             },
