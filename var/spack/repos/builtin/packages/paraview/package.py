@@ -175,7 +175,7 @@ class Paraview(CMakePackage, CudaPackage, ROCmPackage):
     depends_on("openpmd-api +adios2", when="+openpmd +adios2", type=("build", "run"))
     depends_on("openpmd-api +hdf5", when="+openpmd +hdf5", type=("build", "run"))
 
-    depends_on("intel-tbb", when="+tbb")
+    depends_on("tbb", when="+tbb")
 
     depends_on("mpi", when="+mpi")
     depends_on("qt+opengl", when="@5.3.0:+qt+opengl2")
