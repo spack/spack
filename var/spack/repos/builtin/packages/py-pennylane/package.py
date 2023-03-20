@@ -30,7 +30,7 @@ class PyPennylane(PythonPackage):
     version(
         "0.28.0",
         sha256="2a6100c00277c1eb59eab6856cdad7b1237e9d1fbda98b1e15020bd5a64b10a8",
-        preferred=True,
+        deprecated=True,
     )
 
     depends_on("python@3.8:", type=("build", "run"))
@@ -44,14 +44,14 @@ class PyPennylane(PythonPackage):
     depends_on("py-toml", type=("build", "run"))
     depends_on("py-appdirs", type=("build", "run"))
     depends_on("py-semantic-version@2.7:", type=("build", "run"))
-    depends_on("py-autoray", type=("build", "run"))
+    depends_on("py-autoray@0.3.1:", type=("build", "run"))
     depends_on("py-cachetools", type=("build", "run"))
-    depends_on("py-pennylane-lightning", type=("build", "run"))
+    depends_on("py-pennylane-lightning@0.28.0:", type=("build", "run"))
     depends_on("py-requests", type=("build", "run"))
 
     # Test deps
     depends_on("py-pytest", type="test")
-    depends_on("py-pytest-xdist", type="test")
+    depends_on("py-pytest-xdist@3.2:", type="test")
     depends_on("py-pytest-mock", type="test")
     depends_on("py-flaky", type="test")
 

@@ -13,9 +13,9 @@ class Blaspp(CMakePackage, CudaPackage, ROCmPackage):
     Innovative Computing Laboratory at the University of Tennessee,
     Knoxville."""
 
-    homepage = "https://bitbucket.org/icl/blaspp"
+    homepage = "https://github.com/icl-utk-edu/blaspp"
     git = homepage
-    url = "https://bitbucket.org/icl/blaspp/downloads/blaspp-2020.09.00.tar.gz"
+    url = "https://github.com/icl-utk-edu/blaspp/releases/download/v2023.01.00/blaspp-2023.01.00.tar.gz"
     maintainers("teonnik", "Sely85", "G-Ragghianti", "mgates3")
 
     version("master", branch="master")

@@ -190,7 +190,6 @@ class Anaconda3(Package):
     )
 
     def install(self, spec, prefix):
-
         dir, anaconda_script = split(self.stage.archive_file)
         bash = which("bash")
         bash(anaconda_script, "-b", "-f", "-p", self.prefix)

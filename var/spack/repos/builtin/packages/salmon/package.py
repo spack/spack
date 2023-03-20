@@ -113,8 +113,6 @@ class Salmon(CMakePackage):
             filter_file("curl -k.*", "", "scripts/fetchPufferfish.sh")
 
     def cmake_args(self):
-        args = [
-            "-DBOOST_ROOT=%s" % self.spec["boost"].prefix,
-        ]
+        args = ["-DBOOST_ROOT=%s" % self.spec["boost"].prefix]
 
         return args

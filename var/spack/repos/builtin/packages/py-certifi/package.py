@@ -14,6 +14,7 @@ class PyCertifi(PythonPackage):
     homepage = "https://github.com/certifi/python-certifi"
     pypi = "certifi/certifi-2020.6.20.tar.gz"
 
+    version("2022.12.7", sha256="35824b4c3a97115964b408844d64aa14db1cc518f6562e8d7261699d1350a9e3")
     version("2022.9.14", sha256="36973885b9542e6bd01dea287b2b4b3b21236307c56324fcc3f1160f2d655ed5")
     version("2021.10.8", sha256="78884e7c1d4b00ce3cea67b44566851c4343c120abd683433ce934a68ea58872")
     version("2020.6.20", sha256="5930595817496dd21bb8dc35dad090f1c2cd0adfaf21204bf6732ca5d8ee34d3")

@@ -105,21 +105,9 @@ class Poppler(CMakePackage):
             args.append("-DENABLE_CPP=OFF")
 
         if "+glib" in spec:
-            args.extend(
-                [
-                    "-DENABLE_GLIB=ON",
-                    "-DWITH_GLIB=ON",
-                    "-DWITH_Cairo=ON",
-                ]
-            )
+            args.extend(["-DENABLE_GLIB=ON", "-DWITH_GLIB=ON", "-DWITH_Cairo=ON"])
         else:
-            args.extend(
-                [
-                    "-DENABLE_GLIB=OFF",
-                    "-DWITH_GLIB=OFF",
-                    "-DWITH_Cairo=OFF",
-                ]
-            )
+            args.extend(["-DENABLE_GLIB=OFF", "-DWITH_GLIB=OFF", "-DWITH_Cairo=OFF"])
 
         if "+gobject" in spec:
             args.append("-DENABLE_GOBJECT_INTROSPECTION=ON")

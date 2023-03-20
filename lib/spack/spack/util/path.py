@@ -22,8 +22,6 @@ from llnl.util.lang import memoized
 
 import spack.util.spack_yaml as syaml
 
-is_windows = sys.platform == "win32"
-
 __all__ = ["substitute_config_variables", "substitute_path_variables", "canonicalize_path"]
 
 
@@ -153,7 +151,7 @@ def sanitize_file_path(pth):
     # instances of illegal characters on join
     pth_cmpnts = pth.split(os.path.sep)
 
-    if is_windows:
+    if sys.platform == "win32":
         drive_match = r"[a-zA-Z]:"
         is_abs = bool(re.match(drive_match, pth_cmpnts[0]))
         drive = pth_cmpnts[0] + os.path.sep if is_abs else ""
@@ -210,7 +208,7 @@ def system_path_filter(_func=None, arg_slice=None):
 def get_system_path_max():
     # Choose a conservative default
     sys_max_path_length = 256
-    if is_windows:
+    if sys.platform == "win32":
         sys_max_path_length = 260
     else:
         try:
@@ -238,7 +236,7 @@ class Path:
 
     unix = 0
     windows = 1
-    platform_path = windows if is_windows else unix
+    platform_path = windows if sys.platform == "win32" else unix
 
 
 def format_os_path(path, mode=Path.unix):
@@ -487,7 +485,7 @@ def debug_padded_filter(string, level=1):
     Returns (str): filtered string if current debug level does not exceed
         level and not windows; otherwise, unfiltered string
     """
-    if is_windows:
+    if sys.platform == "win32":
         return string
 
     return padding_filter(string) if tty.debug_level() <= level else string

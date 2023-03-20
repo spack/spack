@@ -26,7 +26,5 @@ class Maeparser(CMakePackage):
     depends_on("zlib")
 
     def cmake_args(self):
-        args = [
-            self.define_from_variant("MAEPARSER_BUILD_SHARED_LIBS", "shared"),
-        ]
+        args = [self.define_from_variant("MAEPARSER_BUILD_SHARED_LIBS", "shared")]
         return args

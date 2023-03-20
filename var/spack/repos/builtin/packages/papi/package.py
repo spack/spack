@@ -82,6 +82,7 @@ class Papi(AutotoolsPackage, ROCmPackage):
         when="@5.4.0:5.6%gcc@8:",
     )
     patch("crayftn-fixes.patch", when="@6.0.0:%cce@9:")
+    patch("intel-oneapi-compiler-fixes.patch", when="@6.0.0:%oneapi")
 
     configure_directory = "src"
 
@@ -112,6 +113,11 @@ class Papi(AutotoolsPackage, ROCmPackage):
             env.set("DBG", "")
 
     setup_run_environment = setup_build_environment
+
+    @when("@6.0.0:%oneapi")
+    def autoreconf(self, spec, prefix):
+        bash = which("bash")
+        bash("-c", "cd src && autoreconf -ivf")
 
     def configure_args(self):
         spec = self.spec

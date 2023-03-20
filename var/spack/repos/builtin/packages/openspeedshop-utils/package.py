@@ -207,7 +207,6 @@ class OpenspeedshopUtils(CMakePackage):
             )
 
         else:
-
             # Appends base options to cmake_args
             self.set_defaultbase_cmake_options(spec, cmake_args)
             cmake_args.extend(

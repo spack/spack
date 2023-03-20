@@ -53,12 +53,7 @@ import spack.util.spack_yaml
 import spack.util.url
 import spack.version
 
-from ._common import (
-    _executables_in_store,
-    _python_import,
-    _root_spec,
-    _try_import_from_store,
-)
+from ._common import _executables_in_store, _python_import, _root_spec, _try_import_from_store
 from .config import spack_python_interpreter, spec_for_current_python
 
 #: Name of the file containing metadata about the bootstrapping source
@@ -213,7 +208,7 @@ class BuildcacheBootstrapper(Bootstrapper):
                 # This will be None for things that don't depend on python
                 python_spec = item.get("python", None)
                 # Skip specs which are not compatible
-                if not abstract_spec.satisfies(candidate_spec):
+                if not abstract_spec.intersects(candidate_spec):
                     continue
 
                 if python_spec is not None and python_spec not in abstract_spec:

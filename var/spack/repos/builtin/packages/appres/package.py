@@ -15,6 +15,7 @@ class Appres(AutotoolsPackage, XorgPackage):
     homepage = "https://cgit.freedesktop.org/xorg/app/appres"
     xorg_mirror_path = "app/appres-1.0.4.tar.gz"
 
+    version("1.0.6", sha256="848f383ff429612fb9df840d79e97dc193dc72dbbf53d3217a8d1e90a5aa1e26")
     version("1.0.4", sha256="22cb6f639c891ffdbb5371bc50a88278185789eae6907d05e9e0bd1086a80803")
 
     depends_on("libx11")

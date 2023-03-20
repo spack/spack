@@ -7,7 +7,7 @@ from typing import Optional, Tuple
 
 import llnl.util.lang as lang
 
-from spack.directives import extends
+from spack.directives import extends, maintainers
 
 from .generic import GenericBuilder, Package
 
@@ -71,7 +71,7 @@ class RPackage(Package):
 
     GenericBuilder = RBuilder
 
-    maintainers = ["glennpj"]
+    maintainers("glennpj")
 
     #: This attribute is used in UI queries that need to know the build
     #: system base class

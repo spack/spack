@@ -46,17 +46,12 @@ class Libxml2(AutotoolsPackage):
 
     # avoid cycle dependency for concretizer
     with when("+python"):
+        extends("python")
         depends_on("python+shared~libxml2")
         # A note about python versions: libxml 2.10.1 (and presumably earlier) has
         # a bug in its configure script that fails to properly parse python
         # version strings with more than one character for the minor version.
         depends_on("python@:3.9", when="@:2.10.1")
-    extends(
-        "python",
-        when="+python",
-        ignore=r"(bin.*$)|(include.*$)|(share.*$)|(lib/libxml2.*$)|"
-        "(lib/xml2.*$)|(lib/cmake.*$)",
-    )
 
     # XML Conformance Test Suites
     # See https://www.w3.org/XML/Test/ for information

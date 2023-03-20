@@ -47,6 +47,5 @@ class Libabigail(AutotoolsPackage):
     def autoreconf(self, spec, prefix):
         autoreconf = which("autoreconf")
         with working_dir(self.configure_directory):
-
             # We need force (f) because without it, looks for RedHat library
             autoreconf("-ivf")

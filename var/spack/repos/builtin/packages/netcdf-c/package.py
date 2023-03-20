@@ -68,6 +68,9 @@ class NetcdfC(AutotoolsPackage):
     # See https://github.com/Unidata/netcdf-c/pull/2293
     patch("4.8.1-no-strict-aliasing-config.patch", when="@4.8.1")
 
+    # See https://github.com/Unidata/netcdf-c/pull/2618
+    patch("4.9.0-no-mpi-yes-pnetcdf.patch", when="@4.9.0: ~mpi+parallel-netcdf")
+
     variant("mpi", default=True, description="Enable parallel I/O for netcdf-4")
     variant("parallel-netcdf", default=False, description="Enable parallel I/O for classic files")
     variant("hdf4", default=False, description="Enable HDF4 support")
