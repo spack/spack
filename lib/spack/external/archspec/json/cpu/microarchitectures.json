@@ -2617,15 +2617,23 @@
                   "flags" : "-march=armv8.2-a+crypto+fp16 -mtune=cortex-a72"
               },
               {
-                  "versions": "8.0:8.9",
+                  "versions": "8.0:9.3",
                   "flags" : "-march=armv8.2-a+fp16+dotprod+crypto -mtune=cortex-a72"
               },
               {
-                  "versions": "9.0:9.9",
+                  "versions": "9.4:9.9",
                   "flags" : "-mcpu=neoverse-v1"
               },
-	            {
-                  "versions": "10.0:",
+              {
+                  "versions": "10.0:10.1",
+                  "flags" : "-march=armv8.2-a+fp16+dotprod+crypto -mtune=cortex-a72"
+              },
+              {
+                  "versions": "10.2:10.9",
+                  "flags" : "-mcpu=zeus"
+              },
+              {
+                  "versions": "11.0:",
                   "flags" : "-mcpu=neoverse-v1"
               }
 
