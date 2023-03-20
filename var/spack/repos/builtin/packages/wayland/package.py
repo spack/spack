@@ -6,7 +6,7 @@
 from spack.package import *
 
 
-class Wayland(AutotoolsPackage):
+class Wayland(MesonPackage, AutotoolsPackage):
     """Wayland is a project to define a protocol for a compositor to talk
     to its clients as well as a library implementation of the protocol.
     The compositor can be a standalone display server running on Linux
@@ -15,20 +15,39 @@ class Wayland(AutotoolsPackage):
     X servers(rootless or fullscreen) or other display servers."""
 
     homepage = "https://wayland.freedesktop.org/"
-    url = "https://github.com/wayland-project/wayland/archive/1.18.0.tar.gz"
+    url = "https://gitlab.freedesktop.org/wayland/wayland/-/archive/1.18.0/wayland-1.18.0.tar.gz"
+    list_url = "https://gitlab.freedesktop.org/wayland/wayland/-/tags"
+    git = "https://gitlab.freedesktop.org/wayland/wayland/"
 
+    maintainers("wdconinc")
+
+    build_system(
+        conditional("autotools", when="@:1.19"),
+        conditional("meson", when="@1.18:"),
+        default="meson",
+    )
+
+    version("1.21.0", sha256="53b7fa67142e653820030ec049971bcb5e84ac99e05cba5bcb9cb55f43fae4b3")
+    version("1.20.0", sha256="20523cd6f2c18c3c86725467157c6221e19de76fbfad944042a2d494af3c7a92")
+    version("1.19.0", sha256="4e3b889468b9a4c2d16fc6489e28d000641e67c45dc97c4f6d9ecd3e261c895f")
     version("1.18.0", sha256="8d375719ebfa36b6f2968096fdf0bfa7d39ba110b7956c0032e395e7e012f332")
     version("1.17.93", sha256="293536ad23bfed15fc34e2a63bbb511167e8b096c0eba35e805cb64d46ad62ae")
     version("1.17.92", sha256="d944a7b999cfe6fee5327a2315c8e5891222c5a88a96e1ca73485978e4990512")
 
-    depends_on("autoconf", type="build")
-    depends_on("automake", type="build")
-    depends_on("libtool", type="build")
-    depends_on("m4", type="build")
+    with when("build_system=autotools"):
+        depends_on("autoconf", type="build")
+        depends_on("automake", type="build")
+        depends_on("libtool", type="build")
+        depends_on("m4", type="build")
+
+    with when("build_system=meson"):
+        depends_on("meson@0.56.0:", type="build")
+
     depends_on("pkgconfig", type="build")
     depends_on("doxygen", type="build")
     depends_on("xmlto", type="build")
     depends_on("libxslt", type="build")
+    depends_on("docbook-xsl", type="build")
     depends_on("libxml2")
     depends_on("chrpath")
     depends_on("expat")
