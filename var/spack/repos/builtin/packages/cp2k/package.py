@@ -268,7 +268,7 @@ class Cp2k(MakefilePackage, CudaPackage, CMakePackage, ROCmPackage):
         "80": "A100",
         "gfx906": "Mi50",
         "gfx908": "Mi100",
-        "gfx90a": "Mi250x",
+        "gfx90a": "Mi250",
     }
     cuda_msg = "cp2k only supports cuda_arch {0}".format(supported_cuda_arch_list)
 
@@ -850,7 +850,7 @@ class CMakeBuilder(spack.build_systems.cmake.CMakeBuilder):
 
         args += [
             self.define_from_variant("CP2K_USE_ELPA", "elpa"),
-            self.define_from_variant("CP2K_USE_LIBINT", "libint"),
+            self.define_from_variant("CP2K_USE_LIBINT2", "libint"),
             self.define_from_variant("CP2K_USE_SIRIUS", "sirius"),
             self.define_from_variant("CP2K_USE_SPLA", "spla"),
             self.define_from_variant("CP2K_USE_COSMA", "cosma"),
