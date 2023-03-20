@@ -13,7 +13,7 @@ class Petsc(Package, CudaPackage, ROCmPackage):
     differential equations.
     """
 
-    homepage = "https://www.mcs.anl.gov/petsc/index.html"
+    homepage = "https://petsc.org"
     url = "https://ftp.mcs.anl.gov/pub/petsc/release-snapshots/petsc-3.15.0.tar.gz"
     git = "https://gitlab.com/petsc/petsc.git"
     maintainers("balay", "barrysmith", "jedbrown")

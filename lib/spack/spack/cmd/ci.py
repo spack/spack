@@ -255,10 +255,9 @@ def ci_rebuild(args):
 
     # Make sure the environment is "gitlab-enabled", or else there's nothing
     # to do.
-    yaml_root = ev.config_dict(env.yaml)
-    gitlab_ci = yaml_root["gitlab-ci"] if "gitlab-ci" in yaml_root else None
-    if not gitlab_ci:
-        tty.die("spack ci rebuild requires an env containing gitlab-ci cfg")
+    ci_config = cfg.get("ci")
+    if not ci_config:
+        tty.die("spack ci rebuild requires an env containing ci cfg")
 
     tty.msg(
         "SPACK_BUILDCACHE_DESTINATION={0}".format(
@@ -306,8 +305,10 @@ def ci_rebuild(args):
     # Query the environment manifest to find out whether we're reporting to a
     # CDash instance, and if so, gather some information from the manifest to
     # support that task.
-    cdash_handler = spack_ci.CDashHandler(yaml_root.get("cdash")) if "cdash" in yaml_root else None
-    if cdash_handler:
+    cdash_config = cfg.get("cdash")
+    cdash_handler = None
+    if "build-group" in cdash_config:
+        cdash_handler = spack_ci.CDashHandler(cdash_config)
         tty.debug("cdash url = {0}".format(cdash_handler.url))
         tty.debug("cdash project = {0}".format(cdash_handler.project))
         tty.debug("cdash project_enc = {0}".format(cdash_handler.project_enc))
@@ -340,13 +341,13 @@ def ci_rebuild(args):
     pipeline_mirror_url = None
 
     temp_storage_url_prefix = None
-    if "temporary-storage-url-prefix" in gitlab_ci:
-        temp_storage_url_prefix = gitlab_ci["temporary-storage-url-prefix"]
+    if "temporary-storage-url-prefix" in ci_config:
+        temp_storage_url_prefix = ci_config["temporary-storage-url-prefix"]
         pipeline_mirror_url = url_util.join(temp_storage_url_prefix, ci_pipeline_id)
 
     enable_artifacts_mirror = False
-    if "enable-artifacts-buildcache" in gitlab_ci:
-        enable_artifacts_mirror = gitlab_ci["enable-artifacts-buildcache"]
+    if "enable-artifacts-buildcache" in ci_config:
+        enable_artifacts_mirror = ci_config["enable-artifacts-buildcache"]
         if enable_artifacts_mirror or (
             spack_is_pr_pipeline and not enable_artifacts_mirror and not temp_storage_url_prefix
         ):
@@ -593,8 +594,8 @@ def ci_rebuild(args):
     # avoid wasting compute cycles attempting to build those hashes.
     if install_exit_code == INSTALL_FAIL_CODE and spack_is_develop_pipeline:
         tty.debug("Install failed on develop")
-        if "broken-specs-url" in gitlab_ci:
-            broken_specs_url = gitlab_ci["broken-specs-url"]
+        if "broken-specs-url" in ci_config:
+            broken_specs_url = ci_config["broken-specs-url"]
             dev_fail_hash = job_spec.dag_hash()
             broken_spec_path = url_util.join(broken_specs_url, dev_fail_hash)
             tty.msg("Reporting broken develop build as: {0}".format(broken_spec_path))
@@ -615,17 +616,14 @@ def ci_rebuild(args):
     # the package, run them and copy the output. Failures of any kind should
     # *not* terminate the build process or preclude creating the build cache.
     broken_tests = (
-        "broken-tests-packages" in gitlab_ci
-        and job_spec.name in gitlab_ci["broken-tests-packages"]
+        "broken-tests-packages" in ci_config
+        and job_spec.name in ci_config["broken-tests-packages"]
     )
     reports_dir = fs.join_path(os.getcwd(), "cdash_report")
     if args.tests and broken_tests:
-        tty.warn(
-            "Unable to run stand-alone tests since listed in "
-            "gitlab-ci's 'broken-tests-packages'"
-        )
+        tty.warn("Unable to run stand-alone tests since listed in " "ci's 'broken-tests-packages'")
         if cdash_handler:
-            msg = "Package is listed in gitlab-ci's broken-tests-packages"
+            msg = "Package is listed in ci's broken-tests-packages"
             cdash_handler.report_skipped(job_spec, reports_dir, reason=msg)
             cdash_handler.copy_test_results(reports_dir, job_test_dir)
     elif args.tests:
@@ -688,8 +686,8 @@ def ci_rebuild(args):
 
         # If this is a develop pipeline, check if the spec that we just built is
         # on the broken-specs list. If so, remove it.
-        if spack_is_develop_pipeline and "broken-specs-url" in gitlab_ci:
-            broken_specs_url = gitlab_ci["broken-specs-url"]
+        if spack_is_develop_pipeline and "broken-specs-url" in ci_config:
+            broken_specs_url = ci_config["broken-specs-url"]
             just_built_hash = job_spec.dag_hash()
             broken_spec_path = url_util.join(broken_specs_url, just_built_hash)
             if web_util.url_exists(broken_spec_path):

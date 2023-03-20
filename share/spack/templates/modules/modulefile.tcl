@@ -78,5 +78,5 @@ unsetenv {{ cmd.name }}
 {% endblock %}
 
 {% block footer %}
-{# In case the module needs to be extended with custom TCL code #}
+{# In case the module needs to be extended with custom Tcl code #}
 {% endblock %}
