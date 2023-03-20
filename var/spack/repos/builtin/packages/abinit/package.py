@@ -162,7 +162,7 @@ class Abinit(AutotoolsPackage):
                 )
         else:
             if "@:9.8" in spec:
-                oapp("--with-fftw {0}".format(spec["fftw"].prefix))
+                oapp("--with-fftw {0}".format(spec["fftw-api"].prefix))
                 oapp("--with-hdf5 {0}".format(spec["hdf5"].prefix))
 
             if "@:8" in spec:
