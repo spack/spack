@@ -33,12 +33,6 @@ class PyPennylaneLightning(CMakePackage, PythonExtension):
         deprecated=True,
     )  # on Spack v0.19.0
 
-    patch(
-        "v0.28-spack_support.patch",
-        when="@0.28.2",
-        sha256="26e79a0a01fbd1d9364d2328ccdbdcdd5109ea289a4e79f86f7a8206bcb35419",
-    )
-
     variant("blas", default=True, description="Build with BLAS support")
     variant(
         "dispatcher",
