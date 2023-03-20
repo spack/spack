@@ -676,10 +676,11 @@ def ci_rebuild(args):
                 pipeline_mirror_url=pipeline_mirror_url,
                 pr_pipeline=spack_is_pr_pipeline,
             ):
-                tty.msg(
-                    "{} buildcache for {} to {}".format(
+                msg = tty.msg if result.success else tty.warn
+                msg(
+                    "{} {} to {}".format(
                         "Successfully pushed" if result.success else "Failed to push",
-                        job_spec.format("{name}{hash:7}"),
+                        job_spec.format("{name}{/hash:7}"),
                         result.url,
                     )
                 )
