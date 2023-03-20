@@ -12,12 +12,26 @@ class PyPennylane(PythonPackage):
 
     homepage = "https://docs.pennylane.ai/"
     git = "https://github.com/PennyLaneAI/pennylane.git"
-    pypi = "PennyLane/PennyLane-0.28.0.tar.gz"
+    url = "https://github.com/PennyLaneAI/pennylane/archive/refs/tags/v0.29.0.tar.gz"
 
     maintainers("mlxd", "AmintorDusko", "marcodelapierre")
 
     version("master", branch="master")
-    version("0.28.0", sha256="2a6100c00277c1eb59eab6856cdad7b1237e9d1fbda98b1e15020bd5a64b10a8")
+    version(
+        "0.29.1",
+        sha256="6ecfb305a3898347df8c539a89a67e748766941d159dbef9e34864872f13c45c",
+        preferred=True,
+    )
+    version(
+        "0.29.0",
+        sha256="e59e042174abd8f1596034d3f4dd113b24d06e4aadb5f2e5828fa3411fabf0df",
+        preferred=True,
+    )
+    version(
+        "0.28.0",
+        sha256="2a6100c00277c1eb59eab6856cdad7b1237e9d1fbda98b1e15020bd5a64b10a8",
+        preferred=True,
+    )
 
     depends_on("python@3.8:", type=("build", "run"))
     depends_on("py-setuptools", type="build")

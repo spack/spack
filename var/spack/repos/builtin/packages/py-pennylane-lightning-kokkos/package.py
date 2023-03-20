@@ -12,16 +12,18 @@ class PyPennylaneLightningKokkos(CMakePackage, PythonExtension, CudaPackage, ROC
 
     homepage = "https://docs.pennylane.ai/projects/lightning-kokkos"
     git = "https://github.com/PennyLaneAI/pennylane-lightning-kokkos.git"
-    tag = "v0.29.1"
     url = (
-        f"https://github.com/PennyLaneAI/pennylane-lightning-kokkos/archive/refs/tags/{tag}.tar.gz"
+        "https://github.com/PennyLaneAI/pennylane-lightning-kokkos/archive/refs/tags/v0.29.1.tar.gz"
     )
 
     maintainers("vincentmr")
 
     version("main", branch="main")
-    version("develop", commit="fd6feb9b2c961d6f8d93f31b6015b37e9aeac759")
-    version("0.29.1", sha256="96ba290809873856e28eb1939754cc20b6bce47fd30cee706217f1849955c044")
+    version(
+        "0.29.1",
+        sha256="f51ba7718defc7bb5064f690f381e04b2ec58cb09f22a171ae5f410860716e30",
+        preferred=True,
+    )
 
     # kokkos backends
     backends = {
@@ -61,11 +63,9 @@ class PyPennylaneLightningKokkos(CMakePackage, PythonExtension, CudaPackage, ROC
         description="CMake build type",
         values=("Debug", "Release", "RelWithDebInfo", "MinSizeRel"),
     )
-    variant("cppbenchmarks", default=False, description="Build CPP benchmark examples")
     variant("cpptests", default=False, description="Build CPP tests")
     variant("native", default=False, description="Build natively for given hardware")
     variant("sanitize", default=False, description="Build with address sanitization")
-    variant("verbose", default=False, description="Build with full verbosity")
 
     # hard dependencies
     depends_on("cmake@3.21:3.24,3.25.2:", type="build")
@@ -75,8 +75,8 @@ class PyPennylaneLightningKokkos(CMakePackage, PythonExtension, CudaPackage, ROC
     depends_on("py-pybind11", type=("build"))
     depends_on("py-pip", type=("build", "run"))
     depends_on("py-wheel", type="build")
-    depends_on("py-pennylane", type=("run"))
-    depends_on("py-pennylane-lightning~kokkos", type=("run"))
+    depends_on("py-pennylane", type=("run", "test"))
+    depends_on("py-pennylane-lightning~kokkos", type=("run", "test"))
 
     # variant defined dependencies
     depends_on("llvm-openmp", when="+openmp %apple-clang")
@@ -95,9 +95,8 @@ class CMakeBuilder(spack.build_systems.cmake.CMakeBuilder):
         Here we specify all variant options that can be dynamically specified at build time
         """
         args = [
-            self.define_from_variant("CMAKE_VERBOSE_MAKEFILE:BOOL", "verbose"),
-            self.define_from_variant("PLKOKKOS_ENABLE_NATIVE", "native"),
             self.define_from_variant("PLKOKKOS_BUILD_TESTS", "cpptests"),
+            self.define_from_variant("PLKOKKOS_ENABLE_NATIVE", "native"),
             self.define_from_variant("PLKOKKOS_ENABLE_SANITIZER", "sanitize"),
         ]
         args.append("-DCMAKE_PREFIX_PATH=" + self.spec["kokkos"].prefix)
@@ -122,8 +121,6 @@ class CMakeBuilder(spack.build_systems.cmake.CMakeBuilder):
     @run_after("install")
     @on_package_attributes(run_tests=True)
     def install_test(self):
-        pytest = which("pytest")
-        pytest("tests")
-        # with working_dir(self.stage.source_path):
-        #     pl_runner = Executable(self.prefix.bin.pl-device-test)
-        #     pl_runner("--device", "lightning.kokkos", "--shots", "None", "--skip-ops")
+        with working_dir(self.stage.source_path):
+            pl_device_test = Executable(join_path(self.prefix, "bin", "pl-device-test"))
+            pl_device_test("--device", "lightning.kokkos", "--shots", "None", "--skip-ops")
