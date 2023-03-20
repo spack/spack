@@ -91,6 +91,14 @@ class Cp2k(MakefilePackage, CudaPackage, CMakePackage, ROCmPackage):
     variant("pytorch", default=False, description="Enable libtorch support")
     variant("quip", default=False, description=("Enable quip support"))
 
+    variant(
+        "enable_regtests",
+        default=False,
+        description="Configure cp2k to run the regtests afterwards."
+        " It build cp2k normally but put the executables in exe/cmake-build-* instead of the"
+        " conventional location. This option is only relevant when regtests need to be run.",
+    )
+
     with when("+cuda"):
         variant(
             "cuda_arch_35_k20x",
@@ -849,6 +857,7 @@ class CMakeBuilder(spack.build_systems.cmake.CMakeBuilder):
             args += ["-DCP2K_USE_ACCEL=hip"]
 
         args += [
+            self.define_from_variant("CP2K_ENABLE_REGTESTS", "enable_regtests"),
             self.define_from_variant("CP2K_USE_ELPA", "elpa"),
             self.define_from_variant("CP2K_USE_LIBINT2", "libint"),
             self.define_from_variant("CP2K_USE_SIRIUS", "sirius"),
