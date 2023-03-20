@@ -16,6 +16,7 @@ class Libpng(CMakePackage):
 
     maintainers("AlexanderRichert-NOAA")
 
+    version("1.6.39", sha256="1f4696ce70b4ee5f85f1e1623dc1229b210029fa4b7aee573df3e2ba7b036937")
     version("1.6.37", sha256="505e70834d35383537b6491e7ae8641f1a4bed1876dbfe361201fc80868d88ca")
     # From http://www.libpng.org/pub/png/libpng.html (2019-04-15)
     #     libpng versions 1.6.36 and earlier have a use-after-free bug in the
