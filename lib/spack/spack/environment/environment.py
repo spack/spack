@@ -13,6 +13,7 @@ import sys
 import time
 import urllib.parse
 import urllib.request
+from typing import List, Optional
 
 import ruamel.yaml as yaml
 
@@ -59,7 +60,7 @@ spack_env_var = "SPACK_ENV"
 
 
 #: currently activated environment
-_active_environment = None
+_active_environment: Optional["Environment"] = None
 
 
 #: default path where environments are stored in the spack tree
@@ -1552,12 +1553,11 @@ class Environment(object):
 
     def regenerate_views(self):
         if not self.views:
-            tty.debug("Skip view update, this environment does not" " maintain a view")
+            tty.debug("Skip view update, this environment does not maintain a view")
             return
 
-        concretized_root_specs = [s for _, s in self.concretized_specs()]
         for view in self.views.values():
-            view.regenerate(concretized_root_specs)
+            view.regenerate(self.concrete_roots())
 
     def check_views(self):
         """Checks if the environments default view can be activated."""
@@ -1565,7 +1565,7 @@ class Environment(object):
             # This is effectively a no-op, but it touches all packages in the
             # default view if they are installed.
             for view_name, view in self.views.items():
-                for _, spec in self.concretized_specs():
+                for spec in self.concrete_roots():
                     if spec in view and spec.package and spec.installed:
                         msg = '{0} in view "{1}"'
                         tty.debug(msg.format(spec.name, view_name))
@@ -1583,7 +1583,7 @@ class Environment(object):
         visited = set()
 
         errors = []
-        for _, root_spec in self.concretized_specs():
+        for root_spec in self.concrete_roots():
             if root_spec in self.default_view and root_spec.installed and root_spec.package:
                 for spec in root_spec.traverse(deptype="run", root=True):
                     if spec.name in visited:
@@ -1800,9 +1800,6 @@ class Environment(object):
                             "Could not install log links for {0}: {1}".format(spec.name, str(e))
                         )
 
-            with self.write_transaction():
-                self.regenerate_views()
-
     def all_specs(self):
         """Return all specs, even those a user spec would shadow."""
         roots = [self.specs_by_hash[h] for h in self.concretized_order]
@@ -1847,6 +1844,11 @@ class Environment(object):
         for s, h in zip(self.concretized_user_specs, self.concretized_order):
             yield (s, self.specs_by_hash[h])
 
+    def concrete_roots(self):
+        """Same as concretized_specs, except it returns the list of concrete
+        roots *without* associated user spec"""
+        return [root for _, root in self.concretized_specs()]
+
     def get_by_hash(self, dag_hash):
         matches = {}
         roots = [self.specs_by_hash[h] for h in self.concretized_order]
@@ -1862,6 +1864,15 @@ class Environment(object):
         hash_matches = self.get_by_hash(dag_hash)
         assert len(hash_matches) == 1
         return hash_matches[0]
+
+    def all_matching_specs(self, *specs: spack.spec.Spec) -> List[Spec]:
+        """Returns all concretized specs in the environment satisfying any of the input specs"""
+        key = lambda s: s.dag_hash()
+        return [
+            s
+            for s in spack.traverse.traverse_nodes(self.concrete_roots(), key=key)
+            if any(s.satisfies(t) for t in specs)
+        ]
 
     @spack.repo.autospec
     def matching_spec(self, spec):
