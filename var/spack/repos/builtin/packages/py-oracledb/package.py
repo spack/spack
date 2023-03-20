@@ -19,7 +19,7 @@ class PyOracledb(PythonPackage):
     depends_on("py-setuptools@40.6.0:", type="build")
     depends_on("py-cryptography@3.2.1:", type=("build", "run"))
     depends_on("py-cython", type="build")
-    depends_on("python@3.6:3.11", type=("build", "run"))
+    depends_on("python@3.6:", type=("build", "run"))
     depends_on("oracle-instant-client", type="run", when="impl=thick")
 
     variant(
