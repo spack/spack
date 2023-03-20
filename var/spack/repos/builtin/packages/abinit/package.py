@@ -72,7 +72,8 @@ class Abinit(AutotoolsPackage):
     depends_on("netcdf-c~mpi", when="~mpi")
     depends_on("hdf5+mpi", when="+mpi")
     depends_on("hdf5~mpi", when="~mpi")
-    depends_on("hdf5@:1.8", when="@9.8:")
+    # constrain version of hdf5
+    depends_on("hdf5@:1.8", when="@9:")
     depends_on("wannier90+shared", when="+wannier90+mpi")
 
     # constrain libxc version
