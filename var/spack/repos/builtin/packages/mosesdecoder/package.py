@@ -24,4 +24,3 @@ class Mosesdecoder(Package):
     depends_on("boost")
     depends_on("zlib")
     depends_on("python")
-
