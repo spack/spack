@@ -14,6 +14,6 @@ class PyReportseff(PythonPackage):
 
     version("2.7.2", sha256="63cf99ceb0111de511636b214ade937c6c1b8444531e8026dbc34ddf92049c41")
 
-    depends_on("python@3.7:", type=("build", "run"))
+    depends_on("python@3.7:3", type=("build", "run"))
     depends_on("py-poetry-core", type="build")
     depends_on("py-click@6.7:", type=("build", "run"))
