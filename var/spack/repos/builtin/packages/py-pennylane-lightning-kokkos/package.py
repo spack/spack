@@ -19,11 +19,7 @@ class PyPennylaneLightningKokkos(CMakePackage, PythonExtension, CudaPackage, ROC
     maintainers("vincentmr")
 
     version("main", branch="main")
-    version(
-        "0.29.1",
-        sha256="f51ba7718defc7bb5064f690f381e04b2ec58cb09f22a171ae5f410860716e30",
-        preferred=True,
-    )
+    version("0.29.1", sha256="f51ba7718defc7bb5064f690f381e04b2ec58cb09f22a171ae5f410860716e30")
 
     # kokkos backends
     backends = {
