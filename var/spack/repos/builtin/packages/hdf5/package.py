@@ -580,7 +580,7 @@ class Hdf5(CMakePackage):
         if api != "default":
             args.append(self.define("DEFAULT_API_VERSION", api))
 
-        if "+mpi" in spec and "platform=windows" not in spec:
+        if "+mpi" in spec and "%msvc" not in spec:
             args.extend(
                 [
                     "-DMPI_CXX_COMPILER:PATH=%s" % spec["mpi"].mpicxx,
@@ -645,7 +645,7 @@ class Hdf5(CMakePackage):
         if not pc_files:
             # This also tells us that the pkgconfig directory does not exist.
             return
-        import pdb; pdb.set_trace()
+
         # Replace versioned references in all pkg-config files:
         filter_file(
             r"(Requires(?:\.private)?:.*)(hdf5[^\s,]*)(?:-[^\s,]*)(.*)",
