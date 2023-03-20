@@ -9,6 +9,7 @@ import shutil
 
 import llnl.util.filesystem as fs
 import llnl.util.tty as tty
+import llnl.util.tty.color as clr
 
 import spack.binary_distribution as bindist
 import spack.ci as spack_ci
@@ -679,8 +680,8 @@ def ci_rebuild(args):
                 msg = tty.msg if result.success else tty.warn
                 msg(
                     "{} {} to {}".format(
-                        "Successfully pushed" if result.success else "Failed to push",
-                        job_spec.format("{name}{/hash:7}"),
+                        "Pushed" if result.success else "Failed to push",
+                        job_spec.format("{name}{@version}{/hash:7}", color=clr.get_color_when()),
                         result.url,
                     )
                 )
