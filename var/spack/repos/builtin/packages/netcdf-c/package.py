@@ -88,12 +88,6 @@ class NetcdfC(CMakePackage, AutotoolsPackage):
     variant("zstd", default=True, description="Enable ZStandard compression", when="@4.9.0:")
     variant("optimize", default=True, description="Enable -O2 for a more optimized lib")
 
-    # It's unclear if cdmremote can be enabled if '--enable-netcdf-4' is passed
-    # to the configure script. Since netcdf-4 support is mandatory we comment
-    # this variant out.
-    # variant('cdmremote', default=False,
-    #         description='Enable CDM Remote support')
-
     # The patch for 4.7.0 touches configure.ac. See force_autoreconf below.
     with when("build_system=autotools"):
         depends_on("autoconf", type="build", when="@4.7.0,main")
@@ -107,7 +101,6 @@ class NetcdfC(CMakePackage, AutotoolsPackage):
     # curl 7.18.0 or later is required:
     # http://www.unidata.ucar.edu/software/netcdf/docs/getting_and_building_netcdf.html
     depends_on("curl@7.18.0:", when="+dap")
-    # depends_on("curl@7.18.0:", when='+cdmremote')
 
     # Need to include libxml2 when using DAP in 4.9.0 and newer to build
     # https://github.com/Unidata/netcdf-c/commit/53464e89635a43b812b5fec5f7abb6ff34b9be63
@@ -142,10 +135,6 @@ class NetcdfC(CMakePackage, AutotoolsPackage):
     depends_on("hdf5@:1.8", when="@:4.4.0")
 
     depends_on("zstd", when="+zstd")
-
-    # The feature was introduced in version 4.1.2
-    # and was removed in version 4.4.0
-    # conflicts('+cdmremote', when='@:4.1.1,4.4:')
 
     # The features were introduced in version 4.1.0
     conflicts("+parallel-netcdf", when="@:4.0")
@@ -251,13 +240,8 @@ class AutotoolsBuilder(BackupStep, Setup, autotools.AutotoolsBuilder):
             cflags.append(self.pkg.compiler.cc_pic_flag)
 
         config_args += self.enable_or_disable("dap")
-        # config_args += self.enable_or_disable('cdmremote')
 
-        # if '+dap' in self.pkg.spec or '+cdmremote' in self.pkg.spec:
         if "+dap" in self.pkg.spec:
-            # Make sure Netcdf links against Spack's curl, otherwise it may
-            # pick up system's curl, which can give link errors, e.g.:
-            # undefined reference to `SSL_CTX_use_certificate_chain_file
             curl = self.pkg.spec["curl"]
             curl_libs = curl.libs
             libs.append(curl_libs.link_flags)
@@ -277,9 +261,6 @@ class AutotoolsBuilder(BackupStep, Setup, autotools.AutotoolsBuilder):
         if self.pkg.spec.satisfies("@4.3.2:"):
             config_args += self.enable_or_disable("jna")
 
-        # Starting version 4.1.3, --with-hdf5= and other such configure options
-        # are removed. Variables CPPFLAGS, LDFLAGS, and LD_LIBRARY_PATH must be
-        # used instead.
         hdf5_hl = self.pkg.spec["hdf5:hl"]
         cppflags.append(hdf5_hl.headers.cpp_flags)
         ldflags.append(hdf5_hl.libs.search_flags)
@@ -323,10 +304,6 @@ class AutotoolsBuilder(BackupStep, Setup, autotools.AutotoolsBuilder):
             # Prevent linking to system zstd.
             # There is no explicit option to disable zstd.
             config_args.append("ac_cv_lib_zstd_ZSTD_compress=no")
-
-        # Fortran support
-        # In version 4.2+, NetCDF-C and NetCDF-Fortran have split.
-        # Use the netcdf-fortran package to install Fortran support.
 
         config_args.append("CFLAGS=" + " ".join(cflags))
         config_args.append("CPPFLAGS=" + " ".join(cppflags))
