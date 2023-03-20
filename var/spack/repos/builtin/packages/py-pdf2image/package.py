@@ -17,5 +17,5 @@ class PyPdf2image(PythonPackage):
 
     depends_on("py-setuptools", type="build")
 
-    depends_on("py-pillow", type=("build", "run"))
+    depends_on("pil", type=("build", "run"))
     depends_on("poppler", type=("build", "run"))
