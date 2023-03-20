@@ -99,7 +99,8 @@ class NetcdfC(CMakePackage, AutotoolsPackage):
         depends_on("autoconf", type="build", when="@4.7.0,main")
         depends_on("automake", type="build", when="@4.7.0,main")
         depends_on("libtool", type="build", when="@4.7.0,main")
-        depends_on("m4", type="build")
+    # CMake system can use m4, but Windows does not yet support
+    depends_on("m4", type="build", when=sys.platform != "win32")
 
     depends_on("hdf~netcdf", when="+hdf4")
 
