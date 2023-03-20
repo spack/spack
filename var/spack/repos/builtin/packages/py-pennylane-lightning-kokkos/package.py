@@ -8,13 +8,12 @@ from spack.package import *
 
 
 class PyPennylaneLightningKokkos(CMakePackage, PythonExtension, CudaPackage, ROCmPackage):
-    """The PennyLane-Lightning-Kokkos plugin provides a fast state-vector simulator with Kokkos kernels."""
+    """The PennyLane-Lightning-Kokkos plugin provides
+    a fast state-vector simulator with Kokkos kernels."""
 
     homepage = "https://docs.pennylane.ai/projects/lightning-kokkos"
     git = "https://github.com/PennyLaneAI/pennylane-lightning-kokkos.git"
-    url = (
-        "https://github.com/PennyLaneAI/pennylane-lightning-kokkos/archive/refs/tags/v0.29.1.tar.gz"
-    )
+    url = "https://github.com/PennyLaneAI/pennylane-lightning-kokkos/archive/refs/tags/v0.29.1.tar.gz"
 
     maintainers("vincentmr")
 
@@ -48,7 +47,9 @@ class PyPennylaneLightningKokkos(CMakePackage, PythonExtension, CudaPackage, ROC
         depends_on("kokkos amdgpu_target={0}".format(val), when="amdgpu_target={0}".format(val))
 
     conflicts(
-        "+cuda", when="+rocm", msg="CUDA and ROCm are not compatible in PennyLane-Lightning-Kokkos."
+        "+cuda",
+        when="+rocm",
+        msg="CUDA and ROCm are not compatible in PennyLane-Lightning-Kokkos.",
     )
 
     # build options
