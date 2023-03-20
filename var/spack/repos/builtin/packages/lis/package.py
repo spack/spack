@@ -16,6 +16,7 @@ class Lis(AutotoolsPackage):
     homepage = "https://www.ssisc.org/lis/index.en.html"
     url = "https://www.ssisc.org/lis/dl/lis-2.0.27.zip"
 
+    version("2.1.0", sha256="630a1341824fbeef7fdfb82413bfdeb7d3df14e77616ba88159fce1150cf006c")
     version("2.0.27", sha256="85f32f4abbc94d1b40b22c10b915170271b19822b6aa6939b1cb295f6e455237")
 
     variant("mpi", default=False, description="Build with MPI library")
