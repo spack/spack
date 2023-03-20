@@ -21,6 +21,7 @@ class Geos(CMakePackage):
 
     maintainers("adamjstewart")
 
+    version("3.11.2", sha256="b1f077669481c5a3e62affc49e96eb06f281987a5d36fdab225217e5b825e4cc")
     version("3.11.1", sha256="6d0eb3cfa9f92d947731cc75f1750356b3bdfc07ea020553daf6af1c768e0be2")
     version("3.11.0", sha256="79ab8cabf4aa8604d161557b52e3e4d84575acdc0d08cb09ab3f7aaefa4d858a")
     version("3.10.4", sha256="d6fc11bcfd265cbf2714199174e4c3392d657551e5fd84c74c07c863b29357e3")
