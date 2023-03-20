@@ -1018,6 +1018,8 @@ class SpackSolverSetup(object):
             rules = []
             for requirement in requirements:
                 if isinstance(requirement, str):
+                    # A string represents a spec that must be satisfied. It is
+                    # equivalent to a one_of group with a single element
                     rules.append((pkg_name, "one_of", [requirement]))
                 else:
                     for policy in ("one_of", "any_of"):
