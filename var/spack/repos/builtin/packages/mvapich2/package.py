@@ -109,6 +109,9 @@ class Mvapich2(AutotoolsPackage):
     )
 
     variant(
+        "hwlocv2", default=False, description="Builds mvapich2 with hwloc v2"
+    )
+    variant(
         "file_systems",
         description="List of the ROMIO file systems to activate",
         values=auto_or_any_combination_of("lustre", "gpfs", "nfs", "ufs"),
@@ -430,6 +433,8 @@ class Mvapich2(AutotoolsPackage):
         else:
             args.append("--disable-cuda")
 
+        if "+hwlocv2" in self.spec:
+            args.append("--with-hwloc=v2")
         if "+regcache" in self.spec:
             args.append("--enable-registration-cache")
         else:
