@@ -59,8 +59,6 @@ class PySphinx(PythonPackage):
     version("1.4.5", sha256="c5df65d97a58365cbf4ea10212186a9a45d89c61ed2c071de6090cdf9ddb4028")
     version("1.3.1", sha256="1a6e5130c2b42d2de301693c299f78cc4bd3501e78b610c08e45efc70e2b5114")
 
-    extends("python", ignore="bin/(pybabel|pygmentize)")
-
     depends_on("py-flit-core@3.7:", when="@5.2:", type="build")
     depends_on("py-setuptools", when="@4.4:5.1", type="build")
     depends_on("py-setuptools", when="@:4.3", type=("build", "run"))

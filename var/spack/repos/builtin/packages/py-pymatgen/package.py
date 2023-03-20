@@ -20,8 +20,6 @@ class PyPymatgen(PythonPackage):
         "2020.12.31", sha256="5002490facd47c55d2dae42c35712e061c1f5d881180485c0543a899589856d6"
     )
 
-    extends("python@3.7:", ignore="bin/tabulate")
-
     depends_on("py-setuptools@18.0:", type="build")
 
     depends_on("py-numpy@1.9:", type=("build", "run"))

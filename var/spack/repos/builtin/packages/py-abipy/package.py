@@ -18,16 +18,6 @@ class PyAbipy(PythonPackage):
     variant("gui", default=False, description="Build the GUI")
     variant("ipython", default=False, description="Build IPython support")
 
-    extends(
-        "python",
-        ignore=(
-            "bin/("
-            "feff_.*|gaussian_analyzer|get_environment|html2text|"
-            "nc3tonc4|nc4tonc3|ncinfo|pmg|pydii|tabulate|tqdm"
-            ")"
-        ),
-    )
-
     depends_on("python@2.7:")
 
     depends_on("py-setuptools", type="build")
