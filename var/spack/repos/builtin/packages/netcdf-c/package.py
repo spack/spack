@@ -3,6 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+import itertools
 import os
 import sys
 
@@ -59,6 +60,8 @@ class NetcdfC(CMakePackage, AutotoolsPackage):
         #  is accepted:
         patch("netcdfc-mpi-win-support.patch", when="platform=windows")
 
+    # Some of the patches touch configure.ac and, therefore, require forcing the autoreconf stage:
+    _force_autoreconf_when = []
     with when("build_system=autotools"):
         # Configure fails if curl is not installed
         # See https://github.com/Unidata/netcdf-c/issues/1390
@@ -67,12 +70,23 @@ class NetcdfC(CMakePackage, AutotoolsPackage):
             sha256="c551ca2f5b6bcefa07dd7f8b7bac426a5df9861e091df1ab99167d8d401f963f",
             when="@4.7.0",
         )
+        _force_autoreconf_when.append("@4.7.0")
 
         # See https://github.com/Unidata/netcdf-c/pull/1752
-        patch("4.7.3-spectrum-mpi-pnetcdf-detect.patch", when="@4.7.3:4.7.4 +parallel-netcdf")
+        patch(
+            "https://github.com/Unidata/netcdf-c/commit/386e2695286702156eba27ab7c68816efb192230.patch?full_index=1",
+            sha256="cb928a91f87c1615a0788f95b95d7a2e3df91dc16822f8b8a34a85d4e926c0de",
+            when="@4.7.3:4.7.4 +parallel-netcdf",
+        )
+        _force_autoreconf_when.append("@4.7.3:4.7.4 +parallel-netcdf")
 
         # See https://github.com/Unidata/netcdf-c/pull/2293
-        patch("4.8.1-no-strict-aliasing-config.patch", when="@4.8.1")
+        patch(
+            "https://github.com/Unidata/netcdf-c/commit/a7ea050ebb3c412a99cc352859d5176a9b5ef986.patch?full_index=1",
+            sha256="38d34de38bad99737d3308867071196f20a3fb39b936de7bfcfbc85eb0c7ef54",
+            when="@4.8.1",
+        )
+        _force_autoreconf_when.append("@4.8.1")
 
     with when("@4.7.2"):
         # Fix headers
@@ -88,7 +102,11 @@ class NetcdfC(CMakePackage, AutotoolsPackage):
         )
 
     # See https://github.com/Unidata/netcdf-c/pull/2618
-    patch("4.9.0-no-mpi-yes-pnetcdf.patch", when="@4.9.0: ~mpi+parallel-netcdf")
+    patch(
+        "https://github.com/Unidata/netcdf-c/commit/00a722b253bae186bba403d0f92ff1eba719591f.patch?full_index=1",
+        sha256="25b83de1e081f020efa9e21c94c595220849f78c125ad43d8015631d453dfcb9",
+        when="@4.9.0:4.9.1~mpi+parallel-netcdf",
+    )
 
     variant("mpi", default=True, description="Enable parallel I/O for netcdf-4")
     variant("parallel-netcdf", default=False, description="Enable parallel I/O for classic files")
@@ -106,11 +124,14 @@ class NetcdfC(CMakePackage, AutotoolsPackage):
     variant("blosc", default=True, description="Enable Blosc compression plugin")
     variant("zstd", default=True, description="Enable Zstandard compression plugin")
 
-    # The patch for 4.7.0 touches configure.ac. See force_autoreconf below.
     with when("build_system=autotools"):
-        depends_on("autoconf", type="build", when="@4.7.0,main")
-        depends_on("automake", type="build", when="@4.7.0,main")
-        depends_on("libtool", type="build", when="@4.7.0,main")
+        for __s in itertools.chain(["@main"], _force_autoreconf_when):
+            with when(__s):
+                depends_on("autoconf", type="build")
+                depends_on("automake", type="build")
+                depends_on("libtool", type="build")
+        del __s
+
     # CMake system can use m4, but Windows does not yet support
     depends_on("m4", type="build", when=sys.platform != "win32")
 
@@ -281,8 +302,7 @@ class CMakeBuilder(BackupStep, Setup, cmake.CMakeBuilder):
 class AutotoolsBuilder(BackupStep, Setup, autotools.AutotoolsBuilder):
     @property
     def force_autoreconf(self):
-        # The patch for 4.7.0 touches configure.ac.
-        return self.spec.satisfies("@4.7.0")
+        return any(self.spec.satisfies(s) for s in self.pkg._force_autoreconf_when)
 
     def autoreconf(self, pkg, spec, prefix):
         if not os.path.exists(self.configure_abs_path):
