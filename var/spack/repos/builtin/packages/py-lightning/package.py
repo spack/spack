@@ -57,7 +57,7 @@ class PyLightning(PythonPackage):
     depends_on("py-uvicorn@:1", type=("build", "run"))
     depends_on("py-websocket-client@:2", type=("build", "run"))
     depends_on("py-websockets@:11", type=("build", "run"))
-    depends_on("py-pytorch-lightning", type=("build", "run"))
+    depends_on("py-pytorch-lightning@2.0.0", when="@2.0.0", type=("build", "run"))
 
     with when("+extra"):
         depends_on("py-aiohttp@3.8:3", type=("build", "run"))
