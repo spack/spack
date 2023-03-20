@@ -66,7 +66,7 @@ class Mvapich(AutotoolsPackage):
         values=disjoint_sets(("auto",), ("slurm",), ("pbs",), ("hydra", "gforker", "remshell"))
         .prohibit_empty_set()
         .with_error(
-            "'slurm','pbs' or 'auto' cannot be activated along with other process managers"
+            "'slurm' 'pbs' or 'auto' cannot be activated along with other process managers"
         )
         .with_default("auto")
         .with_non_feature_values("auto"),
@@ -101,8 +101,8 @@ class Mvapich(AutotoolsPackage):
     depends_on("libxml2")
     depends_on("cuda", when="+cuda")
     depends_on("libfabric", when="netmod=ofi")
-    depends_on("slurm", when="process_managers=slurm")
     depends_on("openpbs", when="process_managers=pbs")
+    depends_on("slurm", when="process_managers=slurm")
     depends_on("ucx", when="netmod=ucx")
 
     filter_compiler_wrappers("mpicc", "mpicxx", "mpif77", "mpif90", "mpifort", relative_root="bin")
@@ -150,6 +150,7 @@ class Mvapich(AutotoolsPackage):
             ]
         if "process_managers=pbs" in spec:
             opts = ["--with-pbs={0}".format(spec["pbs"].prefix)]
+
         return opts
 
     @property
@@ -288,6 +289,7 @@ class Mvapich(AutotoolsPackage):
             args.append("--enable-registration-cache")
         else:
             args.append("--disable-registration-cache")
+
         ld = ""
         for path in itertools.chain(self.compiler.extra_rpaths, self.compiler.implicit_rpaths()):
             ld += "-Wl,-rpath," + path + " "
