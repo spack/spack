@@ -1017,9 +1017,14 @@ class SpackSolverSetup(object):
         else:
             rules = []
             for requirement in requirements:
-                for policy in ("one_of", "any_of"):
-                    if policy in requirement:
-                        rules.append((pkg_name, policy, requirement[policy]))
+                if isinstance(requirement, str):
+                    # A string represents a spec that must be satisfied. It is
+                    # equivalent to a one_of group with a single element
+                    rules.append((pkg_name, "one_of", [requirement]))
+                else:
+                    for policy in ("one_of", "any_of"):
+                        if policy in requirement:
+                            rules.append((pkg_name, policy, requirement[policy]))
         return rules
 
     def pkg_rules(self, pkg, tests):
