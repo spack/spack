@@ -41,6 +41,10 @@ class Bash(AutotoolsPackage, GNUMirrorPackage):
         ("5.2", "010", "c7705e029f752507310ecd7270aef437e8043a9959e4d0c6065a82517996c1cd"),
         ("5.2", "011", "831b5f25bf3e88625f3ab315043be7498907c551f86041fa3b914123d79eb6f4"),
         ("5.2", "012", "2fb107ce1fb8e93f36997c8b0b2743fc1ca98a454c7cc5a3fcabec533f67d42c"),
+        ("5.2", "013", "094b4fd81bc488a26febba5d799689b64d52a5505b63e8ee854f48d356bc7ce6"),
+        ("5.2", "014", "3ef9246f2906ef1e487a0a3f4c647ae1c289cbd8459caa7db5ce118ef136e624"),
+        ("5.2", "015", "ef73905169db67399a728e238a9413e0d689462cb9b72ab17a05dba51221358a"),
+
         ("5.1", "001", "ebb07b3dbadd98598f078125d0ae0d699295978a5cdaef6282fe19adef45b5fa"),
         ("5.1", "002", "15ea6121a801e48e658ceee712ea9b88d4ded022046a6147550790caf04f5dbe"),
         ("5.1", "003", "22f2cc262f056b22966281babf4b0a2f84cb7dd2223422e5dcd013c3dcbab6b1"),
@@ -57,6 +61,7 @@ class Bash(AutotoolsPackage, GNUMirrorPackage):
         ("5.1", "014", "6a4ee0c81b437b96279a792c1efcec4ba56f009195a318083db6b53b096f83d0"),
         ("5.1", "015", "1b37692ef1f6cc3dcec246773443276066e6b1379868f8c14e01f4dfd4df80f0"),
         ("5.1", "016", "8899144f76a5db1fb41a89ed881c9f19add95728dd71db324f772ef225c5384f"),
+
         ("5.0", "001", "f2fe9e1f0faddf14ab9bfa88d450a75e5d028fedafad23b88716bd657c737289"),
         ("5.0", "002", "87e87d3542e598799adb3e7e01c8165bc743e136a400ed0de015845f7ff68707"),
         ("5.0", "003", "4eebcdc37b13793a232c5f2f498a5fcbf7da0ecb3da2059391c096db620ec85b"),
@@ -75,6 +80,7 @@ class Bash(AutotoolsPackage, GNUMirrorPackage):
         ("5.0", "016", "ffd1d7a54a99fa7f5b1825e4f7e95d8c8876bc2ca151f150e751d429c650b06d"),
         ("5.0", "017", "4cf3b9fafb8a66d411dd5fc9120032533a4012df1dc6ee024c7833373e2ddc31"),
         ("5.0", "018", "7c314e375a105a6642e8ed44f3808b9def89d15f7492fe2029a21ba9c0de81d3"),
+
         ("4.4", "001", "3e28d91531752df9a8cb167ad07cc542abaf944de9353fe8c6a535c9f1f17f0f"),
         ("4.4", "002", "7020a0183e17a7233e665b979c78c184ea369cfaf3e8b4b11f5547ecb7c13c53"),
         ("4.4", "003", "51df5a9192fdefe0ddca4bdf290932f74be03ffd0503a3d112e4199905e718b2"),
@@ -98,6 +104,7 @@ class Bash(AutotoolsPackage, GNUMirrorPackage):
         ("4.4", "021", "bd8f59054a763ec1c64179ad5cb607f558708a317c2bdb22b814e3da456374c1"),
         ("4.4", "022", "45331f0936e36ab91bfe44b936e33ed8a1b1848fa896e8a1d0f2ef74f297cb79"),
         ("4.4", "023", "4fec236f3fbd3d0c47b893fdfa9122142a474f6ef66c20ffb6c0f4864dd591b6"),
+
         ("4.3", "001", "ecb3dff2648667513e31554b3ad054ccd89fce38e33367c9459ac3a285153742"),
         ("4.3", "002", "eee7cd7062ab29a9e4f02924d9c367264dcb8b162703f74ff6eb8f175a91502b"),
         ("4.3", "003", "000e6eac50cd9053ce0630db01239dcdead04a2c2c351c47e2b51dac1ac1087d"),
