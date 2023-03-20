@@ -65,7 +65,7 @@ class PyPennylaneLightningKokkos(CMakePackage, PythonExtension, CudaPackage, ROC
     variant("sanitize", default=False, description="Build with address sanitization")
 
     # hard dependencies
-    depends_on("cmake@3.21:3.24,3.25.2:", type="build")
+    depends_on("cmake@3.20:", type="build")
     depends_on("ninja", type=("run", "build"))
     depends_on("python@3.8:", type=("build", "run"))
     depends_on("py-setuptools", type="build")
