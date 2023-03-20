@@ -32,11 +32,16 @@ properties = {
                             {
                                 "type": "array",
                                 "items": {
-                                    "type": "object",
-                                    "properties": {
-                                        "one_of": {"type": "array"},
-                                        "any_of": {"type": "array"},
-                                    },
+                                    "oneOf": [
+                                        {
+                                            "type": "object",
+                                            "properties": {
+                                                "one_of": {"type": "array"},
+                                                "any_of": {"type": "array"},
+                                            },
+                                        },
+                                        {"type": "string"},
+                                    ]
                                 },
                             },
                             # Shorthand for a single requirement group with
