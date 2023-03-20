@@ -14,9 +14,11 @@ class EnvironmentModules(Package):
 
     homepage = "https://cea-hpc.github.io/modules/"
     url = "https://github.com/cea-hpc/modules/releases/download/v5.2.0/modules-5.2.0.tar.gz"
+    git = "https://github.com/cea-hpc/modules.git"
 
     maintainers("xdelaruelle")
 
+    version("main", branch="main")
     version("5.2.0", sha256="48f9f10864303df628a48cab17074820a6251ad8cd7d66dd62aa7798af479254")
     version("5.1.1", sha256="1985f79e0337f63d6564b08db0238cf96a276a4184def822bb8ad37996dc8295")
     version("5.1.0", sha256="1ab1e859b9c8bca8a8d332945366567fae4cf8dd7e312a689daaff46e7ffa949")
@@ -54,6 +56,11 @@ class EnvironmentModules(Package):
     )
 
     variant("X", default=True, description="Build with X functionality")
+
+    depends_on("autoconf", type="build", when="@main")
+    depends_on("automake", type="build", when="@main")
+    depends_on("libtool", type="build", when="@main")
+    depends_on("m4", type="build", when="@main")
 
     # Dependencies:
     depends_on("tcl", type=("build", "link", "run"))
