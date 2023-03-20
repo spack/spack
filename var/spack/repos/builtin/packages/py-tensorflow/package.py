@@ -30,6 +30,8 @@ class PyTensorflow(Package, CudaPackage, ROCmPackage, PythonExtension):
     maintainers("adamjstewart", "aweits")
     import_modules = ["tensorflow"]
 
+    version("2.11.1", sha256="624ed1cc170cdcc19e8a15d8cdde989a9a1c6b0534c90b38a6b2f06fb2963e5f")
+    version("2.11.0", sha256="99c732b92b1b37fc243a559e02f9aef5671771e272758aa4aec7f34dc92dac48")
     version("2.10.1", sha256="622a92e22e6f3f4300ea43b3025a0b6122f1cc0e2d9233235e4c628c331a94a3")
     version("2.10.0", sha256="b5a1bb04c84b6fe1538377e5a1f649bb5d5f0b2e3625a3c526ff3a8af88633e8")
     version("2.9.3", sha256="59d09bd00eef6f07477eea2f50778582edd4b7b2850a396f1fd0c646b357a573")
@@ -147,12 +149,18 @@ class PyTensorflow(Package, CudaPackage, ROCmPackage, PythonExtension):
     )
 
     extends("python")
-    depends_on("python@3:", type=("build", "run"), when="@2.1:")
-    # https://github.com/tensorflow/tensorflow/issues/33374
-    depends_on("python@:3.7", type=("build", "run"), when="@:2.1")
+
+    # Python support based on wheel availability
+    depends_on("python@3.7:3.10", when="@2.8:", type=("build", "run"))
+    depends_on("python@3.7:3.9", when="@2.7", type=("build", "run"))
+    depends_on("python@3.6:3.9", when="@2.5:2.6", type=("build", "run"))
+    depends_on("python@3.6:3.8", when="@2.4", type=("build", "run"))
+    depends_on("python@3.5:3.8", when="@2.2:2.3", type=("build", "run"))
+    depends_on("python@2.7,3.5:3.7", when="@:2.1", type=("build", "run"))
 
     # See .bazelversion
-    depends_on("bazel@5.1.1", type="build", when="@2.10:")
+    depends_on("bazel@5.3.0", type="build", when="@2.11:")
+    depends_on("bazel@5.1.1", type="build", when="@2.10")
     # See _TF_MIN_BAZEL_VERSION and _TF_MAX_BAZEL_VERSION in configure.py
     depends_on("bazel@4.2.2:5.99.0", type="build", when="@2.9")
     depends_on("bazel@4.2.1:4.99.0", type="build", when="@2.8")
@@ -214,13 +222,6 @@ class PyTensorflow(Package, CudaPackage, ROCmPackage, PythonExtension):
     depends_on("py-h5py~mpi", type=("build", "run"), when="@1.15.5,2.0.4,2.1.3:~mpi")
     depends_on("hdf5+mpi", type="build", when="@1.15.5,2.0.4,2.1.3:+mpi")
     depends_on("hdf5~mpi", type="build", when="@1.15.5,2.0.4,2.1.3:~mpi")
-    depends_on("py-keras-preprocessing@1.1.1:", type=("build", "run"), when="@2.7:")
-    depends_on("py-keras-preprocessing@1.1.2:1.1", type=("build", "run"), when="@2.4:2.6")
-    depends_on("py-keras-preprocessing@1.1.1:1.1", type=("build", "run"), when="@2.3")
-    depends_on("py-keras-preprocessing@1.1:", type=("build", "run"), when="@2.1.0,2.2")
-    depends_on("py-keras-preprocessing@1.1.0", type=("build", "run"), when="@2.1.1:2.1")
-    depends_on("py-keras-preprocessing@1.0.5:", type=("build", "run"), when="@1.12:2.0")
-    depends_on("py-keras-preprocessing@1.0.3:", type=("build", "run"), when="@1.11")
     depends_on("py-libclang@13:", type=("build", "run"), when="@2.9:")
     depends_on("py-libclang@9.0.1:", type=("build", "run"), when="@2.7:2.8")
     depends_on("py-numpy@1.20:", type=("build", "run"), when="@2.8:")
@@ -252,7 +253,7 @@ class PyTensorflow(Package, CudaPackage, ROCmPackage, PythonExtension):
     # https://github.com/tensorflow/tensorflow/issues/56266
     depends_on("py-protobuf@:3.19", type=("build", "run"))
     depends_on("protobuf@:3.19", type=("build", "run"))
-    depends_on("py-setuptools", type="build")
+    depends_on("py-setuptools", type=("build", "run"))
     depends_on("py-six@1.12:", type=("build", "run"), when="@2.1:2.3,2.7:")
     depends_on("py-six@1.15", type=("build", "run"), when="@2.4:2.6")
     depends_on("py-six@1.10:", type=("build", "run"), when="@:2.0")
@@ -309,6 +310,13 @@ class PyTensorflow(Package, CudaPackage, ROCmPackage, PythonExtension):
     depends_on("py-keras-applications@1.0.8:", type=("build", "run"), when="@1.15:2.1")
     depends_on("py-keras-applications@1.0.6:", type=("build", "run"), when="@1.12:1.14")
     depends_on("py-keras-applications@1.0.5:", type=("build", "run"), when="@1.11")
+    depends_on("py-keras-preprocessing@1.1.1:", type=("build", "run"), when="@2.7:2.10")
+    depends_on("py-keras-preprocessing@1.1.2:1.1", type=("build", "run"), when="@2.4:2.6")
+    depends_on("py-keras-preprocessing@1.1.1:1.1", type=("build", "run"), when="@2.3")
+    depends_on("py-keras-preprocessing@1.1:", type=("build", "run"), when="@2.1.0,2.2")
+    depends_on("py-keras-preprocessing@1.1.0", type=("build", "run"), when="@2.1.1:2.1")
+    depends_on("py-keras-preprocessing@1.0.5:", type=("build", "run"), when="@1.12:2.0")
+    depends_on("py-keras-preprocessing@1.0.3:", type=("build", "run"), when="@1.11")
     depends_on("py-scipy@1.4.1", type=("build", "run"), when="@2.1.0:2.1.1,2.2.0,2.3.0")
     depends_on("py-wheel@0.32:0", type=("build", "run"), when="@2.7")
     depends_on("py-wheel@0.35:0", type=("build", "run"), when="@2.4:2.6")
