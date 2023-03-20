@@ -13,7 +13,7 @@ import pprint
 import re
 import types
 import warnings
-from typing import List, Tuple
+from typing import List
 
 import archspec.cpu
 
@@ -636,6 +636,12 @@ class ErrorHandler:
         raise UnsatisfiableSpecError(msg)
 
 
+#: Data class to collect information on a requirement
+RequirementRule = collections.namedtuple(
+    "RequirementRule", ["name", "policy", "requirements", "provenance", "message"]
+)
+
+
 class PyclingoDriver(object):
     def __init__(self, cores=True):
         """Driver for the Python clingo interface.
@@ -1043,15 +1049,19 @@ class SpackSolverSetup(object):
                 if isinstance(requirement, str):
                     # A string represents a spec that must be satisfied. It is
                     # equivalent to a one_of group with a single element
-                    rules.append((pkg_name, "one_of", [requirement]))
+                    rules.append(self._rule_from_str(pkg_name, requirement))
                 else:
                     for policy in ("one_of", "any_of"):
                         if policy in requirement:
-                            rules.append((pkg_name, policy, requirement[policy]))
+                            rules.append(
+                            RequirementRule(pkg_name, policy, requirement[policy], "", "")
+                        )
         return rules
 
-    def _rule_from_str(self, pkg_name: str, requirements: str) -> Tuple[str, str, List[str]]:
-        return pkg_name, "one_of", [requirements]
+    def _rule_from_str(self, pkg_name: str, requirements: str) -> RequirementRule:
+        return RequirementRule(
+            name=pkg_name, policy="one_of", requirements=[requirements], provenance="", message=""
+        )
 
     def pkg_rules(self, pkg, tests):
         pkg = packagize(pkg)
@@ -1282,7 +1292,9 @@ class SpackSolverSetup(object):
             rules = self._rules_from_requirements(virtual_str, requirements)
             self.emit_facts_from_requirement_rules(rules, virtual=True)
 
-    def emit_facts_from_requirement_rules(self, rules, *, virtual=False, raise_on_failure=True):
+    def emit_facts_from_requirement_rules(
+        self, rules: List[RequirementRule], *, virtual: bool = False, raise_on_failure: bool = True
+    ):
         """Generate facts to enforce requirements from packages.yaml.
 
         Args:
@@ -1291,7 +1303,8 @@ class SpackSolverSetup(object):
             raise_on_failure: if True raise an exception when a requirement condition is invalid
                 for the current spec. If False, just skip that condition
         """
-        for requirement_grp_id, (pkg_name, policy, requirement_grp) in enumerate(rules):
+        for requirement_grp_id, rule in enumerate(rules):
+            pkg_name, policy, requirement_grp = rule.name, rule.policy, rule.requirements
             self.gen.fact(fn.requirement_group(pkg_name, requirement_grp_id))
             self.gen.fact(fn.requirement_policy(pkg_name, requirement_grp_id, policy))
             requirement_weight = 0
