@@ -15,7 +15,7 @@ class PyPennylaneLightningKokkos(CMakePackage, PythonExtension, CudaPackage, ROC
     git = "https://github.com/PennyLaneAI/pennylane-lightning-kokkos.git"
     url = "https://github.com/PennyLaneAI/pennylane-lightning-kokkos/archive/refs/tags/v0.29.1.tar.gz"
 
-    maintainers("vincentmr")
+    maintainers("AmintorDusko", "vincentmr")
 
     version("main", branch="main")
     version("0.29.1", sha256="f51ba7718defc7bb5064f690f381e04b2ec58cb09f22a171ae5f410860716e30")
