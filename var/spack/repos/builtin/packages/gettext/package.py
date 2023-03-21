@@ -122,8 +122,10 @@ class Gettext(AutotoolsPackage, GNUMirrorPackage):
 
     @property
     def libs(self):
-        return find_libraries(
+        libs = find_libraries(
             ["libasprintf", "libgettextlib", "libgettextpo", "libgettextsrc", "libintl"],
             root=self.prefix,
             recursive=True,
+            shared=self.spec.variants["shared"].value,
         )
+        return libs
