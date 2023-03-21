@@ -148,8 +148,6 @@ class Paraview(CMakePackage, CudaPackage, ROCmPackage):
     depends_on("cmake@3.3:", type="build")
     depends_on("cmake@3.21:", type="build", when="+rocm")
 
-    depends_on("ninja", type="build")
-
     extends("python", when="+python")
 
     # VTK < 8.2.1 can't handle Python 3.8
@@ -276,13 +274,10 @@ class Paraview(CMakePackage, CudaPackage, ROCmPackage):
     # Fix VTK to work with external freetype using CONFIG mode for find_package
     patch("FindFreetype.cmake.patch", when="@5.10.1:")
 
-    @property
-    def generator(self):
-        # https://gitlab.kitware.com/paraview/paraview/-/issues/21223
-        if self.spec.satisfies("%xl") or self.spec.satisfies("%xl_r"):
-            return "Unix Makefiles"
-        else:
-            return "Ninja"
+    generator("ninja", "make", default="ninja")
+    # https://gitlab.kitware.com/paraview/paraview/-/issues/21223
+    conflicts("generator=ninja", when="%xl")
+    conflicts("generator=ninja", when="%xl_r")
 
     def url_for_version(self, version):
         _urlfmt = "http://www.paraview.org/files/v{0}/ParaView-v{1}{2}.tar.{3}"
@@ -472,11 +467,7 @@ class Paraview(CMakePackage, CudaPackage, ROCmPackage):
         # The assumed qt version changed to QT5 (as of paraview 5.2.1),
         # so explicitly specify which QT major version is actually being used
         if "+qt" in spec:
-            cmake_args.extend(
-                [
-                    "-DPARAVIEW_QT_VERSION=%s" % spec["qt"].version[0],
-                ]
-            )
+            cmake_args.extend(["-DPARAVIEW_QT_VERSION=%s" % spec["qt"].version[0]])
 
         if "+fortran" in spec:
             cmake_args.append("-DPARAVIEW_USE_FORTRAN:BOOL=ON")
@@ -563,10 +554,7 @@ class Paraview(CMakePackage, CudaPackage, ROCmPackage):
 
         if "darwin" in spec.architecture:
             cmake_args.extend(
-                [
-                    "-DVTK_USE_X:BOOL=OFF",
-                    "-DPARAVIEW_DO_UNIX_STYLE_INSTALLS:BOOL=ON",
-                ]
+                ["-DVTK_USE_X:BOOL=OFF", "-DPARAVIEW_DO_UNIX_STYLE_INSTALLS:BOOL=ON"]
             )
 
         if "+kits" in spec:

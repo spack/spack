@@ -522,7 +522,7 @@ error(2, "{0} and {1} cannot both propagate variant '{2}' to package {3} with va
   attr("variant_propagate", Package, Variant, Value1, Source1),
   attr("variant_propagate", Package, Variant, Value2, Source2),
   variant(Package, Variant),
-  Value1 != Value2.
+  Value1 < Value2.
 
 % a variant cannot be set if it is not a variant on the package
 error(2, "Cannot set variant '{0}' for package '{1}' because the variant condition cannot be satisfied for the given spec", Variant, Package)
@@ -816,25 +816,15 @@ node_target_compatible(Package, Target)
  :- attr("node_target", Package, MyTarget),
     target_compatible(Target, MyTarget).
 
-% target_compatible(T1, T2) means code for T2 can run on T1
-% This order is dependent -> dependency in the node DAG, which
-% is contravariant with the target DAG.
-target_compatible(Target, Target) :- target(Target).
-target_compatible(Child, Parent) :- target_parent(Child, Parent).
-target_compatible(Descendent, Ancestor)
-  :- target_parent(Target, Ancestor),
-     target_compatible(Descendent, Target),
-     target(Target).
-
 #defined target_satisfies/2.
-#defined target_parent/2.
 
 % can't use targets on node if the compiler for the node doesn't support them
 error(2, "{0} compiler '{2}@{3}' incompatible with 'target={1}'", Package, Target, Compiler, Version)
   :- attr("node_target", Package, Target),
-     not compiler_supports_target(Compiler, Version, Target),
-     attr("node_compiler", Package, Compiler),
-     attr("node_compiler_version", Package, Compiler, Version),
+     node_compiler(Package, CompilerID),
+     not compiler_supports_target(CompilerID, Target),
+     compiler_name(CompilerID, Compiler),
+     compiler_version(CompilerID, Version),
      build(Package).
 
 % if a target is set explicitly, respect it
@@ -868,32 +858,44 @@ error(2, "'{0} target={1}' is not compatible with this machine", Package, Target
 %-----------------------------------------------------------------------------
 % Compiler semantics
 %-----------------------------------------------------------------------------
-compiler(Compiler) :- compiler_version(Compiler, _).
-
-% There must be only one compiler set per built node. The compiler
-% is chosen among available versions.
-{ attr("node_compiler_version", Package, Compiler, Version) : compiler_version(Compiler, Version) } :-
+% There must be only one compiler set per built node.
+{ node_compiler(Package, CompilerID) : compiler_id(CompilerID) } :-
     attr("node", Package),
     build(Package).
 
+% Infer the compiler that matches a reused node
+node_compiler(Package, CompilerID)
+  :- attr("node_compiler_version", Package, CompilerName, CompilerVersion),
+     attr("node", Package),
+     compiler_name(CompilerID, CompilerName),
+     compiler_version(CompilerID, CompilerVersion),
+     concrete(Package).
+
+% Expand the internal attribute into "attr("node_compiler_version")
+attr("node_compiler_version", Package, CompilerName, CompilerVersion)
+  :- node_compiler(Package, CompilerID),
+     compiler_name(CompilerID, CompilerName),
+     compiler_version(CompilerID, CompilerVersion),
+     build(Package).
+
+attr("node_compiler", Package, CompilerName)
+  :- attr("node_compiler_version", Package, CompilerName, CompilerVersion).
+
 error(2, "No valid compiler version found for '{0}'", Package)
   :- attr("node", Package),
-     C = #count{ Version : attr("node_compiler_version", Package, _, Version)},
-     C < 1.
-error(2, "'{0}' compiler constraints '%{1}@{2}' and '%{3}@{4}' are incompatible", Package, Compiler1, Version1, Compiler2, Version2)
-  :- attr("node", Package),
-     attr("node_compiler_version", Package, Compiler1, Version1),
-     attr("node_compiler_version", Package, Compiler2, Version2),
-     (Compiler1, Version1) < (Compiler2, Version2). % see[1]
+     not node_compiler(Package, _).
 
-% Sometimes we just need to know the compiler and not the version
-attr("node_compiler", Package, Compiler) :- attr("node_compiler_version", Package, Compiler, _).
+error(2, "Cannot concretize {0} with two compilers {1}@{2} and {3}@{4}", Package, C1, V1, C2, V2)
+  :- attr("node", Package),
+     attr("node_compiler_version", Package, C1, V1),
+     attr("node_compiler_version", Package, C2, V2),
+     (C1, V1) < (C2, V2). % see[1]
 
 % We can't have a compiler be enforced and select the version from another compiler
 error(2, "Cannot concretize {0} with two compilers {1}@{2} and {3}@{4}", Package, C1, V1, C2, V2)
  :- attr("node_compiler_version", Package, C1, V1),
     attr("node_compiler_version", Package, C2, V2),
-    (C1, V1) != (C2, V2).
+    (C1, V1) < (C2, V2).
 
 error(2, "Cannot concretize {0} with two compilers {1} and {2}@{3}", Package, Compiler1, Compiler2, Version)
  :- attr("node_compiler", Package, Compiler1),
@@ -904,37 +906,41 @@ error(2, "Cannot concretize {0} with two compilers {1} and {2}@{3}", Package, Co
 error(1, "No valid compiler for {0} satisfies '%{1}'", Package, Compiler)
   :- attr("node", Package),
      attr("node_compiler_version_satisfies", Package, Compiler, ":"),
-     C = #count{ Version : attr("node_compiler_version", Package, Compiler, Version), compiler_version_satisfies(Compiler, ":", Version) },
-     C < 1.
+     not compiler_version_satisfies(Compiler, ":", _).
 
 % If the compiler of a node must satisfy a constraint, then its version
 % must be chosen among the ones that satisfy said constraint
 error(2, "No valid version for '{0}' compiler '{1}' satisfies '@{2}'", Package, Compiler, Constraint)
   :- attr("node", Package),
      attr("node_compiler_version_satisfies", Package, Compiler, Constraint),
-     C = #count{ Version : attr("node_compiler_version", Package, Compiler, Version), compiler_version_satisfies(Compiler, Constraint, Version) },
-     C < 1.
+		 not compiler_version_satisfies(Compiler, Constraint, _).
 
 % If the node is associated with a compiler and the compiler satisfy a constraint, then
 % the compiler associated with the node satisfy the same constraint
 attr("node_compiler_version_satisfies", Package, Compiler, Constraint)
-  :- attr("node_compiler_version", Package, Compiler, Version),
-     compiler_version_satisfies(Compiler, Constraint, Version).
+  :- node_compiler(Package, CompilerID),
+     compiler_name(CompilerID, Compiler),
+     compiler_version_satisfies(Compiler, Constraint, CompilerID).
 
 #defined compiler_version_satisfies/3.
 
 % If the compiler version was set from the command line,
 % respect it verbatim
-attr("node_compiler_version", Package, Compiler, Version) :-
-     attr("node_compiler_version_set", Package, Compiler, Version).
+:- attr("node_compiler_version_set", Package, Compiler, Version),
+   not attr("node_compiler_version", Package, Compiler, Version).
+
+:- attr("node_compiler_set", Package, Compiler),
+   not attr("node_compiler_version", Package, Compiler, _).
 
 % Cannot select a compiler if it is not supported on the OS
 % Compilers that are explicitly marked as allowed
 % are excluded from this check
 error(2, "{0} compiler '%{1}@{2}' incompatible with 'os={3}'", Package, Compiler, Version, OS)
-  :- attr("node_compiler_version", Package, Compiler, Version),
-     attr("node_os", Package, OS),
-     not compiler_supports_os(Compiler, Version, OS),
+  :- attr("node_os", Package, OS),
+     node_compiler(Package, CompilerID),
+     compiler_name(CompilerID, Compiler),
+     compiler_version(CompilerID, Version),
+     not compiler_os(CompilerID, OS),
      not allow_compiler(Compiler, Version),
      build(Package).
 
@@ -942,8 +948,8 @@ error(2, "{0} compiler '%{1}@{2}' incompatible with 'os={3}'", Package, Compiler
 % same compiler there's a mismatch.
 compiler_match(Package, Dependency)
   :- depends_on(Package, Dependency),
-     attr("node_compiler_version", Package, Compiler, Version),
-     attr("node_compiler_version", Dependency, Compiler, Version).
+     node_compiler(Package, CompilerID),
+     node_compiler(Dependency, CompilerID).
 
 compiler_mismatch(Package, Dependency)
   :- depends_on(Package, Dependency),
@@ -955,25 +961,32 @@ compiler_mismatch_required(Package, Dependency)
      attr("node_compiler_set", Dependency, _),
      not compiler_match(Package, Dependency).
 
-#defined compiler_supports_os/3.
+#defined compiler_os/3.
 #defined allow_compiler/2.
 
 % compilers weighted by preference according to packages.yaml
 compiler_weight(Package, Weight)
- :- attr("node_compiler_version", Package, Compiler, V),
+ :- node_compiler(Package, CompilerID),
+    compiler_name(CompilerID, Compiler),
+    compiler_version(CompilerID, V),
     node_compiler_preference(Package, Compiler, V, Weight).
 compiler_weight(Package, Weight)
- :- attr("node_compiler_version", Package, Compiler, V),
+ :- node_compiler(Package, CompilerID),
+    compiler_name(CompilerID, Compiler),
+    compiler_version(CompilerID, V),
     not node_compiler_preference(Package, Compiler, V, _),
-    default_compiler_preference(Compiler, V, Weight).
+    default_compiler_preference(CompilerID, Weight).
 compiler_weight(Package, 100)
- :- attr("node_compiler_version", Package, Compiler, Version),
-    not node_compiler_preference(Package, Compiler, Version, _),
-    not default_compiler_preference(Compiler, Version, _).
+ :- node_compiler(Package, CompilerID),
+    compiler_name(CompilerID, Compiler),
+    compiler_version(CompilerID, V),
+    not node_compiler_preference(Package, Compiler, V, _),
+    not default_compiler_preference(CompilerID, _).
 
 % For the time being, be strict and reuse only if the compiler match one we have on the system
 error(2, "Compiler {1}@{2} requested for {0} cannot be found. Set install_missing_compilers:true if intended.", Package, Compiler, Version)
- :- attr("node_compiler_version", Package, Compiler, Version), not compiler_version(Compiler, Version).
+ :- attr("node_compiler_version", Package, Compiler, Version),
+    not node_compiler(Package, _).
 
 #defined node_compiler_preference/4.
 #defined default_compiler_preference/3.
@@ -985,10 +998,11 @@ error(2, "Compiler {1}@{2} requested for {0} cannot be found. Set install_missin
 % propagate flags when compiler match
 can_inherit_flags(Package, Dependency, FlagType)
  :- depends_on(Package, Dependency),
-    attr("node_compiler", Package, Compiler),
-    attr("node_compiler", Dependency, Compiler),
+    node_compiler(Package, CompilerID),
+    node_compiler(Dependency, CompilerID),
     not attr("node_flag_set", Dependency, FlagType, _),
-    compiler(Compiler), flag_type(FlagType).
+    compiler_id(CompilerID),
+    flag_type(FlagType).
 
 node_flag_inherited(Dependency, FlagType, Flag)
  :- attr("node_flag_set", Package, FlagType, Flag), can_inherit_flags(Package, Dependency, FlagType),
@@ -1005,7 +1019,7 @@ error(2, "{0} and {1} cannot both propagate compiler flags '{2}' to {3}", Source
   attr("node_flag_propagate", Source2, FlagType),
   can_inherit_flags(Source1, Package, FlagType),
   can_inherit_flags(Source2, Package, FlagType),
-  Source1 != Source2.
+  Source1 < Source2.
 
 % remember where flags came from
 attr("node_flag_source", Package, FlagType, Package) :- attr("node_flag_set", Package, FlagType, _).
@@ -1015,19 +1029,21 @@ attr("node_flag_source", Dependency, FlagType, Q)
 
 % compiler flags from compilers.yaml are put on nodes if compiler matches
 attr("node_flag", Package, FlagType, Flag)
- :- compiler_version_flag(Compiler, Version, FlagType, Flag),
-    attr("node_compiler_version", Package, Compiler, Version),
+ :- compiler_flag(CompilerID, FlagType, Flag),
+    node_compiler(Package, CompilerID),
     flag_type(FlagType),
-    compiler(Compiler),
-    compiler_version(Compiler, Version).
+    compiler_id(CompilerID),
+    compiler_name(CompilerID, CompilerName),
+    compiler_version(CompilerID, Version).
 
 attr("node_flag_compiler_default", Package)
  :- not attr("node_flag_set", Package, FlagType, _),
-    compiler_version_flag(Compiler, Version, FlagType, Flag),
-    attr("node_compiler_version", Package, Compiler, Version),
+    compiler_flag(CompilerID, FlagType, Flag),
+    node_compiler(Package, CompilerID),
     flag_type(FlagType),
-    compiler(Compiler),
-    compiler_version(Compiler, Version).
+    compiler_id(CompilerID),
+    compiler_name(CompilerID, CompilerName),
+    compiler_version(CompilerID, Version).
 
 % if a flag is set to something or inherited, it's included
 attr("node_flag", Package, FlagType, Flag) :- attr("node_flag_set", Package, FlagType, Flag).
@@ -1038,7 +1054,7 @@ attr("node_flag", Package, FlagType, Flag)
 attr("no_flags", Package, FlagType)
  :- not attr("node_flag", Package, FlagType, _), attr("node", Package), flag_type(FlagType).
 
-#defined compiler_version_flag/4.
+#defined compiler_flag/3.
 
 
 %-----------------------------------------------------------------------------
@@ -1054,7 +1070,7 @@ attr("no_flags", Package, FlagType)
 % You can't install a hash, if it is not installed
 :- attr("hash", Package, Hash), not installed_hash(Package, Hash).
 % This should be redundant given the constraint above
-:- attr("hash", Package, Hash1), attr("hash", Package, Hash2), Hash1 != Hash2.
+:- attr("hash", Package, Hash1), attr("hash", Package, Hash2), Hash1 < Hash2.
 
 % if a hash is selected, we impose all the constraints that implies
 impose(Hash) :- attr("hash", Package, Hash).
@@ -1311,13 +1327,29 @@ opt_criterion(5, "non-preferred targets").
 %-----------------
 % Domain heuristic
 %-----------------
-#heuristic attr("version", Package, Version) : version_declared(Package, Version, 0), attr("node", Package). [10, true]
-#heuristic version_weight(Package, 0) : version_declared(Package, Version, 0), attr("node", Package). [10, true]
-#heuristic attr("node_target", Package, Target) : package_target_weight(Target, Package, 0), attr("node", Package). [10, true]
-#heuristic node_target_weight(Package, 0) : attr("node", Package). [10, true]
+#heuristic literal_solved(ID) : literal(ID). [1, sign]
+#heuristic literal_solved(ID) : literal(ID). [50, init]
+#heuristic attr("hash", Package, Hash) : attr("root", Package). [45, init]
+
+#heuristic attr("version", Package, Version) : version_declared(Package, Version, 0), attr("root", Package). [40, true]
+#heuristic version_weight(Package, 0) : version_declared(Package, Version, 0), attr("root", Package). [40, true]
+#heuristic attr("variant_value", Package, Variant, Value) : variant_default_value(Package, Variant, Value), attr("root", Package). [40, true]
+#heuristic attr("node_target", Package, Target) : package_target_weight(Target, Package, 0), attr("root", Package). [40, true]
+#heuristic node_target_weight(Package, 0) : attr("root", Package). [40, true]
+#heuristic node_compiler(Package, CompilerID) : default_compiler_preference(ID, 0), compiler_id(ID), attr("root", Package). [40, true]
+
+#heuristic provider(Package, Virtual) : possible_provider_weight(Package, Virtual, 0, _), attr("virtual_node", Virtual). [30, true]
+#heuristic provider_weight(Package, Virtual, 0, R) : possible_provider_weight(Package, Virtual, 0, R), attr("virtual_node", Virtual). [30, true]
+#heuristic attr("node", Package) : possible_provider_weight(Package, Virtual, 0, _), attr("virtual_node", Virtual). [30, true]
+
+#heuristic attr("version", Package, Version) : version_declared(Package, Version, 0), attr("node", Package). [20, true]
+#heuristic version_weight(Package, 0) : version_declared(Package, Version, 0), attr("node", Package). [20, true]
+
+#heuristic attr("node_target", Package, Target) : package_target_weight(Target, Package, 0), attr("node", Package). [20, true]
+#heuristic node_target_weight(Package, 0) : attr("node", Package). [20, true]
+#heuristic node_compiler(Package, CompilerID) : default_compiler_preference(ID, 0), compiler_id(ID), attr("node", Package). [15, true]
+
 #heuristic attr("variant_value", Package, Variant, Value) : variant_default_value(Package, Variant, Value), attr("node", Package). [10, true]
-#heuristic provider(Package, Virtual) : possible_provider_weight(Package, Virtual, 0, _), attr("virtual_node", Virtual). [10, true]
-#heuristic attr("node", Package) : possible_provider_weight(Package, Virtual, 0, _), attr("virtual_node", Virtual). [10, true]
 #heuristic attr("node_os", Package, OS) : buildable_os(OS). [10, true]
 
 %-----------

@@ -16,6 +16,8 @@ class Rmgdft(CMakePackage):
     maintainers("elbriggs")
     tags = ["ecp", "ecp-apps"]
     version("master", branch="master")
+    version("5.0.5", tag="v5.0.5")
+    version("5.0.4", tag="v5.0.4")
     version("5.0.1", tag="v5.0.1")
     version("4.3.1", tag="v4.3.1")
     version("4.3.0", tag="v4.3.0")
@@ -91,7 +93,6 @@ class Rmgdft(CMakePackage):
         return args
 
     def install(self, spec, prefix):
-
         # create top-level directories
         mkdirp(prefix.bin)
         mkdirp(prefix.share.tests.RMG)

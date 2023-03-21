@@ -197,36 +197,33 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage):
     depends_on("autogen@5.5.4:", type="test")
     depends_on("guile@1.4.1:", type="test")
 
-    # See https://golang.org/doc/install/gccgo#Releases
+    # See https://go.dev/doc/install/gccgo#Releases
     with when("languages=go"):
-        provides("golang", when="@4.6:")
-        provides("golang@:1", when="@4.7.1:")
-        provides("golang@:1.1", when="@4.8:")
-        provides("golang@:1.1.2", when="@4.8.2:")
+        provides("go-or-gccgo-bootstrap@:1.0", when="@4.7.1:")
+        provides("go-or-gccgo-bootstrap@:1.2", when="@4.9:")
+        provides("go-or-gccgo-bootstrap@:1.4", when="@5:")
+        provides("go-or-gccgo-bootstrap@:1.6.1", when="@6:")
+        provides("go-or-gccgo-bootstrap@:1.8.1", when="@7:")
+        provides("go-or-gccgo-bootstrap@:1.10.1", when="@8:")
+        provides("go-or-gccgo-bootstrap@:1.12.2", when="@9:")
+        provides("go-or-gccgo-bootstrap@:1.14.6", when="@10:")
+        provides("go-or-gccgo-bootstrap@1.16.3:1.16.5", when="@11:")
+
+        provides("golang@:1.0", when="@4.7.1:")
         provides("golang@:1.2", when="@4.9:")
         provides("golang@:1.4", when="@5:")
         provides("golang@:1.6.1", when="@6:")
-        provides("golang@:1.8", when="@7:")
-        provides("golang@:1.10", when="@8:")
-        provides("golang@:1.12", when="@9:")
-        provides("golang@:1.14", when="@10:")
-        provides("golang@:1.16", when="@11:")
-        provides("golang@:1.18", when="@11:")
-        # GCC 4.6 added support for the Go programming language.
-        # See https://gcc.gnu.org/gcc-4.6/changes.html
-        conflicts("@:4.5", msg="support for Go has been added in GCC 4.6")
-        # aarch64 machines (including Macs with Apple silicon) can't use
-        # go-bootstrap because it pre-dates aarch64 support in Go. When not
-        # using an external go bootstrap go, These machines have to rely on
-        # Go support in gcc (which may require compiling a version of gcc
-        # with Go support just to satisfy this requirement).  However,
-        # there's also a bug in some versions of GCC's Go front-end that prevents
-        # these versions from properly bootstrapping Go.  (See issue #47771
-        # https://github.com/golang/go/issues/47771 )  On the 10.x branch, we need
-        # at least 10.4.  On the 11.x branch, we need at least 11.3:
-        provides("go-external-or-gccgo-bootstrap", when="gcc@10.4.0:10,11.3.0:target=aarch64:")
+        provides("golang@:1.8.1", when="@7:")
+        provides("golang@:1.10.1", when="@8:")
+        provides("golang@:1.12.2", when="@9:")
+        provides("golang@:1.14.6", when="@10:")
+        provides("golang@1.16.3:1.16.5", when="@11:")
+
+        # GCC 4.7.1 added full support for the Go 1.x programming language.
+        conflicts("@:4.7.0")
+
         # Go is not supported on macOS
-        conflicts("platform=darwin", msg="Go not supported on MacOS")
+        conflicts("platform=darwin", msg="GCC cannot build Go support on MacOS")
 
     # For a list of valid languages for a specific release,
     # run the following command in the GCC source directory:
@@ -438,6 +435,11 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage):
     )
     patch("patch-745dae5923aba02982563481d75a21595df22ff8.patch", when="@10.1.0:10.3.0,11.1.0")
 
+    # Backport libsanitizer patch for glibc >= 2.36
+    # https://reviews.llvm.org/D129471
+    patch("glibc-2.36-libsanitizer-gcc-5-9.patch", when="@5.1:5.5,6.1:6.5,7.1:7.5,8.1:8.5,9.1:9.5")
+    patch("glibc-2.36-libsanitizer-gcc-10-12.patch", when="@10.1:10.4,11.1:11.3,12.1.0")
+
     # Older versions do not compile with newer versions of glibc
     # https://gcc.gnu.org/bugzilla/show_bug.cgi?id=81712
     patch("ucontext_t.patch", when="@4.9,5.1:5.4,6.1:6.4,7.1")
@@ -575,7 +577,7 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage):
             "languages=d": "d",
             "languages=fortran": "fortran",
         }.items():
-            if spec.satisfies(constraint, strict=True):
+            if spec.satisfies(constraint):
                 msg = "{0} not in {1}"
                 assert key in compilers, msg.format(key, spec)
 
@@ -765,17 +767,9 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage):
 
         # enable_bootstrap
         if spec.satisfies("+bootstrap"):
-            options.extend(
-                [
-                    "--enable-bootstrap",
-                ]
-            )
+            options.extend(["--enable-bootstrap"])
         else:
-            options.extend(
-                [
-                    "--disable-bootstrap",
-                ]
-            )
+            options.extend(["--disable-bootstrap"])
 
         # Configure include and lib directories explicitly for these
         # dependencies since the short GCC option assumes that libraries
@@ -876,7 +870,6 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage):
 
         # self.build_directory = 'spack-build-nvptx'
         with working_dir("spack-build-nvptx", create=True):
-
             options = [
                 "--prefix={0}".format(prefix),
                 "--enable-languages={0}".format(",".join(spec.variants["languages"].value)),

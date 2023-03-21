@@ -23,6 +23,7 @@ class Mvapich2Gdr(AutotoolsPackage):
 
     maintainers("ndcontini", "natshineman", "harisubramoni")
 
+    version("2.3.7", sha256="7bf748ed3750aa607382fc96229e256d888824aed758ce364b1ed9429da4779e")
     version("2.3.6", sha256="618408431348164c0824f3a72dc406763f169f7f5400f3cc15dfebf8d7166005")
     version("2.3.5", sha256="bcfe8197875405af0ddbf6462e585efc21668108bec9b481fe53616ad36a98b4")
     version("2.3.4", sha256="ed78101e6bb807e979213006ee5f20ff466369b01f96b6d1cf0c471baf7e35aa")
@@ -35,7 +36,7 @@ class Mvapich2Gdr(AutotoolsPackage):
         "process_managers",
         description="The process manager to activate.",
         default="mpirun",
-        values=("slurm", "mpirun", "pbs", "jsrun"),
+        values=("none", "slurm", "mpiexec", "mpirun", "pbs", "jsrun"),
         multi=False,
     )
 
@@ -53,7 +54,7 @@ class Mvapich2Gdr(AutotoolsPackage):
         "Is ignored if set for mpirun or jsrun. "
         "jsrun uses pmix regardless of chosen option.",
         default="pmi1",
-        values=("pmi1", "pmi2", "pmix"),
+        values=("simple", "pmi1", "pmi2", "pmix"),
         multi=False,
     )
 
@@ -69,13 +70,17 @@ class Mvapich2Gdr(AutotoolsPackage):
     conflicts("+rocm", when="@:2.3.4", msg="MVAPICH2-GDR only supports ROCm in version >= 2.3.5")
     conflicts("+cuda +rocm", msg="MVAPICH2-GDR can only be built with either CUDA or ROCm")
     conflicts("~cuda ~rocm", msg="MVAPICH2-GDR must be built with either CUDA or ROCm")
+    conflicts(
+        "process_managers=slurm pmi_version=simple",
+        msg="MVAPICH2-GDR can not be built with slurm and simple pmi",
+    )
 
     depends_on("bison@3.4.2", type="build")
     depends_on("libpciaccess@0.13.5", when=(sys.platform != "darwin"))
     depends_on("libxml2@2.9.10")
-    depends_on("cuda@9.2.88:11.2.2", when="+cuda")
+    depends_on("cuda@9.2.88:", when="+cuda")
     depends_on("pmix@3.1.3", when="pmi_version=pmix")
-    depends_on("hip@3.9.0:4.1.0", when="+rocm")
+    depends_on("hip@3.9.0:", when="+rocm")
 
     filter_compiler_wrappers("mpicc", "mpicxx", "mpif77", "mpif90", "mpifort", relative_root="bin")
 
@@ -107,31 +112,39 @@ class Mvapich2Gdr(AutotoolsPackage):
         if "+cuda" in spec:
             opts.append("--enable-cuda")
             opts.append("--disable-gl")
-            opts.append("--with-cuda={0}".format(spec["cuda"].prefix))
+            opts.append("--disable-cl")
+            # opts.append("--disable-nvml")
+            opts.append("--disable-opencl")
+            opts.append("--with-cuda=" + spec["cuda"].prefix)
 
         if "+rocm" in spec:
             opts.append("--enable-hip=basic")
             opts.append("--enable-rocm")
+            opts.append("--with-rocm=" + spec["hip"].prefix)
+            opts.append("--disable-gl")
 
-        # See: http://slurm.schedmd.com/mpi_guide.html#mvapich2
-        if "process_managers=slurm" in spec:
-            opts.append("--with-pm=slurm")
-            if "pmi_version=pmi1" in spec:
-                opts.append("--with-pmi=pmi1")
-            if "pmi_version=pmi2" in spec:
-                opts.append("--with-pmi=pmi2")
+        if "process_managers=mpiexec" in spec:
+            opts.append("--with-pm=mpiexec")
+            opts.append("--with-pmi=" + spec.variants["pmi_version"].value)
             if "pmi_version=pmix" in spec:
-                opts.append("--with-pmi=pmix")
                 opts.append("--with-pmix={0}".format(spec["pmix"].prefix))
-
+        # See: http://slurm.schedmd.com/mpi_guide.html#mvapich2
+        elif "process_managers=slurm" in spec:
+            opts.append("--with-pm=slurm")
+            opts.append("--with-pmi=" + spec.variants["pmi_version"].value)
+            if "pmi_version=pmix" in spec:
+                opts.append("--with-pmix={0}".format(spec["pmix"].prefix))
+        elif "process_managers=none" in spec:
+            opts.append("--with-pm=none")
+            opts.append("--with-pmi=" + spec.variants["pmi_version"].value)
+            if "pmi_version=pmix" in spec:
+                opts.append("--with-pmix={0}".format(spec["pmix"].prefix))
         elif "process_managers=pbs" in spec:
             opts.append(["--with-pm=hydra", "--with-pbs=/opt/pbs"])
-
         elif "process_managers=jsrun" in spec:
             opts.append(
                 ["--with-pmi=pmix", "--with-pmix={0}".format(spec["pmix"].prefix), "--with-pm=jsm"]
             )
-
         return opts
 
     def setup_build_environment(self, env):
@@ -178,6 +191,8 @@ class Mvapich2Gdr(AutotoolsPackage):
         ]
 
     def configure_args(self):
+        spec = self.spec
+
         args = [
             "--with-ch3-rank-bits=32",
             "--without-hydra-ckpointlib",
@@ -185,5 +200,10 @@ class Mvapich2Gdr(AutotoolsPackage):
             "--enable-shared",
             "--disable-rdma-cm",
         ]
+
+        # prevents build error regarding gfortran not allowing mismatched arguments
+        if spec.satisfies("%gcc@10.0.0:"):
+            args.extend(["FFLAGS=-fallow-argument-mismatch", "FCFLAGS=-fallow-argument-mismatch"])
+
         args.extend(self.process_manager_options)
         return args

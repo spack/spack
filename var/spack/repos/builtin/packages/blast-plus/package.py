@@ -84,12 +84,7 @@ class BlastPlus(AutotoolsPackage):
     def configure_args(self):
         spec = self.spec
 
-        config_args = [
-            "--with-bin-release",
-            "--without-debug",
-            "--with-mt",
-            "--without-boost",
-        ]
+        config_args = ["--with-bin-release", "--without-debug", "--with-mt", "--without-boost"]
 
         if spec.target.family != "aarch64":
             config_args.append("--with-64")

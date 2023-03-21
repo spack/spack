@@ -1,0 +1,37 @@
+diff --git a/src/configure.in b/src/configure.in
+index 3cf47edc..ef5463ff 100644
+--- a/src/configure.in
++++ b/src/configure.in
+@@ -566,7 +566,7 @@ AC_ARG_WITH(tls,
+                            #include <unistd.h>
+                            extern __thread int i;
+                            static int res1, res2;
+-                           void thread_main (void *arg) {
++                           void *thread_main (void *arg) {
+                              i = (int)arg;
+                              sleep (1);
+                              if ((int)arg == 1)
+diff --git a/src/libpfm4/lib/pfmlib_common.c b/src/libpfm4/lib/pfmlib_common.c
+index 335155e2..38f3f957 100644
+--- a/src/libpfm4/lib/pfmlib_common.c
++++ b/src/libpfm4/lib/pfmlib_common.c
+@@ -1749,7 +1749,7 @@ pfmlib_pmu_validate_encoding(pfmlib_pmu_t *pmu, FILE *fp)
+ 	pfmlib_event_attr_info_t ainfo;
+ 	char *buf;
+ 	size_t maxlen = 0, len;
+-	int i, u, n = 0, um;
++	int i, u, um;
+ 	int ret, retval = PFM_SUCCESS;
+ 
+ 	pfmlib_for_each_pmu_event(pmu, i) {
+@@ -1838,7 +1838,6 @@ pfmlib_pmu_validate_encoding(pfmlib_pmu_t *pmu, FILE *fp)
+ 				continue;
+ 			}
+ 		}
+-		n++;
+ 	}
+ 	free(buf);
+ 
+-- 
+2.27.0
+

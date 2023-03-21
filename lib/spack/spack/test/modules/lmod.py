@@ -41,10 +41,7 @@ def provider(request):
     return request.param
 
 
-@pytest.mark.usefixtures(
-    "config",
-    "mock_packages",
-)
+@pytest.mark.usefixtures("config", "mock_packages")
 class TestLmod(object):
     def test_file_layout(self, compiler, provider, factory, module_configuration):
         """Tests the layout of files in the hierarchy is the one expected."""
@@ -91,7 +88,7 @@ class TestLmod(object):
         assert provides["compiler"] == spack.spec.CompilerSpec("oneapi@3.0")
 
     def test_simple_case(self, modulefile_content, module_configuration):
-        """Tests the generation of a simple TCL module file."""
+        """Tests the generation of a simple Tcl module file."""
 
         module_configuration("autoload_direct")
         content = modulefile_content(mpich_spec_string)
@@ -240,7 +237,7 @@ class TestLmod(object):
         module_configuration("missing_core_compilers")
 
         # Our mock paths must be detected as system paths
-        monkeypatch.setattr(spack.util.environment, "system_dirs", ["/path/to"])
+        monkeypatch.setattr(spack.util.environment, "SYSTEM_DIRS", ["/path/to"])
 
         # We don't want to really write into user configuration
         # when running tests
@@ -254,12 +251,7 @@ class TestLmod(object):
         assert writer.conf.core_compilers
 
     @pytest.mark.parametrize(
-        "spec_str",
-        [
-            "mpileaks target=nocona",
-            "mpileaks target=core2",
-            "mpileaks target=x86_64",
-        ],
+        "spec_str", ["mpileaks target=nocona", "mpileaks target=core2", "mpileaks target=x86_64"]
     )
     @pytest.mark.regression("13005")
     def test_only_generic_microarchitectures_in_root(

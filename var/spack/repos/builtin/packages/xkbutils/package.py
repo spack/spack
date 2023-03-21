@@ -13,6 +13,7 @@ class Xkbutils(AutotoolsPackage, XorgPackage):
     homepage = "https://cgit.freedesktop.org/xorg/app/xkbutils"
     xorg_mirror_path = "app/xkbutils-1.0.4.tar.gz"
 
+    version("1.0.5", sha256="b87072f0d7e75f56ee04455e1feab92bb5847aee4534b18c2e08b926150279ff")
     version("1.0.4", sha256="cf31303cbdd6a86c34cab46f4b6e0c7acd2e84578593b334a146142894529bca")
 
     depends_on("libxaw")

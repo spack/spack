@@ -32,7 +32,6 @@ class IqTree(CMakePackage):
     depends_on("mpi", when="+mpi")
 
     def cmake_args(self):
-
         spec = self.spec
         args = []
         iqflags = []

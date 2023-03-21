@@ -33,7 +33,6 @@ def test_test_package_not_installed(
     install_mockery_mutable_config,
     mock_test_stage,
 ):
-
     output = spack_test("run", "libdwarf")
 
     assert "No installed packages match spec libdwarf" in output

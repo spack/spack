@@ -47,8 +47,8 @@ class Mxnet(CMakePackage, CudaPackage, PythonExtension):
     variant("mkldnn", default=False, description="Build with MKL-DNN support")
     variant("python", default=True, description="Install python bindings")
 
+    generator("ninja")
     depends_on("cmake@3.13:", type="build")
-    depends_on("ninja", type="build")
     depends_on("pkgconfig", when="@1.6.0", type="build")
     depends_on("blas")
     depends_on("cuda@:10.2", when="@:1.8.0 +cuda")
@@ -84,7 +84,6 @@ class Mxnet(CMakePackage, CudaPackage, PythonExtension):
 
     # python/setup.py assumes libs can be found in build directory
     build_directory = "build"
-    generator = "Ninja"
 
     def setup_run_environment(self, env):
         env.set("MXNET_LIBRARY_PATH", self.spec["mxnet"].libs[0])

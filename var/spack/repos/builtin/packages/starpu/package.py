@@ -104,11 +104,7 @@ class Starpu(AutotoolsPackage):
     def configure_args(self):
         spec = self.spec
 
-        config_args = [
-            "--disable-build-doc",
-            "--enable-blas-lib=none",
-            "--disable-mlr",
-        ]
+        config_args = ["--disable-build-doc", "--enable-blas-lib=none", "--disable-mlr"]
 
         # add missing lib for simgrid static compilation,
         # already fixed since StarPU 1.2.1

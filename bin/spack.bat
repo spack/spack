@@ -226,7 +226,7 @@ for %%Z in ("%_pa_new_path%") do if EXIST %%~sZ\NUL (
 exit /b 0
 
 :: set module system roots
-:_sp_multi_pathadd 
+:_sp_multi_pathadd
 for %%I in (%~2) do (
     for %%Z in (%_sp_compatible_sys_types%) do (
         :pathadd "%~1" "%%I\%%Z"

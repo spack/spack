@@ -28,20 +28,13 @@ import os
 import os.path
 import re
 import shutil
-import sys
 import urllib.parse
 from typing import List, Optional
 
 import llnl.util
 import llnl.util.filesystem as fs
 import llnl.util.tty as tty
-from llnl.util.filesystem import (
-    get_single_file,
-    mkdirp,
-    temp_cwd,
-    temp_rename,
-    working_dir,
-)
+from llnl.util.filesystem import get_single_file, mkdirp, temp_cwd, temp_rename, working_dir
 from llnl.util.symlink import symlink
 
 import spack.config
@@ -59,7 +52,6 @@ from spack.util.string import comma_and, quote
 
 #: List of all fetch strategies, created by FetchStrategy metaclass.
 all_strategies = []
-is_windows = sys.platform == "win32"
 
 CONTENT_TYPE_MISMATCH_WARNING_TEMPLATE = (
     "The contents of {subject} look like {content_type}.  Either the URL"
@@ -93,22 +85,6 @@ def _ensure_one_stage_entry(stage_path):
     stage_entries = os.listdir(stage_path)
     assert len(stage_entries) == 1
     return os.path.join(stage_path, stage_entries[0])
-
-
-def _filesummary(path, print_bytes=16):
-    try:
-        n = print_bytes
-        with open(path, "rb") as f:
-            size = os.fstat(f.fileno()).st_size
-            if size <= 2 * n:
-                short_contents = f.read(2 * n)
-            else:
-                short_contents = f.read(n)
-                f.seek(-n, 2)
-                short_contents += b"..." + f.read(n)
-        return size, short_contents
-    except OSError:
-        return 0, b""
 
 
 def fetcher(cls):
@@ -519,7 +495,7 @@ class URLFetchStrategy(FetchStrategy):
             # On failure, provide some information about the file size and
             # contents, so that we can quickly see what the issue is (redirect
             # was not followed, empty file, text instead of binary, ...)
-            size, contents = _filesummary(self.archive_file)
+            size, contents = fs.filesummary(self.archive_file)
             raise ChecksumError(
                 f"{checker.hash_name} checksum failed for {self.archive_file}",
                 f"Expected {self.digest} but got {checker.sum}. "
@@ -1525,7 +1501,7 @@ def _from_merged_attrs(fetcher, pkg, version):
     return fetcher(**attrs)
 
 
-def for_package_version(pkg, version):
+def for_package_version(pkg, version=None):
     """Determine a fetch strategy based on the arguments supplied to
     version() in the package description."""
 
@@ -1536,8 +1512,18 @@ def for_package_version(pkg, version):
 
     check_pkg_attributes(pkg)
 
-    if not isinstance(version, spack.version.VersionBase):
-        version = spack.version.Version(version)
+    if version is not None:
+        assert not pkg.spec.concrete, "concrete specs should not pass the 'version=' argument"
+        # Specs are initialized with the universe range, if no version information is given,
+        # so here we make sure we always match the version passed as argument
+        if not isinstance(version, spack.version.VersionBase):
+            version = spack.version.Version(version)
+
+        version_list = spack.version.VersionList()
+        version_list.add(version)
+        pkg.spec.versions = version_list
+    else:
+        version = pkg.version
 
     # if it's a commit, we must use a GitFetchStrategy
     if isinstance(version, spack.version.GitVersion):
@@ -1555,11 +1541,7 @@ def for_package_version(pkg, version):
         # performance hit for branches on older versions of git.
         # Branches cannot be cached, so we tell the fetcher not to cache tags/branches
         ref_type = "commit" if version.is_commit else "tag"
-        kwargs = {
-            "git": pkg.git,
-            ref_type: version.ref,
-            "no_cache": True,
-        }
+        kwargs = {"git": pkg.git, ref_type: version.ref, "no_cache": True}
 
         kwargs["submodules"] = getattr(pkg, "submodules", False)
 

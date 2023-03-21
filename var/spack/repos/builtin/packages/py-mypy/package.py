@@ -14,6 +14,8 @@ class PyMypy(PythonPackage):
 
     maintainers("adamjstewart")
 
+    version("1.1.1", sha256="ae9ceae0f5b9059f33dbc62dea087e942c0ccab4b7a003719cb70f9b8abfa32f")
+    version("1.0.1", sha256="28cea5a6392bb43d266782983b5a4216c25544cd7d80be681a155ddcdafd152d")
     version("1.0.0", sha256="f34495079c8d9da05b183f9f7daec2878280c2ad7cc81da686ef0b484cea2ecf")
     version("0.991", sha256="3c0165ba8f354a6d9881809ef29f1a9318a236a6d81c690094c5df32107bde06")
     version("0.990", sha256="72382cb609142dba3f04140d016c94b4092bc7b4d98ca718740dc989e5271b8d")
@@ -43,7 +45,8 @@ class PyMypy(PythonPackage):
     depends_on("py-wheel@0.30:", when="@0.790:", type="build")
     depends_on("py-typing-extensions@3.10:", when="@0.930:", type=("build", "run"))
     depends_on("py-typing-extensions@3.7.4:", when="@0.700:", type=("build", "run"))
-    depends_on("py-mypy-extensions@0.4.3:", when="@0.930:", type=("build", "run"))
+    depends_on("py-mypy-extensions@1:", when="@1.1:", type=("build", "run"))
+    depends_on("py-mypy-extensions@0.4.3:", when="@0.930:1.0", type=("build", "run"))
     depends_on("py-mypy-extensions@0.4.3:0.4", when="@0.700:0.929", type=("build", "run"))
     depends_on("py-mypy-extensions@0.4.0:0.4", when="@:0.699", type=("build", "run"))
     depends_on("py-typed-ast@1.4.0:1", when="@0.920: ^python@:3.7", type=("build", "run"))

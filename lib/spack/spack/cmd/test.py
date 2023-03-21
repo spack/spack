@@ -33,9 +33,7 @@ def setup_parser(subparser):
 
     # Run
     run_parser = sp.add_parser(
-        "run",
-        description=test_run.__doc__,
-        help=spack.cmd.first_line(test_run.__doc__),
+        "run", description=test_run.__doc__, help=spack.cmd.first_line(test_run.__doc__)
     )
 
     alias_help_msg = "Provide an alias for this test-suite"
@@ -80,9 +78,7 @@ def setup_parser(subparser):
 
     # List
     list_parser = sp.add_parser(
-        "list",
-        description=test_list.__doc__,
-        help=spack.cmd.first_line(test_list.__doc__),
+        "list", description=test_list.__doc__, help=spack.cmd.first_line(test_list.__doc__)
     )
     list_parser.add_argument(
         "-a",
@@ -96,9 +92,7 @@ def setup_parser(subparser):
 
     # Find
     find_parser = sp.add_parser(
-        "find",
-        description=test_find.__doc__,
-        help=spack.cmd.first_line(test_find.__doc__),
+        "find", description=test_find.__doc__, help=spack.cmd.first_line(test_find.__doc__)
     )
     find_parser.add_argument(
         "filter",
@@ -108,9 +102,7 @@ def setup_parser(subparser):
 
     # Status
     status_parser = sp.add_parser(
-        "status",
-        description=test_status.__doc__,
-        help=spack.cmd.first_line(test_status.__doc__),
+        "status", description=test_status.__doc__, help=spack.cmd.first_line(test_status.__doc__)
     )
     status_parser.add_argument(
         "names", nargs=argparse.REMAINDER, help="Test suites for which to print status"
@@ -147,9 +139,7 @@ def setup_parser(subparser):
 
     # Remove
     remove_parser = sp.add_parser(
-        "remove",
-        description=test_remove.__doc__,
-        help=spack.cmd.first_line(test_remove.__doc__),
+        "remove", description=test_remove.__doc__, help=spack.cmd.first_line(test_remove.__doc__)
     )
     arguments.add_common_arguments(remove_parser, ["yes_to_all"])
     remove_parser.add_argument(
@@ -189,11 +179,7 @@ def test_run(args):
     specs = spack.cmd.parse_specs(args.specs) if args.specs else [None]
     specs_to_test = []
     for spec in specs:
-        matching = spack.store.db.query_local(
-            spec,
-            hashes=hashes,
-            explicit=explicit,
-        )
+        matching = spack.store.db.query_local(spec, hashes=hashes, explicit=explicit)
         if spec and not matching:
             tty.warn("No {0}installed packages match spec {1}".format(explicit_str, spec))
             """

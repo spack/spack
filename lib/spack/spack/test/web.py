@@ -224,11 +224,7 @@ def test_list_url(tmpdir):
 
 class MockPages(object):
     def search(self, *args, **kwargs):
-        return [
-            {"Key": "keyone"},
-            {"Key": "keytwo"},
-            {"Key": "keythree"},
-        ]
+        return [{"Key": "keyone"}, {"Key": "keytwo"}, {"Key": "keythree"}]
 
 
 class MockPaginator(object):

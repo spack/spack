@@ -40,7 +40,6 @@ class Qrupdate(MakefilePackage, SourceforgePackage):
 
     # The Makefile does not take the simple "make" rule
     def build(self, spec, prefix):
-
         lapack_blas = spec["lapack"].libs + spec["blas"].libs
 
         make_args = [

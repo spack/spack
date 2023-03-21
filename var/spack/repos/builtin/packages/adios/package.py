@@ -118,7 +118,6 @@ class Adios(AutotoolsPackage):
             raise RuntimeError(msg)
 
     def with_or_without_hdf5(self, activated):
-
         if activated:
             return "--with-phdf5={0}".format(self.spec["hdf5"].prefix)
 

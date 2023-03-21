@@ -857,10 +857,7 @@ class IntelPackage(Package):
             raise_lib_error("Cannot find a BLACS library for the given MPI.")
 
         int_suff = "_" + self.intel64_int_suffix
-        scalapack_libnames = [
-            "libmkl_scalapack" + int_suff,
-            blacs_lib + int_suff,
-        ]
+        scalapack_libnames = ["libmkl_scalapack" + int_suff, blacs_lib + int_suff]
         sca_libs = find_libraries(
             scalapack_libnames, root=self.component_lib_dir("mkl"), shared=("+shared" in self.spec)
         )
@@ -1161,9 +1158,7 @@ class IntelPackage(Package):
         #
         # Ideally, we just tell the installer to look around on the system.
         # Thankfully, we neither need to care nor emulate where it looks:
-        license_type = {
-            "ACTIVATION_TYPE": "exist_lic",
-        }
+        license_type = {"ACTIVATION_TYPE": "exist_lic"}
 
         # However (and only), if the spack-internal Intel license file has been
         # populated beyond its templated explanatory comments, proffer it to

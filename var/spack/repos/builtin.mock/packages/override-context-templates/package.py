@@ -7,7 +7,7 @@ from spack.package import *
 
 
 class OverrideContextTemplates(Package):
-    """This package updates the context for TCL modulefiles.
+    """This package updates the context for Tcl modulefiles.
 
     And additional lines that shouldn't be in the short description.
     """

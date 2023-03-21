@@ -46,11 +46,7 @@ class Rocmlir(CMakePackage):
     depends_on("half")
     depends_on("pkgconfig", type="build")
 
-    for ver in [
-        "5.3.0",
-        "5.4.0",
-        "5.4.3",
-    ]:
+    for ver in ["5.3.0", "5.4.0", "5.4.3"]:
         depends_on("hip@" + ver, when="@" + ver)
         depends_on("llvm-amdgpu@" + ver, when="@" + ver)
         depends_on("hsa-rocr-dev@" + ver, when="@" + ver)

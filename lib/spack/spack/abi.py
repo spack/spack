@@ -25,7 +25,7 @@ class ABI(object):
         return (
             not target.architecture
             or not constraint.architecture
-            or target.architecture.satisfies(constraint.architecture)
+            or target.architecture.intersects(constraint.architecture)
         )
 
     @memoized
@@ -104,7 +104,7 @@ class ABI(object):
             for cversion in child.compiler.versions:
                 # For a few compilers use specialized comparisons.
                 # Otherwise match on version match.
-                if pversion.satisfies(cversion):
+                if pversion.intersects(cversion):
                     return True
                 elif parent.compiler.name == "gcc" and self._gcc_compiler_compare(
                     pversion, cversion

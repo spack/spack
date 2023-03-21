@@ -30,7 +30,6 @@ class Pdftk(MakefilePackage):
 
     # https://www.pdflabs.com/docs/install-pdftk-on-redhat-or-centos/
     def edit(self, spec, prefix):
-
         # ------ Fix install directory in main Makefile
         makefile = FileFilter(join_path("pdftk", "Makefile.Base"))
         makefile.filter("/usr/local/bin", spec.prefix.bin)

@@ -28,7 +28,5 @@ class Openlibm(MakefilePackage):
         make(*args)
 
     def install(self, spec, prefix):
-        args = [
-            "prefix={0}".format(prefix),
-        ]
+        args = ["prefix={0}".format(prefix)]
         make("install", *args)
