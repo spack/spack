@@ -33,7 +33,7 @@ def atomic_update(oldpath, newpath):
     on other systems, oldpath is not affected but all paths are abstracted
     by a symlink to allow for atomic updates.
     """
-    if has_renameat2():
+    if renameat2:
         return atomic_update_renameat2(oldpath, newpath)
     else:
         return atomic_update_symlink(oldpath, newpath)
@@ -48,7 +48,7 @@ def atomic_update_renameat2(src, dest):
     if not dest_exists:
         fs.touch(dest)
     try:
-        rc = libc.renameat2(AT_FDCWD, src.encode(), AT_FDCWD, dest.encode(), RENAME_EXCHANGE)
+        rc = renameat2(AT_FDCWD, src.encode(), AT_FDCWD, dest.encode(), RENAME_EXCHANGE)
         if rc:
             raise OSError(f"renameat2 failed to exchange {src} and {dest}")
         if not dest_exists:
