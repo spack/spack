@@ -75,7 +75,6 @@ class AutotoolsBuilder(AutotoolsBuilder):
     def setup_build_environment(self, env):
         if self.spec.satisfies("+pic"):
             env.set("CFLAGS", "-fPIC")
-            env.set("FFLAGS", "-fPIC")
 
 
 class CMakeBuilder(CMakeBuilder):
