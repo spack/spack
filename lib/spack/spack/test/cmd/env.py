@@ -52,7 +52,7 @@ find = SpackCommand("find")
 
 sep = os.sep
 
-if spack.util.atomic_update.use_renameat2():
+if spack.util.atomic_update.renameat2:
     use_renameat2 = [True, False]
 else:
     use_renameat2 = [False]
@@ -60,7 +60,8 @@ else:
 
 @pytest.fixture(params=use_renameat2)
 def atomic_update_implementations(request, monkeypatch):
-    monkeypatch.setattr(spack.util.atomic_update, "use_renameat2", lambda: request.param)
+    if request.param is False:
+        monkeypatch.setattr(spack.util.atomic_update, "renameat2", None)
     yield
 
 
@@ -2901,7 +2902,7 @@ def test_environment_view_target_already_exists(
     the new view dir already exists. If so, it should not be
     removed or modified."""
     # Only works for symlinked atomic views
-    monkeypatch.setattr(spack.util.atomic_update, "use_renameat2", lambda: False)
+    monkeypatch.setattr(spack.util.atomic_update, "renameat2", None)
 
     # Create a new environment
     view = str(tmpdir.join("view"))

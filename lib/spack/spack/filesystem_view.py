@@ -82,18 +82,21 @@ def view_copy(src, dst, view, spec=None):
         orig_sbang = "#!/bin/bash {0}/bin/sbang".format(spack.paths.spack_root)
         new_sbang = sbang.sbang_shebang_line()
 
+        root = view.final_destination
         prefix_to_projection = collections.OrderedDict(
-            {spec.prefix: view.get_projection_for_spec(spec)}
+            {spec.prefix: os.path.join(root, view.get_relative_projection_for_spec(spec))}
         )
 
         for dep in spec.traverse():
             if not dep.external:
-                prefix_to_projection[dep.prefix] = view.get_projection_for_spec(dep)
+                prefix_to_projection[dep.prefix] = os.path.join(
+                    root, view.get_relative_projection_for_spec(dep)
+                )
 
         if spack.relocate.is_binary(dst):
             spack.relocate.relocate_text_bin(binaries=[dst], prefixes=prefix_to_projection)
         else:
-            prefix_to_projection[spack.store.layout.root] = view._root
+            prefix_to_projection[spack.store.layout.root] = root
             prefix_to_projection[orig_sbang] = new_sbang
             spack.relocate.relocate_text(files=[dst], prefixes=prefix_to_projection)
         try:
@@ -154,6 +157,8 @@ class FilesystemView(object):
         self.ignore_conflicts = kwargs.get("ignore_conflicts", False)
         self.verbose = kwargs.get("verbose", False)
 
+        self.final_destination = kwargs.get("final_destination", self._root)
+
         # Setup link function to include view
         link_func = kwargs.get("link", view_symlink)
         self.link = ft.partial(link_func, view=self)
@@ -210,11 +215,14 @@ class FilesystemView(object):
         """
         raise NotImplementedError
 
-    def get_projection_for_spec(self, spec):
+    def get_relative_projection_for_spec(self, spec):
         """
-        Get the projection in this view for a spec.
+        Get the relative projection in this view for a spec.
         """
         raise NotImplementedError
+
+    def get_projection_for_spec(self, spec):
+        return os.path.join(self._root, self.get_relative_projection_for_spec(spec))
 
     def get_all_specs(self):
         """
@@ -486,9 +494,9 @@ class YamlFilesystemView(FilesystemView):
         if self.verbose:
             tty.info(self._croot + "Removed package: %s" % colorize_spec(spec))
 
-    def get_projection_for_spec(self, spec):
+    def get_relative_projection_for_spec(self, spec):
         """
-        Return the projection for a spec in this view.
+        Return the relative projection for a spec in this view.
 
         Relies on the ordering of projections to avoid ambiguity.
         """
@@ -499,9 +507,7 @@ class YamlFilesystemView(FilesystemView):
             locator_spec = spec.package.extendee_spec
 
         proj = spack.projections.get_projection(self.projections, locator_spec)
-        if proj:
-            return os.path.join(self._root, locator_spec.format(proj))
-        return self._root
+        return spec.format(proj) if proj else ""
 
     def get_all_specs(self):
         md_dirs = []
@@ -765,28 +771,19 @@ class SimpleFilesystemView(FilesystemView):
             self.link(os.path.join(src_root, src_relpath), os.path.join(self._root, dst_relpath))
 
     def get_relative_projection_for_spec(self, spec):
+        """
+        Return the relative projection for a spec in this view.
+
+        Relies on the ordering of projections to avoid ambiguity.
+        """
+        spec = spack.spec.Spec(spec)
+
         # Extensions are placed by their extendee, not by their own spec
         if spec.package.extendee_spec:
             spec = spec.package.extendee_spec
 
         p = spack.projections.get_projection(self.projections, spec)
         return spec.format(p) if p else ""
-
-    def get_projection_for_spec(self, spec):
-        """
-        Return the projection for a spec in this view.
-
-        Relies on the ordering of projections to avoid ambiguity.
-        """
-        spec = spack.spec.Spec(spec)
-
-        if spec.package.extendee_spec:
-            spec = spec.package.extendee_spec
-
-        proj = spack.projections.get_projection(self.projections, spec)
-        if proj:
-            return os.path.join(self._root, spec.format(proj))
-        return self._root
 
 
 #####################

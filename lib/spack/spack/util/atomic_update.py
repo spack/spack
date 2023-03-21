@@ -22,9 +22,7 @@ try:
 except BaseException:
     pass
 
-
-def use_renameat2():
-    return hasattr(libc, "renameat2")
+renameat2 = getattr(libc, "renameat2", None)
 
 
 def atomic_update(oldpath, newpath):
@@ -35,7 +33,7 @@ def atomic_update(oldpath, newpath):
     on other systems, oldpath is not affected but all paths are abstracted
     by a symlink to allow for atomic updates.
     """
-    if use_renameat2():
+    if has_renameat2():
         return atomic_update_renameat2(oldpath, newpath)
     else:
         return atomic_update_symlink(oldpath, newpath)

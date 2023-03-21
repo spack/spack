@@ -468,11 +468,11 @@ class ViewDescriptor(object):
 
     @property
     def _current_root(self):
-        if spack.util.atomic_update.use_renameat2():
-            return self.root
-
         if not os.path.islink(self.root):
-            return None
+            if os.path.isdir(self.root):
+                return self.root
+            else:
+                return None
 
         root = os.readlink(self.root)
         if os.path.isabs(root):
@@ -537,6 +537,7 @@ class ViewDescriptor(object):
             ignore_conflicts=True,
             projections=self.projections,
             link=self.link_type,
+            final_destination=self.root,
         )
 
     def __contains__(self, spec):
@@ -580,6 +581,15 @@ class ViewDescriptor(object):
 
         return specs
 
+    def use_renameat2(self):
+        if os.path.islink(self.root):
+            return False
+        elif os.path.isdir(self.root):
+            if not spack.util.atmoic_update.renameat2:
+                raise Exception
+
+        return bool(spack.util.atomic_update.renameat2)
+
     def regenerate(self, concretized_root_specs):
         specs = self.specs_for_view(concretized_root_specs)
 
@@ -592,6 +602,9 @@ class ViewDescriptor(object):
         # will be /dirname/._basename_<hash>.
         # This allows for atomic swaps when we update the view
 
+        # Check which atomic update method we need
+        use_renameat2 = self.use_renameat2()
+
         # cache the roots because the way we determine which is which does
         # not work while we are updating
         new_root = self._next_root(specs)
@@ -601,7 +614,7 @@ class ViewDescriptor(object):
             tty.debug("View at %s does not need regeneration." % self.root)
             return
 
-        if spack.util.atomic_update.use_renameat2():
+        if use_renameat2:
             if os.path.isdir(new_root):
                 shutil.rmtree(new_root)
 
@@ -617,7 +630,10 @@ class ViewDescriptor(object):
         try:
             fs.mkdirp(new_root)
             view.add_specs(*specs, with_dependencies=False)
-            spack.util.atomic_update.atomic_update(new_root, self.root)
+            if use_renameat2:
+                spack.util.atomic_update.atomic_update_renameat2(new_root, self.root)
+            else:
+                spack.util.atomic_update.atomic_update_symlink(new_root, self.root)
         except Exception as e:
             # Clean up new view and temporary symlink on any failure.
             try:
