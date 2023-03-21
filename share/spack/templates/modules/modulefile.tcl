@@ -23,12 +23,7 @@ proc ModulesHelp { } {
 
 {% block autoloads %}
 {% for module in autoload %}
-if {{ '{' }} ![ is-loaded '{{ module }}' ] {{ '}' }} {{ '{' }}
-{% if verbose %}
-    puts stderr "Autoloading {{ module }}"
-{% endif %}
-    module load {{ module }}
-{{ '}' }}
+module load {{ module }}
 {% endfor %}
 {% endblock %}
 {#  #}
@@ -78,5 +73,5 @@ unsetenv {{ cmd.name }}
 {% endblock %}
 
 {% block footer %}
-{# In case the module needs to be extended with custom TCL code #}
+{# In case the module needs to be extended with custom Tcl code #}
 {% endblock %}

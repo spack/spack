@@ -21,6 +21,7 @@ class Cgl(AutotoolsPackage):
     depends_on("osi")
     depends_on("clp")
 
+    version("0.60.6", sha256="9e2c51ffad816ab408763d6b931e2a3060482ee4bf1983148969de96d4b2c9ce")
     version("0.60.3", sha256="cfeeedd68feab7c0ce377eb9c7b61715120478f12c4dd0064b05ad640e20f3fb")
 
     build_directory = "spack-build"

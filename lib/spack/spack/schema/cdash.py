@@ -15,7 +15,8 @@ properties = {
     "cdash": {
         "type": "object",
         "additionalProperties": False,
-        "required": ["build-group", "url", "project", "site"],
+        # "required": ["build-group", "url", "project", "site"],
+        "required": ["build-group"],
         "patternProperties": {
             r"build-group": {"type": "string"},
             r"url": {"type": "string"},

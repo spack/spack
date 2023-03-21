@@ -31,6 +31,7 @@ class Gftl(CMakePackage):
 
     homepage = "https://github.com/Goddard-Fortran-Ecosystem/gFTL"
     url = "https://github.com/Goddard-Fortran-Ecosystem/gFTL/archive/refs/tags/v1.5.5.tar.gz"
+    list_url = "https://github.com/Goddard-Fortran-Ecosystem/gFTL/tags"
     git = "https://github.com/Goddard-Fortran-Ecosystem/gFTL.git"
 
     maintainers("mathomp4", "tclune")
@@ -38,6 +39,7 @@ class Gftl(CMakePackage):
     version("develop", branch="develop")
     version("main", branch="main")
 
+    version("1.8.3", sha256="5864c6a427105c1194cbc0dcbe0dad2c3d14d42b2717f0a5e1626e0d56bba8a6")
     version("1.8.2", sha256="7ee9a1db62f6dd09e533516d7dc53fbc9c8c81464bb12f6eb558ad5d3bfd85ef")
     version("1.8.1", sha256="b8171ea69b108325816472ee47068618d709a3f563959142bc58ff38908a7210")
     version("1.8.0", sha256="e99def0a9a1b3031ceff22c416bee75e70558cf6b91ce4be70b0ad752dda26c6")

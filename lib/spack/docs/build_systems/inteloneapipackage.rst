@@ -124,7 +124,7 @@ Using oneAPI Tools Installed by Spack
 =====================================
 
 Spack can be a convenient way to install and configure compilers and
-libaries, even if you do not intend to build a Spack package. If you
+libraries, even if you do not intend to build a Spack package. If you
 want to build a Makefile project using Spack-installed oneAPI compilers,
 then use spack to configure your environment::
 

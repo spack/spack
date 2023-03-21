@@ -12,6 +12,7 @@ class Dnsmasq(MakefilePackage):
     homepage = "https://www.thekelleys.org.uk/dnsmasq/doc.html"
     url = "http://www.thekelleys.org.uk/dnsmasq/dnsmasq-2.70.tar.gz"
 
+    version("2.89", sha256="8651373d000cae23776256e83dcaa6723dee72c06a39362700344e0c12c4e7e4")
     version("2.81", sha256="3c28c68c6c2967c3a96e9b432c0c046a5df17a426d3a43cffe9e693cf05804d0")
     version("2.80", sha256="9e4a58f816ce0033ce383c549b7d4058ad9b823968d352d2b76614f83ea39adc")
     version("2.79", sha256="77512dd6f31ffd96718e8dcbbf54f02c083f051d4cca709bd32540aea269f789")
