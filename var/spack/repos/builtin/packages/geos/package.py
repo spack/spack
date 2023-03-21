@@ -76,6 +76,6 @@ class Geos(CMakePackage):
         if "%intel" in self.spec:
             args.append(self.define("BUILD_ASTYLE", False))
 
-        args.extend(self.define_from_variant("BUILD_SHARED_LIBS", "shared"))
+        args.append(self.define_from_variant("BUILD_SHARED_LIBS", "shared"))
 
         return args
