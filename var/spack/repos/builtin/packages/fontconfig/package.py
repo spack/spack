@@ -50,16 +50,22 @@ class Fontconfig(AutotoolsPackage):
         args = ["--enable-libxml2", "--disable-docs", f"--with-default-fonts={font_path}"]
         ldflags = []
         libs = []
-        for lib in ["libpng", "bzip2"]:
-            if self.spec[lib].satisfies("+shared") or self.spec[lib].satisfies("libs=shared"):
-                continue
-            ldflags.append(self.spec[lib].libs.ld_flags)
-            libs.append(self.spec[lib].libs.link_flags)
+        deps = []
+        if self.spec["python"].satisfies("~shared"):
+            deps += ["libpng", "bzip2"]
+        if self.spec["libxml2"].satisfies("~shared"):
+            deps += ["zlib", "xz", "iconv"]
+        if deps:
+            for lib in deps:
+                ldflags.append(self.spec[lib].libs.ld_flags)
+                libs.append(self.spec[lib].libs.link_flags)
             args.append("LDFLAGS=%s" % " ".join(ldflags))
             args.append("LIBS=%s" % " ".join(libs))
+
         if self.spec.satisfies("+pic"):
             args.append("CFLAGS=-fPIC")
             args.append("FFLAGS=-fPIC")
+
         return args
 
     @run_after("install")
