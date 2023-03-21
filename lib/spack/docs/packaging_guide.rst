@@ -2669,9 +2669,9 @@ to allow dependencies to run correctly:
 
 .. _packaging_conflicts:
 
----------
-Conflicts
----------
+--------------------------
+Conflicts and requirements
+--------------------------
 
 Sometimes packages have known bugs, or limitations, that would prevent them
 to build e.g. against other dependencies or with certain compilers. Spack
@@ -2681,26 +2681,35 @@ Adding the following to a package:
 
 .. code-block:: python
 
-    conflicts("%intel", when="@:1.2",
-              msg="<myNicePackage> <= v1.2 cannot be built with Intel ICC, "
-                  "please use a newer release.")
+    conflicts(
+        "%intel",
+         when="@:1.2",
+         msg="<myNicePackage> <= v1.2 cannot be built with Intel ICC, "
+             "please use a newer release."
+    )
 
 we express the fact that the current package *cannot be built* with the Intel
-compiler when we are trying to install a version "<=1.2". The ``when`` argument
-can be omitted, in which case the conflict will always be active.
-Conflicts are always evaluated after the concretization step has been performed,
-and if any match is found a detailed error message is shown to the user.
-You can add an additional message via the ``msg=`` parameter to a conflict that
-provideds more specific instructions for users.
+compiler when we are trying to install a version "<=1.2".
 
-Similarly, packages that only build on a subset of platforms can use the
-``conflicts`` directive to express that limitation, for example:
+The ``when`` argument can be omitted, in which case the conflict will always be active.
+
+An optional custom error message can be added via the ``msg=`` parameter, and will be printed
+by Spack in case the conflict cannot be avoided and leads to a concretization error.
+
+Sometimes, packages allow only very specific choices and they can't use the rest. In those cases
+the ``requires`` directive can be used:
 
 .. code-block:: python
 
-    for platform in ["cray", "darwin", "windows"]:
-        conflicts("platform={0}".format(platform), msg="Only 'linux' is supported")
+    requires(
+        "%apple-clang",
+        when="platform=darwin",
+        msg="<myNicePackage> builds only with Apple-Clang on Darwin"
+    )
 
+In the example above, our package can only be built with Apple-Clang on Darwin.
+The ``requires`` directive is effectively the opposite of the ``conflicts`` directive, and takes
+the same optional ``when`` and ``msg`` arguments.
 
 
 .. _packaging_extensions:
