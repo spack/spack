@@ -585,7 +585,7 @@ class ViewDescriptor(object):
         if os.path.islink(self.root):
             return False
         elif os.path.isdir(self.root):
-            if not spack.util.atmoic_update.renameat2:
+            if not spack.util.atomic_update.renameat2:
                 raise Exception
 
         return bool(spack.util.atomic_update.renameat2)
