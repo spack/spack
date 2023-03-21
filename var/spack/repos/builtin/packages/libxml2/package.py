@@ -111,7 +111,6 @@ class Libxml2(AutotoolsPackage):
 
         if spec.satisfies("+pic"):
             args.append("CFLAGS=-fPIC")
-            args.append("FFLAGS=-fPIC")
 
         return args
 
