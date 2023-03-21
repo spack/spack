@@ -259,11 +259,22 @@ class Neuron(CMakePackage):
         # improves ccache performance in CI builds.
         if self.spec.satisfies("@8.2:"):
             args.append("-DNRN_AVOID_ABSOLUTE_PATHS=ON")
-        # Pass Spack's target architecture flags in explicitly so that they're
-        # saved to the nrnivmodl Makefile.
-        compilation_flags.append(
-            self.spec.architecture.target.optimization_flags(self.spec.compiler)
-        )
+        if (
+            ("%intel" in self.spec or "%oneapi" in self.spec)
+            and self.spec.satisfies("+coreneuron~nmodl")
+            and self.spec.variants["build_type"].value == "Release"
+        ):
+            # Compile for the host architecture when using MOD2C. This seems to be
+            # needed to undo a performance regression for this configuration that
+            # came with CoreNEURON being merged into NEURON. It can go away when
+            # mod2c goes away "soon"
+            compilation_flags.append("-xHost")
+        else:
+            # Pass Spack's target architecture flags in explicitly so that they're
+            # saved to the nrnivmodl Makefile.
+            compilation_flags.append(
+                self.spec.architecture.target.optimization_flags(self.spec.compiler)
+            )
         if "%intel" in self.spec:
             # icpc: command line warning #10121: overriding '-march=skylake' with '-march=skylake'
             compilation_flags.append("-diag-disable=10121")
