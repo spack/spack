@@ -99,7 +99,9 @@ class FftwBase(AutotoolsPackage):
 
     def configure(self, spec, prefix):
         # Base options
-        options = ["--prefix={0}".format(prefix), self.enable_or_disable("shared"), "--enable-threads"]
+        options = ["--prefix={0}".format(prefix), "--enable-threads"]
+        options.extend(self.enable_or_disable("shared"))
+
         if not self.compiler.f77 or not self.compiler.fc:
             options.append("--disable-fortran")
         if spec.satisfies("@:2"):
