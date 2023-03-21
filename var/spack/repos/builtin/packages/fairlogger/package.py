@@ -17,6 +17,9 @@ class Fairlogger(CMakePackage):
     maintainers("dennisklein", "ChristianTackeGSI")
 
     version("develop", branch="dev", get_full_repo=True)
+    version("1.11.1", sha256="bba5814f101d705792499e43b387190d8b8c7592466171ae045d4926485f2f70")
+    version("1.10.4", sha256="2fa321893f2c8c599cca160db243299ce1e941fbfb3f935b1139caa943bc0dba")
+    version("1.9.3", sha256="0c02076ed708372d5ae7bdebcefc8e45a8cbfa480eea781308336d60a2781f3a")
     version("1.9.0", sha256="13bcaa0d4129f8d4e69a0a2ece8e5b7073760082c8aa028e3fc0c11106503095")
     version("1.8.0", sha256="3f0a38dba1411b542d998e02badcc099c057b33a402954fc5c2ab74947a0c42c")
     version("1.7.0", sha256="ef467f0a70afc0549442323d70b165fa0b0b4b4e6f17834573ca15e8e0b007e4")
@@ -40,7 +43,7 @@ class Fairlogger(CMakePackage):
     variant(
         "cxxstd",
         default="default",
-        values=("default", "11", "14", "17"),
+        values=("default", conditional("11", when="@:1.9"), "14", "17", "20"),
         multi=False,
         description="Use the specified C++ standard when building.",
     )
