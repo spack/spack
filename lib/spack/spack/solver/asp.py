@@ -118,6 +118,10 @@ class Provenance(enum.IntEnum):
     PACKAGE_PY = enum.auto()
     # An installed spec
     INSTALLED = enum.auto()
+    # The 'all' subsection of the  of 'packages' section of the configuration
+    PACKAGES_YAML_ALL = enum.auto()
+    # A virtual package subsection of the  of 'packages' section of the configuration
+    PACKAGES_YAML_VIRTUAL = enum.auto()
 
     def __str__(self):
         return f"{self._name_.lower()}"
@@ -643,7 +647,7 @@ class ErrorHandler:
 
 #: Data class to collect information on a requirement
 RequirementRule = collections.namedtuple(
-    "RequirementRule", ["name", "policy", "requirements", "provenance", "message"]
+    "RequirementRule", ["name", "policy", "requirements", "condition", "provenance", "message"]
 )
 
 
@@ -1021,48 +1025,74 @@ class SpackSolverSetup(object):
             )
 
     def package_requirement_rules(self, pkg):
-        self.package_requirement_from_package_py(pkg)
-        self.package_requirement_from_packages_yaml(pkg)
+        rules = self.requirement_rules_from_package_py(pkg)
+        rules.extend(self.requirement_rules_from_packages_yaml(pkg))
+        self.emit_facts_from_requirement_rules(rules)
 
-    def package_requirement_from_package_py(self, pkg):
-        rules = [self._rule_from_str(pkg.name, requirement) for requirement in pkg.requirements]
-        self.emit_facts_from_requirement_rules(rules, virtual=False, raise_on_failure=True)
+    def requirement_rules_from_package_py(self, pkg):
+        rules = []
+        for requirement, conditions in pkg.requirements.items():
+            for when_spec, message in conditions:
+                rules.append(
+                    RequirementRule(
+                        name=pkg.name,
+                        policy="one_of",
+                        requirements=[requirement],
+                        provenance=Provenance.PACKAGE_PY,
+                        condition="",
+                        message=message,
+                    )
+                )
+        return rules
 
-    def package_requirement_from_packages_yaml(self, pkg):
+    def requirement_rules_from_packages_yaml(self, pkg):
         pkg_name = pkg.name
         config = spack.config.get("packages")
-        requirements, raise_on_failure = config.get(pkg_name, {}).get("require", []), True
+        requirements = config.get(pkg_name, {}).get("require", [])
+        provenance = Provenance.PACKAGES_YAML
         if not requirements:
-            requirements, raise_on_failure = config.get("all", {}).get("require", []), False
-        rules = self._rules_from_requirements(pkg_name, requirements)
-        self.emit_facts_from_requirement_rules(
-            rules, virtual=False, raise_on_failure=raise_on_failure
-        )
+            requirements = config.get("all", {}).get("require", [])
+            provenance = Provenance.PACKAGES_YAML_ALL
+        return self._rules_from_requirements(pkg_name, requirements, provenance)
 
-    def _rules_from_requirements(self, pkg_name, requirements):
+    def _rules_from_requirements(self, pkg_name: str, requirements, provenance: Provenance):
         """Manipulate requirements from packages.yaml, and return a list of tuples
         with a uniform structure (name, policy, requirements).
         """
         if isinstance(requirements, str):
-            rules = [self._rule_from_str(pkg_name, requirements)]
+            rules = [self._rule_from_str(pkg_name, requirements, provenance)]
         else:
             rules = []
             for requirement in requirements:
                 if isinstance(requirement, str):
                     # A string represents a spec that must be satisfied. It is
                     # equivalent to a one_of group with a single element
-                    rules.append(self._rule_from_str(pkg_name, requirement))
+                    rules.append(self._rule_from_str(pkg_name, requirement, provenance))
                 else:
                     for policy in ("one_of", "any_of"):
                         if policy in requirement:
                             rules.append(
-                                RequirementRule(pkg_name, policy, requirement[policy], "", "")
+                                RequirementRule(
+                                    name=pkg_name,
+                                    policy=policy,
+                                    requirements=requirement[policy],
+                                    provenance=provenance,
+                                    message="",
+                                    condition="",
+                                )
                             )
         return rules
 
-    def _rule_from_str(self, pkg_name: str, requirements: str) -> RequirementRule:
+    def _rule_from_str(
+        self, pkg_name: str, requirements: str, provenance: Provenance
+    ) -> RequirementRule:
         return RequirementRule(
-            name=pkg_name, policy="one_of", requirements=[requirements], provenance="", message=""
+            name=pkg_name,
+            policy="one_of",
+            requirements=[requirements],
+            provenance=provenance,
+            condition="",
+            message="",
         )
 
     def pkg_rules(self, pkg, tests):
@@ -1291,24 +1321,26 @@ class SpackSolverSetup(object):
         assert self.possible_virtuals is not None, msg
         for virtual_str in sorted(self.possible_virtuals):
             requirements = packages_yaml.get(virtual_str, {}).get("require", [])
-            rules = self._rules_from_requirements(virtual_str, requirements)
-            self.emit_facts_from_requirement_rules(rules, virtual=True)
+            rules = self._rules_from_requirements(
+                virtual_str, requirements, provenance=Provenance.PACKAGES_YAML_VIRTUAL
+            )
+            self.emit_facts_from_requirement_rules(rules)
 
-    def emit_facts_from_requirement_rules(
-        self, rules: List[RequirementRule], *, virtual: bool = False, raise_on_failure: bool = True
-    ):
-        """Generate facts to enforce requirements from packages.yaml.
+    def emit_facts_from_requirement_rules(self, rules: List[RequirementRule]):
+        """Generate facts to enforce requirements.
 
         Args:
             rules: rules for which we want facts to be emitted
-            virtual: if True the requirements are on a virtual spec
-            raise_on_failure: if True raise an exception when a requirement condition is invalid
-                for the current spec. If False, just skip that condition
         """
         for requirement_grp_id, rule in enumerate(rules):
+            virtual = rule.provenance == Provenance.PACKAGES_YAML_VIRTUAL
+
             pkg_name, policy, requirement_grp = rule.name, rule.policy, rule.requirements
             self.gen.fact(fn.requirement_group(pkg_name, requirement_grp_id))
             self.gen.fact(fn.requirement_policy(pkg_name, requirement_grp_id, policy))
+            if rule.message:
+                self.gen.fact(fn.requirement_message(pkg_name, requirement_grp_id, rule.message))
+
             requirement_weight = 0
             for spec_str in requirement_grp:
                 spec = spack.spec.Spec(spec_str)
@@ -1324,7 +1356,10 @@ class SpackSolverSetup(object):
                         required_spec=when_spec, imposed_spec=spec, name=pkg_name, node=virtual
                     )
                 except Exception as e:
-                    if raise_on_failure:
+                    # Do not raise if the rule comes from the 'all' subsection, since usability
+                    # would be impaired. If a rule does not apply for a specific package, just
+                    # discard it.
+                    if rule.provenance != Provenance.PACKAGES_YAML_ALL:
                         raise RuntimeError("cannot emit requirements for the solver") from e
                     continue
 

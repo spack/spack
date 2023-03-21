@@ -866,19 +866,34 @@ def maintainers(*names: str):
 
 
 @directive("requirements")
-def requires(requirement_spec):
+def requires(requirement_spec, when=None, msg=None):
     """Allows a package to request a configuration to be present in all valid solutions.
 
     For instance, a package that is known to compile only with GCC can declare:
 
         requires("%gcc")
 
+    A package that requires Apple-Clang on Darwin can declare instead:
+
+        requires("%apple-clang", when="platform=darwin", msg="Apple Clang is required on Darwin")
+
     Args:
         requirement_spec: spec expressing the requirement
+        when: optional constraint that triggers the conflict
+        msg: optional user defined message
     """
 
     def _execute_requires(pkg):
-        pkg.requirements.setdefault(requirement_spec, None)
+        # Note that when=None corresponds to when_spec = Spec(), which is always True.
+        # when=False, instead, is a statically evaluated condition that return False
+        # and get discarded.
+        when_spec = make_when_spec(when)
+        if not when_spec:
+            return
+
+        # Save in a list the conflicts and the associated custom messages
+        when_spec_list = pkg.requirements.setdefault(requirement_spec, [])
+        when_spec_list.append((when_spec, msg))
 
     return _execute_requires
 

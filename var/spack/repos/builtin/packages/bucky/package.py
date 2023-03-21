@@ -18,7 +18,7 @@ class Bucky(MakefilePackage):
 
     version("1.4.4", sha256="1621fee0d42314d9aa45d0082b358d4531e7d1d1a0089c807c1b21fbdc4e4592")
 
-    requires("%gcc")
+    requires("%gcc", msg="bucky can only be compiled with GCC")
 
     build_directory = "src"
 

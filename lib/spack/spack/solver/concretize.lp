@@ -497,9 +497,19 @@ requirement_weight(Package, Group, W) :-
 error(100, "cannot satisfy a requirement for package '{0}'.", Package) :-
   activate_requirement_rules(Package),
   requirement_group(Package, X),
+  not requirement_message(Package, X, _),
   not requirement_group_satisfied(Package, X).
 
+
+error(2, Message) :-
+  activate_requirement_rules(Package),
+  requirement_group(Package, X),
+  requirement_message(Package, X, Message),
+  not requirement_group_satisfied(Package, X).
+
+
 #defined requirement_group/2.
+#defined requirement_message/3.
 #defined requirement_group_member/3.
 #defined requirement_has_weight/2.
 #defined requirement_policy/3.
