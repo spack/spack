@@ -48,13 +48,13 @@ class Gnina(CMakePackage, CudaPackage):
     depends_on(_boost)
     depends_on("glog")
     depends_on("protobuf")
-    depends_on("hdf5+cxx+hl")
+    depends_on("hdf5+cxx+hl~mpi")
     depends_on("openblas~fortran")
 
     depends_on("libmolgrid")
 
     depends_on("openbabel@3:~gui~cairo~maeparser~coordgen")
-    # depends_on("rdkit")
+    depends_on("rdkit")
 
     depends_on("python", type="build")
     depends_on("py-numpy", type="build")
@@ -65,5 +65,7 @@ class Gnina(CMakePackage, CudaPackage):
     def cmake_args(self):
         args = [
             "-DBLAS=Open",  # Use OpenBLAS instead of Atlas' BLAS
+            f"-DRDKIT_INCLUDE_DIR={self.spec['rdkit'].prefix.include}/rdkit",
         ]
+
         return args

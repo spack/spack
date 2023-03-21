@@ -42,7 +42,7 @@ class Namd(MakefilePackage, CudaPackage):
         "interface",
         default="none",
         values=("none", "tcl", "python"),
-        description="Enables TCL and/or python interface",
+        description="Enables Tcl and/or python interface",
     )
 
     # init_tcl_pointers() declaration and implementation are inconsistent

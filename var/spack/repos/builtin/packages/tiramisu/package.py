@@ -16,7 +16,7 @@ class Tiramisu(CMakePackage, CudaPackage, PythonExtension):
 
     maintainers("wraith1995")
 
-    generator = "Ninja"
+    generator("ninja")
 
     version("master", branch="master")
     version("2023-2-8", commit="2cd0c43cc1656bfa43cfb6e81d06f770cbf7251e")
@@ -32,8 +32,6 @@ class Tiramisu(CMakePackage, CudaPackage, PythonExtension):
     )
 
     depends_on("cmake@3.5:", type="build")
-    depends_on("ninja", type="build")
-
     depends_on("halide@14.0.0:", type=("build", "link", "run"))
     depends_on("isl", type=("build", "link", "run"))
     depends_on("python@3.8:", type=("build", "link", "run"), when="+python")

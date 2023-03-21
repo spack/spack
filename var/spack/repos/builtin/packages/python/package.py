@@ -22,8 +22,6 @@ from spack.package import *
 from spack.util.environment import is_system_path
 from spack.util.prefix import Prefix
 
-is_windows = sys.platform == "win32"
-
 
 class Python(Package):
     """The Python programming language."""
@@ -125,12 +123,12 @@ class Python(Package):
     # See https://legacy.python.org/dev/peps/pep-0394/
     variant(
         "pythoncmd",
-        default=not is_windows,
+        default=sys.platform != "win32",
         description="Symlink 'python3' executable to 'python' (not PEP 394 compliant)",
     )
 
     # Optional Python modules
-    variant("readline", default=not is_windows, description="Build readline module")
+    variant("readline", default=sys.platform != "win32", description="Build readline module")
     variant("ssl", default=True, description="Build ssl module")
     variant("sqlite3", default=True, description="Build sqlite3 module")
     variant("dbm", default=True, description="Build dbm module")
@@ -147,7 +145,7 @@ class Python(Package):
     variant("crypt", default=True, description="Build crypt module", when="@:3.12 platform=darwin")
     variant("crypt", default=True, description="Build crypt module", when="@:3.12 platform=cray")
 
-    if not is_windows:
+    if sys.platform != "win32":
         depends_on("pkgconfig@0.9.0:", type="build")
         depends_on("gettext +libxml2", when="+libxml2")
         depends_on("gettext ~libxml2", when="~libxml2")
@@ -298,7 +296,7 @@ class Python(Package):
                 variants += "~tix"
 
         # Some modules are platform-dependent
-        if not is_windows:
+        if sys.platform != "win32":
             try:
                 python("-c", "import crypt", error=os.devnull)
                 variants += "+crypt"
@@ -354,7 +352,7 @@ class Python(Package):
         # Fix for following issues for python with aocc%3.2.0:
         # https://github.com/spack/spack/issues/29115
         # https://github.com/spack/spack/pull/28708
-        if self.spec.satisfies("%aocc@3.2.0", strict=True):
+        if self.spec.satisfies("%aocc@3.2.0"):
             if name == "cflags":
                 flags.extend(["-mllvm", "-disable-indvar-simplify=true"])
 
@@ -475,7 +473,7 @@ class Python(Package):
                 config_args.append("--with-lto")
             config_args.append("--with-computed-gotos")
 
-        if spec.satisfies("@3.7 %intel", strict=True):
+        if spec.satisfies("@3.7 %intel"):
             config_args.append("--with-icc={0}".format(spack_cc))
 
         if "+debug" in spec:
@@ -542,7 +540,7 @@ class Python(Package):
         and an appropriately set prefix.
         """
         with working_dir(self.stage.source_path, create=True):
-            if is_windows:
+            if sys.platform == "win32":
                 pass
             else:
                 options = getattr(self, "configure_flag_args", [])
@@ -557,7 +555,7 @@ class Python(Package):
         # Windows builds use a batch script to drive
         # configure and build in one step
         with working_dir(self.stage.source_path):
-            if is_windows:
+            if sys.platform == "win32":
                 pcbuild_root = os.path.join(self.stage.source_path, "PCbuild")
                 builder_cmd = os.path.join(pcbuild_root, "build.bat")
                 try:
@@ -580,7 +578,7 @@ class Python(Package):
         :py:attr:``~.AutotoolsPackage.install_targets``
         """
         with working_dir(self.stage.source_path):
-            if is_windows:
+            if sys.platform == "win32":
                 self.win_installer(prefix)
             else:
                 make(*self.install_targets)
@@ -593,7 +591,7 @@ class Python(Package):
         If this isn't done, they'll have CC and CXX set to Spack's generic
         cc and c++. We want them to be bound to whatever compiler
         they were built with."""
-        if is_windows:
+        if sys.platform == "win32":
             return
         kwargs = {"ignore_absent": True, "backup": False, "string": True}
 
@@ -605,7 +603,7 @@ class Python(Package):
 
     @run_after("install")
     def symlink(self):
-        if is_windows:
+        if sys.platform == "win32":
             return
         spec = self.spec
         prefix = self.prefix
@@ -723,7 +721,7 @@ class Python(Package):
         # in that order if using python@3.11.0, for example.
         version = self.spec.version
         for ver in [version.up_to(2), version.up_to(1), ""]:
-            if not is_windows:
+            if sys.platform != "win32":
                 path = os.path.join(self.prefix.bin, "python{0}".format(ver))
             else:
                 path = os.path.join(self.prefix, "python{0}.exe".format(ver))
@@ -772,11 +770,11 @@ print(json.dumps(config))
 """
 
         dag_hash = self.spec.dag_hash()
-        lib_prefix = "lib" if not is_windows else ""
+        lib_prefix = "lib" if sys.platform != "win32" else ""
         if dag_hash not in self._config_vars:
             # Default config vars
             version = self.version.up_to(2)
-            if is_windows:
+            if sys.platform == "win32":
                 version = str(version).split(".")[0]
             config = {
                 # get_config_vars
@@ -886,9 +884,9 @@ print(json.dumps(config))
     @property
     def libs(self):
         py_version = self.version.up_to(2)
-        if is_windows:
+        if sys.platform == "win32":
             py_version = str(py_version).replace(".", "")
-        lib_prefix = "lib" if not is_windows else ""
+        lib_prefix = "lib" if sys.platform != "win32" else ""
         # The values of LDLIBRARY and LIBRARY aren't reliable. Intel Python uses a
         # static binary but installs shared libraries, so sysconfig reports
         # libpythonX.Y.a but only libpythonX.Y.so exists. So we add our own paths, too.
@@ -1121,7 +1119,7 @@ print(json.dumps(config))
             # fact that LDSHARED is set in the environment, therefore we export
             # the variable only if the new value is different from what we got
             # from the sysconfigdata file:
-            if config_link != new_link and not is_windows:
+            if config_link != new_link and sys.platform != "win32":
                 env.set(link_var, new_link)
 
     def setup_dependent_run_environment(self, env, dependent_spec):
@@ -1180,7 +1178,7 @@ print(json.dumps(config))
                 view.link(new_link_target, dst, spec=self.spec)
 
     def remove_files_from_view(self, view, merge_map):
-        bin_dir = self.spec.prefix.bin if not is_windows else self.spec.prefix
+        bin_dir = self.spec.prefix.bin if sys.platform != "win32" else self.spec.prefix
         for src, dst in merge_map.items():
             if not path_contains_subdirectory(src, bin_dir):
                 view.remove_file(src, dst)
