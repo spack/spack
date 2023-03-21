@@ -18,7 +18,7 @@ import stat
 import sys
 import tempfile
 from contextlib import contextmanager
-from typing import Callable, List, Match, Optional, Tuple, Union
+from typing import Callable, Iterable, List, Match, Optional, Tuple, Union
 
 from llnl.util import tty
 from llnl.util.lang import dedupe, memoized
@@ -1673,7 +1673,7 @@ def fix_darwin_install_name(path):
                     break
 
 
-def find_first(root: str, *file_patterns: str, bfs_depth: int = 2) -> Optional[str]:
+def find_first(root: str, files: Union[Iterable[str], str], bfs_depth: int = 2) -> Optional[str]:
     """Find the first file matching a pattern.
 
     The following
@@ -1684,7 +1684,7 @@ def find_first(root: str, *file_patterns: str, bfs_depth: int = 2) -> Optional[s
 
     is equivalent to:
 
-    >>> find_first("/usr", "abc*", "def*")
+    >>> find_first("/usr", ["abc*", "def*"])
 
     Any glob pattern supported by fnmatch can be used.
 
@@ -1693,14 +1693,16 @@ def find_first(root: str, *file_patterns: str, bfs_depth: int = 2) -> Optional[s
 
     Parameters:
         root (str): The root directory to start searching from
-        files (str or Iterable): Library name(s) to search for
+        files (str or Iterable): File pattern(s) to search for
         bfs_depth (int): (advanced) parameter that specifies at which
             depth to switch to depth-first search.
 
     Returns:
         str or None: The matching file or None when no file is found.
     """
-    return FindFirstFile(root, *file_patterns, bfs_depth=bfs_depth).find()
+    if isinstance(files, str):
+        files = [files]
+    return FindFirstFile(root, *files, bfs_depth=bfs_depth).find()
 
 
 def find(root, files, recursive=True):

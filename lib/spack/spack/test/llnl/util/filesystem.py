@@ -875,19 +875,14 @@ def test_filesummary(tmpdir):
 
 def test_find_first_file(tmpdir):
     # Create a structure: a/a/a/{file1,file2}, b/a, c/a, d/{a,file1}
-    tmpdir.join("a").ensure(dir=True).join("a").ensure(dir=True).join("a").ensure(dir=True)
-    tmpdir.join("b").ensure(dir=True).join("a").ensure(dir=True)
-    tmpdir.join("c").ensure(dir=True).join("a").ensure(dir=True)
-    tmpdir.join("d").ensure(dir=True).join("a").ensure(dir=True)
+    tmpdir.join("a", "a", "a").ensure(dir=True)
+    tmpdir.join("b", "a").ensure(dir=True)
+    tmpdir.join("c", "a").ensure(dir=True)
+    tmpdir.join("d", "a").ensure(dir=True)
 
-    with open(tmpdir.join("a", "a", "a", "file1"), "w") as f:
-        f.write("contents")
-
-    with open(tmpdir.join("a", "a", "a", "file2"), "w") as f:
-        f.write("contents")
-
-    with open(tmpdir.join("d", "file1"), "w") as f:
-        f.write("contents")
+    fs.touch(tmpdir.join("a", "a", "a", "file1"))
+    fs.touch(tmpdir.join("a", "a", "a", "file2"))
+    fs.touch(tmpdir.join("d", "file1"))
 
     root = str(tmpdir)
 
@@ -897,7 +892,7 @@ def test_find_first_file(tmpdir):
     assert fs.find_first(root, "nonexisting") is None
 
     assert os.path.samefile(
-        fs.find_first(root, "nonexisting", "file2"), os.path.join(root, "a", "a", "a", "file2")
+        fs.find_first(root, ["nonexisting", "file2"]), os.path.join(root, "a", "a", "a", "file2")
     )
 
     # Should find first dir
