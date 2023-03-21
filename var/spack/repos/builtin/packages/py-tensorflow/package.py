@@ -742,7 +742,14 @@ class PyTensorflow(Package, CudaPackage, ROCmPackage, PythonExtension):
             '"-U_FORTIFY_SOURCE", "-I%s",' % self.spec["protobuf"].prefix.include,
             "third_party/gpus/crosstool/BUILD.rocm.tpl",
         )
-        if self.spec.satisfies("@2.3.0:"):
+        if self.spec.satisfies("@2.11:"):
+            filter_file(
+                "deps = protodeps + well_known_proto_libs(),",
+                "deps = protodeps,",
+                "tensorflow/tsl/platform/default/build_config.bzl",
+                string=True,
+            )
+        if self.spec.satisfies("@2.3:2.10"):
             filter_file(
                 "deps = protodeps + well_known_proto_libs(),",
                 "deps = protodeps,",
