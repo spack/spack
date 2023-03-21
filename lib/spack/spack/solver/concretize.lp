@@ -483,12 +483,7 @@ activate_requirement(Package, X) :-
   requirement_group(Package, X),
   requirement_conditional(Package, X).
 
-1 { activate_requirement_rule(Y, Package, X) : requirement_group_member(Y, Package, X) } 1 :-
-  requirement_policy(Package, X, "one_of"),
-  activate_requirement(Package, X).
-
-1 { activate_requirement_rule(Y, Package, X) : requirement_group_member(Y, Package, X) } :-
-  requirement_policy(Package, X, "any_of"),
+{ activate_requirement_rule(Y, Package, X) : requirement_group_member(Y, Package, X) } :-
   activate_requirement(Package, X).
 
 impose(Y) :- activate_requirement_rule(Y, Package, X).
@@ -503,7 +498,15 @@ do_not_impose(Y) :-
    requirement_group_member(Y, Package, X).
 
 requirement_group_satisfied(Package, X) :-
-  activate_requirement_rule(_, Package, X),
+  1 { activate_requirement_rule(_, Package, X) },
+  requirement_policy(Package, X, "any_of"),
+  activate_requirement(Package, X),
+  requirement_group(Package, X).
+
+requirement_group_satisfied(Package, X) :-
+  1 { activate_requirement_rule(_, Package, X) } 1,
+  requirement_policy(Package, X, "one_of"),
+  activate_requirement(Package, X),
   requirement_group(Package, X).
 
 requirement_weight(Package, Group, W) :-

@@ -1346,7 +1346,7 @@ class SpackSolverSetup(object):
             if when_spec is False:
                 continue
 
-            if rule.condition:
+            if rule.condition and when_spec != spack.spec.Spec():
                 self.gen.fact(fn.requirement_conditional(pkg_name, requirement_grp_id))
 
             for spec_str in requirement_grp:

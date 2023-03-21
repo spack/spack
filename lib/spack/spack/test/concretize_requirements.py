@@ -9,6 +9,7 @@ import pytest
 
 import spack.build_systems.generic
 import spack.config
+import spack.error
 import spack.package_base
 import spack.repo
 import spack.util.spack_yaml as syaml
@@ -603,14 +604,28 @@ def test_non_existing_variants_under_all(concretize_scope, mock_packages):
         (
             """\
     packages:
-      all:
+      libelf:
         require:
         - one_of: ["%clang"]
           when: "@0.8.13"
 """,
             "libelf",
             [("@0.8.13%clang", True), ("%gcc", False)],
-        )
+        ),
+        (
+            """\
+    packages:
+      all:
+        compiler: ["gcc", "clang"]
+
+      libelf:
+        require:
+        - one_of: ["%clang"]
+          when: "@0.8.13"
+""",
+            "libelf@0.8.12",
+            [("%clang", False), ("%gcc", True)],
+        ),
     ],
 )
 def test_requirements_from_packages_yaml(
@@ -626,3 +641,34 @@ def test_requirements_from_packages_yaml(
     spec = Spec(spec_str).concretized()
     for match_str, expected in expected_satisfies:
         assert spec.satisfies(match_str) is expected
+
+
+@pytest.mark.parametrize(
+    "packages_yaml,spec_str,expected_message",
+    [
+        (
+            """\
+    packages:
+      mpileaks:
+        require:
+        - one_of: ["~debug"]
+          message: "debug is not allowed"
+""",
+            "mpileaks+debug",
+            "debug is not allowed",
+        )
+        # TODO: improve error handling for compilers
+    ],
+)
+def test_requirements_fail_with_custom_message(
+    packages_yaml, spec_str, expected_message, concretize_scope, mock_packages
+):
+    """Test that specs failing due to requirements not being satisfiable fail with a
+    custom error message.
+    """
+    if spack.config.get("config:concretizer") == "original":
+        pytest.skip("Original concretizer does not support configuration requirements")
+
+    update_packages_config(packages_yaml)
+    with pytest.raises(spack.error.SpackError, match=expected_message):
+        Spec(spec_str).concretized()
