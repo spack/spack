@@ -811,14 +811,6 @@ class CMakeBuildStage(Stage):
         """Destroy external build tree if not keep-stage
         Otherwise this is kept as usual"""
 
-        def teardown(pth: Path):
-            for sub_item in pth.iterdir():
-                if sub_item.is_dir():
-                    teardown(sub_item)
-                else:
-                    sub_item.unlink()
-            pth.rmdir()
-
         if self._remote_build_dir.exists():
             shutil.rmtree(self._remote_build_dir)
         self._remote_build_dir = None
