@@ -66,7 +66,7 @@ class Namd(MakefilePackage, CudaPackage):
 
     depends_on("amdfftw", when="fftw=amdfftw")
 
-    depends_on("intel-mkl", when="fftw=mkl")
+    depends_on("mkl", when="fftw=mkl")
 
     depends_on("tcl", when="interface=tcl")
 
@@ -91,7 +91,8 @@ class Namd(MakefilePackage, CudaPackage):
         if lib != "python":
             self._copy_arch_file(lib)
         spec = self.spec
-        opts.extend(["--with-{0}".format(lib), "--{0}-prefix".format(lib), spec[lib].prefix])
+        lib_prefix = spec[lib].package.component_prefix if spec[lib].name == "intel-oneapi-mkl" else spec[lib].prefix
+        opts.extend(["--with-{0}".format(lib), "--{0}-prefix".format(lib), lib_prefix])
 
     @property
     def arch(self):
