@@ -28,7 +28,9 @@ class Henson(CMakePackage):
     def cmake_args(self):
         args = []
         if "+python" in self.spec:
-            args += ["-Dpython=on"]
+            python_executable = self.spec["python"].command.path
+            args += ["-Dpython=on",
+                     "-DPYTHON_EXECUTABLE={0}".format(python_executable)]
         else:
             args += ["-Dpython=off"]
 
