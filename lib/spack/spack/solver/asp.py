@@ -1039,7 +1039,7 @@ class SpackSolverSetup(object):
                         policy="one_of",
                         requirements=[requirement],
                         provenance=Provenance.PACKAGE_PY,
-                        condition="",
+                        condition=when_spec,
                         message=message,
                     )
                 )
@@ -1077,8 +1077,8 @@ class SpackSolverSetup(object):
                                     policy=policy,
                                     requirements=requirement[policy],
                                     provenance=provenance,
-                                    message="",
-                                    condition="",
+                                    message=requirement.get("message"),
+                                    condition=requirement.get("when"),
                                 )
                             )
         return rules
@@ -1091,8 +1091,8 @@ class SpackSolverSetup(object):
             policy="one_of",
             requirements=[requirements],
             provenance=provenance,
-            condition="",
-            message="",
+            condition=None,
+            message=None,
         )
 
     def pkg_rules(self, pkg, tests):
@@ -1342,14 +1342,23 @@ class SpackSolverSetup(object):
                 self.gen.fact(fn.requirement_message(pkg_name, requirement_grp_id, rule.message))
 
             requirement_weight = 0
+            when_spec = spack.directives.make_when_spec(rule.condition)
+            if when_spec is False:
+                continue
+
+            if rule.condition:
+                self.gen.fact(fn.requirement_conditional(pkg_name, requirement_grp_id))
+
             for spec_str in requirement_grp:
                 spec = spack.spec.Spec(spec_str)
                 if not spec.name:
                     spec.name = pkg_name
                 spec.attach_git_version_lookup()
-                when_spec = spec
+
                 if virtual:
                     when_spec = spack.spec.Spec(pkg_name)
+                elif not rule.condition:
+                    when_spec = spec
 
                 try:
                     member_id = self.condition(

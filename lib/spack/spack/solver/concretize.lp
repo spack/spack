@@ -461,13 +461,49 @@ error(100, "Attempted to use external for '{0}' which does not satisfy any confi
 % Config required semantics
 %-----------------------------------------------------------------------------
 
-activate_requirement_rules(Package) :- attr("node", Package).
-activate_requirement_rules(Package) :- attr("virtual_node", Package).
+activate_requirement(Package, X) :-
+  attr("node", Package),
+  requirement_group(Package, X),
+  not requirement_conditional(Package, X).
+
+activate_requirement(Package, X) :-
+  attr("virtual_node", Package),
+  requirement_group(Package, X),
+  not requirement_conditional(Package, X).
+
+activate_requirement(Package, X) :-
+  attr("node", Package),
+  1 { condition_holds(Y) : requirement_group_member(Y, Package, X) },
+  requirement_group(Package, X),
+  requirement_conditional(Package, X).
+
+activate_requirement(Package, X) :-
+  attr("virtual_node", Package),
+  1 { condition_holds(Y) : requirement_group_member(Y, Package, X) },
+  requirement_group(Package, X),
+  requirement_conditional(Package, X).
+
+1 { activate_requirement_rule(Y, Package, X) : requirement_group_member(Y, Package, X) } 1 :-
+  requirement_policy(Package, X, "one_of"),
+  activate_requirement(Package, X).
+
+1 { activate_requirement_rule(Y, Package, X) : requirement_group_member(Y, Package, X) } :-
+  requirement_policy(Package, X, "any_of"),
+  activate_requirement(Package, X).
+
+impose(Y) :- activate_requirement_rule(Y, Package, X).
+do_not_impose(Y) :-
+  not activate_requirement_rule(Y, Package, X),
+  requirement_conditional(Package, X),
+  requirement_group_member(Y, Package, X).
+
+% Avoid impose(Y) to be derived by other rules when it is part of a requirement
+:- impose(Y),
+   not activate_requirement_rule(Y, Package, X),
+   requirement_group_member(Y, Package, X).
 
 requirement_group_satisfied(Package, X) :-
-  1 { condition_holds(Y) : requirement_group_member(Y, Package, X) } 1,
-  activate_requirement_rules(Package),
-  requirement_policy(Package, X, "one_of"),
+  activate_requirement_rule(_, Package, X),
   requirement_group(Package, X).
 
 requirement_weight(Package, Group, W) :-
@@ -476,12 +512,6 @@ requirement_weight(Package, Group, W) :-
   requirement_group_member(Y, Package, Group),
   requirement_policy(Package, Group, "one_of"),
   requirement_group_satisfied(Package, Group).
-
-requirement_group_satisfied(Package, X) :-
-  1 { condition_holds(Y) : requirement_group_member(Y, Package, X) } ,
-  activate_requirement_rules(Package),
-  requirement_policy(Package, X, "any_of"),
-  requirement_group(Package, X).
 
 requirement_weight(Package, Group, W) :-
   W = #min {
@@ -495,20 +525,21 @@ requirement_weight(Package, Group, W) :-
   requirement_group_satisfied(Package, Group).
 
 error(100, "cannot satisfy a requirement for package '{0}'.", Package) :-
-  activate_requirement_rules(Package),
+  activate_requirement(Package, X),
   requirement_group(Package, X),
   not requirement_message(Package, X, _),
   not requirement_group_satisfied(Package, X).
 
 
 error(2, Message) :-
-  activate_requirement_rules(Package),
+  activate_requirement(Package, X),
   requirement_group(Package, X),
   requirement_message(Package, X, Message),
   not requirement_group_satisfied(Package, X).
 
 
 #defined requirement_group/2.
+#defined requirement_conditional/2.
 #defined requirement_message/3.
 #defined requirement_group_member/3.
 #defined requirement_has_weight/2.

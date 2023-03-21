@@ -595,3 +595,34 @@ def test_non_existing_variants_under_all(concretize_scope, mock_packages):
 
     spec = Spec("callpath ^zmpi").concretized()
     assert "~foo" not in spec
+
+
+@pytest.mark.parametrize(
+    "packages_yaml,spec_str,expected_satisfies",
+    [
+        (
+            """\
+    packages:
+      all:
+        require:
+        - one_of: ["%clang"]
+          when: "@0.8.13"
+""",
+            "libelf",
+            [("@0.8.13%clang", True), ("%gcc", False)],
+        )
+    ],
+)
+def test_requirements_from_packages_yaml(
+    packages_yaml, spec_str, expected_satisfies, concretize_scope, mock_packages
+):
+    """Test that a few properties of specs that are concretized with requirements
+    match the expectations.
+    """
+    if spack.config.get("config:concretizer") == "original":
+        pytest.skip("Original concretizer does not support configuration requirements")
+
+    update_packages_config(packages_yaml)
+    spec = Spec(spec_str).concretized()
+    for match_str, expected in expected_satisfies:
+        assert spec.satisfies(match_str) is expected
