@@ -39,6 +39,7 @@ class Libxml2(AutotoolsPackage):
 
     variant("python", default=False, description="Enable Python support")
     variant("shared", default=True, description="Build shared library")
+    variant("pic", default=False, description="Enable position-independent code (PIC)")
 
     depends_on("pkgconfig@0.9.0:", type="build")
     depends_on("iconv")
@@ -107,6 +108,10 @@ class Libxml2(AutotoolsPackage):
             args.append("--without-python")
 
         args.extend(self.enable_or_disable("shared"))
+
+        if spec.satisfies("+pic"):
+            args.append("CFLAGS=-fPIC")
+            args.append("FFLAGS=-fPIC")
 
         return args
 
