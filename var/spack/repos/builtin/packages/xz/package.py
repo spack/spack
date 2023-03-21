@@ -61,7 +61,12 @@ class Xz(MSBuildPackage, AutotoolsPackage, SourceforgePackage):
 
     @property
     def libs(self):
-        return find_libraries(["liblzma"], root=self.prefix, recursive=True)
+        return find_libraries(
+            ["liblzma"],
+            root=self.prefix,
+            recursive=True,
+            shared=self.spec.satisfies("libs=shared")
+        )
 
     @classmethod
     def determine_version(cls, exe):
