@@ -91,7 +91,11 @@ class Namd(MakefilePackage, CudaPackage):
         if lib != "python":
             self._copy_arch_file(lib)
         spec = self.spec
-        lib_prefix = spec[lib].package.component_prefix if spec[lib].name == "intel-oneapi-mkl" else spec[lib].prefix
+        lib_prefix = (
+            spec[lib].package.component_prefix
+            if spec[lib].name == "intel-oneapi-mkl"
+            else spec[lib].prefix
+        )
         opts.extend(["--with-{0}".format(lib), "--{0}-prefix".format(lib), lib_prefix])
 
     @property
