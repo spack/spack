@@ -26,6 +26,7 @@ class Curl(NMakePackage, AutotoolsPackage):
 
     maintainers("alecbcs")
 
+    version("8.0.1", sha256="9b6b1e96b748d04b968786b6bdf407aa5c75ab53a3d37c1c8c81cdb736555ccf")
     version("7.88.1", sha256="8224b45cce12abde039c12dc0711b7ea85b104b9ad534d6e4c5b4e188a61c907")
 
     # Deprecated versions due to CVEs
