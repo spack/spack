@@ -73,15 +73,13 @@ class Fairlogger(CMakePackage):
             )
 
     def cmake_args(self):
-        args = []
-        args.append("-DDISABLE_COLOR=ON")
-        cxxstd = self.spec.variants["cxxstd"].value
-        if cxxstd != "default":
-            args.append("-DCMAKE_CXX_STANDARD=%s" % cxxstd)
+        args = [self.define("DISABLE_COLOR", True)]
+        if self.spec.variants["cxxstd"].value != "default":
+            args.append(self.define_from_variant("CMAKE_CXX_STANDARD", "cxxstd"))
         if self.spec.satisfies("@1.4:"):
             args.append(self.define_from_variant("USE_BOOST_PRETTY_FUNCTION", "pretty"))
         if self.spec.satisfies("@1.6:"):
-            args.append("-DUSE_EXTERNAL_FMT=ON")
+            args.append(self.define("USE_EXTERNAL_FMT", True))
         if self.spec.satisfies("^boost@:1.69"):
-            args.append("-DBoost_NO_BOOST_CMAKE=ON")
+            args.append(self.define("Boost_NO_BOOST_CMAKE", True))
         return args
