@@ -50,24 +50,51 @@ setlocal enabledelayedexpansion
 :: flags will always start with '-', e.g. --help or -V
 :: subcommands will never start with '-'
 :: everything after the subcommand is an arg
-for %%x in (%*) do (
-    set t="%%~x"
+
+:: WE CANNOT ALLOW BATCH FOR TO DIRECTLY PROCESS CL ARGS
+:: a number of batch reserved characters are commonly passed to
+:: spack and allowing batch's for method to process the raw inputs
+:: results in a large number of formatting issues
+:: instead, treat the entire CLI as one string
+:: and split by space manually
+set cl_args=%*
+:foreach
+for /f "tokens=1*" %%g in ("%cl_args%") do (
+    set t=%%~g
+    :: remainder of string is composed into %%h
+    set cl_args=%%h
     if "!t:~0,1!" == "-" (
         if defined _sp_subcommand (
             :: We already have a subcommand, processing args now
-            set "_sp_args=!_sp_args! !t!"
+            if not defined _sp_args (
+                set "_sp_args=!t!"
+            ) else (
+                set "_sp_args=!_sp_args! !t!"
+            )
         ) else (
-            set "_sp_flags=!_sp_flags! !t!"
-            shift
+            if not defined _sp_flags (
+                set "_sp_flags=!t!"
+                shift
+            ) else (
+                set "_sp_flags=!_sp_flags! !t!"
+                shift
+            )
         )
     ) else if not defined _sp_subcommand (
         set "_sp_subcommand=!t!"
         shift
     ) else (
-        set "_sp_args=!_sp_args! !t!"
-        shift
+        if not defined _sp_args (
+            set "_sp_args=!t!"
+            shift
+        ) else (
+            set "_sp_args=!_sp_args! !t!"
+            shift
+        )
     )
 )
+if defined cl_args goto :foreach
+
 
 :: --help, -h and -V flags don't require further output parsing.
 :: If we encounter, execute and exit
@@ -95,31 +122,21 @@ if not defined _sp_subcommand (
 
 :: pass parsed variables outside of local scope. Need to do
 :: this because delayedexpansion can only be set by setlocal
-echo %_sp_flags%>flags
-echo %_sp_args%>args
-echo %_sp_subcommand%>subcmd
-endlocal
-set /p _sp_subcommand=<subcmd
-set /p _sp_flags=<flags
-set /p _sp_args=<args
-if "%_sp_subcommand%"=="ECHO is off." (set "_sp_subcommand=")
-if "%_sp_subcommand%"=="ECHO is on." (set "_sp_subcommand=")
-if "%_sp_flags%"=="ECHO is off." (set "_sp_flags=")
-if "%_sp_flags%"=="ECHO is on." (set "_sp_flags=")
-if "%_sp_args%"=="ECHO is off." (set "_sp_args=")
-if "%_sp_args%"=="ECHO is on." (set "_sp_args=")
-del subcmd
-del flags
-del args
+endlocal & (
+    set "_sp_flags=%_sp_flags%"
+    set "_sp_args=%_sp_args%"
+    set "_sp_subcommand=%_sp_subcommand%"
+)
+
 
 :: Filter out some commands. For any others, just run the command.
-if %_sp_subcommand% == "cd" (
+if "%_sp_subcommand%" == "cd" (
     goto :case_cd
-) else if %_sp_subcommand% == "env" (
+) else if "%_sp_subcommand%" == "env" (
     goto :case_env
-) else if %_sp_subcommand% == "load" (
+) else if "%_sp_subcommand%" == "load" (
     goto :case_load
-) else if %_sp_subcommand% == "unload" (
+) else if "%_sp_subcommand%" == "unload" (
     goto :case_load
 ) else (
     goto :default_case
@@ -154,20 +171,25 @@ goto :end_switch
 if NOT defined _sp_args (
     goto :default_case
 )
-set args_no_quote=%_sp_args:"=%
-if NOT "%args_no_quote%"=="%args_no_quote:--help=%" (
+
+if NOT "%_sp_args%"=="%_sp_args:--help=%" (
+    echo "--help"
     goto :default_case
-) else if NOT "%args_no_quote%"=="%args_no_quote: -h=%" (
+) else if NOT "%_sp_args%"=="%_sp_args: -h=%" (
+    echo "-h"
     goto :default_case
-) else if NOT "%args_no_quote%"=="%args_no_quote:--bat=%" (
+) else if NOT "%_sp_args%"=="%_sp_args:--bat=%" (
+    echo "--bat"
     goto :default_case
-) else if NOT "%args_no_quote%"=="%args_no_quote:deactivate=%" (
+) else if NOT "%_sp_args%"=="%_sp_args:deactivate=%" (
+    echo "deactivate"
     for /f "tokens=* USEBACKQ" %%I in (
-        `call python %spack% %_sp_flags% env deactivate --bat %args_no_quote:deactivate=%`
+        `call python %spack% %_sp_flags% env deactivate --bat %_sp_args:deactivate=%`
     ) do %%I
-) else if NOT "%args_no_quote%"=="%args_no_quote:activate=%" (
+) else if NOT "%_sp_args%"=="%_sp_args:activate=%" (
+    echo "activate"
     for /f "tokens=* USEBACKQ" %%I in (
-        `python %spack% %_sp_flags% env activate --bat %args_no_quote:activate=%`
+        `python %spack% %_sp_flags% env activate --bat %_sp_args:activate=%`
     ) do %%I
 ) else (
     goto :default_case
@@ -188,7 +210,7 @@ if defined _sp_args (
 
 for /f "tokens=* USEBACKQ" %%I in (
     `python "%spack%" %_sp_flags% %_sp_subcommand% --bat %_sp_args%`) do %%I
-)
+
 goto :end_switch
 
 :case_unload
