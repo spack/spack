@@ -494,12 +494,6 @@ class Openssl(Package):  # Uses Fake Autotools, should subclass Package
         pkg_cert = join_path(pkg_dir, "cert.pem")
         install(mozilla_pem, pkg_cert)
 
-#    @run_after("install")
-#    @when("~shared")
-#    def static_only(self):
-#        for sharedlibpath in glob.glob(os.path.join(self.spec.prefix.lib, "*.so"):
-#            os.remove(sharedlibpath)
-
     def patch(self):
         if self.spec.satisfies("%nvhpc"):
             # Remove incompatible preprocessor flags
