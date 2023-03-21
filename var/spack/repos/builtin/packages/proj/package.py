@@ -106,6 +106,10 @@ class Proj(AutotoolsPackage):
 
         args.extend(self.enable_or_disable("shared"))
 
+        if self.spec["libtiff"].satisfies("+jpeg~shared"):
+            args.append("LDFLAGS=%s" % self.spec["jpeg"].libs.ld_flags)
+            args.append("LIBS=%s" % self.spec["jpeg"].libs.link_flags)
+
         return args
 
     def setup_run_environment(self, env):
