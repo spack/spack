@@ -420,6 +420,11 @@ class PyTensorflow(Package, CudaPackage, ROCmPackage, PythonExtension):
     conflicts("~rocm", when="@2.7.4-rocm-enhanced")
     conflicts("+rocm", when="@:2.7.4-a,2.7.4.0:")
 
+    # https://www.tensorflow.org/install/source#tested_build_configurations
+    conflicts("%gcc@:9.3.0", when="@2.9:")
+    conflicts("%gcc@:7.3.0", when="@1.15:")
+    conflicts("%gcc@:4.7")
+
     # zlib is vendored and downloaded directly from zlib.org (or mirrors), but
     # old downloads are removed from that site immediately after a new release.
     # If the tf mirrors don't work, make sure the fallback is to something existing.
