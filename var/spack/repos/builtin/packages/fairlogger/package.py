@@ -33,6 +33,8 @@ class Fairlogger(CMakePackage):
     version("1.1.0", sha256="e185e5bd07df648224f85e765d18579fae0de54adaab9a194335e3ad6d3d29f7")
     version("1.0.6", sha256="2fc266a6e494adda40837be406aef8d9838f385ffd64fbfafb1164833906b4e0")
 
+    generator("make", "ninja", default="ninja")
+
     variant(
         "build_type",
         default="RelWithDebInfo",
