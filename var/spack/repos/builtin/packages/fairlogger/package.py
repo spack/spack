@@ -118,7 +118,7 @@ class Fairlogger(CMakePackage):
         if not self.spec.satisfies("@develop"):
             filter_file(
                 r"(get_git_version\(.*)\)",
-                r"\1 DEFAULT_VERSION %s)" % self.spec.version,
+                rf"\1 DEFAULT_VERSION {self.spec.version})",
                 "CMakeLists.txt",
             )
 
