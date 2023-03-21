@@ -40,17 +40,17 @@ class Discotec(CMakePackage):
 
     def cmake_args(self):
         args = [
-            self.define('DISCOTEC_BUILD_MISSING_DEPS', False),
-            self.define_from_variant('DISCOTEC_ENABLEFT', 'ft'),
-            self.define_from_variant('DISCOTEC_GENE', 'gene'),
-            self.define_from_variant('DISCOTEC_OPENMP', 'openmp'),
-            self.define_from_variant('DISCOTEC_TIMING', 'timing'),
-            self.define_from_variant('DISCOTEC_TEST', 'test'),
-            self.define_from_variant('DISCOTEC_USE_HDF5', 'hdf5'),
-            self.define_from_variant('DISCOTEC_USE_HIGHFIVE', 'hdf5'),
-            self.define_from_variant('DISCOTEC_USE_LTO', 'lto'),
-            self.define_from_variant('DISCOTEC_USE_VTK', 'vtk'),
-            self.define_from_variant('DISCOTEC_WITH_SELALIB', 'selalib'),
+            self.define("DISCOTEC_BUILD_MISSING_DEPS", False),
+            self.define_from_variant("DISCOTEC_ENABLEFT", "ft"),
+            self.define_from_variant("DISCOTEC_GENE", "gene"),
+            self.define_from_variant("DISCOTEC_OPENMP", "openmp"),
+            self.define_from_variant("DISCOTEC_TIMING", "timing"),
+            self.define_from_variant("DISCOTEC_TEST", "test"),
+            self.define_from_variant("DISCOTEC_USE_HDF5", "hdf5"),
+            self.define_from_variant("DISCOTEC_USE_HIGHFIVE", "hdf5"),
+            self.define_from_variant("DISCOTEC_USE_LTO", "lto"),
+            self.define_from_variant("DISCOTEC_USE_VTK", "vtk"),
+            self.define_from_variant("DISCOTEC_WITH_SELALIB", "selalib"),
         ]
 
         return args
