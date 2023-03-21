@@ -7,8 +7,7 @@ import os
 import llnl.util.filesystem as fs
 import llnl.util.tty as tty
 
-from spack.build_systems.autotools import AutotoolsBuilder
-from spack.build_systems.nmake import NMakeBuilder
+from spack.build_systems import autotools, nmake
 from spack.package import *
 
 
@@ -153,7 +152,7 @@ class RunAfter(object):
                 python("-c", "import libxml2")
 
 
-class AutotoolsBuilder(AutotoolsBuilder, RunAfter):
+class AutotoolsBuilder(autotools.AutotoolsBuilder, RunAfter):
     def configure_args(self):
         spec = self.spec
 
@@ -175,7 +174,7 @@ class AutotoolsBuilder(AutotoolsBuilder, RunAfter):
         return args
 
 
-class NMakeBuilder(NMakeBuilder, RunAfter):
+class NMakeBuilder(nmake.NMakeBuilder, RunAfter):
     phases = ("configure", "build", "install")
 
     @property
@@ -184,10 +183,10 @@ class NMakeBuilder(NMakeBuilder, RunAfter):
 
     @property
     def build_directory(self):
-        return os.path.join(super().build_directory, "win32")
+        return os.path.join(self.stage.source_path, "win32")
 
     def configure(self, pkg, spec, prefix):
-        with working_dir(os.path.join(self.stage.source_path, "win32")):
+        with working_dir(self.build_directory):
             opts = [
                 "prefix=%s" % prefix,
                 "compiler=msvc",
