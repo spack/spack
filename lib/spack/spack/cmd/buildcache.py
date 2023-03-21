@@ -478,15 +478,17 @@ def create_fn(args):
 
     for i, spec in enumerate(specs):
         try:
-            bindist.safe_push(
+            bindist.push_or_raise(
                 spec,
                 url,
-                force=args.force,
-                relative=args.rel,
-                unsigned=args.unsigned,
-                allow_root=args.allow_root,
-                key=args.key,
-                regenerate_index=args.rebuild_index,
+                bindist.PushOptions(
+                    force=args.force,
+                    relative=args.rel,
+                    unsigned=args.unsigned,
+                    allow_root=args.allow_root,
+                    key=args.key,
+                    regenerate_index=args.rebuild_index,
+                ),
             )
 
             if total_specs > 1:

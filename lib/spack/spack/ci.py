@@ -1595,7 +1595,9 @@ def _push_mirror_contents(input_spec, sign_binaries, mirror_url):
     unsigned = not sign_binaries
     tty.debug("Creating buildcache ({0})".format("unsigned" if unsigned else "signed"))
     push_url = spack.mirror.Mirror.from_url(mirror_url).push_url
-    return bindist.push(input_spec, push_url, force=True, allow_root=True, unsigned=unsigned)
+    return bindist.push(
+        input_spec, push_url, bindist.PushOptions(force=True, allow_root=True, unsigned=unsigned)
+    )
 
 
 def push_mirror_contents(input_spec: spack.spec.Spec, mirror_url, sign_binaries):
@@ -2132,6 +2134,7 @@ def process_command(name, commands, repro_dir):
 
 def create_buildcache(
     input_spec: spack.spec.Spec,
+    *,
     pr_pipeline: bool,
     pipeline_mirror_url: Optional[str] = None,
     buildcache_mirror_url: Optional[str] = None,
@@ -2140,9 +2143,9 @@ def create_buildcache(
 
     Arguments:
         input_spec: Installed spec to package and push
-        buildcache_mirror_url (str or None): URL for the buildcache mirror
-        pipeline_mirror_url (str or None): URL for the pipeline mirror
-        pr_pipeline (bool): True if the CI job is for a PR
+        buildcache_mirror_url: URL for the buildcache mirror
+        pipeline_mirror_url: URL for the pipeline mirror
+        pr_pipeline: True if the CI job is for a PR
 
     Returns: A list of PushResults, indicating success or failure.
     """

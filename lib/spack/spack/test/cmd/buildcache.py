@@ -318,11 +318,11 @@ def test_correct_specs_are_pushed(
 
     packages_to_push = []
 
-    def fake_push(node, push_url, **kwargs):
+    def fake_push(node, push_url, options):
         assert isinstance(node, Spec)
         packages_to_push.append(node.name)
 
-    monkeypatch.setattr(spack.binary_distribution, "safe_push", fake_push)
+    monkeypatch.setattr(spack.binary_distribution, "push_or_raise", fake_push)
 
     buildcache_create_args = ["create", "-d", str(tmpdir), "--unsigned"]
 
