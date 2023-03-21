@@ -732,6 +732,8 @@ variant_single_value(Package, "dev_path")
 %-----------------------------------------------------------------------------
 
 % if no platform is set, fall back to the default
+:- attr("node_platform", _, Platform), not allowed_platform(Platform).
+
 attr("node_platform", Package, Platform)
  :- attr("node", Package),
     not attr("node_platform_set", Package),

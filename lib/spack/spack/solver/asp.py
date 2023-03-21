@@ -1755,6 +1755,7 @@ class SpackSolverSetup(object):
         self.gen.h2("Default platform")
         platform = spack.platforms.host()
         self.gen.fact(fn.node_platform_default(platform))
+        self.gen.fact(fn.allowed_platform(platform))
 
     def os_defaults(self, specs):
         self.gen.h2("Possible operating systems")
