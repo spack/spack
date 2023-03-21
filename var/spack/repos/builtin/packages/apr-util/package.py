@@ -104,7 +104,8 @@ class AprUtil(AutotoolsPackage):
 
         if "+crypto" in spec:
             if spec["openssl"].satisfies("~shared"):
-                args.append("LIBS=-L%s -lz" % self.spec["zlib"].prefix.lib)
+                zlibs = self.spec["zlib"].libs
+                args.append("LIBS={0} {1}".format(zlibs.ld_flags, zlibs.link_flags))
 
         return args
 
