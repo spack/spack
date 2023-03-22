@@ -29,11 +29,7 @@ spack:
           +common: '{name}/{version}-commonmods'
           +plasticity: '{name}-plasticity/{version}'
           +ngv+metabolism: '{name}-multiscale/{version}'
-  packages:
-    steps:
-      variants: +petsc
-    trilinos:
-      version: [13.0.1]
+          ^petsc+complex: '{name}-complex/{version}'
   specs:
     - neuron+tests+coreneuron
     - neuron+tests+nmodl+sympy+coreneuron
@@ -57,6 +53,8 @@ spack:
     - spatial-index
     - spykfunc
     - steps
+    - steps@5
+    - steps@5 ^petsc+complex
     - synapsetool
     - touchdetector
     - unit-test-translator
