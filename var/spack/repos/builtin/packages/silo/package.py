@@ -85,6 +85,9 @@ class Silo(AutotoolsPackage):
     conflicts("+hzip", when="@4.10.2-bsd,4.11-bsd")
     conflicts("+fpzip", when="@4.10.2-bsd,4.11-bsd")
 
+    # silo 4.11 doesn't compile with gcc 11.1
+    conflicts("%gcc@11.1:", when="@4.11")
+
     # zfp include missing
     patch("zfp_error.patch", when="@4.11 +hdf5")
 
