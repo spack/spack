@@ -99,7 +99,7 @@ class NetcdfC(CMakePackage, AutotoolsPackage):
     depends_on("hdf~netcdf", when="+hdf4")
 
     # curl 7.18.0 or later is required:
-    # http://www.unidata.ucar.edu/software/netcdf/docs/getting_and_building_netcdf.html
+    # https://docs.unidata.ucar.edu/nug/current/getting_and_building_netcdf.html
     depends_on("curl@7.18.0:", when="+dap")
 
     # Need to include libxml2 when using DAP in 4.9.0 and newer to build
@@ -110,16 +110,16 @@ class NetcdfC(CMakePackage, AutotoolsPackage):
 
     # We need to build with MPI wrappers if any of the two
     # parallel I/O features is enabled:
-    # http://www.unidata.ucar.edu/software/netcdf/docs/getting_and_building_netcdf.html#build_parallel
+    # https://docs.unidata.ucar.edu/nug/current/getting_and_building_netcdf.html#build_parallel
     depends_on("mpi", when="+mpi")
     depends_on("mpi", when="+parallel-netcdf")
 
     # zlib 1.2.5 or later is required for netCDF-4 compression:
-    # http://www.unidata.ucar.edu/software/netcdf/docs/getting_and_building_netcdf.html
+    # https://docs.unidata.ucar.edu/nug/current/getting_and_building_netcdf.html
     depends_on("zlib@1.2.5:")
 
     # High-level API of HDF5 1.8.9 or later is required for netCDF-4 support:
-    # http://www.unidata.ucar.edu/software/netcdf/docs/getting_and_building_netcdf.html
+    # https://docs.unidata.ucar.edu/nug/current/getting_and_building_netcdf.html
     depends_on("hdf5@1.8.9:+hl")
 
     # Starting version 4.4.0, it became possible to disable parallel I/O even
