@@ -236,9 +236,9 @@ class Sirius(CMakePackage, CudaPackage, ROCmPackage):
     # versions below develop will simply ignore this dependency
     with when("+umpire"):
         depends_on("umpire")
-        depends_on("umpire+openmp", when("+openmp"))
-        depends_on("umpire+cuda", when("+cuda"))
-        depends_on("umpire+rocm", when("+rocm"))
+        depends_on("umpire+openmp", when=("+openmp"))
+        depends_on("umpire+cuda", when=("+cuda"))
+        depends_on("umpire+rocm", when=("+rocm"))
 
     patch("strip-spglib-include-subfolder.patch", when="@6.1.5")
     patch("link-libraries-fortran.patch", when="@6.1.5")
