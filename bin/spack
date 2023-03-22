@@ -32,7 +32,8 @@ import os.path
 import signal
 import sys
 
-signal.signal(signal.SIGPIPE, signal.SIG_DFL)
+if os.name == "posix":
+    signal.signal(signal.SIGPIPE, signal.SIG_DFL)
 
 min_python3 = (3, 6)
 
