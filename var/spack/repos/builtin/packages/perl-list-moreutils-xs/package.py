@@ -15,4 +15,5 @@ class PerlListMoreutilsXs(PerlPackage):
     homepage = "https://metacpan.org/pod/List::MoreUtils::XS"
     url = "https://cpan.metacpan.org/authors/id/R/RE/REHSACK/List-MoreUtils-XS-0.428.tar.gz"
 
+    version("0.430", sha256="e8ce46d57c179eecd8758293e9400ff300aaf20fefe0a9d15b9fe2302b9cb242")
     version("0.428", sha256="9d9fe621429dfe7cf2eb1299c192699ddebf060953e5ebdc1b4e293c6d6dd62d")
