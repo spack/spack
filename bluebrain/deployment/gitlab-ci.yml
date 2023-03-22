@@ -206,7 +206,7 @@ github_information:
     - spack concretize -f|tee "concretization_${DEPLOY_ENV}.txt"
     - installed-hashes -m|tee missing.txt
     # - if [[ -n "$(<missing.txt)" ]]; then
-    -     spack fetch -m
+    # -     spack fetch -m
     -     spack env depfile > Makefile
           # This should store all test results in unique XML files.
           #
