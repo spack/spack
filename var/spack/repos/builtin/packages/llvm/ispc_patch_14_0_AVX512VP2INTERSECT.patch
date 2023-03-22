@@ -1,0 +1,41 @@
+# This is backport of commit bd5722b87b5aa, which removes VP2INTERSECT for SPR.
+diff --git a/llvm/lib/Support/X86TargetParser.cpp b/llvm/lib/Support/X86TargetParser.cpp
+index 10f9692d217e..2a00e58e000c 100644
+--- a/llvm/lib/Support/X86TargetParser.cpp
++++ b/llvm/lib/Support/X86TargetParser.cpp
+@@ -203,10 +203,10 @@ constexpr FeatureBitset FeaturesTigerlake =
+     FeatureCLWB | FeatureMOVDIRI | FeatureSHSTK | FeatureKL | FeatureWIDEKL;
+ constexpr FeatureBitset FeaturesSapphireRapids =
+     FeaturesICLServer | FeatureAMX_BF16 | FeatureAMX_INT8 | FeatureAMX_TILE |
+-    FeatureAVX512BF16 | FeatureAVX512FP16 | FeatureAVX512VP2INTERSECT |
+-    FeatureAVXVNNI | FeatureCLDEMOTE | FeatureENQCMD | FeatureMOVDIR64B |
+-    FeatureMOVDIRI | FeaturePTWRITE | FeatureSERIALIZE | FeatureSHSTK |
+-    FeatureTSXLDTRK | FeatureUINTR | FeatureWAITPKG;
++    FeatureAVX512BF16 | FeatureAVX512FP16 | FeatureAVXVNNI | FeatureCLDEMOTE |
++    FeatureENQCMD | FeatureMOVDIR64B | FeatureMOVDIRI | FeaturePTWRITE |
++    FeatureSERIALIZE | FeatureSHSTK | FeatureTSXLDTRK | FeatureUINTR |
++    FeatureWAITPKG;
+ 
+ // Intel Atom processors.
+ // Bonnell has feature parity with Core2 and adds MOVBE.
+@@ -366,7 +366,7 @@ constexpr ProcInfo Processors[] = {
+   // Tigerlake microarchitecture based processors.
+   { {"tigerlake"}, CK_Tigerlake, FEATURE_AVX512VP2INTERSECT, FeaturesTigerlake },
+   // Sapphire Rapids microarchitecture based processors.
+-  { {"sapphirerapids"}, CK_SapphireRapids, FEATURE_AVX512VP2INTERSECT, FeaturesSapphireRapids },
++  { {"sapphirerapids"}, CK_SapphireRapids, FEATURE_AVX512BF16, FeaturesSapphireRapids },
+   // Alderlake microarchitecture based processors.
+   { {"alderlake"}, CK_Alderlake, FEATURE_AVX2, FeaturesAlderlake },
+   // Knights Landing processor.
+diff --git a/llvm/lib/Target/X86/X86.td b/llvm/lib/Target/X86/X86.td
+index bafba2ee09c3..9b6e0fe06583 100644
+--- a/llvm/lib/Target/X86/X86.td
++++ b/llvm/lib/Target/X86/X86.td
+@@ -858,7 +858,6 @@ def ProcessorFeatures {
+                                                   FeatureTSXLDTRK,
+                                                   FeatureENQCMD,
+                                                   FeatureSHSTK,
+-                                                  FeatureVP2INTERSECT,
+                                                   FeatureMOVDIRI,
+                                                   FeatureMOVDIR64B,
+                                                   FeatureUINTR];

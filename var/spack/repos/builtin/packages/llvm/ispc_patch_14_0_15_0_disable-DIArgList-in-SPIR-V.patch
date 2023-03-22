@@ -1,0 +1,25 @@
+# This patch is needed for ISPC for Xe only
+# It disables using of DIArgList for dbg.val if SPIR-V target is used.
+# It is needed till DIArgList is supported in SPIR-V Translator.
+diff --git a/llvm/lib/Transforms/Utils/Local.cpp b/llvm/lib/Transforms/Utils/Local.cpp
+index 1c350a258..55f783643 100644
+--- a/llvm/lib/Transforms/Utils/Local.cpp
++++ b/llvm/lib/Transforms/Utils/Local.cpp
+@@ -1798,7 +1798,16 @@ void llvm::salvageDebugInfoForDbgValues(
+     } else if (isa<DbgValueInst>(DII) && IsValidSalvageExpr &&
+                DII->getNumVariableLocationOps() + AdditionalValues.size() <=
+                    MaxDebugArgs) {
+-      DII->addVariableLocationOps(AdditionalValues, SalvagedExpr);
++      if (!Triple(I.getModule()->getTargetTriple()).isSPIR()) {
++        DII->addVariableLocationOps(AdditionalValues, SalvagedExpr);
++      } else {
++        // Do not salvage using DIArgList for dbg.addr/dbg.declare, as it is
++        // currently only valid for stack value expressions.
++        // Also do not salvage if the resulting DIArgList would contain an
++        // unreasonably large number of values.
++        Value *Undef = UndefValue::get(I.getOperand(0)->getType());
++        DII->replaceVariableLocationOp(I.getOperand(0), Undef);
++      }
+     } else {
+       // Do not salvage using DIArgList for dbg.addr/dbg.declare, as it is
+       // currently only valid for stack value expressions.

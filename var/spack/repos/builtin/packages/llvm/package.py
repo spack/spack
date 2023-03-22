@@ -194,6 +194,11 @@ class Llvm(CMakePackage, CudaPackage):
         "z3", default=False, when="+clang @8:", description="Use Z3 for the clang static analyzer"
     )
 
+    variant(
+        "ispc_patches",
+        default=False,
+        description="Apply patches needed for ISPC")
+
     provides("libllvm@14", when="@14.0.0:14")
     provides("libllvm@13", when="@13.0.0:13")
     provides("libllvm@12", when="@12.0.0:12")
@@ -347,6 +352,11 @@ class Llvm(CMakePackage, CudaPackage):
     # TODO: adjust version constraint and switch to fetching from the upstream GitHub repo
     #  when/if the bugfix is merged
     patch("D133513.diff", level=0, when="@14:15+lldb+python")
+
+    patch("ispc_patch_13_0_14_0_disable-A-B-A-B-and-BSWAP-in-InstCombine.patch", when="+ispc_patches")
+    patch("ispc_patch_14_0_15_0_disable-DIArgList-in-SPIR-V.patch", when="+ispc_patches")
+    patch("ispc_patch_14_0_AVX512VP2INTERSECT.patch", when="+ispc_patches")
+    patch("ispc_patch_14_0_fp16_converts.partial.fix.patch", when="+ispc_patches")
 
     # The functions and attributes below implement external package
     # detection for LLVM. See:

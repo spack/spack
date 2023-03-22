@@ -38,9 +38,10 @@ class Ispc(CMakePackage):
     depends_on("python", type="build")
     depends_on("bison", type="build")
     depends_on("flex", type="build")
-    depends_on("ncurses", type="link")
+    depends_on("ncurses@6.3.2", type="link")
     depends_on("zlib", type="link")
-    depends_on("llvm+clang")
+    depends_on("llvm+clang+ispc_patches")
+    depends_on("llvm@14+clang+ispc_patches", when="@1.19")
     depends_on("llvm@11:14", when="@1.18")
     depends_on("llvm@:12", when="@:1.16")
     depends_on("llvm@11:", when="@1.16")
@@ -67,8 +68,13 @@ class Ispc(CMakePackage):
 
    # inspired by https://zhangboyi.gitlab.io/post/2020-09-14-resolve-dso-missing-from-command-line-error/
    # leads to a different error though :(
-   #def setup_build_environment(self, env):
-   #    if self.spec.version == Version("1.19.0"):
+    def setup_build_environment(self, env):
+        if self.spec.version == Version("1.19.0"):
+            print(f"LLVM_HOME={self.spec['llvm'].prefix}")
+            print(f"ISPC_HOME={self.spec['ispc'].prefix}")
+            env.set("LLVM_HOME", self.spec["llvm"].prefix)
+            env.set("ISPC_HOME", self.spec["ispc"].prefix)
+            env.set("CMAKE_INSTALL_PREFIX_SCRIPT", self.spec["ispc"].prefix)
    #        env.append_flags("LDFLAGS", "-Wl,--copy-dt-needed-entries")
 
     def patch(self):
@@ -86,6 +92,9 @@ class Ispc(CMakePackage):
         args.append("-DISPC_INCLUDE_EXAMPLES=OFF")
         args.append("-DISPC_INCLUDE_TESTS=OFF")
         args.append("-DISPC_INCLUDE_UTILS=OFF")
+
+        # for arg in ["ARM_ENABLED", "WASM_ENABLED", "XE_ENABLED", "ISPC_INCLUDE_EXAMPLES", "ISPC_INCLUDE_DPCPP_EXAMPLES", "ISPC_INCLUDE_TESTS", "ISPC_INCLUDE_BENCHMARKS", "ISPC_INCLUDE_RT", "ISPC_INCLUDE_UTILS", "ISPC_PREPARE_PACKAGE", "ISPC_OPAQUE_PTR_MODE", "ISPC_CROSS", "ISPC_WINDOWS_TARGET", "ISPC_LINUX_TARGET", "ISPC_FREEBSD_TARGET", "ISPC_MACOS_TARGET", "ISPC_IOS_TARGET", "ISPC_ANDROID_TARGET", "ISPC_PS_TARGET", "ISPC_INCLUDE_XE_EXAMPLES", "ISPC_STATIC_STDCXX_LINK", "ISPC_STATIC_LINK", "ISPC_STATIC_LINK", "ISPC_USE_ASAN"]:
+        #     args.append(self.define(arg, False))
         return args
 
     @classmethod

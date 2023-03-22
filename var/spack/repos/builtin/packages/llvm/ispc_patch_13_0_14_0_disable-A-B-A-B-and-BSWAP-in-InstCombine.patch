@@ -1,0 +1,52 @@
+# This patch is needed for ISPC for Xe only
+
+# 1. Transformation of add to or is not safe for VC backend.
+# 2. bswap intrinsics is not supported in VC backend yet.
+diff --git a/llvm/lib/Transforms/InstCombine/InstCombineAddSub.cpp b/llvm/lib/Transforms/InstCombine/InstCombineAddSub.cpp
+index d01a021bf3f4..bccce825a03d 100644
+--- a/llvm/lib/Transforms/InstCombine/InstCombineAddSub.cpp
++++ b/llvm/lib/Transforms/InstCombine/InstCombineAddSub.cpp
+@@ -15,6 +15,7 @@
+ #include "llvm/ADT/APInt.h"
+ #include "llvm/ADT/STLExtras.h"
+ #include "llvm/ADT/SmallVector.h"
++#include "llvm/ADT/Triple.h"
+ #include "llvm/Analysis/InstructionSimplify.h"
+ #include "llvm/Analysis/ValueTracking.h"
+ #include "llvm/IR/Constant.h"
+@@ -1369,9 +1370,12 @@ Instruction *InstCombinerImpl::visitAdd(BinaryOperator &I) {
+     }
+   }
+ 
+-  // A+B --> A|B iff A and B have no bits set in common.
+-  if (haveNoCommonBitsSet(LHS, RHS, DL, &AC, &I, &DT))
+-    return BinaryOperator::CreateOr(LHS, RHS);
++  // Disable this transformation for ISPC SPIR-V
++  if (!Triple(I.getModule()->getTargetTriple()).isSPIR()) {
++    // A+B --> A|B iff A and B have no bits set in common.
++    if (haveNoCommonBitsSet(LHS, RHS, DL, &AC, &I, &DT))
++      return BinaryOperator::CreateOr(LHS, RHS);
++  }
+ 
+   // add (select X 0 (sub n A)) A  -->  select X A n
+   {
+diff --git a/llvm/lib/Transforms/InstCombine/InstCombineAndOrXor.cpp b/llvm/lib/Transforms/InstCombine/InstCombineAndOrXor.cpp
+index 120852c44474..8de55311ce3e 100644
+--- a/llvm/lib/Transforms/InstCombine/InstCombineAndOrXor.cpp
++++ b/llvm/lib/Transforms/InstCombine/InstCombineAndOrXor.cpp
+@@ -2671,9 +2671,12 @@ Instruction *InstCombinerImpl::visitOr(BinaryOperator &I) {
+   if (Instruction *FoldedLogic = foldBinOpIntoSelectOrPhi(I))
+     return FoldedLogic;
+ 
+-  if (Instruction *BitOp = matchBSwapOrBitReverse(I, /*MatchBSwaps*/ true,
+-                                                  /*MatchBitReversals*/ true))
+-    return BitOp;
++  // Disable this transformation for ISPC SPIR-V
++  if (!Triple(I.getModule()->getTargetTriple()).isSPIR()) {
++    if (Instruction *BitOp = matchBSwapOrBitReverse(I, /*MatchBSwaps*/ true,
++                                                    /*MatchBitReversals*/ true))
++      return BitOp;
++  }
+ 
+   if (Instruction *Funnel = matchFunnelShift(I, *this))
+     return Funnel;
