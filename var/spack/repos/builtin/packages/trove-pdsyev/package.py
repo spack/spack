@@ -33,7 +33,6 @@ class TrovePdsyev(MakefilePackage):
     parallel = False
 
     def edit(self, spec, prefix):
-
         if self.compiler.name != "intel":
             msg = "The compiler [{self.compiler.name}] is not supported yet."
             raise InstallError(msg)
@@ -57,9 +56,7 @@ class TrovePdsyev(MakefilePackage):
             makefile.filter(r"(.*) -use-intel-optimized-headers (.*)", r"\1 \2")
 
     def build(self, spec, prefix):
-
         make()
 
     def install(self, spec, prefix):
-
         make("install")

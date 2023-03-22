@@ -31,7 +31,6 @@ class Ramses(MakefilePackage):
     parallel = False
 
     def edit(self, spec, prefix):
-
         os.chdir(os.path.join(os.getcwd(), "SRC", "bin"))
         makefile = FileFilter("Makefile")
         makefile.filter(r"^PREFIX := .*", f"PREFIX = {prefix}")
@@ -49,9 +48,7 @@ class Ramses(MakefilePackage):
             raise InstallError(msg)
 
     def build(self, spec, prefix):
-
         make()
 
     def install(self, spec, prefix):
-
         make("install")

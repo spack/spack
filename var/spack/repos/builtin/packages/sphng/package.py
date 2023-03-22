@@ -29,7 +29,6 @@ class Sphng(MakefilePackage):
     parallel = False
 
     def edit(self, spec, prefix):
-
         self.fc = spack_fc if "~mpi" in spec else spec["mpi"].mpifc
 
         env["PREFIX"] = prefix
@@ -64,9 +63,7 @@ class Sphng(MakefilePackage):
         env["FFLAGS"] = fflags
 
     def build(self, spec, prefix):
-
         make("gradhrk")
 
     def install(self, spec, prefix):
-
         make("install")

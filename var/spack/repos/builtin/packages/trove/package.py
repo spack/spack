@@ -30,7 +30,6 @@ class Trove(MakefilePackage):
     parallel = False
 
     def edit(self, spec, prefix):
-
         self.fc = spack_fc if "~mpi" in spec else spec["mpi"].mpifc
 
         env["PREFIX"] = prefix
@@ -60,9 +59,7 @@ class Trove(MakefilePackage):
         env["LAPACK"] = lapack
 
     def build(self, spec, prefix):
-
         make("goal")
 
     def install(self, spec, prefix):
-
         make("install")
