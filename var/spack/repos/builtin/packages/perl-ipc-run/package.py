@@ -16,6 +16,9 @@ class PerlIpcRun(PerlPackage):
     url = "https://cpan.metacpan.org/authors/id/T/TO/TODDR/IPC-Run-20180523.0.tar.gz"
 
     version(
+        "20220807.0", sha256="277d781dbbc98af18e979c7ef36f222513d7361742c52507c3348b265f6f5e69"
+    )
+    version(
         "20180523.0", sha256="3850d7edf8a4671391c6e99bb770698e1c45da55b323b31c76310913349b6c2f"
     )
 
