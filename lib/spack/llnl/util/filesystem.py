@@ -528,7 +528,7 @@ def exploding_archive_handler(tarball_container, stage):
     if len(non_hidden) == 1:
         src = non_hidden[0]
         if src.is_dir():
-            stage.srcdir = str(src)
+            stage.srcdir = str(src.name)
             shutil.move(src, stage.source_path)
             if len(files) > 1:
                 files.remove(non_hidden[0])
