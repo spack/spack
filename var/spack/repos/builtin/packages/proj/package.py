@@ -57,6 +57,7 @@ class Proj(CMakePackage, AutotoolsPackage):
     variant("tiff", default=True, description="Enable TIFF support")
     variant("curl", default=True, description="Enable curl support")
     variant("shared", default=True, description="Enable shared libraries")
+    variant("pic", default=False, description="Enable position-independent code (PIC)")
 
     # https://github.com/OSGeo/PROJ#distribution-files-and-format
     # https://github.com/OSGeo/PROJ-data
@@ -153,6 +154,7 @@ class AutotoolsBuilder(BaseBuilder, autotools.AutotoolsBuilder):
                 args.append("--without-curl")
 
         args.extend(self.enable_or_disable("shared"))
+        args.extend(self.with_or_without("pic"))
 
         if self.spec["libtiff"].satisfies("+jpeg~shared"):
             args.append("LDFLAGS=%s" % self.spec["jpeg"].libs.ld_flags)
