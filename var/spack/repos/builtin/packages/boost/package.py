@@ -732,10 +732,7 @@ class Boost(Package):
         if jobs > 64 and spec.satisfies("@:1.58"):
             jobs = 64
 
-        b2_options = [
-            "-j",
-            "%s" % jobs,
-        ]
+        b2_options = ["-j", "%s" % jobs]
         if not self.spec.satisfies("platform=windows"):
             b2_options.append(path_to_config)
 
