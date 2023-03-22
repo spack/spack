@@ -580,7 +580,10 @@ class Hdf5(CMakePackage):
         if api != "default":
             args.append(self.define("DEFAULT_API_VERSION", api))
 
-        if "+mpi" in spec and "%msvc" not in spec:
+        # MSMPI does not vendor compiler wrappers
+        # and pointing these varibles at the msvc compilers
+        # breaks CMake's mpi detection for MSMPI.
+        if "+mpi" in spec and "msmpi" not in spec:
             args.extend(
                 [
                     "-DMPI_CXX_COMPILER:PATH=%s" % spec["mpi"].mpicxx,
