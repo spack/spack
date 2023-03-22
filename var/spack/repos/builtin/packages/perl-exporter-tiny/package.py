@@ -13,4 +13,5 @@ class PerlExporterTiny(PerlPackage):
     homepage = "https://metacpan.org/pod/Exporter::Tiny"
     url = "http://search.cpan.org/CPAN/authors/id/T/TO/TOBYINK/Exporter-Tiny-1.000000.tar.gz"
 
+    version("1.006000", sha256="d95479ff085699d6422f7fc8306db085e34b626438deb82ec82d41df2295f400")
     version("1.000000", sha256="ffdd77d57de099e8f64dd942ef12a00a3f4313c2531f342339eeed2d366ad078")
