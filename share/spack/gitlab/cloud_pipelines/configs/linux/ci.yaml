@@ -14,7 +14,7 @@ ci:
       - rocblas
       - visit
       build-job:
-        tags: [ "spack", "huge" ]
+        tags: [ "spack" ]
         variables:
           CI_JOB_SIZE: huge
           SPACK_BUILD_JOBS: "12"
@@ -75,7 +75,7 @@ ci:
       - wrf
       - wxwidgets
       build-job:
-        tags: [ "spack", "large" ]
+        tags: [ "spack" ]
         variables:
           CI_JOB_SIZE: large
           SPACK_BUILD_JOBS: "8"
@@ -169,7 +169,7 @@ ci:
       - vtk-m
       - zfp
       build-job:
-        tags: [ "spack", "medium" ]
+        tags: [ "spack" ]
         variables:
           CI_JOB_SIZE: "medium"
           SPACK_BUILD_JOBS: "2"
@@ -286,7 +286,7 @@ ci:
       - zlib
       - zstd
       build-job:
-        tags: [ "spack", "small" ]
+        tags: [ "spack" ]
         variables:
           CI_JOB_SIZE: "small"
           SPACK_BUILD_JOBS: "1"
