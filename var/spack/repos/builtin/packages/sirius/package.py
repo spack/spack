@@ -145,6 +145,7 @@ class Sirius(CMakePackage, CudaPackage, ROCmPackage):
     )
     variant("fortran", default=False, description="Build Fortran bindings")
     variant("python", default=False, description="Build Python bindings")
+    variant("umpire", default=True, description="Build with umpire memory pool")
     variant("memory_pool", default=True, description="Build with memory pool")
     variant("elpa", default=False, description="Use ELPA")
     variant("vdwxc", default=False, description="Enable libvdwxc support")
@@ -232,6 +233,13 @@ class Sirius(CMakePackage, CudaPackage, ROCmPackage):
 
     depends_on("costa+shared", when="@7.3.2:")
 
+    # versions below develop will simply ignore this dependency
+    with when("+umpire"):
+        depends_on("umpire")
+        depends_on("umpire+openmp", when("+openmp"))
+        depends_on("umpire+cuda", when("+cuda"))
+        depends_on("umpire+rocm", when("+rocm"))
+
     patch("strip-spglib-include-subfolder.patch", when="@6.1.5")
     patch("link-libraries-fortran.patch", when="@6.1.5")
     patch("cmake-fix-shared-library-installation.patch", when="@6.1.5")
@@ -267,6 +275,7 @@ class Sirius(CMakePackage, CudaPackage, ROCmPackage):
             self.define_from_variant("USE_MAGMA", "magma"),
             self.define_from_variant("USE_NLCGLIB", "nlcglib"),
             self.define_from_variant("USE_VDWXC", "vdwxc"),
+            self.define_from_variant("USE_MEMORY_POOL", "umpire"),
             self.define_from_variant("USE_MEMORY_POOL", "memory_pool"),
             self.define_from_variant("USE_SCALAPACK", "scalapack"),
             self.define_from_variant("CREATE_FORTRAN_BINDINGS", "fortran"),
