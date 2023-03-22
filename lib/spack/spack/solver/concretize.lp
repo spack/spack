@@ -489,8 +489,14 @@ activate_requirement(Package, X) :-
 impose(Y) :- activate_requirement_rule(Y, Package, X).
 do_not_impose(Y) :-
   not activate_requirement_rule(Y, Package, X),
-  requirement_conditional(Package, X),
   requirement_group_member(Y, Package, X).
+
+
+error(2, "cannot impose all the requirements for package '{0}'", Package)
+  :-  do_not_impose(Y),
+      condition_holds(Y),
+      not requirement_conditional(Package, X),
+      requirement_group_member(Y, Package, X).
 
 % Avoid impose(Y) to be derived by other rules when it is part of a requirement
 :- impose(Y),

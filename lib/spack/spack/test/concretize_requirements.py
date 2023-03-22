@@ -656,8 +656,30 @@ def test_requirements_from_packages_yaml(
 """,
             "mpileaks+debug",
             "debug is not allowed",
-        )
-        # TODO: improve error handling for compilers
+        ),
+        (
+            """\
+    packages:
+      libelf:
+        require:
+        - one_of: ["%clang"]
+          message: "can only be compiled with clang"
+""",
+            "libelf%gcc",
+            "can only be compiled with clang",
+        ),
+        (
+            """\
+        packages:
+          libelf:
+            require:
+            - one_of: ["%clang"]
+              when: platform=test
+              message: "can only be compiled with clang on the test platform"
+    """,
+            "libelf%gcc",
+            "can only be compiled with clang on ",
+        ),
     ],
 )
 def test_requirements_fail_with_custom_message(
