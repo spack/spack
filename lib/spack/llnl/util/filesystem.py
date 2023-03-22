@@ -2545,7 +2545,7 @@ def files_in(*search_paths):
         files.extend(
             filter(
                 lambda x: x[1].is_file(),
-                [(f, d / f) for f in list(d.iterdir())],
+                [(f.name, f) for f in list(d.iterdir())],
             )
         )
     # prevent pathlib Path from leaking out into rest of codebase
