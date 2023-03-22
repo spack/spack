@@ -1924,7 +1924,9 @@ class BuildProcessInstaller(object):
         with self.pkg.stage:
             # Run the pre-install hook in the child process after
             # the directory is created.
+            tty.debug("{0} install: running pre-install hooks".format(self.pkg_id))
             spack.hooks.pre_install(self.pkg.spec)
+            tty.debug("{0} install: pre-install hooks completed".format(self.pkg_id))
             if self.fake:
                 _do_fake_install(self.pkg)
             else:
@@ -1939,7 +1941,9 @@ class BuildProcessInstaller(object):
                 self.timer.write_json(timelog)
 
             # Run post install hooks before build stage is removed.
+            tty.debug("{0} install: running post-install hooks".format(self.pkg_id))
             spack.hooks.post_install(self.pkg.spec)
+            tty.debug("{0} install: post-install hooks completed".format(self.pkg_id))
 
         _print_timer(pre=self.pre, pkg_id=self.pkg_id, timer=self.timer)
         _print_installed_pkg(self.pkg.prefix)
@@ -1970,12 +1974,14 @@ class BuildProcessInstaller(object):
         with fs.working_dir(pkg.stage.source_path):
             # Save the build environment in a file before building.
             dump_environment(pkg.env_path)
+            tty.debug("{0} install: dumped environment".format(self.pre))
 
             # Save just the changes to the environment.  This file can be
             # safely installed, since it does not contain secret variables.
             with open(pkg.env_mods_path, "w") as env_mods_file:
                 mods = self.env_mods.shell_modifications(explicit=True, env=self.unmodified_env)
                 env_mods_file.write(mods)
+            tty.debug("{0} install: dumped environment actions".format(self.pre))
 
             for attr in ("configure_args", "cmake_args"):
                 try:
@@ -2002,6 +2008,9 @@ class BuildProcessInstaller(object):
                 log_file = os.path.join(log_dir, log_file)
 
                 try:
+                    tty.debug(
+                        "{0} install: phase loop iteration {1}".format(self.pre, phase_fn.name)
+                    )
                     # DEBUGGING TIP - to debug this section, insert an IPython
                     # embed here, and run the sections below without log capture
                     log_contextmanager = log_output(
