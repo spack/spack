@@ -2,6 +2,7 @@
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
+import collections
 import os
 import sys
 
@@ -193,15 +194,75 @@ def test_test_functions(mock_packages, install_mockery, virtuals, names):
     spec = spack.spec.Spec("printing-package").concretized()
     expected = "printing-package.test_print" if names else "test_print"
 
-    def check_results(fns):
-        tests = fns if names else [f.__name__ for f in fns]
-        assert len(tests) == 1, "expecting only one test function"
-        assert tests[0] == expected
-
     fns = spack.install_test.test_functions(spec.package, add_virtuals=virtuals, names=names)
-    check_results(fns)
+    tests = fns if names else [f.__name__ for f in fns]
+    assert len(tests) == 1, "expecting only one test function"
+    assert tests[0] == expected
 
-    fns = spack.install_test.test_functions(
-        spec.package.__class__, add_virtuals=virtuals, names=names
-    )
-    check_results(fns)
+
+# TODO: This test should go away when compilers as dependencies is supported
+def test_test_virtuals():
+    # This is an unrealistic case but it is set up to retrieve all possible
+    # virtual names in a single call.
+    def satisfies(spec):
+        return True
+
+    # Ensure spec will pick up the llvm+clang virtual compiler package names.
+    VirtualSpec = collections.namedtuple("VirtualSpec", ["name", "satisfies"])
+    vspec = VirtualSpec("llvm", satisfies)
+
+    # Ensure the package name is in the list that provides c, cxx, and fortran
+    # to pick up the three associated compilers and that virtuals provided will
+    # be deduped.
+    MyPackage = collections.namedtuple("MyPackage", ["name", "spec", "virtuals_provided"])
+    pkg = MyPackage("gcc", vspec, [vspec, vspec])
+
+    # This check assumes the method will not provide a unique set of
+    # compilers
+    v_names = spack.install_test.virtuals(pkg)
+    for name, number in [("c", 2), ("cxx", 2), ("fortran", 1), ("llvm", 1)]:
+        assert v_names.count(name) == number, "Expected {0} of '{1}'".format(number, name)
+
+
+def test_package_copy_test_files_fails(mock_packages):
+    vspec = spack.spec.Spec("something")
+
+    # Try without a package
+    with pytest.raises(spack.install_test.TestSuiteError) as exc_info:
+        spack.install_test.copy_test_files(None, vspec)
+    assert "without a package" in str(exc_info)
+
+    # Try with a package without a test suite
+    MyPackage = collections.namedtuple("MyPackage", ["name", "spec", "test_suite"])
+    pkg = MyPackage("SomePackage", vspec, None)
+
+    with pytest.raises(spack.install_test.TestSuiteError) as exc_info:
+        spack.install_test.copy_test_files(pkg, vspec)
+    assert "test suite is missing" in str(exc_info)
+
+
+def test_package_copy_test_files_skips(mock_packages, ensure_debug, capsys):
+    # Try with a non-concrete spec and package with a test suite
+    MockSuite = collections.namedtuple("TestSuite", ["specs"])
+    MyPackage = collections.namedtuple("MyPackage", ["name", "spec", "test_suite"])
+    vspec = spack.spec.Spec("something")
+    pkg = MyPackage("SomePackage", vspec, MockSuite([]))
+    spack.install_test.copy_test_files(pkg, vspec)
+    out = capsys.readouterr()
+    assert "skipping test data copy" in out[1]
+    assert "no package class found" in out[1]
+
+
+def test_test_parts_process_fails(mock_packages):
+    # Try without a package
+    with pytest.raises(spack.install_test.TestSuiteError) as exc_info:
+        spack.install_test.test_parts_process(None, [])
+    assert "without a package" in str(exc_info)
+
+    # Try with a package without a test suite
+    MyPackage = collections.namedtuple("MyPackage", ["name", "test_suite"])
+    pkg = MyPackage("SomePackage", None)
+
+    with pytest.raises(spack.install_test.TestSuiteError) as exc_info:
+        spack.install_test.test_parts_process(pkg, [])
+    assert "test suite is missing" in str(exc_info)

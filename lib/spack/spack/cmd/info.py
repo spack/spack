@@ -14,9 +14,9 @@ from llnl.util.tty.colify import colify
 
 import spack.cmd.common.arguments as arguments
 import spack.fetch_strategy as fs
+import spack.install_test
 import spack.repo
 import spack.spec
-from spack.install_test import test_functions
 from spack.package_base import preferred_version
 
 description = "get detailed information on a particular package"
@@ -261,7 +261,7 @@ def print_tests(pkg):
     # if it has been overridden and, therefore, assumed to be implemented.
     color.cprint("")
     color.cprint(section_title("Stand-Alone/Smoke Test Methods:"))
-    names = test_functions(pkg, add_virtuals=True, names=True)
+    names = spack.install_test.test_functions(pkg, add_virtuals=True, names=True)
     if names:
         colify(sorted(names), indent=4)
     else:

@@ -1900,12 +1900,12 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
 
         self.tester.stand_alone_tests(kwargs)
 
-    # TLD: Remove this once eliminate test() methods from packages
+    # Deprecated: Remove this once eliminate test() methods from packages
     def test(self):
         # Defer tests to virtual and concrete packages
         pass
 
-    # TODO/TLD: Begin run_test functionality to be replaced with test_part
+    # Deprecated: Begin run_test functionality to be replaced with test_part
     def run_test(
         self,
         exe,
@@ -1935,6 +1935,7 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
                 in the install prefix bin directory or the provided work_dir
             work_dir (str or None): path to the smoke test directory
         """
+        tty.warn("This method is deprecated.  Use 'test_part' instead.")
         wdir = "." if work_dir is None else work_dir
         with fsys.working_dir(wdir, create=True):
             try:
@@ -1998,6 +1999,7 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
                     self.tester.add_failure(exc, m)
                 return False
 
+    # Deprecated: remove when remove test() methods
     def _run_test_helper(self, runner, options, expected, status, installed, purpose):
         status = [status] if isinstance(status, int) else status
         expected = [expected] if isinstance(expected, str) else expected
@@ -2028,8 +2030,6 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
             msg = "Expected '{0}' to match output of `{1}`".format(check, cmd)
             msg += "\n\nOutput: {0}".format(output)
             assert re.search(check, output), msg
-
-    # TODO/TLD: End run_test functionality to replace
 
     def unit_test_check(self):
         """Hook for unit tests to assert things about package internals.

@@ -13,7 +13,7 @@ import re
 import shutil
 import sys
 from collections import Counter
-from typing import List, Tuple
+from typing import Callable, List, Optional, Tuple, Union
 
 import llnl.util.filesystem as fs
 import llnl.util.tty as tty
@@ -28,7 +28,7 @@ from spack.util.prefix import Prefix
 from spack.util.string import plural
 
 #: Stand-alone test failure info type
-TEST_FAILURE_TYPE = Tuple[Exception, str]
+TEST_FAILURE_TYPE = Tuple[BaseException, str]
 
 #: Name of the test suite's (JSON) lock file
 test_suite_filename = "test_suite.lock"
@@ -38,6 +38,10 @@ results_filename = "results.txt"
 
 #: Name of the Spack install phase-time test log file
 spack_install_test_log = "install-time-test-log.txt"
+
+
+ListOrStringType = Union[str, List[str]]
+SpecType = List[Spec]
 
 
 @enum.unique
@@ -88,7 +92,7 @@ def get_test_stage_dir():
     )
 
 
-def cache_extra_test_sources(pkg, srcs):
+def cache_extra_test_sources(pkg: "spack.package_base.PackageBase", srcs: ListOrStringType):
     """Copy relative source paths to the corresponding install test subdir
 
     This routine is intended as an optional install test setup helper for
@@ -97,11 +101,10 @@ def cache_extra_test_sources(pkg, srcs):
     during install testing.
 
     Args:
-        pkg (spack.package_base.PackageBase): package being tested
-        srcs (str or list): relative path for files and or
-            subdirectories located in the staged source path that are to
-            be copied to the corresponding location(s) under the install
-            testing directory.
+        pkg: package being tested
+        srcs: relative path for file(s) and or subdirectory(ies) located in
+            the staged source path that are to be copied to the corresponding
+            location(s) under the install testing directory.
     """
     paths = [srcs] if isinstance(srcs, str) else srcs
 
@@ -115,93 +118,77 @@ def cache_extra_test_sources(pkg, srcs):
             fs.copy(src_path, dest_path)
 
 
-def check_outputs(expected, actual):
+def check_outputs(expected: Union[list, set, str], actual: str):
     """Ensure the expected outputs are contained in the actual outputs.
 
     Args:
-        expected (list): list of expected raw output strings
-        actual (list): list of actual output strings
+        expected: expected raw output string(s)
+        actual: actual output string
 
     Raises:
-        AssertionError: raised if the expected output does not match actual
+        RuntimeError: the expected output is not found in the actual output
     """
+    expected = expected if isinstance(expected, (list, set)) else [expected]
     for check in expected:
-        msg = "Expected '{0}' to match actual output".format(check)
-        msg += "\n\nOutput: {0}".format(actual)
-        assert re.search(check, actual), msg
+        if not re.search(check, actual):
+            raise RuntimeError("Expected '{0}' in output '{1}'".format(check, actual))
 
 
-def find_required_file(root, filename, expected=1, recursive=True):
+def find_required_file(
+    root: str, filename: str, expected: int = 1, recursive: bool = True
+) -> ListOrStringType:
     """Find the required file(s) under the root directory.
 
     Args:
-       root (str): root directory for the search
-       filename (str): name of the file being located
-       expected (int): expected number of files to be found under the directory
+       root: root directory for the search
+       filename: name of the file being located
+       expected: expected number of files to be found under the directory
            (default is 1)
-       recursive (bool): True if subdirectories are to be searched, else False
-           (default is True)
+       recursive: ``True`` if subdirectories are to be searched, else ``False``
+           (default is ``True``)
 
-    Returns: str or list: the path or paths, relative to root, to the file(s)
+    Returns: the path(s), relative to root, to the required file(s)
 
     Raises:
-        Exception: Skip Test when number detected does not match expected
+        Exception: SkipTest when number of files detected does not match expected
     """
-
-    def copies(num):
-        if num == 0:
-            return "no copies"
-        if num == 1:
-            return "1 copy"
-        return "{0} copies"
-
     paths = fs.find(root, filename, recursive=recursive)
     num_paths = len(paths)
     if num_paths != expected:
         files = ": {0}".format(", ".join(paths)) if num_paths else ""
         raise SkipTest(
             "Expected {0} of {1} under {2} but {3} found{4}".format(
-                copies(expected), filename, root, copies(num_paths), files
+                plural(expected, "copy", "copies"),
+                filename,
+                root,
+                plural(num_paths, "copy", "copies"),
+                files,
             )
         )
 
     return paths[0] if expected == 1 else paths
 
 
-def install_test_root(pkg):
+def install_test_root(pkg: "spack.package_base.PackageBase"):
     """The install test root directory.
 
     Args:
-        pkg (spack.package_base.PackageBase): package being tested
+        pkg: package being tested
     """
     return os.path.join(pkg.metadata_dir, "test")
 
 
-def package_class(spec):
-    """Return the spec's package class.
-
-    Args:
-        spec (spack.spec.Spec): spec instance
-    """
-    try:
-        cls = spec.package.__class__
-    except AssertionError:
-        try:
-            cls = spec.package_class
-        except spack.repo.UnknownPackageError as e:
-            tty.debug("{0}: Cannot retrieve class from spec: {1}".format(spec.name, str(e)))
-            return None
-
-    return cls
+LogType = Union["tty.log.nixlog", "tty.log.winlog"]
 
 
-def print_message(logger, msg, verbose=False):
+def print_message(logger: LogType, msg: str, verbose: bool = False):
     """Print the message to the log, optionally echoing.
 
     Args:
-        logger (object): output logger (e.g. nixlog or winlog)
-        msg (str): message being output
-        verbose (bool): Display verbose output (suppress by default)
+        logger: instance of the output logger (e.g. nixlog or winlog)
+        msg: message being output
+        verbose: ``True`` displays verbose output, ``False`` suppresses
+            it (``False`` is default)
     """
     if verbose:
         with logger.force_echo():
@@ -213,10 +200,10 @@ def print_message(logger, msg, verbose=False):
 class PackageTest(object):
     """The class that manages stand-alone (post-install) package tests."""
 
-    def __init__(self, pkg):
+    def __init__(self, pkg: "spack.package_base.PackageBase"):
         """
         Args:
-            pkg (spack.package_base.PackageBase): package being tested
+            pkg: package being tested
 
         Raises:
             ValueError: if the package is not concrete
@@ -224,10 +211,12 @@ class PackageTest(object):
         if not pkg.spec.concrete:
             raise ValueError("Stand-alone tests require a concrete package")
 
+        self.counts: "Counter" = Counter()  # type: ignore[attr-defined]
         self.pkg = pkg
         self.test_failures: List[TEST_FAILURE_TYPE] = []
-        self.test_parts = []  # tuple of (test name, TestStatus)
-        self.counts = Counter()
+        self.test_parts: List[Tuple[str, "TestStatus"]] = []
+        self.test_log_file: str
+        self.pkg_id: str
 
         if pkg.test_suite:
             self.test_log_file = pkg.test_suite.log_file_for_spec(pkg.spec)
@@ -237,14 +226,14 @@ class PackageTest(object):
             self.test_log_file = fs.join_path(pkg.stage.path, spack_install_test_log)
             self.pkg_id = pkg.spec.format("{name}-{version}-{hash:7}")
 
-        fs.touch(self.test_log_file)  # otherwise log_parse complains
+        fs.touch(self.test_log_file)  # Otherwise log_parse complains
         fs.set_install_permissions(self.test_log_file)
 
         # Internal logger for test part processing
         self._logger = None
 
     @property
-    def logger(self):
+    def logger(self) -> object:
         """The current logger or, if none, sets to one."""
         if not self._logger:
             self._logger = tty.log.log_output(self.test_log_file)
@@ -252,14 +241,14 @@ class PackageTest(object):
         return self._logger
 
     @contextlib.contextmanager
-    def test_logger(self, verbose, externals):
+    def test_logger(self, verbose: bool, externals: bool):
         """Context manager for setting up the test logger
 
         Args:
-            verbose (bool): Display verbose output, including echoing to stdout,
+            verbose: Display verbose output, including echoing to stdout,
                 otherwise suppress it
-            externals (bool): ``True`` for performing tests if external package,
-                otherwise, don't perform the tests
+            externals: ``True`` for performing tests if external package,
+                ``False`` to skip them
         """
         with tty.log.log_output(self.test_log_file, verbose) as logger:
             with logger.force_echo():
@@ -277,32 +266,33 @@ class PackageTest(object):
                 tty.set_debug(old_debug)
 
     @property
-    def archived_install_test_log(self):
+    def archived_install_test_log(self) -> str:
         return fs.join_path(self.pkg.metadata_dir, spack_install_test_log)
 
-    def archive_install_test_log(self, dest_dir):
+    def archive_install_test_log(self, dest_dir: str):
         if os.path.exists(self.test_log_file):
             fs.install(self.test_log_file, self.archived_install_test_log)
 
-    def add_failure(self, exception, msg):
+    def add_failure(self, exception: Exception, msg: str):
         """Add the failure details to the current list."""
         self.test_failures.append((exception, msg))
 
-    def status(self, name, status):
-        """Log the test status (TestStatus) for the part name."""
+    def status(self, name: Optional[str], status: "TestStatus"):
+        """Log the test status for the part name."""
         extra = "::{0}".format(name) if name else ""
         part_name = "{0}{1}".format(self.pkg.__class__.__name__, extra)
         self.test_parts.append((part_name, status))
         self.counts[status] += 1
 
-    def phase_tests(self, builder, phase_name, method_names):
+    def phase_tests(
+        self, builder: spack.builder.Builder, phase_name: str, method_names: List[str]
+    ):
         """Execute the builder's package phase-time tests.
 
         Args:
-            builder (spack.builder.Builder): builder for package being tested
-            phase_name (str): the name of the build-time phase (e.g.,
-                ``build``, ``install``)
-            method_names (list): list of phase-specific callback method names
+            builder: builder for package being tested
+            phase_name: the name of the build-time phase (e.g., ``build``, ``install``)
+            method_names: phase-specific callback method names
         """
         verbose = tty.is_verbose()
         fail_fast = spack.config.get("config:fail_fast", False)
@@ -326,7 +316,7 @@ class PackageTest(object):
 
                     fn()
 
-                # TODO/TLD: Catch other exception to support test_* methods
+                # TODO/TBD: Do we want to treat these calls as test parts?
                 except AttributeError as e:
                     msg = "RUN-TESTS: method not implemented [{0}]".format(name)
                     print_message(logger, msg, verbose)
@@ -352,11 +342,11 @@ class PackageTest(object):
 
         spack.build_environment.start_build_process(self.pkg, test_process, kwargs)
 
-    def parts(self):
+    def parts(self) -> int:
         """The total number of (checked) test parts."""
         try:
             # New in Python 3.10
-            total = self.counts.total()
+            total = self.counts.total()  # type: ignore[attr-defined]
         except AttributeError:
             nums = [n for _, n in self.counts.items()]
             total = sum(nums)
@@ -373,8 +363,8 @@ class PackageTest(object):
 
         print("\nSee test results at:\n  {0}".format(log))
 
-    def ran_tests(self):
-        """True if ran tests, False otherwise."""
+    def ran_tests(self) -> bool:
+        """``True`` if ran tests, ``False`` otherwise."""
         return self.parts() > self.counts[TestStatus.NO_TESTS]
 
     def summarize(self):
@@ -382,7 +372,7 @@ class PackageTest(object):
         lines = []
         lines.append("{:=^80}".format(" SUMMARY: {0} ".format(self.pkg_id)))
         for name, status in self.test_parts:
-            # TODO/TBD/TLD: Should the pkg_id be listed?  If so, remove above
+            # TODO/TBD: Should the pkg_id be listed?  If so, remove above
             # msg = "{0}::{1} .. {2}\n".format(self.pkg_id, name, status)
             msg = "{0} .. {1}".format(name, status)
             lines.append(msg)
@@ -392,26 +382,15 @@ class PackageTest(object):
         lines.append("{:=^80}".format(totals))
         return lines
 
-    # TBD/TLD: Remove if this continues to not be used
-    def write_summary(self, filename, mode="w"):
-        lines = self.summarize()
-        with open(filename, mode) as f:
-            f.write("\n{0}\n".format("\n".join(lines)))
 
-
-def ensure_expected(output, expected):
-    """Ensure expected strings are in output."""
-    expected = expected if isinstance(expected, (list, set)) else [expected]
-    for check in expected:
-        msg = "Expected '{0}' in output '{1}'".format(check, output)
-        assert re.search(check, output), msg
-
-
-# TBD/TLD: Needs to replace run_test
-# TBD/TLD: Provide decorator/wrapper to auto pass name and (docstring) purpose
-# TBD/TLD:   *if* embedded within a test method
 @contextlib.contextmanager
-def test_part(pkg, test_name, purpose, work_dir=".", verbose=False):
+def test_part(
+    pkg: "spack.package_base.PackageBase",
+    test_name: str,
+    purpose: str,
+    work_dir: str = ".",
+    verbose: bool = False,
+):
     wdir = "." if work_dir is None else work_dir
     tester = pkg.tester
     # TODO: Replace "test" with "test_" when remove run_test, etc.
@@ -467,19 +446,23 @@ def test_part(pkg, test_name, purpose, work_dir=".", verbose=False):
                         lines = f.readlines()
                     new_lineno = lineno - 2
                     text = lines[new_lineno]
-                    stack[i] = (filename, new_lineno, function, text)
+                    if isinstance(entry, tuple):
+                        new_entry = (filename, new_lineno, function, text)
+                        stack[i] = new_entry  # type: ignore[call-overload]
+                    elif isinstance(entry, list):
+                        stack[i][1] = new_lineno  # type: ignore[index]
 
-            # Format the stack to print and print it
+            # Format and print the stack
             out = traceback.format_list(stack)
             for line in out:
                 print(line.rstrip("\n"))
 
             if exc_type is spack.util.executable.ProcessError:
-                out = io.StringIO()
+                iostr = io.StringIO()
                 spack.build_environment.write_log_summary(
-                    out, "test", tester.test_log_file, last=1
-                )
-                m = out.getvalue()
+                    iostr, "test", tester.test_log_file, last=1
+                )  # type: ignore[assignment]
+                m = iostr.getvalue()
             else:
                 # We're below the package context, so get context from
                 # stack instead of from traceback.
@@ -496,14 +479,13 @@ def test_part(pkg, test_name, purpose, work_dir=".", verbose=False):
                 tester.add_failure(exc, m)
 
 
-def test_phase_callbacks(builder, phase_name, method_names):
+def test_phase_callbacks(builder: spack.builder.Builder, phase_name: str, method_names: List[str]):
     """Execute the builder's package phase-time tests.
 
     Args:
-        builder (spack.builder.Builder): builder for package being tested
-        phase_name (str): the name of the build-time phase (e.g., ``build``,
-            ``install``)
-        method_names (list): list of phase-specific callback method names
+        builder: builder for package being tested
+        phase_name: the name of the build-time phase (e.g., ``build``, ``install``)
+        method_names: phase-specific callback method names
     """
     if not builder.pkg.run_tests or not method_names:
         return
@@ -511,33 +493,25 @@ def test_phase_callbacks(builder, phase_name, method_names):
     builder.pkg.tester.phase_tests(builder, phase_name, method_names)
 
 
-def virtuals(pkg):
-    """Return a list of unique virtuals for the package.
-
-    Args:
-        pkg (spack.package_base.PackageBase): package of interest
-    """
-    # provided virtuals have to be deduped by name
-    v_names = list(set([vspec.name for vspec in pkg.virtuals_provided]))
-
-    # hack for compilers that are not dependencies (yet)
-    # TODO: this all eventually goes away
-    c_names = ("gcc", "intel", "intel-parallel-studio", "pgi")
-    if pkg.name in c_names:
-        v_names.extend(["c", "cxx", "fortran"])
-    if pkg.spec.satisfies("llvm+clang"):
-        v_names.extend(["c", "cxx"])
-    return v_names
-
-
-def copy_test_files(pkg, test_spec):
+def copy_test_files(pkg: "spack.package_base.PackageBase", test_spec: spack.spec.Spec):
     """Copy the spec's cached and custom test files to the test stage directory.
 
     Args:
-        pkg (spack.package_base.PackageBase): package being tested
-        test_spec (spack.spec.Spec): spec being tested, where the spec may
-            be virtual
+        pkg: package being tested
+        test_spec: spec being tested, where the spec may be virtual
+
+    Raises:
+        TestSuiteError: package must be part of an active test suite
     """
+    if pkg is None or pkg.test_suite is None:
+        base = "Cannot copy test files"
+        msg = (
+            "{0} without a package".format(base)
+            if pkg is None
+            else "{0}: {1}: test suite is missing".format(pkg.name, base)
+        )
+        raise TestSuiteError(msg)
+
     # copy installed test sources cache into test stage dir
     if test_spec.concrete:
         cache_source = install_test_root(test_spec.package)
@@ -546,8 +520,9 @@ def copy_test_files(pkg, test_spec):
             fs.install_tree(cache_source, cache_dir)
 
     # copy test data into test stage data dir
-    pkg_cls = package_class(test_spec)
-    if not pkg_cls:
+    try:
+        pkg_cls = test_spec.package_class
+    except spack.repo.UnknownPackageError:
         tty.debug(
             "{0}: skipping test data copy since no package class found".format(test_spec.name)
         )
@@ -562,65 +537,70 @@ def copy_test_files(pkg, test_spec):
         shutil.copytree(data_source, data_dir)
 
 
-def test_functions(spec_or_pkg, add_virtuals=False, names=False):
-    """Grab all non-pass-only test functions (names) associated with the spec or package.
+FunctionType = Union[str, Callable]
+FunctionResult = List[FunctionType]
+
+
+def test_functions(
+    pkg: "spack.package_base.PackageBase", add_virtuals: bool = False, names: bool = False
+) -> FunctionResult:
+    """Grab all non-empty test functions.
 
     Args:
-        spec_or_pkg (spack.spec.Spec or spack.package_base.PackageBase): spec or package (class)
-        add_virtuals (bool): True to add test methods of provided package virtual
-        names (bool): True results in the return of test function names
+        pkg: package of interest
+        add_virtuals: ``True`` adds test methods of provided package
+            virtual, ``False`` only returns test functions of the package
+        names: ``True`` returns test function names, ``False`` returns functions
 
-    Returns: list of test functions or function names
-
-    Raises: ValueError:
+    Returns: test functions or their names
     """
-    if isinstance(spec_or_pkg, spack.spec.Spec):
-        spec = spec_or_pkg
-        cls = package_class(spec)
-        if not cls:
-            tty.debug("Skipping {0}: no package class found".format(spec.name))
-            return []
-    elif isinstance(spec_or_pkg, spack.package_base.PackageBase):
-        pkg = spec_or_pkg
-        cls = pkg.__class__
-        if add_virtuals:
-            methods = []
-            v_names = virtuals(pkg)
-            test_specs = [pkg.spec] + [spack.spec.Spec(v_name) for v_name in sorted(v_names)]
-            for spec in test_specs:
-                methods.extend(test_functions(spec, names=names))
-            return methods
+    pkg_cls = pkg.__class__
+    classes = [pkg_cls]
+    if add_virtuals:
+        classes.extend([(Spec(name)).package_class for name in sorted(virtuals(pkg))])
 
-    elif inspect.isclass(spec_or_pkg):
-        cls = spec_or_pkg
-
-    else:
-        raise ValueError("Cannot retrieve test methods for {0}".format(spec_or_pkg))
-
-    methods = inspect.getmembers(cls, predicate=lambda x: inspect.isfunction(x))
+    fmt = pkg_cls.name.lower() + ".{0}"
     tests = []
-    for name, test_fn in methods:
-        if not name.startswith("test"):
-            continue
+    for cls in classes:
+        methods = inspect.getmembers(cls, predicate=lambda x: inspect.isfunction(x))
+        for name, test_fn in methods:
+            # TODO: Change to test_ once eliminate PackageBase.test()
+            if not name.startswith("test"):
+                continue
 
-        source = (inspect.getsource(test_fn)).splitlines()[1:]
-        lines = (ln.strip() for ln in source)
-        statements = [ln for ln in lines if not ln.startswith("#")]
-        empty = len(statements) > 0 and statements[0] == "pass"
-        if not empty:
-            tests.append("{0}.{1}".format(cls.name.lower(), name) if names else test_fn)
+            # TBD: Remove empty method check once eliminate PackageBase.test()
+            source = (inspect.getsource(test_fn)).splitlines()[1:]
+            lines = [ln.strip() for ln in source if not ln.strip().startswith("#")]
+            if len(lines) > 0 and lines[0] == "pass":
+                continue
+
+            tests.append(fmt.format(name) if names else test_fn)
+
     return tests
 
 
-def test_parts_process(pkg, test_specs, logger, verbose=False):
+def test_parts_process(
+    pkg: "spack.package_base.PackageBase", test_specs: List[spack.spec.Spec], verbose: bool = False
+):
     """Process test parts associated with the package.
 
     Args:
-        pkg (spack.package_base.PackageBase): package being tested
-        test_specs (list): list of test specs
-        logger (object): output logger (e.g. nixlog or winlog)
-        verbose (bool): Display verbose output (suppress by default)
+        pkg: package being tested
+        test_specs: list of test specs
+        verbose: Display verbose output (suppress by default)
+
+    Raises:
+        TestSuiteError: package must be part of an active test suite
     """
+    if pkg is None or pkg.test_suite is None:
+        base = "Cannot process tests"
+        msg = (
+            "{0} without a package".format(base)
+            if pkg is None
+            else "{0}: {1}: test suite is missing".format(pkg.name, base)
+        )
+        raise TestSuiteError(msg)
+
     test_suite = pkg.test_suite
     tester = pkg.tester
     try:
@@ -630,7 +610,7 @@ def test_parts_process(pkg, test_specs, logger, verbose=False):
 
             # grab test functions associated with the spec, which may be a
             # virtual spec
-            tests = test_functions(spec, names=False)
+            tests = test_functions(spec.package_class, names=False)
             if len(tests) == 0:
                 tester.status("", TestStatus.NO_TESTS)
                 continue
@@ -672,7 +652,7 @@ def test_parts_process(pkg, test_specs, logger, verbose=False):
             tty.msg("No tests to run")
 
 
-def test_process(pkg, kwargs):
+def test_process(pkg: "spack.package_base.PackageBase", kwargs):
     verbose = kwargs.get("verbose", True)
     externals = kwargs.get("externals", False)
 
@@ -690,7 +670,28 @@ def test_process(pkg, kwargs):
         # run test methods from the package and all virtuals it provides
         v_names = virtuals(pkg)
         test_specs = [pkg.spec] + [spack.spec.Spec(v_name) for v_name in sorted(v_names)]
-        test_parts_process(pkg, test_specs, logger, verbose)
+        test_parts_process(pkg, test_specs, verbose)
+
+
+def virtuals(pkg):
+    """Return a list of unique virtuals for the package.
+
+    Args:
+        pkg: package of interest
+
+    Returns: names of unique virtual packages
+    """
+    # provided virtuals have to be deduped by name
+    v_names = list(set([vspec.name for vspec in pkg.virtuals_provided]))
+
+    # hack for compilers that are not dependencies (yet)
+    # TODO: this all eventually goes away
+    c_names = ("gcc", "intel", "intel-parallel-studio", "pgi")
+    if pkg.name in c_names:
+        v_names.extend(["c", "cxx", "fortran"])
+    if pkg.spec.satisfies("llvm+clang"):
+        v_names.extend(["c", "cxx"])
+    return v_names
 
 
 def get_all_test_suites():
@@ -724,7 +725,7 @@ def get_named_test_suites(name):
         list: a list of matching TestSuite instances, which may be empty if none
 
     Raises:
-        TestSuiteNameError: If no name is provided
+        Exception: TestSuiteNameError if no name is provided
     """
     if not name:
         raise TestSuiteNameError("Test suite name is required.")
@@ -733,22 +734,22 @@ def get_named_test_suites(name):
     return [ts for ts in test_suites if ts.name == name]
 
 
-def get_test_suite(name):
+def get_test_suite(name: str) -> Optional["TestSuite"]:
     """Ensure there is only one matching test suite with the provided name.
 
     Returns:
-        str or None: the name if one matching test suite, else None
+        the name if one matching test suite, else None
 
     Raises:
-        TestSuiteNameError: If there is more than one matching TestSuite
+        TestSuiteNameError: If there are more than one matching TestSuites
     """
-    names = get_named_test_suites(name)
-    if len(names) > 1:
-        raise TestSuiteNameError('Too many suites named "{0}".  May shadow hash.'.format(name))
+    suites = get_named_test_suites(name)
+    if len(suites) > 1:
+        raise TestSuiteNameError("Too many suites named '{0}'. May shadow hash.".format(name))
 
-    if not names:
+    if not suites:
         return None
-    return names[0]
+    return suites[0]
 
 
 def write_test_suite_file(suite):
@@ -757,13 +758,16 @@ def write_test_suite_file(suite):
         sjson.dump(suite.to_dict(), stream=f)
 
 
-def write_test_summary(counts):
-    """Write a well formatted summary of the totals for each relevant status
-    category."""
+def write_test_summary(counts: "Counter"):
+    """Write summary of the totals for each relevant status category.
+
+    Args:
+        counts: counts of the occurrences of relevant test status types
+    """
     summary = ["{0} {1}".format(n, s.lower()) for s, n in counts.items() if n > 0]
     try:
         # New in Python 3.10
-        total = counts.total()
+        total = counts.total()  # type: ignore[attr-defined]
     except AttributeError:
         nums = [n for _, n in counts.items()]
         total = sum(nums)
@@ -786,7 +790,7 @@ class TestSuite(object):
         self._hash = None
         self._stage = None
 
-        self.counts = Counter()
+        self.counts: "Counter" = Counter()
 
     @property
     def name(self):
@@ -839,7 +843,7 @@ class TestSuite(object):
                 if remove_directory:
                     shutil.rmtree(test_dir)
 
-                # TODO/TBD/TLD: Extract test parts from the tested file???
+                # TBD: Should test parts be written and extracted from tested file?
                 tested = os.path.exists(self.tested_file_for_spec(spec))
                 if tested:
                     status = TestStatus.PASSED
@@ -857,6 +861,8 @@ class TestSuite(object):
             except BaseException as exc:
                 status = TestStatus.FAILED
                 self.counts[status] += 1
+                tty.debug("Test failure: {0}".format(str(exc)))
+
                 if isinstance(exc, (SyntaxError, TestSuiteSpecError)):
                     # Create the test log file and report the error.
                     self.ensure_stage()
@@ -919,7 +925,7 @@ class TestSuite(object):
         """The standard install test package identifier.
 
         Args:
-            spec (spack.spec.Spec): instance of the spec under test
+            spec: instance of the spec under test
 
         Returns:
             str: the install test package identifier
@@ -1066,9 +1072,8 @@ class TestSuite(object):
             specs: list of the test suite's specs in dictionary form
             alias: the test suite alias
 
-
         Returns:
-            TestSuite: Instance of TestSuite created from the specs
+            TestSuite: Instance created from the specs
         """
         specs = [Spec.from_dict(spec_dict) for spec_dict in d["specs"]]
         alias = d.get("alias", None)
@@ -1082,6 +1087,9 @@ class TestSuite(object):
         Args:
             filename (str): The path to the JSON file containing the test
                 suite specs and optional alias.
+
+        Raises:
+            BaseException: sjson.SpackJSONError if problem parsing the file
         """
         try:
             with open(filename, "r") as f:
@@ -1091,7 +1099,7 @@ class TestSuite(object):
                 test_suite._hash = content_hash
                 return test_suite
         except Exception as e:
-            raise sjson.SpackJSONError("error parsing JSON TestSuite:", str(e)) from e
+            raise sjson.SpackJSONError("error parsing JSON TestSuite:", e)
 
 
 def _add_msg_to_file(filename, msg):
@@ -1112,7 +1120,7 @@ class SkipTest(spack.error.SpackError):
 class TestFailure(spack.error.SpackError):
     """Raised when package tests have failed for an installation."""
 
-    def __init__(self, failures):
+    def __init__(self, failures: List[TEST_FAILURE_TYPE]):
         # Failures are all exceptions
         num = len(failures)
         msg = "{0} failed.\n".format(plural(num, "test"))
@@ -1121,6 +1129,10 @@ class TestFailure(spack.error.SpackError):
             msg += "\n%s\n" % message
 
         super(TestFailure, self).__init__(msg)
+
+
+class TestSuiteError(spack.error.SpackError):
+    """Raised when there is an error with the test suite."""
 
 
 class TestSuiteFailure(spack.error.SpackError):

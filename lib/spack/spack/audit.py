@@ -289,6 +289,7 @@ def _check_build_test_callbacks(pkgs, error_cls):
         pkg_cls = spack.repo.path.get_pkg_class(pkg_name)
         test_callbacks = getattr(pkg_cls, "build_time_test_callbacks", None)
 
+        # TODO: change "test" and "test*" to "test_" and "test_*" once remove "test"
         has_test_method = test_callbacks and any([m.startswith("test") for m in test_callbacks])
         if has_test_method:
             msg = '{0} package contains "test*" method(s) in ' "build_time_test_callbacks"

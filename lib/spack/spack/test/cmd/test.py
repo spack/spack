@@ -103,10 +103,6 @@ def test_test_output_on_error(
     with capfd.disabled():
         out = spack_test("run", "test-error", fail_on_error=False)
 
-    # Aid debugging
-    for ln in out.split("\n"):
-        print(ln)
-
     assert "TestFailure" in out
     assert "Command exited with status 1" in out
 
@@ -122,10 +118,6 @@ def test_test_output_on_failure(
             err_msg = str(e)
             assert "noop" in err_msg
             assert "not defined" in err_msg
-
-    # Aid debugging
-    for ln in out.split("\n"):
-        print(ln)
 
     assert "TestFailure" in out
     assert "Command exited with status 1" in out

@@ -1644,6 +1644,8 @@ class Spec(object):
         """Internal package call gets only the class object for a package.
         Use this to just get package metadata.
         """
+        if self.concrete:
+            return self._package.__class__
         return spack.repo.path.get_pkg_class(self.fullname)
 
     @property
