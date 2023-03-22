@@ -76,6 +76,7 @@ class Libtiff(CMakePackage, AutotoolsPackage):
     build_system(conditional("cmake", when="@4.0.5:"), "autotools", default="cmake")
 
     variant("shared", default=True, description="Build shared")
+    variant("pic", default=False, description="Enable position-independent code (PIC)")
 
     with when("build_system=cmake"):
         depends_on("cmake@3.9:", when="@4.3:", type="build")
@@ -115,6 +116,8 @@ class CMakeBuilder(CMakeBuilder):
         args = [self.define_from_variant(var) for var in VARIANTS]
         args.append("-Dsphinx=OFF")
         args += [self.define_from_variant("BUILD_SHARED_LIBS", "shared")]
+#        args += [self.define_from_variant("CMAKE_POSITION_INDEPENDENT_CODE", "pic")]
+        args += ["-DCMAKE_POSITION_INDEPENDENT_CODE=ON"]
 
         # Remove empty strings
         args = [arg for arg in args if arg]
@@ -131,5 +134,6 @@ class AutotoolsBuilder(AutotoolsBuilder):
         args.append("--disable-sphinx")
 
         args.extend(self.enable_or_disable("shared"))
+        args.extend(self.with_or_without("pic"))
 
         return args
