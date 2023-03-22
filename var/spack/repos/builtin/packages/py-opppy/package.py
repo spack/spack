@@ -26,7 +26,6 @@ class PyOpppy(PythonPackage):
     version("0_1_1", sha256="505c023853e75552abc65de9777a125ecb6a99a1cb4e605a4f702af837e3168b")
 
     depends_on("py-setuptools", type=("build"))
-    depends_on("py-sphinx", type=("build"))
     depends_on("py-numpy@1.6:", type=("build", "run"))
     depends_on("python@3:", type=("build", "run"))
     depends_on("py-scipy", type=("build", "run"))
