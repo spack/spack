@@ -12,15 +12,15 @@ class PyPennylane(PythonPackage):
 
     homepage = "https://docs.pennylane.ai/"
     git = "https://github.com/PennyLaneAI/pennylane.git"
-    pypi = "PennyLane/PennyLane-0.28.0.tar.gz"
+    url = "https://github.com/PennyLaneAI/pennylane/archive/refs/tags/v0.29.1.tar.gz"
 
     maintainers("mlxd", "AmintorDusko", "marcodelapierre")
 
     version("master", branch="master")
-    version("0.29.1", sha256="c5d662994b741afa69e4fdadc79a1b75840275138a8b7e0cfc5fd64b66a12eef")
+    version("0.29.1", sha256="6ecfb305a3898347df8c539a89a67e748766941d159dbef9e34864872f13c45c")
     version(
         "0.28.0",
-        sha256="2a6100c00277c1eb59eab6856cdad7b1237e9d1fbda98b1e15020bd5a64b10a8",
+        sha256="7736a17dc972d918e3a737ce4360d16ac84b9f9f6fca440f167de579c926c114",
         deprecated=True,
     )
 
