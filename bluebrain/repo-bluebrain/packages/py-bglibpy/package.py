@@ -14,6 +14,7 @@ class PyBglibpy(PythonPackage):
 
     version("develop", branch="main")
     version("4.8.2", commit="0d72a870f39da8201bf0f6dd8171984a89372cff")
+    version("4.10.1", commit="50ec3f984103882f603d48b1a1dacc489d5361da")
 
     depends_on("py-setuptools", type=("build", "run"))
     depends_on("neuron+python", type=("build", "run"))
