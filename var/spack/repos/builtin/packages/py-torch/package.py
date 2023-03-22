@@ -111,6 +111,9 @@ class PyTorch(PythonPackage, CudaPackage, ROCmPackage):
     # https://github.com/pytorch/pytorch/issues/77811
     conflicts("+qnnpack", when="platform=darwin target=aarch64:")
 
+    # https://github.com/pytorch/pytorch/issues/80805
+    conflicts("+openmp", when="platform=darwin target=aarch64:")
+
     conflicts(
         "cuda_arch=none",
         when="+cuda",
