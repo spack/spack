@@ -2,13 +2,16 @@
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
+import os
+
 import llnl.util.filesystem as fs
 import llnl.util.tty as tty
 
+from spack.build_systems import autotools, nmake
 from spack.package import *
 
 
-class Libxml2(AutotoolsPackage):
+class Libxml2(AutotoolsPackage, NMakePackage):
     """Libxml2 is the XML C parser and toolkit developed for the Gnome
     project (but usable outside of the Gnome platform), it is free
     software available under the MIT License."""
@@ -39,8 +42,10 @@ class Libxml2(AutotoolsPackage):
 
     variant("python", default=False, description="Enable Python support")
 
-    depends_on("pkgconfig@0.9.0:", type="build")
-    depends_on("iconv")
+    depends_on("pkgconfig@0.9.0:", type="build", when="build_system=autotools")
+    # conditional on non Windows, but rather than specify for each platform
+    # specify for non Windows builder, which has equivalent effect
+    depends_on("iconv", when="build_system=autotools")
     depends_on("zlib")
     depends_on("xz")
 
@@ -70,6 +75,7 @@ class Libxml2(AutotoolsPackage):
         sha256="3e06d42596b105839648070a5921157fe284b932289ffdbfa304ddc3457e5637",
         when="@2.9.11:2.9.14",
     )
+    build_system(conditional("nmake", when="platform=windows"), "autotools", default="autotools")
 
     @property
     def command(self):
@@ -81,26 +87,6 @@ class Libxml2(AutotoolsPackage):
         hl = find_all_headers(include_dir)
         hl.directories = [include_dir, self.spec.prefix.include]
         return hl
-
-    def configure_args(self):
-        spec = self.spec
-
-        args = [
-            "--with-lzma={0}".format(spec["xz"].prefix),
-            "--with-iconv={0}".format(spec["iconv"].prefix),
-        ]
-
-        if "+python" in spec:
-            args.extend(
-                [
-                    "--with-python={0}".format(spec["python"].home),
-                    "--with-python-install-dir={0}".format(python_platlib),
-                ]
-            )
-        else:
-            args.append("--without-python")
-
-        return args
 
     def patch(self):
         # Remove flags not recognized by the NVIDIA compiler
@@ -114,13 +100,6 @@ class Libxml2(AutotoolsPackage):
                 "configure",
             )
             filter_file("-Wno-long-long -Wno-format-extra-args", "", "configure")
-
-    @run_after("install")
-    @on_package_attributes(run_tests=True)
-    def import_module_test(self):
-        if "+python" in self.spec:
-            with working_dir("spack-test", create=True):
-                python("-c", "import libxml2")
 
     def test(self):
         """Perform smoke tests on the installed package"""
@@ -157,3 +136,61 @@ class Libxml2(AutotoolsPackage):
 
         # Perform some cleanup
         fs.force_remove(test_filename)
+
+
+class RunAfter(object):
+    @run_after("install")
+    @on_package_attributes(run_tests=True)
+    def import_module_test(self):
+        if "+python" in self.spec:
+            with working_dir("spack-test", create=True):
+                python("-c", "import libxml2")
+
+
+class AutotoolsBuilder(autotools.AutotoolsBuilder, RunAfter):
+    def configure_args(self):
+        spec = self.spec
+
+        args = [
+            "--with-lzma={0}".format(spec["xz"].prefix),
+            "--with-iconv={0}".format(spec["iconv"].prefix),
+        ]
+
+        if "+python" in spec:
+            args.extend(
+                [
+                    "--with-python={0}".format(spec["python"].home),
+                    "--with-python-install-dir={0}".format(python_platlib),
+                ]
+            )
+        else:
+            args.append("--without-python")
+
+        return args
+
+
+class NMakeBuilder(nmake.NMakeBuilder, RunAfter):
+    phases = ("configure", "build", "install")
+
+    @property
+    def makefile_name(self):
+        return "Makefile.msvc"
+
+    @property
+    def build_directory(self):
+        return os.path.join(self.stage.source_path, "win32")
+
+    def configure(self, pkg, spec, prefix):
+        with working_dir(self.build_directory):
+            opts = [
+                "prefix=%s" % prefix,
+                "compiler=msvc",
+                "iconv=no",
+                "zlib=yes",
+                "lzma=yes",
+                "lib=%s" % ";".join((spec["zlib"].prefix.lib, spec["xz"].prefix.lib)),
+                "include=%s" % ";".join((spec["zlib"].prefix.include, spec["xz"].prefix.include)),
+            ]
+            if "+python" in spec:
+                opts.append("python=yes")
+            cscript("configure.js", *opts)
