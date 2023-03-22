@@ -108,9 +108,7 @@ class Mvapich2(AutotoolsPackage):
         "alloca", default=False, description="Use alloca to allocate temporary memory if available"
     )
 
-    variant(
-        "hwlocv2", default=False, description="Builds mvapich2 with hwloc v2"
-    )
+    variant("hwlocv2", default=False, description="Builds mvapich2 with hwloc v2")
     variant(
         "file_systems",
         description="List of the ROMIO file systems to activate",
