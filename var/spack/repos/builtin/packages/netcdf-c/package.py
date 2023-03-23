@@ -6,9 +6,12 @@
 import os
 import sys
 
+from llnl.util.lang import dedupe
+
 import spack.builder
 from spack.build_systems import autotools, cmake
 from spack.package import *
+from spack.util.environment import is_system_path
 
 
 class NetcdfC(CMakePackage, AutotoolsPackage):
@@ -288,27 +291,45 @@ class AutotoolsBuilder(BackupStep, Setup, autotools.AutotoolsBuilder):
         if "+mpi" in self.spec or "+parallel-netcdf" in self.spec:
             config_args.append("CC=%s" % self.spec["mpi"].mpicc)
 
-        ldflags = []
-        libs = []
+        # In general, we rely on the compiler wrapper to inject the required CPPFLAGS and LDFLAGS.
+        # However, the injected LDFLAGS are invisible for the configure script and are added
+        # neither to the pkg-config nor to the nc-config files. Therefore, we generate LDFLAGS
+        # based on the contents of the following list and pass them to the configure script:
+        lib_search_dirs = []
+
+        # In general, we rely on the configure script to generate the required linker flags in the
+        # right order. However, the configure script does not know and does not check for several
+        # possible transitive dependencies and we have to pass them as the LIBS argument. The list
+        # is generated based on the contents of the following list:
+        extra_libs = []
 
         if "+parallel-netcdf" in self.spec:
-            ldflags.append(self.spec["parallel-netcdf"].libs.search_flags)
+            lib_search_dirs.extend(self.spec["parallel-netcdf"].libs.directories)
 
         if "+hdf4" in self.spec:
-            hdf4_libs = self.spec["hdf:transitive"].libs
-            ldflags.append(hdf4_libs.search_flags)
-            libs.append(hdf4_libs.link_flags)
+            hdf = self.spec["hdf"]
+            lib_search_dirs.extend(hdf.libs.directories)
+            # The configure script triggers unavoidable overlinking to jpeg:
+            lib_search_dirs.extend(hdf["jpeg"].libs.directories)
+            if "~shared" in hdf:
+                # We do not use self.spec["hdf:transitive"].libs to avoid even more duplicates
+                # introduced by the configure script:
+                if "+szip" in hdf:
+                    extra_libs.append(hdf["szip"].libs)
+                if "+external-xdr" in hdf:
+                    extra_libs.append(hdf["rpc"].libs)
+                extra_libs.append(hdf["zlib"].libs)
 
-        hdf5_hl = self.spec["hdf5:hl"]
-        ldflags.append(hdf5_hl.libs.search_flags)
-        if "~shared" in hdf5_hl:
-            hdf5_transitive_libs = hdf5_hl["zlib"].libs
-            if "+szip" in hdf5_hl:
-                hdf5_transitive_libs += hdf5_hl["szip"].libs
-            ldflags.append(hdf5_transitive_libs.search_flags)
-            libs.append(hdf5_transitive_libs.link_flags)
+        hdf5 = self.spec["hdf5:hl"]
+        lib_search_dirs.extend(hdf5.libs.directories)
+        if "~shared" in hdf5:
+            if "+szip" in hdf5:
+                extra_libs.append(hdf5["szip"].libs)
+            extra_libs.append(hdf5["zlib"].libs)
 
-        if not self.spec.satisfies("@4.9.0:+shared"):
+        if self.spec.satisfies("@4.9.0:+shared"):
+            lib_search_dirs.extend(self.spec["zlib"].libs.directories)
+        else:
             # Prevent overlinking to zlib:
             config_args.append("ac_cv_search_deflate=")
 
@@ -316,33 +337,49 @@ class AutotoolsBuilder(BackupStep, Setup, autotools.AutotoolsBuilder):
             # Prevent linking to system libzip:
             config_args.append("ac_cv_lib_zip_zip_open=no")
 
-        if self.spec.satisfies("@4.9.0:~szip"):
+        if "+szip" in self.spec:
+            lib_search_dirs.extend(self.spec["szip"].libs.directories)
+        elif self.spec.satisfies("@4.9.0:"):
             # Prevent linking to szip to disable the plugin:
             config_args.append("ac_cv_lib_sz_SZ_BufftoBuffCompress=no")
 
-        if self.spec.satisfies("@4.9.0:~shared"):
-            # Prevent redundant entries mentioning system bzip2 in nc-config and pkg-config files:
-            config_args.append("ac_cv_lib_bz2_BZ2_bzCompress=no")
+        if self.spec.satisfies("@4.9.0:"):
+            if "+shared" in self.spec:
+                lib_search_dirs.extend(self.spec["bzip2"].libs.directories)
+            else:
+                # Prevent redundant entries mentioning system bzip2 in nc-config and pkg-config
+                # files:
+                config_args.append("ac_cv_lib_bz2_BZ2_bzCompress=no")
 
-        if self.spec.satisfies("@4.9.0:~zstd"):
+        if "+zstd" in self.spec:
+            lib_search_dirs.extend(self.spec["zstd"].libs.directories)
+        elif self.spec.satisfies("@4.9.0:"):
             # Prevent linking to system zstd:
             config_args.append("ac_cv_lib_zstd_ZSTD_compress=no")
 
-        if self.spec.satisfies("@4.9.0:~blosc"):
+        if "+blosc" in self.spec:
+            lib_search_dirs.extend(self.spec["c-blosc"].libs.directories)
+        elif self.spec.satisfies("@4.9.0:"):
             # Prevent linking to system c-blosc:
             config_args.append("ac_cv_lib_blosc_blosc_init=no")
 
         if "+dap" in self.spec:
-            curl = self.spec["curl"]
-            curl_libs = curl.libs
-            libs.append(curl_libs.link_flags)
-            ldflags.append(curl_libs.search_flags)
+            lib_search_dirs.extend(self.spec["curl"].libs.directories)
         elif self.spec.satisfies("@4.8.0:"):
-            # Prevent overlinking to a system installation of libcurl:
+            # Prevent linking to system curl:
             config_args.append("ac_cv_lib_curl_curl_easy_setopt=no")
 
-        config_args.append("LDFLAGS=" + " ".join(ldflags))
-        config_args.append("LIBS=" + " ".join(libs))
+        lib_search_dirs.extend(d for libs in extra_libs for d in libs.directories)
+        # Remove duplicates and system prefixes:
+        lib_search_dirs = filter(lambda d: not is_system_path(d), dedupe(lib_search_dirs))
+        config_args.append(
+            "LDFLAGS={0}".format(" ".join("-L{0}".format(d) for d in lib_search_dirs))
+        )
+
+        extra_lib_names = [n for libs in extra_libs for n in libs.names]
+        # Remove duplicates in the reversed order:
+        extra_lib_names = reversed(list(dedupe(reversed(extra_lib_names))))
+        config_args.append("LIBS={0}".format(" ".join("-l{0}".format(n) for n in extra_lib_names)))
 
         return config_args
 
