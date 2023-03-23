@@ -291,19 +291,9 @@ class AutotoolsBuilder(BackupStep, Setup, autotools.AutotoolsBuilder):
 
         config_args += self.enable_or_disable("hdf4")
         if "+hdf4" in self.spec:
-            hdf4 = self.spec["hdf"]
-            # TODO: change to hdf4.libs.search_flags once 'hdf'
-            # package gets custom implementation of 'libs' property.
-            ldflags.append("-L" + hdf4.prefix.lib)
-            # TODO: change to self.spec['jpeg'].libs.link_flags once the
-            # implementations of 'jpeg' virtual package get 'jpeg_libs'
-            # property.
-            libs.append("-ljpeg")
-            if "+szip" in hdf4:
-                # This should also come from hdf4.libs
-                libs.append("-lsz")
-            if "+external-xdr" in hdf4 and hdf4["rpc"].name != "libc":
-                libs.append(hdf4["rpc"].libs.link_flags)
+            hdf4_libs = self.spec["hdf:transitive"].libs
+            ldflags.append(hdf4_libs.search_flags)
+            libs.append(hdf4_libs.link_flags)
 
         if self.spec.satisfies("@4.9.0:"):
             # Prevent linking to system bzip2:
