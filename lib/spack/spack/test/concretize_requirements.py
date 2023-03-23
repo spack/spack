@@ -248,6 +248,8 @@ packages:
     assert s2.satisfies("@2.3")
 
 
+# TODO: this belongs in the concretize_preferences test module but uses
+# fixtures defined only here
 def test_preference_adds_new_version(
     concretize_scope, test_repo, mock_git_version_info, monkeypatch
 ):
