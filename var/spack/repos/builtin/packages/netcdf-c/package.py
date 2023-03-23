@@ -146,7 +146,8 @@ class NetcdfC(CMakePackage, AutotoolsPackage):
     build_system("cmake", "autotools", default=default_build_system)
 
     def setup_run_environment(self, env):
-        if "+zstd" in self.spec:
+        if self.spec.satisfies("@4.9.0:+shared"):
+            # Both HDF5 and NCZarr backends honor the same environment variable:
             env.append_path("HDF5_PLUGIN_PATH", self.prefix.plugins)
 
     def flag_handler(self, name, flags):
@@ -240,6 +241,12 @@ class AutotoolsBuilder(BackupStep, Setup, autotools.AutotoolsBuilder):
         elif self.spec.satisfies("@4.8.0"):
             config_args.append("--disable-nczarr")
 
+        if self.spec.satisfies("@4.9.0:+shared"):
+            # The plugins are not built when the shared libraries are disabled:
+            config_args.extend(
+                ["--enable-plugins", "--with-plugin-dir={0}".format(self.prefix.plugins)]
+            )
+
         # Byte-range I/O was added in version 4.7.0 and we disable it until it becomes a variant:
         if self.spec.satisfies("@4.7.0:"):
             config_args.append("--disable-byterange")
@@ -301,7 +308,6 @@ class AutotoolsBuilder(BackupStep, Setup, autotools.AutotoolsBuilder):
         if "+zstd" in self.spec:
             zstd = self.spec["zstd"]
             ldflags.append(zstd.libs.search_flags)
-            config_args.append("--with-plugin-dir={}".format(self.prefix.plugins))
         elif self.spec.satisfies("@4.9.0:"):
             # Prevent linking to system zstd:
             # There is no explicit option to disable zstd.
