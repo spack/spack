@@ -2083,7 +2083,9 @@ class SpackSolverSetup(object):
         self.add_concrete_versions_from_specs(dev_specs, version_provenance.dev_spec)
 
         req_version_specs = _get_versioned_specs_from_pkg_requirements()
-        self.add_concrete_versions_from_specs(req_version_specs, version_provenance.package_requirements)
+        self.add_concrete_versions_from_specs(
+            req_version_specs, version_provenance.package_requirements
+        )
 
         self.gen.h1("Concrete input spec definitions")
         self.define_concrete_input_specs(specs, possible)
