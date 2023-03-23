@@ -307,12 +307,8 @@ class AutotoolsBuilder(BackupStep, Setup, autotools.AutotoolsBuilder):
             # Prevent linking to system c-blosc:
             config_args.append("ac_cv_lib_blosc_blosc_init=no")
 
-        if "+zstd" in self.spec:
-            zstd = self.spec["zstd"]
-            ldflags.append(zstd.libs.search_flags)
-        elif self.spec.satisfies("@4.9.0:"):
+        if self.spec.satisfies("@4.9.0:~zstd"):
             # Prevent linking to system zstd:
-            # There is no explicit option to disable zstd.
             config_args.append("ac_cv_lib_zstd_ZSTD_compress=no")
 
         if self.spec.satisfies("@4.8.0:"):
