@@ -38,7 +38,7 @@ class Ispc(CMakePackage):
     depends_on("python", type="build")
     depends_on("bison", type="build")
     depends_on("flex", type="build")
-    depends_on("ncurses@6.3.2", type="link")
+    depends_on("ncurses", type="link")
     depends_on("zlib", type="link")
     depends_on("llvm+clang")
     depends_on("llvm@14.0.6:", when="@1.19")
