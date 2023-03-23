@@ -210,7 +210,7 @@ class AutotoolsBuilder(BackupStep, Setup, autotools.AutotoolsBuilder):
     @property
     def force_autoreconf(self):
         # The patch for 4.7.0 touches configure.ac.
-        return self.pkg.spec.satisfies("@4.7.0")
+        return self.spec.satisfies("@4.7.0")
 
     def autoreconf(self, pkg, spec, prefix):
         if not os.path.exists(self.configure_abs_path):
@@ -232,40 +232,40 @@ class AutotoolsBuilder(BackupStep, Setup, autotools.AutotoolsBuilder):
         config_args.extend(self.enable_or_disable("fsync"))
 
         # The flag was introduced in version 4.3.1
-        if self.pkg.spec.satisfies("@4.3.1:"):
+        if self.spec.satisfies("@4.3.1:"):
             config_args.append("--enable-dynamic-loading")
 
         config_args += self.enable_or_disable("shared")
 
         config_args += self.enable_or_disable("dap")
 
-        if "+dap" in self.pkg.spec:
-            curl = self.pkg.spec["curl"]
+        if "+dap" in self.spec:
+            curl = self.spec["curl"]
             curl_libs = curl.libs
             libs.append(curl_libs.link_flags)
             ldflags.append(curl_libs.search_flags)
             # TODO: figure out how to get correct flags via headers.cpp_flags
             cppflags.append("-I" + curl.prefix.include)
-        elif self.pkg.spec.satisfies("@4.8.0:"):
+        elif self.spec.satisfies("@4.8.0:"):
             # Prevent overlinking to a system installation of libcurl:
             config_args.append("ac_cv_lib_curl_curl_easy_setopt=no")
 
-        if self.pkg.spec.satisfies("@4.4:"):
-            if "+mpi" in self.pkg.spec:
+        if self.spec.satisfies("@4.4:"):
+            if "+mpi" in self.spec:
                 config_args.append("--enable-parallel4")
             else:
                 config_args.append("--disable-parallel4")
 
-        if self.pkg.spec.satisfies("@4.3.2:"):
+        if self.spec.satisfies("@4.3.2:"):
             config_args += self.enable_or_disable("jna")
 
-        hdf5_hl = self.pkg.spec["hdf5:hl"]
+        hdf5_hl = self.spec["hdf5:hl"]
         cppflags.append(hdf5_hl.headers.cpp_flags)
         ldflags.append(hdf5_hl.libs.search_flags)
 
-        if "+parallel-netcdf" in self.pkg.spec:
+        if "+parallel-netcdf" in self.spec:
             config_args.append("--enable-pnetcdf")
-            pnetcdf = self.pkg.spec["parallel-netcdf"]
+            pnetcdf = self.spec["parallel-netcdf"]
             cppflags.append(pnetcdf.headers.cpp_flags)
             # TODO: change to pnetcdf.libs.search_flags once 'parallel-netcdf'
             # package gets custom implementation of 'libs'
@@ -273,17 +273,17 @@ class AutotoolsBuilder(BackupStep, Setup, autotools.AutotoolsBuilder):
         else:
             config_args.append("--disable-pnetcdf")
 
-        if "+mpi" in self.pkg.spec or "+parallel-netcdf" in self.pkg.spec:
-            config_args.append("CC=%s" % self.pkg.spec["mpi"].mpicc)
+        if "+mpi" in self.spec or "+parallel-netcdf" in self.spec:
+            config_args.append("CC=%s" % self.spec["mpi"].mpicc)
 
         config_args += self.enable_or_disable("hdf4")
-        if "+hdf4" in self.pkg.spec:
-            hdf4 = self.pkg.spec["hdf"]
+        if "+hdf4" in self.spec:
+            hdf4 = self.spec["hdf"]
             cppflags.append(hdf4.headers.cpp_flags)
             # TODO: change to hdf4.libs.search_flags once 'hdf'
             # package gets custom implementation of 'libs' property.
             ldflags.append("-L" + hdf4.prefix.lib)
-            # TODO: change to self.pkg.spec['jpeg'].libs.link_flags once the
+            # TODO: change to self.spec['jpeg'].libs.link_flags once the
             # implementations of 'jpeg' virtual package get 'jpeg_libs'
             # property.
             libs.append("-ljpeg")
@@ -293,12 +293,12 @@ class AutotoolsBuilder(BackupStep, Setup, autotools.AutotoolsBuilder):
             if "+external-xdr" in hdf4 and hdf4["rpc"].name != "libc":
                 libs.append(hdf4["rpc"].libs.link_flags)
 
-        if "+zstd" in self.pkg.spec:
-            zstd = self.pkg.spec["zstd"]
+        if "+zstd" in self.spec:
+            zstd = self.spec["zstd"]
             cppflags.append(zstd.headers.cpp_flags)
             ldflags.append(zstd.libs.search_flags)
             config_args.append("--with-plugin-dir={}".format(self.prefix.plugins))
-        elif "~zstd" in self.pkg.spec:
+        elif "~zstd" in self.spec:
             # Prevent linking to system zstd.
             # There is no explicit option to disable zstd.
             config_args.append("ac_cv_lib_zstd_ZSTD_compress=no")
