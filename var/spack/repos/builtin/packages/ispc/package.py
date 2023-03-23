@@ -66,7 +66,6 @@ class Ispc(CMakePackage):
             env.append_flags("LDFLAGS", "-lcurses")
             env.append_flags("LDFLAGS", "-lz")
 
-
     def patch(self):
         with open("check-m32.c", "w") as f:
             f.write("#include <sys/cdefs.h>")
