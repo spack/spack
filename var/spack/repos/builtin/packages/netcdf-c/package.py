@@ -260,6 +260,9 @@ class AutotoolsBuilder(BackupStep, Setup, autotools.AutotoolsBuilder):
         config_args += self.enable_or_disable("shared")
 
         config_args += self.enable_or_disable("dap")
+        if self.spec.satisfies("@4.9.0:"):
+            # Prevent linking to system libxml2:
+            config_args += self.enable_or_disable("libxml2", variant="dap")
 
         if "+dap" in self.spec:
             curl = self.spec["curl"]
