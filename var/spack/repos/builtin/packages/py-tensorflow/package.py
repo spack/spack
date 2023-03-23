@@ -30,7 +30,7 @@ class PyTensorflow(Package, CudaPackage, ROCmPackage, PythonExtension):
     maintainers("adamjstewart", "aweits")
     import_modules = ["tensorflow"]
 
-    version("2.12.0", sha256="d553551a4716b250322cb5d327a1e0aa077740b83943d6e40336b876a331dd69")
+    version("2.12.0", sha256="c030cb1905bff1d2446615992aad8d8d85cbe90c4fb625cee458c63bf466bc8e")
     version("2.11.1", sha256="624ed1cc170cdcc19e8a15d8cdde989a9a1c6b0534c90b38a6b2f06fb2963e5f")
     version("2.11.0", sha256="99c732b92b1b37fc243a559e02f9aef5671771e272758aa4aec7f34dc92dac48")
     version("2.10.1", sha256="622a92e22e6f3f4300ea43b3025a0b6122f1cc0e2d9233235e4c628c331a94a3")
