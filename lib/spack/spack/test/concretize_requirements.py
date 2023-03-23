@@ -248,6 +248,41 @@ packages:
     assert s2.satisfies("@2.3")
 
 
+def test_preference_adds_new_version(
+    concretize_scope, test_repo, mock_git_version_info, monkeypatch
+):
+    if spack.config.get("config:concretizer") == "original":
+        pytest.skip("Original concretizer does not support configuration" " requirements")
+
+    repo_path, filename, commits = mock_git_version_info
+    monkeypatch.setattr(
+        spack.package_base.PackageBase, "git", "file://%s" % repo_path, raising=False
+    )
+
+    conf_str = """\
+packages:
+  v:
+    version: ["{0}=2.2", "{1}=2.3"]
+""".format(
+        commits[0], commits[1]
+    )
+    update_packages_config(conf_str)
+
+    s1 = Spec("v").concretized()
+    assert s1.satisfies("@2.2")
+    assert s1.satisfies("@{0}".format(commits[0]))
+
+    s2 = Spec("v@2.3").concretized()
+    # Note: this check will fail: the command-line spec version is preferred
+    # assert s2.satisfies("@{0}".format(commits[1]))
+    assert s2.satisfies("@2.3")
+
+    s3 = Spec("v@{0}".format(commits[1])).concretized()
+    assert s3.satisfies("@{0}".format(commits[1]))
+    # Note: this check will fail: the command-line spec version is preferred
+    # assert s3.satisfies("@2.3")
+
+
 def test_requirement_is_successfully_applied(concretize_scope, test_repo):
     """If a simple requirement can be satisfied, make sure the
     concretization succeeds and the requirement spec is applied.
