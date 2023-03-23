@@ -228,7 +228,7 @@ class AutotoolsBuilder(BackupStep, Setup, autotools.AutotoolsBuilder):
             "--enable-netcdf-4",
         ]
 
-        config_args.extend(self.enable_or_disable("fsync"))
+        config_args += self.enable_or_disable("fsync")
 
         # The flag was introduced in version 4.3.1
         if self.spec.satisfies("@4.3.1:"):
@@ -248,10 +248,7 @@ class AutotoolsBuilder(BackupStep, Setup, autotools.AutotoolsBuilder):
             config_args.append("ac_cv_lib_curl_curl_easy_setopt=no")
 
         if self.spec.satisfies("@4.4:"):
-            if "+mpi" in self.spec:
-                config_args.append("--enable-parallel4")
-            else:
-                config_args.append("--disable-parallel4")
+            config_args += self.enable_or_disable("parallel4", variant="mpi")
 
         if self.spec.satisfies("@4.3.2:"):
             config_args += self.enable_or_disable("jna")
@@ -259,14 +256,12 @@ class AutotoolsBuilder(BackupStep, Setup, autotools.AutotoolsBuilder):
         hdf5_hl = self.spec["hdf5:hl"]
         ldflags.append(hdf5_hl.libs.search_flags)
 
+        config_args += self.enable_or_disable("pnetcdf", variant="parallel-netcdf")
         if "+parallel-netcdf" in self.spec:
-            config_args.append("--enable-pnetcdf")
             pnetcdf = self.spec["parallel-netcdf"]
             # TODO: change to pnetcdf.libs.search_flags once 'parallel-netcdf'
             # package gets custom implementation of 'libs'
             ldflags.append("-L" + pnetcdf.prefix.lib)
-        else:
-            config_args.append("--disable-pnetcdf")
 
         if "+mpi" in self.spec or "+parallel-netcdf" in self.spec:
             config_args.append("CC=%s" % self.spec["mpi"].mpicc)
