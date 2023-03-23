@@ -87,6 +87,7 @@ class NetcdfC(CMakePackage, AutotoolsPackage):
     variant("fsync", default=False, description="Enable fsync support")
     variant("optimize", default=True, description="Enable -O2 for a more optimized lib")
 
+    variant("blosc", default=True, description="Enable Blosc compression plugin")
     variant("zstd", default=True, description="Enable Zstandard compression plugin")
 
     # The patch for 4.7.0 touches configure.ac. See force_autoreconf below.
@@ -136,12 +137,18 @@ class NetcdfC(CMakePackage, AutotoolsPackage):
     depends_on("hdf5@:1.8", when="@:4.4.0")
 
     depends_on("bzip2", when="@4.9.0:+shared")
+    depends_on("c-blosc", when="+blosc")
     depends_on("zstd", when="+zstd")
 
     # The features were introduced in version 4.9.0:
-    conflicts("+zstd", when="@:4.8")
+    with when("@:4.8"):
+        conflicts("+blosc")
+        conflicts("+zstd")
+
     # The plugins are not built when the shared libraries are disabled:
-    conflicts("+zstd", when="~shared")
+    with when("~shared"):
+        conflicts("+blosc")
+        conflicts("+zstd")
 
     default_build_system = "cmake" if sys.platform == "win32" else "autotools"
 
@@ -305,7 +312,7 @@ class AutotoolsBuilder(BackupStep, Setup, autotools.AutotoolsBuilder):
             # Prevent linking to system szip:
             config_args.append("ac_cv_lib_sz_SZ_BufftoBuffCompress=no")
 
-        if self.spec.satisfies("@4.9.0:"):
+        if self.spec.satisfies("@4.9.0:~blosc"):
             # Prevent linking to system c-blosc:
             config_args.append("ac_cv_lib_blosc_blosc_init=no")
 
