@@ -2114,7 +2114,6 @@ class TestConcretize(object):
                         "fc": "/usr/bin/gfortran",
                     },
                     "operating_system": "debian6",
-                    "target": "x86_64",
                     "modules": [],
                 }
             },
@@ -2128,7 +2127,6 @@ class TestConcretize(object):
                         "fc": "/usr/bin/gfortran",
                     },
                     "operating_system": "debian6",
-                    "target": "x86_64",
                     "modules": [],
                 }
             },
@@ -2150,7 +2148,6 @@ class TestConcretize(object):
                     "spec": "gcc@foo",
                     "paths": {"cc": gcc_path, "cxx": gcc_path, "f77": None, "fc": None},
                     "operating_system": "debian6",
-                    "target": "x86_64",
                     "modules": [],
                 }
             }
