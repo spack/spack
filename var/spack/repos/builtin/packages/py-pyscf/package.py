@@ -31,7 +31,7 @@ class PyPyscf(PythonPackage):
     depends_on("py-setuptools", type="build")
     depends_on("py-numpy@1.8.0:", type=("build", "run"))
     depends_on("py-numpy@1.13.0:", type=("build", "run"), when="@2:")
-    conflicts("py-numpy@1.16:1.17", when="@2:")
+    conflicts("^py-numpy@1.16:1.17", when="@2:")
     depends_on("py-scipy@0.12:", type=("build", "run"))
     depends_on("py-scipy@0.19:", type=("build", "run"), when="@2.1:")
     depends_on("py-scipy@:1.1.0", when="^python@:3.7 platform=darwin", type=("build", "run"))
