@@ -24,6 +24,7 @@ import spack.error
 import spack.paths
 import spack.platforms
 import spack.spec
+import spack.version
 from spack.util.environment import get_path
 from spack.util.naming import mod_to_class
 
@@ -69,7 +70,7 @@ def pkg_spec_for_compiler(cspec):
             break
     else:
         spec_str = str(cspec)
-    return spack.spec.Spec(spec_str)
+    return spack.spec.concrete_spec_from_old_syntax(spec_str)
 
 
 def _auto_compiler_spec(function):
@@ -212,10 +213,14 @@ def all_compilers_config(scope=None, init_config=True):
 
 def all_compiler_specs(scope=None, init_config=True):
     # Return compiler specs from the merged config.
-    return [
+    specs = [
         spack.spec.CompilerSpec(s["compiler"]["spec"])
         for s in all_compilers_config(scope, init_config)
     ]
+    # versions from config should be concrete.
+    for s in specs:
+        s.versions = spack.version.VersionList([s.versions.concrete_range_as_version])
+    return specs
 
 
 def find_compilers(path_hints=None):
@@ -385,6 +390,7 @@ class CacheReference(object):
 
 def compiler_from_dict(items):
     cspec = spack.spec.CompilerSpec(items["spec"])
+    cspec.versions = spack.version.VersionList([cspec.versions.concrete_range_as_version])
     os = items.get("operating_system", None)
     target = items.get("target", None)
 

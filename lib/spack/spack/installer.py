@@ -52,6 +52,7 @@ import spack.mirror
 import spack.package_base
 import spack.package_prefs as prefs
 import spack.repo
+import spack.spec
 import spack.store
 import spack.util.executable
 import spack.util.path
@@ -628,9 +629,7 @@ def package_id(pkg):
             derived
     """
     if not pkg.spec.concrete:
-        raise ValueError(
-            "Cannot provide a unique, readable id when " "the spec is not concretized."
-        )
+        raise ValueError("Cannot provide a unique, readable id when the spec is not concretized.")
 
     return "{0}-{1}-{2}".format(pkg.name, pkg.version, pkg.spec.dag_hash())
 

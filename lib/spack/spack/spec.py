@@ -594,7 +594,7 @@ class CompilerSpec(object):
             # Note: This may be impossible to reach by the current parser
             # Keeping it in case the implementation changes.
             raise MultipleVersionError(
-                "A spec cannot contain multiple version signifiers." " Use a version list instead."
+                "A spec cannot contain multiple version signifiers. Use a version list instead."
             )
         self.versions = vn.VersionList()
         for version in version_list:
@@ -2108,7 +2108,7 @@ class Spec(object):
         # (and the user spec) have dependencies
         new_spec = init_spec.copy()
         package_cls = spack.repo.path.get_pkg_class(new_spec.name)
-        if change_spec.versions and not change_spec.versions == spack.version.ver(":"):
+        if change_spec.versions and not change_spec.versions == vn.VersionList([vn.ver(":")]):
             new_spec.versions = change_spec.versions
         for variant, value in change_spec.variants.items():
             if variant in package_cls.variants:
@@ -4538,6 +4538,23 @@ class Spec(object):
 
     def __reduce__(self):
         return Spec.from_dict, (self.to_dict(hash=ht.process_hash),)
+
+    def attach_git_version_lookup(self):
+        # Add a git lookup method for GitVersions
+        if not self.name:
+            return
+        for v in self.versions:
+            if isinstance(v, vn.GitVersion):
+                v.attach_git_lookup_from_package(self.fullname)
+
+
+def concrete_spec_from_old_syntax(string: str):
+    """Same as Spec(string), but interprets @x as @=x"""
+    s = Spec(string)
+    interpreted_version = s.versions.concrete_range_as_version
+    if interpreted_version:
+        s.versions = vn.VersionList([interpreted_version])
+    return s
 
 
 def merge_abstract_anonymous_specs(*abstract_specs: Spec):

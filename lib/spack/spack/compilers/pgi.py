@@ -77,13 +77,13 @@ class Pgi(Compiler):
 
     @property
     def c99_flag(self):
-        if self.real_version >= ver("12.10"):
+        if self.real_version >= ver("=12.10"):
             return "-c99"
         raise UnsupportedCompilerFlag(self, "the C99 standard", "c99_flag", "< 12.10")
 
     @property
     def c11_flag(self):
-        if self.real_version >= ver("15.3"):
+        if self.real_version >= ver("=15.3"):
             return "-c11"
         raise UnsupportedCompilerFlag(self, "the C11 standard", "c11_flag", "< 15.3")
 

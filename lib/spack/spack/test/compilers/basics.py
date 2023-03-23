@@ -58,8 +58,7 @@ def test_multiple_conflicting_compiler_definitions(mutable_config):
     mutable_config.update_config("compilers", compiler_config)
 
     arch_spec = spack.spec.ArchSpec(("test", "test", "test"))
-    cspec = compiler_config[0]["compiler"]["spec"]
-    cmp = compilers.compiler_for_spec(cspec, arch_spec)
+    cmp = compilers.compiler_for_spec("clang@=0.0.0", arch_spec)
     assert cmp.f77 == "f77"
 
 
@@ -338,83 +337,83 @@ def test_default_flags():
 
 # Verify behavior of particular compiler definitions.
 def test_arm_flags():
-    supported_flag_test("openmp_flag", "-fopenmp", "arm@1.0")
-    supported_flag_test("cxx11_flag", "-std=c++11", "arm@1.0")
-    supported_flag_test("cxx14_flag", "-std=c++14", "arm@1.0")
-    supported_flag_test("cxx17_flag", "-std=c++1z", "arm@1.0")
-    supported_flag_test("c99_flag", "-std=c99", "arm@1.0")
-    supported_flag_test("c11_flag", "-std=c11", "arm@1.0")
-    supported_flag_test("cc_pic_flag", "-fPIC", "arm@1.0")
-    supported_flag_test("cxx_pic_flag", "-fPIC", "arm@1.0")
-    supported_flag_test("f77_pic_flag", "-fPIC", "arm@1.0")
-    supported_flag_test("fc_pic_flag", "-fPIC", "arm@1.0")
-    supported_flag_test("opt_flags", ["-O", "-O0", "-O1", "-O2", "-O3", "-Ofast"], "arm@1.0")
+    supported_flag_test("openmp_flag", "-fopenmp", "arm@=1.0")
+    supported_flag_test("cxx11_flag", "-std=c++11", "arm@=1.0")
+    supported_flag_test("cxx14_flag", "-std=c++14", "arm@=1.0")
+    supported_flag_test("cxx17_flag", "-std=c++1z", "arm@=1.0")
+    supported_flag_test("c99_flag", "-std=c99", "arm@=1.0")
+    supported_flag_test("c11_flag", "-std=c11", "arm@=1.0")
+    supported_flag_test("cc_pic_flag", "-fPIC", "arm@=1.0")
+    supported_flag_test("cxx_pic_flag", "-fPIC", "arm@=1.0")
+    supported_flag_test("f77_pic_flag", "-fPIC", "arm@=1.0")
+    supported_flag_test("fc_pic_flag", "-fPIC", "arm@=1.0")
+    supported_flag_test("opt_flags", ["-O", "-O0", "-O1", "-O2", "-O3", "-Ofast"], "arm@=1.0")
 
 
 def test_cce_flags():
-    supported_flag_test("version_argument", "--version", "cce@9.0.1")
-    supported_flag_test("version_argument", "-V", "cce@9.0.1-classic")
-    supported_flag_test("openmp_flag", "-fopenmp", "cce@9.0.1")
-    supported_flag_test("openmp_flag", "-h omp", "cce@9.0.1-classic")
-    supported_flag_test("openmp_flag", "-h omp", "cce@1.0")
-    supported_flag_test("cxx11_flag", "-std=c++11", "cce@9.0.1")
-    supported_flag_test("cxx11_flag", "-h std=c++11", "cce@9.0.1-classic")
-    supported_flag_test("cxx11_flag", "-h std=c++11", "cce@1.0")
-    unsupported_flag_test("c99_flag", "cce@8.0")
-    supported_flag_test("c99_flag", "-std=c99", "cce@9.0.1")
-    supported_flag_test("c99_flag", "-h c99,noconform,gnu", "cce@8.1")
-    supported_flag_test("c99_flag", "-h std=c99,noconform,gnu", "cce@8.4")
-    unsupported_flag_test("c11_flag", "cce@8.4")
-    supported_flag_test("c11_flag", "-std=c11", "cce@9.0.1")
-    supported_flag_test("c11_flag", "-h std=c11,noconform,gnu", "cce@8.5")
-    supported_flag_test("cc_pic_flag", "-h PIC", "cce@1.0")
-    supported_flag_test("cxx_pic_flag", "-h PIC", "cce@1.0")
-    supported_flag_test("f77_pic_flag", "-h PIC", "cce@1.0")
-    supported_flag_test("fc_pic_flag", "-h PIC", "cce@1.0")
-    supported_flag_test("cc_pic_flag", "-fPIC", "cce@9.1.0")
-    supported_flag_test("cxx_pic_flag", "-fPIC", "cce@9.1.0")
-    supported_flag_test("f77_pic_flag", "-fPIC", "cce@9.1.0")
-    supported_flag_test("fc_pic_flag", "-fPIC", "cce@9.1.0")
-    supported_flag_test("stdcxx_libs", (), "cce@1.0")
-    supported_flag_test("debug_flags", ["-g", "-G0", "-G1", "-G2", "-Gfast"], "cce@1.0")
+    supported_flag_test("version_argument", "--version", "cce@=9.0.1")
+    supported_flag_test("version_argument", "-V", "cce@=9.0.1-classic")
+    supported_flag_test("openmp_flag", "-fopenmp", "cce@=9.0.1")
+    supported_flag_test("openmp_flag", "-h omp", "cce@=9.0.1-classic")
+    supported_flag_test("openmp_flag", "-h omp", "cce@=1.0")
+    supported_flag_test("cxx11_flag", "-std=c++11", "cce@=9.0.1")
+    supported_flag_test("cxx11_flag", "-h std=c++11", "cce@=9.0.1-classic")
+    supported_flag_test("cxx11_flag", "-h std=c++11", "cce@=1.0")
+    unsupported_flag_test("c99_flag", "cce@=8.0")
+    supported_flag_test("c99_flag", "-std=c99", "cce@=9.0.1")
+    supported_flag_test("c99_flag", "-h c99,noconform,gnu", "cce@=8.1")
+    supported_flag_test("c99_flag", "-h std=c99,noconform,gnu", "cce@=8.4")
+    unsupported_flag_test("c11_flag", "cce@=8.4")
+    supported_flag_test("c11_flag", "-std=c11", "cce@=9.0.1")
+    supported_flag_test("c11_flag", "-h std=c11,noconform,gnu", "cce@=8.5")
+    supported_flag_test("cc_pic_flag", "-h PIC", "cce@=1.0")
+    supported_flag_test("cxx_pic_flag", "-h PIC", "cce@=1.0")
+    supported_flag_test("f77_pic_flag", "-h PIC", "cce@=1.0")
+    supported_flag_test("fc_pic_flag", "-h PIC", "cce@=1.0")
+    supported_flag_test("cc_pic_flag", "-fPIC", "cce@=9.1.0")
+    supported_flag_test("cxx_pic_flag", "-fPIC", "cce@=9.1.0")
+    supported_flag_test("f77_pic_flag", "-fPIC", "cce@=9.1.0")
+    supported_flag_test("fc_pic_flag", "-fPIC", "cce@=9.1.0")
+    supported_flag_test("stdcxx_libs", (), "cce@=1.0")
+    supported_flag_test("debug_flags", ["-g", "-G0", "-G1", "-G2", "-Gfast"], "cce@=1.0")
 
 
 def test_apple_clang_flags():
-    supported_flag_test("openmp_flag", "-Xpreprocessor -fopenmp", "apple-clang@2.0.0")
-    unsupported_flag_test("cxx11_flag", "apple-clang@2.0.0")
-    supported_flag_test("cxx11_flag", "-std=c++11", "apple-clang@4.0.0")
-    unsupported_flag_test("cxx14_flag", "apple-clang@5.0.0")
-    supported_flag_test("cxx14_flag", "-std=c++1y", "apple-clang@5.1.0")
-    supported_flag_test("cxx14_flag", "-std=c++14", "apple-clang@6.1.0")
-    unsupported_flag_test("cxx17_flag", "apple-clang@6.0.0")
-    supported_flag_test("cxx17_flag", "-std=c++1z", "apple-clang@6.1.0")
-    supported_flag_test("c99_flag", "-std=c99", "apple-clang@6.1.0")
-    unsupported_flag_test("c11_flag", "apple-clang@3.0.0")
-    supported_flag_test("c11_flag", "-std=c11", "apple-clang@6.1.0")
-    supported_flag_test("cc_pic_flag", "-fPIC", "apple-clang@2.0.0")
-    supported_flag_test("cxx_pic_flag", "-fPIC", "apple-clang@2.0.0")
-    supported_flag_test("f77_pic_flag", "-fPIC", "apple-clang@2.0.0")
-    supported_flag_test("fc_pic_flag", "-fPIC", "apple-clang@2.0.0")
+    supported_flag_test("openmp_flag", "-Xpreprocessor -fopenmp", "apple-clang@=2.0.0")
+    unsupported_flag_test("cxx11_flag", "apple-clang@=2.0.0")
+    supported_flag_test("cxx11_flag", "-std=c++11", "apple-clang@=4.0.0")
+    unsupported_flag_test("cxx14_flag", "apple-clang@=5.0.0")
+    supported_flag_test("cxx14_flag", "-std=c++1y", "apple-clang@=5.1.0")
+    supported_flag_test("cxx14_flag", "-std=c++14", "apple-clang@=6.1.0")
+    unsupported_flag_test("cxx17_flag", "apple-clang@=6.0.0")
+    supported_flag_test("cxx17_flag", "-std=c++1z", "apple-clang@=6.1.0")
+    supported_flag_test("c99_flag", "-std=c99", "apple-clang@=6.1.0")
+    unsupported_flag_test("c11_flag", "apple-clang@=3.0.0")
+    supported_flag_test("c11_flag", "-std=c11", "apple-clang@=6.1.0")
+    supported_flag_test("cc_pic_flag", "-fPIC", "apple-clang@=2.0.0")
+    supported_flag_test("cxx_pic_flag", "-fPIC", "apple-clang@=2.0.0")
+    supported_flag_test("f77_pic_flag", "-fPIC", "apple-clang@=2.0.0")
+    supported_flag_test("fc_pic_flag", "-fPIC", "apple-clang@=2.0.0")
 
 
 def test_clang_flags():
-    supported_flag_test("version_argument", "--version", "clang@foo.bar")
-    supported_flag_test("openmp_flag", "-fopenmp", "clang@3.3")
-    unsupported_flag_test("cxx11_flag", "clang@3.2")
-    supported_flag_test("cxx11_flag", "-std=c++11", "clang@3.3")
-    unsupported_flag_test("cxx14_flag", "clang@3.3")
-    supported_flag_test("cxx14_flag", "-std=c++1y", "clang@3.4")
-    supported_flag_test("cxx14_flag", "-std=c++14", "clang@3.5")
-    unsupported_flag_test("cxx17_flag", "clang@3.4")
-    supported_flag_test("cxx17_flag", "-std=c++1z", "clang@3.5")
-    supported_flag_test("cxx17_flag", "-std=c++17", "clang@5.0")
-    supported_flag_test("c99_flag", "-std=c99", "clang@3.3")
-    unsupported_flag_test("c11_flag", "clang@2.0")
-    supported_flag_test("c11_flag", "-std=c11", "clang@6.1.0")
-    supported_flag_test("cc_pic_flag", "-fPIC", "clang@3.3")
-    supported_flag_test("cxx_pic_flag", "-fPIC", "clang@3.3")
-    supported_flag_test("f77_pic_flag", "-fPIC", "clang@3.3")
-    supported_flag_test("fc_pic_flag", "-fPIC", "clang@3.3")
+    supported_flag_test("version_argument", "--version", "clang@=foo.bar")
+    supported_flag_test("openmp_flag", "-fopenmp", "clang@=3.3")
+    unsupported_flag_test("cxx11_flag", "clang@=3.2")
+    supported_flag_test("cxx11_flag", "-std=c++11", "clang@=3.3")
+    unsupported_flag_test("cxx14_flag", "clang@=3.3")
+    supported_flag_test("cxx14_flag", "-std=c++1y", "clang@=3.4")
+    supported_flag_test("cxx14_flag", "-std=c++14", "clang@=3.5")
+    unsupported_flag_test("cxx17_flag", "clang@=3.4")
+    supported_flag_test("cxx17_flag", "-std=c++1z", "clang@=3.5")
+    supported_flag_test("cxx17_flag", "-std=c++17", "clang@=5.0")
+    supported_flag_test("c99_flag", "-std=c99", "clang@=3.3")
+    unsupported_flag_test("c11_flag", "clang@=2.0")
+    supported_flag_test("c11_flag", "-std=c11", "clang@=6.1.0")
+    supported_flag_test("cc_pic_flag", "-fPIC", "clang@=3.3")
+    supported_flag_test("cxx_pic_flag", "-fPIC", "clang@=3.3")
+    supported_flag_test("f77_pic_flag", "-fPIC", "clang@=3.3")
+    supported_flag_test("fc_pic_flag", "-fPIC", "clang@=3.3")
     supported_flag_test(
         "debug_flags",
         [
@@ -428,12 +427,12 @@ def test_clang_flags():
             "-gz",
             "-g",
         ],
-        "clang@3.3",
+        "clang@=3.3",
     )
     supported_flag_test(
         "opt_flags",
         ["-O0", "-O1", "-O2", "-O3", "-Ofast", "-Os", "-Oz", "-Og", "-O", "-O4"],
-        "clang@3.3",
+        "clang@=3.3",
     )
 
 
@@ -494,166 +493,166 @@ def test_fj_flags():
 
 
 def test_gcc_flags():
-    supported_flag_test("openmp_flag", "-fopenmp", "gcc@4.1")
-    supported_flag_test("cxx98_flag", "", "gcc@5.2")
-    supported_flag_test("cxx98_flag", "-std=c++98", "gcc@6.0")
-    unsupported_flag_test("cxx11_flag", "gcc@4.2")
-    supported_flag_test("cxx11_flag", "-std=c++0x", "gcc@4.3")
-    supported_flag_test("cxx11_flag", "-std=c++11", "gcc@4.7")
-    unsupported_flag_test("cxx14_flag", "gcc@4.7")
-    supported_flag_test("cxx14_flag", "-std=c++1y", "gcc@4.8")
-    supported_flag_test("cxx14_flag", "-std=c++14", "gcc@4.9")
-    supported_flag_test("cxx14_flag", "-std=c++14", "gcc@6.0")
-    unsupported_flag_test("cxx17_flag", "gcc@4.9")
-    supported_flag_test("cxx17_flag", "-std=c++1z", "gcc@5.0")
-    supported_flag_test("cxx17_flag", "-std=c++17", "gcc@6.0")
-    unsupported_flag_test("c99_flag", "gcc@4.4")
-    supported_flag_test("c99_flag", "-std=c99", "gcc@4.5")
-    unsupported_flag_test("c11_flag", "gcc@4.6")
-    supported_flag_test("c11_flag", "-std=c11", "gcc@4.7")
-    supported_flag_test("cc_pic_flag", "-fPIC", "gcc@4.0")
-    supported_flag_test("cxx_pic_flag", "-fPIC", "gcc@4.0")
-    supported_flag_test("f77_pic_flag", "-fPIC", "gcc@4.0")
-    supported_flag_test("fc_pic_flag", "-fPIC", "gcc@4.0")
-    supported_flag_test("stdcxx_libs", ("-lstdc++",), "gcc@4.1")
+    supported_flag_test("openmp_flag", "-fopenmp", "gcc@=4.1")
+    supported_flag_test("cxx98_flag", "", "gcc@=5.2")
+    supported_flag_test("cxx98_flag", "-std=c++98", "gcc@=6.0")
+    unsupported_flag_test("cxx11_flag", "gcc@=4.2")
+    supported_flag_test("cxx11_flag", "-std=c++0x", "gcc@=4.3")
+    supported_flag_test("cxx11_flag", "-std=c++11", "gcc@=4.7")
+    unsupported_flag_test("cxx14_flag", "gcc@=4.7")
+    supported_flag_test("cxx14_flag", "-std=c++1y", "gcc@=4.8")
+    supported_flag_test("cxx14_flag", "-std=c++14", "gcc@=4.9")
+    supported_flag_test("cxx14_flag", "-std=c++14", "gcc@=6.0")
+    unsupported_flag_test("cxx17_flag", "gcc@=4.9")
+    supported_flag_test("cxx17_flag", "-std=c++1z", "gcc@=5.0")
+    supported_flag_test("cxx17_flag", "-std=c++17", "gcc@=6.0")
+    unsupported_flag_test("c99_flag", "gcc@=4.4")
+    supported_flag_test("c99_flag", "-std=c99", "gcc@=4.5")
+    unsupported_flag_test("c11_flag", "gcc@=4.6")
+    supported_flag_test("c11_flag", "-std=c11", "gcc@=4.7")
+    supported_flag_test("cc_pic_flag", "-fPIC", "gcc@=4.0")
+    supported_flag_test("cxx_pic_flag", "-fPIC", "gcc@=4.0")
+    supported_flag_test("f77_pic_flag", "-fPIC", "gcc@=4.0")
+    supported_flag_test("fc_pic_flag", "-fPIC", "gcc@=4.0")
+    supported_flag_test("stdcxx_libs", ("-lstdc++",), "gcc@=4.1")
     supported_flag_test(
-        "debug_flags", ["-g", "-gstabs+", "-gstabs", "-gxcoff+", "-gxcoff", "-gvms"], "gcc@4.0"
+        "debug_flags", ["-g", "-gstabs+", "-gstabs", "-gxcoff+", "-gxcoff", "-gvms"], "gcc@=4.0"
     )
     supported_flag_test(
-        "opt_flags", ["-O", "-O0", "-O1", "-O2", "-O3", "-Os", "-Ofast", "-Og"], "gcc@4.0"
+        "opt_flags", ["-O", "-O0", "-O1", "-O2", "-O3", "-Os", "-Ofast", "-Og"], "gcc@=4.0"
     )
 
 
 def test_intel_flags():
-    supported_flag_test("openmp_flag", "-openmp", "intel@15.0")
-    supported_flag_test("openmp_flag", "-qopenmp", "intel@16.0")
-    unsupported_flag_test("cxx11_flag", "intel@11.0")
-    supported_flag_test("cxx11_flag", "-std=c++0x", "intel@12.0")
-    supported_flag_test("cxx11_flag", "-std=c++11", "intel@13")
-    unsupported_flag_test("cxx14_flag", "intel@14.0")
-    supported_flag_test("cxx14_flag", "-std=c++1y", "intel@15.0")
-    supported_flag_test("cxx14_flag", "-std=c++14", "intel@15.0.2")
-    unsupported_flag_test("c99_flag", "intel@11.0")
-    supported_flag_test("c99_flag", "-std=c99", "intel@12.0")
-    unsupported_flag_test("c11_flag", "intel@15.0")
-    supported_flag_test("c11_flag", "-std=c1x", "intel@16.0")
-    supported_flag_test("cc_pic_flag", "-fPIC", "intel@1.0")
-    supported_flag_test("cxx_pic_flag", "-fPIC", "intel@1.0")
-    supported_flag_test("f77_pic_flag", "-fPIC", "intel@1.0")
-    supported_flag_test("fc_pic_flag", "-fPIC", "intel@1.0")
-    supported_flag_test("stdcxx_libs", ("-cxxlib",), "intel@1.0")
-    supported_flag_test("debug_flags", ["-debug", "-g", "-g0", "-g1", "-g2", "-g3"], "intel@1.0")
+    supported_flag_test("openmp_flag", "-openmp", "intel@=15.0")
+    supported_flag_test("openmp_flag", "-qopenmp", "intel@=16.0")
+    unsupported_flag_test("cxx11_flag", "intel@=11.0")
+    supported_flag_test("cxx11_flag", "-std=c++0x", "intel@=12.0")
+    supported_flag_test("cxx11_flag", "-std=c++11", "intel@=13")
+    unsupported_flag_test("cxx14_flag", "intel@=14.0")
+    supported_flag_test("cxx14_flag", "-std=c++1y", "intel@=15.0")
+    supported_flag_test("cxx14_flag", "-std=c++14", "intel@=15.0.2")
+    unsupported_flag_test("c99_flag", "intel@=11.0")
+    supported_flag_test("c99_flag", "-std=c99", "intel@=12.0")
+    unsupported_flag_test("c11_flag", "intel@=15.0")
+    supported_flag_test("c11_flag", "-std=c1x", "intel@=16.0")
+    supported_flag_test("cc_pic_flag", "-fPIC", "intel@=1.0")
+    supported_flag_test("cxx_pic_flag", "-fPIC", "intel@=1.0")
+    supported_flag_test("f77_pic_flag", "-fPIC", "intel@=1.0")
+    supported_flag_test("fc_pic_flag", "-fPIC", "intel@=1.0")
+    supported_flag_test("stdcxx_libs", ("-cxxlib",), "intel@=1.0")
+    supported_flag_test("debug_flags", ["-debug", "-g", "-g0", "-g1", "-g2", "-g3"], "intel@=1.0")
     supported_flag_test(
-        "opt_flags", ["-O", "-O0", "-O1", "-O2", "-O3", "-Ofast", "-Os"], "intel@1.0"
+        "opt_flags", ["-O", "-O0", "-O1", "-O2", "-O3", "-Ofast", "-Os"], "intel@=1.0"
     )
 
 
 def test_oneapi_flags():
-    supported_flag_test("openmp_flag", "-fiopenmp", "oneapi@2020.8.0.0827")
-    supported_flag_test("cxx11_flag", "-std=c++11", "oneapi@2020.8.0.0827")
-    supported_flag_test("cxx14_flag", "-std=c++14", "oneapi@2020.8.0.0827")
-    supported_flag_test("c99_flag", "-std=c99", "oneapi@2020.8.0.0827")
-    supported_flag_test("c11_flag", "-std=c1x", "oneapi@2020.8.0.0827")
-    supported_flag_test("cc_pic_flag", "-fPIC", "oneapi@2020.8.0.0827")
-    supported_flag_test("cxx_pic_flag", "-fPIC", "oneapi@2020.8.0.0827")
-    supported_flag_test("f77_pic_flag", "-fPIC", "oneapi@2020.8.0.0827")
-    supported_flag_test("fc_pic_flag", "-fPIC", "oneapi@2020.8.0.0827")
-    supported_flag_test("stdcxx_libs", ("-cxxlib",), "oneapi@2020.8.0.0827")
+    supported_flag_test("openmp_flag", "-fiopenmp", "oneapi@=2020.8.0.0827")
+    supported_flag_test("cxx11_flag", "-std=c++11", "oneapi@=2020.8.0.0827")
+    supported_flag_test("cxx14_flag", "-std=c++14", "oneapi@=2020.8.0.0827")
+    supported_flag_test("c99_flag", "-std=c99", "oneapi@=2020.8.0.0827")
+    supported_flag_test("c11_flag", "-std=c1x", "oneapi@=2020.8.0.0827")
+    supported_flag_test("cc_pic_flag", "-fPIC", "oneapi@=2020.8.0.0827")
+    supported_flag_test("cxx_pic_flag", "-fPIC", "oneapi@=2020.8.0.0827")
+    supported_flag_test("f77_pic_flag", "-fPIC", "oneapi@=2020.8.0.0827")
+    supported_flag_test("fc_pic_flag", "-fPIC", "oneapi@=2020.8.0.0827")
+    supported_flag_test("stdcxx_libs", ("-cxxlib",), "oneapi@=2020.8.0.0827")
     supported_flag_test(
-        "debug_flags", ["-debug", "-g", "-g0", "-g1", "-g2", "-g3"], "oneapi@2020.8.0.0827"
+        "debug_flags", ["-debug", "-g", "-g0", "-g1", "-g2", "-g3"], "oneapi@=2020.8.0.0827"
     )
     supported_flag_test(
-        "opt_flags", ["-O", "-O0", "-O1", "-O2", "-O3", "-Ofast", "-Os"], "oneapi@2020.8.0.0827"
+        "opt_flags", ["-O", "-O0", "-O1", "-O2", "-O3", "-Ofast", "-Os"], "oneapi@=2020.8.0.0827"
     )
 
 
 def test_nag_flags():
-    supported_flag_test("openmp_flag", "-openmp", "nag@1.0")
-    supported_flag_test("cxx11_flag", "-std=c++11", "nag@1.0")
-    supported_flag_test("cc_pic_flag", "-fPIC", "nag@1.0")
-    supported_flag_test("cxx_pic_flag", "-fPIC", "nag@1.0")
-    supported_flag_test("f77_pic_flag", "-PIC", "nag@1.0")
-    supported_flag_test("fc_pic_flag", "-PIC", "nag@1.0")
-    supported_flag_test("cc_rpath_arg", "-Wl,-rpath,", "nag@1.0")
-    supported_flag_test("cxx_rpath_arg", "-Wl,-rpath,", "nag@1.0")
-    supported_flag_test("f77_rpath_arg", "-Wl,-Wl,,-rpath,,", "nag@1.0")
-    supported_flag_test("fc_rpath_arg", "-Wl,-Wl,,-rpath,,", "nag@1.0")
-    supported_flag_test("linker_arg", "-Wl,-Wl,,", "nag@1.0")
-    supported_flag_test("debug_flags", ["-g", "-gline", "-g90"], "nag@1.0")
-    supported_flag_test("opt_flags", ["-O", "-O0", "-O1", "-O2", "-O3", "-O4"], "nag@1.0")
+    supported_flag_test("openmp_flag", "-openmp", "nag@=1.0")
+    supported_flag_test("cxx11_flag", "-std=c++11", "nag@=1.0")
+    supported_flag_test("cc_pic_flag", "-fPIC", "nag@=1.0")
+    supported_flag_test("cxx_pic_flag", "-fPIC", "nag@=1.0")
+    supported_flag_test("f77_pic_flag", "-PIC", "nag@=1.0")
+    supported_flag_test("fc_pic_flag", "-PIC", "nag@=1.0")
+    supported_flag_test("cc_rpath_arg", "-Wl,-rpath,", "nag@=1.0")
+    supported_flag_test("cxx_rpath_arg", "-Wl,-rpath,", "nag@=1.0")
+    supported_flag_test("f77_rpath_arg", "-Wl,-Wl,,-rpath,,", "nag@=1.0")
+    supported_flag_test("fc_rpath_arg", "-Wl,-Wl,,-rpath,,", "nag@=1.0")
+    supported_flag_test("linker_arg", "-Wl,-Wl,,", "nag@=1.0")
+    supported_flag_test("debug_flags", ["-g", "-gline", "-g90"], "nag@=1.0")
+    supported_flag_test("opt_flags", ["-O", "-O0", "-O1", "-O2", "-O3", "-O4"], "nag@=1.0")
 
 
 def test_nvhpc_flags():
-    supported_flag_test("openmp_flag", "-mp", "nvhpc@20.9")
-    supported_flag_test("cxx11_flag", "--c++11", "nvhpc@20.9")
-    supported_flag_test("cxx14_flag", "--c++14", "nvhpc@20.9")
-    supported_flag_test("cxx17_flag", "--c++17", "nvhpc@20.9")
-    supported_flag_test("c99_flag", "-c99", "nvhpc@20.9")
-    supported_flag_test("c11_flag", "-c11", "nvhpc@20.9")
-    supported_flag_test("cc_pic_flag", "-fpic", "nvhpc@20.9")
-    supported_flag_test("cxx_pic_flag", "-fpic", "nvhpc@20.9")
-    supported_flag_test("f77_pic_flag", "-fpic", "nvhpc@20.9")
-    supported_flag_test("fc_pic_flag", "-fpic", "nvhpc@20.9")
-    supported_flag_test("debug_flags", ["-g", "-gopt"], "nvhpc@20.9")
-    supported_flag_test("opt_flags", ["-O", "-O0", "-O1", "-O2", "-O3", "-O4"], "nvhpc@20.9")
-    supported_flag_test("stdcxx_libs", ("-c++libs",), "nvhpc@20.9")
+    supported_flag_test("openmp_flag", "-mp", "nvhpc@=20.9")
+    supported_flag_test("cxx11_flag", "--c++11", "nvhpc@=20.9")
+    supported_flag_test("cxx14_flag", "--c++14", "nvhpc@=20.9")
+    supported_flag_test("cxx17_flag", "--c++17", "nvhpc@=20.9")
+    supported_flag_test("c99_flag", "-c99", "nvhpc@=20.9")
+    supported_flag_test("c11_flag", "-c11", "nvhpc@=20.9")
+    supported_flag_test("cc_pic_flag", "-fpic", "nvhpc@=20.9")
+    supported_flag_test("cxx_pic_flag", "-fpic", "nvhpc@=20.9")
+    supported_flag_test("f77_pic_flag", "-fpic", "nvhpc@=20.9")
+    supported_flag_test("fc_pic_flag", "-fpic", "nvhpc@=20.9")
+    supported_flag_test("debug_flags", ["-g", "-gopt"], "nvhpc@=20.9")
+    supported_flag_test("opt_flags", ["-O", "-O0", "-O1", "-O2", "-O3", "-O4"], "nvhpc@=20.9")
+    supported_flag_test("stdcxx_libs", ("-c++libs",), "nvhpc@=20.9")
 
 
 def test_pgi_flags():
-    supported_flag_test("openmp_flag", "-mp", "pgi@1.0")
-    supported_flag_test("cxx11_flag", "-std=c++11", "pgi@1.0")
-    unsupported_flag_test("c99_flag", "pgi@12.9")
-    supported_flag_test("c99_flag", "-c99", "pgi@12.10")
-    unsupported_flag_test("c11_flag", "pgi@15.2")
-    supported_flag_test("c11_flag", "-c11", "pgi@15.3")
-    supported_flag_test("cc_pic_flag", "-fpic", "pgi@1.0")
-    supported_flag_test("cxx_pic_flag", "-fpic", "pgi@1.0")
-    supported_flag_test("f77_pic_flag", "-fpic", "pgi@1.0")
-    supported_flag_test("fc_pic_flag", "-fpic", "pgi@1.0")
-    supported_flag_test("stdcxx_libs", ("-pgc++libs",), "pgi@1.0")
-    supported_flag_test("debug_flags", ["-g", "-gopt"], "pgi@1.0")
-    supported_flag_test("opt_flags", ["-O", "-O0", "-O1", "-O2", "-O3", "-O4"], "pgi@1.0")
+    supported_flag_test("openmp_flag", "-mp", "pgi@=1.0")
+    supported_flag_test("cxx11_flag", "-std=c++11", "pgi@=1.0")
+    unsupported_flag_test("c99_flag", "pgi@=12.9")
+    supported_flag_test("c99_flag", "-c99", "pgi@=12.10")
+    unsupported_flag_test("c11_flag", "pgi@=15.2")
+    supported_flag_test("c11_flag", "-c11", "pgi@=15.3")
+    supported_flag_test("cc_pic_flag", "-fpic", "pgi@=1.0")
+    supported_flag_test("cxx_pic_flag", "-fpic", "pgi@=1.0")
+    supported_flag_test("f77_pic_flag", "-fpic", "pgi@=1.0")
+    supported_flag_test("fc_pic_flag", "-fpic", "pgi@=1.0")
+    supported_flag_test("stdcxx_libs", ("-pgc++libs",), "pgi@=1.0")
+    supported_flag_test("debug_flags", ["-g", "-gopt"], "pgi@=1.0")
+    supported_flag_test("opt_flags", ["-O", "-O0", "-O1", "-O2", "-O3", "-O4"], "pgi@=1.0")
 
 
 def test_xl_flags():
-    supported_flag_test("openmp_flag", "-qsmp=omp", "xl@1.0")
-    unsupported_flag_test("cxx11_flag", "xl@13.0")
-    supported_flag_test("cxx11_flag", "-qlanglvl=extended0x", "xl@13.1")
-    unsupported_flag_test("c99_flag", "xl@10.0")
-    supported_flag_test("c99_flag", "-qlanglvl=extc99", "xl@10.1")
-    supported_flag_test("c99_flag", "-std=gnu99", "xl@13.1.1")
-    unsupported_flag_test("c11_flag", "xl@12.0")
-    supported_flag_test("c11_flag", "-qlanglvl=extc1x", "xl@12.1")
-    supported_flag_test("c11_flag", "-std=gnu11", "xl@13.1.2")
-    supported_flag_test("cc_pic_flag", "-qpic", "xl@1.0")
-    supported_flag_test("cxx_pic_flag", "-qpic", "xl@1.0")
-    supported_flag_test("f77_pic_flag", "-qpic", "xl@1.0")
-    supported_flag_test("fc_pic_flag", "-qpic", "xl@1.0")
-    supported_flag_test("fflags", "-qzerosize", "xl@1.0")
-    supported_flag_test("debug_flags", ["-g", "-g0", "-g1", "-g2", "-g8", "-g9"], "xl@1.0")
+    supported_flag_test("openmp_flag", "-qsmp=omp", "xl@=1.0")
+    unsupported_flag_test("cxx11_flag", "xl@=13.0")
+    supported_flag_test("cxx11_flag", "-qlanglvl=extended0x", "xl@=13.1")
+    unsupported_flag_test("c99_flag", "xl@=10.0")
+    supported_flag_test("c99_flag", "-qlanglvl=extc99", "xl@=10.1")
+    supported_flag_test("c99_flag", "-std=gnu99", "xl@=13.1.1")
+    unsupported_flag_test("c11_flag", "xl@=12.0")
+    supported_flag_test("c11_flag", "-qlanglvl=extc1x", "xl@=12.1")
+    supported_flag_test("c11_flag", "-std=gnu11", "xl@=13.1.2")
+    supported_flag_test("cc_pic_flag", "-qpic", "xl@=1.0")
+    supported_flag_test("cxx_pic_flag", "-qpic", "xl@=1.0")
+    supported_flag_test("f77_pic_flag", "-qpic", "xl@=1.0")
+    supported_flag_test("fc_pic_flag", "-qpic", "xl@=1.0")
+    supported_flag_test("fflags", "-qzerosize", "xl@=1.0")
+    supported_flag_test("debug_flags", ["-g", "-g0", "-g1", "-g2", "-g8", "-g9"], "xl@=1.0")
     supported_flag_test(
-        "opt_flags", ["-O", "-O0", "-O1", "-O2", "-O3", "-O4", "-O5", "-Ofast"], "xl@1.0"
+        "opt_flags", ["-O", "-O0", "-O1", "-O2", "-O3", "-O4", "-O5", "-Ofast"], "xl@=1.0"
     )
 
 
 def test_xl_r_flags():
-    supported_flag_test("openmp_flag", "-qsmp=omp", "xl_r@1.0")
-    unsupported_flag_test("cxx11_flag", "xl_r@13.0")
-    supported_flag_test("cxx11_flag", "-qlanglvl=extended0x", "xl_r@13.1")
-    unsupported_flag_test("c99_flag", "xl_r@10.0")
-    supported_flag_test("c99_flag", "-qlanglvl=extc99", "xl_r@10.1")
-    supported_flag_test("c99_flag", "-std=gnu99", "xl_r@13.1.1")
-    unsupported_flag_test("c11_flag", "xl_r@12.0")
-    supported_flag_test("c11_flag", "-qlanglvl=extc1x", "xl_r@12.1")
-    supported_flag_test("c11_flag", "-std=gnu11", "xl_r@13.1.2")
-    supported_flag_test("cc_pic_flag", "-qpic", "xl_r@1.0")
-    supported_flag_test("cxx_pic_flag", "-qpic", "xl_r@1.0")
-    supported_flag_test("f77_pic_flag", "-qpic", "xl_r@1.0")
-    supported_flag_test("fc_pic_flag", "-qpic", "xl_r@1.0")
-    supported_flag_test("fflags", "-qzerosize", "xl_r@1.0")
-    supported_flag_test("debug_flags", ["-g", "-g0", "-g1", "-g2", "-g8", "-g9"], "xl@1.0")
+    supported_flag_test("openmp_flag", "-qsmp=omp", "xl_r@=1.0")
+    unsupported_flag_test("cxx11_flag", "xl_r@=13.0")
+    supported_flag_test("cxx11_flag", "-qlanglvl=extended0x", "xl_r@=13.1")
+    unsupported_flag_test("c99_flag", "xl_r@=10.0")
+    supported_flag_test("c99_flag", "-qlanglvl=extc99", "xl_r@=10.1")
+    supported_flag_test("c99_flag", "-std=gnu99", "xl_r@=13.1.1")
+    unsupported_flag_test("c11_flag", "xl_r@=12.0")
+    supported_flag_test("c11_flag", "-qlanglvl=extc1x", "xl_r@=12.1")
+    supported_flag_test("c11_flag", "-std=gnu11", "xl_r@=13.1.2")
+    supported_flag_test("cc_pic_flag", "-qpic", "xl_r@=1.0")
+    supported_flag_test("cxx_pic_flag", "-qpic", "xl_r@=1.0")
+    supported_flag_test("f77_pic_flag", "-qpic", "xl_r@=1.0")
+    supported_flag_test("fc_pic_flag", "-qpic", "xl_r@=1.0")
+    supported_flag_test("fflags", "-qzerosize", "xl_r@=1.0")
+    supported_flag_test("debug_flags", ["-g", "-g0", "-g1", "-g2", "-g8", "-g9"], "xl@=1.0")
     supported_flag_test(
-        "opt_flags", ["-O", "-O0", "-O1", "-O2", "-O3", "-O4", "-O5", "-Ofast"], "xl@1.0"
+        "opt_flags", ["-O", "-O0", "-O1", "-O2", "-O3", "-O4", "-O5", "-Ofast"], "xl@=1.0"
     )
 
 
@@ -662,8 +661,8 @@ def test_xl_r_flags():
     [("gcc@4.7.2", False), ("clang@3.3", False), ("clang@8.0.0", True)],
 )
 def test_detecting_mixed_toolchains(compiler_spec, expected_result, config):
-    compiler = spack.compilers.compilers_for_spec(compiler_spec).pop()
-    assert spack.compilers.is_mixed_toolchain(compiler) is expected_result
+    compiler = compilers.compilers_for_spec(compiler_spec).pop()
+    assert compilers.is_mixed_toolchain(compiler) is expected_result
 
 
 @pytest.mark.regression("14798,13733")
@@ -844,7 +843,7 @@ def test_apple_clang_setup_environment(mock_executable, monkeypatch):
 
     apple_clang_cls = spack.compilers.class_for_compiler_name("apple-clang")
     compiler = apple_clang_cls(
-        spack.spec.CompilerSpec("apple-clang@11.0.0"),
+        spack.spec.CompilerSpec("apple-clang@=11.0.0"),
         "catalina",
         "x86_64",
         ["/usr/bin/clang", "/usr/bin/clang++", None, None],

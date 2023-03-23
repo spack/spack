@@ -290,7 +290,7 @@ class PythonPackage(PythonExtension):
 
         python_external_config = spack.config.get("packages:python:externals", [])
         python_externals_configured = [
-            spack.spec.Spec(item["spec"])
+            spack.spec.concrete_spec_from_old_syntax(item["spec"])
             for item in python_external_config
             if item["prefix"] == self.spec.external_path
         ]
