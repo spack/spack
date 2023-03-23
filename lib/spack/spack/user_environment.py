@@ -89,7 +89,10 @@ def environment_modifications_for_spec(spec, view=None, set_package_py_globals=T
     # before asking for package-specific modifications
     env.extend(
         spack.build_environment.modifications_from_dependencies(
-            spec, context="run", set_package_py_globals=set_package_py_globals
+            spec,
+            custom_mods_only=False,
+            context="run",
+            set_package_py_globals=set_package_py_globals,
         )
     )
 
