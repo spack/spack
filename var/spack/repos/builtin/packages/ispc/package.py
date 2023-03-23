@@ -62,7 +62,7 @@ class Ispc(CMakePackage):
     )
 
     def setup_build_environment(self, env):
-        if self.spec.version >= Version("1.18.0"):
+        if self.spec.satisfies("@1.18.0:"):
             env.append_flags("LDFLAGS", "-lcurses")
             env.append_flags("LDFLAGS", "-lz")
 
