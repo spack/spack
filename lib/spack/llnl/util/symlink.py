@@ -40,10 +40,9 @@ def symlink(real_path: str, link_path: str):
     links effectively deletes the file. Don't need System
     Administrator privileges.
 
-    Junction (sometimes called soft link): A link to a
-    directory on the same or different volume (drive
-    letter) but not to a remote directory. Don't need
-    System Administrator privileges.
+    Junction: A link to a directory on the same or different
+    volume (drive letter) but not to a remote directory. Don't
+    need System Administrator privileges.
     """
     real_path = os.path.abspath(real_path)
     link_path = os.path.abspath(link_path)
