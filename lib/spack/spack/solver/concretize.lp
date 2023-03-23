@@ -915,6 +915,12 @@ error(2, "No valid version for '{0}' compiler '{1}' satisfies '@{2}'", Package, 
      attr("node_compiler_version_satisfies", Package, Compiler, Constraint),
 		 not compiler_version_satisfies(Compiler, Constraint, _).
 
+error(2, "No valid version for '{0}' compiler '{1}' satisfies '@{2}'", Package, Compiler, Constraint)
+  :- attr("node", Package),
+     attr("node_compiler_version_satisfies", Package, Compiler, Constraint),
+     not compiler_version_satisfies(Compiler, Constraint, ID),
+     node_compiler(Package, ID).
+
 % If the node is associated with a compiler and the compiler satisfy a constraint, then
 % the compiler associated with the node satisfy the same constraint
 attr("node_compiler_version_satisfies", Package, Compiler, Constraint)

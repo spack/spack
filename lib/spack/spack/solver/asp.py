@@ -1773,10 +1773,8 @@ class SpackSolverSetup(object):
             # real_version from the compiler object to get more accurate
             # results.
             if not supported:
-                compiler_obj = spack.compilers.compilers_for_spec(compiler)
-                compiler_obj = compiler_obj[0]
                 supported = self._supported_targets(
-                    compiler.name, compiler_obj.real_version, candidate_targets
+                    compiler.name, compiler.real_version, candidate_targets
                 )
 
             if not supported:
