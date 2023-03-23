@@ -305,6 +305,10 @@ class AutotoolsBuilder(BackupStep, Setup, autotools.AutotoolsBuilder):
             if "+external-xdr" in hdf4 and hdf4["rpc"].name != "libc":
                 libs.append(hdf4["rpc"].libs.link_flags)
 
+        if self.spec.satisfies("@4.9.0:"):
+            # Prevent linking to system bzip2:
+            config_args.append("ac_cv_lib_bz2_BZ2_bzCompress=no")
+
         if "+zstd" in self.spec:
             zstd = self.spec["zstd"]
             ldflags.append(zstd.libs.search_flags)
