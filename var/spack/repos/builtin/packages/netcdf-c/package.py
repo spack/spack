@@ -138,6 +138,8 @@ class NetcdfC(CMakePackage, AutotoolsPackage):
 
     # The features were introduced in version 4.9.0:
     conflicts("+zstd", when="@:4.8")
+    # The plugins are not built when the shared libraries are disabled:
+    conflicts("+zstd", when="~shared")
 
     default_build_system = "cmake" if sys.platform == "win32" else "autotools"
 
