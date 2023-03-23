@@ -16,3 +16,10 @@ class Libzip(AutotoolsPackage):
     version("1.2.0", sha256="6cf9840e427db96ebf3936665430bab204c9ebbd0120c326459077ed9c907d9f")
 
     depends_on("zlib@1.1.2:")
+
+    @property
+    def headers(self):
+        # Up to version 1.3.0 zipconf.h was installed outside of self.prefix.include
+        return find_all_headers(
+            self.prefix if self.spec.satisfies("@:1.3.0") else self.prefix.include
+        )
