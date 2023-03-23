@@ -2136,3 +2136,24 @@ class TestConcretize(object):
         spack.config.set("compilers", compiler_configuration)
         s = spack.spec.Spec("a %gcc@:11").concretized()
         assert s.compiler.version == ver("11.1.0"), s
+
+    @pytest.mark.regression("36339")
+    def test_compiler_with_custom_non_numeric_version(self, mock_executable):
+        """Test that, when a compiler has a completely made up version, we can use its
+        'real version' to detect targets and don't raise during concretization.
+        """
+        gcc_path = mock_executable("gcc", output="echo 9")
+        compiler_configuration = [
+            {
+                "compiler": {
+                    "spec": "gcc@foo",
+                    "paths": {"cc": gcc_path, "cxx": gcc_path, "f77": None, "fc": None},
+                    "operating_system": "debian6",
+                    "target": "x86_64",
+                    "modules": [],
+                }
+            }
+        ]
+        spack.config.set("compilers", compiler_configuration)
+        s = spack.spec.Spec("a %gcc@foo").concretized()
+        assert s.compiler.version == ver("foo")
