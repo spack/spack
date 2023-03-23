@@ -117,10 +117,6 @@ class NetcdfC(CMakePackage, AutotoolsPackage):
     depends_on("mpi", when="+mpi")
     depends_on("mpi", when="+parallel-netcdf")
 
-    # zlib 1.2.5 or later is required for netCDF-4 compression:
-    # https://docs.unidata.ucar.edu/nug/current/getting_and_building_netcdf.html
-    depends_on("zlib@1.2.5:")
-
     # High-level API of HDF5 1.8.9 or later is required for netCDF-4 support:
     # https://docs.unidata.ucar.edu/nug/current/getting_and_building_netcdf.html
     depends_on("hdf5@1.8.9:+hl")
@@ -137,6 +133,11 @@ class NetcdfC(CMakePackage, AutotoolsPackage):
     # https://github.com/Unidata/netcdf-c/issues/250
     depends_on("hdf5@:1.8", when="@:4.4.0")
 
+    # According to the documentation (see
+    # https://docs.unidata.ucar.edu/nug/current/getting_and_building_netcdf.html), zlib 1.2.5 or
+    # later is required for netCDF-4 compression. However, zlib became a direct dependency only
+    # starting NetCDF 4.9.0 (for the deflate plugin):
+    depends_on("zlib@1.2.5:", when="@4.9.0:+shared")
     depends_on("bzip2", when="@4.9.0:+shared")
     depends_on("szip", when="+szip")
     depends_on("c-blosc", when="+blosc")
@@ -294,10 +295,12 @@ class AutotoolsBuilder(BackupStep, Setup, autotools.AutotoolsBuilder):
 
         hdf5_hl = self.spec["hdf5:hl"]
         ldflags.append(hdf5_hl.libs.search_flags)
-        if "~shared+szip" in hdf5_hl:
-            szip_libs = hdf5_hl["szip"].libs
-            ldflags.append(szip_libs.search_flags)
-            libs.append(szip_libs.link_flags)
+        if "~shared" in hdf5_hl:
+            hdf5_transitive_libs = hdf5_hl["zlib"].libs
+            if "+szip" in hdf5_hl:
+                hdf5_transitive_libs += hdf5_hl["szip"].libs
+            ldflags.append(hdf5_transitive_libs.search_flags)
+            libs.append(hdf5_transitive_libs.link_flags)
 
         config_args += self.enable_or_disable("pnetcdf", variant="parallel-netcdf")
         if "+parallel-netcdf" in self.spec:
@@ -311,6 +314,10 @@ class AutotoolsBuilder(BackupStep, Setup, autotools.AutotoolsBuilder):
             hdf4_libs = self.spec["hdf:transitive"].libs
             ldflags.append(hdf4_libs.search_flags)
             libs.append(hdf4_libs.link_flags)
+
+        if not self.spec.satisfies("@4.9.0:+shared"):
+            # Prevent overlinking to zlib:
+            config_args.append("ac_cv_search_deflate=")
 
         if self.spec.satisfies("@4.9.0:~shared"):
             # Prevent redundant entries mentioning system bzip2 in nc-config and pkg-config files:
