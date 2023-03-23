@@ -115,30 +115,8 @@ version_provenance = collections.namedtuple(  # type: ignore
     "VersionProvenance", version_origin_fields
 )(**{name: i for i, name in enumerate(version_origin_fields)})
 
-
-class DeclaredVersion(object):
-    def __init__(self, version: spack.version.VersionBase, idx, origin):
-        if not isinstance(version, spack.version.VersionBase):
-            raise ValueError("Unexpected type for declared version: {0}".format(type(version)))
-        self.version = version
-        self.idx = idx
-        self.origin = origin
-
-    def __eq__(self, other):
-        if not isinstance(other, DeclaredVersion):
-            return False
-        is_git = lambda v: isinstance(v, spack.version.GitVersion)
-        if is_git(self.version) != is_git(other.version):
-            # GitVersion(hash=x) and Version(y) compare equal if x == y, but
-            # we do not want that to be true for DeclaredVersion, which is
-            # tracking how much information is provided: in that sense, the
-            # GitVersion provides more information and is therefore not equal.
-            return False
-        return (self.version, self.idx, self.origin) == (other.version, other.idx, other.origin)
-
-    def __hash__(self):
-        return hash((self.version, self.idx, self.origin))
-
+#: Named tuple to contain information on declared versions
+DeclaredVersion = collections.namedtuple("DeclaredVersion", ["version", "idx", "origin"])
 
 # Below numbers are used to map names of criteria to the order
 # they appear in the solution. See concretize.lp
@@ -1673,15 +1651,6 @@ class SpackSolverSetup(object):
                     DeclaredVersion(version=dep.version, idx=0, origin=origin)
                 )
                 self.possible_versions[dep.name].add(dep.version)
-                if (
-                    isinstance(dep.version, spack.version.GitVersion)
-                    and dep.version.user_supplied_reference
-                ):
-                    defined_version = spack.version.Version(dep.version.ref_version_str)
-                    self.declared_versions[dep.name].append(
-                        DeclaredVersion(version=defined_version, idx=0, origin=origin)
-                    )
-                    self.possible_versions[dep.name].add(defined_version)
 
     def _supported_targets(self, compiler_name, compiler_version, targets):
         """Get a list of which targets are supported by the compiler.
@@ -1920,11 +1889,7 @@ class SpackSolverSetup(object):
 
             # This is needed to account for a variable number of
             # numbers e.g. if both 1.0 and 1.0.2 are possible versions
-            exact_match = [
-                v
-                for v in allowed_versions
-                if v == versions and not isinstance(v, spack.version.GitVersion)
-            ]
+            exact_match = [v for v in allowed_versions if v == versions]
             if exact_match:
                 allowed_versions = exact_match
 
@@ -2126,9 +2091,6 @@ class SpackSolverSetup(object):
         self.add_concrete_versions_from_specs(specs, version_provenance.spec)
         self.add_concrete_versions_from_specs(dev_specs, version_provenance.dev_spec)
 
-        req_version_specs = _get_versioned_specs_from_pkg_requirements()
-        self.add_concrete_versions_from_specs(req_version_specs, version_provenance.packages_yaml)
-
         self.gen.h1("Concrete input spec definitions")
         self.define_concrete_input_specs(specs, possible)
 
@@ -2201,52 +2163,6 @@ class SpackSolverSetup(object):
 
         if self.concretize_everything:
             self.gen.fact(fn.concretize_everything())
-
-
-def _get_versioned_specs_from_pkg_requirements():
-    """If package requirements mention versions that are not mentioned
-    elsewhere, then we need to collect those to mark them as possible
-    versions.
-    """
-    req_version_specs = list()
-    config = spack.config.get("packages")
-    for pkg_name, d in config.items():
-        if pkg_name == "all":
-            continue
-        if "require" in d:
-            req_version_specs.extend(_specs_from_requires(pkg_name, d["require"]))
-    return req_version_specs
-
-
-def _specs_from_requires(pkg_name, section):
-    if isinstance(section, str):
-        spec = spack.spec.Spec(section)
-        if not spec.name:
-            spec.name = pkg_name
-        extracted_specs = [spec]
-    else:
-        spec_strs = []
-        # Each of these will be one_of or any_of
-        for spec_group in section:
-            (x,) = spec_group.values()
-            spec_strs.extend(x)
-
-        extracted_specs = []
-        for spec_str in spec_strs:
-            spec = spack.spec.Spec(spec_str)
-            if not spec.name:
-                spec.name = pkg_name
-            extracted_specs.append(spec)
-
-    version_specs = []
-    for spec in extracted_specs:
-        try:
-            spec.version
-            version_specs.append(spec)
-        except spack.error.SpecError:
-            pass
-
-    return version_specs
 
 
 class SpecBuilder(object):
