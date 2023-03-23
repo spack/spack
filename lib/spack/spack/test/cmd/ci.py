@@ -412,7 +412,7 @@ spack:
 """
         )
 
-    expect_out = "Error: Environment yaml does not have `ci` section"
+    expect_out = "Environment does not have `ci` a configuration"
 
     with tmpdir.as_cwd():
         env_cmd("create", "test", "./spack.yaml")

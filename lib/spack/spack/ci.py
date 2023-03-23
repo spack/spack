@@ -756,12 +756,12 @@ def generate_gitlab_ci_yaml(
     ci_config = cfg.get("ci")
 
     if not ci_config:
-        tty.warning("Environment does not have `ci` a configuration")
+        tty.warn("Environment does not have `ci` a configuration")
         gitlabci_config = yaml_root.get("gitlab-ci")
         if not gitlabci_config:
-            tty.die("Environment yaml does not have `gitlab-ci` config section.")
+            tty.die("Environment yaml does not have `gitlab-ci` config section. Cannot recover.")
 
-        tty.warning(
+        tty.warn(
             "The `gitlab-ci` configuration is deprecated in favor of `ci`.\n",
             "To update first change the section key from `gitlab-ci` to `ci`\n",
             "Then run \n\t$ spack config update ci",
@@ -769,7 +769,7 @@ def generate_gitlab_ci_yaml(
         ci_config = translate_deprecated_config(gitlabci_config)
 
     # Default target is gitlab...and only target is gitlab
-    if "target" in ci_config and ci_config["target"] != "gitlab":
+    if not ci_config.get("target", "gitlab") == "gitlab":
         tty.die('Spack CI module only generates target "gitlab"')
 
     cdash_config = cfg.get("cdash")
