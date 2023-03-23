@@ -219,10 +219,10 @@ class TestSpecList(object):
         matrix = {
             "matrix": [["mpileaks"], ["^callpath"]],
             "broadcast": [["%gcc", "%clang"], ["+debug", "~debug"]],
-        }
+            "exclude": ["+debug%clang"]}
         speclist = SpecList("specs", [matrix])
 
-        assert len(speclist) == 4
+        assert len(speclist) == 3
         for spec in speclist:
             for node in spec.traverse():
                 assert node.compiler.name == spec.compiler.name
