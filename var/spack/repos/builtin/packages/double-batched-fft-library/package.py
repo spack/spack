@@ -33,7 +33,7 @@ class DoubleBatchedFftLibrary(CMakePackage):
     depends_on("oneapi-level-zero", when="+level-zero")
     depends_on("opencl", when="+opencl")
 
-    patch("0001-Add-CPATH-and-LIBRARY_PATHs-to-OpenCL-search-paths.patch")
+    patch("0001-Add-CPATH-and-LIBRARY_PATHs-to-OpenCL-search-paths.patch", when="@:0.3.6")
 
     def cmake_args(self):
         cxx_compiler = os.path.basename(self.compiler.cxx)
