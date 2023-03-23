@@ -144,6 +144,15 @@ class NetcdfC(CMakePackage, AutotoolsPackage):
         if "+zstd" in self.spec:
             env.append_path("HDF5_PLUGIN_PATH", self.prefix.plugins)
 
+    def flag_handler(self, name, flags):
+        if self.builder.build_system == "autotools":
+            if name == "cflags":
+                if "+pic" in self.spec:
+                    flags.append(self.compiler.cc_pic_flag)
+                if "+optimize" in self.spec:
+                    flags.append("-O2")
+        return flags, None, None
+
     @property
     def libs(self):
         shared = "+shared" in self.spec
@@ -208,7 +217,6 @@ class AutotoolsBuilder(BackupStep, Setup, autotools.AutotoolsBuilder):
             Executable("./bootstrap")()
 
     def configure_args(self):
-        cflags = []
         cppflags = []
         ldflags = []
         libs = []
@@ -221,9 +229,6 @@ class AutotoolsBuilder(BackupStep, Setup, autotools.AutotoolsBuilder):
             "--enable-netcdf-4",
         ]
 
-        if "+optimize" in self.pkg.spec:
-            cflags.append("-O2")
-
         config_args.extend(self.enable_or_disable("fsync"))
 
         # The flag was introduced in version 4.3.1
@@ -231,9 +236,6 @@ class AutotoolsBuilder(BackupStep, Setup, autotools.AutotoolsBuilder):
             config_args.append("--enable-dynamic-loading")
 
         config_args += self.enable_or_disable("shared")
-
-        if "+pic" in self.pkg.spec:
-            cflags.append(self.pkg.compiler.cc_pic_flag)
 
         config_args += self.enable_or_disable("dap")
 
@@ -301,7 +303,6 @@ class AutotoolsBuilder(BackupStep, Setup, autotools.AutotoolsBuilder):
             # There is no explicit option to disable zstd.
             config_args.append("ac_cv_lib_zstd_ZSTD_compress=no")
 
-        config_args.append("CFLAGS=" + " ".join(cflags))
         config_args.append("CPPFLAGS=" + " ".join(cppflags))
         config_args.append("LDFLAGS=" + " ".join(ldflags))
         config_args.append("LIBS=" + " ".join(libs))
