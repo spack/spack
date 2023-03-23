@@ -217,7 +217,6 @@ class AutotoolsBuilder(BackupStep, Setup, autotools.AutotoolsBuilder):
             Executable("./bootstrap")()
 
     def configure_args(self):
-        cppflags = []
         ldflags = []
         libs = []
 
@@ -244,8 +243,6 @@ class AutotoolsBuilder(BackupStep, Setup, autotools.AutotoolsBuilder):
             curl_libs = curl.libs
             libs.append(curl_libs.link_flags)
             ldflags.append(curl_libs.search_flags)
-            # TODO: figure out how to get correct flags via headers.cpp_flags
-            cppflags.append("-I" + curl.prefix.include)
         elif self.spec.satisfies("@4.8.0:"):
             # Prevent overlinking to a system installation of libcurl:
             config_args.append("ac_cv_lib_curl_curl_easy_setopt=no")
@@ -260,13 +257,11 @@ class AutotoolsBuilder(BackupStep, Setup, autotools.AutotoolsBuilder):
             config_args += self.enable_or_disable("jna")
 
         hdf5_hl = self.spec["hdf5:hl"]
-        cppflags.append(hdf5_hl.headers.cpp_flags)
         ldflags.append(hdf5_hl.libs.search_flags)
 
         if "+parallel-netcdf" in self.spec:
             config_args.append("--enable-pnetcdf")
             pnetcdf = self.spec["parallel-netcdf"]
-            cppflags.append(pnetcdf.headers.cpp_flags)
             # TODO: change to pnetcdf.libs.search_flags once 'parallel-netcdf'
             # package gets custom implementation of 'libs'
             ldflags.append("-L" + pnetcdf.prefix.lib)
@@ -279,7 +274,6 @@ class AutotoolsBuilder(BackupStep, Setup, autotools.AutotoolsBuilder):
         config_args += self.enable_or_disable("hdf4")
         if "+hdf4" in self.spec:
             hdf4 = self.spec["hdf"]
-            cppflags.append(hdf4.headers.cpp_flags)
             # TODO: change to hdf4.libs.search_flags once 'hdf'
             # package gets custom implementation of 'libs' property.
             ldflags.append("-L" + hdf4.prefix.lib)
@@ -295,7 +289,6 @@ class AutotoolsBuilder(BackupStep, Setup, autotools.AutotoolsBuilder):
 
         if "+zstd" in self.spec:
             zstd = self.spec["zstd"]
-            cppflags.append(zstd.headers.cpp_flags)
             ldflags.append(zstd.libs.search_flags)
             config_args.append("--with-plugin-dir={}".format(self.prefix.plugins))
         elif "~zstd" in self.spec:
@@ -303,7 +296,6 @@ class AutotoolsBuilder(BackupStep, Setup, autotools.AutotoolsBuilder):
             # There is no explicit option to disable zstd.
             config_args.append("ac_cv_lib_zstd_ZSTD_compress=no")
 
-        config_args.append("CPPFLAGS=" + " ".join(cppflags))
         config_args.append("LDFLAGS=" + " ".join(ldflags))
         config_args.append("LIBS=" + " ".join(libs))
 
