@@ -134,6 +134,7 @@ class NetcdfC(CMakePackage, AutotoolsPackage):
     # https://github.com/Unidata/netcdf-c/issues/250
     depends_on("hdf5@:1.8", when="@:4.4.0")
 
+    depends_on("bzip2", when="@4.9.0:+shared")
     depends_on("zstd", when="+zstd")
 
     # The features were introduced in version 4.9.0:
@@ -295,8 +296,8 @@ class AutotoolsBuilder(BackupStep, Setup, autotools.AutotoolsBuilder):
             ldflags.append(hdf4_libs.search_flags)
             libs.append(hdf4_libs.link_flags)
 
-        if self.spec.satisfies("@4.9.0:"):
-            # Prevent linking to system bzip2:
+        if self.spec.satisfies("@4.9.0:~shared"):
+            # Prevent redundant entries mentioning system bzip2 in nc-config and pkg-config files:
             config_args.append("ac_cv_lib_bz2_BZ2_bzCompress=no")
 
         if "^szip" not in self.spec:
