@@ -506,6 +506,9 @@ class VersionBase(object):
             return VersionList()
 
 
+_version_debug = False
+
+
 class GitVersion(VersionBase):
     """Class to represent versions interpreted from git refs.
 
@@ -627,7 +630,20 @@ class GitVersion(VersionBase):
         self_cmp = self._cmp(other.ref_lookup)
         other_cmp = other._cmp(self.ref_lookup)
 
-        if other.is_ref:
+        if self.is_ref and other.is_ref:
+            if self.ref != other.ref:
+                return False
+            elif self.user_supplied_reference and other.user_supplied_reference:
+                return self.ref_version == other.ref_version
+            elif other.user_supplied_reference:
+                return False
+            else:
+                # In this case, 'other' does not supply a version equivalence
+                # with "=" and the commit strings are equal. 'self' may specify
+                # a version equivalence, but that is extra info and will
+                # satisfy no matter what it is.
+                return True
+        elif other.is_ref:
             # if other is a ref then satisfaction requires an exact version match
             # i.e. the GitRef must match this.version for satisfaction
             # this creates an asymmetric comparison:
