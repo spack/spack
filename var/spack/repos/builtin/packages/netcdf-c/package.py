@@ -136,10 +136,6 @@ class NetcdfC(CMakePackage, AutotoolsPackage):
 
     depends_on("zstd", when="+zstd")
 
-    # The features were introduced in version 4.1.0
-    conflicts("+parallel-netcdf", when="@:4.0")
-    conflicts("+hdf4", when="@:4.0")
-
     default_build_system = "cmake" if sys.platform == "win32" else "autotools"
 
     build_system("cmake", "autotools", default=default_build_system)
