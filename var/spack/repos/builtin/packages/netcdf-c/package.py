@@ -325,6 +325,10 @@ class AutotoolsBuilder(BackupStep, Setup, autotools.AutotoolsBuilder):
             # There is no explicit option to disable zstd.
             config_args.append("ac_cv_lib_zstd_ZSTD_compress=no")
 
+        if self.spec.satisfies("@4.8.0:"):
+            # Prevent linking to system libzip:
+            config_args.append("ac_cv_lib_zip_zip_open=no")
+
         config_args.append("LDFLAGS=" + " ".join(ldflags))
         config_args.append("LIBS=" + " ".join(libs))
 
