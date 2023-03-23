@@ -76,8 +76,10 @@ jobs:
           . .github/workflows/setup_git.sh
           useradd spack-test
           chown -R spack-test .
-      - name: Run unit tests
+      - name: Bootstrap Spack development environment
         shell: runuser -u spack-test -- bash {0}
         run: |
           source share/spack/setup-env.sh
           spack -d bootstrap now --dev
+          spack style -t black
+          spack unit-test -V
