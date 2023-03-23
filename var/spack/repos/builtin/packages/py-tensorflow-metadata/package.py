@@ -37,6 +37,21 @@ class PyTensorflowMetadata(PythonPackage):
     depends_on("py-googleapis-common-protos@1.52:1", type=("build", "run"))
     depends_on("py-protobuf@3.13:3", type=("build", "run"))
 
+    def patch(self):
+        filter_file(
+            "self._additional_build_options = ['--copt=-DWIN32_LEAN_AND_MEAN']",
+            "self._additional_build_options = ['--copt=-DWIN32_LEAN_AND_MEAN',"
+            f" '--jobs={make_jobs}']",
+            "setup.py",
+            string=True,
+        )
+        filter_file(
+            "self._additional_build_options = []",
+            f"self._additional_build_options = ['--jobs={make_jobs}']",
+            "setup.py",
+            string=True,
+        )
+
     def setup_build_environment(self, env):
         tmp_path = tempfile.mkdtemp(prefix="spack")
         env.set("TEST_TMPDIR", tmp_path)
