@@ -61,6 +61,7 @@ class PyH5py(PythonPackage):
     # Link dependencies (py-h5py v2 cannot build against HDF5 1.12 regardless
     # of API setting)
     depends_on("hdf5@1.8.4:1.11 +hl", when="@:2")
+    # https://forum.hdfgroup.org/t/runtimeerror-wrong-file-driver-version/10123
     depends_on("hdf5@1.8.4:1.12.99 +hl", when="@3:3.7")
     depends_on("hdf5@1.8.4: +hl", when="@3.8:")
 
