@@ -284,10 +284,7 @@ class AutotoolsBuilder(BackupStep, Setup, autotools.AutotoolsBuilder):
 
         config_args += self.enable_or_disable("pnetcdf", variant="parallel-netcdf")
         if "+parallel-netcdf" in self.spec:
-            pnetcdf = self.spec["parallel-netcdf"]
-            # TODO: change to pnetcdf.libs.search_flags once 'parallel-netcdf'
-            # package gets custom implementation of 'libs'
-            ldflags.append("-L" + pnetcdf.prefix.lib)
+            ldflags.append(self.spec["parallel-netcdf"].libs.search_flags)
 
         if "+mpi" in self.spec or "+parallel-netcdf" in self.spec:
             config_args.append("CC=%s" % self.spec["mpi"].mpicc)
