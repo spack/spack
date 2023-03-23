@@ -85,7 +85,7 @@ class NetcdfC(CMakePackage, AutotoolsPackage):
     variant("dap", default=False, description="Enable DAP support")
     variant("jna", default=False, description="Enable JNA support")
     variant("fsync", default=False, description="Enable fsync support")
-    variant("zstd", default=True, description="Enable ZStandard compression", when="@4.9.0:")
+    variant("zstd", default=True, description="Enable ZStandard compression")
     variant("optimize", default=True, description="Enable -O2 for a more optimized lib")
 
     # The patch for 4.7.0 touches configure.ac. See force_autoreconf below.
@@ -135,6 +135,9 @@ class NetcdfC(CMakePackage, AutotoolsPackage):
     depends_on("hdf5@:1.8", when="@:4.4.0")
 
     depends_on("zstd", when="+zstd")
+
+    # The features were introduced in version 4.9.0:
+    conflicts("+zstd", when="@:4.8")
 
     default_build_system = "cmake" if sys.platform == "win32" else "autotools"
 
@@ -286,8 +289,8 @@ class AutotoolsBuilder(BackupStep, Setup, autotools.AutotoolsBuilder):
             zstd = self.spec["zstd"]
             ldflags.append(zstd.libs.search_flags)
             config_args.append("--with-plugin-dir={}".format(self.prefix.plugins))
-        elif "~zstd" in self.spec:
-            # Prevent linking to system zstd.
+        elif self.spec.satisfies("@4.9.0:"):
+            # Prevent linking to system zstd:
             # There is no explicit option to disable zstd.
             config_args.append("ac_cv_lib_zstd_ZSTD_compress=no")
 
