@@ -12,6 +12,7 @@ class PyRequests(PythonPackage):
     homepage = "http://python-requests.org"
     pypi = "requests/requests-2.24.0.tar.gz"
 
+    version("2.28.2", sha256="98b1b2782e3c6c4904938b84c0eb932721069dfdb9134313beff7c83c2df24bf")
     version("2.28.1", sha256="7c5599b102feddaa661c826c56ab4fee28bfd17f5abca1ebbe3e7f19d7c97983")
     version("2.28.0", sha256="d568723a7ebd25875d8d1eaf5dfa068cd2fc8194b2e483d7b1f7c81918dbec6b")
     version("2.27.1", sha256="68d7c56fd5a8999887728ef304a6d12edc7be74f1cfa47714fc8b414525c9a61")
