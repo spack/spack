@@ -233,6 +233,13 @@ class AutotoolsBuilder(BackupStep, Setup, autotools.AutotoolsBuilder):
             "--enable-netcdf-4",
         ]
 
+        # NCZarr was added in version 4.8.0 as an experimental feature and became a supported one
+        # in version 4.8.1:
+        if self.spec.satisfies("@4.8.1:"):
+            config_args.append("--enable-nczarr")
+        elif self.spec.satisfies("@4.8.0"):
+            config_args.append("--disable-nczarr")
+
         config_args += self.enable_or_disable("fsync")
 
         # The flag was introduced in version 4.3.1
