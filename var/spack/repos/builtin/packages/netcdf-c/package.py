@@ -216,6 +216,9 @@ class NetcdfC(AutotoolsPackage):
         elif self.spec.satisfies("@4.8.0:"):
             # Prevent overlinking to a system installation of libcurl:
             config_args.append("ac_cv_lib_curl_curl_easy_setopt=no")
+            # 4.9.2 configure complains about libxml2 even with ~dap:
+            if self.spec.satisfies("@4.9.1:4.9.2"):
+                config_args.append("--disable-libxml2")
 
         if self.spec.satisfies("@4.4:"):
             if "+mpi" in self.spec:
