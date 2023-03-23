@@ -2226,10 +2226,13 @@ def _specs_from_requires(pkg_name, section):
         extracted_specs = [spec]
     else:
         spec_strs = []
-        # Each of these will be one_of or any_of
         for spec_group in section:
-            (x,) = spec_group.values()
-            spec_strs.extend(x)
+            if isinstance(spec_group, str):
+                spec_strs.append(spec_group)
+            else:
+                # Otherwise it is a one_of or any_of: get the values
+                (x,) = spec_group.values()
+                spec_strs.extend(x)
 
         extracted_specs = []
         for spec_str in spec_strs:
