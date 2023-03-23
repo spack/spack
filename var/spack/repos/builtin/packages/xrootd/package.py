@@ -91,11 +91,14 @@ class Xrootd(CMakePackage):
         when="@5.5.1",
     )
 
-    # do not use systemd
-    patch("no-systemd.patch")
-
     def patch(self):
-        """Remove hardcoded -std=c++0x flag"""
+        # Do not use systemd
+        filter_file(
+            r"(add_definitions\(\s*-DHAVE_SYSTEMD\s*\))",
+            r"#\1",
+            "cmake/XRootDFindLibs.cmake")
+
+        # Remove hardcoded -std=c++0x flag
         if self.spec.satisfies("@4.7.0:"):
             filter_file(r"\-std=c\+\+0x", r"", "cmake/XRootDOSDefs.cmake")
 
