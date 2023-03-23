@@ -103,6 +103,7 @@ version_origin_fields = [
     "dev_spec",
     "external",
     "packages_yaml",
+    "package_requirements",
     "package_py",
     "installed",
 ]
@@ -116,28 +117,7 @@ version_provenance = collections.namedtuple(  # type: ignore
 )(**{name: i for i, name in enumerate(version_origin_fields)})
 
 
-class DeclaredVersion(object):
-    def __init__(self, version: spack.version.VersionBase, idx, origin):
-        if not isinstance(version, spack.version.VersionBase):
-            raise ValueError("Unexpected type for declared version: {0}".format(type(version)))
-        self.version = version
-        self.idx = idx
-        self.origin = origin
-
-    def __eq__(self, other):
-        if not isinstance(other, DeclaredVersion):
-            return False
-        is_git = lambda v: isinstance(v, spack.version.GitVersion)
-        if is_git(self.version) != is_git(other.version):
-            # GitVersion(hash=x) and Version(y) compare equal if x == y, but
-            # we do not want that to be true for DeclaredVersion, which is
-            # tracking how much information is provided: in that sense, the
-            # GitVersion provides more information and is therefore not equal.
-            return False
-        return (self.version, self.idx, self.origin) == (other.version, other.idx, other.origin)
-
-    def __hash__(self):
-        return hash((self.version, self.idx, self.origin))
+DeclaredVersion = collections.namedtuple("DeclaredVersion", ["version", "idx", "origin"])
 
 
 # Below numbers are used to map names of criteria to the order
@@ -893,30 +873,6 @@ class SpackSolverSetup(object):
                     version_origin_str[declared_version.origin],
                 )
             )
-
-        for v in most_to_least_preferred:
-            # There are two paths for creating the ref_version in GitVersions.
-            # The first uses a lookup to supply a tag and distance as a version.
-            # The second is user specified and can be resolved as a standard version.
-            # This second option is constrained such that the user version must be known to Spack
-            if (
-                isinstance(v.version, spack.version.GitVersion)
-                and v.version.user_supplied_reference
-            ):
-                ref_version = spack.version.Version(v.version.ref_version_str)
-                self.gen.fact(fn.version_equivalent(pkg.name, v.version, ref_version))
-                # disqualify any git supplied version from user if they weren't already known
-                # versions in spack
-                if not any(ref_version == dv.version for dv in most_to_least_preferred if v != dv):
-                    msg = (
-                        "The reference version '{version}' for package '{package}' is not defined."
-                        " Either choose another reference version or define '{version}' in your"
-                        " version preferences or package.py file for {package}.".format(
-                            package=pkg.name, version=str(ref_version)
-                        )
-                    )
-
-                    raise UnsatisfiableSpecError(msg)
 
         # Declare deprecated versions for this package, if any
         deprecated = self.deprecated_versions[pkg.name]
@@ -2127,7 +2083,7 @@ class SpackSolverSetup(object):
         self.add_concrete_versions_from_specs(dev_specs, version_provenance.dev_spec)
 
         req_version_specs = _get_versioned_specs_from_pkg_requirements()
-        self.add_concrete_versions_from_specs(req_version_specs, version_provenance.packages_yaml)
+        self.add_concrete_versions_from_specs(req_version_specs, version_provenance.package_requirements)
 
         self.gen.h1("Concrete input spec definitions")
         self.define_concrete_input_specs(specs, possible)
