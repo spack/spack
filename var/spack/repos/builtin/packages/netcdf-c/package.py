@@ -267,8 +267,8 @@ class AutotoolsBuilder(BackupStep, Setup, autotools.AutotoolsBuilder):
 
         config_args += self.enable_or_disable("fsync")
 
-        # The flag was introduced in version 4.3.1
-        if self.spec.satisfies("@4.3.1:"):
+        # The option was introduced in version 4.3.1 and does nothing starting version 4.6.1:
+        if self.spec.satisfies("@4.3.1:4.6.0"):
             config_args.append("--enable-dynamic-loading")
 
         config_args += self.enable_or_disable("shared")
