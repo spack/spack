@@ -240,6 +240,10 @@ class AutotoolsBuilder(BackupStep, Setup, autotools.AutotoolsBuilder):
         elif self.spec.satisfies("@4.8.0"):
             config_args.append("--disable-nczarr")
 
+        # Byte-range I/O was added in version 4.7.0 and we disable it until it becomes a variant:
+        if self.spec.satisfies("@4.7.0:"):
+            config_args.append("--disable-byterange")
+
         config_args += self.enable_or_disable("fsync")
 
         # The flag was introduced in version 4.3.1
