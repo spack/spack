@@ -6,6 +6,7 @@
 import os
 
 from spack.package import *
+from llnl.util.symlink import symlink
 
 
 class ViewDirSymlinkedDir(Package):
@@ -19,8 +20,8 @@ class ViewDirSymlinkedDir(Package):
     version("0.1.0", sha256="cc89a8768693f1f11539378b21cdca9f0ce3fc5cb564f9b3e4154a051dcea69b")
 
     def install(self, spec, prefix):
-        os.mkdir(os.path.join(prefix, "bin"))
-        os.mkdir(os.path.join(prefix, "bin", "y"))
-        with open(os.path.join(prefix, "bin", "y", "file_in_symlinked_dir"), "wb") as f:
+        mkdirp(join_path(prefix, "bin"))
+        mkdirp(join_path(prefix, "bin", "y"))
+        with open(join_path(prefix, "bin", "y", "file_in_symlinked_dir"), "wb") as f:
             f.write(b"hello world")
-        os.symlink("y", os.path.join(prefix, "bin", "x"))
+        symlink("y", join_path(prefix, "bin", "x"))

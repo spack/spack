@@ -14,6 +14,7 @@ import pytest
 
 import llnl.util.filesystem as fs
 import llnl.util.link_tree
+from llnl.util.symlink import symlink, islink
 
 import spack.cmd.env
 import spack.config
@@ -36,8 +37,7 @@ from spack.version import Version
 # everything here uses the mock_env_path
 pytestmark = [
     pytest.mark.usefixtures("mutable_mock_env_path", "config", "mutable_mock_repo"),
-    pytest.mark.maybeslow,
-    pytest.mark.skipif(sys.platform == "win32", reason="Envs unsupported on Window"),
+    pytest.mark.maybeslow
 ]
 
 env = SpackCommand("env")
@@ -50,7 +50,10 @@ stage = SpackCommand("stage")
 uninstall = SpackCommand("uninstall")
 find = SpackCommand("find")
 
-sep = os.sep
+root = "/"
+if sys.platform == "win32":
+    root = "C:\\"
+    is_windows = True
 
 
 def check_mpileaks_and_deps_in_view(viewdir):
@@ -146,7 +149,6 @@ def test_env_list(mutable_mock_env_path):
 def test_env_remove(capfd):
     env("create", "foo")
     env("create", "bar")
-
     out = env("list")
     assert "foo" in out
     assert "bar" in out
@@ -307,16 +309,18 @@ def test_env_definition_symlink(install_mockery, mock_fetch, tmpdir):
     e.add("mpileaks")
 
     os.rename(e.manifest_path, filepath)
-    os.symlink(filepath, filepath_mid)
-    os.symlink(filepath_mid, e.manifest_path)
+
+    symlink(filepath, filepath_mid)
+    symlink(filepath_mid, e.manifest_path)
 
     e.concretize()
     e.write()
 
-    assert os.path.islink(e.manifest_path)
-    assert os.path.islink(filepath_mid)
+    assert islink(e.manifest_path)
+    assert islink(filepath_mid)
 
 
+@pytest.mark.skipif(is_windows, reason="WIP depb calls concretize without a file because it's an AutotoolsPackage and capsys messes with the logger")
 def test_env_install_two_specs_same_dep(install_mockery, mock_fetch, tmpdir, capsys):
     """Test installation of two packages that share a dependency with no
     connection and the second specifying the dependency as a 'build'
@@ -708,7 +712,10 @@ spack:
     err = str(exc)
     assert "missing include" in err
     assert "/no/such/directory" in err
-    assert os.path.join("no", "such", "file.yaml") in err
+    if is_windows:
+      assert "no\\\\such\\\\file.yaml" in err
+    else:
+      assert os.path.join("no", "such", "file.yaml") in err
     assert ev.active_environment() is None
 
 
@@ -770,22 +777,29 @@ packages:
 def mpileaks_env_config(include_path):
     """Return the contents of an environment that includes the provided
     path and lists mpileaks as the sole spec."""
+
+    file_seperator = "//"
+    if is_windows:
+      file_seperator = "///"
+
     return """\
 env:
   include:
-  - {0}
+  - file:{1}{0}
   specs:
   - mpileaks
 """.format(
-        include_path
+        include_path, file_seperator
     )
 
 
+@pytest.mark.skipif(sys.platform == "win32", reason="File uri relative paths not supported on windows")
 def test_env_with_included_config_file(packages_file):
     """Test inclusion of a relative packages configuration file added to an
     existing environment."""
     include_filename = "included-config.yaml"
-    test_config = mpileaks_env_config(os.path.join(".", include_filename))
+    file_path = os.path.join(".", include_filename)
+    test_config = mpileaks_env_config(file_path)
 
     _env_create("test", io.StringIO(test_config))
     e = ev.read("test")
@@ -805,7 +819,10 @@ def test_env_with_included_config_file_url(tmpdir, mutable_empty_config, package
 
     spack_yaml = tmpdir.join("spack.yaml")
     with spack_yaml.open("w") as f:
-        f.write("spack:\n  include:\n    - file://{0}\n".format(packages_file))
+        file_seperator = "//"
+        if is_windows:
+          file_seperator = "///"
+        f.write("spack:\n  include:\n    - file:{1}{0}\n".format(packages_file, file_seperator))
 
     env = ev.Environment(tmpdir.strpath)
     ev.activate(env)
@@ -823,7 +840,10 @@ def test_env_with_included_config_missing_file(tmpdir, mutable_empty_config):
     spack_yaml = tmpdir.join("spack.yaml")
     missing_file = tmpdir.join("packages.yaml")
     with spack_yaml.open("w") as f:
-        f.write("spack:\n  include:\n    - {0}\n".format(missing_file.strpath))
+        file_seperator = "//"
+        if is_windows:
+          file_seperator = "///"
+        f.write("spack:\n  include:\n    - file:{1}{0}\n".format(missing_file.strpath, file_seperator))
 
     env = ev.Environment(tmpdir.strpath)
     with pytest.raises(spack.config.ConfigError, match="missing include path"):
@@ -1213,12 +1233,17 @@ def test_env_view_fails_dir_file(tmpdir, mock_packages, mock_stage, mock_fetch, 
     with ev.read("test"):
         add("view-dir-file")
         add("view-dir-dir")
+
+        match = "bin/x"
+        if sys.platform == "win32":
+            match = "bin\\\\x"
         with pytest.raises(
-            llnl.util.link_tree.MergeConflictSummary, match=os.path.join("bin", "x")
+            llnl.util.link_tree.MergeConflictSummary, match=match
         ):
             install()
 
 
+@pytest.mark.skipif(sys.platform == "win32", reason="Views are not yet supported for windows")
 def test_env_view_succeeds_symlinked_dir_file(
     tmpdir, mock_packages, mock_stage, mock_fetch, install_mockery
 ):
@@ -2131,6 +2156,7 @@ spack:
         assert not os.path.exists(os.path.join(viewdir, pkg))
 
 
+@pytest.mark.skipif(sys.platform == "win32", reason="Views are not yet supported for windows")
 @pytest.mark.parametrize("link_type", ["hardlink", "copy", "symlink"])
 def test_view_link_type(
     link_type, tmpdir, mock_fetch, mock_packages, mock_archive, install_mockery
@@ -2495,6 +2521,7 @@ spack:
     env("update", "-y", str(abspath.dirname))
 
 
+@pytest.mark.skipif(sys.platform == "win32", reason="Modules are not yet supported on windows")
 @pytest.mark.regression("18338")
 def test_newline_in_commented_sequence_is_not_an_issue(tmpdir):
     spack_yaml = """
@@ -2602,7 +2629,7 @@ def test_rewrite_rel_dev_path_new_dir(tmpdir):
     env("create", "-d", str(dest_env), str(spack_yaml))
     with ev.Environment(str(dest_env)) as e:
         assert e.dev_specs["mypkg1"]["path"] == str(build_folder)
-        assert e.dev_specs["mypkg2"]["path"] == sep + os.path.join("some", "other", "path")
+        assert e.dev_specs["mypkg2"]["path"] == root + os.path.join("some", "other", "path")
 
 
 def test_rewrite_rel_dev_path_named_env(tmpdir):
@@ -2612,7 +2639,7 @@ def test_rewrite_rel_dev_path_named_env(tmpdir):
     env("create", "named_env", str(spack_yaml))
     with ev.read("named_env") as e:
         assert e.dev_specs["mypkg1"]["path"] == str(build_folder)
-        assert e.dev_specs["mypkg2"]["path"] == sep + os.path.join("some", "other", "path")
+        assert e.dev_specs["mypkg2"]["path"] == root + os.path.join("some", "other", "path")
 
 
 def test_rewrite_rel_dev_path_original_dir(tmpdir):
@@ -2659,6 +2686,7 @@ def test_custom_version_concretize_together(tmpdir):
     assert any("hdf5@myversion" in spec for _, spec in e.concretized_specs())
 
 
+@pytest.mark.skipif(sys.platform == "win32", reason="Modules are not yet supported on windows")
 def test_modules_relative_to_views(tmpdir, install_mockery, mock_fetch):
     spack_yaml = """
 spack:
@@ -2690,6 +2718,7 @@ spack:
     assert spec.prefix not in contents
 
 
+@pytest.mark.skipif(sys.platform == "win32", reason="Modules are not yet supported on windows")
 def test_multiple_modules_post_env_hook(tmpdir, install_mockery, mock_fetch):
     spack_yaml = """
 spack:
@@ -2811,7 +2840,7 @@ def test_env_view_fail_if_symlink_points_elsewhere(tmpdir, install_mockery, mock
     view = str(tmpdir.join("view"))
     # Put a symlink to an actual directory in view
     non_view_dir = str(tmpdir.mkdir("dont-delete-me"))
-    os.symlink(non_view_dir, view)
+    symlink(non_view_dir, view)
     with ev.create("env", with_view=view):
         add("libelf")
         install("--fake")
@@ -3025,6 +3054,7 @@ def test_read_legacy_lockfile_and_reconcretize(mock_stage, mock_fetch, install_m
     assert current_versions == expected_versions
 
 
+@pytest.mark.skipif(sys.platform == "win32", reason="Depfiles only support Make")
 @pytest.mark.parametrize(
     "depfile_flags,expected_installs",
     [
@@ -3119,6 +3149,7 @@ def test_environment_depfile_makefile(depfile_flags, expected_installs, tmpdir, 
     assert len(specs_that_make_would_install) == len(expected_installs)
 
 
+@pytest.mark.skipif(sys.platform == "win32", reason="Depfiles only support Make")
 def test_environment_depfile_out(tmpdir, mock_packages):
     env("create", "test")
     makefile_path = str(tmpdir.join("Makefile"))
@@ -3132,6 +3163,7 @@ def test_environment_depfile_out(tmpdir, mock_packages):
             assert stdout == f.read()
 
 
+@pytest.mark.skipif(sys.platform == "win32", reason="Depfiles only support Make")
 def test_spack_package_ids_variable(tmpdir, mock_packages):
     # Integration test for post-install hooks through prefix/SPACK_PACKAGE_IDS
     # variable

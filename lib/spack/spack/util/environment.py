@@ -980,18 +980,27 @@ def environment_after_sourcing_files(*files, **kwargs):
             only when the previous command succeeds (default: ``&&``)
     """
     # Set the shell executable that will be used to source files
-    shell_cmd = kwargs.get("shell", "/bin/bash")
-    shell_options = kwargs.get("shell_options", "-c")
-    source_command = kwargs.get("source_command", "source")
-    suppress_output = kwargs.get("suppress_output", "&> /dev/null")
+    if sys.platform == "win32":
+        shell_cmd = kwargs.get("shell", "cmd.exe")
+        shell_options = kwargs.get("shell_options", "")
+        suppress_output = kwargs.get("suppress_output", "")
+        source_command = kwargs.get("source_command", "")
+    else:
+        shell_cmd = kwargs.get("shell", "/bin/bash")
+        shell_options = kwargs.get("shell_options", "-c")
+        suppress_output = kwargs.get("suppress_output", "&> /dev/null")
+        source_command = kwargs.get("source_command", "source")
     concatenate_on_success = kwargs.get("concatenate_on_success", "&&")
 
     shell = executable.Executable(" ".join([shell_cmd, shell_options]))
 
     def _source_single_file(file_and_args, environment):
-        source_file = [source_command]
-        source_file.extend(x for x in file_and_args)
-        source_file = " ".join(source_file)
+        if sys.platform == "win32":
+            source_file_arguments = ['/C']
+        else:
+            source_file_arguments = [source_command]
+
+        source_file_arguments.extend(x for x in file_and_args if x != os.devnull)
 
         # If the environment contains 'python' use it, if not
         # go with sys.executable. Below we just need a working
@@ -1000,13 +1009,14 @@ def environment_after_sourcing_files(*files, **kwargs):
         python_cmd = python_cmd.path if python_cmd else sys.executable
 
         dump_cmd = "import os, json; print(json.dumps(dict(os.environ)))"
-        dump_environment = python_cmd + ' -E -c "{0}"'.format(dump_cmd)
+        dump_environment = ['python', '-E', '-c', dump_cmd]
 
         # Try to source the file
-        source_file_arguments = " ".join(
-            [source_file, suppress_output, concatenate_on_success, dump_environment]
-        )
-        output = shell(source_file_arguments, output=str, env=environment, ignore_quotes=True)
+        if source_file_arguments and source_file_arguments != ['/C']:
+            source_file_arguments.extend([suppress_output, concatenate_on_success])
+        source_file_arguments.extend(dump_environment)
+
+        output = shell(*source_file_arguments, output=str, env=environment, ignore_quotes=True)
         return json.loads(output)
 
     current_environment = kwargs.get("env", dict(os.environ))

@@ -23,6 +23,7 @@ from spack.util.environment import (
 
 datadir = os.path.join(spack_root, "lib", "spack", "spack", "test", "data")
 
+is_windows = sys.platform == "win32"
 
 def test_inspect_path(tmpdir):
     inspections = {
@@ -70,9 +71,21 @@ def prepare_environment_for_tests(working_env):
     """
     os.environ["UNSET_ME"] = "foo"
     os.environ["EMPTY_PATH_LIST"] = ""
-    os.environ["PATH_LIST"] = "/path/second:/path/third"
-    os.environ["REMOVE_PATH_LIST"] = "/a/b:/duplicate:/a/c:/remove/this:/a/d:/duplicate/:/f/g"
-    os.environ["PATH_LIST_WITH_SYSTEM_PATHS"] = "/usr/include:" + os.environ["REMOVE_PATH_LIST"]
+    list_sep = ";" if is_windows else ":"
+    os.environ["PATH_LIST"] = list_sep.join([os.sep.join(["","path","second"]), os.sep.join(["","path", "third"])])
+    os.environ["REMOVE_PATH_LIST"] = list_sep.join([
+        os.sep.join(["","a", "b"]),
+        os.sep.join(["","duplicate"]),
+        os.sep.join(["","a", "c"]),
+        os.sep.join(["","remove", "this"]),
+        os.sep.join(["","a","d"]),
+        os.sep.join(["","duplicate"]),
+        os.sep.join(["","f","g"])
+        ])
+    prepend = "/usr/include:"
+    if is_windows:
+        prepend = "C:\\Users;"
+    os.environ["PATH_LIST_WITH_SYSTEM_PATHS"] = prepend + os.environ["REMOVE_PATH_LIST"]
     os.environ["PATH_LIST_WITH_DUPLICATES"] = os.environ["REMOVE_PATH_LIST"]
 
 
@@ -85,6 +98,19 @@ def env(prepare_environment_for_tests):
 @pytest.fixture
 def miscellaneous_paths():
     """Returns a list of paths, including system ones."""
+    if is_windows:
+        return [
+          "C:\\",
+          "C:\\Program Files",
+          "C:\\Program Files (x86)",
+          "C:\\Program Files (x86)\\some-package",
+          "C:\\Users",
+          "C:\\Users\\Cellar\\opt\\some-package\\lib",
+          "C:\\Users\\Cellar\\gcc\\5.3.0\\lib",
+          "C:\\ProgramData",
+          "C:\\ProgramData\\some-package\\local"
+        ]
+
     return [
         "/usr/local/Cellar/gcc/5.3.0/lib",
         "/usr/local/lib",
@@ -111,6 +137,13 @@ def miscellaneous_paths():
 @pytest.fixture
 def files_to_be_sourced():
     """Returns a list of files to be sourced"""
+    if is_windows:
+        return [
+            os.path.join(datadir, "sourceme_first.bat"),
+            os.path.join(datadir, "sourceme_second.bat"),
+            os.path.join(datadir, "sourceme_parameters.bat"),
+            os.path.join(datadir, "sourceme_unicode.bat")
+        ]
     return [
         os.path.join(datadir, "sourceme_first.sh"),
         os.path.join(datadir, "sourceme_second.sh"),
@@ -159,7 +192,6 @@ def test_unset(env):
         os.environ["UNSET_ME"]
 
 
-@pytest.mark.skipif(sys.platform == "win32", reason="Not supported on Windows (yet)")
 def test_filter_system_paths(miscellaneous_paths):
     """Tests that the filtering of system paths works as expected."""
     filtered = filter_system_paths(miscellaneous_paths)
@@ -170,27 +202,43 @@ def test_filter_system_paths(miscellaneous_paths):
         "/opt/some-package/include",
         "/opt/some-package/local/..",
     ]
+    if is_windows:
+        expected = [
+          "C:\\Program Files (x86)\\some-package",
+          "C:\\Users\\Cellar\\opt\\some-package\\lib",
+          "C:\\Users\\Cellar\\gcc\\5.3.0\\lib",
+          "C:\\ProgramData\\some-package\\local"
+        ]
     assert filtered == expected
 
 
 # TODO 27021
-@pytest.mark.skipif(sys.platform == "win32", reason="Not supported on Windows (yet)")
 def test_set_path(env):
     """Tests setting paths in an environment variable."""
+    vars = ["foo", "bar", "baz"]
+    col_sep = "foo:bar:baz"
+    semi_col_sep = "foo;bar;baz"
 
     # Check setting paths with the default separator
     env.set_path("A", ["foo", "bar", "baz"])
     env.apply_modifications()
 
-    assert "foo:bar:baz" == os.environ["A"]
+    if is_windows:
+      assert semi_col_sep == os.environ["A"]
+    else:
+      assert col_sep == os.environ["A"]
 
     env.set_path("B", ["foo", "bar", "baz"], separator=";")
     env.apply_modifications()
 
-    assert "foo;bar;baz" == os.environ["B"]
+    assert semi_col_sep == os.environ["B"]
+
+    env.set_path("B", ["foo", "bar", "baz"], separator=":")
+    env.apply_modifications()
+
+    assert col_sep == os.environ["B"]
 
 
-@pytest.mark.skipif(sys.platform == "win32", reason="Not supported on Windows (yet)")
 def test_path_manipulation(env):
     """Tests manipulating list of paths in the environment."""
 
@@ -213,21 +261,48 @@ def test_path_manipulation(env):
 
     env.apply_modifications()
 
-    expected = "/path/first:/path/second:/path/third:/path/last"
+    list_sep = ";" if is_windows else ":"
+
+    expected = list_sep.join([
+        os.sep.join(["","path","first"]),
+        os.sep.join(["","path","second"]),
+        os.sep.join(["","path","third"]),
+        os.sep.join(["","path","last"])
+    ])
     assert os.environ["PATH_LIST"] == expected
 
-    expected = "/path/first:/path/middle:/path/last"
+    expected = list_sep.join([
+        os.sep.join(["","path","first"]),
+        os.sep.join(["","path","middle"]),
+        os.sep.join(["","path","last"])
+    ])
     assert os.environ["EMPTY_PATH_LIST"] == expected
 
-    expected = "/path/first:/path/middle:/path/last"
+    expected = list_sep.join([
+        os.sep.join(["","path","first"]),
+        os.sep.join(["","path","middle"]),
+        os.sep.join(["","path","last"])
+    ])
     assert os.environ["NEWLY_CREATED_PATH_LIST"] == expected
 
-    assert os.environ["REMOVE_PATH_LIST"] == "/a/b:/a/c:/a/d:/f/g"
+    expected = list_sep.join([
+        os.sep.join(["","a","b"]),
+        os.sep.join(["","a","c"]),
+        os.sep.join(["","a","d"]),
+        os.sep.join(["","f","g"])
+    ])
+    assert os.environ["REMOVE_PATH_LIST"] == expected
 
-    assert not os.environ["PATH_LIST_WITH_SYSTEM_PATHS"].startswith("/usr/include:")
-    assert os.environ["PATH_LIST_WITH_SYSTEM_PATHS"].endswith(":/usr/include")
+    expected = "/usr/include:"
+    if is_windows:
+        expected = "C:\\Users;"
+    assert not os.environ["PATH_LIST_WITH_SYSTEM_PATHS"].startswith(expected)
+    expected = ":/usr/include"
+    if is_windows:
+        expected = ";C:\\Users"
+    assert os.environ["PATH_LIST_WITH_SYSTEM_PATHS"].endswith(expected)
 
-    assert os.environ["PATH_LIST_WITH_DUPLICATES"].count("/duplicate") == 1
+    assert os.environ["PATH_LIST_WITH_DUPLICATES"].count("duplicate") == 1
 
 
 def test_extra_arguments(env):
@@ -254,7 +329,6 @@ def test_extend(env):
         assert x is y
 
 
-@pytest.mark.skipif(sys.platform == "win32", reason="Not supported on Windows (yet)")
 @pytest.mark.usefixtures("prepare_environment_for_tests")
 def test_source_files(files_to_be_sourced):
     """Tests the construction of a list of environment modifications that are
@@ -262,7 +336,7 @@ def test_source_files(files_to_be_sourced):
     """
     env = EnvironmentModifications()
     for filename in files_to_be_sourced:
-        if filename.endswith("sourceme_parameters.sh"):
+        if "sourceme_parameters" in filename:
             env.extend(EnvironmentModifications.from_sourcing_file(filename, "intel64"))
         else:
             env.extend(EnvironmentModifications.from_sourcing_file(filename))
@@ -295,11 +369,13 @@ def test_source_files(files_to_be_sourced):
 
     assert len(modifications["PATH_LIST"]) == 3
     assert isinstance(modifications["PATH_LIST"][0], RemovePath)
-    assert modifications["PATH_LIST"][0].value == "/path/third"
+    assert modifications["PATH_LIST"][0].value == os.sep.join(["","path","third"])
+
     assert isinstance(modifications["PATH_LIST"][1], AppendPath)
-    assert modifications["PATH_LIST"][1].value == "/path/fourth"
+    assert modifications["PATH_LIST"][1].value == os.sep.join(["","path","fourth"])
+
     assert isinstance(modifications["PATH_LIST"][2], PrependPath)
-    assert modifications["PATH_LIST"][2].value == "/path/first"
+    assert modifications["PATH_LIST"][2].value == os.sep.join(["","path","first"])
 
 
 @pytest.mark.regression("8345")
@@ -318,42 +394,44 @@ def test_preserve_environment(prepare_environment_for_tests):
 
     assert "NOT_SET" not in os.environ
     assert os.environ["UNSET_ME"] == "foo"
-    assert os.environ["PATH_LIST"] == "/path/second:/path/third"
+    expected = "/path/second:/path/third"
+    if is_windows:
+        expected = "\\path\\second;\\path\\third"
+    assert os.environ["PATH_LIST"] == expected
 
 
-@pytest.mark.skipif(sys.platform == "win32", reason="Not supported on Windows (yet)")
 @pytest.mark.parametrize(
     "files,expected,deleted",
     [
         # Sets two variables
         (
-            (os.path.join(datadir, "sourceme_first.sh"),),
+            (os.path.join(datadir, "sourceme_first.bat"),),
             {"NEW_VAR": "new", "UNSET_ME": "overridden"},
             [],
         ),
         # Check if we can set a variable to different values depending
         # on command line parameters
-        ((os.path.join(datadir, "sourceme_parameters.sh"),), {"FOO": "default"}, []),
-        (([os.path.join(datadir, "sourceme_parameters.sh"), "intel64"],), {"FOO": "intel64"}, []),
+        ((os.path.join(datadir, "sourceme_parameters.bat"),), {"FOO": "default"}, []),
+        (([os.path.join(datadir, "sourceme_parameters.bat"), "intel64"],), {"FOO": "intel64"}, []),
         # Check unsetting variables
         (
-            (os.path.join(datadir, "sourceme_second.sh"),),
-            {"PATH_LIST": "/path/first:/path/second:/path/fourth"},
+            (os.path.join(datadir, "sourceme_second.bat"),),
+            {"PATH_LIST": "\\path\\first;\\path\\second;\\path\\fourth"},
             ["EMPTY_PATH_LIST"],
         ),
         # Check that order of sourcing matters
         (
             (
-                os.path.join(datadir, "sourceme_unset.sh"),
-                os.path.join(datadir, "sourceme_first.sh"),
+                os.path.join(datadir, "sourceme_unset.bat"),
+                os.path.join(datadir, "sourceme_first.bat"),
             ),
             {"NEW_VAR": "new", "UNSET_ME": "overridden"},
             [],
         ),
         (
             (
-                os.path.join(datadir, "sourceme_first.sh"),
-                os.path.join(datadir, "sourceme_unset.sh"),
+                os.path.join(datadir, "sourceme_first.bat"),
+                os.path.join(datadir, "sourceme_unset.bat"),
             ),
             {"NEW_VAR": "new"},
             ["UNSET_ME"],

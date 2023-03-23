@@ -14,10 +14,6 @@ import llnl.util.filesystem as fs
 import spack.environment as ev
 import spack.spec
 
-pytestmark = pytest.mark.skipif(
-    sys.platform == "win32", reason="Envs are not supported on windows"
-)
-
 
 def test_hash_change_no_rehash_concrete(tmpdir, mock_packages, config):
     # create an environment

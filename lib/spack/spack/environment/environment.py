@@ -21,7 +21,7 @@ import llnl.util.tty as tty
 import llnl.util.tty.color as clr
 from llnl.util.lang import dedupe
 from llnl.util.link_tree import ConflictingSpecsError
-from llnl.util.symlink import symlink
+from llnl.util.symlink import symlink, islink
 
 import spack.compilers
 import spack.concretize
@@ -467,10 +467,10 @@ class ViewDescriptor(object):
 
     @property
     def _current_root(self):
-        if not os.path.islink(self.root):
+        if not islink(self.root):
             return None
 
-        root = os.readlink(self.root)
+        root = os.path.realpath(self.root)
         if os.path.isabs(root):
             return root
 
@@ -1072,6 +1072,8 @@ class Environment(object):
 
     def destroy(self):
         """Remove this environment from Spack entirely."""
+        if os.path.exists(self.view_path_default):
+                os.unlink(self.view_path_default)
         shutil.rmtree(self.path)
 
     def update_stale_references(self, from_list=None):
