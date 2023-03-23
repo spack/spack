@@ -2,7 +2,6 @@
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
-import errno
 import os
 import shutil
 import sys
@@ -182,8 +181,7 @@ def _windows_create_link(path: str, link: str):
     if sys.platform != "win32":
         tty.warn("windows_create_link method can't be used on non-Windows OS.")
         return
-
-    if os.path.isdir(path):
+    elif os.path.isdir(path):
         _windows_create_junction(path=path, link=link)
     elif os.path.isfile(path):
         _windows_create_hard_link(path=path, link=link)
@@ -200,15 +198,23 @@ def _windows_create_junction(path: str, link: str):
     if sys.platform != "win32":
         tty.warn("windows_create_junction method can't be used on non-Windows OS.")
         return
+    elif not os.path.exists(path):
+        raise SymlinkError("Source path does not exist, cannot create a junction.")
+    elif os.path.exists(link):
+        raise SymlinkError("Link path already exists, cannot create a junction.")
+    elif not os.path.isdir(path):
+        raise SymlinkError("Source path is not a directory, cannot create a junction.")
+
     import subprocess
 
     try:
         cmd = ["cmd", "/C", "mklink", "/J", link, path]
         proc = subprocess.run(cmd, capture_output=True)
+        tty.debug(proc.stdout.decode())
         if proc.returncode != 0:
-            # TODO: How do we know that this only happens if the
-            #  junction already exists?
-            raise OSError(errno.EEXIST, "Junction exists: %s" % link)
+            err = proc.stdout.decode()
+            tty.error(err)
+            raise SymlinkError("Make junction command returned a non-zero return code.", err)
     except subprocess.CalledProcessError as e:
         raise SymlinkError(f"Failed to make junction {link} from directory {path}") from e
 
