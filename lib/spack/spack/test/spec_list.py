@@ -219,7 +219,8 @@ class TestSpecList(object):
         matrix = {
             "matrix": [["mpileaks"], ["^callpath"]],
             "broadcast": [["%gcc", "%clang"], ["+debug", "~debug"]],
-            "exclude": ["+debug%clang"]}
+            "exclude": ["+debug%clang"],
+        }
         speclist = SpecList("specs", [matrix])
 
         assert len(speclist) == 3
