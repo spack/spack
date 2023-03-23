@@ -20,7 +20,8 @@ class Grep(AutotoolsPackage):
 
     build_directory = "spack-build"
 
-    depends_on("pcre", when="+pcre")
+    depends_on("pcre2", when="@3.8:+pcre")
+    depends_on("pcre", when="@:3.7+pcre")
 
     def configure_args(self):
         args = []

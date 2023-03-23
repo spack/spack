@@ -17,6 +17,7 @@ class Xdpyinfo(AutotoolsPackage, XorgPackage):
     homepage = "https://cgit.freedesktop.org/xorg/app/xdpyinfo"
     xorg_mirror_path = "app/xdpyinfo-1.3.2.tar.gz"
 
+    version("1.3.3", sha256="2ae7b8213ea839b8376843477496276e8d69550c48bff081e16376539fc27c5a")
     version("1.3.2", sha256="ef39935e8e9b328e54a85d6218d410d6939482da6058db1ee1b39749d98cbcf2")
 
     depends_on("libxext")

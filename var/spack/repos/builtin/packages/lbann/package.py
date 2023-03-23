@@ -315,8 +315,7 @@ class Lbann(CMakePackage, CudaPackage, ROCmPackage):
     depends_on("spdlog", when="@:0.90,0.102:")
     depends_on("zstr")
 
-    generator = "Ninja"
-    depends_on("ninja", type="build")
+    generator("ninja")
 
     @property
     def common_config_args(self):

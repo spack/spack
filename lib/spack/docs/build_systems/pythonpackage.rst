@@ -582,7 +582,7 @@ libraries. Make sure not to add modules/packages containing the word
 "test", as these likely won't end up in the installation directory,
 or may require test dependencies like pytest to be installed.
 
-Instead of defining the ``import_modules`` explicity, only the subset
+Instead of defining the ``import_modules`` explicitly, only the subset
 of module names to be skipped can be defined by using ``skip_modules``.
 If a defined module has submodules, they are skipped as well, e.g.,
 in case the ``plotting`` modules should be excluded from the
