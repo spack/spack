@@ -85,8 +85,9 @@ class NetcdfC(CMakePackage, AutotoolsPackage):
     variant("dap", default=False, description="Enable DAP support")
     variant("jna", default=False, description="Enable JNA support")
     variant("fsync", default=False, description="Enable fsync support")
-    variant("zstd", default=True, description="Enable ZStandard compression")
     variant("optimize", default=True, description="Enable -O2 for a more optimized lib")
+
+    variant("zstd", default=True, description="Enable Zstandard compression plugin")
 
     # The patch for 4.7.0 touches configure.ac. See force_autoreconf below.
     with when("build_system=autotools"):
