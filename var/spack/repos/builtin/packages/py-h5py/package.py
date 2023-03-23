@@ -16,6 +16,7 @@ class PyH5py(PythonPackage):
     maintainers = ["bryanherman", "takluyver"]
 
     version("master", branch="master")
+    version("3.8.0", sha256="6fead82f0c4000cf38d53f9c030780d81bfa0220218aee13b90b7701c937d95f")
     version("3.7.0", sha256="3fcf37884383c5da64846ab510190720027dca0768def34dd8dcb659dbe5cbf3")
     version("3.6.0", sha256="8752d2814a92aba4e2b2a5922d2782d0029102d99caaf3c201a566bc0b40db29")
     version("3.5.0", sha256="77c7be4001ac7d3ed80477de5b6942501d782de1bbe4886597bdfec2a7ab821f")
@@ -60,7 +61,8 @@ class PyH5py(PythonPackage):
     # Link dependencies (py-h5py v2 cannot build against HDF5 1.12 regardless
     # of API setting)
     depends_on("hdf5@1.8.4:1.11 +hl", when="@:2")
-    depends_on("hdf5@1.8.4: +hl", when="@3:")
+    depends_on("hdf5@1.8.4:1.12.99 +hl", when="@3:3.7")
+    depends_on("hdf5@1.8.4: +hl", when="@3.8:")
 
     # MPI dependencies
     depends_on("hdf5+mpi", when="+mpi")
