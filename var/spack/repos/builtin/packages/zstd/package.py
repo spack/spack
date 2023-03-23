@@ -71,6 +71,12 @@ class CMakeBuilder(CMakeBuilder):
         spec = self.spec
         args = []
         args.append(self.define_from_variant("ZSTD_BUILD_PROGRAMS", "programs"))
+        args.extend(
+            [
+                self.define("ZSTD_BUILD_STATIC", self.spec.satisfies("libs=static")),
+                self.define("ZSTD_BUILD_SHARED", self.spec.satisfies("libs=shared")),
+            ]
+        )
         if "compression=zlib" in spec:
             args.append(self.define("ZSTD_ZLIB_SUPPORT", True))
         if "compression=lzma" in spec:
