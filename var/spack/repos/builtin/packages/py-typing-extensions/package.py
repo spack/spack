@@ -26,5 +26,8 @@ class PyTypingExtensions(PythonPackage):
     version("3.7.2", sha256="fb2cd053238d33a8ec939190f30cfd736c00653a85a2919415cecf7dc3d9da71")
     version("3.6.6", sha256="51e7b7f3dcabf9ad22eed61490f3b8d23d9922af400fe6656cb08e66656b701f")
 
+    # typing-extensions 4+ uses flit
+    depends_on("python@3.7:", when="@4.2:", type=("build", "run"))
+    depends_on("python@3.6:", when="@4:", type=("build", "run"))
     depends_on("py-flit-core@3.4:3", when="@4:", type="build")
     depends_on("py-setuptools", when="@:3", type="build")
