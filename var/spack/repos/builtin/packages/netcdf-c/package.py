@@ -309,6 +309,10 @@ class AutotoolsBuilder(BackupStep, Setup, autotools.AutotoolsBuilder):
             # Prevent linking to system bzip2:
             config_args.append("ac_cv_lib_bz2_BZ2_bzCompress=no")
 
+        if "^szip" not in self.spec:
+            # Prevent linking to system szip:
+            config_args.append("ac_cv_lib_sz_SZ_BufftoBuffCompress=no")
+
         if "+zstd" in self.spec:
             zstd = self.spec["zstd"]
             ldflags.append(zstd.libs.search_flags)
