@@ -353,7 +353,7 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage):
     conflicts("%gcc@:4.7", when="@11:")
 
     # https://github.com/iains/gcc-12-branch/issues/6
-    conflicts("%apple-clang@14.0")
+    conflicts("%apple-clang@14:14.0")
 
     if sys.platform == "darwin":
         # Fix parallel build on APFS filesystem
