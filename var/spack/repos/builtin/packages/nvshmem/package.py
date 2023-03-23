@@ -53,7 +53,10 @@ class Nvshmem(CMakePackage, MakefilePackage, CudaPackage):
     def url_for_version(self, version):
         ver_str = "{0}".format(version)
         directory = ver_str.split("-")[0]
-        url_fmt = "https://developer.download.nvidia.com/compute/redist/nvshmem/{0}/source/nvshmem_src_{1}.txz"
+        if self.spec.satisfies("@2.9:"):
+            url_fmt = "https://developer.download.nvidia.com/compute/redist/nvshmem/{0}/source/nvshmem_src_{1}.tar.xz"
+        else:
+            url_fmt = "https://developer.download.nvidia.com/compute/redist/nvshmem/{0}/source/nvshmem_src_{1}.txz"
         return url_fmt.format(directory, version)
 
     depends_on("mpi", when="+mpi")
