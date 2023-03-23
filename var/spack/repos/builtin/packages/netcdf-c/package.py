@@ -237,9 +237,6 @@ class AutotoolsBuilder(BackupStep, Setup, autotools.AutotoolsBuilder):
             Executable("./bootstrap")()
 
     def configure_args(self):
-        ldflags = []
-        libs = []
-
         config_args = [
             "--enable-v2",
             "--enable-utilities",
@@ -265,11 +262,16 @@ class AutotoolsBuilder(BackupStep, Setup, autotools.AutotoolsBuilder):
         if self.spec.satisfies("@4.7.0:"):
             config_args.append("--disable-byterange")
 
-        config_args += self.enable_or_disable("fsync")
-
         # The option was introduced in version 4.3.1 and does nothing starting version 4.6.1:
         if self.spec.satisfies("@4.3.1:4.6.0"):
             config_args.append("--enable-dynamic-loading")
+
+        if self.spec.satisfies("@4.4:"):
+            config_args += self.enable_or_disable("parallel4", variant="mpi")
+
+        config_args += self.enable_or_disable("pnetcdf", variant="parallel-netcdf")
+
+        config_args += self.enable_or_disable("hdf4")
 
         config_args += self.enable_or_disable("shared")
 
@@ -278,20 +280,24 @@ class AutotoolsBuilder(BackupStep, Setup, autotools.AutotoolsBuilder):
             # Prevent linking to system libxml2:
             config_args += self.enable_or_disable("libxml2", variant="dap")
 
-        if "+dap" in self.spec:
-            curl = self.spec["curl"]
-            curl_libs = curl.libs
-            libs.append(curl_libs.link_flags)
-            ldflags.append(curl_libs.search_flags)
-        elif self.spec.satisfies("@4.8.0:"):
-            # Prevent overlinking to a system installation of libcurl:
-            config_args.append("ac_cv_lib_curl_curl_easy_setopt=no")
-
-        if self.spec.satisfies("@4.4:"):
-            config_args += self.enable_or_disable("parallel4", variant="mpi")
-
         if self.spec.satisfies("@4.3.2:"):
             config_args += self.enable_or_disable("jna")
+
+        config_args += self.enable_or_disable("fsync")
+
+        if "+mpi" in self.spec or "+parallel-netcdf" in self.spec:
+            config_args.append("CC=%s" % self.spec["mpi"].mpicc)
+
+        ldflags = []
+        libs = []
+
+        if "+parallel-netcdf" in self.spec:
+            ldflags.append(self.spec["parallel-netcdf"].libs.search_flags)
+
+        if "+hdf4" in self.spec:
+            hdf4_libs = self.spec["hdf:transitive"].libs
+            ldflags.append(hdf4_libs.search_flags)
+            libs.append(hdf4_libs.link_flags)
 
         hdf5_hl = self.spec["hdf5:hl"]
         ldflags.append(hdf5_hl.libs.search_flags)
@@ -302,42 +308,38 @@ class AutotoolsBuilder(BackupStep, Setup, autotools.AutotoolsBuilder):
             ldflags.append(hdf5_transitive_libs.search_flags)
             libs.append(hdf5_transitive_libs.link_flags)
 
-        config_args += self.enable_or_disable("pnetcdf", variant="parallel-netcdf")
-        if "+parallel-netcdf" in self.spec:
-            ldflags.append(self.spec["parallel-netcdf"].libs.search_flags)
-
-        if "+mpi" in self.spec or "+parallel-netcdf" in self.spec:
-            config_args.append("CC=%s" % self.spec["mpi"].mpicc)
-
-        config_args += self.enable_or_disable("hdf4")
-        if "+hdf4" in self.spec:
-            hdf4_libs = self.spec["hdf:transitive"].libs
-            ldflags.append(hdf4_libs.search_flags)
-            libs.append(hdf4_libs.link_flags)
-
         if not self.spec.satisfies("@4.9.0:+shared"):
             # Prevent overlinking to zlib:
             config_args.append("ac_cv_search_deflate=")
 
-        if self.spec.satisfies("@4.9.0:~shared"):
-            # Prevent redundant entries mentioning system bzip2 in nc-config and pkg-config files:
-            config_args.append("ac_cv_lib_bz2_BZ2_bzCompress=no")
+        if self.spec.satisfies("@4.8.0:"):
+            # Prevent linking to system libzip:
+            config_args.append("ac_cv_lib_zip_zip_open=no")
 
         if self.spec.satisfies("@4.9.0:~szip"):
             # Prevent linking to szip to disable the plugin:
             config_args.append("ac_cv_lib_sz_SZ_BufftoBuffCompress=no")
 
-        if self.spec.satisfies("@4.9.0:~blosc"):
-            # Prevent linking to system c-blosc:
-            config_args.append("ac_cv_lib_blosc_blosc_init=no")
+        if self.spec.satisfies("@4.9.0:~shared"):
+            # Prevent redundant entries mentioning system bzip2 in nc-config and pkg-config files:
+            config_args.append("ac_cv_lib_bz2_BZ2_bzCompress=no")
 
         if self.spec.satisfies("@4.9.0:~zstd"):
             # Prevent linking to system zstd:
             config_args.append("ac_cv_lib_zstd_ZSTD_compress=no")
 
-        if self.spec.satisfies("@4.8.0:"):
-            # Prevent linking to system libzip:
-            config_args.append("ac_cv_lib_zip_zip_open=no")
+        if self.spec.satisfies("@4.9.0:~blosc"):
+            # Prevent linking to system c-blosc:
+            config_args.append("ac_cv_lib_blosc_blosc_init=no")
+
+        if "+dap" in self.spec:
+            curl = self.spec["curl"]
+            curl_libs = curl.libs
+            libs.append(curl_libs.link_flags)
+            ldflags.append(curl_libs.search_flags)
+        elif self.spec.satisfies("@4.8.0:"):
+            # Prevent overlinking to a system installation of libcurl:
+            config_args.append("ac_cv_lib_curl_curl_easy_setopt=no")
 
         config_args.append("LDFLAGS=" + " ".join(ldflags))
         config_args.append("LIBS=" + " ".join(libs))
