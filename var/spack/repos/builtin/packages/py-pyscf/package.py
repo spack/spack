@@ -12,7 +12,7 @@ class PyPyscf(PythonPackage):
     by Python."""
 
     homepage = "https://pyscf.org"
-    url = "https://pypi.io/packages/source/p/pyscf/pyscf-2.2.0.tar.gz"
+    pypi = "pyscf/pyscf-2.2.0.tar.gz"
 
     maintainers("naromero77")
 
