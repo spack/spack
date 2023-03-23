@@ -87,6 +87,7 @@ class NetcdfC(CMakePackage, AutotoolsPackage):
     variant("fsync", default=False, description="Enable fsync support")
     variant("optimize", default=True, description="Enable -O2 for a more optimized lib")
 
+    variant("szip", default=True, description="Enable Szip compression plugin")
     variant("blosc", default=True, description="Enable Blosc compression plugin")
     variant("zstd", default=True, description="Enable Zstandard compression plugin")
 
@@ -137,16 +138,19 @@ class NetcdfC(CMakePackage, AutotoolsPackage):
     depends_on("hdf5@:1.8", when="@:4.4.0")
 
     depends_on("bzip2", when="@4.9.0:+shared")
+    depends_on("szip", when="+szip")
     depends_on("c-blosc", when="+blosc")
     depends_on("zstd", when="+zstd")
 
     # The features were introduced in version 4.9.0:
     with when("@:4.8"):
+        conflicts("+szip")
         conflicts("+blosc")
         conflicts("+zstd")
 
     # The plugins are not built when the shared libraries are disabled:
     with when("~shared"):
+        conflicts("+szip")
         conflicts("+blosc")
         conflicts("+zstd")
 
@@ -290,6 +294,10 @@ class AutotoolsBuilder(BackupStep, Setup, autotools.AutotoolsBuilder):
 
         hdf5_hl = self.spec["hdf5:hl"]
         ldflags.append(hdf5_hl.libs.search_flags)
+        if "~shared+szip" in hdf5_hl:
+            szip_libs = hdf5_hl["szip"].libs
+            ldflags.append(szip_libs.search_flags)
+            libs.append(szip_libs.link_flags)
 
         config_args += self.enable_or_disable("pnetcdf", variant="parallel-netcdf")
         if "+parallel-netcdf" in self.spec:
@@ -308,8 +316,8 @@ class AutotoolsBuilder(BackupStep, Setup, autotools.AutotoolsBuilder):
             # Prevent redundant entries mentioning system bzip2 in nc-config and pkg-config files:
             config_args.append("ac_cv_lib_bz2_BZ2_bzCompress=no")
 
-        if "^szip" not in self.spec:
-            # Prevent linking to system szip:
+        if self.spec.satisfies("@4.9.0:~szip"):
+            # Prevent linking to szip to disable the plugin:
             config_args.append("ac_cv_lib_sz_SZ_BufftoBuffCompress=no")
 
         if self.spec.satisfies("@4.9.0:~blosc"):
