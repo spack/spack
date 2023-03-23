@@ -1635,7 +1635,7 @@ class SpackSolverSetup(object):
                 ):
                     defined_version = spack.version.Version(dep.version.ref_version_str)
                     self.declared_versions[dep.name].append(
-                        DeclaredVersion(version=defined_version, idx=0, origin=origin)
+                        DeclaredVersion(version=defined_version, idx=1, origin=origin)
                     )
                     self.possible_versions[dep.name].add(defined_version)
 
