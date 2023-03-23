@@ -1,0 +1,11 @@
+--- a/Wrapping/Generators/Python/itk/support/types.py	2022-11-24 13:03:07.000000000 -0600
++++ b/Wrapping/Generators/Python/itk/support/types.py	2023-03-24 15:27:43.708546448 -0500
+@@ -138,7 +138,7 @@
+         _SS: "itkCType" = itkCType("signed short", "SS", np.int16)
+         _SI: "itkCType" = itkCType("signed int", "SI", np.int32)
+         _SLL: "itkCType" = itkCType("signed long long", "SLL", np.int64)
+-        _B: "itkCType" = itkCType("bool", "B", np.bool8)
++        _B: "itkCType" = itkCType("bool", "B", np.bool_)
+         return _F, _D, _UC, _US, _UI, _UL, _SL, _LD, _ULL, _SC, _SS, _SI, _SLL, _B
+ 
+ 
