@@ -5,10 +5,11 @@
 
 import sys
 
+from spack.build_systems import autotools, cmake
 from spack.package import *
 
 
-class Expat(AutotoolsPackage):
+class Expat(AutotoolsPackage, CMakePackage):
     """Expat is an XML parser library written in C."""
 
     homepage = "https://libexpat.github.io/"
@@ -92,6 +93,8 @@ class Expat(AutotoolsPackage):
         deprecated=True,
     )
 
+    build_system("autotools", "cmake", default="autotools")
+
     # Version 2.2.2 introduced a requirement for a high quality
     # entropy source.  "Older" linux systems (aka CentOS 7) do not
     # support get_random so we'll provide a high quality source via
@@ -102,8 +105,15 @@ class Expat(AutotoolsPackage):
     # `~libbsd`.
     variant(
         "libbsd",
-        default=sys.platform != "darwin",
+        default=sys.platform != "darwin" and sys.platform != "win32",
         description="Use libbsd (for high quality randomness)",
+    )
+
+    variant(
+        "shared",
+        default=True,
+        description="Build expat as shared if true, static if false",
+        when="build_system=cmake",
     )
 
     depends_on("libbsd", when="@2.2.1:+libbsd")
@@ -112,9 +122,24 @@ class Expat(AutotoolsPackage):
         url = "https://github.com/libexpat/libexpat/releases/download/R_{0}/expat-{1}.tar.bz2"
         return url.format(version.underscored, version.dotted)
 
+
+class AutotoolsBuilder(autotools.AutotoolsBuilder):
     def configure_args(self):
         spec = self.spec
         args = ["--without-docbook", "--enable-static"]
         if "+libbsd" in spec and "@2.2.1:" in spec:
             args.append("--with-libbsd")
+        return args
+
+
+class CMakeBuilder(cmake.CMakeBuilder):
+    def cmake_args(self):
+        args = [
+            self.define("EXPAT_BUILD_DOCS", False),
+            self.define_from_variant("BUILD_SHARED_LIBS", "shared"),
+        ]
+
+        if "+libbsd" in self.spec and "@2.2.1:" in self.spec:
+            args.append(self.define_from_variant("EXPAT_WITH_LIBBSD", "libbsd"))
+
         return args
