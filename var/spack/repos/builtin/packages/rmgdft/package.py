@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -13,9 +13,11 @@ class Rmgdft(CMakePackage):
 
     homepage = "http://www.rmgdft.org/"
     git = "https://github.com/RMGDFT/rmgdft.git"
-    maintainers = ["elbriggs"]
+    maintainers("elbriggs")
     tags = ["ecp", "ecp-apps"]
     version("master", branch="master")
+    version("5.0.4", tag="v5.0.4")
+    version("5.0.1", tag="v5.0.1")
     version("4.3.1", tag="v4.3.1")
     version("4.3.0", tag="v4.3.0")
     version("4.2.2", tag="v4.2.2")
@@ -43,11 +45,15 @@ class Rmgdft(CMakePackage):
     )
 
     # RMGDFT 4.0.0 or later requires compiler support for C++14
-    compiler_warning = "RMGDFT 4.0.0 or later requires a " "compiler with support for C++14"
-    conflicts("%gcc@:4", when="@3.6.0:", msg=compiler_warning)
-    conflicts("%intel@:17", when="@3.6.0:", msg=compiler_warning)
-    conflicts("%pgi@:17", when="@3.6.0:", msg=compiler_warning)
-    conflicts("%llvm@:3.4", when="@3.6.0:", msg=compiler_warning)
+    compiler_warning14 = "RMGDFT 4.0.0 or later requires a compiler with support for C++14"
+    conflicts("%gcc@:4", when="@3.6.0:", msg=compiler_warning14)
+    conflicts("%intel@:17", when="@3.6.0:", msg=compiler_warning14)
+    conflicts("%pgi@:17", when="@3.6.0:", msg=compiler_warning14)
+    conflicts("%llvm@:3.4", when="@3.6.0:", msg=compiler_warning14)
+
+    # RMGDFT 5.0.0 requires C++17 and increase the minimum gcc to 8
+    compiler_warning17 = "RMGDFT 5.0.0 or later requires a compiler with support for C++17"
+    conflicts("%gcc@:7", when="@5.0.0:", msg=compiler_warning17)
 
     depends_on("cmake", type="build")
     depends_on("boost+filesystem+iostreams+thread+program_options+system", type="build")
@@ -86,7 +92,6 @@ class Rmgdft(CMakePackage):
         return args
 
     def install(self, spec, prefix):
-
         # create top-level directories
         mkdirp(prefix.bin)
         mkdirp(prefix.share.tests.RMG)

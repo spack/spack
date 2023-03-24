@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -13,11 +13,15 @@ class RocmTensile(CMakePackage):
 
     homepage = "https://github.com/ROCmSoftwarePlatform/Tensile/"
     git = "https://github.com/ROCmSoftwarePlatform/Tensile.git"
-    url = "https://github.com/ROCmSoftwarePlatform/Tensile/archive/rocm-5.2.3.tar.gz"
+    url = "https://github.com/ROCmSoftwarePlatform/Tensile/archive/rocm-5.4.3.tar.gz"
     tags = ["rocm"]
 
-    maintainers = ["srekolam", "renjithravindrankannath", "haampie"]
+    maintainers("srekolam", "renjithravindrankannath", "haampie")
 
+    version("5.4.3", sha256="a4c5e62edd33ea6b8528eb3f017a14c28eaa67c540f5c9023f6a245340198b0f")
+    version("5.4.0", sha256="2da9c1df3c6d9b44afdad621ef59a03389fb1a38a61a8b8bad9c9991b97157eb")
+    version("5.3.3", sha256="ecb99243edf1cd2bb5e953915a7dae7867c3cdb0cd8ed15b8618aaaeb2bd7b29")
+    version("5.3.0", sha256="05c546986549154e6c7b4f57a0b3bfd5cb223d2393c206ff1702f89454c832f4")
     version("5.2.3", sha256="840698bf2ac62e08ae76c3843f1dad5367ed098d42e6a5fa7953de70642fd2cf")
     version("5.2.1", sha256="49582e28f7e14fed6a66c59482a41d3899c1eb8e7aa0ce40a7a2e806dadc536b")
     version("5.2.0", sha256="aa6107944482ad278111d11d2e926393423fc70e7e1838574fe7ad9f553bdacf")
@@ -145,6 +149,10 @@ class RocmTensile(CMakePackage):
         "5.2.0",
         "5.2.1",
         "5.2.3",
+        "5.3.0",
+        "5.3.3",
+        "5.4.0",
+        "5.4.3",
     ]:
         depends_on("rocm-cmake@" + ver, type="build", when="@" + ver)
         depends_on("hip@" + ver, when="@" + ver)
@@ -171,6 +179,10 @@ class RocmTensile(CMakePackage):
         "5.2.0",
         "5.2.1",
         "5.2.3",
+        "5.3.0",
+        "5.3.3",
+        "5.4.0",
+        "5.4.3",
     ]:
         depends_on("rocm-smi-lib@" + ver, type="build", when="@" + ver)
 
@@ -203,7 +215,7 @@ class RocmTensile(CMakePackage):
             self.define("Tensile_LOGIC", "asm_full"),
             self.define("Tensile_CODE_OBJECT_VERSION", "V3"),
             self.define("Boost_USE_STATIC_LIBS", "OFF"),
-            self.define("TENSILE_USE_OPENMP", "ON"),
+            self.define("TENSILE_USE_OPENMP", "OFF"),
             self.define("BUILD_WITH_TENSILE_HOST", "ON" if "@3.7.0:" in self.spec else "OFF"),
         ]
 

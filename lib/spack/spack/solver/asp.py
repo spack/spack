@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -112,8 +112,7 @@ version_origin_str = {i: name for i, name in enumerate(version_origin_fields)}
 
 #: Enumeration like object to mark version provenance
 version_provenance = collections.namedtuple(  # type: ignore
-    "VersionProvenance",
-    version_origin_fields,
+    "VersionProvenance", version_origin_fields
 )(**{name: i for i, name in enumerate(version_origin_fields)})
 
 #: Named tuple to contain information on declared versions
@@ -1012,11 +1011,13 @@ class SpackSolverSetup(object):
     def package_requirement_rules(self, pkg):
         pkg_name = pkg.name
         config = spack.config.get("packages")
-        requirements = config.get(pkg_name, {}).get("require", []) or config.get("all", {}).get(
-            "require", []
-        )
+        requirements, raise_on_failure = config.get(pkg_name, {}).get("require", []), True
+        if not requirements:
+            requirements, raise_on_failure = config.get("all", {}).get("require", []), False
         rules = self._rules_from_requirements(pkg_name, requirements)
-        self.emit_facts_from_requirement_rules(rules, virtual=False)
+        self.emit_facts_from_requirement_rules(
+            rules, virtual=False, raise_on_failure=raise_on_failure
+        )
 
     def _rules_from_requirements(self, pkg_name, requirements):
         """Manipulate requirements from packages.yaml, and return a list of tuples
@@ -1136,8 +1137,7 @@ class SpackSolverSetup(object):
 
         # virtual preferences
         self.virtual_preferences(
-            pkg.name,
-            lambda v, p, i: self.gen.fact(fn.pkg_provider_preference(pkg.name, v, p, i)),
+            pkg.name, lambda v, p, i: self.gen.fact(fn.pkg_provider_preference(pkg.name, v, p, i))
         )
 
         self.package_requirement_rules(pkg)
@@ -1161,11 +1161,13 @@ class SpackSolverSetup(object):
         named_cond.name = named_cond.name or name
         assert named_cond.name, "must provide name for anonymous condtions!"
 
+        # Check if we can emit the requirements before updating the condition ID counter.
+        # In this way, if a condition can't be emitted but the exception is handled in the caller,
+        # we won't emit partial facts.
+        requirements = self.spec_clauses(named_cond, body=True, required_from=name)
+
         condition_id = next(self._condition_id_counter)
         self.gen.fact(fn.condition(condition_id, msg))
-
-        # requirements trigger the condition
-        requirements = self.spec_clauses(named_cond, body=True, required_from=name)
         for pred in requirements:
             self.gen.fact(fn.condition_requirement(condition_id, *pred.args))
 
@@ -1244,8 +1246,7 @@ class SpackSolverSetup(object):
         )
         assert self.possible_virtuals is not None, msg
         self.virtual_preferences(
-            "all",
-            lambda v, p, i: self.gen.fact(fn.default_provider_preference(v, p, i)),
+            "all", lambda v, p, i: self.gen.fact(fn.default_provider_preference(v, p, i))
         )
 
     def provider_requirements(self):
@@ -1261,23 +1262,39 @@ class SpackSolverSetup(object):
             rules = self._rules_from_requirements(virtual_str, requirements)
             self.emit_facts_from_requirement_rules(rules, virtual=True)
 
-    def emit_facts_from_requirement_rules(self, rules, virtual=False):
-        """Generate facts to enforce requirements from packages.yaml."""
+    def emit_facts_from_requirement_rules(self, rules, *, virtual=False, raise_on_failure=True):
+        """Generate facts to enforce requirements from packages.yaml.
+
+        Args:
+            rules: rules for which we want facts to be emitted
+            virtual: if True the requirements are on a virtual spec
+            raise_on_failure: if True raise an exception when a requirement condition is invalid
+                for the current spec. If False, just skip that condition
+        """
         for requirement_grp_id, (pkg_name, policy, requirement_grp) in enumerate(rules):
             self.gen.fact(fn.requirement_group(pkg_name, requirement_grp_id))
             self.gen.fact(fn.requirement_policy(pkg_name, requirement_grp_id, policy))
-            for requirement_weight, spec_str in enumerate(requirement_grp):
+            requirement_weight = 0
+            for spec_str in requirement_grp:
                 spec = spack.spec.Spec(spec_str)
                 if not spec.name:
                     spec.name = pkg_name
                 when_spec = spec
                 if virtual:
                     when_spec = spack.spec.Spec(pkg_name)
-                member_id = self.condition(
-                    required_spec=when_spec, imposed_spec=spec, name=pkg_name, node=virtual
-                )
+
+                try:
+                    member_id = self.condition(
+                        required_spec=when_spec, imposed_spec=spec, name=pkg_name, node=virtual
+                    )
+                except Exception as e:
+                    if raise_on_failure:
+                        raise RuntimeError("cannot emit requirements for the solver") from e
+                    continue
+
                 self.gen.fact(fn.requirement_group_member(member_id, pkg_name, requirement_grp_id))
                 self.gen.fact(fn.requirement_has_weight(member_id, requirement_weight))
+                requirement_weight += 1
 
     def external_packages(self):
         """Facts on external packages, as read from packages.yaml"""
@@ -1407,12 +1424,7 @@ class SpackSolverSetup(object):
         return clauses
 
     def _spec_clauses(
-        self,
-        spec,
-        body=False,
-        transitive=True,
-        expand_hashes=False,
-        concrete_build_deps=False,
+        self, spec, body=False, transitive=True, expand_hashes=False, concrete_build_deps=False
     ):
         """Return a list of clauses for a spec mandates are true.
 
@@ -2245,6 +2257,12 @@ class SpecBuilder(object):
         )
         self._specs[pkg].extra_attributes = spec_info.get("extra_attributes", {})
 
+        # If this is an extension, update the dependencies to include the extendee
+        package = self._specs[pkg].package_class(self._specs[pkg])
+        extendee_spec = package.extendee_spec
+        if extendee_spec:
+            package.update_external_dependencies(self._specs.get(extendee_spec.name, None))
+
     def depends_on(self, pkg, dep, type):
         dependencies = self._specs[pkg].edges_to_dependencies(name=dep)
 
@@ -2253,7 +2271,7 @@ class SpecBuilder(object):
         assert len(dependencies) < 2, msg
 
         if not dependencies:
-            self._specs[pkg].add_dependency_edge(self._specs[dep], (type,))
+            self._specs[pkg].add_dependency_edge(self._specs[dep], deptypes=(type,))
         else:
             # TODO: This assumes that each solve unifies dependencies
             dependencies[0].add_type(type)
@@ -2269,48 +2287,41 @@ class SpecBuilder(object):
         The solver determines wihch flags are on nodes; this routine
         imposes order afterwards.
         """
-        # nodes with no flags get flag order from compiler
         compilers = dict((c.spec, c) for c in all_compilers_in_config())
-        for pkg in self._flag_compiler_defaults:
-            spec = self._specs[pkg]
-            compiler_flags = compilers[spec.compiler].flags
-            for key in spec.compiler_flags:
-                spec_compiler_flags_set = set(spec.compiler_flags.get(key, []))
-                compiler_flags_set = set(compiler_flags.get(key, []))
-
-                assert spec_compiler_flags_set == compiler_flags_set, "%s does not equal %s" % (
-                    spec_compiler_flags_set,
-                    compiler_flags_set,
-                )
-
-                spec.compiler_flags[key] = compiler_flags.get(key, [])
-        # index of all specs (and deps) from the command line by name
         cmd_specs = dict((s.name, s) for spec in self._command_line_specs for s in spec.traverse())
 
-        # iterate through specs with specified flags
-        for key, sources in self._flag_sources.items():
-            pkg, flag_type = key
-            spec = self._specs[pkg]
-            compiler_flags = spec.compiler_flags.get(flag_type, [])
+        for spec in self._specs.values():
+            # if bootstrapping, compiler is not in config and has no flags
+            flagmap_from_compiler = {}
+            if spec.compiler in compilers:
+                flagmap_from_compiler = compilers[spec.compiler].flags
 
-            # order is determined by the DAG.  A spec's flags come after
-            # any from its ancestors on the compile line.
-            order = [s.name for s in spec.traverse(order="post", direction="parents")]
+            for flag_type in spec.compiler_flags.valid_compiler_flags():
+                from_compiler = flagmap_from_compiler.get(flag_type, [])
+                from_sources = []
 
-            # sort the sources in our DAG order
-            sorted_sources = sorted(sources, key=lambda s: order.index(s))
+                # order is determined by the  DAG. A spec's flags come after any of its ancestors
+                # on the compile line
+                source_key = (spec.name, flag_type)
+                if source_key in self._flag_sources:
+                    order = [s.name for s in spec.traverse(order="post", direction="parents")]
+                    sorted_sources = sorted(
+                        self._flag_sources[source_key], key=lambda s: order.index(s)
+                    )
 
-            # add flags from each source, lowest to highest precedence
-            flags = []
-            for source_name in sorted_sources:
-                source = cmd_specs[source_name]
-                extend_flag_list(flags, source.compiler_flags.get(flag_type, []))
+                    # add flags from each source, lowest to highest precedence
+                    for source_name in sorted_sources:
+                        source = cmd_specs[source_name]
+                        extend_flag_list(from_sources, source.compiler_flags.get(flag_type, []))
 
-            assert set(compiler_flags) == set(flags), "%s does not equal %s" % (
-                set(compiler_flags),
-                set(flags),
-            )
-            spec.compiler_flags.update({flag_type: source.compiler_flags[flag_type]})
+                # compiler flags from compilers config are lowest precedence
+                ordered_compiler_flags = from_compiler + from_sources
+                compiler_flags = spec.compiler_flags.get(flag_type, [])
+
+                msg = "%s does not equal %s" % (set(compiler_flags), set(ordered_compiler_flags))
+                assert set(compiler_flags) == set(ordered_compiler_flags), msg
+
+                spec.compiler_flags.update({flag_type: ordered_compiler_flags})
 
     def deprecated(self, pkg, version):
         msg = 'using "{0}@{1}" which is a deprecated version'
@@ -2318,17 +2329,28 @@ class SpecBuilder(object):
 
     @staticmethod
     def sort_fn(function_tuple):
+        """Ensure attributes are evaluated in the correct order.
+
+        hash attributes are handled first, since they imply entire concrete specs
+        node attributes are handled next, since they instantiate nodes
+        node_compiler attributes are handled next to ensure they come before node_compiler_version
+        external_spec_selected attributes are handled last, so that external extensions can find
+        the concrete specs on which they depend because all nodes are fully constructed before we
+        consider which ones are external.
+        """
         name = function_tuple[0]
         if name == "hash":
-            return (-4, 0)
+            return (-5, 0)
         elif name == "node":
-            return (-3, 0)
+            return (-4, 0)
         elif name == "node_compiler":
-            return (-2, 0)
+            return (-3, 0)
         elif name == "node_flag":
-            return (-1, 0)
+            return (-2, 0)
+        elif name == "external_spec_selected":
+            return (0, 0)  # note out of order so this goes last
         else:
-            return (0, 0)
+            return (-1, 0)
 
     def build_specs(self, function_tuples):
         # Functions don't seem to be in particular order in output.  Sort
@@ -2412,12 +2434,6 @@ class SpecBuilder(object):
                 if isinstance(spec.version, spack.version.GitVersion):
                     spec.version.generate_git_lookup(spec.fullname)
 
-        # Add synthetic edges for externals that are extensions
-        for root in self._specs.values():
-            for dep in root.traverse():
-                if dep.external:
-                    dep.package.update_external_dependencies()
-
         return self._specs
 
 
@@ -2497,15 +2513,7 @@ class Solver(object):
                 pass
         return reusable_specs
 
-    def solve(
-        self,
-        specs,
-        out=None,
-        timers=False,
-        stats=False,
-        tests=False,
-        setup_only=False,
-    ):
+    def solve(self, specs, out=None, timers=False, stats=False, tests=False, setup_only=False):
         """
         Arguments:
           specs (list): List of ``Spec`` objects to solve for.
@@ -2525,14 +2533,7 @@ class Solver(object):
         result, _, _ = self.driver.solve(setup, specs, reuse=reusable_specs, output=output)
         return result
 
-    def solve_in_rounds(
-        self,
-        specs,
-        out=None,
-        timers=False,
-        stats=False,
-        tests=False,
-    ):
+    def solve_in_rounds(self, specs, out=None, timers=False, stats=False, tests=False):
         """Solve for a stable model of specs in multiple rounds.
 
         This relaxes the assumption of solve that everything must be consistent and

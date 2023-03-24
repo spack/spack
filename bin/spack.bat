@@ -1,4 +1,4 @@
-:: Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+:: Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 :: Spack Project Developers. See the top-level COPYRIGHT file for details.
 ::
 :: SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -83,6 +83,16 @@ if defined _sp_flags (
         exit /B 0
     )
 )
+if not defined _sp_subcommand (
+   if not defined _sp_args (
+      if not defined _sp_flags (
+         python "%spack%" --help
+         exit /B 0
+      )
+   )
+)
+
+
 :: pass parsed variables outside of local scope. Need to do
 :: this because delayedexpansion can only be set by setlocal
 echo %_sp_flags%>flags
@@ -92,24 +102,24 @@ endlocal
 set /p _sp_subcommand=<subcmd
 set /p _sp_flags=<flags
 set /p _sp_args=<args
-set str_subcommand=%_sp_subcommand:"='%
-set str_flags=%_sp_flags:"='%
-set str_args=%_sp_args:"='%
-if "%str_subcommand%"=="ECHO is off." (set "_sp_subcommand=")
-if "%str_flags%"=="ECHO is off." (set "_sp_flags=")
-if "%str_args%"=="ECHO is off." (set "_sp_args=")
+if "%_sp_subcommand%"=="ECHO is off." (set "_sp_subcommand=")
+if "%_sp_subcommand%"=="ECHO is on." (set "_sp_subcommand=")
+if "%_sp_flags%"=="ECHO is off." (set "_sp_flags=")
+if "%_sp_flags%"=="ECHO is on." (set "_sp_flags=")
+if "%_sp_args%"=="ECHO is off." (set "_sp_args=")
+if "%_sp_args%"=="ECHO is on." (set "_sp_args=")
 del subcmd
 del flags
 del args
 
 :: Filter out some commands. For any others, just run the command.
-if "%_sp_subcommand%" == "cd" (
+if %_sp_subcommand% == "cd" (
     goto :case_cd
-) else if "%_sp_subcommand%" == "env" (
+) else if %_sp_subcommand% == "env" (
     goto :case_env
-) else if "%_sp_subcommand%" == "load" (
+) else if %_sp_subcommand% == "load" (
     goto :case_load
-) else if "%_sp_subcommand%" == "unload" (
+) else if %_sp_subcommand% == "unload" (
     goto :case_load
 ) else (
     goto :default_case
@@ -143,19 +153,21 @@ goto :end_switch
 :: If no args or args contain --bat or -h/--help: just execute.
 if NOT defined _sp_args (
     goto :default_case
-)else if NOT "%_sp_args%"=="%_sp_args:--help=%" (
+)
+set args_no_quote=%_sp_args:"=%
+if NOT "%args_no_quote%"=="%args_no_quote:--help=%" (
     goto :default_case
-) else if NOT "%_sp_args%"=="%_sp_args: -h=%" (
+) else if NOT "%args_no_quote%"=="%args_no_quote: -h=%" (
     goto :default_case
-) else if NOT "%_sp_args%"=="%_sp_args:--bat=%" (
+) else if NOT "%args_no_quote%"=="%args_no_quote:--bat=%" (
     goto :default_case
-) else if NOT "%_sp_args%"=="%_sp_args:deactivate=%" (
+) else if NOT "%args_no_quote%"=="%args_no_quote:deactivate=%" (
     for /f "tokens=* USEBACKQ" %%I in (
-        `call python "%spack%" %_sp_flags% env deactivate --bat %_sp_args:deactivate=%`
+        `call python %spack% %_sp_flags% env deactivate --bat %args_no_quote:deactivate=%`
     ) do %%I
-) else if NOT "%_sp_args%"=="%_sp_args:activate=%" (
+) else if NOT "%args_no_quote%"=="%args_no_quote:activate=%" (
     for /f "tokens=* USEBACKQ" %%I in (
-        `call python "%spack%" %_sp_flags% env activate --bat %_sp_args:activate=%`
+        `python %spack% %_sp_flags% env activate --bat %args_no_quote:activate=%`
     ) do %%I
 ) else (
     goto :default_case
@@ -214,7 +226,7 @@ for %%Z in ("%_pa_new_path%") do if EXIST %%~sZ\NUL (
 exit /b 0
 
 :: set module system roots
-:_sp_multi_pathadd 
+:_sp_multi_pathadd
 for %%I in (%~2) do (
     for %%Z in (%_sp_compatible_sys_types%) do (
         :pathadd "%~1" "%%I\%%Z"

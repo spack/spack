@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -16,6 +16,7 @@ class Nasm(AutotoolsPackage):
     url = "https://www.nasm.us/pub/nasm/releasebuilds/2.14.02/nasm-2.14.02.tar.gz"
     list_url = "https://www.nasm.us/pub/nasm/releasebuilds"
     list_depth = 1
+    tags = ["windows"]
 
     build_system("autotools", conditional("generic", when="platform=windows"), default="autotools")
 

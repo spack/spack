@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -22,7 +22,7 @@ class Aluminum(CMakePackage, CudaPackage, ROCmPackage):
     git = "https://github.com/LLNL/Aluminum.git"
     tags = ["ecp", "radiuss"]
 
-    maintainers = ["bvanessen"]
+    maintainers("bvanessen")
 
     version("master", branch="master")
     version("1.0.0-lbann", tag="v1.0.0-lbann")

@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -9,8 +9,8 @@ import os
 import shutil
 import sys
 
+import jsonschema
 import pytest
-from jsonschema import ValidationError, validate
 
 from llnl.util.filesystem import mkdirp, working_dir
 
@@ -31,7 +31,6 @@ from spack.schema.buildcache_spec import schema as specfile_schema
 from spack.schema.database_index import schema as db_idx_schema
 from spack.schema.gitlab_ci import schema as gitlab_ci_schema
 from spack.spec import CompilerSpec, Spec
-from spack.util.executable import which
 from spack.util.pattern import Bunch
 
 ci_cmd = spack.main.SpackCommand("ci")
@@ -54,14 +53,13 @@ def ci_base_environment(working_env, tmpdir):
 
 
 @pytest.fixture(scope="function")
-def mock_git_repo(tmpdir):
+def mock_git_repo(git, tmpdir):
     """Create a mock git repo with two commits, the last one creating
     a .gitlab-ci.yml"""
 
     repo_path = tmpdir.join("mockspackrepo").strpath
     mkdirp(repo_path)
 
-    git = which("git", required=True)
     with working_dir(repo_path):
         git("init")
 
@@ -231,7 +229,7 @@ spack:
 
             assert "rebuild-index" in yaml_contents
             rebuild_job = yaml_contents["rebuild-index"]
-            expected = "spack buildcache update-index --keys -d {0}".format(mirror_url)
+            expected = "spack buildcache update-index --keys --mirror-url {0}".format(mirror_url)
             assert rebuild_job["script"][0] == expected
 
             assert "variables" in yaml_contents
@@ -260,12 +258,7 @@ def _validate_needs_graph(yaml_contents, needs_graph, artifacts):
 
 
 def test_ci_generate_bootstrap_gcc(
-    tmpdir,
-    working_env,
-    mutable_mock_env_path,
-    install_mockery,
-    mock_packages,
-    ci_base_environment,
+    tmpdir, working_env, mutable_mock_env_path, install_mockery, mock_packages, ci_base_environment
 ):
     """Test that we can bootstrap a compiler and use it as the
     compiler for a spec in the environment"""
@@ -302,21 +295,10 @@ spack:
 
     needs_graph = {
         "(bootstrap) conflict": [],
-        "(bootstrap) gcc": [
-            "(bootstrap) conflict",
-        ],
-        "(specs) libelf": [
-            "(bootstrap) gcc",
-        ],
-        "(specs) libdwarf": [
-            "(bootstrap) gcc",
-            "(specs) libelf",
-        ],
-        "(specs) dyninst": [
-            "(bootstrap) gcc",
-            "(specs) libelf",
-            "(specs) libdwarf",
-        ],
+        "(bootstrap) gcc": ["(bootstrap) conflict"],
+        "(specs) libelf": ["(bootstrap) gcc"],
+        "(specs) libdwarf": ["(bootstrap) gcc", "(specs) libelf"],
+        "(specs) dyninst": ["(bootstrap) gcc", "(specs) libelf", "(specs) libdwarf"],
     }
 
     with tmpdir.as_cwd():
@@ -333,12 +315,7 @@ spack:
 
 
 def test_ci_generate_bootstrap_artifacts_buildcache(
-    tmpdir,
-    working_env,
-    mutable_mock_env_path,
-    install_mockery,
-    mock_packages,
-    ci_base_environment,
+    tmpdir, working_env, mutable_mock_env_path, install_mockery, mock_packages, ci_base_environment
 ):
     """Test that we can bootstrap a compiler when artifacts buildcache
     is turned on"""
@@ -375,18 +352,9 @@ spack:
 
     needs_graph = {
         "(bootstrap) conflict": [],
-        "(bootstrap) gcc": [
-            "(bootstrap) conflict",
-        ],
-        "(specs) libelf": [
-            "(bootstrap) gcc",
-            "(bootstrap) conflict",
-        ],
-        "(specs) libdwarf": [
-            "(bootstrap) gcc",
-            "(bootstrap) conflict",
-            "(specs) libelf",
-        ],
+        "(bootstrap) gcc": ["(bootstrap) conflict"],
+        "(specs) libelf": ["(bootstrap) gcc", "(bootstrap) conflict"],
+        "(specs) libdwarf": ["(bootstrap) gcc", "(bootstrap) conflict", "(specs) libelf"],
         "(specs) dyninst": [
             "(bootstrap) gcc",
             "(bootstrap) conflict",
@@ -449,11 +417,7 @@ def test_ci_generate_with_cdash_token(
     mock_binary_index,
 ):
     """Make sure we it doesn't break if we configure cdash"""
-    os.environ.update(
-        {
-            "SPACK_CDASH_AUTH_TOKEN": "notreallyatokenbutshouldnotmatter",
-        }
-    )
+    os.environ.update({"SPACK_CDASH_AUTH_TOKEN": "notreallyatokenbutshouldnotmatter"})
     filename = str(tmpdir.join("spack.yaml"))
     with open(filename, "w") as f:
         f.write(
@@ -600,12 +564,7 @@ spack:
 
 
 def test_ci_generate_pkg_with_deps(
-    tmpdir,
-    working_env,
-    mutable_mock_env_path,
-    install_mockery,
-    mock_packages,
-    ci_base_environment,
+    tmpdir, working_env, mutable_mock_env_path, install_mockery, mock_packages, ci_base_environment
 ):
     """Test pipeline generation for a package w/ dependencies"""
     filename = str(tmpdir.join("spack.yaml"))
@@ -672,10 +631,7 @@ def test_ci_generate_for_pr_pipeline(
     rebuilding the mirror index, even if that job is specifically
     configured"""
     os.environ.update(
-        {
-            "SPACK_PIPELINE_TYPE": "spack_pull_request",
-            "SPACK_PR_BRANCH": "fake-test-branch",
-        }
+        {"SPACK_PIPELINE_TYPE": "spack_pull_request", "SPACK_PR_BRANCH": "fake-test-branch"}
     )
     filename = str(tmpdir.join("spack.yaml"))
     with open(filename, "w") as f:
@@ -810,10 +766,10 @@ def create_rebuild_env(tmpdir, pkg_name, broken_tests=False):
     env_dir = working_dir.join("concrete_env")
 
     mirror_dir = working_dir.join("mirror")
-    mirror_url = "file://{0}".format(mirror_dir.strpath)
+    mirror_url = url_util.path_to_file_url(mirror_dir.strpath)
 
     broken_specs_path = os.path.join(working_dir.strpath, "naughty-list")
-    broken_specs_url = url_util.join("file://", broken_specs_path)
+    broken_specs_url = url_util.path_to_file_url(broken_specs_path)
     temp_storage_url = "file:///path/to/per/pipeline/storage"
 
     broken_tests_packages = [pkg_name] if broken_tests else []
@@ -930,7 +886,6 @@ def test_ci_rebuild_mock_success(
     monkeypatch,
     broken_tests,
 ):
-
     pkg_name = "archive-files"
     rebuild_env = create_rebuild_env(tmpdir, pkg_name, broken_tests)
 
@@ -1131,11 +1086,7 @@ def test_ci_generate_mirror_override(
     """Ensure that protected pipelines using --buildcache-destination do not
     skip building specs that are not in the override mirror when they are
     found in the main mirror."""
-    os.environ.update(
-        {
-            "SPACK_PIPELINE_TYPE": "spack_protected_branch",
-        }
-    )
+    os.environ.update({"SPACK_PIPELINE_TYPE": "spack_protected_branch"})
 
     working_dir = tmpdir.join("working_dir")
 
@@ -1220,7 +1171,7 @@ def test_push_mirror_contents(
     working_dir = tmpdir.join("working_dir")
 
     mirror_dir = working_dir.join("mirror")
-    mirror_url = "file://{0}".format(mirror_dir.strpath)
+    mirror_url = url_util.path_to_file_url(mirror_dir.strpath)
 
     ci.import_signing_key(_signing_key())
 
@@ -1315,7 +1266,7 @@ spack:
             index_path = os.path.join(buildcache_path, "index.json")
             with open(index_path) as idx_fd:
                 index_object = json.load(idx_fd)
-                validate(index_object, db_idx_schema)
+                jsonschema.validate(index_object, db_idx_schema)
 
             # Now that index is regenerated, validate "buildcache list" output
             buildcache_list_output = buildcache_cmd("list", output=str)
@@ -1327,7 +1278,7 @@ spack:
                     spec_json_path = os.path.join(buildcache_path, file_name)
                     with open(spec_json_path) as json_fd:
                         json_object = Spec.extract_json_from_clearsig(json_fd.read())
-                        validate(json_object, specfile_schema)
+                        jsonschema.validate(json_object, specfile_schema)
 
             logs_dir = working_dir.join("logs_dir")
             if not os.path.exists(logs_dir.strpath):
@@ -1632,7 +1583,7 @@ spack:
             index_path = os.path.join(buildcache_path, "index.json")
             with open(index_path) as idx_fd:
                 index_object = json.load(idx_fd)
-                validate(index_object, db_idx_schema)
+                jsonschema.validate(index_object, db_idx_schema)
 
 
 def test_ci_generate_bootstrap_prune_dag(
@@ -1729,12 +1680,7 @@ spack:
         if spec.name == "gcc":
             return []
         else:
-            return [
-                {
-                    "spec": spec,
-                    "mirror_url": mirror_url,
-                }
-            ]
+            return [{"spec": spec, "mirror_url": mirror_url}]
 
     with tmpdir.as_cwd():
         env_cmd("create", "test", "./spack.yaml")
@@ -1768,12 +1714,7 @@ spack:
             # not otherwise need to be rebuilt (thanks to DAG pruning), they
             # both end up in the generated pipeline because the compiler they
             # depend on is bootstrapped, and *does* need to be rebuilt.
-            needs_graph = {
-                "(bootstrap) gcc": [],
-                "(specs) b": [
-                    "(bootstrap) gcc",
-                ],
-            }
+            needs_graph = {"(bootstrap) gcc": [], "(specs) b": ["(bootstrap) gcc"]}
 
             _validate_needs_graph(new_yaml_contents, needs_graph, False)
 
@@ -1790,11 +1731,7 @@ def test_ci_generate_prune_untouched(
 ):
     """Test pipeline generation with pruning works to eliminate
     specs that were not affected by a change"""
-    os.environ.update(
-        {
-            "SPACK_PRUNE_UNTOUCHED": "TRUE",  # enables pruning of untouched specs
-        }
-    )
+    os.environ.update({"SPACK_PRUNE_UNTOUCHED": "TRUE"})  # enables pruning of untouched specs
     mirror_url = "https://my.fake.mirror"
     filename = str(tmpdir.join("spack.yaml"))
     with open(filename, "w") as f:
@@ -1913,21 +1850,21 @@ def test_ensure_only_one_temporary_storage():
 
     # User can specify "enable-artifacts-buildcache" (boolean)
     yaml_obj = syaml.load(gitlab_ci_template.format(enable_artifacts))
-    validate(yaml_obj, gitlab_ci_schema)
+    jsonschema.validate(yaml_obj, gitlab_ci_schema)
 
     # User can also specify "temporary-storage-url-prefix" (string)
     yaml_obj = syaml.load(gitlab_ci_template.format(temp_storage))
-    validate(yaml_obj, gitlab_ci_schema)
+    jsonschema.validate(yaml_obj, gitlab_ci_schema)
 
     # However, specifying both should fail to validate
     yaml_obj = syaml.load(gitlab_ci_template.format(specify_both))
-    with pytest.raises(ValidationError):
-        validate(yaml_obj, gitlab_ci_schema)
+    with pytest.raises(jsonschema.ValidationError):
+        jsonschema.validate(yaml_obj, gitlab_ci_schema)
 
     # Specifying neither should be fine too, as neither of these properties
     # should be required
     yaml_obj = syaml.load(gitlab_ci_template.format(specify_neither))
-    validate(yaml_obj, gitlab_ci_schema)
+    jsonschema.validate(yaml_obj, gitlab_ci_schema)
 
 
 def test_ci_generate_temp_storage_url(
@@ -2218,14 +2155,7 @@ spack:
 
 
 @pytest.mark.parametrize(
-    "subcmd",
-    [
-        (""),
-        ("generate"),
-        ("rebuild-index"),
-        ("rebuild"),
-        ("reproduce-build"),
-    ],
+    "subcmd", [(""), ("generate"), ("rebuild-index"), ("rebuild"), ("reproduce-build")]
 )
 def test_ci_help(subcmd, capsys):
     """Make sure `spack ci` --help describes the (sub)command help."""

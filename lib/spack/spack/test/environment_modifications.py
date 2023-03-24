@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -362,7 +362,6 @@ def test_preserve_environment(prepare_environment_for_tests):
 )
 @pytest.mark.usefixtures("prepare_environment_for_tests")
 def test_environment_from_sourcing_files(files, expected, deleted):
-
     env = environment.environment_after_sourcing_files(*files)
 
     # Test that variables that have been modified are still there and contain
@@ -393,7 +392,6 @@ def test_clear(env):
     ],
 )
 def test_sanitize_literals(env, exclude, include):
-
     after = environment.sanitize(env, exclude, include)
 
     # Check that all the included variables are there
@@ -430,7 +428,6 @@ def test_sanitize_literals(env, exclude, include):
     ],
 )
 def test_sanitize_regex(env, exclude, include, expected, deleted):
-
     after = environment.sanitize(env, exclude, include)
 
     assert all(x in after for x in expected)
@@ -481,15 +478,11 @@ def test_sanitize_regex(env, exclude, include, expected, deleted):
         (
             {"FOO": "foo", "BAR": "bar"},
             {"FOO": "baz", "BAR": "baz"},
-            [
-                environment.SetEnv("FOO", "baz"),
-                environment.SetEnv("BAR", "baz"),
-            ],
+            [environment.SetEnv("FOO", "baz"), environment.SetEnv("BAR", "baz")],
         ),
     ],
 )
 def test_from_environment_diff(before, after, search_list):
-
     mod = environment.EnvironmentModifications.from_environment_diff(before, after)
 
     for item in search_list:

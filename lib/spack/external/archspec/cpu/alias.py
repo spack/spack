@@ -3,13 +3,12 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 """Aliases for microarchitecture features."""
-# pylint: disable=useless-object-inheritance
 from .schema import TARGETS_JSON, LazyDictionary
 
 _FEATURE_ALIAS_PREDICATE = {}
 
 
-class FeatureAliasTest(object):
+class FeatureAliasTest:
     """A test that must be passed for a feature alias to succeed.
 
     Args:
@@ -48,7 +47,7 @@ def alias_predicate(func):
 
     # Check we didn't register anything else with the same name
     if name in _FEATURE_ALIAS_PREDICATE:
-        msg = 'the alias predicate "{0}" already exists'.format(name)
+        msg = f'the alias predicate "{name}" already exists'
         raise KeyError(msg)
 
     _FEATURE_ALIAS_PREDICATE[name] = func

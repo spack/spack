@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -34,6 +34,9 @@ class PyDocutils(PythonPackage):
     depends_on("python@2.6:2.8,3.3:", when="@0.14:0.15", type=("build", "run"))
     depends_on("python@2.4:", when="@:0.13", type=("build", "run"))
     depends_on("py-setuptools", when="@0.15:", type="build")
+
+    # Includes "longintrepr.h" instead of Python.h
+    conflicts("^python@3.11:", when="@:0.15")
 
     # NOTE: This creates symbolic links to be able to run docutils scripts
     # without .py file extension similarly to various linux distributions to

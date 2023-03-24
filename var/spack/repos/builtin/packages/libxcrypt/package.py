@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -11,7 +11,7 @@ class Libxcrypt(AutotoolsPackage):
 
     homepage = "https://github.com/besser82/libxcrypt"
     url = "https://github.com/besser82/libxcrypt/releases/download/v4.4.30/libxcrypt-4.4.30.tar.xz"
-    maintainers = ["haampie"]
+    maintainers("haampie")
 
     def url_for_version(self, version):
         if version <= Version("4.4.17"):
@@ -32,6 +32,15 @@ class Libxcrypt(AutotoolsPackage):
 
     patch("truncating-conversion.patch", when="@4.4.30")
 
+    with when("@:4.4.17"):
+        depends_on("autoconf", type="build")
+        depends_on("automake@1.14:", type="build")
+        depends_on("libtool", type="build")
+        depends_on("m4", type="build")
+
+    # Some distros have incomplete perl installs, +open catches that.
+    depends_on("perl@5.14.0: +open", type="build", when="@4.4.18:")
+
     def configure_args(self):
         args = [
             # Disable test dependency on Python (Python itself depends on libxcrypt).
@@ -45,9 +54,3 @@ class Libxcrypt(AutotoolsPackage):
     @property
     def libs(self):
         return find_libraries("libcrypt", root=self.prefix, recursive=True)
-
-    with when("@:4.4.17"):
-        depends_on("autoconf", type="build")
-        depends_on("automake", type="build")
-        depends_on("libtool", type="build")
-        depends_on("m4", type="build")

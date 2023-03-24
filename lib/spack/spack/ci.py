@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -33,19 +33,16 @@ import spack.main
 import spack.mirror
 import spack.paths
 import spack.repo
-import spack.util.executable as exe
+import spack.util.git
 import spack.util.gpg as gpg_util
 import spack.util.spack_yaml as syaml
 import spack.util.url as url_util
 import spack.util.web as web_util
 from spack.error import SpackError
-from spack.reporters.cdash import CDash
+from spack.reporters import CDash, CDashConfiguration
 from spack.reporters.cdash import build_stamp as cdash_build_stamp
-from spack.util.pattern import Bunch
 
-JOB_RETRY_CONDITIONS = [
-    "always",
-]
+JOB_RETRY_CONDITIONS = ["always"]
 
 TEMP_STORAGE_MIRROR_NAME = "ci_temporary_mirror"
 SPACK_RESERVED_TAGS = ["public", "protected", "notary"]
@@ -130,10 +127,7 @@ def _remove_reserved_tags(tags):
 
 
 def _get_spec_string(spec):
-    format_elements = [
-        "{name}{@version}",
-        "{%compiler}",
-    ]
+    format_elements = ["{name}{@version}", "{%compiler}"]
 
     if spec.architecture:
         format_elements.append(" {arch=architecture}")
@@ -329,12 +323,7 @@ def _compute_spec_deps(spec_list, check_index_only=False, mirrors_to_check=None)
     dependencies = []
 
     def append_dep(s, d):
-        dependencies.append(
-            {
-                "spec": s,
-                "depends": d,
-            }
-        )
+        dependencies.append({"spec": s, "depends": d})
 
     for spec in spec_list:
         for s in spec.traverse(deptype=all):
@@ -347,10 +336,7 @@ def _compute_spec_deps(spec_list, check_index_only=False, mirrors_to_check=None)
             )
 
             skey = _spec_deps_key(s)
-            spec_labels[skey] = {
-                "spec": s,
-                "needs_rebuild": not up_to_date_mirrors,
-            }
+            spec_labels[skey] = {"spec": s, "needs_rebuild": not up_to_date_mirrors}
 
             for d in s.dependencies(deptype=all):
                 dkey = _spec_deps_key(d)
@@ -369,10 +355,7 @@ def _compute_spec_deps(spec_list, check_index_only=False, mirrors_to_check=None)
             }
         )
 
-    deps_json_obj = {
-        "specs": specs,
-        "dependencies": dependencies,
-    }
+    deps_json_obj = {"specs": specs, "dependencies": dependencies}
 
     return deps_json_obj
 
@@ -411,14 +394,7 @@ def _copy_attributes(attrs_list, src_dict, dest_dict):
 
 def _find_matching_config(spec, gitlab_ci):
     runner_attributes = {}
-    overridable_attrs = [
-        "image",
-        "tags",
-        "variables",
-        "before_script",
-        "script",
-        "after_script",
-    ]
+    overridable_attrs = ["image", "tags", "variables", "before_script", "script", "after_script"]
 
     _copy_attributes(overridable_attrs, gitlab_ci, runner_attributes)
 
@@ -486,7 +462,7 @@ def get_stack_changed(env_path, rev1="HEAD^", rev2="HEAD"):
     whether or not the stack was changed.  Returns True if the environment
     manifest changed between the provided revisions (or additionally if the
     `.gitlab-ci.yml` file itself changed).  Returns False otherwise."""
-    git = exe.which("git")
+    git = spack.util.git.git()
     if git:
         with fs.working_dir(spack.paths.prefix):
             git_log = git(
@@ -686,28 +662,14 @@ def generate_gitlab_ci_yaml(
             except AttributeError:
                 phase_name = phase
                 strip_compilers = False
-            phases.append(
-                {
-                    "name": phase_name,
-                    "strip-compilers": strip_compilers,
-                }
-            )
+            phases.append({"name": phase_name, "strip-compilers": strip_compilers})
 
             for bs in env.spec_lists[phase_name]:
                 bootstrap_specs.append(
-                    {
-                        "spec": bs,
-                        "phase-name": phase_name,
-                        "strip-compilers": strip_compilers,
-                    }
+                    {"spec": bs, "phase-name": phase_name, "strip-compilers": strip_compilers}
                 )
 
-    phases.append(
-        {
-            "name": "specs",
-            "strip-compilers": False,
-        }
-    )
+    phases.append({"name": "specs", "strip-compilers": False})
 
     # If a remote mirror override (alternate buildcache destination) was
     # specified, add it here in case it has already built hashes we might
@@ -728,13 +690,19 @@ def generate_gitlab_ci_yaml(
         # --check-index-only, then the override mirror needs to be added to
         # the configured mirrors when bindist.update() is run, or else we
         # won't fetch its index and include in our local cache.
-        spack.mirror.add("ci_pr_mirror", remote_mirror_override, cfg.default_modify_scope())
+        spack.mirror.add(
+            spack.mirror.Mirror(remote_mirror_override, name="ci_pr_mirror"),
+            cfg.default_modify_scope(),
+        )
 
     shared_pr_mirror = None
     if spack_pipeline_type == "spack_pull_request":
         stack_name = os.environ.get("SPACK_CI_STACK_NAME", "")
         shared_pr_mirror = url_util.join(SHARED_PR_MIRROR_URL, stack_name)
-        spack.mirror.add("ci_shared_pr_mirror", shared_pr_mirror, cfg.default_modify_scope())
+        spack.mirror.add(
+            spack.mirror.Mirror(shared_pr_mirror, name="ci_shared_pr_mirror"),
+            cfg.default_modify_scope(),
+        )
 
     pipeline_artifacts_dir = artifacts_root
     if not pipeline_artifacts_dir:
@@ -1104,15 +1072,9 @@ def generate_gitlab_ci_yaml(
                     "variables": variables,
                     "script": job_script,
                     "tags": tags,
-                    "artifacts": {
-                        "paths": artifact_paths,
-                        "when": "always",
-                    },
+                    "artifacts": {"paths": artifact_paths, "when": "always"},
                     "needs": sorted(job_dependencies, key=lambda d: d["job"]),
-                    "retry": {
-                        "max": 2,
-                        "when": JOB_RETRY_CONDITIONS,
-                    },
+                    "retry": {"max": 2, "when": JOB_RETRY_CONDITIONS},
                     "interruptible": True,
                 }
 
@@ -1130,10 +1092,7 @@ def generate_gitlab_ci_yaml(
                 if image_name:
                     job_object["image"] = image_name
                     if image_entry is not None:
-                        job_object["image"] = {
-                            "name": image_name,
-                            "entrypoint": image_entry,
-                        }
+                        job_object["image"] = {"name": image_name, "entrypoint": image_entry}
 
                 output_object[job_name] = job_object
                 job_id += 1
@@ -1176,11 +1135,7 @@ def generate_gitlab_ci_yaml(
 
     service_job_retries = {
         "max": 2,
-        "when": [
-            "runner_system_failure",
-            "stuck_or_timeout_failure",
-            "script_failure",
-        ],
+        "when": ["runner_system_failure", "stuck_or_timeout_failure", "script_failure"],
     }
 
     if job_id > 0:
@@ -1264,7 +1219,7 @@ def generate_gitlab_ci_yaml(
 
             final_job["stage"] = "stage-rebuild-index"
             final_job["script"] = [
-                "spack buildcache update-index --keys -d {0}".format(index_target_mirror)
+                "spack buildcache update-index --keys --mirror-url {0}".format(index_target_mirror)
             ]
             final_job["when"] = "always"
             final_job["retry"] = service_job_retries
@@ -1352,9 +1307,7 @@ def generate_gitlab_ci_yaml(
             _copy_attributes(default_attrs, service_job_config, noop_job)
 
         if "script" not in noop_job:
-            noop_job["script"] = [
-                'echo "All specs already up to date, nothing to rebuild."',
-            ]
+            noop_job["script"] = ['echo "All specs already up to date, nothing to rebuild."']
 
         noop_job["retry"] = service_job_retries
 
@@ -1483,10 +1436,9 @@ def _push_mirror_contents(env, specfile_path, sign_binaries, mirror_url):
     tty.debug("Creating buildcache ({0})".format("unsigned" if unsigned else "signed"))
     hashes = env.all_hashes() if env else None
     matches = spack.store.specfile_matches(specfile_path, hashes=hashes)
-    push_url = spack.mirror.push_url_from_mirror_url(mirror_url)
-    spec_kwargs = {"include_root": True, "include_dependencies": False}
+    push_url = spack.mirror.Mirror.from_url(mirror_url).push_url
     kwargs = {"force": True, "allow_root": True, "unsigned": unsigned}
-    bindist.push(matches, push_url, spec_kwargs, **kwargs)
+    bindist.push(matches, push_url, include_root=True, include_dependencies=False, **kwargs)
 
 
 def push_mirror_contents(env, specfile_path, mirror_url, sign_binaries):
@@ -1549,10 +1501,7 @@ def copy_files_to_artifacts(src, artifacts_dir):
     try:
         fs.copy(src, artifacts_dir)
     except Exception as err:
-        msg = ("Unable to copy files ({0}) to artifacts {1} due to " "exception: {2}").format(
-            src, artifacts_dir, str(err)
-        )
-        tty.error(msg)
+        tty.warn(f"Unable to copy files ({src}) to artifacts {artifacts_dir} due to: {err}")
 
 
 def copy_stage_logs_to_artifacts(job_spec, job_log_dir):
@@ -1615,9 +1564,7 @@ def download_and_extract_artifacts(url, work_dir):
     """
     tty.msg("Fetching artifacts from: {0}\n".format(url))
 
-    headers = {
-        "Content-Type": "application/zip",
-    }
+    headers = {"Content-Type": "application/zip"}
 
     token = os.environ.get("GITLAB_PRIVATE_TOKEN", None)
     if token:
@@ -1655,7 +1602,7 @@ def get_spack_info():
     entry, otherwise, return a string containing the spack version."""
     git_path = os.path.join(spack.paths.prefix, ".git")
     if os.path.exists(git_path):
-        git = exe.which("git")
+        git = spack.util.git.git()
         if git:
             with fs.working_dir(spack.paths.prefix):
                 git_log = git("log", "-1", output=str, error=os.devnull, fail_on_error=False)
@@ -1695,7 +1642,7 @@ def setup_spack_repro_version(repro_dir, checkout_commit, merge_commit=None):
 
     spack_git_path = spack.paths.prefix
 
-    git = exe.which("git")
+    git = spack.util.git.git()
     if not git:
         tty.error("reproduction of pipeline job requires git")
         return False
@@ -2076,10 +2023,7 @@ def write_broken_spec(url, pkg_name, stack_name, job_url, pipeline_url, spec_dic
         with open(file_path, "w") as fd:
             fd.write(syaml.dump(broken_spec_details))
         web_util.push_to_url(
-            file_path,
-            url,
-            keep_original=False,
-            extra_args={"ContentType": "text/plain"},
+            file_path, url, keep_original=False, extra_args={"ContentType": "text/plain"}
         )
     except Exception as err:
         # If there is an S3 error (e.g., access denied or connection
@@ -2157,14 +2101,7 @@ def run_standalone_tests(**kwargs):
         tty.error("Reproduction directory is required for stand-alone tests")
         return
 
-    test_args = [
-        "spack",
-        "--color=always",
-        "--backtrace",
-        "--verbose",
-        "test",
-        "run",
-    ]
+    test_args = ["spack", "--color=always", "--backtrace", "--verbose", "test", "run"]
     if fail_fast:
         test_args.append("--fail-fast")
 
@@ -2314,19 +2251,9 @@ class CDashHandler(object):
 
         opener = build_opener(HTTPHandler)
 
-        parent_group_id = self.create_buildgroup(
-            opener,
-            headers,
-            url,
-            self.build_group,
-            "Daily",
-        )
+        parent_group_id = self.create_buildgroup(opener, headers, url, self.build_group, "Daily")
         group_id = self.create_buildgroup(
-            opener,
-            headers,
-            url,
-            "Latest {0}".format(self.build_group),
-            "Latest",
+            opener, headers, url, "Latest {0}".format(self.build_group), "Latest"
         )
 
         if not parent_group_id or not group_id:
@@ -2336,13 +2263,9 @@ class CDashHandler(object):
 
         data = {
             "dynamiclist": [
-                {
-                    "match": name,
-                    "parentgroupid": parent_group_id,
-                    "site": self.site,
-                }
+                {"match": name, "parentgroupid": parent_group_id, "site": self.site}
                 for name in job_names
-            ],
+            ]
         }
 
         enc_data = json.dumps(data).encode("utf-8")
@@ -2358,10 +2281,13 @@ class CDashHandler(object):
             tty.warn(msg)
 
     def report_skipped(self, spec, directory_name, reason):
-        cli_args = self.args()
-        cli_args.extend(["package", [spec.name]])
-        it = iter(cli_args)
-        kv = {x.replace("--", "").replace("-", "_"): next(it) for x in it}
-
-        reporter = CDash(Bunch(**kv))
+        configuration = CDashConfiguration(
+            upload_url=self.upload_url,
+            packages=[spec.name],
+            build=self.build_name,
+            site=self.site,
+            buildstamp=self.build_stamp,
+            track=None,
+        )
+        reporter = CDash(configuration=configuration)
         reporter.test_skipped_report(directory_name, spec, reason)

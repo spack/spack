@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -22,7 +22,6 @@ class Ace(MakefilePackage):
     version("6.5.0", "b6f9ec922fbdcecb4348e16d851d0d1f135df1836dfe77d2e0b64295ddb83066")
 
     def edit(self, spec, prefix):
-
         # Dictionary mapping: compiler-name : ACE config-label
         supported = {"intel": "_icc", "gcc": ""}
 

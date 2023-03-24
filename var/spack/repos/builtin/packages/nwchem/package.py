@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -42,7 +42,7 @@ class Nwchem(Package):
     depends_on("mpi")
     depends_on("scalapack")
     depends_on("fftw-api")
-    depends_on("python@3:", type=("build", "link", "run"))
+    depends_on("python@3:3.9", type=("build", "link", "run"), when="@:7.0.2")
 
     def install(self, spec, prefix):
         scalapack = spec["scalapack"].libs

@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -20,7 +20,7 @@ class Ispc(CMakePackage):
     homepage = "https://ispc.github.io"
     url = "https://github.com/ispc/ispc/tarball/v1.14.1"
     git = "https://github.com/ispc/ispc"
-    maintainers = ["aumuell"]
+    maintainers("aumuell")
 
     executables = ["^ispc$"]
 

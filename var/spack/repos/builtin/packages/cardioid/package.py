@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -11,7 +11,7 @@ class Cardioid(CMakePackage):
 
     homepage = "https://baasic.llnl.gov/comp-bio/cardioid-code.php"
     git = "https://github.com/LLNL/cardioid.git"
-    maintainers = ["rblake-llnl"]
+    maintainers("rblake-llnl")
 
     version("develop", branch="master")
     version("elecfem", branch="elec-fem")

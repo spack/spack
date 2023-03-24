@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -218,7 +218,6 @@ class TestTcl(object):
             modulefile_content("mpileaks")
 
     def test_module_index(self, module_configuration, factory, tmpdir_factory):
-
         module_configuration("suffix")
 
         w1, s1 = factory("mpileaks")

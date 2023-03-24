@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -48,7 +48,7 @@ class Ascent(CMakePackage, CudaPackage):
     url = "https://github.com/Alpine-DAV/ascent/releases/download/v0.5.1/ascent-v0.5.1-src-with-blt.tar.gz"
     tags = ["radiuss", "e4s"]
 
-    maintainers = ["cyrush"]
+    maintainers("cyrush")
 
     version("develop", branch="develop", submodules=True)
 

@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -20,7 +20,7 @@ class Lbann(CMakePackage, CudaPackage, ROCmPackage):
     git = "https://github.com/LLNL/lbann.git"
     tags = ["ecp", "radiuss"]
 
-    maintainers = ["bvanessen"]
+    maintainers("bvanessen")
 
     version("develop", branch="develop")
     version("0.102", sha256="3734a76794991207e2dd2221f05f0e63a86ddafa777515d93d99d48629140f1a")
@@ -274,17 +274,10 @@ class Lbann(CMakePackage, CudaPackage, ROCmPackage):
         cppflags.append("-DLBANN_SET_EL_RNG")
         cppflags.append("-std=c++17")
         args = []
-        args.extend(
-            [
-                "-DCMAKE_CXX_FLAGS=%s" % " ".join(cppflags),
-                "-DLBANN_VERSION=spack",
-            ]
-        )
+        args.extend(["-DCMAKE_CXX_FLAGS=%s" % " ".join(cppflags), "-DLBANN_VERSION=spack"])
 
         if "+numpy" in spec:
-            args.append(
-                "-DCNPY_DIR={0}".format(spec["cnpy"].prefix),
-            )
+            args.append("-DCNPY_DIR={0}".format(spec["cnpy"].prefix))
 
         # Use lld high performance linker
         if "+lld" in spec:
@@ -428,11 +421,7 @@ class Lbann(CMakePackage, CudaPackage, ROCmPackage):
                 ]
             )
             if "platform=cray" in spec:
-                args.extend(
-                    [
-                        "-DMPI_ASSUME_NO_BUILTIN_MPI=ON",
-                    ]
-                )
+                args.extend(["-DMPI_ASSUME_NO_BUILTIN_MPI=ON"])
             archs = self.spec.variants["amdgpu_target"].value
             if archs != "none":
                 arch_str = ",".join(archs)

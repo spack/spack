@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -14,7 +14,7 @@ class Wgl(Package):
 
     homepage = "https://learn.microsoft.com/en-us/windows/win32/opengl/wgl-and-windows-reference"
     has_code = False
-
+    tags = ["windows"]
     # hard code the extension as shared lib
     libraries = ["OpenGL32.Lib"]
 

@@ -1,4 +1,4 @@
-.. Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+.. Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
    Spack Project Developers. See the top-level COPYRIGHT file for details.
 
    SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -175,14 +175,11 @@ Spec-related modules
 ^^^^^^^^^^^^^^^^^^^^
 
 :mod:`spack.spec`
-  Contains :class:`~spack.spec.Spec` and :class:`~spack.spec.SpecParser`.
-  Also implements most of the logic for normalization and concretization
+  Contains :class:`~spack.spec.Spec`. Also implements most of the logic for concretization
   of specs.
 
-:mod:`spack.parse`
-  Contains some base classes for implementing simple recursive descent
-  parsers: :class:`~spack.parse.Parser` and :class:`~spack.parse.Lexer`.
-  Used by :class:`~spack.spec.SpecParser`.
+:mod:`spack.parser`
+  Contains :class:`~spack.parser.SpecParser` and functions related to parsing specs.
 
 :mod:`spack.concretize`
   Contains :class:`~spack.concretize.Concretizer` implementation,
@@ -235,7 +232,7 @@ Spack Subcommands
 Unit tests
 ^^^^^^^^^^
 
-:mod:`spack.test`
+``spack.test``
   Implements Spack's test suite.  Add a module and put its name in
   the test suite in ``__init__.py`` to add more unit tests.
 

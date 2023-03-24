@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -18,7 +18,7 @@ class Iwyu(CMakePackage):
     homepage = "https://include-what-you-use.org"
     url = "https://include-what-you-use.org/downloads/include-what-you-use-0.13.src.tar.gz"
 
-    maintainers = ["sethrj"]
+    maintainers("sethrj")
 
     tags = ["build-tools"]
 

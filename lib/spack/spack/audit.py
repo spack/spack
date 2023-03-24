@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -321,8 +321,7 @@ def _check_patch_urls(pkgs, error_cls):
                     errors.append(
                         error_cls(
                             "patch URL in package {0} must end with {1}".format(
-                                pkg_cls.name,
-                                full_index_arg,
+                                pkg_cls.name, full_index_arg
                             ),
                             [patch.url],
                         )

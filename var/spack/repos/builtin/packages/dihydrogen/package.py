@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -20,7 +20,7 @@ class Dihydrogen(CMakePackage, CudaPackage, ROCmPackage):
     git = "https://github.com/LLNL/DiHydrogen.git"
     tags = ["ecp", "radiuss"]
 
-    maintainers = ["bvanessen"]
+    maintainers("bvanessen")
 
     version("develop", branch="develop")
     version("master", branch="master")
@@ -129,14 +129,7 @@ class Dihydrogen(CMakePackage, CudaPackage, ROCmPackage):
 
     # Idenfity versions of cuda_arch that are too old
     # from lib/spack/spack/build_systems/cuda.py
-    illegal_cuda_arch_values = [
-        "10",
-        "11",
-        "12",
-        "13",
-        "20",
-        "21",
-    ]
+    illegal_cuda_arch_values = ["10", "11", "12", "13", "20", "21"]
     for value in illegal_cuda_arch_values:
         conflicts("cuda_arch=" + value)
 
@@ -216,11 +209,7 @@ class Dihydrogen(CMakePackage, CudaPackage, ROCmPackage):
                 ]
             )
             if "platform=cray" in spec:
-                args.extend(
-                    [
-                        "-DMPI_ASSUME_NO_BUILTIN_MPI=ON",
-                    ]
-                )
+                args.extend(["-DMPI_ASSUME_NO_BUILTIN_MPI=ON"])
             archs = self.spec.variants["amdgpu_target"].value
             if archs != "none":
                 arch_str = ",".join(archs)

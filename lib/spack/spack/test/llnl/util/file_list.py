@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -9,13 +9,7 @@ import sys
 
 import pytest
 
-from llnl.util.filesystem import (
-    HeaderList,
-    LibraryList,
-    find,
-    find_headers,
-    find_libraries,
-)
+from llnl.util.filesystem import HeaderList, LibraryList, find, find_headers, find_libraries
 
 import spack.paths
 
@@ -80,7 +74,6 @@ class TestLibraryList(object):
         assert library_list == x
 
     def test_joined_and_str(self, library_list):
-
         s1 = library_list.joined()
         expected = " ".join(
             [
@@ -109,7 +102,6 @@ class TestLibraryList(object):
         assert s3 == expected
 
     def test_flags(self, library_list):
-
         search_flags = library_list.search_flags
         assert "-L/dir1" in search_flags
         assert "-L/dir2" in search_flags
@@ -306,7 +298,6 @@ def test_library_type_search(lib_list, kwargs):
     ],
 )
 def test_searching_order(search_fn, search_list, root, kwargs):
-
     # Test search
     result = search_fn(search_list, root, **kwargs)
 

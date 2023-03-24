@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -16,6 +16,7 @@ import llnl.util.filesystem as fs
 import llnl.util.link_tree
 
 import spack.cmd.env
+import spack.config
 import spack.environment as ev
 import spack.environment.shell
 import spack.error
@@ -29,7 +30,6 @@ from spack.spec import Spec
 from spack.stage import stage_prefix
 from spack.util.executable import Executable
 from spack.util.path import substitute_path_variables
-from spack.util.web import FetchError
 from spack.version import Version
 
 # TODO-27021
@@ -627,7 +627,6 @@ packages:
 
     test_scope = spack.config.InternalConfigScope("env-external-test", data=external_config_dict)
     with spack.config.override(test_scope):
-
         e = ev.create("test", initial_yaml)
         e.concretize()
         # Note: normally installing specs in a test environment requires doing
@@ -707,9 +706,9 @@ spack:
             e.concretize()
 
     err = str(exc)
-    assert "not retrieve configuration" in err
-    assert os.path.join("no", "such", "directory") in err
-
+    assert "missing include" in err
+    assert "/no/such/directory" in err
+    assert os.path.join("no", "such", "file.yaml") in err
     assert ev.active_environment() is None
 
 
@@ -827,7 +826,7 @@ def test_env_with_included_config_missing_file(tmpdir, mutable_empty_config):
         f.write("spack:\n  include:\n    - {0}\n".format(missing_file.strpath))
 
     env = ev.Environment(tmpdir.strpath)
-    with pytest.raises(FetchError, match="No such file or directory"):
+    with pytest.raises(spack.config.ConfigError, match="missing include path"):
         ev.activate(env)
 
 
@@ -1201,7 +1200,7 @@ def test_env_view_fails(tmpdir, mock_packages, mock_stage, mock_fetch, install_m
         add("libelf")
         add("libelf cflags=-g")
         with pytest.raises(
-            llnl.util.link_tree.MergeConflictSummary, match=spack.store.layout.metadata_dir
+            ev.SpackEnvironmentViewError, match="two specs project to the same prefix"
         ):
             install("--fake")
 
@@ -2763,12 +2762,7 @@ def test_query_develop_specs():
 
 @pytest.mark.parametrize("method", [spack.cmd.env.env_activate, spack.cmd.env.env_deactivate])
 @pytest.mark.parametrize(
-    "env,no_env,env_dir",
-    [
-        ("b", False, None),
-        (None, True, None),
-        (None, False, "path/"),
-    ],
+    "env,no_env,env_dir", [("b", False, None), (None, True, None), (None, False, "path/")]
 )
 def test_activation_and_deactiviation_ambiguities(method, env, no_env, env_dir, capsys):
     """spack [-e x | -E | -D x/]  env [activate | deactivate] y are ambiguous"""
@@ -2836,10 +2830,10 @@ def test_failed_view_cleanup(tmpdir, mock_stage, mock_fetch, install_mockery):
     all_views = os.path.dirname(resolved_view)
     views_before = os.listdir(all_views)
 
-    # Add a spec that results in MergeConflictError's when creating a view
+    # Add a spec that results in view clash when creating a view
     with ev.read("env"):
         add("libelf cflags=-O3")
-        with pytest.raises(llnl.util.link_tree.MergeConflictError):
+        with pytest.raises(ev.SpackEnvironmentViewError):
             install("--fake")
 
     # Make sure there is no broken view in the views directory, and the current
@@ -3071,15 +3065,7 @@ def test_read_legacy_lockfile_and_reconcretize(mock_stage, mock_fetch, install_m
         # This prunes all build deps
         (
             ["--use-buildcache=only"],
-            [
-                "dtlink1",
-                "dtlink3",
-                "dtlink4",
-                "dtlink5",
-                "dtrun1",
-                "dtrun3",
-                "dttop",
-            ],
+            ["dtlink1", "dtlink3", "dtlink4", "dtlink5", "dtrun1", "dtrun3", "dttop"],
         ),
         # Test whether pruning of build deps is correct if we explicitly include one
         # that is also a dependency of a root.
@@ -3115,7 +3101,7 @@ def test_environment_depfile_makefile(depfile_flags, expected_installs, tmpdir, 
             "-o",
             makefile,
             "--make-disable-jobserver",
-            "--make-target-prefix=prefix",
+            "--make-prefix=prefix",
             *depfile_flags,
         )
 
@@ -3144,6 +3130,54 @@ def test_environment_depfile_out(tmpdir, mock_packages):
         stdout = env("depfile", "-G", "make")
         with open(makefile_path, "r") as f:
             assert stdout == f.read()
+
+
+def test_spack_package_ids_variable(tmpdir, mock_packages):
+    # Integration test for post-install hooks through prefix/SPACK_PACKAGE_IDS
+    # variable
+    env("create", "test")
+    makefile_path = str(tmpdir.join("Makefile"))
+    include_path = str(tmpdir.join("include.mk"))
+
+    # Create env and generate depfile in include.mk with prefix example/
+    with ev.read("test"):
+        add("libdwarf")
+        concretize()
+
+    with ev.read("test"):
+        env(
+            "depfile",
+            "-G",
+            "make",
+            "--make-disable-jobserver",
+            "--make-prefix=example",
+            "-o",
+            include_path,
+        )
+
+    # Include in Makefile and create target that depend on SPACK_PACKAGE_IDS
+    with open(makefile_path, "w") as f:
+        f.write(
+            r"""
+all: post-install
+
+include include.mk
+
+example/post-install/%: example/install/%
+	$(info post-install: $(HASH)) # noqa: W191,E101
+
+post-install: $(addprefix example/post-install/,$(example/SPACK_PACKAGE_IDS))
+"""
+        )
+    make = Executable("make")
+
+    # Do dry run.
+    out = make("-n", "-C", str(tmpdir), output=str)
+
+    # post-install: <hash> should've been executed
+    with ev.read("test") as test:
+        for s in test.all_specs():
+            assert "post-install: {}".format(s.dag_hash()) in out
 
 
 def test_unify_when_possible_works_around_conflicts():
@@ -3181,3 +3215,27 @@ def test_env_include_packages_url(
 
         cfg = spack.config.get("packages")
         assert "openmpi" in cfg["all"]["providers"]["mpi"]
+
+
+def test_relative_view_path_on_command_line_is_made_absolute(tmpdir, config):
+    with fs.working_dir(str(tmpdir)):
+        env("create", "--with-view", "view", "--dir", "env")
+        environment = ev.Environment(os.path.join(".", "env"))
+        assert os.path.samefile("view", environment.default_view.root)
+
+
+def test_environment_created_in_users_location(mutable_config, tmpdir):
+    """Test that an environment is created in a location based on the config"""
+    spack.config.set("config:environments_root", str(tmpdir.join("envs")))
+    env_dir = spack.config.get("config:environments_root")
+
+    assert tmpdir.strpath in env_dir
+    assert not os.path.isdir(env_dir)
+
+    dir_name = "user_env"
+    env("create", dir_name)
+    out = env("list")
+
+    assert dir_name in out
+    assert env_dir in ev.root(dir_name)
+    assert os.path.isdir(os.path.join(env_dir, dir_name))

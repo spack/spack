@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -21,7 +21,7 @@ class Mvapich2Gdr(AutotoolsPackage):
     homepage = "http://mvapich.cse.ohio-state.edu"
     url = "http://mvapich.cse.ohio-state.edu/download/mvapich/spack-mirror/mvapich2-gdr/mvapich2-gdr-2.3.6.tar.gz"
 
-    maintainers = ["ndcontini", "natshineman", "harisubramoni"]
+    maintainers("ndcontini", "natshineman", "harisubramoni")
 
     version("2.3.6", sha256="618408431348164c0824f3a72dc406763f169f7f5400f3cc15dfebf8d7166005")
     version("2.3.5", sha256="bcfe8197875405af0ddbf6462e585efc21668108bec9b481fe53616ad36a98b4")

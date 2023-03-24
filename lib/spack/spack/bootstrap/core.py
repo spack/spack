@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -29,6 +29,7 @@ import os
 import os.path
 import sys
 import uuid
+from typing import Callable, List, Optional
 
 from llnl.util import tty
 from llnl.util.lang import GroupedExceptionHandler
@@ -52,12 +53,7 @@ import spack.util.spack_yaml
 import spack.util.url
 import spack.version
 
-from ._common import (
-    _executables_in_store,
-    _python_import,
-    _root_spec,
-    _try_import_from_store,
-)
+from ._common import _executables_in_store, _python_import, _root_spec, _try_import_from_store
 from .config import spack_python_interpreter, spec_for_current_python
 
 #: Name of the file containing metadata about the bootstrapping source
@@ -70,12 +66,12 @@ IS_WINDOWS = sys.platform == "win32"
 _bootstrap_methods = {}
 
 
-def bootstrapper(bootstrapper_type):
+def bootstrapper(bootstrapper_type: str):
     """Decorator to register classes implementing bootstrapping
     methods.
 
     Args:
-        bootstrapper_type (str): string identifying the class
+        bootstrapper_type: string identifying the class
     """
 
     def _register(cls):
@@ -93,22 +89,15 @@ class Bootstrapper:
     def __init__(self, conf):
         self.conf = conf
         self.name = conf["name"]
-        self.url = conf["info"]["url"]
         self.metadata_dir = spack.util.path.canonicalize_path(conf["metadata"])
 
-    @property
-    def mirror_url(self):
-        """Mirror url associated with this bootstrapper"""
-        # Absolute paths
-        if os.path.isabs(self.url):
-            return spack.util.url.format(self.url)
-
-        # Check for :// and assume it's an url if we find it
-        if "://" in self.url:
-            return self.url
-
-        # Otherwise, it's a relative path
-        return spack.util.url.format(os.path.join(self.metadata_dir, self.url))
+        # Promote (relative) paths to file urls
+        url = conf["info"]["url"]
+        if spack.util.url.is_path_instead_of_url(url):
+            if not os.path.isabs(url):
+                url = os.path.join(self.metadata_dir, url)
+            url = spack.util.url.path_to_file_url(url)
+        self.url = url
 
     @property
     def mirror_scope(self):
@@ -116,29 +105,29 @@ class Bootstrapper:
         this bootstrapper.
         """
         return spack.config.InternalConfigScope(
-            self.config_scope_name, {"mirrors:": {self.name: self.mirror_url}}
+            self.config_scope_name, {"mirrors:": {self.name: self.url}}
         )
 
-    def try_import(self, module: str, abstract_spec_str: str):  # pylint: disable=unused-argument
+    def try_import(self, module: str, abstract_spec_str: str) -> bool:
         """Try to import a Python module from a spec satisfying the abstract spec
         passed as argument.
 
         Args:
-            module (str): Python module name to try importing
-            abstract_spec_str (str): abstract spec that can provide the Python module
+            module: Python module name to try importing
+            abstract_spec_str: abstract spec that can provide the Python module
 
         Return:
             True if the Python module could be imported, False otherwise
         """
         return False
 
-    def try_search_path(self, executables, abstract_spec_str):  # pylint: disable=unused-argument
+    def try_search_path(self, executables: List[str], abstract_spec_str: str) -> bool:
         """Try to search some executables in the prefix of specs satisfying the abstract
         spec passed as argument.
 
         Args:
-            executables (list of str): executables to be found
-            abstract_spec_str (str): abstract spec that can provide the Python module
+            executables: executables to be found
+            abstract_spec_str: abstract spec that can provide the Python module
 
         Return:
             True if the executables are found, False otherwise
@@ -347,7 +336,7 @@ def source_is_enabled_or_raise(conf):
         raise ValueError("source is not trusted")
 
 
-def ensure_module_importable_or_raise(module, abstract_spec=None):
+def ensure_module_importable_or_raise(module: str, abstract_spec: Optional[str] = None):
     """Make the requested module available for import, or raise.
 
     This function tries to import a Python module in the current interpreter
@@ -357,8 +346,8 @@ def ensure_module_importable_or_raise(module, abstract_spec=None):
     on first success.
 
     Args:
-        module (str): module to be imported in the current interpreter
-        abstract_spec (str): abstract spec that might provide the module. If not
+        module: module to be imported in the current interpreter
+        abstract_spec: abstract spec that might provide the module. If not
             given it defaults to "module"
 
     Raises:
@@ -395,7 +384,11 @@ def ensure_module_importable_or_raise(module, abstract_spec=None):
     raise ImportError(msg)
 
 
-def ensure_executables_in_path_or_raise(executables, abstract_spec, cmd_check=None):
+def ensure_executables_in_path_or_raise(
+    executables: list,
+    abstract_spec: str,
+    cmd_check: Optional[Callable[[spack.util.executable.Executable], bool]] = None,
+):
     """Ensure that some executables are in path or raise.
 
     Args:
@@ -545,8 +538,9 @@ def ensure_core_dependencies():
     """Ensure the presence of all the core dependencies."""
     if sys.platform.lower() == "linux":
         ensure_patchelf_in_path_or_raise()
+    if not IS_WINDOWS:
+        ensure_gpg_in_path_or_raise()
     ensure_clingo_importable_or_raise()
-    ensure_gpg_in_path_or_raise()
 
 
 def all_core_root_specs():
@@ -554,11 +548,11 @@ def all_core_root_specs():
     return [clingo_root_spec(), gnupg_root_spec(), patchelf_root_spec()]
 
 
-def bootstrapping_sources(scope=None):
+def bootstrapping_sources(scope: Optional[str] = None):
     """Return the list of configured sources of software for bootstrapping Spack
 
     Args:
-        scope (str or None): if a valid configuration scope is given, return the
+        scope: if a valid configuration scope is given, return the
             list only from that scope
     """
     source_configs = spack.config.get("bootstrap:sources", default=None, scope=scope)

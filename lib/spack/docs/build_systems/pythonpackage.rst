@@ -1,4 +1,4 @@
-.. Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+.. Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
    Spack Project Developers. See the top-level COPYRIGHT file for details.
 
    SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -366,7 +366,7 @@ If the ``pyproject.toml`` lists ``mesonpy`` as the ``build-backend``,
 it uses the meson build system. Meson uses the default
 ``pyproject.toml`` keys to list dependencies.
 
-See https://meson-python.readthedocs.io/en/latest/usage/start.html
+See https://meson-python.readthedocs.io/en/latest/tutorials/introduction.html
 for more information.
 
 """

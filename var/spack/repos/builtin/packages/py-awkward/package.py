@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -13,7 +13,7 @@ class PyAwkward(PythonPackage):
     pypi = "awkward/awkward-1.1.2.tar.gz"
     homepage = "https://awkward-array.org"
 
-    maintainers = ["vvolkl"]
+    maintainers("vvolkl")
 
     version("master", branch="master")
     version("1.9.0", sha256="cad799237e4370b50f77e716e78dd3565a7b3fd82fcd5a41a76aa1512d51075d")

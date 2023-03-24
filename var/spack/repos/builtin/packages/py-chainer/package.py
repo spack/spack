@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -22,7 +22,7 @@ class PyChainer(PythonPackage):
     homepage = "https://chainer.org/"
     url = "https://github.com/chainer/chainer/archive/v7.2.0.tar.gz"
 
-    maintainers = ["adamjstewart"]
+    maintainers("adamjstewart")
 
     version("7.2.0", sha256="6e2fba648cc5b8a5421e494385b76fe5ec154f1028a1c5908557f5d16c04f0b3")
     version("6.7.0", sha256="87cb3378a35e7c5c695028ec91d58dc062356bc91412384ea939d71374610389")
@@ -57,21 +57,10 @@ class PyChainer(PythonPackage):
             mnist_file = join_path(mnist_dir, "train_mnist.py")
             mpi_name = self.spec["mpi"].prefix.bin.mpirun
             python_exe = self.spec["python"].command.path
-            opts = [
-                "-n",
-                "4",
-                python_exe,
-                mnist_file,
-                "-o",
-                test_dir,
-            ]
+            opts = ["-n", "4", python_exe, mnist_file, "-o", test_dir]
             env["OMP_NUM_THREADS"] = "4"
 
-            self.run_test(
-                mpi_name,
-                options=opts,
-                work_dir=test_dir,
-            )
+            self.run_test(mpi_name, options=opts, work_dir=test_dir)
 
             # check results
             json_open = open(join_path(test_dir, "log"), "r")

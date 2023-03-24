@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -28,8 +28,10 @@ class Gdal(CMakePackage, AutotoolsPackage, PythonExtension):
     list_url = "https://download.osgeo.org/gdal/"
     list_depth = 1
 
-    maintainers = ["adamjstewart"]
+    maintainers("adamjstewart")
 
+    version("3.6.2", sha256="35f40d2e08061b342513cdcddc2b997b3814ef8254514f0ef1e8bc7aa56cf681")
+    version("3.6.1", sha256="68f1c03547ff7152289789db7f67ee634167c9b7bfec4872b88406b236f9c230")
     version("3.6.0", sha256="f7afa4aa8d32d0799e011a9f573c6a67e9471f78e70d3d0d0b45b45c8c0c1a94")
     version("3.5.3", sha256="d32223ddf145aafbbaec5ccfa5dbc164147fb3348a3413057f9b1600bb5b3890")
     version("3.5.2", sha256="0874dfdeb9ac42e53c37be4184b19350be76f0530e1f4fa8004361635b9030c2")
@@ -228,9 +230,7 @@ class Gdal(CMakePackage, AutotoolsPackage, PythonExtension):
 
     # Build system
     build_system(
-        conditional("cmake", when="@3.5:"),
-        conditional("autotools", when="@:3.5"),
-        default="cmake",
+        conditional("cmake", when="@3.5:"), conditional("autotools", when="@:3.5"), default="cmake"
     )
 
     with when("build_system=cmake"):

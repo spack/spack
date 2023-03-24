@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -13,9 +13,10 @@ class PySlepc4py(PythonPackage):
     url = "https://slepc.upv.es/download/distrib/slepc4py-3.17.1.tar.gz"
     git = "https://gitlab.com/slepc/slepc.git"
 
-    maintainers = ["joseeroman", "balay"]
+    maintainers("joseeroman", "balay")
 
     version("main", branch="main")
+    version("3.18.2", sha256="402297fd8e583ed2618d2cba05e5cae8e9d0a2c3943812a1a138f431ef3479b3")
     version("3.18.1", sha256="4c2bc0947d6a9cdb209e3174b7f54fe7b029220e2c90106f52844e8f8795f8f0")
     version("3.18.0", sha256="aa83f46f942aca05ffcbc8be29b496f56837f564e0396f5b39cec4946654ee78")
     version("3.17.2", sha256="e5b235486b6901cd4ff0d94083f0e5eeacaef3a2893e1714769717ad488a3885")
@@ -35,7 +36,7 @@ class PySlepc4py(PythonPackage):
     patch("ldshared.patch", when="@:99")
     patch("ldshared-dev.patch", when="@main")
 
-    depends_on("py-cython", type="build", when="@main")
+    depends_on("py-cython@0.24:", type="build", when="@main")
     depends_on("py-setuptools", type="build")
 
     depends_on("py-petsc4py", type=("build", "run"))

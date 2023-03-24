@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -7,10 +7,10 @@ import argparse
 import os
 import shutil
 import sys
-import textwrap
+from typing import List
 
 import llnl.util.filesystem as fs
-import llnl.util.tty as tty
+from llnl.util import lang, tty
 
 import spack.build_environment
 import spack.cmd
@@ -232,12 +232,7 @@ installation for top-level packages (but skip tests for dependencies).
 if 'all' is chosen, run package tests during installation for all
 packages. If neither are chosen, don't run tests for any packages.""",
     )
-    subparser.add_argument(
-        "--log-format",
-        default=None,
-        choices=spack.report.valid_formats,
-        help="format to be used for log files",
-    )
+    arguments.add_common_arguments(subparser, ["log_format"])
     subparser.add_argument(
         "--log-file",
         default=None,
@@ -260,6 +255,12 @@ def default_log_file(spec):
     dirname = fs.os.path.join(spack.paths.reports_path, "junit")
     fs.mkdirp(dirname)
     return fs.os.path.join(dirname, basename)
+
+
+def report_filename(args: argparse.Namespace, specs: List[spack.spec.Spec]) -> str:
+    """Return the filename to be used for reporting to JUnit or CDash format."""
+    result = args.log_file or default_log_file(specs[0])
+    return result
 
 
 def install_specs(specs, install_kwargs, cli_args):
@@ -346,34 +347,8 @@ def install_specs_outside_environment(specs, install_kwargs):
     builder.install()
 
 
-def print_cdash_help():
-    parser = argparse.ArgumentParser(
-        formatter_class=argparse.RawDescriptionHelpFormatter,
-        epilog=textwrap.dedent(
-            """\
-environment variables:
-SPACK_CDASH_AUTH_TOKEN
-                    authentication token to present to CDash
-                    """
-        ),
-    )
-    arguments.add_cdash_args(parser, True)
-    parser.print_help()
-
-
-def _create_log_reporter(args):
-    # TODO: remove args injection to spack.report.collect_info, since a class in core
-    # TODO: shouldn't know what are the command line arguments a command use.
-    reporter = spack.report.collect_info(
-        spack.package_base.PackageInstaller, "_install_task", args.log_format, args
-    )
-    if args.log_file:
-        reporter.filename = args.log_file
-    return reporter
-
-
 def install_all_specs_from_active_environment(
-    install_kwargs, only_concrete, cli_test_arg, reporter
+    install_kwargs, only_concrete, cli_test_arg, reporter_factory
 ):
     """Install all specs from the active environment
 
@@ -415,12 +390,10 @@ def install_all_specs_from_active_environment(
         tty.msg(msg)
         return
 
-    if not reporter.filename:
-        reporter.filename = default_log_file(specs[0])
-    reporter.specs = specs
+    reporter = reporter_factory(specs) or lang.nullcontext()
 
     tty.msg("Installing environment {0}".format(env.name))
-    with reporter("build"):
+    with reporter:
         env.install_all(**install_kwargs)
 
     tty.debug("Regenerating environment views for {0}".format(env.name))
@@ -439,7 +412,7 @@ def compute_tests_install_kwargs(specs, cli_test_arg):
     return False
 
 
-def specs_from_cli(args, install_kwargs, reporter):
+def specs_from_cli(args, install_kwargs):
     """Return abstract and concrete spec parsed from the command line."""
     abstract_specs = spack.cmd.parse_specs(args.spec)
     install_kwargs["tests"] = compute_tests_install_kwargs(abstract_specs, args.test)
@@ -449,7 +422,9 @@ def specs_from_cli(args, install_kwargs, reporter):
         )
     except SpackError as e:
         tty.debug(e)
-        reporter.concretization_report(e.message)
+        if args.log_format is not None:
+            reporter = args.reporter()
+            reporter.concretization_report(report_filename(args, abstract_specs), e.message)
         raise
     return abstract_specs, concrete_specs
 
@@ -505,7 +480,7 @@ def install(parser, args):
     tty.set_verbose(args.verbose or args.install_verbose)
 
     if args.help_cdash:
-        print_cdash_help()
+        spack.cmd.common.arguments.print_cdash_help()
         return
 
     if args.no_checksum:
@@ -514,7 +489,17 @@ def install(parser, args):
     if args.deprecated:
         spack.config.set("config:deprecated", True, scope="command_line")
 
-    reporter = _create_log_reporter(args)
+    spack.cmd.common.arguments.sanitize_reporter_options(args)
+
+    def reporter_factory(specs):
+        if args.log_format is None:
+            return None
+
+        context_manager = spack.report.build_context_manager(
+            reporter=args.reporter(), filename=report_filename(args, specs=specs), specs=specs
+        )
+        return context_manager
+
     install_kwargs = install_kwargs_from_args(args)
 
     if not args.spec and not args.specfiles:
@@ -523,12 +508,12 @@ def install(parser, args):
             install_kwargs=install_kwargs,
             only_concrete=args.only_concrete,
             cli_test_arg=args.test,
-            reporter=reporter,
+            reporter_factory=reporter_factory,
         )
         return
 
     # Specs from CLI
-    abstract_specs, concrete_specs = specs_from_cli(args, install_kwargs, reporter)
+    abstract_specs, concrete_specs = specs_from_cli(args, install_kwargs)
 
     # Concrete specs from YAML or JSON files
     specs_from_file = concrete_specs_from_file(args)
@@ -538,11 +523,8 @@ def install(parser, args):
     if len(concrete_specs) == 0:
         tty.die("The `spack install` command requires a spec to install.")
 
-    if not reporter.filename:
-        reporter.filename = default_log_file(concrete_specs[0])
-    reporter.specs = concrete_specs
-
-    with reporter("build"):
+    reporter = reporter_factory(concrete_specs) or lang.nullcontext()
+    with reporter:
         if args.overwrite:
             require_user_confirmation_for_overwrite(concrete_specs, args)
             install_kwargs["overwrite"] = [spec.dag_hash() for spec in concrete_specs]

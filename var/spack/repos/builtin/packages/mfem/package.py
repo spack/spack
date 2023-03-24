@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -18,7 +18,7 @@ class Mfem(Package, CudaPackage, ROCmPackage):
     homepage = "http://www.mfem.org"
     git = "https://github.com/mfem/mfem.git"
 
-    maintainers = ["v-dobrev", "tzanio", "acfisher", "goxberry", "markcmiller86"]
+    maintainers("v-dobrev", "tzanio", "acfisher", "goxberry", "markcmiller86")
 
     test_requires_compiler = True
 
@@ -335,8 +335,7 @@ class Mfem(Package, CudaPackage, ROCmPackage):
     depends_on("ginkgo@1.4.0:", when="+ginkgo")
     for sm_ in CudaPackage.cuda_arch_values:
         depends_on(
-            "ginkgo+cuda cuda_arch={0}".format(sm_),
-            when="+ginkgo+cuda cuda_arch={0}".format(sm_),
+            "ginkgo+cuda cuda_arch={0}".format(sm_), when="+ginkgo+cuda cuda_arch={0}".format(sm_)
         )
     for gfx in ROCmPackage.amdgpu_targets:
         depends_on(
@@ -347,8 +346,7 @@ class Mfem(Package, CudaPackage, ROCmPackage):
     depends_on("hiop@0.4.6:+mpi", when="+hiop+mpi")
     for sm_ in CudaPackage.cuda_arch_values:
         depends_on(
-            "hiop+cuda cuda_arch={0}".format(sm_),
-            when="+hiop+cuda cuda_arch={0}".format(sm_),
+            "hiop+cuda cuda_arch={0}".format(sm_), when="+hiop+cuda cuda_arch={0}".format(sm_)
         )
     for gfx in ROCmPackage.amdgpu_targets:
         depends_on(
@@ -601,7 +599,7 @@ class Mfem(Package, CudaPackage, ROCmPackage):
             else:
                 cxxstd_flag = getattr(self.compiler, "cxx" + cxxstd + "_flag")
 
-        cxxflags = spec.compiler_flags["cxxflags"]
+        cxxflags = spec.compiler_flags["cxxflags"].copy()
 
         if cxxflags:
             # Add opt/debug flags if they are not present in global cxx flags
@@ -805,9 +803,22 @@ class Mfem(Package, CudaPackage, ROCmPackage):
                 "apf_zoltan",
                 "spr",
             ]
+            pumi_dep_zoltan = ""
+            pumi_dep_parmetis = ""
+            if "+zoltan" in spec["pumi"]:
+                pumi_dep_zoltan = ld_flags_from_dirs([spec["zoltan"].prefix.lib], ["zoltan"])
+                if "+parmetis" in spec["zoltan"]:
+                    pumi_dep_parmetis = ld_flags_from_dirs(
+                        [spec["parmetis"].prefix.lib], ["parmetis"]
+                    )
             options += [
                 "PUMI_OPT=-I%s" % spec["pumi"].prefix.include,
-                "PUMI_LIB=%s" % ld_flags_from_dirs([spec["pumi"].prefix.lib], pumi_libs),
+                "PUMI_LIB=%s %s %s"
+                % (
+                    ld_flags_from_dirs([spec["pumi"].prefix.lib], pumi_libs),
+                    pumi_dep_zoltan,
+                    pumi_dep_parmetis,
+                ),
             ]
 
         if "+gslib" in spec:
@@ -1116,7 +1127,7 @@ class Mfem(Package, CudaPackage, ROCmPackage):
             "miniapps/gslib/findpts.cpp",
             "miniapps/gslib/pfindpts.cpp",
         ]
-        bom = "\xef\xbb\xbf" if sys.version_info < (3,) else u"\ufeff"
+        bom = "\xef\xbb\xbf" if sys.version_info < (3,) else "\ufeff"
         for f in files_with_bom:
             filter_file(bom, "", f)
 

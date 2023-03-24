@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -14,7 +14,7 @@ class Fdb(CMakePackage):
     url = "https://github.com/ecmwf/fdb/archive/refs/tags/5.7.8.tar.gz"
     git = "https://github.com/ecmwf/fdb.git"
 
-    maintainers = ["skosukhin"]
+    maintainers("skosukhin")
 
     # master version of fdb is subject to frequent changes and is to be used experimentally.
     version("master", branch="master")

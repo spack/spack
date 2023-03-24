@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -14,13 +14,16 @@ class PyOnnxRuntime(CMakePackage, PythonExtension):
     stays up to date with the ONNX standard with complete
     implementation of all ONNX operators, and supports all
     ONNX releases (1.2+) with both future and backwards
-    compatibility."""
+    compatibility.
+
+    Deprecated in favor of py-onnxruntime.
+    """
 
     homepage = "https://github.com/microsoft/onnxruntime"
     git = "https://github.com/microsoft/onnxruntime.git"
 
-    version("1.10.0", tag="v1.10.0", submodules=True)
-    version("1.7.2", tag="v1.7.2", submodules=True)
+    version("1.10.0", tag="v1.10.0", submodules=True, deprecated=True)
+    version("1.7.2", tag="v1.7.2", submodules=True, deprecated=True)
 
     variant("cuda", default=False, description="Build with CUDA support")
 

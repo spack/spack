@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -22,7 +22,7 @@ class Elfutils(AutotoolsPackage, SourcewarePackage):
     list_url = "https://sourceware.org/elfutils/ftp"
     list_depth = 1
 
-    maintainers = ["mwkrentel"]
+    maintainers("mwkrentel")
 
     version("0.188", sha256="fb8b0e8d0802005b9a309c60c1d8de32dd2951b56f0c3a3cb56d21ce01595dff")
     version("0.187", sha256="e70b0dfbe610f90c4d1fe0d71af142a4e25c3c4ef9ebab8d2d72b65159d454c8")
@@ -55,10 +55,7 @@ class Elfutils(AutotoolsPackage, SourcewarePackage):
     # libdebuginfod support
     # NB: For 0.181 and newer, this enables _both_ the client and server
     variant(
-        "debuginfod",
-        default=False,
-        description="Enable libdebuginfod support.",
-        when="@0.179:",
+        "debuginfod", default=False, description="Enable libdebuginfod support.", when="@0.179:"
     )
 
     # elfutils-0.185-static-inline.patch

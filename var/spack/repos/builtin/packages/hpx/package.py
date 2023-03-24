@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -16,7 +16,7 @@ class Hpx(CMakePackage, CudaPackage, ROCmPackage):
     homepage = "https://hpx.stellar-group.org/"
     url = "https://github.com/STEllAR-GROUP/hpx/archive/1.2.1.tar.gz"
     git = "https://github.com/STEllAR-GROUP/hpx.git"
-    maintainers = ["msimberg", "albestro", "teonnik", "hkaiser"]
+    maintainers("msimberg", "albestro", "teonnik", "hkaiser")
 
     tags = ["e4s"]
 
@@ -105,8 +105,7 @@ class Hpx(CMakePackage, CudaPackage, ROCmPackage):
     depends_on("asio", when="@1.7:")
     for cxxstd in cxxstds:
         depends_on(
-            "asio cxxstd={0}".format(map_cxxstd(cxxstd)),
-            when="cxxstd={0} ^asio".format(cxxstd),
+            "asio cxxstd={0}".format(map_cxxstd(cxxstd)), when="cxxstd={0} ^asio".format(cxxstd)
         )
 
     depends_on("gperftools", when="malloc=tcmalloc")
@@ -188,7 +187,7 @@ class Hpx(CMakePackage, CudaPackage, ROCmPackage):
 
     # Patches APEX
     patch("git_external.patch", when="@1.3.0 instrumentation=apex")
-    patch("mimalloc_no_version_requirement.patch", when="@:1.8 malloc=mimalloc")
+    patch("mimalloc_no_version_requirement.patch", when="@:1.8.0 malloc=mimalloc")
 
     def instrumentation_args(self):
         args = []

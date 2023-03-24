@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -16,7 +16,7 @@ class Patchelf(AutotoolsPackage):
     list_url = "https://nixos.org/releases/patchelf/"
     list_depth = 1
 
-    maintainers = ["haampie"]
+    maintainers("haampie")
 
     version("0.16.1", sha256="1a562ed28b16f8a00456b5f9ee573bb1af7c39c1beea01d94fc0c7b3256b0406")
     version("0.15.0", sha256="53a8d58ed4e060412b8fdcb6489562b3c62be6f65cee5af30eba60f4423bfa0f")

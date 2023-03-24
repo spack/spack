@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -31,7 +31,7 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage):
     list_depth = 1
     keep_werror = "all"
 
-    maintainers = ["michaelkuhn", "alalazo"]
+    maintainers("michaelkuhn", "alalazo")
 
     version("master", branch="master")
 
@@ -462,6 +462,13 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage):
     patch("patch-fc930b3010bd0de899a3da3209eab20664ddb703.patch", when="@10.1:10.3")
     patch("patch-f1feb74046e0feb0596b93bbb822fae02940a90e.patch", when="@11.1")
 
+    # libstdc++: Fix inconsistent noexcept-specific for valarray begin/end
+    patch(
+        "https://github.com/gcc-mirror/gcc/commit/423cd47cfc9640ba3d6811b780e8a0b94b704dcb.patch?full_index=1",
+        sha256="0d136226eb07bc43f1b15284f48bd252e3748a0426b5d7ac9084ebc406e15490",
+        when="@9.5.0:11.2",
+    )
+
     build_directory = "spack-build"
 
     @classproperty
@@ -758,17 +765,9 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage):
 
         # enable_bootstrap
         if spec.satisfies("+bootstrap"):
-            options.extend(
-                [
-                    "--enable-bootstrap",
-                ]
-            )
+            options.extend(["--enable-bootstrap"])
         else:
-            options.extend(
-                [
-                    "--disable-bootstrap",
-                ]
-            )
+            options.extend(["--disable-bootstrap"])
 
         # Configure include and lib directories explicitly for these
         # dependencies since the short GCC option assumes that libraries
@@ -869,7 +868,6 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage):
 
         # self.build_directory = 'spack-build-nvptx'
         with working_dir("spack-build-nvptx", create=True):
-
             options = [
                 "--prefix={0}".format(prefix),
                 "--enable-languages={0}".format(",".join(spec.variants["languages"].value)),

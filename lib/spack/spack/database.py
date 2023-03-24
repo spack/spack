@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -46,10 +46,7 @@ import spack.spec
 import spack.store
 import spack.util.lock as lk
 import spack.util.spack_json as sjson
-from spack.directory_layout import (
-    DirectoryLayoutError,
-    InconsistentInstallDirectoryError,
-)
+from spack.directory_layout import DirectoryLayoutError, InconsistentInstallDirectoryError
 from spack.error import SpackError
 from spack.util.crypto import bit_length
 from spack.version import Version
@@ -105,6 +102,11 @@ default_install_record_fields = [
     "installation_time",
     "deprecated_for",
 ]
+
+
+def reader(version):
+    reader_cls = {Version("5"): spack.spec.SpecfileV1, Version("6"): spack.spec.SpecfileV3}
+    return reader_cls[version]
 
 
 def _now():
@@ -674,7 +676,7 @@ class Database(object):
         except (TypeError, ValueError) as e:
             raise sjson.SpackJSONError("error writing JSON database:", str(e))
 
-    def _read_spec_from_dict(self, hash_key, installs, hash=ht.dag_hash):
+    def _read_spec_from_dict(self, spec_reader, hash_key, installs, hash=ht.dag_hash):
         """Recursively construct a spec from a hash in a YAML database.
 
         Does not do any locking.
@@ -692,7 +694,7 @@ class Database(object):
             spec_dict[hash.name] = hash_key
 
         # Build spec from dict first.
-        spec = spack.spec.Spec.from_node_dict(spec_dict)
+        spec = spec_reader.from_node_dict(spec_dict)
         return spec
 
     def db_for_spec_hash(self, hash_key):
@@ -732,7 +734,7 @@ class Database(object):
         with self.read_transaction():
             return self._data.get(hash_key, None)
 
-    def _assign_dependencies(self, hash_key, installs, data):
+    def _assign_dependencies(self, spec_reader, hash_key, installs, data):
         # Add dependencies from other records in the install DB to
         # form a full spec.
         spec = data[hash_key].spec
@@ -742,7 +744,7 @@ class Database(object):
             spec_node_dict = spec_node_dict[spec.name]
         if "dependencies" in spec_node_dict:
             yaml_deps = spec_node_dict["dependencies"]
-            for dname, dhash, dtypes, _ in spack.spec.Spec.read_yaml_dep_specs(yaml_deps):
+            for dname, dhash, dtypes, _ in spec_reader.read_specfile_dep_specs(yaml_deps):
                 # It is important that we always check upstream installations
                 # in the same order, and that we always check the local
                 # installation first: if a downstream Spack installs a package
@@ -765,7 +767,7 @@ class Database(object):
                     tty.warn(msg)
                     continue
 
-                spec._add_dependency(child, dtypes)
+                spec._add_dependency(child, deptypes=dtypes)
 
     def _read_from_file(self, filename):
         """Fill database from file, do not maintain old data.
@@ -797,6 +799,7 @@ class Database(object):
 
         # TODO: better version checking semantics.
         version = Version(db["version"])
+        spec_reader = reader(version)
         if version > _db_version:
             raise InvalidDatabaseVersionError(_db_version, version)
         elif version < _db_version:
@@ -832,7 +835,7 @@ class Database(object):
         for hash_key, rec in installs.items():
             try:
                 # This constructs a spec DAG from the list of all installs
-                spec = self._read_spec_from_dict(hash_key, installs)
+                spec = self._read_spec_from_dict(spec_reader, hash_key, installs)
 
                 # Insert the brand new spec in the database.  Each
                 # spec has its own copies of its dependency specs.
@@ -848,7 +851,7 @@ class Database(object):
         # Pass 2: Assign dependencies once all specs are created.
         for hash_key in data:
             try:
-                self._assign_dependencies(hash_key, installs, data)
+                self._assign_dependencies(spec_reader, hash_key, installs, data)
             except MissingDependenciesError:
                 raise
             except Exception as e:
@@ -1167,7 +1170,7 @@ class Database(object):
             for dep in spec.edges_to_dependencies(deptype=_tracked_deps):
                 dkey = dep.spec.dag_hash()
                 upstream, record = self.query_by_spec_hash(dkey)
-                new_spec._add_dependency(record.spec, dep.deptypes)
+                new_spec._add_dependency(record.spec, deptypes=dep.deptypes)
                 if not upstream:
                     record.ref_count += 1
 

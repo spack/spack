@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -61,25 +61,14 @@ properties = {
                         "default": [],
                         "items": {"type": "string"},
                     },  # compiler specs
-                    "buildable": {
-                        "type": "boolean",
-                        "default": True,
-                    },
+                    "buildable": {"type": "boolean", "default": True},
                     "permissions": {
                         "type": "object",
                         "additionalProperties": False,
                         "properties": {
-                            "read": {
-                                "type": "string",
-                                "enum": ["user", "group", "world"],
-                            },
-                            "write": {
-                                "type": "string",
-                                "enum": ["user", "group", "world"],
-                            },
-                            "group": {
-                                "type": "string",
-                            },
+                            "read": {"type": "string", "enum": ["user", "group", "world"]},
+                            "write": {"type": "string", "enum": ["user", "group", "world"]},
+                            "group": {"type": "string"},
                         },
                     },
                     # If 'get_full_repo' is promoted to a Package-level
@@ -87,9 +76,7 @@ properties = {
                     "package_attributes": {
                         "type": "object",
                         "additionalProperties": False,
-                        "patternProperties": {
-                            r"\w+": {},
-                        },
+                        "patternProperties": {r"\w+": {}},
                     },
                     "providers": {
                         "type": "object",
@@ -100,14 +87,14 @@ properties = {
                                 "type": "array",
                                 "default": [],
                                 "items": {"type": "string"},
-                            },
+                            }
                         },
                     },
                     "variants": {
                         "oneOf": [
                             {"type": "string"},
                             {"type": "array", "items": {"type": "string"}},
-                        ],
+                        ]
                     },
                     "externals": {
                         "type": "array",
@@ -124,9 +111,9 @@ properties = {
                         },
                     },
                 },
-            },
+            }
         },
-    },
+    }
 }
 
 

@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -37,14 +37,12 @@ import io
 import multiprocessing
 import os
 import re
-import shutil
 import sys
 import traceback
 import types
 from typing import List, Tuple
 
 import llnl.util.tty as tty
-from llnl.util.filesystem import install, install_tree, mkdirp
 from llnl.util.lang import dedupe
 from llnl.util.symlink import symlink
 from llnl.util.tty.color import cescape, colorize
@@ -52,6 +50,7 @@ from llnl.util.tty.log import MultiProcessFd
 
 import spack.build_systems.cmake
 import spack.build_systems.meson
+import spack.build_systems.python
 import spack.builder
 import spack.config
 import spack.install_test
@@ -585,17 +584,19 @@ def set_module_variables_for_package(pkg):
     m.make = MakeExecutable("make", jobs)
     m.gmake = MakeExecutable("gmake", jobs)
     m.ninja = MakeExecutable("ninja", jobs, supports_jobserver=False)
-
-    # easy shortcut to os.environ
-    m.env = os.environ
+    # TODO: johnwparent: add package or builder support to define these build tools
+    # for now there is no entrypoint for builders to define these on their
+    # own
+    if sys.platform == "win32":
+        m.nmake = Executable("nmake")
+        m.msbuild = Executable("msbuild")
+        # analog to configure for win32
+        m.cscript = Executable("cscript")
 
     # Find the configure script in the archive path
     # Don't use which for this; we want to find it in the current dir.
     m.configure = Executable("./configure")
 
-    if sys.platform == "win32":
-        m.nmake = Executable("nmake")
-        m.msbuild = Executable("msbuild")
     # Standard CMake arguments
     m.std_cmake_args = spack.build_systems.cmake.CMakeBuilder.std_args(pkg)
     m.std_meson_args = spack.build_systems.meson.MesonBuilder.std_args(pkg)
@@ -607,21 +608,6 @@ def set_module_variables_for_package(pkg):
     m.spack_cxx = os.path.join(link_dir, pkg.compiler.link_paths["cxx"])
     m.spack_f77 = os.path.join(link_dir, pkg.compiler.link_paths["f77"])
     m.spack_fc = os.path.join(link_dir, pkg.compiler.link_paths["fc"])
-
-    # Emulate some shell commands for convenience
-    m.pwd = os.getcwd
-    m.cd = os.chdir
-    m.mkdir = os.mkdir
-    m.makedirs = os.makedirs
-    m.remove = os.remove
-    m.removedirs = os.removedirs
-    m.symlink = symlink
-
-    m.mkdirp = mkdirp
-    m.install = install
-    m.install_tree = install_tree
-    m.rmtree = shutil.rmtree
-    m.move = shutil.move
 
     # Useful directories within the prefix are encapsulated in
     # a Prefix object.
@@ -1030,7 +1016,6 @@ def get_cmake_prefix_path(pkg):
 def _setup_pkg_and_run(
     serialized_pkg, function, kwargs, child_pipe, input_multiprocess_fd, jsfd1, jsfd2
 ):
-
     context = kwargs.get("context", "build")
 
     try:

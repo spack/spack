@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -15,7 +15,7 @@ class Proj(AutotoolsPackage):
     homepage = "https://proj.org/"
     url = "https://download.osgeo.org/proj/proj-7.2.1.tar.gz"
 
-    maintainers = ["adamjstewart"]
+    maintainers("adamjstewart")
 
     # Version 6 removes projects.h, while version 7 removes proj_api.h.
     # Many packages that depend on proj do not yet support the newer API.

@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -33,6 +33,7 @@ class Perl(Package):  # Perl doesn't use Autotools, it should subclass Package
     homepage = "https://www.perl.org"
     # URL must remain http:// so Spack can bootstrap curl
     url = "http://www.cpan.org/src/5.0/perl-5.34.0.tar.gz"
+    tags = ["windows"]
 
     executables = [r"^perl(-?\d+.*)?$"]
 
@@ -51,38 +52,14 @@ class Perl(Package):  # Perl doesn't use Autotools, it should subclass Package
         sha256="e26085af8ac396f62add8a533c3a0ea8c8497d836f0689347ac5abd7b7a4e00a",
         preferred=True,
     )
-    version(
-        "5.34.1",
-        sha256="357951a491b0ba1ce3611263922feec78ccd581dddc24a446b033e25acf242a1",
-    )
-    version(
-        "5.34.0",
-        sha256="551efc818b968b05216024fb0b727ef2ad4c100f8cb6b43fab615fa78ae5be9a",
-    )
-    version(
-        "5.32.1",
-        sha256="03b693901cd8ae807231b1787798cf1f2e0b8a56218d07b7da44f784a7caeb2c",
-    )
-    version(
-        "5.32.0",
-        sha256="efeb1ce1f10824190ad1cadbcccf6fdb8a5d37007d0100d2d9ae5f2b5900c0b4",
-    )
-    version(
-        "5.30.3",
-        sha256="32e04c8bb7b1aecb2742a7f7ac0eabac100f38247352a73ad7fa104e39e7406f",
-    )
-    version(
-        "5.30.2",
-        sha256="66db7df8a91979eb576fac91743644da878244cf8ee152f02cd6f5cd7a731689",
-    )
-    version(
-        "5.30.1",
-        sha256="bf3d25571ff1ee94186177c2cdef87867fd6a14aa5a84f0b1fb7bf798f42f964",
-    )
-    version(
-        "5.30.0",
-        sha256="851213c754d98ccff042caa40ba7a796b2cee88c5325f121be5cbb61bbf975f2",
-    )
+    version("5.34.1", sha256="357951a491b0ba1ce3611263922feec78ccd581dddc24a446b033e25acf242a1")
+    version("5.34.0", sha256="551efc818b968b05216024fb0b727ef2ad4c100f8cb6b43fab615fa78ae5be9a")
+    version("5.32.1", sha256="03b693901cd8ae807231b1787798cf1f2e0b8a56218d07b7da44f784a7caeb2c")
+    version("5.32.0", sha256="efeb1ce1f10824190ad1cadbcccf6fdb8a5d37007d0100d2d9ae5f2b5900c0b4")
+    version("5.30.3", sha256="32e04c8bb7b1aecb2742a7f7ac0eabac100f38247352a73ad7fa104e39e7406f")
+    version("5.30.2", sha256="66db7df8a91979eb576fac91743644da878244cf8ee152f02cd6f5cd7a731689")
+    version("5.30.1", sha256="bf3d25571ff1ee94186177c2cdef87867fd6a14aa5a84f0b1fb7bf798f42f964")
+    version("5.30.0", sha256="851213c754d98ccff042caa40ba7a796b2cee88c5325f121be5cbb61bbf975f2")
 
     # End of life releases
     version("5.28.0", sha256="7e929f64d4cb0e9d1159d4a59fc89394e27fa1f7004d0836ca0d514685406ea8")
@@ -159,10 +136,9 @@ class Perl(Package):  # Perl doesn't use Autotools, it should subclass Package
     # having it in core increases the "energy of activation" for doing
     # things cleanly.
     variant("cpanm", default=True, description="Optionally install cpanm with the core packages.")
-
     variant("shared", default=True, description="Build a shared libperl.so library")
-
     variant("threads", default=True, description="Build perl with threads support")
+    variant("open", default=True, description="Support open.pm")
 
     resource(
         name="cpanm",
@@ -211,6 +187,16 @@ class Perl(Package):  # Perl doesn't use Autotools, it should subclass Package
                 variants += "+cpanm"
             else:
                 variants += "~cpanm"
+            # this is just to detect incomplete installs
+            # normally perl installs open.pm
+            perl(
+                "-e",
+                "use open OUT => qw(:raw)",
+                output=os.devnull,
+                error=os.devnull,
+                fail_on_error=False,
+            )
+            variants += "+open" if perl.returncode == 0 else "~open"
             return variants
 
     # On a lustre filesystem, patch may fail when files
@@ -384,7 +370,6 @@ class Perl(Package):  # Perl doesn't use Autotools, it should subclass Package
         # If system perl is used through packages.yaml
         # there cannot be extensions.
         if dependent_spec.package.is_extension:
-
             # perl extension builds can have a global perl
             # executable function
             module.perl = self.spec["perl"].command

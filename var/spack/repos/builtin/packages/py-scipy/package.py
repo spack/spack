@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -18,9 +18,10 @@ class PyScipy(PythonPackage):
     pypi = "scipy/scipy-1.5.4.tar.gz"
     git = "https://github.com/scipy/scipy.git"
 
-    maintainers = ["adamjstewart", "rgommers"]
+    maintainers("adamjstewart", "rgommers")
 
     version("master", branch="master")
+    version("1.10.0", sha256="c8b3cbc636a87a89b770c6afc999baa6bcbb01691b5ccbbc1b1791c7c0a07540")
     version("1.9.3", sha256="fbc5c05c85c1a02be77b1ff591087c83bc44579c6d2bd9fb798bb64ea5e1a027")
     version("1.9.2", sha256="99e7720caefb8bca6ebf05c7d96078ed202881f61e0c68bd9e0f3e8097d6f794")
     version("1.9.1", sha256="26d28c468900e6d5fdb37d2812ab46db0ccd22c63baa095057871faa3a498bc9")
@@ -55,14 +56,16 @@ class PyScipy(PythonPackage):
     # https://github.com/mesonbuild/meson-python/pull/167
     depends_on("py-build", when="@1.9:", type="build")
 
-    depends_on("py-meson-python@0.9:", when="@1.9.2:", type="build")
+    depends_on("py-meson-python@0.11", when="@1.10:", type="build")
+    depends_on("py-meson-python@0.9:", when="@1.9.2:1.9", type="build")
     depends_on("py-meson-python@0.8.1:", when="@1.9.1", type="build")
     depends_on("py-meson-python@0.7", when="@1.9.0", type="build")
     depends_on("meson@0.62.2", when="@1.9.0:1.9.1", type="build")
     depends_on("py-cython@0.29.32:2", when="@1.9.2:", type="build")
     depends_on("py-cython@0.29.21:2", when="@1.9:", type="build")
     depends_on("py-cython@0.29.18:2", when="@1.7:", type="build")
-    depends_on("py-pybind11@2.4.3:2.10", when="@1.9.1:", type=("build", "link"))
+    depends_on("py-pybind11@2.10.1", when="@1.10:", type=("build", "link"))
+    depends_on("py-pybind11@2.4.3:2.10", when="@1.9.1:1.9", type=("build", "link"))
     depends_on("py-pybind11@2.4.3:2.9", when="@1.9.0", type=("build", "link"))
     depends_on("py-pybind11@2.4.3:2.8", when="@1.8", type=("build", "link"))
     depends_on("py-pybind11@2.4.3:2.7", when="@1.7.2:1.7", type=("build", "link"))
@@ -70,18 +73,21 @@ class PyScipy(PythonPackage):
     depends_on("py-pybind11@2.4.3:", when="@1.5:1.6.1", type=("build", "link"))
     depends_on("py-pybind11@2.4.0:", when="@1.4.1:1.4", type=("build", "link"))
     depends_on("py-pybind11@2.2.4:", when="@1.4.0", type=("build", "link"))
-    depends_on("py-pythran@0.9.12:0.12", when="@1.9.2:", type=("build", "link"))
+    depends_on("py-pythran@0.12", when="@1.10:", type=("build", "link"))
+    depends_on("py-pythran@0.9.12:0.12", when="@1.9.2:1.9", type=("build", "link"))
     depends_on("py-pythran@0.9.12:0.11", when="@1.9.0:1.9.1", type=("build", "link"))
     depends_on("py-pythran@0.10", when="@1.8", type=("build", "link"))
     depends_on("py-pythran@0.9.12:0.9", when="@1.7.2:1.7", type=("build", "link"))
     depends_on("py-pythran@0.9.11", when="@1.7.0:1.7.1", type=("build", "link"))
-    depends_on("py-wheel@:0.37", type="build")
+    depends_on("py-wheel@:0.38", when="@1.10:", type="build")
+    depends_on("py-wheel@:0.37", when="@:1.9", type="build")
     depends_on("pkgconfig", when="@1.9:", type="build")
     depends_on("py-setuptools", when="@:1.8", type="build")
     depends_on("py-setuptools@:59", when="@1.8", type="build")
     depends_on("py-setuptools@:57", when="@1.7", type="build")
     depends_on("py-setuptools@:51.0.0", when="@1.6", type="build")
-    depends_on("py-numpy@1.18.5:1.25+blas+lapack", when="@1.9:", type=("build", "link", "run"))
+    depends_on("py-numpy@1.19.5:1.26+blas+lapack", when="@1.10:", type=("build", "link", "run"))
+    depends_on("py-numpy@1.18.5:1.25+blas+lapack", when="@1.9", type=("build", "link", "run"))
     depends_on("py-numpy@1.17.3:1.24+blas+lapack", when="@1.8", type=("build", "link", "run"))
     depends_on(
         "py-numpy@1.16.5:1.22+blas+lapack", when="@1.6.2:1.7", type=("build", "link", "run")
@@ -94,10 +100,10 @@ class PyScipy(PythonPackage):
     depends_on("python@3.8:3.10", when="@1.8", type=("build", "link", "run"))
     depends_on("python@3.7:3.10", when="@1.7.2:1.7", type=("build", "link", "run"))
     depends_on("python@3.7:3.9", when="@1.6.2:1.7.1", type=("build", "link", "run"))
-    depends_on("python@3.7:", when="@1.6:1.6.1", type=("build", "link", "run"))
-    depends_on("python@3.6:", when="@1.5.0:1.5", type=("build", "link", "run"))
-    depends_on("python@3.5:", when="@1.3:1.4", type=("build", "link", "run"))
-    depends_on("python@2.7:2.8,3.4:", when="@:1.2", type=("build", "link", "run"))
+    depends_on("python@3.7:3.10.0", when="@1.6:1.6.1", type=("build", "link", "run"))
+    depends_on("python@3.6:3.10.0", when="@1.5.0:1.5", type=("build", "link", "run"))
+    depends_on("python@3.5:3.10.0", when="@1.3:1.4", type=("build", "link", "run"))
+    depends_on("python@2.7:2.8,3.4:3.10.0", when="@:1.2", type=("build", "link", "run"))
     depends_on("py-pytest", type="test")
 
     # NOTE: scipy should use the same BLAS/LAPACK as numpy.
@@ -105,8 +111,16 @@ class PyScipy(PythonPackage):
     # and setup_build_environment() from numpy in the scipy spec.
     depends_on("blas")
     depends_on("lapack")
-    # https://github.com/scipy/scipy/wiki/Dropping-support-for-Accelerate
+
+    # https://docs.scipy.org/doc/scipy/dev/toolchain.html#other-libraries
+    depends_on("lapack@3.7.1:", when="@1.9:")
     depends_on("lapack@3.4.1:", when="@1.2:")
+
+    # https://docs.scipy.org/doc/scipy/dev/toolchain.html#compilers
+    conflicts("%gcc@:7", when="@1.10:")
+    conflicts("%gcc@:4.7", when="@:1.9")
+    conflicts("%apple-clang@:9", when="@1.10:")
+    conflicts("%msvc@:19.19", when="@1.10:")
 
     # https://github.com/scipy/scipy/pull/11324
     conflicts("@1.4.0:1.4.1", when="target=ppc64le:")
@@ -115,11 +129,6 @@ class PyScipy(PythonPackage):
     # Intel OneAPI ifx claims to support -fvisibility, but this does not work.
     # Meson adds this flag for all Python extensions which include Fortran code.
     conflicts("%oneapi", when="@1.9:")
-
-    # FIXME: mysterious build issues with MKL
-    conflicts("^intel-mkl", when="@1.9:")
-    conflicts("^intel-oneapi-mkl", when="@1.9:")
-    conflicts("^intel-parallel-studio", when="@1.9:")
 
     # https://github.com/scipy/scipy/issues/12860
     patch(
@@ -142,6 +151,11 @@ class PyScipy(PythonPackage):
 
     @run_before("install")
     def set_fortran_compiler(self):
+        if self.compiler.f77 is None or self.compiler.fc is None:
+            raise InstallError(
+                "py-scipy requires Fortran compilers. Configure Fortran compiler to proceed."
+            )
+
         if self.spec.satisfies("%fj"):
             with open("setup.cfg", "w") as f:
                 f.write("[config_fc]\n")
@@ -181,14 +195,16 @@ class PyScipy(PythonPackage):
     def install(self, spec, prefix):
         blas = spec["blas"].libs.names[0]
         lapack = spec["lapack"].libs.names[0]
-        # FIXME: MKL support doesn't work, why?
         if spec["blas"].name in ["intel-mkl", "intel-parallel-studio", "intel-oneapi-mkl"]:
             blas = "mkl-dynamic-lp64-seq"
         if spec["lapack"].name in ["intel-mkl", "intel-parallel-studio", "intel-oneapi-mkl"]:
             lapack = "mkl-dynamic-lp64-seq"
-
         if spec["blas"].name in ["blis", "amdblis"]:
             blas = "blis"
+        if blas == "armpl":
+            blas += "-dynamic-lp64-seq"
+        if lapack == "armpl":
+            lapack += "-dynamic-lp64-seq"
 
         args = [
             "setup",

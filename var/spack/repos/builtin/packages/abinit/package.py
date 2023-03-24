@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -125,7 +125,6 @@ class Abinit(AutotoolsPackage):
     patch("fix_for_fujitsu.v9.patch", when="@9: %fj")
 
     def configure_args(self):
-
         spec = self.spec
 
         options = []

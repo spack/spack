@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -14,7 +14,7 @@ class PyPyscf(PythonPackage):
     homepage = "https://sunqm.github.io/pyscf/"
     git = "https://github.com/pyscf/pyscf"
 
-    maintainers = ["naromero77"]
+    maintainers("naromero77")
 
     version("2.0.1", tag="v2.0.1")
     version("1.7.5", tag="v1.7.5")

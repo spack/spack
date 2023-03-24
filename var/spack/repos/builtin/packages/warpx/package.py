@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -17,14 +17,17 @@ class Warpx(CMakePackage):
     """
 
     homepage = "https://ecp-warpx.github.io"
-    url = "https://github.com/ECP-WarpX/WarpX/archive/refs/tags/22.10.tar.gz"
+    url = "https://github.com/ECP-WarpX/WarpX/archive/refs/tags/23.01.tar.gz"
     git = "https://github.com/ECP-WarpX/WarpX.git"
 
-    maintainers = ["ax3l", "dpgrote", "MaxThevenet", "RemiLehe"]
+    maintainers("ax3l", "dpgrote", "MaxThevenet", "RemiLehe")
     tags = ["e4s", "ecp"]
 
     # NOTE: if you update the versions here, also see py-warpx
     version("develop", branch="development")
+    version("23.01", sha256="e853d01c20ea00c8ddedfa82a31a11d9d91a7f418d37d7f064cf8a241ea4da0c")
+    version("22.12", sha256="96019902cd6ea444a1ae515e8853048e9074822c168021e4ec1687adc72ef062")
+    version("22.11", sha256="528f65958f2f9e60a094e54eede698e871ccefc89fa103fe2a6f22e4a059515e")
     version("22.10", sha256="3cbbbbb4d79f806b15e81c3d0e4a4401d1d03d925154682a3060efebd3b6ca3e")
     version("22.09", sha256="dbef1318248c86c860cc47f7e18bbb0397818e3acdfb459e48075004bdaedea3")
     version("22.08", sha256="5ff7fd628e8bf615c1107e6c51bc55926f3ef2a076985444b889d292fecf56d4")

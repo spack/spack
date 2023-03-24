@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -205,16 +205,6 @@ def test_process_external_package_module(install_mockery, monkeypatch, capfd):
     assert "has external module in {0}".format(spec.external_modules) in out
 
 
-def test_process_binary_cache_tarball_none(install_mockery, monkeypatch, capfd):
-    """Tests of _process_binary_cache_tarball when no tarball."""
-    monkeypatch.setattr(spack.binary_distribution, "download_tarball", _none)
-
-    s = spack.spec.Spec("trivial-install-test-package").concretized()
-    assert not inst._process_binary_cache_tarball(s.package, None, False, False)
-
-    assert "exists in binary cache but" in capfd.readouterr()[0]
-
-
 def test_process_binary_cache_tarball_tar(install_mockery, monkeypatch, capfd):
     """Tests of _process_binary_cache_tarball with a tar file."""
 
@@ -229,7 +219,7 @@ def test_process_binary_cache_tarball_tar(install_mockery, monkeypatch, capfd):
     monkeypatch.setattr(spack.database.Database, "add", _noop)
 
     spec = spack.spec.Spec("a").concretized()
-    assert inst._process_binary_cache_tarball(spec.package, spec, False, False)
+    assert inst._process_binary_cache_tarball(spec.package, explicit=False, unsigned=False)
 
     out = capfd.readouterr()[0]
     assert "Extracting a" in out
@@ -488,7 +478,7 @@ def test_update_tasks_for_compiler_packages_as_compiler(mock_packages, config, m
 
 
 def test_bootstrapping_compilers_with_different_names_from_spec(
-    install_mockery, mutable_config, mock_fetch
+    install_mockery, mutable_config, mock_fetch, archspec_host_is_spack_test_host
 ):
     with spack.config.override("config:install_missing_compilers", True):
         with spack.concretize.disable_compiler_existence_check():
@@ -622,13 +612,29 @@ def test_combine_phase_logs(tmpdir):
 
     # This is the output log we will combine them into
     combined_log = os.path.join(str(tmpdir), "combined-out.txt")
-    spack.installer.combine_phase_logs(phase_log_files, combined_log)
+    inst.combine_phase_logs(phase_log_files, combined_log)
     with open(combined_log, "r") as log_file:
         out = log_file.read()
 
     # Ensure each phase log file is represented
     for log_file in log_files:
         assert "Output from %s\n" % log_file in out
+
+
+def test_combine_phase_logs_does_not_care_about_encoding(tmpdir):
+    # this is invalid utf-8 at a minimum
+    data = b"\x00\xF4\xBF\x00\xBF\xBF"
+    input = [str(tmpdir.join("a")), str(tmpdir.join("b"))]
+    output = str(tmpdir.join("c"))
+
+    for path in input:
+        with open(path, "wb") as f:
+            f.write(data)
+
+    inst.combine_phase_logs(input, output)
+
+    with open(output, "rb") as f:
+        assert f.read() == data * 2
 
 
 def test_check_deps_status_install_failure(install_mockery, monkeypatch):

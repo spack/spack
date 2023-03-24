@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -229,11 +229,7 @@ class VersionBase(object):
 
     """
 
-    __slots__ = [
-        "version",
-        "separators",
-        "string",
-    ]
+    __slots__ = ["version", "separators", "string"]
 
     def __init__(self, string: str) -> None:
         if not isinstance(string, str):
@@ -937,7 +933,7 @@ class VersionList(object):
         self.versions = []
         if vlist is not None:
             if isinstance(vlist, str):
-                vlist = _string_to_version(vlist)
+                vlist = from_string(vlist)
                 if type(vlist) == VersionList:
                     self.versions = vlist.versions
                 else:
@@ -1165,7 +1161,7 @@ class VersionList(object):
         return str(self.versions)
 
 
-def _string_to_version(string):
+def from_string(string):
     """Converts a string to a Version, VersionList, or VersionRange.
     This is private.  Client code should use ver().
     """
@@ -1191,9 +1187,9 @@ def ver(obj):
     if isinstance(obj, (list, tuple)):
         return VersionList(obj)
     elif isinstance(obj, str):
-        return _string_to_version(obj)
+        return from_string(obj)
     elif isinstance(obj, (int, float)):
-        return _string_to_version(str(obj))
+        return from_string(str(obj))
     elif type(obj) in (VersionBase, GitVersion, VersionRange, VersionList):
         return obj
     else:

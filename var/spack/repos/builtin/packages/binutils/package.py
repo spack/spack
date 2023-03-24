@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -14,12 +14,14 @@ class Binutils(AutotoolsPackage, GNUMirrorPackage):
     homepage = "https://www.gnu.org/software/binutils/"
     gnu_mirror_path = "binutils/binutils-2.28.tar.bz2"
 
-    maintainers = ["alalazo"]
+    maintainers("alalazo")
 
     tags = ["build-tools", "core-packages"]
 
     executables = ["^nm$", "^readelf$"]
 
+    version("2.40", sha256="f8298eb153a4b37d112e945aa5cb2850040bcf26a3ea65b5a715c83afe05e48a")
+    version("2.39", sha256="da24a84fef220102dd24042df06fdea851c2614a5377f86effa28f33b7b16148")
     version("2.38", sha256="070ec71cf077a6a58e0b959f05a09a35015378c2d8a51e90f3aeabfe30590ef8")
     version("2.37", sha256="67fc1a4030d08ee877a4867d3dcab35828148f87e1fd05da6db585ed5a166bd4")
     version("2.36.1", sha256="5b4bd2e79e30ce8db0abd76dd2c2eae14a94ce212cfc59d3c37d23e24bc6d7a3")
@@ -30,6 +32,7 @@ class Binutils(AutotoolsPackage, GNUMirrorPackage):
     version("2.33.1", sha256="0cb4843da15a65a953907c96bad658283f3c4419d6bcc56bf2789db16306adb2")
     version("2.32", sha256="de38b15c902eb2725eac6af21183a5f34ea4634cb0bcef19612b50e5ed31072d")
     version("2.31.1", sha256="ffcc382695bf947da6135e7436b8ed52d991cf270db897190f19d6f9838564d0")
+    version("2.30", sha256="efeade848067e9a03f1918b1da0d37aaffa0b0127a06b5e9236229851d9d0c09")
     version("2.29.1", sha256="1509dff41369fb70aed23682351b663b56db894034773e6dbf7d5d6071fc55cc")
     version("2.28", sha256="6297433ee120b11b4b0a1c8f3512d7d73501753142ab9e2daa13c5a3edd32a72")
     version("2.27", sha256="369737ce51587f92466041a97ab7d2358c6d9e1b6490b3940eb09fb0a9a6ac88")
@@ -45,9 +48,15 @@ class Binutils(AutotoolsPackage, GNUMirrorPackage):
     # --disable-ld flag
     variant("gold", default=False, when="+ld", description="build the gold linker")
     variant("libiberty", default=False, description="Also install libiberty.")
-    variant("nls", default=True, description="Enable Native Language Support")
+    variant("nls", default=False, description="Enable Native Language Support")
     variant("headers", default=False, description="Install extra headers (e.g. ELF)")
     variant("lto", default=False, description="Enable lto.")
+    variant(
+        "pgo",
+        default=False,
+        description="Build with profile-guided optimization (slow)",
+        when="@2.37:",
+    )
     variant("ld", default=False, description="Enable ld.")
     # When you build binutils with ~ld and +gas and load it in your PATH, you
     # may end up with incompatibilities between a potentially older system ld
@@ -57,6 +66,7 @@ class Binutils(AutotoolsPackage, GNUMirrorPackage):
     # when compiling with debug symbols on gcc.
     variant("gas", default=False, when="+ld", description="Enable as assembler.")
     variant("interwork", default=False, description="Enable interwork.")
+    variant("gprofng", default=False, description="Enable gprofng.", when="@2.39:")
     variant(
         "libs",
         default="shared,static",
@@ -76,19 +86,26 @@ class Binutils(AutotoolsPackage, GNUMirrorPackage):
     depends_on("diffutils", type="build")
     depends_on("gettext", when="+nls")
 
+    # PGO runs tests, which requires `runtest` from dejagnu
+    depends_on("dejagnu", when="+pgo", type="build")
+
     # Prior to 2.30, gold did not distribute the generated files and
     # thus needs bison, even for a one-time build.
     depends_on("m4", type="build", when="@:2.29 +gold")
     depends_on("bison", type="build", when="@:2.29 +gold")
 
-    # 2.38 with +gas needs makeinfo due to a bug, see:
-    # https://sourceware.org/bugzilla/show_bug.cgi?id=28909
-    depends_on("texinfo", type="build", when="@2.38 +gas")
-    # 2.34 needs makeinfo due to a bug, see:
+    # 2.34:2.40 needs makeinfo due to a bug, see:
     # https://sourceware.org/bugzilla/show_bug.cgi?id=25491
-    depends_on("texinfo", type="build", when="@2.34")
+    # https://sourceware.org/bugzilla/show_bug.cgi?id=28909
+    depends_on("texinfo", type="build", when="@2.34:2.40")
+
+    # gprofng requires bison
+    depends_on("bison@3.0.4:", type="build", when="+gprofng")
 
     conflicts("+gold", when="platform=darwin", msg="Binutils cannot build linkers on macOS")
+    conflicts(
+        "~lto", when="+pgo", msg="Profile-guided optimization enables link-time optimization"
+    )
 
     @classmethod
     def determine_version(cls, exe):
@@ -98,6 +115,13 @@ class Binutils(AutotoolsPackage, GNUMirrorPackage):
 
     def flag_handler(self, name, flags):
         spec = self.spec
+
+        # Set -O3 -g0 by default when using gcc or clang, since it improves performance
+        # a bit and significantly reduces install size
+        if name in ("cflags", "cxxflags") and self.compiler.name in ("gcc", "clang"):
+            flags.insert(0, "-g0")
+            flags.insert(0, "-O3")
+
         # Use a separate variable for injecting flags. This way, installing
         # `binutils cflags='-O2'` will still work as expected.
         iflags = []
@@ -108,10 +132,8 @@ class Binutils(AutotoolsPackage, GNUMirrorPackage):
         ):
             iflags.append("-Wno-narrowing")
         elif name == "cflags":
-            if spec.satisfies("@:2.34 %gcc@10:"):
+            if spec.satisfies("@:2.34 %gcc@10:") or spec.satisfies("%cce"):
                 iflags.append("-fcommon")
-            if spec.satisfies("%cce") or spec.satisfies("@2.38 %gcc"):
-                iflags.extend([self.compiler.cc_pic_flag, "-fcommon"])
         elif name == "ldflags":
             if spec.satisfies("%cce") or spec.satisfies("@2.38 %gcc"):
                 iflags.append("-Wl,-z,notext")
@@ -146,28 +168,41 @@ class Binutils(AutotoolsPackage, GNUMirrorPackage):
 
 class AutotoolsBuilder(spack.build_systems.autotools.AutotoolsBuilder):
     def configure_args(self):
+        known_targets = {"x86_64": "x86_64", "aarch64": "aarch64", "ppc64le": "powerpc"}
+        known_platforms = {"linux": "linux-gnu", "cray": "linux-gnu", "darwin": "apple-darwin"}
+
+        family = str(self.spec.target.family)
+        platform = self.spec.platform
+
+        if family in known_targets and platform in known_platforms:
+            targets = "{}-{}".format(known_targets[family], known_platforms[platform])
+        else:
+            targets = "all"
+
         args = [
             "--disable-dependency-tracking",
             "--disable-werror",
-            "--enable-multilib",
             "--enable-64-bit-bfd",
-            "--enable-targets=all",
-            "--with-system-zlib",
+            "--enable-multilib",
+            "--enable-pic",
+            "--enable-targets={}".format(targets),
             "--with-sysroot=/",
+            "--with-system-zlib",
         ]
+        args += self.enable_or_disable("gas")
+        args += self.enable_or_disable("gold")
+        args += self.enable_or_disable("gprofng")
+        args += self.enable_or_disable("install-libiberty", variant="libiberty")
+        args += self.enable_or_disable("interwork")
+        args += self.enable_or_disable("ld")
         args += self.enable_or_disable("libs")
         args += self.enable_or_disable("lto")
-        args += self.enable_or_disable("ld")
-        args += self.enable_or_disable("gas")
-        args += self.enable_or_disable("interwork")
-        args += self.enable_or_disable("gold")
         args += self.enable_or_disable("nls")
         args += self.enable_or_disable("plugins")
-
-        if "+libiberty" in self.spec:
-            args.append("--enable-install-libiberty")
+        if "+pgo" in self.spec:
+            args.append("--enable-pgo-build=lto")
         else:
-            args.append("--disable-install-libiberty")
+            args.append("--disable-pgo-build")
 
         # To avoid namespace collisions with Darwin/BSD system tools,
         # prefix executables with "g", e.g., gar, gnm; see Homebrew

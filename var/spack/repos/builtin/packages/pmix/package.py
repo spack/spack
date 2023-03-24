@@ -1,8 +1,9 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 import os
+import platform
 
 from spack.package import *
 
@@ -32,7 +33,7 @@ class Pmix(AutotoolsPackage):
     homepage = "https://pmix.org"
     url = "https://github.com/pmix/pmix/releases/download/v3.1.3/pmix-3.1.3.tar.bz2"
     git = "https://github.com/openpmix/openpmix.git"
-    maintainers = ["rhc54"]
+    maintainers("rhc54")
 
     version("master", branch="master")
     version("4.1.2", sha256="670d3a02b39fb2126fe8084174cf03c484e027b5921b5c98a851108134e2597a")
@@ -97,6 +98,18 @@ class Pmix(AutotoolsPackage):
         perl = which("perl")
         perl("./autogen.pl")
 
+    def find_external_lib_path(self, pkg_name, path_match_str=""):
+        spec = self.spec
+        tgt_libpath = ""
+        dir_list = spec[pkg_name].libs
+        for entry in dir_list:
+            if path_match_str == "" or (path_match_str != "" and path_match_str in entry):
+                tgt_libpath = entry
+                break
+        path_list = tgt_libpath.split(os.sep)
+        del path_list[-1]
+        return (os.sep).join(path_list)
+
     def configure_args(self):
         spec = self.spec
 
@@ -104,6 +117,19 @@ class Pmix(AutotoolsPackage):
 
         config_args.append("--with-libevent=" + spec["libevent"].prefix)
         config_args.append("--with-hwloc=" + spec["hwloc"].prefix)
+
+        # As of 09/22/22 pmix build does not detect the hwloc version
+        # for 32-bit architecture correctly. Since, we have only been
+        # able to test on 64-bit architecture, we are keeping this
+        # check for "64" in place. We will need to re-visit this when we
+        # have the fix in Pmix for 32-bit library version detection
+        if "64" in platform.machine():
+            if spec["libevent"].external_path:
+                dep_libpath = self.find_external_lib_path("libevent", "64")
+                config_args.append("--with-libevent-libdir=" + dep_libpath)
+            if spec["hwloc"].external_path:
+                dep_libpath = self.find_external_lib_path("hwloc", "64")
+                config_args.append("--with-hwloc-libdir=" + dep_libpath)
 
         config_args.extend(self.enable_or_disable("python-bindings", variant="python"))
 

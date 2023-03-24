@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -13,7 +13,7 @@ class Libjwt(AutotoolsPackage):
     git = "https://github.com/benmcollins/libjwt"
     url = "https://github.com/benmcollins/libjwt/archive/v1.12.0.tar.gz"
 
-    maintainers = ["bollig"]
+    maintainers("bollig")
 
     version("1.13.1", sha256="4df55ac89c6692adaf3badb43daf3241fd876612c9ab627e250dfc4bb59993d9")
     version("1.12.1", sha256="d29e4250d437340b076350e910e69fd5539ef8b92528d0306745cec0e343cc17")

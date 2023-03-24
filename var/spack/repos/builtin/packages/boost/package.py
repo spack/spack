@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -24,7 +24,7 @@ class Boost(Package):
     git = "https://github.com/boostorg/boost.git"
     list_url = "https://sourceforge.net/projects/boost/files/boost/"
     list_depth = 1
-    maintainers = ["hainest"]
+    maintainers("hainest")
 
     version("develop", branch="develop", submodules=True)
     version("1.80.0", sha256="1e19565d82e43bc59209a168f5ac899d3ba471d55c7610c677d4ccf2c9c500c0")
@@ -393,7 +393,7 @@ class Boost(Package):
     patch("pthread-stack-min-fix.patch", when="@1.69.0:1.72.0")
 
     # https://www.intel.com/content/www/us/en/developer/articles/technical/building-boost-with-oneapi.html
-    patch("intel-oneapi-linux-jam.patch", when="@1.76:1.79 %oneapi")
+    patch("intel-oneapi-linux-jam.patch", when="@1.76: %oneapi")
 
     def patch(self):
         # Disable SSSE3 and AVX2 when using the NVIDIA compiler

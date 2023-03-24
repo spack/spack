@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -23,12 +23,7 @@ class TestSpecList(object):
         "mpileaks",
         "zmpi@1.0",
         "mpich@3.0",
-        {
-            "matrix": [
-                ["hypre"],
-                ["%gcc@4.5.0", "%clang@3.3"],
-            ]
-        },
+        {"matrix": [["hypre"], ["%gcc@4.5.0", "%clang@3.3"]]},
         "libelf",
     ]
 
@@ -219,3 +214,17 @@ class TestSpecList(object):
         speclist = SpecList("specs", [matrix])
         assert len(speclist.specs) == 1
         assert libdwarf_spec in speclist.specs[0]
+
+    def test_spec_list_broadcast(self, mock_packages):
+        matrix = {
+            "matrix": [["mpileaks"], ["^callpath"]],
+            "broadcast": [["%gcc", "%clang"], ["+debug", "~debug"]],
+            "exclude": ["+debug%clang"],
+        }
+        speclist = SpecList("specs", [matrix])
+
+        assert len(speclist) == 3
+        for spec in speclist:
+            for node in spec.traverse():
+                assert node.compiler.name == spec.compiler.name
+                assert node.variants["debug"].value == spec.variants["debug"].value

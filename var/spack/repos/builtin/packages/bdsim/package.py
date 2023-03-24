@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -18,7 +18,7 @@ class Bdsim(CMakePackage):
 
     tags = ["hep"]
 
-    maintainers = ["gganis"]
+    maintainers("gganis")
 
     version("develop", branch="develop")
     version("1.6.0", sha256="e3241d2d097cb4e22249e315c1474da9b3657b9c6893232d9f9e543a5323f717")

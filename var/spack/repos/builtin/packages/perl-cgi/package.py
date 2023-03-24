@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -15,7 +15,7 @@ class PerlCgi(PerlPackage):
     homepage = "https://metacpan.org/pod/CGI"
     url = "https://cpan.metacpan.org/authors/id/L/LE/LEEJO/CGI-4.40.tar.gz"
 
-    maintainers = ["cessenat"]
+    maintainers("cessenat")
 
     version("4.54", sha256="9608a044ae2e87cefae8e69b113e3828552ddaba0d596a02f9954c6ac17fa294")
     version("4.53", sha256="c67e732f3c96bcb505405fd944f131fe5c57b46e5d02885c00714c452bf14e60")

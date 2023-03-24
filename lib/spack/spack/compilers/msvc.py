@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -42,16 +42,16 @@ def get_valid_fortran_pth(comp_ver):
 
 class Msvc(Compiler):
     # Subclasses use possible names of C compiler
-    cc_names: List[str] = ["cl.exe"]
+    cc_names: List[str] = ["cl"]
 
     # Subclasses use possible names of C++ compiler
-    cxx_names: List[str] = ["cl.exe"]
+    cxx_names: List[str] = ["cl"]
 
     # Subclasses use possible names of Fortran 77 compiler
-    f77_names: List[str] = ["ifx.exe"]
+    f77_names: List[str] = ["ifx"]
 
     # Subclasses use possible names of Fortran 90 compiler
-    fc_names: List[str] = ["ifx.exe"]
+    fc_names: List[str] = ["ifx"]
 
     # Named wrapper links within build_env_path
     # Due to the challenges of supporting compiler wrappers
@@ -103,10 +103,21 @@ class Msvc(Compiler):
         """
         This is the shorthand VCToolset version of form
         MSVC<short-ver> *NOT* the full version, for that see
-        Msvc.msvc_version
+        Msvc.msvc_version or MSVC.platform_toolset_ver for the
+        raw platform toolset version
         """
-        ver = self.msvc_version[:2].joined.string[:3]
+        ver = self.platform_toolset_ver
         return "MSVC" + ver
+
+    @property
+    def platform_toolset_ver(self):
+        """
+        This is the platform toolset version of current MSVC compiler
+        i.e. 142.
+        This is different from the VC toolset version as established
+        by `short_msvc_version`
+        """
+        return self.msvc_version[:2].joined.string[:3]
 
     @property
     def cl_version(self):
@@ -160,6 +171,8 @@ class Msvc(Compiler):
     def fc_version(cls, fc):
         # We're using intel for the Fortran compilers, which exist if
         # ONEAPI_ROOT is a meaningful variable
+        if not sys.platform == "win32":
+            return "unknown"
         fc_ver = cls.default_version(fc)
         avail_fc_version.add(fc_ver)
         fc_path[fc_ver] = fc

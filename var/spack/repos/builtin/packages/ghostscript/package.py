@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -87,11 +87,7 @@ class Ghostscript(AutotoolsPackage):
         )
 
     def configure_args(self):
-        args = [
-            "--disable-compile-inits",
-            "--enable-dynamic",
-            "--with-system-libtiff",
-        ]
+        args = ["--disable-compile-inits", "--enable-dynamic", "--with-system-libtiff"]
 
         if self.spec.satisfies("@9.53:"):
             args.extend(self.with_or_without("tesseract"))

@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -52,7 +52,8 @@ class Silo(AutotoolsPackage):
     depends_on("automake", type="build", when="+shared")
     depends_on("libtool", type="build", when="+shared")
     depends_on("mpi", when="+mpi")
-    depends_on("hdf5@1.8:", when="+hdf5")
+    depends_on("hdf5@1.8", when="@:4.10+hdf5")
+    depends_on("hdf5@1.12:", when="@4.11:+hdf5")
     depends_on("qt+gui~framework@4.8:4.9", when="+silex")
     depends_on("libx11", when="+silex")
     # Xmu dependency is required on Ubuntu 18-20
@@ -83,6 +84,9 @@ class Silo(AutotoolsPackage):
     # hzip and fpzip are not available in the BSD releases
     conflicts("+hzip", when="@4.10.2-bsd,4.11-bsd")
     conflicts("+fpzip", when="@4.10.2-bsd,4.11-bsd")
+
+    # zfp include missing
+    patch("zfp_error.patch", when="@4.11 +hdf5")
 
     def flag_handler(self, name, flags):
         spec = self.spec
@@ -186,13 +190,11 @@ class Silo(AutotoolsPackage):
         if is_system_path(zlib_prefix):
             config_args.append("--with-zlib=yes")
         else:
-            config_args.append(
-                "--with-zlib=%s,%s" % (zlib_prefix.include, zlib_prefix.lib),
-            )
+            config_args.append("--with-zlib=%s,%s" % (zlib_prefix.include, zlib_prefix.lib))
 
         if "+hdf5" in spec:
             config_args.append(
-                "--with-hdf5=%s,%s" % (spec["hdf5"].prefix.include, spec["hdf5"].prefix.lib),
+                "--with-hdf5=%s,%s" % (spec["hdf5"].prefix.include, spec["hdf5"].prefix.lib)
             )
 
         if "+silex" in spec:

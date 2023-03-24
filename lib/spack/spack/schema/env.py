@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -28,12 +28,11 @@ spec_list_schema = {
                 "properties": {
                     "matrix": {
                         "type": "array",
-                        "items": {
-                            "type": "array",
-                            "items": {
-                                "type": "string",
-                            },
-                        },
+                        "items": {"type": "array", "items": {"type": "string"}},
+                    },
+                    "broadcast": {
+                        "type": "array",
+                        "items": {"type": "array", "items": {"type": "string"}},
                     },
                     "exclude": {"type": "array", "items": {"type": "string"}},
                 },
@@ -61,11 +60,7 @@ schema = {
                 spack.schema.merged.properties,
                 # extra environment schema properties
                 {
-                    "include": {
-                        "type": "array",
-                        "default": [],
-                        "items": {"type": "string"},
-                    },
+                    "include": {"type": "array", "default": [], "items": {"type": "string"}},
                     "develop": {
                         "type": "object",
                         "default": {},
@@ -78,7 +73,7 @@ schema = {
                                     "spec": {"type": "string"},
                                     "path": {"type": "string"},
                                 },
-                            },
+                            }
                         },
                     },
                     "definitions": {

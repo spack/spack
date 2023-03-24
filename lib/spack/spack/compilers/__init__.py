@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -619,11 +619,9 @@ def arguments_to_detect_version_fn(operating_system, paths):
         command_arguments = []
         files_to_be_tested = fs.files_in(*search_paths)
         for compiler_name in spack.compilers.supported_compilers():
-
             compiler_cls = class_for_compiler_name(compiler_name)
 
             for language in ("cc", "cxx", "f77", "fc"):
-
                 # Select only the files matching a regexp
                 for (file, full_path), regexp in itertools.product(
                     files_to_be_tested, compiler_cls.search_regexps(language)
@@ -722,6 +720,8 @@ def make_compiler_list(detected_versions):
         compiler_cls = spack.compilers.class_for_compiler_name(compiler_name)
         spec = spack.spec.CompilerSpec(compiler_cls.name, version)
         paths = [paths.get(x, None) for x in ("cc", "cxx", "f77", "fc")]
+        # TODO: johnwparent - revist the following line as per discussion at:
+        # https://github.com/spack/spack/pull/33385/files#r1040036318
         target = archspec.cpu.host()
         compiler = compiler_cls(spec, operating_system, str(target.family), paths)
         return [compiler]

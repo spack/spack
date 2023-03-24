@@ -184,7 +184,6 @@ spack:
             KUBERNETES_CPU_REQUEST: 15000m
             KUBERNETES_MEMORY_REQUEST: 62G
 
-
       - match:
         - ascent
         - atk
@@ -202,9 +201,11 @@ spack:
         - magma
         - mfem
         - mpich
+        - openfoam
         - openturns
         - parallelio
         - precice
+        - qt
         - raja
         - relion
         - rocblas
@@ -215,6 +216,7 @@ spack:
         - sundials
         - trilinos
         - umpire
+        - visit
         - vtk
         - vtk-h
         - vtk-m

@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -12,7 +12,7 @@ class PyFenicsBasix(PythonPackage):
     homepage = "https://github.com/FEniCS/basix"
     url = "https://github.com/FEniCS/basix/archive/v0.1.0.tar.gz"
     git = "https://github.com/FEniCS/basix.git"
-    maintainers = ["chrisrichardson", "mscroggs", "garth-wells", "jhale"]
+    maintainers("chrisrichardson", "mscroggs", "garth-wells", "jhale")
 
     version("main", branch="main")
     version("0.5.1", sha256="69133476ac35f0bd0deccb480676030378c341d7dfb2adaca22cd16b7e1dc1cb")

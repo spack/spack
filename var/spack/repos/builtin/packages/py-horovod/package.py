@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -14,7 +14,7 @@ class PyHorovod(PythonPackage, CudaPackage):
     homepage = "https://github.com/horovod"
     git = "https://github.com/horovod/horovod.git"
 
-    maintainers = ["adamjstewart", "aweits", "tgaddair"]
+    maintainers("adamjstewart", "aweits", "tgaddair")
 
     version("master", branch="master", submodules=True)
     version("0.26.1", tag="v0.26.1", submodules=True)
@@ -159,7 +159,7 @@ class PyHorovod(PythonPackage, CudaPackage):
     # Patch vendored copy of eigen to fix build on aarch64
     # https://github.com/horovod/horovod/issues/3605
     # https://gitlab.com/libeigen/eigen/-/commit/fd1dcb6b45a2c797ad4c4d6cc7678ee70763b4ed
-    patch("eigen.patch", when="@0.21: target=aarch64:")
+    patch("eigen.patch", when="@0.21:0.25 target=aarch64:")
 
     @property
     def import_modules(self):

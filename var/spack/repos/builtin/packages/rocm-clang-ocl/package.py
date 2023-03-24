@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -11,12 +11,16 @@ class RocmClangOcl(CMakePackage):
 
     homepage = "https://github.com/RadeonOpenCompute/clang-ocl"
     git = "https://github.com/RadeonOpenCompute/clang-ocl.git"
-    url = "https://github.com/RadeonOpenCompute/clang-ocl/archive/rocm-5.2.3.tar.gz"
+    url = "https://github.com/RadeonOpenCompute/clang-ocl/archive/rocm-5.4.3.tar.gz"
     tags = ["rocm"]
 
-    maintainers = ["srekolam", "renjithravindrankannath"]
+    maintainers("srekolam", "renjithravindrankannath")
     version("master", branch="master")
 
+    version("5.4.3", sha256="689e0354ea685bd488116de8eb902b902492e9ace184c3109b97b9a43f8b2d59")
+    version("5.4.0", sha256="602f8fb1f36587543cc0ee95fd1938f8eeb03de79119101e128150332cc8d89c")
+    version("5.3.3", sha256="549d5bf37507f67c5277abdeed4ec40b5d0edbfbb72907c685444c26b9ce6f8a")
+    version("5.3.0", sha256="66b80ba050848ad921496bd894e740e66afad0ba1923b385f01f2eeae97999ad")
     version("5.2.3", sha256="9cdb387168975207314c08ba63ae7cd11f70542117a5390eddbec77ebb84bed0")
     version("5.2.1", sha256="693a9a360cb2f7e6910a6714df236df6a9d984f94b01712103a520d8e506c03f")
     version("5.2.0", sha256="a2059f6aeccc119abbd444cb37128e00e4854e22a88a47f120f8f8b947d862c5")
@@ -122,6 +126,10 @@ class RocmClangOcl(CMakePackage):
         "5.2.0",
         "5.2.1",
         "5.2.3",
+        "5.3.0",
+        "5.3.3",
+        "5.4.0",
+        "5.4.3",
         "master",
     ]:
         depends_on("rocm-cmake@%s:" % ver, type="build", when="@" + ver)
