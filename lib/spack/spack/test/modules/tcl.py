@@ -108,6 +108,19 @@ class TestTcl(object):
         assert len([x for x in content if "module load foo/bar" in x]) == 1
         assert len([x for x in content if "setenv LIBDWARF_ROOT" in x]) == 1
 
+    def test_prepend_path_separator(self, modulefile_content, module_configuration):
+        """Tests that we can use custom delimiters to manipulate path lists."""
+
+        module_configuration("module_path_separator")
+        content = modulefile_content("module-path-separator")
+
+        assert len([x for x in content if 'append-path --delim ":" COLON "foo"' in x]) == 1
+        assert len([x for x in content if 'prepend-path --delim ":" COLON "foo"' in x]) == 1
+        assert len([x for x in content if 'remove-path --delim ":" COLON "foo"' in x]) == 1
+        assert len([x for x in content if 'append-path --delim ";" SEMICOLON "bar"' in x]) == 1
+        assert len([x for x in content if 'prepend-path --delim ";" SEMICOLON "bar"' in x]) == 1
+        assert len([x for x in content if 'remove-path --delim ";" SEMICOLON "bar"' in x]) == 1
+
     @pytest.mark.parametrize("config_name", ["exclude", "blacklist"])
     def test_exclude(self, modulefile_content, module_configuration, config_name):
         """Tests excluding the generation of selected modules."""
