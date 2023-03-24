@@ -109,7 +109,12 @@ class Expat(AutotoolsPackage, CMakePackage):
         description="Use libbsd (for high quality randomness)",
     )
 
-    variant("shared", default=True, description="Build expat as shared if true, static if false")
+    variant(
+        "shared",
+        default=True,
+        description="Build expat as shared if true, static if false",
+        when="build_system=cmake",
+    )
 
     depends_on("libbsd", when="@2.2.1:+libbsd")
 
