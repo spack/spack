@@ -15,15 +15,58 @@ class Mbedtls(MakefilePackage):
 
     homepage = "https://tls.mbed.org"
     url = "https://github.com/ARMmbed/mbedtls/archive/mbedtls-2.2.1.tar.gz"
-    maintainers("mwkrentel", "haampie")
+    maintainers("haampie")
 
-    version("3.1.0", sha256="64d01a3b22b91cf3a25630257f268f11bc7bfa37981ae6d397802dd4ccec4690")
-    version("3.0.0", sha256="377d376919be19f07c7e7adeeded088a525be40353f6d938a78e4f986bce2ae0")
-    version("2.28.0", sha256="f644248f23cf04315cf9bb58d88c4c9471c16ca0533ecf33f86fb7749a3e5fa6")
-    version("2.27.0", sha256="4f6a43f06ded62aa20ef582436a39b65902e1126cbbe2fb17f394e9e9a552767")
-    version("2.24.0", sha256="b5a779b5f36d5fc4cba55faa410685f89128702423ad07b36c5665441a06a5f3")
-    version("2.16.12", sha256="0afb4a4ce5b771f2fb86daee786362fbe48285f05b73cd205f46a224ec031783")
-    version("2.16.11", sha256="51bb9685c4f4ff9255da5659ff346b89dcaf129e3ba0f3b2b0c48a1a7495e701")
+    # version 3.x
+    version("3.3.0", sha256="a22ff38512697b9cd8472faa2ea2d35e320657f6d268def3a64765548b81c3ec")
+    version(
+        "3.2.1",
+        sha256="5850089672560eeaca03dc36678ee8573bb48ef6e38c94f5ce349af60c16da33",
+        deprecated=True,
+    )
+    version(
+        "3.1.0",
+        sha256="64d01a3b22b91cf3a25630257f268f11bc7bfa37981ae6d397802dd4ccec4690",
+        deprecated=True,
+    )
+    version(
+        "3.0.0",
+        sha256="377d376919be19f07c7e7adeeded088a525be40353f6d938a78e4f986bce2ae0",
+        deprecated=True,
+    )
+
+    # version 2.x
+    version("2.28.2", sha256="1db6d4196178fa9f8264bef5940611cd9febcd5d54ec05f52f1e8400f792b5a4")
+    version(
+        "2.28.1",
+        sha256="82ff5fda18ecbdee9053bdbeed6059c89e487f3024227131657d4c4536735ed1",
+        deprecated=True,
+    )
+    version(
+        "2.28.0",
+        sha256="f644248f23cf04315cf9bb58d88c4c9471c16ca0533ecf33f86fb7749a3e5fa6",
+        deprecated=True,
+    )
+    version(
+        "2.27.0",
+        sha256="4f6a43f06ded62aa20ef582436a39b65902e1126cbbe2fb17f394e9e9a552767",
+        deprecated=True,
+    )
+    version(
+        "2.24.0",
+        sha256="b5a779b5f36d5fc4cba55faa410685f89128702423ad07b36c5665441a06a5f3",
+        deprecated=True,
+    )
+    version(
+        "2.16.12",
+        sha256="0afb4a4ce5b771f2fb86daee786362fbe48285f05b73cd205f46a224ec031783",
+        deprecated=True,
+    )
+    version(
+        "2.16.11",
+        sha256="51bb9685c4f4ff9255da5659ff346b89dcaf129e3ba0f3b2b0c48a1a7495e701",
+        deprecated=True,
+    )
     version(
         "2.16.9",
         sha256="b7ca99ee10551b5b13242b7effebefd2a5cc38c287e5f5be1267d51ee45effe3",

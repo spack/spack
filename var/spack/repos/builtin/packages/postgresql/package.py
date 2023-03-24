@@ -62,7 +62,7 @@ class Postgresql(AutotoolsPackage):
 
     @property
     def command(self):
-        return Exectuable(self.prefix.bin.pg_config)
+        return Executable(self.prefix.bin.pg_config)
 
     def configure_args(self):
         config_args = ["--with-openssl"]

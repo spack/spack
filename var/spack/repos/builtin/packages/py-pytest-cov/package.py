@@ -16,8 +16,6 @@ class PyPytestCov(PythonPackage):
     version("2.8.1", sha256="cc6742d8bac45070217169f5f72ceee1e0e55b0221f54bcf24845972d3a47f2b")
     version("2.3.1", sha256="fa0a212283cdf52e2eecc24dd6459bb7687cc29adb60cb84258fab73be8dda0f")
 
-    extends("python", ignore=r"bin/*")
-
     depends_on("python@2.7:2.8,3.4:", type=("build", "run"))
     depends_on("python@3.6:", type=("build", "run"), when="@3.0.0:")
     depends_on("py-setuptools", type="build")

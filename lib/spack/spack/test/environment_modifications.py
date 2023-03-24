@@ -230,16 +230,6 @@ def test_path_manipulation(env):
     assert os.environ["PATH_LIST_WITH_DUPLICATES"].count("/duplicate") == 1
 
 
-def test_extra_arguments(env):
-    """Tests that we can attach extra arguments to any command."""
-    env.set("A", "dummy value", who="Pkg1")
-    for x in env:
-        assert "who" in x.args
-
-    env.apply_modifications()
-    assert "dummy value" == os.environ["A"]
-
-
 def test_extend(env):
     """Tests that we can construct a list of environment modifications
     starting from another list.
@@ -489,7 +479,7 @@ def test_from_environment_diff(before, after, search_list):
         assert item in mod
 
 
-@pytest.mark.skipif(sys.platform == "win32", reason="LMod not supported on Windows")
+@pytest.mark.skipif(sys.platform == "win32", reason="Lmod not supported on Windows")
 @pytest.mark.regression("15775")
 def test_exclude_lmod_variables():
     # Construct the list of environment modifications

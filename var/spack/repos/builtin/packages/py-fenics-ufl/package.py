@@ -19,6 +19,9 @@ class PyFenicsUfl(PythonPackage):
     maintainers("chrisrichardson", "garth-wells", "jhale")
 
     version("main", branch="main")
+    version(
+        "2023.1.1.post0", sha256="9e6e87f1447635029cec42604f62a76bba84899beb4b8822af10389d1f93a9b6"
+    )
     version("2022.2.0", sha256="d6e18e06df5d7a626c3138d49a543914d68186afb6159c4d1a7cd72b2a199b02")
     version("2022.1.0", sha256="48359903d47fb397900d105fe4a60b459c50bbf9d9da78beb9accb54e4e4acaf")
     version("2021.1.0", sha256="130fdc09bb7fcd39dcd2618426912b8a25a03431d94575711068b38c666b4337")
@@ -34,4 +37,6 @@ class PyFenicsUfl(PythonPackage):
     version("2016.2.0", tag="ufl-2016.2.0")
 
     depends_on("python@3.7:", type=("build", "run"))
-    depends_on("py-numpy", type=("build", "run"))
+    depends_on("py-setuptools@58:", type=("build", "run"), when="@2022.1.0:")
+    depends_on("py-setuptools@40:", type=("build", "run"))
+    depends_on("py-numpy@1.21:", type=("build", "run"))
