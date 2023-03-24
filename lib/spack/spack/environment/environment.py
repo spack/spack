@@ -1769,7 +1769,7 @@ class Environment(object):
                 for spec in specs_dropped:
                     spack.store.db.update_explicit(spec, True)
 
-        if not specs_to_install:
+        if not specs_to_install and "overwrite" not in install_args:
             tty.msg("All of the packages are already installed")
         else:
             tty.debug("Processing {0} uninstalled specs".format(len(specs_to_install)))
