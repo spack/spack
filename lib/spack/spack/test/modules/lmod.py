@@ -144,6 +144,8 @@ class TestLmod(object):
         assert len([x for x in content if 'append_path("SEMICOLON", "bar", ";")' in x]) == 1
         assert len([x for x in content if 'prepend_path("SEMICOLON", "bar", ";")' in x]) == 1
         assert len([x for x in content if 'remove_path("SEMICOLON", "bar", ";")' in x]) == 1
+        assert len([x for x in content if 'append_path("SPACE", "qux", " ")' in x]) == 1
+        assert len([x for x in content if 'remove_path("SPACE", "qux", " ")' in x]) == 1
 
     @pytest.mark.parametrize("config_name", ["exclude", "blacklist"])
     def test_exclude(self, modulefile_content, module_configuration, config_name):

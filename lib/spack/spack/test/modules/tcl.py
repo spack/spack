@@ -120,6 +120,8 @@ class TestTcl(object):
         assert len([x for x in content if 'append-path --delim ";" SEMICOLON "bar"' in x]) == 1
         assert len([x for x in content if 'prepend-path --delim ";" SEMICOLON "bar"' in x]) == 1
         assert len([x for x in content if 'remove-path --delim ";" SEMICOLON "bar"' in x]) == 1
+        assert len([x for x in content if 'append-path --delim " " SPACE "qux"' in x]) == 1
+        assert len([x for x in content if 'remove-path --delim " " SPACE "qux"' in x]) == 1
 
     @pytest.mark.parametrize("config_name", ["exclude", "blacklist"])
     def test_exclude(self, modulefile_content, module_configuration, config_name):
