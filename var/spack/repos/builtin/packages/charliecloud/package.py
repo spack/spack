@@ -75,6 +75,7 @@ class Charliecloud(AutotoolsPackage):
         sha256="15ce63353afe1fc6bcc10979496a54fcd5628f997cb13c827c9fc7afb795bdc5",
     )
     variant("docs", default=False, description="Build man pages and html docs")
+    variant("squashfuse", default=False, description="Build with squashfuse support")
 
     # Autoconf.
     depends_on("m4", type="build")
@@ -102,6 +103,11 @@ class Charliecloud(AutotoolsPackage):
 
     # See https://github.com/spack/spack/pull/16049.
     conflicts("platform=darwin", msg="This package does not build on macOS")
+    
+    # Squashfuse support
+    depends_on("squashfuse@0.1.105:", when="+squashfuse")
+    depends_on("squashfs",type="run", when="+squashfuse")
+
 
     def autoreconf(self, spec, prefix):
         which("bash")("autogen.sh")
@@ -117,5 +123,8 @@ class Charliecloud(AutotoolsPackage):
             args.append("--with-sphinx-build={0}".format(sphinx_bin.join("sphinx-build")))
         else:
             args.append("--disable-html")
-
+         
+        if "+squashfuse" in self.spec:
+            args.append("--with-libsquashfuse=yes")
+        
         return args
