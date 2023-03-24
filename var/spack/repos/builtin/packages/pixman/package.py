@@ -66,5 +66,4 @@ class Pixman(AutotoolsPackage):
             args.append("--disable-mmx")
             args.append("--disable-arm-a64-neon")
 
-
         return args
