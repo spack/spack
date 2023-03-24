@@ -106,12 +106,11 @@ class Charliecloud(AutotoolsPackage):
     
     # Squashfuse support
     depends_on("squashfuse@0.1.105:", when="+squashfuse")
-    depends_on("squashfs",type="run", when="+squashfuse")
-
+    depends_on("squashfs", type="run", when="+squashfuse")
 
     def autoreconf(self, spec, prefix):
         which("bash")("autogen.sh")
-
+        
     def configure_args(self):
         args = []
         py_path = self.spec["python"].command.path
@@ -123,7 +122,7 @@ class Charliecloud(AutotoolsPackage):
             args.append("--with-sphinx-build={0}".format(sphinx_bin.join("sphinx-build")))
         else:
             args.append("--disable-html")
-         
+            
         if "+squashfuse" in self.spec:
             args.append("--with-libsquashfuse=yes")
         
