@@ -209,10 +209,11 @@ def _windows_create_junction(path: str, link: str):
 
     try:
         cmd = ["cmd", "/C", "mklink", "/J", link, path]
-        proc = subprocess.run(cmd, capture_output=True)
-        tty.debug(proc.stdout.decode())
+        proc = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        out, err = proc.communicate()
+        tty.debug(out.decode())
         if proc.returncode != 0:
-            err = proc.stderr.decode()
+            err = err.decode()
             tty.error(err)
             raise SymlinkError("Make junction command returned a non-zero return code.", err)
     except subprocess.CalledProcessError as e:
