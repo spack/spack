@@ -62,6 +62,9 @@ class Pixman(AutotoolsPackage):
         args = ["--enable-libpng", "--disable-gtk"]
 
         if sys.platform == "darwin":
+            # neither style of acceleration work on macOS
             args.append("--disable-mmx")
+            args.append("--disable-arm-a64-neon")
+
 
         return args
