@@ -36,6 +36,7 @@ import spack.fetch_strategy as fs
 import spack.mirror
 import spack.paths
 import spack.util.lock
+import spack.spec
 import spack.util.path as sup
 import spack.util.pattern as pattern
 import spack.util.url as url_util
@@ -47,6 +48,11 @@ _source_path_subdir = "spack-src"
 
 # The temporary stage name prefix.
 stage_prefix = "spack-stage-"
+
+
+def compute_stage_name(prefix: str, spec):
+    hash_len = spack.config.get("config:hash_length", None)
+    return f"{stage_prefix}{spec.name}-{spec.version}-{spec.dag_hash(hash_len)}"
 
 
 def create_stage_root(path: str) -> None:

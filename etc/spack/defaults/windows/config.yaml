@@ -2,4 +2,4 @@ config:
   locks: false
   concretizer: clingo
   build_stage::
-    - '$spack/.staging'
+    - 'C:/spack'
