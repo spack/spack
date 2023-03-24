@@ -51,7 +51,7 @@ stage_prefix = "spack-stage-"
 
 
 def compute_stage_name(prefix: str, spec):
-    hash_len = spack.config.get("config:hash_length", None)
+    hash_len = spack.config.get("config:stage_hash_length", None)
     return f"{stage_prefix}{spec.name}-{spec.version}-{spec.dag_hash(hash_len)}"
 
 
