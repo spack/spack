@@ -88,6 +88,7 @@ class NetcdfC(CMakePackage, AutotoolsPackage):
     variant("dap", default=False, description="Enable DAP support")
     variant("jna", default=False, description="Enable JNA support")
     variant("fsync", default=False, description="Enable fsync support")
+    variant("nczarr_zip", default=False, description="Enable NCZarr zipfile format storage")
     variant("optimize", default=True, description="Enable -O2 for a more optimized lib")
 
     variant("szip", default=True, description="Enable Szip compression plugin")
@@ -136,6 +137,8 @@ class NetcdfC(CMakePackage, AutotoolsPackage):
     # https://github.com/Unidata/netcdf-c/issues/250
     depends_on("hdf5@:1.8", when="@:4.4.0")
 
+    depends_on("libzip", when="+nczarr_zip")
+
     # According to the documentation (see
     # https://docs.unidata.ucar.edu/nug/current/getting_and_building_netcdf.html), zlib 1.2.5 or
     # later is required for netCDF-4 compression. However, zlib became a direct dependency only
@@ -145,6 +148,10 @@ class NetcdfC(CMakePackage, AutotoolsPackage):
     depends_on("szip", when="+szip")
     depends_on("c-blosc", when="+blosc")
     depends_on("zstd", when="+zstd")
+
+    # NCZarr was added in version 4.8.0 as an experimental feature and became a supported one in
+    # version 4.8.1:
+    conflicts("+nczarr_zip", when="@:4.8.0")
 
     # The features were introduced in version 4.9.0:
     with when("@:4.8"):
@@ -333,8 +340,10 @@ class AutotoolsBuilder(BackupStep, Setup, autotools.AutotoolsBuilder):
             # Prevent overlinking to zlib:
             config_args.append("ac_cv_search_deflate=")
 
-        if self.spec.satisfies("@4.8.0:"):
-            # Prevent linking to system libzip:
+        if "+nczarr_zip" in self.spec:
+            lib_search_dirs.extend(self.spec["libzip"].libs.directories)
+        elif self.spec.satisfies("@4.8.0:"):
+            # Prevent linking to libzip to disable the feature:
             config_args.append("ac_cv_lib_zip_zip_open=no")
 
         if "+szip" in self.spec:
