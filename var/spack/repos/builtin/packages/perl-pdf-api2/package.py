@@ -12,6 +12,7 @@ class PerlPdfApi2(PerlPackage):
     homepage = "https://metacpan.org/pod/PDF::API2"
     url = "http://search.cpan.org/CPAN/authors/id/S/SS/SSIMMS/PDF-API2-2.033.tar.gz"
 
+    version("2.044", sha256="b2d15579e42723d8d7f9b72de86d0d35cde34f1eb7713456ba2ad35fb3cbea7e")
     version("2.033", sha256="9c0866ec1a3053f73afaca5f5cdbe6925903b4ce606f4bf4ac317731a69d27a0")
 
     depends_on("perl-test-exception", type=("build", "run"))
