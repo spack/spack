@@ -1755,7 +1755,10 @@ class Environment(object):
         # locks. As a small optimization, drop already installed root specs.
         installed_roots, uninstalled_roots = self._partition_roots_by_install_status()
         if specs:
-            specs_to_install = [s for s in specs if s not in installed_roots]
+            if "overwrite" in install_args:
+                specs_to_install = specs
+            else:
+                specs_to_install = [s for s in specs if s not in installed_roots]
             specs_dropped = [s for s in specs if s in installed_roots]
         else:
             specs_to_install = uninstalled_roots
@@ -1769,7 +1772,7 @@ class Environment(object):
                 for spec in specs_dropped:
                     spack.store.db.update_explicit(spec, True)
 
-        if not specs_to_install and "overwrite" not in install_args:
+        if not specs_to_install:
             tty.msg("All of the packages are already installed")
         else:
             tty.debug("Processing {0} uninstalled specs".format(len(specs_to_install)))
