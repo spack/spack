@@ -26,6 +26,7 @@ class NetcdfC(CMakePackage, AutotoolsPackage):
     maintainers("skosukhin", "WardF")
 
     version("main", branch="main")
+    version("4.9.2", sha256="bc104d101278c68b303359b3dc4192f81592ae8640f1aee486921138f7f88cb7")
     version("4.9.0", sha256="9f4cb864f3ab54adb75409984c6202323d2fc66c003e5308f3cdf224ed41c0a6")
     version("4.8.1", sha256="bc018cc30d5da402622bf76462480664c6668b55eb16ba205a0dfb8647161dd0")
     version("4.8.0", sha256="aff58f02b1c3e91dc68f989746f652fe51ff39e6270764e484920cb8db5ad092")
@@ -342,6 +343,9 @@ class AutotoolsBuilder(BackupStep, Setup, autotools.AutotoolsBuilder):
 
         if "+nczarr_zip" in self.spec:
             lib_search_dirs.extend(self.spec["libzip"].libs.directories)
+        elif self.spec.satisfies("@4.9.2:"):
+            # Prevent linking to libzip to disable the feature:
+            config_args.append("ac_cv_search_zip_open=no")
         elif self.spec.satisfies("@4.8.0:"):
             # Prevent linking to libzip to disable the feature:
             config_args.append("ac_cv_lib_zip_zip_open=no")
