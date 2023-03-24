@@ -286,6 +286,7 @@ class Esmf(MakefilePackage):
         if "+mpi" in spec:
             if "^cray-mpich" in self.spec:
                 env.set("ESMF_COMM", "mpi")
+                env.set("ESMF_CXXLINKLIBS", "-lmpifort -lmpi")
             elif "^mvapich2" in spec:
                 env.set("ESMF_COMM", "mvapich2")
             elif "^mpich" in spec:
