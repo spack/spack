@@ -6,7 +6,7 @@
 from spack.package import *
 
 
-class Itk(CMakePackage,PythonExtension):
+class Itk(CMakePackage, PythonExtension):
     """The Insight Toolkit (ITK) is an open-source, cross-platform toolkit for
     N-dimensional scientific image processing, segmentation, and registration.
 
