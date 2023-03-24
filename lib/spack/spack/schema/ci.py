@@ -170,13 +170,19 @@ ci_properties = {
                 core_shared_properties, {"temporary-storage-url-prefix": {"type": "string"}}
             ),
         },
-        # Allow legacy format for update
-        spack.schema.gitlab_ci.properties,
     ]
 }
 
 #: Properties for inclusion in other schemas
-properties = {"ci": ci_properties}
+properties = {
+    "ci": {
+        "oneOf": [
+            ci_properties,
+            # Allow legacy format under `ci` for `config update ci`
+            spack.schema.gitlab_ci.gitlab_ci_properties
+        ]
+    }
+}
 
 #: Full schema with metadata
 schema = {
