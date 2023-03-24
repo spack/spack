@@ -12,7 +12,6 @@
 # Date: September 6, 2015
 #
 import os
-import platform
 import re
 import sys
 from contextlib import contextmanager
@@ -22,8 +21,6 @@ from llnl.util.symlink import symlink
 
 from spack.operating_systems.mac_os import macos_version
 from spack.package import *
-
-is_windows = sys.platform == "win32"
 
 
 class Perl(Package):  # Perl doesn't use Autotools, it should subclass Package
@@ -41,6 +38,7 @@ class Perl(Package):  # Perl doesn't use Autotools, it should subclass Package
     # explanation of version numbering scheme
 
     # Development releases (odd numbers)
+    version("5.37.9", sha256="9884fa8a4958bf9434b50f01cbfd187f9e2738f38fe1ae37f844e9950c5117c1")
     version("5.35.0", sha256="d6c0eb4763d1c73c1d18730664d43fcaf6100c31573c3b81e1504ec8f5b22708")
     version("5.33.3", sha256="4f4ba0aceb932e6cf7c05674d05e51ef759d1c97f0685dee65a8f3d190f737cd")
     version("5.31.7", sha256="d05c4e72128f95ef6ffad42728ecbbd0d9437290bf0f88268b51af011f26b57d")
@@ -76,7 +74,7 @@ class Perl(Package):  # Perl doesn't use Autotools, it should subclass Package
 
     extendable = True
 
-    if not is_windows:
+    if sys.platform != "win32":
         depends_on("gdbm@:1.23")
         # Bind us below gdbm-1.20 due to API change: https://github.com/Perl/perl5/issues/18915
         depends_on("gdbm@:1.19", when="@:5.35")
@@ -229,7 +227,7 @@ class Perl(Package):  # Perl doesn't use Autotools, it should subclass Package
         return args
 
     def is_64bit(self):
-        return platform.machine().endswith("64")
+        return "64" in self.pkg.spec.target.family
 
     def configure_args(self):
         spec = self.spec
@@ -277,13 +275,13 @@ class Perl(Package):  # Perl doesn't use Autotools, it should subclass Package
         return config_args
 
     def configure(self, spec, prefix):
-        if is_windows:
+        if sys.platform == "win32":
             return
         configure = Executable("./Configure")
         configure(*self.configure_args())
 
     def build(self, spec, prefix):
-        if is_windows:
+        if sys.platform == "win32":
             pass
         else:
             make()
@@ -291,7 +289,7 @@ class Perl(Package):  # Perl doesn't use Autotools, it should subclass Package
     @run_after("build")
     @on_package_attributes(run_tests=True)
     def build_test(self):
-        if is_windows:
+        if sys.platform == "win32":
             win32_dir = os.path.join(self.stage.source_path, "win32")
             with working_dir(win32_dir):
                 nmake("test", ignore_quotes=True)
@@ -299,7 +297,7 @@ class Perl(Package):  # Perl doesn't use Autotools, it should subclass Package
             make("test")
 
     def install(self, spec, prefix):
-        if is_windows:
+        if sys.platform == "win32":
             win32_dir = os.path.join(self.stage.source_path, "win32")
             with working_dir(win32_dir):
                 nmake("install", *self.nmake_arguments, ignore_quotes=True)
@@ -308,7 +306,7 @@ class Perl(Package):  # Perl doesn't use Autotools, it should subclass Package
 
     @run_after("install")
     def symlink_windows(self):
-        if not is_windows:
+        if sys.platform != "win32":
             return
         win_install_path = os.path.join(self.prefix.bin, "MSWin32")
         if self.is_64bit():
@@ -331,7 +329,7 @@ class Perl(Package):  # Perl doesn't use Autotools, it should subclass Package
         spec = self.spec
         maker = make
         cpan_dir = join_path("cpanm", "cpanm")
-        if is_windows:
+        if sys.platform == "win32":
             maker = nmake
             cpan_dir = join_path(self.stage.source_path, cpan_dir)
         if "+cpanm" in spec:
@@ -352,7 +350,7 @@ class Perl(Package):  # Perl doesn't use Autotools, it should subclass Package
         if perl_lib_dirs:
             perl_lib_path = ":".join(perl_lib_dirs)
             env.prepend_path("PERL5LIB", perl_lib_path)
-        if is_windows:
+        if sys.platform == "win32":
             env.append_path("PATH", self.prefix.bin)
 
     def setup_dependent_build_environment(self, env, dependent_spec):
@@ -382,7 +380,7 @@ class Perl(Package):  # Perl doesn't use Autotools, it should subclass Package
             mkdirp(module.perl_lib_dir)
 
     def setup_build_environment(self, env):
-        if is_windows:
+        if sys.platform == "win32":
             env.append_path("PATH", self.prefix.bin)
             return
 
@@ -410,7 +408,7 @@ class Perl(Package):  # Perl doesn't use Autotools, it should subclass Package
         frustrates filter_file on some filesystems (NFSv4), so make them
         temporarily writable.
         """
-        if is_windows:
+        if sys.platform == "win32":
             return
         kwargs = {"ignore_absent": True, "backup": False, "string": False}
 
@@ -478,7 +476,7 @@ class Perl(Package):  # Perl doesn't use Autotools, it should subclass Package
         """
         for ver in ("", self.spec.version):
             ext = ""
-            if is_windows:
+            if sys.platform == "win32":
                 ext = ".exe"
             path = os.path.join(self.prefix.bin, "{0}{1}{2}".format(self.spec.name, ver, ext))
             if os.path.exists(path):

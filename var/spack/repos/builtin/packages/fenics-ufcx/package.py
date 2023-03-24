@@ -9,7 +9,7 @@ from spack.package import *
 class FenicsUfcx(CMakePackage):
     """FFCx provides the ufcx.h interface header for generated finite element
     kernels, used by DOLFINx. ufcx.h can be installed from the FFCx repo
-    without a Python build or runtime dependancy."""
+    without a Python build or runtime dependency."""
 
     homepage = "https://github.com/FEniCS/ffcx"
     git = "https://github.com/FEniCS/ffcx.git"
@@ -17,6 +17,7 @@ class FenicsUfcx(CMakePackage):
     maintainers("ma595", "jhale")
 
     version("main", branch="main")
+    version("0.6.0", sha256="076fad61d406afffd41019ae1abf6da3f76406c035c772abad2156127667980e")
     version(
         "0.5.0.post0", sha256="039908c9998b51ba53e5deb3a97016062c262f0a4285218644304f7d3cd35882"
     )

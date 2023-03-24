@@ -16,12 +16,6 @@ class PyReportlab(PythonPackage):
     version("3.6.12", sha256="b13cebf4e397bba14542bcd023338b6ff2c151a3a12aabca89eecbf972cb361a")
     version("3.4.0", sha256="5beaf35e59dfd5ebd814fdefd76908292e818c982bd7332b5d347dfd2f01c343")
 
-    # py-reportlab provides binaries that duplicate those of other packages,
-    # thus interfering with activation.
-    # - easy_install, provided by py-setuptools
-    # - pip, provided by py-pip
-    extends("python", ignore=r"bin/.*")
-
     depends_on("python@3.7:3", when="@3.6.9:", type=("build", "run"))
     depends_on("py-setuptools@2.2:", type="build")
     depends_on("py-pip@1.4.1:", type="build")

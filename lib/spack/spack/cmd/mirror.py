@@ -335,7 +335,7 @@ def not_excluded_fn(args):
         exclude_specs.extend(spack.cmd.parse_specs(str(args.exclude_specs).split()))
 
     def not_excluded(x):
-        return not any(x.satisfies(y, strict=True) for y in exclude_specs)
+        return not any(x.satisfies(y) for y in exclude_specs)
 
     return not_excluded
 
