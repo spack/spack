@@ -212,7 +212,7 @@ def _windows_create_junction(path: str, link: str):
         proc = subprocess.run(cmd, capture_output=True)
         tty.debug(proc.stdout.decode())
         if proc.returncode != 0:
-            err = proc.stdout.decode()
+            err = proc.stderr.decode()
             tty.error(err)
             raise SymlinkError("Make junction command returned a non-zero return code.", err)
     except subprocess.CalledProcessError as e:
