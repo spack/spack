@@ -2706,7 +2706,7 @@
         ],
         "clang" : [
           {
-            "versions": "9.0:12.99",
+            "versions": "9.0:12.0",
             "flags" : "-march=armv8.4-a"
           },
           {

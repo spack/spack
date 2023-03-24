@@ -19,7 +19,7 @@ try:
     # python links against libc, so we can treat this as a libc handle
     # we could also use CDLL("libc.so.6") but this is (irrelevantly) more future proof
     libc = ctypes.CDLL(None)
-except BaseException:
+except OSError:
     pass
 
 renameat2 = getattr(libc, "renameat2", None)
