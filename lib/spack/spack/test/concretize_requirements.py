@@ -13,6 +13,7 @@ import spack.repo
 import spack.util.spack_yaml as syaml
 from spack.solver.asp import UnsatisfiableSpecError
 from spack.spec import Spec
+from spack.util.url import path_to_file_url
 
 pytestmark = pytest.mark.skipif(sys.platform == "win32", reason="Windows uses old concretizer")
 
@@ -146,7 +147,7 @@ def test_git_user_supplied_reference_satisfaction(
     repo_path, filename, commits = mock_git_version_info
 
     monkeypatch.setattr(
-        spack.package_base.PackageBase, "git", "file://%s" % repo_path, raising=False
+        spack.package_base.PackageBase, "git", path_to_file_url(repo_path), raising=False
     )
 
     specs = ["v@{commit0}=2.2", "v@{commit0}", "v@2.2", "v@{commit0}=2.3"]
@@ -173,7 +174,7 @@ def test_requirement_adds_new_version(
 
     repo_path, filename, commits = mock_git_version_info
     monkeypatch.setattr(
-        spack.package_base.PackageBase, "git", "file://%s" % repo_path, raising=False
+        spack.package_base.PackageBase, "git", path_to_file_url(repo_path), raising=False
     )
 
     a_commit_hash = commits[0]
@@ -202,7 +203,7 @@ def test_requirement_adds_git_hash_version(
 
     repo_path, filename, commits = mock_git_version_info
     monkeypatch.setattr(
-        spack.package_base.PackageBase, "git", "file://%s" % repo_path, raising=False
+        spack.package_base.PackageBase, "git", path_to_file_url(repo_path), raising=False
     )
 
     a_commit_hash = commits[0]
@@ -227,7 +228,7 @@ def test_requirement_adds_multiple_new_versions(
 
     repo_path, filename, commits = mock_git_version_info
     monkeypatch.setattr(
-        spack.package_base.PackageBase, "git", "file://%s" % repo_path, raising=False
+        spack.package_base.PackageBase, "git", path_to_file_url(repo_path), raising=False
     )
 
     conf_str = """\
@@ -258,7 +259,7 @@ def test_preference_adds_new_version(
 
     repo_path, filename, commits = mock_git_version_info
     monkeypatch.setattr(
-        spack.package_base.PackageBase, "git", "file://%s" % repo_path, raising=False
+        spack.package_base.PackageBase, "git", path_to_file_url(repo_path), raising=False
     )
 
     conf_str = """\

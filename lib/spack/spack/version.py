@@ -506,9 +506,6 @@ class VersionBase(object):
             return VersionList()
 
 
-_version_debug = False
-
-
 class GitVersion(VersionBase):
     """Class to represent versions interpreted from git refs.
 
