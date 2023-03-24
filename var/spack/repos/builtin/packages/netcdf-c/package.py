@@ -87,6 +87,7 @@ class NetcdfC(CMakePackage, AutotoolsPackage):
     variant("pic", default=True, description="Produce position-independent code (for shared libs)")
     variant("shared", default=True, description="Enable shared library")
     variant("dap", default=False, description="Enable DAP support")
+    variant("byterange", default=False, description="Enable byte-range I/O")
     variant("jna", default=False, description="Enable JNA support")
     variant("fsync", default=False, description="Enable fsync support")
     variant("nczarr_zip", default=False, description="Enable NCZarr zipfile format storage")
@@ -109,6 +110,7 @@ class NetcdfC(CMakePackage, AutotoolsPackage):
     # curl 7.18.0 or later is required:
     # https://docs.unidata.ucar.edu/nug/current/getting_and_building_netcdf.html
     depends_on("curl@7.18.0:", when="+dap")
+    depends_on("curl@7.18.0:", when="+byterange")
 
     # Need to include libxml2 when using DAP in 4.9.0 and newer to build
     # https://github.com/Unidata/netcdf-c/commit/53464e89635a43b812b5fec5f7abb6ff34b9be63
@@ -151,6 +153,20 @@ class NetcdfC(CMakePackage, AutotoolsPackage):
     # keep it simple, we require HDF5 1.10.x or older:
     depends_on("hdf5@:1.10", when="@4.8.0")
 
+    with when("+byterange"):
+        # HDF5 implements H5allocate_memory starting version 1.8.15:
+        depends_on("hdf5@1.8.15:")
+        # HDF5 defines H5FD_FEAT_DEFAULT_VFD_COMPATIBLE (required when version 1.10.x is used)
+        # starting version 1.10.2:
+        depends_on("hdf5@:1.9,1.10.2:")
+        # The macro usage was adjusted (required when versions 1.8.23+, 1.10.8+, 1.12.1+ and
+        # 1.13.0+ of HDF5 are used) in NetCDF 4.8.1
+        # (see https://github.com/Unidata/netcdf-c/pull/2034):
+        depends_on("hdf5@:1.8.22,1.10.0:1.10.7,1.12.0,1.13:", when="@:4.8.0")
+        # Compatibility with HDF5 1.14.x was introduced in NetCDF 4.9.2
+        # (see https://github.com/Unidata/netcdf-c/pull/2615):
+        depends_on("hdf5@:1.12", when="@:4.9.1")
+
     depends_on("libzip", when="+nczarr_zip")
 
     # According to the documentation (see
@@ -162,6 +178,9 @@ class NetcdfC(CMakePackage, AutotoolsPackage):
     depends_on("szip", when="+szip")
     depends_on("c-blosc", when="+blosc")
     depends_on("zstd", when="+zstd")
+
+    # Byte-range I/O was added in version 4.7.0:
+    conflicts("+byterange", when="@:4.6")
 
     # NCZarr was added in version 4.8.0 as an experimental feature and became a supported one in
     # version 4.8.1:
@@ -282,10 +301,6 @@ class AutotoolsBuilder(BackupStep, Setup, autotools.AutotoolsBuilder):
                 ["--enable-plugins", "--with-plugin-dir={0}".format(self.prefix.plugins)]
             )
 
-        # Byte-range I/O was added in version 4.7.0 and we disable it until it becomes a variant:
-        if self.spec.satisfies("@4.7.0:"):
-            config_args.append("--disable-byterange")
-
         # The option was introduced in version 4.3.1 and does nothing starting version 4.6.1:
         if self.spec.satisfies("@4.3.1:4.6.0"):
             config_args.append("--enable-dynamic-loading")
@@ -303,6 +318,11 @@ class AutotoolsBuilder(BackupStep, Setup, autotools.AutotoolsBuilder):
         if self.spec.satisfies("@4.9.0:"):
             # Prevent linking to system libxml2:
             config_args += self.enable_or_disable("libxml2", variant="dap")
+
+        if "+byterange" in self.spec:
+            config_args.append("--enable-byterange")
+        elif self.spec.satisfies("@4.7.0:"):
+            config_args.append("--disable-byterange")
 
         if self.spec.satisfies("@4.3.2:"):
             config_args += self.enable_or_disable("jna")
@@ -389,7 +409,9 @@ class AutotoolsBuilder(BackupStep, Setup, autotools.AutotoolsBuilder):
             # Prevent linking to system c-blosc:
             config_args.append("ac_cv_lib_blosc_blosc_init=no")
 
-        if "+dap" in self.spec:
+        if self.spec.satisfies("@:4.7~dap+byterange"):
+            extra_libs.append(self.spec["curl"].libs)
+        elif "+dap" in self.spec or "+byterange" in self.spec:
             lib_search_dirs.extend(self.spec["curl"].libs.directories)
         elif self.spec.satisfies("@4.8.0:"):
             # Prevent linking to system curl:
