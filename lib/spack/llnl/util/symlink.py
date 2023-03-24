@@ -15,7 +15,7 @@ if sys.platform == "win32":
     from win32file import CreateHardLink
 
 
-def symlink(real_path: str, link_path: str):
+def symlink(source_path: str, link_path: str):
     """
     Try to create a symbolic link.
 
@@ -43,20 +43,18 @@ def symlink(real_path: str, link_path: str):
     volume (drive letter) but not to a remote directory. Don't
     need System Administrator privileges.
     """
-    real_path = os.path.abspath(real_path)
-    link_path = os.path.abspath(link_path)
-
     # Perform basic checks to make sure symlinking will succeed
     if os.path.exists(link_path):
         raise SymlinkError(f"Link path ({link_path}) already exists. Cannot create link.")
-    elif not os.path.exists(real_path):
-        raise SymlinkError(f"Source path ({real_path}) does not exist. Cannot create link.")
 
     # Create the symlink
     if sys.platform == "win32" and not _windows_can_symlink():
-        _windows_create_link(real_path, link_path)
+        _windows_create_link(source_path, link_path)
     else:
-        os.symlink(real_path, link_path, target_is_directory=os.path.isdir(real_path))
+        try:
+            os.symlink(source_path, link_path, target_is_directory=os.path.isdir(source_path))
+        except OSError as e:
+            raise SymlinkError('An exception occurred while creating symlink') from e
 
     # Redundancy check to make sure the link created successfully
     if not os.path.exists(link_path):
@@ -178,43 +176,62 @@ def _windows_can_symlink() -> bool:
     return can_symlink_directories and can_symlink_files
 
 
-def _windows_create_link(path: str, link: str):
+def _windows_create_link(source: str, link: str):
     """
     Attempts to create a Hard Link or Junction as an alternative
     to a symbolic link. This is called when symbolic links cannot
     be created.
+
+    os.symlink can create a link with relative paths, even if the source paths is not
+    relative to the current working directory. In order to emulate that behavior,
+    if the source path doesn't exist, check to see if the source path exists relative
+    to the link's parent directory.
     """
     if sys.platform != "win32":
         tty.warn("windows_create_link method can't be used on non-Windows OS.")
         return
-    elif os.path.isdir(path):
-        _windows_create_junction(path=path, link=link)
-    elif os.path.isfile(path):
-        _windows_create_hard_link(path=path, link=link)
+    elif os.path.isabs(source) and not os.path.exists(source):
+        raise SymlinkError(
+            f'Source path ({source}) is absolute but does not exist. Cannot create link.'
+        )
+    elif not os.path.exists(source):
+        # Emulate how the os.symlink method creates links where the source is
+        # relative to the target.
+        link_parent = os.path.dirname(link)
+        relative_path = os.path.join(link_parent, source)
+        if os.path.exists(relative_path):
+            source = relative_path
+        else:
+            raise SymlinkError(f"Source path ({source}) does not exist. Cannot create link.")
+
+    if os.path.isdir(source):
+        _windows_create_junction(source=source, link=link)
+    elif os.path.isfile(source):
+        _windows_create_hard_link(path=source, link=link)
     else:
         raise SymlinkError(
-            f"Cannot create link from {path}. It is neither a file nor a directory."
+            f"Cannot create link from {source}. It is neither a file nor a directory."
         )
 
 
-def _windows_create_junction(path: str, link: str):
+def _windows_create_junction(source: str, link: str):
     """Duly verify that the path and link are eligible to create a junction,
     then create the junction.
     """
     if sys.platform != "win32":
         tty.warn("windows_create_junction method can't be used on non-Windows OS.")
         return
-    elif not os.path.exists(path):
+    elif not os.path.exists(source):
         raise SymlinkError("Source path does not exist, cannot create a junction.")
     elif os.path.exists(link):
         raise SymlinkError("Link path already exists, cannot create a junction.")
-    elif not os.path.isdir(path):
+    elif not os.path.isdir(source):
         raise SymlinkError("Source path is not a directory, cannot create a junction.")
 
     import subprocess
 
     try:
-        cmd = ["cmd", "/C", "mklink", "/J", link, path]
+        cmd = ["cmd", "/C", "mklink", "/J", link, source]
         proc = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         out, err = proc.communicate()
         tty.debug(out.decode())
@@ -223,7 +240,7 @@ def _windows_create_junction(path: str, link: str):
             tty.error(err)
             raise SymlinkError("Make junction command returned a non-zero return code.", err)
     except subprocess.CalledProcessError as e:
-        raise SymlinkError(f"Failed to make junction {link} from directory {path}") from e
+        raise SymlinkError(f"Failed to make junction {link} from directory {source}") from e
 
 
 def _windows_create_hard_link(path: str, link: str):

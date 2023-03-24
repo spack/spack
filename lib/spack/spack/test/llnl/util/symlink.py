@@ -36,7 +36,7 @@ def test_symlink__file(stage):
         assert os.path.exists(real_file)
         link_file = tempfile.mktemp(prefix="link", suffix=".txt", dir=test_dir)
         assert os.path.exists(link_file) is False
-        symlink.symlink(real_path=real_file, link_path=link_file)
+        symlink.symlink(source_path=real_file, link_path=link_file)
         assert os.path.exists(link_file)
         assert symlink.islink(link_file)
     finally:
@@ -50,7 +50,7 @@ def test_symlink__dir(stage):
     link_dir = os.path.join(test_dir, "link_dir")
     os.mkdir(real_dir)
     assert os.path.exists(real_dir)
-    symlink.symlink(real_path=real_dir, link_path=link_dir)
+    symlink.symlink(source_path=real_dir, link_path=link_dir)
     assert os.path.exists(link_dir)
     assert symlink.islink(link_dir)
 
@@ -63,10 +63,36 @@ def test_symlink__source_not_exists(stage):
     assert not os.path.exists(real_dir)
     assert not os.path.exists(link_dir)
     try:
-        symlink.symlink(real_path=real_dir, link_path=link_dir)
+        symlink.symlink(source_path=real_dir, link_path=link_dir)
         assert False, "symlink command succeeded when it should have failed."
     except symlink.SymlinkError:
         ...
+
+
+def test_symlink__src_relative_to_link(stage):
+    """Test the symlink.symlink functionality where the source value exists relative to the link
+    but not relative to the cwd"""
+    test_dir = tempfile.mkdtemp(dir=stage)
+    subdir_1 = os.path.join(test_dir, 'a')
+    subdir_2 = os.path.join(subdir_1, 'b')
+    os.mkdir(subdir_1)
+    os.mkdir(subdir_2)
+    prev_dir = os.getcwd()
+    fd, real_file = tempfile.mkstemp(prefix="real", suffix=".txt", dir=subdir_2)
+    try:
+        os.chdir(test_dir)
+        assert os.path.exists(real_file)
+        link_file = tempfile.mktemp(prefix="link", suffix=".txt", dir=subdir_1)
+        assert os.path.exists(link_file) is False
+        symlink.symlink(
+            source_path=f'b/{os.path.basename(real_file)}',
+            link_path=f'a/{os.path.basename(link_file)}'
+        )
+        assert os.path.exists(link_file)
+        assert symlink.islink(link_file)
+    finally:
+        os.chdir(prev_dir)
+        os.close(fd)
 
 
 def test_symlink__link_exists(stage):
@@ -79,7 +105,7 @@ def test_symlink__link_exists(stage):
     assert os.path.exists(real_dir)
     assert os.path.exists(link_dir)
     try:
-        symlink.symlink(real_path=real_dir, link_path=link_dir)
+        symlink.symlink(source_path=real_dir, link_path=link_dir)
         assert False, "symlink command succeeded when it should have failed."
     except symlink.SymlinkError:
         ...
@@ -95,7 +121,7 @@ def test_symlink__win_file(stage):
         assert os.path.exists(real_file)
         link_file = tempfile.mktemp(prefix="link", suffix=".txt", dir=test_dir)
         assert os.path.exists(link_file) is False
-        symlink.symlink(real_path=real_file, link_path=link_file)
+        symlink.symlink(source_path=real_file, link_path=link_file)
         # Verify that all expected conditions are met
         assert os.path.exists(link_file)
         assert symlink.islink(link_file)
@@ -115,7 +141,7 @@ def test_symlink__win_dir(stage):
     link_dir = os.path.join(test_dir, "link")
     os.mkdir(real_dir)
     assert os.path.exists(real_dir)
-    symlink.symlink(real_path=real_dir, link_path=link_dir)
+    symlink.symlink(source_path=real_dir, link_path=link_dir)
     # Verify that all expected conditions are met
     assert os.path.exists(link_dir)
     assert symlink.islink(link_dir)
