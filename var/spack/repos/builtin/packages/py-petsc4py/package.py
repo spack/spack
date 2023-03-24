@@ -52,7 +52,8 @@ class PyPetsc4py(PythonPackage):
     patch("ldshared.patch", when="@:99")
     patch("ldshared-dev.patch", when="@main")
 
-    depends_on("py-cython", type="build", when="@main")
+    depends_on("py-cython@0.29.32:", when="^python@3.11:", type="build")
+    depends_on("py-cython@0.24:", type="build")
     depends_on("python@2.6:2.8,3.3:", type=("build", "run"))
     depends_on("py-setuptools", type="build")
     depends_on("py-numpy", type=("build", "run"))
@@ -79,3 +80,8 @@ class PyPetsc4py(PythonPackage):
             return os.path.join(self.stage.source_path, "src", "binding", "petsc4py")
         else:
             return self.stage.source_path
+
+    @run_before("install")
+    def cythonize(self):
+        with working_dir(self.build_directory):
+            python(join_path("conf", "cythonize.py"))
