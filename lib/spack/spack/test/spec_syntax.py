@@ -1040,18 +1040,44 @@ def test_compare_abstract_specs():
         assert a <= b or b < a
 
 
-def test_git_ref_spec_equivalences(mock_packages):
-    spec_hash_fmt = "develop-branch-version@git.{hash}=develop"
-    s1 = SpecParser(spec_hash_fmt.format(hash="a" * 40)).next_spec()
-    s2 = SpecParser(spec_hash_fmt.format(hash="b" * 40)).next_spec()
-    s3 = SpecParser("develop-branch-version@git.0.2.15=develop").next_spec()
-    s_no_git = SpecParser("develop-branch-version@develop").next_spec()
+@pytest.mark.parametrize(
+    "lhs_str,rhs_str,expected",
+    [
+        # Git shasum vs generic develop
+        (
+            f"develop-branch-version@git.{'a' * 40}=develop",
+            "develop-branch-version@develop",
+            (True, True, False),
+        ),
+        # Two different shasums
+        (
+            f"develop-branch-version@git.{'a' * 40}=develop",
+            f"develop-branch-version@git.{'b' * 40}=develop",
+            (False, False, False),
+        ),
+        # Git shasum vs. git tag
+        (
+            f"develop-branch-version@git.{'a' * 40}=develop",
+            "develop-branch-version@git.0.2.15=develop",
+            (False, False, False),
+        ),
+        # Git tag vs. generic develop
+        (
+            "develop-branch-version@git.0.2.15=develop",
+            "develop-branch-version@develop",
+            (True, True, False),
+        ),
+    ],
+)
+def test_git_ref_spec_equivalences(mock_packages, lhs_str, rhs_str, expected):
+    lhs = SpecParser(lhs_str).next_spec()
+    rhs = SpecParser(rhs_str).next_spec()
+    intersect, lhs_sat_rhs, rhs_sat_lhs = expected
 
-    assert s1.satisfies(s_no_git)
-    assert s2.satisfies(s_no_git)
-    assert not s_no_git.satisfies(s1)
-    assert not s2.satisfies(s1)
-    assert not s3.satisfies(s1)
+    assert lhs.intersects(rhs) is intersect
+    assert rhs.intersects(lhs) is intersect
+    assert lhs.satisfies(rhs) is lhs_sat_rhs
+    assert rhs.satisfies(lhs) is rhs_sat_lhs
 
 
 @pytest.mark.regression("32471")

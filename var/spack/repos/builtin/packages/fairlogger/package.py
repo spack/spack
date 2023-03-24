@@ -16,7 +16,6 @@ class Fairlogger(CMakePackage):
     url = "https://github.com/FairRootGroup/FairLogger/archive/v1.2.0.tar.gz"
     git = "https://github.com/FairRootGroup/FairLogger.git"
     maintainers("dennisklein", "ChristianTackeGSI")
-    # generator = 'Ninja'
 
     version("develop", branch="dev", get_full_repo=True)
     version("1.9.0", sha256="13bcaa0d4129f8d4e69a0a2ece8e5b7073760082c8aa028e3fc0c11106503095")
@@ -61,6 +60,7 @@ class Fairlogger(CMakePackage):
     # See https://github.com/spack/spack/pull/22303 for reference
     depends_on(Boost.with_default_variants, when="+pretty")
     conflicts("^boost@1.70:", when="^cmake@:3.14")
+    depends_on("fmt@:8", when="@:1.9")
     depends_on("fmt@5.3.0:5", when="@1.6.0:1.6.1")
     depends_on("fmt@5.3.0:", when="@1.6.2:")
 

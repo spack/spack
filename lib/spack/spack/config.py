@@ -77,6 +77,8 @@ section_schemas = {
     "config": spack.schema.config.schema,
     "upstreams": spack.schema.upstreams.schema,
     "bootstrap": spack.schema.bootstrap.schema,
+    "ci": spack.schema.ci.schema,
+    "cdash": spack.schema.cdash.schema,
 }
 
 # Same as above, but including keys for environments
@@ -360,6 +362,12 @@ class InternalConfigScope(ConfigScope):
             if sk.endswith(":"):
                 key = syaml.syaml_str(sk[:-1])
                 key.override = True
+            elif sk.endswith("+"):
+                key = syaml.syaml_str(sk[:-1])
+                key.prepend = True
+            elif sk.endswith("-"):
+                key = syaml.syaml_str(sk[:-1])
+                key.append = True
             else:
                 key = sk
 
@@ -1040,6 +1048,33 @@ def _override(string):
     return hasattr(string, "override") and string.override
 
 
+def _append(string):
+    """Test if a spack YAML string is an override.
+
+    See ``spack_yaml`` for details.  Keys in Spack YAML can end in `+:`,
+    and if they do, their values append lower-precedence
+    configs.
+
+    str, str : concatenate strings.
+    [obj], [obj] : append lists.
+
+    """
+    return getattr(string, "append", False)
+
+
+def _prepend(string):
+    """Test if a spack YAML string is an override.
+
+    See ``spack_yaml`` for details.  Keys in Spack YAML can end in `+:`,
+    and if they do, their values prepend lower-precedence
+    configs.
+
+    str, str : concatenate strings.
+    [obj], [obj] : prepend lists. (default behavior)
+    """
+    return getattr(string, "prepend", False)
+
+
 def _mark_internal(data, name):
     """Add a simple name mark to raw YAML/JSON data.
 
@@ -1102,7 +1137,57 @@ def get_valid_type(path):
     raise ConfigError("Cannot determine valid type for path '%s'." % path)
 
 
-def merge_yaml(dest, source):
+def remove_yaml(dest, source):
+    """UnMerges source from dest; entries in source take precedence over dest.
+
+    This routine may modify dest and should be assigned to dest, in
+    case dest was None to begin with, e.g.:
+
+       dest = remove_yaml(dest, source)
+
+    In the result, elements from lists from ``source`` will not appear
+    as elements of lists from ``dest``. Likewise, when iterating over keys
+    or items in merged ``OrderedDict`` objects, keys from ``source`` will not
+    appear as keys in ``dest``.
+
+    Config file authors can optionally end any attribute in a dict
+    with `::` instead of `:`, and the key will remove the entire section
+    from ``dest``
+    """
+
+    def they_are(t):
+        return isinstance(dest, t) and isinstance(source, t)
+
+    # If source is None, overwrite with source.
+    if source is None:
+        return dest
+
+    # Source list is prepended (for precedence)
+    if they_are(list):
+        # Make sure to copy ruamel comments
+        dest[:] = [x for x in dest if x not in source]
+        return dest
+
+    # Source dict is merged into dest.
+    elif they_are(dict):
+        for sk, sv in source.items():
+            # always remove the dest items. Python dicts do not overwrite
+            # keys on insert, so this ensures that source keys are copied
+            # into dest along with mark provenance (i.e., file/line info).
+            unmerge = sk in dest
+            old_dest_value = dest.pop(sk, None)
+
+            if unmerge and not spack.config._override(sk):
+                dest[sk] = remove_yaml(old_dest_value, sv)
+
+        return dest
+
+    # If we reach here source and dest are either different types or are
+    # not both lists or dicts: replace with source.
+    return dest
+
+
+def merge_yaml(dest, source, prepend=False, append=False):
     """Merges source into dest; entries in source take precedence over dest.
 
     This routine may modify dest and should be assigned to dest, in
@@ -1118,6 +1203,9 @@ def merge_yaml(dest, source):
     Config file authors can optionally end any attribute in a dict
     with `::` instead of `:`, and the key will override that of the
     parent instead of merging.
+
+    `+:` will extend the default prepend merge strategy to include string concatenation
+    `-:` will change the merge strategy to append, it also includes string concatentation
     """
 
     def they_are(t):
@@ -1129,8 +1217,12 @@ def merge_yaml(dest, source):
 
     # Source list is prepended (for precedence)
     if they_are(list):
-        # Make sure to copy ruamel comments
-        dest[:] = source + [x for x in dest if x not in source]
+        if append:
+            # Make sure to copy ruamel comments
+            dest[:] = [x for x in dest if x not in source] + source
+        else:
+            # Make sure to copy ruamel comments
+            dest[:] = source + [x for x in dest if x not in source]
         return dest
 
     # Source dict is merged into dest.
@@ -1147,7 +1239,7 @@ def merge_yaml(dest, source):
             old_dest_value = dest.pop(sk, None)
 
             if merge and not _override(sk):
-                dest[sk] = merge_yaml(old_dest_value, sv)
+                dest[sk] = merge_yaml(old_dest_value, sv, _prepend(sk), _append(sk))
             else:
                 # if sk ended with ::, or if it's new, completely override
                 dest[sk] = copy.deepcopy(sv)
@@ -1157,6 +1249,13 @@ def merge_yaml(dest, source):
             dest[dk] = dest.pop(dk)
 
         return dest
+
+    elif they_are(str):
+        # Concatenate strings in prepend mode
+        if prepend:
+            return source + dest
+        elif append:
+            return dest + source
 
     # If we reach here source and dest are either different types or are
     # not both lists or dicts: replace with source.
@@ -1183,6 +1282,17 @@ def process_config_path(path):
             front = syaml.syaml_str(front)
             front.override = True
             seen_override_in_path = True
+
+        elif front.endswith("+"):
+            front = front.rstrip("+")
+            front = syaml.syaml_str(front)
+            front.prepend = True
+
+        elif front.endswith("-"):
+            front = front.rstrip("-")
+            front = syaml.syaml_str(front)
+            front.append = True
+
         result.append(front)
     return result
 
