@@ -46,17 +46,23 @@ def symlink(real_path: str, link_path: str):
     real_path = os.path.abspath(real_path)
     link_path = os.path.abspath(link_path)
 
+    # Perform basic checks to make sure symlinking will succeed
     if os.path.exists(link_path):
         raise SymlinkError(f"Link path ({link_path}) already exists. Cannot create link.")
     elif not os.path.exists(real_path):
         raise SymlinkError(f"Source path ({real_path}) does not exist. Cannot create link.")
-    elif sys.platform == "win32" and not _windows_can_symlink():
+
+    # Create the symlink
+    if sys.platform == "win32" and not _windows_can_symlink():
         _windows_create_link(real_path, link_path)
     else:
         os.symlink(real_path, link_path, target_is_directory=os.path.isdir(real_path))
 
+    # Redundancy check to make sure the link created successfully
     if not os.path.exists(link_path):
-        raise SymlinkError(f"Failed to create link: {link_path}")
+        raise SymlinkError(
+            f"After attempt to create symlink, the link path doesn't exist. Expected: {link_path}"
+        )
 
 
 def islink(path: str) -> bool:
