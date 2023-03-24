@@ -814,7 +814,12 @@ def copy_tree(
                         if new_target != target:
                             tty.debug("Redirecting link {0} to {1}".format(target, new_target))
                             target = new_target
-
+                    # TODO: Here we create a symlink to a file that may or may not have been
+                    #  copied yet. Thats fine for unix symlinks because once the file that
+                    #  the link points to is moved, the link works. This does not work on windows
+                    #  because hard links and junctions need to point to an existing file. To fix
+                    #  this, get a list of all symlinks and their new targets, then after every
+                    #  real file is moved over, create the links again.
                     symlink(target, d)
                 elif os.path.isdir(link_target):
                     mkdirp(d)
