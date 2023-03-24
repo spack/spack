@@ -40,16 +40,16 @@ class HipExamples(Package):
                     for file in os.listdir("."):
                         if file not in files and os.path.isfile(file) and os.access(file, os.X_OK):
                             install(file, join_path(prefix, file))
-                            if (file == "RecursiveGaussian"):
+                            if file == "RecursiveGaussian":
                                 install(
                                     "RecursiveGaussian_Input.bmp",
-                                    join_path(prefix, "RecursiveGaussian_Input.bmp")
+                                    join_path(prefix, "RecursiveGaussian_Input.bmp"),
                                 )
 
     def test(self):
         test_dir = self.spec["hip-examples"].prefix
         with working_dir(test_dir, create=True):
             for file in os.listdir("."):
-                if (os.path.isfile(file) and os.access(file, os.X_OK)):
+                if os.path.isfile(file) and os.access(file, os.X_OK):
                     print("Executing test binary: " + file)
                     self.run_test(file)
