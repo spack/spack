@@ -69,7 +69,7 @@ class Visit(CMakePackage):
     version("3.0.1", sha256="a506d4d83b8973829e68787d8d721199523ce7ec73e7594e93333c214c2c12bd")
 
     root_cmakelists_dir = "src"
-    generator = "Ninja"
+    generator("ninja")
 
     variant("gui", default=True, description="Enable VisIt's GUI")
     variant("osmesa", default=False, description="Use OSMesa for off-screen CPU rendering")
@@ -99,7 +99,6 @@ class Visit(CMakePackage):
     conflicts("+gui", when="+osmesa")
 
     depends_on("cmake@3.14.7:", type="build")
-    depends_on("ninja", type="build")
 
     depends_on("mpi", when="+mpi")
 

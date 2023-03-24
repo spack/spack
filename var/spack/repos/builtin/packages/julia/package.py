@@ -69,7 +69,7 @@ class Julia(MakefilePackage):
         depends_on("mbedtls@2.28.0:2.28")
         depends_on("openlibm@0.8.1:0.8", when="+openlibm")
         depends_on("nghttp2@1.47.0:1.47")
-        depends_on("curl@7.84.0:7")
+        depends_on("curl@7.84.0:")
 
     with when("@1.7.0:1.7"):
         # libssh2.so.1, libpcre2-8.so.0, mbedtls.so.13, mbedcrypto.so.5, mbedx509.so.1
@@ -81,7 +81,7 @@ class Julia(MakefilePackage):
         depends_on("llvm@12.0.1")
         depends_on("mbedtls@2.24.0:2.24")
         depends_on("openlibm@0.7.0:0.7", when="+openlibm")
-        depends_on("curl@7.73.0:7")
+        depends_on("curl@7.73.0:")
 
     with when("@1.6.0:1.6"):
         # libssh2.so.1, libpcre2-8.so.0, mbedtls.so.13, mbedcrypto.so.5, mbedx509.so.1
@@ -92,7 +92,7 @@ class Julia(MakefilePackage):
         depends_on("llvm@11.0.1")
         depends_on("mbedtls@2.24.0:2.24")
         depends_on("openlibm@0.7.0:0.7", when="+openlibm")
-        depends_on("curl@7.73.0:7")
+        depends_on("curl@7.73.0:")
 
     # Patches for llvm
     depends_on("llvm", patches="llvm7-symver-jlprefix.patch", when="@:1.7")
