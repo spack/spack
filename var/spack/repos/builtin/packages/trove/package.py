@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -20,7 +20,7 @@ class Trove(MakefilePackage):
 
     maintainers = ["TomMelt"]
 
-    version("v1.0.0", branch="update-makefile")
+    version("v1.0.0", tag="v1.0.0")
 
     executables = [r"^j-trove.x$"]
 
