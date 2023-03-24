@@ -57,10 +57,16 @@ def symlink(source_path: str, link_path: str):
             raise SymlinkError('An exception occurred while creating symlink') from e
 
     # Redundancy check to make sure the link created successfully
-    if not os.path.exists(link_path):
-        raise SymlinkError(
-            f"After attempt to create symlink, the link path doesn't exist. Expected: {link_path}"
-        )
+    if os.path.lexists(link_path):
+        if not os.path.exists(link_path):
+            # This is a broken link.
+            raise SymlinkError(
+                f"Broken link does not point to the source path ({source_path}).",
+                long_message="This can be caused by the source path not being relative to "
+                             "either the link's parent directory or the current working directory."
+            )
+    else:
+        raise SymlinkError('Link does not exist after symlink methods finished.')
 
 
 def islink(path: str) -> bool:
