@@ -468,6 +468,18 @@ class ViewDescriptor(object):
 
     @property
     def _current_root(self):
+        """
+        Return the directory in which the view is currently implemented.
+
+        If the view is using renameat2 for atomic updates, self.root is a directory and the root
+        of the underlying implementation is the same as self.root.
+
+        If the view us using symlinks for atomic updates, self.root is a link and we read the link
+        to find the root of the underlying implementation of the view.
+
+        If self.root does not exist or is a regular file, there is no current implementation of the
+        view on the filesystem.
+        """
         if not os.path.islink(self.root):
             if os.path.isdir(self.root):
                 return self.root
