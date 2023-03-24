@@ -48,8 +48,12 @@ class Mfem(Package, CudaPackage, ROCmPackage):
     # other version.
     version("develop", branch="master")
 
-    # FIXME: replace branch with tarball when v4.5.2 is released
-    version("4.5.2", branch="mfem-4.5.2-dev")
+    version(
+        "4.5.2",
+        sha256="7003c908c8265810ff97cb37531521b3aed24959975833a01ea05adfdb36e0f7",
+        url="https://bit.ly/mfem-4-5-2",
+        extension="tar.gz",
+    )
 
     version(
         "4.5.0",
