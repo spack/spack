@@ -179,7 +179,7 @@ properties = {
         "oneOf": [
             ci_properties,
             # Allow legacy format under `ci` for `config update ci`
-            spack.schema.gitlab_ci.gitlab_ci_properties
+            spack.schema.gitlab_ci.gitlab_ci_properties,
         ]
     }
 }

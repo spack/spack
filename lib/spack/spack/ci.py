@@ -2515,13 +2515,20 @@ def translate_deprecated_config(config):
     pipeline_gen.append({"submapping": submapping, "match_behavior": match_behavior})
 
     build_job = {}
-    build_job["image"] = config.get("image", None)
-    build_job["tags"] = config.get("tags", None)
-    build_job["variables"] = config.get("variables", None)
-    build_job["before_script"] = config.get("before_script", None)
-    build_job["script"] = config.get("script", None)
-    build_job["after_script"] = config.get("after_script", None)
-    pipeline_gen.append({"build-job": build_job})
+    if "image" in config:
+        build_job["image"] = config["image"]
+    if "tags" in config:
+        build_job["tags"] = config["tags"]
+    if "variables" in config:
+        build_job["variables"] = config["variables"]
+    if "before_script" in config:
+        build_job["before_script"] = config["before_script"]
+    if "script" in config:
+        build_job["script"] = config["script"]
+    if "after_script" in config:
+        build_job["after_script"] = config["after_script"]
+    if build_job:
+        pipeline_gen.append({"build-job": build_job})
 
     # Signing Job
     if "signing-job-attributes" in config:
