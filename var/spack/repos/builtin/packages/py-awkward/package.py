@@ -30,6 +30,7 @@ class PyAwkward(PythonPackage):
     version("2.0.2", sha256="c7b8194be5f9b1f19ed64c2a4b01d96b1b5a9a357e5a96186c6692d6b4cf439b")
     version("2.0.1", sha256="97fa7e119cc31f479b660a8213df5ba8c938b66f76aadf90b8bdb956c5b5654b")
     version("2.0.0", sha256="3782b34643083d6ee7644e9fdb3daeafc4b6030a667f219fd61cb7b234976b68")
+    version("1.10.3", sha256="7e669b1d29da300ed4c4f0d3a14119356037e7cfa8c3aa9d130bf1be6e38f03b")
     version("1.10.2", sha256="303bc0919f0932db3e78a9254c17fcdeb125e4be65cd894b40dfbc3bfddfc054")
     version("1.10.1", sha256="c6394ed25fb14a086d63621d9d84fdc228f5d42a64586f215731b36fde17034b")
     version("1.10.0", sha256="1d89c7244e6184b35f4bce6bd08ff82eb2ef60be67f572923bc6aaee35dab544")
