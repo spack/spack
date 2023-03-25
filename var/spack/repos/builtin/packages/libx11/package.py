@@ -14,6 +14,8 @@ class Libx11(AutotoolsPackage, XorgPackage):
 
     license("X11")
 
+    maintainers("wdconinc")
+
     version("1.8.4", sha256="efd3a3a43c1f177edc2c205bedb0719b6648203595e54c0b83a32576aeaca7cd")
     version("1.8.3", sha256="5a55945b7da86ce94733faf229342f75867e9c1090685f47f4d82b7f88602a14")
     version("1.8.2", sha256="f1bc56187bee0f830e1179ac5068ac93b78c51ace94eb27702ffb2efd116587b")

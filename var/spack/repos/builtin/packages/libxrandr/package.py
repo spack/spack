@@ -14,6 +14,8 @@ class Libxrandr(AutotoolsPackage, XorgPackage):
 
     license("MIT")
 
+    maintainers("wdconinc")
+
     version("1.5.3", sha256="3ad316c1781fe2fe22574b819e81f0eff087a8560377f521ba932238b41b251f")
     version("1.5.0", sha256="1b594a149e6b124aab7149446f2fd886461e2935eca8dca43fe83a70cf8ec451")
 

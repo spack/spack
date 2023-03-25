@@ -14,6 +14,8 @@ class Libxres(AutotoolsPackage, XorgPackage):
 
     license("custom")
 
+    maintainers("wdconinc")
+
     version("1.2.2", sha256="8abce597ced4a7ab89032aee91f6f784d9960adc772b2b59f17e515cd4127950")
     version("1.2.1", sha256="918fb33c3897b389a1fbb51571c5c04c6b297058df286d8b48faa5af85e88bcc")
     version("1.2.0", sha256="5b62feee09f276d74054787df030fceb41034de84174abec6d81c591145e043a")

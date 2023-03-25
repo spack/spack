@@ -14,6 +14,8 @@ class Libxpm(AutotoolsPackage, XorgPackage):
 
     license("X11")
 
+    maintainers("wdconinc")
+
     version("3.5.15", sha256="2a9bd419e31270593e59e744136ee2375ae817322447928d2abb6225560776f9")
     version("3.5.14", sha256="18861cc64dfffc0e7fe317b0eeb935adf64858fd5d82004894c4906d909dabf8")
     version("3.5.13", sha256="e3dfb0fb8c1f127432f2a498c7856b37ce78a61e8da73f1aab165a73dd97ad00")

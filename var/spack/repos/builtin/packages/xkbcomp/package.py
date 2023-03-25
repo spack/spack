@@ -19,6 +19,8 @@ class Xkbcomp(AutotoolsPackage, XorgPackage):
 
     license("MIT")
 
+    maintainers("wdconinc")
+
     version("1.4.6", sha256="b216a2c8c0eab83f3dc4a3d5ee2bdf7827b30e49c8907035d0f222138eca0987")
     version("1.4.5", sha256="e88a4d86b9925ea1e8685dd5ea29c815abafb8ddf19bf5f1a1e0650839252c23")
     version("1.4.4", sha256="159fba6b62ef4a3fb16ef7fc4eb4fc26f3888652471ceb604c495783dda020bc")

@@ -15,6 +15,8 @@ class Libxfixes(AutotoolsPackage, XorgPackage):
 
     license("MIT")
 
+    maintainers("wdconinc")
+
     version("6.0.0", sha256="82045da5625350838390c9440598b90d69c882c324ca92f73af9f0e992cb57c7")
     version("5.0.3", sha256="9ab6c13590658501ce4bd965a8a5d32ba4d8b3bb39a5a5bc9901edffc5666570")
     version("5.0.2", sha256="ad8df1ecf3324512b80ed12a9ca07556e561b14256d94216e67a68345b23c981")

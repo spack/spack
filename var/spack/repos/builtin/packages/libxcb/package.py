@@ -17,6 +17,8 @@ class Libxcb(AutotoolsPackage):
 
     license("MIT")
 
+    maintainers("wdconinc")
+
     version("1.15", sha256="cc38744f817cf6814c847e2df37fcb8997357d72fa4bcbc228ae0fe47219a059")
     version("1.14", sha256="a55ed6db98d43469801262d81dc2572ed124edc3db31059d4e9916eb9f844c34")
     version("1.13", sha256="0bb3cfd46dbd90066bf4d7de3cad73ec1024c7325a4a0cbf5f4a0d4fa91155fb")

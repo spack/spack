@@ -18,6 +18,8 @@ class Libxft(AutotoolsPackage, XorgPackage):
 
     license("MIT")
 
+    maintainers("wdconinc")
+
     version("2.3.7", sha256="75b4378644f5df3a15f684f8f0b5ff1324d37aacd5a381f3b830a2fbe985f660")
     version("2.3.6", sha256="b7e59f69e0bbabe9438088775f7e5a7c16a572e58b11f9722519385d38192df5")
     version("2.3.5", sha256="f7324aa0664115223672bae55086f3a9ae8f6ad4cdca87a8dd620295ee459e1a")
