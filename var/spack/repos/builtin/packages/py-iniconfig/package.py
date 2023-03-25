@@ -18,4 +18,5 @@ class PyIniconfig(PythonPackage):
 
     depends_on("py-hatchling", when="@2", type="build")
     depends_on("py-hatch-vcs", when="@2", type="build")
-    depends_on("py-setuptools", when="@1", type="build")
+    depends_on("py-setuptools@41.2:", when="@1", type="build")
+    depends_on("py-setuptools-scm@4:", when="@1", type="build")
