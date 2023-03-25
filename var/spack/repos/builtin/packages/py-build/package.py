@@ -24,6 +24,7 @@ class PyBuild(PythonPackage):
     depends_on("py-flit-core@3.4:", when="@0.10:", type="build")
     depends_on("py-setuptools", when="@:0.9", type="build")
     depends_on("py-packaging@19:", type=("build", "run"))
+    depends_on("py-pyproject-hooks", when="@0.10.0:", type=("build", "run"))
     depends_on("py-pep517@0.9.1:", when="@:0.9", type=("build", "run"))
     depends_on("py-tomli@1:", type=("build", "run"))
     depends_on("py-tomli@1.1:", when="@0.10:", type=("build", "run"))
