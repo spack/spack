@@ -17,6 +17,10 @@ class PyAwkward(PythonPackage):
 
     version("main", branch="main")
     version("master", branch="main", deprecated=True)
+    version("2.1.1", sha256="fda8e1634161b8b46b151c074ff0fc631fc0feaec2ec277c4b40a2095110b0dd")
+    version("2.1.0", sha256="73f7a76a1fb43e2557befee54b1381f3e6d90636983cdc54da1c2bcb9ad4c1a8")
+    version("2.0.10", sha256="8dae67afe50f5cf1677b4062f9b29dc7e6893420d0af5a0649364b117a3502af")
+    version("2.0.9", sha256="498e09e85894a952fa8ec4495a7865d2d7a57ab5c522c9e5dcc54419e2793ff2")
     version("2.0.8", sha256="32a57c29e13a2ae3bc1e6ac53637825bbd22c4286696163bd41a1dec284a8ee5")
     version("2.0.7", sha256="05397d659a5a8889c8afae193c0ea51585683038ecc7f666f3da9835ba2f6492")
     version("2.0.6", sha256="9e5133ba6be89ff1210d862edf83824fe0c1f21dccfe1d52161329760ffac821")
@@ -58,6 +62,9 @@ class PyAwkward(PythonPackage):
         ("@2.0.6", "@7"),
         ("@2.0.7", "@8"),
         ("@2.0.8", "@9"),
+        ("@2.0.9", "@10"),
+        ("@2.0.10", "@11"),
+        ("@2.1.0:", "@12"),
     ]
     for _awkward, _awkward_cpp in _awkward_to_awkward_cpp_map:
         depends_on("py-awkward-cpp{}".format(_awkward_cpp), when=_awkward, type=("build", "run"))
@@ -66,7 +73,8 @@ class PyAwkward(PythonPackage):
     depends_on("python@3.6:", when="@1.9:", type=("build", "run"))
     depends_on("python@3.7:", when="@1.10:", type=("build", "run"))
     depends_on("py-numpy@1.13.1:", when="@:1", type=("build", "run"))
-    depends_on("py-numpy@1.14.5:", when="@2:", type=("build", "run"))
+    depends_on("py-numpy@1.14.5:", when="@2.0", type=("build", "run"))
+    depends_on("py-numpy@1.17.0:", when="@2.1:", type=("build", "run"))
     depends_on("py-pybind11", type=("build", "link"))
     depends_on("py-importlib-resources", when="@2: ^python@:3.8", type=("build", "run"))
     depends_on("py-typing-extensions@4.1:", when="@2: ^python@:3.10", type=("build", "run"))
