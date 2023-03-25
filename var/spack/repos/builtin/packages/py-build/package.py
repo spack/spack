@@ -34,4 +34,9 @@ class PyBuild(PythonPackage):
 
     # https://github.com/pypa/build/issues/266
     # https://github.com/pypa/build/issues/406
-    patch("isolation.patch", when="@0.7.0")
+    def patch(self):
+        filter_file(
+            r"^(\s*)(venv\.EnvBuilder.*)$",
+            r"\1os.environ.pop('PYTHONPATH', None)" + "\n" + r"\1\2",
+            "src/build/env.py",
+        )
