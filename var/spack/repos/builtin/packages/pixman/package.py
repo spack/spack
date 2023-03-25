@@ -64,6 +64,11 @@ class Pixman(AutotoolsPackage):
         if sys.platform == "darwin":
             # neither style of acceleration work on macOS
             args.append("--disable-mmx")
+
+            # For reference on disabling neon, see:
+            # - https://gitlab.freedesktop.org/pixman/pixman/-/issues/59
+            # - https://gitlab.freedesktop.org/pixman/pixman/-/issues/69
+            # - https://github.com/Homebrew/homebrew-core/blob/e00896f32d894cca0204df6bf3dbbecc49f94a3c/Formula/pixman.rb
             args.append("--disable-arm-a64-neon")
 
         return args
