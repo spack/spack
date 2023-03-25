@@ -236,10 +236,12 @@ class Octopus(AutotoolsPackage, CudaPackage):
             )
             # Add debug flag if needed
             if spec.satisfies("+debug"):
-                fcflags += f" -g"
-                cxxflags += f" -g"
-                cflags += f" -g"
-                gcc10_extra += "-fno-var-tracking-assignments" if spec.satisfies("%gcc@10:") else ""
+                fcflags += " -g"
+                cxxflags += " -g"
+                cflags += " -g"
+                gcc10_extra += (
+                    "-fno-var-tracking-assignments" if spec.satisfies("%gcc@10:") else ""
+                )
 
             args.append(f"{fcflags} {gcc10_extra}")
             args.append(f"{cxxflags} {gcc10_extra}")
