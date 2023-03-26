@@ -22,3 +22,5 @@ class XorgCfFiles(AutotoolsPackage, XorgPackage):
     version("1.0.6", sha256="6d56094e5d1a6c7d7a9576ac3a0fc2c042344509ea900d59f4b23df668b96c7a")
 
     depends_on("pkgconfig", type="build")
+    depends_on("xorg-macros@1.4:", type="build")
+    depends_on("xorg-macros@1.20:", when="@1.0.8:", type="build")
