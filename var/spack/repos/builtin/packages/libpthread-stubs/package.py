@@ -13,6 +13,8 @@ class LibpthreadStubs(AutotoolsPackage, XorgPackage):
     homepage = "https://gitlab.freedesktop.org/xorg/lib/pthread-stubs"
     xorg_mirror_path = "xcb/libpthread-stubs-0.4.tar.gz"
 
+    maintainers("wdconinc")
+
     version(
         "0.4",
         sha256="50d5686b79019ccea08bcbd7b02fe5a40634abcfd4146b6e75c6420cc170e9d9",
