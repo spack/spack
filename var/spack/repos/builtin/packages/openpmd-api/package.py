@@ -78,6 +78,20 @@ class OpenpmdApi(CMakePackage):
     # https://github.com/openPMD/openPMD-api/pull/1012
     patch("hdf5-1.12.0.patch", when="@:0.13 +hdf5")
 
+    # CMake: Fix Python Install Directory
+    patch(
+        "https://github.com/openPMD/openPMD-api/pull/1393.patch?full_index=1",
+        sha256="b5cecbdbe16d98c0ba352fa861fcdf9d7c7cc85f21226fa03effa7d62a7cb276",
+        when="@0.15.0",
+    )
+
+    # macOS AppleClang12 Fixes
+    patch(
+        "https://github.com/openPMD/openPMD-api/pull/1395.patch?full_index=1",
+        sha256="791c0a9d1dc09226beb26e8e67824b3337d95f4a2a6e7e64637ea8f0d95eee61",
+        when="@0.15.0",
+    )
+
     extends("python", when="+python")
 
     def cmake_args(self):
