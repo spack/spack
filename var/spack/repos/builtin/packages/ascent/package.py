@@ -187,7 +187,7 @@ class Ascent(CMakePackage, CudaPackage):
     # Ascent 0.9.0 includes VTK-h, prior to 0.9.0
     # VTK-h was developed externally
     depends_on("vtk-h@:0.7", when="@:0.7 +vtkh")
-    depends_on("vtk-h@0.8.1:", when="@0.8: +vtkh")
+    depends_on("vtk-h@0.8.1:", when="@0.8:0.8 +vtkh")
     # propagate relevent variants to vtk-h
     depends_on("vtk-h+openmp", when="@:0.8.0 +vtkh+openmp")
     depends_on("vtk-h~openmp", when="@:0.8.0 +vtkh~openmp")
