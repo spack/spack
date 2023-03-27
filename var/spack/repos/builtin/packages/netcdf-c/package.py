@@ -138,6 +138,19 @@ class NetcdfC(CMakePackage, AutotoolsPackage):
     # https://github.com/Unidata/netcdf-c/issues/250
     depends_on("hdf5@:1.8", when="@:4.4.0")
 
+    # NetCDF 4.7.4 and prior require HDF5 1.10 or older
+    # https://github.com/Unidata/netcdf-c/pull/1671
+    depends_on("hdf5@:1.10", when="@:4.7.3")
+
+    # Although NetCDF 4.8.0 builds and passes the respective tests against HDF5 1.12.0 with the
+    # default API (i.e. the problem reported in https://github.com/Unidata/netcdf-c/issues/1965 is
+    # not reproducible), the configure script fails if HDF5 1.12.0 is built without api=v18
+    # (according to the error message emitted by the configure script) or api=v110 (according to
+    # the comments in the configure script and its implementation). The check that led to the
+    # failure was removed in version 4.8.1 (https://github.com/Unidata/netcdf-c/pull/2044). To
+    # keep it simple, we require HDF5 1.10.x or older:
+    depends_on("hdf5@:1.10", when="@4.8.0")
+
     depends_on("libzip", when="+nczarr_zip")
 
     # According to the documentation (see
