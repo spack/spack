@@ -70,8 +70,7 @@ class Mvapich(AutotoolsPackage):
     variant(
         "process_managers",
         description="List of the process managers to activate",
-        values=disjoint_sets(("auto",), ("None",), ("slurm",), ("hydra", "gforker", "remshell"))
-        .prohibit_empty_set()
+        values=disjoint_sets(("auto",), ("slurm",), ("hydra", "gforker", "remshell"))
         .with_error("'slurm' or 'auto' cannot be activated along with " "other process managers")
         .with_default("auto")
         .with_non_feature_values("auto"),
@@ -158,7 +157,7 @@ class Mvapich(AutotoolsPackage):
                 "--with-slurm={0}".format(spec["slurm"].prefix),
                 "CFLAGS=-I{0}/include/slurm".format(spec["slurm"].prefix),
             ]
-        if "process_managers=None" in spec:
+        if 'none'  in spec.variants["process_managers"].value:
             opts = ["--with-pm=none"]
 
         return opts
