@@ -109,9 +109,9 @@ class Scotch(CMakePackage, MakefilePackage):
 
     @when("+fismahigh")
     def patch(self):
-        os.remove("ci/analysis.sh")
-        os.remove("src/misc/scotch_5.1.12_openmpi.spec")
-
+        for path in ["ci/analysis.sh", "src/misc/scotch_5.1.12_openmpi.spec"]:
+            if os.path.exists(path):
+                os.remove(path)
 
 class CMakeBuilder(spack.build_systems.cmake.CMakeBuilder):
     def cmake_args(self):
