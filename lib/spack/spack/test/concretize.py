@@ -2076,3 +2076,82 @@ class TestConcretize(object):
         abstract_specs = [spack.spec.Spec(s) for s in ["py-extension1", "python"]]
         specs = spack.concretize.concretize_specs_together(*abstract_specs)
         assert specs[0]["python"] == specs[1]["python"]
+
+    @pytest.mark.regression("36190")
+    @pytest.mark.parametrize(
+        "specs",
+        [
+            ["mpileaks^ callpath ^dyninst@8.1.1:8 ^mpich2@1.3:1"],
+            ["multivalue-variant ^a@2:2"],
+            ["v1-consumer ^conditional-provider@1:1 +disable-v1"],
+        ],
+    )
+    def test_result_specs_is_not_empty(self, specs):
+        """Check that the implementation of "result.specs" is correct in cases where we
+        know a concretization exists.
+        """
+        specs = [spack.spec.Spec(s) for s in specs]
+        solver = spack.solver.asp.Solver()
+        setup = spack.solver.asp.SpackSolverSetup()
+        result, _, _ = solver.driver.solve(setup, specs, reuse=[])
+
+        assert result.specs
+        assert not result.unsolved_specs
+
+    @pytest.mark.regression("36339")
+    def test_compiler_match_constraints_when_selected(self):
+        """Test that, when multiple compilers with the same name are in the configuration
+        we ensure that the selected one matches all the required constraints.
+        """
+        compiler_configuration = [
+            {
+                "compiler": {
+                    "spec": "gcc@11.1.0",
+                    "paths": {
+                        "cc": "/usr/bin/gcc",
+                        "cxx": "/usr/bin/g++",
+                        "f77": "/usr/bin/gfortran",
+                        "fc": "/usr/bin/gfortran",
+                    },
+                    "operating_system": "debian6",
+                    "modules": [],
+                }
+            },
+            {
+                "compiler": {
+                    "spec": "gcc@12.1.0",
+                    "paths": {
+                        "cc": "/usr/bin/gcc",
+                        "cxx": "/usr/bin/g++",
+                        "f77": "/usr/bin/gfortran",
+                        "fc": "/usr/bin/gfortran",
+                    },
+                    "operating_system": "debian6",
+                    "modules": [],
+                }
+            },
+        ]
+        spack.config.set("compilers", compiler_configuration)
+        s = spack.spec.Spec("a %gcc@:11").concretized()
+        assert s.compiler.version == ver("11.1.0"), s
+
+    @pytest.mark.regression("36339")
+    @pytest.mark.skipif(sys.platform == "win32", reason="Not supported on Windows")
+    def test_compiler_with_custom_non_numeric_version(self, mock_executable):
+        """Test that, when a compiler has a completely made up version, we can use its
+        'real version' to detect targets and don't raise during concretization.
+        """
+        gcc_path = mock_executable("gcc", output="echo 9")
+        compiler_configuration = [
+            {
+                "compiler": {
+                    "spec": "gcc@foo",
+                    "paths": {"cc": gcc_path, "cxx": gcc_path, "f77": None, "fc": None},
+                    "operating_system": "debian6",
+                    "modules": [],
+                }
+            }
+        ]
+        spack.config.set("compilers", compiler_configuration)
+        s = spack.spec.Spec("a %gcc@foo").concretized()
+        assert s.compiler.version == ver("foo")

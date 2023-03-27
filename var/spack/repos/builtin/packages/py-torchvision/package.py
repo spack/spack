@@ -116,8 +116,8 @@ class PyTorchvision(PythonPackage):
     depends_on("py-accimage", when="backend=accimage", type=("build", "run"))
     depends_on("libpng@1.6.0:", when="backend=png")
     depends_on("jpeg")  # seems to be required for all backends
-
-    depends_on("ffmpeg@3.1:", when="@0.13:")
+    # https://github.com/pytorch/vision/pull/7378
+    depends_on("ffmpeg@3.1:5", when="@0.13:")
     depends_on("ffmpeg@3.1:4.4", when="@0.4.2:0.12")
 
     # Many of the datasets require additional dependencies to use.

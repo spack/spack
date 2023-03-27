@@ -501,7 +501,7 @@ class Result(object):
                 key = providers[0]
             candidate = answer.get(key)
 
-            if candidate and candidate.intersects(input_spec):
+            if candidate and candidate.satisfies(input_spec):
                 self._concrete_specs.append(answer[key])
                 self._concrete_specs_by_input[input_spec] = answer[key]
             else:
@@ -1017,9 +1017,14 @@ class SpackSolverSetup(object):
         else:
             rules = []
             for requirement in requirements:
-                for policy in ("one_of", "any_of"):
-                    if policy in requirement:
-                        rules.append((pkg_name, policy, requirement[policy]))
+                if isinstance(requirement, str):
+                    # A string represents a spec that must be satisfied. It is
+                    # equivalent to a one_of group with a single element
+                    rules.append((pkg_name, "one_of", [requirement]))
+                else:
+                    for policy in ("one_of", "any_of"):
+                        if policy in requirement:
+                            rules.append((pkg_name, policy, requirement[policy]))
         return rules
 
     def pkg_rules(self, pkg, tests):
@@ -1768,10 +1773,8 @@ class SpackSolverSetup(object):
             # real_version from the compiler object to get more accurate
             # results.
             if not supported:
-                compiler_obj = spack.compilers.compilers_for_spec(compiler)
-                compiler_obj = compiler_obj[0]
                 supported = self._supported_targets(
-                    compiler.name, compiler_obj.real_version, candidate_targets
+                    compiler.name, compiler.real_version, candidate_targets
                 )
 
             if not supported:
@@ -1877,8 +1880,9 @@ class SpackSolverSetup(object):
         """Define what version_satisfies(...) means in ASP logic."""
         for pkg_name, versions in sorted(self.version_constraints):
             # version must be *one* of the ones the spec allows.
+            # Also, "possible versions" contain only concrete versions, so satisfies is appropriate
             allowed_versions = [
-                v for v in sorted(self.possible_versions[pkg_name]) if v.intersects(versions)
+                v for v in sorted(self.possible_versions[pkg_name]) if v.satisfies(versions)
             ]
 
             # This is needed to account for a variable number of
