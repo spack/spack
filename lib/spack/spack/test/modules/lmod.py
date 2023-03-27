@@ -88,7 +88,7 @@ class TestLmod(object):
         assert provides["compiler"] == spack.spec.CompilerSpec("oneapi@3.0")
 
     def test_simple_case(self, modulefile_content, module_configuration):
-        """Tests the generation of a simple Tcl module file."""
+        """Tests the generation of a simple Lua module file."""
 
         module_configuration("autoload_direct")
         content = modulefile_content(mpich_spec_string)
@@ -146,6 +146,31 @@ class TestLmod(object):
         assert len([x for x in content if 'remove_path("SEMICOLON", "bar", ";")' in x]) == 1
         assert len([x for x in content if 'append_path("SPACE", "qux", " ")' in x]) == 1
         assert len([x for x in content if 'remove_path("SPACE", "qux", " ")' in x]) == 1
+
+    def test_help_message(self, modulefile_content, module_configuration):
+        """Tests the generation of module help message."""
+
+        module_configuration("autoload_direct")
+        content = modulefile_content("mpileaks target=core2")
+
+        help_msg = (
+            "help([[Name   : mpileaks]])"
+            "help([[Version: 2.3]])"
+            "help([[Target : core2]])"
+            "help()"
+            "help([[Mpileaks is a mock package that passes audits]])"
+        )
+        assert help_msg in "".join(content)
+
+        content = modulefile_content("libdwarf target=core2")
+
+        help_msg = (
+            "help([[Name   : libdwarf]])"
+            "help([[Version: 20130729]])"
+            "help([[Target : core2]])"
+            "depends_on("
+        )
+        assert help_msg in "".join(content)
 
     @pytest.mark.parametrize("config_name", ["exclude", "blacklist"])
     def test_exclude(self, modulefile_content, module_configuration, config_name):

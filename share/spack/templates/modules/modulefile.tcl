@@ -14,11 +14,15 @@
 module-whatis "{{ short_description }}"
 {% endif %}
 
-{% if long_description %}
 proc ModulesHelp { } {
-{{ long_description| textwrap(72)| quote()| prepend_to_line('puts stderr ')| join() }}
-}
+    puts stderr "Name   : {{ spec.name }}"
+    puts stderr "Version: {{ spec.version }}"
+    puts stderr "Target : {{ spec.target }}"
+{% if long_description %}
+    puts stderr ""
+{{ long_description| textwrap(72)| quote()| prepend_to_line('    puts stderr ')| join() }}
 {% endif %}
+}
 {% endblock %}
 
 {% block autoloads %}
