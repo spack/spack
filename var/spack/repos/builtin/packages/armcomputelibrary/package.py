@@ -27,11 +27,12 @@ class Armcomputelibrary(SConsPackage):
     immediate support for new Arm® technologies e.g. SVE2."""
 
     homepage = "https://arm-software.github.io/ComputeLibrary/latest/"
-    url = "https://github.com/ARM-software/ComputeLibrary/archive/refs/tags/v22.11.zip"
+    url = "https://github.com/ARM-software/ComputeLibrary/archive/refs/tags/v23.02.zip"
     git = "https://github.com/ARM-software/ComputeLibrary.git"
 
     maintainers = ["annop-w"]
 
+    version("23.02", sha256="bed1b24047ce00155e552204bc3983e86f46775414c554a34a7ece931d67ec62")
     version("22.11", sha256="2f70f54d84390625222503ea38650c00c49d4b70bc86a6b9aeeebee9d243865f")
     version("22.08", sha256="5d76d07406b105f0bdf74ef80263236cb03baf0ade882f2bf8446bbc239e0079")
     version("22.05", sha256="8ff308448874c6b72c1ce8d9f28af41d8b47c8e5c43b8ccc069da744e3c0a421")
@@ -41,11 +42,7 @@ class Armcomputelibrary(SConsPackage):
 
     phases = ["build"]
 
-    variant(
-        "build_type",
-        default="release",
-        values=("release", "debug"),
-    )
+    variant("build_type", default="release", values=("release", "debug"))
     variant(
         "threads",
         default="cppthreads",
@@ -65,21 +62,9 @@ class Armcomputelibrary(SConsPackage):
         description="Target Architecture. The x86_32 and x86_64 targets can only be"
         " used with neon=0 and opencl=1.",
     )
-    variant(
-        "sve",
-        default=False,
-        description="Build for SVE.",
-    )
-    variant(
-        "sve2",
-        default=False,
-        description="Build for SVE2.",
-    )
-    variant(
-        "neon",
-        default=True,
-        description="Enable Arm® Neon™ support",
-    )
+    variant("sve", default=False, description="Build for SVE.")
+    variant("sve2", default=False, description="Build for SVE2.")
+    variant("neon", default=True, description="Enable Arm® Neon™ support")
     variant(
         "experimental_dynamic_fusion",
         default=False,
@@ -90,26 +75,10 @@ class Armcomputelibrary(SConsPackage):
         default=False,
         description="Enable fixed format kernels for GEMM.",
     )
-    variant(
-        "benchmark_examples",
-        default=False,
-        description="Build benchmark examples programs.",
-    )
-    variant(
-        "validate_examples",
-        default=False,
-        description="Build validate examples programs.",
-    )
-    variant(
-        "validation_tests",
-        default=False,
-        description="Build validation test programs.",
-    )
-    variant(
-        "benchmark_tests",
-        default=False,
-        description="Build benchmark test programs.",
-    )
+    variant("benchmark_examples", default=False, description="Build benchmark examples programs.")
+    variant("validate_examples", default=False, description="Build validate examples programs.")
+    variant("validation_tests", default=False, description="Build validation test programs.")
+    variant("benchmark_tests", default=False, description="Build benchmark test programs.")
 
     def build_args(self, spec, prefix):
         args = ["-j{0}".format(make_jobs)]

@@ -16,8 +16,6 @@ import spack.detection.path
 from spack.main import SpackCommand
 from spack.spec import Spec
 
-is_windows = sys.platform == "win32"
-
 
 @pytest.fixture
 def executables_found(monkeypatch):
@@ -39,7 +37,7 @@ def _platform_executables(monkeypatch):
 
 
 def define_plat_exe(exe):
-    if is_windows:
+    if sys.platform == "win32":
         exe += ".bat"
     return exe
 

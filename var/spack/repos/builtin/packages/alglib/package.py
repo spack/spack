@@ -16,6 +16,7 @@ class Alglib(MakefilePackage):
     homepage = "https://www.alglib.net/"
     url = "https://www.alglib.net/translator/re/alglib-3.11.0.cpp.gpl.tgz"
 
+    version("3.20.0", sha256="e7357f0f894313ff1b640ec9cb5e8b63f06d2d3411c2143a374aa0e9740da8a9")
     version("3.11.0", sha256="34e391594aac89fb354bdaf58c42849489cd1199197398ba98bb69961f42bdb0")
 
     build_directory = "src"
