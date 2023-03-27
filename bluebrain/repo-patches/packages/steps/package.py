@@ -71,6 +71,7 @@ class Steps(CMakePackage):
     depends_on("petsc~debug+int64~mpi", when="+petsc~mpi")
     depends_on("pkgconfig", type="build")
     depends_on("py-build", type="build", when="@5:")
+    depends_on("py-pip", type="build", when="@5:")
     depends_on("py-cython")
     depends_on("py-h5py", type=("build", "test", "run"))
     depends_on("py-gcovr", when="+coverage", type="build")
@@ -99,72 +100,36 @@ class Steps(CMakePackage):
         filter_file("unittest2", "", "requirements.txt", ignore_absent=True)
 
     def cmake_args(self):
-        args = []
-        spec = self.spec
-
-        args.append(self.define_from_variant("BUILD_TESTING", "codechecks"))
-
-        use_bundle = "ON" if "+bundle" in spec else "OFF"
-        bundles = ["EASYLOGGINGPP", "OMEGA_H", "RANDOM123", "SUNDIALS", "SUPERLU_DIST"]
-        args.extend("-DUSE_BUNDLE_{0}:BOOL={1}".format(bundle, use_bundle) for bundle in bundles)
-
-        if "+native" in spec:
-            args.append("-DTARGET_NATIVE_ARCH:BOOL=True")
-        else:
-            args.append("-DTARGET_NATIVE_ARCH:BOOL=False")
-
-        if "+lapack" in spec:
-            args.append("-DUSE_BDSYSTEM_LAPACK:BOOL=True")
-        else:
-            args.append("-DUSE_BDSYSTEM_LAPACK:BOOL=False")
-
-        if "+petsc" in spec:
-            args.append("-DUSE_PETSC:BOOL=True")
-        else:
-            args.append("-DUSE_PETSC:BOOL=False")
-
-        if "+mpi" in spec:
-            args.append("-DUSE_MPI:BOOL=True")
-        else:
-            args.append("-DUSE_MPI:BOOL=False")
-
-        if "+coverage" in spec:
-            args.append("-DENABLE_CODECOVERAGE:BOOL=True")
-
-        if "+distmesh" in spec:
-            args.append("-DSTEPS_USE_DIST_MESH:BOOL=True")
-        else:
-            args.append("-DSTEPS_USE_DIST_MESH:BOOL=False")
-
-        if "+vesicle" in spec:
-            args.append("-DSTEPS_USE_VESICLE_MODEL:BOOL=True")
-        else:
-            args.append("-DSTEPS_USE_VESICLE_MODEL:BOOL=False")
-
-        if "+stochtest" in spec:
-            args.append("-DBUILD_STOCHASTIC_TESTS:BOOL=True")
-        else:
-            args.append("-DBUILD_STOCHASTIC_TESTS:BOOL=False")
-
-        if "+codechecks" in spec:
-            args.append("-DSTEPS_TEST_FORMATTING:BOOL=ON")
-            args.append("-DSTEPS_ENABLE_ERROR_ON_WARNING:BOOL=ON")
-        else:
-            args.append("-DSTEPS_TEST_FORMATTING:BOOL=OFF")
-            args.append("-DSTEPS_ENABLE_ERROR_ON_WARNING:BOOL=OFF")
-
-        if "+caliper" in spec:
-            args.append("-DSTEPS_USE_CALIPER_PROFILING=ON")
-
-        if "+likwid" in spec:
-            args.append("-DSTEPS_USE_LIKWID_PROFILING=ON")
-
-        args.append("-DBLAS_LIBRARIES=" + spec["blas"].libs.joined(";"))
-        args.append(
-            "-DPYTHON_EXECUTABLE="
-            + spec["python"].prefix.bin.python
-            + str(spec["python"].version.up_to(1))
+        python_interpreter = self.spec["python"].prefix.bin.python + str(
+            self.spec["python"].version.up_to(1)
         )
+        args = [
+            self.define("STEPS_INSTALL_PYTHON_DEPS", False),
+            self.define("STEPS_USE_STEPSBLENDER", False),
+            self.define("USE_MPI", "True" if "+mpi" in self.spec else "False"),
+            self.define("USE_PETSC", "True" if "+petsc" in self.spec else "False"),
+            self.define_from_variant("BUILD_STOCHASTIC_TESTS", "stochtests"),
+            self.define_from_variant("BUILD_TESTING", "codechecks"),
+            self.define_from_variant("ENABLE_CODECOVERAGE", "coverage"),
+            self.define_from_variant("STEPS_ENABLE_ERROR_ON_WARNING", "codechecks"),
+            self.define_from_variant("STEPS_TEST_FORMATTING", "codechecks"),
+            self.define_from_variant("STEPS_USE_CALIPER_PROFILING", "caliper"),
+            self.define_from_variant("STEPS_USE_DIST_MESH", "distmesh"),
+            self.define_from_variant("STEPS_USE_LIKWID_PROFILING", "likwid"),
+            self.define_from_variant("STEPS_USE_VESICLE_MODEL", "vesicle"),
+            self.define_from_variant("TARGET_NATIVE_ARCH", "native"),
+            self.define_from_variant("USE_BDSYSTEM_LAPACK", "lapack"),
+            "-DBLAS_LIBRARIES=" + self.spec["blas"].libs.joined(";"),
+            f"-DPYTHON_EXECUTABLE={python_interpreter}",
+        ]
+
+        args.extend(
+            [
+                self.define_from_variant(f"USE_BUNDLE_{bundle}", "bundle")
+                for bundle in ["EASYLOGGINGPP", "OMEGA_H", "RANDOM123", "SUNDIALS", "SUPERLU_DIST"]
+            ]
+        )
+
         return args
 
     @property
