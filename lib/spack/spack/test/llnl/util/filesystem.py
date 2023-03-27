@@ -873,7 +873,8 @@ def test_filesummary(tmpdir):
     assert fs.filesummary(p, print_bytes=100) == (26, b"abcdefghijklmnopqrstuvwxyz")
 
 
-def test_find_first_file(tmpdir):
+@pytest.mark.parametrize("bfs_depth", [1, 10])
+def test_find_first_file(tmpdir, bfs_depth):
     # Create a structure: a/a/a/{file1,file2}, b/a, c/a, d/{a,file1}
     tmpdir.join("a", "a", "a").ensure(dir=True)
     tmpdir.join("b", "a").ensure(dir=True)
@@ -887,13 +888,16 @@ def test_find_first_file(tmpdir):
     root = str(tmpdir)
 
     # Iterative deepening: should find low-depth file1.
-    assert os.path.samefile(fs.find_first(root, "file*"), os.path.join(root, "d", "file1"))
+    assert os.path.samefile(
+        fs.find_first(root, "file*", bfs_depth=bfs_depth), os.path.join(root, "d", "file1")
+    )
 
-    assert fs.find_first(root, "nonexisting") is None
+    assert fs.find_first(root, "nonexisting", bfs_depth=bfs_depth) is None
 
     assert os.path.samefile(
-        fs.find_first(root, ["nonexisting", "file2"]), os.path.join(root, "a", "a", "a", "file2")
+        fs.find_first(root, ["nonexisting", "file2"], bfs_depth=bfs_depth),
+        os.path.join(root, "a", "a", "a", "file2"),
     )
 
     # Should find first dir
-    assert os.path.samefile(fs.find_first(root, "a"), os.path.join(root, "a"))
+    assert os.path.samefile(fs.find_first(root, "a", bfs_depth=bfs_depth), os.path.join(root, "a"))
