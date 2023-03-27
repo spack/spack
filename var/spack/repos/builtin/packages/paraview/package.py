@@ -86,7 +86,6 @@ class Paraview(CMakePackage, CudaPackage, ROCmPackage):
     )
     variant("gdal", default=False, description="Enable GDAL support")
     variant("smtk_extensions", default=False, description="Enable components required by CMB/SMTK")
-    variant("visitbridge", default=False, description="Enable VisItBridge Support")
 
     variant(
         "advanced_debug",
@@ -394,8 +393,6 @@ class Paraview(CMakePackage, CudaPackage, ROCmPackage):
             "-DPARAVIEW_INSTALL_DEVELOPMENT_FILES:BOOL=%s" % includes,
             "-DBUILD_TESTING:BOOL=OFF",
             "-DOpenGL_GL_PREFERENCE:STRING=LEGACY",
-            self.define_from_variant("PARAVIEW_ENABLE_VISITBRIDGE", "visitbridge"),
-            self.define_from_variant("VISIT_BUILD_READER_Silo", "visitbridge"),
         ]
 
         if spec.satisfies("@5.11:"):
