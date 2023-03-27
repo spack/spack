@@ -157,7 +157,7 @@ class Mvapich(AutotoolsPackage):
                 "--with-slurm={0}".format(spec["slurm"].prefix),
                 "CFLAGS=-I{0}/include/slurm".format(spec["slurm"].prefix),
             ]
-        if 'none'  in spec.variants["process_managers"].value:
+        if "none" in spec.variants["process_managers"].value:
             opts = ["--with-pm=none"]
 
         return opts
