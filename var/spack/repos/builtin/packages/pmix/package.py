@@ -35,7 +35,8 @@ class Pmix(AutotoolsPackage):
     git = "https://github.com/openpmix/openpmix.git"
     maintainers("rhc54")
 
-    version("master", branch="master")
+    # Branches 4.2 & 5.0 will also need submodules
+    version("master", branch="master", submodules=True)
     version("4.1.2", sha256="670d3a02b39fb2126fe8084174cf03c484e027b5921b5c98a851108134e2597a")
     version("4.1.1", sha256="0527a15d616637b95975d238bbc100b244894518fbba822cd8f46589ca61ccec")
     version("4.1.0", sha256="145f05a6c621bfb3fc434776b615d7e6d53260cc9ba340a01f55b383e07c842e")
@@ -80,6 +81,7 @@ class Pmix(AutotoolsPackage):
     depends_on("libtool", type="build", when="@master")
     depends_on("perl", type="build", when="@master")
     depends_on("pandoc", type="build", when="+docs")
+    depends_on("pkgconfig", type="build")
 
     depends_on("libevent@2.0.20:")
     depends_on("hwloc@1.0:1", when="@:2")

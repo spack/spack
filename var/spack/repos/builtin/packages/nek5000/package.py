@@ -53,7 +53,7 @@ class Nek5000(Package):
             raise RuntimeError(msg)
 
     @run_after("install")
-    def test_install(self):
+    def check_install(self):
         with working_dir("short_tests/eddy"):
             f_size = join_path(os.getcwd(), "SIZE")
             f_size_legacy = join_path(os.getcwd(), "SIZE.legacy")

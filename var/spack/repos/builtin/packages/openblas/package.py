@@ -182,6 +182,10 @@ class Openblas(MakefilePackage):
         when="@0.3.21 %gcc@:9",
     )
 
+    # Generic fix (https://github.com/xianyi/OpenBLAS/pull/3902) so we don't
+    # have to build tests
+    patch("fix-shared-tests-prereqs.patch", when="@0.2.20:0.3.21")
+
     # See https://github.com/spack/spack/issues/19932#issuecomment-733452619
     # Notice: fixed on Amazon Linux GCC 7.3.1 (which is an unofficial version
     # as GCC only has major.minor releases. But the bound :7.3.0 doesn't hurt)
@@ -463,10 +467,7 @@ class Openblas(MakefilePackage):
 
     @property
     def install_targets(self):
-        make_args = [
-            "install",
-            "PREFIX={0}".format(self.prefix),
-        ]
+        make_args = ["install", "PREFIX={0}".format(self.prefix)]
         return make_args + self.make_defs
 
     @run_after("install")

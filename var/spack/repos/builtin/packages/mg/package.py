@@ -22,8 +22,5 @@ class Mg(MakefilePackage):
 
     def edit(self, spec, prefix):
         configure = Executable("./configure")
-        args = [
-            "--mandir={0}".format(self.prefix.man),
-            "--prefix={0}".format(self.prefix),
-        ]
+        args = ["--mandir={0}".format(self.prefix.man), "--prefix={0}".format(self.prefix)]
         configure(*args)

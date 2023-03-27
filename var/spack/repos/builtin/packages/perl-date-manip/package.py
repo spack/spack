@@ -19,4 +19,5 @@ class PerlDateManip(PerlPackage):
     homepage = "https://metacpan.org/release/Date-Manip"
     url = "https://cpan.metacpan.org/authors/id/S/SB/SBECK/Date-Manip-6.82.tar.gz"
 
+    version("6.91", sha256="6bd9cb47e82ba91fdba4022ef358149d81e8453f52ca54f49faac2696210c479")
     version("6.82", sha256="fa96bcf94c6b4b7d3333f073f5d0faad59f546e5aec13ac01718f2e6ef14672a")

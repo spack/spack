@@ -7,7 +7,6 @@ import sys
 
 from spack.main import SpackCommand
 
-is_windows = sys.platform == "win32"
 resource = SpackCommand("resource")
 
 #: these are hashes used in mock packages
@@ -23,7 +22,7 @@ mock_hashes = (
         "bf07a7fbb825fc0aae7bf4a1177b2b31fcf8a3feeaf7092761e18c859ee52a9c",
         "7d865e959b2466918c9863afca942d0fb89d7c9ac0c99bafc3749504ded97730",
     ]
-    if not is_windows
+    if sys.platform != "win32"
     else [
         "abcd1234abcd1234abcd1234abcd1234abcd1234abcd1234abcd1234abcd1234",
         "1234abcd1234abcd1234abcd1234abcd1234abcd1234abcd1234abcd1234abcd",
@@ -68,7 +67,7 @@ def test_resource_list_only_hashes(mock_packages, capfd):
 def test_resource_show(mock_packages, capfd):
     test_hash = (
         "c45c1564f70def3fc1a6e22139f62cb21cd190cc3a7dbe6f4120fa59ce33dcb8"
-        if not is_windows
+        if sys.platform != "win32"
         else "3c5b65abcd6a3b2c714dbf7c31ff65fe3748a1adc371f030c283007ca5534f11"
     )
     with capfd.disabled():

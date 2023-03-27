@@ -3,10 +3,11 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+from spack.build_systems import autotools, cmake
 from spack.package import *
 
 
-class Proj(AutotoolsPackage):
+class Proj(CMakePackage, AutotoolsPackage):
     """PROJ is a generic coordinate transformation software, that transforms
     geospatial coordinates from one coordinate reference system (CRS) to
     another. This includes cartographic projections as well as geodetic
@@ -83,14 +84,49 @@ class Proj(AutotoolsPackage):
     )
 
     # https://proj.org/install.html#build-requirements
-    depends_on("pkgconfig@0.9.0:", type="build", when="@6:")
     depends_on("googletest", when="@6:")
     depends_on("sqlite@3.11:", when="@6:")
     depends_on("libtiff@4.0:", when="@7:+tiff")
     depends_on("curl@7.29.0:", when="@7:+curl")
+    depends_on("pkgconfig@0.9.0:", type="build", when="@6: build_system=autotools")
+    depends_on("cmake@2.6.0:", type="build", when="build_system=cmake")
 
+    build_system("autotools", conditional("cmake", when="@5.0.0:"), default="cmake")
+
+    def setup_run_environment(self, env):
+        # PROJ_LIB doesn't need to be set. However, it may be set by conda.
+        # If an incompatible version of PROJ is found in PROJ_LIB, it can
+        # cause the package to fail at run-time. See the following for details:
+        # * https://proj.org/usage/environmentvars.html
+        # * https://rasterio.readthedocs.io/en/latest/faq.html
+        env.set("PROJ_LIB", self.prefix.share.proj)
+
+    def setup_dependent_run_environment(self, env, dependent_spec):
+        self.setup_run_environment(env)
+
+
+class Setup:
+    def setup_dependent_build_environment(self, env, dependent_spec):
+        self.pkg.setup_run_environment(env)
+
+    def setup_build_environment(self, env):
+        env.set("PROJ_LIB", join_path(self.pkg.stage.source_path, "nad"))
+
+
+class CMakeBuilder(cmake.CMakeBuilder, Setup):
+    def cmake_args(self):
+        args = [
+            self.define_from_variant("ENABLE_TIFF", "tiff"),
+            self.define_from_variant("ENABLE_CURL", "curl"),
+        ]
+        if self.spec.satisfies("@6:"):
+            args.append(self.define("USE_EXTERNAL_GTEST", True))
+        return args
+
+
+class AutotoolsBuilder(autotools.AutotoolsBuilder, Setup):
     def configure_args(self):
-        args = ["PROJ_LIB={0}".format(join_path(self.stage.source_path, "nad"))]
+        args = []
 
         if self.spec.satisfies("@6:"):
             args.append("--with-external-gtest")
@@ -107,17 +143,3 @@ class Proj(AutotoolsPackage):
                 args.append("--without-curl")
 
         return args
-
-    def setup_run_environment(self, env):
-        # PROJ_LIB doesn't need to be set. However, it may be set by conda.
-        # If an incompatible version of PROJ is found in PROJ_LIB, it can
-        # cause the package to fail at run-time. See the following for details:
-        # * https://proj.org/usage/environmentvars.html
-        # * https://rasterio.readthedocs.io/en/latest/faq.html
-        env.set("PROJ_LIB", self.prefix.share.proj)
-
-    def setup_dependent_build_environment(self, env, dependent_spec):
-        self.setup_run_environment(env)
-
-    def setup_dependent_run_environment(self, env, dependent_spec):
-        self.setup_run_environment(env)

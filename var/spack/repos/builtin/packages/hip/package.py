@@ -291,10 +291,7 @@ class Hip(CMakePackage):
         ".5.2.1.patch",
         when="@5.2.1:5.2.3",
     )
-    patch(
-        "0013-remove-compiler-rt-linkage-for-host.5.3.0.patch",
-        when="@5.3.0:",
-    )
+    patch("0013-remove-compiler-rt-linkage-for-host.5.3.0.patch", when="@5.3.0:")
 
     # See https://github.com/ROCm-Developer-Tools/HIP/pull/2141
     patch("0002-Fix-detection-of-HIP_CLANG_ROOT.patch", when="@:3.9.0")

@@ -2,7 +2,7 @@
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
-import re
+
 import sys
 
 import pytest
@@ -41,10 +41,7 @@ def provider(request):
     return request.param
 
 
-@pytest.mark.usefixtures(
-    "config",
-    "mock_packages",
-)
+@pytest.mark.usefixtures("config", "mock_packages")
 class TestLmod(object):
     def test_file_layout(self, compiler, provider, factory, module_configuration):
         """Tests the layout of files in the hierarchy is the one expected."""
@@ -91,7 +88,7 @@ class TestLmod(object):
         assert provides["compiler"] == spack.spec.CompilerSpec("oneapi@3.0")
 
     def test_simple_case(self, modulefile_content, module_configuration):
-        """Tests the generation of a simple TCL module file."""
+        """Tests the generation of a simple Lua module file."""
 
         module_configuration("autoload_direct")
         content = modulefile_content(mpich_spec_string)
@@ -131,21 +128,49 @@ class TestLmod(object):
 
         content = modulefile_content("libdwarf platform=test target=core2")
 
-        assert len([x for x in content if x.startswith('prepend-path("CMAKE_PREFIX_PATH"')]) == 0
+        assert len([x for x in content if x.startswith('prepend_path("CMAKE_PREFIX_PATH"')]) == 0
         assert len([x for x in content if 'setenv("FOO", "foo")' in x]) == 0
         assert len([x for x in content if 'unsetenv("BAR")' in x]) == 0
 
     def test_prepend_path_separator(self, modulefile_content, module_configuration):
-        """Tests modifications to run-time environment."""
+        """Tests that we can use custom delimiters to manipulate path lists."""
 
         module_configuration("module_path_separator")
         content = modulefile_content("module-path-separator")
 
-        for line in content:
-            if re.match(r'[a-z]+_path\("COLON"', line):
-                assert line.endswith('"foo", ":")')
-            elif re.match(r'[a-z]+_path\("SEMICOLON"', line):
-                assert line.endswith('"bar", ";")')
+        assert len([x for x in content if 'append_path("COLON", "foo", ":")' in x]) == 1
+        assert len([x for x in content if 'prepend_path("COLON", "foo", ":")' in x]) == 1
+        assert len([x for x in content if 'remove_path("COLON", "foo", ":")' in x]) == 1
+        assert len([x for x in content if 'append_path("SEMICOLON", "bar", ";")' in x]) == 1
+        assert len([x for x in content if 'prepend_path("SEMICOLON", "bar", ";")' in x]) == 1
+        assert len([x for x in content if 'remove_path("SEMICOLON", "bar", ";")' in x]) == 1
+        assert len([x for x in content if 'append_path("SPACE", "qux", " ")' in x]) == 1
+        assert len([x for x in content if 'remove_path("SPACE", "qux", " ")' in x]) == 1
+
+    def test_help_message(self, modulefile_content, module_configuration):
+        """Tests the generation of module help message."""
+
+        module_configuration("autoload_direct")
+        content = modulefile_content("mpileaks target=core2")
+
+        help_msg = (
+            "help([[Name   : mpileaks]])"
+            "help([[Version: 2.3]])"
+            "help([[Target : core2]])"
+            "help()"
+            "help([[Mpileaks is a mock package that passes audits]])"
+        )
+        assert help_msg in "".join(content)
+
+        content = modulefile_content("libdwarf target=core2")
+
+        help_msg = (
+            "help([[Name   : libdwarf]])"
+            "help([[Version: 20130729]])"
+            "help([[Target : core2]])"
+            "depends_on("
+        )
+        assert help_msg in "".join(content)
 
     @pytest.mark.parametrize("config_name", ["exclude", "blacklist"])
     def test_exclude(self, modulefile_content, module_configuration, config_name):
@@ -240,7 +265,7 @@ class TestLmod(object):
         module_configuration("missing_core_compilers")
 
         # Our mock paths must be detected as system paths
-        monkeypatch.setattr(spack.util.environment, "system_dirs", ["/path/to"])
+        monkeypatch.setattr(spack.util.environment, "SYSTEM_DIRS", ["/path/to"])
 
         # We don't want to really write into user configuration
         # when running tests
@@ -254,12 +279,7 @@ class TestLmod(object):
         assert writer.conf.core_compilers
 
     @pytest.mark.parametrize(
-        "spec_str",
-        [
-            "mpileaks target=nocona",
-            "mpileaks target=core2",
-            "mpileaks target=x86_64",
-        ],
+        "spec_str", ["mpileaks target=nocona", "mpileaks target=core2", "mpileaks target=x86_64"]
     )
     @pytest.mark.regression("13005")
     def test_only_generic_microarchitectures_in_root(

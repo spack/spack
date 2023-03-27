@@ -4,7 +4,9 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import os
+import sys
 
+from spack.build_environment import dso_suffix, stat_suffix
 from spack.package import *
 
 
@@ -24,43 +26,19 @@ class Esmf(MakefilePackage):
     # Develop is a special name for spack and is always considered the newest version
     version("develop", branch="develop")
     # generate chksum with spack checksum esmf@x.y.z
+    version("8.4.1", sha256="1b54cee91aacaa9df400bd284614cbb0257e175f6f3ec9977a2d991ed8aa1af6")
     version("8.4.0", sha256="28531810bf1ae78646cda6494a53d455d194400f19dccd13d6361871de42ed0f")
-    version(
-        "8.3.1",
-        sha256="6c39261e55dcdf9781cdfa344417b9606f7f961889d5ec626150f992f04f146d",
-    )
-    version(
-        "8.3.0",
-        sha256="0ff43ede83d1ac6beabd3d5e2a646f7574174b28a48d1b9f2c318a054ba268fd",
-    )
+    version("8.3.1", sha256="6c39261e55dcdf9781cdfa344417b9606f7f961889d5ec626150f992f04f146d")
+    version("8.3.0", sha256="0ff43ede83d1ac6beabd3d5e2a646f7574174b28a48d1b9f2c318a054ba268fd")
     version("8.3.0b09", commit="5b7e546c4b")
-    version(
-        "8.2.0",
-        sha256="3693987aba2c8ae8af67a0e222bea4099a48afe09b8d3d334106f9d7fc311485",
-    )
-    version(
-        "8.1.1",
-        sha256="58c2e739356f21a1b32673aa17a713d3c4af9d45d572f4ba9168c357d586dc75",
-    )
-    version(
-        "8.0.1",
-        sha256="9172fb73f3fe95c8188d889ee72fdadb4f978b1d969e1d8e401e8d106def1d84",
-    )
-    version(
-        "8.0.0",
-        sha256="051dca45f9803d7e415c0ea146df15ce487fb55f0fce18ca61d96d4dba0c8774",
-    )
-    version(
-        "7.1.0r",
-        sha256="ae9a5edb8d40ae97a35cbd4bd00b77061f995c77c43d36334dbb95c18b00a889",
-    )
+    version("8.2.0", sha256="3693987aba2c8ae8af67a0e222bea4099a48afe09b8d3d334106f9d7fc311485")
+    version("8.1.1", sha256="58c2e739356f21a1b32673aa17a713d3c4af9d45d572f4ba9168c357d586dc75")
+    version("8.0.1", sha256="9172fb73f3fe95c8188d889ee72fdadb4f978b1d969e1d8e401e8d106def1d84")
+    version("8.0.0", sha256="051dca45f9803d7e415c0ea146df15ce487fb55f0fce18ca61d96d4dba0c8774")
+    version("7.1.0r", sha256="ae9a5edb8d40ae97a35cbd4bd00b77061f995c77c43d36334dbb95c18b00a889")
 
     variant("mpi", default=True, description="Build with MPI support")
-    variant(
-        "external-lapack",
-        default=False,
-        description="Build with external LAPACK support",
-    )
+    variant("external-lapack", default=False, description="Build with external LAPACK support")
     variant("netcdf", default=True, description="Build with NetCDF support")
     variant("pnetcdf", default=True, description="Build with pNetCDF support", when="+mpi")
     variant("xerces", default=True, description="Build with Xerces support")
@@ -76,17 +54,9 @@ class Esmf(MakefilePackage):
         description="Build with external parallelio library",
         when="@8.3.b09",
     )
+    variant("pio", default=True, description="Enable Internal ParallelIO support", when="@:8.2.99")
     variant(
-        "pio",
-        default=True,
-        description="Enable Internal ParallelIO support",
-        when="@:8.2.99",
-    )
-    variant(
-        "pio",
-        default=True,
-        description="Enable Internal ParallelIO support",
-        when="@8.3.0b09",
+        "pio", default=True, description="Enable Internal ParallelIO support", when="@8.3.0b09"
     )
     variant("debug", default=False, description="Make a debuggable version of the library")
     variant("shared", default=True, description="Build shared library")
@@ -133,6 +103,10 @@ class Esmf(MakefilePackage):
     # Missing include file for newer gcc compilers
     # https://trac.macports.org/ticket/57493
     patch("cstddef.patch", when="@7.1.0r %gcc@8:")
+
+    # Skip info print of ESMF_CPP due to permission denied errors
+    # https://github.com/spack/spack/issues/35957
+    patch("esmf_cpp_info.patch")
 
     # Make script from mvapich2.patch executable
     @when("@:7.0")
@@ -199,22 +173,25 @@ class Esmf(MakefilePackage):
 
         # ESMF_COMPILER must be set to select which Fortran and
         # C++ compilers are being used to build the ESMF library.
+
         if self.compiler.name == "gcc":
             env.set("ESMF_COMPILER", "gfortran")
-            gfortran_major_version = int(
-                spack.compiler.get_compiler_version_output(self.compiler.fc, "-dumpversion").split(
-                    "."
-                )[0]
-            )
+            with self.compiler.compiler_environment():
+                gfortran_major_version = int(
+                    spack.compiler.get_compiler_version_output(
+                        self.compiler.fc, "-dumpversion"
+                    ).split(".")[0]
+                )
         elif self.compiler.name == "intel" or self.compiler.name == "oneapi":
             env.set("ESMF_COMPILER", "intel")
         elif self.compiler.name in ["clang", "apple-clang"]:
             env.set("ESMF_COMPILER", "gfortranclang")
-            gfortran_major_version = int(
-                spack.compiler.get_compiler_version_output(self.compiler.fc, "-dumpversion").split(
-                    "."
-                )[0]
-            )
+            with self.compiler.compiler_environment():
+                gfortran_major_version = int(
+                    spack.compiler.get_compiler_version_output(
+                        self.compiler.fc, "-dumpversion"
+                    ).split(".")[0]
+                )
         elif self.compiler.name == "nag":
             env.set("ESMF_COMPILER", "nag")
         elif self.compiler.name == "pgi":
@@ -232,8 +209,8 @@ class Esmf(MakefilePackage):
             env.set("ESMF_CXX", spec["mpi"].mpicxx)
             env.set("ESMF_F90", spec["mpi"].mpifc)
         else:
-            env.set("ESMF_CXX", env["CXX"])
-            env.set("ESMF_F90", env["FC"])
+            env.set("ESMF_CXX", spack_cxx)
+            env.set("ESMF_F90", spack_fc)
 
         # This environment variable controls the build option.
         if "+debug" in spec:
@@ -378,8 +355,17 @@ class Esmf(MakefilePackage):
             env.set("ESMF_SHARED_LIB_BUILD", "OFF")
 
     @run_after("install")
-    def install_findesmf(self):
+    def post_install(self):
         install_tree("cmake", self.prefix.cmake)
+        # Several applications using ESMF are affected by CMake
+        # capitalization issue. The following fix allows all apps
+        # to use as-is. Note that since the macOS file system is
+        # case-insensitive, this step is not allowed on macOS.
+        if sys.platform != "darwin":
+            for prefix in [dso_suffix, stat_suffix]:
+                library_path = os.path.join(self.prefix.lib, "libesmf.%s" % prefix)
+                if os.path.exists(library_path):
+                    os.symlink(library_path, os.path.join(self.prefix.lib, "libESMF.%s" % prefix))
 
     def check(self):
         make("check", parallel=False)

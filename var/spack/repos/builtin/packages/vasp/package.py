@@ -66,7 +66,6 @@ class Vasp(MakefilePackage):
     parallel = False
 
     def edit(self, spec, prefix):
-
         if "%gcc" in spec:
             if "+openmp" in spec:
                 make_include = join_path("arch", "makefile.include.linux_gnu_omp")

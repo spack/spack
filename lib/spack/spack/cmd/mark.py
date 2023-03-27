@@ -27,12 +27,7 @@ error_message = """You can either:
 """
 
 # Arguments for display_specs when we find ambiguity
-display_args = {
-    "long": True,
-    "show_flags": False,
-    "variants": False,
-    "indent": 4,
-}
+display_args = {"long": True, "show_flags": False, "variants": False, "indent": 4}
 
 
 def setup_parser(subparser):

@@ -26,9 +26,7 @@ class Crtm(CMakePackage):
     )
 
     variant(
-        "fix",
-        default=False,
-        description='Download CRTM coeffecient or "fix" files (several GBs).',
+        "fix", default=False, description='Download CRTM coeffecient or "fix" files (several GBs).'
     )
     variant(
         "build_type",

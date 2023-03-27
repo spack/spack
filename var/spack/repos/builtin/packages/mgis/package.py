@@ -85,7 +85,6 @@ class Mgis(CMakePackage):
                 self._if_ninja_target_execute("check")
 
     def cmake_args(self):
-
         args = []
 
         args.append("-DUSE_EXTERNAL_COMPILER_FLAGS=ON")

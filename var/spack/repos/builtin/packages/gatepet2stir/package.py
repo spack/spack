@@ -25,9 +25,7 @@ class Gatepet2stir(QMakePackage):
         return url.format(version.underscored)
 
     def qmake_args(self):
-        args = [
-            "QMAKE_LIBS=-ltcmalloc",
-        ]
+        args = ["QMAKE_LIBS=-ltcmalloc"]
         return args
 
     def install(self, spec, prefix):

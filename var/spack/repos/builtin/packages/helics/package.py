@@ -125,10 +125,7 @@ class Helics(CMakePackage):
     def cmake_args(self):
         spec = self.spec
         from_variant = self.define_from_variant
-        args = [
-            "-DHELICS_BUILD_EXAMPLES=OFF",
-            "-DHELICS_BUILD_TESTS=OFF",
-        ]
+        args = ["-DHELICS_BUILD_EXAMPLES=OFF", "-DHELICS_BUILD_TESTS=OFF"]
 
         # HELICS core type CMake options
         # Options were renamed in v3
