@@ -123,7 +123,6 @@ spack:
     # will break.
     - julia@1.6^curl@7.73  # As requested by Polina S.
     - libxslt
-    - libzmq+libsodium
     - likwid
     - mvapich2@2.3.7
     - ncurses
