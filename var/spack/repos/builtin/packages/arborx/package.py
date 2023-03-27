@@ -73,6 +73,7 @@ class Arborx(CMakePackage, CudaPackage, ROCmPackage):
         rocm_dep = "+rocm amdgpu_target={0}".format(arch)
         depends_on("kokkos {0}".format(rocm_dep), when=rocm_dep)
 
+    conflicts("+cuda", when="cuda_arch=none")
     depends_on("kokkos+cuda_lambda", when="~trilinos+cuda")
 
     # Trilinos/Kokkos
