@@ -15,7 +15,11 @@ whatis([[Short description : {{ short_description }}]])
 whatis([[Configure options : {{ configure_options }}]])
 {% endif %}
 
+help([[Name   : {{ spec.name }}]])
+help([[Version: {{ spec.version }}]])
+help([[Target : {{ spec.target }}]])
 {% if long_description %}
+help()
 help([[{{ long_description| textwrap(72)| join() }}]])
 {% endif %}
 {% endblock %}
