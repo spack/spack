@@ -16,3 +16,4 @@ class PerlDataOptlist(PerlPackage):
     version("0.110", sha256="366117cb2966473f2559f2f4575ff6ae69e84c69a0f30a0773e1b51a457ef5c3")
 
     depends_on("perl-sub-install", type=("build", "run"))
+    depends_on("perl-extutils-makemaker@6.78:", when="@0.113:", type=("build", "run"))
