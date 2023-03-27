@@ -23,6 +23,7 @@ class PyTorchaudio(PythonPackage):
     git = "https://github.com/pytorch/audio.git"
 
     version("main", branch="main", submodules=True)
+    version("2.0.1", tag="v2.0.1", submodules=True)
     version("0.13.1", tag="v0.13.1", submodules=True)
     version("0.13.0", tag="v0.13.0", submodules=True)
     version("0.12.1", tag="v0.12.1", submodules=True)
@@ -44,16 +45,20 @@ class PyTorchaudio(PythonPackage):
     version("0.4.0", tag="v0.4.0", submodules=True)
 
     # https://github.com/pytorch/audio#dependencies
-    depends_on("python@3.7:3.10", when="@0.12:", type=("build", "link", "run"))
+    depends_on("python@3.8:3.11", when="@2:", type=("build", "link", "run"))
+    depends_on("python@3.7:3.10", when="@0.12:0", type=("build", "link", "run"))
     depends_on("python@3.7:3.9", when="@0.11", type=("build", "link", "run"))
     depends_on("python@3.6:3.9", when="@0.7.2:0.10", type=("build", "link", "run"))
     depends_on("python@3.6:3.8", when="@0.6:0.7.0", type=("build", "link", "run"))
     depends_on("python@3.5:3.8", when="@0.5", type=("build", "link", "run"))
     depends_on("python@2.7,3.5:3.8", when="@0.4", type=("build", "link", "run"))
 
+    # CMakelists.txt
     depends_on("cmake@3.18:", when="@0.10:", type="build")
     depends_on("cmake@3.5:", when="@0.8:", type="build")
     depends_on("ninja", when="@0.8:", type="build")
+
+    # setup.py
     depends_on("py-setuptools", type="build")
     depends_on("py-pybind11", when="@0.12:", type=("build", "link"))
     depends_on("pkgconfig", type="build")
@@ -61,6 +66,7 @@ class PyTorchaudio(PythonPackage):
 
     # https://github.com/pytorch/audio#dependencies
     depends_on("py-torch@master", when="@main", type=("build", "link", "run"))
+    depends_on("py-torch@2.0.0", when="@2.0.1", type=("build", "link", "run"))
     depends_on("py-torch@1.13.1", when="@0.13.1", type=("build", "link", "run"))
     depends_on("py-torch@1.13.0", when="@0.13.0", type=("build", "link", "run"))
     depends_on("py-torch@1.12.1", when="@0.12.1", type=("build", "link", "run"))

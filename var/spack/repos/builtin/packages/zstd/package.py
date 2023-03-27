@@ -3,10 +3,14 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+import os
+
+from spack.build_systems.cmake import CMakeBuilder
+from spack.build_systems.makefile import MakefileBuilder
 from spack.package import *
 
 
-class Zstd(MakefilePackage):
+class Zstd(CMakePackage, MakefilePackage):
     """Zstandard, or zstd as short version, is a fast lossless compression
     algorithm, targeting real-time compression scenarios at zlib-level and
     better compression ratios."""
@@ -56,6 +60,34 @@ class Zstd(MakefilePackage):
     # (last tested: nvhpc@22.3)
     conflicts("+programs %nvhpc")
 
+    build_system("cmake", "makefile", default="cmake")
+
+
+class CMakeBuilder(CMakeBuilder):
+    @property
+    def root_cmakelists_dir(self):
+        return os.path.join(super().root_cmakelists_dir, "build", "cmake")
+
+    def cmake_args(self):
+        spec = self.spec
+        args = []
+        args.append(self.define_from_variant("ZSTD_BUILD_PROGRAMS", "programs"))
+        args.extend(
+            [
+                self.define("ZSTD_BUILD_STATIC", self.spec.satisfies("libs=static")),
+                self.define("ZSTD_BUILD_SHARED", self.spec.satisfies("libs=shared")),
+            ]
+        )
+        if "compression=zlib" in spec:
+            args.append(self.define("ZSTD_ZLIB_SUPPORT", True))
+        if "compression=lzma" in spec:
+            args.append(self.define("ZSTD_LZMA_SUPPORT", True))
+        if "compression=lz4" in spec:
+            args.append(self.define("ZSTD_LZ4_SUPPORT", True))
+        return args
+
+
+class MakefileBuilder(MakefileBuilder):
     def build(self, spec, prefix):
         pass
 
@@ -65,7 +97,6 @@ class Zstd(MakefilePackage):
         # Tested %nvhpc@22.3. No support for -MP
         if "%nvhpc" in self.spec:
             args.append("DEPFLAGS=-MT $@ -MMD -MF")
-
         # library targets
         lib_args = ["-C", "lib"] + args + ["install-pc", "install-includes"]
         if "libs=shared" in spec:
@@ -75,7 +106,6 @@ class Zstd(MakefilePackage):
 
         # install the library
         make(*lib_args)
-
         # install the programs
         if "+programs" in spec:
             programs_args = ["-C", "programs"] + args

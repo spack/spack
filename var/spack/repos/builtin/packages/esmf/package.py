@@ -4,6 +4,7 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import os
+import sys
 
 from spack.build_environment import dso_suffix, stat_suffix
 from spack.package import *
@@ -206,22 +207,25 @@ class Esmf(MakefilePackage):
 
         # ESMF_COMPILER must be set to select which Fortran and
         # C++ compilers are being used to build the ESMF library.
+
         if self.compiler.name == "gcc":
             env.set("ESMF_COMPILER", "gfortran")
-            gfortran_major_version = int(
-                spack.compiler.get_compiler_version_output(self.compiler.fc, "-dumpversion").split(
-                    "."
-                )[0]
-            )
+            with self.compiler.compiler_environment():
+                gfortran_major_version = int(
+                    spack.compiler.get_compiler_version_output(
+                        self.compiler.fc, "-dumpversion"
+                    ).split(".")[0]
+                )
         elif self.compiler.name == "intel" or self.compiler.name == "oneapi":
             env.set("ESMF_COMPILER", "intel")
         elif self.compiler.name in ["clang", "apple-clang"]:
             env.set("ESMF_COMPILER", "gfortranclang")
-            gfortran_major_version = int(
-                spack.compiler.get_compiler_version_output(self.compiler.fc, "-dumpversion").split(
-                    "."
-                )[0]
-            )
+            with self.compiler.compiler_environment():
+                gfortran_major_version = int(
+                    spack.compiler.get_compiler_version_output(
+                        self.compiler.fc, "-dumpversion"
+                    ).split(".")[0]
+                )
         elif self.compiler.name == "nag":
             env.set("ESMF_COMPILER", "nag")
         elif self.compiler.name == "pgi":
@@ -390,12 +394,15 @@ class Esmf(MakefilePackage):
     @run_after("install")
     def post_install(self):
         install_tree("cmake", self.prefix.cmake)
-        # Several applications using ESMF are affected by CMake capitalization
-        # issue. The following fix allows all apps to use as-is.
-        for prefix in [dso_suffix, stat_suffix]:
-            library_path = os.path.join(self.prefix.lib, "libesmf.%s" % prefix)
-            if os.path.exists(library_path):
-                os.symlink(library_path, os.path.join(self.prefix.lib, "libESMF.%s" % prefix))
+        # Several applications using ESMF are affected by CMake
+        # capitalization issue. The following fix allows all apps
+        # to use as-is. Note that since the macOS file system is
+        # case-insensitive, this step is not allowed on macOS.
+        if sys.platform != "darwin":
+            for prefix in [dso_suffix, stat_suffix]:
+                library_path = os.path.join(self.prefix.lib, "libesmf.%s" % prefix)
+                if os.path.exists(library_path):
+                    os.symlink(library_path, os.path.join(self.prefix.lib, "libESMF.%s" % prefix))
 
     def check(self):
         make("check", parallel=False)
