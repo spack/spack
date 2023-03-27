@@ -26,6 +26,7 @@ class Ior(AutotoolsPackage):
 
     variant("hdf5", default=False, description="support IO with HDF5 backend")
     variant("ncmpi", default=False, description="support IO with NCMPI backend")
+    variant("ime", default=False, description="support IO with IME backend")
 
     depends_on("autoconf", type="build")
     depends_on("automake", type="build")
@@ -63,5 +64,10 @@ class Ior(AutotoolsPackage):
             config_args.append("--with-ncmpi")
         else:
             config_args.append("--without-ncmpi")
+
+        if "+ime" in self.spec:
+            config_args.append("--with-ime")
+        else:
+            config_args.append("--without-ime")
 
         return config_args
