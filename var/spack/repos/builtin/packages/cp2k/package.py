@@ -58,7 +58,7 @@ class Cp2k(MakefilePackage, CudaPackage):
         "elpa",
         default=False,
         description="Enable optimised diagonalisation routines from ELPA",
-        when="@8.3:",
+        when="@7.1:",
     )
     variant(
         "sirius",
