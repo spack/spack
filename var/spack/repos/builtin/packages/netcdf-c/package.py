@@ -130,10 +130,25 @@ class NetcdfC(CMakePackage, AutotoolsPackage):
                 depends_on("autoconf", type="build")
                 depends_on("automake", type="build")
                 depends_on("libtool", type="build")
+                depends_on("m4", type="build")
         del __s
 
-    # CMake system can use m4, but Windows does not yet support
-    depends_on("m4", type="build", when=sys.platform != "win32")
+    # M4 is also needed for the source and man file generation. All the generated source files are
+    # included in the release tarballs starting at least the oldest supported version:
+    depends_on("m4", type="build", when="@main")
+
+    # The man files are included in the release tarballs starting version 4.5.0 but they are not
+    # needed for the Windows platform:
+    for __p in ["darwin", "cray", "linux"]:
+        with when("platform={0}".format(__p)):
+            # It is possible to install the package with CMake and without M4 on a non-Windows
+            # platform but some of the man files will not be installed in that case (even if they
+            # are in the release tarball):
+            depends_on("m4", type="build", when="build_system=cmake")
+            # Apart from the redundant configure-time check, which we suppress below, M4 is not
+            # needed when building with Autotools if the man files are in the release tarball:
+            depends_on("m4", type="build", when="@:4.4 build_system=autotools")
+    del __p
 
     depends_on("hdf~netcdf", when="+hdf4")
 
@@ -446,6 +461,10 @@ class AutotoolsBuilder(BackupStep, Setup, autotools.AutotoolsBuilder):
         elif self.spec.satisfies("@4.8.0:"):
             # Prevent linking to system curl:
             config_args.append("ac_cv_lib_curl_curl_easy_setopt=no")
+
+        if not self.spec.satisfies("@:4.4,main"):
+            # Suppress the redundant check for m4:
+            config_args.append("ac_cv_prog_NC_M4=false")
 
         lib_search_dirs.extend(d for libs in extra_libs for d in libs.directories)
         # Remove duplicates and system prefixes:
