@@ -87,6 +87,13 @@ class NetcdfC(CMakePackage, AutotoolsPackage):
     variant("fsync", default=False, description="Enable fsync support")
     variant("zstd", default=True, description="Enable ZStandard compression", when="@4.9.0:")
     variant("optimize", default=True, description="Enable -O2 for a more optimized lib")
+    variant("nczarr", default=True, description="Enable zarr storage support", when="@4.8.0:")
+    variant("byterange", default=False, description="Allow byte-range I/O")
+    variant(
+        "fismahigh",
+        default=False,
+        description="Disable network connectivity to support FISMA-high compliance",
+    )
 
     # It's unclear if cdmremote can be enabled if '--enable-netcdf-4' is passed
     # to the configure script. Since netcdf-4 support is mandatory we comment
@@ -151,6 +158,10 @@ class NetcdfC(CMakePackage, AutotoolsPackage):
     conflicts("+parallel-netcdf", when="@:4.0")
     conflicts("+hdf4", when="@:4.0")
 
+    conflicts("+dap", when="+fismahigh")
+    conflicts("+byterange", when="+fismahigh")
+    conflicts("+nczarr", when="+fismahigh")
+
     filter_compiler_wrappers("nc-config", relative_root="bin")
 
     default_build_system = "cmake" if sys.platform == "win32" else "autotools"
@@ -204,6 +215,8 @@ class CMakeBuilder(CMakeBuilder, BackupStep, Setup):
             self.define("ENABLE_PARALLEL_TESTS", False),
             self.define_from_variant("ENABLE_FSYNC", "fsync"),
             self.define("ENABLE_LARGE_FILE_SUPPORT", True),
+            self.define_from_variant("ENABLE_NCZARR", "nczarr"),
+            self.define_from_variant("ENABLE_BYTERANGE", "byterange"),
         ]
         if "+parallel-netcdf" in self.pkg.spec:
             base_cmake_args.append(self.define("ENABLE_PNETCDF", True))
@@ -251,6 +264,8 @@ class AutotoolsBuilder(AutotoolsBuilder, BackupStep, Setup):
             cflags.append(self.pkg.compiler.cc_pic_flag)
 
         config_args += self.enable_or_disable("dap")
+        config_args += self.enable_or_disable("nczarr")
+        config_args += self.enable_or_disable("byterange")
         # config_args += self.enable_or_disable('cdmremote')
 
         # if '+dap' in self.pkg.spec or '+cdmremote' in self.pkg.spec:
