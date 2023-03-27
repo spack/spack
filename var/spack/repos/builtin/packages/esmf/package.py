@@ -260,7 +260,7 @@ class Esmf(MakefilePackage):
         if (
             self.compiler.name in ["gcc", "clang", "apple-clang"]
             and gfortran_major_version >= 10
-            and self.spec.satisfies('@:8.2.99')
+            and self.spec.satisfies("@:8.2.99")
         ):
             env.set("ESMF_F90COMPILEOPTS", "-fallow-argument-mismatch")
 
@@ -290,7 +290,7 @@ class Esmf(MakefilePackage):
             elif "^mvapich2" in spec:
                 env.set("ESMF_COMM", "mvapich2")
             elif "^mpich" in spec:
-                if self.spec.satisfies('@:8.2.99'):
+                if self.spec.satisfies("@:8.2.99"):
                     env.set("ESMF_COMM", "mpich3")
                 else:
                     env.set("ESMF_COMM", "mpich")
