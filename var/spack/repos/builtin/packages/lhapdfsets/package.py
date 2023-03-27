@@ -55,14 +55,15 @@ class Lhapdfsets(BundlePackage):
             sets = default_sets
         with working_dir(self.prefix.share.lhapdfsets):
             for s in sets:
+                _filename = "%s.tar.gz" % s
                 curl(
                     "-L",
                     "-o",
-                    "%s.tar.gz" % s,
-                    "http://lhapdfsets.web.cern.ch/lhapdfsets/current/%s.tar.gz" % s,
+                    _filename,
+                    "http://lhapdfsets.web.cern.ch/lhapdfsets/current/%s" % _filename,
                 )
-                tar("xfz", s + ".tar.gz")
-                os.remove(s + ".tar.gz")
+                tar("xfz", _filename)
+                os.remove(_filename)
 
     def setup_dependent_build_environment(self, env, dependent_spec):
         env.set("LHAPDF_DATA_PATH", self.prefix.share.lhapdfsets)
