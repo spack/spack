@@ -306,6 +306,9 @@ class PyTensorflow(Package, CudaPackage, ROCmPackage, PythonExtension):
     # depends_on('py-tensorflow-estimator')  # circular dep
     # depends_on('py-keras')  # circular dep
 
+    # Undocumented dependencies
+    depends_on("py-requests", type=("build", "run"))
+
     # No longer a dependency in latest versions
     depends_on("py-astor@0.6:", type=("build", "run"), when="@1.6:2.1")
     depends_on("py-backports-weakref@1.0rc1", type=("build", "run"), when="@1.2")
