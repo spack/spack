@@ -17,6 +17,7 @@ import sys
 import tempfile
 from contextlib import contextmanager
 from typing import Callable, List, Match, Optional, Tuple, Union
+from itertools import accumulate
 
 from llnl.util import tty
 from llnl.util.lang import dedupe, memoized
@@ -779,6 +780,11 @@ def copy_tree(
     if not files:
         raise IOError("No such file or directory: '{0}'".format(src))
 
+    # For Windows hard-links and junctions, the source path must exist to make a symlink. Add
+    # all symlinks to this list while traversing the tree, then when finished, make all
+    # symlinks at the end.
+    links = []
+
     for src in files:
         abs_src = os.path.abspath(src)
         if not abs_src.endswith(os.path.sep):
@@ -814,13 +820,21 @@ def copy_tree(
                         if new_target != target:
                             tty.debug("Redirecting link {0} to {1}".format(target, new_target))
                             target = new_target
-                    # TODO: Here we create a symlink to a file that may or may not have been
-                    #  copied yet. Thats fine for unix symlinks because once the file that
-                    #  the link points to is moved, the link works. This does not work on windows
-                    #  because hard links and junctions need to point to an existing file. To fix
-                    #  this, get a list of all symlinks and their new targets, then after every
-                    #  real file is moved over, create the links again.
-                    symlink(target, d)
+
+                    ignore = ignore or (lambda filename: False)
+
+                    # Build an accumulating list of all parent file paths to check against the
+                    # ignores func to make sure the source file is going to be copied into the new
+                    # tree before adding the symlink to the list of links to make after files
+                    # have been copied.
+                    all_parents = accumulate(target.split(os.sep), lambda x, y: os.path.join(x, y))
+                    if any(map(ignore, all_parents)):
+                        tty.msg(f"Ignoring link {d} because the source or a part of the source's "
+                                f"path is included in the ignores.")
+                    else:
+                        links.append((target, d, s))
+                    continue
+
                 elif os.path.isdir(link_target):
                     mkdirp(d)
                 else:
@@ -834,6 +848,12 @@ def copy_tree(
             if _permissions:
                 set_install_permissions(d)
                 copy_mode(s, d)
+
+    for target, d, s in links:
+        symlink(target, d)
+        if _permissions:
+            set_install_permissions(d)
+            copy_mode(s, d)
 
 
 @system_path_filter
