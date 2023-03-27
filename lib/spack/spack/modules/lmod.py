@@ -274,6 +274,13 @@ class LmodFileLayout(BaseFileLayout):
         )
         return fullname
 
+    @property
+    def modulerc(self):
+        """Returns the modulerc file associated with current module file"""
+        return os.path.join(
+            os.path.dirname(self.filename), ".".join([".modulerc", self.extension])
+        )
+
     def token_to_path(self, name, value):
         """Transforms a hierarchy token into the corresponding path part.
 
@@ -469,6 +476,10 @@ class LmodModulefileWriter(BaseModuleFileWriter):
     """Writer class for lmod module files."""
 
     default_template = posixpath.join("modules", "modulefile.lua")
+
+    modulerc_header: list = []
+
+    hide_cmd_format = 'hide_version("%s")'
 
 
 class CoreCompilersNotFoundError(spack.error.SpackError, KeyError):
