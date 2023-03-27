@@ -113,6 +113,7 @@ class Scotch(CMakePackage, MakefilePackage):
             if os.path.exists(path):
                 os.remove(path)
 
+
 class CMakeBuilder(spack.build_systems.cmake.CMakeBuilder):
     def cmake_args(self):
         spec = self.spec
