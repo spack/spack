@@ -16,7 +16,7 @@ class Lhapdfsets(BundlePackage):
 
     tags = ["hep"]
 
-    maintainers("vvolkl")
+    maintainers("vvolkl", "wdconinc")
 
     version("6.3.0")
 
