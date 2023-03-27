@@ -116,8 +116,8 @@ class EcpDataVisSdk(BundlePackage, CudaPackage, ROCmPackage):
     # When building with VisIt and CinemaSci in the same SDK environment there is a conflict
     # in the build dependency of py-setuptools which prevents building a py-h5py that is
     # compatible with 'hdf5@1.14:'. Until there is a version of VisIt with an updated VTK or Spack
-    # allows the concretization of multiple versions of the same build only dependency concretization
-    # with VisIt and Cinema variants will not allow building VOLs.
+    # allows the concretization of multiple versions of the same build only dependency
+    # concretization with VisIt and Cinema variants will not allow building VOLs.
     dav_sdk_depends_on("hdf5@1.12: +shared+mpi", when="+hdf5", propagate=["fortran"])
 
     # HDF5 VOL Adapters require hdf5@1.14:
