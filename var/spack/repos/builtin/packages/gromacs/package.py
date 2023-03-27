@@ -88,6 +88,7 @@ class Gromacs(CMakePackage):
     )
     variant("plumed", default=False, description="Enable PLUMED support")
     variant("cuda", default=False, description="Enable CUDA support")
+    variant("cufftmp", default=False, description="Enable Multi GPU FFT support")
     variant("opencl", default=False, description="Enable OpenCL support")
     variant("sycl", default=False, description="Enable SYCL support")
     variant("nosuffix", default=False, description="Disable default suffixes")
@@ -249,6 +250,8 @@ class Gromacs(CMakePackage):
 
     depends_on("cp2k@8.1:", when="+cp2k")
     depends_on("dbcsr", when="+cp2k")
+
+    depends_on("nvhpc", when="+cufftmp")
 
     patch("gmxDetectCpu-cmake-3.14.patch", when="@2018:2019.3^cmake@3.14.0:")
     patch("gmxDetectSimd-cmake-3.14.patch", when="@5.0:2017^cmake@3.14.0:")
@@ -478,6 +481,11 @@ class CMakeBuilder(spack.build_systems.cmake.CMakeBuilder):
         if "+cp2k" in self.spec:
             options.append("-DGMX_CP2K:BOOL=ON")
             options.append("-DCP2K_DIR:STRING={0}".format(self.spec["cp2k"].prefix))
+
+        if "+cufftmp" in self.spec:
+            options.append("-DGMX_USE_CUFFTMP=ON")
+            options.append(f'-DcuFFTMp_ROOT={self.spec["nvhpc"].prefix}/Linux_{self.spec.target.family}/{self.spec["nvhpc"].version}/math_libs')
+
 
         # Activate SIMD based on properties of the target
         target = self.spec.target
