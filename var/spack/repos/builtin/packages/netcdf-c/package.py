@@ -304,6 +304,7 @@ class AutotoolsBuilder(BackupStep, Setup, autotools.AutotoolsBuilder):
     def force_autoreconf(self):
         return any(self.spec.satisfies(s) for s in self.pkg._force_autoreconf_when)
 
+    @when("@4.6.3:")
     def autoreconf(self, pkg, spec, prefix):
         if not os.path.exists(self.configure_abs_path):
             Executable("./bootstrap")()
