@@ -873,13 +873,14 @@ def test_filesummary(tmpdir):
     assert fs.filesummary(p, print_bytes=100) == (26, b"abcdefghijklmnopqrstuvwxyz")
 
 
-@pytest.mark.parametrize("bfs_depth", [1, 10])
+@pytest.mark.parametrize("bfs_depth", [1, 2, 10])
 def test_find_first_file(tmpdir, bfs_depth):
     # Create a structure: a/a/a/{file1,file2}, b/a, c/a, d/{a,file1}
     tmpdir.join("a", "a", "a").ensure(dir=True)
     tmpdir.join("b", "a").ensure(dir=True)
     tmpdir.join("c", "a").ensure(dir=True)
     tmpdir.join("d", "a").ensure(dir=True)
+    tmpdir.join("e").ensure(dir=True)
 
     fs.touch(tmpdir.join("a", "a", "a", "file1"))
     fs.touch(tmpdir.join("a", "a", "a", "file2"))
