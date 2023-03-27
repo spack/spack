@@ -124,7 +124,7 @@ class Charliecloud(AutotoolsPackage):
             args.append("--disable-html")
 
         if "+squashfuse" in self.spec:
-            squash_bin="{0}".format(self.spec["squashfuse"].prefix.bin)
-            args.append("--with-libsquashfuse={0}".format(squash_bin))
+            squashfuse_prefix="{0}".format(self.spec["squashfuse"].prefix)
+            args.append("--with-libsquashfuse={0}".format(squashfuse_prefix))
 
         return args
