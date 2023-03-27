@@ -21,7 +21,7 @@ class Esmf(MakefilePackage):
     The NUOPC Layer is included with the ESMF package."""
 
     homepage = "https://earthsystemmodeling.org/"
-    url = "https://github.com/esmf-org/esmf/archive/ESMF_8_0_1.tar.gz"
+    url = "https://github.com/esmf-org/esmf/archive/v8.4.1.tar.gz"
     git = "https://github.com/esmf-org/esmf.git"
 
     maintainers("climbfuji", "jedwards4b", "AlexanderRichert-NOAA", "theurich", "uturuncoglu")
@@ -38,22 +38,22 @@ class Esmf(MakefilePackage):
         deprecated=True,
     )
     version("8.3.0b09", commit="5b7e546c4b", deprecated=True)
-    version("8.2.0", sha256="3693987aba2c8ae8af67a0e222bea4099a48afe09b8d3d334106f9d7fc311485")
-    version("8.1.1", sha256="58c2e739356f21a1b32673aa17a713d3c4af9d45d572f4ba9168c357d586dc75")
+    version("8.2.0", sha256="27866c31fdb63c58e78211de970470ca02d274f5d4d6d97e94284d63b1c1d9e4")
+    version("8.1.1", sha256="629690c7a488e84ac7252470349458d7aaa98b54c260f8b3911a2e2f3e713dd0")
     version(
         "8.1.0",
-        sha256="367dc89ab8e273f6fbe3d63a64a9a6735cbaa77d5f144ebae4af198fee5bb203",
+        sha256="226219ec61cace89f4678eece93188155d7cbb50a13ec4c9c93174ef3d58d7c0",
         deprecated=True,
     )
-    version("8.0.1", sha256="9172fb73f3fe95c8188d889ee72fdadb4f978b1d969e1d8e401e8d106def1d84")
+    version("8.0.1", sha256="13ce2ca0ae622548c00f7bb18317fb100235ca8b7ddbfac7e201a339e8eb05a3")
     version(
         "8.0.0",
-        sha256="051dca45f9803d7e415c0ea146df15ce487fb55f0fce18ca61d96d4dba0c8774",
+        sha256="4b7904fdc935710071c4aafb9370834d40c2ee06365a8b5845317be8f71bf51f",
         deprecated=True,
     )
     version(
         "7.1.0r",
-        sha256="ae9a5edb8d40ae97a35cbd4bd00b77061f995c77c43d36334dbb95c18b00a889",
+        sha256="e08f21544083dcbe162b472852e321f8df14f4f711f35508403d32df438367a7",
         deprecated=True,
     )
 
@@ -151,15 +151,12 @@ class Esmf(MakefilePackage):
 
     def url_for_version(self, version):
         if version < Version("8.0.0"):
-            return "http://www.earthsystemmodeling.org/esmf_releases/public/ESMF_{0}/esmf_{0}_src.tar.gz".format(
-                version.underscored
-            )
-        elif version < Version("8.2.1"):
+            # Older ESMF releases had a custom tag format ESMF_x_y_z
             return "https://github.com/esmf-org/esmf/archive/ESMF_{0}.tar.gz".format(
                 version.underscored
             )
         else:
-            # Starting with ESMF 8.2.1 releases are now in the form vx.y.z
+            # Starting with ESMF 8.0.0 releases are in the form vx.y.z
             return "https://github.com/esmf-org/esmf/archive/refs/tags/v{0}.tar.gz".format(
                 version.dotted
             )
