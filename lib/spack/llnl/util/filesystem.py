@@ -16,8 +16,8 @@ import stat
 import sys
 import tempfile
 from contextlib import contextmanager
-from typing import Callable, List, Match, Optional, Tuple, Union
 from itertools import accumulate
+from typing import Callable, List, Match, Optional, Tuple, Union
 
 from llnl.util import tty
 from llnl.util.lang import dedupe, memoized
@@ -829,8 +829,10 @@ def copy_tree(
                     # have been copied.
                     all_parents = accumulate(target.split(os.sep), lambda x, y: os.path.join(x, y))
                     if any(map(ignore, all_parents)):
-                        tty.msg(f"Ignoring link {d} because the source or a part of the source's "
-                                f"path is included in the ignores.")
+                        tty.msg(
+                            f"Ignoring link {d} because the source or a part of the source's "
+                            f"path is included in the ignores."
+                        )
                     else:
                         links.append((target, d, s))
                     continue
@@ -1335,28 +1337,9 @@ def traverse_tree(
 def lexists_islink_isdir(path):
     """Computes the tuple (lexists(path), islink(path), isdir(path)) in a minimal
     number of stat calls."""
-    # First try to lstat, so we know if it's a link or not.
-    try:
-        lst = os.lstat(path)
-    except (IOError, OSError):
+    if not os.path.lexists(path):
         return False, False, False
-
-    is_link = stat.S_ISLNK(lst.st_mode)
-
-    # Check whether file is a dir.
-    if not is_link:
-        is_dir = stat.S_ISDIR(lst.st_mode)
-        return True, is_link, is_dir
-
-    # Check whether symlink points to a dir.
-    try:
-        st = os.stat(path)
-        is_dir = stat.S_ISDIR(st.st_mode)
-    except (IOError, OSError):
-        # Dangling symlink (i.e. it lexists but not exists)
-        is_dir = False
-
-    return True, is_link, is_dir
+    return os.path.lexists(path), islink(path), os.path.isdir(path)
 
 
 class BaseDirectoryVisitor(object):
