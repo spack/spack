@@ -16,6 +16,7 @@ class PySlepc4py(PythonPackage):
     maintainers("joseeroman", "balay")
 
     version("main", branch="main")
+    version("3.18.3", sha256="93c978f115683900a575026111ff2abe6f3ce4de8c21eec53c07dfd97ea43c85")
     version("3.18.2", sha256="402297fd8e583ed2618d2cba05e5cae8e9d0a2c3943812a1a138f431ef3479b3")
     version("3.18.1", sha256="4c2bc0947d6a9cdb209e3174b7f54fe7b029220e2c90106f52844e8f8795f8f0")
     version("3.18.0", sha256="aa83f46f942aca05ffcbc8be29b496f56837f564e0396f5b39cec4946654ee78")
@@ -36,10 +37,12 @@ class PySlepc4py(PythonPackage):
     patch("ldshared.patch", when="@:99")
     patch("ldshared-dev.patch", when="@main")
 
-    depends_on("py-cython@0.24:", type="build", when="@main")
+    depends_on("py-cython@0.29.32:", when="^python@3.11:", type="build")
+    depends_on("py-cython@0.24:", type="build")
     depends_on("py-setuptools", type="build")
 
     depends_on("py-petsc4py", type=("build", "run"))
+    depends_on("py-petsc4py@main", when="@main", type=("build", "run"))
     depends_on("py-petsc4py@3.18.0:3.18", when="@3.18.0:3.18", type=("build", "run"))
     depends_on("py-petsc4py@3.17.0:3.17", when="@3.17.0:3.17", type=("build", "run"))
     depends_on("py-petsc4py@3.16.0:3.16", when="@3.16.0:3.16", type=("build", "run"))
@@ -49,6 +52,7 @@ class PySlepc4py(PythonPackage):
     depends_on("py-petsc4py@3.11.0:3.11", when="@3.11.0:3.11", type=("build", "run"))
 
     depends_on("slepc")
+    depends_on("slepc@main", when="@main")
     depends_on("slepc@3.18.0:3.18", when="@3.18.0:3.18")
     depends_on("slepc@3.17.0:3.17", when="@3.17.0:3.17")
     depends_on("slepc@3.16.0:3.16", when="@3.16.0:3.16")
@@ -65,3 +69,8 @@ class PySlepc4py(PythonPackage):
             return os.path.join(self.stage.source_path, "src", "binding", "slepc4py")
         else:
             return self.stage.source_path
+
+    @run_before("install")
+    def cythonize(self):
+        with working_dir(self.build_directory):
+            python(join_path("conf", "cythonize.py"))
