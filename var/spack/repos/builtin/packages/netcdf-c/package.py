@@ -50,33 +50,42 @@ class NetcdfC(CMakePackage, AutotoolsPackage):
     version("4.3.3.1", sha256="f2ee78eb310637c007f001e7c18e2d773d23f3455242bde89647137b7344c2e2")
     version("4.3.3", sha256="3f16e21bc3dfeb3973252b9addf5defb48994f84fc9c9356081f871526a680e7")
 
-    # configure fails if curl is not installed.
-    # See https://github.com/Unidata/netcdf-c/issues/1390
-    patch(
-        "https://github.com/Unidata/netcdf-c/commit/e5315da1e748dc541d50796fb05233da65e86b6b.patch?full_index=1",
-        sha256="c551ca2f5b6bcefa07dd7f8b7bac426a5df9861e091df1ab99167d8d401f963f",
-        when="@4.7.0",
-    )
-    # fix headers
-    patch(
-        "https://github.com/Unidata/netcdf-c/pull/1505.patch?full_index=1",
-        sha256="495b3e5beb7f074625bcec2ca76aebd339e42719e9c5ccbedbdcc4ffb81a7450",
-        when="@4.7.2",
-    )
-    patch(
-        "https://github.com/Unidata/netcdf-c/pull/1508.patch?full_index=1",
-        sha256="19e7f31b96536928621b1c29bb6d1a57bcb7aa672cea8719acf9ac934cdd2a3e",
-        when="@4.7.2",
-    )
+    with when("build_system=cmake"):
+        # TODO: document why we need to revert https://github.com/Unidata/netcdf-c/pull/1731
+        #  with the following patch:
+        patch("4.8.1-win-hdf5-with-zlib.patch", when="@4.8.1: platform=windows")
 
-    patch("4.8.1-win-hdf5-with-zlib.patch", when="@4.8.1: platform=windows")
+        # TODO: fetch from the upstream repo once https://github.com/Unidata/netcdf-c/pull/2595
+        #  is accepted:
+        patch("netcdfc-mpi-win-support.patch", when="platform=windows")
 
-    patch("netcdfc-mpi-win-support.patch", when="platform=windows")
-    # See https://github.com/Unidata/netcdf-c/pull/1752
-    patch("4.7.3-spectrum-mpi-pnetcdf-detect.patch", when="@4.7.3:4.7.4 +parallel-netcdf")
+    with when("build_system=autotools"):
+        # Configure fails if curl is not installed
+        # See https://github.com/Unidata/netcdf-c/issues/1390
+        patch(
+            "https://github.com/Unidata/netcdf-c/commit/e5315da1e748dc541d50796fb05233da65e86b6b.patch?full_index=1",
+            sha256="c551ca2f5b6bcefa07dd7f8b7bac426a5df9861e091df1ab99167d8d401f963f",
+            when="@4.7.0",
+        )
 
-    # See https://github.com/Unidata/netcdf-c/pull/2293
-    patch("4.8.1-no-strict-aliasing-config.patch", when="@4.8.1")
+        # See https://github.com/Unidata/netcdf-c/pull/1752
+        patch("4.7.3-spectrum-mpi-pnetcdf-detect.patch", when="@4.7.3:4.7.4 +parallel-netcdf")
+
+        # See https://github.com/Unidata/netcdf-c/pull/2293
+        patch("4.8.1-no-strict-aliasing-config.patch", when="@4.8.1")
+
+    with when("@4.7.2"):
+        # Fix headers
+        # See https://github.com/Unidata/netcdf-c/pull/1505
+        patch(
+            "https://github.com/Unidata/netcdf-c/pull/1505.patch?full_index=1",
+            sha256="495b3e5beb7f074625bcec2ca76aebd339e42719e9c5ccbedbdcc4ffb81a7450",
+        )
+        # See https://github.com/Unidata/netcdf-c/pull/1508
+        patch(
+            "https://github.com/Unidata/netcdf-c/pull/1508.patch?full_index=1",
+            sha256="19e7f31b96536928621b1c29bb6d1a57bcb7aa672cea8719acf9ac934cdd2a3e",
+        )
 
     # See https://github.com/Unidata/netcdf-c/pull/2618
     patch("4.9.0-no-mpi-yes-pnetcdf.patch", when="@4.9.0: ~mpi+parallel-netcdf")
