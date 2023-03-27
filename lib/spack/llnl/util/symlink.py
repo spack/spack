@@ -53,8 +53,8 @@ def symlink(source_path: str, link_path: str):
     else:
         try:
             os.symlink(source_path, link_path, target_is_directory=os.path.isdir(source_path))
-        except OSError as e:
-            raise SymlinkError('An exception occurred while creating symlink') from e
+        except Exception as e:
+            raise SymlinkError("An exception occurred while creating symlink") from e
 
     # Redundancy check to make sure the link created successfully
     if os.path.lexists(link_path):
@@ -198,7 +198,7 @@ def _windows_create_link(source: str, link: str):
         return
     elif os.path.isabs(source) and not os.path.exists(source):
         raise SymlinkError(
-            f'Source path ({source}) is absolute but does not exist. Cannot create link.'
+            f"Source path ({source}) is absolute but does not exist. Cannot create link."
         )
     elif not os.path.exists(source):
         # Emulate how the os.symlink method creates links where the source is
@@ -209,6 +209,9 @@ def _windows_create_link(source: str, link: str):
             source = relative_path
         else:
             raise SymlinkError(f"Source path ({source}) does not exist. Cannot create link.")
+
+    source = os.path.normpath(source)
+    link = os.path.normpath(link)
 
     if os.path.isdir(source):
         _windows_create_junction(source=source, link=link)
