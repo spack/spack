@@ -43,6 +43,9 @@ def symlink(source_path: str, link_path: str):
     volume (drive letter) but not to a remote directory. Don't
     need System Administrator privileges.
     """
+    source_path = os.path.normpath(source_path)
+    link_path = os.path.normpath(link_path)
+
     # Perform basic checks to make sure symlinking will succeed
     if os.path.exists(link_path):
         raise SymlinkError(f"Link path ({link_path}) already exists. Cannot create link.")
@@ -209,9 +212,6 @@ def _windows_create_link(source: str, link: str):
             source = relative_path
         else:
             raise SymlinkError(f"Source path ({source}) does not exist. Cannot create link.")
-
-    source = os.path.normpath(source)
-    link = os.path.normpath(link)
 
     if os.path.isdir(source):
         _windows_create_junction(source=source, link=link)
