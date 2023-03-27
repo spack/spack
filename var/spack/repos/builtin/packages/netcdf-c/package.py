@@ -301,7 +301,6 @@ class CMakeBuilder(BackupStep, Setup, cmake.CMakeBuilder):
             self.define("BUILD_UTILITIES", True),
             self.define("ENABLE_NETCDF_4", True),
             self.define_from_variant("ENABLE_DAP", "dap"),
-            self.define("CMAKE_INSTALL_PREFIX", self.prefix),
             self.define_from_variant("ENABLE_HDF4", "hdf4"),
             self.define("ENABLE_PARALLEL_TESTS", False),
             self.define_from_variant("ENABLE_FSYNC", "fsync"),
