@@ -17,7 +17,7 @@ class Heffte(CMakePackage, CudaPackage, ROCmPackage):
     url = "https://github.com/icl-utk-edu/heffte/archive/refs/tags/v2.3.0.tar.gz"
     git = "https://github.com/icl-utk-edu/heffte/"
 
-    maintainers("mkstoyanov")
+    maintainers("mkstoyanov", "G-Ragghianti")
     tags = ["e4s", "ecp"]
 
     test_requires_compiler = True
@@ -178,6 +178,9 @@ class Heffte(CMakePackage, CudaPackage, ROCmPackage):
             options.append(
                 "-Drocfft_DIR=" + join_path(self.spec["rocfft"].prefix, "lib", "cmake", "rocfft")
             )
+
+        # Provide the path to the MPI dependency so that the test can find an MPI launcher
+        options.append("-DMPI_HOME=" + self.spec["mpi"].prefix)
 
         if not self.run_test(cmake_bin, options=options, purpose="Generate the Makefile"):
             tty.msg("Skipping heffte test: failed to generate Makefile")
