@@ -73,8 +73,8 @@ def test_symlink__src_relative_to_link(stage):
     """Test the symlink.symlink functionality where the source value exists relative to the link
     but not relative to the cwd"""
     test_dir = tempfile.mkdtemp(dir=stage)
-    subdir_1 = os.path.join(test_dir, 'a')
-    subdir_2 = os.path.join(subdir_1, 'b')
+    subdir_1 = os.path.join(test_dir, "a")
+    subdir_2 = os.path.join(subdir_1, "b")
     os.mkdir(subdir_1)
     os.mkdir(subdir_2)
     prev_dir = os.getcwd()
@@ -85,8 +85,8 @@ def test_symlink__src_relative_to_link(stage):
         link_file = tempfile.mktemp(prefix="link", suffix=".txt", dir=subdir_1)
         assert os.path.exists(link_file) is False
         symlink.symlink(
-            source_path=f'b/{os.path.basename(real_file)}',
-            link_path=f'a/{os.path.basename(link_file)}'
+            source_path=f"b/{os.path.basename(real_file)}",
+            link_path=f"a/{os.path.basename(link_file)}",
         )
         assert os.path.exists(link_file)
         assert symlink.islink(link_file)
