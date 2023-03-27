@@ -40,7 +40,7 @@ class Simulationio(CMakePackage):
     depends_on("python@3:", when="+python", type=("build", "run"))
     depends_on("rnpletal", when="+rnpl")
     depends_on("silo", when="+silo")
-    depends_on("swig", type="build")
+    depends_on("swig @3", type="build")
 
     extends("python")
 
