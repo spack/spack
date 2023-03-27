@@ -42,7 +42,7 @@ def test_location_first(install_mockery, mock_fetch, mock_archive, mock_packages
     install = SpackCommand("install")
     install("libelf@0.8.12")
     install("libelf@0.8.13")
-    """This would normally return an error without --first"""
+    # This would normally return an error without --first
     assert location("--first", "--install-dir", "libelf")
 
 
