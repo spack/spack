@@ -304,6 +304,17 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage):
         "4.3.0.20230120": "83a62a99af59e38eb9b0c58ed092ee24d700fff43a22c03e433955113ef35150",
     }
 
+    # GPU offload backend supported by limited languages
+    with when("+nvptx") or when("+amdgcn"):
+        conflicts("languages=ada")
+        conflicts("languages=brig")
+        conflicts("languages=go")
+        conflicts("languages=java")
+        conflicts("languages=jit")
+        conflicts("languages=objc")
+        conflicts("languages=obj-c++")
+        conflicts("languages=d")
+
     with when("+nvptx"):
         depends_on("cuda")
         newlib_ver = "3.0.0.20180831"
@@ -322,31 +333,30 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage):
             git="https://github.com/MentorEmbedded/nvptx-tools",
             commit="d0524fbdc86dfca068db5a21cc78ac255b335be5",
         )
-        # NVPTX offloading supported in 7 and later by limited languages
+        # NVPTX offloading supported in 7 and later
         conflicts("@:6", msg="NVPTX only supported in gcc 7 and above")
-        conflicts("languages=ada")
-        conflicts("languages=brig")
-        conflicts("languages=go")
-        conflicts("languages=java")
-        conflicts("languages=jit")
-        conflicts("languages=objc")
-        conflicts("languages=obj-c++")
-        conflicts("languages=d")
         # NVPTX build disables bootstrap
         conflicts("+bootstrap")
 
     with when("+amdgcn"):
-        # Building LLVM requires CMake
-        depends_on("cmake", type="build")
-        llvm_src_ver = {"@:11": "9.0.1", "@12:": "13.0.1"}
+        # AMDGCN build requires LLVM utilities
+        llvm_src_ver = {
+            "@10.1.0": "9.0.1",
+            "@10.2.0": "9.0.1",
+            "@10.3.0": "9.0.1",
+            "@10.4.0": "9.0.1",
+            "@11.1.0": "9.0.1",
+            "@11.2.0": "9.0.1",
+            "@11.3.0": "9.0.1",
+            "@12.1.0": "13.0.1",
+            "@12.2.0": "13.0.1",
+        }
         for k, v in llvm_src_ver.items():
-            with when(k):
-                resource(
-                    name="llvm-project",
-                    git="https://github.com/llvm/llvm-project.git",
-                    tag="llvmorg-{0}".format(v),
-                    destination="llvm-source",
-                )
+            depends_on(
+                f"llvm@{v} ~clang +lld ~gold ~llvm_dylib ~polly targets=amdgpu",
+                type="build",
+                when=k,
+            )
         # The Newlib version needs to be contemporaenous with GCC
         newlib_ver = {
             "@10.1.0": "3.3.0",  # GCC: 2020-05-07, Newlib: 2020-01-22
@@ -369,16 +379,8 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage):
                     destination="newlibsource",
                     fetch_options=timeout,
                 )
-        # AMDGCN offloading supported in 10 and later by limited languages
+        # AMDGCN offloading supported in 10 and later
         conflicts("@:9", msg="AMDGCN only supported in gcc 10 and above")
-        conflicts("languages=ada")
-        conflicts("languages=brig")
-        conflicts("languages=go")
-        conflicts("languages=java")
-        conflicts("languages=jit")
-        conflicts("languages=objc")
-        conflicts("languages=obj-c++")
-        conflicts("languages=d")
         # AMDGCN build disables bootstrap
         conflicts("+bootstrap")
 
@@ -848,7 +850,7 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage):
                 ]
             )
 
-        # Offload targets
+        # GPU offload targets
         offload_targets = []
         if spec.satisfies("+nvptx"):
             offload_targets.append("nvptx-none")
@@ -975,44 +977,8 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage):
         options = getattr(self, "configure_flag_args", [])
         options += ["--prefix={0}".format(prefix)]
 
-        # Determine LLVM host target
-        llvm_targets = set()
-        if spec.target.family in ("x86", "x86_64"):
-            llvm_targets.add("X86")
-        elif spec.target.family == "arm":
-            llvm_targets.add("ARM")
-        elif spec.target.family == "aarch64":
-            llvm_targets.add("AArch64")
-        elif spec.target.family in ("sparc", "sparc64"):
-            llvm_targets.add("Sparc")
-        elif spec.target.family in ("ppc64", "ppc64le", "ppc", "ppcle"):
-            llvm_targets.add("PowerPC")
-
-        # Add AMDGPU target
-        llvm_targets.add("AMDGPU")
-
-        # Set up CMake arguments for LLVM
-        cmake_dict = {
-            "LLVM_TARGETS_TO_BUILD": ";".join(list(llvm_targets)),
-            "LLVM_ENABLE_PROJECTS": "lld",
-        }
-        cmake_args = []
-        for k, v in cmake_dict.items():
-            cmake_args.append("-D{0}={1}".format(k, v))
-
-        pattern = join_path(self.stage.source_path, "llvm-source", "*")
-        files = glob.glob(pattern)
-        if files:
-            cmake_args.append(join_path(files[0], "llvm"))
-
-        # Build LLVM utils
-        with working_dir("llvm-build", create=True):
-            cmake = Executable(spec["cmake"].prefix.bin.cmake)
-            cmake(*cmake_args)
-            make()
-
         # Copy LLVM utils
-        llvm_bin_path = join_path("llvm-build", "bin")
+        llvm_bin_path = join_path(spec["llvm"].prefix, "bin")
         llvm_util_path = join_path(prefix, "usr", "local", "amdgcn-amdhsa", "bin")
         copy(
             "{0}".format(join_path(llvm_bin_path, "llvm-ar")),
