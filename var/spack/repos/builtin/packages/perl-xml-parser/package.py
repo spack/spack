@@ -12,6 +12,7 @@ class PerlXmlParser(PerlPackage):
     homepage = "https://metacpan.org/pod/XML::Parser"
     url = "http://search.cpan.org/CPAN/authors/id/T/TO/TODDR/XML-Parser-2.44.tar.gz"
 
+    version("2.46", sha256="d331332491c51cccfb4cb94ffc44f9cd73378e618498d4a37df9e043661c515d")
     version("2.44", sha256="1ae9d07ee9c35326b3d9aad56eae71a6730a73a116b9fe9e8a4758b7cc033216")
 
     depends_on("expat")
