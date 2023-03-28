@@ -713,7 +713,7 @@ class Llvm(CMakePackage, CudaPackage):
 
         # Add extra projects
         extra_projects = spec.variants["projects"].value
-        if "all" in targets:
+        if "all" in extra_projects:
             projects = ["all"]
         else:
             for project in extra_projects:
