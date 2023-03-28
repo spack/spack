@@ -35,8 +35,8 @@ import spack.error
 import spack.fetch_strategy as fs
 import spack.mirror
 import spack.paths
-import spack.util.lock
 import spack.spec
+import spack.util.lock
 import spack.util.path as sup
 import spack.util.pattern as pattern
 import spack.util.url as url_util
@@ -159,7 +159,7 @@ def _resolve_paths(candidates):
         can_path = sup.canonicalize_path(path)
         # Do not add per user path on Windows - currently only need to support
         # single user stages
-        if user not in can_path and not sys.platform=="win32":
+        if user not in can_path and not sys.platform == "win32":
             can_path = os.path.join(can_path, user)
 
         paths.append(can_path)
