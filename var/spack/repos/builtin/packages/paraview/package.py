@@ -84,6 +84,8 @@ class Paraview(CMakePackage, CudaPackage, ROCmPackage):
         description="Enable Catalyst 2 (libcatalyst) implementation",
         when="@5.10:",
     )
+    variant("gdal", default=False, description="Enable GDAL support")
+    variant("smtk_extensions", default=False, description="Enable components required by CMB/SMTK")
 
     variant(
         "advanced_debug",
@@ -186,8 +188,7 @@ class Paraview(CMakePackage, CudaPackage, ROCmPackage):
     depends_on("expat")
     depends_on("eigen@3:")
     depends_on("freetype")
-    # depends_on('hdf5+mpi', when='+mpi')
-    # depends_on('hdf5~mpi', when='~mpi')
+    depends_on("gdal@3.5.1", when="+gdal")
     depends_on("hdf5+hl+mpi", when="+hdf5+mpi")
     depends_on("hdf5+hl~mpi", when="+hdf5~mpi")
     depends_on("hdf5@1.10:", when="+hdf5 @5.10:")
@@ -392,8 +393,6 @@ class Paraview(CMakePackage, CudaPackage, ROCmPackage):
             "-DPARAVIEW_INSTALL_DEVELOPMENT_FILES:BOOL=%s" % includes,
             "-DBUILD_TESTING:BOOL=OFF",
             "-DOpenGL_GL_PREFERENCE:STRING=LEGACY",
-            self.define_from_variant("PARAVIEW_ENABLE_VISITBRIDGE", "visitbridge"),
-            self.define_from_variant("VISIT_BUILD_READER_Silo", "visitbridge"),
         ]
 
         if spec.satisfies("@5.11:"):
@@ -610,5 +609,38 @@ class Paraview(CMakePackage, CudaPackage, ROCmPackage):
         if "+libcatalyst" in spec:
             cmake_args.append("-DVTK_MODULE_ENABLE_ParaView_InSitu=YES")
             cmake_args.append("-DPARAVIEW_ENABLE_CATALYST=YES")
+
+        if "+gdal" in spec:
+            cmake_args.extend(
+                [
+                    self.define("PARAVIEW_ENABLE_GDAL", "YES"),
+                ]
+            )
+            # SMTK needs geovis to enable gdal
+            if "+smtk_extensions" in spec:
+                cmake_args.extend(
+                    [
+                        self.define("VTK_MODULE_ENABLE_VTK_GeovisCore", "YES"),
+                    ]
+                )
+
+        if "+smtk_extensions" in spec:
+            cmake_args.extend(
+                [
+                    self.define("VTK_MODULE_ENABLE_VTK_ViewsInfovis", "YES"),
+                    self.define("VTK_MODULE_ENABLE_VTK_RenderingGL2PSOpenGL2", "YES"),
+                    self.define("VTK_MODULE_ENABLE_VTK_DomainsChemistryOpenGL2", "YES"),
+                    self.define("PARAVIEW_BUILD_LEGACY_REMOVE", "OFF"),
+                    self.define("PARAVIEW_UNIFIED_INSTALL_TREE", "OFF"),
+                ]
+            )
+
+        if "+visitbridge" in spec:
+            cmake_args.extend(
+                [
+                    self.define("PARAVIEW_ENABLE_VISITBRIDGE", "ON"),
+                    self.define("VISIT_BUILD_READER_Silo", "ON"),
+                ]
+            )
 
         return cmake_args
