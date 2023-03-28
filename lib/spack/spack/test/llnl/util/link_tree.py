@@ -94,7 +94,7 @@ def test_merge_to_new_directory__win32_base(stage, link_tree):
             "dest/c/4",
             "dest/c/d/5",
             "dest/c/d/6",
-            "dest/c/d/e/7"
+            "dest/c/d/e/7",
         ]
         for file in files:
             assert islink(file)
@@ -133,8 +133,8 @@ def test_merge_to_new_directory_relative(stage, link_tree):
         assert not os.path.exists("dest")
 
 
-@pytest.mark.skipif(_windows_can_symlink(), reason='Requires base privileges.')
-@pytest.mark.skipif(sys.platform != 'win32', reason='Windows only.')
+@pytest.mark.skipif(_windows_can_symlink(), reason="Requires base privileges.")
+@pytest.mark.skipif(sys.platform != "win32", reason="Windows only.")
 def test_merge_to_new_directory_relative__win32_base(stage, link_tree):
     with working_dir(stage.path):
         link_tree.merge("dest", relative=True)
@@ -192,8 +192,8 @@ def test_merge_to_existing_directory(stage, link_tree):
         assert not os.path.isfile("dest/c/d/e/7")
 
 
-@pytest.mark.skipif(_windows_can_symlink(), reason='Requires base privileges.')
-@pytest.mark.skipif(sys.platform != 'win32', reason='Windows only.')
+@pytest.mark.skipif(_windows_can_symlink(), reason="Requires base privileges.")
+@pytest.mark.skipif(sys.platform != "win32", reason="Windows only.")
 def test_merge_to_existing_directory__win32_base(stage, link_tree):
     with working_dir(stage.path):
         touchp("dest/x")
