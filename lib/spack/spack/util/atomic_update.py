@@ -13,18 +13,32 @@ from llnl.util.symlink import symlink
 RENAME_EXCHANGE = 2
 AT_FDCWD = -100
 
-libc: Optional[ctypes.CDLL] = None
-try:
-    # CDLL(None) returns the python process
-    # python links against libc, so we can treat this as a libc handle
-    # we could also use CDLL("libc.so.6") but this is (irrelevantly) more future proof
-    libc = ctypes.CDLL(None)
-except (OSError, TypeError):
-    # OSError if the call fails,
-    # TypeError on Windows
-    pass
+# object for renameat2 not set
+# We use None for not found and notset for not set so that boolean checks work
+# properly in client code
+notset = object()
+_renameat2 = notset
 
-renameat2 = getattr(libc, "renameat2", None)
+
+def set_renameat2():
+    libc: Optional[ctypes.CDLL] = None
+    try:
+        # CDLL(None) returns the python process
+        # python links against libc, so we can treat this as a libc handle
+        # we could also use CDLL("libc.so.6") but this is (irrelevantly) more future proof
+        libc = ctypes.CDLL(None)
+    except (OSError, TypeError):
+        # OSError if the call fails,
+        # TypeError on Windows
+        return None
+
+    return getattr(libc, "renameat2", None)
+
+
+def renameat2():
+    if _renameat2 is notset:
+        _renameat2 = set_renameat2()
+    return _renameat2
 
 
 def atomic_update(oldpath, newpath):
@@ -35,7 +49,7 @@ def atomic_update(oldpath, newpath):
     on other systems, oldpath is not affected but all paths are abstracted
     by a symlink to allow for atomic updates.
     """
-    if renameat2:
+    if renameat2():
         return atomic_update_renameat2(oldpath, newpath)
     else:
         return atomic_update_symlink(oldpath, newpath)
@@ -50,7 +64,7 @@ def atomic_update_renameat2(src, dest):
     if not dest_exists:
         fs.touch(dest)
     try:
-        rc = renameat2(AT_FDCWD, src.encode(), AT_FDCWD, dest.encode(), RENAME_EXCHANGE)
+        rc = renameat2()(AT_FDCWD, src.encode(), AT_FDCWD, dest.encode(), RENAME_EXCHANGE)
         if rc:
             raise OSError(f"renameat2 failed to exchange {src} and {dest}")
         if not dest_exists:
