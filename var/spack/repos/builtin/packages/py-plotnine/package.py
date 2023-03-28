@@ -31,8 +31,9 @@ class PyPlotnine(PythonPackage):
 
     depends_on("py-descartes@1.1.0:", type=("build", "run"), when="@:0.8.0")
 
-    depends_on("py-matplotlib@3.5.0:", type=("build", "run"), when="@0.9.0:")
-    depends_on("py-matplotlib@3.1.1:", type=("build", "run"), when="@0.6.0:")
+    # https://github.com/has2k1/plotnine/issues/619
+    depends_on("py-matplotlib@3.5.0:3.5", type=("build", "run"), when="@0.9.0:0.9")
+    depends_on("py-matplotlib@3.1.1:3.5", type=("build", "run"), when="@0.6.0:0.9")
 
     depends_on("py-mizani@0.7.3:", type=("build", "run"), when="@0.8.0:")
     depends_on("py-mizani@0.6.0:", type=("build", "run"), when="@0.6.0:")
