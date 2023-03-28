@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -13,10 +13,15 @@ class Nwchem(Package):
     """High-performance computational chemistry software"""
 
     homepage = "https://nwchemgit.github.io"
-    url = "https://github.com/nwchemgit/nwchem/releases/download/v7.0.2-release/nwchem-7.0.2-release.revision-b9985dfa-srconly.2020-10-12.tar.bz2"
+    url = "https://github.com/nwchemgit/nwchem/releases/download/v7.2.0-release/nwchem-7.2.0-release.revision-d0d141fd-srconly.2023-03-10.tar.bz2"
 
     tags = ["ecp", "ecp-apps"]
 
+    version(
+        "7.2.0",
+        sha256="28ea70947e77886337c84e6fae3bdf88f25f0acfdeaf95e722615779c19f7a7e",
+        url="https://github.com/nwchemgit/nwchem/releases/download/v7.2.0-release/nwchem-7.2.0-release.revision-d0d141fd-srconly.2023-03-10.tar.bz2",
+    )
     version(
         "7.0.2",
         sha256="9bf913b811b97c8ed51bc5a02bf1c8e18456d0719c0a82b2e71223a596d945a7",
@@ -26,11 +31,6 @@ class Nwchem(Package):
         "7.0.0",
         sha256="e3c6510627345be596f4079047e5e7b59e6c20599798ecfe122e3527f8ad6eb0",
         url="https://github.com/nwchemgit/nwchem/releases/download/v7.0.0-release/nwchem-7.0.0-release.revision-2c9a1c7c-srconly.2020-02-26.tar.bz2",
-    )
-    version(
-        "6.8.1",
-        sha256="fd20f9ca1b410270a815e77e052ec23552f828526cd252709f798f589b2a6431",
-        url="https://github.com/nwchemgit/nwchem/releases/download/6.8.1-release/nwchem-6.8.1-release.revision-v6.8-133-ge032219-srconly.2018-06-14.tar.bz2",
     )
 
     variant("openmp", default=False, description="Enables OpenMP support")
@@ -47,11 +47,7 @@ class Nwchem(Package):
     depends_on("mpi")
     depends_on("scalapack")
     depends_on("fftw-api")
-    depends_on("python@3:", when="@7:", type=("build", "link", "run"))
-    depends_on("python@2.7:2.8", when="@:6", type=("build", "link", "run"))
-    conflicts(
-        "%gcc@10:", when="@:6", msg="NWChem versions prior to 7.0.0 do not build with GCC 10"
-    )
+    depends_on("python@3:3.9", type=("build", "link", "run"), when="@:7.0.2")
 
     def install(self, spec, prefix):
         scalapack = spec["scalapack"].libs
@@ -83,14 +79,6 @@ class Nwchem(Package):
                 "USE_NOFSCHECK=TRUE",  # FSCHECK, caused problems like code crashes
             ]
         )
-        if spec.version < Version("7.0.0"):
-            args.extend(
-                [
-                    "PYTHONVERSION=%s" % spec["python"].version.up_to(2),
-                    "PYTHONHOME=%s" % spec["python"].home,
-                    "USE_PYTHONCONFIG=Y",
-                ]
-            )
 
         # TODO: query if blas/lapack/scalapack uses 64bit Ints
         # A flag to distinguish between 32bit and 64bit integers in linear
@@ -98,9 +86,9 @@ class Nwchem(Package):
         use_32_bit_lin_alg = True
 
         if use_32_bit_lin_alg:
-            args.extend(["USE_64TO32=y", "BLAS_SIZE=4", "LAPACK_SIZE=4", "SCALAPACK_SIZE=4"])
+            args.extend(["USE_64TO32=y", "BLAS_SIZE=4", "SCALAPACK_SIZE=4"])
         else:
-            args.extend(["BLAS_SIZE=8", "LAPACK_SIZE=8" "SCALAPACK_SIZE=8"])
+            args.extend(["BLAS_SIZE=8", "SCALAPACK_SIZE=8"])
 
         if sys.platform == "darwin":
             target = "MACX64"
@@ -130,6 +118,7 @@ class Nwchem(Package):
 
             install_tree("data", share_path)
             install_tree(join_path("basis", "libraries"), join_path(share_path, "libraries"))
+            install_tree(join_path("basis", "libraries.bse"), join_path(share_path, "libraries"))
             install_tree(join_path("nwpw", "libraryps"), join_path(share_path, "libraryps"))
 
             b_path = join_path(self.stage.source_path, "bin", target, "nwchem")

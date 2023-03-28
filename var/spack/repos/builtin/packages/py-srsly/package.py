@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -21,7 +21,6 @@ class PySrsly(PythonPackage):
     depends_on("py-setuptools", type="build")
     depends_on("py-wheel", when="@2:", type="build")
     depends_on("py-cython@0.25:", when="@2:", type="build")
-    depends_on("py-pathlib@1.0.1", when="^python@:3.3", type=("build", "run"))
 
     # https://github.com/explosion/srsly/pull/24
     patch("subprocess.patch", when="@2.0.0:2.0.1")

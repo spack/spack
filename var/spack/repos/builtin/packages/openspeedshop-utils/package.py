@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -30,6 +30,8 @@ class OpenspeedshopUtils(CMakePackage):
 
     homepage = "http://www.openspeedshop.org"
     git = "https://github.com/OpenSpeedShop/openspeedshop.git"
+
+    maintainers = ["jgalarowicz"]
 
     version("develop", branch="master")
     version("2.4.2.1", branch="2.4.2.1")
@@ -89,7 +91,7 @@ class OpenspeedshopUtils(CMakePackage):
     depends_on("flex@2.6.1", type="build")
 
     # For binutils
-    depends_on("binutils+plugins~gold@2.32", type="build")
+    depends_on("binutils@2.32", type="build")
 
     depends_on("elfutils", type="link")
     depends_on("libdwarf")
@@ -103,10 +105,9 @@ class OpenspeedshopUtils(CMakePackage):
     # See https://github.com/spack/spack/pull/22303 for reference
     depends_on(Boost.with_default_variants)
 
-    depends_on("dyninst@master", when="@develop")
     depends_on("dyninst@10:", when="@2.4.0:9999")
 
-    depends_on("python@2.7.14:2.7", type=("build", "run"))
+    depends_on("python", type=("build", "run"))
 
     depends_on("libxml2")
 
@@ -206,7 +207,6 @@ class OpenspeedshopUtils(CMakePackage):
             )
 
         else:
-
             # Appends base options to cmake_args
             self.set_defaultbase_cmake_options(spec, cmake_args)
             cmake_args.extend(

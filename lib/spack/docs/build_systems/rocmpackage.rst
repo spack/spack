@@ -1,13 +1,13 @@
-.. Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+.. Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
    Spack Project Developers. See the top-level COPYRIGHT file for details.
 
    SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 .. _rocmpackage:
 
------------
-ROCmPackage
------------
+----
+ROCm
+----
 
 The ``ROCmPackage`` is not a build system but a helper package. Like ``CudaPackage``,
 it provides standard variants, dependencies, and conflicts to facilitate building
@@ -25,7 +25,7 @@ This package provides the following variants:
 
 * **rocm**
 
-  This variant is used to enable/disable building with ``rocm``.  
+  This variant is used to enable/disable building with ``rocm``.
   The default is disabled (or ``False``).
 
 * **amdgpu_target**

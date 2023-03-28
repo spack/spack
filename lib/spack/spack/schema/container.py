@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -62,9 +62,7 @@ container_schema = {
             "additionalProperties": False,
         },
         # Add labels to the image
-        "labels": {
-            "type": "object",
-        },
+        "labels": {"type": "object"},
         # Add a custom extra section at the bottom of a stage
         "extra_instructions": {
             "type": "object",
@@ -83,11 +81,7 @@ container_schema = {
                 "help": {"type": "string"},
             },
         },
-        "docker": {
-            "type": "object",
-            "additionalProperties": False,
-            "default": {},
-        },
+        "docker": {"type": "object", "additionalProperties": False, "default": {}},
     },
 }
 

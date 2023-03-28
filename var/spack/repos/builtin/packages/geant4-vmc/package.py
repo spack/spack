@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -36,3 +36,7 @@ class Geant4Vmc(CMakePackage):
     depends_on("cmake@3.3:", type="build")
     depends_on("geant4")
     depends_on("vmc")
+
+    def setup_build_environment(self, env):
+        if self.spec.satisfies("platform=darwin"):
+            env.unset("MACOSX_DEPLOYMENT_TARGET")

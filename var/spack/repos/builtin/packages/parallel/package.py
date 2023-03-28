@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -45,10 +45,5 @@ class Parallel(AutotoolsPackage, GNUMirrorPackage):
         with working_dir("src"):
             match = "^#!/usr/bin/env perl|^#!/usr/bin/perl.*"
             substitute = "#!{perl}".format(perl=perl)
-            files = [
-                "parallel",
-                "niceload",
-                "parcat",
-                "sql",
-            ]
+            files = ["parallel", "niceload", "parcat", "sql"]
             filter_file(match, substitute, *files, **kwargs)

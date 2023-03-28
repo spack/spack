@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -17,4 +17,5 @@ class REstimability(RPackage):
 
     cran = "estimability"
 
+    version("1.4.1", sha256="c65aaf1e452f3947013d3ce05ae674d48492081f615a942592dc91db780f1124")
     version("1.3", sha256="a33179c5fbd6a1a623d90cb6f1743148f92c09429fac466867f3ea70946a2e32")

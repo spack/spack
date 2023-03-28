@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -14,6 +14,7 @@ class Glm(CMakePackage):
     homepage = "https://github.com/g-truc/glm"
     url = "https://github.com/g-truc/glm/archive/0.9.9.8.tar.gz"
     git = "https://github.com/g-truc/glm.git"
+    tags = ["windows"]
 
     version("develop", branch="master")
     version("0.9.9.8", sha256="7d508ab72cb5d43227a3711420f06ff99b0a0cb63ee2f93631b162bfe1fe9592")

@@ -1,0 +1,161 @@
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
+#
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
+
+import io
+from collections import OrderedDict
+
+import pytest
+
+import llnl.util.filesystem as fs
+
+import spack.platforms
+import spack.util.elf as elf
+import spack.util.executable
+
+
+# note that our elf parser is platform independent... but I guess creating an elf file
+# is slightly more difficult with system tools on non-linux.
+def skip_unless_linux(f):
+    return pytest.mark.skipif(
+        str(spack.platforms.real_host()) != "linux",
+        reason="implementation currently requires linux",
+    )(f)
+
+
+@pytest.mark.requires_executables("gcc")
+@skip_unless_linux
+@pytest.mark.parametrize(
+    "linker_flag,is_runpath",
+    [("-Wl,--disable-new-dtags", False), ("-Wl,--enable-new-dtags", True)],
+)
+def test_elf_parsing_shared_linking(linker_flag, is_runpath, tmpdir):
+    gcc = spack.util.executable.which("gcc")
+
+    with fs.working_dir(str(tmpdir)):
+        # Create a library to link to so we can force a dynamic section in an ELF file
+        with open("foo.c", "w") as f:
+            f.write("int foo(){return 0;}")
+        with open("bar.c", "w") as f:
+            f.write("int foo(); int _start(){return foo();}")
+
+        # Create library and executable linking to it.
+        gcc("-shared", "-o", "libfoo.so", "-Wl,-soname,libfoo.so.1", "-nostdlib", "foo.c")
+        gcc(
+            "-o",
+            "bar",
+            linker_flag,
+            "-Wl,-rpath,/first",
+            "-Wl,-rpath,/second",
+            "-Wl,--no-as-needed",
+            "-nostdlib",
+            "libfoo.so",
+            "bar.c",
+            "-o",
+            "bar",
+        )
+
+        with open("libfoo.so", "rb") as f:
+            foo_parsed = elf.parse_elf(f, interpreter=True, dynamic_section=True)
+
+        assert not foo_parsed.has_pt_interp
+        assert foo_parsed.has_pt_dynamic
+        assert not foo_parsed.has_rpath
+        assert not foo_parsed.has_needed
+        assert foo_parsed.has_soname
+        assert foo_parsed.dt_soname_str == b"libfoo.so.1"
+
+        with open("bar", "rb") as f:
+            bar_parsed = elf.parse_elf(f, interpreter=True, dynamic_section=True)
+
+        assert bar_parsed.has_pt_interp
+        assert bar_parsed.has_pt_dynamic
+        assert bar_parsed.has_rpath
+        assert bar_parsed.has_needed
+        assert not bar_parsed.has_soname
+        assert bar_parsed.dt_rpath_str == b"/first:/second"
+        assert bar_parsed.dt_needed_strs == [b"libfoo.so.1"]
+
+
+def test_broken_elf():
+    # No elf magic
+    with pytest.raises(elf.ElfParsingError, match="Not an ELF file"):
+        elf.parse_elf(io.BytesIO(b"x"))
+
+    # Incomplete ELF header
+    with pytest.raises(elf.ElfParsingError, match="Not an ELF file"):
+        elf.parse_elf(io.BytesIO(b"\x7fELF"))
+
+    # Invalid class
+    with pytest.raises(elf.ElfParsingError, match="Invalid class"):
+        elf.parse_elf(io.BytesIO(b"\x7fELF\x09\x01" + b"\x00" * 10))
+
+    # Invalid data type
+    with pytest.raises(elf.ElfParsingError, match="Invalid data type"):
+        elf.parse_elf(io.BytesIO(b"\x7fELF\x01\x09" + b"\x00" * 10))
+
+    # 64-bit needs at least 64 bytes of header; this is only 56 bytes
+    with pytest.raises(elf.ElfParsingError, match="ELF header malformed"):
+        elf.parse_elf(io.BytesIO(b"\x7fELF\x02\x01" + b"\x00" * 50))
+
+    # 32-bit needs at least 52 bytes of header; this is only 46 bytes
+    with pytest.raises(elf.ElfParsingError, match="ELF header malformed"):
+        elf.parse_elf(io.BytesIO(b"\x7fELF\x01\x01" + b"\x00" * 40))
+
+    # Not a ET_DYN/ET_EXEC on a 32-bit LE ELF
+    with pytest.raises(elf.ElfParsingError, match="Not an ET_DYN or ET_EXEC"):
+        elf.parse_elf(io.BytesIO(b"\x7fELF\x01\x01" + (b"\x00" * 10) + b"\x09" + (b"\x00" * 35)))
+
+
+def test_parser_doesnt_deal_with_nonzero_offset():
+    # Currently we don't have logic to parse ELF files at nonzero offsets in a file
+    # This could be useful when e.g. modifying an ELF file inside a tarball or so,
+    # but currently we cannot.
+    elf_at_offset_one = io.BytesIO(b"\x00\x7fELF\x01\x01" + b"\x00" * 10)
+    elf_at_offset_one.read(1)
+    with pytest.raises(elf.ElfParsingError, match="Cannot parse at a nonzero offset"):
+        elf.parse_elf(elf_at_offset_one)
+
+
+@pytest.mark.requires_executables("gcc")
+@skip_unless_linux
+def test_elf_get_and_replace_rpaths(binary_with_rpaths):
+    long_rpaths = ["/very/long/prefix-a/x", "/very/long/prefix-b/y"]
+    executable = str(binary_with_rpaths(rpaths=long_rpaths))
+
+    # Before
+    assert elf.get_rpaths(executable) == long_rpaths
+
+    replacements = OrderedDict(
+        [
+            (b"/very/long/prefix-a", b"/short-a"),
+            (b"/very/long/prefix-b", b"/short-b"),
+            (b"/very/long", b"/dont"),
+        ]
+    )
+
+    # Replace once: should modify the file.
+    assert elf.replace_rpath_in_place_or_raise(executable, replacements)
+
+    # Replace twice: nothing to be done.
+    assert not elf.replace_rpath_in_place_or_raise(executable, replacements)
+
+    # Verify the rpaths were modified correctly
+    assert elf.get_rpaths(executable) == ["/short-a/x", "/short-b/y"]
+
+    # Going back to long rpaths should fail, since we've added trailing \0
+    # bytes, and replacement can't assume it can write back in repeated null
+    # bytes -- it may correspond to zero-length strings for example.
+    with pytest.raises(
+        elf.ElfDynamicSectionUpdateFailed,
+        match="New rpath /very/long/prefix-a/x:/very/long/prefix-b/y is "
+        "longer than old rpath /short-a/x:/short-b/y",
+    ):
+        elf.replace_rpath_in_place_or_raise(
+            executable,
+            OrderedDict(
+                [(b"/short-a", b"/very/long/prefix-a"), (b"/short-b", b"/very/long/prefix-b")]
+            ),
+        )

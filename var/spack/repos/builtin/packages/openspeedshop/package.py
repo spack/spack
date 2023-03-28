@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -25,6 +25,8 @@ class Openspeedshop(CMakePackage):
 
     homepage = "http://www.openspeedshop.org"
     git = "https://github.com/OpenSpeedShop/openspeedshop.git"
+
+    maintainers = ["jgalarowicz"]
 
     version("develop", branch="master")
     version("2.4.2.1", branch="2.4.2.1")
@@ -91,7 +93,7 @@ class Openspeedshop(CMakePackage):
     depends_on("flex@2.6.1", type="build")
 
     # For binutils
-    depends_on("binutils+plugins~gold@2.32")
+    depends_on("binutils@2.32")
 
     depends_on("elfutils", type="link")
     depends_on("libdwarf")
@@ -105,10 +107,9 @@ class Openspeedshop(CMakePackage):
     # See https://github.com/spack/spack/pull/22303 for reference
     depends_on(Boost.with_default_variants)
 
-    depends_on("dyninst@master", when="@develop")
     depends_on("dyninst@10:", when="@2.4.0:9999")
 
-    depends_on("python@2.7.14:2.7", type=("build", "run"))
+    depends_on("python", type=("build", "run"))
 
     depends_on("libxml2")
 
@@ -186,7 +187,6 @@ class Openspeedshop(CMakePackage):
         cmake_options.extend(cray_login_node_options)
 
     def cmake_args(self):
-
         spec = self.spec
 
         compile_flags = "-O2 -g -Wall"
@@ -214,7 +214,6 @@ class Openspeedshop(CMakePackage):
                 cmake_args.extend(["-DCBTF_ARGONAVIS_DIR=%s" % spec["cbtf-argonavis"].prefix])
 
         else:
-
             # Appends base options to cmake_args
             self.set_defaultbase_cmake_options(spec, cmake_args)
             guitype = self.spec.variants["gui"].value

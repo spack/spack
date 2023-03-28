@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -15,7 +15,7 @@ class Pcsclite(AutotoolsPackage):
     url = "https://pcsclite.apdu.fr/files/pcsc-lite-1.9.8.tar.bz2"
     git = "https://salsa.debian.org/rousseau/PCSC.git"
 
-    maintainers = ["cessenat"]
+    maintainers("cessenat")
 
     version("master", branch="master")
     version("1.9.8", sha256="502d80c557ecbee285eb99fe8703eeb667bcfe067577467b50efe3420d1b2289")

@@ -1,14 +1,12 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import json
-import sys
 
 import jsonschema
 import jsonschema.exceptions
-import six
 
 import llnl.util.tty as tty
 
@@ -20,10 +18,7 @@ from spack.schema.cray_manifest import schema as manifest_schema
 #: packages here.
 default_path = "/opt/cray/pe/cpe-descriptive-manifest/"
 
-compiler_name_translation = {
-    "nvidia": "nvhpc",
-    "rocm": "rocmcc",
-}
+compiler_name_translation = {"nvidia": "nvhpc", "rocm": "rocmcc"}
 
 
 def translated_compiler_name(manifest_compiler_name):
@@ -63,9 +58,16 @@ def compiler_from_entry(entry):
 def spec_from_entry(entry):
     arch_str = ""
     if "arch" in entry:
+        local_platform = spack.platforms.host()
+        spec_platform = entry["arch"]["platform"]
+        # Note that Cray systems are now treated as Linux. Specs
+        # in the manifest which specify "cray" as the platform
+        # should be registered in the DB as "linux"
+        if local_platform.name == "linux" and spec_platform.lower() == "cray":
+            spec_platform = "linux"
         arch_format = "arch={platform}-{os}-{target}"
         arch_str = arch_format.format(
-            platform=entry["arch"]["platform"],
+            platform=spec_platform,
             os=entry["arch"]["platform_os"],
             target=entry["arch"]["target"]["name"],
         )
@@ -98,7 +100,7 @@ def spec_from_entry(entry):
                 continue
 
             # Value could be a list (of strings), boolean, or string
-            if isinstance(value, six.string_types):
+            if isinstance(value, str):
                 variant_strs.append("{0}={1}".format(name, value))
             else:
                 try:
@@ -157,27 +159,20 @@ def entries_to_specs(entries):
                     continue
                 parent_spec = spec_dict[entry["hash"]]
                 dep_spec = spec_dict[dep_hash]
-                parent_spec._add_dependency(dep_spec, deptypes)
+                parent_spec._add_dependency(dep_spec, deptypes=deptypes)
 
     return spec_dict
 
 
 def read(path, apply_updates):
-    if sys.version_info >= (3, 0):
-        decode_exception_type = json.decoder.JSONDecodeError
-    else:
-        decode_exception_type = ValueError
-
+    decode_exception_type = json.decoder.JSONDecodeError
     try:
         with open(path, "r") as json_file:
             json_data = json.load(json_file)
 
         jsonschema.validate(json_data, manifest_schema)
     except (jsonschema.exceptions.ValidationError, decode_exception_type) as e:
-        raise six.raise_from(
-            ManifestValidationError("error parsing manifest JSON:", str(e)),
-            e,
-        )
+        raise ManifestValidationError("error parsing manifest JSON:", str(e)) from e
 
     specs = entries_to_specs(json_data["specs"])
     tty.debug("{0}: {1} specs read from manifest".format(path, str(len(specs))))

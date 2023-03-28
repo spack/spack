@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -33,10 +33,7 @@ def _create_config(scope=None, data={}, section="packages"):
 def config_yaml_v015(mutable_config):
     """Create a packages.yaml in the old format"""
     old_data = {
-        "config": {
-            "install_tree": "/fake/path",
-            "install_path_scheme": "{name}-{version}",
-        }
+        "config": {"install_tree": "/fake/path", "install_path_scheme": "{name}-{version}"}
     }
     return functools.partial(_create_config, data=old_data, section="config")
 
@@ -232,7 +229,6 @@ def test_config_add_update_dict(mutable_empty_config):
 
 
 def test_config_with_c_argument(mutable_empty_config):
-
     # I don't know how to add a spack argument to a Spack Command, so we test this way
     config_file = "config:install_root:root:/path/to/config.yaml"
     parser = spack.main.make_argument_parser()
@@ -606,6 +602,14 @@ def check_config_updated(data):
     assert data["install_tree"]["projections"] == {"all": "{name}-{version}"}
 
 
+def test_config_update_shared_linking(mutable_config):
+    # Old syntax: config:shared_linking:rpath/runpath
+    # New syntax: config:shared_linking:{type:rpath/runpath,bind:True/False}
+    with spack.config.override("config:shared_linking", "runpath"):
+        assert spack.config.get("config:shared_linking:type") == "runpath"
+        assert not spack.config.get("config:shared_linking:bind")
+
+
 def test_config_prefer_upstream(
     tmpdir_factory, install_mockery, mock_fetch, mutable_config, gen_mock_layout, monkeypatch
 ):
@@ -634,13 +638,13 @@ def test_config_prefer_upstream(
 
     # Make sure only the non-default variants are set.
     assert packages["boost"] == {
-        "compiler": ["gcc@4.5.0"],
+        "compiler": ["gcc@10.2.1"],
         "variants": "+debug +graph",
         "version": ["1.63.0"],
     }
-    assert packages["dependency-install"] == {"compiler": ["gcc@4.5.0"], "version": ["2.0"]}
+    assert packages["dependency-install"] == {"compiler": ["gcc@10.2.1"], "version": ["2.0"]}
     # Ensure that neither variant gets listed for hdf5, since they conflict
-    assert packages["hdf5"] == {"compiler": ["gcc@4.5.0"], "version": ["2.3"]}
+    assert packages["hdf5"] == {"compiler": ["gcc@10.2.1"], "version": ["2.3"]}
 
     # Make sure a message about the conflicting hdf5's was given.
     assert "- hdf5" in output

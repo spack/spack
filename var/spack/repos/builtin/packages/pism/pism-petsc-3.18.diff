@@ -1,0 +1,22 @@
+--- spack-src/src/util/options.cc~	2019-06-17 13:14:35.000000000 -0500
++++ spack-src/src/util/options.cc	2022-10-10 19:50:05.309762538 -0500
+@@ -59,8 +59,7 @@
+   memset(tmp, 0, TEMPORARY_STRING_LENGTH);
+ 
+   PetscErrorCode ierr;
+-  ierr = PetscOptionsBegin(MPI_COMM_SELF, "", "", "");
+-  PISM_CHK(ierr, "PetscOptionsBegin");
++  PetscOptionsBegin(MPI_COMM_SELF, "", "", "");
+ 
+   ierr = PetscOptionsString(option.c_str(),
+                             description.c_str(),
+@@ -71,8 +70,7 @@
+                             &flag);                  // PETSC_TRUE if found, else PETSC_FALSE
+   PISM_CHK(ierr, "PetscOptionsString");
+ 
+-  ierr = PetscOptionsEnd();
+-  PISM_CHK(ierr, "PetscOptionsEnd");
++  PetscOptionsEnd();
+ 
+   std::string result = tmp;
+ 
