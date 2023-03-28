@@ -66,7 +66,8 @@ def symlink(source_path: str, link_path: str):
             raise SymlinkError(
                 f"Broken link does not point to the source path ({source_path}).",
                 long_message="This can be caused by the source path not being relative to "
-                "either the link's parent directory or the current working directory.",
+                "either the link's parent directory or the current working directory or "
+                "the source target not existing.",
             )
     else:
         raise SymlinkError("Link does not exist after symlink methods finished.")
