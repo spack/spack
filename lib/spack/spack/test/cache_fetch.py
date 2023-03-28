@@ -30,7 +30,13 @@ def test_fetch_missing_cache(tmpdir, _fetch_method):
 
 @pytest.mark.parametrize("_fetch_method", ["curl", "urllib"])
 def test_fetch(tmpdir, _fetch_method):
-    """Ensure a fetch after expanding is effectively a no-op."""
+    """Ensure a fetch after expanding is effectively a no-op.
+
+    Since the `stage.save_filename` value is the same as the `cache` path, fetch()
+    deletes the cache.tar.gz file, then tries to create a symlink that points to
+    itself for the file that it just deleted. This raises a symlink.Symlink error
+    because the resulting link is broken.
+    """
     testpath = str(tmpdir)
     cache = os.path.join(testpath, "cache.tar.gz")
     touch(cache)

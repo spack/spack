@@ -10,7 +10,7 @@ import pytest
 
 from llnl.util.filesystem import mkdirp, touchp, visit_directory_tree, working_dir
 from llnl.util.link_tree import DestinationMergeVisitor, LinkTree, SourceMergeVisitor
-from llnl.util.symlink import islink, _windows_can_symlink, symlink
+from llnl.util.symlink import _windows_can_symlink, islink, symlink
 
 from spack.stage import Stage
 
@@ -80,8 +80,8 @@ def test_merge_to_new_directory(stage, link_tree):
         assert not os.path.exists("dest")
 
 
-@pytest.mark.skipif(_windows_can_symlink(), reason='Requires base privileges.')
-@pytest.mark.skipif(sys.platform != 'win32', reason='Windows only.')
+@pytest.mark.skipif(_windows_can_symlink(), reason="Requires base privileges.")
+@pytest.mark.skipif(sys.platform != "win32", reason="Windows only.")
 def test_merge_to_new_directory__win32_base(stage, link_tree):
     """Test for link_tree.merge for windows with base permissions"""
     with working_dir(stage.path):
@@ -401,4 +401,3 @@ def test_destination_merge_visitor_file_dir_clashes(tmpdir):
     visit_directory_tree(str(tmpdir.join("a")), DestinationMergeVisitor(b_to_a))
     assert b_to_a.fatal_conflicts
     assert b_to_a.fatal_conflicts[0].dst == "example"
-

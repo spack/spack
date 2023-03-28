@@ -35,7 +35,7 @@ import llnl.util
 import llnl.util.filesystem as fs
 import llnl.util.tty as tty
 from llnl.util.filesystem import get_single_file, mkdirp, temp_cwd, temp_rename, working_dir
-from llnl.util.symlink import symlink
+from llnl.util.symlink import SymlinkError, symlink
 
 import spack.config
 import spack.error
@@ -551,7 +551,12 @@ class CacheURLFetchStrategy(URLFetchStrategy):
             os.remove(filename)
 
         # Symlink to local cached archive.
-        symlink(path, filename)
+        try:
+            symlink(path, filename)
+        except SymlinkError as e:
+            tty.warn("No-op as symlink to local cached archive was not created.")
+            tty.debug(e)
+            return
 
         # Remove link if checksum fails, or subsequent fetchers
         # will assume they don't need to download.
