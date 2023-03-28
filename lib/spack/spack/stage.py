@@ -51,6 +51,7 @@ stage_prefix = "spack-stage-"
 
 
 def compute_stage_name(prefix: str, spec):
+    """Determine stage name given a spec"""
     hash_len = spack.config.get("config:stage_hash_length", None)
     return f"{stage_prefix}{spec.name}-{spec.version}-{spec.dag_hash(hash_len)}"
 
@@ -156,7 +157,9 @@ def _resolve_paths(candidates):
 
         # Ensure the path is unique per user.
         can_path = sup.canonicalize_path(path)
-        if user not in can_path:
+        # Do not add per user path on Windows - currently only need to support
+        # single user stages
+        if user not in can_path and not sys.platform=="win32":
             can_path = os.path.join(can_path, user)
 
         paths.append(can_path)
