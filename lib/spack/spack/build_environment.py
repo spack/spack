@@ -43,6 +43,7 @@ import types
 from typing import List, Tuple
 
 import llnl.util.tty as tty
+from llnl.util.filesystem import join_path
 from llnl.util.lang import dedupe
 from llnl.util.symlink import symlink
 from llnl.util.tty.color import cescape, colorize
@@ -65,6 +66,7 @@ import spack.user_environment
 import spack.util.path
 import spack.util.pattern
 from spack.error import NoHeadersError, NoLibrariesError
+from spack.install_test import spack_install_test_log
 from spack.installer import InstallError
 from spack.util.cpus import cpus_available
 from spack.util.environment import (
@@ -1358,15 +1360,12 @@ class ChildError(InstallError):
             out.write("See {0} log for details:\n".format(self.log_type))
             out.write("  {0}\n".format(self.log_name))
 
-        # # TODO: Ensure this is the process when rebase to include 35315
-        # # Also output the test log path IF it exists
-        # if self.context != "test":
-        #     test_log = join_path(
-        #         os.path.dirname(self.log_name), spack.package_base.spack_install_test_log
-        #     )
-        #     if os.path.isfile(test_log):
-        #         out.write("\nSee test log for details:\n")
-        #         out.write("  {0}n".format(test_log))
+        # Also output the test log path IF it exists
+        if self.context != "test":
+            test_log = join_path(os.path.dirname(self.log_name), spack_install_test_log)
+            if os.path.isfile(test_log):
+                out.write("\nSee test log for details:\n")
+                out.write("  {0}n".format(test_log))
 
         return out.getvalue()
 

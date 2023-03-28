@@ -713,9 +713,7 @@ spack:
         with e:
             e.concretize()
 
-    err = str(exc)
-    print(err)
-    assert "2 missing include path" in err
+    assert "2 missing include path" in str(exc)
     assert ev.active_environment() is None
 
 

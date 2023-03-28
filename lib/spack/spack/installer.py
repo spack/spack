@@ -278,13 +278,13 @@ def _print_installed_pkg(message):
     print(colorize("@*g{[+]} ") + spack.util.path.debug_padded_filter(message))
 
 
-def _print_install_test_log(pkg: "spack.package_base.PackageBase"):
-    """Output install test log file information but onlly if have test failures.
+def print_install_test_log(pkg: "spack.package_base.PackageBase"):
+    """Output install test log file path but only if have test failures.
 
     Args:
-        pkg: package of interest
+        pkg: instance of the package under test
     """
-    if not pkg.run_tests or not pkg.test_failures:
+    if not pkg.run_tests or not (pkg.tester and pkg.tester.test_failures):
         # The tests were not run or there were no test failures
         return
 
@@ -1967,7 +1967,7 @@ class BuildProcessInstaller(object):
             with open(self.pkg.times_log_path, "w") as timelog:
                 self.timer.write_json(timelog)
 
-        _print_install_test_log(self.pkg, self.verbose)
+        print_install_test_log(self.pkg)
         _print_timer(pre=self.pre, pkg_id=self.pkg_id, timer=self.timer)
         _print_installed_pkg(self.pkg.prefix)
 

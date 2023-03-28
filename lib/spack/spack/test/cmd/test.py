@@ -238,13 +238,14 @@ def test_test_list_all(mock_packages):
     pkgs = spack_test("list", "--all").strip().split()
     assert set(pkgs) == set(
         [
+            "fail-test-audit",
             "printing-package",
             "py-extension1",
             "py-extension2",
+            "py-test-callback",
             "simple-standalone-test",
             "test-error",
             "test-fail",
-            "fail-test-audit",
         ]
     )
 

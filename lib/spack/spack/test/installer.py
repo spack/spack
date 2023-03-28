@@ -27,6 +27,9 @@ import spack.store
 import spack.util.lock as lk
 import spack.version
 
+# TODO/TLD: from spack.install_test import PackageTest, TestSuite, spack_install_test_log
+# TODO/TLD: from spack.util.prefix import Prefix
+
 
 def _mock_repo(root, namespace):
     """Create an empty repository at the specified root
@@ -1384,3 +1387,49 @@ def test_single_external_implicit_install(install_mockery, explicit_args, is_exp
     s.external_path = "/usr"
     create_installer([(s, explicit_args)]).install()
     assert spack.store.db.get_record(pkg).explicit == is_explicit
+
+
+# # TODO/TLD: Need to determine if this chicken-and-egg issue is worthwhile anymore.
+# @pytest.mark.parametrize(
+#     "installed,staged,fails",
+#     [
+#         (False, False, True),  # no output file available
+#         (False, True, True),  # staged log file, print path
+#         (False, True, False),  # staged log file, don't print path
+#         (True, False, True),  # install log file, print path
+#     ],
+# )
+# def test_print_install_test_log(
+#     tmpdir, mock_packages, install_mockery, capsys, monkeypatch, installed, staged, fails
+# ):
+#     pkg = "py-test-callback"
+#     spec = spack.spec.Spec(pkg).concretized()
+#     spec.package._stage = Prefix(str(tmpdir))
+#
+#     def create_log(package):
+#         if installed:
+#             log = package.tester.archived_install_test_log
+#         elif staged:
+#             package.test_suite = TestSuite([spec])
+#             package.test_suite._stage = tmpdir
+#             log = package.tester.test_log_file
+#         else:
+#             return
+#
+#     expected = []
+#     if installed or staged:
+#         create_log(spec.package)
+#         if fails:
+#             expected.append("See test results")
+#     else:
+#         monkeypatch.setattr(tty, "_debug", 1)
+#         expected.append("There is no test log file")
+#
+#     spec.package.run_tests = True
+#     if fails:
+#         spec.package.test_failures = [(AssertionError("Fake failure"), "Fake test failure")]
+#     inst.print_install_test_log(spec.package)
+#     captured = str(capsys.readouterr())
+#
+#     for e in expected:
+#         assert e in captured, "Expected '{0}' to be printed".format(e)

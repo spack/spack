@@ -303,6 +303,7 @@ class PackageTest(object):
             builder.pkg.test_suite.current_test_spec = builder.pkg.spec
             builder.pkg.test_suite.current_base_spec = builder.pkg.spec
 
+            # TODO: Change "test" to "test_" once remove package's test()
             have_tests = any(name.startswith("test") for name in method_names)
             if have_tests:
                 copy_test_files(builder.pkg, builder.pkg.spec)
@@ -353,7 +354,7 @@ class PackageTest(object):
         return total
 
     def print_log_path(self):
-        """Print the test log file location and, optionally, contents"""
+        """Print the test log file path."""
         log = self.archived_install_test_log
         if not os.path.isfile(log):
             log = self.test_log_file
@@ -554,9 +555,12 @@ def test_functions(
 
     Returns: test functions or their names
     """
-    pkg_cls = pkg.__class__
-    classes = [pkg_cls]
-    if add_virtuals:
+    pkg_cls = pkg if inspect.isclass(pkg) else pkg.__class__
+    if not issubclass(pkg, spack.package_base.PackageBase):
+        raise ValueError("Expected a package, not {0}".format(type(pkg)))
+
+    classes = [pkg]
+    if add_virtuals and isinstance(pkg, spack.package_base.PackageBase):
         classes.extend([(Spec(name)).package_class for name in sorted(virtuals(pkg))])
 
     fmt = pkg_cls.name.lower() + ".{0}"
@@ -568,7 +572,7 @@ def test_functions(
             if not name.startswith("test"):
                 continue
 
-            # TBD: Remove empty method check once eliminate PackageBase.test()
+            # TBD: Remove empty method check once eliminate PackageBase.test()?
             source = (inspect.getsource(test_fn)).splitlines()[1:]
             lines = [ln.strip() for ln in source if not ln.strip().startswith("#")]
             if len(lines) > 0 and lines[0] == "pass":
@@ -682,7 +686,9 @@ def virtuals(pkg):
     Returns: names of unique virtual packages
     """
     # provided virtuals have to be deduped by name
-    v_names = list(set([vspec.name for vspec in pkg.virtuals_provided]))
+    provides = pkg.virtuals_provided
+    tty.error("provides ({0}): {1}".format(type(provides), provides))
+    v_names = list(set([vspec.name for vspec in provides]))
 
     # hack for compilers that are not dependencies (yet)
     # TODO: this all eventually goes away
