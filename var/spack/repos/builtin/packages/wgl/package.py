@@ -43,21 +43,19 @@ class Wgl(Package):
     # satisfied appropriately
     provides("gl@4.6")
 
-    variant("plat", values=("x64", "x86", "arm", "arm64"), default="x64")
-
     # WGL exists on all Windows systems post win 98, however the headers
     # needed to use OpenGL are found in the SDK (GL/gl.h)
     # Dep is needed to consolidate sdk version to locate header files for
     # version of SDK being used
     # Generic depends to capture handling for external versions
-    depends_on("win-sdk", type=("build", "run"))
-    depends_on("win-sdk@10.0.19041", when="@10.0.19041", type=("build", "run"))
-    depends_on("win-sdk@10.0.18362", when="@10.0.18362", type=("build", "run"))
-    depends_on("win-sdk@10.0.17763", when="@10.0.17763", type=("build", "run"))
-    depends_on("win-sdk@10.0.17134", when="@10.0.17134", type=("build", "run"))
-    depends_on("win-sdk@10.0.16299", when="@10.0.16299", type=("build", "run"))
-    depends_on("win-sdk@10.0.15063", when="@10.0.15063", type=("build", "run"))
-    depends_on("win-sdk@10.0.14393", when="@10.0.14393", type=("build", "run"))
+    depends_on("win-sdk")
+    depends_on("win-sdk@10.0.19041", when="@10.0.19041")
+    depends_on("win-sdk@10.0.18362", when="@10.0.18362")
+    depends_on("win-sdk@10.0.17763", when="@10.0.17763")
+    depends_on("win-sdk@10.0.17134", when="@10.0.17134")
+    depends_on("win-sdk@10.0.16299", when="@10.0.16299")
+    depends_on("win-sdk@10.0.15063", when="@10.0.15063")
+    depends_on("win-sdk@10.0.14393", when="@10.0.14393")
 
     # WGL has no meaning on other platforms, should not be able to spec
     for plat in ["linux", "darwin", "cray"]:
@@ -80,6 +78,15 @@ class Wgl(Package):
             variants.append("plat=%s" % arch)
         return variants
 
+    def _spec_arch_to_sdk_arch(self):
+        spec_arch = str(self.spec.architecture.target).lower()
+        _64bit = "64" in spec_arch
+        arm = "arm" in spec_arch
+        if arm:
+            return "arm64" if _64bit else "arm"
+        else:
+            return "x64" if _64bit else "x86"
+
     # As noted above, the headers neccesary to include
     @property
     def headers(self):
@@ -93,7 +100,7 @@ class Wgl(Package):
             "opengl32",
             shared=False,
             root=os.path.join(
-                self.prefix.Lib, str(self.version) + ".0", "um", self.spec.variants["plat"].value
+                self.prefix.Lib, str(self.version) + ".0", "um", self._spec_arch_to_sdk_arch()
             ),
             recursive=True,
         )
