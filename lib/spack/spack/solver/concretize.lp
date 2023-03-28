@@ -617,6 +617,7 @@ variant_not_default(Package, Variant, Value)
 % A default variant value that is not used
 variant_default_not_used(Package, Variant, Value)
   :- variant_default_value(Package, Variant, Value),
+     variant(Package, Variant),
      not attr("variant_value", Package, Variant, Value),
      attr("node", Package).
 
