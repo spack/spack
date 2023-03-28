@@ -146,8 +146,8 @@ possible_version_weight(Package, Weight)
 % Otherwise covered by `no_version_error` and `versions_conflict_error`.
 error(1, "No valid version for '{0}' satisfies '@{1}'", Package, Constraint)
   :- attr("node_version_satisfies", Package, Constraint),
-     C = #count{ Version : attr("version", Package, Version), version_satisfies(Package, Constraint, Version)},
-     C < 1.
+     attr("version", Package, Version),
+     not version_satisfies(Package, Constraint, Version).
 
 attr("node_version_satisfies", Package, Constraint)
   :- attr("version", Package, Version), version_satisfies(Package, Constraint, Version).
