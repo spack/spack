@@ -1579,7 +1579,12 @@ class SpackSolverSetup(object):
                 # When COMPARING VERSIONS, the '@develop' version is always
                 # larger than other versions. BUT when CONCRETIZING, the largest
                 # NON-develop version is selected by default.
-                return info.get("preferred", False), not version.isdevelop(), version
+                return (
+                    info.get("preferred", False),
+                    not info.get("deprecated", False),
+                    not version.isdevelop(),
+                    version,
+                )
 
             for idx, item in enumerate(sorted(pkg_cls.versions.items(), key=key_fn, reverse=True)):
                 v, version_info = item
