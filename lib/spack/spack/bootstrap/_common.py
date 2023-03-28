@@ -9,7 +9,7 @@ import re
 import sys
 import sysconfig
 import warnings
-from typing import Dict, List, Optional, Union
+from typing import Dict, Optional, Sequence, Union
 
 import archspec.cpu
 
@@ -163,7 +163,7 @@ def _fix_ext_suffix(candidate_spec: "spack.spec.Spec"):
 
 
 def _executables_in_store(
-    executables: List[str],
+    executables: Sequence[str],
     query_spec: Union["spack.spec.Spec", str],
     query_info: Optional[QueryInfo] = None,
 ) -> bool:

@@ -124,7 +124,7 @@ class Bootstrapper:
         """
         return False
 
-    def try_search_path(self, executables: List[str], abstract_spec_str: str) -> bool:
+    def try_search_path(self, executables: Tuple[str], abstract_spec_str: str) -> bool:
         """Try to search some executables in the prefix of specs satisfying the abstract
         spec passed as argument.
 
@@ -253,7 +253,7 @@ class BuildcacheBootstrapper(Bootstrapper):
         data = self._read_metadata(module)
         return self._install_and_test(abstract_spec, bincache_platform, data, test_fn)
 
-    def try_search_path(self, executables: List[str], abstract_spec_str: str) -> bool:
+    def try_search_path(self, executables: Tuple[str], abstract_spec_str: str) -> bool:
         info: ConfigDictionary
         test_fn, info = functools.partial(_executables_in_store, executables), {}
         if test_fn(query_spec=abstract_spec_str, query_info=info):
@@ -312,7 +312,7 @@ class SourceBootstrapper(Bootstrapper):
             return True
         return False
 
-    def try_search_path(self, executables: List[str], abstract_spec_str: str) -> bool:
+    def try_search_path(self, executables: Tuple[str], abstract_spec_str: str) -> bool:
         info: ConfigDictionary = {}
         if _executables_in_store(executables, abstract_spec_str, query_info=info):
             self.last_search = info
