@@ -213,7 +213,6 @@ class Octopus(AutotoolsPackage, CudaPackage):
         if "+berkeleygw" in spec:
             args.append("--with-berkeleygw-prefix=%s" % spec["berkeleygw"].prefix)
 
-
         # When preprocessor expands macros (i.e. CFLAGS) defined as quoted
         # strings the result may be > 132 chars and is terminated.
         # This will look to a compiler as an Unterminated character constant
