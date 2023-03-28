@@ -75,6 +75,13 @@
             "flags": "-march={name} -mtune=generic"
           }
         ],
+        "cce": [
+          {
+            "versions": ":",
+            "name": "x86-64",
+            "flags": "-march={name} -mtune=generic"
+          }
+        ],
         "aocc": [
           {
             "versions": "2.2:",
@@ -329,6 +336,12 @@
             "flags": "-march={name} -mtune={name}"
           }
         ],
+        "cce": [
+          {
+            "versions": "15.0:",
+            "flags": "-march={name} -mtune={name}"
+          }
+        ],
         "aocc": [
           {
             "versions": "2.2:",
@@ -380,6 +393,12 @@
         "clang": [
           {
             "versions": "3.9:",
+            "flags": "-march={name} -mtune={name}"
+          }
+        ],
+        "cce": [
+          {
+            "versions": "15.0:",
             "flags": "-march={name} -mtune={name}"
           }
         ],
@@ -445,6 +464,12 @@
             "flags": "-march={name} -mtune={name}"
           }
         ],
+        "cce": [
+          {
+            "versions": "15.0:",
+            "flags": "-march={name} -mtune={name}"
+          }
+        ],
         "aocc": [
           {
             "versions": "2.2:",
@@ -504,6 +529,12 @@
         "clang": [
           {
             "versions": "3.9:",
+            "flags": "-march={name} -mtune={name}"
+          }
+        ],
+        "cce": [
+          {
+            "versions": "15.0:",
             "flags": "-march={name} -mtune={name}"
           }
         ],
@@ -572,6 +603,12 @@
         "clang": [
           {
             "versions": "3.9:",
+            "flags": "-march={name} -mtune={name}"
+          }
+        ],
+        "cce": [
+          {
+            "versions": "15.0:",
             "flags": "-march={name} -mtune={name}"
           }
         ],
@@ -644,6 +681,12 @@
         "clang": [
           {
             "versions": "3.9:",
+            "flags": "-march={name} -mtune={name}"
+          }
+        ],
+        "cce": [
+          {
+            "versions": "15.0:",
             "flags": "-march={name} -mtune={name}"
           }
         ],
@@ -724,6 +767,12 @@
             "flags": "-march={name} -mtune={name}"
           }
         ],
+        "cce": [
+          {
+            "versions": "15.0:",
+            "flags": "-march={name} -mtune={name}"
+          }
+        ],
         "aocc": [
           {
             "versions": "2.2:",
@@ -798,6 +847,12 @@
             "flags": "-march={name} -mtune={name}"
           }
         ],
+        "cce": [
+          {
+            "versions": "15.0:",
+            "flags": "-march={name} -mtune={name}"
+          }
+        ],
         "aocc": [
           {
             "versions": "2.2:",
@@ -867,6 +922,12 @@
         "clang": [
           {
             "versions": "3.9:",
+            "flags": "-march={name} -mtune={name}"
+          }
+        ],
+        "cce": [
+          {
+            "versions": "15.0:",
             "flags": "-march={name} -mtune={name}"
           }
         ],
@@ -1030,6 +1091,13 @@
             "flags": "-march={name} -mtune={name}"
           }
         ],
+        "cce": [
+          {
+            "versions": "15.0:",
+            "name": "skylake-avx512",
+            "flags": "-march={name} -mtune={name}"
+          }
+        ],
         "aocc": [
           {
             "versions": "2.2:",
@@ -1114,6 +1182,12 @@
             "flags": "-march={name} -mtune={name}"
           }
         ],
+        "cce": [
+          {
+            "versions": "15.0:",
+            "flags": "-march={name} -mtune={name}"
+          }
+        ],
         "aocc": [
           {
             "versions": "2.2:",
@@ -1190,6 +1264,12 @@
         "clang": [
           {
             "versions": "8.0:",
+            "flags": "-march={name} -mtune={name}"
+          }
+        ],
+        "cce": [
+          {
+            "versions": "15.0:",
             "flags": "-march={name} -mtune={name}"
           }
         ],
@@ -1288,6 +1368,13 @@
           },
           {
             "versions": "6.0:6.9",
+            "flags": "-march={name} -mtune={name}"
+          }
+        ],
+        "cce": [
+          {
+            "versions": "15.0:",
+            "name": "icelake-client",
             "flags": "-march={name} -mtune={name}"
           }
         ],
@@ -1711,6 +1798,13 @@
             "flags": "-march={name} -mtune={name}"
           }
         ],
+        "cce": [
+          {
+            "versions": "15:",
+            "name": "znver1",
+            "flags": "-march={name} -mtune={name}"
+          }
+        ],
         "aocc": [
           {
             "versions": "2.2:",
@@ -1786,6 +1880,13 @@
         "clang": [
           {
             "versions": "9.0:",
+            "name": "znver2",
+            "flags": "-march={name} -mtune={name}"
+          }
+        ],
+        "cce": [
+          {
+            "versions": "15.0:",
             "name": "znver2",
             "flags": "-march={name} -mtune={name}"
           }
@@ -1868,6 +1969,13 @@
         "clang": [
           {
             "versions": "12.0:",
+            "name": "znver3",
+            "flags": "-march={name} -mtune={name}"
+          }
+        ],
+        "cce": [
+          {
+            "versions": "15.0:",
             "name": "znver3",
             "flags": "-march={name} -mtune={name}"
           }
@@ -1966,6 +2074,13 @@
         "clang": [
           {
             "versions": "12.0:",
+            "name": "znver3",
+            "flags": "-march={name} -mtune={name} -mavx512f -mavx512dq -mavx512ifma -mavx512cd -mavx512bw -mavx512vl -mavx512vbmi -mavx512vbmi2 -mavx512vnni -mavx512bitalg"
+          }
+        ],
+        "cce": [
+          {
+            "versions": "15.0:",
             "name": "znver3",
             "flags": "-march={name} -mtune={name} -mavx512f -mavx512dq -mavx512ifma -mavx512cd -mavx512bw -mavx512vl -mavx512vbmi -mavx512vbmi2 -mavx512vnni -mavx512bitalg"
           }
