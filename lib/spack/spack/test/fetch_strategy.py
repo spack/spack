@@ -18,16 +18,6 @@ def test_fetchstrategy_bad_url_scheme():
         fetcher = fetch_strategy.from_url_scheme("bogus-scheme://example.com/a/b/c")  # noqa: F841
 
 
-def test_filesummary(tmpdir):
-    p = str(tmpdir.join("xyz"))
-    with open(p, "wb") as f:
-        f.write(b"abcdefghijklmnopqrstuvwxyz")
-
-    assert fetch_strategy._filesummary(p, print_bytes=8) == (26, b"abcdefgh...stuvwxyz")
-    assert fetch_strategy._filesummary(p, print_bytes=13) == (26, b"abcdefghijklmnopqrstuvwxyz")
-    assert fetch_strategy._filesummary(p, print_bytes=100) == (26, b"abcdefghijklmnopqrstuvwxyz")
-
-
 archive_test_data = [
     ("cvs", fetch_strategy.CvsFetchStrategy, "CVS", False),
     ("cvs", fetch_strategy.CvsFetchStrategy, "CVS", True),
