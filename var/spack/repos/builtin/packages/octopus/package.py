@@ -55,6 +55,12 @@ class Octopus(AutotoolsPackage, CudaPackage):
     variant("libyaml", default=False, description="Compile with libyaml")
     variant("elpa", default=False, description="Compile with ELPA")
     variant("nlopt", default=False, description="Compile with nlopt")
+    variant(
+        "pnfft",
+        default=False,
+        when="+pfft",
+        description="Compile with PNFFT - Parallel Nonequispaced FFT library",
+    )
     variant("debug", default=False, description="Compile with debug flags")
 
     depends_on("autoconf", type="build", when="@develop")
@@ -98,6 +104,7 @@ class Octopus(AutotoolsPackage, CudaPackage):
     depends_on("pfft", when="+pfft")
     depends_on("likwid", when="+likwid")
     depends_on("libyaml", when="+libyaml")
+    depends_on("pnfft", when="+pnfft")
     depends_on("nlopt", when="+nlopt")
 
     # optional dependencies:
@@ -184,6 +191,8 @@ class Octopus(AutotoolsPackage, CudaPackage):
         #     args.extend([
         #         '--with-poke-prefix=%s' % spec['poke'].prefix,
         #     ])
+        if "+pnfft" in spec:
+            args.append("--with-pnfft-prefix=%s" % spec["pnfft"].prefix)
 
         if "+libvdwxc" in spec:
             args.append("--with-libvdwxc-prefix=%s" % spec["libvdwxc"].prefix)
