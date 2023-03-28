@@ -163,7 +163,9 @@ def _fix_ext_suffix(candidate_spec: "spack.spec.Spec"):
 
 
 def _executables_in_store(
-    executables: List[str], query_spec: "spack.spec.Spec", query_info: Optional[QueryInfo] = None
+    executables: List[str],
+    query_spec: Union["spack.spec.Spec", str],
+    query_info: Optional[QueryInfo] = None,
 ) -> bool:
     """Return True if at least one of the executables can be retrieved from
     a spec in store, False otherwise.
