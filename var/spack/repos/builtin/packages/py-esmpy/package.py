@@ -10,9 +10,9 @@ class PyEsmpy(PythonPackage):
     """ESMPy is a Python interface to the Earth System Modeling Framework (ESMF)"""
 
     homepage = "https://earthsystemmodeling.org/"
+    url = "https://github.com/esmf-org/esmf/archive/refs/tags/v8.4.0.tar.gz"
     git = "https://github.com/esmf-org/esmf.git"
 
-    # because it relies on py-setuptools-git-versioning, we need to install from git
     version("develop", branch="develop")
     version("8.4.0", sha256="28531810bf1ae78646cda6494a53d455d194400f19dccd13d6361871de42ed0f")
     version("8.3.1", sha256="6c39261e55dcdf9781cdfa344417b9606f7f961889d5ec626150f992f04f146d")
