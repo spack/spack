@@ -638,11 +638,11 @@ class TestVariantMapTest(object):
         b["foobar"] = SingleValuedVariant("foobar", "fee")
         b["shared"] = BoolValuedVariant("shared", True)
 
-        assert not a.satisfies(b)
-        assert b.satisfies(a)
+        assert a.intersects(b)
+        assert b.intersects(a)
 
-        assert not a.satisfies(b, strict=True)
-        assert not b.satisfies(a, strict=True)
+        assert not a.satisfies(b)
+        assert not b.satisfies(a)
 
         # foo=bar,baz foobar=fee feebar=foo shared=True
         c = VariantMap(None)

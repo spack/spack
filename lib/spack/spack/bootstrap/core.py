@@ -208,7 +208,7 @@ class BuildcacheBootstrapper(Bootstrapper):
                 # This will be None for things that don't depend on python
                 python_spec = item.get("python", None)
                 # Skip specs which are not compatible
-                if not abstract_spec.satisfies(candidate_spec):
+                if not abstract_spec.intersects(candidate_spec):
                     continue
 
                 if python_spec is not None and python_spec not in abstract_spec:
