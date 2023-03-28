@@ -224,9 +224,11 @@ class PyTensorflow(Package, CudaPackage, ROCmPackage, PythonExtension):
     depends_on("py-h5py~mpi", type=("build", "run"), when="@1.15.5,2.0.4,2.1.3:~mpi")
     depends_on("hdf5+mpi", type="build", when="@1.15.5,2.0.4,2.1.3:+mpi")
     depends_on("hdf5~mpi", type="build", when="@1.15.5,2.0.4,2.1.3:~mpi")
+    depends_on("py-jax@0.3.15:", type=("build", "run"), when="@2.12:")
     depends_on("py-libclang@13:", type=("build", "run"), when="@2.9:")
     depends_on("py-libclang@9.0.1:", type=("build", "run"), when="@2.7:2.8")
-    depends_on("py-numpy@1.20:", type=("build", "run"), when="@2.8:")
+    depends_on("py-numpy@1.22:1.23", type=("build", "run"), when="@2.12:")
+    depends_on("py-numpy@1.20:", type=("build", "run"), when="@2.8:2.11")
     depends_on("py-numpy@1.14.5:", type=("build", "run"), when="@2.7")
     depends_on("py-numpy@1.19.2:1.19", type=("build", "run"), when="@2.4:2.6")
     # https://github.com/tensorflow/tensorflow/issues/40688
@@ -241,7 +243,8 @@ class PyTensorflow(Package, CudaPackage, ROCmPackage, PythonExtension):
     depends_on("py-opt-einsum@2.3.2:", type=("build", "run"), when="@1.15:2.3,2.7:")
     depends_on("py-opt-einsum@3.3", type=("build", "run"), when="@2.4:2.6")
     depends_on("py-packaging", type=("build", "run"), when="@2.9:")
-    depends_on("py-protobuf@3.9.2:", type=("build", "run"), when="@2.3:")
+    depends_on("py-protobuf@3.20.3:4.20,4.21.6:4", type=("build", "run"), when="@2.12:")
+    depends_on("py-protobuf@3.9.2:", type=("build", "run"), when="@2.3:2.11")
     depends_on("py-protobuf@3.8.0:", type=("build", "run"), when="@2.1:2.2")
     depends_on("py-protobuf@3.6.1:", type=("build", "run"), when="@1.12:2.0")
     depends_on("py-protobuf@3.6.0:", type=("build", "run"), when="@1.10:1.11")
@@ -249,12 +252,14 @@ class PyTensorflow(Package, CudaPackage, ROCmPackage, PythonExtension):
     depends_on("py-protobuf@3.3.0:", type=("build", "run"), when="@1.3:1.4")
     depends_on("py-protobuf@3.2.0:", type=("build", "run"), when="@1.1:1.2")
     depends_on("py-protobuf@3.1.0:", type=("build", "run"), when="@:1.0")
-    depends_on("protobuf@:3.12", when="@:2.4")
-    depends_on("protobuf@:3.17")
     # https://github.com/protocolbuffers/protobuf/issues/10051
     # https://github.com/tensorflow/tensorflow/issues/56266
-    depends_on("py-protobuf@:3.19", type=("build", "run"))
-    depends_on("protobuf@:3.19", type=("build", "run"))
+    depends_on("py-protobuf@:3.19", type=("build", "run"), when="@:2.11")
+    depends_on("py-protobuf+cpp", type=("build", "run"))
+    depends_on("protobuf@:3.19", when="@:2.11")
+    depends_on("protobuf@:3.17", when="@:2.11")
+    depends_on("protobuf@:3.12", when="@:2.4")
+    depends_on("protobuf", type=("build", "run"))
     depends_on("py-setuptools", type=("build", "run"))
     depends_on("py-six@1.12:", type=("build", "run"), when="@2.1:2.3,2.7:")
     depends_on("py-six@1.15", type=("build", "run"), when="@2.4:2.6")
@@ -263,7 +268,8 @@ class PyTensorflow(Package, CudaPackage, ROCmPackage, PythonExtension):
     depends_on("py-termcolor@1.1", type=("build", "run"), when="@2.4:2.6")
     depends_on("py-typing-extensions@3.6.6:", type=("build", "run"), when="@2.7:")
     depends_on("py-typing-extensions@3.7.4:3.7", type=("build", "run"), when="@2.4:2.6")
-    depends_on("py-wrapt@1.11:", type=("build", "run"), when="@2.7:")
+    depends_on("py-wrapt@1.11:1.14", type=("build", "run"), when="@2.12:")
+    depends_on("py-wrapt@1.11:", type=("build", "run"), when="@2.7:2.11")
     depends_on("py-wrapt@1.12.1:1.12", type=("build", "run"), when="@2.4:2.6")
     depends_on("py-wrapt@1.11.1:", type=("build", "run"), when="@1.12.1,1.14:2.3")
     # TODO: add package for this dependency
@@ -295,7 +301,7 @@ class PyTensorflow(Package, CudaPackage, ROCmPackage, PythonExtension):
         depends_on("py-grpcio@1.32", type=("build", "run"), when="@2.4")
         depends_on("py-grpcio@1.8.6:", type=("build", "run"), when="@1.6:2.3")
 
-    for minor_ver in range(5, 11):
+    for minor_ver in range(5, 13):
         depends_on(
             "py-tensorboard@2.{}".format(minor_ver),
             type=("build", "run"),
