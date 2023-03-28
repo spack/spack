@@ -58,6 +58,7 @@ class Visit(CMakePackage):
     executables = ["^visit$"]
 
     version("develop", branch="develop")
+    version("3.3.1", sha256="2e969d3146b559fb833e4cdfaefa72f303d8ad368ef325f68506003f7bc317b9")
     version(
         "3.3.0",
         sha256="1a7485146133ac5f1e330d9029697750046ef8d9e9de23a6c2a3685c1c5f4aac",
@@ -90,7 +91,7 @@ class Visit(CMakePackage):
     patch("parallel-hdf5-3.3.patch", when="@3.3.0:+hdf5+mpi")
     patch("cmake-findvtkh-3.3.patch", when="@3.3.0:+vtkm")
     patch("cmake-findjpeg.patch", when="@3.1.0:3.2.2")
-    patch("cmake-findjpeg-3.3.patch", when="@3.3.0:")
+    patch("cmake-findjpeg-3.3.patch", when="@3.3.0")
 
     # Fix pthread and librt link errors
     patch("visit32-missing-link-libs.patch", when="@3.2")
