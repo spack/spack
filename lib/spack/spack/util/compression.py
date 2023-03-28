@@ -141,7 +141,7 @@ def _system_gunzip(archive_file):
     compressed_file = os.path.basename(archive_file)
     copy_path = os.path.join(working_dir, compressed_file)
     shutil.copy(archive_file, copy_path)
-    gzip = which("gzip")
+    gzip = which("gzip", required=True)
     gzip.add_default_arg("-d")
     gzip(copy_path)
     return destination_abspath
@@ -168,11 +168,7 @@ def _unzip(archive_file):
 
 
 def _unZ(archive_file):
-    if sys.platform == "win32":
-        result = _7zip(archive_file)
-    else:
-        result = _system_gunzip(archive_file)
-    return result
+    return _system_gunzip(archive_file)
 
 
 def _lzma_decomp(archive_file):
@@ -186,47 +182,45 @@ def _lzma_decomp(archive_file):
         with open(archive_out, "wb") as ar:
             with lzma.open(archive_file) as lar:
                 shutil.copyfileobj(lar, ar)
+        return archive_out
     else:
-        if sys.platform == "win32":
-            return _7zip(archive_file)
-        else:
-            return _xz(archive_file)
+        return _xz(archive_file)
 
 
-def _win_compressed_tarball_handler(archive_file):
+def _win_compressed_tarball_handler(helper):
     """Decompress and extract compressed tarballs on Windows.
-    This method uses 7zip in conjunction with the tar utility
-    to perform decompression and extraction in a two step process
-    first using 7zip to decompress, and tar to extract.
+    This method uses a decompression method in conjunction with
+    the tar utility to perform decompression and extraction in
+    a two step process first using decompressor to decompress,
+    and tar to extract.
 
-    The motivation for this method is the inability of 7zip
-    to directly decompress and extract compressed archives
-    in a single shot without undocumented workarounds, and
-    the Windows tar utility's lack of access to the xz tool (unsupported on Windows)
+    The motivation for this method is Windows tar utility's lack
+    of access to the xz tool (unsupported natively on Windows) but
+    can be installed manually or via spack
     """
-    # perform intermediate extraction step
-    # record name of new archive so we can extract
-    # and later clean up
-    decomped_tarball = _7zip(archive_file)
-    # 7zip is able to one shot extract compressed archives
-    # that have been named .txz. If that is the case, there will
-    # be no intermediate archvie to extract.
-    if check_extension(decomped_tarball, "tar"):
-        # run tar on newly decomped archive
-        outfile = _untar(decomped_tarball)
-        # clean intermediate archive to mimic end result
-        # produced by one shot decomp/extraction
-        os.remove(decomped_tarball)
-        return outfile
-    return decomped_tarball
+    def unarchive(archive_file):
+        # perform intermediate extraction step
+        # record name of new archive so we can extract
+        # and later clean up
+        decomped_tarball = helper(archive_file)
+        # 7zip is able to one shot extract compressed archives
+        # that have been named .txz. If that is the case, there will
+        # be no intermediate archvie to extract.
+        if check_extension(decomped_tarball, "tar"):
+            # run tar on newly decomped archive
+            outfile = _untar(decomped_tarball)
+            # clean intermediate archive to mimic end result
+            # produced by one shot decomp/extraction
+            os.remove(decomped_tarball)
+            return outfile
+        return decomped_tarball
+    return unarchive
 
 
 def _xz(archive_file):
     """Decompress lzma compressed .xz files via xz command line
     tool. Available only on Unix
     """
-    if sys.platform == "win32":
-        raise RuntimeError("XZ tool unavailable on Windows")
     decompressed_file = os.path.basename(strip_extension(archive_file, "xz"))
     working_dir = os.getcwd()
     destination_abspath = os.path.join(working_dir, decompressed_file)
@@ -237,33 +231,6 @@ def _xz(archive_file):
     xz.add_default_arg("-d")
     xz(copy_path)
     return destination_abspath
-
-
-def _7zip(archive_file):
-    """Unpack/decompress with 7z executable
-    7z is able to handle a number file extensions however
-    it may not be available on system.
-
-    Without 7z, Windows users with certain versions of Python may
-    be unable to extract .xz files, and all Windows users will be unable
-    to extract .Z files. If we cannot find 7z either externally or a
-    Spack installed copy, we fail, but inform the user that 7z can
-    be installed via `spack install 7zip`
-
-    Args:
-        archive_file (str): absolute path of file to be unarchived
-    """
-    outfile = os.path.basename(strip_last_extension(archive_file))
-    _7z = which("7z")
-    if not _7z:
-        raise CommandNotFoundError(
-            "7z unavailable,\
-unable to extract %s files. 7z can be installed via Spack"
-            % extension_from_path(archive_file)
-        )
-    _7z.add_default_arg("e")
-    _7z(archive_file)
-    return outfile
 
 
 def decompressor_for(path, extension=None):
@@ -308,8 +275,11 @@ unrecognized file extension: '%s'"
     # Catch tar.xz/tar.Z files here for Windows
     # as the tar utility on Windows cannot handle such
     # compression types directly
-    if ("xz" in extension or "Z" in extension) and sys.platform == "win32":
-        return _win_compressed_tarball_handler
+    if ("xz" in extension) and sys.platform == "win32":
+        return _win_compressed_tarball_handler(_lzma_decomp)
+
+    if "Z" in extension and sys.platform == "win32":
+        return _win_compressed_tarball_handler(_unZ)
 
     return _untar
 
