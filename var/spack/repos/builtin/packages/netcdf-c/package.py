@@ -169,6 +169,9 @@ class NetcdfC(CMakePackage, AutotoolsPackage):
     depends_on("mpi", when="+mpi")
     depends_on("mpi", when="+parallel-netcdf")
 
+    # We also need to use MPI wrappers when building against static MPI-enabled HDF5:
+    depends_on("mpi", when="^hdf5+mpi~shared")
+
     # High-level API of HDF5 1.8.9 or later is required for netCDF-4 support:
     # https://docs.unidata.ucar.edu/nug/current/getting_and_building_netcdf.html
     depends_on("hdf5@1.8.9:+hl")
@@ -373,8 +376,8 @@ class AutotoolsBuilder(BackupStep, Setup, autotools.AutotoolsBuilder):
 
         config_args += self.enable_or_disable("fsync")
 
-        if "+mpi" in self.spec or "+parallel-netcdf" in self.spec:
-            config_args.append("CC=%s" % self.spec["mpi"].mpicc)
+        if any(self.spec.satisfies(s) for s in ["+mpi", "+parallel-netcdf", "^hdf5+mpi~shared"]):
+            config_args.append("CC={0}".format(self.spec["mpi"].mpicc))
 
         # In general, we rely on the compiler wrapper to inject the required CPPFLAGS and LDFLAGS.
         # However, the injected LDFLAGS are invisible for the configure script and are added
