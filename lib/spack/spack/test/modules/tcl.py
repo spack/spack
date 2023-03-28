@@ -375,6 +375,25 @@ class TestTcl(object):
             writer = writer_cls(item, "default")
             assert writer.conf.excluded
 
+    @pytest.mark.regression("12105")
+    @pytest.mark.parametrize("config_name", ["exclude_implicits", "blacklist_implicits"])
+    def test_exclude_implicits_with_arg(
+        self, modulefile_content, module_configuration, database, config_name
+    ):
+        module_configuration(config_name)
+
+        # mpileaks is defined as explicit with explicit argument set on writer
+        mpileaks_spec = spack.spec.Spec("mpileaks")
+        mpileaks_spec.concretize()
+        writer = writer_cls(mpileaks_spec, "default", True)
+        assert not writer.conf.excluded
+
+        # callpath is defined as implicit with explicit argument set on writer
+        callpath_spec = spack.spec.Spec("callpath")
+        callpath_spec.concretize()
+        writer = writer_cls(callpath_spec, "default", False)
+        assert writer.conf.excluded
+
     @pytest.mark.regression("9624")
     @pytest.mark.db
     def test_autoload_with_constraints(self, modulefile_content, module_configuration, database):
