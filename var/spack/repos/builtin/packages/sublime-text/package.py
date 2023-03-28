@@ -14,25 +14,35 @@ class SublimeText(Package):
     url = "https://download.sublimetext.com/sublime_text_build_4143_x64.tar.xz"
 
     version(
-        "4.4143", sha256="7de862c38d19367414117110328dded754ac709fed54c8cc5cb0737c894c073c"
+        "4.4143",
+        sha256="7de862c38d19367414117110328dded754ac709fed54c8cc5cb0737c894c073c",
     )
     version(
-        "3.2.2.3211", sha256="0b3c8ca5e6df376c3c24a4b9ac2e3b391333f73b229bc6e87d0b4a5f636d74ee"
+        "3.2.2.3211",
+        sha256="0b3c8ca5e6df376c3c24a4b9ac2e3b391333f73b229bc6e87d0b4a5f636d74ee",
     )
     version(
-        "3.2.1.3207", sha256="acb64f1de024a0f004888096afa101051e48d96c7a3e7fe96e11312d524938c4"
+        "3.2.1.3207",
+        sha256="acb64f1de024a0f004888096afa101051e48d96c7a3e7fe96e11312d524938c4",
     )
     version(
-        "3.1.1.3176", sha256="74f17c1aec4ddec9d4d4c39f5aec0414a4755d407a05efa571e8892e0b9cf732"
+        "3.1.1.3176",
+        sha256="74f17c1aec4ddec9d4d4c39f5aec0414a4755d407a05efa571e8892e0b9cf732",
     )
-    version("3.0.3126", sha256="18db132e9a305fa3129014b608628e06f9442f48d09cfe933b3b1a84dd18727a")
-    version("2.0.2", sha256="01baed30d66432e30002a309ff0393967be1daba5cce653e43bba6bd6c38ab84")
+    version(
+        "3.0.3126",
+        sha256="18db132e9a305fa3129014b608628e06f9442f48d09cfe933b3b1a84dd18727a",
+    )
+    version(
+        "2.0.2",
+        sha256="01baed30d66432e30002a309ff0393967be1daba5cce653e43bba6bd6c38ab84",
+    )
 
     # Sublime text comes as a pre-compiled binary.
     # Since we can't link to Spack packages, we'll just have to
     # add them as runtime dependencies.
 
-    # depends_on('libgobject', type='run')
+    # depends_on("libgobject", type="run")
     depends_on("gtkplus@:2", type="run", when="@:3.1")
     depends_on("gtkplus@3:", type="run", when="@3.2:")
     depends_on("glib", type="run")
