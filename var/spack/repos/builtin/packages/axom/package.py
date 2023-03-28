@@ -344,8 +344,7 @@ class Axom(CachedCMakePackage, CudaPackage, ROCmPackage):
             if _existing_paths:
                 entries.append(
                     cmake_cache_string(
-                        "BLT_CMAKE_IMPLICIT_LINK_DIRECTORIES_EXCLUDE",
-                        ";".join(_existing_paths),
+                        "BLT_CMAKE_IMPLICIT_LINK_DIRECTORIES_EXCLUDE", ";".join(_existing_paths)
                     )
                 )
 

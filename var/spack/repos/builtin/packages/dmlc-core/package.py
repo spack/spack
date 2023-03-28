@@ -32,6 +32,4 @@ class DmlcCore(CMakePackage):
         )
 
     def cmake_args(self):
-        return [
-            self.define_from_variant("USE_OPENMP", "openmp"),
-        ]
+        return [self.define_from_variant("USE_OPENMP", "openmp")]

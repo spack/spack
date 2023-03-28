@@ -427,6 +427,48 @@ isystem_include_dirs_list=""
 libs_list=""
 other_args_list=""
 
+# Global state for keeping track of -Wl,-rpath -Wl,/path
+wl_expect_rpath=no
+
+parse_Wl() {
+    # drop -Wl
+    shift
+    while [ $# -ne 0 ]; do
+    if [ "$wl_expect_rpath" = yes ]; then
+        rp="$1"
+        wl_expect_rpath=no
+    else
+        rp=""
+        case "$1" in
+            -rpath=*)
+                rp="${1#-rpath=}"
+                ;;
+            --rpath=*)
+                rp="${1#--rpath=}"
+                ;;
+            -rpath|--rpath)
+                wl_expect_rpath=yes
+                ;;
+            "$dtags_to_strip")
+                ;;
+            *)
+                append other_args_list "-Wl,$1"
+                ;;
+        esac
+    fi
+    if [ -n "$rp" ]; then
+        if system_dir "$rp"; then
+            append system_rpath_dirs_list "$rp"
+        else
+            append rpath_dirs_list "$rp"
+        fi
+    fi
+    shift
+    done
+    # By lack of local variables, always set this to empty string.
+    rp=""
+}
+
 
 while [ $# -ne 0 ]; do
 
@@ -526,54 +568,9 @@ while [ $# -ne 0 ]; do
             append other_args_list "-l$arg"
             ;;
         -Wl,*)
-            arg="${1#-Wl,}"
-            if [ -z "$arg" ]; then shift; arg="$1"; fi
-            case "$arg" in
-                -rpath=*)  rp="${arg#-rpath=}"  ;;
-                --rpath=*) rp="${arg#--rpath=}" ;;
-                -rpath,*)  rp="${arg#-rpath,}"  ;;
-                --rpath,*) rp="${arg#--rpath,}" ;;
-                -rpath|--rpath)
-                    shift; arg="$1"
-                    case "$arg" in
-                        -Wl,*)
-                            rp="${arg#-Wl,}"
-                            ;;
-                        *)
-                            die "-Wl,-rpath was not followed by -Wl,*"
-                            ;;
-                    esac
-                    ;;
-                "$dtags_to_strip")
-                    :  # We want to remove explicitly this flag
-                    ;;
-                *)
-                    append other_args_list "-Wl,$arg"
-                    ;;
-            esac
-            ;;
-        -Xlinker,*)
-            arg="${1#-Xlinker,}"
-            if [ -z "$arg" ]; then shift; arg="$1"; fi
-
-            case "$arg" in
-                -rpath=*)  rp="${arg#-rpath=}"  ;;
-                --rpath=*) rp="${arg#--rpath=}" ;;
-                -rpath|--rpath)
-                    shift; arg="$1"
-                    case "$arg" in
-                        -Xlinker,*)
-                            rp="${arg#-Xlinker,}"
-                        ;;
-                        *)
-                            die "-Xlinker,-rpath was not followed by -Xlinker,*"
-                            ;;
-                    esac
-                    ;;
-                *)
-                    append other_args_list "-Xlinker,$arg"
-                    ;;
-            esac
+            IFS=,
+            parse_Wl $1
+            unset IFS
             ;;
         -Xlinker)
             if [ "$2" = "-rpath" ]; then

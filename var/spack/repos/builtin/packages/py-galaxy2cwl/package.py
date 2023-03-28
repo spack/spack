@@ -13,10 +13,7 @@ class PyGalaxy2cwl(PythonPackage):
     homepage = "https://github.com/workflowhub-eu/galaxy2cwl"
     url = "https://github.com/workflowhub-eu/galaxy2cwl/archive/refs/tags/0.1.4.tar.gz"
 
-    version(
-        "0.1.4",
-        sha256="ceb9024a7bf74c874be216c943cc97343563b1ec78f85fd3ec5b482c64350290",
-    )
+    version("0.1.4", sha256="ceb9024a7bf74c874be216c943cc97343563b1ec78f85fd3ec5b482c64350290")
 
     depends_on("py-setuptools", type="build")
 

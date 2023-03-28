@@ -75,7 +75,7 @@ repo:
         )
 
     packages_dir = tmpdir.join("packages")
-    for (pkg_name, pkg_str) in [_pkgx, _pkgy, _pkgv]:
+    for pkg_name, pkg_str in [_pkgx, _pkgy, _pkgv]:
         pkg_dir = packages_dir.ensure(pkg_name, dir=True)
         pkg_file = pkg_dir.join("package.py")
         with open(str(pkg_file), "w") as f:
@@ -107,12 +107,28 @@ def fake_installs(monkeypatch, tmpdir):
     )
 
 
+def test_one_package_multiple_reqs(concretize_scope, test_repo):
+    if spack.config.get("config:concretizer") == "original":
+        pytest.skip("Original concretizer does not support configuration requirements")
+
+    conf_str = """\
+packages:
+  y:
+    require:
+    - "@2.4"
+    - "~shared"
+"""
+    update_packages_config(conf_str)
+    y_spec = Spec("y").concretized()
+    assert y_spec.satisfies("@2.4~shared")
+
+
 def test_requirement_isnt_optional(concretize_scope, test_repo):
     """If a user spec requests something that directly conflicts
     with a requirement, make sure we get an error.
     """
     if spack.config.get("config:concretizer") == "original":
-        pytest.skip("Original concretizer does not support configuration" " requirements")
+        pytest.skip("Original concretizer does not support configuration requirements")
 
     conf_str = """\
 packages:
@@ -372,11 +388,7 @@ packages:
 
 @pytest.mark.parametrize(
     "mpi_requirement,specific_requirement",
-    [
-        ("mpich", "@3.0.3"),
-        ("mpich2", "%clang"),
-        ("zmpi", "%gcc"),
-    ],
+    [("mpich", "@3.0.3"), ("mpich2", "%clang"), ("zmpi", "%gcc")],
 )
 def test_requirements_on_virtual_and_on_package(
     mpi_requirement, specific_requirement, concretize_scope, mock_packages
@@ -413,3 +425,18 @@ def test_incompatible_virtual_requirements_raise(concretize_scope, mock_packages
     spec = Spec("callpath ^zmpi")
     with pytest.raises(UnsatisfiableSpecError):
         spec.concretize()
+
+
+def test_non_existing_variants_under_all(concretize_scope, mock_packages):
+    if spack.config.get("config:concretizer") == "original":
+        pytest.skip("Original concretizer does not support configuration" " requirements")
+    conf_str = """\
+    packages:
+      all:
+        require:
+        - any_of: ["~foo", "@:"]
+    """
+    update_packages_config(conf_str)
+
+    spec = Spec("callpath ^zmpi").concretized()
+    assert "~foo" not in spec

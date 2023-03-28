@@ -44,7 +44,6 @@ class Hal(MakefilePackage):
         env.set("sonLibRootDir", self.spec["sonlib"].prefix)
 
     def install(self, spec, prefix):
-
         # First the easy bit
 
         install_tree("bin", prefix.bin)
@@ -79,7 +78,6 @@ class Hal(MakefilePackage):
         ]
 
         for folder in haldirs:
-
             install_tree(folder, join_path(self.prefix, "hal", folder))
 
         install("__init__.py", join_path(self.prefix, "hal"))
@@ -97,7 +95,6 @@ class Hal(MakefilePackage):
         ]
 
         for pyfile in halpyfiles:
-
             install(pyfile, self.prefix.bin)
 
     # The hal directory is a python library so we set the path

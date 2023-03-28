@@ -121,7 +121,6 @@ class Libint(AutotoolsPackage):
             env.set("AR", "xiar")
 
     def configure_args(self):
-
         config_args = ["--enable-shared"]
 
         if self.spec.satisfies("@2:"):

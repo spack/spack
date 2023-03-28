@@ -95,7 +95,6 @@ class Roms(MakefilePackage):
         filter_file(r"\sFREEFLAGS\s:=.*", "FREEFLAGS := -ffree-form", make_aocc)
 
     def edit(self, spec, prefix):
-
         # ROMS doesn't have support for AOCC out of the box
         # Support extended to AOCC from below steps
         if "%aocc" in self.spec:
@@ -130,7 +129,6 @@ class Roms(MakefilePackage):
             makefile.filter(r"\sUSE_DEBUG\s[?]=.*", "USE_DEBUG = on")
 
     def setup_build_environment(self, spack_env):
-
         spec = self.spec
 
         netcdf_include = spec["netcdf-fortran"].prefix.include

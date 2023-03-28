@@ -252,7 +252,6 @@ def test_relocate_links(tmpdir):
 
 
 def test_needs_relocation():
-
     assert needs_binary_relocation("application", "x-sharedlib")
     assert needs_binary_relocation("application", "x-executable")
     assert not needs_binary_relocation("application", "x-octet-stream")

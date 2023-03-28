@@ -38,10 +38,7 @@ class Texinfo(AutotoolsPackage, GNUMirrorPackage):
     depends_on("gettext")
 
     # sanity check
-    sanity_check_is_file = [
-        join_path("bin", "info"),
-        join_path("bin", "makeinfo"),
-    ]
+    sanity_check_is_file = [join_path("bin", "info"), join_path("bin", "makeinfo")]
 
     # Fix unescaped braces in regexps.
     # Ref: https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=898994

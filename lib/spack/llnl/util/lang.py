@@ -198,7 +198,7 @@ def memoized(func):
         except TypeError as e:
             # TypeError is raised when indexing into a dict if the key is unhashable.
             raise UnhashableArguments(
-                "args + kwargs '{}' was not hashable for function '{}'".format(key, func.__name__),
+                "args + kwargs '{}' was not hashable for function '{}'".format(key, func.__name__)
             ) from e
 
     return _memoized_function
@@ -237,6 +237,7 @@ def decorator_with_or_without_args(decorator):
         @decorator
 
     """
+
     # See https://stackoverflow.com/questions/653368 for more on this
     @functools.wraps(decorator)
     def new_dec(*args, **kwargs):
@@ -990,8 +991,7 @@ def enum(**kwargs):
 
 
 def stable_partition(
-    input_iterable: Iterable,
-    predicate_fn: Callable[[Any], bool],
+    input_iterable: Iterable, predicate_fn: Callable[[Any], bool]
 ) -> Tuple[List[Any], List[Any]]:
     """Partition the input iterable according to a custom predicate.
 
@@ -1104,11 +1104,7 @@ class GroupedExceptionForwarder(object):
 
     def __exit__(self, exc_type, exc_value, tb):
         if exc_value is not None:
-            self._handler._receive_forwarded(
-                self._context,
-                exc_value,
-                traceback.format_tb(tb),
-            )
+            self._handler._receive_forwarded(self._context, exc_value, traceback.format_tb(tb))
 
         # Suppress any exception from being re-raised:
         # https://docs.python.org/3/reference/datamodel.html#object.__exit__.

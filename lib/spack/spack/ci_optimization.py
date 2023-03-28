@@ -43,7 +43,6 @@ def matches(obj, proto):
         return all((key in obj and matches(obj[key], val)) for key, val in proto.items())
 
     if isinstance(obj, collections.abc.Sequence) and not isinstance(obj, str):
-
         if not (isinstance(proto, collections.abc.Sequence) and not isinstance(proto, str)):
             return False
 

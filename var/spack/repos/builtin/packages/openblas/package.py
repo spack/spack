@@ -14,7 +14,7 @@ class Openblas(MakefilePackage):
     """OpenBLAS: An optimized BLAS library"""
 
     homepage = "https://www.openblas.net"
-    url = "https://github.com/xianyi/OpenBLAS/archive/v0.2.19.tar.gz"
+    url = "https://github.com/xianyi/OpenBLAS/releases/download/v0.2.19/OpenBLAS-0.2.19.tar.gz"
     git = "https://github.com/xianyi/OpenBLAS.git"
 
     libraries = ["libopenblas"]
@@ -181,6 +181,10 @@ class Openblas(MakefilePackage):
         sha256="c20f5188a9145395c37c22ae5c1f72bfc24edfbccbb636cc8f9227345615daa8",
         when="@0.3.21 %gcc@:9",
     )
+
+    # Generic fix (https://github.com/xianyi/OpenBLAS/pull/3902) so we don't
+    # have to build tests
+    patch("fix-shared-tests-prereqs.patch", when="@0.2.20:0.3.21")
 
     # See https://github.com/spack/spack/issues/19932#issuecomment-733452619
     # Notice: fixed on Amazon Linux GCC 7.3.1 (which is an unofficial version
@@ -463,10 +467,7 @@ class Openblas(MakefilePackage):
 
     @property
     def install_targets(self):
-        make_args = [
-            "install",
-            "PREFIX={0}".format(self.prefix),
-        ]
+        make_args = ["install", "PREFIX={0}".format(self.prefix)]
         return make_args + self.make_defs
 
     @run_after("install")

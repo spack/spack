@@ -131,11 +131,7 @@ class Strumpack(CMakePackage, CudaPackage, ROCmPackage):
                         "-DCMAKE_Fortran_COMPILER=%s" % spec["mpi"].mpifc,
                     ]
                 )
-            args.extend(
-                [
-                    self.define_from_variant("STRUMPACK_C_INTERFACE", "c_interface"),
-                ]
-            )
+            args.extend([self.define_from_variant("STRUMPACK_C_INTERFACE", "c_interface")])
 
         if "+cuda" in spec:
             args.extend(

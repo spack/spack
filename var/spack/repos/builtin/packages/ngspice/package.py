@@ -104,10 +104,7 @@ class Ngspice(AutotoolsPackage):
                 args.append("--with-x")
                 x = spec["libx11"]
                 args.extend(
-                    [
-                        "--x-includes=%s" % x.prefix.include,
-                        "--x-libraries=%s" % x.prefix.lib,
-                    ]
+                    ["--x-includes=%s" % x.prefix.include, "--x-libraries=%s" % x.prefix.lib]
                 )
             else:
                 args.append("--without-x")

@@ -67,7 +67,8 @@ class Silo(AutotoolsPackage):
     patch("H5FD_class_t-terminate.patch", when="@:4.10.2-bsd")
 
     # H5EPR_SEMI_COLON.patch was fixed in current dev
-    patch("H5EPR_SEMI_COLON.patch", when="@:4.11-bsd")
+    # patch("H5EPR_SEMI_COLON.patch", when="@:4.11-bsd")
+    patch("H5EPR_SEMI_COLON.patch")
 
     # Fix missing F77 init, fixed in 4.9
     patch("48-configure-f77.patch", when="@:4.8")
@@ -190,13 +191,11 @@ class Silo(AutotoolsPackage):
         if is_system_path(zlib_prefix):
             config_args.append("--with-zlib=yes")
         else:
-            config_args.append(
-                "--with-zlib=%s,%s" % (zlib_prefix.include, zlib_prefix.lib),
-            )
+            config_args.append("--with-zlib=%s,%s" % (zlib_prefix.include, zlib_prefix.lib))
 
         if "+hdf5" in spec:
             config_args.append(
-                "--with-hdf5=%s,%s" % (spec["hdf5"].prefix.include, spec["hdf5"].prefix.lib),
+                "--with-hdf5=%s,%s" % (spec["hdf5"].prefix.include, spec["hdf5"].prefix.lib)
             )
 
         if "+silex" in spec:

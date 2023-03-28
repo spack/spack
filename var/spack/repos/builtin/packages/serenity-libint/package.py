@@ -19,7 +19,5 @@ class SerenityLibint(CMakePackage):
     depends_on("gmp+cxx")
 
     def cmake_args(self):
-        args = [
-            self.define("BUILD_SHARED_LIBS", True),
-        ]
+        args = [self.define("BUILD_SHARED_LIBS", True)]
         return args

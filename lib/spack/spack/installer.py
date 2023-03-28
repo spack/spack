@@ -84,9 +84,6 @@ STATUS_DEQUEUED = "dequeued"
 #: queue invariants).
 STATUS_REMOVED = "removed"
 
-is_windows = sys.platform == "win32"
-is_osx = sys.platform == "darwin"
-
 
 class InstallAction(object):
     #: Don't perform an install
@@ -169,9 +166,9 @@ def _do_fake_install(pkg):
     if not pkg.name.startswith("lib"):
         library = "lib" + library
 
-    plat_shared = ".dll" if is_windows else ".so"
-    plat_static = ".lib" if is_windows else ".a"
-    dso_suffix = ".dylib" if is_osx else plat_shared
+    plat_shared = ".dll" if sys.platform == "win32" else ".so"
+    plat_static = ".lib" if sys.platform == "win32" else ".a"
+    dso_suffix = ".dylib" if sys.platform == "darwin" else plat_shared
 
     # Install fake command
     fs.mkdirp(pkg.prefix.bin)
@@ -423,11 +420,7 @@ def _try_install_from_binary_cache(pkg, explicit, unsigned=False, timer=timer.NU
         matches = binary_distribution.get_mirrors_for_spec(pkg.spec, index_only=True)
 
     return _process_binary_cache_tarball(
-        pkg,
-        explicit,
-        unsigned,
-        mirrors_for_spec=matches,
-        timer=timer,
+        pkg, explicit, unsigned, mirrors_for_spec=matches, timer=timer
     )
 
 
@@ -789,7 +782,7 @@ class PackageInstaller(object):
                 associated dependents
         """
         packages = _packages_needed_to_bootstrap_compiler(compiler, architecture, pkgs)
-        for (comp_pkg, is_compiler) in packages:
+        for comp_pkg, is_compiler in packages:
             pkgid = package_id(comp_pkg)
             if pkgid not in self.build_tasks:
                 self._add_init_task(comp_pkg, request, is_compiler, all_deps)
@@ -813,8 +806,7 @@ class PackageInstaller(object):
             key, task = tup
             if task.pkg_id == pkgid:
                 tty.debug(
-                    "Modifying task for {0} to treat it as a compiler".format(pkgid),
-                    level=2,
+                    "Modifying task for {0} to treat it as a compiler".format(pkgid), level=2
                 )
                 setattr(task, attr, value)
                 self.build_pq[i] = (key, task)
@@ -1212,7 +1204,6 @@ class PackageInstaller(object):
 
         install_package = request.install_args.get("install_package")
         if install_package and request.pkg_id not in self.build_tasks:
-
             # Be sure to clear any previous failure
             spack.store.db.clear_failure(request.spec, force=True)
 
@@ -1761,14 +1752,16 @@ class PackageInstaller(object):
                 raise
 
             except binary_distribution.NoChecksumException as exc:
-                if not task.cache_only:
-                    # Checking hash on downloaded binary failed.
-                    err = "Failed to install {0} from binary cache due to {1}:"
-                    err += " Requeueing to install from source."
-                    tty.error(err.format(pkg.name, str(exc)))
-                    task.use_cache = False
-                    self._requeue_task(task)
-                    continue
+                if task.cache_only:
+                    raise
+
+                # Checking hash on downloaded binary failed.
+                err = "Failed to install {0} from binary cache due to {1}:"
+                err += " Requeueing to install from source."
+                tty.error(err.format(pkg.name, str(exc)))
+                task.use_cache = False
+                self._requeue_task(task)
+                continue
 
             except (Exception, SystemExit) as exc:
                 self._update_failed(task, True, exc)
@@ -1948,11 +1941,7 @@ class BuildProcessInstaller(object):
             # Run post install hooks before build stage is removed.
             spack.hooks.post_install(self.pkg.spec)
 
-        _print_timer(
-            pre=self.pre,
-            pkg_id=self.pkg_id,
-            timer=self.timer,
-        )
+        _print_timer(pre=self.pre, pkg_id=self.pkg_id, timer=self.timer)
         _print_installed_pkg(self.pkg.prefix)
 
         # Send final status that install is successful

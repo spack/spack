@@ -19,4 +19,5 @@ class PerlMce(PerlPackage):
     homepage = "https://github.com/marioroy/mce-perl"
     url = "https://cpan.metacpan.org/authors/id/M/MA/MARIOROY/MCE-1.874.tar.gz"
 
+    version("1.884", sha256="c830c0e548094f19c620049e744258be2c121d4a86cf7c94a37599ad016daf33")
     version("1.874", sha256="d809e3018475115ad7eccb8bef49bde3bf3e75abbbcd80564728bbcfab86d3d0")

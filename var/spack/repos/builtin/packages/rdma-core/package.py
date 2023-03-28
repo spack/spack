@@ -56,6 +56,12 @@ class RdmaCore(CMakePackage):
     version("17.1", sha256="b47444b7c05d3906deb8771eec3e634984dd83f5e620d5e37d3a83f74f0cc1ba")
     version("13", sha256="e5230fd7cda610753ad1252b40a28b1e9cf836423a10d8c2525b081527760d97")
 
+    variant(
+        "static",
+        default=True,
+        description="Produce static libraries along with usual shared libraries.",
+    )
+
     depends_on("pkgconfig", type="build")
     depends_on("py-docutils", type="build")
     depends_on("libnl")
@@ -81,6 +87,8 @@ class RdmaCore(CMakePackage):
             "-DCMAKE_INSTALL_SYSCONFDIR={0}".format(self.spec.prefix.etc),
             "-DCMAKE_INSTALL_RUNDIR=/var/run",
         ]
+
+        cmake_args.append(self.define_from_variant("ENABLE_STATIC", "static"))
 
         if self.spec.satisfies("@:39.0"):
             cmake_args.extend(

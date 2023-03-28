@@ -151,10 +151,7 @@ class Flamemaster(CMakePackage):
     def cmake_args(self):
         spec = self.spec
 
-        args = [
-            "-DCMAKE_C_COMPILER=%s" % spack_cc,
-            "-DCMAKE_CXX_COMPILER=%s" % spack_cxx,
-        ]
+        args = ["-DCMAKE_C_COMPILER=%s" % spack_cc, "-DCMAKE_CXX_COMPILER=%s" % spack_cxx]
 
         if spec.variants["build_type"].value == "Release":
             cxx_flags_release = []

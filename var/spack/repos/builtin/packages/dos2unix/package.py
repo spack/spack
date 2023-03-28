@@ -28,7 +28,7 @@ class Dos2unix(MakefilePackage):
         targets = [
             "LDFLAGS_USER=-L{0} {1}".format(
                 self.spec["gettext"].prefix.lib, self.spec["gettext"].libs.link_flags
-            ),
+            )
         ]
         return targets
 

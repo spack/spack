@@ -84,7 +84,6 @@ class FakeWebResponder(object):
         return self._resp_code
 
     def read(self, length=None):
-
         if len(self._content) <= 0:
             return None
 
@@ -103,11 +102,7 @@ class FakeWebResponder(object):
 
 
 def test_download_and_extract_artifacts(tmpdir, monkeypatch, working_env):
-    os.environ.update(
-        {
-            "GITLAB_PRIVATE_TOKEN": "faketoken",
-        }
-    )
+    os.environ.update({"GITLAB_PRIVATE_TOKEN": "faketoken"})
 
     url = "https://www.nosuchurlexists.itsfake/artifacts.zip"
     working_dir = os.path.join(tmpdir.strpath, "repro")
@@ -234,24 +229,14 @@ def test_setup_spack_repro_version(tmpdir, capfd, last_two_git_commits, monkeypa
     assert "Unable to merge {0}".format(c1) in err
 
 
-@pytest.mark.parametrize(
-    "obj, proto",
-    [
-        ({}, []),
-    ],
-)
+@pytest.mark.parametrize("obj, proto", [({}, [])])
 def test_ci_opt_argument_checking(obj, proto):
     """Check that matches() and subkeys() return False when `proto` is not a dict."""
     assert not ci_opt.matches(obj, proto)
     assert not ci_opt.subkeys(obj, proto)
 
 
-@pytest.mark.parametrize(
-    "yaml",
-    [
-        {"extends": 1},
-    ],
-)
+@pytest.mark.parametrize("yaml", [{"extends": 1}])
 def test_ci_opt_add_extends_non_sequence(yaml):
     """Check that add_extends() exits if 'extends' is not a sequence."""
     yaml_copy = yaml.copy()
@@ -263,10 +248,7 @@ def test_ci_workarounds():
     fake_root_spec = "x" * 544
     fake_spack_ref = "x" * 40
 
-    common_variables = {
-        "SPACK_COMPILER_ACTION": "NONE",
-        "SPACK_IS_PR_PIPELINE": "False",
-    }
+    common_variables = {"SPACK_COMPILER_ACTION": "NONE", "SPACK_IS_PR_PIPELINE": "False"}
 
     common_before_script = [
         'git clone "https://github.com/spack/spack"',
@@ -307,7 +289,6 @@ def test_ci_workarounds():
         return {name: result}
 
     def make_rebuild_index_job(use_artifact_buildcache, optimize, use_dependencies):
-
         result = {
             "stage": "stage-rebuild-index",
             "script": "spack buildcache update-index --mirror-url s3://mirror",
@@ -427,19 +408,36 @@ def test_get_spec_filter_list(mutable_mock_env_path, config, mutable_mock_repo):
 
     touched = ["libdwarf"]
 
-    # traversing both directions from libdwarf in the graphs depicted
-    # above (and additionally including dependencies of dependents of
-    # libdwarf) results in the following possibly affected env specs:
-    # mpileaks, callpath, dyninst, libdwarf, libelf, and mpich.
-    # Unaffected specs are hypre and it's dependencies.
+    # Make sure we return the correct set of possibly affected specs,
+    # given a dependent traversal depth and the fact that the touched
+    # package is libdwarf.  Passing traversal depth of None or something
+    # equal to or larger than the greatest depth in the graph are
+    # equivalent and result in traversal of all specs from the touched
+    # package to the root.  Passing negative traversal depth results in
+    # no spec traversals.  Passing any other number yields differing
+    # numbers of possibly affected specs.
 
-    affected_specs = ci.get_spec_filter_list(e1, touched)
-    affected_pkg_names = set([s.name for s in affected_specs])
-    expected_affected_pkg_names = set(
-        ["mpileaks", "mpich", "callpath", "dyninst", "libdwarf", "libelf"]
-    )
+    full_set = set(["mpileaks", "mpich", "callpath", "dyninst", "libdwarf", "libelf"])
+    empty_set = set([])
+    depth_2_set = set(["mpich", "callpath", "dyninst", "libdwarf", "libelf"])
+    depth_1_set = set(["dyninst", "libdwarf", "libelf"])
+    depth_0_set = set(["libdwarf", "libelf"])
 
-    assert affected_pkg_names == expected_affected_pkg_names
+    expectations = {
+        None: full_set,
+        3: full_set,
+        100: full_set,
+        -1: empty_set,
+        0: depth_0_set,
+        1: depth_1_set,
+        2: depth_2_set,
+    }
+
+    for key, val in expectations.items():
+        affected_specs = ci.get_spec_filter_list(e1, touched, dependent_traverse_depth=key)
+        affected_pkg_names = set([s.name for s in affected_specs])
+        print(f"{key}: {affected_pkg_names}")
+        assert affected_pkg_names == val
 
 
 @pytest.mark.regression("29947")
