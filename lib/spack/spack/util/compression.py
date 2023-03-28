@@ -198,6 +198,7 @@ def _win_compressed_tarball_handler(helper):
     of access to the xz tool (unsupported natively on Windows) but
     can be installed manually or via spack
     """
+
     def unarchive(archive_file):
         # perform intermediate extraction step
         # record name of new archive so we can extract
@@ -214,6 +215,7 @@ def _win_compressed_tarball_handler(helper):
             os.remove(decomped_tarball)
             return outfile
         return decomped_tarball
+
     return unarchive
 
 
