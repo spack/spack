@@ -346,7 +346,14 @@ class Hdf5(CMakePackage):
     # These do not appear to exist on Windows, only enable for supported platforms
     for plat in ["linux", "darwin", "cray"]:
         filter_compiler_wrappers(
-            "h5cc", "h5hlcc", "h5fc", "h5hlfc", "h5c++", "h5hlc++", relative_root="bin", when=f"platform={plat}"
+            "h5cc",
+            "h5hlcc",
+            "h5fc",
+            "h5hlfc",
+            "h5c++",
+            "h5hlc++",
+            relative_root="bin",
+            when=f"platform={plat}",
         )
 
     def url_for_version(self, version):
