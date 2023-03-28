@@ -10,8 +10,6 @@ import sys
 import spack.build_environment
 from spack.package import *
 
-is_windows = sys.platform == "win32"
-
 
 class Cmake(Package):
     """A cross-platform, open-source build system. CMake is a family of
@@ -187,7 +185,11 @@ class Cmake(Package):
         default=False,
         description="Enables the generation of html and man page documentation",
     )
-    variant("ncurses", default=not is_windows, description="Enables the build of the ncurses gui")
+    variant(
+        "ncurses",
+        default=sys.platform != "win32",
+        description="Enables the build of the ncurses gui",
+    )
 
     # See https://gitlab.kitware.com/cmake/cmake/-/issues/21135
     conflicts(

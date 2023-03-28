@@ -21,8 +21,6 @@ import spack.config
 import spack.error
 import spack.paths
 
-is_windows = sys.platform == "win32"
-
 
 class Lock(llnl.util.lock.Lock):
     """Lock that can be disabled.
@@ -34,7 +32,7 @@ class Lock(llnl.util.lock.Lock):
 
     def __init__(self, *args, **kwargs):
         super(Lock, self).__init__(*args, **kwargs)
-        self._enable = spack.config.get("config:locks", not is_windows)
+        self._enable = spack.config.get("config:locks", sys.platform != "win32")
 
     def _lock(self, op, timeout=0):
         if self._enable:
