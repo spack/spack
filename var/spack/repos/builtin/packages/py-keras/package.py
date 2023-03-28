@@ -169,23 +169,13 @@ class PyKeras(PythonPackage):
     # Required dependencies listed in multiple places:
     # * BUILD
     # * WORKSPACE
-    # * requirements.txt
-    # * setup.py
     depends_on("py-absl-py", type=("build", "run"), when="@2.6:")
     depends_on("py-h5py", type=("build", "run"))
-    depends_on("py-numpy@1.23.2:1.23", type=("build", "run"), when="@2.12: ^python@3.11:")
-    depends_on("py-numpy@1.22", type=("build", "run"), when="@2.12: ^python@:3.10")
-    depends_on("py-numpy@1.21.4:1.21", type=("build", "run"), when="@2.8:2.11")
-    depends_on("py-numpy@1.19.2:1.19", type=("build", "run"), when="@2.7")
-    depends_on("py-numpy@1.9.1:", type=("build", "run"), when="@2.0.8:")
     depends_on("py-numpy", type=("build", "run"))
     depends_on("py-pandas", type=("build", "run"), when="@2.0.9:")
     depends_on("pil", type=("build", "run"))
     depends_on("py-portpicker", type=("build", "run"), when="@2.10:")
     depends_on("py-pydot", type=("build", "run"))
-    depends_on("py-scipy@1.7.2:1.7", type=("build", "run"), when="@2.11:")
-    depends_on("py-scipy@1.5.2:1.5", type=("build", "run"), when="@2.6:2.10")
-    depends_on("py-scipy@0.14:", type=("build", "run"), when="@2.0.8:")
     depends_on("py-scipy", type=("build", "run"))
     depends_on("py-six", type=("build", "run"))
     for minor_ver in range(5, 13):
