@@ -4,12 +4,13 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import os
+import sys
 
 import pytest
 
 from llnl.util.filesystem import mkdirp, touchp, visit_directory_tree, working_dir
 from llnl.util.link_tree import DestinationMergeVisitor, LinkTree, SourceMergeVisitor
-from llnl.util.symlink import islink
+from llnl.util.symlink import islink, _windows_can_symlink, symlink
 
 from spack.stage import Stage
 
@@ -51,6 +52,9 @@ def check_dir(filename):
     assert os.path.isdir(filename)
 
 
+@pytest.mark.skipif(
+    sys.platform == "win32" and not _windows_can_symlink(), reason="Requires elevated privileges."
+)
 def test_merge_to_new_directory(stage, link_tree):
     with working_dir(stage.path):
         link_tree.merge("dest")
@@ -76,6 +80,34 @@ def test_merge_to_new_directory(stage, link_tree):
         assert not os.path.exists("dest")
 
 
+@pytest.mark.skipif(_windows_can_symlink(), reason='Requires base privileges.')
+@pytest.mark.skipif(sys.platform != 'win32', reason='Windows only.')
+def test_merge_to_new_directory__win32_base(stage, link_tree):
+    """Test for link_tree.merge for windows with base permissions"""
+    with working_dir(stage.path):
+        link_tree.merge("dest")
+
+        files = [
+            "dest/1",
+            "dest/a/b/2",
+            "dest/a/b/3",
+            "dest/c/4",
+            "dest/c/d/5",
+            "dest/c/d/6",
+            "dest/c/d/e/7"
+        ]
+        for file in files:
+            assert islink(file)
+            assert os.path.isfile(file)
+
+        link_tree.unmerge("dest")
+
+        assert not os.path.exists("dest")
+
+
+@pytest.mark.skipif(
+    sys.platform == "win32" and not _windows_can_symlink(), reason="Requires elevated privileges."
+)
 def test_merge_to_new_directory_relative(stage, link_tree):
     with working_dir(stage.path):
         link_tree.merge("dest", relative=True)
@@ -101,6 +133,33 @@ def test_merge_to_new_directory_relative(stage, link_tree):
         assert not os.path.exists("dest")
 
 
+@pytest.mark.skipif(_windows_can_symlink(), reason='Requires base privileges.')
+@pytest.mark.skipif(sys.platform != 'win32', reason='Windows only.')
+def test_merge_to_new_directory_relative__win32_base(stage, link_tree):
+    with working_dir(stage.path):
+        link_tree.merge("dest", relative=True)
+
+        files = [
+            "dest/1",
+            "dest/a/b/2",
+            "dest/a/b/3",
+            "dest/c/4",
+            "dest/c/d/5",
+            "dest/c/d/6",
+            "dest/c/d/e/7",
+        ]
+        for file in files:
+            assert islink(file)
+            assert os.path.isfile(file)
+
+        link_tree.unmerge("dest")
+
+        assert not os.path.exists("dest")
+
+
+@pytest.mark.skipif(
+    sys.platform == "win32" and not _windows_can_symlink(), reason="Requires elevated privileges."
+)
 def test_merge_to_existing_directory(stage, link_tree):
     with working_dir(stage.path):
         touchp("dest/x")
@@ -115,6 +174,45 @@ def test_merge_to_existing_directory(stage, link_tree):
         check_file_link("dest/c/d/5", "source/c/d/5")
         check_file_link("dest/c/d/6", "source/c/d/6")
         check_file_link("dest/c/d/e/7", "source/c/d/e/7")
+
+        assert os.path.isfile("dest/x")
+        assert os.path.isfile("dest/a/b/y")
+
+        link_tree.unmerge("dest")
+
+        assert os.path.isfile("dest/x")
+        assert os.path.isfile("dest/a/b/y")
+
+        assert not os.path.isfile("dest/1")
+        assert not os.path.isfile("dest/a/b/2")
+        assert not os.path.isfile("dest/a/b/3")
+        assert not os.path.isfile("dest/c/4")
+        assert not os.path.isfile("dest/c/d/5")
+        assert not os.path.isfile("dest/c/d/6")
+        assert not os.path.isfile("dest/c/d/e/7")
+
+
+@pytest.mark.skipif(_windows_can_symlink(), reason='Requires base privileges.')
+@pytest.mark.skipif(sys.platform != 'win32', reason='Windows only.')
+def test_merge_to_existing_directory__win32_base(stage, link_tree):
+    with working_dir(stage.path):
+        touchp("dest/x")
+        touchp("dest/a/b/y")
+
+        link_tree.merge("dest")
+
+        files = [
+            "dest/1",
+            "dest/a/b/2",
+            "dest/a/b/3",
+            "dest/c/4",
+            "dest/c/d/5",
+            "dest/c/d/6",
+            "dest/c/d/e/7",
+        ]
+        for file in files:
+            assert islink(file)
+            assert os.path.isfile(file)
 
         assert os.path.isfile("dest/x")
         assert os.path.isfile("dest/a/b/y")
@@ -192,9 +290,9 @@ def test_source_merge_visitor_does_not_follow_symlinked_dirs_at_depth(tmpdir):
         os.mkdir(j("a", "b"))
         os.mkdir(j("a", "b", "c"))
         os.mkdir(j("a", "b", "c", "d"))
-        os.symlink(j("b"), j("a", "symlink_b"))
-        os.symlink(j("c"), j("a", "b", "symlink_c"))
-        os.symlink(j("d"), j("a", "b", "c", "symlink_d"))
+        symlink(j("b"), j("a", "symlink_b"))
+        symlink(j("c"), j("a", "b", "symlink_c"))
+        symlink(j("d"), j("a", "b", "c", "symlink_d"))
         with open(j("a", "b", "c", "d", "file"), "wb"):
             pass
 
@@ -236,10 +334,11 @@ def test_source_merge_visitor_cant_be_cyclical(tmpdir):
     j = os.path.join
     with tmpdir.as_cwd():
         os.mkdir(j("a"))
-        os.symlink(j("..", "b"), j("a", "symlink_b"))
-        os.symlink(j("symlink_b"), j("a", "symlink_b_b"))
         os.mkdir(j("b"))
-        os.symlink(j("..", "a"), j("b", "symlink_a"))
+
+        symlink(j("..", "b"), j("a", "symlink_b"))
+        symlink(j("symlink_b"), j("a", "symlink_b_b"))
+        symlink(j("..", "a"), j("b", "symlink_a"))
 
     visitor = SourceMergeVisitor()
     visit_directory_tree(str(tmpdir), visitor)
@@ -302,3 +401,4 @@ def test_destination_merge_visitor_file_dir_clashes(tmpdir):
     visit_directory_tree(str(tmpdir.join("a")), DestinationMergeVisitor(b_to_a))
     assert b_to_a.fatal_conflicts
     assert b_to_a.fatal_conflicts[0].dst == "example"
+
