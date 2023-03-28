@@ -193,6 +193,24 @@ class Llvm(CMakePackage, CudaPackage):
     variant(
         "z3", default=False, when="+clang @8:", description="Use Z3 for the clang static analyzer"
     )
+    variant(
+        "projects",
+        description="Additional LLVM projects to build",
+        values=(
+            "clang",
+            "clang-tools-extra",
+            "cross-project-tests",
+            "libc",
+            "libclc",
+            "lld",
+            "lldb",
+            "openmp",
+            "polly",
+            "pstl",
+        ),
+        default=None,
+        multi=True,
+    )
 
     provides("libllvm@14", when="@14.0.0:14")
     provides("libllvm@13", when="@13.0.0:13")
@@ -691,6 +709,12 @@ class Llvm(CMakePackage, CudaPackage):
         if self.spec.satisfies("@15.0.0: platform=darwin"):
             cmake_args.append(define("BUILTINS_CMAKE_ARGS", "-DCOMPILER_RT_ENABLE_IOS=OFF"))
 
+        # Add extra projects
+        extra_projects = spec.variants["projects"].value
+        for project in extra_projects:
+            if project not in projects:
+                projects.append(project)
+
         # Semicolon seperated list of projects to enable
         cmake_args.append(define("LLVM_ENABLE_PROJECTS", projects))
 
@@ -799,3 +823,11 @@ def get_llvm_targets_to_build(spec):
         llvm_targets.add("PowerPC")
 
     return list(llvm_targets)
+
+
+# This function copied from OpenMPI recipe
+def get_options_from_variant(self, name):
+    values = self.variants[name][0].values
+    if getattr(values, "feature_values", None):
+        values = values.feature_values
+    return values
