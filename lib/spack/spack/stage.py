@@ -52,8 +52,9 @@ stage_prefix = "spack-stage-"
 
 def compute_stage_name(prefix: str, spec):
     """Determine stage name given a spec"""
-    hash_len = spack.config.get("config:stage_hash_length", None)
-    return f"{stage_prefix}{spec.name}-{spec.version}-{spec.dag_hash(hash_len)}"
+    default_stage_structure = "spack-stage-{name}-{version}-{hash}"
+    stage_name_structure = spack.config.get("config:stage_name", default=default_stage_structure)
+    return spec.format(format_string=stage_name_structure)
 
 
 def create_stage_root(path: str) -> None:

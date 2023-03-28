@@ -4,3 +4,4 @@ config:
   build_stage::
     - '$spack/.staging'
     - 'C:/spack'
+  stage_name: '{name}-{version}-{hash:7}'
