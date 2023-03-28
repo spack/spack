@@ -116,6 +116,7 @@ class BaseBuilder:
     def install_datum_grids(self):
         install_tree(join_path("share", "proj"), self.prefix.share.proj)
 
+
 class CMakeBuilder(cmake.CMakeBuilder, BaseBuilder):
     def cmake_args(self):
         args = [
