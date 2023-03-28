@@ -154,6 +154,10 @@ class Hipcub(CMakePackage, CudaPackage, ROCmPackage):
         depends_on("rocprim@" + ver, when="+rocm @" + ver)
         depends_on("rocm-cmake@%s:" % ver, type="build", when="@" + ver)
 
+    # fix hardcoded search in /opt/rocm and broken config mode search
+    patch("find-hip-cuda-rocm-5.1.patch", when="@5.1:5.2 +cuda")
+    patch("find-hip-cuda-rocm-5.3.patch", when="@5.3: +cuda")
+
     def setup_build_environment(self, env):
         if self.spec.satisfies("+rocm"):
             env.set("CXX", self.spec["hip"].hipcc)
