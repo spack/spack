@@ -1800,7 +1800,7 @@
         ],
         "cce": [
           {
-            "versions": "15:",
+            "versions": "15.0:",
             "name": "znver1",
             "flags": "-march={name} -mtune={name}"
           }
