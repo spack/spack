@@ -184,20 +184,18 @@ class RocmSmiLib(CMakePackage):
                         with open(name_file, "r") as f:
                             node = f.readline().strip("\n")
                             if node:
-                                cmd = 'source ' + exclude + ' && echo "${FILTER[' + node + ']}"'
+                                cmd = "source " + exclude + ' && echo "${FILTER[' + node + ']}"'
                                 node_tests = subprocess.check_output(
-                                        cmd,
-                                        shell=True,
-                                        executable="/bin/bash"
+                                    cmd, shell=True, executable="/bin/bash"
                                 )
-                                node_tests = node_tests.decode('utf-8').strip("\n")
+                                node_tests = node_tests.decode("utf-8").strip("\n")
                                 if node_tests:
                                     disabled_tests = disabled_tests + node_tests + ":"
 
             # disable tests under virtualization
-            cmd = 'source ' + exclude + ' && echo "${FILTER[virtualization]}"'
+            cmd = "source " + exclude + ' && echo "${FILTER[virtualization]}"'
             virtualization_tests = subprocess.check_output(cmd, shell=True, executable="/bin/bash")
-            virtualization_tests = virtualization_tests.decode('utf-8').strip("\n")
+            virtualization_tests = virtualization_tests.decode("utf-8").strip("\n")
             disabled_tests = disabled_tests + virtualization_tests
 
             # disable test that requires --privileged permissions

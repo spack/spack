@@ -157,15 +157,8 @@ class RocmClangOcl(CMakePackage):
         test_dir = join_path(self.test_suite.current_test_cache_dir, self.test_src_dir)
         with working_dir(test_dir, create=True):
             cmake_bin = join_path(self.spec["cmake"].prefix.bin, "cmake")
-            prefixes = ";".join(
-                [
-                    self.spec["rocm-clang-ocl"].prefix,
-                ]
-            )
-            cc_options = [
-                "-DCMAKE_PREFIX_PATH=" + prefixes,
-                ".",
-            ]
+            prefixes = ";".join([self.spec["rocm-clang-ocl"].prefix])
+            cc_options = ["-DCMAKE_PREFIX_PATH=" + prefixes, "."]
             self.run_test(cmake_bin, cc_options)
             make()
             make("clean")
