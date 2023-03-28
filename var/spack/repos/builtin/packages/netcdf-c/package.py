@@ -63,15 +63,6 @@ class NetcdfC(CMakePackage, AutotoolsPackage):
     # Some of the patches touch configure.ac and, therefore, require forcing the autoreconf stage:
     _force_autoreconf_when = []
     with when("build_system=autotools"):
-        # Configure fails if curl is not installed
-        # See https://github.com/Unidata/netcdf-c/issues/1390
-        patch(
-            "https://github.com/Unidata/netcdf-c/commit/e5315da1e748dc541d50796fb05233da65e86b6b.patch?full_index=1",
-            sha256="c551ca2f5b6bcefa07dd7f8b7bac426a5df9861e091df1ab99167d8d401f963f",
-            when="@4.7.0",
-        )
-        _force_autoreconf_when.append("@4.7.0")
-
         # See https://github.com/Unidata/netcdf-c/pull/1752
         patch(
             "https://github.com/Unidata/netcdf-c/commit/386e2695286702156eba27ab7c68816efb192230.patch?full_index=1",
@@ -460,8 +451,14 @@ class AutotoolsBuilder(BackupStep, Setup, autotools.AutotoolsBuilder):
             extra_libs.append(self.spec["curl"].libs)
         elif "+dap" in self.spec or "+byterange" in self.spec:
             lib_search_dirs.extend(self.spec["curl"].libs.directories)
-        elif self.spec.satisfies("@4.8.0:"):
-            # Prevent linking to system curl:
+        elif self.spec.satisfies("@4.7.0"):
+            # This particular version fails if curl is not found, even if it is not needed
+            # (see https://github.com/Unidata/netcdf-c/issues/1390). Note that the following does
+            # not trigger linking to system curl for this version because DAP support is disabled:
+            config_args.append("ac_cv_lib_curl_curl_easy_setopt=yes")
+        else:
+            # Prevent linking to system curl (for versions 4.8.0 and newer) and the redundant check
+            # for curl (for older versions):
             config_args.append("ac_cv_lib_curl_curl_easy_setopt=no")
 
         if not self.spec.satisfies("@:4.4,main"):
