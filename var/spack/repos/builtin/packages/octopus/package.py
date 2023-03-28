@@ -54,6 +54,7 @@ class Octopus(AutotoolsPackage, CudaPackage):
     variant("libvdwxc", default=False, description="Compile with libvdwxc")
     variant("libyaml", default=False, description="Compile with libyaml")
     variant("elpa", default=False, description="Compile with ELPA")
+    variant("etsf-io", default=False, description="Compile with etsf-io")
     variant("nlopt", default=False, description="Compile with nlopt")
     variant("debug", default=False, description="Compile with debug flags")
 
@@ -89,6 +90,7 @@ class Octopus(AutotoolsPackage, CudaPackage):
         depends_on("elpa~mpi", when="+elpa")
         depends_on("netcdf-fortran ^netcdf-c~~mpi", when="+netcdf")
 
+    depends_on("etsf-io", when="+etsf-io")
     depends_on("py-numpy", when="+python")
     depends_on("py-mpi4py", when="+python")
     depends_on("metis@5:+int64", when="+metis")
@@ -204,6 +206,8 @@ class Octopus(AutotoolsPackage, CudaPackage):
             args.append("--enable-python")
 
         # --with-etsf-io-prefix=
+        if "+etsf-io" in spec:
+            args.append("--with-etsf-io-prefix=%s" % spec["etsf-io"].prefix)
         # --with-sparskit=${prefix}/lib/libskit.a
         # --with-pfft-prefix=${prefix} --with-mpifftw-prefix=${prefix}
         # --with-berkeleygw-prefix=${prefix}
