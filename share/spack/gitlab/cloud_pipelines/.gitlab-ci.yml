@@ -14,10 +14,10 @@ default:
     SPACK_TARGET_PLATFORM: "linux"
     SPACK_TARGET_ARCH: "x86_64"
 
-.linux_x86_64_v4:
+.linux_x86_64_v3:
   variables:
     SPACK_TARGET_PLATFORM: "linux"
-    SPACK_TARGET_ARCH: "x86_64_v4"
+    SPACK_TARGET_ARCH: "x86_64_v3"
 
 .linux_aarch64:
   variables:
@@ -562,7 +562,7 @@ radiuss-protected-build:
   image: { "name": "ghcr.io/spack/e4s-amazonlinux-2:v2023-03-09", "entrypoint": [""] }
 
 .radiuss-aws:
-  extends: [ ".linux_x86_64_v4" ]
+  extends: [ ".linux_x86_64_v3" ]
   variables:
     SPACK_CI_STACK_NAME: radiuss-aws
 
@@ -679,7 +679,7 @@ data-vis-sdk-protected-build:
   image: { "name": "ghcr.io/spack/e4s-amazonlinux-2:v2023-03-09", "entrypoint": [""] }
 
 .aws-ahug:
-  extends: [ ".linux_x86_64_v4" ]
+  extends: [ ".linux_x86_64_v3" ]
   variables:
     SPACK_CI_STACK_NAME: aws-ahug
 
@@ -757,7 +757,7 @@ aws-ahug-aarch64-protected-build:
   image: { "name": "ghcr.io/spack/e4s-amazonlinux-2:v2023-03-09", "entrypoint": [""] }
 
 .aws-isc:
-  extends: [ ".linux_x86_64_v4" ]
+  extends: [ ".linux_x86_64_v3" ]
   variables:
     SPACK_CI_STACK_NAME: aws-isc
 
@@ -866,7 +866,7 @@ tutorial-protected-build:
 # Machine Learning - Linux x86_64 (CPU)
 #######################################
 .ml-linux-x86_64-cpu:
-  extends: [ ".linux_x86_64_v4" ]
+  extends: [ ".linux_x86_64_v3" ]
   variables:
     SPACK_CI_STACK_NAME: ml-linux-x86_64-cpu
 
@@ -906,7 +906,7 @@ ml-linux-x86_64-cpu-protected-build:
 # Machine Learning - Linux x86_64 (CUDA)
 ########################################
 .ml-linux-x86_64-cuda:
-  extends: [ ".linux_x86_64_v4" ]
+  extends: [ ".linux_x86_64_v3" ]
   variables:
     SPACK_CI_STACK_NAME: ml-linux-x86_64-cuda
 
@@ -946,7 +946,7 @@ ml-linux-x86_64-cuda-protected-build:
 # Machine Learning - Linux x86_64 (ROCm)
 ########################################
 .ml-linux-x86_64-rocm:
-  extends: [ ".linux_x86_64_v4" ]
+  extends: [ ".linux_x86_64_v3" ]
   variables:
     SPACK_CI_STACK_NAME: ml-linux-x86_64-rocm
 
