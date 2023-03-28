@@ -10,11 +10,11 @@ import contextlib
 import functools
 import inspect
 import itertools
-import os
 import re
 import sys
 import traceback
 from datetime import datetime, timedelta
+from pathlib import Path
 from typing import Any, Callable, Iterable, List, Tuple
 
 # Ignore emacs backups when listing modules
@@ -210,15 +210,16 @@ def list_modules(directory, **kwargs):
     order."""
     list_directories = kwargs.setdefault("directories", True)
 
-    for name in os.listdir(directory):
-        if name == "__init__.py":
+    directory = Path(directory)
+    for name in directory.iterdir():
+        if name.name == "__init__.py":
             continue
 
-        path = os.path.join(directory, name)
-        if list_directories and os.path.isdir(path):
-            init_py = os.path.join(path, "__init__.py")
-            if os.path.isfile(init_py):
-                yield name
+        path = directory / name
+        if list_directories and path.is_dir():
+            init_py = path / "__init__.py"
+            if init_py.is_file():
+                yield str(name.name)
 
         elif name.endswith(".py"):
             if not any(re.search(pattern, name) for pattern in ignore_modules):
