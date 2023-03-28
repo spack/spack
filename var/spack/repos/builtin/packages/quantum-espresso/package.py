@@ -275,6 +275,16 @@ class QuantumEspresso(CMakePackage, Package):
 
     conflicts("@6.5:", when="+environ", msg="6.4.x is the latest QE series supported by Environ")
 
+    # QE 7.1 fix post-processing install part 1/2
+    patch_url = "https://gitlab.com/QEF/q-e/-/commit/4ca3afd4c6f27afcf3f42415a85a353a7be1bd37.diff"
+    patch_checksum = "e54d33e36a2667bd1d7e358db9fa9d4d83085264cdd47e39ce88754452ae7700"
+    patch(patch_url, sha256=patch_checksum, when="@:7.1 build_system=cmake")
+    
+    # QE 7.1 fix post-processing install part 2/2
+    patch_url = "https://gitlab.com/QEF/q-e/-/commit/481a001293de2f9eec8481e02d64f679ffd83ede.diff"
+    patch_checksum = "5075f2df61ef5ff70f2ec3b52a113f5636fb07f5d3d4c0115931f9b95ed61c3e"
+    patch(patch_url, sha256=patch_checksum, when="@:7.1 build_system=cmake")
+
     # No patch needed for QMCPACK converter beyond 7.0
     # 7.0
     patch_url = "https://raw.githubusercontent.com/QMCPACK/qmcpack/v3.13.0/external_codes/quantum_espresso/add_pw2qmcpack_to_qe-7.0.diff"
@@ -369,20 +379,6 @@ class QuantumEspresso(CMakePackage, Package):
         when="+patch@6.4.1:6.5.0",
     )
     
-    # QE 7.1 fix post-processing install part 1/2
-    patch(
-        "https://gitlab.com/QEF/q-e/-/commit/4ca3afd4c6f27afcf3f42415a85a353a7be1bd37.diff",
-        sha256="e54d33e36a2667bd1d7e358db9fa9d4d83085264cdd47e39ce88754452ae7700",
-        when="@:7.1 build_system=cmake",
-    )
-
-    # QE 7.1 fix post-processing install part 2/2
-    patch(
-        "https://gitlab.com/QEF/q-e/-/commit/481a001293de2f9eec8481e02d64f679ffd83ede.diff",
-        sha256="5075f2df61ef5ff70f2ec3b52a113f5636fb07f5d3d4c0115931f9b95ed61c3e",
-        when="@:7.1 build_system=cmake",
-    )
-
     # Patch automake configure for AOCC compilers
     patch("configure_aocc.patch", when="@6.7 %aocc")
 
