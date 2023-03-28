@@ -51,18 +51,34 @@ setlocal enabledelayedexpansion
 :: subcommands will never start with '-'
 :: everything after the subcommand is an arg
 
-:: WE CANNOT ALLOW BATCH FOR TO DIRECTLY PROCESS CL ARGS
+:: we cannot allow batch "for" loop to directly process CL args
 :: a number of batch reserved characters are commonly passed to
-:: spack and allowing batch's for method to process the raw inputs
+:: spack and allowing batch's "for" method to process the raw inputs
 :: results in a large number of formatting issues
 :: instead, treat the entire CLI as one string
 :: and split by space manually
+:: capture cl args in variable named cl_args
 set cl_args=%*
-:foreach
+:process_cl_args
+:: tokens=1* returns the first processed token produced
+:: by tokenizing the input string cl_args on spaces into
+:: the named variable %%g
+:: While this make look like a for loop, it only
+:: executes a single time for each of the cl args
+:: the actual iterative loop is performed by the
+:: goto process_cl_args stanza
+:: we are simply leveraging the "for" method's string
+:: tokenization
 for /f "tokens=1*" %%g in ("%cl_args%") do (
     set t=%%~g
     :: remainder of string is composed into %%h
+    :: these are the cl args yet to be processed
+    :: assign cl_args var to only the args to be processed
+    :: effectively discarding the current arg %%g
+    :: this will be nul when we have no further tokens to process
     set cl_args=%%h
+    :: process the first space delineated cl arg
+    :: of this iteration
     if "!t:~0,1!" == "-" (
         if defined _sp_subcommand (
             :: We already have a subcommand, processing args now
@@ -93,7 +109,9 @@ for /f "tokens=1*" %%g in ("%cl_args%") do (
         )
     )
 )
-if defined cl_args goto :foreach
+:: if this is not nil, we have more tokens to process
+:: start above process again with remaining unprocessed cl args
+if defined cl_args goto :process_cl_args
 
 
 :: --help, -h and -V flags don't require further output parsing.
@@ -173,21 +191,16 @@ if NOT defined _sp_args (
 )
 
 if NOT "%_sp_args%"=="%_sp_args:--help=%" (
-    echo "--help"
     goto :default_case
 ) else if NOT "%_sp_args%"=="%_sp_args: -h=%" (
-    echo "-h"
     goto :default_case
 ) else if NOT "%_sp_args%"=="%_sp_args:--bat=%" (
-    echo "--bat"
     goto :default_case
 ) else if NOT "%_sp_args%"=="%_sp_args:deactivate=%" (
-    echo "deactivate"
     for /f "tokens=* USEBACKQ" %%I in (
         `call python %spack% %_sp_flags% env deactivate --bat %_sp_args:deactivate=%`
     ) do %%I
 ) else if NOT "%_sp_args%"=="%_sp_args:activate=%" (
-    echo "activate"
     for /f "tokens=* USEBACKQ" %%I in (
         `python %spack% %_sp_flags% env activate --bat %_sp_args:activate=%`
     ) do %%I
