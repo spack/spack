@@ -95,6 +95,8 @@ class Xalt(AutotoolsPackage):
     def configure_args(self):
         args = []
 
+        args.append("--exec-prefix={0}".format(self.prefix))
+
         for multi_variant in (
             "config",
             "etcDir",
