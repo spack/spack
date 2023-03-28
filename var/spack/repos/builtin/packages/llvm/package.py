@@ -197,6 +197,8 @@ class Llvm(CMakePackage, CudaPackage):
         "projects",
         description="Additional LLVM projects to build",
         values=(
+            "all",
+            "none",
             "clang",
             "clang-tools-extra",
             "cross-project-tests",
@@ -208,7 +210,7 @@ class Llvm(CMakePackage, CudaPackage):
             "polly",
             "pstl",
         ),
-        default=None,
+        default="none",
         multi=True,
     )
 
@@ -711,9 +713,12 @@ class Llvm(CMakePackage, CudaPackage):
 
         # Add extra projects
         extra_projects = spec.variants["projects"].value
-        for project in extra_projects:
-            if project not in projects:
-                projects.append(project)
+        if "all" in targets:
+            projects = ["all"]
+        else:
+            for project in extra_projects:
+                if project not in projects:
+                    projects.append(project)
 
         # Semicolon seperated list of projects to enable
         cmake_args.append(define("LLVM_ENABLE_PROJECTS", projects))
@@ -823,11 +828,3 @@ def get_llvm_targets_to_build(spec):
         llvm_targets.add("PowerPC")
 
     return list(llvm_targets)
-
-
-# This function copied from OpenMPI recipe
-def get_options_from_variant(self, name):
-    values = self.variants[name][0].values
-    if getattr(values, "feature_values", None):
-        values = values.feature_values
-    return values
