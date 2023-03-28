@@ -103,6 +103,7 @@ version_origin_fields = [
     "dev_spec",
     "external",
     "packages_yaml",
+    "package_requirements",
     "package_py",
     "installed",
 ]
@@ -115,8 +116,9 @@ version_provenance = collections.namedtuple(  # type: ignore
     "VersionProvenance", version_origin_fields
 )(**{name: i for i, name in enumerate(version_origin_fields)})
 
-#: Named tuple to contain information on declared versions
+
 DeclaredVersion = collections.namedtuple("DeclaredVersion", ["version", "idx", "origin"])
+
 
 # Below numbers are used to map names of criteria to the order
 # they appear in the solution. See concretize.lp
@@ -871,30 +873,6 @@ class SpackSolverSetup(object):
                     version_origin_str[declared_version.origin],
                 )
             )
-
-        for v in most_to_least_preferred:
-            # There are two paths for creating the ref_version in GitVersions.
-            # The first uses a lookup to supply a tag and distance as a version.
-            # The second is user specified and can be resolved as a standard version.
-            # This second option is constrained such that the user version must be known to Spack
-            if (
-                isinstance(v.version, spack.version.GitVersion)
-                and v.version.user_supplied_reference
-            ):
-                ref_version = spack.version.Version(v.version.ref_version_str)
-                self.gen.fact(fn.version_equivalent(pkg.name, v.version, ref_version))
-                # disqualify any git supplied version from user if they weren't already known
-                # versions in spack
-                if not any(ref_version == dv.version for dv in most_to_least_preferred if v != dv):
-                    msg = (
-                        "The reference version '{version}' for package '{package}' is not defined."
-                        " Either choose another reference version or define '{version}' in your"
-                        " version preferences or package.py file for {package}.".format(
-                            package=pkg.name, version=str(ref_version)
-                        )
-                    )
-
-                    raise UnsatisfiableSpecError(msg)
 
         # Declare deprecated versions for this package, if any
         deprecated = self.deprecated_versions[pkg.name]
@@ -1651,6 +1629,15 @@ class SpackSolverSetup(object):
                     DeclaredVersion(version=dep.version, idx=0, origin=origin)
                 )
                 self.possible_versions[dep.name].add(dep.version)
+                if (
+                    isinstance(dep.version, spack.version.GitVersion)
+                    and dep.version.user_supplied_reference
+                ):
+                    defined_version = spack.version.Version(dep.version.ref_version_str)
+                    self.declared_versions[dep.name].append(
+                        DeclaredVersion(version=defined_version, idx=1, origin=origin)
+                    )
+                    self.possible_versions[dep.name].add(defined_version)
 
     def _supported_targets(self, compiler_name, compiler_version, targets):
         """Get a list of which targets are supported by the compiler.
@@ -1887,7 +1874,11 @@ class SpackSolverSetup(object):
 
             # This is needed to account for a variable number of
             # numbers e.g. if both 1.0 and 1.0.2 are possible versions
-            exact_match = [v for v in allowed_versions if v == versions]
+            exact_match = [
+                v
+                for v in allowed_versions
+                if v == versions and not isinstance(v, spack.version.GitVersion)
+            ]
             if exact_match:
                 allowed_versions = exact_match
 
@@ -2089,6 +2080,11 @@ class SpackSolverSetup(object):
         self.add_concrete_versions_from_specs(specs, version_provenance.spec)
         self.add_concrete_versions_from_specs(dev_specs, version_provenance.dev_spec)
 
+        req_version_specs = _get_versioned_specs_from_pkg_requirements()
+        self.add_concrete_versions_from_specs(
+            req_version_specs, version_provenance.package_requirements
+        )
+
         self.gen.h1("Concrete input spec definitions")
         self.define_concrete_input_specs(specs, possible)
 
@@ -2161,6 +2157,55 @@ class SpackSolverSetup(object):
 
         if self.concretize_everything:
             self.gen.fact(fn.concretize_everything())
+
+
+def _get_versioned_specs_from_pkg_requirements():
+    """If package requirements mention versions that are not mentioned
+    elsewhere, then we need to collect those to mark them as possible
+    versions.
+    """
+    req_version_specs = list()
+    config = spack.config.get("packages")
+    for pkg_name, d in config.items():
+        if pkg_name == "all":
+            continue
+        if "require" in d:
+            req_version_specs.extend(_specs_from_requires(pkg_name, d["require"]))
+    return req_version_specs
+
+
+def _specs_from_requires(pkg_name, section):
+    if isinstance(section, str):
+        spec = spack.spec.Spec(section)
+        if not spec.name:
+            spec.name = pkg_name
+        extracted_specs = [spec]
+    else:
+        spec_strs = []
+        for spec_group in section:
+            if isinstance(spec_group, str):
+                spec_strs.append(spec_group)
+            else:
+                # Otherwise it is a one_of or any_of: get the values
+                (x,) = spec_group.values()
+                spec_strs.extend(x)
+
+        extracted_specs = []
+        for spec_str in spec_strs:
+            spec = spack.spec.Spec(spec_str)
+            if not spec.name:
+                spec.name = pkg_name
+            extracted_specs.append(spec)
+
+    version_specs = []
+    for spec in extracted_specs:
+        try:
+            spec.version
+            version_specs.append(spec)
+        except spack.error.SpecError:
+            pass
+
+    return version_specs
 
 
 class SpecBuilder(object):
