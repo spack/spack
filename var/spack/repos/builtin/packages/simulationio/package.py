@@ -17,6 +17,7 @@ class Simulationio(CMakePackage):
     maintainers("eschnett")
 
     version("master", branch="master")
+    version("9.0.3", sha256="d07192fb69ae0d43364dc5807ce788c6cf1f8fbaa46f83028311b6935fd76aa8")
     version("9.0.2", sha256="3dd3422e64f6a75215783f6157effd07430e1d0af5884e565f73388a815511f8")
     version("9.0.1", sha256="c2f6c99417165f6eb8cbb9c44822d119586675abb34eabd553eb80f44b53e0c8")
 
@@ -39,7 +40,7 @@ class Simulationio(CMakePackage):
     depends_on("python@3:", when="+python", type=("build", "run"))
     depends_on("rnpletal", when="+rnpl")
     depends_on("silo", when="+silo")
-    depends_on("swig", type="build")
+    depends_on("swig @3", type="build")
 
     extends("python")
 
