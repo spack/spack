@@ -639,10 +639,12 @@ class Lammps(CMakePackage, CudaPackage, ROCmPackage):
         when="@:20220602",
         msg="ROCm builds of the GPU package not maintained prior to version 20220623",
     )
+    conflicts("+intel", when="%aocc@:3.2.9999", msg="+intel with AOCC requires version 4 or newer")
 
     patch("lib.patch", when="@20170901")
     patch("660.patch", when="@20170922")
     patch("gtest_fix.patch", when="@:20210310 %aocc@3.2.0")
+    patch("intel-aocc.patch", when="@20220324:20221103 +intel %aocc")
     patch(
         "https://github.com/lammps/lammps/commit/562300996285fdec4ef74542383276898555af06.patch?full_index=1",
         sha256="e6f1b62bbfdc79d632f4cea98019202d0dd25aa4ae61a70df1164cb4f290df79",
@@ -699,8 +701,19 @@ class Lammps(CMakePackage, CudaPackage, ROCmPackage):
             args.append(self.define("BUILD_LIB", True))
 
         if spec.satisfies("%aocc"):
-            cxx_flags = "-Ofast -mfma -fvectorize -funroll-loops"
+            if spec.satisfies("+intel"):
+                cxx_flags = (
+                    "-Ofast -fno-math-errno -fno-unroll-loops "
+                    "-fveclib=AMDLIBM -muse-unaligned-vector-move"
+                )
+                # add -fopenmp-simd if OpenMP not already turned on
+                if spec.satisfies("~openmp"):
+                    cxx_flags += " -fopenmp-simd"
+                cxx_flags += " -DLMP_SIMD_COMPILER -DUSE_OMP_SIMD -DLMP_INTEL_USELRT"
+            else:
+                cxx_flags = "-Ofast -mfma -fvectorize -funroll-loops"
             args.append(self.define("CMAKE_CXX_FLAGS_RELEASE", cxx_flags))
+            args.append(self.define("CMAKE_CXX_FLAGS_RELWITHDEBINFO", cxx_flags))
 
         # Overwrite generic cpu tune option
         cmake_tune_flags = archspec.cpu.TARGETS[spec.target.name].optimization_flags(
@@ -758,6 +771,10 @@ class Lammps(CMakePackage, CudaPackage, ROCmPackage):
             args.append(self.define("CMAKE_CXX_COMPILER", spec["hip"].hipcc))
 
         return args
+
+    def setup_build_environment(self, env):
+        if self.spec.satisfies("+intel %aocc"):
+            env.append_flags("LDFLAGS", "-lalm -lm")
 
     def setup_run_environment(self, env):
         env.set("LAMMPS_POTENTIALS", self.prefix.share.lammps.potentials)

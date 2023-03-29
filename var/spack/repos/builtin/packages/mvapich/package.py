@@ -59,12 +59,18 @@ class Mvapich(AutotoolsPackage):
         multi=False,
         description="Number of bits allocated to the rank field (16 or 32)",
     )
+    variant(
+        "pmi_version",
+        description="Which pmi version to be used. If using pmi2 add it to your CFLAGS",
+        default="simple",
+        values=("simple", "pmi2"),
+        multi=False,
+    )
 
     variant(
         "process_managers",
         description="List of the process managers to activate",
         values=disjoint_sets(("auto",), ("slurm",), ("hydra", "gforker", "remshell"))
-        .prohibit_empty_set()
         .with_error("'slurm' or 'auto' cannot be activated along with " "other process managers")
         .with_default("auto")
         .with_non_feature_values("auto"),
@@ -101,6 +107,12 @@ class Mvapich(AutotoolsPackage):
     depends_on("libfabric", when="netmod=ofi")
     depends_on("slurm", when="process_managers=slurm")
     depends_on("ucx", when="netmod=ucx")
+
+    with when("process_managers=slurm"):
+        conflicts("pmi_version=pmi2")
+
+    with when("process_managers=auto"):
+        conflicts("pmi_version=pmi2")
 
     filter_compiler_wrappers("mpicc", "mpicxx", "mpif77", "mpif90", "mpifort", relative_root="bin")
 
@@ -145,6 +157,8 @@ class Mvapich(AutotoolsPackage):
                 "--with-slurm={0}".format(spec["slurm"].prefix),
                 "CFLAGS=-I{0}/include/slurm".format(spec["slurm"].prefix),
             ]
+        if "none" in spec.variants["process_managers"].value:
+            opts = ["--with-pm=none"]
 
         return opts
 
@@ -260,6 +274,7 @@ class Mvapich(AutotoolsPackage):
         ]
 
         args.extend(self.enable_or_disable("alloca"))
+        args.append("--with-pmi=" + spec.variants["pmi_version"].value)
 
         if "+debug" in self.spec:
             args.extend(

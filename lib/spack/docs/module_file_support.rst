@@ -629,8 +629,9 @@ by its dependency; when the dependency is autoloaded, the executable will be in 
 PATH. Similarly for scripting languages such as Python, packages and their dependencies
 have to be loaded together.
 
-Autoloading is enabled by default for Lmod, as it has great builtin support for through
-the ``depends_on`` function. For Environment Modules it is disabled by default.
+Autoloading is enabled by default for Lmod and Environment Modules. The former
+has builtin support for through the ``depends_on`` function. The latter uses
+``module load`` statement to load and track dependencies.
 
 Autoloading can also be enabled conditionally:
 
@@ -654,8 +655,10 @@ The allowed values for the ``autoload`` statement are either ``none``,
      In the ``tcl`` section of the configuration file it is possible to use
      the ``prerequisites`` directive that accepts the same values as
      ``autoload``. It will produce module files that have a ``prereq``
-     statement, which can be used to autoload dependencies in some versions
-     of Environment Modules.
+     statement, which autoloads dependencies on Environment Modules when its
+     ``auto_handling`` configuration option is enabled. If Environment Modules
+     is installed with Spack, ``auto_handling`` is enabled by default starting
+     version 4.2. Otherwise it is enabled by default since version 5.0.
 
 ------------------------
 Maintaining Module Files
