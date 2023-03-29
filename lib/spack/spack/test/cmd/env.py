@@ -3329,6 +3329,7 @@ def test_view_update_mismatch(update_method, tmpdir, install_mockery, mock_fetch
         view.regenerate([spec], force=True)
         assert os.path.exists(view.root)
 
+
 @pytest.mark.parametrize("update_method", ["symlink", "exchange"])
 def test_view_update_fails(update_method, tmpdir, install_mockery, mock_fetch, monkeypatch):
     root = str(tmpdir.join("root"))
