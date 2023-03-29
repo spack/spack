@@ -7,7 +7,7 @@ spack:
       providers:
         blas: [openblas]
         mpi: [mpich]
-      target: [x86_64]
+      require: target=x86_64_v3
       variants: +mpi amdgpu_target=gfx90a cuda_arch=80
     tbb:
       require: "intel-tbb"
