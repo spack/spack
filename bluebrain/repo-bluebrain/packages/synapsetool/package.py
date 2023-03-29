@@ -39,7 +39,7 @@ class Synapsetool(CMakePackage):
     depends_on("cmake@3.0:", type="build")
     depends_on("ninja", type="build")
 
-    depends_on("boost@1.55:")
+    depends_on("boost@1.55: +filesystem+test")
     depends_on("mpi", when="+mpi")
     depends_on("python", when="+python", type=("build", "run"))
     depends_on("hdf5+mpi", when="+mpi")
