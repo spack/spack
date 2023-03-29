@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -154,9 +154,7 @@ class LuaImplPackage(MakefilePackage):
 
     def setup_run_environment(self, env):
         env.prepend_path(
-            "LUA_PATH",
-            os.path.join(self.spec.prefix, self.lua_share_dir, "?.lua"),
-            separator=";",
+            "LUA_PATH", os.path.join(self.spec.prefix, self.lua_share_dir, "?.lua"), separator=";"
         )
         env.prepend_path(
             "LUA_PATH",
@@ -164,9 +162,7 @@ class LuaImplPackage(MakefilePackage):
             separator=";",
         )
         env.prepend_path(
-            "LUA_PATH",
-            os.path.join(self.spec.prefix, self.lua_lib_dir, "?.lua"),
-            separator=";",
+            "LUA_PATH", os.path.join(self.spec.prefix, self.lua_lib_dir, "?.lua"), separator=";"
         )
         env.prepend_path(
             "LUA_PATH",
@@ -174,9 +170,7 @@ class LuaImplPackage(MakefilePackage):
             separator=";",
         )
         env.prepend_path(
-            "LUA_CPATH",
-            os.path.join(self.spec.prefix, self.lua_lib_dir, "?.so"),
-            separator=";",
+            "LUA_CPATH", os.path.join(self.spec.prefix, self.lua_lib_dir, "?.so"), separator=";"
         )
 
     @property

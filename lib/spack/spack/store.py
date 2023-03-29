@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -190,18 +190,6 @@ def _store():
     root, unpadded_root, projections = parse_install_tree(config_dict)
     hash_length = spack.config.get("config:install_hash_length")
 
-    # Check that the user is not trying to install software into the store
-    # reserved by Spack to bootstrap its own dependencies, since this would
-    # lead to bizarre behaviors (e.g. cleaning the bootstrap area would wipe
-    # user installed software)
-    enable_bootstrap = spack.config.get("bootstrap:enable", True)
-    if enable_bootstrap and spack.bootstrap.store_path() == root:
-        msg = (
-            'please change the install tree root "{0}" in your '
-            "configuration [path reserved for Spack internal use]"
-        )
-        raise ValueError(msg.format(root))
-
     return Store(
         root=root, unpadded_root=unpadded_root, projections=projections, hash_length=hash_length
     )
@@ -274,7 +262,9 @@ def _construct_upstream_dbs_from_install_roots(install_roots, _test=False):
     for install_root in reversed(install_roots):
         upstream_dbs = list(accumulated_upstream_dbs)
         next_db = spack.database.Database(
-            install_root, is_upstream=True, upstream_dbs=upstream_dbs
+            spack.util.path.canonicalize_path(install_root),
+            is_upstream=True,
+            upstream_dbs=upstream_dbs,
         )
         next_db._fail_when_missing_deps = _test
         next_db._read()

@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -14,7 +14,7 @@ class Redset(CMakePackage):
     git = "https://github.com/ecp-veloc/redset.git"
     tags = ["ecp"]
 
-    maintainers = ["CamStan", "gonsie"]
+    maintainers("CamStan", "gonsie")
 
     version("main", branch="main")
     version("0.2.0", sha256="0438b0ba56dafcd5694a8fceeb5a932901307353e056ab29817d30b8387f787f")

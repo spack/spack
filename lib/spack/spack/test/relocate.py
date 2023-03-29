@@ -1,14 +1,12 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
-import io
 import os
 import os.path
 import re
 import shutil
 import sys
-from collections import OrderedDict
 
 import pytest
 
@@ -18,11 +16,11 @@ import spack.concretize
 import spack.paths
 import spack.platforms
 import spack.relocate
+import spack.relocate_text as relocate_text
 import spack.spec
 import spack.store
 import spack.tengine
 import spack.util.executable
-from spack.relocate import utf8_path_to_binary_regex, utf8_paths_to_single_binary_regex
 
 pytestmark = pytest.mark.skipif(sys.platform == "win32", reason="Tests fail on Windows")
 
@@ -158,14 +156,21 @@ def copy_binary(prefix_like):
 
 @pytest.mark.requires_executables("/usr/bin/gcc", "patchelf", "strings", "file")
 @skip_unless_linux
-def test_file_is_relocatable(source_file, is_relocatable):
+def test_ensure_binary_is_relocatable(source_file, is_relocatable):
     compiler = spack.util.executable.Executable("/usr/bin/gcc")
     executable = str(source_file).replace(".c", ".x")
     compiler_env = {"PATH": "/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"}
     compiler(str(source_file), "-o", executable, env=compiler_env)
 
     assert spack.relocate.is_binary(executable)
-    assert spack.relocate.file_is_relocatable(executable) is is_relocatable
+
+    try:
+        spack.relocate.ensure_binary_is_relocatable(executable)
+        relocatable = True
+    except spack.relocate.InstallRootStringError:
+        relocatable = False
+
+    assert relocatable == is_relocatable
 
 
 @pytest.mark.requires_executables("patchelf", "strings", "file")
@@ -173,14 +178,14 @@ def test_file_is_relocatable(source_file, is_relocatable):
 def test_patchelf_is_relocatable():
     patchelf = os.path.realpath(spack.relocate._patchelf())
     assert llnl.util.filesystem.is_exe(patchelf)
-    assert spack.relocate.file_is_relocatable(patchelf)
+    spack.relocate.ensure_binary_is_relocatable(patchelf)
 
 
 @skip_unless_linux
-def test_file_is_relocatable_errors(tmpdir):
+def test_ensure_binary_is_relocatable_errors(tmpdir):
     # The file passed in as argument must exist...
     with pytest.raises(ValueError) as exc_info:
-        spack.relocate.file_is_relocatable("/usr/bin/does_not_exist")
+        spack.relocate.ensure_binary_is_relocatable("/usr/bin/does_not_exist")
     assert "does not exist" in str(exc_info.value)
 
     # ...and the argument must be an absolute path to it
@@ -189,7 +194,7 @@ def test_file_is_relocatable_errors(tmpdir):
 
     with llnl.util.filesystem.working_dir(str(tmpdir)):
         with pytest.raises(ValueError) as exc_info:
-            spack.relocate.file_is_relocatable("delete.me")
+            spack.relocate.ensure_binary_is_relocatable("delete.me")
         assert "is not an absolute path" in str(exc_info.value)
 
 
@@ -262,7 +267,7 @@ def test_set_elf_rpaths_warning(mock_patchelf):
 
 @pytest.mark.requires_executables("patchelf", "strings", "file", "gcc")
 @skip_unless_linux
-def test_replace_prefix_bin(binary_with_rpaths, prefix_like):
+def test_relocate_text_bin(binary_with_rpaths, prefix_like):
     prefix = "/usr/" + prefix_like
     prefix_bytes = prefix.encode("utf-8")
     new_prefix = "/foo/" + prefix_like
@@ -271,7 +276,7 @@ def test_replace_prefix_bin(binary_with_rpaths, prefix_like):
     executable = binary_with_rpaths(rpaths=[prefix + "/lib", prefix + "/lib64"])
 
     # Relocate the RPATHs
-    spack.relocate._replace_prefix_bin(str(executable), {prefix_bytes: new_prefix_bytes})
+    spack.relocate.relocate_text_bin([str(executable)], {prefix_bytes: new_prefix_bytes})
 
     # Some compilers add rpaths so ensure changes included in final result
     assert "%s/lib:%s/lib64" % (new_prefix, new_prefix) in rpaths_for(executable)
@@ -340,15 +345,9 @@ def test_make_elf_binaries_relative(binary_with_rpaths, copy_binary, prefix_tmpd
     assert "$ORIGIN/lib:$ORIGIN/lib64:/opt/local/lib" in rpaths_for(new_binary)
 
 
-def test_raise_if_not_relocatable(monkeypatch):
-    monkeypatch.setattr(spack.relocate, "file_is_relocatable", lambda x: False)
-    with pytest.raises(spack.relocate.InstallRootStringError):
-        spack.relocate.raise_if_not_relocatable(["an_executable"], allow_root=False)
-
-
 @pytest.mark.requires_executables("patchelf", "strings", "file", "gcc")
 @skip_unless_linux
-def test_relocate_text_bin(binary_with_rpaths, copy_binary, prefix_tmpdir):
+def test_relocate_text_bin_with_message(binary_with_rpaths, copy_binary, prefix_tmpdir):
     orig_binary = binary_with_rpaths(
         rpaths=[
             str(prefix_tmpdir.mkdir("lib")),
@@ -367,7 +366,7 @@ def test_relocate_text_bin(binary_with_rpaths, copy_binary, prefix_tmpdir):
     orig_path_bytes = str(orig_binary.dirpath()).encode("utf-8")
     new_path_bytes = str(new_binary.dirpath()).encode("utf-8")
 
-    spack.relocate.unsafe_relocate_text_bin([str(new_binary)], {orig_path_bytes: new_path_bytes})
+    spack.relocate.relocate_text_bin([str(new_binary)], {orig_path_bytes: new_path_bytes})
 
     # Check original directory is not there anymore and it was
     # substituted with the new one
@@ -381,8 +380,8 @@ def test_relocate_text_bin_raise_if_new_prefix_is_longer(tmpdir):
     fpath = str(tmpdir.join("fakebin"))
     with open(fpath, "w") as f:
         f.write("/short")
-    with pytest.raises(spack.relocate.BinaryTextReplaceError):
-        spack.relocate.unsafe_relocate_text_bin([fpath], {short_prefix: long_prefix})
+    with pytest.raises(relocate_text.BinaryTextReplaceError):
+        spack.relocate.relocate_text_bin([fpath], {short_prefix: long_prefix})
 
 
 @pytest.mark.requires_executables("install_name_tool", "file", "cc")
@@ -437,170 +436,3 @@ def test_fixup_macos_rpaths(make_dylib, make_object_file):
     # (this is a corner case for GCC installation)
     (root, filename) = make_object_file()
     assert not fixup_rpath(root, filename)
-
-
-def test_text_relocation_regex_is_safe():
-    # Test whether prefix regex is properly escaped
-    string = b"This does not match /a/, but this does: /[a-z]/."
-    assert utf8_path_to_binary_regex("/[a-z]/").search(string).group(0) == b"/[a-z]/"
-
-
-def test_utf8_paths_to_single_binary_regex():
-    regex = utf8_paths_to_single_binary_regex(["/first/path", "/second/path", "/safe/[a-z]"])
-    # Match nothing
-    assert not regex.search(b"text /neither/first/path text /the/second/path text")
-
-    # Match first
-    string = b"contains both /first/path/subdir and /second/path/sub"
-    assert regex.search(string).group(0) == b"/first/path/subdir"
-
-    # Match second
-    string = b"contains both /not/first/path/subdir but /second/path/subdir"
-    assert regex.search(string).group(0) == b"/second/path/subdir"
-
-    # Match "unsafe" dir name
-    string = b"don't match /safe/a/path but do match /safe/[a-z]/file"
-    assert regex.search(string).group(0) == b"/safe/[a-z]/file"
-
-
-def test_ordered_replacement():
-    # This tests whether binary text replacement respects order, so that
-    # a long package prefix is replaced before a shorter sub-prefix like
-    # the root of the spack store (as a fallback).
-    def replace_and_expect(prefix_map, before, after=None, suffix_safety_size=7):
-        f = io.BytesIO(before)
-        spack.relocate.apply_binary_replacements(f, OrderedDict(prefix_map), suffix_safety_size)
-        f.seek(0)
-        assert f.read() == after
-
-    # The case of having a non-null terminated common suffix.
-    replace_and_expect(
-        [
-            (b"/old-spack/opt/specific-package", b"/first/specific-package"),
-            (b"/old-spack/opt", b"/sec/spack/opt"),
-        ],
-        b"Binary with /old-spack/opt/specific-package and /old-spack/opt",
-        b"Binary with /////////first/specific-package and /sec/spack/opt",
-        suffix_safety_size=7,
-    )
-
-    # The case of having a direct null terminated common suffix.
-    replace_and_expect(
-        [
-            (b"/old-spack/opt/specific-package", b"/first/specific-package"),
-            (b"/old-spack/opt", b"/sec/spack/opt"),
-        ],
-        b"Binary with /old-spack/opt/specific-package\0 and /old-spack/opt\0",
-        b"Binary with /////////first/specific-package\0 and /sec/spack/opt\0",
-        suffix_safety_size=7,
-    )
-
-    # Testing the order of operations (not null terminated, long enough common suffix)
-    replace_and_expect(
-        [
-            (b"/old-spack/opt", b"/s/spack/opt"),
-            (b"/old-spack/opt/specific-package", b"/first/specific-package"),
-        ],
-        b"Binary with /old-spack/opt/specific-package and /old-spack/opt",
-        b"Binary with ///s/spack/opt/specific-package and ///s/spack/opt",
-        suffix_safety_size=7,
-    )
-
-    # Testing the order of operations (null terminated, long enough common suffix)
-    replace_and_expect(
-        [
-            (b"/old-spack/opt", b"/s/spack/opt"),
-            (b"/old-spack/opt/specific-package", b"/first/specific-package"),
-        ],
-        b"Binary with /old-spack/opt/specific-package\0 and /old-spack/opt\0",
-        b"Binary with ///s/spack/opt/specific-package\0 and ///s/spack/opt\0",
-        suffix_safety_size=7,
-    )
-
-    # Null terminated within the lookahead window, common suffix long enough
-    replace_and_expect(
-        [(b"/old-spack/opt/specific-package", b"/opt/specific-XXXXage")],
-        b"Binary with /old-spack/opt/specific-package/sub\0 data",
-        b"Binary with ///////////opt/specific-XXXXage/sub\0 data",
-        suffix_safety_size=7,
-    )
-
-    # Null terminated within the lookahead window, common suffix too short, but
-    # shortening is enough to spare more than 7 bytes of old suffix.
-    replace_and_expect(
-        [(b"/old-spack/opt/specific-package", b"/opt/specific-XXXXXge")],
-        b"Binary with /old-spack/opt/specific-package/sub\0 data",
-        b"Binary with /opt/specific-XXXXXge/sub\0ckage/sub\0 data",  # ckage/sub = 9 bytes
-        suffix_safety_size=7,
-    )
-
-    # Null terminated within the lookahead window, common suffix too short,
-    # shortening leaves exactly 7 suffix bytes untouched, amazing!
-    replace_and_expect(
-        [(b"/old-spack/opt/specific-package", b"/spack/specific-XXXXXge")],
-        b"Binary with /old-spack/opt/specific-package/sub\0 data",
-        b"Binary with /spack/specific-XXXXXge/sub\0age/sub\0 data",  # age/sub = 7 bytes
-        suffix_safety_size=7,
-    )
-
-    # Null terminated within the lookahead window, common suffix too short,
-    # shortening doesn't leave space for 7 bytes, sad!
-    error_msg = "Cannot replace {!r} with {!r} in the C-string {!r}.".format(
-        b"/old-spack/opt/specific-package",
-        b"/snacks/specific-XXXXXge",
-        b"/old-spack/opt/specific-package/sub",
-    )
-    with pytest.raises(spack.relocate.CannotShrinkCString, match=error_msg):
-        replace_and_expect(
-            [(b"/old-spack/opt/specific-package", b"/snacks/specific-XXXXXge")],
-            b"Binary with /old-spack/opt/specific-package/sub\0 data",
-            # expect failure!
-            suffix_safety_size=7,
-        )
-
-    # Check that it works when changing suffix_safety_size.
-    replace_and_expect(
-        [(b"/old-spack/opt/specific-package", b"/snacks/specific-XXXXXXe")],
-        b"Binary with /old-spack/opt/specific-package/sub\0 data",
-        b"Binary with /snacks/specific-XXXXXXe/sub\0ge/sub\0 data",
-        suffix_safety_size=6,
-    )
-
-    # Finally check the case of no shortening but a long enough common suffix.
-    replace_and_expect(
-        [(b"pkg-gwixwaalgczp6", b"pkg-zkesfralgczp6")],
-        b"Binary with pkg-gwixwaalgczp6/config\0 data",
-        b"Binary with pkg-zkesfralgczp6/config\0 data",
-        suffix_safety_size=7,
-    )
-
-    # Too short matching suffix, identical string length
-    error_msg = "Cannot replace {!r} with {!r} in the C-string {!r}.".format(
-        b"pkg-gwixwaxlgczp6",
-        b"pkg-zkesfrzlgczp6",
-        b"pkg-gwixwaxlgczp6",
-    )
-    with pytest.raises(spack.relocate.CannotShrinkCString, match=error_msg):
-        replace_and_expect(
-            [(b"pkg-gwixwaxlgczp6", b"pkg-zkesfrzlgczp6")],
-            b"Binary with pkg-gwixwaxlgczp6\0 data",
-            # expect failure
-            suffix_safety_size=7,
-        )
-
-    # Finally, make sure that the regex is not greedily finding the LAST null byte
-    # it should find the first null byte in the window. In this test we put one null
-    # at a distance where we cant keep a long enough suffix, and one where we can,
-    # so we should expect failure when the first null is used.
-    error_msg = "Cannot replace {!r} with {!r} in the C-string {!r}.".format(
-        b"pkg-abcdef",
-        b"pkg-xyzabc",
-        b"pkg-abcdef",
-    )
-    with pytest.raises(spack.relocate.CannotShrinkCString, match=error_msg):
-        replace_and_expect(
-            [(b"pkg-abcdef", b"pkg-xyzabc")],
-            b"Binary with pkg-abcdef\0/xx\0",  # def\0/xx is 7 bytes.
-            # expect failure
-            suffix_safety_size=7,
-        )

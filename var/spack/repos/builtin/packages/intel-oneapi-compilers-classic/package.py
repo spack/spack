@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -16,7 +16,7 @@ class IntelOneapiCompilersClassic(Package):
 
     """
 
-    maintainers = ["rscohn2"]
+    maintainers("rscohn2")
 
     homepage = "https://software.intel.com/content/www/us/en/develop/tools/oneapi.html"
 
@@ -32,9 +32,14 @@ class IntelOneapiCompilersClassic(Package):
         "2021.5.0": "2022.0.1:2022.0.2",
         "2021.6.0": "2022.1.0",
         "2021.7.0": "2022.2.0",
+        "2021.7.1": "2022.2.1",
+        "2021.8.0": "2023.0.0",
     }.items():
         version(ver)
         depends_on("intel-oneapi-compilers@" + oneapi_ver, when="@" + ver, type="run")
+
+    # icc@2021.6.0 does not support gcc@12 headers
+    conflicts("%gcc@12:", when="@:2021.6.0")
 
     @property
     def oneapi_compiler_prefix(self):

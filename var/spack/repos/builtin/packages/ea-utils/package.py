@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -16,7 +16,7 @@ class EaUtils(MakefilePackage):
     homepage = "https://expressionanalysis.github.io/ea-utils/"
     url = "https://github.com/ExpressionAnalysis/ea-utils/archive/1.04.807.tar.gz"
     git = "https://github.com/ExpressionAnalysis/ea-utils.git"
-    maintainers = ["snehring"]
+    maintainers("snehring")
 
     version("2021-10-20", commit="10c21926a4dce4289d5052acfd73b8e744d4fede")
     version(

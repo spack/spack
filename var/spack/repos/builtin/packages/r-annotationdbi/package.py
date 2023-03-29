@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -14,6 +14,7 @@ class RAnnotationdbi(RPackage):
 
     bioc = "AnnotationDbi"
 
+    version("1.60.0", commit="cd61bd1b1538e2f1f411fd7087820749ecf39da8")
     version("1.58.0", commit="05fcf7a28a6b15b195da23474d7ba89bd0cfd891")
     version("1.56.2", commit="13fdc4a93852199ca6ec120a2fe1078f9f445f67")
     version("1.52.0", commit="c4e0ca9bd65362ae9cad6a98d90f54267b0ae838")

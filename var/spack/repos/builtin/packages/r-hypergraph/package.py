@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -14,6 +14,7 @@ class RHypergraph(RPackage):
 
     bioc = "hypergraph"
 
+    version("1.70.0", commit="a5ffeafa8b999b5e7e77f93f4e6284abafc81621")
     version("1.68.0", commit="7d53b5050f4ebe0a7007c02b76e93498195da3a4")
     version("1.66.0", commit="e9c47336df6409006622818f541f258103163a39")
     version("1.62.0", commit="a286bbb70289e9f3cdf41407d52e5976bd6ed11e")

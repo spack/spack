@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -14,7 +14,7 @@ class Madx(CMakePackage):
     url = "https://github.com/MethodicalAcceleratorDesign/MAD-X/archive/refs/tags/5.07.00.tar.gz"
     git = "https://github.com/MethodicalAcceleratorDesign/MAD-X.git"
 
-    maintainers = ["wdconinc"]
+    maintainers("wdconinc")
 
     # Supported MAD-X versions
     version("5.08.01", sha256="89c943fcb474344a4f7d28de98e8eae0aec40f779bf908daff79043bf3520555")
