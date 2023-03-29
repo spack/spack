@@ -195,6 +195,8 @@ def _do_fake_install(pkg):
     packages_dir = spack.store.layout.build_packages_path(pkg.spec)
     dump_packages(pkg.spec, packages_dir)
 
+    fs.touch(os.path.join(pkg.prefix, '.spack', 'spack-build-out.txt'))
+
 
 def _packages_needed_to_bootstrap_compiler(compiler, architecture, pkgs):
     """
