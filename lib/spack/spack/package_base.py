@@ -648,19 +648,13 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
         "tags",
     ]
 
-    #: Boolean. If set to ``True``, the smoke/install test requires a compiler.
-    #: This is currently used by smoke tests to ensure a compiler is available
-    #: to build a custom test code.
-    test_requires_compiler = False
+    #: Set to ``True`` to indicate the stand-alone test requires a compiler.
+    #: It is used to ensure a compiler and build dependencies like 'cmake'
+    #: are available to build a custom test code.
+    test_requires_compiler: bool = False
 
-    #: List of test failures encountered during a smoke/install test run.
-    test_failures = None
-
-    #: TestSuite instance used to manage smoke/install tests for one or more specs.
-    test_suite = None
-
-    #: Path to the log file used for tests
-    test_log_file = None
+    #: TestSuite instance used to manage stand-alone tests for 1+ specs.
+    test_suite: Optional["TestSuite"] = None
 
     def __init__(self, spec):
         # this determines how the package should be built.
@@ -682,7 +676,7 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
         # init internal variables
         self._stage = None
         self._fetcher = None
-        self._tester = None
+        self._tester: Optional["PackageTest"] = None
 
         # Set up timing variables
         self._fetch_time = 0.0

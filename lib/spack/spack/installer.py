@@ -291,7 +291,7 @@ def print_install_test_log(pkg: "spack.package_base.PackageBase"):
     try:
         pkg.tester.print_log_path()
     except Exception as e:
-        # TODO/TLD: Narrow the exceptions
+        # TODO/TBD: Narrow the exceptions
         tty.error("{0} was not tested: {1}".format(package_id(pkg), str(e)))
 
 

@@ -192,7 +192,7 @@ def test_get_test_suite_too_many(mock_packages, mock_test_stage):
 )
 def test_test_functions(mock_packages, install_mockery, virtuals, names):
     spec = spack.spec.Spec("printing-package").concretized()
-    expected = "printing-package.test_print" if names else "test_print"
+    expected = "PrintingPackage.test_print" if names else "test_print"
 
     fns = spack.install_test.test_functions(spec.package, add_virtuals=virtuals, names=names)
     tests = fns if names else [f.__name__ for f in fns]

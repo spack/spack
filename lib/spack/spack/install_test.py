@@ -13,7 +13,7 @@ import re
 import shutil
 import sys
 from collections import Counter
-from typing import Callable, List, Optional, Tuple, Union
+from typing import Callable, List, Optional, Tuple, Type, TypeVar, Union
 
 import llnl.util.filesystem as fs
 import llnl.util.tty as tty
@@ -219,15 +219,16 @@ class PackageTest(object):
         self.pkg_id: str
 
         if pkg.test_suite:
+            # Running stand-alone tests
             self.test_log_file = pkg.test_suite.log_file_for_spec(pkg.spec)
             self.tested_file = pkg.test_suite.tested_file_for_spec(pkg.spec)
             self.pkg_id = pkg.test_suite.test_pkg_id(pkg.spec)
         else:
+            # Running phase-time tests for a single package whose results are
+            # retained in the package's stage directory.
+            pkg.test_suite = TestSuite([pkg.spec])
             self.test_log_file = fs.join_path(pkg.stage.path, spack_install_test_log)
             self.pkg_id = pkg.spec.format("{name}-{version}-{hash:7}")
-
-        fs.touch(self.test_log_file)  # Otherwise log_parse complains
-        fs.set_install_permissions(self.test_log_file)
 
         # Internal logger for test part processing
         self._logger = None
@@ -250,6 +251,9 @@ class PackageTest(object):
             externals: ``True`` for performing tests if external package,
                 ``False`` to skip them
         """
+        fs.touch(self.test_log_file)  # Otherwise log_parse complains
+        fs.set_install_permissions(self.test_log_file)
+
         with tty.log.log_output(self.test_log_file, verbose) as logger:
             with logger.force_echo():
                 tty.msg("Testing package " + colorize(r"@*g{" + self.pkg_id + r"}"))
@@ -538,47 +542,55 @@ def copy_test_files(pkg: "spack.package_base.PackageBase", test_spec: spack.spec
         shutil.copytree(data_source, data_dir)
 
 
+Pb = TypeVar("Pb", bound="spack.package_base.PackageBase")
+TestPackageType = Union["spack.package_base.PackageBase", Type(Pb)]
 FunctionType = Union[str, Callable]
 FunctionResult = List[FunctionType]
 
 
 def test_functions(
-    pkg: "spack.package_base.PackageBase", add_virtuals: bool = False, names: bool = False
+    pkg: TestPackageType, add_virtuals: bool = False, names: bool = False
 ) -> FunctionResult:
     """Grab all non-empty test functions.
 
     Args:
-        pkg: package of interest
+        pkg: package or package class of interest
         add_virtuals: ``True`` adds test methods of provided package
             virtual, ``False`` only returns test functions of the package
         names: ``True`` returns test function names, ``False`` returns functions
 
-    Returns: test functions or their names
-    """
-    pkg_cls = pkg if inspect.isclass(pkg) else pkg.__class__
-    if not issubclass(pkg, spack.package_base.PackageBase):
-        raise ValueError("Expected a package, not {0}".format(type(pkg)))
+    Returns:
+        test functions or their names
 
-    classes = [pkg]
-    if add_virtuals and isinstance(pkg, spack.package_base.PackageBase):
+    Raises:
+        ValueError: occurs if pkg is not a package class
+    """
+    instance = isinstance(pkg, spack.package_base.PackageBase)
+    if not (instance or issubclass(pkg, spack.package_base.PackageBase)):
+        raise ValueError("Expected a package (class), not {0} ({1})".format(pkg, type(pkg)))
+
+    pkg_cls = pkg.__class__ if instance else pkg
+    classes = [pkg_cls]
+    if add_virtuals:
         classes.extend([(Spec(name)).package_class for name in sorted(virtuals(pkg))])
 
-    fmt = pkg_cls.name.lower() + ".{0}"
+    doc_regex = r'\s+("""[\w\s\(\)\-\,\;\:]+""")'
+    fmt = "{0}.{1}"
     tests = []
-    for cls in classes:
-        methods = inspect.getmembers(cls, predicate=lambda x: inspect.isfunction(x))
+    for clss in classes:
+        methods = inspect.getmembers(clss, predicate=lambda x: inspect.isfunction(x))
         for name, test_fn in methods:
             # TODO: Change to test_ once eliminate PackageBase.test()
             if not name.startswith("test"):
                 continue
 
             # TBD: Remove empty method check once eliminate PackageBase.test()?
-            source = (inspect.getsource(test_fn)).splitlines()[1:]
+            source = re.sub(doc_regex, r"", inspect.getsource(test_fn)).splitlines()[1:]
             lines = [ln.strip() for ln in source if not ln.strip().startswith("#")]
             if len(lines) > 0 and lines[0] == "pass":
                 continue
 
-            tests.append(fmt.format(name) if names else test_fn)
+            tests.append(fmt.format(clss.__name__, name) if names else test_fn)
 
     return tests
 
@@ -686,9 +698,7 @@ def virtuals(pkg):
     Returns: names of unique virtual packages
     """
     # provided virtuals have to be deduped by name
-    provides = pkg.virtuals_provided
-    tty.error("provides ({0}): {1}".format(type(provides), provides))
-    v_names = list(set([vspec.name for vspec in provides]))
+    v_names = list(set([vspec.name for vspec in pkg.virtuals_provided]))
 
     # hack for compilers that are not dependencies (yet)
     # TODO: this all eventually goes away

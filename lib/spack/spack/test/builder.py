@@ -141,10 +141,7 @@ def test_monkey_patching_wrapped_pkg():
 def test_monkey_patching_test_log_file():
     s = spack.spec.Spec("old-style-autotools").concretized()
     builder = spack.builder.create(s.package)
-    assert s.package.test_log_file is None
-    assert builder.pkg.test_log_file is None
-    assert builder.pkg_with_dispatcher.test_log_file is None
 
-    s.package.test_log_file = "/some/file"
-    assert builder.pkg.test_log_file == "/some/file"
-    assert builder.pkg_with_dispatcher.test_log_file == "/some/file"
+    s.package.tester.test_log_file = "/some/file"
+    assert builder.pkg.tester.test_log_file == "/some/file"
+    assert builder.pkg_with_dispatcher.tester.test_log_file == "/some/file"

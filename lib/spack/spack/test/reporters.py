@@ -108,7 +108,7 @@ def test_reporters_extract_missing_desc():
         assert parts[i]["status"] == status.lower()
 
 
-# # TBD/TLD: How will we support this now?
+# # TODO/TBD: How will we support this now?
 # def test_reporters_extract_xfail():
 #     fake_bin = fs.join_path(fake_install_prefix, "bin", "fake-app")
 #     outputs = """
@@ -143,7 +143,7 @@ def test_reporters_extract_skipped(state):
     parts[0]["completed"] == expected
 
 
-# # TBD/TLD: How will this appear and be handled?
+# # TODO/TBD: How will skip tests be handled now?
 # def test_reporters_skip():
 #     # This test ticks 3 boxes:
 #     # 1) covers an as yet uncovered skip messages
