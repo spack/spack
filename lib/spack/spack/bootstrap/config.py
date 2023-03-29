@@ -137,7 +137,7 @@ def _bootstrap_config_scopes() -> Sequence["spack.config.ConfigScope"]:
         msg = "[BOOTSTRAP CONFIG SCOPE] name={0}, path={1}"
         tty.debug(msg.format(generic_scope.name, generic_scope.path))
         tty.debug(msg.format(platform_scope.name, platform_scope.path))
-    return tuple(config_scopes)
+    return config_scopes
 
 
 def _add_compilers_if_missing() -> None:

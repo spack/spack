@@ -89,7 +89,7 @@ class Bootstrapper:
 
     config_scope_name = ""
 
-    def __init__(self, conf: ConfigDictionary):
+    def __init__(self, conf: ConfigDictionary) -> None:
         self.conf = conf
         self.name = conf["name"]
         self.metadata_dir = spack.util.path.canonicalize_path(conf["metadata"])
@@ -142,9 +142,9 @@ class Bootstrapper:
 class BuildcacheBootstrapper(Bootstrapper):
     """Install the software needed during bootstrapping from a buildcache."""
 
-    def __init__(self, conf):
+    def __init__(self, conf) -> None:
         super().__init__(conf)
-        self.last_search = None
+        self.last_search: Optional[ConfigDictionary] = None
         self.config_scope_name = f"bootstrap_buildcache-{uuid.uuid4()}"
 
     @staticmethod
@@ -163,7 +163,7 @@ class BuildcacheBootstrapper(Bootstrapper):
         bincache_platform = spack.platforms.real_host()
         return abstract_spec, bincache_platform
 
-    def _read_metadata(self, package_name: str):
+    def _read_metadata(self, package_name: str) -> Any:
         """Return metadata about the given package."""
         json_filename = f"{package_name}.json"
         json_dir = self.metadata_dir
@@ -178,7 +178,7 @@ class BuildcacheBootstrapper(Bootstrapper):
         pkg_sha256: str,
         index: List[spack.spec.Spec],
         bincache_platform: spack.platforms.Platform,
-    ):
+    ) -> None:
         index_spec = next(x for x in index if x.dag_hash() == pkg_hash)
         # Reconstruct the compiler that we need to use for bootstrapping
         compiler_entry = {
@@ -270,9 +270,9 @@ class BuildcacheBootstrapper(Bootstrapper):
 class SourceBootstrapper(Bootstrapper):
     """Install the software needed during bootstrapping from sources."""
 
-    def __init__(self, conf):
+    def __init__(self, conf) -> None:
         super().__init__(conf)
-        self.last_search = None
+        self.last_search: Optional[ConfigDictionary] = None
         self.config_scope_name = f"bootstrap_source-{uuid.uuid4()}"
 
     def try_import(self, module: str, abstract_spec_str: str) -> bool:

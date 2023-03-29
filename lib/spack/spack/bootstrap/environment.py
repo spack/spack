@@ -78,7 +78,7 @@ class BootstrapEnvironment(spack.environment.Environment):
         """Environment spack.yaml file"""
         return cls.environment_root().joinpath("spack.yaml")
 
-    def __init__(self):
+    def __init__(self) -> None:
         if not self.spack_yaml().exists():
             self._write_spack_yaml_file()
         super().__init__(self.environment_root())
