@@ -14,6 +14,6 @@ class PyIpyvuetify(PythonPackage):
 
     version("1.8.5", sha256="c1f88485dcac8324c8e134cf38fcea1fb5f9bd3e75836d055713e354f158f565")
 
-    depends_on("python@3.6:", type=("build", "run"))
+    depends_on("py-setuptools", type="build")
     depends_on("py-pandas", type=("build", "run"))
-    depends_on("py-ipyvue@1.5:2.0", type=("build", "run"))
+    depends_on("py-ipyvue@1.5:2", type=("build", "run"))
