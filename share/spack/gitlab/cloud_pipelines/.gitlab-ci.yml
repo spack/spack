@@ -1023,7 +1023,7 @@ ml-linux-x86_64-rocm-protected-build:
 .deprecated-ci:
   extends: [ ".linux_x86_64" ]
   variables:
-    SPACK_CI_STACK_NAME: deprecated-ci
+    SPACK_CI_STACK_NAME: deprecated
 
 deprecated-ci-pr-generate:
   extends: [ ".pr-generate-deprecated", ".deprecated-ci" ]
