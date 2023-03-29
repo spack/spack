@@ -606,7 +606,7 @@ class ViewDescriptor(object):
             msg += "change its update_method to 'symlink' or 'auto'."
             msg += f"\n  If the view at {self.root} exists already, either remove it for a"
             msg += " non-atomic update or run on a newer OS."
-        raise RuntimeError(msg)
+            raise RuntimeError(msg)
 
     def raise_if_symlink_before_exchange(self):
         if os.path.islink(self.root):
