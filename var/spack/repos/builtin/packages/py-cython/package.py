@@ -54,7 +54,7 @@ class PyCython(PythonPackage):
     depends_on("gdb@7.2:", type="test")
 
     # Backports CYTHON_FORCE_REGEN environment variable
-    patch("5307.patch", when="@0.29")
+    patch("5307.patch", when="@0.29:0.29.33")
 
     @property
     def command(self):
@@ -72,9 +72,7 @@ class PyCython(PythonPackage):
         # pre-generated C-sources in tarballs, see also
         # https://github.com/cython/cython/issues/5089
 
-        # Backport for support for this variable in 0.29 is pending
-        # https://github.com/cython/cython/pull/5307, we apply a patch in
-        # Spack to use it already.
+        # Support for this was backported to 0.29.34, but we patch any 0.29 release
         if self.spec.version >= Version("0.29"):
             env.set("CYTHON_FORCE_REGEN", "1")
 
