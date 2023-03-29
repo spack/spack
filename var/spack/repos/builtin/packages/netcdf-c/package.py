@@ -12,7 +12,7 @@ from llnl.util.lang import dedupe
 import spack.builder
 from spack.build_systems import autotools, cmake
 from spack.package import *
-from spack.util.environment import is_system_path
+from spack.util.environment import filter_system_paths
 
 
 class NetcdfC(CMakePackage, AutotoolsPackage):
@@ -467,7 +467,7 @@ class AutotoolsBuilder(BackupStep, Setup, autotools.AutotoolsBuilder):
 
         lib_search_dirs.extend(d for libs in extra_libs for d in libs.directories)
         # Remove duplicates and system prefixes:
-        lib_search_dirs = filter(lambda d: not is_system_path(d), dedupe(lib_search_dirs))
+        lib_search_dirs = filter_system_paths(dedupe(lib_search_dirs))
         config_args.append(
             "LDFLAGS={0}".format(" ".join("-L{0}".format(d) for d in lib_search_dirs))
         )
