@@ -626,11 +626,8 @@ class ViewDescriptor(object):
     def raise_if_exchange_before_symlink(self, force):
         if os.path.isdir(self.root) and not os.path.islink(self.root):
             if force:
-                try:
-                    shutil.rmtree(self.root)
-                    return
-                except:
-                    pass
+                shutil.rmtree(self.root, ignore_errors=True)
+                return
             msg = f"The view at {self.root} cannot be updated with the 'symlink' update method"
             msg += " because it was originally constructed with the 'exchange' method."
             msg += "\n  Either change the update method to 'exchange' or"

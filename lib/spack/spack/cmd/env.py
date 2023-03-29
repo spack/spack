@@ -425,7 +425,7 @@ def env_view_setup_parser(subparser):
         "--force",
         action="store_true",
         dest="force",
-        help="regenerate even if regeneration cannot be done atomically"
+        help="regenerate even if regeneration cannot be done atomically",
     )
     subparser.add_argument(
         "action", choices=ViewAction.actions(), help="action to take for the environment's view"
