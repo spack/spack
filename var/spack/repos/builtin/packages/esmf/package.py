@@ -15,60 +15,71 @@ class Esmf(MakefilePackage):
     software infrastructure for building and coupling weather, climate, and
     related Earth science applications. The ESMF defines an architecture for
     composing complex, coupled modeling systems and includes data structures
-    and utilities for developing individual models."""
+    and utilities for developing individual models.
+    The National Unified Operational Prediction Capability (NUOPC) Layer
+    defines a common model architecture to support interoperable ESMF components.
+    The NUOPC Layer is included with the ESMF package."""
 
-    homepage = "https://www.earthsystemcog.org/projects/esmf/"
-    url = "https://github.com/esmf-org/esmf/archive/ESMF_8_0_1.tar.gz"
+    homepage = "https://earthsystemmodeling.org/"
+    url = "https://github.com/esmf-org/esmf/archive/v8.4.1.tar.gz"
     git = "https://github.com/esmf-org/esmf.git"
 
-    maintainers("climbfuji", "jedwards4b", "AlexanderRichert-NOAA")
+    maintainers("climbfuji", "jedwards4b", "AlexanderRichert-NOAA", "theurich", "uturuncoglu")
 
     # Develop is a special name for spack and is always considered the newest version
     version("develop", branch="develop")
     # generate chksum with spack checksum esmf@x.y.z
     version("8.4.1", sha256="1b54cee91aacaa9df400bd284614cbb0257e175f6f3ec9977a2d991ed8aa1af6")
-    version("8.4.0", sha256="28531810bf1ae78646cda6494a53d455d194400f19dccd13d6361871de42ed0f")
+    version(
+        "8.4.0",
+        sha256="28531810bf1ae78646cda6494a53d455d194400f19dccd13d6361871de42ed0f",
+        deprecated=True,
+    )
     version("8.3.1", sha256="6c39261e55dcdf9781cdfa344417b9606f7f961889d5ec626150f992f04f146d")
-    version("8.3.0", sha256="0ff43ede83d1ac6beabd3d5e2a646f7574174b28a48d1b9f2c318a054ba268fd")
-    version("8.3.0b09", commit="5b7e546c4b")
-    version("8.2.0", sha256="3693987aba2c8ae8af67a0e222bea4099a48afe09b8d3d334106f9d7fc311485")
-    version("8.1.1", sha256="58c2e739356f21a1b32673aa17a713d3c4af9d45d572f4ba9168c357d586dc75")
-    version("8.0.1", sha256="9172fb73f3fe95c8188d889ee72fdadb4f978b1d969e1d8e401e8d106def1d84")
-    version("8.0.0", sha256="051dca45f9803d7e415c0ea146df15ce487fb55f0fce18ca61d96d4dba0c8774")
-    version("7.1.0r", sha256="ae9a5edb8d40ae97a35cbd4bd00b77061f995c77c43d36334dbb95c18b00a889")
+    version(
+        "8.3.0",
+        sha256="0ff43ede83d1ac6beabd3d5e2a646f7574174b28a48d1b9f2c318a054ba268fd",
+        deprecated=True,
+    )
+    version("8.3.0b09", commit="5b7e546c4b", deprecated=True)
+    version("8.2.0", sha256="27866c31fdb63c58e78211de970470ca02d274f5d4d6d97e94284d63b1c1d9e4")
+    version("8.1.1", sha256="629690c7a488e84ac7252470349458d7aaa98b54c260f8b3911a2e2f3e713dd0")
+    version(
+        "8.1.0",
+        sha256="226219ec61cace89f4678eece93188155d7cbb50a13ec4c9c93174ef3d58d7c0",
+        deprecated=True,
+    )
+    version("8.0.1", sha256="13ce2ca0ae622548c00f7bb18317fb100235ca8b7ddbfac7e201a339e8eb05a3")
+    version(
+        "8.0.0",
+        sha256="4b7904fdc935710071c4aafb9370834d40c2ee06365a8b5845317be8f71bf51f",
+        deprecated=True,
+    )
+    version(
+        "7.1.0r",
+        sha256="e08f21544083dcbe162b472852e321f8df14f4f711f35508403d32df438367a7",
+        deprecated=True,
+    )
 
     variant("mpi", default=True, description="Build with MPI support")
-    variant("external-lapack", default=False, description="Build with external LAPACK support")
+    variant("external-lapack", default=False, description="Build with external LAPACK library")
     variant("netcdf", default=True, description="Build with NetCDF support")
-    variant("pnetcdf", default=True, description="Build with pNetCDF support", when="+mpi")
-    variant("xerces", default=True, description="Build with Xerces support")
+    variant("pnetcdf", default=False, description="Build with pNetCDF support")
+    variant("xerces", default=False, description="Build with Xerces support")
     variant(
-        "parallelio",
+        "external-parallelio",
         default=True,
         description="Build with external parallelio library",
-        when="@8.3:",
+        when="@8.3.1:",
     )
-    variant(
-        "parallelio",
-        default=False,
-        description="Build with external parallelio library",
-        when="@8.3.b09",
-    )
-    variant("pio", default=True, description="Enable Internal ParallelIO support", when="@:8.2.99")
-    variant(
-        "pio", default=True, description="Enable Internal ParallelIO support", when="@8.3.0b09"
-    )
-    variant("debug", default=False, description="Make a debuggable version of the library")
+    variant("debug", default=False, description="Build with debugging symbols and options enabled")
     variant("shared", default=True, description="Build shared library")
-    # 'esmf_comm' and 'esmf_os' variants allow override values for their corresponding
+    # 'esmf_os', 'esmf_comm', 'esmf_pio' variants allow override values for their corresponding
     # build environment variables. Documentation, including valid values, can be found at
     # https://earthsystemmodeling.org/docs/release/latest/ESMF_usrdoc/node10.html#SECTION000105000000000000000
-    variant("esmf_comm", default="auto", description="Override for ESMF_COMM variable")
     variant("esmf_os", default="auto", description="Override for ESMF_OS variable")
-
-    # Required dependencies
-    depends_on("zlib")
-    depends_on("libxml2")
+    variant("esmf_comm", default="auto", description="Override for ESMF_COMM variable")
+    variant("esmf_pio", default="auto", description="Override for ESMF_PIO variable")
 
     # Optional dependencies
     depends_on("mpi", when="+mpi")
@@ -77,7 +88,34 @@ class Esmf(MakefilePackage):
     depends_on("netcdf-fortran@3.6:", when="+netcdf")
     depends_on("parallel-netcdf@1.2.0:", when="+pnetcdf")
     depends_on("xerces-c@3.1.0:", when="+xerces")
-    depends_on("parallelio@2.5.8:", when="+parallelio")
+    depends_on(
+        "parallelio@2.5.7: +mpi+pnetcdf", when="@8.3.0:8.3.99+external-parallelio+mpi+pnetcdf"
+    )
+    depends_on(
+        "parallelio@2.5.7: +mpi~pnetcdf", when="@8.3.0:8.3.99+external-parallelio+mpi~pnetcdf"
+    )
+    depends_on(
+        "parallelio@2.5.7: ~mpi+pnetcdf", when="@8.3.0:8.3.99+external-parallelio~mpi+pnetcdf"
+    )
+    depends_on(
+        "parallelio@2.5.7: ~mpi~pnetcdf", when="@8.3.0:8.3.99+external-parallelio~mpi~pnetcdf"
+    )
+    depends_on(
+        "parallelio@2.5.9: +mpi+pnetcdf", when="@8.4.0:8.4.99+external-parallelio+mpi+pnetcdf"
+    )
+    depends_on(
+        "parallelio@2.5.9: +mpi~pnetcdf", when="@8.4.0:8.4.99+external-parallelio+mpi~pnetcdf"
+    )
+    depends_on(
+        "parallelio@2.5.9: ~mpi+pnetcdf", when="@8.4.0:8.4.99+external-parallelio~mpi+pnetcdf"
+    )
+    depends_on(
+        "parallelio@2.5.9: ~mpi~pnetcdf", when="@8.4.0:8.4.99+external-parallelio~mpi~pnetcdf"
+    )
+    depends_on("parallelio@2.5.10: +mpi+pnetcdf", when="@8.5.0:+external-parallelio+mpi+pnetcdf")
+    depends_on("parallelio@2.5.10: +mpi~pnetcdf", when="@8.5.0:+external-parallelio+mpi~pnetcdf")
+    depends_on("parallelio@2.5.10: ~mpi+pnetcdf", when="@8.5.0:+external-parallelio~mpi+pnetcdf")
+    depends_on("parallelio@2.5.10: ~mpi~pnetcdf", when="@8.5.0:+external-parallelio~mpi~pnetcdf")
 
     # Testing dependencies
     depends_on("perl", type="test")
@@ -117,15 +155,12 @@ class Esmf(MakefilePackage):
 
     def url_for_version(self, version):
         if version < Version("8.0.0"):
-            return "http://www.earthsystemmodeling.org/esmf_releases/public/ESMF_{0}/esmf_{0}_src.tar.gz".format(
-                version.underscored
-            )
-        elif version < Version("8.2.1"):
+            # Older ESMF releases had a custom tag format ESMF_x_y_z
             return "https://github.com/esmf-org/esmf/archive/ESMF_{0}.tar.gz".format(
                 version.underscored
             )
         else:
-            # Starting with ESMF 8.2.1 releases are now in the form vx.y.z
+            # Starting with ESMF 8.0.0 releases are in the form vx.y.z
             return "https://github.com/esmf-org/esmf/archive/refs/tags/v{0}.tar.gz".format(
                 version.dotted
             )
@@ -207,9 +242,11 @@ class Esmf(MakefilePackage):
 
         if "+mpi" in spec:
             env.set("ESMF_CXX", spec["mpi"].mpicxx)
+            env.set("ESMF_C", spec["mpi"].mpicc)
             env.set("ESMF_F90", spec["mpi"].mpifc)
         else:
             env.set("ESMF_CXX", spack_cxx)
+            env.set("ESMF_C", spack_cc)
             env.set("ESMF_F90", spack_fc)
 
         # This environment variable controls the build option.
@@ -220,7 +257,11 @@ class Esmf(MakefilePackage):
             # Build an optimized version of the library.
             env.set("ESMF_BOPT", "O")
 
-        if self.compiler.name in ["gcc", "clang", "apple-clang"] and gfortran_major_version >= 10:
+        if (
+            self.compiler.name in ["gcc", "clang", "apple-clang"]
+            and gfortran_major_version >= 10
+            and self.spec.satisfies("@:8.2.99")
+        ):
             env.set("ESMF_F90COMPILEOPTS", "-fallow-argument-mismatch")
 
         #######
@@ -249,12 +290,10 @@ class Esmf(MakefilePackage):
             elif "^mvapich2" in spec:
                 env.set("ESMF_COMM", "mvapich2")
             elif "^mpich" in spec:
-                # esmf@7.0.1 does not include configs for mpich3,
-                # so we start with the configs for mpich2:
-                env.set("ESMF_COMM", "mpich2")
-                # The mpich 3 series split apart the Fortran and C bindings,
-                # so we link the Fortran libraries when building C programs:
-                env.set("ESMF_CXXLINKLIBS", "-lmpifort")
+                if self.spec.satisfies("@:8.2.99"):
+                    env.set("ESMF_COMM", "mpich3")
+                else:
+                    env.set("ESMF_COMM", "mpich")
             elif "^openmpi" in spec or "^hpcx-mpi" in spec:
                 env.set("ESMF_COMM", "openmpi")
             elif (
@@ -320,20 +359,15 @@ class Esmf(MakefilePackage):
         ##############
         # ParallelIO #
         ##############
-        if "+parallelio" in spec:
+        if "+external-parallelio" in spec:
             env.set("ESMF_PIO", "external")
             env.set("ESMF_PIO_LIBPATH", spec["parallelio"].prefix.lib)
             env.set("ESMF_PIO_INCLUDE", spec["parallelio"].prefix.include)
-        elif "+pio" in spec and "+mpi" in spec:
-            # ESMF provides the ability to read and write data in both binary
-            # and NetCDF formats through ParallelIO (PIO), a third-party IO
-            # software library that is integrated in the ESMF library.
-            # PIO-dependent features will be enabled and will use the
-            # PIO library that is included and built with ESMF.
-            env.set("ESMF_PIO", "internal")
-        else:
-            # Disables PIO-dependent code.
-            env.set("ESMF_PIO", "OFF")
+
+        # Allow override of ESMF_PIO:
+        pio_variant = spec.variants["esmf_pio"].value
+        if pio_variant != "auto":
+            env.set("ESMF_PIO", pio_variant)
 
         ##########
         # XERCES #
@@ -349,6 +383,10 @@ class Esmf(MakefilePackage):
             # FIXME: determine if the following are needed
             # ESMF_XERCES_INCLUDE
             # ESMF_XERCES_LIBPATH
+
+        #########################
+        # General build options #
+        #########################
 
         # Static-only option:
         if "~shared" in spec:
