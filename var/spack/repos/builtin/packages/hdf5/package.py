@@ -204,8 +204,8 @@ class Hdf5(CMakePackage):
 
     # The compiler wrappers (h5cc, h5fc, etc.) run 'pkg-config'.
     # Skip this on Windows since pkgconfig is autotools
-    for p in ["cray", "darwin", "linux"]:
-        depends_on("pkgconfig", when=f"platform={p}", type="run")
+    for plat in ["cray", "darwin", "linux"]:
+        depends_on("pkgconfig", when=f"platform={plat}", type="run")
 
     conflicts("+mpi", "^mpich@4.0:4.0.3")
     conflicts("api=v116", when="@1.6:1.14", msg="v116 is not compatible with this release")
@@ -345,7 +345,7 @@ class Hdf5(CMakePackage):
     # compiler wrappers and do not need to be changed.
     # These do not exist on Windows.
     # Enable only for supported platforms.
-    for p in ["linux", "darwin", "cray"]:
+    for plat in ["linux", "darwin", "cray"]:
         filter_compiler_wrappers(
             "h5cc",
             "h5hlcc",
@@ -354,7 +354,7 @@ class Hdf5(CMakePackage):
             "h5c++",
             "h5hlc++",
             relative_root="bin",
-            when=f"platform={p}",
+            when=f"platform={plat}",
         )
 
     def url_for_version(self, version):
