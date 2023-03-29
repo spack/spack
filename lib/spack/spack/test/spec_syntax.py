@@ -666,10 +666,12 @@ def test_dep_spec_by_hash(database, mutable_empty_config):
     assert "fake" in mpileaks_zmpi
     assert "zmpi" in mpileaks_zmpi
 
-    mpileaks_hash_fake = SpecParser(f"mpileaks ^/{fake.dag_hash()}").next_spec()
+    mpileaks_hash_fake = SpecParser(f"mpileaks ^/{fake.dag_hash()} ^zmpi").next_spec()
     mpileaks_hash_fake.replace_hash()
     assert "fake" in mpileaks_hash_fake
     assert mpileaks_hash_fake["fake"] == fake
+    assert "zmpi" in mpileaks_hash_fake
+    assert mpileaks_hash_fake["zmpi"] == spack.spec.Spec("zmpi")
 
     mpileaks_hash_zmpi = SpecParser(
         f"mpileaks %{mpileaks_zmpi.compiler} ^ /{zmpi.dag_hash()}"
@@ -759,6 +761,12 @@ def test_invalid_hash(database, mutable_empty_config):
     with pytest.raises(spack.spec.InvalidHashError):
         parsed_spec = SpecParser(f"mpileaks ^zmpi /{mpich.dag_hash()}").next_spec()
         parsed_spec.replace_hash()
+
+
+def test_invalid_hash_dep(database, mutable_empty_config):
+    mpich = database.query_one("mpich")
+    hash = mpich.dag_hash()
+    spack.spec.Spec(f"callpath ^zlib/{hash}").replace_hash()
 
 
 @pytest.mark.db

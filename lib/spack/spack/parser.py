@@ -275,7 +275,7 @@ class SpecParser:
                     raise spack.spec.RedundantSpecError(root_spec, self.ctx.current_token)
                 dependency = SpecNodeParser(self.ctx).parse(spack.spec.Spec())
 
-                if dependency == spack.spec.Spec():
+                if not dependency.abstract_hash and dependency == spack.spec.Spec():
                     msg = (
                         "this dependency sigil needs to be followed by a package name "
                         "or a node attribute (version, variant, etc.)"

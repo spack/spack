@@ -1858,16 +1858,12 @@ class Spec(object):
             return self
 
         spec = self.copy(deps=False)
-
         # root spec is replaced
         if spec.abstract_hash:
             new = spec._lookup_hash()
             if not new._satisfies(self):
                 raise InvalidHashError(spec, spec.abstract_hash)
             spec._dup(new)
-            for dep in self.traverse():
-                if not any(node._satisfies(dep) for node in spec.traverse()):
-                    raise RedundantSpecError(self, self.abstract_hash)
             return spec
 
         # Get dependencies that need to be replaced
@@ -1894,9 +1890,6 @@ class Spec(object):
             return
 
         spec_by_hash = self.lookup_hash()
-
-        if not spec_by_hash._satisfies(self):
-            raise InvalidHashError(self, spec_by_hash.abstract_hash)
 
         if spec_by_hash != self or not self.eq_dag(spec_by_hash):
             self._dup(spec_by_hash)
