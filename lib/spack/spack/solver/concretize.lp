@@ -40,6 +40,24 @@ attr(Name, A1, A2, A3, A4) :- literal(LiteralID, Name, A1, A2, A3, A4), literal_
 #defined literal/5.
 #defined literal/6.
 
+% Attributes for node packages which must have a single value
+attr_single_value("version").
+attr_single_value("node_platform").
+attr_single_value("node_os").
+attr_single_value("node_target").
+
+% Error when no attribute is selected
+error(2, no_value_error, Attribute, Package)
+  :- attr("node", Package),
+     attr_single_value(Attribute),
+     not attr(Attribute, Package, _).
+
+% Error when multiple attr need to be selected
+error(2, multiple_values_error, Attribute, Package)
+  :- attr("node", Package),
+     attr_single_value(Attribute),
+     2 { attr(Attribute, Package, Version) }.
+
 %-----------------------------------------------------------------------------
 % Version semantics
 %-----------------------------------------------------------------------------
@@ -77,13 +95,6 @@ version_satisfies(Package, Constraint, HashVersion) :- version_satisfies(Package
 % possible
 { attr("version", Package, Version) : version_declared(Package, Version) }
  :- attr("node", Package).
-
-error(2, "Cannot select a single version for '{0}'", Package)
-  :- attr("node", Package),
-     2 { attr("version", Package, Version) }.
-
-error(2, "No versions available for package '{0}'", Package)
-  :- attr("node", Package), not attr("version", Package, _).
 
 % A virtual package may or may not have a version, but never has more than one
 error(2, "Cannot select a single version for virtual '{0}'", Virtual)
@@ -141,7 +152,7 @@ possible_version_weight(Package, Weight)
 
 % More specific error message if the version cannot satisfy some constraint
 % Otherwise covered by `no_version_error` and `versions_conflict_error`.
-error(1, "No valid version for '{0}' satisfies '@{1}'", Package, Constraint)
+error(1, "Cannot satisfy '{0}@{1}'", Package, Constraint)
   :- attr("node_version_satisfies", Package, Constraint),
      attr("version", Package, Version),
      not version_satisfies(Package, Constraint, Version).
@@ -259,7 +270,7 @@ error(1, "'{0}' is not a valid dependency for any package in the DAG", Package)
 % this ensures that we solve around them
 path(Parent, Child) :- depends_on(Parent, Child).
 path(Parent, Descendant) :- path(Parent, A), depends_on(A, Descendant).
-error(2, "Cyclic dependency detected between '{0}' and '{1}'\n    Consider changing variants to avoid the cycle", A, B)
+error(2, "Cyclic dependency detected between '{0}' and '{1}' (consider changing variants to avoid the cycle)", A, B)
   :- path(A, B),
      path(B, A).
 
@@ -483,7 +494,7 @@ requirement_weight(Package, Group, W) :-
   requirement_policy(Package, Group, "any_of"),
   requirement_group_satisfied(Package, Group).
 
-error(2, "Cannot satisfy the requirements in packages.yaml for the '{0}' package. You may want to delete them to proceed with concretization. To check where the requirements are defined run 'spack config blame packages'", Package) :-
+error(2, "Cannot satisfy the requirements in packages.yaml for package '{0}'. You may want to delete them to proceed with concretization. To check where the requirements are defined run 'spack config blame packages'", Package) :-
   activate_requirement_rules(Package),
   requirement_group(Package, X),
   not requirement_group_satisfied(Package, X).
@@ -692,15 +703,6 @@ attr("node_platform", Package, Platform)
 % platform is set if set to anything
 attr("node_platform_set", Package) :- attr("node_platform_set", Package, _).
 
-% each node must have a single platform
-error(2, "No valid platform found for {0}", Package)
-  :- attr("node", Package),
-     not attr("node_platform", Package, _).
-
-error(2, "Cannot select a single platform for package {0}", Package)
-  :- attr("node", Package),
-     2 { attr("node_platform", Package, Platform) }.
-
 %-----------------------------------------------------------------------------
 % OS semantics
 %-----------------------------------------------------------------------------
@@ -710,16 +712,8 @@ os(OS) :- os(OS, _).
 % one os per node
 { attr("node_os", Package, OS) : os(OS) } :- attr("node", Package).
 
-error(2, "Cannot find valid operating system for '{0}'", Package)
-  :- attr("node", Package),
-     not attr("node_os", Package, _).
-
-error(2, "Cannot select a single operating system for package {0}", Package)
-  :- attr("node", Package),
-     2 { attr("node_os", Package, OS1) }.
-
 % can't have a non-buildable OS on a node we need to build
-error(2, "Cannot concretize '{0} os={1}'. Operating system '{1}' is not buildable", Package, OS)
+error(2, "Cannot select '{0} os={1}' (operating system '{1}' is not buildable)", Package, OS)
  :- build(Package),
     attr("node_os", Package, OS),
     not buildable_os(OS).
@@ -768,14 +762,6 @@ attr("node_os", Package, OS) :- attr("node_os_set", Package, OS), attr("node", P
 
 % Each node has only one target chosen among the known targets
 { attr("node_target", Package, Target) : target(Target) } :- attr("node", Package).
-
-error(2, "Cannot find valid target for '{0}'", Package)
-  :- attr("node", Package),
-     not attr("node_target", Package, _).
-
-error(2, "Cannot select a single target for '{0}'", Package)
-  :- attr("node", Package),
-     2 { attr("node_target", Package, Target) }.
 
 % If a node must satisfy a target constraint, enforce it
 error(1, "'{0} target={1}' cannot satisfy constraint 'target={2}'", Package, Target, Constraint)
