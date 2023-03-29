@@ -16,6 +16,7 @@ class Openfst(AutotoolsPackage):
     url = "http://www.openfst.org/twiki/pub/FST/FstDownload/openfst-1.6.1.tar.gz"
     list_url = "http://www.openfst.org/twiki/bin/view/FST/FstDownload"
 
+    version("1.8.2", sha256="de987bf3624721c5d5ba321af95751898e4f4bb41c8a36e2d64f0627656d8b42")
     version("1.8.1", sha256="24fb53b72bb687e3fa8ee96c72a31ff2920d99b980a0a8f61dda426fca6713f0")
     version("1.7.9", sha256="9319aeb31d1e2950ae25449884e255cc2bc9dfaf987f601590763e61a10fbdde")
     version("1.7.3", sha256="b8dc6b4ca0f964faaf046577e4ad86b1a6ef544e35eacc6a5f16237f38300a0d")

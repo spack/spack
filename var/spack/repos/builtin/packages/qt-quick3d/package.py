@@ -14,6 +14,7 @@ class QtQuick3d(QtPackage):
     url = QtPackage.get_url(__qualname__)
     list_url = QtPackage.get_list_url(__qualname__)
 
+    version("6.4.3", sha256="609f37efb97c9ef893630b5d29f1ad98a51a47700e260c604931285ac8521479")
     version("6.4.2", sha256="940145615fe3c4c8fb346c5bfc10f94fc7a4005c8c187886e0f3088ea0ce0778")
     version("6.4.1", sha256="67daeed69b9e7b3da516c6205e737fdba30a267978c1fb9d34723a6dc5588585")
     version("6.4.0", sha256="37987536da151b7c2cddabfde734759ebe6173708d32cb85aa008e151751270e")
@@ -22,6 +23,8 @@ class QtQuick3d(QtPackage):
     version("6.3.0", sha256="413dec87828155ea0c0424e6b40c777bf0710f1ffaf98969c5d8b19ad3992823")
     version("6.2.4", sha256="7292ed4373a92913c6811f2faa5191f0426f84bd93a3f6eb7d54b62626b56db5")
     version("6.2.3", sha256="35d06edbdd83b7d781b70e0bada18911fa9b774b6403589d5b21813a73584d80")
+
+    depends_on("qt-base +network", when="@6.3.0:")
 
     depends_on("assimp@5.0.1:")
     depends_on("embree", when="@6.4:")

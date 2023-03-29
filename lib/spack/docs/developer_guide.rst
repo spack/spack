@@ -472,7 +472,7 @@ use my new hook as follows:
 .. code-block:: python
 
     def post_log_write(message, level):
-        """Do something custom with the messsage and level every time we write
+        """Do something custom with the message and level every time we write
         to the log
         """
         print('running post_log_write!')

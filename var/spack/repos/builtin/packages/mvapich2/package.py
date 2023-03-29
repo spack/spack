@@ -108,6 +108,7 @@ class Mvapich2(AutotoolsPackage):
         "alloca", default=False, description="Use alloca to allocate temporary memory if available"
     )
 
+    variant("hwlocv2", default=False, description="Builds mvapich2 with hwloc v2")
     variant(
         "file_systems",
         description="List of the ROMIO file systems to activate",
@@ -430,6 +431,8 @@ class Mvapich2(AutotoolsPackage):
         else:
             args.append("--disable-cuda")
 
+        if "+hwlocv2" in self.spec:
+            args.append("--with-hwloc=v2")
         if "+regcache" in self.spec:
             args.append("--enable-registration-cache")
         else:

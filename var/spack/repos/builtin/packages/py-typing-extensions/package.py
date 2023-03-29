@@ -15,6 +15,7 @@ class PyTypingExtensions(PythonPackage):
     homepage = "https://github.com/python/typing/tree/master/typing_extensions"
     pypi = "typing_extensions/typing_extensions-3.7.4.tar.gz"
 
+    version("4.5.0", sha256="5cb5f4a79139d699607b3ef622a1dedafa84e115ab0024e0d9c044a9479ca7cb")
     version("4.3.0", sha256="e6d2677a32f47fc7eb2795db1dd15c1f34eff616bcaf2cfb5e997f854fa1c4a6")
     version("4.2.0", sha256="f1c24655a0da0d1b67f07e17a5e6b2a105894e6824b92096378bb3668ef02376")
     version("4.1.1", sha256="1a9462dcc3347a79b1f1c0271fbe79e844580bb598bafa1ed208b94da3cdcd42")
@@ -29,7 +30,4 @@ class PyTypingExtensions(PythonPackage):
     depends_on("python@3.7:", when="@4.2:", type=("build", "run"))
     depends_on("python@3.6:", when="@4:", type=("build", "run"))
     depends_on("py-flit-core@3.4:3", when="@4:", type="build")
-
-    # typing-extensions 3 uses setuptools
-    depends_on("python@2.7:2.8,3.4:", when="@:3", type=("build", "run"))
     depends_on("py-setuptools", when="@:3", type="build")
