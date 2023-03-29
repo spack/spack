@@ -7,9 +7,14 @@ from spack.package import *
 
 
 class Hdf5VolAsync(CMakePackage):
-    """This package enables asynchronous IO in HDF5.  WARNING: Please refer to the
-    documentation.  This package will be available in HDF5_PLUGIN_PATH, but in order to
-    use it the consumer must set the HDF5_VOL_CONNECTOR environment variable."""
+    """This package enables asynchronous IO in HDF5.
+
+    Usage: Set the HDF5_VOL_CONNECTOR environment variable to enable this adaptor, i.e.
+
+        $export HDF5_VOL_CONNECTOR="async under_vol=0;under_info={}"
+
+    ref. https://hdf5-vol-async.readthedocs.io/en/latest/gettingstarted.html#set-environmental-variables
+    """
 
     homepage = "https://hdf5-vol-async.readthedocs.io"
     git = "https://github.com/hpc-io/vol-async.git"
@@ -34,7 +39,7 @@ class Hdf5VolAsync(CMakePackage):
     depends_on("hdf5@1.13.0:1.13.2", when="@:1.3")
     depends_on("hdf5@1.13.3:", when="@1.4:")
 
-    # Enforce that MPI_THREAD_MULTIPLE is available.
+    # Require MPI_THREAD_MULTIPLE.
     depends_on("openmpi +thread_multiple", when="^openmpi")
     depends_on("mvapich2 threads=multiple", when="^mvapich2")
 
