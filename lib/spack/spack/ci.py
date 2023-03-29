@@ -763,8 +763,7 @@ def generate_gitlab_ci_yaml(
 
         tty.warn(
             "The `gitlab-ci` configuration is deprecated in favor of `ci`.\n",
-            "To update first change the section key from `gitlab-ci` to `ci`\n",
-            "Then run \n\t$ spack config update ci",
+            "To update run \n\t$ spack env update /path/to/ci/spack.yaml",
         )
         translate_deprecated_config(gitlabci_config)
         ci_config = gitlabci_config

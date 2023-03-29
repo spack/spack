@@ -205,9 +205,7 @@ def update(data):
     if ci_env:
         env_config = ev.config_dict(ci_env.yaml)
         if "gitlab-ci" in env_config:
-            tty.die(
-                "Error: `gitlab-ci` section detected with `ci`, these are not compatible"
-            )
+            tty.die("Error: `gitlab-ci` section detected with `ci`, these are not compatible")
 
     # Detect if the ci section is using the new pipeline-gen
     # If it is, assume it has already been converted
