@@ -113,6 +113,13 @@ sourcing time, ensuring future invocations of the ``spack`` command will
 continue to use the same consistent python version regardless of changes in
 the environment.
 
+.. note::
+
+   The ``spack`` command will ignore any python interpreter installed by
+   spack found in a view, even if explicitly passed in ``SPACK_PYTHON``.
+   This is done so that it is impossible for ``spack uninstall`` to
+   to remove the python that ``spack`` is running on.
+
 ^^^^^^^^^^^^^^^^^^^^
 Bootstrapping clingo
 ^^^^^^^^^^^^^^^^^^^^
