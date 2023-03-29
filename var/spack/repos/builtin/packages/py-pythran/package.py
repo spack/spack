@@ -16,7 +16,6 @@ class PyPythran(PythonPackage):
     homepage = "https://github.com/serge-sans-paille/pythran"
     pypi = "pythran/pythran-0.9.11.tar.gz"
 
-    version("0.12.1", sha256="702c2701187cfb38f66c0c20cc85d04d0e156d260a8d92892da65947faa5360e")
     version("0.12.0", sha256="eff3dd0d3eebe57372f0d14f82985525e9bcdfb5b1d1010e1932cf9207060f9f")
     version("0.11.0", sha256="0b2cba712e09f7630879dff69f268460bfe34a6d6000451b47d598558a92a875")
     version("0.10.0", sha256="9dac8e1d50f33d4676003e350b1f0c878ce113e6f907920e92dc103352cac5bf")
@@ -33,21 +32,17 @@ class PyPythran(PythonPackage):
 
     depends_on("py-setuptools", type="build")
     depends_on("py-ply@3.4:", type=("build", "run"))
-    depends_on("py-gast", type=("build", "run"))
-    # Unpin overly strict dependency requirements to ease concretization of TensorFlow
-    # depends_on("py-gast@0.5", when="@0.9.12:", type=("build", "run"))
-    # depends_on("py-gast@0.4", when="@0.9.7:0.9.11", type=("build", "run"))
-    # depends_on("py-gast@0.3.3:0.3", when="@0.9.6", type=("build", "run"))
-    # depends_on("py-gast@0.3:", when="@0.9.4:0.9.5", type=("build", "run"))
-    # depends_on("py-gast", when="@:0.9.3", type=("build", "run"))
+    depends_on("py-gast@0.5", when="@0.9.12:", type=("build", "run"))
+    depends_on("py-gast@0.4", when="@0.9.7:0.9.11", type=("build", "run"))
+    depends_on("py-gast@0.3.3:0.3", when="@0.9.6", type=("build", "run"))
+    depends_on("py-gast@0.3:", when="@0.9.4:0.9.5", type=("build", "run"))
+    depends_on("py-gast", when="@:0.9.3", type=("build", "run"))
     depends_on("py-numpy", type=("build", "run"))
-    depends_on("py-beniget", type=("build", "run"))
-    # Unpin overly strict dependency requirements to ease concretization of TensorFlow
-    # depends_on("py-beniget@0.4", when="@0.9.12:", type=("build", "run"))
-    # depends_on("py-beniget@0.3", when="@0.9.7:0.9.11", type=("build", "run"))
-    # depends_on("py-beniget@0.2.1:0.2", when="@0.9.6", type=("build", "run"))
-    # depends_on("py-beniget@0.2:", when="@0.9.4:0.9.5", type=("build", "run"))
-    # depends_on("py-beniget", when="@:0.9.3", type=("build", "run"))
+    depends_on("py-beniget@0.4", when="@0.9.12:", type=("build", "run"))
+    depends_on("py-beniget@0.3", when="@0.9.7:0.9.11", type=("build", "run"))
+    depends_on("py-beniget@0.2.1:0.2", when="@0.9.6", type=("build", "run"))
+    depends_on("py-beniget@0.2:", when="@0.9.4:0.9.5", type=("build", "run"))
+    depends_on("py-beniget", when="@:0.9.3", type=("build", "run"))
     depends_on("llvm-openmp", when="%apple-clang", type=("build", "run"))
 
     # Historical dependencies

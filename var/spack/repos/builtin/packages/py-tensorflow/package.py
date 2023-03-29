@@ -203,7 +203,9 @@ class PyTensorflow(Package, CudaPackage, ROCmPackage, PythonExtension):
     depends_on("py-flatbuffers@1.12:", type=("build", "run"), when="@2.8")
     depends_on("py-flatbuffers@1.12:2", type=("build", "run"), when="@2.7")
     depends_on("py-flatbuffers@1.12", type=("build", "run"), when="@2.4:2.6")
-    depends_on("py-gast@0.2.1:0.4.0", type=("build", "run"), when="@2.9:")
+    # Unpin overly strict dependency requirements to ease concretization of TensorFlow
+    depends_on("py-gast@0.2.1:", type=("build", "run"), when="@2.9:")
+    # depends_on("py-gast@0.2.1:0.4.0", type=("build", "run"), when="@2.9:")
     depends_on("py-gast@0.2.1:", type=("build", "run"), when="@2.8")
     depends_on("py-gast@0.2.1:0.4", type=("build", "run"), when="@2.7")
     depends_on("py-gast@0.4.0", type=("build", "run"), when="@2.5:2.6")
