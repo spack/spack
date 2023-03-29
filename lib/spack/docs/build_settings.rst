@@ -332,7 +332,7 @@ keyed by package name:
 
    packages:
      libfabric:
-       require: "@1.13.2"
+       require: ["@1.13.2"]
      openmpi:
        require:
        - any_of: ["~cuda", "%gcc"]
@@ -379,7 +379,7 @@ like this:
 
    packages:
      all:
-       require: '%clang'
+       require: ['%clang']
 
 which means every spec will be required to use ``clang`` as a compiler.
 
@@ -391,9 +391,9 @@ under ``all`` are disregarded. For example, with a configuration like this:
 
    packages:
      all:
-       require: '%clang'
+       require: ['%clang']
      cmake:
-       require: '%gcc'
+       require: ['%gcc']
 
 Spack requires ``cmake`` to use ``gcc`` and all other nodes (including ``cmake``
 dependencies) to use ``clang``.
@@ -409,7 +409,7 @@ This can be useful for fixing which virtual provider you want to use:
 
    packages:
      mpi:
-       require: 'mvapich2 %gcc'
+       require: ['mvapich2 %gcc']
 
 With the configuration above the only allowed ``mpi`` provider is ``mvapich2 %gcc``.
 
@@ -420,9 +420,9 @@ present. For instance with a configuration like:
 
    packages:
      mpi:
-       require: 'mvapich2 %gcc'
+       require: ['mvapich2 %gcc']
      mvapich2:
-       require: '~cuda'
+       require: ['~cuda']
 
 you will use ``mvapich2~cuda %gcc`` as an ``mpi`` provider.
 

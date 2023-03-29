@@ -134,7 +134,7 @@ def test_requirement_isnt_optional(concretize_scope, test_repo):
     conf_str = """\
 packages:
   x:
-    require: "@1.0"
+    require: ["@1.0"]
 """
     update_packages_config(conf_str)
     with pytest.raises(UnsatisfiableSpecError):
@@ -178,13 +178,11 @@ def test_requirement_adds_new_version(
     )
 
     a_commit_hash = commits[0]
-    conf_str = """\
+    conf_str = f"""\
 packages:
   v:
-    require: "@{0}=2.2"
-""".format(
-        a_commit_hash
-    )
+    require: ["@{a_commit_hash}=2.2"]
+"""
     update_packages_config(conf_str)
 
     s1 = Spec("v").concretized()
@@ -207,13 +205,11 @@ def test_requirement_adds_git_hash_version(
     )
 
     a_commit_hash = commits[0]
-    conf_str = """\
+    conf_str = f"""\
 packages:
   v:
-    require: "@{0}"
-""".format(
-        a_commit_hash
-    )
+    require: ["@{a_commit_hash}"]
+"""
     update_packages_config(conf_str)
 
     s1 = Spec("v").concretized()
@@ -300,7 +296,7 @@ def test_requirement_is_successfully_applied(concretize_scope, test_repo):
     conf_str = """\
 packages:
   x:
-    require: "@1.0"
+    require: ["@1.0"]
 """
     update_packages_config(conf_str)
     s2 = Spec("x").concretized()
@@ -318,9 +314,9 @@ def test_multiple_packages_requirements_are_respected(concretize_scope, test_rep
     conf_str = """\
 packages:
   x:
-    require: "@1.0"
+    require: ["@1.0"]
   y:
-    require: "@2.4"
+    require: ["@2.4"]
 """
     update_packages_config(conf_str)
     spec = Spec("x").concretized()
@@ -385,7 +381,7 @@ def test_requirements_for_package_that_is_not_needed(concretize_scope, test_repo
     conf_str = """\
 packages:
   x:
-    require: "@1.0"
+    require: ["@1.0"]
   y:
     require:
     - one_of: ["@2.4%gcc", "@2.5%clang"]
@@ -468,13 +464,11 @@ def test_default_requirements_with_all(spec_str, requirement_str, concretize_sco
     if spack.config.get("config:concretizer") == "original":
         pytest.skip("Original concretizer does not support configuration" " requirements")
 
-    conf_str = """\
+    conf_str = f"""\
 packages:
   all:
-    require: "{}"
-""".format(
-        requirement_str
-    )
+    require: ["{requirement_str}"]
+"""
     update_packages_config(conf_str)
 
     spec = Spec(spec_str).concretized()
@@ -497,15 +491,13 @@ def test_default_and_package_specific_requirements(
         pytest.skip("Original concretizer does not support configuration" " requirements")
     generic_req, specific_req = requirements
     generic_exp, specific_exp = expectations
-    conf_str = """\
+    conf_str = f"""\
 packages:
   all:
-    require: "{}"
+    require: ["{generic_req}"]
   x:
-    require: "{}"
-""".format(
-        generic_req, specific_req
-    )
+    require: ["{specific_req}"]
+"""
     update_packages_config(conf_str)
 
     spec = Spec("x").concretized()
@@ -518,13 +510,11 @@ packages:
 def test_requirements_on_virtual(mpi_requirement, concretize_scope, mock_packages):
     if spack.config.get("config:concretizer") == "original":
         pytest.skip("Original concretizer does not support configuration" " requirements")
-    conf_str = """\
+    conf_str = f"""\
 packages:
   mpi:
-    require: "{}"
-""".format(
-        mpi_requirement
-    )
+    require: ["{mpi_requirement}"]
+"""
     update_packages_config(conf_str)
 
     spec = Spec("callpath").concretized()
@@ -541,15 +531,13 @@ def test_requirements_on_virtual_and_on_package(
 ):
     if spack.config.get("config:concretizer") == "original":
         pytest.skip("Original concretizer does not support configuration" " requirements")
-    conf_str = """\
+    conf_str = f"""\
 packages:
   mpi:
-    require: "{0}"
-  {0}:
-    require: "{1}"
-""".format(
-        mpi_requirement, specific_requirement
-    )
+    require: "{mpi_requirement}"
+  {mpi_requirement}:
+    require: "{specific_requirement}"
+"""
     update_packages_config(conf_str)
 
     spec = Spec("callpath").concretized()
@@ -564,7 +552,7 @@ def test_incompatible_virtual_requirements_raise(concretize_scope, mock_packages
     conf_str = """\
     packages:
       mpi:
-        require: "mpich"
+        require: ["mpich"]
     """
     update_packages_config(conf_str)
 
