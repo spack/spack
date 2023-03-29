@@ -6,10 +6,10 @@
 """Tests for ``llnl/util/filesystem.py``"""
 import filecmp
 import os
-from pathlib import Path
 import shutil
 import stat
 import sys
+from pathlib import Path
 
 import pytest
 
@@ -377,9 +377,14 @@ def test_recursive_search_of_headers_from_prefix(installation_dir_with_headers):
 if sys.platform == "win32":
     dir_list = [
         (["C:/pfx/include/foo.h", "C:\\pfx\\include\\subdir\\foo.h"], ["C:\\pfx\\include"]),
-        (["C:/pfx/include/foo.h", "C:/pfx/subdir/foo.h"], ["C:\\pfx\\include", "C:\\pfx\\subdir"]),
+        (["C:\\pfx\\include\\foo.h", "C:\\pfx\\include\\subdir\\foo.h"], ["C:\\pfx\\include"]),
+        (["C:/pfx/include/foo.h", "C:/pfx/include/subdir/foo.h"], ["C:\\pfx\\include"]),
         (
-            ["C:/pfx/include/subdir/foo.h", "C:/pfx/subdir/foo.h"],
+            ["C:\\pfx\\include\\foo.h", "C:\\pfx\\subdir\\foo.h"],
+            ["C:\\pfx\\include", "C:\\pfx\\subdir"],
+        ),
+        (
+            ["C:\\pfx\\include\\subdir\\foo.h", "C:\\pfx\\subdir\\foo.h"],
             ["C:\\pfx\\include", "C:\\pfx\\subdir"],
         ),
     ]

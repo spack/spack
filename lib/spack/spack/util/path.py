@@ -176,6 +176,31 @@ def args_to_pathlib(*args):
     ]
 
 
+def args_to_pure_pathlib(*args):
+    return [
+        pathlib.PurePath(arg) if (isinstance(arg, str) and not is_path_url(arg)) else arg
+        for arg in args
+    ]
+
+
+def normalize_string_path(pth):
+    return str(args_to_pathlib(pth)[0])
+
+
+def pathlib_purepath_filter(_func=None, arg_slice=None):
+    """
+    Filters function arguments composing path arguments into Pathlib PurePath objects
+    represeting abstract path useage, without needing to access filesystem
+    Optional slicing range can be specified to select specific or groups of arguments
+
+    This decorator is identical to system_path_filter and pathlib except it converts from str
+    to pathlib.PurePath - it is intended as a temporary functional stopgap to facilitate a
+    piecewise conversion of the Spack codebase to use pathlib. Once internal useage is consistent
+    this decorator and other cross platform path logic specific to spack should be removed
+    """
+    return _path_filter(_func=_func, arg_slice=arg_slice, path_func=args_to_pure_pathlib)
+
+
 def pathlib_filter(_func=None, arg_slice=None):
     """
     Filters function arguments composing path arguments into Pathlib Path objects
@@ -186,6 +211,10 @@ def pathlib_filter(_func=None, arg_slice=None):
     piecewise conversion of the Spack codebase to use pathlib. Once internal useage is consistent
     this decorator and other cross platform path logic specific to spack should be removed
     """
+    return _path_filter(_func=_func, arg_slice=arg_slice)
+
+
+def _path_filter(_func=None, arg_slice=None, path_func=args_to_pathlib):
     from functools import wraps
 
     def holder_func(func):
@@ -193,9 +222,9 @@ def pathlib_filter(_func=None, arg_slice=None):
         def path_filter_caller(*args, **kwargs):
             args = list(args)
             if arg_slice:
-                args[arg_slice] = args_to_pathlib(*args[arg_slice])
+                args[arg_slice] = path_func(*args[arg_slice])
             else:
-                args = args_to_pathlib(*args)
+                args = path_func(*args)
             return func(*args, **kwargs)
 
         return path_filter_caller

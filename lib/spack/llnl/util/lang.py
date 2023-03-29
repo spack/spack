@@ -221,9 +221,9 @@ def list_modules(directory, **kwargs):
             if init_py.is_file():
                 yield str(name.name)
 
-        elif name.endswith(".py"):
-            if not any(re.search(pattern, name) for pattern in ignore_modules):
-                yield re.sub(".py$", "", name)
+        elif name.suffix == ".py":
+            if not any(re.search(pattern, name.name) for pattern in ignore_modules):
+                yield re.sub(".py$", "", name.name)
 
 
 def decorator_with_or_without_args(decorator):

@@ -5,11 +5,11 @@
 
 import errno
 import os
-from pathlib import Path
 import socket
 import sys
 import time
 from datetime import datetime
+from pathlib import Path
 
 import llnl.util.tty as tty
 from llnl.util.lang import pretty_seconds
@@ -288,7 +288,7 @@ class Lock(object):
 
     def __str__(self):
         """Readable string (with key fields) of the lock."""
-        location = "{0}[{1}:{2}]".format(str(self.path), self._start, self._length)
+        location = "{0}[{1}:{2}]".format(self.path, self._start, self._length)
         timeout = "timeout={0}".format(self.default_timeout)
         activity = "#reads={0}, #writes={1}".format(self._reads, self._writes)
         return "({0}, {1}, {2})".format(location, timeout, activity)

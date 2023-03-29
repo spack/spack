@@ -25,7 +25,7 @@ from llnl.util import tty
 from llnl.util.lang import dedupe, memoized
 from llnl.util.symlink import islink, symlink
 
-from spack.util.executable import CommandNotFoundError, Executable, which
+from spack.util.executable import Executable, which
 from spack.util.path import pathlib_filter
 
 if sys.platform != "win32":
@@ -1239,7 +1239,7 @@ def can_access(file_name):
 def traverse_tree(
     source_root: str,
     dest_root: str,
-    rel_path: str = Path(""),
+    rel_path: str = "",
     *,
     order: str = "pre",
     ignore: Optional[Callable[[str], bool]] = None,
@@ -1286,8 +1286,8 @@ def traverse_tree(
     # Don't descend into ignored directories
     if ignore(rel_path):
         return
-    source_path = source_root / rel_path
-    dest_path = dest_root / rel_path
+    source_path = source_root / rel_path  # type: ignore
+    dest_path = dest_root / rel_path  # type: ignore
 
     # preorder yields directories before children
     if order == "pre":
@@ -1488,7 +1488,7 @@ def visit_directory_tree(root, visitor, rel_path="", depth=0):
         elif islink and visitor.before_visit_symlinked_dir(root, str(rel_child), depth):
             # Handle symlinked directories
             visit_directory_tree(root, visitor, rel_child, depth + 1)
-            visitor.after_visit_symlinked_dir(root, rel_child, depth)
+            visitor.after_visit_symlinked_dir(root, str(rel_child), depth)
 
 
 @pathlib_filter
@@ -2542,12 +2542,7 @@ def files_in(*search_paths):
     """
     files = []
     for d in filter(can_access_dir, search_paths):
-        files.extend(
-            filter(
-                lambda x: x[1].is_file(),
-                [(f.name, f) for f in list(d.iterdir())],
-            )
-        )
+        files.extend(filter(lambda x: x[1].is_file(), [(f.name, f) for f in list(d.iterdir())]))
     # prevent pathlib Path from leaking out into rest of codebase
     return [(str(f[0]), str(f[1])) for f in files]
 
@@ -2630,7 +2625,8 @@ def partition_path(path, entry=None):
     followed by an empty string and an empty list.
     """
     paths = prefixes(path)
-    # TODO: johnwparent - remove this once larger pathlib integration is complete and consuming methods
+    # TODO: johnwparent - remove this once larger pathlib
+    # integration is complete and consuming methods
     # can handle pathlib types
     paths = [str(x) for x in paths]
     if entry is not None:

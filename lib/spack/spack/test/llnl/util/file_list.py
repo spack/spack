@@ -5,19 +5,16 @@
 
 import fnmatch
 import os.path
-from pathlib import Path
 import sys
+from pathlib import Path
 
 import pytest
 
 from llnl.util.filesystem import HeaderList, LibraryList, find, find_headers, find_libraries
 
 import spack.paths
+from spack.util.path import normalize_string_path
 
-if sys.platform == "win32":
-    from pathlib import WindowsPath
-else:
-    from pathlib import PosixPath
 
 @pytest.fixture()
 def library_list():
@@ -80,12 +77,14 @@ class TestLibraryList(object):
         s1 = library_list.joined()
         expected = " ".join(
             [
-                str(Path("/dir1/liblapack.%s" % plat_static_ext)),
-                str(Path("/dir2/libpython3.6.%s"
-                % (plat_apple_shared_ext if sys.platform != "win32" else "dll"))),
-                str(Path("/dir1/libblas.%s" % plat_static_ext)),
-                str(Path("/dir3/libz.%s" % plat_shared_ext)),
-                str(Path("libmpi.%s.20.10.1" % plat_shared_ext)),
+                normalize_string_path("/dir1/liblapack.%s" % plat_static_ext),
+                normalize_string_path(
+                    "/dir2/libpython3.6.%s"
+                    % (plat_apple_shared_ext if sys.platform != "win32" else "dll")
+                ),
+                normalize_string_path("/dir1/libblas.%s" % plat_static_ext),
+                normalize_string_path("/dir3/libz.%s" % plat_shared_ext),
+                "libmpi.%s.20.10.1" % plat_shared_ext,
             ]
         )
         assert s1 == expected
@@ -96,21 +95,25 @@ class TestLibraryList(object):
         s3 = library_list.joined(";")
         expected = ";".join(
             [
-                str(Path("/dir1/liblapack.%s" % plat_static_ext)),
-                str(Path("/dir2/libpython3.6.%s"
-                % (plat_apple_shared_ext if sys.platform != "win32" else "dll"))),
-                str(Path("/dir1/libblas.%s" % plat_static_ext)),
-                str(Path("/dir3/libz.%s" % plat_shared_ext)),
-                str(Path("libmpi.%s.20.10.1" % plat_shared_ext)),
+                normalize_string_path("/dir1/liblapack.%s" % plat_static_ext),
+                str(
+                    Path(
+                        "/dir2/libpython3.6.%s"
+                        % (plat_apple_shared_ext if sys.platform != "win32" else "dll")
+                    )
+                ),
+                normalize_string_path("/dir1/libblas.%s" % plat_static_ext),
+                normalize_string_path("/dir3/libz.%s" % plat_shared_ext),
+                normalize_string_path("libmpi.%s.20.10.1" % plat_shared_ext),
             ]
         )
         assert s3 == expected
 
     def test_flags(self, library_list):
         search_flags = library_list.search_flags
-        assert str(Path("-L/dir1")) in search_flags
-        assert str(Path("-L/dir2")) in search_flags
-        assert str(Path("-L/dir3")) in search_flags
+        assert normalize_string_path("-L/dir1") in search_flags
+        assert normalize_string_path("-L/dir2") in search_flags
+        assert normalize_string_path("-L/dir3") in search_flags
         assert isinstance(search_flags, str)
         assert search_flags == "-L{0}dir1 -L{0}dir2 -L{0}dir3".format(os.path.sep)
 
@@ -132,11 +135,15 @@ class TestLibraryList(object):
         assert names == ["lapack", "python3.6", "blas", "z", "mpi"]
 
         directories = library_list.directories
-        assert directories == [str(Path("/dir1")), str(Path("/dir2")), str(Path("/dir3"))]
+        assert directories == [
+            normalize_string_path("/dir1"),
+            normalize_string_path("/dir2"),
+            normalize_string_path("/dir3"),
+        ]
 
     def test_get_item(self, library_list):
         a = library_list[0]
-        assert a == str(Path("/dir1/liblapack.%s" % plat_static_ext))
+        assert a == normalize_string_path("/dir1/liblapack.%s" % plat_static_ext)
 
         b = library_list[:]
         assert type(b) == type(library_list)
@@ -170,11 +177,11 @@ class TestHeaderList(object):
         s1 = header_list.joined()
         expected = " ".join(
             [
-                str(Path("/dir1/Python.h")),
-                str(Path("/dir2/date.time.h")),
-                str(Path("/dir1/pyconfig.hpp")),
-                str(Path("/dir3/core.hh")),
-                str(Path("pymem.cuh")),
+                normalize_string_path("/dir1/Python.h"),
+                normalize_string_path("/dir2/date.time.h"),
+                normalize_string_path("/dir1/pyconfig.hpp"),
+                normalize_string_path("/dir3/core.hh"),
+                normalize_string_path("pymem.cuh"),
             ]
         )
         assert s1 == expected
@@ -185,20 +192,20 @@ class TestHeaderList(object):
         s3 = header_list.joined(";")
         expected = ";".join(
             [
-                str(Path("/dir1/Python.h")),
-                str(Path("/dir2/date.time.h")),
-                str(Path("/dir1/pyconfig.hpp")),
-                str(Path("/dir3/core.hh")),
-                str(Path("pymem.cuh")),
+                normalize_string_path("/dir1/Python.h"),
+                normalize_string_path("/dir2/date.time.h"),
+                normalize_string_path("/dir1/pyconfig.hpp"),
+                normalize_string_path("/dir3/core.hh"),
+                normalize_string_path("pymem.cuh"),
             ]
         )
         assert s3 == expected
 
     def test_flags(self, header_list):
         include_flags = header_list.include_flags
-        assert str(Path("-I/dir1")) in include_flags
-        assert str(Path("-I/dir2")) in include_flags
-        assert str(Path("-I/dir3")) in include_flags
+        assert normalize_string_path("-I/dir1") in include_flags
+        assert normalize_string_path("-I/dir2") in include_flags
+        assert normalize_string_path("-I/dir3") in include_flags
         assert isinstance(include_flags, str)
         assert include_flags == "-I{0}dir1 -I{0}dir2 -I{0}dir3".format(os.path.sep)
 
@@ -217,11 +224,15 @@ class TestHeaderList(object):
         assert names == ["Python", "date.time", "pyconfig", "core", "pymem"]
 
         directories = header_list.directories
-        assert directories == [str(Path("/dir1")), str(Path("/dir2")), str(Path("/dir3"))]
+        assert directories == [
+            normalize_string_path("/dir1"),
+            normalize_string_path("/dir2"),
+            normalize_string_path("/dir3"),
+        ]
 
     def test_get_item(self, header_list):
         a = header_list[0]
-        assert a == str(Path("/dir1/Python.h"))
+        assert a == normalize_string_path("/dir1/Python.h")
 
         b = header_list[:]
         assert type(b) == type(header_list)

@@ -51,17 +51,16 @@ def _win32_junction(path, link):
     path = Path(path)
     link = Path(link)
     # junctions require absolute paths
-    if not link.is_absolute():
-        link = link.absolute()
+    link = link.absolute()
 
     # os.symlink will fail if link exists, emulate the behavior here
     if link.exists():
         raise OSError(errno.EEXIST, "File  exists: %s -> %s" % (str(link), str(path)))
 
     if not path.is_absolute():
-        parent = os.path.join(link, os.pardir)
-        path = os.path.join(parent, path)
-        path = os.path.abspath(path)
+        parent = link / os.pardir
+        path = parent / path
+        path = path.absolute()
 
     CreateHardLink(link, path)
 
@@ -102,8 +101,7 @@ def _win32_is_junction(path):
     """
     Determines if a path is a win32 junction
     """
-    path = Path(path)
-    if path.is_symlink():
+    if Path(path).is_symlink():
         return False
 
     if sys.platform == "win32":
