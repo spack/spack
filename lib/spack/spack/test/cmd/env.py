@@ -52,7 +52,8 @@ find = SpackCommand("find")
 
 sep = os.sep
 
-if spack.util.atomic_update.renameat2():
+supports_renameat2 = bool(spack.util.atomic_update.renameat2())
+if supports_renameat2:
     use_renameat2 = [True, False]
 else:
     use_renameat2 = [False]
@@ -3303,13 +3304,16 @@ def test_view_update_mismatch(update_method, tmpdir, install_mockery, mock_fetch
     if update_method == "symlink":
         os.makedirs(root)
         checker = "cannot be updated with the 'symlink' update method"
-    elif True in use_renameat2:
+        forceable = True
+    elif supports_renameat2:
         link = str(tmpdir.join("symlink"))
         os.makedirs(link)
         os.symlink(link, root)
         checker = "cannot be updated with the 'exchange' update method"
+        forceable = True
     else:
         checker = "does not support the 'exchange' atomic update method"
+        forceable = False
 
     view = ev.environment.ViewDescriptor(
         base_path=str(tmpdir), root=root, update_method=update_method
@@ -3321,6 +3325,9 @@ def test_view_update_mismatch(update_method, tmpdir, install_mockery, mock_fetch
     with pytest.raises(RuntimeError, match=checker):
         view.regenerate([spec])
 
+    if forceable:
+        view.regenerate([spec], force=True)
+        assert os.path.exists(view.root)
 
 @pytest.mark.parametrize("update_method", ["symlink", "exchange"])
 def test_view_update_fails(update_method, tmpdir, install_mockery, mock_fetch, monkeypatch):
