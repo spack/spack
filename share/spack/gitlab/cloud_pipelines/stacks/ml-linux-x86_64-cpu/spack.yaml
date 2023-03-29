@@ -4,6 +4,8 @@ spack:
     all:
       require: target=x86_64_v3
       variants: ~cuda~rocm
+    mpi:
+      require: openmpi
 
   specs:
     # Horovod

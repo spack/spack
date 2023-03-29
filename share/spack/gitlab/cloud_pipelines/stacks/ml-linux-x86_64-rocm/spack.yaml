@@ -9,6 +9,8 @@ spack:
     py-torch:
       # Does not yet support Spack-installed ROCm
       require: ~rocm
+    mpi:
+      require: openmpi
 
   specs:
     # Horovod
