@@ -77,21 +77,18 @@ version_satisfies(Package, Constraint, HashVersion) :- version_satisfies(Package
 % possible
 { attr("version", Package, Version) : version_declared(Package, Version) }
  :- attr("node", Package).
-error(2, "No version for '{0}' satisfies '@{1}' and '@{2}'", Package, Version1, Version2)
+
+error(2, "Cannot select a single version for '{0}'", Package)
   :- attr("node", Package),
-     attr("version", Package, Version1),
-     attr("version", Package, Version2),
-     Version1 < Version2.  % see[1]
+     2 { attr("version", Package, Version) }.
 
 error(2, "No versions available for package '{0}'", Package)
   :- attr("node", Package), not attr("version", Package, _).
 
 % A virtual package may or may not have a version, but never has more than one
-error(2, "No version for '{0}' satisfies '@{1}' and '@{2}'", Virtual, Version1, Version2)
+error(2, "Cannot select a single version for virtual '{0}'", Virtual)
   :- attr("virtual_node", Virtual),
-     attr("version", Virtual, Version1),
-     attr("version", Virtual, Version2),
-     Version1 < Version2. % see[1]
+     2 { attr("version", Virtual, Version) }.
 
 % If we select a deprecated version, mark the package as deprecated
 attr("deprecated", Package, Version) :-
@@ -301,15 +298,14 @@ attr("virtual_node", Virtual)
 % The provider must be selected among the possible providers.
 { provider(Package, Virtual) : possible_provider(Package, Virtual) }
   :- attr("virtual_node", Virtual).
+
 error(2, "Cannot find valid provider for virtual {0}", Virtual)
   :- attr("virtual_node", Virtual),
      not provider(_, Virtual).
 
-error(2, "Spec cannot include multiple providers for virtual '{0}'\n    Requested '{1}' and '{2}'", Virtual, P1, P2)
+error(2, "Cannot select a single provider for virtual '{0}'", Virtual)
   :- attr("virtual_node", Virtual),
-     provider(P1, Virtual),
-     provider(P2, Virtual),
-     P1 < P2.
+     2 { provider(P, Virtual) }.
 
 % virtual roots imply virtual nodes, and that one provider is a root
 attr("virtual_node", Virtual) :- attr("virtual_root", Virtual).
@@ -401,11 +397,10 @@ possible_provider_weight(Dependency, Virtual, 100, "fallback") :- provider(Depen
 error(2, "Attempted to use external for '{0}' which does not satisfy any configured external spec", Package)
   :- external(Package),
      not external_version(Package, _, _).
+
 error(2, "Attempted to use external for '{0}' which does not satisfy any configured external spec", Package)
   :- external(Package),
-     external_version(Package, Version1, Weight1),
-     external_version(Package, Version2, Weight2),
-     (Version1, Weight1) < (Version2, Weight2). % see[1]
+     2 { external_version(Package, Version, Weight) }.
 
 version_weight(Package, Weight) :- external_version(Package, Version, Weight).
 attr("version", Package, Version) :- external_version(Package, Version, Weight).
@@ -554,14 +549,13 @@ attr("variant_value", Package, Variant, Value) :-
     build(Package).
 
 
-error(2, "'{0}' required multiple values for single-valued variant '{1}'\n    Requested 'Spec({1}={2})' and 'Spec({1}={3})'", Package, Variant, Value1, Value2)
+error(2, "'{0}' required multiple values for single-valued variant '{1}'", Package, Variant)
   :- attr("node", Package),
      variant(Package, Variant),
      variant_single_value(Package, Variant),
      build(Package),
-     attr("variant_value", Package, Variant, Value1),
-     attr("variant_value", Package, Variant, Value2),
-     Value1 < Value2. % see[1]
+     2 { attr("variant_value", Package, Variant, Value) }.
+
 error(2, "No valid value for variant '{1}' of package '{0}'", Package, Variant)
   :- attr("node", Package),
      variant(Package, Variant),
@@ -582,7 +576,7 @@ error(1, "'Spec({1}={2})' is not a valid value for '{0}' variant '{1}'", Package
 % Some multi valued variants accept multiple values from disjoint sets.
 % Ensure that we respect that constraint and we don't pick values from more
 % than one set at once
-error(2, "{0} variant '{1}' cannot have values '{2}' and '{3}' as they come from disjoing value sets", Package, Variant, Value1, Value2)
+error(2, "{0} variant '{1}' cannot have values '{2}' and '{3}' as they come from disjoint value sets", Package, Variant, Value1, Value2)
   :- attr("variant_value", Package, Variant, Value1),
      attr("variant_value", Package, Variant, Value2),
      variant_value_from_disjoint_sets(Package, Variant, Value1, Set1),
@@ -703,11 +697,9 @@ error(2, "No valid platform found for {0}", Package)
   :- attr("node", Package),
      not attr("node_platform", Package, _).
 
-error(2, "Cannot concretize {0} with multiple platforms\n    Requested 'platform={1}' and 'platform={2}'", Package, Platform1, Platform2)
+error(2, "Cannot select a single platform for package {0}", Package)
   :- attr("node", Package),
-     attr("node_platform", Package, Platform1),
-     attr("node_platform", Package, Platform2),
-     Platform1 < Platform2. % see[1]
+     2 { attr("node_platform", Package, Platform) }.
 
 %-----------------------------------------------------------------------------
 % OS semantics
@@ -722,11 +714,9 @@ error(2, "Cannot find valid operating system for '{0}'", Package)
   :- attr("node", Package),
      not attr("node_os", Package, _).
 
-error(2, "Cannot concretize {0} with multiple operating systems\n    Requested 'os={1}' and 'os={2}'", Package, OS1, OS2)
+error(2, "Cannot select a single operating system for package {0}", Package)
   :- attr("node", Package),
-     attr("node_os", Package, OS1),
-     attr("node_os", Package, OS2),
-     OS1 < OS2. %see [1]
+     2 { attr("node_os", Package, OS1) }.
 
 % can't have a non-buildable OS on a node we need to build
 error(2, "Cannot concretize '{0} os={1}'. Operating system '{1}' is not buildable", Package, OS)
@@ -783,11 +773,9 @@ error(2, "Cannot find valid target for '{0}'", Package)
   :- attr("node", Package),
      not attr("node_target", Package, _).
 
-error(2, "Cannot concretize '{0}' with multiple targets\n    Requested 'target={1}' and 'target={2}'", Package, Target1, Target2)
+error(2, "Cannot select a single target for '{0}'", Package)
   :- attr("node", Package),
-     attr("node_target", Package, Target1),
-     attr("node_target", Package, Target2),
-     Target1 < Target2. % see[1]
+     2 { attr("node_target", Package, Target) }.
 
 % If a node must satisfy a target constraint, enforce it
 error(1, "'{0} target={1}' cannot satisfy constraint 'target={2}'", Package, Target, Constraint)
@@ -883,10 +871,9 @@ error(2, "No valid compiler version found for '{0}'", Package)
      not node_compiler(Package, _).
 
 % We can't have a compiler be enforced and select the version from another compiler
-error(2, "Cannot concretize {0} with two compilers {1}@{2} and {3}@{4}", Package, C1, V1, C2, V2)
- :- attr("node_compiler_version", Package, C1, V1),
-    attr("node_compiler_version", Package, C2, V2),
-    (C1, V1) < (C2, V2).
+error(2, "Cannot select a single compiler for package {0}", Package)
+ :- attr("node", Package),
+    2 { attr("node_compiler_version", Package, C, V) }.
 
 error(2, "Cannot concretize {0} with two compilers {1} and {2}@{3}", Package, Compiler1, Compiler2, Version)
  :- attr("node_compiler", Package, Compiler1),
@@ -1067,7 +1054,7 @@ attr("no_flags", Package, FlagType)
 % You can't install a hash, if it is not installed
 :- attr("hash", Package, Hash), not installed_hash(Package, Hash).
 % This should be redundant given the constraint above
-:- attr("hash", Package, Hash1), attr("hash", Package, Hash2), Hash1 < Hash2.
+:- attr("node", Package), 2 { attr("hash", Package, Hash) }.
 
 % if a hash is selected, we impose all the constraints that implies
 impose(Hash) :- attr("hash", Package, Hash).
@@ -1129,7 +1116,6 @@ build_priority(Package, 0)   :- attr("node", Package), not optimize_for_reuse().
 #minimize{ 1000@1000+Priority,Msg,Arg1,Arg2: error(Priority, Msg, Arg1, Arg2) }.
 #minimize{ 1000@1000+Priority,Msg,Arg1,Arg2,Arg3: error(Priority, Msg, Arg1, Arg2, Arg3) }.
 #minimize{ 1000@1000+Priority,Msg,Arg1,Arg2,Arg3,Arg4: error(Priority, Msg, Arg1, Arg2, Arg3, Arg4) }.
-#minimize{ 1000@1000+Priority,Msg,Arg1,Arg2,Arg3,Arg4,Arg5: error(Priority, Msg, Arg1, Arg2, Arg3, Arg4, Arg5) }.
 
 %-----------------------------------------------------------------------------
 % How to optimize the spec (high to low priority)
