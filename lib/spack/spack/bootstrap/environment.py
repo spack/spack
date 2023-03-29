@@ -100,8 +100,12 @@ class BootstrapEnvironment(spack.environment.Environment):
             if sys.platform == "win32":
                 self.install_all()
             else:
+                tty.warn("BEFORE INSTALL")
                 self._install_with_depfile()
+                tty.warn("AFTER")
+            print("BEFORE REGENERATE")
             self.write(regenerate=True)
+            print("AFTER REGENERATE")
 
     def update_syspath_and_environ(self):
         """Update ``sys.path`` and the PATH, PYTHONPATH environment variables to point to
