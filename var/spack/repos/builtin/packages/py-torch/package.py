@@ -89,12 +89,7 @@ class PyTorch(PythonPackage, CudaPackage, ROCmPackage):
     variant("distributed", default=not is_darwin, description="Use distributed")
     variant("mpi", default=not is_darwin, description="Use MPI for Caffe2", when="+distributed")
     variant("gloo", default=not is_darwin, description="Use Gloo", when="+distributed")
-    variant(
-        "tensorpipe",
-        default=not is_darwin,
-        description="Use TensorPipe",
-        when="@1.6: +distributed",
-    )
+    variant("tensorpipe", default=not is_darwin, description="Use TensorPipe", when="@1.6:")
     variant("onnx_ml", default=True, description="Enable traditional ONNX ML API", when="@1.5:")
     variant(
         "breakpad",
@@ -104,7 +99,17 @@ class PyTorch(PythonPackage, CudaPackage, ROCmPackage):
     )
 
     conflicts("+cuda+rocm")
-    conflicts("+tensorpipe", when="+rocm", msg="TensorPipe doesn't yet support ROCm")
+    conflicts("+tensorpipe", when="^hip@:5.1")
+    conflicts(
+        "~tensorpipe",
+        when="@1.8: +distributed",
+        msg="Distributed requires TensorPipe for py-torch@1.8:",
+    )
+    conflicts(
+        "+tensorpipe",
+        when="~distributed",
+        msg="TensorPipe requires Distributed.",  # super-Oxford comma
+    )
     conflicts("+breakpad", when="target=ppc64:")
     conflicts("+breakpad", when="target=ppc64le:")
 
