@@ -133,6 +133,15 @@ def update(data):
     Returns:
         True if data was changed, False otherwise
     """
+
+    import spack.ci
+
+    if "gitlab-ci" in data:
+        data["ci"] = data.pop("gitlab-ci")
+
+    if "ci" in data:
+        return spack.ci.translate_deprecated_config(data["ci"])
+
     # There are not currently any deprecated attributes in this section
     # that have not been removed
     return False

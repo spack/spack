@@ -2387,7 +2387,6 @@ def test_gitlab_ci_deprecated(
             assert artifacts_root == "jobs_scratch_dir"
 
 
-@pytest.mark.skip(reason="config update fails when inside of an environment")
 @pytest.mark.regression("36045")
 def test_gitlab_ci_update(
     tmpdir,
@@ -2403,9 +2402,7 @@ def test_gitlab_ci_update(
         f.write(legacy_spack_yaml_contents.format("ci"))
 
     with tmpdir.as_cwd():
-        env_cmd("create", "test", "./spack.yaml")
-        with ev.read("test"):
-            config_cmd("update", "-y", "ci")
+        env_cmd("update", "-y", ".")
 
         with open("spack.yaml") as f:
             contents = f.read()
