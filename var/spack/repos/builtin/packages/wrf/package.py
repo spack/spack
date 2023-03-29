@@ -5,18 +5,16 @@
 
 import glob
 import re
+import sys
 import time
 from os.path import basename
 from subprocess import PIPE, Popen
-from sys import platform, stdout
 
 from llnl.util import tty
 
 from spack.package import *
 
-is_windows = platform == "win32"
-
-if not is_windows:
+if sys.platform != "win32":
     from fcntl import F_GETFL, F_SETFL, fcntl
     from os import O_NONBLOCK
 
@@ -229,7 +227,10 @@ class Wrf(Package):
         env.set("JASPERINC", self.spec["jasper"].prefix.include)
         env.set("JASPERLIB", self.spec["jasper"].prefix.lib)
 
-        if self.spec.satisfies("%gcc@10:"):
+        # These flags should be used also in v3, but FCFLAGS/FFLAGS aren't used
+        # consistently in that version of WRF, so we have to force them through
+        # `flag_handler` below.
+        if self.spec.satisfies("@4.0: %gcc@10:"):
             args = "-w -O2 -fallow-argument-mismatch -fallow-invalid-boz"
             env.set("FCFLAGS", args)
             env.set("FFLAGS", args)
@@ -238,6 +239,13 @@ class Wrf(Package):
             env.set("WRFIO_NCD_LARGE_FILE_SUPPORT", 1)
             env.set("HDF5", self.spec["hdf5"].prefix)
             env.prepend_path("PATH", ancestor(self.compiler.cc))
+
+    def flag_handler(self, name, flags):
+        # Same flags as FCFLAGS/FFLAGS above, but forced through the compiler
+        # wrapper when compiling v3.9.1.1.
+        if self.spec.satisfies("@3.9.1.1 %gcc@10:") and name == "fflags":
+            flags.extend(["-w", "-O2", "-fallow-argument-mismatch", "-fallow-invalid-boz"])
+        return (flags, None, None)
 
     def patch(self):
         # Let's not assume csh is intalled in bin
@@ -323,7 +331,7 @@ class Wrf(Package):
             )
 
         p = Popen("./configure", stdin=PIPE, stdout=PIPE, stderr=PIPE)
-        if not is_windows:
+        if sys.platform != "win32":
             setNonBlocking(p.stdout)
             setNonBlocking(p.stderr)
 
@@ -348,7 +356,7 @@ class Wrf(Package):
                 time.sleep(0.1)  # Try to do a bit of rate limiting
                 stallcounter += 1
                 continue
-            stdout.write(line)
+            sys.stdout.write(line)
             stallcounter = 0
             outputbuf += line
             if "Enter selection" in outputbuf or "Compile for nesting" in outputbuf:

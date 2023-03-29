@@ -492,7 +492,7 @@ def get_matching_versions(specs, num_versions=1):
                 break
 
             # Generate only versions that satisfy the spec.
-            if spec.concrete or v.satisfies(spec.versions):
+            if spec.concrete or v.intersects(spec.versions):
                 s = spack.spec.Spec(pkg.name)
                 s.versions = VersionList([v])
                 s.variants = spec.variants.copy()

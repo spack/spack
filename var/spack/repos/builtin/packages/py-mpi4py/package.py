@@ -32,8 +32,13 @@ class PyMpi4py(PythonPackage):
     depends_on("python@2.7:2.8,3.5:", when="@3.1:")
     depends_on("py-setuptools@40.9:", type="build")
     depends_on("mpi")
-    depends_on("py-cython@0.27.0:", when="@master", type="build")
+    depends_on("py-cython@0.27.0:", type="build")
 
     @when("@3.1:")
     def install_options(self, spec, prefix):
         return ["--mpicc=%s -shared" % spec["mpi"].mpicc]
+
+    @run_before("install")
+    def cythonize(self):
+        with working_dir(self.build_directory):
+            python(join_path("conf", "cythonize.py"))
