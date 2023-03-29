@@ -17,6 +17,7 @@ spack:
           - py-bluepymm
           - py-bluepyopt
           - py-bluepyparallel
+          - py-connectome-manipulator
           - py-data-integrity-check
           - py-efel
           - py-nexusforge
@@ -59,6 +60,7 @@ spack:
     - py-bluepymm
     - py-bluepyopt
     - py-bluepyparallel
+    - py-connectome-manipulator
     - py-data-integrity-check
     - py-efel
     - py-nexusforge
