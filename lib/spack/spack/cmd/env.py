@@ -421,6 +421,13 @@ class ViewAction(object):
 def env_view_setup_parser(subparser):
     """manage a view associated with the environment"""
     subparser.add_argument(
+        "-f",
+        "--force",
+        action="store_true",
+        dest="force",
+        help="regenerate even if regeneration cannot be done atomically"
+    )
+    subparser.add_argument(
         "action", choices=ViewAction.actions(), help="action to take for the environment's view"
     )
     subparser.add_argument(
@@ -433,7 +440,7 @@ def env_view(args):
 
     if env:
         if args.action == ViewAction.regenerate:
-            env.regenerate_views()
+            env.regenerate_views(force=args.force)
         elif args.action == ViewAction.enable:
             if args.view_path:
                 view_path = args.view_path

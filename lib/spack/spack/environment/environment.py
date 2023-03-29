@@ -604,46 +604,60 @@ class ViewDescriptor(object):
             msg = "This operating system does not support the 'exchange' atomic update method."
             msg += f"\n  If the view at {self.root} does not already exist on the filesystem,"
             msg += "change its update_method to 'symlink' or 'auto'."
-            msg += f"\n  If the view at {self.root} exists already, either remove it for a"
-            msg += " non-atomic update or run on a newer OS."
+            msg += f"\n  If the view at {self.root} exists already, either change the"
+            msg += " update_method and run `spack env view regenerate --force`"
+            msg += " or run on a newer OS."
             raise RuntimeError(msg)
 
-    def raise_if_symlink_before_exchange(self):
+    def raise_if_symlink_before_exchange(self, force):
         if os.path.islink(self.root):
+            if force:
+                try:
+                    os.unlink(self.root)
+                    return
+                except OSError:
+                    pass
             msg = f"The view at {self.root} cannot be updated with the 'exchange' update method"
             msg += " because it was originally constructed with the 'symlink' method."
-            msg += " Either change the update method to 'symlink' or remove the view for a"
-            msg += " non-atomic update"
+            msg += " Either change the update method to 'symlink' or"
+            msg += " run `spack env view regenerate --force` for a non-atomic update"
             raise RuntimeError(msg)
 
-    def raise_if_exchange_before_symlink(self):
+    def raise_if_exchange_before_symlink(self, force):
         if os.path.isdir(self.root) and not os.path.islink(self.root):
+            if force:
+                try:
+                    shutil.rmtree(self.root)
+                    return
+                except:
+                    pass
             msg = f"The view at {self.root} cannot be updated with the 'symlink' update method"
             msg += " because it was originally constructed with the 'exchange' method."
-            msg += " Either change the update method to 'exchange' or remove the view for a"
-            msg += " non-atomic update"
+            msg += " Either change the update method to 'exchange' or"
+            msg += " run `spack env view regenerate --force` for a non-atomic update"
             raise RuntimeError(msg)
 
-    def use_renameat2(self):
+    def use_renameat2(self, force=False):
         # If it's set explicitly, respect that
         if self.update_method == "exchange":
-            self.raise_if_symlink_before_exchange()
+            self.raise_if_symlink_before_exchange(force)
             self.raise_if_invalid_exchange()
             return True
         if self.update_method == "symlink":
-            self.raise_if_exchange_before_symlink()
+            self.raise_if_exchange_before_symlink(force)
             return False
 
         # If it's set to "auto", detect which it should be
         if os.path.islink(self.root):
             return False
         elif os.path.isdir(self.root):
-            self.raise_if_invalid_exchange()
+            if not spack.util.atomic_update.renameat2():
+                self.raise_if_exchange_before_symlink(force)
             return True
 
         return bool(spack.util.atomic_update.renameat2())
 
-    def regenerate(self, concretized_root_specs):
+    def regenerate(self, concretized_root_specs, force=False):
         specs = self.specs_for_view(concretized_root_specs)
 
         # To ensure there are no conflicts with packages being installed
@@ -656,7 +670,7 @@ class ViewDescriptor(object):
         # This allows for atomic swaps when we update the view
 
         # Check which atomic update method we need
-        use_renameat2 = self.use_renameat2()
+        use_renameat2 = self.use_renameat2(force)
 
         # cache the roots because the way we determine which is which does
         # not work while we are updating
@@ -1615,14 +1629,14 @@ class Environment(object):
         else:
             self.views.pop(name, None)
 
-    def regenerate_views(self):
+    def regenerate_views(self, force=False):
         if not self.views:
             tty.debug("Skip view update, this environment does not" " maintain a view")
             return
 
         concretized_root_specs = [s for _, s in self.concretized_specs()]
         for view in self.views.values():
-            view.regenerate(concretized_root_specs)
+            view.regenerate(concretized_root_specs, force)
 
     def check_views(self):
         """Checks if the environments default view can be activated."""
