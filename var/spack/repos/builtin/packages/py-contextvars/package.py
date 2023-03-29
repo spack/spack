@@ -7,7 +7,8 @@ from spack.package import *
 
 
 class PyContextvars(PythonPackage):
-    """This package implements a backport of Python 3.7 contextvars module (see PEP 567) for Python 3.6."""
+    """This package implements a backport of Python 3.7 contextvars module (see
+    PEP 567) for Python 3.6."""
 
     homepage = "http://github.com/MagicStack/contextvars"
     pypi = "contextvars/contextvars-2.4.tar.gz"
