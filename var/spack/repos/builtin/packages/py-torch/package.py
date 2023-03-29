@@ -104,9 +104,12 @@ class PyTorch(PythonPackage, CudaPackage, ROCmPackage):
     )
 
     conflicts("+cuda+rocm")
-    conflicts("+tensorpipe", when="+rocm@:5.1", msg="TensorPipe ROCm<5.2")
-    conflicts("+tensorpipe+distributed", when="@1.8:",
-              msg="TensorPipe and Distributed are incompatible for py-torch@1.8:")
+    conflicts("+tensorpipe", when="+rocm@:5.1")
+    conflicts(
+        "+tensorpipe+distributed",
+        when="@1.8:",
+        msg="TensorPipe and Distributed are incompatible for py-torch@1.8:",
+    )
     conflicts("+breakpad", when="target=ppc64:")
     conflicts("+breakpad", when="target=ppc64le:")
 
