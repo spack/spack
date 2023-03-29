@@ -42,20 +42,6 @@ def renameat2():
     return _renameat2
 
 
-def atomic_update(oldpath, newpath):
-    """
-    atomically update newpath to contain the information at oldpath
-
-    on linux systems supporting renameat2, the paths are swapped.
-    on other systems, oldpath is not affected but all paths are abstracted
-    by a symlink to allow for atomic updates.
-    """
-    if renameat2():
-        return atomic_update_renameat2(oldpath, newpath)
-    else:
-        return atomic_update_symlink(oldpath, newpath)
-
-
 def atomic_update_renameat2(src, dest):
     # Ensure a directory that is a symlink will not be read as symlink in libc
     src = src.rstrip(os.path.sep)
@@ -73,9 +59,6 @@ def atomic_update_renameat2(src, dest):
     except (OSError, IOError):
         if not dest_exists:
             os.unlink(dest)
-        # Some filesystems don't support this
-        # fail over to symlink method
-        atomic_update_symlink(src, dest)
 
 
 def atomic_update_symlink(src, dest):
