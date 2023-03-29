@@ -716,9 +716,10 @@ class Llvm(CMakePackage, CudaPackage):
         if "all" in extra_projects:
             projects = ["all"]
         else:
-            for project in extra_projects:
-                if project not in projects:
-                    projects.append(project)
+            if project is not "none":
+                for project in extra_projects:
+                    if project not in projects:
+                        projects.append(project)
 
         # Semicolon seperated list of projects to enable
         cmake_args.append(define("LLVM_ENABLE_PROJECTS", projects))
