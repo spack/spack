@@ -619,7 +619,7 @@ class ViewDescriptor(object):
                     pass
             msg = f"The view at {self.root} cannot be updated with the 'exchange' update method"
             msg += " because it was originally constructed with the 'symlink' method."
-            msg += " Either change the update method to 'symlink' or"
+            msg += "\n  Either change the update method to 'symlink' or"
             msg += " run `spack env view regenerate --force` for a non-atomic update"
             raise RuntimeError(msg)
 
@@ -633,7 +633,7 @@ class ViewDescriptor(object):
                     pass
             msg = f"The view at {self.root} cannot be updated with the 'symlink' update method"
             msg += " because it was originally constructed with the 'exchange' method."
-            msg += " Either change the update method to 'exchange' or"
+            msg += "\n  Either change the update method to 'exchange' or"
             msg += " run `spack env view regenerate --force` for a non-atomic update"
             raise RuntimeError(msg)
 
