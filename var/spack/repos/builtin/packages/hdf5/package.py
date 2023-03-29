@@ -343,8 +343,8 @@ class Hdf5(CMakePackage):
 
     # The parallel compiler wrappers (i.e. h5pcc, h5pfc, etc.) reference MPI
     # compiler wrappers and do not need to be changed.
-    # These do not exist on Windows
-    # Enable only for supported platforms
+    # These do not exist on Windows.
+    # Enable only for supported platforms.
     for p in ["linux", "darwin", "cray"]:
         filter_compiler_wrappers(
             "h5cc",
