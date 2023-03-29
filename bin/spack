@@ -11,11 +11,30 @@
 # See https://stackoverflow.com/a/47886254
 """:"
 # prefer SPACK_PYTHON environment variable, python3, python, then python2
+#
+# We will then include all executables found by whereis for these names
+# as fallbacks.
 SPACK_PREFERRED_PYTHONS="python3 python python2 /usr/libexec/platform-python"
+SPACK_PYTHONS_TO_CHECK="${SPACK_PYTHON:-} ${SPACK_PREFERRED_PYTHONS}"
+# Collect the fallbacks with whereis
 for cmd in "${SPACK_PYTHON:-}" ${SPACK_PREFERRED_PYTHONS}; do
+    for path in $(whereis $cmd 2>/dev/null); do
+        if test "$path" != "$cmd:" -a -f "$path" -a -x "$path"; then
+            SPACK_PYTHONS_TO_CHECK="$SPACK_PYTHONS_TO_CHECK $path"
+        fi
+    done
+done
+# Check each possibility.
+for cmd in $SPACK_PYTHONS_TO_CHECK; do
     if command -v > /dev/null "$cmd"; then
-        export SPACK_PYTHON="$(command -v "$cmd")"
-        exec "${SPACK_PYTHON}" "$0" "$@"
+        # Skip it if it was installed by Spack itself (
+        # sys.prefix == sys.base_prefix "._view" is the parent directory of
+        # sys.prefix)
+        IS_NOT_FROM_SPACK=$($cmd -c "import sys, os.path; print(sys.prefix != sys.base_prefix or os.path.basename(os.path.dirname(sys.prefix)) != '._view')" 2>/dev/null)
+        if test True = "$IS_NOT_FROM_SPACK"; then
+            export SPACK_PYTHON="$(command -v "$cmd")"
+            exec "${SPACK_PYTHON}" "$0" "$@"
+        fi
     fi
 done
 
