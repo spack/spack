@@ -110,7 +110,7 @@ class Tasmanian(CMakePackage, CudaPackage, ROCmPackage):
     depends_on("magma@2.4.0:", when="+magma @6.0:", type=("build", "run"))
     depends_on("magma@2.5.0:", when="+magma @7.0:", type=("build", "run"))
 
-    conflicts("+magma", when="-cuda-rocm")  # currently MAGMA only works with CUDA
+    conflicts("+magma", when="~cuda~rocm")  # currently MAGMA only works with CUDA
     conflicts("+cuda", when="+rocm")  # can pick CUDA or ROCm, not both
 
     # old versions
