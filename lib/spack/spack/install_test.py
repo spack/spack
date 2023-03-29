@@ -542,8 +542,7 @@ def copy_test_files(pkg: "spack.package_base.PackageBase", test_spec: spack.spec
         shutil.copytree(data_source, data_dir)
 
 
-Pb = TypeVar("Pb", bound="spack.package_base.PackageBase")
-TestPackageType = Union["spack.package_base.PackageBase", Type(Pb)]
+TestPackageType = Union["spack.package_base.PackageBase", Type]
 FunctionType = Union[str, Callable]
 FunctionResult = List[FunctionType]
 
