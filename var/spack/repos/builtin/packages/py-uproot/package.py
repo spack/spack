@@ -23,6 +23,12 @@ class PyUproot(PythonPackage):
 
     tags = ["hep"]
 
+    version("5.0.3", sha256="a4ab3f2ea0b98746f601d43115a64b36f9c2145e9793da1e1cd9aaca72f311ab")
+    version("5.0.2", sha256="734f70d9e44f964d84bbe3de581aa4a96585be09049b3ad104623390d10ac828")
+    version("5.0.1", sha256="0ee6790df1df1cd0125b636d7fc8bddc3517d5b665c84246148fe83c79b336aa")
+    version("5.0.0", sha256="7e4a87e602c6d9cc245aeab779fe9686471bf49cec993182ded324b6119a421e")
+    version("4.3.7", sha256="264f148edde4c4a778d9b347c4ae975fe70a910e87d069fbd2b53e1f99874f0e")
+    version("4.3.6", sha256="1dc2dade0d25beec25aacb1c1b2cb6db10886e3a0c8b5cad6a96ae3f7e46059c")
     version("4.3.5", sha256="5d18e1a7af07d367e900ab746aba24676ac29849718ea1a9c8b652f95af8509a")
     version("4.3.4", sha256="45457307ebda62b1afa4838f60c1d05e04a1c703bb15f0fb37504de9bd2dd8f8")
     version("4.3.3", sha256="766a02fe5a51b9fe1965dea5548bada3b3e2574ba5c66848c8be9576ab3adfb9")
@@ -55,9 +61,13 @@ class PyUproot(PythonPackage):
 
     depends_on("python@2.6:2,3.5:", type=("build", "run"))
     depends_on("python@3.6:", type=("build", "run"), when="@4.2.0:")
-    depends_on("py-setuptools", type=("build", "run"))
-    depends_on("py-setuptools@42:", type=("build", "run"), when="@4.1.8:")
+    depends_on("py-hatchling", when="@5:", type="build")
+    depends_on("py-setuptools", when="@:4", type=("build", "run"))
+    depends_on("py-setuptools@42:", type=("build", "run"), when="@4.1.8:4")
+    depends_on("py-awkward@2:", type=("build", "run"), when="@5:")
+    depends_on("py-importlib-metadata", when="@5: ^python@:3.7", type=("build", "run"))
     depends_on("py-numpy", type=("build", "run"))
+    depends_on("py-packaging", when="@5:", type=("build", "run"))
 
     depends_on("xrootd", when="+xrootd")
 

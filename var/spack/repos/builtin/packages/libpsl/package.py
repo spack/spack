@@ -38,9 +38,7 @@ class Libpsl(AutotoolsPackage):
     def configure_args(self):
         spec = self.spec
 
-        args = [
-            "PYTHON={0}".format(spec["python"].command.path),
-        ]
+        args = ["PYTHON={0}".format(spec["python"].command.path)]
 
         if self.run_tests:
             args.append("--enable-valgrind-tests")

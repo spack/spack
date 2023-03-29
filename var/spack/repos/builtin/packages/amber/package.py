@@ -201,11 +201,7 @@ class Amber(Package, CudaPackage):
 
         # Base configuration
         conf = Executable("./configure")
-        base_args = [
-            "--skip-python",
-            "--with-netcdf",
-            self.spec["netcdf-fortran"].prefix,
-        ]
+        base_args = ["--skip-python", "--with-netcdf", self.spec["netcdf-fortran"].prefix]
         if self.spec.satisfies("~x11"):
             base_args += ["-noX11"]
 

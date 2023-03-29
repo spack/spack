@@ -15,7 +15,20 @@ class PyAwkward(PythonPackage):
 
     maintainers("vvolkl")
 
-    version("master", branch="master")
+    version("main", branch="main")
+    version("master", branch="main", deprecated=True)
+    version("2.0.8", sha256="32a57c29e13a2ae3bc1e6ac53637825bbd22c4286696163bd41a1dec284a8ee5")
+    version("2.0.7", sha256="05397d659a5a8889c8afae193c0ea51585683038ecc7f666f3da9835ba2f6492")
+    version("2.0.6", sha256="9e5133ba6be89ff1210d862edf83824fe0c1f21dccfe1d52161329760ffac821")
+    version("2.0.5", sha256="2a07bb0409411782fea226de5c817eb6e48db06d64323977581e4f304f911029")
+    version("2.0.4", sha256="fc36ef5934ced78b6d8a40bc94d3ea59667725516b36afea5ed1ef794263a7c7")
+    version("2.0.3", sha256="563bb70ef7673ba4dd9dd7116493d1b661bba729305d1fa50efa8cc38ab43da9")
+    version("2.0.2", sha256="c7b8194be5f9b1f19ed64c2a4b01d96b1b5a9a357e5a96186c6692d6b4cf439b")
+    version("2.0.1", sha256="97fa7e119cc31f479b660a8213df5ba8c938b66f76aadf90b8bdb956c5b5654b")
+    version("2.0.0", sha256="3782b34643083d6ee7644e9fdb3daeafc4b6030a667f219fd61cb7b234976b68")
+    version("1.10.2", sha256="303bc0919f0932db3e78a9254c17fcdeb125e4be65cd894b40dfbc3bfddfc054")
+    version("1.10.1", sha256="c6394ed25fb14a086d63621d9d84fdc228f5d42a64586f215731b36fde17034b")
+    version("1.10.0", sha256="1d89c7244e6184b35f4bce6bd08ff82eb2ef60be67f572923bc6aaee35dab544")
     version("1.9.0", sha256="cad799237e4370b50f77e716e78dd3565a7b3fd82fcd5a41a76aa1512d51075d")
     version("1.8.0", sha256="6655fa22d1b1d1dcb9ccee0d502350ab90c53467a10b540b7624422b594d2e72")
     version("1.7.0", sha256="e4e642dfe496d2acb245c90e37dc18028e25d5e936421e7371ea6ba0fde6435a")
@@ -31,13 +44,33 @@ class PyAwkward(PythonPackage):
     patch("pybind11.patch", when="@:1.2.2")
     patch("pybind11_02.patch", when="@1.2.3:1.8.0")
 
-    depends_on("py-setuptools@42.0:", type=("build", "run"))
-    depends_on("py-pyyaml", type="build")
+    depends_on("py-hatchling@1.10:", when="@2:", type="build")
+    depends_on("py-hatch-fancy-pypi-readme", when="@2:", type="build")
+    depends_on("py-setuptools@42.0:", when="@:1", type=("build", "run"))
+    depends_on("py-pyyaml", when="@:1", type="build")
+
+    _awkward_to_awkward_cpp_map = [
+        ("@2.0.0", "@2"),
+        ("@2.0.1", "@3"),
+        ("@2.0.2", "@4"),
+        ("@2.0.3:2.0.4", "@5"),
+        ("@2.0.5", "@6"),
+        ("@2.0.6", "@7"),
+        ("@2.0.7", "@8"),
+        ("@2.0.8", "@9"),
+    ]
+    for _awkward, _awkward_cpp in _awkward_to_awkward_cpp_map:
+        depends_on("py-awkward-cpp{}".format(_awkward_cpp), when=_awkward, type=("build", "run"))
 
     depends_on("python@2.7:2.8,3.5:", type=("build", "run"))
-    depends_on("python@3.6:", when="@1.9.0:", type=("build", "run"))
-    depends_on("py-numpy@1.13.1:", type=("build", "run"))
+    depends_on("python@3.6:", when="@1.9:", type=("build", "run"))
+    depends_on("python@3.7:", when="@1.10:", type=("build", "run"))
+    depends_on("py-numpy@1.13.1:", when="@:1", type=("build", "run"))
+    depends_on("py-numpy@1.14.5:", when="@2:", type=("build", "run"))
     depends_on("py-pybind11", type=("build", "link"))
+    depends_on("py-importlib-resources", when="@2: ^python@:3.8", type=("build", "run"))
+    depends_on("py-typing-extensions@4.1:", when="@2: ^python@:3.10", type=("build", "run"))
+    depends_on("py-packaging", when="@2:", type=("build", "run"))
     depends_on("dlpack", when="@1.0.0:")
     depends_on("rapidjson")
     depends_on("cmake@3.13:", type="build")

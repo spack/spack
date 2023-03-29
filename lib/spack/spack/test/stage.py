@@ -198,6 +198,7 @@ def tmp_build_stage_dir(tmpdir, clear_stage_root):
 @pytest.fixture
 def mock_stage_archive(tmp_build_stage_dir):
     """Create the directories and files for the staged mock archive."""
+
     # Mock up a stage area that looks like this:
     #
     # tmpdir/                test_files_dir
@@ -385,7 +386,6 @@ def check_stage_dir_perms(prefix, path):
 
 @pytest.mark.usefixtures("mock_packages")
 class TestStage(object):
-
     stage_name = "spack-test-stage"
 
     def test_setup_and_destroy_name_with_tmp(self, mock_stage_archive):
@@ -444,7 +444,6 @@ class TestStage(object):
 
     @pytest.mark.disable_clean_stage_check
     def test_composite_stage_with_expand_resource(self, composite_stage_with_expanding_resource):
-
         (
             composite_stage,
             root_stage,

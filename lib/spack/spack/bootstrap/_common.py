@@ -59,10 +59,7 @@ def _try_import_from_store(module, query_spec, query_info=None):
         # to be picked up and used, possibly depending on something in the store, first
         # allows the bootstrap version to work when an incompatible version is in
         # sys.path
-        orders = [
-            module_paths + sys.path,
-            sys.path + module_paths,
-        ]
+        orders = [module_paths + sys.path, sys.path + module_paths]
         for path in orders:
             sys.path = path
             try:

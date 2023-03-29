@@ -148,8 +148,7 @@ def env_activate(args):
 
     if not args.shell:
         spack.cmd.common.shell_init_instructions(
-            "spack env activate",
-            "    eval `spack env activate {sh_arg} [...]`",
+            "spack env activate", "    eval `spack env activate {sh_arg} [...]`"
         )
         return 1
 
@@ -166,7 +165,7 @@ def env_activate(args):
         short_name = os.path.basename(env_path)
         ev.Environment(env).write(regenerate=False)
 
-    # Named environment
+    # Managed environment
     elif ev.exists(env_name_or_dir) and not args.dir:
         env_path = ev.root(env_name_or_dir)
         short_name = env_name_or_dir
@@ -238,8 +237,7 @@ def env_deactivate_setup_parser(subparser):
 def env_deactivate(args):
     if not args.shell:
         spack.cmd.common.shell_init_instructions(
-            "spack env deactivate",
-            "    eval `spack env deactivate {sh_arg}`",
+            "spack env deactivate", "    eval `spack env deactivate {sh_arg}`"
         )
         return 1
 

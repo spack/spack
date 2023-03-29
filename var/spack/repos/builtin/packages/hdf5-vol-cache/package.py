@@ -14,6 +14,7 @@ class Hdf5VolCache(CMakePackage):
     maintainers("hyoklee", "lrknox")
 
     version("default", branch="develop")
+    version("v1.1", tag="v1.1")
     version("v1.0", tag="v1.0")
 
     depends_on("hdf5-vol-async")

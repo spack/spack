@@ -3,6 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+import itertools
 import os.path
 import re
 import sys
@@ -19,7 +20,7 @@ class Mvapich(AutotoolsPackage):
     url = "https://mvapich.cse.ohio-state.edu/download/mvapich/mv2/mvapich2-3.0a.tar.gz"
     list_url = "https://mvapich.cse.ohio-state.edu/downloads/"
 
-    maintainers("natshineman", "harisubramoni", "ndcontini")
+    maintainers("natshineman", "harisubramoni", "MatthewLieber")
 
     executables = ["^mpiname$", "^mpichversion$"]
 
@@ -58,12 +59,18 @@ class Mvapich(AutotoolsPackage):
         multi=False,
         description="Number of bits allocated to the rank field (16 or 32)",
     )
+    variant(
+        "pmi_version",
+        description="Which pmi version to be used. If using pmi2 add it to your CFLAGS",
+        default="simple",
+        values=("simple", "pmi2"),
+        multi=False,
+    )
 
     variant(
         "process_managers",
         description="List of the process managers to activate",
         values=disjoint_sets(("auto",), ("slurm",), ("hydra", "gforker", "remshell"))
-        .prohibit_empty_set()
         .with_error("'slurm' or 'auto' cannot be activated along with " "other process managers")
         .with_default("auto")
         .with_non_feature_values("auto"),
@@ -76,10 +83,7 @@ class Mvapich(AutotoolsPackage):
         "by libfabrics, use the ofi netmod. For more info, visit the "
         "homepage url.",
         default="ofi",
-        values=(
-            "ofi",
-            "ucx",
-        ),
+        values=("ofi", "ucx"),
         multi=False,
     )
 
@@ -103,6 +107,12 @@ class Mvapich(AutotoolsPackage):
     depends_on("libfabric", when="netmod=ofi")
     depends_on("slurm", when="process_managers=slurm")
     depends_on("ucx", when="netmod=ucx")
+
+    with when("process_managers=slurm"):
+        conflicts("pmi_version=pmi2")
+
+    with when("process_managers=auto"):
+        conflicts("pmi_version=pmi2")
 
     filter_compiler_wrappers("mpicc", "mpicxx", "mpif77", "mpif90", "mpifort", relative_root="bin")
 
@@ -147,6 +157,8 @@ class Mvapich(AutotoolsPackage):
                 "--with-slurm={0}".format(spec["slurm"].prefix),
                 "CFLAGS=-I{0}/include/slurm".format(spec["slurm"].prefix),
             ]
+        if "none" in spec.variants["process_managers"].value:
+            opts = ["--with-pm=none"]
 
         return opts
 
@@ -262,6 +274,7 @@ class Mvapich(AutotoolsPackage):
         ]
 
         args.extend(self.enable_or_disable("alloca"))
+        args.append("--with-pmi=" + spec.variants["pmi_version"].value)
 
         if "+debug" in self.spec:
             args.extend(
@@ -287,6 +300,11 @@ class Mvapich(AutotoolsPackage):
         else:
             args.append("--disable-registration-cache")
 
+        ld = ""
+        for path in itertools.chain(self.compiler.extra_rpaths, self.compiler.implicit_rpaths()):
+            ld += "-Wl,-rpath," + path + " "
+        if ld != "":
+            args.append("LDFLAGS=" + ld)
         args.extend(self.process_manager_options)
         args.extend(self.network_options)
         args.extend(self.file_system_options)

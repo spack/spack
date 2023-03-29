@@ -4,11 +4,14 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import os
+import sys
 
+from spack.build_systems.autotools import AutotoolsBuilder
+from spack.build_systems.cmake import CMakeBuilder
 from spack.package import *
 
 
-class NetcdfC(AutotoolsPackage):
+class NetcdfC(CMakePackage, AutotoolsPackage):
     """NetCDF (network Common Data Form) is a set of software libraries and
     machine-independent data formats that support the creation, access, and
     sharing of array-oriented scientific data. This is the C distribution."""
@@ -62,6 +65,9 @@ class NetcdfC(AutotoolsPackage):
         when="@4.7.2",
     )
 
+    patch("4.8.1-win-hdf5-with-zlib.patch", when="@4.8.1: platform=windows")
+
+    patch("netcdfc-mpi-win-support.patch", when="platform=windows")
     # See https://github.com/Unidata/netcdf-c/pull/1752
     patch("4.7.3-spectrum-mpi-pnetcdf-detect.patch", when="@4.7.3:4.7.4 +parallel-netcdf")
 
@@ -89,11 +95,13 @@ class NetcdfC(AutotoolsPackage):
     #         description='Enable CDM Remote support')
 
     # The patch for 4.7.0 touches configure.ac. See force_autoreconf below.
-    depends_on("autoconf", type="build", when="@4.7.0,main")
-    depends_on("automake", type="build", when="@4.7.0,main")
-    depends_on("libtool", type="build", when="@4.7.0,main")
+    with when("build_system=autotools"):
+        depends_on("autoconf", type="build", when="@4.7.0,main")
+        depends_on("automake", type="build", when="@4.7.0,main")
+        depends_on("libtool", type="build", when="@4.7.0,main")
+    # CMake system can use m4, but Windows does not yet support
+    depends_on("m4", type="build", when=sys.platform != "win32")
 
-    depends_on("m4", type="build")
     depends_on("hdf~netcdf", when="+hdf4")
 
     # curl 7.18.0 or later is required:
@@ -145,13 +153,72 @@ class NetcdfC(AutotoolsPackage):
 
     filter_compiler_wrappers("nc-config", relative_root="bin")
 
+    default_build_system = "cmake" if sys.platform == "win32" else "autotools"
+
+    build_system("cmake", "autotools", default=default_build_system)
+
+    def setup_run_environment(self, env):
+        if "+zstd" in self.spec:
+            env.append_path("HDF5_PLUGIN_PATH", self.prefix.plugins)
+
+    @property
+    def libs(self):
+        shared = "+shared" in self.spec
+        return find_libraries("libnetcdf", root=self.prefix, shared=shared, recursive=True)
+
+
+class Setup:
+    def setup_dependent_build_environment(self, env, dependent_spec):
+        self.pkg.setup_run_environment(env)
+        # Some packages, e.g. ncview, refuse to build if the compiler path returned by nc-config
+        # differs from the path to the compiler that the package should be built with. Therefore,
+        # we have to shadow nc-config from self.prefix.bin, which references the real compiler,
+        # with a backed up version, which references Spack compiler wrapper.
+        if os.path.exists(self._nc_config_backup_dir):
+            env.prepend_path("PATH", self._nc_config_backup_dir)
+
+
+class BackupStep:
+    @property
+    def _nc_config_backup_dir(self):
+        return join_path(self.pkg.metadata_dir, "spack-nc-config")
+
+    @run_after("install")
+    def backup_nc_config(self):
+        # We expect this to be run before filter_compiler_wrappers:
+        nc_config_file = self.prefix.bin.join("nc-config")
+        if os.path.exists(nc_config_file):
+            mkdirp(self._nc_config_backup_dir)
+            install(nc_config_file, self._nc_config_backup_dir)
+
+
+class CMakeBuilder(CMakeBuilder, BackupStep, Setup):
+    def cmake_args(self):
+        base_cmake_args = [
+            self.define_from_variant("BUILD_SHARED_LIBS", "shared"),
+            self.define("BUILD_UTILITIES", True),
+            self.define("ENABLE_NETCDF_4", True),
+            self.define_from_variant("ENABLE_DAP", "dap"),
+            self.define("CMAKE_INSTALL_PREFIX", self.prefix),
+            self.define_from_variant("ENABLE_HDF4", "hdf4"),
+            self.define("ENABLE_PARALLEL_TESTS", False),
+            self.define_from_variant("ENABLE_FSYNC", "fsync"),
+            self.define("ENABLE_LARGE_FILE_SUPPORT", True),
+        ]
+        if "+parallel-netcdf" in self.pkg.spec:
+            base_cmake_args.append(self.define("ENABLE_PNETCDF", True))
+        if self.pkg.spec.satisfies("@4.3.1:"):
+            base_cmake_args.append(self.define("ENABLE_DYNAMIC_LOADING", True))
+        return base_cmake_args
+
+
+class AutotoolsBuilder(AutotoolsBuilder, BackupStep, Setup):
     @property
     def force_autoreconf(self):
         # The patch for 4.7.0 touches configure.ac.
-        return self.spec.satisfies("@4.7.0")
+        return self.pkg.spec.satisfies("@4.7.0")
 
-    @when("@4.6.3:")
-    def autoreconf(self, spec, prefix):
+    def autoreconf(self, pkg, spec, prefix):
         if not os.path.exists(self.configure_abs_path):
             Executable("./bootstrap")()
 
@@ -169,57 +236,57 @@ class NetcdfC(AutotoolsPackage):
             "--enable-netcdf-4",
         ]
 
-        if "+optimize" in self.spec:
+        if "+optimize" in self.pkg.spec:
             cflags.append("-O2")
 
         config_args.extend(self.enable_or_disable("fsync"))
 
         # The flag was introduced in version 4.3.1
-        if self.spec.satisfies("@4.3.1:"):
+        if self.pkg.spec.satisfies("@4.3.1:"):
             config_args.append("--enable-dynamic-loading")
 
         config_args += self.enable_or_disable("shared")
 
-        if "+pic" in self.spec:
-            cflags.append(self.compiler.cc_pic_flag)
+        if "+pic" in self.pkg.spec:
+            cflags.append(self.pkg.compiler.cc_pic_flag)
 
         config_args += self.enable_or_disable("dap")
         # config_args += self.enable_or_disable('cdmremote')
 
-        # if '+dap' in self.spec or '+cdmremote' in self.spec:
-        if "+dap" in self.spec:
+        # if '+dap' in self.pkg.spec or '+cdmremote' in self.pkg.spec:
+        if "+dap" in self.pkg.spec:
             # Make sure Netcdf links against Spack's curl, otherwise it may
             # pick up system's curl, which can give link errors, e.g.:
             # undefined reference to `SSL_CTX_use_certificate_chain_file
-            curl = self.spec["curl"]
+            curl = self.pkg.spec["curl"]
             curl_libs = curl.libs
             libs.append(curl_libs.link_flags)
             ldflags.append(curl_libs.search_flags)
             # TODO: figure out how to get correct flags via headers.cpp_flags
             cppflags.append("-I" + curl.prefix.include)
-        elif self.spec.satisfies("@4.8.0:"):
+        elif self.pkg.spec.satisfies("@4.8.0:"):
             # Prevent overlinking to a system installation of libcurl:
             config_args.append("ac_cv_lib_curl_curl_easy_setopt=no")
 
-        if self.spec.satisfies("@4.4:"):
-            if "+mpi" in self.spec:
+        if self.pkg.spec.satisfies("@4.4:"):
+            if "+mpi" in self.pkg.spec:
                 config_args.append("--enable-parallel4")
             else:
                 config_args.append("--disable-parallel4")
 
-        if self.spec.satisfies("@4.3.2:"):
+        if self.pkg.spec.satisfies("@4.3.2:"):
             config_args += self.enable_or_disable("jna")
 
         # Starting version 4.1.3, --with-hdf5= and other such configure options
         # are removed. Variables CPPFLAGS, LDFLAGS, and LD_LIBRARY_PATH must be
         # used instead.
-        hdf5_hl = self.spec["hdf5:hl"]
+        hdf5_hl = self.pkg.spec["hdf5:hl"]
         cppflags.append(hdf5_hl.headers.cpp_flags)
         ldflags.append(hdf5_hl.libs.search_flags)
 
-        if "+parallel-netcdf" in self.spec:
+        if "+parallel-netcdf" in self.pkg.spec:
             config_args.append("--enable-pnetcdf")
-            pnetcdf = self.spec["parallel-netcdf"]
+            pnetcdf = self.pkg.spec["parallel-netcdf"]
             cppflags.append(pnetcdf.headers.cpp_flags)
             # TODO: change to pnetcdf.libs.search_flags once 'parallel-netcdf'
             # package gets custom implementation of 'libs'
@@ -227,17 +294,17 @@ class NetcdfC(AutotoolsPackage):
         else:
             config_args.append("--disable-pnetcdf")
 
-        if "+mpi" in self.spec or "+parallel-netcdf" in self.spec:
-            config_args.append("CC=%s" % self.spec["mpi"].mpicc)
+        if "+mpi" in self.pkg.spec or "+parallel-netcdf" in self.pkg.spec:
+            config_args.append("CC=%s" % self.pkg.spec["mpi"].mpicc)
 
         config_args += self.enable_or_disable("hdf4")
-        if "+hdf4" in self.spec:
-            hdf4 = self.spec["hdf"]
+        if "+hdf4" in self.pkg.spec:
+            hdf4 = self.pkg.spec["hdf"]
             cppflags.append(hdf4.headers.cpp_flags)
             # TODO: change to hdf4.libs.search_flags once 'hdf'
             # package gets custom implementation of 'libs' property.
             ldflags.append("-L" + hdf4.prefix.lib)
-            # TODO: change to self.spec['jpeg'].libs.link_flags once the
+            # TODO: change to self.pkg.spec['jpeg'].libs.link_flags once the
             # implementations of 'jpeg' virtual package get 'jpeg_libs'
             # property.
             libs.append("-ljpeg")
@@ -247,12 +314,12 @@ class NetcdfC(AutotoolsPackage):
             if "+external-xdr" in hdf4 and hdf4["rpc"].name != "libc":
                 libs.append(hdf4["rpc"].libs.link_flags)
 
-        if "+zstd" in self.spec:
-            zstd = self.spec["zstd"]
+        if "+zstd" in self.pkg.spec:
+            zstd = self.pkg.spec["zstd"]
             cppflags.append(zstd.headers.cpp_flags)
             ldflags.append(zstd.libs.search_flags)
             config_args.append("--with-plugin-dir={}".format(self.prefix.plugins))
-        elif "~zstd" in self.spec:
+        elif "~zstd" in self.pkg.spec:
             # Prevent linking to system zstd.
             # There is no explicit option to disable zstd.
             config_args.append("ac_cv_lib_zstd_ZSTD_compress=no")
@@ -268,36 +335,6 @@ class NetcdfC(AutotoolsPackage):
 
         return config_args
 
-    def setup_run_environment(self, env):
-        if "+zstd" in self.spec:
-            env.append_path("HDF5_PLUGIN_PATH", self.prefix.plugins)
-
-    def setup_dependent_build_environment(self, env, dependent_spec):
-        self.setup_run_environment(env)
-        # Some packages, e.g. ncview, refuse to build if the compiler path returned by nc-config
-        # differs from the path to the compiler that the package should be built with. Therefore,
-        # we have to shadow nc-config from self.prefix.bin, which references the real compiler,
-        # with a backed up version, which references Spack compiler wrapper.
-        if os.path.exists(self._nc_config_backup_dir):
-            env.prepend_path("PATH", self._nc_config_backup_dir)
-
-    @run_after("install")
-    def backup_nc_config(self):
-        # We expect this to be run before filter_compiler_wrappers:
-        nc_config_file = self.prefix.bin.join("nc-config")
-        if os.path.exists(nc_config_file):
-            mkdirp(self._nc_config_backup_dir)
-            install(nc_config_file, self._nc_config_backup_dir)
-
     def check(self):
         # h5_test fails when run in parallel
         make("check", parallel=False)
-
-    @property
-    def libs(self):
-        shared = "+shared" in self.spec
-        return find_libraries("libnetcdf", root=self.prefix, shared=shared, recursive=True)
-
-    @property
-    def _nc_config_backup_dir(self):
-        return join_path(self.metadata_dir, "spack-nc-config")

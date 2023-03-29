@@ -249,7 +249,6 @@ class Totalview(Package):
 
         # Run install script for totalview (which automatically installs memoryscape)
         with working_dir("./totalview.{0}".format(self.version)):
-
             install_cmd = which("./Install")
             arg_list.extend(["-install", "totalview"])
             # TotalView automatically installs Memoryscape, so no need to add

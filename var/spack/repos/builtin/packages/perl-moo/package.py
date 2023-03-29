@@ -13,6 +13,7 @@ class PerlMoo(PerlPackage):
     homepage = "https://metacpan.org/pod/Moo"
     url = "https://cpan.metacpan.org/authors/id/H/HA/HAARG/Moo-2.005004.tar.gz"
 
+    version("2.005005", sha256="fb5a2952649faed07373f220b78004a9c6aba387739133740c1770e9b1f4b108")
     version("2.005004", sha256="e3030b80bd554a66f6b3c27fd53b1b5909d12af05c4c11ece9a58f8d1e478928")
 
     depends_on("perl-carp", type=("build", "run"))

@@ -27,6 +27,7 @@ class Boost(Package):
     maintainers("hainest")
 
     version("develop", branch="develop", submodules=True)
+    version("1.81.0", sha256="71feeed900fbccca04a3b4f2f84a7c217186f28a940ed8b7ed4725986baf99fa")
     version("1.80.0", sha256="1e19565d82e43bc59209a168f5ac899d3ba471d55c7610c677d4ccf2c9c500c0")
     version("1.79.0", sha256="475d589d51a7f8b3ba2ba4eda022b170e562ca3b760ee922c146b6c65856ef39")
     version("1.78.0", sha256="8681f175d4bdb26c52222665793eef08490d7758529330f98d3b29dd0735bccc")
@@ -395,6 +396,9 @@ class Boost(Package):
     # https://www.intel.com/content/www/us/en/developer/articles/technical/building-boost-with-oneapi.html
     patch("intel-oneapi-linux-jam.patch", when="@1.76: %oneapi")
 
+    # https://github.com/boostorg/phoenix/issues/111
+    patch("boost_phoenix_1.81.0.patch", level=2, when="@1.81.0")
+
     def patch(self):
         # Disable SSSE3 and AVX2 when using the NVIDIA compiler
         if self.spec.satisfies("%nvhpc"):
@@ -723,14 +727,13 @@ class Boost(Package):
         # Disable find package's config mode for versions of Boost that
         # didn't provide it. See https://github.com/spack/spack/issues/20169
         # and https://cmake.org/cmake/help/latest/module/FindBoost.html
-        is_cmake = isinstance(dependent_spec.package, CMakePackage)
-        if self.spec.satisfies("boost@:1.69.0") and is_cmake:
-            args_fn = type(dependent_spec.package).cmake_args
+        if self.spec.satisfies("boost@:1.69.0") and dependent_spec.satisfies("build_system=cmake"):
+            args_fn = type(dependent_spec.package.builder).cmake_args
 
             def _cmake_args(self):
                 return ["-DBoost_NO_BOOST_CMAKE=ON"] + args_fn(self)
 
-            type(dependent_spec.package).cmake_args = _cmake_args
+            type(dependent_spec.package.builder).cmake_args = _cmake_args
 
     def setup_dependent_build_environment(self, env, dependent_spec):
         if "+context" in self.spec and "context-impl" in self.spec.variants:

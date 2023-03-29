@@ -18,6 +18,8 @@ class Collier(CMakePackage):
 
     maintainers("vvolkl")
 
+    version("1.2.7", sha256="fde4b144a17c1bf5aa2ceaa86c71c79da10c9de8fec7bd33c8bffb4198acd5ca")
+    version("1.2.6", sha256="b0d517868c71d2d1b8b6d3e0c370a43c9eb18ea8393a6e80070a5a2206f7de36")
     version("1.2.5", sha256="3ec58a975ff0c3b1ca870bc38973476c923ff78fd3dd5850e296037852b94a8b")
     version("1.2.4", sha256="92ae8f61461b232fbd47a6d8e832e1a726d504f9390b7edc49a68fceedff8857")
     version("1.2.3", sha256="e6f72df223654df59113b0067a4bebe9f8c20227bb81371d3193e1557bdf56fb")

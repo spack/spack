@@ -14,4 +14,5 @@ class PerlDbi(PerlPackage):
     homepage = "https://dbi.perl.org/"
     url = "http://search.cpan.org/CPAN/authors/id/T/TI/TIMB/DBI-1.636.tar.gz"
 
+    version("1.643", sha256="8a2b993db560a2c373c174ee976a51027dd780ec766ae17620c20393d2e836fa")
     version("1.636", sha256="8f7ddce97c04b4b7a000e65e5d05f679c964d62c8b02c94c1a7d815bb2dd676c")

@@ -46,7 +46,6 @@ class Xsbench(MakefilePackage, CudaPackage):
 
     @property
     def build_targets(self):
-
         targets = []
         cflags = ""
 

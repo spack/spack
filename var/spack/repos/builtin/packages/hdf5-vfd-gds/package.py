@@ -31,9 +31,7 @@ class Hdf5VfdGds(CMakePackage, CudaPackage):
 
     def cmake_args(self):
         # CMake options
-        args = [
-            self.define("BUILD_TESTING", self.run_tests),
-        ]
+        args = [self.define("BUILD_TESTING", self.run_tests)]
 
         return args
 

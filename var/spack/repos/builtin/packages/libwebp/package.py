@@ -40,11 +40,7 @@ class Libwebp(AutotoolsPackage):
 
     def configure_args(self):
         # TODO: add variants and dependencies for these
-        args = [
-            "--disable-gl",
-            "--disable-sdl",
-            "--disable-wic",
-        ]
+        args = ["--disable-gl", "--disable-sdl", "--disable-wic"]
 
         args += self.enable_or_disable("gif")
         args += self.enable_or_disable("jpeg")
