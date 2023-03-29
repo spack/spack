@@ -855,7 +855,7 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage):
         if spec.satisfies("+nvptx"):
             offload_targets.append("nvptx-none")
         if spec.satisfies("+amdgcn"):
-            offload_targets.append("amdgcn-amdhsa")
+            offload_targets.append("amdgcn-unknown-amdhsa")
         if offload_targets:
             options.extend(
                 [
@@ -960,7 +960,7 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage):
             make()
             make("install")
 
-    # run configure/make/make(install) for the amdgcn-amdhsa target
+    # run configure/make/make(install) for the amdgcn-unknown-amdhsa target
     # before running the host compiler phases
     @run_before("configure")
     def amdgcn_install(self):
@@ -979,7 +979,7 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage):
 
         # Copy LLVM utils
         llvm_bin_path = join_path(spec["llvm"].prefix, "bin")
-        llvm_util_path = join_path(prefix, "usr", "local", "amdgcn-amdhsa", "bin")
+        llvm_util_path = join_path(prefix, "usr", "local", "amdgcn-unknown-amdhsa", "bin")
         mkdirp(llvm_util_path)
         copy(
             "{0}".format(join_path(llvm_bin_path, "llvm-ar")),
@@ -1011,7 +1011,7 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage):
                 "--enable-languages={0}".format(",".join(spec.variants["languages"].value)),
                 "--with-mpfr={0}".format(spec["mpfr"].prefix),
                 "--with-gmp={0}".format(spec["gmp"].prefix),
-                "--target=amdgcn-amdhsa",
+                "--target=amdgcn-unknown-amdhsa",
                 "--with-build-time-tools={0}".format(llvm_util_path),
                 "--enable-as-accelerator-for={0}".format(targetguess),
                 "--disable-sjlj-exceptions",
