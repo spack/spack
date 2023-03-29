@@ -33,6 +33,7 @@ class PyEsmpy(PythonPackage):
     depends_on("py-setuptools-git-versioning", when="@8.4.0: ^python@3.10:", type="build")
     depends_on("py-numpy", type=("build", "run"))
     depends_on("py-importlib-metadata", when="@8.4.0: ^python@:3.7")
+    depends_on("py-pytest-json-report")
 
     patch("setuppy.patch", when="@:8.3.1")
 
