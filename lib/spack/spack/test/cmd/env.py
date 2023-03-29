@@ -3343,8 +3343,10 @@ def test_view_update_fails(update_method, tmpdir, install_mockery, mock_fetch, m
     def raises(*args, **kwargs):
         raise OSError
 
+    # The python symlink code fails by raising an error
     monkeypatch.setattr(fs, "rename", raises)
-    monkeypatch.setattr(spack.util.atomic_update, "_renameat2", raises)
+    # The c library call fails by a non-zero return code
+    monkeypatch.setattr(spack.util.atomic_update, "_renameat2", lambda x, y, z, v, w: 1)
 
     with pytest.raises(OSError):
         view.regenerate([spec])
