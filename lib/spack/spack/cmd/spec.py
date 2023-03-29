@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -110,7 +110,7 @@ def spec(parser, args):
         else:
             tty.die("spack spec requires at least one spec or an active environment")
 
-    for (input, output) in specs:
+    for input, output in specs:
         # With -y, just print YAML to output.
         if args.format:
             if args.format == "yaml":

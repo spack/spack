@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -20,7 +20,7 @@ except ImportError:
     _use_uuid = False
     pass
 
-from jsonschema import validate
+import jsonschema
 
 import llnl.util.lock as lk
 from llnl.util.tty.colify import colify
@@ -32,8 +32,6 @@ import spack.spec
 import spack.store
 from spack.schema.database_index import schema
 from spack.util.executable import Executable
-
-is_windows = sys.platform == "win32"
 
 pytestmark = pytest.mark.db
 
@@ -451,12 +449,12 @@ def test_005_db_exists(database):
     lock_file = os.path.join(database.root, ".spack-db", "lock")
     assert os.path.exists(str(index_file))
     # Lockfiles not currently supported on Windows
-    if not is_windows:
+    if sys.platform != "win32":
         assert os.path.exists(str(lock_file))
 
     with open(index_file) as fd:
         index_object = json.load(fd)
-        validate(index_object, schema)
+        jsonschema.validate(index_object, schema)
 
 
 def test_010_all_install_sanity(database):
@@ -750,7 +748,7 @@ def test_old_external_entries_prefix(mutable_database):
     with open(spack.store.db._index_path, "r") as f:
         db_obj = json.loads(f.read())
 
-    validate(db_obj, schema)
+    jsonschema.validate(db_obj, schema)
 
     s = spack.spec.Spec("externaltool")
     s.concretize()

@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -18,7 +18,7 @@ class Gpi2(AutotoolsPackage):
     url = "https://github.com/cc-hpc-itwm/GPI-2/archive/refs/tags/v1.5.1.tar.gz"
     git = "https://github.com/cc-hpc-itwm/GPI-2.git"
 
-    maintainers = ["robert-mijakovic", "acastanedam", "mzeyen1985"]
+    maintainers("robert-mijakovic", "acastanedam", "mzeyen1985")
 
     version("develop", branch="next")
     version("master", branch="master")
@@ -39,11 +39,9 @@ class Gpi2(AutotoolsPackage):
     variant("mpi", default=False, description="Enable MPI support")
     variant(
         "fabrics",
-        values=disjoint_sets(
-            ("auto",),
-            ("infiniband",),
-            ("ethernet",),
-        ).with_non_feature_values("auto", "none"),
+        values=disjoint_sets(("auto",), ("infiniband",), ("ethernet",)).with_non_feature_values(
+            "auto", "none"
+        ),
         description="List of fabrics that are enabled; "
         "'none' use GPI-2 default (infiniband), "
         "'infiniband' will use 'rdma-core' from Spack",

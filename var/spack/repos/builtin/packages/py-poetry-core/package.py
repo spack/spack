@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -24,7 +24,7 @@ class PyPoetryCore(PythonPackage):
 
     # https://github.com/python-poetry/poetry/issues/5547
     def setup_build_environment(self, env):
-        env.set("GIT_DIR", self.stage.source_path)
+        env.set("GIT_DIR", join_path(self.stage.source_path, ".git"))
 
     def setup_dependent_build_environment(self, env, dependent_spec):
-        env.set("GIT_DIR", dependent_spec.package.stage.source_path)
+        env.set("GIT_DIR", join_path(dependent_spec.package.stage.source_path, ".git"))

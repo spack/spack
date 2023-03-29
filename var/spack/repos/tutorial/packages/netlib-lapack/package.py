@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -88,16 +88,9 @@ class NetlibLapack(CMakePackage):
         query_parameters = self.spec.last_query.extra_parameters
         query2libraries = {
             tuple(): ["libblas"],
-            ("c", "fortran"): [
-                "libcblas",
-                "libblas",
-            ],
-            ("c",): [
-                "libcblas",
-            ],
-            ("fortran",): [
-                "libblas",
-            ],
+            ("c", "fortran"): ["libcblas", "libblas"],
+            ("c",): ["libcblas"],
+            ("fortran",): ["libblas"],
         }
         key = tuple(sorted(query_parameters))
         libraries = query2libraries[key]

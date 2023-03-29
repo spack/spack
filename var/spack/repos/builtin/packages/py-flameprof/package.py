@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -12,7 +12,7 @@ class PyFlameprof(PythonPackage):
     homepage = "https://github.com/baverman/flameprof/"
     pypi = "flameprof/flameprof-0.4.tar.gz"
 
-    maintainers = ["haampie"]
+    maintainers("haampie")
 
     version("0.4", sha256="dbc86d4190cbbba624f1e0a40f44d9db96138e27534d83c8ef42d420857875a3")
 

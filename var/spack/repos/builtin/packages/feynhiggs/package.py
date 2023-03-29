@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -15,7 +15,7 @@ class Feynhiggs(AutotoolsPackage):
     homepage = "https://wwwth.mpp.mpg.de/members/heinemey/feynhiggs/cFeynHiggs.html"
     url = "https://lcgpackages.web.cern.ch/tarFiles/sources/MCGeneratorsTarFiles/FeynHiggs-2.18.1.tar.gz"
 
-    maintainers = ["vvolkl"]
+    maintainers("vvolkl")
     tags = ["hep"]
 
     version("2.18.1", sha256="3aba89cac6397d7e1a8a9d9dcfeed9fb32eeeee98768b0c0c9f444c2cc125ab9")

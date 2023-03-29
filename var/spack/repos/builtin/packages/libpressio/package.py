@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -15,7 +15,7 @@ class Libpressio(CMakePackage, CudaPackage):
     git = "https://github.com/robertu94/libpressio"
 
     tags = ["e4s"]
-    maintainers = ["robertu94"]
+    maintainers("robertu94")
 
     tests_require_compiler = True
     version("master", branch="master")

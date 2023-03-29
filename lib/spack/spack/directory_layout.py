@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -21,7 +21,6 @@ import spack.spec
 import spack.util.spack_json as sjson
 from spack.error import SpackError
 
-is_windows = sys.platform == "win32"
 # Note: Posixpath is used here as opposed to
 # os.path.join due to spack.spec.Spec.format
 # requiring forward slash path seperators at this stage
@@ -346,7 +345,7 @@ class DirectoryLayout(object):
 
         # Windows readonly files cannot be removed by Python
         # directly, change permissions before attempting to remove
-        if is_windows:
+        if sys.platform == "win32":
             kwargs = {
                 "ignore_errors": False,
                 "onerror": fs.readonly_file_handler(ignore_errors=False),

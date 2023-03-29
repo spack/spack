@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -11,7 +11,7 @@ class PyFlitCore(PythonPackage):
 
     homepage = "https://github.com/takluyver/flit"
     pypi = "flit-core/flit_core-3.3.0.tar.gz"
-    maintainers = ["takluyver"]
+    maintainers("takluyver")
 
     version("3.7.1", sha256="14955af340c43035dbfa96b5ee47407e377ee337f69e70f73064940d27d0a44f")
     version("3.6.0", sha256="5892962ab8b8ea945835b3a288fe9dd69316f1903d5288c3f5cafdcdd04756ad")

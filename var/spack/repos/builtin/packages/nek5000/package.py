@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -53,7 +53,7 @@ class Nek5000(Package):
             raise RuntimeError(msg)
 
     @run_after("install")
-    def test_install(self):
+    def check_install(self):
         with working_dir("short_tests/eddy"):
             f_size = join_path(os.getcwd(), "SIZE")
             f_size_legacy = join_path(os.getcwd(), "SIZE.legacy")

@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -53,7 +53,6 @@ def packages(parser, args):
 
 
 def packages_https(parser, args):
-
     # Since packages takes a long time, --all is required without name
     if not args.check_all and not args.name:
         tty.die("Please specify one or more packages to audit, or --all.")
