@@ -50,7 +50,7 @@ _source_path_subdir = "spack-src"
 stage_prefix = "spack-stage-"
 
 
-def compute_stage_name(prefix: str, spec):
+def compute_stage_name(spec):
     """Determine stage name given a spec"""
     default_stage_structure = "spack-stage-{name}-{version}-{hash}"
     stage_name_structure = spack.config.get("config:stage_name", default=default_stage_structure)
@@ -158,8 +158,9 @@ def _resolve_paths(candidates):
 
         # Ensure the path is unique per user.
         can_path = sup.canonicalize_path(path)
-        # Do not add per user path on Windows - currently only need to support
-        # single user stages
+        # When multiple users share a stage root, we can avoid conflicts between
+        # them by adding a per-user subdirectory.
+        # Avoid doing this on Windows to keep stage absolute path as short as possible.
         if user not in can_path and not sys.platform == "win32":
             can_path = os.path.join(can_path, user)
 
