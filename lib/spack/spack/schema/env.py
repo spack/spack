@@ -111,6 +111,10 @@ schema = {
                                                 "type": "array",
                                                 "items": {"type": "string"},
                                             },
+                                            "update_method": {
+                                                "type": "string",
+                                                "pattern": "(symlink|exchange|auto)",
+                                            },
                                             "projections": projections_scheme,
                                         },
                                     }

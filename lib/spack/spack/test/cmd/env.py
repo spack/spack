@@ -52,7 +52,7 @@ find = SpackCommand("find")
 
 sep = os.sep
 
-if spack.util.atomic_update.renameat2:
+if spack.util.atomic_update.renameat2():
     use_renameat2 = [True, False]
 else:
     use_renameat2 = [False]
@@ -61,7 +61,7 @@ else:
 @pytest.fixture(params=use_renameat2)
 def atomic_update_implementations(request, monkeypatch):
     if request.param is False:
-        monkeypatch.setattr(spack.util.atomic_update, "renameat2", None)
+        monkeypatch.setattr(spack.util.atomic_update, "_renameat2", None)
     yield
 
 
@@ -2902,7 +2902,7 @@ def test_environment_view_target_already_exists(
     the new view dir already exists. If so, it should not be
     removed or modified."""
     # Only works for symlinked atomic views
-    monkeypatch.setattr(spack.util.atomic_update, "renameat2", None)
+    monkeypatch.setattr(spack.util.atomic_update, "_renameat2", None)
 
     # Create a new environment
     view = str(tmpdir.join("view"))
@@ -3295,3 +3295,28 @@ def test_environment_created_in_users_location(mutable_config, tmpdir):
     assert dir_name in out
     assert env_dir in ev.root(dir_name)
     assert os.path.isdir(os.path.join(env_dir, dir_name))
+
+
+@pytest.mark.parametrize("update_method", ["symlink", "exchange"])
+def test_view_update_mismatch(update_method, tmpdir, install_mockery, mock_fetch):
+    root = str(tmpdir.join("root"))
+    if update_method == "symlink":
+        os.makedirs(root)
+        checker = "cannot be updated with the 'symlink' update method"
+    elif True in use_renameat2:
+        link = str(tmpdir.join("symlink"))
+        os.makedirs(link)
+        os.symlink(link, root)
+        checker = "cannot be updated with the 'exchange' update method"
+    else:
+        checker = "does not support the 'exchange' atomic update method"
+
+    view = ev.environment.ViewDescriptor(
+        base_path=str(tmpdir), root=root, update_method=update_method
+    )
+
+    spec = spack.spec.Spec("libelf").concretized()
+    install("libelf")
+
+    with pytest.raises(RuntimeError, match=checker):
+        view.regenerate([spec])

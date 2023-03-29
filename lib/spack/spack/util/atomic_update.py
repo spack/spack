@@ -36,6 +36,7 @@ def set_renameat2():
 
 
 def renameat2():
+    global _renameat2
     if _renameat2 is notset:
         _renameat2 = set_renameat2()
     return _renameat2

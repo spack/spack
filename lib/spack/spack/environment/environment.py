@@ -407,6 +407,7 @@ class ViewDescriptor(object):
         exclude=[],
         link=default_view_link,
         link_type="symlink",
+        update_method="auto",
     ):
         self.base = base_path
         self.raw_root = root
@@ -416,6 +417,7 @@ class ViewDescriptor(object):
         self.exclude = exclude
         self.link_type = view_func_parser(link_type)
         self.link = link
+        self.update_method = update_method
 
     def select_fn(self, spec):
         return any(spec.satisfies(s) for s in self.select)
@@ -432,6 +434,7 @@ class ViewDescriptor(object):
                 self.exclude == other.exclude,
                 self.link == other.link,
                 self.link_type == other.link_type,
+                self.update_method == other.update_method,
             ]
         )
 
@@ -452,6 +455,8 @@ class ViewDescriptor(object):
             ret["link_type"] = inverse_view_func_parser(self.link_type)
         if self.link != default_view_link:
             ret["link"] = self.link
+        if self.update_method != "auto":
+            ret["update_method"] = self.update_method
         return ret
 
     @staticmethod
@@ -464,6 +469,7 @@ class ViewDescriptor(object):
             d.get("exclude", []),
             d.get("link", default_view_link),
             d.get("link_type", "symlink"),
+            d.get("update_method", "auto"),
         )
 
     @property
@@ -593,14 +599,49 @@ class ViewDescriptor(object):
 
         return specs
 
+    def raise_if_invalid_exchange(self):
+        if not spack.util.atomic_update.renameat2():
+            msg = "This operating system does not support the 'exchange' atomic update method."
+            msg += f"\n  If the view at {self.root} does not already exist on the filesystem,"
+            msg += "change its update_method to 'symlink' or 'auto'."
+            msg += f"\n  If the view at {self.root} exists already, either remove it for a"
+            msg += " non-atomic update or run on a newer OS."
+        raise RuntimeError(msg)
+
+    def raise_if_symlink_before_exchange(self):
+        if os.path.islink(self.root):
+            msg = f"The view at {self.root} cannot be updated with the 'exchange' update method"
+            msg += " because it was originally constructed with the 'symlink' method."
+            msg += " Either change the update method to 'symlink' or remove the view for a"
+            msg += " non-atomic update"
+            raise RuntimeError(msg)
+
+    def raise_if_exchange_before_symlink(self):
+        if os.path.isdir(self.root) and not os.path.islink(self.root):
+            msg = f"The view at {self.root} cannot be updated with the 'symlink' update method"
+            msg += " because it was originally constructed with the 'exchange' method."
+            msg += " Either change the update method to 'exchange' or remove the view for a"
+            msg += " non-atomic update"
+            raise RuntimeError(msg)
+
     def use_renameat2(self):
+        # If it's set explicitly, respect that
+        if self.update_method == "exchange":
+            self.raise_if_symlink_before_exchange()
+            self.raise_if_invalid_exchange()
+            return True
+        if self.update_method == "symlink":
+            self.raise_if_exchange_before_symlink()
+            return False
+
+        # If it's set to "auto", detect which it should be
         if os.path.islink(self.root):
             return False
         elif os.path.isdir(self.root):
-            if not spack.util.atomic_update.renameat2:
-                raise Exception
+            self.raise_if_invalid_exchange()
+            return True
 
-        return bool(spack.util.atomic_update.renameat2)
+        return bool(spack.util.atomic_update.renameat2())
 
     def regenerate(self, concretized_root_specs):
         specs = self.specs_for_view(concretized_root_specs)
