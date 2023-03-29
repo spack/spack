@@ -766,7 +766,8 @@ def generate_gitlab_ci_yaml(
             "To update first change the section key from `gitlab-ci` to `ci`\n",
             "Then run \n\t$ spack config update ci",
         )
-        ci_config = translate_deprecated_config(gitlabci_config)
+        translate_deprecated_config(gitlabci_config)
+        ci_config = gitlabci_config
 
     # Default target is gitlab...and only target is gitlab
     if not ci_config.get("target", "gitlab") == "gitlab":
@@ -947,6 +948,10 @@ def generate_gitlab_ci_yaml(
                 include_scopes.insert(0, scope)
         env_includes.extend(include_scopes)
         env_yaml_root["spack"]["include"] = env_includes
+
+        if "gitlab-ci" in env_yaml_root["spack"] and "ci" not in env_yaml_root["spack"]:
+            env_yaml_root["spack"]["ci"] = env_yaml_root["spack"].pop("gitlab-ci")
+            translate_deprecated_config(env_yaml_root["spack"]["ci"])
 
         with open(os.path.join(concrete_env_dir, "spack.yaml"), "w") as fd:
             fd.write(syaml.dump_config(env_yaml_root, default_flow_style=False))
@@ -2484,26 +2489,42 @@ class CDashHandler(object):
 
 
 def translate_deprecated_config(config):
-    ci_config = {}
+    # Remove all deprecated keys from config
+    mappings = config.pop("mappings", [])
+    match_behavior = config.pop("match_behavior", "first")
 
-    ci_config["target"] = "gitlab"
+    build_job = {}
+    if "image" in config:
+        build_job["image"] = config.pop("image")
+    if "tags" in config:
+        build_job["tags"] = config.pop("tags")
+    if "variables" in config:
+        build_job["variables"] = config.pop("variables")
+    if "before_script" in config:
+        build_job["before_script"] = config.pop("before_script")
+    if "script" in config:
+        build_job["script"] = config.pop("script")
+    if "after_script" in config:
+        build_job["after_script"] = config.pop("after_script")
 
-    if "enable-artifacts-buildcache" in config:
-        ci_config["enable-artifacts-buildcache"] = config["enable-artifacts-buildcache"]
-    elif "temporary-storage-url-prefix" in config:
-        ci_config["temporary-storage-url-prefix"] = config.get("temporary-storage-url-prefix")
+    signing_job = None
+    if "signing-job-attributes" in config:
+        signing_job = {"signing-job": config.pop("signing-job-attributes")}
 
-    ci_config["bootstrap"] = config.get("bootstrap", [])
-    ci_config["rebuild-index"] = config.get("rebuild-index", True)
-    ci_config["broken-specs-url"] = config.get("broken-specs-url", None)
-    ci_config["broken-tests-packages"] = config.get("broken-tests-packages", [])
+    service_job_attributes = None
+    if "service-job-attributes" in config:
+        service_job_attributes = config.pop("service-job-attributes")
 
-    ci_config["pipeline-gen"] = []
-    pipeline_gen = ci_config["pipeline-gen"]
+    # If this config already has pipeline-gen do not more
+    if "pipeline-gen" in config:
+        return True if mappings or build_job or signing_job or service_job_attributes else False
+
+    config["target"] = "gitlab"
+
+    config["pipeline-gen"] = []
+    pipeline_gen = config["pipeline-gen"]
 
     # Build Job
-    mappings = config["mappings"]
-    match_behavior = config.get("match_behavior", "first")
     submapping = []
     for section in mappings:
         submapping_section = {"match": section["match"]}
@@ -2514,31 +2535,17 @@ def translate_deprecated_config(config):
         submapping.append(submapping_section)
     pipeline_gen.append({"submapping": submapping, "match_behavior": match_behavior})
 
-    build_job = {}
-    if "image" in config:
-        build_job["image"] = config["image"]
-    if "tags" in config:
-        build_job["tags"] = config["tags"]
-    if "variables" in config:
-        build_job["variables"] = config["variables"]
-    if "before_script" in config:
-        build_job["before_script"] = config["before_script"]
-    if "script" in config:
-        build_job["script"] = config["script"]
-    if "after_script" in config:
-        build_job["after_script"] = config["after_script"]
     if build_job:
         pipeline_gen.append({"build-job": build_job})
 
     # Signing Job
-    if "signing-job-attributes" in config:
-        signing_job = {"signing-job": config["signing-job-attributes"]}
+    if signing_job:
         pipeline_gen.append(signing_job)
 
     # Service Jobs
-    if "service-job-attributes" in config:
-        pipeline_gen.append({"reindex-job": config["service-job-attributes"]})
-        pipeline_gen.append({"noop-job": config["service-job-attributes"]})
-        pipeline_gen.append({"cleanup-job": config["service-job-attributes"]})
+    if service_job_attributes:
+        pipeline_gen.append({"reindex-job": service_job_attributes})
+        pipeline_gen.append({"noop-job": service_job_attributes})
+        pipeline_gen.append({"cleanup-job": service_job_attributes})
 
-    return ci_config
+    return True
