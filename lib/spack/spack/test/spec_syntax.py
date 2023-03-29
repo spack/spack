@@ -766,7 +766,8 @@ def test_invalid_hash(database, mutable_empty_config):
 def test_invalid_hash_dep(database, mutable_empty_config):
     mpich = database.query_one("mpich")
     hash = mpich.dag_hash()
-    spack.spec.Spec(f"callpath ^zlib/{hash}").replace_hash()
+    with pytest.raises(spack.spec.InvalidHashError):
+        spack.spec.Spec(f"callpath ^zlib/{hash}").replace_hash()
 
 
 @pytest.mark.db
