@@ -59,6 +59,7 @@ def atomic_update_renameat2(src, dest):
     except (OSError, IOError):
         if not dest_exists:
             os.unlink(dest)
+        raise
 
 
 def atomic_update_symlink(src, dest):
@@ -71,6 +72,6 @@ def atomic_update_symlink(src, dest):
     # atomically mv the symlink to destpath (still points to srcpath)
     try:
         fs.rename(tmp_symlink_name, dest)
-    except Exception:
+    except OSError:
         os.unlink(tmp_symlink_name)
         raise

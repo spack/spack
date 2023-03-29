@@ -3320,3 +3320,28 @@ def test_view_update_mismatch(update_method, tmpdir, install_mockery, mock_fetch
 
     with pytest.raises(RuntimeError, match=checker):
         view.regenerate([spec])
+
+
+@pytest.mark.parametrize("update_method", ["symlink", "exchange"])
+def test_view_update_fails(update_method, tmpdir, install_mockery, mock_fetch, monkeypatch):
+    root = str(tmpdir.join("root"))
+    view = ev.environment.ViewDescriptor(
+        base_path=str(tmpdir), root=root, update_method=update_method
+    )
+
+    spec = spack.spec.Spec("libelf").concretized()
+    install("libelf")
+
+    def raises(*args, **kwargs):
+        raise OSError
+
+    monkeypatch.setattr(fs, "rename", raises)
+    monkeypatch.setattr(spack.util.atomic_update, "_renameat2", raises)
+
+    with pytest.raises(OSError):
+        view.regenerate([spec])
+
+    assert not os.path.exists(view.root)
+    if update_method == "symlink":
+        link = os.path.join(str(tmpdir), "._root", "._tmp_symlink")
+        assert not os.path.lexists(link)
