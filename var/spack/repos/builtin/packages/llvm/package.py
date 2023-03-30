@@ -716,7 +716,7 @@ class Llvm(CMakePackage, CudaPackage):
         if "all" in extra_projects:
             projects = ["all"]
         else:
-            if project is not "none":
+            if project != "none":
                 for project in extra_projects:
                     if project not in projects:
                         projects.append(project)
