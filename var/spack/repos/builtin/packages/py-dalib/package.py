@@ -11,7 +11,7 @@ class PyDalib(PythonPackage):
     performance and friendly API."""
 
     homepage = "https://github.com/thuml/Domain-Adaptation-Lib"
-    pypi     = "dalib/dalib-0.2.tar.gz"
+    pypi = "dalib/dalib-0.2.tar.gz"
 
     maintainers("meyersbs")
 

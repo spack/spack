@@ -16,8 +16,7 @@ class PyOsqp(PythonPackage):
     maintainers("meyersbs")
 
     version(
-        "0.6.2.post8",
-        sha256="23d6bae4a3612f60d5f652d0e5fa4b2ead507cabfff5d930d822057ae6ed6677"
+        "0.6.2.post8", sha256="23d6bae4a3612f60d5f652d0e5fa4b2ead507cabfff5d930d822057ae6ed6677"
     )
     version("0.6.1", sha256="47b17996526d6ecdf35cfaead6e3e05d34bc2ad48bcb743153cefe555ecc0e8c")
 

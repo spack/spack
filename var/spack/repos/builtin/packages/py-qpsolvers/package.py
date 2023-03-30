@@ -11,7 +11,7 @@ class PyQpsolvers(PythonPackage):
     Python."""
 
     homepage = "https://www.example.com"
-    pypi     = "qpsolvers/qpsolvers-3.1.0.tar.gz"
+    pypi = "qpsolvers/qpsolvers-3.1.0.tar.gz"
 
     maintainers("meyersbs")
 

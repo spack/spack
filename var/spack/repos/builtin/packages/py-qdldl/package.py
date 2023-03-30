@@ -15,7 +15,9 @@ class PyQdldl(PythonPackage):
 
     maintainers("meyersbs")
 
-    version("0.1.5.post3", sha256="69c092f6e1fc23fb779a80a62e6fcdfe2eba05c925860248c4d6754f4736938f")
+    version(
+        "0.1.5.post3", sha256="69c092f6e1fc23fb779a80a62e6fcdfe2eba05c925860248c4d6754f4736938f"
+    )
 
     depends_on("py-setuptools@18.0:", type="build")
     depends_on("py-pybind11", type="build")
