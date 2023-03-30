@@ -5,13 +5,14 @@
 
 from spack.package import *
 
+
 class PySoyclustering(PythonPackage):
     """This package is implementation of Improving spherical k-means for document
     clustering. Fast initialization, sparse centroid projection, and efficient
     cluster labeling (Kim et al., 2020)."""
 
     homepage = "https://github.com/lovit/clustering4docs"
-    pypi     = "soyclustering/soyclustering-0.2.0.tar.gz"
+    pypi = "soyclustering/soyclustering-0.2.0.tar.gz"
 
     maintainers("meyersbs")
 
