@@ -1579,7 +1579,12 @@ class SpackSolverSetup(object):
                 # When COMPARING VERSIONS, the '@develop' version is always
                 # larger than other versions. BUT when CONCRETIZING, the largest
                 # NON-develop version is selected by default.
-                return info.get("preferred", False), not version.isdevelop(), version
+                return (
+                    info.get("preferred", False),
+                    not info.get("deprecated", False),
+                    not version.isdevelop(),
+                    version,
+                )
 
             for idx, item in enumerate(sorted(pkg_cls.versions.items(), key=key_fn, reverse=True)):
                 v, version_info = item
@@ -2282,10 +2287,8 @@ class SpecBuilder(object):
     def version(self, pkg, version):
         self._specs[pkg].versions = spack.version.ver([version])
 
-    def node_compiler(self, pkg, compiler):
-        self._specs[pkg].compiler = spack.spec.CompilerSpec(compiler)
-
     def node_compiler_version(self, pkg, compiler, version):
+        self._specs[pkg].compiler = spack.spec.CompilerSpec(compiler)
         self._specs[pkg].compiler.versions = spack.version.VersionList([version])
 
     def node_flag_compiler_default(self, pkg):
@@ -2390,7 +2393,6 @@ class SpecBuilder(object):
 
         hash attributes are handled first, since they imply entire concrete specs
         node attributes are handled next, since they instantiate nodes
-        node_compiler attributes are handled next to ensure they come before node_compiler_version
         external_spec_selected attributes are handled last, so that external extensions can find
         the concrete specs on which they depend because all nodes are fully constructed before we
         consider which ones are external.
@@ -2400,8 +2402,6 @@ class SpecBuilder(object):
             return (-5, 0)
         elif name == "node":
             return (-4, 0)
-        elif name == "node_compiler":
-            return (-3, 0)
         elif name == "node_flag":
             return (-2, 0)
         elif name == "external_spec_selected":

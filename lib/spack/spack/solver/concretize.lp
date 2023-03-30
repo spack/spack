@@ -303,8 +303,8 @@ attr("virtual_node", Virtual)
   :- attr("virtual_node", Virtual).
 error(2, "Cannot find valid provider for virtual {0}", Virtual)
   :- attr("virtual_node", Virtual),
-     P = #count{ Package : provider(Package, Virtual)},
-     P < 1.
+     not provider(_, Virtual).
+
 error(2, "Spec cannot include multiple providers for virtual '{0}'\n    Requested '{1}' and '{2}'", Virtual, P1, P2)
   :- attr("virtual_node", Virtual),
      provider(P1, Virtual),
@@ -566,8 +566,7 @@ error(2, "No valid value for variant '{1}' of package '{0}'", Package, Variant)
   :- attr("node", Package),
      variant(Package, Variant),
      build(Package),
-     C = #count{ Value : attr("variant_value", Package, Variant, Value) },
-     C < 1.
+     not attr("variant_value", Package, Variant, _).
 
 % if a variant is set to anything, it is considered 'set'.
 attr("variant_set", Package, Variant) :- attr("variant_set", Package, Variant, _).
@@ -618,6 +617,7 @@ variant_not_default(Package, Variant, Value)
 % A default variant value that is not used
 variant_default_not_used(Package, Variant, Value)
   :- variant_default_value(Package, Variant, Value),
+     variant(Package, Variant),
      not attr("variant_value", Package, Variant, Value),
      attr("node", Package).
 
@@ -701,8 +701,7 @@ attr("node_platform_set", Package) :- attr("node_platform_set", Package, _).
 % each node must have a single platform
 error(2, "No valid platform found for {0}", Package)
   :- attr("node", Package),
-     C = #count{ Platform : attr("node_platform", Package, Platform)},
-     C < 1.
+     not attr("node_platform", Package, _).
 
 error(2, "Cannot concretize {0} with multiple platforms\n    Requested 'platform={1}' and 'platform={2}'", Package, Platform1, Platform2)
   :- attr("node", Package),
@@ -721,8 +720,7 @@ os(OS) :- os(OS, _).
 
 error(2, "Cannot find valid operating system for '{0}'", Package)
   :- attr("node", Package),
-     C = #count{ OS : attr("node_os", Package, OS)},
-     C < 1.
+     not attr("node_os", Package, _).
 
 error(2, "Cannot concretize {0} with multiple operating systems\n    Requested 'os={1}' and 'os={2}'", Package, OS1, OS2)
   :- attr("node", Package),
@@ -783,8 +781,7 @@ attr("node_os", Package, OS) :- attr("node_os_set", Package, OS), attr("node", P
 
 error(2, "Cannot find valid target for '{0}'", Package)
   :- attr("node", Package),
-     C = #count{Target : attr("node_target", Package, Target)},
-     C < 1.
+     not attr("node_target", Package, _).
 
 error(2, "Cannot concretize '{0}' with multiple targets\n    Requested 'target={1}' and 'target={2}'", Package, Target1, Target2)
   :- attr("node", Package),
@@ -884,12 +881,6 @@ attr("node_compiler", Package, CompilerName)
 error(2, "No valid compiler version found for '{0}'", Package)
   :- attr("node", Package),
      not node_compiler(Package, _).
-
-error(2, "Cannot concretize {0} with two compilers {1}@{2} and {3}@{4}", Package, C1, V1, C2, V2)
-  :- attr("node", Package),
-     attr("node_compiler_version", Package, C1, V1),
-     attr("node_compiler_version", Package, C2, V2),
-     (C1, V1) < (C2, V2). % see[1]
 
 % We can't have a compiler be enforced and select the version from another compiler
 error(2, "Cannot concretize {0} with two compilers {1}@{2} and {3}@{4}", Package, C1, V1, C2, V2)
