@@ -174,8 +174,7 @@ def _unZ(archive_file):
 def _lzma_decomp(archive_file):
     """Decompress lzma compressed files. Prefer Python native
     lzma module, but fall back on command line xz tooling
-    to find available Python support. This is the xz command
-    on Unix and 7z on Windows"""
+    to find available Python support."""
     if is_lzma_supported():
         decompressed_file = os.path.basename(strip_extension(archive_file, "xz"))
         archive_out = os.path.join(os.getcwd(), decompressed_file)
@@ -187,7 +186,7 @@ def _lzma_decomp(archive_file):
         return _xz(archive_file)
 
 
-def _win_compressed_tarball_handler(helper):
+def _win_compressed_tarball_handler(decompressor):
     """Decompress and extract compressed tarballs on Windows.
     This method uses a decompression method in conjunction with
     the tar utility to perform decompression and extraction in
@@ -203,10 +202,7 @@ def _win_compressed_tarball_handler(helper):
         # perform intermediate extraction step
         # record name of new archive so we can extract
         # and later clean up
-        decomped_tarball = helper(archive_file)
-        # 7zip is able to one shot extract compressed archives
-        # that have been named .txz. If that is the case, there will
-        # be no intermediate archvie to extract.
+        decomped_tarball = decompressor(archive_file)
         if check_extension(decomped_tarball, "tar"):
             # run tar on newly decomped archive
             outfile = _untar(decomped_tarball)
@@ -221,7 +217,7 @@ def _win_compressed_tarball_handler(helper):
 
 def _xz(archive_file):
     """Decompress lzma compressed .xz files via xz command line
-    tool. Available only on Unix
+    tool.
     """
     decompressed_file = os.path.basename(strip_extension(archive_file, "xz"))
     working_dir = os.getcwd()
@@ -270,7 +266,6 @@ unrecognized file extension: '%s'"
 
     # Python and platform may not have support for lzma
     # compression. If no lzma support, use tools available on systems
-    # 7zip on Windows and the xz tool on Unix systems.
     if re.match(r"xz", extension):
         return _lzma_decomp
 
