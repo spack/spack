@@ -12,7 +12,7 @@ class PyCoclust(PythonPackage):
     clustering"""
 
     homepage = "https://github.com/franrole/cclust_package"
-    pypi     = "coclust/coclust-0.2.1.tar.gz"
+    pypi = "coclust/coclust-0.2.1.tar.gz"
 
     maintainers("meyersbs")
 
