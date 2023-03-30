@@ -797,17 +797,46 @@ def test_git_versions_without_explicit_reference(
 
 def test_total_order_versions_and_ranges():
     # The set of version ranges and individual versions are comparable, which is used in
-    # VersionList. For identical versions: StandardVersion < GitVersion < ClosedOpenRange.
-    assert ver("=1.2") < ver("git.ref=1.2") < ver("1.2") < ver("=1.2.0")
-    assert ver("=1.2") <= ver("git.ref=1.2") <= ver("1.2") <= ver("=1.2.0")
-    assert ver("=1.2.0") >= ver("1.2") >= ver("git.ref=1.2") >= ver("=1.2")
-    assert ver("=1.2.0") > ver("1.2") > ver("git.ref=1.2") > ver("=1.2")
-    assert ver("=1.2") != ver("git.ref=1.2")
-    assert not ver("=1.2") == ver("git.ref=1.2")
-    assert ver("=1.2") != ver("1.2")
-    assert not ver("=1.2") == ver("1.2")
-    assert ver("1.2") != ver("git.ref=1.2")
-    assert not ver("1.2") == ver("git.ref=1.2")
+    # VersionList. The comparsion across types is based on default version comparsion
+    # of StandardVersion, GitVersion.ref_version, and ClosedOpenRange.lo.
+
+    # StandardVersion / GitVersion (at equal ref version)
+    assert_ver_lt("=1.2", "git.ref=1.2")
+    assert_ver_gt("git.ref=1.2", "=1.2")
+
+    # StandardVersion / GitVersion (at different ref versions)
+    assert_ver_lt("git.ref=1.2", "=1.3")
+    assert_ver_gt("=1.3", "git.ref=1.2")
+    assert_ver_lt("=1.2", "git.ref=1.3")
+    assert_ver_gt("git.ref=1.3", "=1.2")
+
+    # GitVersion / ClosedOpenRange (at equal ref/lo version)
+    assert_ver_lt("git.ref=1.2", "1.2")
+    assert_ver_gt("1.2", "git.ref=1.2")
+
+    # GitVersion / ClosedOpenRange (at different ref/lo version)
+    assert_ver_lt("git.ref=1.2", "1.3")
+    assert_ver_gt("1.3", "git.ref=1.2")
+    assert_ver_lt("1.2", "git.ref=1.3")
+    assert_ver_gt("git.ref=1.3", "1.2")
+
+    # StandardVersion / ClosedOpenRange (at equal lo version)
+    assert_ver_lt("=1.2", "1.2")
+    assert_ver_gt("1.2", "=1.2")
+
+    # StandardVersion / ClosedOpenRange (at different lo version)
+    assert_ver_lt("=1.2", "1.3")
+    assert_ver_gt("1.3", "=1.2")
+    assert_ver_lt("1.2", "=1.3")
+    assert_ver_gt("=1.3", "1.2")
+
+
+def test_version_list_normalization():
+    # Git versions and ordinary versions can live together in a VersionList
+    assert len(VersionList(["=1.2", "ref=1.2"])) == 2
+
+    # But when a range is added, the only disjoint bit is the range.
+    assert VersionList(["=1.2", "ref=1.2", "ref=1.3", "1.2:1.3"]) == VersionList(["1.2:1.3"])
 
 
 @pytest.mark.parametrize("version", ["=1.2", "git.ref=1.2", "1.2"])
