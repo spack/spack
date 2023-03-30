@@ -10,7 +10,7 @@ spack:
     libglx:
       require: ^mesa +glx
     all:
-      target: [x86_64]
+      require: target=x86_64_v3
 
   definitions:
   - paraview_specs:
