@@ -127,7 +127,6 @@ class Provenance(enum.IntEnum):
         return f"{self._name_.lower()}"
 
 
-
 DeclaredVersion = collections.namedtuple("DeclaredVersion", ["version", "idx", "origin"])
 
 
@@ -2152,9 +2151,7 @@ class SpackSolverSetup(object):
         self.add_concrete_versions_from_specs(dev_specs, Provenance.DEV_SPEC)
 
         req_version_specs = _get_versioned_specs_from_pkg_requirements()
-        self.add_concrete_versions_from_specs(
-            req_version_specs, Provenance.PACKAGE_REQUIREMENT
-        )
+        self.add_concrete_versions_from_specs(req_version_specs, Provenance.PACKAGE_REQUIREMENT)
 
         self.gen.h1("Concrete input spec definitions")
         self.define_concrete_input_specs(specs, possible)
@@ -2258,8 +2255,8 @@ def _specs_from_requires(pkg_name, section):
                 spec_strs.append(spec_group)
             else:
                 # Otherwise it is a one_of or any_of: get the values
-                (x,) = spec_group.values()
-                spec_strs.extend(x)
+                key = "one_of" if "one_of" in spec_group else "any_of"
+                spec_strs.extend(spec_group[key])
 
         extracted_specs = []
         for spec_str in spec_strs:
