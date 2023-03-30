@@ -3350,3 +3350,32 @@ def test_view_update_fails(update_method, tmpdir, install_mockery, mock_fetch, m
     if update_method == "symlink":
         link = os.path.join(str(tmpdir), "._root", "._tmp_symlink")
         assert not os.path.lexists(link)
+
+
+@pytest.mark.parametrize("update_method", ["symlink", "exchange"])
+def test_view_update_unnecessary(update_method, tmpdir, install_mockery, mock_fetch, monkeypatch):
+    if update_method == "exchange" and not supports_renameat2:
+        pytest.skip("Testing on an OS that does not support the exchange update method")
+
+    root = str(tmpdir.join("root"))
+    view = ev.environment.ViewDescriptor(
+        base_path=str(tmpdir), root=root, update_method=update_method
+    )
+
+    libelf = spack.spec.Spec("libelf").concretized()
+    install("libelf")
+    libdwarf = spack.spec.Spec("libdwarf").concretized()
+    install("libdwarf")
+
+    # Ensure multiple previous views around
+    view.regenerate([libelf])
+    view.regenerate([libelf, libdwarf])
+
+    # monkeypatch so that any attempt to actually regenerate the view fails
+    def raises(*args, **kwargs):
+        raise AssertionError
+    monkeypatch.setattr(view, "view", raises)
+
+    view.regenerate([libelf, libdwarf])
+    with pytest.raises(AssertionError):
+        view.regenerate([libelf])
