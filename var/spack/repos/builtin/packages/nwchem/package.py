@@ -69,7 +69,7 @@ class Nwchem(Package):
                 "EACCSD=y",  # TCE extra module
             ]
         )
-        if self.version >= Version("7.2.0"):
+        if self.spec.satisfies("@7.2.0:"):
             args.extend(["NWCHEM_MODULES=all python gwmol"])
         else:
             args.extend(["NWCHEM_MODULES=all python"])
