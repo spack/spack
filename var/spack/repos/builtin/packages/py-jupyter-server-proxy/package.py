@@ -24,5 +24,5 @@ class PyJupyterServerProxy(PythonPackage):
     depends_on("py-setuptools@40.8.0:", type="build")
 
     depends_on("py-aiohttp", type=("build", "run"))
-    depends_on("py-jupyter-server@1.0:", when="@2022.4.0:", type=("build", "run"))
-    depends_on("py-simpervisor@0.4:", when="@2022.4.0:", type=("build", "run"))
+    depends_on("py-jupyter-server@1.0:", type=("build", "run"))
+    depends_on("py-simpervisor@0.4:", type=("build", "run"))

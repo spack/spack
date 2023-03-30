@@ -20,3 +20,6 @@ class ModulePathSeparator(Package):
         env.append_path("SEMICOLON", "bar", separator=";")
         env.prepend_path("SEMICOLON", "bar", separator=";")
         env.remove_path("SEMICOLON", "bar", separator=";")
+
+        env.append_flags("SPACE", "qux")
+        env.remove_flags("SPACE", "qux")

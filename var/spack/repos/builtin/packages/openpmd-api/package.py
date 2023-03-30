@@ -10,7 +10,7 @@ class OpenpmdApi(CMakePackage):
     """C++ & Python API for Scientific I/O"""
 
     homepage = "https://www.openPMD.org"
-    url = "https://github.com/openPMD/openPMD-api/archive/0.14.2.tar.gz"
+    url = "https://github.com/openPMD/openPMD-api/archive/0.15.0.tar.gz"
     git = "https://github.com/openPMD/openPMD-api.git"
 
     maintainers("ax3l", "franzpoeschel")
@@ -19,6 +19,7 @@ class OpenpmdApi(CMakePackage):
 
     # C++17 up until here
     version("develop", branch="dev")
+    version("0.15.0", sha256="290e3a3c5814204ea6527d53423bfacf7a8dc490713227c9e0eaa3abf4756177")
     # C++14 up until here
     version("0.14.5", sha256="e3f509098e75014394877e0dc91f833e57ced5552b110c7339a69e9dbe49bf62")
     version("0.14.4", sha256="42b7bcd043e772d63f0fe0e5e70da411f001db10096d5b8be797ffc88e786379")
@@ -43,11 +44,12 @@ class OpenpmdApi(CMakePackage):
     variant("python", default=False, description="Enable Python bindings")
 
     depends_on("cmake@3.15.0:", type="build")
-    depends_on("catch2@2.6.1:", type="test")
-    depends_on("catch2@2.13.4:", type="test", when="@0.14.0:")
+    depends_on("catch2@2.6.1:2", type="test")
+    depends_on("catch2@2.13.4:2", type="test", when="@0.14.0:")
+    depends_on("catch2@2.13.10:2", type="test", when="@0.15.0:")
     depends_on("mpi@2.3:", when="+mpi")  # might become MPI 3.0+
     depends_on("nlohmann-json@3.9.1:")
-    depends_on("mpark-variant@1.4.0:", when="@:0.14.99")  # pre C++17 releases
+    depends_on("mpark-variant@1.4.0:", when="@:0.14")  # pre C++17 releases
     depends_on("toml11@3.7.1:", when="@0.15.0:")
     with when("+hdf5"):
         depends_on("hdf5@1.8.13:")
@@ -68,12 +70,27 @@ class OpenpmdApi(CMakePackage):
         depends_on("py-numpy@1.15.1:", type=["test", "run"])
         depends_on("py-mpi4py@2.1.0:", when="+mpi", type=["test", "run"])
         depends_on("python@3.6:", type=["link", "test", "run"])
+        depends_on("python@3.7:", when="@0.15.0:", type=["link", "test", "run"])
 
     conflicts("^hdf5 api=v16", msg="openPMD-api requires HDF5 APIs for 1.8+")
 
     # Fix breaking HDF5 1.12.0 API when build with legacy api options
     # https://github.com/openPMD/openPMD-api/pull/1012
     patch("hdf5-1.12.0.patch", when="@:0.13 +hdf5")
+
+    # CMake: Fix Python Install Directory
+    patch(
+        "https://github.com/openPMD/openPMD-api/pull/1393.patch?full_index=1",
+        sha256="b5cecbdbe16d98c0ba352fa861fcdf9d7c7cc85f21226fa03effa7d62a7cb276",
+        when="@0.15.0",
+    )
+
+    # macOS AppleClang12 Fixes
+    patch(
+        "https://github.com/openPMD/openPMD-api/pull/1395.patch?full_index=1",
+        sha256="791c0a9d1dc09226beb26e8e67824b3337d95f4a2a6e7e64637ea8f0d95eee61",
+        when="@0.15.0",
+    )
 
     extends("python", when="+python")
 

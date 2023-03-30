@@ -84,7 +84,7 @@ def _to_dict(compiler):
     d = {}
     d["spec"] = str(compiler.spec)
     d["paths"] = dict((attr, getattr(compiler, attr, None)) for attr in _path_instance_vars)
-    d["flags"] = dict((fname, fvals) for fname, fvals in compiler.flags)
+    d["flags"] = dict((fname, " ".join(fvals)) for fname, fvals in compiler.flags.items())
     d["flags"].update(
         dict(
             (attr, getattr(compiler, attr, None))
