@@ -1,5 +1,8 @@
 spack:
   view: false
+  packages:
+    all:
+      require: target=x86_64_v3
   definitions:
     - default_specs:
       - 'uncrustify build_system=autotools'
@@ -11,7 +14,7 @@ spack:
       - r-rcpp  # RPackage
       - ruby-rake  # RubyPackage
     - arch:
-      - '%gcc target=x86_64'
+      - '%gcc'
 
   specs:
     - matrix:
