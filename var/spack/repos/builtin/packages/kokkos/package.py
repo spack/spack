@@ -133,7 +133,7 @@ class Kokkos(CMakePackage, CudaPackage, ROCmPackage):
         "75": "turing75",
         "80": "ampere80",
         "86": "ampere86",
-        "90": "hopper90"
+        "90": "hopper90",
     }
     cuda_arches = spack_cuda_arch_map.values()
     conflicts("+cuda", when="cuda_arch=none")
@@ -143,7 +143,7 @@ class Kokkos(CMakePackage, CudaPackage, ROCmPackage):
         "gfx906": "vega906",
         "gfx908": "vega908",
         "gfx90a": "vega90A",
-        "gfx1030": "navi1030"
+        "gfx1030": "navi1030",
     }
     amd_support_conflict_msg = (
         "{0} is not supported; "
