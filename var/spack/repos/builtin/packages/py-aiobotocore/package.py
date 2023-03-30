@@ -19,6 +19,7 @@ class PyAiobotocore(PythonPackage):
     depends_on("py-setuptools", type="build")
     depends_on("py-botocore@1.27.59", when="@2.4.2", type=("build", "run"))
     depends_on("py-botocore@1.19.52", when="@1.2.1", type=("build", "run"))
+    depends_on("py-botocore@1.29.76", when="@2.5.0", type=("build", "run"))
     depends_on("py-aiohttp@3.3.1:", type=("build", "run"))
     depends_on("py-wrapt@1.10.10:", type=("build", "run"))
     depends_on("py-aioitertools@0.5.1:", type=("build", "run"))
