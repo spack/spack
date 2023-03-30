@@ -793,3 +793,62 @@ def test_git_versions_without_explicit_reference(
 
     for test_str, expected in tested_intersects:
         assert spec.intersects(test_str) is expected, test_str
+
+
+def test_total_order_versions_and_ranges():
+    # The set of version ranges and individual versions are comparable, which is used in
+    # VersionList. For identical versions: StandardVersion < GitVersion < ClosedOpenRange.
+    assert ver("=1.2") < ver("git.ref=1.2") < ver("1.2") < ver("=1.2.0")
+    assert ver("=1.2") <= ver("git.ref=1.2") <= ver("1.2") <= ver("=1.2.0")
+    assert ver("=1.2.0") >= ver("1.2") >= ver("git.ref=1.2") >= ver("=1.2")
+    assert ver("=1.2.0") > ver("1.2") > ver("git.ref=1.2") > ver("=1.2")
+    assert ver("=1.2") != ver("git.ref=1.2")
+    assert not ver("=1.2") == ver("git.ref=1.2")
+    assert ver("=1.2") != ver("1.2")
+    assert not ver("=1.2") == ver("1.2")
+    assert ver("1.2") != ver("git.ref=1.2")
+    assert not ver("1.2") == ver("git.ref=1.2")
+
+
+@pytest.mark.parametrize("version", ["=1.2", "git.ref=1.2", "1.2"])
+def test_version_comparison_with_list_fails(version):
+    vlist = VersionList(["=1.3"])
+
+    with pytest.raises(TypeError):
+        version < vlist
+
+    with pytest.raises(TypeError):
+        vlist < version
+
+    with pytest.raises(TypeError):
+        version <= vlist
+
+    with pytest.raises(TypeError):
+        vlist <= version
+
+    with pytest.raises(TypeError):
+        version >= vlist
+
+    with pytest.raises(TypeError):
+        vlist >= version
+
+    with pytest.raises(TypeError):
+        version > vlist
+
+    with pytest.raises(TypeError):
+        vlist > version
+
+
+def test_inclusion_upperbound():
+    is_specific = spack.spec.Spec("x@=1.2")
+    is_range = spack.spec.Spec("x@1.2")
+    upperbound = spack.spec.Spec("x@:1.2.0")
+
+    # The exact version is included in the range
+    assert is_specific.satisfies(upperbound)
+
+    # But the range 1.2:1.2 is not, since it includes for example 1.2.1
+    assert not is_range.satisfies(upperbound)
+
+    # They do intersect of course.
+    assert is_specific.intersects(upperbound) and is_range.intersects(upperbound)
