@@ -9,15 +9,10 @@ default:
     SPACK_TARGET_PLATFORM: "darwin"
     SPACK_TARGET_ARCH: "x86_64"
 
-.linux_x86_64:
+.linux_x86_64_v3:
   variables:
     SPACK_TARGET_PLATFORM: "linux"
-    SPACK_TARGET_ARCH: "x86_64"
-
-.linux_x86_64_v4:
-  variables:
-    SPACK_TARGET_PLATFORM: "linux"
-    SPACK_TARGET_ARCH: "x86_64_v4"
+    SPACK_TARGET_ARCH: "x86_64_v3"
 
 .linux_aarch64:
   variables:
@@ -169,7 +164,7 @@ protected-publish:
 # My Super Cool Pipeline
 ########################################
 # .my-super-cool-stack:
-#   extends: [ ".linux_x86_64" ]
+#   extends: [ ".linux_x86_64_v3" ]
 #   variables:
 #     SPACK_CI_STACK_NAME: my-super-cool-stack
 #     tags: [ "all", "tags", "your", "job", "needs"]
@@ -324,7 +319,7 @@ protected-publish:
 # E4S pipeline
 ########################################
 .e4s:
-  extends: [ ".linux_x86_64" ]
+  extends: [ ".linux_x86_64_v3" ]
   variables:
     SPACK_CI_STACK_NAME: e4s
 
@@ -362,7 +357,7 @@ e4s-protected-build:
 # GPU Testing Pipeline
 ########################################
 .gpu-tests:
-  extends: [ ".linux_x86_64" ]
+  extends: [ ".linux_x86_64_v3" ]
   variables:
     SPACK_CI_STACK_NAME: gpu-tests
 
@@ -400,7 +395,7 @@ gpu-tests-protected-build:
 # E4S OneAPI Pipeline
 ########################################
 .e4s-oneapi:
-  extends: [ ".linux_x86_64" ]
+  extends: [ ".linux_x86_64_v3" ]
   variables:
     SPACK_CI_STACK_NAME: e4s-oneapi
 
@@ -478,7 +473,7 @@ e4s-power-protected-build:
 # Build tests for different build-systems
 #########################################
 .build_systems:
-  extends: [ ".linux_x86_64" ]
+  extends: [ ".linux_x86_64_v3" ]
   variables:
     SPACK_CI_STACK_NAME: build_systems
 
@@ -514,7 +509,7 @@ build_systems-protected-build:
 # RADIUSS
 #########################################
 .radiuss:
-  extends: [ ".linux_x86_64" ]
+  extends: [ ".linux_x86_64_v3" ]
   variables:
     SPACK_CI_STACK_NAME: radiuss
 
@@ -562,7 +557,7 @@ radiuss-protected-build:
   image: { "name": "ghcr.io/spack/e4s-amazonlinux-2:v2023-03-09", "entrypoint": [""] }
 
 .radiuss-aws:
-  extends: [ ".linux_x86_64_v4" ]
+  extends: [ ".linux_x86_64_v3" ]
   variables:
     SPACK_CI_STACK_NAME: radiuss-aws
 
@@ -634,7 +629,7 @@ radiuss-aws-aarch64-protected-build:
 # ECP Data & Vis SDK
 ########################################
 .data-vis-sdk:
-  extends: [ ".linux_x86_64" ]
+  extends: [ ".linux_x86_64_v3" ]
   variables:
     SPACK_CI_STACK_NAME: data-vis-sdk
 
@@ -679,7 +674,7 @@ data-vis-sdk-protected-build:
   image: { "name": "ghcr.io/spack/e4s-amazonlinux-2:v2023-03-09", "entrypoint": [""] }
 
 .aws-ahug:
-  extends: [ ".linux_x86_64_v4" ]
+  extends: [ ".linux_x86_64_v3" ]
   variables:
     SPACK_CI_STACK_NAME: aws-ahug
 
@@ -757,7 +752,7 @@ aws-ahug-aarch64-protected-build:
   image: { "name": "ghcr.io/spack/e4s-amazonlinux-2:v2023-03-09", "entrypoint": [""] }
 
 .aws-isc:
-  extends: [ ".linux_x86_64_v4" ]
+  extends: [ ".linux_x86_64_v3" ]
   variables:
     SPACK_CI_STACK_NAME: aws-isc
 
@@ -830,7 +825,7 @@ aws-isc-aarch64-protected-build:
 # Spack Tutorial
 ########################################
 .tutorial:
-  extends: [ ".linux_x86_64" ]
+  extends: [ ".linux_x86_64_v3" ]
   variables:
     SPACK_CI_STACK_NAME: tutorial
 
@@ -866,7 +861,7 @@ tutorial-protected-build:
 # Machine Learning - Linux x86_64 (CPU)
 #######################################
 .ml-linux-x86_64-cpu:
-  extends: [ ".linux_x86_64_v4" ]
+  extends: [ ".linux_x86_64_v3" ]
   variables:
     SPACK_CI_STACK_NAME: ml-linux-x86_64-cpu
 
@@ -906,7 +901,7 @@ ml-linux-x86_64-cpu-protected-build:
 # Machine Learning - Linux x86_64 (CUDA)
 ########################################
 .ml-linux-x86_64-cuda:
-  extends: [ ".linux_x86_64_v4" ]
+  extends: [ ".linux_x86_64_v3" ]
   variables:
     SPACK_CI_STACK_NAME: ml-linux-x86_64-cuda
 
@@ -946,7 +941,7 @@ ml-linux-x86_64-cuda-protected-build:
 # Machine Learning - Linux x86_64 (ROCm)
 ########################################
 .ml-linux-x86_64-rocm:
-  extends: [ ".linux_x86_64_v4" ]
+  extends: [ ".linux_x86_64_v3" ]
   variables:
     SPACK_CI_STACK_NAME: ml-linux-x86_64-rocm
 
