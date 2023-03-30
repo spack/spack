@@ -15,7 +15,7 @@ class PyScipy(PythonPackage):
     as routines for numerical integration and optimization."""
 
     homepage = "https://www.scipy.org/"
-    pypi = "scipy/scipy-1.5.4.tar.gz"
+    pypi = "scipy/scipy-1.10.1.tar.gz"
     git = "https://github.com/scipy/scipy.git"
 
     maintainers("adamjstewart", "rgommers")
