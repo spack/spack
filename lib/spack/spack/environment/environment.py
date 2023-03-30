@@ -692,6 +692,13 @@ class ViewDescriptor(object):
 
         if update_method == "exchange":
             if os.path.isdir(new_root):
+                # If new_root is the newest thing in its directory, no need to update
+                parent = os.path.dirname(new_root)
+                siblings = [os.path.join(parent, s) for s in os.listdir(parent)]
+                siblings.sort(reverse=True, key=lambda p: os.stat(p).st_mtime)
+                if siblings[0] == new_root:
+                    tty.debug("View at %s does not need regenration." % self.root)
+                    return
                 shutil.rmtree(new_root)
 
         _error_on_nonempty_view_dir(new_root)
