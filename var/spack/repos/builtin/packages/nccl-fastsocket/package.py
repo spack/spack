@@ -3,23 +3,6 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-# ----------------------------------------------------------------------------
-# If you submit this package back to Spack as a pull request,
-# please first remove this boilerplate and all FIXME comments.
-#
-# This is a template package file for Spack.  We've put "FIXME"
-# next to all the things you'll want to change. Once you've handled
-# them, you can save this file and test your package like this:
-#
-#     spack install nccl-fastsocket
-#
-# You can edit this file again by typing:
-#
-#     spack edit nccl-fastsocket
-#
-# See the Spack documentation for more information on packaging.
-# ----------------------------------------------------------------------------
-
 from spack.package import *
 import os
 import tempfile
@@ -37,9 +20,8 @@ class NcclFastsocket(Package):
 
     depends_on("bazel", type="build")
     depends_on("nccl", type=["build", "run"])
-
     
-    maintainers = ["ahlin"]
+    maintainers = ["danielahlin"]
 
     def setup_build_environment(self, env):
         spec = self.spec
