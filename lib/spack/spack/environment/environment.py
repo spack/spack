@@ -640,7 +640,7 @@ class ViewDescriptor(object):
                     os.unlink(self.root)
                     return True
                 else:
-                    return "symlink" not in self.update_methods
+                    return "symlink" not in self.update_method
 
         return True
 
