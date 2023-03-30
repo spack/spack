@@ -40,6 +40,7 @@ class Octopus(AutotoolsPackage, CudaPackage):
 
     variant("mpi", default=True, description="Build with MPI support")
     variant("scalapack", default=False, when="+mpi", description="Compile with Scalapack")
+    variant("berkeleygw", default=False, description="Compile with BerkeleyGW")
     variant("metis", default=False, description="Compile with METIS")
     variant("parmetis", default=False, when="+mpi", description="Compile with ParMETIS")
     variant("netcdf", default=False, description="Compile with Netcdf")
@@ -92,6 +93,7 @@ class Octopus(AutotoolsPackage, CudaPackage):
         depends_on("arpack-ng+mpi", when="+arpack")
         depends_on("elpa+mpi", when="+elpa")
         depends_on("netcdf-fortran ^netcdf-c+mpi", when="+netcdf")
+        depends_on("berkeleygw@2.1+mpi", when="+berkeleygw")
 
     with when("~mpi"):  # list all the serial dependencies
         depends_on("fftw@3:+openmp~mpi", when="@8:9")  # FFT library
@@ -100,6 +102,7 @@ class Octopus(AutotoolsPackage, CudaPackage):
         depends_on("arpack-ng~mpi", when="+arpack")
         depends_on("elpa~mpi", when="+elpa")
         depends_on("netcdf-fortran ^netcdf-c~~mpi", when="+netcdf")
+        depends_on("berkeleygw@2.1~mpi", when="+berkeleygw")
 
     depends_on("etsf-io", when="+etsf-io")
     depends_on("py-numpy", when="+python")
@@ -232,6 +235,8 @@ class Octopus(AutotoolsPackage, CudaPackage):
         # --with-sparskit=${prefix}/lib/libskit.a
         # --with-pfft-prefix=${prefix} --with-mpifftw-prefix=${prefix}
         # --with-berkeleygw-prefix=${prefix}
+        if "+berkeleygw" in spec:
+            args.append("--with-berkeleygw-prefix=%s" % spec["berkeleygw"].prefix)
 
         # When preprocessor expands macros (i.e. CFLAGS) defined as quoted
         # strings the result may be > 132 chars and is terminated.
