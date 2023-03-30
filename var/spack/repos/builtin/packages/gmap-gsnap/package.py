@@ -14,6 +14,11 @@ class GmapGsnap(AutotoolsPackage):
     homepage = "http://research-pub.gene.com/gmap/"
     url = "http://research-pub.gene.com/gmap/src/gmap-gsnap-2017-06-16.tar.gz"
 
+    maintainers("snehring")
+
+    version(
+        "2023-02-17", sha256="d54abb6bc59da46823f5a1a9d94872a6b90468699112a6f375ddc7b91340db06"
+    )
     version(
         "2021-03-08", sha256="00de0e945b86bcbda50df94c68a61957f3783e232cce466fcd5f8d3a55398aa2"
     )
@@ -44,6 +49,7 @@ class GmapGsnap(AutotoolsPackage):
 
     depends_on("zlib")
     depends_on("bzip2")
+    depends_on("perl", type="run")
 
     variant(
         "simd",
@@ -74,3 +80,6 @@ class GmapGsnap(AutotoolsPackage):
         for simd in spec.variants["simd"].value:
             with working_dir(simd):
                 make("install")
+
+    def setup_build_environment(self, env):
+        env.set("PERL", self.spec["perl"].prefix.bin.perl)
