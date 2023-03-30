@@ -30,6 +30,8 @@ class Freesasa(AutotoolsPackage):
     depends_on("json-c", when="+json")
     depends_on("libxml2", when="+xml")
 
+    patch("libcpp.patch", when="@2.1.2")
+
     def autoreconf(self, spec, prefix):
         autoreconf("--install", "--verbose", "--force")
 
