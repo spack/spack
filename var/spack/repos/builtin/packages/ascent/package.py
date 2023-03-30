@@ -254,6 +254,9 @@ class Ascent(CMakePackage, CudaPackage):
     conflicts(
         "+shared", when="@:0.7 +cuda", msg="Ascent needs to be built with ~shared for CUDA builds."
     )
+    conflicts(
+        "~fides", when="@0.9: +adios2", msg="Ascent >= 0.9 assumes FIDES when building ADIOS2"
+    )
 
     def setup_build_environment(self, env):
         env.set("CTEST_OUTPUT_ON_FAILURE", "1")
