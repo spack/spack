@@ -198,7 +198,7 @@ class Kokkos(CMakePackage, CudaPackage, ROCmPackage):
 
     stds = ["11", "14", "17", "20"]
     # TODO: This should be named cxxstd for consistency with other packages
-    variant("std", default="14", values=stds, multi=False)
+    variant("std", default="17", values=stds, multi=False)
     variant("pic", default=False, description="Build position independent code")
 
     # nvcc does not currently work with C++17 or C++20
