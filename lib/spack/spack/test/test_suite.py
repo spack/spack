@@ -188,16 +188,22 @@ def test_get_test_suite_too_many(mock_packages, mock_test_stage):
 
 
 @pytest.mark.parametrize(
-    "virtuals,names", [(False, False), (False, True), (True, False), (True, True)]
+    "virtuals,expected",
+    [(False, ["Mpich.test_mpich"]), (True, ["Mpi.test_hello", "Mpich.test_mpich"])],
 )
-def test_test_functions(mock_packages, install_mockery, virtuals, names):
-    spec = spack.spec.Spec("printing-package").concretized()
-    expected = "PrintingPackage.test_print" if names else "test_print"
+def test_test_function_names(mock_packages, install_mockery, virtuals, expected):
+    spec = spack.spec.Spec("mpich").concretized()
+    tests = spack.install_test.test_function_names(spec.package, add_virtuals=virtuals)
+    assert sorted(tests) == sorted(expected)
 
-    fns = spack.install_test.test_functions(spec.package, add_virtuals=virtuals, names=names)
-    tests = fns if names else [f.__name__ for f in fns]
-    assert len(tests) == 1, "expecting only one test function"
-    assert tests[0] == expected
+
+def test_test_functions(mock_packages, install_mockery, ensure_debug, capsys):
+    """Confirm works package providing a package-less virtual."""
+    spec = spack.spec.Spec("simple-standalone-test").concretized()
+    fns = spack.install_test.test_functions(spec.package, add_virtuals=True)
+    out = capsys.readouterr()
+    assert len(fns) == 1, "Expected only one test function"
+    assert "does not appear to have a package file" in out[1]
 
 
 # TODO: This test should go away when compilers as dependencies is supported

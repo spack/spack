@@ -14,6 +14,8 @@ class SimpleStandaloneTest(Package):
 
     version("1.0", md5="0123456789abcdef0123456789abcdef")
 
+    provides("standalone-test")
+
     def test_echo(self):
         """simple stand-alone test"""
         echo = which("echo")

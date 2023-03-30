@@ -13,7 +13,7 @@ import re
 import shutil
 import sys
 from collections import Counter
-from typing import Callable, List, Optional, Tuple, Type, TypeVar, Union
+from typing import Callable, List, Optional, Tuple, Type, Union
 
 import llnl.util.filesystem as fs
 import llnl.util.tty as tty
@@ -543,23 +543,36 @@ def copy_test_files(pkg: "spack.package_base.PackageBase", test_spec: spack.spec
 
 
 TestPackageType = Union["spack.package_base.PackageBase", Type]
-FunctionType = Union[str, Callable]
-FunctionResult = List[FunctionType]
 
 
-def test_functions(
-    pkg: TestPackageType, add_virtuals: bool = False, names: bool = False
-) -> FunctionResult:
+def test_function_names(pkg: TestPackageType, add_virtuals: bool = False) -> List[str]:
+    """Grab the names of all non-empty test functions.
+
+    Args:
+        pkg: package or package class of interest
+        add_virtuals: ``True`` adds test methods of provided package
+            virtual, ``False`` only returns test functions of the package
+
+    Returns:
+        names of non-empty test functions
+
+    Raises:
+        ValueError: occurs if pkg is not a package class
+    """
+    fns = test_functions(pkg, add_virtuals)
+    return ["{0}.{1}".format(cls_name, fn.__name__) for (cls_name, fn) in fns]
+
+
+def test_functions(pkg: TestPackageType, add_virtuals: bool = False) -> List[Tuple[str, Callable]]:
     """Grab all non-empty test functions.
 
     Args:
         pkg: package or package class of interest
         add_virtuals: ``True`` adds test methods of provided package
             virtual, ``False`` only returns test functions of the package
-        names: ``True`` returns test function names, ``False`` returns functions
 
     Returns:
-        test functions or their names
+        list of non-empty test functions' (name, function)
 
     Raises:
         ValueError: occurs if pkg is not a package class
@@ -571,10 +584,14 @@ def test_functions(
     pkg_cls = pkg.__class__ if instance else pkg
     classes = [pkg_cls]
     if add_virtuals:
-        classes.extend([(Spec(name)).package_class for name in sorted(virtuals(pkg))])
+        vpkgs = virtuals(pkg)
+        for vname in vpkgs:
+            try:
+                classes.append((Spec(vname)).package_class)
+            except spack.repo.UnknownPackageError:
+                tty.debug("{0}: virtual does not appear to have a package file".format(vname))
 
     doc_regex = r'\s+("""[\w\s\(\)\-\,\;\:]+""")'
-    fmt = "{0}.{1}"
     tests = []
     for clss in classes:
         methods = inspect.getmembers(clss, predicate=lambda x: inspect.isfunction(x))
@@ -589,7 +606,7 @@ def test_functions(
             if len(lines) > 0 and lines[0] == "pass":
                 continue
 
-            tests.append(fmt.format(clss.__name__, name) if names else test_fn)
+            tests.append((clss.__name__, test_fn))
 
     return tests
 
@@ -623,9 +640,8 @@ def test_parts_process(
         for spec in test_specs:
             test_suite.current_test_spec = spec
 
-            # grab test functions associated with the spec, which may be a
-            # virtual spec
-            tests = test_functions(spec.package_class, names=False)
+            # grab test functions associated with the spec, which may be virtual
+            tests = test_functions(spec.package_class)
             if len(tests) == 0:
                 tester.status("", TestStatus.NO_TESTS)
                 continue
@@ -634,7 +650,7 @@ def test_parts_process(
             copy_test_files(pkg, spec)
 
             # Run the tests
-            for test_fn in tests:
+            for _, test_fn in tests:
                 with test_part(
                     pkg,
                     test_fn.__name__,

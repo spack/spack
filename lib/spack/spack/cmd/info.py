@@ -261,7 +261,7 @@ def print_tests(pkg):
     # if it has been overridden and, therefore, assumed to be implemented.
     color.cprint("")
     color.cprint(section_title("Stand-Alone/Smoke Test Methods:"))
-    names = spack.install_test.test_functions(pkg, add_virtuals=True, names=True)
+    names = spack.install_test.test_function_names(pkg, add_virtuals=True)
     if names:
         colify(sorted(names), indent=4)
     else:
