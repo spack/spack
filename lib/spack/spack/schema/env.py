@@ -111,14 +111,20 @@ schema = {
                                                 "type": "array",
                                                 "items": {"type": "string"},
                                             },
-                                            "update_method": {"anyOf": [
-                                                {"type": "string",
-                                                 "pattern": "(symlink|exchange)",
-                                                 },
-                                                {"type": "array",
-                                                 "items": {"type": "string", "pattern": "(symlink|exchange)"}
-                                                 },
-                                            ],
+                                            "update_method": {
+                                                "anyOf": [
+                                                    {
+                                                        "type": "string",
+                                                        "pattern": "(symlink|exchange)",
+                                                    },
+                                                    {
+                                                        "type": "array",
+                                                        "items": {
+                                                            "type": "string",
+                                                            "pattern": "(symlink|exchange)",
+                                                        },
+                                                    },
+                                                ]
                                             },
                                             "projections": projections_scheme,
                                         },
