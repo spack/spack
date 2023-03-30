@@ -210,7 +210,6 @@ class Octopus(AutotoolsPackage, CudaPackage):
             args.append("--enable-python")
 
         # --with-etsf-io-prefix=
-        # --with-sparskit=${prefix}/lib/libskit.a
         if "+sparskit" in spec:
             "--with-sparskit=%s" % os.path.join(self.spec["sparskit"].prefix.lib, "libskit.a")
         # --with-pfft-prefix=${prefix} --with-mpifftw-prefix=${prefix}
