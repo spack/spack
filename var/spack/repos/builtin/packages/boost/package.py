@@ -526,6 +526,7 @@ class Boost(Package):
                 f.write(self.bjam_python_line(spec))
 
         options.append("-show-libraries")
+        options.append("--prefix=%s" % prefix)
 
     def determine_b2_options(self, spec, options):
         if "+debug" in spec:
