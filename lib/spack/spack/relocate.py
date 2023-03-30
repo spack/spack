@@ -675,7 +675,7 @@ def relocate_text_bin(binaries, prefixes):
     Raises:
       spack.relocate_text.BinaryTextReplaceError: when the new path is longer than the old path
     """
-    BinaryFilePrefixReplacer.from_strings_or_bytes(prefixes).apply(binaries)
+    return BinaryFilePrefixReplacer.from_strings_or_bytes(prefixes).apply(binaries)
 
 
 def is_relocatable(spec):

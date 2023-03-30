@@ -12,6 +12,7 @@ class PyTraitlets(PythonPackage):
     homepage = "https://github.com/ipython/traitlets"
     pypi = "traitlets/traitlets-5.0.4.tar.gz"
 
+    version("5.9.0", sha256="f6cde21a9c68cf756af02035f72d5a723bf607e862e7be33ece505abf4a3bad9")
     version("5.7.1", sha256="fde8f62c05204ead43c2c1b9389cfc85befa7f54acb5da28529d671175bb4108")
     version("5.3.0", sha256="0bb9f1f9f017aa8ec187d8b1b2a7a6626a2a1d877116baba52a129bfa124f8e2")
     version("5.1.1", sha256="059f456c5a7c1c82b98c2e8c799f39c9b8128f6d0d46941ee118daace9eb70c7")
@@ -26,8 +27,6 @@ class PyTraitlets(PythonPackage):
     version("4.1.0", sha256="440e38dfa5d2a26c086d4b427cfb7aed17d0a2dca78bce90c33354da2592af5b")
     version("4.0.0", sha256="0b140b4a94a4f1951887d9bce4650da211f79600fc9fdb422acc90c5bbe0233b")
 
-    depends_on("python@3.7:", when="@5:", type=("build", "run"))
-    depends_on("python@2.7:2.8,3.3:", type=("build", "run"))
     depends_on("py-hatchling@1.5:", when="@5.5:", type="build")
     depends_on("py-hatchling@0.25:", when="@5.2.1.post0:", type="build")
     depends_on("py-setuptools@40.8:", when="@:5.2.1.a", type="build")

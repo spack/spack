@@ -71,7 +71,9 @@ class R(AutotoolsPackage):
     depends_on("blas", when="+external-lapack")
     depends_on("lapack", when="+external-lapack")
     depends_on("bzip2")
-    depends_on("curl+libidn2")
+    # R didn't anticipate the celebratory
+    # non-breaking major version bump of curl 8.
+    depends_on("curl+libidn2@:7")
     depends_on("icu4c")
     depends_on("java")
     depends_on("ncurses")

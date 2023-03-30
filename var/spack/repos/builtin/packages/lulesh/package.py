@@ -41,8 +41,7 @@ class Lulesh(MakefilePackage):
             targets.append("SILO_INCDIR = {0}".format(self.spec["silo"].prefix.include))
             targets.append("SILO_LIBDIR = {0}".format(self.spec["silo"].prefix.lib))
             cxxflag = " -g -DVIZ_MESH -I${SILO_INCDIR} "
-            ldflags = " -g -L${SILO_LIBDIR} -Wl,-rpath -Wl, "
-            ldflags += "${SILO_LIBDIR} -lsiloh5 -lhdf5 "
+            ldflags = " -g -L${SILO_LIBDIR} -Wl,-rpath=${SILO_LIBDIR} -lsiloh5 -lhdf5 "
 
         if "+openmp" in self.spec:
             cxxflag += self.compiler.openmp_flag
