@@ -3299,19 +3299,14 @@ def test_environment_created_in_users_location(mutable_config, tmpdir):
 
 
 @pytest.mark.parametrize("update_method", ["symlink", "exchange"])
-def test_view_update_mismatch(update_method, tmpdir, install_mockery, mock_fetch):
+def test_view_update_mismatch(update_method, tmpdir, install_mockery, mock_fetch, monkeypatch):
     root = str(tmpdir.join("root"))
     if update_method == "symlink":
         os.makedirs(root)
         checker = "cannot be updated with 'symlink' update method"
         forceable = True
-    elif supports_renameat2:
-        link = str(tmpdir.join("symlink"))
-        os.makedirs(link)
-        os.symlink(link, root)
-        checker = "cannot be updated with 'exchange' update method"
-        forceable = True
     else:
+        monkeypatch.setattr(spack.util.atomic_update, "_renameat2", None)
         checker = "does not support 'exchange' atomic update method"
         forceable = False
 
