@@ -38,6 +38,7 @@ class PyOpenmc(PythonPackage):
     for ver in [
         "develop",
         "master",
+        "0.13.3",
         "0.13.2",
         "0.13.1",
         "0.13.0",
