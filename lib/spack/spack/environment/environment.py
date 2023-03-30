@@ -139,6 +139,8 @@ user_speclist_name = "specs"
 default_view_name = "default"
 # Default behavior to link all packages into views (vs. only root packages)
 default_view_link = "all"
+# Default behavior to use exchange if possible and otherwise symlink for view updates
+default_update_method = ["exchange", "symlink"]
 
 
 def installed_specs():
@@ -407,7 +409,7 @@ class ViewDescriptor(object):
         exclude=[],
         link=default_view_link,
         link_type="symlink",
-        update_method="auto",
+        update_method=default_update_method,
     ):
         self.base = base_path
         self.raw_root = root
@@ -455,7 +457,7 @@ class ViewDescriptor(object):
             ret["link_type"] = inverse_view_func_parser(self.link_type)
         if self.link != default_view_link:
             ret["link"] = self.link
-        if self.update_method != "auto":
+        if self.update_method != default_update_method:
             ret["update_method"] = self.update_method
         return ret
 
@@ -469,7 +471,7 @@ class ViewDescriptor(object):
             d.get("exclude", []),
             d.get("link", default_view_link),
             d.get("link_type", "symlink"),
-            d.get("update_method", "auto"),
+            d.get("update_method", default_update_method),
         )
 
     @property
@@ -599,60 +601,70 @@ class ViewDescriptor(object):
 
         return specs
 
-    def raise_if_invalid_exchange(self):
-        if not spack.util.atomic_update.renameat2():
-            msg = "This operating system does not support the 'exchange' atomic update method."
-            msg += f"\n  If the view at {self.root} does not already exist on the filesystem,"
-            msg += "change its update_method to 'symlink' or 'auto'."
-            msg += f"\n  If the view at {self.root} exists already, either change the"
-            msg += " update_method and run `spack env view regenerate --force`"
-            msg += " or run on a newer OS."
-            raise RuntimeError(msg)
-
-    def raise_if_symlink_before_exchange(self, force):
-        if os.path.islink(self.root):
-            if force:
-                try:
-                    os.unlink(self.root)
-                    return
-                except OSError:
-                    pass
-            msg = f"The view at {self.root} cannot be updated with the 'exchange' update method"
-            msg += " because it was originally constructed with the 'symlink' method."
-            msg += "\n  Either change the update method to 'symlink' or"
-            msg += " run `spack env view regenerate --force` for a non-atomic update"
-            raise RuntimeError(msg)
-
-    def raise_if_exchange_before_symlink(self, force):
-        if os.path.isdir(self.root) and not os.path.islink(self.root):
-            if force:
-                shutil.rmtree(self.root, ignore_errors=True)
-                return
-            msg = f"The view at {self.root} cannot be updated with the 'symlink' update method"
-            msg += " because it was originally constructed with the 'exchange' method."
-            msg += "\n  Either change the update method to 'exchange' or"
-            msg += " run `spack env view regenerate --force` for a non-atomic update"
-            raise RuntimeError(msg)
-
-    def use_renameat2(self, force=False):
-        # If it's set explicitly, respect that
-        if self.update_method == "exchange":
-            self.raise_if_symlink_before_exchange(force)
-            self.raise_if_invalid_exchange()
-            return True
-        if self.update_method == "symlink":
-            self.raise_if_exchange_before_symlink(force)
-            return False
-
-        # If it's set to "auto", detect which it should be
-        if os.path.islink(self.root):
-            return False
-        elif os.path.isdir(self.root):
+    def update_method_error_msg(self, methods):
+        """When methods are already determined invalid, construct error message for methods."""
+        msg = "View cannot be updated using specified update methods:"
+        if "exchange" in methods:
             if not spack.util.atomic_update.renameat2():
-                self.raise_if_exchange_before_symlink(force)
-            return True
+                msg += "\n  Operating system does not support 'exchange' atomic update method."
+                msg += f"\n    If the view {self.root} does not already exist on the filesystem,"
+                msg += " change its update_method to 'symlink' or 'auto'."
+                msg += f"\n    If the view at {self.root} exists already, either change the"
+                msg += " update_method and run `spack env view regenerate --force`"
+                msg += " or run on a newer OS."
+            else:
+                msg += f"\n  The view {self.root} cannot be updated with 'exchange' update method"
+                msg += " because it was originally constructed with the 'symlink' method."
+                msg += "\n    Either change the update method to 'symlink' or"
+                msg += " run `spack env view regenerate --force` for a non-atomic update."
+        if "symlink" in methods:
+            msg += f"\n  The view {self.root} cannot be updated with 'symlink' update method"
+            msg += " because it was originally constructed with the 'exchange' method."
+            msg += "\n    Either change the update method to 'exchange' or"
+            msg += " run `spack env view regenerate --force` for a non-atomic update."
+        return msg
 
-        return bool(spack.util.atomic_update.renameat2())
+    def valid_update_method(self, method, force):
+        return getattr(self, f"valid_update_method_{method}")(force)
+
+    def valid_update_method_exchange(self, force):
+        if not spack.util.atomic_update.renameat2():
+            return False
+
+        # This is all to ensure we don't swap symlink -> exchange if we have
+        # symlink as an acceptable method. This is to avoid problems switching
+        # between OSs
+        if os.path.exists(self.root):
+            if os.path.islink(self.root):
+                if force:
+                    os.unlink(self.root)
+                    return True
+                else:
+                    return "symlink" not in self.update_methods
+
+        return True
+
+    def valid_update_method_symlink(self, force):
+        if os.path.exists(self.root):
+            if not os.path.islink(self.root):
+                if force:
+                    shutil.rmtree(self.root)
+                    return True
+                else:
+                    return False
+        return True
+
+    def update_method_to_use(self, force=False):
+        update_methods = self.update_method
+        if isinstance(update_methods, str):
+            update_methods = [update_methods]
+
+        for method in update_methods:
+            # Check whether we can use this method and return if we can
+            if self.valid_update_method(method, force):
+                return method
+
+        raise RuntimeError(self.update_method_error_msg(update_methods))
 
     def regenerate(self, concretized_root_specs, force=False):
         specs = self.specs_for_view(concretized_root_specs)
@@ -667,7 +679,7 @@ class ViewDescriptor(object):
         # This allows for atomic swaps when we update the view
 
         # Check which atomic update method we need
-        use_renameat2 = self.use_renameat2(force)
+        update_method = self.update_method_to_use(force)
 
         # cache the roots because the way we determine which is which does
         # not work while we are updating
@@ -678,7 +690,7 @@ class ViewDescriptor(object):
             tty.debug("View at %s does not need regeneration." % self.root)
             return
 
-        if use_renameat2:
+        if update_method == "exchange":
             if os.path.isdir(new_root):
                 shutil.rmtree(new_root)
 
@@ -694,7 +706,7 @@ class ViewDescriptor(object):
         try:
             fs.mkdirp(new_root)
             view.add_specs(*specs, with_dependencies=False)
-            if use_renameat2:
+            if update_method == "exchange":
                 spack.util.atomic_update.atomic_update_renameat2(new_root, self.root)
             else:
                 spack.util.atomic_update.atomic_update_symlink(new_root, self.root)

@@ -3303,16 +3303,16 @@ def test_view_update_mismatch(update_method, tmpdir, install_mockery, mock_fetch
     root = str(tmpdir.join("root"))
     if update_method == "symlink":
         os.makedirs(root)
-        checker = "cannot be updated with the 'symlink' update method"
+        checker = "cannot be updated with 'symlink' update method"
         forceable = True
     elif supports_renameat2:
         link = str(tmpdir.join("symlink"))
         os.makedirs(link)
         os.symlink(link, root)
-        checker = "cannot be updated with the 'exchange' update method"
+        checker = "cannot be updated with 'exchange' update method"
         forceable = True
     else:
-        checker = "does not support the 'exchange' atomic update method"
+        checker = "does not support 'exchange' atomic update method"
         forceable = False
 
     view = ev.environment.ViewDescriptor(
