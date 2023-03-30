@@ -20,6 +20,7 @@ from llnl.util.filesystem import (
 )
 from llnl.util.lang import index_by, match_predicate
 from llnl.util.link_tree import (
+    ConflictingSpecsError,
     DestinationMergeVisitor,
     LinkTree,
     MergeConflictSummary,
@@ -638,6 +639,22 @@ class SimpleFilesystemView(FilesystemView):
     def __init__(self, root, layout, **kwargs):
         super(SimpleFilesystemView, self).__init__(root, layout, **kwargs)
 
+    def _sanity_check_view_projection(self, specs):
+        """A very common issue is that we end up with two specs of the same
+        package, that project to the same prefix. We want to catch that as
+        early as possible and give a sensible error to the user. Here we use
+        the metadata dir (.spack) projection as a quick test to see whether
+        two specs in the view are going to clash. The metadata dir is used
+        because it's always added by Spack with identical files, so a
+        guaranteed clash that's easily verified."""
+        seen = dict()
+        for current_spec in specs:
+            metadata_dir = self.relative_metadata_dir_for_spec(current_spec)
+            conflicting_spec = seen.get(metadata_dir)
+            if conflicting_spec:
+                raise ConflictingSpecsError(current_spec, conflicting_spec)
+            seen[metadata_dir] = current_spec
+
     def add_specs(self, *specs, **kwargs):
         assert all((s.concrete for s in specs))
         if len(specs) == 0:
@@ -651,6 +668,8 @@ class SimpleFilesystemView(FilesystemView):
 
         if kwargs.get("exclude", None):
             specs = set(filter_exclude(specs, kwargs["exclude"]))
+
+        self._sanity_check_view_projection(specs)
 
         # Ignore spack meta data folder.
         def skip_list(file):
@@ -714,16 +733,17 @@ class SimpleFilesystemView(FilesystemView):
             for src_root, group in per_source
         }
 
+    def relative_metadata_dir_for_spec(self, spec):
+        return os.path.join(
+            self.get_relative_projection_for_spec(spec), spack.store.layout.metadata_dir, spec.name
+        )
+
     def link_metadata(self, specs):
         metadata_visitor = SourceMergeVisitor()
 
         for spec in specs:
             src_prefix = os.path.join(spec.package.view_source(), spack.store.layout.metadata_dir)
-            proj = os.path.join(
-                self.get_relative_projection_for_spec(spec),
-                spack.store.layout.metadata_dir,
-                spec.name,
-            )
+            proj = self.relative_metadata_dir_for_spec(spec)
             metadata_visitor.set_projection(proj)
             visit_directory_tree(src_prefix, metadata_visitor)
 

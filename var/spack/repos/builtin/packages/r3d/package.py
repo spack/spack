@@ -36,16 +36,17 @@ class R3d(CMakePackage):
         description="Build R3D regression tests (versions 2019-04-24 or earlier)",
     )
 
+    variant(
+        "pic", default=False, description="Produce position-independent code (for shared libs)"
+    )
+
     @when("@:2019-04-24")
     def cmake(self, spec, prefix):
         pass
 
     @when("@:2019-04-24")
     def build(self, spec, prefix):
-
-        make_args = [
-            "CC={0}".format(spack_cc),
-        ]
+        make_args = ["CC={0}".format(spack_cc)]
         make("libr3d.a", *make_args)
 
         if "+test" in spec:
@@ -54,7 +55,6 @@ class R3d(CMakePackage):
 
     @when("@:2019-04-24")
     def install(self, spec, prefix):
-
         # R3D does not have an install target so create our own here.
         mkdirp(prefix.include)
         my_headers = find(".", "*.h", recursive=False)
@@ -65,7 +65,6 @@ class R3d(CMakePackage):
 
         if "+test" in spec:
             with working_dir("tests"):
-
                 # R3D does not have an install target so create our own here.
                 mkdirp(prefix.test)
                 install("r2d_unit_tests", prefix.test)
@@ -84,5 +83,7 @@ class R3d(CMakePackage):
             options.append("-DENABLE_UNIT_TESTS=ON")
         else:
             options.append("-DENABLE_UNIT_TESTS=OFF")
+
+        options.append(self.define_from_variant("CMAKE_POSITION_INDEPENDENT_CODE", "pic"))
 
         return options

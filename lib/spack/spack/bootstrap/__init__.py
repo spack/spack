@@ -5,11 +5,7 @@
 """Function and classes needed to bootstrap Spack itself."""
 
 from .config import ensure_bootstrap_configuration, is_bootstrapping
-from .core import (
-    all_core_root_specs,
-    ensure_core_dependencies,
-    ensure_patchelf_in_path_or_raise,
-)
+from .core import all_core_root_specs, ensure_core_dependencies, ensure_patchelf_in_path_or_raise
 from .environment import BootstrapEnvironment, ensure_environment_dependencies
 from .status import status_message
 

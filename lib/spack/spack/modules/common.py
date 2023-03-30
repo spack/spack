@@ -207,7 +207,7 @@ def merge_config_rules(configuration, spec):
     # evaluated in order of appearance in the module file
     spec_configuration = module_specific_configuration.pop("all", {})
     for constraint, action in module_specific_configuration.items():
-        if spec.satisfies(constraint, strict=True):
+        if spec.satisfies(constraint):
             if hasattr(constraint, "override") and constraint.override:
                 spec_configuration = {}
             update_dictionary_extending_lists(spec_configuration, action)
@@ -249,10 +249,7 @@ def root_path(name, module_set_name):
     Returns:
         root folder for module file installation
     """
-    defaults = {
-        "lmod": "$spack/share/spack/lmod",
-        "tcl": "$spack/share/spack/modules",
-    }
+    defaults = {"lmod": "$spack/share/spack/lmod", "tcl": "$spack/share/spack/modules"}
     # Root folders where the various module files should be written
     roots = spack.config.get("modules:%s:roots" % module_set_name, {})
 
@@ -402,13 +399,19 @@ def get_module(module_type, spec, get_full_path, module_set_name="default", requ
     else:
         writer = spack.modules.module_types[module_type](spec, module_set_name)
         if not os.path.isfile(writer.layout.filename):
+            fmt_str = "{name}{@version}{/hash:7}"
             if not writer.conf.excluded:
-                err_msg = "No module available for package {0} at {1}".format(
-                    spec, writer.layout.filename
+                raise ModuleNotFoundError(
+                    "The module for package {} should be at {}, but it does not exist".format(
+                        spec.format(fmt_str), writer.layout.filename
+                    )
                 )
-                raise ModuleNotFoundError(err_msg)
             elif required:
-                tty.debug("The module configuration has excluded {0}: " "omitting it".format(spec))
+                tty.debug(
+                    "The module configuration has excluded {}: omitting it".format(
+                        spec.format(fmt_str)
+                    )
+                )
             else:
                 return None
 

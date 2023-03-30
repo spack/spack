@@ -13,8 +13,7 @@ from contextlib import contextmanager
 
 from llnl.util import tty
 
-is_windows = sys.platform == "win32"
-if is_windows:
+if sys.platform == "win32":
     import winreg
 
 
@@ -154,7 +153,7 @@ class WindowsRegistryView(object):
                          to get an entrypoint, the HKEY constants are always open, or an already
                          open key can be used instead.
         """
-        if not is_windows:
+        if sys.platform != "win32":
             raise RuntimeError(
                 "Cannot instantiate Windows Registry class on non Windows platforms"
             )
@@ -167,7 +166,7 @@ class WindowsRegistryView(object):
         try:
             yield
         except FileNotFoundError as e:
-            if e.winerror == 2:
+            if sys.platform == "win32" and e.winerror == 2:
                 tty.debug("Key %s at position %s does not exist" % (self.key, str(self.root)))
             else:
                 raise e
@@ -182,7 +181,7 @@ class WindowsRegistryView(object):
                 winreg.OpenKeyEx(self.root.hkey, self.key, access=winreg.KEY_READ),
             )
         except FileNotFoundError as e:
-            if e.winerror == 2:
+            if sys.platform == "win32" and e.winerror == 2:
                 self._reg = -1
                 tty.debug("Key %s at position %s does not exist" % (self.key, str(self.root)))
             else:

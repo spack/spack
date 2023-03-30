@@ -9,10 +9,7 @@ import pickle
 import pytest
 
 from spack.environment import Environment
-from spack.environment.environment import (
-    SpackEnvironmentViewError,
-    _error_on_nonempty_view_dir,
-)
+from spack.environment.environment import SpackEnvironmentViewError, _error_on_nonempty_view_dir
 
 
 def test_environment_pickle(tmpdir):

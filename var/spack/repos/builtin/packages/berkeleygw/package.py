@@ -131,7 +131,6 @@ class Berkeleygw(MakefilePackage):
         filter_file("Precision : 8e-15", "Precision : 9e-15", "testsuite/GaAs-EPM/GaAs.test")
 
     def build(self, spec, prefix):
-
         buildopts = []
         paraflags = []
 

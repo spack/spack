@@ -65,7 +65,7 @@ class Libbeagle(AutotoolsPackage, CudaPackage):
         args = [
             # Since spack will inject architecture flags turn off -march=native
             # when building libbeagle.
-            "--disable-march-native",
+            "--disable-march-native"
         ]
 
         if "+cuda" in self.spec:

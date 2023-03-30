@@ -58,9 +58,7 @@ Testing
 ``WafPackage`` also provides ``test`` and ``installtest`` methods,
 which are run after the ``build`` and ``install`` phases, respectively.
 By default, these phases do nothing, but you can override them to
-run package-specific unit tests. For example, the
-`py-py2cairo <https://github.com/spack/spack/blob/develop/var/spack/repos/builtin/packages/py-py2cairo/package.py>`_
-package uses:
+run package-specific unit tests.
 
 .. code-block:: python
 

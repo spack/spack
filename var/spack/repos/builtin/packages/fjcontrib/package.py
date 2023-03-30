@@ -16,6 +16,7 @@ class Fjcontrib(AutotoolsPackage):
 
     tags = ["hep"]
 
+    version("1.051", sha256="76a2ec612c768db3eb6bbaf686d02b05ddb64dde477d185e20df563b52308473")
     version("1.045", sha256="667f15556ca371cfaf185086fb41ac579658a233c18fb1e5153382114f9785f8")
     version("1.044", sha256="de3f45c2c1bed6d7567483e4a774575a504de8ddc214678bac7f64e9d2e7e7a7")
     version("1.043", sha256="ef0f586b19ffd12f392b7facc890a73d31fc11b9f5bb727cf3743d6eb59e9993")

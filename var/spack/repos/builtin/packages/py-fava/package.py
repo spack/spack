@@ -15,11 +15,6 @@ class PyFava(PythonPackage):
 
     version("1.18", sha256="21336b695708497e6f00cab77135b174c51feb2713b657e0e208282960885bf5")
 
-    # For some reason Fava adds a whole bunch of executables to
-    # its bin directory, and this causes clashes when loading
-    # the module.
-    extends("python", ignore="bin/^(?!fava).*")
-
     # Some of the dependencies are not listed as required at
     # build or run time, but actually are.
     # - py-setuptools

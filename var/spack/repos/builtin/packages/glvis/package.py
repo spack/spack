@@ -155,13 +155,7 @@ class MakefileBuilder(spack.build_systems.makefile.MakefileBuilder):
         if self.spec.satisfies("@4.0:"):
             # Spack will inject the necessary include dirs and link paths via
             # its compiler wrapper, so we can skip them:
-            result += [
-                "GLM_DIR=",
-                "SDL_DIR=",
-                "GLEW_DIR=",
-                "FREETYPE_DIR=",
-                "OPENGL_DIR=",
-            ]
+            result += ["GLM_DIR=", "SDL_DIR=", "GLEW_DIR=", "FREETYPE_DIR=", "OPENGL_DIR="]
             # Spack will not inject include dirs like /usr/include/freetype2,
             # so we need to do it ourselves:
             if spec["freetype"].external:

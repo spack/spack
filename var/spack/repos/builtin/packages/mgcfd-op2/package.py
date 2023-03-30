@@ -33,12 +33,7 @@ class MgcfdOp2(MakefilePackage):
     depends_on("op2-dsl~mpi", when="~mpi")
 
     def setup_build_environment(self, env):
-        compiler_map = {
-            "gcc": "gnu",
-            "arm": "clang",
-            "cce": "cray",
-            "nvhpc": "pgi",
-        }
+        compiler_map = {"gcc": "gnu", "arm": "clang", "cce": "cray", "nvhpc": "pgi"}
         if self.spec.compiler.name in compiler_map:
             env.set("COMPILER", compiler_map[self.spec.compiler.name])
         else:

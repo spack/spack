@@ -26,12 +26,7 @@ class Sqlcipher(AutotoolsPackage):
     version("3.4.2", sha256="69897a5167f34e8a84c7069f1b283aba88cdfa8ec183165c4a5da2c816cfaadb")
 
     depends_on("openssl")
-    depends_on(
-        "tcl",
-        type=[
-            "build",
-        ],
-    )
+    depends_on("tcl", type=["build"])
     depends_on("zlib")
 
     def configure_args(self):
