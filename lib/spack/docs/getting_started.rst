@@ -115,9 +115,9 @@ the environment.
 
 .. note::
 
-   The ``spack`` command will ignore any python interpreter installed by
-   spack found in a view, even if explicitly passed in ``SPACK_PYTHON``.
-   This is done so that it is impossible for ``spack uninstall`` to
+   When trying to find a suitable python interpreter, the ``spack`` command will
+   ignore any python interpreter installed by spack found in a view. This is
+   done so that it is impossible for ``spack uninstall`` or a re-concretization
    to remove the python that ``spack`` is running on.
 
 ^^^^^^^^^^^^^^^^^^^^
