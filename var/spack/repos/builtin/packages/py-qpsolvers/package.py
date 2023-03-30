@@ -10,7 +10,7 @@ class PyQpsolvers(PythonPackage):
     """Unified interface to convex Quadratic Programming (QP) solvers available in
     Python."""
 
-    homepage = "https://www.example.com"
+    homepage = "https://github.com/qpsolvers/qpsolvers"
     pypi = "qpsolvers/qpsolvers-3.1.0.tar.gz"
 
     maintainers("meyersbs")
