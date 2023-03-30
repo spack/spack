@@ -239,6 +239,7 @@ def test_test_list_all(mock_packages):
     assert set(pkgs) == set(
         [
             "fail-test-audit",
+            "mpich",
             "printing-package",
             "py-extension1",
             "py-extension2",

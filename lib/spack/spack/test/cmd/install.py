@@ -1076,7 +1076,7 @@ def test_installation_fail_tests(install_mockery, mock_fetch, name, method):
 
     assert output.count(method) == 2
     assert output.count("method not implemented") == 1
-    assert output.count("TestFailure: 1 tests failed") == 1
+    assert output.count("TestFailure: 1 test failed") == 1
 
 
 def test_install_use_buildcache(

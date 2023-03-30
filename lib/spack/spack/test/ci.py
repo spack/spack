@@ -566,8 +566,7 @@ def test_ci_run_standalone_tests_not_installed_cdash(
     ci.run_standalone_tests(**args)
     out = capfd.readouterr()[0]
     # CDash *and* log file output means log file ignored
-    assert "xml option is ignored" in out
-    assert "0 passed of 0" in out
+    assert "xml option is ignored with CDash" in out
 
     # copy test results (though none)
     artifacts_dir = tmp_path / "artifacts"

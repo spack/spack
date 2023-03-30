@@ -641,7 +641,12 @@ def test_parts_process(
             test_suite.current_test_spec = spec
 
             # grab test functions associated with the spec, which may be virtual
-            tests = test_functions(spec.package_class)
+            try:
+                tests = test_functions(spec.package_class)
+            except spack.repo.UnknownPackageError:
+                # some virtuals don't have a package
+                tests = []
+
             if len(tests) == 0:
                 tester.status("", TestStatus.NO_TESTS)
                 continue
