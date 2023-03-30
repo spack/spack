@@ -27,11 +27,6 @@ class Nwchem(Package):
         sha256="9bf913b811b97c8ed51bc5a02bf1c8e18456d0719c0a82b2e71223a596d945a7",
         url="https://github.com/nwchemgit/nwchem/releases/download/v7.0.2-release/nwchem-7.0.2-release.revision-b9985dfa-srconly.2020-10-12.tar.bz2",
     )
-    version(
-        "7.0.0",
-        sha256="e3c6510627345be596f4079047e5e7b59e6c20599798ecfe122e3527f8ad6eb0",
-        url="https://github.com/nwchemgit/nwchem/releases/download/v7.0.0-release/nwchem-7.0.0-release.revision-2c9a1c7c-srconly.2020-02-26.tar.bz2",
-    )
 
     variant("openmp", default=False, description="Enables OpenMP support")
     variant("mpipr", default=False, description="Enables ARMCI with progress rank")
@@ -47,7 +42,7 @@ class Nwchem(Package):
     depends_on("mpi")
     depends_on("scalapack")
     depends_on("fftw-api")
-    depends_on("python@3:3.9", type=("build", "link", "run"), when="@:7.0.2")
+    depends_on("python@3", type=("build", "link", "run"))
 
     def install(self, spec, prefix):
         scalapack = spec["scalapack"].libs
@@ -64,21 +59,20 @@ class Nwchem(Package):
                 "CC=%s" % os.path.basename(spack_cc),
                 "FC=%s" % os.path.basename(spack_fc),
                 "USE_MPI=y",
-                "USE_BLAS=y",
-                "USE_FFTW3=y",
                 "PYTHONVERSION=%s" % spec["python"].version.up_to(2),
                 "BLASOPT=%s" % ((lapack + blas).ld_flags),
-                "BLAS_LIB=%s" % blas.ld_flags,
                 "LAPACK_LIB=%s" % lapack.ld_flags,
                 "SCALAPACK_LIB=%s" % scalapack.ld_flags,
-                "FFTW3_LIB=%s" % fftw.ld_flags,
-                "FFTW3_INCLUDE={0}".format(spec["fftw-api"].prefix.include),
-                "NWCHEM_MODULES=all python",
-                "NWCHEM_LONG_PATHS=Y",  # by default NWCHEM_TOP is 64 char max
                 "USE_NOIO=Y",  # skip I/O algorithms
-                "USE_NOFSCHECK=TRUE",  # FSCHECK, caused problems like code crashes
+                "MRCC_METHODS=y",  # TCE extra module
+                "IPCCSD=y",  # TCE extra module
+                "EACCSD=y",  # TCE extra module
             ]
         )
+        if self.spec.satisfies("@7.2.0:"):
+            args.extend(["NWCHEM_MODULES=all python gwmol"])
+        else:
+            args.extend(["NWCHEM_MODULES=all python"])
 
         # TODO: query if blas/lapack/scalapack uses 64bit Ints
         # A flag to distinguish between 32bit and 64bit integers in linear
@@ -103,6 +97,11 @@ class Nwchem(Package):
 
         if "+mpipr" in spec:
             args.extend(["ARMCI_NETWORK=MPI-PR"])
+
+        if "+fftw3" in spec:
+            args.extend(["USE_FFTW3=y"])
+            args.extend(["FFTW3_LIB=%s" % fftw.ld_flags])
+            args.extend(["FFTW3_INCLUDE={0}".format(spec["fftw-api"].prefix.include)])
 
         with working_dir("src"):
             make("nwchem_config", *args)
