@@ -342,6 +342,16 @@ def test_fc_flags(wrapper_environment, wrapper_flags):
     )
 
 
+def test_Wl_parsing(wrapper_environment):
+    check_args(
+        cc,
+        ["-Wl,-rpath,/a,--enable-new-dtags,-rpath=/b,--rpath", "-Wl,/c"],
+        [real_cc]
+        + target_args
+        + ["-Wl,--disable-new-dtags", "-Wl,-rpath,/a", "-Wl,-rpath,/b", "-Wl,-rpath,/c"],
+    )
+
+
 def test_dep_rpath(wrapper_environment):
     """Ensure RPATHs for root package are added."""
     check_args(cc, test_args, [real_cc] + target_args + common_compile_args)
