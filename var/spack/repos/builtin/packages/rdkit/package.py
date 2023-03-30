@@ -89,6 +89,7 @@ class Rdkit(CMakePackage):
         if "@2022_09_5:" in self.spec:
             args.extend(
                 [
+                    self.define_from_variant("RDK_BUILD_PYTHON_WRAPPERS", "python"),
                     self.define_from_variant("RDK_BUILD_CONTRIB", "contrib"),
                     self.define_from_variant("RDK_BUILD_FREESASA_SUPPORT", "freesasa"),
                     self.define_from_variant("RDK_BUILD_COORDGEN_SUPPORT", "coordgen"),
