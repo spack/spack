@@ -578,7 +578,7 @@ def test_functions(pkg: TestPackageType, add_virtuals: bool = False) -> List[Tup
         ValueError: occurs if pkg is not a package class
     """
     instance = isinstance(pkg, spack.package_base.PackageBase)
-    if not (instance or issubclass(pkg, spack.package_base.PackageBase)):
+    if not (instance or issubclass(pkg, spack.package_base.PackageBase)):  # type: ignore[arg-type]
         raise ValueError("Expected a package (class), not {0} ({1})".format(pkg, type(pkg)))
 
     pkg_cls = pkg.__class__ if instance else pkg
@@ -606,7 +606,7 @@ def test_functions(pkg: TestPackageType, add_virtuals: bool = False) -> List[Tup
             if len(lines) > 0 and lines[0] == "pass":
                 continue
 
-            tests.append((clss.__name__, test_fn))
+            tests.append((clss.__name__, test_fn))  # type: ignore[union-attr]
 
     return tests
 
