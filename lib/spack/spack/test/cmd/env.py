@@ -3374,6 +3374,7 @@ def test_view_update_unnecessary(update_method, tmpdir, install_mockery, mock_fe
     # monkeypatch so that any attempt to actually regenerate the view fails
     def raises(*args, **kwargs):
         raise AssertionError
+
     monkeypatch.setattr(view, "view", raises)
 
     view.regenerate([libelf, libdwarf])
