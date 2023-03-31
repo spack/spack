@@ -25,7 +25,8 @@ fi
 # For the prefered pythons, we will first try each one till we find one
 # suitable. If none are found, we will use which or whereis on them in
 # order to find a fallback.
-SPACK_PREFERRED_PYTHONS="python3 python python2 /usr/libexec/platform-python"
+SPACK_PREFERRED_PYTHONS="python3 python /usr/libexec/platform-python "\
+"/usr/bin/python3 /usr/bin/python"
 PYTHON_CHECK_CMD="import sys, os.path; print(sys.prefix != sys.base_prefix "\
 "or os.path.basename(os.path.dirname(sys.prefix)) != '._view')"
 
