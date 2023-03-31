@@ -377,6 +377,7 @@ class Petsc(Package, CudaPackage, ROCmPackage):
             "--download-c2html=0",
             "--download-sowing=0",
             "--download-hwloc=0",
+            "--with-make-exec=%s" % make,
         ]
         # If 'cflags', 'fflags', and/or 'cxxflags' are not set, let the PETSc
         # configuration script choose defaults.
@@ -580,7 +581,10 @@ class Petsc(Package, CudaPackage, ROCmPackage):
 
     def build(self, spec, prefix):
         self.revert_kokkos_nvcc_wrapper()
-        make("V=1")
+        if spec.satisfies("@:3.18.5"):
+            make("OMAKE_PRINTDIR=%s" % make, "V=1")
+        else:
+            make("V=1")
 
     def install(self, spec, prefix):
         self.revert_kokkos_nvcc_wrapper()
