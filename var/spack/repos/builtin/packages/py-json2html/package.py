@@ -18,5 +18,3 @@ class PyJson2html(PythonPackage):
     version("1.3.0", sha256="8951a53662ae9cfd812685facdba693fc950ffc1c1fd1a8a2d3cf4c34600689c")
 
     depends_on("py-setuptools", type="build")
-    depends_on("py-simplejson", when="^python@:2.6", type=("build", "run"))
-    depends_on("py-ordereddict", when="^python@:2.6", type=("build", "run"))
