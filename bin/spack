@@ -69,7 +69,8 @@ elif command -v which > /dev/null; then
     done
 fi
 
-echo "==> Error: spack could not find a python interpreter!" >&2
+echo "==> Error: spack could not find a python interpreter! Adjust your "\
+"PATH or set SPACK_PYTHON to a python command/path to set one manually." >&2
 exit 1
 ":"""
 # Line above is a shell no-op, and ends a python multi-line comment.
