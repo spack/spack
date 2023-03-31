@@ -413,6 +413,13 @@ In the example above, that means you could build ``mpich+cuda`` or ``mpich+rocm`
    preference: items that appear earlier in the list are preferred
    (note that these preferences can be ignored in favor of others).
 
+.. note::
+
+   When using a conditional requirement, Spack is allowed to actively avoid the triggering
+   condition (the ``when=...`` spec) if that leads to a concrete spec with better scores in
+   the optimization criteria. To check the current optimization criteria and their
+   priorities you can run ``spack solve zlib``.
+
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 Setting default requirements
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
