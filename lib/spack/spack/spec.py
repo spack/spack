@@ -2289,12 +2289,17 @@ class Spec(object):
         """
         # Legacy specfile format
         if isinstance(data["spec"], list):
-            return SpecfileV1.load(data)
+            spec = SpecfileV1.load(data)
+        elif int(data["spec"]["_meta"]["version"]) == 2:
+            spec = SpecfileV2.load(data)
+        else:
+            spec = SpecfileV3.load(data)
 
-        specfile_version = int(data["spec"]["_meta"]["version"])
-        if specfile_version == 2:
-            return SpecfileV2.load(data)
-        return SpecfileV3.load(data)
+        # Any git version should
+        for s in spec.traverse():
+            s.attach_git_version_lookup()
+
+        return s
 
     @staticmethod
     def from_yaml(stream):

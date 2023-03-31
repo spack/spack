@@ -265,10 +265,7 @@ def test_install_commit(mock_git_version_info, install_mockery, mock_packages, m
     )
 
     # Use the earliest commit in the respository
-    commit = commits[-1]
-    spec = spack.spec.Spec("git-test-commit@%s" % commit)
-    spec.concretize()
-    print(spec)
+    spec = Spec(f"git-test-commit@{commits[-1]}").concretized()
     spec.package.do_install()
 
     # Ensure first commit file contents were written
