@@ -20,6 +20,7 @@ debugging easier.
 import contextlib
 import os
 import re
+from typing import Union
 
 import llnl.util.lang
 import llnl.util.tty as tty
@@ -196,7 +197,7 @@ def _store():
 
 
 #: Singleton store instance
-store = llnl.util.lang.Singleton(_store)
+store: Union[Store, llnl.util.lang.Singleton] = llnl.util.lang.Singleton(_store)
 
 
 def _store_root():

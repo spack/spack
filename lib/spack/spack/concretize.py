@@ -21,6 +21,7 @@ import platform
 import tempfile
 from contextlib import contextmanager
 from itertools import chain
+from typing import Union
 
 import archspec.cpu
 
@@ -43,7 +44,9 @@ from spack.package_prefs import PackagePrefs, is_spec_buildable, spec_externals
 from spack.version import Version, VersionList, VersionRange, ver
 
 #: impements rudimentary logic for ABI compatibility
-_abi = llnl.util.lang.Singleton(lambda: spack.abi.ABI())
+_abi: Union[spack.abi.ABI, llnl.util.lang.Singleton] = llnl.util.lang.Singleton(
+    lambda: spack.abi.ABI()
+)
 
 
 @functools.total_ordering
