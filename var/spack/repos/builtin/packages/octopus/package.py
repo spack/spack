@@ -44,6 +44,11 @@ class Octopus(AutotoolsPackage, CudaPackage):
     variant("metis", default=False, description="Compile with METIS")
     variant("parmetis", default=False, when="+mpi", description="Compile with ParMETIS")
     variant("netcdf", default=False, description="Compile with Netcdf")
+    variant(
+        "sparskit",
+        default=False,
+        description="Compile with Sparskit - A Basic Tool Kit for Sparse Matrix Computations",
+    )
     variant("arpack", default=False, description="Compile with ARPACK")
     variant("cgal", default=False, description="Compile with CGAL library support")
     variant("pfft", default=False, when="+mpi", description="Compile with PFFT")
@@ -110,6 +115,7 @@ class Octopus(AutotoolsPackage, CudaPackage):
     depends_on("metis@5:+int64", when="+metis")
     depends_on("parmetis+int64", when="+parmetis")
     depends_on("scalapack", when="+scalapack")
+    depends_on("sparskit", when="+sparskit")
     depends_on("cgal", when="+cgal")
     depends_on("pfft", when="+pfft")
     depends_on("nfft@3.2.4", when="+nfft")
@@ -229,10 +235,12 @@ class Octopus(AutotoolsPackage, CudaPackage):
         if "+python" in spec:
             args.append("--enable-python")
 
-        # --with-etsf-io-prefix=
+        if "+sparskit" in spec:
+            args.append(
+                "--with-sparskit=%s" % os.path.join(self.spec["sparskit"].prefix.lib, "libskit.a")
+            )
         if "+etsf-io" in spec:
             args.append("--with-etsf-io-prefix=%s" % spec["etsf-io"].prefix)
-        # --with-sparskit=${prefix}/lib/libskit.a
         # --with-pfft-prefix=${prefix} --with-mpifftw-prefix=${prefix}
         # --with-berkeleygw-prefix=${prefix}
         if "+berkeleygw" in spec:
