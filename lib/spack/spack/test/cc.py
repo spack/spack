@@ -329,6 +329,53 @@ def test_Wl_parsing(wrapper_environment):
     )
 
 
+def test_Xlinker_parsing(wrapper_environment):
+    # -Xlinker <x> ... -Xlinker <y> may have compiler flags inbetween, like -O3 in this
+    # example. Also check that a trailing -Xlinker (which is a compiler error) is not
+    # dropped or given an empty argument.
+    check_args(
+        cc,
+        [
+            "-Xlinker",
+            "-rpath",
+            "-O3",
+            "-Xlinker",
+            "/a",
+            "-Xlinker",
+            "--flag",
+            "-Xlinker",
+            "-rpath=/b",
+            "-Xlinker",
+        ],
+        [real_cc]
+        + target_args
+        + [
+            "-Wl,--disable-new-dtags",
+            "-Wl,-rpath,/a",
+            "-Wl,-rpath,/b",
+            "-O3",
+            "-Xlinker",
+            "--flag",
+            "-Xlinker",
+        ],
+    )
+
+
+def test_rpath_without_value(wrapper_environment):
+    # cc -Wl,-rpath without a value shouldn't drop -Wl,-rpath;
+    # same for -Xlinker
+    check_args(
+        cc,
+        ["-Wl,-rpath", "-O3", "-g"],
+        [real_cc] + target_args + ["-Wl,--disable-new-dtags", "-O3", "-g", "-Wl,-rpath"],
+    )
+    check_args(
+        cc,
+        ["-Xlinker", "-rpath", "-O3", "-g"],
+        [real_cc] + target_args + ["-Wl,--disable-new-dtags", "-O3", "-g", "-Xlinker", "-rpath"],
+    )
+
+
 def test_dep_rpath(wrapper_environment):
     """Ensure RPATHs for root package are added."""
     check_args(cc, test_args, [real_cc] + target_args + common_compile_args)
