@@ -17,7 +17,7 @@ spack:
       root: {{ store_path }}
       padded_length: 0
 
-  packages:
+  packages::
     python:
       buildable: false
       externals:

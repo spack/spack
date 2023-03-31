@@ -485,13 +485,8 @@ def _add_externals_if_missing() -> None:
     ]
     if IS_WINDOWS:
         search_list.append("winbison")
-    externals = spack.detection.by_path(search_list)
-    # System git is typically deprecated, so mark as non-buildable to force it as external
-    non_buildable_externals = {k: externals.pop(k) for k in ("git",) if k in externals}
-    spack.detection.update_configuration(externals, scope="bootstrap", buildable=True)
-    spack.detection.update_configuration(
-        non_buildable_externals, scope="bootstrap", buildable=False
-    )
+    detected_packages = spack.detection.by_path(search_list)
+    spack.detection.update_database(detected_packages)
 
 
 def clingo_root_spec() -> str:

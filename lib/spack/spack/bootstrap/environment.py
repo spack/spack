@@ -44,7 +44,7 @@ class BootstrapEnvironment(spack.environment.Environment):
     def environment_root(cls) -> pathlib.Path:
         """Environment root directory"""
         bootstrap_root_path = root_path()
-        python_part = spec_for_current_python().replace("@", "")
+        python_part = f"python{sys.version_info.major}.{sys.version_info.minor}"
         arch_part = archspec.cpu.host().family
         interpreter_part = hashlib.md5(sys.exec_prefix.encode()).hexdigest()[:5]
         environment_dir = f"{python_part}-{arch_part}-{interpreter_part}"

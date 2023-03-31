@@ -38,8 +38,14 @@ def spec_for_current_python() -> str:
       https://www.python.org/dev/peps/pep-0513/
       https://stackoverflow.com/a/35801395/771663
     """
+    try:
+        __import__("ctypes")
+    except ImportError:
+        msg = "the current interpreter must support ctypes for bootstrapping Spack"
+        raise RuntimeError(msg)
+
     version_str = ".".join(str(x) for x in sys.version_info[:2])
-    return f"python@{version_str}"
+    return f"python@{version_str} +ctypes"
 
 
 def root_path() -> str:
