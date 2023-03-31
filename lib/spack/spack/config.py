@@ -36,7 +36,7 @@ import os
 import re
 import sys
 from contextlib import contextmanager
-from typing import Dict, List, Optional
+from typing import Dict, List, Optional, Union
 
 import ruamel.yaml as yaml
 from ruamel.yaml.error import MarkedYAMLError
@@ -838,7 +838,7 @@ def _config():
 
 
 #: This is the singleton configuration instance for Spack.
-config = llnl.util.lang.Singleton(_config)
+config: Union[Configuration, llnl.util.lang.Singleton] = llnl.util.lang.Singleton(_config)
 
 
 def add_from_file(filename, scope=None):
