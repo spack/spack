@@ -430,21 +430,37 @@ other_args_list=""
 # Global state for keeping track of -Wl,-rpath -Wl,/path
 wl_expect_rpath=no
 
+# Same, but for -Xlinker -rpath -Xlinker /path
+xlinker_expect_rpath=no
+
 parse_Wl() {
     # drop -Wl
     shift
     while [ $# -ne 0 ]; do
     if [ "$wl_expect_rpath" = yes ]; then
-        rp="$1"
+        if system_dir "$1"; then
+            append system_rpath_dirs_list "$1"
+        else
+            append rpath_dirs_list "$1"
+        fi
         wl_expect_rpath=no
     else
-        rp=""
         case "$1" in
             -rpath=*)
-                rp="${1#-rpath=}"
+                arg="${1#-rpath=}"
+                if system_dir "$arg"; then
+                    append system_rpath_dirs_list "$arg"
+                else
+                    append rpath_dirs_list "$arg"
+                fi
                 ;;
             --rpath=*)
-                rp="${1#--rpath=}"
+                arg="${1#--rpath=}"
+                if system_dir "$arg"; then
+                    append system_rpath_dirs_list "$arg"
+                else
+                    append rpath_dirs_list "$arg"
+                fi
                 ;;
             -rpath|--rpath)
                 wl_expect_rpath=yes
@@ -456,17 +472,8 @@ parse_Wl() {
                 ;;
         esac
     fi
-    if [ -n "$rp" ]; then
-        if system_dir "$rp"; then
-            append system_rpath_dirs_list "$rp"
-        else
-            append rpath_dirs_list "$rp"
-        fi
-    fi
     shift
     done
-    # By lack of local variables, always set this to empty string.
-    rp=""
 }
 
 
@@ -573,37 +580,71 @@ while [ $# -ne 0 ]; do
             unset IFS
             ;;
         -Xlinker)
-            if [ "$2" = "-rpath" ]; then
-                if [ "$3" != "-Xlinker" ]; then
-                    die "-Xlinker,-rpath was not followed by -Xlinker,*"
+            shift
+            if [ $# -eq 0 ]; then
+                # -Xlinker without value: let the compiler error about it.
+                append other_args_list -Xlinker
+                xlinker_expect_rpath=no
+                break
+            elif [ "$xlinker_expect_rpath" = yes ]; then
+                # Register the path of -Xlinker -rpath <other args> -Xlinker <path>
+                if system_dir "$1"; then
+                    append system_rpath_dirs_list "$1"
+                else
+                    append rpath_dirs_list "$1"
                 fi
-                shift 3;
-                rp="$1"
-            elif [ "$2" = "$dtags_to_strip" ]; then
-                shift  # We want to remove explicitly this flag
+                xlinker_expect_rpath=no
             else
-                append other_args_list "$1"
+                case "$1" in
+                    -rpath=*)
+                        arg="${1#-rpath=}"
+                        if system_dir "$arg"; then
+                            append system_rpath_dirs_list "$arg"
+                        else
+                            append rpath_dirs_list "$arg"
+                        fi
+                        ;;
+                    --rpath=*)
+                        arg="${1#--rpath=}"
+                        if system_dir "$arg"; then
+                            append system_rpath_dirs_list "$arg"
+                        else
+                            append rpath_dirs_list "$arg"
+                        fi
+                        ;;
+                    -rpath|--rpath)
+                        xlinker_expect_rpath=yes
+                        ;;
+                    "$dtags_to_strip")
+                        ;;
+                    *)
+                        append other_args_list -Xlinker
+                        append other_args_list "$1"
+                        ;;
+                esac
             fi
+            ;;
+        "$dtags_to_strip")
             ;;
         *)
-            if [ "$1" = "$dtags_to_strip" ]; then
-                :  # We want to remove explicitly this flag
-            else
-                append other_args_list "$1"
-            fi
+            append other_args_list "$1"
             ;;
     esac
-
-    # test rpaths against system directories in one place.
-    if [ -n "$rp" ]; then
-        if system_dir "$rp"; then
-            append system_rpath_dirs_list "$rp"
-        else
-            append rpath_dirs_list "$rp"
-        fi
-    fi
     shift
 done
+
+# We found `-Xlinker -rpath` but no matching value `-Xlinker /path`. Just append
+# `-Xlinker -rpath` again and let the compiler or linker handle the error during arg
+# parsing.
+if [ "$xlinker_expect_rpath" = yes ]; then
+    append other_args_list -Xlinker
+    append other_args_list -rpath
+fi
+
+# Same, but for -Wl flags.
+if [ "$wl_expect_rpath" = yes ]; then
+    append other_args_list -Wl,-rpath
+fi
 
 #
 # Add flags from Spack's cppflags, cflags, cxxflags, fcflags, fflags, and
