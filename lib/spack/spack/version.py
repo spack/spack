@@ -25,7 +25,6 @@ from llnl.util.filesystem import mkdirp, working_dir
 import spack.caches
 import spack.error
 import spack.paths
-import spack.repo
 import spack.util.executable
 import spack.util.spack_json as sjson
 import spack.util.url
@@ -1172,6 +1171,8 @@ class CommitLookup(object):
     @property
     def pkg(self):
         if not self._pkg:
+            import spack.repo  # break cycle
+
             self._pkg = spack.repo.path.get_pkg_class(self.pkg_name)
         return self._pkg
 
