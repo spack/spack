@@ -9,6 +9,11 @@ default:
     SPACK_TARGET_PLATFORM: "darwin"
     SPACK_TARGET_ARCH: "x86_64"
 
+.darwin_aarch64:
+  variables:
+    SPACK_TARGET_PLATFORM: "darwin"
+    SPACK_TARGET_ARCH: "aarch64"
+
 .linux_x86_64_v3:
   variables:
     SPACK_TARGET_PLATFORM: "linux"
