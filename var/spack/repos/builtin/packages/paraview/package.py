@@ -28,10 +28,11 @@ class Paraview(CMakePackage, CudaPackage, ROCmPackage):
 
     version("master", branch="master", submodules=True)
     version(
-        "5.11.0",
-        sha256="9a0b8fe8b1a2cdfd0ace9a87fa87e0ec21ee0f6f0bcb1fdde050f4f585a25165",
+        "5.11.1",
+        sha256="5cc2209f7fa37cd3155d199ff6c3590620c12ca4da732ef7698dec37fa8dbb34",
         preferred=True,
     )
+    version("5.11.0", sha256="9a0b8fe8b1a2cdfd0ace9a87fa87e0ec21ee0f6f0bcb1fdde050f4f585a25165")
     version("5.10.1", sha256="520e3cdfba4f8592be477314c2f6c37ec73fb1d5b25ac30bdbd1c5214758b9c2")
     version("5.10.0", sha256="86d85fcbec395cdbc8e1301208d7c76d8f48b15dc6b967ffbbaeee31242343a5")
     version("5.9.1", sha256="0d486cb6fbf55e428845c9650486f87466efcb3155e40489182a7ea85dfd4c8d")
