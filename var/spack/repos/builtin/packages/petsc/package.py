@@ -254,7 +254,7 @@ class Petsc(Package, CudaPackage, ROCmPackage):
     depends_on("hypre+complex", when="+hypre+complex")
     depends_on("hypre~complex", when="+hypre~complex")
     depends_on("hypre+int64", when="+hypre+int64")
-    depends_on("hypre~int64", when="-hypre~int64")
+    depends_on("hypre~int64", when="+hypre~int64")
     depends_on("hypre+mpi", when="+hypre+mpi")
 
     depends_on("superlu-dist@:4.3~int64", when="@3.4.4:3.6.4+superlu-dist+mpi~int64")
