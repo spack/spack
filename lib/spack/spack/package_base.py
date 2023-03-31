@@ -1022,7 +1022,7 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
         )
         # Construct a path where the stage should build..
         s = self.spec
-        stage_name = compute_stage_name(stage_prefix, s)
+        stage_name = compute_stage_name(s)
         stage = Stage(
             fetcher,
             mirror_paths=mirror_paths,
