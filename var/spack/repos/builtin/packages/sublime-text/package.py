@@ -11,8 +11,9 @@ class SublimeText(Package):
     prose."""
 
     homepage = "https://www.sublimetext.com/"
-    url = "https://download.sublimetext.com/sublime_text_3_build_3211_x64.tar.bz2"
+    url = "https://download.sublimetext.com/sublime_text_build_4143_x64.tar.xz"
 
+    version("4.4143", sha256="7de862c38d19367414117110328dded754ac709fed54c8cc5cb0737c894c073c")
     version(
         "3.2.2.3211", sha256="0b3c8ca5e6df376c3c24a4b9ac2e3b391333f73b229bc6e87d0b4a5f636d74ee"
     )
@@ -29,7 +30,7 @@ class SublimeText(Package):
     # Since we can't link to Spack packages, we'll just have to
     # add them as runtime dependencies.
 
-    # depends_on('libgobject', type='run')
+    # depends_on("libgobject", type="run")
     depends_on("gtkplus@:2", type="run", when="@:3.1")
     depends_on("gtkplus@3:", type="run", when="@3.2:")
     depends_on("glib", type="run")
@@ -44,11 +45,15 @@ class SublimeText(Package):
             return "https://download.sublimetext.com/Sublime%20Text%20{0}%20x64.tar.bz2".format(
                 version
             )
-        else:
+        elif version[0] == 3:
             return (
                 "https://download.sublimetext.com/sublime_text_{0}_build_{1}_x64.tar.bz2".format(
                     version[0], version[-1]
                 )
+            )
+        else:
+            return "https://download.sublimetext.com/sublime_text_build_{0}_x64.tar.xz".format(
+                version[-1]
             )
 
     def install(self, spec, prefix):

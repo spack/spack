@@ -28,6 +28,7 @@ class Octave(AutotoolsPackage, GNUMirrorPackage):
 
     extendable = True
 
+    version("8.1.0", sha256="8052074d17b0ef643d037de8ab389672c752bb201ee9cea4dfa69858fb6a213f")
     version("7.3.0", sha256="6e14a4649d70af45ab660f8cbbf645aaf1ec33f25f88bfda4697cb17e440c4f5")
     version("7.2.0", sha256="b12cb652587d31c5c382b39ed73463c22a5259ecb2fa6b323a27da409222dacc")
     version("7.1.0", sha256="d4a9d81f3f67b4a6e07cb7a80dcb10ad5e9176fcc30762c70a81580a64b8b0b6")
