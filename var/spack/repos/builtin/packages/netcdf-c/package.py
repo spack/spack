@@ -124,7 +124,10 @@ class NetcdfC(AutotoolsPackage):
     # Starting version 4.4.0, it became possible to disable parallel I/O even
     # if HDF5 supports it. For previous versions of the library we need
     # HDF5 without mpi support to disable parallel I/O:
-    depends_on("hdf5~mpi", when="@:4.3~mpi")
+    #depends_on("hdf5~mpi", when="@:4.3~mpi")
+    # While it may be possible to do this, it messes with concretizing large environments with
+    # both ~mpi and +mpi builds of hdf5
+    depends_on("hdf5~mpi", when="~mpi")
 
     # We need HDF5 with mpi support to enable parallel I/O.
     depends_on("hdf5+mpi", when="+mpi")

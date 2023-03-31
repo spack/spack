@@ -199,8 +199,8 @@ class Esmf(MakefilePackage):
             env.set("ESMF_CXX", spec["mpi"].mpicxx)
             env.set("ESMF_F90", spec["mpi"].mpifc)
         else:
-            env.set("ESMF_CXX", env["CXX"])
-            env.set("ESMF_F90", env["FC"])
+            os.environ["ESMF_CXX"] = os.environ["CXX"]
+            os.environ["ESMF_F90"] = os.environ["FC"]
 
         # This environment variable controls the build option.
         if "+debug" in spec:
