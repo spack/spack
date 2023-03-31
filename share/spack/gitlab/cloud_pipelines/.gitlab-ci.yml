@@ -1021,7 +1021,6 @@ ml-linux-x86_64-rocm-protected-build:
 # Deprecated CI testing
 ########################################
 .deprecated-ci:
-  extends: [ ".linux_x86_64" ]
   variables:
     SPACK_CI_STACK_NAME: deprecated
 
