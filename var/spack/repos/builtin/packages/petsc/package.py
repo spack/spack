@@ -246,6 +246,7 @@ class Petsc(Package, CudaPackage, ROCmPackage):
     # Also PETSc prefer to build it without internal superlu, likely due to
     # conflict in headers see
     # https://bitbucket.org/petsc/petsc/src/90564b43f6b05485163c147b464b5d6d28cde3ef/config/BuildSystem/config/packages/hypre.py
+    depends_on("hypre@2.14:2.18.2~internal-superlu", when="@3.11:3.13+hypre")
     depends_on("hypre@2.14:2.22.0~internal-superlu", when="@3.14:3.15+hypre")
     depends_on("hypre@2.14:~internal-superlu", when="@3.16:+hypre")
     depends_on("hypre@develop~internal-superlu", when="@main+hypre")
