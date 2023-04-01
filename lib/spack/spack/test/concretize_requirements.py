@@ -220,6 +220,11 @@ packages:
 def test_requirement_adds_version_satisfies(
     concretize_scope, test_repo, mock_git_version_info, monkeypatch
 ):
+    """Make sure that new versions added by requirements are factored into
+    conditions. In this case create a new version that satisfies a
+    depends_on condition and make sure it is triggered (i.e. the
+    dependency is added).
+    """
     if spack.config.get("config:concretizer") == "original":
         pytest.skip("Original concretizer does not support configuration" " requirements")
 
