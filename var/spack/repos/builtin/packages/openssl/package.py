@@ -348,7 +348,12 @@ class Openssl(Package):  # Uses Fake Autotools, should subclass Package
 
     @property
     def libs(self):
-        return find_libraries(["libssl", "libcrypto"], root=self.prefix, recursive=True)
+        return find_libraries(
+            ["libssl", "libcrypto"],
+            root=self.prefix,
+            recursive=True,
+            shared=self.spec.variants["shared"].value
+        )
 
     def handle_fetch_error(self, error):
         tty.warn(
