@@ -228,13 +228,16 @@ def test_requirement_adds_version_satisfies(
         spack.package_base.PackageBase, "git", path_to_file_url(repo_path), raising=False
     )
 
-    a_commit_hash = commits[0]
+    # Sanity check: early version of T does not include U
+    s0 = Spec("t@2.0").concretized()
+    assert not ("u" in s0)
+
     conf_str = """\
 packages:
   t:
     require: "@{0}=2.2"
 """.format(
-        a_commit_hash
+        commits[0]
     )
     update_packages_config(conf_str)
 
