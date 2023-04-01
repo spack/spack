@@ -633,8 +633,8 @@ def test_spec_by_hash_tokens(text, tokens):
 @pytest.mark.db
 def test_spec_by_hash(database, monkeypatch, mutable_empty_config):
     mpileaks = database.query_one("mpileaks ^zmpi")
-    a = spack.spec.Spec("a").concretized()
-    monkeypatch.setattr(spack.binary_distribution, "update_cache_and_get_specs", lambda: [a])
+    b = spack.spec.Spec("b").concretized()
+    monkeypatch.setattr(spack.binary_distribution, "update_cache_and_get_specs", lambda: [b])
 
     hash_str = f"/{mpileaks.dag_hash()}"
     parsed_spec = SpecParser(hash_str).next_spec()
@@ -651,10 +651,10 @@ def test_spec_by_hash(database, monkeypatch, mutable_empty_config):
     parsed_spec.replace_hash()
     assert parsed_spec == mpileaks
 
-    a_hash = f"/{a.dag_hash()}"
-    parsed_spec = SpecParser(a_hash).next_spec()
+    b_hash = f"/{b.dag_hash()}"
+    parsed_spec = SpecParser(b_hash).next_spec()
     parsed_spec.replace_hash()
-    assert parsed_spec == a
+    assert parsed_spec == b
 
 
 @pytest.mark.db
