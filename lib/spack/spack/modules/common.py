@@ -434,8 +434,8 @@ class BaseConfiguration(object):
         # Spec for which we want to generate a module file
         self.spec = spec
         self.name = module_set_name
-        # Software installation has been explicitly asked (get this
-        # information from spec if not provided as argument)
+        # Software installation has been explicitly asked (get this information from
+        # db when querying an existing module, like during a refresh or rm operations)
         if explicit is None:
             explicit = spec._installed_explicitly()
         self.explicit = explicit
