@@ -213,7 +213,6 @@ class Perl(Package):  # Perl doesn't use Autotools, it should subclass Package
         perm = os.stat(filename).st_mode
         os.chmod(filename, perm | 0o200)
 
-    @property
     def nmake_arguments(self):
         args = []
         if self.spec.satisfies("%msvc"):
@@ -304,7 +303,7 @@ class Perl(Package):  # Perl doesn't use Autotools, it should subclass Package
         if sys.platform == "win32":
             win32_dir = os.path.join(self.stage.source_path, "win32")
             with working_dir(win32_dir):
-                nmake("install", *self.nmake_arguments, ignore_quotes=True)
+                nmake("install", *self.nmake_arguments(), ignore_quotes=True)
         else:
             make("install")
 
