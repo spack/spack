@@ -63,6 +63,28 @@ class V(Package):
 )
 
 
+_pkgt = (
+    "t",
+    """\
+class T(Package):
+    version('2.1')
+    version('2.0')
+
+    depends_on('u', when='@2.1:')
+""",
+)
+
+
+_pkgu = (
+    "u",
+    """\
+class U(Package):
+    version('1.1')
+    version('1.0')
+""",
+)
+
+
 @pytest.fixture
 def create_test_repo(tmpdir, mutable_config):
     repo_path = str(tmpdir)
@@ -76,7 +98,7 @@ repo:
         )
 
     packages_dir = tmpdir.join("packages")
-    for pkg_name, pkg_str in [_pkgx, _pkgy, _pkgv]:
+    for pkg_name, pkg_str in [_pkgx, _pkgy, _pkgv, _pkgt, _pkgu]:
         pkg_dir = packages_dir.ensure(pkg_name, dir=True)
         pkg_file = pkg_dir.join("package.py")
         with open(str(pkg_file), "w") as f:
@@ -193,6 +215,32 @@ packages:
     # Make sure the git commit info is retained
     assert isinstance(s1.version, spack.version.GitVersion)
     assert s1.version.ref == a_commit_hash
+
+
+def test_requirement_adds_version_satisfies(
+    concretize_scope, test_repo, mock_git_version_info, monkeypatch
+):
+    if spack.config.get("config:concretizer") == "original":
+        pytest.skip("Original concretizer does not support configuration" " requirements")
+
+    repo_path, filename, commits = mock_git_version_info
+    monkeypatch.setattr(
+        spack.package_base.PackageBase, "git", path_to_file_url(repo_path), raising=False
+    )
+
+    a_commit_hash = commits[0]
+    conf_str = """\
+packages:
+  t:
+    require: "@{0}=2.2"
+""".format(
+        a_commit_hash
+    )
+    update_packages_config(conf_str)
+
+    s1 = Spec("t").concretized()
+    assert "u" in s1
+    assert s1.satisfies("@2.2")
 
 
 def test_requirement_adds_git_hash_version(
