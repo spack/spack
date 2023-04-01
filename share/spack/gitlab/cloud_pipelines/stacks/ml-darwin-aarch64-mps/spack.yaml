@@ -45,7 +45,6 @@ spack:
     - py-torchdata
     - py-torchfile
     - py-torchgeo
-    - py-torchmeta
     - py-torchmetrics
     - py-torchtext
     - py-torchvision
