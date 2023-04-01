@@ -297,12 +297,12 @@ class LlvmAmdgpu(CMakePackage):
     @classmethod
     def determine_version(cls, path):
         match = re.search(r"amdclang", path)
-        ver = None
+        detected_version = None
         if match:
             version_query = Executable(path)("--version", output=str)
             match = re.search(r"roc-(\d)\.(\d).(\d)", version_query)
             if match:
-                ver = "{0}.{1}.{2}".format(
+                detected_version = "{0}.{1}.{2}".format(
                     int(match.group(1)), int(match.group(2)), int(match.group(3))
                 )
-        return ver
+        return detected_version
