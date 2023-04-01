@@ -1,4 +1,9 @@
 modules:
+  prefix_inspections:
+    # Julia needs this because they don't properly RPATH
+    ./lib/julia:
+      - LD_LIBRARY_PATH
+
   default:
     enable::
     - tcl
