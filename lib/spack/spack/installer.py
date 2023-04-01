@@ -1884,7 +1884,7 @@ class BuildProcessInstaller(object):
         self.verbose = install_args.get("verbose", False)
 
         # whether installation was explicitly requested by the user
-        self.explicit = install_args.get("is_root", False) and install_args.get("explicit", False)
+        self.explicit = install_args.get("is_root", False) and install_args.get("explicit", True)
 
         # env before starting installation
         self.unmodified_env = install_args.get("unmodified_env", {})
