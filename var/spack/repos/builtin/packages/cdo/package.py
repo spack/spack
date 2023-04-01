@@ -186,7 +186,7 @@ class Cdo(AutotoolsPackage):
 
     # Internal compiler error when building with Intel 2022.1.2
     # https://github.com/NOAA-EMC/spack-stack/issues/248
-    patch("intel-compare.patch", when="%intel")
+    patch("intel-compare.patch", when="%intel@2022.1.2")
 
     def configure_args(self):
         config_args = []
@@ -255,6 +255,10 @@ class Cdo(AutotoolsPackage):
         config_args += self.with_or_without(
             "udunits2", activation_value=lambda x: yes_or_prefix("udunits")
         )
+        if self.spec.satisfies("+udunits2"):
+            if self.spec["udunits"].satisfies("~shared"):
+                flags["LDFLAGS"].append("-L%s" % self.spec["expat"].prefix.lib)
+                flags["LIBS"].append("-lexpat")
 
         if "+libxml2" in self.spec:
             libxml2_spec = self.spec["libxml2"]
@@ -267,10 +271,34 @@ class Cdo(AutotoolsPackage):
                     flags["CPPFLAGS"].append(libxml2_spec.headers.include_flags)
             else:
                 config_args.append("--with-libxml2=" + libxml2_spec.prefix)
+            if self.spec["libxml2"].satisfies("~shared"):
+                for lib in ["libiconv", "xz"]:
+                    flags["LDFLAGS"].append(self.spec[lib].libs.search_flags)
+                    flags["LIBS"].append(self.spec[lib].libs.link_flags)
         else:
             config_args.append("--without-libxml2")
 
         config_args += self.with_or_without("proj", activation_value=yes_or_prefix)
+        if self.spec.satisfies("+proj"):
+            if self.spec["proj"].satisfies("~shared"):
+                if self.spec["proj"].satisfies("^sqlite"):
+                    flags["LDFLAGS"].append("-L%s" % self.spec["sqlite"].prefix.lib)
+                    flags["LIBS"].append("-lsqlite3")
+                if self.spec["proj"].satisfies("+tiff"):
+                    flags["LDFLAGS"].append("-L%s" % self.spec["libtiff"].prefix.lib)
+                    flags["LIBS"].append("-ltiff")
+                    if self.spec["libtiff"].satisfies("+zlib"):
+                        flags["LDFLAGS"].append("-L%s" % self.spec["zlib"].prefix.lib)
+                        flags["LIBS"].append("-lz")
+                    if self.spec["libtiff"].satisfies("+jpeg"):
+                        flags["LDFLAGS"].append("-L%s" % self.spec["jpeg"].prefix.lib)
+                        flags["LIBS"].append(self.spec["jpeg"].libs.link_flags)
+                if self.spec["proj"].satisfies("+curl"):
+                    flags["LDFLAGS"].append("-L%s" % self.spec["curl"].prefix.lib)
+                    flags["LIBS"].append("-lcurl")
+                    if self.spec["curl"].satisfies("tls=openssl"):
+                        flags["LDFLAGS"].append("-L%s" % self.spec["openssl"].prefix.lib)
+                        flags["LIBS"].append("-lssl -lcrypto")
 
         config_args += self.with_or_without("curl", activation_value=yes_or_prefix)
 
