@@ -16,6 +16,8 @@ class PyPetsc4py(PythonPackage):
     maintainers("balay")
 
     version("main", branch="main")
+    version("3.19.0", sha256="d1660092c9be9547e9a17d3d5bb139eaad737c3e1c4ef2ee41c71c8dc3bb9955")
+    version("3.18.6", sha256="e4976e42895955cbb2c56f1b0f791c838338348a10664b8dcfc3fe56198bf943")
     version("3.18.5", sha256="625cbb99d7d3000ad05afe60585c6aa24ca650894b09a1989127febb64b65470")
     version("3.18.4", sha256="84a055b7f38d1200a8c486c89db05ce0724fe28da56afb656660cef054384e24")
     version("3.18.3", sha256="853ab9620c4832cbfe1f490edde827a505c8a376cc1a7b4fa6406faac9059433")
@@ -49,8 +51,7 @@ class PyPetsc4py(PythonPackage):
 
     variant("mpi", default=True, description="Activates MPI support")
 
-    patch("ldshared.patch", when="@:99")
-    patch("ldshared-dev.patch", when="@main")
+    patch("ldshared.patch", when="@:3.18")
 
     depends_on("py-cython@0.29.32:", when="^python@3.11:", type="build")
     depends_on("py-cython@0.24:", type="build")
@@ -62,6 +63,7 @@ class PyPetsc4py(PythonPackage):
     depends_on("petsc+mpi", when="+mpi")
     depends_on("petsc~mpi", when="~mpi")
     depends_on("petsc@main", when="@main")
+    depends_on("petsc@3.19.0:3.19", when="@3.19.0:3.19")
     depends_on("petsc@3.18.0:3.18", when="@3.18.0:3.18")
     depends_on("petsc@3.17.0:3.17", when="@3.17.0:3.17")
     depends_on("petsc@3.16.0:3.16", when="@3.16.0:3.16")
