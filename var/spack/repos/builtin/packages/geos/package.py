@@ -69,6 +69,11 @@ class Geos(CMakePackage):
     def command(self):
         return Executable(self.prefix.bin.join("geos-config"))
 
+    @property
+    def libs(self):
+        libs = find_libraries(["libgeos"], root=self.prefix, recursive=True, shared=self.spec.variants["shared"].value)
+        return libs
+
     def cmake_args(self):
         args = []
 
