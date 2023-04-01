@@ -75,6 +75,10 @@ class PyH5py(PythonPackage):
     depends_on("py-mpi4py@3.0.2:", when="@3.3.0:+mpi^python@3:3.7", type=("build", "run"))
     depends_on("py-mpi4py@3.0.3:", when="@3:+mpi^python@3.8.0:", type=("build", "run"))
 
+    # Patch version 3.7.0 so that it works with hdf5@1.14.0 (3.8.0 doesn't build correctly)
+    # https://github.com/h5py/h5py/pull/2194/commits
+    patch("h5py370_hdf51140.patch", when="@3.7.0")
+
     def setup_build_environment(self, env):
         env.set("HDF5_DIR", self.spec["hdf5"].prefix)
         if "+mpi" in self.spec:
