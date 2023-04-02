@@ -22,6 +22,3 @@ class Sdl2Ttf(CMakePackage):
     version("2.0.12", sha256="8728605443ea1cca5cad501dc34dc0cb15135d1e575551da6d151d213d356f6e")
 
     depends_on("sdl2")
-
-
-
