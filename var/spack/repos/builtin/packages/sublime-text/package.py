@@ -13,6 +13,8 @@ class SublimeText(Package):
     homepage = "https://www.sublimetext.com/"
     url = "https://download.sublimetext.com/sublime_text_build_4143_x64.tar.xz"
 
+    maintainers("LRWeber")
+
     version("4.4143", sha256="7de862c38d19367414117110328dded754ac709fed54c8cc5cb0737c894c073c")
     version(
         "3.2.2.3211", sha256="0b3c8ca5e6df376c3c24a4b9ac2e3b391333f73b229bc6e87d0b4a5f636d74ee"
@@ -32,13 +34,13 @@ class SublimeText(Package):
 
     # depends_on("libgobject", type="run")
     depends_on("gtkplus@:2", type="run", when="@:3.1")
-    depends_on("gtkplus@3:", type="run", when="@3.2:")
-    depends_on("glib", type="run")
-    depends_on("libx11", type="run")
-    depends_on("pcre", type="run")
-    depends_on("libffi", type="run")
-    depends_on("libxcb", type="run")
-    depends_on("libxau", type="run")
+    depends_on("gtkplus@3:", type="run", when="@3.2:3.2.2")
+    depends_on("glib", type="run", when="@:3.2.2")
+    depends_on("libx11", type="run", when="@:3.2.2")
+    depends_on("pcre", type="run", when="@:3.2.2")
+    depends_on("libffi", type="run", when="@:3.2.2")
+    depends_on("libxcb", type="run", when="@:3.2.2")
+    depends_on("libxau", type="run", when="@:3.2.2")
 
     def url_for_version(self, version):
         if version[0] == 2:
