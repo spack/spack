@@ -356,9 +356,7 @@ class TestTcl(object):
     @pytest.mark.regression("4400")
     @pytest.mark.db
     @pytest.mark.parametrize("config_name", ["exclude_implicits", "blacklist_implicits"])
-    def test_exclude_implicits(
-        self, modulefile_content, module_configuration, database, config_name
-    ):
+    def test_exclude_implicits(self, module_configuration, database, config_name):
         module_configuration(config_name)
 
         # mpileaks has been installed explicitly when setting up
@@ -377,9 +375,7 @@ class TestTcl(object):
 
     @pytest.mark.regression("12105")
     @pytest.mark.parametrize("config_name", ["exclude_implicits", "blacklist_implicits"])
-    def test_exclude_implicits_with_arg(
-        self, modulefile_content, module_configuration, database, config_name
-    ):
+    def test_exclude_implicits_with_arg(self, module_configuration, config_name):
         module_configuration(config_name)
 
         # mpileaks is defined as explicit with explicit argument set on writer
