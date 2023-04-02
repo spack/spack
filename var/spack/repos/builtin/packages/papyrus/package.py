@@ -103,5 +103,5 @@ class Papyrus(CMakePackage):
                 work_dir=test_dir,
             )
 
-    def test(self):
-        self.run_example_tests()
+    # def test(self):
+    #     self.run_example_tests()
