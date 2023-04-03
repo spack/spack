@@ -459,6 +459,13 @@ class Bazel(Package):
         when="@5.0:5.4.0,6.0",
     )
 
+    # https://github.com/bazelbuild/bazel/issues/17958
+    patch(
+        "https://github.com/bazelbuild/bazel/commit/43dadb275b3f9690242bf2d94a0757c721d231a9.patch?full_index=1",
+        sha256="af73a49006baa05475b1b79dad83e1e014ebfe22f38aa55774f9a465404aed54",
+        when="@5:6.0",
+    )
+
     # Fix build on power9 (2x commits)
     # https://github.com/bazelbuild/bazel/commit/5cff4f1edf8b95bf0612791632255852332f72b5
     # https://github.com/bazelbuild/bazel/commit/ab62a6e097590dac5ec946ad7a796ea0e8593ae0
