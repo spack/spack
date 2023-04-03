@@ -67,7 +67,7 @@ def test_modules_default_symlink(
     module_type, mock_packages, mock_module_filename, mock_module_defaults, config
 ):
     spec = spack.spec.Spec("mpileaks@2.3").concretized()
-    mock_module_defaults(spec.format("{name}{@version}"))
+    mock_module_defaults(spec.format("{name}{@version}"), True)
 
     generator_cls = spack.modules.module_types[module_type]
     generator = generator_cls(spec, "default")

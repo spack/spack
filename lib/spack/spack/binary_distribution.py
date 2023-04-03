@@ -2026,7 +2026,7 @@ def install_root_node(spec, allow_root, unsigned=False, force=False, sha256=None
     with spack.util.path.filter_padding():
         tty.msg('Installing "{0}" from a buildcache'.format(spec.format()))
         extract_tarball(spec, download_result, allow_root, unsigned, force)
-        spack.hooks.post_install(spec)
+        spack.hooks.post_install(spec, False)
         spack.store.db.add(spec, spack.store.layout)
 
 

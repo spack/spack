@@ -224,7 +224,7 @@ def install_sbang():
     os.rename(sbang_tmp_path, sbang_path)
 
 
-def post_install(spec):
+def post_install(spec, explicit=None):
     """This hook edits scripts so that they call /bin/bash
     $spack_prefix/bin/sbang instead of something longer than the
     shebang limit.

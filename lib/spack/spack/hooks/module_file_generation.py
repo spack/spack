@@ -10,7 +10,7 @@ import spack.modules
 import spack.modules.common
 
 
-def _for_each_enabled(spec, method_name):
+def _for_each_enabled(spec, method_name, explicit=None):
     """Calls a method for each enabled module"""
     set_names = set(spack.config.get("modules", {}).keys())
     # If we have old-style modules enabled, we put those in the default set
@@ -27,7 +27,7 @@ def _for_each_enabled(spec, method_name):
             continue
 
         for type in enabled:
-            generator = spack.modules.module_types[type](spec, name)
+            generator = spack.modules.module_types[type](spec, name, explicit)
             try:
                 getattr(generator, method_name)()
             except RuntimeError as e:
@@ -36,7 +36,7 @@ def _for_each_enabled(spec, method_name):
                 tty.warn(msg.format(method_name, str(e)))
 
 
-def post_install(spec):
+def post_install(spec, explicit):
     import spack.environment as ev  # break import cycle
 
     if ev.active_environment():
@@ -45,7 +45,7 @@ def post_install(spec):
         # can manage interactions between env views and modules
         return
 
-    _for_each_enabled(spec, "write")
+    _for_each_enabled(spec, "write", explicit)
 
 
 def post_uninstall(spec):

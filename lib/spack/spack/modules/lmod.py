@@ -33,24 +33,26 @@ def configuration(module_set_name):
 configuration_registry: Dict[str, Any] = {}
 
 
-def make_configuration(spec, module_set_name):
+def make_configuration(spec, module_set_name, explicit):
     """Returns the lmod configuration for spec"""
-    key = (spec.dag_hash(), module_set_name)
+    key = (spec.dag_hash(), module_set_name, explicit)
     try:
         return configuration_registry[key]
     except KeyError:
-        return configuration_registry.setdefault(key, LmodConfiguration(spec, module_set_name))
+        return configuration_registry.setdefault(
+            key, LmodConfiguration(spec, module_set_name, explicit)
+        )
 
 
-def make_layout(spec, module_set_name):
+def make_layout(spec, module_set_name, explicit):
     """Returns the layout information for spec"""
-    conf = make_configuration(spec, module_set_name)
+    conf = make_configuration(spec, module_set_name, explicit)
     return LmodFileLayout(conf)
 
 
-def make_context(spec, module_set_name):
+def make_context(spec, module_set_name, explicit):
     """Returns the context information for spec"""
-    conf = make_configuration(spec, module_set_name)
+    conf = make_configuration(spec, module_set_name, explicit)
     return LmodContext(conf)
 
 
@@ -409,7 +411,7 @@ class LmodContext(BaseContext):
     @tengine.context_property
     def unlocked_paths(self):
         """Returns the list of paths that are unlocked unconditionally."""
-        layout = make_layout(self.spec, self.conf.name)
+        layout = make_layout(self.spec, self.conf.name, self.conf.explicit)
         return [os.path.join(*parts) for parts in layout.unlocked_paths[None]]
 
     @tengine.context_property
@@ -417,7 +419,7 @@ class LmodContext(BaseContext):
         """Returns the list of paths that are unlocked conditionally.
         Each item in the list is a tuple with the structure (condition, path).
         """
-        layout = make_layout(self.spec, self.conf.name)
+        layout = make_layout(self.spec, self.conf.name, self.conf.explicit)
         value = []
         conditional_paths = layout.unlocked_paths
         conditional_paths.pop(None)
