@@ -827,7 +827,7 @@ ml-darwin-aarch64-cpu-pr-generate:
   extends: [ ".pr-generate-macos-aarch64", ".ml-darwin-aarch64-cpu" ]
 
 ml-darwin-aarch64-cpu-protected-generate:
-  extends: [ ".protected-generate-macos-aarch64", ".ml-darwin-aarch64-cpu-generate" ]
+  extends: [ ".protected-generate-macos-aarch64", ".ml-darwin-aarch64-cpu" ]
 
 ml-darwin-aarch64-cpu-pr-build:
   extends: [ ".pr-build", ".ml-darwin-aarch64-cpu"  ]
@@ -865,7 +865,7 @@ ml-darwin-aarch64-mps-pr-generate:
   extends: [ ".pr-generate-macos-aarch64", ".ml-darwin-aarch64-mps" ]
 
 ml-darwin-aarch64-mps-protected-generate:
-  extends: [ ".protected-generate-macos-aarch64", ".ml-darwin-aarch64-mps-generate" ]
+  extends: [ ".protected-generate-macos-aarch64", ".ml-darwin-aarch64-mps" ]
 
 ml-darwin-aarch64-mps-pr-build:
   extends: [ ".pr-build", ".ml-darwin-aarch64-mps"  ]
