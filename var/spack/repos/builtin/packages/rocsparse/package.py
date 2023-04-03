@@ -146,9 +146,9 @@ class Rocsparse(CMakePackage):
         depends_on("rocm-cmake@%s:" % ver, type="build", when="@" + ver)
 
     # Add option so Spack can manage downloaded test matricies as resources.
-    patch("0001-set-mtx-directory.patch", when="@4.5.0: +test")
+    patch("0001-set-mtx-directory.patch", when="@4.5.0:5.3 +test")
     # Enable use of Spack-provided Python.
-    patch("0002-fix-gentest-shebang.patch", when="@4.5.0: +test")
+    patch("0002-fix-gentest-shebang.patch", when="@4.5.0:5.3 +test")
     # Fix build for most Radeon 5000 and Radeon 6000 series GPUs.
     patch("0003-fix-navi-1x-rocm-4.5.patch", when="@4.5.0:5.1")
     patch("0003-fix-navi-1x-rocm-5.2.patch", when="@5.2")
