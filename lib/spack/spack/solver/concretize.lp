@@ -47,13 +47,13 @@ attr_single_value("node_os").
 attr_single_value("node_target").
 
 % Error when no attribute is selected
-error(2, no_value_error, Attribute, Package)
+error(100, no_value_error, Attribute, Package)
   :- attr("node", Package),
      attr_single_value(Attribute),
      not attr(Attribute, Package, _).
 
 % Error when multiple attr need to be selected
-error(2, multiple_values_error, Attribute, Package)
+error(100, multiple_values_error, Attribute, Package)
   :- attr("node", Package),
      attr_single_value(Attribute),
      2 { attr(Attribute, Package, Version) }.
@@ -97,7 +97,7 @@ version_satisfies(Package, Constraint, HashVersion) :- version_satisfies(Package
  :- attr("node", Package).
 
 % A virtual package may or may not have a version, but never has more than one
-error(2, "Cannot select a single version for virtual '{0}'", Virtual)
+error(100, "Cannot select a single version for virtual '{0}'", Virtual)
   :- attr("virtual_node", Virtual),
      2 { attr("version", Virtual, Version) }.
 
@@ -152,7 +152,7 @@ possible_version_weight(Package, Weight)
 
 % More specific error message if the version cannot satisfy some constraint
 % Otherwise covered by `no_version_error` and `versions_conflict_error`.
-error(1, "Cannot satisfy '{0}@{1}'", Package, Constraint)
+error(10, "Cannot satisfy '{0}@{1}'", Package, Constraint)
   :- attr("node_version_satisfies", Package, Constraint),
      attr("version", Package, Version),
      not version_satisfies(Package, Constraint, Version).
@@ -261,7 +261,7 @@ attr("node", Dependency) :- attr("node", Package), depends_on(Package, Dependenc
 % dependencies) and get a two-node unconnected graph
 needed(Package) :- attr("root", Package).
 needed(Dependency) :- needed(Package), depends_on(Package, Dependency).
-error(1, "'{0}' is not a valid dependency for any package in the DAG", Package)
+error(10, "'{0}' is not a valid dependency for any package in the DAG", Package)
   :- attr("node", Package),
      not needed(Package).
 
@@ -270,7 +270,7 @@ error(1, "'{0}' is not a valid dependency for any package in the DAG", Package)
 % this ensures that we solve around them
 path(Parent, Child) :- depends_on(Parent, Child).
 path(Parent, Descendant) :- path(Parent, A), depends_on(A, Descendant).
-error(2, "Cyclic dependency detected between '{0}' and '{1}' (consider changing variants to avoid the cycle)", A, B)
+error(100, "Cyclic dependency detected between '{0}' and '{1}' (consider changing variants to avoid the cycle)", A, B)
   :- path(A, B),
      path(B, A).
 
@@ -280,7 +280,7 @@ error(2, "Cyclic dependency detected between '{0}' and '{1}' (consider changing 
 %-----------------------------------------------------------------------------
 % Conflicts
 %-----------------------------------------------------------------------------
-error(0, Msg) :- attr("node", Package),
+error(1, Msg) :- attr("node", Package),
    conflict(Package, TriggerID, ConstraintID, Msg),
    condition_holds(TriggerID),
    condition_holds(ConstraintID),
@@ -310,11 +310,11 @@ attr("virtual_node", Virtual)
 { provider(Package, Virtual) : possible_provider(Package, Virtual) }
   :- attr("virtual_node", Virtual).
 
-error(2, "Cannot find valid provider for virtual {0}", Virtual)
+error(100, "Cannot find valid provider for virtual {0}", Virtual)
   :- attr("virtual_node", Virtual),
      not provider(_, Virtual).
 
-error(2, "Cannot select a single provider for virtual '{0}'", Virtual)
+error(100, "Cannot select a single provider for virtual '{0}'", Virtual)
   :- attr("virtual_node", Virtual),
      2 { provider(P, Virtual) }.
 
@@ -405,11 +405,11 @@ possible_provider_weight(Dependency, Virtual, 100, "fallback") :- provider(Depen
 { external_version(Package, Version, Weight):
     version_declared(Package, Version, Weight, "external") }
     :- external(Package).
-error(2, "Attempted to use external for '{0}' which does not satisfy any configured external spec", Package)
+error(100, "Attempted to use external for '{0}' which does not satisfy any configured external spec", Package)
   :- external(Package),
      not external_version(Package, _, _).
 
-error(2, "Attempted to use external for '{0}' which does not satisfy any configured external spec", Package)
+error(100, "Attempted to use external for '{0}' which does not satisfy any configured external spec", Package)
   :- external(Package),
      2 { external_version(Package, Version, Weight) }.
 
@@ -446,7 +446,7 @@ external_conditions_hold(Package, LocalIndex) :-
 
 % it cannot happen that a spec is external, but none of the external specs
 % conditions hold.
-error(2, "Attempted to use external for '{0}' which does not satisfy any configured external spec", Package)
+error(100, "Attempted to use external for '{0}' which does not satisfy any configured external spec", Package)
  :- external(Package),
     not external_conditions_hold(Package, _).
 
@@ -494,7 +494,7 @@ requirement_weight(Package, Group, W) :-
   requirement_policy(Package, Group, "any_of"),
   requirement_group_satisfied(Package, Group).
 
-error(2, "Cannot satisfy the requirements in packages.yaml for package '{0}'. You may want to delete them to proceed with concretization. To check where the requirements are defined run 'spack config blame packages'", Package) :-
+error(100, "Cannot satisfy the requirements in packages.yaml for package '{0}'. You may want to delete them to proceed with concretization. To check where the requirements are defined run 'spack config blame packages'", Package) :-
   activate_requirement_rules(Package),
   requirement_group(Package, X),
   not requirement_group_satisfied(Package, X).
@@ -524,20 +524,20 @@ attr("variant_value", Package, Variant, Value) :-
   attr("variant_propagate", Package, Variant, Value, _),
   variant_possible_value(Package, Variant, Value).
 
-error(2, "{0} and {1} cannot both propagate variant '{2}' to package {3} with values '{4}' and '{5}'", Source1, Source2, Variant, Package, Value1, Value2) :-
+error(100, "{0} and {1} cannot both propagate variant '{2}' to package {3} with values '{4}' and '{5}'", Source1, Source2, Variant, Package, Value1, Value2) :-
   attr("variant_propagate", Package, Variant, Value1, Source1),
   attr("variant_propagate", Package, Variant, Value2, Source2),
   variant(Package, Variant),
   Value1 < Value2.
 
 % a variant cannot be set if it is not a variant on the package
-error(2, "Cannot set variant '{0}' for package '{1}' because the variant condition cannot be satisfied for the given spec", Variant, Package)
+error(100, "Cannot set variant '{0}' for package '{1}' because the variant condition cannot be satisfied for the given spec", Variant, Package)
   :- attr("variant_set", Package, Variant),
      not variant(Package, Variant),
      build(Package).
 
 % a variant cannot take on a value if it is not a variant of the package
-error(2, "Cannot set variant '{0}' for package '{1}' because the variant condition cannot be satisfied for the given spec", Variant, Package)
+error(100, "Cannot set variant '{0}' for package '{1}' because the variant condition cannot be satisfied for the given spec", Variant, Package)
   :- attr("variant_value", Package, Variant, _),
      not variant(Package, Variant),
      build(Package).
@@ -560,14 +560,14 @@ attr("variant_value", Package, Variant, Value) :-
     build(Package).
 
 
-error(2, "'{0}' required multiple values for single-valued variant '{1}'", Package, Variant)
+error(100, "'{0}' required multiple values for single-valued variant '{1}'", Package, Variant)
   :- attr("node", Package),
      variant(Package, Variant),
      variant_single_value(Package, Variant),
      build(Package),
      2 { attr("variant_value", Package, Variant, Value) }.
 
-error(2, "No valid value for variant '{1}' of package '{0}'", Package, Variant)
+error(100, "No valid value for variant '{1}' of package '{0}'", Package, Variant)
   :- attr("node", Package),
      variant(Package, Variant),
      build(Package),
@@ -579,7 +579,7 @@ attr("variant_set", Package, Variant) :- attr("variant_set", Package, Variant, _
 % A variant cannot have a value that is not also a possible value
 % This only applies to packages we need to build -- concrete packages may
 % have been built w/different variants from older/different package versions.
-error(1, "'Spec({1}={2})' is not a valid value for '{0}' variant '{1}'", Package, Variant, Value)
+error(10, "'Spec({1}={2})' is not a valid value for '{0}' variant '{1}'", Package, Variant, Value)
  :- attr("variant_value", Package, Variant, Value),
     not variant_possible_value(Package, Variant, Value),
     build(Package).
@@ -587,7 +587,7 @@ error(1, "'Spec({1}={2})' is not a valid value for '{0}' variant '{1}'", Package
 % Some multi valued variants accept multiple values from disjoint sets.
 % Ensure that we respect that constraint and we don't pick values from more
 % than one set at once
-error(2, "{0} variant '{1}' cannot have values '{2}' and '{3}' as they come from disjoint value sets", Package, Variant, Value1, Value2)
+error(100, "{0} variant '{1}' cannot have values '{2}' and '{3}' as they come from disjoint value sets", Package, Variant, Value1, Value2)
   :- attr("variant_value", Package, Variant, Value1),
      attr("variant_value", Package, Variant, Value2),
      variant_value_from_disjoint_sets(Package, Variant, Value1, Set1),
@@ -655,7 +655,7 @@ variant_default_value(Package, Variant, Value) :-
 
 % Treat 'none' in a special way - it cannot be combined with other
 % values even if the variant is multi-valued
-error(2, "{0} variant '{1}' cannot have values '{2}' and 'none'", Package, Variant, Value)
+error(100, "{0} variant '{1}' cannot have values '{2}' and 'none'", Package, Variant, Value)
  :- attr("variant_value", Package, Variant, Value),
     attr("variant_value", Package, Variant, "none"),
     Value != "none",
@@ -713,13 +713,13 @@ os(OS) :- os(OS, _).
 { attr("node_os", Package, OS) : os(OS) } :- attr("node", Package).
 
 % can't have a non-buildable OS on a node we need to build
-error(2, "Cannot select '{0} os={1}' (operating system '{1}' is not buildable)", Package, OS)
+error(100, "Cannot select '{0} os={1}' (operating system '{1}' is not buildable)", Package, OS)
  :- build(Package),
     attr("node_os", Package, OS),
     not buildable_os(OS).
 
 % can't have dependencies on incompatible OS's
-error(2, "{0} and dependency {1} have incompatible operating systems 'os={2}' and 'os={3}'", Package, Dependency, PackageOS, DependencyOS)
+error(100, "{0} and dependency {1} have incompatible operating systems 'os={2}' and 'os={3}'", Package, Dependency, PackageOS, DependencyOS)
   :- depends_on(Package, Dependency),
      attr("node_os", Package, PackageOS),
      attr("node_os", Dependency, DependencyOS),
@@ -764,7 +764,7 @@ attr("node_os", Package, OS) :- attr("node_os_set", Package, OS), attr("node", P
 { attr("node_target", Package, Target) : target(Target) } :- attr("node", Package).
 
 % If a node must satisfy a target constraint, enforce it
-error(1, "'{0} target={1}' cannot satisfy constraint 'target={2}'", Package, Target, Constraint)
+error(10, "'{0} target={1}' cannot satisfy constraint 'target={2}'", Package, Target, Constraint)
   :- attr("node_target", Package, Target),
      attr("node_target_satisfies", Package, Constraint),
      not target_satisfies(Constraint, Target).
@@ -775,7 +775,7 @@ attr("node_target_satisfies", Package, Constraint)
   :- attr("node_target", Package, Target), target_satisfies(Constraint, Target).
 
 % If a node has a target, all of its dependencies must be compatible with that target
-error(2, "Cannot find compatible targets for {0} and {1}", Package, Dependency)
+error(100, "Cannot find compatible targets for {0} and {1}", Package, Dependency)
   :- depends_on(Package, Dependency),
      attr("node_target", Package, Target),
      not node_target_compatible(Dependency, Target).
@@ -790,7 +790,7 @@ node_target_compatible(Package, Target)
 #defined target_satisfies/2.
 
 % can't use targets on node if the compiler for the node doesn't support them
-error(2, "{0} compiler '{2}@{3}' incompatible with 'target={1}'", Package, Target, Compiler, Version)
+error(100, "{0} compiler '{2}@{3}' incompatible with 'target={1}'", Package, Target, Compiler, Version)
   :- attr("node_target", Package, Target),
      node_compiler(Package, CompilerID),
      not compiler_supports_target(CompilerID, Target),
@@ -819,7 +819,7 @@ node_target_mismatch(Parent, Dependency)
      not node_target_match(Parent, Dependency).
 
 % disallow reusing concrete specs that don't have a compatible target
-error(2, "'{0} target={1}' is not compatible with this machine", Package, Target)
+error(100, "'{0} target={1}' is not compatible with this machine", Package, Target)
   :- attr("node", Package),
      attr("node_target", Package, Target),
      not target(Target).
@@ -852,34 +852,34 @@ attr("node_compiler_version", Package, CompilerName, CompilerVersion)
 attr("node_compiler", Package, CompilerName)
   :- attr("node_compiler_version", Package, CompilerName, CompilerVersion).
 
-error(2, "No valid compiler version found for '{0}'", Package)
+error(100, "No valid compiler version found for '{0}'", Package)
   :- attr("node", Package),
      not node_compiler(Package, _).
 
 % We can't have a compiler be enforced and select the version from another compiler
-error(2, "Cannot select a single compiler for package {0}", Package)
+error(100, "Cannot select a single compiler for package {0}", Package)
  :- attr("node", Package),
     2 { attr("node_compiler_version", Package, C, V) }.
 
-error(2, "Cannot concretize {0} with two compilers {1} and {2}@{3}", Package, Compiler1, Compiler2, Version)
+error(100, "Cannot concretize {0} with two compilers {1} and {2}@{3}", Package, Compiler1, Compiler2, Version)
  :- attr("node_compiler", Package, Compiler1),
     attr("node_compiler_version", Package, Compiler2, Version),
     Compiler1 != Compiler2.
 
 % If the compiler of a node cannot be satisfied, raise
-error(1, "No valid compiler for {0} satisfies '%{1}'", Package, Compiler)
+error(10, "No valid compiler for {0} satisfies '%{1}'", Package, Compiler)
   :- attr("node", Package),
      attr("node_compiler_version_satisfies", Package, Compiler, ":"),
      not compiler_version_satisfies(Compiler, ":", _).
 
 % If the compiler of a node must satisfy a constraint, then its version
 % must be chosen among the ones that satisfy said constraint
-error(2, "No valid version for '{0}' compiler '{1}' satisfies '@{2}'", Package, Compiler, Constraint)
+error(100, "No valid version for '{0}' compiler '{1}' satisfies '@{2}'", Package, Compiler, Constraint)
   :- attr("node", Package),
      attr("node_compiler_version_satisfies", Package, Compiler, Constraint),
 		 not compiler_version_satisfies(Compiler, Constraint, _).
 
-error(2, "No valid version for '{0}' compiler '{1}' satisfies '@{2}'", Package, Compiler, Constraint)
+error(100, "No valid version for '{0}' compiler '{1}' satisfies '@{2}'", Package, Compiler, Constraint)
   :- attr("node", Package),
      attr("node_compiler_version_satisfies", Package, Compiler, Constraint),
      not compiler_version_satisfies(Compiler, Constraint, ID),
@@ -905,7 +905,7 @@ attr("node_compiler_version_satisfies", Package, Compiler, Constraint)
 % Cannot select a compiler if it is not supported on the OS
 % Compilers that are explicitly marked as allowed
 % are excluded from this check
-error(2, "{0} compiler '%{1}@{2}' incompatible with 'os={3}'", Package, Compiler, Version, OS)
+error(100, "{0} compiler '%{1}@{2}' incompatible with 'os={3}'", Package, Compiler, Version, OS)
   :- attr("node_os", Package, OS),
      node_compiler(Package, CompilerID),
      compiler_name(CompilerID, Compiler),
@@ -954,7 +954,7 @@ compiler_weight(Package, 100)
     not default_compiler_preference(CompilerID, _).
 
 % For the time being, be strict and reuse only if the compiler match one we have on the system
-error(2, "Compiler {1}@{2} requested for {0} cannot be found. Set install_missing_compilers:true if intended.", Package, Compiler, Version)
+error(100, "Compiler {1}@{2} requested for {0} cannot be found. Set install_missing_compilers:true if intended.", Package, Compiler, Version)
  :- attr("node_compiler_version", Package, Compiler, Version),
     not node_compiler(Package, _).
 
@@ -982,7 +982,7 @@ node_flag_inherited(Dependency, FlagType, Flag)
     can_inherit_flags(Package, Dependency, FlagType),
     attr("node_flag_propagate", Package, FlagType).
 
-error(2, "{0} and {1} cannot both propagate compiler flags '{2}' to {3}", Source1, Source2, Package, FlagType) :-
+error(100, "{0} and {1} cannot both propagate compiler flags '{2}' to {3}", Source1, Source2, Package, FlagType) :-
   depends_on(Source1, Package),
   depends_on(Source2, Package),
   attr("node_flag_propagate", Source1, FlagType),
@@ -1094,11 +1094,11 @@ build_priority(Package, 0)   :- attr("node", Package), not optimize_for_reuse().
 % it allows us to explain why something failed.
 #minimize{ 0@1000: #true}.
 
-#minimize{ 1@1000,Msg: error(Priority, Msg) }.
-#minimize{ 1@1000,Msg,Arg1: error(Priority, Msg, Arg1) }.
-#minimize{ 1@1000,Msg,Arg1,Arg2: error(Priority, Msg, Arg1, Arg2) }.
-#minimize{ 1@1000,Msg,Arg1,Arg2,Arg3: error(Priority, Msg, Arg1, Arg2, Arg3) }.
-#minimize{ 1@1000,Msg,Arg1,Arg2,Arg3,Arg4: error(Priority, Msg, Arg1, Arg2, Arg3, Arg4) }.
+#minimize{ Weight@1000,Msg: error(Weight, Msg) }.
+#minimize{ Weight@1000,Msg,Arg1: error(Weight, Msg, Arg1) }.
+#minimize{ Weight@1000,Msg,Arg1,Arg2: error(Weight, Msg, Arg1, Arg2) }.
+#minimize{ Weight@1000,Msg,Arg1,Arg2,Arg3: error(Weight, Msg, Arg1, Arg2, Arg3) }.
+#minimize{ Weight@1000,Msg,Arg1,Arg2,Arg3,Arg4: error(Weight, Msg, Arg1, Arg2, Arg3, Arg4) }.
 
 %-----------------------------------------------------------------------------
 % How to optimize the spec (high to low priority)
