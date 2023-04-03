@@ -477,7 +477,7 @@ class ViewDescriptor(object):
     @property
     def _current_root(self):
         """
-        Return the directory in which the view is currently implemented.
+        Return the directory in which the view has been constructed.
 
         If the view is using renameat2 for atomic updates, self.root is a directory and the root
         of the underlying implementation is the same as self.root.
