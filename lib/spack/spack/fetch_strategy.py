@@ -121,7 +121,7 @@ class FetchStrategy(object):
         self.package = package
 
     # Subclasses need to implement these methods
-    def fetch(self):
+    def fetch(self, verbose=True):
         """Fetch source code archive or repo.
 
         Returns:
@@ -211,7 +211,7 @@ class BundleFetchStrategy(FetchStrategy):
     #: functions (e.g., check_pkg_attributes).
     url_attr = ""
 
-    def fetch(self):
+    def fetch(self, verbose=True):
         """Simply report success -- there is no code to fetch."""
         return True
 
@@ -310,7 +310,7 @@ class URLFetchStrategy(FetchStrategy):
         return [self.url] + (self.mirrors or [])
 
     @_needs_stage
-    def fetch(self):
+    def fetch(self, verbose=True):
         if self.archive_file:
             tty.debug("Already downloaded {0}".format(self.archive_file))
             return
@@ -323,7 +323,7 @@ class URLFetchStrategy(FetchStrategy):
                 continue
 
             try:
-                self._fetch_from_url(url)
+                self._fetch_from_url(url, verbose=verbose)
                 break
             except FailedDownloadError as e:
                 errors.append(str(e))
@@ -334,11 +334,11 @@ class URLFetchStrategy(FetchStrategy):
         if not self.archive_file:
             raise FailedDownloadError(url)
 
-    def _fetch_from_url(self, url):
+    def _fetch_from_url(self, url, verbose=True):
         if spack.config.get("config:url_fetch_method") == "curl":
-            return self._fetch_curl(url)
+            return self._fetch_curl(url, verbose=verbose)
         else:
-            return self._fetch_urllib(url)
+            return self._fetch_urllib(url, verbose=verbose)
 
     def _check_headers(self, headers):
         # Check if we somehow got an HTML file rather than the archive we
@@ -349,9 +349,10 @@ class URLFetchStrategy(FetchStrategy):
             warn_content_type_mismatch(self.archive_file or "the archive")
 
     @_needs_stage
-    def _fetch_urllib(self, url):
+    def _fetch_urllib(self, url, verbose=True):
         save_file = self.stage.save_filename
-        tty.msg("Fetching {0}".format(url))
+        msg = tty.msg if verbose else tty.debug
+        msg(f"Fetching {url}")
 
         # Run urllib but grab the mime type from the http headers
         try:
@@ -374,13 +375,14 @@ class URLFetchStrategy(FetchStrategy):
         self._check_headers(str(headers))
 
     @_needs_stage
-    def _fetch_curl(self, url):
+    def _fetch_curl(self, url, verbose=True):
         save_file = None
         partial_file = None
         if self.stage.save_filename:
             save_file = self.stage.save_filename
             partial_file = self.stage.save_filename + ".part"
-        tty.msg("Fetching {0}".format(url))
+        msg = tty.msg if verbose else tty.debug
+        msg(f"Fetching {url}")
         if partial_file:
             save_args = [
                 "-C",
@@ -538,7 +540,7 @@ class CacheURLFetchStrategy(URLFetchStrategy):
     """The resource associated with a cache URL may be out of date."""
 
     @_needs_stage
-    def fetch(self):
+    def fetch(self, verbose=True):
         path = url_util.file_url_string_to_path(self.url)
 
         # check whether the cache file exists.
@@ -563,7 +565,8 @@ class CacheURLFetchStrategy(URLFetchStrategy):
                 raise
 
         # Notify the user how we fetched.
-        tty.msg("Using cached archive: {0}".format(path))
+        msg = tty.msg if verbose else tty.debug
+        msg("Using cached archive: {0}".format(path))
 
 
 class VCSFetchStrategy(FetchStrategy):
@@ -668,8 +671,9 @@ class GoFetchStrategy(VCSFetchStrategy):
         return self._go
 
     @_needs_stage
-    def fetch(self):
-        tty.debug("Getting go resource: {0}".format(self.url))
+    def fetch(self, verbose=True):
+        msg = tty.msg if verbose else tty.debug
+        msg("Getting go resource: {0}".format(self.url))
 
         with working_dir(self.stage.path):
             try:
@@ -805,14 +809,14 @@ class GitFetchStrategy(VCSFetchStrategy):
         return "{0}{1}".format(self.url, args)
 
     @_needs_stage
-    def fetch(self):
+    def fetch(self, verbose=True):
         if self.stage.expanded:
             tty.debug("Already fetched {0}".format(self.stage.source_path))
             return
 
-        self.clone(commit=self.commit, branch=self.branch, tag=self.tag)
+        self.clone(commit=self.commit, branch=self.branch, tag=self.tag, verbose=verbose)
 
-    def clone(self, dest=None, commit=None, branch=None, tag=None, bare=False):
+    def clone(self, dest=None, commit=None, branch=None, tag=None, bare=False, verbose=True):
         """
         Clone a repository to a path.
 
@@ -829,7 +833,8 @@ class GitFetchStrategy(VCSFetchStrategy):
         """
         # Default to spack source path
         dest = dest or self.stage.source_path
-        tty.debug("Cloning git repository: {0}".format(self._repo_info()))
+        msg = tty.msg if verbose else tty.debug
+        msg("Cloning git repository: {0}".format(self._repo_info()))
 
         git = self.git
         debug = spack.config.get("config:debug")
@@ -1044,12 +1049,13 @@ class CvsFetchStrategy(VCSFetchStrategy):
         return result
 
     @_needs_stage
-    def fetch(self):
+    def fetch(self, verbose=True):
         if self.stage.expanded:
             tty.debug("Already fetched {0}".format(self.stage.source_path))
             return
 
-        tty.debug("Checking out CVS repository: {0}".format(self.url))
+        msg = tty.msg if verbose else tty.debug
+        msg("Checking out CVS repository: {0}".format(self.url))
 
         with temp_cwd():
             url, module = self.url.split("%module=")
@@ -1139,12 +1145,13 @@ class SvnFetchStrategy(VCSFetchStrategy):
             return result
 
     @_needs_stage
-    def fetch(self):
+    def fetch(self, verbose=True):
         if self.stage.expanded:
             tty.debug("Already fetched {0}".format(self.stage.source_path))
             return
 
-        tty.debug("Checking out subversion repository: {0}".format(self.url))
+        msg = tty.msg if verbose else tty.debug
+        msg("Checking out subversion repository: {0}".format(self.url))
 
         args = ["checkout", "--force", "--quiet"]
         if self.revision:
@@ -1250,7 +1257,7 @@ class HgFetchStrategy(VCSFetchStrategy):
             return result
 
     @_needs_stage
-    def fetch(self):
+    def fetch(self, verbose=True):
         if self.stage.expanded:
             tty.debug("Already fetched {0}".format(self.stage.source_path))
             return
@@ -1258,7 +1265,9 @@ class HgFetchStrategy(VCSFetchStrategy):
         args = []
         if self.revision:
             args.append("at revision %s" % self.revision)
-        tty.debug("Cloning mercurial repository: {0} {1}".format(self.url, args))
+
+        msg = tty.msg if verbose else tty.debug
+        msg("Cloning mercurial repository: {0} {1}".format(self.url, args))
 
         args = ["clone"]
 
@@ -1312,7 +1321,7 @@ class S3FetchStrategy(URLFetchStrategy):
                 raise ValueError("S3FetchStrategy requires a url for fetching.")
 
     @_needs_stage
-    def fetch(self):
+    def fetch(self, verbose=True):
         if self.archive_file:
             tty.debug("Already downloaded {0}".format(self.archive_file))
             return
@@ -1321,7 +1330,8 @@ class S3FetchStrategy(URLFetchStrategy):
         if parsed_url.scheme != "s3":
             raise web_util.FetchError("S3FetchStrategy can only fetch from s3:// urls.")
 
-        tty.debug("Fetching {0}".format(self.url))
+        msg = tty.msg if verbose else tty.debug
+        msg(f"Fetching {self.url}")
 
         basename = os.path.basename(parsed_url.path)
 
@@ -1359,7 +1369,7 @@ class GCSFetchStrategy(URLFetchStrategy):
                 raise ValueError("GCSFetchStrategy requires a url for fetching.")
 
     @_needs_stage
-    def fetch(self):
+    def fetch(self, verbose=True):
         if self.archive_file:
             tty.debug("Already downloaded {0}".format(self.archive_file))
             return
@@ -1368,7 +1378,8 @@ class GCSFetchStrategy(URLFetchStrategy):
         if parsed_url.scheme != "gs":
             raise web_util.FetchError("GCSFetchStrategy can only fetch from gs:// urls.")
 
-        tty.debug("Fetching {0}".format(self.url))
+        msg = tty.msg if verbose else tty.debug
+        msg(f"Fetching {self.url}")
 
         basename = os.path.basename(parsed_url.path)
 

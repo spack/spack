@@ -387,7 +387,7 @@ def _process_binary_cache_tarball(
         if download_result is None:
             return False
 
-    tty.msg(f"Extracting {package_id(pkg)} from {download_result.url}")
+    tty.msg(f"Fetched {package_id(pkg)} from {download_result.url}")
 
     with timer.measure("install"), spack.util.path.filter_padding():
         binary_distribution.extract_tarball(

@@ -1475,7 +1475,7 @@ def try_fetch(url_to_fetch):
     stage.create()
 
     try:
-        stage.fetch()
+        stage.fetch(verbose=False)
     except web_util.FetchError:
         stage.destroy()
         return None
