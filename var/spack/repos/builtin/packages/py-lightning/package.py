@@ -16,6 +16,7 @@ class PyLightning(PythonPackage):
 
     maintainers("adamjstewart")
 
+    version("2.0.1", sha256="abf4f9e10b0d97348336038db79f4efc75daa2f3f81876822273023294d6ef3e")
     version("2.0.0", sha256="dfe158aa91ac139d8bdfccc7cdb627072e0052076ae9c0459c8fa12a028dbe6c")
 
     variant(
@@ -57,7 +58,7 @@ class PyLightning(PythonPackage):
     depends_on("py-uvicorn@:1", type=("build", "run"))
     depends_on("py-websocket-client@:2", type=("build", "run"))
     depends_on("py-websockets@:11", type=("build", "run"))
-    depends_on("py-pytorch-lightning@2.0.0", when="@2.0.0", type=("build", "run"))
+    depends_on("py-pytorch-lightning", type=("build", "run"))
 
     with when("+extra"):
         depends_on("py-aiohttp@3.8:3", type=("build", "run"))
