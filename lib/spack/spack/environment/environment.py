@@ -480,13 +480,13 @@ class ViewDescriptor(object):
         Return the directory in which the view has been constructed.
 
         If the view is using renameat2 for atomic updates, self.root is a directory and the root
-        of the underlying implementation is the same as self.root.
+        directory of the view is the same as self.root.
 
         If the view us using symlinks for atomic updates, self.root is a link and we read the link
-        to find the root of the underlying implementation of the view.
+        to find the real root directory.
 
-        If self.root does not exist or is a regular file, there is no current implementation of the
-        view on the filesystem.
+        If self.root does not exist or is a regular file, the view has not been
+        constructed on the filesystem.
         """
         if not os.path.islink(self.root):
             if os.path.isdir(self.root):
