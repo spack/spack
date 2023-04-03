@@ -2299,7 +2299,7 @@ class Spec(object):
         for s in spec.traverse():
             s.attach_git_version_lookup()
 
-        return s
+        return spec
 
     @staticmethod
     def from_yaml(stream):
