@@ -18,7 +18,8 @@ class Libsonata(CMakePackage):
     git = "https://github.com/BlueBrain/libsonata.git"
     url = "https://pypi.io/packages/source/l/libsonata/libsonata-0.1.14.tar.gz"
 
-    version("develop", branch="master")
+    version("develop", branch="master", get_full_repo=True)
+    version("0.1.18", tag="v0.1.18")
     version("0.1.17", tag="v0.1.17")
     version("0.1.16", tag="v0.1.16")
     version("0.1.15", tag="v0.1.15")
