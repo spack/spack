@@ -87,7 +87,6 @@ class Gromacs(CMakePackage, CudaPackage):
         description="Produces a double precision version of the executables",
     )
     variant("plumed", default=False, description="Enable PLUMED support")
-    variant("cuda", default=False, description="Enable CUDA support")
     variant("opencl", default=False, description="Enable OpenCL support")
     variant("sycl", default=False, description="Enable SYCL support")
     variant("nosuffix", default=False, description="Disable default suffixes")
