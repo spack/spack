@@ -24,7 +24,7 @@ _versions = {
     "23.3": {
         "Linux-aarch64": (
             "48c837de0b1d2dc31c313b19da752d27527e706cb4150c7a6185a4218fc24ef3",
-            "https://developer.download.nvidia.com/hpc-sdk/23.1/nvhpc_2023_233_Linux_aarch64_cuda_multi.tar.gz",
+            "https://developer.download.nvidia.com/hpc-sdk/23.3/nvhpc_2023_233_Linux_aarch64_cuda_multi.tar.gz",
         ),
         "Linux-ppc64le": (
             "0f2b5b2fff8ffed13428c55809841b4abd3dfe61e2b1a866bbe959e4bcd50223",
