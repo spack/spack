@@ -883,6 +883,7 @@ def test_inclusion_upperbound():
     assert is_specific.intersects(upperbound) and is_range.intersects(upperbound)
 
 
+@pytest.mark.skipif(sys.platform == "win32", reason="Not supported on Windows (yet)")
 def test_git_version_repo_attached_after_serialization(
     mock_git_version_info, mock_packages, monkeypatch
 ):
