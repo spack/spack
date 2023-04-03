@@ -939,12 +939,16 @@ class BaseModuleFileWriter(object):
                 pass
 
     def remove_module_defaults(self):
-        if any(self.spec.satisfies(default) for default in self.conf.defaults):
-            # This spec matches a default, symlink needs to be removed as we
-            # remove the module file it targets.
-            default_symlink = os.path.join(os.path.dirname(self.layout.filename), "default")
-            if os.path.lexists(default_symlink):
-                os.remove(default_symlink)
+        if not any(self.spec.satisfies(default) for default in self.conf.defaults):
+            return
+
+        # This spec matches a default, symlink needs to be removed as we remove the module
+        # file it targets.
+        default_symlink = os.path.join(os.path.dirname(self.layout.filename), "default")
+        try:
+            os.unlink(default_symlink)
+        except OSError:
+            pass
 
 
 @contextlib.contextmanager
