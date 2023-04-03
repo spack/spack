@@ -586,6 +586,54 @@ def extract_args(model, predicate_name):
     return [stringify(sym.arguments) for sym in model if sym.name == predicate_name]
 
 
+class ErrorHandler:
+    def __init__(self, model):
+        self.model = model
+        self.error_args = extract_args(model, "error")
+
+    def multiple_values_error(self, attribute, pkg):
+        return f'Cannot select a single "{attribute}" for package "{pkg}"'
+
+    def no_value_error(self, attribute, pkg):
+        return f'Cannot select a single "{attribute}" for package "{pkg}"'
+
+    def handle_error(self, msg, *args):
+        """Handle an error state derived by the solver."""
+        if msg == "multiple_values_error":
+            return self.multiple_values_error(*args)
+
+        if msg == "no_value_error":
+            return self.no_value_error(*args)
+
+        # For variant formatting, we sometimes have to construct specs
+        # to format values properly. Find/replace all occurances of
+        # Spec(...) with the string representation of the spec mentioned
+        msg = msg.format(*args)
+        specs_to_construct = re.findall(r"Spec\(([^)]*)\)", msg)
+        for spec_str in specs_to_construct:
+            msg = msg.replace("Spec(%s)" % spec_str, str(spack.spec.Spec(spec_str)))
+
+        return msg
+
+    def message(self, errors) -> str:
+        messages = [
+            f"  {idx+1: 2}. {self.handle_error(msg, *args)}"
+            for idx, (_, msg, args) in enumerate(errors)
+        ]
+        header = "concretization failed for the following reasons:\n"
+        return "\n".join([header] + messages)
+
+    def raise_if_errors(self):
+        if not self.error_args:
+            return
+
+        errors = sorted(
+            [(int(priority), msg, args) for priority, msg, *args in self.error_args], reverse=True
+        )
+        msg = self.message(errors)
+        raise UnsatisfiableSpecError(msg)
+
+
 class PyclingoDriver(object):
     def __init__(self, cores=True):
         """Driver for the Python clingo interface.
@@ -640,20 +688,6 @@ class PyclingoDriver(object):
         self.backend.add_rule([atom], [], choice=choice)
         if choice:
             self.assumptions.append(atom)
-
-    def handle_error(self, msg, *args):
-        """Handle an error state derived by the solver."""
-        msg = msg.format(*args)
-
-        # For variant formatting, we sometimes have to construct specs
-        # to format values properly. Find/replace all occurances of
-        # Spec(...) with the string representation of the spec mentioned
-        specs_to_construct = re.findall(r"Spec\(([^)]*)\)", msg)
-        for spec_str in specs_to_construct:
-            msg = msg.replace("Spec(%s)" % spec_str, str(spack.spec.Spec(spec_str)))
-
-        # TODO: this raises early -- we should handle multiple errors if there are any.
-        raise UnsatisfiableSpecError(msg)
 
     def solve(self, setup, specs, reuse=None, output=None, control=None):
         """Set up the input and solve for dependencies of ``specs``.
@@ -756,10 +790,8 @@ class PyclingoDriver(object):
             min_cost, best_model = min(models)
 
             # first check for errors
-            error_args = extract_args(best_model, "error")
-            errors = sorted((int(priority), msg, args) for priority, msg, *args in error_args)
-            for _, msg, args in errors:
-                self.handle_error(msg, *args)
+            error_handler = ErrorHandler(best_model)
+            error_handler.raise_if_errors()
 
             # build specs from spec attributes in the model
             spec_attrs = [(name, tuple(rest)) for name, *rest in extract_args(best_model, "attr")]
