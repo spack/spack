@@ -23,6 +23,5 @@
 #show error/4.
 #show error/5.
 #show error/6.
-#show error/7.
 
 % debug
