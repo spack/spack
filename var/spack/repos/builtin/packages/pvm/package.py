@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -39,7 +39,6 @@ class Pvm(MakefilePackage):
         env["PVM_ROOT"] = self.stage.source_path
 
     def patch(self):
-
         pvm_arch = self.pvm_arch(self.stage.source_path)
 
         if "+fpic" in self.spec:
@@ -49,14 +48,10 @@ class Pvm(MakefilePackage):
 
     def setup_build_environment(self, env):
         tirpc = self.spec["libtirpc"].prefix
-        env.prepend_path(
-            "SPACK_INCLUDE_DIRS",
-            tirpc.include.tirpc,
-        )
+        env.prepend_path("SPACK_INCLUDE_DIRS", tirpc.include.tirpc)
         env.set("SPACK_LDLIBS", "-ltirpc")
 
     def install(self, spec, prefix):
-
         install_tree("bin", prefix.bin)
         install_tree("include", prefix.include)
         install_tree("lib", prefix.lib)

@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -124,10 +124,7 @@ parlib :
         # Set MPI.
         if "+mpi" in self.spec:
             mpi = self.spec["mpi"]
-            args += [
-                "MPI={0}".format(mpi.name),
-                "MPI_INST={0}".format(mpi.prefix),
-            ]
+            args += ["MPI={0}".format(mpi.name), "MPI_INST={0}".format(mpi.prefix)]
         return args
 
     def install(self, spec, prefix):

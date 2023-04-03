@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -12,6 +12,7 @@ class PerlHttpMessage(PerlPackage):
     homepage = "https://metacpan.org/pod/HTTP::Message"
     url = "https://cpan.metacpan.org/authors/id/O/OA/OALDERS/HTTP-Message-6.13.tar.gz"
 
+    version("6.44", sha256="398b647bf45aa972f432ec0111f6617742ba32fc773c6612d21f64ab4eacbca1")
     version("6.37", sha256="0e59da0a85e248831327ebfba66796314cb69f1bfeeff7a9da44ad766d07d802")
     version("6.36", sha256="576a53b486af87db56261a36099776370c06f0087d179fc8c7bb803b48cddd76")
     version("6.35", sha256="d77c3a64c2991c58e0694564fea7ed3610ae1790fa9eb32b51972b0a62bc6619")

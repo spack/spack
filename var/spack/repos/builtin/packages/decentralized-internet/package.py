@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -11,5 +11,5 @@ class DecentralizedInternet(MakefilePackage):
 
     homepage = "https://lonero.readthedocs.io"
     url = "https://github.com/Lonero-Team/Decentralized-Internet/releases/download/4.2.3/Decentralized.Internet.tar.gz"
-    maintainers = ["Lonero-Team", "Mentors4edu"]
+    maintainers("Lonero-Team", "Mentors4edu")
     version("4.2.3", sha256="2922b9128b411ece2f04d07942a453f1e772548aa27b3936c9f9bcfbc0737058")

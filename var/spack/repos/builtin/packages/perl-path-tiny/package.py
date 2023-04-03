@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -16,6 +16,7 @@ class PerlPathTiny(PerlPackage):
     homepage = "https://metacpan.org/pod/Path::Tiny"
     url = "https://cpan.metacpan.org/authors/id/D/DA/DAGOLDEN/Path-Tiny-0.108.tar.gz"
 
+    version("0.144", sha256="f6ea094ece845c952a02c2789332579354de8d410a707f9b7045bd241206487d")
     version("0.124", sha256="fa083144781e46817ec39d21962bbbb0533c201f3baf031d2999a785a2a013fd")
     version("0.122", sha256="4bc6f76d0548ccd8b38cb66291a885bf0de453d0167562c7b82e8861afdcfb7c")
     version("0.120", sha256="66a1164981d449da46cc88383fe37f9e352e87e9570bfb960e43fe8ff016ee1b")

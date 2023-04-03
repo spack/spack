@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -11,7 +11,7 @@ from spack.package import *
 class Apex(CMakePackage):
     """Autonomic Performance Environment for eXascale (APEX)."""
 
-    maintainers = ["khuck"]
+    maintainers("khuck")
     homepage = "https://uo-oaciss.github.io/apex"
     url = "https://github.com/UO-OACISS/apex/archive/v2.3.1.tar.gz"
     git = "https://github.com/UO-OACISS/apex"

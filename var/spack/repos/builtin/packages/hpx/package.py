@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -16,7 +16,7 @@ class Hpx(CMakePackage, CudaPackage, ROCmPackage):
     homepage = "https://hpx.stellar-group.org/"
     url = "https://github.com/STEllAR-GROUP/hpx/archive/1.2.1.tar.gz"
     git = "https://github.com/STEllAR-GROUP/hpx.git"
-    maintainers = ["msimberg", "albestro", "teonnik", "hkaiser"]
+    maintainers("msimberg", "albestro", "teonnik", "hkaiser")
 
     tags = ["e4s"]
 
@@ -36,7 +36,7 @@ class Hpx(CMakePackage, CudaPackage, ROCmPackage):
     version("1.2.0", sha256="20942314bd90064d9775f63b0e58a8ea146af5260a4c84d0854f9f968077c170")
     version("1.1.0", sha256="1f28bbe58d8f0da600d60c3a74a644d75ac777b20a018a5c1c6030a470e8a1c9")
 
-    generator = "Ninja"
+    generator("ninja")
 
     map_cxxstd = lambda cxxstd: "2a" if cxxstd == "20" else cxxstd
     cxxstds = ("11", "14", "17", "20")
@@ -91,7 +91,6 @@ class Hpx(CMakePackage, CudaPackage, ROCmPackage):
 
     # Build dependencies
     depends_on("python", type=("build", "test", "run"))
-    depends_on("ninja", type="build")
     depends_on("pkgconfig", type="build")
     depends_on("git", type="build")
     depends_on("cmake", type="build")
@@ -105,8 +104,7 @@ class Hpx(CMakePackage, CudaPackage, ROCmPackage):
     depends_on("asio", when="@1.7:")
     for cxxstd in cxxstds:
         depends_on(
-            "asio cxxstd={0}".format(map_cxxstd(cxxstd)),
-            when="cxxstd={0} ^asio".format(cxxstd),
+            "asio cxxstd={0}".format(map_cxxstd(cxxstd)), when="cxxstd={0} ^asio".format(cxxstd)
         )
 
     depends_on("gperftools", when="malloc=tcmalloc")
@@ -188,7 +186,7 @@ class Hpx(CMakePackage, CudaPackage, ROCmPackage):
 
     # Patches APEX
     patch("git_external.patch", when="@1.3.0 instrumentation=apex")
-    patch("mimalloc_no_version_requirement.patch", when="@:1.8 malloc=mimalloc")
+    patch("mimalloc_no_version_requirement.patch", when="@:1.8.0 malloc=mimalloc")
 
     def instrumentation_args(self):
         args = []

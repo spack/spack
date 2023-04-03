@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -12,7 +12,7 @@ class PyGsutil(PythonPackage):
     homepage = "https://cloud.google.com/storage/docs/gsutil"
     pypi = "gsutil/gsutil-4.59.tar.gz"
 
-    maintainers = ["dorton21"]
+    maintainers("dorton21")
 
     version("5.2", sha256="08857eedbd89c7c6d10176b14f94fb1168d5ef88f5b5b15b3e8a37e29302b79b")
     version("4.59", sha256="349e0e0b48c281659acec205917530ae57e2eb23db7220375f5add44688d3ddf")

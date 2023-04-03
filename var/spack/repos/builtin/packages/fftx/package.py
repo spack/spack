@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -15,7 +15,7 @@ class Fftx(CMakePackage, CudaPackage, ROCmPackage):
     url = "https://github.com/spiral-software/fftx/archive/refs/tags/1.0.3.tar.gz"
     git = "https://github.com/spiral-software/fftx.git"
 
-    maintainers = ["spiralgen"]
+    maintainers("spiralgen")
 
     version("develop", branch="develop")
     version("main", branch="main")

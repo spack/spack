@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -31,4 +31,9 @@ class PerlStatisticsDescriptive(PerlPackage):
         "3.07.00",
         sha256="2cddd1d0f764d0d8105806b12ca344961fecf26f97da6769b59fc086d684fd67",
         url="https://cpan.metacpan.org/authors/id/S/SH/SHLOMIF/Statistics-Descriptive-3.0700.tar.gz",
+    )
+    version(
+        "3.06.12",
+        sha256="772413148e5e00efb32f277c4254aa78b9112490a896208dcd0025813afdbf7a",
+        url="https://cpan.metacpan.org/authors/id/S/SH/SHLOMIF/Statistics-Descriptive-3.0612.tar.gz",
     )

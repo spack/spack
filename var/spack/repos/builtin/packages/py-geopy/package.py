@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -12,7 +12,7 @@ class PyGeopy(PythonPackage):
     homepage = "https://github.com/geopy/geopy"
     pypi = "geopy/geopy-2.1.0.tar.gz"
 
-    maintainers = ["adamjstewart"]
+    maintainers("adamjstewart")
 
     version("2.1.0", sha256="892b219413e7955587b029949af3a1949c6fbac9d5ad17b79d850718f6a9550f")
 

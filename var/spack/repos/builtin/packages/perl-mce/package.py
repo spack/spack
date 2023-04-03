@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -19,6 +19,7 @@ class PerlMce(PerlPackage):
     homepage = "https://github.com/marioroy/mce-perl"
     url = "https://cpan.metacpan.org/authors/id/M/MA/MARIOROY/MCE-1.874.tar.gz"
 
+    version("1.884", sha256="c830c0e548094f19c620049e744258be2c121d4a86cf7c94a37599ad016daf33")
     version("1.879", sha256="9c4cf39838b5c113448799af451b3d64b54e0de39d635536d7e85e8bdc5888dc")
     version("1.878", sha256="bb5713197cc5ab91302aec746b5cc7204bf84556c30d6af67ce34a6fd38444ad")
     version("1.877", sha256="e2a05061b88e909e90b01320b8381d7e2f8f3840d0f0b35c2f816daf7edcf2ea")

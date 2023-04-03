@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -36,7 +36,7 @@ class VtkH(CMakePackage, CudaPackage):
     url = "https://github.com/Alpine-DAV/vtk-h/releases/download/v0.5.8/vtkh-v0.5.8.tar.gz"
     git = "https://github.com/Alpine-DAV/vtk-h.git"
 
-    maintainers = ["cyrush"]
+    maintainers("cyrush")
 
     version("develop", branch="develop", submodules=True)
     version("0.8.1", sha256="0cb1c84087e2b9385477fba3e7e197d6eabe1d366bd3bc87d7824e50dcdbe057")

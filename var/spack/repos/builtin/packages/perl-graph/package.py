@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -10,8 +10,13 @@ class PerlGraph(PerlPackage):
     """Graph data structures and algorithms"""
 
     homepage = "https://metacpan.org/pod/Graph"
-    url = "https://cpan.metacpan.org/authors/id/J/JH/JHI/Graph-0.9704.tar.gz"
+    url = "https://cpan.metacpan.org/authors/id/E/ET/ETJ/Graph-0.9726.tar.gz"
 
+    version(
+        "0.97.26",
+        sha256="7a60c7746da3f2da43f4acea703be2ad8fa24b26a623a0745876020e6ecd970e",
+        url="https://cpan.metacpan.org/authors/id/E/ET/ETJ/Graph-0.9726.tar.gz",
+    )
     version(
         "0.97.04",
         sha256="325e8eb07be2d09a909e450c13d3a42dcb2a2e96cc3ac780fe4572a0d80b2a25",

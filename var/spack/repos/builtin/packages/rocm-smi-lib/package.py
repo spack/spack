@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -17,13 +17,18 @@ class RocmSmiLib(CMakePackage):
 
     homepage = "https://github.com/RadeonOpenCompute/rocm_smi_lib"
     git = "https://github.com/RadeonOpenCompute/rocm_smi_lib.git"
-    url = "https://github.com/RadeonOpenCompute/rocm_smi_lib/archive/rocm-5.2.3.tar.gz"
+    url = "https://github.com/RadeonOpenCompute/rocm_smi_lib/archive/rocm-5.4.3.tar.gz"
     tags = ["rocm"]
 
-    maintainers = ["srekolam", "renjithravindrankannath"]
+    maintainers("srekolam", "renjithravindrankannath")
     libraries = ["librocm_smi64"]
 
     version("master", branch="master")
+
+    version("5.4.3", sha256="34d550272e420684230ceb7845aefcef79b155e51cf9ec55e31fdba2a4ed177b")
+    version("5.4.0", sha256="4b110c9ec104ec39fc458b1b6f693662ab75395b75ed402b671d8e58c7ae63fe")
+    version("5.3.3", sha256="c2c2a377c2e84f0c40297a97b6060dddc49183c2771b833ebe91ed98a98e4119")
+    version("5.3.0", sha256="8f72ad825a021d5199fb73726b4975f20682beb966e0ec31b53132bcd56c5408")
     version("5.2.3", sha256="fcf4f75a8daeca81ecb107989712c5f3776ee11e6eed870cb93efbf66ff1c384")
     version("5.2.1", sha256="07ad3be6f8c7d3f0a1b8b79950cd7839fb82972cef373dccffdbda32a3aca760")
     version("5.2.0", sha256="7bce567ff4e087598eace2cae72d24c98b2bcc93af917eafa61ec9d1e8ef4477")
@@ -114,7 +119,11 @@ class RocmSmiLib(CMakePackage):
     patch("disable_pdf_generation_with_doxygen_and_latex.patch", when="@4.5.2:")
 
     def cmake_args(self):
-        return [self.define_from_variant("BUILD_SHARED_LIBS", "shared")]
+        args = [
+            self.define_from_variant("BUILD_SHARED_LIBS", "shared"),
+            self.define("CMAKE_INSTALL_LIBDIR", self.prefix.lib),
+        ]
+        return args
 
     @classmethod
     def determine_version(cls, lib):

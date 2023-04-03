@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -7,9 +7,9 @@ from spack.package import *
 
 
 class PerlArchiveZip(PerlPackage):
-    """Provide an interface to ZIP archive files."""  # AUTO-CPAN2Spack
+    """Archive::Zip - Provide an interface to ZIP archive files."""
 
-    homepage = "https://cpan.metacpan.org/authors/id/P/PH/PHRED"  # AUTO-CPAN2Spack
+    homepage = "https://metacpan.org/pod/Archive::Zip"
     url = "https://cpan.metacpan.org/authors/id/P/PH/PHRED/Archive-Zip-1.68.tar.gz"
 
     maintainers = ["chissg", "gartung", "marcmengel", "vitodb"]  # AUTO-CPAN2Spack

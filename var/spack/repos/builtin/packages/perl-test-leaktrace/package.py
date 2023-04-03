@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -7,9 +7,10 @@ from spack.package import *
 
 
 class PerlTestLeaktrace(PerlPackage):
-    """Traces memory leaks."""  # AUTO-CPAN2Spack
+    """Test::LeakTrace provides several functions that trace memory leaks. This module scans
+    arenas, the memory allocation system, so it can detect any leaked SVs in given blocks."""
 
-    homepage = "https://metacpan.org/release/Test-LeakTrace"  # AUTO-CPAN2Spack
+    homepage = "https://metacpan.org/release/Test-LeakTrace"
     url = "https://cpan.metacpan.org/authors/id/L/LE/LEEJO/Test-LeakTrace-0.17.tar.gz"
 
     maintainers = ["chissg", "gartung", "marcmengel", "vitodb"]  # AUTO-CPAN2Spack

@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -13,6 +13,16 @@ class PerlExporterTiny(PerlPackage):
     homepage = "https://metacpan.org/pod/Exporter::Tiny"
     url = "https://cpan.metacpan.org/authors/id/T/TO/TOBYINK/Exporter-Tiny-1.000000.tar.gz"
 
+    version(
+        "1.006.001",
+        sha256="8df2a7ee5a11bacb8166edd9ee8fc93172278a74d5abe2021a5f4a7d57915c50",
+        url="https://cpan.metacpan.org/authors/id/T/TO/TOBYINK/Exporter-Tiny-1.006001.tar.gz",
+    )
+    version(
+        "1.006.000",
+        sha256="d95479ff085699d6422f7fc8306db085e34b626438deb82ec82d41df2295f400",
+        url="https://cpan.metacpan.org/authors/id/T/TO/TOBYINK/Exporter-Tiny-1.006000.tar.gz",
+    )
     version(
         "1.004.000",
         sha256="7f7b3b4fbe923355317243cd434d2319ffbad81c98cf8c8e189a6943b42bfeca",
