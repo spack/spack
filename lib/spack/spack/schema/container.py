@@ -84,6 +84,7 @@ container_schema = {
             },
         },
         "docker": {"type": "object", "additionalProperties": False, "default": {}},
+        "depfile": {"type": "boolean", "default": False},
     },
     "deprecatedProperties": {
         "properties": ["extra_instructions"],

@@ -474,7 +474,7 @@ template, the environment must register the directory containing it, and declare
 ``container`` configuration:
 
 .. code-block:: yaml
-   :emphasize-lines: 7-8,11
+   :emphasize-lines: 7-8,12
 
    spack:
      specs:
@@ -486,6 +486,7 @@ template, the environment must register the directory containing it, and declare
        - /opt/environment/templates
      container:
        format: docker
+       depfile: true
        template: container/CustomDockerfile
 
 The template extension can override two blocks, named ``build_stage`` and ``final_stage``, similarly to
@@ -496,7 +497,7 @@ the example below:
 
    {% extends "container/Dockerfile" %}
    {% block build_stage %}
-   ENV CFLAGS="-finline-functions"
+   RUN echo "Start building"
    {{ super() }}
    {% endblock %}
    {% block final_stage %}
@@ -512,7 +513,7 @@ The recipe that gets generated contains the two extra instruction that we added 
    # Build stage with Spack pre-installed and ready to be used
    FROM spack/ubuntu-jammy:latest as builder
 
-   ENV CFLAGS="-finline-functions"
+   RUN echo "Start building"
 
    # What we want to install and how we want to install it
    # is specified in a manifest file (spack.yaml)
@@ -577,6 +578,10 @@ to customize the generation of container recipes:
      - The format of the recipe
      - ``docker`` or ``singularity``
      - Yes
+   * - ``depfile``
+     - Whether to use a depfile for installation, or not
+     - True or False (default)
+     - No
    * - ``images:os``
      - Operating system used as a base for the image
      - See :ref:`containers-supported-os`
@@ -624,14 +629,6 @@ to customize the generation of container recipes:
    * - ``os_packages:final``
      - System packages needed at run-time
      - Valid packages for the current OS
-     - No
-   * - ``extra_instructions:build``
-     - Extra instructions (e.g. `RUN`, `COPY`, etc.) at the end of the ``build`` stage
-     - Anything understood by the current ``format``
-     - No
-   * - ``extra_instructions:final``
-     - Extra instructions (e.g. `RUN`, `COPY`, etc.) at the end of the ``final`` stage
-     - Anything understood by the current ``format``
      - No
    * - ``labels``
      - Labels to tag the image

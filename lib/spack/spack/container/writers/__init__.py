@@ -151,6 +151,10 @@ class PathContext(tengine.Context):
         self.last_phase = last_phase
 
     @tengine.context_property
+    def depfile(self):
+        return self.container_config.get("depfile", False)
+
+    @tengine.context_property
     def run(self):
         """Information related to the run image."""
         Run = collections.namedtuple("Run", ["image"])
