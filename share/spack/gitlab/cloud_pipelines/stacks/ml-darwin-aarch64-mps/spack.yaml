@@ -78,15 +78,5 @@ spack:
 
   mirrors: { "mirror": "s3://spack-binaries/develop/ml-darwin-aarch64-cpu" }
 
-  ci:
-    pipeline-gen:
-    - cleanup-job:
-        before_script: |
-          - export SPACK_USER_CACHE_PATH=$(pwd)/.spack-user-cache
-          - export SPACK_USER_CONFIG_PATH=$(pwd)/.spack-user-config
-          - . share/spack/setup-env.sh
-          - spack --version
-        tags: [lambda]
-
   cdash:
     build-group: Machine Learning
