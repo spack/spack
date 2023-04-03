@@ -23,7 +23,7 @@ EOF
   . /opt/spack/share/spack/setup-env.sh
   spack -e . concretize
 {% if depfile %}
-  spack -e . env depfile > Makefile
+  spack -e . env depfile -o Makefile
   make -j $(nproc)
 {% else %}
   spack -e . install

@@ -530,7 +530,7 @@ The recipe that gets generated contains the two extra instruction that we added 
    &&   echo "  view: /opt/view") > /opt/spack-environment/spack.yaml
 
    # Install the software, remove unnecessary deps
-   RUN cd /opt/spack-environment && spack env activate . && spack concretize && spack env depfile -o Makefile && make -j && spack gc -y
+   RUN cd /opt/spack-environment && spack env activate . && spack concretize && spack env depfile -o Makefile && make -j $(nproc) && spack gc -y
 
    # Strip all the binaries
    RUN find -L /opt/view/* -type f -exec readlink -f '{}' \; | \
