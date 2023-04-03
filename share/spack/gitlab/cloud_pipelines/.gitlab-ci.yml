@@ -149,6 +149,62 @@ default:
   extends: [ ".base-job", ".generate" ]
   tags: ["spack", "public", "medium", "aarch64"]
 
+.generate-macos-aarch64:
+  stage: generate
+  script:
+  - export SPACK_DISABLE_LOCAL_CONFIG=1
+  - export SPACK_USER_CACHE_PATH=$(pwd)/_user_cache
+  - uname -a || true
+  - grep -E 'vendor|model name' /proc/cpuinfo 2>/dev/null | sort -u || head -n10 /proc/cpuinfo 2>/dev/null || true
+  - nproc || true
+  - . "./share/spack/setup-env.sh"
+  - spack --version
+  - cd share/spack/gitlab/cloud_pipelines/stacks/${SPACK_CI_STACK_NAME}
+  - spack env activate --without-view .
+  - export SPACK_CI_CONFIG_ROOT="${SPACK_ROOT}/share/spack/gitlab/cloud_pipelines/configs"
+  - spack
+    --config-scope "${SPACK_CI_CONFIG_ROOT}"
+    ${CI_STACK_CONFIG_SCOPES}
+    ci generate --check-index-only
+    --buildcache-destination "${SPACK_BUILDCACHE_DESTINATION}"
+    --artifacts-root "${CI_PROJECT_DIR}/jobs_scratch_dir"
+    --output-file "${CI_PROJECT_DIR}/jobs_scratch_dir/cloud-ci-pipeline.yml"
+  after_script:
+  - cat /proc/loadavg || true
+  artifacts:
+    paths:
+    - "${CI_PROJECT_DIR}/jobs_scratch_dir"
+  interruptible: true
+  timeout: 60 minutes
+  retry:
+    max: 2
+    when:
+    - always
+
+.pr-generate:
+  extends: [ ".pr", ".generate" ]
+
+.pr-generate-deprecated:
+  extends: [ ".pr", ".generate-deprecated" ]
+
+.pr-generate-aarch64:
+  extends: [ ".pr", ".generate-aarch64" ]
+
+.pr-generate-macos-aarch64:
+  extends: [ ".pr", ".generate-macos-aarch64" ]
+
+.protected-generate:
+  extends: [ ".protected", ".generate" ]
+
+.protected-generate-deprecated:
+  extends: [ ".protected", ".generate-deprecated" ]
+
+.protected-generate-aarch64:
+  extends: [ ".protected", ".generate-aarch64" ]
+
+.protected-generate-macos-aarch64:
+  extends: [ ".protected", ".generate-macos-aarch64" ]
+
 .build:
   extends: [ ".base-job" ]
   stage: build
@@ -746,6 +802,98 @@ ml-linux-x86_64-rocm-build:
   needs:
     - artifacts: True
       job: ml-linux-x86_64-rocm-generate
+
+ml-linux-x86_64-rocm-protected-build:
+  extends: [ ".protected-build", ".ml-linux-x86_64-rocm" ]
+  trigger:
+    include:
+      - artifact: jobs_scratch_dir/cloud-ci-pipeline.yml
+        job: ml-linux-x86_64-rocm-protected-generate
+    strategy: depend
+  needs:
+    - artifacts: True
+      job: ml-linux-x86_64-rocm-protected-generate
+
+#########################################
+# Machine Learning - Darwin aarch64 (CPU)
+#########################################
+.tags-darwin-aarch64:
+  tags: ["macos-ventura", "apple-clang-14", "aarch64"]
+
+.ml-darwin-aarch64-cpu:
+  extends: [ ".darwin_aarch64" ]
+  variables:
+    SPACK_CI_STACK_NAME: ml-darwin-aarch64-cpu
+
+.ml-darwin-aarch64-cpu-generate:
+  extends: [ .ml-darwin-aarch64-cpu, ".tags-darwin-aarch64"]
+
+ml-darwin-aarch64-cpu-pr-generate:
+  extends: [ ".pr-generate", ".ml-darwin-aarch64-cpu-generate" ]
+
+ml-darwin-aarch64-cpu-protected-generate:
+  extends: [ ".protected-generate", ".ml-darwin-aarch64-cpu-generate" ]
+
+ml-darwin-aarch64-cpu-pr-build:
+  extends: [ ".pr-build", ".ml-darwin-aarch64-cpu"  ]
+  trigger:
+    include:
+      - artifact: jobs_scratch_dir/cloud-ci-pipeline.yml
+        job: ml-darwin-aarch64-cpu-pr-generate
+    strategy: depend
+  needs:
+    - artifacts: True
+      job: ml-darwin-aarch64-cpu-pr-generate
+
+ml-darwin-aarch64-cpu-protected-build:
+  extends: [ ".protected-build", ".ml-darwin-aarch64-cpu" ]
+  trigger:
+    include:
+      - artifact: jobs_scratch_dir/cloud-ci-pipeline.yml
+        job: ml-darwin-aarch64-cpu-protected-generate
+    strategy: depend
+  needs:
+    - artifacts: True
+      job: ml-darwin-aarch64-cpu-protected-generate
+
+#########################################
+# Machine Learning - Darwin aarch64 (MPS)
+#########################################
+.ml-darwin-aarch64-mps:
+  extends: [ ".darwin_aarch64" ]
+  variables:
+    SPACK_CI_STACK_NAME: ml-darwin-aarch64-mps
+
+.ml-darwin-aarch64-mps-generate:
+  extends: [ .ml-darwin-aarch64-mps, ".tags-darwin-aarch64" ]
+
+ml-darwin-aarch64-mps-pr-generate:
+  extends: [ ".pr-generate", ".ml-darwin-aarch64-mps-generate" ]
+
+ml-darwin-aarch64-mps-protected-generate:
+  extends: [ ".protected-generate", ".ml-darwin-aarch64-mps-generate" ]
+
+ml-darwin-aarch64-mps-pr-build:
+  extends: [ ".pr-build", ".ml-darwin-aarch64-mps"  ]
+  trigger:
+    include:
+      - artifact: jobs_scratch_dir/cloud-ci-pipeline.yml
+        job: ml-darwin-aarch64-mps-pr-generate
+    strategy: depend
+  needs:
+    - artifacts: True
+      job: ml-darwin-aarch64-mps-pr-generate
+
+ml-darwin-aarch64-mps-protected-build:
+  extends: [ ".protected-build", ".ml-darwin-aarch64-mps" ]
+  trigger:
+    include:
+      - artifact: jobs_scratch_dir/cloud-ci-pipeline.yml
+        job: ml-darwin-aarch64-mps-protected-generate
+    strategy: depend
+  needs:
+    - artifacts: True
+      job: ml-darwin-aarch64-mps-protected-generate
 
 ########################################
 # Deprecated CI testing
