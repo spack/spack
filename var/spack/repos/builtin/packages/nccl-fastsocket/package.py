@@ -3,8 +3,9 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack.package import *
 import tempfile
+
+from spack.package import *
 
 
 class NcclFastsocket(Package):
@@ -13,10 +14,7 @@ class NcclFastsocket(Package):
     homepage = "https://github.com/google/nccl-fastsocket"
     git = "https://github.com/google/nccl-fastsocket.git"
 
-    version(
-        "master",
-        preferred=True
-    )
+    version("master", preferred=True)
 
     depends_on("bazel", type="build")
     depends_on("nccl", type=["build", "run"])
@@ -61,7 +59,7 @@ class NcclFastsocket(Package):
         # The current plugin pickup method of NCCL is to scan for libraries with certain
         # names in the standard library search paths. Consequently, to make nccl-fastsocket
         # discoverable to NCCL it is necessary to add it to the LD_LIBRARY_PATH.
-        env.prepend_path('LD_LIBRARY_PATH', self.prefix.lib)
+        env.prepend_path("LD_LIBRARY_PATH", self.prefix.lib)
         # NCCL_NET_PLUGIN can be used to change part of the library-name NCCL is looking
         # for. This is not necessary for this plugin so it is set to the empty string.
-        env.set('NCCL_NET_PLUGIN', '')
+        env.set("NCCL_NET_PLUGIN", "")
