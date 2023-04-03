@@ -109,7 +109,7 @@ class Mxnet(CMakePackage, CudaPackage, PythonExtension):
             args.append(self.define_from_variant("USE_NCCL", "nccl"))
 
             # Workaround for bug in GCC 8+ and CUDA 10 on PowerPC
-            args.append(self.define("CMAKE_CUDA_FLAGS", self.compiler.cxx11_flag))
+            #args.append(self.define("CMAKE_CUDA_FLAGS", self.compiler.cxx11_flag))
 
         return args
 
