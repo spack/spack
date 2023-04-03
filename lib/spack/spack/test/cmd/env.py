@@ -9,6 +9,7 @@ import os
 import shutil
 import sys
 from argparse import Namespace
+import pathlib
 
 import pytest
 
@@ -778,18 +779,16 @@ def mpileaks_env_config(include_path):
     """Return the contents of an environment that includes the provided
     path and lists mpileaks as the sole spec."""
 
-    file_seperator = "//"
-    if is_windows:
-      file_seperator = "///"
+    include_path = pathlib.Path(include_path).as_uri()
 
     return """\
 env:
   include:
-  - file:{1}{0}
+  - {0}
   specs:
   - mpileaks
 """.format(
-        include_path, file_seperator
+        include_path
     )
 
 
@@ -819,10 +818,9 @@ def test_env_with_included_config_file_url(tmpdir, mutable_empty_config, package
 
     spack_yaml = tmpdir.join("spack.yaml")
     with spack_yaml.open("w") as f:
-        file_seperator = "//"
-        if is_windows:
-          file_seperator = "///"
-        f.write("spack:\n  include:\n    - file:{1}{0}\n".format(packages_file, file_seperator))
+        packages_file = pathlib.Path(packages_file).as_uri()
+
+        f.write("spack:\n  include:\n    - {0}\n".format(packages_file))
 
     env = ev.Environment(tmpdir.strpath)
     ev.activate(env)
@@ -840,10 +838,8 @@ def test_env_with_included_config_missing_file(tmpdir, mutable_empty_config):
     spack_yaml = tmpdir.join("spack.yaml")
     missing_file = tmpdir.join("packages.yaml")
     with spack_yaml.open("w") as f:
-        file_seperator = "//"
-        if is_windows:
-          file_seperator = "///"
-        f.write("spack:\n  include:\n    - file:{1}{0}\n".format(missing_file.strpath, file_seperator))
+        file = pathlib.Path(missing_file.strpath).as_uri()
+        f.write("spack:\n  include:\n    - {0}\n".format(file))
 
     env = ev.Environment(tmpdir.strpath)
     with pytest.raises(spack.config.ConfigError, match="missing include path"):
