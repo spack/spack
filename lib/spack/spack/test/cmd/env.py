@@ -881,7 +881,20 @@ def test_env_with_included_config_var_path(packages_file):
     """Test inclusion of a package configuration file with path variables
     "staged" in the environment's configuration stage directory."""
     config_var_path = os.path.join("$tempdir", "included-config.yaml")
-    test_config = mpileaks_env_config(config_var_path)
+
+    file_seperator = "//"
+    if is_windows:
+      file_seperator = "///"
+
+    test_config = """\
+      env:
+        include:
+        - file:{0}{1}
+        specs:
+        - mpileaks
+      """.format(
+              file_seperator, config_var_path
+          )
 
     _env_create("test", io.StringIO(test_config))
     e = ev.read("test")
