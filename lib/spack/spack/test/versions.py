@@ -881,3 +881,22 @@ def test_inclusion_upperbound():
 
     # They do intersect of course.
     assert is_specific.intersects(upperbound) and is_range.intersects(upperbound)
+
+
+def test_git_version_repo_attached_after_serialization(
+    mock_git_version_info, mock_packages, monkeypatch
+):
+    """Test that a GitVersion instance can be serialized and deserialized
+    without losing its repository reference.
+    """
+    repo_path, _, commits = mock_git_version_info
+    monkeypatch.setattr(
+        spack.package_base.PackageBase, "git", "file://%s" % repo_path, raising=False
+    )
+    spec = spack.spec.Spec(f"git-test-commit@{commits[-2]}").concretized()
+
+    # Before serialization, the repo is attached
+    assert spec.satisfies("@1.0")
+
+    # After serialization, the repo is still attached
+    assert spack.spec.Spec.from_dict(spec.to_dict()).satisfies("@1.0")
