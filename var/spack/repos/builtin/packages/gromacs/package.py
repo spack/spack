@@ -566,7 +566,9 @@ class CMakeBuilder(spack.build_systems.cmake.CMakeBuilder):
             # we use the mkl interface of gromacs
             options.append("-DGMX_FFT_LIBRARY=mkl")
             if not self.spec["mkl"].satisfies("@2023:"):
-                options.append("-DMKL_INCLUDE_DIR={0}".format(self.spec["mkl"].headers.directories[0]))
+                options.append(
+                    "-DMKL_INCLUDE_DIR={0}".format(self.spec["mkl"].headers.directories[0])
+                )
                 # The 'blas' property provides a minimal set of libraries
                 # that is sufficient for fft. Using full mkl fails the cmake test
                 options.append("-DMKL_LIBRARIES={0}".format(self.spec["blas"].libs.joined(";")))
