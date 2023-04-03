@@ -481,7 +481,7 @@ class CMakeBuilder(spack.build_systems.cmake.CMakeBuilder):
         if "+cp2k" in self.spec:
             options.append("-DGMX_CP2K:BOOL=ON")
             options.append("-DCP2K_DIR:STRING={0}".format(self.spec["cp2k"].prefix))
-            
+
         if "+cufftmp" in self.spec:
             options.append("-DGMX_USE_CUFFTMP=ON")
             options.append(
