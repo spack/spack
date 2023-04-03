@@ -98,7 +98,7 @@ class SuiteSparse(Package):
     def flag_handler(self, name, flags):
         if name in ("cflags", "cxxflags"):
             if self.spec.satisfies("^openblas ~shared threads=openmp"):
-                flags.append("-fopenmp")
+                flags.append(self.compiler.openmp_flag)
         return (flags, None, None)
 
     def symbol_suffix_blas(self, spec, args):
