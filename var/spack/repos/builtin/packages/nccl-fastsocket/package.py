@@ -4,8 +4,8 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 from spack.package import *
-import os
 import tempfile
+
 
 class NcclFastsocket(Package):
     """NCCL Fast Socket GCP Net plugin for NCCL"""
@@ -20,7 +20,7 @@ class NcclFastsocket(Package):
 
     depends_on("bazel", type="build")
     depends_on("nccl", type=["build", "run"])
-    
+
     maintainers = ["danielahlin"]
 
     def setup_build_environment(self, env):
@@ -31,9 +31,7 @@ class NcclFastsocket(Package):
         env.set("NCCL_HDR_PATH", spec["nccl"].prefix.include)
 
     def install(self, spec, prefix):
-
         tmp_path = env["TEST_TMPDIR"]
-
         # Copied of py-tensorflow
         args = [
             # Don't allow user or system .bazelrc to override build settings
@@ -56,10 +54,7 @@ class NcclFastsocket(Package):
             # Increase verbosity of explanation,
             "--verbose_explanations",
         ]
-
-
         bazel(*args)
-
         install_tree("bazel-bin", prefix.lib)
 
     def setup_run_environment(self, env):
