@@ -194,14 +194,15 @@ class RocmOpencl(CMakePackage):
 
     @classmethod
     def determine_version(cls, lib):
-        match = re.search(r"lib\S*\.so\.\d+\.\d+\.(\d)(\d\d)(\d\d)", lib)
+        detected_version = None
+        with open(lib, "rb") as f:
+            library_content = str(f.readlines())
+        match = re.search(r"rocm-(\d)\.(\d).(\d)", library_content)
         if match:
-            ver = "{0}.{1}.{2}".format(
+            detected_version = "{0}.{1}.{2}".format(
                 int(match.group(1)), int(match.group(2)), int(match.group(3))
             )
-        else:
-            ver = None
-        return ver
+        return detected_version
 
     def flag_handler(self, name, flags):
         # The includes are messed up in ROCm 3.5.0:
