@@ -631,16 +631,13 @@ class ViewDescriptor(object):
         if not spack.util.atomic_update.renameat2():
             return False
 
-        # This is all to ensure we don't swap symlink -> exchange if we have
-        # symlink as an acceptable method. This is to avoid problems switching
-        # between OSs
-        if os.path.exists(self.root):
-            if os.path.islink(self.root):
-                if force:
-                    os.unlink(self.root)
-                    return True
-                else:
-                    return "symlink" not in self.update_method
+        # Ensure we don't swap symlink -> exchange if we have a symlink and symlink is an
+        # acceptable method. This is to avoid problems switching between OSs.
+        if os.path.islink(self.root):
+            if force:
+                os.unlink(self.root)
+            elif "symlink" in self.update_method:
+                return False
 
         return True
 
@@ -690,16 +687,15 @@ class ViewDescriptor(object):
             tty.debug("View at %s does not need regeneration." % self.root)
             return
 
-        if update_method == "exchange":
-            if os.path.isdir(new_root):
-                # If new_root is the newest thing in its directory, no need to update
-                parent = os.path.dirname(new_root)
-                siblings = [os.path.join(parent, s) for s in os.listdir(parent)]
-                siblings.sort(reverse=True, key=lambda p: os.stat(p).st_mtime)
-                if siblings[0] == new_root:
-                    tty.debug("View at %s does not need regenration." % self.root)
-                    return
-                shutil.rmtree(new_root)
+        if update_method == "exchange" and os.path.isdir(new_root):
+            # If new_root is the newest thing in its directory, no need to update
+            parent = os.path.dirname(new_root)
+            siblings = [os.path.join(parent, s) for s in os.listdir(parent)]
+            siblings.sort(reverse=True, key=lambda p: os.stat(p).st_mtime)
+            if siblings[0] == new_root:
+                tty.debug("View at %s does not need regenration." % self.root)
+                return
+            shutil.rmtree(new_root)
 
         _error_on_nonempty_view_dir(new_root)
 
