@@ -691,9 +691,8 @@ class ViewDescriptor(object):
             # If new_root is the newest thing in its directory, no need to update
             parent = os.path.dirname(new_root)
             siblings = [os.path.join(parent, s) for s in os.listdir(parent)]
-            siblings.sort(reverse=True, key=lambda p: os.stat(p).st_mtime)
-            if siblings[0] == new_root:
-                tty.debug("View at %s does not need regenration." % self.root)
+            if max(siblings, key=lambda p: os.stat(p).st_mtime) == new_root:
+                tty.debug("View at %s does not need regeneration." % self.root)
                 return
             shutil.rmtree(new_root)
 
