@@ -471,7 +471,7 @@ class MockCache(object):
 
 
 class MockCacheFetcher(object):
-    def fetch(self):
+    def fetch(self, verbose=True):
         raise FetchError("Mock cache always fails for tests")
 
     def __str__(self):

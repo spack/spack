@@ -2012,7 +2012,7 @@ def install_root_node(spec, allow_root, unsigned=False, force=False, sha256=None
     if sha256:
         checker = spack.util.crypto.Checker(sha256)
         msg = 'cannot verify checksum for "{0}" [expected={1}]'
-        tarball_path = download_result["tarball_stage"].save_filename
+        tarball_path = download_result.tarball_stage.save_filename
         msg = msg.format(tarball_path, sha256)
         if not checker.check(tarball_path):
             size, contents = fsys.filesummary(tarball_path)

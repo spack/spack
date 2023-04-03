@@ -548,7 +548,7 @@ def mock_download():
         def mirror_id(self):
             return None
 
-        def fetch(self):
+        def fetch(self, verbose=True):
             raise spack.fetch_strategy.FailedDownloadError(
                 "<non-existent URL>", "This FetchStrategy always fails"
             )
@@ -599,7 +599,7 @@ def fetching_not_allowed(monkeypatch):
         def mirror_id(self):
             return None
 
-        def fetch(self):
+        def fetch(self, verbose=True):
             raise Exception("Sources are fetched but shouldn't have been")
 
     fetcher = FetchStrategyComposite()
