@@ -27,7 +27,7 @@ from llnl.util.link_tree import (
     SingleMergeConflictError,
     SourceMergeVisitor,
 )
-from llnl.util.symlink import symlink
+from llnl.util.symlink import islink, symlink
 from llnl.util.tty.color import colorize
 
 import spack.config
@@ -63,7 +63,7 @@ def view_copy(src, dst, view, spec=None):
 
     Use spec and view to generate relocations
     """
-    shutil.copy2(src, dst)
+    shutil.copy2(src, dst, follow_symlinks=False)
     if spec and not spec.external:
         # Not metadata, we have to relocate it
 
@@ -95,6 +95,8 @@ def view_copy(src, dst, view, spec=None):
 
         if spack.relocate.is_binary(dst):
             spack.relocate.relocate_text_bin(binaries=[dst], prefixes=prefix_to_projection)
+        elif islink(dst):
+            spack.relocate.relocate_links(links=[dst], prefix_to_prefix=prefix_to_projection)
         else:
             prefix_to_projection[spack.store.layout.root] = root
             prefix_to_projection[orig_sbang] = new_sbang
