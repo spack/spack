@@ -77,6 +77,9 @@ def test_modules_default_symlink(
     assert os.path.islink(link_path)
     assert os.readlink(link_path) == mock_module_filename
 
+    generator.remove()
+    assert not os.path.lexists(link_path)
+
 
 class MockDb(object):
     def __init__(self, db_ids, spec_hash_to_db):
