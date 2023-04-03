@@ -587,9 +587,7 @@ def test_install_legacy_buildcache_layout(install_mockery_mutable_config):
     mirror_cmd("add", "--scope", "site", "test-legacy-layout", mirror_url)
     output = install_cmd("--no-check-signature", "--cache-only", "-f", spec_json_path, output=str)
     mirror_cmd("rm", "--scope=site", "test-legacy-layout")
-    expect_line = (
-        "Extracting archive-files-2.0-" "l3vdiqvbobmspwyb4q2b62fz6nitd4hk from binary cache"
-    )
+    expect_line = f"Fetched archive-files-2.0-l3vdiqvbobmspwyb4q2b62fz6nitd4hk from {mirror_url}"
     assert expect_line in output
 
 
