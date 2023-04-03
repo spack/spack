@@ -82,7 +82,12 @@ class Binutils(AutotoolsPackage, GNUMirrorPackage):
     # https://sourceware.org/bugzilla/show_bug.cgi?id=27482
     patch("parallel-build-2.36.patch", when="@2.36")
 
+    # compression libs for debug symbols.
+    # pkg-config is used to find zstd in gas/configure
+    depends_on("pkgconfig", type="build")
+    depends_on("zstd@1.4.0:", when="@2.40:")
     depends_on("zlib")
+
     depends_on("diffutils", type="build")
     depends_on("gettext", when="+nls")
 

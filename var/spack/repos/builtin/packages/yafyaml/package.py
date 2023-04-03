@@ -3,6 +3,8 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+import os
+
 from spack.package import *
 
 
@@ -52,3 +54,9 @@ class Yafyaml(CMakePackage):
         description="The build type to build",
         values=("Debug", "Release"),
     )
+    variant("fismahigh", default=False, description="Apply patching for FISMA-high compliance")
+
+    @when("+fismahigh")
+    def patch(self):
+        if os.path.exists("tools/ci-install-gfe.bash"):
+            os.remove("tools/ci-install-gfe.bash")

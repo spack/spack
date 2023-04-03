@@ -16,6 +16,7 @@ class PySlepc4py(PythonPackage):
     maintainers("joseeroman", "balay")
 
     version("main", branch="main")
+    version("3.19.0", sha256="ae84d33cce259c1d6ff64308b2f819d1c0f7b018e048f9049ec6d5be15614ba5")
     version("3.18.3", sha256="93c978f115683900a575026111ff2abe6f3ce4de8c21eec53c07dfd97ea43c85")
     version("3.18.2", sha256="402297fd8e583ed2618d2cba05e5cae8e9d0a2c3943812a1a138f431ef3479b3")
     version("3.18.1", sha256="4c2bc0947d6a9cdb209e3174b7f54fe7b029220e2c90106f52844e8f8795f8f0")
@@ -34,8 +35,7 @@ class PySlepc4py(PythonPackage):
     version("3.12.0", sha256="d8c06953b7d00f529a9a7fd016dfa8efdf1d05995baeea7688d1d59611f424f7")
     version("3.11.0", sha256="1e591056beee209f585cd781e5fe88174cd2a61215716a71d9eaaf9411b6a775")
 
-    patch("ldshared.patch", when="@:99")
-    patch("ldshared-dev.patch", when="@main")
+    patch("ldshared.patch", when="@:3.18")
 
     depends_on("py-cython@0.29.32:", when="^python@3.11:", type="build")
     depends_on("py-cython@0.24:", type="build")
@@ -43,6 +43,7 @@ class PySlepc4py(PythonPackage):
 
     depends_on("py-petsc4py", type=("build", "run"))
     depends_on("py-petsc4py@main", when="@main", type=("build", "run"))
+    depends_on("py-petsc4py@3.19.0:3.19", when="@3.19.0:3.19", type=("build", "run"))
     depends_on("py-petsc4py@3.18.0:3.18", when="@3.18.0:3.18", type=("build", "run"))
     depends_on("py-petsc4py@3.17.0:3.17", when="@3.17.0:3.17", type=("build", "run"))
     depends_on("py-petsc4py@3.16.0:3.16", when="@3.16.0:3.16", type=("build", "run"))
@@ -53,6 +54,7 @@ class PySlepc4py(PythonPackage):
 
     depends_on("slepc")
     depends_on("slepc@main", when="@main")
+    depends_on("slepc@3.19.0:3.19", when="@3.19.0:3.19")
     depends_on("slepc@3.18.0:3.18", when="@3.18.0:3.18")
     depends_on("slepc@3.17.0:3.17", when="@3.17.0:3.17")
     depends_on("slepc@3.16.0:3.16", when="@3.16.0:3.16")
