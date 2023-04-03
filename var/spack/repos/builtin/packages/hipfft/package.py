@@ -7,7 +7,7 @@
 from spack.package import *
 
 
-class Hipfft(CMakePackage):
+class Hipfft(CMakePackage, CudaPackage, ROCmPackage):
     """hipFFT is an FFT marshalling library. Currently, hipFFT supports
     either rocFFT or cuFFT as backends.hipFFT exports an interface that
     does not require the client to change, regardless of the chosen backend.
@@ -73,6 +73,22 @@ class Hipfft(CMakePackage):
         deprecated=True,
     )
 
+    # default to an 'auto' variant until amdgpu_targets can be given a better default than 'none'
+    amdgpu_targets = ROCmPackage.amdgpu_targets
+    variant(
+        "amdgpu_target",
+        values=spack.variant.DisjointSetsOfValues(("auto",), ("none",), amdgpu_targets)
+        .with_default("auto")
+        .with_error(
+            "the values 'auto' and 'none' are mutually exclusive with any of the other values"
+        )
+        .with_non_feature_values("auto", "none"),
+        sticky=True,
+    )
+    variant("rocm", default=True, description="Enable ROCm support")
+    conflicts("+cuda +rocm", msg="CUDA and ROCm support are mutually exclusive")
+    conflicts("~cuda ~rocm", msg="CUDA or ROCm support is required")
+
     variant(
         "build_type",
         default="Release",
@@ -81,6 +97,8 @@ class Hipfft(CMakePackage):
     )
 
     depends_on("cmake@3.5:", type="build")
+
+    depends_on("hip +cuda", when="+cuda")
 
     for ver in [
         "4.1.0",
@@ -102,25 +120,28 @@ class Hipfft(CMakePackage):
         "5.4.3",
     ]:
         depends_on("rocm-cmake@%s:" % ver, type="build", when="@" + ver)
-        depends_on("hip@" + ver, when="@" + ver)
-        depends_on("rocfft@" + ver, when="@" + ver)
+        depends_on("rocfft@" + ver, when="+rocm @" + ver)
 
-    def setup_build_environment(self, env):
-        env.set("CXX", self.spec["hip"].hipcc)
+    for tgt in ROCmPackage.amdgpu_targets:
+        depends_on(
+            "rocfft amdgpu_target={0}".format(tgt), when="+rocm amdgpu_target={0}".format(tgt)
+        )
 
     def cmake_args(self):
-        args = [
-            # Make sure find_package(HIP) finds the module.
-            self.define("BUILD_CLIENTS_SAMPLES", "OFF")
-        ]
+        args = [self.define("BUILD_CLIENTS_SAMPLES", "OFF")]
 
-        if self.spec.satisfies("^cmake@3.21.0:3.21.2"):
-            args.append(self.define("__skip_rocmclang", "ON"))
+        if self.spec.satisfies("+rocm"):
+            args.append(self.define("BUILD_WITH_LIB", "ROCM"))
+        elif self.spec.satisfies("+cuda"):
+            args.append(self.define("BUILD_WITH_LIB", "CUDA"))
 
-        if self.spec.satisfies("@3.7.0:5.1"):
+        # FindHIP.cmake is still used for both +rocm and +cuda
+        if self.spec["hip"].satisfies("@:5.1"):
             args.append(self.define("CMAKE_MODULE_PATH", self.spec["hip"].prefix.cmake))
-        elif self.spec.satisfies("@5.2.0:"):
+        else:
             args.append(self.define("CMAKE_MODULE_PATH", self.spec["hip"].prefix.lib.cmake.hip))
+
+        if self.spec.satisfies("@5.2.0:"):
             args.append(self.define("BUILD_FILE_REORG_BACKWARD_COMPATIBILITY", True))
 
         if self.spec.satisfies("@5.3.0:"):
