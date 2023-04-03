@@ -60,7 +60,7 @@ class Zstd(CMakePackage, MakefilePackage):
     # (last tested: nvhpc@22.3)
     conflicts("+programs %nvhpc")
 
-    build_system("cmake", "makefile", default="cmake")
+    build_system("cmake", "makefile", default="makefile")
 
 
 class CMakeBuilder(CMakeBuilder):
@@ -88,10 +88,10 @@ class CMakeBuilder(CMakeBuilder):
 
 
 class MakefileBuilder(MakefileBuilder):
-    def build(self, spec, prefix):
+    def build(self, pkg, spec, prefix):
         pass
 
-    def install(self, spec, prefix):
+    def install(self, pkg, spec, prefix):
         args = ["VERBOSE=1", "PREFIX=" + prefix]
 
         # Tested %nvhpc@22.3. No support for -MP
