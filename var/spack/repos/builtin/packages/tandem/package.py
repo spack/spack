@@ -14,11 +14,13 @@ class Tandem(CMakePackage):
     in 2D, tetrahedral meshes in 3D)."""
 
     homepage = "https://tandem.readthedocs.io/en/latest/"
-    version(
-        "develop", git="https://github.com/TEAR-ERC/tandem.git", branch="main", submodules=True
-    )
+    version("main", git="https://github.com/TEAR-ERC/tandem.git", branch="main", submodules=True)
 
-    maintainers = ["uphoffc", "dmay23", "Thomas-Ulrich"]
+    # we cannot use the tar.gz file because it does not contains submodules
+    version("1.0", git="https://github.com/TEAR-ERC/tandem.git", tag="v1.0", submodules=True)
+    patch("fix_v1.0_compilation.diff", when="@1.0")
+
+    maintainers = ["dmay23", "Thomas-Ulrich"]
     variant("polynomial_degree", default="2")
     variant("domain_dimension", default="2", values=("2", "3"), multi=False)
     variant("min_quadrature_order", default="0")
