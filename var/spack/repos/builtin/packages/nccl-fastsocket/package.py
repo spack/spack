@@ -62,7 +62,11 @@ class NcclFastsocket(Package):
 
         install_tree("bazel-bin", prefix.lib)
 
-
     def setup_run_environment(self, env):
+        # The current plugin pickup method of NCCL is to scan for libraries with certain
+        # names in the standard library search paths. Consequently, to make nccl-fastsocket
+        # discoverable to NCCL it is necessary to add it to the LD_LIBRARY_PATH.
         env.prepend_path('LD_LIBRARY_PATH', self.prefix.lib)
+        # NCCL_NET_PLUGIN can be used to change part of the library-name NCCL is looking
+        # for. This is not necessary for this plugin so it is set to the empty string.
         env.set('NCCL_NET_PLUGIN', '')
