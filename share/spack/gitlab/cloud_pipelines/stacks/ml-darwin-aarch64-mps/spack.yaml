@@ -1,5 +1,10 @@
 spack:
   view: false
+
+  config:
+    install_tree:
+      root: $spack/opt/spack
+
   packages:
     all:
       require: target=aarch64
@@ -8,73 +13,101 @@ spack:
       require: openmpi
 
   specs:
-    # Horovod
-    - py-horovod
+  # Horovod
+  - py-horovod
 
-    # Hugging Face
-    - py-transformers
+  # Hugging Face
+  - py-transformers
 
-    # JAX
-    - py-jax
-    - py-jaxlib
+  # JAX
+  - py-jax
+  - py-jaxlib
 
-    # Keras
-    - py-keras
-    - py-keras-applications
-    - py-keras-preprocessing
-    - py-keras2onnx
+  # Keras
+  - py-keras
+  - py-keras-applications
+  - py-keras-preprocessing
+  - py-keras2onnx
 
-    # MXNet
-    - mxnet
+  # MXNet
+  - mxnet
 
-    # PyTorch
-    - py-botorch
-    - py-efficientnet-pytorch
-    - py-gpytorch
-    - py-kornia
-    - py-lightning
-    - py-pytorch-gradual-warmup-lr
-    - py-pytorch-lightning
-    - py-segmentation-models-pytorch
-    - py-timm
-    - py-torch
-    - py-torch-cluster
-    - py-torch-geometric
-    - py-torch-nvidia-apex
-    - py-torch-scatter
-    - py-torch-sparse
-    - py-torch-spline-conv
-    - py-torchaudio
-    - py-torchdata
-    - py-torchfile
-    - py-torchgeo
-    - py-torchmetrics
-    - py-torchtext
-    - py-torchvision
-    - py-vector-quantize-pytorch
+  # PyTorch
+  - py-botorch
+  - py-efficientnet-pytorch
+  - py-gpytorch
+  - py-kornia
+  - py-lightning
+  - py-pytorch-gradual-warmup-lr
+  - py-pytorch-lightning
+  - py-segmentation-models-pytorch
+  - py-timm
+  - py-torch
+  - py-torch-cluster
+  - py-torch-geometric
+  - py-torch-nvidia-apex
+  - py-torch-scatter
+  - py-torch-sparse
+  - py-torch-spline-conv
+  - py-torchaudio
+  - py-torchdata
+  - py-torchfile
+  - py-torchgeo
+  - py-torchmetrics
+  - py-torchtext
+  - py-torchvision
+  - py-vector-quantize-pytorch
 
-    # scikit-learn
-    - py-scikit-learn
-    - py-scikit-learn-extra
+  # scikit-learn
+  - py-scikit-learn
+  - py-scikit-learn-extra
 
-    # TensorBoard
-    - py-tensorboard
-    - py-tensorboard-data-server
-    - py-tensorboard-plugin-wit
-    - py-tensorboardx
+  # TensorBoard
+  - py-tensorboard
+  - py-tensorboard-data-server
+  - py-tensorboard-plugin-wit
+  - py-tensorboardx
 
-    # TensorFlow
-    - py-tensorflow
-    - py-tensorflow-datasets
-    - py-tensorflow-estimator
-    - py-tensorflow-hub
-    - py-tensorflow-metadata
-    - py-tensorflow-probability
+  # TensorFlow
+  - py-tensorflow
+  - py-tensorflow-datasets
+  - py-tensorflow-estimator
+  - py-tensorflow-hub
+  - py-tensorflow-metadata
+  - py-tensorflow-probability
 
-    # XGBoost
-    - py-xgboost
-    - r-xgboost
-    - xgboost
+  # XGBoost
+  - py-xgboost
+  - r-xgboost
+  - xgboost
+
+  compilers:
+  - compiler:
+      spec: apple-clang@14.0.0
+      paths:
+        cc: /usr/bin/clang
+        cxx: /usr/bin/clang++
+        f77: /opt/homebrew/bin/gfortran
+        fc: /opt/homebrew/bin/gfortran
+      flags: {}
+      operating_system: ventura
+      target: aarch64
+      modules: []
+      environment: {}
+      extra_rpaths: []
+  - compiler:
+      spec: gcc@12.2.0
+      paths:
+        cc: /opt/homebrew/bin/gcc-12
+        cxx: /opt/homebrew/bin/g++-12
+        f77: /opt/homebrew/bin/gfortran-12
+        fc: /opt/homebrew/bin/gfortran-12
+      flags: {}
+      operating_system: ventura
+      target: aarch64
+      modules: []
+      environment: {}
+      extra_rpaths: []
 
   mirrors: { "mirror": "s3://spack-binaries/develop/ml-darwin-aarch64-cpu" }
 
