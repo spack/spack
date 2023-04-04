@@ -10,7 +10,7 @@ import llnl.util.filesystem as fs
 from spack.package import *
 
 
-class Gromacs(CMakePackage):
+class Gromacs(CMakePackage, CudaPackage):
     """GROMACS is a molecular dynamics package primarily designed for simulations
     of proteins, lipids and nucleic acids. It was originally developed in
     the Biophysical Chemistry department of University of Groningen, and is now
@@ -87,7 +87,6 @@ class Gromacs(CMakePackage):
         description="Produces a double precision version of the executables",
     )
     variant("plumed", default=False, description="Enable PLUMED support")
-    variant("cuda", default=False, description="Enable CUDA support")
     variant("opencl", default=False, description="Enable OpenCL support")
     variant("sycl", default=False, description="Enable SYCL support")
     variant("nosuffix", default=False, description="Disable default suffixes")
