@@ -96,31 +96,23 @@ def test_test_output(
 
 
 def test_test_output_on_error(
-    mock_packages, mock_archive, mock_fetch, install_mockery_mutable_config, capfd, mock_test_stage
+    mock_packages, mock_archive, mock_fetch, install_mockery_mutable_config, mock_test_stage
 ):
     install("test-error")
-    # capfd interferes with Spack's capturing
-    with capfd.disabled():
-        out = spack_test("run", "test-error", fail_on_error=False)
-
+    out = spack_test("run", "test-error", fail_on_error=False)
     assert "TestFailure" in out
     assert "Command exited with status 1" in out
 
 
 def test_test_output_on_failure(
-    mock_packages, mock_archive, mock_fetch, install_mockery_mutable_config, capfd, mock_test_stage
+    mock_packages, mock_archive, mock_fetch, install_mockery_mutable_config, mock_test_stage
 ):
     install("test-fail")
-    with capfd.disabled():
-        try:
-            out = spack_test("run", "test-fail", fail_on_error=False)
-        except NameError as e:
-            err_msg = str(e)
-            assert "noop" in err_msg
-            assert "not defined" in err_msg
-
+    out = spack_test("run", "test-fail", fail_on_error=False)
+    lines = [ln for ln in out.split("\n") if ln]
+    lines = lines[2:]
     assert "TestFailure" in out
-    assert "Command exited with status 1" in out
+    assert "not callable" in out
 
 
 def test_show_log_on_error(
@@ -142,7 +134,7 @@ def test_show_log_on_error(
     "pkg_name,msgs",
     [
         ("test-error", ["exited with status 1", "TestFailure"]),
-        ("test-fail", ["not defined", "TestFailure"]),
+        ("test-fail", ["not callable", "TestFailure"]),
     ],
 )
 def test_junit_output_with_failures(tmpdir, mock_test_stage, pkg_name, msgs):

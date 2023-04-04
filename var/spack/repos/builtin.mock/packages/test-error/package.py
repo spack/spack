@@ -20,4 +20,4 @@ class TestError(Package):
     def test_false(self):
         """TestError test"""
         false = which("false")
-        false(output=str.split, error=str.split)
+        false()
