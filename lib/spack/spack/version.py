@@ -1043,7 +1043,7 @@ def prev_version(v: StandardVersion) -> StandardVersion:
 
 
 def is_git_version(string: str) -> bool:
-    return (
+    return bool(
         string.startswith("git.")
         or len(string) == 40
         and COMMIT_VERSION.match(string)
