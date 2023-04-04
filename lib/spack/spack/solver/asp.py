@@ -2252,7 +2252,7 @@ def _specs_from_requires(pkg_name, section):
         try:
             ver = spec.version
             # TODO: can requirements for virtuals specify versions/variants
-            # on implementations? e.g. packages:mpi:require:openmpi@4.0.1?
+            # on implementations (e.g. packages:mpi:require:openmpi@4.0.1)?
             # If so, get_pkg_class should defer to spec.name rather than
             # pkg_name
             pkg_class = spack.repo.path.get_pkg_class(pkg_name)
