@@ -444,7 +444,7 @@ def padding_filter(string):
             r"(/{pad})+"  # the padding string repeated one or more times
             r"(/{longest_prefix})?(?=/)"  # trailing prefix of padding as path component
         )
-        regex = regex.replace("/", os.sep)
+        regex = regex.replace("/", re.escape(os.sep))
         regex = regex.format(pad=pad, longest_prefix=longest_prefix)
         _filter_re = re.compile(regex)
 
