@@ -485,7 +485,8 @@ class CMakeBuilder(spack.build_systems.cmake.CMakeBuilder):
         if "+cufftmp" in self.spec:
             options.append("-DGMX_USE_CUFFTMP=ON")
             options.append(
-                f'-DcuFFTMp_ROOT={self.spec["nvhpc"].prefix}/Linux_{self.spec.target.family}/{self.spec["nvhpc"].version}/math_libs'
+                f'-DcuFFTMp_ROOT={self.spec["nvhpc"].prefix}/Linux_{self.spec.target.family}' +
+                f'/{self.spec["nvhpc"].version}/math_libs'
             )
 
         # Activate SIMD based on properties of the target
