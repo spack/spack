@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -19,7 +19,7 @@ class Clblast(CMakePackage):
     git = "https://github.com/CNugteren/CLBlast"
     url = "https://github.com/CNugteren/CLBlast/archive/refs/tags/1.5.2.zip"
 
-    maintainers = ["umar456"]
+    maintainers("umar456")
 
     version("master", branch="master")
     version("1.5.2", sha256="0e3a017c3aa352e0bf94ea65cfc9609beb2c22204d31c2ef43d0478178cfee00")

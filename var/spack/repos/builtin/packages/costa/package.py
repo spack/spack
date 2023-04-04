@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -13,14 +13,14 @@ class Costa(CMakePackage):
     Based on the paper: https://arxiv.org/abs/2106.06601
     """
 
-    maintainers = ["haampie", "kabicm"]
+    maintainers("haampie", "kabicm", "RMeli")
     homepage = "https://github.com/eth-cscs/COSTA"
-    url = "https://github.com/eth-cscs/COSTA/releases/download/v2.0/COSTA-v2.0.tar.gz"
     git = "https://github.com/eth-cscs/COSTA.git"
 
     # note: The default archives produced with github do not have the archives
     #       of the submodules.
     version("master", branch="master", submodules=True)
+    version("2.1", sha256="c1e86452415083f7470b292d93ec60708b7c8dbafc2bac383636bb4b28135866")
     version("2.0", sha256="de250197f31f7d23226c6956a687c3ff46fb0ff6c621a932428236c3f7925fe4")
 
     variant("scalapack", default=False, description="Build with ScaLAPACK API")
@@ -31,9 +31,14 @@ class Costa(CMakePackage):
     depends_on("scalapack", when="+scalapack")
 
     def url_for_version(self, version):
-        return "https://github.com/eth-cscs/COSTA/releases/download/v{0}/COSTA-v{1}.tar.gz".format(
-            version, version
-        )
+        if version == Version("2.0"):
+            return "https://github.com/eth-cscs/COSTA/releases/download/v{0}/COSTA-v{1}.tar.gz".format(
+                version, version
+            )
+        else:
+            return "https://github.com/eth-cscs/COSTA/archive/refs/tags/v{0}.tar.gz".format(
+                version
+            )
 
     def setup_build_environment(self, env):
         return

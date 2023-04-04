@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -19,7 +19,7 @@ class Plasma(CMakePackage):
     homepage = "https://github.com/icl-utk-edu/plasma/"
     url = "https://github.com/icl-utk-edu/plasma/releases/download/21.8.29/plasma-21.8.29.tar.gz"
     git = "https://github.com/icl-utk-edu/plasma"
-    maintainers = ["luszczek"]
+    maintainers("luszczek")
 
     tags = ["e4s"]
 
@@ -85,6 +85,14 @@ class Plasma(CMakePackage):
     patch("protect_cmake_version.patch", when="@19.8.0:19.8.9")
     patch("fix_cmake_include.patch", when="@19.8.0:19.8.9")
 
+    @when("@22.9.29")
+    def patch(self):
+        filter_file(
+            "^(#define PLASMA_CORE_LAPACK_H)$",
+            '\\1\n\n#include "plasma_config.h"',
+            "include/core_lapack.h",
+        )
+
     @when("@develop:")
     def patch(self):
         python("tools/generate_precisions.py")
@@ -107,6 +115,17 @@ class CMakeBuilder(spack.build_systems.cmake.CMakeBuilder):
             if package in self.spec:
                 for lib in ("CBLAS", "LAPACKE"):
                     options.append(self.define("{}_PROVIDER".format(lib), provider))
+        if "cray-libsci" in self.spec:
+            for lib in ("CBLAS", "LAPACKE"):
+                libsci_prefix = self.spec["cray-libsci"].package.external_prefix
+                options.append(self.define("{}_PROVIDER".format(lib), "generic"))
+                options.append(
+                    self.define("{}_INCLUDE_DIRS".format(lib), join_path(libsci_prefix, "include"))
+                )
+                options.append(
+                    self.define("{}_LIBRARIES".format(lib), self.spec["blas"].libs.joined(";"))
+                )
+            options.append(self.define("CBLAS_ADD_TYPEDEF", True))
 
         return options
 

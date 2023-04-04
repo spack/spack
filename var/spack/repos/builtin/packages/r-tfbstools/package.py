@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -18,6 +18,7 @@ class RTfbstools(RPackage):
 
     bioc = "TFBSTools"
 
+    version("1.36.0", commit="3358c89227a4d2e237ee5f8c532f468460a16ee2")
     version("1.34.0", commit="7f8d0cb58a527a5d7ba94a773279f13aedca6ec7")
     version("1.32.0", commit="235505626b910de29156a07e1f990daa3b5d57d9")
     version("1.28.0", commit="15e7cf76f39ee3280a27284d58f7adef1c33f193")

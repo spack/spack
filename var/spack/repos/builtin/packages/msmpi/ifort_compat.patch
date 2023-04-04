@@ -1,0 +1,34 @@
+diff --git a/src/mpi/msmpi/dll/msmpi.vcxproj b/src/mpi/msmpi/dll/msmpi.vcxproj
+index 255b9f5..cc4f096 100644
+--- a/src/mpi/msmpi/dll/msmpi.vcxproj
++++ b/src/mpi/msmpi/dll/msmpi.vcxproj
+@@ -57,6 +57,9 @@
+         $(OutDir)\..\mpi_debugger\mpi_debugger.lib;
+         $(CRT_Libs);
+       </AdditionalDependencies>
++      <AdditionalLibraryDirectories>
++        $(SPACK_IFORT)compiler\lib\intel64
++      </AdditionalLibraryDirectories>
+       <ModuleDefinitionFile>.\msmpi.def</ModuleDefinitionFile>
+     </Link>
+   </ItemDefinitionGroup>
+diff --git a/src/mpi/msmpi/fortran/lib/mpifort.vcxproj b/src/mpi/msmpi/fortran/lib/mpifort.vcxproj
+index 24bd29d..57d0292 100644
+--- a/src/mpi/msmpi/fortran/lib/mpifort.vcxproj
++++ b/src/mpi/msmpi/fortran/lib/mpifort.vcxproj
+@@ -8,12 +8,12 @@
+   </PropertyGroup>
+   <Target Name="CompileFortran" AfterTargets="ClCompile" Inputs="@(ForCompile)" Outputs="@(ForCompile->'$(O)%(FileName).obj')">
+     <PropertyGroup Condition="'$(BuildArchitecture)'=='i386'">
+-      <Fort_Flags>-fno-underscoring -D_X86_=1 -Di386=1 -march=x86-64 -m32</Fort_Flags>
++      <Fort_Flags>/D _X86_=1 /D i386=1 -march=x86-64 -m32</Fort_Flags>
+     </PropertyGroup>
+     <PropertyGroup Condition="'$(BuildArchitecture)'=='amd64'">
+-      <Fort_Flags>-fno-underscoring -D_WIN64 -D_AMD64_ -DAMD64</Fort_Flags>
++      <Fort_Flags>/D _WIN64=1 /D _AMD64_=1 /D AMD64=1</Fort_Flags>
+     </PropertyGroup>
+-    <Exec Command="$(GFORTRAN_BIN)\gfortran.exe -I$(MPI_INC_ROOT) -c %(ForCompile.Identity) $(Fort_Flags)  -o $(O)\%(ForCompile.FileName).obj" />
++    <Exec Command="$(IFORT_BIN)\ifort.exe /I$(MPI_INC_ROOT) /c %(ForCompile.Identity) $(Fort_Flags) /names:lowercase /assume:nounderscore /o $(O)\%(ForCompile.FileName).obj" />
+     <ItemGroup>
+       <Lib Condition="'$(ConfigurationType)'=='StaticLibrary'" Include="@(ForCompile->'$(O)\%(Filename).obj')" />
+     </ItemGroup>

@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -6,7 +6,7 @@
 from spack.package import *
 
 
-class PyWheel(Package):
+class PyWheel(Package, PythonExtension):
     """A built-package format for Python."""
 
     homepage = "https://github.com/pypa/wheel"
@@ -14,8 +14,6 @@ class PyWheel(Package):
         "https://files.pythonhosted.org/packages/py2.py3/w/wheel/wheel-0.34.2-py2.py3-none-any.whl"
     )
     list_url = "https://pypi.org/simple/wheel/"
-
-    maintainers = ["adamjstewart"]
 
     version(
         "0.37.1",

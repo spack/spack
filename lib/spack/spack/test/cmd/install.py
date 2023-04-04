@@ -1,9 +1,9 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
-
 import argparse
+import builtins
 import filecmp
 import itertools
 import os
@@ -12,7 +12,6 @@ import sys
 import time
 
 import pytest
-from six.moves import builtins
 
 import llnl.util.filesystem as fs
 import llnl.util.tty as tty
@@ -27,6 +26,7 @@ import spack.package_base
 import spack.util.executable
 from spack.error import SpackError
 from spack.main import SpackCommand
+from spack.parser import SpecSyntaxError
 from spack.spec import CompilerSpec, Spec
 
 install = SpackCommand("install")
@@ -51,7 +51,6 @@ def noop_install(monkeypatch):
 def test_install_package_and_dependency(
     tmpdir, mock_packages, mock_archive, mock_fetch, config, install_mockery
 ):
-
     log = "test"
     with tmpdir.as_cwd():
         install("--log-format=junit", "--log-file={0}".format(log), "libdwarf")
@@ -96,7 +95,6 @@ def test_install_runtests_all(monkeypatch, mock_packages, install_mockery):
 def test_install_package_already_installed(
     tmpdir, mock_packages, mock_archive, mock_fetch, config, install_mockery
 ):
-
     with tmpdir.as_cwd():
         install("libdwarf")
         install("--log-format=junit", "--log-file=test.xml", "libdwarf")
@@ -242,11 +240,7 @@ def test_install_overwrite(mock_packages, mock_archive, mock_fetch, config, inst
 
 
 def test_install_overwrite_not_installed(
-    mock_packages,
-    mock_archive,
-    mock_fetch,
-    config,
-    install_mockery,
+    mock_packages, mock_archive, mock_fetch, config, install_mockery
 ):
     # Try to install a spec and then to reinstall it.
     spec = Spec("libdwarf")
@@ -282,7 +276,7 @@ def test_install_commit(mock_git_version_info, install_mockery, mock_packages, m
     assert filename in installed
     with open(spec.prefix.bin.join(filename), "r") as f:
         content = f.read().strip()
-    assert content == "[]"  # contents are weird for another test
+    assert content == "[0]"  # contents are weird for another test
 
 
 def test_install_overwrite_multiple(
@@ -342,11 +336,7 @@ def test_install_overwrite_multiple(
 
 
 @pytest.mark.usefixtures(
-    "mock_packages",
-    "mock_archive",
-    "mock_fetch",
-    "config",
-    "install_mockery",
+    "mock_packages", "mock_archive", "mock_fetch", "config", "install_mockery"
 )
 def test_install_conflicts(conflict_spec):
     # Make sure that spec with conflicts raises a SpackError
@@ -355,15 +345,11 @@ def test_install_conflicts(conflict_spec):
 
 
 @pytest.mark.usefixtures(
-    "mock_packages",
-    "mock_archive",
-    "mock_fetch",
-    "config",
-    "install_mockery",
+    "mock_packages", "mock_archive", "mock_fetch", "config", "install_mockery"
 )
 def test_install_invalid_spec(invalid_spec):
     # Make sure that invalid specs raise a SpackError
-    with pytest.raises(SpackError, match="Unexpected token"):
+    with pytest.raises(SpecSyntaxError, match="unexpected tokens"):
         install(invalid_spec)
 
 
@@ -378,7 +364,6 @@ def test_install_invalid_spec(invalid_spec):
     ],
 )
 def test_install_from_file(spec, concretize, error_code, tmpdir):
-
     if concretize:
         spec.concretize()
 
@@ -508,7 +493,6 @@ def test_junit_output_with_errors(
     ],
 )
 def test_install_mix_cli_and_files(clispecs, filespecs, tmpdir):
-
     args = clispecs
 
     for spec in filespecs:
@@ -556,10 +540,7 @@ def test_cdash_report_concretization_error(
             assert "<UpdateReturnStatus>" in content
             # The message is different based on using the
             # new or the old concretizer
-            expected_messages = (
-                "Conflicts in concretized spec",
-                "conflicts with",
-            )
+            expected_messages = ("Conflicts in concretized spec", "conflicts with")
             assert any(x in content for x in expected_messages)
 
 
@@ -650,7 +631,6 @@ def test_cdash_install_from_spec_json(
     # capfd interferes with Spack's capturing
     with capfd.disabled():
         with tmpdir.as_cwd():
-
             spec_json_path = str(tmpdir.join("spec.json"))
 
             pkg_spec = Spec("a")
@@ -771,7 +751,7 @@ def test_install_only_dependencies_in_env(
         dep = Spec("dependency-install").concretized()
         root = Spec("dependent-install").concretized()
 
-        install("-v", "--only", "dependencies", "dependent-install")
+        install("-v", "--only", "dependencies", "--add", "dependent-install")
 
         assert os.path.exists(dep.prefix)
         assert not os.path.exists(root.prefix)
@@ -800,7 +780,7 @@ def test_install_only_dependencies_of_all_in_env(
 
 
 def test_install_no_add_in_env(tmpdir, mock_fetch, install_mockery, mutable_mock_env_path):
-    # To test behavior of --no-add option, we create the following environment:
+    # To test behavior of --add option, we create the following environment:
     #
     #     mpileaks
     #         ^callpath
@@ -813,7 +793,7 @@ def test_install_no_add_in_env(tmpdir, mock_fetch, install_mockery, mutable_mock
     #         ^b
     #     a
     #         ^b
-    e = ev.create("test")
+    e = ev.create("test", with_view=False)
     e.add("mpileaks")
     e.add("libelf@0.8.10")  # so env has both root and dep libelf specs
     e.add("a")
@@ -849,18 +829,16 @@ def test_install_no_add_in_env(tmpdir, mock_fetch, install_mockery, mutable_mock
         # Assert using --no-add with a spec not in the env fails
         inst_out = install("--no-add", "boost", fail_on_error=False, output=str)
 
-        assert "no such spec exists in environment" in inst_out
+        assert "You can add specs to the environment with 'spack add " in inst_out
 
-        # Ensure using --no-add with an ambiguous spec fails
-        with pytest.raises(ev.SpackEnvironmentError) as err:
-            inst_out = install("--no-add", "a", output=str)
+        # Without --add, ensure that two packages "a" get installed
+        inst_out = install("a", output=str)
+        assert len([x for x in e.all_specs() if x.installed and x.name == "a"]) == 2
 
-        assert "a matches multiple specs in the env" in str(err)
-
-        # With "--no-add", install an unambiguous dependency spec (that already
-        # exists as a dep in the environment) using --no-add and make sure it
-        # gets installed (w/ deps), but is not added to the environment.
-        install("--no-add", "dyninst")
+        # Install an unambiguous dependency spec (that already exists as a dep
+        # in the environment) and make sure it gets installed (w/ deps),
+        # but is not added to the environment.
+        install("dyninst")
 
         find_output = find("-l", output=str)
         assert "dyninst" in find_output
@@ -872,31 +850,30 @@ def test_install_no_add_in_env(tmpdir, mock_fetch, install_mockery, mutable_mock
         assert all([s in env_specs for s in post_install_specs])
 
         # Make sure we can install a concrete dependency spec from a spec.json
-        # file on disk, using the ``--no-add` option, and the spec is installed
-        # but not added as a root
+        # file on disk, and the spec is installed but not added as a root
         mpi_spec_json_path = tmpdir.join("{0}.json".format(mpi_spec.name))
         with open(mpi_spec_json_path.strpath, "w") as fd:
             fd.write(mpi_spec.to_json(hash=ht.dag_hash))
 
-        install("--no-add", "-f", mpi_spec_json_path.strpath)
+        install("-f", mpi_spec_json_path.strpath)
         assert mpi_spec not in e.roots()
 
         find_output = find("-l", output=str)
         assert mpi_spec.name in find_output
 
-        # Without "--no-add", install an unambiguous depependency spec (that
-        # already exists as a dep in the environment) without --no-add and make
-        # sure it is added as a root of the environment as well as installed.
+        # Install an unambiguous depependency spec (that already exists as a
+        # dep in the environment) with --add and make sure it is added as a
+        # root of the environment as well as installed.
         assert b_spec not in e.roots()
 
-        install("b")
+        install("--add", "b")
 
         assert b_spec in e.roots()
         assert b_spec not in e.uninstalled_specs()
 
-        # Without "--no-add", install a novel spec and make sure it is added
-        # as a root and installed.
-        install("bowtie")
+        # Install a novel spec with --add and make sure it is added  as a root
+        # and installed.
+        install("--add", "bowtie")
 
         assert any([s.name == "bowtie" for s in e.roots()])
         assert not any([s.name == "bowtie" for s in e.uninstalled_specs()])
@@ -935,7 +912,16 @@ def test_cdash_configure_warning(tmpdir, mock_fetch, install_mockery, capfd):
     with capfd.disabled():
         with tmpdir.as_cwd():
             # Test would fail if install raised an error.
-            install("--log-file=cdash_reports", "--log-format=cdash", "configure-warning")
+
+            # Ensure that even on non-x86_64 architectures, there are no
+            # dependencies installed
+            spec = spack.spec.Spec("configure-warning").concretized()
+            spec.clear_dependencies()
+            specfile = "./spec.json"
+            with open(specfile, "w") as f:
+                f.write(spec.to_json())
+
+            install("--log-file=cdash_reports", "--log-format=cdash", specfile)
             # Verify Configure.xml exists with expected contents.
             report_dir = tmpdir.join("cdash_reports")
             assert report_dir in tmpdir.listdir()
@@ -955,10 +941,10 @@ def test_compiler_bootstrap(
 ):
     monkeypatch.setattr(spack.concretize.Concretizer, "check_for_compiler_existence", False)
     spack.config.set("config:install_missing_compilers", True)
-    assert CompilerSpec("gcc@2.0") not in compilers.all_compiler_specs()
+    assert CompilerSpec("gcc@12.0") not in compilers.all_compiler_specs()
 
     # Test succeeds if it does not raise an error
-    install("a%gcc@2.0")
+    install("a%gcc@12.0")
 
 
 def test_compiler_bootstrap_from_binary_mirror(
@@ -1013,11 +999,11 @@ def test_compiler_bootstrap_already_installed(
     monkeypatch.setattr(spack.concretize.Concretizer, "check_for_compiler_existence", False)
     spack.config.set("config:install_missing_compilers", True)
 
-    assert CompilerSpec("gcc@2.0") not in compilers.all_compiler_specs()
+    assert CompilerSpec("gcc@12.0") not in compilers.all_compiler_specs()
 
     # Test succeeds if it does not raise an error
-    install("gcc@2.0")
-    install("a%gcc@2.0")
+    install("gcc@12.0")
+    install("a%gcc@12.0")
 
 
 def test_install_fails_no_args(tmpdir):
@@ -1170,3 +1156,24 @@ def test_install_use_buildcache(
         # Alternative to --cache-only (always) or --no-cache (never)
         for opt in ["auto", "only", "never"]:
             install_use_buildcache(opt)
+
+
+@pytest.mark.regression("34006")
+@pytest.mark.disable_clean_stage_check
+def test_padded_install_runtests_root(install_mockery_mutable_config, mock_fetch):
+    spack.config.set("config:install_tree:padded_length", 255)
+    output = install("--test=root", "--no-cache", "test-build-callbacks", fail_on_error=False)
+    assert output.count("method not implemented") == 1
+
+
+@pytest.mark.regression("35337")
+def test_report_filename_for_cdash(install_mockery_mutable_config, mock_fetch):
+    """Test that the temporary file used to write the XML for CDash is not the upload URL"""
+    parser = argparse.ArgumentParser()
+    spack.cmd.install.setup_parser(parser)
+    args = parser.parse_args(
+        ["--cdash-upload-url", "https://blahblah/submit.php?project=debugging", "a"]
+    )
+    specs = spack.cmd.install.concrete_specs_from_cli(args, {})
+    filename = spack.cmd.install.report_filename(args, specs)
+    assert filename != "https://blahblah/submit.php?project=debugging"

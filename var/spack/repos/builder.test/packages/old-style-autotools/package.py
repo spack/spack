@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -48,3 +48,9 @@ class OldStyleAutotools(AutotoolsPackage):
     @run_after("autoreconf", when="@2.0")
     def after_autoreconf_2(self):
         os.environ["AFTER_AUTORECONF_2_CALLED"] = "1"
+
+    def check(self):
+        os.environ["CHECK_CALLED"] = "1"
+
+    def installcheck(self):
+        os.environ["INSTALLCHECK_CALLED"] = "1"

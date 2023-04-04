@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -41,6 +41,13 @@ class JsonC(CMakePackage, AutotoolsPackage):
     @when("%cce@11.0.3:")
     def patch(self):
         filter_file("-Werror", "", "CMakeLists.txt")
+
+    def flag_handler(self, name, flags):
+        iflags = []
+        if name == "cflags":
+            if self.spec.satisfies("%oneapi"):
+                iflags.append("-Wno-error=implicit-function-declaration")
+        return (iflags, None, None)
 
     @run_after("install")
     def darwin_fix(self):

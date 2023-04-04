@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -12,7 +12,7 @@ class H5bench(CMakePackage):
     homepage = "https://github.com/hpc-io/h5bench"
     git = "https://github.com/hpc-io/h5bench.git"
 
-    maintainers = ["jeanbez", "sbyna"]
+    maintainers("jeanbez", "sbyna")
 
     version("latest", branch="master", submodules=True)
     version("develop", branch="develop", submodules=True)
@@ -39,7 +39,7 @@ class H5bench(CMakePackage):
     depends_on("cmake@3.10:", type="build")
     depends_on("mpi")
     depends_on("hdf5+mpi@1.12.0:1,develop-1.12:")
-    depends_on("hdf5-vol-async@1.3", when="+async")
+    depends_on("hdf5-vol-async@1.5", when="+async")
     depends_on("parallel-netcdf", when="+e3sm")
     depends_on("parallel-netcdf", when="+all")
 

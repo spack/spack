@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -21,6 +21,5 @@ class PyCheroot(PythonPackage):
     depends_on("py-setuptools-scm-git-archive@1.0:", type="build")
     depends_on("py-more-itertools@2.6:", type=("build", "run"))
     depends_on("py-six@1.11.0:", type=("build", "run"))
-    depends_on("py-backports-functools-lru-cache", type=("build", "run"), when="^python@:3.3")
     depends_on("py-jaraco-functools", when="@8.3.0:", type=("build", "run"))
     depends_on("python@2.7:2.8,3.4:", type=("build", "run"))

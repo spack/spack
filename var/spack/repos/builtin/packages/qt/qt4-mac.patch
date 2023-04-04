@@ -1,8 +1,7 @@
-diff --git a/src/gui/painting/qpaintengine_mac.cpp b/src/gui/painting/qpaintengine_mac.cpp
-index 4aa0668..63b646d 100644
---- a/src/gui/painting/qpaintengine_mac.cpp
-+++ b/src/gui/painting/qpaintengine_mac.cpp
-@@ -340,13 +340,7 @@ CGColorSpaceRef QCoreGraphicsPaintEngine::macDisplayColorSpace(const QWidget *wi
+diff -Naur a/src/gui/painting/qpaintengine_mac.cpp b/src/gui/painting/qpaintengine_mac.cpp
+--- a/src/gui/painting/qpaintengine_mac.cpp	2015-05-07 09:14:43.000000000 -0500
++++ b/src/gui/painting/qpaintengine_mac.cpp	2022-12-22 16:59:44.000000000 -0600
+@@ -340,13 +340,7 @@
      }
  
      // Get the color space from the display profile.
@@ -17,9 +16,9 @@ index 4aa0668..63b646d 100644
  
      // Fallback: use generic DeviceRGB
      if (colorSpace == 0)
-diff -r -u a/src/gui/kernel/qt_cocoa_helpers_mac.mm b/src/gui/kernel/qt_cocoa_helpers_mac.mm
---- a/src/gui/kernel/qt_cocoa_helpers_mac.mm	2015-05-07 10:14:43.000000000 -0400
-+++ b/src/gui/kernel/qt_cocoa_helpers_mac.mm	2019-03-20 09:30:22.000000000 -0400
+diff -Naur a/src/gui/kernel/qt_cocoa_helpers_mac.mm b/src/gui/kernel/qt_cocoa_helpers_mac.mm
+--- a/src/gui/kernel/qt_cocoa_helpers_mac.mm	2015-05-07 09:14:43.000000000 -0500
++++ b/src/gui/kernel/qt_cocoa_helpers_mac.mm	2022-12-22 16:59:44.000000000 -0600
 @@ -73,6 +73,9 @@
  **
  ****************************************************************************/
@@ -30,9 +29,9 @@ diff -r -u a/src/gui/kernel/qt_cocoa_helpers_mac.mm b/src/gui/kernel/qt_cocoa_he
  #include <private/qcore_mac_p.h>
  #include <qaction.h>
  #include <qwidget.h>
-diff -r -u a/src/gui/text/qfontengine_coretext.mm b/src/gui/text/qfontengine_coretext.mm
---- a/src/gui/text/qfontengine_coretext.mm	2015-05-07 10:14:43.000000000 -0400
-+++ b/src/gui/text/qfontengine_coretext.mm	2019-03-20 09:30:22.000000000 -0400
+diff -Naur a/src/gui/text/qfontengine_coretext.mm b/src/gui/text/qfontengine_coretext.mm
+--- a/src/gui/text/qfontengine_coretext.mm	2015-05-07 09:14:43.000000000 -0500
++++ b/src/gui/text/qfontengine_coretext.mm	2022-12-22 16:59:44.000000000 -0600
 @@ -886,7 +886,7 @@
  
  QFixed QCoreTextFontEngine::emSquareSize() const
@@ -42,9 +41,9 @@ diff -r -u a/src/gui/text/qfontengine_coretext.mm b/src/gui/text/qfontengine_cor
  }
  
  QFontEngine *QCoreTextFontEngine::cloneWithSize(qreal pixelSize) const
-diff -r -u a/config.tests/unix/compile.test b/config.tests/unix/compile.test
---- a/config.tests/unix/compile.test	2015-05-07 10:14:42.000000000 -0400
-+++ b/config.tests/unix/compile.test	2019-03-20 09:30:21.000000000 -0400
+diff -Naur a/config.tests/unix/compile.test b/config.tests/unix/compile.test
+--- a/config.tests/unix/compile.test	2015-05-07 09:14:42.000000000 -0500
++++ b/config.tests/unix/compile.test	2022-12-22 16:59:44.000000000 -0600
 @@ -73,7 +73,7 @@
  rm -f "$EXE" "${EXE}.exe"
  
@@ -54,9 +53,9 @@ diff -r -u a/config.tests/unix/compile.test b/config.tests/unix/compile.test
  
  if [ "$VERBOSE" = "yes" ]; then
      $MAKE
-diff -r -u qt-everywhere-opensource-src-4.8.7.orig/configure qt-everywhere-opensource-src-4.8.7/configure
---- qt-everywhere-opensource-src-4.8.7.orig/configure	2019-04-04 15:44:58.000000000 -0400
-+++ qt-everywhere-opensource-src-4.8.7/configure	2019-04-04 16:50:38.000000000 -0400
+diff -Naur a/configure b/configure
+--- a/configure	2015-05-07 09:14:56.000000000 -0500
++++ b/configure	2022-12-22 16:59:44.000000000 -0600
 @@ -3472,9 +3472,8 @@
  # auto-detect support for -Xarch on the mac
  if [ "$PLATFORM_MAC" = "yes" ] && [ "$CFG_MAC_XARCH" = "auto" ]; then
@@ -181,9 +180,9 @@ diff -r -u qt-everywhere-opensource-src-4.8.7.orig/configure qt-everywhere-opens
          fi
          ;;
      esac
-diff -r -u qt-everywhere-opensource-src-4.8.7.orig/mkspecs/common/clang.conf qt-everywhere-opensource-src-4.8.7/mkspecs/common/clang.conf
---- qt-everywhere-opensource-src-4.8.7.orig/mkspecs/common/clang.conf	2015-05-07 10:14:42.000000000 -0400
-+++ qt-everywhere-opensource-src-4.8.7/mkspecs/common/clang.conf	2019-04-04 15:59:33.000000000 -0400
+diff -Naur a/mkspecs/common/clang.conf b/mkspecs/common/clang.conf
+--- a/mkspecs/common/clang.conf	2015-05-07 09:14:42.000000000 -0500
++++ b/mkspecs/common/clang.conf	2022-12-22 16:59:44.000000000 -0600
 @@ -2,8 +2,8 @@
  # Qmake configuration for Clang on Linux and Mac
  #
@@ -195,9 +194,9 @@ diff -r -u qt-everywhere-opensource-src-4.8.7.orig/mkspecs/common/clang.conf qt-
  
  QMAKE_LINK       = $$QMAKE_CXX
  QMAKE_LINK_SHLIB = $$QMAKE_CXX
-diff -r -u qt-everywhere-opensource-src-4.8.7.orig/mkspecs/common/g++-base.conf qt-everywhere-opensource-src-4.8.7/mkspecs/common/g++-base.conf
---- qt-everywhere-opensource-src-4.8.7.orig/mkspecs/common/g++-base.conf	2015-05-07 10:14:42.000000000 -0400
-+++ qt-everywhere-opensource-src-4.8.7/mkspecs/common/g++-base.conf	2019-04-04 15:59:15.000000000 -0400
+diff -Naur a/mkspecs/common/g++-base.conf b/mkspecs/common/g++-base.conf
+--- a/mkspecs/common/g++-base.conf	2015-05-07 09:14:42.000000000 -0500
++++ b/mkspecs/common/g++-base.conf	2022-12-22 16:59:44.000000000 -0600
 @@ -8,14 +8,14 @@
  # you can use the manual test in tests/manual/mkspecs.
  #
@@ -215,9 +214,23 @@ diff -r -u qt-everywhere-opensource-src-4.8.7.orig/mkspecs/common/g++-base.conf 
  
  QMAKE_LINK       = $$QMAKE_CXX
  QMAKE_LINK_SHLIB = $$QMAKE_CXX
-diff -r -u qt-everywhere-opensource-src-4.8.7.orig/mkspecs/common/gcc-base-macx.conf qt-everywhere-opensource-src-4.8.7/mkspecs/common/gcc-base-macx.conf
---- qt-everywhere-opensource-src-4.8.7.orig/mkspecs/common/gcc-base-macx.conf	2015-05-07 10:14:42.000000000 -0400
-+++ qt-everywhere-opensource-src-4.8.7/mkspecs/common/gcc-base-macx.conf	2019-04-04 15:47:55.000000000 -0400
+diff -Naur a/mkspecs/common/g++-macx.conf b/mkspecs/common/g++-macx.conf
+--- a/mkspecs/common/g++-macx.conf	2015-05-07 09:14:42.000000000 -0500
++++ b/mkspecs/common/g++-macx.conf	2022-12-22 17:01:56.000000000 -0600
+@@ -16,8 +16,8 @@
+ 
+ QMAKE_LFLAGS_STATIC_LIB += -all_load
+ 
+-QMAKE_CFLAGS_X86_64 += -Xarch_x86_64 -mmacosx-version-min=10.5
+-QMAKE_CFLAGS_PPC_64 += -Xarch_ppc64 -mmacosx-version-min=10.5
++QMAKE_CFLAGS_X86_64 += -Xarch_x86_64 -mmacosx-version-min=$$QMAKE_MACOSX_DEPLOYMENT_TARGET
++QMAKE_CFLAGS_PPC_64 += -Xarch_ppc64 -mmacosx-version-min=$$QMAKE_MACOSX_DEPLOYMENT_TARGET
+ 
+ QMAKE_CXXFLAGS_X86_64         = $$QMAKE_CFLAGS_X86_64
+ QMAKE_CXXFLAGS_PPC_64         = $$QMAKE_CFLAGS_PPC_64
+diff -Naur a/mkspecs/common/gcc-base-macx.conf b/mkspecs/common/gcc-base-macx.conf
+--- a/mkspecs/common/gcc-base-macx.conf	2015-05-07 09:14:42.000000000 -0500
++++ b/mkspecs/common/gcc-base-macx.conf	2022-12-22 16:59:44.000000000 -0600
 @@ -29,12 +29,21 @@
  QMAKE_OBJECTIVE_CFLAGS_WARN_OFF = $$QMAKE_CFLAGS_WARN_OFF
  QMAKE_OBJECTIVE_CFLAGS_DEBUG    = $$QMAKE_CFLAGS_DEBUG
@@ -241,9 +254,9 @@ diff -r -u qt-everywhere-opensource-src-4.8.7.orig/mkspecs/common/gcc-base-macx.
  QMAKE_LFLAGS_X86    += $$QMAKE_CFLAGS_X86
  QMAKE_LFLAGS_X86_64 += $$QMAKE_CFLAGS_X86_64
  QMAKE_LFLAGS_PPC    += $$QMAKE_CFLAGS_PPC
-diff -r -u qt-everywhere-opensource-src-4.8.7.orig/mkspecs/common/gcc-base.conf qt-everywhere-opensource-src-4.8.7/mkspecs/common/gcc-base.conf
---- qt-everywhere-opensource-src-4.8.7.orig/mkspecs/common/gcc-base.conf	2015-05-07 10:14:42.000000000 -0400
-+++ qt-everywhere-opensource-src-4.8.7/mkspecs/common/gcc-base.conf	2019-04-04 16:00:32.000000000 -0400
+diff -Naur a/mkspecs/common/gcc-base.conf b/mkspecs/common/gcc-base.conf
+--- a/mkspecs/common/gcc-base.conf	2015-05-07 09:14:42.000000000 -0500
++++ b/mkspecs/common/gcc-base.conf	2022-12-22 16:59:44.000000000 -0600
 @@ -42,7 +42,7 @@
  QMAKE_CFLAGS_YACC           += -Wno-unused -Wno-parentheses
  QMAKE_CFLAGS_HIDESYMS       += -fvisibility=hidden
@@ -253,9 +266,9 @@ diff -r -u qt-everywhere-opensource-src-4.8.7.orig/mkspecs/common/gcc-base.conf 
  QMAKE_CXXFLAGS_DEPS       += $$QMAKE_CFLAGS_DEPS
  QMAKE_CXXFLAGS_WARN_ON    += $$QMAKE_CFLAGS_WARN_ON
  QMAKE_CXXFLAGS_WARN_OFF   += $$QMAKE_CFLAGS_WARN_OFF
-diff -r -u qt-everywhere-opensource-src-4.8.7.orig/mkspecs/common/mac.conf qt-everywhere-opensource-src-4.8.7/mkspecs/common/mac.conf
---- qt-everywhere-opensource-src-4.8.7.orig/mkspecs/common/mac.conf	2015-05-07 10:14:42.000000000 -0400
-+++ qt-everywhere-opensource-src-4.8.7/mkspecs/common/mac.conf	2019-04-04 15:50:20.000000000 -0400
+diff -Naur a/mkspecs/common/mac.conf b/mkspecs/common/mac.conf
+--- a/mkspecs/common/mac.conf	2015-05-07 09:14:42.000000000 -0500
++++ b/mkspecs/common/mac.conf	2022-12-22 16:59:44.000000000 -0600
 @@ -9,15 +9,14 @@
  QMAKE_LIBDIR		=
  QMAKE_INCDIR_QT		= $$[QT_INSTALL_HEADERS]
@@ -283,9 +296,9 @@ diff -r -u qt-everywhere-opensource-src-4.8.7.orig/mkspecs/common/mac.conf qt-ev
 +QMAKE_MACOSX_DEPLOYMENT_TARGET = @MACOSX_DEPLOYMENT_TARGET@
  
  include(unix.conf)
-diff -r -u qt-everywhere-opensource-src-4.8.7.orig/mkspecs/features/debug.prf qt-everywhere-opensource-src-4.8.7/mkspecs/features/debug.prf
---- qt-everywhere-opensource-src-4.8.7.orig/mkspecs/features/debug.prf	2015-05-07 10:14:42.000000000 -0400
-+++ qt-everywhere-opensource-src-4.8.7/mkspecs/features/debug.prf	2019-04-04 15:47:55.000000000 -0400
+diff -Naur a/mkspecs/features/debug.prf b/mkspecs/features/debug.prf
+--- a/mkspecs/features/debug.prf	2015-05-07 09:14:42.000000000 -0500
++++ b/mkspecs/features/debug.prf	2022-12-22 16:59:44.000000000 -0600
 @@ -3,6 +3,7 @@
  QMAKE_CFLAGS += $$QMAKE_CFLAGS_DEBUG
  QMAKE_CXXFLAGS += $$QMAKE_CXXFLAGS_DEBUG
@@ -294,9 +307,9 @@ diff -r -u qt-everywhere-opensource-src-4.8.7.orig/mkspecs/features/debug.prf qt
  QMAKE_LFLAGS += $$QMAKE_LFLAGS_DEBUG
  QMAKE_LIBFLAGS += $$QMAKE_LIBFLAGS_DEBUG
  !debug_and_release:fix_output_dirs:fixExclusiveOutputDirs(debug, release)
-diff -r -u qt-everywhere-opensource-src-4.8.7.orig/mkspecs/features/mac/default_post.prf qt-everywhere-opensource-src-4.8.7/mkspecs/features/mac/default_post.prf
---- qt-everywhere-opensource-src-4.8.7.orig/mkspecs/features/mac/default_post.prf	2015-05-07 10:14:42.000000000 -0400
-+++ qt-everywhere-opensource-src-4.8.7/mkspecs/features/mac/default_post.prf	2019-04-04 15:47:55.000000000 -0400
+diff -Naur a/mkspecs/features/mac/default_post.prf b/mkspecs/features/mac/default_post.prf
+--- a/mkspecs/features/mac/default_post.prf	2015-05-07 09:14:42.000000000 -0500
++++ b/mkspecs/features/mac/default_post.prf	2022-12-22 16:59:44.000000000 -0600
 @@ -1,5 +1,5 @@
  load(default_post)
 -!no_objective_c:CONFIG += objective_c
@@ -304,9 +317,9 @@ diff -r -u qt-everywhere-opensource-src-4.8.7.orig/mkspecs/features/mac/default_
  
  # Pick a suitable default architecture for qmake-based applications.
  # If the Qt package contains one of x86 and x86_64, pick that one. If it
-diff -r -u qt-everywhere-opensource-src-4.8.7.orig/mkspecs/features/mac/objective_c.prf qt-everywhere-opensource-src-4.8.7/mkspecs/features/mac/objective_c.prf
---- qt-everywhere-opensource-src-4.8.7.orig/mkspecs/features/mac/objective_c.prf	2015-05-07 10:14:42.000000000 -0400
-+++ qt-everywhere-opensource-src-4.8.7/mkspecs/features/mac/objective_c.prf	2019-04-04 15:47:55.000000000 -0400
+diff -Naur a/mkspecs/features/mac/objective_c.prf b/mkspecs/features/mac/objective_c.prf
+--- a/mkspecs/features/mac/objective_c.prf	2015-05-07 09:14:42.000000000 -0500
++++ b/mkspecs/features/mac/objective_c.prf	2022-12-22 16:59:44.000000000 -0600
 @@ -1,23 +1,18 @@
 -
 -for(source, SOURCES) {
@@ -337,9 +350,9 @@ diff -r -u qt-everywhere-opensource-src-4.8.7.orig/mkspecs/features/mac/objectiv
  objective_c.name = Compile ${QMAKE_FILE_IN}
  silent:objective_c.commands = @echo objective-c ${QMAKE_FILE_IN} && $$objective_c.commands
  QMAKE_EXTRA_COMPILERS += objective_c
-diff -N -r -u qt-orig/mkspecs/features/mac/objective_cxx.prf qt-everywhere-opensource-src-4.8.7/mkspecs/features/mac/objective_cxx.prf
---- qt-orig/mkspecs/features/mac/objective_cxx.prf	1969-12-31 19:00:00.000000000 -0500
-+++ qt-everywhere-opensource-src-4.8.7/mkspecs/features/mac/objective_cxx.prf	2019-03-29 09:52:51.000000000 -0400
+diff -Naur a/mkspecs/features/mac/objective_cxx.prf b/mkspecs/features/mac/objective_cxx.prf
+--- a/mkspecs/features/mac/objective_cxx.prf	1969-12-31 18:00:00.000000000 -0600
++++ b/mkspecs/features/mac/objective_cxx.prf	2022-12-22 16:59:44.000000000 -0600
 @@ -0,0 +1,18 @@
 +# Add compiler directives for Objective C (.mm) only
 +#
@@ -359,9 +372,9 @@ diff -N -r -u qt-orig/mkspecs/features/mac/objective_cxx.prf qt-everywhere-opens
 +objective_cxx.name = Compile ${QMAKE_FILE_IN}
 +silent:objective_cxx.commands = @echo objective-cxx ${QMAKE_FILE_IN} && $$objective_cxx.commands
 +QMAKE_EXTRA_COMPILERS += objective_cxx
-diff -N -r -u qt-orig/mkspecs/features/mac/split_sources.prf qt-everywhere-opensource-src-4.8.7/mkspecs/features/mac/split_sources.prf
---- qt-orig/mkspecs/features/mac/split_sources.prf	1969-12-31 19:00:00.000000000 -0500
-+++ qt-everywhere-opensource-src-4.8.7/mkspecs/features/mac/split_sources.prf	2019-03-29 09:52:51.000000000 -0400
+diff -Naur a/mkspecs/features/mac/split_sources.prf b/mkspecs/features/mac/split_sources.prf
+--- a/mkspecs/features/mac/split_sources.prf	1969-12-31 18:00:00.000000000 -0600
++++ b/mkspecs/features/mac/split_sources.prf	2022-12-22 16:59:44.000000000 -0600
 @@ -0,0 +1,52 @@
 +# move Objective C and C++ files from SOURCES to OBJECTIVE_SOURCES
 +
@@ -415,9 +428,9 @@ diff -N -r -u qt-orig/mkspecs/features/mac/split_sources.prf qt-everywhere-opens
 +	}
 +    }
 +}
-diff -r -u qt-everywhere-opensource-src-4.8.7.orig/mkspecs/features/mac/sdk.prf qt-everywhere-opensource-src-4.8.7/mkspecs/features/mac/sdk.prf
---- qt-everywhere-opensource-src-4.8.7.orig/mkspecs/features/mac/sdk.prf	2015-05-07 10:14:42.000000000 -0400
-+++ qt-everywhere-opensource-src-4.8.7/mkspecs/features/mac/sdk.prf	2019-04-04 15:47:55.000000000 -0400
+diff -Naur a/mkspecs/features/mac/sdk.prf b/mkspecs/features/mac/sdk.prf
+--- a/mkspecs/features/mac/sdk.prf	2015-05-07 09:14:42.000000000 -0500
++++ b/mkspecs/features/mac/sdk.prf	2022-12-22 16:59:44.000000000 -0600
 @@ -2,6 +2,7 @@
      !macx-xcode:!macx-pbuilder {
          QMAKE_CFLAGS += -isysroot $$QMAKE_MAC_SDK
@@ -426,9 +439,9 @@ diff -r -u qt-everywhere-opensource-src-4.8.7.orig/mkspecs/features/mac/sdk.prf 
          QMAKE_CXXFLAGS += -isysroot $$QMAKE_MAC_SDK
          QMAKE_LFLAGS += -Wl,-syslibroot,$$QMAKE_MAC_SDK
      }
-diff -r -u qt-everywhere-opensource-src-4.8.7.orig/mkspecs/features/mac/x86.prf qt-everywhere-opensource-src-4.8.7/mkspecs/features/mac/x86.prf
---- qt-everywhere-opensource-src-4.8.7.orig/mkspecs/features/mac/x86.prf	2015-05-07 10:14:42.000000000 -0400
-+++ qt-everywhere-opensource-src-4.8.7/mkspecs/features/mac/x86.prf	2019-04-04 15:47:55.000000000 -0400
+diff -Naur a/mkspecs/features/mac/x86.prf b/mkspecs/features/mac/x86.prf
+--- a/mkspecs/features/mac/x86.prf	2015-05-07 09:14:42.000000000 -0500
++++ b/mkspecs/features/mac/x86.prf	2022-12-22 16:59:44.000000000 -0600
 @@ -2,6 +2,7 @@
  } else {
     QMAKE_CFLAGS += $$QMAKE_CFLAGS_X86
@@ -437,9 +450,9 @@ diff -r -u qt-everywhere-opensource-src-4.8.7.orig/mkspecs/features/mac/x86.prf 
     QMAKE_CXXFLAGS += $$QMAKE_CXXFLAGS_X86
     QMAKE_LFLAGS += $$QMAKE_LFLAGS_X86
  }
-diff -r -u qt-everywhere-opensource-src-4.8.7.orig/mkspecs/features/mac/x86_64.prf qt-everywhere-opensource-src-4.8.7/mkspecs/features/mac/x86_64.prf
---- qt-everywhere-opensource-src-4.8.7.orig/mkspecs/features/mac/x86_64.prf	2015-05-07 10:14:42.000000000 -0400
-+++ qt-everywhere-opensource-src-4.8.7/mkspecs/features/mac/x86_64.prf	2019-04-04 15:47:55.000000000 -0400
+diff -Naur a/mkspecs/features/mac/x86_64.prf b/mkspecs/features/mac/x86_64.prf
+--- a/mkspecs/features/mac/x86_64.prf	2015-05-07 09:14:42.000000000 -0500
++++ b/mkspecs/features/mac/x86_64.prf	2022-12-22 16:59:44.000000000 -0600
 @@ -2,6 +2,7 @@
  } else {
     QMAKE_CFLAGS += $$QMAKE_CFLAGS_X86_64
@@ -448,9 +461,9 @@ diff -r -u qt-everywhere-opensource-src-4.8.7.orig/mkspecs/features/mac/x86_64.p
     QMAKE_CXXFLAGS += $$QMAKE_CXXFLAGS_X86_64
     QMAKE_LFLAGS += $$QMAKE_LFLAGS_X86_64
  }
-diff -r -u qt-everywhere-opensource-src-4.8.7.orig/mkspecs/features/release.prf qt-everywhere-opensource-src-4.8.7/mkspecs/features/release.prf
---- qt-everywhere-opensource-src-4.8.7.orig/mkspecs/features/release.prf	2015-05-07 10:14:42.000000000 -0400
-+++ qt-everywhere-opensource-src-4.8.7/mkspecs/features/release.prf	2019-04-04 15:47:55.000000000 -0400
+diff -Naur a/mkspecs/features/release.prf b/mkspecs/features/release.prf
+--- a/mkspecs/features/release.prf	2015-05-07 09:14:42.000000000 -0500
++++ b/mkspecs/features/release.prf	2022-12-22 16:59:44.000000000 -0600
 @@ -2,6 +2,7 @@
  QMAKE_CFLAGS += $$QMAKE_CFLAGS_RELEASE
  QMAKE_CXXFLAGS += $$QMAKE_CXXFLAGS_RELEASE
@@ -461,18 +474,18 @@ diff -r -u qt-everywhere-opensource-src-4.8.7.orig/mkspecs/features/release.prf 
 -!debug_and_release:fix_output_dirs:fixExclusiveOutputDirs(release, debug)
 \ No newline at end of file
 +!debug_and_release:fix_output_dirs:fixExclusiveOutputDirs(release, debug)
-diff -r -u qt-everywhere-opensource-src-4.8.7.orig/mkspecs/features/unix/hide_symbols.prf qt-everywhere-opensource-src-4.8.7/mkspecs/features/unix/hide_symbols.prf
---- qt-everywhere-opensource-src-4.8.7.orig/mkspecs/features/unix/hide_symbols.prf	2015-05-07 10:14:42.000000000 -0400
-+++ qt-everywhere-opensource-src-4.8.7/mkspecs/features/unix/hide_symbols.prf	2019-04-04 15:47:55.000000000 -0400
+diff -Naur a/mkspecs/features/unix/hide_symbols.prf b/mkspecs/features/unix/hide_symbols.prf
+--- a/mkspecs/features/unix/hide_symbols.prf	2015-05-07 09:14:42.000000000 -0500
++++ b/mkspecs/features/unix/hide_symbols.prf	2022-12-22 16:59:44.000000000 -0600
 @@ -1,4 +1,5 @@
  QMAKE_CFLAGS += $$QMAKE_CFLAGS_HIDESYMS
  QMAKE_CXXFLAGS += $$QMAKE_CXXFLAGS_HIDESYMS
  QMAKE_OBJECTIVE_CFLAGS += $$QMAKE_OBJECTIVE_CFLAGS_HIDESYMS
 +QMAKE_OBJECTIVE_CXXFLAGS += $$QMAKE_OBJECTIVE_CXXFLAGS_HIDESYMS
  QMAKE_LFLAGS += $$QMAKE_LFLAGS_HIDESYMS
-diff -r -u qt-everywhere-opensource-src-4.8.7.orig/mkspecs/features/warn_off.prf qt-everywhere-opensource-src-4.8.7/mkspecs/features/warn_off.prf
---- qt-everywhere-opensource-src-4.8.7.orig/mkspecs/features/warn_off.prf	2015-05-07 10:14:42.000000000 -0400
-+++ qt-everywhere-opensource-src-4.8.7/mkspecs/features/warn_off.prf	2019-04-04 15:47:55.000000000 -0400
+diff -Naur a/mkspecs/features/warn_off.prf b/mkspecs/features/warn_off.prf
+--- a/mkspecs/features/warn_off.prf	2015-05-07 09:14:42.000000000 -0500
++++ b/mkspecs/features/warn_off.prf	2022-12-22 16:59:44.000000000 -0600
 @@ -1,4 +1,5 @@
  CONFIG -= warn_on
  QMAKE_CFLAGS += $$QMAKE_CFLAGS_WARN_OFF
@@ -481,18 +494,18 @@ diff -r -u qt-everywhere-opensource-src-4.8.7.orig/mkspecs/features/warn_off.prf
 \ No newline at end of file
 +QMAKE_OBJECTIVE_CFLAGS += $$QMAKE_OBJECTIVE_CFLAGS_WARN_OFF
 +QMAKE_OBJECTIVE_CXXFLAGS += $$QMAKE_OBJECTIVE_CXXFLAGS_WARN_OFF
-diff -r -u qt-everywhere-opensource-src-4.8.7.orig/mkspecs/features/warn_on.prf qt-everywhere-opensource-src-4.8.7/mkspecs/features/warn_on.prf
---- qt-everywhere-opensource-src-4.8.7.orig/mkspecs/features/warn_on.prf	2015-05-07 10:14:42.000000000 -0400
-+++ qt-everywhere-opensource-src-4.8.7/mkspecs/features/warn_on.prf	2019-04-04 15:47:55.000000000 -0400
+diff -Naur a/mkspecs/features/warn_on.prf b/mkspecs/features/warn_on.prf
+--- a/mkspecs/features/warn_on.prf	2015-05-07 09:14:42.000000000 -0500
++++ b/mkspecs/features/warn_on.prf	2022-12-22 16:59:44.000000000 -0600
 @@ -2,4 +2,4 @@
  QMAKE_CFLAGS += $$QMAKE_CFLAGS_WARN_ON
  QMAKE_CXXFLAGS += $$QMAKE_CXXFLAGS_WARN_ON
  QMAKE_OBJECTIVE_CFLAGS += $$QMAKE_OBJECTIVE_CFLAGS_WARN_ON
 -
 +QMAKE_OBJECTIVE_CXXFLAGS += $$QMAKE_OBJECTIVE_CXXFLAGS_WARN_ON
-diff -r -u qt-everywhere-opensource-src-4.8.7.orig/mkspecs/unsupported/macx-clang/qmake.conf qt-everywhere-opensource-src-4.8.7/mkspecs/unsupported/macx-clang/qmake.conf
---- qt-everywhere-opensource-src-4.8.7.orig/mkspecs/unsupported/macx-clang/qmake.conf	2015-05-07 10:14:42.000000000 -0400
-+++ qt-everywhere-opensource-src-4.8.7/mkspecs/unsupported/macx-clang/qmake.conf	2019-04-04 16:10:40.000000000 -0400
+diff -Naur a/mkspecs/unsupported/macx-clang/qmake.conf b/mkspecs/unsupported/macx-clang/qmake.conf
+--- a/mkspecs/unsupported/macx-clang/qmake.conf	2015-05-07 09:14:42.000000000 -0500
++++ b/mkspecs/unsupported/macx-clang/qmake.conf	2022-12-22 16:59:44.000000000 -0600
 @@ -13,6 +13,13 @@
  include(../../common/gcc-base-macx.conf)
  include(../../common/clang.conf)
@@ -507,9 +520,9 @@ diff -r -u qt-everywhere-opensource-src-4.8.7.orig/mkspecs/unsupported/macx-clan
  QMAKE_OBJCFLAGS_PRECOMPILE       = -x objective-c-header -c ${QMAKE_PCH_INPUT} -o ${QMAKE_PCH_OUTPUT}
  QMAKE_OBJCFLAGS_USE_PRECOMPILE   = $$QMAKE_CFLAGS_USE_PRECOMPILE
  QMAKE_OBJCXXFLAGS_PRECOMPILE     = -x objective-c++-header -c ${QMAKE_PCH_INPUT} -o ${QMAKE_PCH_OUTPUT}
-diff -r -u qt-everywhere-opensource-src-4.8.7.orig/mkspecs/unsupported/macx-clang-libc++/qmake.conf qt-everywhere-opensource-src-4.8.7/mkspecs/unsupported/macx-clang-libc++/qmake.conf
---- qt-everywhere-opensource-src-4.8.7.orig/mkspecs/unsupported/macx-clang-libc++/qmake.conf	2015-05-07 10:14:42.000000000 -0400
-+++ qt-everywhere-opensource-src-4.8.7/mkspecs/unsupported/macx-clang-libc++/qmake.conf	2019-04-04 16:10:36.000000000 -0400
+diff -Naur a/mkspecs/unsupported/macx-clang-libc++/qmake.conf b/mkspecs/unsupported/macx-clang-libc++/qmake.conf
+--- a/mkspecs/unsupported/macx-clang-libc++/qmake.conf	2015-05-07 09:14:42.000000000 -0500
++++ b/mkspecs/unsupported/macx-clang-libc++/qmake.conf	2022-12-22 16:59:44.000000000 -0600
 @@ -13,10 +13,11 @@
  include(../../common/gcc-base-macx.conf)
  include(../../common/clang.conf)
@@ -523,9 +536,9 @@ diff -r -u qt-everywhere-opensource-src-4.8.7.orig/mkspecs/unsupported/macx-clan
  QMAKE_LFLAGS += -stdlib=libc++ -mmacosx-version-min=$$QMAKE_MACOSX_DEPLOYMENT_TARGET
  
  QMAKE_OBJCFLAGS_PRECOMPILE       = -x objective-c-header -c ${QMAKE_PCH_INPUT} -o ${QMAKE_PCH_OUTPUT}
-diff -r -u qt-everywhere-opensource-src-4.8.7.orig/qmake/qmake.pri qt-everywhere-opensource-src-4.8.7/qmake/qmake.pri
---- qt-everywhere-opensource-src-4.8.7.orig/qmake/qmake.pri	2019-04-04 15:46:06.000000000 -0400
-+++ qt-everywhere-opensource-src-4.8.7/qmake/qmake.pri	2019-04-04 15:47:55.000000000 -0400
+diff -Naur a/qmake/qmake.pri b/qmake/qmake.pri
+--- a/qmake/qmake.pri	2015-05-07 09:14:42.000000000 -0500
++++ b/qmake/qmake.pri	2022-12-22 16:59:44.000000000 -0600
 @@ -135,7 +135,7 @@
          SOURCES += qfilesystemengine_unix.cpp qfilesystemiterator_unix.cpp qfsfileengine_unix.cpp
          mac {
@@ -535,9 +548,9 @@ diff -r -u qt-everywhere-opensource-src-4.8.7.orig/qmake/qmake.pri qt-everywhere
            LIBS += -framework ApplicationServices
          }
      } else:win32 {
-diff -r -u qt-everywhere-opensource-src-4.8.7.orig/src/tools/bootstrap/bootstrap.pro qt-everywhere-opensource-src-4.8.7/src/tools/bootstrap/bootstrap.pro
---- qt-everywhere-opensource-src-4.8.7.orig/src/tools/bootstrap/bootstrap.pro	2019-04-04 16:54:09.000000000 -0400
-+++ qt-everywhere-opensource-src-4.8.7/src/tools/bootstrap/bootstrap.pro	2019-04-04 16:54:16.000000000 -0400
+diff -Naur a/src/tools/bootstrap/bootstrap.pro b/src/tools/bootstrap/bootstrap.pro
+--- a/src/tools/bootstrap/bootstrap.pro	2015-05-07 09:14:44.000000000 -0500
++++ b/src/tools/bootstrap/bootstrap.pro	2022-12-22 16:59:44.000000000 -0600
 @@ -103,7 +103,7 @@
  else:win32:SOURCES += ../../corelib/tools/qlocale_win.cpp
  
@@ -547,9 +560,9 @@ diff -r -u qt-everywhere-opensource-src-4.8.7.orig/src/tools/bootstrap/bootstrap
     SOURCES += ../../corelib/kernel/qcore_mac.cpp
     LIBS += -framework CoreServices -framework ApplicationServices
  }
-diff -r -u a/tools/macdeployqt/shared/shared.cpp b/tools/macdeployqt/shared/shared.cpp
---- a/tools/macdeployqt/shared/shared.cpp	2015-05-07 10:14:40.000000000 -0400
-+++ b/tools/macdeployqt/shared/shared.cpp	2019-03-20 09:30:21.000000000 -0400
+diff -Naur a/tools/macdeployqt/shared/shared.cpp b/tools/macdeployqt/shared/shared.cpp
+--- a/tools/macdeployqt/shared/shared.cpp	2015-05-07 09:14:40.000000000 -0500
++++ b/tools/macdeployqt/shared/shared.cpp	2022-12-22 16:59:44.000000000 -0600
 @@ -141,7 +141,7 @@
                  state = DylibName;
                  continue;
@@ -559,9 +572,9 @@ diff -r -u a/tools/macdeployqt/shared/shared.cpp b/tools/macdeployqt/shared/shar
                  info.frameworkDirectory = info.installName;
                  state = FrameworkName;
                  continue;
-diff -r -u a/tools/qtconfig/main.cpp b/tools/qtconfig/main.cpp
---- a/tools/qtconfig/main.cpp	2015-05-07 10:14:41.000000000 -0400
-+++ b/tools/qtconfig/main.cpp	2019-03-20 09:30:22.000000000 -0400
+diff -Naur a/tools/qtconfig/main.cpp b/tools/qtconfig/main.cpp
+--- a/tools/qtconfig/main.cpp	2015-05-07 09:14:41.000000000 -0500
++++ b/tools/qtconfig/main.cpp	2022-12-22 16:59:44.000000000 -0600
 @@ -51,6 +51,13 @@
  {
      Q_INIT_RESOURCE(qtconfig);
@@ -576,9 +589,9 @@ diff -r -u a/tools/qtconfig/main.cpp b/tools/qtconfig/main.cpp
      QApplication app(argc, argv);
  
      QTranslator translator;
-diff -r -u a/tools/qtconfig/mainwindow.cpp b/tools/qtconfig/mainwindow.cpp
---- a/tools/qtconfig/mainwindow.cpp	2015-05-07 10:14:41.000000000 -0400
-+++ b/tools/qtconfig/mainwindow.cpp	2019-03-20 09:30:22.000000000 -0400
+diff -Naur a/tools/qtconfig/mainwindow.cpp b/tools/qtconfig/mainwindow.cpp
+--- a/tools/qtconfig/mainwindow.cpp	2015-05-07 09:14:41.000000000 -0500
++++ b/tools/qtconfig/mainwindow.cpp	2022-12-22 16:59:44.000000000 -0600
 @@ -227,6 +227,7 @@
      connect(ui->rtlExtensionsCheckBox, SIGNAL(toggled(bool)), SLOT(somethingModified()));
      connect(ui->inputStyleCombo, SIGNAL(activated(int)), SLOT(somethingModified()));

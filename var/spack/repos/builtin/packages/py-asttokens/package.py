@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -19,4 +19,3 @@ class PyAsttokens(PythonPackage):
     depends_on("py-setuptools-scm+toml@3.4.3:", type="build")
 
     depends_on("py-six", type=("build", "run"))
-    depends_on("py-typing", when="@2.0.7: ^python@:3.4", type=("build", "run"))

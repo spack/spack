@@ -1,0 +1,9 @@
+# This patch is applicable starting at least version 3.0.
+--- a/confdb/config.rpath
++++ b/confdb/config.rpath
+@@ -79 +79 @@ else
+-        icc* | ifort*)
++        icc* | icx* | ifort* | ifx*)
+@@ -383 +383 @@ else
+-      if { case $cc_basename in ifort*) true;; *) test "$GCC" = yes;; esac; }; then
++      if { case $cc_basename in ifort* | ifx*) true;; *) test "$GCC" = yes;; esac; }; then

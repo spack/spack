@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -130,10 +130,7 @@ class JsonCompilerEntry(object):
         """The compiler spec only lists the name/version, not
         arch/executables.
         """
-        return {
-            "name": self.name,
-            "version": self.version,
-        }
+        return {"name": self.name, "version": self.version}
 
 
 _common_arch = JsonArchEntry(platform="linux", os="centos8", target="haswell").to_dict()
@@ -233,14 +230,39 @@ def test_generate_specs_from_manifest():
     assert openmpi_spec["hwloc"]
 
 
+def test_translate_cray_platform_to_linux(monkeypatch):
+    """Manifests might list specs on newer Cray platforms as being "cray",
+    but Spack identifies such platforms as "linux". Make sure we
+    automaticaly transform these entries.
+    """
+    test_linux_platform = spack.platforms.test.Test("linux")
+
+    def the_host_is_linux():
+        return test_linux_platform
+
+    monkeypatch.setattr(spack.platforms, "host", the_host_is_linux)
+
+    cray_arch = JsonArchEntry(platform="cray", os="rhel8", target="x86_64").to_dict()
+    spec_json = JsonSpecEntry(
+        name="cray-mpich",
+        hash="craympichfakehashaaa",
+        prefix="/path/to/cray-mpich/",
+        version="1.0.0",
+        arch=cray_arch,
+        compiler=_common_compiler.spec_json(),
+        dependencies={},
+        parameters={},
+    ).to_dict()
+
+    (spec,) = entries_to_specs([spec_json]).values()
+    assert spec.architecture.platform == "linux"
+
+
 def test_translate_compiler_name():
     nvidia_compiler = JsonCompilerEntry(
         name="nvidia",
         version="19.1",
-        executables={
-            "cc": "/path/to/compiler/nvc",
-            "cxx": "/path/to/compiler/nvc++",
-        },
+        executables={"cc": "/path/to/compiler/nvc", "cxx": "/path/to/compiler/nvc++"},
     )
 
     compiler = compiler_from_entry(nvidia_compiler.compiler_json())

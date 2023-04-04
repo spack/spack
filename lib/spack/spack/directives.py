@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -28,16 +28,14 @@ The available directives are:
   * ``version``
 
 """
+import collections.abc
 import functools
 import os.path
 import re
-from typing import List, Set  # novm
-
-import six
+from typing import List, Set
 
 import llnl.util.lang
 import llnl.util.tty.color
-from llnl.util.compat import Sequence
 
 import spack.error
 import spack.patch
@@ -56,6 +54,7 @@ __all__ = [
     "conflicts",
     "depends_on",
     "extends",
+    "maintainers",
     "provides",
     "patch",
     "variant",
@@ -124,9 +123,9 @@ class DirectiveMeta(type):
     """
 
     # Set of all known directives
-    _directive_dict_names = set()  # type: Set[str]
-    _directives_to_be_executed = []  # type: List[str]
-    _when_constraints_from_context = []  # type: List[str]
+    _directive_dict_names: Set[str] = set()
+    _directives_to_be_executed: List[str] = []
+    _when_constraints_from_context: List[str] = []
 
     def __new__(cls, name, bases, attr_dict):
         # Initialize the attribute containing the list of directives
@@ -234,10 +233,10 @@ class DirectiveMeta(type):
         """
         global directive_names
 
-        if isinstance(dicts, six.string_types):
+        if isinstance(dicts, str):
             dicts = (dicts,)
 
-        if not isinstance(dicts, Sequence):
+        if not isinstance(dicts, collections.abc.Sequence):
             message = "dicts arg must be list, tuple, or string. Found {0}"
             raise TypeError(message.format(type(dicts)))
 
@@ -300,7 +299,7 @@ class DirectiveMeta(type):
 
                 # ...so if it is not a sequence make it so
                 values = result
-                if not isinstance(values, Sequence):
+                if not isinstance(values, collections.abc.Sequence):
                     values = (values,)
 
                 DirectiveMeta._directives_to_be_executed.extend(values)
@@ -363,6 +362,8 @@ def _depends_on(pkg, spec, when=None, type=default_deptype, patches=None):
         return
 
     dep_spec = spack.spec.Spec(spec)
+    if not dep_spec.name:
+        raise DependencyError("Invalid dependency specification in package '%s':" % pkg.name, spec)
     if pkg.name == dep_spec.name:
         raise CircularReferenceError("Package '%s' cannot depend on itself." % pkg.name)
 
@@ -391,7 +392,7 @@ def _depends_on(pkg, spec, when=None, type=default_deptype, patches=None):
         patches = [patches]
 
     # auto-call patch() directive on any strings in patch list
-    patches = [patch(p) if isinstance(p, six.string_types) else p for p in patches]
+    patches = [patch(p) if isinstance(p, str) else p for p in patches]
     assert all(callable(p) for p in patches)
 
     # this is where we actually add the dependency to this package
@@ -468,14 +469,7 @@ def depends_on(spec, when=None, type=default_deptype, patches=None):
 
 @directive(("extendees", "dependencies"))
 def extends(spec, type=("build", "run"), **kwargs):
-    """Same as depends_on, but allows symlinking into dependency's
-    prefix tree.
-
-    This is for Python and other language modules where the module
-    needs to be installed into the prefix of the Python installation.
-    Spack handles this by installing modules into their own prefix,
-    but allowing ONE module version to be symlinked into a parent
-    Python install at a time, using ``spack activate``.
+    """Same as depends_on, but also adds this package to the extendee list.
 
     keyword arguments can be passed to extends() so that extension
     packages can pass parameters to the extendee's extension
@@ -504,6 +498,8 @@ def provides(*specs, **kwargs):
     """
 
     def _execute_provides(pkg):
+        import spack.parser  # Avoid circular dependency
+
         when = kwargs.get("when")
         when_spec = make_when_spec(when)
         if not when_spec:
@@ -514,7 +510,7 @@ def provides(*specs, **kwargs):
         when_spec.name = pkg.name
 
         for string in specs:
-            for provided_spec in spack.spec.parse(string):
+            for provided_spec in spack.parser.parse(string):
                 if pkg.name == provided_spec.name:
                     raise CircularReferenceError("Package '%s' cannot provide itself." % pkg.name)
 
@@ -772,11 +768,31 @@ def build_system(*values, **kwargs):
     )
 
 
+@directive(dicts=())
+def maintainers(*names: str):
+    """Add a new maintainer directive, to specify maintainers in a declarative way.
+
+    Args:
+        names: GitHub username for the maintainer
+    """
+
+    def _execute_maintainer(pkg):
+        maintainers_from_base = getattr(pkg, "maintainers", [])
+        # Here it is essential to copy, otherwise we might add to an empty list in the parent
+        pkg.maintainers = list(sorted(set(maintainers_from_base + list(names))))
+
+    return _execute_maintainer
+
+
 class DirectiveError(spack.error.SpackError):
     """This is raised when something is wrong with a package directive."""
 
 
-class CircularReferenceError(DirectiveError):
+class DependencyError(DirectiveError):
+    """This is raised when a dependency specification is invalid."""
+
+
+class CircularReferenceError(DependencyError):
     """This is raised when something depends on itself."""
 
 

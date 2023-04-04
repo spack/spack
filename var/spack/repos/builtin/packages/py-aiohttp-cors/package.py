@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -19,4 +19,3 @@ class PyAiohttpCors(PythonPackage):
     depends_on("python@3.4.1:", type=("build", "run"))
     depends_on("py-setuptools@20.8.1:", type="build")
     depends_on("py-aiohttp@1.1:", type=("build", "run"))
-    depends_on("py-typing", when="^python@:3.4", type=("build", "run"))

@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -14,7 +14,7 @@ class Cutlang(Package):
 
     homepage = "https://github.com/unelg/CutLang"
     url = "https://github.com/unelg/CutLang/archive/refs/tags/v2.12.10.tar.gz"
-    maintainers = ["unelg", "ssekmen", "sabrivatansever"]
+    maintainers("unelg", "ssekmen", "sabrivatansever")
 
     version(
         "2.12.10",

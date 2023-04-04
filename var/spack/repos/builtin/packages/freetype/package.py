@@ -1,12 +1,14 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+from spack.build_systems.autotools import AutotoolsBuilder
+from spack.build_systems.cmake import CMakeBuilder
 from spack.package import *
 
 
-class Freetype(AutotoolsPackage):
+class Freetype(AutotoolsPackage, CMakePackage):
     """FreeType is a freely available software library to render fonts.
     It is written in C, designed to be small, efficient, highly customizable,
     and portable while capable of producing high-quality output (glyph images)
@@ -15,7 +17,7 @@ class Freetype(AutotoolsPackage):
     homepage = "https://www.freetype.org/index.html"
     url = "https://download.savannah.gnu.org/releases/freetype/freetype-2.10.1.tar.gz"
 
-    maintainers = ["michaelkuhn"]
+    maintainers("michaelkuhn")
 
     version("2.11.1", sha256="f8db94d307e9c54961b39a1cc799a67d46681480696ed72ecf78d4473770f09b")
     version("2.11.0", sha256="a45c6b403413abd5706f3582f04c8339d26397c4304b78fa552f2215df64101f")
@@ -28,9 +30,12 @@ class Freetype(AutotoolsPackage):
     version("2.7", sha256="7b657d5f872b0ab56461f3bd310bd1c5ec64619bd15f0d8e08282d494d9cfea4")
     version("2.5.3", sha256="41217f800d3f40d78ef4eb99d6a35fd85235b64f81bc56e4812d7672fca7b806")
 
+    build_system("cmake", "autotools", default="autotools")
+
     depends_on("bzip2")
     depends_on("libpng")
-    depends_on("pkgconfig", type="build")
+    for plat in ["linux", "darwin", "cray"]:
+        depends_on("pkgconfig", type="build", when="platform=%s" % plat)
 
     conflicts(
         "%intel",
@@ -47,6 +52,8 @@ class Freetype(AutotoolsPackage):
         headers.directories = [self.prefix.include.freetype2]
         return headers
 
+
+class AutotoolsBuilder(AutotoolsBuilder):
     def configure_args(self):
         args = [
             "--with-brotli=no",
@@ -58,3 +65,14 @@ class Freetype(AutotoolsPackage):
         if self.spec.satisfies("@2.9.1:"):
             args.append("--enable-freetype-config")
         return args
+
+
+class CMakeBuilder(CMakeBuilder):
+    def cmake_args(self):
+        return [
+            self.define("FT_DISABLE_ZLIB", True),
+            self.define("FT_DISABLE_BROTLI", True),
+            self.define("FT_DISABLE_HARFBUZZ", True),
+            self.define("FT_REQUIRE_PNG", True),
+            self.define("FT_REQUIRE_BZIP2", True),
+        ]
