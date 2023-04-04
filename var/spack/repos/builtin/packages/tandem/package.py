@@ -36,6 +36,8 @@ class Tandem(CMakePackage):
     depends_on("zlib@1.2.8:1.2.13")
     depends_on("petsc@3.14.6:3.18.5 +int64 +mumps +scalapack")
     depends_on("petsc@3.14.6:3.18.5 +int64 +mumps +scalapack +knl", when="target=skylake:")
+    # see https://github.com/TEAR-ERC/tandem/issues/45
+    conflicts("%intel")
 
     def cmake_args(self):
         args = [
