@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -352,7 +352,7 @@ class PatchCache(object):
 
         Arguments:
             sha256 (str): sha256 hash to look up
-            pkg (spack.package_base.Package): Package object to get patch for.
+            pkg (spack.package_base.PackageBase): Package object to get patch for.
 
         We build patch objects lazily because building them requires that
         we have information about the package's location in its repo.

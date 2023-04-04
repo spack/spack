@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -62,7 +62,7 @@ class SpectrumMpi(BundlePackage):
             siblings = os.listdir(dirname)
             compilers_found = {}
             for compiler_suite in compiler_suites.values():
-                for (compiler_class, compiler_name) in compiler_suite.items():
+                for compiler_class, compiler_name in compiler_suite.items():
                     if compiler_name in siblings:
                         # Get the real name of the compiler
                         full_exe = os.path.join(dirname, compiler_name)

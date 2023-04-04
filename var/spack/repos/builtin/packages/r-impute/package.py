@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -13,6 +13,7 @@ class RImpute(RPackage):
 
     bioc = "impute"
 
+    version("1.72.0", commit="638ac916464f5a392b947ef5bb426b8445d27325")
     version("1.70.0", commit="970b2c28d908e26369b01dddf36dab2f8916d4af")
     version("1.68.0", commit="fa4e4d883e609633c49d865a44acd6a79954eaac")
     version("1.64.0", commit="31a5636f4dfbb1fd61386738786a0de048a620c2")

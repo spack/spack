@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -12,9 +12,14 @@ class Xrootd(CMakePackage):
     tolerant access to data repositories of many kinds."""
 
     homepage = "http://xrootd.org"
-    url = "http://xrootd.org/download/v5.3.1/xrootd-5.3.1.tar.gz"
+    url = "https://xrootd.slac.stanford.edu/download/v5.5.1/xrootd-5.5.1.tar.gz"
     list_url = "https://xrootd.slac.stanford.edu/dload.html"
 
+    maintainers("wdconinc")
+
+    version("5.5.3", sha256="703829c2460204bd3c7ba8eaa23911c3c9a310f6d436211ba0af487ef7f6a980")
+    version("5.5.2", sha256="ec4e0490b8ee6a3254a4ea4449342aa364bc95b78dc9a8669151be30353863c6")
+    version("5.5.1", sha256="3556d5afcae20ed9a12c89229d515492f6c6f94f829a3d537f5880fcd2fa77e4")
     version("5.3.2", sha256="e8371fb9e86769bece74b9b9d67cb695023cd6a20a1199386fddd9ed840b0875")
     version("5.3.1", sha256="7ea3a112ae9d8915eb3a06616141e5a0ee366ce9a5e4d92407b846b37704ee98")
     version("5.1.0", sha256="c639536f1bdc5b6b365e807f3337ed2d41012cd3df608d40e91ed05f1c568b6d")
@@ -81,12 +86,20 @@ class Xrootd(CMakePackage):
 
     extends("python", when="+python")
     patch("python-support.patch", level=1, when="@:4.8+python")
-
-    # do not use systemd
-    patch("no-systemd.patch")
+    # https://github.com/xrootd/xrootd/pull/1805
+    patch(
+        "https://patch-diff.githubusercontent.com/raw/xrootd/xrootd/pull/1805.patch?full_index=1",
+        sha256="2655e2d609d80bf9c9ab58557f4f6940408a1af9c686e7aa214ac0348c89c8fa",
+        when="@5.5.1",
+    )
 
     def patch(self):
-        """Remove hardcoded -std=c++0x flag"""
+        # Do not use systemd
+        filter_file(
+            r"(add_definitions\(\s*-DHAVE_SYSTEMD\s*\))", r"#\1", "cmake/XRootDFindLibs.cmake"
+        )
+
+        # Remove hardcoded -std=c++0x flag
         if self.spec.satisfies("@4.7.0:"):
             filter_file(r"\-std=c\+\+0x", r"", "cmake/XRootDOSDefs.cmake")
 

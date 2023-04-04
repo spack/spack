@@ -1,13 +1,13 @@
-.. Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+.. Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
    Spack Project Developers. See the top-level COPYRIGHT file for details.
 
    SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 .. _racketpackage:
 
--------------
-RacketPackage
--------------
+------
+Racket
+------
 
 Much like Python, Racket packages and modules have their own special build system.
 To learn more about the specifics of Racket package system, please refer to the
@@ -17,7 +17,7 @@ To learn more about the specifics of Racket package system, please refer to the
 Phases
 ^^^^^^
 
-The ``RacketPackage`` base class provides an ``install`` phase that
+The ``RacketBuilder`` and ``RacketPackage`` base classes provides an ``install`` phase that
 can be overridden, corresponding to the use of:
 
 .. code-block:: console

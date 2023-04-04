@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -29,8 +29,6 @@ class Tensorpipe(CMakePackage):
         "2020-06-26", commit="3b8089c9c6717038cff44b70b881d0ad6c93e679", submodules=True
     )  # py-torch@1.6
 
+    generator("ninja")
     depends_on("cmake@3.5:", type="build")
-    depends_on("ninja", type="build")
     depends_on("libuv@1.26:")
-
-    generator = "Ninja"

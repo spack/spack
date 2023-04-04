@@ -1,7 +1,8 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
+import sys
 
 from spack.package import *
 
@@ -17,3 +18,9 @@ class Hypre(Package):
 
     depends_on("lapack")
     depends_on("blas")
+
+    variant(
+        "shared",
+        default=(sys.platform != "darwin"),
+        description="Build shared library (disables static library)",
+    )

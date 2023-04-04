@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -23,12 +23,7 @@ class TestSpecList(object):
         "mpileaks",
         "zmpi@1.0",
         "mpich@3.0",
-        {
-            "matrix": [
-                ["hypre"],
-                ["%gcc@4.5.0", "%clang@3.3"],
-            ]
-        },
+        {"matrix": [["hypre"], ["%gcc@4.5.0", "%clang@3.3"]]},
         "libelf",
     ]
 
@@ -200,3 +195,22 @@ class TestSpecList(object):
         ]
         speclist = SpecList("specs", matrix)
         assert len(speclist.specs) == 1
+
+    @pytest.mark.regression("22991")
+    def test_spec_list_constraints_with_structure(
+        self, mock_packages, mock_fetch, install_mockery
+    ):
+        # Setup by getting hash and installing package with dep
+        libdwarf_spec = Spec("libdwarf").concretized()
+        libdwarf_spec.package.do_install()
+
+        # Create matrix
+        matrix = {
+            "matrix": [["mpileaks"], ["^callpath"], ["^libdwarf/%s" % libdwarf_spec.dag_hash()]]
+        }
+
+        # ensure the concrete spec was retained in the matrix entry of which
+        # it is a dependency
+        speclist = SpecList("specs", [matrix])
+        assert len(speclist.specs) == 1
+        assert libdwarf_spec in speclist.specs[0]

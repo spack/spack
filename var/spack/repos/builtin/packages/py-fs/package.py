@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -20,6 +20,3 @@ class PyFs(PythonPackage):
     depends_on("py-appdirs@1.4.3:1.4", type=("build", "run"))
     depends_on("py-pytz", type=("build", "run"))
     depends_on("py-six@1.10:1", type=("build", "run"))
-    depends_on("py-enum34@1.1.6:1.1", type=("build", "run"), when="^python@:3.3")
-    depends_on("py-typing@3.6:3", type=("build", "run"), when="^python@:3.5")
-    depends_on("py-backports-os@0.1:0", type=("build", "run"), when="^python@:2")

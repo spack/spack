@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -13,7 +13,7 @@ class PySphinxTabs(PythonPackage):
     homepage = "https://github.com/executablebooks/sphinx-tabs"
     pypi = "sphinx-tabs/sphinx-tabs-3.2.0.tar.gz"
 
-    maintainers = ["schmitts"]
+    maintainers("schmitts")
 
     version("3.2.0", sha256="33137914ed9b276e6a686d7a337310ee77b1dae316fdcbce60476913a152e0a4")
 

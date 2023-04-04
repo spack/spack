@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -35,7 +35,7 @@ class Opencoarrays(CMakePackage):
     depends_on("mpi")
     # This patch removes a bunch of checks for the version of MPI available on
     # the system. They make the Crays hang.
-    patch("CMakeLists.patch", when="platform=cray")
+    patch("CMakeLists.patch", when="^cray-mpich")
 
     def cmake_args(self):
         args = []

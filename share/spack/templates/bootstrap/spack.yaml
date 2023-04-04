@@ -1,0 +1,34 @@
+# This environment contains Spack non-core dependencies for the
+# following configuration
+#
+# Python spec: {{ python_spec }}
+# Python interpreter: {{ python_prefix }}
+# Architecture: {{ architecture }}
+#
+spack:
+  specs:
+{% for spec in environment_specs %}
+    - "{{ spec }}"
+{% endfor %}
+  view: {{ environment_path }}/view
+
+  config:
+    install_tree:
+      root: {{ store_path }}
+
+  packages:
+    python:
+      buildable: false
+      externals:
+        - spec: "{{ python_spec }}"
+          prefix: "{{ python_prefix }}"
+
+    py-typed-ast:
+      require: "+wheel"
+
+    py-platformdirs:
+      require: "+wheel"
+
+  concretizer:
+    reuse: false
+    unify: true

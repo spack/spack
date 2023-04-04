@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -15,6 +15,7 @@ class RDnacopy(RPackage):
 
     bioc = "DNAcopy"
 
+    version("1.72.0", commit="1a1ae854c3425aee68b060e3e7ab788db5bed08c")
     version("1.70.0", commit="9595d0ad7c78af4ed568cbd210b894d3350eae0a")
     version("1.68.0", commit="08f039f58bc2f5ed2cc3117ae817dbac333002a6")
     version("1.64.0", commit="01650266ea7a4e5c600de545fe70a1103e79b2d8")
