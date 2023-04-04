@@ -282,7 +282,7 @@ class Root(CMakePackage):
     )
     # depends_on('intel-tbb@:2021.0', when='@:6.22 ^intel-tbb')
     depends_on("unuran", when="+unuran")
-    depends_on("vc", when="+vc")
+    depends_on("vc@1.3.0", when="+vc")
     depends_on("vdt", when="+vdt")
     depends_on("veccore", when="+veccore")
     depends_on("libxml2", when="+xml")
