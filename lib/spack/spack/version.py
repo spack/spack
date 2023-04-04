@@ -18,7 +18,7 @@ import numbers
 import os
 import re
 from bisect import bisect_left
-from typing import List, Optional, Tuple, Union
+from typing import Dict, List, Optional, Tuple, Union
 
 from llnl.util.filesystem import mkdirp, working_dir
 
@@ -78,6 +78,9 @@ class VersionStrComponent(object):
             if isinstance(self.data, int)
             else self.data
         )
+
+    def __repr__(self) -> str:
+        return f'VersionStrComponent("{self}")'
 
     def __eq__(self, other):
         return isinstance(other, VersionStrComponent) and self.data == other.data
@@ -429,31 +432,25 @@ class GitVersion(ConcreteVersion):
 
     @property
     def ref_version(self) -> StandardVersion:
-        # If we've already looked this version up, return cached value
+        # Return cached version if we have it
         if self._ref_version is not None:
             return self._ref_version
 
-        if not self.ref_lookup:
+        if self.ref_lookup is None:
             raise RuntimeError(
                 f"git ref '{self.ref}' cannot be looked up: "
                 "call attach_git_lookup_from_package first"
             )
 
-        ref_info = self.ref_lookup.get(self.ref)
+        version_string, distance = self.ref_lookup.get(self.ref)
+        version_string = version_string or "0"
 
-        if not ref_info:
-            raise RuntimeError(f"Could not find git ref '{self.ref}'")
-
-        prev_version, distance = ref_info
-
-        if prev_version is None:
-            prev_version = "0"
-
-        # Extend previous version by empty component and distance
-        # If commit is exactly a known version, no distance suffix
-        prev_tuple = parse_string_components(prev_version)[0] if prev_version else ()
-        dist_suffix = (VersionStrComponent(""), distance) if distance else ()
-        self._ref_version = StandardVersion("", prev_tuple + dist_suffix, ())
+        # Add a -git.<distance> suffix when we're not exactly on a tag
+        if distance > 0:
+            version_string += f"-git.{distance}"
+        self._ref_version = StandardVersion(
+            version_string, *parse_string_components(version_string)
+        )
         return self._ref_version
 
     def intersects(self, other):
@@ -486,7 +483,7 @@ class GitVersion(ConcreteVersion):
         raise ValueError(f"Unexpected type {type(other)}")
 
     def __str__(self):
-        return self.string
+        return f"{self.ref}={self.ref_version}"
 
     def __repr__(self):
         return "GitVersion(" + repr(self.string) + ")"
@@ -1045,7 +1042,7 @@ def prev_version(v: StandardVersion) -> StandardVersion:
     return StandardVersion("".join(string_components), v.version[:-1] + (prev,), v.separators)
 
 
-def is_git_version(string: str):
+def is_git_version(string: str) -> bool:
     return (
         string.startswith("git.")
         or len(string) == 40
@@ -1138,7 +1135,7 @@ class CommitLookup(object):
     def __init__(self, pkg_name):
         self.pkg_name = pkg_name
 
-        self.data = {}
+        self.data: Dict[str, Tuple[Optional[str], int]] = {}
 
         self._pkg = None
         self._fetcher = None
@@ -1189,9 +1186,7 @@ class CommitLookup(object):
 
     @property
     def repository_uri(self):
-        """
-        Identifier for git repos used within the repo and metadata caches.
-        """
+        """Identifier for git repos used within the repo and metadata caches."""
         try:
             components = [
                 str(c).lstrip("/") for c in spack.util.url.parse_git_url(self.pkg.git) if c
@@ -1202,21 +1197,17 @@ class CommitLookup(object):
             return os.path.abspath(self.pkg.git)
 
     def save(self):
-        """
-        Save the data to file
-        """
+        """Save the data to file"""
         with spack.caches.misc_cache.write_transaction(self.cache_key) as (old, new):
             sjson.dump(self.data, new)
 
     def load_data(self):
-        """
-        Load data if the path already exists.
-        """
+        """Load data if the path already exists."""
         if os.path.isfile(self.cache_path):
             with spack.caches.misc_cache.read_transaction(self.cache_key) as cache_file:
                 self.data = sjson.load(cache_file)
 
-    def get(self, ref):
+    def get(self, ref) -> Tuple[Optional[str], int]:
         if not self.data:
             self.load_data()
 
@@ -1226,7 +1217,7 @@ class CommitLookup(object):
 
         return self.data[ref]
 
-    def lookup_ref(self, ref):
+    def lookup_ref(self, ref) -> Tuple[Optional[str], int]:
         """Lookup the previous version and distance for a given commit.
 
         We use git to compare the known versions from package to the git tags,
@@ -1321,6 +1312,5 @@ class CommitLookup(object):
                         "rev-list", "%s..%s" % (commits[-1], ref), "--count", output=str, error=str
                     ).strip()
                 )
-                print(distance)
 
         return prev_version, distance
