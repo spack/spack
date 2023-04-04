@@ -11,14 +11,16 @@ class Catch2(CMakePackage):
     supports Objective-C (and maybe C)."""
 
     homepage = "https://github.com/catchorg/Catch2"
-    url = "https://github.com/catchorg/Catch2/archive/v2.13.10.tar.gz"
+    url = "https://github.com/catchorg/Catch2/archive/refs/tags/v3.3.1.tar.gz"
+    list_url = "https://github.com/catchorg/Catch2/releases/"
     git = "https://github.com/catchorg/Catch2.git"
-    maintainers("ax3l", "AndrewGaspar")
+    maintainers("ax3l", "AndrewGaspar", "greenc-FNAL")
 
     # In-Development
     version("develop", branch="devel")
 
     # Releases
+    version("3.3.1", sha256="d90351cdc55421f640c553cfc0875a8c834428679444e8062e9187d05b18aace")
     version("3.0.1", sha256="8c4173c68ae7da1b5b505194a0c2d6f1b2aef4ec1e3e7463bde451f26bbaf4e7")
     version(
         "3.0.0-preview4", sha256="2458d47d923b65ab611656cb7669d1810bcc4faa62e4c054a7405b1914cd4aee"
@@ -97,6 +99,16 @@ class Catch2(CMakePackage):
     version("1.3.5", sha256="f15730d81b4173fb860ce3561768de7d41bbefb67dc031d7d1f5ae2c07f0a472")
     version("1.3.0", sha256="245f6ee73e2fea66311afa1da59e5087ddab8b37ce64994ad88506e8af28c6ac")
 
+    variant(
+        "cxxstd",
+        when="@3:",
+        default="17",
+        values=("17", "20", "23"),
+        multi=False,
+        sticky=True,
+        description="C++ standard",
+    )
+
     def cmake_args(self):
         spec = self.spec
         args = []
@@ -105,6 +117,17 @@ class Catch2(CMakePackage):
             args.append("-DNO_SELFTEST={0}".format("OFF" if self.run_tests else "ON"))
         elif spec.satisfies("@2.1.1:"):
             args.append(self.define("BUILD_TESTING", self.run_tests))
+        if spec.satisfies("@3:"):
+            args.extend([
+                self.define("BUILD_TESTING", self.run_tests),
+                self.define("CATCH_BUILD_EXAMPLES", True),
+                self.define("CATCH_BUILD_EXTRA_TESTS", self.run_tests),
+                self.define("CATCH_BUILD_TESTING", self.run_tests),
+                self.define("CATCH_ENABLE_WERROR", True),
+                self.define("CATCH_INSTALL_EXTRAS", True),
+                self.define_from_variant("CMAKE_CXX_STANDARD", "cxxstd"),
+                self.define("CMAKE_CXX_STANDARD_REQUIRED", True),
+            ])
         return args
 
     @when("@:1.6")
