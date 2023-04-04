@@ -36,10 +36,11 @@ import os
 import re
 import sys
 from contextlib import contextmanager
-from typing import List  # novm
+from typing import List  # novm # noqa: F401
 
 import ruamel.yaml as yaml
 import six
+from ruamel.yaml.comments import Comment
 from ruamel.yaml.error import MarkedYAMLError
 from six import iteritems
 
@@ -532,16 +533,14 @@ class Configuration(object):
         scope = self._validate_scope(scope)  # get ConfigScope object
 
         # manually preserve comments
-        need_comment_copy = section in scope.sections and scope.sections[section] is not None
+        need_comment_copy = section in scope.sections and scope.sections[section]
         if need_comment_copy:
-            comments = getattr(
-                scope.sections[section][section], yaml.comments.Comment.attrib, None
-            )
+            comments = getattr(scope.sections[section][section], Comment.attrib, None)
 
         # read only the requested section's data.
         scope.sections[section] = syaml.syaml_dict({section: update_data})
         if need_comment_copy and comments:
-            setattr(scope.sections[section][section], yaml.comments.Comment.attrib, comments)
+            setattr(scope.sections[section][section], Comment.attrib, comments)
 
         scope._write_section(section)
 

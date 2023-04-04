@@ -244,30 +244,35 @@ def config_remove(args):
     spack.config.set(path, existing, scope)
 
 
-def _can_update_config_file(scope_dir, cfg_file):
-    dir_ok = fs.can_write_to_dir(scope_dir)
-    cfg_ok = fs.can_access(cfg_file)
-    return dir_ok and cfg_ok
+def _can_update_config_file(scope, cfg_file):
+    if isinstance(scope, spack.config.SingleFileScope):
+        return fs.can_access(cfg_file)
+    return fs.can_write_to_dir(scope.path) and fs.can_access(cfg_file)
 
 
 def config_update(args):
     # Read the configuration files
     spack.config.config.get_config(args.section, scope=args.scope)
-    updates = spack.config.config.format_updates[args.section]
+    updates = list(
+        filter(
+            lambda s: not isinstance(
+                s, (spack.config.InternalConfigScope, spack.config.ImmutableConfigScope)
+            ),
+            spack.config.config.format_updates[args.section],
+        )
+    )
 
     cannot_overwrite, skip_system_scope = [], False
     for scope in updates:
         cfg_file = spack.config.config.get_config_filename(scope.name, args.section)
-        scope_dir = scope.path
-        can_be_updated = _can_update_config_file(scope_dir, cfg_file)
+        can_be_updated = _can_update_config_file(scope, cfg_file)
         if not can_be_updated:
             if scope.name == "system":
                 skip_system_scope = True
-                msg = (
+                tty.warn(
                     'Not enough permissions to write to "system" scope. '
-                    "Skipping update at that location [cfg={0}]"
+                    "Skipping update at that location [cfg={0}]".format(cfg_file)
                 )
-                tty.warn(msg.format(cfg_file))
                 continue
             cannot_overwrite.append((scope, cfg_file))
 
@@ -315,18 +320,14 @@ def config_update(args):
     # Get a function to update the format
     update_fn = spack.config.ensure_latest_format_fn(args.section)
     for scope in updates:
-        cfg_file = spack.config.config.get_config_filename(scope.name, args.section)
-        with open(cfg_file) as f:
-            data = syaml.load_config(f) or {}
-            data = data.pop(args.section, {})
+        data = scope.get_section(args.section).pop(args.section)
         update_fn(data)
 
         # Make a backup copy and rewrite the file
         bkp_file = cfg_file + ".bkp"
         shutil.copy(cfg_file, bkp_file)
         spack.config.config.update_config(args.section, data, scope=scope.name, force=True)
-        msg = 'File "{0}" updated [backup={1}]'
-        tty.msg(msg.format(cfg_file, bkp_file))
+        tty.msg('File "{}" update [backup={}]'.format(cfg_file, bkp_file))
 
 
 def _can_revert_update(scope_dir, cfg_file, bkp_file):

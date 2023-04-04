@@ -13,6 +13,7 @@ import spack.config
 import spack.database
 import spack.environment as ev
 import spack.main
+import spack.schema.config
 import spack.spec
 import spack.store
 import spack.util.spack_yaml as syaml
@@ -652,3 +653,26 @@ def test_config_prefer_upstream(
 
     # Make sure a message about the conflicting hdf5's was given.
     assert "- hdf5" in output
+
+
+def test_environment_config_update(tmpdir, mutable_config, monkeypatch):
+    with open(str(tmpdir.join("spack.yaml")), "w") as f:
+        f.write(
+            """\
+spack:
+  config:
+    ccache: true
+"""
+        )
+
+    def update_config(data):
+        data["ccache"] = False
+        return True
+
+    monkeypatch.setattr(spack.schema.config, "update", update_config)
+
+    with ev.Environment(str(tmpdir)):
+        config("update", "-y", "config")
+
+    with ev.Environment(str(tmpdir)) as e:
+        assert not e.raw_yaml["spack"]["config"]["ccache"]
