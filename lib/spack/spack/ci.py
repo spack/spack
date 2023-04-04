@@ -1088,7 +1088,7 @@ def generate_gitlab_ci_yaml(
                     raise AttributeError
 
                 def main_script_replacements(cmd):
-                    return cmd.replace("{env_dir}", concrete_env_dir)
+                    return cmd.replace("{env_dir}", rel_concrete_env_dir)
 
                 job_script = _unpack_script(runner_attribs["script"], op=main_script_replacements)
 
