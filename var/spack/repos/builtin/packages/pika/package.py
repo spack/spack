@@ -171,10 +171,16 @@ class Pika(CMakePackage, CudaPackage, ROCmPackage):
             self.define_from_variant("PIKA_WITH_TRACY", "tracy"),
             self.define("PIKA_WITH_TESTS", self.run_tests),
             self.define_from_variant("PIKA_WITH_GENERIC_CONTEXT_COROUTINES", "generic_coroutines"),
-            self.define_from_variant("PIKA_WITH_P2300_REFERENCE_IMPLEMENTATION", "stdexec"),
             self.define("BOOST_ROOT", spec["boost"].prefix),
             self.define("HWLOC_ROOT", spec["hwloc"].prefix),
         ]
+
+        if self.spec.satisfies("@0.14:"):
+            args.append(self.define_from_variant("PIKA_WITH_STDEXEC", "stdexec"))
+        else:
+            args.append(
+                self.define_from_variant("PIKA_WITH_P2300_REFERENCE_IMPLEMENTATION", "stdexec")
+            )
 
         # HIP support requires compiling with hipcc for < 0.8.0
         if self.spec.satisfies("@:0.7 +rocm"):
