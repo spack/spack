@@ -550,6 +550,13 @@ class SpackCI:
         return self.ir
 
 
+#: YAML fragment for retries
+_service_job_retries = {
+    "max": 2,
+    "when": ["runner_system_failure", "stuck_or_timeout_failure", "script_failure"],
+}
+
+
 def generate_gitlab_ci_yaml(
     env,
     print_summary,
@@ -585,6 +592,21 @@ def generate_gitlab_ci_yaml(
             criteria.  Spack protected pipelines populate different mirrors based
             on branch name, facilitated by this option.  DEPRECATED
     """
+    rev1, rev2 = get_change_revisions()
+    tty.debug(f"Got following revisions: rev1={rev1}, rev2={rev2}")
+
+    changed = rev1 and rev2
+    if changed:
+        affected_pkgs = compute_affected_packages(rev1, rev2)
+        tty.debug("affected pkgs:")
+        for p in affected_pkgs:
+            tty.debug(f"  {p}")
+
+        possible_builds = env.possible_dependencies()
+        with env.read_transaction():
+            if not any(spec.name in possible_builds for spec in affected_pkgs):
+                pass
+
     with spack.concretize.disable_compiler_existence_check():
         with env.write_transaction():
             env.concretize()
@@ -635,16 +657,10 @@ def generate_gitlab_ci_yaml(
     if spack_prune_untouched is not None and spack_prune_untouched.lower() == "true":
         # Requested to prune untouched packages, but assume we won't do that
         # unless we're actually in a git repo.
-        rev1, rev2 = get_change_revisions()
-        tty.debug(f"Got following revisions: rev1={rev1}, rev2={rev2}")
-        if rev1 and rev2:
+        if changed:
             # If the stack file itself did not change, proceed with pruning
             if not get_stack_changed(env.manifest_path, rev1, rev2):
                 prune_untouched_packages = True
-                affected_pkgs = compute_affected_packages(rev1, rev2)
-                tty.debug("affected pkgs:")
-                for p in affected_pkgs:
-                    tty.debug(f"  {p}")
                 affected_specs = get_spec_filter_list(
                     env, affected_pkgs, dependent_traverse_depth=dependent_depth
                 )
@@ -1114,11 +1130,6 @@ def generate_gitlab_ci_yaml(
         # warn only if there was actually a CDash configuration.
         tty.warn("Unable to populate buildgroup without CDash credentials")
 
-    service_job_retries = {
-        "max": 2,
-        "when": ["runner_system_failure", "stuck_or_timeout_failure", "script_failure"],
-    }
-
     if copy_only_pipeline and not config_deprecated:
         stage_names.append("copy")
         sync_job = copy.deepcopy(spack_ci_ir["jobs"]["copy"]["attributes"])
@@ -1157,7 +1168,7 @@ def generate_gitlab_ci_yaml(
 
             cleanup_job["stage"] = "cleanup-temp-storage"
             cleanup_job["when"] = "always"
-            cleanup_job["retry"] = service_job_retries
+            cleanup_job["retry"] = _service_job_retries
             cleanup_job["interruptible"] = True
 
             cleanup_job["script"] = _unpack_script(
@@ -1208,7 +1219,7 @@ def generate_gitlab_ci_yaml(
             )
 
             final_job["when"] = "always"
-            final_job["retry"] = service_job_retries
+            final_job["retry"] = _service_job_retries
             final_job["interruptible"] = True
             final_job["dependencies"] = []
 
@@ -1272,7 +1283,7 @@ def generate_gitlab_ci_yaml(
     else:
         # No jobs were generated
         noop_job = spack_ci_ir["jobs"]["noop"]["attributes"]
-        noop_job["retry"] = service_job_retries
+        noop_job["retry"] = _service_job_retries
 
         if copy_only_pipeline and config_deprecated:
             tty.debug("Generating no-op job as copy-only is unsupported here.")
