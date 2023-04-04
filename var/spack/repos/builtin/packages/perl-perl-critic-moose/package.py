@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -12,7 +12,7 @@ class PerlPerlCriticMoose(PerlPackage):
     homepage = "http://metacpan.org/release/Perl-Critic-Moose"  # AUTO-CPAN2Spack
     url = "https://cpan.metacpan.org/authors/id/D/DR/DROLSKY/Perl-Critic-Moose-1.05.tar.gz"
 
-    maintainers = ["chissg", "gartung", "marcmengel", "vitodb"]  # AUTO-CPAN2Spack
+    maintainers("chissg", "gartung", "marcmengel", "vitodb")  # AUTO-CPAN2Spack
 
     version("1.05", sha256="52eb8e22c42643f17fe297a21714017efdb9e2986c24e3337e030f3650f92201")
     version("1.04", sha256="7a441cd9e08090c3e676c904e452efeff6f42f171cd38c5e2e609f8c45692a3d")
