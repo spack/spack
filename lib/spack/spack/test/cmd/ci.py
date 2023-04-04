@@ -539,40 +539,36 @@ spack:
 
                 found_it = False
 
-                assert "variables" in yaml_contents
                 global_vars = yaml_contents["variables"]
-                assert "SPACK_VERSION" in global_vars
                 assert global_vars["SPACK_VERSION"] == "0.15.3"
-                assert "SPACK_CHECKOUT_VERSION" in global_vars
                 assert global_vars["SPACK_CHECKOUT_VERSION"] == "v0.15.3"
 
                 for ci_key in yaml_contents.keys():
                     ci_obj = yaml_contents[ci_key]
                     if "archive-files" in ci_key:
                         # Ensure we have variables, possibly interpolated
-                        assert "variables" in ci_obj
                         var_d = ci_obj["variables"]
-                        assert "ONE" in var_d
                         assert var_d["ONE"] == "plain-string-value"
-                        assert "TWO" in var_d
                         assert var_d["TWO"] == "${INTERP_ON_BUILD}"
 
                         # Ensure we have scripts verbatim
-                        assert "before_script" in ci_obj
-                        before_script = ci_obj["before_script"]
-                        assert before_script[0] == "mkdir /some/path"
-                        assert before_script[1] == "pushd /some/path"
-                        assert before_script[2] == "git clone ${SPACK_REPO}"
-                        assert before_script[3] == "cd spack"
-                        assert before_script[4] == "git checkout ${SPACK_REF}"
-                        assert before_script[5] == "popd"
-
-                        assert "script" in ci_obj
-                        assert ci_obj["script"][0] == "spack -d ci rebuild"
-
-                        assert "after_script" in ci_obj
-                        after_script = ci_obj["after_script"][0]
-                        assert after_script == "rm -rf /some/path/spack"
+                        assert ci_obj["before_script"] == [
+                            "mkdir /some/path",
+                            "pushd /some/path",
+                            "git clone ${SPACK_REPO}",
+                            "cd spack",
+                            "git checkout ${SPACK_REF}",
+                            "popd",
+                        ]
+                        assert ci_obj["script"][1].startswith("cd ")
+                        ci_obj["script"][1] = "cd ENV"
+                        assert ci_obj["script"] == [
+                            "spack -d ci rebuild",
+                            "cd ENV",
+                            "spack env activate --without-view .",
+                            "spack ci rebuild",
+                        ]
+                        assert ci_obj["after_script"] == ["rm -rf /some/path/spack"]
 
                         found_it = True
 
