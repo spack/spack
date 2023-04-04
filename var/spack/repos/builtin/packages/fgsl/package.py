@@ -19,7 +19,7 @@ class Fgsl(AutotoolsPackage):
     version(
         "1.5.0",
         sha256="5013b4e000e556daac8b3c83192adfe8f36ffdc91d1d4baf0b1cb3100260e664",
-        url="https://github.com/reinh-bader/fgsl/archive/1.5.0.tar.gz"
+        url="https://github.com/reinh-bader/fgsl/archive/1.5.0.tar.gz",
     )
     version("1.4.0", sha256="9d1d0353013ffa5e95389b1ebeaa68f258c949bdae2feb3f4d3afce7bd274c87")
     version("1.3.0", sha256="6d73d558c889d7ea23e510a436f28618624035e8ffa07692894f10968aa83a4b")
