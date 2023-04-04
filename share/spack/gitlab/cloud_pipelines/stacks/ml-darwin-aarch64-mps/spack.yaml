@@ -1,9 +1,18 @@
 spack:
   view: false
 
+  concretizer:
+    unify: false
+    reuse: false
+
   config:
+    concretizer: clingo
+    db_lock_timeout: 120
     install_tree:
       root: $spack/opt/spack
+      padded_length: 256
+      projections:
+        all: '{architecture}/{compiler.name}-{compiler.version}/{name}-{version}-{hash}'
 
   packages:
     all:
@@ -81,40 +90,22 @@ spack:
   - r-xgboost
   - xgboost
 
-  compilers:
-  - compiler:
-      spec: apple-clang@14.0.0
-      paths:
-        cc: /usr/bin/clang
-        cxx: /usr/bin/clang++
-        f77: /opt/homebrew/bin/gfortran
-        fc: /opt/homebrew/bin/gfortran
-      flags: {}
-      operating_system: ventura
-      target: aarch64
-      modules: []
-      environment: {}
-      extra_rpaths: []
-  - compiler:
-      spec: gcc@12.2.0
-      paths:
-        cc: /opt/homebrew/bin/gcc-12
-        cxx: /opt/homebrew/bin/g++-12
-        f77: /opt/homebrew/bin/gfortran-12
-        fc: /opt/homebrew/bin/gfortran-12
-      flags: {}
-      operating_system: ventura
-      target: aarch64
-      modules: []
-      environment: {}
-      extra_rpaths: []
-
   mirrors: { "mirror": "s3://spack-binaries/develop/ml-darwin-aarch64-cpu" }
 
   ci:
     pipeline-gen:
     - build-job:
         tags:  [ "macos-ventura", "apple-clang-14", "aarch64" ]
+    - build-job-remove:
+        image: no-image
+    - signing-job:
+        image: { "name": "ghcr.io/spack/notary:latest", "entrypoint": [""] }
+        tags: ["aws"]
+        script:
+        - - aws s3 sync --exclude "*" --include "*spec.json*" ${SPACK_REMOTE_MIRROR_OVERRIDE}/build_cache /tmp
+          - /sign.sh
+          - aws s3 sync --exclude "*" --include "*spec.json.sig*" /tmp ${SPACK_REMOTE_MIRROR_OVERRIDE}/build_cache
+          - aws s3 cp /tmp/public_keys ${SPACK_REMOTE_MIRROR_OVERRIDE}/build_cache/_pgp --recursive --exclude "*" --include "*.pub"
 
   cdash:
     build-group: Machine Learning
