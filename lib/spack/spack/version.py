@@ -483,7 +483,7 @@ class GitVersion(ConcreteVersion):
         raise ValueError(f"Unexpected type {type(other)}")
 
     def __str__(self):
-        return f"{self.ref}={self.ref_version}"
+        return f"{self.ref}={self.ref_version}" if self._ref_version else self.ref
 
     def __repr__(self):
         return "GitVersion(" + repr(self.string) + ")"
@@ -1043,10 +1043,10 @@ def prev_version(v: StandardVersion) -> StandardVersion:
 
 
 def is_git_version(string: str) -> bool:
-    return bool(
+    return (
         string.startswith("git.")
         or len(string) == 40
-        and COMMIT_VERSION.match(string)
+        and bool(COMMIT_VERSION.match(string))
         or "=" in string[1:]
     )
 
