@@ -45,7 +45,13 @@ import spack.variant
 from spack.dependency import Dependency, canonical_deptype, default_deptype
 from spack.fetch_strategy import from_kwargs
 from spack.resource import Resource
-from spack.version import GitVersion, Version, VersionChecksumError, VersionLookupError
+from spack.version import (
+    GitVersion,
+    Version,
+    VersionChecksumError,
+    VersionError,
+    VersionLookupError,
+)
 
 __all__ = [
     "DirectiveError",
@@ -407,17 +413,26 @@ def version(
             if value is not None
         }
 
+        if isinstance(ver, float):
+            raise VersionError(
+                f"{pkg.name}: declared version '{ver}' in package should be a string. "
+                "floating point numbers are ambiguous."
+            )
+        elif not isinstance(ver, (int, str)):
+            raise VersionError(
+                f"{pkg.name}: declared version '{ver!r}' in package should be a string or int."
+            )
+
         # Declared versions are concrete
         version = Version(ver)
 
-        if isinstance(version, GitVersion):
-            if git is None and not hasattr(pkg, "git"):
-                msg = "Spack version directives cannot include git hashes fetched from"
-                msg += " URLs. Error in package '%s'\n" % pkg.name
-                msg += "    version('%s', " % version.string
-                msg += ", ".join("%s='%s'" % (argname, value) for argname, value in kwargs.items())
-                msg += ")"
-                raise VersionLookupError(msg)
+        if isinstance(version, GitVersion) and not hasattr(pkg, "git") and "git" not in kwargs:
+            msg = "Spack version directives cannot include git hashes fetched from"
+            msg += " URLs. Error in package '%s'\n" % pkg.name
+            msg += "    version('%s', " % version.string
+            msg += ", ".join("%s='%s'" % (argname, value) for argname, value in kwargs.items())
+            msg += ")"
+            raise VersionLookupError(msg)
 
         # Store kwargs for the package to later with a fetch_strategy.
         pkg.versions[version] = kwargs
