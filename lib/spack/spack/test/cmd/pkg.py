@@ -85,7 +85,11 @@ def mock_pkg_git_repo(git, tmpdir_factory):
 @pytest.fixture(scope="module")
 def mock_pkg_names():
     repo = spack.repo.path.get_repo("builtin.mock")
-    names = set(name for name in repo.all_package_names() if not name.startswith("pkg-"))
+    names = set(
+        name
+        for name in repo.all_package_names(include_virtuals=True)
+        if not name.startswith("pkg-")
+    )
     return names
 
 
