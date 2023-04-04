@@ -194,6 +194,12 @@ class Llvm(CMakePackage, CudaPackage):
     variant(
         "z3", default=False, when="+clang @8:", description="Use Z3 for the clang static analyzer"
     )
+    variant(
+        "zstd",
+        default=False,
+        when="@15:",
+        description="Enable zstd support for static analyzer / lld",
+    )
 
     provides("libllvm@14", when="@14.0.0:14")
     provides("libllvm@13", when="@13.0.0:13")
@@ -232,6 +238,9 @@ class Llvm(CMakePackage, CudaPackage):
 
     # llvm-config --system-libs libraries.
     depends_on("zlib")
+
+    # needs zstd cmake config file, which is not added when built with makefile.
+    depends_on("zstd build_system=cmake", when="+zstd")
 
     # lldb dependencies
     with when("+lldb +python"):
@@ -556,6 +565,7 @@ class Llvm(CMakePackage, CudaPackage):
             define("PYTHON_EXECUTABLE", python.command.path),
             define("LIBOMP_USE_HWLOC", True),
             define("LIBOMP_HWLOC_INSTALL_DIR", spec["hwloc"].prefix),
+            from_variant("LLVM_ENABLE_ZSTD", "zstd"),
         ]
 
         version_suffix = spec.variants["version_suffix"].value
