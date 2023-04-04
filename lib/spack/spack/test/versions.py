@@ -911,7 +911,8 @@ def test_resolved_git_version_is_shown_in_str(mock_git_version_info, mock_packag
     monkeypatch.setattr(
         spack.package_base.PackageBase, "git", "file://%s" % repo_path, raising=False
     )
-    spec = spack.spec.Spec(f"git-test-commit@{commits[-3]}").concretized()
+    commit = commits[-3]
+    spec = spack.spec.Spec(f"git-test-commit@{commit}").concretized()
 
     assert spec.version.satisfies(ver("1.0"))
-    assert str(spec.version) == f"{commits[-2]}=1.0-git.1"
+    assert str(spec.version) == f"{commit}=1.0-git.1"
