@@ -163,6 +163,26 @@ packages:
         Spec("x@1.1").concretize()
 
 
+def test_require_undefined_version(concretize_scope, test_repo):
+    """If a requirement specifies a numbered version that isn't in
+    the associated package.py and isn't part of a Git hash
+    equivalence (hash=number), then Spack should raise an error
+    (it is assumed this is a typo, and raising the error here
+    avoids a likely error when Spack attempts to fetch the version).
+    """
+    if spack.config.get("config:concretizer") == "original":
+        pytest.skip("Original concretizer does not support configuration requirements")
+
+    conf_str = """\
+packages:
+  x:
+    require: "@1.2"
+"""
+    update_packages_config(conf_str)
+    with pytest.raises(spack.config.ConfigError):
+        Spec("x").concretize()
+
+
 def test_git_user_supplied_reference_satisfaction(
     concretize_scope, test_repo, mock_git_version_info, monkeypatch
 ):
