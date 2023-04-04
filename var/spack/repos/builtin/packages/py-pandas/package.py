@@ -17,6 +17,7 @@ class PyPandas(PythonPackage):
 
     maintainers("adamjstewart")
 
+    version("2.0.0", sha256="cda9789e61b44463c1c4fe17ef755de77bcd13b09ba31c940d20f193d63a5dc8")
     version("1.5.3", sha256="74a3fd7e5a7ec052f183273dc7b0acd3a863edf7520f5d3a1765c04ffdb3b0b1")
     version("1.5.2", sha256="220b98d15cee0b2cd839a6358bd1f273d0356bf964c1a1aeb32d47db0215488b")
     version("1.5.1", sha256="249cec5f2a5b22096440bd85c33106b6102e0672204abd2d5c014106459804ee")
@@ -66,49 +67,59 @@ class PyPandas(PythonPackage):
     version("0.16.0", sha256="4013de6f8796ca9d2871218861823bd9878a8dfacd26e08ccf9afdd01bbad9f1")
 
     # Required dependencies
-    # https://pandas.pydata.org/pandas-docs/stable/getting_started/install.html#dependencies
+    # https://pandas.pydata.org/pandas-docs/stable/getting_started/install.html#python-version-support
     depends_on("python@3.8:", type=("build", "run"), when="@1.4:")
     depends_on("python@3.7.1:", type=("build", "run"), when="@1.2:")
     depends_on("python@3.6.1:", type=("build", "run"), when="@1:")
     depends_on("python@3.5.3:", type=("build", "run"), when="@0.25:")
-    depends_on("py-cython@0.29.13:2", type="build", when="@1:")
-    depends_on("py-cython@0.29.16:2", type="build", when="@1.1:")
-    depends_on("py-cython@0.29.21:2", type="build", when="@1.1.3:")
-    depends_on("py-cython@0.29.24:2", type="build", when="@1.3.4:")
-    depends_on("py-cython@0.29.30:2", type="build", when="@1.4.3:")
+
+    # pyproject.toml
+    depends_on("py-setuptools@61:", type="build", when="@2:")
+    depends_on("py-setuptools@51:", type="build", when="@1.3.2:")
+    depends_on("py-setuptools@38.6:", type="build", when="@1.3:")
+    depends_on("py-setuptools@24.2:", type="build")
+    depends_on("py-cython@0.29.33:2", type="build", when="@2:")
     depends_on("py-cython@0.29.32:2", type="build", when="@1.4.4:")
-    depends_on("py-setuptools@24.2.0:", type="build")
-    depends_on("py-setuptools@38.6.0:", type="build", when="@1.3:")
-    depends_on("py-setuptools@51.0.0:", type="build", when="@1.3.2:")
+    depends_on("py-cython@0.29.30:2", type="build", when="@1.4.3:")
+    depends_on("py-cython@0.29.24:2", type="build", when="@1.3.4:")
+    depends_on("py-cython@0.29.21:2", type="build", when="@1.1.3:")
+    depends_on("py-cython@0.29.16:2", type="build", when="@1.1:")
+    depends_on("py-cython@0.29.13:2", type="build", when="@1:")
+    depends_on("py-versioneer+toml", type="build", when="@2:")
+
+    # https://pandas.pydata.org/pandas-docs/stable/getting_started/install.html#dependencies
+    depends_on("py-numpy@1.20.3:", type=("build", "run"), when="@1.5:")
+    depends_on("py-numpy@1.18.5:", type=("build", "run"), when="@1.4:")
+    depends_on("py-numpy@1.17.3:", type=("build", "run"), when="@1.3:")
+    depends_on("py-numpy@1.16.5:", type=("build", "run"), when="@1.2:")
+    depends_on("py-numpy@1.15.4:", type=("build", "run"), when="@1.1:")
+    depends_on("py-numpy@1.13.3:", type=("build", "run"), when="@0.25:")
     depends_on("py-numpy", type=("build", "run"))
     # 'NUMPY_IMPORT_ARRAY_RETVAL' was removed in numpy@1.19
     depends_on("py-numpy@:1.18", type=("build", "run"), when="@:0.25")
-    depends_on("py-numpy@1.13.3:", type=("build", "run"), when="@0.25:")
-    depends_on("py-numpy@1.15.4:", type=("build", "run"), when="@1.1:")
-    depends_on("py-numpy@1.16.5:", type=("build", "run"), when="@1.2:")
-    depends_on("py-numpy@1.17.3:", type=("build", "run"), when="@1.3:")
-    depends_on("py-numpy@1.18.5:", type=("build", "run"), when="@1.4:")
-    depends_on("py-numpy@1.20.3:", type=("build", "run"), when="@1.5:")
-    depends_on("py-python-dateutil", type=("build", "run"))
-    depends_on("py-python-dateutil@2.6.1:", type=("build", "run"), when="@0.25:")
-    depends_on("py-python-dateutil@2.7.3:", type=("build", "run"), when="@1.1:")
+    depends_on("py-python-dateutil@2.8.2:", type=("build", "run"), when="@2:")
     depends_on("py-python-dateutil@2.8.1:", type=("build", "run"), when="@1.4:")
-    depends_on("py-pytz@2017.2:", type=("build", "run"))
-    depends_on("py-pytz@2017.3:", type=("build", "run"), when="@1.2:")
+    depends_on("py-python-dateutil@2.7.3:", type=("build", "run"), when="@1.1:")
+    depends_on("py-python-dateutil@2.6.1:", type=("build", "run"), when="@0.25:")
+    depends_on("py-python-dateutil", type=("build", "run"))
     depends_on("py-pytz@2020.1:", type=("build", "run"), when="@1.4:")
+    depends_on("py-pytz@2017.3:", type=("build", "run"), when="@1.2:")
+    depends_on("py-pytz@2017.2:", type=("build", "run"))
+    depends_on("py-tzdata@2022.1:", type=("build", "run"), when="@2:")
 
     # Recommended dependencies
     # https://pandas.pydata.org/pandas-docs/stable/getting_started/install.html#recommended-dependencies
-    depends_on("py-numexpr", type=("build", "run"))
-    depends_on("py-numexpr@2.6.2:", type=("build", "run"), when="@0.25:")
-    depends_on("py-numexpr@2.6.8:", type=("build", "run"), when="@1.2:")
-    depends_on("py-numexpr@2.7.0:", type=("build", "run"), when="@1.3:")
-    depends_on("py-numexpr@2.7.1:", type=("build", "run"), when="@1.4:")
     depends_on("py-numexpr@2.7.3:", type=("build", "run"), when="@1.5:")
-    depends_on("py-bottleneck", type=("build", "run"))
-    depends_on("py-bottleneck@1.2.1:", type=("build", "run"), when="@0.25:")
-    depends_on("py-bottleneck@1.3.1:", type=("build", "run"), when="@1.4:")
+    depends_on("py-numexpr@2.7.1:", type=("build", "run"), when="@1.4:")
+    depends_on("py-numexpr@2.7.0:", type=("build", "run"), when="@1.3:")
+    depends_on("py-numexpr@2.6.8:", type=("build", "run"), when="@1.2:")
+    depends_on("py-numexpr@2.6.2:", type=("build", "run"), when="@0.25:")
+    depends_on("py-numexpr", type=("build", "run"))
     depends_on("py-bottleneck@1.3.2:", type=("build", "run"), when="@1.5:")
+    depends_on("py-bottleneck@1.3.1:", type=("build", "run"), when="@1.4:")
+    depends_on("py-bottleneck@1.2.1:", type=("build", "run"), when="@0.25:")
+    depends_on("py-bottleneck", type=("build", "run"))
+    depends_on("py-numba@0.53.1:", type=("build", "run"), when="@2:")
 
     # Optional dependencies
     # https://pandas.pydata.org/pandas-docs/stable/getting_started/install.html#optional-dependencies
