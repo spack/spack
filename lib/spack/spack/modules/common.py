@@ -703,7 +703,7 @@ class BaseContext(tengine.Context):
 
         if os.path.exists(pkg.install_configure_args_path):
             with open(pkg.install_configure_args_path, "r") as args_file:
-                return args_file.read()
+                return spack.util.path.padding_filter(args_file.read())
 
         # Returning a false-like value makes the default templates skip
         # the configure option section
