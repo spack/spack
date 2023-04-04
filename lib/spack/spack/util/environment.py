@@ -21,6 +21,7 @@ from llnl.util import tty
 from llnl.util.lang import dedupe
 
 import spack.platforms
+import spack.target
 import spack.spec
 
 from .executable import Executable, which
@@ -37,7 +38,7 @@ if sys.platform == "win32":
     SUFFIXES = []
 else:
     SYSTEM_PATHS = ["/", "/usr", "/usr/local"]
-    SUFFIXES = ["bin", "bin64", "include", "lib", "lib64"]
+    SUFFIXES = ["bin64", "bin", "include", "lib64", "lib"]
 
 SYSTEM_DIRS = [os.path.join(p, s) for s in SUFFIXES for p in SYSTEM_PATHS] + SYSTEM_PATHS
 
@@ -74,17 +75,23 @@ def filter_system_paths(paths: List[Path]) -> List[Path]:
     return [p for p in paths if not is_system_path(p)]
 
 
-def deprioritize_system_paths(paths: List[Path]) -> List[Path]:
+target_64bit_re = re.compile(r"(?<!\d)64(?=\D|$)")
+def deprioritize_system_paths(paths: List[Path], target: Optional[Union[str, spack.target.Target]] = None) -> List[Path]:
     """Reorders input paths by putting system paths at the end of the list, otherwise
     preserving order.
     """
-    filtered_paths = filter_system_paths(paths)
-    fp = set(filtered_paths)
-    return (
-        filtered_paths
-        + [p for p in paths if p not in fp and p.endswith("64")]
-        + [p for p in paths if p not in fp and not p.endswith("64")]
-    )
+    result = sorted(paths, key=is_system_path)
+    # If we are building for a 64-bit target, move e.g. *64 system paths to
+    # the front of the system paths; otherwise remove them
+    if target is None:
+        target = spack.platforms.host().target("default_target")
+    elif not isinstance(target, spack.target.Target):
+        target = spack.target.Target(target)
+    if target_64bit_re.search(target.microarchitecture.family.name):
+        result.sort(key=lambda path: is_system_path(path) and not path.endswith("64"))
+    else:
+        result = filter(lambda path: not (is_system_path(path) and path.endswith("64")), result)
+    return list(result)
 
 
 def prune_duplicate_paths(paths: List[Path]) -> List[Path]:
@@ -380,13 +387,34 @@ class RemovePath(NameValueModifier):
         env[self.name] = self.separator.join(directories)
 
 
-class DeprioritizeSystemPaths(NameModifier):
+class RemoveSystemPaths(NameModifier):
     def execute(self, env: MutableMapping[str, str]):
+        tty.debug(f"RemoveSystemPaths: {self.name}", level=3)
+        environment_value = env.get(self.name, "")
+        directories = environment_value.split(self.separator) if environment_value else []
+        directories = filter_system_paths(
+            [path_to_os_path(os.path.normpath(x)).pop() for x in directories]
+        )
+        env[self.name] = self.separator.join(directories)
+
+
+class DeprioritizeSystemPaths(NameModifier):
+    __slots__ = ("target",)
+
+    def __init__(
+            self, name: str, *, separator: str = os.pathsep, trace: Optional[Trace] = None, target: Optional[Union[str, spack.target.Target]] = None
+    ):
+        super().__init__(name, separator=separator, trace=trace)
+        self.target = target
+
+    def execute(self,
+                env: MutableMapping[str, str]):
         tty.debug(f"DeprioritizeSystemPaths: {self.name}", level=3)
         environment_value = env.get(self.name, "")
         directories = environment_value.split(self.separator) if environment_value else []
         directories = deprioritize_system_paths(
-            [path_to_os_path(os.path.normpath(x)).pop() for x in directories]
+            [path_to_os_path(os.path.normpath(x)).pop() for x in directories],
+            self.target
         )
         env[self.name] = self.separator.join(directories)
 
@@ -540,7 +568,17 @@ class EnvironmentModifications:
         item = RemovePath(name, path, separator=separator, trace=self._trace())
         self.env_modifications.append(item)
 
-    def deprioritize_system_paths(self, name: str, separator: str = os.pathsep):
+    def remove_system_paths(self, name: str, separator: str = os.pathsep):
+        """Stores a request to remove system paths from a list of paths.
+
+        Args:
+            name: name of the environment variable
+            separator: separator for the paths (default: os.pathsep)
+        """
+        item = RemoveSystemPaths(name, separator=separator, trace=self._trace())
+        self.env_modifications.append(item)
+
+    def deprioritize_system_paths(self, name: str, separator: str = os.pathsep, target: Optional[Union[str, spack.target.Target]] = None):
         """Stores a request to deprioritize system paths in a path list,
         otherwise preserving the order.
 
@@ -548,7 +586,7 @@ class EnvironmentModifications:
             name: name of the environment variable
             separator: separator for the paths (default: os.pathsep)
         """
-        item = DeprioritizeSystemPaths(name, separator=separator, trace=self._trace())
+        item = DeprioritizeSystemPaths(name, separator=separator, trace=self._trace(), target=target)
         self.env_modifications.append(item)
 
     def prune_duplicate_paths(self, name: str, separator: str = os.pathsep):
