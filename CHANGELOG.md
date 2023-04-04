@@ -1,3 +1,24 @@
+# v0.19.2 (2023-04-04)
+
+### Spack Bugfixes
+
+* Ignore global variant requirement for packages that do not define it (#35037)
+* Compiler wrapper: improved parsing of linker arguments (#35929, #35912)
+* Do not detect apple-clang as cce on macOS (#35974)
+* Views: fix support for optional Python extensions (#35489)
+* Views: fix issue where Python executable gets symlinked instead of copied (#34661)
+* Fix a bug where tests were not added when concretizing together (#35290)
+* Compiler flags: fix clang/apple-clang c/c++ standard flags (#35062)
+* Increase db timeout from 3s to 60s to improve stability of parallel installs (#35517)
+* Buildcache: improve error handling in downloads (#35568)
+* Module files for packages installed from buildcache have long placeholder paths abbreviated in configure args section (#36611)
+* Reduce verbosity of error messages regarding non-existing module files (#35502)
+* Ensure file with build environment variables is truncated when writing to it (#35673)
+* `spack config update` now works on active environments (#36542)
+* Fix an issue where spack.yaml got reformatted incorrectly (#36698)
+* Packages UPC++ and GASNet-EX were updated (#36629)
+
+
 # v0.19.1 (2023-02-07)
 
 ### Spack Bugfixes
