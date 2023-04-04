@@ -59,3 +59,4 @@ class PyQiskitTerra(PythonPackage):
         depends_on("py-typing-extensions", when="^python@:3.7", type=("build", "run"))
         depends_on("py-shared-memory38", when="^python@:3.7", type=("build", "run"))
         depends_on("py-importlib-metadata@:4", when="^python@:3.7", type=("build", "run"))
+        depends_on("py-singledispatchmethod", when="^python@:3.7", type=("build", "run"))
