@@ -818,17 +818,19 @@ ml-linux-x86_64-rocm-protected-build:
 #########################################
 # Machine Learning - Darwin aarch64 (CPU)
 #########################################
+.ml-darwin-aarch64-cpu-tags:
+  tags: [ "macos-ventura", "apple-clang-14", "aarch64" ]
+
 .ml-darwin-aarch64-cpu:
   extends: [ ".darwin_aarch64" ]
   variables:
     SPACK_CI_STACK_NAME: ml-darwin-aarch64-cpu
-  tags: [ "macos-ventura", "apple-clang-14", "aarch64" ]
 
 ml-darwin-aarch64-cpu-pr-generate:
-  extends: [ ".pr-generate-macos-aarch64", ".ml-darwin-aarch64-cpu" ]
+  extends: [ ".pr-generate-macos-aarch64", ".ml-darwin-aarch64-cpu", ".ml-darwin-aarch64-cpu-tags"]
 
 ml-darwin-aarch64-cpu-protected-generate:
-  extends: [ ".protected-generate-macos-aarch64", ".ml-darwin-aarch64-cpu" ]
+  extends: [ ".protected-generate-macos-aarch64", ".ml-darwin-aarch64-cpu", ".ml-darwin-aarch64-cpu-tags" ]
 
 ml-darwin-aarch64-cpu-pr-build:
   extends: [ ".pr-build", ".ml-darwin-aarch64-cpu"  ]
@@ -856,17 +858,19 @@ ml-darwin-aarch64-cpu-protected-build:
 #########################################
 # Machine Learning - Darwin aarch64 (MPS)
 #########################################
+.ml-darwin-aarch64-mps-tags:
+  tags: [ "macos-ventura", "apple-clang-14", "aarch64" ]
+
 .ml-darwin-aarch64-mps:
   extends: [ ".darwin_aarch64" ]
   variables:
     SPACK_CI_STACK_NAME: ml-darwin-aarch64-mps
-  tags: [ "macos-ventura", "apple-clang-14", "aarch64" ]
 
 ml-darwin-aarch64-mps-pr-generate:
-  extends: [ ".pr-generate-macos-aarch64", ".ml-darwin-aarch64-mps" ]
+  extends: [ ".pr-generate-macos-aarch64", ".ml-darwin-aarch64-mps", ".ml-darwin-aarch64-mps-tags" ]
 
 ml-darwin-aarch64-mps-protected-generate:
-  extends: [ ".protected-generate-macos-aarch64", ".ml-darwin-aarch64-mps" ]
+  extends: [ ".protected-generate-macos-aarch64", ".ml-darwin-aarch64-mps", ".ml-darwin-aarch64-mps-tags" ]
 
 ml-darwin-aarch64-mps-pr-build:
   extends: [ ".pr-build", ".ml-darwin-aarch64-mps"  ]
