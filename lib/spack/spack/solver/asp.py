@@ -1635,10 +1635,9 @@ class SpackSolverSetup(object):
                 # v can be a string so force it into an actual version for comparisons
                 ver = spack.version.Version(v)
                 if ver.concrete:
-                    single_version = ver.lowest()
-                    if not isinstance(single_version, spack.version.GitVersion):
+                    if not isinstance(ver, spack.version.GitVersion):
                         pkg_class = spack.repo.path.get_pkg_class(pkg_name)
-                        if single_version not in pkg_class.versions:
+                        if not any(v.satisfies(ver) for v in pkg_class.versions):
                             raise spack.config.ConfigError(
                                 "Preference defines version {0} for {1} that "
                                 "is not in its associated package.py".format(str(ver), pkg_name)
@@ -2251,14 +2250,14 @@ def _specs_from_requires(pkg_name, section):
     version_specs = []
     for spec in extracted_specs:
         try:
-            spec.version
+            ver = spec.version
             # TODO: can requirements for virtuals specify versions/variants
             # on implementations? e.g. packages:mpi:require:openmpi@4.0.1?
             # If so, get_pkg_class should defer to spec.name rather than
             # pkg_name
             pkg_class = spack.repo.path.get_pkg_class(pkg_name)
-            if not isinstance(spec.version, spack.version.GitVersion) and not (
-                spec.version in pkg_class.versions
+            if not isinstance(spec.version, spack.version.GitVersion) and not any(
+                v.satisfies(ver) for v in pkg_class.versions
             ):
                 raise spack.config.ConfigError(
                     "{0} assigns a version that is not defined in"
