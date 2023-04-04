@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -12,7 +12,7 @@ class PerlExtutilsParsexs(PerlPackage):
     homepage = "https://github.com/Perl/perl5"  # AUTO-CPAN2Spack
     url = "https://cpan.metacpan.org/authors/id/X/XS/XSAWYERX/ExtUtils-ParseXS-3.44.tar.gz"
 
-    maintainers = ["chissg", "gartung", "marcmengel", "vitodb"]  # AUTO-CPAN2Spack
+    maintainers("chissg", "gartung", "marcmengel", "vitodb")  # AUTO-CPAN2Spack
 
     version("3.44", sha256="77effdf31af36ef656f09aa7c15356d238dab6d1afaa7278ae15c1b6bcf86266")
 

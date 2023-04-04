@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -12,7 +12,7 @@ class PerlPerlCriticPulp(PerlPackage):
     homepage = "http://user42.tuxfamily.org/perl-critic-pulp/index.html"  # AUTO-CPAN2Spack
     url = "https://cpan.metacpan.org/authors/id/K/KR/KRYDE/Perl-Critic-Pulp-99.tar.gz"
 
-    maintainers = ["chissg", "gartung", "marcmengel", "vitodb"]  # AUTO-CPAN2Spack
+    maintainers("chissg", "gartung", "marcmengel", "vitodb")  # AUTO-CPAN2Spack
 
     version("99", sha256="b8fda842fcbed74d210257c0a284b6dc7b1d0554a47a3de5d97e7d542e23e7fe")
     version("98", sha256="476f00aea58ca8a10a09ff709e90506ddb70ae35f6574ae184e08eb944413da0")

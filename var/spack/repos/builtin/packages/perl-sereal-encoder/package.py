@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -12,7 +12,7 @@ class PerlSerealEncoder(PerlPackage):
     homepage = "https://cpan.metacpan.org/authors/id/Y/YV/YVES"  # AUTO-CPAN2Spack
     url = "https://cpan.metacpan.org/authors/id/Y/YV/YVES/Sereal-Encoder-4.025.tar.gz"
 
-    maintainers = ["chissg", "gartung", "marcmengel", "vitodb"]  # AUTO-CPAN2Spack
+    maintainers("chissg", "gartung", "marcmengel", "vitodb")  # AUTO-CPAN2Spack
 
     version("5.001", sha256="2367f2f5f1486f32f65c3905048918de55639c79d1835ab56789f70cedfbbac3")
     version("4.025", sha256="0fd51ba6083026650d08526758261173c18ab8234c5526fac7edb91ad9c6026e")
