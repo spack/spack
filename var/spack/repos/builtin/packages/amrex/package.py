@@ -14,7 +14,7 @@ class Amrex(CMakePackage, CudaPackage, ROCmPackage):
     mesh refinement (AMR) applications."""
 
     homepage = "https://amrex-codes.github.io/amrex/"
-    url = "https://github.com/AMReX-Codes/amrex/releases/download/23.03/amrex-23.03.tar.gz"
+    url = "https://github.com/AMReX-Codes/amrex/releases/download/23.04/amrex-23.04.tar.gz"
     git = "https://github.com/AMReX-Codes/amrex.git"
 
     test_requires_compiler = True
@@ -24,6 +24,7 @@ class Amrex(CMakePackage, CudaPackage, ROCmPackage):
     maintainers("WeiqunZhang", "asalmgren", "etpalmer63")
 
     version("develop", branch="development")
+    version("23.04", sha256="b070949611abd2156208e675e40e5e73ed405bf83e3b1e8ba70fbb451a9e7dd7")
     version("23.03", sha256="e17c721b1aba4f66e467723f61b59e56c02cf1b72cab5a2680b13ff6e79ef903")
     version("23.02", sha256="f443c5eb4b89f4a74bf0e1b8a5943da18ab81cdc76aff12e8282ca43ffd06412")
     version("23.01", sha256="3b1770653a7c6d3e6167bc3cce98cbf838962102c510d1f872ab08f1115933b7")
