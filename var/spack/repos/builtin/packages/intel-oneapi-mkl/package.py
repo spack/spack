@@ -26,6 +26,12 @@ class IntelOneapiMkl(IntelOneApiLibraryPackage):
     )
 
     version(
+        "2023.1",
+        url="https://registrationcenter-download.intel.com/akdlm/IRC_NAS/cd17b7fe-500e-4305-a89b-bd5b42bfd9f8/l_onemkl_p_2023.1.0.46342_offline.sh",
+        sha256="cc28c94cab23c185520b93c5a04f3979d8da6b4c90cee8c0681dd89819d76167",
+        expand=False,
+    )
+    version(
         "2023.0.0",
         url="https://registrationcenter-download.intel.com/akdlm/irc_nas/19138/l_onemkl_p_2023.0.0.25398_offline.sh",
         sha256="0d61188e91a57bdb575782eb47a05ae99ea8eebefee6b2dfe20c6708e16e9927",
