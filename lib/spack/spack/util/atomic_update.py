@@ -49,14 +49,12 @@ def atomic_update_renameat2(src, dest):
 
     dest_exists = os.path.lexists(dest)
     if not dest_exists:
-        fs.touch(dest)
+        fs.mkdirp(dest)
     try:
         rc = renameat2()(AT_FDCWD, src.encode(), AT_FDCWD, dest.encode(), RENAME_EXCHANGE)
         if rc:
             raise OSError(f"renameat2 failed to exchange {src} and {dest}")
-        if not dest_exists:
-            os.unlink(src)
-    except (OSError, IOError):
+    except OSError:
         if not dest_exists:
             os.unlink(dest)
         raise
