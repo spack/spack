@@ -30,8 +30,6 @@ class OphidiaPrimitives(AutotoolsPackage):
         autoreconf("--install", "--verbose", "--force")
 
     def configure_args(self):
-        args = [
-            "--with-matheval-path={0}".format(self.spec["libmatheval"].prefix.lib),
-        ]
+        args = ["--with-matheval-path={0}".format(self.spec["libmatheval"].prefix.lib)]
 
         return args
