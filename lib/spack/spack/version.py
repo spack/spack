@@ -24,6 +24,7 @@ be called on any of the types::
   intersection
   concrete
 """
+import itertools
 import numbers
 import os
 import re
@@ -505,6 +506,10 @@ class VersionBase(object):
         else:
             return VersionList()
 
+    def defined(self):
+        """List all numbered versions defined by this version object."""
+        return []
+
 
 class GitVersion(VersionBase):
     """Class to represent versions interpreted from git refs.
@@ -752,6 +757,13 @@ class GitVersion(VersionBase):
         # Generate a commit looker-upper
         self._ref_lookup = CommitLookup(pkg_name)
 
+    def defined(self):
+        # TODO: the answer can change depending on whether commit resolution
+        # has occurred.
+        if self.ref_version:
+            return [self.ref_version]
+        return []
+
 
 class VersionRange(object):
     def __init__(self, start, end):
@@ -971,6 +983,11 @@ class VersionRange(object):
             out += str(self.end)
         return out
 
+    def defined(self):
+        # Ranges don't define any versions: the range boundaries don't
+        # necessarily have to exist.
+        return []
+
 
 class VersionList(object):
     """Sorted, non-redundant list of Versions and VersionRanges."""
@@ -1187,6 +1204,9 @@ class VersionList(object):
 
     def __repr__(self):
         return str(self.versions)
+
+    def defined(self):
+        return list(itertools.chain.from_iterable(v.defined() for v in self.versions))
 
 
 def from_string(string):
