@@ -936,12 +936,6 @@ class Repo(object):
         self.config_file = os.path.join(self.root, repo_config_name)
         check(os.path.isfile(self.config_file), "No %s found in '%s'" % (repo_config_name, root))
 
-        self.packages_path = os.path.join(self.root, packages_dir_name)
-        check(
-            os.path.isdir(self.packages_path),
-            "No directory '%s' found in '%s'" % (packages_dir_name, root),
-        )
-
         # Read configuration and validate namespace
         config = self._read_config()
         check(
@@ -961,6 +955,13 @@ class Repo(object):
 
         # Keep name components around for checking prefixes.
         self._names = self.full_namespace.split(".")
+
+        packages_dir = config.get("subdirectory", packages_dir_name)
+        self.packages_path = os.path.join(self.root, packages_dir)
+        check(
+            os.path.isdir(self.packages_path),
+            "No directory '%s' found in '%s'" % (packages_dir, root),
+        )
 
         # These are internal cache variables.
         self._modules = {}
@@ -1151,7 +1152,7 @@ class Repo(object):
 
     def package_path(self, name):
         """Get path to package.py file for this repo."""
-        return os.path.join(self.root, packages_dir_name, name, package_file_name)
+        return os.path.join(self.packages_path, name, package_file_name)
 
     def all_package_paths(self):
         for name in self.all_package_names():
