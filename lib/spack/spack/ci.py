@@ -1445,6 +1445,9 @@ def generate_gitlab_ci_yaml(
         if spack_stack_name:
             output_object["variables"]["SPACK_CI_STACK_NAME"] = spack_stack_name
 
+        # Ensure the child pipeline always runs
+        output_object["workflow"] = {"rules": [{"when": "always"}]}
+
         if spack_buildcache_copy:
             # Write out the file describing specs that should be copied
             copy_specs_dir = os.path.join(pipeline_artifacts_dir, "specs_to_copy")
