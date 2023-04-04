@@ -78,5 +78,10 @@ spack:
 
   mirrors: { "mirror": "s3://spack-binaries/develop/ml-darwin-aarch64-cpu" }
 
+  ci:
+    pipeline-gen:
+    - build-job:
+        tags:  [ "macos-ventura", "apple-clang-14", "aarch64" ]
+
   cdash:
     build-group: Machine Learning
