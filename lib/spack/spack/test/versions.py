@@ -901,3 +901,17 @@ def test_git_version_repo_attached_after_serialization(
 
     # After serialization, the repo is still attached
     assert spack.spec.Spec.from_dict(spec.to_dict()).satisfies("@1.0")
+
+
+@pytest.mark.skipif(sys.platform == "win32", reason="Not supported on Windows (yet)")
+def test_resolved_git_version_is_shown_in_str(mock_git_version_info, mock_packages, monkeypatch):
+    """Test that a GitVersion from a commit without a user supplied version is printed
+    as <hash>=<version>, and not just <hash>."""
+    repo_path, _, commits = mock_git_version_info
+    monkeypatch.setattr(
+        spack.package_base.PackageBase, "git", "file://%s" % repo_path, raising=False
+    )
+    spec = spack.spec.Spec(f"git-test-commit@{commits[-2]}").concretized()
+
+    assert spec.version.satisfies(ver("1.0"))
+    assert str(spec.version) == f"{commits[-2]}=1.0-git.1"

@@ -1675,10 +1675,7 @@ class SpackSolverSetup(object):
                     DeclaredVersion(version=narrowed_version, idx=0, origin=origin)
                 )
                 self.possible_versions[dep.name].add(narrowed_version)
-                if (
-                    isinstance(narrowed_version, vn.GitVersion)
-                    and narrowed_version.user_supplied_reference
-                ):
+                if isinstance(narrowed_version, vn.GitVersion):
                     self.declared_versions[dep.name].append(
                         DeclaredVersion(version=narrowed_version.ref_version, idx=1, origin=origin)
                     )

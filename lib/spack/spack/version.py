@@ -412,16 +412,12 @@ class GitVersion(ConcreteVersion):
         self.string = string
 
         if "=" in self.normalized_string:
-            # User has supplied a version to associate with this git ref
-            self.user_supplied_reference = True
-
             # Store the git reference, and parse the user provided version.
             self.ref, spack_version = self.normalized_string.split("=")
             self._ref_version = StandardVersion(
                 spack_version, *parse_string_components(spack_version)
             )
         else:
-            self.user_supplied_reference = False
             # The ref_version is lazily attached after parsing, since we don't know what
             # package it applies to here.
             self._ref_version = None
