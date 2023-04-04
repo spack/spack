@@ -184,9 +184,9 @@ class Pika(CMakePackage, CudaPackage, ROCmPackage):
 
         # HIP support requires compiling with hipcc for < 0.8.0
         if spec.satisfies("@:0.7 +rocm"):
-            args += [self.define("CMAKE_CXX_COMPILER", spec["hip"].hipcc)]
+            args.append(self.define("CMAKE_CXX_COMPILER", spec["hip"].hipcc))
             if spec.satisfies("^cmake@3.21.0:3.21.2"):
-                args += [self.define("__skip_rocmclang", True)]
+                args.append(self.define("__skip_rocmclang", True))
         if spec.satisfies("@0.8: +rocm"):
             rocm_archs = spec.variants["amdgpu_target"].value
             if "none" not in rocm_archs:
