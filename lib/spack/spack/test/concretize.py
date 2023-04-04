@@ -1762,8 +1762,7 @@ class TestConcretize(object):
             solver = spack.solver.asp.Solver()
             setup = spack.solver.asp.SpackSolverSetup()
             with pytest.raises(
-                spack.solver.asp.UnsatisfiableSpecError,
-                match="'dep-with-variants' satisfies '@999'",
+                spack.solver.asp.UnsatisfiableSpecError, match="'dep-with-variants@999'"
             ):
                 solver.driver.solve(setup, [root_spec], reuse=reusable_specs)
 

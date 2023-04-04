@@ -51,10 +51,14 @@ class OmegaH(CMakePackage, CudaPackage):
     variant("optimize", default=True, description="Compile C++ with optimization")
     variant("symbols", default=True, description="Compile C++ with debug symbols")
     variant("warnings", default=False, description="Compile C++ with warnings")
+    variant("gmsh", default=False, description="Use Gmsh C++ API")
+    variant("kokkos", default=False, description="Use Kokkos")
 
-    depends_on("gmsh", when="+examples", type="build")
+    depends_on("gmsh", when="+examples")
+    depends_on("gmsh@4.4.1:", when="+gmsh")
     depends_on("mpi", when="+mpi")
     depends_on("trilinos +kokkos", when="+trilinos")
+    depends_on("kokkos", when="+kokkos")
     depends_on("zlib", when="+zlib")
     # Note: '+cuda' and 'cuda_arch' variants are added by the CudaPackage
     depends_on("cuda", when="+cuda")
@@ -73,6 +77,12 @@ class OmegaH(CMakePackage, CudaPackage):
 
     # https://gcc.gnu.org/bugzilla/show_bug.cgi?id=86610
     conflicts("%gcc@8:8.2", when="@:9.22.1")
+
+    def patch(self):
+        if "@:9.34.8" in self.spec:
+            filter_file(
+                r"OUTPUT_QUIET", "OUTPUT_VARIABLE Gmsh_VERSION_STRING", "cmake/FindGmsh.cmake"
+            )
 
     def _bob_options(self):
         cmake_var_prefix = "Omega_h_CXX_"
@@ -110,6 +120,10 @@ class OmegaH(CMakePackage, CudaPackage):
             args.append("-DOmega_h_USE_CUDA:BOOL=OFF")
         if "+trilinos" in self.spec:
             args.append("-DOmega_h_USE_Trilinos:BOOL=ON")
+        if "+gmsh" in self.spec:
+            args.append("-DOmega_h_USE_Gmsh:BOOL=ON")
+        if "+kokkos" in self.spec:
+            args.append("-DOmega_h_USE_Kokkos:BOOL=ON")
         if "+zlib" in self.spec:
             args.append("-DOmega_h_USE_ZLIB:BOOL=ON")
             args.append("-DZLIB_ROOT:PATH={0}".format(self.spec["zlib"].prefix))
@@ -123,9 +137,10 @@ class OmegaH(CMakePackage, CudaPackage):
             args.append("-DOmega_h_THROW:BOOL=ON")
         else:
             args.append("-DOmega_h_THROW:BOOL=OFF")
-        # omega-h requires empty CMAKE_BUILD_TYPE
-        args.append("-DCMAKE_BUILD_TYPE:STRING=")
-        args += list(self._bob_options())
+        if "@:9.29.99" in self.spec:
+            # omega-h requires empty CMAKE_BUILD_TYPE
+            args.append("-DCMAKE_BUILD_TYPE:STRING=")
+            args += list(self._bob_options())
         return args
 
     def flag_handler(self, name, flags):
