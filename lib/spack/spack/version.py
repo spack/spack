@@ -480,8 +480,11 @@ class GitVersion(ConcreteVersion):
 
     def __str__(self):
         s = f"git.{self.ref}" if self.print_with_git_prefix else self.ref
-        # Don't cause a lookup
-        if self._ref_version:
+        # Note: the solver actually depends on str(...) to produce the effective version.
+        # So when a lookup is attached, we require the resolved version to be printed.
+        # But for standalone git versions that don't have a repo attached, it would still
+        # be nice if we could print @<hash>.
+        if self._ref_version or self._ref_lookup:
             s += f"={self.ref_version}"
         return s
 
