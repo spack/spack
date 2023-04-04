@@ -3367,16 +3367,31 @@ def test_view_update_unnecessary(update_method, tmpdir, install_mockery, mock_fe
     libdwarf = spack.spec.Spec("libdwarf").concretized()
     install("libdwarf")
 
-    # Ensure multiple previous views around
+    # Create a "previous" view
     view.regenerate([libelf])
-    view.regenerate([libelf, libdwarf])
 
     # monkeypatch so that any attempt to actually regenerate the view fails
     def raises(*args, **kwargs):
         raise AssertionError
 
+    old_view = view.view
     monkeypatch.setattr(view, "view", raises)
 
+    # regenerating the view is a no-op, so doesn't raise
+    # will raise if the view isn't identical
+    view.regenerate([libelf])
+    with pytest.raises(AssertionError):
+        view.regenerate([libelf, libdwarf])
+
+    # Create another view so there are multiple old views around
+    monkeypatch.setattr(view, "view", old_view)
+    view.regenerate([libelf, libdwarf])
+
+    # Redo the monkeypatch
+    monkeypatch.setattr(view, "view", raises)
+
+    # no raise for no-op regeneration
+    # raise when it's not a no-op
     view.regenerate([libelf, libdwarf])
     with pytest.raises(AssertionError):
         view.regenerate([libelf])
