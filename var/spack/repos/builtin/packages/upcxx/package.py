@@ -68,12 +68,23 @@ class Upcxx(Package, CudaPackage, ROCmPackage):
     variant(
         "cuda",
         default=False,
-        description="Enables UPC++ support for the CUDA memory kind.\n"
+        description="Enables UPC++ support for the CUDA memory kind on NVIDIA GPUs.\n"
         + "NOTE: Requires CUDA Driver library be present on the build system",
+        when="@2019.3.0:",
     )
 
     variant(
-        "rocm", default=False, description="Enables UPC++ support for the ROCm/HIP memory kind"
+        "rocm",
+        default=False,
+        description="Enables UPC++ support for the ROCm/HIP memory kind on AMD GPUs",
+        when="@2022.3.0:",
+    )
+
+    variant(
+        "level_zero",
+        default=False,
+        description="Enables UPC++ support for the Level Zero memory kind on Intel GPUs",
+        when="@2023.3.0:",
     )
 
     variant(
@@ -100,6 +111,8 @@ class Upcxx(Package, CudaPackage, ROCmPackage):
     depends_on("python@2.7.5:", type=("build", "run"))
 
     conflicts("hip@:4.4.0", when="+rocm")
+
+    depends_on("oneapi-level-zero@1.8.0:", when="+level_zero")
 
     # All flags should be passed to the build-env in autoconf-like vars
     flag_handler = env_flags
@@ -202,6 +215,10 @@ class Upcxx(Package, CudaPackage, ROCmPackage):
             options.append(
                 "--with-ld-flags=" + self.compiler.cc_rpath_arg + spec["hip"].prefix.lib
             )
+
+        if "+level_zero" in spec:
+            options.append("--enable-ze")
+            options.append("--with-ze-home=" + spec["oneapi-level-zero"].prefix)
 
         env["GASNET_CONFIGURE_ARGS"] = "--enable-rpath " + env["GASNET_CONFIGURE_ARGS"]
 
