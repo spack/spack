@@ -653,14 +653,14 @@ def test_git_ref_comparisons(mock_git_version_info, install_mockery, mock_packag
     spec_tag.concretize()
     assert spec_tag.satisfies("@1.0")
     assert not spec_tag.satisfies("@1.1:")
-    assert str(spec_tag.version) == "git.v1.0"
+    assert str(spec_tag.version) == "git.v1.0=1.0"
 
     # Spec based on branch 1.x
     spec_branch = spack.spec.Spec("git-test-commit@git.1.x")
     spec_branch.concretize()
     assert spec_branch.satisfies("@1.2")
     assert spec_branch.satisfies("@1.1:1.3")
-    assert str(spec_branch.version) == "git.1.x"
+    assert str(spec_branch.version) == "git.1.x=1.2"
 
 
 @pytest.mark.parametrize(
@@ -911,7 +911,7 @@ def test_resolved_git_version_is_shown_in_str(mock_git_version_info, mock_packag
     monkeypatch.setattr(
         spack.package_base.PackageBase, "git", "file://%s" % repo_path, raising=False
     )
-    spec = spack.spec.Spec(f"git-test-commit@{commits[-2]}").concretized()
+    spec = spack.spec.Spec(f"git-test-commit@{commits[-3]}").concretized()
 
     assert spec.version.satisfies(ver("1.0"))
     assert str(spec.version) == f"{commits[-2]}=1.0-git.1"

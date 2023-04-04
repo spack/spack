@@ -408,8 +408,8 @@ class GitVersion(ConcreteVersion):
         self._ref_version: Optional[StandardVersion]
 
         # Drop `git.` prefix
-        self.normalized_string = string[4:] if string.startswith("git.") else string
-        self.string = string
+        self.print_with_git_prefix = string.startswith("git.")
+        self.normalized_string = string[4:] if self.print_with_git_prefix else string
 
         if "=" in self.normalized_string:
             # Store the git reference, and parse the user provided version.
@@ -479,10 +479,14 @@ class GitVersion(ConcreteVersion):
         raise ValueError(f"Unexpected type {type(other)}")
 
     def __str__(self):
-        return f"{self.ref}={self.ref_version}" if self._ref_version else self.ref
+        s = f"git.{self.ref}" if self.print_with_git_prefix else self.ref
+        # Don't cause a lookup
+        if self._ref_version:
+            s += f"={self.ref_version}"
+        return s
 
     def __repr__(self):
-        return "GitVersion(" + repr(self.string) + ")"
+        return f'GitVersion("{self}")'
 
     def __eq__(self, other):
         # GitVersion cannot be equal to StandardVersion, otherwise == is not transitive

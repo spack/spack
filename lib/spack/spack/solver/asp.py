@@ -43,6 +43,7 @@ import spack.platforms
 import spack.repo
 import spack.spec
 import spack.store
+import spack.traverse
 import spack.util.path
 import spack.util.timer
 import spack.variant
@@ -1646,40 +1647,40 @@ class SpackSolverSetup(object):
 
     def add_concrete_versions_from_specs(self, specs, origin):
         """Add concrete versions to possible versions from lists of CLI/dev specs."""
-        for spec in specs:
-            for dep in spec.traverse():
-                # Backwards compatibility for `spack install pkg@1.2.3` when
-                # 1.2.3 does not exist. Old spack used to install pkg@=1.2.3
-                # in that case. So here we check if 1.2.3 matches any known
-                # versions, and if not, we narrow to =1.2.3 as a declared
-                # version.
-                narrowed_version = dep.versions.concrete_range_as_version
+        for s in spack.traverse.traverse_nodes(specs):
+            # Backwards compatibility for `spack install pkg@1.2.3` when
+            # 1.2.3 does not exist. Old spack used to install pkg@=1.2.3
+            # in that case. So here we check if 1.2.3 matches any known
+            # versions, and if not, we narrow to =1.2.3 as a declared
+            # version.
+            narrowed_version = s.versions.concrete_range_as_version
 
-                if not narrowed_version or any(
-                    v.satisfies(dep.versions) for v in self.possible_versions[dep.name]
-                ):
-                    # some version we know about satisfies this constraint, so we
-                    # should use that one. e.g, if the user asks for qt@5 and we
-                    # know about qt@5.5. This ensures we don't add under-specified
-                    # versions to the solver
-                    #
-                    # For git versions, we know the version is already fully specified
-                    # so we don't have to worry about whether it's an under-specified
-                    # version
-                    continue
+            if not narrowed_version or any(
+                v.satisfies(s.versions) for v in self.possible_versions[s.name]
+            ):
+                # some version we know about satisfies this constraint, so we
+                # should use that one. e.g, if the user asks for qt@5 and we
+                # know about qt@5.5. This ensures we don't add under-specified
+                # versions to the solver
+                #
+                # For git versions, we know the version is already fully specified
+                # so we don't have to worry about whether it's an under-specified
+                # version
+                continue
 
-                # if there is a concrete version on the CLI *that we know nothing
-                # about*, add it to the known versions. Use idx=0, which is the
-                # best possible, so they're guaranteed to be used preferentially.
-                self.declared_versions[dep.name].append(
-                    DeclaredVersion(version=narrowed_version, idx=0, origin=origin)
+            # if there is a concrete version on the CLI *that we know nothing
+            # about*, add it to the known versions. Use idx=0, which is the
+            # best possible, so they're guaranteed to be used preferentially.
+            self.declared_versions[s.name].append(
+                DeclaredVersion(version=narrowed_version, idx=0, origin=origin)
+            )
+            self.possible_versions[s.name].add(narrowed_version)
+
+            if isinstance(narrowed_version, vn.GitVersion):
+                self.declared_versions[s.name].append(
+                    DeclaredVersion(version=narrowed_version.ref_version, idx=1, origin=origin)
                 )
-                self.possible_versions[dep.name].add(narrowed_version)
-                if isinstance(narrowed_version, vn.GitVersion):
-                    self.declared_versions[dep.name].append(
-                        DeclaredVersion(version=narrowed_version.ref_version, idx=1, origin=origin)
-                    )
-                    self.possible_versions[dep.name].add(narrowed_version.ref_version)
+                self.possible_versions[s.name].add(narrowed_version.ref_version)
 
     def _supported_targets(self, compiler_name, compiler_version, targets):
         """Get a list of which targets are supported by the compiler.
