@@ -19,6 +19,8 @@ class Lhapdf(AutotoolsPackage):
 
     tags = ["hep"]
 
+    maintainers("vvolkl", "wdconinc")
+
     version("6.5.4", sha256="ace8913781044ad542e378697fcd95a8535d510818bb74a6665f9fd2b132ac0f")
     version("6.5.3", sha256="90fe7254d5a48a9b2d424fcbac1bf9708b0e54690efec4c78e9ad28b9203bfcd")
     version("6.5.2", sha256="23972ec46289c82a63df60b55b62f219418b4d80f94b8d570feb2b5e48014054")
