@@ -175,7 +175,7 @@ class Pika(CMakePackage, CudaPackage, ROCmPackage):
             self.define("HWLOC_ROOT", spec["hwloc"].prefix),
         ]
 
-        if self.spec.satisfies("@0.14:"):
+        if spec.satisfies("@0.14:"):
             args.append(self.define_from_variant("PIKA_WITH_STDEXEC", "stdexec"))
         else:
             args.append(
@@ -183,11 +183,11 @@ class Pika(CMakePackage, CudaPackage, ROCmPackage):
             )
 
         # HIP support requires compiling with hipcc for < 0.8.0
-        if self.spec.satisfies("@:0.7 +rocm"):
-            args += [self.define("CMAKE_CXX_COMPILER", self.spec["hip"].hipcc)]
-            if self.spec.satisfies("^cmake@3.21.0:3.21.2"):
+        if spec.satisfies("@:0.7 +rocm"):
+            args += [self.define("CMAKE_CXX_COMPILER", spec["hip"].hipcc)]
+            if spec.satisfies("^cmake@3.21.0:3.21.2"):
                 args += [self.define("__skip_rocmclang", True)]
-        if self.spec.satisfies("@0.8: +rocm"):
+        if spec.satisfies("@0.8: +rocm"):
             rocm_archs = spec.variants["amdgpu_target"].value
             if "none" not in rocm_archs:
                 rocm_archs = ";".join(rocm_archs)
