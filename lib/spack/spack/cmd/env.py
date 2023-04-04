@@ -676,7 +676,7 @@ class MakeTargetVisitor(object):
         return ""
 
     def accept(self, node):
-        fmt = "{name}-{version}-{hash}"
+        fmt = "{name}-{hash}"
         tgt = node.edge.spec.format(fmt)
         spec_str = node.edge.spec.format(
             "{name}{@version}{%compiler}{variants}{arch=architecture}"
@@ -736,7 +736,7 @@ def env_depfile(args):
     )
 
     # Root specs without deps are the prereqs for the environment target
-    root_install_targets = [get_install_target(h.format("{name}-{version}-{hash}")) for h in roots]
+    root_install_targets = [get_install_target(h.format("{name}-{hash}")) for h in roots]
 
     all_pkg_identifiers = []
 
