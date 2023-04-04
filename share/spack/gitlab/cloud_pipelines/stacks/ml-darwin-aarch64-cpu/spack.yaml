@@ -137,3 +137,6 @@ spack:
 
   cdash:
     build-group: Machine Learning
+    url: https://cdash.spack.io
+    project: Spack Testing
+    site: Cloud Gitlab Infrastructure
