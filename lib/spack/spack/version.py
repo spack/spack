@@ -400,6 +400,8 @@ class GitVersion(ConcreteVersion):
     sufficient.
     """
 
+    __slots__ = ["ref", "has_git_prefix", "is_commit", "_ref_lookup", "_ref_version"]
+
     def __init__(self, string: str):
         # An object that can lookup git refs to compare them to versions
         self._ref_lookup: Optional[CommitLookup] = None
@@ -407,13 +409,14 @@ class GitVersion(ConcreteVersion):
         # This is the effective version.
         self._ref_version: Optional[StandardVersion]
 
-        # Drop `git.` prefix
-        self.print_with_git_prefix = string.startswith("git.")
-        self.normalized_string = string[4:] if self.print_with_git_prefix else string
+        self.has_git_prefix = string.startswith("git.")
 
-        if "=" in self.normalized_string:
+        # Drop `git.` prefix
+        normalized_string = string[4:] if self.has_git_prefix else string
+
+        if "=" in normalized_string:
             # Store the git reference, and parse the user provided version.
-            self.ref, spack_version = self.normalized_string.split("=")
+            self.ref, spack_version = normalized_string.split("=")
             self._ref_version = StandardVersion(
                 spack_version, *parse_string_components(spack_version)
             )
@@ -421,10 +424,10 @@ class GitVersion(ConcreteVersion):
             # The ref_version is lazily attached after parsing, since we don't know what
             # package it applies to here.
             self._ref_version = None
-            self.ref = self.normalized_string
+            self.ref = normalized_string
 
         # Used by fetcher
-        self.is_commit: bool = bool(len(self.ref) == 40 and COMMIT_VERSION.match(self.ref))
+        self.is_commit: bool = len(self.ref) == 40 and bool(COMMIT_VERSION.match(self.ref))
 
     @property
     def ref_version(self) -> StandardVersion:
@@ -479,7 +482,7 @@ class GitVersion(ConcreteVersion):
         raise ValueError(f"Unexpected type {type(other)}")
 
     def __str__(self):
-        s = f"git.{self.ref}" if self.print_with_git_prefix else self.ref
+        s = f"git.{self.ref}" if self.has_git_prefix else self.ref
         # Note: the solver actually depends on str(...) to produce the effective version.
         # So when a lookup is attached, we require the resolved version to be printed.
         # But for standalone git versions that don't have a repo attached, it would still
@@ -550,21 +553,6 @@ class GitVersion(ConcreteVersion):
     def __contains__(self, other):
         raise Exception("Not implemented yet")
 
-    def is_predecessor(self, other: "GitVersion"):
-        """True if the other version is the immediate predecessor of this one.
-        That is, NO non-commit versions v exist such that:
-        (self < v < other and v not in self).
-        """
-        if not isinstance(other, GitVersion):
-            raise ValueError("Needs a GitVersion to compare to")
-
-        if self.ref_version[:-1] != other.ref_version[:-1]:
-            return False
-
-        sl = self.ref_version[-1]
-        ol = other.ref_version[-1]
-        return type(sl) == int and type(ol) == int and (ol - sl == 1)
-
     @property
     def ref_lookup(self):
         if self._ref_lookup:
@@ -585,6 +573,37 @@ class GitVersion(ConcreteVersion):
         be one and the same with the source cache.
         """
         self._ref_lookup = self._ref_lookup or CommitLookup(pkg_name)
+
+    def __iter__(self):
+        return self.ref_version.__iter__()
+
+    def __len__(self):
+        return self.ref_version.__len__()
+
+    def __getitem__(self, idx):
+        return self.ref_version.__getitem__(idx)
+
+    def isdevelop(self):
+        return self.ref_version.isdevelop()
+
+    @property
+    def dotted(self) -> StandardVersion:
+        return self.ref_version.dotted
+
+    @property
+    def underscored(self) -> StandardVersion:
+        return self.ref_version.underscored
+
+    @property
+    def dashed(self) -> StandardVersion:
+        return self.ref_version.dashed
+
+    @property
+    def joined(self) -> StandardVersion:
+        return self.ref_version.joined
+
+    def up_to(self, index) -> StandardVersion:
+        return self.ref_version.up_to(index)
 
 
 class ClosedOpenRange:

@@ -831,6 +831,26 @@ def test_total_order_versions_and_ranges():
     assert_ver_gt("=1.3", "1.2")
 
 
+def test_git_version_accessors():
+    """Test whether iteration, indexing, slicing, dotted, dashed, and underscored works for
+    GitVersion."""
+    v = GitVersion("my_branch=1.2-3")
+    assert [x for x in v] == [1, 2, 3]
+    assert v[0] == 1
+    assert v[1] == 2
+    assert v[2] == 3
+    assert v[0:2] == Version("1.2")
+    assert v[0:10] == Version("1.2.3")
+    assert str(v.dotted) == "1.2.3"
+    assert str(v.dashed) == "1-2-3"
+    assert str(v.underscored) == "1_2_3"
+    assert v.up_to(1) == Version("1")
+    assert v.up_to(2) == Version("1.2")
+    assert len(v) == 3
+    assert not v.isdevelop()
+    assert GitVersion("my_branch=develop").isdevelop()
+
+
 def test_version_list_normalization():
     # Git versions and ordinary versions can live together in a VersionList
     assert len(VersionList(["=1.2", "ref=1.2"])) == 2
