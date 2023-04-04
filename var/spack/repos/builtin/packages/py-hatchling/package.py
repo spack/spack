@@ -14,6 +14,8 @@ class PyHatchling(PythonPackage):
     git = "https://github.com/pypa/hatch"
 
     version("1.13.0", sha256="f8d275a2cc720735286b7c2e2bc35da05761e6d3695c2fa416550395f10c53c7")
+    version("1.12.2", sha256="8a6d719d96653a0f3901072b12710c9c3cc934f9061b443775c6789b45333495")
+    version("1.11.1", sha256="9f84361f70cf3a7ab9543b0c3ecc64211ed2ba8a606a71eb6a473c1c9b08e1d0")
     version("1.10.0", sha256="5d31f43dffaf6265c808e1b5353662ffa5146d844278b55caa6c7f74f427ec50")
     version("1.8.1", sha256="448b04b23faed669b2b565b998ac955af4feea66c5deed3a1212ac9399d2e1cd")
     version("1.4.1", sha256="13461b42876ade4f75ee5d2a2c656b288ca0aab7f048ef66657ef166996b2118")

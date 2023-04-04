@@ -16,6 +16,7 @@ class PyMarkupsafe(PythonPackage):
     pypi = "MarkupSafe/MarkupSafe-1.1.1.tar.gz"
     git = "https://github.com/pallets/markupsafe.git"
 
+    version("2.1.2", sha256="abcabc8c2b26036d62d4c746381a6f7cf60aafcc653198ad678306986b09450d")
     version("2.1.1", sha256="7f91197cc9e48f989d12e4e6fbc46495c446636dfc81b9ccf50bb0ec74b91d4b")
     version("2.0.1", sha256="594c67807fb16238b30c44bdf74f36c02cdf22d1c8cda91ef8a0ed8dabf5620a")
     version("1.1.1", sha256="29872e92839765e546828bb7754a68c418d927cd064fd4708fab9fe9c8bb116b")
