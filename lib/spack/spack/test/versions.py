@@ -851,6 +851,17 @@ def test_git_version_accessors():
     assert GitVersion("my_branch=develop").isdevelop()
 
 
+def test_boolness_of_versions():
+    # We do implement __len__, but at the end of the day versions are used as elements in
+    # the first place, not as lists of version components. So VersionList(...).concrete
+    # should be truthy even when there are no version components.
+    assert bool(Version("1.2"))
+    assert bool(Version("1.2").up_to(0))
+
+    # bool(GitVersion) shouldn't trigger a ref lookup.
+    assert bool(GitVersion("a" * 40))
+
+
 def test_version_list_normalization():
     # Git versions and ordinary versions can live together in a VersionList
     assert len(VersionList(["=1.2", "ref=1.2"])) == 2

@@ -144,6 +144,9 @@ class StandardVersion(ConcreteVersion):
     def typemax():
         return StandardVersion("infinity", (VersionStrComponent(len(infinity_versions)),), ())
 
+    def __bool__(self):
+        return True
+
     def __eq__(self, other):
         if isinstance(other, StandardVersion):
             return self.version == other.version
@@ -493,6 +496,9 @@ class GitVersion(ConcreteVersion):
 
     def __repr__(self):
         return f'GitVersion("{self}")'
+
+    def __bool__(self):
+        return True
 
     def __eq__(self, other):
         # GitVersion cannot be equal to StandardVersion, otherwise == is not transitive
