@@ -350,7 +350,7 @@ class PyTorch(PythonPackage, CudaPackage, ROCmPackage):
         when="@1.12 arch=ppc64le:",
     )
     patch(
-        "https://github.com/open-ce/pytorch-feedstock/raw/main/pytorch-1.13/recipe/0302-cpp-extension.patch",
+        "https://github.com/open-ce/pytorch-feedstock/raw/open-ce-v1.8.0/pytorch-1.13/recipe/0302-cpp-extension.patch",
         sha256="a54db63640b90e5833cc1099c0935572f5297d2d8625f62f01ac1fda79ed4569",
         when="@1.13 arch=ppc64le:",
     )
