@@ -265,6 +265,7 @@ class Acts(CMakePackage, CudaPackage):
     depends_on("eigen @3.3.7:3.3.99", when="@:15.0")
     depends_on("geant4", when="+fatras_geant4")
     depends_on("geant4", when="+geant4")
+    depends_on("git-lfs", when="@12.0.0:")
     depends_on("gperftools", when="+profilecpu")
     depends_on("gperftools", when="+profilemem")
     depends_on("hepmc3 @3.2.1:", when="+hepmc3")
