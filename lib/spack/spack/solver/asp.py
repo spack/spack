@@ -1640,8 +1640,9 @@ class SpackSolverSetup(object):
                         pkg_class = spack.repo.path.get_pkg_class(pkg_name)
                         if single_version not in pkg_class.versions:
                             raise spack.config.ConfigError(
-                                "Preference defines version {0} for {1} that is not in its associated package.py"
-                                .format(str(ver), pkg_name)
+                                "Preference defines version {0} for {1} that is not in its associated package.py".format(
+                                    str(ver), pkg_name
+                                )
                             )
                 self.declared_versions[pkg_name].append(
                     DeclaredVersion(version=ver, idx=idx, origin=version_provenance.packages_yaml)
@@ -2222,9 +2223,9 @@ def _get_versioned_specs_from_pkg_requirements():
 
 def _specs_from_requires(pkg_name, section):
     """Collect specs from requirements which define versions (i.e. those that
-       have a concrete version). Requirements can define *new* versions if
-       they are included as part of an equivalence (hash=number) but not
-       otherwise.
+    have a concrete version). Requirements can define *new* versions if
+    they are included as part of an equivalence (hash=number) but not
+    otherwise.
     """
     if isinstance(section, str):
         spec = spack.spec.Spec(section)
@@ -2255,10 +2256,13 @@ def _specs_from_requires(pkg_name, section):
             # TODO: can requirements for virtuals specify versions/variants
             # on implementations? e.g. packages:mpi:require:openmpi@4.0.1?
             pkg_class = spack.repo.path.get_pkg_class(pkg_name)
-            if not isinstance(spec.version, spack.version.GitVersion) and not (spec.version in pkg_class.versions):
+            if not isinstance(spec.version, spack.version.GitVersion) and not (
+                spec.version in pkg_class.versions
+            ):
                 raise spack.config.ConfigError(
-                    "{0} assigns a version that is not defined in the associated package.py"
-                    .format(str(spec))
+                    "{0} assigns a version that is not defined in the associated package.py".format(
+                        str(spec)
+                    )
                 )
             version_specs.append(spec)
         except spack.error.SpecError:
