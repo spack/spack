@@ -6,6 +6,7 @@
 # Build stage with Spack pre-installed and ready to be used
 FROM {{ build.image }} as builder
 
+{% block build_stage %}
 {% if os_packages_build %}
 # Install OS packages needed to build the software
 RUN {% if os_package_update %}{{ os_packages_build.update }} \
@@ -19,7 +20,11 @@ RUN mkdir {{ paths.environment }} \
 {{ manifest }} > {{ paths.environment }}/spack.yaml
 
 # Install the software, remove unnecessary deps
+{% if depfile %}
+RUN cd {{ paths.environment }} && spack env activate . && spack concretize && spack env depfile -o Makefile && make -j $(nproc) && spack gc -y
+{% else %}
 RUN cd {{ paths.environment }} && spack env activate . && spack install --fail-fast && spack gc -y
+{% endif %}
 {% if strip %}
 
 # Strip all the binaries
@@ -37,7 +42,9 @@ RUN cd {{ paths.environment }} && \
 {% if extra_instructions.build %}
 {{ extra_instructions.build }}
 {% endif %}
+{% endblock build_stage %}
 {% endif %}
+
 {% if render_phase.final %}
 # Bare OS image to run the installed executables
 FROM {{ run.image }}
@@ -48,6 +55,8 @@ COPY --from=builder {{ paths.hidden_view }} {{ paths.hidden_view }}
 COPY --from=builder {{ paths.view }} {{ paths.view }}
 COPY --from=builder /etc/profile.d/z10_spack_environment.sh /etc/profile.d/z10_spack_environment.sh
 
+{% block final_stage %}
+
 {% if os_packages_final %}
 RUN {% if os_package_update %}{{ os_packages_final.update }} \
  && {% endif %}{{ os_packages_final.install }} {{ os_packages_final.list | join | replace('\n', ' ') }} \
@@ -57,6 +66,7 @@ RUN {% if os_package_update %}{{ os_packages_final.update }} \
 
 {{ extra_instructions.final }}
 {% endif %}
+{% endblock final_stage %}
 {% for label, value in labels.items() %}
 LABEL "{{ label }}"="{{ value }}"
 {% endfor %}

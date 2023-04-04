@@ -315,7 +315,7 @@ def _install_from_cache(pkg, cache_only, explicit, unsigned=False):
     tty.debug("Successfully extracted {0} from binary cache".format(pkg_id))
     _print_timer(pre=_log_prefix(pkg.name), pkg_id=pkg_id, timer=t)
     _print_installed_pkg(pkg.spec.prefix)
-    spack.hooks.post_install(pkg.spec)
+    spack.hooks.post_install(pkg.spec, explicit)
     return True
 
 
@@ -353,7 +353,7 @@ def _process_external_package(pkg, explicit):
         # For external packages we just need to run
         # post-install hooks to generate module files.
         tty.debug("{0} generating module file".format(pre))
-        spack.hooks.post_install(spec)
+        spack.hooks.post_install(spec, explicit)
 
         # Add to the DB
         tty.debug("{0} registering into DB".format(pre))
@@ -1260,6 +1260,10 @@ class PackageInstaller(object):
         if not pkg.unit_test_check():
             return
 
+        # Injecting information to know if this installation request is the root one
+        # to determine in BuildProcessInstaller whether installation is explicit or not
+        install_args["is_root"] = task.is_root
+
         try:
             self._setup_install_dir(pkg)
 
@@ -1879,6 +1883,9 @@ class BuildProcessInstaller(object):
         # whether to enable echoing of build output initially or not
         self.verbose = install_args.get("verbose", False)
 
+        # whether installation was explicitly requested by the user
+        self.explicit = install_args.get("is_root", False) and install_args.get("explicit", True)
+
         # env before starting installation
         self.unmodified_env = install_args.get("unmodified_env", {})
 
@@ -1939,7 +1946,7 @@ class BuildProcessInstaller(object):
                 self.timer.write_json(timelog)
 
             # Run post install hooks before build stage is removed.
-            spack.hooks.post_install(self.pkg.spec)
+            spack.hooks.post_install(self.pkg.spec, self.explicit)
 
         _print_timer(pre=self.pre, pkg_id=self.pkg_id, timer=self.timer)
         _print_installed_pkg(self.pkg.prefix)
