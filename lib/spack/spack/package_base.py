@@ -87,11 +87,11 @@ _spack_build_envfile = "spack-build-env.txt"
 #: Filename for the Spack build/install environment modifications file.
 _spack_build_envmodsfile = "spack-build-env-mods.txt"
 
-#: Filename of json with total build and phase times (seconds)
-_spack_times_log = "install_times.json"
-
 #: Filename for the Spack configure args file.
 _spack_configure_argsfile = "spack-configure-args.txt"
+
+#: Filename of json with total build and phase times (seconds)
+spack_times_log = "install_times.json"
 
 
 def deprecated_version(pkg, version):
@@ -1156,7 +1156,7 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
     @property
     def times_log_path(self):
         """Return the times log json file."""
-        return os.path.join(self.metadata_dir, _spack_times_log)
+        return os.path.join(self.metadata_dir, spack_times_log)
 
     @property
     def install_configure_args_path(self):
