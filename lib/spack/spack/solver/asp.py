@@ -2251,11 +2251,10 @@ def _specs_from_requires(pkg_name, section):
     for spec in extracted_specs:
         try:
             ver = spec.version
-            # TODO: can requirements for virtuals specify versions/variants
-            # on implementations (e.g. packages:mpi:require:openmpi@4.0.1)?
-            # If so, get_pkg_class should defer to spec.name rather than
-            # pkg_name
-            pkg_class = spack.repo.path.get_pkg_class(pkg_name)
+            # Prefer spec's name if it exists, in case the spec is
+            # requiring a specific implementation inside of a virtual section
+            # e.g. packages:mpi:require:openmpi@4.0.1
+            pkg_class = spack.repo.path.get_pkg_class(spec.name or pkg_name)
             if not isinstance(spec.version, spack.version.GitVersion) and not any(
                 v.satisfies(ver) for v in pkg_class.versions
             ):
