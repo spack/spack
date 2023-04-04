@@ -71,11 +71,7 @@ class Paraview(CMakePackage, CudaPackage, ROCmPackage):
     variant("eyedomelighting", default=False, description="Enable Eye Dome Lighting feature")
     variant("adios2", default=False, description="Enable ADIOS2 support", when="@5.8:")
     variant("visitbridge", default=False, description="Enable VisItBridge support")
-    variant(
-        "raytracing",
-        default=False,
-        description="Enable Raytracing support"
-    )
+    variant("raytracing", default=False, description="Enable Raytracing support")
     variant(
         "openpmd",
         default=False,
