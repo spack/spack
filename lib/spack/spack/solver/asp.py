@@ -1640,9 +1640,8 @@ class SpackSolverSetup(object):
                         pkg_class = spack.repo.path.get_pkg_class(pkg_name)
                         if single_version not in pkg_class.versions:
                             raise spack.config.ConfigError(
-                                "Preference defines version {0} for {1} that is not in its associated package.py".format(
-                                    str(ver), pkg_name
-                                )
+                                "Preference defines version {0} for {1} that "
+                                "is not in its associated package.py".format(str(ver), pkg_name)
                             )
                 self.declared_versions[pkg_name].append(
                     DeclaredVersion(version=ver, idx=idx, origin=version_provenance.packages_yaml)
@@ -2260,9 +2259,8 @@ def _specs_from_requires(pkg_name, section):
                 spec.version in pkg_class.versions
             ):
                 raise spack.config.ConfigError(
-                    "{0} assigns a version that is not defined in the associated package.py".format(
-                        str(spec)
-                    )
+                    "{0} assigns a version that is not defined in"
+                    " the associated package.py".format(str(spec))
                 )
             version_specs.append(spec)
         except spack.error.SpecError:
