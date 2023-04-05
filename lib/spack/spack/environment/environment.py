@@ -479,21 +479,28 @@ class ViewDescriptor(object):
         """
         Return the directory in which the view has been constructed.
 
-        If the view is using renameat2 for atomic updates, self.root is a directory and the root
-        directory of the view is the same as self.root.
+        Query the view if it stores metadata on where it was constructed.
 
         If the view us using symlinks for atomic updates, self.root is a link and we read the link
         to find the real root directory.
 
-        If self.root does not exist or is a regular file, the view has not been
-        constructed on the filesystem.
+        If self.root is not a view with metadata and is not a link, the view has not been
+        constructed.
         """
-        if not os.path.islink(self.root):
-            if os.path.isdir(self.root):
-                return self.root
-            else:
-                return None
+        # Get the view as self.root even if it is actually a symlink
+        # We will not operate on this view object, only query metadata
+        # We don't want to pass a created_path to this view, so that we can read where it says it
+        # was created.
+        view = self.view(self.root, created_path=False)
+        orig_path = view.metadata.get("created_path", None)
+        if orig_path:
+            return orig_path
 
+        # Backwards compat only applies for symlinked views
+        if not os.path.islink(self.root):
+            return None
+
+        # For backards compat, check link for symlink views if no "created_path"
         root = os.readlink(self.root)
         if os.path.isabs(root):
             return root
@@ -529,7 +536,7 @@ class ViewDescriptor(object):
         rel_path = os.path.relpath(view_path, self._current_root)
         return os.path.join(self.root, rel_path)
 
-    def view(self, new=None):
+    def view(self, new=None, created_path=True):
         """
         Generate the FilesystemView object for this ViewDescriptor
 
@@ -551,14 +558,17 @@ class ViewDescriptor(object):
                 "View root is at %s" % self.root
             )
             raise SpackEnvironmentViewError(msg)
-        return SimpleFilesystemView(
-            root,
-            spack.store.layout,
-            ignore_conflicts=True,
-            projections=self.projections,
-            link=self.link_type,
-            final_destination=self.root,
-        )
+
+        kwargs = {
+            "ignore_conflicts": True,
+            "projections": self.projections,
+            "link": self.link_type,
+            "final_destination": self.root,
+        }
+        if created_path:
+            kwargs["metadata"] = {"created_path": root}
+
+        return SimpleFilesystemView(root, spack.store.layout, **kwargs)
 
     def __contains__(self, spec):
         """Is the spec described by the view descriptor
@@ -675,9 +685,6 @@ class ViewDescriptor(object):
         # will be /dirname/._basename_<hash>.
         # This allows for atomic swaps when we update the view
 
-        # Check which atomic update method we need
-        update_method = self.update_method_to_use(force)
-
         # cache the roots because the way we determine which is which does
         # not work while we are updating
         new_root = self._next_root(specs)
@@ -687,21 +694,10 @@ class ViewDescriptor(object):
             tty.debug("View at %s does not need regeneration." % self.root)
             return
 
-        print(new_root)
-        #        print(
-        #            [
-        #                (s, os.stat(os.path.join(os.path.dirname(new_root), s)).st_mtime)
-        #                for s in os.listdir(os.path.dirname(new_root))
-        #            ]
-        #        )
-        print(specs)
+        # Check which atomic update method we need
+        update_method = self.update_method_to_use(force)
+
         if update_method == "exchange" and os.path.isdir(new_root):
-            # If new_root is the newest thing in its directory, no need to update
-            parent = os.path.dirname(new_root)
-            siblings = [os.path.join(parent, s) for s in os.listdir(parent)]
-            if max(siblings, key=lambda p: os.stat(p).st_mtime) == new_root:
-                tty.debug("View at %s does not need regeneration." % self.root)
-                return
             shutil.rmtree(new_root)
 
         _error_on_nonempty_view_dir(new_root)
@@ -717,7 +713,14 @@ class ViewDescriptor(object):
             fs.mkdirp(new_root)
             view.add_specs(*specs, with_dependencies=False)
             if update_method == "exchange":
-                spack.util.atomic_update.atomic_update_renameat2(new_root, self.root)
+                # Swap the view to the directory of the previous view if one exists so that
+                # the view that is swapped out will be named appropriately
+                if old_root:
+                    os.rename(new_root, old_root)
+                    exchange_location = old_root
+                else:
+                    exchange_location = new_root
+                spack.util.atomic_update.atomic_update_renameat2(exchange_location, self.root)
             else:
                 spack.util.atomic_update.atomic_update_symlink(new_root, self.root)
         except Exception as e:
