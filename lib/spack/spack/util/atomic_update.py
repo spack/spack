@@ -56,7 +56,7 @@ def atomic_update_renameat2(src, dest):
             raise OSError(f"renameat2 failed to exchange {src} and {dest}")
     except OSError:
         if not dest_exists:
-            os.unlink(dest)
+            os.rmdir(dest)
         raise
 
 

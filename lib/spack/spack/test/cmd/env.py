@@ -8,6 +8,7 @@ import io
 import os
 import shutil
 import sys
+import time
 from argparse import Namespace
 
 import pytest
@@ -3368,7 +3369,9 @@ def test_view_update_unnecessary(update_method, tmpdir, install_mockery, mock_fe
     install("libdwarf")
 
     # Create a "previous" view
+    # Wait after each view regeneration to ensure timestamps are different
     view.regenerate([libelf])
+    time.sleep(1)
 
     # monkeypatch so that any attempt to actually regenerate the view fails
     def raises(*args, **kwargs):
@@ -3380,12 +3383,14 @@ def test_view_update_unnecessary(update_method, tmpdir, install_mockery, mock_fe
     # regenerating the view is a no-op, so doesn't raise
     # will raise if the view isn't identical
     view.regenerate([libelf])
+    time.sleep(1)
     with pytest.raises(AssertionError):
         view.regenerate([libelf, libdwarf])
 
     # Create another view so there are multiple old views around
     monkeypatch.setattr(view, "view", old_view)
     view.regenerate([libelf, libdwarf])
+    time.sleep(1)
 
     # Redo the monkeypatch
     monkeypatch.setattr(view, "view", raises)
@@ -3393,5 +3398,6 @@ def test_view_update_unnecessary(update_method, tmpdir, install_mockery, mock_fe
     # no raise for no-op regeneration
     # raise when it's not a no-op
     view.regenerate([libelf, libdwarf])
+    time.sleep(1)
     with pytest.raises(AssertionError):
         view.regenerate([libelf])
