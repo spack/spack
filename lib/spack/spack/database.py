@@ -696,26 +696,30 @@ class Database(object):
         # Build spec from dict first.
         spec = spec_reader.from_node_dict(spec_dict)
 
+        self._validate_version(spec)
+
+        return spec
+
+    def _validate_version(self, spec):
         # Specs installed from a git sha without an associated spack version, that cannot
         # be resolved anymore because the repo has been removed from its package.py, get
-        # assigned a `=develop` version.
+        # replaced by a literal string version, to avoid errors in comparison.
         # TODO: Remove this ad-hoc logic in Spack 0.21. It's mostly there so that these
         # spack-versionless specs don't break basic operations. Since Spack 0.20, the
         # resolved version is stored in the DB, so this is not needed for newer installs.
-        for v in spec.versions:
-            if not isinstance(v, vn.GitVersion):
-                continue
-            try:
-                v.ref_version
-            except RuntimeError:
-                v._ref_version = vn.Version("develop")
-                tty.warn(
-                    f"database: assigned version {spec.cformat('{version}')} to "
-                    f"{spec.cformat('{name}{/hash:7}')} because its git commit could not "
-                    f"be resolved. 1 silence this message."
-                )
+        v = spec.version
+        if not isinstance(v, vn.GitVersion):
+            return
 
-        return spec
+        try:
+            v.ref_version
+        except RuntimeError:
+            spec.versions = vn.VersionList([vn.StandardVersion.from_string(str(v))])
+            tty.warn(
+                f"database: git sha of {spec.cformat('{name}{version}{/hash:7}')} could not "
+                "be resolved to a spack version. Remove ths spec by hash to silence this "
+                "message."
+            )
 
     def db_for_spec_hash(self, hash_key):
         with self.read_transaction():
