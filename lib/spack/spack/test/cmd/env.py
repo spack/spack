@@ -3122,7 +3122,6 @@ def test_environment_depfile_makefile(depfile_flags, expected_installs, tmpdir, 
 
 def test_environment_depfile_spec_format_special_chars(tmpdir, mock_packages, monkeypatch):
     env("create", "test")
-    make = Executable("make")
     makefile = str(tmpdir.join("Makefile"))
     with ev.read("test"):
         add("dttop")
