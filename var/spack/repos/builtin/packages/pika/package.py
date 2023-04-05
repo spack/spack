@@ -17,6 +17,7 @@ class Pika(CMakePackage, CudaPackage, ROCmPackage):
     git = "https://github.com/pika-org/pika.git"
     maintainers("msimberg", "albestro", "teonnik", "aurianer")
 
+    version("0.14.0", sha256="c0fc10a3c2c24bccbdc292c22a3373a2ad579583ee9d8bd31aaf1755e49958a4")
     version("0.13.0", sha256="67e0843141fb711787e71171a7a669c9cdb9587e4afd851ee2b0339a62b9a254")
     version("0.12.0", sha256="daa1422eb73d6a897ce7b8ff8022e09e7b0fec83d92728ed941a92e57dec5da3")
     version("0.11.0", sha256="3c3d94ca1a3960884bad7272bb9434d61723f4047ebdb097fcf522c6301c3fda")
@@ -171,17 +172,23 @@ class Pika(CMakePackage, CudaPackage, ROCmPackage):
             self.define_from_variant("PIKA_WITH_TRACY", "tracy"),
             self.define("PIKA_WITH_TESTS", self.run_tests),
             self.define_from_variant("PIKA_WITH_GENERIC_CONTEXT_COROUTINES", "generic_coroutines"),
-            self.define_from_variant("PIKA_WITH_P2300_REFERENCE_IMPLEMENTATION", "stdexec"),
             self.define("BOOST_ROOT", spec["boost"].prefix),
             self.define("HWLOC_ROOT", spec["hwloc"].prefix),
         ]
 
+        if spec.satisfies("@0.14:"):
+            args.append(self.define_from_variant("PIKA_WITH_STDEXEC", "stdexec"))
+        else:
+            args.append(
+                self.define_from_variant("PIKA_WITH_P2300_REFERENCE_IMPLEMENTATION", "stdexec")
+            )
+
         # HIP support requires compiling with hipcc for < 0.8.0
-        if self.spec.satisfies("@:0.7 +rocm"):
-            args += [self.define("CMAKE_CXX_COMPILER", self.spec["hip"].hipcc)]
-            if self.spec.satisfies("^cmake@3.21.0:3.21.2"):
-                args += [self.define("__skip_rocmclang", True)]
-        if self.spec.satisfies("@0.8: +rocm"):
+        if spec.satisfies("@:0.7 +rocm"):
+            args.append(self.define("CMAKE_CXX_COMPILER", spec["hip"].hipcc))
+            if spec.satisfies("^cmake@3.21.0:3.21.2"):
+                args.append(self.define("__skip_rocmclang", True))
+        if spec.satisfies("@0.8: +rocm"):
             rocm_archs = spec.variants["amdgpu_target"].value
             if "none" not in rocm_archs:
                 rocm_archs = ";".join(rocm_archs)
