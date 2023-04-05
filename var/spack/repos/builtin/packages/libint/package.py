@@ -5,11 +5,10 @@
 
 import os
 
-from spack.package import *
-from spack.pkg.builtin.boost import Boost
-
 import spack.build_systems.autotools
 import spack.build_systems.cmake
+from spack.package import *
+from spack.pkg.builtin.boost import Boost
 
 TUNE_VARIANTS = (
     "none",
