@@ -95,15 +95,12 @@ def test_version_type_validation():
 
     package = namedtuple("package", ["name"])
 
-    msg = (
-        r"python: declared version '\d+\.\d+' in package should be a string\. "
-        "floating point numbers are ambiguous"
-    )
+    msg = r"python: declared version '.+' in package should be a string\."
 
     # Pass a float
     with pytest.raises(spack.version.VersionError, match=msg):
-        spack.directives.version(3.10)(package(name="python"))
+        spack.directives._execute_version(package(name="python"), 3.10)
 
     # Try passing a bogus type; it's just that we want a nice error message
-    with pytest.raises(spack.version.VersionError):
-        spack.directives.version({})(package(name="python"))
+    with pytest.raises(spack.version.VersionError, match=msg):
+        spack.directives._execute_version(package(name="python"), {})
