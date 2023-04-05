@@ -432,12 +432,11 @@ def _execute_version(pkg, ver, **kwargs):
     version = Version(ver)
 
     if isinstance(version, GitVersion) and not hasattr(pkg, "git") and "git" not in kwargs:
-        msg = "Spack version directives cannot include git hashes fetched from"
-        msg += " URLs. Error in package '%s'\n" % pkg.name
-        msg += "    version('%s', " % version.string
-        msg += ", ".join("%s='%s'" % (argname, value) for argname, value in kwargs.items())
-        msg += ")"
-        raise VersionLookupError(msg)
+        args = ", ".join(f"{argname}='{value}'" for argname, value in kwargs.items())
+        raise VersionLookupError(
+            f"{pkg.name}: spack version directives cannot include git hashes fetched from URLs.\n"
+            f"    version('{version}', {args})"
+        )
 
     # Store kwargs for the package to later with a fetch_strategy.
     pkg.versions[version] = kwargs
