@@ -46,7 +46,6 @@ class PyArchspec(PythonPackage):
         depends_on("py-click@8", type=("build", "run"))
 
     depends_on("python@3.6:", when="@0.2:", type=("build", "run"))
-    depends_on("py-setuptools", type="build")
     depends_on("py-poetry-core@1.0.0:", type="build")
 
     def patch(self):
