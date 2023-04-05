@@ -123,19 +123,6 @@ class SetupEnvironment(object):
         env.prepend_path("XDG_DATA_DIRS", self.prefix.share)
         env.prepend_path("GI_TYPELIB_PATH", join_path(self.prefix.lib, "girepository-1.0"))
 
-    def setup_build_environment(self, env):
-        ldflags = []
-        libs = []
-        for lib in ["bzip2", "zlib", "libpng"]:
-            spec = self.spec[lib]
-            if spec.satisfies("+shared") or spec.satisfies("libs=shared"):
-                continue
-            ldflags.append(spec.libs.ld_flags)
-            libs.append(spec.libs.link_flags)
-        if ldflags:
-            env.set("LDFLAGS", " ".join(ldflags))
-            env.set("LIBS", " ".join(libs))
-
 
 class MesonBuilder(spack.build_systems.meson.MesonBuilder, SetupEnvironment):
     def meson_args(self):
@@ -162,5 +149,30 @@ class AutotoolsBuilder(spack.build_systems.autotools.AutotoolsBuilder, SetupEnvi
         args.append("GTKDOC_REBASE={0}".format(true))
         args.extend(self.with_or_without("graphite2"))
         args.extend(self.with_or_without("coretext"))
+
+        ldflags = []
+        libs = []
+        for lib in ["bzip2", "zlib", "libpng"]:
+            spec = self.spec[lib]
+            if spec.satisfies("+shared") or spec.satisfies("libs=shared"):
+                continue
+            ldflags.append(spec.libs.ld_flags)
+            libs.append(spec.libs.link_flags)
+        cairo = self.spec["cairo"]
+        if cairo.satisfies("~shared"):
+            if cairo.satisfies("+fc"):
+                ldflags.append("-L%s" % cairo["fontconfig"].prefix.lib)
+                libs.append("-lfontconfig")
+            if cairo.satisfies("+ft"):
+                ldflags.append("-L%s" % cairo["freetype"].prefix.lib)
+                libs.append("-lfreetype")
+            if cairo.satisfies("+png"):
+                ldflags.append("-L%s" % cairo["libpng"].prefix.lib)
+                libs.append("-lpng")
+            ldflags.append("-L%s" % cairo["pixman"].prefix.lib)
+            libs.append("-lpixman-1")
+        if ldflags:
+            args.append("LDFLAGS=%s" % " ".join(ldflags))
+            args.append("LIBS=%s" % " ".join(libs))
 
         return args
