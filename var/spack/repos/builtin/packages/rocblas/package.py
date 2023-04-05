@@ -135,7 +135,6 @@ class Rocblas(CMakePackage):
 
     depends_on("googletest@1.10.0:", type="test")
     depends_on("netlib-lapack@3.7.1:", type="test")
-    depends_on("llvm-amdgpu +openmp", type="test")
 
     def check(self):
         if "@4.2.0:" in self.spec:
@@ -177,6 +176,7 @@ class Rocblas(CMakePackage):
         depends_on("hip@" + ver, when="@" + ver)
         depends_on("llvm-amdgpu@" + ver, type="build", when="@" + ver)
         depends_on("rocminfo@" + ver, type="build", when="@" + ver)
+        depends_on("rocm-openmp-extras@" + ver, type="test", when="@" + ver)
 
     depends_on("python@3.6:", type="build")
 
@@ -238,6 +238,7 @@ class Rocblas(CMakePackage):
     patch("0003-Fix-rocblas-gentest.patch", when="@4.2.0:5.1")
     # Finding Python package and set command python as python3
     patch("0004-Find-python.patch", when="@5.2.0:")
+    patch("0005-omp-for-test.patch")
 
     def setup_build_environment(self, env):
         env.set("CXX", self.spec["hip"].hipcc)
@@ -259,6 +260,7 @@ class Rocblas(CMakePackage):
             self.define("BUILD_CLIENTS_BENCHMARKS", "OFF"),
             self.define("BUILD_CLIENTS_SAMPLES", "OFF"),
             self.define("RUN_HEADER_TESTING", "OFF"),
+            self.define("ROCM_OPENMP_EXTRAS_DIR", self.spec["rocm-openmp-extras"].prefix),
             self.define_from_variant("BUILD_WITH_TENSILE", "tensile"),
         ]
         if self.run_tests:
