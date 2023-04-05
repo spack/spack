@@ -420,7 +420,7 @@ def version(
             )
         elif not isinstance(ver, (int, str)):
             raise VersionError(
-                f"{pkg.name}: declared version '{ver!r}' in package should be a string or int."
+                f"{pkg.name}: declared version '{ver!r}' in package should be a string."
             )
 
         # Declared versions are concrete
