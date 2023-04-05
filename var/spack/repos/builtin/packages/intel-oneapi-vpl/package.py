@@ -26,7 +26,7 @@ class IntelOneapiVpl(IntelOneApiLibraryPackage):
     )
 
     version(
-        "2023.2.0",
+        "2023.1.0",
         url="https://registrationcenter-download.intel.com/akdlm/IRC_NAS/e2f5aca0-c787-4e1d-a233-92a6b3c0c3f2/l_oneVPL_p_2023.1.0.43488_offline.sh",
         sha256="8cc6aa0464dc962def9f96e1f766b6d21745391398626121feeca132f34261be",
         expand=False,
