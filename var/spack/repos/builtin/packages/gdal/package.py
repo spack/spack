@@ -689,7 +689,7 @@ class AutotoolsBuilder(AutotoolsBuilder):
         ]
 
         args.extend(self.enable_or_disable("shared"))
-        args.extend(self.with_or_without("pic"))
+        args.append(self.with_or_without("pic"))
 
         # Renamed or modified flags
         if self.spec.satisfies("@3:"):
