@@ -43,7 +43,11 @@ class Libint(AutotoolsPackage, CMakePackage):
     version("1.1.6", sha256="f201b0c621df678cfe8bdf3990796b8976ff194aba357ae398f2f29b0e2985a6")
     version("1.1.5", sha256="ec8cd4a4ba1e1a98230165210c293632372f0e573acd878ed62e5ec6f8b6174b")
 
-    build_system(conditional("cmake", when="@2.7.0:"), conditional("autotools", when="@:2.6.0"))
+    build_system(
+        conditional("cmake", when="@2.7.0:"),
+        conditional("autotools", when="@:2.6.0"),
+        default="autotools",
+    )
 
     variant("debug", default=False, description="Enable building with debug symbols")
     variant("fortran", default=False, description="Build & install Fortran bindings")
