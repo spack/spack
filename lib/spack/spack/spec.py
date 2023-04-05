@@ -4546,10 +4546,10 @@ class Spec(object):
 
     def attach_git_version_lookup(self):
         # Add a git lookup method for GitVersions
-        if not self.name:
+        if not self.name or not hasattr(self, "git"):
             return
         for v in self.versions:
-            if isinstance(v, vn.GitVersion):
+            if isinstance(v, vn.GitVersion) and v._ref_version is None:
                 v.attach_git_lookup_from_package(self.fullname)
 
 
@@ -4602,6 +4602,7 @@ class SpecfileReaderBase:
 
         if "version" in node or "versions" in node:
             spec.versions = vn.VersionList.from_dict(node)
+            spec.attach_git_version_lookup()
 
         if "arch" in node:
             spec.architecture = ArchSpec.from_dict(node)

@@ -46,10 +46,10 @@ import spack.spec
 import spack.store
 import spack.util.lock as lk
 import spack.util.spack_json as sjson
+import spack.version as vn
 from spack.directory_layout import DirectoryLayoutError, InconsistentInstallDirectoryError
 from spack.error import SpackError
 from spack.util.crypto import bit_length
-from spack.version import Version
 
 # TODO: Provide an API automatically retyring a build after detecting and
 # TODO: clearing a failure.
@@ -60,7 +60,7 @@ _db_dirname = ".spack-db"
 # DB version.  This is stuck in the DB file to track changes in format.
 # Increment by one when the database format changes.
 # Versions before 5 were not integers.
-_db_version = Version("6")
+_db_version = vn.Version("6")
 
 # For any version combinations here, skip reindex when upgrading.
 # Reindexing can take considerable time and is not always necessary.
@@ -70,8 +70,8 @@ _skip_reindex = [
     # only difference is that v5 can contain "deprecated_for"
     # fields.  So, skip the reindex for this transition. The new
     # version is saved to disk the first time the DB is written.
-    (Version("0.9.3"), Version("5")),
-    (Version("5"), Version("6")),
+    (vn.Version("0.9.3"), vn.Version("5")),
+    (vn.Version("5"), vn.Version("6")),
 ]
 
 # Default timeout for spack database locks in seconds or None (no timeout).
@@ -105,7 +105,7 @@ default_install_record_fields = [
 
 
 def reader(version):
-    reader_cls = {Version("5"): spack.spec.SpecfileV1, Version("6"): spack.spec.SpecfileV3}
+    reader_cls = {vn.Version("5"): spack.spec.SpecfileV1, vn.Version("6"): spack.spec.SpecfileV3}
     return reader_cls[version]
 
 
@@ -695,6 +695,26 @@ class Database(object):
 
         # Build spec from dict first.
         spec = spec_reader.from_node_dict(spec_dict)
+
+        # Specs installed from a git sha without an associated spack version, that cannot
+        # be resolved anymore because the repo has been removed from its package.py, get
+        # assigned a `=develop` version.
+        # TODO: Remove this ad-hoc logic in Spack 0.21. It's mostly there so that these
+        # spack-versionless specs don't break basic operations. Since Spack 0.20, the
+        # resolved version is stored in the DB, so this is not needed for newer installs.
+        for v in spec.versions:
+            if not isinstance(v, vn.GitVersion):
+                continue
+            try:
+                v.ref_version
+            except RuntimeError:
+                v._ref_version = vn.Version("develop")
+                tty.warn(
+                    f"database: assigned version {spec.cformat('{version}')} to "
+                    f"{spec.cformat('{name}{/hash:7}')} because its git commit could not "
+                    f"be resolved. 1 silence this message."
+                )
+
         return spec
 
     def db_for_spec_hash(self, hash_key):
@@ -798,7 +818,7 @@ class Database(object):
         installs = db["installs"]
 
         # TODO: better version checking semantics.
-        version = Version(db["version"])
+        version = vn.Version(db["version"])
         spec_reader = reader(version)
         if version > _db_version:
             raise InvalidDatabaseVersionError(_db_version, version)
