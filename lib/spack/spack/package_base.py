@@ -188,8 +188,8 @@ class DetectablePackageMeta(object):
     def __init__(cls, name, bases, attr_dict):
         if hasattr(cls, "executables") and hasattr(cls, "libraries"):
             msg = "a package can have either an 'executables' or 'libraries' attribute"
-            msg += " [package '{0.name}' defines both]"
-            raise spack.error.SpackError(msg.format(cls))
+            msg += " [package '{0}' defines both]"
+            raise spack.error.SpackError(msg.format(name))
 
         # On windows, extend the list of regular expressions to look for
         # filenames ending with ".exe"
@@ -2475,16 +2475,6 @@ class PackageError(spack.error.SpackError):
 
     def __init__(self, message, long_msg=None):
         super(PackageError, self).__init__(message, long_msg)
-
-
-class PackageVersionError(PackageError):
-    """Raised when a version URL cannot automatically be determined."""
-
-    def __init__(self, version):
-        super(PackageVersionError, self).__init__(
-            "Cannot determine a URL automatically for version %s" % version,
-            "Please provide a url for this version in the package.py file.",
-        )
 
 
 class NoURLError(PackageError):
