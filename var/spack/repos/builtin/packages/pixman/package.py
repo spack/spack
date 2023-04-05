@@ -31,6 +31,9 @@ class Pixman(AutotoolsPackage):
     depends_on("bison@3:", type="build")
     depends_on("libpng")
 
+    variant("shared", default=True, description="Build shared library")
+    variant("pic", default=False, description="Enable position-independent code")
+
     # As discussed here:
     # https://bugs.freedesktop.org/show_bug.cgi?id=104886
     # __builtin_shuffle was removed in clang 5.0.
@@ -60,7 +63,7 @@ class Pixman(AutotoolsPackage):
 
     @property
     def libs(self):
-        return find_libraries("libpixman-1", self.prefix, shared=True, recursive=True)
+        return find_libraries("libpixman-1", self.prefix, shared=self.spec.satisfies("+shared"), recursive=True)
 
     def configure_args(self):
         args = ["--enable-libpng", "--disable-gtk"]
@@ -77,5 +80,8 @@ class Pixman(AutotoolsPackage):
         # The Fujitsu compiler does not support assembler macros.
         if self.spec.satisfies("%fj"):
             args.append("--disable-arm-a64-neon")
+
+        args.extend(self.enable_or_disable("shared"))
+        args.extend(self.with_or_without("pic"))
 
         return args
