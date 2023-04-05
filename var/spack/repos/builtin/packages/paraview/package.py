@@ -214,7 +214,7 @@ class Paraview(CMakePackage, CudaPackage, ROCmPackage):
     depends_on("hip@5.2:", when="+rocm")
     for target in ROCmPackage.amdgpu_targets:
         depends_on(
-            "kokkos +rocm amdgpu_target={0}".format(target),
+            "kokkos@:3.7.01 +rocm amdgpu_target={0}".format(target),
             when="+rocm amdgpu_target={0}".format(target),
         )
 
