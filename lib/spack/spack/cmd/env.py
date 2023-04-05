@@ -677,14 +677,21 @@ class MakeTargetVisitor(object):
         return ""
 
     def accept(self, node):
-        fmt = "{name}-{version}-{hash}"
         spec_str = node.edge.spec.format(
             "{name}{@version}{%compiler}{variants}{arch=architecture}"
         )
         buildcache_flag = self.build_cache_flag(node.depth)
-        prereqs = " ".join([self.target(_fmt_spec_make_target(dep.spec)) for dep in self.neighbors(node)])
+        prereqs = " ".join(
+            [self.target(_fmt_spec_make_target(dep.spec)) for dep in self.neighbors(node)]
+        )
         self.adjacency_list.append(
-            (_fmt_spec_make_target(node.edge.spec), prereqs, node.edge.spec.dag_hash(), spec_str, buildcache_flag)
+            (
+                _fmt_spec_make_target(node.edge.spec),
+                prereqs,
+                node.edge.spec.dag_hash(),
+                spec_str,
+                buildcache_flag,
+            )
         )
 
         # We already accepted this

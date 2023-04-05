@@ -3120,7 +3120,7 @@ def test_environment_depfile_makefile(depfile_flags, expected_installs, tmpdir, 
     assert len(specs_that_make_would_install) == len(expected_installs)
 
 
-def test_environment_depfile_makefile(tmpdir, mock_packages, monkeypatch):
+def test_environment_depfile_spec_format_special_chars(tmpdir, mock_packages, monkeypatch):
     env("create", "test")
     make = Executable("make")
     makefile = str(tmpdir.join("Makefile"))
@@ -3146,7 +3146,7 @@ def test_environment_depfile_makefile(tmpdir, mock_packages, monkeypatch):
             makefile,
             "--make-disable-jobserver",
             "--make-prefix=prefix",
-            "--use-buildcache=never"
+            "--use-buildcache=never",
         )
 
     with open(makefile, "r") as f:
