@@ -12,7 +12,6 @@ import llnl.util.tty as tty
 import llnl.util.tty.color as color
 from llnl.util.filesystem import working_dir
 
-import spack.bootstrap
 import spack.config
 import spack.paths
 import spack.repo
