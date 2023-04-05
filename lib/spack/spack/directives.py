@@ -32,7 +32,7 @@ import collections.abc
 import functools
 import os.path
 import re
-from typing import List, Optional, Set
+from typing import List, Optional, Set, Union
 
 import llnl.util.lang
 import llnl.util.tty.color
@@ -324,7 +324,7 @@ directive = DirectiveMeta.directive
 
 @directive("versions")
 def version(
-    ver: str,
+    ver: Union[str, int],
     # this positional argument is deprecated, use sha256=... instead
     checksum: Optional[str] = None,
     *,
@@ -413,19 +413,9 @@ def _execute_version(pkg, ver, **kwargs):
             "(see '{1}' version).".format(pkg.name, ver)
         )
 
-    if isinstance(ver, float):
-        raise VersionError(
-            f"{pkg.name}: declared version '{ver}' in package should be a string. "
-            "floating point numbers are ambiguous."
-        )
-    elif not isinstance(ver, (int, str)):
-        raise VersionError(
-            f"{pkg.name}: declared version '{ver!r}' in package should be a string."
-        )
-
     if not isinstance(ver, (int, str)):
         raise VersionError(
-            f"{pkg.name}: declared version '{ver!r}' in package should be a string."
+            f"{pkg.name}: declared version '{ver!r}' in package should be a string or int."
         )
 
     # Declared versions are concrete

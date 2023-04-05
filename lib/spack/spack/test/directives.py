@@ -95,7 +95,7 @@ def test_version_type_validation():
 
     package = namedtuple("package", ["name"])
 
-    msg = r"python: declared version '.+' in package should be a string\."
+    msg = r"python: declared version '.+' in package should be a string or int\."
 
     # Pass a float
     with pytest.raises(spack.version.VersionError, match=msg):
