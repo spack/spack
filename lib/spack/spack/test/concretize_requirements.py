@@ -158,7 +158,6 @@ def test_git_user_supplied_reference_satisfaction(
     just_ver = Spec("v@=2.2")
     hash_eq_other_ver = Spec(f"v@{commits[0]}=2.3")
 
-    # No associated Git repository, there is no means to compare
     assert not hash_eq_ver == just_hash
     assert not hash_eq_ver.satisfies(just_hash)
     assert not hash_eq_ver.intersects(just_hash)

@@ -4546,7 +4546,7 @@ class Spec(object):
 
     def attach_git_version_lookup(self):
         # Add a git lookup method for GitVersions
-        if not self.name or not hasattr(self, "git"):
+        if not self.name:
             return
         for v in self.versions:
             if isinstance(v, vn.GitVersion) and v._ref_version is None:
