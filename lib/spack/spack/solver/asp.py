@@ -2261,29 +2261,30 @@ def _specs_from_requires(pkg_name, section):
     version_specs = []
     for spec in extracted_specs:
         try:
-            vspecs = [spec]
-
             ver = spec.version
-            # Prefer spec's name if it exists, in case the spec is
-            # requiring a specific implementation inside of a virtual section
-            # e.g. packages:mpi:require:openmpi@4.0.1
-            pkg_class = spack.repo.path.get_pkg_class(spec.name or pkg_name)
-            satisfying_versions = list(v for v in pkg_class.versions if v.satisfies(ver))
-            if not isinstance(spec.version, spack.version.GitVersion):
-                if not satisfying_versions:
-                    raise spack.config.ConfigError(
-                        "{0} assigns a version that is not defined in"
-                        " the associated package.py".format(str(spec))
-                    )
-                if ver not in pkg_class.versions:
-                    ordered_satisfying_versions = sorted(satisfying_versions, reverse=True)
-                    vspecs = list(
-                        spack.spec.Spec("@{0}".format(x)) for x in ordered_satisfying_versions
-                    )
-
-            version_specs.extend(vspecs)
         except spack.error.SpecError:
-            pass
+            continue
+
+        vspecs = [spec]
+
+        # Prefer spec's name if it exists, in case the spec is
+        # requiring a specific implementation inside of a virtual section
+        # e.g. packages:mpi:require:openmpi@4.0.1
+        pkg_class = spack.repo.path.get_pkg_class(spec.name or pkg_name)
+        satisfying_versions = list(v for v in pkg_class.versions if v.satisfies(ver))
+        if not isinstance(spec.version, spack.version.GitVersion):
+            if not satisfying_versions:
+                raise spack.config.ConfigError(
+                    "{0} assigns a version that is not defined in"
+                    " the associated package.py".format(str(spec))
+                )
+            if ver not in pkg_class.versions:
+                ordered_satisfying_versions = sorted(satisfying_versions, reverse=True)
+                vspecs = list(
+                    spack.spec.Spec("@{0}".format(x)) for x in ordered_satisfying_versions
+                )
+
+        version_specs.extend(vspecs)
 
     return version_specs
 
