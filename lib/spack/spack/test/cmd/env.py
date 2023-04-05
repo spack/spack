@@ -3158,7 +3158,7 @@ def test_environment_depfile_spec_format_special_chars(tmpdir, mock_packages, mo
         if "githash=version" in line:
             assert re.search("SPEC = dtlink1-githash=version-spackhash$", line)
 
-    assert "dtlink1_githash_version_spackhash" in makefile_contents
+    assert "dtlink1-githash_version-spackhash" in makefile_contents
 
 
 def test_environment_depfile_out(tmpdir, mock_packages):

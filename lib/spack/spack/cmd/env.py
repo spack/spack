@@ -699,13 +699,18 @@ class MakeTargetVisitor(object):
 
 
 def _fmt_spec_make_target(spec):
-    """According to https://www.gnu.org/software/autoconf/manual/autoconf-2.63/html_node/Special-Chars-in-Names.html
-    a target should only consist of "ASCII letters and digits, `.', and `_'.".
+    """Create a unique identifier string from a Spec to use as a make target.
+
+    Many characters in a typical Spec formatted string trigger special
+    behavior in `make`, including '=', and '%'.
+
+    Note that '-' is an acceptable character but may cause confusion when
+    invoking make from the shell; it is allowed here though.
     """
     if not isinstance(spec, spack.spec.Spec):
         raise ValueError("Internal error: got non-spec object: {0}".format(spec))
     tgt = spec.format("{name}-{version}-{hash}")
-    return re.sub(r"[^A-Za-z0-9_.]", "_", tgt)
+    return re.sub(r"[^A-Za-z0-9_.-]", "_", tgt)
 
 
 def env_depfile(args):
