@@ -70,6 +70,7 @@ class Libint(AutotoolsPackage, CMakePackage):
     depends_on("libtool", type="build")
     depends_on("python", type="build")
     depends_on("gnuconfig", type="build")  # macOS
+    depends_on("cmake", type="build", when="build_system=cmake")
 
     depends_on("eigen", when="@2.7.0: +cxx")
 
