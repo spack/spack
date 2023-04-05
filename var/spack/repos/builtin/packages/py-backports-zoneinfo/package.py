@@ -14,6 +14,4 @@ class PyBackportsZoneinfo(PythonPackage):
 
     version("0.2.1", sha256="fadbfe37f74051d024037f223b8e001611eac868b5c5b06144ef4d8b799862f2")
 
-    depends_on("python@3.6:", type=("build", "run"))
     depends_on("py-setuptools@40.8.0:", type="build")
-    depends_on("py-importlib-resources", type=("build", "run"), when="^python@:3.6")
