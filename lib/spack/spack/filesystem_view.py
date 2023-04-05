@@ -43,6 +43,7 @@ __all__ = ["FilesystemView", "YamlFilesystemView"]
 
 
 _projections_path = ".spack/projections.yaml"
+_metadata_path = ".spack/metadata.yaml"
 
 
 def view_symlink(src, dst, **kwargs):
@@ -155,6 +156,7 @@ class FilesystemView(object):
         self.layout = layout
 
         self.projections = kwargs.get("projections", {})
+        self.metadata = kwargs.get("metadata", {})
 
         self.ignore_conflicts = kwargs.get("ignore_conflicts", False)
         self.verbose = kwargs.get("verbose", False)
@@ -284,7 +286,33 @@ class YamlFilesystemView(FilesystemView):
                 msg += " which does not match projections passed manually."
                 raise ConflictingProjectionsError(msg)
 
+        self.metadata_path = os.path.join(self._root, _metadata_path)
+        if not self.metadata:
+            self.projections = self.read_metadata()
+        elif not os.path.exists(self.metadata_path):
+            self.write_metadata()
+        else:
+            if self.metadata != self.read_metadata():
+                msg = f"View at {self._root} has metadata file"
+                msg += " which does not match metadata passed manually."
+                raise ConflictingMetadataError(msg)
+
         self._croot = colorize_root(self._root) + " "
+
+    def write_metadata(self):
+        if self.metadata:
+            mkdirp(os.path.dirname(self.metadata_path))
+            with open(self.metadata_path, "w") as f:
+                f.write(s_yaml.dump_config({"metadata": self.metadata}))
+
+    def read_metadata(self):
+        if os.path.exists(self.metadata_path):
+            with open(self.metadata_path, "r") as f:
+                # no schema as this is not user modified
+                metadata_data = s_yaml.load(f)
+                return metadata_data["metadata"]
+        else:
+            return {}
 
     def write_projections(self):
         if self.projections:
@@ -848,3 +876,7 @@ def get_dependencies(specs):
 
 class ConflictingProjectionsError(SpackError):
     """Raised when a view has a projections file and is given one manually."""
+
+
+class ConflictingMetadataError(SpackError):
+    """Raised when a view has a metadata file and is given one manually."""
