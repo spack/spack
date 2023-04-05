@@ -430,19 +430,6 @@ class PackageViewMixin(object):
         view.remove_files(merge_map.values())
 
 
-def test_log_pathname(test_stage, spec):
-    """Build the pathname of the test log file
-
-    Args:
-        test_stage (str): path to the test stage directory
-        spec (spack.spec.Spec): instance of the spec under test
-
-    Returns:
-        (str): the pathname of the test log file
-    """
-    return os.path.join(test_stage, "test-{0}-out.txt".format(TestSuite.test_pkg_id(spec)))
-
-
 Pb = TypeVar("Pb", bound="PackageBase")
 
 

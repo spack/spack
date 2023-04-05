@@ -29,7 +29,7 @@ def ensure_results(filename, expected):
         assert have
 
 
-def test_test_log_pathname(mock_packages, config):
+def test_test_log_name(mock_packages, config):
     """Ensure test log path is reasonable."""
     spec = spack.spec.Spec("libdwarf").concretized()
 
