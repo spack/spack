@@ -714,11 +714,11 @@ class Database(object):
         try:
             v.ref_version
         except vn.VersionLookupError:
+            before = spec.cformat("{name}{@version}{/hash:7}")
             v._ref_version = vn.StandardVersion.from_string("develop")
             tty.warn(
-                f"database: git sha of {spec.cformat('{name}{version}{/hash:7}')} could not "
-                "be resolved to a spack version. Remove ths spec by hash to silence this "
-                "message."
+                f"database: the git sha of {before} could not be resolved to spack version; "
+                f"it has been replaced by {spec.cformat('{name}{@version}{/hash:7}')}."
             )
 
     def db_for_spec_hash(self, hash_key):
