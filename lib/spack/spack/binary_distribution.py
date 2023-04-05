@@ -24,6 +24,7 @@ import urllib.request
 import warnings
 from contextlib import closing, contextmanager
 from gzip import GzipFile
+from typing import Union
 from urllib.error import HTTPError, URLError
 
 import ruamel.yaml as yaml
@@ -502,7 +503,9 @@ def _binary_index():
 
 
 #: Singleton binary_index instance
-binary_index = llnl.util.lang.Singleton(_binary_index)
+binary_index: Union[BinaryCacheIndex, llnl.util.lang.Singleton] = llnl.util.lang.Singleton(
+    _binary_index
+)
 
 
 class NoOverwriteException(spack.error.SpackError):
@@ -1796,7 +1799,15 @@ def relocate_package(spec, allow_root):
         relocate.relocate_text(text_names, prefix_to_prefix_text)
 
         # relocate the install prefixes in binary files including dependencies
-        relocate.relocate_text_bin(files_to_relocate, prefix_to_prefix_bin)
+        changed_files = relocate.relocate_text_bin(files_to_relocate, prefix_to_prefix_bin)
+
+        # Add ad-hoc signatures to patched macho files when on macOS.
+        if "macho" in platform.binary_formats and sys.platform == "darwin":
+            codesign = which("codesign")
+            if not codesign:
+                return
+            for binary in changed_files:
+                codesign("-fs-", binary)
 
     # If we are installing back to the same location
     # relocate the sbang location if the spack directory changed
@@ -2015,7 +2026,7 @@ def install_root_node(spec, allow_root, unsigned=False, force=False, sha256=None
     with spack.util.path.filter_padding():
         tty.msg('Installing "{0}" from a buildcache'.format(spec.format()))
         extract_tarball(spec, download_result, allow_root, unsigned, force)
-        spack.hooks.post_install(spec)
+        spack.hooks.post_install(spec, False)
         spack.store.db.add(spec, spack.store.layout)
 
 

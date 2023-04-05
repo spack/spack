@@ -22,7 +22,7 @@ class AoclSparse(CMakePackage):
     """
 
     _name = "aocl-sparse"
-    homepage = "https://developer.amd.com/amd-aocl/aocl-sparse/"
+    homepage = "https://www.amd.com/en/developer/aocl/sparse.html"
     url = "https://github.com/amd/aocl-sparse/archive/3.0.tar.gz"
     git = "https://github.com/amd/aocl-sparse.git"
 

@@ -3,6 +3,7 @@ From: {{ build.image }}
 Stage: build
 
 %post
+{% block build_stage %}
 {% if os_packages_build.list %}
   # Update, install and cleanup of system packages needed at build-time
   {% if os_package_update %}
@@ -20,10 +21,14 @@ EOF
 
   # Install all the required software
   . /opt/spack/share/spack/setup-env.sh
-  spack env activate .
-  spack install --fail-fast
+  spack -e . concretize
+{% if depfile %}
+  spack -e . env depfile -o Makefile
+  make -j $(nproc)
+{% else %}
+  spack -e . install
+{% endif %}
   spack gc -y
-  spack env deactivate
   spack env activate --sh -d . >> {{ paths.environment }}/environment_modifications.sh
 {% if strip %}
 
@@ -37,7 +42,7 @@ EOF
 {% if extra_instructions.build %}
 {{ extra_instructions.build }}
 {% endif %}
-
+{% endblock build_stage %}
 {% if apps %}
 {% for application, help_text in apps.items() %}
 
@@ -61,6 +66,7 @@ Stage: final
   {{ paths.environment }}/environment_modifications.sh {{ paths.environment }}/environment_modifications.sh
 
 %post
+{% block final_stage %}
 {% if os_packages_final.list %}
   # Update, install and cleanup of system packages needed at run-time
   {% if os_package_update %}
@@ -74,6 +80,7 @@ Stage: final
 {% if extra_instructions.final %}
 {{ extra_instructions.final }}
 {% endif %}
+{% endblock final_stage %}
 {% if runscript %}
 
 %runscript

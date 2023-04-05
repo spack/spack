@@ -108,6 +108,49 @@ class TestTcl(object):
         assert len([x for x in content if "module load foo/bar" in x]) == 1
         assert len([x for x in content if "setenv LIBDWARF_ROOT" in x]) == 1
 
+    def test_prepend_path_separator(self, modulefile_content, module_configuration):
+        """Tests that we can use custom delimiters to manipulate path lists."""
+
+        module_configuration("module_path_separator")
+        content = modulefile_content("module-path-separator")
+
+        assert len([x for x in content if 'append-path --delim ":" COLON "foo"' in x]) == 1
+        assert len([x for x in content if 'prepend-path --delim ":" COLON "foo"' in x]) == 1
+        assert len([x for x in content if 'remove-path --delim ":" COLON "foo"' in x]) == 1
+        assert len([x for x in content if 'append-path --delim ";" SEMICOLON "bar"' in x]) == 1
+        assert len([x for x in content if 'prepend-path --delim ";" SEMICOLON "bar"' in x]) == 1
+        assert len([x for x in content if 'remove-path --delim ";" SEMICOLON "bar"' in x]) == 1
+        assert len([x for x in content if 'append-path --delim " " SPACE "qux"' in x]) == 1
+        assert len([x for x in content if 'remove-path --delim " " SPACE "qux"' in x]) == 1
+
+    def test_help_message(self, modulefile_content, module_configuration):
+        """Tests the generation of module help message."""
+
+        module_configuration("autoload_direct")
+        content = modulefile_content("mpileaks target=core2")
+
+        help_msg = (
+            "proc ModulesHelp { } {"
+            '    puts stderr "Name   : mpileaks"'
+            '    puts stderr "Version: 2.3"'
+            '    puts stderr "Target : core2"'
+            '    puts stderr ""'
+            '    puts stderr "Mpileaks is a mock package that passes audits"'
+            "}"
+        )
+        assert help_msg in "".join(content)
+
+        content = modulefile_content("libdwarf target=core2")
+
+        help_msg = (
+            "proc ModulesHelp { } {"
+            '    puts stderr "Name   : libdwarf"'
+            '    puts stderr "Version: 20130729"'
+            '    puts stderr "Target : core2"'
+            "}"
+        )
+        assert help_msg in "".join(content)
+
     @pytest.mark.parametrize("config_name", ["exclude", "blacklist"])
     def test_exclude(self, modulefile_content, module_configuration, config_name):
         """Tests excluding the generation of selected modules."""
@@ -313,9 +356,7 @@ class TestTcl(object):
     @pytest.mark.regression("4400")
     @pytest.mark.db
     @pytest.mark.parametrize("config_name", ["exclude_implicits", "blacklist_implicits"])
-    def test_exclude_implicits(
-        self, modulefile_content, module_configuration, database, config_name
-    ):
+    def test_exclude_implicits(self, module_configuration, database, config_name):
         module_configuration(config_name)
 
         # mpileaks has been installed explicitly when setting up
@@ -331,6 +372,23 @@ class TestTcl(object):
         for item in callpath_specs:
             writer = writer_cls(item, "default")
             assert writer.conf.excluded
+
+    @pytest.mark.regression("12105")
+    @pytest.mark.parametrize("config_name", ["exclude_implicits", "blacklist_implicits"])
+    def test_exclude_implicits_with_arg(self, module_configuration, config_name):
+        module_configuration(config_name)
+
+        # mpileaks is defined as explicit with explicit argument set on writer
+        mpileaks_spec = spack.spec.Spec("mpileaks")
+        mpileaks_spec.concretize()
+        writer = writer_cls(mpileaks_spec, "default", True)
+        assert not writer.conf.excluded
+
+        # callpath is defined as implicit with explicit argument set on writer
+        callpath_spec = spack.spec.Spec("callpath")
+        callpath_spec.concretize()
+        writer = writer_cls(callpath_spec, "default", False)
+        assert writer.conf.excluded
 
     @pytest.mark.regression("9624")
     @pytest.mark.db
