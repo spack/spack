@@ -192,3 +192,80 @@ def test_cache_extra_sources(install_mockery, spec, sources, extras, expect):
 
     # Perform a little cleanup
     shutil.rmtree(os.path.dirname(source_path))
+
+
+def test_package_exes_and_libs():
+    with pytest.raises(spack.error.SpackError, match="defines both"):
+
+        class BadDetectablePackage(spack.package.Package):
+            executables = ["findme"]
+            libraries = ["libFindMe.a"]
+
+
+def test_package_url_and_urls():
+    class URLsPackage(spack.package.Package):
+        url = "https://www.example.com/url-package-1.0.tgz"
+        urls = ["https://www.example.com/archive"]
+
+    s = spack.spec.Spec("a")
+    with pytest.raises(ValueError, match="defines both"):
+        _ = URLsPackage(s)
+
+
+def test_package_license():
+    class LicensedPackage(spack.package.Package):
+        extendees = None  # currently a required attribute for is_extension()
+        license_files = None
+
+    s = spack.spec.Spec("a")
+    pkg = LicensedPackage(s)
+    assert pkg.global_license_file is None
+
+    pkg.license_files = ["license.txt"]
+    assert os.path.basename(pkg.global_license_file) == pkg.license_files[0]
+
+
+class BaseTestPackage(spack.package.Package):
+    extendees = None  # currently a required attribute for is_extension()
+
+
+def test_package_version_fails():
+    s = spack.spec.Spec("a")
+    pkg = BaseTestPackage(s)
+    with pytest.raises(ValueError, match="does not have a concrete version"):
+        _ = pkg.version()
+
+
+def test_package_tester_fails():
+    s = spack.spec.Spec("a")
+    pkg = BaseTestPackage(s)
+    with pytest.raises(ValueError, match="without concrete version"):
+        _ = pkg.tester()
+
+
+def test_package_fetcher_fails():
+    s = spack.spec.Spec("a")
+    pkg = BaseTestPackage(s)
+    with pytest.raises(ValueError, match="without concrete version"):
+        _ = pkg.fetcher
+
+
+def test_package_no_extendees():
+    s = spack.spec.Spec("a")
+    pkg = BaseTestPackage(s)
+    assert pkg.extendee_args is None
+
+
+def test_package_test_no_compilers(mock_packages, monkeypatch, capfd):
+    def compilers(compiler, arch_spec):
+        return None
+
+    monkeypatch.setattr(spack.compilers, "compilers_for_spec", compilers)
+
+    s = spack.spec.Spec("a")
+    pkg = BaseTestPackage(s)
+    pkg.test_requires_compiler = True
+    pkg.do_test()
+    error = capfd.readouterr()[1]
+    assert "Skipping tests for package" in error
+    assert "test requires missing compiler" in error
