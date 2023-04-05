@@ -6,6 +6,7 @@ import filecmp
 import glob
 import io
 import os
+import re
 import shutil
 import sys
 from argparse import Namespace
@@ -3119,13 +3120,23 @@ def test_environment_depfile_makefile(depfile_flags, expected_installs, tmpdir, 
     assert len(specs_that_make_would_install) == len(expected_installs)
 
 
-def test_environment_depfile_makefile(tmpdir, mock_packages):
+def test_environment_depfile_makefile(tmpdir, mock_packages, monkeypatch):
     env("create", "test")
     make = Executable("make")
     makefile = str(tmpdir.join("Makefile"))
     with ev.read("test"):
         add("dttop")
         concretize()
+
+    orig_format = spack.spec.Spec.format
+
+    def _contrived_spec_format(obj, format_str):
+        if obj.name == "dtlink1":
+            return "dtlink1-githash=version-spackhash"
+        else:
+            return orig_format(obj, format_str)
+
+    monkeypatch.setattr(spack.spec.Spec, "format", _contrived_spec_format)
 
     # Disable jobserver so we can do a dry run.
     with ev.read("test"):
@@ -3138,8 +3149,16 @@ def test_environment_depfile_makefile(tmpdir, mock_packages):
             "--use-buildcache=never"
         )
 
-    # List all targets
-    out = make("-p", makefile, output=str)
+    with open(makefile, "r") as f:
+        makefile_lines = f.readlines()
+
+    makefile_contents = "\n".join(makefile_lines)
+
+    for line in makefile_lines:
+        if "githash=version" in line:
+            assert re.search("SPEC = dtlink1-githash=version-spackhash$", line)
+
+    assert "dtlink1_githash_version_spackhash" in makefile_contents
 
 
 def test_environment_depfile_out(tmpdir, mock_packages):
