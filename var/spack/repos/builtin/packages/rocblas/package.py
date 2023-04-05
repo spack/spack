@@ -176,15 +176,7 @@ class Rocblas(CMakePackage):
         depends_on("hip@" + ver, when="@" + ver)
         depends_on("llvm-amdgpu@" + ver, type="build", when="@" + ver)
         depends_on("rocminfo@" + ver, type="build", when="@" + ver)
-    for ver in [
-        "5.2.0",
-        "5.2.1",
-        "5.2.3",
-        "5.3.0",
-        "5.3.3",
-        "5.4.0",
-        "5.4.3",
-    ]:
+    for ver in ["5.2.0", "5.2.1", "5.2.3", "5.3.0", "5.3.3", "5.4.0", "5.4.3"]:
         depends_on("rocm-openmp-extras@" + ver, type="test", when="@" + ver)
 
     depends_on("python@3.6:", type="build")
