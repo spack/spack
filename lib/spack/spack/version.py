@@ -490,8 +490,10 @@ class GitVersion(ConcreteVersion):
         # So when a lookup is attached, we require the resolved version to be printed.
         # But for standalone git versions that don't have a repo attached, it would still
         # be nice if we could print @<hash>.
-        if self._ref_version or self._ref_lookup:
+        try:
             s += f"={self.ref_version}"
+        except VersionLookupError:
+            pass
         return s
 
     def __repr__(self):
@@ -1199,10 +1201,11 @@ class CommitLookup(object):
             import spack.repo  # break cycle
 
             try:
-                self._pkg = spack.repo.path.get_pkg_class(self.pkg_name)
-                self._pkg.git
+                pkg = spack.repo.path.get_pkg_class(self.pkg_name)
+                pkg.git
             except (spack.repo.RepoError, AttributeError) as e:
                 raise VersionLookupError(f"Couldn't get the git repo for {self.pkg_name}") from e
+            self._pkg = pkg
         return self._pkg
 
     @property

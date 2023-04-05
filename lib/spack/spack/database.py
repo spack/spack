@@ -840,9 +840,11 @@ class Database(object):
                 )
 
         def invalid_record(hash_key, error):
-            msg = "Invalid record in Spack database: " "hash: %s, cause: %s: %s"
-            msg %= (hash_key, type(error).__name__, str(error))
-            raise CorruptDatabaseError(msg, self._index_path)
+            return CorruptDatabaseError(
+                f"Invalid record in Spack database: hash: {hash_key}, cause: "
+                f"{type(error).__name__}: {error}",
+                self._index_path,
+            )
 
         # Build up the database in three passes:
         #
@@ -870,7 +872,7 @@ class Database(object):
                 if not spec.external and "installed" in rec and rec["installed"]:
                     installed_prefixes.add(rec["path"])
             except Exception as e:
-                invalid_record(hash_key, e)
+                raise invalid_record(hash_key, e) from e
 
         # Pass 2: Assign dependencies once all specs are created.
         for hash_key in data:
@@ -879,7 +881,7 @@ class Database(object):
             except MissingDependenciesError:
                 raise
             except Exception as e:
-                invalid_record(hash_key, e)
+                raise invalid_record(hash_key, e) from e
 
         # Pass 3: Mark all specs concrete.  Specs representing real
         # installations must be explicitly marked.
