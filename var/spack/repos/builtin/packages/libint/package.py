@@ -70,6 +70,7 @@ class Libint(AutotoolsPackage, CMakePackage):
     depends_on("automake", type="build")
     depends_on("libtool", type="build")
     depends_on("python", type="build")
+    depends_on("gnuconfig", type="build")  # macOS
 
     depends_on("eigen", when="@2.7.0: +cxx")
 
@@ -261,18 +262,21 @@ class AutotoolsBuilder(spack.build_systems.autotools.AutotoolsBuilder):
 class CMakeBuilder(
     # ./configure is sensitive to the oder of declatation
     # Devlaring CMakeBuilder first, does not seem to trigger set_configure_or_die
-    spack.build_systems.autotools.AutotoolsBuilder, spack.build_systems.cmake.CMakeBuilder
+    spack.build_systems.autotools.AutotoolsBuilder,
+    spack.build_systems.cmake.CMakeBuilder,
 ):
     phases = ("autoreconf", "configure", "build", "cmake", "cmake_build", "install")
 
     force_autoreconf = True
+
+    root_cmakelists_dir = "generated"
 
     def autoreconf(self, pkg, spec, prefix):
         print(">>> PREFIX:", prefix)
         print(">>> CONFIGURE_ABS_PATH:", self.configure_abs_path)
         print(">>> BUILD_DIRECTORY:", self.build_directory)
         which("bash")("autogen.sh")
-        filter_file(r"^(export::.*)\s+tgz$", r"\1", "export/Makefile")
+        filter_file(r"^(export::.*)\s+tgz( .*)$", r"\1\2", "export/Makefile")
 
     @property
     def optflags(self):
@@ -321,15 +325,15 @@ class CMakeBuilder(
         ]
         return args
 
-    def cmake(self, pkg, spec, prefix):
-        print(">>> WORKDIR:", os.path.join(self.build_directory, "generated"))
-        with working_dir(os.path.join(self.build_directory, "generated")):
-            super(spack.build_systems.cmake.CMakeBuilder, self).cmake(pkg, spec, prefix)
+    # def cmake(self, pkg, spec, prefix):
+    #    print(">>> WORKDIR:", os.path.join(self.build_directory, "generated"))
+    #    with working_dir(os.path.join(self.build_directory, "generated")):
+    #        super(spack.build_systems.cmake.CMakeBuilder, self).cmake(pkg, spec, prefix)
 
     def cmake_build(self, pkg, spec, prefix):
-        with working_dir(os.path.join(self.build_directory, "generated")):
-            super(spack.build_systems.cmake.CMakeBuilder, self).build(pkg, spec, prefix)
+        # with working_dir(os.path.join(self.build_directory, "generated")):
+        spack.build_systems.cmake.CMakeBuilder.build(self, pkg, spec, prefix)
 
-    def install(self, pkg, spec, prefix):
-        with working_dir(os.path.join(self.build_directory, "generated")):
-            super(spack.build_system.cmake.CMakeBuilder, self).install(pkg, spec, prefix)
+    # def install(self, pkg, spec, prefix):
+    #    with working_dir(os.path.join(self.build_directory, "generated")):
+    #        super(spack.build_system.cmake.CMakeBuilder, self).install(pkg, spec, prefix)
