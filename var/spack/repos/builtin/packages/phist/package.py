@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -24,7 +24,7 @@ class Phist(CMakePackage):
     url = "https://bitbucket.org/essex/phist/get/phist-1.11.2.tar.gz"
     git = "https://bitbucket.org/essex/phist.git"
 
-    maintainers = ["jthies"]
+    maintainers("jthies")
     tags = ["e4s"]
 
     # phist is a required part of spack GitLab CI pipelines. In them, mpich is requested

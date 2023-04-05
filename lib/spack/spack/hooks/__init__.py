@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -12,7 +12,7 @@ Hooks are not executed in any particular order.
 Currently the following hooks are supported:
 
     * pre_install(spec)
-    * post_install(spec)
+    * post_install(spec, explicit)
     * pre_uninstall(spec)
     * post_uninstall(spec)
     * on_install_start(spec)

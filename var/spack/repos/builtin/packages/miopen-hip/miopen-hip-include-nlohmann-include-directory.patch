@@ -1,0 +1,12 @@
+diff --git a/src/CMakeLists.txt b/src/CMakeLists.txt
+index ad4f043..bab85dc 100644
+--- a/src/CMakeLists.txt
++++ b/src/CMakeLists.txt
+@@ -643,6 +643,7 @@ set(MIOPEN_CK_LINK_FLAGS composable_kernel::device_operations hip::host)
+ endif()
+ 
+ target_include_directories(MIOpen SYSTEM PUBLIC $<BUILD_INTERFACE:${HALF_INCLUDE_DIR}>)
++target_include_directories(MIOpen SYSTEM PUBLIC "${NLOHMANN_JSON_INCLUDE}")
+ target_include_directories(MIOpen SYSTEM PRIVATE ${BZIP2_INCLUDE_DIR})
+ target_link_libraries(MIOpen PRIVATE ${CMAKE_THREAD_LIBS_INIT} ${BZIP2_LIBRARIES} ${MIOPEN_CK_LINK_FLAGS})
+ generate_export_header(MIOpen

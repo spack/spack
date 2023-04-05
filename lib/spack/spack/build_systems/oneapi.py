@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -10,6 +10,7 @@ from os.path import basename, dirname, isdir
 
 from llnl.util.filesystem import find_headers, find_libraries, join_path
 
+from spack.directives import conflicts, variant
 from spack.util.environment import EnvironmentModifications
 from spack.util.executable import Executable
 
@@ -24,6 +25,19 @@ class IntelOneApiPackage(Package):
     # oneAPI license does not allow mirroring outside of the
     # organization (e.g. University/Company).
     redistribute_source = False
+
+    for c in [
+        "target=ppc64:",
+        "target=ppc64le:",
+        "target=aarch64:",
+        "platform=darwin:",
+        "platform=cray:",
+        "platform=windows:",
+    ]:
+        conflicts(c, msg="This package in only available for x86_64 and Linux")
+
+    # Add variant to toggle environment modifications from vars.sh
+    variant("envmods", default=True, description="Toggles environment modifications")
 
     @staticmethod
     def update_description(cls):
@@ -103,11 +117,13 @@ class IntelOneApiPackage(Package):
 
            $ source {prefix}/{component}/{version}/env/vars.sh
         """
-        env.extend(
-            EnvironmentModifications.from_sourcing_file(
-                join_path(self.component_prefix, "env", "vars.sh")
+        # Only if environment modifications are desired (default is +envmods)
+        if "+envmods" in self.spec:
+            env.extend(
+                EnvironmentModifications.from_sourcing_file(
+                    join_path(self.component_prefix, "env", "vars.sh")
+                )
             )
-        )
 
 
 class IntelOneApiLibraryPackage(IntelOneApiPackage):

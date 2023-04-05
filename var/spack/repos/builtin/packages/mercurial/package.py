@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -69,8 +69,7 @@ class Mercurial(PythonPackage):
         hgrc_filename = etc_dir.hgrc
 
         # Use certifi to find the location of the CA certificate
-        print_str = self.spec["python"].package.print_string("certifi.where()")
-        certificate = python("-c", "import certifi; " + print_str, output=str)
+        certificate = python("-c", "import certifi; print(certifi.where())", output=str)
 
         if not certificate:
             tty.warn(

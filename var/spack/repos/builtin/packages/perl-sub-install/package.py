@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -12,6 +12,7 @@ class PerlSubInstall(PerlPackage):
     homepage = "https://metacpan.org/pod/Sub::Install"
     url = "https://cpan.metacpan.org/authors/id/R/RJ/RJBS/Sub-Install-0.928.tar.gz"
 
+    version("0.929", sha256="80b1e281d8cd3b2b31dac711f5c8a1657a87cd80bbe69af3924bcbeb4e5db077")
     version("0.928", sha256="61e567a7679588887b7b86d427bc476ea6d77fffe7e0d17d640f89007d98ef0f")
     depends_on("perl-extutils-makemaker@6.30:", type="build")  # AUTO-CPAN2Spack
     depends_on("perl-scalar-util", type="run")  # AUTO-CPAN2Spack

@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -27,7 +27,7 @@ class Archer(CMakePackage):
     depends_on("ninja@1.5:", type="build")
     depends_on("llvm-openmp-ompt@tr6_forwards")
 
-    generator = "Ninja"
+    generator("ninja")
 
     def patch(self):
         if self.spec.satisfies("^llvm@8.0.0:"):

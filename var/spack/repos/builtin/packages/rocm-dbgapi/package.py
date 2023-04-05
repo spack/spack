@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -16,14 +16,18 @@ class RocmDbgapi(CMakePackage):
 
     homepage = "https://github.com/ROCm-Developer-Tools/ROCdbgapi"
     git = "https://github.com/ROCm-Developer-Tools/ROCdbgapi.git"
-    url = "https://github.com/ROCm-Developer-Tools/ROCdbgapi/archive/rocm-5.2.3.tar.gz"
+    url = "https://github.com/ROCm-Developer-Tools/ROCdbgapi/archive/rocm-5.4.3.tar.gz"
     tags = ["rocm"]
 
-    maintainers = ["srekolam", "renjithravindrankannath"]
+    maintainers("srekolam", "renjithravindrankannath")
     libraries = ["librocm-dbgapi"]
 
     version("master", branch="amd-master")
 
+    version("5.4.3", sha256="d647c9121a50f2c54367c567d8f39a145cb135e1ceed931581659f57f49f61e5")
+    version("5.4.0", sha256="895eb7056864daada40c3f9cd37645b0bdf4b6dc408b5f8cc974fc4cd9ab7ccb")
+    version("5.3.3", sha256="3c81cb23fe671d391557a63c13b6a13d4dc367db5cb5de55592a6758284d8a3f")
+    version("5.3.0", sha256="afffec78e34fe70952cd41efc3d7ba8f64e43acb2ad20aa35c9b8b591bed48ca")
     version("5.2.3", sha256="17925d23f614ecb2b40dffe5e14535cba380d4f489ea1a027762c356be9fbc2b")
     version("5.2.1", sha256="169e3914ebd99d6a5c034c568964b7bad56611262e292f77c0c65a7708e02376")
     version("5.2.0", sha256="44f0528a7583bc59b6585166d2289970b20115c4c70e3bcc218aff19fc242b3f")
@@ -129,6 +133,10 @@ class RocmDbgapi(CMakePackage):
         "5.2.0",
         "5.2.1",
         "5.2.3",
+        "5.3.0",
+        "5.3.3",
+        "5.4.0",
+        "5.4.3",
         "master",
     ]:
         depends_on("hsa-rocr-dev@" + ver, type="build", when="@" + ver)
@@ -151,3 +159,9 @@ class RocmDbgapi(CMakePackage):
             r"\1 {0}/include".format(self.spec["hsa-rocr-dev"].prefix),
             "CMakeLists.txt",
         )
+
+    def cmake_args(self):
+        args = []
+        if self.spec.satisfies("@5.3.0:"):
+            args.append("-DCMAKE_INSTALL_LIBDIR=lib")
+        return args

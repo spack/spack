@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -15,6 +15,11 @@ class PerlSubQuote(PerlPackage):
 
     maintainers = ["chissg", "gartung", "marcmengel", "vitodb"]  # AUTO-CPAN2Spack
 
+    version(
+        "2.006.008",
+        sha256="94bebd500af55762e83ea2f2bc594d87af828072370c7110c60c238a800d15b2",
+        url="https://cpan.metacpan.org/authors/id/H/HA/HAARG/Sub-Quote-2.006008.tar.gz",
+    )
     version("2.006_007", sha256="ccb226d1d1a0d1cde99eabe98cb4eeb89f9f9eaf961be226d903e9ac333e5220")
     version(
         "2.006.006",

@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -19,6 +19,11 @@ class PerlModuleBuild(PerlPackage):
     url = "https://cpan.metacpan.org/authors/id/L/LE/LEONT/Module-Build-0.4224.tar.gz"
 
     version(
+        "0.42.32",
+        sha256="67c82ee245d94ba06decfa25572ab75fdcd26a9009094289d8f45bc54041771b",
+        url="https://cpan.metacpan.org/authors/id/L/LE/LEONT/Module-Build-0.4232.tar.gz",
+    )
+    version(
         "0.42.31",
         sha256="7e0f4c692c1740c1ac84ea14d7ea3d8bc798b2fb26c09877229e04f430b2b717",
         url="https://cpan.metacpan.org/authors/id/L/LE/LEONT/Module-Build-0.4231.tar.gz",
@@ -28,6 +33,16 @@ class PerlModuleBuild(PerlPackage):
         "0.42.29",
         sha256="1fe491a6cda914b01bc8e592faa2b5404e9f35915ca15322f8f2a8d8f9008c18",
         url="https://cpan.metacpan.org/authors/id/L/LE/LEONT/Module-Build-0.4229.tar.gz",
+    )
+    version(
+        "0.42.24",
+        sha256="a6ca15d78244a7b50fdbf27f85c85f4035aa799ce7dd018a0d98b358ef7bc782",
+        url="https://cpan.metacpan.org/authors/id/L/LE/LEONT/Module-Build-0.4224.tar.gz",
+    )
+    version(
+        "0.42.20",
+        sha256="fb1207c7e799366f7a8adda3f135bf8141c4d6068505650d4db2b2d3ce34b5a2",
+        url="https://cpan.metacpan.org/authors/id/L/LE/LEONT/Module-Build-0.4220.tar.gz",
     )
 
     provides("perl-module-build-base")  # AUTO-CPAN2Spack

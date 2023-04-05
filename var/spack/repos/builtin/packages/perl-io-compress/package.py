@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -13,6 +13,7 @@ class PerlIoCompress(PerlPackage):
     homepage = "https://github.com/pmqs/IO-Compress"
     url = "https://cpan.metacpan.org/authors/id/P/PM/PMQS/IO-Compress-2.201.tar.gz"
 
+    version("2.204", sha256="617784cb8543778681341b18fc67b74735e8b494f32f00814dd22f68ac6af018")
     version("2.201", sha256="f6c55c4e39cfaa3219965dd3b36c9de1edee9a82a10a9cadeb3b74a9ceeeaaad")
     version("2.106", sha256="cb9a26ec7d86afb3081b6369620f1f67eaa45b7c41c4eb800e1da5e700a3e3f5")
     version("2.105", sha256="74f791c20b024ab0eb0404dbdf12ebd7fdcaa700e429790bad39e5738838e41f")

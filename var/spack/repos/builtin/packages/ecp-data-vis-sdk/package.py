@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -65,7 +65,7 @@ class EcpDataVisSdk(BundlePackage, CudaPackage, ROCmPackage):
     homepage = "https://ecp-data-vis-sdk.github.io/"
 
     tags = ["ecp"]
-    maintainers = ["kwryankrattiger", "svenevs"]
+    maintainers("kwryankrattiger", "svenevs")
 
     version("1.0")
 
@@ -114,10 +114,7 @@ class EcpDataVisSdk(BundlePackage, CudaPackage, ROCmPackage):
 
     dav_sdk_depends_on("hdf5@1.12: +shared+mpi", when="+hdf5", propagate=["fortran"])
     # hdf5-vfd-gds needs cuda@11.7.1 or later, only enable when 11.7.1+ available.
-    depends_on(
-        "hdf5-vfd-gds@1.0.2:",
-        when="+cuda+hdf5^cuda@11.7.1:",
-    )
+    depends_on("hdf5-vfd-gds@1.0.2:", when="+cuda+hdf5^cuda@11.7.1:")
     for cuda_arch in cuda_arch_variants:
         depends_on(
             "hdf5-vfd-gds@1.0.2: {0}".format(cuda_arch),
@@ -155,22 +152,14 @@ class EcpDataVisSdk(BundlePackage, CudaPackage, ROCmPackage):
 
     depends_on("py-cinemasci", when="+cinema")
 
+    # ParaView needs @5.11: in order to use CUDA/ROCM, therefore it is the minimum
+    # required version since GPU capability is desired for ECP
     dav_sdk_depends_on(
-        "paraview@5.10:+mpi+python+kits+shared+catalyst+libcatalyst",
+        "paraview@5.11:+mpi+openpmd+python+kits+shared+catalyst+libcatalyst",
         when="+paraview",
-        propagate=["hdf5", "adios2"],
+        propagate=["adios2", "cuda", "hdf5", "rocm"] + amdgpu_target_variants + cuda_arch_variants,
     )
-    dav_sdk_depends_on("libcatalyst+mpi", when="+paraview")
-
-    # ParaView needs @5.11: in order to use cuda and be compatible with other
-    # SDK packages.
-    depends_on("paraview +cuda", when="+paraview +cuda ^paraview@5.11:")
-    for cuda_arch in cuda_arch_variants:
-        depends_on(
-            "paraview {0}".format(cuda_arch),
-            when="+paraview {0} ^paraview@5.11:".format(cuda_arch),
-        )
-    depends_on("paraview ~cuda", when="+paraview ~cuda")
+    dav_sdk_depends_on("libcatalyst@2:+mpi", when="+paraview")
     conflicts("paraview@master", when="+paraview")
 
     dav_sdk_depends_on("visit+mpi+python+silo", when="+visit", propagate=["hdf5", "adios2"])
@@ -180,6 +169,9 @@ class EcpDataVisSdk(BundlePackage, CudaPackage, ROCmPackage):
         when="+vtkm",
         propagate=["cuda", "rocm"] + cuda_arch_variants + amdgpu_target_variants,
     )
+    # TODO: When Ascent is updated to use VTK-m >= 1.8 move examples to
+    # the main spec.
+    depends_on("vtk-m+examples", when="+vtkm ^vtk-m@1.8:")
     depends_on("vtk-m+openmp", when="~rocm+vtkm")
     depends_on("vtk-m~openmp", when="+rocm+vtkm")
 

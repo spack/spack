@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -169,7 +169,7 @@ def write_license_file(pkg, license_path):
         f.close()
 
 
-def post_install(spec):
+def post_install(spec, explicit=None):
     """This hook symlinks local licenses to the global license for
     licensed software.
     """

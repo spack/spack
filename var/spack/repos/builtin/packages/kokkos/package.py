@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -21,10 +21,11 @@ class Kokkos(CMakePackage, CudaPackage, ROCmPackage):
 
     test_requires_compiler = True
 
-    maintainers = ["janciesko", "crtrott"]
+    maintainers("janciesko", "crtrott")
 
     version("master", branch="master")
     version("develop", branch="develop")
+    version("3.7.01", sha256="0481b24893d1bcc808ec68af1d56ef09b82a1138a1226d6be27c3b3c3da65ceb")
     version("3.7.00", sha256="62e3f9f51c798998f6493ed36463f66e49723966286ef70a9dcba329b8443040")
     version("3.6.01", sha256="1b80a70c5d641da9fefbbb652e857d7c7a76a0ebad1f477c253853e209deb8db")
     version("3.6.00", sha256="53b11fffb53c5d48da5418893ac7bc814ca2fde9c86074bdfeaa967598c918f4")
@@ -77,7 +78,7 @@ class Kokkos(CMakePackage, CudaPackage, ROCmPackage):
         "debug_bounds_check": [False, "Use bounds checking - will increase runtime"],
         "debug_dualview_modify_check": [False, "Debug check on dual views"],
         "deprecated_code": [False, "Whether to enable deprecated code"],
-        "examples": [False, "Whether to build OpenMP  backend"],
+        "examples": [False, "Whether to build examples"],
         "explicit_instantiation": [False, "Explicitly instantiate template types"],
         "hpx_async_dispatch": [False, "Whether HPX supports asynchronous dispath"],
         "profiling": [True, "Create bindings for profiling tools"],
@@ -224,6 +225,13 @@ class Kokkos(CMakePackage, CudaPackage, ROCmPackage):
     patch("hpx_profiling_fences.patch", when="@3.5.00 +hpx")
 
     variant("shared", default=True, description="Build shared libraries")
+
+    # Filter spack-generated files that may include links to the
+    # spack compiler wrappers
+    filter_compiler_wrappers("kokkos_launch_compiler", relative_root="bin")
+    filter_compiler_wrappers(
+        "KokkosConfigCommon.cmake", relative_root=os.path.join("lib64", "cmake", "Kokkos")
+    )
 
     @classmethod
     def get_microarch(cls, target):

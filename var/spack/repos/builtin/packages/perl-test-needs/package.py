@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -12,6 +12,11 @@ class PerlTestNeeds(PerlPackage):
     homepage = "https://metacpan.org/pod/Test::Needs"
     url = "https://cpan.metacpan.org/authors/id/H/HA/HAARG/Test-Needs-0.002009.tar.gz"
 
+    version(
+        "0.002010",
+        sha256="923ffdc78fcba96609753e4bae26b0ba0186893de4a63cd5236e012c7c90e208",
+        url="https://cpan.metacpan.org/authors/id/H/HA/HAARG/Test-Needs-0.002010.tar.gz",
+    )
     version(
         "0.002.009",
         sha256="571c21193ad16195df58b06b268798796a391b398c443271721d2cc0fb7c4ac3",

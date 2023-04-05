@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -26,6 +26,7 @@ import spack.config
 import spack.environment as ev
 import spack.error
 import spack.extensions
+import spack.parser
 import spack.paths
 import spack.spec
 import spack.store
@@ -160,9 +161,7 @@ class _UnquotedFlags(object):
     """
 
     flags_arg_pattern = re.compile(
-        r'^({0})=([^\'"].*)$'.format(
-            "|".join(spack.spec.FlagMap.valid_compiler_flags()),
-        )
+        r'^({0})=([^\'"].*)$'.format("|".join(spack.spec.FlagMap.valid_compiler_flags()))
     )
 
     def __init__(self, all_unquoted_flag_pairs: List[Tuple[Match[str], str]]):
@@ -217,7 +216,7 @@ def parse_specs(args, **kwargs):
     unquoted_flags = _UnquotedFlags.extract(sargs)
 
     try:
-        specs = spack.spec.parse(sargs)
+        specs = spack.parser.parse(sargs)
         for spec in specs:
             if concretize:
                 spec.concretize(tests=tests)  # implies normalize
@@ -226,7 +225,6 @@ def parse_specs(args, **kwargs):
         return specs
 
     except spack.error.SpecError as e:
-
         msg = e.message
         if e.long_message:
             msg += e.long_message
