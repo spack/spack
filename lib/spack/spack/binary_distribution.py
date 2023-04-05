@@ -1381,12 +1381,12 @@ def _build_tarball_in_stage_dir(
     return None
 
 
-def nodes_to_be_packaged(specs, deptype, root=True, dependencies=True):
+def nodes_to_be_packaged(specs, deptype: str = dep.default_deptype, root=True, dependencies=True):
     """Return the list of nodes to be packaged, given a list of specs.
 
     Args:
         specs (List[spack.spec.Spec]): list of root specs to be processed
-        deptype: dependency types to package
+        deptype (str): dependency types to package
         root (bool): include the root of each spec in the nodes
         dependencies (bool): include the dependencies of each
             spec in the nodes
@@ -1406,7 +1406,8 @@ def nodes_to_be_packaged(specs, deptype, root=True, dependencies=True):
         return list(filter(packageable, nodes))
 
 
-def push(specs, push_url, include_root: bool = True, include_dependencies: bool = True, deptype: str = dep.default_deptype):
+def push(specs, push_url, include_root: bool = True, include_dependencies: bool = True,
+         deptype: str = dep.default_deptype, **kwargs):
     """Create a binary package for each of the specs passed as input and push them
     to a given push URL.
 
@@ -1416,6 +1417,7 @@ def push(specs, push_url, include_root: bool = True, include_dependencies: bool 
         include_root (bool): include the root of each spec in the nodes
         include_dependencies (bool): include the dependencies of each
             spec in the nodes
+        deptype (str): dependency types to package
         **kwargs: TODO
 
     """
