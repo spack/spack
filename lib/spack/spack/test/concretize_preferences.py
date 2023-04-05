@@ -227,6 +227,9 @@ mpileaks:
 
     def test_preferred_undefined_raises(self):
         """Preference should not specify an undefined version"""
+        if spack.config.get("config:concretizer") == "original":
+            pytest.xfail("This behavior is not enforced for the old concretizer")
+
         update_packages("python", "version", ["3.5.0.1"])
         spec = Spec("python")
         with pytest.raises(spack.config.ConfigError):
