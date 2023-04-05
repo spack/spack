@@ -1329,7 +1329,7 @@ def test_env_updates_view_uninstall(
     view_dir = tmpdir.join("view")
     env("create", "--with-view=%s" % view_dir, "test")
     with ev.read("test"):
-        install("--fake", "--add", "mpileaks")
+        print(install("--fake", "--add", "mpileaks"))
 
     check_mpileaks_and_deps_in_view(view_dir)
 
