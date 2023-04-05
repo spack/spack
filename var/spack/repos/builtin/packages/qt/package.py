@@ -329,6 +329,10 @@ class Qt(Package):
                 llvm_path = "/spack-disable-llvm"
             env.set("LLVM_INSTALL_DIR", llvm_path)
 
+        if self.spec.satisfies("+ssl"):
+            if self.spec["openssl"].satisfies("~shared"):
+                env.set("OPENSSL_LIBS", "-lssl -lcrypto -lz")
+
     def setup_run_environment(self, env):
         env.set("QTDIR", self.prefix)
         env.set("QTINC", self.prefix.inc)
@@ -506,6 +510,12 @@ class Qt(Package):
             with open(conf_file, "a") as f:
                 f.write("QMAKE_CXXFLAGS += -std=gnu++98\n")
 
+    @when("~shared")
+    @run_before("configure")
+    def patch(self):
+        filter_file("libs-only-L", "libs-only-L --static", "qtbase/mkspecs/features/qt_configure.prf")
+        filter_file("libs-only-l", "libs-only-l --static", "qtbase/mkspecs/features/qt_configure.prf")
+
     def _dep_appender_factory(self, config_args):
         spec = self.spec
 
@@ -576,6 +586,7 @@ class Qt(Package):
             config_args.append("-no-openvg")
         else:
             # FIXME: those could work for other versions
+            use_spack_dep("libtiff", "tiff")
             use_spack_dep("libpng")
             use_spack_dep("jpeg", "libjpeg")
             use_spack_dep("zlib")
