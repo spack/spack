@@ -688,12 +688,12 @@ class ViewDescriptor(object):
             return
 
         print(new_root)
-        print(
-            [
-                (s, os.stat(os.path.join(os.path.dirname(new_root), s)).st_mtime)
-                for s in os.listdir(os.path.dirname(new_root))
-            ]
-        )
+#        print(
+#            [
+#                (s, os.stat(os.path.join(os.path.dirname(new_root), s)).st_mtime)
+#                for s in os.listdir(os.path.dirname(new_root))
+#            ]
+#        )
         print(specs)
         if update_method == "exchange" and os.path.isdir(new_root):
             # If new_root is the newest thing in its directory, no need to update
