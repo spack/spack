@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -12,7 +12,7 @@ class PerlPpixQuotelike(PerlPackage):
     homepage = "https://cpan.metacpan.org/authors/id/W/WY/WYANT"  # AUTO-CPAN2Spack
     url = "https://cpan.metacpan.org/authors/id/W/WY/WYANT/PPIx-QuoteLike-0.022.tar.gz"
 
-    maintainers = ["chissg", "gartung", "marcmengel", "vitodb"]  # AUTO-CPAN2Spack
+    maintainers("chissg", "gartung", "marcmengel", "vitodb")  # AUTO-CPAN2Spack
 
     version("0.022", sha256="e043488d3b561b65188ab8e7b778f682490bf710a7bddced521e77bd111d378a")
     version("0.021_01", sha256="72df53114cb6fb0bf847c0073b35bc8a3097fcdf4cbadd451174fb960787b9af")

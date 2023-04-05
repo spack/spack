@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -12,7 +12,7 @@ class PerlAppPmuninstall(PerlPackage):
     homepage = "https://github.com/xaicron/pm-uninstall"  # AUTO-CPAN2Spack
     url = "https://cpan.metacpan.org/authors/id/X/XA/XAICRON/App-pmuninstall-0.33.tar.gz"
 
-    maintainers = ["chissg", "gartung", "marcmengel", "vitodb"]  # AUTO-CPAN2Spack
+    maintainers("chissg", "gartung", "marcmengel", "vitodb")  # AUTO-CPAN2Spack
 
     version("0.33", sha256="f05a12435124046a2a45bce49f283216797e71fe1b129bcf43b3f04887c89aff")
     version("0.32", sha256="ebc4f6cb4c9fd9ceee0d2d83b1d54d61fd2ccb43a624a86fcc6dcd51e922132d")

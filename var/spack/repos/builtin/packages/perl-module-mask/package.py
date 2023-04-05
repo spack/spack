@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -12,7 +12,7 @@ class PerlModuleMask(PerlPackage):
     homepage = "https://cpan.metacpan.org/authors/id/M/MA/MATTLAW"  # AUTO-CPAN2Spack
     url = "https://cpan.metacpan.org/authors/id/M/MA/MATTLAW/Module-Mask-0.06.tar.gz"
 
-    maintainers = ["chissg", "gartung", "marcmengel", "vitodb"]  # AUTO-CPAN2Spack
+    maintainers("chissg", "gartung", "marcmengel", "vitodb")  # AUTO-CPAN2Spack
 
     version("0.06", sha256="2d73f81ff21c9fa28102791e546ff257164b3025f7832544c8223fb87c1e7e77")
     version("0.05", sha256="c7bfbd35d144412e5a213a2f4b6e2ad2885d93e71fdfb1f9bff467d75fb47eb7")

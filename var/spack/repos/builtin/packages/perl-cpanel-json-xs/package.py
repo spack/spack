@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -12,7 +12,7 @@ class PerlCpanelJsonXs(PerlPackage):
     homepage = "https://cpan.metacpan.org/authors/id/R/RU/RURBAN"  # AUTO-CPAN2Spack
     url = "https://cpan.metacpan.org/authors/id/R/RU/RURBAN/Cpanel-JSON-XS-4.32.tar.gz"
 
-    maintainers = ["chissg", "gartung", "marcmengel", "vitodb"]  # AUTO-CPAN2Spack
+    maintainers("chissg", "gartung", "marcmengel", "vitodb")  # AUTO-CPAN2Spack
 
     version("4.32", sha256="ece9d35914175e6c47b62fd936244278365ebce0905fe92b037e484e6d501895")
     version("4.31", sha256="02a67acee3de24a728c396486800e2a235591a543d0794449ad388fe3d5cff29")
