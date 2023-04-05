@@ -3119,6 +3119,29 @@ def test_environment_depfile_makefile(depfile_flags, expected_installs, tmpdir, 
     assert len(specs_that_make_would_install) == len(expected_installs)
 
 
+def test_environment_depfile_makefile(tmpdir, mock_packages):
+    env("create", "test")
+    make = Executable("make")
+    makefile = str(tmpdir.join("Makefile"))
+    with ev.read("test"):
+        add("dttop")
+        concretize()
+
+    # Disable jobserver so we can do a dry run.
+    with ev.read("test"):
+        env(
+            "depfile",
+            "-o",
+            makefile,
+            "--make-disable-jobserver",
+            "--make-prefix=prefix",
+            "--use-buildcache=never"
+        )
+
+    # List all targets
+    out = make("-p", makefile, output=str)
+
+
 def test_environment_depfile_out(tmpdir, mock_packages):
     env("create", "test")
     makefile_path = str(tmpdir.join("Makefile"))

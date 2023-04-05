@@ -6,6 +6,7 @@
 import argparse
 import io
 import os
+import re
 import shutil
 import sys
 import tempfile
@@ -676,15 +677,14 @@ class MakeTargetVisitor(object):
         return ""
 
     def accept(self, node):
-        fmt = "{name}-{hash}"
-        tgt = node.edge.spec.format(fmt)
+        fmt = "{name}-{version}-{hash}"
         spec_str = node.edge.spec.format(
             "{name}{@version}{%compiler}{variants}{arch=architecture}"
         )
         buildcache_flag = self.build_cache_flag(node.depth)
-        prereqs = " ".join([self.target(dep.spec.format(fmt)) for dep in self.neighbors(node)])
+        prereqs = " ".join([self.target(dep.spec) for dep in self.neighbors(node)])
         self.adjacency_list.append(
-            (tgt, prereqs, node.edge.spec.dag_hash(), spec_str, buildcache_flag)
+            (node.edge.spec, prereqs, node.edge.spec.dag_hash(), spec_str, buildcache_flag)
         )
 
         # We already accepted this
@@ -703,6 +703,15 @@ def env_depfile(args):
     else:
         prefix = args.make_prefix
 
+    def _fmt_spec_make_target(spec):
+        """According to https://www.gnu.org/software/autoconf/manual/autoconf-2.63/html_node/Special-Chars-in-Names.html
+        a target should only consist of "ASCII letters and digits, `.', and `_'.".
+        """
+        if not isinstance(spec, spack.spec.Spec):
+            raise ValueError("Internal error: got non-spec object: {0}".format(spec))
+        tgt = spec.format("{name}-{version}-{hash}")
+        return re.sub(r"[^A-Za-z0-9_.]", "_", tgt)
+
     def get_target(name):
         # The `all` and `clean` targets are phony. It doesn't make sense to
         # have /abs/path/to/env/metadir/{all,clean} targets. But it *does* make
@@ -713,11 +722,11 @@ def env_depfile(args):
         else:
             return os.path.join(prefix, name)
 
-    def get_install_target(name):
-        return os.path.join(prefix, "install", name)
+    def get_install_target(spec):
+        return os.path.join(prefix, "install", _fmt_spec_make_target(spec))
 
-    def get_install_deps_target(name):
-        return os.path.join(prefix, "install-deps", name)
+    def get_install_deps_target(spec):
+        return os.path.join(prefix, "install-deps", _fmt_spec_make_target(spec))
 
     # What things do we build when running make? By default, we build the
     # root specs. If specific specs are provided as input, we build those.
@@ -736,7 +745,7 @@ def env_depfile(args):
     )
 
     # Root specs without deps are the prereqs for the environment target
-    root_install_targets = [get_install_target(h.format("{name}-{hash}")) for h in roots]
+    root_install_targets = [get_install_target(h) for h in roots]
 
     all_pkg_identifiers = []
 
@@ -758,10 +767,11 @@ def env_depfile(args):
     # we don't have a custom make target prefix.
     phony_convenience_targets = []
 
-    for tgt, _, _, _, _ in make_targets.adjacency_list:
+    for tgt_spec, _, _, _, _ in make_targets.adjacency_list:
+        tgt = _fmt_spec_make_target(tgt_spec)
         all_pkg_identifiers.append(tgt)
-        all_install_related_targets.append(get_install_target(tgt))
-        all_install_related_targets.append(get_install_deps_target(tgt))
+        all_install_related_targets.append(get_install_target(tgt_spec))
+        all_install_related_targets.append(get_install_deps_target(tgt_spec))
         if args.make_prefix is None:
             phony_convenience_targets.append(os.path.join("install", tgt))
             phony_convenience_targets.append(os.path.join("install-deps", tgt))
