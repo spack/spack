@@ -16,7 +16,7 @@ def is_CrayXC():
 
 
 def is_CrayEX():
-    return (spack.platforms.host().name == "cray") and (
+    return (spack.platforms.host().name in ["linux", "cray"]) and (
         os.environ.get("CRAYPE_NETWORK_TARGET") in ["ofi", "ucx"]
     )
 
@@ -47,6 +47,7 @@ class Upcxx(Package, CudaPackage, ROCmPackage):
     version("develop", branch="develop")
     version("master", branch="master")
 
+    version("2023.3.0", sha256="382af3c093decdb51f0533e19efb4cc7536b6617067b2dd89431e323704a1009")
     version("2022.9.0", sha256="dbf15fd9ba38bfe2491f556b55640343d6303048a117c4e84877ceddb64e4c7c")
     version("2022.3.0", sha256="72bccfc9dfab5c2351ee964232b3754957ecfdbe6b4de640e1b1387d45019496")
     version("2021.9.0", sha256="9299e17602bcc8c05542cdc339897a9c2dba5b5c3838d6ef2df7a02250f42177")
@@ -67,12 +68,23 @@ class Upcxx(Package, CudaPackage, ROCmPackage):
     variant(
         "cuda",
         default=False,
-        description="Enables UPC++ support for the CUDA memory kind.\n"
+        description="Enables UPC++ support for the CUDA memory kind on NVIDIA GPUs.\n"
         + "NOTE: Requires CUDA Driver library be present on the build system",
+        when="@2019.3.0:",
     )
 
     variant(
-        "rocm", default=False, description="Enables UPC++ support for the ROCm/HIP memory kind"
+        "rocm",
+        default=False,
+        description="Enables UPC++ support for the ROCm/HIP memory kind on AMD GPUs",
+        when="@2022.3.0:",
+    )
+
+    variant(
+        "level_zero",
+        default=False,
+        description="Enables UPC++ support for the Level Zero memory kind on Intel GPUs",
+        when="@2023.3.0:",
     )
 
     variant(
@@ -99,6 +111,8 @@ class Upcxx(Package, CudaPackage, ROCmPackage):
     depends_on("python@2.7.5:", type=("build", "run"))
 
     conflicts("hip@:4.4.0", when="+rocm")
+
+    depends_on("oneapi-level-zero@1.8.0:", when="+level_zero")
 
     # All flags should be passed to the build-env in autoconf-like vars
     flag_handler = env_flags
@@ -201,6 +215,10 @@ class Upcxx(Package, CudaPackage, ROCmPackage):
             options.append(
                 "--with-ld-flags=" + self.compiler.cc_rpath_arg + spec["hip"].prefix.lib
             )
+
+        if "+level_zero" in spec:
+            options.append("--enable-ze")
+            options.append("--with-ze-home=" + spec["oneapi-level-zero"].prefix)
 
         env["GASNET_CONFIGURE_ARGS"] = "--enable-rpath " + env["GASNET_CONFIGURE_ARGS"]
 
