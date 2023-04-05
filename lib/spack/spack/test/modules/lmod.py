@@ -437,7 +437,7 @@ class TestLmod:
 
     def test_hide_implicits(self, module_configuration):
         """Tests the addition and removal of hide command in modulerc."""
-        module_configuration("exclude_implicits")
+        module_configuration("hide_implicits")
 
         spec = spack.spec.Spec("mpileaks@2.3").concretized()
 
@@ -507,14 +507,14 @@ class TestLmod:
         assert len([x for x in content if hide_cmd_alt1 == x]) == 0
         assert len([x for x in content if hide_cmd_alt2 == x]) == 0
 
-        # disable exclude_implicits configuration option
+        # disable hide_implicits configuration option
         module_configuration("autoload_direct")
         writer = writer_cls(spec, "default")
         writer.write(overwrite=True)
         assert not os.path.exists(writer.layout.modulerc)
 
-        # reenable exclude_implicits configuration option
-        module_configuration("exclude_implicits")
+        # reenable hide_implicits configuration option
+        module_configuration("hide_implicits")
         writer = writer_cls(spec, "default")
         writer.write(overwrite=True)
         assert os.path.exists(writer.layout.modulerc)

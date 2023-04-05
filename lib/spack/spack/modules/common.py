@@ -514,14 +514,12 @@ class BaseConfiguration:
         spec = self.spec
         conf = self.module.configuration(self.name)
 
-        # Should I hide the module because it's implicit?
-        # DEPRECATED: remove 'blacklist_implicits' in v0.20
-        hide_implicits = get_deprecated(conf, "exclude_implicits", "blacklist_implicits", None)
-        hidden_as_implicit = hide_implicits and not self.explicit
+        hidden_as_implicit = not self.explicit and conf.get(
+            "hide_implicits", conf.get("exclude_implicits", False)
+        )
 
         if hidden_as_implicit:
-            msg = "\tHIDDEN_AS_IMPLICIT : {0}".format(spec.cshort_spec)
-            tty.debug(msg)
+            tty.debug(f"\tHIDDEN_AS_IMPLICIT : {spec.cshort_spec}")
 
         return hidden_as_implicit
 

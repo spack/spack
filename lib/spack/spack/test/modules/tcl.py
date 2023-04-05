@@ -439,8 +439,9 @@ class TestTcl:
 
     @pytest.mark.regression("4400")
     @pytest.mark.db
-    def test_exclude_implicits(self, module_configuration, database):
-        module_configuration("exclude_implicits")
+    @pytest.mark.parametrize("config_name", ["hide_implicits", "exclude_implicits"])
+    def test_hide_implicits_no_arg(self, module_configuration, database, config_name):
+        module_configuration(config_name)
 
         # mpileaks has been installed explicitly when setting up
         # the tests database
@@ -457,8 +458,9 @@ class TestTcl:
             assert writer.conf.hidden
 
     @pytest.mark.regression("12105")
-    def test_exclude_implicits_with_arg(self, module_configuration):
-        module_configuration("exclude_implicits")
+    @pytest.mark.parametrize("config_name", ["hide_implicits", "exclude_implicits"])
+    def test_hide_implicits_with_arg(self, module_configuration, config_name):
+        module_configuration(config_name)
 
         # mpileaks is defined as explicit with explicit argument set on writer
         mpileaks_spec = spack.spec.Spec("mpileaks")
@@ -502,7 +504,7 @@ class TestTcl:
 
     def test_hide_implicits(self, module_configuration):
         """Tests the addition and removal of hide command in modulerc."""
-        module_configuration("exclude_implicits")
+        module_configuration("hide_implicits")
 
         spec = spack.spec.Spec("mpileaks@2.3").concretized()
 
@@ -572,14 +574,14 @@ class TestTcl:
         assert len([x for x in content if hide_cmd_alt1 == x]) == 0
         assert len([x for x in content if hide_cmd_alt2 == x]) == 0
 
-        # disable exclude_implicits configuration option
+        # disable hide_implicits configuration option
         module_configuration("autoload_direct")
         writer = writer_cls(spec, "default")
         writer.write(overwrite=True)
         assert not os.path.exists(writer.layout.modulerc)
 
-        # reenable exclude_implicits configuration option
-        module_configuration("exclude_implicits")
+        # reenable hide_implicits configuration option
+        module_configuration("hide_implicits")
         writer = writer_cls(spec, "default")
         writer.write(overwrite=True)
         assert os.path.exists(writer.layout.modulerc)

@@ -1,7 +1,7 @@
 enable:
   - lmod
 lmod:
-  exclude_implicits: true
+  hide_implicits: true
   core_compilers:
     - 'clang@3.3'
   hierarchy:
