@@ -7,7 +7,6 @@ import os
 
 from spack.package import *
 from spack.pkg.builtin.boost import Boost
-from spack.builder import run_before
 
 import spack.build_systems.autotools
 import spack.build_systems.cmake
@@ -260,8 +259,8 @@ class AutotoolsBuilder(spack.build_systems.autotools.AutotoolsBuilder):
 
 
 class CMakeBuilder(
-    # ./configure is sensitive to the oder of declatation
-    # Devlaring CMakeBuilder first, does not seem to trigger set_configure_or_die
+    # Declare autotools first, so that building the libint compiler is very
+    # to the old process
     spack.build_systems.autotools.AutotoolsBuilder,
     spack.build_systems.cmake.CMakeBuilder,
 ):
@@ -272,10 +271,10 @@ class CMakeBuilder(
     root_cmakelists_dir = "generated"
 
     def autoreconf(self, pkg, spec, prefix):
-        print(">>> PREFIX:", prefix)
-        print(">>> CONFIGURE_ABS_PATH:", self.configure_abs_path)
-        print(">>> BUILD_DIRECTORY:", self.build_directory)
         which("bash")("autogen.sh")
+        # skip tarball creation and removal of dir with generated code
+        # The regexp is different from @2.6.0 since export/Makefile changed
+        # TODO:: More robust solution
         filter_file(r"^(export::.*)\s+tgz( .*)$", r"\1\2", "export/Makefile")
 
     @property
@@ -325,15 +324,5 @@ class CMakeBuilder(
         ]
         return args
 
-    # def cmake(self, pkg, spec, prefix):
-    #    print(">>> WORKDIR:", os.path.join(self.build_directory, "generated"))
-    #    with working_dir(os.path.join(self.build_directory, "generated")):
-    #        super(spack.build_systems.cmake.CMakeBuilder, self).cmake(pkg, spec, prefix)
-
     def cmake_build(self, pkg, spec, prefix):
-        # with working_dir(os.path.join(self.build_directory, "generated")):
         spack.build_systems.cmake.CMakeBuilder.build(self, pkg, spec, prefix)
-
-    # def install(self, pkg, spec, prefix):
-    #    with working_dir(os.path.join(self.build_directory, "generated")):
-    #        super(spack.build_system.cmake.CMakeBuilder, self).install(pkg, spec, prefix)
