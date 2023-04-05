@@ -37,13 +37,13 @@ class PyArchspec(PythonPackage):
         deprecated=True,
     )
 
-    with when("@0.1:0.1"):
+    with when("@0.1"):
         depends_on("python@2.7:2.8,3.5:", type=("build", "run"))
         depends_on("py-click@7.1.2:7", type=("build", "run"))
         depends_on("py-six@1.13.0:1", type=("build", "run"))
 
     with when("@0.2.0"):
-        depends_on("py-click@8:8", type=("build", "run"))
+        depends_on("py-click@8", type=("build", "run"))
 
     depends_on("python@3.6:", when="@0.2:", type=("build", "run"))
     depends_on("py-setuptools", type="build")
