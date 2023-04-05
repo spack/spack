@@ -7,8 +7,10 @@ import os
 
 from spack.package import *
 from spack.pkg.builtin.boost import Boost
+from spack.builder import run_before
 
 import spack.build_systems.autotools
+import spack.build_systems.cmake
 
 TUNE_VARIANTS = (
     "none",
@@ -47,6 +49,7 @@ class Libint(AutotoolsPackage, CMakePackage):
 
     variant("debug", default=False, description="Enable building with debug symbols")
     variant("fortran", default=False, description="Build & install Fortran bindings")
+    variant("cxx", default=True, when="@2.7.0:", description="Enable C++11 API")
     variant(
         "tune",
         default="none",
@@ -63,10 +66,12 @@ class Libint(AutotoolsPackage, CMakePackage):
     )
 
     # Build dependencies
-    depends_on("autoconf@2.52:", when="build_system=autotools", type="build")
-    depends_on("automake", when="build_system=autotools", type="build")
+    depends_on("autoconf@2.52:", type="build")
+    depends_on("automake", type="build")
     depends_on("libtool", type="build")
     depends_on("python", type="build")
+
+    depends_on("eigen", when="@2.7.0: +cxx")
 
     # Libint 2 dependencies
     # Fixme: Can maintainers please confirm that this is a required dependency
@@ -93,8 +98,75 @@ class Libint(AutotoolsPackage, CMakePackage):
             return "{0}/v{1}.tar.gz".format(base_url, version)
 
 
-class AutotoolsBuilder(spack.build_systems.autotools.AutotoolsBuilder):
+def define_configure_args(pkg, spec, prefix, optflags):
+    config_args = ["--enable-shared"]
 
+    if spec.satisfies("@2:"):
+        # --with-boost option available only from version 2 and above
+        config_args.extend(["--with-boost={0}".format(spec["boost"].prefix)])
+
+    # Optimization flag names have changed in libint 2
+    if pkg.version < Version("2.0.0"):
+        config_args.extend(
+            ["--with-cc-optflags={0}".format(optflags), "--with-cxx-optflags={0}".format(optflags)]
+        )
+    else:
+        config_args.extend(
+            [
+                "--with-cxx-optflags={0}".format(optflags),
+                "--with-cxxgen-optflags={0}".format(optflags),
+            ]
+        )
+
+    # Options required by CP2K, removed in libint 2
+    if pkg.version < Version("2.0.0"):
+        config_args.extend(["--with-libint-max-am=5", "--with-libderiv-max-am1=4"])
+
+    if "@2.6.0:" in spec:
+        config_args += ["--with-libint-exportdir=generated"]
+        # config_args += self.enable_or_disable("debug", activation_value=lambda x: "opt")
+        # config_args += self.enable_or_disable("fma")
+
+        tune_value = spec.variants["tune"].value
+        if tune_value.startswith("cp2k"):
+            lmax = int(tune_value.split("-lmax-")[1])
+            config_args += [
+                "--enable-eri=1",
+                "--enable-eri2=1",
+                "--enable-eri3=1",
+                "--with-max-am={0}".format(lmax),
+                "--with-eri-max-am={0},{1}".format(lmax, lmax - 1),
+                "--with-eri2-max-am={0},{1}".format(lmax + 2, lmax + 1),
+                "--with-eri3-max-am={0},{1}".format(lmax + 2, lmax + 1),
+                "--with-opt-am=3",
+                # keep code-size at an acceptable limit,
+                # cf. https://github.com/evaleev/libint/wiki#program-specific-notes:
+                "--enable-generic-code",
+                "--disable-unrolling",
+            ]
+        if tune_value.startswith("molgw"):
+            lmax = int(tune_value.split("-lmax-")[1])
+            config_args += [
+                "--enable-1body=1",
+                "--enable-eri=0",
+                "--enable-eri2=0",
+                "--enable-eri3=0",
+                "--with-multipole-max-order=0",
+                "--with-max-am={0}".format(lmax),
+                "--with-eri-max-am={0}".format(lmax),
+                "--with-eri2-max-am={0}".format(lmax),
+                "--with-eri3-max-am={0}".format(lmax),
+                "--with-opt-am=2",
+                "--enable-contracted-ints",
+                # keep code-size at an acceptable limit,
+                # cf. https://github.com/evaleev/libint/wiki#program-specific-notes:
+                "--enable-generic-code",
+                "--disable-unrolling",
+            ]
+    return config_args
+
+
+class AutotoolsBuilder(spack.build_systems.autotools.AutotoolsBuilder):
     def autoreconf(self, pkg, spec, prefix):
         if spec.satisfies("@2:"):
             which("bash")("autogen.sh")
@@ -129,76 +201,7 @@ class AutotoolsBuilder(spack.build_systems.autotools.AutotoolsBuilder):
             env.set("AR", "xiar")
 
     def configure_args(self):
-        config_args = ["--enable-shared"]
-        print(self)
-
-        if self.spec.satisfies("@2:"):
-            # --with-boost option available only from version 2 and above
-            config_args.extend(["--with-boost={0}".format(self.spec["boost"].prefix)])
-
-        # Optimization flag names have changed in libint 2
-        if self.pkg.version < Version("2.0.0"):
-            config_args.extend(
-                [
-                    "--with-cc-optflags={0}".format(self.optflags),
-                    "--with-cxx-optflags={0}".format(self.optflags),
-                ]
-            )
-        else:
-            config_args.extend(
-                [
-                    "--with-cxx-optflags={0}".format(self.optflags),
-                    "--with-cxxgen-optflags={0}".format(self.optflags),
-                ]
-            )
-
-        # Options required by CP2K, removed in libint 2
-        if self.pkg.version < Version("2.0.0"):
-            config_args.extend(["--with-libint-max-am=5", "--with-libderiv-max-am1=4"])
-
-        if "@2.6.0:" in self.spec:
-            config_args += ["--with-libint-exportdir=generated"]
-            config_args += self.enable_or_disable("debug", activation_value=lambda x: "opt")
-            config_args += self.enable_or_disable("fma")
-
-            tune_value = self.spec.variants["tune"].value
-            if tune_value.startswith("cp2k"):
-                lmax = int(tune_value.split("-lmax-")[1])
-                config_args += [
-                    "--enable-eri=1",
-                    "--enable-eri2=1",
-                    "--enable-eri3=1",
-                    "--with-max-am={0}".format(lmax),
-                    "--with-eri-max-am={0},{1}".format(lmax, lmax - 1),
-                    "--with-eri2-max-am={0},{1}".format(lmax + 2, lmax + 1),
-                    "--with-eri3-max-am={0},{1}".format(lmax + 2, lmax + 1),
-                    "--with-opt-am=3",
-                    # keep code-size at an acceptable limit,
-                    # cf. https://github.com/evaleev/libint/wiki#program-specific-notes:
-                    "--enable-generic-code",
-                    "--disable-unrolling",
-                ]
-            if tune_value.startswith("molgw"):
-                lmax = int(tune_value.split("-lmax-")[1])
-                config_args += [
-                    "--enable-1body=1",
-                    "--enable-eri=0",
-                    "--enable-eri2=0",
-                    "--enable-eri3=0",
-                    "--with-multipole-max-order=0",
-                    "--with-max-am={0}".format(lmax),
-                    "--with-eri-max-am={0}".format(lmax),
-                    "--with-eri2-max-am={0}".format(lmax),
-                    "--with-eri3-max-am={0}".format(lmax),
-                    "--with-opt-am=2",
-                    "--enable-contracted-ints",
-                    # keep code-size at an acceptable limit,
-                    # cf. https://github.com/evaleev/libint/wiki#program-specific-notes:
-                    "--enable-generic-code",
-                    "--disable-unrolling",
-                ]
-
-        return config_args
+        return define_configure_args(self.pkg, self.spec, self.prefix, self.optflags)
 
     @property
     def build_targets(self):
@@ -253,3 +256,80 @@ class AutotoolsBuilder(spack.build_systems.autotools.AutotoolsBuilder):
             filter_file(
                 "$(CXX) $(CXXFLAGS)", "$(FC) $(FCFLAGS)", "export/fortran/Makefile", string=True
             )
+
+
+class CMakeBuilder(
+    # ./configure is sensitive to the oder of declatation
+    # Devlaring CMakeBuilder first, does not seem to trigger set_configure_or_die
+    spack.build_systems.autotools.AutotoolsBuilder, spack.build_systems.cmake.CMakeBuilder
+):
+    phases = ("autoreconf", "configure", "build", "cmake", "cmake_build", "install")
+
+    force_autoreconf = True
+
+    def autoreconf(self, pkg, spec, prefix):
+        print(">>> PREFIX:", prefix)
+        print(">>> CONFIGURE_ABS_PATH:", self.configure_abs_path)
+        print(">>> BUILD_DIRECTORY:", self.build_directory)
+        which("bash")("autogen.sh")
+        filter_file(r"^(export::.*)\s+tgz$", r"\1", "export/Makefile")
+
+    @property
+    def optflags(self):
+        flags = "-O2"
+
+        # microarchitecture-specific optimization flags should be controlled
+        # by Spack, otherwise we may end up with contradictory or invalid flags
+        # see https://github.com/spack/spack/issues/17794
+
+        return flags
+
+    def setup_build_environment(self, env):
+        # Set optimization flags
+        env.set("CFLAGS", self.optflags)
+        env.set("CXXFLAGS", self.optflags)
+
+        # Change AR to xiar if we compile with Intel and we
+        # find the executable
+        if "%intel" in self.spec and which("xiar"):
+            env.set("AR", "xiar")
+
+    def configure_args(self):
+        return define_configure_args(self.pkg, self.spec, self.prefix, self.optflags)
+
+    @property
+    def build_targets(self):
+        return ["export"]
+
+    def build(self, pkg, spec, prefix):
+        """
+        Starting from libint 2.6.0 we're using the 2-stage build
+        to get support for the Fortran bindings, required by some
+        packages (CP2K notably).
+        """
+
+        # upstream says that using configure/make for the generated code
+        # is deprecated and one should use CMake, but with the currently
+        # recent 2.7.0.b1 it still doesn't work
+        # first generate the libint compiler
+        make("export")
+
+    def cmake_args(self):
+        args = [
+            self.pkg.define_from_variant("REQUIRE_CXX_API", "cxx"),
+            self.pkg.define_from_variant("ENABLE_FORTRAN", "fortran"),
+        ]
+        return args
+
+    def cmake(self, pkg, spec, prefix):
+        print(">>> WORKDIR:", os.path.join(self.build_directory, "generated"))
+        with working_dir(os.path.join(self.build_directory, "generated")):
+            super(spack.build_systems.cmake.CMakeBuilder, self).cmake(pkg, spec, prefix)
+
+    def cmake_build(self, pkg, spec, prefix):
+        with working_dir(os.path.join(self.build_directory, "generated")):
+            super(spack.build_systems.cmake.CMakeBuilder, self).build(pkg, spec, prefix)
+
+    def install(self, pkg, spec, prefix):
+        with working_dir(os.path.join(self.build_directory, "generated")):
+            super(spack.build_system.cmake.CMakeBuilder, self).install(pkg, spec, prefix)
