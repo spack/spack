@@ -713,7 +713,7 @@ class Database(object):
 
         try:
             v.ref_version
-        except RuntimeError:
+        except vn.VersionLookupError:
             spec.versions = vn.VersionList([vn.StandardVersion.from_string(str(v))])
             tty.warn(
                 f"database: git sha of {spec.cformat('{name}{version}{/hash:7}')} could not "

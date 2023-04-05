@@ -16,7 +16,15 @@ from llnl.util.filesystem import working_dir
 
 import spack.package_base
 import spack.spec
-from spack.version import GitVersion, StandardVersion, Version, VersionList, VersionRange, ver
+from spack.version import (
+    GitVersion,
+    StandardVersion,
+    Version,
+    VersionList,
+    VersionLookupError,
+    VersionRange,
+    ver,
+)
 
 
 def assert_ver_lt(a, b):
@@ -947,3 +955,11 @@ def test_resolved_git_version_is_shown_in_str(mock_git_version_info, mock_packag
 
     assert spec.version.satisfies(ver("1.0"))
     assert str(spec.version) == f"{commit}=1.0-git.1"
+
+
+def test_unresolvable_git_versions_error(mock_packages):
+    """Test that VersionLookupError is raised when a git prop is not set on a package."""
+    with pytest.raises(VersionLookupError):
+        # The package exists, but does not have a git property set. When dereferencing
+        # the version, we should get VersionLookupError, not a generic AttributeError.
+        spack.spec.Spec(f"git-test-commit@{'a' * 40}").version.ref_version

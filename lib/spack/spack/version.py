@@ -439,7 +439,7 @@ class GitVersion(ConcreteVersion):
             return self._ref_version
 
         if self.ref_lookup is None:
-            raise RuntimeError(
+            raise VersionLookupError(
                 f"git ref '{self.ref}' cannot be looked up: "
                 "call attach_git_lookup_from_package first"
             )
@@ -1198,7 +1198,11 @@ class CommitLookup(object):
         if not self._pkg:
             import spack.repo  # break cycle
 
-            self._pkg = spack.repo.path.get_pkg_class(self.pkg_name)
+            try:
+                self._pkg = spack.repo.path.get_pkg_class(self.pkg_name)
+                self._pkg.git
+            except (spack.repo.RepoError, AttributeError) as e:
+                raise VersionLookupError(f"Couldn't get the git repo for {self.pkg_name}") from e
         return self._pkg
 
     @property
