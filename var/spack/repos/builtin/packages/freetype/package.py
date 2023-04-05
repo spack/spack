@@ -44,6 +44,7 @@ class Freetype(AutotoolsPackage, CMakePackage):
         "support __builtin_shuffle)",
     )
 
+    variant("shared", default=True, description="Build shared libraries")
     variant(
         "pic",
         default=False,
@@ -70,6 +71,7 @@ class AutotoolsBuilder(AutotoolsBuilder):
         ]
         if self.spec.satisfies("@2.9.1:"):
             args.append("--enable-freetype-config")
+        args.extend(self.enable_or_disable("shared"))
         return args
 
     def setup_build_environment(self, env):
@@ -85,5 +87,6 @@ class CMakeBuilder(CMakeBuilder):
             self.define("FT_DISABLE_HARFBUZZ", True),
             self.define("FT_REQUIRE_PNG", True),
             self.define("FT_REQUIRE_BZIP2", True),
+            self.define_from_variant("BUILD_SHARED_LIBS", "shared"),
             self.define_from_variant("CMAKE_POSITION_INDEPENDENT_CODE", "pic"),
         ]
