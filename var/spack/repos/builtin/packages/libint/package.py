@@ -8,6 +8,8 @@ import os
 from spack.package import *
 from spack.pkg.builtin.boost import Boost
 
+import spack.build_systems.autotools
+
 TUNE_VARIANTS = (
     "none",
     "cp2k-lmax-4",
@@ -21,7 +23,7 @@ TUNE_VARIANTS = (
 )
 
 
-class Libint(AutotoolsPackage):
+class Libint(AutotoolsPackage, CMakePackage):
     """Libint is a high-performance library for computing
     Gaussian integrals in quantum mechanics.
     """
@@ -29,8 +31,9 @@ class Libint(AutotoolsPackage):
     homepage = "https://github.com/evaleev/libint"
     url = "https://github.com/evaleev/libint/archive/v2.1.0.tar.gz"
 
-    maintainers("dev-zero")
+    maintainers("dev-zero", "RMeli")
 
+    version("2.7.2", sha256="fd0466ce9eb6786b8c5bbe3d510e387ed44b198a163264dfd7e60b337e295fd9")
     version("2.6.0", sha256="4ae47e8f0b5632c3d2a956469a7920896708e9f0e396ec10071b8181e4c8d9fa")
     version("2.4.2", sha256="86dff38065e69a3a51d15cfdc638f766044cb87e5c6682d960c14f9847e2eac3")
     version("2.4.1", sha256="0513be124563fdbbc7cd3c7043e221df1bda236a037027ba9343429a27db8ce4")
@@ -39,6 +42,8 @@ class Libint(AutotoolsPackage):
     version("2.1.0", sha256="43c453a1663aa1c55294df89ff9ece3aefc8d1bbba5ea31dbfe71b2d812e24c8")
     version("1.1.6", sha256="f201b0c621df678cfe8bdf3990796b8976ff194aba357ae398f2f29b0e2985a6")
     version("1.1.5", sha256="ec8cd4a4ba1e1a98230165210c293632372f0e573acd878ed62e5ec6f8b6174b")
+
+    build_system(conditional("cmake", when="@2.7.0:"), conditional("autotools", when="@:2.6.0"))
 
     variant("debug", default=False, description="Enable building with debug symbols")
     variant("fortran", default=False, description="Build & install Fortran bindings")
@@ -58,8 +63,8 @@ class Libint(AutotoolsPackage):
     )
 
     # Build dependencies
-    depends_on("autoconf@2.52:", type="build")
-    depends_on("automake", type="build")
+    depends_on("autoconf@2.52:", when="build_system=autotools", type="build")
+    depends_on("automake", when="build_system=autotools", type="build")
     depends_on("libtool", type="build")
     depends_on("python", type="build")
 
@@ -87,8 +92,11 @@ class Libint(AutotoolsPackage):
         else:
             return "{0}/v{1}.tar.gz".format(base_url, version)
 
-    def autoreconf(self, spec, prefix):
-        if self.spec.satisfies("@2:"):
+
+class AutotoolsBuilder(spack.build_systems.autotools.AutotoolsBuilder):
+
+    def autoreconf(self, pkg, spec, prefix):
+        if spec.satisfies("@2:"):
             which("bash")("autogen.sh")
         else:
             # Fall back since autogen is not available
@@ -122,13 +130,14 @@ class Libint(AutotoolsPackage):
 
     def configure_args(self):
         config_args = ["--enable-shared"]
+        print(self)
 
         if self.spec.satisfies("@2:"):
             # --with-boost option available only from version 2 and above
             config_args.extend(["--with-boost={0}".format(self.spec["boost"].prefix)])
 
         # Optimization flag names have changed in libint 2
-        if self.version < Version("2.0.0"):
+        if self.pkg.version < Version("2.0.0"):
             config_args.extend(
                 [
                     "--with-cc-optflags={0}".format(self.optflags),
@@ -144,7 +153,7 @@ class Libint(AutotoolsPackage):
             )
 
         # Options required by CP2K, removed in libint 2
-        if self.version < Version("2.0.0"):
+        if self.pkg.version < Version("2.0.0"):
             config_args.extend(["--with-libint-max-am=5", "--with-libderiv-max-am1=4"])
 
         if "@2.6.0:" in self.spec:
@@ -199,7 +208,7 @@ class Libint(AutotoolsPackage):
         return []
 
     @when("@2.6.0:")
-    def build(self, spec, prefix):
+    def build(self, pkg, spec, prefix):
         """
         Starting from libint 2.6.0 we're using the 2-stage build
         to get support for the Fortran bindings, required by some
@@ -233,7 +242,7 @@ class Libint(AutotoolsPackage):
             make("check")
 
     @when("@2.6.0:")
-    def install(self, spec, prefix):
+    def install(self, pkg, spec, prefix):
         with working_dir(os.path.join(self.build_directory, "generated")):
             make("install")
 
