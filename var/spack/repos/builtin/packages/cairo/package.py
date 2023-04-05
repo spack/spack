@@ -40,6 +40,7 @@ class Cairo(AutotoolsPackage):
     variant("png", default=False, description="Enable cairo's PNG functions feature")
     variant("svg", default=False, description="Enable cairo's SVN functions feature")
     variant("shared", default=True, description="Build shared libraries")
+    variant("pic", default=False, description="Enable position-independent code (PIC)")
 
     depends_on("libx11", when="+X")
     depends_on("libxext", when="+X")
@@ -85,6 +86,12 @@ class Cairo(AutotoolsPackage):
         args.extend(self.enable_or_disable("ft"))
         args.extend(self.enable_or_disable("fc"))
         args.extend(self.enable_or_disable("shared"))
+        args.extend(self.with_or_without("pic"))
+
+        if self.spec.satisfies("+ft"):
+            if self.spec["freetype"].satisfies("~shared"):
+                args.append("LDFLAGS=%s" % self.spec["bzip2"].libs.search_flags)
+                args.append("LIBS=%s" % self.spec["bzip2"].libs.link_flags)
 
         return args
 
