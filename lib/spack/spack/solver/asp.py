@@ -1639,7 +1639,9 @@ class SpackSolverSetup(object):
                 if ver.concrete:
                     if not isinstance(ver, spack.version.GitVersion):
                         pkg_class = spack.repo.path.get_pkg_class(pkg_name)
-                        satisfying_versions = list(v for v in pkg_class.versions if v.satisfies(ver))
+                        satisfying_versions = list(
+                            v for v in pkg_class.versions if v.satisfies(ver)
+                        )
                         if not satisfying_versions:
                             raise spack.config.ConfigError(
                                 "Preference defines version {0} for {1} that "
@@ -1649,7 +1651,9 @@ class SpackSolverSetup(object):
                             version_defs = list(sorted(satisfying_versions, reverse=True))
                 for vdef in version_defs:
                     self.declared_versions[pkg_name].append(
-                        DeclaredVersion(version=vdef, idx=idx, origin=version_provenance.packages_yaml)
+                        DeclaredVersion(
+                            version=vdef, idx=idx, origin=version_provenance.packages_yaml
+                        )
                     )
                     idx += 1
 
@@ -2274,8 +2278,7 @@ def _specs_from_requires(pkg_name, section):
                 if ver not in pkg_class.versions:
                     ordered_satisfying_versions = sorted(satisfying_versions, reverse=True)
                     vspecs = list(
-                        spack.spec.Spec("@{0}".format(x)) for x in
-                        ordered_satisfying_versions
+                        spack.spec.Spec("@{0}".format(x)) for x in ordered_satisfying_versions
                     )
 
             version_specs.extend(vspecs)
