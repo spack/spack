@@ -25,6 +25,7 @@ script_schema = {
 # CI target YAML for each job.
 attributes_schema = {
     "type": "object",
+    "additionalProperties": True,
     "properties": {
         "image": {
             "oneOf": [
@@ -51,7 +52,7 @@ attributes_schema = {
 
 submapping_schema = {
     "type": "object",
-    "additinoalProperties": False,
+    "additionalProperties": False,
     "required": ["submapping"],
     "properties": {
         "match_behavior": {"type": "string", "enum": ["first", "merge"], "default": "first"},

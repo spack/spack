@@ -200,6 +200,7 @@ spack:
         tags: [donotcare]
     - reindex-job:
         script:: [hello, world]
+        custom_attribute: custom!
   cdash:
     build-group: Not important
     url: https://my.fake.cdash
@@ -234,6 +235,7 @@ spack:
             rebuild_job = yaml_contents["rebuild-index"]
             expected = "spack buildcache update-index --keys --mirror-url {0}".format(mirror_url)
             assert rebuild_job["script"][0] == expected
+            assert rebuild_job["custom_attribute"] == "custom!"
 
             assert "variables" in yaml_contents
             assert "SPACK_ARTIFACTS_ROOT" in yaml_contents["variables"]
@@ -1222,6 +1224,7 @@ spack:
        tags:
          - nonbuildtag
        image: basicimage
+       custom_attribute: custom!
 """.format(
         mirror_url
     )
@@ -1263,6 +1266,7 @@ spack:
                 assert "nonbuildtag" in the_elt["tags"]
                 assert "image" in the_elt
                 assert the_elt["image"] == "basicimage"
+                assert the_elt["custom_attribute"] == "custom!"
 
             outputfile_not_pruned = str(tmpdir.join("unpruned_pipeline.yml"))
             ci_cmd("generate", "--no-prune-dag", "--output-file", outputfile_not_pruned)
@@ -1281,6 +1285,7 @@ spack:
                         job_vars = the_elt["variables"]
                         assert "SPACK_SPEC_NEEDS_REBUILD" in job_vars
                         assert job_vars["SPACK_SPEC_NEEDS_REBUILD"] == "False"
+                        assert the_elt["custom_attribute"] == "custom!"
                         found_spec_job = True
 
                 assert found_spec_job
@@ -2005,6 +2010,8 @@ spack:
           tags:
             - donotcare
           image: donotcare
+    - cleanup-job:
+        custom_attribute: custom!
 """
         )
 
@@ -2020,6 +2027,8 @@ spack:
 
                 assert "cleanup" in pipeline_doc
                 cleanup_job = pipeline_doc["cleanup"]
+
+                assert cleanup_job["custom_attribute"] == "custom!"
 
                 assert "script" in cleanup_job
                 cleanup_task = cleanup_job["script"][0]
@@ -2138,6 +2147,7 @@ spack:
           IMPORTANT_INFO: avalue
         script::
           - echo hello
+        custom_attribute: custom!
 """
         )
 
@@ -2157,6 +2167,7 @@ spack:
             signing_job_tags = signing_job["tags"]
             for expected_tag in ["notary", "protected", "aws"]:
                 assert expected_tag in signing_job_tags
+            assert signing_job["custom_attribute"] == "custom!"
 
 
 def test_ci_reproduce(
