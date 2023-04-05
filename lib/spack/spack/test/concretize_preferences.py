@@ -232,6 +232,13 @@ mpileaks:
         with pytest.raises(spack.config.ConfigError):
             spec.concretize()
 
+    def test_preferred_truncated(self):
+        """Preference should not specify an undefined version"""
+        update_packages("python", "version", ["3.5"])
+        spec = Spec("python")
+        spec.concretize()
+        assert spec.satisfies("@3.5.1")
+
     def test_develop(self):
         """Test concretization with develop-like versions"""
         spec = Spec("develop-test")
