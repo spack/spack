@@ -1334,7 +1334,7 @@ def test_env_updates_view_uninstall(
     check_mpileaks_and_deps_in_view(view_dir)
 
     with ev.read("test"):
-        uninstall("-ay")
+        print(uninstall("-ay"))
 
     check_viewdir_removal(view_dir)
 
