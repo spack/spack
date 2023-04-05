@@ -40,9 +40,9 @@ def configuration(module_set_name):
 configuration_registry = {}  # type: Dict[str, Any]
 
 
-def make_configuration(spec, module_set_name):
+def make_configuration(spec, module_set_name, explicit):
     """Returns the ups_version configuration for spec"""
-    key = (spec.dag_hash(), module_set_name)
+    key = (spec.dag_hash(), module_set_name, explicit)
     try:
         return configuration_registry[key]
     except KeyError:
@@ -51,15 +51,15 @@ def make_configuration(spec, module_set_name):
         )
 
 
-def make_layout(spec, module_set_name):
+def make_layout(spec, module_set_name, explicit):
     """Returns the layout information for spec"""
-    conf = make_configuration(spec, module_set_name)
+    conf = make_configuration(spec, module_set_name, explicit)
     return UpsVersionFileLayout(conf)
 
 
-def make_context(spec, module_set_name):
+def make_context(spec, module_set_name, explicit):
     """Returns the context information for spec"""
-    conf = make_configuration(spec, module_set_name)
+    conf = make_configuration(spec, module_set_name, explicit)
     return UpsVersionContext(conf)
 
 
