@@ -36,6 +36,10 @@ class R3d(CMakePackage):
         description="Build R3D regression tests (versions 2019-04-24 or earlier)",
     )
 
+    variant(
+        "pic", default=False, description="Produce position-independent code (for shared libs)"
+    )
+
     @when("@:2019-04-24")
     def cmake(self, spec, prefix):
         pass
@@ -79,5 +83,7 @@ class R3d(CMakePackage):
             options.append("-DENABLE_UNIT_TESTS=ON")
         else:
             options.append("-DENABLE_UNIT_TESTS=OFF")
+
+        options.append(self.define_from_variant("CMAKE_POSITION_INDEPENDENT_CODE", "pic"))
 
         return options
