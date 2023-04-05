@@ -435,7 +435,7 @@ def _execute_version(pkg, ver, **kwargs):
         args = ", ".join(f"{argname}='{value}'" for argname, value in kwargs.items())
         raise VersionLookupError(
             f"{pkg.name}: spack version directives cannot include git hashes fetched from URLs.\n"
-            f"    version('{version}', {args})"
+            f"    version('{ver}', {args})"
         )
 
     # Store kwargs for the package to later with a fetch_strategy.
