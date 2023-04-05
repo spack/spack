@@ -86,7 +86,7 @@ def checksum(parser, args):
     if not args.versions and args.preferred:
         versions = [preferred_version(pkg)]
     else:
-        versions = list(map(Version, args.versions))
+        versions = [Version(v) for v in args.versions]
 
     if versions:
         remote_versions = None
