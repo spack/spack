@@ -1276,25 +1276,6 @@ def generate_gitlab_ci_yaml(
                 job_object["retry"] = {"max": 2, "when": JOB_RETRY_CONDITIONS}
                 job_object["interruptible"] = True
 
-                job_object = {
-                    k: v
-                    for k, v in job_object.items()
-                    if k
-                    in (
-                        "stage",
-                        "script",
-                        "before_script",
-                        "after_script",
-                        "tags",
-                        "artifacts",
-                        "needs",
-                        "retry",
-                        "interruptible",
-                        "variables",
-                        "image",
-                    )
-                }
-
                 length_needs = len(job_object["needs"])
                 if length_needs > max_length_needs:
                     max_length_needs = length_needs

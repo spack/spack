@@ -480,7 +480,7 @@ spack:
             assert filecmp.cmp(orig_file, copy_to_file) is True
 
 
-def test_ci_generate_with_custom_scripts(
+def test_ci_generate_with_custom_settings(
     tmpdir,
     working_env,
     mutable_mock_env_path,
@@ -490,7 +490,7 @@ def test_ci_generate_with_custom_scripts(
     ci_base_environment,
     mock_binary_index,
 ):
-    """Test use of user-provided scripts"""
+    """Test use of user-provided scripts and attributes"""
     filename = str(tmpdir.join("spack.yaml"))
     with open(filename, "w") as f:
         f.write(
@@ -522,6 +522,7 @@ spack:
             - spack -d ci rebuild
           after_script:
             - rm -rf /some/path/spack
+          custom_attribute: custom!
 """
         )
 
@@ -569,6 +570,9 @@ spack:
                             "spack ci rebuild",
                         ]
                         assert ci_obj["after_script"] == ["rm -rf /some/path/spack"]
+
+                        # Ensure we have the custom attributes
+                        assert ci_obj["custom_attribute"] == "custom!"
 
                         found_it = True
 
