@@ -54,7 +54,7 @@ container_schema = {
         "os_packages": {
             "type": "object",
             "properties": {
-                "command": {"type": "string", "enum": ["apt", "yum"]},
+                "command": {"type": "string", "enum": ["apt", "yum", "zypper"]},
                 "update": {"type": "boolean"},
                 "build": _list_of_packages,
                 "final": _list_of_packages,
