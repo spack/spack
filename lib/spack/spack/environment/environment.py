@@ -698,6 +698,8 @@ class Environment(object):
         # This attribute will be set properly from configuration
         # during concretization
         self.unify = None
+        self.new_specs = []
+        self.new_installs = []
         self.clear()
 
         if init_file:
@@ -2089,30 +2091,14 @@ class Environment(object):
             regenerate (bool): regenerate views and run post-write hooks as
                 well as writing if True.
         """
-        # Warn that environments are not in the latest format.
         self.manifest_uptodate_or_warn()
-
-        # ensure path in var/spack/environments
-        fs.mkdirp(self.path)
 
         yaml_dict = config_dict(self.yaml)
         raw_yaml_dict = config_dict(self.raw_yaml)
 
         if self.specs_by_hash:
-            # ensure the prefix/.env directory exists
-            fs.mkdirp(self.env_subdir_path)
-
-            for spec in spack.traverse.traverse_nodes(self.new_specs):
-                if not spec.concrete:
-                    raise ValueError("specs passed to environment.write() " "must be concrete!")
-
-                root = os.path.join(self.repos_path, spec.namespace)
-                repo = spack.repo.create_or_construct(root, spec.namespace)
-                pkg_dir = repo.dirname_for_package_name(spec.name)
-
-                fs.mkdirp(pkg_dir)
-                spack.repo.path.dump_provenance(spec, pkg_dir)
-
+            self.ensure_env_directory_exists(dot_env=True)
+            self._update_environment_repository()
             self._update_and_write_manifest(raw_yaml_dict, yaml_dict)
 
             # Write the lock file last. This is useful for Makefiles
@@ -2122,6 +2108,7 @@ class Environment(object):
             with fs.write_tmp_and_move(self.lock_path) as f:
                 sjson.dump(self._to_lockfile_dict(), stream=f)
         else:
+            self.ensure_env_directory_exists(dot_env=False)
             with fs.safe_remove(self.lock_path):
                 self._update_and_write_manifest(raw_yaml_dict, yaml_dict)
 
@@ -2140,6 +2127,32 @@ class Environment(object):
         # new specs and new installs reset at write time
         self.new_specs = []
         self.new_installs = []
+
+    def ensure_env_directory_exists(self, dot_env: bool = False) -> None:
+        """Ensure that the root directory of the environment exists
+
+        Args:
+            dot_env: if True also ensures that the <root>/.env directory exists
+        """
+        fs.mkdirp(self.path)
+        if dot_env:
+            fs.mkdirp(self.env_subdir_path)
+
+    def _update_environment_repository(self) -> None:
+        """Updates the repository associated with the environment."""
+        for spec in spack.traverse.traverse_nodes(self.new_specs):
+            if not spec.concrete:
+                raise ValueError("specs passed to environment.write() must be concrete!")
+
+            self._add_to_environment_repository(spec)
+
+    def _add_to_environment_repository(self, spec_node: Spec) -> None:
+        """Add the root node of the spec to the environment repository"""
+        repository_dir = os.path.join(self.repos_path, spec_node.namespace)
+        repository = spack.repo.create_or_construct(repository_dir, spec_node.namespace)
+        pkg_dir = repository.dirname_for_package_name(spec_node.name)
+        fs.mkdirp(pkg_dir)
+        spack.repo.path.dump_provenance(spec_node, pkg_dir)
 
     def manifest_uptodate_or_warn(self):
         """Emits a warning if the manifest file is not up-to-date."""
