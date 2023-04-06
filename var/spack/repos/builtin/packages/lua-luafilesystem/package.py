@@ -4,6 +4,7 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import os
+
 import spack.build_systems.lua
 from spack.package import *
 
@@ -19,6 +20,7 @@ class LuaLuafilesystem(LuaPackage):
     """
 
     homepage = "https://lunarmodules.github.io/luafilesystem/"
+
     def url_for_version(self, version):
         url = "https://github.com/lunarmodules/luafilesystem/archive/refs/tags/v{0}.tar.gz"
         return url.format(version.underscored)
@@ -28,6 +30,7 @@ class LuaLuafilesystem(LuaPackage):
     version("1.6.3", sha256="11c7b1fc2e560c0a521246b84e6257138d97dddde5a19e405714dbabcb9436ca")
 
     depends_on("lua-lang@:5.3", when="@:1.7")
+
 
 class LuaBuilder(spack.build_systems.lua.LuaBuilder):
     def install(self, pkg, spec, prefix):
