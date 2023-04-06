@@ -10,7 +10,7 @@ from spack.package import *
 
 
 def is_CrayXC():
-    return (spack.platforms.host().name == "cray") and (
+    return (spack.platforms.host().name in ["linux", "cray"]) and (
         os.environ.get("CRAYPE_NETWORK_TARGET") == "aries"
     )
 
@@ -155,14 +155,6 @@ class Upcxx(Package, CudaPackage, ROCmPackage):
         else:
             options.append("--with-cross=" + spec.variants["cross"].value)
 
-        if is_CrayXC():
-            # Spack loads the cray-libsci module incorrectly on ALCF theta,
-            # breaking the Cray compiler wrappers
-            # cray-libsci is irrelevant to our build, so disable it
-            for var in ["PE_PKGCONFIG_PRODUCTS", "PE_PKGCONFIG_LIBS"]:
-                env[var] = ":".join(
-                    filter(lambda x: "libsci" not in x.lower(), env[var].split(":"))
-                )
         if (is_CrayXC() or is_CrayEX()) and env.get("CRAYPE_DIR"):
             # Undo spack compiler wrappers:
             # the C/C++ compilers must work post-install
