@@ -262,11 +262,8 @@ packages:
 """
     update_packages_config(conf_str)
 
-    s1 = Spec("v").concretized()
-    assert s1.satisfies("@2.2")
-
-    s2 = Spec("v@2.3").concretized()
-    assert s2.satisfies(f"v@{commits[1]}=2.3")
+    assert Spec("v").concretized().satisfies("@2.2")
+    assert Spec("v@2.3").concretized().satisfies(f"v@{commits[1]}=2.3")
 
 
 # TODO: this belongs in the concretize_preferences test module but uses
