@@ -134,7 +134,7 @@ class NetcdfFortran(AutotoolsPackage):
 
         if "~shared" in netcdf_c_spec:
             nc_config = which("nc-config")
-            config_args.append("LIBS={0}".format(nc_config("--libs", output=str)))
+            config_args.append("LIBS={0}".format(nc_config("--libs", output=str).strip()))
             if any(s in netcdf_c_spec for s in ["+mpi", "+parallel-netcdf", "^hdf5+mpi~shared"]):
                 config_args.append("CC=%s" % self.spec["mpi"].mpicc)
 
