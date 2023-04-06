@@ -491,7 +491,10 @@ class ViewDescriptor(object):
         # We will not operate on this view object, only query metadata
         # We don't want to pass a created_path to this view, so that we can read where it says it
         # was created.
-        view = self.view(self.root, created_path=False)
+        if not os.path.exists(self.root):
+            return None
+
+        view = self.view(created_path=False)
         orig_path = view.metadata.get("created_path", None)
         if orig_path:
             return orig_path
@@ -532,9 +535,7 @@ class ViewDescriptor(object):
         symlink.
         """
         view = self.view()
-        view_path = view.get_projection_for_spec(spec)
-        rel_path = os.path.relpath(view_path, self._current_root)
-        return os.path.join(self.root, rel_path)
+        return view.get_projection_for_spec(spec)
 
     def view(self, new=None, created_path=True):
         """
@@ -550,7 +551,8 @@ class ViewDescriptor(object):
                 rooted at that path. Default None. This should only be used to
                 regenerate the view, and cannot be used to access specs.
         """
-        root = new if new else self._current_root
+        root = new if new else self.root
+
         if not root:
             # This can only be hit if we write a future bug
             msg = (

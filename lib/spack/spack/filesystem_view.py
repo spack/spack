@@ -288,7 +288,7 @@ class YamlFilesystemView(FilesystemView):
 
         self.metadata_path = os.path.join(self._root, _metadata_path)
         if not self.metadata:
-            self.projections = self.read_metadata()
+            self.metadata = self.read_metadata()
         elif not os.path.exists(self.metadata_path):
             self.write_metadata()
         else:
@@ -674,6 +674,32 @@ class SimpleFilesystemView(FilesystemView):
 
     def __init__(self, root, layout, **kwargs):
         super(SimpleFilesystemView, self).__init__(root, layout, **kwargs)
+
+        self.metadata_path = os.path.join(self._root, _metadata_path)
+        if not self.metadata:
+            self.metadata = self.read_metadata()
+        elif not os.path.exists(self.metadata_path):
+            self.write_metadata()
+        else:
+            if self.metadata != self.read_metadata():
+                msg = f"View at {self._root} has metadata file"
+                msg += " which does not match metadata passed manually."
+                raise ConflictingMetadataError(msg)
+
+    def write_metadata(self):
+        if self.metadata:
+            mkdirp(os.path.dirname(self.metadata_path))
+            with open(self.metadata_path, "w") as f:
+                f.write(s_yaml.dump_config({"metadata": self.metadata}))
+
+    def read_metadata(self):
+        if os.path.exists(self.metadata_path):
+            with open(self.metadata_path, "r") as f:
+                # no schema as this is not user modified
+                metadata_data = s_yaml.load(f)
+                return metadata_data["metadata"]
+        else:
+            return {}
 
     def _sanity_check_view_projection(self, specs):
         """A very common issue is that we end up with two specs of the same
