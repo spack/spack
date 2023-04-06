@@ -703,8 +703,8 @@ class Database(object):
     def _validate_version(self, spec):
         # Specs installed from a git sha without an associated spack version, that cannot
         # be resolved anymore because the repo has been removed from its package.py, get
-        # replaced by a literal string version, to avoid errors in comparison. Installs
-        # from Spack v0.20 are not affected by this.
+        # assigned an =develop ref_version, to avoid errors in comparison. Installs from
+        # Spack v0.20+ are not affected by this, they always have a ref_version associated.
         v = spec.version
         if not isinstance(v, vn.GitVersion):
             return
