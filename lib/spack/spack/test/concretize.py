@@ -765,11 +765,9 @@ class TestConcretize(object):
             s = Spec(spec).concretized()
             assert str(s.architecture.target) == str(expected)
 
-    @pytest.mark.regression("8735,14730")
     def test_compiler_version_matches_any_entry_in_compilers_yaml(self):
-        # The behavior here has changed since #8735. Now %gcc@10.2
-        # is an abstract compiler spec, and it should first find a
-        # matching compiler gcc@=10.2.1
+        # The behavior here has changed since #8735 / #14730. Now %gcc@10.2 is an abstract
+        # compiler spec, and it should first find a matching compiler gcc@=10.2.1
         assert Spec("mpileaks %gcc@10.2").concretized().compiler == CompilerSpec("gcc@=10.2.1")
         assert Spec("mpileaks %gcc@10.2:").concretized().compiler == CompilerSpec("gcc@=10.2.1")
 
