@@ -525,6 +525,9 @@ spack:
           after_script:
             - rm -rf /some/path/spack
           custom_attribute: custom!
+          artifacts:
+            paths:
+            - some/custom/artifact
 """
         )
 
@@ -574,6 +577,7 @@ spack:
                         assert ci_obj["after_script"] == ["rm -rf /some/path/spack"]
 
                         # Ensure we have the custom attributes
+                        assert "some/custom/artifact" in ci_obj["artifacts"]["paths"]
                         assert ci_obj["custom_attribute"] == "custom!"
 
                         found_it = True
