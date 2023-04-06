@@ -972,7 +972,9 @@ class VersionList:
         return hash(tuple(self.versions))
 
     def __str__(self):
-        return ",".join(str(v) for v in self.versions)
+        return ",".join(
+            f"={v}" if isinstance(v, StandardVersion) else str(v) for v in self.versions
+        )
 
     def __repr__(self):
         return str(self.versions)

@@ -229,7 +229,7 @@ def test_new_version_from_list_url(
 
     """Test non-specific URLs from the url-list-test package."""
     with spack.config.override("config:url_fetch_method", _fetch_method):
-        s = Spec("url-list-test @=%s" % requested_version).concretized()
+        s = Spec("url-list-test @%s" % requested_version).concretized()
         fetch_strategy = fs.from_list_url(s.package)
 
         assert isinstance(fetch_strategy, fs.URLFetchStrategy)

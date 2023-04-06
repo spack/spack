@@ -149,8 +149,8 @@ _separators = "[\\%s]" % "\\".join(color_formats.keys())
 #: every time we call str()
 _any_version = vn.VersionList([":"])
 
-default_format = "{name}{@version}"
-default_format += "{%compiler.name}{@compiler.version}{compiler_flags}"
+default_format = "{name}{@versions}"
+default_format += "{%compiler.name}{@compiler.versions}{compiler_flags}"
 default_format += "{variants}{arch=architecture}"
 
 #: Regular expression to pull spec contents out of clearsigned signature
@@ -4171,9 +4171,13 @@ class Spec(object):
                         if part == "arch":
                             part = "architecture"
                         elif part == "version":
-                            # Version requires concrete spec, versions does not
-                            # when concrete, they print the same thing
-                            part = "versions"
+                            # version (singular) requires a concrete versions list. Avoid
+                            # pedantic errors by using versions (plural) when not concrete.
+                            # These two are not entirely equivalent for pkg@=1.2.3:
+                            # - version prints '1.2.3'
+                            # - versions prints '=1.2.3'
+                            if not current.versions.concrete:
+                                part = "versions"
                         try:
                             current = getattr(current, part)
                         except AttributeError:

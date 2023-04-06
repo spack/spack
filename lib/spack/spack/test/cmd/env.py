@@ -2647,11 +2647,11 @@ def test_custom_version_concretize_together(tmpdir):
     e.unify = True
 
     # Concretize a first time using 'mpich' as the MPI provider
-    e.add("hdf5@myversion")
+    e.add("hdf5@=myversion")
     e.add("mpich")
     e.concretize()
 
-    assert any("hdf5@myversion" in spec for _, spec in e.concretized_specs())
+    assert any(spec.satisfies("hdf5@myversion") for _, spec in e.concretized_specs())
 
 
 def test_modules_relative_to_views(environment_from_manifest, install_mockery, mock_fetch):

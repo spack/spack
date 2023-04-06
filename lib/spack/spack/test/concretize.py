@@ -229,7 +229,7 @@ class TestConcretize(object):
         check_concretize(spec)
 
     def test_concretize_mention_build_dep(self):
-        spec = check_concretize("cmake-client ^cmake@3.21.3")
+        spec = check_concretize("cmake-client ^cmake@=3.21.3")
 
         # Check parent's perspective of child
         to_dependencies = spec.edges_to_dependencies(name="cmake")
@@ -749,7 +749,7 @@ class TestConcretize(object):
     @pytest.mark.parametrize(
         "spec, best_achievable",
         [
-            ("mpileaks%gcc@=4.4.7 ^dyninst@10.2.1 target=x86_64:", "core2"),
+            ("mpileaks%gcc@=4.4.7 ^dyninst@=10.2.1 target=x86_64:", "core2"),
             ("mpileaks%gcc@=4.8 target=x86_64:", "haswell"),
             ("mpileaks%gcc@=5.3.0 target=x86_64:", "broadwell"),
             ("mpileaks%apple-clang@=5.1.0 target=x86_64:", "x86_64"),
@@ -773,7 +773,7 @@ class TestConcretize(object):
 
         # This compiler does not exist
         with pytest.raises(spack.concretize.UnavailableCompilerVersionError):
-            Spec("mpileaks %gcc@=10.2").concretize()
+            Spec("mpileaks %gcc@=10.2").concretized()
 
     def test_concretize_anonymous(self):
         with pytest.raises(spack.error.SpackError):

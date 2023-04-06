@@ -1059,9 +1059,9 @@ def test_addition_of_different_deptypes_in_multiple_calls(mock_packages, config)
 def test_adding_same_deptype_with_the_same_name_raises(
     mock_packages, config, c1_deptypes, c2_deptypes
 ):
-    p = Spec("b@2.0").concretized()
-    c1 = Spec("b@1.0").concretized()
-    c2 = Spec("b@2.0").concretized()
+    p = Spec("b@=2.0").concretized()
+    c1 = Spec("b@=1.0").concretized()
+    c2 = Spec("b@=2.0").concretized()
 
     p.add_dependency_edge(c1, deptypes=c1_deptypes)
     with pytest.raises(spack.error.SpackError):
