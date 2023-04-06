@@ -1211,7 +1211,6 @@ def _build_tarball(
     allow_root=False,
     key=None,
     regenerate_index=False,
-    skip_on_error=False,
 ):
     """
     Build a tarball from given spec and put it into the directory structure
@@ -1310,29 +1309,9 @@ def _build_tarball_in_stage_dir(
     # optionally make the paths in the binaries relative to each other
     # in the spack install tree before creating tarball
     if relative:
-        try:
-            make_package_relative(workdir, spec, allow_root)
-        except Exception as e:
-            shutil.rmtree(workdir)
-            shutil.rmtree(tarfile_dir)
-            shutil.rmtree(tmpdir)
-            if skip_on_error:
-                tty.warn('Error while creating buildcache for "{0}", skip: {1}'.format(spec, e))
-                return
-            else:
-                tty.die(e)
-    else:
-        try:
-            ensure_package_relocatable(buildinfo, binaries_dir)
-        except Exception as e:
-            shutil.rmtree(workdir)
-            shutil.rmtree(tarfile_dir)
-            shutil.rmtree(tmpdir)
-            if skip_on_error:
-                tty.warn('Error while creating buildcache for "{0}", skip: {1}'.format(spec, e))
-                return
-            else:
-                tty.die(e)
+        make_package_relative(workdir, spec, buildinfo, allow_root)
+    elif not allow_root:
+        ensure_package_relocatable(buildinfo, binaries_dir)
 
     _do_create_tarball(tarfile_path, binaries_dir, pkg_dir, buildinfo)
 
@@ -1444,7 +1423,6 @@ def push(specs, push_url, include_root: bool = True, include_dependencies: bool 
     # TODO: This seems to be an easy target for task
     # TODO: distribution using a parallel pool
     for node in nodes:
-        tty.msg('Creating buildcache for "{0}"'.format(node.format()))
         try:
             _build_tarball(node, push_url, **kwargs)
         except NoOverwriteException as e:
@@ -1694,7 +1672,7 @@ def dedupe_hardlinks_if_necessary(root, buildinfo):
         buildinfo[key] = new_list
 
 
-def relocate_package(spec):
+def relocate_package(spec, allow_root):
     """
     Relocate the given package
     """
@@ -1979,7 +1957,7 @@ def extract_tarball(spec, download_result, allow_root=False, unsigned=False, for
     os.remove(specfile_path)
 
     try:
-        relocate_package(spec)
+        relocate_package(spec, allow_root)
     except Exception as e:
         shutil.rmtree(spec.prefix)
         raise e
