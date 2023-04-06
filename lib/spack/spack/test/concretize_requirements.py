@@ -262,7 +262,7 @@ packages:
 """
     update_packages_config(conf_str)
 
-    assert Spec("v").concretized().satisfies("@2.2")
+    assert Spec("v").concretized().satisfies(f"@{commits[0]}=2.2")
     assert Spec("v@2.3").concretized().satisfies(f"v@{commits[1]}=2.3")
 
 
