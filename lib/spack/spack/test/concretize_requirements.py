@@ -286,14 +286,8 @@ packages:
 """
     update_packages_config(conf_str)
 
-    s1 = Spec("v").concretized()
-    assert s1.satisfies("@2.2")
-    assert s1.satisfies(f"@{commits[0]}=2.2")
-
-    # The way to interpret this: install something in the range [2.3, 2.4), which includes
-    # the preferred version commits[1]=2.3.
-    s2 = Spec("v@2.3").concretized()
-    assert s2.satisfies(f"@{commits[1]}=2.3")
+    assert Spec("v").concretized().satisfies(f"@{commits[0]}=2.2")
+    assert Spec("v@2.3").concretized().satisfies(f"@{commits[1]}=2.3")
 
     # When installing by hash, a lookup is triggered, so it's not mapped to =2.3.
     s3 = Spec(f"v@{commits[1]}").concretized()
