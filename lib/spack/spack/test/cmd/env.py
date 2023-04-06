@@ -74,9 +74,11 @@ def check_mpileaks_and_deps_in_view(viewdir):
 
 def check_viewdir_removal(viewdir):
     """Check that the uninstall/removal worked."""
-    assert not os.path.exists(str(viewdir.join(".spack"))) or os.listdir(
-        str(viewdir.join(".spack"))
-    ) == ["projections.yaml"]
+    view_spack_dir = str(viewdir.join(".spack"))
+    if not os.path.exists(view_spack_dir):
+        return
+
+    assert all(f in ["projections.yaml", "metadata.yaml"] for f in os.listdir(view_spack_dir))
 
 
 def test_add():
