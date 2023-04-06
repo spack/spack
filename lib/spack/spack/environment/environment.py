@@ -2080,53 +2080,44 @@ class Environment(object):
         for spec_dag_hash in self.concretized_order:
             self.specs_by_hash[spec_dag_hash] = first_seen[spec_dag_hash]
 
-    def write(self, regenerate=True):
+    def write(self, regenerate: bool = True) -> None:
         """Writes an in-memory environment to its location on disk.
 
         Write out package files for each newly concretized spec.  Also
         regenerate any views associated with the environment and run post-write
         hooks, if regenerate is True.
 
-        Arguments:
-            regenerate (bool): regenerate views and run post-write hooks as
-                well as writing if True.
+        Args:
+            regenerate: regenerate views and run post-write hooks as well as writing if True.
         """
         self.manifest_uptodate_or_warn()
-
-        yaml_dict = config_dict(self.yaml)
-        raw_yaml_dict = config_dict(self.raw_yaml)
-
         if self.specs_by_hash:
             self.ensure_env_directory_exists(dot_env=True)
-            self._update_environment_repository()
-            self._update_and_write_manifest(raw_yaml_dict, yaml_dict)
-
+            self.update_environment_repository()
+            self.update_manifest()
             # Write the lock file last. This is useful for Makefiles
             # with `spack.lock: spack.yaml` rules, where the target
             # should be newer than the prerequisite to avoid
             # redundant re-concretization.
-            with fs.write_tmp_and_move(self.lock_path) as f:
-                sjson.dump(self._to_lockfile_dict(), stream=f)
+            self.update_lockfile()
         else:
             self.ensure_env_directory_exists(dot_env=False)
             with fs.safe_remove(self.lock_path):
-                self._update_and_write_manifest(raw_yaml_dict, yaml_dict)
+                self.update_manifest()
 
-        # TODO: rethink where this needs to happen along with
-        # writing. For some of the commands (like install, which write
-        # concrete specs AND regen) this might as well be a separate
-        # call.  But, having it here makes the views consistent witht the
-        # concretized environment for most operations.  Which is the
-        # special case?
         if regenerate:
             self.regenerate_views()
-
-            # Run post_env_hooks
             spack.hooks.post_env_write(self)
 
-        # new specs and new installs reset at write time
+        self._reset_new_specs_and_installs()
+
+    def _reset_new_specs_and_installs(self) -> None:
         self.new_specs = []
         self.new_installs = []
+
+    def update_lockfile(self) -> None:
+        with fs.write_tmp_and_move(self.lock_path) as f:
+            sjson.dump(self._to_lockfile_dict(), stream=f)
 
     def ensure_env_directory_exists(self, dot_env: bool = False) -> None:
         """Ensure that the root directory of the environment exists
@@ -2138,7 +2129,7 @@ class Environment(object):
         if dot_env:
             fs.mkdirp(self.env_subdir_path)
 
-    def _update_environment_repository(self) -> None:
+    def update_environment_repository(self) -> None:
         """Updates the repository associated with the environment."""
         for spec in spack.traverse.traverse_nodes(self.new_specs):
             if not spec.concrete:
@@ -2167,10 +2158,12 @@ class Environment(object):
             )
             warnings.warn(msg.format(self.name, self.name, ver))
 
-    def _update_and_write_manifest(self, raw_yaml_dict, yaml_dict):
+    def update_manifest(self):
         """Update YAML manifest for this environment based on changes to
         spec lists and views and write it.
         """
+        yaml_dict = config_dict(self.yaml)
+        raw_yaml_dict = config_dict(self.raw_yaml)
         # invalidate _repo cache
         self._repo = None
         # put any changes in the definitions in the YAML
