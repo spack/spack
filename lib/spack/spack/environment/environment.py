@@ -2263,12 +2263,19 @@ class Environment(object):
             activate(self._previous_active)
 
 
-def yaml_equivalent(first, second):
+def yaml_equivalent(first, second) -> bool:
     """Returns whether two spack yaml items are equivalent, including overrides"""
+    # YAML has timestamps and dates, but we don't use them yet in schemas
     if isinstance(first, dict):
         return isinstance(second, dict) and _equiv_dict(first, second)
     elif isinstance(first, list):
         return isinstance(second, list) and _equiv_list(first, second)
+    elif isinstance(first, bool):
+        return isinstance(second, bool) and first is second
+    elif isinstance(first, int):
+        return isinstance(second, int) and first == second
+    elif first is None:
+        return second is None
     else:  # it's a string
         return isinstance(second, str) and first == second
 
