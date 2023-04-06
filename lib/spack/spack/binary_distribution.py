@@ -1323,7 +1323,7 @@ def _build_tarball_in_stage_dir(
                 tty.die(e)
     else:
         try:
-            check_package_relocatable(workdir, spec, allow_root)
+            ensure_package_relocatable(workdir, spec, allow_root)
         except Exception as e:
             shutil.rmtree(workdir)
             shutil.rmtree(tarfile_dir)
