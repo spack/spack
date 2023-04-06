@@ -288,11 +288,7 @@ def print_install_test_log(pkg: "spack.package_base.PackageBase"):
         # The tests were not run or there were no test failures
         return
 
-    try:
-        pkg.tester.print_log_path()
-    except Exception as e:
-        # TODO/TBD: Narrow the exceptions
-        tty.error("{0} was not tested: {1}".format(package_id(pkg), str(e)))
+    pkg.tester.print_log_path()
 
 
 def _print_timer(pre, pkg_id, timer):

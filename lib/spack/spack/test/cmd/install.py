@@ -1175,3 +1175,9 @@ def test_report_filename_for_cdash(install_mockery_mutable_config, mock_fetch):
     specs = spack.cmd.install.concrete_specs_from_cli(args, {})
     filename = spack.cmd.install.report_filename(args, specs)
     assert filename != "https://blahblah/submit.php?project=debugging"
+
+
+@pytest.mark.disable_clean_stage_check
+def test_install_runtests_root_log(install_mockery_mutable_config, mock_fetch):
+    output = install("--test=root", "--no-cache", "test-install-callbacks", fail_on_error=False)
+    assert "See test log for details" in output
