@@ -3,6 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+import os
 import spack.build_systems.lua
 from spack.package import *
 
@@ -28,7 +29,13 @@ class LuaLuafilesystem(LuaPackage):
 
 class LuaBuilder(spack.build_systems.lua.LuaBuilder):
     def install(self, pkg, spec, prefix):
-        rock = "rockspecs/luafilesystem-{0}.rockspec".format(self.spec.version)
         rocks_args = self.luarocks_args()
-        rocks_args.append(rock)
+        if spec.satisfies("@:1.7.0-2"):
+            rock = "rockspecs/luafilesystem-{0}.rockspec".format(self.spec.version)
+            if not os.path.isfile(rock):
+                rock = "rockspecs/luafilesystem-{0}-1.rockspec".format(self.spec.version)
+            if not os.path.isfile(rock):
+                # fall back on default luarocks behavior for finding rockspec
+                rock = ""
+            rocks_args.append(rock)
         self.pkg.luarocks("--tree=" + prefix, "make", *rocks_args)
