@@ -60,7 +60,7 @@ class Highfive(CMakePackage):
 
     # Using the page buffer with pHDF5 requires HDF5 to be patched. This
     # patch is currently only available for one version.
-    depends_on("hdf5@1.12.1 +page_buffer_patch+mpi", when="+mpi+page_buffer_patch")
+    depends_on("hdf5@1.12.1,1.14.0 +page_buffer_patch+mpi", when="+mpi+page_buffer_patch")
 
     depends_on("eigen", when="+eigen")
     depends_on("xtensor", when="+xtensor")
