@@ -1249,15 +1249,18 @@ def generate_gitlab_ci_yaml(
                     build_stamp = cdash_handler.build_stamp
                     job_vars["SPACK_CDASH_BUILD_STAMP"] = build_stamp
 
-                job_object["artifacts"] = spack.config.merge_yaml(job_object.get("artifacts", {}), {
-                    "when": "always",
-                    "paths": [
-                        rel_job_log_dir,
-                        rel_job_repro_dir,
-                        rel_job_test_dir,
-                        rel_user_artifacts_dir,
-                    ],
-                })
+                job_object["artifacts"] = spack.config.merge_yaml(
+                    job_object.get("artifacts", {}),
+                    {
+                        "when": "always",
+                        "paths": [
+                            rel_job_log_dir,
+                            rel_job_repro_dir,
+                            rel_job_test_dir,
+                            rel_user_artifacts_dir,
+                        ],
+                    },
+                )
 
                 if enable_artifacts_buildcache:
                     bc_root = os.path.join(local_mirror_dir, "build_cache")
