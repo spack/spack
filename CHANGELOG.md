@@ -1547,7 +1547,7 @@ This minor release includes two new features:
 
 This release also includes several important fixes:
 
-* MPICC and related variables are now cleand in the build environment (#17450)
+* MPICC and related variables are now cleaned in the build environment (#17450)
 * LLVM flang only builds CUDA offload components when +cuda (#17466)
 * CI pipelines no longer upload user environments that can contain secrets to the internet (#17545)
 * CI pipelines add bootstrapped compilers to the compiler config (#17536)

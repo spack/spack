@@ -103,7 +103,7 @@ _bash_completion_spack() {
     local COMP_CWORD_NO_FLAGS=$((${#COMP_WORDS_NO_FLAGS[@]} - 1))
 
     # There is no guarantee that the cursor is at the end of the command line
-    # when tab completion is envoked. For example, in the following situation:
+    # when tab completion is invoked. For example, in the following situation:
     #     `spack -d [] install`
     # if the user presses the TAB key, a list of valid flags should be listed.
     # Note that we cannot simply ignore everything after the cursor. In the
@@ -118,7 +118,7 @@ _bash_completion_spack() {
         list_options=true
     fi
 
-    # In general, when envoking tab completion, the user is not expecting to
+    # In general, when invoking tab completion, the user is not expecting to
     # see optional flags mixed in with subcommands or package names. Tab
     # completion is used by those who are either lazy or just bad at spelling.
     # If someone doesn't remember what flag to use, seeing single letter flags

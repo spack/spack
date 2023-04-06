@@ -1,3 +1,3 @@
 [codespell]
 skip = .git,*.pdf,*.svg,*.patch,*.py,*.diff,*.pub,
-ignore-words-list = bu,fo,nd,ot,te,pilon,namd
+ignore-words-list = bu,fo,nd,ot,te,pilon,namd,oce,ther

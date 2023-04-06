@@ -600,7 +600,7 @@ set -l stat $status
 
 
 #
-# Delete temprary global variabels allocated in `allocated_sp_shared`.
+# Delete temporary global variabels allocated in `allocated_sp_shared`.
 #
 
 delete_sp_shared
