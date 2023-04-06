@@ -8,8 +8,11 @@ import sys
 
 import pytest
 
+from llnl.util.filesystem import touch
+
 import spack.install_test
 import spack.spec
+from spack.util.executable import which
 
 
 def _true(*args, **kwargs):
@@ -197,8 +200,13 @@ def test_test_function_names(mock_packages, install_mockery, virtuals, expected)
     assert sorted(tests) == sorted(expected)
 
 
-def test_test_functions(mock_packages, install_mockery, ensure_debug, capsys):
-    """Confirm works package providing a package-less virtual."""
+def test_test_functions_fails():
+    with pytest.raises(ValueError, match="Expected a package"):
+        spack.install_test.test_functions(str)
+
+
+def test_test_functions_pkgless(mock_packages, install_mockery, ensure_debug, capsys):
+    """Confirm works for package providing a package-less virtual."""
     spec = spack.spec.Spec("simple-standalone-test").concretized()
     fns = spack.install_test.test_functions(spec.package, add_virtuals=True)
     out = capsys.readouterr()
@@ -272,3 +280,43 @@ def test_test_parts_process_fails(mock_packages):
     with pytest.raises(spack.install_test.TestSuiteError) as exc_info:
         spack.install_test.test_parts_process(pkg, [])
     assert "test suite is missing" in str(exc_info)
+
+
+def test_test_part_fail(tmpdir, install_mockery_mutable_config, mock_fetch, mock_test_stage):
+    s = spack.spec.Spec("trivial-smoke-test").concretized()
+    pkg = s.package
+    pkg.tester.test_log_file = str(tmpdir.join("test-log.txt"))
+    touch(pkg.tester.test_log_file)
+
+    with spack.install_test.test_part(pkg, "test_fail", "fake ProcessError"):
+        raise spack.util.executable.ProcessError("Mock failure")
+
+    name, status = pkg.tester.test_parts[0]
+    assert name.endswith("test_fail")
+    assert status == spack.install_test.TestStatus.FAILED
+
+
+def test_test_part_pass(install_mockery_mutable_config, mock_fetch, mock_test_stage):
+    s = spack.spec.Spec("trivial-smoke-test").concretized()
+    pkg = s.package
+
+    msg = "nothing"
+    with spack.install_test.test_part(pkg, "test_echo", "echo"):
+        echo = which("echo")
+        echo(msg)
+
+    name, status = pkg.tester.test_parts[0]
+    assert name.endswith("test_echo")
+    assert status == spack.install_test.TestStatus.PASSED
+
+
+def test_test_part_skip(install_mockery_mutable_config, mock_fetch, mock_test_stage):
+    s = spack.spec.Spec("trivial-smoke-test").concretized()
+    pkg = s.package
+
+    with spack.install_test.test_part(pkg, "test_skip", "raise SkipTest"):
+        raise spack.install_test.SkipTest("Skipping the test")
+
+    name, status = pkg.tester.test_parts[0]
+    assert name.endswith("test_skip")
+    assert status == spack.install_test.TestStatus.SKIPPED
