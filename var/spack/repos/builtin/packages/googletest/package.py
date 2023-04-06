@@ -38,6 +38,8 @@ class Googletest(CMakePackage):
     )
     conflicts("cxxstd=98", when="@1.9:")
     conflicts("cxxstd=11", when="@1.13:")
+    # Insufficient C++11 support for some versions with older GCC.
+    conflicts("%gcc@:4.99.99", when="@1.11:")
 
     def cmake_args(self):
         spec = self.spec
