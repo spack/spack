@@ -265,9 +265,8 @@ packages:
     s1 = Spec("v").concretized()
     assert s1.satisfies("@2.2")
 
-    # s2 = Spec(f"v@{commits[1]}").concretized()
-    # assert s2.satisfies("v@{commits[1]}")
-    # assert s2.satisfies("@2.3")
+    s2 = Spec(f"v@2.3").concretized()
+    assert s2.satisfies(f"v@{commits[1]}=2.3")
 
 
 # TODO: this belongs in the concretize_preferences test module but uses
