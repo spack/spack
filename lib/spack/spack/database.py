@@ -703,10 +703,8 @@ class Database(object):
     def _validate_version(self, spec):
         # Specs installed from a git sha without an associated spack version, that cannot
         # be resolved anymore because the repo has been removed from its package.py, get
-        # replaced by a literal string version, to avoid errors in comparison.
-        # TODO: Remove this ad-hoc logic in Spack 0.21. It's mostly there so that these
-        # spack-versionless specs don't break basic operations. Since Spack 0.20, the
-        # resolved version is stored in the DB, so this is not needed for newer installs.
+        # replaced by a literal string version, to avoid errors in comparison. Installs
+        # from Spack v0.20 are not affected by this.
         v = spec.version
         if not isinstance(v, vn.GitVersion):
             return
@@ -716,7 +714,7 @@ class Database(object):
         except vn.VersionLookupError:
             before = spec.cformat("{name}{@version}{/hash:7}")
             v._ref_version = vn.StandardVersion.from_string("develop")
-            tty.warn(
+            tty.debug(
                 f"database: the git sha of {before} could not be resolved to spack version; "
                 f"it has been replaced by {spec.cformat('{name}{@version}{/hash:7}')}."
             )
