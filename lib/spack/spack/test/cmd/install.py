@@ -963,7 +963,7 @@ def test_compiler_bootstrap_from_binary_mirror(
     mirror_url = "file://{0}".format(mirror_dir.strpath)
 
     # Install a compiler, because we want to put it in a buildcache
-    install("gcc@10.2.0")
+    install("gcc@=10.2.0")
 
     # Put installed compiler in the buildcache
     buildcache("push", "-u", "-a", "-f", "-d", mirror_dir.strpath, "gcc@10.2.0")
@@ -973,7 +973,7 @@ def test_compiler_bootstrap_from_binary_mirror(
 
     monkeypatch.setattr(spack.concretize.Concretizer, "check_for_compiler_existence", False)
     spack.config.set("config:install_missing_compilers", True)
-    assert CompilerSpec("gcc@10.2.0") not in compilers.all_compiler_specs()
+    assert CompilerSpec("gcc@=10.2.0") not in compilers.all_compiler_specs()
 
     # Configure the mirror where we put that buildcache w/ the compiler
     mirror("add", "test-mirror", mirror_url)
@@ -1000,7 +1000,7 @@ def test_compiler_bootstrap_already_installed(
     assert CompilerSpec("gcc@=12.0") not in compilers.all_compiler_specs()
 
     # Test succeeds if it does not raise an error
-    install("gcc@12.0")
+    install("gcc@=12.0")
     install("a%gcc@12.0")
 
 
