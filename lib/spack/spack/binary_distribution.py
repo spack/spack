@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -6,8 +6,6 @@
 import codecs
 import collections
 import hashlib
-import io
-import itertools
 import json
 import multiprocessing.pool
 import os
@@ -22,8 +20,7 @@ import urllib.error
 import urllib.parse
 import urllib.request
 import warnings
-from contextlib import closing, contextmanager
-from gzip import GzipFile
+from contextlib import closing
 from urllib.error import HTTPError, URLError
 
 import ruamel.yaml as yaml
@@ -42,10 +39,7 @@ import spack.mirror
 import spack.platforms
 import spack.relocate as relocate
 import spack.repo
-import spack.stage
 import spack.store
-import spack.traverse as traverse
-import spack.util.crypto
 import spack.util.file_cache as file_cache
 import spack.util.gpg
 import spack.util.spack_json as sjson
@@ -53,7 +47,7 @@ import spack.util.spack_yaml as syaml
 import spack.util.url as url_util
 import spack.util.web as web_util
 from spack.caches import misc_cache_location
-from spack.relocate_text import utf8_paths_to_single_binary_regex
+from spack.relocate import utf8_paths_to_single_binary_regex
 from spack.spec import Spec
 from spack.stage import Stage
 from spack.util.executable import which
@@ -215,7 +209,10 @@ class BinaryCacheIndex(object):
                         break
                 else:
                     self._mirrors_for_spec[dag_hash].append(
-                        {"mirror_url": mirror_url, "spec": indexed_spec}
+                        {
+                            "mirror_url": mirror_url,
+                            "spec": indexed_spec,
+                        }
                     )
         finally:
             shutil.rmtree(tmpdir)
@@ -297,9 +294,10 @@ class BinaryCacheIndex(object):
                         cur_entry["spec"] = new_entry["spec"]
                         break
                 else:
-                    current_list.append(
-                        {"mirror_url": new_entry["mirror_url"], "spec": new_entry["spec"]}
-                    )
+                    current_list.append = {
+                        "mirror_url": new_entry["mirror_url"],
+                        "spec": new_entry["spec"],
+                    }
 
     def update(self, with_cooldown=False):
         """Make sure local cache of buildcache index files is up to date.
@@ -366,7 +364,8 @@ class BinaryCacheIndex(object):
                     # May need to fetch the index and update the local caches
                     try:
                         needs_regen = self._fetch_and_cache_index(
-                            cached_mirror_url, cache_entry=cache_entry
+                            cached_mirror_url,
+                            cache_entry=cache_entry,
                         )
                         self._last_fetch_times[cached_mirror_url] = (now, True)
                         all_methods_failed = False
@@ -511,9 +510,9 @@ class NoOverwriteException(spack.error.SpackError):
     """
 
     def __init__(self, file_path):
-        super(NoOverwriteException, self).__init__(
-            '"{}" exists in buildcache. Use --force flag to overwrite.'.format(file_path)
-        )
+        err_msg = "\n%s\nexists\n" % file_path
+        err_msg += "Use -f option to overwrite."
+        super(NoOverwriteException, self).__init__(err_msg)
 
 
 class NoGpgException(spack.error.SpackError):
@@ -558,12 +557,7 @@ class NoChecksumException(spack.error.SpackError):
     Raised if file fails checksum verification.
     """
 
-    def __init__(self, path, size, contents, algorithm, expected, computed):
-        super(NoChecksumException, self).__init__(
-            f"{algorithm} checksum failed for {path}",
-            f"Expected {expected} but got {computed}. "
-            f"File size = {size} bytes. Contents = {contents!r}",
-        )
+    pass
 
 
 class NewLayoutException(spack.error.SpackError):
@@ -743,31 +737,34 @@ def get_buildfile_manifest(spec):
     return data
 
 
-def prefixes_to_hashes(spec):
-    return {
-        str(s.prefix): s.dag_hash()
-        for s in itertools.chain(
-            spec.traverse(root=True, deptype="link"), spec.dependencies(deptype="run")
-        )
-    }
-
-
-def get_buildinfo_dict(spec, rel=False):
-    """Create metadata for a tarball"""
+def write_buildinfo_file(spec, workdir, rel=False):
+    """
+    Create a cache file containing information
+    required for the relocation
+    """
     manifest = get_buildfile_manifest(spec)
 
-    return {
-        "sbang_install_path": spack.hooks.sbang.sbang_install_path(),
-        "relative_rpaths": rel,
-        "buildpath": spack.store.layout.root,
-        "spackprefix": spack.paths.prefix,
-        "relative_prefix": os.path.relpath(spec.prefix, spack.store.layout.root),
-        "relocate_textfiles": manifest["text_to_relocate"],
-        "relocate_binaries": manifest["binary_to_relocate"],
-        "relocate_links": manifest["link_to_relocate"],
-        "hardlinks_deduped": manifest["hardlinks_deduped"],
-        "prefix_to_hash": prefixes_to_hashes(spec),
-    }
+    prefix_to_hash = dict()
+    prefix_to_hash[str(spec.package.prefix)] = spec.dag_hash()
+    deps = spack.build_environment.get_rpath_deps(spec.package)
+    for d in deps + spec.dependencies(deptype="run"):
+        prefix_to_hash[str(d.prefix)] = d.dag_hash()
+
+    # Create buildinfo data and write it to disk
+    buildinfo = {}
+    buildinfo["sbang_install_path"] = spack.hooks.sbang.sbang_install_path()
+    buildinfo["relative_rpaths"] = rel
+    buildinfo["buildpath"] = spack.store.layout.root
+    buildinfo["spackprefix"] = spack.paths.prefix
+    buildinfo["relative_prefix"] = os.path.relpath(spec.prefix, spack.store.layout.root)
+    buildinfo["relocate_textfiles"] = manifest["text_to_relocate"]
+    buildinfo["relocate_binaries"] = manifest["binary_to_relocate"]
+    buildinfo["relocate_links"] = manifest["link_to_relocate"]
+    buildinfo["hardlinks_deduped"] = manifest["hardlinks_deduped"]
+    buildinfo["prefix_to_hash"] = prefix_to_hash
+    filename = buildinfo_file_name(workdir)
+    with open(filename, "w") as outfile:
+        outfile.write(syaml.dump(buildinfo, default_flow_style=True))
 
 
 def tarball_directory_name(spec):
@@ -1053,7 +1050,7 @@ def generate_package_index(cache_prefix, concurrency=32):
     try:
         file_list, read_fn = _spec_files_from_cache(cache_prefix)
     except ListMirrorSpecsError as err:
-        tty.error("Unable to generate package index, {0}".format(err))
+        tty.error("Unabled to generate package index, {0}".format(err))
         return
 
     tty.debug("Retrieving spec descriptor files from {0} to build index".format(cache_prefix))
@@ -1140,68 +1137,6 @@ def generate_key_index(key_prefix, tmpdir=None):
                 shutil.rmtree(tmpdir)
 
 
-@contextmanager
-def gzip_compressed_tarfile(path):
-    """Create a reproducible, compressed tarfile"""
-    # Create gzip compressed tarball of the install prefix
-    # 1) Use explicit empty filename and mtime 0 for gzip header reproducibility.
-    #    If the filename="" is dropped, Python will use fileobj.name instead.
-    #    This should effectively mimick `gzip --no-name`.
-    # 2) On AMD Ryzen 3700X and an SSD disk, we have the following on compression speed:
-    # compresslevel=6 gzip default: llvm takes 4mins, roughly 2.1GB
-    # compresslevel=9 python default: llvm takes 12mins, roughly 2.1GB
-    # So we follow gzip.
-    with open(path, "wb") as fileobj, closing(
-        GzipFile(filename="", mode="wb", compresslevel=6, mtime=0, fileobj=fileobj)
-    ) as gzip_file, tarfile.TarFile(name="", mode="w", fileobj=gzip_file) as tar:
-        yield tar
-
-
-def deterministic_tarinfo(tarinfo: tarfile.TarInfo):
-    # We only add files, symlinks, hardlinks, and directories
-    # No character devices, block devices and FIFOs should ever enter a tarball.
-    if tarinfo.isdev():
-        return None
-
-    # For distribution, it makes no sense to user/group data; since (a) they don't exist
-    # on other machines, and (b) they lead to surprises as `tar x` run as root will change
-    # ownership if it can. We want to extract as the current user. By setting owner to root,
-    # root will extract as root, and non-privileged user will extract as themselves.
-    tarinfo.uid = 0
-    tarinfo.gid = 0
-    tarinfo.uname = ""
-    tarinfo.gname = ""
-
-    # Reset mtime to epoch time, our prefixes are not truly immutable, so files may get
-    # touched; as long as the content does not change, this ensures we get stable tarballs.
-    tarinfo.mtime = 0
-
-    # Normalize mode
-    if tarinfo.isfile() or tarinfo.islnk():
-        # If user can execute, use 0o755; else 0o644
-        # This is to avoid potentially unsafe world writable & exeutable files that may get
-        # extracted when Python or tar is run with privileges
-        tarinfo.mode = 0o644 if tarinfo.mode & 0o100 == 0 else 0o755
-    else:  # symbolic link and directories
-        tarinfo.mode = 0o755
-
-    return tarinfo
-
-
-def tar_add_metadata(tar: tarfile.TarFile, path: str, data: dict):
-    # Serialize buildinfo for the tarball
-    bstring = syaml.dump(data, default_flow_style=True).encode("utf-8")
-    tarinfo = tarfile.TarInfo(name=path)
-    tarinfo.size = len(bstring)
-    tar.addfile(deterministic_tarinfo(tarinfo), io.BytesIO(bstring))
-
-
-def _do_create_tarball(tarfile_path, binaries_dir, pkg_dir, buildinfo):
-    with gzip_compressed_tarfile(tarfile_path) as tar:
-        tar.add(name=binaries_dir, arcname=pkg_dir, filter=deterministic_tarinfo)
-        tar_add_metadata(tar, buildinfo_file_name(pkg_dir), buildinfo)
-
-
 def _build_tarball(
     spec,
     out_url,
@@ -1211,6 +1146,7 @@ def _build_tarball(
     allow_root=False,
     key=None,
     regenerate_index=False,
+    skip_on_error=False,
 ):
     """
     Build a tarball from given spec and put it into the directory structure
@@ -1219,37 +1155,15 @@ def _build_tarball(
     if not spec.concrete:
         raise ValueError("spec must be concrete to build tarball")
 
-    with tempfile.TemporaryDirectory(dir=spack.stage.get_stage_root()) as tmpdir:
-        _build_tarball_in_stage_dir(
-            spec,
-            out_url,
-            stage_dir=tmpdir,
-            force=force,
-            relative=relative,
-            unsigned=unsigned,
-            allow_root=allow_root,
-            key=key,
-            regenerate_index=regenerate_index,
-        )
+    # set up some paths
+    tmpdir = tempfile.mkdtemp()
+    cache_prefix = build_cache_prefix(tmpdir)
 
-
-def _build_tarball_in_stage_dir(
-    spec,
-    out_url,
-    stage_dir,
-    force=False,
-    relative=False,
-    unsigned=False,
-    allow_root=False,
-    key=None,
-    regenerate_index=False,
-):
-    cache_prefix = build_cache_prefix(stage_dir)
     tarfile_name = tarball_name(spec, ".spack")
     tarfile_dir = os.path.join(cache_prefix, tarball_directory_name(spec))
     tarfile_path = os.path.join(tarfile_dir, tarfile_name)
     spackfile_path = os.path.join(cache_prefix, tarball_path_name(spec, ".spack"))
-    remote_spackfile_path = url_util.join(out_url, os.path.relpath(spackfile_path, stage_dir))
+    remote_spackfile_path = url_util.join(out_url, os.path.relpath(spackfile_path, tmpdir))
 
     mkdirp(tarfile_dir)
     if web_util.url_exists(remote_spackfile_path):
@@ -1268,7 +1182,7 @@ def _build_tarball_in_stage_dir(
     signed_specfile_path = "{0}.sig".format(specfile_path)
 
     remote_specfile_path = url_util.join(
-        out_url, os.path.relpath(specfile_path, os.path.realpath(stage_dir))
+        out_url, os.path.relpath(specfile_path, os.path.realpath(tmpdir))
     )
     remote_signed_specfile_path = "{0}.sig".format(remote_specfile_path)
 
@@ -1283,41 +1197,58 @@ def _build_tarball_in_stage_dir(
     ):
         raise NoOverwriteException(url_util.format(remote_specfile_path))
 
-    pkg_dir = os.path.basename(spec.prefix.rstrip(os.path.sep))
-    workdir = os.path.join(stage_dir, pkg_dir)
-
-    # TODO: We generally don't want to mutate any files, but when using relative
-    # mode, Spack unfortunately *does* mutate rpaths and links ahead of time.
-    # For now, we only make a full copy of the spec prefix when in relative mode.
-
-    if relative:
-        # tarfile is used because it preserves hardlink etc best.
-        binaries_dir = workdir
-        temp_tarfile_name = tarball_name(spec, ".tar")
-        temp_tarfile_path = os.path.join(tarfile_dir, temp_tarfile_name)
-        with closing(tarfile.open(temp_tarfile_path, "w")) as tar:
-            tar.add(name="%s" % spec.prefix, arcname=".")
-        with closing(tarfile.open(temp_tarfile_path, "r")) as tar:
-            tar.extractall(workdir)
-        os.remove(temp_tarfile_path)
-    else:
-        binaries_dir = spec.prefix
+    # make a copy of the install directory to work with
+    workdir = os.path.join(tmpdir, os.path.basename(spec.prefix))
+    # install_tree copies hardlinks
+    # create a temporary tarfile from prefix and exract it to workdir
+    # tarfile preserves hardlinks
+    temp_tarfile_name = tarball_name(spec, ".tar")
+    temp_tarfile_path = os.path.join(tarfile_dir, temp_tarfile_name)
+    with closing(tarfile.open(temp_tarfile_path, "w")) as tar:
+        tar.add(name="%s" % spec.prefix, arcname=".")
+    with closing(tarfile.open(temp_tarfile_path, "r")) as tar:
+        tar.extractall(workdir)
+    os.remove(temp_tarfile_path)
 
     # create info for later relocation and create tar
-    buildinfo = get_buildinfo_dict(spec, relative)
+    write_buildinfo_file(spec, workdir, relative)
 
     # optionally make the paths in the binaries relative to each other
     # in the spack install tree before creating tarball
     if relative:
-        make_package_relative(workdir, spec, buildinfo, allow_root)
-    elif not allow_root:
-        ensure_package_relocatable(buildinfo, binaries_dir)
+        try:
+            make_package_relative(workdir, spec, allow_root)
+        except Exception as e:
+            shutil.rmtree(workdir)
+            shutil.rmtree(tarfile_dir)
+            shutil.rmtree(tmpdir)
+            if skip_on_error:
+                tty.warn('Error while creating buildcache for "{0}", skip: {1}'.format(spec, e))
+                return
+            else:
+                tty.die(e)
+    else:
+        try:
+            check_package_relocatable(workdir, spec, allow_root)
+        except Exception as e:
+            shutil.rmtree(workdir)
+            shutil.rmtree(tarfile_dir)
+            shutil.rmtree(tmpdir)
+            if skip_on_error:
+                tty.warn('Error while creating buildcache for "{0}", skip: {1}'.format(spec, e))
+                return
+            else:
+                tty.die(e)
 
-    _do_create_tarball(tarfile_path, binaries_dir, pkg_dir, buildinfo)
-
+    # create gzip compressed tarball of the install prefix
+    # On AMD Ryzen 3700X and an SSD disk, we have the following on compression speed:
+    # compresslevel=6 gzip default: llvm takes 4mins, roughly 2.1GB
+    # compresslevel=9 python default: llvm takes 12mins, roughly 2.1GB
+    # So we follow gzip.
+    with closing(tarfile.open(tarfile_path, "w:gz", compresslevel=6)) as tar:
+        tar.add(name="%s" % workdir, arcname="%s" % os.path.basename(spec.prefix))
     # remove copy of install directory
-    if relative:
-        shutil.rmtree(workdir)
+    shutil.rmtree(workdir)
 
     # get the sha256 checksum of the tarball
     checksum = checksum_tarball(tarfile_path)
@@ -1343,11 +1274,7 @@ def _build_tarball_in_stage_dir(
     spec_dict["buildinfo"] = buildinfo
 
     with open(specfile_path, "w") as outfile:
-        # Note: when using gpg clear sign, we need to avoid long lines (19995 chars).
-        # If lines are longer, they are truncated without error. Thanks GPG!
-        # So, here we still add newlines, but no indent, so save on file size and
-        # line length.
-        json.dump(spec_dict, outfile, indent=0, separators=(",", ":"))
+        outfile.write(sjson.dump(spec_dict))
 
     # sign the tarball and spec file with gpg
     if not unsigned:
@@ -1364,65 +1291,78 @@ def _build_tarball_in_stage_dir(
 
     tty.debug('Buildcache for "{0}" written to \n {1}'.format(spec, remote_spackfile_path))
 
-    # push the key to the build cache's _pgp directory so it can be
-    # imported
-    if not unsigned:
-        push_keys(out_url, keys=[key], regenerate_index=regenerate_index, tmpdir=stage_dir)
+    try:
+        # push the key to the build cache's _pgp directory so it can be
+        # imported
+        if not unsigned:
+            push_keys(out_url, keys=[key], regenerate_index=regenerate_index, tmpdir=tmpdir)
 
-    # create an index.json for the build_cache directory so specs can be
-    # found
-    if regenerate_index:
-        generate_package_index(url_util.join(out_url, os.path.relpath(cache_prefix, stage_dir)))
+        # create an index.json for the build_cache directory so specs can be
+        # found
+        if regenerate_index:
+            generate_package_index(url_util.join(out_url, os.path.relpath(cache_prefix, tmpdir)))
+    finally:
+        shutil.rmtree(tmpdir)
 
     return None
 
 
-def nodes_to_be_packaged(specs, root=True, dependencies=True):
+def nodes_to_be_packaged(specs, include_root=True, include_dependencies=True):
     """Return the list of nodes to be packaged, given a list of specs.
 
     Args:
         specs (List[spack.spec.Spec]): list of root specs to be processed
-        root (bool): include the root of each spec in the nodes
-        dependencies (bool): include the dependencies of each
+        include_root (bool): include the root of each spec in the nodes
+        include_dependencies (bool): include the dependencies of each
             spec in the nodes
     """
-    if not root and not dependencies:
-        return []
-    elif dependencies:
-        nodes = traverse.traverse_nodes(specs, root=root, deptype="all")
-    else:
-        nodes = set(specs)
+    if not include_root and not include_dependencies:
+        return set()
 
-    # Limit to installed non-externals.
-    packageable = lambda n: not n.external and n.installed
+    def skip_node(current_node):
+        if current_node.external or current_node.virtual:
+            return True
+        return spack.store.db.query_one(current_node) is None
 
-    # Mass install check
-    with spack.store.db.read_transaction():
-        return list(filter(packageable, nodes))
+    expanded_set = set()
+    for current_spec in specs:
+        if not include_dependencies:
+            nodes = [current_spec]
+        else:
+            nodes = [
+                n
+                for n in current_spec.traverse(
+                    order="post", root=include_root, deptype=("link", "run")
+                )
+            ]
+
+        for node in nodes:
+            if not skip_node(node):
+                expanded_set.add(node)
+
+    return expanded_set
 
 
-def push(specs, push_url, include_root: bool = True, include_dependencies: bool = True, **kwargs):
+def push(specs, push_url, specs_kwargs=None, **kwargs):
     """Create a binary package for each of the specs passed as input and push them
     to a given push URL.
 
     Args:
         specs (List[spack.spec.Spec]): installed specs to be packaged
         push_url (str): url where to push the binary package
-        include_root (bool): include the root of each spec in the nodes
-        include_dependencies (bool): include the dependencies of each
-            spec in the nodes
+        specs_kwargs (dict): dictionary with two possible boolean keys, "include_root"
+            and "include_dependencies", which determine which part of each spec is
+            packaged and pushed to the mirror
         **kwargs: TODO
 
     """
-    # Be explicit about the arugment type
-    if type(include_root) != bool or type(include_dependencies) != bool:
-        raise ValueError("Expected include_root/include_dependencies to be True/False")
-
-    nodes = nodes_to_be_packaged(specs, root=include_root, dependencies=include_dependencies)
+    specs_kwargs = specs_kwargs or {"include_root": True, "include_dependencies": True}
+    nodes = nodes_to_be_packaged(specs, **specs_kwargs)
 
     # TODO: This seems to be an easy target for task
     # TODO: distribution using a parallel pool
     for node in nodes:
+        tty.msg('Creating buildcache for "{0}"'.format(node.format()))
         try:
             _build_tarball(node, push_url, **kwargs)
         except NoOverwriteException as e:
@@ -1605,12 +1545,13 @@ def download_tarball(spec, unsigned=False, mirrors_for_spec=None):
     return None
 
 
-def make_package_relative(workdir, spec, buildinfo, allow_root):
+def make_package_relative(workdir, spec, allow_root):
     """
     Change paths in binaries to relative paths. Change absolute symlinks
     to relative symlinks.
     """
     prefix = spec.prefix
+    buildinfo = read_buildinfo_file(workdir)
     old_layout_root = buildinfo["buildpath"]
     orig_path_names = list()
     cur_path_names = list()
@@ -1634,10 +1575,16 @@ def make_package_relative(workdir, spec, buildinfo, allow_root):
     relocate.make_link_relative(cur_path_names, orig_path_names)
 
 
-def ensure_package_relocatable(buildinfo, binaries_dir):
-    """Check if package binaries are relocatable."""
-    binaries = [os.path.join(binaries_dir, f) for f in buildinfo["relocate_binaries"]]
-    relocate.ensure_binaries_are_relocatable(binaries)
+def check_package_relocatable(workdir, spec, allow_root):
+    """
+    Check if package binaries are relocatable.
+    Change links to placeholder links.
+    """
+    buildinfo = read_buildinfo_file(workdir)
+    cur_path_names = list()
+    for filename in buildinfo["relocate_binaries"]:
+        cur_path_names.append(os.path.join(workdir, filename))
+    allow_root or relocate.ensure_binaries_are_relocatable(cur_path_names)
 
 
 def dedupe_hardlinks_if_necessary(root, buildinfo):
@@ -1672,7 +1619,7 @@ def dedupe_hardlinks_if_necessary(root, buildinfo):
         buildinfo[key] = new_list
 
 
-def relocate_package(spec, allow_root):
+def relocate_package(spec):
     """
     Relocate the given package
     """
@@ -1793,24 +1740,16 @@ def relocate_package(spec, allow_root):
 
         # For all buildcaches
         # relocate the install prefixes in text files including dependencies
-        relocate.relocate_text(text_names, prefix_to_prefix_text)
+        relocate.unsafe_relocate_text(text_names, prefix_to_prefix_text)
 
         # relocate the install prefixes in binary files including dependencies
-        changed_files = relocate.relocate_text_bin(files_to_relocate, prefix_to_prefix_bin)
-
-        # Add ad-hoc signatures to patched macho files when on macOS.
-        if "macho" in platform.binary_formats and sys.platform == "darwin":
-            codesign = which("codesign")
-            if not codesign:
-                return
-            for binary in changed_files:
-                codesign("-fs-", binary)
+        relocate.unsafe_relocate_text_bin(files_to_relocate, prefix_to_prefix_bin)
 
     # If we are installing back to the same location
     # relocate the sbang location if the spack directory changed
     else:
         if old_spack_prefix != new_spack_prefix:
-            relocate.relocate_text(text_names, prefix_to_prefix_text)
+            relocate.unsafe_relocate_text(text_names, prefix_to_prefix_text)
 
 
 def _extract_inner_tarball(spec, filename, extract_to, unsigned, remote_checksum):
@@ -1848,15 +1787,14 @@ def _extract_inner_tarball(spec, filename, extract_to, unsigned, remote_checksum
             raise UnsignedPackageException(
                 "To install unsigned packages, use the --no-check-signature option."
             )
-
-    # compute the sha256 checksum of the tarball
+    # get the sha256 checksum of the tarball
     local_checksum = checksum_tarball(tarfile_path)
-    expected = remote_checksum["hash"]
 
     # if the checksums don't match don't install
-    if local_checksum != expected:
-        size, contents = fsys.filesummary(tarfile_path)
-        raise NoChecksumException(tarfile_path, size, contents, "sha256", expected, local_checksum)
+    if local_checksum != remote_checksum["hash"]:
+        raise NoChecksumException(
+            "Package tarball failed checksum verification.\n" "It cannot be installed."
+        )
 
     return tarfile_path
 
@@ -1914,14 +1852,12 @@ def extract_tarball(spec, download_result, allow_root=False, unsigned=False, for
 
         # compute the sha256 checksum of the tarball
         local_checksum = checksum_tarball(tarfile_path)
-        expected = bchecksum["hash"]
 
         # if the checksums don't match don't install
-        if local_checksum != expected:
-            size, contents = fsys.filesummary(tarfile_path)
+        if local_checksum != bchecksum["hash"]:
             _delete_staged_downloads(download_result)
             raise NoChecksumException(
-                tarfile_path, size, contents, "sha256", expected, local_checksum
+                "Package tarball failed checksum verification.\n" "It cannot be installed."
             )
 
     new_relative_prefix = str(os.path.relpath(spec.prefix, spack.store.layout.root))
@@ -1957,7 +1893,7 @@ def extract_tarball(spec, download_result, allow_root=False, unsigned=False, for
     os.remove(specfile_path)
 
     try:
-        relocate_package(spec, allow_root)
+        relocate_package(spec)
     except Exception as e:
         shutil.rmtree(spec.prefix)
         raise e
@@ -2012,11 +1948,8 @@ def install_root_node(spec, allow_root, unsigned=False, force=False, sha256=None
         tarball_path = download_result["tarball_stage"].save_filename
         msg = msg.format(tarball_path, sha256)
         if not checker.check(tarball_path):
-            size, contents = fsys.filesummary(tarball_path)
             _delete_staged_downloads(download_result)
-            raise NoChecksumException(
-                tarball_path, size, contents, checker.hash_name, sha256, checker.sum
-            )
+            raise spack.binary_distribution.NoChecksumException(msg)
         tty.debug("Verified SHA256 checksum of the build cache")
 
     # don't print long padded paths while extracting/relocating binaries
@@ -2090,7 +2023,12 @@ def try_direct_fetch(spec, mirrors=None):
             fetched_spec = Spec.from_json(specfile_contents)
         fetched_spec._mark_concrete()
 
-        found_specs.append({"mirror_url": mirror.fetch_url, "spec": fetched_spec})
+        found_specs.append(
+            {
+                "mirror_url": mirror.fetch_url,
+                "spec": fetched_spec,
+            }
+        )
 
     return found_specs
 
@@ -2392,7 +2330,11 @@ def download_single_spec(concrete_spec, destination, mirror_url=None):
     local_tarball_path = os.path.join(destination, tarball_dir_name)
 
     files_to_fetch = [
-        {"url": [tarball_path_name], "path": local_tarball_path, "required": True},
+        {
+            "url": [tarball_path_name],
+            "path": local_tarball_path,
+            "required": True,
+        },
         {
             "url": [
                 tarball_name(concrete_spec, ".spec.json.sig"),
@@ -2513,7 +2455,12 @@ class DefaultIndexFetcher:
                 response.headers.get("Etag", None) or response.headers.get("etag", None)
             )
 
-        return FetchIndexResult(etag=etag, hash=computed_hash, data=result, fresh=False)
+        return FetchIndexResult(
+            etag=etag,
+            hash=computed_hash,
+            data=result,
+            fresh=False,
+        )
 
 
 class EtagIndexFetcher:
