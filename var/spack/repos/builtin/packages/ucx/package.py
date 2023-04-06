@@ -175,7 +175,6 @@ class Ucx(AutotoolsPackage, CudaPackage):
         args += self.with_or_without("pic")
 
         args += self.with_or_without("cuda", activation_value="prefix")
-        args += self.with_or_without("rocm")  # todo, prefix, avoid /opt/rocm guess.
 
         args += self.with_or_without("cm")
         args += self.enable_or_disable("cma")
