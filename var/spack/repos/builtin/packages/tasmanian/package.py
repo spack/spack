@@ -244,6 +244,9 @@ class Tasmanian(CMakePackage, CudaPackage, ROCmPackage):
                 + join_path(self.spec["rocsolver"].prefix, "lib", "cmake", "rocsolver")
             )
 
+        if "+mpi" in self.spec:
+            options.append("-DMPI_HOME=" + self.spec["mpi"].prefix)
+
         if not self.run_test(cmake_bin, options=options, purpose="Generate the Makefile"):
             tty.msg("Skipping tasmanian test: failed to generate Makefile")
             return
