@@ -494,7 +494,7 @@ class ViewDescriptor(object):
         if not os.path.exists(self.root):
             return None
 
-        view = self.view(created_path=False)
+        view = self.view()
         orig_path = view.metadata.get("created_path", None)
         if orig_path:
             return orig_path
@@ -537,7 +537,7 @@ class ViewDescriptor(object):
         view = self.view()
         return view.get_projection_for_spec(spec)
 
-    def view(self, new=None, created_path=True):
+    def view(self, new=None, created_path=False):
         """
         Generate the FilesystemView object for this ViewDescriptor
 
@@ -550,6 +550,10 @@ class ViewDescriptor(object):
             new (str or None): If a string, create a FilesystemView
                 rooted at that path. Default None. This should only be used to
                 regenerate the view, and cannot be used to access specs.
+            created_path (bool): Pass metadata on the path the view was created in to the
+                underlying view implementation. Default False. This option should be enabled
+                when creating a view to add packages to, but not when creating a view object
+                to query an existing view.
         """
         root = new if new else self.root
 
@@ -708,7 +712,7 @@ class ViewDescriptor(object):
         if specs:
             tty.msg("Updating view at {0}".format(self.root))
 
-        view = self.view(new=new_root)
+        view = self.view(new=new_root, created_path=True)
 
         # Create a new view
         try:
