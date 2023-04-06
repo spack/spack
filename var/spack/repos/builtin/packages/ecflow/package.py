@@ -91,10 +91,12 @@ class Ecflow(CMakePackage):
             self.define_from_variant("ENABLE_STATIC_BOOST_LIBS", "static_boost"),
             self.define("Python3_EXECUTABLE", spec["python"].package.command),
             self.define("BOOST_ROOT", spec["boost"].prefix),
+            self.define("CMAKE_POSITION_INDEPENDENT_CODE", "ON"),
         ]
 
         if spec.satisfies("+ssl ^openssl ~shared"):
-            ssl_libs = [os.path.join(spec["openssl"].prefix.lib, "libcrypto.a"), spec["zlib"].libs[0]]
+            ssl_libs = [os.path.join(spec["openssl"].prefix.lib, "libcrypto.a")]
+            ssl_libs.extend(spec["zlib"].libs)
             args.append(self.define("OPENSSL_CRYPTO_LIBRARY", ";".join(ssl_libs)))
 
         return args
