@@ -46,6 +46,8 @@ class Libsonata(CMakePackage):
     # version penalty from `nlohmann-js` then :(
     depends_on("nlohmann-json@:3.9.1")
 
+    conflicts("^highfive@2.5:2.6")
+
     def cmake_args(self):
         result = [
             "-DEXTLIB_FROM_SUBMODULES=OFF",

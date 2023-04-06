@@ -1,0 +1,40 @@
+diff --git i/include/highfive/H5PropertyList.hpp w/include/highfive/H5PropertyList.hpp
+index 6122820..2f8025f 100644
+--- i/include/highfive/H5PropertyList.hpp
++++ w/include/highfive/H5PropertyList.hpp
+@@ -335,7 +335,6 @@ class FileSpacePageSize {
+     hsize_t _page_size;
+ };
+ 
+-#ifndef H5_HAVE_PARALLEL
+ /// \brief Set size of the page buffer.
+ ///
+ /// Please, consult the upstream documentation of
+@@ -374,7 +373,6 @@ class PageBufferSize {
+     unsigned _min_raw;
+ };
+ #endif
+-#endif
+ 
+ /// \brief Set hints as to how many links to expect and their average length
+ ///
+diff --git i/include/highfive/bits/H5PropertyList_misc.hpp w/include/highfive/bits/H5PropertyList_misc.hpp
+index 6a4ef9e..e9e7432 100644
+--- i/include/highfive/bits/H5PropertyList_misc.hpp
++++ w/include/highfive/bits/H5PropertyList_misc.hpp
+@@ -137,7 +137,6 @@ inline hsize_t FileSpacePageSize::getPageSize() const {
+     return _page_size;
+ }
+ 
+-#ifndef H5_HAVE_PARALLEL
+ inline PageBufferSize::PageBufferSize(size_t page_buffer_size,
+                                       unsigned min_meta_percent,
+                                       unsigned min_raw_percent)
+@@ -169,7 +168,6 @@ inline unsigned PageBufferSize::getMinRawPercent() const {
+     return _min_raw;
+ }
+ #endif
+-#endif
+ 
+ #ifdef H5_HAVE_PARALLEL
+ 

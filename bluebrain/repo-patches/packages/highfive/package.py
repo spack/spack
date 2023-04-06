@@ -15,6 +15,8 @@ class Highfive(CMakePackage):
     git = "https://github.com/BlueBrain/HighFive.git"
 
     version("master", branch="master")
+    version("2.7.1", sha256="25b4c51a94d1e670dc93b9b73f51e79b65d8ff49bcd6e5d5582d5ecd2789a249")
+    version("2.7.0", sha256="8e05672ddf81a59ce014b1d065bd9a8c5034dbd91a5c2578e805ef880afa5907")
     version("2.6.2", sha256="ab51b9fbb49e877dd1aa7b53b4b26875f41e4e0b8ee0fc2f1d735e0d1e43d708")
     version("2.6.1", sha256="b5002c1221cf1821e02fb2ab891b0160bac88b43f56655bd844a472106ca3397")
     version("2.6.0", sha256="9f9828912619ba27d6f3a30e77c27669d9f19f6ee9170f79ee5f1ea96f85a4cd")
@@ -44,7 +46,7 @@ class Highfive(CMakePackage):
     variant(
         "page_buffer_patch",
         default=False,
-        when="@2.6.2",
+        when="@2.6.2,2.7.1",
         description="Allow using the pagebuffer with pHDF5.",
     )
 
@@ -69,8 +71,14 @@ class Highfive(CMakePackage):
     # Enables the `PageBufferSize` property list also when building against pHDF5.
     patch(
         "remove-page-buffer-phdf5-check_v2.6.2.patch",
-        when="+page_buffer_patch+mpi",
+        when="@2.6.2+page_buffer_patch+mpi",
         sha256="7d9f63114902af0e5de9b4a1192e1de72ce384bdf401e7efbf434fb5f52d0ef7",
+    )
+
+    patch(
+        "remove-page-buffer-phdf5-check_v2.7.1.patch",
+        when="@2.7.1+page_buffer_patch+mpi",
+        sha256="352074bc2fb30357425042878de2334ffc2e24ac8da9353fe8a7c9c6a62dd95f",
     )
 
     def cmake_args(self):
