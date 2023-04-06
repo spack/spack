@@ -71,6 +71,7 @@ class Paraview(CMakePackage, CudaPackage, ROCmPackage):
     variant("eyedomelighting", default=False, description="Enable Eye Dome Lighting feature")
     variant("adios2", default=False, description="Enable ADIOS2 support", when="@5.8:")
     variant("visitbridge", default=False, description="Enable VisItBridge support")
+    variant("raytracing", default=False, description="Enable Raytracing support")
     variant(
         "openpmd",
         default=False,
@@ -180,6 +181,10 @@ class Paraview(CMakePackage, CudaPackage, ROCmPackage):
         depends_on("glx", when="~osmesa platform={}".format(p))
         depends_on("libxt", when="~osmesa platform={}".format(p))
     conflicts("+qt", when="+osmesa")
+
+    depends_on("ospray@2.1:", when="+raytracing")
+    depends_on("openimagedenoise", when="+raytracing")
+    depends_on("ospray +mpi", when="+raytracing +mpi")
 
     depends_on("bzip2")
     depends_on("double-conversion")
@@ -610,5 +615,10 @@ class Paraview(CMakePackage, CudaPackage, ROCmPackage):
         if "+libcatalyst" in spec:
             cmake_args.append("-DVTK_MODULE_ENABLE_ParaView_InSitu=YES")
             cmake_args.append("-DPARAVIEW_ENABLE_CATALYST=YES")
+
+        cmake_args.append(self.define_from_variant("PARAVIEW_ENABLE_RAYTRACING", "raytracing"))
+        # Currently only support OSPRay ray tracing
+        cmake_args.append(self.define_from_variant("VTK_ENABLE_OSPRAY", "raytracing"))
+        cmake_args.append(self.define_from_variant("VTKOSPRAY_ENABLE_DENOISER", "raytracing"))
 
         return cmake_args
