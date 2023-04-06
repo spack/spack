@@ -558,7 +558,7 @@ class Llvm(CMakePackage, CudaPackage):
         if "+flang" not in spec:
             cmake_args.append(define("LLVM_ENABLE_EH", True))
 
-        cmake_args = cmake_args + [
+        cmake_args.extend([
             define("CLANG_DEFAULT_OPENMP_RUNTIME", "libomp"),
             define("PYTHON_EXECUTABLE", python.command.path),
             define("LIBOMP_USE_HWLOC", True),
