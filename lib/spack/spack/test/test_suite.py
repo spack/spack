@@ -320,3 +320,22 @@ def test_test_part_skip(install_mockery_mutable_config, mock_fetch, mock_test_st
     name, status = pkg.tester.test_parts[0]
     assert name.endswith("test_skip")
     assert status == spack.install_test.TestStatus.SKIPPED
+
+
+def test_check_special_outputs(tmpdir):
+    """This test covers two related helper methods"""
+    contents = """CREATE TABLE packages (
+name varchar(80) primary key,
+has_code integer,
+url varchar(160));
+INSERT INTO packages VALUES('sqlite',1,'https://www.sqlite.org');
+INSERT INTO packages VALUES('readline',1,'https://tiswww.case.edu/php/chet/readline/rltop.html');
+INSERT INTO packages VALUES('xsdk',0,'http://xsdk.info');
+COMMIT;
+"""
+    filename = tmpdir.join("special.txt")
+    with open(filename, "w") as f:
+        f.write(contents)
+
+    expected = spack.install_test.get_escaped_text_output(filename)
+    spack.install_test.check_outputs(expected, contents)

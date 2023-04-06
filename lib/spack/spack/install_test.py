@@ -61,14 +61,14 @@ class TestStatus(enum.Enum):
         return name.lower()
 
 
-def get_escaped_text_output(filename):
+def get_escaped_text_output(filename: str) -> List[str]:
     """Retrieve and escape the expected text output from the file
 
     Args:
-        filename (str): path to the file
+        filename: path to the file
 
     Returns:
-        list: escaped text lines read from the file
+        escaped text lines read from the file
     """
     with open(filename, "r") as f:
         # Ensure special characters are escaped as needed
