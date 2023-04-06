@@ -115,6 +115,7 @@ class Ucx(AutotoolsPackage, CudaPackage):
     variant("ud", default=False, description="Compile with IB Unreliable Datagram support")
     variant("verbs", default=False, description="Build OpenFabrics support")
     variant("xpmem", default=False, description="Enable XPMEM support")
+    variant("gtest", default=False, description="Build and install Googletest")
 
     depends_on("binutils+ld", when="%aocc", type="build")
     depends_on("binutils", when="+backtrace_detail")
@@ -129,6 +130,7 @@ class Ucx(AutotoolsPackage, CudaPackage):
     depends_on("rdma-core", when="+rdmacm")
     depends_on("rdma-core", when="+verbs")
     depends_on("xpmem", when="+xpmem")
+    depends_on("hip", when="+rocm")
 
     conflicts("+gdrcopy", when="~cuda", msg="gdrcopy currently requires cuda support")
     conflicts("+rocm", when="+gdrcopy", msg="gdrcopy > 2.0 does not support rocm")
@@ -137,6 +139,21 @@ class Ucx(AutotoolsPackage, CudaPackage):
 
     # See https://github.com/openucx/ucx/pull/8629, wrong int type
     patch("commit-2523555.patch", when="@1.13.1")
+
+    def patch(self):
+        if self.spec.satisfies("+rocm"):
+            filter_file(
+                "$$with_rocm", "${with_rocm[@]}", "configure", string=True
+            )
+            filter_file(
+                "-I$with_rocm/include/hip -I$with_rocm/include",
+                "$ROCM_CPPFLAGS",
+                "configure",
+                string=True
+            )
+            filter_file(
+                "-L$with_rocm/hip/lib -L$with_rocm/lib", "$ROCM_LDFLAGS", "configure", string=True
+            )
 
     @when("@1.9-dev")
     def autoreconf(self, spec, prefix):
@@ -219,9 +236,30 @@ class Ucx(AutotoolsPackage, CudaPackage):
         if "%aocc" in spec:
             args.append("LDFLAGS=-fuse-ld=bfd")
 
+        if "+rocm" in spec:
+            rocm_flags = " ".join(
+                [
+                    "-I" + self.spec["hip"].prefix.include,
+                    "-I" + self.spec["hip"].prefix.include.hip,
+                    "-I" + self.spec["hsa-rocr-dev"].prefix.include.hsa,
+                    "-L" + self.spec["hip"].prefix.lib,
+                    "-L" + self.spec["hsa-rocr-dev"].prefix.lib,
+                ]
+            )
+            args.append("--with-rocm=" + rocm_flags)
+        else:
+            args.append("--without-rocm")
+        if "+gtest" in spec:
+            args.append("--enable-gtest")
+
         return args
 
     @run_after("install")
     def drop_examples(self):
         if self.spec.satisfies("~examples"):
             shutil.rmtree(join_path(self.spec.prefix, "share", "ucx", "examples"))
+
+    @run_after("install")
+    def install_gtest(self):
+        if self.spec.satisfies("+gtest"):
+            install_tree("test", self.spec.prefix.test)
