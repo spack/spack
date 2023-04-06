@@ -678,8 +678,7 @@ class CompilerSpec(object):
     def __str__(self):
         out = self.name
         if self.versions and self.versions != _any_version:
-            vlist = ",".join(str(v) for v in self.versions)
-            out += "@%s" % vlist
+            out += f"@{self.versions}"
         return out
 
     def __repr__(self):
