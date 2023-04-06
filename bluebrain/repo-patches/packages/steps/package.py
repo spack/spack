@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -14,24 +14,25 @@ class Steps(CMakePackage):
     homepage = "https://groups.oist.jp/cnu/software"
     git = "ssh://git@bbpgitlab.epfl.ch/hpc/HBP_STEPS.git"
 
+    maintainers("tristan0x")
+
     submodules = True
 
     version("develop", branch="master")
-    version("5.0.0a", commit="d75d46f")
-    version("4.0.0", tag="4.0.0", preferred=True)
-    version("3.6.0", tag="3.6.0")
-    version("3.5.0b", commit="b2be5fe")
+    version("5.0.0a", commit="b4bdd64")
+    version("4.1.0", tag="4.1.0", preferred=True)
 
     variant(
         "codechecks",
         default=False,
-        description="Perform additional code checks like " "code formatting or static analysis",
+        description="Perform additional code checks like code formatting or static analysis",
     )
     variant(
         "native",
         default=False if sys.platform == "darwin" else True,
         description="Generate non-portable arch-specific code",
     )
+    variant("blender", default=False, description="Build stepsblender package")
     variant("lapack", default=False, description="Use new BDSystem/Lapack code for E-Field solver")
     variant("distmesh", default=True, description="Add solvers based on distributed mesh")
     variant("petsc", default=True, description="Use PETSc library for parallel E-Field solver")
@@ -55,40 +56,37 @@ class Steps(CMakePackage):
 
     # Build with `ninja` instead of `make`
     generator = "Ninja"
-    depends_on("ninja", type="build")
 
+    conflicts("+distmesh~mpi", msg="steps+distmesh requires +mpi")
     depends_on("benchmark", type=("build", "test"))
-    depends_on("boost", when="@:3")
-    depends_on("boost", when="@4:", type="build")
     depends_on("blas")
+    depends_on("boost", type="build")
+    depends_on("caliper", when="+caliper")
+    depends_on("easyloggingpp", when="~bundle")
+    depends_on("gmsh", when="+distmesh")
     depends_on("gsl", when="+vesicle")
     depends_on("lapack", when="+lapack")
     depends_on("lcov", when="+coverage", type="build")
-    depends_on("metis+int64", when="@3.6.1:")
-    depends_on("eigen", when="@3.6.1:")
+    depends_on("likwid", when="+likwid")
+    depends_on("metis+int64")
     depends_on("mpi", when="+mpi")
+    depends_on("ninja", type="build")
+    depends_on("omega-h+gmsh+mpi", when="~bundle+distmesh")
     depends_on("petsc~debug+int64+mpi", when="+petsc+mpi")
     depends_on("petsc~debug+int64~mpi", when="+petsc~mpi")
     depends_on("pkgconfig", type="build")
-    depends_on("py-build", type="build", when="@5:")
-    depends_on("py-pip", type="build", when="@5:")
     depends_on("py-cython")
-    depends_on("py-h5py", type=("build", "test", "run"))
     depends_on("py-gcovr", when="+coverage", type="build")
+    depends_on("py-h5py", type=("build", "test", "run"))
+    depends_on("py-pip", type="build", when="@5:")
     depends_on("py-matplotlib", type=("build", "test"))
+    depends_on("py-build", type="build", when="@5:")
     depends_on("py-mpi4py", when="+distmesh", type=("build", "test", "run"))
-    depends_on("py-nose", when="@3:4", type=("build", "test"))
     depends_on("py-numpy", type=("build", "test", "run"))
     depends_on("py-scipy", type=("build", "test", "run"))
     depends_on("python", type=("build", "test", "run"))
-    depends_on("omega-h+gmsh+mpi", when="~bundle+distmesh")
-    depends_on("gmsh", when="+distmesh")
-    depends_on("easyloggingpp", when="~bundle")
     depends_on("random123", when="~bundle")
     depends_on("sundials@:2.99.99+int64", when="~bundle")
-    depends_on("caliper", when="+caliper")
-    depends_on("likwid", when="+likwid")
-    conflicts("+distmesh~mpi", msg="steps+distmesh requires +mpi")
 
     patch("for_aarch64.patch", when="target=aarch64:")
 
@@ -105,9 +103,6 @@ class Steps(CMakePackage):
         )
         args = [
             self.define("STEPS_INSTALL_PYTHON_DEPS", False),
-            self.define("STEPS_USE_STEPSBLENDER", False),
-            self.define("USE_MPI", "True" if "+mpi" in self.spec else "False"),
-            self.define("USE_PETSC", "True" if "+petsc" in self.spec else "False"),
             self.define_from_variant("BUILD_STOCHASTIC_TESTS", "stochtests"),
             self.define_from_variant("BUILD_TESTING", "codechecks"),
             self.define_from_variant("ENABLE_CODECOVERAGE", "coverage"),
@@ -116,9 +111,12 @@ class Steps(CMakePackage):
             self.define_from_variant("STEPS_USE_CALIPER_PROFILING", "caliper"),
             self.define_from_variant("STEPS_USE_DIST_MESH", "distmesh"),
             self.define_from_variant("STEPS_USE_LIKWID_PROFILING", "likwid"),
-            self.define_from_variant("STEPS_USE_VESICLE_MODEL", "vesicle"),
+            self.define_from_variant("STEPS_USE_STEPSBLENDER", "blender"),
+            self.define_from_variant("STEPS_USE_VESICLE_SOLVER", "vesicle"),
             self.define_from_variant("TARGET_NATIVE_ARCH", "native"),
             self.define_from_variant("USE_BDSYSTEM_LAPACK", "lapack"),
+            self.define_from_variant("USE_MPI", "mpi"),
+            self.define_from_variant("USE_PETSC", "petsc"),
             "-DBLAS_LIBRARIES=" + self.spec["blas"].libs.joined(";"),
             f"-DPYTHON_EXECUTABLE={python_interpreter}",
         ]
