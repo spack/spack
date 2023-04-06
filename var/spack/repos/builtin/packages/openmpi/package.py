@@ -484,6 +484,7 @@ class Openmpi(AutotoolsPackage, CudaPackage):
         "memchecker",
         default=False,
         description="Memchecker support for debugging [degrades performance]",
+        sticky=True,
     )
 
     variant(

@@ -61,6 +61,7 @@ properties = {
             "build_stage": {
                 "oneOf": [{"type": "string"}, {"type": "array", "items": {"type": "string"}}]
             },
+            "stage_name": {"type": "string"},
             "test_stage": {"type": "string"},
             "extensions": {"type": "array", "items": {"type": "string"}},
             "template_dirs": {"type": "array", "items": {"type": "string"}},

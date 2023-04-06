@@ -13,8 +13,9 @@ concretizer:
   # Whether to consider installed packages or packages from buildcaches when
   # concretizing specs. If `true`, we'll try to use as many installs/binaries
   # as possible, rather than building. If `false`, we'll always give you a fresh
-  # concretization.
-  reuse: true
+  # concretization. If `dependencies`, we'll only reuse dependencies but
+  # give you a fresh concretization for your root specs.
+  reuse: dependencies
   # Options that tune which targets are considered for concretization. The
   # concretization process is very sensitive to the number targets, and the time
   # needed to reach a solution increases noticeably with the number of targets

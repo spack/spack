@@ -139,3 +139,26 @@ class RocmClangOcl(CMakePackage):
         depends_on(
             "rocm-device-libs@" + ver, when="@{0} ^llvm-amdgpu ~rocm-device-libs".format(ver)
         )
+
+    test_src_dir = "test"
+
+    @run_after("install")
+    def cache_test_sources(self):
+        """Copy the tests source files after the package is installed to an
+        install test subdirectory for use during `spack test run`."""
+        if self.spec.satisfies("@:5.1.0"):
+            return
+        self.cache_extra_test_sources([self.test_src_dir])
+
+    def test(self):
+        if self.spec.satisfies("@:5.1.0"):
+            print("Skipping: stand-alone tests")
+            return
+        test_dir = join_path(self.test_suite.current_test_cache_dir, self.test_src_dir)
+        with working_dir(test_dir, create=True):
+            cmake_bin = join_path(self.spec["cmake"].prefix.bin, "cmake")
+            prefixes = ";".join([self.spec["rocm-clang-ocl"].prefix])
+            cc_options = ["-DCMAKE_PREFIX_PATH=" + prefixes, "."]
+            self.run_test(cmake_bin, cc_options)
+            make()
+            make("clean")
