@@ -211,7 +211,7 @@ def test_from_list_url(mock_packages, config, spec, url, digest, _fetch_method):
     [
         # This version is in the web data path (test/data/web/4.html), but not in the
         # url-list-test package. We expect Spack to generate a URL with the new version.
-        ("4.5.0", "foo-4.5.0.tar.gz", None),
+        ("=4.5.0", "foo-4.5.0.tar.gz", None),
         # This version is in web data path and not in the package file, BUT the 2.0.0b2
         # version in the package file satisfies 2.0.0, so Spack will use the known version.
         # TODO: this is *probably* not what the user wants, but it's here as an example
