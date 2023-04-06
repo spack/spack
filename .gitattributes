@@ -1,4 +1,5 @@
-*.py diff=python
+*.py text eol=lf diff=python
+*.yaml text eol=lf
 *.lp linguist-language=Prolog
 lib/spack/external/* linguist-vendored
 *.bat text eol=crlf
