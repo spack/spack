@@ -52,7 +52,7 @@ spack:
     - matrix:
       - [$sdk_base_spec]
       - [$^paraview_specs]
-    # Test ParaView builds with differnt GL backends
+    # Test ParaView builds with different GL backends
     - matrix:
       - [$sdk_base_spec]
       - [$^visit_specs]

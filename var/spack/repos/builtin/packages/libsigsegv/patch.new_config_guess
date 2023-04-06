@@ -113,7 +113,7 @@
  case "${UNAME_MACHINE}:${UNAME_SYSTEM}:${UNAME_RELEASE}:${UNAME_VERSION}" in
      *:NetBSD:*:*)
  	# NetBSD (nbsd) targets should (where applicable) match one or
--	# more of the tupples: *-*-netbsdelf*, *-*-netbsdaout*,
+-	# more of the tuples: *-*-netbsdelf*, *-*-netbsdaout*,
 +	# more of the tuples: *-*-netbsdelf*, *-*-netbsdaout*,
  	# *-*-netbsdecoff* and *-*-netbsd*.  For targets that recently
  	# switched to ELF, *-*-netbsd* would select the old
@@ -833,7 +833,7 @@
 +	# uname -m prints for DJGPP always 'pc', but it prints nothing about
 +	# the processor, so we play safe by assuming i586.
  	# Note: whatever this is, it MUST be the same as what config.sub
--	# prints for the "djgpp" host, or else GDB configury will decide that
+-	# prints for the "djgpp" host, or else GDB configurable will decide that
 +	# prints for the "djgpp" host, or else GDB configure will decide that
  	# this is a cross-build.
  	echo i586-pc-msdosdjgpp
