@@ -77,7 +77,7 @@ def test_get_compiler_duplicates(config):
 
 def test_all_compilers(config):
     all_compilers = compilers.all_compilers()
-    filtered = [x for x in all_compilers if str(x.spec) == "clang@3.3"]
+    filtered = [x for x in all_compilers if str(x.spec) == "clang@=3.3"]
     filtered = [x for x in filtered if x.operating_system == "SuSE11"]
     assert len(filtered) == 1
 
@@ -691,7 +691,7 @@ def test_raising_if_compiler_target_is_over_specific(config):
     with spack.config.override("compilers", compilers):
         cfg = spack.compilers.get_compiler_config()
         with pytest.raises(ValueError):
-            spack.compilers.get_compilers(cfg, "gcc@9.0.1", arch_spec)
+            spack.compilers.get_compilers(cfg, spack.spec.CompilerSpec("gcc@9.0.1"), arch_spec)
 
 
 @pytest.mark.skipif(sys.platform == "win32", reason="Not supported on Windows (yet)")
