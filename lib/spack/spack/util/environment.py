@@ -21,8 +21,8 @@ from llnl.util import tty
 from llnl.util.lang import dedupe
 
 import spack.platforms
-import spack.target
 import spack.spec
+import spack.target
 
 from .executable import Executable, which
 from .path import path_to_os_path, system_path_filter

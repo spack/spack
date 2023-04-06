@@ -17,7 +17,6 @@ from llnl.util.tty.color import colorize
 
 import spack.cmd
 import spack.cmd.common
-import spack.cmd.common.arguments
 import spack.cmd.common.arguments as arguments
 import spack.cmd.install
 import spack.cmd.modules
