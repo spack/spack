@@ -1644,13 +1644,13 @@ def test_ci_generate_bootstrap_prune_dag(
     mirror_url = "file://{0}".format(mirror_dir.strpath)
 
     # Install a compiler, because we want to put it in a buildcache
-    install_cmd("gcc@12.2.0%gcc@10.2.1")
+    install_cmd("gcc@=12.2.0%gcc@10.2.1")
 
     # Put installed compiler in the buildcache
-    buildcache_cmd("push", "-u", "-a", "-f", "-d", mirror_dir.strpath, "gcc@12.2.0%gcc@10.2.1")
+    buildcache_cmd("push", "-u", "-a", "-f", "-d", mirror_dir.strpath, "gcc@=12.2.0%gcc@10.2.1")
 
     # Now uninstall the compiler
-    uninstall_cmd("-y", "gcc@12.2.0%gcc@10.2.1")
+    uninstall_cmd("-y", "gcc@=12.2.0%gcc@10.2.1")
 
     monkeypatch.setattr(spack.concretize.Concretizer, "check_for_compiler_existence", False)
     spack.config.set("config:install_missing_compilers", True)
@@ -1674,7 +1674,7 @@ def test_ci_generate_bootstrap_prune_dag(
 spack:
   definitions:
     - bootstrap:
-      - gcc@12.2.0%gcc@10.2.1
+      - gcc@=12.2.0%gcc@10.2.1
   specs:
     - b%gcc@12.2.0
   mirrors:

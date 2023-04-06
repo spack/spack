@@ -294,16 +294,15 @@ packages:
     assert s1.satisfies("@2.2")
     assert s1.satisfies(f"@{commits[0]}=2.2")
 
+    # The way to interpret this: install something in the range [2.3, 2.4), which includes
+    # the preferred version commits[1]=2.3.
     s2 = Spec("v@2.3").concretized()
-    # Note: this check will fail: the command-line spec version is preferred
-    # assert s2.satisfies("@{0}".format(commits[1]))
-    assert s2.satisfies("@2.3")
+    assert s2.satisfies(f"@{commits[1]}=2.3")
 
-    # TODO: figure this out. Should the right-hand side have a repo attached?
-    # s3 = Spec(f"v@{commits[1]}").concretized()
-    # assert s3.satisfies(f"@{commits[1]}")
-    # Note: this check will fail: the command-line spec version is preferred
-    # assert s3.satisfies("@2.3")
+    # When installing by hash, a lookup is triggered, so it's not mapped to =2.3.
+    s3 = Spec(f"v@{commits[1]}").concretized()
+    assert s3.satisfies(f"v@{commits[1]}")
+    assert not s3.satisfies("@2.3")
 
 
 def test_requirement_is_successfully_applied(concretize_scope, test_repo):

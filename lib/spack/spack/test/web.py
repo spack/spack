@@ -108,7 +108,7 @@ def test_find_versions_of_archive_0():
 @pytest.mark.skipif(sys.platform == "win32", reason="Not supported on Windows (yet)")
 def test_find_versions_of_archive_1():
     versions = spack.util.web.find_versions_of_archive(root_tarball, root, list_depth=1)
-    assert Version("=0.0.0") in versions
+    assert Version("0.0.0") in versions
     assert Version("1.0.0") in versions
 
 

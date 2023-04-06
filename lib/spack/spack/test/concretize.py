@@ -1500,7 +1500,7 @@ class TestConcretize(object):
         assert ver("=2.7.11") == Spec("python@2.7").concretized().version
 
         # Here there is no known satisfying version - use the one on the spec.
-        assert ver("=2.7.21") == Spec("python@2.7.21").concretized().version
+        assert ver("=2.7.21") == Spec("python@=2.7.21").concretized().version
 
     @pytest.mark.parametrize(
         "spec_str,valid",
