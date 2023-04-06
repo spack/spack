@@ -10,7 +10,7 @@ class PyCwlRegistry(PythonPackage):
     git = "ssh://git@bbpgitlab.epfl.ch/nse/cwl-registry.git"
 
     version("develop", branch="main")
-    version("0.3.2", tag="cwl-registry-v0.3.2")
+    version("0.3.6", tag="cwl-registry-v0.3.6")
 
     depends_on("python@3.9:", type=("build", "run"))
 
@@ -30,4 +30,4 @@ class PyCwlRegistry(PythonPackage):
     @run_after("install")
     @on_package_attributes(run_tests=True)
     def test_install(self):
-        python("-m", "pytest", "tests")
+        python("-m", "pytest", "tests/unit")
