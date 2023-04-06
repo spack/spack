@@ -100,12 +100,30 @@ class Nvshmem(CMakePackage, MakefilePackage, CudaPackage):
             env.set("NVSHMEM_LSHMEM", "-loshmem")
 
         if "+gpu_initiated_support" in self.spec:
-            env.set("NVSHMEM_GPUINITIATED_SUPPORT", "1")
+            if self.spec.satisfies("@2.9:"):
+#                env.set("NVSHMEM_IBGDA_SUPPORT", "1")
+                env.set("NVSHMEM_IBGDA_SUPPORT_GPUMEM_ONLY", "1")
+#-L$(NON_STANDARD_MLX5_LOCATION) -lmlx5
+            else:
+                env.set("NVSHMEM_GPUINITIATED_SUPPORT", "1")
 
         if "+ibrc" in self.spec:
             env.set("NVSHMEM_IBRC_SUPPORT", "1")
 
     @when("@2.6:")
     def setup_run_environment(self, env):
+        if "+gpu_initiated_support" in self.spec:
+            if self.spec.satisfies("@2.9:"):
+                env.set("NVSHMEM_IB_ENABLE_IBGDA", "1")
+
         if "+nccl" in self.spec:
-            env.append_flags("NVSHMEM_BOOTSTRAP", "MPI")
+            env.set("NVSHMEM_BOOTSTRAP", "MPI")
+        if self.spec.satisfies("^spectrum-mpi") or self.spec.satisfies("^openmpi"):
+            env.set("NVSHMEM_MPI_IS_OMPI", "1")
+            env.set("NVSHMEM_BOOTSTRAP_PMI", "PMIX")
+            if self.spec.satisfies("^openmpi") and self.spec.satisfies("^openmpi +pmix"):
+                env.set("NVSHMEM_PMIX_SUPPORT", "1")
+                env.set("NVSHMEM_BOOTSTRAP_PMI", "PMIX")
+            else:
+                env.set("NVSHMEM_PMIX_SUPPORT", "0")
+                env.set("NVSHMEM_BOOTSTRAP_PMI", "PMI")
