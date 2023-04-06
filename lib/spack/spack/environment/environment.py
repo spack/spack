@@ -13,6 +13,7 @@ import sys
 import time
 import urllib.parse
 import urllib.request
+import warnings
 from typing import List, Optional
 
 import ruamel.yaml as yaml
@@ -2089,16 +2090,7 @@ class Environment(object):
                 well as writing if True.
         """
         # Warn that environments are not in the latest format.
-        if not is_latest_format(self.manifest_path):
-            ver = ".".join(str(s) for s in spack.spack_version_info[:2])
-            msg = (
-                'The environment "{}" is written to disk in a deprecated format. '
-                "Please update it using:\n\n"
-                "\tspack env update {}\n\n"
-                "Note that versions of Spack older than {} may not be able to "
-                "use the updated configuration."
-            )
-            tty.warn(msg.format(self.name, self.name, ver))
+        self.manifest_uptodate_or_warn()
 
         # ensure path in var/spack/environments
         fs.mkdirp(self.path)
@@ -2148,6 +2140,19 @@ class Environment(object):
         # new specs and new installs reset at write time
         self.new_specs = []
         self.new_installs = []
+
+    def manifest_uptodate_or_warn(self):
+        """Emits a warning if the manifest file is not up-to-date."""
+        if not is_latest_format(self.manifest_path):
+            ver = ".".join(str(s) for s in spack.spack_version_info[:2])
+            msg = (
+                'The environment "{}" is written to disk in a deprecated format. '
+                "Please update it using:\n\n"
+                "\tspack env update {}\n\n"
+                "Note that versions of Spack older than {} may not be able to "
+                "use the updated configuration."
+            )
+            warnings.warn(msg.format(self.name, self.name, ver))
 
     def _update_and_write_manifest(self, raw_yaml_dict, yaml_dict):
         """Update YAML manifest for this environment based on changes to
