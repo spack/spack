@@ -372,6 +372,15 @@ class PyTorch(PythonPackage, CudaPackage, ROCmPackage):
         working_dir="third_party/gloo",
     )
 
+    # PyTorch does not build on Linux >=6.0.3 (fixed in master)
+    # See: https://github.com/facebookincubator/gloo/issues/345
+    patch(
+        "https://github.com/facebookincubator/gloo/commit/10909297fedab0a680799211a299203e53515032.patch?full_index=1",
+        sha256="8e6e9a44e0533ba4303a95a651b1934e5d73632cab08cc7d5a9435e1e64aa424",
+        when="@:1",
+        working_dir="third_party/gloo",
+    )
+
     @when("@1.5.0:")
     def patch(self):
         # https://github.com/pytorch/pytorch/issues/52208
