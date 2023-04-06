@@ -16,10 +16,15 @@ def is_CrayXC():
 
 
 def is_CrayEX():
-    return (spack.platforms.host().name in ["linux", "cray"]) and (
-        os.environ.get("CRAYPE_NETWORK_TARGET") in ["ofi", "ucx"]
-    )
-
+    if (spack.platforms.host().name in ["linux", "cray"]):
+        target = os.environ.get("CRAYPE_NETWORK_TARGET")
+        if (target in ["ofi", "ucx"]): # normal case
+            return True
+        elif (target is None): # but some systems lack Cray PrgEnv
+            fi_info = which("fi_info")
+            if fi_info and fi_info("-l", output=str).find("cxi") >= 0:
+                return True
+    return False
 
 def cross_detect():
     if is_CrayXC():
@@ -158,7 +163,7 @@ class Upcxx(Package, CudaPackage, ROCmPackage):
                 env[var] = ":".join(
                     filter(lambda x: "libsci" not in x.lower(), env[var].split(":"))
                 )
-        if is_CrayXC() or is_CrayEX():
+        if (is_CrayXC() or is_CrayEX()) and env.get("CRAYPE_DIR"):
             # Undo spack compiler wrappers:
             # the C/C++ compilers must work post-install
             real_cc = join_path(env["CRAYPE_DIR"], "bin", "cc")
@@ -188,7 +193,10 @@ class Upcxx(Package, CudaPackage, ROCmPackage):
             # Append the recommended options for Cray Shasta
             # This list can be pruned once the floor version reaches 2022.9.0
             options.append("--with-pmi-version=cray")
-            options.append("--with-pmi-runcmd='srun -n %N -- %C'")
+            if which("srun"):
+                options.append("--with-pmi-runcmd='srun -n %N -- %C'")
+            elif which("aprun"):
+                options.append("--with-pmi-runcmd='aprun -n %N %C'")
             options.append("--disable-ibv")
             options.append("--enable-ofi")
             options.append("--with-default-network=ofi")
