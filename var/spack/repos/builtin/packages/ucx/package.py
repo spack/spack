@@ -142,14 +142,12 @@ class Ucx(AutotoolsPackage, CudaPackage):
 
     def patch(self):
         if self.spec.satisfies("+rocm"):
-            filter_file(
-                "$$with_rocm", "${with_rocm[@]}", "configure", string=True
-            )
+            filter_file("$$with_rocm", "${with_rocm[@]}", "configure", string=True)
             filter_file(
                 "-I$with_rocm/include/hip -I$with_rocm/include",
                 "$ROCM_CPPFLAGS",
                 "configure",
-                string=True
+                string=True,
             )
             filter_file(
                 "-L$with_rocm/hip/lib -L$with_rocm/lib", "$ROCM_LDFLAGS", "configure", string=True
