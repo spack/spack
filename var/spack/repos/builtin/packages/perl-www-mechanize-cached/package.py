@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -12,7 +12,7 @@ class PerlWwwMechanizeCached(PerlPackage):
     homepage = "https://github.com/libwww-perl/WWW-Mechanize-Cached"  # AUTO-CPAN2Spack
     url = "https://cpan.metacpan.org/authors/id/O/OA/OALDERS/WWW-Mechanize-Cached-1.56.tar.gz"
 
-    maintainers("chissg", "gartung", "marcmengel", "vitodb")  # AUTO-CPAN2Spack
+    maintainers = ["chissg", "gartung", "marcmengel", "vitodb"]  # AUTO-CPAN2Spack
 
     version("1.56", sha256="a18b0706aac202604adc575b6be6b8ae26b373a9d43d8da59c826d7d300151dd")
     version("1.55", sha256="3ab16463beede3061db7b7d3c66ea9536f02b737467cc6b1172aa08302d9fb60")

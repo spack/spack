@@ -24,7 +24,7 @@ class PyMystParser(PythonPackage):
     ]
     pypi = "myst-parser/myst-parser-0.18.0.tar.gz"
 
-    maintainers("chissg", "gartung", "marcmengel", "vitodb")
+    maintainers = ["chissg", "gartung", "marcmengel", "vitodb"]
 
     version("0.18.1", sha256="79317f4bb2c13053dd6e64f9da1ba1da6cd9c40c8a430c447a7b146a594c246d")
     version("0.18.0", sha256="739a4d96773a8e55a2cacd3941ce46a446ee23dcd6b37e06f73f551ad7821d86")

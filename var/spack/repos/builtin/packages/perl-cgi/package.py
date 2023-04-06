@@ -15,7 +15,7 @@ class PerlCgi(PerlPackage):
     homepage = "https://metacpan.org/pod/CGI"
     url = "https://cpan.metacpan.org/authors/id/L/LE/LEEJO/CGI-4.40.tar.gz"
 
-    maintainers("cessenat")
+    maintainers("cessenat", "chissg", "gartung", "marcmengel", "vitodb")
 
     version("4.56", sha256="2d36d930b89ecdfbcc7d6d4740821bd466a0218abf1bd413568640b2f43799b7")
     version("4.54", sha256="9608a044ae2e87cefae8e69b113e3828552ddaba0d596a02f9954c6ac17fa294")

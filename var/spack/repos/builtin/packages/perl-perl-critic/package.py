@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -12,7 +12,7 @@ class PerlPerlCritic(PerlPackage):
     homepage = "http://perlcritic.com"  # AUTO-CPAN2Spack
     url = "https://cpan.metacpan.org/authors/id/P/PE/PETDANCE/Perl-Critic-1.140.tar.gz"
 
-    maintainers("chissg", "gartung", "marcmengel", "vitodb")  # AUTO-CPAN2Spack
+    maintainers = ["chissg", "gartung", "marcmengel", "vitodb"]  # AUTO-CPAN2Spack
 
     version("1.140", sha256="bfeef0aa36f0941682a607212593db530b2c8a5499f6dc7d41f7e61a8ebdfddb")
     version("1.139_01", sha256="6fcbf8ab7e9579e3985fc87c92e3ec57eafdc7c609d3e39ed7331675335b1703")

@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -12,7 +12,7 @@ class PerlClassAccessorLite(PerlPackage):
     homepage = "https://cpan.metacpan.org/authors/id/K/KA/KAZUHO"  # AUTO-CPAN2Spack
     url = "https://cpan.metacpan.org/authors/id/K/KA/KAZUHO/Class-Accessor-Lite-0.08.tar.gz"
 
-    maintainers("chissg", "gartung", "marcmengel", "vitodb")  # AUTO-CPAN2Spack
+    maintainers = ["chissg", "gartung", "marcmengel", "vitodb"]  # AUTO-CPAN2Spack
 
     version("0.08", sha256="75b3b8ec8efe687677b63f0a10eef966e01f60735c56656ce75cbb44caba335a")
     version("0.07", sha256="a8aaaaf32a64e9ff89dbc4ef8a55d6197f5c161b8fc8d64219eef9ea173971d1")

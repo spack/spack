@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -12,7 +12,7 @@ class PerlFileFindRulePerl(PerlPackage):
     homepage = "https://github.com/karenetheridge/File-Find-Rule-Perl"  # AUTO-CPAN2Spack
     url = "https://cpan.metacpan.org/authors/id/E/ET/ETHER/File-Find-Rule-Perl-1.16.tar.gz"
 
-    maintainers("chissg", "gartung", "marcmengel", "vitodb")  # AUTO-CPAN2Spack
+    maintainers = ["chissg", "gartung", "marcmengel", "vitodb"]  # AUTO-CPAN2Spack
 
     version("1.16", sha256="ae1886050d9ca21223c073e2870abdc80dc30e3f55289a11c37da3820a8321ff")
     version("1.15", sha256="9a48433f86e08ce18e03526e2982de52162eb909d19735460f07eefcaf463ea6")

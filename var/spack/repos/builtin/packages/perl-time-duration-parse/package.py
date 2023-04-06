@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -12,7 +12,7 @@ class PerlTimeDurationParse(PerlPackage):
     homepage = "https://github.com/neilb/Time-Duration-Parse"  # AUTO-CPAN2Spack
     url = "https://cpan.metacpan.org/authors/id/N/NE/NEILB/Time-Duration-Parse-0.16.tar.gz"
 
-    maintainers("chissg", "gartung", "marcmengel", "vitodb")  # AUTO-CPAN2Spack
+    maintainers = ["chissg", "gartung", "marcmengel", "vitodb"]  # AUTO-CPAN2Spack
 
     version("0.16", sha256="1084a6463ee2790f99215bd76b135ca45afe2bfa6998fa6fd5470b69e1babc12")
     version("0.15", sha256="61d8143a8e6981cc1f7a974804d492039e5e56716767829d5e4bcd9ed74ae381")

@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -12,7 +12,7 @@ class PerlLogAny(PerlPackage):
     homepage = "https://github.com/preaction/Log-Any"  # AUTO-CPAN2Spack
     url = "https://cpan.metacpan.org/authors/id/P/PR/PREACTION/Log-Any-1.710.tar.gz"
 
-    maintainers("chissg", "gartung", "marcmengel", "vitodb")  # AUTO-CPAN2Spack
+    maintainers = ["chissg", "gartung", "marcmengel", "vitodb"]  # AUTO-CPAN2Spack
 
     version("1.710", sha256="bdb65fd0a8888fd4522f39f0fe95e94cb9267ef1fd9f7737564d46527b306f6f")
     version("1.709", sha256="80e4b00f494f365082650222b228d2925b37ed7efaf94052087c68b2f4291e85")

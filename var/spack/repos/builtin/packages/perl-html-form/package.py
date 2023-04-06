@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -12,7 +12,7 @@ class PerlHtmlForm(PerlPackage):
     homepage = "https://github.com/libwww-perl/HTML-Form"  # AUTO-CPAN2Spack
     url = "https://cpan.metacpan.org/authors/id/S/SI/SIMBABQUE/HTML-Form-6.10.tar.gz"
 
-    maintainers("chissg", "gartung", "marcmengel", "vitodb")  # AUTO-CPAN2Spack
+    maintainers = ["chissg", "gartung", "marcmengel", "vitodb"]  # AUTO-CPAN2Spack
 
     version("6.10", sha256="df8393e35e495a0839f06a63fb65d6922842c180d260554137728a9f092df9d3")
     version("6.09", sha256="f6c06ce1e54f9cfe1fd800d886126b875c972716a27fc281d3fb00345132e230")

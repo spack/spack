@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -12,7 +12,7 @@ class PerlPpi(PerlPackage):
     homepage = "https://github.com/Perl-Critic/PPI"  # AUTO-CPAN2Spack
     url = "https://cpan.metacpan.org/authors/id/O/OA/OALDERS/PPI-1.276.tar.gz"
 
-    maintainers("chissg", "gartung", "marcmengel", "vitodb")  # AUTO-CPAN2Spack
+    maintainers = ["chissg", "gartung", "marcmengel", "vitodb"]  # AUTO-CPAN2Spack
 
     version("1.276", sha256="657655470e78b7c5b7660f7dec82893489c2e2d880e449135613da3b37500f01")
     version("1.275", sha256="71ef406ce6d0c8ff9545fe308740c958d7892851677ff9c61bb967cd466130d9")

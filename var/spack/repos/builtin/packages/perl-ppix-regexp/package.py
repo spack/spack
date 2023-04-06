@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -12,7 +12,7 @@ class PerlPpixRegexp(PerlPackage):
     homepage = "https://cpan.metacpan.org/authors/id/W/WY/WYANT"  # AUTO-CPAN2Spack
     url = "https://cpan.metacpan.org/authors/id/W/WY/WYANT/PPIx-Regexp-0.085.tar.gz"
 
-    maintainers("chissg", "gartung", "marcmengel", "vitodb")  # AUTO-CPAN2Spack
+    maintainers = ["chissg", "gartung", "marcmengel", "vitodb"]  # AUTO-CPAN2Spack
 
     version("0.085", sha256="2ef0bb89248438e0138fc64c9ab0cacd0a532e908882a07dd8f0b841f130cf1d")
     version("0.084_01", sha256="7bb7e2d62a2118be6a6bcf23fddd1e0515650f8578fdb3204d3279536d58dfae")

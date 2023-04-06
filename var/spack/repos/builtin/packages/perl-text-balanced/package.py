@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -12,7 +12,7 @@ class PerlTextBalanced(PerlPackage):
     homepage = "https://cpan.metacpan.org/authors/id/S/SH/SHAY"  # AUTO-CPAN2Spack
     url = "https://cpan.metacpan.org/authors/id/S/SH/SHAY/Text-Balanced-2.06.tar.gz"
 
-    maintainers("chissg", "gartung", "marcmengel", "vitodb")  # AUTO-CPAN2Spack
+    maintainers = ["chissg", "gartung", "marcmengel", "vitodb"]  # AUTO-CPAN2Spack
 
     version("2.06", sha256="773e0f0f21c0cb2cf664cee6ba28ff70259babcc892f9b650f9cbda00be092ad")
     version("2.05", sha256="3a6f3fbcc6cb5406964b2e332688bae3c2595436d03ddb25ee6703a47a98977d")

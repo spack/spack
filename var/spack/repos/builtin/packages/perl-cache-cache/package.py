@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -12,7 +12,7 @@ class PerlCacheCache(PerlPackage):
     homepage = "https://cpan.metacpan.org/authors/id/R/RJ/RJBS"  # AUTO-CPAN2Spack
     url = "https://cpan.metacpan.org/authors/id/R/RJ/RJBS/Cache-Cache-1.08.tar.gz"
 
-    maintainers("chissg", "gartung", "marcmengel", "vitodb")  # AUTO-CPAN2Spack
+    maintainers = ["chissg", "gartung", "marcmengel", "vitodb"]  # AUTO-CPAN2Spack
 
     version("1.08", sha256="d2c7fd5dba5dd010b7d8923516890bb6ccf6b5f188ccb69f35cb0fd6c031d1e8")
     version("1.07", sha256="c1afe8fff07f05385468f78f3fdbf1dbb5fd2bb70b50c25163d5be540bdc8d12")

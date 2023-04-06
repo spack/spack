@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -12,7 +12,7 @@ class PerlPerlMinimumversion(PerlPackage):
     homepage = "https://github.com/neilb/Perl-MinimumVersion"  # AUTO-CPAN2Spack
     url = "https://cpan.metacpan.org/authors/id/D/DB/DBOOK/Perl-MinimumVersion-1.40.tar.gz"
 
-    maintainers("chissg", "gartung", "marcmengel", "vitodb")  # AUTO-CPAN2Spack
+    maintainers = ["chissg", "gartung", "marcmengel", "vitodb"]  # AUTO-CPAN2Spack
 
     version("1.40", sha256="7589a578cb60d70ca4755c395b3592b440a0cd6a1b074e4eceac93b031a1be90")
     version(
