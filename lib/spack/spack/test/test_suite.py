@@ -8,7 +8,7 @@ import sys
 
 import pytest
 
-from llnl.util.filesystem import touch
+from llnl.util.filesystem import join_path, mkdirp, touch
 
 import spack.install_test
 import spack.spec
@@ -339,3 +339,31 @@ COMMIT;
 
     expected = spack.install_test.get_escaped_text_output(filename)
     spack.install_test.check_outputs(expected, contents)
+
+
+def test_find_required_file(tmpdir):
+    filename = "myexe"
+    dirs = ["a", "b"]
+    for d in dirs:
+        path = tmpdir.join(d)
+        mkdirp(path)
+        touch(join_path(path, filename))
+    path = join_path(tmpdir.join("c"), "d")
+    mkdirp(path)
+    touch(join_path(path, filename))
+
+    # First just find a single path
+    results = spack.install_test.find_required_file(
+        tmpdir.join("c"), filename, expected=1, recursive=True
+    )
+    assert isinstance(results, str)
+
+    # Ensure none file if do not recursively search that directory
+    with pytest.raises(spack.install_test.SkipTest, match="Expected 1"):
+        spack.install_test.find_required_file(
+            tmpdir.join("c"), filename, expected=1, recursive=False
+        )
+
+    # Now make sure we get all of the files
+    results = spack.install_test.find_required_file(tmpdir, filename, expected=3, recursive=True)
+    assert isinstance(results, list) and len(results) == 3

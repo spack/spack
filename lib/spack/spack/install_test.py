@@ -144,8 +144,8 @@ def find_required_file(
        filename: name of the file being located
        expected: expected number of files to be found under the directory
            (default is 1)
-       recursive: ``True`` if subdirectories are to be searched, else ``False``
-           (default is ``True``)
+       recursive: ``True`` if subdirectories are to be recursively searched,
+           else ``False`` (default is ``True``)
 
     Returns: the path(s), relative to root, to the required file(s)
 
