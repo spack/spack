@@ -27,6 +27,8 @@ class LuaLuafilesystem(LuaPackage):
     version("1.7.0-2", sha256="23b4883aeb4fb90b2d0f338659f33a631f9df7a7e67c54115775a77d4ac3cc59")
     version("1.6.3", sha256="11c7b1fc2e560c0a521246b84e6257138d97dddde5a19e405714dbabcb9436ca")
 
+    depends_on("lua-lang@:5.3", when="@:1.7")
+
 class LuaBuilder(spack.build_systems.lua.LuaBuilder):
     def install(self, pkg, spec, prefix):
         rocks_args = self.luarocks_args()
