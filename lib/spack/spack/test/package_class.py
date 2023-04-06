@@ -19,6 +19,7 @@ import llnl.util.filesystem as fs
 
 import spack.package_base
 import spack.repo
+from spack.build_systems.generic import Package
 
 
 @pytest.fixture(scope="module")
@@ -225,7 +226,7 @@ def test_package_license():
     assert os.path.basename(pkg.global_license_file) == pkg.license_files[0]
 
 
-class BaseTestPackage(spack.package.Package):
+class BaseTestPackage(Package):
     extendees = None  # currently a required attribute for is_extension()
 
 
