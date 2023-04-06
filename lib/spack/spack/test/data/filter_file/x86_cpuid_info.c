@@ -350,7 +350,7 @@ init_amd( PAPI_mh_info_t * mh_info, int *num_levels )
     * Application Note, AP-485, Nov 2008, 241618-033
     * Updated to AP-485, Aug 2009, 241618-036
     *
-    * The following data structure and its instantiation trys to
+    * The following data structure and its instantiation tries to
     * capture all the information in Section 2.1.3 of the above
     * document. Not all of it is used by PAPI, but it could be.
     * As the above document is revised, this table should be
@@ -989,7 +989,7 @@ static struct _intel_cache_info intel_cache[] = {
 // 0xB1 NOTE: This is currently the only instance where .entries
 //      is dependent on .size. It's handled as a code exception.
 //      If other instances appear in the future, the structure
-//      should probably change to accomodate it.
+//      should probably change to accommodate it.
 	{.descriptor = 0xB1,
 	 .level = 1,
 	 .type = PAPI_MH_TYPE_TLB | PAPI_MH_TYPE_INST,
