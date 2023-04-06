@@ -16,6 +16,7 @@ class Crmc(CMakePackage):
     # url = "https://devel-ik.fzk.de/wsvn/mc/crmc/tags/crmc.v1.7.0/?op=dl"
     url = "https://lcgpackages.web.cern.ch/lcgpackages/tarFiles/sources/MCGeneratorsTarFiles/crmc.v1.7.0.tar.gz"
 
+    version("2.0.1", sha256="c607733c7534b188c9aede9e18cd7d4eac4f0a37d6728c1f406c434f74aed743")
     # Version 1.7.0 has issues linking phojet, devs contacted but no response
     # version('1.7.0', sha256='59086f4e654d775a4f6c3974ae89bbfd995391c4677f266881604878b47563d1')
     version("1.6.0", sha256="ae2ba5aa2a483d20aa60bef35080f555b365715d1a8fae54b473c275813345c1")
