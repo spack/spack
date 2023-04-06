@@ -265,7 +265,7 @@ packages:
     s1 = Spec("v").concretized()
     assert s1.satisfies("@2.2")
 
-    s2 = Spec(f"v@2.3").concretized()
+    s2 = Spec("v@2.3").concretized()
     assert s2.satisfies(f"v@{commits[1]}=2.3")
 
 
