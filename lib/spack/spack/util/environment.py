@@ -88,14 +88,18 @@ def deprioritize_system_paths(
     # If we are building for a 64-bit target, move e.g. *64 system paths to
     # the front of the system paths; otherwise remove them
     if target is None:
-        target = spack.platforms.host().target("default_target")
+        ref_target = spack.platforms.host().target("default_target")
     elif not isinstance(target, spack.target.Target):
-        target = spack.target.Target(target)
-    if target_64bit_re.search(target.microarchitecture.family.name):
+        ref_target = spack.target.Target(target)
+    else:
+        ref_target = target
+    if target_64bit_re.search(ref_target.microarchitecture.family.name):
         result.sort(key=lambda path: is_system_path(path) and not path.endswith("64"))
     else:
-        result = filter(lambda path: not (is_system_path(path) and path.endswith("64")), result)
-    return list(result)
+        result = list(
+            filter(lambda path: not (is_system_path(path) and path.endswith("64")), result)
+        )
+    return result
 
 
 def prune_duplicate_paths(paths: List[Path]) -> List[Path]:

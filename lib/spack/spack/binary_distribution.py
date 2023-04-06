@@ -24,7 +24,7 @@ import urllib.request
 import warnings
 from contextlib import closing, contextmanager
 from gzip import GzipFile
-from typing import Union
+from typing import Tuple, Union
 from urllib.error import HTTPError, URLError
 
 import ruamel.yaml as yaml
@@ -1381,7 +1381,9 @@ def _build_tarball_in_stage_dir(
     return None
 
 
-def nodes_to_be_packaged(specs, deptype: str = dep.default_deptype, root=True, dependencies=True):
+def nodes_to_be_packaged(
+    specs, deptype: Union[str, Tuple[str, ...]] = dep.default_deptype, root=True, dependencies=True
+):
     """Return the list of nodes to be packaged, given a list of specs.
 
     Args:
@@ -1411,7 +1413,7 @@ def push(
     push_url,
     include_root: bool = True,
     include_dependencies: bool = True,
-    deptype: str = dep.default_deptype,
+    deptype: Union[str, Tuple[str, ...]] = dep.default_deptype,
     **kwargs,
 ):
     """Create a binary package for each of the specs passed as input and push them
