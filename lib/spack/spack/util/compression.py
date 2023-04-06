@@ -168,7 +168,15 @@ def _unzip(archive_file):
 
 
 def _unZ(archive_file):
-    return _system_gunzip(archive_file)
+    """
+    Decompress UNIX compress style compression
+    Utilizes gunzip on unix and 7zip on Windows
+    """
+    if sys.platform == "win32":
+        result = _7zip(archive_file)
+    else:
+        result = _system_gunzip(archive_file)
+    return result
 
 
 def _lzma_decomp(archive_file):
@@ -229,6 +237,31 @@ def _xz(archive_file):
     xz.add_default_arg("-d")
     xz(copy_path)
     return destination_abspath
+
+
+def _7zip(archive_file):
+    """Unpack/decompress with 7z executable
+    7z is able to handle a number file extensions however
+    it may not be available on system.
+    Without 7z, Windows users with certain versions of Python may
+    be unable to extract .xz files, and all Windows users will be unable
+    to extract .Z files. If we cannot find 7z either externally or a
+    Spack installed copy, we fail, but inform the user that 7z can
+    be installed via `spack install 7zip`
+    Args:
+        archive_file (str): absolute path of file to be unarchived
+    """
+    outfile = os.path.basename(strip_last_extension(archive_file))
+    _7z = which("7z")
+    if not _7z:
+        raise CommandNotFoundError(
+            "7z unavailable,\
+unable to extract %s files. 7z can be installed via Spack"
+            % extension_from_path(archive_file)
+        )
+    _7z.add_default_arg("e")
+    _7z(archive_file)
+    return outfile
 
 
 def decompressor_for(path, extension=None):
