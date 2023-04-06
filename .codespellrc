@@ -1,3 +1,4 @@
 [codespell]
-skip = .git,*.pdf,*.svg,*.patch,*.py,*.diff,*.pub,
-ignore-words-list = bu,fo,nd,ot,te,pilon,namd,oce,ther
+skip = .git,*.pdf,*.svg,*.patch,*.py,*.diff,*.pub,foamEtcFile
+# precice - package
+ignore-words-list = bu,fo,nd,ot,te,pilon,namd,oce,ther,precice
