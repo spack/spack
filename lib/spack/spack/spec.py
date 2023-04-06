@@ -4204,7 +4204,7 @@ class Spec(object):
                 col = "="
             elif "compiler" in parts or "compiler_flags" in parts:
                 col = "%"
-            elif "version" in parts:
+            elif "version" in parts or "versions" in parts:
                 col = "@"
 
             # Finally, write the output
