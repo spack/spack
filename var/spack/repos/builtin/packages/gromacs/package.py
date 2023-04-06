@@ -5,10 +5,12 @@
 
 import os
 
+import llnl.util.filesystem as fs
+
 from spack.package import *
 
 
-class Gromacs(CMakePackage):
+class Gromacs(CMakePackage, CudaPackage):
     """GROMACS is a molecular dynamics package primarily designed for simulations
     of proteins, lipids and nucleic acids. It was originally developed in
     the Biophysical Chemistry department of University of Groningen, and is now
@@ -85,13 +87,13 @@ class Gromacs(CMakePackage):
         description="Produces a double precision version of the executables",
     )
     variant("plumed", default=False, description="Enable PLUMED support")
-    variant("cuda", default=False, description="Enable CUDA support")
+    variant("cufftmp", default=False, when="+cuda+mpi", description="Enable Multi GPU FFT support")
     variant("opencl", default=False, description="Enable OpenCL support")
     variant("sycl", default=False, description="Enable SYCL support")
     variant("nosuffix", default=False, description="Disable default suffixes")
     variant(
         "build_type",
-        default="RelWithDebInfo",
+        default="Release",
         description="The build type to build",
         values=(
             "Debug",
@@ -248,6 +250,8 @@ class Gromacs(CMakePackage):
     depends_on("cp2k@8.1:", when="+cp2k")
     depends_on("dbcsr", when="+cp2k")
 
+    depends_on("nvhpc", when="+cufftmp")
+
     patch("gmxDetectCpu-cmake-3.14.patch", when="@2018:2019.3^cmake@3.14.0:")
     patch("gmxDetectSimd-cmake-3.14.patch", when="@5.0:2017^cmake@3.14.0:")
 
@@ -335,12 +339,54 @@ class Gromacs(CMakePackage):
                     r"-gencode;arch=compute_20,code=sm_21;?", "", "cmake/gmxManageNvccConfig.cmake"
                 )
 
+
+class CMakeBuilder(spack.build_systems.cmake.CMakeBuilder):
+    @run_after("build")
+    def build_test_binaries(self):
+        """Build the test binaries.
+
+        GROMACS usually excludes tests from the default build target, but building
+        the tests during spack's ``check`` phase takes a long time while producing
+        no visible output, even with ``--verbose``.
+
+        Here, we make sure the test binaries are built during the build phase
+        (as would normally be expected when configured with BUILD_TESTING)
+        when the ``--test`` flag is used.
+
+        Note: the GMX_DEVELOPER_BUILD option disables the EXCLUDE_FROM_ALL on the
+        test binaries, but the option incurs additional side effects that may
+        not be intended with ``--test``.
+        """
+        if self.pkg.run_tests:
+            with fs.working_dir(self.build_directory):
+                make("tests")
+
+    def check(self):
+        """Run the ``check`` target (skipping the ``test`` target).
+
+        Override the standard CMakeBuilder behavior. GROMACS has both `test`
+        and `check` targets, but we are only interested in the latter.
+        """
+        with fs.working_dir(self.build_directory):
+            if self.generator == "Unix Makefiles":
+                make("check")
+            elif self.generator == "Ninja":
+                ninja("check")
+
     def cmake_args(self):
         options = []
+        # Warning: Use `define_from_variant()` with caution.
+        # GROMACS may use unexpected conventions for CMake variable values.
+        # For example: variables that accept boolean values like "OFF"
+        # may actually be STRING type, and undefined variables may trigger
+        # different defaults for dependent options than explicitly defined variables.
+        # `-DGMX_VAR=OFF` may not have the same meaning as `-DGMX_VAR=`.
+        # In other words, the mapping between package variants and the
+        # GMX CMake variables is often non-trivial.
 
         if "+mpi" in self.spec:
             options.append("-DGMX_MPI:BOOL=ON")
-            if self.version < Version("2020"):
+            if self.pkg.version < Version("2020"):
                 # Ensures gmxapi builds properly
                 options.extend(
                     [
@@ -349,7 +395,7 @@ class Gromacs(CMakePackage):
                         "-DCMAKE_Fortran_COMPILER=%s" % self.spec["mpi"].mpifc,
                     ]
                 )
-            elif self.version == Version("2021"):
+            elif self.pkg.version == Version("2021"):
                 # Work around https://gitlab.com/gromacs/gromacs/-/issues/3896
                 # Ensures gmxapi builds properly
                 options.extend(
@@ -395,7 +441,7 @@ class Gromacs(CMakePackage):
         else:
             options.append("-DGMX_HWLOC:BOOL=OFF")
 
-        if self.version >= Version("2021"):
+        if self.pkg.version >= Version("2021"):
             if "+cuda" in self.spec:
                 options.append("-DGMX_GPU:STRING=CUDA")
             elif "+opencl" in self.spec:
@@ -434,6 +480,13 @@ class Gromacs(CMakePackage):
         if "+cp2k" in self.spec:
             options.append("-DGMX_CP2K:BOOL=ON")
             options.append("-DCP2K_DIR:STRING={0}".format(self.spec["cp2k"].prefix))
+
+        if "+cufftmp" in self.spec:
+            options.append("-DGMX_USE_CUFFTMP=ON")
+            options.append(
+                f'-DcuFFTMp_ROOT={self.spec["nvhpc"].prefix}/Linux_{self.spec.target.family}'
+                + f'/{self.spec["nvhpc"].version}/math_libs'
+            )
 
         # Activate SIMD based on properties of the target
         target = self.spec.target
