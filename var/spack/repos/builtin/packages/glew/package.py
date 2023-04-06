@@ -58,7 +58,7 @@ class Glew(CMakePackage):
             self.define("CMAKE_DISABLE_FIND_PACKAGE_X11", "gl=glx" not in spec),
         ]
         if not is_system_path(spec["gl"].headers.directories[0]):
-            args+=[
+            args += [
                 self.define("OPENGL_INCLUDE_DIR", spec["gl"].headers.directories[0]),
                 self.define("OPENGL_gl_LIBRARY", spec["gl"].libs[0]),
             ]

@@ -15,13 +15,7 @@ import llnl.util.tty as tty
 import spack.config
 import spack.tengine as tengine
 
-from .common import (
-    BaseConfiguration,
-    BaseContext,
-    BaseFileLayout,
-    BaseModuleFileWriter,
-    root_path,
-)
+from .common import BaseConfiguration, BaseContext, BaseFileLayout, BaseModuleFileWriter, root_path
 
 #: TCL specific part of the configuration
 # configuration = spack.config.get('module_roots:ups_version', {})

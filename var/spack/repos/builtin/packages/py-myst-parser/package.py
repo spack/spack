@@ -14,14 +14,7 @@ class PyMystParser(PythonPackage):
 
     homepage = "https://github.com/executablebooks/MyST-Parser"
     documentation = "https://myst-parser.readthedocs.io/en/latest/"
-    keywords = [
-        "markdown",
-        "lexer",
-        "parser",
-        "development",
-        "docutils",
-        "sphinx",
-    ]
+    keywords = ["markdown", "lexer", "parser", "development", "docutils", "sphinx"]
     pypi = "myst-parser/myst-parser-0.18.0.tar.gz"
 
     maintainers("chissg", "gartung", "marcmengel", "vitodb")

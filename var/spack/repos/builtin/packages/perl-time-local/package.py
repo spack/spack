@@ -15,8 +15,7 @@ class PerlTimeLocal(PerlPackage):
     maintainers("chissg", "gartung", "marcmengel", "vitodb")  # AUTO-CPAN2Spack
 
     version(
-        "1.31-TRIAL",
-        sha256="c5acfe5de04af6ebb69dd8dec17788594e32053c8b8f7e4c43f823019cd72f83",
+        "1.31-TRIAL", sha256="c5acfe5de04af6ebb69dd8dec17788594e32053c8b8f7e4c43f823019cd72f83"
     )  # Pre-release.
     version(
         "1.30",

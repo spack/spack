@@ -1406,8 +1406,14 @@ def nodes_to_be_packaged(specs, deptype: str = dep.default_deptype, root=True, d
         return list(filter(packageable, nodes))
 
 
-def push(specs, push_url, include_root: bool = True, include_dependencies: bool = True,
-         deptype: str = dep.default_deptype, **kwargs):
+def push(
+    specs,
+    push_url,
+    include_root: bool = True,
+    include_dependencies: bool = True,
+    deptype: str = dep.default_deptype,
+    **kwargs,
+):
     """Create a binary package for each of the specs passed as input and push them
     to a given push URL.
 
@@ -1425,7 +1431,9 @@ def push(specs, push_url, include_root: bool = True, include_dependencies: bool 
     if type(include_root) != bool or type(include_dependencies) != bool:
         raise ValueError("Expected include_root/include_dependencies to be True/False")
 
-    nodes = nodes_to_be_packaged(specs, root=include_root, dependencies=include_dependencies, deptype=deptype)
+    nodes = nodes_to_be_packaged(
+        specs, root=include_root, dependencies=include_dependencies, deptype=deptype
+    )
 
     # TODO: This seems to be an easy target for task
     # TODO: distribution using a parallel pool
