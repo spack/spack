@@ -340,6 +340,11 @@ COMMIT;
     expected = spack.install_test.get_escaped_text_output(filename)
     spack.install_test.check_outputs(expected, contents)
 
+    # Let's also cover case where something expected is NOT in the output
+    expected.append("should not find me")
+    with pytest.raises(RuntimeError, match="Expected"):
+        spack.install_test.check_outputs(expected, contents)
+
 
 def test_find_required_file(tmpdir):
     filename = "myexe"
@@ -367,3 +372,12 @@ def test_find_required_file(tmpdir):
     # Now make sure we get all of the files
     results = spack.install_test.find_required_file(tmpdir, filename, expected=3, recursive=True)
     assert isinstance(results, list) and len(results) == 3
+
+
+def test_packagetest_fails(mock_packages):
+    MyPackage = collections.namedtuple("MyPackage", ["spec"])
+
+    s = spack.spec.Spec("a")
+    pkg = MyPackage(s)
+    with pytest.raises(ValueError, match="requires a concrete package"):
+        spack.install_test.PackageTest(pkg)

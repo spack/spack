@@ -210,7 +210,7 @@ def test_package_url_and_urls():
 
     s = spack.spec.Spec("a")
     with pytest.raises(ValueError, match="defines both"):
-        _ = URLsPackage(s)
+        URLsPackage(s)
 
 
 def test_package_license():
@@ -234,21 +234,21 @@ def test_package_version_fails():
     s = spack.spec.Spec("a")
     pkg = BaseTestPackage(s)
     with pytest.raises(ValueError, match="does not have a concrete version"):
-        _ = pkg.version()
+        pkg.version()
 
 
 def test_package_tester_fails():
     s = spack.spec.Spec("a")
     pkg = BaseTestPackage(s)
     with pytest.raises(ValueError, match="without concrete version"):
-        _ = pkg.tester()
+        pkg.tester()
 
 
 def test_package_fetcher_fails():
     s = spack.spec.Spec("a")
     pkg = BaseTestPackage(s)
     with pytest.raises(ValueError, match="without concrete version"):
-        _ = pkg.fetcher
+        pkg.fetcher
 
 
 def test_package_no_extendees():
@@ -272,7 +272,7 @@ def test_package_test_no_compilers(mock_packages, monkeypatch, capfd):
     assert "test requires missing compiler" in error
 
 
-# TODO: Deprecated. Remove when remote test(), run_test(), etc.
+# TODO: Remove when remove deprecated run_test(), etc.
 def test_package_run_test(install_mockery_mutable_config, mock_fetch, capfd):
     s = spack.spec.Spec("trivial-smoke-test").concretized()
     pkg = s.package

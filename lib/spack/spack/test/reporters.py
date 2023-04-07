@@ -78,42 +78,56 @@ def test_reporters_extract_no_parts(capfd):
 
 
 def test_reporters_extract_missing_desc():
-    # This test includes one part without a description and another with one
+    # This test parts with and without descriptions *and* a test part that has
+    # multiple commands
     fake_bin = fs.join_path(fake_install_prefix, "bin", "importer")
-    names = ["test_fake_bin", "test_fake_util"]
-    descs = ["", "import fake util module"]
+    names = ["test_fake_bin", "test_fake_util", "test_multiple_commands"]
+    descs = ["", "import fake util module", ""]
     failed = TestStatus.FAILED
     passed = TestStatus.PASSED
-    results = [passed, failed]
+    results = [passed, failed, passed]
     outputs = """
 ==> Testing package fake-1.0-abcdefg
-==> [2022-02-15-18:44:21.250165] test: {0}:
-==> [2022-02-15-18:44:21.250170] '{1}' '-c' 'import fake.bin'
+==> [2022-02-15-18:44:21.250165] test: {0}: {1}
+==> [2022-02-15-18:44:21.250170] '{5}' '-c' 'import fake.bin'
 {2}: {0}
 ==> [2022-02-15-18:44:21.250185] test: {3}: {4}
 ==> [2022-02-15-18:44:21.250200] '{5}' '-c' 'import fake.util'
 {6}: {3}
+==> [2022-02-15-18:44:21.250205] test: {7}: {8}
+==> [2022-02-15-18:44:21.250210] 'exe1 1'
+==> [2022-02-15-18:44:21.250250] 'exe2 2'
+{9}: {7}
 """.format(
-        names[0], descs[0], results[0], names[1], descs[1], fake_bin, results[1]
+        names[0],
+        descs[0],
+        results[0],
+        names[1],
+        descs[1],
+        fake_bin,
+        results[1],
+        names[2],
+        descs[2],
+        results[2],
     ).splitlines()
-    for ln in outputs:
-        print(ln)
 
     parts = spack.reporters.extract.extract_test_parts("fake", outputs)
 
-    assert len(parts) == 2
+    assert len(parts) == 3
     for i, (name, desc, status) in enumerate(zip(names, descs, results)):
         assert parts[i]["name"] == name
         assert parts[i]["desc"] == desc
         assert parts[i]["status"] == status.lower()
+    assert parts[2]["command"] == "exe1 1; exe2 2"
 
 
 # TODO: Remove this test when removing deprecated run_test(), etc.
-def test_reporters_extract_xfail():
+def test_reporters_extract_empty_and_xfail():
     fake_bin = fs.join_path(fake_install_prefix, "bin", "fake-app")
     outputs = """
 ==> Testing package fake-1.0-abcdefg
-==> [2022-02-15-18:44:21.250165] Expecting return code in [3]
+==> [2022-02-15-18:44:21.250165] Checking fake imports
+==> [2022-02-15-18:44:21.250175] Expecting return code in [3]
 ==> [2022-02-15-18:44:21.250200] '{0}'
 {1}
 """.format(
@@ -122,8 +136,9 @@ def test_reporters_extract_xfail():
 
     parts = spack.reporters.extract.extract_test_parts("fake", outputs)
 
-    assert len(parts) == 1
-    parts[0]["completed"] == "Expected to fail"
+    assert len(parts) == 2
+    parts[0]["command"] == "unkown"
+    parts[1]["completed"] == "Expected to fail"
 
 
 @pytest.mark.parametrize("state", [("not installed"), ("external")])

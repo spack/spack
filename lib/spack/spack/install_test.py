@@ -41,6 +41,7 @@ spack_install_test_log = "install-time-test-log.txt"
 
 
 ListOrStringType = Union[str, List[str]]
+LogType = Union["tty.log.nixlog", "tty.log.winlog"]
 SpecType = List[Spec]
 
 
@@ -178,9 +179,6 @@ def install_test_root(pkg: "spack.package_base.PackageBase"):
     return os.path.join(pkg.metadata_dir, "test")
 
 
-LogType = Union["tty.log.nixlog", "tty.log.winlog"]
-
-
 def print_message(logger: LogType, msg: str, verbose: bool = False):
     """Print the message to the log, optionally echoing.
 
@@ -234,7 +232,7 @@ class PackageTest(object):
         self._logger = None
 
     @property
-    def logger(self) -> object:
+    def logger(self) -> Optional[LogType]:
         """The current logger or, if none, sets to one."""
         if not self._logger:
             self._logger = tty.log.log_output(self.test_log_file)
@@ -242,7 +240,7 @@ class PackageTest(object):
         return self._logger
 
     @contextlib.contextmanager
-    def test_logger(self, verbose: bool, externals: bool):
+    def test_logger(self, verbose: bool = False, externals: bool = False):
         """Context manager for setting up the test logger
 
         Args:
@@ -254,8 +252,8 @@ class PackageTest(object):
         fs.touch(self.test_log_file)  # Otherwise log_parse complains
         fs.set_install_permissions(self.test_log_file)
 
-        with tty.log.log_output(self.test_log_file, verbose) as logger:
-            with logger.force_echo():
+        with tty.log.log_output(self.test_log_file, verbose) as self._logger:
+            with self.logger.force_echo():  # type: ignore[union-attr]
                 tty.msg("Testing package " + colorize(r"@*g{" + self.pkg_id + r"}"))
 
             # use debug print levels for log file to record commands
@@ -263,8 +261,7 @@ class PackageTest(object):
             tty.set_debug(True)
 
             try:
-                self._logger = logger
-                yield logger
+                yield self.logger
             finally:
                 # reset debug level
                 tty.set_debug(old_debug)
@@ -321,7 +318,6 @@ class PackageTest(object):
 
                     fn()
 
-                # TODO/TBD: Do we want to treat these calls as test parts?
                 except AttributeError as e:
                     msg = "RUN-TESTS: method not implemented [{0}]".format(name)
                     print_message(logger, msg, verbose)
@@ -364,7 +360,7 @@ class PackageTest(object):
             log = self.test_log_file
             if not (log and os.path.isfile(log)):
                 tty.debug("There is no test log file (staged or installed)")
-            return
+                return
 
         print("\nSee test results at:\n  {0}".format(log))
 
@@ -377,8 +373,6 @@ class PackageTest(object):
         lines = []
         lines.append("{:=^80}".format(" SUMMARY: {0} ".format(self.pkg_id)))
         for name, status in self.test_parts:
-            # TODO/TBD: Should the pkg_id be listed?  If so, remove above
-            # msg = "{0}::{1} .. {2}\n".format(self.pkg_id, name, status)
             msg = "{0} .. {1}".format(name, status)
             lines.append(msg)
 
@@ -596,11 +590,12 @@ def test_functions(pkg: TestPackageType, add_virtuals: bool = False) -> List[Tup
     for clss in classes:
         methods = inspect.getmembers(clss, predicate=lambda x: inspect.isfunction(x))
         for name, test_fn in methods:
-            # TODO: Change to test_ once eliminate PackageBase.test()
+            # TODO: Change to test_ once remove deprecated run_test(), etc.
             if not name.startswith("test"):
                 continue
 
-            # TBD: Remove empty method check once eliminate PackageBase.test()?
+            # TODO: Could remove empty method check once remove
+            # TODO: deprecated run_test(), etc.
             source = re.sub(doc_regex, r"", inspect.getsource(test_fn)).splitlines()[1:]
             lines = [ln.strip() for ln in source if not ln.strip().startswith("#")]
             if len(lines) > 0 and lines[0] == "pass":
@@ -879,7 +874,6 @@ class TestSuite(object):
                 if remove_directory:
                     shutil.rmtree(test_dir)
 
-                # TBD: Should test parts be written and extracted from tested file?
                 tested = os.path.exists(self.tested_file_for_spec(spec))
                 if tested:
                     status = TestStatus.PASSED

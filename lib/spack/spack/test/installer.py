@@ -1384,3 +1384,29 @@ def test_single_external_implicit_install(install_mockery, explicit_args, is_exp
     s.external_path = "/usr"
     create_installer([(s, explicit_args)]).install()
     assert spack.store.db.get_record(pkg).explicit == is_explicit
+
+
+def test_print_install_test_log(tmpdir, install_mockery, mock_packages, ensure_debug, capfd):
+    name = "trivial-install-test-package"
+    s = spack.spec.Spec(name).concretized()
+    pkg = s.package
+
+    spack.installer.print_install_test_log(pkg)
+    out = capfd.readouterr()[0]
+    assert out == ""
+
+    pkg.run_tests = True
+    spack.installer.print_install_test_log(pkg)
+    out = capfd.readouterr()[0]
+    assert out == ""
+
+    pkg.tester.test_log_file = str(tmpdir.join("test-log.txt"))
+    pkg.tester.add_failure(AssertionError("test"), "test-failure")
+    spack.installer.print_install_test_log(pkg)
+    err = capfd.readouterr()[1]
+    assert "no test log file" in err
+
+    fs.touch(pkg.tester.test_log_file)
+    spack.installer.print_install_test_log(pkg)
+    out, err = capfd.readouterr()
+    assert pkg.tester.test_log_file in out

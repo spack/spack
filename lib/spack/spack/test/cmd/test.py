@@ -109,7 +109,7 @@ def test_test_output_on_failure(
 ):
     install("test-fail")
     out = spack_test("run", "test-fail", fail_on_error=False)
-    lines = [ln for ln in out.split("\n") if ln]
+    lines = [ln for ln in out.splitlines() if ln]
     lines = lines[2:]
     assert "TestFailure" in out
     assert "not callable" in out
