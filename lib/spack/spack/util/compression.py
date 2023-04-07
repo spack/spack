@@ -139,7 +139,7 @@ def _gunzip(archive_file):
     if is_gzip_supported():
         return _py_gunzip(archive_file)
     else:
-       return _system_gunzip(archive_file)
+        return _system_gunzip(archive_file)
 
 
 def _py_gunzip(archive_file):
@@ -204,7 +204,7 @@ def _lzma_decomp(archive_file):
     lzma module, but fall back on command line xz tooling
     to find available Python support."""
     if is_lzma_supported():
-       return _py_lzma(archive_file)
+        return _py_lzma(archive_file)
     else:
         return _xz(archive_file)
 
