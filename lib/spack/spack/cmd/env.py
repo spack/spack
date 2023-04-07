@@ -698,16 +698,14 @@ class MakeTargetVisitor(object):
         return True
 
 
-def _fmt_spec_make_target(spec):
+def _fmt_spec_make_target(spec: [spack.spec.Spec]) -> str:
     """Create a unique identifier string from a Spec to use as a make target.
 
     Many characters in a typical Spec formatted string trigger special
     behavior in `make`, including '=', and '%'. To avoid potential issues,
-    filter all characters except a small set which are guaranteed not to have
-    special meaning.
+    allow only a small set of characters which are known not to have any
+    special meaning (any other character is replaced with "_").
     """
-    if not isinstance(spec, spack.spec.Spec):
-        raise ValueError("Internal error: got non-spec object: {0}".format(spec))
     tgt = spec.format("{name}-{version}-{hash}")
     return re.sub(r"[^A-Za-z0-9_.-]", "_", tgt)
 
