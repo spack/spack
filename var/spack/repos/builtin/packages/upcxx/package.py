@@ -16,15 +16,16 @@ def is_CrayXC():
 
 
 def is_CrayEX():
-    if (spack.platforms.host().name in ["linux", "cray"]):
+    if spack.platforms.host().name in ["linux", "cray"]:
         target = os.environ.get("CRAYPE_NETWORK_TARGET")
-        if (target in ["ofi", "ucx"]): # normal case
+        if target in ["ofi", "ucx"]:  # normal case
             return True
-        elif (target is None): # but some systems lack Cray PrgEnv
+        elif target is None:  # but some systems lack Cray PrgEnv
             fi_info = which("fi_info")
             if fi_info and fi_info("-l", output=str).find("cxi") >= 0:
                 return True
     return False
+
 
 def cross_detect():
     if is_CrayXC():
