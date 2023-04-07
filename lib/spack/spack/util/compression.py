@@ -94,21 +94,36 @@ def _bunzip2(archive_file):
     Args:
         archive_file (str): absolute path to the bz2 archive to be decompressed
     """
-    compressed_file_name = os.path.basename(archive_file)
+    if is_bz2_supported():
+        return _py_bunzip(archive_file)
+    else:
+        return _system_bunzip(archive_file)
+
+
+def _py_bunzip(archive_file):
+    """Decompress bz2 compressed archives/files via python's bz2 module"""
     decompressed_file = os.path.basename(strip_extension(archive_file, "bz2"))
     working_dir = os.getcwd()
     archive_out = os.path.join(working_dir, decompressed_file)
-    copy_path = os.path.join(working_dir, compressed_file_name)
     if is_bz2_supported():
         f_bz = bz2.BZ2File(archive_file, mode="rb")
         with open(archive_out, "wb") as ar:
             shutil.copyfileobj(f_bz, ar)
         f_bz.close()
-    else:
-        shutil.copy(archive_file, copy_path)
-        bunzip2 = which("bunzip2", required=True)
-        bunzip2.add_default_arg("-q")
-        return bunzip2(copy_path)
+    return archive_out
+
+
+def _system_bunzip(archive_file):
+    """Decompress bz2 compressed archives/files via system bzip2 utility"""
+    compressed_file_name = os.path.basename(archive_file)
+    decompressed_file = os.path.basename(strip_extension(archive_file, "bz2"))
+    working_dir = os.getcwd()
+    archive_out = os.path.join(working_dir, decompressed_file)
+    copy_path = os.path.join(working_dir, compressed_file_name)
+    shutil.copy(archive_file, copy_path)
+    bunzip2 = which("bunzip2", required=True)
+    bunzip2.add_default_arg("-q")
+    bunzip2(copy_path)
     return archive_out
 
 
@@ -121,16 +136,21 @@ def _gunzip(archive_file):
     Args:
         archive_file (str): absolute path of the file to be decompressed
     """
+    if is_gzip_supported():
+        return _py_gunzip(archive_file)
+    else:
+       return _system_gunzip(archive_file)
+
+
+def _py_gunzip(archive_file):
+    """Decompress `.gz` compressed archvies via python gzip module"""
     decompressed_file = os.path.basename(strip_extension(archive_file, "gz"))
     working_dir = os.getcwd()
     destination_abspath = os.path.join(working_dir, decompressed_file)
-    if is_gzip_supported():
-        f_in = gzip.open(archive_file, "rb")
-        with open(destination_abspath, "wb") as f_out:
-            shutil.copyfileobj(f_in, f_out)
-        f_in.close()
-    else:
-        _system_gunzip(archive_file)
+    f_in = gzip.open(archive_file, "rb")
+    with open(destination_abspath, "wb") as f_out:
+        shutil.copyfileobj(f_in, f_out)
+    f_in.close()
     return destination_abspath
 
 
@@ -184,12 +204,7 @@ def _lzma_decomp(archive_file):
     lzma module, but fall back on command line xz tooling
     to find available Python support."""
     if is_lzma_supported():
-        decompressed_file = os.path.basename(strip_extension(archive_file, "xz"))
-        archive_out = os.path.join(os.getcwd(), decompressed_file)
-        with open(archive_out, "wb") as ar:
-            with lzma.open(archive_file) as lar:
-                shutil.copyfileobj(lar, ar)
-        return archive_out
+       return _py_lzma(archive_file)
     else:
         return _xz(archive_file)
 
@@ -221,6 +236,16 @@ def _win_compressed_tarball_handler(decompressor):
         return decomped_tarball
 
     return unarchive
+
+
+def _py_lzma(archive_file):
+    """Decompress lzma compressed .xz files via python lzma module"""
+    decompressed_file = os.path.basename(strip_extension(archive_file, "xz"))
+    archive_out = os.path.join(os.getcwd(), decompressed_file)
+    with open(archive_out, "wb") as ar:
+        with lzma.open(archive_file) as lar:
+            shutil.copyfileobj(lar, ar)
+    return archive_out
 
 
 def _xz(archive_file):
@@ -265,12 +290,14 @@ unable to extract %s files. 7z can be installed via Spack"
 
 
 def decompressor_for(path, extension=None):
-    """Returns a function pointer to appropriate decompression
-    algorithm based on extension type.
+    extension = _validate_extension(path, extension=extension)
+    if sys.platform == "win32":
+        return decompressor_for_win(extension)
+    else:
+        return decompressor_for_nix(extension)
 
-    Args:
-        path (str): path of the archive file requiring decompression
-    """
+
+def _validate_extension(path, extension=None):
     if not extension:
         extension = extension_from_file(path, decompress=True)
 
@@ -280,21 +307,32 @@ def decompressor_for(path, extension=None):
 unrecognized file extension: '%s'"
             % extension
         )
+    return extension
 
-    if re.match(r"\.?zip$", extension) or path.endswith(".zip"):
+
+def decompressor_for_nix(extension):
+    """Returns a function pointer to appropriate decompression
+    algorithm based on extension type and unix specific considerations
+    i.e. a reasonable expectation system utils like gzip, bzip2, and xz are
+    available
+
+    Args:
+        path (str): path of the archive file requiring decompression
+    """
+    if re.match(r"zip", extension):
         return _unzip
 
     if re.match(r"gz", extension):
         return _gunzip
 
-    if re.match(r"bz2", extension):
+    if re.match(r"bz", extension):
         return _bunzip2
 
     # Python does not have native support
     # of any kind for .Z files. In these cases,
     # we rely on external tools such as tar,
     # 7z, or uncompressZ
-    if re.match(r"Z$", extension):
+    if re.match(r"Z", extension):
         return _unZ
 
     # Python and platform may not have support for lzma
@@ -302,16 +340,72 @@ unrecognized file extension: '%s'"
     if re.match(r"xz", extension):
         return _lzma_decomp
 
-    # Catch tar.xz/tar.Z files here for Windows
-    # as the tar utility on Windows cannot handle such
-    # compression types directly
-    if ("xz" in extension) and sys.platform == "win32":
-        return _win_compressed_tarball_handler(_lzma_decomp)
-
-    if "Z" in extension and sys.platform == "win32":
-        return _win_compressed_tarball_handler(_unZ)
-
     return _untar
+
+
+def _determine_py_decomp_archive_strategy(extension):
+    """Returns appropriate python based decompression strategy
+    based on extension type"""
+    # Only rely on Python decompression support for gz
+    if re.match(r"gz", extension):
+        return _py_gunzip
+
+    # Only rely on Python decompression support for bzip2
+    if re.match(r"bz2", extension):
+        return _py_bunzip
+
+    # Python does not have native support
+    # of any kind for .Z files. In these cases,
+    # we rely on 7zip, which must be installed outside
+    # of spack and added to the PATH or externally detected
+    if re.match(r"Z", extension):
+        return _unZ
+
+    # Only rely on Python decompression support for xz
+    if re.match(r"xz", extension):
+        return _py_lzma
+
+    return None
+
+
+def decompressor_for_win(extension):
+    """Returns a function pointer to appropriate decompression
+    algorithm based on extension type and Windows specific considerations
+
+    Windows natively vendors *only* tar, no other archive/compression utilities
+    So we must rely exclusively on Python module support for all compression
+    operations, tar for tarballs and zip files, and 7zip for Z compressed archives
+    and files as Python does not provide support for the UNIX compress algorithm
+
+    Args:
+        path (str): path of the archive file requiring decompression
+        extension (str): extension
+    """
+
+    # Windows native tar can handle .zip extensions, use standard
+    # unzip method
+    if re.match(r"zip", extension):
+        return _unzip
+
+    # Windows vendors no native decompression tools, attempt to derive
+    # python based decompression strategy, if this is None, type is
+    # some sort of archive, compressed or other
+    decompressor = _determine_py_decomp_archive_strategy(extension)
+
+    # reaching here means `path` is either a compressed archive or a tarball
+    # Windows does not natively provide *any* decompression utilities
+    # and only provides tar for archive extraction
+    # so we must decompress the archive with python modules and then hand things
+    # off to Windows native tar.exe
+
+    # if extension is standard tarball, invoke Windows native tar
+    if re.match(r"tar", extension):
+        return _untar
+
+    extension = compression_ext_from_compressed_archive(extension)
+    decompressor = _determine_py_decomp_archive_strategy(extension)
+
+    return _win_compressed_tarball_handler(decompressor)
 
 
 class FileTypeInterface:
@@ -649,3 +743,10 @@ def check_and_remove_ext(path, ext):
     if check_extension(path, ext):
         return reg_remove_ext(path, ext)
     return path
+
+
+def compression_ext_from_compressed_archive(extension):
+    """Returns compression extension for a compressed archive"""
+    for ext in [*EXTS, "bz"]:
+        if ext in extension:
+            return ext
