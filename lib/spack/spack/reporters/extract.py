@@ -10,7 +10,12 @@ from datetime import datetime
 import llnl.util.tty as tty
 
 # The keys here represent the only recognized (ctest/cdash) status values
-completed = {"failed": "Completed", "passed": "Completed", "notrun": "No tests to run"}
+completed = {
+    "failed": "Completed",
+    "passed": "Completed",
+    "skipped": "Completed",
+    "notrun": "No tests to run",
+}
 
 log_regexp = re.compile(r"^==> \[([0-9:.\-]*)(?:, [0-9]*)?\] (.*)")
 returns_regexp = re.compile(r"\[([0-9 ,]*)\]")
@@ -19,7 +24,7 @@ skip_msgs = ["Testing package", "Results for", "Detected the following"]
 skip_regexps = [re.compile(r"{0}".format(msg)) for msg in skip_msgs]
 
 # Status values need to match those in spack.install_test.TestStatus
-status_values = ["FAILED", "PASSED", "NO_TESTS"]
+status_values = ["FAILED", "PASSED", "SKIPPED", "NO_TESTS"]
 status_regexps = [re.compile(r"^({0})".format(stat)) for stat in status_values]
 
 
@@ -37,6 +42,8 @@ def elapsed(current, previous):
     return diff.total_seconds()
 
 
+# TODO: Should remove with deprecated run_test(), etc. since don't have an XFAIL
+# TODO: mechanism with the new test_part() approach.
 def expected_failure(line):
     if not line:
         return False
@@ -59,8 +66,8 @@ def new_part():
     }
 
 
+# TODO: Remove this when remove deprecated test_part(), etc.
 def part_name(source):
-    # TODO: Should be passed the package prefix and only remove it
     elements = []
     for e in source.replace("'", "").split(" "):
         elements.append(os.path.basename(e) if os.sep in e else e)
@@ -74,6 +81,8 @@ def process_part_end(part, curr_time, last_time):
 
         stat = part["status"]
         if stat in completed:
+            # TODO: remove the expected failure mapping along with removal of
+            # TODO: deprecated run_test(), etc.
             if stat == "passed" and expected_failure(part["desc"]):
                 part["completed"] = "Expected to fail"
             elif part["completed"] == "Unknown":
@@ -106,6 +115,11 @@ def extract_test_parts(default_name, outputs):
     part = {}
     last_time = None
     curr_time = None
+
+    # TODO: Remove these once remove deprecated run_test() processing
+    testdesc = ""
+    using_deprecated_tests = True
+
     for line in outputs:
         line = line.strip()
         if not line:
@@ -115,7 +129,8 @@ def extract_test_parts(default_name, outputs):
         if skip(line):
             continue
 
-        # Skipped tests start with "Skipped" and end with "package"
+        # The spec was explicitly reported as skipped as determined by CI
+        # (e.g., installation failed, package known to have failing tests).
         if line.startswith("Skipped") and line.endswith("package"):
             part = new_part()
             part["command"] = "Not Applicable"
@@ -139,7 +154,9 @@ def extract_test_parts(default_name, outputs):
 
                 # New test: means new test part assumed to be in the form
                 # "test: <name>: <desc>".
-                if msg.startswith("test:"):
+                if msg.startswith("test: "):
+                    using_deprecated_tests = False
+
                     # Update the last part processed
                     process_part_end(part, curr_time, last_time)
 
@@ -149,16 +166,54 @@ def extract_test_parts(default_name, outputs):
                     part["desc"] = ":".join(desc[2:]).strip()
                     parts.append(part)
 
-                # Command should be a command associated with the last test part
+                # There is no guarantee of a 1-to-1 mapping of a test part and
+                # a (single) command (or executable) since the introduction of
+                # PR 34236.
+                #
+                # Note that tests where the package does not save the output
+                # (e.g., output=str.split, error=str.split) will not have
+                # a command printed to the test log.
                 elif msg.startswith("'") and msg.endswith("'"):
-                    if part["command"]:
+                    if using_deprecated_tests:
+                        # Update the last part processed
+                        process_part_end(part, curr_time, last_time)
+
+                        part = new_part()
+                        part["command"] = msg
+                        part["name"] = part_name(msg)
+                        parts.append(part)
+
+                        # Save off the optional test description if it was
+                        # tty.debuged *prior to* the command and reset
+                        if testdesc:
+                            part["desc"] = testdesc
+                            testdesc = ""
+
+                    # Otherwise, the command should be associated with the last
+                    # test part.
+                    elif part["command"]:
                         part["command"] += "; " + msg.replace("'", "")
                     else:
                         part["command"] = msg.replace("'", "")
+
                 else:
                     # Update the last part processed since a new log message
                     # means a non-test action
                     process_part_end(part, curr_time, last_time)
+
+                    if using_deprecated_tests:
+                        if testdesc:
+                            # We had a test description but no command so treat
+                            # as a new part (e.g., some import tests)
+                            part = new_part()
+                            part["name"] = "_".join(testdesc.split())
+                            part["command"] = "unknown"
+                            part["desc"] = testdesc
+                            parts.append(part)
+                            process_part_end(part, curr_time, curr_time)
+
+                        # Assuming this is a description for the next test part
+                        testdesc = msg
 
             else:
                 tty.debug("Did not recognize test output '{0}'".format(line))

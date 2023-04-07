@@ -331,6 +331,10 @@ class CDash(Reporter):
         self.finalize_report()
 
     def test_skipped_report(self, directory_name, spec, reason=None):
+        """Explicitly report spec as being skipped (e.g., CI).
+
+        Examples the installation failed or the package is known to have
+        broken tests."""
         output = "Skipped {0} package".format(spec.name)
         if reason:
             output += "\n{0}".format(reason)

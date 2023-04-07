@@ -108,23 +108,22 @@ def test_reporters_extract_missing_desc():
         assert parts[i]["status"] == status.lower()
 
 
-# # TODO/TBD: How will we support this now?
-# def test_reporters_extract_xfail():
-#     fake_bin = fs.join_path(fake_install_prefix, "bin", "fake-app")
-#     outputs = """
-# ==> Testing package fake-1.0-abcdefg
-# ==> [2022-02-15-18:44:21.250165] Expecting return code in [3]
-# ==> [2022-02-15-18:44:21.250165] Expecting return code in [3]
-# ==> [2022-02-15-18:44:21.250200] '{0}'
-# {1}
-# """.format(
-#         fake_bin, TestStatus.PASSED
-#     ).splitlines()
-#
-#     parts = spack.reporters.extract.extract_test_parts("fake", outputs)
-#
-#     assert len(parts) == 1
-#     parts[0]["completed"] == "Expected to fail"
+# TODO: Remove this test when removing deprecated run_test(), etc.
+def test_reporters_extract_xfail():
+    fake_bin = fs.join_path(fake_install_prefix, "bin", "fake-app")
+    outputs = """
+==> Testing package fake-1.0-abcdefg
+==> [2022-02-15-18:44:21.250165] Expecting return code in [3]
+==> [2022-02-15-18:44:21.250200] '{0}'
+{1}
+""".format(
+        fake_bin, str(TestStatus.PASSED)
+    ).splitlines()
+
+    parts = spack.reporters.extract.extract_test_parts("fake", outputs)
+
+    assert len(parts) == 1
+    parts[0]["completed"] == "Expected to fail"
 
 
 @pytest.mark.parametrize("state", [("not installed"), ("external")])
@@ -143,32 +142,53 @@ def test_reporters_extract_skipped(state):
     parts[0]["completed"] == expected
 
 
-# # TODO/TBD: How will skip tests be handled now?
-# def test_reporters_skip():
-#     # This test ticks 3 boxes:
-#     # 1) covers an as yet uncovered skip messages
-#     # 2) covers debug timestamps
-#     # 3) unrecognized output
-#     fake_bin = fs.join_path(fake_install_prefix, "bin", "fake")
-#     unknown_message = "missing timestamp"
-#     outputs = """
-# ==> Testing package fake-1.0-abcdefg
-# ==> [2022-02-15-18:44:21.250165, 123456] Detected the following modules: fake1
-# ==> {0}
-# ==> [2022-02-15-18:44:21.250175, 123456] running fake program
-# ==> [2022-02-15-18:44:21.250200, 123456] '{1}'
-# INVALID
-# Results for test suite abcdefghijklmn
-# """.format(
-#         unknown_message, fake_bin
-#     ).splitlines()
-#
-#     parts = spack.reporters.extract.extract_test_parts("fake", outputs)
-#
-#     assert len(parts) == 1
-#     assert fake_bin in parts[0]["command"]
-#     assert parts[0]["loglines"] == ["INVALID"]
-#     assert parts[0]["elapsed"] == 0.0
+# TODO: Remove this test when removing deprecated run_test(), etc.
+def test_reporters_skip():
+    # This test ticks 3 boxes:
+    # 1) covers an as yet uncovered skip messages
+    # 2) covers debug timestamps
+    # 3) unrecognized output
+    fake_bin = fs.join_path(fake_install_prefix, "bin", "fake")
+    unknown_message = "missing timestamp"
+    outputs = """
+==> Testing package fake-1.0-abcdefg
+==> [2022-02-15-18:44:21.250165, 123456] Detected the following modules: fake1
+==> {0}
+==> [2022-02-15-18:44:21.250175, 123456] running fake program
+==> [2022-02-15-18:44:21.250200, 123456] '{1}'
+INVALID
+Results for test suite abcdefghijklmn
+""".format(
+        unknown_message, fake_bin
+    ).splitlines()
+
+    parts = spack.reporters.extract.extract_test_parts("fake", outputs)
+
+    assert len(parts) == 1
+    assert fake_bin in parts[0]["command"]
+    assert parts[0]["loglines"] == ["INVALID"]
+    assert parts[0]["elapsed"] == 0.0
+
+
+def test_reporters_skip_new():
+    outputs = """
+==> [2023-04-06-15:55:13.094025] test: test_skip:
+SKIPPED: test_skip: Package must be built with +python
+==> [2023-04-06-15:55:13.540029] Completed testing
+==> [2023-04-06-15:55:13.540275]
+======================= SUMMARY: fake-1.0-abcdefg ========================
+fake::test_skip .. SKIPPED
+=========================== 1 skipped of 1 part ==========================
+""".splitlines()
+
+    parts = spack.reporters.extract.extract_test_parts("fake", outputs)
+
+    assert len(parts) == 1
+    part = parts[0]
+    assert part["name"] == "test_skip"
+    assert part["status"] == "skipped"
+    assert part["completed"] == "Completed"
+    assert part["loglines"][0].startswith("SKIPPED:")
 
 
 def test_reporters_report_for_package_no_stdout(tmpdir, monkeypatch, capfd):

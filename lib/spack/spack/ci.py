@@ -2457,6 +2457,8 @@ class CDashHandler(object):
             tty.warn(msg)
 
     def report_skipped(self, spec, directory_name, reason):
+        """Explicitly report skipping testing of a spec (e.g., CI install
+        failed, spec known to have failing tests."""
         configuration = CDashConfiguration(
             upload_url=self.upload_url,
             packages=[spec.name],
