@@ -43,16 +43,18 @@ class FluxPmix(AutotoolsPackage):
         pluginpath = join_path(self.prefix.lib, "flux/shell/plugins/pmix.so")
         if spec.satisfies("@:0.3.0"):
             rcfile = join_path(self.prefix.etc, "flux/shell/lua.d/mpi/openmpi@5.lua")
-            filter_file( r"pmix/pmix.so", pluginpath)
+            filter_file(r"pmix/pmix.so", pluginpath)
         else:
             rcdir = join_path(self.prefix.etc, "flux/shell/lua.d")
             rcfile = join_path(rcdir, "pmix.lua")
             mkdirp(rcdir)
             with open(rcfile, "w") as fp:
-                fp.write("plugin.load(\"" + pluginpath + "\")")
- 
+                fp.write('plugin.load("' + pluginpath + '")')
+
     def setup_run_environment(self, env):
         spec = self.spec
         env.prepend_path("FLUX_SHELL_RC_PATH", join_path(self.prefix, "etc/flux/shell/lua.d"))
         if spec.satisfies("@0.3.0:"):
-            env.prepend_path("FLUX_PMI_CLIENT_SEARCHPATH", join_path(self.prefix, "flux/upmi/plugins"))
+            env.prepend_path(
+                "FLUX_PMI_CLIENT_SEARCHPATH", join_path(self.prefix, "flux/upmi/plugins")
+            )
