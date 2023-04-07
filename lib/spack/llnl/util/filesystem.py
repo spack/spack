@@ -1303,7 +1303,6 @@ def traverse_tree(
         # target is relative to the link, then that may not resolve properly
         # relative to our cwd - see resolve_link_target_relative_to_the_link
         if source_child.is_dir() and (follow_links or not source_child.is_symlink()):
-
             # When follow_nonexisting isn't set, don't descend into dirs
             # in source that do not exist in dest
             if follow_nonexisting or dest_child.exists():
