@@ -9,7 +9,7 @@ from spack.package import *
 class PyFuro(PythonPackage):
     """A clean customisable Sphinx documentation theme."""
 
-    homepage = "https://www.example.com"
+    homepage = "https://github.com/pradyunsg/furo"
     pypi = "furo/furo-2022.6.21.tar.gz"
 
     maintainers("chissg", "gartung", "marcmengel", "vitodb")
