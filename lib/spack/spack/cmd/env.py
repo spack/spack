@@ -698,6 +698,7 @@ class MakeTargetVisitor(object):
         return True
 
 
+_fmt_spec_make_target_pattern = re.compile(r"[^A-Za-z0-9_.-]")
 def _fmt_spec_make_target(spec: [spack.spec.Spec]) -> str:
     """Create a unique identifier string from a Spec to use as a make target.
 
@@ -707,7 +708,7 @@ def _fmt_spec_make_target(spec: [spack.spec.Spec]) -> str:
     special meaning (any other character is replaced with "_").
     """
     tgt = spec.format("{name}-{version}-{hash}")
-    return re.sub(r"[^A-Za-z0-9_.-]", "_", tgt)
+    return _fmt_spec_make_target_pattern.sub("_", tgt)
 
 
 def env_depfile(args):
