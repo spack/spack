@@ -709,6 +709,7 @@ class MakeTargetSpecComponentFormatter(object):
     allow only a small set of characters which are known not to have any
     special meaning (any other character is replaced with "_").
     """
+
     def __init__(self):
         self._pattern = None
 
@@ -718,7 +719,7 @@ class MakeTargetSpecComponentFormatter(object):
             self._pattern = re.compile(r"[^A-Za-z0-9_.-]")
         return self._pattern
 
-    def __call__(self, spec: [spack.spec.Spec]) -> str:
+    def __call__(self, spec: spack.spec.Spec) -> str:
         tgt = spec.format("{name}-{version}-{hash}")
         return self.pattern.sub("_", tgt)
 
