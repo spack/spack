@@ -35,6 +35,7 @@ import inspect
 import os.path
 import pathlib
 import re
+import string
 import warnings
 from typing import Optional
 
@@ -471,6 +472,11 @@ class BaseConfiguration:
         return None
 
     @property
+    def conflicts(self):
+        """Conflicts for this module file"""
+        return self.conf.get("conflict", [])
+
+    @property
     def excluded(self):
         """Returns True if the module has been excluded, False otherwise."""
 
@@ -762,6 +768,29 @@ class BaseContext(tengine.Context):
                 return True
         else:
             return False
+
+    @tengine.context_property
+    def conflicts(self):
+        """List of conflicts for the module file."""
+        fmts = []
+        projection = proj.get_projection(self.conf.projections, self.spec)
+        f = string.Formatter()
+        for item in self.conf.conflicts:
+            if len([x for x in f.parse(item)]) > 1:
+                for naming_dir, conflict_dir in zip(projection.split("/"), item.split("/")):
+                    if naming_dir != conflict_dir:
+                        message = "conflict scheme does not match naming "
+                        message += "scheme [{spec}]\n\n"
+                        message += 'naming scheme   : "{nformat}"\n'
+                        message += 'conflict scheme : "{cformat}"\n\n'
+                        message += "** You may want to check your "
+                        message += "`modules.yaml` configuration file **\n"
+                        tty.error(message.format(spec=self.spec, nformat=projection, cformat=item))
+                        raise SystemExit("Module generation aborted.")
+                item = self.spec.format(item)
+            fmts.append(item)
+        # Substitute spec tokens if present
+        return [self.spec.format(x) for x in fmts]
 
     @tengine.context_property
     def autoload(self):
