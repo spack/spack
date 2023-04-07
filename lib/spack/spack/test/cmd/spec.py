@@ -196,12 +196,12 @@ def test_env_aware_spec(mutable_mock_env_path):
 
     with env:
         output = spec()
-        assert "mpileaks@2.3" in output
-        assert "callpath@1.0" in output
-        assert "dyninst@8.2" in output
-        assert "libdwarf@20130729" in output
-        assert "libelf@0.8.1" in output
-        assert "mpich@3.0.4" in output
+        assert "mpileaks@=2.3" in output
+        assert "callpath@=1.0" in output
+        assert "dyninst@=8.2" in output
+        assert "libdwarf@=20130729" in output
+        assert "libelf@=0.8.1" in output
+        assert "mpich@=3.0.4" in output
 
 
 @pytest.mark.parametrize(
