@@ -351,7 +351,7 @@ def _determine_py_decomp_archive_strategy(extension):
         return _py_gunzip
 
     # Only rely on Python decompression support for bzip2
-    if re.match(r"bz2", extension):
+    if re.match(r"bz", extension):
         return _py_bunzip
 
     # Python does not have native support
@@ -747,6 +747,7 @@ def check_and_remove_ext(path, ext):
 
 def compression_ext_from_compressed_archive(extension):
     """Returns compression extension for a compressed archive"""
+    # use bz here to catch tbz bz2 compressed tarballs
     for ext in [*EXTS, "bz"]:
         if ext in extension:
             return ext
