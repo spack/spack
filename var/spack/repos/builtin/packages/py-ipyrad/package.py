@@ -7,7 +7,9 @@ from spack.package import *
 
 
 class PyIpyrad(PythonPackage):
-    """An interactive toolkit for assembly and analysis of restriction-site associated genomic data sets (e.g., RAD, ddRAD, GBS) for population genetic and phylogenetic studies."""
+    """An interactive toolkit for assembly and analysis of restriction-site
+    associated genomic data sets (e.g., RAD, ddRAD, GBS) for population
+    genetic and phylogenetic studies."""
 
     homepage = "https://github.com/dereneaton/ipyrad"
 
