@@ -57,7 +57,7 @@ class GenericBuilder(GenericBuilder):
         env.set("SPACK_IFORT", ifort_root)
 
     def is_64bit(self):
-        return "64" in self.pkg.spec.target.family
+        return "64" in str(self.pkg.spec.target.family)
 
     def build_command_line(self):
         args = ["-noLogo"]
