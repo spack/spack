@@ -698,17 +698,32 @@ class MakeTargetVisitor(object):
         return True
 
 
-_fmt_spec_make_target_pattern = re.compile(r"[^A-Za-z0-9_.-]")
-def _fmt_spec_make_target(spec: [spack.spec.Spec]) -> str:
-    """Create a unique identifier string from a Spec to use as a make target.
+# Create a singleton object to manage lazy compilation of regex pattern
+# (but only do the compilation once)
+class MakeTargetSpecComponentFormatter(object):
+    """Callable to create a unique identifier string from a Spec to
+    use as a make target.
 
     Many characters in a typical Spec formatted string trigger special
     behavior in `make`, including '=', and '%'. To avoid potential issues,
     allow only a small set of characters which are known not to have any
     special meaning (any other character is replaced with "_").
     """
-    tgt = spec.format("{name}-{version}-{hash}")
-    return _fmt_spec_make_target_pattern.sub("_", tgt)
+    def __init__(self):
+        self._pattern = None
+
+    @property
+    def pattern(self):
+        if not self._pattern:
+            self._pattern = re.compile(r"[^A-Za-z0-9_.-]")
+        return self._pattern
+
+    def __call__(self, spec: [spack.spec.Spec]) -> str:
+        tgt = spec.format("{name}-{version}-{hash}")
+        return self.pattern.sub("_", tgt)
+
+
+_fmt_spec_make_target = MakeTargetSpecComponentFormatter()
 
 
 def env_depfile(args):
