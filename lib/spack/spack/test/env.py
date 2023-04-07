@@ -161,3 +161,31 @@ def test_environment_cant_modify_environments_root(tmpdir):
         with pytest.raises(ev.SpackEnvironmentError):
             e = ev.Environment(tmpdir.strpath)
             ev.activate(e)
+
+
+@pytest.mark.regression("35420")
+@pytest.mark.parametrize(
+    "original_content",
+    [
+        (
+            """\
+spack:
+  specs:
+  - matrix:
+    # test
+    - - a
+  concretizer:
+    unify: false"""
+        )
+    ],
+)
+def test_roundtrip_spack_yaml_with_comments(original_content, mock_packages, config, tmp_path):
+    """Ensure that round-tripping a spack.yaml file doesn't change its content."""
+    spack_yaml = tmp_path / "spack.yaml"
+    spack_yaml.write_text(original_content)
+
+    e = ev.Environment(str(tmp_path))
+    e.update_manifest()
+
+    content = spack_yaml.read_text()
+    assert content == original_content
