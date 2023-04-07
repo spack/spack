@@ -13,6 +13,7 @@ import sys
 import time
 import urllib.parse
 import urllib.request
+import warnings
 from typing import List, Optional
 
 import ruamel.yaml as yaml
@@ -697,6 +698,8 @@ class Environment(object):
         # This attribute will be set properly from configuration
         # during concretization
         self.unify = None
+        self.new_specs = []
+        self.new_installs = []
         self.clear()
 
         if init_file:
@@ -2077,18 +2080,73 @@ class Environment(object):
         for spec_dag_hash in self.concretized_order:
             self.specs_by_hash[spec_dag_hash] = first_seen[spec_dag_hash]
 
-    def write(self, regenerate=True):
+    def write(self, regenerate: bool = True) -> None:
         """Writes an in-memory environment to its location on disk.
 
         Write out package files for each newly concretized spec.  Also
         regenerate any views associated with the environment and run post-write
         hooks, if regenerate is True.
 
-        Arguments:
-            regenerate (bool): regenerate views and run post-write hooks as
-                well as writing if True.
+        Args:
+            regenerate: regenerate views and run post-write hooks as well as writing if True.
         """
-        # Warn that environments are not in the latest format.
+        self.manifest_uptodate_or_warn()
+        if self.specs_by_hash:
+            self.ensure_env_directory_exists(dot_env=True)
+            self.update_environment_repository()
+            self.update_manifest()
+            # Write the lock file last. This is useful for Makefiles
+            # with `spack.lock: spack.yaml` rules, where the target
+            # should be newer than the prerequisite to avoid
+            # redundant re-concretization.
+            self.update_lockfile()
+        else:
+            self.ensure_env_directory_exists(dot_env=False)
+            with fs.safe_remove(self.lock_path):
+                self.update_manifest()
+
+        if regenerate:
+            self.regenerate_views()
+            spack.hooks.post_env_write(self)
+
+        self._reset_new_specs_and_installs()
+
+    def _reset_new_specs_and_installs(self) -> None:
+        self.new_specs = []
+        self.new_installs = []
+
+    def update_lockfile(self) -> None:
+        with fs.write_tmp_and_move(self.lock_path) as f:
+            sjson.dump(self._to_lockfile_dict(), stream=f)
+
+    def ensure_env_directory_exists(self, dot_env: bool = False) -> None:
+        """Ensure that the root directory of the environment exists
+
+        Args:
+            dot_env: if True also ensures that the <root>/.env directory exists
+        """
+        fs.mkdirp(self.path)
+        if dot_env:
+            fs.mkdirp(self.env_subdir_path)
+
+    def update_environment_repository(self) -> None:
+        """Updates the repository associated with the environment."""
+        for spec in spack.traverse.traverse_nodes(self.new_specs):
+            if not spec.concrete:
+                raise ValueError("specs passed to environment.write() must be concrete!")
+
+            self._add_to_environment_repository(spec)
+
+    def _add_to_environment_repository(self, spec_node: Spec) -> None:
+        """Add the root node of the spec to the environment repository"""
+        repository_dir = os.path.join(self.repos_path, spec_node.namespace)
+        repository = spack.repo.create_or_construct(repository_dir, spec_node.namespace)
+        pkg_dir = repository.dirname_for_package_name(spec_node.name)
+        fs.mkdirp(pkg_dir)
+        spack.repo.path.dump_provenance(spec_node, pkg_dir)
+
+    def manifest_uptodate_or_warn(self):
+        """Emits a warning if the manifest file is not up-to-date."""
         if not is_latest_format(self.manifest_path):
             ver = ".".join(str(s) for s in spack.spack_version_info[:2])
             msg = (
@@ -2098,61 +2156,14 @@ class Environment(object):
                 "Note that versions of Spack older than {} may not be able to "
                 "use the updated configuration."
             )
-            tty.warn(msg.format(self.name, self.name, ver))
+            warnings.warn(msg.format(self.name, self.name, ver))
 
-        # ensure path in var/spack/environments
-        fs.mkdirp(self.path)
-
-        yaml_dict = config_dict(self.yaml)
-        raw_yaml_dict = config_dict(self.raw_yaml)
-
-        if self.specs_by_hash:
-            # ensure the prefix/.env directory exists
-            fs.mkdirp(self.env_subdir_path)
-
-            for spec in spack.traverse.traverse_nodes(self.new_specs):
-                if not spec.concrete:
-                    raise ValueError("specs passed to environment.write() " "must be concrete!")
-
-                root = os.path.join(self.repos_path, spec.namespace)
-                repo = spack.repo.create_or_construct(root, spec.namespace)
-                pkg_dir = repo.dirname_for_package_name(spec.name)
-
-                fs.mkdirp(pkg_dir)
-                spack.repo.path.dump_provenance(spec, pkg_dir)
-
-            self._update_and_write_manifest(raw_yaml_dict, yaml_dict)
-
-            # Write the lock file last. This is useful for Makefiles
-            # with `spack.lock: spack.yaml` rules, where the target
-            # should be newer than the prerequisite to avoid
-            # redundant re-concretization.
-            with fs.write_tmp_and_move(self.lock_path) as f:
-                sjson.dump(self._to_lockfile_dict(), stream=f)
-        else:
-            with fs.safe_remove(self.lock_path):
-                self._update_and_write_manifest(raw_yaml_dict, yaml_dict)
-
-        # TODO: rethink where this needs to happen along with
-        # writing. For some of the commands (like install, which write
-        # concrete specs AND regen) this might as well be a separate
-        # call.  But, having it here makes the views consistent witht the
-        # concretized environment for most operations.  Which is the
-        # special case?
-        if regenerate:
-            self.regenerate_views()
-
-            # Run post_env_hooks
-            spack.hooks.post_env_write(self)
-
-        # new specs and new installs reset at write time
-        self.new_specs = []
-        self.new_installs = []
-
-    def _update_and_write_manifest(self, raw_yaml_dict, yaml_dict):
+    def update_manifest(self):
         """Update YAML manifest for this environment based on changes to
         spec lists and views and write it.
         """
+        yaml_dict = config_dict(self.yaml)
+        raw_yaml_dict = config_dict(self.raw_yaml)
         # invalidate _repo cache
         self._repo = None
         # put any changes in the definitions in the YAML
@@ -2252,12 +2263,19 @@ class Environment(object):
             activate(self._previous_active)
 
 
-def yaml_equivalent(first, second):
+def yaml_equivalent(first, second) -> bool:
     """Returns whether two spack yaml items are equivalent, including overrides"""
+    # YAML has timestamps and dates, but we don't use them yet in schemas
     if isinstance(first, dict):
         return isinstance(second, dict) and _equiv_dict(first, second)
     elif isinstance(first, list):
         return isinstance(second, list) and _equiv_list(first, second)
+    elif isinstance(first, bool):
+        return isinstance(second, bool) and first is second
+    elif isinstance(first, int):
+        return isinstance(second, int) and first == second
+    elif first is None:
+        return second is None
     else:  # it's a string
         return isinstance(second, str) and first == second
 
