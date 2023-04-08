@@ -187,9 +187,9 @@ class Upcxx(Package, CudaPackage, ROCmPackage):
             # This list can be pruned once the floor version reaches 2022.9.0
             options.append("--with-pmi-version=cray")
             if which("srun"):
-                options.append("--with-pmi-runcmd='srun -n %N -- %C'")
+                options.append("--with-pmi-runcmd=srun -n %N -- %C")
             elif which("aprun"):
-                options.append("--with-pmi-runcmd='aprun -n %N %C'")
+                options.append("--with-pmi-runcmd=aprun -n %N %C")
             options.append("--disable-ibv")
             options.append("--enable-ofi")
             options.append("--with-default-network=ofi")
