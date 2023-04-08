@@ -287,4 +287,8 @@ class Upcxx(Package, CudaPackage, ROCmPackage):
             variants += "+rocm"
         else:
             variants += "~rocm"
+        if re.search(r"-DUPCXXI_ZE_ENABLED=1", output):
+            variants += "+level_zero"
+        else:
+            variants += "~level_zero"
         return variants
