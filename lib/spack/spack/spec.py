@@ -2827,6 +2827,26 @@ class Spec(object):
             return
         self._normal = value
         self._concrete = value
+        self._validate_version()
+
+    def _validate_version(self):
+        # Specs that were concretized with just a git sha as version, without associated
+        # Spack version, get their Spack version mapped to develop. This should only apply
+        # when reading specs concretized with Spack 0.19 or earlier. Currently Spack always
+        # ensures that GitVersion specs have an associated Spack version.
+        v = self.versions.concrete
+        if not isinstance(v, vn.GitVersion):
+            return
+
+        try:
+            v.ref_version
+        except vn.VersionLookupError:
+            before = self.cformat("{name}{@version}{/hash:7}")
+            v._ref_version = vn.StandardVersion.from_string("develop")
+            tty.debug(
+                f"the git sha of {before} could not be resolved to spack version; "
+                f"it has been replaced by {self.cformat('{name}{@version}{/hash:7}')}."
+            )
 
     def _mark_concrete(self, value=True):
         """Mark this spec and its dependencies as concrete.
@@ -4640,7 +4660,8 @@ class SpecfileReaderBase:
                 )
 
         # specs read in are concrete unless marked abstract
-        spec._concrete = node.get("concrete", True)
+        if node.get("concrete", True):
+            spec._mark_root_concrete()
 
         if "patches" in node:
             patches = node["patches"]

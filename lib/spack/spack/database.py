@@ -694,30 +694,7 @@ class Database(object):
             spec_dict[hash.name] = hash_key
 
         # Build spec from dict first.
-        spec = spec_reader.from_node_dict(spec_dict)
-
-        self._validate_version(spec)
-
-        return spec
-
-    def _validate_version(self, spec):
-        # Specs installed from a git sha without an associated spack version, that cannot
-        # be resolved anymore because the repo has been removed from its package.py, get
-        # assigned an =develop ref_version, to avoid errors in comparison. Installs from
-        # Spack v0.20+ are not affected by this, they always have a ref_version associated.
-        v = spec.version
-        if not isinstance(v, vn.GitVersion):
-            return
-
-        try:
-            v.ref_version
-        except vn.VersionLookupError:
-            before = spec.cformat("{name}{@version}{/hash:7}")
-            v._ref_version = vn.StandardVersion.from_string("develop")
-            tty.debug(
-                f"database: the git sha of {before} could not be resolved to spack version; "
-                f"it has been replaced by {spec.cformat('{name}{@version}{/hash:7}')}."
-            )
+        return spec_reader.from_node_dict(spec_dict)
 
     def db_for_spec_hash(self, hash_key):
         with self.read_transaction():
