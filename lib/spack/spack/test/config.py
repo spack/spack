@@ -1414,5 +1414,5 @@ def test_config_file_read_invalid_yaml(tmpdir, mutable_empty_config):
     with open(filename, "w") as f:
         f.write("spack:\nview")
 
-    with pytest.raises(spack.config.ConfigFileError, match="parsing yaml"):
+    with pytest.raises(spack.config.ConfigFileError, match="parsing YAML"):
         spack.config.read_config_file(filename)

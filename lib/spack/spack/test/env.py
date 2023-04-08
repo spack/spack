@@ -415,7 +415,7 @@ def test_preserving_comments_when_adding_specs(
 
     e = ev.Environment(str(tmp_path))
     e.add(new_spec)
-    e.update_manifest()
+    e.write()
 
     content = spack_yaml.read_text()
     assert content == expected_yaml
