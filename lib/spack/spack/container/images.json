@@ -12,6 +12,34 @@
       },
       "os_package_manager": "yum_amazon"
     },
+    "almalinux:9": {
+      "bootstrap": {
+        "template": "container/almalinux_9.dockerfile",
+        "image": "quay.io/almalinux/almalinux:9"
+      },
+      "os_package_manager": "yum",
+      "build": "spack/almalinux9",
+      "build_tags": {
+        "develop": "latest"
+      },
+      "final": {
+        "image": "quay.io/almalinux/almalinux:9"
+      }
+    },
+    "almalinux:8": {
+      "bootstrap": {
+        "template": "container/almalinux_8.dockerfile",
+        "image": "quay.io/almalinux/almalinux:8"
+      },
+      "os_package_manager": "yum",
+      "build": "spack/almalinux8",
+      "build_tags": {
+        "develop": "latest"
+      },
+      "final": {
+        "image": "quay.io/almalinux/almalinux:8"
+      }
+    },
     "centos:stream": {
       "bootstrap": {
         "template": "container/centos_stream.dockerfile",
