@@ -379,5 +379,5 @@ def test_packagetest_fails(mock_packages):
 
     s = spack.spec.Spec("a")
     pkg = MyPackage(s)
-    with pytest.raises(ValueError, match="requires a concrete package"):
+    with pytest.raises(ValueError, match="require a concrete package"):
         spack.install_test.PackageTest(pkg)
