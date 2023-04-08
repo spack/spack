@@ -99,7 +99,7 @@ class Mxnet(CMakePackage, CudaPackage, PythonExtension):
             args.append(self.define("USE_CUTENSOR", False))
 
         if "+cuda" in self.spec:
-            args.append("CMAKE_CUDA_COMPILER", self.spec["cuda"].prefix.bin.nvcc)
+            args.append(self.define("CMAKE_CUDA_COMPILER", self.spec["cuda"].prefix.bin.nvcc))
             if "cuda_arch=none" not in self.spec:
                 cuda_arch = ";".join(
                     "{0:.1f}".format(float(i) / 10.0)
