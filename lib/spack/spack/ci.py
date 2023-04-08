@@ -1275,7 +1275,6 @@ def generate_gitlab_ci_yaml(
                     )
 
                 job_object["stage"] = stage_name
-                job_object["needs"] = sorted(job_object["needs"], key=lambda d: d["job"])
                 job_object["retry"] = {"max": 2, "when": JOB_RETRY_CONDITIONS}
                 job_object["interruptible"] = True
 
