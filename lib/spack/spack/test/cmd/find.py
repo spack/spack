@@ -122,7 +122,7 @@ def test_namespaces_shown_correctly(database):
     out = find()
     assert "builtin.mock.zmpi" not in out
 
-    out = find("--namespace")
+    out = find("--namespaces")
     assert "builtin.mock.zmpi" in out
 
 
