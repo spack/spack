@@ -227,7 +227,7 @@ def display_env(env, args, decorator, results):
             env.user_specs,
             root_args,
             decorator=lambda s, f: color.colorize("@*{%s}" % f),
-            namespace=True,
+            namespaces=True,
             show_flags=True,
             show_full_compiler=True,
             variants=True,
