@@ -330,6 +330,15 @@ def tags():
         help="filter a package query by tag (multiple use allowed)",
     )
 
+@arg
+def namespaces():
+    return Args(
+        "-N",
+        "--namespaces",
+        action="store_true",
+        default=False,
+        help="show fully qualified package names",
+    )
 
 @arg
 def jobs():

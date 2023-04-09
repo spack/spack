@@ -105,7 +105,7 @@ def setup_parser(subparser):
     install.set_defaults(func=install_fn)
 
     listcache = subparsers.add_parser("list", help=list_fn.__doc__)
-    arguments.add_common_arguments(listcache, ["long", "very_long"])
+    arguments.add_common_arguments(listcache, ["long", "very_long", "namespaces"])
     listcache.add_argument(
         "-v",
         "--variants",
