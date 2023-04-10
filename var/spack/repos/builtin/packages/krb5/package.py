@@ -31,7 +31,8 @@ class Krb5(AutotoolsPackage):
 
     depends_on("diffutils", type="build")
     depends_on("bison", type="build")
-    depends_on("openssl@:1")
+    depends_on("openssl@:1", when="@:1.19")
+    depends_on("openssl")
     depends_on("gettext")
 
     variant(
