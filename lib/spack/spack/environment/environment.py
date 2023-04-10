@@ -1757,12 +1757,16 @@ class Environment(object):
         # a large amount of time due to repeatedly acquiring and releasing
         # locks. As a small optimization, drop already installed root specs.
         installed_roots, uninstalled_roots = self._partition_roots_by_install_status()
+        overwrite = install_args.get("overwrite", [])
+
+        # Specs to install are those that aren't installed yet or are overwritten
         if specs:
-            specs_to_install = [s for s in specs if s not in installed_roots]
-            specs_dropped = [s for s in specs if s in installed_roots]
+            # Filter specs to install by CLI arguments
+            specs_to_install = [s for s in specs if s not in installed_roots or s.dag_hash() in overwrite]
+            specs_dropped = [s for s in specs if s in installed_roots and s.dag_hash() not in overwrite]
         else:
-            specs_to_install = uninstalled_roots
-            specs_dropped = installed_roots
+            specs_to_install = uninstalled_roots + [s for s in installed_roots if s.dag_hash() in overwrite]
+            specs_dropped = [s for s in installed_roots if s.dag_hash() not in overwrite]
 
         # We need to repeat the work of the installer thanks to the above optimization:
         # Already installed root specs should be marked explicitly installed in the
