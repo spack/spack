@@ -33,6 +33,7 @@ page_4 = _create_url("4.html")
 
 root_with_fragment = _create_url("index_with_fragment.html")
 
+
 @pytest.mark.skipif(sys.platform == "win32", reason="Not supported on Windows (yet)")
 @pytest.mark.parametrize(
     "depth,expected_found,expected_not_found,expected_text",
