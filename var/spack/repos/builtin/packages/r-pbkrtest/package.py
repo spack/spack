@@ -22,6 +22,7 @@ class RPbkrtest(RPackage):
 
     cran = "pbkrtest"
 
+    version("0.5.2", sha256="8e79adf035a0fcf3c82145ad55847497379e009f7be880ba3007ebeb2e69b6e3")
     version("0.5.1", sha256="b2a3452003d93890f122423b3f2487dcb6925440f5b8a05578509e98b6aec7c5")
     version("0.5-0.1", sha256="f56525488c6efe4a5cbf849bf9a82747041478605b166c29bad54e464e46f469")
     version("0.4-7", sha256="5cbb03ad2b2468720a5a610a0ebda48ac08119a34fca77810a85f554225c23ea")
