@@ -18,8 +18,8 @@ ci:
         variables:
           CI_JOB_SIZE: huge
           SPACK_BUILD_JOBS: "12"
-          KUBERNETES_CPU_REQUEST: 12000m
-          KUBERNETES_MEMORY_REQUEST: 42G
+          KUBERNETES_CPU_REQUEST: "12000m"
+          KUBERNETES_MEMORY_REQUEST: "42G"
 
     - match:
       - ascent
@@ -79,8 +79,8 @@ ci:
         variables:
           CI_JOB_SIZE: large
           SPACK_BUILD_JOBS: "8"
-          KUBERNETES_CPU_REQUEST: 8000m
-          KUBERNETES_MEMORY_REQUEST: 12G
+          KUBERNETES_CPU_REQUEST: "8000m"
+          KUBERNETES_MEMORY_REQUEST: "12G"
 
     - match:
       - adios2
@@ -289,6 +289,6 @@ ci:
         tags: [ "spack", "small" ]
         variables:
           CI_JOB_SIZE: "small"
-          SPACK_BUILD_JOBS: "1"
-          KUBERNETES_CPU_REQUEST: "500m"
-          KUBERNETES_MEMORY_REQUEST: "500M"
+          SPACK_BUILD_JOBS: "2"
+          KUBERNETES_CPU_REQUEST: "2000m"
+          KUBERNETES_MEMORY_REQUEST: "1G"
