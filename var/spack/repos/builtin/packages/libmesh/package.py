@@ -163,6 +163,12 @@ class Libmesh(AutotoolsPackage):
     depends_on("vtk", when="+vtk")
     depends_on("libtirpc")
 
+    patch(
+        "https://github.com/libMesh/libmesh/commit/2950e259975141fd83d2213d1663d01279ef906d.patch?full_index=1",
+        sha256="965c6879408fbb6388befa095fe36c730e0461d0a20e7ea156e0c7318010d737",
+        when="@:1.7.1 ^vtk@9.2",
+    )
+
     def patch(self):
         filter_file(
             "-ltirpc",
@@ -240,7 +246,13 @@ class Libmesh(AutotoolsPackage):
 
         if "+vtk" in self.spec:
             options.append("--enable-vtk")
-            options.append("--with-vtk=%s" % self.spec["vtk"].prefix)
+            options.append("--enable-vtk-required")
+            vtk_suffix = self.spec["vtk"].version.up_to(2)
+            vtk_include_dir = join_path(
+                self.spec["vtk"].prefix.include, "vtk-{0}".format(vtk_suffix)
+            )
+            options.append("--with-vtk-include=%s" % vtk_include_dir)
+            options.append("--with-vtk-lib=%s" % self.spec["vtk"].prefix.lib)
         else:
             options.append("--disable-vtk")
 

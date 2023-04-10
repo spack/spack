@@ -34,7 +34,7 @@ class Moose(MakefilePackage):
     depends_on("slepc~arpack")
     # libmesh pin from docker_ci/Dockerfile
     depends_on(
-        "libmesh@git.5a7a9bd0e7295628f465c3bb4e42563b8b8c1a9c=1.7.0+metis+fparser+petsc+exodusii+metaphysicl+nanoflann+unique+nemesis+hdf5+eigen+boost+gmv+libhilbert+qhull~warnings+xdr threads=openmp",  # noqa: E501
+        "libmesh@git.5a7a9bd0e7295628f465c3bb4e42563b8b8c1a9c=1.7.0+metis+fparser+petsc+exodusii+metaphysicl+nanoflann+unique+nemesis+hdf5+eigen+boost+gmv+libhilbert+qhull~warnings+xdr+vtk threads=openmp",  # noqa: E501
         when="@2022-06-10",
     )
     depends_on("eigen")
@@ -46,7 +46,7 @@ class Moose(MakefilePackage):
     depends_on("py-packaging", type=("build", "run"))
 
     depends_on("py-pyqt5", type=("build", "run"), when="+gui")
-    depends_on("vtk+python", type=("build", "run"), when="+gui")
+    depends_on("vtk+python", type=("build", "run"))
     depends_on("py-matplotlib", type=("build", "run"))
     depends_on("py-pandas", type=("build", "run"))
     depends_on("py-pyyaml", type=("build", "run"))
