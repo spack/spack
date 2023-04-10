@@ -12,6 +12,7 @@ class PyPytz(PythonPackage):
     homepage = "https://pythonhosted.org/pytz"
     pypi = "pytz/pytz-2019.3.tar.gz"
 
+    version("2022.7.1", sha256="01a0681c4b9684a28304615eba55d1ab31ae00bf68ec157ec3708a8182dbbcd0")
     version("2022.2.1", sha256="cea221417204f2d1a2aa03ddae3e867921971d0d76f14d87abb4414415bbdcf5")
     version("2021.3", sha256="acad2d8b20a1af07d4e4c9d2e9285c5ed9104354062f275f3fcd88dcef4f1326")
     version("2021.1", sha256="83a4a90894bf38e243cf052c8b58f381bfe9a7a483f6a9cab140bc7f702ac4da")
