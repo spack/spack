@@ -118,16 +118,18 @@ class Catch2(CMakePackage):
         elif spec.satisfies("@2.1.1:"):
             args.append(self.define("BUILD_TESTING", self.run_tests))
         if spec.satisfies("@3:"):
-            args.extend([
-                self.define("BUILD_TESTING", self.run_tests),
-                self.define("CATCH_BUILD_EXAMPLES", True),
-                self.define("CATCH_BUILD_EXTRA_TESTS", self.run_tests),
-                self.define("CATCH_BUILD_TESTING", self.run_tests),
-                self.define("CATCH_ENABLE_WERROR", True),
-                self.define("CATCH_INSTALL_EXTRAS", True),
-                self.define_from_variant("CMAKE_CXX_STANDARD", "cxxstd"),
-                self.define("CMAKE_CXX_STANDARD_REQUIRED", True),
-            ])
+            args.extend(
+                [
+                    self.define("BUILD_TESTING", self.run_tests),
+                    self.define("CATCH_BUILD_EXAMPLES", True),
+                    self.define("CATCH_BUILD_EXTRA_TESTS", self.run_tests),
+                    self.define("CATCH_BUILD_TESTING", self.run_tests),
+                    self.define("CATCH_ENABLE_WERROR", True),
+                    self.define("CATCH_INSTALL_EXTRAS", True),
+                    self.define_from_variant("CMAKE_CXX_STANDARD", "cxxstd"),
+                    self.define("CMAKE_CXX_STANDARD_REQUIRED", True),
+                ]
+            )
         return args
 
     @when("@:1.6")

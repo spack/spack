@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -8,25 +8,16 @@ non-hierarchical modules.
 """
 import os.path
 import string
-from typing import Any, Dict  # novm
+from typing import Any, Dict
 
 import llnl.util.tty as tty
 
 import spack.config
 import spack.tengine as tengine
 
-from .common import (
-    BaseConfiguration,
-    BaseContext,
-    BaseFileLayout,
-    BaseModuleFileWriter,
-    root_path,
-)
-
-# configuration = spack.config.get('module_roots:ups_table', {})
+from .common import BaseConfiguration, BaseContext, BaseFileLayout, BaseModuleFileWriter, root_path
 
 
-#: TCL specific part of the configuration
 def configuration(module_set_name):
     config_path = "modules:%s:ups_table" % module_set_name
     config = spack.config.get(config_path, {})
@@ -37,7 +28,7 @@ def configuration(module_set_name):
 
 
 #: Caches the configuration {spec_hash: configuration}
-configuration_registry = {}  # type: Dict[str, Any]
+configuration_registry: Dict[str, Any] = {}
 
 
 def make_configuration(spec, module_set_name, explicit):

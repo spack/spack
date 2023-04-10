@@ -132,8 +132,4 @@ class Gettext(AutotoolsPackage, GNUMirrorPackage):
                 ["libasprintf", "libgettextlib", "libgettextpo", "libgettextsrc", "libintl"],
             )
 
-        return find_libraries(
-            liblist,
-            root=root,
-            recursive=True,
-        )
+        return find_libraries(liblist, root=root, recursive=True)
