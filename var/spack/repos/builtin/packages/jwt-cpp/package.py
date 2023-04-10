@@ -3,23 +3,6 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-# ----------------------------------------------------------------------------
-# If you submit this package back to Spack as a pull request,
-# please first remove this boilerplate and all FIXME comments.
-#
-# This is a template package file for Spack.  We've put "FIXME"
-# next to all the things you'll want to change. Once you've handled
-# them, you can save this file and test your package like this:
-#
-#     spack install jwt-cpp
-#
-# You can edit this file again by typing:
-#
-#     spack edit jwt-cpp
-#
-# See the Spack documentation for more information on packaging.
-# ----------------------------------------------------------------------------
-
 from spack.package import *
 
 
@@ -53,17 +36,14 @@ class JwtCpp(CMakePackage):
     depends_on("openssl@1.0.1:", when="@0.6.0: ssl=openssl")
     depends_on("libressl@3:", when="@0.5.0: ssl=libressl")
 
-
     def cmake_args(self):
         spec = self.spec
         define = self.define
         args = []
         if spec.satisfies("@0.5.0:"):
-            ssl_library_dict = { "openssl": "OpenSSL", "libressl": "LibreSSL" }
-            args.append(define("JWT_SSL_LIBRARY",
-                               ssl_library_dict[spec.variants["ssl"].value]))
-            args+=[define("JWT_BUILD_TESTS", False),
-                   define("JWT_BUILD_EXAMPLES", False)]
+            ssl_library_dict = {"openssl": "OpenSSL", "libressl": "LibreSSL"}
+            args.append(define("JWT_SSL_LIBRARY", ssl_library_dict[spec.variants["ssl"].value]))
+            args += [define("JWT_BUILD_TESTS", False), define("JWT_BUILD_EXAMPLES", False)]
         else:
             args.append(define("BUILD_TESTS", False))
         return args
