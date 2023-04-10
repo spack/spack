@@ -11,6 +11,8 @@
 
 from llnl.util.lang import union_dicts
 
+import spack.schema.gitlab_ci
+
 # Schema for script fields
 # List of lists and/or strings
 # This is similar to what is allowed in
@@ -20,24 +22,27 @@ script_schema = {
     "items": {"anyOf": [{"type": "string"}, {"type": "array", "items": {"type": "string"}}]},
 }
 
+# Schema for CI image
+image_schema = {
+    "oneOf": [
+        {"type": "string"},
+        {
+            "type": "object",
+            "properties": {
+                "name": {"type": "string"},
+                "entrypoint": {"type": "array", "items": {"type": "string"}},
+            },
+        },
+    ]
+}
+
 # Additional attributes are allow
 # and will be forwarded directly to the
 # CI target YAML for each job.
 attributes_schema = {
     "type": "object",
     "properties": {
-        "image": {
-            "oneOf": [
-                {"type": "string"},
-                {
-                    "type": "object",
-                    "properties": {
-                        "name": {"type": "string"},
-                        "entrypoint": {"type": "array", "items": {"type": "string"}},
-                    },
-                },
-            ]
-        },
+        "image": image_schema,
         "tags": {"type": "array", "items": {"type": "string"}},
         "variables": {
             "type": "object",
@@ -169,7 +174,15 @@ ci_properties = {
 }
 
 #: Properties for inclusion in other schemas
-properties = {"ci": ci_properties}
+properties = {
+    "ci": {
+        "oneOf": [
+            ci_properties,
+            # Allow legacy format under `ci` for `config update ci`
+            spack.schema.gitlab_ci.gitlab_ci_properties,
+        ]
+    }
+}
 
 #: Full schema with metadata
 schema = {
@@ -179,3 +192,21 @@ schema = {
     "additionalProperties": False,
     "properties": properties,
 }
+
+
+def update(data):
+    import llnl.util.tty as tty
+
+    import spack.ci
+    import spack.environment as ev
+
+    # Warn if deprecated section is still in the environment
+    ci_env = ev.active_environment()
+    if ci_env:
+        env_config = ev.config_dict(ci_env.yaml)
+        if "gitlab-ci" in env_config:
+            tty.die("Error: `gitlab-ci` section detected with `ci`, these are not compatible")
+
+    # Detect if the ci section is using the new pipeline-gen
+    # If it is, assume it has already been converted
+    return spack.ci.translate_deprecated_config(data)

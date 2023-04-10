@@ -756,10 +756,20 @@ def generate_gitlab_ci_yaml(
     ci_config = cfg.get("ci")
 
     if not ci_config:
-        tty.die('Environment yaml does not have "ci" section')
+        tty.warn("Environment does not have `ci` a configuration")
+        gitlabci_config = yaml_root.get("gitlab-ci")
+        if not gitlabci_config:
+            tty.die("Environment yaml does not have `gitlab-ci` config section. Cannot recover.")
+
+        tty.warn(
+            "The `gitlab-ci` configuration is deprecated in favor of `ci`.\n",
+            "To update run \n\t$ spack env update /path/to/ci/spack.yaml",
+        )
+        translate_deprecated_config(gitlabci_config)
+        ci_config = gitlabci_config
 
     # Default target is gitlab...and only target is gitlab
-    if "target" in ci_config and ci_config["target"] != "gitlab":
+    if not ci_config.get("target", "gitlab") == "gitlab":
         tty.die('Spack CI module only generates target "gitlab"')
 
     cdash_config = cfg.get("cdash")
@@ -937,6 +947,10 @@ def generate_gitlab_ci_yaml(
                 include_scopes.insert(0, scope)
         env_includes.extend(include_scopes)
         env_yaml_root["spack"]["include"] = env_includes
+
+        if "gitlab-ci" in env_yaml_root["spack"] and "ci" not in env_yaml_root["spack"]:
+            env_yaml_root["spack"]["ci"] = env_yaml_root["spack"].pop("gitlab-ci")
+            translate_deprecated_config(env_yaml_root["spack"]["ci"])
 
         with open(os.path.join(concrete_env_dir, "spack.yaml"), "w") as fd:
             fd.write(syaml.dump_config(env_yaml_root, default_flow_style=False))
@@ -2474,3 +2488,66 @@ class CDashHandler(object):
         )
         reporter = CDash(configuration=configuration)
         reporter.test_skipped_report(directory_name, spec, reason)
+
+
+def translate_deprecated_config(config):
+    # Remove all deprecated keys from config
+    mappings = config.pop("mappings", [])
+    match_behavior = config.pop("match_behavior", "first")
+
+    build_job = {}
+    if "image" in config:
+        build_job["image"] = config.pop("image")
+    if "tags" in config:
+        build_job["tags"] = config.pop("tags")
+    if "variables" in config:
+        build_job["variables"] = config.pop("variables")
+    if "before_script" in config:
+        build_job["before_script"] = config.pop("before_script")
+    if "script" in config:
+        build_job["script"] = config.pop("script")
+    if "after_script" in config:
+        build_job["after_script"] = config.pop("after_script")
+
+    signing_job = None
+    if "signing-job-attributes" in config:
+        signing_job = {"signing-job": config.pop("signing-job-attributes")}
+
+    service_job_attributes = None
+    if "service-job-attributes" in config:
+        service_job_attributes = config.pop("service-job-attributes")
+
+    # If this config already has pipeline-gen do not more
+    if "pipeline-gen" in config:
+        return True if mappings or build_job or signing_job or service_job_attributes else False
+
+    config["target"] = "gitlab"
+
+    config["pipeline-gen"] = []
+    pipeline_gen = config["pipeline-gen"]
+
+    # Build Job
+    submapping = []
+    for section in mappings:
+        submapping_section = {"match": section["match"]}
+        if "runner-attributes" in section:
+            submapping_section["build-job"] = section["runner-attributes"]
+        if "remove-attributes" in section:
+            submapping_section["build-job-remove"] = section["remove-attributes"]
+        submapping.append(submapping_section)
+    pipeline_gen.append({"submapping": submapping, "match_behavior": match_behavior})
+
+    if build_job:
+        pipeline_gen.append({"build-job": build_job})
+
+    # Signing Job
+    if signing_job:
+        pipeline_gen.append(signing_job)
+
+    # Service Jobs
+    if service_job_attributes:
+        pipeline_gen.append({"reindex-job": service_job_attributes})
+        pipeline_gen.append({"noop-job": service_job_attributes})
+        pipeline_gen.append({"cleanup-job": service_job_attributes})
+
+    return True
