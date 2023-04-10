@@ -814,7 +814,7 @@ ml-linux-x86_64-rocm-protected-build:
 # Machine Learning - Darwin aarch64 (CPU)
 #########################################
 .ml-darwin-aarch64-cpu-tags:
-  tags: [ "macos-ventura", "apple-clang-14", "aarch64" ]
+  tags: [ "macos-ventura", "apple-clang-14", "aarch64-macos" ]
 
 .ml-darwin-aarch64-cpu:
   extends: [ ".darwin_aarch64" ]
@@ -854,7 +854,7 @@ ml-darwin-aarch64-cpu-protected-build:
 # Machine Learning - Darwin aarch64 (MPS)
 #########################################
 .ml-darwin-aarch64-mps-tags:
-  tags: [ "macos-ventura", "apple-clang-14", "aarch64" ]
+  tags: [ "macos-ventura", "apple-clang-14", "aarch64-macos" ]
 
 .ml-darwin-aarch64-mps:
   extends: [ ".darwin_aarch64" ]
