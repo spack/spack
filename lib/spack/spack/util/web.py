@@ -579,7 +579,8 @@ def spider(root_urls, depth=0, concurrency=32):
                     # This seems to be text/html, though text/fragment+html is also used
                     fragment_response_url, _, fragment_response = read_from_url(abs_link, "text/html")
                 except Exception as e:
-                    tty.debug("Error reading fragment: %s:%s" % (type(e), str(e)), traceback.format_exc())
+                    msg = f"Error reading fragment: {(type(e), str(e)}:{traceback.format_exc()}"
+                    tty.debug(msg)
 
                 if not fragment_response_url or not fragment_response:
                     continue
