@@ -35,9 +35,7 @@ class Xfsprogs(AutotoolsPackage):
         env.append_path("C_INCLUDE_PATH", self.spec["util-linux"].prefix.include.blkid)
 
     def configure_args(self):
-        args = [
-            "--with-systemd-unit-dir=" + self.spec["xfsprogs"].prefix.lib.systemd.system,
-        ]
+        args = ["--with-systemd-unit-dir=" + self.spec["xfsprogs"].prefix.lib.systemd.system]
         if "intl" in self.spec["gettext"].libs.names:
             args.append("LDFLAGS=-lintl")
         return args

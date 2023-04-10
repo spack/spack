@@ -3,11 +3,13 @@ name: ci
 on:
   push:
     branches:
-      - develop
+      - fnal-develop
+      - v*.fermi
       - releases/**
   pull_request:
     branches:
-      - develop
+      - fnal-develop
+      - v*.fermi
       - releases/**
 
 concurrency:

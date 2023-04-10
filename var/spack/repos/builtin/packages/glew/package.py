@@ -6,19 +6,19 @@
 import sys
 
 from spack.package import *
+from spack.util.environment import is_system_path
 
 
 class Glew(CMakePackage):
     """The OpenGL Extension Wrangler Library."""
 
     homepage = "http://glew.sourceforge.net/"
-    url = "https://github.com/nigels-com/glew/archive/refs/tags/glew-2.2.0.tar.gz"
+    url = "https://github.com/nigels-com/glew/releases/download/glew-2.1.0/glew-2.1.0.tgz"
     root_cmakelists_dir = "build/cmake"
 
     version("2.2.0", sha256="d4fc82893cfb00109578d0a1a2337fb8ca335b3ceccf97b97e5cc7f08e4353e1")
     version("2.1.0", sha256="04de91e7e6763039bc11940095cd9c7f880baba82196a7765f727ac05a993c95")
     version("2.0.0", sha256="c572c30a4e64689c342ba1624130ac98936d7af90c3103f9ce12b8a0c5736764")
-    version("1.10.0", sha256="1350bcf13ed910611ad8c75339633f4e342e13d6e428a73cfed5c1dbbf997775")
 
     variant(
         "gl",
@@ -49,8 +49,6 @@ class Glew(CMakePackage):
             self.define("GLEW_REGAL", False),
             self.define("GLEW_EGL", False),
             self.define("OpenGL_GL_PREFERENCE", "LEGACY"),
-            self.define("OPENGL_INCLUDE_DIR", spec["gl"].headers.directories[0]),
-            self.define("OPENGL_gl_LIBRARY", spec["gl"].libs[0]),
             self.define("OPENGL_opengl_LIBRARY", "IGNORE"),
             self.define("OPENGL_glx_LIBRARY", "IGNORE"),
             self.define("OPENGL_egl_LIBRARY", "IGNORE"),
@@ -59,5 +57,10 @@ class Glew(CMakePackage):
             self.define("GLEW_X11", "gl=glx" in spec),
             self.define("CMAKE_DISABLE_FIND_PACKAGE_X11", "gl=glx" not in spec),
         ]
+        if not is_system_path(spec["gl"].headers.directories[0]):
+            args += [
+                self.define("OPENGL_INCLUDE_DIR", spec["gl"].headers.directories[0]),
+                self.define("OPENGL_gl_LIBRARY", spec["gl"].libs[0]),
+            ]
 
         return args

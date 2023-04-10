@@ -2,7 +2,7 @@
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
-from typing import Tuple
+from typing import List, Tuple
 
 import spack.builder
 import spack.directives
@@ -41,7 +41,7 @@ class GenericBuilder(BaseBuilder):
     legacy_attributes: Tuple[str, ...] = ("archive_files", "install_time_test_callbacks")
 
     #: Callback names for post-install phase tests
-    install_time_test_callbacks = []
+    install_time_test_callbacks: List[str] = []
 
     # On macOS, force rpaths for shared library IDs and remove duplicate rpaths
     spack.builder.run_after("install", when="platform=darwin")(apply_macos_rpath_fixups)

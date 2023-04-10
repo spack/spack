@@ -144,7 +144,7 @@ class Openblas(MakefilePackage):
     # Fix ICE in LLVM 9.0.0 https://github.com/xianyi/OpenBLAS/pull/2329
     # Patch as in https://github.com/xianyi/OpenBLAS/pull/2597
     patch("openblas_appleclang11.patch", when="@0.3.8:0.3.9 %apple-clang@11.0.3")
-    # There was an error in Reference-LAPACK that is triggeret by Xcode12
+    # There was an error in Reference-LAPACK that is triggered by Xcode12
     # fixed upstream by https://github.com/xianyi/OpenBLAS/pull/2808 and
     # should be included in post 0.3.10 versions. Application to earlier
     # versions was not tested.
@@ -214,6 +214,8 @@ class Openblas(MakefilePackage):
         if name == "cflags":
             if spec.satisfies("@0.3.20: %oneapi"):
                 iflags.append("-Wno-error=implicit-function-declaration")
+            if spec.satisfies("~fortran %clang"):
+                iflags.append("-Wno-error=int-conversion")
         return (iflags, None, None)
 
     @classmethod
