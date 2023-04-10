@@ -76,9 +76,10 @@ class Elfutils(AutotoolsPackage, SourcewarePackage):
     depends_on("pkgconfig@0.9.0:", type=("build", "link"))
 
     # debuginfod has extra dependencies
-    # NB: Waiting on an elfutils patch before we can use libmicrohttpd@0.9.71
-    depends_on("libmicrohttpd@0.9.33:0.9.70", type="link", when="+debuginfod")
-    depends_on("libarchive@3.1.2:", type="link", when="+debuginfod")
+    # NB: Waiting on an elfutils patch before we can use libmicrohttpd@0.9.51
+    depends_on("libmicrohttpd@0.9.33:0.9.50", type="link", when="+debuginfod")
+    # libarchive with iconv doesn't configure: https://github.com/spack/spack/issues/36710
+    depends_on("libarchive@3.1.2: ~iconv", type="link", when="+debuginfod")
     depends_on("sqlite@3.7.17:", type="link", when="+debuginfod")
     depends_on("curl@7.29.0:", type="link", when="+debuginfod")
 
