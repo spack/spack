@@ -27,6 +27,7 @@ class Wayland(MesonPackage, AutotoolsPackage):
         default="meson",
     )
 
+    version("1.22.0", sha256="bbca9c906a8fb8992409ebf51812f19e2a784b2c169d4b784cdd753b4bb448ef")
     version("1.21.0", sha256="53b7fa67142e653820030ec049971bcb5e84ac99e05cba5bcb9cb55f43fae4b3")
     version("1.20.0", sha256="20523cd6f2c18c3c86725467157c6221e19de76fbfad944042a2d494af3c7a92")
     version("1.19.0", sha256="4e3b889468b9a4c2d16fc6489e28d000641e67c45dc97c4f6d9ecd3e261c895f")

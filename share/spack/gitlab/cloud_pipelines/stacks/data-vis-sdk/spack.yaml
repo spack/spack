@@ -52,6 +52,7 @@ spack:
     - matrix:
       - [$sdk_base_spec]
       - [$^paraview_specs]
+      - - ^hdf5@1.14 # Non-VisIt can build HDF5 1.14
     # Test ParaView builds with differnt GL backends
     - matrix:
       - [$sdk_base_spec]

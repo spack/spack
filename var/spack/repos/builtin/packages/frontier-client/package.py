@@ -65,6 +65,7 @@ class FrontierClient(MakefilePackage):
     def build(self, spec, prefix):
         with working_dir("client"):
             make(
+                "CC=clang" if self.spec.satisfies("%clang") else "",
                 "-j1",
                 "dist",
                 "PACPARSER_DIR=" + self.spec["pacparser"].prefix,
