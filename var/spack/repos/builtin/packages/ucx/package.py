@@ -170,6 +170,7 @@ class Ucx(AutotoolsPackage, CudaPackage):
         args += self.with_or_without("openmp")
         args += self.enable_or_disable("optimizations")
         args += self.enable_or_disable("params-check", variant="parameter_checking")
+        args += self.enable_or_disable("gtest")
         args += self.with_or_without("pic")
 
         args += self.with_or_without("cuda", activation_value="prefix")
@@ -246,8 +247,6 @@ class Ucx(AutotoolsPackage, CudaPackage):
             args.append("--with-rocm=" + rocm_flags)
         else:
             args.append("--without-rocm")
-        if "+gtest" in spec:
-            args.append("--enable-gtest")
 
         return args
 
