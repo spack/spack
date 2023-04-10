@@ -73,6 +73,7 @@ class Elfutils(AutotoolsPackage, SourcewarePackage):
     depends_on("zlib", type="link")
     depends_on("gettext", when="+nls")
     depends_on("m4", type="build")
+    depends_on("pkgconfig@0.9.0:", type=("build", "link"))
 
     # debuginfod has extra dependencies
     # NB: Waiting on an elfutils patch before we can use libmicrohttpd@0.9.71
