@@ -586,7 +586,7 @@ class CompilerSpec(object):
 
     def _add_versions(self, version_list):
         # If it already has a non-trivial version list, this is an error
-        if self.versions and self.versions != vn.VersionList(":"):
+        if self.versions and self.versions != vn.any_version:
             # Note: This may be impossible to reach by the current parser
             # Keeping it in case the implementation changes.
             raise MultipleVersionError(
@@ -1290,7 +1290,7 @@ class Spec(object):
 
         # init an empty spec that matches anything.
         self.name = None
-        self.versions = vn.VersionList(":")
+        self.versions = vn.any_version
         self.variants = vt.VariantMap(self)
         self.architecture = None
         self.compiler = None
@@ -1472,7 +1472,7 @@ class Spec(object):
     def _add_versions(self, version_list):
         """Called by the parser to add an allowable version."""
         # If it already has a non-trivial version list, this is an error
-        if self.versions and self.versions != vn.VersionList(":"):
+        if self.versions and self.versions != vn.any_version:
             raise MultipleVersionError(
                 "A spec cannot contain multiple version signifiers." " Use a version list instead."
             )
@@ -2103,7 +2103,7 @@ class Spec(object):
         # (and the user spec) have dependencies
         new_spec = init_spec.copy()
         package_cls = spack.repo.path.get_pkg_class(new_spec.name)
-        if change_spec.versions and not change_spec.versions == vn.VersionList([vn.ver(":")]):
+        if change_spec.versions and not change_spec.versions == vn.any_version:
             new_spec.versions = change_spec.versions
         for variant, value in change_spec.variants.items():
             if variant in package_cls.variants:
