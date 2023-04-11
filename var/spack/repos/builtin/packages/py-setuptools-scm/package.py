@@ -43,4 +43,4 @@ class PySetuptoolsScm(PythonPackage):
     depends_on("py-typing-extensions", when="@7:", type=("build", "run"))
     depends_on("py-importlib-metadata", when="@7: ^python@:3.7", type=("build", "run"))
 
-    depends_on("git", type="build")
+    depends_on("git", type=("build", "run"))
