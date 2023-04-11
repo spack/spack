@@ -1885,23 +1885,9 @@ class SpackSolverSetup(object):
     def define_version_constraints(self):
         """Define what version_satisfies(...) means in ASP logic."""
         for pkg_name, versions in sorted(self.version_constraints):
-            # version must be *one* of the ones the spec allows.
-            # Also, "possible versions" contain only concrete versions, so satisfies is appropriate
-            allowed_versions = [
-                v for v in sorted(self.possible_versions[pkg_name]) if v.satisfies(versions)
-            ]
-
-            # This is needed to account for a variable number of
-            # numbers e.g. if both 1.0 and 1.0.2 are possible versions
-            exact_match = [
-                v for v in allowed_versions if v == versions and not isinstance(v, vn.GitVersion)
-            ]
-            if exact_match:
-                allowed_versions = exact_match
-
             # generate facts for each package constraint and the version
             # that satisfies it
-            for v in allowed_versions:
+            for v in sorted(v for v in self.possible_versions[pkg_name] if v.satisfies(versions)):
                 self.gen.fact(fn.version_satisfies(pkg_name, versions, v))
 
             self.gen.newline()
