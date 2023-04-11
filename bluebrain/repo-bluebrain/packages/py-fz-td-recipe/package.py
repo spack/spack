@@ -14,7 +14,7 @@ class PyFzTdRecipe(PythonPackage):
     git = "ssh://git@bbpgitlab.epfl.ch/hpc/circuit-building/fz-td-recipe.git"
 
     version("develop", branch="master")
-    version("0.1.0.dev0", tag="fz-td-recipe-v0.1.0.dev0")
+    version("0.1.0", tag="fz-td-recipe-v0.1.0")
 
     depends_on("py-setuptools", type="build")
 
