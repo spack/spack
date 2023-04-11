@@ -40,6 +40,34 @@
         "image": "docker.io/fedora:37"
       }
     },
+    "rockylinux:9": {
+      "bootstrap": {
+        "template": "container/rockylinux_9.dockerfile",
+        "image": "docker.io/rockylinux:9"
+      },
+      "os_package_manager": "yum",
+      "build": "spack/rockylinux9",
+      "build_tags": {
+        "develop": "latest"
+      },
+      "final": {
+        "image": "docker.io/rockylinux:9"
+      }
+    },
+    "rockylinux:8": {
+      "bootstrap": {
+        "template": "container/rockylinux_8.dockerfile",
+        "image": "docker.io/rockylinux:8"
+      },
+      "os_package_manager": "yum",
+      "build": "spack/rockylinux8",
+      "build_tags": {
+        "develop": "latest"
+      },
+      "final": {
+        "image": "docker.io/rockylinux:8"
+      }
+    },
     "almalinux:9": {
       "bootstrap": {
         "template": "container/almalinux_9.dockerfile",
