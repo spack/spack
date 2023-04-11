@@ -169,10 +169,11 @@ class Msvc(Compiler):
             if key and value
         )
 
-        if "path" in int_env:
-            env.set_path("PATH", int_env["path"].split(";"))
-        env.set_path("INCLUDE", int_env.get("include", "").split(";"))
-        env.set_path("LIB", int_env.get("lib", "").split(";"))
+        for env_var in int_env:
+            if os.pathsep not in int_env[env_var]:
+                env.set(env_var, int_env[env_var])
+            else:
+                env.set_path(env_var, int_env[env_var].split(os.pathsep))
 
         env.set("CC", self.cc)
         env.set("CXX", self.cxx)
