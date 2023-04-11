@@ -1762,10 +1762,16 @@ class Environment(object):
         # Specs to install are those that aren't installed yet or are overwritten
         if specs:
             # Filter specs to install by CLI arguments
-            specs_to_install = [s for s in specs if s not in installed_roots or s.dag_hash() in overwrite]
-            specs_dropped = [s for s in specs if s in installed_roots and s.dag_hash() not in overwrite]
+            specs_to_install = [
+                s for s in specs if s not in installed_roots or s.dag_hash() in overwrite
+            ]
+            specs_dropped = [
+                s for s in specs if s in installed_roots and s.dag_hash() not in overwrite
+            ]
         else:
-            specs_to_install = uninstalled_roots + [s for s in installed_roots if s.dag_hash() in overwrite]
+            specs_to_install = uninstalled_roots + [
+                s for s in installed_roots if s.dag_hash() in overwrite
+            ]
             specs_dropped = [s for s in installed_roots if s.dag_hash() not in overwrite]
 
         # We need to repeat the work of the installer thanks to the above optimization:
