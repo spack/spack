@@ -942,7 +942,7 @@ def test_compiler_bootstrap(
     assert CompilerSpec("gcc@=12.0") not in compilers.all_compiler_specs()
 
     # Test succeeds if it does not raise an error
-    install("a%gcc@12.0")
+    install("a%gcc@=12.0")
 
 
 def test_compiler_bootstrap_from_binary_mirror(
@@ -981,7 +981,7 @@ def test_compiler_bootstrap_from_binary_mirror(
     # Now make sure that when the compiler is installed from binary mirror,
     # it also gets configured as a compiler.  Test succeeds if it does not
     # raise an error
-    install("--no-check-signature", "--cache-only", "--only", "dependencies", "b%gcc@10.2.0")
+    install("--no-check-signature", "--cache-only", "--only", "dependencies", "b%gcc@=10.2.0")
     install("--no-cache", "--only", "package", "b%gcc@10.2.0")
 
 
@@ -1001,7 +1001,7 @@ def test_compiler_bootstrap_already_installed(
 
     # Test succeeds if it does not raise an error
     install("gcc@=12.0")
-    install("a%gcc@12.0")
+    install("a%gcc@=12.0")
 
 
 def test_install_fails_no_args(tmpdir):
