@@ -48,7 +48,7 @@ jobs:
                      [ubuntu-jammy, 'linux/amd64,linux/arm64,linux/ppc64le', 'ubuntu:22.04'],
                      [almalinux8, 'linux/amd64,linux/arm64,linux/ppc64le', 'almalinux:8'],
                      [almalinux9, 'linux/amd64,linux/arm64,linux/ppc64le', 'almalinux:9'],
-                     [rockylinux8, 'linux/amd64,linux/arm64,linux/ppc64le', 'rockylinux:8'],
+                     [rockylinux8, 'linux/amd64,linux/arm64', 'rockylinux:8'],
                      [rockylinux9, 'linux/amd64,linux/arm64,linux/ppc64le', 'rockylinux:9'],
                      [fedora37, 'linux/amd64,linux/arm64,linux/ppc64le', 'fedora:37'],
                      [fedora38, 'linux/amd64,linux/arm64,linux/ppc64le', 'fedora:38']]
