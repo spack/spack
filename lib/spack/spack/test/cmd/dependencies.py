@@ -4,7 +4,6 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import re
-import sys
 
 import pytest
 
@@ -17,8 +16,6 @@ dependencies = SpackCommand("dependencies")
 
 mpis = ["low-priority-provider", "mpich", "mpich2", "multi-provider-mpi", "zmpi"]
 mpi_deps = ["fake"]
-
-pytestmark = pytest.mark.skipif(sys.platform == "win32", reason="does not run on windows")
 
 
 def test_direct_dependencies(mock_packages):
