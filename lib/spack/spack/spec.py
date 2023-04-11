@@ -4576,9 +4576,9 @@ class Spec(object):
                 v.attach_git_lookup_from_package(self.fullname)
 
 
-def concrete_spec_from_old_syntax(string: str):
+def parse_with_version_concrete(string: str, compiler: bool = False):
     """Same as Spec(string), but interprets @x as @=x"""
-    s = Spec(string)
+    s = CompilerSpec(string) if compiler else Spec(string)
     interpreted_version = s.versions.concrete_range_as_version
     if interpreted_version:
         s.versions = vn.VersionList([interpreted_version])

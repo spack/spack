@@ -1332,9 +1332,7 @@ class SpackSolverSetup(object):
 
             # Read a list of all the specs for this package
             externals = data.get("externals", [])
-            external_specs = [
-                spack.spec.concrete_spec_from_old_syntax(x["spec"]) for x in externals
-            ]
+            external_specs = [spack.spec.parse_with_version_concrete(x["spec"]) for x in externals]
 
             # Order the external versions to prefer more recent versions
             # even if specs in packages.yaml are not ordered that way
@@ -1855,40 +1853,26 @@ class SpackSolverSetup(object):
         # add compiler specs from the input line to possibilities if we
         # don't require compilers to exist.
         strict = spack.concretize.Concretizer().check_for_compiler_existence
-        for spec in specs:
-            for s in spec.traverse():
-                # we don't need to validate compilers for already-built specs
-                if s.concrete:
-                    continue
+        for s in spack.traverse.traverse_nodes(specs):
+            # we don't need to validate compilers for already-built specs
+            if s.concrete or not s.compiler:
+                continue
 
-                if not s.compiler:
-                    continue
+            version = s.compiler.versions.concrete
 
-                # This is only for backward compatibility, where old spack
-                # would interpret %gcc@10.0 as %gcc@=10.0 when bootstrapping
-                # compilers.
-                compiler_version = s.compiler.versions.concrete_range_as_version
+            if not version or any(c.satisfies(s.compiler) for c in cspecs):
+                continue
 
-                if not compiler_version:
-                    continue
+            # Error when a compiler is not found and strict mode is enabled
+            if strict:
+                raise spack.concretize.UnavailableCompilerVersionError(s.compiler)
 
-                if not any(c.satisfies(s.compiler) for c in cspecs):
-                    if not strict:
-                        # Make up a compiler matching the input spec. This is for bootstrapping.
-                        # Replace @x with @=x, see note about backward compat.
-                        s.compiler.versions = vn.VersionList([compiler_version])
-                        compiler_cls = spack.compilers.class_for_compiler_name(s.compiler.name)
-                        compilers.append(
-                            compiler_cls(
-                                s.compiler, operating_system=None, target=None, paths=[None] * 4
-                            )
-                        )
-                        self.gen.fact(fn.allow_compiler(s.compiler.name, compiler_version))
-
-                    elif not s.concrete:
-                        # Only error for abstract specs, since reused, concrete specs's
-                        # compilers may have gone missing?
-                        raise spack.concretize.UnavailableCompilerVersionError(s.compiler)
+            # Make up a compiler matching the input spec. This is for bootstrapping.
+            compiler_cls = spack.compilers.class_for_compiler_name(s.compiler.name)
+            compilers.append(
+                compiler_cls(s.compiler, operating_system=None, target=None, paths=[None] * 4)
+            )
+            self.gen.fact(fn.allow_compiler(s.compiler.name, version))
 
         return list(
             sorted(

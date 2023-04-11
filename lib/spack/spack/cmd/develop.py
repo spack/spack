@@ -63,7 +63,9 @@ def develop(parser, args):
                 tty.msg(msg)
                 continue
 
-            spec = spack.spec.concrete_spec_from_old_syntax(entry["spec"])
+            # Both old syntax `spack develop pkg@x` and new syntax `spack develop pkg@=x`
+            # are currently supported.
+            spec = spack.spec.parse_with_version_concrete(entry["spec"])
             pkg_cls = spack.repo.path.get_pkg_class(spec.name)
             pkg_cls(spec).stage.steal_source(abspath)
 
