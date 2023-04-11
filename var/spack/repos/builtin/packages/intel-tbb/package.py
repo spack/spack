@@ -107,7 +107,9 @@ class IntelTbb(CMakePackage, MakefilePackage):
     )
 
     variant("tm", default=True, description="Enable use of transactional memory on x86")
-    variant("test", default=True, description="Enable building and running unit tests before install")
+    variant(
+        "test", default=True, description="Enable building and running unit tests before install"
+    )
 
     # Testing version ranges inside when clauses was fixed in e9ee9eaf.
     # See: #8957 and #13989.
