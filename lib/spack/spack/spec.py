@@ -145,10 +145,6 @@ color_formats = {
 #: ``color_formats.keys()``.
 _separators = "[\\%s]" % "\\".join(color_formats.keys())
 
-#: Versionlist constant so we don't have to build a list
-#: every time we call str()
-_any_version = vn.VersionList([":"])
-
 default_format = "{name}{@versions}"
 default_format += "{%compiler.name}{@compiler.versions}{compiler_flags}"
 default_format += "{variants}{arch=architecture}"
@@ -677,7 +673,7 @@ class CompilerSpec(object):
 
     def __str__(self):
         out = self.name
-        if self.versions and self.versions != _any_version:
+        if self.versions and self.versions != vn.any_version:
             out += f"@{self.versions}"
         return out
 
@@ -4205,7 +4201,7 @@ class Spec(object):
                             m += "Spec %s has no attribute %s" % (parent, part)
                             raise SpecFormatStringError(m)
                         if isinstance(current, vn.VersionList):
-                            if current == _any_version:
+                            if current == vn.any_version:
                                 # We don't print empty version lists
                                 return
 

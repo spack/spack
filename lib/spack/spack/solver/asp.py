@@ -921,7 +921,7 @@ class SpackSolverSetup(object):
         if spec.concrete:
             return [fn.attr("version", spec.name, spec.version)]
 
-        if spec.versions == vn.VersionList([":"]):
+        if spec.versions == vn.any_version:
             return []
 
         # record all version constraints for later
