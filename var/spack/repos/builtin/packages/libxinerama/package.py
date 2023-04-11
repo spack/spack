@@ -12,6 +12,7 @@ class Libxinerama(AutotoolsPackage, XorgPackage):
     homepage = "https://cgit.freedesktop.org/xorg/lib/libXinerama"
     xorg_mirror_path = "lib/libXinerama-1.1.3.tar.gz"
 
+    version("1.1.5", sha256="2efa855cb42dc620eff3b77700d8655695e09aaa318f791f201fa60afa72b95c")
     version("1.1.3", sha256="0ba243222ae5aba4c6a3d7a394c32c8b69220a6872dbb00b7abae8753aca9a44")
 
     depends_on("libx11")
