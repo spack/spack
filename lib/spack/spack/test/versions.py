@@ -23,8 +23,8 @@ from spack.version import (
     VersionList,
     VersionLookupError,
     VersionRange,
-    ver,
     is_git_version,
+    ver,
 )
 
 
