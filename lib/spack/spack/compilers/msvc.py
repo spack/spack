@@ -170,11 +170,10 @@ class Msvc(Compiler):
         )
 
         for env_var in int_env:
-            if int_env[env_var] != os.environ.get(env_var, None):
-                if os.pathsep not in int_env[env_var]:
-                    env.set(env_var, int_env[env_var])
-                else:
-                    env.set_path(env_var, int_env[env_var].split(os.pathsep))
+            if os.pathsep not in int_env[env_var]:
+                env.set(env_var, int_env[env_var])
+            else:
+                env.set_path(env_var, int_env[env_var].split(os.pathsep))
 
         env.set("CC", self.cc)
         env.set("CXX", self.cxx)
