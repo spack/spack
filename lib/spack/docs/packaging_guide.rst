@@ -2414,21 +2414,29 @@ requires Python 2, you can similarly leave out the lower bound:
 Notice that we didn't use ``@:3``. Version ranges are *inclusive*, so
 ``@:3`` means "up to and including any 3.x version".
 
-What if a package can only be built with Python 2.7? You might be
-inclined to use:
+You can also simply write
 
 .. code-block:: python
 
    depends_on("python@2.7")
 
-However, this would be wrong. Spack assumes that all version constraints
-are exact, so it would try to install Python not at ``2.7.18``, but
-exactly at ``2.7``, which is a non-existent version. The correct way to
-specify this would be:
+to tell Spack that the package needs Python 2.7.x. This is equivalent to
+``@2.7:2.7``.
+
+In very rare cases, you may need to specify an exact version, for example
+if you need to distinguish between ``3.2`` and ``3.2.1``:
 
 .. code-block:: python
 
-   depends_on("python@2.7.0:2.7")
+   depends_on("pkg@=3.2")
+
+But in general, you should try to use version ranges as much as possible,
+so that custom suffixes are included too. The above example can be
+rewritten in terms of ranges as follows:
+
+.. code-block:: python
+
+   depends_on("pkg@3.2:3.2.0")
 
 A spec can contain a version list of ranges and individual versions
 separated by commas. For example, if you need Boost 1.59.0 or newer,
