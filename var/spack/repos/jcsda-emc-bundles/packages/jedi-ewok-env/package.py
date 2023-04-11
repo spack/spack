@@ -43,7 +43,9 @@ class JediEwokEnv(BundlePackage):
 
     # R2D2 mysql backend
     depends_on("mysql", type="run")
-    depends_on("py-mysql-connector-python", type="run")
+    # Comment out for now until build problems are solved
+    # https://github.com/NOAA-EMC/spack-stack/issues/522
+    #depends_on("py-mysql-connector-python", type="run")
 
     depends_on("solo", when="+solo", type="run")
     depends_on("r2d2", when="+r2d2", type="run")
