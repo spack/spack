@@ -922,20 +922,26 @@ use:
 Ranges versus specific versions
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Spack version specifiers ``pkg@<specifier>`` are (a list of) ranges
-and specific versions.  When packaging, you typically want to use
-ranges instead of specific versions, to avoid over-constraining
-dependencies, patches, conflicts, etc.
+When specifying versions in Spack using the ``pkg@<specifier>`` syntax,
+you can use either ranges or specific versions. It is generally
+recommended to use ranges instead of specific versions when packaging
+to avoid overly constraining dependencies, patches, and conflicts.
 
 For example, ``depends_on("python@3")`` denotes a range of versions,
-which allows Spack to pick any ``3.x.y`` for Python, while
+allowing Spack to pick any ``3.x.y`` version for Python, while
 ``depends_on("python@=3.10.1")`` restricts it to a specific version.
 
-Only in exceptional cases do you need to specific versions,
-for example when the package has a versioning scheme that omits the
-zero in the first patch release: ``3.1``, ``3.1.1``, ``3.1.2``, etc.
-In those cases, ``@=3.1`` is the correct way to select only the
-``3.1`` version, whereas ``@3.1`` would match all those versions.
+Specific ``@=`` versions should only be used in exceptional cases, such
+as when the package has a versioning scheme that omits the zero in the
+first patch release: ``3.1``, ``3.1.1``, ``3.1.2``. In this example,
+the specifier ``@=3.1`` is the correct way to select only the ``3.1``
+version, whereas ``@3.1`` would match all those versions.
+
+Ranges are preferred even if they would only match a single version
+defined in the package. This is because users can define custom versions
+in ``packages.yaml`` that typically include a custom suffix. For example,
+if the package defines the version ``1.2.3``, the specifier ``@1.2.3``
+will also match a user-defined version ``1.2.3-custom``.
 
 
 .. _cmd-spack-checksum:
