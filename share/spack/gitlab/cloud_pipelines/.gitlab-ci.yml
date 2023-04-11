@@ -102,6 +102,37 @@ default:
   extends: [ ".generate-base" ]
   tags: ["spack", "public", "medium", "x86_64"]
 
+.generate-deprecated:
+  stage: generate
+  script:
+    - uname -a || true
+    - grep -E 'vendor|model name' /proc/cpuinfo 2>/dev/null | sort -u || head -n10 /proc/cpuinfo 2>/dev/null || true
+    - nproc || true
+    - . "./share/spack/setup-env.sh"
+    - spack --version
+    - cd share/spack/gitlab/cloud_pipelines/stacks/${SPACK_CI_STACK_NAME}
+    - spack env activate --without-view .
+    - spack
+      ci generate --check-index-only
+      --buildcache-destination "${SPACK_BUILDCACHE_DESTINATION}"
+      --artifacts-root "${CI_PROJECT_DIR}/jobs_scratch_dir"
+      --output-file "${CI_PROJECT_DIR}/jobs_scratch_dir/cloud-ci-pipeline.yml"
+  after_script:
+    - cat /proc/loadavg || true
+  artifacts:
+    paths:
+      - "${CI_PROJECT_DIR}/jobs_scratch_dir"
+  variables:
+    KUBERNETES_CPU_REQUEST: 4000m
+    KUBERNETES_MEMORY_REQUEST: 16G
+  interruptible: true
+  timeout: 60 minutes
+  retry:
+    max: 2
+    when:
+      - always
+  tags: ["spack", "public", "medium", "x86_64"]
+
 .generate-aarch64:
   extends: [ ".generate" ]
   tags: ["spack", "public", "medium", "aarch64"]
@@ -109,11 +140,17 @@ default:
 .pr-generate:
   extends: [ ".pr", ".generate" ]
 
+.pr-generate-deprecated:
+  extends: [ ".pr", ".generate-deprecated" ]
+
 .pr-generate-aarch64:
   extends: [ ".pr", ".generate-aarch64" ]
 
 .protected-generate:
   extends: [ ".protected", ".generate" ]
+
+.protected-generate-deprecated:
+  extends: [ ".protected", ".generate-deprecated" ]
 
 .protected-generate-aarch64:
   extends: [ ".protected", ".generate-aarch64" ]
@@ -978,3 +1015,39 @@ ml-linux-x86_64-rocm-protected-build:
   needs:
     - artifacts: True
       job: ml-linux-x86_64-rocm-protected-generate
+
+
+########################################
+# Deprecated CI testing
+########################################
+.deprecated-ci:
+  variables:
+    SPACK_CI_STACK_NAME: deprecated
+
+deprecated-ci-pr-generate:
+  extends: [ ".pr-generate-deprecated", ".deprecated-ci" ]
+
+deprecated-ci-protected-generate:
+  extends: [ ".protected-generate-deprecated", ".deprecated-ci" ]
+
+deprecated-ci-pr-build:
+  extends: [ ".pr-build", ".deprecated-ci" ]
+  trigger:
+    include:
+      - artifact: jobs_scratch_dir/cloud-ci-pipeline.yml
+        job: deprecated-ci-pr-generate
+    strategy: depend
+  needs:
+    - artifacts: True
+      job: deprecated-ci-pr-generate
+
+deprecated-ci-protected-build:
+  extends: [ ".protected-build", ".deprecated-ci" ]
+  trigger:
+    include:
+      - artifact: jobs_scratch_dir/cloud-ci-pipeline.yml
+        job: deprecated-ci-protected-generate
+    strategy: depend
+  needs:
+    - artifacts: True
+      job: deprecated-ci-protected-generate
