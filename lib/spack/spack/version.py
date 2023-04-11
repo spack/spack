@@ -1141,8 +1141,10 @@ def ver(obj) -> Union[VersionList, ClosedOpenRange, StandardVersion, GitVersion]
     else:
         raise TypeError("ver() can't convert %s to version!" % type(obj))
 
+
 #: This version contains all possible versions.
 any_version: VersionList = VersionList([":"])
+
 
 class VersionError(spack.error.SpackError):
     """This is raised when something is wrong with a version."""

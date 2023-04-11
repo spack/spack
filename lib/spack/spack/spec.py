@@ -55,7 +55,7 @@ import itertools
 import os
 import re
 import warnings
-from typing import Tuple
+from typing import Tuple, Union
 
 import llnl.util.filesystem as fs
 import llnl.util.lang as lang
@@ -4574,7 +4574,7 @@ class Spec(object):
 
 def parse_with_version_concrete(string: str, compiler: bool = False):
     """Same as Spec(string), but interprets @x as @=x"""
-    s = CompilerSpec(string) if compiler else Spec(string)
+    s: Union[CompilerSpec, Spec] = CompilerSpec(string) if compiler else Spec(string)
     interpreted_version = s.versions.concrete_range_as_version
     if interpreted_version:
         s.versions = vn.VersionList([interpreted_version])
