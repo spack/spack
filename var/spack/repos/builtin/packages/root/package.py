@@ -11,20 +11,6 @@ from spack.package import *
 from spack.util.environment import is_system_path
 
 
-def sanitize_environments(*args):
-    for env in args:
-        for var in (
-            "PATH",
-            "LD_LIBRARY_PATH",
-            "DYLD_LIBRARY_PATH",
-            "LIBRARY_PATH",
-            "CMAKE_PREFIX_PATH",
-            "ROOT_INCLUDE_PATH",
-        ):
-            env.prune_duplicate_paths(var)
-            env.deprioritize_system_paths(var)
-
-
 class Root(CMakePackage):
     """ROOT is a data analysis framework."""
 
@@ -329,8 +315,8 @@ class Root(CMakePackage):
     conflicts("+tmva", when="~gsl", msg="TVMA requires GSL")
     conflicts("+tmva", when="~mlp", msg="TVMA requires MLP")
     conflicts("cxxstd=11", when="+root7", msg="root7 requires at least C++14")
-    conflicts("cxxstd=11", when="@6.25.02:", msg="This version of root " "requires at least C++14")
-    conflicts("cxxstd=20", when="@:6.25.01", msg="C++20 support was added " "in 6.25.02")
+    conflicts("cxxstd=11", when="@6.25.02:", msg="This version of root requires at least C++14")
+    conflicts("cxxstd=20", when="@:6.28.00", msg="C++20 support delayed to 6.28.??")
 
     # See https://github.com/root-project/root/issues/11128
     conflicts("%clang@16:", when="@:6.26.07", msg="clang 16+ support was added in 6.26.08")
@@ -655,7 +641,7 @@ class Root(CMakePackage):
             # warnings when building against ROOT
             env.unset("MACOSX_DEPLOYMENT_TARGET")
         # Cleanup.
-        sanitize_environments(env)
+        self.sanitize_environments(env)
 
     def setup_run_environment(self, env):
         env.set("ROOTSYS", self.prefix)
@@ -665,9 +651,11 @@ class Root(CMakePackage):
         env.set("CLING_STANDARD_PCH", "none")
         env.set("CPPYY_API_PATH", "none")
         # Cleanup.
-        sanitize_environments(env)
+        self.sanitize_environments(env)
 
-    def setup_dependent_build_environment(self, env, dependent_spec):
+    def setup_dependent_build_environment(
+        self, env: spack.util.environment.EnvironmentModifications, dependent_spec
+    ):
         env.set("ROOTSYS", self.prefix)
         env.set("ROOT_VERSION", "v{0}".format(self.version.up_to(1)))
         env.prepend_path("PYTHONPATH", self.prefix.lib.root)
@@ -680,9 +668,11 @@ class Root(CMakePackage):
             # Newer deployment targets cause fatal errors in rootcling
             env.unset("MACOSX_DEPLOYMENT_TARGET")
         # Cleanup.
-        sanitize_environments(env)
+        self.sanitize_environments(env)
 
-    def setup_dependent_run_environment(self, env, dependent_spec):
+    def setup_dependent_run_environment(
+        self, env: spack.util.environment.EnvironmentModifications, dependent_spec
+    ):
         env.set("ROOTSYS", self.prefix)
         env.set("ROOT_VERSION", "v{0}".format(self.version.up_to(1)))
         env.prepend_path("PYTHONPATH", self.prefix.lib.root)
@@ -691,4 +681,27 @@ class Root(CMakePackage):
         if "+rpath" not in self.spec:
             env.prepend_path("LD_LIBRARY_PATH", self.prefix.lib.root)
         # Cleanup.
-        sanitize_environments(env)
+        self.sanitize_environments(env)
+
+    def sanitize_environments(self, env: spack.util.environment.EnvironmentModifications, *vars):
+        target = self.spec.target
+        special_separators = {"LDSHARED": " -L"}
+        if not vars:
+            vars = (
+                "PATH",
+                "LDSHARED",
+                "LD_LIBRARY_PATH",
+                "DYLD_LIBRARY_PATH",
+                "LIBRARY_PATH",
+                "CMAKE_PREFIX_PATH",
+                "ROOT_INCLUDE_PATH",
+            )
+        for var in vars:
+            kwargs = {}
+            if var in special_separators:
+                kwargs["separator"] = special_separators[var]
+            env.prune_duplicate_paths(var, **kwargs)
+            if var == "PATH":
+                env.deprioritize_system_paths(var, target=target, **kwargs)
+            else:
+                env.remove_system_paths(var, **kwargs)
