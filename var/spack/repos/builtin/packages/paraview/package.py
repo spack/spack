@@ -115,6 +115,7 @@ class Paraview(CMakePackage, CudaPackage, ROCmPackage):
     conflicts("+openpmd", when="~adios2 ~hdf5", msg="openPMD needs ADIOS2 and/or HDF5")
     conflicts("~shared", when="+cuda")
     conflicts("+cuda", when="@5.8:5.10")
+    conflicts("+cuda", when="use_vtkm=off")
     conflicts("+rocm", when="+cuda")
     conflicts("+rocm", when="use_vtkm=off")
     conflicts("paraview@:5.10", when="+rocm")
