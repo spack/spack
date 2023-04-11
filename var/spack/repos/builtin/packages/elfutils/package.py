@@ -86,7 +86,9 @@ class Elfutils(AutotoolsPackage, SourcewarePackage):
 
     provides("elf@1")
 
-    # libarchive with iconv doesn't configure: https://github.com/spack/spack/issues/36710
+    # libarchive with iconv doesn't configure.
+    # see https://github.com/spack/spack/issues/36710
+    # and https://github.com/libarchive/libarchive/issues/1819
     conflicts("libarchive@3.6.2 +iconv", when="+debuginfod")
 
     # Elfutils uses nested functions in C code, which is implemented
