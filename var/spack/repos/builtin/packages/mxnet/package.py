@@ -99,7 +99,6 @@ class Mxnet(CMakePackage, CudaPackage, PythonExtension):
             args.append(self.define("USE_CUTENSOR", False))
 
         if "+cuda" in self.spec:
-            args.append(self.define("CMAKE_CUDA_COMPILER", self.spec["cuda"].prefix.bin.nvcc))
             if "cuda_arch=none" not in self.spec:
                 cuda_arch = ";".join(
                     "{0:.1f}".format(float(i) / 10.0)
@@ -108,6 +107,9 @@ class Mxnet(CMakePackage, CudaPackage, PythonExtension):
                 args.append(self.define("MXNET_CUDA_ARCH", cuda_arch))
 
             args.append(self.define_from_variant("USE_NCCL", "nccl"))
+
+            # Workaround for bug in GCC 8+ and CUDA 10 on PowerPC
+            args.append(self.define("CMAKE_CUDA_FLAGS", self.compiler.cxx11_flag))
 
         return args
 

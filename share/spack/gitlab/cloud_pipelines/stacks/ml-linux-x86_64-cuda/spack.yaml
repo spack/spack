@@ -28,7 +28,8 @@ spack:
     - py-keras2onnx
 
     # MXNet
-    - mxnet
+    # https://github.com/apache/mxnet/issues/21193
+    # - mxnet
 
     # PyTorch
     - py-botorch
