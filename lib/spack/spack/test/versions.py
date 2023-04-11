@@ -24,6 +24,7 @@ from spack.version import (
     VersionLookupError,
     VersionRange,
     ver,
+    is_git_version,
 )
 
 
@@ -378,6 +379,8 @@ def test_intersection():
     check_intersection(["2.5:2.7"], ["1.1:2.7"], ["2.5:3.0", "1.0"])
     check_intersection(["0:1"], [":"], ["0:1"])
 
+    check_intersection(["=ref=1.0", "=1.1"], ["=ref=1.0", "1.1"], ["1:1.0", "=1.1"])
+
 
 def test_intersect_with_containment():
     check_intersection("1.6.5", "1.6.5", ":1.6")
@@ -404,6 +407,8 @@ def test_union_with_containment():
 
     # Tests successor/predecessor case.
     check_union("1:4", "1:2", "3:4")
+
+    check_union(["1:1.0", "1.1"], ["=ref=1.0", "1.1"], ["1:1.0", "=1.1"])
 
 
 def test_basic_version_satisfaction():
@@ -682,6 +687,7 @@ def test_git_ref_comparisons(mock_git_version_info, install_mockery, mock_packag
     ],
 )
 def test_version_git_vs_base(string, git):
+    assert is_git_version(string) == git
     assert isinstance(Version(string), GitVersion) == git
 
 
@@ -876,6 +882,11 @@ def test_version_list_normalization():
 
     # But when a range is added, the only disjoint bit is the range.
     assert VersionList(["=1.2", "ref=1.2", "ref=1.3", "1.2:1.3"]) == VersionList(["1.2:1.3"])
+
+    # Also test normalization when using ver.
+    assert ver("=1.0,ref=1.0,1.0:2.0") == ver(["1.0:2.0"])
+    assert ver("=1.0,1.0:2.0,ref=1.0") == ver(["1.0:2.0"])
+    assert ver("1.0:2.0,=1.0,ref=1.0") == ver(["1.0:2.0"])
 
 
 @pytest.mark.parametrize("version", ["=1.2", "git.ref=1.2", "1.2"])

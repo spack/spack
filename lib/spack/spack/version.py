@@ -467,6 +467,11 @@ class GitVersion(ConcreteVersion):
             return any(self.intersects(rhs) for rhs in other)
         raise ValueError(f"Unexpected type {type(other)}")
 
+    def intersection(self, other):
+        if isinstance(other, ConcreteVersion):
+            return self if self == other else VersionList()
+        return other.intersection(self)
+
     def overlaps(self, other) -> bool:
         return self.intersects(other)
 
@@ -685,16 +690,12 @@ class ClosedOpenRange:
             return (self.lo, self.hi) > (other.lo, other.hi)
         return NotImplemented
 
-    def __contains__(rhs, lhs: Union[StandardVersion, "ClosedOpenRange", "VersionList"]):
-        # We should probably get rid of `x in y` for versions, since
-        # versions still have a dual interpretation as singleton sets
-        # or elements. x in y should be: is the lhs-element in the
-        # rhs-set. Instead this function also does subset checks.
-        if isinstance(lhs, (StandardVersion, ClosedOpenRange, VersionList)):
+    def __contains__(rhs, lhs):
+        if isinstance(lhs, (ConcreteVersion, ClosedOpenRange, VersionList)):
             return lhs.satisfies(rhs)
-        raise ValueError(lhs)
+        raise ValueError(f"Unexpected type {type(lhs)}")
 
-    def intersects(self, other: Union[StandardVersion, "ClosedOpenRange", "VersionList"]):
+    def intersects(self, other: Union[ConcreteVersion, "ClosedOpenRange", "VersionList"]):
         if isinstance(other, StandardVersion):
             return self.lo <= other < self.hi
         if isinstance(other, GitVersion):
@@ -703,11 +704,9 @@ class ClosedOpenRange:
             return (self.lo < other.hi) and (other.lo < self.hi)
         if isinstance(other, VersionList):
             return any(self.intersects(rhs) for rhs in other)
-        raise ValueError(other)
+        raise ValueError(f"Unexpected type {type(other)}")
 
-    def satisfies(
-        self, other: Union["ClosedOpenRange", GitVersion, StandardVersion, "VersionList"]
-    ):
+    def satisfies(self, other: Union["ClosedOpenRange", ConcreteVersion, "VersionList"]):
         if isinstance(other, ConcreteVersion):
             return False
         if isinstance(other, ClosedOpenRange):
@@ -716,10 +715,10 @@ class ClosedOpenRange:
             return any(self.satisfies(rhs) for rhs in other)
         raise ValueError(other)
 
-    def overlaps(self, other: Union["ClosedOpenRange", StandardVersion, "VersionList"]) -> bool:
+    def overlaps(self, other: Union["ClosedOpenRange", ConcreteVersion, "VersionList"]) -> bool:
         return self.intersects(other)
 
-    def union(self, other: Union["ClosedOpenRange", StandardVersion, GitVersion, "VersionList"]):
+    def union(self, other: Union["ClosedOpenRange", ConcreteVersion, "VersionList"]):
         if isinstance(other, StandardVersion):
             return self if self.lo <= other < self.hi else VersionList([self, other])
 
@@ -728,7 +727,7 @@ class ClosedOpenRange:
 
         if isinstance(other, ClosedOpenRange):
             # Notice <= cause we want union(1:2, 3:4) = 1:4.
-            if (self.lo <= other.hi) and (other.lo <= self.hi):
+            if self.lo <= other.hi and other.lo <= self.hi:
                 return ClosedOpenRange(min(self.lo, other.lo), max(self.hi, other.hi))
 
             return VersionList([self, other])
@@ -740,9 +739,9 @@ class ClosedOpenRange:
 
         raise ValueError(f"Unexpected type {type(other)}")
 
-    def intersection(self, other: Union["ClosedOpenRange", StandardVersion]):
+    def intersection(self, other: Union["ClosedOpenRange", ConcreteVersion]):
         # range - version -> singleton or nothing.
-        if isinstance(other, StandardVersion):
+        if isinstance(other, ConcreteVersion):
             return other if self.intersects(other) else VersionList()
 
         # range - range -> range or nothing.
@@ -1099,8 +1098,7 @@ def VersionRange(lo: Union[str, StandardVersion], hi: Union[str, StandardVersion
 
 
 def from_string(string) -> Union[VersionList, ClosedOpenRange, StandardVersion, GitVersion]:
-    """Converts a string to a version object.
-    This is private. Client code should use ver()."""
+    """Converts a string to a version object. This is private. Client code should use ver()."""
     string = string.replace(" ", "")
 
     # VersionList
