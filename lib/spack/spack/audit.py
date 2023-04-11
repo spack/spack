@@ -727,7 +727,7 @@ def _version_constraints_are_satisfiable_by_some_version_in_repo(pkgs, error_cls
                 assert any(v.intersects(s.versions) for v in list(dependency_pkg_cls.versions))
             except Exception:
                 summary = (
-                    "{0}: dependency on {1} cannot be satisfied by known versions of {1.name}"
+                    "{0}: dependency on {1} cannot be satisfied " "by known versions of {1.name}"
                 ).format(pkg_name, s)
                 details = ["happening in " + filename]
                 if dependency_pkg_cls is not None:
