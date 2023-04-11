@@ -1527,7 +1527,7 @@ def test_ci_generate_with_workarounds(
             """\
 spack:
   specs:
-    - callpath%gcc@9.5
+    - callpath%gcc@=9.5
   mirrors:
     some-mirror: https://my.fake.mirror
   ci:

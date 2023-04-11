@@ -480,7 +480,7 @@ class TestConcretize(object):
     def test_no_matching_compiler_specs(self, mock_low_high_config):
         # only relevant when not building compilers as needed
         with spack.concretize.enable_compiler_existence_check():
-            s = Spec("a %gcc@0.0.0")
+            s = Spec("a %gcc@=0.0.0")
             with pytest.raises(spack.concretize.UnavailableCompilerVersionError):
                 s.concretize()
 
