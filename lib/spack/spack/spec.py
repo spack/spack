@@ -577,9 +577,7 @@ class CompilerSpec(object):
         elif nargs == 2:
             name, version = args
             self.name = name
-            self.versions = vn.VersionList()
-            versions = vn.ver(version)
-            self.versions.add(versions)
+            self.versions = vn.VersionList([vn.ver(version)])
 
         else:
             raise TypeError("__init__ takes 1 or 2 arguments. (%d given)" % nargs)
@@ -1290,7 +1288,7 @@ class Spec(object):
 
         # init an empty spec that matches anything.
         self.name = None
-        self.versions = vn.any_version
+        self.versions = vn.VersionList(":")
         self.variants = vt.VariantMap(self)
         self.architecture = None
         self.compiler = None
