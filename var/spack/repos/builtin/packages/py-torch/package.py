@@ -116,7 +116,7 @@ class PyTorch(PythonPackage, CudaPackage, ROCmPackage):
 
     # https://github.com/pytorch/pytorch/issues/97397
     conflicts(
-        "~tensorpipe", when="+distributed", msg="TensorPipe must be enabled with +distributed"
+        "~tensorpipe", when="@1.8: +distributed", msg="TensorPipe must be enabled with +distributed"
     )
 
     conflicts(
