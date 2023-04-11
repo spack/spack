@@ -39,17 +39,29 @@ class Go(Package):
 
     maintainers("alecbcs")
 
+    version("1.20.3", sha256="e447b498cde50215c4f7619e5124b0fc4e25fb5d16ea47271c47f278e7aa763a")
     version("1.20.2", sha256="4d0e2850d197b4ddad3bdb0196300179d095bb3aefd4dfbc3b36702c3728f8ab")
-    version("1.20.1", sha256="b5c1a3af52c385a6d1c76aed5361cf26459023980d0320de7658bae3915831a2")
 
+    version("1.19.8", sha256="1d7a67929dccafeaf8a29e55985bc2b789e0499cb1a17100039f084e3238da2f")
     version("1.19.7", sha256="775bdf285ceaba940da8a2fe20122500efd7a0b65dbcee85247854a8d7402633")
-    version("1.19.6", sha256="d7f0013f82e6d7f862cc6cb5c8cdb48eef5f2e239b35baa97e2f1a7466043767")
 
     # Deprecated Versions
+    # https://nvd.nist.gov/vuln/detail/CVE-2023-24532
+    version(
+        "1.20.1",
+        sha256="b5c1a3af52c385a6d1c76aed5361cf26459023980d0320de7658bae3915831a2",
+        deprecated=True,
+    )
     # https://nvd.nist.gov/vuln/detail/CVE-2022-41723
     version(
         "1.20",
         sha256="3a29ff0421beaf6329292b8a46311c9fbf06c800077ceddef5fb7f8d5b1ace33",
+        deprecated=True,
+    )
+    # https://nvd.nist.gov/vuln/detail/CVE-2022-41725
+    version(
+        "1.19.6",
+        sha256="d7f0013f82e6d7f862cc6cb5c8cdb48eef5f2e239b35baa97e2f1a7466043767",
         deprecated=True,
     )
     # https://nvd.nist.gov/vuln/detail/CVE-2022-41725
@@ -81,6 +93,8 @@ class Go(Package):
     depends_on("go-or-gccgo-bootstrap", type="build")
     depends_on("go-or-gccgo-bootstrap@1.17.13:", type="build", when="@1.20:")
 
+    phases = ["build", "install"]
+
     def url_for_version(self, version):
         return f"https://go.dev/dl/go{version}.src.tar.gz"
 
@@ -90,14 +104,6 @@ class Go(Package):
         match = re.search(r"go version go(\S+)", output)
         return match.group(1) if match else None
 
-    def install(self, spec, prefix):
-        bash = which("bash")
-
-        with working_dir("src"):
-            bash("{0}.bash".format("all" if self.run_tests else "make"))
-
-        install_tree(".", prefix)
-
     def setup_build_environment(self, env):
         env.set("GOROOT_FINAL", self.spec.prefix)
         # We need to set CC/CXX_FOR_TARGET, otherwise cgo will use the
@@ -106,8 +112,17 @@ class Go(Package):
         env.set("CXX_FOR_TARGET", self.compiler.cxx)
         env.set("GOMAXPROCS", make_jobs)
 
+    def build(self, spec, prefix):
+        bash = which("bash")
+
+        with working_dir("src"):
+            bash("{0}.bash".format("all" if self.run_tests else "make"))
+
+    def install(self, spec, prefix):
+        install_tree(".", prefix)
+
     def setup_dependent_package(self, module, dependent_spec):
-        """Called before go modules' install() methods.
+        """Called before go modules' build(), install() methods.
 
         In most cases, extensions will only need to set GOPATH and use go::
 
