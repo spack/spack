@@ -247,11 +247,11 @@ class Concretizer(object):
             else:
                 last = spec.versions[-1]
                 if isinstance(last, ClosedOpenRange):
-                    maybe = VersionList([last]).concrete_range_as_version
-                    if maybe:
-                        spec.versions = ver([maybe])
+                    range_as_version = VersionList([last]).concrete_range_as_version
+                    if range_as_version:
+                        spec.versions = ver([range_as_version])
                     else:
-                        raise RuntimeError("Dunno")
+                        raise NoValidVersionError(spec)
                 else:
                     spec.versions = ver([last])
 
