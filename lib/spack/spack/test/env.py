@@ -3,7 +3,6 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 """Test environment internals without CLI"""
-import io
 import os
 import sys
 
@@ -80,9 +79,10 @@ env:
 """
 
 
-def test_env_change_spec_in_definition(tmpdir, mock_packages, config, mutable_mock_env_path):
-    initial_yaml = io.StringIO(_test_matrix_yaml)
-    e = ev.create("test", initial_yaml)
+def test_env_change_spec_in_definition(tmp_path, mock_packages, config, mutable_mock_env_path):
+    manifest_file = tmp_path / ev.manifest_name
+    manifest_file.write_text(_test_matrix_yaml)
+    e = ev.create("test", manifest_file)
     e.concretize()
     e.write()
 
@@ -96,10 +96,11 @@ def test_env_change_spec_in_definition(tmpdir, mock_packages, config, mutable_mo
 
 
 def test_env_change_spec_in_matrix_raises_error(
-    tmpdir, mock_packages, config, mutable_mock_env_path
+    tmp_path, mock_packages, config, mutable_mock_env_path
 ):
-    initial_yaml = io.StringIO(_test_matrix_yaml)
-    e = ev.create("test", initial_yaml)
+    manifest_file = tmp_path / ev.manifest_name
+    manifest_file.write_text(_test_matrix_yaml)
+    e = ev.create("test", manifest_file)
     e.concretize()
     e.write()
 
@@ -131,7 +132,7 @@ def test_user_view_path_is_not_canonicalized_in_yaml(tmpdir, config):
 
     # Serialize environment with relative view path
     with fs.working_dir(str(tmpdir)):
-        fst = ev.Environment(env_path, with_view=view)
+        fst = ev.Environment(env_path).set_view(view)
         fst.write()
 
     # The view link should be created

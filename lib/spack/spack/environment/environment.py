@@ -6,6 +6,7 @@ import collections
 import contextlib
 import copy
 import os
+import pathlib
 import re
 import shutil
 import stat
@@ -14,7 +15,7 @@ import time
 import urllib.parse
 import urllib.request
 import warnings
-from typing import List, Optional
+from typing import Any, Dict, List, Optional, Union
 
 import ruamel.yaml as yaml
 
@@ -270,14 +271,87 @@ def read(name):
     return Environment(root(name))
 
 
-def create(name, init_file=None, with_view=None, keep_relative=False):
-    """Create a managed environment in Spack."""
+def create(
+    name: str,
+    init_file: Optional[Union[str, pathlib.Path]] = None,
+    with_view: Optional[Union[str, pathlib.Path, bool]] = None,
+    keep_relative: bool = False,
+) -> "Environment":
+    """Create a managed environment in Spack and returns it.
+
+    A managed environment is created in a root directory managed by this Spack instance, so that
+    Spack can keep track of them.
+
+    Args:
+        name: name of the managed environment
+        init_file: either a "spack.yaml" or a "spack.lock" file or None
+        with_view: whether a view should be maintained for the environment. If the value is a
+            string, it specifies the path to the view
+        keep_relative: if True, develop paths are copied verbatim into the new environment file,
+            otherwise they are made absolute
+    """
+    environment_dir = environment_dir_from_name(name, exists_ok=False)
+    return create_in_dir(
+        environment_dir, init_file=init_file, with_view=with_view, keep_relative=keep_relative
+    )
+
+
+def create_in_dir(
+    manifest_dir: Union[str, pathlib.Path],
+    init_file: Optional[Union[str, pathlib.Path]] = None,
+    with_view: Optional[Union[str, pathlib.Path, bool]] = None,
+    keep_relative: bool = False,
+) -> "Environment":
+    """Create an environment in the directory passed as input and returns it.
+
+    Args:
+        manifest_dir: directory where to create the environment.
+        init_file: either a "spack.yaml" or a "spack.lock" file or None
+        with_view: whether a view should be maintained for the environment. If the value is a
+            string, it specifies the path to the view
+        keep_relative: if True, develop paths are copied verbatim into the new environment file,
+            otherwise they are made absolute
+    """
+    initialize_environment_dir(manifest_dir, envfile=init_file)
+
+    if with_view is None and keep_relative:
+        return Environment(manifest_dir)
+
+    manifest = EnvironmentManifestFile(manifest_dir)
+
+    if with_view is not None:
+        manifest.set_view(with_view)
+
+    if not keep_relative and init_file is not None and str(init_file).endswith(manifest_name):
+        init_file = pathlib.Path(init_file)
+        manifest.absolutify_dev_paths(init_file.parent)
+
+    manifest.flush()
+
+    return Environment(manifest_dir)
+
+
+def environment_dir_from_name(name: str, exists_ok: bool = True) -> str:
+    """Returns the directory associated with a named environment.
+
+    Args:
+        name: name of the environment
+        exists_ok: if False, raise an error if the environment exists already
+
+    Raises:
+        SpackEnvironmentError: if exists_ok is False and the environment exists already
+    """
+    if not exists_ok and exists(name):
+        raise SpackEnvironmentError(f"'{name}': environment already exists at {root(name)}")
+
+    ensure_env_root_path_exists()
+    validate_env_name(name)
+    return root(name)
+
+
+def ensure_env_root_path_exists():
     if not os.path.isdir(env_root_path()):
         fs.mkdirp(env_root_path())
-    validate_env_name(name)
-    if exists(name):
-        raise SpackEnvironmentError("'%s': environment already exists at %s" % (name, root(name)))
-    return Environment(root(name), init_file, with_view, keep_relative)
 
 
 def config_dict(yaml_data):
@@ -313,7 +387,7 @@ def _read_yaml(str_or_file):
     data = syaml.load_config(str_or_file)
     filename = getattr(str_or_file, "name", None)
     default_data = spack.config.validate(data, spack.schema.env.schema, filename)
-    return (data, default_data)
+    return data, default_data
 
 
 def _write_yaml(data, str_or_file):
@@ -399,7 +473,7 @@ def _error_on_nonempty_view_dir(new_root):
     )
 
 
-class ViewDescriptor(object):
+class ViewDescriptor:
     def __init__(
         self,
         base_path,
@@ -665,94 +739,59 @@ class ViewDescriptor(object):
                 tty.warn(msg)
 
 
-def _create_environment(*args, **kwargs):
-    return Environment(*args, **kwargs)
+def _create_environment(path):
+    return Environment(path)
 
 
-class Environment(object):
-    def __init__(self, path, init_file=None, with_view=None, keep_relative=False):
-        """Create a new environment.
+class Environment:
+    """A Spack environment, which bundles together configuration and a list of specs."""
 
-        The environment can be optionally initialized with either a
-        spack.yaml or spack.lock file.
+    def __init__(self, manifest_dir: Union[str, pathlib.Path]) -> None:
+        """An environment can be constructed from a directory containing a "spack.yaml" file, and
+        optionally a consistent "spack.lock" file.
 
-        Arguments:
-            path (str): path to the root directory of this environment
-            init_file (str or file object): filename or file object to
-                initialize the environment
-            with_view (str or bool): whether a view should be maintained for
-                the environment. If the value is a string, it specifies the
-                path to the view.
-            keep_relative (bool): if True, develop paths are copied verbatim
-                into the new environment file, otherwise they are made absolute
-                when the environment path is different from init_file's
-                directory.
+        Args:
+            manifest_dir: directory with the "spack.yaml" associated with the environment
         """
-        self.path = os.path.abspath(path)
-        self.init_file = init_file
-        self.with_view = with_view
-        self.keep_relative = keep_relative
+        self.path = os.path.abspath(str(manifest_dir))
 
         self.txlock = lk.Lock(self._transaction_lock_path)
 
-        # This attribute will be set properly from configuration
-        # during concretization
         self.unify = None
-        self.new_specs = []
-        self.new_installs = []
-        self.clear()
+        self.new_specs: List[Spec] = []
+        self.new_installs: List[Spec] = []
+        self.views: Dict[str, ViewDescriptor] = {}
 
-        if init_file:
-            # If we are creating the environment from an init file, we don't
-            # need to lock, because there are no Spack operations that alter
-            # the init file.
-            with fs.open_if_filename(init_file) as f:
-                if hasattr(f, "name") and f.name.endswith(".lock"):
-                    self._read_manifest(default_manifest_yaml())
-                    self._read_lockfile(f)
-                    self._set_user_specs_from_lockfile()
-                else:
-                    self._read_manifest(f, raw_yaml=default_manifest_yaml())
+        #: Specs from "spack.yaml"
+        self.spec_lists = {user_speclist_name: SpecList()}
+        #: Dev-build specs from "spack.yaml"
+        self.dev_specs: Dict[str, Any] = {}
+        #: User specs from the last concretization
+        self.concretized_user_specs: List[Spec] = []
+        #: Roots associated with the last concretization, in order
+        self.concretized_order: List[Spec] = []
+        #: Concretized specs by hash
+        self.specs_by_hash: Dict[str, Spec] = {}
+        #: Repository for this environment (memoized)
+        self._repo = None
+        #: Previously active environment
+        self._previous_active = None
 
-                # Rewrite relative develop paths when initializing a new
-                # environment in a different location from the spack.yaml file.
-                if not keep_relative and hasattr(f, "name") and f.name.endswith(".yaml"):
-                    init_file_dir = os.path.abspath(os.path.dirname(f.name))
-                    self._rewrite_relative_paths_on_relocation(init_file_dir)
-        else:
-            with lk.ReadTransaction(self.txlock):
-                self._read()
+        with lk.ReadTransaction(self.txlock):
+            self._read()
 
-        if with_view is False:
+    def set_view(self, view_dir: Union[bool, str, pathlib.Path]) -> "Environment":
+        """Sets the default view and returns the environment."""
+        if view_dir is False:
             self.views = {}
-        elif with_view is True:
+        elif view_dir is True:
             self.views = {default_view_name: ViewDescriptor(self.path, self.view_path_default)}
-        elif isinstance(with_view, str):
-            self.views = {default_view_name: ViewDescriptor(self.path, with_view)}
-        # If with_view is None, then defer to the view settings determined by
-        # the manifest file
+        else:
+            self.views = {default_view_name: ViewDescriptor(self.path, str(view_dir))}
+        return self
 
     def __reduce__(self):
-        return _create_environment, (self.path, self.init_file, self.with_view, self.keep_relative)
-
-    def _rewrite_relative_paths_on_relocation(self, init_file_dir):
-        """When initializing the environment from a manifest file and we plan
-        to store the environment in a different directory, we have to rewrite
-        relative paths to absolute ones."""
-        if init_file_dir == self.path:
-            return
-
-        for name, entry in self.dev_specs.items():
-            dev_path = entry["path"]
-            expanded_path = os.path.normpath(os.path.join(init_file_dir, entry["path"]))
-
-            # Skip if the expanded path is the same (e.g. when absolute)
-            if dev_path == expanded_path:
-                continue
-
-            tty.debug("Expanding develop path for {0} to {1}".format(name, expanded_path))
-
-            self.dev_specs[name]["path"] = expanded_path
+        return _create_environment, (self.path,)
 
     def _re_read(self):
         """Reinitialize the environment object if it has been written (this
@@ -2233,7 +2272,7 @@ class Environment(object):
         # Remove yaml sections that are shadowing defaults
         # construct garbage path to ensure we don't find a manifest by accident
         with fs.temp_cwd() as env_dir:
-            bare_env = Environment(env_dir, with_view=self.view_path_default)
+            bare_env = Environment(env_dir).set_view(self.view_path_default)
             keys_present = list(yaml_dict.keys())
             for key in keys_present:
                 if yaml_dict[key] == config_dict(bare_env.yaml).get(key, None):
@@ -2498,6 +2537,158 @@ def no_active_environment():
         # TODO: we don't handle `use_env_repo` here.
         if env:
             activate(env)
+
+
+def initialize_environment_dir(
+    environment_dir: Union[str, pathlib.Path], envfile: Optional[Union[str, pathlib.Path]]
+) -> None:
+    """Initialize an environment directory starting from an envfile.
+
+    The envfile can be either a "spack.yaml" manifest file, or a "spack.lock" file.
+
+    Args:
+        environment_dir: directory where the environment should be placed
+        envfile: manifest file or lockfile used to initialize the environment
+
+    Raises:
+        SpackEnvironmentError: if the directory can't be initialized
+    """
+    environment_dir = pathlib.Path(environment_dir)
+    target_lockfile = environment_dir / lockfile_name
+    target_manifest = environment_dir / manifest_name
+    if target_manifest.exists():
+        msg = f"cannot initialize environment, {target_manifest} already exists"
+        raise SpackEnvironmentError(msg)
+
+    if target_lockfile.exists():
+        msg = f"cannot initialize environment, {target_lockfile} already exists"
+        raise SpackEnvironmentError(msg)
+
+    def _ensure_env_dir():
+        try:
+            environment_dir.mkdir(parents=True, exist_ok=True)
+        except FileExistsError as e:
+            msg = f"cannot initialize the environment, '{environment_dir}' already exists"
+            raise SpackEnvironmentError(msg) from e
+
+    if envfile is None:
+        _ensure_env_dir()
+        target_manifest.write_text(default_manifest_yaml())
+        return
+
+    envfile = pathlib.Path(envfile)
+    if not envfile.exists() or not envfile.is_file():
+        msg = f"cannot initialize environment, {envfile} is not a valid file"
+        raise SpackEnvironmentError(msg)
+
+    if not str(envfile).endswith(manifest_name) and not str(envfile).endswith(lockfile_name):
+        msg = (
+            f"cannot initialize environment from '{envfile}', either a '{manifest_name}'"
+            f" or a '{lockfile_name}' file is needed"
+        )
+        raise SpackEnvironmentError(msg)
+
+    _ensure_env_dir()
+
+    # When we have a lockfile we should copy that and produce a consistent default manifest
+    if str(envfile).endswith(lockfile_name):
+        shutil.copy(envfile, target_lockfile)
+        EnvironmentManifestFile.from_lockfile(environment_dir)
+        return
+
+    shutil.copy(envfile, target_manifest)
+
+
+class EnvironmentManifestFile(collections.Mapping):
+    """Manages the in-memory representation of a manifest file, and its synchronization
+    with the actual manifest on disk.
+    """
+
+    @staticmethod
+    def from_lockfile(manifest_dir: Union[pathlib.Path, str]) -> "EnvironmentManifestFile":
+        """Returns an environment manifest file compatible with the lockfile already present in
+        the environment directory.
+
+        Args:
+             manifest_dir: directory where the lockfile is
+        """
+        manifest_dir = pathlib.Path(manifest_dir)
+        lockfile = manifest_dir / lockfile_name
+        with lockfile.open("r") as f:
+            data = sjson.load(f)
+        user_specs = data["roots"]
+
+        default_content = manifest_dir / manifest_name
+        default_content.write_text(default_manifest_yaml())
+        manifest = EnvironmentManifestFile(manifest_dir)
+        for item in user_specs:
+            manifest.add(item["spec"])
+        manifest.flush()
+        return manifest
+
+    def __init__(self, manifest_dir: Union[pathlib.Path, str]) -> None:
+        self.manifest_dir = pathlib.Path(manifest_dir)
+        self.manifest_file = self.manifest_dir / manifest_name
+
+        with self.manifest_file.open() as f:
+            raw, with_defaults_added = _read_yaml(f)
+
+        #: Pristine YAML content, without defaults being added
+        self.pristine_yaml_content = raw
+        #: YAML content with defaults added by Spack, if they're missing
+        self.yaml_content = with_defaults_added
+
+    def add(self, user_spec: str) -> None:
+        """Appends the user spec passed as input to the list of root specs.
+
+        Args:
+            user_spec: user spec to be appended
+        """
+        config_dict(self.pristine_yaml_content)["specs"].append(user_spec)
+        config_dict(self.yaml_content)["specs"].append(user_spec)
+
+    def set_view(self, view: Union[bool, str, pathlib.Path]) -> None:
+        """Sets the view in the manifest to the value passed as input.
+
+        Args:
+            view: If the value is a string or a path, it specifies the path to the view. If
+                True the default view is used for the environment, if False there's no view.
+        """
+        if not isinstance(view, bool):
+            view = str(pathlib.Path(view).absolute())
+
+        config_dict(self.pristine_yaml_content)["view"] = view
+        config_dict(self.yaml_content)["view"] = view
+
+    def absolutify_dev_paths(self, init_file_dir: Union[str, pathlib.Path]) -> None:
+        """Normalizes the dev paths in the environment with respect to the directory where the
+        initialization file resides.
+
+        Args:
+            init_file_dir: directory with the "spack.yaml" used to initialize the environment.
+        """
+        init_file_dir = pathlib.Path(init_file_dir).absolute()
+        for _, entry in config_dict(self.pristine_yaml_content).get("develop", {}).items():
+            expanded_path = os.path.normpath(str(init_file_dir / entry["path"]))
+            entry["path"] = str(expanded_path)
+
+        for _, entry in config_dict(self.yaml_content).get("develop", {}).items():
+            expanded_path = os.path.normpath(str(init_file_dir / entry["path"]))
+            entry["path"] = str(expanded_path)
+
+    def flush(self) -> None:
+        """Synchronizes the object with the manifest file on disk."""
+        with self.manifest_file.open("w") as f:
+            _write_yaml(self.pristine_yaml_content, f)
+
+    def __len__(self):
+        return len(self.yaml_content)
+
+    def __getitem__(self, key):
+        return self.yaml_content[key]
+
+    def __iter__(self):
+        return iter(self.yaml_content)
 
 
 class SpackEnvironmentError(spack.error.SpackError):

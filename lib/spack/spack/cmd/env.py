@@ -301,16 +301,17 @@ def env_create(args):
         # object could choose to enable a view by default. False means that
         # the environment should not include a view.
         with_view = None
-    if args.envfile:
-        with open(args.envfile) as f:
-            _env_create(
-                args.create_env, f, args.dir, with_view=with_view, keep_relative=args.keep_relative
-            )
-    else:
-        _env_create(args.create_env, None, args.dir, with_view=with_view)
+
+    _env_create(
+        args.create_env,
+        init_file=args.envfile,
+        dir=args.dir,
+        with_view=with_view,
+        keep_relative=args.keep_relative,
+    )
 
 
-def _env_create(name_or_path, init_file=None, dir=False, with_view=None, keep_relative=False):
+def _env_create(name_or_path, *, init_file=None, dir=False, with_view=None, keep_relative=False):
     """Create a new environment, with an optional yaml description.
 
     Arguments:
@@ -323,18 +324,21 @@ def _env_create(name_or_path, init_file=None, dir=False, with_view=None, keep_re
             the new environment file, otherwise they may be made absolute if the
             new environment is in a different location
     """
-    if dir:
-        env = ev.Environment(name_or_path, init_file, with_view, keep_relative)
-        env.write()
-        tty.msg("Created environment in %s" % env.path)
-        tty.msg("You can activate this environment with:")
-        tty.msg("  spack env activate %s" % env.path)
-    else:
-        env = ev.create(name_or_path, init_file, with_view, keep_relative)
-        env.write()
+    if not dir:
+        env = ev.create(
+            name_or_path, init_file=init_file, with_view=with_view, keep_relative=keep_relative
+        )
         tty.msg("Created environment '%s' in %s" % (name_or_path, env.path))
         tty.msg("You can activate this environment with:")
         tty.msg("  spack env activate %s" % (name_or_path))
+        return env
+
+    env = ev.create_in_dir(
+        name_or_path, init_file=init_file, with_view=with_view, keep_relative=keep_relative
+    )
+    tty.msg("Created environment in %s" % env.path)
+    tty.msg("You can activate this environment with:")
+    tty.msg("  spack env activate %s" % env.path)
     return env
 
 

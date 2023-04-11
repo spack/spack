@@ -91,17 +91,10 @@ def test_config_edit(mutable_config, working_env):
 
 
 def test_config_get_gets_spack_yaml(mutable_mock_env_path):
-    env = ev.create("test")
-
     config("get", fail_on_error=False)
     assert config.returncode == 1
 
-    with env:
-        config("get", fail_on_error=False)
-        assert config.returncode == 1
-
-        env.write()
-
+    with ev.create("test") as env:
         assert "mpileaks" not in config("get")
 
         env.add("mpileaks")
