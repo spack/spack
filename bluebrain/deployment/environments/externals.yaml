@@ -47,6 +47,12 @@ spack:
           - ilmbase
           - openblas
           - openexr
+        cuda:
+          environment:
+            append_path:
+              LD_LIBRARY_PATH: '{prefix}/extras/CUPTI/lib64'
+            set:
+              NVHPC_CUDA_HOME: '{prefix}'
         hpe-mpi:
           environment:
             prepend_path:
@@ -84,17 +90,11 @@ spack:
     - cgal
     - cli-tools
     - cmake
-    # - cuda@11.0.2
-    # # NVHPC 21.11 ships CUDA 11.5 (11.5.20211118 in version.json)
-    # - cuda@11.5.1
-    # # NVHPC 22.2 ships CUDA 11.6.0 (version.json)
-    # - cuda@11.6.0
-    # # NVHPC 22.3 ships CUDA 11.6.1 (version.json)
-    # - cuda@11.6.1
-    # NVHPC 22.11 ships CUDA 11.8.0 (version.json)
+    # NVHPC 22.11 and 23.1 ship CUDA 11.8.0 (version.json)
+    # CUDA 11.x do not support GCC 12
     - cuda@11.8.0%gcc@11.3.0
-    # CUDA 12 requires a CUDA driver that is not yet available on BB5
-    # - cuda@12.0.0
+    # NVHPC 23.1 ships CUDA 12.0.0 (version.json)
+    - cuda@12.0.0
     - cudnn@8.0.3.33-11.0
     - darshan-runtime
     - darshan-util

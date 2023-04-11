@@ -322,14 +322,21 @@ class Neuron(CMakePackage):
             options.append("-DCORENRN_NMODL_FLAGS=%s" % nmodl_options)
 
             if spec.satisfies("+gpu"):
-                gcc = which("gcc")
                 nvcc = which("nvcc")
-                options.extend(
-                    ["-DCMAKE_CUDA_COMPILER=%s" % nvcc, "-DCMAKE_CUDA_HOST_COMPILER=%s" % gcc]
-                )
+                # Instead of assuming that the gcc in $PATH is the right host compiler, take the
+                # compiler used to build the cuda package as the CUDA host compiler.
+                host_compiler_spec = self.spec["cuda"].compiler
+                # Surely this isn't the best way
+                host_compiler_candidates = [
+                    c for c in spack.compilers.all_compilers() if c.spec == host_compiler_spec
+                ]
+                assert len(host_compiler_candidates) == 1
+                host_compiler = host_compiler_candidates[0]
+                options.append(self.define("CMAKE_CUDA_COMPILER", nvcc))
+                options.append(self.define("CMAKE_CUDA_HOST_COMPILER", host_compiler.cxx))
                 if spec.satisfies("+unified"):
-                    options.append("-DCORENRN_ENABLE_CUDA_UNIFIED_MEMORY=ON")
-                options.append("-DCORENRN_ENABLE_GPU=ON")
+                    options.append(self.define("CORENRN_ENABLE_CUDA_UNIFIED_MEMORY", True))
+                options.append(self.define("CORENRN_ENABLE_GPU", True))
 
             args.extend(options)
 
