@@ -230,7 +230,7 @@ class Perl(Package):  # Perl doesn't use Autotools, it should subclass Package
         return args
 
     def is_64bit(self):
-        return "64" in str(self.pkg.spec.target.family)
+        return "64" in str(self.spec.target.family)
 
     def configure_args(self):
         spec = self.spec
