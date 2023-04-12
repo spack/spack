@@ -1251,7 +1251,12 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
 
         # TODO: allow more than one active extendee.
         if deps:
-            assert len(deps) == 1
+            # assert len(deps) == 1
+            if len(deps) == 2:
+                assert repr(deps[0]) == repr(deps[1])
+                tty.debug("duplicated extendee deps?! {0}".format(repr(deps[0])))
+            else:
+                assert len(deps) == 1
             return deps[0]
 
         # if the spec is concrete already, then it extends something

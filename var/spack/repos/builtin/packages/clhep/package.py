@@ -83,6 +83,15 @@ class Clhep(CMakePackage):
 
     def cmake_args(self):
         cmake_args = [
-            "-DCLHEP_BUILD_CXXSTD=-std=c++{0}".format(self.spec.variants["cxxstd"].value)
+            "-DCLHEP_BUILD_CXXSTD=-std=c++{0}".format(self.spec.variants["cxxstd"].value),
+            "-DCMAKE_CXX_COMPILER={0}".format(self.compiler.cxx_names[0]),
+            "-DCMAKE_C_COMPILER={0}".format(self.compiler.cc_names[0]),
+            "-DCMAKE_Fortran_COMPILER={0}".format(self.compiler.f77_names[0]),
         ]
+
+        if not ("build_type=Debug" in self.spec):
+            compile_options = "-O3 -g -fno-omit-frame-pointer"
+            cmake_args.append("-DCMAKE_C_FLAGS={0}".format(compile_options))
+            cmake_args.append("-DCMAKE_CXX_FLAGS={0}".format(compile_options))
+
         return cmake_args

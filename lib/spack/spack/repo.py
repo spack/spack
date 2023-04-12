@@ -1232,7 +1232,7 @@ class Repo(object):
         try:
             module = importlib.import_module(fullname)
         except ImportError:
-            raise UnknownPackageError(pkg_name)
+            raise UnknownPackageError(pkg_name + " " + fullname)
 
         cls = getattr(module, class_name)
         if not inspect.isclass(cls):

@@ -152,6 +152,8 @@ class Sqlite(AutotoolsPackage):
         version_string = str(full_version[0]) + "".join(["%02d" % v for v in full_version[1:]])
         # See https://www.sqlite.org/chronology.html for version -> year
         # correspondence.
+        if version >= Version("3.40.1"):
+            year = "2023"
         if version >= Version("3.37.2"):
             year = "2022"
         elif version >= Version("3.34.1"):
