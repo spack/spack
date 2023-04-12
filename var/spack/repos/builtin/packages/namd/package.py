@@ -23,6 +23,10 @@ class Namd(MakefilePackage, CudaPackage):
 
     version("master", branch="master")
     version("2.15a1", branch="master", tag="release-2-15-alpha-1")
+    # Same as above, but lets you use a local file instead of git
+    version(
+        "2.15a1.manual", sha256="474006e98e32dddae59616b3b75f13a2bb149deaf7a0d617ce7fb9fd5a56a33a"
+    )
     version(
         "2.14",
         sha256="34044d85d9b4ae61650ccdba5cda4794088c3a9075932392dd0752ef8c049235",
@@ -62,7 +66,7 @@ class Namd(MakefilePackage, CudaPackage):
 
     depends_on("amdfftw", when="fftw=amdfftw")
 
-    depends_on("intel-mkl", when="fftw=mkl")
+    depends_on("mkl", when="fftw=mkl")
 
     depends_on("tcl", when="interface=tcl")
 
@@ -87,7 +91,12 @@ class Namd(MakefilePackage, CudaPackage):
         if lib != "python":
             self._copy_arch_file(lib)
         spec = self.spec
-        opts.extend(["--with-{0}".format(lib), "--{0}-prefix".format(lib), spec[lib].prefix])
+        lib_prefix = (
+            spec[lib].package.component_prefix
+            if spec[lib].name == "intel-oneapi-mkl"
+            else spec[lib].prefix
+        )
+        opts.extend(["--with-{0}".format(lib), "--{0}-prefix".format(lib), lib_prefix])
 
     @property
     def arch(self):
