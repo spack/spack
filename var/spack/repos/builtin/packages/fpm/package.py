@@ -24,6 +24,7 @@ class Fpm(Package):
     maintainers("awvwgk")
 
     version("0.8.1", "0bd978bb1d3f2a3297d82a0d6ac009746a466cfa9a59ba3b6513b74e5ce4b7bf")
+    version("0.8.0", "d63162a2ab013c19cefc938e52717c30f78e04de94384d4589c55a48be2724f1")
     version("0.7.0", "536dec7d4502221734683b15e6ff64a6ab3f9910df122d18f851c9a68711f91f")
     version("0.6.0", "365516f66b116a112746af043e8eccb3d854d6feb1fad0507c570433dacbf7be")
     version("0.5.0", "e4a06956d2300f9aa1d06bd3323670480e946549617582e32684ded6921a921e")
