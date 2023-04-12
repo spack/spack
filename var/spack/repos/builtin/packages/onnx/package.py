@@ -59,6 +59,14 @@ class Onnx(CMakePackage):
     depends_on("python", type="build")
     depends_on("protobuf")
 
+    def patch(self):
+        if self.spec.satisfies("@1.13 ^protobuf@3.22:"):
+            filter_file(
+                "CMAKE_CXX_STANDARD 11",
+                "CMAKE_CXX_STANDARD 14",
+                "CMakeLists.txt"
+            )
+
     def cmake_args(self):
         # Try to get ONNX to use the same version of python as the spec is using
         args = ["-DPY_VERSION={0}".format(self.spec["python"].version.up_to(2))]
