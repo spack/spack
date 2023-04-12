@@ -68,16 +68,6 @@ class Wgl(Package):
         ver_str = re.search(version_match_pat, lib)
         return ver_str if not ver_str else Version(ver_str.group())
 
-    @classmethod
-    def determine_variants(cls, libs, ver_str):
-        """Allow for determination of toolchain arch for detected WGL"""
-        variants = []
-        for lib in libs:
-            base, lib_name = os.path.split(lib)
-            _, arch = os.path.split(base)
-            variants.append("plat=%s" % arch)
-        return variants
-
     def _spec_arch_to_sdk_arch(self):
         spec_arch = str(self.spec.architecture.target).lower()
         _64bit = "64" in spec_arch
