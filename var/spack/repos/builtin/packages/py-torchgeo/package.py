@@ -51,7 +51,7 @@ class PyTorchgeo(PythonPackage):
     depends_on("py-kornia@0.6.4:0.6.9", when="@0.3", type=("build", "run"))
     depends_on("py-kornia@0.5.11:0.6.9", when="@0.2", type=("build", "run"))
     depends_on("py-kornia@0.5.4:0.6.9", when="@0.1", type=("build", "run"))
-    depends_on("py-lightning@1.8:2", when="@0.4.1:", type=("build", "run"))
+    depends_on("py-lightning@1.8:1", when="@0.4.1:", type=("build", "run"))
     depends_on("py-matplotlib@3.3:3", type=("build", "run"))
     depends_on("py-numpy@1.17.2:1", type=("build", "run"))
     depends_on("py-omegaconf@2.1:2", when="@:0.4.0", type=("build", "run"))
