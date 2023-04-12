@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -14,7 +14,7 @@ class Jsonnet(MakefilePackage):
     git = "https://github.com/google/jsonnet.git"
     url = "https://github.com/google/jsonnet/archive/refs/tags/v0.18.0.tar.gz"
 
-    maintainers = ["jcpunk"]
+    maintainers("jcpunk")
 
     version("master", branch="master")
     version("0.18.0", sha256="85c240c4740f0c788c4d49f9c9c0942f5a2d1c2ae58b2c71068107bc80a3ced4")

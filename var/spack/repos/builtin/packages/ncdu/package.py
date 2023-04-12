@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -17,6 +17,7 @@ class Ncdu(Package):
     homepage = "https://dev.yorhel.nl/ncdu"
     url = "https://dev.yorhel.nl/download/ncdu-1.11.tar.gz"
 
+    version("1.18.1", sha256="7c0fa1eb29d85aaed4ba174164bdbb8f011b5c390d017c57d668fc7231332405")
     version("1.17", sha256="810745a8ed1ab3788c87d3aea4cc1a14edf6ee226f764bcc383e024ba56adbf1")
     version("1.16", sha256="2b915752a183fae014b5e5b1f0a135b4b408de7488c716e325217c2513980fd4")
     version("1.15.1", sha256="b02ddc4dbf1db139cc6fbbe2f54a282770380f0ca5c17089855eab52a9ea3fb0")

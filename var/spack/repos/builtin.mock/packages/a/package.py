@@ -1,8 +1,8 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
-
+import spack.build_systems.autotools
 from spack.package import *
 
 
@@ -16,9 +16,7 @@ class A(AutotoolsPackage):
     version("2.0", "abcdef0123456789abcdef0123456789")
 
     variant(
-        "foo",
-        description="",
-        values=any_combination_of("bar", "baz", "fee").with_default("bar"),
+        "foo", description="", values=any_combination_of("bar", "baz", "fee").with_default("bar")
     )
 
     variant("foobar", values=("bar", "baz", "fee"), default="bar", description="", multi=False)
@@ -32,21 +30,23 @@ class A(AutotoolsPackage):
 
     parallel = False
 
+
+class AutotoolsBuilder(spack.build_systems.autotools.AutotoolsBuilder):
     def with_or_without_fee(self, activated):
         if not activated:
             return "--no-fee"
         return "--fee-all-the-time"
 
-    def autoreconf(self, spec, prefix):
+    def autoreconf(self, pkg, spec, prefix):
         pass
 
-    def configure(self, spec, prefix):
+    def configure(self, pkg, spec, prefix):
         pass
 
-    def build(self, spec, prefix):
+    def build(self, pkg, spec, prefix):
         pass
 
-    def install(self, spec, prefix):
+    def install(self, pkg, spec, prefix):
         # sanity_check_prefix requires something in the install directory
         # Test requires overriding the one provided by `AutotoolsPackage`
         mkdirp(prefix.bin)

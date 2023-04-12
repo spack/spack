@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -22,4 +22,3 @@ class PyConfigparser(PythonPackage):
     depends_on("py-setuptools@34.4:", type="build", when="@3.5.1:")
     depends_on("py-setuptools@56:", type="build", when="@5.2.0:")
     depends_on("py-setuptools-scm@3.4.1:+toml", type="build", when="@5.2.0:")
-    depends_on("py-ordereddict", type=("build", "run"), when="python@:2.6")

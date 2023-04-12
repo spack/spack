@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -6,7 +6,7 @@
 from spack.package import *
 
 
-class PySetuptools(Package):
+class PySetuptools(Package, PythonExtension):
     """A Python utility that aids in the process of downloading, building,
     upgrading, installing, and uninstalling Python packages."""
 
@@ -14,8 +14,11 @@ class PySetuptools(Package):
     url = "https://files.pythonhosted.org/packages/py3/s/setuptools/setuptools-62.3.2-py3-none-any.whl"
     list_url = "https://pypi.org/simple/setuptools/"
 
-    maintainers = ["adamjstewart"]
-
+    version(
+        "67.6.0",
+        sha256="b78aaa36f6b90a074c1fa651168723acbf45d14cb1196b6f02c0fd07f17623b2",
+        expand=False,
+    )
     version(
         "65.5.0",
         sha256="f62ea9da9ed6289bfe868cd6845968a2c854d1427f8548d52cae02a42b4f0356",

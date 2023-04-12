@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -16,7 +16,7 @@ class Cctools(AutotoolsPackage):
 
     homepage = "https://cctools.readthedocs.io"
     url = "https://ccl.cse.nd.edu/software/files/cctools-7.4.2-source.tar.gz"
-    maintainers = ["dthain", "btovar"]
+    maintainers("dthain", "btovar")
 
     version("7.4.2", sha256="7c8c86f09bcb9ad23ab44e52dfb5bf3a4e4a1ad84ef51e500a9c8c2371770f4b")
     version("7.2.10", sha256="4a604329896ae5e0fad7451a3814f531ff2f00a41c96e971ac08276208aa1650")
@@ -75,29 +75,15 @@ class Cctools(AutotoolsPackage):
 
         # make sure we do not pick a python outside spack:
         if self.spec.satisfies("@6.1.1"):
-            if self.spec.satisfies("^python@3:"):
-                args.extend(
-                    ["--with-python3-path", self.spec["python"].prefix, "--with-python-path", "no"]
-                )
-            elif self.spec.satisfies("^python@:2.9"):
-                args.extend(
-                    ["--with-python-path", self.spec["python"].prefix, "--with-python3-path", "no"]
-                )
-            else:
-                args.extend(["--with-python-path", "no", "--with-python3-path", "no"])
+            args.extend(
+                ["--with-python3-path", self.spec["python"].prefix, "--with-python-path", "no"]
+            )
         else:
             # versions 7 and above, where --with-python-path recognized the
             # python version:
-            if self.spec.satisfies("^python@3:"):
-                args.extend(
-                    ["--with-python-path", self.spec["python"].prefix, "--with-python2-path", "no"]
-                )
-            elif self.spec.satisfies("^python@:2.9"):
-                args.extend(
-                    ["--with-python-path", self.spec["python"].prefix, "--with-python3-path", "no"]
-                )
-            else:
-                args.extend(["--with-python2-path", "no", "--with-python3-path", "no"])
+            args.extend(
+                ["--with-python-path", self.spec["python"].prefix, "--with-python2-path", "no"]
+            )
 
         # disable these bits
         for p in ["mysql", "xrootd"]:

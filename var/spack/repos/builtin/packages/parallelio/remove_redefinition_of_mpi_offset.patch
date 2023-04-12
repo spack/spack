@@ -1,0 +1,35 @@
+--- a/src/clib/pio_internal.h
++++ b/src/clib/pio_internal.h
+@@ -30,12 +30,12 @@
+ #include <mpe.h>
+ #endif /* USE_MPE */
+ 
+-#ifndef MPI_OFFSET
++//#ifndef MPI_OFFSET
+ /** MPI_OFFSET is an integer type of size sufficient to represent the
+  * size (in bytes) of the largest file supported by MPI. In some MPI
+  * implementations MPI_OFFSET is not properly defined.  */
+-#define MPI_OFFSET  MPI_LONG_LONG
+-#endif
++//#define MPI_OFFSET  MPI_LONG_LONG
++//#endif
+ 
+ /* These are the sizes of types in netCDF files. Do not replace these
+  * constants with sizeof() calls for C types. They are not the
+@@ -57,10 +57,10 @@
+ #define MPI_OFFSET OMPI_OFFSET_DATATYPE
+ #endif
+ #endif
+-#ifndef MPI_Offset
++//#ifndef MPI_Offset
+ /** This is the type used for PIO_Offset. */
+-#define MPI_Offset long long
+-#endif
++//#define MPI_Offset long long
++//#endif
+ 
+ /** Some MPI implementations do not allow passing MPI_DATATYPE_NULL to
+  * comm functions even though the send or recv length is 0, in these
+-- 
+2.34.1
+

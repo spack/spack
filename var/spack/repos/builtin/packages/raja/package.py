@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -16,7 +16,7 @@ class Raja(CachedCMakePackage, CudaPackage, ROCmPackage):
     git = "https://github.com/LLNL/RAJA.git"
     tags = ["radiuss", "e4s"]
 
-    maintainers = ["davidbeckingsale"]
+    maintainers("davidbeckingsale")
 
     version("develop", branch="develop", submodules=False)
     version("main", branch="main", submodules=False)
@@ -133,12 +133,14 @@ class Raja(CachedCMakePackage, CudaPackage, ROCmPackage):
             entries.append(cmake_cache_option("ENABLE_HIP", True))
             entries.append(cmake_cache_path("HIP_ROOT_DIR", "{0}".format(spec["hip"].prefix)))
             hip_repair_cache(entries, spec)
+            hipcc_flags = []
+            if self.spec.satisfies("@0.14.0"):
+                hipcc_flags.append("-std=c++14")
             archs = self.spec.variants["amdgpu_target"].value
             if archs != "none":
                 arch_str = ",".join(archs)
-                entries.append(
-                    cmake_cache_string("HIP_HIPCC_FLAGS", "--amdgpu-target={0}".format(arch_str))
-                )
+                hipcc_flags.append("--amdgpu-target={0}".format(arch_str))
+            entries.append(cmake_cache_string("HIP_HIPCC_FLAGS", " ".join(hipcc_flags)))
         else:
             entries.append(cmake_cache_option("ENABLE_HIP", False))
 

@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -43,4 +43,4 @@ def gc(parser, args):
     if not args.yes_to_all:
         spack.cmd.uninstall.confirm_removal(specs)
 
-    spack.cmd.uninstall.do_uninstall(None, specs, force=False)
+    spack.cmd.uninstall.do_uninstall(specs, force=False)
