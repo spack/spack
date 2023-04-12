@@ -27,7 +27,7 @@ if sys.platform != "win32":
     import grp
 
 
-pytestmark = pytest.mark.skipif(sys.platform == "win32", reason="does not run on windows")
+pytestmark = pytest.mark.skipif(sys.platform == "win32", reason="Windows will not support")
 
 
 too_long = sbang.system_shebang_limit + 1
