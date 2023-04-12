@@ -386,7 +386,7 @@ class Paraview(CMakePackage, CudaPackage, ROCmPackage):
 
         rendering = variant_bool("+opengl2", "OpenGL2", "OpenGL")
         includes = variant_bool("+development_files")
-        use_x11 = nvariant_bool("+osmesa") if not sys.platform == "win32" else "OFF"
+        use_x11 = nvariant_bool("+osmesa") if not spec.satisfies("platform=windows") else "OFF"
 
         cmake_args = [
             "-DVTK_OPENGL_HAS_OSMESA:BOOL=%s" % variant_bool("+osmesa"),
