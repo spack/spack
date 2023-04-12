@@ -104,7 +104,7 @@ class PyTorch(PythonPackage, CudaPackage, ROCmPackage):
     )
 
     conflicts("+cuda+rocm")
-    conflicts("+tensorpipe", when="+rocm", msg="TensorPipe doesn't yet support ROCm")
+    conflicts("+tensorpipe", when="+rocm ^hip@:5.1", msg="TensorPipe not supported until ROCm 5.2")
     conflicts("+breakpad", when="target=ppc64:")
     conflicts("+breakpad", when="target=ppc64le:")
 
@@ -113,6 +113,13 @@ class PyTorch(PythonPackage, CudaPackage, ROCmPackage):
 
     # https://github.com/pytorch/pytorch/issues/80805
     conflicts("+openmp", when="platform=darwin target=aarch64:")
+
+    # https://github.com/pytorch/pytorch/issues/97397
+    conflicts(
+        "~tensorpipe",
+        when="@1.8: +distributed",
+        msg="TensorPipe must be enabled with +distributed",
+    )
 
     conflicts(
         "cuda_arch=none",
