@@ -16,6 +16,7 @@ class Protobuf(CMakePackage):
     url = "https://github.com/protocolbuffers/protobuf/archive/v3.18.0.tar.gz"
     maintainers("hyoklee")
 
+    version("3.22.2", sha256="2118051b4fb3814d59d258533a4e35452934b1ddb41230261c9543384cbb4dfc")
     version("3.21.12", sha256="930c2c3b5ecc6c9c12615cf5ad93f1cd6e12d0aba862b572e076259970ac3a53")
     version("3.21.7", sha256="ce2fbea3c78147a41b2a922485d283137845303e5e1b6cbd7ece94b96ade7031")
     version("3.21.5", sha256="d7d204a59fd0d2d2387bd362c2155289d5060f32122c4d1d922041b61191d522")
@@ -79,6 +80,7 @@ class Protobuf(CMakePackage):
     )
 
     depends_on("zlib")
+    depends_on("abseil-cpp", when="@3.22:")
 
     conflicts("%gcc@:4.6", when="@3.6.0:")  # Requires c++11
     conflicts("%gcc@:4.6", when="@3.2.0:3.3.0")  # Breaks
@@ -119,6 +121,8 @@ class Protobuf(CMakePackage):
         ]
         if sys.platform == "darwin":
             args.extend(["-DCMAKE_MACOSX_RPATH=ON"])
+        if self.spec.satisfies("@3.22:"):
+            args.append("-Dprotobuf_ABSL_PROVIDER=package")
         return args
 
     @property
