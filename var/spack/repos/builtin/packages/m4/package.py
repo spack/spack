@@ -45,6 +45,12 @@ class M4(AutotoolsPackage, GNUMirrorPackage):
     patch("checks-198.sysval.1.patch", when="@1.4.19")
     patch("checks-198.sysval.2.patch", when="@1.4.19")
 
+    # oneapi compilers can build m4, but it does not run
+    # correctly. This causes difficulties when compiling a package
+    # with oneapi and m4 is a dependency. Even if it worked, there
+    # isn't any benefit for using a oneapi-compiled m4 so disable it.
+    conflicts("%oneapi")
+
     variant("sigsegv", default=True, description="Build the libsigsegv dependency")
 
     depends_on("diffutils", type="build")
