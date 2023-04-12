@@ -19,10 +19,11 @@ class Simsipm(CMakePackage):
 
     maintainers("vvolkl")
 
+    version("2.0.2", sha256="ba60ed88b54b1b29d089f583dbce93b3272b0b13d47772941339f1503ee3fa48")
     version("1.2.4", sha256="1c633bebb19c490b5e6dfa5ada4a6bc7ec36348237c2626d57843a25af923211")
 
     variant("python", default=False, description="Build pybind11-based python bindings")
-    variant("openmp", default=False, description="Use OpenMP")
+    variant("openmp", default=False, description="Use OpenMP", when="@:1")
 
     extends("python", when="+python")
     depends_on("python@3.6:", when="+python", type=("build", "run"))
