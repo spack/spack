@@ -26,7 +26,7 @@ class Gromacs(CMakePackage):
     url = "https://ftp.gromacs.org/gromacs/gromacs-2022.2.tar.gz"
     list_url = "https://ftp.gromacs.org/gromacs"
     git = "https://gitlab.com/gromacs/gromacs.git"
-    maintainers("danielahlin", "junghans", "marvinbernhardt")
+    maintainers("danielahlin", "eirrgang", "junghans")
 
     version("main", branch="main")
     version("master", branch="main", deprecated=True)
