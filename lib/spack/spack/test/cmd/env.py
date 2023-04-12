@@ -2554,10 +2554,10 @@ spack:
 
     # If I run concretize again and there's an error during write,
     # the spack.lock file shouldn't disappear from disk
-    def _write_helper_raise(self, x, y):
+    def _write_helper_raise(self):
         raise RuntimeError("some error")
 
-    monkeypatch.setattr(ev.Environment, "_update_and_write_manifest", _write_helper_raise)
+    monkeypatch.setattr(ev.Environment, "update_manifest", _write_helper_raise)
     with ev.Environment(str(tmpdir)) as e:
         e.concretize(force=True)
         with pytest.raises(RuntimeError):

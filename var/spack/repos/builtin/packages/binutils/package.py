@@ -33,15 +33,51 @@ class Binutils(AutotoolsPackage, GNUMirrorPackage):
     version("2.32", sha256="de38b15c902eb2725eac6af21183a5f34ea4634cb0bcef19612b50e5ed31072d")
     version("2.31.1", sha256="ffcc382695bf947da6135e7436b8ed52d991cf270db897190f19d6f9838564d0")
     version("2.30", sha256="efeade848067e9a03f1918b1da0d37aaffa0b0127a06b5e9236229851d9d0c09")
-    version("2.29.1", sha256="1509dff41369fb70aed23682351b663b56db894034773e6dbf7d5d6071fc55cc")
-    version("2.28", sha256="6297433ee120b11b4b0a1c8f3512d7d73501753142ab9e2daa13c5a3edd32a72")
-    version("2.27", sha256="369737ce51587f92466041a97ab7d2358c6d9e1b6490b3940eb09fb0a9a6ac88")
-    version("2.26", sha256="c2ace41809542f5237afc7e3b8f32bb92bc7bc53c6232a84463c423b0714ecd9")
-    version("2.25.1", sha256="b5b14added7d78a8d1ca70b5cb75fef57ce2197264f4f5835326b0df22ac9f22")
-    version("2.25", sha256="22defc65cfa3ef2a3395faaea75d6331c6e62ea5dfacfed3e2ec17b08c882923")
-    version("2.24", sha256="e5e8c5be9664e7f7f96e0d09919110ab5ad597794f5b1809871177a0f0f14137")
-    version("2.23.2", sha256="fe914e56fed7a9ec2eb45274b1f2e14b0d8b4f41906a5194eac6883cfe5c1097")
-    version("2.20.1", sha256="71d37c96451333c5c0b84b170169fdcb138bbb27397dc06281905d9717c8ed64")
+    version(
+        "2.29.1",
+        sha256="1509dff41369fb70aed23682351b663b56db894034773e6dbf7d5d6071fc55cc",
+        deprecated=True,
+    )
+    version(
+        "2.28",
+        sha256="6297433ee120b11b4b0a1c8f3512d7d73501753142ab9e2daa13c5a3edd32a72",
+        deprecated=True,
+    )
+    version(
+        "2.27",
+        sha256="369737ce51587f92466041a97ab7d2358c6d9e1b6490b3940eb09fb0a9a6ac88",
+        deprecated=True,
+    )
+    version(
+        "2.26",
+        sha256="c2ace41809542f5237afc7e3b8f32bb92bc7bc53c6232a84463c423b0714ecd9",
+        deprecated=True,
+    )
+    version(
+        "2.25.1",
+        sha256="b5b14added7d78a8d1ca70b5cb75fef57ce2197264f4f5835326b0df22ac9f22",
+        deprecated=True,
+    )
+    version(
+        "2.25",
+        sha256="22defc65cfa3ef2a3395faaea75d6331c6e62ea5dfacfed3e2ec17b08c882923",
+        deprecated=True,
+    )
+    version(
+        "2.24",
+        sha256="e5e8c5be9664e7f7f96e0d09919110ab5ad597794f5b1809871177a0f0f14137",
+        deprecated=True,
+    )
+    version(
+        "2.23.2",
+        sha256="fe914e56fed7a9ec2eb45274b1f2e14b0d8b4f41906a5194eac6883cfe5c1097",
+        deprecated=True,
+    )
+    version(
+        "2.20.1",
+        sha256="71d37c96451333c5c0b84b170169fdcb138bbb27397dc06281905d9717c8ed64",
+        deprecated=True,
+    )
 
     variant("plugins", default=True, description="enable plugins, needed for gold linker")
     # When you build ld.gold you automatically get ld, even when you add the
@@ -107,7 +143,12 @@ class Binutils(AutotoolsPackage, GNUMirrorPackage):
     # gprofng requires bison
     depends_on("bison@3.0.4:", type="build", when="+gprofng")
 
-    conflicts("+gold", when="platform=darwin", msg="Binutils cannot build linkers on macOS")
+    with when("platform=darwin"):
+        conflicts("+gold", msg="Binutils cannot build linkers on macOS")
+        conflicts(
+            "libs=shared", when="@2.37:2.40", msg="https://github.com/spack/spack/issues/35817"
+        )
+
     conflicts(
         "~lto", when="+pgo", msg="Profile-guided optimization enables link-time optimization"
     )

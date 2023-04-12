@@ -93,6 +93,13 @@ class OpenpmdApi(CMakePackage):
         when="@0.15.0",
     )
 
+    # forgot to bump version.hpp in 0.15.1
+    patch(
+        "https://github.com/openPMD/openPMD-api/pull/1417.patch?full_index=1",
+        sha256="c306483f1f94b308775a401c9cd67ee549fac6824a2264f5985499849fe210d5",
+        when="@0.15.1",
+    )
+
     extends("python", when="+python")
 
     def cmake_args(self):

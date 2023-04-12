@@ -340,6 +340,10 @@ def install(parser, args):
     if args.deprecated:
         spack.config.set("config:deprecated", True, scope="command_line")
 
+    if args.log_file and not args.log_format:
+        msg = "the '--log-format' must be specified when using '--log-file'"
+        tty.die(msg)
+
     arguments.sanitize_reporter_options(args)
 
     def reporter_factory(specs):

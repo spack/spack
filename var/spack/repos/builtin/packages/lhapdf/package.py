@@ -42,11 +42,15 @@ class Lhapdf(AutotoolsPackage):
     depends_on("gettext", type="build", when="+python")
 
     def configure_args(self):
-        args = [
-            "FCFLAGS=-O3",
-            "CFLAGS=-O3",
-            "CXXFLAGS=-O3",
-            "LIBS=-L" + self.spec["python"].prefix.lib + " -L" + self.spec["gettext"].prefix.lib,
-        ]
+        args = ["FCFLAGS=-O3", "CFLAGS=-O3", "CXXFLAGS=-O3"]
+
+        if self.spec.satisfies("+python"):
+            args.extend(
+                "LIBS=-L"
+                + self.spec["python"].prefix.lib
+                + " -L"
+                + self.spec["gettext"].prefix.lib
+            )
+
         args.extend(self.enable_or_disable("python"))
         return args
