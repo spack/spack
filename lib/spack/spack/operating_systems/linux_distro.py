@@ -37,39 +37,21 @@ class LinuxDistro(OperatingSystem):
     platform.dist()
     """
 
-    def _from_platform(self) -> Optional[Tuple[str, VersionBase]]:
-        """Return the name and version of libc from the currently
-        running Python interpreter, which is the most reliable way
-        of figuring things out, but it doesn't work if libc is
-        statically linked, and it doesn't look like musl is
-        supported. This should also be the fastest check, since the
-        interpreter is aready in memory"""
-        name, version_str = py_platform.libc_ver()
-
-        # Let's restrict to glibc / musl for now
-        if name not in ("glibc", "musl") or not version_str:
-            return None
-
-        # Try parse the version
-        try:
-            version = VersionBase(version_str)
-        except Exception:
-            return None
-
-        return name, version
-
     def _from_ldd(self) -> Optional[Tuple[str, VersionBase]]:
         """Try to derive the libc version from the output of ldd.
-        This is a bit slower and less likely to be correct, since
-        on systems with multiple libcs it depends on what is in
-        PATH. However, it supports musl."""
+        This is more useful than platform.libc_ver(), since it
+        since libc_ver() may return the max symbol version of all
+        resolved symbols used by the Python interpreter, which can
+        be lower than the actual libc -- and also all that
+        introspection is very glibc specific. The downside however
+        is that this now depends on PATH :(."""
         try:
             first_line = check_output(["ldd", "--version"]).decode().splitlines()[0]
         except Exception:
             return None
 
         # First try to parse the version
-        version_str = re.match(r".*\(.*\) (.*)", first_line)
+        version_str = re.match(r".+\(.+\) (.+)", first_line)
         if not version_str:
             return None
         try:
@@ -121,7 +103,7 @@ class LinuxDistro(OperatingSystem):
         return distname, Version(version)
 
     def __init__(self):
-        methods = (f() for f in (self._from_platform, self._from_ldd, self._from_distro))
+        methods = (f() for f in (self._from_ldd, self._from_distro))
         result = next((m for m in methods if m is not None), None)
         if result:
             super().__init__(*result)
