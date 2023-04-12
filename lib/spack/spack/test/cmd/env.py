@@ -440,11 +440,11 @@ def test_environment_status(capsys, tmpdir):
             with capsys.disabled():
                 assert "In environment test" in env("status")
 
-        with ev.Environment("local_dir"):
+        with ev.create_in_dir("local_dir"):
             with capsys.disabled():
                 assert os.path.join(os.getcwd(), "local_dir") in env("status")
 
-            e = ev.Environment("myproject")
+            e = ev.create_in_dir("myproject")
             e.write()
             with tmpdir.join("myproject").as_cwd():
                 with e:
@@ -458,21 +458,20 @@ def test_env_status_broken_view(
     mock_fetch,
     mock_custom_repository,
     install_mockery,
-    tmpdir,
+    tmp_path,
 ):
-    env_dir = str(tmpdir)
-    with ev.Environment(env_dir):
+    with ev.create_in_dir(tmp_path):
         install("--add", "trivial-install-test-package")
 
     # switch to a new repo that doesn't include the installed package
     # test that Spack detects the missing package and warns the user
     with spack.repo.use_repositories(mock_custom_repository):
-        with ev.Environment(env_dir):
+        with ev.Environment(tmp_path):
             output = env("status")
             assert "includes out of date packages or repos" in output
 
     # Test that the warning goes away when it's fixed
-    with ev.Environment(env_dir):
+    with ev.Environment(tmp_path):
         output = env("status")
         assert "includes out of date packages or repos" not in output
 
@@ -2951,18 +2950,16 @@ def test_read_old_lock_and_write_new(config, tmpdir, lockfile):
     assert old_hashes == hashes
 
 
-def test_read_v1_lock_creates_backup(config, tmpdir):
+def test_read_v1_lock_creates_backup(config, tmp_path):
     """When reading a version-1 lockfile, make sure that a backup of that file
     is created.
     """
-    # read in the JSON from a legacy v1 lockfile
-    v1_lockfile_path = os.path.join(spack.paths.test_path, "data", "legacy_env", "v1.lock")
-
-    # make an env out of the old lockfile
-    test_lockfile_path = str(tmpdir.join(ev.lockfile_name))
+    v1_lockfile_path = pathlib.Path(spack.paths.test_path) / "data" / "legacy_env" / "v1.lock"
+    test_lockfile_path = tmp_path / "init" / ev.lockfile_name
+    test_lockfile_path.parent.mkdir(parents=True, exist_ok=False)
     shutil.copy(v1_lockfile_path, test_lockfile_path)
 
-    e = ev.Environment(str(tmpdir))
+    e = ev.create_in_dir(tmp_path, init_file=test_lockfile_path)
     assert os.path.exists(e._lock_backup_v1_path)
     assert filecmp.cmp(e._lock_backup_v1_path, v1_lockfile_path)
 

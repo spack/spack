@@ -18,10 +18,11 @@ pytestmark = pytest.mark.skipif(
 )
 
 
-def test_hash_change_no_rehash_concrete(tmpdir, mock_packages, config):
+def test_hash_change_no_rehash_concrete(tmp_path, mock_packages, config):
     # create an environment
-    env_path = tmpdir.mkdir("env_dir").strpath
-    env = ev.Environment(env_path)
+    env_path = tmp_path / "env_dir"
+    env_path.mkdir(exist_ok=False)
+    env = ev.create_in_dir(env_path)
     env.write()
 
     # add a spec with a rewritten build hash
@@ -47,9 +48,10 @@ def test_hash_change_no_rehash_concrete(tmpdir, mock_packages, config):
     assert read_in.specs_by_hash[read_in.concretized_order[0]]._hash == new_hash
 
 
-def test_env_change_spec(tmpdir, mock_packages, config):
-    env_path = tmpdir.mkdir("env_dir").strpath
-    env = ev.Environment(env_path)
+def test_env_change_spec(tmp_path, mock_packages, config):
+    env_path = tmp_path / "env_dir"
+    env_path.mkdir(exist_ok=False)
+    env = ev.create_in_dir(env_path)
     env.write()
 
     spec = spack.spec.Spec("mpileaks@2.1~shared+debug")
@@ -132,8 +134,8 @@ def test_user_view_path_is_not_canonicalized_in_yaml(tmpdir, config):
 
     # Serialize environment with relative view path
     with fs.working_dir(str(tmpdir)):
-        fst = ev.Environment(env_path).set_view(view)
-        fst.write()
+        fst = ev.create_in_dir(env_path, with_view=view)
+        fst.regenerate_views()
 
     # The view link should be created
     assert os.path.isdir(absolute_view)
@@ -185,7 +187,7 @@ def test_roundtrip_spack_yaml_with_comments(original_content, mock_packages, con
     spack_yaml = tmp_path / "spack.yaml"
     spack_yaml.write_text(original_content)
 
-    e = ev.Environment(str(tmp_path))
+    e = ev.Environment(tmp_path)
     e.update_manifest()
 
     content = spack_yaml.read_text()

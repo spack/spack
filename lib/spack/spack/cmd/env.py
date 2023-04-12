@@ -163,7 +163,7 @@ def env_activate(args):
         env = create_temp_env_directory()
         env_path = os.path.abspath(env)
         short_name = os.path.basename(env_path)
-        ev.Environment(env).write(regenerate=False)
+        ev.create_in_dir(env).write(regenerate=False)
 
     # Managed environment
     elif ev.exists(env_name_or_dir) and not args.dir:

@@ -777,6 +777,10 @@ class Environment:
         #: Previously active environment
         self._previous_active = None
 
+        if not pathlib.Path(self.manifest_path).exists():
+            msg = f"cannot create environment, '{manifest_name}' is missing from {manifest_dir}"
+            raise SpackEnvironmentError(msg)
+
         with lk.ReadTransaction(self.txlock):
             self._read()
 
@@ -796,7 +800,8 @@ class Environment:
     def _re_read(self):
         """Reinitialize the environment object if it has been written (this
         may not be true if the environment was just created in this running
-        instance of Spack)."""
+        instance of Spack).
+        """
         if not os.path.exists(self.manifest_path):
             return
 
@@ -804,41 +809,24 @@ class Environment:
         self._read()
 
     def _read(self):
-        default_manifest = not os.path.exists(self.manifest_path)
-        if default_manifest:
-            # No manifest, use default yaml
-            self._read_manifest(default_manifest_yaml())
-        else:
-            with open(self.manifest_path) as f:
-                self._read_manifest(f)
+        with open(self.manifest_path) as f:
+            self._read_manifest(f)
 
         if os.path.exists(self.lock_path):
             with open(self.lock_path) as f:
                 read_lock_version = self._read_lockfile(f)
-            if default_manifest:
-                # No manifest, set user specs from lockfile
-                self._set_user_specs_from_lockfile()
 
             if read_lock_version == 1:
-                tty.debug(
-                    "Storing backup of old lockfile {0} at {1}".format(
-                        self.lock_path, self._lock_backup_v1_path
-                    )
-                )
+                tty.debug(f"Storing backup of {self.lock_path} at {self._lock_backup_v1_path}")
                 shutil.copy(self.lock_path, self._lock_backup_v1_path)
 
     def write_transaction(self):
         """Get a write lock context manager for use in a `with` block."""
         return lk.WriteTransaction(self.txlock, acquire=self._re_read)
 
-    def _read_manifest(self, f, raw_yaml=None):
+    def _read_manifest(self, f):
         """Read manifest file and set up user specs."""
-        if raw_yaml:
-            _, self.yaml = _read_yaml(f)
-            self.raw_yaml, _ = _read_yaml(raw_yaml)
-        else:
-            self.raw_yaml, self.yaml = _read_yaml(f)
-
+        self.raw_yaml, self.yaml = _read_yaml(f)
         self.spec_lists = collections.OrderedDict()
 
         for item in config_dict(self.yaml).get("definitions", []):
@@ -892,14 +880,6 @@ class Environment:
     @property
     def user_specs(self):
         return self.spec_lists[user_speclist_name]
-
-    def _set_user_specs_from_lockfile(self):
-        """Copy user_specs from a read-in lockfile."""
-        self.spec_lists = {
-            user_speclist_name: SpecList(
-                user_speclist_name, [str(s) for s in self.concretized_user_specs]
-            )
-        }
 
     def clear(self, re_read=False):
         """Clear the contents of the environment
@@ -2272,7 +2252,7 @@ class Environment:
         # Remove yaml sections that are shadowing defaults
         # construct garbage path to ensure we don't find a manifest by accident
         with fs.temp_cwd() as env_dir:
-            bare_env = Environment(env_dir).set_view(self.view_path_default)
+            bare_env = create_in_dir(env_dir).set_view(self.view_path_default)
             keys_present = list(yaml_dict.keys())
             for key in keys_present:
                 if yaml_dict[key] == config_dict(bare_env.yaml).get(key, None):
@@ -2655,7 +2635,7 @@ class EnvironmentManifestFile(collections.Mapping):
                 True the default view is used for the environment, if False there's no view.
         """
         if not isinstance(view, bool):
-            view = str(pathlib.Path(view).absolute())
+            view = str(view)
 
         config_dict(self.pristine_yaml_content)["view"] = view
         config_dict(self.yaml_content)["view"] = view

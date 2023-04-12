@@ -8,15 +8,15 @@ import pickle
 
 import pytest
 
-from spack.environment import Environment
+import spack.environment as ev
 from spack.environment.environment import SpackEnvironmentViewError, _error_on_nonempty_view_dir
 
 
-def test_environment_pickle(tmpdir):
-    env1 = Environment(str(tmpdir))
+def test_environment_pickle(tmp_path):
+    env1 = ev.create_in_dir(tmp_path)
     obj = pickle.dumps(env1)
     env2 = pickle.loads(obj)
-    assert isinstance(env2, Environment)
+    assert isinstance(env2, ev.Environment)
 
 
 def test_error_on_nonempty_view_dir(tmpdir):
