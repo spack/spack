@@ -25,3 +25,5 @@ class PyDaskMpi(PythonPackage):
     depends_on("py-distributed@2.19:", when="@2022.4.0:", type=("build", "run"))
     depends_on("py-mpi4py", type=("build", "run"))
     depends_on("py-mpi4py@3.0.3:", when="@2022.4.0:", type=("build", "run"))
+
+    patch("remove-dependency-jupyter-proxy.patch")
