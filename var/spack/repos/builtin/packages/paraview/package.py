@@ -28,10 +28,11 @@ class Paraview(CMakePackage, CudaPackage, ROCmPackage):
 
     version("master", branch="master", submodules=True)
     version(
-        "5.11.0",
-        sha256="9a0b8fe8b1a2cdfd0ace9a87fa87e0ec21ee0f6f0bcb1fdde050f4f585a25165",
+        "5.11.1",
+        sha256="5cc2209f7fa37cd3155d199ff6c3590620c12ca4da732ef7698dec37fa8dbb34",
         preferred=True,
     )
+    version("5.11.0", sha256="9a0b8fe8b1a2cdfd0ace9a87fa87e0ec21ee0f6f0bcb1fdde050f4f585a25165")
     version("5.10.1", sha256="520e3cdfba4f8592be477314c2f6c37ec73fb1d5b25ac30bdbd1c5214758b9c2")
     version("5.10.0", sha256="86d85fcbec395cdbc8e1301208d7c76d8f48b15dc6b967ffbbaeee31242343a5")
     version("5.9.1", sha256="0d486cb6fbf55e428845c9650486f87466efcb3155e40489182a7ea85dfd4c8d")
@@ -71,6 +72,7 @@ class Paraview(CMakePackage, CudaPackage, ROCmPackage):
     variant("eyedomelighting", default=False, description="Enable Eye Dome Lighting feature")
     variant("adios2", default=False, description="Enable ADIOS2 support", when="@5.8:")
     variant("visitbridge", default=False, description="Enable VisItBridge support")
+    variant("raytracing", default=False, description="Enable Raytracing support")
     variant(
         "openpmd",
         default=False,
@@ -113,6 +115,7 @@ class Paraview(CMakePackage, CudaPackage, ROCmPackage):
     conflicts("+openpmd", when="~adios2 ~hdf5", msg="openPMD needs ADIOS2 and/or HDF5")
     conflicts("~shared", when="+cuda")
     conflicts("+cuda", when="@5.8:5.10")
+    conflicts("+cuda", when="use_vtkm=off")
     conflicts("+rocm", when="+cuda")
     conflicts("+rocm", when="use_vtkm=off")
     conflicts("paraview@:5.10", when="+rocm")
@@ -133,6 +136,9 @@ class Paraview(CMakePackage, CudaPackage, ROCmPackage):
         when="%xl_r",
         msg="Use paraview@5.9.0 with %xl_r. Earlier versions are not able to build with xl.",
     )
+
+    # Newer abseil-cpp requires C++14, but paraview uses C++11 by default
+    conflicts("^abseil-cpp@2023:")
 
     # We only support one single Architecture
     for _arch, _other_arch in itertools.permutations(CudaPackage.cuda_arch_values, 2):
@@ -181,6 +187,10 @@ class Paraview(CMakePackage, CudaPackage, ROCmPackage):
         depends_on("libxt", when="~osmesa platform={}".format(p))
     conflicts("+qt", when="+osmesa")
 
+    depends_on("ospray@2.1:", when="+raytracing")
+    depends_on("openimagedenoise", when="+raytracing")
+    depends_on("ospray +mpi", when="+raytracing +mpi")
+
     depends_on("bzip2")
     depends_on("double-conversion")
     depends_on("expat")
@@ -214,7 +224,7 @@ class Paraview(CMakePackage, CudaPackage, ROCmPackage):
     depends_on("hip@5.2:", when="+rocm")
     for target in ROCmPackage.amdgpu_targets:
         depends_on(
-            "kokkos +rocm amdgpu_target={0}".format(target),
+            "kokkos@:3.7.01 +rocm amdgpu_target={0}".format(target),
             when="+rocm amdgpu_target={0}".format(target),
         )
 
@@ -269,7 +279,7 @@ class Paraview(CMakePackage, CudaPackage, ROCmPackage):
     # Patch for paraview 5.10: +hdf5 ^hdf5@1.13.2:
     # https://gitlab.kitware.com/vtk/vtk/-/merge_requests/9690
     patch("vtk-xdmf2-hdf51.13.1.patch", when="@5.10.0:5.10")
-    patch("vtk-xdmf2-hdf51.13.2.patch", when="@5.10:")
+    patch("vtk-xdmf2-hdf51.13.2.patch", when="@5.10:5.11.0")
 
     # Fix VTK to work with external freetype using CONFIG mode for find_package
     patch("FindFreetype.cmake.patch", when="@5.10.1:")
@@ -610,5 +620,10 @@ class Paraview(CMakePackage, CudaPackage, ROCmPackage):
         if "+libcatalyst" in spec:
             cmake_args.append("-DVTK_MODULE_ENABLE_ParaView_InSitu=YES")
             cmake_args.append("-DPARAVIEW_ENABLE_CATALYST=YES")
+
+        cmake_args.append(self.define_from_variant("PARAVIEW_ENABLE_RAYTRACING", "raytracing"))
+        # Currently only support OSPRay ray tracing
+        cmake_args.append(self.define_from_variant("VTK_ENABLE_OSPRAY", "raytracing"))
+        cmake_args.append(self.define_from_variant("VTKOSPRAY_ENABLE_DENOISER", "raytracing"))
 
         return cmake_args

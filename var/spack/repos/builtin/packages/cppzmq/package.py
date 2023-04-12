@@ -13,7 +13,11 @@ class Cppzmq(CMakePackage):
     url = "https://github.com/zeromq/cppzmq/archive/v4.2.2.tar.gz"
     git = "https://github.com/zeromq/cppzmq.git"
 
+    maintainers("wdconinc")
+
     version("master", branch="master")
+    version("4.9.0", sha256="3fdf5b100206953f674c94d40599bdb3ea255244dcc42fab0d75855ee3645581")
+    version("4.8.1", sha256="7a23639a45f3a0049e11a188e29aaedd10b2f4845f0000cf3e22d6774ebde0af")
     version("4.7.1", sha256="9853e0437d834cbed5d3c223bf1d755cadee70e7c964c6e42c4c6783dee5d02c")
     version("4.6.0", sha256="e9203391a0b913576153a2ad22a2dc1479b1ec325beb6c46a3237c669aef5a52")
     version("4.5.0", sha256="64eb4e58eaf0c77505391c6c9a606cffcb57c6086f3431567a1ef4a25b01fa36")
@@ -26,6 +30,7 @@ class Cppzmq(CMakePackage):
     variant("drafts", default=False, description="Build and install draft classes and methods")
 
     depends_on("cmake@3.0.0:", type="build")
+    depends_on("cmake@3.11:", type="build", when="@4.8:")
     depends_on("libzmq")
     depends_on("libzmq@4.2.2", when="@4.2.2:4.2.3")
     depends_on("libzmq+drafts", when="+drafts")

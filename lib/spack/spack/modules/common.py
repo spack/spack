@@ -703,7 +703,7 @@ class BaseContext(tengine.Context):
 
         if os.path.exists(pkg.install_configure_args_path):
             with open(pkg.install_configure_args_path, "r") as args_file:
-                return args_file.read()
+                return spack.util.path.padding_filter(args_file.read())
 
         # Returning a false-like value makes the default templates skip
         # the configure option section
@@ -935,12 +935,25 @@ class BaseModuleFileWriter(object):
         if os.path.exists(mod_file):
             try:
                 os.remove(mod_file)  # Remove the module file
+                self.remove_module_defaults()  # Remove default targeting module file
                 os.removedirs(
                     os.path.dirname(mod_file)
                 )  # Remove all the empty directories from the leaf up
             except OSError:
                 # removedirs throws OSError on first non-empty directory found
                 pass
+
+    def remove_module_defaults(self):
+        if not any(self.spec.satisfies(default) for default in self.conf.defaults):
+            return
+
+        # This spec matches a default, symlink needs to be removed as we remove the module
+        # file it targets.
+        default_symlink = os.path.join(os.path.dirname(self.layout.filename), "default")
+        try:
+            os.unlink(default_symlink)
+        except OSError:
+            pass
 
 
 @contextlib.contextmanager

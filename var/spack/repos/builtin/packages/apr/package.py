@@ -12,6 +12,7 @@ class Apr(AutotoolsPackage):
     homepage = "https://apr.apache.org/"
     url = "https://archive.apache.org/dist/apr/apr-1.7.0.tar.gz"
 
+    version("1.7.3", sha256="af9bfd5b8a04425d6b419673f3e0a7656fade226aae78180d93f8a6f2d3d1c09")
     version("1.7.2", sha256="3d8999b216f7b6235343a4e3d456ce9379aa9a380ffb308512f133f0c5eb2db9")
     version("1.7.0", sha256="48e9dbf45ae3fdc7b491259ffb6ccf7d63049ffacbc1c0977cced095e4c2d5a2")
     version("1.6.2", sha256="4fc24506c968c5faf57614f5d0aebe0e9d0b90afa47a883e1a1ca94f15f4a42e")

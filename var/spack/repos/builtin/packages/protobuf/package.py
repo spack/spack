@@ -3,8 +3,6 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-import sys
-
 import spack.util.web
 from spack.package import *
 
@@ -16,7 +14,9 @@ class Protobuf(CMakePackage):
     url = "https://github.com/protocolbuffers/protobuf/archive/v3.18.0.tar.gz"
     maintainers("hyoklee")
 
+    version("3.22.2", sha256="2118051b4fb3814d59d258533a4e35452934b1ddb41230261c9543384cbb4dfc")
     version("3.21.12", sha256="930c2c3b5ecc6c9c12615cf5ad93f1cd6e12d0aba862b572e076259970ac3a53")
+    version("3.21.9", sha256="1add10f9bd92775b91f326da259f243881e904dd509367d5031d4c782ba82810")
     version("3.21.7", sha256="ce2fbea3c78147a41b2a922485d283137845303e5e1b6cbd7ece94b96ade7031")
     version("3.21.5", sha256="d7d204a59fd0d2d2387bd362c2155289d5060f32122c4d1d922041b61191d522")
     version("3.21.4", sha256="85d42d4485f36f8cec3e475a3b9e841d7d78523cd775de3a86dba77081f4ca25")
@@ -78,6 +78,8 @@ class Protobuf(CMakePackage):
         values=("Debug", "Release", "RelWithDebInfo"),
     )
 
+    # https://github.com/protocolbuffers/protobuf/issues/11828#issuecomment-1433557509
+    depends_on("abseil-cpp@20230125:", when="@3.22:")
     depends_on("zlib")
 
     conflicts("%gcc@:4.6", when="@3.6.0:")  # Requires c++11
@@ -113,12 +115,22 @@ class Protobuf(CMakePackage):
 
     def cmake_args(self):
         args = [
-            "-DBUILD_SHARED_LIBS=%s" % int("+shared" in self.spec),
-            "-Dprotobuf_BUILD_TESTS:BOOL=OFF",
-            "-DCMAKE_POSITION_INDEPENDENT_CODE:BOOL=ON",
+            self.define_from_variant("BUILD_SHARED_LIBS", "shared"),
+            self.define("protobuf_BUILD_TESTS", False),
+            self.define("CMAKE_POSITION_INDEPENDENT_CODE", True),
         ]
-        if sys.platform == "darwin":
-            args.extend(["-DCMAKE_MACOSX_RPATH=ON"])
+
+        if self.spec.satisfies("@3.22:"):
+            args.extend(
+                [
+                    self.define("protobuf_ABSL_PROVIDER", "package"),
+                    self.define("CMAKE_CXX_STANDARD", 14),
+                ]
+            )
+
+        if self.spec.satisfies("platform=darwin"):
+            args.append(self.define("CMAKE_MACOSX_RPATH", True))
+
         return args
 
     @property
