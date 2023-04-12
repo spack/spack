@@ -137,6 +137,9 @@ class Paraview(CMakePackage, CudaPackage, ROCmPackage):
         msg="Use paraview@5.9.0 with %xl_r. Earlier versions are not able to build with xl.",
     )
 
+    # Newer abseil-cpp requires C++14, but paraview uses C++11 by default
+    conflicts("^abseil-cpp@2023:")
+
     # We only support one single Architecture
     for _arch, _other_arch in itertools.permutations(CudaPackage.cuda_arch_values, 2):
         conflicts(
