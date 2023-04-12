@@ -75,7 +75,7 @@ class LinkParser(HTMLParser):
     links.  Good enough for a really simple spider."""
 
     def __init__(self):
-        HTMLParser.__init__(self)
+        super().__init__()
         self.links = []
 
     def handle_starttag(self, tag, attrs):
@@ -90,7 +90,7 @@ class IncludeFragmentParser(HTMLParser):
     used on GitHub, https://github.github.io/include-fragment-element."""
 
     def __init__(self):
-        HTMLParser.__init__(self)
+        super().__init__()
         self.links = []
 
     def handle_starttag(self, tag, attrs):
