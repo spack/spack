@@ -19,6 +19,9 @@ class PyProtobuf(PythonPackage):
 
     variant("cpp", default=True, description="Enable the cpp implementation")
 
+    # Newer versions seem to require bazel to build?
+    # https://github.com/protocolbuffers/protobuf/tree/main/python
+    version("4.21.9", sha256="61f21493d96d2a77f9ca84fefa105872550ab5ef71d21c458eb80edcf4885a99")
     version("4.21.7", sha256="71d9dba03ed3432c878a801e2ea51e034b0ea01cf3a4344fb60166cb5f6c8757")
     version("4.21.5", sha256="eb1106e87e095628e96884a877a51cdb90087106ee693925ec0a300468a9be3a")
     version(
@@ -62,10 +65,8 @@ class PyProtobuf(PythonPackage):
     version("3.3.0", sha256="1cbcee2c45773f57cb6de7ee0eceb97f92b9b69c0178305509b162c0160c1f04")
     version("3.0.0", sha256="ecc40bc30f1183b418fe0ec0c90bc3b53fa1707c4205ee278c6b90479e5b6ff5")
 
-    depends_on("python@3.5:", when="@3.18:", type=("build", "run"))
-    depends_on("python@3.7:", when="@3.20:", type=("build", "run"))
     depends_on("py-setuptools", type=("build", "run"))
-    depends_on("py-six@1.9:", when="@3:", type=("build", "run"))
+    depends_on("py-six@1.9:", when="@3.0:3.17", type=("build", "run"))
 
     # Setup dependencies for protobuf to use the same minor version as py-protobuf
     # Handle mapping the 4.x release to the protobuf 3.x releases
@@ -90,9 +91,3 @@ class PyProtobuf(PythonPackage):
     @when("+cpp")
     def install_options(self, spec, prefix):
         return ["--cpp_implementation"]
-
-    @run_after("install")
-    def fix_import_error(self):
-        if str(self.spec["python"].version.up_to(1)) == "2":
-            touch = which("touch")
-            touch(join_path(python_platlib, "google", "__init__.py"))

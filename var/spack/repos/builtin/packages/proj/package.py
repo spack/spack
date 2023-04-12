@@ -87,7 +87,7 @@ class Proj(CMakePackage, AutotoolsPackage):
     depends_on("sqlite@3.11:", when="@6:")
     depends_on("libtiff@4:", when="@7:+tiff")
     depends_on("curl@7.29:", when="@7:+curl")
-    depends_on("googletest", when="@6:", type="test")
+    depends_on("googletest@1.8:", when="@6:", type="test")
 
     build_system(
         conditional("autotools", when="@:8"), conditional("cmake", when="@5:"), default="cmake"
@@ -132,7 +132,7 @@ class AutotoolsBuilder(autotools.AutotoolsBuilder, BaseBuilder):
     def configure_args(self):
         args = []
 
-        if self.spec.satisfies("@6:"):
+        if self.spec.satisfies("@6:") and self.pkg.run_tests:
             args.append("--with-external-gtest")
 
         if self.spec.satisfies("@7:"):
