@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -14,7 +14,7 @@ class Cabana(CMakePackage):
     git = "https://github.com/ECP-copa/Cabana.git"
     url = "https://github.com/ECP-copa/Cabana/archive/0.5.0.tar.gz"
 
-    maintainers = ["junghans", "streeve", "sslattery"]
+    maintainers("junghans", "streeve", "sslattery")
 
     tags = ["e4s", "ecp"]
 
@@ -44,7 +44,7 @@ class Cabana(CMakePackage):
     depends_on("cmake@3.9:", type="build", when="@:0.4.0")
     depends_on("cmake@3.16:", type="build", when="@0.5.0:")
     depends_on("googletest", type="build", when="testing")
-    _versions = {":0.2.0": "-legacy", "0.3.0": "@3.1:", "0.4.0": "@3.2:", "0.5.0": "@3.2:"}
+    _versions = {":0.2": "-legacy", "0.3:": "@3.1:", "0.4:": "@3.2:", "master": "@3.4:"}
     for _version in _versions:
         _kk_version = _versions[_version]
         for _backend in _kokkos_backends:

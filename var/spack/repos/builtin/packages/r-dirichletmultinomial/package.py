@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -18,6 +18,7 @@ class RDirichletmultinomial(RPackage):
 
     bioc = "DirichletMultinomial"
 
+    version("1.40.0", commit="200176f8c72ff127788c500629b71872bc6b1f83")
     version("1.38.0", commit="b4de83d354e974fdb7cb3526d029487f24aab670")
     version("1.36.0", commit="926baff6c75cb498945c5895f25cc143c907a357")
     version("1.32.0", commit="6949abab2462b2c09f7a0ca5b5cbf0c95a40ad16")

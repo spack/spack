@@ -1,13 +1,12 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 from __future__ import division, print_function
 
+import urllib.parse
 from collections import defaultdict
-
-import six.moves.urllib.parse as urllib_parse
 
 import llnl.util.tty.color as color
 from llnl.util import tty
@@ -107,12 +106,7 @@ def setup_parser(subparser):
 
 
 def url(parser, args):
-    action = {
-        "parse": url_parse,
-        "list": url_list,
-        "summary": url_summary,
-        "stats": url_stats,
-    }
+    action = {"parse": url_parse, "list": url_list, "summary": url_summary, "stats": url_stats}
 
     action[args.subcommand](args)
 
@@ -323,7 +317,7 @@ def url_stats(args):
                     md5_hashes[pkg_name].append(fetcher.url)
 
                 # parse out the URL scheme (https/http/ftp/etc.)
-                urlinfo = urllib_parse.urlparse(fetcher.url)
+                urlinfo = urllib.parse.urlparse(fetcher.url)
                 self.schemes[urlinfo.scheme] += 1
 
                 if urlinfo.scheme == "http":

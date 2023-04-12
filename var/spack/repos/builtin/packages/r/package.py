@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -21,8 +21,9 @@ class R(AutotoolsPackage):
 
     extendable = True
 
-    maintainers = ["glennpj"]
+    maintainers("glennpj")
 
+    version("4.2.2", sha256="0ff62b42ec51afa5713caee7c4fde7a0c45940ba39bef8c5c9487fef0c953df5")
     version("4.2.1", sha256="4d52db486d27848e54613d4ee977ad952ec08ce17807e1b525b10cd4436c643f")
     version("4.2.0", sha256="38eab7719b7ad095388f06aa090c5a2b202791945de60d3e2bb0eab1f5097488")
     version("4.1.3", sha256="15ff5b333c61094060b2a52e9c1d8ec55cc42dd029e39ca22abdaa909526fed6")
@@ -70,7 +71,9 @@ class R(AutotoolsPackage):
     depends_on("blas", when="+external-lapack")
     depends_on("lapack", when="+external-lapack")
     depends_on("bzip2")
-    depends_on("curl+libidn2")
+    # R didn't anticipate the celebratory
+    # non-breaking major version bump of curl 8.
+    depends_on("curl+libidn2@:7")
     depends_on("icu4c")
     depends_on("java")
     depends_on("ncurses")
@@ -105,8 +108,6 @@ class R(AutotoolsPackage):
         """Handle R's customed URL versions"""
         url = "https://cloud.r-project.org/src/base"
         return url + "/R-%s/R-%s.tar.gz" % (version.up_to(1), version)
-
-    filter_compiler_wrappers("Makeconf", relative_root=os.path.join("rlib", "R", "etc"))
 
     @property
     def etcdir(self):
@@ -186,6 +187,9 @@ class R(AutotoolsPackage):
         dst_makeconf = join_path(self.etcdir, "Makeconf.spack")
         install(src_makeconf, dst_makeconf)
 
+    # To respect order of execution, we should filter after we made the copy above
+    filter_compiler_wrappers("Makeconf", relative_root=os.path.join("rlib", "R", "etc"))
+
     # ========================================================================
     # Set up environment to make install easy for R extensions.
     # ========================================================================
@@ -198,7 +202,7 @@ class R(AutotoolsPackage):
         # Set R_LIBS to include the library dir for the
         # extension and any other R extensions it depends on.
         r_libs_path = []
-        for d in dependent_spec.traverse(deptype=("build", "run"), deptype_query="run"):
+        for d in dependent_spec.traverse(deptype=("build", "run")):
             if d.package.extends(self.spec):
                 r_libs_path.append(join_path(d.prefix, self.r_lib_dir))
 

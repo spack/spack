@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -94,6 +94,12 @@ class SuiteSparse(Package):
     conflicts(
         "%gcc@:4.8", when="@5.2.0:", msg="gcc version must be at least 4.9 for suite-sparse@5.2.0:"
     )
+
+    def flag_handler(self, name, flags):
+        if name in ("cflags", "cxxflags"):
+            if self.spec.satisfies("^openblas ~shared threads=openmp"):
+                flags.append(self.compiler.openmp_flag)
+        return (flags, None, None)
 
     def symbol_suffix_blas(self, spec, args):
         """When using BLAS with a special symbol suffix we use defines to
@@ -211,10 +217,7 @@ class SuiteSparse(Package):
 
         # Intel TBB in SuiteSparseQR
         if "+tbb" in spec:
-            make_args += [
-                "SPQR_CONFIG=-DHAVE_TBB",
-                "TBB=%s" % spec["tbb"].libs.ld_flags,
-            ]
+            make_args += ["SPQR_CONFIG=-DHAVE_TBB", "TBB=%s" % spec["tbb"].libs.ld_flags]
 
         if "@5.3:" in spec:
             # Without CMAKE_LIBRARY_PATH defined, the CMake file in the

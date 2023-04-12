@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -240,7 +240,7 @@ class Cudnn(Package):
     #     https://developer.nvidia.com/rdp/cudnn-archive
     # Note that download links don't work from command line,
     # need to use modified URLs like in url_for_version.
-    maintainers = ["adamjstewart", "bvanessen"]
+    maintainers("adamjstewart", "bvanessen")
 
     for ver, packages in _versions.items():
         key = "{0}-{1}".format(platform.system(), platform.machine())
@@ -307,8 +307,17 @@ class Cudnn(Package):
             return url.format(directory, cuda, sys_key, ver)
 
     def setup_run_environment(self, env):
+        # Package is not compiled, and does not work unless LD_LIBRARY_PATH is set
+        env.prepend_path("LD_LIBRARY_PATH", self.prefix.lib)
+
         if "target=ppc64le: platform=linux" in self.spec:
             env.set("cuDNN_ROOT", os.path.join(self.prefix, "targets", "ppc64le-linux"))
+
+    def setup_dependent_build_environment(self, env, dependent_spec):
+        self.setup_run_environment(env)
+
+    def setup_dependent_run_environment(self, env, dependent_spec):
+        self.setup_run_environment(env)
 
     def install(self, spec, prefix):
         install_tree(".", prefix)

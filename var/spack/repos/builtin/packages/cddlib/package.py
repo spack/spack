@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -15,7 +15,7 @@ class Cddlib(AutotoolsPackage):
 
     homepage = "https://people.inf.ethz.ch/fukudak/cdd_home"
     url = "https://github.com/cddlib/cddlib/archive/refs/tags/0.94m.tar.gz"
-    maintainers = ["NessieCanCode"]
+    maintainers("NessieCanCode")
     version("0.94m", sha256="70dffdb3369b8704dc75428a1b3c42ab9047b81ce039f12f427e2eb2b1b0dee2")
     version("0.94h", sha256="7382782c3834214b022c8b2898ed775a7bf915f2cb2acb73fa045d6fd9a3de33")
 

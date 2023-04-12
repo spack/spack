@@ -1,0 +1,28 @@
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
+#
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
+from spack.package import *
+
+
+class RGoogleauthr(RPackage):
+    """Authenticate and Create Google APIs.
+
+    Create R functions that interact with OAuth2 Google APIs
+    <https://developers.google.com/apis-explorer/> easily, with auto-refresh
+    and Shiny compatibility."""
+
+    cran = "googleAuthR"
+
+    version("2.0.0", sha256="ba504baf3bde2e1b3e988bee7602df5765cc6ca542cf0ab76a782c4e60966feb")
+
+    depends_on("r@3.3.0:", type=("build", "run"))
+    depends_on("r-assertthat", type=("build", "run"))
+    depends_on("r-cli", type=("build", "run"))
+    depends_on("r-digest", type=("build", "run"))
+    depends_on("r-gargle@1.2.0:", type=("build", "run"))
+    depends_on("r-httr@1.4.0:", type=("build", "run"))
+    depends_on("r-jsonlite@1.6:", type=("build", "run"))
+    depends_on("r-memoise@1.1.0:", type=("build", "run"))
+    depends_on("r-rlang", type=("build", "run"))

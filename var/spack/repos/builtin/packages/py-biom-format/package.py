@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -29,4 +29,3 @@ class PyBiomFormat(PythonPackage):
     depends_on("py-scipy@1.3.1:", type=("build", "run"))
     depends_on("py-pandas@0.20.0:", type=("build", "run"))
     depends_on("py-six@1.10.0:", type=("build", "run"))
-    depends_on("py-pyqi", type=("build", "run"), when="^python@:2")

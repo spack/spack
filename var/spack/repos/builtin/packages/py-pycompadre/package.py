@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -18,7 +18,7 @@ class PyPycompadre(PythonPackage):
     homepage = "https://github.com/SNLComputation/compadre"
     git = "https://github.com/SNLComputation/compadre.git"
     url = "https://github.com/SNLComputation/compadre/archive/v1.3.0.tar.gz"
-    maintainers = ["kuberry"]
+    maintainers("kuberry")
 
     version("master", branch="master", preferred=True)
 
