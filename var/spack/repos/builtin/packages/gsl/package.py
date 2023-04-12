@@ -56,7 +56,7 @@ class Gsl(AutotoolsPackage, GNUMirrorPackage):
             configure_args.append("CBLAS_CFLAGS=%s" % self.spec["blas"].headers.include_flags)
             configure_args.append("CBLAS_LIBS=%s" % self.spec["blas"].libs.ld_flags)
 
-        configure_args.append(self.enable_or_disable("shared"))
-        configure_args.append(self.with_or_without("pic"))
+        configure_args.extend(self.enable_or_disable("shared"))
+        configure_args.extend(self.with_or_without("pic"))
 
         return configure_args
