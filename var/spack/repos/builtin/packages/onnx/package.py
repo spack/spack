@@ -18,6 +18,10 @@ class Onnx(CMakePackage):
     git = "https://github.com/onnx/onnx.git"
 
     version("master", branch="master")
+    version(
+        "1.13.1", sha256="090d3e10ec662a98a2a72f1bf053f793efc645824f0d4b779e0ce47468a0890e"
+    )  # py-torch@2:
+    version("1.13.0", sha256="66eb61fc0ff4b6189816eb8e4da52e1e6775a1c29f372cbd08b694aa5b4ca978")
     version("1.12.0", sha256="052ad3d5dad358a33606e0fc89483f8150bb0655c99b12a43aa58b5b7f0cc507")
     version(
         "1.11.0", sha256="a20f2d9df805b16ac75ab4da0a230d3d1c304127d719e5c66a4e6df514e7f6c0"
