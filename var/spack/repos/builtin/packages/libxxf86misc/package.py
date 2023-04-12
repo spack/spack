@@ -12,6 +12,7 @@ class Libxxf86misc(AutotoolsPackage, XorgPackage):
     homepage = "https://cgit.freedesktop.org/xorg/lib/libXxf86misc"
     xorg_mirror_path = "lib/libXxf86misc-1.0.3.tar.gz"
 
+    version("1.0.4", sha256="63a68b2fafd03236f9b0135de21976e9194d6d811ca2fd774c13a6b4be576676")
     version("1.0.3", sha256="358f692f793af00f6ef4c7a8566c1bcaeeea37e417337db3f519522cc1df3946")
 
     depends_on("libx11")
