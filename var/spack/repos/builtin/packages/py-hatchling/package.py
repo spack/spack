@@ -26,4 +26,4 @@ class PyHatchling(PythonPackage):
     depends_on("py-pathspec@0.9:", type=("build", "run"))
     depends_on("py-pluggy@1:", type=("build", "run"))
     depends_on("py-tomli@1.2.2:", when="^python@:3.10", type=("build", "run"))
-    depends_on("py-trove-classifiers", type=("build", "run"))
+    depends_on("py-trove-classifiers", when="@1.14:", type=("build", "run"))

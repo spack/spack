@@ -16,4 +16,4 @@ class PyTroveClassifiers(PythonPackage):
     version("2023.3.9", sha256="ee42f2f8c1d4bcfe35f746e472f07633570d485fab45407effc0379270a3bb03")
 
     depends_on("py-setuptools", type="build")
-    depends_on("py-calver", type=("build", "run"))
+    depends_on("py-calver", type="build")
