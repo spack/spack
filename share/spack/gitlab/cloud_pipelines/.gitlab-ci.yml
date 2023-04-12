@@ -9,15 +9,10 @@ default:
     SPACK_TARGET_PLATFORM: "darwin"
     SPACK_TARGET_ARCH: "x86_64"
 
-.linux_x86_64:
+.linux_x86_64_v3:
   variables:
     SPACK_TARGET_PLATFORM: "linux"
-    SPACK_TARGET_ARCH: "x86_64"
-
-.linux_x86_64_v4:
-  variables:
-    SPACK_TARGET_PLATFORM: "linux"
-    SPACK_TARGET_ARCH: "x86_64_v4"
+    SPACK_TARGET_ARCH: "x86_64_v3"
 
 .linux_aarch64:
   variables:
@@ -107,6 +102,37 @@ default:
   extends: [ ".generate-base" ]
   tags: ["spack", "public", "medium", "x86_64"]
 
+.generate-deprecated:
+  stage: generate
+  script:
+    - uname -a || true
+    - grep -E 'vendor|model name' /proc/cpuinfo 2>/dev/null | sort -u || head -n10 /proc/cpuinfo 2>/dev/null || true
+    - nproc || true
+    - . "./share/spack/setup-env.sh"
+    - spack --version
+    - cd share/spack/gitlab/cloud_pipelines/stacks/${SPACK_CI_STACK_NAME}
+    - spack env activate --without-view .
+    - spack
+      ci generate --check-index-only
+      --buildcache-destination "${SPACK_BUILDCACHE_DESTINATION}"
+      --artifacts-root "${CI_PROJECT_DIR}/jobs_scratch_dir"
+      --output-file "${CI_PROJECT_DIR}/jobs_scratch_dir/cloud-ci-pipeline.yml"
+  after_script:
+    - cat /proc/loadavg || true
+  artifacts:
+    paths:
+      - "${CI_PROJECT_DIR}/jobs_scratch_dir"
+  variables:
+    KUBERNETES_CPU_REQUEST: 4000m
+    KUBERNETES_MEMORY_REQUEST: 16G
+  interruptible: true
+  timeout: 60 minutes
+  retry:
+    max: 2
+    when:
+      - always
+  tags: ["spack", "public", "medium", "x86_64"]
+
 .generate-aarch64:
   extends: [ ".generate" ]
   tags: ["spack", "public", "medium", "aarch64"]
@@ -114,11 +140,17 @@ default:
 .pr-generate:
   extends: [ ".pr", ".generate" ]
 
+.pr-generate-deprecated:
+  extends: [ ".pr", ".generate-deprecated" ]
+
 .pr-generate-aarch64:
   extends: [ ".pr", ".generate-aarch64" ]
 
 .protected-generate:
   extends: [ ".protected", ".generate" ]
+
+.protected-generate-deprecated:
+  extends: [ ".protected", ".generate-deprecated" ]
 
 .protected-generate-aarch64:
   extends: [ ".protected", ".generate-aarch64" ]
@@ -143,6 +175,8 @@ protected-publish:
   variables:
     AWS_ACCESS_KEY_ID: ${PROTECTED_MIRRORS_AWS_ACCESS_KEY_ID}
     AWS_SECRET_ACCESS_KEY: ${PROTECTED_MIRRORS_AWS_SECRET_ACCESS_KEY}
+    KUBERNETES_CPU_REQUEST: 4000m
+    KUBERNETES_MEMORY_REQUEST: 16G
   script:
     - . "./share/spack/setup-env.sh"
     - spack --version
@@ -169,7 +203,7 @@ protected-publish:
 # My Super Cool Pipeline
 ########################################
 # .my-super-cool-stack:
-#   extends: [ ".linux_x86_64" ]
+#   extends: [ ".linux_x86_64_v3" ]
 #   variables:
 #     SPACK_CI_STACK_NAME: my-super-cool-stack
 #     tags: [ "all", "tags", "your", "job", "needs"]
@@ -324,7 +358,7 @@ protected-publish:
 # E4S pipeline
 ########################################
 .e4s:
-  extends: [ ".linux_x86_64" ]
+  extends: [ ".linux_x86_64_v3" ]
   variables:
     SPACK_CI_STACK_NAME: e4s
 
@@ -362,7 +396,7 @@ e4s-protected-build:
 # GPU Testing Pipeline
 ########################################
 .gpu-tests:
-  extends: [ ".linux_x86_64" ]
+  extends: [ ".linux_x86_64_v3" ]
   variables:
     SPACK_CI_STACK_NAME: gpu-tests
 
@@ -400,7 +434,7 @@ gpu-tests-protected-build:
 # E4S OneAPI Pipeline
 ########################################
 .e4s-oneapi:
-  extends: [ ".linux_x86_64" ]
+  extends: [ ".linux_x86_64_v3" ]
   variables:
     SPACK_CI_STACK_NAME: e4s-oneapi
 
@@ -478,7 +512,7 @@ e4s-power-protected-build:
 # Build tests for different build-systems
 #########################################
 .build_systems:
-  extends: [ ".linux_x86_64" ]
+  extends: [ ".linux_x86_64_v3" ]
   variables:
     SPACK_CI_STACK_NAME: build_systems
 
@@ -514,7 +548,7 @@ build_systems-protected-build:
 # RADIUSS
 #########################################
 .radiuss:
-  extends: [ ".linux_x86_64" ]
+  extends: [ ".linux_x86_64_v3" ]
   variables:
     SPACK_CI_STACK_NAME: radiuss
 
@@ -562,7 +596,7 @@ radiuss-protected-build:
   image: { "name": "ghcr.io/spack/e4s-amazonlinux-2:v2023-03-09", "entrypoint": [""] }
 
 .radiuss-aws:
-  extends: [ ".linux_x86_64_v4" ]
+  extends: [ ".linux_x86_64_v3" ]
   variables:
     SPACK_CI_STACK_NAME: radiuss-aws
 
@@ -634,7 +668,7 @@ radiuss-aws-aarch64-protected-build:
 # ECP Data & Vis SDK
 ########################################
 .data-vis-sdk:
-  extends: [ ".linux_x86_64" ]
+  extends: [ ".linux_x86_64_v3" ]
   variables:
     SPACK_CI_STACK_NAME: data-vis-sdk
 
@@ -679,7 +713,7 @@ data-vis-sdk-protected-build:
   image: { "name": "ghcr.io/spack/e4s-amazonlinux-2:v2023-03-09", "entrypoint": [""] }
 
 .aws-ahug:
-  extends: [ ".linux_x86_64_v4" ]
+  extends: [ ".linux_x86_64_v3" ]
   variables:
     SPACK_CI_STACK_NAME: aws-ahug
 
@@ -757,7 +791,7 @@ aws-ahug-aarch64-protected-build:
   image: { "name": "ghcr.io/spack/e4s-amazonlinux-2:v2023-03-09", "entrypoint": [""] }
 
 .aws-isc:
-  extends: [ ".linux_x86_64_v4" ]
+  extends: [ ".linux_x86_64_v3" ]
   variables:
     SPACK_CI_STACK_NAME: aws-isc
 
@@ -830,7 +864,7 @@ aws-isc-aarch64-protected-build:
 # Spack Tutorial
 ########################################
 .tutorial:
-  extends: [ ".linux_x86_64" ]
+  extends: [ ".linux_x86_64_v3" ]
   variables:
     SPACK_CI_STACK_NAME: tutorial
 
@@ -866,7 +900,7 @@ tutorial-protected-build:
 # Machine Learning - Linux x86_64 (CPU)
 #######################################
 .ml-linux-x86_64-cpu:
-  extends: [ ".linux_x86_64_v4" ]
+  extends: [ ".linux_x86_64_v3" ]
   variables:
     SPACK_CI_STACK_NAME: ml-linux-x86_64-cpu
 
@@ -906,7 +940,7 @@ ml-linux-x86_64-cpu-protected-build:
 # Machine Learning - Linux x86_64 (CUDA)
 ########################################
 .ml-linux-x86_64-cuda:
-  extends: [ ".linux_x86_64_v4" ]
+  extends: [ ".linux_x86_64_v3" ]
   variables:
     SPACK_CI_STACK_NAME: ml-linux-x86_64-cuda
 
@@ -946,7 +980,7 @@ ml-linux-x86_64-cuda-protected-build:
 # Machine Learning - Linux x86_64 (ROCm)
 ########################################
 .ml-linux-x86_64-rocm:
-  extends: [ ".linux_x86_64_v4" ]
+  extends: [ ".linux_x86_64_v3" ]
   variables:
     SPACK_CI_STACK_NAME: ml-linux-x86_64-rocm
 
@@ -981,3 +1015,39 @@ ml-linux-x86_64-rocm-protected-build:
   needs:
     - artifacts: True
       job: ml-linux-x86_64-rocm-protected-generate
+
+
+########################################
+# Deprecated CI testing
+########################################
+.deprecated-ci:
+  variables:
+    SPACK_CI_STACK_NAME: deprecated
+
+deprecated-ci-pr-generate:
+  extends: [ ".pr-generate-deprecated", ".deprecated-ci" ]
+
+deprecated-ci-protected-generate:
+  extends: [ ".protected-generate-deprecated", ".deprecated-ci" ]
+
+deprecated-ci-pr-build:
+  extends: [ ".pr-build", ".deprecated-ci" ]
+  trigger:
+    include:
+      - artifact: jobs_scratch_dir/cloud-ci-pipeline.yml
+        job: deprecated-ci-pr-generate
+    strategy: depend
+  needs:
+    - artifacts: True
+      job: deprecated-ci-pr-generate
+
+deprecated-ci-protected-build:
+  extends: [ ".protected-build", ".deprecated-ci" ]
+  trigger:
+    include:
+      - artifact: jobs_scratch_dir/cloud-ci-pipeline.yml
+        job: deprecated-ci-protected-generate
+    strategy: depend
+  needs:
+    - artifacts: True
+      job: deprecated-ci-protected-generate

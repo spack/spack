@@ -112,16 +112,31 @@ class EcpDataVisSdk(BundlePackage, CudaPackage, ROCmPackage):
 
     dav_sdk_depends_on("faodel+shared+mpi network=libfabric", when="+faodel", propagate=["hdf5"])
 
+    # HDF5 1.14 is a soft requirement for the ECP Data and Vis SDK.
+    # When building with VisIt and CinemaSci in the same SDK environment there is a conflict
+    # in the build dependency of py-setuptools which prevents building a py-h5py that is
+    # compatible with 'hdf5@1.14:'. Until there is a version of VisIt with an updated VTK or Spack
+    # allows the concretization of multiple versions of the same build only dependency
+    # concretization with VisIt and Cinema variants will not allow building VOLs.
     dav_sdk_depends_on("hdf5@1.12: +shared+mpi", when="+hdf5", propagate=["fortran"])
+
+    # HDF5 VOL Adapters require hdf5@1.14:
+
     # hdf5-vfd-gds needs cuda@11.7.1 or later, only enable when 11.7.1+ available.
-    depends_on("hdf5-vfd-gds@1.0.2:", when="+cuda+hdf5^cuda@11.7.1:")
+    depends_on("hdf5-vfd-gds@1.0.2:", when="+cuda+hdf5 ^cuda@11.7.1: ^hdf5@1.14:")
     for cuda_arch in cuda_arch_variants:
         depends_on(
             "hdf5-vfd-gds@1.0.2: {0}".format(cuda_arch),
-            when="+cuda+hdf5 {0} ^cuda@11.7.1:".format(cuda_arch),
+            when="+cuda+hdf5 {0} ^cuda@11.7.1: ^hdf5@1.14:".format(cuda_arch),
         )
     conflicts("~cuda", when="^hdf5-vfd-gds@1.0.2:")
     conflicts("~hdf5", when="^hdf5-vfd-gds@1.0.2:")
+    conflicts("~hdf5", when="^hdf5-vol-async")
+    conflicts("~hdf5", when="^hdf5-vol-cache")
+    conflicts("~hdf5", when="^hdf5-vol-log")
+    depends_on("hdf5-vol-async", when="+hdf5 ^hdf5@1.14:")
+    depends_on("hdf5-vol-cache", when="+hdf5 ^hdf5@1.14:")
+    depends_on("hdf5-vol-log", when="+hdf5 ^hdf5@1.14:")
 
     dav_sdk_depends_on("parallel-netcdf+shared", when="+pnetcdf", propagate=["fortran"])
 

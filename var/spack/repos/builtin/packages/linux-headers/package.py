@@ -14,6 +14,7 @@ class LinuxHeaders(Package):
     list_url = "https://www.kernel.org/pub/linux/kernel"
     list_depth = 2
 
+    version("6.2.8", sha256="fed0ad87d42f83a70ce019ff2800bc30a855e672e72bf6d54a014d98d344f665")
     version("4.9.10", sha256="bd6e05476fd8d9ea4945e11598d87bc97806bbc8d03556abbaaf809707661525")
 
     def setup_build_environment(self, env):
