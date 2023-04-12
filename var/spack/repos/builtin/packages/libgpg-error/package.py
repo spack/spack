@@ -14,6 +14,7 @@ class LibgpgError(AutotoolsPackage):
 
     maintainers("alalazo")
 
+    version("1.47", sha256="9e3c670966b96ecc746c28c2c419541e3bcb787d1a73930f5e5f5e1bcbbb9bdb")
     version("1.46", sha256="b7e11a64246bbe5ef37748de43b245abd72cfcd53c9ae5e7fc5ca59f1c81268d")
     version("1.45", sha256="570f8ee4fb4bff7b7495cff920c275002aea2147e9a1d220c068213267f80a26")
     version("1.44", sha256="8e3d2da7a8b9a104dd8e9212ebe8e0daf86aa838cc1314ba6bc4de8f2d8a1ff9")
