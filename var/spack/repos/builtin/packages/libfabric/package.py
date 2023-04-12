@@ -112,7 +112,6 @@ class Libfabric(AutotoolsPackage):
     depends_on("ucx", when="fabrics=mlx")
     depends_on("uuid", when="fabrics=opx")
     depends_on("numactl", when="fabrics=opx")
-    depends_on("linux-headers", when="fabrics=opx")
 
     depends_on("m4", when="@main", type="build")
     depends_on("autoconf", when="@main", type="build")
