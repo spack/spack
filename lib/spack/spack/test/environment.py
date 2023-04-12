@@ -9,9 +9,10 @@ import sys
 
 import pytest
 
+from llnl.util.symlink import _windows_can_symlink
+
 from spack.environment import Environment
 from spack.environment.environment import SpackEnvironmentViewError, _error_on_nonempty_view_dir
-from llnl.util.symlink import _windows_can_symlink
 
 
 def test_environment_pickle(tmpdir):

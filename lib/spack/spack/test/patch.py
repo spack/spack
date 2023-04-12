@@ -26,18 +26,10 @@ from spack.util.executable import Executable
 # due to the use of carriage returns ('\r\n') in Windows line endings
 
 # files with contents 'foo', 'bar', and 'baz'
-foo_sha256 = (
-    "b5bb9d8014a0f9b1d61e21e796d78dccdf1352f23cd32812f4850b878ae4944c"
-)
-bar_sha256 = (
-    "7d865e959b2466918c9863afca942d0fb89d7c9ac0c99bafc3749504ded97730"
-)
-baz_sha256 = (
-    "bf07a7fbb825fc0aae7bf4a1177b2b31fcf8a3feeaf7092761e18c859ee52a9c"
-)
-biz_sha256 = (
-    "a69b288d7393261e613c276c6d38a01461028291f6e381623acc58139d01f54d"
-)
+foo_sha256 = "b5bb9d8014a0f9b1d61e21e796d78dccdf1352f23cd32812f4850b878ae4944c"
+bar_sha256 = "7d865e959b2466918c9863afca942d0fb89d7c9ac0c99bafc3749504ded97730"
+baz_sha256 = "bf07a7fbb825fc0aae7bf4a1177b2b31fcf8a3feeaf7092761e18c859ee52a9c"
+biz_sha256 = "a69b288d7393261e613c276c6d38a01461028291f6e381623acc58139d01f54d"
 
 # url patches
 # url shas are the same on Windows
@@ -45,9 +37,7 @@ url1_sha256 = "abcd1234abcd1234abcd1234abcd1234abcd1234abcd1234abcd1234abcd1234"
 url2_sha256 = "1234abcd1234abcd1234abcd1234abcd1234abcd1234abcd1234abcd1234abcd"
 url2_archive_sha256 = "abcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcd"
 
-platform_url_sha = (
-    "252c0af58be3d90e5dc5e0d16658434c9efa5d20a5df6c10bf72c2d77f780866"
-)
+platform_url_sha = "252c0af58be3d90e5dc5e0d16658434c9efa5d20a5df6c10bf72c2d77f780866"
 
 
 @pytest.fixture()
@@ -147,15 +137,9 @@ def test_patch_order(mock_packages, config):
     spec = Spec("dep-diamond-patch-top")
     spec.concretize()
 
-    mid2_sha256 = (
-        "mid21234abcd1234abcd1234abcd1234abcd1234abcd1234abcd1234abcd1234"
-    )
-    mid1_sha256 = (
-        "0b62284961dab49887e31319843431ee5b037382ac02c4fe436955abef11f094"
-    )
-    top_sha256 = (
-        "f7de2947c64cb6435e15fb2bef359d1ed5f6356b2aebb7b20535e3772904e6db"
-    )
+    mid2_sha256 = "mid21234abcd1234abcd1234abcd1234abcd1234abcd1234abcd1234abcd1234"
+    mid1_sha256 = "0b62284961dab49887e31319843431ee5b037382ac02c4fe436955abef11f094"
+    top_sha256 = "f7de2947c64cb6435e15fb2bef359d1ed5f6356b2aebb7b20535e3772904e6db"
 
     dep = spec["patch"]
     patch_order = dep.variants["patches"]._patches_in_order_of_appearance
@@ -200,9 +184,7 @@ def test_patched_dependency(mock_packages, config, install_mockery, mock_fetch):
     assert "patches" in list(spec["libelf"].variants.keys())
 
     # make sure the patch makes it into the dependency spec
-    t_sha = (
-        "c45c1564f70def3fc1a6e22139f62cb21cd190cc3a7dbe6f4120fa59ce33dcb8"
-    )
+    t_sha = "c45c1564f70def3fc1a6e22139f62cb21cd190cc3a7dbe6f4120fa59ce33dcb8"
     assert (t_sha,) == spec["libelf"].variants["patches"].value
 
     # make sure the patch in the dependent's directory is applied to the
