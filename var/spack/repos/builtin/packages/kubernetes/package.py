@@ -12,11 +12,11 @@ class Kubernetes(Package):
     for deployment, maintenance, and scaling of applications."""
 
     homepage = "https://kubernetes.io"
-    url = "https://github.com/kubernetes/kubernetes/archive/refs/tags/v1.26.3.tar.gz"
+    url = "https://github.com/kubernetes/kubernetes/archive/refs/tags/v1.27.0.tar.gz"
 
     maintainers("alecbcs")
 
-    version("1.26.3", sha256="e9db7e0a2e8cb40e478564de22530c5e582ae7136558994130b3ae7d8828ab31")
+    version("1.27.0", sha256="536025dba2714ee5e940bb0a6b1df9ca97c244fa5b00236e012776a69121c323")
 
     # Deprecated versions
     # https://nvd.nist.gov/vuln/detail/CVE-2022-3294
