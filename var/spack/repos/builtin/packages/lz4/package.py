@@ -63,7 +63,7 @@ class CMakeBuilder(CMakeBuilder):
         return os.path.join(super().root_cmakelists_dir, "build", "cmake")
 
     def cmake_args(self):
-        args = []
+        args = [self.define("CMAKE_POLICY_DEFAULT_CMP0042", "NEW")]
         # # no pic on windows
         if "platform=windows" in self.spec:
             args.append(self.define("LZ4_POSITION_INDEPENDENT_LIB", False))
