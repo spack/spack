@@ -15,34 +15,24 @@ class Brayns(CMakePackage):
     submodules = False
 
     version("develop", branch="develop")
-    version("3.0.0", tag="3.0.0")
-    version("3.1.0", tag="3.1.0")
-
-    variant("blueconfig", default=True, description="BlueConfig support")
+    version("3.1.1", tag="3.1.1")
 
     depends_on("cmake@3.15:", type="build")
     depends_on("ispc@1.18.0:", type="build")
     depends_on("ninja", type="build")
     depends_on("git", type="build")
 
-    depends_on("brion@3.3.9:", when="+blueconfig")
-    depends_on("libsonata@:0.1.16", when="@:3.1.0")
-    depends_on("libsonata@0.1.17:", when="@3.1.1:")
-    depends_on("morphio@3.3.3:")
-    depends_on("mvdtool@2.4.2:")
+    depends_on("brion@3.3.9:")
+    depends_on("libsonata@0.1.18:")
+    depends_on("morphio@3.3.4:")
+    depends_on("mvdtool@2.4.9:")
     depends_on("ospray@2.10.0")
     depends_on("rkcommon@1.10.0")
     depends_on("spdlog@1.9.2")
-    depends_on("poco@1.11.1")
+    depends_on("poco@1.12.4")
     depends_on("glm")
     depends_on("zlib")
     depends_on("bzip2")
-
-    patch(
-        "https://patch-diff.githubusercontent.com/raw/BlueBrain/Brayns/pull/1133.patch?full_index=1",
-        sha256="e97840784211f363e3aeea556816422d0b9c5ca8bed8bc62bcce829b543cb86e",
-        when="@3.0.0%gcc@12:",
-    )
 
     def cmake_args(self):
         return [

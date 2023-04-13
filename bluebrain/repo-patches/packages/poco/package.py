@@ -16,6 +16,7 @@ class Poco(CMakePackage):
     git = "https://github.com/pocoproject/poco.git"
     generator = "Ninja"
 
+    version("1.12.4", tag="poco-1.12.4-release")
     version("1.11.1", tag="poco-1.11.1-release")
 
     depends_on("cmake@3.5:", type="build")
