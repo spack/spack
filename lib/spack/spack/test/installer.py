@@ -7,6 +7,7 @@ import glob
 import os
 import shutil
 import sys
+import tempfile
 
 import py
 import pytest
@@ -250,6 +251,46 @@ def test_installer_str(install_mockery):
     assert "#tasks=0" in istr
     assert "installed (0)" in istr
     assert "failed (0)" in istr
+
+
+def test_installer_prune_built_build_deps(install_mockery):
+    r"""
+    Ensure that build dependencies of installed deps are pruned
+    from installer package queues.
+
+                (a)
+               /   \
+             (d)   (b) <-- is installed already so we should
+              |      \     prune (c) from this install since
+             (e)     (c)   it is *only* needed to build (b)
+
+    Thus since (b) is already installed our build_pq dag should
+    only include four packages. [(a), (b), (d), (e)]
+    """
+    tmpdir = tempfile.mkdtemp()
+    builder = spack.repo.MockRepositoryBuilder(tmpdir)
+
+    builder.add_package("a", dependencies=[("b", "build", None), ("d", "build", None)])
+
+    builder.add_package("b", dependencies=[("c", "build", None)])
+    builder.add_package("c")
+
+    builder.add_package("d", dependencies=[("e", "build", None)])
+    builder.add_package("e")
+
+    with spack.repo.use_repositories(builder.root):
+        const_arg = installer_args(["a"], {})
+        installer = create_installer(const_arg)
+
+        # Mark (b) as already installed locally
+        b_spec = spack.spec.Spec("b")
+        b_spec.concretize()
+        installer._flag_installed(b_spec.package)
+
+        installer._init_queue()
+
+        # Assert that (c) is not in the build_pq
+        assert len(installer.build_pq) == 4
 
 
 def test_check_before_phase_error(install_mockery):
