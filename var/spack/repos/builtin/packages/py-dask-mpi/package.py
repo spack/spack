@@ -26,4 +26,7 @@ class PyDaskMpi(PythonPackage):
     depends_on("py-mpi4py", type=("build", "run"))
     depends_on("py-mpi4py@3.0.3:", when="@2022.4.0:", type=("build", "run"))
 
-    patch("remove-dependency-jupyter-proxy.patch")
+
+    # jupyter-server-proxy is not a needed dependency; https://github.com/dask/dask-mpi/pull/102
+    # this significantly reduces the dependency tree of py-dask-mpi
+    patch("remove-dependency-jupyter-proxy.patch", when="@:2022.4.0")
