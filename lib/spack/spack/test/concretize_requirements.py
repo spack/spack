@@ -628,7 +628,7 @@ def test_non_existing_variants_under_all(concretize_scope, mock_packages):
         ),
     ],
 )
-def test_requirements_from_packages_yaml(
+def test_conditional_requirements_from_packages_yaml(
     packages_yaml, spec_str, expected_satisfies, concretize_scope, mock_packages
 ):
     """Test that a few properties of specs that are concretized with requirements
