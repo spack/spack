@@ -62,6 +62,9 @@ DOSKEY spacktivate=spack env activate $*
 @echo ** Spack Package Manager
 @echo **********************************************************************
 
+:: Execute system status check
+python %SPACK_ROOT%\bin\spack win-system-check
+
 IF "%1"=="" GOTO CONTINUE
 set
 GOTO:EOF
