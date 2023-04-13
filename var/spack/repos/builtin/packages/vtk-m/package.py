@@ -64,7 +64,10 @@ class VtkM(CMakePackage, CudaPackage, ROCmPackage):
     variant("logging", default=False, description="build logging support")
     variant("ascent_types", default=True, description="build support for ascent types")
     variant(
-        "virtuals", default=False, description="enable support for deprecated virtual functions"
+        "virtuals",
+        default=False,
+        description="enable support for deprecated virtual functions",
+        when="@:1.9",
     )
     variant("mpi", default=False, description="build mpi support")
     variant("rendering", default=True, description="build rendering support")
