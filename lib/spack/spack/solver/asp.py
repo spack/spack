@@ -646,7 +646,7 @@ class ErrorHandler:
 
 #: Data class to collect information on a requirement
 RequirementRule = collections.namedtuple(
-    "RequirementRule", ["name", "policy", "requirements", "condition", "provenance", "message"]
+    "RequirementRule", ["pkg_name", "policy", "requirements", "condition", "provenance", "message"]
 )
 
 
@@ -1034,7 +1034,7 @@ class SpackSolverSetup(object):
             for when_spec, message in conditions:
                 rules.append(
                     RequirementRule(
-                        name=pkg.name,
+                        pkg_name=pkg.name,
                         policy="one_of",
                         requirements=[requirement],
                         provenance=Provenance.PACKAGE_PY,
@@ -1072,7 +1072,7 @@ class SpackSolverSetup(object):
                         if policy in requirement:
                             rules.append(
                                 RequirementRule(
-                                    name=pkg_name,
+                                    pkg_name=pkg_name,
                                     policy=policy,
                                     requirements=requirement[policy],
                                     provenance=provenance,
@@ -1086,7 +1086,7 @@ class SpackSolverSetup(object):
         self, pkg_name: str, requirements: str, provenance: Provenance
     ) -> RequirementRule:
         return RequirementRule(
-            name=pkg_name,
+            pkg_name=pkg_name,
             policy="one_of",
             requirements=[requirements],
             provenance=provenance,
@@ -1334,7 +1334,7 @@ class SpackSolverSetup(object):
         for requirement_grp_id, rule in enumerate(rules):
             virtual = rule.provenance == Provenance.PACKAGES_YAML_VIRTUAL
 
-            pkg_name, policy, requirement_grp = rule.name, rule.policy, rule.requirements
+            pkg_name, policy, requirement_grp = rule.pkg_name, rule.policy, rule.requirements
             self.gen.fact(fn.requirement_group(pkg_name, requirement_grp_id))
             self.gen.fact(fn.requirement_policy(pkg_name, requirement_grp_id, policy))
             if rule.message:
