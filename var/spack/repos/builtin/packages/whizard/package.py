@@ -42,7 +42,6 @@ class Whizard(AutotoolsPackage):
         multi=False,
     )
 
-
     variant("pythia8", default=True, description="builds with pythia8")
     variant("fastjet", default=False, description="builds with fastjet")
     variant("lcio", default=False, description="builds with lcio")
