@@ -424,6 +424,9 @@ class CMakeBuilder(spack.build_systems.cmake.CMakeBuilder):
                 ]
             )
 
+        if self.spec.satisfies("%aocc"):
+            options.append("-DCMAKE_CXX_FLAGS=--stdlib=libc++")
+
         if self.spec.satisfies("@2020:"):
             options.append("-DGMX_INSTALL_LEGACY_API=ON")
 
