@@ -244,6 +244,8 @@ class PhaseCallbacksMeta(type):
                 callbacks_from_base = getattr(base, temporary_stage.attribute_name, None)
                 if callbacks_from_base:
                     break
+            else:
+                callbacks_from_base = []
             callbacks_from_base = callbacks_from_base or []
 
             # Set the callbacks in this class and flush the temporary stage
