@@ -27,12 +27,12 @@ jobs:
     strategy:
       matrix:
         os: [ubuntu-latest]
-        python-version: ['3.7', '3.8', '3.9', '3.10', '3.11.0']
+        python-version: ['3.7', '3.8', '3.9', '3.10', '3.11.3']
         concretizer: ['clingo']
         on_develop:
         - ${{ github.ref == 'refs/heads/develop' }}
         include:
-        - python-version: '3.11.0'
+        - python-version: '3.11.3'
           os: ubuntu-latest
           concretizer: original
           on_develop: ${{ github.ref == 'refs/heads/develop' }}
@@ -100,7 +100,7 @@ jobs:
           SPACK_TEST_SOLVER: ${{ matrix.concretizer }}
           SPACK_TEST_PARALLEL: 2
           COVERAGE: true
-          UNIT_TEST_COVERAGE: ${{ matrix.python-version == '3.11.0' }}
+          UNIT_TEST_COVERAGE: ${{ matrix.python-version == '3.11.3' }}
       run: |
           share/spack/qa/run-unit-tests
   # Test shell integration
@@ -112,7 +112,7 @@ jobs:
         fetch-depth: 0
     - uses: actions/setup-python@d27e3f3d7c64b4bbf8e4abfb9b63b83e846e0435 # @v2
       with:
-        python-version: '3.11.0'
+        python-version: '3.11.3'
     - name: Install System packages
       run: |
           sudo apt-get -y update
@@ -175,7 +175,7 @@ jobs:
         fetch-depth: 0
     - uses: actions/setup-python@d27e3f3d7c64b4bbf8e4abfb9b63b83e846e0435 # @v2
       with:
-        python-version: '3.11.0'
+        python-version: '3.11.3'
     - name: Install System packages
       run: |
           sudo apt-get -y update
