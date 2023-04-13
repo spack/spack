@@ -72,7 +72,10 @@ class ELF_CONSTANTS:
     DT_SONAME = 14
     DT_RPATH = 15
     DT_RUNPATH = 29
+    DT_VERDEF = 0x6FFFFFFC
+    DT_VERDEFNUM = 0x6FFFFFFD
     SHT_STRTAB = 3
+    SHT_GNU_verdef = 0x6FFFFFFD
 
 
 class ElfFile:
@@ -108,6 +111,11 @@ class ElfFile:
         "has_soname",
         "dt_soname_strtab_offset",
         "dt_soname_str",
+        # version definitions
+        "has_verdef",
+        "verdef_num",
+        "pt_dynamic_verdef_offset",  # string table for verdef section
+        "verdefs",  # set of version definitions
     ]
 
     def __init__(self):
@@ -118,6 +126,8 @@ class ElfFile:
         self.pt_load = []
         self.has_pt_dynamic = False
         self.has_pt_interp = False
+        self.verdef_num = 0
+        self.verdefs = set()
 
 
 def parse_c_string(byte_string, start=0):
@@ -272,7 +282,38 @@ def vaddr_to_offset(elf, vaddr):
     return p_offset - p_vaddr + vaddr
 
 
-def parse_pt_dynamic(f, elf):
+def parse_verdef(f, elf, string_table: bytes):
+    f.seek(elf.pt_dynamic_verdef_offset)
+    Elf_Verdef_fmt = elf.byte_order + "HHHHIII"
+    Elf_Verdef_size = calcsize(Elf_Verdef_fmt)
+
+    Elf_Verdaux_fmt = elf.byte_order + "II"
+    Elf_Verdaux_size = calcsize(Elf_Verdaux_fmt)
+
+    # Read the verdef entries
+    for i in range(elf.verdef_num):
+        verdef_start = f.tell()
+        _, _, _, vd_cnt, _, vd_aux, vd_next = unpack(
+            Elf_Verdef_fmt, read_exactly(f, Elf_Verdef_size, "Malformed verdef section")
+        )
+
+        # Read the verdaux entries
+        f.seek(verdef_start + vd_aux)
+        for j in range(vd_cnt):
+            verdaux_start = f.tell()
+            vda_name, vda_next = unpack(
+                Elf_Verdaux_fmt, read_exactly(f, Elf_Verdaux_size, "Malformed verdef section")
+            )
+            elf.verdefs.add(parse_c_string(string_table, vda_name))
+            if j + 1 < vd_cnt:
+                f.seek(verdaux_start + vda_next)
+
+        # Move to the next verdef
+        if i + 1 < elf.verdef_num:
+            f.seek(verdef_start + vd_next)
+
+
+def parse_pt_dynamic(f, elf, verdef: bool = False):
     """
     Parse the dynamic section of an ELF file
 
@@ -311,6 +352,11 @@ def parse_pt_dynamic(f, elf):
         elif tag == ELF_CONSTANTS.DT_STRTAB:
             count_strtab += 1
             strtab_vaddr = val
+        elif verdef and tag == ELF_CONSTANTS.DT_VERDEF:
+            verdef_vaddr = val
+            elf.has_verdef = True
+        elif verdef and tag == ELF_CONSTANTS.DT_VERDEFNUM:
+            elf.verdef_num = val
         elif tag == ELF_CONSTANTS.DT_NEEDED:
             elf.has_needed = True
             elf.dt_needed_strtab_offsets.append(val)
@@ -329,11 +375,15 @@ def parse_pt_dynamic(f, elf):
         raise ElfParsingError("Could not find a unique strtab of for the dynamic section strings")
 
     # Nothing to retrieve, so don't bother getting the string table.
-    if not (elf.has_rpath or elf.has_soname or elf.has_needed):
+    if not (elf.has_rpath or elf.has_soname or elf.has_needed or elf.has_verdef):
         return
 
     elf.pt_dynamic_strtab_offset = vaddr_to_offset(elf, strtab_vaddr)
     string_table = retrieve_strtab(f, elf, elf.pt_dynamic_strtab_offset)
+
+    if verdef and elf.has_verdef and elf.verdef_num:
+        elf.pt_dynamic_verdef_offset = vaddr_to_offset(elf, verdef_vaddr)
+        parse_verdef(f, elf, string_table)
 
     if elf.has_needed:
         elf.dt_needed_strs = list(
@@ -377,7 +427,7 @@ def parse_header(f, elf):
     elf.elf_hdr = ElfHeader._make(unpack(elf_header_fmt, data))
 
 
-def _do_parse_elf(f, interpreter=True, dynamic_section=True):
+def _do_parse_elf(f, interpreter=True, dynamic_section=True, verdef=False):
     # We don't (yet?) allow parsing ELF files at a nonzero offset, we just
     # jump to absolute offsets as they are specified in the ELF file.
     if f.tell() != 0:
@@ -398,16 +448,16 @@ def _do_parse_elf(f, interpreter=True, dynamic_section=True):
 
     # Parse PT_DYNAMIC section.
     if dynamic_section and elf.has_pt_dynamic and len(elf.pt_load) > 0:
-        parse_pt_dynamic(f, elf)
+        parse_pt_dynamic(f, elf, verdef)
 
     return elf
 
 
-def parse_elf(f, interpreter=False, dynamic_section=False):
+def parse_elf(f, interpreter=False, dynamic_section=False, verdef=False):
     """Given a file handle f for an ELF file opened in binary mode, return an ElfFile
     object that is stores data about rpaths"""
     try:
-        return _do_parse_elf(f, interpreter, dynamic_section)
+        return _do_parse_elf(f, interpreter, dynamic_section, verdef)
     except (DeprecationWarning, struct.error):
         # According to the docs old versions of Python can throw DeprecationWarning
         # instead of struct.error.

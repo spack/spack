@@ -2,11 +2,14 @@
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
+import os
 import platform as py_platform
 import re
+import sys
 from subprocess import check_output
 from typing import Optional, Tuple
 
+import spack.util.elf
 from spack.version import Version, VersionBase
 
 from ._operating_system import OperatingSystem
@@ -36,6 +39,64 @@ class LinuxDistro(OperatingSystem):
     autodetection using the python module platform and the method
     platform.dist()
     """
+
+    def _parse_pt_interp(self) -> Optional[Tuple[str, VersionBase]]:
+        """If the current Python interpreter is a dynamically linked ELF
+        executable, retrieve the dynamic linker and figure out its version."""
+        try:
+            with open(sys.executable, "rb") as f:
+                elf = spack.util.elf.parse_elf(f, interpreter=True)
+        except (OSError, spack.util.elf.ElfParsingError):
+            return None
+
+        if not elf.has_pt_interp:
+            return None
+
+        dynamic_linker_path = elf.pt_interp_str.decode("utf-8")
+        dynamic_linker = os.path.basename(dynamic_linker_path)
+
+        # Musl doesn't define version symbols, so we can't get the version
+        # by parsing the file. Instead, run it and parse the output.
+        if "ld-musl" in dynamic_linker:
+            try:
+                output = check_output([dynamic_linker_path, "--version"]).decode()
+            except Exception:
+                return None
+            version_str = re.search(r"^Version (.+)$", output)
+            if not version_str:
+                return None
+            try:
+                return "musl", VersionBase(version_str.group(1))
+            except Exception:
+                return None
+
+        with open(dynamic_linker_path, "rb") as f:
+            try:
+                elf = spack.util.elf.parse_elf(f, dynamic_section=True, verdef=True)
+            except spack.util.elf.ElfParsingError:
+                return None
+
+            if not elf.has_verdef:
+                return None
+
+            # Get the max version of all GLIBC_ symbols
+            regex = re.compile(rb"^GLIBC_(\d+\.\d+)$")
+            max_version = VersionBase("")
+            for verdef in elf.verdefs:
+                result = regex.match(verdef)
+                if not result:
+                    continue
+                try:
+                    candidate = VersionBase(result.group(1).decode("utf-8"))
+                except Exception:
+                    continue
+                if candidate > max_version:
+                    max_version = candidate
+
+            if max_version == VersionBase(""):
+                return None
+
+            return "glibc", max_version
 
     def _from_ldd(self) -> Optional[Tuple[str, VersionBase]]:
         """Try to derive the libc version from the output of ldd.
@@ -103,8 +164,8 @@ class LinuxDistro(OperatingSystem):
         return distname, Version(version)
 
     def __init__(self):
-        methods = (f() for f in (self._from_ldd, self._from_distro))
-        result = next((m for m in methods if m is not None), None)
+        methods = (self._parse_pt_interp, self._from_ldd, self._from_distro)
+        result = next(filter(None, (f() for f in methods)), None)
         if result:
             super().__init__(*result)
         else:
