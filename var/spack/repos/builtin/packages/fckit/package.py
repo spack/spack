@@ -16,7 +16,7 @@ class Fckit(CMakePackage):
     git = "https://github.com/ecmwf/fckit.git"
     url = "https://github.com/ecmwf/fckit/archive/0.9.0.tar.gz"
 
-    maintainers = ['climbfuji']
+    maintainers('climbfuji')
 
     version('master', branch='master')
     version('develop', branch='develop')

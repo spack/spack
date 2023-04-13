@@ -13,7 +13,7 @@ class PyMinkowskiengine(PythonPackage, CudaPackage):
     homepage = "https://nvidia.github.io/MinkowskiEngine/"
     pypi = "MinkowskiEngine/MinkowskiEngine-0.5.4.tar.gz"
 
-    maintainers = ["wdconinc"]
+    maintainers("wdconinc")
 
     version("0.5.4", sha256="b1879c00d0b0b1d30ba622cce239886a7e3c78ee9da1064cdfe2f64c2ab15f94")
 

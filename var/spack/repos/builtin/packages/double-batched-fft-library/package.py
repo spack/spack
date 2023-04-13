@@ -17,7 +17,7 @@ class DoubleBatchedFftLibrary(CMakePackage):
     url = "https://github.com/intel/double-batched-fft-library/archive/refs/tags/v0.3.6.tar.gz"
     git = "https://github.com/intel/double-batched-fft-library.git"
 
-    maintainers = ["uphoffc"]
+    maintainers("uphoffc")
 
     version("main", branch="main")
     version("develop", branch="develop")

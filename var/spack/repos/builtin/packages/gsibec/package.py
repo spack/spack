@@ -15,7 +15,7 @@ class Gsibec(CMakePackage):
     git = "https://github.com/GEOS-ESM/gsibec.git"
     url = "https://github.com/GEOS-ESM/gsibec/archive/refs/tags/1.0.2.tar.gz"
 
-    maintainers = ["mathomp4", "danholdaway"]
+    maintainers("mathomp4", "danholdaway")
 
     version("develop", branch="develop")
     version("1.0.7", sha256="53912f1f19d46f4941b377803cc2fce89a2b50d2ece7562f8fd65215a8908158")

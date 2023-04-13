@@ -15,7 +15,7 @@ class PyExtension2(PythonPackage):
     url = "http://www.example.com/extension2-1.0.tar.gz"
 
     # Override settings in base class
-    maintainers = []
+    maintainers()
 
     extends("python")
     depends_on("py-extension1", type=("build", "run"))

@@ -12,7 +12,7 @@ class JediBaseEnv(BundlePackage):
     homepage = "https://github.com/noaa-emc/spack-stack"
     git = "https://github.com/noaa-emc/spack-stack.git"
 
-    maintainers = ["climbfuji", "srherbener"]
+    maintainers("climbfuji", "srherbener")
 
     version("1.0.0")
 

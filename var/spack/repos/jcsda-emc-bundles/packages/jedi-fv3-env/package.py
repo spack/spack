@@ -12,7 +12,7 @@ class JediFv3Env(BundlePackage):
     homepage = "https://github.com/JCSDA/fv3-bundle"
     git = "https://github.com/JCSDA/fv3-bundle.git"
 
-    maintainers = ["climbfuji", "srherbener"]
+    maintainers("climbfuji", "srherbener")
 
     version("1.0.0")
 
