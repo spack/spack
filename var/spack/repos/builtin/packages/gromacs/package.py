@@ -10,7 +10,7 @@ import llnl.util.filesystem as fs
 from spack.package import *
 
 
-class Gromacs(CMakePackage):
+class Gromacs(CMakePackage, CudaPackage):
     """GROMACS is a molecular dynamics package primarily designed for simulations
     of proteins, lipids and nucleic acids. It was originally developed in
     the Biophysical Chemistry department of University of Groningen, and is now
@@ -26,7 +26,7 @@ class Gromacs(CMakePackage):
     url = "https://ftp.gromacs.org/gromacs/gromacs-2022.2.tar.gz"
     list_url = "https://ftp.gromacs.org/gromacs"
     git = "https://gitlab.com/gromacs/gromacs.git"
-    maintainers("junghans", "marvinbernhardt")
+    maintainers("danielahlin", "eirrgang", "junghans")
 
     version("main", branch="main")
     version("master", branch="main", deprecated=True)
@@ -87,7 +87,7 @@ class Gromacs(CMakePackage):
         description="Produces a double precision version of the executables",
     )
     variant("plumed", default=False, description="Enable PLUMED support")
-    variant("cuda", default=False, description="Enable CUDA support")
+    variant("cufftmp", default=False, when="+cuda+mpi", description="Enable Multi GPU FFT support")
     variant("opencl", default=False, description="Enable OpenCL support")
     variant("sycl", default=False, description="Enable SYCL support")
     variant("nosuffix", default=False, description="Disable default suffixes")
@@ -243,12 +243,15 @@ class Gromacs(CMakePackage):
     depends_on("sycl", when="+sycl")
     depends_on("lapack", when="+lapack")
     depends_on("blas", when="+blas")
+    depends_on("gcc", when="%oneapi")
 
     depends_on("hwloc@1.0:1", when="+hwloc@2016:2018")
     depends_on("hwloc", when="+hwloc@2019:")
 
     depends_on("cp2k@8.1:", when="+cp2k")
     depends_on("dbcsr", when="+cp2k")
+
+    depends_on("nvhpc", when="+cufftmp")
 
     patch("gmxDetectCpu-cmake-3.14.patch", when="@2018:2019.3^cmake@3.14.0:")
     patch("gmxDetectSimd-cmake-3.14.patch", when="@5.0:2017^cmake@3.14.0:")
@@ -427,6 +430,9 @@ class CMakeBuilder(spack.build_systems.cmake.CMakeBuilder):
         if self.spec.satisfies("@2020:"):
             options.append("-DGMX_INSTALL_LEGACY_API=ON")
 
+        if self.spec.satisfies("%oneapi"):
+            options.append("-DGMX_GPLUSPLUS_PATH=%s/g++" % self.spec["gcc"].prefix.bin)
+
         if "+double" in self.spec:
             options.append("-DGMX_DOUBLE:BOOL=ON")
 
@@ -481,6 +487,13 @@ class CMakeBuilder(spack.build_systems.cmake.CMakeBuilder):
         if "+cp2k" in self.spec:
             options.append("-DGMX_CP2K:BOOL=ON")
             options.append("-DCP2K_DIR:STRING={0}".format(self.spec["cp2k"].prefix))
+
+        if "+cufftmp" in self.spec:
+            options.append("-DGMX_USE_CUFFTMP=ON")
+            options.append(
+                f'-DcuFFTMp_ROOT={self.spec["nvhpc"].prefix}/Linux_{self.spec.target.family}'
+                + f'/{self.spec["nvhpc"].version}/math_libs'
+            )
 
         # Activate SIMD based on properties of the target
         target = self.spec.target
@@ -564,10 +577,13 @@ class CMakeBuilder(spack.build_systems.cmake.CMakeBuilder):
             # fftw-api@3 is provided by intel-mkl or intel-parllel-studio
             # we use the mkl interface of gromacs
             options.append("-DGMX_FFT_LIBRARY=mkl")
-            options.append("-DMKL_INCLUDE_DIR={0}".format(self.spec["mkl"].headers.directories[0]))
-            # The 'blas' property provides a minimal set of libraries
-            # that is sufficient for fft. Using full mkl fails the cmake test
-            options.append("-DMKL_LIBRARIES={0}".format(self.spec["blas"].libs.joined(";")))
+            if not self.spec["mkl"].satisfies("@2023:"):
+                options.append(
+                    "-DMKL_INCLUDE_DIR={0}".format(self.spec["mkl"].headers.directories[0])
+                )
+                # The 'blas' property provides a minimal set of libraries
+                # that is sufficient for fft. Using full mkl fails the cmake test
+                options.append("-DMKL_LIBRARIES={0}".format(self.spec["blas"].libs.joined(";")))
         else:
             # we rely on the fftw-api@3
             options.append("-DGMX_FFT_LIBRARY=fftw3")
