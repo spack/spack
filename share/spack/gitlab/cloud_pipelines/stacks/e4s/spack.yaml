@@ -199,7 +199,7 @@ spack:
   - cabana +rocm
   - caliper +rocm
   - chai ~benchmarks +rocm
-  - ecp-data-vis-sdk +paraview +vtkm +rocm
+  - ecp-data-vis-sdk +ascent +adios2 +hdf5 +paraview +pnetcdf +sz +vtkm +zfp +rocm
   - gasnet +rocm
   - ginkgo +rocm
   - heffte +rocm
