@@ -879,19 +879,17 @@ def requires(requirement_spec, when=None, msg=None):
 
     Args:
         requirement_spec: spec expressing the requirement
-        when: optional constraint that triggers the conflict
+        when: optional constraint that triggers the requirement. If None the requirement
+            is applied unconditionally.
         msg: optional user defined message
     """
 
     def _execute_requires(pkg):
-        # Note that when=None corresponds to when_spec = Spec(), which is always True.
-        # when=False, instead, is a statically evaluated condition that return False
-        # and get discarded.
         when_spec = make_when_spec(when)
         if not when_spec:
             return
 
-        # Save in a list the conflicts and the associated custom messages
+        # Save in a list the requirements and the associated custom messages
         when_spec_list = pkg.requirements.setdefault(requirement_spec, [])
         when_spec_list.append((when_spec, msg))
 
