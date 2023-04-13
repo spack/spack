@@ -90,6 +90,7 @@ def system_env_normalize(func):
         if sys.platform == "win32":
             name = name.upper()
         return func(self, name, *args, **kwargs)
+
     return marshall_env_var_name
 
 
