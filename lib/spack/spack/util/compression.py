@@ -391,7 +391,8 @@ def decompressor_for_win(extension):
     # python based decompression strategy, if this is None, type is
     # some sort of archive, compressed or other
     decompressor = _determine_py_decomp_archive_strategy(extension)
-
+    if decompressor:
+        return decompressor
     # reaching here means `path` is either a compressed archive or a tarball
     # Windows does not natively provide *any* decompression utilities
     # and only provides tar for archive extraction
@@ -709,6 +710,7 @@ def strip_last_extension(path):
 def strip_extension(path, ext=None):
     """Get the part of a path that does not include its compressed
     type extension."""
+    path = expand_contracted_extension_in_path(path)
     if ext:
         return check_and_remove_ext(path, ext)
     for t in ALLOWED_ARCHIVE_TYPES:
@@ -745,9 +747,35 @@ def check_and_remove_ext(path, ext):
     return path
 
 
+def reg_sub_ext(path, old_ext, new_ext):
+    return re.sub(fr"{old_ext}", fr"{new_ext}", path)
+
+
+def expand_contracted_extension_in_path(path, ext=None):
+    if not ext:
+        ext = extension_from_path(path)
+    expanded_ext = expand_contracted_extension(ext)
+    if expanded_ext != ext:
+        return reg_sub_ext(path, ext, expanded_ext)
+    return path
+
+
+def expand_contracted_extension(extension):
+    if extension in NOTAR_EXTS and extension != "zip":
+        # NOTAR exts are abbreviated extensions
+        # for compressed tarballs
+        # so we know tar is the first ext after initial '.'
+        prefix = "tar"
+        suffix = extension[1:]
+        if suffix == "bz":
+            suffix = "bz2"
+        return ".".join([prefix, suffix])
+    return extension
+
+
 def compression_ext_from_compressed_archive(extension):
     """Returns compression extension for a compressed archive"""
-    # use bz here to catch tbz bz2 compressed tarballs
-    for ext in [*EXTS, "bz"]:
+    extension = expand_contracted_extension(extension)
+    for ext in [*EXTS]:
         if ext in extension:
             return ext
