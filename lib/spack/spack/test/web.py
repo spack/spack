@@ -31,6 +31,8 @@ page_2 = _create_url("2.html")
 page_3 = _create_url("3.html")
 page_4 = _create_url("4.html")
 
+root_with_fragment = _create_url("index_with_fragment.html")
+
 
 @pytest.mark.skipif(sys.platform == "win32", reason="Not supported on Windows (yet)")
 @pytest.mark.parametrize(
@@ -141,6 +143,14 @@ def test_find_exotic_versions_of_archive_3():
     assert ver("2.0.0b2") in versions
     assert ver("3.0a1") in versions
     assert ver("4.5-rc5") in versions
+
+
+@pytest.mark.skipif(sys.platform == "win32", reason="Not supported on Windows (yet)")
+def test_find_versions_of_archive_with_fragment():
+    versions = spack.util.web.find_versions_of_archive(
+        root_tarball, root_with_fragment, list_depth=0
+    )
+    assert ver("5.0.0") in versions
 
 
 def test_get_header():
