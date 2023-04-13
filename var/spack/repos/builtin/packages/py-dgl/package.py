@@ -65,7 +65,7 @@ class PyDgl(CMakePackage, PythonExtension, CudaPackage):
     depends_on("py-tfdlpack", when="backend=tensorflow", type="run")
 
     # Cuda
-    # See https://github.com/dmlc/dgl/issues/3083 
+    # See https://github.com/dmlc/dgl/issues/3083
     depends_on("cuda@:10", when="@:0.4 +cuda", type=("build", "run"))
     depends_on("cuda@11:", when="@0.5: +cuda", type=("build", "run"))
     # From error: "Your installed Caffe2 version uses cuDNN but I cannot find the
@@ -75,7 +75,7 @@ class PyDgl(CMakePackage, PythonExtension, CudaPackage):
     patch(
         "https://patch-diff.githubusercontent.com/raw/dmlc/dgl/pull/5434.patch?full_index=1",
         sha256="8c5f14784637a9bb3dd55e6104715d4a35b4e6594c99884aa19e67bc0544e91a",
-        when="@1.0.1"
+        when="@1.0.1",
     )
 
     build_directory = "build"
