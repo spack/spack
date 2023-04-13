@@ -82,7 +82,7 @@ class CMakeBuilder(CMakeBuilder):
 
 
 class MakefileBuilder(MakefileBuilder):
-    def build(self, spec, prefix):
+    def build(self, pkg, spec, prefix):
         par = True
         if spec.compiler.name == "nvhpc":
             # relocation error when building shared and dynamic libs in
@@ -94,7 +94,7 @@ class MakefileBuilder(MakefileBuilder):
         else:
             make(parallel=par)
 
-    def install(self, spec, prefix):
+    def install(self, pkg, spec, prefix):
         make(
             "install",
             "PREFIX={0}".format(prefix),
