@@ -37,7 +37,7 @@ EOF
     xargs file -i | \
     grep 'charset=binary' | \
     grep 'x-executable\|x-archive\|x-sharedlib' | \
-    awk -F: '{print $1}' | xargs strip -s
+    awk -F: '{print $1}' | xargs strip
 {% endif %}
 {% if extra_instructions.build %}
 {{ extra_instructions.build }}
