@@ -40,72 +40,61 @@ class LinuxDistro(OperatingSystem):
     platform.dist()
     """
 
-    def _parse_pt_interp(self) -> Optional[Tuple[str, VersionBase]]:
-        """If the current Python interpreter is a dynamically linked ELF
-        executable, retrieve the dynamic linker and figure out its version."""
+    def _from_confstr(self) -> Optional[Tuple[str, VersionBase]]:
+        """On glibc the version is available in the CS_GNU_LIBC_VERSION,
+        this is a runtime, not compile-time constant, so should be fast
+        and correct."""
+        try:
+            result = os.confstr("CS_GNU_LIBC_VERSION")
+            if not result:
+                return None
+            name, version_str = result.split(maxsplit=1)
+            version = VersionBase(version_str)
+        except Exception:
+            return None
+
+        if name != "glibc":
+            return None
+
+        return name, version
+
+    def _from_dynamic_linker(self) -> Optional[Tuple[str, VersionBase]]:
+        """On musl libc the dynamic linker is executable and can dump
+        its version. We retrieve the dynamic linker from the current
+        Python interpreter."""
         try:
             with open(sys.executable, "rb") as f:
                 elf = spack.util.elf.parse_elf(f, interpreter=True)
         except (OSError, spack.util.elf.ElfParsingError):
             return None
 
+        # Statically linked Python
         if not elf.has_pt_interp:
             return None
 
         dynamic_linker_path = elf.pt_interp_str.decode("utf-8")
-        dynamic_linker = os.path.basename(dynamic_linker_path)
 
-        # Musl doesn't define version symbols, so we can't get the version
-        # by parsing the file. Instead, run it and parse the output.
-        if "ld-musl" in dynamic_linker:
-            try:
-                output = check_output([dynamic_linker_path, "--version"]).decode()
-            except Exception:
-                return None
-            version_str = re.search(r"^Version (.+)$", output)
-            if not version_str:
-                return None
-            try:
-                return "musl", VersionBase(version_str.group(1))
-            except Exception:
-                return None
+        # Not musl
+        if "ld-musl" not in os.path.basename(dynamic_linker_path):
+            return None
 
-        with open(dynamic_linker_path, "rb") as f:
-            try:
-                elf = spack.util.elf.parse_elf(f, dynamic_section=True, verdef=True)
-            except spack.util.elf.ElfParsingError:
-                return None
-
-            if not elf.has_verdef:
-                return None
-
-            # Get the max version of all GLIBC_ symbols
-            regex = re.compile(rb"^GLIBC_(\d+\.\d+)$")
-            max_version = VersionBase("")
-            for verdef in elf.verdefs:
-                result = regex.match(verdef)
-                if not result:
-                    continue
-                try:
-                    candidate = VersionBase(result.group(1).decode("utf-8"))
-                except Exception:
-                    continue
-                if candidate > max_version:
-                    max_version = candidate
-
-            if max_version == VersionBase(""):
-                return None
-
-            return "glibc", max_version
+        try:
+            output = check_output([dynamic_linker_path, "--version"]).decode()
+        except Exception:
+            return None
+        version_str = re.search(r"^Version (.+)$", output)
+        if not version_str:
+            return None
+        try:
+            return "musl", VersionBase(version_str.group(1))
+        except Exception:
+            return None
 
     def _from_ldd(self) -> Optional[Tuple[str, VersionBase]]:
-        """Try to derive the libc version from the output of ldd.
-        This is more useful than platform.libc_ver(), since it
-        since libc_ver() may return the max symbol version of all
-        resolved symbols used by the Python interpreter, which can
-        be lower than the actual libc -- and also all that
-        introspection is very glibc specific. The downside however
-        is that this now depends on PATH :(."""
+        """Try to derive the libc version from the output of ldd."""
+        # It would be slightly better to parse the verdef section of libc.so
+        # for glibc, but that requires locating the library. Instead we just
+        # rely on ldd being in PATH and hope it's the right one.
         try:
             first_line = check_output(["ldd", "--version"]).decode().splitlines()[0]
         except Exception:
@@ -164,7 +153,12 @@ class LinuxDistro(OperatingSystem):
         return distname, Version(version)
 
     def __init__(self):
-        methods = (self._parse_pt_interp, self._from_ldd, self._from_distro)
+        methods = (
+            self._from_confstr,
+            self._from_dynamic_linker,
+            self._from_ldd,
+            self._from_distro,
+        )
         result = next(filter(None, (f() for f in methods)), None)
         if result:
             super().__init__(*result)
