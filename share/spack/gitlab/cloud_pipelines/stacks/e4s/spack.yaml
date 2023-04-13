@@ -146,6 +146,7 @@ spack:
   - variorum
   - veloc
   - wannier90
+  - xyce +mpi +shared +pymi +pymi_static_tpls
 
   # CUDA
   - amrex +cuda
