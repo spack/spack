@@ -777,11 +777,10 @@ class Environment:
         #: Previously active environment
         self._previous_active = None
 
-        if not pathlib.Path(self.manifest_path).exists():
-            msg = f"cannot create environment, '{manifest_name}' is missing from {manifest_dir}"
-            raise SpackEnvironmentError(msg)
-
         with lk.ReadTransaction(self.txlock):
+            self.manifest = EnvironmentManifestFile(manifest_dir)
+            self.yaml = self.manifest.yaml_content
+            self.raw_yaml = self.manifest.pristine_yaml_content
             self._read()
 
     def set_view(self, view_dir: Union[bool, str, pathlib.Path]) -> "Environment":
@@ -802,15 +801,15 @@ class Environment:
         may not be true if the environment was just created in this running
         instance of Spack).
         """
-        if not os.path.exists(self.manifest_path):
-            return
-
         self.clear(re_read=True)
-        self._read()
+        with lk.ReadTransaction(self.txlock):
+            self.manifest = EnvironmentManifestFile(self.manifest.manifest_dir)
+            self.yaml = self.manifest.yaml_content
+            self.raw_yaml = self.manifest.pristine_yaml_content
+            self._read()
 
     def _read(self):
-        with open(self.manifest_path) as f:
-            self._read_manifest(f)
+        self._construct_state_from_manifest()
 
         if os.path.exists(self.lock_path):
             with open(self.lock_path) as f:
@@ -824,9 +823,8 @@ class Environment:
         """Get a write lock context manager for use in a `with` block."""
         return lk.WriteTransaction(self.txlock, acquire=self._re_read)
 
-    def _read_manifest(self, f):
+    def _construct_state_from_manifest(self):
         """Read manifest file and set up user specs."""
-        self.raw_yaml, self.yaml = _read_yaml(f)
         self.spec_lists = collections.OrderedDict()
 
         for item in config_dict(self.yaml).get("definitions", []):
@@ -1123,9 +1121,7 @@ class Environment:
         spec = Spec(user_spec)
 
         if list_name not in self.spec_lists:
-            raise SpackEnvironmentError(
-                "No list %s exists in environment %s" % (list_name, self.name)
-            )
+            raise SpackEnvironmentError(f"No list {list_name} exists in environment {self.name}")
 
         if list_name == user_speclist_name:
             if not spec.name:
@@ -1141,6 +1137,10 @@ class Environment:
         if not existing:
             list_to_change.add(str(spec))
             self.update_stale_references(list_name)
+            if list_name == user_speclist_name:
+                self.manifest.add_user_spec(str(user_spec))
+            else:
+                self.manifest.add_definition(str(user_spec), list_name=list_name)
 
         return bool(not existing)
 
@@ -1198,23 +1198,28 @@ class Environment:
 
     def remove(self, query_spec, list_name=user_speclist_name, force=False):
         """Remove specs from an environment that match a query_spec"""
+        err_msg_header = (
+            f"cannot remove {query_spec} from '{list_name}' definition "
+            f"in {self.manifest.manifest_file}"
+        )
         query_spec = Spec(query_spec)
-
-        list_to_change = self.spec_lists[list_name]
-        matches = []
+        try:
+            list_to_change = self.spec_lists[list_name]
+        except KeyError as e:
+            msg = f"{err_msg_header}, since '{list_name}' does not exist"
+            raise SpackEnvironmentError(msg) from e
 
         if not query_spec.concrete:
             matches = [s for s in list_to_change if s.satisfies(query_spec)]
 
-        if not matches:
+        else:
             # concrete specs match against concrete specs in the env
             # by dag hash.
             specs_hashes = zip(self.concretized_user_specs, self.concretized_order)
-
             matches = [s for s, h in specs_hashes if query_spec.dag_hash() == h]
 
         if not matches:
-            raise SpackEnvironmentError("Not found: {0}".format(query_spec))
+            raise SpackEnvironmentError(f"{err_msg_header}, no spec matches")
 
         old_specs = set(self.user_specs)
         new_specs = set()
@@ -1227,14 +1232,20 @@ class Environment:
                 except spack.spec_list.SpecListError:
                     # define new specs list
                     new_specs = set(self.user_specs)
-                    msg = "Spec '%s' is part of a spec matrix and " % spec
-                    msg += "cannot be removed from list '%s'." % list_to_change
+                    msg = f"Spec '{spec}' is part of a spec matrix and "
+                    msg += f"cannot be removed from list '{list_to_change}'."
                     if force:
                         msg += " It will be removed from the concrete specs."
-                        # Mock new specs so we can remove this spec from
-                        # concrete spec lists
+                        # Mock new specs, so we can remove this spec from concrete spec lists
                         new_specs.remove(spec)
                     tty.warn(msg)
+                else:
+                    if list_name == user_speclist_name:
+                        for user_spec in matches:
+                            self.manifest.remove_user_spec(str(user_spec))
+                    else:
+                        for user_spec in matches:
+                            self.manifest.remove_definition(str(user_spec), list_name=list_name)
 
         # If force, update stale concretized specs
         for spec in old_specs - new_specs:
@@ -2183,45 +2194,9 @@ class Environment:
         """
         yaml_dict = config_dict(self.yaml)
         raw_yaml_dict = config_dict(self.raw_yaml)
-        # invalidate _repo cache
-        self._repo = None
-        # put any changes in the definitions in the YAML
-        for name, speclist in self.spec_lists.items():
-            if name == user_speclist_name:
-                # The primary list is handled differently
-                continue
 
-            active_yaml_lists = [
-                x
-                for x in yaml_dict.get("definitions", [])
-                if name in x and _eval_conditional(x.get("when", "True"))
-            ]
+        self.invalidate_repository_cache()
 
-            # Remove any specs in yaml that are not in internal representation
-            for ayl in active_yaml_lists:
-                # If it's not a string, it's a matrix. Those can't have changed
-                # If it is a string that starts with '$', it's a reference.
-                # Those also can't have changed.
-                ayl[name][:] = [
-                    s
-                    for s in ayl.setdefault(name, [])
-                    if (not isinstance(s, str)) or s.startswith("$") or Spec(s) in speclist.specs
-                ]
-
-            # Put the new specs into the first active list from the yaml
-            new_specs = [
-                entry
-                for entry in speclist.yaml_list
-                if isinstance(entry, str)
-                and not any(entry in ayl[name] for ayl in active_yaml_lists)
-            ]
-            list_for_new_specs = active_yaml_lists[0].setdefault(name, [])
-            list_for_new_specs[:] = list_for_new_specs + new_specs
-        # put the new user specs in the YAML.
-        # This can be done directly because there can't be multiple definitions
-        # nor when clauses for `specs` list.
-        yaml_spec_list = yaml_dict.setdefault(user_speclist_name, [])
-        yaml_spec_list[:] = self.user_specs.yaml_list
         # Construct YAML representation of view
         default_name = default_view_name
         if self.views and len(self.views) == 1 and default_name in self.views:
@@ -2264,12 +2239,15 @@ class Environment:
         # thing that changed is the "override" attribute on a config dict,
         # which would not show up in even a string comparison between the two
         # keys).
-        changed = not yaml_equivalent(self.yaml, self.raw_yaml)
+        changed = self.manifest.changed or not yaml_equivalent(self.yaml, self.raw_yaml)
         written = os.path.exists(self.manifest_path)
         if changed or not written:
             self.raw_yaml = copy.deepcopy(self.yaml)
             with fs.write_tmp_and_move(os.path.realpath(self.manifest_path)) as f:
                 _write_yaml(self.yaml, f)
+
+    def invalidate_repository_cache(self):
+        self._repo = None
 
     def __enter__(self):
         self._previous_active = _active_environment
@@ -2602,13 +2580,17 @@ class EnvironmentManifestFile(collections.Mapping):
         default_content.write_text(default_manifest_yaml())
         manifest = EnvironmentManifestFile(manifest_dir)
         for item in user_specs:
-            manifest.add(item["spec"])
+            manifest.add_user_spec(item["spec"])
         manifest.flush()
         return manifest
 
     def __init__(self, manifest_dir: Union[pathlib.Path, str]) -> None:
         self.manifest_dir = pathlib.Path(manifest_dir)
         self.manifest_file = self.manifest_dir / manifest_name
+
+        if not self.manifest_file.exists():
+            msg = f"cannot find '{manifest_name}' in {self.manifest_dir}"
+            raise SpackEnvironmentError(msg)
 
         with self.manifest_file.open() as f:
             raw, with_defaults_added = _read_yaml(f)
@@ -2617,8 +2599,9 @@ class EnvironmentManifestFile(collections.Mapping):
         self.pristine_yaml_content = raw
         #: YAML content with defaults added by Spack, if they're missing
         self.yaml_content = with_defaults_added
+        self.changed = False
 
-    def add(self, user_spec: str) -> None:
+    def add_user_spec(self, user_spec: str) -> None:
         """Appends the user spec passed as input to the list of root specs.
 
         Args:
@@ -2626,6 +2609,101 @@ class EnvironmentManifestFile(collections.Mapping):
         """
         config_dict(self.pristine_yaml_content)["specs"].append(user_spec)
         config_dict(self.yaml_content)["specs"].append(user_spec)
+        self.changed = True
+
+    def remove_user_spec(self, user_spec: str) -> None:
+        """Removes the user spec passed as input from the list of root specs
+
+        Args:
+            user_spec: user spec to be removed
+
+        Raises:
+            SpackEnvironmentError: when the user spec is not in the list
+        """
+        try:
+            config_dict(self.pristine_yaml_content)["specs"].remove(user_spec)
+            config_dict(self.yaml_content)["specs"].remove(user_spec)
+        except ValueError as e:
+            msg = f"cannot remove {user_spec} from {self}, no such spec exists"
+            raise SpackEnvironmentError(msg) from e
+        self.changed = True
+
+    def add_definition(self, user_spec: str, list_name: str) -> None:
+        """Appends a user spec to the first active definition mathing the name passed as argument.
+
+        Args:
+            user_spec: user spec to be appended
+            list_name: name of the definition where to append
+
+        Raises:
+            SpackEnvironmentError: is no valid definition exists already
+        """
+        definitions = config_dict(self.pristine_yaml_content).get("definitions", [])
+
+        def extract_name(_item):
+            names = list(x for x in _item if x != "when")
+            assert len(names) == 1, f"more than one name in {_item}"
+            return names[0]
+
+        for idx, item in enumerate(definitions):
+            name = extract_name(item)
+            if name != list_name:
+                continue
+
+            condition_str = item.get("when", "True")
+            if not _eval_conditional(condition_str):
+                continue
+
+            item[name].append(user_spec)
+            break
+        else:
+            msg = f"cannot add {user_spec} to the '{list_name}' definition, no valid list exists"
+            raise SpackEnvironmentError(msg)
+
+        config_dict(self.yaml_content)["definitions"][idx][list_name].append(user_spec)
+        self.changed = True
+
+    def remove_definition(self, user_spec: str, list_name: str) -> None:
+        """Removes a user spec from an active definition that matches the name passed as argument.
+
+        Args:
+            user_spec: user spec to be removed
+            list_name: name of the definition where to remove the spec from
+
+        Raises:
+            SpackEnvironmentError: if the user spec cannot be removed from the list,
+                or the list does not exist
+        """
+        definitions = config_dict(self.pristine_yaml_content).get("definitions", [])
+
+        def extract_name(_item):
+            names = list(x for x in _item if x != "when")
+            assert len(names) == 1, f"more than one name in {_item}"
+            return names[0]
+
+        for idx, item in enumerate(definitions):
+            name = extract_name(item)
+            if name != list_name:
+                continue
+
+            condition_str = item.get("when", "True")
+            if not _eval_conditional(condition_str):
+                continue
+
+            try:
+                item[name].remove(user_spec)
+                break
+            except ValueError:
+                pass
+        else:
+            msg = (
+                f"cannot remove {user_spec} from the '{list_name}' definition, "
+                f"no valid list exists"
+            )
+            raise SpackEnvironmentError(msg)
+
+        config_dict(self.yaml_content)["definitions"][idx][list_name].remove(user_spec)
+        self.changed = True
 
     def set_view(self, view: Union[bool, str, pathlib.Path]) -> None:
         """Sets the view in the manifest to the value passed as input.
@@ -2639,6 +2717,7 @@ class EnvironmentManifestFile(collections.Mapping):
 
         config_dict(self.pristine_yaml_content)["view"] = view
         config_dict(self.yaml_content)["view"] = view
+        self.changed = True
 
     def absolutify_dev_paths(self, init_file_dir: Union[str, pathlib.Path]) -> None:
         """Normalizes the dev paths in the environment with respect to the directory where the
@@ -2655,11 +2734,16 @@ class EnvironmentManifestFile(collections.Mapping):
         for _, entry in config_dict(self.yaml_content).get("develop", {}).items():
             expanded_path = os.path.normpath(str(init_file_dir / entry["path"]))
             entry["path"] = str(expanded_path)
+        self.changed = True
 
     def flush(self) -> None:
         """Synchronizes the object with the manifest file on disk."""
+        if not self.changed:
+            return
+
         with self.manifest_file.open("w") as f:
             _write_yaml(self.pristine_yaml_content, f)
+        self.changed = False
 
     def __len__(self):
         return len(self.yaml_content)
@@ -2669,6 +2753,9 @@ class EnvironmentManifestFile(collections.Mapping):
 
     def __iter__(self):
         return iter(self.yaml_content)
+
+    def __str__(self):
+        return str(self.manifest_file)
 
 
 class SpackEnvironmentError(spack.error.SpackError):
