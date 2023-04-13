@@ -748,7 +748,7 @@ def check_and_remove_ext(path, ext):
 
 
 def reg_sub_ext(path, old_ext, new_ext):
-    return re.sub(fr"{old_ext}", fr"{new_ext}", path)
+    return re.sub(rf"{old_ext}", rf"{new_ext}", path)
 
 
 def expand_contracted_extension_in_path(path, ext=None):
