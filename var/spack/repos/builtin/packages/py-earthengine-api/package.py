@@ -25,3 +25,4 @@ class PyEarthengineApi(PythonPackage):
     depends_on("py-httplib2@0.9.2:0", type=("build", "run"))
     depends_on("py-requests", when="@0.1.344:", type=("build", "run"))
     depends_on("py-six", when="@:0.1.186", type=("build", "run"))
+    depends_on("google-cloud-cli", type="run")
