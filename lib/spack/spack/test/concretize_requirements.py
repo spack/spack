@@ -680,6 +680,18 @@ def test_conditional_requirements_from_packages_yaml(
             "libelf%gcc",
             "can only be compiled with clang on ",
         ),
+        (
+            """\
+        packages:
+          libelf:
+            require:
+            - one_of: ["%clang", "%intel"]
+              when: platform=test
+              message: "can only be compiled with clang or intel on the test platform"
+    """,
+            "libelf%gcc",
+            "can only be compiled with clang or intel",
+        ),
     ],
 )
 def test_requirements_fail_with_custom_message(
