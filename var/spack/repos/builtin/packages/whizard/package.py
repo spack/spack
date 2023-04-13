@@ -42,19 +42,18 @@ class Whizard(AutotoolsPackage):
         multi=False,
     )
 
+
     variant("pythia8", default=True, description="builds with pythia8")
-
     variant("fastjet", default=False, description="builds with fastjet")
-
     variant("lcio", default=False, description="builds with lcio")
-
     variant("lhapdf", default=False, description="builds with fastjet")
-
     variant("openmp", default=False, description="builds with openmp")
-
     variant("openloops", default=False, description="builds with openloops")
-
     variant("latex", default=False, description="data visualization with latex")
+
+    depends_on("autoconf", type="build")
+    depends_on("automake", type="build")
+    depends_on("libtool", type="build")
 
     depends_on("libtirpc")
     depends_on("ocaml@4.02.3:", type="build", when="@3:")
