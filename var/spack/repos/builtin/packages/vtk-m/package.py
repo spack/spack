@@ -124,6 +124,7 @@ class VtkM(CMakePackage, CudaPackage, ROCmPackage):
     conflicts("+rocm", when="@:1.6")
     conflicts("+rocm", when="+cuda")
     conflicts("+rocm", when="~kokkos", msg="VTK-m does not support HIP without Kokkos")
+    conflicts("+rocm", when="+virtuals", msg="VTK-m does not support virtual functions with ROCm")
 
     # Can build +shared+cuda after @1.7:
     conflicts("+shared", when="@:1.6 +cuda_native")
@@ -251,8 +252,6 @@ class VtkM(CMakePackage, CudaPackage, ROCmPackage):
 
             # hip support
             if "+rocm" in spec:
-                options.append("-DVTKm_NO_DEPRECATED_VIRTUAL:BOOL=ON")
-
                 archs = ",".join(self.spec.variants["amdgpu_target"].value)
                 options.append("-DCMAKE_HIP_ARCHITECTURES:STRING={0}".format(archs))
 
