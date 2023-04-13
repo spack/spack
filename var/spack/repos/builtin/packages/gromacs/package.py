@@ -26,7 +26,7 @@ class Gromacs(CMakePackage, CudaPackage):
     url = "https://ftp.gromacs.org/gromacs/gromacs-2022.2.tar.gz"
     list_url = "https://ftp.gromacs.org/gromacs"
     git = "https://gitlab.com/gromacs/gromacs.git"
-    maintainers("junghans", "marvinbernhardt")
+    maintainers("danielahlin", "eirrgang", "junghans")
 
     version("main", branch="main")
     version("master", branch="main", deprecated=True)
@@ -243,6 +243,7 @@ class Gromacs(CMakePackage, CudaPackage):
     depends_on("sycl", when="+sycl")
     depends_on("lapack", when="+lapack")
     depends_on("blas", when="+blas")
+    depends_on("gcc", when="%oneapi")
 
     depends_on("hwloc@1.0:1", when="+hwloc@2016:2018")
     depends_on("hwloc", when="+hwloc@2019:")
@@ -426,6 +427,9 @@ class CMakeBuilder(spack.build_systems.cmake.CMakeBuilder):
         if self.spec.satisfies("@2020:"):
             options.append("-DGMX_INSTALL_LEGACY_API=ON")
 
+        if self.spec.satisfies("%oneapi"):
+            options.append("-DGMX_GPLUSPLUS_PATH=%s/g++" % self.spec["gcc"].prefix.bin)
+
         if "+double" in self.spec:
             options.append("-DGMX_DOUBLE:BOOL=ON")
 
@@ -570,10 +574,13 @@ class CMakeBuilder(spack.build_systems.cmake.CMakeBuilder):
             # fftw-api@3 is provided by intel-mkl or intel-parllel-studio
             # we use the mkl interface of gromacs
             options.append("-DGMX_FFT_LIBRARY=mkl")
-            options.append("-DMKL_INCLUDE_DIR={0}".format(self.spec["mkl"].headers.directories[0]))
-            # The 'blas' property provides a minimal set of libraries
-            # that is sufficient for fft. Using full mkl fails the cmake test
-            options.append("-DMKL_LIBRARIES={0}".format(self.spec["blas"].libs.joined(";")))
+            if not self.spec["mkl"].satisfies("@2023:"):
+                options.append(
+                    "-DMKL_INCLUDE_DIR={0}".format(self.spec["mkl"].headers.directories[0])
+                )
+                # The 'blas' property provides a minimal set of libraries
+                # that is sufficient for fft. Using full mkl fails the cmake test
+                options.append("-DMKL_LIBRARIES={0}".format(self.spec["blas"].libs.joined(";")))
         else:
             # we rely on the fftw-api@3
             options.append("-DGMX_FFT_LIBRARY=fftw3")
