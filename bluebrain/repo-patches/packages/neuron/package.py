@@ -221,8 +221,7 @@ class Neuron(CMakePackage):
             args.append("-DNRN_SANITIZERS=" + ",".join(self.spec.variants["sanitizers"].value))
         if "+mpi" in self.spec:
             args.append("-DNRN_ENABLE_MPI=ON")
-            if "~coreneuron" in self.spec:
-                args.append("-DNRN_ENABLE_MPI_DYNAMIC=ON")
+            args.append("-DNRN_ENABLE_MPI_DYNAMIC=ON")
         else:
             args.append("-DNRN_ENABLE_MPI=OFF")
         if "+python" in self.spec:
