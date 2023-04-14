@@ -105,7 +105,7 @@ class Proj(CMakePackage, AutotoolsPackage):
         self.setup_run_environment(env)
 
 
-class BaseBuilder:
+class BaseBuilder(metaclass=spack.builder.PhaseCallbacksMeta):
     def setup_dependent_build_environment(self, env, dependent_spec):
         self.pkg.setup_run_environment(env)
 
@@ -117,7 +117,7 @@ class BaseBuilder:
         install_tree(join_path("share", "proj"), self.prefix.share.proj)
 
 
-class CMakeBuilder(cmake.CMakeBuilder, BaseBuilder):
+class CMakeBuilder(BaseBuilder, cmake.CMakeBuilder):
     def cmake_args(self):
         args = [
             self.define_from_variant("ENABLE_TIFF", "tiff"),
@@ -128,7 +128,7 @@ class CMakeBuilder(cmake.CMakeBuilder, BaseBuilder):
         return args
 
 
-class AutotoolsBuilder(autotools.AutotoolsBuilder, BaseBuilder):
+class AutotoolsBuilder(BaseBuilder, autotools.AutotoolsBuilder):
     def configure_args(self):
         args = []
 
