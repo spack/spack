@@ -12,8 +12,9 @@ class Odc(CMakePackage):
     homepage = "https://github.com/ecmwf/odc"
     url = "https://github.com/ecmwf/odc/archive/refs/tags/1.3.0.tar.gz"
 
-    maintainers = ["skosukhin"]
+    maintainers = ["skosukhin", "climbfuji"]
 
+    version("1.4.6", sha256="ff99d46175e6032ddd0bdaa3f6a5e2c4729d24b698ba0191a2a4aa418f48867c")
     version("1.4.5", sha256="8532d0453531d62e1f15791d1c5c96540b842913bd211a8ef090211eaf4cccae")
     version("1.4.4", sha256="65cb7b491566d3de14b66741544360f20eaaf1a6d5a24af7d8b939dd50e26431")
     version("1.4.2", sha256="19572e93238c1531bcf0f7966f0d2342a0400f5fe9deb934a384228f895909c9")
