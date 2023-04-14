@@ -29,7 +29,6 @@ import spack.environment.shell
 import spack.schema.env
 import spack.spec
 import spack.tengine
-import spack.traverse as traverse
 import spack.util.string as string
 from spack.util.environment import EnvironmentModifications
 
@@ -646,26 +645,14 @@ def env_depfile(args):
 
     # What things do we build when running make? By default, we build the
     # root specs. If specific specs are provided as input, we build those.
-    if args.specs:
-        abstract_specs = spack.cmd.parse_specs(args.specs)
-        specs = [env.matching_spec(s) for s in abstract_specs]
-    else:
-        specs = [s for _, s in env.concretized_specs()]
+    filter_specs = spack.cmd.parse_specs(args.specs) if args.specs else None
 
-    # We produce a sub-DAG from the DAG induced by roots, where we drop build
-    # edges for those specs that are installed through a binary cache.
-    pkg_buildcache = depfile.UseBuildCache.from_string(args.use_buildcache[0])
-    dep_buildcache = depfile.UseBuildCache.from_string(args.use_buildcache[1])
-
-    visitor = depfile.DepfileSpecVisitor(pkg_buildcache, dep_buildcache)
-    traverse.traverse_breadth_first_with_visitor(
-        specs, traverse.CoverNodesVisitor(visitor, key=lambda s: s.dag_hash())
-    )
+    pkg_use_bc, dep_use_bc = args.use_buildcache
 
     buf = io.StringIO()
     template = spack.tengine.make_environment().get_template(os.path.join("depfile", "Makefile"))
-    model = depfile.MakefileModel(
-        env, specs, visitor.adjacency_list, args.make_prefix, args.jobserver
+    model = depfile.MakefileModel.from_env(
+        env, filter_specs, pkg_use_bc, dep_use_bc, args.make_prefix, args.jobserver
     )
     rendered = template.render(model.to_dict())
 

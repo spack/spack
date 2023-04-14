@@ -191,3 +191,28 @@ class MakefileModel:
             "pkg_ids_variable": self.pkg_identifier_variable,
             "pkg_ids": " ".join(self.all_pkg_identifiers),
         }
+
+    @staticmethod
+    def from_env(
+        env: ev.Environment,
+        filter_specs: Optional[List[spack.spec.Spec]],
+        pkg_buildcache: str,
+        dep_buildcache: str,
+        make_prefix: Optional[str],
+        jobserver: bool,
+    ) -> "MakefileModel":
+        """Produces a MakefileModel from an environment and a list of specs."""
+        # If no specs are provided as a filter, build all the specs in the environment.
+        if filter_specs:
+            entrypoints = [env.matching_spec(s) for s in filter_specs]
+        else:
+            entrypoints = [s for _, s in env.concretized_specs()]
+
+        visitor = DepfileSpecVisitor(
+            UseBuildCache.from_string(pkg_buildcache), UseBuildCache.from_string(dep_buildcache)
+        )
+        traverse.traverse_breadth_first_with_visitor(
+            entrypoints, traverse.CoverNodesVisitor(visitor, key=lambda s: s.dag_hash())
+        )
+
+        return MakefileModel(env, entrypoints, visitor.adjacency_list, make_prefix, jobserver)
