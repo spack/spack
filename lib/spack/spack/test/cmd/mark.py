@@ -15,8 +15,6 @@ mark = SpackCommand("mark")
 install = SpackCommand("install")
 uninstall = SpackCommand("uninstall")
 
-pytestmark = pytest.mark.skipif(sys.platform == "win32", reason="does not run on windows")
-
 
 @pytest.mark.db
 def test_mark_mode_required(mutable_database):
