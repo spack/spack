@@ -59,9 +59,10 @@ def filter_compiler_wrappers(*files, **kwargs):
 
     find_kwargs = {"recursive": kwargs.get("recursive", False)}
 
-    def _filter_compiler_wrappers_impl(self):
+    def _filter_compiler_wrappers_impl(pkg_or_builder):
+        pkg = getattr(pkg_or_builder, "pkg", pkg_or_builder)
         # Compute the absolute path of the search root
-        root = os.path.join(self.prefix, relative_root) if relative_root else self.prefix
+        root = os.path.join(pkg.prefix, relative_root) if relative_root else pkg.prefix
 
         # Compute the absolute path of the files to be filtered and
         # remove links from the list.
@@ -71,10 +72,10 @@ def filter_compiler_wrappers(*files, **kwargs):
         x = llnl.util.filesystem.FileFilter(*abs_files)
 
         compiler_vars = [
-            ("CC", self.compiler.cc),
-            ("CXX", self.compiler.cxx),
-            ("F77", self.compiler.f77),
-            ("FC", self.compiler.fc),
+            ("CC", pkg.compiler.cc),
+            ("CXX", pkg.compiler.cxx),
+            ("F77", pkg.compiler.f77),
+            ("FC", pkg.compiler.fc),
         ]
 
         # Some paths to the compiler wrappers might be substrings of the others.
@@ -103,11 +104,11 @@ def filter_compiler_wrappers(*files, **kwargs):
             x.filter(wrapper_path, compiler_path, **filter_kwargs)
 
         # Remove this linking flag if present (it turns RPATH into RUNPATH)
-        x.filter("{0}--enable-new-dtags".format(self.compiler.linker_arg), "", **filter_kwargs)
+        x.filter("{0}--enable-new-dtags".format(pkg.compiler.linker_arg), "", **filter_kwargs)
 
         # NAG compiler is usually mixed with GCC, which has a different
         # prefix for linker arguments.
-        if self.compiler.name == "nag":
+        if pkg.compiler.name == "nag":
             x.filter("-Wl,--enable-new-dtags", "", **filter_kwargs)
 
     spack.builder.run_after(after)(_filter_compiler_wrappers_impl)
