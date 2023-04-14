@@ -300,6 +300,7 @@ class CMakeBuilder(BaseBuilder, cmake.CMakeBuilder):
     def cmake_args(self):
         base_cmake_args = [
             self.define_from_variant("BUILD_SHARED_LIBS", "shared"),
+            self.define_from_variant("ENABLE_BYTERANGE", "byterange"),
             self.define("BUILD_UTILITIES", True),
             self.define("ENABLE_NETCDF_4", True),
             self.define_from_variant("ENABLE_DAP", "dap"),
