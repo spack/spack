@@ -715,7 +715,7 @@ class BuildSystemGuesser:
                 output = tar("--exclude=*/*/*", "-tf", stage.archive_file, output=str)
             except ProcessError:
                 output = ""
-        lines = output.split("\n")
+        lines = output.splitlines()
 
         # Determine the build system based on the files contained
         # in the archive.
