@@ -271,7 +271,7 @@ class NetcdfC(CMakePackage, AutotoolsPackage):
         return find_libraries("libnetcdf", root=self.prefix, shared=shared, recursive=True)
 
 
-class Setup:
+class BaseBuilder(metaclass=spack.builder.PhaseCallbacksMeta):
     def setup_dependent_build_environment(self, env, dependent_spec):
         self.pkg.setup_run_environment(env)
         # Some packages, e.g. ncview, refuse to build if the compiler path returned by nc-config
@@ -281,8 +281,6 @@ class Setup:
         if os.path.exists(self._nc_config_backup_dir):
             env.prepend_path("PATH", self._nc_config_backup_dir)
 
-
-class BackupStep(metaclass=spack.builder.PhaseCallbacksMeta):
     @property
     def _nc_config_backup_dir(self):
         return join_path(self.pkg.metadata_dir, "spack-nc-config")
@@ -298,7 +296,7 @@ class BackupStep(metaclass=spack.builder.PhaseCallbacksMeta):
     filter_compiler_wrappers("nc-config", relative_root="bin")
 
 
-class CMakeBuilder(BackupStep, Setup, cmake.CMakeBuilder):
+class CMakeBuilder(BaseBuilder, cmake.CMakeBuilder):
     def cmake_args(self):
         base_cmake_args = [
             self.define_from_variant("BUILD_SHARED_LIBS", "shared"),
@@ -317,7 +315,7 @@ class CMakeBuilder(BackupStep, Setup, cmake.CMakeBuilder):
         return base_cmake_args
 
 
-class AutotoolsBuilder(BackupStep, Setup, autotools.AutotoolsBuilder):
+class AutotoolsBuilder(BaseBuilder, autotools.AutotoolsBuilder):
     @property
     def force_autoreconf(self):
         return any(self.spec.satisfies(s) for s in self.pkg._force_autoreconf_when)
