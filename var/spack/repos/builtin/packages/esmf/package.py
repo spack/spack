@@ -96,30 +96,30 @@ class Esmf(MakefilePackage):
         "parallelio@2.5.7: +mpi+pnetcdf", when="@8.3.0:8.3.99+external-parallelio+mpi+pnetcdf"
     )
     depends_on(
-        "parallelio@2.5.7: +mpi~pnetcdf", when="@8.3.0:8.3.99+external-parallelio+mpi~pnetcdf"
+        "parallelio@2.5.7: +mpi", when="@8.3.0:8.3.99+external-parallelio+mpi~pnetcdf"
     )
     depends_on(
         "parallelio@2.5.7: ~mpi+pnetcdf", when="@8.3.0:8.3.99+external-parallelio~mpi+pnetcdf"
     )
     depends_on(
-        "parallelio@2.5.7: ~mpi~pnetcdf", when="@8.3.0:8.3.99+external-parallelio~mpi~pnetcdf"
+        "parallelio@2.5.7: ~mpi", when="@8.3.0:8.3.99+external-parallelio~mpi~pnetcdf"
     )
     depends_on(
         "parallelio@2.5.9: +mpi+pnetcdf", when="@8.4.0:8.4.99+external-parallelio+mpi+pnetcdf"
     )
     depends_on(
-        "parallelio@2.5.9: +mpi~pnetcdf", when="@8.4.0:8.4.99+external-parallelio+mpi~pnetcdf"
+        "parallelio@2.5.9: +mpi", when="@8.4.0:8.4.99+external-parallelio+mpi~pnetcdf"
     )
     depends_on(
         "parallelio@2.5.9: ~mpi+pnetcdf", when="@8.4.0:8.4.99+external-parallelio~mpi+pnetcdf"
     )
     depends_on(
-        "parallelio@2.5.9: ~mpi~pnetcdf", when="@8.4.0:8.4.99+external-parallelio~mpi~pnetcdf"
+        "parallelio@2.5.9: ~mpi", when="@8.4.0:8.4.99+external-parallelio~mpi~pnetcdf"
     )
     depends_on("parallelio@2.5.10: +mpi+pnetcdf", when="@8.5.0:+external-parallelio+mpi+pnetcdf")
-    depends_on("parallelio@2.5.10: +mpi~pnetcdf", when="@8.5.0:+external-parallelio+mpi~pnetcdf")
+    depends_on("parallelio@2.5.10: +mpi", when="@8.5.0:+external-parallelio+mpi~pnetcdf")
     depends_on("parallelio@2.5.10: ~mpi+pnetcdf", when="@8.5.0:+external-parallelio~mpi+pnetcdf")
-    depends_on("parallelio@2.5.10: ~mpi~pnetcdf", when="@8.5.0:+external-parallelio~mpi~pnetcdf")
+    depends_on("parallelio@2.5.10: ~mpi", when="@8.5.0:+external-parallelio~mpi~pnetcdf")
 
     # Testing dependencies
     depends_on("perl", type="test")
