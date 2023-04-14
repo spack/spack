@@ -31,7 +31,7 @@ class Lz4(CMakePackage, MakefilePackage):
 
     depends_on("valgrind", type="test")
 
-    build_system("cmake", "makefile", default="cmake")
+    build_system("cmake", "makefile", default="makefile")
     parallel = False if sys.platform == "win32" else True
     variant(
         "libs",
@@ -56,11 +56,6 @@ class Lz4(CMakePackage, MakefilePackage):
             filter_file("-fvisibility=hidden", "", "lib/Makefile")
             filter_file("-pedantic", "", "Makefile")
 
-    @run_after("install")
-    def darwin_fix(self):
-        if sys.platform == "darwin":
-            fix_darwin_install_name(self.prefix.lib)
-
 
 class CMakeBuilder(CMakeBuilder):
     @property
@@ -68,7 +63,7 @@ class CMakeBuilder(CMakeBuilder):
         return os.path.join(super().root_cmakelists_dir, "build", "cmake")
 
     def cmake_args(self):
-        args = []
+        args = [self.define("CMAKE_POLICY_DEFAULT_CMP0042", "NEW")]
         # # no pic on windows
         if "platform=windows" in self.spec:
             args.append(self.define("LZ4_POSITION_INDEPENDENT_LIB", False))
@@ -101,3 +96,7 @@ class MakefileBuilder(MakefileBuilder):
             "BUILD_SHARED={0}".format("yes" if "libs=shared" in self.spec else "no"),
             "BUILD_STATIC={0}".format("yes" if "libs=static" in self.spec else "no"),
         )
+
+    @run_after("install", when="platform=darwin")
+    def darwin_fix(self):
+        fix_darwin_install_name(self.prefix.lib)
