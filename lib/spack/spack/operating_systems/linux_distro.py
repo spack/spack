@@ -10,7 +10,7 @@ from subprocess import check_output
 from typing import Optional, Tuple
 
 import spack.util.elf
-from spack.version import Version, VersionBase
+from spack.version import Version, StandardVersion
 
 from ._operating_system import OperatingSystem
 
@@ -40,7 +40,7 @@ class LinuxDistro(OperatingSystem):
     platform.dist()
     """
 
-    def _from_confstr(self) -> Optional[Tuple[str, VersionBase]]:
+    def _from_confstr(self) -> Optional[Tuple[str, StandardVersion]]:
         """On glibc the version is available in the CS_GNU_LIBC_VERSION,
         this is a runtime, not compile-time constant, so should be fast
         and correct."""
@@ -49,7 +49,7 @@ class LinuxDistro(OperatingSystem):
             if not result:
                 return None
             name, version_str = result.split(maxsplit=1)
-            version = VersionBase(version_str)
+            version = StandardVersion.from_string(version_str)
         except Exception:
             return None
 
@@ -58,7 +58,7 @@ class LinuxDistro(OperatingSystem):
 
         return name, version
 
-    def _from_dynamic_linker(self) -> Optional[Tuple[str, VersionBase]]:
+    def _from_dynamic_linker(self) -> Optional[Tuple[str, StandardVersion]]:
         """On musl libc the dynamic linker is executable and can dump
         its version. We retrieve the dynamic linker from the current
         Python interpreter."""
@@ -86,11 +86,11 @@ class LinuxDistro(OperatingSystem):
         if not version_str:
             return None
         try:
-            return "musl", VersionBase(version_str.group(1))
+            return "musl", StandardVersion.from_string(version_str.group(1))
         except Exception:
             return None
 
-    def _from_ldd(self) -> Optional[Tuple[str, VersionBase]]:
+    def _from_ldd(self) -> Optional[Tuple[str, StandardVersion]]:
         """Try to derive the libc version from the output of ldd."""
         # It would be slightly better to parse the verdef section of libc.so
         # for glibc, but that requires locating the library. Instead we just
@@ -105,7 +105,7 @@ class LinuxDistro(OperatingSystem):
         if not version_str:
             return None
         try:
-            version = VersionBase(version_str.group(1))
+            version = StandardVersion.from_string(version_str.group(1))
         except Exception:
             return None
 
@@ -118,7 +118,7 @@ class LinuxDistro(OperatingSystem):
 
         return None
 
-    def _from_distro(self) -> Optional[Tuple[str, VersionBase]]:
+    def _from_distro(self) -> Optional[Tuple[str, StandardVersion]]:
         """Last resort is to use the distro module, which actually
         figures out the distribution name and version, instead of
         the libc flavor. This is a fallback in case the other methods
@@ -146,11 +146,11 @@ class LinuxDistro(OperatingSystem):
             version_str = components[0]
 
         try:
-            version = Version(version_str)
+            version = StandardVersion.from_string(version_str)
         except Exception:
             return None
 
-        return distname, Version(version)
+        return distname, version
 
     def __init__(self):
         methods = (
