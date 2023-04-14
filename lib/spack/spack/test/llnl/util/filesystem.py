@@ -736,17 +736,9 @@ def test_lexists_islink_isdir(tmpdir):
     symlink("dir", symlink_to_dir)
     symlink("file", symlink_to_file)
 
-    try:
+    with pytest.raises(SymlinkError):
         symlink("does_not_exist", dangling_symlink)
-        assert False
-    except SymlinkError:
-        ...
-
-    try:
         symlink("dangling_symlink", symlink_to_dangling_symlink)
-        assert False
-    except SymlinkError:
-        ...
 
     symlink("symlink_to_dir", symlink_to_symlink_to_dir)
     symlink("symlink_to_file", symlink_to_symlink_to_file)
