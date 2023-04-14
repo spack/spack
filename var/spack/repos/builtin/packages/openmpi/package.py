@@ -554,7 +554,7 @@ class Openmpi(AutotoolsPackage, CudaPackage):
     # depends_on('pmix@3.2.3', when='@4.1.2')
     depends_on("pmix@1.0:1", when="@2.0:2")
     depends_on("pmix@3.2:", when="@4.0:4")
-    depends_on("pmix@5:", when="@5.0:5")
+    depends_on("pmix@4.2:", when="@5.0:5")
 
     # Libevent is required when *vendored* PMIx is used
     depends_on("libevent@2:", when="@main")

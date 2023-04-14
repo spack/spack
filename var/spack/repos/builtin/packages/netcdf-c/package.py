@@ -6,8 +6,8 @@
 import os
 import sys
 
-from spack.build_systems.autotools import AutotoolsBuilder
-from spack.build_systems.cmake import CMakeBuilder
+import spack.builder
+from spack.build_systems import autotools, cmake
 from spack.package import *
 
 
@@ -151,8 +151,6 @@ class NetcdfC(CMakePackage, AutotoolsPackage):
     conflicts("+parallel-netcdf", when="@:4.0")
     conflicts("+hdf4", when="@:4.0")
 
-    filter_compiler_wrappers("nc-config", relative_root="bin")
-
     default_build_system = "cmake" if sys.platform == "win32" else "autotools"
 
     build_system("cmake", "autotools", default=default_build_system)
@@ -178,7 +176,7 @@ class Setup:
             env.prepend_path("PATH", self._nc_config_backup_dir)
 
 
-class BackupStep:
+class BackupStep(metaclass=spack.builder.PhaseCallbacksMeta):
     @property
     def _nc_config_backup_dir(self):
         return join_path(self.pkg.metadata_dir, "spack-nc-config")
@@ -191,8 +189,10 @@ class BackupStep:
             mkdirp(self._nc_config_backup_dir)
             install(nc_config_file, self._nc_config_backup_dir)
 
+    filter_compiler_wrappers("nc-config", relative_root="bin")
 
-class CMakeBuilder(CMakeBuilder, BackupStep, Setup):
+
+class CMakeBuilder(BackupStep, Setup, cmake.CMakeBuilder):
     def cmake_args(self):
         base_cmake_args = [
             self.define_from_variant("BUILD_SHARED_LIBS", "shared"),
@@ -212,7 +212,7 @@ class CMakeBuilder(CMakeBuilder, BackupStep, Setup):
         return base_cmake_args
 
 
-class AutotoolsBuilder(AutotoolsBuilder, BackupStep, Setup):
+class AutotoolsBuilder(BackupStep, Setup, autotools.AutotoolsBuilder):
     @property
     def force_autoreconf(self):
         # The patch for 4.7.0 touches configure.ac.
