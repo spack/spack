@@ -90,25 +90,24 @@ class DepfileSpecVisitor(object):
 class MakefileModel:
     def __init__(
         self,
-        env: ev.Environment,
+        env_path: str,
         roots: List[spack.spec.Spec],
         adjacency_list: List[DepfileNode],
-        make_prefix: Optional[str],
+        make_prefix: str,
+        pkg_identifier_variable: str,
         jobserver: bool,
     ):
         # Currently we can only use depfile with an environment since Spack needs to
         # find the concrete specs somewhere.
-        self.env = env
+        self.env_path = env_path
+
+        # Prefix for targets, this is where the makefile touches files in.
+        self.make_prefix = make_prefix
 
         # These specs are built in the default target.
         self.roots = roots
 
-        if make_prefix is None:
-            self.make_prefix = os.path.join(env.env_subdir_path, "makedeps")
-        else:
-            self.make_prefix = make_prefix
-
-        # And this is the dependency graph.
+        # And here we collect a tuple of (target, prereqs, dag_hash, nice_name, buildcache_flag)
         self.make_adjacency_list = [
             (
                 self._safe_name(item.target),
@@ -125,25 +124,21 @@ class MakefileModel:
 
         self.jobserver_support = "+" if jobserver else ""
 
-        self.all_pkg_identifiers = []
+        # All package identifiers, used to generate the SPACK_PACKAGE_IDS variable
+        self.all_pkg_identifiers: List[str] = []
 
         # The SPACK_PACKAGE_IDS variable is "exported", which can be used when including
         # generated makefiles to add post-install hooks, like pushing to a buildcache,
         # running tests, etc.
-        # NOTE: GNU Make allows directory separators in variable names, so for consistency
-        # we can namespace this variable with the same prefix as targets.
-        if make_prefix is None:
-            self.pkg_identifier_variable = "SPACK_PACKAGE_IDS"
-        else:
-            self.pkg_identifier_variable = os.path.join(make_prefix, "SPACK_PACKAGE_IDS")
+        self.pkg_identifier_variable = pkg_identifier_variable
 
         # All install and install-deps targets
-        self.all_install_related_targets = []
+        self.all_install_related_targets: List[str] = []
 
         # Convenience shortcuts: ensure that `make install/pkg-version-hash` triggers
         # <absolute path to env>/.spack-env/makedeps/install/pkg-version-hash in case
         # we don't have a custom make target prefix.
-        self.phony_convenience_targets = []
+        self.phony_convenience_targets: List[str] = []
 
         for node in adjacency_list:
             tgt = self._safe_name(node.target)
@@ -181,7 +176,7 @@ class MakefileModel:
             "all_install_related_targets": " ".join(self.all_install_related_targets),
             "root_install_targets": " ".join(self.root_install_targets),
             "dirs_target": self._target("dirs"),
-            "environment": self.env.path,
+            "environment": self.env_path,
             "install_target": self._target("install"),
             "install_deps_target": self._target("install-deps"),
             "any_hash_target": self._target("%"),
@@ -215,4 +210,19 @@ class MakefileModel:
             entrypoints, traverse.CoverNodesVisitor(visitor, key=lambda s: s.dag_hash())
         )
 
-        return MakefileModel(env, entrypoints, visitor.adjacency_list, make_prefix, jobserver)
+        if make_prefix is None:
+            make_prefix = os.path.join(env.env_subdir_path, "makedeps")
+            pkg_identifier_variable = "SPACK_PACKAGE_IDS"
+        else:
+            # NOTE: GNU Make allows directory separators in variable names, so for consistency
+            # we can namespace this variable with the same prefix as targets.
+            pkg_identifier_variable = os.path.join(make_prefix, "SPACK_PACKAGE_IDS")
+
+        return MakefileModel(
+            env.path,
+            entrypoints,
+            visitor.adjacency_list,
+            make_prefix,
+            pkg_identifier_variable,
+            jobserver,
+        )
