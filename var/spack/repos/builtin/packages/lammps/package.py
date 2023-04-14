@@ -2,6 +2,7 @@
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
+import os
 import datetime as dt
 
 import archspec
@@ -730,6 +731,8 @@ class Lammps(CMakePackage, CudaPackage, ROCmPackage):
                 cxx_flags = "-Ofast -mfma -fvectorize -funroll-loops"
             args.append(self.define("CMAKE_CXX_FLAGS_RELEASE", cxx_flags))
             args.append(self.define("CMAKE_CXX_FLAGS_RELWITHDEBINFO", cxx_flags))
+        if spec.satisfies("%oneapi"):
+            args.append(f"-C {os.path.join(self.stage.source_path, 'cmake', 'presets', 'oneapi.cmake')}")
 
         # Overwrite generic cpu tune option
         cmake_tune_flags = archspec.cpu.TARGETS[spec.target.name].optimization_flags(
