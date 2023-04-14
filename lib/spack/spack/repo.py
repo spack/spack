@@ -987,18 +987,7 @@ class RepoPath(object):
         This dumps the package file and any associated patch files.
         Raises UnknownPackageError if not found.
         """
-        try:
-            return self.repo_for_pkg(spec).dump_provenance(spec, path)
-        except IOError:
-            # BlueBrain: when pushing packages upstream, we delete them from our own
-            # repositories. But references to our repositories remain in the database of
-            # the continuous deployment, and therefore should be routed to the updated
-            # builtin package.
-            tty.warn(
-                "using package {0}.{1} from builtin packages".format(spec.namespace, spec.name)
-            )
-            spec.namespace = "builtin"
-            return self.repo_for_pkg(spec).dump_provenance(spec, path)
+        return self.repo_for_pkg(spec).dump_provenance(spec, path)
 
     def dirname_for_package_name(self, pkg_name):
         return self.repo_for_pkg(pkg_name).dirname_for_package_name(pkg_name)
