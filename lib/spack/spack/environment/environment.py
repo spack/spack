@@ -320,7 +320,7 @@ def create_in_dir(
     manifest = EnvironmentManifestFile(manifest_dir)
 
     if with_view is not None:
-        manifest.set_view(with_view)
+        manifest.set_default_view(with_view)
 
     if not keep_relative and init_file is not None and str(init_file).endswith(manifest_name):
         init_file = pathlib.Path(init_file)
@@ -1571,18 +1571,37 @@ class Environment:
 
         return self.views[default_view_name]
 
-    def update_default_view(self, viewpath):
-        name = default_view_name
-        if name in self.views and self.default_view.root != viewpath:
-            shutil.rmtree(self.default_view.root)
+    def update_default_view(self, path_or_bool: Union[str, bool]) -> None:
+        view_path = self.view_path_default if path_or_bool is True else path_or_bool
 
-        if viewpath:
-            if name in self.views:
-                self.default_view.root = viewpath
-            else:
-                self.views[name] = ViewDescriptor(self.path, viewpath)
-        else:
-            self.views.pop(name, None)
+        # We don't have the view, and we want to remove it
+        if default_view_name not in self.views and path_or_bool is False:
+            return
+
+        # We have the view, and we want to set it to the same path
+        if default_view_name in self.views and self.default_view.root == view_path:
+            return
+
+        self.delete_default_view()
+
+        if path_or_bool is False:
+            self.views.pop(default_view_name)
+            self.manifest.remove_default_view()
+            return
+
+        self.views.setdefault(
+            default_view_name, ViewDescriptor(self.path, view_path)
+        ).root = view_path
+        self.manifest.set_default_view(self._default_view_as_yaml())
+
+    def delete_default_view(self) -> None:
+        """Deletes the default view associated with this environment."""
+        if default_view_name not in self.views:
+            return
+
+        view = pathlib.Path(self.default_view.root)
+        shutil.rmtree(view.resolve())
+        view.unlink()
 
     def regenerate_views(self):
         if not self.views:
@@ -2197,23 +2216,6 @@ class Environment:
 
         self.invalidate_repository_cache()
 
-        # Construct YAML representation of view
-        default_name = default_view_name
-        if self.views and len(self.views) == 1 and default_name in self.views:
-            path = self.default_view.raw_root
-            if self.default_view == ViewDescriptor(self.path, self.view_path_default):
-                view = True
-            elif self.default_view == ViewDescriptor(self.path, path):
-                view = path
-            else:
-                view = dict((name, view.to_dict()) for name, view in self.views.items())
-        elif self.views:
-            view = dict((name, view.to_dict()) for name, view in self.views.items())
-        else:
-            view = False
-
-        yaml_dict["view"] = view
-
         if self.dev_specs:
             # Remove entries that are mirroring defaults
             write_dev_specs = copy.deepcopy(self.dev_specs)
@@ -2245,6 +2247,17 @@ class Environment:
             self.raw_yaml = copy.deepcopy(self.yaml)
             with fs.write_tmp_and_move(os.path.realpath(self.manifest_path)) as f:
                 _write_yaml(self.yaml, f)
+
+    def _default_view_as_yaml(self):
+        """This internal function assumes the default view is set"""
+        path = self.default_view.raw_root
+        if self.default_view == ViewDescriptor(self.path, self.view_path_default):
+            return True
+
+        if self.default_view == ViewDescriptor(self.path, path):
+            return path
+
+        return {"root": path}
 
     def invalidate_repository_cache(self):
         self._repo = None
@@ -2705,19 +2718,36 @@ class EnvironmentManifestFile(collections.Mapping):
         config_dict(self.yaml_content)["definitions"][idx][list_name].remove(user_spec)
         self.changed = True
 
-    def set_view(self, view: Union[bool, str, pathlib.Path]) -> None:
-        """Sets the view in the manifest to the value passed as input.
+    def set_default_view(self, view: Union[bool, str, pathlib.Path, Dict[str, str]]) -> None:
+        """Sets the default view root in the manifest to the value passed as input.
 
         Args:
             view: If the value is a string or a path, it specifies the path to the view. If
                 True the default view is used for the environment, if False there's no view.
         """
+        if isinstance(view, dict):
+            config_dict(self.pristine_yaml_content)["view"][default_view_name].update(view)
+            config_dict(self.yaml_content)["view"][default_view_name].update(view)
+            self.changed = True
+            return
+
         if not isinstance(view, bool):
             view = str(view)
 
         config_dict(self.pristine_yaml_content)["view"] = view
         config_dict(self.yaml_content)["view"] = view
         self.changed = True
+
+    def remove_default_view(self) -> None:
+        """Removes the default view from the manifest file"""
+        view_data = config_dict(self.pristine_yaml_content).get("view")
+        if isinstance(view_data, collections.Mapping):
+            config_dict(self.pristine_yaml_content)["view"].pop(default_view_name)
+            config_dict(self.yaml_content)["view"].pop(default_view_name)
+            self.changed = True
+            return
+
+        self.set_default_view(view=False)
 
     def absolutify_dev_paths(self, init_file_dir: Union[str, pathlib.Path]) -> None:
         """Normalizes the dev paths in the environment with respect to the directory where the
