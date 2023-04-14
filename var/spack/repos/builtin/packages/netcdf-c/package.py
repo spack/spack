@@ -223,7 +223,12 @@ class NetcdfC(CMakePackage, AutotoolsPackage):
     # later is required for netCDF-4 compression. However, zlib became a direct dependency only
     # starting NetCDF 4.9.0 (for the deflate plugin):
     depends_on("zlib@1.2.5:", when="@4.9.0:+shared")
-    depends_on("bzip2", when="@4.9.0:+shared")
+
+    # Use the vendored bzip2 on Windows:
+    for __p in ["darwin", "cray", "linux"]:
+        depends_on("bzip2", when="@4.9.0:+shared platform={0}".format(__p))
+    del __p
+
     depends_on("szip", when="+szip")
     depends_on("c-blosc", when="+blosc")
     depends_on("zstd", when="+zstd")
@@ -313,6 +318,9 @@ class CMakeBuilder(BaseBuilder, cmake.CMakeBuilder):
             base_cmake_args.append(self.define("ENABLE_PNETCDF", True))
         if self.pkg.spec.satisfies("@4.3.1:"):
             base_cmake_args.append(self.define("ENABLE_DYNAMIC_LOADING", True))
+        if "platform=windows" in self.pkg.spec:
+            # Enforce the usage of the vendored version of bzip2 on Windows:
+            base_cmake_args.append(self.define("Bz2_INCLUDE_DIRS", ""))
         return base_cmake_args
 
 
