@@ -27,6 +27,7 @@ class Boost(Package):
     maintainers("hainest")
 
     version("develop", branch="develop", submodules=True)
+    version("1.82.0", sha256="a6e1ab9b0860e6a2881dd7b21fe9f737a095e5f33a3a874afc6a345228597ee6")
     version("1.81.0", sha256="71feeed900fbccca04a3b4f2f84a7c217186f28a940ed8b7ed4725986baf99fa")
     version("1.80.0", sha256="1e19565d82e43bc59209a168f5ac899d3ba471d55c7610c677d4ccf2c9c500c0")
     version("1.79.0", sha256="475d589d51a7f8b3ba2ba4eda022b170e562ca3b760ee922c146b6c65856ef39")
@@ -398,6 +399,13 @@ class Boost(Package):
 
     # https://github.com/boostorg/phoenix/issues/111
     patch("boost_phoenix_1.81.0.patch", level=2, when="@1.81.0")
+
+    # https://github.com/boostorg/filesystem/issues/284
+    patch(
+        "https://www.boost.org/patches/1_82_0/0002-filesystem-fix-win-smbv1-dir-iterator.patch",
+        sha256="738ba8e0d7b5cdcf5fae4998f9450b51577bbde1bb0d220a0721551609714ca4",
+        when="@1.82.0 platform=windows",
+    )
 
     def patch(self):
         # Disable SSSE3 and AVX2 when using the NVIDIA compiler
