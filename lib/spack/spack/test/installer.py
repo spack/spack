@@ -7,7 +7,6 @@ import glob
 import os
 import shutil
 import sys
-import tempfile
 
 import py
 import pytest
@@ -269,6 +268,7 @@ def test_installer_prune_built_build_deps(install_mockery, monkeypatch, tmpdir):
     Thus since (b) is already installed our build_pq dag should
     only include four packages. [(a), (b), (d), (e)]
     """
+
     @property
     def _mock_installed(self):
         return self.name in ["b"]
