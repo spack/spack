@@ -257,21 +257,21 @@ def test_installer_prune_built_build_deps(install_mockery, monkeypatch, tmpdir):
     Ensure that build dependencies of installed deps are pruned
     from installer package queues.
 
-                (a)
-                / \
-               /   \
-             (d)   (b) <-- is installed already so we should
-               \   / \     prune (c) from this install since
-                \ /  (c)   it is *only* needed to build (b)
-                (e)
+               (a)
+              /   \
+             /     \
+           (b)     (c) <--- is installed already so we should
+              \   / | \     prune (f) from this install since
+               \ /  |  \    it is *only* needed to build (b)
+               (d) (e) (f)
 
-    Thus since (b) is already installed our build_pq dag should
-    only include four packages. [(a), (b), (d), (e)]
+    Thus since (c) is already installed our build_pq dag should
+    only include four packages. [(a), (b), (c), (d), (e)]
     """
 
     @property
     def _mock_installed(self):
-        return self.name in ["b"]
+        return self.name in ["c"]
 
     # Mock the installed property to say that (b) is installed
     monkeypatch.setattr(spack.spec.Spec, "installed", _mock_installed)
@@ -279,11 +279,14 @@ def test_installer_prune_built_build_deps(install_mockery, monkeypatch, tmpdir):
     # Create mock repository with packages (a), (b), (c), (d), and (e)
     builder = spack.repo.MockRepositoryBuilder(tmpdir.mkdir("mock-repo"))
 
-    builder.add_package("a", dependencies=[("b", "build", None), ("d", "build", None)])
-    builder.add_package("b", dependencies=[("c", "build", None), ("e", "build", None)])
-    builder.add_package("c")
-    builder.add_package("d", dependencies=[("e", "build", None)])
+    builder.add_package("a", dependencies=[("b", "build", None), ("c", "build", None)])
+    builder.add_package("b", dependencies=[("d", "build", None)])
+    builder.add_package(
+        "c", dependencies=[("d", "build", None), ("e", "all", None), ("f", "build", None)]
+    )
+    builder.add_package("d")
     builder.add_package("e")
+    builder.add_package("f")
 
     with spack.repo.use_repositories(builder.root):
         const_arg = installer_args(["a"], {})
@@ -292,8 +295,9 @@ def test_installer_prune_built_build_deps(install_mockery, monkeypatch, tmpdir):
         installer._init_queue()
 
         # Assert that (c) is not in the build_pq
-        for _, task in installer.build_pq:
-            assert "c-" not in task.pkg_id
+        result = set([task.pkg_id[0] for _, task in installer.build_pq])
+        expected = set(["a", "b", "c", "d", "e"])
+        assert result == expected
 
 
 def test_check_before_phase_error(install_mockery):
