@@ -1,0 +1,11 @@
+--- a/src/core/IO/FileSystem.hpp
++++ b/src/core/IO/FileSystem.hpp
+@@ -63,6 +63,9 @@ public:
+     std::ifstream  src(f1, std::ios::binary);
+     std::ofstream  dst(f2,   std::ios::binary);
+     dst << src.rdbuf();
++    dst.flush();
++    dst.close();
++    src.close();
+   }
+ };

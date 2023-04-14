@@ -1,0 +1,11 @@
+--- a/src/core/IO/LibpllParsers.cpp
++++ b/src/core/IO/LibpllParsers.cpp
+@@ -130,6 +130,7 @@ void LibpllParsers::saveRtree(const pll_rnode_t *rtree,
+   std::ofstream os(fileName, std::ofstream::out);
+   char *newick = pll_rtree_export_newick(rtree, 0);
+   os << newick;
++  os.flush();
+   os.close();
+   free(newick);
+ }
+
