@@ -41,4 +41,4 @@ class Codecov(Package):
         chmod = which("chmod")
         chmod("+x", codecov)
         mkdirp(prefix.bin)
-        install(codecov, join_path(prefix.bin, "codecov"))
+        install(codecov, prefix.bin.codecov)
