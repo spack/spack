@@ -1715,6 +1715,7 @@ class Environment(object):
                 )
                 if os.path.lexists(build_log_link):
                     os.remove(build_log_link)
+                fs.touchp(spec.package.build_log_path)
                 symlink(spec.package.build_log_path, build_log_link)
 
     def _partition_roots_by_install_status(self):
