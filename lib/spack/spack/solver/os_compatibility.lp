@@ -8,6 +8,7 @@
 % OlderOS binaries can be used on RecentOS
 
 % macOS
+os_compatible("ventura", "monterey").
 os_compatible("monterey", "bigsur").
 os_compatible("bigsur", "catalina").
 
