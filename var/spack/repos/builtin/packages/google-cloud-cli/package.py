@@ -7,7 +7,6 @@ import platform
 
 from spack.package import *
 
-
 checksums = {
     "linux": {
         "arm": "8409b8cc00f0ae8089be97d8a565f4072eada890776345bccb988bcd4d4bb27f",
