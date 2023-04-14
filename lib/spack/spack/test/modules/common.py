@@ -17,8 +17,6 @@ import spack.util.spack_yaml as syaml
 from spack.modules.common import UpstreamModuleIndex
 from spack.spec import Spec
 
-pytestmark = pytest.mark.skipif(sys.platform == "win32", reason="does not run on windows")
-
 
 def test_update_dictionary_extending_list():
     target = {"foo": {"a": 1, "b": 2, "d": 4}, "bar": [1, 2, 4], "baz": "foobar"}
@@ -48,7 +46,7 @@ def mock_package_perms(monkeypatch):
 
     yield perms
 
-
+@pytest.mark.skipif(sys.platform == "win32", reason="Symlinks do not work on windows yet")
 def test_modules_written_with_proper_permissions(
     mock_module_filename, mock_package_perms, mock_packages, config
 ):
@@ -62,6 +60,7 @@ def test_modules_written_with_proper_permissions(
     assert mock_package_perms & os.stat(mock_module_filename).st_mode == mock_package_perms
 
 
+@pytest.mark.skipif(sys.platform == "win32", reason="Symlinks do not work on windows yet")
 @pytest.mark.parametrize("module_type", ["tcl", "lmod"])
 def test_modules_default_symlink(
     module_type, mock_packages, mock_module_filename, mock_module_defaults, config
