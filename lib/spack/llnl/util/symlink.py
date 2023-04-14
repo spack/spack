@@ -76,10 +76,7 @@ def symlink(source_path: str, link_path: str):
     if sys.platform == "win32" and not _windows_can_symlink():
         _windows_create_link(source_path, link_path)
     else:
-        try:
-            os.symlink(source_path, link_path, target_is_directory=os.path.isdir(source_path))
-        except Exception as e:
-            raise SymlinkError("An exception occurred while creating symlink") from e
+        os.symlink(source_path, link_path, target_is_directory=os.path.isdir(source_path))
 
 
 def islink(path: str) -> bool:
@@ -97,10 +94,7 @@ def islink(path: str) -> bool:
     Returns:
          bool - whether the path is any kind link or not.
     """
-    try:
-        return any([os.path.islink(path), _windows_is_junction(path), _windows_is_hardlink(path)])
-    except Exception as e:
-        raise SymlinkError("Could not determine if given path is a link") from e
+    return any([os.path.islink(path), _windows_is_junction(path), _windows_is_hardlink(path)])
 
 
 def _windows_is_hardlink(path: str) -> bool:
@@ -119,10 +113,7 @@ def _windows_is_hardlink(path: str) -> bool:
     if sys.platform != "win32" or os.path.islink(path) or not os.path.exists(path):
         return False
 
-    try:
-        return os.stat(path).st_nlink > 1
-    except Exception as e:
-        raise SymlinkError("Could not determine if path is a hard link") from e
+    return os.stat(path).st_nlink > 1
 
 
 def _windows_is_junction(path: str) -> bool:
@@ -233,17 +224,14 @@ def _windows_create_junction(source: str, link: str):
 
     import subprocess
 
-    try:
-        cmd = ["cmd", "/C", "mklink", "/J", link, source]
-        proc = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-        out, err = proc.communicate()
-        tty.debug(out.decode())
-        if proc.returncode != 0:
-            err = err.decode()
-            tty.error(err)
-            raise SymlinkError("Make junction command returned a non-zero return code.", err)
-    except subprocess.CalledProcessError as e:
-        raise SymlinkError(f"Failed to make junction {link} from directory {source}") from e
+    cmd = ["cmd", "/C", "mklink", "/J", link, source]
+    proc = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    out, err = proc.communicate()
+    tty.debug(out.decode())
+    if proc.returncode != 0:
+        err = err.decode()
+        tty.error(err)
+        raise SymlinkError("Make junction command returned a non-zero return code.", err)
 
 
 def _windows_create_hard_link(path: str, link: str):
