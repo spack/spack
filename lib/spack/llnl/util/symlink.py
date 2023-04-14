@@ -223,8 +223,7 @@ def _windows_create_junction(source: str, link: str):
     then create the junction.
     """
     if sys.platform != "win32":
-        tty.warn("windows_create_junction method can't be used on non-Windows OS.")
-        return
+        raise SymlinkError("windows_create_junction method can't be used on non-Windows OS.")
     elif not os.path.exists(source):
         raise SymlinkError("Source path does not exist, cannot create a junction.")
     elif os.path.exists(link):
@@ -252,8 +251,7 @@ def _windows_create_hard_link(path: str, link: str):
     link, then create the hard link.
     """
     if sys.platform != "win32":
-        tty.warn("windows_create_hard_link method can't be used on non-Windows OS.")
-        return
+        raise SymlinkError("windows_create_hard_link method can't be used on non-Windows OS.")
     elif not os.path.exists(path):
         raise SymlinkError(f"File path {path} does not exist. Cannot create hard link.")
     elif os.path.exists(link):
