@@ -222,13 +222,8 @@ def test_merge_to_existing_directory__win32_base(stage, link_tree):
         assert os.path.isfile("dest/x")
         assert os.path.isfile("dest/a/b/y")
 
-        assert not os.path.isfile("dest/1")
-        assert not os.path.isfile("dest/a/b/2")
-        assert not os.path.isfile("dest/a/b/3")
-        assert not os.path.isfile("dest/c/4")
-        assert not os.path.isfile("dest/c/d/5")
-        assert not os.path.isfile("dest/c/d/6")
-        assert not os.path.isfile("dest/c/d/e/7")
+        for f in files:
+            assert not os.path.isfile(f)
 
 
 def test_merge_with_empty_directories(stage, link_tree):
