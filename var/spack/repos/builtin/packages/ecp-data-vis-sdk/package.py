@@ -141,6 +141,7 @@ class EcpDataVisSdk(BundlePackage, CudaPackage, ROCmPackage):
     dav_sdk_depends_on("parallel-netcdf+shared", when="+pnetcdf", propagate=["fortran"])
 
     dav_sdk_depends_on("unifyfs", when="+unifyfs ")
+    conflicts("unifyfs@develop")
 
     dav_sdk_depends_on("veloc", when="+veloc")
 
