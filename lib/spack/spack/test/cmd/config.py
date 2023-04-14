@@ -664,4 +664,4 @@ spack:
         config("update", "-y", "config")
 
     with ev.Environment(str(tmpdir)) as e:
-        assert not e.raw_yaml["spack"]["config"]["ccache"]
+        assert not e.manifest.pristine_yaml_content["spack"]["config"]["ccache"]

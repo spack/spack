@@ -144,7 +144,7 @@ def test_user_view_path_is_not_canonicalized_in_yaml(tmpdir, config):
     # and also check that the getter is pointing to the right dir.
     with fs.working_dir(str(tmpdir)):
         snd = ev.Environment(env_path)
-        assert snd.yaml["spack"]["view"] == view
+        assert snd.manifest["spack"]["view"] == view
         assert os.path.samefile(snd.default_view.root, absolute_view)
 
 
@@ -188,7 +188,7 @@ def test_roundtrip_spack_yaml_with_comments(original_content, mock_packages, con
     spack_yaml.write_text(original_content)
 
     e = ev.Environment(tmp_path)
-    e.update_manifest()
+    e.manifest.flush()
 
     content = spack_yaml.read_text()
     assert content == original_content

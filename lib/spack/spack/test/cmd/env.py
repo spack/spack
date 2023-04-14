@@ -19,6 +19,7 @@ import llnl.util.link_tree
 import spack.cmd.env
 import spack.config
 import spack.environment as ev
+import spack.environment.environment
 import spack.environment.shell
 import spack.error
 import spack.modules
@@ -1888,7 +1889,9 @@ env:
 
         test = ev.read("test")
 
-        packages_lists = list(filter(lambda x: "packages" in x, test.yaml["env"]["definitions"]))
+        packages_lists = list(
+            filter(lambda x: "packages" in x, test.manifest["env"]["definitions"])
+        )
 
         assert len(packages_lists) == 2
         assert "callpath" not in packages_lists[0]["packages"]
@@ -2566,7 +2569,9 @@ spack:
     def _write_helper_raise(self):
         raise RuntimeError("some error")
 
-    monkeypatch.setattr(ev.Environment, "update_manifest", _write_helper_raise)
+    monkeypatch.setattr(
+        spack.environment.environment.EnvironmentManifestFile, "flush", _write_helper_raise
+    )
     with ev.Environment(str(tmpdir)) as e:
         e.concretize(force=True)
         with pytest.raises(RuntimeError):

@@ -3,6 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 import collections
+import collections.abc
 import contextlib
 import copy
 import os
@@ -779,19 +780,7 @@ class Environment:
 
         with lk.ReadTransaction(self.txlock):
             self.manifest = EnvironmentManifestFile(manifest_dir)
-            self.yaml = self.manifest.yaml_content
-            self.raw_yaml = self.manifest.pristine_yaml_content
             self._read()
-
-    def set_view(self, view_dir: Union[bool, str, pathlib.Path]) -> "Environment":
-        """Sets the default view and returns the environment."""
-        if view_dir is False:
-            self.views = {}
-        elif view_dir is True:
-            self.views = {default_view_name: ViewDescriptor(self.path, self.view_path_default)}
-        else:
-            self.views = {default_view_name: ViewDescriptor(self.path, str(view_dir))}
-        return self
 
     def __reduce__(self):
         return _create_environment, (self.path,)
@@ -803,9 +792,7 @@ class Environment:
         """
         self.clear(re_read=True)
         with lk.ReadTransaction(self.txlock):
-            self.manifest = EnvironmentManifestFile(self.manifest.manifest_dir)
-            self.yaml = self.manifest.yaml_content
-            self.raw_yaml = self.manifest.pristine_yaml_content
+            self.manifest = EnvironmentManifestFile(self.path)
             self._read()
 
     def _read(self):
@@ -827,7 +814,7 @@ class Environment:
         """Read manifest file and set up user specs."""
         self.spec_lists = collections.OrderedDict()
 
-        for item in config_dict(self.yaml).get("definitions", []):
+        for item in config_dict(self.manifest).get("definitions", []):
             entry = copy.deepcopy(item)
             when = _eval_conditional(entry.pop("when", "True"))
             assert len(entry) == 1
@@ -839,13 +826,13 @@ class Environment:
                 else:
                     self.spec_lists[name] = user_specs
 
-        spec_list = config_dict(self.yaml).get(user_speclist_name, [])
+        spec_list = config_dict(self.manifest).get(user_speclist_name, [])
         user_specs = SpecList(
             user_speclist_name, [s for s in spec_list if s], self.spec_lists.copy()
         )
         self.spec_lists[user_speclist_name] = user_specs
 
-        enable_view = config_dict(self.yaml).get("view")
+        enable_view = config_dict(self.manifest).get("view")
         # enable_view can be boolean, string, or None
         if enable_view is True or enable_view is None:
             self.views = {default_view_name: ViewDescriptor(self.path, self.view_path_default)}
@@ -861,7 +848,7 @@ class Environment:
             self.views = {}
 
         # Retrieve the current concretization strategy
-        configuration = config_dict(self.yaml)
+        configuration = config_dict(self.manifest)
 
         # Retrieve unification scheme for the concretizer
         self.unify = spack.config.get("concretizer:unify", False)
@@ -893,7 +880,7 @@ class Environment:
         self.concretized_user_specs = []  # user specs from last concretize
         self.concretized_order = []  # roots of last concretize, in order
         self.specs_by_hash = {}  # concretized specs by hash
-        self._repo = None  # RepoPath for this env (memoized)
+        self.invalidate_repository_cache()
         self._previous_active = None  # previously active environment
         if not re_read:
             # things that cannot be recreated from file
@@ -987,7 +974,7 @@ class Environment:
 
         # load config scopes added via 'include:', in reverse so that
         # highest-precedence scopes are last.
-        includes = config_dict(self.yaml).get("include", [])
+        includes = config_dict(self.manifest).get("include", [])
         missing = []
         for i, config_path in enumerate(reversed(includes)):
             # allow paths to contain spack config/environment variables, etc.
@@ -1083,7 +1070,7 @@ class Environment:
             config_name,
             self.manifest_path,
             spack.schema.env.schema,
-            [spack.config.first_existing(self.raw_yaml, spack.schema.env.keys)],
+            [spack.config.first_existing(self.manifest, spack.schema.env.keys)],
         )
 
     def config_scopes(self):
@@ -2146,7 +2133,7 @@ class Environment:
         if self.specs_by_hash:
             self.ensure_env_directory_exists(dot_env=True)
             self.update_environment_repository()
-            self.update_manifest()
+            self.manifest.flush()
             # Write the lock file last. This is useful for Makefiles
             # with `spack.lock: spack.yaml` rules, where the target
             # should be newer than the prerequisite to avoid
@@ -2155,7 +2142,7 @@ class Environment:
         else:
             self.ensure_env_directory_exists(dot_env=False)
             with fs.safe_remove(self.lock_path):
-                self.update_manifest()
+                self.manifest.flush()
 
         if regenerate:
             self.regenerate_views()
@@ -2209,37 +2196,6 @@ class Environment:
                 "use the updated configuration."
             )
             warnings.warn(msg.format(self.name, self.name, ver))
-
-    def update_manifest(self):
-        """Update YAML manifest for this environment based on changes to
-        spec lists and views and write it.
-        """
-        yaml_dict = config_dict(self.yaml)
-        raw_yaml_dict = config_dict(self.raw_yaml)
-
-        self.invalidate_repository_cache()
-
-        # Remove yaml sections that are shadowing defaults
-        # construct garbage path to ensure we don't find a manifest by accident
-        with fs.temp_cwd() as env_dir:
-            bare_env = create_in_dir(env_dir).set_view(self.view_path_default)
-            keys_present = list(yaml_dict.keys())
-            for key in keys_present:
-                if yaml_dict[key] == config_dict(bare_env.yaml).get(key, None):
-                    if key not in raw_yaml_dict:
-                        del yaml_dict[key]
-        # if all that worked, write out the manifest file at the top level
-        # (we used to check whether the yaml had changed and not write it out
-        # if it hadn't. We can't do that anymore because it could be the only
-        # thing that changed is the "override" attribute on a config dict,
-        # which would not show up in even a string comparison between the two
-        # keys).
-        changed = self.manifest.changed or not yaml_equivalent(self.yaml, self.raw_yaml)
-        written = os.path.exists(self.manifest_path)
-        if changed or not written:
-            self.raw_yaml = copy.deepcopy(self.yaml)
-            with fs.write_tmp_and_move(os.path.realpath(self.manifest_path)) as f:
-                _write_yaml(self.yaml, f)
 
     def _default_view_as_yaml(self):
         """This internal function assumes the default view is set"""
@@ -2563,7 +2519,7 @@ def initialize_environment_dir(
     shutil.copy(envfile, target_manifest)
 
 
-class EnvironmentManifestFile(collections.Mapping):
+class EnvironmentManifestFile(collections.abc.Mapping):
     """Manages the in-memory representation of a manifest file, and its synchronization
     with the actual manifest on disk.
     """
@@ -2734,7 +2690,7 @@ class EnvironmentManifestFile(collections.Mapping):
     def remove_default_view(self) -> None:
         """Removes the default view from the manifest file"""
         view_data = config_dict(self.pristine_yaml_content).get("view")
-        if isinstance(view_data, collections.Mapping):
+        if isinstance(view_data, collections.abc.Mapping):
             config_dict(self.pristine_yaml_content)["view"].pop(default_view_name)
             config_dict(self.yaml_content)["view"].pop(default_view_name)
             self.changed = True
@@ -2800,7 +2756,7 @@ class EnvironmentManifestFile(collections.Mapping):
         if not self.changed:
             return
 
-        with self.manifest_file.open("w") as f:
+        with fs.write_tmp_and_move(os.path.realpath(self.manifest_file)) as f:
             _write_yaml(self.pristine_yaml_content, f)
         self.changed = False
 
