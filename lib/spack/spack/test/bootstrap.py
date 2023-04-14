@@ -166,7 +166,6 @@ def test_nested_use_of_context_manager(mutable_config):
     assert spack.config.config == user_config
 
 
-@pytest.mark.skipif(sys.platform == "win32", reason="Not supported on Windows (yet)")
 @pytest.mark.parametrize("expected_missing", [False, True])
 def test_status_function_find_files(
     mutable_config, mock_executable, tmpdir, monkeypatch, expected_missing
