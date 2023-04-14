@@ -2,14 +2,11 @@
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
-import sys
 
 import pytest
 
 import spack.spec
 import spack.store
-
-pytestmark = pytest.mark.skipif(sys.platform == "win32", reason="does not run on windows")
 
 
 @pytest.mark.parametrize("hash_length", [1, 2, 3, 4, 5, 9])
