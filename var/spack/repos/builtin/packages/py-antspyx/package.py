@@ -43,6 +43,7 @@ class PyAntspyx(PythonPackage):
     resource(
         name="submodule-imposter-pybind11",
         git="https://github.com/stnava/pybind11/",
+        commit="10511f50b23c9c640d59f7dfd5bca0db99fefc4c",
         destination="ants/lib",
     )
 
