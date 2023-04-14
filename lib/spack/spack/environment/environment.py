@@ -867,7 +867,7 @@ class Environment:
         self.unify = spack.config.get("concretizer:unify", False)
 
         # Retrieve dev-build packages:
-        self.dev_specs = configuration.get("develop", {})
+        self.dev_specs = copy.deepcopy(configuration.get("develop", {}))
         for name, entry in self.dev_specs.items():
             # spec must include a concrete version
             assert Spec(entry["spec"]).version.concrete
@@ -1310,7 +1310,9 @@ class Environment:
             pkg_cls(spec).stage.steal_source(abspath)
 
         # If it wasn't already in the list, append it
-        self.dev_specs[spec.name] = {"path": path, "spec": str(spec)}
+        entry = {"path": path, "spec": str(spec)}
+        self.dev_specs[spec.name] = entry
+        self.manifest.add_develop_spec(spec.name, entry=entry.copy())
         return True
 
     def undevelop(self, spec):
@@ -1320,6 +1322,7 @@ class Environment:
         spec = Spec(spec)  # In case it's a spec object
         if spec.name in self.dev_specs:
             del self.dev_specs[spec.name]
+            self.manifest.remove_develop_spec(spec.name)
             return True
         return False
 
@@ -2216,16 +2219,6 @@ class Environment:
 
         self.invalidate_repository_cache()
 
-        if self.dev_specs:
-            # Remove entries that are mirroring defaults
-            write_dev_specs = copy.deepcopy(self.dev_specs)
-            for name, entry in write_dev_specs.items():
-                if entry["path"] == name:
-                    del entry["path"]
-            yaml_dict["develop"] = write_dev_specs
-        else:
-            yaml_dict.pop("develop", None)
-
         # Remove yaml sections that are shadowing defaults
         # construct garbage path to ensure we don't find a manifest by accident
         with fs.temp_cwd() as env_dir:
@@ -2748,6 +2741,42 @@ class EnvironmentManifestFile(collections.Mapping):
             return
 
         self.set_default_view(view=False)
+
+    def add_develop_spec(self, pkg_name: str, entry: Dict[str, str]) -> None:
+        """Adds a develop spec to the manifest file
+
+        Args:
+            pkg_name: name of the package to be developed
+            entry: spec and path of the developed package
+        """
+        # The environment sets the path to pkg_name is that is implicit
+        if entry["path"] == pkg_name:
+            entry.pop("path")
+
+        config_dict(self.pristine_yaml_content).setdefault("develop", {}).setdefault(
+            pkg_name, {}
+        ).update(entry)
+        config_dict(self.yaml_content).setdefault("develop", {}).setdefault(pkg_name, {}).update(
+            entry
+        )
+        self.changed = True
+
+    def remove_develop_spec(self, pkg_name: str) -> None:
+        """Removes a develop spec from the manifest file
+
+        Args:
+            pkg_name: package to be removed from development
+
+        Raises:
+            SpackEnvironmentError: if there is nothing to remove
+        """
+        try:
+            del config_dict(self.pristine_yaml_content)["develop"][pkg_name]
+        except KeyError as e:
+            msg = f"cannot remove '{pkg_name}' from develop specs in {self}, entry does not exist"
+            raise SpackEnvironmentError(msg) from e
+        del config_dict(self.yaml_content)["develop"][pkg_name]
+        self.changed = True
 
     def absolutify_dev_paths(self, init_file_dir: Union[str, pathlib.Path]) -> None:
         """Normalizes the dev paths in the environment with respect to the directory where the
