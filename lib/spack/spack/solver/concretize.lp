@@ -1263,23 +1263,23 @@ opt_criterion(39, "compiler mismatches that are not from CLI").
 }.
 
 % Try to minimize the number of compiler mismatches in the DAG.
-% opt_criterion(35, "non-preferred OS's").
-% #minimize{ 0@235: #true }.
-% #minimize{ 0@35: #true }.
-% #minimize{
-%     Weight@35+Priority,Package
-%     : node_os_weight(Package, Weight),
-%       build_priority(Package, Priority)
-% }.
+opt_criterion(35, "OS mismatches").
+#minimize{ 0@235: #true }.
+#minimize{ 0@35: #true }.
+#minimize{
+    1@35+Priority,Package,Dependency
+    : node_os_mismatch(Package, Dependency),
+      build_priority(Package, Priority)
+}.
 
-% opt_criterion(30, "OS mismatches").
-% #minimize{ 0@230: #true }.
-% #minimize{ 0@30: #true }.
-% #minimize{
-%     1@30+Priority,Package,Dependency
-%     : node_os_mismatch(Package, Dependency),
-%       build_priority(Package, Priority)
-% }.
+opt_criterion(30, "non-preferred OS's").
+#minimize{ 0@230: #true }.
+#minimize{ 0@30: #true }.
+#minimize{
+    Weight@30+Priority,Package
+    : node_os_weight(Package, Weight),
+      build_priority(Package, Priority)
+}.
 
 % Choose more recent versions for nodes
 opt_criterion(25, "version badness").
