@@ -246,7 +246,6 @@ class PhaseCallbacksMeta(type):
                     break
             else:
                 callbacks_from_base = []
-            callbacks_from_base = callbacks_from_base or []
 
             # Set the callbacks in this class and flush the temporary stage
             attr_dict[temporary_stage.attribute_name] = staged_callbacks[:] + callbacks_from_base
