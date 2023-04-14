@@ -63,6 +63,7 @@ class Steps(CMakePackage):
     depends_on("boost", type="build")
     depends_on("caliper", when="+caliper")
     depends_on("easyloggingpp", when="~bundle")
+    depends_on("eigen")
     depends_on("gmsh", when="+distmesh")
     depends_on("gsl", when="+vesicle")
     depends_on("lapack", when="+lapack")
