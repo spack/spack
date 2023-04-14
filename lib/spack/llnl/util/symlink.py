@@ -50,6 +50,28 @@ def symlink(source_path: str, link_path: str):
     if os.path.exists(link_path):
         raise SymlinkError(f"Link path ({link_path}) already exists. Cannot create link.")
 
+    if not os.path.exists(source_path):
+        if os.path.isabs(source_path):
+            # An absolute source path that does not exist will result in a broken link.
+            raise SymlinkError(
+                f"Source path ({source_path}) is absolute but does not exist. Resulting "
+                f"link would be broken so not making link."
+            )
+        else:
+            # os.symlink can create a link when the given source path is relative to
+            # the link path. Emulate this behavior and check to see if the source exists
+            # relative to the link patg ahead of link creation to prevent broken
+            # links from being made.
+            link_parent_dir = os.path.dirname(link_path)
+            relative_path = os.path.join(link_parent_dir, source_path)
+            if os.path.exists(relative_path):
+                source_path = relative_path
+            else:
+                raise SymlinkError(
+                    f"The source path ({source_path}) is not relative to the link path "
+                    f"({link_path}). Resulting link would be broken so not making link."
+                )
+
     # Create the symlink
     if sys.platform == "win32" and not _windows_can_symlink():
         _windows_create_link(source_path, link_path)
@@ -58,19 +80,6 @@ def symlink(source_path: str, link_path: str):
             os.symlink(source_path, link_path, target_is_directory=os.path.isdir(source_path))
         except Exception as e:
             raise SymlinkError("An exception occurred while creating symlink") from e
-
-    # Redundancy check to make sure the link created successfully
-    if os.path.lexists(link_path):
-        if not os.path.exists(link_path):
-            # This is a broken link.
-            raise SymlinkError(
-                f"Broken link does not point to the source path ({source_path}).",
-                long_message="This can be caused by the source path not being relative to "
-                "either the link's parent directory or the current working directory or "
-                "the source target not existing.",
-            )
-    else:
-        raise SymlinkError("Link does not exist after symlink methods finished.")
 
 
 def islink(path: str) -> bool:
@@ -198,23 +207,8 @@ def _windows_create_link(source: str, link: str):
     to the link's parent directory.
     """
     if sys.platform != "win32":
-        tty.warn("windows_create_link method can't be used on non-Windows OS.")
-        return
-    elif os.path.isabs(source) and not os.path.exists(source):
-        raise SymlinkError(
-            f"Source path ({source}) is absolute but does not exist. Cannot create link."
-        )
-    elif not os.path.exists(source):
-        # Emulate how the os.symlink method creates links where the source is
-        # relative to the target.
-        link_parent = os.path.dirname(link)
-        relative_path = os.path.join(link_parent, source)
-        if os.path.exists(relative_path):
-            source = relative_path
-        else:
-            raise SymlinkError(f"Source path ({source}) does not exist. Cannot create link.")
-
-    if os.path.isdir(source):
+        raise SymlinkError("windows_create_link method can't be used on non-Windows OS.")
+    elif os.path.isdir(source):
         _windows_create_junction(source=source, link=link)
     elif os.path.isfile(source):
         _windows_create_hard_link(path=source, link=link)
