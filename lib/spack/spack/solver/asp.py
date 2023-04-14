@@ -1847,7 +1847,7 @@ class SpackSolverSetup:
         # Consider any OS's mentioned on the command line. We need this to
         # cross-concretize in CI, and for some tests.
         # TODO: OS should really be more than just a label -- rework this.
-        for spec in specs:
+        for spec in spack.traverse.traverse_nodes(specs):
             if spec.architecture and spec.architecture.os:
                 buildable.add(spec.architecture.os)
 
