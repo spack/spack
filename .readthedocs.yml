@@ -5,6 +5,24 @@ sphinx:
   fail_on_warning: true
 
 python:
-  version: 3.7
   install:
     - requirements: lib/spack/docs/requirements.txt
+
+build:
+  os: "ubuntu-22.04"
+  apt_packages:
+    - "graphviz"
+  tools:
+    python: "3.7"
+  jobs:
+    post_checkout:
+      # Cancel building pull requests when there aren't changed in the docs directory or YAML file.
+      #
+      # If there are no changes (git diff exits with 0) we force the command to return with 183.
+      # This is a special exit code on Read the Docs that will cancel the build immediately
+      # without failing the unit test.
+      - |
+        if [ "$READTHEDOCS_VERSION_TYPE" = "external" ] && git diff --quiet origin/develop -- lib/spack/docs/ .readthedocs.yml;
+        then
+          exit 183;
+        fi
