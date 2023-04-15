@@ -38,7 +38,10 @@ def setup_parser(subparser):
         action="store",
         dest="subdir",
         default=spack.repo.packages_dir_name,
-        help="subdirectory to stroe packages in the repository. Default 'packages'. Use an empty string for no subdirectory."
+        help=(
+            "subdirectory to store packages in the repository."
+            " Default 'packages'. Use an empty string for no subdirectory."
+            ),
     )
 
     # List
