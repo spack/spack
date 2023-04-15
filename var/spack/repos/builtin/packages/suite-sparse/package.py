@@ -244,7 +244,6 @@ class SuiteSparse(Package):
             "KLU",
             "UMFPACK",
             "RBio",
-            "SPQR",
         ]
         if spec.satisfies("+cuda"):
             targets.extend(["SuiteSparse_GPURuntime", "GPUQREngine"])
