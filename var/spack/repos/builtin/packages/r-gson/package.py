@@ -15,6 +15,7 @@ class RGson(RPackage):
 
     cran = "gson"
 
+    version("0.1.0", sha256="14ddbee5be66d0b1dc178e41175a50ab6ed9ffed04d4361ecf5eef3548d9a381")
     version("0.0.9", sha256="f694765cd2872efb73dd7be66ef8e31395915f9b277f59e0891cff138777b118")
 
     depends_on("r-jsonlite", type=("build", "run"))
