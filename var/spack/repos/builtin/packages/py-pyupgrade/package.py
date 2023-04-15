@@ -12,6 +12,7 @@ class PyPyupgrade(PythonPackage):
     homepage = "https://github.com/asottile/pyupgrade"
     pypi = "pyupgrade/pyupgrade-2.31.1.tar.gz"
 
+    version("3.3.1", sha256="f88bce38b0ba92c2a9a5063c8629e456e8d919b67d2d42c7ecab82ff196f9813")
     version("2.31.1", sha256="22e0ad6dd39c4381805cb059f1e691b6315c62c0ebcec98a5f29d22cd186a72a")
 
     depends_on("python@3.7:", type=("build", "run"))
