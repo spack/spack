@@ -59,4 +59,3 @@ class RTibble(RPackage):
     depends_on("r-ellipsis@0.2.0:", type=("build", "run"), when="@3.0.5:")
     depends_on("r-ellipsis@0.3.2:", type=("build", "run"), when="@3.1.2:")
     depends_on("r-ellipsis", when="@:3.1.7")
-    depends_on("r-ellipsis", when="@:3.1.8")
