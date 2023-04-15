@@ -650,6 +650,13 @@ class Lammps(CMakePackage, CudaPackage, ROCmPackage):
         when="@20220623.3:20230208 +kokkos +rocm +kspace",
     )
 
+    # Older LAMMPS does not compile with Kokkos 4.x
+    conflicts(
+        "^kokkos @4:",
+        when="@:20221222",
+        msg="LAMMPS is incompatible with Kokkos 4.x until @20230208",
+    )
+
     patch("lib.patch", when="@20170901")
     patch("660.patch", when="@20170922")
     patch("gtest_fix.patch", when="@:20210310 %aocc@3.2.0")
