@@ -38,12 +38,6 @@ class Ginkgo(CMakePackage, CudaPackage, ROCmPackage):
     variant("develtools", default=False, description="Compile with develtools enabled")
     variant("hwloc", default=False, description="Enable HWLOC support")
     variant("mpi", default=False, description="Enable MPI support")
-    variant(
-        "build_type",
-        default="Release",
-        description="The build type to build",
-        values=("Debug", "Release"),
-    )
 
     depends_on("cmake@3.9:", type="build")
     depends_on("cuda@9:", when="+cuda")
