@@ -14,6 +14,7 @@ class RTibble(RPackage):
 
     cran = "tibble"
 
+    version("3.2.1", sha256="65a72d0c557fd6e7c510d150c935ed6ced5db7d05fc20236b370f11428372131")
     version("3.1.8", sha256="acf30e075d18d2f61de53ca20a13c502bb32abb8083089b0bb9172a0cb5cedea")
     version("3.1.7", sha256="e1a50891f476803526960b4c4d736a72e7d9c3d366946744a02d6347f591c872")
     version("3.1.6", sha256="5b33d909f146ebad38e262f6a57cb91ab70bfe240c2af01004beec11b3898292")
