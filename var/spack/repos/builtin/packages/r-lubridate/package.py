@@ -36,3 +36,4 @@ class RLubridate(RPackage):
     depends_on("r-stringr", type=("build", "run"), when="@:1.7.4")
     depends_on("r-cpp11@0.2.7:", type=("build", "run"), when="@1.8:")
     depends_on("r-cpp11", when="@:1.8.0")
+    depends_on("r-cpp11", when="@:1.9.0")

@@ -36,3 +36,4 @@ class RRlang(RPackage):
     depends_on("r@3.2.0:", type=("build", "run"), when="@0.4.0:")
     depends_on("r@3.3.0:", type=("build", "run"), when="@0.4.10:")
     depends_on("r@3.4.0:", type=("build", "run"), when="@1.0.2:")
+    depends_on("r@3.5.0:", type=("build", "run"), when="@1.1.0:")
