@@ -1289,7 +1289,7 @@ class Repo(object):
 RepoType = Union[Repo, RepoPath]
 
 
-def create_repo(root, namespace=None):
+def create_repo(root, namespace=None, subdir=packages_dir_name):
     """Create a new repository in root with the specified namespace.
 
     If the namespace is not provided, use basename of root.
@@ -1320,12 +1320,14 @@ def create_repo(root, namespace=None):
 
     try:
         config_path = os.path.join(root, repo_config_name)
-        packages_path = os.path.join(root, packages_dir_name)
+        packages_path = os.path.join(root, subdir)
 
         fs.mkdirp(packages_path)
         with open(config_path, "w") as config:
             config.write("repo:\n")
-            config.write("  namespace: '%s'\n" % namespace)
+            config.write(f"  namespace: '{namespace}'\n")
+            if subdir != packages_dir_name:
+                config.write(f"  subdirectory: '{subdir}'\n")
 
     except (IOError, OSError) as e:
         # try to clean up.
