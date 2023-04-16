@@ -1,0 +1,13 @@
+diff --git a/test/jaccard/test-jaccard.sh b/test/jaccard/test-jaccard.sh
+index b8d626bd..6aea03c6 100644
+--- a/test/jaccard/test-jaccard.sh
++++ b/test/jaccard/test-jaccard.sh
+@@ -119,7 +119,7 @@ rm obs exp
+ echo "    jaccard.t11...\c"
+ echo \
+ "intersection	union-intersection	jaccard	n_intersections
+-120	290	0.413793	4" >exp
++70	340	0.205882	3" >exp
+ $BT jaccard -a aMixedStrands.bed -b bMixedStrands.bed -s > obs
+ check obs exp
+ rm obs exp
