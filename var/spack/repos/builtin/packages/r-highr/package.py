@@ -23,4 +23,5 @@ class RHighr(RPackage):
 
     depends_on("r@3.0.2:", type=("build", "run"))
     depends_on("r@3.2.3:", type=("build", "run"), when="@0.8:")
+    depends_on("r@3.3.0:", type=("build", "run"), when="@0.10:")
     depends_on("r-xfun@0.18:", type=("build", "run"), when="@0.9:")
