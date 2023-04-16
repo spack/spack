@@ -56,6 +56,5 @@ class RTibble(RPackage):
     depends_on("r-assertthat", type=("build", "run"), when="@:1.3.1")
     depends_on("r-lazyeval@0.1.10:", type=("build", "run"), when="@:1.3.0")
     depends_on("r-rcpp@0.12.3:", type=("build", "run"), when="@:1.3.4")
-    depends_on("r-ellipsis@0.2.0:", type=("build", "run"), when="@3.0.5:")
-    depends_on("r-ellipsis@0.3.2:", type=("build", "run"), when="@3.1.2:")
-    depends_on("r-ellipsis", when="@:3.1.7")
+    depends_on("r-ellipsis@0.2.0:", type=("build", "run"), when="@3.0.5:3.1.7")
+    depends_on("r-ellipsis@0.3.2:", type=("build", "run"), when="@3.1.2:3.1.7")

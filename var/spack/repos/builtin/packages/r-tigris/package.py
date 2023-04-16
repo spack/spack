@@ -33,9 +33,6 @@ class RTigris(RPackage):
     depends_on("r-dplyr", type=("build", "run"))
 
     depends_on("r-rgeos", type=("build", "run"), when="@:0.5.3")
-    depends_on("r-maptools", type=("build", "run"))
-    depends_on("r-maptools", when="@:1.6.1")
-    depends_on("r-rgdal", type=("build", "run"))
-    depends_on("r-rgdal", when="@:1.6.1")
-    depends_on("r-sp", type=("build", "run"))
-    depends_on("r-sp", when="@:1.6.1")
+    depends_on("r-maptools", type=("build", "run"), when="@:1.6.1")
+    depends_on("r-rgdal", type=("build", "run"), when="@:1.6.1")
+    depends_on("r-sp", type=("build", "run"), when="@:1.6.1")
