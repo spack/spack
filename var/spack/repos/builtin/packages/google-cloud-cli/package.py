@@ -38,7 +38,9 @@ class GoogleCloudCli(Package):
 
     # https://cloud.google.com/sdk/docs/downloads-versioned-archives
     system = platform.system().lower()
-    machine = targets[platform.machine().lower()]
+    machine = platform.machine().lower()
+    if machine in targets:
+        machine = targets[machine]
     ext = "zip" if system == "windows" else "tar.gz"
 
     for ver in versions:
