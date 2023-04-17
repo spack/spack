@@ -21,6 +21,8 @@ class Metall(CMakePackage):
     version("master", branch="master")
     version("develop", branch="develop")
 
+    version("0.25", sha256="223cb54543b62a62fdbbe6274b02ddcc14b29806e344ee7e2fd3f055c2374295")
+    version("0.24", sha256="872de2a1b76d44e6876c0b672c0cc518c6f334959e4a229f2f18cc7e01edf477")
     version("0.23.1", sha256="25e8fbc424e66d09e0faf60029288e4612685675bfd947cc142bd9d6d0645ac4")
     version("0.23", sha256="17987922a3eb23a6b904498858db94aca12859d5dbcd8483704619ae93353340")
     version("0.22", sha256="e937fcb667902b2a578eaad65a44aa4107f63cdede135ead5ef48bb889ed13ad")
