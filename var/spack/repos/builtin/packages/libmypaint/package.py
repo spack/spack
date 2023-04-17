@@ -37,7 +37,7 @@ class Libmypaint(AutotoolsPackage):
         args = []
 
         if "+gegl" in self.spec:
-            args.extend("--enable-gegl=yes")
+            args.append("--enable-gegl=yes")
 
         if "+introspection" in self.spec:
             args.extend(
