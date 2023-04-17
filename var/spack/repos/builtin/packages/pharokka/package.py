@@ -14,6 +14,7 @@ class Pharokka(Package):
     homepage = "https://github.com/gbouras13/pharokka"
     url = "https://github.com/gbouras13/pharokka/archive/refs/tags/v1.1.0.tar.gz"
 
+    version("1.3.0", sha256="17055ecc532dbc18908ba2d6da5675ce7c08b3ab2767d4def7de9935281bc4df")
     version("1.1.0", sha256="57d546f501f201117f5d8037ac47c0d83ccd1ec518080145e8f28d3e9843fba6")
 
     depends_on("py-bcbio-gff", type="run")
