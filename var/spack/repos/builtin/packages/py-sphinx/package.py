@@ -14,6 +14,11 @@ class PySphinx(PythonPackage):
 
     maintainers("adamjstewart")
 
+    version("6.1.3", sha256="0dac3b698538ffef41716cf97ba26c1c7788dba73ce6f150c1ff5b4720786dd2")
+    version("6.1.2", sha256="19678b91c1f4e2025cfe3bfcbf473ffa3b086651bbdd43d6816e16e4cc58a8b4")
+    version("6.1.1", sha256="6a8e43b5030b9870d7402fb56f5efeebb83b76d65bf1c567a89b555340e127b2")
+    version("6.1.0", sha256="b0fd0a1993733492572bbd429b5ec081e17c082b5b5168ffae50524c3a90fd3c")
+    version("6.0.1", sha256="6217d768c3c865769c1561ea31c2f27d3bea413c9b0e1fd4722811ea148a4a46")
     version("6.0.0", sha256="58c140ecd9aa0abbc8ff6da48a266648eac9e5bfc8e49576efd2979bf46f5961")
 
     version("5.3.0", sha256="51026de0a9ff9fc13c05d74913ad66047e104f56a129ff73e174eb5c3ee794b5")
@@ -76,6 +81,7 @@ class PySphinx(PythonPackage):
     depends_on("py-jinja2@3:", when="@5.2:", type=("build", "run"))
     depends_on("py-jinja2@2.3:2", when="@:4.0.1", type=("build", "run"))
     depends_on("py-jinja2@2.3:", type=("build", "run"))
+    depends_on("py-pygments@2.13:", when="@6.0.1:", type=("build", "run"))
     depends_on("py-pygments@2.12:", when="@5.2:", type=("build", "run"))
     depends_on("py-pygments@2:", type=("build", "run"))
     depends_on("py-docutils@0.18:0.19", when="@6:", type=("build", "run"))
