@@ -28,6 +28,11 @@ os_compatible("glibc2.26", "glibc2.25").
 os_compatible("glibc2.25", "glibc2.24").
 os_compatible("glibc2.24", "glibc2.23").
 
+% musl mapping
+os_compatible("musl1.2.3", "musl1.2.2").
+os_compatible("musl1.2.2", "musl1.2.1").
+os_compatible("musl1.2.1", "musl1.2.0").
+
 % ubuntu <=> glibc mapping
 os_compatible("ubuntu16.04", "glibc2.23"). os_compatible("glibc2.23", "ubuntu16.04").
 os_compatible("ubuntu16.10", "glibc2.24"). os_compatible("glibc2.24", "ubuntu16.10").
@@ -45,5 +50,17 @@ os_compatible("ubuntu22.04", "glibc2.35"). os_compatible("glibc2.35", "ubuntu22.
 os_compatible("ubuntu22.10", "glibc2.36"). os_compatible("glibc2.36", "ubuntu22.10").
 os_compatible("ubuntu23.04", "glibc2.37"). os_compatible("glibc2.37", "ubuntu23.04").
 
-%EL8
+% EL8
 os_compatible("rhel8", "rocky8").
+os_compatible("rhel8", "glibc2.28"). os_compatible("glibc2.28", "rhel8").
+os_compatible("rhel7", "glibc2.17"). os_compatible("glibc2.17", "rhel7").
+
+% sles
+% note: `spack arch` reported major versions for opensuse, which is not a useful glibc
+% proxy, since it was updated in minor releases:
+%   opensuse 15.3 - 15.5: glibc 2.31
+%   opensuse 15.0 - 15.2: glibc 2.26
+os_compatible("opensuse15", "glibc2.26"). os_compatible("glibc2.31", "opensuse15")
+
+% alpine <=> musl mapping
+os_compatible("alpine3", "musl1.2.3"). os_compatible("musl1.2.3", "alpine3").
