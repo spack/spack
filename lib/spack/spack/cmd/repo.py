@@ -41,7 +41,7 @@ def setup_parser(subparser):
         help=(
             "subdirectory to store packages in the repository."
             " Default 'packages'. Use an empty string for no subdirectory."
-            ),
+        ),
     )
 
     # List
