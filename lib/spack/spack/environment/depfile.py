@@ -89,6 +89,7 @@ class DepfileSpecVisitor:
 
 class MakefileModel:
     """This class produces all data to render a makefile for specs of an environment."""
+
     def __init__(
         self,
         env_path: str,
