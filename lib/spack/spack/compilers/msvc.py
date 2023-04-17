@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -8,7 +8,7 @@ import re
 import subprocess
 import sys
 from distutils.version import StrictVersion
-from typing import Dict, List, Set  # novm
+from typing import Dict, List, Set
 
 import spack.compiler
 import spack.operating_systems.windows_os
@@ -18,8 +18,8 @@ from spack.compiler import Compiler
 from spack.error import SpackError
 from spack.version import Version
 
-avail_fc_version = set()  # type: Set[str]
-fc_path = dict()  # type: Dict[str, str]
+avail_fc_version: Set[str] = set()
+fc_path: Dict[str, str] = dict()
 
 fortran_mapping = {
     "2021.3.0": "19.29.30133",
@@ -42,16 +42,16 @@ def get_valid_fortran_pth(comp_ver):
 
 class Msvc(Compiler):
     # Subclasses use possible names of C compiler
-    cc_names = ["cl.exe"]  # type: List[str]
+    cc_names: List[str] = ["cl"]
 
     # Subclasses use possible names of C++ compiler
-    cxx_names = ["cl.exe"]  # type: List[str]
+    cxx_names: List[str] = ["cl"]
 
     # Subclasses use possible names of Fortran 77 compiler
-    f77_names = ["ifx.exe"]  # type: List[str]
+    f77_names: List[str] = ["ifx"]
 
     # Subclasses use possible names of Fortran 90 compiler
-    fc_names = ["ifx.exe"]  # type: List[str]
+    fc_names: List[str] = ["ifx"]
 
     # Named wrapper links within build_env_path
     # Due to the challenges of supporting compiler wrappers
@@ -103,15 +103,38 @@ class Msvc(Compiler):
         """
         This is the shorthand VCToolset version of form
         MSVC<short-ver> *NOT* the full version, for that see
-        Msvc.msvc_version
+        Msvc.msvc_version or MSVC.platform_toolset_ver for the
+        raw platform toolset version
         """
-        ver = self.msvc_version[:2].joined.string[:3]
+        ver = self.platform_toolset_ver
         return "MSVC" + ver
+
+    @property
+    def platform_toolset_ver(self):
+        """
+        This is the platform toolset version of current MSVC compiler
+        i.e. 142.
+        This is different from the VC toolset version as established
+        by `short_msvc_version`
+        """
+        return self.msvc_version[:2].joined.string[:3]
 
     @property
     def cl_version(self):
         """Cl toolset version"""
-        return spack.compiler.get_compiler_version_output(self.cc)
+        return Version(
+            re.search(
+                Msvc.version_regex,
+                spack.compiler.get_compiler_version_output(self.cc, version_arg=None),
+            ).group(1)
+        )
+
+    @property
+    def vs_root(self):
+        # The MSVC install root is located at a fix level above the compiler
+        # and is referenceable idiomatically via the pattern below
+        # this should be consistent accross versions
+        return os.path.abspath(os.path.join(self.cc, "../../../../../../../.."))
 
     def setup_custom_environment(self, pkg, env):
         """Set environment variables for MSVC using the
@@ -146,10 +169,11 @@ class Msvc(Compiler):
             if key and value
         )
 
-        if "path" in int_env:
-            env.set_path("PATH", int_env["path"].split(";"))
-        env.set_path("INCLUDE", int_env.get("include", "").split(";"))
-        env.set_path("LIB", int_env.get("lib", "").split(";"))
+        for env_var in int_env:
+            if os.pathsep not in int_env[env_var]:
+                env.set(env_var, int_env[env_var])
+            else:
+                env.set_path(env_var, int_env[env_var].split(os.pathsep))
 
         env.set("CC", self.cc)
         env.set("CXX", self.cxx)
@@ -160,6 +184,8 @@ class Msvc(Compiler):
     def fc_version(cls, fc):
         # We're using intel for the Fortran compilers, which exist if
         # ONEAPI_ROOT is a meaningful variable
+        if not sys.platform == "win32":
+            return "unknown"
         fc_ver = cls.default_version(fc)
         avail_fc_version.add(fc_ver)
         fc_path[fc_ver] = fc

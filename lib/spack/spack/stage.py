@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -14,7 +14,7 @@ import shutil
 import stat
 import sys
 import tempfile
-from typing import Dict  # novm
+from typing import Dict
 
 import llnl.util.lang
 import llnl.util.tty as tty
@@ -35,6 +35,7 @@ import spack.error
 import spack.fetch_strategy as fs
 import spack.mirror
 import spack.paths
+import spack.spec
 import spack.util.lock
 import spack.util.path as sup
 import spack.util.pattern as pattern
@@ -49,9 +50,14 @@ _source_path_subdir = "spack-src"
 stage_prefix = "spack-stage-"
 
 
-def create_stage_root(path):
-    # type: (str) -> None
+def compute_stage_name(spec):
+    """Determine stage name given a spec"""
+    default_stage_structure = "spack-stage-{name}-{version}-{hash}"
+    stage_name_structure = spack.config.get("config:stage_name", default=default_stage_structure)
+    return spec.format(format_string=stage_name_structure)
 
+
+def create_stage_root(path: str) -> None:
     """Create the stage root directory and ensure appropriate access perms."""
     assert os.path.isabs(path) and len(path.strip()) > 1
 
@@ -152,7 +158,10 @@ def _resolve_paths(candidates):
 
         # Ensure the path is unique per user.
         can_path = sup.canonicalize_path(path)
-        if user not in can_path:
+        # When multiple users share a stage root, we can avoid conflicts between
+        # them by adding a per-user subdirectory.
+        # Avoid doing this on Windows to keep stage absolute path as short as possible.
+        if user not in can_path and not sys.platform == "win32":
             can_path = os.path.join(can_path, user)
 
         paths.append(can_path)
@@ -235,7 +244,7 @@ class Stage(object):
     """
 
     """Shared dict of all stage locks."""
-    stage_locks = {}  # type: Dict[str, spack.util.lock.Lock]
+    stage_locks: Dict[str, spack.util.lock.Lock] = {}
 
     """Most staging is managed by Spack.  DIYStage is one exception."""
     managed_by_spack = True

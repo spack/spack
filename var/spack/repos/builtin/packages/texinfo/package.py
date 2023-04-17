@@ -1,8 +1,7 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
-
 
 import re
 
@@ -23,6 +22,7 @@ class Texinfo(AutotoolsPackage, GNUMirrorPackage):
 
     tags = ["build-tools"]
 
+    version("7.0", sha256="9261d4ee11cdf6b61895e213ffcd6b746a61a64fe38b9741a3aaa73125b35170")
     version("6.8", sha256="8e09cf753ad1833695d2bac0f57dc3bd6bcbbfbf279450e1ba3bc2d7fb297d08")
     version("6.7", sha256="a52d05076b90032cb2523673c50e53185938746482cf3ca0213e9b4b50ac2d3e")
     version("6.6", sha256="900723b220baa4672c4214a873a69ecbe1cb5f14c926a1a4bbb230ac309294cb")
@@ -34,12 +34,11 @@ class Texinfo(AutotoolsPackage, GNUMirrorPackage):
     version("5.0", sha256="2c579345a39a2a0bb4b8c28533f0b61356504a202da6a25d17d4d866af7f5803")
 
     depends_on("perl")
+    depends_on("ncurses")
+    depends_on("gettext")
 
     # sanity check
-    sanity_check_is_file = [
-        join_path("bin", "info"),
-        join_path("bin", "makeinfo"),
-    ]
+    sanity_check_is_file = [join_path("bin", "info"), join_path("bin", "makeinfo")]
 
     # Fix unescaped braces in regexps.
     # Ref: https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=898994
@@ -53,6 +52,19 @@ class Texinfo(AutotoolsPackage, GNUMirrorPackage):
     patch("update_locale_handling.patch", when="@6.3:6.5")
 
     patch("nvhpc.patch", when="%nvhpc")
+
+    @property
+    def build_targets(self):
+        targets = []
+        if self.spec.satisfies("@7.0:"):
+            targets.append("CFLAGS={}".format(self.compiler.c11_flag))
+        return targets
+
+    def setup_build_environment(self, env):
+        # texinfo builds Perl XS modules internally, and by default it overrides the
+        # CC that the top-level configure reports. This loses the Spack wrappers unless
+        # we set PERL_EXT_CC
+        env.set("PERL_EXT_CC", spack_cc)
 
     @classmethod
     def determine_version(cls, exe):

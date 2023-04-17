@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -13,8 +13,11 @@ class Ccls(CMakePackage):
     git = "https://github.com/MaskRay/ccls.git"
     url = "https://github.com/MaskRay/ccls/archive/0.20201025.tar.gz"
 
-    maintainers = ["jacobmerson"]
+    maintainers("jacobmerson")
 
+    version(
+        "0.20220729", sha256="af19be36597c2a38b526ce7138c72a64c7fb63827830c4cff92256151fc7a6f4"
+    )
     version(
         "0.20210330", sha256="28c228f49dfc0f23cb5d581b7de35792648f32c39f4ca35f68ff8c9cb5ce56c2"
     )

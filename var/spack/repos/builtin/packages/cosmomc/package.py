@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -174,13 +174,7 @@ class Cosmomc(Package):
             exe = join_path(spec["mpi"].prefix.bin, "mpiexec")
         cosmomc = Executable(exe)
         with working_dir("spack-check", create=True):
-            for entry in [
-                "camb",
-                "chains",
-                "data",
-                "paramnames",
-                "planck_covmats",
-            ]:
+            for entry in ["camb", "chains", "data", "paramnames", "planck_covmats"]:
                 os.symlink(join_path(prefix.share, "cosmomc", entry), entry)
             inifile = join_path(prefix.share, "cosmomc", "test.ini")
             cosmomc(*(args + [inifile]))

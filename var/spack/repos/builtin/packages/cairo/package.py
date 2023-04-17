@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -57,6 +57,7 @@ class Cairo(AutotoolsPackage):
     depends_on("freetype", when="+ft")
     depends_on("pkgconfig", type="build")
     depends_on("fontconfig@2.10.91:", when="+fc")  # Require newer version of fontconfig.
+    depends_on("which", type="build")
 
     conflicts("+png", when="platform=darwin")
     conflicts("+svg", when="platform=darwin")

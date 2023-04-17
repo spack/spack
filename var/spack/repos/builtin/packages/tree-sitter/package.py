@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -15,7 +15,7 @@ class TreeSitter(MakefilePackage):
     homepage = "https://tree-sitter.github.io/tree-sitter/"
     url = "https://github.com/tree-sitter/tree-sitter/archive/refs/tags/v0.20.1.tar.gz"
 
-    maintainers = ["albestro"]
+    maintainers("albestro")
 
     version("0.20.6", sha256="4d37eaef8a402a385998ff9aca3e1043b4a3bba899bceeff27a7178e1165b9de")
     version("0.20.4", sha256="979ad0b36eb90975baf0c65d155d106276cac08afb1c2fe0ad54d4b7d498ce39")

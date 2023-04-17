@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -10,8 +10,6 @@ import sys
 import spack.build_environment
 from spack.package import *
 
-is_windows = sys.platform == "win32"
-
 
 class Cmake(Package):
     """A cross-platform, open-source build system. CMake is a family of
@@ -21,14 +19,22 @@ class Cmake(Package):
     homepage = "https://www.cmake.org"
     url = "https://github.com/Kitware/CMake/releases/download/v3.19.0/cmake-3.19.0.tar.gz"
     git = "https://gitlab.kitware.com/cmake/cmake.git"
-    maintainers = ["chuckatkins"]
+    maintainers("chuckatkins")
 
-    tags = ["build-tools"]
+    tags = ["build-tools", "windows"]
 
-    executables = ["^cmake$"]
+    executables = ["^cmake[0-9]*$"]
 
     version("master", branch="master")
+    version("3.26.3", sha256="bbd8d39217509d163cb544a40d6428ac666ddc83e22905d3e52c925781f0f659")
+    version("3.26.2", sha256="d54f25707300064308ef01d4d21b0f98f508f52dda5d527d882b9d88379f89a8")
+    version("3.26.1", sha256="f29964290ad3ced782a1e58ca9fda394a82406a647e24d6afd4e6c32e42c412f")
+    version("3.26.0", sha256="4256613188857e95700621f7cdaaeb954f3546a9249e942bc2f9b3c26e381365")
+    version("3.25.3", sha256="cc995701d590ca6debc4245e9989939099ca52827dd46b5d3592f093afe1901c")
+    version("3.25.2", sha256="c026f22cb931dd532f648f087d587f07a1843c6e66a3dfca4fb0ea21944ed33c")
+    version("3.25.1", sha256="1c511d09516af493694ed9baf13c55947a36389674d657a2d5e0ccedc6b291d8")
     version("3.25.0", sha256="306463f541555da0942e6f5a0736560f70c487178b9d94a5ae7f34d0538cdd48")
+    version("3.24.4", sha256="32c9e499510eff7070d3f0adfbabe0afea2058608c5fa93e231beb49fbfa2296")
     version("3.24.3", sha256="b53aa10fa82bff84ccdb59065927b72d3bee49f4d86261249fc0984b3b367291")
     version("3.24.2", sha256="0d9020f06f3ddf17fb537dc228e1a56c927ee506b486f55fe2dc19f69bf0c8db")
     version("3.24.1", sha256="4931e277a4db1a805f13baa7013a7757a0cbfe5b7932882925c7061d9d1fa82b")
@@ -185,7 +191,11 @@ class Cmake(Package):
         default=False,
         description="Enables the generation of html and man page documentation",
     )
-    variant("ncurses", default=not is_windows, description="Enables the build of the ncurses gui")
+    variant(
+        "ncurses",
+        default=sys.platform != "win32",
+        description="Enables the build of the ncurses gui",
+    )
 
     # See https://gitlab.kitware.com/cmake/cmake/-/issues/21135
     conflicts(
@@ -310,6 +320,13 @@ class Cmake(Package):
         spec = self.spec
         args = []
         self.generator = make
+
+        # The Intel compiler isn't able to deal with noinline member functions of
+        # template classes defined in headers.  As such it outputs
+        #   warning #2196: routine is both "inline" and "noinline"
+        # cmake bootstrap will fail due to the word 'warning'.
+        if spec.satisfies("%intel@:2021.6.0"):
+            args.append("CXXFLAGS=-diag-disable=2196")
 
         if self.spec.satisfies("platform=windows"):
             args.append("-GNinja")

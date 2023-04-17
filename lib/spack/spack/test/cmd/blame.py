@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -13,11 +13,8 @@ import spack.cmd
 import spack.paths
 import spack.util.spack_json as sjson
 from spack.main import SpackCommand
-from spack.util.executable import which
 
-pytestmark = pytest.mark.skipif(
-    not which("git") or not spack.cmd.spack_is_git_repo(), reason="needs git"
-)
+pytestmark = pytest.mark.usefixtures("git")
 
 blame = SpackCommand("blame")
 

@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -18,7 +18,7 @@ class QuantumEspresso(CMakePackage, Package):
     url = "https://gitlab.com/QEF/q-e/-/archive/qe-6.6/q-e-qe-6.6.tar.gz"
     git = "https://gitlab.com/QEF/q-e.git"
 
-    maintainers = ["ye-luo", "danielecesarini", "bellenlau"]
+    maintainers("ye-luo", "danielecesarini", "bellenlau")
 
     build_system(conditional("cmake", when="@6.8:"), "generic", default="cmake")
 
@@ -74,15 +74,13 @@ class QuantumEspresso(CMakePackage, Package):
         depends_on("openblas threads=openmp", when="^openblas")
         depends_on("amdblis threads=openmp", when="^amdblis")
         depends_on("intel-mkl threads=openmp", when="^intel-mkl")
+        depends_on("armpl-gcc threads=openmp", when="^armpl-gcc")
+        depends_on("acfl threads=openmp", when="^acfl")
 
     # Add Cuda Fortran support
     # depends on NVHPC compiler, not directly on CUDA toolkit
     with when("%nvhpc"):
-        variant(
-            "cuda",
-            default=False,
-            description="Build with CUDA Fortran",
-        )
+        variant("cuda", default=False, description="Build with CUDA Fortran")
         with when("+cuda"):
             # GPUs are enabled since v6.6
             conflicts("@:6.5")
@@ -256,6 +254,13 @@ class QuantumEspresso(CMakePackage, Package):
     # NOTE: *SOME* third-party patches will require deactivation of
     # upstream patches using `~patch` variant
 
+    # Only CMake will work for @6.8: %aocc
+    conflicts(
+        "build_system=generic", when="@6.8: %aocc", msg="Please use CMake to build with AOCC"
+    )
+
+    conflicts("~openmp", when="^amdlibflame", msg="amdlibflame requires OpenMP")
+
     # QMCPACK converter patches for QE 6.8, 6.7, 6.4.1, 6.4, and 6.3
     conflicts(
         "@:6.2,6.5:6.6",
@@ -269,6 +274,18 @@ class QuantumEspresso(CMakePackage, Package):
     )
 
     conflicts("@6.5:", when="+environ", msg="6.4.x is the latest QE series supported by Environ")
+
+    # QE 7.1 fix post-processing install part 1/2
+    # see: https://gitlab.com/QEF/q-e/-/merge_requests/2005
+    patch_url = "https://gitlab.com/QEF/q-e/-/commit/4ca3afd4c6f27afcf3f42415a85a353a7be1bd37.diff"
+    patch_checksum = "e54d33e36a2667bd1d7e358db9fa9d4d83085264cdd47e39ce88754452ae7700"
+    patch(patch_url, sha256=patch_checksum, when="@:7.1 build_system=cmake")
+
+    # QE 7.1 fix post-processing install part 2/2
+    # see: https://gitlab.com/QEF/q-e/-/merge_requests/2007
+    patch_url = "https://gitlab.com/QEF/q-e/-/commit/481a001293de2f9eec8481e02d64f679ffd83ede.diff"
+    patch_checksum = "5075f2df61ef5ff70f2ec3b52a113f5636fb07f5d3d4c0115931f9b95ed61c3e"
+    patch(patch_url, sha256=patch_checksum, when="@:7.1 build_system=cmake")
 
     # No patch needed for QMCPACK converter beyond 7.0
     # 7.0
@@ -364,8 +381,8 @@ class QuantumEspresso(CMakePackage, Package):
         when="+patch@6.4.1:6.5.0",
     )
 
-    # Configure updated to work with AOCC compilers
-    patch("configure_aocc.patch", when="@6.7:6.8 %aocc")
+    # Patch automake configure for AOCC compilers
+    patch("configure_aocc.patch", when="@6.7 %aocc")
 
     # Configure updated to work with NVIDIA compilers
     patch("nvhpc.patch", when="@6.5 %nvhpc")
@@ -406,6 +423,13 @@ class CMakeBuilder(spack.build_systems.cmake.CMakeBuilder):
 
         if "+qmcpack" in spec:
             cmake_args.append(self.define("QE_ENABLE_PW2QMCPACK", True))
+
+        if "^armpl-gcc" in spec or "^acfl" in spec:
+            cmake_args.append(self.define("BLAS_LIBRARIES", spec["blas"].libs.joined(";")))
+            cmake_args.append(self.define("LAPACK_LIBRARIES", spec["lapack"].libs.joined(";")))
+            # Up to q-e@7.1 set BLA_VENDOR to All to force detection of vanilla scalapack
+            if spec.satisfies("@:7.1"):
+                cmake_args.append(self.define("BLA_VENDOR", "All"))
 
         return cmake_args
 
@@ -526,7 +550,6 @@ class GenericBuilder(spack.build_systems.generic.GenericBuilder):
             options.append("--with-libxc-prefix={0}".format(spec["libxc"].prefix))
 
         if "+elpa" in spec:
-
             # Spec for elpa
             elpa = spec["elpa"]
 
@@ -581,8 +604,8 @@ class GenericBuilder(spack.build_systems.generic.GenericBuilder):
                 zlib_libs = spec["zlib"].prefix.lib + " -lz"
                 filter_file(zlib_libs, format(spec["zlib"].libs.ld_flags), make_inc)
 
-        # QE 6.6 and later has parallel builds fixed
-        if spec.satisfies("@:6.5"):
+        # QE 6.8 and later has parallel builds fixed
+        if spec.satisfies("@:6.7"):
             parallel_build_on = False
         else:
             parallel_build_on = True

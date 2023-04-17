@@ -1,9 +1,11 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+from spack.build_environment import MakeExecutable, determine_number_of_jobs
 from spack.package import *
+from spack.util.executable import which_string
 
 
 class NinjaFortran(Package):
@@ -92,6 +94,6 @@ class NinjaFortran(Package):
 
         module.ninja = MakeExecutable(
             which_string(name, path=[self.spec.prefix.bin], required=True),
-            determine_number_of_jobs(parallel=self.parallel),
+            determine_number_of_jobs(parallel=dspec.package.parallel),
             supports_jobserver=True,  # This fork supports jobserver
         )

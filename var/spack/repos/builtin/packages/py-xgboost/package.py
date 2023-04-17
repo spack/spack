@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -15,7 +15,7 @@ class PyXgboost(PythonPackage):
     homepage = "https://xgboost.ai/"
     pypi = "xgboost/xgboost-1.3.3.tar.gz"
 
-    maintainers = ["adamjstewart"]
+    maintainers("adamjstewart")
     import_modules = ["xgboost"]
 
     version("1.6.2", sha256="e1f5c91ba88cf8edb409d7fd2ca150dcd80b6f2115587d87365f0c10b2d4f009")

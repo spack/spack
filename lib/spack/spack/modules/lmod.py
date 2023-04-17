@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -7,7 +7,7 @@ import collections
 import itertools
 import os.path
 import posixpath
-from typing import Any, Dict  # novm
+from typing import Any, Dict
 
 import llnl.util.lang as lang
 
@@ -30,27 +30,29 @@ def configuration(module_set_name):
 
 
 # Caches the configuration {spec_hash: configuration}
-configuration_registry = {}  # type: Dict[str, Any]
+configuration_registry: Dict[str, Any] = {}
 
 
-def make_configuration(spec, module_set_name):
+def make_configuration(spec, module_set_name, explicit):
     """Returns the lmod configuration for spec"""
-    key = (spec.dag_hash(), module_set_name)
+    key = (spec.dag_hash(), module_set_name, explicit)
     try:
         return configuration_registry[key]
     except KeyError:
-        return configuration_registry.setdefault(key, LmodConfiguration(spec, module_set_name))
+        return configuration_registry.setdefault(
+            key, LmodConfiguration(spec, module_set_name, explicit)
+        )
 
 
-def make_layout(spec, module_set_name):
+def make_layout(spec, module_set_name, explicit):
     """Returns the layout information for spec"""
-    conf = make_configuration(spec, module_set_name)
+    conf = make_configuration(spec, module_set_name, explicit)
     return LmodFileLayout(conf)
 
 
-def make_context(spec, module_set_name):
+def make_context(spec, module_set_name, explicit):
     """Returns the context information for spec"""
-    conf = make_configuration(spec, module_set_name)
+    conf = make_configuration(spec, module_set_name, explicit)
     return LmodContext(conf)
 
 
@@ -71,7 +73,7 @@ def guess_core_compilers(name, store=False):
             # A compiler is considered to be a core compiler if any of the
             # C, C++ or Fortran compilers reside in a system directory
             is_system_compiler = any(
-                os.path.dirname(x) in spack.util.environment.system_dirs
+                os.path.dirname(x) in spack.util.environment.SYSTEM_DIRS
                 for x in compiler["paths"].values()
                 if x is not None
             )
@@ -180,7 +182,7 @@ class LmodConfiguration(BaseConfiguration):
 
         # If it is in the list of supported compilers family -> compiler
         if self.spec.name in spack.compilers.supported_compilers():
-            provides["compiler"] = spack.spec.CompilerSpec(str(self.spec))
+            provides["compiler"] = spack.spec.CompilerSpec(self.spec.format("{name}{@version}"))
         elif self.spec.name in spack.compilers.package_name_to_compiler_name:
             # If it is the package for a supported compiler, but of a different name
             cname = spack.compilers.package_name_to_compiler_name[self.spec.name]
@@ -409,7 +411,7 @@ class LmodContext(BaseContext):
     @tengine.context_property
     def unlocked_paths(self):
         """Returns the list of paths that are unlocked unconditionally."""
-        layout = make_layout(self.spec, self.conf.name)
+        layout = make_layout(self.spec, self.conf.name, self.conf.explicit)
         return [os.path.join(*parts) for parts in layout.unlocked_paths[None]]
 
     @tengine.context_property
@@ -417,7 +419,7 @@ class LmodContext(BaseContext):
         """Returns the list of paths that are unlocked conditionally.
         Each item in the list is a tuple with the structure (condition, path).
         """
-        layout = make_layout(self.spec, self.conf.name)
+        layout = make_layout(self.spec, self.conf.name, self.conf.explicit)
         value = []
         conditional_paths = layout.unlocked_paths
         conditional_paths.pop(None)

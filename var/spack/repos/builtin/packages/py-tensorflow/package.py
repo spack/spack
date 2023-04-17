@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -10,7 +10,7 @@ from spack.operating_systems.mac_os import macos_version
 from spack.package import *
 
 
-class PyTensorflow(Package, CudaPackage, ROCmPackage):
+class PyTensorflow(Package, CudaPackage, ROCmPackage, PythonExtension):
     """An Open Source Machine Learning Framework for Everyone.
 
     TensorFlow is an end-to-end open source platform for machine learning. It has a
@@ -27,7 +27,7 @@ class PyTensorflow(Package, CudaPackage, ROCmPackage):
     homepage = "https://www.tensorflow.org"
     url = "https://github.com/tensorflow/tensorflow/archive/v2.3.1.tar.gz"
 
-    maintainers = ["adamjstewart", "aweits"]
+    maintainers("adamjstewart", "aweits")
     import_modules = ["tensorflow"]
 
     version("2.10.1", sha256="622a92e22e6f3f4300ea43b3025a0b6122f1cc0e2d9233235e4c628c331a94a3")
@@ -321,6 +321,8 @@ class PyTensorflow(Package, CudaPackage, ROCmPackage):
     # depends_on('trisycl',    when='+opencl~computepp')
     depends_on("cuda@:10.2", when="+cuda @:2.3")
     depends_on("cuda@:11.4", when="+cuda @2.4:2.7")
+    # avoid problem fixed by commit a76f797b9cd4b9b15bec4c503b16236a804f676f
+    depends_on("cuda@:11.7.0", when="+cuda @:2.9")
     depends_on("cudnn", when="+cuda")
     depends_on("cudnn@:7", when="@:2.2 +cuda")
     # depends_on('tensorrt', when='+tensorrt')
@@ -418,6 +420,19 @@ class PyTensorflow(Package, CudaPackage, ROCmPackage):
         sha256="f9e26c544da729cfd376dbd3b096030e3777d3592459add1f3c78b1b9828d493",
         when="@2.9:2.10.0",
     )
+
+    # Version 2.10 produces an error related to cuBLAS:
+    # E tensorflow/stream_executor/cuda/cuda_blas.cc:2981] Unable to register
+    # cuBLAS factory: Attempting to register factory for plugin cuBLAS when one
+    # has already been registered
+    # See https://github.com/tensorflow/tensorflow/issues/57663
+    # This is fixed for 2.11 but 2.10 needs the following patch.
+    patch(
+        "https://github.com/tensorflow/tensorflow/pull/56691.patch?full_index=1",
+        sha256="d635ea6d6c1571505871d0caba3e2cd939ea0f4aff972095d552913a8109def3",
+        when="@2.10",
+    )
+
     # Avoid build error: "no such package '@io_bazel_rules_docker..."
     patch("io_bazel_rules_docker2.patch", when="@1.15:2.0")
     # Avoide build error: "name 'new_http_archive' is not defined"
@@ -589,10 +604,7 @@ class PyTensorflow(Package, CudaPackage, ROCmPackage):
             # Please specify which gcc nvcc should use as the host compiler
             env.set("GCC_HOST_COMPILER_PATH", spack_cc)
 
-            cuda_paths = [
-                spec["cuda"].prefix,
-                spec["cudnn"].prefix,
-            ]
+            cuda_paths = [spec["cuda"].prefix, spec["cudnn"].prefix]
 
             # Do you wish to build TensorFlow with TensorRT support?
             if "+tensorrt" in spec:
@@ -1022,16 +1034,3 @@ def protobuf_deps():
             args = std_pip_args + ["--prefix=" + prefix, "."]
             pip(*args)
         remove_linked_tree(tmp_path)
-
-    def test(self):
-        """Attempts to import modules of the installed package."""
-
-        # Make sure we are importing the installed modules,
-        # not the ones in the source directory
-        for module in self.import_modules:
-            self.run_test(
-                self.spec["python"].command.path,
-                ["-c", "import {0}".format(module)],
-                purpose="checking import of {0}".format(module),
-                work_dir="spack-test",
-            )

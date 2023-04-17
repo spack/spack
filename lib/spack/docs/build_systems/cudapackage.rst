@@ -1,13 +1,13 @@
-.. Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+.. Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
    Spack Project Developers. See the top-level COPYRIGHT file for details.
 
    SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 .. _cudapackage:
 
------------
-CudaPackage
------------
+----
+Cuda
+----
 
 Different from other packages, ``CudaPackage`` does not represent a build system.
 Instead its goal is to simplify and unify usage of ``CUDA`` in other packages by providing a `mixin-class <https://en.wikipedia.org/wiki/Mixin>`_.
@@ -28,11 +28,14 @@ This package provides the following variants:
 
 * **cuda_arch**
 
-  This variant supports the optional specification of the architecture.
+  This variant supports the optional specification of one or multiple architectures.
   Valid values are maintained in the ``cuda_arch_values`` property and
   are the numeric character equivalent of the compute capability version
   (e.g., '10' for version 1.0). Each provided value affects associated
   ``CUDA`` dependencies and compiler conflicts.
+  
+  The variant builds both PTX code for the _virtual_ architecture
+  (e.g. ``compute_10``) and binary code for the _real_ architecture (e.g. ``sm_10``).
 
   GPUs and their compute capability versions are listed at
   https://developer.nvidia.com/cuda-gpus .
@@ -80,7 +83,7 @@ standard CUDA compiler flags.
 
 **cuda_flags**
 
-    This built-in static method returns a list of command line flags 
+    This built-in static method returns a list of command line flags
     for the chosen ``cuda_arch`` value(s).  The flags are intended to
     be passed to the CUDA compiler driver (i.e., ``nvcc``).
 

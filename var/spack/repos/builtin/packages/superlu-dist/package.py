@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -16,7 +16,7 @@ class SuperluDist(CMakePackage, CudaPackage, ROCmPackage):
 
     tags = ["e4s"]
 
-    maintainers = ["xiaoye", "gchavez2", "balay", "pghysels", "liuyangzhuan"]
+    maintainers("xiaoye", "gchavez2", "balay", "pghysels", "liuyangzhuan")
 
     version("develop", branch="master")
     version("amd", branch="amd")
@@ -103,10 +103,10 @@ class SuperluDist(CMakePackage, CudaPackage, ROCmPackage):
 
         if (spec.satisfies("%xl") or spec.satisfies("%xl_r")) and spec.satisfies("@:6.1.1"):
             append_define("CMAKE_C_FLAGS", "-DNoChange")
-        if spec.satisfies("%oneapi"):
+        if spec.satisfies("%oneapi") or spec.satisfies("%arm@23.04:"):
             #
-            # 2022 and later  Intel OneAPI compilers throws errors compiling
-            # some of the non ISO C99 compliant code in this package
+            # 2022 and later Intel OneAPI compilers and Arm compilers version 23.04 and later
+            # throw errors compiling some of the non ISO C99 compliant code in this package
             # see https://reviews.llvm.org/D122983
             #
             append_define("CMAKE_C_FLAGS", "-Wno-error=implicit-function-declaration")
