@@ -19,6 +19,7 @@ class RCovr(RPackage):
 
     cran = "covr"
 
+    version("3.6.2", sha256="ace68ce7516147b4d77f591a498cbd7b2803062c1b47252e7a35081af0ea485b")
     version("3.6.1", sha256="ffbe15438c1a4f274c14cacfb944480e284f1ab60808d5e840c015cc57c51157")
     version("3.5.1", sha256="a54cfc3623ea56084158ac5d7fe33f216f45191f6dcddab9c9ed4ec1d9d8ac6c")
     version("3.5.0", sha256="cb919912018130164a40803ac573a37dde2186678c058c03c6303d79604979df")
