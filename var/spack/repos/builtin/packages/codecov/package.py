@@ -12,29 +12,31 @@ class Codecov(Package):
     """Codecov uploads coverage reports to Codecov for processing."""
 
     homepage = "https://codecov.io"
-    _url_base = "https://github.com/codecov/uploader/releases/download/v0.4.1/codecov"
 
-    if platform.system() == "Linux" and platform.machine() == "x86_64":
-        version(
-            "0.4.1",
-            sha256="32cb14b5f3aaacd67f4c1ff55d82f037d3cd10c8e7b69c051f27391d2e66e15c",
-            url=_url_base + "-linux",
-            expand=False,
-        )
-    elif platform.system() == "Darwin":
-        version(
-            "0.4.1",
-            sha256="4ab0f06f06e9c4d25464f155b0aff36bfc1e8dbcdb19bfffd586beed1269f3af",
-            url=_url_base + "-macos",
-            expand=False,
-        )
-    elif platform.system() == "Windows":
-        version(
-            "0.4.1",
-            sha256="e0cda212aeaebe695509ce8fa2d608760ff70bc932003f544f1ad368ac5450a8",
-            url=_url_base + ".exe",
-            expand=False,
-        )
+    versions = {
+        "0.4.1": {
+            "linux": {
+                "x86_64": "32cb14b5f3aaacd67f4c1ff55d82f037d3cd10c8e7b69c051f27391d2e66e15c",
+            },
+            "darwin": {
+                "x86_64": "4ab0f06f06e9c4d25464f155b0aff36bfc1e8dbcdb19bfffd586beed1269f3af",
+            },
+            "windows": {
+                "x86_64": "e0cda212aeaebe695509ce8fa2d608760ff70bc932003f544f1ad368ac5450a8",
+            },
+        }
+    }
+
+    system = platform.system().lower()
+    machine = platform.machine().lower()
+
+    for ver in versions:
+        if system in versions[ver] and machine in versions[ver][system]:
+            version(ver, sha256=versions[ver][system][machine], expand=False)
+
+    def url_for_version(self, version):
+        _url_base = f"https://github.com/codecov/uploader/releases/download/v{version}/codecov"
+        return _url_base + ".exe" if self.system == "windows" else _url_base + f"-{self.system}"
 
     def install(self, spec, prefix):
         codecov = self.stage.archive_file
