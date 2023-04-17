@@ -2789,11 +2789,11 @@ class Spec(object):
         # Also record all patches required on dependencies by
         # depends_on(..., patch=...)
         for dspec in root.traverse_edges(deptype=all, cover="edges", root=False):
-            pkg_deps = dspec.parent.package_class.dependencies
-            if dspec.spec.name not in pkg_deps:
+            if dspec.spec.concrete:
                 continue
 
-            if dspec.spec.concrete:
+            pkg_deps = dspec.parent.package_class.dependencies
+            if dspec.spec.name not in pkg_deps:
                 continue
 
             patches = []
