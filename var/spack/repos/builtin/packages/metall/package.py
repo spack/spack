@@ -41,7 +41,7 @@ class Metall(CMakePackage):
     version("0.9", sha256="2d7bd9ea2f1e04136050f210884445a9e3dcb96c992cf42ff9ea4b392f85f927")
 
     depends_on("cmake@3.10:", type="build")
-    depends_on("boost@1.64:", type=("build", "link"))
+    depends_on("boost@1.75:", type=("build", "link"))
 
     # googletest is required only for test
     # GCC is also required only for test (Metall is a header-only library)
