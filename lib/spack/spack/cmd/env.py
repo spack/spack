@@ -4,6 +4,7 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import argparse
+import io
 import os
 import shutil
 import sys
@@ -23,11 +24,10 @@ import spack.cmd.modules
 import spack.cmd.uninstall
 import spack.config
 import spack.environment as ev
-import spack.environment.depfile as depfile
 import spack.environment.shell
 import spack.schema.env
-import spack.spec
 import spack.tengine
+import spack.traverse as traverse
 import spack.util.string as string
 from spack.util.environment import EnvironmentModifications
 
@@ -637,22 +637,161 @@ def env_depfile_setup_parser(subparser):
     )
 
 
+def _deptypes(use_buildcache):
+    """What edges should we follow for a given node? If it's a cache-only
+    node, then we can drop build type deps."""
+    return ("link", "run") if use_buildcache == "only" else ("build", "link", "run")
+
+
+class MakeTargetVisitor(object):
+    """This visitor produces an adjacency list of a (reduced) DAG, which
+    is used to generate Makefile targets with their prerequisites."""
+
+    def __init__(self, target, pkg_buildcache, deps_buildcache):
+        """
+        Args:
+            target: function that maps dag_hash -> make target string
+            pkg_buildcache (str): "only", "never", "auto": when "only",
+                redundant build deps of roots are dropped
+            deps_buildcache (str): same as pkg_buildcache, but for non-root specs.
+        """
+        self.adjacency_list = []
+        self.target = target
+        self.pkg_buildcache = pkg_buildcache
+        self.deps_buildcache = deps_buildcache
+        self.deptypes_root = _deptypes(pkg_buildcache)
+        self.deptypes_deps = _deptypes(deps_buildcache)
+
+    def neighbors(self, node):
+        """Produce a list of spec to follow from node"""
+        deptypes = self.deptypes_root if node.depth == 0 else self.deptypes_deps
+        return traverse.sort_edges(node.edge.spec.edges_to_dependencies(deptype=deptypes))
+
+    def build_cache_flag(self, depth):
+        setting = self.pkg_buildcache if depth == 0 else self.deps_buildcache
+        if setting == "only":
+            return "--use-buildcache=only"
+        elif setting == "never":
+            return "--use-buildcache=never"
+        return ""
+
+    def accept(self, node):
+        fmt = "{name}-{version}-{hash}"
+        tgt = node.edge.spec.format(fmt)
+        spec_str = node.edge.spec.format(
+            "{name}{@version}{%compiler}{variants}{arch=architecture}"
+        )
+        buildcache_flag = self.build_cache_flag(node.depth)
+        prereqs = " ".join([self.target(dep.spec.format(fmt)) for dep in self.neighbors(node)])
+        self.adjacency_list.append(
+            (tgt, prereqs, node.edge.spec.dag_hash(), spec_str, buildcache_flag)
+        )
+
+        # We already accepted this
+        return True
+
+
 def env_depfile(args):
     # Currently only make is supported.
     spack.cmd.require_active_env(cmd_name="env depfile")
     env = ev.active_environment()
 
+    # Special make targets are useful when including a makefile in another, and you
+    # need to "namespace" the targets to avoid conflicts.
+    if args.make_prefix is None:
+        prefix = os.path.join(env.env_subdir_path, "makedeps")
+    else:
+        prefix = args.make_prefix
+
+    def get_target(name):
+        # The `all` and `clean` targets are phony. It doesn't make sense to
+        # have /abs/path/to/env/metadir/{all,clean} targets. But it *does* make
+        # sense to have a prefix like `env/all`, `env/clean` when they are
+        # supposed to be included
+        if name in ("all", "clean") and os.path.isabs(prefix):
+            return name
+        else:
+            return os.path.join(prefix, name)
+
+    def get_install_target(name):
+        return os.path.join(prefix, "install", name)
+
+    def get_install_deps_target(name):
+        return os.path.join(prefix, "install-deps", name)
+
     # What things do we build when running make? By default, we build the
     # root specs. If specific specs are provided as input, we build those.
-    filter_specs = spack.cmd.parse_specs(args.specs) if args.specs else None
+    if args.specs:
+        abstract_specs = spack.cmd.parse_specs(args.specs)
+        roots = [env.matching_spec(s) for s in abstract_specs]
+    else:
+        roots = [s for _, s in env.concretized_specs()]
 
-    pkg_use_bc, dep_use_bc = args.use_buildcache
+    # We produce a sub-DAG from the DAG induced by roots, where we drop build
+    # edges for those specs that are installed through a binary cache.
+    pkg_buildcache, dep_buildcache = args.use_buildcache
+    make_targets = MakeTargetVisitor(get_install_target, pkg_buildcache, dep_buildcache)
+    traverse.traverse_breadth_first_with_visitor(
+        roots, traverse.CoverNodesVisitor(make_targets, key=lambda s: s.dag_hash())
+    )
+
+    # Root specs without deps are the prereqs for the environment target
+    root_install_targets = [get_install_target(h.format("{name}-{version}-{hash}")) for h in roots]
+
+    all_pkg_identifiers = []
+
+    # The SPACK_PACKAGE_IDS variable is "exported", which can be used when including
+    # generated makefiles to add post-install hooks, like pushing to a buildcache,
+    # running tests, etc.
+    # NOTE: GNU Make allows directory separators in variable names, so for consistency
+    # we can namespace this variable with the same prefix as targets.
+    if args.make_prefix is None:
+        pkg_identifier_variable = "SPACK_PACKAGE_IDS"
+    else:
+        pkg_identifier_variable = os.path.join(prefix, "SPACK_PACKAGE_IDS")
+
+    # All install and install-deps targets
+    all_install_related_targets = []
+
+    # Convenience shortcuts: ensure that `make install/pkg-version-hash` triggers
+    # <absolute path to env>/.spack-env/makedeps/install/pkg-version-hash in case
+    # we don't have a custom make target prefix.
+    phony_convenience_targets = []
+
+    for tgt, _, _, _, _ in make_targets.adjacency_list:
+        all_pkg_identifiers.append(tgt)
+        all_install_related_targets.append(get_install_target(tgt))
+        all_install_related_targets.append(get_install_deps_target(tgt))
+        if args.make_prefix is None:
+            phony_convenience_targets.append(os.path.join("install", tgt))
+            phony_convenience_targets.append(os.path.join("install-deps", tgt))
+
+    buf = io.StringIO()
 
     template = spack.tengine.make_environment().get_template(os.path.join("depfile", "Makefile"))
-    model = depfile.MakefileModel.from_env(
-        env, filter_specs, pkg_use_bc, dep_use_bc, args.make_prefix, args.jobserver
+
+    rendered = template.render(
+        {
+            "all_target": get_target("all"),
+            "env_target": get_target("env"),
+            "clean_target": get_target("clean"),
+            "all_install_related_targets": " ".join(all_install_related_targets),
+            "root_install_targets": " ".join(root_install_targets),
+            "dirs_target": get_target("dirs"),
+            "environment": env.path,
+            "install_target": get_target("install"),
+            "install_deps_target": get_target("install-deps"),
+            "any_hash_target": get_target("%"),
+            "jobserver_support": "+" if args.jobserver else "",
+            "adjacency_list": make_targets.adjacency_list,
+            "phony_convenience_targets": " ".join(phony_convenience_targets),
+            "pkg_ids_variable": pkg_identifier_variable,
+            "pkg_ids": " ".join(all_pkg_identifiers),
+        }
     )
-    makefile = template.render(model.to_dict())
+
+    buf.write(rendered)
+    makefile = buf.getvalue()
 
     # Finally write to stdout/file.
     if args.output:
