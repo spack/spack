@@ -22,6 +22,15 @@ class Glab(Package):
 
     depends_on("go@1.13:", type="build")
 
-    def install(self, spec, prefix):
+    phases = ["build", "install"]
+
+    def setup_build_environment(self, env):
+        # Point GOPATH at the top of the staging dir for the build step.
+        env.prepend_path("GOPATH", self.stage.path)
+
+    def build(self, spec, prefix):
         make()
-        make("install", "prefix=" + prefix)
+
+    def install(self, spec, prefix):
+        mkdirp(prefix.bin)
+        install("bin/glab", prefix.bin)
