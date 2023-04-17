@@ -1669,9 +1669,20 @@ class SpackSolverSetup(object):
                         if concrete_build_deps or dtype != "build":
                             clauses.append(fn.attr("depends_on", spec.name, dep.name, dtype))
 
-                            # Ensure Spack will not coconcretize this with another provider
-                            # for the same virtual
-                            for virtual in dep.package.virtuals_provided:
+                            # Skip virtual node constriants for renamed/deleted packages,
+                            # so their binaries can still be installed.
+                            # NOTE: with current specs (which lack edge attributes) this
+                            # can allow concretizations with two providers, but it's unlikely.
+                            try:
+                                virtuals = dep.package.virtuals_provided
+                            except spack.repo.UnknownPackageError:
+                                continue
+
+                            # Don't concretize with two providers of the same virtual.
+                            # See above for exception for unknown packages.
+                            # TODO: we will eventually record provider information on edges,
+                            # TODO: which avoids the need for the package lookup above.
+                            for virtual in virtuals:
                                 clauses.append(fn.attr("virtual_node", virtual.name))
                                 clauses.append(fn.provider(dep.name, virtual.name))
 
