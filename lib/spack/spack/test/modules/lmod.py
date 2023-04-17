@@ -36,7 +36,7 @@ def compiler(request):
         ("openblas@0.2.15", ("blas",)),
         ("openblas-with-lapack@0.2.15", ("blas", "lapack")),
         ("mpileaks@2.3", ("mpi",)),
-        ("mpileaks@2.1", [])
+        ("mpileaks@2.1", []),
     ]
 )
 def provider(request):
@@ -83,7 +83,7 @@ class TestLmod(object):
         repetitions = len([x for x in path_parts if service_part == x])
         if spec_string == "openblas-with-lapack@0.2.15":
             assert repetitions == 2
-        elif spec_string == 'mpileaks@2.1':
+        elif spec_string == "mpileaks@2.1":
             assert repetitions == 0
         else:
             assert repetitions == 1

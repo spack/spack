@@ -129,7 +129,7 @@ class LmodConfiguration(BaseConfiguration):
     @property
     def filter_hierarchy_specs(self):
         """Returns the dict of specs with modified hierarchies"""
-        return configuration(self.name).get('filter_hierarchy_specs', {})
+        return configuration(self.name).get("filter_hierarchy_specs", {})
 
     @property
     def hierarchy_tokens(self):

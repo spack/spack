@@ -129,10 +129,8 @@ module_config_properties = {
                     "core_specs": array_of_strings,
                     "filter_hierarchy_specs": {
                         "type": "object",
-                        "patternProperties": {
-                            spec_regex: array_of_strings
-                        }
-                    }
+                        "patternProperties": {spec_regex: array_of_strings},
+                    },
                 },
             },  # Specific lmod extensions
         ]
