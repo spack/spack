@@ -786,14 +786,10 @@ class Environment:
         return _create_environment, (self.path,)
 
     def _re_read(self):
-        """Reinitialize the environment object if it has been written (this
-        may not be true if the environment was just created in this running
-        instance of Spack).
-        """
+        """Reinitialize the environment object."""
         self.clear(re_read=True)
-        with lk.ReadTransaction(self.txlock):
-            self.manifest = EnvironmentManifestFile(self.path)
-            self._read()
+        self.manifest = EnvironmentManifestFile(self.path)
+        self._read()
 
     def _read(self):
         self._construct_state_from_manifest()
@@ -1112,7 +1108,7 @@ class Environment:
 
         if list_name == user_speclist_name:
             if not spec.name:
-                raise SpackEnvironmentError("cannot add anonymous specs to an environment!")
+                raise SpackEnvironmentError("cannot add anonymous specs to an environment")
             elif not spack.repo.path.exists(spec.name):
                 virtuals = spack.repo.path.provider_index.providers.keys()
                 if spec.name not in virtuals:
@@ -1573,15 +1569,12 @@ class Environment:
             return
 
         self.delete_default_view()
-
         if path_or_bool is False:
-            self.views.pop(default_view_name)
+            self.views.pop(default_view_name, None)
             self.manifest.remove_default_view()
             return
 
-        self.views.setdefault(
-            default_view_name, ViewDescriptor(self.path, view_path)
-        ).root = view_path
+        self.views[default_view_name] = ViewDescriptor(self.path, view_path)
         self.manifest.set_default_view(self._default_view_as_yaml())
 
     def delete_default_view(self) -> None:
@@ -1589,9 +1582,13 @@ class Environment:
         if default_view_name not in self.views:
             return
 
-        view = pathlib.Path(self.default_view.root)
-        shutil.rmtree(view.resolve())
-        view.unlink()
+        try:
+            view = pathlib.Path(self.default_view.root)
+            shutil.rmtree(view.resolve())
+            view.unlink()
+        except FileNotFoundError as e:
+            msg = f"[ENVIRONMENT] error trying to delete the default view: {str(e)}"
+            tty.debug(msg)
 
     def regenerate_views(self):
         if not self.views:
@@ -2200,10 +2197,13 @@ class Environment:
     def _default_view_as_yaml(self):
         """This internal function assumes the default view is set"""
         path = self.default_view.raw_root
-        if self.default_view == ViewDescriptor(self.path, self.view_path_default):
+        if (
+            self.default_view == ViewDescriptor(self.path, self.view_path_default)
+            and len(self.views) == 1
+        ):
             return True
 
-        if self.default_view == ViewDescriptor(self.path, path):
+        if self.default_view == ViewDescriptor(self.path, path) and len(self.views) == 1:
             return path
 
         return {"root": path}

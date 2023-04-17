@@ -435,21 +435,22 @@ def env_view_setup_parser(subparser):
 def env_view(args):
     env = ev.active_environment()
 
-    if env:
-        if args.action == ViewAction.regenerate:
-            env.regenerate_views()
-        elif args.action == ViewAction.enable:
-            if args.view_path:
-                view_path = args.view_path
-            else:
-                view_path = env.view_path_default
-            env.update_default_view(view_path)
-            env.write()
-        elif args.action == ViewAction.disable:
-            env.update_default_view(None)
-            env.write()
-    else:
+    if not env:
         tty.msg("No active environment")
+        return
+
+    if args.action == ViewAction.regenerate:
+        env.regenerate_views()
+    elif args.action == ViewAction.enable:
+        if args.view_path:
+            view_path = args.view_path
+        else:
+            view_path = env.view_path_default
+        env.update_default_view(view_path)
+        env.write()
+    elif args.action == ViewAction.disable:
+        env.update_default_view(path_or_bool=False)
+        env.write()
 
 
 #

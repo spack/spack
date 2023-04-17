@@ -18,6 +18,16 @@ pytestmark = pytest.mark.skipif(
 )
 
 
+class TestDirectoryInitialization:
+    def test_environment_dir_from_name(self, mutable_mock_env_path):
+        """Test the function mapping a managed environment name to its folder."""
+        env = ev.create("test")
+        environment_dir = ev.environment_dir_from_name("test")
+        assert env.path == environment_dir
+        with pytest.raises(ev.SpackEnvironmentError, match="environment already exists"):
+            ev.environment_dir_from_name("test", exists_ok=False)
+
+
 def test_hash_change_no_rehash_concrete(tmp_path, mock_packages, config):
     # create an environment
     env_path = tmp_path / "env_dir"
@@ -192,3 +202,75 @@ def test_roundtrip_spack_yaml_with_comments(original_content, mock_packages, con
 
     content = spack_yaml.read_text()
     assert content == original_content
+
+
+def test_adding_anonymous_specs_to_env_fails(tmp_path):
+    """Tests that trying to add an anonymous spec to the 'specs' section of an environment
+    raises an exception
+    """
+    env = ev.create_in_dir(tmp_path)
+    with pytest.raises(ev.SpackEnvironmentError, match="cannot add anonymous"):
+        env.add("%gcc")
+
+
+def test_removing_from_non_existing_list_fails(tmp_path):
+    """Tests that trying to remove a spec from a non-existing definition fails."""
+    env = ev.create_in_dir(tmp_path)
+    with pytest.raises(ev.SpackEnvironmentError, match="'bar' does not exist"):
+        env.remove("%gcc", list_name="bar")
+
+
+@pytest.mark.parametrize(
+    "init_view,update_value",
+    [
+        (True, False),
+        (True, "./view"),
+        (False, True),
+        ("./view", True),
+        (True, True),
+        (False, False),
+    ],
+)
+def test_update_default_view(init_view, update_value, tmp_path, mock_packages, config):
+    """Tests updating the default view with different values."""
+    env = ev.create_in_dir(tmp_path, with_view=init_view)
+    env.update_default_view(update_value)
+    env.write(regenerate=True)
+    if not isinstance(update_value, bool):
+        assert env.default_view.raw_root == update_value
+    assert env.manifest.pristine_yaml_content["spack"]["view"] == update_value
+
+
+@pytest.mark.parametrize("filename", [ev.manifest_name, ev.lockfile_name])
+def test_cannot_initialize_in_dir_with_init_file(tmp_path, filename):
+    """Tests that initializing an environment in a directory with an already existing
+    spack.yaml or spack.lock raises an exception.
+    """
+    init_file = tmp_path / filename
+    init_file.touch()
+    with pytest.raises(ev.SpackEnvironmentError, match="cannot initialize"):
+        ev.create_in_dir(tmp_path)
+
+
+def test_cannot_initiliaze_if_dirname_exists_as_a_file(tmp_path):
+    """Tests that initializing an environment using as a location an existing file raises
+    an error.
+    """
+    dir_name = tmp_path / "dir"
+    dir_name.touch()
+    with pytest.raises(ev.SpackEnvironmentError, match="cannot initialize"):
+        ev.create_in_dir(dir_name)
+
+
+def test_cannot_initiliaze_if_init_file_does_not_exist(tmp_path):
+    """Tests that initializing an environment passing a non-existing init file raises an error."""
+    init_file = tmp_path / ev.manifest_name
+    with pytest.raises(ev.SpackEnvironmentError, match="cannot initialize"):
+        ev.create_in_dir(tmp_path, init_file=init_file)
+
+
+def test_cannot_initialize_from_random_file(tmp_path):
+    init_file = tmp_path / "foo.txt"
+    init_file.touch()
+    with pytest.raises(ev.SpackEnvironmentError, match="cannot initialize"):
+        ev.create_in_dir(tmp_path, init_file=init_file)
