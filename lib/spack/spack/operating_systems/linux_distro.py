@@ -6,7 +6,7 @@ import os
 import platform as py_platform
 import re
 import sys
-from subprocess import check_output
+from subprocess import PIPE, run
 from typing import Optional, Tuple
 
 import spack.util.elf
@@ -79,9 +79,14 @@ class LinuxDistro(OperatingSystem):
             return None
 
         try:
-            output = check_output([dynamic_linker_path, "--version"]).decode()
+            output = run(
+                [dynamic_linker_path], check=False, stdout=PIPE, stderr=PIPE
+            ).stderr.decode("utf-8")
         except Exception:
             return None
+        return self._parse_musl_output(output)
+
+    def _parse_musl_output(self, output: str) -> Optional[Tuple[str, StandardVersion]]:
         version_str = re.search(r"^Version (.+)$", output)
         if not version_str:
             return None
@@ -96,27 +101,28 @@ class LinuxDistro(OperatingSystem):
         # for glibc, but that requires locating the library. Instead we just
         # rely on ldd being in PATH and hope it's the right one.
         try:
-            first_line = check_output(["ldd", "--version"]).decode().splitlines()[0]
+            output = run(["ldd", "--version"], check=False, stdout=PIPE, stderr=PIPE)
+            stdout = output.stdout.decode("utf-8")
+            stderr = output.stderr.decode("utf-8")
         except Exception:
             return None
 
-        # First try to parse the version
-        version_str = re.match(r".+\(.+\) (.+)", first_line)
+        # musl libc prints to stderr, returns with error code
+        if stderr.startswith("musl"):
+            return self._parse_musl_output(stderr)
+
+        # Otherwise, glibc.
+        if not re.search("gnu|glibc", stdout, re.IGNORECASE):
+            return None
+
+        version_str = re.match(r".+\(.+\) (.+)", stdout)
         if not version_str:
             return None
         try:
             version = StandardVersion.from_string(version_str.group(1))
+            return "glibc", version
         except Exception:
             return None
-
-        # Then figure out the name
-        if re.search(r"musl", first_line, re.IGNORECASE):
-            return "musl", version
-
-        if re.search(r"glibc|gnu", first_line, re.IGNORECASE):
-            return "glibc", version
-
-        return None
 
     def _from_distro(self) -> Optional[Tuple[str, StandardVersion]]:
         """Last resort is to use the distro module, which actually
