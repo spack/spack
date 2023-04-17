@@ -20,7 +20,7 @@ class OsgCaCerts(Package):
     maintainers("wdconinc")
 
     releases = [
-        {   
+        {
             "osg_version": "1.110",
             "igtf_version": "1.119",
             "osg_sha256": "025969d415bf27c1609699caf63d0d79540a01df500187195f2bd973fe69e00d",
