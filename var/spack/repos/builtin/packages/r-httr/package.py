@@ -28,6 +28,7 @@ class RHttr(RPackage):
     depends_on("r@3.0.0:", type=("build", "run"))
     depends_on("r@3.1:", type=("build", "run"), when="@1.4.0:")
     depends_on("r@3.2:", type=("build", "run"), when="@1.4.1:")
+    depends_on("r@3.5:", type=("build", "run"), when="@1.4.5:")
     depends_on("r-curl@3.0.0:", type=("build", "run"))
     depends_on("r-jsonlite", type=("build", "run"))
     depends_on("r-mime", type=("build", "run"))

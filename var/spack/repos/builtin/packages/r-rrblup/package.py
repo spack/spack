@@ -22,3 +22,4 @@ class RRrblup(RPackage):
     version("4.6", sha256="28b475a1466fcdc1780caace75cf34155338fda496cebd5799315598a4bc84af")
 
     depends_on("r@2.14:", type=("build", "run"))
+    depends_on("r@4.0:", type=("build", "run"), when="@4.6.2:")
