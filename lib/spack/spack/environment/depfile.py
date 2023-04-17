@@ -46,9 +46,9 @@ class DepfileNode:
         self.target = target
         self.prereqs = prereqs
         if buildcache == UseBuildCache.ONLY:
-            self.buildcache_flag = " --use-buildcache=only"
+            self.buildcache_flag = "--use-buildcache=only"
         elif buildcache == UseBuildCache.NEVER:
-            self.buildcache_flag = " --use-buildcache=never"
+            self.buildcache_flag = "--use-buildcache=never"
         else:
             self.buildcache_flag = ""
 
@@ -88,6 +88,7 @@ class DepfileSpecVisitor(object):
 
 
 class MakefileModel:
+    """This class produces all data to render a makefile for specs of an environment."""
     def __init__(
         self,
         env_path: str,
@@ -97,6 +98,17 @@ class MakefileModel:
         pkg_identifier_variable: str,
         jobserver: bool,
     ):
+        """
+        Args:
+            env_path: path to the environment
+            roots: specs that get built in the default target
+            adjacency_list: list of DepfileNode, mapping specs to their dependencies
+            make_prefix: prefix for makefile targets
+            pkg_identifier_variable: name of the variable that includes all package
+                identifiers, and can be used when including the generated Makefile elsewhere
+            jobserver: when enabled, make will invoke Spack with jobserver support. For
+                dry-run this should be disabled.
+        """
         # Currently we can only use depfile with an environment since Spack needs to
         # find the concrete specs somewhere.
         self.env_path = env_path
@@ -196,7 +208,19 @@ class MakefileModel:
         make_prefix: Optional[str],
         jobserver: bool,
     ) -> "MakefileModel":
-        """Produces a MakefileModel from an environment and a list of specs."""
+        """Produces a MakefileModel from an environment and a list of specs.
+        Args:
+            env: the environment to use
+            filter_specs: if provided, only these specs will be built from the environment,
+                otherwise the environment roots are used.
+            pkg_buildcache: whether to only use the buildcache for top-level specs.
+                Values: only/never/auto. When only, their build deps are pruned.
+            dep_buildcache: whether to only use the buildcache for non-top-level specs.
+                Values: only/never/auto. When only, their build deps are pruned.
+            make_prefix: the prefix for the makefile targets
+            jobserver: when enabled, make will invoke Spack with jobserver support. For
+                dry-run this should be disabled.
+        """
         # If no specs are provided as a filter, build all the specs in the environment.
         if filter_specs:
             entrypoints = [env.matching_spec(s) for s in filter_specs]

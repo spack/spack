@@ -649,15 +649,11 @@ def env_depfile(args):
 
     pkg_use_bc, dep_use_bc = args.use_buildcache
 
-    buf = io.StringIO()
     template = spack.tengine.make_environment().get_template(os.path.join("depfile", "Makefile"))
     model = depfile.MakefileModel.from_env(
         env, filter_specs, pkg_use_bc, dep_use_bc, args.make_prefix, args.jobserver
     )
-    rendered = template.render(model.to_dict())
-
-    buf.write(rendered)
-    makefile = buf.getvalue()
+    makefile = template.render(model.to_dict())
 
     # Finally write to stdout/file.
     if args.output:
