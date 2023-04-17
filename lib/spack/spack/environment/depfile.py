@@ -53,7 +53,7 @@ class DepfileNode:
             self.buildcache_flag = ""
 
 
-class DepfileSpecVisitor(object):
+class DepfileSpecVisitor:
     """This visitor produces an adjacency list of a (reduced) DAG, which
     is used to generate depfile targets with their prerequisites. Currently
     it only drops build deps when using buildcache only mode.
