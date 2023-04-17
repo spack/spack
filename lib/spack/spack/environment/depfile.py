@@ -2,8 +2,10 @@
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
-"""This module contains the traversal logic and models that can be used to generate
-depfiles from an environment."""
+"""
+This module contains the traversal logic and models that can be used to generate
+depfiles from an environment.
+"""
 
 import os
 from enum import Enum
@@ -210,6 +212,7 @@ class MakefileModel:
         jobserver: bool,
     ) -> "MakefileModel":
         """Produces a MakefileModel from an environment and a list of specs.
+
         Args:
             env: the environment to use
             filter_specs: if provided, only these specs will be built from the environment,
