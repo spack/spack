@@ -20,6 +20,8 @@ class Openblas(MakefilePackage):
     libraries = ["libopenblas"]
 
     version("develop", branch="develop")
+    version("0.3.23", sha256="5d9491d07168a5d00116cdc068a40022c3455bf9293c7cb86a65b1054d7e5114")
+    version("0.3.22", sha256="7fa9685926ba4f27cfe513adbf9af64d6b6b63f9dcabb37baefad6a65ff347a7")
     version("0.3.21", sha256="f36ba3d7a60e7c8bcc54cd9aaa9b1223dd42eaf02c811791c37e8ca707c241ca")
     version("0.3.20", sha256="8495c9affc536253648e942908e88e097f2ec7753ede55aca52e5dead3029e3c")
     version("0.3.19", sha256="947f51bfe50c2a0749304fbe373e00e7637600b0a47b78a51382aeb30ca08562")
