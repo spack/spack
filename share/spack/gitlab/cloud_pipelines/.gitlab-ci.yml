@@ -906,7 +906,7 @@ tutorial-protected-build:
 
 .ml-linux-x86_64-cpu-generate:
   extends: [ .ml-linux-x86_64-cpu, ".tags-x86_64_v4" ]
-  image: ghcr.io/spack/e4s-amazonlinux-2:v2023-03-09
+  image: ghcr.io/spack/linux-ubuntu22.04-x86_64_v2:nightly
 
 ml-linux-x86_64-cpu-pr-generate:
   extends: [ ".pr-generate", ".ml-linux-x86_64-cpu-generate" ]
@@ -946,7 +946,7 @@ ml-linux-x86_64-cpu-protected-build:
 
 .ml-linux-x86_64-cuda-generate:
   extends: [ .ml-linux-x86_64-cuda, ".tags-x86_64_v4" ]
-  image: ghcr.io/spack/e4s-amazonlinux-2:v2023-03-09
+  image: ghcr.io/spack/linux-ubuntu22.04-x86_64_v2:nightly
 
 ml-linux-x86_64-cuda-pr-generate:
   extends: [ ".pr-generate", ".ml-linux-x86_64-cuda-generate" ]
@@ -986,7 +986,7 @@ ml-linux-x86_64-cuda-protected-build:
 
 .ml-linux-x86_64-rocm-generate:
   extends: [ .ml-linux-x86_64-rocm, ".tags-x86_64_v4" ]
-  image: ghcr.io/spack/e4s-amazonlinux-2:v2023-03-09
+  image: ghcr.io/spack/linux-ubuntu22.04-x86_64_v2:nightly
 
 ml-linux-x86_64-rocm-pr-generate:
   extends: [ ".pr-generate", ".ml-linux-x86_64-rocm-generate" ]
