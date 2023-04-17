@@ -87,7 +87,7 @@ class LinuxDistro(OperatingSystem):
         return self._parse_musl_output(output)
 
     def _parse_musl_output(self, output: str) -> Optional[Tuple[str, StandardVersion]]:
-        version_str = re.search(r"^Version (.+)$", output)
+        version_str = re.search(r"^Version (.+)$", output, re.MULTILINE)
         if not version_str:
             return None
         try:
