@@ -20,12 +20,18 @@ class OsgCaCerts(Package):
     maintainers("wdconinc")
 
     releases = [
+        {   
+            "osg_version": "1.110",
+            "igtf_version": "1.119",
+            "osg_sha256": "025969d415bf27c1609699caf63d0d79540a01df500187195f2bd973fe69e00d",
+            "igtf_sha256": "cc4db07a86fc27f0e0dfd15c797d1a0da7b5620f4b611dbb686543712b2f335a",
+        },
         {
             "osg_version": "1.109",
             "igtf_version": "1.117",
             "osg_sha256": "41e12c05aedb4df729bf326318cc29b9b79eb097564fd68c6af2e1448ec74f75",
             "igtf_sha256": "130d4d95cd65d01d2db250ee24c539341e3adc899b7eff1beafef1ba4674807d",
-        }
+        },
     ]
 
     for release in releases:
