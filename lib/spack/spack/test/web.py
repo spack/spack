@@ -150,7 +150,7 @@ def test_find_versions_of_archive_with_fragment():
     versions = spack.util.web.find_versions_of_archive(
         root_tarball, root_with_fragment, list_depth=0
     )
-    assert ver("5.0.0") in versions
+    assert Version("5.0.0") in versions
 
 
 def test_get_header():
