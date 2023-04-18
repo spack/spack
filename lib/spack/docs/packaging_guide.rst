@@ -229,8 +229,7 @@ always choose to download just one tarball initially, and run
 
 Spack automatically creates a directory in the appropriate repository,
 generates a boilerplate template for your package, and opens up the new
-``package.py`` in your favorite ``$EDITOR`` (see :ref:`controlling-the-editor`
-for details):
+``package.py`` in your favorite ``$EDITOR``:
 
 .. code-block:: python
    :linenos:
@@ -335,31 +334,6 @@ The rest of the tasks you need to do are as follows:
    depending on the package and its build system.
    :ref:`installation_process` is
    covered in detail later.
-
-
-.. _controlling-the-editor:
-
-^^^^^^^^^^^^^^^^^^^^^^^^^
-Controlling the editor
-^^^^^^^^^^^^^^^^^^^^^^^^^
-
-When Spack needs to open an editor for you (e.g., for commands like
-:ref:`cmd-spack-create` or :ref:`spack edit`, it looks at several environment variables
-to figure out what to use. The order of precedence is:
-
-* ``SPACK_EDITOR``: highest precedence, in case you want something specific for Spack;
-* ``VISUAL``: standard environment variable for full-screen editors like ``vim`` or ``emacs``;
-* ``EDITOR``: older environment variable for your editor.
-
-You can set any of these to the command you want to run, e.g., in ``bash`` you might run
-one of these::
-
-  export VISUAL=vim
-  export EDITOR="emacs -nw"
-  export SPACK_EDITOR=nano
-
-If Spack finds none of these variables set, it will look for ``vim``, ``vi``, ``emacs``,
-``nano``, and ``notepad``, in that order.
 
 ^^^^^^^^^^^^^^^^^^^^^^^^^
 Non-downloadable software
@@ -1813,7 +1787,7 @@ for instructions on setting up a mirror.
 After running ``spack install pgi``, the first thing that will happen is
 Spack will create a global license file located at
 ``$SPACK_ROOT/etc/spack/licenses/pgi/license.dat``. It will then open up the
-file using :ref:`your favorite editor <controlling-the-editor>`. It will look like
+file using the editor set in ``$EDITOR``, or vi if unset. It will look like
 this:
 
 .. code-block:: sh
