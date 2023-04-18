@@ -94,33 +94,39 @@ class MakefileModel:
 
     def __init__(
         self,
-        env_path: str,
+        env: ev.Environment,
         roots: List[spack.spec.Spec],
         adjacency_list: List[DepfileNode],
-        make_prefix: str,
-        pkg_identifier_variable: str,
+        make_prefix: Optional[str],
         jobserver: bool,
     ):
         """
         Args:
-            env_path: path to the environment
+            env: environment to generate the makefile for
             roots: specs that get built in the default target
             adjacency_list: list of DepfileNode, mapping specs to their dependencies
             make_prefix: prefix for makefile targets
-            pkg_identifier_variable: name of the variable that includes all package
-                identifiers, and can be used when including the generated Makefile elsewhere
             jobserver: when enabled, make will invoke Spack with jobserver support. For
                 dry-run this should be disabled.
         """
         # Currently we can only use depfile with an environment since Spack needs to
         # find the concrete specs somewhere.
-        self.env_path = env_path
-
-        # Prefix for targets, this is where the makefile touches files in.
-        self.make_prefix = make_prefix
+        self.env_path = env.path
 
         # These specs are built in the default target.
         self.roots = roots
+
+        # The SPACK_PACKAGE_IDS variable is "exported", which can be used when including
+        # generated makefiles to add post-install hooks, like pushing to a buildcache,
+        # running tests, etc.
+        if make_prefix is None:
+            self.make_prefix = os.path.join(env.env_subdir_path, "makedeps")
+            self.pkg_identifier_variable = "SPACK_PACKAGE_IDS"
+        else:
+            # NOTE: GNU Make allows directory separators in variable names, so for consistency
+            # we can namespace this variable with the same prefix as targets.
+            self.make_prefix = make_prefix
+            self.pkg_identifier_variable = os.path.join(make_prefix, "SPACK_PACKAGE_IDS")
 
         # And here we collect a tuple of (target, prereqs, dag_hash, nice_name, buildcache_flag)
         self.make_adjacency_list = [
@@ -141,11 +147,6 @@ class MakefileModel:
 
         # All package identifiers, used to generate the SPACK_PACKAGE_IDS variable
         self.all_pkg_identifiers: List[str] = []
-
-        # The SPACK_PACKAGE_IDS variable is "exported", which can be used when including
-        # generated makefiles to add post-install hooks, like pushing to a buildcache,
-        # running tests, etc.
-        self.pkg_identifier_variable = pkg_identifier_variable
 
         # All install and install-deps targets
         self.all_install_related_targets: List[str] = []
@@ -238,19 +239,4 @@ class MakefileModel:
             entrypoints, traverse.CoverNodesVisitor(visitor, key=lambda s: s.dag_hash())
         )
 
-        if make_prefix is None:
-            make_prefix = os.path.join(env.env_subdir_path, "makedeps")
-            pkg_identifier_variable = "SPACK_PACKAGE_IDS"
-        else:
-            # NOTE: GNU Make allows directory separators in variable names, so for consistency
-            # we can namespace this variable with the same prefix as targets.
-            pkg_identifier_variable = os.path.join(make_prefix, "SPACK_PACKAGE_IDS")
-
-        return MakefileModel(
-            env.path,
-            entrypoints,
-            visitor.adjacency_list,
-            make_prefix,
-            pkg_identifier_variable,
-            jobserver,
-        )
+        return MakefileModel(env, entrypoints, visitor.adjacency_list, make_prefix, jobserver)
