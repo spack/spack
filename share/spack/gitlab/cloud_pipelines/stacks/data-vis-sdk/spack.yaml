@@ -52,6 +52,7 @@ spack:
     - matrix:
       - [$sdk_base_spec]
       - [$^paraview_specs]
+      - - ^hdf5@1.14 # Non-VisIt can build HDF5 1.14
     # Test ParaView builds with differnt GL backends
     - matrix:
       - [$sdk_base_spec]
@@ -62,7 +63,7 @@ spack:
   ci:
     pipeline-gen:
     - build-job:
-        image: { "name": "ecpe4s/ubuntu20.04-runner-x86_64:2022-10-01", "entrypoint": [""] }
+        image: { "name": "ecpe4s/ubuntu20.04-runner-x86_64:2023-01-01", "entrypoint": [""] }
 
   cdash:
     build-group:: Data and Vis SDK
