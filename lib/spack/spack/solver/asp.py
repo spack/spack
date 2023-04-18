@@ -1669,13 +1669,27 @@ class SpackSolverSetup(object):
                         if concrete_build_deps or dtype != "build":
                             clauses.append(fn.attr("depends_on", spec.name, dep.name, dtype))
 
-                            # Skip virtual node constriants for renamed/deleted packages,
-                            # so their binaries can still be installed.
-                            # NOTE: with current specs (which lack edge attributes) this
-                            # can allow concretizations with two providers, but it's unlikely.
+                            # TODO: We have to look up info from package.py here, but we'd
+                            # TODO: like to avoid this entirely. We should not need to look
+                            # TODO: up potentially wrong info if we have virtual edge info.
                             try:
-                                virtuals = dep.package.virtuals_provided
+                                try:
+                                    pkg = dep.package
+
+                                except spack.repo.UnknownNamespaceError:
+                                    # Try to look up the package of the same name and use its
+                                    # providers. This is as good as we can do without edge info.
+                                    pkg_class = spack.repo.path.get_pkg_class(dep.name)
+                                    spec = spack.spec.Spec(f"{dep.name}@{dep.version}")
+                                    pkg = pkg_class(spec)
+
+                                virtuals = pkg.virtuals_provided
+
                             except spack.repo.UnknownPackageError:
+                                # Skip virtual node constriants for renamed/deleted packages,
+                                # so their binaries can still be installed.
+                                # NOTE: with current specs (which lack edge attributes) this
+                                # can allow concretizations with two providers, but it's unlikely.
                                 continue
 
                             # Don't concretize with two providers of the same virtual.
