@@ -127,6 +127,8 @@ def editor(*args: List[str], exec_fn: Callable[[str, List[str]], int] = os.execv
         return try_exec(exe, full_args, var)
 
     # try standard environment variables
+    if try_env_var("SPACK_EDITOR"):
+        return True
     if try_env_var("VISUAL"):
         return True
     if try_env_var("EDITOR"):
