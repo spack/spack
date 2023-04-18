@@ -57,7 +57,7 @@ import spack.util.web
 from spack.filesystem_view import YamlFilesystemView
 from spack.install_test import TestFailure, TestSuite
 from spack.installer import InstallError, PackageInstaller
-from spack.stage import ResourceStage, Stage, StageComposite, stage_prefix
+from spack.stage import ResourceStage, Stage, StageComposite, compute_stage_name
 from spack.util.executable import ProcessError, which
 from spack.util.package_hash import package_hash
 from spack.util.prefix import Prefix
@@ -1022,8 +1022,7 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
         )
         # Construct a path where the stage should build..
         s = self.spec
-        stage_name = "{0}{1}-{2}-{3}".format(stage_prefix, s.name, s.version, s.dag_hash())
-
+        stage_name = compute_stage_name(s)
         stage = Stage(
             fetcher,
             mirror_paths=mirror_paths,

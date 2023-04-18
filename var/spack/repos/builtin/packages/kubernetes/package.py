@@ -12,14 +12,46 @@ class Kubernetes(Package):
     for deployment, maintenance, and scaling of applications."""
 
     homepage = "https://kubernetes.io"
-    url = "https://github.com/kubernetes/kubernetes/archive/v1.19.0-alpha.0.tar.gz"
+    url = "https://github.com/kubernetes/kubernetes/archive/refs/tags/v1.27.0.tar.gz"
 
-    version("1.18.1", sha256="33ca738f1f4e6ad453b80f231f71e62470b822f21d44dc5b8121b2964ae8e6f8")
-    version("1.18.0", sha256="6bd252b8b5401ad6f1fb34116cd5df59153beced3881b98464862a81c083f7ab")
-    version("1.17.4", sha256="b61a6eb3bd5251884f34853cc51aa31c6680e7e476268fe06eb33f3d95294f62")
+    maintainers("alecbcs")
 
+    version("1.27.0", sha256="536025dba2714ee5e940bb0a6b1df9ca97c244fa5b00236e012776a69121c323")
+
+    # Deprecated versions
+    # https://nvd.nist.gov/vuln/detail/CVE-2022-3294
+    version(
+        "1.18.1",
+        sha256="33ca738f1f4e6ad453b80f231f71e62470b822f21d44dc5b8121b2964ae8e6f8",
+        deprecated=True,
+    )
+    version(
+        "1.18.0",
+        sha256="6bd252b8b5401ad6f1fb34116cd5df59153beced3881b98464862a81c083f7ab",
+        deprecated=True,
+    )
+    version(
+        "1.17.4",
+        sha256="b61a6eb3bd5251884f34853cc51aa31c6680e7e476268fe06eb33f3d95294f62",
+        deprecated=True,
+    )
+
+    depends_on("bash", type="build")
     depends_on("go", type="build")
 
+    phases = ["build", "install"]
+
+    def build(self, spec, prefix):
+        components = [
+            "cmd/kubeadm",
+            "cmd/kubelet",
+            "cmd/kube-apiserver",
+            "cmd/kube-controller-manager",
+            "cmd/kube-proxy",
+            "cmd/kube-scheduler",
+        ]
+
+        make(f"WHAT={' '.join(components)}")
+
     def install(self, spec, prefix):
-        make()
         install_tree("_output/bin", prefix.bin)

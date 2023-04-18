@@ -2782,6 +2782,10 @@
           {
             "versions": "13.0:",
             "flags" : "-mcpu=apple-m1"
+          },
+          {
+            "versions": "16.0:",
+            "flags" : "-mcpu=apple-m2"
           }
         ],
         "apple-clang": [
@@ -2790,8 +2794,12 @@
             "flags" : "-march=armv8.5-a"
           },
           {
-            "versions": "13.0:",
-            "flags" : "-mcpu=vortex"
+            "versions": "13.0:14.0.2",
+            "flags" : "-mcpu=apple-m1"
+          },
+          {
+            "versions": "14.0.2:",
+            "flags" : "-mcpu=apple-m2"
           }
         ]
       }

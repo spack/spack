@@ -169,7 +169,7 @@ def write_license_file(pkg, license_path):
         f.close()
 
 
-def post_install(spec):
+def post_install(spec, explicit=None):
     """This hook symlinks local licenses to the global license for
     licensed software.
     """

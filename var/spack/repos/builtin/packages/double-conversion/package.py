@@ -21,6 +21,7 @@ class DoubleConversion(CMakePackage):
     homepage = "https://github.com/google/double-conversion"
     url = "https://github.com/google/double-conversion/archive/v2.0.1.zip"
 
+    version("3.2.1", sha256="55aa41b463346b1032585c04fe7d0adec9db56598d8d699841cdadeb3597e909")
     version("3.1.5", sha256="72c0e3925a1214095afc6f1c214faecbec20e8526cf6b8a541cf72195a11887f")
     version("2.0.2", sha256="7a0ae55ec9f75c22607808d091bae050a38d4a7728c52273c89d25dd5b78fcdd")
     version("2.0.1", sha256="476aefbdc2051bbcca0d5919ebc293c90a7ad2c0cb6c4ad877d6e665f469146b")
