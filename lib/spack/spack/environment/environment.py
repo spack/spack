@@ -1161,7 +1161,7 @@ class Environment:
                 " specify a named list that is not a matrix"
             )
 
-        matches = list(x for x in list_to_change if x.satisfies(match_spec))
+        matches = list((idx, x) for idx, x in enumerate(list_to_change) if x.satisfies(match_spec))
         if len(matches) == 0:
             raise ValueError(
                 "There are no specs named {0} in {1}".format(match_spec.name, list_name)
@@ -1169,15 +1169,17 @@ class Environment:
         elif len(matches) > 1 and not allow_changing_multiple_specs:
             raise ValueError("{0} matches multiple specs".format(str(match_spec)))
 
-        new_speclist = SpecList(list_name)
-        for i, spec in enumerate(list_to_change):
-            if spec.satisfies(match_spec):
-                new_speclist.add(Spec.override(spec, change_spec))
+        for idx, spec in matches:
+            override_spec = Spec.override(spec, change_spec)
+            self.spec_lists[list_name].specs[idx] = override_spec
+            if list_name == user_speclist_name:
+                self.manifest.override_user_spec(str(override_spec), idx=idx)
             else:
-                new_speclist.add(spec)
-
-        self.spec_lists[list_name] = new_speclist
-        self.update_stale_references()
+                self.manifest.override_definition(
+                    str(spec), override=str(override_spec), list_name=list_name
+                )
+        self.update_stale_references(from_list=list_name)
+        self._construct_state_from_manifest()
 
     def remove(self, query_spec, list_name=user_speclist_name, force=False):
         """Remove specs from an environment that match a query_spec"""
@@ -2590,6 +2592,24 @@ class EnvironmentManifestFile(collections.abc.Mapping):
             raise SpackEnvironmentError(msg) from e
         self.changed = True
 
+    def override_user_spec(self, user_spec: str, idx: int) -> None:
+        """Overrides the user spec at index idx with the one passed as input.
+
+        Args:
+            user_spec: new user spec
+            idx: index of the spec to be overridden
+
+        Raises:
+            SpackEnvironmentError: when the user spec cannot be overridden
+        """
+        try:
+            config_dict(self.pristine_yaml_content)["specs"][idx] = user_spec
+            config_dict(self.yaml_content)["specs"][idx] = user_spec
+        except ValueError as e:
+            msg = f"cannot override {user_spec} from {self}"
+            raise SpackEnvironmentError(msg) from e
+        self.changed = True
+
     def add_definition(self, user_spec: str, list_name: str) -> None:
         """Appends a user spec to the first active definition mathing the name passed as argument.
 
@@ -2665,6 +2685,47 @@ class EnvironmentManifestFile(collections.abc.Mapping):
             raise SpackEnvironmentError(msg)
 
         config_dict(self.yaml_content)["definitions"][idx][list_name].remove(user_spec)
+        self.changed = True
+
+    def override_definition(self, user_spec: str, *, override: str, list_name: str) -> None:
+        """Overrides a user spec from an active definition that matches the name passed
+        as argument.
+
+        Args:
+            user_spec: user spec to be overridden
+            override: new spec to be used
+            list_name: name of the definition where to override the spec
+
+        Raises:
+            SpackEnvironmentError: if the user spec cannot be overridden
+        """
+        definitions = config_dict(self.pristine_yaml_content).get("definitions", [])
+
+        def extract_name(_item):
+            names = list(x for x in _item if x != "when")
+            assert len(names) == 1, f"more than one name in {_item}"
+            return names[0]
+
+        for idx, item in enumerate(definitions):
+            name = extract_name(item)
+            if name != list_name:
+                continue
+
+            condition_str = item.get("when", "True")
+            if not _eval_conditional(condition_str):
+                continue
+
+            try:
+                sub_index = item[name].index(user_spec)
+                item[name][sub_index] = override
+                break
+            except ValueError:
+                pass
+        else:
+            msg = f"cannot override {user_spec} with {override} in the '{list_name}' definition"
+            raise SpackEnvironmentError(msg)
+
+        config_dict(self.yaml_content)["definitions"][idx][list_name][sub_index] = override
         self.changed = True
 
     def set_default_view(self, view: Union[bool, str, pathlib.Path, Dict[str, str]]) -> None:
