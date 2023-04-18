@@ -354,11 +354,8 @@ def version(
     attribute with ``Version`` keys and metadata values, where the metadata
     is stored as a dictionary of ``kwargs``.
 
-    The ``dict`` of arguments is turned into a valid fetch strategy for
+    The (keyword) arguments are turned into a valid fetch strategy for
     code packages later. See ``spack.fetch_strategy.for_package_version()``.
-
-    Keyword Arguments:
-        deprecated (bool): whether or not this version is deprecated
     """
 
     def _execute_version(pkg):
