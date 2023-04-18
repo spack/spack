@@ -317,7 +317,21 @@ directive = DirectiveMeta.directive
 
 
 @directive("versions")
-def version(ver, checksum=None, **kwargs):
+def version(
+    ver,
+    *,
+    sha256=None,
+    preferred=None,
+    deprecated=None,
+    expand=None,
+    url=None,
+    git=None,
+    branch=None,
+    submodules=None,
+    commit=None,
+    tag=None,
+    checksum=None,
+):
     """Adds a version and, if appropriate, metadata for fetching its code.
 
     The ``version`` directives are aggregated into a ``versions`` dictionary
@@ -332,19 +346,34 @@ def version(ver, checksum=None, **kwargs):
     """
 
     def _execute_version(pkg):
-        if checksum is not None:
-            if hasattr(pkg, "has_code") and not pkg.has_code:
-                raise VersionChecksumError(
-                    "{0}: Checksums not allowed in no-code packages"
-                    "(see '{1}' version).".format(pkg.name, ver)
-                )
+        if checksum is not None and hasattr(pkg, "has_code") and not pkg.has_code:
+            raise VersionChecksumError(
+                "{0}: Checksums not allowed in no-code packages"
+                "(see '{1}' version).".format(pkg.name, ver)
+            )
 
-            kwargs["checksum"] = checksum
+        kwargs = {
+            key: value
+            for key, value in (
+                ("sha256", sha256),
+                ("preferred", preferred),
+                ("deprecated", deprecated),
+                ("expand", expand),
+                ("url", url),
+                ("git", git),
+                ("branch", branch),
+                ("submodules", submodules),
+                ("commit", commit),
+                ("tag", tag),
+                ("checksum", checksum),
+            )
+            if value is not None
+        }
 
         # Store kwargs for the package to later with a fetch_strategy.
         version = Version(ver)
         if isinstance(version, GitVersion):
-            if not hasattr(pkg, "git") and "git" not in kwargs:
+            if git is None and not hasattr(pkg, "git"):
                 msg = "Spack version directives cannot include git hashes fetched from"
                 msg += " URLs. Error in package '%s'\n" % pkg.name
                 msg += "    version('%s', " % version.string
