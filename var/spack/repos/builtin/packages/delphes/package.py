@@ -20,13 +20,27 @@ class Delphes(CMakePackage):
     maintainers("drbenmorgan", "vvolkl", "selvaggi", "jmcarcell")
 
     version("master", branch="master")
-    version("3.5.1pre07", sha256="bbef79bf651d2f8a12c134b40e8dac63d25ce93be93c222e1931e70ae7da62d5")
-    version("3.5.1pre06", sha256="728e91789b782e2c8fd005880cba717bffab2a765b6340a2e505d0c00f013c1d")
-    version("3.5.1pre05", sha256="51134cee69a8b44cbb9a2af562870581c88aa004cd3196895dcc8eec7e4c4f84")
-    version("3.5.1pre04", sha256="de0a43524313b395924897cb39a628ed317a1781217f0df9e162dd737ab03c41")
-    version("3.5.1pre03", sha256="03f23061e6cb2cc8a0cfbc89a04563cf1250e34a996e7e1fd3588f9ccf1ae69f")
-    version("3.5.1pre02", sha256="e90a373e0259c89f48e16adcde28a011b630fd140560bbf8ec9ea797c4ee087f")
-    version("3.5.1pre01", sha256="164421a0b8fe7e85a3e88e15019ae2b908a68af2260d7dad342a4436a0f1cdd3")
+    version(
+        "3.5.1pre07", sha256="bbef79bf651d2f8a12c134b40e8dac63d25ce93be93c222e1931e70ae7da62d5"
+    )
+    version(
+        "3.5.1pre06", sha256="728e91789b782e2c8fd005880cba717bffab2a765b6340a2e505d0c00f013c1d"
+    )
+    version(
+        "3.5.1pre05", sha256="51134cee69a8b44cbb9a2af562870581c88aa004cd3196895dcc8eec7e4c4f84"
+    )
+    version(
+        "3.5.1pre04", sha256="de0a43524313b395924897cb39a628ed317a1781217f0df9e162dd737ab03c41"
+    )
+    version(
+        "3.5.1pre03", sha256="03f23061e6cb2cc8a0cfbc89a04563cf1250e34a996e7e1fd3588f9ccf1ae69f"
+    )
+    version(
+        "3.5.1pre02", sha256="e90a373e0259c89f48e16adcde28a011b630fd140560bbf8ec9ea797c4ee087f"
+    )
+    version(
+        "3.5.1pre01", sha256="164421a0b8fe7e85a3e88e15019ae2b908a68af2260d7dad342a4436a0f1cdd3"
+    )
     version("3.5.0", sha256="37685b945ef43aab09217d70b0ac7f9c5d3c2c27cf3b3f8d64c4e6eb5c5fd9aa")
     version("3.4.2", sha256="d46a7c5474de650befdb89377115feee31f1743107ceb3d8da699be9d48c097b")
     version("3.4.1", sha256="4b5a2aeac326643f45b6d45c39ba2302e323eeb86d8cb58843c6e73949b1208a")
