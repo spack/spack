@@ -7,7 +7,7 @@
 from spack.package import *
 
 
-class PyDgl(CMakePackage, PythonExtension):
+class PyDgl(CMakePackage, PythonExtension, CudaPackage):
     """Deep Graph Library (DGL).
 
     DGL is an easy-to-use, high performance and scalable Python package for
@@ -19,9 +19,10 @@ class PyDgl(CMakePackage, PythonExtension):
     homepage = "https://www.dgl.ai/"
     git = "https://github.com/dmlc/dgl.git"
 
-    maintainers("adamjstewart")
+    maintainers("adamjstewart", "meyersbs")
 
     version("master", branch="master", submodules=True)
+    version("1.0.1", tag="1.0.1", submodules=True)
     version("0.4.3", tag="0.4.3", submodules=True)
     version("0.4.2", tag="0.4.2", submodules=True)
 
@@ -36,7 +37,6 @@ class PyDgl(CMakePackage, PythonExtension):
     )
 
     depends_on("cmake@3.5:", type="build")
-    depends_on("cuda", when="+cuda")
     depends_on("llvm-openmp", when="%apple-clang +openmp")
 
     # Python dependencies
@@ -51,16 +51,33 @@ class PyDgl(CMakePackage, PythonExtension):
     depends_on("py-scipy@1.1.0:", type=("build", "run"))
     depends_on("py-networkx@2.1:", type=("build", "run"))
     depends_on("py-requests@2.19.0:", when="@0.4.3:", type=("build", "run"))
+    depends_on("py-tqdm", when="@1.0.1:", type=("build", "run"))
+    depends_on("py-psutil@5.8.0:", when="@1.0.1:", type=("build", "run"))
 
     # Backends
-    # See https://github.com/dmlc/dgl#installation
+    # See https://docs.dgl.ai/install/index.html#working-with-different-backends
+    depends_on("py-torch@1.12.0:", when="@1.0.1: backend=pytorch", type="run")
     depends_on("py-torch@1.2.0:", when="@0.4.3: backend=pytorch", type="run")
     depends_on("py-torch@0.4.1:", when="backend=pytorch", type="run")
-    depends_on("mxnet@1.5.1:", when="@0.4.3: backend=pytorch", type="run")
+    depends_on("mxnet@1.6.0:", when="@1.0.1: backend=mxnet", type="run")
+    depends_on("mxnet@1.5.1:", when="@0.4.3: backend=mxnet", type="run")
     depends_on("mxnet@1.5.0:", when="backend=mxnet", type="run")
+    depends_on("py-tensorflow@2.3:", when="@1.0.1: backend=tensorflow", type="run")
     depends_on("py-tensorflow@2.1:", when="@0.4.3: backend=tensorflow", type="run")
     depends_on("py-tensorflow@2.0:", when="backend=tensorflow", type="run")
-    depends_on("py-tfdlpack", when="backend=tensorflow", type="run")
+
+    # Cuda
+    # See https://github.com/dmlc/dgl/issues/3083
+    depends_on("cuda@:10", when="@:0.4 +cuda", type=("build", "run"))
+    # From error: "Your installed Caffe2 version uses cuDNN but I cannot find the
+    # cuDNN libraries.  Please set the proper cuDNN prefixes and / or install cuDNN."
+    depends_on("cudnn", when="+cuda", type=("build", "run"))
+
+    patch(
+        "https://patch-diff.githubusercontent.com/raw/dmlc/dgl/pull/5434.patch?full_index=1",
+        sha256="8c5f14784637a9bb3dd55e6104715d4a35b4e6594c99884aa19e67bc0544e91a",
+        when="@1.0.1",
+    )
 
     build_directory = "build"
 
@@ -70,6 +87,11 @@ class PyDgl(CMakePackage, PythonExtension):
 
         if "+cuda" in self.spec:
             args.append("-DUSE_CUDA=ON")
+            # Prevent defaulting to old compute_ and sm_ despite defining cuda_arch
+            args.append("-DCUDA_ARCH_NAME=Manual")
+            cuda_arch_list = " ".join(list(self.spec.variants["cuda_arch"].value))
+            args.append("-DCUDA_ARCH_BIN={0}".format(cuda_arch_list))
+            args.append("_DCUDA_ARCH_PTX={0}".format(cuda_arch_list))
         else:
             args.append("-DUSE_CUDA=OFF")
 
@@ -101,8 +123,10 @@ class PyDgl(CMakePackage, PythonExtension):
             args = std_pip_args + ["--prefix=" + prefix, "."]
             pip(*args)
 
-        # Work around installation bug: https://github.com/dmlc/dgl/issues/1379
-        install_tree(prefix.dgl, prefix.lib)
+        # Older versions do not install correctly
+        if self.spec.satisfies("@:0.4.3"):
+            # Work around installation bug: https://github.com/dmlc/dgl/issues/1379
+            install_tree(prefix.dgl, prefix.lib)
 
     def setup_run_environment(self, env):
         # https://docs.dgl.ai/install/backend.html
