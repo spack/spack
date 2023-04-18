@@ -55,19 +55,20 @@ class PyDgl(CMakePackage, PythonExtension, CudaPackage):
     depends_on("py-psutil@5.8.0:", when="@1.0.1:", type=("build", "run"))
 
     # Backends
-    # See https://github.com/dmlc/dgl#installation
+    # See https://docs.dgl.ai/install/index.html#working-with-different-backends
+    depends_on("py-torch@1.12.0:", when="@1.0.1: backend=pytorch", type="run")
     depends_on("py-torch@1.2.0:", when="@0.4.3: backend=pytorch", type="run")
     depends_on("py-torch@0.4.1:", when="backend=pytorch", type="run")
+    depends_on("mxnet@1.6.0:", when="@1.0.1: backend=mxnet", type="run")
     depends_on("mxnet@1.5.1:", when="@0.4.3: backend=mxnet", type="run")
     depends_on("mxnet@1.5.0:", when="backend=mxnet", type="run")
+    depends_on("py-tensorflow@2.3:", when="@1.0.1: backend=tensorflow", type="run")
     depends_on("py-tensorflow@2.1:", when="@0.4.3: backend=tensorflow", type="run")
     depends_on("py-tensorflow@2.0:", when="backend=tensorflow", type="run")
-    depends_on("py-tfdlpack", when="backend=tensorflow", type="run")
 
     # Cuda
     # See https://github.com/dmlc/dgl/issues/3083
     depends_on("cuda@:10", when="@:0.4 +cuda", type=("build", "run"))
-    depends_on("cuda@11:", when="@0.5: +cuda", type=("build", "run"))
     # From error: "Your installed Caffe2 version uses cuDNN but I cannot find the
     # cuDNN libraries.  Please set the proper cuDNN prefixes and / or install cuDNN."
     depends_on("cudnn", when="+cuda", type=("build", "run"))
@@ -122,8 +123,7 @@ class PyDgl(CMakePackage, PythonExtension, CudaPackage):
             args = std_pip_args + ["--prefix=" + prefix, "."]
             pip(*args)
 
-        # Workaround causes errors in @1.0.1 during install phase:
-        # Error: OSError: No such file or directory: '<prefix>/dgl'
+        # Older versions do not install correctly
         if self.spec.satisfies("@:0.4.3"):
             # Work around installation bug: https://github.com/dmlc/dgl/issues/1379
             install_tree(prefix.dgl, prefix.lib)
