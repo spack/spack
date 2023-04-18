@@ -19,7 +19,7 @@ pytestmark = [
 
 
 # env vars that control the editor
-EDITOR_VARS = ["VISUAL", "EDITOR"]
+EDITOR_VARS = ["SPACK_EDITOR", "VISUAL", "EDITOR"]
 
 
 @pytest.fixture(scope="module", autouse=True)
@@ -102,6 +102,30 @@ def test_editor_gvim_special_case(gvim_exe):
         return 0
 
     assert ed.editor("/path/to/file", exec_fn=assert_exec)
+
+
+def test_editor_precedence(good_exe, gvim_exe, vim_exe, bad_exe):
+    """Ensure we prefer editor variables in order of precedence."""
+    os.environ["SPACK_EDITOR"] = good_exe
+    os.environ["VISUAL"] = gvim_exe
+    os.environ["EDITOR"] = vim_exe
+    correct_exe = good_exe
+
+    def assert_callback(exe, args):
+        result = ed.executable(exe, args)
+        if result == 0:
+            assert exe == correct_exe
+        return result
+
+    ed.editor(exec_fn=assert_callback)
+
+    os.environ["SPACK_EDITOR"] = bad_exe
+    correct_exe = gvim_exe
+    ed.editor(exec_fn=assert_callback)
+
+    os.environ["VISUAL"] = bad_exe
+    correct_exe = vim_exe
+    ed.editor(exec_fn=assert_callback)
 
 
 def test_find_exe_from_env_var_no_editor():
