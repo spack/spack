@@ -35,6 +35,8 @@ def compiler(request):
         ("mpich@3.0.1", []),
         ("openblas@0.2.15", ("blas",)),
         ("openblas-with-lapack@0.2.15", ("blas", "lapack")),
+        ("mpileaks@2.3", ("mpi",)),
+        ("mpileaks@2.1", []),
     ]
 )
 def provider(request):
@@ -69,12 +71,20 @@ class TestLmod(object):
         path_parts = layout.available_path_parts
         service_part = spec_string.replace("@", "/")
         service_part = "-".join([service_part, layout.spec.dag_hash(length=7)])
-        assert service_part in path_parts
+
+        if "mpileaks" in spec_string:
+            # It's a user, not a provider, so create the provider string
+            service_part = layout.spec["mpi"].format("{name}/{version}-{hash:7}")
+        else:
+            # Only relevant for providers, not users, of virtuals
+            assert service_part in path_parts
 
         # Check that multi-providers have repetitions in path parts
         repetitions = len([x for x in path_parts if service_part == x])
         if spec_string == "openblas-with-lapack@0.2.15":
             assert repetitions == 2
+        elif spec_string == "mpileaks@2.1":
+            assert repetitions == 0
         else:
             assert repetitions == 1
 

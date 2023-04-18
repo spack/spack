@@ -51,6 +51,8 @@ class Hugo(Package):
 
     variant("extended", default=False, description="Enable extended features")
 
+    phases = ["build", "install"]
+
     @classmethod
     def determine_version(cls, exe):
         output = Executable(exe)("version", output=str, error=str)
@@ -58,13 +60,16 @@ class Hugo(Package):
         return match.group(1) if match else None
 
     def setup_build_environment(self, env):
+        # Point GOPATH at the top of the staging dir for the build step.
         env.prepend_path("GOPATH", self.stage.path)
 
-    def install(self, spec, prefix):
+    def build(self, spec, prefix):
         go_args = ["build"]
         if self.spec.satisfies("+extended"):
             go_args.extend(["--tags", "extended"])
 
         go(*go_args)
+
+    def install(self, spec, prefix):
         mkdirp(prefix.bin)
         install("hugo", prefix.bin)

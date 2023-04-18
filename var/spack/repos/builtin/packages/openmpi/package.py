@@ -1007,6 +1007,11 @@ class Openmpi(AutotoolsPackage, CudaPackage):
                 config_args.append(
                     "--with-cuda-libdir={0}".format(spec["cuda"].libs.directories[0])
                 )
+            if spec.satisfies("@5.0:"):
+                # And then it returned
+                config_args.append(
+                    "--with-cuda-libdir={0}".format(spec["cuda"].libs.directories[0] + "/stubs")
+                )
             if spec.satisfies("@1.7.2"):
                 # There was a bug in 1.7.2 when --enable-static is used
                 config_args.append("--enable-mca-no-build=pml-bfo")

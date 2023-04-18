@@ -127,6 +127,13 @@ class Xyce(CMakePackage):
         # HDF5
         depends_on("hdf5~shared", when="^hdf5")
 
+    # fix MPI issue
+    patch(
+        "450-mpich-xyce.patch",
+        sha256="e91063d22afeeff01e6c572cef2ac2e3abea27b2fcb5a7e6ac5f41e4734a556d",
+        when="@:7.6,master",
+    )
+
     # fix RPATH issue on mac
     patch(
         "https://github.com/xyce/xyce/commit/40dbc0e0341a5cf9a7fa82a87313869dc284fdd9.patch?full_index=1",
