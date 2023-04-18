@@ -32,7 +32,7 @@ import collections.abc
 import functools
 import os.path
 import re
-from typing import List, Set
+from typing import List, Optional, Set
 
 import llnl.util.lang
 import llnl.util.tty.color
@@ -318,35 +318,35 @@ directive = DirectiveMeta.directive
 
 @directive("versions")
 def version(
-    ver,
-    checksum=None,  # deprecated years ago
+    ver: str,
+    checksum: Optional[str] = None,  # deprecated years ago
     *,
-    sha256=None,
-    sha384=None,
-    sha512=None,
-    preferred=None,
-    deprecated=None,
-    expand=None,
-    url=None,
-    extension=None,
-    no_cache=None,
-    fetch_options=None,
-    git=None,
-    svn=None,
-    hg=None,
-    cvs=None,
-    get_full_repo=None,
-    branch=None,
-    submodules=None,
-    submodules_delete=None,
-    commit=None,
-    tag=None,
-    revision=None,
-    date=None,
+    sha256: Optional[str] = None,
+    sha384: Optional[str] = None,
+    sha512: Optional[str] = None,
+    preferred: Optional[bool] = None,
+    deprecated: Optional[bool] = None,
+    expand: Optional[bool] = None,
+    url: Optional[str] = None,
+    extension: Optional[str] = None,
+    no_cache: Optional[bool] = None,
+    fetch_options: Optional[dict] = None,
+    git: Optional[str] = None,
+    svn: Optional[str] = None,
+    hg: Optional[str] = None,
+    cvs: Optional[str] = None,
+    get_full_repo: Optional[bool] = None,
+    branch: Optional[str] = None,
+    submodules: Optional[bool] = None,
+    submodules_delete: Optional[bool] = None,
+    commit: Optional[str] = None,
+    tag: Optional[str] = None,
+    revision: Optional[str] = None,
+    date: Optional[str] = None,
     # unsafe checksums
-    md5=None,
-    sha1=None,
-    sha224=None,
+    md5: Optional[str] = None,
+    sha1: Optional[str] = None,
+    sha224: Optional[str] = None,
 ):
     """Adds a version and, if appropriate, metadata for fetching its code.
 
