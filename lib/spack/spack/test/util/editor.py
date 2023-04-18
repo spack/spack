@@ -18,6 +18,30 @@ pytestmark = [
 ]
 
 
+# env vars that control the editor
+EDITOR_VARS = ["VISUAL", "EDITOR"]
+
+
+@pytest.fixture(scope="module", autouse=True)
+def clean_env_vars():
+    """Unset all editor env vars before tests."""
+    for var in EDITOR_VARS:
+        if var in os.environ:
+            del os.environ[var]
+
+
+@pytest.fixture(autouse=True)
+def working_editor_test_env(working_env):
+    """Don't leak environent variables between functions here."""
+    pass
+
+
+# parameterized fixture for editor var names
+@pytest.fixture(params=EDITOR_VARS)
+def editor_var(request):
+    return request.param
+
+
 def _make_exe(tmpdir_factory, name, contents=None):
     if sys.platform == "win32":
         name += ".exe"
@@ -49,6 +73,11 @@ def vim_exe(tmpdir_factory):
     return _make_exe(tmpdir_factory, "vim", "exit 0")
 
 
+@pytest.fixture(scope="session")
+def gvim_exe(tmpdir_factory):
+    return _make_exe(tmpdir_factory, "gvim", "exit 0")
+
+
 def test_find_exe_from_env_var(good_exe):
     os.environ["EDITOR"] = good_exe
     assert ed._find_exe_from_env_var("EDITOR") == (good_exe, [good_exe])
@@ -64,20 +93,32 @@ def test_find_exe_from_env_var_bad_path(nosuch_exe):
     assert ed._find_exe_from_env_var("FOO") == (None, [])
 
 
+def test_editor_gvim_special_case(gvim_exe):
+    os.environ["EDITOR"] = gvim_exe
+
+    def assert_exec(exe, args):
+        assert exe == gvim_exe
+        assert args == [gvim_exe, "-f", "/path/to/file"]
+        return 0
+
+    assert ed.editor("/path/to/file", exec_fn=assert_exec)
+
+
 def test_find_exe_from_env_var_no_editor():
     if "FOO" in os.environ:
         os.environ.unset("FOO")
     assert ed._find_exe_from_env_var("FOO") == (None, [])
 
 
-def test_editor_visual(good_exe):
-    os.environ["VISUAL"] = good_exe
+def test_editor(editor_var, good_exe):
+    os.environ[editor_var] = good_exe
 
     def assert_exec(exe, args):
         assert exe == good_exe
         assert args == [good_exe, "/path/to/file"]
+        return 0
 
-    ed.editor("/path/to/file", _exec_func=assert_exec)
+    ed.editor("/path/to/file", exec_fn=assert_exec)
 
 
 def test_editor_visual_bad(good_exe, bad_exe):
@@ -90,34 +131,32 @@ def test_editor_visual_bad(good_exe, bad_exe):
 
         assert exe == good_exe
         assert args == [good_exe, "/path/to/file"]
+        return 0
 
-    ed.editor("/path/to/file", _exec_func=assert_exec)
+    ed.editor("/path/to/file", exec_fn=assert_exec)
 
 
 def test_editor_no_visual(good_exe):
-    if "VISUAL" in os.environ:
-        del os.environ["VISUAL"]
     os.environ["EDITOR"] = good_exe
 
     def assert_exec(exe, args):
         assert exe == good_exe
         assert args == [good_exe, "/path/to/file"]
+        return 0
 
-    ed.editor("/path/to/file", _exec_func=assert_exec)
+    ed.editor("/path/to/file", exec_fn=assert_exec)
 
 
 def test_editor_no_visual_with_args(good_exe):
-    if "VISUAL" in os.environ:
-        del os.environ["VISUAL"]
-
     # editor has extra args in the var (e.g., emacs -nw)
     os.environ["EDITOR"] = good_exe + " -nw --foo"
 
     def assert_exec(exe, args):
         assert exe == good_exe
         assert args == [good_exe, "-nw", "--foo", "/path/to/file"]
+        return 0
 
-    ed.editor("/path/to/file", _exec_func=assert_exec)
+    ed.editor("/path/to/file", exec_fn=assert_exec)
 
 
 def test_editor_both_bad(nosuch_exe, vim_exe):
@@ -129,19 +168,32 @@ def test_editor_both_bad(nosuch_exe, vim_exe):
     def assert_exec(exe, args):
         assert exe == vim_exe
         assert args == [vim_exe, "/path/to/file"]
+        return 0
 
-    ed.editor("/path/to/file", _exec_func=assert_exec)
+    ed.editor("/path/to/file", exec_fn=assert_exec)
 
 
 def test_no_editor():
-    if "VISUAL" in os.environ:
-        del os.environ["VISUAL"]
-    if "EDITOR" in os.environ:
-        del os.environ["EDITOR"]
     os.environ["PATH"] = ""
 
     def assert_exec(exe, args):
         assert False
 
     with pytest.raises(EnvironmentError, match=r"No text editor found.*"):
-        ed.editor("/path/to/file", _exec_func=assert_exec)
+        ed.editor("/path/to/file", exec_fn=assert_exec)
+
+    def assert_exec(exe, args):
+        return False
+
+    with pytest.raises(EnvironmentError, match=r"No text editor found.*"):
+        ed.editor("/path/to/file", exec_fn=assert_exec)
+
+
+def test_exec_fn_executable(editor_var, good_exe, bad_exe):
+    """Make sure editor() works with ``ed.executable`` as well as execv"""
+    os.environ[editor_var] = good_exe
+    assert ed.editor(exec_fn=ed.executable)
+
+    os.environ[editor_var] = bad_exe
+    with pytest.raises(EnvironmentError, match=r"No text editor found.*"):
+        ed.editor(exec_fn=ed.executable)
