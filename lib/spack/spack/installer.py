@@ -2422,7 +2422,7 @@ class BuildRequest(object):
 
         # Only add build dependencies if pkg is not already installed
         # and build depdencies are called for by install_args.
-        if (not cache_only or include_build_deps) and not pkg.spec.installed:
+        if include_build_deps or not (cache_only or pkg.spec.installed):
             deptypes.append("build")
         if self.run_tests(pkg):
             deptypes.append("test")
