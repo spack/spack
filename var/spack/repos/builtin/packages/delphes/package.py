@@ -17,7 +17,7 @@ class Delphes(CMakePackage):
 
     tags = ["hep"]
 
-    maintainers("drbenmorgan", "vvolkl", "selvaggi")
+    maintainers("drbenmorgan", "vvolkl", "selvaggi", "jmcarcell")
 
     version("master", branch="master")
     version("3.5.1pre07", sha256="bbef79bf651d2f8a12c134b40e8dac63d25ce93be93c222e1931e70ae7da62d5") 
