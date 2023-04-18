@@ -3161,12 +3161,21 @@ def test_depfile_phony_convenience_targets(
             picked_spec = e.matching_spec(picked_package)
             env("depfile", "-o", "Makefile", "--make-disable-jobserver")
 
+        # Phony install/* target should install picked package and all its deps
         specs_that_make_would_install = _parse_dry_run_package_installs(
             make("-n", picked_spec.format("install/{name}-{version}-{hash}"), output=str)
         )
 
         assert set(specs_that_make_would_install) == set(expected_installs)
         assert len(specs_that_make_would_install) == len(expected_installs)
+
+        # Phony install-deps/* target shouldn't install picked package
+        specs_that_make_would_install = _parse_dry_run_package_installs(
+            make("-n", picked_spec.format("install-deps/{name}-{version}-{hash}"), output=str)
+        )
+
+        assert set(specs_that_make_would_install) == set(expected_installs) - {picked_package}
+        assert len(specs_that_make_would_install) == len(expected_installs) - 1
 
 
 def test_environment_depfile_out(tmpdir, mock_packages):
