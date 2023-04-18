@@ -203,10 +203,16 @@ class PyScipy(PythonPackage):
             lapack = "mkl-dynamic-lp64-seq"
         if spec["blas"].name in ["blis", "amdblis"]:
             blas = "blis"
-        if blas == "armpl":
-            blas += "-dynamic-lp64-seq"
-        if lapack == "armpl":
-            lapack += "-dynamic-lp64-seq"
+        if "armpl" in blas:
+            if "_mp" in blas:
+                blas = "armpl-dynamic-lp64-omp"
+            else:
+                blas = "armpl-dynamic-lp64-seq"
+        if "armpl" in lapack:
+            if "_mp" in lapack:
+                lapack = "armpl-dynamic-lp64-omp"
+            else:
+                lapack = "armpl-dynamic-lp64-seq"
 
         args = [
             "setup",
