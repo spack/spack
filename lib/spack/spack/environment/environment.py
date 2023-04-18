@@ -2620,27 +2620,12 @@ class EnvironmentManifestFile(collections.abc.Mapping):
         Raises:
             SpackEnvironmentError: is no valid definition exists already
         """
-        definitions = config_dict(self.pristine_yaml_content).get("definitions", [])
+        defs = config_dict(self.pristine_yaml_content).get("definitions", [])
+        msg = f"cannot add {user_spec} to the '{list_name}' definition, no valid list exists"
 
-        def extract_name(_item):
-            names = list(x for x in _item if x != "when")
-            assert len(names) == 1, f"more than one name in {_item}"
-            return names[0]
-
-        for idx, item in enumerate(definitions):
-            name = extract_name(item)
-            if name != list_name:
-                continue
-
-            condition_str = item.get("when", "True")
-            if not _eval_conditional(condition_str):
-                continue
-
-            item[name].append(user_spec)
+        for idx, item in self._iterate_on_definitions(defs, list_name=list_name, err_msg=msg):
+            item[list_name].append(user_spec)
             break
-        else:
-            msg = f"cannot add {user_spec} to the '{list_name}' definition, no valid list exists"
-            raise SpackEnvironmentError(msg)
 
         config_dict(self.yaml_content)["definitions"][idx][list_name].append(user_spec)
         self.changed = True
@@ -2656,33 +2641,18 @@ class EnvironmentManifestFile(collections.abc.Mapping):
             SpackEnvironmentError: if the user spec cannot be removed from the list,
                 or the list does not exist
         """
-        definitions = config_dict(self.pristine_yaml_content).get("definitions", [])
+        defs = config_dict(self.pristine_yaml_content).get("definitions", [])
+        msg = (
+            f"cannot remove {user_spec} from the '{list_name}' definition, "
+            f"no valid list exists"
+        )
 
-        def extract_name(_item):
-            names = list(x for x in _item if x != "when")
-            assert len(names) == 1, f"more than one name in {_item}"
-            return names[0]
-
-        for idx, item in enumerate(definitions):
-            name = extract_name(item)
-            if name != list_name:
-                continue
-
-            condition_str = item.get("when", "True")
-            if not _eval_conditional(condition_str):
-                continue
-
+        for idx, item in self._iterate_on_definitions(defs, list_name=list_name, err_msg=msg):
             try:
-                item[name].remove(user_spec)
+                item[list_name].remove(user_spec)
                 break
             except ValueError:
                 pass
-        else:
-            msg = (
-                f"cannot remove {user_spec} from the '{list_name}' definition, "
-                f"no valid list exists"
-            )
-            raise SpackEnvironmentError(msg)
 
         config_dict(self.yaml_content)["definitions"][idx][list_name].remove(user_spec)
         self.changed = True
@@ -2699,7 +2669,22 @@ class EnvironmentManifestFile(collections.abc.Mapping):
         Raises:
             SpackEnvironmentError: if the user spec cannot be overridden
         """
-        definitions = config_dict(self.pristine_yaml_content).get("definitions", [])
+        defs = config_dict(self.pristine_yaml_content).get("definitions", [])
+        msg = f"cannot override {user_spec} with {override} in the '{list_name}' definition"
+
+        for idx, item in self._iterate_on_definitions(defs, list_name=list_name, err_msg=msg):
+            try:
+                sub_index = item[list_name].index(user_spec)
+                item[list_name][sub_index] = override
+                break
+            except ValueError:
+                pass
+
+        config_dict(self.yaml_content)["definitions"][idx][list_name][sub_index] = override
+        self.changed = True
+
+    def _iterate_on_definitions(self, definitions, *, list_name, err_msg):
+        """Iterates on definitions, returning the active ones matching a given name."""
 
         def extract_name(_item):
             names = list(x for x in _item if x != "when")
@@ -2715,18 +2700,9 @@ class EnvironmentManifestFile(collections.abc.Mapping):
             if not _eval_conditional(condition_str):
                 continue
 
-            try:
-                sub_index = item[name].index(user_spec)
-                item[name][sub_index] = override
-                break
-            except ValueError:
-                pass
+            yield idx, item
         else:
-            msg = f"cannot override {user_spec} with {override} in the '{list_name}' definition"
-            raise SpackEnvironmentError(msg)
-
-        config_dict(self.yaml_content)["definitions"][idx][list_name][sub_index] = override
-        self.changed = True
+            raise SpackEnvironmentError(err_msg)
 
     def set_default_view(self, view: Union[bool, str, pathlib.Path, Dict[str, str]]) -> None:
         """Sets the default view root in the manifest to the value passed as input.
