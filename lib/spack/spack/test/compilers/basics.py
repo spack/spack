@@ -842,8 +842,8 @@ def test_apple_clang_setup_environment(mock_executable, monkeypatch):
     class MockPackage(object):
         use_xcode = False
 
-    apple_clang = 'apple-clang'
-    apple_clang_version = '11.0.0'
+    apple_clang = "apple-clang"
+    apple_clang_version = "11.0.0"
 
     apple_clang_cls = spack.compilers.class_for_compiler_name(apple_clang)
     compiler = apple_clang_cls(
@@ -896,7 +896,7 @@ echo "/Library/Developer"
     monkeypatch.setattr(os, "symlink", noop)
     monkeypatch.setattr(os, "listdir", _listdir)
 
-    xcode_sel = os.path.join(spack.stage.get_stage_root(), 'xcode-select')
+    xcode_sel = os.path.join(spack.stage.get_stage_root(), "xcode-select")
     ver_dir = os.path.join(xcode_sel, apple_clang, apple_clang_version)
     os.makedirs(ver_dir)
 
