@@ -127,6 +127,11 @@ class LmodConfiguration(BaseConfiguration):
         return configuration(self.name).get("core_specs", [])
 
     @property
+    def filter_hierarchy_specs(self):
+        """Returns the dict of specs with modified hierarchies"""
+        return configuration(self.name).get("filter_hierarchy_specs", {})
+
+    @property
     def hierarchy_tokens(self):
         """Returns the list of tokens that are part of the modulefile
         hierarchy. 'compiler' is always present.
@@ -160,11 +165,21 @@ class LmodConfiguration(BaseConfiguration):
         if any(self.spec.satisfies(core_spec) for core_spec in self.core_specs):
             return {"compiler": self.core_compilers[0]}
 
+        hierarchy_filter_list = []
+        for spec, filter_list in self.filter_hierarchy_specs.items():
+            if self.spec.satisfies(spec):
+                hierarchy_filter_list = filter_list
+                break
+
         # Keep track of the requirements that this package has in terms
         # of virtual packages that participate in the hierarchical structure
         requirements = {"compiler": self.spec.compiler}
         # For each virtual dependency in the hierarchy
         for x in self.hierarchy_tokens:
+            # Skip anything filtered for this spec
+            if x in hierarchy_filter_list:
+                continue
+
             # If I depend on it
             if x in self.spec and not self.spec.package.provides(x):
                 requirements[x] = self.spec[x]  # record the actual provider
