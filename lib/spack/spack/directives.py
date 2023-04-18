@@ -319,6 +319,7 @@ directive = DirectiveMeta.directive
 @directive("versions")
 def version(
     ver,
+    checksum=None,  # deprecated years ago
     *,
     sha256=None,
     sha384=None,
@@ -346,7 +347,6 @@ def version(
     md5=None,
     sha1=None,
     sha224=None,
-    checksum=None,  # deprecated years ago
 ):
     """Adds a version and, if appropriate, metadata for fetching its code.
 
