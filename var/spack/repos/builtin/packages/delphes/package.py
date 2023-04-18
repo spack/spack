@@ -20,7 +20,7 @@ class Delphes(CMakePackage):
     maintainers("drbenmorgan", "vvolkl", "selvaggi", "jmcarcell")
 
     version("master", branch="master")
-    version("3.5.1pre07", sha256="bbef79bf651d2f8a12c134b40e8dac63d25ce93be93c222e1931e70ae7da62d5") 
+    version("3.5.1pre07", sha256="bbef79bf651d2f8a12c134b40e8dac63d25ce93be93c222e1931e70ae7da62d5")
     version("3.5.1pre06", sha256="728e91789b782e2c8fd005880cba717bffab2a765b6340a2e505d0c00f013c1d")
     version("3.5.1pre05", sha256="51134cee69a8b44cbb9a2af562870581c88aa004cd3196895dcc8eec7e4c4f84")
     version("3.5.1pre04", sha256="de0a43524313b395924897cb39a628ed317a1781217f0df9e162dd737ab03c41")
