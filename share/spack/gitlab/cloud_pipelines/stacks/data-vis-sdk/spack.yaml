@@ -4,11 +4,17 @@ spack:
     cmake:
       variants: ~ownlibs
     mesa:
-      require: "@21 +glx +osmesa +opengl ~opengles +llvm swr=auto"
+      require: "+glx +osmesa +opengl ~opengles +llvm"
     libosmesa:
       require: ^mesa +osmesa
     libglx:
       require: ^mesa +glx
+    ospray:
+      require: "@2.8.0 +denoiser +mpi"
+    llvm:
+      require: "@14:"
+      # Minimize LLVM
+      variants: ~lldb~lld~internal_unwind~polly~compiler-rt~gold
     all:
       require: target=x86_64_v3
 
