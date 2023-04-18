@@ -416,7 +416,8 @@ class Hip(CMakePackage):
             # Used in hipcc, but only useful when hip is external, since only then
             # there is a common prefix /opt/rocm-x.y.z.
             env.set("ROCM_PATH", paths["rocm-path"])
-            env.set("HIPIFY_CLANG_PATH", self.spec["hipify-clang"].prefix)
+            if self.spec.satisfies("@5.4:"):
+                env.set("HIPIFY_CLANG_PATH", self.spec["hipify-clang"].prefix)
 
             # hipcc recognizes HIP_PLATFORM == hcc and HIP_COMPILER == clang, even
             # though below we specified HIP_PLATFORM=rocclr and HIP_COMPILER=clang
