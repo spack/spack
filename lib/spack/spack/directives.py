@@ -321,16 +321,30 @@ def version(
     ver,
     *,
     sha256=None,
+    sha384=None,
+    sha512=None,
     preferred=None,
     deprecated=None,
     expand=None,
     url=None,
+    extension=None,
+    no_cache=None,
     git=None,
+    svn=None,
+    hg=None,
+    get_full_repo=None,
     branch=None,
     submodules=None,
+    submodules_delete=None,
     commit=None,
     tag=None,
-    checksum=None,
+    revision=None,
+    date=None,
+    # unsafe checksums
+    md5=None,
+    sha1=None,
+    sha224=None,
+    checksum=None,  # deprecated years ago
 ):
     """Adds a version and, if appropriate, metadata for fetching its code.
 
@@ -346,9 +360,13 @@ def version(
     """
 
     def _execute_version(pkg):
-        if checksum is not None and hasattr(pkg, "has_code") and not pkg.has_code:
+        if (
+            any((sha256, sha384, sha512, md5, sha1, sha224, checksum))
+            and hasattr(pkg, "has_code")
+            and not pkg.has_code
+        ):
             raise VersionChecksumError(
-                "{0}: Checksums not allowed in no-code packages"
+                "{0}: Checksums not allowed in no-code packages "
                 "(see '{1}' version).".format(pkg.name, ver)
             )
 
@@ -356,15 +374,28 @@ def version(
             key: value
             for key, value in (
                 ("sha256", sha256),
+                ("sha384", sha384),
+                ("sha512", sha512),
                 ("preferred", preferred),
                 ("deprecated", deprecated),
                 ("expand", expand),
                 ("url", url),
+                ("extension", extension),
+                ("no_cache", no_cache),
                 ("git", git),
+                ("svn", svn),
+                ("hg", hg),
+                ("get_full_repo", get_full_repo),
                 ("branch", branch),
                 ("submodules", submodules),
+                ("submodules_delete", submodules_delete),
                 ("commit", commit),
                 ("tag", tag),
+                ("revision", revision),
+                ("date", date),
+                ("md5", md5),
+                ("sha1", sha1),
+                ("sha224", sha224),
                 ("checksum", checksum),
             )
             if value is not None
