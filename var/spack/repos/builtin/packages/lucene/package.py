@@ -17,6 +17,7 @@ class Lucene(Package):
     list_url = "https://archive.apache.org/dist/lucene/java/"
     list_depth = 1
 
+    version("9.5.0", sha256="547277a2b6ce283422eccd14e9ee7ffb28b1af3975936959716c9b4d85843555")
     version("8.3.1", sha256="acd61ad458d16f3c98b9dd4653c6a34dd666a965842e461f7cdf8947fa041e1a")
     version("8.3.0", sha256="67c4f8081f24ff9f4eb4f2b999ac19f7a639b416e5b6f1c1c74e0524a481fc7e")
     version("8.2.0", sha256="505cad34698b217fd6ceee581a8215223a47df5af820c94ca70a6bdbba9d5d7c")

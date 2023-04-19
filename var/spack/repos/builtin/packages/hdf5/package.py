@@ -39,6 +39,8 @@ class Hdf5(CMakePackage):
     version("develop-1.8", branch="hdf5_1_8")
 
     # Odd versions are considered experimental releases
+    # Note: These are still required to build some VOL adapters, but even releases should be
+    #       preferred.
     version("1.13.3", sha256="83c7c06671f975cee6944b0b217f95005faa55f79ea5532cf4ac268989866af4")
     version("1.13.2", sha256="01643fa5b37dba7be7c4db6bbf3c5d07adf5c1fa17dbfaaa632a279b1b2f06da")
 
@@ -178,6 +180,7 @@ class Hdf5(CMakePackage):
 
     variant("hl", default=False, description="Enable the high-level library")
     variant("cxx", default=False, description="Enable C++ support")
+    variant("map", when="@1.14:", default=False, description="Enable MAP API support")
     variant("fortran", default=False, description="Enable Fortran support")
     variant("java", when="@1.10:", default=False, description="Enable Java support")
     variant("threadsafe", default=False, description="Enable thread-safe capabilities")
@@ -204,7 +207,7 @@ class Hdf5(CMakePackage):
     # The compiler wrappers (h5cc, h5fc, etc.) run 'pkg-config'.
     # Skip this on Windows since pkgconfig is autotools
     for plat in ["cray", "darwin", "linux"]:
-        depends_on("pkgconfig", when="platform=%s" % plat, type="run")
+        depends_on("pkgconfig", when=f"platform={plat}", type="run")
 
     conflicts("+mpi", "^mpich@4.0:4.0.3")
     conflicts("api=v116", when="@1.6:1.14", msg="v116 is not compatible with this release")
@@ -342,9 +345,19 @@ class Hdf5(CMakePackage):
 
     # The parallel compiler wrappers (i.e. h5pcc, h5pfc, etc.) reference MPI
     # compiler wrappers and do not need to be changed.
-    filter_compiler_wrappers(
-        "h5cc", "h5hlcc", "h5fc", "h5hlfc", "h5c++", "h5hlc++", relative_root="bin"
-    )
+    # These do not exist on Windows.
+    # Enable only for supported target platforms.
+    for spack_spec_target_platform in ["linux", "darwin", "cray"]:
+        filter_compiler_wrappers(
+            "h5cc",
+            "h5hlcc",
+            "h5fc",
+            "h5hlfc",
+            "h5c++",
+            "h5hlc++",
+            relative_root="bin",
+            when=f"platform={spack_spec_target_platform}",
+        )
 
     def url_for_version(self, version):
         url = (
@@ -560,6 +573,7 @@ class Hdf5(CMakePackage):
                 # are enabled but the tests are disabled.
                 spec.satisfies("@1.8.22+shared+tools"),
             ),
+            self.define_from_variant("HDF5_ENABLE_MAP_API", "map"),
             self.define("HDF5_ENABLE_Z_LIB_SUPPORT", True),
             self.define_from_variant("HDF5_ENABLE_SZIP_SUPPORT", "szip"),
             self.define_from_variant("HDF5_ENABLE_SZIP_ENCODING", "szip"),
@@ -578,14 +592,19 @@ class Hdf5(CMakePackage):
         if api != "default":
             args.append(self.define("DEFAULT_API_VERSION", api))
 
-        if "+mpi" in spec:
+        # MSMPI does not provide compiler wrappers
+        # and pointing these variables at the MSVC compilers
+        # breaks CMake's mpi detection for MSMPI.
+        if "+mpi" in spec and "msmpi" not in spec:
             args.extend(
                 [
                     "-DMPI_CXX_COMPILER:PATH=%s" % spec["mpi"].mpicxx,
                     "-DMPI_C_COMPILER:PATH=%s" % spec["mpi"].mpicc,
-                    "-DMPI_Fortran_COMPILER:PATH=%s" % spec["mpi"].mpifc,
                 ]
             )
+
+            if "+fortran" in spec:
+                args.extend(["-DMPI_Fortran_COMPILER:PATH=%s" % spec["mpi"].mpifc])
 
         # work-around for https://github.com/HDFGroup/hdf5/issues/1320
         if spec.satisfies("@1.10.8,1.13.0"):

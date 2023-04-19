@@ -27,7 +27,6 @@ class PyFlake8(PythonPackage):
     version("3.0.4", sha256="b4c210c998f07d6ff24325dd91fbc011f2c37bcd6bf576b188de01d8656e970d")
     version("2.5.4", sha256="cc1e58179f6cf10524c7bfdd378f5536d0a61497688517791639a5ecc867492f")
 
-    extends("python", ignore="bin/(pyflakes|pycodestyle)")
     depends_on("python@3.6.1:", when="@5:", type=("build", "run"))
     depends_on("python@3.6:", when="@4:", type=("build", "run"))
     depends_on("python@2.7:2.8,3.5:", when="@3.9.2:", type=("build", "run"))

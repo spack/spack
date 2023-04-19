@@ -57,7 +57,7 @@ import spack.util.web
 from spack.filesystem_view import YamlFilesystemView
 from spack.install_test import TestFailure, TestSuite
 from spack.installer import InstallError, PackageInstaller
-from spack.stage import ResourceStage, Stage, StageComposite, stage_prefix
+from spack.stage import ResourceStage, Stage, StageComposite, compute_stage_name
 from spack.util.executable import ProcessError, which
 from spack.util.package_hash import package_hash
 from spack.util.prefix import Prefix
@@ -1022,8 +1022,7 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
         )
         # Construct a path where the stage should build..
         s = self.spec
-        stage_name = "{0}{1}-{2}-{3}".format(stage_prefix, s.name, s.version, s.dag_hash())
-
+        stage_name = compute_stage_name(s)
         stage = Stage(
             fetcher,
             mirror_paths=mirror_paths,
@@ -1197,7 +1196,7 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
         # one element (the root package). In case there are resources
         # associated with the package, append their fetcher to the
         # composite.
-        root_fetcher = fs.for_package_version(self, self.version)
+        root_fetcher = fs.for_package_version(self)
         fetcher = fs.FetchStrategyComposite()  # Composite fetcher
         fetcher.append(root_fetcher)  # Root fetcher is always present
         resources = self._get_needed_resources()
@@ -1308,7 +1307,7 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
         True if this package provides a virtual package with the specified name
         """
         return any(
-            any(self.spec.satisfies(c) for c in constraints)
+            any(self.spec.intersects(c) for c in constraints)
             for s, constraints in self.provided.items()
             if s.name == vpkg_name
         )
@@ -1614,7 +1613,7 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
         # TODO: resources
         if self.spec.versions.concrete:
             try:
-                source_id = fs.for_package_version(self, self.version).source_id()
+                source_id = fs.for_package_version(self).source_id()
             except (fs.ExtrapolationError, fs.InvalidArgsError):
                 # ExtrapolationError happens if the package has no fetchers defined.
                 # InvalidArgsError happens when there are version directives with args,
@@ -1777,7 +1776,7 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
                 # conflict with the spec, so we need to invoke
                 # when_spec.satisfies(self.spec) vs.
                 # self.spec.satisfies(when_spec)
-                if when_spec.satisfies(self.spec, strict=False):
+                if when_spec.intersects(self.spec):
                     resources.extend(resource_list)
         # Sorts the resources by the length of the string representing their
         # destination. Since any nested resource must contain another

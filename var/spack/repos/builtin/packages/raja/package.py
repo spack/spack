@@ -20,6 +20,7 @@ class Raja(CachedCMakePackage, CudaPackage, ROCmPackage):
 
     version("develop", branch="develop", submodules=False)
     version("main", branch="main", submodules=False)
+    version("2022.10.4", tag="v2022.10.4", submodules=False)
     version("2022.03.0", tag="v2022.03.0", submodules=False)
     version("0.14.0", tag="v0.14.0", submodules="True")
     version("0.13.0", tag="v0.13.0", submodules="True")
@@ -62,12 +63,14 @@ class Raja(CachedCMakePackage, CudaPackage, ROCmPackage):
 
     depends_on("camp@0.2.2:0.2.3", when="@0.14.0")
     depends_on("camp@0.1.0", when="@0.10.0:0.13.0")
-    depends_on("camp@2022.03.2:", when="@2022.03.0:")
+    depends_on("camp@2022.03.2:2022.03", when="@2022.03.0:2022.03")
+    depends_on("camp@2022.10:", when="@2022.10:")
     depends_on("camp@main", when="@main")
     depends_on("camp@main", when="@develop")
     depends_on("camp+openmp", when="+openmp")
 
-    depends_on("cmake@:3.20", when="+rocm", type="build")
+    depends_on("cmake@:3.20", when="@:2022.03+rocm", type="build")
+    depends_on("cmake@3.23:", when="@2022.10:+rocm", type="build")
     depends_on("cmake@3.14:", when="@2022.03.0:")
 
     depends_on("llvm-openmp", when="+openmp %apple-clang")

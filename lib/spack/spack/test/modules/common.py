@@ -55,7 +55,7 @@ def test_modules_written_with_proper_permissions(
     spec = spack.spec.Spec("mpileaks").concretized()
 
     # The code tested is common to all module types, but has to be tested from
-    # one. TCL picked at random
+    # one. Tcl picked at random
     generator = spack.modules.tcl.TclModulefileWriter(spec, "default")
     generator.write()
 
@@ -67,7 +67,7 @@ def test_modules_default_symlink(
     module_type, mock_packages, mock_module_filename, mock_module_defaults, config
 ):
     spec = spack.spec.Spec("mpileaks@2.3").concretized()
-    mock_module_defaults(spec.format("{name}{@version}"))
+    mock_module_defaults(spec.format("{name}{@version}"), True)
 
     generator_cls = spack.modules.module_types[module_type]
     generator = generator_cls(spec, "default")
@@ -76,6 +76,9 @@ def test_modules_default_symlink(
     link_path = os.path.join(os.path.dirname(mock_module_filename), "default")
     assert os.path.islink(link_path)
     assert os.readlink(link_path) == mock_module_filename
+
+    generator.remove()
+    assert not os.path.lexists(link_path)
 
 
 class MockDb(object):

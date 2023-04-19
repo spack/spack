@@ -82,8 +82,8 @@ def test_change_match_spec():
 
         change("--match-spec", "mpileaks@2.2", "mpileaks@2.3")
 
-    assert not any(x.satisfies("mpileaks@2.2") for x in e.user_specs)
-    assert any(x.satisfies("mpileaks@2.3") for x in e.user_specs)
+    assert not any(x.intersects("mpileaks@2.2") for x in e.user_specs)
+    assert any(x.intersects("mpileaks@2.3") for x in e.user_specs)
 
 
 def test_change_multiple_matches():
@@ -97,8 +97,8 @@ def test_change_multiple_matches():
 
         change("--match-spec", "mpileaks", "-a", "mpileaks%gcc")
 
-    assert all(x.satisfies("%gcc") for x in e.user_specs if x.name == "mpileaks")
-    assert any(x.satisfies("%clang") for x in e.user_specs if x.name == "libelf")
+    assert all(x.intersects("%gcc") for x in e.user_specs if x.name == "mpileaks")
+    assert any(x.intersects("%clang") for x in e.user_specs if x.name == "libelf")
 
 
 def test_env_add_virtual():
@@ -111,7 +111,7 @@ def test_env_add_virtual():
     hashes = e.concretized_order
     assert len(hashes) == 1
     spec = e.specs_by_hash[hashes[0]]
-    assert spec.satisfies("mpi")
+    assert spec.intersects("mpi")
 
 
 def test_env_add_nonexistant_fails():
@@ -687,7 +687,7 @@ env:
     with e:
         e.concretize()
 
-    assert any(x.satisfies("mpileaks@2.2") for x in e._get_environment_specs())
+    assert any(x.intersects("mpileaks@2.2") for x in e._get_environment_specs())
 
 
 def test_with_config_bad_include():
@@ -1630,9 +1630,9 @@ env:
             assert concrete.concrete
             assert not user.concrete
             if user.name == "libelf":
-                assert not concrete.satisfies("^mpi", strict=True)
+                assert not concrete.satisfies("^mpi")
             elif user.name == "mpileaks":
-                assert concrete.satisfies("^mpi", strict=True)
+                assert concrete.satisfies("^mpi")
 
 
 def test_stack_concretize_extraneous_variants(tmpdir, config, mock_packages):
@@ -2554,10 +2554,10 @@ spack:
 
     # If I run concretize again and there's an error during write,
     # the spack.lock file shouldn't disappear from disk
-    def _write_helper_raise(self, x, y):
+    def _write_helper_raise(self):
         raise RuntimeError("some error")
 
-    monkeypatch.setattr(ev.Environment, "_update_and_write_manifest", _write_helper_raise)
+    monkeypatch.setattr(ev.Environment, "update_manifest", _write_helper_raise)
     with ev.Environment(str(tmpdir)) as e:
         e.concretize(force=True)
         with pytest.raises(RuntimeError):
@@ -3025,6 +3025,15 @@ def test_read_legacy_lockfile_and_reconcretize(mock_stage, mock_fetch, install_m
     assert current_versions == expected_versions
 
 
+def _parse_dry_run_package_installs(make_output):
+    """Parse `spack install ... # <spec>` output from a make dry run."""
+    return [
+        Spec(line.split("# ")[1]).name
+        for line in make_output.splitlines()
+        if line.startswith("spack")
+    ]
+
+
 @pytest.mark.parametrize(
     "depfile_flags,expected_installs",
     [
@@ -3108,15 +3117,66 @@ def test_environment_depfile_makefile(depfile_flags, expected_installs, tmpdir, 
     # Do make dry run.
     out = make("-n", "-f", makefile, output=str)
 
-    # Spack install commands are of the form "spack install ... # <spec>",
-    # so we just parse the spec again, for simplicity.
-    specs_that_make_would_install = [
-        Spec(line.split("# ")[1]).name for line in out.splitlines() if line.startswith("spack")
-    ]
+    specs_that_make_would_install = _parse_dry_run_package_installs(out)
 
     # Check that all specs are there (without duplicates)
     assert set(specs_that_make_would_install) == set(expected_installs)
-    assert len(specs_that_make_would_install) == len(expected_installs)
+    assert len(specs_that_make_would_install) == len(set(specs_that_make_would_install))
+
+
+@pytest.mark.parametrize(
+    "picked_package,expected_installs",
+    [
+        (
+            "dttop",
+            [
+                "dtbuild2",
+                "dtlink2",
+                "dtrun2",
+                "dtbuild1",
+                "dtlink4",
+                "dtlink3",
+                "dtlink1",
+                "dtlink5",
+                "dtbuild3",
+                "dtrun3",
+                "dtrun1",
+                "dttop",
+            ],
+        ),
+        ("dtrun1", ["dtlink5", "dtbuild3", "dtrun3", "dtrun1"]),
+    ],
+)
+def test_depfile_phony_convenience_targets(
+    picked_package, expected_installs: set, tmpdir, mock_packages
+):
+    """Check whether convenience targets "install/%" and "install-deps/%" are created for
+    each package if "--make-prefix" is absent."""
+    make = Executable("make")
+    with fs.working_dir(str(tmpdir)):
+        with ev.Environment("."):
+            add("dttop")
+            concretize()
+
+        with ev.Environment(".") as e:
+            picked_spec = e.matching_spec(picked_package)
+            env("depfile", "-o", "Makefile", "--make-disable-jobserver")
+
+        # Phony install/* target should install picked package and all its deps
+        specs_that_make_would_install = _parse_dry_run_package_installs(
+            make("-n", picked_spec.format("install/{name}-{version}-{hash}"), output=str)
+        )
+
+        assert set(specs_that_make_would_install) == set(expected_installs)
+        assert len(specs_that_make_would_install) == len(set(specs_that_make_would_install))
+
+        # Phony install-deps/* target shouldn't install picked package
+        specs_that_make_would_install = _parse_dry_run_package_installs(
+            make("-n", picked_spec.format("install-deps/{name}-{version}-{hash}"), output=str)
+        )
+
+        assert set(specs_that_make_would_install) == set(expected_installs) - {picked_package}
+        assert len(specs_that_make_would_install) == len(set(specs_that_make_would_install))
 
 
 def test_environment_depfile_out(tmpdir, mock_packages):
