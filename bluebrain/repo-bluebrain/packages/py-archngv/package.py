@@ -41,7 +41,7 @@ class PyArchngv(PythonPackage):
     depends_on("py-morph-tool@2.4.0:", type=("build", "run"))
     depends_on("snakemake@5.0:", type=("build", "run"))
     depends_on("py-tmd@2.0.11:", type=("build", "run"))
-    depends_on("py-tns@2.5.0", type=("build", "run"))
+    depends_on("py-neurots@2.5.0", type=("build", "run"))
     depends_on("py-diameter-synthesis@0.2.5", type=("build", "run"))
     depends_on("py-trimesh@2.38.10:", type=("build", "run"))
 
