@@ -324,9 +324,24 @@ class Visit(CMakePackage):
 
         if "@3.3.3: +vtkm" in spec:
             args.append(self.define("VISIT_VTKM_DIR", spec["vtk-m"].prefix))
-            args.append(self.define("CMAKE_EXE_LINKER_FLAGS", "-L%s/lib -L%s/lib" % (spec["hip"].prefix, spec["libx11"].prefix)))
-            args.append(self.define("CMAKE_MODULE_LINKER_FLAGS", "-L%s/lib -L%s/lib" % (spec["hip"].prefix, spec["libx11"].prefix)))
-            args.append(self.define("CMAKE_SHARED_LINKER_FLAGS", "-L%s/lib -L%s/lib" % (spec["hip"].prefix, spec["libx11"].prefix)))
+            args.append(
+                self.define(
+                    "CMAKE_EXE_LINKER_FLAGS",
+                    "-L%s/lib -L%s/lib" % (spec["hip"].prefix, spec["libx11"].prefix)
+                )
+            )
+            args.append(
+                self.define(
+                    "CMAKE_MODULE_LINKER_FLAGS",
+                    "-L%s/lib -L%s/lib" % (spec["hip"].prefix, spec["libx11"].prefix)
+                )
+            )
+            args.append(
+                self.define(
+                    "CMAKE_SHARED_LINKER_FLAGS",
+                    "-L%s/lib -L%s/lib" % (spec["hip"].prefix, spec["libx11"].prefix)
+                )
+            )
 
         return args
 
