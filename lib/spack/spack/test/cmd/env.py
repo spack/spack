@@ -3025,6 +3025,15 @@ def test_read_legacy_lockfile_and_reconcretize(mock_stage, mock_fetch, install_m
     assert current_versions == expected_versions
 
 
+def _parse_dry_run_package_installs(make_output):
+    """Parse `spack install ... # <spec>` output from a make dry run."""
+    return [
+        Spec(line.split("# ")[1]).name
+        for line in make_output.splitlines()
+        if line.startswith("spack")
+    ]
+
+
 @pytest.mark.parametrize(
     "depfile_flags,expected_installs",
     [
@@ -3108,15 +3117,66 @@ def test_environment_depfile_makefile(depfile_flags, expected_installs, tmpdir, 
     # Do make dry run.
     out = make("-n", "-f", makefile, output=str)
 
-    # Spack install commands are of the form "spack install ... # <spec>",
-    # so we just parse the spec again, for simplicity.
-    specs_that_make_would_install = [
-        Spec(line.split("# ")[1]).name for line in out.splitlines() if line.startswith("spack")
-    ]
+    specs_that_make_would_install = _parse_dry_run_package_installs(out)
 
     # Check that all specs are there (without duplicates)
     assert set(specs_that_make_would_install) == set(expected_installs)
-    assert len(specs_that_make_would_install) == len(expected_installs)
+    assert len(specs_that_make_would_install) == len(set(specs_that_make_would_install))
+
+
+@pytest.mark.parametrize(
+    "picked_package,expected_installs",
+    [
+        (
+            "dttop",
+            [
+                "dtbuild2",
+                "dtlink2",
+                "dtrun2",
+                "dtbuild1",
+                "dtlink4",
+                "dtlink3",
+                "dtlink1",
+                "dtlink5",
+                "dtbuild3",
+                "dtrun3",
+                "dtrun1",
+                "dttop",
+            ],
+        ),
+        ("dtrun1", ["dtlink5", "dtbuild3", "dtrun3", "dtrun1"]),
+    ],
+)
+def test_depfile_phony_convenience_targets(
+    picked_package, expected_installs: set, tmpdir, mock_packages
+):
+    """Check whether convenience targets "install/%" and "install-deps/%" are created for
+    each package if "--make-prefix" is absent."""
+    make = Executable("make")
+    with fs.working_dir(str(tmpdir)):
+        with ev.Environment("."):
+            add("dttop")
+            concretize()
+
+        with ev.Environment(".") as e:
+            picked_spec = e.matching_spec(picked_package)
+            env("depfile", "-o", "Makefile", "--make-disable-jobserver")
+
+        # Phony install/* target should install picked package and all its deps
+        specs_that_make_would_install = _parse_dry_run_package_installs(
+            make("-n", picked_spec.format("install/{name}-{version}-{hash}"), output=str)
+        )
+
+        assert set(specs_that_make_would_install) == set(expected_installs)
+        assert len(specs_that_make_would_install) == len(set(specs_that_make_would_install))
+
+        # Phony install-deps/* target shouldn't install picked package
+        specs_that_make_would_install = _parse_dry_run_package_installs(
+            make("-n", picked_spec.format("install-deps/{name}-{version}-{hash}"), output=str)
+        )
+
+        assert set(specs_that_make_would_install) == set(expected_installs) - {picked_package}
+        assert len(specs_that_make_would_install) == len(set(specs_that_make_would_install))
 
 
 def test_environment_depfile_out(tmpdir, mock_packages):
