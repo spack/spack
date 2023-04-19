@@ -255,3 +255,24 @@ setuptools = "pkg_resources"
 CacheControl = "https://raw.githubusercontent.com/ionrock/cachecontrol/v0.12.6/LICENSE.txt"
 distlib = "https://bitbucket.org/pypa/distlib/raw/master/LICENSE.txt"
 webencodings = "https://github.com/SimonSapin/python-webencodings/raw/master/LICENSE"
+
+[tool.pylint.main]
+init-hook = """
+import sys
+import os.path
+
+spack_lib_path = os.path.join(".", "lib", "spack")
+sys.path.insert(0, spack_lib_path)
+
+# Add external libs
+spack_external_libs = os.path.join(spack_lib_path, "external")
+sys.path.insert(0, os.path.join(spack_external_libs, "_vendoring"))
+sys.path.insert(0, spack_external_libs)
+"""
+py-version = "3.6"
+
+[tool.pylint.reports]
+output-format = "colorized"
+
+[tool.pylint.refactoring]
+max-nested = 5

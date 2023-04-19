@@ -122,6 +122,7 @@ class Bootstrapper:
         Return:
             True if the Python module could be imported, False otherwise
         """
+        # pylint: disable=unused-argument
         return False
 
     def try_search_path(self, executables: Tuple[str], abstract_spec_str: str) -> bool:
@@ -135,6 +136,7 @@ class Bootstrapper:
         Return:
             True if the executables are found, False otherwise
         """
+        # pylint: disable=unused-argument
         return False
 
 

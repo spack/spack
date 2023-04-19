@@ -130,10 +130,12 @@ class BootstrapEnvironment(spack.environment.Environment):
         makefile = self.environment_root() / "Makefile"
         makefile.write_text(template.render(model.to_dict()))
         make = spack.util.executable.which("make")
+        if make is None:
+            raise RuntimeError("cannot find 'make' in the environment")
         kwargs = {}
         if not tty.is_debug():
             kwargs = {"output": os.devnull, "error": os.devnull}
-        make(
+        make(  # pylint: disable=not-callable
             "-C",
             str(self.environment_root()),
             "-j",
