@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+maintainers("janciesko")
+
 
 def is_integer(x):
     """Any integer value"""
@@ -36,7 +38,6 @@ class Qthreads(AutotoolsPackage):
 
     tags = ["e4s"]
 
-   
     version("1.18", sha256="d1a808b35d3af0012194a8f3afe72241dfcffca7e88a7104fa02a46c73022880")
     version("1.17", sha256="b17efb3c94c2027b8edd759584f4b1fa1e2725f1878a7a098d7bc58ad38d82f1")
     version("1.16", sha256="0a95e20b08cb486de6c33bff16590f41e444ca64ab738aee697ef982fbb021d8")
@@ -45,7 +46,7 @@ class Qthreads(AutotoolsPackage):
     version("1.12", sha256="2c13a5f6f45bc2f22038d272be2e748e027649d3343a9f824da9e86a88b594c9")
     version("1.11", sha256="dbde6c7cb7de7e89921e47363d09cecaebf775c9d090496c2be8350355055571")
     version("1.10", sha256="29fbc2e54bcbc814c1be13049790ee98c505f22f22ccee34b7c29a4295475656")
-    
+
     patch("restrict.patch", when="@:1.10")
     patch("trap.patch", when="@:1.10")
 
