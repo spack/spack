@@ -206,6 +206,7 @@ class MakefileModel:
     @staticmethod
     def from_env(
         env: ev.Environment,
+        *,
         filter_specs: Optional[List[spack.spec.Spec]],
         pkg_buildcache: str,
         dep_buildcache: str,

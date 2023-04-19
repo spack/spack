@@ -640,17 +640,18 @@ def env_depfile_setup_parser(subparser):
 def env_depfile(args):
     # Currently only make is supported.
     spack.cmd.require_active_env(cmd_name="env depfile")
-    env = ev.active_environment()
 
     # What things do we build when running make? By default, we build the
     # root specs. If specific specs are provided as input, we build those.
     filter_specs = spack.cmd.parse_specs(args.specs) if args.specs else None
-
-    pkg_use_bc, dep_use_bc = args.use_buildcache
-
     template = spack.tengine.make_environment().get_template(os.path.join("depfile", "Makefile"))
     model = depfile.MakefileModel.from_env(
-        env, filter_specs, pkg_use_bc, dep_use_bc, args.make_prefix, args.jobserver
+        ev.active_environment(),
+        filter_specs=filter_specs,
+        pkg_buildcache=args.use_buildcache[0],
+        dep_buildcache=args.use_buildcache[1],
+        make_prefix=args.make_prefix,
+        jobserver=args.jobserver,
     )
     makefile = template.render(model.to_dict())
 

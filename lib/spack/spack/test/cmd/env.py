@@ -3150,7 +3150,8 @@ def test_environment_depfile_makefile(depfile_flags, expected_installs, tmpdir, 
 def test_depfile_phony_convenience_targets(
     picked_package, expected_installs, tmpdir, mock_packages
 ):
-    """Check if install/{name}-{version}-{hash} targets are created for"""
+    """Check whether convenience targets "install/%" and "install-deps/%" are created for
+    each package if "--make-prefix" is absent."""
     make = Executable("make")
     with fs.working_dir(str(tmpdir)):
         with ev.Environment("."):
