@@ -35,7 +35,7 @@ class Emacs(AutotoolsPackage, GNUMirrorPackage):
         values=("gtk", "athena"),
         description="Select an X toolkit (gtk, athena)",
     )
-    variant("tls", default=False, description="Build Emacs with gnutls")
+    variant("tls", default=True, description="Build Emacs with gnutls")
     variant("native", default=False, when="@28:", description="enable native compilation of elisp")
     variant("treesitter", default=False, when="@29:", description="Build with tree-sitter support")
     variant("json", default=False, when="@27:", description="Build with json support")
