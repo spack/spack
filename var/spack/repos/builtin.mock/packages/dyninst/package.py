@@ -12,17 +12,17 @@ class Dyninst(Package):
 
     version(
         "8.2",
-        "0123456789abcdef0123456789abcdef",
+        md5="0123456789abcdef0123456789abcdef",
         url="http://www.paradyn.org/release8.2/DyninstAPI-8.2.tgz",
     )
     version(
         "8.1.2",
-        "fedcba9876543210fedcba9876543210",
+        md5="fedcba9876543210fedcba9876543210",
         url="http://www.paradyn.org/release8.1.2/DyninstAPI-8.1.2.tgz",
     )
     version(
         "8.1.1",
-        "123456789abcdef0123456789abcdef0",
+        md5="123456789abcdef0123456789abcdef0",
         url="http://www.paradyn.org/release8.1/DyninstAPI-8.1.1.tgz",
     )
 

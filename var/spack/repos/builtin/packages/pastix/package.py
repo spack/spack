@@ -17,8 +17,8 @@ class Pastix(CMakePackage, CudaPackage):
     maintainers("fpruvost", "mfaverge", "ramet")
 
     version("master", branch="master", submodules=True)
-    version("6.2.2", "cce9a1fe4678b5733c9f1a5a52f77b040eadc3e254418c6fb03d8ab37dede508")
-    version("6.2.1", "b680cbfc265df8cba18d3a7093fcc02e260198c4a2d6a86d1e684bb291e309dd")
+    version("6.2.2", sha256="cce9a1fe4678b5733c9f1a5a52f77b040eadc3e254418c6fb03d8ab37dede508")
+    version("6.2.1", sha256="b680cbfc265df8cba18d3a7093fcc02e260198c4a2d6a86d1e684bb291e309dd")
 
     # cmake's specific
     variant("shared", default=True, description="Build Pastix as a shared library")

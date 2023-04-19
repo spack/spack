@@ -15,7 +15,7 @@ class PyThirdorder(PythonPackage):
     # Deprecated because download doesn't work
     version(
         "1.1.1-8526f47",
-        "5e1cc8d6ffa7efdb7325c397ca236863ea8a9c5bed1c558acca68b140f89167e",
+        sha256="5e1cc8d6ffa7efdb7325c397ca236863ea8a9c5bed1c558acca68b140f89167e",
         deprecated=True,
     )
 

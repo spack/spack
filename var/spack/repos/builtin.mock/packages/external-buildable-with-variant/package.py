@@ -10,8 +10,8 @@ class ExternalBuildableWithVariant(Package):
     homepage = "http://somewhere.com"
     url = "http://somewhere.com/module-1.0.tar.gz"
 
-    version("1.0", "1234567890abcdef1234567890abcdef")
-    version("0.9", "1234567890abcdef1234567890abcdef")
+    version("1.0", md5="1234567890abcdef1234567890abcdef")
+    version("0.9", md5="1234567890abcdef1234567890abcdef")
 
     variant("baz", default=False, description="nope")
 

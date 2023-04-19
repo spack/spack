@@ -15,7 +15,7 @@ class ViewDirDir(Package):
     url = "http://www.spack.org/downloads/aml-1.0.tar.gz"
     has_code = False
 
-    version("0.1.0", sha256="cc89a8768693f1f11539378b21cdca9f0ce3fc5cb564f9b3e4154a051dcea69b")
+    version("0.1.0")
 
     def install(self, spec, prefix):
         os.mkdir(os.path.join(prefix, "bin"))

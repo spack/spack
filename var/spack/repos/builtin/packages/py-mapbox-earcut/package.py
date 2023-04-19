@@ -14,7 +14,7 @@ class PyMapboxEarcut(PythonPackage):
     pypi = "mapbox-earcut/mapbox_earcut-1.0.1.tar.gz"
     git = "https://github.com/skogler/mapbox_earcut_python"
 
-    version("1.0.1", "9f155e429a22e27387cfd7a6372c3a3865aafa609ad725e2c4465257f154a438")
+    version("1.0.1", sha256="9f155e429a22e27387cfd7a6372c3a3865aafa609ad725e2c4465257f154a438")
 
     depends_on("py-setuptools@42:", type="build")
     depends_on("py-pybind11@2.6:2", type="build")

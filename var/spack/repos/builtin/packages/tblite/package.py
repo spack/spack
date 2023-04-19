@@ -15,7 +15,7 @@ class Tblite(MesonPackage):
 
     maintainers("awvwgk")
 
-    version("0.3.0", "46d77c120501ac55ed6a64dea8778d6593b26fb0653c591f8e8c985e35884f0a")
+    version("0.3.0", sha256="46d77c120501ac55ed6a64dea8778d6593b26fb0653c591f8e8c985e35884f0a")
 
     variant("openmp", default=True, description="Use OpenMP parallelisation")
     variant("python", default=False, description="Build Python extension module")

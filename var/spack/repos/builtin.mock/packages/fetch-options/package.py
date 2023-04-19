@@ -17,6 +17,6 @@ class FetchOptions(Package):
     timeout = {"timeout": 65}
     cookie = {"cookie": "baz"}
 
-    version("1.2", "00000000000000000000000000000012", fetch_options=cookie)
-    version("1.1", "00000000000000000000000000000011", fetch_options=timeout)
-    version("1.0", "00000000000000000000000000000010")
+    version("1.2", md5="00000000000000000000000000000012", fetch_options=cookie)
+    version("1.1", md5="00000000000000000000000000000011", fetch_options=timeout)
+    version("1.0", md5="00000000000000000000000000000010")

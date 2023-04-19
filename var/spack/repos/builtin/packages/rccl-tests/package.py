@@ -17,7 +17,7 @@ class RcclTests(MakefilePackage):
 
     maintainers("bvanessen")
 
-    version("develop", branch="develop", default=True)
+    version("develop", branch="develop", preferred=True)
     version("master", branch="master")
 
     variant("mpi", default=True, description="with MPI support")

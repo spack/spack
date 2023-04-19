@@ -22,7 +22,7 @@ class Gapfiller(Package):
     homepage = "https://www.baseclear.com/genomics/bioinformatics/basetools/gapfiller"
     manual_download = True
 
-    version("1.10", "54d5e2ada131a1305a66e41c0d380382")
+    version("1.10", md5="54d5e2ada131a1305a66e41c0d380382")
 
     def url_for_version(self, version):
         return "file://{0}/39GapFiller_v{1}_linux-x86_64.tar.gz".format(
