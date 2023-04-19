@@ -112,6 +112,8 @@ class Root(CMakePackage):
         # Resolve circular dependency, _cf_
         # https://sft.its.cern.ch/jira/browse/ROOT-8226.
         patch("root6-60606-mathmore.patch", when="@6.06.06")
+        # rpath correction
+        patch("loader.patch",when="@6.28.02 +python")
 
     # ###################### Variants ##########################
     # See README.md for specific notes about what ROOT configuration
