@@ -258,6 +258,7 @@ class PyTensorflow(Package, CudaPackage, ROCmPackage, PythonExtension):
     # https://github.com/tensorflow/tensorflow/issues/56266
     depends_on("py-protobuf@:3.19", type=("build", "run"), when="@:2.11")
     depends_on("py-protobuf+cpp", type=("build", "run"))
+    depends_on("protobuf@:3.21.9", when="@:2.12")
     depends_on("protobuf@:3.19", when="@:2.11")
     depends_on("protobuf@:3.17", when="@:2.11")
     depends_on("protobuf@:3.12", when="@:2.4")
@@ -760,6 +761,13 @@ class PyTensorflow(Package, CudaPackage, ROCmPackage, PythonExtension):
             '"-U_FORTIFY_SOURCE", "-I%s",' % self.spec["protobuf"].prefix.include,
             "third_party/gpus/crosstool/BUILD.rocm.tpl",
         )
+        if self.spec.satisfies("@2.12:"):
+            filter_file(
+                'genproto_deps.append("@com_google_protobuf//:well_known_types_py_pb2_genproto")',
+                "pass",
+                "tensorflow/tsl/platform/default/build_config.bzl",
+                string=True,
+            )
         if self.spec.satisfies("@2.11:"):
             filter_file(
                 "deps = protodeps + well_known_proto_libs(),",
