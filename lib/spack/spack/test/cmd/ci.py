@@ -33,6 +33,7 @@ from spack.schema.database_index import schema as db_idx_schema
 from spack.spec import CompilerSpec, Spec
 from spack.util.pattern import Bunch
 
+config_cmd = spack.main.SpackCommand("config")
 ci_cmd = spack.main.SpackCommand("ci")
 env_cmd = spack.main.SpackCommand("env")
 mirror_cmd = spack.main.SpackCommand("mirror")
@@ -412,7 +413,7 @@ spack:
 """
         )
 
-    expect_out = 'Error: Environment yaml does not have "ci" section'
+    expect_out = "Environment does not have `ci` a configuration"
 
     with tmpdir.as_cwd():
         env_cmd("create", "test", "./spack.yaml")
@@ -1842,12 +1843,11 @@ def test_ci_generate_prune_env_vars(
 spack:
   specs:
     - libelf
-  ci:
-    pipeline-gen:
-    - submapping:
+  gitlab-ci:
+    mappings:
       - match:
           - arch=test-debian6-core2
-        build-job:
+        runner-attributes:
           tags:
             - donotcare
           image: donotcare
@@ -2290,3 +2290,174 @@ def test_cmd_first_line():
     )
 
     assert spack.cmd.first_line(doc) == first
+
+
+legacy_spack_yaml_contents = """
+spack:
+  definitions:
+    - bootstrap:
+      - cmake@3.4.3
+    - old-gcc-pkgs:
+      - archive-files
+      - callpath
+      # specify ^openblas-with-lapack to ensure that builtin.mock repo flake8
+      # package (which can also provide lapack) is not chosen, as it violates
+      # a package-level check which requires exactly one fetch strategy (this
+      # is apparently not an issue for other tests that use it).
+      - hypre@0.2.15 ^openblas-with-lapack
+  specs:
+    - matrix:
+      - [$old-gcc-pkgs]
+  mirrors:
+    test-mirror: file:///some/fake/mirror
+  {0}:
+    bootstrap:
+      - name: bootstrap
+        compiler-agnostic: true
+    match_behavior: first
+    mappings:
+      - match:
+          - arch=test-debian6-core2
+        runner-attributes:
+          tags:
+            - donotcare
+          image: donotcare
+      - match:
+          - arch=test-debian6-m1
+        runner-attributes:
+          tags:
+            - donotcare
+          image: donotcare
+    service-job-attributes:
+      image: donotcare
+      tags: [donotcare]
+  cdash:
+    build-group: Not important
+    url: https://my.fake.cdash
+    project: Not used
+    site: Nothing
+"""
+
+
+@pytest.mark.regression("36409")
+def test_gitlab_ci_deprecated(
+    tmpdir,
+    mutable_mock_env_path,
+    install_mockery,
+    mock_packages,
+    monkeypatch,
+    ci_base_environment,
+    mock_binary_index,
+):
+    mirror_url = "file:///some/fake/mirror"
+    filename = str(tmpdir.join("spack.yaml"))
+    with open(filename, "w") as f:
+        f.write(legacy_spack_yaml_contents.format("gitlab-ci"))
+
+    with tmpdir.as_cwd():
+        env_cmd("create", "test", "./spack.yaml")
+        outputfile = "generated-pipeline.yaml"
+
+        with ev.read("test"):
+            ci_cmd("generate", "--output-file", outputfile)
+
+        with open(outputfile) as f:
+            contents = f.read()
+            yaml_contents = syaml.load(contents)
+
+            found_spec = False
+            for ci_key in yaml_contents.keys():
+                if "(bootstrap)" in ci_key:
+                    found_spec = True
+                    assert "cmake" in ci_key
+            assert found_spec
+            assert "stages" in yaml_contents
+            assert len(yaml_contents["stages"]) == 6
+            assert yaml_contents["stages"][0] == "stage-0"
+            assert yaml_contents["stages"][5] == "stage-rebuild-index"
+
+            assert "rebuild-index" in yaml_contents
+            rebuild_job = yaml_contents["rebuild-index"]
+            expected = "spack buildcache update-index --keys --mirror-url {0}".format(mirror_url)
+            assert rebuild_job["script"][0] == expected
+
+            assert "variables" in yaml_contents
+            assert "SPACK_ARTIFACTS_ROOT" in yaml_contents["variables"]
+            artifacts_root = yaml_contents["variables"]["SPACK_ARTIFACTS_ROOT"]
+            assert artifacts_root == "jobs_scratch_dir"
+
+
+@pytest.mark.regression("36045")
+def test_gitlab_ci_update(
+    tmpdir,
+    mutable_mock_env_path,
+    install_mockery,
+    mock_packages,
+    monkeypatch,
+    ci_base_environment,
+    mock_binary_index,
+):
+    filename = str(tmpdir.join("spack.yaml"))
+    with open(filename, "w") as f:
+        f.write(legacy_spack_yaml_contents.format("ci"))
+
+    with tmpdir.as_cwd():
+        env_cmd("update", "-y", ".")
+
+        with open("spack.yaml") as f:
+            contents = f.read()
+            yaml_contents = syaml.load(contents)
+
+            ci_root = yaml_contents["spack"]["ci"]
+
+            assert "pipeline-gen" in ci_root
+
+
+def test_gitlab_config_scopes(
+    tmpdir, working_env, mutable_mock_env_path, mock_packages, ci_base_environment
+):
+    """Test pipeline generation with real configs included"""
+    configs_path = os.path.join(spack_paths.share_path, "gitlab", "cloud_pipelines", "configs")
+    filename = str(tmpdir.join("spack.yaml"))
+    with open(filename, "w") as f:
+        f.write(
+            """\
+spack:
+  config:
+    install_tree: {0}
+  include: [{1}]
+  view: false
+  specs:
+    - flatten-deps
+  mirrors:
+    some-mirror: https://my.fake.mirror
+  ci:
+    pipeline-gen:
+    - build-job:
+        image: "ecpe4s/ubuntu20.04-runner-x86_64:2023-01-01"
+        tags: ["some_tag"]
+""".format(
+                tmpdir.strpath, configs_path
+            )
+        )
+
+    with tmpdir.as_cwd():
+        env_cmd("create", "test", "./spack.yaml")
+        outputfile = str(tmpdir.join(".gitlab-ci.yml"))
+
+        with ev.read("test"):
+            ci_cmd("generate", "--output-file", outputfile)
+
+        with open(outputfile) as f:
+            contents = f.read()
+            yaml_contents = syaml.load(contents)
+
+            assert "rebuild-index" in yaml_contents
+            rebuild_job = yaml_contents["rebuild-index"]
+            assert "tags" in rebuild_job
+            assert "variables" in rebuild_job
+            rebuild_tags = rebuild_job["tags"]
+            rebuild_vars = rebuild_job["variables"]
+            assert all([t in rebuild_tags for t in ["spack", "service"]])
+            expected_vars = ["CI_JOB_SIZE", "KUBERNETES_CPU_REQUEST", "KUBERNETES_MEMORY_REQUEST"]
+            assert all([v in rebuild_vars for v in expected_vars])

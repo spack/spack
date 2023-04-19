@@ -182,10 +182,6 @@ class Openblas(MakefilePackage):
         when="@0.3.21 %gcc@:9",
     )
 
-    # Generic fix (https://github.com/xianyi/OpenBLAS/pull/3902) so we don't
-    # have to build tests
-    patch("fix-shared-tests-prereqs.patch", when="@0.2.20:0.3.21")
-
     # See https://github.com/spack/spack/issues/19932#issuecomment-733452619
     # Notice: fixed on Amazon Linux GCC 7.3.1 (which is an unofficial version
     # as GCC only has major.minor releases. But the bound :7.3.0 doesn't hurt)
@@ -216,7 +212,7 @@ class Openblas(MakefilePackage):
         spec = self.spec
         iflags = []
         if name == "cflags":
-            if spec.satisfies("@0.3.20: %oneapi"):
+            if spec.satisfies("@0.3.20: %oneapi") or spec.satisfies("@0.3.20: %arm"):
                 iflags.append("-Wno-error=implicit-function-declaration")
         return (iflags, None, None)
 
@@ -452,13 +448,7 @@ class Openblas(MakefilePackage):
 
     @property
     def build_targets(self):
-        targets = ["libs", "netlib"]
-
-        # Build shared if variant is set.
-        if "+shared" in self.spec:
-            targets += ["shared"]
-
-        return self.make_defs + targets
+        return self.make_defs + ["all"]
 
     @run_after("build")
     @on_package_attributes(run_tests=True)

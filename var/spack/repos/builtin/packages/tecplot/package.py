@@ -17,17 +17,40 @@ class Tecplot(Package):
     homepage = "https://www.tecplot.com/"
     manual_download = True
 
-    version("2017r1", "06a8057d33a519607720d4c621cd3f50", expand=False)
-    version("2018r2", "d3cf54a7555e0259b7ba0d82fef23bc3", expand=False)
+    maintainers("LRWeber")
+
+    version(
+        "2022r2", "a93a740bd8a8aa6e8cac278793cd5881f5c530e12a535a882d9c5d4af02fd45c", expand=False
+    )
+    # Deprecated versions
+    version("2018r2", "d3cf54a7555e0259b7ba0d82fef23bc3", expand=False, deprecated=True)
+    version("2017r1", "06a8057d33a519607720d4c621cd3f50", expand=False, deprecated=True)
+
+    # Licensing
+    license_required = True
+    license_comment = "#"
+    license_files = ["tecplotlm.lic"]
 
     def url_for_version(self, version):
         return "file://{0}/tecplot360ex{1}_linux64.sh".format(os.getcwd(), version)
 
     def install(self, spec, prefix):
-        makefile = FileFilter(self.stage.archive_file)
-        makefile.filter("interactive=TRUE", "interactive=FALSE")
-        makefile.filter("cpack_skip_license=FALSE", "cpack_skip_license=TRUE")
-
         set_executable(self.stage.archive_file)
         installer = Executable(self.stage.archive_file)
-        installer("--prefix=%s" % prefix)
+        installer("--skip-license", "--prefix=%s" % prefix)
+        # Link individual products to top level license file
+        lic360 = "360ex_{0}/tecplotlm.lic".format(self.version)
+        licChorus = "chorus_{0}/tecplotlm.lic".format(self.version)
+        force_symlink("../tecplotlm.lic", join_path(self.prefix, lic360))
+        force_symlink("../tecplotlm.lic", join_path(self.prefix, licChorus))
+
+    def setup_run_environment(self, env):
+        # Add Chorus bin
+        binChorus = "chorus_{0}/bin".format(self.version)
+        env.prepend_path("PATH", join_path(self.prefix, binChorus))
+        # Add Tecplot 360 bin
+        bin360 = "360ex_{0}/bin".format(self.version)
+        env.prepend_path("PATH", join_path(self.prefix, bin360))
+        # Add Tecplot 360 lib
+        lib360 = "360ex_{0}/lib".format(self.version)
+        env.prepend_path("LD_LIBRARY_PATH", join_path(self.prefix, lib360))

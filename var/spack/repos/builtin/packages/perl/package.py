@@ -152,6 +152,10 @@ class Perl(Package):  # Perl doesn't use Autotools, it should subclass Package
         # https://github.com/Perl/perl5/issues/15544 long PATH(>1000 chars) fails a test
         os.chmod("lib/perlbug.t", 0o644)
         filter_file("!/$B/", "! (/(?:$B|PATH)/)", "lib/perlbug.t")
+        # Several non-existent flags cause Intel@19.1.3 to fail
+        with when("%intel@19.1.3"):
+            os.chmod("hints/linux.sh", 0o644)
+            filter_file("-we147 -mp -no-gcc", "", "hints/linux.sh")
 
     @classmethod
     def determine_version(cls, exe):
@@ -209,7 +213,6 @@ class Perl(Package):  # Perl doesn't use Autotools, it should subclass Package
         perm = os.stat(filename).st_mode
         os.chmod(filename, perm | 0o200)
 
-    @property
     def nmake_arguments(self):
         args = []
         if self.spec.satisfies("%msvc"):
@@ -227,7 +230,7 @@ class Perl(Package):  # Perl doesn't use Autotools, it should subclass Package
         return args
 
     def is_64bit(self):
-        return "64" in self.pkg.spec.target.family
+        return "64" in str(self.spec.target.family)
 
     def configure_args(self):
         spec = self.spec
@@ -300,7 +303,7 @@ class Perl(Package):  # Perl doesn't use Autotools, it should subclass Package
         if sys.platform == "win32":
             win32_dir = os.path.join(self.stage.source_path, "win32")
             with working_dir(win32_dir):
-                nmake("install", *self.nmake_arguments, ignore_quotes=True)
+                nmake("install", *self.nmake_arguments(), ignore_quotes=True)
         else:
             make("install")
 
