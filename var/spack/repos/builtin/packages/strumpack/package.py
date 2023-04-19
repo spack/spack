@@ -29,6 +29,7 @@ class Strumpack(CMakePackage, CudaPackage, ROCmPackage):
     test_requires_compiler = True
 
     version("master", branch="master")
+    version("7.1.1", sha256="56481a22955c2eeb40932777233fc227347743c75683d996cb598617dd2a8635")
     version("7.1.0", sha256="a3e80e0530ea1cc6b62c22699cfe5f02f81794321f225440f0e08bceed69c241")
     version("7.0.1", sha256="ddbf9c0509eaf0f8a4c70f59508787336a05eeacc8322f156117d8ce59a70a60")
     version("7.0.0", sha256="18f7a0d75cc5cfdb7bbb6112a2bdda7a50fbcaefa2d8bab001f902bdf62e69e3")
@@ -79,6 +80,7 @@ class Strumpack(CMakePackage, CudaPackage, ROCmPackage):
     depends_on("hipblas", when="+rocm")
     depends_on("hipsparse", type="link", when="@7.0.1: +rocm")
     depends_on("rocsolver", when="+rocm")
+    depends_on("rocthrust", when="+rocm")
     depends_on("slate", when="+slate")
     depends_on("slate+cuda", when="+cuda+slate")
     depends_on("slate+rocm", when="+rocm+slate")
