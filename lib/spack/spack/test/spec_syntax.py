@@ -631,7 +631,7 @@ def test_spec_by_hash_tokens(text, tokens):
 
 
 @pytest.mark.db
-def test_spec_by_hash(database, monkeypatch, mutable_empty_config):
+def test_spec_by_hash(database, monkeypatch, mutable_config):
     mpileaks = database.query_one("mpileaks ^zmpi")
     b = spack.spec.Spec("b").concretized()
     monkeypatch.setattr(spack.binary_distribution, "update_cache_and_get_specs", lambda: [b])
