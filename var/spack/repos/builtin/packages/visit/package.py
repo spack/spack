@@ -327,19 +327,19 @@ class Visit(CMakePackage):
             args.append(
                 self.define(
                     "CMAKE_EXE_LINKER_FLAGS",
-                    "-L%s/lib -L%s/lib" % (spec["hip"].prefix, spec["libx11"].prefix)
+                    "-L%s/lib -L%s/lib" % (spec["hip"].prefix, spec["libx11"].prefix),
                 )
             )
             args.append(
                 self.define(
                     "CMAKE_MODULE_LINKER_FLAGS",
-                    "-L%s/lib -L%s/lib" % (spec["hip"].prefix, spec["libx11"].prefix)
+                    "-L%s/lib -L%s/lib" % (spec["hip"].prefix, spec["libx11"].prefix),
                 )
             )
             args.append(
                 self.define(
                     "CMAKE_SHARED_LINKER_FLAGS",
-                    "-L%s/lib -L%s/lib" % (spec["hip"].prefix, spec["libx11"].prefix)
+                    "-L%s/lib -L%s/lib" % (spec["hip"].prefix, spec["libx11"].prefix),
                 )
             )
 
