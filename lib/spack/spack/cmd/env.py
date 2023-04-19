@@ -648,8 +648,8 @@ def env_depfile(args):
     model = depfile.MakefileModel.from_env(
         ev.active_environment(),
         filter_specs=filter_specs,
-        pkg_buildcache=args.use_buildcache[0],
-        dep_buildcache=args.use_buildcache[1],
+        pkg_buildcache=depfile.UseBuildCache.from_string(args.use_buildcache[0]),
+        dep_buildcache=depfile.UseBuildCache.from_string(args.use_buildcache[1]),
         make_prefix=args.make_prefix,
         jobserver=args.jobserver,
     )

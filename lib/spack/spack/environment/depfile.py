@@ -207,11 +207,11 @@ class MakefileModel:
     def from_env(
         env: ev.Environment,
         *,
-        filter_specs: Optional[List[spack.spec.Spec]],
-        pkg_buildcache: str,
-        dep_buildcache: str,
-        make_prefix: Optional[str],
-        jobserver: bool,
+        filter_specs: Optional[List[spack.spec.Spec]] = None,
+        pkg_buildcache: UseBuildCache = UseBuildCache.AUTO,
+        dep_buildcache: UseBuildCache = UseBuildCache.AUTO,
+        make_prefix: Optional[str] = None,
+        jobserver: bool = True,
     ) -> "MakefileModel":
         """Produces a MakefileModel from an environment and a list of specs.
 
@@ -220,9 +220,7 @@ class MakefileModel:
             filter_specs: if provided, only these specs will be built from the environment,
                 otherwise the environment roots are used.
             pkg_buildcache: whether to only use the buildcache for top-level specs.
-                Values: only/never/auto. When only, their build deps are pruned.
             dep_buildcache: whether to only use the buildcache for non-top-level specs.
-                Values: only/never/auto. When only, their build deps are pruned.
             make_prefix: the prefix for the makefile targets
             jobserver: when enabled, make will invoke Spack with jobserver support. For
                 dry-run this should be disabled.
@@ -233,9 +231,7 @@ class MakefileModel:
         else:
             entrypoints = [s for _, s in env.concretized_specs()]
 
-        visitor = DepfileSpecVisitor(
-            UseBuildCache.from_string(pkg_buildcache), UseBuildCache.from_string(dep_buildcache)
-        )
+        visitor = DepfileSpecVisitor(pkg_buildcache, dep_buildcache)
         traverse.traverse_breadth_first_with_visitor(
             entrypoints, traverse.CoverNodesVisitor(visitor, key=lambda s: s.dag_hash())
         )
