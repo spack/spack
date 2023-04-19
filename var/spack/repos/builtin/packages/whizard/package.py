@@ -43,17 +43,11 @@ class Whizard(AutotoolsPackage):
     )
 
     variant("pythia8", default=True, description="builds with pythia8")
-
     variant("fastjet", default=False, description="builds with fastjet")
-
     variant("lcio", default=False, description="builds with lcio")
-
     variant("lhapdf", default=False, description="builds with fastjet")
-
     variant("openmp", default=False, description="builds with openmp")
-
     variant("openloops", default=False, description="builds with openloops")
-
     variant("latex", default=False, description="data visualization with latex")
 
     depends_on("libtirpc")
@@ -99,6 +93,8 @@ class Whizard(AutotoolsPackage):
         env.set("CXX", self.compiler.cxx)
         env.set("FC", self.compiler.fc)
         env.set("F77", self.compiler.fc)
+        env.prepend_path("LD_LIBRARY_PATH", self.spec["libtirpc"].prefix.lib)
+        env.prepend_path("CPATH", self.spec["libtirpc"].prefix.include.tirpc)
 
     def configure_args(self):
         spec = self.spec
