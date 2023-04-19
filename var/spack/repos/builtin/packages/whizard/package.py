@@ -17,7 +17,7 @@ class Whizard(AutotoolsPackage):
 
     tags = ["hep"]
 
-    maintainers("vvolkl")
+    maintainers("vvolkl", "jmcarcell")
 
     version("master", branch="master")
     version("3.1.0", sha256="9dc5e6d1a25d2fc708625f85010cb81b63559ff02cceb9b35024cf9f426c0ad9")
