@@ -404,11 +404,6 @@ class Openssl(Package):  # Uses Fake Autotools, should subclass Package
             # crypto/md5/md5-x86_64.s:684:31: error: expected string
             options.append("no-asm")
 
-        # The default glibc provided by CentOS 7 does not provide proper
-        # atomic support when using the NVIDIA compilers
-        if self.spec.satisfies("%nvhpc os=centos7"):
-            options.append("-D__STDC_NO_ATOMICS__")
-
         # Make a flag for shared library builds
         base_args = [
             "--prefix=%s" % prefix,
