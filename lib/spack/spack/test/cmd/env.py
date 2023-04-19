@@ -3121,7 +3121,7 @@ def test_environment_depfile_makefile(depfile_flags, expected_installs, tmpdir, 
 
     # Check that all specs are there (without duplicates)
     assert set(specs_that_make_would_install) == set(expected_installs)
-    assert len(specs_that_make_would_install) == len(expected_installs)
+    assert len(specs_that_make_would_install) == len(set(specs_that_make_would_install))
 
 
 @pytest.mark.parametrize(
@@ -3129,24 +3129,22 @@ def test_environment_depfile_makefile(depfile_flags, expected_installs, tmpdir, 
     [
         (
             "dttop",
-            set(
-                [
-                    "dtbuild2",
-                    "dtlink2",
-                    "dtrun2",
-                    "dtbuild1",
-                    "dtlink4",
-                    "dtlink3",
-                    "dtlink1",
-                    "dtlink5",
-                    "dtbuild3",
-                    "dtrun3",
-                    "dtrun1",
-                    "dttop",
-                ]
-            ),
+            [
+                "dtbuild2",
+                "dtlink2",
+                "dtrun2",
+                "dtbuild1",
+                "dtlink4",
+                "dtlink3",
+                "dtlink1",
+                "dtlink5",
+                "dtbuild3",
+                "dtrun3",
+                "dtrun1",
+                "dttop",
+            ],
         ),
-        ("dtrun1", set(["dtlink5", "dtbuild3", "dtrun3", "dtrun1"])),
+        ("dtrun1", ["dtlink5", "dtbuild3", "dtrun3", "dtrun1"]),
     ],
 )
 def test_depfile_phony_convenience_targets(
@@ -3170,7 +3168,7 @@ def test_depfile_phony_convenience_targets(
         )
 
         assert set(specs_that_make_would_install) == expected_installs
-        assert len(specs_that_make_would_install) == len(expected_installs)
+        assert len(specs_that_make_would_install) == len(set(specs_that_make_would_install))
 
         # Phony install-deps/* target shouldn't install picked package
         specs_that_make_would_install = _parse_dry_run_package_installs(
@@ -3178,7 +3176,7 @@ def test_depfile_phony_convenience_targets(
         )
 
         assert set(specs_that_make_would_install) == expected_installs - {picked_package}
-        assert len(specs_that_make_would_install) == len(expected_installs) - 1
+        assert len(specs_that_make_would_install) == len(set(specs_that_make_would_install))
 
 
 def test_environment_depfile_out(tmpdir, mock_packages):
