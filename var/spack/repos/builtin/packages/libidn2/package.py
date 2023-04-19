@@ -29,3 +29,9 @@ class Libidn2(AutotoolsPackage, GNUMirrorPackage):
 
     # in-source build fails
     build_directory = "spack-build"
+
+    def configure_args(self):
+        args = []
+        if self.spec.satisfies("%intel"):
+            args.append("CFLAGS=-std=c11")
+        return args

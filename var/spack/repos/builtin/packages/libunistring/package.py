@@ -35,6 +35,12 @@ class Libunistring(AutotoolsPackage, GNUMirrorPackage):
     # glibc 2.28+ removed libio.h and thus _IO_ftrylockfile
     patch("removed_libio.patch", when="@:0.9.9")
 
+    def configure_args(self):
+        args = []
+        if self.spec.satisfies("%intel"):
+            args.append("CFLAGS=-std=c11")
+        return args
+
     @when("@0.9.10")
     def patch(self):
         # Applies upstream fix for testcase: pragma weak conflicts with --as-needed
