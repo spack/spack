@@ -3167,7 +3167,7 @@ def test_depfile_phony_convenience_targets(
             make("-n", picked_spec.format("install/{name}-{version}-{hash}"), output=str)
         )
 
-        assert set(specs_that_make_would_install) == expected_installs
+        assert set(specs_that_make_would_install) == set(expected_installs)
         assert len(specs_that_make_would_install) == len(set(specs_that_make_would_install))
 
         # Phony install-deps/* target shouldn't install picked package
@@ -3175,7 +3175,7 @@ def test_depfile_phony_convenience_targets(
             make("-n", picked_spec.format("install-deps/{name}-{version}-{hash}"), output=str)
         )
 
-        assert set(specs_that_make_would_install) == expected_installs - {picked_package}
+        assert set(specs_that_make_would_install) == set(expected_installs) - {picked_package}
         assert len(specs_that_make_would_install) == len(set(specs_that_make_would_install))
 
 
