@@ -118,13 +118,20 @@ class Provenance(enum.IntEnum):
     PACKAGE_PY = enum.auto()
     # An installed spec
     INSTALLED = enum.auto()
-    # The 'all' subsection of the  of 'packages' section of the configuration
-    PACKAGES_YAML_ALL = enum.auto()
-    # A virtual package subsection of the  of 'packages' section of the configuration
-    PACKAGES_YAML_VIRTUAL = enum.auto()
 
     def __str__(self):
         return f"{self._name_.lower()}"
+
+
+class RequirementKind(enum.Enum):
+    """Purpose / provenance of a requirement"""
+
+    #: Default requirement expressed under the 'all' attribute of packages.yaml
+    DEFAULT = enum.auto()
+    #: Requirement expressed on a virtual package
+    VIRTUAL = enum.auto()
+    #: Requirement expressed on a specific package
+    PACKAGE = enum.auto()
 
 
 DeclaredVersion = collections.namedtuple("DeclaredVersion", ["version", "idx", "origin"])
@@ -646,7 +653,7 @@ class ErrorHandler:
 
 #: Data class to collect information on a requirement
 RequirementRule = collections.namedtuple(
-    "RequirementRule", ["pkg_name", "policy", "requirements", "condition", "provenance", "message"]
+    "RequirementRule", ["pkg_name", "policy", "requirements", "condition", "kind", "message"]
 )
 
 
@@ -1037,7 +1044,7 @@ class SpackSolverSetup(object):
                         pkg_name=pkg.name,
                         policy="one_of",
                         requirements=[requirement],
-                        provenance=Provenance.PACKAGE_PY,
+                        kind=Provenance.PACKAGE_PY,
                         condition=when_spec,
                         message=message,
                     )
@@ -1048,25 +1055,25 @@ class SpackSolverSetup(object):
         pkg_name = pkg.name
         config = spack.config.get("packages")
         requirements = config.get(pkg_name, {}).get("require", [])
-        provenance = Provenance.PACKAGES_YAML
+        kind = RequirementKind.PACKAGE
         if not requirements:
             requirements = config.get("all", {}).get("require", [])
-            provenance = Provenance.PACKAGES_YAML_ALL
-        return self._rules_from_requirements(pkg_name, requirements, provenance)
+            kind = RequirementKind.DEFAULT
+        return self._rules_from_requirements(pkg_name, requirements, kind=kind)
 
-    def _rules_from_requirements(self, pkg_name: str, requirements, provenance: Provenance):
+    def _rules_from_requirements(self, pkg_name: str, requirements, *, kind: RequirementKind):
         """Manipulate requirements from packages.yaml, and return a list of tuples
         with a uniform structure (name, policy, requirements).
         """
         if isinstance(requirements, str):
-            rules = [self._rule_from_str(pkg_name, requirements, provenance)]
+            rules = [self._rule_from_str(pkg_name, requirements, kind)]
         else:
             rules = []
             for requirement in requirements:
                 if isinstance(requirement, str):
                     # A string represents a spec that must be satisfied. It is
                     # equivalent to a one_of group with a single element
-                    rules.append(self._rule_from_str(pkg_name, requirement, provenance))
+                    rules.append(self._rule_from_str(pkg_name, requirement, kind))
                 else:
                     for policy in ("one_of", "any_of"):
                         if policy in requirement:
@@ -1075,7 +1082,7 @@ class SpackSolverSetup(object):
                                     pkg_name=pkg_name,
                                     policy=policy,
                                     requirements=requirement[policy],
-                                    provenance=provenance,
+                                    kind=kind,
                                     message=requirement.get("message"),
                                     condition=requirement.get("when"),
                                 )
@@ -1083,13 +1090,13 @@ class SpackSolverSetup(object):
         return rules
 
     def _rule_from_str(
-        self, pkg_name: str, requirements: str, provenance: Provenance
+        self, pkg_name: str, requirements: str, kind: RequirementKind
     ) -> RequirementRule:
         return RequirementRule(
             pkg_name=pkg_name,
             policy="one_of",
             requirements=[requirements],
-            provenance=provenance,
+            kind=kind,
             condition=None,
             message=None,
         )
@@ -1321,7 +1328,7 @@ class SpackSolverSetup(object):
         for virtual_str in sorted(self.possible_virtuals):
             requirements = packages_yaml.get(virtual_str, {}).get("require", [])
             rules = self._rules_from_requirements(
-                virtual_str, requirements, provenance=Provenance.PACKAGES_YAML_VIRTUAL
+                virtual_str, requirements, kind=RequirementKind.VIRTUAL
             )
             self.emit_facts_from_requirement_rules(rules)
 
@@ -1332,7 +1339,7 @@ class SpackSolverSetup(object):
             rules: rules for which we want facts to be emitted
         """
         for requirement_grp_id, rule in enumerate(rules):
-            virtual = rule.provenance == Provenance.PACKAGES_YAML_VIRTUAL
+            virtual = rule.kind == RequirementKind.VIRTUAL
 
             pkg_name, policy, requirement_grp = rule.pkg_name, rule.policy, rule.requirements
             self.gen.fact(fn.requirement_group(pkg_name, requirement_grp_id))
@@ -1367,7 +1374,7 @@ class SpackSolverSetup(object):
                     # Do not raise if the rule comes from the 'all' subsection, since usability
                     # would be impaired. If a rule does not apply for a specific package, just
                     # discard it.
-                    if rule.provenance != Provenance.PACKAGES_YAML_ALL:
+                    if rule.kind != RequirementKind.DEFAULT:
                         raise RuntimeError("cannot emit requirements for the solver") from e
                     continue
 
