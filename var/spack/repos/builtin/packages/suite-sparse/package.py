@@ -228,6 +228,9 @@ class SuiteSparse(Package):
                 + " -DCMAKE_LIBRARY_PATH=%s" % prefix.lib
             ]
 
+        if spec.satisfies("%gcc platform=darwin"):
+            make_args += ["LDLIBS=-lm"]
+
         make_args.append("INSTALL=%s" % prefix)
 
         # Filter the targets we're interested in
@@ -254,7 +257,7 @@ class SuiteSparse(Package):
             targets.append("SLIP_LU")
 
         # Finally make and install
-        make("-C", "SuiteSparse_config", "library", "config")
+        make("-C", "SuiteSparse_config", "config", *make_args)
         for target in targets:
             make("-C", target, "library", *make_args)
             make("-C", target, "install", *make_args)

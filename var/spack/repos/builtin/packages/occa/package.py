@@ -100,6 +100,9 @@ class Occa(Package):
         if "~opencl" in spec:
             env.set("OCCA_OPENCL_ENABLED", "0")
 
+        if "~openmp" in spec:
+            env.set("OCCA_OPENMP_ENABLED", "0")
+
         # Setup run-time environment for testing.
         env.set("OCCA_VERBOSE", "1")
         self._setup_runtime_flags(env)
