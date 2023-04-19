@@ -384,7 +384,6 @@ def decompressor_for_win(extension):
 
     # Windows native tar can handle .zip extensions, use standard
     # unzip method
-    import ipdb; ipdb.set_trace()
     if re.match(r"zip", extension):
         return _unzip
 
