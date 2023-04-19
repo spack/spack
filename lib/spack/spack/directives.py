@@ -319,34 +319,39 @@ directive = DirectiveMeta.directive
 @directive("versions")
 def version(
     ver: str,
-    checksum: Optional[str] = None,  # deprecated years ago
+    # this positional argument is deprecated, use sha256=... instead
+    checksum: Optional[str] = None,
     *,
-    sha256: Optional[str] = None,
-    sha384: Optional[str] = None,
-    sha512: Optional[str] = None,
+    # generic version options
     preferred: Optional[bool] = None,
     deprecated: Optional[bool] = None,
-    expand: Optional[bool] = None,
+    no_cache: Optional[bool] = None,
+    # url fetch options
     url: Optional[str] = None,
     extension: Optional[str] = None,
-    no_cache: Optional[bool] = None,
+    expand: Optional[bool] = None,
     fetch_options: Optional[dict] = None,
-    git: Optional[str] = None,
-    svn: Optional[str] = None,
-    hg: Optional[str] = None,
-    cvs: Optional[str] = None,
-    get_full_repo: Optional[bool] = None,
-    branch: Optional[str] = None,
-    submodules: Optional[bool] = None,
-    submodules_delete: Optional[bool] = None,
-    commit: Optional[str] = None,
-    tag: Optional[str] = None,
-    revision: Optional[str] = None,
-    date: Optional[str] = None,
-    # unsafe checksums
+    # url archive verification options
     md5: Optional[str] = None,
     sha1: Optional[str] = None,
     sha224: Optional[str] = None,
+    sha256: Optional[str] = None,
+    sha384: Optional[str] = None,
+    sha512: Optional[str] = None,
+    # git fetch options
+    git: Optional[str] = None,
+    commit: Optional[str] = None,
+    tag: Optional[str] = None,
+    branch: Optional[str] = None,
+    get_full_repo: Optional[bool] = None,
+    submodules: Optional[bool] = None,
+    submodules_delete: Optional[bool] = None,
+    # other version control
+    svn: Optional[str] = None,
+    hg: Optional[str] = None,
+    cvs: Optional[str] = None,
+    revision: Optional[str] = None,
+    date: Optional[str] = None,
 ):
     """Adds a version and, if appropriate, metadata for fetching its code.
 
