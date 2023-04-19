@@ -1348,12 +1348,20 @@ class SpackSolverSetup(object):
                 self.gen.fact(fn.requirement_message(pkg_name, requirement_grp_id, rule.message))
 
             requirement_weight = 0
-            when_spec = spack.directives.make_when_spec(rule.condition)
-            if when_spec is False:
+            main_requirement_condition = spack.directives.make_when_spec(rule.condition)
+            if main_requirement_condition is False:
                 continue
 
-            if rule.condition and when_spec != spack.spec.Spec():
-                self.gen.fact(fn.requirement_conditional(pkg_name, requirement_grp_id))
+            # Write explicitly if a requirement is conditional or not
+            if rule.condition and main_requirement_condition != spack.spec.Spec():
+                msg = f"condition to activate requirement {requirement_grp_id}"
+                main_condition_id = self.condition(
+                    main_requirement_condition, name=pkg_name, msg=msg
+                )
+                self.gen.fact(
+                    fn.requirement_conditional(pkg_name, requirement_grp_id, main_condition_id)
+                )
+            self.gen.newline()
 
             for spec_str in requirement_grp:
                 spec = spack.spec.Spec(spec_str)
@@ -1361,10 +1369,9 @@ class SpackSolverSetup(object):
                     spec.name = pkg_name
                 spec.attach_git_version_lookup()
 
+                when_spec = spec
                 if virtual:
                     when_spec = spack.spec.Spec(pkg_name)
-                elif not rule.condition:
-                    when_spec = spec
 
                 try:
                     member_id = self.condition(
@@ -1380,6 +1387,7 @@ class SpackSolverSetup(object):
 
                 self.gen.fact(fn.requirement_group_member(member_id, pkg_name, requirement_grp_id))
                 self.gen.fact(fn.requirement_has_weight(member_id, requirement_weight))
+                self.gen.newline()
                 requirement_weight += 1
 
     def external_packages(self):
