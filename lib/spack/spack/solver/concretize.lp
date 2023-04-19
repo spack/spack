@@ -461,28 +461,19 @@ error(100, "Attempted to use external for '{0}' which does not satisfy any confi
 % Config required semantics
 %-----------------------------------------------------------------------------
 
+package_in_dag(Package) :-  attr("node", Package).
+package_in_dag(Package) :-  attr("virtual_node", Package).
+
 activate_requirement(Package, X) :-
-  attr("node", Package),
+  package_in_dag(Package),
   requirement_group(Package, X),
   not requirement_conditional(Package, X, _).
 
 activate_requirement(Package, X) :-
-  attr("virtual_node", Package),
+  package_in_dag(Package),
   requirement_group(Package, X),
-  not requirement_conditional(Package, X, _).
-
-activate_requirement(Package, X) :-
-  attr("node", Package),
   condition_holds(Y),
-  requirement_group(Package, X),
   requirement_conditional(Package, X, Y).
-
-activate_requirement(Package, X) :-
-  attr("virtual_node", Package),
-  condition_holds(Y),
-  requirement_group(Package, X),
-  requirement_conditional(Package, X, Y).
-
 
 requirement_group_satisfied(Package, X) :-
   1 { condition_holds(Y) : requirement_group_member(Y, Package, X) } 1,
@@ -521,7 +512,7 @@ error(100, "cannot satisfy a requirement for package '{0}'.", Package) :-
   not requirement_group_satisfied(Package, X).
 
 
-error(2, Message) :-
+error(10, Message) :-
   activate_requirement(Package, X),
   requirement_group(Package, X),
   requirement_message(Package, X, Message),
