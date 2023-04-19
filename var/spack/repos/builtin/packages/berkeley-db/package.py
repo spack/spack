@@ -70,8 +70,6 @@ class BerkeleyDb(AutotoolsPackage):
             filter_file(r"gsg_db_server", "", "dist/Makefile.in")
 
     def configure_args(self):
-        spec = self.spec
-
         config_args = [
             "--disable-static",
             "--enable-dbm",
@@ -84,13 +82,6 @@ class BerkeleyDb(AutotoolsPackage):
 
         config_args += self.enable_or_disable("cxx")
         config_args += self.enable_or_disable("stl")
-
-        # The default glibc provided by CentOS 7 and Red Hat 8 does not provide
-        # proper atomic support when using the NVIDIA compilers
-        if spec.satisfies("%nvhpc") and (
-            spec.satisfies("os=centos7") or spec.satisfies("os=rhel8")
-        ):
-            config_args.append("--disable-atomicsupport")
 
         return config_args
 
