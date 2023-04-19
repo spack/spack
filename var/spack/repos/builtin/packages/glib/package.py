@@ -153,10 +153,6 @@ class Glib(MesonPackage, AutotoolsPackage):
     # Clang doesn't seem to acknowledge the pragma lines to disable the -Werror
     # around a legitimate usage.
     patch("no-Werror=format-security.patch", when="@:2.57")
-    # Patch to prevent compiler errors in kernels older than 2.6.35
-    patch("old-kernels.patch", when="@2.56.0:2.56.1 os=rhel6")
-    patch("old-kernels.patch", when="@2.56.0:2.56.1 os=centos6")
-    patch("old-kernels.patch", when="@2.56.0:2.56.1 os=scientific6")
     # fix multiple definition error in gio tests for 2.76.1
     patch(
         "https://gitlab.gnome.org/GNOME/glib/-/merge_requests/3368.diff",
