@@ -21,9 +21,9 @@ class Compadre(CMakePackage):
     maintainers("kuberry")
 
     version("master", branch="master")
-    version("1.5.0", "b7dd6020cc5a7969de817d5c7f6c5acceaad0f08dcfd3d7cacfa9f42e4c8b335")
-    version("1.4.1", "2e1e7d8e30953f76b6dc3a4c86ec8103d4b29447194cb5d5abb74b8e4099bdd9")
-    version("1.3.0", "f711a840fd921e84660451ded408023ec3bcfc98fd0a7dc4a299bfae6ab489c2")
+    version("1.5.0", sha256="b7dd6020cc5a7969de817d5c7f6c5acceaad0f08dcfd3d7cacfa9f42e4c8b335")
+    version("1.4.1", sha256="2e1e7d8e30953f76b6dc3a4c86ec8103d4b29447194cb5d5abb74b8e4099bdd9")
+    version("1.3.0", sha256="f711a840fd921e84660451ded408023ec3bcfc98fd0a7dc4a299bfae6ab489c2")
 
     depends_on("kokkos-kernels@3.3.01:3.6")
     depends_on("cmake@3.13:", type="build")
