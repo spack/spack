@@ -968,9 +968,6 @@ class SpackSolverSetup(object):
             if compiler.operating_system:
                 self.gen.fact(fn.compiler_os(compiler_id, compiler.operating_system))
 
-            if compiler.target == "any":
-                compiler.target = None
-
             if compiler.target is not None:
                 self.gen.fact(fn.compiler_target(compiler_id, compiler.target))
 
@@ -1856,6 +1853,12 @@ class SpackSolverSetup(object):
         # not selectable by users using the spec syntax
         seen, sanitized_list = set(), []
         for compiler in compilers:
+            # A compiler may have 'target: any' on module files based Cray programming
+            # environment. It is semantically equivalent to 'target: None' so here we
+            # normalize the input.
+            if compiler.target == "any":
+                compiler.target = None
+
             key = compiler.spec, compiler.operating_system, compiler.target
             if key in seen:
                 warnings.warn(
