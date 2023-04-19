@@ -1,0 +1,17 @@
+diff --git a/src/hdf5_drv/H5FDsilo.c b/src/hdf5_drv/H5FDsilo.c
+index 74594c1..c36b9b3 100644
+--- a/src/hdf5_drv/H5FDsilo.c
++++ b/src/hdf5_drv/H5FDsilo.c
+@@ -585,6 +585,12 @@ static const H5FD_class_t H5FD_silo_g = {
+     H5FD_silo_get_handle,                       /*get_handle            */
+     H5FD_silo_read,		                /*read			*/
+     H5FD_silo_write,		                /*write			*/
++#if HDF5_VERSION_GE(1,13,3) && defined(H5FD_CLASS_VERSION)
++    NULL,                           /*read_vector*/
++    NULL,                           /*write_vector*/
++    NULL,                           /*read_selection*/
++    NULL,                           /*write_selection*/
++#endif
+     NULL,		                	/*flush			*/
+     H5FD_silo_truncate,				/*truncate		*/
+     NULL,                                       /*lock                  */
