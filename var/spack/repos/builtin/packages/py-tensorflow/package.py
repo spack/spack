@@ -748,6 +748,7 @@ class PyTensorflow(Package, CudaPackage, ROCmPackage, PythonExtension):
         tmp_path = tempfile.mkdtemp(prefix="spack")
         env.set("TEST_TMPDIR", tmp_path)
 
+        env.set("TF_SYSTEM_LIBS", "com_google_protobuf")
         if spec.satisfies("@:2.3"):
             # NOTE: INCLUDEDIR is not just relevant to protobuf
             # see third_party/systemlibs/jsoncpp.BUILD
