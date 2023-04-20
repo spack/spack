@@ -3,6 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+import errno
 import filecmp
 import os
 import re
@@ -211,7 +212,7 @@ def install_sbang():
 
     # copy over the fresh copy of `sbang`
     sbang_tmp_path = os.path.join(
-        os.path.dirname(sbang_path), ".%s.tmp" % os.path.basename(sbang_path)
+        os.path.dirname(sbang_path), ".%s.%d.tmp" % (os.path.basename(sbang_path), os.getpid())
     )
     shutil.copy(spack.paths.sbang_script, sbang_tmp_path)
 
@@ -221,7 +222,11 @@ def install_sbang():
         os.chown(sbang_tmp_path, os.stat(sbang_tmp_path).st_uid, grp.getgrnam(group_name).gr_gid)
 
     # Finally, move the new `sbang` into place atomically
-    os.rename(sbang_tmp_path, sbang_path)
+    try:
+        os.rename(sbang_tmp_path, sbang_path)
+    except OSError as e:
+        if e.errno != errno.EEXIST:
+            raise e
 
 
 def post_install(spec, explicit=None):
