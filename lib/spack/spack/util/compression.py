@@ -687,14 +687,22 @@ def extension_from_path(path):
     return None
 
 
-def strip_last_extension(path):
-    """Strips last supported archive extension from path"""
-    path = expand_contracted_extension_in_path(path)
-    if path:
+def strip_last_extension(path, ext=None):
+    """Strips last supported or provided archive extension from path"""
+    path = expand_contracted_extension_in_path(path, ext)
+    def check_return_mod_path(ext):
+        mod_path = check_and_remove_ext(path, ext)
+        if mod_path != path:
+            return mod_path
+        return None
+    if ext:
+        return check_return_mod_path(ext)
+    else:
         for ext in ALLOWED_SINGLE_EXT_ARCHIVE_TYPES:
-            mod_path = check_and_remove_ext(path, ext)
-            if mod_path != path:
+            potential_mod_path = check_return_mod_path
+            if potential_mod_path:
                 return mod_path
+
     return path
 
 
