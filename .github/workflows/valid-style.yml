@@ -18,8 +18,8 @@ jobs:
   validate:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@3df4ab11eba7bda6032a0b82a6bb43b11571feac # @v2
-    - uses: actions/setup-python@61a6322f88396a6271a6ee3565807d608ecaddd1 # @v2
+    - uses: actions/checkout@3df4ab11eba7bda6032a0b82a6bb43b11571feac
+    - uses: actions/setup-python@61a6322f88396a6271a6ee3565807d608ecaddd1
       with:
         python-version: '3.11'
         cache: 'pip'
@@ -35,10 +35,10 @@ jobs:
   style:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@3df4ab11eba7bda6032a0b82a6bb43b11571feac # @v2
+    - uses: actions/checkout@3df4ab11eba7bda6032a0b82a6bb43b11571feac
       with:
         fetch-depth: 0
-    - uses: actions/setup-python@61a6322f88396a6271a6ee3565807d608ecaddd1 # @v2
+    - uses: actions/setup-python@61a6322f88396a6271a6ee3565807d608ecaddd1
       with:
         python-version: '3.11'
         cache: 'pip'
@@ -53,6 +53,23 @@ jobs:
     - name: Run style tests
       run: |
           share/spack/qa/run-style-tests
+  pylint:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@8e5e7e5ab8b370d6c329ec480221332ada57f0ab
+      with:
+        fetch-depth: 0
+    - uses: actions/setup-python@d27e3f3d7c64b4bbf8e4abfb9b63b83e846e0435
+      with:
+        python-version: '3.11'
+        cache: 'pip'
+    - name: Install Python packages
+      run: |
+        python3 -m pip install --upgrade pip setuptools pylint
+    - name: Run linting
+      # Currently, check only some parts of Spack and extend linting incrementally
+      run: | 
+        pylint lib/spack/spack/bootstrap
   audit:
     uses: ./.github/workflows/audit.yaml
     with:
