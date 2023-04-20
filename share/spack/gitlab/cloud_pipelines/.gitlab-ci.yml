@@ -142,7 +142,7 @@ default:
 
 .generate-win64:
   extends: [ ".generate-base-windows" ]
-  tags: ["spack", "public", "medium", "win64"]
+  tags: ["spack", "protected", "medium", "win64"]
 
 .generate-base:
   stage: generate
@@ -598,7 +598,7 @@ radiuss-build:
   tags: ["spack", "public", "aws", "medium", "x86_64_v4"]
 
 .tags-win64-msvc2019:
-  tags: ["spack", "protected", "medium", "win64", "msvc2019"]
+  tags: ["spack", "protected", "medium", "win64"]
 
 # Include this AFTER .*-generate in "extends" list
 .radiuss-aws-overrides:
@@ -953,16 +953,15 @@ e4s-cray-sles-build:
 # Windows Vis
 ########################################
 .windows-vis:
-  extends: [ ".win64-msvc2019", ".tags-win64-msvc2019"]
+  extends: [".win64-msvc2019"]
   variables:
     SPACK_CI_STACK_NAME: windows-vis
 
-# Windows CI only runs on protected pipelines
 windows-vis-generate:
-  extends: [ ".generate-win64", ".windows-vis" ]
+  extends: [ ".generate-win64", ".windows-vis", ".tags-win64-msvc2019" ]
 
 windows-vis-build:
-  extends: [ ".build", ".windows-vis" ]
+  extends: [ ".build", ".windows-vis", ".tags-win64-msvc2019" ]
   trigger:
     include:
       - artifact: jobs_scratch_dir/cloud-ci-pipeline.yml
