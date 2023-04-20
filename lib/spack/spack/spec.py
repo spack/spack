@@ -4162,9 +4162,9 @@ class Spec(object):
                 col = "#"
                 if ":" in attribute:
                     _, length = attribute.split(":")
-                    write(sig + morph(spec, spec.dag_hash(int(length))), col)
+                    write(sig + morph(spec, current.dag_hash(int(length))), col)
                 else:
-                    write(sig + morph(spec, spec.dag_hash()), col)
+                    write(sig + morph(spec, current.dag_hash()), col)
                 return
 
             # Iterate over components using getattr to get next element
