@@ -29,6 +29,8 @@ class Strumpack(CMakePackage, CudaPackage, ROCmPackage):
     test_requires_compiler = True
 
     version("master", branch="master")
+    version("7.1.1", sha256="56481a22955c2eeb40932777233fc227347743c75683d996cb598617dd2a8635")
+    version("7.1.0", sha256="a3e80e0530ea1cc6b62c22699cfe5f02f81794321f225440f0e08bceed69c241")
     version("7.0.1", sha256="ddbf9c0509eaf0f8a4c70f59508787336a05eeacc8322f156117d8ce59a70a60")
     version("7.0.0", sha256="18f7a0d75cc5cfdb7bbb6112a2bdda7a50fbcaefa2d8bab001f902bdf62e69e3")
     version("6.3.1", sha256="3f1de435aeb850c06d841655c3bc426565eb0cc0a7314b76586c2c709b03fb61")
@@ -58,7 +60,8 @@ class Strumpack(CMakePackage, CudaPackage, ROCmPackage):
     variant("task_timers", default=False, description="Build with timers for internal routines")
     variant("slate", default=True, description="Build with SLATE support")
 
-    depends_on("cmake@3.11:", type="build")
+    depends_on("cmake@3.11:", when="@:6.2.9", type="build")
+    depends_on("cmake@3.17:", when="@6.3.0:", type="build")
     depends_on("mpi", when="+mpi")
     depends_on("blas")
     depends_on("lapack")
@@ -77,6 +80,7 @@ class Strumpack(CMakePackage, CudaPackage, ROCmPackage):
     depends_on("hipblas", when="+rocm")
     depends_on("hipsparse", type="link", when="@7.0.1: +rocm")
     depends_on("rocsolver", when="+rocm")
+    depends_on("rocthrust", when="+rocm")
     depends_on("slate", when="+slate")
     depends_on("slate+cuda", when="+cuda+slate")
     depends_on("slate+rocm", when="+rocm+slate")
