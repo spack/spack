@@ -9,9 +9,9 @@
    :lines: 13-
 """
 
-from llnl.util.lang import union_dicts
+from llnl.util import lang, tty
 
-import spack.schema.gitlab_ci
+from .gitlab_ci import gitlab_ci_properties, image_schema
 
 # Schema for script fields
 # List of lists and/or strings
@@ -20,20 +20,6 @@ import spack.schema.gitlab_ci
 script_schema = {
     "type": "array",
     "items": {"anyOf": [{"type": "string"}, {"type": "array", "items": {"type": "string"}}]},
-}
-
-# Schema for CI image
-image_schema = {
-    "oneOf": [
-        {"type": "string"},
-        {
-            "type": "object",
-            "properties": {
-                "name": {"type": "string"},
-                "entrypoint": {"type": "array", "items": {"type": "string"}},
-            },
-        },
-    ]
 }
 
 # Additional attributes are allow
@@ -131,7 +117,7 @@ pipeline_gen_schema = {
     "items": {"oneOf": [submapping_schema, named_attributes_schema]},
 }
 
-core_shared_properties = union_dicts(
+core_shared_properties = lang.union_dicts(
     {
         "pipeline-gen": pipeline_gen_schema,
         "rebuild-index": {"type": "boolean"},
@@ -147,7 +133,7 @@ ci_properties = {
             "type": "object",
             "additionalProperties": False,
             # "required": ["mappings"],
-            "properties": union_dicts(
+            "properties": lang.union_dicts(
                 core_shared_properties, {"enable-artifacts-buildcache": {"type": "boolean"}}
             ),
         },
@@ -155,7 +141,7 @@ ci_properties = {
             "type": "object",
             "additionalProperties": False,
             # "required": ["mappings"],
-            "properties": union_dicts(
+            "properties": lang.union_dicts(
                 core_shared_properties, {"temporary-storage-url-prefix": {"type": "string"}}
             ),
         },
@@ -168,7 +154,7 @@ properties = {
         "oneOf": [
             ci_properties,
             # Allow legacy format under `ci` for `config update ci`
-            spack.schema.gitlab_ci.gitlab_ci_properties,
+            gitlab_ci_properties,
         ]
     }
 }
@@ -184,8 +170,15 @@ schema = {
 
 
 def update(data):
-    import llnl.util.tty as tty
+    """Update the data in place to remove deprecated properties.
 
+    Args:
+        data (dict): dictionary to be updated
+
+    Returns:
+        True if data was changed, False otherwise
+    """
+    # pylint: disable=import-outside-toplevel
     import spack.ci
     import spack.environment as ev
 

@@ -12,24 +12,24 @@ import llnl.util.tty
 # jsonschema is imported lazily as it is heavy to import
 # and increases the start-up time
 def _make_validator():
-    import jsonschema
+    import jsonschema  # pylint: disable=import-outside-toplevel
 
-    import spack.parser
+    import spack.parser  # pylint: disable=import-outside-toplevel
 
     def _validate_spec(validator, is_spec, instance, schema):
         """Check if the attributes on instance are valid specs."""
-        import jsonschema
-
+        # pylint: disable=unused-argument
         if not validator.is_type(instance, "object"):
             return
 
         for spec_str in instance:
             try:
                 spack.parser.parse(spec_str)
-            except spack.parser.SpecSyntaxError as e:
-                yield jsonschema.ValidationError(str(e))
+            except spack.parser.SpecSyntaxError as exc:
+                yield jsonschema.ValidationError(str(exc))
 
     def _deprecated_properties(validator, deprecated, instance, schema):
+        # pylint: disable=unused-argument
         if not (validator.is_type(instance, "object") or validator.is_type(instance, "array")):
             return
 
@@ -51,8 +51,6 @@ def _make_validator():
         if not is_error:
             warnings.warn(msg)
         else:
-            import jsonschema
-
             yield jsonschema.ValidationError(msg)
 
     return jsonschema.validators.extend(

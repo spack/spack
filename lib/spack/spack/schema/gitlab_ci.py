@@ -70,6 +70,7 @@ core_shared_properties = union_dicts(
         },
         "match_behavior": {"type": "string", "enum": ["first", "merge"], "default": "first"},
         "mappings": {
+            # pylint: disable=duplicate-code
             "type": "array",
             "items": {
                 "type": "object",

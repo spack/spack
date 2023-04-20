@@ -10,10 +10,9 @@
 """
 from llnl.util.lang import union_dicts
 
-import spack.schema.gitlab_ci  # DEPRECATED
-import spack.schema.merged
-import spack.schema.packages
-import spack.schema.projections
+from .gitlab_ci import properties as gitlab_ci_properties  # DEPRECATED
+from .merged import properties as merged_properties
+from .projections import properties as projections_properties
 
 #: Top level key in a manifest file
 TOP_LEVEL_KEY = "spack"
@@ -40,7 +39,7 @@ spec_list_schema = {
     },
 }
 
-projections_scheme = spack.schema.projections.properties["projections"]
+projections_scheme = projections_properties["projections"]
 
 schema = {
     "$schema": "http://json-schema.org/draft-07/schema#",
@@ -54,13 +53,14 @@ schema = {
             "additionalProperties": False,
             "properties": union_dicts(
                 # Include deprecated "gitlab-ci" section
-                spack.schema.gitlab_ci.properties,
+                gitlab_ci_properties,
                 # merged configuration scope schemas
-                spack.schema.merged.properties,
+                merged_properties,
                 # extra environment schema properties
                 {
                     "include": {"type": "array", "default": [], "items": {"type": "string"}},
                     "develop": {
+                        # pylint: disable=duplicate-code
                         "type": "object",
                         "default": {},
                         "additionalProperties": False,
@@ -133,7 +133,7 @@ def update(data):
     Returns:
         True if data was changed, False otherwise
     """
-
+    # pylint: disable=import-outside-toplevel
     import spack.ci
 
     if "gitlab-ci" in data:

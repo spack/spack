@@ -40,6 +40,7 @@ def parse(config_obj):
         config_obj: a configuration dictionary conforming to the
             schema definition for environment modifications
     """
+    # pylint: disable=import-outside-toplevel
     import spack.util.environment as ev
 
     env = ev.EnvironmentModifications()

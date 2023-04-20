@@ -144,6 +144,7 @@ schema = {
 
 
 def update(data):
+    """Updates the 'version' section of the packages configuration, following #36273."""
     changed = False
     for key in data:
         version = data[key].get("version")
