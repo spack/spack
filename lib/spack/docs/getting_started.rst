@@ -368,7 +368,8 @@ Manual compiler configuration
 
 If auto-detection fails, you can manually configure a compiler by
 editing your ``~/.spack/<platform>/compilers.yaml`` file.  You can do this by running
-``spack config edit compilers``, which will open the file in your ``$EDITOR``.
+``spack config edit compilers``, which will open the file in
+:ref:`your favorite editor <controlling-the-editor>`.
 
 Each compiler configuration in the file looks like this:
 

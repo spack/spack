@@ -1368,7 +1368,7 @@ def create(configuration):
 
 
 #: Singleton repo path instance
-path = llnl.util.lang.Singleton(_path)
+path: Union[RepoPath, llnl.util.lang.Singleton] = llnl.util.lang.Singleton(_path)
 
 # Add the finder to sys.meta_path
 REPOS_FINDER = ReposFinder()
