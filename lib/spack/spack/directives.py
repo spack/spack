@@ -402,9 +402,13 @@ def version(
     }
     return lambda pkg: _execute_version(pkg, ver, **kwargs)
 
+
 def _execute_version(pkg, ver, **kwargs):
     if (
-        any(s in kwargs for s in ("sha256", "sha384", "sha512", "md5", "sha1", "sha224", "checksum"))
+        any(
+            s in kwargs
+            for s in ("sha256", "sha384", "sha512", "md5", "sha1", "sha224", "checksum")
+        )
         and hasattr(pkg, "has_code")
         and not pkg.has_code
     ):
