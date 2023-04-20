@@ -69,7 +69,7 @@ jobs:
     - name: Run linting
       # Currently, check only some parts of Spack and extend linting incrementally
       run: | 
-        pylint lib/spack/spack/bootstrap
+        pylint lib/spack/spack/bootstrap lib/spack/spack/schema
   audit:
     uses: ./.github/workflows/audit.yaml
     with:
