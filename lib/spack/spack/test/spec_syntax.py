@@ -658,7 +658,7 @@ def test_spec_by_hash(database, monkeypatch, mutable_config):
 
 
 @pytest.mark.db
-def test_dep_spec_by_hash(database, mutable_empty_config):
+def test_dep_spec_by_hash(database, mutable_config):
     mpileaks_zmpi = database.query_one("mpileaks ^zmpi")
     zmpi = database.query_one("zmpi")
     fake = database.query_one("fake")
@@ -693,7 +693,7 @@ def test_dep_spec_by_hash(database, mutable_empty_config):
 
 
 @pytest.mark.db
-def test_multiple_specs_with_hash(database, mutable_empty_config):
+def test_multiple_specs_with_hash(database, mutable_config):
     mpileaks_zmpi = database.query_one("mpileaks ^zmpi")
     callpath_mpich2 = database.query_one("callpath ^mpich2")
 
@@ -725,7 +725,7 @@ def test_multiple_specs_with_hash(database, mutable_empty_config):
 
 
 @pytest.mark.db
-def test_ambiguous_hash(mutable_database, default_mock_concretization, mutable_empty_config):
+def test_ambiguous_hash(mutable_database, default_mock_concretization, mutable_config):
     x1 = default_mock_concretization("a")
     x2 = x1.copy()
     x1._hash = "xyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy"
@@ -745,7 +745,7 @@ def test_ambiguous_hash(mutable_database, default_mock_concretization, mutable_e
 
 
 @pytest.mark.db
-def test_invalid_hash(database, mutable_empty_config):
+def test_invalid_hash(database, mutable_config):
     zmpi = database.query_one("zmpi")
     mpich = database.query_one("mpich")
 
@@ -763,7 +763,7 @@ def test_invalid_hash(database, mutable_empty_config):
         parsed_spec.replace_hash()
 
 
-def test_invalid_hash_dep(database, mutable_empty_config):
+def test_invalid_hash_dep(database, mutable_config):
     mpich = database.query_one("mpich")
     hash = mpich.dag_hash()
     with pytest.raises(spack.spec.InvalidHashError):
@@ -771,7 +771,7 @@ def test_invalid_hash_dep(database, mutable_empty_config):
 
 
 @pytest.mark.db
-def test_nonexistent_hash(database, mutable_empty_config):
+def test_nonexistent_hash(database, mutable_config):
     """Ensure we get errors for non existent hashes."""
     specs = database.query()
 
