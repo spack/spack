@@ -16,3 +16,4 @@ jobs:
           owner: spack
           head: develop
           base: develop
+          pr_title: Update develop from spack/spack
