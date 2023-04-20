@@ -30,6 +30,8 @@ class Stream(MakefilePackage):
         if "+openmp" in self.spec:
             cflags += " " + self.compiler.openmp_flag
             fflags += " " + self.compiler.openmp_flag
+        if "%aocc" in self.spec:
+            cflags += " -mcmodel=large -ffp-contract=fast -fnt-store"
 
         # Set the appropriate flags for this compiler
         makefile.filter("CFLAGS = .*", "CFLAGS = {0}".format(cflags))
