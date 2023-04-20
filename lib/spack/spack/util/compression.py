@@ -12,6 +12,7 @@ import sys
 from itertools import product
 
 from llnl.util import tty
+from spack.error import SpackError
 
 import spack.util.path as spath
 from spack.util.executable import CommandNotFoundError, which
@@ -102,21 +103,20 @@ def _bunzip2(archive_file):
 
 def _py_bunzip(archive_file):
     """Decompress bz2 compressed archives/files via python's bz2 module"""
-    decompressed_file = os.path.basename(strip_extension(archive_file, "bz2"))
+    decompressed_file = os.path.basename(strip_last_extension(archive_file, "bz2"))
     working_dir = os.getcwd()
     archive_out = os.path.join(working_dir, decompressed_file)
-    if is_bz2_supported():
-        f_bz = bz2.BZ2File(archive_file, mode="rb")
-        with open(archive_out, "wb") as ar:
-            shutil.copyfileobj(f_bz, ar)
-        f_bz.close()
+    f_bz = bz2.BZ2File(archive_file, mode="rb")
+    with open(archive_out, "wb") as ar:
+        shutil.copyfileobj(f_bz, ar)
+    f_bz.close()
     return archive_out
 
 
 def _system_bunzip(archive_file):
     """Decompress bz2 compressed archives/files via system bzip2 utility"""
     compressed_file_name = os.path.basename(archive_file)
-    decompressed_file = os.path.basename(strip_extension(archive_file, "bz2"))
+    decompressed_file = os.path.basename(strip_last_extension(archive_file, "bz2"))
     working_dir = os.getcwd()
     archive_out = os.path.join(working_dir, decompressed_file)
     copy_path = os.path.join(working_dir, compressed_file_name)
@@ -144,7 +144,7 @@ def _gunzip(archive_file):
 
 def _py_gunzip(archive_file):
     """Decompress `.gz` compressed archvies via python gzip module"""
-    decompressed_file = os.path.basename(strip_extension(archive_file, "gz"))
+    decompressed_file = os.path.basename(strip_last_extension(archive_file, "gz"))
     working_dir = os.getcwd()
     destination_abspath = os.path.join(working_dir, decompressed_file)
     f_in = gzip.open(archive_file, "rb")
@@ -155,7 +155,7 @@ def _py_gunzip(archive_file):
 
 
 def _system_gunzip(archive_file):
-    decompressed_file = os.path.basename(strip_extension(archive_file, "gz"))
+    decompressed_file = os.path.basename(strip_last_extension(archive_file, "gz"))
     working_dir = os.getcwd()
     destination_abspath = os.path.join(working_dir, decompressed_file)
     compressed_file = os.path.basename(archive_file)
@@ -187,7 +187,7 @@ def _unzip(archive_file):
     return extracted_file
 
 
-def _unZ(archive_file):
+def _system_unZ(archive_file):
     """
     Decompress UNIX compress style compression
     Utilizes gunzip on unix and 7zip on Windows
@@ -290,14 +290,6 @@ unable to extract %s files. 7z can be installed via Spack"
 
 
 def decompressor_for(path, extension=None):
-    extension = _validate_extension(path, extension=extension)
-    if sys.platform == "win32":
-        return decompressor_for_win(extension)
-    else:
-        return decompressor_for_nix(extension)
-
-
-def _validate_extension(path, extension=None):
     if not extension:
         extension = extension_from_file(path, decompress=True)
 
@@ -307,7 +299,10 @@ def _validate_extension(path, extension=None):
 unrecognized file extension: '%s'"
             % extension
         )
-    return extension
+    if sys.platform == "win32":
+        return decompressor_for_win(extension)
+    else:
+        return decompressor_for_nix(extension)
 
 
 def decompressor_for_nix(extension):
@@ -319,25 +314,25 @@ def decompressor_for_nix(extension):
     Args:
         path (str): path of the archive file requiring decompression
     """
-    if re.match(r"zip", extension):
+    if re.match(r"zip$", extension):
         return _unzip
 
-    if re.match(r"gz", extension):
+    if re.match(r"gz$", extension):
         return _gunzip
 
-    if re.match(r"bz", extension):
+    if re.match(r"bz2$", extension):
         return _bunzip2
 
     # Python does not have native support
     # of any kind for .Z files. In these cases,
     # we rely on external tools such as tar,
     # 7z, or uncompressZ
-    if re.match(r"Z", extension):
-        return _unZ
+    if re.match(r"Z$", extension):
+        return _system_unZ
 
     # Python and platform may not have support for lzma
     # compression. If no lzma support, use tools available on systems
-    if re.match(r"xz", extension):
+    if re.match(r"xz$", extension):
         return _lzma_decomp
 
     return _untar
@@ -347,22 +342,15 @@ def _determine_py_decomp_archive_strategy(extension):
     """Returns appropriate python based decompression strategy
     based on extension type"""
     # Only rely on Python decompression support for gz
-    if re.match(r"gz", extension):
+    if re.match(r"gz$", extension):
         return _py_gunzip
 
     # Only rely on Python decompression support for bzip2
-    if re.match(r"bz", extension):
+    if re.match(r"bz2$", extension):
         return _py_bunzip
 
-    # Python does not have native support
-    # of any kind for .Z files. In these cases,
-    # we rely on 7zip, which must be installed outside
-    # of spack and added to the PATH or externally detected
-    if re.match(r"Z", extension):
-        return _unZ
-
     # Only rely on Python decompression support for xz
-    if re.match(r"xz", extension):
+    if re.match(r"xz$", extension):
         return _py_lzma
 
     return None
@@ -384,27 +372,29 @@ def decompressor_for_win(extension):
 
     # Windows native tar can handle .zip extensions, use standard
     # unzip method
-    if re.match(r"zip", extension):
+    if re.match(r"zip$", extension):
         return _unzip
-
-    # Windows vendors no native decompression tools, attempt to derive
-    # python based decompression strategy, if this is None, type is
-    # some sort of archive, compressed or other
-    decompressor = _determine_py_decomp_archive_strategy(extension)
-    if decompressor:
-        return decompressor
-    # reaching here means `path` is either a compressed archive or a tarball
-    # Windows does not natively provide *any* decompression utilities
-    # and only provides tar for archive extraction
-    # so we must decompress the archive with python modules and then hand things
-    # off to Windows native tar.exe
 
     # if extension is standard tarball, invoke Windows native tar
     if re.match(r"tar$", extension):
         return _untar
 
+    # Python does not have native support
+    # of any kind for .Z files. In these cases,
+    # we rely on 7zip, which must be installed outside
+    # of spack and added to the PATH or externally detected
+    if re.match(r"Z$", extension):
+        return _system_unZ
+
+    # Windows vendors no native decompression tools, attempt to derive
+    # python based decompression strategy
+    # Expand extension from contracted extension i.e. tar.gz from .tgz
+    # no-op on non contracted extensions
     extension = compression_ext_from_compressed_archive(extension)
     decompressor = _determine_py_decomp_archive_strategy(extension)
+    if not decompressor:
+        raise SpackError(f"Spack was unable to determine a proper decompression strategy for valid extension: {extension}"
+                         "This is a bug, please file an issue at https://github.com/spack/spack/issues")
 
     return _win_compressed_tarball_handler(decompressor)
 
@@ -699,6 +689,7 @@ def extension_from_path(path):
 
 def strip_last_extension(path):
     """Strips last supported archive extension from path"""
+    path = expand_contracted_extension_in_path(path)
     if path:
         for ext in ALLOWED_SINGLE_EXT_ARCHIVE_TYPES:
             mod_path = check_and_remove_ext(path, ext)
@@ -710,7 +701,6 @@ def strip_last_extension(path):
 def strip_extension(path, ext=None):
     """Get the part of a path that does not include its compressed
     type extension."""
-    path = expand_contracted_extension_in_path(path)
     if ext:
         return check_and_remove_ext(path, ext)
     for t in ALLOWED_ARCHIVE_TYPES:
@@ -747,7 +737,7 @@ def check_and_remove_ext(path, ext):
     return path
 
 
-def reg_sub_ext(path, old_ext, new_ext):
+def _substitute_extension(path, old_ext, new_ext):
     return re.sub(rf"{old_ext}", rf"{new_ext}", path)
 
 
@@ -756,11 +746,12 @@ def expand_contracted_extension_in_path(path, ext=None):
         ext = extension_from_path(path)
     expanded_ext = expand_contracted_extension(ext)
     if expanded_ext != ext:
-        return reg_sub_ext(path, ext, expanded_ext)
+        return _substitute_extension(path, ext, expanded_ext)
     return path
 
 
 def expand_contracted_extension(extension):
+    extension = extension.strip(".")
     if extension in NOTAR_EXTS and extension != "zip":
         # NOTAR exts are abbreviated extensions
         # for compressed tarballs
