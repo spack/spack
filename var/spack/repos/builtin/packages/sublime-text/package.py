@@ -28,6 +28,10 @@ class SublimeText(Package):
     version("3.0.3126", sha256="18db132e9a305fa3129014b608628e06f9442f48d09cfe933b3b1a84dd18727a")
     version("2.0.2", sha256="01baed30d66432e30002a309ff0393967be1daba5cce653e43bba6bd6c38ab84")
 
+    # Licensing
+    license_required = True
+    license_url = "https://www.sublimehq.com/store/text"
+
     # Sublime text comes as a pre-compiled binary.
     # Since we can't link to Spack packages, we'll just have to
     # add them as runtime dependencies.

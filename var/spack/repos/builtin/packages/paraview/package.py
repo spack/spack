@@ -5,6 +5,7 @@
 
 import itertools
 import os
+import sys
 
 from spack.package import *
 
@@ -115,6 +116,7 @@ class Paraview(CMakePackage, CudaPackage, ROCmPackage):
     conflicts("+openpmd", when="~adios2 ~hdf5", msg="openPMD needs ADIOS2 and/or HDF5")
     conflicts("~shared", when="+cuda")
     conflicts("+cuda", when="@5.8:5.10")
+    conflicts("+cuda", when="use_vtkm=off")
     conflicts("+rocm", when="+cuda")
     conflicts("+rocm", when="use_vtkm=off")
     conflicts("paraview@:5.10", when="+rocm")
@@ -135,6 +137,9 @@ class Paraview(CMakePackage, CudaPackage, ROCmPackage):
         when="%xl_r",
         msg="Use paraview@5.9.0 with %xl_r. Earlier versions are not able to build with xl.",
     )
+
+    # Newer abseil-cpp requires C++14, but paraview uses C++11 by default
+    conflicts("^abseil-cpp@2023:")
 
     # We only support one single Architecture
     for _arch, _other_arch in itertools.permutations(CudaPackage.cuda_arch_values, 2):
@@ -391,10 +396,11 @@ class Paraview(CMakePackage, CudaPackage, ROCmPackage):
 
         rendering = variant_bool("+opengl2", "OpenGL2", "OpenGL")
         includes = variant_bool("+development_files")
+        use_x11 = nvariant_bool("+osmesa") if not spec.satisfies("platform=windows") else "OFF"
 
         cmake_args = [
             "-DVTK_OPENGL_HAS_OSMESA:BOOL=%s" % variant_bool("+osmesa"),
-            "-DVTK_USE_X:BOOL=%s" % nvariant_bool("+osmesa"),
+            "-DVTK_USE_X:BOOL=%s" % use_x11,
             "-DPARAVIEW_INSTALL_DEVELOPMENT_FILES:BOOL=%s" % includes,
             "-DBUILD_TESTING:BOOL=OFF",
             "-DOpenGL_GL_PREFERENCE:STRING=LEGACY",
@@ -498,15 +504,19 @@ class Paraview(CMakePackage, CudaPackage, ROCmPackage):
             cmake_args.append("-DPARAVIEW_ENABLE_PYTHON:BOOL=OFF")
 
         if "+mpi" in spec:
-            cmake_args.extend(
-                [
-                    "-DPARAVIEW_USE_MPI:BOOL=ON",
-                    "-DMPIEXEC:FILEPATH=%s/bin/mpiexec" % spec["mpi"].prefix,
-                    "-DMPI_CXX_COMPILER:PATH=%s" % spec["mpi"].mpicxx,
-                    "-DMPI_C_COMPILER:PATH=%s" % spec["mpi"].mpicc,
-                    "-DMPI_Fortran_COMPILER:PATH=%s" % spec["mpi"].mpifc,
-                ]
-            )
+            mpi_args = [
+                "-DPARAVIEW_USE_MPI:BOOL=ON",
+                "-DMPIEXEC:FILEPATH=%s/bin/mpiexec" % spec["mpi"].prefix,
+            ]
+            if not sys.platform == "win32":
+                mpi_args.extend(
+                    [
+                        "-DMPI_CXX_COMPILER:PATH=%s" % spec["mpi"].mpicxx,
+                        "-DMPI_C_COMPILER:PATH=%s" % spec["mpi"].mpicc,
+                        "-DMPI_Fortran_COMPILER:PATH=%s" % spec["mpi"].mpifc,
+                    ]
+                )
+            cmake_args.extend(mpi_args)
 
         cmake_args.append("-DPARAVIEW_BUILD_SHARED_LIBS:BOOL=%s" % variant_bool("+shared"))
 

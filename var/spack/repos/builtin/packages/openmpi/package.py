@@ -554,7 +554,7 @@ class Openmpi(AutotoolsPackage, CudaPackage):
     # depends_on('pmix@3.2.3', when='@4.1.2')
     depends_on("pmix@1.0:1", when="@2.0:2")
     depends_on("pmix@3.2:", when="@4.0:4")
-    depends_on("pmix@5:", when="@5.0:5")
+    depends_on("pmix@4.2:", when="@5.0:5")
 
     # Libevent is required when *vendored* PMIx is used
     depends_on("libevent@2:", when="@main")
@@ -1006,6 +1006,11 @@ class Openmpi(AutotoolsPackage, CudaPackage):
                 # This option was removed from later versions
                 config_args.append(
                     "--with-cuda-libdir={0}".format(spec["cuda"].libs.directories[0])
+                )
+            if spec.satisfies("@5.0:"):
+                # And then it returned
+                config_args.append(
+                    "--with-cuda-libdir={0}".format(spec["cuda"].libs.directories[0] + "/stubs")
                 )
             if spec.satisfies("@1.7.2"):
                 # There was a bug in 1.7.2 when --enable-static is used
