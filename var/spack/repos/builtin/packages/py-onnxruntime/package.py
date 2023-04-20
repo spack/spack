@@ -38,7 +38,9 @@ class PyOnnxruntime(CMakePackage, PythonExtension):
 
     variant("cuda", default=False, description="Build with CUDA support")
 
-    depends_on("cmake@3.1:", type="build")
+    depends_on("cmake@3.13:", type="build")
+    depends_on("cmake@3.18:", type="build", when="@1.9:")
+    depends_on("cmake@3.24:", type="build", when="@1.14:")
     depends_on("python", type=("build", "run"))
     depends_on("py-pip", type="build")
     depends_on("protobuf")
