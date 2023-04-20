@@ -120,9 +120,8 @@ default:
   script:
     - .\bin\spack_pwsh.ps1
     - spack --version
-    - cd share\spack\gitlab\cloud_pipelines\stacks\$env:SPACK_CI_STACK_NAME
-    - spack env activate --without-view .
-    - $SPACK_CI_CONFIG_ROOT = $env:SPACK_ROOT\share\spack\gitlab\cloud_pipelines\configs
+    - spack env activate --without-view .\share\spack\gitlab\cloud_pipelines\stacks\$env:SPACK_CI_STACK_NAME
+    - $SPACK_CI_CONFIG_ROOT = .\share\spack\gitlab\cloud_pipelines\configs
     - spack
       --config-scope $SPACK_CI_CONFIG_ROOT
       --config-scope $SPACK_CI_CONFIG_ROOT\$env:SPACK_TARGET_PLATFORM
