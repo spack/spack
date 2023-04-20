@@ -58,6 +58,7 @@ class Visit(CMakePackage):
     executables = ["^visit$"]
 
     version("develop", branch="develop")
+    version("3.3.3", sha256="cc67abb7585e23b51ad576e797df4108641ae6c8c5e80e5359a279c729769187")
     version("3.3.2", sha256="0ae7c38287598e8d7d238cf284ea8be1096dcf13f58a7e9e444a28a32c085b56")
     version("3.3.1", sha256="2e969d3146b559fb833e4cdfaefa72f303d8ad368ef325f68506003f7bc317b9")
     version(
@@ -128,7 +129,7 @@ class Visit(CMakePackage):
     depends_on("qwt+opengl", when="+gui")
 
     # python@3.8 doesn't work with VisIt.
-    depends_on("python@3.2:3.7", when="+python")
+    depends_on("python@3.2:3.7,3.9:", when="+python")
     extends("python", when="+python")
 
     # VisIt uses the hdf5 1.8 api
