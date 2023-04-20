@@ -20,6 +20,7 @@ class Costa(CMakePackage):
     # note: The default archives produced with github do not have the archives
     #       of the submodules.
     version("master", branch="master", submodules=True)
+    version("2.2.1", sha256="aa8aa2a4a79de094f857c22293825de270ff72becd6bd736ff9f2dd8c192446d")
     version("2.2", sha256="3e7333f012af76ec3508276ea90800313f6136504667021fe229e710bf6acdc7")
     version("2.1", sha256="c1e86452415083f7470b292d93ec60708b7c8dbafc2bac383636bb4b28135866")
     version("2.0", sha256="de250197f31f7d23226c6956a687c3ff46fb0ff6c621a932428236c3f7925fe4")

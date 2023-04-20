@@ -14,27 +14,17 @@ class Cosma(CMakePackage):
 
     maintainers("haampie", "kabicm", "teonnik", "simonpintarelli", "mtaillefumier")
     homepage = "https://github.com/eth-cscs/COSMA"
-    url = "https://github.com/eth-cscs/COSMA/releases/download/v2.5.1/COSMA-v2.5.1.tar.gz"
+    url = "https://github.com/eth-cscs/COSMA/archive/refs/tags/v2.6.6.tar.gz"
     git = "https://github.com/eth-cscs/COSMA.git"
 
     # note: The default archives produced with github do not have the archives
     #       of the submodules.
     version("master", branch="master", submodules=False)
-    version(
-        "2.6.4",
-        sha256="6d7bd5e3005874af9542a329c93e7ccd29ca1a5573dae27618fac2704fa2b6ab",
-        url="https://github.com/eth-cscs/COSMA/releases/download/v2.6.4/cosma.tar.gz",
-    )
-    version(
-        "2.6.3",
-        sha256="8ca96ca41458f1e9d0da70d524c5a03c677dba7238d23a578f852163b6d45ac9",
-        url="https://github.com/eth-cscs/COSMA/releases/download/v2.6.3/cosma.tar.gz",
-    )
-    version(
-        "2.6.2",
-        sha256="2debb5123cc35aeebc5fd2f8a46cfd6356d1e27618c9bb57129ecd09aa400940",
-        url="https://github.com/eth-cscs/COSMA/releases/download/v2.6.2/cosma.tar.gz",
-    )
+    version("2.6.6", sha256="e54caf70c154b5d94eeee6f9f7faac51bc21030e0b0b4f1f63d01e885faeade4")
+    version("2.6.5", sha256="10d9b7ecc1ce44ec5b9e0c0bf89278a63029912ec3ea99661be8576b553ececf")
+    version("2.6.4", sha256="6d7bd5e3005874af9542a329c93e7ccd29ca1a5573dae27618fac2704fa2b6ab")
+    version("2.6.3", sha256="8ca96ca41458f1e9d0da70d524c5a03c677dba7238d23a578f852163b6d45ac9")
+    version("2.6.2", sha256="2debb5123cc35aeebc5fd2f8a46cfd6356d1e27618c9bb57129ecd09aa400940")
     version("2.6.1", sha256="69aa6634a030674f0d9be61e7b0bf0dc17acf0fc9e7a90b40e3179e2254c8d67")
     version("2.5.1", sha256="085b7787597374244bbb1eb89bc69bf58c35f6c85be805e881e1c0b25166c3ce")
     version("2.5.0", sha256="7f68bb0ee5c80f9b8df858afcbd017ad4ed87ac09439d13d7d890844dbdd3d54")
@@ -76,16 +66,6 @@ class Cosma(CMakePackage):
         depends_on("cxxopts", when="+tests")
         depends_on("semiprof", when="+profiling")
         depends_on("costa+profiling", when="+profiling")
-
-    def url_for_version(self, version):
-        if version <= Version("2.3.0"):
-            return "https://github.com/eth-cscs/COSMA/releases/download/v{0}/cosma.tar.gz".format(
-                version
-            )
-
-        return "https://github.com/eth-cscs/COSMA/releases/download/v{0}/COSMA-v{1}.tar.gz".format(
-            version, version
-        )
 
     def setup_build_environment(self, env):
         if "+cuda" in self.spec:
