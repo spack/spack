@@ -14,7 +14,9 @@ class Lcov(MakefilePackage):
 
     homepage = "http://ltp.sourceforge.net/coverage/lcov.php"
     url = "https://github.com/linux-test-project/lcov/releases/download/v1.14/lcov-1.14.tar.gz"
+    maintainers = ["KineticTheory"]
 
+    version("1.16", sha256="987031ad5528c8a746d4b52b380bc1bffe412de1f2b9c2ba5224995668e3240b")
     version("1.15", sha256="c1cda2fa33bec9aa2c2c73c87226cfe97de0831887176b45ee523c5e30f8053a")
     version("1.14", sha256="14995699187440e0ae4da57fe3a64adc0a3c5cf14feab971f8db38fb7d8f071a")
 
