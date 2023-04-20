@@ -3,16 +3,18 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
+from spack.package import *
 
 
 class Mozjpeg(CMakePackage):
     """MozJPEG is a patched version of libjpeg-turbo which improves
     JPEG compression efficiency achieving higher visual quality and
     smaller file sizes at the same time"""
-    
+
     homepage = "https://github.com/mozilla/mozjpeg"
     url = "https://github.com/mozilla/mozjpeg/archive/refs/tags/v4.1.1.tar.gz"
+
+    maintainers("RemiLacroix-IDRIS")
 
     version("4.1.1", sha256="66b1b8d6b55d263f35f27f55acaaa3234df2a401232de99b6d099e2bb0a9d196")
 
