@@ -16,7 +16,7 @@ class Octopus(AutotoolsPackage, CudaPackage):
     theory code."""
 
     homepage = "https://octopus-code.org/"
-    url = "https://octopus-code.org/down.php?file=6.0/octopus-6.0.tar.gz"
+    url = "https://octopus-code.org/download/6.0/octopus-6.0.tar.gz"
     git = "https://gitlab.com/octopus-code/octopus"
 
     maintainers("fangohr", "RemiLacroix-IDRIS")
