@@ -10,8 +10,6 @@ import pytest
 import spack.install_test
 import spack.spec
 
-pytestmark = pytest.mark.skipif(sys.platform == "win32", reason="Tests fail on Windows")
-
 
 def _true(*args, **kwargs):
     """Generic monkeypatch function that always returns True."""
@@ -142,6 +140,7 @@ def test_test_spec_run_once(mock_packages, install_mockery, mock_test_stage):
         test_suite()
 
 
+@pytest.mark.skipif(sys.platform == "win32", reason="Cannot find echo executable")
 def test_test_spec_passes(mock_packages, install_mockery, mock_test_stage, monkeypatch):
     spec = spack.spec.Spec("simple-standalone-test").concretized()
     monkeypatch.setattr(spack.spec.Spec, "installed", _true)
