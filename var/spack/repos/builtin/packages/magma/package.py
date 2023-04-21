@@ -131,6 +131,8 @@ class Magma(CMakePackage, CudaPackage, ROCmPackage):
             sep = "" if "@:2.2.0" in spec else "_"
             capabilities = " ".join("sm{0}{1}".format(sep, i) for i in cuda_arch)
             options.append(define("GPU_TARGET", capabilities))
+            archs = ";".join("%s" % i for i in cuda_arch)
+            options.append(define("CMAKE_CUDA_ARCHITECTURES", archs))
 
         if "@2.5.0" in spec:
             options.append(define("MAGMA_SPARSE", False))

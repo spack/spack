@@ -13,8 +13,8 @@ class SraTools(CMakePackage):
     homepage = "https://github.com/ncbi/sra-tools"
     git = "https://github.com/ncbi/sra-tools.git"
 
-    version("3.0.3", tags="3.0.3")
-    version("3.0.0", tags="3.0.0")
+    version("3.0.3", tag="3.0.3")
+    version("3.0.0", tag="3.0.0")
 
     depends_on("openjdk")
     depends_on("flex@2.6:")
