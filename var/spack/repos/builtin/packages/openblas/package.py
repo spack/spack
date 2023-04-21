@@ -346,7 +346,9 @@ class Openblas(MakefilePackage):
         # runs tests, so we set the max number of threads at runtime
         # accordingly
         if self.spec.satisfies("threads=openmp"):
-            env.set("OMP_NUM_THREADS", make_jobs)
+            env.set("OMP_NUM_THREADS", str(make_jobs))
+        elif self.spec.satisfies("threads=pthreads"):
+            env.set("OPENBLAS_NUM_THREADS", str(make_jobs))
 
     @property
     def make_defs(self):
