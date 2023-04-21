@@ -35,12 +35,30 @@ class MpiSerial(AutotoolsPackage):
 
     provides("mpi")
 
+    def flag_handler(self, name, flags):
+        spec = self.spec
+        config_flags = []
+
+        if name == "cflags":
+            config_flags.append(self.compiler.cc_pic_flag)
+
+            if spec.compiler.name in ["oneapi"]:
+                # OneAPI fails due to these standards checks
+                config_flags.append("-Wno-error=implicit-int")
+                config_flags.append("-Wno-error=implicit-function-declaration")
+        elif name == "fflags":
+            config_flags.append(self.compiler.fc_pic_flag)
+
+        return flags, None, (config_flags or None)
+
     def configure_args(self):
-        args = ["CFLAGS={0}".format(self.compiler.cc_pic_flag)]
+        args = []
+
         realsize = int(self.spec.variants["fort-real-size"].value)
         if realsize != 4:
             args.extend(["--enable-fort-real={0}".format(realsize)])
         doublesize = int(self.spec.variants["fort-double-size"].value)
         if doublesize != 8:
             args.extend(["--enable-fort-double={0}".format(doublesize)])
+
         return args
