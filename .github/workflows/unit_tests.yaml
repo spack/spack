@@ -18,16 +18,16 @@ jobs:
         python-version: ['3.7', '3.8', '3.9', '3.10', '3.11']
         concretizer: ['clingo']
         on_develop:
-        - ${{ github.ref == 'refs/heads/develop' }}
+        - ${{ github.ref == 'refs/heads/fnal-develop' }}
         include:
         - python-version: '3.11'
           os: ubuntu-latest
           concretizer: original
-          on_develop: ${{ github.ref == 'refs/heads/develop' }}
+          on_develop: ${{ github.ref == 'refs/heads/fnal-develop' }}
         - python-version: '3.6'
           os: ubuntu-20.04
           concretizer: clingo
-          on_develop: ${{ github.ref == 'refs/heads/develop' }}
+          on_develop: ${{ github.ref == 'refs/heads/fnal-develop' }}
         exclude:
         - python-version: '3.7'
           os: ubuntu-latest

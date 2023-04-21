@@ -5,12 +5,10 @@ on:
     branches:
       - fnal-develop
       - v*.fermi
-      - releases/**
   pull_request:
     branches:
       - fnal-develop
       - v*.fermi
-      - releases/**
 
 concurrency:
   group: ci-${{github.ref}}-${{github.event.pull_request.number || github.run_number}}
