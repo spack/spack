@@ -15,6 +15,7 @@ class PyArchngv(PythonPackage):
     version("develop", branch="main")
     version("2.0.2", tag="ArchNGV-v2.0.2")
     version("2.0.1", tag="ArchNGV-v2.0.1")
+    version("3.0.0", tag="ArchNGV-v3.0.0")
 
     depends_on("py-setuptools@42:", type="build")
 
