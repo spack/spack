@@ -22,32 +22,33 @@ class BigdftAtlab(AutotoolsPackage):
     variant("openmp", default=True, description="Enable OpenMP support")
     variant("openbabel", default=False, description="Enable detection of openbabel compilation")
 
+    depends_on("autoconf", type="build")
+    depends_on("automake", type="build")
+    depends_on("libtool", type="build")
+
     depends_on("mpi", when="+mpi")
     depends_on("openbabel", when="+openbabel")
 
     for vers in ["1.9.0", "1.9.1", "1.9.2", "develop"]:
         depends_on("bigdft-futile@{0}".format(vers), when="@{0}".format(vers))
 
-    build_directory = "atlab"
-
-    def autoreconf(self, spec, prefix):
-        autoreconf = which("autoreconf")
-
-        with working_dir(self.build_directory):
-            autoreconf("-fi")
+    configure_directory = "atlab"
 
     def configure_args(self):
         spec = self.spec
         prefix = self.prefix
 
-        openmp_flag = []
+        fcflags = []
         if "+openmp" in spec:
-            openmp_flag.append(self.compiler.openmp_flag)
+            fcflags.append(self.compiler.openmp_flag)
+
+        if self.spec.satisfies("%gcc@10:"):
+            fcflags.append("-fallow-argument-mismatch")
 
         args = [
-            "FCFLAGS=%s" % " ".join(openmp_flag),
-            "--with-futile-libs=%s" % spec["bigdft-futile"].prefix.lib,
-            "--with-futile-incs=%s" % spec["bigdft-futile"].prefix.include,
+            "FCFLAGS=%s" % " ".join(fcflags),
+            "--with-futile-libs=%s" % spec["bigdft-futile"].libs.ld_flags,
+            "--with-futile-incs=%s" % spec["bigdft-futile"].headers.include_flags + "/futile",
             "--with-moduledir=%s" % prefix.include,
             "--prefix=%s" % prefix,
             "--without-etsf-io",
