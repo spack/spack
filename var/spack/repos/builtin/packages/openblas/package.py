@@ -341,6 +341,13 @@ class Openblas(MakefilePackage):
 
         return args
 
+    def setup_build_environment(self, env):
+        # When building OpenBLAS with threads=openmp, `make all`
+        # runs tests, so we set the max number of threads at runtime
+        # accordingly
+        if self.spec.satisfies("threads=openmp"):
+            env.set("OMP_NUM_THREADS", make_jobs)
+
     @property
     def make_defs(self):
         # Configure fails to pick up fortran from FC=/abs/path/to/fc, but
@@ -424,6 +431,14 @@ class Openblas(MakefilePackage):
         if self.spec.satisfies("+bignuma"):
             make_defs.append("BIGNUMA=1")
 
+        # Avoid that NUM_THREADS gets initialized with the host's number of CPUs.
+        # The version lowerbound is somewhat arbitrary here, but in the past one
+        # had to be careful with pre-allocated buffers for gemm etc.
+        if self.spec.satisfies("@0.3.17: threads=openmp") or self.spec.satisfies(
+            "@0.3.17: threads=pthreads"
+        ):
+            make_defs.append("NUM_THREADS=512")
+
         return make_defs
 
     @property
@@ -450,7 +465,7 @@ class Openblas(MakefilePackage):
 
     @property
     def build_targets(self):
-        return self.make_defs + ["all"]
+        return ["-s"] + self.make_defs + ["all"]
 
     @run_after("build")
     @on_package_attributes(run_tests=True)
