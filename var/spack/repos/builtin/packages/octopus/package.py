@@ -21,6 +21,7 @@ class Octopus(AutotoolsPackage, CudaPackage):
 
     maintainers("fangohr", "RemiLacroix-IDRIS")
 
+    version("12.2", sha256="e919e07703696eadb4ba59352d7a2678a9191b4586cb9da538661615e765a5a2")
     version("12.1", sha256="e2214e958f1e9631dbe6bf020c39f1fe4d71ab0b6118ea9bd8dc38f6d7a7959a")
     version("12.0", sha256="70beaf08573d394a766f10346a708219b355ad725642126065d12596afbc0dcc")
     version("11.4", sha256="73bb872bff8165ddd8efc5b891f767cb3fe575b5a4b518416c834450a4492da7")
