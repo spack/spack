@@ -38,6 +38,6 @@ class PyCupy(PythonPackage, CudaPackage):
     def setup_build_environment(self, env):
         env.set("CUPY_NUM_BUILD_JOBS", make_jobs)
         if not self.spec.satisfies("cuda_arch=none"):
-            cuda_arch = spec.variants["cuda_arch"].value
+            cuda_arch = self.spec.variants["cuda_arch"].value
             arch_str = ";".join("arch=compute_{0},code=sm_{0}".format(i) for i in cuda_arch)
             env.set("CUPY_NVCC_GENERATE_CODE", arch_str)
