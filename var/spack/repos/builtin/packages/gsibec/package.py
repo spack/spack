@@ -18,6 +18,7 @@ class Gsibec(CMakePackage):
     maintainers = ["mathomp4", "danholdaway"]
 
     version("develop", branch="develop")
+    version("1.1.2", sha256="8bdcdf1663e6071b6ad9e893a76307abc70a6de744fb75a13986e70242993ada")
     version("1.0.7", sha256="53912f1f19d46f4941b377803cc2fce89a2b50d2ece7562f8fd65215a8908158")
     version("1.0.6", sha256="10e2561685156bcfba35c7799732c77f9c05bd180888506a339540777db833dd")
     version("1.0.5", sha256="ac0cecc59e38da7eefb5a8f27975b33752fa61a4abd3bdbbfb55578ea59d95b3")
