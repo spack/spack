@@ -263,10 +263,11 @@ class Rocblas(CMakePackage):
             self.define("RUN_HEADER_TESTING", "OFF"),
             self.define_from_variant("BUILD_WITH_TENSILE", "tensile"),
         ]
-        if "+test" in self.spec:
-            args += [self.define("ROCM_OPENMP_EXTRAS_DIR", self.spec["rocm-openmp-extras"].prefix)]
         if self.run_tests:
-            args.append(self.define("LINK_BLIS", "OFF"))
+            args.append(self.define("LINK_BLIS", "OFF")),
+            args.append(
+                self.define("ROCM_OPENMP_EXTRAS_DIR", self.spec["rocm-openmp-extras"].prefix)
+            ),
 
         arch_define_name = "AMDGPU_TARGETS"
         if "+tensile" in self.spec:
