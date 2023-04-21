@@ -58,6 +58,7 @@ class Visit(CMakePackage):
     executables = ["^visit$"]
 
     version("develop", branch="develop")
+    version("3.3.3", sha256="cc67abb7585e23b51ad576e797df4108641ae6c8c5e80e5359a279c729769187")
     version("3.3.2", sha256="0ae7c38287598e8d7d238cf284ea8be1096dcf13f58a7e9e444a28a32c085b56")
     version("3.3.1", sha256="2e969d3146b559fb833e4cdfaefa72f303d8ad368ef325f68506003f7bc317b9")
     version(
@@ -90,7 +91,7 @@ class Visit(CMakePackage):
     patch("nonframework-qwt.patch", when="^qt~framework platform=darwin")
     patch("parallel-hdf5.patch", when="@3.0.1:3.2.2+hdf5+mpi")
     patch("parallel-hdf5-3.3.patch", when="@3.3.0:+hdf5+mpi")
-    patch("cmake-findvtkh-3.3.patch", when="@3.3.0:+vtkm")
+    patch("cmake-findvtkh-3.3.patch", when="@3.3.0:3.3.2+vtkm")
     patch("cmake-findjpeg.patch", when="@3.1.0:3.2.2")
     patch("cmake-findjpeg-3.3.patch", when="@3.3.0")
 
@@ -164,12 +165,14 @@ class Visit(CMakePackage):
     depends_on("adios2+python", when="+adios2+python")
     depends_on("adios2~python", when="+adios2~python")
 
-    # vtk-m also requires vtk-h. Disabling cuda since that requires
-    # later versions of vtk-m and vtk-h. The patch prevents vtk-m from
-    # throwing an exception whenever any vtk-m operations are performed.
-    depends_on("vtk-m@1.7.0+testlib~cuda", when="+vtkm")
-    depends_on("vtk-h@0.8.1+shared~mpi~openmp~cuda", when="+vtkm")
+    # For version 3.3.0 through 3.3.2, we used vtk-h to utilize vtk-m.
+    # For version starting with 3.3.3 we use vtk-m directly.
+    depends_on("vtk-m@1.7.0+testlib~cuda", when="@3.3.0:3.3.2+vtkm")
+    depends_on("vtk-h@0.8.1+shared~mpi~openmp~cuda", when="@3.3.0:3.3.2+vtkm")
+    depends_on("vtk-m@1.9.0+testlib~cuda", when="@3.3.3:+vtkm")
 
+    # This patch prevents vtk-m from throwing an exception whenever any
+    # vtk-m operations are performed.
     depends_on("vtk-m", patches=[patch("vtk-m_transport_tag_topology_field_in.patch")])
 
     depends_on("zlib")
@@ -315,9 +318,30 @@ class Visit(CMakePackage):
         else:
             args.append(self.define("VISIT_PARALLEL", False))
 
-        if "+vtkm" in spec:
+        if "@3.3.0:3.3.2 +vtkm" in spec:
             args.append(self.define("VISIT_VTKM_DIR", spec["vtk-m"].prefix))
             args.append(self.define("VISIT_VTKH_DIR", spec["vtk-h"].prefix))
+
+        if "@3.3.3: +vtkm" in spec:
+            args.append(self.define("VISIT_VTKM_DIR", spec["vtk-m"].prefix))
+            args.append(
+                self.define(
+                    "CMAKE_EXE_LINKER_FLAGS",
+                    "-L%s/lib -L%s/lib" % (spec["hip"].prefix, spec["libx11"].prefix),
+                )
+            )
+            args.append(
+                self.define(
+                    "CMAKE_MODULE_LINKER_FLAGS",
+                    "-L%s/lib -L%s/lib" % (spec["hip"].prefix, spec["libx11"].prefix),
+                )
+            )
+            args.append(
+                self.define(
+                    "CMAKE_SHARED_LINKER_FLAGS",
+                    "-L%s/lib -L%s/lib" % (spec["hip"].prefix, spec["libx11"].prefix),
+                )
+            )
 
         return args
 
