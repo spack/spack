@@ -432,11 +432,7 @@ class Openblas(MakefilePackage):
             make_defs.append("BIGNUMA=1")
 
         # Avoid that NUM_THREADS gets initialized with the host's number of CPUs.
-        # The version lowerbound is somewhat arbitrary here, but in the past one
-        # had to be careful with pre-allocated buffers for gemm etc.
-        if self.spec.satisfies("@0.3.17: threads=openmp") or self.spec.satisfies(
-            "@0.3.17: threads=pthreads"
-        ):
+        if self.spec.satisfies("threads=openmp") or self.spec.satisfies("threads=pthreads"):
             make_defs.append("NUM_THREADS=512")
 
         return make_defs
