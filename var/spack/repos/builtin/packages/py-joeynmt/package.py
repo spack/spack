@@ -10,7 +10,7 @@ class PyJoeynmt(PythonPackage):
     """Minimalist NMT for educational purposes"""
 
     homepage = "https://https://github.com/joeynmt/joeynmt"
-    git      = "https://github.com/joeynmt/joeynmt.git"
+    git = "https://github.com/joeynmt/joeynmt.git"
 
     version("2.2", tag="v2.2")
     version("1.5", tag="1.5")
@@ -45,4 +45,4 @@ class PyJoeynmt(PythonPackage):
     depends_on("py-flake8", when="@2.2", type=("build", "run"))
     depends_on("py-pytest", when="@2.2", type=("build", "run"))
     depends_on("py-datasets", when="@2.2", type=("build", "run"))
-    depends_on("py-packaging", when="@2.2", type=("build", "run")) 
+    depends_on("py-packaging", when="@2.2", type=("build", "run"))
