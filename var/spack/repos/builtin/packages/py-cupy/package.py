@@ -35,7 +35,7 @@ class PyCupy(PythonPackage, CudaPackage):
 
     conflicts("~cuda")
 
-    def setup_build_envionment(self, env):
+    def setup_build_environment(self, env):
         env.set("CUPY_NUM_BUILD_JOBS", make_jobs)
         if not self.spec.satisfies("cuda_arch=none"):
             cuda_arch = spec.variants["cuda_arch"].value
