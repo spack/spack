@@ -25,6 +25,8 @@ class Glib(Package):
 
     maintainers("michaelkuhn")
 
+    version("2.76.1", sha256="43dc0f6a126958f5b454136c4398eab420249c16171a769784486e25f2fda19f")
+    version("2.74.7", sha256="196ab86c27127a61b7a70c3ba6af7b97bdc01c07cd3b21abd5e778b955eccb1b")
     version("2.74.6", sha256="069cf7e51cd261eb163aaf06c8d1754c6835f31252180aff5814e5afc7757fbc")
     version("2.74.3", sha256="e9bc41ecd9690d9bc6a970cc7380119b828e5b6a4b16c393c638b3dc2b87cbcb")
     version("2.74.1", sha256="0ab981618d1db47845e56417b0d7c123f81a3427b2b9c93f5a46ff5bbb964964")
@@ -143,6 +145,12 @@ class Glib(Package):
     patch("old-kernels.patch", when="@2.56.0:2.56.1 os=rhel6")
     patch("old-kernels.patch", when="@2.56.0:2.56.1 os=centos6")
     patch("old-kernels.patch", when="@2.56.0:2.56.1 os=scientific6")
+    # fix multiple definition error in gio tests for 2.76.1
+    patch(
+        "https://gitlab.gnome.org/GNOME/glib/-/merge_requests/3368.diff",
+        sha256="fa31180b55a832cbb75cc640bb115b7b092a26d7bcf0f48768de55576f0a38d3",
+        when="@2.76.1",
+    )
 
     # glib prefers the libc version of gettext, which breaks the build if the
     # external version is also found.
@@ -164,7 +172,7 @@ class Glib(Package):
         gio_tests.filter("'file' : {},", "")
         gio_tests.filter("'gdbus-peer'", "'file'")
         gio_tests.filter("'gdbus-address-get-session' : {},", "")
-        filter_file("'mkenums.py',*", "", "gobject/tests/meson.build")
+        filter_file("'mkenums.py'( : {})*,*", "", "gobject/tests/meson.build")
         filter_file("'fileutils' : {},", "", "glib/tests/meson.build")
 
     @property
@@ -173,8 +181,6 @@ class Glib(Package):
 
     def meson_args(self):
         args = []
-        if self.spec.satisfies("@:2.72"):
-            args.append("-Dgettext=external")
         if self.spec.satisfies("@2.63.5:"):
             if "+libmount" in self.spec:
                 args.append("-Dlibmount=enabled")
@@ -185,13 +191,6 @@ class Glib(Package):
                 args.append("-Dlibmount=true")
             else:
                 args.append("-Dlibmount=false")
-        if "libc" in self.spec:
-            args.append("-Diconv=libc")
-        else:
-            if self.spec.satisfies("@2.61.0:"):
-                args.append("-Diconv=external")
-            else:
-                args.append("-Diconv=gnu")
         if "tracing=dtrace" in self.spec:
             args.append("-Ddtrace=true")
         else:
@@ -206,6 +205,18 @@ class Glib(Package):
             args.append("-Dselinux=false")
         args.append("-Dgtk_doc=false")
         args.append("-Dlibelf=enabled")
+
+        # arguments for older versions
+        if self.spec.satisfies("@:2.72"):
+            args.append("-Dgettext=external")
+        if self.spec.satisfies("@:2.74"):
+            if "libc" in self.spec:
+                args.append("-Diconv=libc")
+            else:
+                if self.spec.satisfies("@2.61.0:"):
+                    args.append("-Diconv=external")
+                else:
+                    args.append("-Diconv=gnu")
         return args
 
     def install(self, spec, prefix):
