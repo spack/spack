@@ -177,6 +177,10 @@ class R(AutotoolsPackage):
         if self.compiler.name != "gcc":
             config_args.append("FPICFLAGS={0}".format(self.compiler.cc_pic_flag))
 
+        if self.spec.satisfies("@:3.6.1 %gcc@10:"):
+            config_args.append("CFLAGS=-fcommon")
+            config_args.append("FFLAGS=-fallow-argument-mismatch")
+
         return config_args
 
     @run_after("install")
