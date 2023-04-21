@@ -85,13 +85,24 @@ def double_quote_escape(s):
 
 
 def system_env_normalize(func):
+    """Decorator wrapping calls to system env modifications,
+    converting all env variable names to all upper case on Windows, no-op
+    on other platforms before calling env modification method.
+
+    Windows, due to a DOS holdover, treats all env variable names case
+    insensitively, however Spack's env modification class does not,
+    meaning setting `Path` and `PATH` would be distinct env operations
+    for Spack, but would cause a collision when actually performing the
+    env modification operations on the env.
+    Normalize all env names to all caps to prevent this collision from the
+    Spack side."""
     @wraps(func)
-    def marshall_env_var_name(self, name: str, *args, **kwargs):
+    def case_insensitive_modification(self, name: str, *args, **kwargs):
         if sys.platform == "win32":
             name = name.upper()
         return func(self, name, *args, **kwargs)
 
-    return marshall_env_var_name
+    return case_insensitive_modification
 
 
 def is_system_path(path: Path) -> bool:
