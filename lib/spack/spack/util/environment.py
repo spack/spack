@@ -96,6 +96,7 @@ def system_env_normalize(func):
     env modification operations on the env.
     Normalize all env names to all caps to prevent this collision from the
     Spack side."""
+
     @wraps(func)
     def case_insensitive_modification(self, name: str, *args, **kwargs):
         if sys.platform == "win32":
