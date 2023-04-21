@@ -14,6 +14,7 @@ import platform
 import re
 import socket
 import sys
+from functools import wraps
 from typing import Any, Callable, Dict, List, MutableMapping, Optional, Tuple, Union
 
 from llnl.util import tty
@@ -81,6 +82,28 @@ def double_quote_escape(s):
     # use double quotes, and escape double quotes in the string
     # the string $"b is then quoted as "$\"b"
     return '"' + s.replace('"', r"\"") + '"'
+
+
+def system_env_normalize(func):
+    """Decorator wrapping calls to system env modifications,
+    converting all env variable names to all upper case on Windows, no-op
+    on other platforms before calling env modification method.
+
+    Windows, due to a DOS holdover, treats all env variable names case
+    insensitively, however Spack's env modification class does not,
+    meaning setting `Path` and `PATH` would be distinct env operations
+    for Spack, but would cause a collision when actually performing the
+    env modification operations on the env.
+    Normalize all env names to all caps to prevent this collision from the
+    Spack side."""
+
+    @wraps(func)
+    def case_insensitive_modification(self, name: str, *args, **kwargs):
+        if sys.platform == "win32":
+            name = name.upper()
+        return func(self, name, *args, **kwargs)
+
+    return case_insensitive_modification
 
 
 def is_system_path(path: Path) -> bool:
@@ -466,6 +489,7 @@ class EnvironmentModifications:
 
         return Trace(filename=filename, lineno=lineno, context=current_context)
 
+    @system_env_normalize
     def set(self, name: str, value: str, *, force: bool = False):
         """Stores a request to set an environment variable.
 
@@ -477,6 +501,7 @@ class EnvironmentModifications:
         item = SetEnv(name, value, trace=self._trace(), force=force)
         self.env_modifications.append(item)
 
+    @system_env_normalize
     def append_flags(self, name: str, value: str, sep: str = " "):
         """Stores a request to append 'flags' to an environment variable.
 
@@ -488,6 +513,7 @@ class EnvironmentModifications:
         item = AppendFlagsEnv(name, value, separator=sep, trace=self._trace())
         self.env_modifications.append(item)
 
+    @system_env_normalize
     def unset(self, name: str):
         """Stores a request to unset an environment variable.
 
@@ -497,6 +523,7 @@ class EnvironmentModifications:
         item = UnsetEnv(name, trace=self._trace())
         self.env_modifications.append(item)
 
+    @system_env_normalize
     def remove_flags(self, name: str, value: str, sep: str = " "):
         """Stores a request to remove flags from an environment variable
 
@@ -508,6 +535,7 @@ class EnvironmentModifications:
         item = RemoveFlagsEnv(name, value, separator=sep, trace=self._trace())
         self.env_modifications.append(item)
 
+    @system_env_normalize
     def set_path(self, name: str, elements: List[str], separator: str = os.pathsep):
         """Stores a request to set an environment variable to a list of paths,
         separated by a character defined in input.
@@ -520,6 +548,7 @@ class EnvironmentModifications:
         item = SetPath(name, elements, separator=separator, trace=self._trace())
         self.env_modifications.append(item)
 
+    @system_env_normalize
     def append_path(self, name: str, path: str, separator: str = os.pathsep):
         """Stores a request to append a path to list of paths.
 
@@ -531,6 +560,7 @@ class EnvironmentModifications:
         item = AppendPath(name, path, separator=separator, trace=self._trace())
         self.env_modifications.append(item)
 
+    @system_env_normalize
     def prepend_path(self, name: str, path: str, separator: str = os.pathsep):
         """Stores a request to prepend a path to list of paths.
 
@@ -542,6 +572,7 @@ class EnvironmentModifications:
         item = PrependPath(name, path, separator=separator, trace=self._trace())
         self.env_modifications.append(item)
 
+    @system_env_normalize
     def remove_path(self, name: str, path: str, separator: str = os.pathsep):
         """Stores a request to remove a path from a list of paths.
 
@@ -553,6 +584,7 @@ class EnvironmentModifications:
         item = RemovePath(name, path, separator=separator, trace=self._trace())
         self.env_modifications.append(item)
 
+    @system_env_normalize
     def deprioritize_system_paths(self, name: str, separator: str = os.pathsep):
         """Stores a request to deprioritize system paths in a path list,
         otherwise preserving the order.
@@ -564,6 +596,7 @@ class EnvironmentModifications:
         item = DeprioritizeSystemPaths(name, separator=separator, trace=self._trace())
         self.env_modifications.append(item)
 
+    @system_env_normalize
     def prune_duplicate_paths(self, name: str, separator: str = os.pathsep):
         """Stores a request to remove duplicates from a path list, otherwise
         preserving the order.
