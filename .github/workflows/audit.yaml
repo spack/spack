@@ -38,7 +38,7 @@ jobs:
       run: |
           . share/spack/setup-env.sh
           $(which spack) audit packages
-    - uses: codecov/codecov-action@40a12dcee2df644d47232dde008099a3e9e4f865 # @v2.1.0
+    - uses: codecov/codecov-action@894ff025c7b54547a9a2a1e9f228beae737ad3c2 # @v2.1.0
       if: ${{ inputs.with_coverage == 'true' }}
       with:
         flags: unittests,linux,audits
