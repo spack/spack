@@ -19,7 +19,7 @@ class NcclFastsocket(Package):
     depends_on("bazel", type="build")
     depends_on("nccl", type=["build", "run"])
 
-    maintainers = ["danielahlin"]
+    maintainers("danielahlin")
 
     def setup_build_environment(self, env):
         spec = self.spec
