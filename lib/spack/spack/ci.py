@@ -1689,7 +1689,7 @@ def setup_spack_repro_version(repro_dir, checkout_commit, merge_commit=None):
     return True
 
 
-def reproduce_ci_job(url, work_dir):
+def reproduce_ci_job(url, work_dir, autostart, gpg_url):
     """Given a url to gitlab artifacts.zip from a failed 'spack ci rebuild' job,
     attempt to setup an environment in which the failure can be reproduced
     locally.  This entails the following:
@@ -1704,6 +1704,11 @@ def reproduce_ci_job(url, work_dir):
     """
     work_dir = os.path.realpath(work_dir)
     download_and_extract_artifacts(url, work_dir)
+
+    gpg_path = None
+    if gpg_url:
+        gpg_path = web_util.fetch_url_text(gpg_url, dest_dir=os.path.join(work_dir, "_pgp"))
+        rel_gpg_path = gpg_path.replace(work_dir, "").lstrip(os.path.sep)
 
     lock_file = fs.find(work_dir, "spack.lock")[0]
     repro_lock_dir = os.path.dirname(lock_file)
@@ -1797,10 +1802,13 @@ def reproduce_ci_job(url, work_dir):
         # more faithful reproducer if everything appears to run in the same
         # absolute path used during the CI build.
         mount_as_dir = "/work"
+        mounted_workdir = "/reproducer"
         if repro_details:
             mount_as_dir = repro_details["ci_project_dir"]
             mounted_repro_dir = os.path.join(mount_as_dir, rel_repro_dir)
             mounted_env_dir = os.path.join(mount_as_dir, relative_concrete_env_dir)
+            if gpg_path:
+                mounted_gpg_path = os.path.join(mounted_workdir, rel_gpg_path)
 
     # We will also try to clone spack from your local checkout and
     # reproduce the state present during the CI build, and put that into
@@ -1864,16 +1872,12 @@ def reproduce_ci_job(url, work_dir):
     entrypoint_script = [
         ["git", "config", "--global", "--add", "safe.directory", mount_as_dir],
         [".", os.path.join(mount_as_dir if job_image else work_dir, "share/spack/setup-env.sh")],
+        ["spack", "gpg", "trust", mounted_gpg_path if job_image else gpg_path] if gpg_path else [],
         ["spack", "env", "activate", mounted_env_dir if job_image else repro_dir],
         [os.path.join(mounted_repro_dir, "install.sh") if job_image else install_script],
     ]
 
     inst_list = []
-    if not setup_result:
-        inst_list.append("    - Clone spack and acquire tested commit\n")
-        inst_list.append("{0}\n".format(spack_info))
-        inst_list.append("    Path to clone spack: {0}/spack\n\n".format(work_dir))
-
     # Finally, print out some instructions to reproduce the build
     if job_image:
         # Allow interactive
@@ -1887,6 +1891,7 @@ def reproduce_ci_job(url, work_dir):
                         else install_script
                     ),
                 ],
+                # Allow interactive
                 ["exec", "$@"],
             ]
         )
@@ -1902,7 +1907,7 @@ def reproduce_ci_job(url, work_dir):
                 "--name",
                 "spack_reproducer",
                 "-v",
-                ":".join([work_dir, "/reproducer", "Z"]),
+                ":".join([work_dir, mounted_workdir, "Z"]),
                 "-v",
                 ":".join(
                     [
@@ -1914,15 +1919,16 @@ def reproduce_ci_job(url, work_dir):
                 "-v",
                 ":".join([os.path.join(work_dir, "spack"), mount_as_dir, "Z"]),
                 "--entrypoint",
-                "/reproducer/entrypoint.sh",
+                os.path.join(mounted_workdir, "entrypoint.sh"),
                 job_image,
                 "bash",
             ]
         ]
-        process_command("docker_start", docker_command, work_dir, run=setup_result)
+        autostart = autostart and setup_result
+        process_command("docker_start", docker_command, work_dir, run=autostart)
 
-        if not setup_result:
-            inst_list.insert(0, "\nTo run the docker reproducer:\n\n")
+        if not autostart:
+            inst_list.append("\nTo run the docker reproducer:\n\n")
             inst_list.extend(
                 [
                     "    - Start the docker container install",
@@ -1932,12 +1938,18 @@ def reproduce_ci_job(url, work_dir):
     else:
         process_command("reproducer", entrypoint_script, work_dir, run=False)
 
-        inst_list.insert(0, "\nOnce on the tagged runner:\n\n")
+        inst_list.append("\nOnce on the tagged runner:\n\n")
         inst_list.extent(
-            ["    - Run the reproducer script" "       $ {0}/reproducer.sh".format(work_dir)]
+            ["    - Run the reproducer script", "       $ {0}/reproducer.sh".format(work_dir)]
         )
 
-    print("".join(inst_list))
+    if not setup_result:
+        inst_list.append("\n    - Clone spack and acquire tested commit")
+        inst_list.append("\n        {0}\n".format(spack_info))
+        inst_list.append("\n")
+        inst_list.append("\n        Path to clone spack: {0}/spack\n\n".format(work_dir))
+
+    tty.msg("".join(inst_list))
 
 
 def process_command(name, commands, repro_dir, run=True):
@@ -1969,8 +1981,7 @@ def process_command(name, commands, repro_dir, run=True):
     with open(script, "w") as fd:
         fd.write("#!/bin/sh\n\n")
         fd.write("\n# spack {0} command\n".format(name))
-        if run:
-            fd.write("set -e\n")
+        fd.write("set -e\n")
         if os.environ.get("SPACK_VERBOSE_SCRIPT"):
             fd.write("set -x\n")
         fd.write(full_command)

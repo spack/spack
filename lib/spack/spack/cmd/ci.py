@@ -160,6 +160,19 @@ def setup_parser(subparser):
         help="where to unpack artifacts",
         default=os.path.join(os.getcwd(), "ci_reproduction"),
     )
+    reproduce.add_argument(
+        "-s",
+        "--autostart",
+        help="Run docker reproducer automatically",
+        action="store_true",
+    )
+    gpg_group = reproduce.add_mutually_exclusive_group(required=False)
+    gpg_group.add_argument(
+        "--gpg-file", help="Path to public GPG key for validating binary cache installs"
+    )
+    gpg_group.add_argument(
+        "--gpg-url", help="URL to public GPG key for validating binary cache installs"
+    )
 
     reproduce.set_defaults(func=ci_reproduce)
 
@@ -699,7 +712,7 @@ def ci_rebuild(args):
 
 \033[34mTo reproduce this build locally, run:
 
-    spack ci reproduce-build {0} [--working-dir <dir>]
+    spack ci reproduce-build {0} [--working-dir <dir>] [--autostart]
 
 If this project does not have public pipelines, you will need to first:
 
@@ -725,8 +738,17 @@ def ci_reproduce(args):
     """
     job_url = args.job_url
     work_dir = args.working_dir
+    autostart = args.autostart
 
-    return spack_ci.reproduce_ci_job(job_url, work_dir)
+    # Allow passing GPG key for reprocuding protected CI jobs
+    if args.gpg_file:
+        gpg_key_url = url_util.path_to_file_url(args.gpg_file)
+    elif args.gpg_url:
+        gpg_key_url = args.gpg_url
+    else:
+        gpg_key_url = None
+
+    return spack_ci.reproduce_ci_job(job_url, work_dir, autostart, gpg_key_url)
 
 
 def ci(parser, args):
