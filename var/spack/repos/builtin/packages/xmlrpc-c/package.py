@@ -19,13 +19,7 @@ class XmlrpcC(AutotoolsPackage):
     depends_on("curl", when="+curl")
 
     def configure_args(self):
-        variants = self.spec.variants
-
-        args = []
-
-        if variants["curl"].value:
-            args.append("--enable-curl-client")
-
+        args = self.enable_or_disable("curl-client", variant="curl")
         if self.spec.target.family == "aarch64":
             args.append("--build=arm-linux")
 
