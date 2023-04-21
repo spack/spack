@@ -1040,7 +1040,6 @@ def generate_gitlab_ci_yaml(
     spack_ci = SpackCI(ci_config, phases, staged_phases)
     spack_ci_ir = spack_ci.generate_ir()
 
-    before_script, after_script = None, None
     for phase in phases:
         phase_name = phase["name"]
         strip_compilers = phase["strip-compilers"]
@@ -1067,52 +1066,35 @@ def generate_gitlab_ci_yaml(
                         spec_record["needs_rebuild"] = False
                         continue
 
-                runner_attribs = spack_ci_ir["jobs"][release_spec_dag_hash]["attributes"]
+                job_object = spack_ci_ir["jobs"][release_spec_dag_hash]["attributes"]
 
-                if not runner_attribs:
+                if not job_object:
                     tty.warn("No match found for {0}, skipping it".format(release_spec))
                     continue
 
-                tags = [tag for tag in runner_attribs["tags"]]
-
                 if spack_pipeline_type is not None:
                     # For spack pipelines "public" and "protected" are reserved tags
-                    tags = _remove_reserved_tags(tags)
+                    job_object["tags"] = _remove_reserved_tags(job_object.get("tags", []))
                     if spack_pipeline_type == "spack_protected_branch":
-                        tags.extend(["protected"])
+                        job_object["tags"].extend(["protected"])
                     elif spack_pipeline_type == "spack_pull_request":
-                        tags.extend(["public"])
+                        job_object["tags"].extend(["public"])
 
-                variables = {}
-                if "variables" in runner_attribs:
-                    variables.update(runner_attribs["variables"])
-
-                image_name = None
-                image_entry = None
-                if "image" in runner_attribs:
-                    build_image = runner_attribs["image"]
-                    try:
-                        image_name = build_image.get("name")
-                        entrypoint = build_image.get("entrypoint")
-                        image_entry = [p for p in entrypoint]
-                    except AttributeError:
-                        image_name = build_image
-
-                if "script" not in runner_attribs:
+                if "script" not in job_object:
                     raise AttributeError
 
                 def main_script_replacements(cmd):
                     return cmd.replace("{env_dir}", concrete_env_dir)
 
-                job_script = _unpack_script(runner_attribs["script"], op=main_script_replacements)
+                job_object["script"] = _unpack_script(
+                    job_object["script"], op=main_script_replacements
+                )
 
-                before_script = None
-                if "before_script" in runner_attribs:
-                    before_script = _unpack_script(runner_attribs["before_script"])
+                if "before_script" in job_object:
+                    job_object["before_script"] = _unpack_script(job_object["before_script"])
 
-                after_script = None
-                if "after_script" in runner_attribs:
-                    after_script = _unpack_script(runner_attribs["after_script"])
+                if "after_script" in job_object:
+                    job_object["after_script"] = _unpack_script(job_object["after_script"])
 
                 osname = str(release_spec.architecture)
                 job_name = get_job_name(
@@ -1125,13 +1107,12 @@ def generate_gitlab_ci_yaml(
                     if _is_main_phase(phase_name):
                         compiler_action = "INSTALL_MISSING"
 
-                job_vars = {
-                    "SPACK_JOB_SPEC_DAG_HASH": release_spec_dag_hash,
-                    "SPACK_JOB_SPEC_PKG_NAME": release_spec.name,
-                    "SPACK_COMPILER_ACTION": compiler_action,
-                }
+                job_vars = job_object.setdefault("variables", {})
+                job_vars["SPACK_JOB_SPEC_DAG_HASH"] = release_spec_dag_hash
+                job_vars["SPACK_JOB_SPEC_PKG_NAME"] = release_spec.name
+                job_vars["SPACK_COMPILER_ACTION"] = compiler_action
 
-                job_dependencies = []
+                job_object["needs"] = []
                 if spec_label in dependencies:
                     if enable_artifacts_buildcache:
                         # Get dependencies transitively, so they're all
@@ -1144,7 +1125,7 @@ def generate_gitlab_ci_yaml(
                         for dep_label in dependencies[spec_label]:
                             dep_jobs.append(spec_labels[dep_label]["spec"])
 
-                    job_dependencies.extend(
+                    job_object["needs"].extend(
                         _format_job_needs(
                             phase_name,
                             strip_compilers,
@@ -1201,7 +1182,7 @@ def generate_gitlab_ci_yaml(
                             if enable_artifacts_buildcache:
                                 dep_jobs = [d for d in c_spec.traverse(deptype=all)]
 
-                            job_dependencies.extend(
+                            job_object["needs"].extend(
                                 _format_job_needs(
                                     bs["phase-name"],
                                     bs["strip-compilers"],
@@ -1267,7 +1248,7 @@ def generate_gitlab_ci_yaml(
                     ]
 
                 if artifacts_root:
-                    job_dependencies.append(
+                    job_object["needs"].append(
                         {"job": generate_job_name, "pipeline": "{0}".format(parent_pipeline_id)}
                     )
 
@@ -1282,18 +1263,22 @@ def generate_gitlab_ci_yaml(
                     build_stamp = cdash_handler.build_stamp
                     job_vars["SPACK_CDASH_BUILD_STAMP"] = build_stamp
 
-                variables.update(job_vars)
-
-                artifact_paths = [
-                    rel_job_log_dir,
-                    rel_job_repro_dir,
-                    rel_job_test_dir,
-                    rel_user_artifacts_dir,
-                ]
+                job_object["artifacts"] = spack.config.merge_yaml(
+                    job_object.get("artifacts", {}),
+                    {
+                        "when": "always",
+                        "paths": [
+                            rel_job_log_dir,
+                            rel_job_repro_dir,
+                            rel_job_test_dir,
+                            rel_user_artifacts_dir,
+                        ],
+                    },
+                )
 
                 if enable_artifacts_buildcache:
                     bc_root = os.path.join(local_mirror_dir, "build_cache")
-                    artifact_paths.extend(
+                    job_object["artifacts"]["paths"].extend(
                         [
                             os.path.join(bc_root, p)
                             for p in [
@@ -1303,32 +1288,14 @@ def generate_gitlab_ci_yaml(
                         ]
                     )
 
-                job_object = {
-                    "stage": stage_name,
-                    "variables": variables,
-                    "script": job_script,
-                    "tags": tags,
-                    "artifacts": {"paths": artifact_paths, "when": "always"},
-                    "needs": sorted(job_dependencies, key=lambda d: d["job"]),
-                    "retry": {"max": 2, "when": JOB_RETRY_CONDITIONS},
-                    "interruptible": True,
-                }
+                job_object["stage"] = stage_name
+                job_object["retry"] = {"max": 2, "when": JOB_RETRY_CONDITIONS}
+                job_object["interruptible"] = True
 
-                length_needs = len(job_dependencies)
+                length_needs = len(job_object["needs"])
                 if length_needs > max_length_needs:
                     max_length_needs = length_needs
                     max_needs_job = job_name
-
-                if before_script:
-                    job_object["before_script"] = before_script
-
-                if after_script:
-                    job_object["after_script"] = after_script
-
-                if image_name:
-                    job_object["image"] = image_name
-                    if image_entry is not None:
-                        job_object["image"] = {"name": image_name, "entrypoint": image_entry}
 
                 output_object[job_name] = job_object
                 job_id += 1

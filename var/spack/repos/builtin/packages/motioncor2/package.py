@@ -25,18 +25,18 @@ class Motioncor2(Package):
     # None of the below are available for download
     version(
         "1.1.0",
-        "6e37e7ed63a9f0aab5d794b2604d5ba79333960bb9440a1a218630b03dbeaeac",
+        sha256="6e37e7ed63a9f0aab5d794b2604d5ba79333960bb9440a1a218630b03dbeaeac",
         deprecated=True,
     )
     version(
         "1.0.5",
-        "4efa55af25644bcff1ca7882419267b8c094c9cc6155b37d2c204b154c56f5a8",
+        sha256="4efa55af25644bcff1ca7882419267b8c094c9cc6155b37d2c204b154c56f5a8",
         url="http://msg.ucsf.edu/MotionCor2/MotionCor2-1.0.5.tar.gz",
         deprecated=True,
     )
     version(
         "1.0.4",
-        "c75738160ac18d3f27c33677e78e63313d8ec2b023b5a46173428c3fa0451a94",
+        sha256="c75738160ac18d3f27c33677e78e63313d8ec2b023b5a46173428c3fa0451a94",
         url="http://msg.ucsf.edu/MotionCor2/MotionCor2-1.0.4.tar.gz",
         deprecated=True,
     )
