@@ -136,9 +136,12 @@ def check_outputs(expected: Union[list, set, str], actual: str):
         RuntimeError: the expected output is not found in the actual output
     """
     expected = expected if isinstance(expected, (list, set)) else [expected]
+    errors = []
     for check in expected:
         if not re.search(check, actual):
-            raise RuntimeError("Expected '{0}' in output '{1}'".format(check, actual))
+            errors.append(f"Expected '{check}' in output '{actual}'")
+    if errors:
+        raise RuntimeError("\n  ".join(errors))
 
 
 def find_required_file(
