@@ -1152,7 +1152,7 @@ def _add_msg_to_file(filename, msg):
         f.write("{0}\n".format(msg))
 
 
-class SkipTest(spack.error.SpackError):
+class SkipTest(Exception):
     """Raised when a test (part) is being skipped."""
 
 
