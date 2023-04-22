@@ -21,6 +21,8 @@ class Sirius(CMakePackage, CudaPackage, ROCmPackage):
     version("develop", branch="develop")
     version("master", branch="master")
 
+    version("7.4.3", sha256="015679a60a39fa750c5d1bd8fb1ce73945524bef561270d8a171ea2fd4687fec")
+    version("7.4.0", sha256="f9360a695a1e786d8cb9d6702c82dd95144a530c4fa7e8115791c7d1e92b020b")
     version("7.3.2", sha256="a256508de6b344345c295ad8642dbb260c4753cd87cc3dd192605c33542955d7")
     version("7.3.1", sha256="8bf9848b8ebf0b43797fd359adf8c84f00822de4eb677e3049f22baa72735e98")
     version("7.3.0", sha256="69b5cf356adbe181be6c919032859c4e0160901ff42a885d7e7ea0f38cc772e2")
@@ -229,6 +231,11 @@ class Sirius(CMakePackage, CudaPackage, ROCmPackage):
     depends_on("eigen@3.4.0:", when="@7.3.2: +tests")
 
     depends_on("costa+shared", when="@7.3.2:")
+
+    with when("@7.5: +memory_pool"):
+        depends_on("umpire")
+        depends_on("umpire+cuda", when="+cuda")
+        depends_on("umpire+rocm", when="+rocm")
 
     patch("strip-spglib-include-subfolder.patch", when="@6.1.5")
     patch("link-libraries-fortran.patch", when="@6.1.5")

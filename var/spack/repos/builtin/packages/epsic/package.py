@@ -13,7 +13,7 @@ class Epsic(AutotoolsPackage):
     homepage = "https://github.com/straten/epsic"
     git = "https://github.com/straten/epsic.git"
 
-    version("develop", default=True)
+    version("develop")
 
     # Version to match
     # https://github.com/lwa-project/pulsar/blob/master/SoftwareStack.md

@@ -32,7 +32,7 @@ RUN find -L {{ paths.view }}/* -type f -exec readlink -f '{}' \; | \
     xargs file -i | \
     grep 'charset=binary' | \
     grep 'x-executable\|x-archive\|x-sharedlib' | \
-    awk -F: '{print $1}' | xargs strip -s
+    awk -F: '{print $1}' | xargs strip
 {% endif %}
 
 # Modifications to the environment that are necessary to run
