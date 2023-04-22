@@ -28,7 +28,7 @@ from spack.util.prefix import Prefix
 from spack.util.string import plural
 
 #: Stand-alone test failure info type
-TEST_FAILURE_TYPE = Tuple[BaseException, str]
+TestFailureType = Tuple[BaseException, str]
 
 #: Name of the test suite's (JSON) lock file
 test_suite_filename = "test_suite.lock"
@@ -42,10 +42,8 @@ spack_install_test_log = "install-time-test-log.txt"
 
 ListOrStringType = Union[str, List[str]]
 LogType = Union["tty.log.nixlog", "tty.log.winlog"]
-SpecType = List[Spec]
 
 
-@enum.unique
 class TestStatus(enum.Enum):
     """Names of different stand-alone test states."""
 
@@ -106,17 +104,25 @@ def cache_extra_test_sources(pkg: "spack.package_base.PackageBase", srcs: ListOr
         srcs: relative path for file(s) and or subdirectory(ies) located in
             the staged source path that are to be copied to the corresponding
             location(s) under the install testing directory.
+
+    Raises:
+        IOError: if any of the source paths do not exist under the build stage
+        ValueError: if any of the source paths are absolute
     """
     paths = [srcs] if isinstance(srcs, str) else srcs
+    if any(os.path.isabs(path) for path in paths):
+        raise ValueError("Only relative paths can be used to copy test sources")
 
     for path in paths:
         src_path = os.path.join(pkg.stage.source_path, path)
         dest_path = os.path.join(install_test_root(pkg), path)
         if os.path.isdir(src_path):
             fs.install_tree(src_path, dest_path)
-        else:
+        elif os.path.exists(src_path):
             fs.mkdirp(os.path.dirname(dest_path))
             fs.copy(src_path, dest_path)
+        else:
+            raise IOError(f"Source path ('{path}') for the copy does not exist")
 
 
 def check_outputs(expected: Union[list, set, str], actual: str):
@@ -211,7 +217,7 @@ class PackageTest(object):
 
         self.counts: "Counter" = Counter()  # type: ignore[attr-defined]
         self.pkg = pkg
-        self.test_failures: List[TEST_FAILURE_TYPE] = []
+        self.test_failures: List[TestFailureType] = []
         self.test_parts: List[Tuple[str, "TestStatus"]] = []
         self.test_log_file: str
         self.pkg_id: str
@@ -1150,7 +1156,7 @@ class SkipTest(spack.error.SpackError):
 class TestFailure(spack.error.SpackError):
     """Raised when package tests have failed for an installation."""
 
-    def __init__(self, failures: List[TEST_FAILURE_TYPE]):
+    def __init__(self, failures: List[TestFailureType]):
         # Failures are all exceptions
         num = len(failures)
         msg = "{0} failed.\n".format(plural(num, "test"))

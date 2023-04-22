@@ -195,6 +195,17 @@ def test_cache_extra_sources(install_mockery, spec, sources, extras, expect):
     shutil.rmtree(os.path.dirname(source_path))
 
 
+def test_cache_extra_sources_fails(install_mockery):
+    s = spack.spec.Spec("a").concretized()
+    s.package.spec.concretize()
+
+    with pytest.raises(ValueError, match="Only relative paths"):
+        s.package.cache_extra_test_sources(["a/b", "/c/d"])
+
+    with pytest.raises(IOError, match="does not exist"):
+        s.package.cache_extra_test_sources("no-such-file")
+
+
 def test_package_exes_and_libs():
     with pytest.raises(spack.error.SpackError, match="defines both"):
 
