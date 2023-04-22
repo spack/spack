@@ -269,8 +269,10 @@ class PyNumpy(PythonPackage):
                 f.write("libraries = {0}\n".format(lapackblas_lib_names))
                 write_library_dirs(f, lapackblas_lib_dirs)
                 f.write("include_dirs = {0}\n".format(lapackblas_header_dirs))
-                f.write("symbol_suffix = {0}\n".format(
-                    spec["openblas"].variants["symbol_suffix"].value)
+                f.write(
+                    "symbol_suffix = {0}\n".format(
+                        spec["openblas"].variants["symbol_suffix"].value
+                    )
                 )
 
             if "^libflame" in spec or "^amdlibflame" in spec:
