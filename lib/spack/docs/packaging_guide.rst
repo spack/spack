@@ -5074,9 +5074,23 @@ installed example.
            example = which(self.prefix.bin.example)
            example()
 
-Spack outputs ``test_always_fails: use assert to always fail`` before running
-``test_always_fails``. Similarly, it logs ``test_example: run installed example`` 
-before running ``test_example``.
+Output showing the identification of each test part after runnig the tests
+is illustrated below.
+
+.. code-block:: console
+
+   $ spack test run --alias mypackage mypackage@1.0
+   ==> Spack test mypackage
+   ...
+   $ spack test results -l mypackage
+   ==> Results for test suite 'mypackage':
+   ...
+   ==> [2023-03-10-16:03:56.625204] test: test_always_fails: use assert to always fail
+   ...
+   FAILED
+   ==> [2023-03-10-16:03:56.625439] test: test_example: run installed example
+   ...
+   PASSED
 
 
 .. note::
@@ -5139,11 +5153,28 @@ embedded test parts.
                     exe = which(join_path(self.prefix.bin, example))
                     exe()
 
-Spack will output ``test_example: run installed examples`` before executing
-``test_example``, then ``test_example_ex1: run installed ex1`` before the first
-test part and ``test_example_ex2: run installed ex2`` before the second test
-part. The test ``test_example_ex2`` will run whether or not ``test_example_ex1``
-succeeds.
+In this case, there will be an implicit test part for ``test_example``
+and separate sub-parts for ``ex1`` and ``ex2``. The second sub-part
+will be executed regardless of whether the first passes. The test
+log for a run where the first executable fails and the second passes
+is illustrated below.
+
+.. code-block:: console
+
+   $ spack test run --alias mypackage mypackage@1.0
+   ==> Spack test mypackage
+   ...
+   $ spack test results -l mypackage
+   ==> Results for test suite 'mypackage':
+   ...
+   ==> [2023-03-10-16:03:56.625204] test: test_example: run installed examples
+   ==> [2023-03-10-16:03:56.625439] test: test_example_ex1: run installed ex1
+   ...
+   FAILED
+   ==> [2023-03-10-16:03:56.625555] test: test_example_ex2: run installed ex2
+   ...
+   PASSED
+   ...
 
 .. warning::
 
@@ -5262,16 +5293,17 @@ and using ``foo.c`` in a test method is illustrated below.
            src_dir = join_path(
                self.test_suite.current_test_cache_dir, "examples"
            )
-           cc = which(os.environ["CC"])
-           cc(
-               "-L{0}".format(self.prefix.lib),
-               "-I{0}".format(self.prefix.include),
-               "{0}.c".format(exe),
-               "-o",
-               exe
-           )
-           foo = which(exe)
-           foo()
+           with working_dir(src_dir):
+               cc = which(os.environ["CC"])
+               cc(
+                   "-L{0}".format(self.prefix.lib),
+                   "-I{0}".format(self.prefix.include),
+                   "{0}.c".format(exe),
+                   "-o",
+                   exe
+               )
+               foo = which(exe)
+               foo()
 
 In this case, the method copies the associated files from the build
 stage, **after** the software is installed, to the package's test
