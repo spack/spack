@@ -4630,7 +4630,7 @@ Spack infers the status of a build based on the contents of the install
 prefix. Success is assumed if anything (e.g., a file, directory) is
 written after ``install()`` completes. Otherwise, the build is assumed
 to have failed. However, the presence of install prefix contents
-is not a sufficient indicator of success so spack supports the addition
+is not a sufficient indicator of success so Spack supports the addition
 of tests that can be performed during `spack install` processing.
 
 Consider a simple autotools build using the following commands:
@@ -4659,12 +4659,11 @@ checks to be performed after one or more installation phases.
 .. note::
 
    Build-time tests are performed when the ``--test`` option is passed
-   to ``spack test``.
+   to ``spack install``.
 
 .. warning::
 
-   Any build-time test failure results in a failed installation of the
-   software.
+   Build-time test failures result in a failed installation of the software.
 
 
 .. _sanity-checks:
@@ -4699,9 +4698,8 @@ that eight paths must exist within the installation prefix after the
        sanity_check_is_dir  = ["bin", "config", "docs", "reframe", "tutorials",
                                "unittests", "cscs-checks"]
 
-When you run `spack install` with tests enabled, Spack will ensure that
+When you run ``spack install`` with tests enabled, Spack will ensure that
 a successfully installed package has the required files and or directories.
-If any are missing then the package installation fails.
 
 For example, running:
 
@@ -4723,8 +4721,8 @@ and the following **directories**:
 * ``self.prefix/unittests``
 * ``self.prefix/cscs-checks``
 
-If any of these paths are missing, then Spack considers the installation to
-have failed.
+If **any** of these paths are missing, then Spack considers the installation
+to have failed.
 
 .. note::
 
