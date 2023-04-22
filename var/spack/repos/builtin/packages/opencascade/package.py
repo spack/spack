@@ -20,6 +20,11 @@ class Opencascade(CMakePackage):
     maintainers("wdconinc")
 
     version(
+        "7.7.1",
+        extension="tar.gz",
+        sha256="f413d30a8a06d6164e94860a652cbc96ea58fe262df36ce4eaa92a9e3561fd12",
+    )
+    version(
         "7.7.0",
         extension="tar.gz",
         sha256="075ca1dddd9646fcf331a809904925055747a951a6afd07a463369b9b441b445",
