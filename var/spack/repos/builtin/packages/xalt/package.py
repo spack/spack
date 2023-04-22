@@ -16,9 +16,10 @@ from spack.package import *
 
 
 class Xalt(AutotoolsPackage):
-    """XALT is a lightweight software tool for any Linux cluster, workstation, or high-end supercomputer to track
-    executable information and linkage of static shared and dynamically linked libraries. When the code is executed,
-    wrappers intercept both GNU linker (ld) to capture linkage information and environmental variables."""
+    """XALT is a lightweight software tool for any Linux cluster, workstation,
+    or high-end supercomputer to track executable information and linkage of static
+    shared and dynamically linked libraries. When the code is executed, wrappers intercept
+    both GNU linker (ld) to capture linkage information and environmental variables."""
 
     homepage = "https://xalt.readthedocs.io/en/latest/index.html"
     url = "https://github.com/xalt/xalt/archive/refs/tags/xalt-2.10.45.tar.gz"
@@ -30,4 +31,3 @@ class Xalt(AutotoolsPackage):
 
     depends_on("lmod")
     depends_on("lua")
-
