@@ -98,6 +98,8 @@ class Sensei(CMakePackage):
     conflicts("+ascent", when="+libsim")
 
     # Patches
+    # https://github.com/SENSEI-insitu/SENSEI/pull/114
+    patch("adios2-remove-deprecated-functions.patch", when="@4:4.1 ^adios2@2.9:")
     patch("libsim-add-missing-symbol-visibility-pr67.patch", when="@4.0.0")
     patch("sensei-find-mpi-component-cxx-pr68.patch", when="@4.0.0")
     patch("sensei-install-external-pugixml-pr69.patch", when="@4.0.0")

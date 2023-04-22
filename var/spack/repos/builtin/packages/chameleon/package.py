@@ -16,7 +16,7 @@ class Chameleon(CMakePackage, CudaPackage):
     maintainers("fpruvost")
 
     version("master", branch="master", submodules=True)
-    version("1.1.0", "e64d0438dfaf5effb3740e53f3ab017d12744b85a138b2ef702a81df559126df")
+    version("1.1.0", sha256="e64d0438dfaf5effb3740e53f3ab017d12744b85a138b2ef702a81df559126df")
 
     # cmake's specific
     variant("shared", default=True, description="Build chameleon as a shared library")

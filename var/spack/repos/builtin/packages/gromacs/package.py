@@ -164,29 +164,31 @@ class Gromacs(CMakePackage, CudaPackage):
 
     depends_on("mpi", when="+mpi")
 
+    # Plumed 2.8.2 needs Gromacs 2022.5 2021.7, 2020.7, 2019.6
     # Plumed 2.8.1 needs Gromacs 2022.3 2021.6, 2020.7, 2019.6
-    # Plumed 2.8.0 needs Gromacs 2021.4, 2020.6, 2019.6
-    # Plumed 2.7.5 needs Gromacs 2021.5, 2020.6, 2019.6
-    # Plumed 2.7.4 needs Gromacs 2021.4, 2020.6, 2019.6
-    # Plumed 2.7.3 needs Gromacs 2021.4, 2020.6, 2019.6
-    # Plumed 2.7.2 needs Gromacs 2021,   2020.6, 2019.6
-    # Plumed 2.7.1 needs Gromacs 2021,   2020.5, 2019.6
-    # Plumed 2.7.0 needs Gromacs         2020.4, 2019.6
-    # Plumed 2.6.6 needs Gromacs         2020.4, 2019.6, 2018.8
-    # Plumed 2.6.5 needs Gromacs         2020.4, 2019.6, 2018.8
-    # Plumed 2.6.4 needs Gromacs         2020.4, 2019.6, 2018.8
-    # Plumed 2.6.3 needs Gromacs         2020.4, 2019.6, 2018.8
-    # Plumed 2.6.2 needs Gromacs         2020.4, 2019.6, 2018.8
-    # Plumed 2.6.1 needs Gromacs         2020.2, 2019.6, 2018.8
-    # Plumed 2.6.0 needs Gromacs                 2019.4, 2018.8
-    # Plumed 2.5.7 needs Gromacs                 2019.4, 2018.8, 2016.6
-    # Plumed 2.5.6 needs Gromacs                 2019.4, 2018.8, 2016.6
-    # Plumed 2.5.5 needs Gromacs                 2019.4, 2018.8, 2016.6
-    # Plumed 2.5.4 needs Gromacs                 2019.4, 2018.8, 2016.6
-    # Plumed 2.5.3 needs Gromacs                 2019.4, 2018.8, 2016.6
-    # Plumed 2.5.2 needs Gromacs                 2019.2, 2018.6, 2016.6
-    # Plumed 2.5.1 needs Gromacs                         2018.6, 2016.6
-    # Plumed 2.5.0 needs Gromacs                         2018.4, 2016.5
+    # Plumed 2.8.0 needs Gromacs        2021.4, 2020.6, 2019.6
+    # Plumed 2.7.6 needs Gromacs        2021.5, 2020.6, 2019.6
+    # Plumed 2.7.5 needs Gromacs        2021.5, 2020.6, 2019.6
+    # Plumed 2.7.4 needs Gromacs        2021.4, 2020.6, 2019.6
+    # Plumed 2.7.3 needs Gromacs        2021.4, 2020.6, 2019.6
+    # Plumed 2.7.2 needs Gromacs        2021,   2020.6, 2019.6
+    # Plumed 2.7.1 needs Gromacs        2021,   2020.5, 2019.6
+    # Plumed 2.7.0 needs Gromacs                2020.4, 2019.6
+    # Plumed 2.6.6 needs Gromacs                2020.4, 2019.6, 2018.8
+    # Plumed 2.6.5 needs Gromacs                2020.4, 2019.6, 2018.8
+    # Plumed 2.6.4 needs Gromacs                2020.4, 2019.6, 2018.8
+    # Plumed 2.6.3 needs Gromacs                2020.4, 2019.6, 2018.8
+    # Plumed 2.6.2 needs Gromacs                2020.4, 2019.6, 2018.8
+    # Plumed 2.6.1 needs Gromacs                2020.2, 2019.6, 2018.8
+    # Plumed 2.6.0 needs Gromacs                        2019.4, 2018.8
+    # Plumed 2.5.7 needs Gromacs                        2019.4, 2018.8, 2016.6
+    # Plumed 2.5.6 needs Gromacs                        2019.4, 2018.8, 2016.6
+    # Plumed 2.5.5 needs Gromacs                        2019.4, 2018.8, 2016.6
+    # Plumed 2.5.4 needs Gromacs                        2019.4, 2018.8, 2016.6
+    # Plumed 2.5.3 needs Gromacs                        2019.4, 2018.8, 2016.6
+    # Plumed 2.5.2 needs Gromacs                        2019.2, 2018.6, 2016.6
+    # Plumed 2.5.1 needs Gromacs                                2018.6, 2016.6
+    # Plumed 2.5.0 needs Gromacs                                2018.4, 2016.5
 
     # Above dependencies can be verified, and new versions added, by going to
     # https://github.com/plumed/plumed2/tree/v2.7.1/patches
@@ -194,18 +196,22 @@ class Gromacs(CMakePackage, CudaPackage):
 
     depends_on("plumed+mpi", when="+plumed+mpi")
     depends_on("plumed~mpi", when="+plumed~mpi")
+    depends_on("plumed@2.8.2+mpi", when="@2022.5+plumed+mpi")
+    depends_on("plumed@2.8.2~mpi", when="@2022.5+plumed~mpi")
     depends_on("plumed@2.8.1+mpi", when="@2022.3+plumed+mpi")
     depends_on("plumed@2.8.1~mpi", when="@2022.3+plumed~mpi")
+    depends_on("plumed@2.8.2+mpi", when="@2021.7+plumed+mpi")
+    depends_on("plumed@2.8.2~mpi", when="@2021.7+plumed~mpi")
     depends_on("plumed@2.8.1+mpi", when="@2021.6+plumed+mpi")
     depends_on("plumed@2.8.1~mpi", when="@2021.6+plumed~mpi")
-    depends_on("plumed@2.8.1+mpi", when="@2020.7+plumed+mpi")
-    depends_on("plumed@2.8.1~mpi", when="@2020.7+plumed~mpi")
-    depends_on("plumed@2.7.5+mpi", when="@2021.5+plumed+mpi")
-    depends_on("plumed@2.7.5~mpi", when="@2021.5+plumed~mpi")
+    depends_on("plumed@2.7.5:2.7.6+mpi", when="@2021.5+plumed+mpi")
+    depends_on("plumed@2.7.5:2.7.6~mpi", when="@2021.5+plumed~mpi")
     depends_on("plumed@2.7.3:2.8.0+mpi", when="@2021.4+plumed+mpi")
     depends_on("plumed@2.7.3:2.8.0~mpi", when="@2021.4+plumed~mpi")
     depends_on("plumed@2.7.1:2.7.2+mpi", when="@2021+plumed+mpi")
     depends_on("plumed@2.7.1:2.7.2~mpi", when="@2021+plumed~mpi")
+    depends_on("plumed@2.8.1:2.8.2+mpi", when="@2020.7+plumed+mpi")
+    depends_on("plumed@2.8.1:2.8.2~mpi", when="@2020.7+plumed~mpi")
     depends_on("plumed@2.7.2:2.8+mpi", when="@2020.6+plumed+mpi")
     depends_on("plumed@2.7.2:2.8~mpi", when="@2020.6+plumed~mpi")
     depends_on("plumed@2.7.1+mpi", when="@2020.5+plumed+mpi")
@@ -214,8 +220,8 @@ class Gromacs(CMakePackage, CudaPackage):
     depends_on("plumed@2.6.2:2.7.0~mpi", when="@2020.4+plumed~mpi")
     depends_on("plumed@2.6.1+mpi", when="@2020.2+plumed+mpi")
     depends_on("plumed@2.6.1~mpi", when="@2020.2+plumed~mpi")
-    depends_on("plumed@2.6.1:2.8.1+mpi", when="@2019.6+plumed+mpi")
-    depends_on("plumed@2.6.1:2.8.1~mpi", when="@2019.6+plumed~mpi")
+    depends_on("plumed@2.6.1:2.8.2+mpi", when="@2019.6+plumed+mpi")
+    depends_on("plumed@2.6.1:2.8.2~mpi", when="@2019.6+plumed~mpi")
     depends_on("plumed@2.5.3:2.6.0+mpi", when="@2019.4+plumed+mpi")
     depends_on("plumed@2.5.3:2.6.0~mpi", when="@2019.4+plumed~mpi")
     depends_on("plumed@2.5.2+mpi", when="@2019.2+plumed+mpi")
