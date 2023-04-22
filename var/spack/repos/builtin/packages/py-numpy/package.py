@@ -87,12 +87,12 @@ class PyNumpy(PythonPackage):
     variant("lapack", default=True, description="Build with LAPACK support")
 
     # Based on wheel availability on PyPI
-    depends_on("python@:3.7", when="@1.14.5:1.17.2", type=("build", "link", "run"))
-    depends_on("python@:3.8", when="@1.17.3:1.19.2", type=("build", "link", "run"))
-    depends_on("python@:3.9", when="@1.19.3:1.21.1", type=("build", "link", "run"))
-    depends_on("python@:3.10", when="@1.21.2:1.21", type=("build", "link", "run"))
-    depends_on("python@3.8:3.10", when="@1.22:1.23.1", type=("build", "link", "run"))
     depends_on("python@3.8:3.11", when="@1.23.2:", type=("build", "link", "run"))
+    depends_on("python@3.8:3.10", when="@1.22:1.23.1", type=("build", "link", "run"))
+    depends_on("python@:3.10", when="@1.21.2:1.21", type=("build", "link", "run"))
+    depends_on("python@:3.9", when="@1.19.3:1.21.1", type=("build", "link", "run"))
+    depends_on("python@:3.8", when="@1.17.3:1.19.2", type=("build", "link", "run"))
+    depends_on("python@:3.7", when="@1.14.5:1.17.2", type=("build", "link", "run"))
 
     # https://github.com/spack/spack/pull/32078
     depends_on("py-setuptools@:63", type=("build", "run"))
