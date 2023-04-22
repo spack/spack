@@ -18,7 +18,7 @@ class AwsOfiRccl(AutotoolsPackage):
 
     maintainers("bvanessen")
 
-    version("cxi", branch="cxi", default=True)
+    version("cxi", branch="cxi", preferred=True)
     version("master", branch="master")
 
     variant("trace", default=False, description="Enable printing trace messages")

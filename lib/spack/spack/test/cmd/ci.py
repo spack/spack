@@ -201,6 +201,7 @@ spack:
         tags: [donotcare]
     - reindex-job:
         script:: [hello, world]
+        custom_attribute: custom!
   cdash:
     build-group: Not important
     url: https://my.fake.cdash
@@ -235,6 +236,7 @@ spack:
             rebuild_job = yaml_contents["rebuild-index"]
             expected = "spack buildcache update-index --keys --mirror-url {0}".format(mirror_url)
             assert rebuild_job["script"][0] == expected
+            assert rebuild_job["custom_attribute"] == "custom!"
 
             assert "variables" in yaml_contents
             assert "SPACK_ARTIFACTS_ROOT" in yaml_contents["variables"]
@@ -481,7 +483,7 @@ spack:
             assert filecmp.cmp(orig_file, copy_to_file) is True
 
 
-def test_ci_generate_with_custom_scripts(
+def test_ci_generate_with_custom_settings(
     tmpdir,
     working_env,
     mutable_mock_env_path,
@@ -491,7 +493,7 @@ def test_ci_generate_with_custom_scripts(
     ci_base_environment,
     mock_binary_index,
 ):
-    """Test use of user-provided scripts"""
+    """Test use of user-provided scripts and attributes"""
     filename = str(tmpdir.join("spack.yaml"))
     with open(filename, "w") as f:
         f.write(
@@ -523,6 +525,10 @@ spack:
             - spack -d ci rebuild
           after_script:
             - rm -rf /some/path/spack
+          custom_attribute: custom!
+          artifacts:
+            paths:
+            - some/custom/artifact
 """
         )
 
@@ -540,40 +546,40 @@ spack:
 
                 found_it = False
 
-                assert "variables" in yaml_contents
                 global_vars = yaml_contents["variables"]
-                assert "SPACK_VERSION" in global_vars
                 assert global_vars["SPACK_VERSION"] == "0.15.3"
-                assert "SPACK_CHECKOUT_VERSION" in global_vars
                 assert global_vars["SPACK_CHECKOUT_VERSION"] == "v0.15.3"
 
                 for ci_key in yaml_contents.keys():
                     ci_obj = yaml_contents[ci_key]
                     if "archive-files" in ci_key:
                         # Ensure we have variables, possibly interpolated
-                        assert "variables" in ci_obj
                         var_d = ci_obj["variables"]
-                        assert "ONE" in var_d
                         assert var_d["ONE"] == "plain-string-value"
-                        assert "TWO" in var_d
                         assert var_d["TWO"] == "${INTERP_ON_BUILD}"
 
                         # Ensure we have scripts verbatim
-                        assert "before_script" in ci_obj
-                        before_script = ci_obj["before_script"]
-                        assert before_script[0] == "mkdir /some/path"
-                        assert before_script[1] == "pushd /some/path"
-                        assert before_script[2] == "git clone ${SPACK_REPO}"
-                        assert before_script[3] == "cd spack"
-                        assert before_script[4] == "git checkout ${SPACK_REF}"
-                        assert before_script[5] == "popd"
+                        assert ci_obj["before_script"] == [
+                            "mkdir /some/path",
+                            "pushd /some/path",
+                            "git clone ${SPACK_REPO}",
+                            "cd spack",
+                            "git checkout ${SPACK_REF}",
+                            "popd",
+                        ]
+                        assert ci_obj["script"][1].startswith("cd ")
+                        ci_obj["script"][1] = "cd ENV"
+                        assert ci_obj["script"] == [
+                            "spack -d ci rebuild",
+                            "cd ENV",
+                            "spack env activate --without-view .",
+                            "spack ci rebuild",
+                        ]
+                        assert ci_obj["after_script"] == ["rm -rf /some/path/spack"]
 
-                        assert "script" in ci_obj
-                        assert ci_obj["script"][0] == "spack -d ci rebuild"
-
-                        assert "after_script" in ci_obj
-                        after_script = ci_obj["after_script"][0]
-                        assert after_script == "rm -rf /some/path/spack"
+                        # Ensure we have the custom attributes
+                        assert "some/custom/artifact" in ci_obj["artifacts"]["paths"]
+                        assert ci_obj["custom_attribute"] == "custom!"
 
                         found_it = True
 
@@ -1223,6 +1229,7 @@ spack:
        tags:
          - nonbuildtag
        image: basicimage
+       custom_attribute: custom!
 """.format(
         mirror_url
     )
@@ -1264,6 +1271,7 @@ spack:
                 assert "nonbuildtag" in the_elt["tags"]
                 assert "image" in the_elt
                 assert the_elt["image"] == "basicimage"
+                assert the_elt["custom_attribute"] == "custom!"
 
             outputfile_not_pruned = str(tmpdir.join("unpruned_pipeline.yml"))
             ci_cmd("generate", "--no-prune-dag", "--output-file", outputfile_not_pruned)
@@ -1282,6 +1290,7 @@ spack:
                         job_vars = the_elt["variables"]
                         assert "SPACK_SPEC_NEEDS_REBUILD" in job_vars
                         assert job_vars["SPACK_SPEC_NEEDS_REBUILD"] == "False"
+                        assert the_elt["custom_attribute"] == "custom!"
                         found_spec_job = True
 
                 assert found_spec_job
@@ -2005,6 +2014,8 @@ spack:
           tags:
             - donotcare
           image: donotcare
+    - cleanup-job:
+        custom_attribute: custom!
 """
         )
 
@@ -2020,6 +2031,8 @@ spack:
 
                 assert "cleanup" in pipeline_doc
                 cleanup_job = pipeline_doc["cleanup"]
+
+                assert cleanup_job["custom_attribute"] == "custom!"
 
                 assert "script" in cleanup_job
                 cleanup_task = cleanup_job["script"][0]
@@ -2138,6 +2151,7 @@ spack:
           IMPORTANT_INFO: avalue
         script::
           - echo hello
+        custom_attribute: custom!
 """
         )
 
@@ -2157,6 +2171,7 @@ spack:
             signing_job_tags = signing_job["tags"]
             for expected_tag in ["notary", "protected", "aws"]:
                 assert expected_tag in signing_job_tags
+            assert signing_job["custom_attribute"] == "custom!"
 
 
 def test_ci_reproduce(

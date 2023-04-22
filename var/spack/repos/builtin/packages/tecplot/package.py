@@ -20,11 +20,13 @@ class Tecplot(Package):
     maintainers("LRWeber")
 
     version(
-        "2022r2", "a93a740bd8a8aa6e8cac278793cd5881f5c530e12a535a882d9c5d4af02fd45c", expand=False
+        "2022r2",
+        sha256="a93a740bd8a8aa6e8cac278793cd5881f5c530e12a535a882d9c5d4af02fd45c",
+        expand=False,
     )
     # Deprecated versions
-    version("2018r2", "d3cf54a7555e0259b7ba0d82fef23bc3", expand=False, deprecated=True)
-    version("2017r1", "06a8057d33a519607720d4c621cd3f50", expand=False, deprecated=True)
+    version("2018r2", md5="d3cf54a7555e0259b7ba0d82fef23bc3", expand=False, deprecated=True)
+    version("2017r1", md5="06a8057d33a519607720d4c621cd3f50", expand=False, deprecated=True)
 
     # Licensing
     license_required = True
