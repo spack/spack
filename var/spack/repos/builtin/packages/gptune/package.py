@@ -18,6 +18,7 @@ class Gptune(CMakePackage):
     maintainers("liuyangzhuan")
 
     version("master", branch="master")
+    version("4.0.0", sha256="4f954a810d83b73f5abe5b15b79e3ed5b7ebf7bc0ae7335d27b68111bd078102")
     version("3.0.0", sha256="e19bfc3033fff11ff8c20cae65b88b7ca005d2c4e4db047f9f23226126ec92fa")
     version("2.1.0", sha256="737e0a1d83f66531098beafa73dd479f12def576be83b1c7b8ea5f1615d60a53")
 
@@ -33,7 +34,8 @@ class Gptune(CMakePackage):
     depends_on("scalapack", type="link")
     depends_on("py-setuptools", type="build")
     depends_on("py-ipyparallel", type=("build", "run"))
-    depends_on("py-numpy@:1.21.5", type=("build", "run"))
+    depends_on("py-numpy@:1.24", type=("build", "run"), when="@:4.0.0")
+    depends_on("py-numpy@:1.21.5", type=("build", "run"), when="@:2.1.0")
     depends_on("py-pandas", type=("build", "run"))
     depends_on("py-joblib", type=("build", "run"))
     depends_on("py-scikit-learn", type=("build", "run"))
