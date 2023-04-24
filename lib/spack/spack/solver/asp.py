@@ -2409,10 +2409,10 @@ class SpecBuilder(object):
                             sources.append(cmd_specs[name])
                         for source in sources:
                             all_src_flags.extend(source.compiler_flags.get(flag_type, []))
-                        extend_flag_list(from_sources, llnl.util.lang.dedupe(all_src_flags))
+                        extend_flag_list(from_sources, all_src_flags)
 
                 # compiler flags from compilers config are lowest precedence
-                ordered_compiler_flags = from_compiler + from_sources
+                ordered_compiler_flags = list(llnl.util.lang.dedupe(from_compiler + from_sources))
                 compiler_flags = spec.compiler_flags.get(flag_type, [])
 
                 msg = "%s does not equal %s" % (set(compiler_flags), set(ordered_compiler_flags))
