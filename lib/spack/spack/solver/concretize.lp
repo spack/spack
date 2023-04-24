@@ -192,10 +192,18 @@ attr(Name, A1, A2)         :- impose(ID), imposed_constraint(ID, Name, A1, A2).
 attr(Name, A1, A2, A3)     :- impose(ID), imposed_constraint(ID, Name, A1, A2, A3).
 attr(Name, A1, A2, A3, A4) :- impose(ID), imposed_constraint(ID, Name, A1, A2, A3, A4).
 
+% If something is mentioned as a possible constraint, allow for the possibility
+% of imposing it
 {impose(ID)} :- imposed_constraint(ID, Name, A1).
 {impose(ID)} :- imposed_constraint(ID, Name, A1, A2).
 {impose(ID)} :- imposed_constraint(ID, Name, A1, A2, A3).
 {impose(ID)} :- imposed_constraint(ID, Name, A1, A2, A3, A4).
+
+% Packages can only set attrs if they are part of the DAG
+attr("node", Package) :- attr(_, Package), not attr("virtual_node", Package).
+attr("node", Package) :- attr(_, Package, _), not attr("virtual_node", Package).
+attr("node", Package) :- attr(_, Package, _, _), not attr("virtual_node", Package).
+attr("node", Package) :- attr(_, Package, _, _, _), not attr("virtual_node", Package).
 
 % we cannot have additional variant values when we are working with concrete specs
 :- attr("node", Package), attr("hash", Package, Hash),
