@@ -2403,8 +2403,13 @@ class SpecBuilder(object):
 
                     # add flags from each source, lowest to highest precedence
                     for name in sorted_sources:
-                        source = self._specs[name] if name in self._hash_specs else cmd_specs[name]
-                        extend_flag_list(from_sources, source.compiler_flags.get(flag_type, []))
+                        all_src_flags = list()
+                        sources = [self._specs[name]]
+                        if name in cmd_specs:
+                            sources.append(cmd_specs[name])
+                        for source in sources:
+                            all_src_flags.extend(source.compiler_flags.get(flag_type, []))
+                        extend_flag_list(from_sources, llnl.util.lang.dedupe(all_src_flags))
 
                 # compiler flags from compilers config are lowest precedence
                 ordered_compiler_flags = from_compiler + from_sources

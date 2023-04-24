@@ -192,6 +192,11 @@ attr(Name, A1, A2)         :- impose(ID), imposed_constraint(ID, Name, A1, A2).
 attr(Name, A1, A2, A3)     :- impose(ID), imposed_constraint(ID, Name, A1, A2, A3).
 attr(Name, A1, A2, A3, A4) :- impose(ID), imposed_constraint(ID, Name, A1, A2, A3, A4).
 
+{impose(ID)} :- imposed_constraint(ID, Name, A1).
+{impose(ID)} :- imposed_constraint(ID, Name, A1, A2).
+{impose(ID)} :- imposed_constraint(ID, Name, A1, A2, A3).
+{impose(ID)} :- imposed_constraint(ID, Name, A1, A2, A3, A4).
+
 % we cannot have additional variant values when we are working with concrete specs
 :- attr("node", Package), attr("hash", Package, Hash),
    attr("variant_value", Package, Variant, Value),
