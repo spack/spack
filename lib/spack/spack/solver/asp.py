@@ -103,6 +103,7 @@ version_origin_fields = [
     "dev_spec",
     "external",
     "packages_yaml",
+    "package_requirements",
     "package_py",
     "installed",
 ]
@@ -115,8 +116,9 @@ version_provenance = collections.namedtuple(  # type: ignore
     "VersionProvenance", version_origin_fields
 )(**{name: i for i, name in enumerate(version_origin_fields)})
 
-#: Named tuple to contain information on declared versions
+
 DeclaredVersion = collections.namedtuple("DeclaredVersion", ["version", "idx", "origin"])
+
 
 # Below numbers are used to map names of criteria to the order
 # they appear in the solution. See concretize.lp
@@ -584,6 +586,54 @@ def extract_args(model, predicate_name):
     return [stringify(sym.arguments) for sym in model if sym.name == predicate_name]
 
 
+class ErrorHandler:
+    def __init__(self, model):
+        self.model = model
+        self.error_args = extract_args(model, "error")
+
+    def multiple_values_error(self, attribute, pkg):
+        return f'Cannot select a single "{attribute}" for package "{pkg}"'
+
+    def no_value_error(self, attribute, pkg):
+        return f'Cannot select a single "{attribute}" for package "{pkg}"'
+
+    def handle_error(self, msg, *args):
+        """Handle an error state derived by the solver."""
+        if msg == "multiple_values_error":
+            return self.multiple_values_error(*args)
+
+        if msg == "no_value_error":
+            return self.no_value_error(*args)
+
+        # For variant formatting, we sometimes have to construct specs
+        # to format values properly. Find/replace all occurances of
+        # Spec(...) with the string representation of the spec mentioned
+        msg = msg.format(*args)
+        specs_to_construct = re.findall(r"Spec\(([^)]*)\)", msg)
+        for spec_str in specs_to_construct:
+            msg = msg.replace("Spec(%s)" % spec_str, str(spack.spec.Spec(spec_str)))
+
+        return msg
+
+    def message(self, errors) -> str:
+        messages = [
+            f"  {idx+1: 2}. {self.handle_error(msg, *args)}"
+            for idx, (_, msg, args) in enumerate(errors)
+        ]
+        header = "concretization failed for the following reasons:\n"
+        return "\n".join([header] + messages)
+
+    def raise_if_errors(self):
+        if not self.error_args:
+            return
+
+        errors = sorted(
+            [(int(priority), msg, args) for priority, msg, *args in self.error_args], reverse=True
+        )
+        msg = self.message(errors)
+        raise UnsatisfiableSpecError(msg)
+
+
 class PyclingoDriver(object):
     def __init__(self, cores=True):
         """Driver for the Python clingo interface.
@@ -638,20 +688,6 @@ class PyclingoDriver(object):
         self.backend.add_rule([atom], [], choice=choice)
         if choice:
             self.assumptions.append(atom)
-
-    def handle_error(self, msg, *args):
-        """Handle an error state derived by the solver."""
-        msg = msg.format(*args)
-
-        # For variant formatting, we sometimes have to construct specs
-        # to format values properly. Find/replace all occurances of
-        # Spec(...) with the string representation of the spec mentioned
-        specs_to_construct = re.findall(r"Spec\(([^)]*)\)", msg)
-        for spec_str in specs_to_construct:
-            msg = msg.replace("Spec(%s)" % spec_str, str(spack.spec.Spec(spec_str)))
-
-        # TODO: this raises early -- we should handle multiple errors if there are any.
-        raise UnsatisfiableSpecError(msg)
 
     def solve(self, setup, specs, reuse=None, output=None, control=None):
         """Set up the input and solve for dependencies of ``specs``.
@@ -754,10 +790,8 @@ class PyclingoDriver(object):
             min_cost, best_model = min(models)
 
             # first check for errors
-            error_args = extract_args(best_model, "error")
-            errors = sorted((int(priority), msg, args) for priority, msg, *args in error_args)
-            for _, msg, args in errors:
-                self.handle_error(msg, *args)
+            error_handler = ErrorHandler(best_model)
+            error_handler.raise_if_errors()
 
             # build specs from spec attributes in the model
             spec_attrs = [(name, tuple(rest)) for name, *rest in extract_args(best_model, "attr")]
@@ -818,6 +852,9 @@ class SpackSolverSetup(object):
         self.compiler_version_constraints = set()
         self.post_facts = []
 
+        # (ID, CompilerSpec) -> dictionary of attributes
+        self.compiler_info = collections.defaultdict(dict)
+
         # hashes we've already added facts for
         self.seen_hashes = set()
         self.reusable_and_possible = {}
@@ -869,30 +906,6 @@ class SpackSolverSetup(object):
                 )
             )
 
-        for v in most_to_least_preferred:
-            # There are two paths for creating the ref_version in GitVersions.
-            # The first uses a lookup to supply a tag and distance as a version.
-            # The second is user specified and can be resolved as a standard version.
-            # This second option is constrained such that the user version must be known to Spack
-            if (
-                isinstance(v.version, spack.version.GitVersion)
-                and v.version.user_supplied_reference
-            ):
-                ref_version = spack.version.Version(v.version.ref_version_str)
-                self.gen.fact(fn.version_equivalent(pkg.name, v.version, ref_version))
-                # disqualify any git supplied version from user if they weren't already known
-                # versions in spack
-                if not any(ref_version == dv.version for dv in most_to_least_preferred if v != dv):
-                    msg = (
-                        "The reference version '{version}' for package '{package}' is not defined."
-                        " Either choose another reference version or define '{version}' in your"
-                        " version preferences or package.py file for {package}.".format(
-                            package=pkg.name, version=str(ref_version)
-                        )
-                    )
-
-                    raise UnsatisfiableSpecError(msg)
-
         # Declare deprecated versions for this package, if any
         deprecated = self.deprecated_versions[pkg.name]
         for v in sorted(deprecated):
@@ -942,53 +955,40 @@ class SpackSolverSetup(object):
                 self.gen.fact(fn.conflict(pkg.name, trigger_id, constraint_id, conflict_msg))
                 self.gen.newline()
 
-    def available_compilers(self):
+    def compiler_facts(self):
         """Facts about available compilers."""
 
         self.gen.h2("Available compilers")
-        compilers = self.possible_compilers
+        indexed_possible_compilers = list(enumerate(self.possible_compilers))
+        for compiler_id, compiler in indexed_possible_compilers:
+            self.gen.fact(fn.compiler_id(compiler_id))
+            self.gen.fact(fn.compiler_name(compiler_id, compiler.spec.name))
+            self.gen.fact(fn.compiler_version(compiler_id, compiler.spec.version))
 
-        compiler_versions = collections.defaultdict(lambda: set())
-        for compiler in compilers:
-            compiler_versions[compiler.name].add(compiler.version)
+            if compiler.operating_system:
+                self.gen.fact(fn.compiler_os(compiler_id, compiler.operating_system))
 
-        for compiler in sorted(compiler_versions):
-            for v in sorted(compiler_versions[compiler]):
-                self.gen.fact(fn.compiler_version(compiler, v))
+            if compiler.target == "any":
+                compiler.target = None
+
+            if compiler.target is not None:
+                self.gen.fact(fn.compiler_target(compiler_id, compiler.target))
+
+            for flag_type, flags in compiler.flags.items():
+                for flag in flags:
+                    self.gen.fact(fn.compiler_flag(compiler_id, flag_type, flag))
 
             self.gen.newline()
 
-    def compiler_defaults(self):
-        """Set compiler defaults, given a list of possible compilers."""
-        self.gen.h2("Default compiler preferences")
+        # Set compiler defaults, given a list of possible compilers
+        self.gen.h2("Default compiler preferences (CompilerID, Weight)")
 
-        compiler_list = self.possible_compilers.copy()
-        compiler_list = sorted(compiler_list, key=lambda x: (x.name, x.version), reverse=True)
         ppk = spack.package_prefs.PackagePrefs("all", "compiler", all=False)
-        matches = sorted(compiler_list, key=ppk)
+        matches = sorted(indexed_possible_compilers, key=lambda x: ppk(x[1].spec))
 
-        for i, cspec in enumerate(matches):
-            f = fn.default_compiler_preference(cspec.name, cspec.version, i)
+        for weight, (compiler_id, cspec) in enumerate(matches):
+            f = fn.default_compiler_preference(compiler_id, weight)
             self.gen.fact(f)
-
-        # Enumerate target families. This may be redundant, but compilers with
-        # custom versions will be able to concretize properly.
-        for entry in spack.compilers.all_compilers_config():
-            compiler_entry = entry["compiler"]
-            cspec = spack.spec.CompilerSpec(compiler_entry["spec"])
-            if not compiler_entry.get("target", None):
-                continue
-
-            self.gen.fact(
-                fn.compiler_supports_target(cspec.name, cspec.version, compiler_entry["target"])
-            )
-
-    def compiler_supports_os(self):
-        compilers_yaml = spack.compilers.all_compilers_config()
-        for entry in compilers_yaml:
-            c = spack.spec.CompilerSpec(entry["compiler"]["spec"])
-            operating_system = entry["compiler"]["operating_system"]
-            self.gen.fact(fn.compiler_supports_os(c.name, c.version, operating_system))
 
     def package_compiler_defaults(self, pkg):
         """Facts about packages' compiler prefs."""
@@ -998,14 +998,16 @@ class SpackSolverSetup(object):
         if not pkg_prefs or "compiler" not in pkg_prefs:
             return
 
-        compiler_list = self.possible_compilers.copy()
+        compiler_list = self.possible_compilers
         compiler_list = sorted(compiler_list, key=lambda x: (x.name, x.version), reverse=True)
         ppk = spack.package_prefs.PackagePrefs(pkg.name, "compiler", all=False)
-        matches = sorted(compiler_list, key=ppk)
+        matches = sorted(compiler_list, key=lambda x: ppk(x.spec))
 
-        for i, cspec in enumerate(reversed(matches)):
+        for i, compiler in enumerate(reversed(matches)):
             self.gen.fact(
-                fn.node_compiler_preference(pkg.name, cspec.name, cspec.version, -i * 100)
+                fn.node_compiler_preference(
+                    pkg.name, compiler.spec.name, compiler.spec.version, -i * 100
+                )
             )
 
     def package_requirement_rules(self, pkg):
@@ -1028,9 +1030,14 @@ class SpackSolverSetup(object):
         else:
             rules = []
             for requirement in requirements:
-                for policy in ("one_of", "any_of"):
-                    if policy in requirement:
-                        rules.append((pkg_name, policy, requirement[policy]))
+                if isinstance(requirement, str):
+                    # A string represents a spec that must be satisfied. It is
+                    # equivalent to a one_of group with a single element
+                    rules.append((pkg_name, "one_of", [requirement]))
+                else:
+                    for policy in ("one_of", "any_of"):
+                        if policy in requirement:
+                            rules.append((pkg_name, policy, requirement[policy]))
         return rules
 
     def pkg_rules(self, pkg, tests):
@@ -1392,23 +1399,6 @@ class SpackSolverSetup(object):
                 fn.target_weight(pkg_name, str(preferred.architecture.target), i + offset)
             )
 
-    def flag_defaults(self):
-        self.gen.h2("Compiler flag defaults")
-
-        # types of flags that can be on specs
-        for flag in spack.spec.FlagMap.valid_compiler_flags():
-            self.gen.fact(fn.flag_type(flag))
-        self.gen.newline()
-
-        # flags from compilers.yaml
-        compilers = all_compilers_in_config()
-        for compiler in compilers:
-            for name, flags in compiler.flags.items():
-                for flag in flags:
-                    self.gen.fact(
-                        fn.compiler_version_flag(compiler.name, compiler.version, name, flag)
-                    )
-
     def spec_clauses(self, *args, **kwargs):
         """Wrap a call to `_spec_clauses()` into a try/except block that
         raises a comprehensible error message in case of failure.
@@ -1458,6 +1448,7 @@ class SpackSolverSetup(object):
             node_compiler = fn.attr("node_compiler_set")
             node_compiler_version = fn.attr("node_compiler_version_set")
             node_flag = fn.attr("node_flag_set")
+            node_flag_source = fn.attr("node_flag_source")
             node_flag_propagate = fn.attr("node_flag_propagate")
             variant_propagate = fn.attr("variant_propagate")
 
@@ -1471,6 +1462,7 @@ class SpackSolverSetup(object):
             node_compiler = fn.attr("node_compiler")
             node_compiler_version = fn.attr("node_compiler_version")
             node_flag = fn.attr("node_flag")
+            node_flag_source = fn.attr("node_flag_source")
             node_flag_propagate = fn.attr("node_flag_propagate")
             variant_propagate = fn.attr("variant_propagate")
 
@@ -1552,6 +1544,7 @@ class SpackSolverSetup(object):
         for flag_type, flags in spec.compiler_flags.items():
             for flag in flags:
                 clauses.append(f.node_flag(spec.name, flag_type, flag))
+                clauses.append(f.node_flag_source(spec.name, flag_type, spec.name))
                 if not spec.concrete and flag.propagate is True:
                     clauses.append(f.node_flag_propagate(spec.name, flag_type))
 
@@ -1621,7 +1614,12 @@ class SpackSolverSetup(object):
                 # When COMPARING VERSIONS, the '@develop' version is always
                 # larger than other versions. BUT when CONCRETIZING, the largest
                 # NON-develop version is selected by default.
-                return info.get("preferred", False), not version.isdevelop(), version
+                return (
+                    info.get("preferred", False),
+                    not info.get("deprecated", False),
+                    not version.isdevelop(),
+                    version,
+                )
 
             for idx, item in enumerate(sorted(pkg_cls.versions.items(), key=key_fn, reverse=True)):
                 v, version_info = item
@@ -1671,6 +1669,15 @@ class SpackSolverSetup(object):
                     DeclaredVersion(version=dep.version, idx=0, origin=origin)
                 )
                 self.possible_versions[dep.name].add(dep.version)
+                if (
+                    isinstance(dep.version, spack.version.GitVersion)
+                    and dep.version.user_supplied_reference
+                ):
+                    defined_version = spack.version.Version(dep.version.ref_version_str)
+                    self.declared_versions[dep.name].append(
+                        DeclaredVersion(version=defined_version, idx=1, origin=origin)
+                    )
+                    self.possible_versions[dep.name].add(defined_version)
 
     def _supported_targets(self, compiler_name, compiler_version, targets):
         """Get a list of which targets are supported by the compiler.
@@ -1762,8 +1769,6 @@ class SpackSolverSetup(object):
         if granularity == "generic":
             candidate_targets = [t for t in candidate_targets if t.vendor == "generic"]
 
-        compilers = self.possible_compilers
-
         # Add targets explicitly requested from specs
         for spec in specs:
             if not spec.architecture or not spec.architecture.target:
@@ -1780,8 +1785,14 @@ class SpackSolverSetup(object):
                     if ancestor not in candidate_targets:
                         candidate_targets.append(ancestor)
 
-        best_targets = set([uarch.family.name])
-        for compiler in sorted(compilers):
+        best_targets = {uarch.family.name}
+        for compiler_id, compiler in enumerate(self.possible_compilers):
+            # Stub support for cross-compilation, to be expanded later
+            if compiler.target is not None and compiler.target != str(uarch.family):
+                self.gen.fact(fn.compiler_supports_target(compiler_id, compiler.target))
+                self.gen.newline()
+                continue
+
             supported = self._supported_targets(compiler.name, compiler.version, candidate_targets)
 
             # If we can't find supported targets it may be due to custom
@@ -1789,10 +1800,8 @@ class SpackSolverSetup(object):
             # real_version from the compiler object to get more accurate
             # results.
             if not supported:
-                compiler_obj = spack.compilers.compilers_for_spec(compiler)
-                compiler_obj = compiler_obj[0]
                 supported = self._supported_targets(
-                    compiler.name, compiler_obj.real_version, candidate_targets
+                    compiler.name, compiler.real_version, candidate_targets
                 )
 
             if not supported:
@@ -1800,20 +1809,19 @@ class SpackSolverSetup(object):
 
             for target in supported:
                 best_targets.add(target.name)
-                self.gen.fact(
-                    fn.compiler_supports_target(compiler.name, compiler.version, target.name)
-                )
+                self.gen.fact(fn.compiler_supports_target(compiler_id, target.name))
 
-            self.gen.fact(
-                fn.compiler_supports_target(compiler.name, compiler.version, uarch.family.name)
-            )
+            self.gen.fact(fn.compiler_supports_target(compiler_id, uarch.family.name))
+            self.gen.newline()
 
         i = 0  # TODO compute per-target offset?
         for target in candidate_targets:
             self.gen.fact(fn.target(target.name))
             self.gen.fact(fn.target_family(target.name, target.family.name))
-            for parent in sorted(target.parents):
-                self.gen.fact(fn.target_parent(target.name, parent.name))
+            self.gen.fact(fn.target_compatible(target.name, target.name))
+            # Code for ancestor can run on target
+            for ancestor in target.ancestors:
+                self.gen.fact(fn.target_compatible(target.name, ancestor.name))
 
             # prefer best possible targets; weight others poorly so
             # they're not used unless set explicitly
@@ -1824,9 +1832,9 @@ class SpackSolverSetup(object):
                 i += 1
             else:
                 self.default_targets.append((100, target.name))
-
-            self.default_targets = list(sorted(set(self.default_targets)))
             self.gen.newline()
+
+        self.default_targets = list(sorted(set(self.default_targets)))
 
     def virtual_providers(self):
         self.gen.h2("Virtual providers")
@@ -1843,6 +1851,22 @@ class SpackSolverSetup(object):
 
     def generate_possible_compilers(self, specs):
         compilers = all_compilers_in_config()
+
+        # Search for compilers which differs only by aspects that are
+        # not selectable by users using the spec syntax
+        seen, sanitized_list = set(), []
+        for compiler in compilers:
+            key = compiler.spec, compiler.operating_system, compiler.target
+            if key in seen:
+                warnings.warn(
+                    f"duplicate found for {compiler.spec} on "
+                    f"{compiler.operating_system}/{compiler.target}. "
+                    f"Edit your compilers.yaml configuration to remove it."
+                )
+                continue
+            sanitized_list.append(compiler)
+            seen.add(key)
+
         cspecs = set([c.spec for c in compilers])
 
         # add compiler specs from the input line to possibilities if we
@@ -1863,22 +1887,38 @@ class SpackSolverSetup(object):
                     # Allow unknown compilers to exist if the associated spec
                     # is already built
                 else:
-                    cspecs.add(s.compiler)
+                    compiler_cls = spack.compilers.class_for_compiler_name(s.compiler.name)
+                    compilers.append(
+                        compiler_cls(
+                            s.compiler, operating_system=None, target=None, paths=[None] * 4
+                        )
+                    )
                     self.gen.fact(fn.allow_compiler(s.compiler.name, s.compiler.version))
 
-        return cspecs
+        return list(
+            sorted(
+                compilers,
+                key=lambda compiler: (compiler.spec.name, compiler.spec.version),
+                reverse=True,
+            )
+        )
 
     def define_version_constraints(self):
         """Define what version_satisfies(...) means in ASP logic."""
         for pkg_name, versions in sorted(self.version_constraints):
             # version must be *one* of the ones the spec allows.
+            # Also, "possible versions" contain only concrete versions, so satisfies is appropriate
             allowed_versions = [
                 v for v in sorted(self.possible_versions[pkg_name]) if v.satisfies(versions)
             ]
 
             # This is needed to account for a variable number of
             # numbers e.g. if both 1.0 and 1.0.2 are possible versions
-            exact_match = [v for v in allowed_versions if v == versions]
+            exact_match = [
+                v
+                for v in allowed_versions
+                if v == versions and not isinstance(v, spack.version.GitVersion)
+            ]
             if exact_match:
                 allowed_versions = exact_match
 
@@ -1923,14 +1963,12 @@ class SpackSolverSetup(object):
                 self.possible_versions[pkg_name].add(version)
 
     def define_compiler_version_constraints(self):
-        compiler_list = spack.compilers.all_compiler_specs()
-        compiler_list = list(sorted(set(compiler_list)))
         for constraint in sorted(self.compiler_version_constraints):
-            for compiler in compiler_list:
-                if compiler.satisfies(constraint):
+            for compiler_id, compiler in enumerate(self.possible_compilers):
+                if compiler.spec.satisfies(constraint):
                     self.gen.fact(
                         fn.compiler_version_satisfies(
-                            constraint.name, constraint.versions, compiler.version
+                            constraint.name, constraint.versions, compiler_id
                         )
                     )
         self.gen.newline()
@@ -2082,6 +2120,11 @@ class SpackSolverSetup(object):
         self.add_concrete_versions_from_specs(specs, version_provenance.spec)
         self.add_concrete_versions_from_specs(dev_specs, version_provenance.dev_spec)
 
+        req_version_specs = _get_versioned_specs_from_pkg_requirements()
+        self.add_concrete_versions_from_specs(
+            req_version_specs, version_provenance.package_requirements
+        )
+
         self.gen.h1("Concrete input spec definitions")
         self.define_concrete_input_specs(specs, possible)
 
@@ -2091,10 +2134,13 @@ class SpackSolverSetup(object):
             for reusable_spec in reuse:
                 self._facts_from_concrete_spec(reusable_spec, possible)
 
+        self.gen.h1("Possible flags on nodes")
+        for flag in spack.spec.FlagMap.valid_compiler_flags():
+            self.gen.fact(fn.flag_type(flag))
+        self.gen.newline()
+
         self.gen.h1("General Constraints")
-        self.available_compilers()
-        self.compiler_defaults()
-        self.compiler_supports_os()
+        self.compiler_facts()
 
         # architecture defaults
         self.platform_defaults()
@@ -2105,7 +2151,6 @@ class SpackSolverSetup(object):
         self.provider_defaults()
         self.provider_requirements()
         self.external_packages()
-        self.flag_defaults()
 
         self.gen.h1("Package Constraints")
         for pkg in sorted(self.pkgs):
@@ -2154,6 +2199,55 @@ class SpackSolverSetup(object):
             self.gen.fact(fn.concretize_everything())
 
 
+def _get_versioned_specs_from_pkg_requirements():
+    """If package requirements mention versions that are not mentioned
+    elsewhere, then we need to collect those to mark them as possible
+    versions.
+    """
+    req_version_specs = list()
+    config = spack.config.get("packages")
+    for pkg_name, d in config.items():
+        if pkg_name == "all":
+            continue
+        if "require" in d:
+            req_version_specs.extend(_specs_from_requires(pkg_name, d["require"]))
+    return req_version_specs
+
+
+def _specs_from_requires(pkg_name, section):
+    if isinstance(section, str):
+        spec = spack.spec.Spec(section)
+        if not spec.name:
+            spec.name = pkg_name
+        extracted_specs = [spec]
+    else:
+        spec_strs = []
+        for spec_group in section:
+            if isinstance(spec_group, str):
+                spec_strs.append(spec_group)
+            else:
+                # Otherwise it is a one_of or any_of: get the values
+                (x,) = spec_group.values()
+                spec_strs.extend(x)
+
+        extracted_specs = []
+        for spec_str in spec_strs:
+            spec = spack.spec.Spec(spec_str)
+            if not spec.name:
+                spec.name = pkg_name
+            extracted_specs.append(spec)
+
+    version_specs = []
+    for spec in extracted_specs:
+        try:
+            spec.version
+            version_specs.append(spec)
+        except spack.error.SpecError:
+            pass
+
+    return version_specs
+
+
 class SpecBuilder(object):
     """Class with actions to rebuild a spec from ASP results."""
 
@@ -2176,6 +2270,7 @@ class SpecBuilder(object):
         self._specs = {}
         self._result = None
         self._command_line_specs = specs
+        self._hash_specs = []
         self._flag_sources = collections.defaultdict(lambda: set())
         self._flag_compiler_defaults = set()
 
@@ -2186,6 +2281,7 @@ class SpecBuilder(object):
     def hash(self, pkg, h):
         if pkg not in self._specs:
             self._specs[pkg] = self._hash_lookup[h]
+        self._hash_specs.append(pkg)
 
     def node(self, pkg):
         if pkg not in self._specs:
@@ -2226,10 +2322,8 @@ class SpecBuilder(object):
     def version(self, pkg, version):
         self._specs[pkg].versions = spack.version.ver([version])
 
-    def node_compiler(self, pkg, compiler):
-        self._specs[pkg].compiler = spack.spec.CompilerSpec(compiler)
-
     def node_compiler_version(self, pkg, compiler, version):
+        self._specs[pkg].compiler = spack.spec.CompilerSpec(compiler)
         self._specs[pkg].compiler.versions = spack.version.VersionList([version])
 
     def node_flag_compiler_default(self, pkg):
@@ -2284,10 +2378,11 @@ class SpecBuilder(object):
         flags will appear last on the compile line, in the order they
         were specified.
 
-        The solver determines wihch flags are on nodes; this routine
+        The solver determines which flags are on nodes; this routine
         imposes order afterwards.
         """
-        compilers = dict((c.spec, c) for c in all_compilers_in_config())
+        # reverse compilers so we get highest priority compilers that share a spec
+        compilers = dict((c.spec, c) for c in reversed(all_compilers_in_config()))
         cmd_specs = dict((s.name, s) for spec in self._command_line_specs for s in spec.traverse())
 
         for spec in self._specs.values():
@@ -2310,8 +2405,8 @@ class SpecBuilder(object):
                     )
 
                     # add flags from each source, lowest to highest precedence
-                    for source_name in sorted_sources:
-                        source = cmd_specs[source_name]
+                    for name in sorted_sources:
+                        source = self._specs[name] if name in self._hash_specs else cmd_specs[name]
                         extend_flag_list(from_sources, source.compiler_flags.get(flag_type, []))
 
                 # compiler flags from compilers config are lowest precedence
@@ -2333,7 +2428,6 @@ class SpecBuilder(object):
 
         hash attributes are handled first, since they imply entire concrete specs
         node attributes are handled next, since they instantiate nodes
-        node_compiler attributes are handled next to ensure they come before node_compiler_version
         external_spec_selected attributes are handled last, so that external extensions can find
         the concrete specs on which they depend because all nodes are fully constructed before we
         consider which ones are external.
@@ -2343,8 +2437,6 @@ class SpecBuilder(object):
             return (-5, 0)
         elif name == "node":
             return (-4, 0)
-        elif name == "node_compiler":
-            return (-3, 0)
         elif name == "node_flag":
             return (-2, 0)
         elif name == "external_spec_selected":
@@ -2386,10 +2478,12 @@ class SpecBuilder(object):
                     continue
 
                 # if we've already gotten a concrete spec for this pkg,
-                # do not bother calling actions on it.
+                # do not bother calling actions on it except for node_flag_source,
+                # since node_flag_source is tracking information not in the spec itself
                 spec = self._specs.get(pkg)
                 if spec and spec.concrete:
-                    continue
+                    if name != "node_flag_source":
+                        continue
 
             action(*args)
 
@@ -2489,7 +2583,7 @@ class Solver(object):
                 spack.spec.Spec.ensure_valid_variants(s)
         return reusable
 
-    def _reusable_specs(self):
+    def _reusable_specs(self, specs):
         reusable_specs = []
         if self.reuse:
             # Specs from the local Database
@@ -2511,6 +2605,13 @@ class Solver(object):
                 # TODO: update mirror configuration so it can indicate that the
                 # TODO: source cache (or any mirror really) doesn't have binaries.
                 pass
+
+        # If we only want to reuse dependencies, remove the root specs
+        if self.reuse == "dependencies":
+            reusable_specs = [
+                spec for spec in reusable_specs if not any(root in spec for root in specs)
+            ]
+
         return reusable_specs
 
     def solve(self, specs, out=None, timers=False, stats=False, tests=False, setup_only=False):
@@ -2527,7 +2628,7 @@ class Solver(object):
         """
         # Check upfront that the variants are admissible
         reusable_specs = self._check_input_and_extract_concrete_specs(specs)
-        reusable_specs.extend(self._reusable_specs())
+        reusable_specs.extend(self._reusable_specs(specs))
         setup = SpackSolverSetup(tests=tests)
         output = OutputConfiguration(timers=timers, stats=stats, out=out, setup_only=setup_only)
         result, _, _ = self.driver.solve(setup, specs, reuse=reusable_specs, output=output)
@@ -2550,7 +2651,7 @@ class Solver(object):
             tests (bool): add test dependencies to the solve
         """
         reusable_specs = self._check_input_and_extract_concrete_specs(specs)
-        reusable_specs.extend(self._reusable_specs())
+        reusable_specs.extend(self._reusable_specs(specs))
         setup = SpackSolverSetup(tests=tests)
 
         # Tell clingo that we don't have to solve all the inputs at once

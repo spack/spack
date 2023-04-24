@@ -30,9 +30,15 @@ def symlink(real_path, link_path):
         try:
             # Try to use junctions
             _win32_junction(real_path, link_path)
-        except OSError:
-            # If all else fails, fall back to copying files
-            shutil.copyfile(real_path, link_path)
+        except OSError as e:
+            if e.errno == errno.EEXIST:
+                # EEXIST error indicates that file we're trying to "link"
+                # is already present, don't bother trying to copy which will also fail
+                # just raise
+                raise
+            else:
+                # If all else fails, fall back to copying files
+                shutil.copyfile(real_path, link_path)
 
 
 def islink(path):

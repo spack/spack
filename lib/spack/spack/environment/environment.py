@@ -13,6 +13,8 @@ import sys
 import time
 import urllib.parse
 import urllib.request
+import warnings
+from typing import List, Optional
 
 import ruamel.yaml as yaml
 
@@ -59,7 +61,7 @@ spack_env_var = "SPACK_ENV"
 
 
 #: currently activated environment
-_active_environment = None
+_active_environment: Optional["Environment"] = None
 
 
 #: default path where environments are stored in the spack tree
@@ -349,7 +351,8 @@ def _is_dev_spec_and_has_changed(spec):
 
 def _spec_needs_overwrite(spec, changed_dev_specs):
     """Check whether the current spec needs to be overwritten because either it has
-    changed itself or one of its dependencies have changed"""
+    changed itself or one of its dependencies have changed
+    """
     # if it's not installed, we don't need to overwrite it
     if not spec.installed:
         return False
@@ -695,6 +698,8 @@ class Environment(object):
         # This attribute will be set properly from configuration
         # during concretization
         self.unify = None
+        self.new_specs = []
+        self.new_installs = []
         self.clear()
 
         if init_file:
@@ -1551,12 +1556,11 @@ class Environment(object):
 
     def regenerate_views(self):
         if not self.views:
-            tty.debug("Skip view update, this environment does not" " maintain a view")
+            tty.debug("Skip view update, this environment does not maintain a view")
             return
 
-        concretized_root_specs = [s for _, s in self.concretized_specs()]
         for view in self.views.values():
-            view.regenerate(concretized_root_specs)
+            view.regenerate(self.concrete_roots())
 
     def check_views(self):
         """Checks if the environments default view can be activated."""
@@ -1564,7 +1568,7 @@ class Environment(object):
             # This is effectively a no-op, but it touches all packages in the
             # default view if they are installed.
             for view_name, view in self.views.items():
-                for _, spec in self.concretized_specs():
+                for spec in self.concrete_roots():
                     if spec in view and spec.package and spec.installed:
                         msg = '{0} in view "{1}"'
                         tty.debug(msg.format(spec.name, view_name))
@@ -1582,7 +1586,7 @@ class Environment(object):
         visited = set()
 
         errors = []
-        for _, root_spec in self.concretized_specs():
+        for root_spec in self.concrete_roots():
             if root_spec in self.default_view and root_spec.installed and root_spec.package:
                 for spec in root_spec.traverse(deptype="run", root=True):
                     if spec.name in visited:
@@ -1799,9 +1803,6 @@ class Environment(object):
                             "Could not install log links for {0}: {1}".format(spec.name, str(e))
                         )
 
-            with self.write_transaction():
-                self.regenerate_views()
-
     def all_specs(self):
         """Return all specs, even those a user spec would shadow."""
         roots = [self.specs_by_hash[h] for h in self.concretized_order]
@@ -1846,6 +1847,11 @@ class Environment(object):
         for s, h in zip(self.concretized_user_specs, self.concretized_order):
             yield (s, self.specs_by_hash[h])
 
+    def concrete_roots(self):
+        """Same as concretized_specs, except it returns the list of concrete
+        roots *without* associated user spec"""
+        return [root for _, root in self.concretized_specs()]
+
     def get_by_hash(self, dag_hash):
         matches = {}
         roots = [self.specs_by_hash[h] for h in self.concretized_order]
@@ -1862,6 +1868,16 @@ class Environment(object):
         assert len(hash_matches) == 1
         return hash_matches[0]
 
+    def all_matching_specs(self, *specs: spack.spec.Spec) -> List[Spec]:
+        """Returns all concretized specs in the environment satisfying any of the input specs"""
+        key = lambda s: s.dag_hash()
+        return [
+            s
+            for s in spack.traverse.traverse_nodes(self.concrete_roots(), key=key)
+            if any(s.satisfies(t) for t in specs)
+        ]
+
+    @spack.repo.autospec
     def matching_spec(self, spec):
         """
         Given a spec (likely not concretized), find a matching concretized
@@ -1879,59 +1895,60 @@ class Environment(object):
         and multiple dependency specs match, then this raises an error
         and reports all matching specs.
         """
-        # Root specs will be keyed by concrete spec, value abstract
-        # Dependency-only specs will have value None
-        matches = {}
+        env_root_to_user = {root.dag_hash(): user for user, root in self.concretized_specs()}
+        root_matches, dep_matches = [], []
 
-        if not isinstance(spec, spack.spec.Spec):
-            spec = spack.spec.Spec(spec)
-
-        for user_spec, concretized_user_spec in self.concretized_specs():
-            # Deal with concrete specs differently
-            if spec.concrete:
-                if spec in concretized_user_spec:
-                    matches[spec] = spec
+        for env_spec in spack.traverse.traverse_nodes(
+            specs=[root for _, root in self.concretized_specs()],
+            key=lambda s: s.dag_hash(),
+            order="breadth",
+        ):
+            if not env_spec.satisfies(spec):
                 continue
 
-            if concretized_user_spec.satisfies(spec):
-                matches[concretized_user_spec] = user_spec
-            for dep_spec in concretized_user_spec.traverse(root=False):
-                if dep_spec.satisfies(spec):
-                    # Don't overwrite the abstract spec if present
-                    # If not present already, set to None
-                    matches[dep_spec] = matches.get(dep_spec, None)
+            # If the spec is concrete, then there is no possibility of multiple matches,
+            # and we immediately return the single match
+            if spec.concrete:
+                return env_spec
 
-        if not matches:
+            # Distinguish between environment roots and deps. Specs that are both
+            # are classified as environment roots.
+            user_spec = env_root_to_user.get(env_spec.dag_hash())
+            if user_spec:
+                root_matches.append((env_spec, user_spec))
+            else:
+                dep_matches.append(env_spec)
+
+        # No matching spec
+        if not root_matches and not dep_matches:
             return None
-        elif len(matches) == 1:
-            return list(matches.keys())[0]
 
-        root_matches = dict(
-            (concrete, abstract) for concrete, abstract in matches.items() if abstract
-        )
-
+        # Single root spec, any number of dep specs => return root spec.
         if len(root_matches) == 1:
-            return list(root_matches.items())[0][0]
+            return root_matches[0][0]
+
+        if not root_matches and len(dep_matches) == 1:
+            return dep_matches[0]
 
         # More than one spec matched, and either multiple roots matched or
         # none of the matches were roots
         # If multiple root specs match, it is assumed that the abstract
         # spec will most-succinctly summarize the difference between them
         # (and the user can enter one of these to disambiguate)
-        match_strings = []
         fmt_str = "{hash:7}  " + spack.spec.default_format
-        for concrete, abstract in matches.items():
-            if abstract:
-                s = "Root spec %s\n  %s" % (abstract, concrete.format(fmt_str))
-            else:
-                s = "Dependency spec\n  %s" % concrete.format(fmt_str)
-            match_strings.append(s)
+        color = clr.get_color_when()
+        match_strings = [
+            f"Root spec {abstract.format(color=color)}\n  {concrete.format(fmt_str, color=color)}"
+            for concrete, abstract in root_matches
+        ]
+        match_strings.extend(
+            f"Dependency spec\n  {s.format(fmt_str, color=color)}" for s in dep_matches
+        )
         matches_str = "\n".join(match_strings)
 
-        msg = "{0} matches multiple specs in the environment {1}: \n" "{2}".format(
-            str(spec), self.name, matches_str
+        raise SpackEnvironmentError(
+            f"{spec} matches multiple specs in the environment {self.name}: \n{matches_str}"
         )
-        raise SpackEnvironmentError(msg)
 
     def removed_specs(self):
         """Tuples of (user spec, concrete spec) for all specs that will be
@@ -2063,18 +2080,73 @@ class Environment(object):
         for spec_dag_hash in self.concretized_order:
             self.specs_by_hash[spec_dag_hash] = first_seen[spec_dag_hash]
 
-    def write(self, regenerate=True):
+    def write(self, regenerate: bool = True) -> None:
         """Writes an in-memory environment to its location on disk.
 
         Write out package files for each newly concretized spec.  Also
         regenerate any views associated with the environment and run post-write
         hooks, if regenerate is True.
 
-        Arguments:
-            regenerate (bool): regenerate views and run post-write hooks as
-                well as writing if True.
+        Args:
+            regenerate: regenerate views and run post-write hooks as well as writing if True.
         """
-        # Warn that environments are not in the latest format.
+        self.manifest_uptodate_or_warn()
+        if self.specs_by_hash:
+            self.ensure_env_directory_exists(dot_env=True)
+            self.update_environment_repository()
+            self.update_manifest()
+            # Write the lock file last. This is useful for Makefiles
+            # with `spack.lock: spack.yaml` rules, where the target
+            # should be newer than the prerequisite to avoid
+            # redundant re-concretization.
+            self.update_lockfile()
+        else:
+            self.ensure_env_directory_exists(dot_env=False)
+            with fs.safe_remove(self.lock_path):
+                self.update_manifest()
+
+        if regenerate:
+            self.regenerate_views()
+            spack.hooks.post_env_write(self)
+
+        self._reset_new_specs_and_installs()
+
+    def _reset_new_specs_and_installs(self) -> None:
+        self.new_specs = []
+        self.new_installs = []
+
+    def update_lockfile(self) -> None:
+        with fs.write_tmp_and_move(self.lock_path) as f:
+            sjson.dump(self._to_lockfile_dict(), stream=f)
+
+    def ensure_env_directory_exists(self, dot_env: bool = False) -> None:
+        """Ensure that the root directory of the environment exists
+
+        Args:
+            dot_env: if True also ensures that the <root>/.env directory exists
+        """
+        fs.mkdirp(self.path)
+        if dot_env:
+            fs.mkdirp(self.env_subdir_path)
+
+    def update_environment_repository(self) -> None:
+        """Updates the repository associated with the environment."""
+        for spec in spack.traverse.traverse_nodes(self.new_specs):
+            if not spec.concrete:
+                raise ValueError("specs passed to environment.write() must be concrete!")
+
+            self._add_to_environment_repository(spec)
+
+    def _add_to_environment_repository(self, spec_node: Spec) -> None:
+        """Add the root node of the spec to the environment repository"""
+        repository_dir = os.path.join(self.repos_path, spec_node.namespace)
+        repository = spack.repo.create_or_construct(repository_dir, spec_node.namespace)
+        pkg_dir = repository.dirname_for_package_name(spec_node.name)
+        fs.mkdirp(pkg_dir)
+        spack.repo.path.dump_provenance(spec_node, pkg_dir)
+
+    def manifest_uptodate_or_warn(self):
+        """Emits a warning if the manifest file is not up-to-date."""
         if not is_latest_format(self.manifest_path):
             ver = ".".join(str(s) for s in spack.spack_version_info[:2])
             msg = (
@@ -2084,61 +2156,14 @@ class Environment(object):
                 "Note that versions of Spack older than {} may not be able to "
                 "use the updated configuration."
             )
-            tty.warn(msg.format(self.name, self.name, ver))
+            warnings.warn(msg.format(self.name, self.name, ver))
 
-        # ensure path in var/spack/environments
-        fs.mkdirp(self.path)
-
-        yaml_dict = config_dict(self.yaml)
-        raw_yaml_dict = config_dict(self.raw_yaml)
-
-        if self.specs_by_hash:
-            # ensure the prefix/.env directory exists
-            fs.mkdirp(self.env_subdir_path)
-
-            for spec in spack.traverse.traverse_nodes(self.new_specs):
-                if not spec.concrete:
-                    raise ValueError("specs passed to environment.write() " "must be concrete!")
-
-                root = os.path.join(self.repos_path, spec.namespace)
-                repo = spack.repo.create_or_construct(root, spec.namespace)
-                pkg_dir = repo.dirname_for_package_name(spec.name)
-
-                fs.mkdirp(pkg_dir)
-                spack.repo.path.dump_provenance(spec, pkg_dir)
-
-            self._update_and_write_manifest(raw_yaml_dict, yaml_dict)
-
-            # Write the lock file last. This is useful for Makefiles
-            # with `spack.lock: spack.yaml` rules, where the target
-            # should be newer than the prerequisite to avoid
-            # redundant re-concretization.
-            with fs.write_tmp_and_move(self.lock_path) as f:
-                sjson.dump(self._to_lockfile_dict(), stream=f)
-        else:
-            with fs.safe_remove(self.lock_path):
-                self._update_and_write_manifest(raw_yaml_dict, yaml_dict)
-
-        # TODO: rethink where this needs to happen along with
-        # writing. For some of the commands (like install, which write
-        # concrete specs AND regen) this might as well be a separate
-        # call.  But, having it here makes the views consistent witht the
-        # concretized environment for most operations.  Which is the
-        # special case?
-        if regenerate:
-            self.regenerate_views()
-
-            # Run post_env_hooks
-            spack.hooks.post_env_write(self)
-
-        # new specs and new installs reset at write time
-        self.new_specs = []
-        self.new_installs = []
-
-    def _update_and_write_manifest(self, raw_yaml_dict, yaml_dict):
+    def update_manifest(self):
         """Update YAML manifest for this environment based on changes to
         spec lists and views and write it.
         """
+        yaml_dict = config_dict(self.yaml)
+        raw_yaml_dict = config_dict(self.raw_yaml)
         # invalidate _repo cache
         self._repo = None
         # put any changes in the definitions in the YAML
@@ -2192,6 +2217,7 @@ class Environment(object):
             view = dict((name, view.to_dict()) for name, view in self.views.items())
         else:
             view = False
+
         yaml_dict["view"] = view
 
         if self.dev_specs:
@@ -2237,12 +2263,19 @@ class Environment(object):
             activate(self._previous_active)
 
 
-def yaml_equivalent(first, second):
+def yaml_equivalent(first, second) -> bool:
     """Returns whether two spack yaml items are equivalent, including overrides"""
+    # YAML has timestamps and dates, but we don't use them yet in schemas
     if isinstance(first, dict):
         return isinstance(second, dict) and _equiv_dict(first, second)
     elif isinstance(first, list):
         return isinstance(second, list) and _equiv_list(first, second)
+    elif isinstance(first, bool):
+        return isinstance(second, bool) and first is second
+    elif isinstance(first, int):
+        return isinstance(second, int) and first == second
+    elif first is None:
+        return second is None
     else:  # it's a string
         return isinstance(second, str) and first == second
 
@@ -2313,7 +2346,7 @@ def _concretize_from_constraints(spec_constraints, tests=False):
             invalid_deps = [
                 c
                 for c in spec_constraints
-                if any(c.satisfies(invd, strict=True) for invd in invalid_deps_string)
+                if any(c.satisfies(invd) for invd in invalid_deps_string)
             ]
             if len(invalid_deps) != len(invalid_deps_string):
                 raise e

@@ -200,7 +200,7 @@ class CMakeBuilder(spack.build_systems.cmake.CMakeBuilder, SetupEnvironment):
         # pkg-config generation is introduced in May 5, 2021.
         # It must not be overwritten by spack-generated tbb.pc.
         # https://github.com/oneapi-src/oneTBB/commit/478de5b1887c928e52f029d706af6ea640a877be
-        if self.spec.satisfies("@:2021.2.0", strict=True):
+        if self.spec.satisfies("@:2021.2.0"):
             mkdirp(self.prefix.lib.pkgconfig)
 
             with open(join_path(self.prefix.lib.pkgconfig, "tbb.pc"), "w") as f:
@@ -296,7 +296,7 @@ class MakefileBuilder(spack.build_systems.makefile.MakefileBuilder, SetupEnviron
             # install debug libs if they exist
             install(join_path("build", "*debug", lib_name + "_debug.*"), prefix.lib)
 
-        if spec.satisfies("@2017.8,2018.1:", strict=True):
+        if spec.satisfies("@2017.8,2018.1:"):
             # Generate and install the CMake Config file.
             cmake_args = (
                 "-DTBB_ROOT={0}".format(prefix),

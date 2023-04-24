@@ -30,6 +30,8 @@ class Gdal(CMakePackage, AutotoolsPackage, PythonExtension):
 
     maintainers("adamjstewart")
 
+    version("3.6.4", sha256="889894cfff348c04ac65b462f629d03efc53ea56cf04de7662fbe81a364e3df1")
+    version("3.6.3", sha256="3cccbed883b1fb99b913966aa3a650ad930e7c3afc714f5823f9754176ee49ea")
     version("3.6.2", sha256="35f40d2e08061b342513cdcddc2b997b3814ef8254514f0ef1e8bc7aa56cf681")
     version("3.6.1", sha256="68f1c03547ff7152289789db7f67ee634167c9b7bfec4872b88406b236f9c230")
     version("3.6.0", sha256="f7afa4aa8d32d0799e011a9f573c6a67e9471f78e70d3d0d0b45b45c8c0c1a94")
@@ -234,8 +236,8 @@ class Gdal(CMakePackage, AutotoolsPackage, PythonExtension):
     )
 
     with when("build_system=cmake"):
+        generator("ninja")
         depends_on("cmake@3.9:", type="build")
-        depends_on("ninja", type="build")
 
     with when("build_system=autotools"):
         depends_on("gmake", type="build")
@@ -462,8 +464,6 @@ class Gdal(CMakePackage, AutotoolsPackage, PythonExtension):
 
 
 class CMakeBuilder(CMakeBuilder):
-    generator = "Ninja"
-
     def cmake_args(self):
         # https://gdal.org/build_hints.html
         args = [

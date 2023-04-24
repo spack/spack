@@ -38,6 +38,7 @@ import spack.util.gpg as gpg_util
 import spack.util.spack_yaml as syaml
 import spack.util.url as url_util
 import spack.util.web as web_util
+from spack import traverse
 from spack.error import SpackError
 from spack.reporters import CDash, CDashConfiguration
 from spack.reporters.cdash import build_stamp as cdash_build_stamp
@@ -361,60 +362,7 @@ def _compute_spec_deps(spec_list, check_index_only=False, mirrors_to_check=None)
 
 
 def _spec_matches(spec, match_string):
-    return spec.satisfies(match_string)
-
-
-def _remove_attributes(src_dict, dest_dict):
-    if "tags" in src_dict and "tags" in dest_dict:
-        # For 'tags', we remove any tags that are listed for removal
-        for tag in src_dict["tags"]:
-            while tag in dest_dict["tags"]:
-                dest_dict["tags"].remove(tag)
-
-
-def _copy_attributes(attrs_list, src_dict, dest_dict):
-    for runner_attr in attrs_list:
-        if runner_attr in src_dict:
-            if runner_attr in dest_dict and runner_attr == "tags":
-                # For 'tags', we combine the lists of tags, while
-                # avoiding duplicates
-                for tag in src_dict[runner_attr]:
-                    if tag not in dest_dict[runner_attr]:
-                        dest_dict[runner_attr].append(tag)
-            elif runner_attr in dest_dict and runner_attr == "variables":
-                # For 'variables', we merge the dictionaries.  Any conflicts
-                # (i.e. 'runner-attributes' has same variable key as the
-                # higher level) we resolve by keeping the more specific
-                # 'runner-attributes' version.
-                for src_key, src_val in src_dict[runner_attr].items():
-                    dest_dict[runner_attr][src_key] = copy.deepcopy(src_dict[runner_attr][src_key])
-            else:
-                dest_dict[runner_attr] = copy.deepcopy(src_dict[runner_attr])
-
-
-def _find_matching_config(spec, gitlab_ci):
-    runner_attributes = {}
-    overridable_attrs = ["image", "tags", "variables", "before_script", "script", "after_script"]
-
-    _copy_attributes(overridable_attrs, gitlab_ci, runner_attributes)
-
-    matched = False
-    only_first = gitlab_ci.get("match_behavior", "first") == "first"
-    for ci_mapping in gitlab_ci["mappings"]:
-        for match_string in ci_mapping["match"]:
-            if _spec_matches(spec, match_string):
-                matched = True
-                if "remove-attributes" in ci_mapping:
-                    _remove_attributes(ci_mapping["remove-attributes"], runner_attributes)
-                if "runner-attributes" in ci_mapping:
-                    _copy_attributes(
-                        overridable_attrs, ci_mapping["runner-attributes"], runner_attributes
-                    )
-                break
-        if matched and only_first:
-            break
-
-    return runner_attributes if matched else None
+    return spec.intersects(match_string)
 
 
 def _format_job_needs(
@@ -490,16 +438,28 @@ def compute_affected_packages(rev1="HEAD^", rev2="HEAD"):
     return spack.repo.get_all_package_diffs("ARC", rev1=rev1, rev2=rev2)
 
 
-def get_spec_filter_list(env, affected_pkgs):
+def get_spec_filter_list(env, affected_pkgs, dependent_traverse_depth=None):
     """Given a list of package names and an active/concretized
        environment, return the set of all concrete specs from the
        environment that could have been affected by changing the
        list of packages.
 
+       If a ``dependent_traverse_depth`` is given, it is used to limit
+       upward (in the parent direction) traversal of specs of touched
+       packages.  E.g. if 1 is provided, then only direct dependents
+       of touched package specs are traversed to produce specs that
+       could have been affected by changing the package, while if 0 is
+       provided, only the changed specs themselves are traversed. If ``None``
+       is given, upward traversal of touched package specs is done all
+       the way to the environment roots.  Providing a negative number
+       results in no traversals at all, yielding an empty set.
+
     Arguments:
 
         env (spack.environment.Environment): Active concrete environment
         affected_pkgs (List[str]): Affected package names
+        dependent_traverse_depth: Optional integer to limit dependent
+            traversal, or None to disable the limit.
 
     Returns:
 
@@ -512,15 +472,235 @@ def get_spec_filter_list(env, affected_pkgs):
     tty.debug("All concrete environment specs:")
     for s in all_concrete_specs:
         tty.debug("  {0}/{1}".format(s.name, s.dag_hash()[:7]))
-    env_matches = [s for s in all_concrete_specs if s.name in frozenset(affected_pkgs)]
+    affected_pkgs = frozenset(affected_pkgs)
+    env_matches = [s for s in all_concrete_specs if s.name in affected_pkgs]
     visited = set()
     dag_hash = lambda s: s.dag_hash()
-    for match in env_matches:
-        for parent in match.traverse(direction="parents", key=dag_hash):
-            affected_specs.update(
-                parent.traverse(direction="children", visited=visited, key=dag_hash)
-            )
+    for depth, parent in traverse.traverse_nodes(
+        env_matches, direction="parents", key=dag_hash, depth=True, order="breadth"
+    ):
+        if dependent_traverse_depth is not None and depth > dependent_traverse_depth:
+            break
+        affected_specs.update(parent.traverse(direction="children", visited=visited, key=dag_hash))
     return affected_specs
+
+
+def _build_jobs(phases, staged_phases):
+    for phase in phases:
+        phase_name = phase["name"]
+        spec_labels, dependencies, stages = staged_phases[phase_name]
+
+        for stage_jobs in stages:
+            for spec_label in stage_jobs:
+                spec_record = spec_labels[spec_label]
+                release_spec = spec_record["spec"]
+                release_spec_dag_hash = release_spec.dag_hash()
+                yield release_spec, release_spec_dag_hash
+
+
+def _noop(x):
+    return x
+
+
+def _unpack_script(script_section, op=_noop):
+    script = []
+    for cmd in script_section:
+        if isinstance(cmd, list):
+            for subcmd in cmd:
+                script.append(op(subcmd))
+        else:
+            script.append(op(cmd))
+
+    return script
+
+
+class SpackCI:
+    """Spack CI object used to generate intermediate representation
+    used by the CI generator(s).
+    """
+
+    def __init__(self, ci_config, phases, staged_phases):
+        """Given the information from the ci section of the config
+        and the job phases setup meta data needed for generating Spack
+        CI IR.
+        """
+
+        self.ci_config = ci_config
+        self.named_jobs = ["any", "build", "cleanup", "noop", "reindex", "signing"]
+
+        self.ir = {
+            "jobs": {},
+            "temporary-storage-url-prefix": self.ci_config.get(
+                "temporary-storage-url-prefix", None
+            ),
+            "enable-artifacts-buildcache": self.ci_config.get(
+                "enable-artifacts-buildcache", False
+            ),
+            "bootstrap": self.ci_config.get(
+                "bootstrap", []
+            ),  # This is deprecated and should be removed
+            "rebuild-index": self.ci_config.get("rebuild-index", True),
+            "broken-specs-url": self.ci_config.get("broken-specs-url", None),
+            "broken-tests-packages": self.ci_config.get("broken-tests-packages", []),
+            "target": self.ci_config.get("target", "gitlab"),
+        }
+        jobs = self.ir["jobs"]
+
+        for spec, dag_hash in _build_jobs(phases, staged_phases):
+            jobs[dag_hash] = self.__init_job(spec)
+
+        for name in self.named_jobs:
+            # Skip the special named jobs
+            if name not in ["any", "build"]:
+                jobs[name] = self.__init_job("")
+
+    def __init_job(self, spec):
+        """Initialize job object"""
+        return {"spec": spec, "attributes": {}}
+
+    def __is_named(self, section):
+        """Check if a pipeline-gen configuration section is for a named job,
+        and if so return the name otherwise return none.
+        """
+        for _name in self.named_jobs:
+            keys = ["{0}-job".format(_name), "{0}-job-remove".format(_name)]
+            if any([key for key in keys if key in section]):
+                return _name
+
+        return None
+
+    @staticmethod
+    def __job_name(name, suffix=""):
+        """Compute the name of a named job with appropriate suffix.
+        Valid suffixes are either '-remove' or empty string or None
+        """
+        assert type(name) == str
+
+        jname = name
+        if suffix:
+            jname = "{0}-job{1}".format(name, suffix)
+        else:
+            jname = "{0}-job".format(name)
+
+        return jname
+
+    def __apply_submapping(self, dest, spec, section):
+        """Apply submapping setion to the IR dict"""
+        matched = False
+        only_first = section.get("match_behavior", "first") == "first"
+
+        for match_attrs in reversed(section["submapping"]):
+            attrs = cfg.InternalConfigScope._process_dict_keyname_overrides(match_attrs)
+            for match_string in match_attrs["match"]:
+                if _spec_matches(spec, match_string):
+                    matched = True
+                    if "build-job-remove" in match_attrs:
+                        spack.config.remove_yaml(dest, attrs["build-job-remove"])
+                    if "build-job" in match_attrs:
+                        spack.config.merge_yaml(dest, attrs["build-job"])
+                    break
+            if matched and only_first:
+                break
+
+        return dest
+
+    # Generate IR from the configs
+    def generate_ir(self):
+        """Generate the IR from the Spack CI configurations."""
+
+        jobs = self.ir["jobs"]
+
+        # Implicit job defaults
+        defaults = [
+            {
+                "build-job": {
+                    "script": [
+                        "cd {env_dir}",
+                        "spack env activate --without-view .",
+                        "spack ci rebuild",
+                    ]
+                }
+            },
+            {"noop-job": {"script": ['echo "All specs already up to date, nothing to rebuild."']}},
+        ]
+
+        # Job overrides
+        overrides = [
+            # Reindex script
+            {
+                "reindex-job": {
+                    "script:": [
+                        "spack buildcache update-index --keys --mirror-url {index_target_mirror}"
+                    ]
+                }
+            },
+            # Cleanup script
+            {
+                "cleanup-job": {
+                    "script:": [
+                        "spack -d mirror destroy --mirror-url {mirror_prefix}/$CI_PIPELINE_ID"
+                    ]
+                }
+            },
+            # Add signing job tags
+            {"signing-job": {"tags": ["aws", "protected", "notary"]}},
+            # Remove reserved tags
+            {"any-job-remove": {"tags": SPACK_RESERVED_TAGS}},
+        ]
+
+        pipeline_gen = overrides + self.ci_config.get("pipeline-gen", []) + defaults
+
+        for section in reversed(pipeline_gen):
+            name = self.__is_named(section)
+            has_submapping = "submapping" in section
+            section = cfg.InternalConfigScope._process_dict_keyname_overrides(section)
+
+            if name:
+                remove_job_name = self.__job_name(name, suffix="-remove")
+                merge_job_name = self.__job_name(name)
+                do_remove = remove_job_name in section
+                do_merge = merge_job_name in section
+
+                def _apply_section(dest, src):
+                    if do_remove:
+                        dest = spack.config.remove_yaml(dest, src[remove_job_name])
+                    if do_merge:
+                        dest = copy.copy(spack.config.merge_yaml(dest, src[merge_job_name]))
+
+                if name == "build":
+                    # Apply attributes to all build jobs
+                    for _, job in jobs.items():
+                        if job["spec"]:
+                            _apply_section(job["attributes"], section)
+                elif name == "any":
+                    # Apply section attributes too all jobs
+                    for _, job in jobs.items():
+                        _apply_section(job["attributes"], section)
+                else:
+                    # Create a signing job if there is script and the job hasn't
+                    # been initialized yet
+                    if name == "signing" and name not in jobs:
+                        if "signing-job" in section:
+                            if "script" not in section["signing-job"]:
+                                continue
+                            else:
+                                jobs[name] = self.__init_job("")
+                    # Apply attributes to named job
+                    _apply_section(jobs[name]["attributes"], section)
+
+            elif has_submapping:
+                # Apply section jobs with specs to match
+                for _, job in jobs.items():
+                    if job["spec"]:
+                        job["attributes"] = self.__apply_submapping(
+                            job["attributes"], job["spec"], section
+                        )
+
+        for _, job in jobs.items():
+            if job["spec"]:
+                job["spec"] = job["spec"].name
+
+        return self.ir
 
 
 def generate_gitlab_ci_yaml(
@@ -572,13 +752,41 @@ def generate_gitlab_ci_yaml(
 
     yaml_root = ev.config_dict(env.yaml)
 
-    if "gitlab-ci" not in yaml_root:
-        tty.die('Environment yaml does not have "gitlab-ci" section')
+    # Get the joined "ci" config with all of the current scopes resolved
+    ci_config = cfg.get("ci")
 
-    gitlab_ci = yaml_root["gitlab-ci"]
+    if not ci_config:
+        tty.warn("Environment does not have `ci` a configuration")
+        gitlabci_config = yaml_root.get("gitlab-ci")
+        if not gitlabci_config:
+            tty.die("Environment yaml does not have `gitlab-ci` config section. Cannot recover.")
 
-    cdash_handler = CDashHandler(yaml_root.get("cdash")) if "cdash" in yaml_root else None
+        tty.warn(
+            "The `gitlab-ci` configuration is deprecated in favor of `ci`.\n",
+            "To update run \n\t$ spack env update /path/to/ci/spack.yaml",
+        )
+        translate_deprecated_config(gitlabci_config)
+        ci_config = gitlabci_config
+
+    # Default target is gitlab...and only target is gitlab
+    if not ci_config.get("target", "gitlab") == "gitlab":
+        tty.die('Spack CI module only generates target "gitlab"')
+
+    cdash_config = cfg.get("cdash")
+    cdash_handler = CDashHandler(cdash_config) if "build-group" in cdash_config else None
     build_group = cdash_handler.build_group if cdash_handler else None
+
+    dependent_depth = os.environ.get("SPACK_PRUNE_UNTOUCHED_DEPENDENT_DEPTH", None)
+    if dependent_depth is not None:
+        try:
+            dependent_depth = int(dependent_depth)
+        except (TypeError, ValueError):
+            tty.warn(
+                f"Unrecognized value ({dependent_depth}) "
+                "provided for SPACK_PRUNE_UNTOUCHED_DEPENDENT_DEPTH, "
+                "ignoring it."
+            )
+            dependent_depth = None
 
     prune_untouched_packages = False
     spack_prune_untouched = os.environ.get("SPACK_PRUNE_UNTOUCHED", None)
@@ -595,7 +803,9 @@ def generate_gitlab_ci_yaml(
                 tty.debug("affected pkgs:")
                 for p in affected_pkgs:
                     tty.debug("  {0}".format(p))
-                affected_specs = get_spec_filter_list(env, affected_pkgs)
+                affected_specs = get_spec_filter_list(
+                    env, affected_pkgs, dependent_traverse_depth=dependent_depth
+                )
                 tty.debug("all affected specs:")
                 for s in affected_specs:
                     tty.debug("  {0}/{1}".format(s.name, s.dag_hash()[:7]))
@@ -637,25 +847,25 @@ def generate_gitlab_ci_yaml(
     # trying to build.
     broken_specs_url = ""
     known_broken_specs_encountered = []
-    if "broken-specs-url" in gitlab_ci:
-        broken_specs_url = gitlab_ci["broken-specs-url"]
+    if "broken-specs-url" in ci_config:
+        broken_specs_url = ci_config["broken-specs-url"]
 
     enable_artifacts_buildcache = False
-    if "enable-artifacts-buildcache" in gitlab_ci:
-        enable_artifacts_buildcache = gitlab_ci["enable-artifacts-buildcache"]
+    if "enable-artifacts-buildcache" in ci_config:
+        enable_artifacts_buildcache = ci_config["enable-artifacts-buildcache"]
 
     rebuild_index_enabled = True
-    if "rebuild-index" in gitlab_ci and gitlab_ci["rebuild-index"] is False:
+    if "rebuild-index" in ci_config and ci_config["rebuild-index"] is False:
         rebuild_index_enabled = False
 
     temp_storage_url_prefix = None
-    if "temporary-storage-url-prefix" in gitlab_ci:
-        temp_storage_url_prefix = gitlab_ci["temporary-storage-url-prefix"]
+    if "temporary-storage-url-prefix" in ci_config:
+        temp_storage_url_prefix = ci_config["temporary-storage-url-prefix"]
 
     bootstrap_specs = []
     phases = []
-    if "bootstrap" in gitlab_ci:
-        for phase in gitlab_ci["bootstrap"]:
+    if "bootstrap" in ci_config:
+        for phase in ci_config["bootstrap"]:
             try:
                 phase_name = phase.get("name")
                 strip_compilers = phase.get("compiler-agnostic")
@@ -720,6 +930,31 @@ def generate_gitlab_ci_yaml(
     shutil.copyfile(env.manifest_path, os.path.join(concrete_env_dir, "spack.yaml"))
     shutil.copyfile(env.lock_path, os.path.join(concrete_env_dir, "spack.lock"))
 
+    with open(env.manifest_path, "r") as env_fd:
+        env_yaml_root = syaml.load(env_fd)
+        # Add config scopes to environment
+        env_includes = env_yaml_root["spack"].get("include", [])
+        cli_scopes = [
+            os.path.abspath(s.path)
+            for s in cfg.scopes().values()
+            if type(s) == cfg.ImmutableConfigScope
+            and s.path not in env_includes
+            and os.path.exists(s.path)
+        ]
+        include_scopes = []
+        for scope in cli_scopes:
+            if scope not in include_scopes and scope not in env_includes:
+                include_scopes.insert(0, scope)
+        env_includes.extend(include_scopes)
+        env_yaml_root["spack"]["include"] = env_includes
+
+        if "gitlab-ci" in env_yaml_root["spack"] and "ci" not in env_yaml_root["spack"]:
+            env_yaml_root["spack"]["ci"] = env_yaml_root["spack"].pop("gitlab-ci")
+            translate_deprecated_config(env_yaml_root["spack"]["ci"])
+
+        with open(os.path.join(concrete_env_dir, "spack.yaml"), "w") as fd:
+            fd.write(syaml.dump_config(env_yaml_root, default_flow_style=False))
+
     job_log_dir = os.path.join(pipeline_artifacts_dir, "logs")
     job_repro_dir = os.path.join(pipeline_artifacts_dir, "reproduction")
     job_test_dir = os.path.join(pipeline_artifacts_dir, "tests")
@@ -731,7 +966,7 @@ def generate_gitlab_ci_yaml(
     # generation job and the rebuild jobs.  This can happen when gitlab
     # checks out the project into a runner-specific directory, for example,
     # and different runners are picked for generate and rebuild jobs.
-    ci_project_dir = os.environ.get("CI_PROJECT_DIR")
+    ci_project_dir = os.environ.get("CI_PROJECT_DIR", os.getcwd())
     rel_artifacts_root = os.path.relpath(pipeline_artifacts_dir, ci_project_dir)
     rel_concrete_env_dir = os.path.relpath(concrete_env_dir, ci_project_dir)
     rel_job_log_dir = os.path.relpath(job_log_dir, ci_project_dir)
@@ -745,7 +980,7 @@ def generate_gitlab_ci_yaml(
     try:
         bindist.binary_index.update()
     except bindist.FetchCacheError as e:
-        tty.error(e)
+        tty.warn(e)
 
     staged_phases = {}
     try:
@@ -802,7 +1037,9 @@ def generate_gitlab_ci_yaml(
         else:
             broken_spec_urls = web_util.list_url(broken_specs_url)
 
-    before_script, after_script = None, None
+    spack_ci = SpackCI(ci_config, phases, staged_phases)
+    spack_ci_ir = spack_ci.generate_ir()
+
     for phase in phases:
         phase_name = phase["name"]
         strip_compilers = phase["strip-compilers"]
@@ -829,54 +1066,35 @@ def generate_gitlab_ci_yaml(
                         spec_record["needs_rebuild"] = False
                         continue
 
-                runner_attribs = _find_matching_config(release_spec, gitlab_ci)
+                job_object = spack_ci_ir["jobs"][release_spec_dag_hash]["attributes"]
 
-                if not runner_attribs:
+                if not job_object:
                     tty.warn("No match found for {0}, skipping it".format(release_spec))
                     continue
 
-                tags = [tag for tag in runner_attribs["tags"]]
-
                 if spack_pipeline_type is not None:
                     # For spack pipelines "public" and "protected" are reserved tags
-                    tags = _remove_reserved_tags(tags)
+                    job_object["tags"] = _remove_reserved_tags(job_object.get("tags", []))
                     if spack_pipeline_type == "spack_protected_branch":
-                        tags.extend(["protected"])
+                        job_object["tags"].extend(["protected"])
                     elif spack_pipeline_type == "spack_pull_request":
-                        tags.extend(["public"])
+                        job_object["tags"].extend(["public"])
 
-                variables = {}
-                if "variables" in runner_attribs:
-                    variables.update(runner_attribs["variables"])
+                if "script" not in job_object:
+                    raise AttributeError
 
-                image_name = None
-                image_entry = None
-                if "image" in runner_attribs:
-                    build_image = runner_attribs["image"]
-                    try:
-                        image_name = build_image.get("name")
-                        entrypoint = build_image.get("entrypoint")
-                        image_entry = [p for p in entrypoint]
-                    except AttributeError:
-                        image_name = build_image
+                def main_script_replacements(cmd):
+                    return cmd.replace("{env_dir}", concrete_env_dir)
 
-                job_script = ["spack env activate --without-view ."]
+                job_object["script"] = _unpack_script(
+                    job_object["script"], op=main_script_replacements
+                )
 
-                if artifacts_root:
-                    job_script.insert(0, "cd {0}".format(concrete_env_dir))
+                if "before_script" in job_object:
+                    job_object["before_script"] = _unpack_script(job_object["before_script"])
 
-                job_script.extend(["spack ci rebuild"])
-
-                if "script" in runner_attribs:
-                    job_script = [s for s in runner_attribs["script"]]
-
-                before_script = None
-                if "before_script" in runner_attribs:
-                    before_script = [s for s in runner_attribs["before_script"]]
-
-                after_script = None
-                if "after_script" in runner_attribs:
-                    after_script = [s for s in runner_attribs["after_script"]]
+                if "after_script" in job_object:
+                    job_object["after_script"] = _unpack_script(job_object["after_script"])
 
                 osname = str(release_spec.architecture)
                 job_name = get_job_name(
@@ -889,13 +1107,12 @@ def generate_gitlab_ci_yaml(
                     if _is_main_phase(phase_name):
                         compiler_action = "INSTALL_MISSING"
 
-                job_vars = {
-                    "SPACK_JOB_SPEC_DAG_HASH": release_spec_dag_hash,
-                    "SPACK_JOB_SPEC_PKG_NAME": release_spec.name,
-                    "SPACK_COMPILER_ACTION": compiler_action,
-                }
+                job_vars = job_object.setdefault("variables", {})
+                job_vars["SPACK_JOB_SPEC_DAG_HASH"] = release_spec_dag_hash
+                job_vars["SPACK_JOB_SPEC_PKG_NAME"] = release_spec.name
+                job_vars["SPACK_COMPILER_ACTION"] = compiler_action
 
-                job_dependencies = []
+                job_object["needs"] = []
                 if spec_label in dependencies:
                     if enable_artifacts_buildcache:
                         # Get dependencies transitively, so they're all
@@ -908,7 +1125,7 @@ def generate_gitlab_ci_yaml(
                         for dep_label in dependencies[spec_label]:
                             dep_jobs.append(spec_labels[dep_label]["spec"])
 
-                    job_dependencies.extend(
+                    job_object["needs"].extend(
                         _format_job_needs(
                             phase_name,
                             strip_compilers,
@@ -938,7 +1155,7 @@ def generate_gitlab_ci_yaml(
                         bs_arch = c_spec.architecture
                         bs_arch_family = bs_arch.target.microarchitecture.family
                         if (
-                            c_spec.satisfies(compiler_pkg_spec)
+                            c_spec.intersects(compiler_pkg_spec)
                             and bs_arch_family == spec_arch_family
                         ):
                             # We found the bootstrap compiler this release spec
@@ -965,7 +1182,7 @@ def generate_gitlab_ci_yaml(
                             if enable_artifacts_buildcache:
                                 dep_jobs = [d for d in c_spec.traverse(deptype=all)]
 
-                            job_dependencies.extend(
+                            job_object["needs"].extend(
                                 _format_job_needs(
                                     bs["phase-name"],
                                     bs["strip-compilers"],
@@ -1031,7 +1248,7 @@ def generate_gitlab_ci_yaml(
                     ]
 
                 if artifacts_root:
-                    job_dependencies.append(
+                    job_object["needs"].append(
                         {"job": generate_job_name, "pipeline": "{0}".format(parent_pipeline_id)}
                     )
 
@@ -1046,18 +1263,22 @@ def generate_gitlab_ci_yaml(
                     build_stamp = cdash_handler.build_stamp
                     job_vars["SPACK_CDASH_BUILD_STAMP"] = build_stamp
 
-                variables.update(job_vars)
-
-                artifact_paths = [
-                    rel_job_log_dir,
-                    rel_job_repro_dir,
-                    rel_job_test_dir,
-                    rel_user_artifacts_dir,
-                ]
+                job_object["artifacts"] = spack.config.merge_yaml(
+                    job_object.get("artifacts", {}),
+                    {
+                        "when": "always",
+                        "paths": [
+                            rel_job_log_dir,
+                            rel_job_repro_dir,
+                            rel_job_test_dir,
+                            rel_user_artifacts_dir,
+                        ],
+                    },
+                )
 
                 if enable_artifacts_buildcache:
                     bc_root = os.path.join(local_mirror_dir, "build_cache")
-                    artifact_paths.extend(
+                    job_object["artifacts"]["paths"].extend(
                         [
                             os.path.join(bc_root, p)
                             for p in [
@@ -1067,32 +1288,14 @@ def generate_gitlab_ci_yaml(
                         ]
                     )
 
-                job_object = {
-                    "stage": stage_name,
-                    "variables": variables,
-                    "script": job_script,
-                    "tags": tags,
-                    "artifacts": {"paths": artifact_paths, "when": "always"},
-                    "needs": sorted(job_dependencies, key=lambda d: d["job"]),
-                    "retry": {"max": 2, "when": JOB_RETRY_CONDITIONS},
-                    "interruptible": True,
-                }
+                job_object["stage"] = stage_name
+                job_object["retry"] = {"max": 2, "when": JOB_RETRY_CONDITIONS}
+                job_object["interruptible"] = True
 
-                length_needs = len(job_dependencies)
+                length_needs = len(job_object["needs"])
                 if length_needs > max_length_needs:
                     max_length_needs = length_needs
                     max_needs_job = job_name
-
-                if before_script:
-                    job_object["before_script"] = before_script
-
-                if after_script:
-                    job_object["after_script"] = after_script
-
-                if image_name:
-                    job_object["image"] = image_name
-                    if image_entry is not None:
-                        job_object["image"] = {"name": image_name, "entrypoint": image_entry}
 
                 output_object[job_name] = job_object
                 job_id += 1
@@ -1120,19 +1323,6 @@ def generate_gitlab_ci_yaml(
     else:
         tty.warn("Unable to populate buildgroup without CDash credentials")
 
-    service_job_config = None
-    if "service-job-attributes" in gitlab_ci:
-        service_job_config = gitlab_ci["service-job-attributes"]
-
-    default_attrs = [
-        "image",
-        "tags",
-        "variables",
-        "before_script",
-        # 'script',
-        "after_script",
-    ]
-
     service_job_retries = {
         "max": 2,
         "when": ["runner_system_failure", "stuck_or_timeout_failure", "script_failure"],
@@ -1144,55 +1334,29 @@ def generate_gitlab_ci_yaml(
             # schedule a job to clean up the temporary storage location
             # associated with this pipeline.
             stage_names.append("cleanup-temp-storage")
-            cleanup_job = {}
-
-            if service_job_config:
-                _copy_attributes(default_attrs, service_job_config, cleanup_job)
-
-            if "tags" in cleanup_job:
-                service_tags = _remove_reserved_tags(cleanup_job["tags"])
-                cleanup_job["tags"] = service_tags
+            cleanup_job = copy.deepcopy(spack_ci_ir["jobs"]["cleanup"]["attributes"])
 
             cleanup_job["stage"] = "cleanup-temp-storage"
-            cleanup_job["script"] = [
-                "spack -d mirror destroy --mirror-url {0}/$CI_PIPELINE_ID".format(
-                    temp_storage_url_prefix
-                )
-            ]
             cleanup_job["when"] = "always"
             cleanup_job["retry"] = service_job_retries
             cleanup_job["interruptible"] = True
 
+            cleanup_job["script"] = _unpack_script(
+                cleanup_job["script"],
+                op=lambda cmd: cmd.replace("mirror_prefix", temp_storage_url_prefix),
+            )
+
             output_object["cleanup"] = cleanup_job
 
         if (
-            "signing-job-attributes" in gitlab_ci
+            "script" in spack_ci_ir["jobs"]["signing"]["attributes"]
             and spack_pipeline_type == "spack_protected_branch"
         ):
             # External signing: generate a job to check and sign binary pkgs
             stage_names.append("stage-sign-pkgs")
-            signing_job_config = gitlab_ci["signing-job-attributes"]
-            signing_job = {}
+            signing_job = spack_ci_ir["jobs"]["signing"]["attributes"]
 
-            signing_job_attrs_to_copy = [
-                "image",
-                "tags",
-                "variables",
-                "before_script",
-                "script",
-                "after_script",
-            ]
-
-            _copy_attributes(signing_job_attrs_to_copy, signing_job_config, signing_job)
-
-            signing_job_tags = []
-            if "tags" in signing_job:
-                signing_job_tags = _remove_reserved_tags(signing_job["tags"])
-
-            for tag in ["aws", "protected", "notary"]:
-                if tag not in signing_job_tags:
-                    signing_job_tags.append(tag)
-            signing_job["tags"] = signing_job_tags
+            signing_job["script"] = _unpack_script(signing_job["script"])
 
             signing_job["stage"] = "stage-sign-pkgs"
             signing_job["when"] = "always"
@@ -1204,23 +1368,17 @@ def generate_gitlab_ci_yaml(
         if rebuild_index_enabled:
             # Add a final job to regenerate the index
             stage_names.append("stage-rebuild-index")
-            final_job = {}
-
-            if service_job_config:
-                _copy_attributes(default_attrs, service_job_config, final_job)
-
-            if "tags" in final_job:
-                service_tags = _remove_reserved_tags(final_job["tags"])
-                final_job["tags"] = service_tags
+            final_job = spack_ci_ir["jobs"]["reindex"]["attributes"]
 
             index_target_mirror = mirror_urls[0]
             if remote_mirror_override:
                 index_target_mirror = remote_mirror_override
-
             final_job["stage"] = "stage-rebuild-index"
-            final_job["script"] = [
-                "spack buildcache update-index --keys --mirror-url {0}".format(index_target_mirror)
-            ]
+            final_job["script"] = _unpack_script(
+                final_job["script"],
+                op=lambda cmd: cmd.replace("{index_target_mirror}", index_target_mirror),
+            )
+
             final_job["when"] = "always"
             final_job["retry"] = service_job_retries
             final_job["interruptible"] = True
@@ -1268,6 +1426,9 @@ def generate_gitlab_ci_yaml(
         if spack_stack_name:
             output_object["variables"]["SPACK_CI_STACK_NAME"] = spack_stack_name
 
+        # Ensure the child pipeline always runs
+        output_object["workflow"] = {"rules": [{"when": "always"}]}
+
         if spack_buildcache_copy:
             # Write out the file describing specs that should be copied
             copy_specs_dir = os.path.join(pipeline_artifacts_dir, "specs_to_copy")
@@ -1301,13 +1462,7 @@ def generate_gitlab_ci_yaml(
     else:
         # No jobs were generated
         tty.debug("No specs to rebuild, generating no-op job")
-        noop_job = {}
-
-        if service_job_config:
-            _copy_attributes(default_attrs, service_job_config, noop_job)
-
-        if "script" not in noop_job:
-            noop_job["script"] = ['echo "All specs already up to date, nothing to rebuild."']
+        noop_job = spack_ci_ir["jobs"]["noop"]["attributes"]
 
         noop_job["retry"] = service_job_retries
 
@@ -1321,7 +1476,7 @@ def generate_gitlab_ci_yaml(
             sys.exit(1)
 
     with open(output_file, "w") as outf:
-        outf.write(syaml.dump_config(sorted_output, default_flow_style=True))
+        outf.write(syaml.dump(sorted_output, default_flow_style=True))
 
 
 def _url_encode_string(input_string):
@@ -1501,7 +1656,10 @@ def copy_files_to_artifacts(src, artifacts_dir):
     try:
         fs.copy(src, artifacts_dir)
     except Exception as err:
-        tty.warn(f"Unable to copy files ({src}) to artifacts {artifacts_dir} due to: {err}")
+        msg = ("Unable to copy files ({0}) to artifacts {1} due to " "exception: {2}").format(
+            src, artifacts_dir, str(err)
+        )
+        tty.warn(msg)
 
 
 def copy_stage_logs_to_artifacts(job_spec, job_log_dir):
@@ -1721,6 +1879,7 @@ def reproduce_ci_job(url, work_dir):
     function is a set of printed instructions for running docker and then
     commands to run to reproduce the build once inside the container.
     """
+    work_dir = os.path.realpath(work_dir)
     download_and_extract_artifacts(url, work_dir)
 
     lock_file = fs.find(work_dir, "spack.lock")[0]
@@ -1885,7 +2044,9 @@ def reproduce_ci_job(url, work_dir):
     if job_image:
         inst_list.append("\nRun the following command:\n\n")
         inst_list.append(
-            "    $ docker run --rm -v {0}:{1} -ti {2}\n".format(work_dir, mount_as_dir, job_image)
+            "    $ docker run --rm --name spack_reproducer -v {0}:{1}:Z -ti {2}\n".format(
+                work_dir, mount_as_dir, job_image
+            )
         )
         inst_list.append("\nOnce inside the container:\n\n")
     else:
@@ -1936,13 +2097,16 @@ def process_command(name, commands, repro_dir):
     # Create a string [command 1] && [command 2] && ... && [command n] with commands
     # quoted using double quotes.
     args_to_string = lambda args: " ".join('"{}"'.format(arg) for arg in args)
-    full_command = " && ".join(map(args_to_string, commands))
+    full_command = " \n ".join(map(args_to_string, commands))
 
     # Write the command to a shell script
     script = "{0}.sh".format(name)
     with open(script, "w") as fd:
         fd.write("#!/bin/sh\n\n")
         fd.write("\n# spack {0} command\n".format(name))
+        fd.write("set -e\n")
+        if os.environ.get("SPACK_VERBOSE_SCRIPT"):
+            fd.write("set -x\n")
         fd.write(full_command)
         fd.write("\n")
 
@@ -2291,3 +2455,66 @@ class CDashHandler(object):
         )
         reporter = CDash(configuration=configuration)
         reporter.test_skipped_report(directory_name, spec, reason)
+
+
+def translate_deprecated_config(config):
+    # Remove all deprecated keys from config
+    mappings = config.pop("mappings", [])
+    match_behavior = config.pop("match_behavior", "first")
+
+    build_job = {}
+    if "image" in config:
+        build_job["image"] = config.pop("image")
+    if "tags" in config:
+        build_job["tags"] = config.pop("tags")
+    if "variables" in config:
+        build_job["variables"] = config.pop("variables")
+    if "before_script" in config:
+        build_job["before_script"] = config.pop("before_script")
+    if "script" in config:
+        build_job["script"] = config.pop("script")
+    if "after_script" in config:
+        build_job["after_script"] = config.pop("after_script")
+
+    signing_job = None
+    if "signing-job-attributes" in config:
+        signing_job = {"signing-job": config.pop("signing-job-attributes")}
+
+    service_job_attributes = None
+    if "service-job-attributes" in config:
+        service_job_attributes = config.pop("service-job-attributes")
+
+    # If this config already has pipeline-gen do not more
+    if "pipeline-gen" in config:
+        return True if mappings or build_job or signing_job or service_job_attributes else False
+
+    config["target"] = "gitlab"
+
+    config["pipeline-gen"] = []
+    pipeline_gen = config["pipeline-gen"]
+
+    # Build Job
+    submapping = []
+    for section in mappings:
+        submapping_section = {"match": section["match"]}
+        if "runner-attributes" in section:
+            submapping_section["build-job"] = section["runner-attributes"]
+        if "remove-attributes" in section:
+            submapping_section["build-job-remove"] = section["remove-attributes"]
+        submapping.append(submapping_section)
+    pipeline_gen.append({"submapping": submapping, "match_behavior": match_behavior})
+
+    if build_job:
+        pipeline_gen.append({"build-job": build_job})
+
+    # Signing Job
+    if signing_job:
+        pipeline_gen.append(signing_job)
+
+    # Service Jobs
+    if service_job_attributes:
+        pipeline_gen.append({"reindex-job": service_job_attributes})
+        pipeline_gen.append({"noop-job": service_job_attributes})
+        pipeline_gen.append({"cleanup-job": service_job_attributes})
+
+    return True

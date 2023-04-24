@@ -368,7 +368,8 @@ Manual compiler configuration
 
 If auto-detection fails, you can manually configure a compiler by
 editing your ``~/.spack/<platform>/compilers.yaml`` file.  You can do this by running
-``spack config edit compilers``, which will open the file in your ``$EDITOR``.
+``spack config edit compilers``, which will open the file in
+:ref:`your favorite editor <controlling-the-editor>`.
 
 Each compiler configuration in the file looks like this:
 
@@ -1597,8 +1598,8 @@ in a Windows CMD prompt.
 
 .. note::
    If you chose to install Spack into a directory on Windows that is set up to require Administrative
-   Privleges, Spack will require elevated privleges to run.
-   Administrative Privleges can be denoted either by default such as
+   Privileges, Spack will require elevated privileges to run.
+   Administrative Privileges can be denoted either by default such as
    ``C:\Program Files``, or aministrator applied administrative restrictions
    on a directory that spack installs files to such as ``C:\Users``
 
@@ -1694,7 +1695,7 @@ Spack console via:
 
    spack install cpuinfo
 
-If in the previous step, you did not have CMake or Ninja installed, running the command above should boostrap both packages
+If in the previous step, you did not have CMake or Ninja installed, running the command above should bootstrap both packages
 
 """""""""""""""""""""""""""
 Windows Compatible Packages

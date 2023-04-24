@@ -14,6 +14,7 @@ class Sed(AutotoolsPackage, GNUMirrorPackage):
     homepage = "https://www.gnu.org/software/sed/"
     gnu_mirror_path = "sed/sed-4.8.tar.xz"
 
+    version("4.9", sha256="6e226b732e1cd739464ad6862bd1a1aba42d7982922da7a53519631d24975181")
     version("4.8", sha256="f79b0cfea71b37a8eeec8490db6c5f7ae7719c35587f21edb0617f370eeff633")
     version("4.2.2", sha256="f048d1838da284c8bc9753e4506b85a1e0cc1ea8999d36f6995bcb9460cddbd7")
 

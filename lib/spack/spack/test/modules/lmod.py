@@ -2,7 +2,7 @@
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
-import re
+
 import sys
 
 import pytest
@@ -35,6 +35,8 @@ def compiler(request):
         ("mpich@3.0.1", []),
         ("openblas@0.2.15", ("blas",)),
         ("openblas-with-lapack@0.2.15", ("blas", "lapack")),
+        ("mpileaks@2.3", ("mpi",)),
+        ("mpileaks@2.1", []),
     ]
 )
 def provider(request):
@@ -69,12 +71,20 @@ class TestLmod(object):
         path_parts = layout.available_path_parts
         service_part = spec_string.replace("@", "/")
         service_part = "-".join([service_part, layout.spec.dag_hash(length=7)])
-        assert service_part in path_parts
+
+        if "mpileaks" in spec_string:
+            # It's a user, not a provider, so create the provider string
+            service_part = layout.spec["mpi"].format("{name}/{version}-{hash:7}")
+        else:
+            # Only relevant for providers, not users, of virtuals
+            assert service_part in path_parts
 
         # Check that multi-providers have repetitions in path parts
         repetitions = len([x for x in path_parts if service_part == x])
         if spec_string == "openblas-with-lapack@0.2.15":
             assert repetitions == 2
+        elif spec_string == "mpileaks@2.1":
+            assert repetitions == 0
         else:
             assert repetitions == 1
 
@@ -88,7 +98,7 @@ class TestLmod(object):
         assert provides["compiler"] == spack.spec.CompilerSpec("oneapi@3.0")
 
     def test_simple_case(self, modulefile_content, module_configuration):
-        """Tests the generation of a simple TCL module file."""
+        """Tests the generation of a simple Lua module file."""
 
         module_configuration("autoload_direct")
         content = modulefile_content(mpich_spec_string)
@@ -128,21 +138,49 @@ class TestLmod(object):
 
         content = modulefile_content("libdwarf platform=test target=core2")
 
-        assert len([x for x in content if x.startswith('prepend-path("CMAKE_PREFIX_PATH"')]) == 0
+        assert len([x for x in content if x.startswith('prepend_path("CMAKE_PREFIX_PATH"')]) == 0
         assert len([x for x in content if 'setenv("FOO", "foo")' in x]) == 0
         assert len([x for x in content if 'unsetenv("BAR")' in x]) == 0
 
     def test_prepend_path_separator(self, modulefile_content, module_configuration):
-        """Tests modifications to run-time environment."""
+        """Tests that we can use custom delimiters to manipulate path lists."""
 
         module_configuration("module_path_separator")
         content = modulefile_content("module-path-separator")
 
-        for line in content:
-            if re.match(r'[a-z]+_path\("COLON"', line):
-                assert line.endswith('"foo", ":")')
-            elif re.match(r'[a-z]+_path\("SEMICOLON"', line):
-                assert line.endswith('"bar", ";")')
+        assert len([x for x in content if 'append_path("COLON", "foo", ":")' in x]) == 1
+        assert len([x for x in content if 'prepend_path("COLON", "foo", ":")' in x]) == 1
+        assert len([x for x in content if 'remove_path("COLON", "foo", ":")' in x]) == 1
+        assert len([x for x in content if 'append_path("SEMICOLON", "bar", ";")' in x]) == 1
+        assert len([x for x in content if 'prepend_path("SEMICOLON", "bar", ";")' in x]) == 1
+        assert len([x for x in content if 'remove_path("SEMICOLON", "bar", ";")' in x]) == 1
+        assert len([x for x in content if 'append_path("SPACE", "qux", " ")' in x]) == 1
+        assert len([x for x in content if 'remove_path("SPACE", "qux", " ")' in x]) == 1
+
+    def test_help_message(self, modulefile_content, module_configuration):
+        """Tests the generation of module help message."""
+
+        module_configuration("autoload_direct")
+        content = modulefile_content("mpileaks target=core2")
+
+        help_msg = (
+            "help([[Name   : mpileaks]])"
+            "help([[Version: 2.3]])"
+            "help([[Target : core2]])"
+            "help()"
+            "help([[Mpileaks is a mock package that passes audits]])"
+        )
+        assert help_msg in "".join(content)
+
+        content = modulefile_content("libdwarf target=core2")
+
+        help_msg = (
+            "help([[Name   : libdwarf]])"
+            "help([[Version: 20130729]])"
+            "help([[Target : core2]])"
+            "depends_on("
+        )
+        assert help_msg in "".join(content)
 
     @pytest.mark.parametrize("config_name", ["exclude", "blacklist"])
     def test_exclude(self, modulefile_content, module_configuration, config_name):

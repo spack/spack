@@ -54,6 +54,7 @@ class Dyninst(CMakePackage):
     depends_on("boost@1.61.0:" + boost_libs, when="@10.1.0:")
     depends_on("boost@1.61.0:1.69" + boost_libs, when="@:10.0")
     depends_on("boost@1.67.0:" + boost_libs, when="@11.0.0:")
+    depends_on("boost@1.70.0:" + boost_libs, when="@12:")
 
     depends_on("libiberty+pic")
 
@@ -74,6 +75,7 @@ class Dyninst(CMakePackage):
     # package layout. Need to use tbb provided config instead.
     conflicts("intel-tbb@2021.1:")
     conflicts("intel-oneapi-tbb@2021.1:")
+    conflicts("intel-parallel-studio", when="@12.0.0:")
     depends_on("tbb@2018.6.0:", when="@10.0.0:")
 
     depends_on("cmake@3.4.0:", type="build", when="@10.1.0:")

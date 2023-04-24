@@ -18,7 +18,7 @@ class Mfem(Package, CudaPackage, ROCmPackage):
     homepage = "http://www.mfem.org"
     git = "https://github.com/mfem/mfem.git"
 
-    maintainers("v-dobrev", "tzanio", "acfisher", "goxberry", "markcmiller86")
+    maintainers("v-dobrev", "tzanio", "acfisher", "markcmiller86")
 
     test_requires_compiler = True
 
@@ -49,6 +49,13 @@ class Mfem(Package, CudaPackage, ROCmPackage):
     version("develop", branch="master")
 
     version(
+        "4.5.2",
+        sha256="7003c908c8265810ff97cb37531521b3aed24959975833a01ea05adfdb36e0f7",
+        url="https://bit.ly/mfem-4-5-2",
+        extension="tar.gz",
+    )
+
+    version(
         "4.5.0",
         sha256="4f201bec02fc5460a902596697b6c1deb7b15ac57c71f615b2ab4a8eb65665f7",
         url="https://bit.ly/mfem-4-5",
@@ -71,14 +78,14 @@ class Mfem(Package, CudaPackage, ROCmPackage):
 
     version(
         "4.2.0",
-        "4352a225b55948d2e73a5ee88cece0e88bdbe7ba6726a23d68b2736d3221a86d",
+        sha256="4352a225b55948d2e73a5ee88cece0e88bdbe7ba6726a23d68b2736d3221a86d",
         url="https://bit.ly/mfem-4-2",
         extension="tar.gz",
     )
 
     version(
         "4.1.0",
-        "4c83fdcf083f8e2f5b37200a755db843cdb858811e25a8486ad36b2cbec0e11d",
+        sha256="4c83fdcf083f8e2f5b37200a755db843cdb858811e25a8486ad36b2cbec0e11d",
         url="https://bit.ly/mfem-4-1",
         extension="tar.gz",
     )
@@ -88,7 +95,7 @@ class Mfem(Package, CudaPackage, ROCmPackage):
 
     version(
         "4.0.0",
-        "df5bdac798ea84a263979f6fbf79de9013e1c55562f95f98644c3edcacfbc727",
+        sha256="df5bdac798ea84a263979f6fbf79de9013e1c55562f95f98644c3edcacfbc727",
         url="https://bit.ly/mfem-4-0",
         extension="tar.gz",
     )
@@ -372,7 +379,8 @@ class Mfem(Package, CudaPackage, ROCmPackage):
     depends_on("raja@0.7.0:0.9.0", when="@4.0.0+raja")
     depends_on("raja@0.10.0:0.12.1", when="@4.0.1:4.2.0+raja")
     depends_on("raja@0.13.0", when="@4.3.0+raja")
-    depends_on("raja@0.14.0:", when="@4.4.0:+raja")
+    depends_on("raja@0.14.0:2022.03", when="@4.4.0:4.5.0+raja")
+    depends_on("raja@2022.10.3:", when="@4.5.2:+raja")
     for sm_ in CudaPackage.cuda_arch_values:
         depends_on(
             "raja+cuda cuda_arch={0}".format(sm_), when="+raja+cuda cuda_arch={0}".format(sm_)
@@ -528,7 +536,7 @@ class Mfem(Package, CudaPackage, ROCmPackage):
             else:
                 mfem_mpiexec = "jsrun"
                 mfem_mpiexec_np = "-p"
-        elif "FLUX_JOB_ID" in os.environ:
+        elif "FLUX_EXEC_PATH" in os.environ:
             mfem_mpiexec = "flux mini run"
             mfem_mpiexec_np = "-n"
 
@@ -651,7 +659,7 @@ class Mfem(Package, CudaPackage, ROCmPackage):
             all_hypre_libs = hypre.libs + hypre["lapack"].libs + hypre["blas"].libs
             hypre_gpu_libs = ""
             if "+cuda" in hypre:
-                hypre_gpu_libs = " -lcusparse -lcurand"
+                hypre_gpu_libs = " -lcusparse -lcurand -lcublas"
             elif "+rocm" in hypre:
                 hypre_rocm_libs = LibraryList([])
                 if "^rocsparse" in hypre:

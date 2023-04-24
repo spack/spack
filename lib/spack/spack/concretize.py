@@ -21,6 +21,7 @@ import platform
 import tempfile
 from contextlib import contextmanager
 from itertools import chain
+from typing import Union
 
 import archspec.cpu
 
@@ -43,7 +44,9 @@ from spack.package_prefs import PackagePrefs, is_spec_buildable, spec_externals
 from spack.version import Version, VersionList, VersionRange, ver
 
 #: impements rudimentary logic for ABI compatibility
-_abi = llnl.util.lang.Singleton(lambda: spack.abi.ABI())
+_abi: Union[spack.abi.ABI, llnl.util.lang.Singleton] = llnl.util.lang.Singleton(
+    lambda: spack.abi.ABI()
+)
 
 
 @functools.total_ordering
@@ -134,7 +137,7 @@ class Concretizer(object):
 
             externals = spec_externals(cspec)
             for ext in externals:
-                if ext.satisfies(spec):
+                if ext.intersects(spec):
                     usable.append(ext)
 
         # If nothing is in the usable list now, it's because we aren't
@@ -200,7 +203,7 @@ class Concretizer(object):
 
         # List of versions we could consider, in sorted order
         pkg_versions = spec.package_class.versions
-        usable = [v for v in pkg_versions if any(v.satisfies(sv) for sv in spec.versions)]
+        usable = [v for v in pkg_versions if any(v.intersects(sv) for sv in spec.versions)]
 
         yaml_prefs = PackagePrefs(spec.name, "version")
 
@@ -344,7 +347,7 @@ class Concretizer(object):
                     new_target_arch = spack.spec.ArchSpec((None, None, str(new_target)))
                     curr_target_arch = spack.spec.ArchSpec((None, None, str(curr_target)))
 
-                    if not new_target_arch.satisfies(curr_target_arch):
+                    if not new_target_arch.intersects(curr_target_arch):
                         # new_target is an incorrect guess based on preferences
                         # and/or default
                         valid_target_ranges = str(curr_target).split(",")

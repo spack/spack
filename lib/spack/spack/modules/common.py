@@ -207,7 +207,7 @@ def merge_config_rules(configuration, spec):
     # evaluated in order of appearance in the module file
     spec_configuration = module_specific_configuration.pop("all", {})
     for constraint, action in module_specific_configuration.items():
-        if spec.satisfies(constraint, strict=True):
+        if spec.satisfies(constraint):
             if hasattr(constraint, "override") and constraint.override:
                 spec_configuration = {}
             update_dictionary_extending_lists(spec_configuration, action)
@@ -428,12 +428,17 @@ class BaseConfiguration(object):
 
     default_projections = {"all": "{name}-{version}-{compiler.name}-{compiler.version}"}
 
-    def __init__(self, spec, module_set_name):
+    def __init__(self, spec, module_set_name, explicit=None):
         # Module where type(self) is defined
         self.module = inspect.getmodule(self)
         # Spec for which we want to generate a module file
         self.spec = spec
         self.name = module_set_name
+        # Software installation has been explicitly asked (get this information from
+        # db when querying an existing module, like during a refresh or rm operations)
+        if explicit is None:
+            explicit = spec._installed_explicitly()
+        self.explicit = explicit
         # Dictionary of configuration options that should be applied
         # to the spec
         self.conf = merge_config_rules(self.module.configuration(self.name), self.spec)
@@ -519,8 +524,7 @@ class BaseConfiguration(object):
         # Should I exclude the module because it's implicit?
         # DEPRECATED: remove 'blacklist_implicits' in v0.20
         exclude_implicits = get_deprecated(conf, "exclude_implicits", "blacklist_implicits", None)
-        installed_implicitly = not spec._installed_explicitly()
-        excluded_as_implicit = exclude_implicits and installed_implicitly
+        excluded_as_implicit = exclude_implicits and not self.explicit
 
         def debug_info(line_header, match_list):
             if match_list:
@@ -699,7 +703,7 @@ class BaseContext(tengine.Context):
 
         if os.path.exists(pkg.install_configure_args_path):
             with open(pkg.install_configure_args_path, "r") as args_file:
-                return args_file.read()
+                return spack.util.path.padding_filter(args_file.read())
 
         # Returning a false-like value makes the default templates skip
         # the configure option section
@@ -788,7 +792,8 @@ class BaseContext(tengine.Context):
     def _create_module_list_of(self, what):
         m = self.conf.module
         name = self.conf.name
-        return [m.make_layout(x, name).use_name for x in getattr(self.conf, what)]
+        explicit = self.conf.explicit
+        return [m.make_layout(x, name, explicit).use_name for x in getattr(self.conf, what)]
 
     @tengine.context_property
     def verbose(self):
@@ -797,7 +802,7 @@ class BaseContext(tengine.Context):
 
 
 class BaseModuleFileWriter(object):
-    def __init__(self, spec, module_set_name):
+    def __init__(self, spec, module_set_name, explicit=None):
         self.spec = spec
 
         # This class is meant to be derived. Get the module of the
@@ -806,9 +811,9 @@ class BaseModuleFileWriter(object):
         m = self.module
 
         # Create the triplet of configuration/layout/context
-        self.conf = m.make_configuration(spec, module_set_name)
-        self.layout = m.make_layout(spec, module_set_name)
-        self.context = m.make_context(spec, module_set_name)
+        self.conf = m.make_configuration(spec, module_set_name, explicit)
+        self.layout = m.make_layout(spec, module_set_name, explicit)
+        self.context = m.make_context(spec, module_set_name, explicit)
 
         # Check if a default template has been defined,
         # throw if not found
@@ -930,12 +935,25 @@ class BaseModuleFileWriter(object):
         if os.path.exists(mod_file):
             try:
                 os.remove(mod_file)  # Remove the module file
+                self.remove_module_defaults()  # Remove default targeting module file
                 os.removedirs(
                     os.path.dirname(mod_file)
                 )  # Remove all the empty directories from the leaf up
             except OSError:
                 # removedirs throws OSError on first non-empty directory found
                 pass
+
+    def remove_module_defaults(self):
+        if not any(self.spec.satisfies(default) for default in self.conf.defaults):
+            return
+
+        # This spec matches a default, symlink needs to be removed as we remove the module
+        # file it targets.
+        default_symlink = os.path.join(os.path.dirname(self.layout.filename), "default")
+        try:
+            os.unlink(default_symlink)
+        except OSError:
+            pass
 
 
 @contextlib.contextmanager
