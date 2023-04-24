@@ -14,6 +14,7 @@ class Maeparser(CMakePackage):
 
     maintainers("RMeli")
 
+    version("1.3.1", sha256="a8d80f67d1b9be6e23b9651cb747f4a3200132e7d878a285119c86bf44568e36")
     version("1.3.0", sha256="fa8f9336de1e5d1cabec29a6da04547b1fb040bb32ba511ff30b4a14097c751c")
 
     variant(
