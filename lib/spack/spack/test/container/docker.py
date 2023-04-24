@@ -116,3 +116,14 @@ def test_error_message_invalid_os(minimal_configuration):
     minimal_configuration["spack"]["container"]["images"]["os"] = "invalid:1"
     with pytest.raises(ValueError, match="invalid operating system"):
         writers.create(minimal_configuration)
+
+
+@pytest.mark.regression("34629,18030")
+def test_not_stripping_all_symbols(minimal_configuration):
+    """Tests that we are not stripping all symbols, so that libraries can still be
+    used for linking.
+    """
+    minimal_configuration["spack"]["container"]["strip"] = True
+    content = writers.create(minimal_configuration)()
+    assert "xargs strip" in content
+    assert "xargs strip -s" not in content

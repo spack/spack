@@ -23,11 +23,15 @@ class Restic(Package):
     depends_on("go@1.15:", type="build", when="@0.14.0:")
     depends_on("go", type="build")
 
+    phases = ["build", "install"]
+
     def setup_build_environment(self, env):
         # Point GOPATH at the top of the staging dir for the build step.
         env.prepend_path("GOPATH", self.stage.path)
 
-    def install(self, spec, prefix):
+    def build(self, spec, prefix):
         go("run", "build.go")
+
+    def install(self, spec, prefix):
         mkdirp(prefix.bin)
         install("restic", prefix.bin)

@@ -23,12 +23,12 @@ class Cmake(Package):
 
     version(
         "3.23.1",
-        "4cb3ff35b2472aae70f542116d616e63",
+        md5="4cb3ff35b2472aae70f542116d616e63",
         url="https://cmake.org/files/v3.4/cmake-3.4.3.tar.gz",
     )
     version(
         "3.4.3",
-        "4cb3ff35b2472aae70f542116d616e63",
+        md5="4cb3ff35b2472aae70f542116d616e63",
         url="https://cmake.org/files/v3.4/cmake-3.4.3.tar.gz",
     )
 
