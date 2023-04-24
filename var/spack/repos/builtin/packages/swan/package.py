@@ -4,6 +4,7 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 from spack.package import *
+import sys, os
 
 
 class Swan(MakefilePackage):
@@ -15,20 +16,27 @@ class Swan(MakefilePackage):
     the development of SWAN."""
 
     homepage = "http://swanmodel.sourceforge.net/"
-    url = "https://cfhcable.dl.sourceforge.net/project/swanmodel/swan/41.31/swan4131.tar.gz"
+    url = "https://cfhcable.dl.sourceforge.net/project/swanmodel/swan/41.45/swan4145.tar.gz"
 
-    maintainers("lhxone")
+    maintainers = ["lhxone", "stevenrbrandt"]
 
-    version("4131", sha256="cd3ba1f0d79123f1b7d42a43169f07575b59b01e604c5e66fbc09769e227432e")
+    parallel = False
+
+    version("4145",
+        sha256="cd3ba1f0d79123f1b7d42a43169f07575b59b01e604c5e66fbc09769e227432e",
+        url="https://cfhcable.dl.sourceforge.net/project/swanmodel/swan/41.45/swan4145.tar.gz")
+    version("4131",
+        sha256="cd3ba1f0d79123f1b7d42a43169f07575b59b01e604c5e66fbc09769e227432e",
+        url="https://cfhcable.dl.sourceforge.net/project/swanmodel/swan/41.31/swan4131.tar.gz")
 
     depends_on("mpi")
     depends_on("netcdf-fortran")
     depends_on("libfabric")
 
     def edit(self, spec, prefix):
-        env["FC"] = "gfortran"
+        env["FC"] = spec.fc
         m = FileFilter("platform.pl")
-        m.filter("F90_MPI = .*", 'F90_MPI = mpifort\\n";')
+        m.filter("F90_MPI = .*", 'F90_MPI = '+spec["mpi"].mpifc)
         m.filter("NETCDFROOT =", "NETCDFROOT = {0}" + spec["netcdf-fortran"].prefix)
 
     def build(self, spec, prefix):
