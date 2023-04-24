@@ -14,6 +14,11 @@ class PerlExporterTiny(PerlPackage):
     url = "https://cpan.metacpan.org/authors/id/T/TO/TOBYINK/Exporter-Tiny-1.000000.tar.gz"
 
     version(
+        "1.006.002",
+        sha256="6f295e2cbffb1dbc15bdb9dadc341671c1e0cd2bdf2d312b17526273c322638d",
+        url="https://cpan.metacpan.org/authors/id/T/TO/TOBYINK/Exporter-Tiny-1.006002.tar.gz",
+    )
+    version(
         "1.006.001",
         sha256="8df2a7ee5a11bacb8166edd9ee8fc93172278a74d5abe2021a5f4a7d57915c50",
         url="https://cpan.metacpan.org/authors/id/T/TO/TOBYINK/Exporter-Tiny-1.006001.tar.gz",

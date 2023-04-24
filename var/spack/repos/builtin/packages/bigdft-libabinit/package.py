@@ -21,6 +21,10 @@ class BigdftLibabinit(AutotoolsPackage):
     version("1.9.1", sha256="3c334da26d2a201b572579fc1a7f8caad1cbf971e848a3e10d83bc4dc8c82e41")
     version("1.9.0", sha256="4500e505f5a29d213f678a91d00a10fef9dc00860ea4b3edf9280f33ed0d1ac8")
 
+    depends_on("autoconf", type="build")
+    depends_on("automake", type="build")
+    depends_on("libtool", type="build")
+
     variant("mpi", default=True, description="Enable MPI support")
 
     depends_on("python@3.0:", type=("build", "run"))
@@ -32,23 +36,22 @@ class BigdftLibabinit(AutotoolsPackage):
     for vers in ["1.9.0", "1.9.1", "1.9.2", "develop"]:
         depends_on("bigdft-futile@{0}".format(vers), when="@{0}".format(vers))
 
-    build_directory = "libABINIT"
-
-    def autoreconf(self, spec, prefix):
-        autoreconf = which("autoreconf")
-
-        with working_dir(self.build_directory):
-            autoreconf("-fi")
+    configure_directory = "libABINIT"
 
     def configure_args(self):
         spec = self.spec
         prefix = self.prefix
 
+        fcflags = []
+        if self.spec.satisfies("%gcc@10:"):
+            fcflags.append("-fallow-argument-mismatch")
+
         args = [
+            "FCFLAGS=%s" % " ".join(fcflags),
             "--with-libxc-libs=%s %s"
             % (spec["libxc"].libs.ld_flags, spec["libxc"].libs.ld_flags + "f90"),
             "--with-libxc-incs=%s" % spec["libxc"].headers.include_flags,
-            "--with-futile-libs=%s" % spec["bigdft-futile"].prefix.lib,
+            "--with-futile-libs=%s" % spec["bigdft-futile"].libs.ld_flags,
             "--with-futile-incs=%s" % spec["bigdft-futile"].headers.include_flags,
             "--with-moduledir=%s" % prefix.include,
             "--prefix=%s" % prefix,

@@ -2420,7 +2420,10 @@ class BuildRequest(object):
         else:
             cache_only = self.install_args.get("dependencies_cache_only")
 
-        if not cache_only or include_build_deps:
+        # Include build dependencies if pkg is not installed and cache_only
+        # is False, or if build depdencies are explicitly called for
+        # by include_build_deps.
+        if include_build_deps or not (cache_only or pkg.spec.installed):
             deptypes.append("build")
         if self.run_tests(pkg):
             deptypes.append("test")

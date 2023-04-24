@@ -17,7 +17,7 @@ class ScineReaduct(CMakePackage):
     homepage = "https://scine.ethz.ch/download/readuct"
     url = "https://github.com/qcscine/readuct/archive/refs/tags/4.1.0.tar.gz"
 
-    version("4.1.0", "9cec0192a444403d6a8fd096509798c49fbd1eec298ec7194aba915e31f50782")
+    version("4.1.0", sha256="9cec0192a444403d6a8fd096509798c49fbd1eec298ec7194aba915e31f50782")
 
     resource(
         name="dev",
