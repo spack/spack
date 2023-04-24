@@ -84,6 +84,9 @@ class Silo(AutotoolsPackage):
     # See https://github.com/LLNL/Silo/pull/307
     patch("hdf5-114.patch", when="@4.11: +hdf5 ^hdf5@1.13.2:")
 
+    # Bug in SILO macors
+    patch("hdf5-db-obj-macros.patch", when="@4.11: +hdf5")
+
     # hzip and fpzip are not available in the BSD releases
     conflicts("+hzip", when="@4.10.2-bsd,4.11-bsd")
     conflicts("+fpzip", when="@4.10.2-bsd,4.11-bsd")
