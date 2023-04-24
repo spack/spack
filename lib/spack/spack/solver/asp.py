@@ -2404,10 +2404,10 @@ class SpecBuilder(object):
                     # add flags from each source, lowest to highest precedence
                     for name in sorted_sources:
                         all_src_flags = list()
-                        sources = [self._specs[name]]
+                        per_pkg_sources = [self._specs[name]]
                         if name in cmd_specs:
-                            sources.append(cmd_specs[name])
-                        for source in sources:
+                            per_pkg_sources.append(cmd_specs[name])
+                        for source in per_pkg_sources:
                             all_src_flags.extend(source.compiler_flags.get(flag_type, []))
                         extend_flag_list(from_sources, all_src_flags)
 
