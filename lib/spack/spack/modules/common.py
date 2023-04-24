@@ -39,6 +39,7 @@ from typing import Optional
 import llnl.util.filesystem
 import llnl.util.tty as tty
 from llnl.util.lang import dedupe
+from llnl.util.symlink import symlink
 
 import spack.build_environment
 import spack.config
@@ -926,7 +927,7 @@ class BaseModuleFileWriter(object):
             # symlinks do not cause an error.
             default_path = os.path.join(os.path.dirname(self.layout.filename), "default")
             default_tmp = os.path.join(os.path.dirname(self.layout.filename), ".tmp_spack_default")
-            os.symlink(self.layout.filename, default_tmp)
+            symlink(self.layout.filename, default_tmp)
             os.rename(default_tmp, default_path)
 
     def remove(self):

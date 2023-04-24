@@ -46,8 +46,7 @@ def mock_package_perms(monkeypatch):
 
     yield perms
 
-
-@pytest.mark.skipif(sys.platform == "win32", reason="Symlinks do not work on windows yet")
+@pytest.mark.skipif(sys.platform == "win32", reason="File permissions incorrect on windows")
 def test_modules_written_with_proper_permissions(
     mock_module_filename, mock_package_perms, mock_packages, config
 ):
@@ -57,11 +56,11 @@ def test_modules_written_with_proper_permissions(
     # one. Tcl picked at random
     generator = spack.modules.tcl.TclModulefileWriter(spec, "default")
     generator.write()
-
+    import pdb; pdb.set_trace()
     assert mock_package_perms & os.stat(mock_module_filename).st_mode == mock_package_perms
 
 
-@pytest.mark.skipif(sys.platform == "win32", reason="Symlinks do not work on windows yet")
+@pytest.mark.skipif(sys.platform == "win32", reason="True symlinks need admin permissions on windows")
 @pytest.mark.parametrize("module_type", ["tcl", "lmod"])
 def test_modules_default_symlink(
     module_type, mock_packages, mock_module_filename, mock_module_defaults, config
