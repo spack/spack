@@ -12,9 +12,11 @@ class PyTopiary(PythonPackage):
     homepage = "https://github.com/harmslab/topiary"
 
     url = "https://github.com/harmslab/topiary/archive/refs/tags/v0.9.9.tar.gz"
+    git = "https://github.com/harmslab/topiary.git"
 
     maintainers("snehring")
 
+    version("main", branch="main")
     version("0.9.9", sha256="5601fba92e7add33a3732482426b2c7ef46b0fccc4a4ea11357537e1b937903c")
 
     depends_on("python@3.8:", type=("build", "run"))
@@ -33,7 +35,7 @@ class PyTopiary(PythonPackage):
 
     depends_on("blast-plus", type="run")
     depends_on("muscle5@5.0:", type="run")
-    depends_on("generax@2.0:", type="run")
+    depends_on("generax@2.0:+mpi", type="run")
     depends_on("raxml-ng@1.1:", type="run")
 
     depends_on("mpi", type="run")

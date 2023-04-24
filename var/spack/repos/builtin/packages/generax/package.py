@@ -32,8 +32,6 @@ class Generax(CMakePackage):
     build_directory = "build"
 
     patch("model-stdexcept.patch", when="@:2.0.4")
-    patch("filesystem-copy-close.patch", when="@:2.0.4")
-    patch("debugging.patch")
 
     def install(self, spec, prefix):
         install_tree("build/bin", prefix.bin)
