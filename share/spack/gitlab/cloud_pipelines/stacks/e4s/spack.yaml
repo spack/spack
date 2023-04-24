@@ -94,6 +94,7 @@ spack:
   - mercury
   - metall
   - mfem
+  - mgard +serial +openmp +timing +unstructured ~cuda
   - mpark-variant
   - mpifileutils ~xattr
   - nccmp
@@ -168,6 +169,7 @@ spack:
   - kokkos-kernels +cuda ^kokkos +wrapper +cuda
   - magma +cuda
   - mfem +cuda
+  - mgard +serial +openmp +timing +unstructured +cuda
   - omega-h +cuda
   - papi +cuda
   - petsc +cuda
