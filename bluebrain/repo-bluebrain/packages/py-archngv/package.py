@@ -15,6 +15,7 @@ class PyArchngv(PythonPackage):
     version("develop", branch="main")
     version("2.0.2", tag="ArchNGV-v2.0.2")
     version("2.0.1", tag="ArchNGV-v2.0.1")
+    version("3.0.0", tag="ArchNGV-v3.0.0")
 
     depends_on("py-setuptools@42:", type="build")
 
@@ -26,9 +27,10 @@ class PyArchngv(PythonPackage):
     depends_on("py-cached-property@1.5:", type=("build", "run"))
     depends_on("py-voxcell@3.0.0:", type=("build", "run"))
     depends_on("py-vascpy@0.1.0:", type=("build", "run"))
+    depends_on("py-atlas-commons@0.1.4:", type=("build", "run"))
 
     depends_on("py-ngv-ctools@1.0:", type=("build", "run"))
-    depends_on("spatial-index@0.4.2:", type=("build", "run"))
+    depends_on("spatial-index@2.0.0:", type=("build", "run"))
     depends_on("py-bluepy-configfile@0.1.11:", type=("build", "run"))
     depends_on("py-click@7.0:", type=("build", "run"))
     depends_on("py-numpy-stl@2.10:2.15.1", type=("build", "run"))
