@@ -37,6 +37,9 @@ class Gmp(AutotoolsPackage, GNUMirrorPackage):
     )
     variant("cxx", default=True, description="Enable C++ support")
 
+    # can be removed upon  >= v6.2.2
+    patch("avoid-x18.diff")
+
     # gmp's configure script seems to be broken; it sometimes misdetects
     # shared library support. Regenerating it fixes the issue.
     force_autoreconf = True
