@@ -56,7 +56,7 @@ def test_modules_written_with_proper_permissions(
     # one. Tcl picked at random
     generator = spack.modules.tcl.TclModulefileWriter(spec, "default")
     generator.write()
-    import pdb; pdb.set_trace()
+
     assert mock_package_perms & os.stat(mock_module_filename).st_mode == mock_package_perms
 
 
