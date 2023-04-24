@@ -26,6 +26,7 @@ class Flecsi(CMakePackage, CudaPackage, ROCmPackage):
     version("develop", branch="develop")
     version("2.2.0", tag="v2.2.0", preferred=True)
     version("2.1.0", tag="v2.1.0")
+    version("1.4.1", tag="v1.4.1")
     version(
         "1.4.develop", git="https://github.com/laristra/flecsi.git", branch="1.4", deprecated=True
     )
