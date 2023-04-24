@@ -12,6 +12,7 @@ class Speexdsp(AutotoolsPackage):
     homepage = "https://github.com/xiph/speexdsp"
     url = "https://github.com/xiph/speexdsp/archive/SpeexDSP-1.2.0.tar.gz"
 
+    version("1.2.1", sha256="d17ca363654556a4ff1d02cc13d9eb1fc5a8642c90b40bd54ce266c3807b91a7")
     version("1.2.0", sha256="d7032f607e8913c019b190c2bccc36ea73fc36718ee38b5cdfc4e4c0a04ce9a4")
 
     depends_on("autoconf", type="build")
