@@ -15,6 +15,7 @@ class Fdupes(AutotoolsPackage):
 
     maintainers("michaelkuhn")
 
+    version("2.2.1", sha256="846bb79ca3f0157856aa93ed50b49217feb68e1b35226193b6bc578be0c5698d")
     version("2.1.2", sha256="cd5cb53b6d898cf20f19b57b81114a5b263cc1149cd0da3104578b083b2837bd")
 
     variant("ncurses", default=True, description="ncurses support")
