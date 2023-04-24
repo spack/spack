@@ -398,7 +398,7 @@ class Boost(Package):
     patch("intel-oneapi-linux-jam.patch", when="@1.76: %oneapi")
 
     # https://github.com/boostorg/phoenix/issues/111
-    patch("boost_phoenix_1.81.0.patch", level=2, when="@1.81.0")
+    patch("boost_phoenix_1.81.0.patch", level=2, when="@1.81.0:1.82.0")
 
     # https://github.com/boostorg/filesystem/issues/284
     patch(
