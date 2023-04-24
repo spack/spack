@@ -46,6 +46,7 @@ def mock_package_perms(monkeypatch):
 
     yield perms
 
+
 @pytest.mark.skipif(sys.platform == "win32", reason="File permissions incorrect on windows")
 def test_modules_written_with_proper_permissions(
     mock_module_filename, mock_package_perms, mock_packages, config
