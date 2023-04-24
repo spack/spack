@@ -64,9 +64,7 @@ def symlink(source_path: str, link_path: str):
             # links from being made.
             link_parent_dir = os.path.dirname(link_path)
             relative_path = os.path.join(link_parent_dir, source_path)
-            if os.path.exists(relative_path):
-                source_path = relative_path
-            else:
+            if not os.path.exists(relative_path):
                 raise SymlinkError(
                     f"The source path ({source_path}) is not relative to the link path "
                     f"({link_path}). Resulting link would be broken so not making link."

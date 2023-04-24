@@ -189,7 +189,7 @@ class TestCopyTree:
     def test_symlinks_true_ignore(self, stage):
         """Test copying when specifying relative paths that should be ignored"""
         with fs.working_dir(str(stage)):
-            ignore = lambda p: p in ["c/d/e", "a"]
+            ignore = lambda p: p in ["c/d/e", "a", "source/a"]
             fs.copy_tree("source", "dest", symlinks=True, ignore=ignore)
             assert not os.path.exists("dest/a")
             assert os.path.exists("dest/c/d")
@@ -748,7 +748,7 @@ def test_lexists_islink_isdir(tmpdir):
     assert fs.lexists_islink_isdir(nonexistent) == (False, False, False)
     assert fs.lexists_islink_isdir(symlink_to_dir) == (True, True, True)
     assert fs.lexists_islink_isdir(symlink_to_file) == (True, True, False)
-    assert fs.lexists_islink_isdir(symlink_to_dangling_symlink) == (True, True, False)
+    assert fs.lexists_islink_isdir(symlink_to_dangling_symlink) == (False, False, False)
     assert fs.lexists_islink_isdir(symlink_to_symlink_to_dir) == (True, True, True)
     assert fs.lexists_islink_isdir(symlink_to_symlink_to_file) == (True, True, False)
 
