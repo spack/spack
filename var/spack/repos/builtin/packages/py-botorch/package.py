@@ -20,7 +20,7 @@ class PyBotorch(PythonPackage):
     depends_on("python@3.7:", type=("build", "run"))
     depends_on("python@3.8:", when="@0.8.3:", type=("build", "run"))
     depends_on("py-setuptools", type="build")
-    depends_on("py-setuptools@:47", when="@:0.6.4", type='build')
+    depends_on("py-setuptools@:47", when="@:0.6.4", type="build")
     depends_on("py-setuptools-scm", type="build")
     depends_on("py-setuptools-scm+toml", when="@0.8.3:", type="build")
     depends_on("py-torch@1.12:", when="@0.8.3:", type=("build", "run"))
