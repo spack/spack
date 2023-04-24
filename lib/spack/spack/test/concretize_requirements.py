@@ -348,6 +348,23 @@ packages:
     assert spec["y"].satisfies("@2.4+shared")
 
 
+def test_require_cflags(concretize_scope, test_repo):
+    """'one_of' allows forcing the concretizer to satisfy one of
+    the specs in the group (but not all have to be satisfied).
+    """
+    if spack.config.get("config:concretizer") == "original":
+        pytest.skip("Original concretizer does not support configuration" " requirements")
+
+    conf_str = """\
+packages:
+  y:
+    require: cflags="-g"
+"""
+    update_packages_config(conf_str)
+    spec = Spec("y").concretized()
+    assert spec.satisfies("cflags=-g")
+
+
 def test_one_package_multiple_oneof_groups(concretize_scope, test_repo):
     """One package has two 'one_of' groups; check that both are
     applied.
