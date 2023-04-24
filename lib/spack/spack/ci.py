@@ -1662,16 +1662,16 @@ def copy_files_to_artifacts(src, artifacts_dir):
         tty.warn(msg)
 
 
-def copy_stage_logs_to_artifacts(job_spec, job_log_dir):
+def copy_stage_logs_to_artifacts(job_spec: spack.spec.Spec, job_log_dir: str) -> None:
     """Copy selected build stage file(s) to the given artifacts directory
 
-    Looks for spack-build-out.txt in the stage directory of the given
-    job_spec, and attempts to copy the file into the directory given
+    Looks for build logs in the stage directory of the given
+    job_spec, and attempts to copy the files into the directory given
     by job_log_dir.
 
-    Parameters:
-        job_spec (spack.spec.Spec): spec associated with spack install log
-        job_log_dir (str): path into which build log should be copied
+    Args:
+        job_spec: spec associated with spack install log
+        job_log_dir: path into which build log should be copied
     """
     tty.debug("job spec: {0}".format(job_spec))
     if not job_spec:
@@ -1690,8 +1690,8 @@ def copy_stage_logs_to_artifacts(job_spec, job_log_dir):
 
     stage_dir = job_pkg.stage.path
     tty.debug("stage dir: {0}".format(stage_dir))
-    build_out_src = os.path.join(stage_dir, "spack-build-out.txt")
-    copy_files_to_artifacts(build_out_src, job_log_dir)
+    for file in [job_pkg.log_path, job_pkg.env_mods_path, *job_pkg.builder.archive_files]:
+        copy_files_to_artifacts(file, job_log_dir)
 
 
 def copy_test_logs_to_artifacts(test_stage, job_test_dir):
