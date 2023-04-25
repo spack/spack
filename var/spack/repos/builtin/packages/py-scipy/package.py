@@ -15,7 +15,7 @@ class PyScipy(PythonPackage):
     as routines for numerical integration and optimization."""
 
     homepage = "https://www.scipy.org/"
-    pypi = "scipy/scipy-1.5.4.tar.gz"
+    pypi = "scipy/scipy-1.10.1.tar.gz"
     git = "https://github.com/scipy/scipy.git"
 
     maintainers("adamjstewart", "rgommers")
@@ -75,12 +75,12 @@ class PyScipy(PythonPackage):
     depends_on("py-pybind11@2.4.3:", when="@1.5:1.6.1", type=("build", "link"))
     depends_on("py-pybind11@2.4.0:", when="@1.4.1:1.4", type=("build", "link"))
     depends_on("py-pybind11@2.2.4:", when="@1.4.0", type=("build", "link"))
-    depends_on("py-pythran@0.12", when="@1.10:", type=("build", "link"))
-    depends_on("py-pythran@0.9.12:0.12", when="@1.9.2:1.9", type=("build", "link"))
-    depends_on("py-pythran@0.9.12:0.11", when="@1.9.0:1.9.1", type=("build", "link"))
-    depends_on("py-pythran@0.10", when="@1.8", type=("build", "link"))
-    depends_on("py-pythran@0.9.12:0.9", when="@1.7.2:1.7", type=("build", "link"))
-    depends_on("py-pythran@0.9.11", when="@1.7.0:1.7.1", type=("build", "link"))
+    depends_on("py-pythran@0.12", when="@1.10:", type="build")
+    depends_on("py-pythran@0.9.12:0.12", when="@1.9.2:1.9", type="build")
+    depends_on("py-pythran@0.9.12:0.11", when="@1.9.0:1.9.1", type="build")
+    depends_on("py-pythran@0.10", when="@1.8", type="build")
+    depends_on("py-pythran@0.9.12:0.9", when="@1.7.2:1.7", type="build")
+    depends_on("py-pythran@0.9.11", when="@1.7.0:1.7.1", type="build")
     depends_on("py-wheel@:0.38", when="@1.10:", type="build")
     depends_on("py-wheel@:0.37", when="@:1.9", type="build")
     depends_on("pkgconfig", when="@1.9:", type="build")
@@ -203,10 +203,16 @@ class PyScipy(PythonPackage):
             lapack = "mkl-dynamic-lp64-seq"
         if spec["blas"].name in ["blis", "amdblis"]:
             blas = "blis"
-        if blas == "armpl":
-            blas += "-dynamic-lp64-seq"
-        if lapack == "armpl":
-            lapack += "-dynamic-lp64-seq"
+        if "armpl" in blas:
+            if "_mp" in blas:
+                blas = "armpl-dynamic-lp64-omp"
+            else:
+                blas = "armpl-dynamic-lp64-seq"
+        if "armpl" in lapack:
+            if "_mp" in lapack:
+                lapack = "armpl-dynamic-lp64-omp"
+            else:
+                lapack = "armpl-dynamic-lp64-seq"
 
         args = [
             "setup",

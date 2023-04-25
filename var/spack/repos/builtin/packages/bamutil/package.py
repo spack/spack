@@ -37,7 +37,7 @@ class Bamutil(MakefilePackage):
 
     @when("@1.0.15")
     def edit(self, spec, prefix):
-        filter_file("git://", "https://", "Makefile.inc", String=True)
+        filter_file("git://", "https://", "Makefile.inc", string=True)
 
     @when("@1.0.15:")
     def build(self, spec, prefix):

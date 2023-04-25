@@ -36,9 +36,10 @@ import os
 import re
 import sys
 from contextlib import contextmanager
-from typing import Dict, List, Optional
+from typing import Dict, List, Optional, Union
 
 import ruamel.yaml as yaml
+from ruamel.yaml.comments import Comment
 from ruamel.yaml.error import MarkedYAMLError
 
 import llnl.util.lang
@@ -543,16 +544,14 @@ class Configuration(object):
         scope = self._validate_scope(scope)  # get ConfigScope object
 
         # manually preserve comments
-        need_comment_copy = section in scope.sections and scope.sections[section] is not None
+        need_comment_copy = section in scope.sections and scope.sections[section]
         if need_comment_copy:
-            comments = getattr(
-                scope.sections[section][section], yaml.comments.Comment.attrib, None
-            )
+            comments = getattr(scope.sections[section][section], Comment.attrib, None)
 
         # read only the requested section's data.
         scope.sections[section] = syaml.syaml_dict({section: update_data})
         if need_comment_copy and comments:
-            setattr(scope.sections[section][section], yaml.comments.Comment.attrib, comments)
+            setattr(scope.sections[section][section], Comment.attrib, comments)
 
         scope._write_section(section)
 
@@ -838,7 +837,7 @@ def _config():
 
 
 #: This is the singleton configuration instance for Spack.
-config = llnl.util.lang.Singleton(_config)
+config: Union[Configuration, llnl.util.lang.Singleton] = llnl.util.lang.Singleton(_config)
 
 
 def add_from_file(filename, scope=None):

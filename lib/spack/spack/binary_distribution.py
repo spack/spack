@@ -24,6 +24,7 @@ import urllib.request
 import warnings
 from contextlib import closing, contextmanager
 from gzip import GzipFile
+from typing import Union
 from urllib.error import HTTPError, URLError
 
 import ruamel.yaml as yaml
@@ -502,7 +503,9 @@ def _binary_index():
 
 
 #: Singleton binary_index instance
-binary_index = llnl.util.lang.Singleton(_binary_index)
+binary_index: Union[BinaryCacheIndex, llnl.util.lang.Singleton] = llnl.util.lang.Singleton(
+    _binary_index
+)
 
 
 class NoOverwriteException(spack.error.SpackError):
@@ -2023,7 +2026,7 @@ def install_root_node(spec, allow_root, unsigned=False, force=False, sha256=None
     with spack.util.path.filter_padding():
         tty.msg('Installing "{0}" from a buildcache'.format(spec.format()))
         extract_tarball(spec, download_result, allow_root, unsigned, force)
-        spack.hooks.post_install(spec)
+        spack.hooks.post_install(spec, False)
         spack.store.db.add(spec, spack.store.layout)
 
 
