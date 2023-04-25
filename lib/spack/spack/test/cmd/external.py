@@ -308,9 +308,63 @@ def test_find_external_merge(mutable_config, mutable_mock_repo):
     assert {"spec": "find-externals1@1.2", "prefix": "/x/y2/"} in pkg_externals
 
 
+def test_remove_external_single_package(mutable_config):
+    """Test invoking `spack external remove` with a single spec
+    that is present in packages.yaml
+    """
+    # confirm package is present in externals before removal
+    assert mutable_config.get("packages")["old-external"]["externals"]
+    external("remove", "-y", "--scope", "site", "old-external")
+    assert not mutable_config.get("packages")["old-external"].get("externals", None)
+
+
+def test_remove_external_non_existent(mutable_config):
+    """Test that spack will error if trying to remove non existent ext package"""
+    # confirm package does not exist
+    assert not mutable_config.get("packages").get("not-there-package", None)
+    with pytest.raises(spack.main.SpackCommandError):
+        out = external("remove", "-y", "not-there-package")
+        assert "No specs matching not-there-package were found" in out
+
+
+def test_remove_external_no_spec(mutable_config):
+    with pytest.raises(spack.main.SpackCommandError):
+        out = external("remove")
+        assert "spack external remove requires at least one package to remove" in out
+
+
+def test_remove_external_multiple_packages(mutable_config):
+    assert mutable_config.get("packages")["old-external"]["externals"]
+    assert mutable_config.get("packages")["externaltool"]["externals"]
+    external("remove", "-y", "--scope", "site", "old-external", "externaltool")
+    assert not mutable_config.get("packages")["old-external"].get("externals", None)
+    assert not mutable_config.get("packages")["externaltool"].get("externals", None)
+
+
+def test_remove_external_all(mutable_config):
+    # remove all packages
+    external("remove", "--scope", "site", "--all", "-y")
+    # ensure all references to external packages are removed
+    pkgs_conf = mutable_config.get("packages")
+    for pkg in pkgs_conf:
+        assert not pkgs_conf[pkg].get("externals", None)
+
+
 def test_list_detectable_packages(mutable_config, mutable_mock_repo):
     external("list")
     assert external.returncode == 0
+
+
+def test_list_detectable_detected_packages(mutable_config):
+    output = external("list", "--detected")
+    # package that is in config
+    assert "external-buildable-with-variant" in output
+    # check that package is actually present in conf
+    assert "external-buildable-with-variant" in mutable_config.get("packages")
+    # check that package in conf has externals
+    assert mutable_config.get("packages")["external-buildable-with-variant"]["externals"]
+    # package that would be in "spack external list" but not "--detected"
+    assert "cmake" not in output
 
 
 def test_packages_yaml_format(mock_executable, mutable_config, monkeypatch, _platform_executables):
