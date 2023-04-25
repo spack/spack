@@ -18,6 +18,8 @@ class Eckit(CMakePackage):
 
     maintainers = ["skosukhin", "climbfuji"]
 
+    version("1.23.0", sha256="3cac55ddf7036ecd32cb0974a1ec3a2d347de574ab3a2c0bb6c6f8982e5a7a09")
+    version("1.22.1", sha256="a3463d07e47e3bd3e5efa13fdc03d7d3a30ada919ccec3259c6c9c7da4cfdfd9")
     version("1.20.2", sha256="9c11ddaaf346e40d11312b81ca7f1b510017f26618f4c0f5c5c59c37623fbac8")
     version("1.19.0", sha256="a5fef36b4058f2f0aac8daf5bcc9740565f68da7357ddd242de3a5eed4765cc7")
     version("1.16.3", sha256="d2aae7d8030e2ce39e5d04e36dd6aa739f3c8dfffe32c61c2a3127c36b573485")
@@ -57,7 +59,8 @@ class Eckit(CMakePackage):
 
     # Build issues with cmake 3.20, not sure about 3.21
     depends_on("cmake@3.12:3.19,3.22:", type="build")
-    depends_on("ecbuild@3.5:", type="build")
+    depends_on("ecbuild@3.5:", when="@:1.20.99", type="build")
+    depends_on("ecbuild@3.7:", when="@1.21:", type="build")
 
     depends_on("mpi", when="+mpi")
     depends_on("llvm-openmp", when="+openmp %apple-clang", type=("build", "run"))
