@@ -23,8 +23,6 @@ class Mpich(Package):
     version("3.0", "0123456789abcdef0123456789abcdef")
     version("1.0", "0123456789abcdef0123456789abcdef")
 
-    #provides("mpi")
-
     provides("mpi@:3", when="@3:")
     provides("mpi@:1", when="@:1")
 

@@ -144,7 +144,6 @@ build_priority_offset = 200
 #: Priority offset of "fixed" criteria (those w/o build criteria)
 fixed_priority_offset = 100
 
-_debug = False
 
 def build_criteria_names(costs, arg_tuples):
     """Construct an ordered mapping from criteria names to costs."""
@@ -1842,10 +1841,6 @@ class SpackSolverSetup(object):
         )
         assert self.possible_virtuals is not None, msg
 
-        global _debug
-        if _debug:
-            import pdb; pdb.set_trace()
-
         # what provides what
         for vspec in sorted(self.possible_virtuals):
             self.gen.fact(fn.virtual(vspec))
@@ -2326,11 +2321,7 @@ class SpecBuilder(object):
         self._specs[pkg].update_variant_validate(name, value)
 
     def version(self, pkg, version):
-        try:
-            self._specs[pkg].versions = spack.version.ver([version])
-        except:
-            import pdb; pdb.set_trace()
-            raise
+        self._specs[pkg].versions = spack.version.ver([version])
 
     def node_compiler_version(self, pkg, compiler, version):
         self._specs[pkg].compiler = spack.spec.CompilerSpec(compiler)

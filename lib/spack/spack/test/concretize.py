@@ -218,8 +218,6 @@ class Changing(Package):
         )
         yield _changing_pkg
 
-from spack.main import SpackCommand
-solve = SpackCommand("solve")
 
 # This must use the mutable_config fixture because the test
 # adjusting_default_target_based_on_compiler uses the current_host fixture,
@@ -227,13 +225,7 @@ solve = SpackCommand("solve")
 @pytest.mark.usefixtures("mutable_config", "mock_packages")
 class TestConcretize(object):
     def test_concretize(self, spec):
-        try:
-            check_concretize(spec)
-        except:
-            spack.solver.asp._debug = True
-            out = solve("--show=asp", spec, output=str)
-            import pdb; pdb.set_trace()
-            raise
+        check_concretize(spec)
 
     def test_concretize_mention_build_dep(self):
         spec = check_concretize("cmake-client ^cmake@3.21.3")
