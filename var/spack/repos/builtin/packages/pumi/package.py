@@ -106,25 +106,34 @@ class Pumi(CMakePackage):
             args.append("-DSIM_MPI=" + mpi_id)
         return args
 
-    def test(self):
+    def test_uniform(self):
+        """run uniform to check pumi uniform mesh refinement"""
         if self.spec.version <= Version("2.2.6"):
-            return
-        exe = "uniform"
-        options = ["../testdata/pipe.dmg", "../testdata/pipe.smb", "pipe_unif.smb"]
-        expected = "mesh pipe_unif.smb written"
-        description = "testing pumi uniform mesh refinement"
-        self.run_test(exe, options, expected, purpose=description, work_dir=self.prefix.bin)
+            raise SkipTest("Test is only available for v2.2.7 on")
 
-        mpiexec = Executable(join_path(self.spec["mpi"].prefix.bin, "mpiexec")).command
-        mpiopt = ["-n", "2"]
-        exe = ["split"]
-        options = ["../testdata/pipe.dmg", "../testdata/pipe.smb", "pipe_2_.smb", "2"]
-        expected = "mesh pipe_2_.smb written"
-        description = "testing pumi mesh partitioning"
-        self.run_test(
-            mpiexec,
-            mpiopt + exe + options,
-            expected,
-            purpose=description,
-            work_dir=self.prefix.bin,
-        )
+        options = [
+            join_path(self.prefix.testdata, "pipe.dmg"),
+            join_path(self.prefix.testdata, "pipe.smb"),
+            "pipe_unif.smb",
+        ]
+        uniform = which(self.prefix.bin.uniform)
+        out = uniform(*options, output=str.split, error=str.split)
+        assert "mesh pipe_unif.smb written" in out
+
+    def test_split(self):
+        """run split to check mesh partitioning"""
+        if self.spec.version <= Version("2.2.6"):
+            raise SkipTest("Test is only available for v2.2.7 on")
+
+        mpiexec = which(self.spec["mpi"].prefix.bin.mpiexec)
+        options = [
+            "-n",
+            "2",
+            "split",
+            join_path(self.prefix.testdata, "pipe.dmg"),
+            join_path(self.prefix.testdata, "pipe.smb"),
+            "pipe_2_.smb",
+            "2",
+        ]
+        out = mpiexec(*options, output=str.split, error=str.split)
+        assert "mesh pipe_2_.smb written" in out

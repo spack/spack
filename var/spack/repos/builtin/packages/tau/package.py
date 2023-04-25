@@ -369,41 +369,45 @@ class Tau(Package):
         install test subdirectory for use during `spack test run`."""
         self.cache_extra_test_sources(self.matmult_test)
 
-    def _run_matmult_test(self):
-        mm_dir = join_path(self.test_suite.current_test_cache_dir, self.matmult_test)
-        self.run_test(
-            "make",
-            ["all"],
-            [],
-            0,
-            False,
-            "Instrument and build matrix multiplication test code",
-            False,
-            mm_dir,
-        )
-        test_exe = "matmult"
-        if "+mpi" in self.spec:
-            test_args = ["-n", "4", test_exe]
-            mpiexe_list = ["mpirun", "mpiexec", "srun"]
-            for mpiexe in mpiexe_list:
-                if which(mpiexe) is not None:
-                    self.run_test(
-                        mpiexe, test_args, [], 0, False, "Run matmult test with mpi", False, mm_dir
-                    )
-                    break
-        else:
-            self.run_test(test_exe, [], [], 0, False, "Run sequential matmult test", False, mm_dir)
-        self.run_test(
-            "pprof",
-            [],
-            [],
-            0,
-            False,
-            "Run pprof profile analysis tool on profile output",
-            False,
-            mm_dir,
-        )
+    def test_matmult_mpi(self):
+        """instrument, build, and run mpi matrix multiplication test"""
+        if "+mpi" not in self.spec:
+            raise SkipTest("Test required build with +mpi")
 
-    def test(self):
-        # Run mm test program pulled from the build
-        self._run_matmult_test()
+        mm_dir = join_path(self.test_suite.current_test_cache_dir, self.matmult_test)
+        with working_dir(mm_dir):
+            make = which("make")
+            make("all")
+
+            test_exe = "matmult"
+
+            mpiexe_list = [
+                self.spec["mpi"].prefix.bin.mpirun,
+                self.spec["mpi"].prefix.bin.mpiexec,
+                "srun",
+            ]
+            mpiexe = which(*mpiexe_list)
+            test_args = ["-n", "4", test_exe]
+            mpiexe(*test_args)
+
+            pprof = which("pprof")
+            pprof()
+
+            # TODO: Is this appropriate?
+            make("clean")
+
+    def test_matmult_seq(self):
+        """build and run sequential matrix multiplication test"""
+        mm_dir = join_path(self.test_suite.current_test_cache_dir, self.matmult_test)
+        with working_dir(mm_dir):
+            make = which("make")
+            make("all")
+
+            matmult = which("matmult")
+            matmult()
+
+            pprof = which("pprof")
+            pprof()
+
+            # TODO: Is this appropriate?
+            make("clean")

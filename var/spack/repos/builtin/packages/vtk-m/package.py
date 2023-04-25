@@ -294,11 +294,8 @@ class VtkM(CMakePackage, CudaPackage, ROCmPackage):
     # Delegate in the vtk-m built smoke test
     def smoke_test(self):
         spec = self.spec
-
         if "+examples" not in spec:
-            raise RuntimeError(
-                "Examples needed for smoke test missing", "reinstall with `+examples` variant"
-            )
+            raise SkipTest("Test requires a +examples build")
 
         testdir = "smoke_test_build"
         with working_dir(testdir, create=True):
@@ -315,5 +312,5 @@ class VtkM(CMakePackage, CudaPackage, ROCmPackage):
     def build_test(self):
         self.smoke_test()
 
-    def test(self):
+    def test_smoke_test(self):
         self.smoke_test()

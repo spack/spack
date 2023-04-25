@@ -25,6 +25,8 @@ class Legion(CMakePackage, ROCmPackage):
     homepage = "https://legion.stanford.edu/"
     git = "https://github.com/StanfordLegion/legion.git"
 
+    test_requires_compiler = True
+
     maintainers("pmccormick", "streichler")
     tags = ["e4s"]
     version("21.03.0", tag="legion-21.03.0")
@@ -423,35 +425,27 @@ class Legion(CMakePackage, ROCmPackage):
         install test subdirectory for use during `spack test run`."""
         self.cache_extra_test_sources([join_path("examples", "local_function_tasks")])
 
-    def run_local_function_tasks_test(self):
-        """Run stand alone test: local_function_tasks"""
+    def test_local_function_tasks(self):
+        """build and run local_function_tasks"""
+        test_exe = "local_function_tasks"
 
-        test_dir = join_path(
-            self.test_suite.current_test_cache_dir, "examples", "local_function_tasks"
-        )
+        test_dir = join_path(self.test_suite.current_test_cache_dir, "examples", test_exe)
 
         if not os.path.exists(test_dir):
-            print("Skipping local_function_tasks test")
-            return
-
-        exe = "local_function_tasks"
+            raise SkipTest("{0} example is missing".format(test_exe))
 
         cmake_args = [
             "-DCMAKE_C_COMPILER={0}".format(self.compiler.cc),
             "-DCMAKE_CXX_COMPILER={0}".format(self.compiler.cxx),
-            "-DLegion_DIR={0}".format(join_path(self.prefix, "share", "Legion", "cmake")),
+            "-DLegion_DIR={0}".format(self.prefix.share.Legion.cmake),
         ]
 
-        self.run_test(
-            "cmake",
-            options=cmake_args,
-            purpose="test: generate makefile for {0} example".format(exe),
-            work_dir=test_dir,
-        )
+        with working_dir(test_dir):
+            cmake = which(self.spec["cmake"].prefix.bin.cmake)
+            cmake(*cmake_args)
 
-        self.run_test("make", purpose="test: build {0} example".format(exe), work_dir=test_dir)
+            make = which("make")
+            make()
 
-        self.run_test(exe, purpose="test: run {0} example".format(exe), work_dir=test_dir)
-
-    def test(self):
-        self.run_local_function_tasks_test()
+            exe = which(test_exe)
+            exe()

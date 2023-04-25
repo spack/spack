@@ -155,44 +155,35 @@ class ParallelNetcdf(AutotoolsPackage):
         install test subdirectory for use during `spack test run`."""
         self.cache_extra_test_sources([self.examples_src_dir])
 
-    def test(self):
-        test_dir = join_path(self.test_suite.current_test_cache_dir, self.examples_src_dir)
+    def test_example_column_wise(self):
+        """build and run the column_wise example"""
         # pnetcdf has many examples to serve as a suitable smoke check.
         # column_wise was chosen based on the E4S test suite. Other
         # examples should work as well.
+        test_dir = join_path(self.test_suite.current_test_cache_dir, self.examples_src_dir)
+
         test_exe = "column_wise"
+        test_source = "{0}.cpp".format(test_exe)
         options = [
-            "{0}.cpp".format(test_exe),
+            test_source,
             "-o",
             test_exe,
             "-lpnetcdf",
             "-L{0}".format(self.prefix.lib),
             "-I{0}".format(self.prefix.include),
         ]
-        reason = "test: compiling and linking pnetcdf example"
-        self.run_test(
-            self.spec["mpi"].mpicxx,
-            options,
-            [],
-            installed=False,
-            purpose=reason,
-            work_dir=test_dir,
-        )
-        mpiexe_list = [
-            self.spec["mpi"].prefix.bin.srun,
-            self.spec["mpi"].prefix.bin.mpirun,
-            self.spec["mpi"].prefix.bin.mpiexec,
-        ]
-        for mpiexe in mpiexe_list:
-            if os.path.isfile(mpiexe):
-                self.run_test(
-                    mpiexe,
-                    ["-n", "1", test_exe],
-                    [],
-                    installed=False,
-                    purpose="test: pnetcdf smoke test",
-                    skip_missing=True,
-                    work_dir=test_dir,
-                )
-                break
-        self.run_test("rm", ["-f", test_exe], work_dir=test_dir)
+
+        with working_dir(test_dir):
+            if not os.path.exists(test_source):
+                raise SkipTest("{0} is missing".format(test_source))
+
+            mpicxx = which(self.spec["mpi"].mpicxx)
+            mpicxx(*options)
+
+            mpiexe_list = [
+                self.spec["mpi"].prefix.bin.srun,
+                self.spec["mpi"].prefix.bin.mpirun,
+                self.spec["mpi"].prefix.bin.mpiexec,
+            ]
+            mpiexe = which(*mpiexe_list)
+            mpiexe("-n", "1", test_exe)
