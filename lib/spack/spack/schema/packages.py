@@ -45,6 +45,7 @@ properties = {
                                                     "type": "array",
                                                     "items": {"type": "string"},
                                                 },
+                                                "spec": {"type": "string"},
                                                 "message": {"type": "string"},
                                                 "when": {"type": "string"},
                                             },

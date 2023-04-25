@@ -393,7 +393,19 @@ We could express a similar requirement using the ``when`` attribute:
          message: "in this example only 4.1.5 can build with other compilers"
 
 In the example above, if the version turns out to be 4.1.4 or less, we require the compiler to be GCC.
+For readability, Spack also allows a ``spec`` key accepting a string when there is only a single
+constraint:
 
+.. code-block:: yaml
+
+   packages:
+     openmpi:
+       require:
+       - spec: "%gcc"
+         when: "@:4.1.4"
+         message: "in this example only 4.1.5 can build with other compilers"
+
+This code snippet and the one before it are semantically equivalent.
 
 Finally, instead of ``any_of`` you can use ``one_of`` which also takes a list of specs. The final
 concretized spec must match one and only one of them:

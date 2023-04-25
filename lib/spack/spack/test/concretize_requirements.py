@@ -626,6 +626,20 @@ def test_non_existing_variants_under_all(concretize_scope, mock_packages):
             "libelf@0.8.12",
             [("%clang", False), ("%gcc", True)],
         ),
+        (
+            """\
+    packages:
+      all:
+        compiler: ["gcc", "clang"]
+
+      libelf:
+        require:
+        - spec: "%clang"
+          when: "@0.8.13"
+""",
+            "libelf@0.8.12",
+            [("%clang", False), ("%gcc", True)],
+        ),
     ],
 )
 def test_conditional_requirements_from_packages_yaml(
@@ -677,6 +691,18 @@ def test_conditional_requirements_from_packages_yaml(
               when: platform=test
               message: "can only be compiled with clang on the test platform"
     """,
+            "libelf%gcc",
+            "can only be compiled with clang on ",
+        ),
+        (
+            """\
+            packages:
+              libelf:
+                require:
+                - spec: "%clang"
+                  when: platform=test
+                  message: "can only be compiled with clang on the test platform"
+        """,
             "libelf%gcc",
             "can only be compiled with clang on ",
         ),

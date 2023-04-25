@@ -1075,13 +1075,20 @@ class SpackSolverSetup(object):
                     # equivalent to a one_of group with a single element
                     rules.append(self._rule_from_str(pkg_name, requirement, kind))
                 else:
-                    for policy in ("one_of", "any_of"):
+                    for policy in ("spec", "one_of", "any_of"):
                         if policy in requirement:
+                            constraints = requirement[policy]
+
+                            # "spec" is for specifying a single spec
+                            if policy == "spec":
+                                constraints = [constraints]
+                                policy = "one_of"
+
                             rules.append(
                                 RequirementRule(
                                     pkg_name=pkg_name,
                                     policy=policy,
-                                    requirements=requirement[policy],
+                                    requirements=constraints,
                                     kind=kind,
                                     message=requirement.get("message"),
                                     condition=requirement.get("when"),
@@ -2276,9 +2283,15 @@ def _specs_from_requires(pkg_name, section):
             if isinstance(spec_group, str):
                 spec_strs.append(spec_group)
             else:
-                # Otherwise it is a one_of or any_of: get the values
-                key = "one_of" if "one_of" in spec_group else "any_of"
-                spec_strs.extend(spec_group[key])
+                # Otherwise it is an object. The object can contain a single
+                # "spec" constraint, or a list of them with "any_of" or
+                # "one_of" policy.
+                if "spec" in spec_group:
+                    new_constraints = [spec_group["spec"]]
+                else:
+                    key = "one_of" if "one_of" in spec_group else "any_of"
+                    new_constraints = spec_group[key]
+                spec_strs.extend(new_constraints)
 
         extracted_specs = []
         for spec_str in spec_strs:
