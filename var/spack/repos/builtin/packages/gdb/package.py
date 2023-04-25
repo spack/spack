@@ -46,7 +46,7 @@ class Gdb(AutotoolsPackage, GNUMirrorPackage):
     variant("gold", default=False, description="Enable gold linker")
     variant("ld", default=False, description="Enable ld")
     variant("tui", default=False, description="Enable tui")
-    variant("debuginfod", default=True, description="Enable debuginfod support", when="@10.1:")
+    variant("debuginfod", default=False, description="Enable debuginfod support", when="@10.1:")
 
     # Resolves the undefined references to libintl_gettext while linking gdbserver
     # https://www.gnu.org/software/gettext/FAQ.html#integrating_undefined
