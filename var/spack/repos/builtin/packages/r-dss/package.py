@@ -33,5 +33,4 @@ class RDss(RPackage):
     depends_on("r-bsseq", type=("build", "run"))
 
     depends_on("r-delayedarray", type=("build", "run"), when="@2.36.0:2.42.0")
-    depends_on("r-matrixstats", type=("build", "run"), when="@2.44.0:")
-    depends_on("r-matrixstats", when="@:2.44.0")
+    depends_on("r-matrixstats", type=("build", "run"), when="@2.44.0")
