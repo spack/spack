@@ -15,6 +15,7 @@ class RBoot(RPackage):
 
     cran = "boot"
 
+    version("1.3-28.1", sha256="d4cde76fcc8ccc7ffa329de69147b66a6a93a10188e89342fd18207b1d02ff53")
     version("1.3-28", sha256="9f7158fd2714659f590c3955651893dc24bd8f39196bc5a4cc35b0b031744a32")
     version("1.3-25", sha256="464835fcb453072346ce49e4ae318e04c9dba682349be49db616623b6088fbbe")
     version("1.3-23", sha256="79236a5a770dc8bf5ce25d9aa303c5dc0574d94aa043fd00b8b4c8ccc877357f")
