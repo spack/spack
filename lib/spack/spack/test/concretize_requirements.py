@@ -706,3 +706,26 @@ def test_requirements_fail_with_custom_message(
     update_packages_config(packages_yaml)
     with pytest.raises(spack.error.SpackError, match=expected_message):
         Spec(spec_str).concretized()
+
+
+def test_skip_requirement_when_default_requirement_condition_cannot_be_met(
+    concretize_scope, mock_packages
+):
+    """Tests that we can express a requirement condition under 'all' also in cases where
+    the corresponding requirement doesn't exist. For those packages the requirement rule
+    is not emitted, since it can be determined to be always false.
+    """
+    if spack.config.get("config:concretizer") == "original":
+        pytest.skip("Original concretizer does not support configuration requirements")
+
+    packages_yaml = """
+        packages:
+          all:
+            require:
+            - one_of: ["%clang"]
+              when: "+shared"
+    """
+    update_packages_config(packages_yaml)
+    s = Spec("mpileaks").concretized()
+
+    assert s.satisfies("%clang +shared")

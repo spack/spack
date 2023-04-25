@@ -1342,10 +1342,6 @@ class SpackSolverSetup(object):
             virtual = rule.kind == RequirementKind.VIRTUAL
 
             pkg_name, policy, requirement_grp = rule.pkg_name, rule.policy, rule.requirements
-            self.gen.fact(fn.requirement_group(pkg_name, requirement_grp_id))
-            self.gen.fact(fn.requirement_policy(pkg_name, requirement_grp_id, policy))
-            if rule.message:
-                self.gen.fact(fn.requirement_message(pkg_name, requirement_grp_id, rule.message))
 
             requirement_weight = 0
             main_requirement_condition = spack.directives.make_when_spec(rule.condition)
@@ -1355,12 +1351,23 @@ class SpackSolverSetup(object):
             # Write explicitly if a requirement is conditional or not
             if rule.condition and main_requirement_condition != spack.spec.Spec():
                 msg = f"condition to activate requirement {requirement_grp_id}"
-                main_condition_id = self.condition(
-                    main_requirement_condition, name=pkg_name, msg=msg
-                )
+                try:
+                    main_condition_id = self.condition(
+                        main_requirement_condition, name=pkg_name, msg=msg
+                    )
+                except Exception as e:
+                    if rule.kind != RequirementKind.DEFAULT:
+                        raise RuntimeError("cannot emit requirements for the solver") from e
+                    continue
+
                 self.gen.fact(
                     fn.requirement_conditional(pkg_name, requirement_grp_id, main_condition_id)
                 )
+
+            self.gen.fact(fn.requirement_group(pkg_name, requirement_grp_id))
+            self.gen.fact(fn.requirement_policy(pkg_name, requirement_grp_id, policy))
+            if rule.message:
+                self.gen.fact(fn.requirement_message(pkg_name, requirement_grp_id, rule.message))
             self.gen.newline()
 
             for spec_str in requirement_grp:
