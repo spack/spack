@@ -26,22 +26,16 @@ class PyBotorch(PythonPackage):
     depends_on("py-setuptools-scm+toml", when="@0.8.3:", type="build")
     depends_on("py-torch@1.12:", when="@0.8.3:", type=("build", "run"))
     depends_on("py-torch@1.9:", type=("build", "run"))
-    depends_on("py-gpytorch@1.10:", when="@0.8.4: +latest", type=("build", "run"))
-    depends_on("py-gpytorch@1.10", when="@0.8.4: ~latest", type=("build", "run"))
-    depends_on("py-gpytorch@1.9.1:", when="@0.8.3: +latest", type=("build", "run"))
-    depends_on("py-gpytorch@1.9.1", when="@0.8.3: ~latest", type=("build", "run"))
+    depends_on("py-gpytorch@1.10:", when="@0.8.4:", type=("build", "run"))
+    depends_on("py-gpytorch@1.9.1:", when="@0.8.3:", type=("build", "run"))
     depends_on("py-gpytorch@1.6:", type=("build", "run"))
     depends_on("py-scipy", type=("build", "run"))
     depends_on("py-multipledispatch", type=("build", "run"))
     depends_on("py-pyro-ppl@1.8.4:", when="@0.8.3:", type=("build", "run"))
     depends_on("py-pyro-ppl@1.8.0", when="@:0.6.4", type=("build", "run"))
-    depends_on("py-linear-operator@0.4.0:", when="@0.8.4: +latest", type=("build", "run"))
-    depends_on("py-linear-operator@0.4.0", when="@0.8.4: ~latest", type=("build", "run"))
-    depends_on("py-linear-operator@0.3.0:", when="@0.8.3: +latest", type=("build", "run"))
-    depends_on("py-linear-operator@0.3.0", when="@0.8.3: ~latest", type=("build", "run"))
-
-    variant("latest", default=False, description="Build with latest gpytorch and linear-operator")
+    depends_on("py-linear-operator@0.4.0:", when="@0.8.4:", type=("build", "run"))
+    depends_on("py-linear-operator@0.3.0:", when="@0.8.3:", type=("build", "run"))
 
     def setup_build_environment(self, env):
-        if self.spec.satisfies("+latest"):
+        if self.spec.satisfies("@0.8.3:"):
             env.set("ALLOW_LATEST_GPYTORCH_LINOP", True)
