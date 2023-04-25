@@ -52,7 +52,9 @@ class Ascent(CMakePackage, CudaPackage):
 
     version("develop", branch="develop", submodules=True)
 
-    version("0.9.0", tag="v0.9.0", submodules=True, preferred=True)
+    version("0.9.1", tag="v0.9.1", submodules=True, preferred=True)
+
+    version("0.9.0", tag="v0.9.0", submodules=True)
 
     version("0.8.0", tag="v0.8.0", submodules=True)
 
