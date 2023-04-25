@@ -17,6 +17,7 @@ class Xrootd(CMakePackage):
 
     maintainers("wdconinc")
 
+    version("5.5.4", sha256="41a8557ea2d118b1950282b17abea9230b252aa5ee1a5959173e2534b7d611d3")
     version("5.5.3", sha256="703829c2460204bd3c7ba8eaa23911c3c9a310f6d436211ba0af487ef7f6a980")
     version("5.5.2", sha256="ec4e0490b8ee6a3254a4ea4449342aa364bc95b78dc9a8669151be30353863c6")
     version("5.5.1", sha256="3556d5afcae20ed9a12c89229d515492f6c6f94f829a3d537f5880fcd2fa77e4")
@@ -78,14 +79,16 @@ class Xrootd(CMakePackage):
         values=("98", "11", "14", "17", "20"),
         multi=False,
         description="Use the specified C++ standard when building",
-        when="@5.2.0:"
+        when="@5.2.0:",
     )
 
     variant(
         "scitokens-cpp", default=False, when="@5.1.0:", description="Enable support for SciTokens"
     )
 
-    variant("client_only", default=False, description="Build and install client only", when="@4.10.0:")
+    variant(
+        "client_only", default=False, description="Build and install client only", when="@4.10.0:"
+    )
 
     conflicts("cxxstd=98", when="@4.7.0:")
     # C++ standard is not honored without
@@ -105,6 +108,7 @@ class Xrootd(CMakePackage):
     depends_on("davix", when="+davix")
     depends_on("libxml2", when="+http")
     depends_on("uuid", when="@4.11.0:")
+    depends_on("openssl@:1", when="@:5.4")
     depends_on("openssl")
     depends_on("python", when="+python")
     depends_on("py-setuptools", type="build", when="+python")
@@ -152,11 +156,10 @@ class Xrootd(CMakePackage):
         define = self.define
         define_from_variant = self.define_from_variant
         options = []
-        if (spec.satisfies("@5.2.0: +client_only") or
-            spec.satisfies("@6:")):
-            options+=[
+        if spec.satisfies("@5.2.0: +client_only") or spec.satisfies("@6:"):
+            options += [
                 define_from_variant("CMAKE_CXX_STANDARD", "cxxstd"),
-                define("CMAKE_CXX_STANDARD_REQUIRED", True)
+                define("CMAKE_CXX_STANDARD_REQUIRED", True),
             ]
 
         options += [
@@ -176,10 +179,12 @@ class Xrootd(CMakePackage):
         ]
         # see https://github.com/spack/spack/pull/11581
         if "+python" in self.spec:
-            options.extend([
-                define("PYTHON_EXECUTABLE", spec["python"].command.path),
-                define("XRD_PYTHON_REQ_VERSION", spec["python"].version.up_to(2)),
-            ])
+            options.extend(
+                [
+                    define("PYTHON_EXECUTABLE", spec["python"].command.path),
+                    define("XRD_PYTHON_REQ_VERSION", spec["python"].version.up_to(2)),
+                ]
+            )
 
         if "+scitokens-cpp" in self.spec:
             options.append("-DSCITOKENS_CPP_DIR=%s" % spec["scitokens-cpp"].prefix)

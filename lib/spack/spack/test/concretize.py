@@ -1762,8 +1762,7 @@ class TestConcretize(object):
             solver = spack.solver.asp.Solver()
             setup = spack.solver.asp.SpackSolverSetup()
             with pytest.raises(
-                spack.solver.asp.UnsatisfiableSpecError,
-                match="'dep-with-variants' satisfies '@999'",
+                spack.solver.asp.UnsatisfiableSpecError, match="'dep-with-variants@999'"
             ):
                 solver.driver.solve(setup, [root_spec], reuse=reusable_specs)
 
@@ -2151,3 +2150,29 @@ class TestConcretize(object):
         spack.config.set("compilers", compiler_configuration)
         s = spack.spec.Spec("a %gcc@foo").concretized()
         assert s.compiler.version == ver("foo")
+
+    @pytest.mark.regression("36628")
+    def test_concretization_with_compilers_supporting_target_any(self):
+        """Tests that a compiler with 'target: any' can satisfy any target, and is a viable
+        candidate for concretization.
+        """
+        compiler_configuration = [
+            {
+                "compiler": {
+                    "spec": "gcc@12.1.0",
+                    "paths": {
+                        "cc": "/some/path/gcc",
+                        "cxx": "/some/path/g++",
+                        "f77": None,
+                        "fc": None,
+                    },
+                    "operating_system": "debian6",
+                    "target": "any",
+                    "modules": [],
+                }
+            }
+        ]
+
+        with spack.config.override("compilers", compiler_configuration):
+            s = spack.spec.Spec("a").concretized()
+        assert s.satisfies("%gcc@12.1.0")

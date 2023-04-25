@@ -16,8 +16,8 @@ class Libmicrohttpd(AutotoolsPackage):
 
     maintainers("hainest")
 
-    version("0.9.71", "e8f445e85faf727b89e9f9590daea4473ae00ead38b237cf1eda55172b89b182")
-    version("0.9.70", "90d0a3d396f96f9bc41eb0f7e8187796049285fabef82604acd4879590977307")
+    version("0.9.71", sha256="e8f445e85faf727b89e9f9590daea4473ae00ead38b237cf1eda55172b89b182")
+    version("0.9.70", sha256="90d0a3d396f96f9bc41eb0f7e8187796049285fabef82604acd4879590977307")
 
     variant("https", default=False, description="HTTPS support with GnuTLS")
 

@@ -23,6 +23,9 @@ class PyDaskMpi(PythonPackage):
     depends_on("py-dask@2.2:", when="@:2.21.0", type=("build", "run"))
     depends_on("py-dask@2.19:", when="@2022.4.0:", type=("build", "run"))
     depends_on("py-distributed@2.19:", when="@2022.4.0:", type=("build", "run"))
-    depends_on("py-jupyter-server-proxy", type=("build", "run"))
     depends_on("py-mpi4py", type=("build", "run"))
     depends_on("py-mpi4py@3.0.3:", when="@2022.4.0:", type=("build", "run"))
+
+    # jupyter-server-proxy is not a needed dependency; https://github.com/dask/dask-mpi/pull/102
+    # this significantly reduces the dependency tree of py-dask-mpi
+    patch("remove-dependency-jupyter-proxy.patch", when="@:2022.4.0")

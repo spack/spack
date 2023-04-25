@@ -23,7 +23,7 @@ jobs:
         python-version: 3.9
     - name: Install Python packages
       run: |
-          python -m pip install --upgrade pip six pywin32 setuptools codecov pytest-cov clingo
+          python -m pip install --upgrade pip six pywin32 setuptools pytest-cov clingo
     - name: Create local develop
       run: |
         ./.github/workflows/setup_git.ps1
@@ -47,7 +47,7 @@ jobs:
         python-version: 3.9
     - name: Install Python packages
       run: |
-          python -m pip install --upgrade pip six pywin32 setuptools codecov coverage pytest-cov clingo
+          python -m pip install --upgrade pip six pywin32 setuptools coverage pytest-cov clingo
     - name: Create local develop
       run: |
         ./.github/workflows/setup_git.ps1
@@ -71,7 +71,7 @@ jobs:
         python-version: 3.9
     - name: Install Python packages
       run: |
-          python -m pip install --upgrade pip six pywin32 setuptools codecov coverage
+          python -m pip install --upgrade pip six pywin32 setuptools coverage
     - name: Build Test
       run: |
         spack compiler find

@@ -13,6 +13,7 @@ class PyHatchling(PythonPackage):
     pypi = "hatchling/hatchling-1.4.1.tar.gz"
     git = "https://github.com/pypa/hatch"
 
+    version("1.14.0", sha256="462ea91df03ff5d52813b5613fec1313a1a2059d2e37343e572b3f979867c5da")
     version("1.13.0", sha256="f8d275a2cc720735286b7c2e2bc35da05761e6d3695c2fa416550395f10c53c7")
     version("1.12.2", sha256="8a6d719d96653a0f3901072b12710c9c3cc934f9061b443775c6789b45333495")
     version("1.11.1", sha256="9f84361f70cf3a7ab9543b0c3ecc64211ed2ba8a606a71eb6a473c1c9b08e1d0")
@@ -27,3 +28,4 @@ class PyHatchling(PythonPackage):
     depends_on("py-pathspec@0.9:", type=("build", "run"))
     depends_on("py-pluggy@1:", type=("build", "run"))
     depends_on("py-tomli@1.2.2:", when="^python@:3.10", type=("build", "run"))
+    depends_on("py-trove-classifiers", when="@1.14:", type=("build", "run"))

@@ -36,6 +36,27 @@ ci:
         - aws s3 sync --exclude "*" --include "*spec.json.sig*" /tmp ${SPACK_REMOTE_MIRROR_OVERRIDE}/build_cache
         - aws s3 cp /tmp/public_keys ${SPACK_REMOTE_MIRROR_OVERRIDE}/build_cache/_pgp --recursive --exclude "*" --include "*.pub"
 
+  - reindex-job:
+      tags: ["service"]
+      variables:
+        CI_JOB_SIZE: "medium"
+        KUBERNETES_CPU_REQUEST: "4000m"
+        KUBERNETES_MEMORY_REQUEST: "16G"
+
+  - cleanup-job:
+      tags: ["service"]
+      variables:
+        CI_JOB_SIZE: "small"
+        KUBERNETES_CPU_REQUEST: "500m"
+        KUBERNETES_MEMORY_REQUEST: "500M"
+
+  - noop-job:
+      tags: ["service"]
+      variables:
+        CI_JOB_SIZE: "small"
+        KUBERNETES_CPU_REQUEST: "500m"
+        KUBERNETES_MEMORY_REQUEST: "500M"
+
   - any-job:
       image: "ghcr.io/spack/e4s-ubuntu-18.04:v2021-10-18"
       tags: ["spack"]

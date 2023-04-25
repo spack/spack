@@ -117,7 +117,7 @@ class Qgis(CMakePackage):
     depends_on("python@3.0.0:", type=("build", "run"), when="@3")
     depends_on("python@3.6:", type=("build", "run"), when="@3.18:")
     depends_on("python@3.7:", type=("build", "run"), when="@3.20:")
-    depends_on("qca@2.2.1")
+    depends_on("qca@2.2.1:")
     depends_on("qjson")
     depends_on("qscintilla +python")
     depends_on("qt+dbus")
