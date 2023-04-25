@@ -26,6 +26,7 @@ class RRinside(RPackage):
 
     cran = "RInside"
 
+    version("0.2.18", sha256="805014f0f0a364633e0e3c59100665a089bc455dec80b24f04aaec96466cb736")
     version("0.2.17", sha256="0be28c44ee34cba669a7264d2b99c289230645598ca78e21682559dc31824348")
     version("0.2.16", sha256="7ae4ade128ea05f37068d59e610822ff0b277f9d39d8900f7eb31759ad5a2a0e")
     version("0.2.15", sha256="1e1d87a3584961f3aa4ca6acd4d2f3cda26abdab027ff5be2fd5cd76a98af02b")
@@ -33,4 +34,3 @@ class RRinside(RPackage):
     version("0.2.13", sha256="be1da861f4f8c1292f0691bce05978e409a081f24ad6006ae173a6a89aa4d031")
 
     depends_on("r-rcpp", type=("build", "run"))
-    depends_on("r-rcpp@0.11.0:", type=("build", "run"), when="@:0.2.16")
