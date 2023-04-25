@@ -16,6 +16,7 @@ class RKs(RPackage):
 
     cran = "ks"
 
+    version("1.14.0", sha256="2db9c56b7b0217b324bbf1e0f66bb94d3f7067a75c5823cbc7d369d63bbb4391")
     version("1.13.5", sha256="d1c4d06d704f301628455787ba929add1e774debc343d0952a768abea6cc7815")
     version("1.13.3", sha256="defb80df665d987f1751899f7a9809cb5a770f3c74266d7fbc7b9493616dce73")
     version("1.11.7", sha256="6a6d9c2366e85a4c6af39b798f3798d20a42615ddfcebcedf6cf56087cdfd2b8")
@@ -24,6 +25,7 @@ class RKs(RPackage):
     version("1.11.2", sha256="9dfd485096e1e67abc7dfcb7b76a83de110dd15bcfeffe5c899605b3a5592961")
 
     depends_on("r@2.10:", type=("build", "run"))
+    depends_on("r@2.10.0:", type=("build", "run"), when="@1.14.0:")
     depends_on("r-fnn@1.1:", type=("build", "run"))
     depends_on("r-kernlab", type=("build", "run"))
     depends_on("r-kernsmooth@2.22:", type=("build", "run"))
