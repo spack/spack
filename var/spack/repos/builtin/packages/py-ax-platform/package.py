@@ -42,4 +42,4 @@ class PyAxPlatform(PythonPackage):
 
     def setup_build_environment(self, env):
         if self.spec.satisfies("+latest"):
-            env.set("ALLOW_BOTORCH_LATESTS", True)
+            env.set("ALLOW_BOTORCH_LATEST", True)
