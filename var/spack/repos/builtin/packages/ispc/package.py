@@ -62,6 +62,52 @@ class Ispc(CMakePackage):
         sha256="d3ccf547d3ba59779fd375e10417a436318f2200d160febb9f830a26f0daefdc",
     )
 
+    depends_on(
+        "llvm",
+        when="^llvm@15.0",
+        patches=[
+            patch(
+                "https://raw.githubusercontent.com/ispc/ispc/v1.19.0/llvm_patches/14_0_15_0_disable-DIArgList-in-SPIR-V.patch",
+                sha256="36971ca75148bb5fda07e7904c58937f3cbf92492782bcad11e3679865847508",
+            ),
+            patch(
+                "https://raw.githubusercontent.com/ispc/ispc/v1.19.0/llvm_patches/14_0_15_0_disable-DIArgList-in-SPIR-V.patch",
+                sha256="36971ca75148bb5fda07e7904c58937f3cbf92492782bcad11e3679865847508",
+            ),
+            patch(
+                "https://raw.githubusercontent.com/ispc/ispc/v1.19.0/llvm_patches/15_0_16_0_fp16_converts.patch",
+                sha256="147591e854eb74321edddb7cde22772ef6d6d5c7e2c21d6c1d6a841e040c5c6d",
+            ),
+            patch(
+                "https://raw.githubusercontent.com/ispc/ispc/v1.19.0/llvm_patches/15_0_disable-A-B-A-B-and-BSWAP-in-InstCombine.patch",
+                sha256="1a59b0cefdda0588d2972bdeb08612ef3d37ba3887633f4ad7ee91bef10e76da",
+            ),
+        ],
+    )
+
+    depends_on(
+        "llvm",
+        when="^llvm@14.0",
+        patches=[
+            patch(
+                "https://raw.githubusercontent.com/ispc/ispc/v1.19.0/llvm_patches/14_0_15_0_disable-DIArgList-in-SPIR-V.patch",
+                sha256="36971ca75148bb5fda07e7904c58937f3cbf92492782bcad11e3679865847508",
+            ),
+            patch(
+                "https://raw.githubusercontent.com/ispc/ispc/v1.19.0/llvm_patches/13_0_14_0_disable-A-B-A-B-and-BSWAP-in-InstCombine.patch",
+                sha256="34cc0d79a30599cb2287b47b4e9a1a5bf03d57a1f8bb35be3fe976ffc4a604f6",
+            ),
+            patch(
+                "https://raw.githubusercontent.com/ispc/ispc/v1.19.0/llvm_patches/14_0_AVX512VP2INTERSECT.patch",
+                sha256="e293b0f482a01b37e235e48afef497e60939b66bd67746315308407fe217926a",
+            ),
+            patch(
+                "https://raw.githubusercontent.com/ispc/ispc/v1.19.0/llvm_patches/14_0_fp16_converts.partial.fix.patch",
+                sha256="e5a8e9462ecb681e63a796ecff5ef45f8083dd8c777a9cf32873b5d976b26035",
+            ),
+        ],
+    )
+
     def setup_build_environment(self, env):
         if self.spec.satisfies("@1.18.0:"):
             env.append_flags("LDFLAGS", "-lcurses")
