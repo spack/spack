@@ -2,7 +2,6 @@
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
-
 # Update Log
 #
 # Apr 13 2023 LB:Update for otalview@2023.1.6 version
@@ -26,7 +25,7 @@ class Totalview(Package):
     be downloaded as a resource."""
 
     homepage = "https://totalview.io"
-    maintainers = ["dshrader", "petertea", "elliebinkley" ]
+    maintainers = ["dshrader", "petertea", "elliebinkley"]
     manual_download = True
     license_required = True
     license_comment = "#"
@@ -292,7 +291,6 @@ class Totalview(Package):
 
         # Run install script for totalview (which automatically installs memoryscape)
         with working_dir("./totalview.{0}".format(self.version)):
-
             install_cmd = which("./Install")
             arg_list.extend(["-install", "totalview"])
             # TotalView automatically installs Memoryscape, so no need to add
