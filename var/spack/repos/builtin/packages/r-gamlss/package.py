@@ -18,6 +18,7 @@ class RGamlss(RPackage):
 
     cran = "gamlss"
 
+    version("5.4-12", sha256="9f791039f7e5c3cf3f6a2da955994a8c41c43044a2d77d99b289e4f82118a6f0")
     version("5.4-3", sha256="6619d4fdc183ab492615d44961a126c827d18db20a0d59362e54de877f0a3076")
     version("5.3-4", sha256="72707187471fd35c5379ae8c9b7b0ca87e302557f09cb3979d1cdb2e2500b01a")
     version("5.2-0", sha256="d3927547109064cbe7b0f955144f53204b5dc86c6b2dbc8f0551a74140ab02e1")
