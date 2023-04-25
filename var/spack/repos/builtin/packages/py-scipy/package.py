@@ -53,6 +53,14 @@ class PyScipy(PythonPackage):
     version("1.2.1", sha256="e085d1babcb419bbe58e2e805ac61924dac4ca45a07c9fa081144739e500aa3c")
     version("1.1.0", sha256="878352408424dffaa695ffedf2f9f92844e116686923ed9aa8626fc30d32cfd1")
 
+    # Based on wheel availability on PyPI
+    depends_on("python@3.8:3.11", when="@1.9.2:", type=("build", "link", "run"))
+    depends_on("python@3.8:3.10", when="@1.8:1.9.1", type=("build", "link", "run"))
+    depends_on("python@:3.10", when="@1.7.2:1.7", type=("build", "link", "run"))
+    depends_on("python@:3.9", when="@1.5.4:1.7.1", type=("build", "link", "run"))
+    depends_on("python@:3.8", when="@1.3.2:1.5.3", type=("build", "link", "run"))
+    depends_on("python@:3.7", when="@1.1:1.3.1", type=("build", "link", "run"))
+
     # TODO: remove once pip build supports BLAS/LAPACK specification
     # https://github.com/mesonbuild/meson-python/pull/167
     depends_on("py-build", when="@1.9:", type="build")
@@ -98,14 +106,6 @@ class PyScipy(PythonPackage):
     depends_on("py-numpy@1.14.5:+blas+lapack", when="@1.5.0:1.5", type=("build", "link", "run"))
     depends_on("py-numpy@1.13.3:+blas+lapack", when="@1.3:1.4", type=("build", "link", "run"))
     depends_on("py-numpy@1.8.2:+blas+lapack", when="@:1.2", type=("build", "link", "run"))
-    depends_on("python@3.8:3.11", when="@1.9:", type=("build", "link", "run"))
-    depends_on("python@3.8:3.10", when="@1.8", type=("build", "link", "run"))
-    depends_on("python@3.7:3.10", when="@1.7.2:1.7", type=("build", "link", "run"))
-    depends_on("python@3.7:3.9", when="@1.6.2:1.7.1", type=("build", "link", "run"))
-    depends_on("python@3.7:3.10.0", when="@1.6:1.6.1", type=("build", "link", "run"))
-    depends_on("python@3.6:3.10.0", when="@1.5.0:1.5", type=("build", "link", "run"))
-    depends_on("python@3.5:3.10.0", when="@1.3:1.4", type=("build", "link", "run"))
-    depends_on("python@2.7:2.8,3.4:3.10.0", when="@:1.2", type=("build", "link", "run"))
     depends_on("py-pytest", type="test")
 
     # NOTE: scipy should use the same BLAS/LAPACK as numpy.
