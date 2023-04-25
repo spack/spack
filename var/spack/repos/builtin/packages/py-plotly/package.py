@@ -22,6 +22,7 @@ class PyPlotly(PythonPackage):
 
     depends_on("py-setuptools", type="build")
     depends_on("py-setuptools@40.8.0:", when="@5.14.1:", type="build")
+    depends_on("py-jupyterlab@:2.9,3.1:", when="@5.14.1", type="build")
     depends_on("py-six", when="@:5.2.2", type=("build", "run"))
 
     depends_on("py-pytz", when="@:2.2.0", type=("build", "run"))
@@ -30,3 +31,4 @@ class PyPlotly(PythonPackage):
     depends_on("py-requests", when="@:2.2.0", type=("build", "run"))
 
     depends_on("py-tenacity@6.2.0:", when="@5.2.2:", type=("build", "run"))
+    depends_on("py-packaging", when="@5.14.1:", type=("build", "run"))
