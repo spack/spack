@@ -1152,7 +1152,11 @@ class TestConcretize(object):
         assert "%gcc@10foo" in s
 
     def test_all_patches_applied(self):
-        uuidpatch = "a60a42b73e03f207433c5579de207c6ed61d58e4d12dd3b5142eb525728d89ea"
+        uuidpatch = (
+            "a60a42b73e03f207433c5579de207c6ed61d58e4d12dd3b5142eb525728d89ea"
+            if sys.platform != "win32"
+            else "d0df7988457ec999c148a4a2af25ce831bfaad13954ba18a4446374cb0aef55e"
+        )
         localpatch = "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
         spec = spack.spec.Spec("conditionally-patch-dependency+jasper")
         spec.concretize()
