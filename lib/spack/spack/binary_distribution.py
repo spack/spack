@@ -24,7 +24,7 @@ import urllib.request
 import warnings
 from contextlib import closing, contextmanager
 from gzip import GzipFile
-from typing import Union
+from typing import NamedTuple, Optional, Union
 from urllib.error import HTTPError, URLError
 
 import ruamel.yaml as yaml
@@ -61,6 +61,15 @@ from spack.util.executable import which
 
 _build_cache_relative_path = "build_cache"
 _build_cache_keys_relative_path = "_pgp"
+
+
+class DownloadResult(NamedTuple):
+    """Result of a buildcache download."""
+
+    tarball_stage: Stage
+    specfile_stage: Stage
+    signature_verified: bool
+    url: str
 
 
 class FetchCacheError(Exception):
@@ -1466,7 +1475,7 @@ def try_fetch(url_to_fetch):
     stage.create()
 
     try:
-        stage.fetch()
+        stage.fetch(verbose=False)
     except web_util.FetchError:
         stage.destroy()
         return None
@@ -1474,13 +1483,13 @@ def try_fetch(url_to_fetch):
     return stage
 
 
-def _delete_staged_downloads(download_result):
+def _delete_staged_downloads(download_result: DownloadResult):
     """Clean up stages used to download tarball and specfile"""
-    download_result["tarball_stage"].destroy()
-    download_result["specfile_stage"].destroy()
+    download_result.tarball_stage.destroy()
+    download_result.specfile_stage.destroy()
 
 
-def download_tarball(spec, unsigned=False, mirrors_for_spec=None):
+def download_tarball(spec, unsigned=False, mirrors_for_spec=None) -> Optional[DownloadResult]:
     """
     Download binary tarball for given package into stage area, returning
     path to downloaded tarball if successful, None otherwise.
@@ -1496,20 +1505,12 @@ def download_tarball(spec, unsigned=False, mirrors_for_spec=None):
     Returns:
         ``None`` if the tarball could not be downloaded (maybe also verified,
         depending on whether new-style signed binary packages were found).
-        Otherwise, return an object indicating the path to the downloaded
-        tarball, the path to the downloaded specfile (in the case of new-style
-        buildcache), and whether or not the tarball is already verified.
-
-    .. code-block:: JSON
-
-       {
-           "tarball_path": "path-to-locally-saved-tarfile",
-           "specfile_path": "none-or-path-to-locally-saved-specfile",
-           "signature_verified": "true-if-binary-pkg-was-already-verified"
-       }
+        Otherwise, return a ``DownloadResult`` object indicating the path to the
+        downloaded tarball, the path to the downloaded specfile (in the case of
+        new-style buildcache), and whether or not the tarball is already verified.
     """
     if not spack.mirror.MirrorCollection():
-        tty.die("Please add a spack mirror to allow " + "download of pre-compiled packages.")
+        tty.die("Please add a spack mirror to allow download of pre-compiled packages.")
 
     tarball = tarball_path_name(spec, ".spack")
     specfile_prefix = tarball_name(spec, ".spec")
@@ -1582,11 +1583,9 @@ def download_tarball(spec, unsigned=False, mirrors_for_spec=None):
                     #     the remaining mirrors, looking for one we can use.
                     tarball_stage = try_fetch(spackfile_url)
                     if tarball_stage:
-                        return {
-                            "tarball_stage": tarball_stage,
-                            "specfile_stage": local_specfile_stage,
-                            "signature_verified": signature_verified,
-                        }
+                        return DownloadResult(
+                            tarball_stage, local_specfile_stage, signature_verified, spackfile_url
+                        )
 
                 local_specfile_stage.destroy()
 
@@ -1864,7 +1863,9 @@ def _extract_inner_tarball(spec, filename, extract_to, unsigned, remote_checksum
     return tarfile_path
 
 
-def extract_tarball(spec, download_result, allow_root=False, unsigned=False, force=False):
+def extract_tarball(
+    spec, download_result: DownloadResult, allow_root=False, unsigned=False, force=False
+):
     """
     extract binary tarball for given package into install area
     """
@@ -1874,7 +1875,7 @@ def extract_tarball(spec, download_result, allow_root=False, unsigned=False, for
         else:
             raise NoOverwriteException(str(spec.prefix))
 
-    specfile_path = download_result["specfile_stage"].save_filename
+    specfile_path = download_result.specfile_stage.save_filename
 
     with open(specfile_path, "r") as inputfile:
         content = inputfile.read()
@@ -1884,8 +1885,7 @@ def extract_tarball(spec, download_result, allow_root=False, unsigned=False, for
             spec_dict = sjson.load(content)
 
     bchecksum = spec_dict["binary_cache_checksum"]
-    filename = download_result["tarball_stage"].save_filename
-    signature_verified = download_result["signature_verified"]
+    filename = download_result.tarball_stage.save_filename
     tmpdir = None
 
     if (
@@ -1910,7 +1910,7 @@ def extract_tarball(spec, download_result, allow_root=False, unsigned=False, for
         # the tarball.
         tarfile_path = filename
 
-        if not unsigned and not signature_verified:
+        if not unsigned and not download_result.signature_verified:
             raise UnsignedPackageException(
                 "To install unsigned packages, use the --no-check-signature option."
             )
@@ -2012,7 +2012,7 @@ def install_root_node(spec, allow_root, unsigned=False, force=False, sha256=None
     if sha256:
         checker = spack.util.crypto.Checker(sha256)
         msg = 'cannot verify checksum for "{0}" [expected={1}]'
-        tarball_path = download_result["tarball_stage"].save_filename
+        tarball_path = download_result.tarball_stage.save_filename
         msg = msg.format(tarball_path, sha256)
         if not checker.check(tarball_path):
             size, contents = fsys.filesummary(tarball_path)

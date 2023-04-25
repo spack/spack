@@ -1099,10 +1099,10 @@ def test_install_use_buildcache(
 
     def validate(mode, out, pkg):
         def assert_auto(pkg, out):
-            assert "==> Extracting {0}".format(pkg) in out
+            assert "==> Fetched {0}".format(pkg) in out
 
         def assert_only(pkg, out):
-            assert "==> Extracting {0}".format(pkg) in out
+            assert "==> Fetched {0}".format(pkg) in out
 
         def assert_never(pkg, out):
             assert "==> {0}: Executing phase: 'install'".format(pkg) in out

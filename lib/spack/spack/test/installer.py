@@ -206,11 +206,11 @@ def test_process_external_package_module(install_mockery, monkeypatch, capfd):
 def test_process_binary_cache_tarball_tar(install_mockery, monkeypatch, capfd):
     """Tests of _process_binary_cache_tarball with a tar file."""
 
-    def _spec(spec, unsigned=False, mirrors_for_spec=None):
-        return spec
+    def download_tarball(spec, unsigned=False, mirrors_for_spec=None):
+        return spack.binary_distribution.DownloadResult(None, None, True, "http://url")
 
     # Skip binary distribution functionality since assume tested elsewhere
-    monkeypatch.setattr(spack.binary_distribution, "download_tarball", _spec)
+    monkeypatch.setattr(spack.binary_distribution, "download_tarball", download_tarball)
     monkeypatch.setattr(spack.binary_distribution, "extract_tarball", _noop)
 
     # Skip database updates
@@ -220,8 +220,8 @@ def test_process_binary_cache_tarball_tar(install_mockery, monkeypatch, capfd):
     assert inst._process_binary_cache_tarball(spec.package, explicit=False, unsigned=False)
 
     out = capfd.readouterr()[0]
-    assert "Extracting a" in out
-    assert "from binary cache" in out
+    assert "Fetched" in out
+    assert "from http://url" in out
 
 
 def test_try_install_from_binary_cache(install_mockery, mock_packages, monkeypatch):

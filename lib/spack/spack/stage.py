@@ -431,7 +431,7 @@ class Stage(object):
         """Returns the well-known source directory path."""
         return os.path.join(self.path, _source_path_subdir)
 
-    def fetch(self, mirror_only=False, err_msg=None):
+    def fetch(self, mirror_only=False, err_msg=None, verbose=True):
         """Retrieves the code or archive
 
         Args:
@@ -523,7 +523,7 @@ class Stage(object):
             try:
                 fetcher.stage = self
                 self.fetcher = fetcher
-                self.fetcher.fetch()
+                self.fetcher.fetch(verbose=verbose)
                 break
             except spack.fetch_strategy.NoCacheError:
                 # Don't bother reporting when something is not cached.

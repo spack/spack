@@ -216,6 +216,8 @@ class Boost(Package):
         description="Default symbol visibility in compiled libraries " "(1.69.0 or later)",
     )
 
+    variant("rebuild_me_please", default=True, description="test in ci")
+
     # Unicode support
     depends_on("icu4c", when="+icu")
     depends_on("icu4c cxxstd=11", when="+icu cxxstd=11")
