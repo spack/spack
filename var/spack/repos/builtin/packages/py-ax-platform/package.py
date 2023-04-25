@@ -34,11 +34,7 @@ class PyAxPlatform(PythonPackage):
     depends_on("py-typeguard@2.13.3", type=("build", "run"))
     depends_on("py-plotly@5.12.0:", type=("build", "run"))
 
-    variant(
-        "latest",
-        default=False,
-        description="Build with latest botorch"
-    )
+    variant("latest", default=False, description="Build with latest botorch")
 
     def setup_build_environment(self, env):
         if self.spec.satisfies("+latest"):

@@ -40,11 +40,7 @@ class PyBotorch(PythonPackage):
     depends_on("py-linear-operator@0.3.0:", when="@0.8.3: +latest", type=("build", "run"))
     depends_on("py-linear-operator@0.3.0", when="@0.8.3: ~latest", type=("build", "run"))
 
-    variant(
-        "latest",
-        default=False,
-        description="Build with latest gpytorch and linear-operator"
-    )
+    variant("latest", default=False, description="Build with latest gpytorch and linear-operator")
 
     def setup_build_environment(self, env):
         if self.spec.satisfies("+latest"):
