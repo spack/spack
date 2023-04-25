@@ -96,7 +96,7 @@ class FileCache(object):
             self._get_lock(key)
         return exists
 
-    def read_transaction(self, key):
+    def read_transaction(self, key, binary=False):
         """Get a read transaction on a file cache item.
 
         Returns a ReadTransaction context manager and opens the cache file for
@@ -106,9 +106,12 @@ class FileCache(object):
                cache_file.read()
 
         """
-        return ReadTransaction(self._get_lock(key), acquire=lambda: open(self.cache_path(key)))
+        return ReadTransaction(
+            self._get_lock(key),
+            acquire=lambda: open(self.cache_path(key), "rb" if binary else "r"),
+        )
 
-    def write_transaction(self, key):
+    def write_transaction(self, key, binary=False):
         """Get a write transaction on a file cache item.
 
         Returns a WriteTransaction context manager that opens a temporary file
@@ -131,10 +134,10 @@ class FileCache(object):
                 cm.orig_filename = self.cache_path(key)
                 cm.orig_file = None
                 if os.path.exists(cm.orig_filename):
-                    cm.orig_file = open(cm.orig_filename, "r")
+                    cm.orig_file = open(cm.orig_filename, "rb" if binary else "r")
 
                 cm.tmp_filename = self.cache_path(key) + ".tmp"
-                cm.tmp_file = open(cm.tmp_filename, "w")
+                cm.tmp_file = open(cm.tmp_filename, "wb" if binary else "w")
 
                 return cm.orig_file, cm.tmp_file
 

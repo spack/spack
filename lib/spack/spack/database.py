@@ -22,19 +22,12 @@ filesystem.
 
 import contextlib
 import datetime
+import json
 import os
-import socket
+import sqlite3
 import sys
 import time
 from typing import Dict
-
-try:
-    import uuid
-
-    _use_uuid = True
-except ImportError:
-    _use_uuid = False
-    pass
 
 import llnl.util.filesystem as fs
 import llnl.util.lang as lang
@@ -45,7 +38,6 @@ import spack.repo
 import spack.spec
 import spack.store
 import spack.util.lock as lk
-import spack.util.spack_json as sjson
 from spack.directory_layout import DirectoryLayoutError, InconsistentInstallDirectoryError
 from spack.error import SpackError
 from spack.util.crypto import bit_length
@@ -329,7 +321,7 @@ class Database(object):
         under ``root/.spack-db``, which is created if it does not
         exist.  This is the ``db_dir``.
 
-        The Database will attempt to read an ``index.json`` file in
+        The Database will attempt to read an ``index.sqlite`` file in
         ``db_dir``.  If that does not exist, it will create a database
         when needed by scanning the entire Database root for ``spec.yaml``
         files according to Spack's ``DirectoryLayout``.
@@ -350,8 +342,7 @@ class Database(object):
         self._db_dir = db_dir or os.path.join(self.root, _db_dirname)
 
         # Set up layout of database files within the db dir
-        self._index_path = os.path.join(self._db_dir, "index.json")
-        self._verifier_path = os.path.join(self._db_dir, "index_verifier")
+        self._sqlite_path = os.path.join(self._db_dir, "index.sqlite")
         self._lock_path = os.path.join(self._db_dir, "lock")
 
         # This is for other classes to use to lock prefix directories.
@@ -371,6 +362,8 @@ class Database(object):
 
         if not is_upstream and not os.path.exists(self._failure_dir):
             fs.mkdirp(self._failure_dir)
+
+        self.sql_con = None
 
         self.is_upstream = is_upstream
         self.last_seen_verifier = ""
@@ -644,45 +637,11 @@ class Database(object):
         else:
             prefix_lock.release_write()
 
-    def _write_to_file(self, stream):
-        """Write out the database in JSON format to the stream passed
-        as argument.
-
-        This function does not do any locking or transactions.
-        """
-        # map from per-spec hash code to installation record.
-        installs = dict(
-            (k, v.to_dict(include_fields=self._record_fields)) for k, v in self._data.items()
-        )
-
-        # database includes installation list and version.
-
-        # NOTE: this DB version does not handle multiple installs of
-        # the same spec well.  If there are 2 identical specs with
-        # different paths, it can't differentiate.
-        # TODO: fix this before we support multiple install locations.
-        database = {
-            "database": {
-                # TODO: move this to a top-level _meta section if we ever
-                # TODO: bump the DB version to 7
-                "version": str(_db_version),
-                # dictionary of installation records, keyed by DAG hash
-                "installs": installs,
-            }
-        }
-
-        try:
-            sjson.dump(database, stream)
-        except (TypeError, ValueError) as e:
-            raise sjson.SpackJSONError("error writing JSON database:", str(e))
-
-    def _read_spec_from_dict(self, spec_reader, hash_key, installs, hash=ht.dag_hash):
+    def _read_spec_from_dict(self, spec_reader, hash_key, spec_dict, hash=ht.dag_hash):
         """Recursively construct a spec from a hash in a YAML database.
 
         Does not do any locking.
         """
-        spec_dict = installs[hash_key]["spec"]
-
         # Install records don't include hash with spec, so we add it in here
         # to ensure it is read properly.
         if "name" not in spec_dict.keys():
@@ -694,8 +653,7 @@ class Database(object):
             spec_dict[hash.name] = hash_key
 
         # Build spec from dict first.
-        spec = spec_reader.from_node_dict(spec_dict)
-        return spec
+        return spec_reader.from_node_dict(spec_dict)
 
     def db_for_spec_hash(self, hash_key):
         with self.read_transaction():
@@ -734,14 +692,15 @@ class Database(object):
         with self.read_transaction():
             return self._data.get(hash_key, None)
 
-    def _assign_dependencies(self, spec_reader, hash_key, installs, data):
+    def _assign_dependencies(self, spec_reader, spec_node_dict, hash_key, data):
         # Add dependencies from other records in the install DB to
         # form a full spec.
         spec = data[hash_key].spec
-        spec_node_dict = installs[hash_key]["spec"]
+
+        # old format
         if "name" not in spec_node_dict:
-            # old format
             spec_node_dict = spec_node_dict[spec.name]
+
         if "dependencies" in spec_node_dict:
             yaml_deps = spec_node_dict["dependencies"]
             for dname, dhash, dtypes, _ in spec_reader.read_specfile_dep_specs(yaml_deps):
@@ -776,49 +735,20 @@ class Database(object):
         Does not do any locking.
         """
         try:
-            with open(filename, "r") as f:
-                fdata = sjson.load(f)
+            # If there is no DB, there shouldn't be an attempt to create the db file.
+            if not os.path.exists(filename):
+                return
+            self._init_sqlite(filename)
+            result = self.sql_con.cursor().execute("SELECT hash, data FROM specs")
         except Exception as e:
             raise CorruptDatabaseError("error parsing database:", str(e)) from e
 
-        if fdata is None:
-            return
-
-        def check(cond, msg):
-            if not cond:
-                raise CorruptDatabaseError("Spack database is corrupt: %s" % msg, self._index_path)
-
-        check("database" in fdata, "no 'database' attribute in JSON DB.")
-
-        # High-level file checks
-        db = fdata["database"]
-        check("installs" in db, "no 'installs' in JSON DB.")
-        check("version" in db, "no 'version' in JSON DB.")
-
-        installs = db["installs"]
-
-        # TODO: better version checking semantics.
-        version = Version(db["version"])
-        spec_reader = reader(version)
-        if version > _db_version:
-            raise InvalidDatabaseVersionError(_db_version, version)
-        elif version < _db_version:
-            if not any(old == version and new == _db_version for old, new in _skip_reindex):
-                tty.warn(
-                    "Spack database version changed from %s to %s. Upgrading."
-                    % (version, _db_version)
-                )
-
-                self.reindex(spack.store.layout)
-                installs = dict(
-                    (k, v.to_dict(include_fields=self._record_fields))
-                    for k, v in self._data.items()
-                )
+        spec_reader = spack.spec.SpecfileV3
 
         def invalid_record(hash_key, error):
             msg = "Invalid record in Spack database: " "hash: %s, cause: %s: %s"
             msg %= (hash_key, type(error).__name__, str(error))
-            raise CorruptDatabaseError(msg, self._index_path)
+            raise CorruptDatabaseError(msg, self._sqlite_path)
 
         # Build up the database in three passes:
         #
@@ -831,38 +761,36 @@ class Database(object):
 
         # Pass 1: Iterate through database and build specs w/o dependencies
         data = {}
+        spec_dicts = {}
         installed_prefixes = set()
-        for hash_key, rec in installs.items():
+        for key, rec in result:
+            rec = json.loads(rec)
+            spec_dicts[key] = rec["spec"]
             try:
                 # This constructs a spec DAG from the list of all installs
-                spec = self._read_spec_from_dict(spec_reader, hash_key, installs)
-
-                # Insert the brand new spec in the database.  Each
-                # spec has its own copies of its dependency specs.
-                # TODO: would a more immmutable spec implementation simplify
-                #       this?
-                data[hash_key] = InstallRecord.from_dict(spec, rec)
+                spec = self._read_spec_from_dict(spec_reader, key, spec_dicts[key])
+                data[key] = InstallRecord.from_dict(spec, rec)
 
                 if not spec.external and "installed" in rec and rec["installed"]:
                     installed_prefixes.add(rec["path"])
             except Exception as e:
-                invalid_record(hash_key, e)
+                invalid_record(key, e)
 
         # Pass 2: Assign dependencies once all specs are created.
-        for hash_key in data:
+        for key in data:
             try:
-                self._assign_dependencies(spec_reader, hash_key, installs, data)
+                self._assign_dependencies(spec_reader, spec_dicts[key], key, data)
             except MissingDependenciesError:
                 raise
             except Exception as e:
-                invalid_record(hash_key, e)
+                invalid_record(key, e)
 
         # Pass 3: Mark all specs concrete.  Specs representing real
         # installations must be explicitly marked.
         # We do this *after* all dependencies are connected because if we
         # do it *while* we're constructing specs,it causes hashes to be
         # cached prematurely.
-        for hash_key, rec in data.items():
+        for rec in data.values():
             rec.spec._mark_root_concrete()
 
         self._data = data
@@ -880,8 +808,8 @@ class Database(object):
         # ignore errors if we need to rebuild a corrupt database.
         def _read_suppress_error():
             try:
-                if os.path.isfile(self._index_path):
-                    self._read_from_file(self._index_path)
+                if os.path.isfile(self._sqlite_path):
+                    self._read_from_file(self._sqlite_path)
             except CorruptDatabaseError as e:
                 self._error = e
                 self._data = {}
@@ -1009,7 +937,7 @@ class Database(object):
             if not expected == found:
                 raise AssertionError(
                     "Invalid ref_count: %s: %d (expected %d), in DB %s"
-                    % (key, found, expected, self._index_path)
+                    % (key, found, expected, self._sqlite_path)
                 )
 
     def _write(self, type, value, traceback):
@@ -1031,46 +959,42 @@ class Database(object):
             self._state_is_inconsistent = True
             return
 
-        temp_file = self._index_path + (".%s.%s.temp" % (socket.getfqdn(), os.getpid()))
+        self.sql_con.commit()
 
-        # Write a temporary database file them move it into place
-        try:
-            with open(temp_file, "w") as f:
-                self._write_to_file(f)
-            fs.rename(temp_file, self._index_path)
-
-            if _use_uuid:
-                with open(self._verifier_path, "w") as f:
-                    new_verifier = str(uuid.uuid4())
-                    f.write(new_verifier)
-                    self.last_seen_verifier = new_verifier
-        except BaseException as e:
-            tty.debug(e)
-            # Clean up temp file if something goes wrong.
-            if os.path.exists(temp_file):
-                os.remove(temp_file)
-            raise
+    def _init_sqlite(self, filename):
+        if os.path.exists(filename) and self.sql_con:
+            return
+        self.sql_con = sqlite3.connect(filename)
+        self.sql_con.cursor().execute(
+            "CREATE TABLE IF NOT EXISTS specs (hash TEXT PRIMARY KEY, name TEXT, data TEXT)"
+        )
+        self.sql_con.commit()
 
     def _read(self):
         """Re-read Database from the data in the set location. This does no locking."""
-        if os.path.isfile(self._index_path):
-            current_verifier = ""
-            if _use_uuid:
-                try:
-                    with open(self._verifier_path, "r") as f:
-                        current_verifier = f.read()
-                except BaseException:
-                    pass
-            if (current_verifier != self.last_seen_verifier) or (current_verifier == ""):
-                self.last_seen_verifier = current_verifier
-                # Read from file if a database exists
-                self._read_from_file(self._index_path)
-            elif self._state_is_inconsistent:
-                self._read_from_file(self._index_path)
-                self._state_is_inconsistent = False
-            return
-        elif self.is_upstream:
-            tty.warn("upstream not found: {0}".format(self._index_path))
+        self._read_from_file(self._sqlite_path)
+        self._state_is_inconsistent = False
+
+    def _do_insert_or_update(self, key, record):
+        # Always update the in-memory representation, since it's used internally.
+        self._data[key] = record
+
+        # But also register a change to be made in sqlite.
+        self._init_sqlite(self._sqlite_path)
+        self.sql_con.cursor().execute(
+            "INSERT OR REPLACE INTO specs (hash, name, data) VALUES (?, ?, ?)",
+            (
+                key,
+                record.spec.name,
+                json.dumps(record.to_dict(include_fields=self._record_fields)),
+            ),
+        )
+
+    def _do_remove(self, key):
+        del self._data[key]
+
+        self._init_sqlite(self._sqlite_path)
+        self.sql_con.cursor().execute("DELETE FROM specs WHERE hash = ?", (key,))
 
     def _add(
         self,
@@ -1156,36 +1080,45 @@ class Database(object):
             path = None
             installed = True
 
-        if key not in self._data:
-            # Create a new install record with no deps initially.
-            new_spec = spec.copy(deps=False)
-            extra_args = {"explicit": explicit, "installation_time": installation_time}
-            # Commands other than 'spack install' may add specs to the DB,
-            # we can record the source of an installed Spec with 'origin'
-            if hasattr(spec, "origin"):
-                extra_args["origin"] = spec.origin
-            self._data[key] = InstallRecord(new_spec, path, installed, ref_count=0, **extra_args)
+        # Update existing record.
+        if key in self._data:
+            record = self._data[key]
+            record.installed = installed
+            record.installation_time = _now()
+            record.explicit = explicit
+            self._do_insert_or_update(key, record)
+            return
 
-            # Connect dependencies from the DB to the new copy.
-            for dep in spec.edges_to_dependencies(deptype=_tracked_deps):
-                dkey = dep.spec.dag_hash()
-                upstream, record = self.query_by_spec_hash(dkey)
-                new_spec._add_dependency(record.spec, deptypes=dep.deptypes)
-                if not upstream:
-                    record.ref_count += 1
+        # Insert new record.
+        new_spec = spec.copy(deps=False)
 
-            # Mark concrete once everything is built, and preserve
-            # the original hashes of concrete specs.
-            new_spec._mark_concrete()
-            new_spec._hash = key
-            new_spec._package_hash = spec_pkg_hash
+        # Connect dependencies from the DB to the new copy.
+        for dep in spec.edges_to_dependencies(deptype=_tracked_deps):
+            dkey = dep.spec.dag_hash()
+            upstream, record = self.query_by_spec_hash(dkey)
+            new_spec._add_dependency(record.spec, deptypes=dep.deptypes)
 
-        else:
-            # It is already in the database
-            self._data[key].installed = installed
-            self._data[key].installation_time = _now()
+            if not upstream:
+                record.ref_count += 1
+                self._do_insert_or_update(dkey, record)
 
-        self._data[key].explicit = explicit
+        # Mark concrete once everything is built, and preserve
+        # the original hashes of concrete specs.
+        new_spec._mark_concrete()
+        new_spec._hash = key
+        new_spec._package_hash = spec_pkg_hash
+
+        self._do_insert_or_update(
+            key,
+            InstallRecord(
+                spec=new_spec,
+                path=path,
+                installed=installed,
+                explicit=explicit,
+                installation_time=installation_time,
+                origin=getattr(spec, "origin", None),
+            ),
+        )
 
     @_autospec
     def add(self, spec, directory_layout, explicit=False):
@@ -1194,7 +1127,6 @@ class Database(object):
         ``add()`` will lock and read from the DB on disk.
 
         """
-        # TODO: ensure that spec is concrete?
         # Entire add is transactional.
         with self.write_transaction():
             self._add(spec, directory_layout, explicit=explicit)
@@ -1226,9 +1158,10 @@ class Database(object):
 
         rec = self._data[key]
         rec.ref_count -= 1
+        self._do_insert_or_update(key, rec)
 
         if rec.ref_count == 0 and not rec.installed:
-            del self._data[key]
+            self._do_remove(key)
 
             for dep in spec.dependencies(deptype=_tracked_deps):
                 self._decrement_ref_count(dep)
@@ -1241,6 +1174,7 @@ class Database(object):
 
         rec = self._data[key]
         rec.ref_count += 1
+        self._do_insert_or_update(key, rec)
 
     def _remove(self, spec):
         """Non-locking version of remove(); does real work."""
@@ -1254,9 +1188,10 @@ class Database(object):
 
         if rec.ref_count > 0:
             rec.installed = False
+            self._do_insert_or_update(key, rec)
             return rec.spec
 
-        del self._data[key]
+        self._do_remove(key)
 
         # Remove any reference to this node from dependencies and
         # decrement the reference count
@@ -1321,7 +1256,7 @@ class Database(object):
 
         spec_rec.deprecated_for = deprecator_key
         spec_rec.installed = False
-        self._data[spec_key] = spec_rec
+        self._do_insert_or_update(spec_key, spec_rec)
 
     @_autospec
     def mark(self, spec, key, value):
@@ -1330,8 +1265,10 @@ class Database(object):
             return self._mark(spec, key, value)
 
     def _mark(self, spec, key, value):
-        record = self._data[self._get_matching_spec_key(spec)]
+        hash_key = self._get_matching_spec_key(spec)
+        record = self._data[hash_key]
         setattr(record, key, value)
+        self._do_insert_or_update(hash_key, record)
 
     @_autospec
     def deprecate(self, spec, deprecator):
@@ -1630,6 +1567,7 @@ class Database(object):
                 status = "explicit" if explicit else "implicit"
                 tty.debug(message.format(status, s=spec))
                 rec.explicit = explicit
+                self._do_insert_or_update(rec.spec.dag_hash(), rec)
 
 
 class UpstreamDatabaseLockingError(SpackError):
