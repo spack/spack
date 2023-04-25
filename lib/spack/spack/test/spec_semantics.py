@@ -654,6 +654,7 @@ class TestSpecSemantics(object):
             ("{spack_install}", spack.store.layout.root),
             ("{hash:7}", spec.dag_hash(7)),
             ("{/hash}", "/" + spec.dag_hash()),
+            ("{/^mpi.hash:7}", "/" + spec["mpi"].dag_hash(7)),
         ]
 
         for named_str, prop in package_segments:

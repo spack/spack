@@ -4115,6 +4115,17 @@ class Spec(object):
             clr.cwrite(f, stream=out, color=color)
 
         def write_attribute(spec, attribute, color):
+            attribute = attribute.lower()
+
+            sig = ""
+            if attribute.startswith(("@", "%", "/")):
+                # color sigils that are inside braces
+                sig = attribute[0]
+                attribute = attribute[1:]
+            elif attribute.startswith("arch="):
+                sig = " arch="  # include space as separator
+                attribute = attribute[5:]
+
             current = spec
             if attribute.startswith("^"):
                 attribute = attribute[1:]
@@ -4123,16 +4134,6 @@ class Spec(object):
 
             if attribute == "":
                 raise SpecFormatStringError("Format string attributes must be non-empty")
-            attribute = attribute.lower()
-
-            sig = ""
-            if attribute[0] in "@%/":
-                # color sigils that are inside braces
-                sig = attribute[0]
-                attribute = attribute[1:]
-            elif attribute.startswith("arch="):
-                sig = " arch="  # include space as separator
-                attribute = attribute[5:]
 
             parts = attribute.split(".")
             assert parts
