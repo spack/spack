@@ -18,6 +18,7 @@ class LibsonataReport(CMakePackage):
     git = "https://github.com/BlueBrain/libsonatareport.git"
 
     version("develop", branch="master", submodules=False, get_full_repo=True)
+    version("1.2", tag="1.2", submodules=False)
     version("1.1.1", tag="1.1.1", submodules=False)
     version("1.1", tag="1.1", submodules=False)
     version("1.0.0.20220218", commit="905641", submodules=False)
@@ -41,6 +42,7 @@ class LibsonataReport(CMakePackage):
             "-DSONATA_REPORT_ENABLE_SUBMODULES=OFF",
             "-DSONATA_REPORT_ENABLE_TEST=OFF",
             "-DSONATA_REPORT_ENABLE_WARNING_AS_ERROR=OFF",
+            "-DSONATA_REPORT_ENABLE_CONVERTER=ON",
         ]
         if self.spec.satisfies("+mpi"):
             result.append("-DSONATA_REPORT_ENABLE_MPI=ON")
