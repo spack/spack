@@ -2711,6 +2711,21 @@ In the example above, our package can only be built with Apple-Clang on Darwin.
 The ``requires`` directive is effectively the opposite of the ``conflicts`` directive, and takes
 the same optional ``when`` and ``msg`` arguments.
 
+If a package needs to express more complex requirements, involving more than a single spec,
+that can also be done using the ``requires`` directive. To express that a package can be built
+either with GCC or with Clang we can write:
+
+.. code-block:: python
+
+    requires(
+        "%gcc", "%clang",
+        policy="one_of"
+        msg="<myNicePackage> builds only with GCC or Clang"
+    )
+
+When using multiple specs in a ``requires`` directive, it is advised to set the ``policy=``
+argument explicitly. That argument can take either the value ``any_of`` or the value ``one_of``,
+and the semantic is the same as for :ref:`package-requirements`.
 
 .. _packaging_extensions:
 

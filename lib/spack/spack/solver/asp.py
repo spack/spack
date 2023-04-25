@@ -1037,13 +1037,13 @@ class SpackSolverSetup(object):
 
     def requirement_rules_from_package_py(self, pkg):
         rules = []
-        for requirement, conditions in pkg.requirements.items():
-            for when_spec, message in conditions:
+        for requirements, conditions in pkg.requirements.items():
+            for when_spec, policy, message in conditions:
                 rules.append(
                     RequirementRule(
                         pkg_name=pkg.name,
-                        policy="one_of",
-                        requirements=[requirement],
+                        policy=policy,
+                        requirements=requirements,
                         kind=Provenance.PACKAGE_PY,
                         condition=when_spec,
                         message=message,

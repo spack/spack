@@ -2,7 +2,7 @@
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
-
+import pathlib
 import sys
 
 import pytest
@@ -755,3 +755,33 @@ def test_skip_requirement_when_default_requirement_condition_cannot_be_met(
     s = Spec("mpileaks").concretized()
 
     assert s.satisfies("%clang +shared")
+
+
+def test_requires_directive(concretize_scope, mock_packages):
+    if spack.config.get("config:concretizer") == "original":
+        pytest.skip("Original concretizer does not support configuration requirements")
+    compilers_yaml = pathlib.Path(concretize_scope) / "compilers.yaml"
+    compilers_yaml.write_text(
+        """
+compilers::
+- compiler:
+    spec: gcc@12.0.0
+    paths:
+      cc: /usr/bin/clang-12
+      cxx: /usr/bin/clang++-12
+      f77: null
+      fc: null
+    operating_system: debian6
+    target: x86_64
+    modules: []
+"""
+    )
+    spack.config.config.clear_caches()
+
+    # This package requires either clang or gcc
+    s = Spec("requires_clang_or_gcc").concretized()
+    assert s.satisfies("%gcc@12.0.0")
+
+    # This package can only be compiled with clang
+    with pytest.raises(spack.error.SpackError, match="can only be compiled with Clang"):
+        Spec("requires_clang").concretized()
