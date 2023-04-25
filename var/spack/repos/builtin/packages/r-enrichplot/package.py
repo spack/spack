@@ -54,6 +54,4 @@ class REnrichplot(RPackage):
     depends_on("r-europepmc", type=("build", "run"), when="@1.2.0:1.4.0")
     depends_on("r-ggplotify", type=("build", "run"), when="@1.2.0:1.4.0")
     depends_on("r-gridextra", type=("build", "run"), when="@1.2.0:1.4.0")
-    depends_on("r-cowplot", type=("build", "run"))
-    depends_on("r-cowplot", when="@:1.16.1")
-    depends_on("r-cowplot", when="@:1.16.2")
+    depends_on("r-cowplot", type=("build", "run"), when="@:1.16.1")
