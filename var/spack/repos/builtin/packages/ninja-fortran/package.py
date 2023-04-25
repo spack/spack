@@ -3,7 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack.build_environment import MakeExecutable, determine_number_of_jobs
+from spack.build_environment import MakeExecutable
 from spack.package import *
 from spack.util.executable import which_string
 
@@ -94,6 +94,6 @@ class NinjaFortran(Package):
 
         module.ninja = MakeExecutable(
             which_string(name, path=[self.spec.prefix.bin], required=True),
-            determine_number_of_jobs(parallel=dspec.package.parallel),
+            module.make_jobs,
             supports_jobserver=True,  # This fork supports jobserver
         )

@@ -335,13 +335,9 @@ class Cmake(Package):
         if not sys.platform == "win32":
             args.append("--prefix={0}".format(self.prefix))
 
-            jobs = spack.build_environment.get_effective_jobs(
-                make_jobs,
-                parallel=self.parallel,
-                supports_jobserver=self.generator.supports_jobserver,
-            )
-            if jobs is not None:
-                args.append("--parallel={0}".format(jobs))
+            support_jobserver = should_support_jobserver and self.generator.supports_jobserver
+            if not support_jobserver:
+                args.append("--parallel={0}".format(make_jobs))
 
             if "+ownlibs" in spec:
                 # Build and link to the CMake-provided third-party libraries
