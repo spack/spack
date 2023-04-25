@@ -6,14 +6,20 @@
 from spack import *
 import os
 
+
 class Funwave(MakefilePackage):
     """
     What is FUNWAVE-TVD?
-    FUNWAVE-TVD is the Total Variation Diminishing (TVD) version of the fully nonlinear Boussinesq wave model (FUNWAVE) developed by Shi et al. (2012). The FUNWAVE model was initially developed by Kirby et al. (1998) based on Wei et al. (1995). The development of the present version was motivated by recent needs for modeling of surfzone--cale optical properties in a Boussinesq model framework, and modeling of Tsunami waves in both a global/coastal scale for prediction of coastal inundation and a basin scale for wave propagation.
+    FUNWAVE-TVD is the Total Variation Diminishing (TVD) version of the fully nonlinear Boussinesq
+    wave model (FUNWAVE) developed by Shi et al. (2012). The FUNWAVE model was initially developed
+    by Kirby et al. (1998) based on Wei et al. (1995). The development of the present version was
+    motivated by recent needs for modeling of surfzone--cale optical properties in a Boussinesq
+    model framework, and modeling of Tsunami waves in both a global/coastal scale for prediction
+    of coastal inundation and a basin scale for wave propagation.
     """
 
     homepage = "https://fengyanshi.github.io/build/html/index.html"
-    url      = "https://github.com/fengyanshi/FUNWAVE-TVD"
+    url = "https://github.com/fengyanshi/FUNWAVE-TVD"
 
     maintainers = ['stevenrbrandt', 'fengyanshi']
 
@@ -30,14 +36,11 @@ class Funwave(MakefilePackage):
             make()
 
     def install(self, spec, prefix):
-        bin = os.path.join(prefix,"bin")
+        bin = os.path.join(prefix, "bin")
         os.makedirs(bin, exist_ok=True)
-        copy("./src/funwave_vessel",os.path.join(bin,"funwave"))
+        copy("./src/funwave_vessel", os.path.join(bin, "funwave"))
 
     def edit(self, spec, prefix):
         with working_dir("./src"):
             makefile = FileFilter('Makefile')
-            makefile.filter("FLAG_8 = -DCOUPLING","#FLAG_8 = -DCOUPLING")
-
-
-
+            makefile.filter("FLAG_8 = -DCOUPLING", "#FLAG_8 = -DCOUPLING")
