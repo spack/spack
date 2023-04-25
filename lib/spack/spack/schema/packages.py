@@ -35,6 +35,7 @@ properties = {
                                     "oneOf": [
                                         {
                                             "type": "object",
+                                            "additionalProperties": False,
                                             "properties": {
                                                 "one_of": {"type": "array"},
                                                 "any_of": {"type": "array"},
