@@ -20,7 +20,7 @@ class Generax(CMakePackage):
     version("master", branch="master", submodules=True)
     version("dev", branch="dev", submodules=True)
     version("2.0.4", commit="e4fab40f407bdd3b588d3d69a449f8c1be56f9fa", submodules=True)
-    version("2.0.1", commit="edff1caca0fe3f691c386e4b9a990f391dbdcc60", submodules=True)
+    version("2.0.1", commit="0623dae55dd602a60faae63e9991fa8d41782456", submodules=True)
 
     depends_on("cmake@3.0.1:", type="build")
     depends_on("mpi", when="+mpi")
