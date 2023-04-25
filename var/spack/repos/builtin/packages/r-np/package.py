@@ -19,6 +19,7 @@ class RNp(RPackage):
 
     cran = "np"
 
+    version("0.60-17", sha256="d97957cb234ec2e570fc2d02d305eadff3d71939484b3d1054ed8b67a3427f36")
     version("0.60-16", sha256="bef967c0195059e53c68e64d7540bf4627415c832f050c8806520ab8796e01b0")
     version("0.60-14", sha256="342b7f51e44eee556a9bb1f2ac9a143006019ca398fdccbb9c4562db3883d56c")
     version("0.60-11", sha256="a3b31b8ad70c42826076786b2b1b63b79cdbadfa55fe126773bc357686fd33a9")
