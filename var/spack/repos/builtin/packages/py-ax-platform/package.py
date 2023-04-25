@@ -21,12 +21,11 @@ class PyAxPlatform(PythonPackage):
 
     version("0.3.1", sha256="0bad1d16155560fdd8644308d2771edf7fd977ad41fea15a7ecf3f224bc36517")
 
-    # From pyproject.toml
     depends_on("py-setuptools@34.4:", type="build")
     depends_on("py-setuptools-scm", type="build")
-    # From setup.py
+    depends_on("py-botorch@0.8.3:", when="+latest", type=("build", "run"))
+    depends_on("py-botorch@0.8.3", when="~latest", type=("build", "run"))
     depends_on("python@3.8:", type=("build", "run"))
-    depends_on("py-botorch@0.8.3:", type=("build", "run"))
     depends_on("py-jinja2", type=("build", "run"))
     depends_on("py-pandas", type=("build", "run"))
     depends_on("py-scipy", type=("build", "run"))
@@ -34,3 +33,13 @@ class PyAxPlatform(PythonPackage):
     depends_on("py-ipywidgets", type=("build", "run"))
     depends_on("py-typeguard@2.13.3", type=("build", "run"))
     depends_on("py-plotly@5.12.0:", type=("build", "run"))
+
+    variant(
+        "latest",
+        default=False,
+        description="Build with latest botorch"
+    )
+
+    def setup_build_environment(self, env):
+        if self.spec.satisfies("+latest"):
+            env.set("ALLOW_BOTORCH_LATESTS", True)
