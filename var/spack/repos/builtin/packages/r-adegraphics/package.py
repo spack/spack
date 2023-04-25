@@ -15,6 +15,7 @@ class RAdegraphics(RPackage):
 
     cran = "adegraphics"
 
+    version("1.0-18", sha256="8fe07fc0f73e9917e098de2ee8e6fdb3e07775446683b6222692a3298e4d563c")
     version("1.0-16", sha256="7ba59ce9aeefe1c25b4b118d08ef458ffd34115412c147cc428629e72a82ec3a")
     version("1.0-15", sha256="87bbcd072e9a898955f5ede4315e82365086a50a2887bf5bd2e94bbb4d3f678a")
 
