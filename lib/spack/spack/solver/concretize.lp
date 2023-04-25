@@ -205,6 +205,7 @@ error(1, "Unexpected attribute {0}/{1}: {2}", Package, X1, X2) :- attr(X1, Packa
 error(1, "Unexpected attribute {0}/{1}: {2}, {3}", Package, X1, X2, X3) :- attr(X1, Package, X2, X3), not attr("virtual_node", Package), not external(Package), not attr("node", Package).
 error(1, "Unexpected attribute {0}/{1}: {2}, {3}, {4}", Package, X1, X2, X3, X4) :- attr(X1, Package, X2, X3, X4), not attr("virtual_node", Package), not external(Package), not attr("node", Package).
 
+virtual(Virtual) :- possible_provider(Package, Virtual).
 attr("virtual_node", Virtual) :- provider(Package, Virtual).
 
 % we cannot have additional variant values when we are working with concrete specs
