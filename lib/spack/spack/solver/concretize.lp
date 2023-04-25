@@ -200,10 +200,40 @@ attr(Name, A1, A2, A3, A4) :- impose(ID), imposed_constraint(ID, Name, A1, A2, A
 {impose(ID)} :- imposed_constraint(ID, Name, A1, A2, A3, A4).
 
 % Packages can only set attrs if they are part of the DAG
-attr("node", Package) :- attr(_, Package), not attr("virtual_node", Package).
-attr("node", Package) :- attr(_, Package, _), not attr("virtual_node", Package).
-attr("node", Package) :- attr(_, Package, _, _), not attr("virtual_node", Package).
-attr("node", Package) :- attr(_, Package, _, _, _), not attr("virtual_node", Package).
+%attr("node", Package) :- attr(_, Package), not attr("virtual_node", Package).
+%attr("node", Package) :- attr(_, Package, _), not attr("virtual_node", Package).
+%attr("node", Package) :- attr(_, Package, _, _), not attr("virtual_node", Package).
+%attr("node", Package) :- attr(_, Package, _, _, _), not attr("virtual_node", Package).
+
+%:- attr(_, Package), not attr("node", Package).
+%:- attr(_, Package, _), not attr("node", Package).
+%:- attr(_, Package, _, _), not attr("node", Package).
+%:- attr(_, Package, _, _, _), not attr("node", Package).
+
+%attr("node", Package) :- provider(Package, Virtual).
+
+%:- attr(_, Package), not virtual(Package), not external(Package), not attr("node", Package).
+%:- attr(_, Package, _), not virtual(Package), not external(Package), not attr("node", Package).
+%:- attr(_, Package, _, _), not virtual(Package), not external(Package), not attr("node", Package).
+%:- attr(_, Package, _, _, _), not virtual(Package), not external(Package), not attr("node", Package).
+
+attr("virtual_node", Virtual) :- provider(Package, Virtual).
+%virtual(Virtual) :- provider(Package, Virtual).
+
+error(1, "Unexpected {0}/{1}", Package, X) :- attr(X, Package), not attr("virtual_node", Package), not external(Package), not attr("node", Package).
+error(1, "Unexpected {0}/{1}: {2}", Package, X1, X2) :- attr(X1, Package, X2), not attr("virtual_node", Package), not external(Package), not attr("node", Package).
+error(1, "Unexpected {0}/{1}: {2}, {3}", Package, X1, X2, X3) :- attr(X1, Package, X2, X3), not attr("virtual_node", Package), not external(Package), not attr("node", Package).
+error(1, "Unexpected {0}", X) :- attr(X, Package, _, _, _), not attr("virtual_node", Package), not external(Package), not attr("node", Package).
+
+%error(1, "Unexpected {0}/{1}", Package, X) :- attr(X, Package), not virtual(Package), not external(Package), not attr("node", Package).
+%error(1, "Unexpected {0}/{1}: {2}", Package, X1, X2) :- attr(X1, Package, X2), not virtual(Package), not external(Package), not attr("node", Package).
+%error(1, "Unexpected {0}/{1}: {2}, {3}", Package, X1, X2, X3) :- attr(X1, Package, X2, X3), not virtual(Package), not external(Package), not attr("node", Package).
+%error(1, "Unexpected {0}", X) :- attr(X, Package, _, _, _), not virtual(Package), not external(Package), not attr("node", Package).
+
+%:- attr(_, Package), not virtual(Package), not external(Package), not attr("node", Package), not attr("hash", Package, _).
+%:- attr(_, Package, _), not virtual(Package), not external(Package), not attr("node", Package), not attr("hash", Package, _).
+%:- attr(_, Package, _, _), not virtual(Package), not external(Package), not attr("node", Package), not attr("hash", Package, _).
+%:- attr(_, Package, _, _, _), not virtual(Package), not external(Package), not attr("node", Package), not attr("hash", Package, _).
 
 % we cannot have additional variant values when we are working with concrete specs
 :- attr("node", Package), attr("hash", Package, Hash),
