@@ -14,6 +14,7 @@ class RLog4r(RPackage):
 
     cran = "log4r"
 
+    version("0.4.3", sha256="dfe3d49d35a8d8f3ad63f156d18e860540a01bd0af0e343cbab3e31a2cf5904c")
     version("0.4.2", sha256="924a020565dcd05a2bc8283285fcae60f6b58b35e1be7c55acc0c703c7edfe34")
     version("0.3.2", sha256="14ba6b096283279f0accbde26a600771ab2df271db6c8eeb04d6f113107825a3")
     version("0.3.0", sha256="8e5d0221298410e48bee9d9a983a23e1834ce88592f9d931471bfdb05f37a691")
