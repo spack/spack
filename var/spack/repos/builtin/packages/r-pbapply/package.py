@@ -17,6 +17,7 @@ class RPbapply(RPackage):
 
     cran = "pbapply"
 
+    version("1.7-0", sha256="64b8e931e0a09031c20b66173ce80a646043b8f135d329bc86226a11c6b706c0")
     version("1.5-0", sha256="effdfee286e5ba9534dc2ac3cee96590a37f5cd2af28c836d00c25ca9f070a55")
     version("1.4-3", sha256="8fe6287535be766b5a688810e2cc1ca4e668ac6b42b6e832473fe5701133eb21")
     version("1.4-1", sha256="b3633349181db944e1dfc4422b4728a6562e454117a232cbb51633906cd27cad")
