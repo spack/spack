@@ -18,6 +18,7 @@ class RRgl(RPackage):
 
     cran = "rgl"
 
+    version("1.1.3", sha256="4fa246c2ab06261ea81e09a7a489f34174b93359fe74a3db291f8d0eccd38aae")
     version("0.110.2", sha256="da1118c1990ae161a5787960fb22009601d2ee7d39ca9c97c31c70589bce346d")
     version("0.108.3.2", sha256="033af3aceade6c21d0a602958fff1c25c21febc7d0e867cf88860cfa25fc3c65")
     version("0.108.3", sha256="89f96eb462cacfcc796ad351d7dac0480a7eb9f80e9bd75e58c5a79f0ee8133b")
@@ -32,6 +33,7 @@ class RRgl(RPackage):
     depends_on("r@3.2.0:", type=("build", "run"))
     depends_on("r@3.3.0:", type=("build", "run"), when="@0.108.3:")
     depends_on("r-htmlwidgets", type=("build", "run"))
+    depends_on("r-htmlwidgets@1.6.0:", type=("build", "run"), when="@1.1.3:")
     depends_on("r-htmltools", type=("build", "run"))
     depends_on("r-knitr", type=("build", "run"))
     depends_on("r-knitr@1.33:", type=("build", "run"), when="@0.108.3:")
