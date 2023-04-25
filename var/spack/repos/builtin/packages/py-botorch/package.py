@@ -38,8 +38,8 @@ class PyBotorch(PythonPackage):
     depends_on("py-linear-operator@0.4.0:", when="@0.8.4: +latest", type=("build", "run"))
     depends_on("py-linear-operator@0.4.0", when="@0.8.4: ~latest", type=("build", "run"))
     depends_on("py-linear-operator@0.3.0:", when="@0.8.3: +latest", type=("build", "run"))
-    depends_on("py-linear-operator@0.3.0", when="@0.8.3: ~latest", type=("build", "run")) 
-                                                                                      
+    depends_on("py-linear-operator@0.3.0", when="@0.8.3: ~latest", type=("build", "run"))
+
     variant(
         "latest",
         default=False,
