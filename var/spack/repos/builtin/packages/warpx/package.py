@@ -265,16 +265,13 @@ class Warpx(CMakePackage):
         install test subdirectory for use during `spack test run`."""
         self.cache_extra_test_sources([self.examples_src_dir])
 
-    def test(self):
-        """Perform smoke tests on the installed package."""
+    def test_example(self):
+        """run variant-dependent example"""
         if "+app" not in self.spec:
-            print("WarpX smoke tests skipped: requires variant +app")
-            return
-
-        # our executable names are a variant-dependent and naming evolves
-        exe = find(self.prefix.bin, "warpx.*", recursive=False)[0]
+            raise SkipTest("Test is only available for +app builds")
 
         cli_args = self._get_input_options(True)
-        self.run_test(
-            exe, cli_args, [], installed=True, purpose="Smoke test for WarpX", skip_missing=False
-        )
+
+        # our evolving executable names are variant-dependent
+        exe = which(find(self.prefix.bin, "warpx.*", recursive=False)[0])
+        exe(*cli_args)
