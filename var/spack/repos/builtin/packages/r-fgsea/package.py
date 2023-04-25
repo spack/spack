@@ -35,5 +35,5 @@ class RFgsea(RPackage):
     depends_on("r-fastmatch", type=("build", "run"))
     depends_on("r-matrix", type=("build", "run"), when="@1.6.0:")
     depends_on("r-bh", type=("build", "run"), when="@1.10.1:")
-    depends_on("r-gridextra", type=("build", "run"))
-    depends_on("r-gridextra", when="@:1.22.0")
+
+    depends_on("r-gridextra", type=("build", "run"), when="@:1.22.0")
