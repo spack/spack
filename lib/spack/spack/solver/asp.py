@@ -2082,8 +2082,9 @@ class SpackSolverSetup(object):
         # get list of all possible dependencies
         self.possible_virtuals = set(x.name for x in specs if x.virtual)
         for spec in specs:
-            for provided in spec.package_class.provided:
-                self.possible_virtuals.add(provided.name)
+            if not spec.virtual:
+                for provided in spec.package_class.provided:
+                    self.possible_virtuals.add(provided.name)
         possible = spack.package_base.possible_dependencies(
             *specs, virtuals=self.possible_virtuals, deptype=spack.dependency.all_deptypes
         )
