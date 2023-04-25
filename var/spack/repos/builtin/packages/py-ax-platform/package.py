@@ -33,4 +33,4 @@ class PyAxPlatform(PythonPackage):
     depends_on("py-scikit-learn", type=("build", "run"))
     depends_on("py-ipywidgets", type=("build", "run"))
     depends_on("py-typeguard@2.13.3:", type=("build", "run"))
-    depends_on("py-plotly@5.12.0:", when="^py-ipywidgets@8.0.0:", type=("build", "run"))
+    depends_on("py-plotly@5.12.0:", type=("build", "run"))
