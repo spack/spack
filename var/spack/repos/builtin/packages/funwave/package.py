@@ -3,8 +3,9 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
 import os
+
+from spack.package import *
 
 
 class Funwave(MakefilePackage):
@@ -21,13 +22,13 @@ class Funwave(MakefilePackage):
     homepage = "https://fengyanshi.github.io/build/html/index.html"
     url = "https://github.com/fengyanshi/FUNWAVE-TVD"
 
-    maintainers = ['stevenrbrandt', 'fengyanshi']
+    maintainers = ["stevenrbrandt", "fengyanshi"]
 
-    version('3.2', git='https://github.com/fengyanshi/FUNWAVE-TVD', tag='v3.2')
-    version('3.1', git='https://github.com/fengyanshi/FUNWAVE-TVD', tag='v3.1')
-    version('3.0', git='https://github.com/fengyanshi/FUNWAVE-TVD', tag='v3.0')
+    version("3.2", git="https://github.com/fengyanshi/FUNWAVE-TVD", tag="v3.2")
+    version("3.1", git="https://github.com/fengyanshi/FUNWAVE-TVD", tag="v3.1")
+    version("3.0", git="https://github.com/fengyanshi/FUNWAVE-TVD", tag="v3.0")
 
-    depends_on('mpi')
+    depends_on("mpi")
 
     parallel = False
 
@@ -42,5 +43,5 @@ class Funwave(MakefilePackage):
 
     def edit(self, spec, prefix):
         with working_dir("./src"):
-            makefile = FileFilter('Makefile')
+            makefile = FileFilter("Makefile")
             makefile.filter("FLAG_8 = -DCOUPLING", "#FLAG_8 = -DCOUPLING")

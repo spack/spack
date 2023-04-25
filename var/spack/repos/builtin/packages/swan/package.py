@@ -3,8 +3,9 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack.package import *
 import re
+
+from spack.package import *
 
 
 class Swan(MakefilePackage):
@@ -26,7 +27,11 @@ class Swan(MakefilePackage):
     def url_for_version(self, version):
         return "https://swanmodel.sourceforge.io/download/zip/swan{0}.tar.gz"
 
-    version("4145", preferred=True, sha256="4cced2250f11f5cff3417d1f541f5e3cdd09fa1bc4fd986e0d0917bfb88b1e2a")
+    version(
+        "4145",
+        preferred=True,
+        sha256="4cced2250f11f5cff3417d1f541f5e3cdd09fa1bc4fd986e0d0917bfb88b1e2a",
+    )
 
     version("4141", sha256="5d411e6602bd4ef764f6c7d23e5e25b588e955cb21a606d6d8a7bc4c9393aa0a")
 
@@ -35,15 +40,15 @@ class Swan(MakefilePackage):
     depends_on("perl", type="build")
 
     def edit(self, spec, prefix):
-        fc = re.sub(r'.*[\\/]', '', env["FC"])
-        mpifc = re.sub(r'.*[\\/]', '', spec['mpi'].mpifc)
+        fc = re.sub(r".*[\\/]", "", env["FC"])
+        mpifc = re.sub(r".*[\\/]", "", spec["mpi"].mpifc)
 
         # Must not be the full path to the compiler or platform.pl gets confused
         env["FC"] = fc
         env["F90_MPI"] = mpifc
 
         m = FileFilter("platform.pl")
-        m.filter("F90_MPI = .*", 'F90_MPI = '+mpifc+'\\n";')
+        m.filter("F90_MPI = .*", "F90_MPI = " + mpifc + '\\n";')
         m.filter("NETCDFROOT =", "NETCDFROOT = " + spec["netcdf-fortran"].prefix)
         m.filter(r"-lnetcdf\b", "")
 
