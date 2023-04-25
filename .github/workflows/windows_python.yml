@@ -60,7 +60,7 @@ jobs:
     - uses: codecov/codecov-action@894ff025c7b54547a9a2a1e9f228beae737ad3c2
       with:
         flags: unittests,windows
-  build-abseil:
+  pkg-build-test:
     runs-on: windows-latest
     steps:
     - uses: actions/checkout@8e5e7e5ab8b370d6c329ec480221332ada57f0ab
@@ -75,9 +75,11 @@ jobs:
     - name: Build Test
       run: |
         spack compiler find
-        spack external find cmake
         spack external find ninja
-        spack -d install abseil-cpp
+        spack external find cmake
+        spack -d install python
+        spack -d install netlib-lapack
+        spack -d install hdf5
   # TODO: johnwparent - reduce the size of the installer operations
   # make-installer:
   #   runs-on: windows-latest
