@@ -16,6 +16,7 @@ class RShiny(RPackage):
 
     cran = "shiny"
 
+    version("1.7.4", sha256="bbfcdd7375013b8f59248b3f3f4e752acd445feb25179f3f7f65cd69614da4b5")
     version("1.7.3", sha256="b8ca9a39fa69ea9b270a7e9037198d95122c79bd493b865d909d343dd3523ada")
     version("1.7.2", sha256="23b5bfee8d597b4147e07c89391a735361cd9f69abeecfd9bd38a14d35fe6252")
     version("1.7.1", sha256="c03b2056fb41430352c7c0e812bcc8632e6ec4caef077d2f7633512d91721d00")
@@ -35,6 +36,7 @@ class RShiny(RPackage):
     depends_on("r-htmltools@0.3.6:", type=("build", "run"))
     depends_on("r-htmltools@0.4.0.9003:", type=("build", "run"), when="@1.5.0:")
     depends_on("r-htmltools@0.5.2:", type=("build", "run"), when="@1.7.1:")
+    depends_on("r-htmltools@0.5.4:", type=("build", "run"), when="@1.7.4:")
     depends_on("r-r6@2.0:", type=("build", "run"))
     depends_on("r-sourcetools", type=("build", "run"))
     depends_on("r-later@0.7.2:", type=("build", "run"), when="@1.1.0:")
