@@ -46,5 +46,4 @@ class RDose(RPackage):
     depends_on("r-scales", type=("build", "run"), when="@3.2.0:3.4.0")
     depends_on("r-rvcheck", type=("build", "run"), when="@3.4.0")
     depends_on("r-igraph", type=("build", "run"), when="@3.2.0:3.4.0")
-    depends_on("r-do-db", type=("build", "run"))
-    depends_on("r-do-db", when="@:3.22.1")
+    depends_on("r-do-db", type=("build", "run"), when="@:3.22.1")
