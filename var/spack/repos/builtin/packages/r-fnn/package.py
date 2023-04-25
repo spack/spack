@@ -15,6 +15,7 @@ class RFnn(RPackage):
 
     cran = "FNN"
 
+    version("1.1.3.2", sha256="d701a13487979ebb07a071f4cc83fcf4daea5832d1f3923bce1e0d671dfe0e87")
     version("1.1.3.1", sha256="52b0e20611481a95bced40be4126f44b002fd3a9c4c9674bb34db4e1e3b5be5a")
     version("1.1.3", sha256="de763a25c9cfbd19d144586b9ed158135ec49cf7b812938954be54eb2dc59432")
     version("1.1.2.2", sha256="b51a60fbbeff58c48cc90c2023c48972d5082d68efd02284c17ccd9820986326")
