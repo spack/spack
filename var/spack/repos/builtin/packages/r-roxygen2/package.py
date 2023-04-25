@@ -16,6 +16,7 @@ class RRoxygen2(RPackage):
 
     cran = "roxygen2"
 
+    version("7.2.3", sha256="d844fab977d2575ab942fa1309ac7ff67f35f099a75d8b41c79efe6ea10416da")
     version("7.2.1", sha256="d2f0342591dc2b561fad8f6cf6fb3001e5e0bdd02be68bb2c6315f6bb82cda21")
     version("7.2.0", sha256="2ebfcfd567b9db6c606c6d42be1645b4e987f987995a2ad8954fa963a519448b")
     version("7.1.2", sha256="b3693d1eb57bb1c27134447ea7f64c353c085dd2237af7cfacc75fca3d2fc5fd")
@@ -32,7 +33,6 @@ class RRoxygen2(RPackage):
     depends_on("r-cli@3.3.0:", type=("build", "run"), when="@7.2.0:")
     depends_on("r-commonmark", type=("build", "run"))
     depends_on("r-desc@1.2.0:", type=("build", "run"))
-    depends_on("r-digest", type=("build", "run"))
     depends_on("r-knitr", type=("build", "run"), when="@7.1.0:")
     depends_on("r-pkgload@1.0.2:", type=("build", "run"))
     depends_on("r-purrr", type=("build", "run"))
@@ -40,6 +40,7 @@ class RRoxygen2(RPackage):
     depends_on("r-r6@2.1.2:", type=("build", "run"))
     depends_on("r-rlang", type=("build", "run"), when="@7.1.0:")
     depends_on("r-rlang@1.0.0:", type=("build", "run"), when="@7.2.0:")
+    depends_on("r-rlang@1.0.6:", type=("build", "run"), when="@7.2.3:")
     depends_on("r-stringi", type=("build", "run"))
     depends_on("r-stringr@1.0.0:", type=("build", "run"))
     depends_on("r-withr", type=("build", "run"), when="@7.2.0:")
@@ -47,3 +48,4 @@ class RRoxygen2(RPackage):
     depends_on("r-cpp11", type=("build", "run"), when="@7.1.2:")
 
     depends_on("r-rcpp@0.11.0:", type=("build", "run"), when="@:7.1.1")
+    depends_on("r-digest", type=("build", "run"), when="@:7.2.1")
