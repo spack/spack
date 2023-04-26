@@ -34,7 +34,6 @@ class Python(AutotoolsPackage, Package):
 
     maintainers("adamjstewart", "skosukhin", "scheibelp", "pradyunsg")
 
-
     version("3.11.2", sha256="2411c74bda5bbcfcddaf4531f66d1adc73f247f529aee981b029513aefdbf849")
     version("3.11.1", sha256="baed518e26b337d4d8105679caf68c5c32630d702614fc174e98cb95c46bdfa4")
     version("3.11.0", sha256="64424e96e2457abbac899b90f9530985b51eef2905951febd935f0e73414caeb")
