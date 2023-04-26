@@ -21,8 +21,7 @@ class PyIpyrad(PythonPackage):
     depends_on("py-setuptools", type="build")
 
     # Dependencies found at
-    # https://ipyrad.readthedocs.io/en/master/3-installation.html
-    # Under Details: dependencies
+    # https://ipyrad.readthedocs.io/en/master/3-installation.html#details-dependencies
     depends_on("bedtools2", type=("build", "run"))
     depends_on("bwa", type=("build", "run"))
     depends_on("muscle", type=("build", "run"))
