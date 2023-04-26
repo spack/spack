@@ -75,11 +75,7 @@ class Opencascade(CMakePackage):
     )
 
     # Modules, per DAG at https://dev.opencascade.org/doc/refman/html/
-    variant(
-        "modeling_data",
-        default=True,
-        description="Build Modeling Data module",
-    )
+    variant("modeling_data", default=True, description="Build Modeling Data module")
     variant(
         "modeling_algorithms",
         default=True,
