@@ -34,6 +34,7 @@ class RInterp(RPackage):
     version("1.1-3", sha256="b74e606b38cfb02985c1f9e3e45093620f76c0307b1b0b4058761e871eb5fa3f")
 
     depends_on("r@3.5.0:", type=("build", "run"))
+
     depends_on("r-rcpp@0.12.9:", type=("build", "run"))
     depends_on("r-deldir", type=("build", "run"))
     depends_on("r-rcppeigen", type=("build", "run"))
