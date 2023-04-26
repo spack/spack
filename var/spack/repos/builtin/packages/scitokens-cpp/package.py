@@ -22,6 +22,7 @@ class ScitokensCpp(CMakePackage):
     depends_on("openssl")
     depends_on("sqlite")
     depends_on("curl")
+    depends_on("pkgconfig", type="build")
     depends_on("uuid", type="build")
 
     # https://github.com/scitokens/scitokens-cpp/issues/72
