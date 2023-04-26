@@ -29,3 +29,4 @@ class RQs(RPackage):
     depends_on("r-rapiserialize@0.1.1:", type=("build", "run"), when="@0.25.4:")
     depends_on("r-stringfish@0.14.1:", type=("build", "run"))
     depends_on("r-stringfish@0.15.1:", type=("build", "run"), when="@0.25.2:")
+    depends_on("zstd")
