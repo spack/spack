@@ -27,6 +27,7 @@ class RGlmnet(RPackage):
     version("2.0-5", sha256="2ca95352c8fbd93aa7800f3d972ee6c1a5fcfeabc6be8c10deee0cb457fd77b1")
 
     depends_on("r@3.6.0:", type=("build", "run"), when="@4.1:")
+
     depends_on("r-matrix@1.0-6:", type=("build", "run"))
     depends_on("r-foreach", type=("build", "run"))
     depends_on("r-shape", type=("build", "run"), when="@4.1:")
