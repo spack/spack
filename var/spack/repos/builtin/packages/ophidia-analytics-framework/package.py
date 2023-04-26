@@ -18,7 +18,6 @@ class OphidiaAnalyticsFramework(AutotoolsPackage):
         sha256="565050b90ce1cefc59136c835a335ca7981fec792df7a1ee9309b24c05b275d6",
         deprecated=True,
     )
-    
     depends_on("autoconf", type="build")
     depends_on("automake", type="build")
     depends_on("libtool", type="build")
