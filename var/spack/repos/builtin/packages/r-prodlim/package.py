@@ -15,7 +15,9 @@ class RProdlim(RPackage):
 
     cran = "prodlim"
 
-    version("2023.03.31", sha256="5510454f8511ca956666f27dfb77d875c56b9166188c33f22cd22b7615797800")
+    version(
+        "2023.03.31", sha256="5510454f8511ca956666f27dfb77d875c56b9166188c33f22cd22b7615797800"
+    )
     version(
         "2019.11.13", sha256="6809924f503a14681de84730489cdaf9240d7951c64f5b98ca37dc1ce7809b0f"
     )
