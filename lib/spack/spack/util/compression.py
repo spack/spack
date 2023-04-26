@@ -12,9 +12,9 @@ import sys
 from itertools import product
 
 from llnl.util import tty
-from spack.error import SpackError
 
 import spack.util.path as spath
+from spack.error import SpackError
 from spack.util.executable import CommandNotFoundError, which
 
 # Supported archive extensions.
@@ -393,8 +393,10 @@ def decompressor_for_win(extension):
     expanded_extension = compression_ext_from_compressed_archive(extension)
     decompressor = _determine_py_decomp_archive_strategy(expanded_extension)
     if not decompressor:
-        raise SpackError(f"Spack was unable to determine a proper decompression strategy for valid extension: {extension}"
-                         "This is a bug, please file an issue at https://github.com/spack/spack/issues")
+        raise SpackError(
+            f"Spack was unable to determine a proper decompression strategy for valid extension: {extension}"
+            "This is a bug, please file an issue at https://github.com/spack/spack/issues"
+        )
     if "tar" not in expanded_extension:
         return decompressor
 
