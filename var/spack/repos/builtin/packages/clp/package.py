@@ -13,7 +13,7 @@ class Clp(AutotoolsPackage):
     homepage = "https://projects.coin-or.org/Clp"
     url = "https://github.com/coin-or/Clp/archive/releases/1.17.6.tar.gz"
 
-    depends_on("pkg-config", type="build")
+    depends_on("pkgconfig", type="build")
     depends_on("coinutils")
     depends_on("osi")
 
