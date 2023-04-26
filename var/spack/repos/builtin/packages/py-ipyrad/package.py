@@ -47,5 +47,5 @@ class PyIpyrad(PythonPackage):
         filter_file(
             r"^IPCLUSTER_BIN\s*=.*$",
             'IPCLUSTER_BIN = "{}"'.format(self.spec["py-ipyparallel"].prefix.bin.ipcluster),
-            "ipyrad/core/Parallel.py",
+            join_path("ipyrad", "core", "Parallel.py"),
         )
