@@ -176,8 +176,6 @@ class Rocblas(CMakePackage):
         depends_on("hip@" + ver, when="@" + ver)
         depends_on("llvm-amdgpu@" + ver, type="build", when="@" + ver)
         depends_on("rocminfo@" + ver, type="build", when="@" + ver)
-    for ver in ["5.2.0", "5.2.1", "5.2.3", "5.3.0", "5.3.3", "5.4.0", "5.4.3"]:
-        depends_on("rocm-openmp-extras@" + ver, type="test", when="@" + ver)
 
     depends_on("python@3.6:", type="build")
 
@@ -239,7 +237,7 @@ class Rocblas(CMakePackage):
     patch("0003-Fix-rocblas-gentest.patch", when="@4.2.0:5.1")
     # Finding Python package and set command python as python3
     patch("0004-Find-python.patch", when="@5.2.0:")
-    patch("0005-omp-for-test.patch")
+    patch("0006-Guard-use-of-OpenMP-to-make-it-optional-5.4.patch", when="@5.4:")
 
     def setup_build_environment(self, env):
         env.set("CXX", self.spec["hip"].hipcc)
@@ -264,10 +262,7 @@ class Rocblas(CMakePackage):
             self.define_from_variant("BUILD_WITH_TENSILE", "tensile"),
         ]
         if self.run_tests:
-            args.append(self.define("LINK_BLIS", "OFF")),
-            args.append(
-                self.define("ROCM_OPENMP_EXTRAS_DIR", self.spec["rocm-openmp-extras"].prefix)
-            ),
+            args.append(self.define("LINK_BLIS", "OFF"))
 
         arch_define_name = "AMDGPU_TARGETS"
         if "+tensile" in self.spec:
