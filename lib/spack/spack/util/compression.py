@@ -390,11 +390,13 @@ def decompressor_for_win(extension):
     # python based decompression strategy
     # Expand extension from contracted extension i.e. tar.gz from .tgz
     # no-op on non contracted extensions
-    extension = compression_ext_from_compressed_archive(extension)
-    decompressor = _determine_py_decomp_archive_strategy(extension)
+    expanded_extension = compression_ext_from_compressed_archive(extension)
+    decompressor = _determine_py_decomp_archive_strategy(expanded_extension)
     if not decompressor:
         raise SpackError(f"Spack was unable to determine a proper decompression strategy for valid extension: {extension}"
                          "This is a bug, please file an issue at https://github.com/spack/spack/issues")
+    if "tar" not in expanded_extension:
+        return decompressor
 
     return _win_compressed_tarball_handler(decompressor)
 
@@ -690,19 +692,13 @@ def extension_from_path(path):
 def strip_last_extension(path, ext=None):
     """Strips last supported or provided archive extension from path"""
     path = expand_contracted_extension_in_path(path, ext)
-    def check_return_mod_path(ext):
-        mod_path = check_and_remove_ext(path, ext)
+    exts_to_check = ALLOWED_SINGLE_EXT_ARCHIVE_TYPES
+    if ext:
+        exts_to_check = [ext]
+    for ext_check in exts_to_check:
+        mod_path = check_and_remove_ext(ext_check)
         if mod_path != path:
             return mod_path
-        return None
-    if ext:
-        return check_return_mod_path(ext)
-    else:
-        for ext in ALLOWED_SINGLE_EXT_ARCHIVE_TYPES:
-            potential_mod_path = check_return_mod_path
-            if potential_mod_path:
-                return mod_path
-
     return path
 
 
@@ -746,10 +742,14 @@ def check_and_remove_ext(path, ext):
 
 
 def _substitute_extension(path, old_ext, new_ext):
+    """Return path with old_ext replaced with new_ext.
+    old_ext and new_ext can be extension strings or regexs"""
     return re.sub(rf"{old_ext}", rf"{new_ext}", path)
 
 
 def expand_contracted_extension_in_path(path, ext=None):
+    """Return path with any contraction extension (i.e. tgz) expanded
+    (i.e. tar.gz). If ext is specified, only attempt to expand that extension"""
     if not ext:
         ext = extension_from_path(path)
     expanded_ext = expand_contracted_extension(ext)
@@ -759,6 +759,8 @@ def expand_contracted_extension_in_path(path, ext=None):
 
 
 def expand_contracted_extension(extension):
+    """Return expanded version of contracted extension
+    i.e. .tgz -> .tar.gz, no op on non contracted extensions"""
     extension = extension.strip(".")
     if extension in NOTAR_EXTS and extension != "zip":
         # NOTAR exts are abbreviated extensions
