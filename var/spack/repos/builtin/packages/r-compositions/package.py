@@ -22,6 +22,7 @@ class RCompositions(RPackage):
 
     depends_on("r@2.2.0:", type=("build", "run"))
     depends_on("r@3.6:", type=("build", "run"), when="@2.0-4:")
+
     depends_on("r-tensora", type=("build", "run"))
     depends_on("r-robustbase", type=("build", "run"))
     depends_on("r-bayesm", type=("build", "run"))
