@@ -433,8 +433,6 @@ wl_expect_rpath=no
 # Same, but for -Xlinker -rpath -Xlinker /path
 xlinker_expect_rpath=no
 
-wl_prefix=-Wl,
-
 parse_Wl() {
     while [ $# -ne 0 ]; do
     if [ "$wl_expect_rpath" = yes ]; then
@@ -477,7 +475,7 @@ parse_Wl() {
                 return 1
                 ;;
             *)
-                append other_args_list "$wl_prefix$1"
+                append other_args_list "-Wl,$1"
                 ;;
         esac
     fi
@@ -584,7 +582,6 @@ while [ $# -ne 0 ]; do
             append other_args_list "-l$arg"
             ;;
         -Wl,*)
-            wl_prefix=-Wl,
             IFS=,
             if ! parse_Wl ${1#-Wl,}; then
                 append other_args_list "$1"
