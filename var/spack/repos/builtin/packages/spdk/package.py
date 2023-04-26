@@ -3,8 +3,6 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-import os
-
 from spack.package import *
 
 
@@ -81,32 +79,3 @@ class Spdk(AutotoolsPackage):
                 config_args.append("--without-{0}".format(mod))
 
         return config_args
-
-    def install_dpdk_files(self):
-        spec = self.spec
-        prefix = self.prefix
-
-        dpdk_build_dir = join_path(spec["dpdk"].prefix, "lib")
-
-        install_tree(join_path(dpdk_build_dir, "pkgconfig"), join_path(prefix.lib, "pkgconfig"))
-
-        for file in os.listdir(dpdk_build_dir):
-            f = join_path(dpdk_build_dir, file)
-            if os.path.isfile(f):
-                install(f, prefix.lib)
-
-        mkdir(join_path(prefix.include, "dpdk"))
-        install_tree(join_path(spec["dpdk"].prefix, "include"), join_path(prefix.include, "dpdk"))
-
-    @run_after("install")
-    def install_additional_files(self):
-        spec = self.spec
-        prefix = self.prefix
-        if "+dpdk" in spec:
-            self.install_dpdk_files()
-        # Copy the config.h file, as some packages might require it.
-        mkdir(prefix.share)
-        mkdir(join_path(prefix.share, "spdk"))
-        install_tree("examples/nvme/fio_plugin", join_path(prefix.share, "spdk", "fio_plugin"))
-        install_tree("include", join_path(prefix.share, "spdk", "include"))
-        install_tree("scripts", join_path(prefix.share, "spdk", "scripts"))
