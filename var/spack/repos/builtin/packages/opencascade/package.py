@@ -75,12 +75,10 @@ class Opencascade(CMakePackage):
     )
 
     # Modules, per DAG at https://dev.opencascade.org/doc/refman/html/
-    variant("foundation_classes", default=True, description="Build Foundation Classes module")
     variant(
         "modeling_data",
         default=True,
         description="Build Modeling Data module",
-        when="+foundation_classes",
     )
     variant(
         "modeling_algorithms",
@@ -152,7 +150,7 @@ class Opencascade(CMakePackage):
             # CamelCase to snake_case
             spack_variant = re.sub(r"(?<!^)(?=[A-Z])", "_", occt_module).lower()
             enabled = spec.satisfies("+" + spack_variant)
-            return "-DBUILD_MODULE_{}={}".format(occt_module, enabled)
+            return self.define(f"BUILD_MODULE_{occt_module}", enabled)
 
         def use_3rdparty(feature, spack_variant=None, depends_on=None, extra_dirs=[]):
             if spack_variant is None:
@@ -182,12 +180,13 @@ class Opencascade(CMakePackage):
         # Disable documentation building
         args.append("-DBUILD_DOC_Overview=OFF")
 
+        # Always build the foundation classes
+        args.append(self.define("BUILD_MODULE_foundation_classes", true))
         # Specify which modules to build
         for module in [
             "ApplicationFramework",
             "Draw",
             "DataExchange",
-            "FoundationClasses",
             "ModelingAlgorithms",
             "ModelingData",
             "Visualization",
