@@ -39,7 +39,6 @@ class PyIpyrad(PythonPackage):
     depends_on("py-requests", type=("build", "run"))
     depends_on("py-future", type=("build", "run"))
 
-    @when("@0.9.85:")
     def patch(self):
         # ipyrad/core/Parallel.py assumes that ipcluster will always be
         # in the python root
