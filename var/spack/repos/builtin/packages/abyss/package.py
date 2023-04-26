@@ -27,6 +27,7 @@ class Abyss(AutotoolsPackage):
     homepage = "https://www.bcgsc.ca/platform/bioinfo/software/abyss"
     url = "https://github.com/bcgsc/abyss/releases/download/2.3.1/abyss-2.3.1.tar.gz"
 
+    version("2.3.5", sha256="5455f7708531681ee15ec4fd5620526a53c86d28f959e630dc495f526b7d40f7")
     version("2.3.1", sha256="664045e7903e9732411effc38edb9ebb1a0c1b7636c64b3a14a681f465f43677")
     version("2.3.0", sha256="3df923b0699187fb27948cae43293eeb5745161d5dc484b9befbe2ca8efb6ad7")
     version("2.2.5", sha256="38e886f455074c76b32dd549e94cc345f46cb1d33ab11ad3e8e1f5214fc65521")
