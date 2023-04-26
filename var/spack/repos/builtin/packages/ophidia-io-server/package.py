@@ -14,11 +14,10 @@ class OphidiaIoServer(AutotoolsPackage):
     maintainers("eldoo", "SoniaScard")
     version("1.7.3", sha256="a33f1010f72f163f103593d14e7b4480258e4c8f0094c792d2a19bcb88ef323f")
     version(
-        "1.7.2", 
-        sha256="8b203c44e0e5497c00f1fdb2322f0b0a41f36900b62a33d95a4570ae1ccc2971", 
+        "1.7.2",
+        sha256="8b203c44e0e5497c00f1fdb2322f0b0a41f36900b62a33d95a4570ae1ccc2971",
         deprecated=True,
     )
-
     depends_on("autoconf", type="build")
     depends_on("automake", type="build")
     depends_on("libtool", type="build")
