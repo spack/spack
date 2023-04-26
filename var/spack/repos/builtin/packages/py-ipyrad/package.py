@@ -38,6 +38,7 @@ class PyIpyrad(PythonPackage):
     depends_on("py-pysam", type=("build", "run"))
     depends_on("py-cutadapt", type=("build", "run"))
     depends_on("py-requests", type=("build", "run"))
+    depends_on("py-future", type=("build", "run"))
 
     @when("@0.9.85:")
     def patch(self):
