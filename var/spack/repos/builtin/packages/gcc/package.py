@@ -159,8 +159,8 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage):
     depends_on("automake@1.15.1:", when="@master", type="build")
     depends_on("autoconf@2.69:", when="@master", type="build")
 
-    depends_on("gmake@3.80:")
-    depends_on("perl@5")
+    depends_on("gmake@3.80:", type="build")
+    depends_on("perl@5", type="build")
 
     # GCC 7.3 does not compile with newer releases on some platforms, see
     #   https://github.com/spack/spack/issues/6902#issuecomment-433030376
