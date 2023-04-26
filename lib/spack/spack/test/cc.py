@@ -351,13 +351,12 @@ def test_Wl_parsing(wrapper_environment):
         + ["-Wl,--disable-new-dtags", "-Wl,-rpath,/a", "-Wl,-rpath,/b", "-Wl,-rpath,/c"],
     )
 
+
 def test_Wl_parsing_with_missing_value(wrapper_environment):
     check_args(
         cc,
         ["-Wl,-rpath=/a,-rpath=", "-Wl,--rpath="],
-        [real_cc]
-        + target_args
-        + ["-Wl,--disable-new-dtags", "-Wl,-rpath,/a"],
+        [real_cc] + target_args + ["-Wl,--disable-new-dtags", "-Wl,-rpath,/a"],
     )
 
 
