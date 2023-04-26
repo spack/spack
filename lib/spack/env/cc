@@ -448,7 +448,9 @@ parse_Wl() {
         case "$1" in
             -rpath=*)
                 arg="${1#-rpath=}"
-                if system_dir "$arg"; then
+                if [ -z "$arg" ]; then
+                    shift; continue
+                elif system_dir "$arg"; then
                     append system_rpath_dirs_list "$arg"
                 else
                     append rpath_dirs_list "$arg"
@@ -456,7 +458,9 @@ parse_Wl() {
                 ;;
             --rpath=*)
                 arg="${1#--rpath=}"
-                if system_dir "$arg"; then
+                if [ -z "$arg" ]; then
+                    shift; continue
+                elif system_dir "$arg"; then
                     append system_rpath_dirs_list "$arg"
                 else
                     append rpath_dirs_list "$arg"
