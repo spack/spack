@@ -22,6 +22,8 @@ class RBookdown(RPackage):
     version("0.12", sha256="38eb4c5b877ccd85b16cfe74a48c3bc53de2f276da98e5515f37e7a06e065bb0")
     version("0.5", sha256="b7331fd56f64bd2bddc34e2a188fc491f9ff5308f44f7e3151721247f21ca67e")
 
+    depends_on("r@3.5.0:", type=("build", "run"), when="@0.33:")
+
     depends_on("r+X", type=("build", "run"))
     depends_on("r-htmltools@0.3.6:", type=("build", "run"))
     depends_on("r-knitr@1.22:", type=("build", "run"))
