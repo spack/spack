@@ -20,6 +20,7 @@ class Atmi(CMakePackage):
 
     maintainers("srekolam", "renjithravindrankannath")
 
+    version("5.4.4", sha256="b335b9868f07ac658773b4092bc893938782e0def18b74a07f8c697a57d91722")
     version("5.4.3", sha256="243aae6614e5bd136a099102957a6d65a01434b620291349613ad63701868ef8")
     version("5.4.0", sha256="b5cce10d7099fecbb40a0d9c2f29a7675315471fe145212b375e37e4c8ba5618")
     version("5.3.3", sha256="cc1144e4939cea2944f6c72a21406b9dc5b56d933696494074c280df7469834a")
