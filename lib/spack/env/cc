@@ -433,6 +433,8 @@ wl_expect_rpath=no
 # Same, but for -Xlinker -rpath -Xlinker /path
 xlinker_expect_rpath=no
 
+wl_prefix=-Wl,
+
 parse_Wl() {
     while [ $# -ne 0 ]; do
     if [ "$wl_expect_rpath" = yes ]; then
@@ -470,12 +472,19 @@ parse_Wl() {
             "$dtags_to_strip")
                 ;;
             *)
-                append other_args_list "-Wl,$1"
+                append other_args_list "$wl_prefix$1"
                 ;;
         esac
     fi
     shift
     done
+}
+
+parse_Wl_NAG() {
+    # For -Wl,-Wl,,x,,y,,z; we receive $@ = [x, '', y, '', z]
+    # so dropping empty arguments with unset IFS gives 'parse_Wl x y z'
+    unset IFS
+    parse_Wl $@
 }
 
 
@@ -577,10 +586,17 @@ while [ $# -ne 0 ]; do
             append other_args_list "-l$arg"
             ;;
         -Wl,-Wl,,*)
-            # We never dealt with the NAG compiler -Wl,-Wl,,-rpath,,/path construct
-            append other_args_list "$1"
+            # NAG Fortran compiler linker flags are of the form -Wl,-Wl,,x,,y,,z
+            # Here we split on comma, and let parse_Wl_NAG drop empty arguments.
+            # This is still buggy, since '-Wl,-Wl,,-rpath,,/path with spaces' fails,
+            # but it's better than nothing.
+            wl_prefix=-Wl,-Wl,,
+            IFS=,
+            parse_Wl_NAG ${1#-Wl,-Wl,,}
+            unset IFS
             ;;
         -Wl,*)
+            wl_prefix=-Wl,
             IFS=,
             parse_Wl ${1#-Wl,}
             unset IFS
