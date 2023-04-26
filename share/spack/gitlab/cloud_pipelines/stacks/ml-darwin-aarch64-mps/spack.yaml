@@ -22,9 +22,6 @@ spack:
       require: openmpi
 
   specs:
-  # Horovod
-  - py-horovod
-
   # Hugging Face
   - py-transformers
 
@@ -43,29 +40,18 @@ spack:
 
   # PyTorch
   - py-botorch
-  - py-efficientnet-pytorch
   - py-gpytorch
-  - py-kornia
-  - py-lightning
   - py-pytorch-gradual-warmup-lr
-  - py-pytorch-lightning
   - py-segmentation-models-pytorch
   - py-timm
   - py-torch
   - py-torch-cluster
   - py-torch-geometric
-  - py-torch-nvidia-apex
-  - py-torch-scatter
   - py-torch-sparse
-  - py-torch-spline-conv
-  - py-torchaudio
   - py-torchdata
   - py-torchfile
   - py-torchgeo
-  - py-torchmetrics
-  - py-torchtext
   - py-torchvision
-  - py-vector-quantize-pytorch
 
   # scikit-learn
   - py-scikit-learn
@@ -87,8 +73,22 @@ spack:
 
   # XGBoost
   - py-xgboost
-  - r-xgboost
   - xgboost
+
+  # ERRORS
+  # - py-efficientnet-pytorch     # py-torch
+  # - py-horovod                  # py-torch
+  # - py-kornia                   # py-torch
+  # - py-lightning                # py-torch
+  # - py-pytorch-lightning        # py-torch
+  # - py-torch-nvidia-apex        # py-torch
+  # - py-torch-scatter            # py-torch
+  # - py-torch-spline-conv        # py-torch
+  # - py-torchaudio               # py-torchaudio
+  # - py-torchmetrics             # py-torch
+  # - py-torchtext                # py-torchtext
+  # - py-vector-quantize-pytorch  # py-torch
+  # - r-xgboost                   # r
 
   mirrors: { "mirror": "s3://spack-binaries/develop/ml-darwin-aarch64-cpu" }
 
