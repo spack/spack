@@ -576,6 +576,11 @@ while [ $# -ne 0 ]; do
             if [ -z "$arg" ]; then shift; arg="$1"; fi
             append other_args_list "-l$arg"
             ;;
+        -Wl,-Wl,,*)
+            # We never dealt with NAG compiler -Wl,-Wl,,-rpath,,/path construct; they are
+            # ignored here, and instead we hope that the linker gets intercepted.
+            append other_args_list "$1"
+            ;;
         -Wl,*)
             IFS=,
             parse_Wl ${1#-Wl,}
