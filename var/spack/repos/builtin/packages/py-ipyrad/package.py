@@ -18,11 +18,11 @@ class PyIpyrad(PythonPackage):
     version("0.9.90", sha256="8b95aa3bae30da15baba90abb03176932411ff708c54d5e4481b811cceb8a4a8")
     version("0.9.85", sha256="17b07466531655db878919e426743ac649cfab2e92c06c4e45f76ee1517633f9")
 
-    depends_on("python@3:", type=("build", "run"))
-    depends_on("py-pip", type="build")
-    depends_on("py-wheel", type="build")
     depends_on("py-setuptools", type="build")
 
+    # Dependencies found at
+    # https://ipyrad.readthedocs.io/en/master/3-installation.html
+    # Under Details: dependencies
     depends_on("bedtools2", type=("build", "run"))
     depends_on("bwa", type=("build", "run"))
     depends_on("muscle", type=("build", "run"))
@@ -38,7 +38,6 @@ class PyIpyrad(PythonPackage):
     depends_on("py-pysam", type=("build", "run"))
     depends_on("py-cutadapt", type=("build", "run"))
     depends_on("py-requests", type=("build", "run"))
-    depends_on("py-future", type=("build", "run"))
 
     @when("@0.9.85:")
     def patch(self):
