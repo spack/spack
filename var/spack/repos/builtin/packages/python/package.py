@@ -468,7 +468,8 @@ print(json.dumps(config))
 
     @property
     def home(self):
-        """Most of the time, ``PYTHONHOME`` is simply
+        """Returns the real installation prefix of the current python
+        Most of the time, ``PYTHONHOME`` is simply
         ``spec['python'].prefix``. However, if the user is using an
         externally installed python, it may be symlinked. For example,
         Homebrew installs python in ``/usr/local/Cellar/python/2.7.12_2``
@@ -597,7 +598,7 @@ print(json.dumps(config))
     # https://github.com/pypa/pip/blob/22.1/src/pip/_internal/locations/__init__.py
     # https://github.com/pypa/installer/pull/103
 
-    # NOTE: XCode Python's sysconfing module was incorrectly patched, and hard-codes
+    # NOTE: XCode Python's sysconfig module was incorrectly patched, and hard-codes
     # everything to be installed in /Library/Python. Therefore, we need to use a
     # fallback in the following methods. For more information, see:
     # https://github.com/pypa/pip/blob/22.1/src/pip/_internal/locations/__init__.py#L486
@@ -664,9 +665,6 @@ print(json.dumps(config))
         if path.startswith(prefix):
             return path.replace(prefix, "")
         return os.path.join("include", "python{}".format(self.version.up_to(2)))
-
-    def setup_run_environment(self, env):
-        env.prepend_path("CPATH", os.pathsep.join(self.spec["python"].headers.directories))
 
     def setup_dependent_run_environment(self, env, dependent_spec):
         """Set PYTHONPATH to include the site-packages directory for the
@@ -1062,6 +1060,7 @@ class AutotoolsBuilder(autotools.AutotoolsBuilder, RunAfter, BuildEnvironment):
 
     def install(self, pkg, spec, prefix):
         with working_dir(self.build_directory):
+            # See https://github.com/python/cpython/issues/102007
             make(*self.install_targets, parllel=False)
 
 
