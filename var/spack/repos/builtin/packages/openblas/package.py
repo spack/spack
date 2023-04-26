@@ -517,6 +517,10 @@ class CMakeBuilder(spack.build_systems.cmake.CMakeBuilder, SetupEnvironment):
     def cmake_args(self):
         cmake_defs = []
         cmake_defs += ["-DTARGET:STRING=GENERIC"]
+        if self.spec.satisfies("platform=windows"):
+            cmake_defs += ["-DDYNAMIC_ARCH:BOOL=FALSE -DBUILD_WITHOUT_LAPACK:BOOL=FALSE"]
+        if "~fortran" in self.spec:
+            cmake_defs += ["-DNOFORTRAN:BOOL=TRUE"]
         if "+shared" in self.spec:
             cmake_defs += ["-DBUILD_SHARED_LIBS:BOOL=TRUE"]
 
