@@ -577,8 +577,7 @@ while [ $# -ne 0 ]; do
             append other_args_list "-l$arg"
             ;;
         -Wl,-Wl,,*)
-            # We never dealt with NAG compiler -Wl,-Wl,,-rpath,,/path construct; they are
-            # ignored here, and instead we hope that the linker gets intercepted.
+            # We never dealt with the NAG compiler -Wl,-Wl,,-rpath,,/path construct
             append other_args_list "$1"
             ;;
         -Wl,*)
