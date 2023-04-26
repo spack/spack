@@ -434,8 +434,6 @@ wl_expect_rpath=no
 xlinker_expect_rpath=no
 
 parse_Wl() {
-    # drop -Wl
-    shift
     while [ $# -ne 0 ]; do
     if [ "$wl_expect_rpath" = yes ]; then
         if system_dir "$1"; then
@@ -580,7 +578,7 @@ while [ $# -ne 0 ]; do
             ;;
         -Wl,*)
             IFS=,
-            parse_Wl $1
+            parse_Wl ${1#-Wl,}
             unset IFS
             ;;
         -Xlinker)
