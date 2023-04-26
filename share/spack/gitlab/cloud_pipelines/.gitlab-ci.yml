@@ -118,7 +118,7 @@ default:
 .generate-base-windows:
   stage: generate
   script:
-    - .\bin\spack_pwsh.ps1
+    - .\share\spack\setup-env.ps1
     - spack --version
     - spack compiler find
     # These should exist in the MSVC installation
