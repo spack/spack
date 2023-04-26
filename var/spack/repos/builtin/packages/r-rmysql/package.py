@@ -24,4 +24,4 @@ class RRmysql(RPackage):
 
     depends_on("r@2.8.0:", type=("build", "run"))
     depends_on("r-dbi@0.4:", type=("build", "run"))
-    depends_on("mysql")
+    depends_on("mariadb-client")
