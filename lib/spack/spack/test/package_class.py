@@ -202,7 +202,7 @@ def test_cache_extra_sources_fails(install_mockery):
     with pytest.raises(ValueError, match="Only relative paths"):
         s.package.cache_extra_test_sources(["a/b", "/c/d"])
 
-    with pytest.raises(IOError, match="does not exist"):
+    with pytest.raises(OSError, match="does not exist"):
         s.package.cache_extra_test_sources("no-such-file")
 
 

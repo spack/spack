@@ -72,7 +72,7 @@ def get_escaped_text_output(filename: str) -> List[str]:
     Returns:
         escaped text lines read from the file
     """
-    with open(filename, "r") as f:
+    with open(filename) as f:
         # Ensure special characters are escaped as needed
         expected = f.read()
 
@@ -109,7 +109,7 @@ def cache_extra_test_sources(pkg: Pb, srcs: ListOrStringType):
             location(s) under the install testing directory.
 
     Raises:
-        IOError: if any of the source paths do not exist under the build stage
+        OSError: if any of the source paths do not exist under the build stage
         ValueError: if any of the source paths are absolute
     """
     paths = [srcs] if isinstance(srcs, str) else srcs
@@ -125,7 +125,7 @@ def cache_extra_test_sources(pkg: Pb, srcs: ListOrStringType):
             fs.mkdirp(os.path.dirname(dest_path))
             fs.copy(src_path, dest_path)
         else:
-            raise IOError(f"Source path ('{path}') for the copy does not exist")
+            raise OSError(f"Source path ('{path}') for the copy does not exist")
 
 
 def check_outputs(expected: Union[list, set, str], actual: str):
@@ -168,9 +168,9 @@ def find_required_file(
     paths = fs.find(root, filename, recursive=recursive)
     num_paths = len(paths)
     if num_paths != expected:
-        files = ": {0}".format(", ".join(paths)) if num_paths else ""
+        files = ": {}".format(", ".join(paths)) if num_paths else ""
         raise SkipTest(
-            "Expected {0} of {1} under {2} but {3} found{4}".format(
+            "Expected {} of {} under {} but {} found{}".format(
                 plural(expected, "copy", "copies"),
                 filename,
                 root,
@@ -207,7 +207,7 @@ def print_message(logger: LogType, msg: str, verbose: bool = False):
         tty.info(msg, format="g")
 
 
-class PackageTest(object):
+class PackageTest:
     """The class that manages stand-alone (post-install) package tests."""
 
     def __init__(self, pkg: Pb):
@@ -292,8 +292,8 @@ class PackageTest(object):
 
     def status(self, name: Optional[str], status: "TestStatus"):
         """Log the test status for the part name."""
-        extra = "::{0}".format(name) if name else ""
-        part_name = "{0}{1}".format(self.pkg.__class__.__name__, extra)
+        extra = f"::{name}" if name else ""
+        part_name = f"{self.pkg.__class__.__name__}{extra}"
         self.test_parts.append((part_name, status))
         self.counts[status] += 1
 
@@ -312,7 +312,7 @@ class PackageTest(object):
 
         with self.test_logger(verbose=verbose, externals=False) as logger:
             # Report running each of the methods in the build log
-            print_message(logger, "Running {0}-time tests".format(phase_name), verbose)
+            print_message(logger, f"Running {phase_name}-time tests", verbose)
             builder.pkg.test_suite.current_test_spec = builder.pkg.spec
             builder.pkg.test_suite.current_base_spec = builder.pkg.spec
 
@@ -325,13 +325,13 @@ class PackageTest(object):
                 try:
                     fn = getattr(builder, name)
 
-                    msg = "RUN-TESTS: {0}-time tests [{1}]".format(phase_name, name)
+                    msg = f"RUN-TESTS: {phase_name}-time tests [{name}]"
                     print_message(logger, msg, verbose)
 
                     fn()
 
                 except AttributeError as e:
-                    msg = "RUN-TESTS: method not implemented [{0}]".format(name)
+                    msg = f"RUN-TESTS: method not implemented [{name}]"
                     print_message(logger, msg, verbose)
 
                     self.add_failure(e, msg)
@@ -374,7 +374,7 @@ class PackageTest(object):
                 tty.debug("There is no test log file (staged or installed)")
                 return
 
-        print("\nSee test results at:\n  {0}".format(log))
+        print(f"\nSee test results at:\n  {log}")
 
     def ran_tests(self) -> bool:
         """``True`` if ran tests, ``False`` otherwise."""
@@ -383,14 +383,14 @@ class PackageTest(object):
     def summarize(self):
         """Collect test results summary lines for this spec."""
         lines = []
-        lines.append("{:=^80}".format(" SUMMARY: {0} ".format(self.pkg_id)))
+        lines.append("{:=^80}".format(f" SUMMARY: {self.pkg_id} "))
         for name, status in self.test_parts:
-            msg = "{0} .. {1}".format(name, status)
+            msg = f"{name} .. {status}"
             lines.append(msg)
 
-        summary = ["{0} {1}".format(n, s.lower()) for s, n in self.counts.items() if n > 0]
-        totals = " {0} of {1} parts ".format(", ".join(summary), self.parts())
-        lines.append("{:=^80}".format(totals))
+        summary = [f"{n} {s.lower()}" for s, n in self.counts.items() if n > 0]
+        totals = " {} of {} parts ".format(", ".join(summary), self.parts())
+        lines.append(f"{totals:=^80}")
         return lines
 
 
@@ -401,15 +401,15 @@ def test_part(pkg: Pb, test_name: str, purpose: str, work_dir: str = ".", verbos
     # TODO: Replace "test" with "test_" when remove run_test, etc.
     assert test_name and test_name.startswith(
         "test"
-    ), "Test name must start with 'test' but {0} was provided".format(test_name)
+    ), f"Test name must start with 'test' but {test_name} was provided"
 
     if test_name == "test":
         tty.warn(
-            "{0}: the 'test' method is deprecated. Convert stand-alone "
+            "{}: the 'test' method is deprecated. Convert stand-alone "
             "test(s) to methods with names starting 'test_'.".format(pkg.name)
         )
 
-    title = "test: {0}: {1}".format(test_name, purpose or "")
+    title = "test: {}: {}".format(test_name, purpose or "")
     with fs.working_dir(wdir, create=True):
         try:
             status = TestStatus.PASSED
@@ -417,12 +417,12 @@ def test_part(pkg: Pb, test_name: str, purpose: str, work_dir: str = ".", verbos
             with context():
                 tty.info(title, format="g")
                 yield
-            print("{0}: {1}".format(status, test_name))
+            print(f"{status}: {test_name}")
             tester.status(test_name, status)
 
         except SkipTest as e:
             status = TestStatus.SKIPPED
-            print("{0}: {1}: {2}".format(status, test_name, e))
+            print(f"{status}: {test_name}: {e}")
             tester.status(test_name, status)
 
         except (AssertionError, BaseException) as e:
@@ -430,7 +430,7 @@ def test_part(pkg: Pb, test_name: str, purpose: str, work_dir: str = ".", verbos
             # so that cdash and junit reporters know about it
             exc_type, _, tb = sys.exc_info()
             status = TestStatus.FAILED
-            print("{0}: {1}: {2}".format(status, test_name, e))
+            print(f"{status}: {test_name}: {e}")
             tester.status(test_name, status)
 
             import traceback
@@ -447,7 +447,7 @@ def test_part(pkg: Pb, test_name: str, purpose: str, work_dir: str = ".", verbos
             for i, entry in enumerate(stack):
                 filename, lineno, function, text = entry
                 if spack.repo.is_package_file(filename):
-                    with open(filename, "r") as f:
+                    with open(filename) as f:
                         lines = f.readlines()
                     new_lineno = lineno - 2
                     text = lines[new_lineno]
@@ -511,9 +511,9 @@ def copy_test_files(pkg: Pb, test_spec: spack.spec.Spec):
     if pkg is None or pkg.test_suite is None:
         base = "Cannot copy test files"
         msg = (
-            "{0} without a package".format(base)
+            f"{base} without a package"
             if pkg is None
-            else "{0}: {1}: test suite is missing".format(pkg.name, base)
+            else f"{pkg.name}: {base}: test suite is missing"
         )
         raise TestSuiteError(msg)
 
@@ -528,9 +528,7 @@ def copy_test_files(pkg: Pb, test_spec: spack.spec.Spec):
     try:
         pkg_cls = test_spec.package_class
     except spack.repo.UnknownPackageError:
-        tty.debug(
-            "{0}: skipping test data copy since no package class found".format(test_spec.name)
-        )
+        tty.debug(f"{test_spec.name}: skipping test data copy since no package class found")
         return
 
     package_dir = spack.package_base.package_directory(pkg_cls)
@@ -557,7 +555,7 @@ def test_function_names(pkg: TestPackageType, add_virtuals: bool = False) -> Lis
         ValueError: occurs if pkg is not a package class
     """
     fns = test_functions(pkg, add_virtuals)
-    return ["{0}.{1}".format(cls_name, fn.__name__) for (cls_name, fn) in fns]
+    return [f"{cls_name}.{fn.__name__}" for (cls_name, fn) in fns]
 
 
 def test_functions(pkg: TestPackageType, add_virtuals: bool = False) -> List[Tuple[str, Callable]]:
@@ -576,7 +574,7 @@ def test_functions(pkg: TestPackageType, add_virtuals: bool = False) -> List[Tup
     """
     instance = isinstance(pkg, spack.package_base.PackageBase)
     if not (instance or issubclass(pkg, spack.package_base.PackageBase)):  # type: ignore[arg-type]
-        raise ValueError("Expected a package (class), not {0} ({1})".format(pkg, type(pkg)))
+        raise ValueError(f"Expected a package (class), not {pkg} ({type(pkg)})")
 
     pkg_cls = pkg.__class__ if instance else pkg
     classes = [pkg_cls]
@@ -586,7 +584,7 @@ def test_functions(pkg: TestPackageType, add_virtuals: bool = False) -> List[Tup
             try:
                 classes.append((Spec(vname)).package_class)
             except spack.repo.UnknownPackageError:
-                tty.debug("{0}: virtual does not appear to have a package file".format(vname))
+                tty.debug(f"{vname}: virtual does not appear to have a package file")
 
     doc_regex = r'\s+("""[\w\s\(\)\-\,\;\:]+""")'
     tests = []
@@ -623,9 +621,9 @@ def test_parts_process(pkg: Pb, test_specs: List[spack.spec.Spec], verbose: bool
     if pkg is None or pkg.test_suite is None:
         base = "Cannot process tests"
         msg = (
-            "{0} without a package".format(base)
+            f"{base} without a package"
             if pkg is None
-            else "{0}: {1}: test suite is missing".format(pkg.name, base)
+            else f"{pkg.name}: {base}: test suite is missing"
         )
         raise TestSuiteError(msg)
 
@@ -675,11 +673,11 @@ def test_parts_process(pkg: Pb, test_specs: List[spack.spec.Spec], verbose: bool
             tty.msg("Completed testing")
 
             lines = tester.summarize()
-            tty.msg("\n{0}".format("\n".join(lines)))
+            tty.msg("\n{}".format("\n".join(lines)))
 
             if tester.test_failures:
                 # Print the test log file path
-                tty.msg("\n\nSee test results at:\n  {0}".format(tester.test_log_file))
+                tty.msg(f"\n\nSee test results at:\n  {tester.test_log_file}")
         else:
             tty.msg("No tests to run")
 
@@ -714,7 +712,7 @@ def virtuals(pkg):
     Returns: names of unique virtual packages
     """
     # provided virtuals have to be deduped by name
-    v_names = list(set([vspec.name for vspec in pkg.virtuals_provided]))
+    v_names = list({vspec.name for vspec in pkg.virtuals_provided})
 
     # hack for compilers that are not dependencies (yet)
     # TODO: this all eventually goes away
@@ -777,7 +775,7 @@ def get_test_suite(name: str) -> Optional["TestSuite"]:
     """
     suites = get_named_test_suites(name)
     if len(suites) > 1:
-        raise TestSuiteNameError("Too many suites named '{0}'. May shadow hash.".format(name))
+        raise TestSuiteNameError(f"Too many suites named '{name}'. May shadow hash.")
 
     if not suites:
         return None
@@ -796,7 +794,7 @@ def write_test_summary(counts: "Counter"):
     Args:
         counts: counts of the occurrences of relevant test status types
     """
-    summary = ["{0} {1}".format(n, s.lower()) for s, n in counts.items() if n > 0]
+    summary = [f"{n} {s.lower()}" for s, n in counts.items() if n > 0]
     try:
         # New in Python 3.10
         total = counts.total()  # type: ignore[attr-defined]
@@ -805,10 +803,10 @@ def write_test_summary(counts: "Counter"):
         total = sum(nums)
 
     if total:
-        print("{:=^80}".format(" {0} of {1} ".format(", ".join(summary), plural(total, "spec"))))
+        print("{:=^80}".format(" {} of {} ".format(", ".join(summary), plural(total, "spec"))))
 
 
-class TestSuite(object):
+class TestSuite:
     """The class that manages specs for ``spack test run`` execution."""
 
     def __init__(self, specs, alias=None):
@@ -852,7 +850,7 @@ class TestSuite(object):
             try:
                 if spec.package.test_suite:
                     raise TestSuiteSpecError(
-                        "Package {0} cannot be run in two test suites at once".format(
+                        "Package {} cannot be run in two test suites at once".format(
                             spec.package.name
                         )
                     )
@@ -892,15 +890,15 @@ class TestSuite(object):
             except BaseException as exc:
                 status = TestStatus.FAILED
                 self.counts[status] += 1
-                tty.debug("Test failure: {0}".format(str(exc)))
+                tty.debug(f"Test failure: {str(exc)}")
 
                 if isinstance(exc, (SyntaxError, TestSuiteSpecError)):
                     # Create the test log file and report the error.
                     self.ensure_stage()
-                    msg = "Testing package {0}\n{1}".format(self.test_pkg_id(spec), str(exc))
+                    msg = f"Testing package {self.test_pkg_id(spec)}\n{str(exc)}"
                     _add_msg_to_file(self.log_file_for_spec(spec), msg)
 
-                msg = "Test failure: {0}".format(str(exc))
+                msg = f"Test failure: {str(exc)}"
                 _add_msg_to_file(self.log_file_for_spec(spec), msg)
                 self.write_test_result(spec, TestStatus.FAILED)
                 if fail_first:
@@ -916,7 +914,7 @@ class TestSuite(object):
         if self.counts[TestStatus.FAILED]:
             for spec in self.specs:
                 print(
-                    "\nSee {0} test results at:\n  {1}".format(
+                    "\nSee {} test results at:\n  {}".format(
                         spec.format("{name}-{version}-{hash:7}"), self.log_file_for_spec(spec)
                     )
                 )
@@ -1063,7 +1061,7 @@ class TestSuite(object):
             spec (spack.spec.Spec): instance of the spec under test
             result (str): result from the spec's test execution (e.g, PASSED)
         """
-        msg = "{0} {1}".format(self.test_pkg_id(spec), result)
+        msg = f"{self.test_pkg_id(spec)} {result}"
         _add_msg_to_file(self.results_file, msg)
 
     def write_reproducibility_data(self):
@@ -1123,7 +1121,7 @@ class TestSuite(object):
             BaseException: sjson.SpackJSONError if problem parsing the file
         """
         try:
-            with open(filename, "r") as f:
+            with open(filename) as f:
                 data = sjson.load(f)
                 test_suite = TestSuite.from_dict(data)
                 content_hash = os.path.basename(os.path.dirname(filename))
@@ -1141,7 +1139,7 @@ def _add_msg_to_file(filename, msg):
         msg (str): message to be appended to the file
     """
     with open(filename, "a+") as f:
-        f.write("{0}\n".format(msg))
+        f.write(f"{msg}\n")
 
 
 class SkipTest(Exception):
@@ -1154,12 +1152,12 @@ class TestFailure(spack.error.SpackError):
     def __init__(self, failures: List[TestFailureType]):
         # Failures are all exceptions
         num = len(failures)
-        msg = "{0} failed.\n".format(plural(num, "test"))
+        msg = "{} failed.\n".format(plural(num, "test"))
         for failure, message in failures:
             msg += "\n\n%s\n" % str(failure)
             msg += "\n%s\n" % message
 
-        super(TestFailure, self).__init__(msg)
+        super().__init__(msg)
 
 
 class TestSuiteError(spack.error.SpackError):
@@ -1172,7 +1170,7 @@ class TestSuiteFailure(spack.error.SpackError):
     def __init__(self, num_failures):
         msg = "%d test(s) in the suite failed.\n" % num_failures
 
-        super(TestSuiteFailure, self).__init__(msg)
+        super().__init__(msg)
 
 
 class TestSuiteSpecError(spack.error.SpackError):
