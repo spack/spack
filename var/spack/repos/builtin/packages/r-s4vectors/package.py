@@ -20,6 +20,7 @@ class RS4vectors(RPackage):
 
     bioc = "S4Vectors"
 
+    version("0.38.0", commit="e80c24e1481033741147a0677fb42ce455e7da74")
     version("0.36.0", commit="af58701957ffdd9209031dd6a8dee3acdc58e999")
     version("0.34.0", commit="f590de3ec4d896a63351d0c1925d3856c0bd5292")
     version("0.32.3", commit="ad90e78fd3a4059cfcf2846498fb0748b4394e1a")
@@ -34,7 +35,7 @@ class RS4vectors(RPackage):
     depends_on("r@3.3.0:", type=("build", "run"))
     depends_on("r@4.0.0:", type=("build", "run"), when="@0.28.1:")
     depends_on("r-biocgenerics@0.21.1:", type=("build", "run"))
-    depends_on("r-biocgenerics@0.23.3:", type=("build", "run"), when="@0.16.0:0.22.1")
+    depends_on("r-biocgenerics@0.23.3:", type=("build", "run"), when="@0.16.0:")
     depends_on("r-biocgenerics@0.31.1:", type=("build", "run"), when="@0.26.1:")
     depends_on("r-biocgenerics@0.36.0:", type=("build", "run"), when="@0.28.1:")
     depends_on("r-biocgenerics@0.37.0:", type=("build", "run"), when="@0.32.3:")
