@@ -27,6 +27,14 @@ class Legion(CMakePackage, ROCmPackage):
 
     maintainers("pmccormick", "streichler")
     tags = ["e4s"]
+    version("23.03.0", tag="legion-23.03.0")
+    version("22.12.0", tag="legion-22.12.0")
+    version("22.09.0", tag="legion-22.09.0")
+    version("22.06.0", tag="legion-22.06.0")
+    version("22.03.0", tag="legion-22.03.0")
+    version("21.12.0", tag="legion-21.12.0")
+    version("21.09.0", tag="legion-21.09.0")
+    version("21.06.0", tag="legion-21.06.0")
     version("21.03.0", tag="legion-21.03.0")
     version("stable", branch="stable")
     version("master", branch="master")
