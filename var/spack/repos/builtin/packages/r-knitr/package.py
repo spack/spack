@@ -15,6 +15,7 @@ class RKnitr(RPackage):
 
     cran = "knitr"
 
+    version("1.42", sha256="9344f1a0089e4da101def54aee38d7cfe3b2022d75c560141d8cc22ac65130f3")
     version("1.40", sha256="9b8f95ff367a0e52f024bda30315ec7cdd6a5b82371a1aaed95ab4eea78535bc")
     version("1.39", sha256="c91a65edebdca779af7f7480fa6636667497c9291ad55d6efd982db0bb91ac72")
     version("1.37", sha256="39cd2a4848baebbe7fa0c0ab8200179690fb5b9190f0c1688d987c38363ad763")
@@ -35,7 +36,6 @@ class RKnitr(RPackage):
     depends_on("r-evaluate@0.10:", type=("build", "run"))
     depends_on("r-evaluate@0.15:", type=("build", "run"), when="@1.39:")
     depends_on("r-highr", type=("build", "run"))
-    depends_on("r-stringr@0.6:", type=("build", "run"))
     depends_on("r-yaml@2.1.19:", type=("build", "run"))
     depends_on("r-xfun", type=("build", "run"), when="@1.23:")
     depends_on("r-xfun@0.15:", type=("build", "run"), when="@1.30")
@@ -43,6 +43,7 @@ class RKnitr(RPackage):
     depends_on("r-xfun@0.21:", type=("build", "run"), when="@1.32:")
     depends_on("r-xfun@0.27:", type=("build", "run"), when="@1.37:")
     depends_on("r-xfun@0.29:", type=("build", "run"), when="@1.39:")
+    depends_on("r-xfun@0.34:", type=("build", "run"), when="@1.42:")
     depends_on("pandoc", type="build")
     depends_on("py-rst2pdf", type=("build", "run"))
 
