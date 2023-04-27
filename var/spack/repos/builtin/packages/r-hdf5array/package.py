@@ -20,6 +20,7 @@ class RHdf5array(RPackage):
 
     bioc = "HDF5Array"
 
+    version("1.28.0", commit="8c839417c4a37c35330bd6f02b79dda9f48e76ae")
     version("1.26.0", commit="38b7bd603f7281245605048d8d57237e00b74d79")
     version("1.24.2", commit="fb213ba36631b04dfe754705f701f3a015c4fc82")
     version("1.24.1", commit="d002fe70c84baaadb62058ce467d6c1ea032d8f5")
