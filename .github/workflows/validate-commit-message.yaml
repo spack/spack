@@ -2,6 +2,7 @@ name: Commit message & PR title validation
 
 on:
   pull_request:
+    types: [opened, edited, synchronize, reopened]
 
 jobs:
   validate:
