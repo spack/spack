@@ -43,6 +43,9 @@ spack_install_test_log = "install-time-test-log.txt"
 ListOrStringType = Union[str, List[str]]
 LogType = Union["tty.log.nixlog", "tty.log.winlog"]
 
+Pb = TypeVar("Pb", bound="spack.package_base.PackageBase")
+TestPackageType = Union[Pb, Type[Pb]]
+
 
 class TestStatus(enum.Enum):
     """Names of different stand-alone test states."""
@@ -91,7 +94,7 @@ def get_test_stage_dir():
     )
 
 
-def cache_extra_test_sources(pkg: "spack.package_base.PackageBase", srcs: ListOrStringType):
+def cache_extra_test_sources(pkg: Pb, srcs: ListOrStringType):
     """Copy relative source paths to the corresponding install test subdir
 
     This routine is intended as an optional install test setup helper for
@@ -179,7 +182,7 @@ def find_required_file(
     return paths[0] if expected == 1 else paths
 
 
-def install_test_root(pkg: "spack.package_base.PackageBase"):
+def install_test_root(pkg: Pb):
     """The install test root directory.
 
     Args:
@@ -207,7 +210,7 @@ def print_message(logger: LogType, msg: str, verbose: bool = False):
 class PackageTest(object):
     """The class that manages stand-alone (post-install) package tests."""
 
-    def __init__(self, pkg: "spack.package_base.PackageBase"):
+    def __init__(self, pkg: Pb):
         """
         Args:
             pkg: package being tested
@@ -392,13 +395,7 @@ class PackageTest(object):
 
 
 @contextlib.contextmanager
-def test_part(
-    pkg: "spack.package_base.PackageBase",
-    test_name: str,
-    purpose: str,
-    work_dir: str = ".",
-    verbose: bool = False,
-):
+def test_part(pkg: Pb, test_name: str, purpose: str, work_dir: str = ".", verbose: bool = False):
     wdir = "." if work_dir is None else work_dir
     tester = pkg.tester
     # TODO: Replace "test" with "test_" when remove run_test, etc.
@@ -501,7 +498,7 @@ def test_phase_callbacks(builder: spack.builder.Builder, phase_name: str, method
     builder.pkg.tester.phase_tests(builder, phase_name, method_names)
 
 
-def copy_test_files(pkg: "spack.package_base.PackageBase", test_spec: spack.spec.Spec):
+def copy_test_files(pkg: Pb, test_spec: spack.spec.Spec):
     """Copy the spec's cached and custom test files to the test stage directory.
 
     Args:
@@ -543,10 +540,6 @@ def copy_test_files(pkg: "spack.package_base.PackageBase", test_spec: spack.spec
         # We assume data dir is used read-only
         # maybe enforce this later
         shutil.copytree(data_source, data_dir)
-
-
-U = TypeVar("U", bound="spack.package_base.PackageBase")
-TestPackageType = Union[U, Type[U]]
 
 
 def test_function_names(pkg: TestPackageType, add_virtuals: bool = False) -> List[str]:
@@ -616,9 +609,7 @@ def test_functions(pkg: TestPackageType, add_virtuals: bool = False) -> List[Tup
     return tests
 
 
-def test_parts_process(
-    pkg: "spack.package_base.PackageBase", test_specs: List[spack.spec.Spec], verbose: bool = False
-):
+def test_parts_process(pkg: Pb, test_specs: List[spack.spec.Spec], verbose: bool = False):
     """Process test parts associated with the package.
 
     Args:
@@ -693,7 +684,7 @@ def test_parts_process(
             tty.msg("No tests to run")
 
 
-def test_process(pkg: "spack.package_base.PackageBase", kwargs):
+def test_process(pkg: Pb, kwargs):
     verbose = kwargs.get("verbose", True)
     externals = kwargs.get("externals", False)
 
