@@ -36,5 +36,5 @@ class RRsqlite(RPackage):
     depends_on("r-cpp11@0.4.0:", type=("build", "run"), when="@2.3.1:")
 
     depends_on("r-bh", type=("build", "run"), when="@:2.2.2")
-    depends_on("r-rcpp@0.12.7:", type=("build", "run"), when="@:2.2.18)"
+    depends_on("r-rcpp@0.12.7:", type=("build", "run"), when="@:2.2.18")
     depends_on("r-rcpp@1.0.7:", type=("build", "run"), when="@2.2.9:2.2.18")

@@ -36,4 +36,4 @@ class REmmeans(RPackage):
     depends_on("r-mvtnorm", type=("build", "run"))
 
     depends_on("r-plyr", type=("build", "run"), when="@:1.6")
-    depends_on("r-xtable@1.8-2:", type=("build", "run"), when="@:1.8.2)"
+    depends_on("r-xtable@1.8-2:", type=("build", "run"), when="@:1.8.2")

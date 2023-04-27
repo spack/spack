@@ -39,4 +39,4 @@ class RNmf(RPackage):
     depends_on("r-biocmanager", type=("build", "run"), when="@0.23.0:")
     depends_on("r-biobase", type=("build", "run"), when="@0.23.0:")
     depends_on("r-codetools", type=("build", "run"), when="@0.26:")
-    depends_on("r-pkgmaker@0.20:", type=("build", "run"), when="@:0.24.0)"
+    depends_on("r-pkgmaker@0.20:", type=("build", "run"), when="@:0.24.0")

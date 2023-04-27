@@ -44,7 +44,7 @@ class RHmisc(RPackage):
     depends_on("r-colorspace", type=("build", "run"), when="@5.0-1:")
 
     depends_on("r-acepack", type=("build", "run"), when="@:4.4-0")
-    depends_on("r-lattice", type=("build", "run"), when="@:4.7-1)"
-    depends_on("r-latticeextra", type=("build", "run"), when="@:4.7-1)"
-    depends_on("r-survival@2.40-1:", type=("build", "run"), when="@:4.7-1)"
+    depends_on("r-lattice", type=("build", "run"), when="@:4.7-1")
+    depends_on("r-latticeextra", type=("build", "run"), when="@:4.7-1")
+    depends_on("r-survival@2.40-1:", type=("build", "run"), when="@:4.7-1")
     depends_on("r-survival@3.1-6:", type=("build", "run"), when="@4.4:4.7-1")
