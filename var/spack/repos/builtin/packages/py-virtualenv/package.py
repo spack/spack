@@ -59,7 +59,7 @@ class PyVirtualenv(PythonPackage):
         "py-importlib-metadata@0.12:3", when="@20.0.0:20.2.0 ^python@:3.7", type=("build", "run")
     )
     depends_on("py-platformdirs@3.2:3", when="@20.22:", type=("build", "run"))
-    depends_on("py-platformdirs@2.4:2", when="@20.16.3:", type=("build", "run"))
+    depends_on("py-platformdirs@2.4:2", when="@20.16.3:20.21", type=("build", "run"))
     depends_on("py-platformdirs@2:2", when="@20.5:20.16.2", type=("build", "run"))
 
     # dependencies of old versions
