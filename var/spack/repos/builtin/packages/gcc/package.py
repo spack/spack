@@ -35,6 +35,8 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage):
 
     version("master", branch="master")
 
+    version("13.1.0", sha256="61d684f0aa5e76ac6585ad8898a2427aade8979ed5e7f85492286c4dfc13ee86")
+
     version("12.2.0", sha256="e549cf9cf3594a00e27b6589d4322d70e0720cdd213f39beb4181e06926230ff")
     version("12.1.0", sha256="62fd634889f31c02b64af2c468f064b47ad1ca78411c45abe6ac4b5f8dd19c7b")
 
@@ -156,6 +158,9 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage):
     depends_on("m4@1.4.6:", when="@master", type="build")
     depends_on("automake@1.15.1:", when="@master", type="build")
     depends_on("autoconf@2.69:", when="@master", type="build")
+
+    depends_on("gmake@3.80:", type="build")
+    depends_on("perl@5", type="build")
 
     # GCC 7.3 does not compile with newer releases on some platforms, see
     #   https://github.com/spack/spack/issues/6902#issuecomment-433030376
@@ -353,7 +358,7 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage):
     conflicts("%gcc@:4.7", when="@11:")
 
     # https://github.com/iains/gcc-12-branch/issues/6
-    conflicts("%apple-clang@14:14.0")
+    conflicts("@:12", when="%apple-clang@14:14.0")
 
     if sys.platform == "darwin":
         # Fix parallel build on APFS filesystem
