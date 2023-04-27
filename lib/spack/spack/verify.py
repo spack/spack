@@ -6,6 +6,7 @@ import base64
 import hashlib
 import os
 import stat
+from typing import Any, Dict
 
 import llnl.util.tty as tty
 
@@ -27,13 +28,13 @@ def compute_hash(path, block_size=1048576):
     return base64.b32encode(hasher.digest()).decode()
 
 
-def create_manifest_entry(path) -> dict:
+def create_manifest_entry(path) -> Dict[str, Any]:
     try:
         s = os.lstat(path)
     except OSError:
         return {}
 
-    data = {"mode": s.st_mode, "owner": s.st_uid, "group": s.st_gid}
+    data: Dict[str, Any] = {"mode": s.st_mode, "owner": s.st_uid, "group": s.st_gid}
 
     if stat.S_ISLNK(s.st_mode):
         data["dest"] = os.readlink(path)
