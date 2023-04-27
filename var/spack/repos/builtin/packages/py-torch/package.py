@@ -606,3 +606,10 @@ class PyTorch(PythonPackage, CudaPackage, ROCmPackage):
     def install_test(self):
         with working_dir("test"):
             python("run_test.py")
+
+    @property
+    def cmake_prefix_paths(self):
+        cmake_prefix_paths = [
+            join_path(self.prefix, self.spec["python"].package.platlib, "torch", "share", "cmake")
+        ]
+        return cmake_prefix_paths

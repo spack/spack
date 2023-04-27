@@ -72,5 +72,10 @@ class Butterflypack(CMakePackage):
             self.define_from_variant("BUILD_SHARED_LIBS", "shared"),
         ]
         args.append("-Denable_openmp=%s" % ("ON" if "+openmp" in spec else "OFF"))
+        if "%cce" in spec:
+            # Assume the proper Cray CCE module (cce) is loaded:
+            craylibs_path = env["CRAYLIBS_" + env["MACHTYPE"].capitalize()]
+            env.setdefault("LDFLAGS", "")
+            env["LDFLAGS"] += " -Wl,-rpath," + craylibs_path
 
         return args

@@ -642,6 +642,21 @@ class Lammps(CMakePackage, CudaPackage, ROCmPackage):
     )
     conflicts("+intel", when="%aocc@:3.2.9999", msg="+intel with AOCC requires version 4 or newer")
 
+    # Backport of https://github.com/lammps/lammps/pull/3726
+    conflicts("+kokkos+rocm+kspace", when="@:20210929.3")
+    patch(
+        "https://github.com/lammps/lammps/commit/ebb8eee941e52c98054fdf96ea78ee4d5f606f47.patch?full_index=1",
+        sha256="3dedd807f63a21c543d1036439099f05c6031fd98e7cb1ea7825822fc074106e",
+        when="@20220623.3:20230208 +kokkos +rocm +kspace",
+    )
+
+    # Older LAMMPS does not compile with Kokkos 4.x
+    conflicts(
+        "^kokkos @4:",
+        when="@:20221222",
+        msg="LAMMPS is incompatible with Kokkos 4.x until @20230208",
+    )
+
     patch("lib.patch", when="@20170901")
     patch("660.patch", when="@20170922")
     patch("gtest_fix.patch", when="@:20210310 %aocc@3.2.0")
@@ -740,7 +755,7 @@ class Lammps(CMakePackage, CudaPackage, ROCmPackage):
                 args.append(self.define("FFT", "FFTW3"))
             elif "^mkl" in spec:
                 args.append(self.define("FFT", "MKL"))
-            elif "^armpl-gcc" in spec:
+            elif "^armpl-gcc" in spec or "^acfl" in spec:
                 args.append(self.define("FFT", "FFTW3"))
                 args.append(self.define("FFTW3_LIBRARY", self.spec["fftw-api"].libs[0]))
                 args.append(
