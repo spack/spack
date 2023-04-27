@@ -658,8 +658,8 @@ class TestSpecSemantics(object):
 
         def depify(depname, fmt_str, sigil):
             sig = len(sigil)
-            opening = fmt_str[:1 + sig]
-            closing = fmt_str[1 + sig:]
+            opening = fmt_str[: 1 + sig]
+            closing = fmt_str[1 + sig :]
             return spec[depname], opening + f"^{depname}." + closing
 
         def check_prop(check_spec, fmt_str, prop, getter):
