@@ -31,6 +31,7 @@ class PyVirtualenv(PythonPackage):
     depends_on("python@2.7:2.8,3.4:", type=("build", "run"))
 
     depends_on("py-hatch-vcs@0.3:", when="@20.18:", type="build")
+    depends_on("py-hatchling@1.14:", when="@20.22:", type="build")
     depends_on("py-hatchling@1.12.2:", when="@20.18:", type="build")
 
     with when("@:20.17"):
@@ -50,9 +51,13 @@ class PyVirtualenv(PythonPackage):
     depends_on("py-distlib@0.3.5:0", when="@20.16.3:20.16.5", type=("build", "run"))
     depends_on("py-distlib@0.3.1:0", when="@20.0.26:20.16.2", type=("build", "run"))
     depends_on("py-distlib@0.3.0:0", when="@20.0.0:20.0.25", type=("build", "run"))
+    depends_on("py-filelock@3.11:3", when="@20.22:", type=("build", "run"))
     depends_on("py-filelock@3.4.1:3", when="@20.16.3:", type=("build", "run"))
     depends_on("py-filelock@3.2:3", when="@20.9:20.16.2", type=("build", "run"))
     depends_on("py-filelock@3.0.0:3", when="@20.0:20.8", type=("build", "run"))
+    depends_on(
+        "py-importlib-metadata@6.4.1:", when="@20.22: ^python@:3.7", type=("build", "run")
+    )
     depends_on(
         "py-importlib-metadata@4.8.3:", when="@20.16.3: ^python@:3.7", type=("build", "run")
     )
@@ -60,6 +65,7 @@ class PyVirtualenv(PythonPackage):
     depends_on(
         "py-importlib-metadata@0.12:3", when="@20.0.0:20.2.0 ^python@:3.7", type=("build", "run")
     )
+    depends_on("py-platformdirs@3.2:3", when="@20.22:", type=("build", "run"))
     depends_on("py-platformdirs@2.4:2", when="@20.16.3:", type=("build", "run"))
     depends_on("py-platformdirs@2:2", when="@20.5:20.16.2", type=("build", "run"))
 
