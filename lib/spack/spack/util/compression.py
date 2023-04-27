@@ -69,12 +69,9 @@ def allowed_archive(path):
     return False if not path else any(path.endswith(t) for t in ALLOWED_ARCHIVE_TYPES)
 
 
-def _untar(archive_file):
-    """Untar archive. Prefer native Python `tarfile`
-    but fall back to system utility if there is a failure
-    to find the native Python module (tar on Unix).
-    Filters archives through native support gzip and xz
-    compression formats.
+def _system_untar(archive_file):
+    """Returns path to unarchived tar file.
+    Untars archive via system tar.
 
     Args:
         archive_file (str): absolute path to the archive to be extracted.
@@ -89,7 +86,8 @@ def _untar(archive_file):
 
 
 def _bunzip2(archive_file):
-    """Use Python's bz2 module to decompress bz2 compressed archives
+    """Returns path to decompressed file.
+    Uses Python's bz2 module to decompress bz2 compressed archives
     Fall back to system utility failing to find Python module `bz2`
 
     Args:
@@ -102,7 +100,8 @@ def _bunzip2(archive_file):
 
 
 def _py_bunzip(archive_file):
-    """Decompress bz2 compressed archives/files via python's bz2 module"""
+    """Returns path to decompressed file.
+    Decompresses bz2 compressed archives/files via python's bz2 module"""
     decompressed_file = os.path.basename(strip_compression_extension(archive_file, "bz2"))
     working_dir = os.getcwd()
     archive_out = os.path.join(working_dir, decompressed_file)
@@ -114,7 +113,8 @@ def _py_bunzip(archive_file):
 
 
 def _system_bunzip(archive_file):
-    """Decompress bz2 compressed archives/files via system bzip2 utility"""
+    """Returns path to decompressed file.
+    Decompresses bz2 compressed archives/files via system bzip2 utility"""
     compressed_file_name = os.path.basename(archive_file)
     decompressed_file = os.path.basename(strip_compression_extension(archive_file, "bz2"))
     working_dir = os.getcwd()
@@ -128,7 +128,8 @@ def _system_bunzip(archive_file):
 
 
 def _gunzip(archive_file):
-    """Decompress `.gz` extensions. Prefer native Python `gzip` module.
+    """Returns path to gunzip'd file
+    Decompresses `.gz` extensions. Prefer native Python `gzip` module.
     Failing back to system utility gunzip.
     Like gunzip, but extracts in the current working directory
     instead of in-place.
@@ -143,7 +144,8 @@ def _gunzip(archive_file):
 
 
 def _py_gunzip(archive_file):
-    """Decompress `.gz` compressed archvies via python gzip module"""
+    """Returns path to gunzip'd file
+    Decompresses `.gz` compressed archvies via python gzip module"""
     decompressed_file = os.path.basename(strip_compression_extension(archive_file, "gz"))
     working_dir = os.getcwd()
     destination_abspath = os.path.join(working_dir, decompressed_file)
@@ -155,6 +157,8 @@ def _py_gunzip(archive_file):
 
 
 def _system_gunzip(archive_file):
+    """Returns path to gunzip'd file
+    Decompresses `.gz` compressed files via system gzip """
     decompressed_file = os.path.basename(strip_compression_extension(archive_file, "gz"))
     working_dir = os.getcwd()
     destination_abspath = os.path.join(working_dir, decompressed_file)
@@ -168,7 +172,7 @@ def _system_gunzip(archive_file):
 
 
 def _unzip(archive_file):
-    """
+    """Returns path to extracted zip archive
     Extract Zipfile, searching for unzip system executable
     If unavailable, search for 'tar' executable on system and use instead
 
@@ -177,7 +181,7 @@ def _unzip(archive_file):
     """
     extracted_file = os.path.basename(strip_extension(archive_file, "zip"))
     if sys.platform == "win32":
-        return _untar(archive_file)
+        return _system_untar(archive_file)
     else:
         exe = "unzip"
         arg = "-q"
@@ -188,19 +192,20 @@ def _unzip(archive_file):
 
 
 def _system_unZ(archive_file):
-    """
+    """Returns path to decompressed file
     Decompress UNIX compress style compression
     Utilizes gunzip on unix and 7zip on Windows
     """
     if sys.platform == "win32":
-        result = _7zip(archive_file)
+        result = _system_7zip(archive_file)
     else:
         result = _system_gunzip(archive_file)
     return result
 
 
 def _lzma_decomp(archive_file):
-    """Decompress lzma compressed files. Prefer Python native
+    """Returns path to decompressed xz file.
+    Decompress lzma compressed files. Prefer Python native
     lzma module, but fall back on command line xz tooling
     to find available Python support."""
     if is_lzma_supported():
@@ -210,7 +215,9 @@ def _lzma_decomp(archive_file):
 
 
 def _win_compressed_tarball_handler(decompressor):
-    """Decompress and extract compressed tarballs on Windows.
+    """Returns function pointer to two stage decompression
+    and extraction method
+    Decompress and extract compressed tarballs on Windows.
     This method uses a decompression method in conjunction with
     the tar utility to perform decompression and extraction in
     a two step process first using decompressor to decompress,
@@ -228,7 +235,7 @@ def _win_compressed_tarball_handler(decompressor):
         decomped_tarball = decompressor(archive_file)
         if check_extension(decomped_tarball, "tar"):
             # run tar on newly decomped archive
-            outfile = _untar(decomped_tarball)
+            outfile = _system_untar(decomped_tarball)
             # clean intermediate archive to mimic end result
             # produced by one shot decomp/extraction
             os.remove(decomped_tarball)
@@ -239,7 +246,8 @@ def _win_compressed_tarball_handler(decompressor):
 
 
 def _py_lzma(archive_file):
-    """Decompress lzma compressed .xz files via python lzma module"""
+    """Returns path to decompressed .xz files
+    Decompress lzma compressed .xz files via python lzma module"""
     decompressed_file = os.path.basename(strip_extension(archive_file, "xz"))
     archive_out = os.path.join(os.getcwd(), decompressed_file)
     with open(archive_out, "wb") as ar:
@@ -249,7 +257,8 @@ def _py_lzma(archive_file):
 
 
 def _xz(archive_file):
-    """Decompress lzma compressed .xz files via xz command line
+    """Returns path to decompressed xz files
+    Decompress lzma compressed .xz files via xz command line
     tool.
     """
     decompressed_file = os.path.basename(strip_extension(archive_file, "xz"))
@@ -264,8 +273,9 @@ def _xz(archive_file):
     return destination_abspath
 
 
-def _7zip(archive_file):
-    """Unpack/decompress with 7z executable
+def _system_7zip(archive_file):
+    """Returns path to decompressed file
+    Unpack/decompress with 7z executable
     7z is able to handle a number file extensions however
     it may not be available on system.
     Without 7z, Windows users with certain versions of Python may
@@ -290,6 +300,10 @@ unable to extract %s files. 7z can be installed via Spack"
 
 
 def decompressor_for(path, extension=None):
+    """Returns appropriate decompression/extraction algorithm function pointer
+    for provided extension. If extension is none, it is computed
+    from the `path` and the decompression function is derived
+    from that information."""
     if not extension:
         extension = extension_from_file(path, decompress=True)
 
@@ -335,7 +349,7 @@ def decompressor_for_nix(extension):
     if re.match(r"xz$", extension):
         return _lzma_decomp
 
-    return _untar
+    return _system_untar
 
 
 def _determine_py_decomp_archive_strategy(extension):
@@ -377,7 +391,7 @@ def decompressor_for_win(extension):
 
     # if extension is standard tarball, invoke Windows native tar
     if re.match(r"tar$", extension):
-        return _untar
+        return _system_untar
 
     # Python does not have native support
     # of any kind for .Z files. In these cases,
