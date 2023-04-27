@@ -2208,7 +2208,7 @@ class Environment:
         if self.default_view == ViewDescriptor(self.path, path) and len(self.views) == 1:
             return path
 
-        return {"root": path}
+        return self.default_view.to_dict()
 
     def invalidate_repository_cache(self):
         self._repo = None
