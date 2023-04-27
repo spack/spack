@@ -551,12 +551,7 @@ class CacheURLFetchStrategy(URLFetchStrategy):
             os.remove(filename)
 
         # Symlink to local cached archive.
-        try:
-            symlink(path, filename)
-        except SymlinkError as e:
-            tty.warn("No-op as symlink to local cached archive was not created.")
-            tty.debug(e)
-            return
+        symlink(path, filename)
 
         # Remove link if checksum fails, or subsequent fetchers
         # will assume they don't need to download.
