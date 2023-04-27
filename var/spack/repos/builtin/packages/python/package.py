@@ -1074,7 +1074,7 @@ class AutotoolsBuilder(RunAfter, BuildEnvironment, autotools.AutotoolsBuilder):
             make(*self.install_targets, parallel=False)
 
 
-class GenericBuilder(RunAfter, BuildEnvironment, generic.GenericBuilder,):
+class GenericBuilder(RunAfter, BuildEnvironment, generic.GenericBuilder):
     phases = ("build", "install")
 
     @property
