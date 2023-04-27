@@ -25,11 +25,6 @@ class PyVirtualenv(PythonPackage):
     version("13.0.1", sha256="36c2cfae0f9c6462264bb19c478fc6bab3478cf0575f1027452e975a1ed84dbd")
     version("1.11.6", sha256="3e7a4c151e2ee97f51db0215bfd2a073b04a91e9786df6cb67c916f16abe04f7")
 
-    depends_on("python@3.7:", when="@20.18.0:", type=("build", "run"))
-    depends_on("python@3.6:", when="@20.16.4:", type=("build", "run"))
-    depends_on("python@2.7:2.8,3.5:", when="@20.5.0:", type=("build", "run"))
-    depends_on("python@2.7:2.8,3.4:", type=("build", "run"))
-
     depends_on("py-hatch-vcs@0.3:", when="@20.18:", type="build")
     depends_on("py-hatchling@1.14:", when="@20.22:", type="build")
     depends_on("py-hatchling@1.12.2:", when="@20.18:", type="build")
