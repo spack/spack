@@ -14,6 +14,7 @@ class RGenie3(RPackage):
 
     bioc = "GENIE3"
 
+    version("1.22.0", commit="e0b7f23a1ac5b01c937a351bb530b2dc6b76711f")
     version("1.20.0", commit="aea2e686a262f30b16c068241938d04f21251a0d")
     version("1.18.0", commit="f16b25ef50978a4a497eb2f911e21f2e839fa33c")
     version("1.16.0", commit="5543b1b883d3a1c92e955de6668444278edc2bdf")
