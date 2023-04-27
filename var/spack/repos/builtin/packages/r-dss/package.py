@@ -18,6 +18,7 @@ class RDss(RPackage):
 
     bioc = "DSS"
 
+    version("2.48.0", commit="03ceee2656e57b717e4fd7f22ff389f118421ae1")
     version("2.46.0", commit="debfbac4bc741961ba57915d4f2d98534f02cc21")
     version("2.44.0", commit="b9f44106f139c93564dfb4afab50555d24a657ba")
     version("2.42.0", commit="33e87450fbb64bb3e321688ff613e83cd40efe48")
@@ -33,5 +34,4 @@ class RDss(RPackage):
     depends_on("r-bsseq", type=("build", "run"))
 
     depends_on("r-delayedarray", type=("build", "run"), when="@2.36.0:2.42.0")
-    depends_on("r-matrixstats", type=("build", "run"), when="@2.44.0:")
-    depends_on("r-matrixstats", when="@:2.44.0")
+    depends_on("r-matrixstats", type=("build", "run"), when="@2.44.0")
