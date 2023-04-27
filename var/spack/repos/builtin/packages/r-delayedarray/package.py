@@ -20,6 +20,7 @@ class RDelayedarray(RPackage):
 
     bioc = "DelayedArray"
 
+    version("0.26.0", commit="e3bdae96838a8ed45f18697f072f3c4ec011aa03")
     version("0.24.0", commit="68ee3d0626c234ee1e9248a6cb95b901e4b3ad90")
     version("0.22.0", commit="4a5afd117b189b40bd409c7aff60e09d41797472")
     version("0.20.0", commit="829b52916ec54bb4f1a3c6f06c9955f3e28b3592")
