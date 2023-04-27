@@ -43,7 +43,7 @@ class Daos(SConsPackage):
     depends_on("py-distro")
     depends_on("readline")
     depends_on("scons@4.4.0:")
-    depends_on("spdk@22.01.1:+shared+rdma+dpdk")
+    depends_on("spdk@23.01:+shared+rdma+dpdk")
     depends_on("ucx@1.12.1:")
 
     def build_args(self, spec, prefix):
