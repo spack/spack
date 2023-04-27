@@ -394,7 +394,8 @@ def decompressor_for_win(extension):
     decompressor = _determine_py_decomp_archive_strategy(expanded_extension)
     if not decompressor:
         raise SpackError(
-            f"Spack was unable to determine a proper decompression strategy for valid extension: {extension}"
+            "Spack was unable to determine a proper decompression strategy for"
+            f"valid extension: {extension}"
             "This is a bug, please file an issue at https://github.com/spack/spack/issues"
         )
     if "tar" not in expanded_extension:
@@ -766,12 +767,7 @@ def expand_contracted_extension(extension):
     """Return expanded version of contracted extension
     i.e. .tgz -> .tar.gz, no op on non contracted extensions"""
     extension = extension.strip(".")
-    contraction_map = {
-        "tgz": "tar.gz",
-        "txz": "tar.xz",
-        "tbz": "tar.bz2",
-        "tbz2": "tar.bz2",
-    }
+    contraction_map = {"tgz": "tar.gz", "txz": "tar.xz", "tbz": "tar.bz2", "tbz2": "tar.bz2"}
     return contraction_map.get(extension, extension)
 
 
