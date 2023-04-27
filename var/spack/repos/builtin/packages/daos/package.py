@@ -36,7 +36,6 @@ class Daos(SConsPackage):
     depends_on("libunwind")
     depends_on("libyaml")
     depends_on("mercury@2.2.0:+boostsys")
-    depends_on("mpich")
     depends_on("openssl")
     depends_on("pmdk@1.12.1:")
     depends_on("protobuf-c@1.3.3:")
