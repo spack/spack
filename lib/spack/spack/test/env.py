@@ -4,6 +4,7 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 """Test environment internals without CLI"""
 import os
+import pickle
 import sys
 
 import pytest
@@ -12,6 +13,7 @@ import llnl.util.filesystem as fs
 
 import spack.environment as ev
 import spack.spec
+from spack.environment.environment import SpackEnvironmentViewError, _error_on_nonempty_view_dir
 
 pytestmark = pytest.mark.skipif(
     sys.platform == "win32", reason="Envs are not supported on windows"
@@ -274,3 +276,38 @@ def test_cannot_initialize_from_random_file(tmp_path):
     init_file.touch()
     with pytest.raises(ev.SpackEnvironmentError, match="cannot initialize"):
         ev.create_in_dir(tmp_path, init_file=init_file)
+
+
+def test_environment_pickle(tmp_path):
+    env1 = ev.create_in_dir(tmp_path)
+    obj = pickle.dumps(env1)
+    env2 = pickle.loads(obj)
+    assert isinstance(env2, ev.Environment)
+
+
+def test_error_on_nonempty_view_dir(tmpdir):
+    """Error when the target is not an empty dir"""
+    with tmpdir.as_cwd():
+        os.mkdir("empty_dir")
+        os.mkdir("nonempty_dir")
+        with open(os.path.join("nonempty_dir", "file"), "wb"):
+            pass
+        os.symlink("empty_dir", "symlinked_empty_dir")
+        os.symlink("does_not_exist", "broken_link")
+        os.symlink("broken_link", "file")
+
+        # This is OK.
+        _error_on_nonempty_view_dir("empty_dir")
+
+        # This is not OK.
+        with pytest.raises(SpackEnvironmentViewError):
+            _error_on_nonempty_view_dir("nonempty_dir")
+
+        with pytest.raises(SpackEnvironmentViewError):
+            _error_on_nonempty_view_dir("symlinked_empty_dir")
+
+        with pytest.raises(SpackEnvironmentViewError):
+            _error_on_nonempty_view_dir("broken_link")
+
+        with pytest.raises(SpackEnvironmentViewError):
+            _error_on_nonempty_view_dir("file")
