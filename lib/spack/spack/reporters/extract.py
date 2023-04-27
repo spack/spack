@@ -42,8 +42,8 @@ def elapsed(current, previous):
     return diff.total_seconds()
 
 
-# TODO: Should remove with deprecated run_test(), etc. since don't have an XFAIL
-# TODO: mechanism with the new test_part() approach.
+# TODO (post-34236): Should remove with deprecated test methods since don't
+# TODO (post-34236): have an XFAIL mechanism with the new test_part() approach.
 def expected_failure(line):
     if not line:
         return False
@@ -66,7 +66,7 @@ def new_part():
     }
 
 
-# TODO: Remove this when remove deprecated test_part(), etc.
+# TODO (post-34236): Remove this when remove deprecated methods
 def part_name(source):
     elements = []
     for e in source.replace("'", "").split(" "):
@@ -81,8 +81,8 @@ def process_part_end(part, curr_time, last_time):
 
         stat = part["status"]
         if stat in completed:
-            # TODO: remove the expected failure mapping along with removal of
-            # TODO: deprecated run_test(), etc.
+            # TODO (post-34236): remove the expected failure mapping when
+            # TODO (post-34236): remove deprecated test methods
             if stat == "passed" and expected_failure(part["desc"]):
                 part["completed"] = "Expected to fail"
             elif part["completed"] == "Unknown":
@@ -116,7 +116,7 @@ def extract_test_parts(default_name, outputs):
     last_time = None
     curr_time = None
 
-    # TODO: Remove these once remove deprecated run_test() processing
+    # TODO (post-34236): Remove once remove deprecated test processing
     testdesc = ""
     using_deprecated_tests = True
 

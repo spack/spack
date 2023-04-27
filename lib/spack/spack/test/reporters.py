@@ -121,7 +121,7 @@ def test_reporters_extract_missing_desc():
     assert parts[2]["command"] == "exe1 1; exe2 2"
 
 
-# TODO: Remove this test when removing deprecated run_test(), etc.
+# TODO (post-34236): Remove this test when removing deprecated run_test(), etc.
 def test_reporters_extract_empty_and_xfail():
     fake_bin = fs.join_path(fake_install_prefix, "bin", "fake-app")
     outputs = """
@@ -157,7 +157,7 @@ def test_reporters_extract_skipped(state):
     parts[0]["completed"] == expected
 
 
-# TODO: Remove this test when removing deprecated run_test(), etc.
+# TODO (post-34236): Remove this test when removing deprecated run_test(), etc.
 def test_reporters_skip():
     # This test ticks 3 boxes:
     # 1) covers an as yet uncovered skip messages

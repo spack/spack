@@ -1150,8 +1150,12 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
         """Return the configure args file path on successful installation."""
         return os.path.join(self.metadata_dir, _spack_configure_argsfile)
 
-    # TODO: Update tests and all packages that use this as a package method
-    # TODO: to the routine made available in package so can remove this.
+    # TODO (post-34236): Update tests and all packages that use this as a
+    # TODO (post-34236): package method to the routine made available in
+    # TODO (post-34236): package so can remove this.
+    # TODO/TLD (per alalazo): Add warning with instructions on updating and
+    # TODO/TLD (per alalazo): say the property will not be supported anymore
+    # TODO/TLD (per alalazo): in v0.21
     @property
     def install_test_root(self):
         """Return the install test root directory."""
@@ -1840,8 +1844,11 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
         builder = PackageInstaller([(self, kwargs)])
         builder.install()
 
-    # TODO: Update tests and all packages that use this as a package method to
-    # TODO: use the routine from package so can remove this.
+    # TODO (post-34236): Update tests and all packages that use this as a
+    # TODO (post-34236): package method to the routine made available in
+    # TODO (post-34236): package so can remove this.
+    # TODO/TLD (per alalazo): add warning that will be removed and remove on
+    # TODO/TLD (per alalazo): develop when working towards v0.21
     def cache_extra_test_sources(self, srcs):
         """Copy relative source paths to the corresponding install test subdir
 

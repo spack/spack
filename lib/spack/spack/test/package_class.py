@@ -283,7 +283,7 @@ def test_package_test_no_compilers(mock_packages, monkeypatch, capfd):
     assert "test requires missing compiler" in error
 
 
-# TODO: Remove when remove deprecated run_test(), etc.
+# TODO (post-34236): Remove when remove deprecated run_test(), etc.
 def test_package_run_test(install_mockery_mutable_config, mock_fetch, capfd):
     s = spack.spec.Spec("trivial-smoke-test").concretized()
     pkg = s.package

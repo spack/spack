@@ -19,6 +19,7 @@ class PyTestCallback(mp.Python):
     def install(self, spec, prefix):
         mkdirp(prefix.bin)
 
+    # TODO (post-34236): "test" -> "test_callback" once remove "test" method
     def test(self):
         super(PyTestCallback, self).test()
 

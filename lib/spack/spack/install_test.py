@@ -316,7 +316,7 @@ class PackageTest:
             builder.pkg.test_suite.current_test_spec = builder.pkg.spec
             builder.pkg.test_suite.current_base_spec = builder.pkg.spec
 
-            # TODO: Change "test" to "test_" once remove package's test()
+            # TODO (post-34236): "test"->"test_" once remove deprecated methods
             have_tests = any(name.startswith("test") for name in method_names)
             if have_tests:
                 copy_test_files(builder.pkg, builder.pkg.spec)
@@ -398,7 +398,7 @@ class PackageTest:
 def test_part(pkg: Pb, test_name: str, purpose: str, work_dir: str = ".", verbose: bool = False):
     wdir = "." if work_dir is None else work_dir
     tester = pkg.tester
-    # TODO: Replace "test" with "test_" when remove run_test, etc.
+    # TODO (post-34236): "test"->"test_" once remove deprecated methods
     assert test_name and test_name.startswith(
         "test"
     ), f"Test name must start with 'test' but {test_name} was provided"
@@ -591,12 +591,12 @@ def test_functions(pkg: TestPackageType, add_virtuals: bool = False) -> List[Tup
     for clss in classes:
         methods = inspect.getmembers(clss, predicate=lambda x: inspect.isfunction(x))
         for name, test_fn in methods:
-            # TODO: Change to test_ once remove deprecated run_test(), etc.
+            # TODO (post-34236): "test"->"test_" once remove deprecated methods
             if not name.startswith("test"):
                 continue
 
-            # TODO: Could remove empty method check once remove
-            # TODO: deprecated run_test(), etc.
+            # TODO (post-34236): Could remove empty method check once remove
+            # TODO (post-34236): deprecated methods
             source = re.sub(doc_regex, r"", inspect.getsource(test_fn)).splitlines()[1:]
             lines = [ln.strip() for ln in source if not ln.strip().startswith("#")]
             if len(lines) > 0 and lines[0] == "pass":
