@@ -871,7 +871,7 @@ class BuildEnvironment:
                 env.set(link_var, new_link)
 
 
-class RunAfter:
+class RunAfter(metaclass=spack.builder.PhaseCallbacksMeta):
     @run_after("install")
     def filter_compilers(self):
         """Run after install to tell the configuration files and Makefiles
@@ -982,7 +982,7 @@ class RunAfter:
                 self.pkg.command("-c", "import crypt")
 
 
-class AutotoolsBuilder(autotools.AutotoolsBuilder, RunAfter, BuildEnvironment):
+class AutotoolsBuilder(RunAfter, BuildEnvironment, autotools.AutotoolsBuilder):
     # An in-source build with --enable-optimizations fails for python@3.X
     build_directory = "spack-build"
 
@@ -1074,7 +1074,7 @@ class AutotoolsBuilder(autotools.AutotoolsBuilder, RunAfter, BuildEnvironment):
             make(*self.install_targets, parallel=False)
 
 
-class GenericBuilder(generic.GenericBuilder, RunAfter, BuildEnvironment):
+class GenericBuilder(RunAfter, BuildEnvironment, generic.GenericBuilder,):
     phases = ("build", "install")
 
     @property
@@ -1156,9 +1156,9 @@ class GenericBuilder(generic.GenericBuilder, RunAfter, BuildEnvironment):
         pyconfig = os.path.join(proj_root, "PC", "pyconfig.h")
         copy(pyconfig, prefix.include)
         shared_libraries = []
-        shared_libraries.extend(glob.glob("%s\\*.exe" % build_root))
-        shared_libraries.extend(glob.glob("%s\\*.dll" % build_root))
-        shared_libraries.extend(glob.glob("%s\\*.pyd" % build_root))
+        shared_libraries.extend(glob.glob(r"%s\*.exe" % build_root))
+        shared_libraries.extend(glob.glob(r"%s\*.dll" % build_root))
+        shared_libraries.extend(glob.glob(r"%s\*.pyd" % build_root))
         os.makedirs(prefix.DLLs)
         for lib in shared_libraries:
             file_name = os.path.basename(lib)
@@ -1170,6 +1170,6 @@ class GenericBuilder(generic.GenericBuilder, RunAfter, BuildEnvironment):
                 copy(lib, prefix)
             else:
                 copy(lib, prefix.DLLs)
-        static_libraries = glob.glob("%s\\*.lib")
+        static_libraries = glob.glob(r"%s\*.lib")
         for lib in static_libraries:
             copy(lib, prefix.libs)
