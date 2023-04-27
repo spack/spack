@@ -185,6 +185,7 @@ condition_holds(ID) :-
 % condition_holds(ID) implies all imposed_constraints, unless do_not_impose(ID)
 % is derived. This allows imposed constraints to be canceled in special cases.
 impose(ID) :- condition_holds(ID), not do_not_impose(ID).
+:- impose(ID), do_not_impose(ID).
 
 % conditions that hold impose constraints on other specs
 attr(Name, A1)             :- impose(ID), imposed_constraint(ID, Name, A1).
