@@ -132,9 +132,15 @@ class SuperluDist(CMakePackage, CudaPackage, ROCmPackage):
             flags.append(self.compiler.cxx11_flag)
         if name == "cflags" and "%pgi" not in self.spec:
             flags.append("-std=c99")
-        if name == "cflags" and (self.spec.satisfies("%xl") or self.spec.satisfies("%xl_r")) and self.spec.satisfies("@:6.1.1"):
+        if (
+            name == "cflags"
+            and (self.spec.satisfies("%xl") or self.spec.satisfies("%xl_r"))
+            and self.spec.satisfies("@:6.1.1")
+        ):
             flags.append("-DNoChange")
-        if name == "cflags" and (self.spec.satisfies("%oneapi") or self.spec.satisfies("%arm@23.04:")):
+        if name == "cflags" and (
+            self.spec.satisfies("%oneapi") or self.spec.satisfies("%arm@23.04:")
+        ):
             #
             # 2022 and later Intel OneAPI compilers and Arm compilers version 23.04 and later
             # throw errors compiling some of the non ISO C99 compliant code in this package
