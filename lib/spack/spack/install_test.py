@@ -13,7 +13,7 @@ import re
 import shutil
 import sys
 from collections import Counter
-from typing import Callable, List, Optional, Tuple, Type, Union
+from typing import Callable, List, Optional, Tuple, Type, TypeVar, Union
 
 import llnl.util.filesystem as fs
 import llnl.util.tty as tty
@@ -545,7 +545,8 @@ def copy_test_files(pkg: "spack.package_base.PackageBase", test_spec: spack.spec
         shutil.copytree(data_source, data_dir)
 
 
-TestPackageType = Union["spack.package_base.PackageBase", Type]
+U = TypeVar("U", bound="spack.package_base.PackageBase")
+TestPackageType = Union[U, Type[U]]
 
 
 def test_function_names(pkg: TestPackageType, add_virtuals: bool = False) -> List[str]:
