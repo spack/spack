@@ -968,12 +968,7 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage):
 
             # Add easily-overridable rpath string at the end
             out.write("*link_libgcc_rpath:\n")
-            if "platform=darwin" in self.spec:
-                # macOS linker requires separate rpath commands
-                out.write(" ".join("-rpath " + lib for lib in rpath_libdirs))
-            else:
-                # linux linker uses colon-separated rpath
-                out.write("-rpath " + ":".join(rpath_libdirs))
+            out.write(" ".join("-rpath " + lib for lib in rpath_libdirs))
             out.write("\n")
         set_install_permissions(specs_file)
         tty.info("Wrote new spec file to {0}".format(specs_file))
