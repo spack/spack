@@ -103,7 +103,7 @@ def _bunzip2(archive_file):
 
 def _py_bunzip(archive_file):
     """Decompress bz2 compressed archives/files via python's bz2 module"""
-    decompressed_file = os.path.basename(strip_last_extension(archive_file, "bz2"))
+    decompressed_file = os.path.basename(strip_compression_extension(archive_file, "bz2"))
     working_dir = os.getcwd()
     archive_out = os.path.join(working_dir, decompressed_file)
     f_bz = bz2.BZ2File(archive_file, mode="rb")
@@ -116,7 +116,7 @@ def _py_bunzip(archive_file):
 def _system_bunzip(archive_file):
     """Decompress bz2 compressed archives/files via system bzip2 utility"""
     compressed_file_name = os.path.basename(archive_file)
-    decompressed_file = os.path.basename(strip_last_extension(archive_file, "bz2"))
+    decompressed_file = os.path.basename(strip_compression_extension(archive_file, "bz2"))
     working_dir = os.getcwd()
     archive_out = os.path.join(working_dir, decompressed_file)
     copy_path = os.path.join(working_dir, compressed_file_name)
@@ -144,7 +144,7 @@ def _gunzip(archive_file):
 
 def _py_gunzip(archive_file):
     """Decompress `.gz` compressed archvies via python gzip module"""
-    decompressed_file = os.path.basename(strip_last_extension(archive_file, "gz"))
+    decompressed_file = os.path.basename(strip_compression_extension(archive_file, "gz"))
     working_dir = os.getcwd()
     destination_abspath = os.path.join(working_dir, decompressed_file)
     f_in = gzip.open(archive_file, "rb")
@@ -155,7 +155,7 @@ def _py_gunzip(archive_file):
 
 
 def _system_gunzip(archive_file):
-    decompressed_file = os.path.basename(strip_last_extension(archive_file, "gz"))
+    decompressed_file = os.path.basename(strip_compression_extension(archive_file, "gz"))
     working_dir = os.getcwd()
     destination_abspath = os.path.join(working_dir, decompressed_file)
     compressed_file = os.path.basename(archive_file)
@@ -276,7 +276,7 @@ def _7zip(archive_file):
     Args:
         archive_file (str): absolute path of file to be unarchived
     """
-    outfile = os.path.basename(strip_last_extension(archive_file))
+    outfile = os.path.basename(strip_compression_extension(archive_file))
     _7z = which("7z")
     if not _7z:
         raise CommandNotFoundError(
@@ -678,7 +678,7 @@ def extension_from_file(file, decompress=False):
 
 
 def extension_from_path(path):
-    """Get the allowed archive extension for a path.
+    """Returns the allowed archive extension for a path.
     If path does not include a valid archive extension
     (see`spack.util.compression.ALLOWED_ARCHIVE_TYPES`) return None
     """
@@ -691,22 +691,23 @@ def extension_from_path(path):
     return None
 
 
-def strip_last_extension(path, ext=None):
-    """Strips last supported or provided archive extension from path"""
+def strip_compression_extension(path, ext=None):
+    """Returns path with last supported or provided archive extension stripped"""
     path = expand_contracted_extension_in_path(path, ext)
-    exts_to_check = ALLOWED_SINGLE_EXT_ARCHIVE_TYPES
+    exts_to_check = EXTS
     if ext:
         exts_to_check = [ext]
     for ext_check in exts_to_check:
-        mod_path = check_and_remove_ext(ext_check)
+        mod_path = check_and_remove_ext(path, ext_check)
         if mod_path != path:
             return mod_path
     return path
 
 
 def strip_extension(path, ext=None):
-    """Get the part of a path that does not include its compressed
-    type extension."""
+    """Returns the part of a path that does not include extension.
+    If ext is given, only attempts to remove that extension. If no
+    extension given, attempts to strip any valid extension from path"""
     if ext:
         return check_and_remove_ext(path, ext)
     for t in ALLOWED_ARCHIVE_TYPES:
@@ -717,7 +718,8 @@ def strip_extension(path, ext=None):
 
 
 def check_extension(path, ext):
-    """Check if extension is present in path"""
+    """Returns true if extension is present in path
+    false otherwise"""
     # Strip sourceforge suffix.
     prefix, _ = spath.find_sourceforge_suffix(path)
     if not ext.startswith(r"\."):
@@ -728,7 +730,7 @@ def check_extension(path, ext):
 
 
 def reg_remove_ext(path, ext):
-    """Regex remove ext from path"""
+    """Returns path with ext remove via regex"""
     if path and ext:
         suffix = r"\.%s$" % ext
         return re.sub(suffix, "", path)
@@ -736,21 +738,21 @@ def reg_remove_ext(path, ext):
 
 
 def check_and_remove_ext(path, ext):
-    """If given extension is present in path, remove and return,
-    otherwise just return path"""
+    """Returns path with extension removed if extension
+    is present in path. Otherwise just returns path"""
     if check_extension(path, ext):
         return reg_remove_ext(path, ext)
     return path
 
 
 def _substitute_extension(path, old_ext, new_ext):
-    """Return path with old_ext replaced with new_ext.
+    """Returns path with old_ext replaced with new_ext.
     old_ext and new_ext can be extension strings or regexs"""
     return re.sub(rf"{old_ext}", rf"{new_ext}", path)
 
 
 def expand_contracted_extension_in_path(path, ext=None):
-    """Return path with any contraction extension (i.e. tgz) expanded
+    """Returns path with any contraction extension (i.e. tgz) expanded
     (i.e. tar.gz). If ext is specified, only attempt to expand that extension"""
     if not ext:
         ext = extension_from_path(path)
@@ -764,16 +766,13 @@ def expand_contracted_extension(extension):
     """Return expanded version of contracted extension
     i.e. .tgz -> .tar.gz, no op on non contracted extensions"""
     extension = extension.strip(".")
-    if extension in NOTAR_EXTS and extension != "zip":
-        # NOTAR exts are abbreviated extensions
-        # for compressed tarballs
-        # so we know tar is the first ext after initial '.'
-        prefix = "tar"
-        suffix = extension[1:]
-        if suffix == "bz":
-            suffix = "bz2"
-        return ".".join([prefix, suffix])
-    return extension
+    contraction_map = {
+        "tgz": "tar.gz",
+        "txz": "tar.xz",
+        "tbz": "tar.bz2",
+        "tbz2": "tar.bz2",
+    }
+    return contraction_map.get(extension, extension)
 
 
 def compression_ext_from_compressed_archive(extension):
