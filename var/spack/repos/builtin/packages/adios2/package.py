@@ -21,6 +21,11 @@ class Adios2(CMakePackage, CudaPackage):
     tags = ["e4s"]
 
     version("master", branch="master")
+    version(
+        "2.9.0",
+        sha256="69f98ef58c818bb5410133e1891ac192653b0ec96eb9468590140f2552b6e5d1",
+        preferred=True,
+    )
     version("2.8.3", sha256="4906ab1899721c41dd918dddb039ba2848a1fb0cf84f3a563a1179b9d6ee0d9f")
     version("2.8.2", sha256="9909f6409dc44b2c28c1fda0042dab4b711f25ec3277ef0cb6ffc40f5483910d")
     version("2.8.1", sha256="3f515b442bbd52e3189866b121613fe3b59edb8845692ea86fad83d1eba35d93")

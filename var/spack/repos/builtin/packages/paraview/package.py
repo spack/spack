@@ -285,6 +285,10 @@ class Paraview(CMakePackage, CudaPackage, ROCmPackage):
     # Fix VTK to work with external freetype using CONFIG mode for find_package
     patch("FindFreetype.cmake.patch", when="@5.10.1:")
 
+    # Fix VTK to remove deprecated ADIOS2 functions
+    # https://gitlab.kitware.com/vtk/vtk/-/merge_requests/10113
+    patch("adios2-remove-deprecated-functions.patch", when="@5.10: ^adios2@2.9:")
+
     generator("ninja", "make", default="ninja")
     # https://gitlab.kitware.com/paraview/paraview/-/issues/21223
     conflicts("generator=ninja", when="%xl")

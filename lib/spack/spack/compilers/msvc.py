@@ -164,7 +164,7 @@ class Msvc(Compiler):
             out = out.decode("utf-16le", errors="replace")  # novermin
 
         int_env = dict(
-            (key.lower(), value)
+            (key, value)
             for key, _, value in (line.partition("=") for line in out.splitlines())
             if key and value
         )

@@ -968,6 +968,9 @@ class SpackSolverSetup(object):
             if compiler.operating_system:
                 self.gen.fact(fn.compiler_os(compiler_id, compiler.operating_system))
 
+            if compiler.target == "any":
+                compiler.target = None
+
             if compiler.target is not None:
                 self.gen.fact(fn.compiler_target(compiler_id, compiler.target))
 

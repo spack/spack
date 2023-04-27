@@ -55,7 +55,6 @@ def upstream_and_downstream_db(tmpdir, gen_mock_layout):
     yield upstream_write_db, upstream_db, upstream_layout, downstream_db, downstream_layout
 
 
-@pytest.mark.skipif(sys.platform == "win32", reason="Upstreams currently unsupported on Windows")
 def test_spec_installed_upstream(
     upstream_and_downstream_db, mock_custom_repository, config, monkeypatch
 ):
@@ -88,7 +87,6 @@ def test_spec_installed_upstream(
     assert not spec.installed_upstream
 
 
-@pytest.mark.skipif(sys.platform == "win32", reason="Upstreams currently unsupported on Windows")
 @pytest.mark.usefixtures("config")
 def test_installed_upstream(upstream_and_downstream_db, tmpdir):
     (
@@ -131,7 +129,6 @@ def test_installed_upstream(upstream_and_downstream_db, tmpdir):
         downstream_db._check_ref_counts()
 
 
-@pytest.mark.skipif(sys.platform == "win32", reason="Upstreams currently unsupported on Windows")
 @pytest.mark.usefixtures("config")
 def test_removed_upstream_dep(upstream_and_downstream_db, tmpdir):
     (
@@ -164,7 +161,6 @@ def test_removed_upstream_dep(upstream_and_downstream_db, tmpdir):
             new_downstream._read()
 
 
-@pytest.mark.skipif(sys.platform == "win32", reason="Upstreams currently unsupported on Windows")
 @pytest.mark.usefixtures("config")
 def test_add_to_upstream_after_downstream(upstream_and_downstream_db, tmpdir):
     """An upstream DB can add a package after it is installed in the downstream
@@ -205,7 +201,6 @@ def test_add_to_upstream_after_downstream(upstream_and_downstream_db, tmpdir):
             spack.store.db = orig_db
 
 
-@pytest.mark.skipif(sys.platform == "win32", reason="Upstreams currently unsupported on Windows")
 @pytest.mark.usefixtures("config", "temporary_store")
 def test_cannot_write_upstream(tmpdir, gen_mock_layout):
     roots = [str(tmpdir.mkdir(x)) for x in ["a", "b"]]
@@ -230,7 +225,6 @@ def test_cannot_write_upstream(tmpdir, gen_mock_layout):
             upstream_dbs[0].add(spec, layouts[1])
 
 
-@pytest.mark.skipif(sys.platform == "win32", reason="Upstreams currently unsupported on Windows")
 @pytest.mark.usefixtures("config", "temporary_store")
 def test_recursive_upstream_dbs(tmpdir, gen_mock_layout):
     roots = [str(tmpdir.mkdir(x)) for x in ["a", "b", "c"]]

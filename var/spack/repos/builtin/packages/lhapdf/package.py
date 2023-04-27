@@ -45,7 +45,7 @@ class Lhapdf(AutotoolsPackage):
         args = ["FCFLAGS=-O3", "CFLAGS=-O3", "CXXFLAGS=-O3"]
 
         if self.spec.satisfies("+python"):
-            args.extend(
+            args.append(
                 "LIBS=-L"
                 + self.spec["python"].prefix.lib
                 + " -L"
