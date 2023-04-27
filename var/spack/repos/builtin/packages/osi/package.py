@@ -20,7 +20,7 @@ class Osi(AutotoolsPackage):
     homepage = "https://projects.coin-or.org/Osi"
     url = "https://github.com/coin-or/Osi/archive/releases/0.108.6.tar.gz"
 
-    depends_on("pkg-config", type="build")
+    depends_on("pkgconfig", type="build")
     depends_on("coinutils")
 
     version("0.108.7", sha256="f1bc53a498585f508d3f8d74792440a30a83c8bc934d0c8ecf8cd8bc0e486228")
