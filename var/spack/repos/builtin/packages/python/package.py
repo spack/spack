@@ -343,6 +343,11 @@ class Python(AutotoolsPackage, Package):
         """Returns the Python command, which may vary depending
         on the version of Python and how it was installed.
 
+        In general, Python 3 only comes with a ``python3`` command. However, some
+        package managers will symlink ``python`` to ``python3``, while others
+        may contain ``python3.11``, ``python3.10``, and ``python3.9`` in the
+        same directory.
+
         Returns:
             Executable: the Python command
         """
@@ -365,6 +370,12 @@ class Python(AutotoolsPackage, Package):
                 return Executable(path)
 
         else:
+            # Give a last try at rhel8 platform python
+            if self.spec.external and self.prefix == "/usr" and self.spec.satisfies("os=rhel8"):
+                path = os.path.join(self.prefix, "libexec", "platform-python")
+                if os.path.exists(path):
+                    return Executable(path)
+
             msg = "Unable to locate {0} command in {1}"
             raise RuntimeError(msg.format(self.name, self.prefix.bin))
 
@@ -1060,7 +1071,7 @@ class AutotoolsBuilder(autotools.AutotoolsBuilder, RunAfter, BuildEnvironment):
     def install(self, pkg, spec, prefix):
         with working_dir(self.build_directory):
             # See https://github.com/python/cpython/issues/102007
-            make(*self.install_targets, parllel=False)
+            make(*self.install_targets, parallel=False)
 
 
 class GenericBuilder(generic.GenericBuilder, RunAfter, BuildEnvironment):
