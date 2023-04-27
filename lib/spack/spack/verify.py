@@ -27,11 +27,11 @@ def compute_hash(path, block_size=1048576):
     return base64.b32encode(hasher.digest()).decode()
 
 
-def create_manifest_entry(path):
+def create_manifest_entry(path) -> dict:
     try:
         s = os.lstat(path)
     except OSError:
-        return
+        return {}
 
     data = {"mode": s.st_mode, "owner": s.st_uid, "group": s.st_gid}
 
