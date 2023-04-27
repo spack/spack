@@ -158,7 +158,7 @@ def _py_gunzip(archive_file):
 
 def _system_gunzip(archive_file):
     """Returns path to gunzip'd file
-    Decompresses `.gz` compressed files via system gzip """
+    Decompresses `.gz` compressed files via system gzip"""
     decompressed_file = os.path.basename(strip_compression_extension(archive_file, "gz"))
     working_dir = os.getcwd()
     destination_abspath = os.path.join(working_dir, decompressed_file)
