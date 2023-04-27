@@ -50,9 +50,7 @@ class PyVirtualenv(PythonPackage):
     depends_on("py-filelock@3.4.1:3", when="@20.16.3:", type=("build", "run"))
     depends_on("py-filelock@3.2:3", when="@20.9:20.16.2", type=("build", "run"))
     depends_on("py-filelock@3.0.0:3", when="@20.0:20.8", type=("build", "run"))
-    depends_on(
-        "py-importlib-metadata@6.4.1:", when="@20.22: ^python@:3.7", type=("build", "run")
-    )
+    depends_on("py-importlib-metadata@6.4.1:", when="@20.22: ^python@:3.7", type=("build", "run"))
     depends_on(
         "py-importlib-metadata@4.8.3:", when="@20.16.3: ^python@:3.7", type=("build", "run")
     )
