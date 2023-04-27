@@ -17,6 +17,7 @@ class RMaptools(RPackage):
 
     cran = "maptools"
 
+    version("1.1-6", sha256="d6a5df52db03b2231f21921b693c67f85df3c3b376181aa13ef4f21710f69308")
     version("1.1-5", sha256="3cd9bd95d3a1cb4aae3a350e0582319dacc25f070af6995061b85e68042f25dc")
     version("1.1-4", sha256="f3ee25f9787d97c8373dac3651c6a198c932948eb3a6006b8618c91c6344fdc9")
     version("1.1-2", sha256="3995c96e8472cd6717fe3cbd3506358ff460b6c2cf92dbe4b00f75f507514439")
