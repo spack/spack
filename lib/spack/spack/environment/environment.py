@@ -2515,6 +2515,8 @@ def initialize_environment_dir(
     # When we have a lockfile we should copy that and produce a consistent default manifest
     if str(envfile).endswith(lockfile_name):
         shutil.copy(envfile, target_lockfile)
+        # This constructor writes a spack.yaml which is consistent with the root
+        # specs in the spack.lock
         EnvironmentManifestFile.from_lockfile(environment_dir)
         return
 
@@ -2530,6 +2532,9 @@ class EnvironmentManifestFile(collections.abc.Mapping):
     def from_lockfile(manifest_dir: Union[pathlib.Path, str]) -> "EnvironmentManifestFile":
         """Returns an environment manifest file compatible with the lockfile already present in
         the environment directory.
+
+        This function also writes a spack.yaml file that is consistent with the spack.lock
+        already existing in the directory.
 
         Args:
              manifest_dir: directory where the lockfile is
