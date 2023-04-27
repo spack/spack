@@ -49,4 +49,4 @@ class RAneufinder(RPackage):
     depends_on("r-ggdendro", type=("build", "run"))
     depends_on("r-ggrepel", type=("build", "run"))
     depends_on("r-mclust", type=("build", "run"))
-    depends_on("r-reordercluster", type=("build", "run"), when="@:1.26.0)"
+    depends_on("r-reordercluster", type=("build", "run"), when="@:1.26.0")

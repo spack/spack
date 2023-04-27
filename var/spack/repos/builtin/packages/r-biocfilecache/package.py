@@ -35,4 +35,4 @@ class RBiocfilecache(RPackage):
     depends_on("r-filelock", type=("build", "run"), when="@2.2.1:")
     depends_on("r-curl", type=("build", "run"), when="@1.6.0:")
     depends_on("r-httr", type=("build", "run"))
-    depends_on("r-rappdirs", type=("build", "run"), when="@:2.6.0)"
+    depends_on("r-rappdirs", type=("build", "run"), when="@:2.6.0")

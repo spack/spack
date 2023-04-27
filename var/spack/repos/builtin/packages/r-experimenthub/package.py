@@ -31,4 +31,4 @@ class RExperimenthub(RPackage):
     depends_on("r-s4vectors", type=("build", "run"))
     depends_on("r-biocmanager", type=("build", "run"))
     depends_on("r-rappdirs", type=("build", "run"))
-    depends_on("r-curl", type=("build", "run"), when="@:2.6.0)"
+    depends_on("r-curl", type=("build", "run"), when="@:2.6.0")
