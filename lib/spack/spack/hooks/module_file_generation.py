@@ -3,15 +3,15 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-import llnl.util.tty as tty
+from llnl.util import tty
 
 import spack.config
 import spack.modules
-import spack.modules.common
 
 
 def _for_each_enabled(spec, method_name, explicit=None):
     """Calls a method for each enabled module"""
+    spack.modules.ensure_modules_are_enabled_or_warn()
     set_names = set(spack.config.get("modules", {}).keys())
     for name in set_names:
         enabled = spack.config.get("modules:%s:enable" % name)

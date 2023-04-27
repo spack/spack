@@ -33,7 +33,9 @@ import copy
 import datetime
 import inspect
 import os.path
+import pathlib
 import re
+import warnings
 from typing import Optional
 
 import llnl.util.filesystem
@@ -799,6 +801,32 @@ class BaseContext(tengine.Context):
     def verbose(self):
         """Verbosity level."""
         return self.conf.verbose
+
+
+def ensure_modules_are_enabled_or_warn():
+    """Ensures that, if a custom configuration file is found, module file generation is enabled.
+    If a custom configuration is found when module file generation is disabled, emits a warning.
+    """
+    for scope in spack.config.config.file_scopes:
+        # Skip default configuration
+        if scope.name.startswith("default"):
+            continue
+
+        modules_yaml = pathlib.Path(scope.path) / "modules.yaml"
+        if modules_yaml.exists():
+            break
+    else:
+        return
+
+    enabled = spack.config.get("modules:default:enable")
+    if not enabled:
+        msg = (
+            f"detected custom modules.yaml in {modules_yaml}, when module file "
+            f"generation for the default module set is disabled.\n\n\t"
+            f"In Spack v0.20 module file generation has been disabled by default. You might "
+            f"want to check {modules_yaml} and enable module generation explicitly.\n"
+        )
+        warnings.warn(msg)
 
 
 class BaseModuleFileWriter(object):
