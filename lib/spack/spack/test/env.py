@@ -103,7 +103,7 @@ def test_env_change_spec_in_definition(tmp_path, mock_packages, config, mutable_
     e.change_existing_spec(spack.spec.Spec("mpileaks@2.2"), list_name="desired_specs")
     e.write()
 
-    assert any(x.intersects("mpileaks@2.2%gcc") for x in e.user_specs), list(e.user_specs)
+    assert any(x.intersects("mpileaks@2.2%gcc") for x in e.user_specs)
     assert not any(x.intersects("mpileaks@2.1%gcc") for x in e.user_specs)
 
 
