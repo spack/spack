@@ -12,6 +12,7 @@ spack:
           - neurodamus-thalamus
           - neurodamus-mousify
           - parquet-converters
+          - py-archive-advisor
           - py-basalt
           - py-mvdtool
           - py-neurodamus
@@ -47,6 +48,7 @@ spack:
     - neuron+coreneuron build_type=FastDebug
     - nmodl
     - parquet-converters
+    - py-archive-advisor
     - py-neurodamus
     - py-pytouchreader
     - reportinglib
