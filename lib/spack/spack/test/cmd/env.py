@@ -3152,7 +3152,7 @@ def test_depfile_phony_convenience_targets(
     each package if "--make-prefix" is absent."""
     make = Executable("make")
     with fs.working_dir(str(tmpdir)):
-        with ev.Environment("."):
+        with ev.create_in_dir("."):
             add("dttop")
             concretize()
 
