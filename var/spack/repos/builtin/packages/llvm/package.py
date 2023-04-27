@@ -254,7 +254,7 @@ class Llvm(CMakePackage, CudaPackage):
     depends_on("py-six", when="+lldb+python")
 
     # gold support, required for some features
-    depends_on("binutils+gold+ld+plugins", when="+gold")
+    depends_on("binutils+gold+ld+plugins+headers", when="+gold")
 
     # Older LLVM do not build with newer compilers, and vice versa
     with when("@16:"):
