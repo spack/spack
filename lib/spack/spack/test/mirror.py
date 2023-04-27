@@ -9,7 +9,7 @@ import sys
 
 import pytest
 
-from llnl.util.filesystem import resolve_link_target_relative_to_the_link
+from llnl.util.symlink import resolve_link_target_relative_to_the_link
 
 import spack.mirror
 import spack.repo
