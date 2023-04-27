@@ -486,7 +486,6 @@ def push_fn(args):
                 url,
                 bindist.PushOptions(
                     force=args.force,
-                    relative=args.rel,
                     unsigned=args.unsigned,
                     allow_root=args.allow_root,
                     key=args.key,
