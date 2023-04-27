@@ -63,14 +63,12 @@ class Libgridxc(CMakePackage,MakefilePackage):
             copy("../extra/fortran.mk", "fortran.mk")
 
     @property
+    @when("build_system=makefile")
     def build_targets(self):
-        args = []
-        with when("build_system=makefile"):
-            # Legacy build options
-            if self.spec.satisfies("@:0.10.1"):
-                args += ["PREFIX={0}".format(self.prefix)]
-                if self.spec.satisfies("@0.8.0:0.10.1"):
-                    args += ["WITH_LIBXC=1", "LIBXC_ROOT={0}".format(self.spec["libxc"].prefix)]
+        # Legacy build options
+        args += ["PREFIX={0}".format(self.prefix)]
+        if self.spec.satisfies("@0.8.0:"):
+            args += ["WITH_LIBXC=1", "LIBXC_ROOT={0}".format(self.spec["libxc"].prefix)]
         return args
 
     @when("build_system=makefile")

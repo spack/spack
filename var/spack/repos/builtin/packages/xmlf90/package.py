@@ -10,12 +10,19 @@ from spack.package import *
 class Xmlf90(AutotoolsPackage):
     """xmlf90 is a suite of libraries to handle XML in Fortran."""
 
-    homepage = "https://launchpad.net/xmlf90"
-    url = "https://launchpad.net/xmlf90/trunk/1.5/+download/xmlf90-1.5.4.tar.gz"
+    homepage = "https://gitlab.com/siesta-project/libraries/xmlf90" 
+    git = "https://gitlab.com/siesta-project/libraries/xmlf90.git" 
+    url = "https://gitlab.com/siesta-project/libraries/xmlf90/-/archive/1.5.6/xmlf90-1.5.6.tar.gz"
 
-    version("1.5.4", sha256="a0b1324ff224d5b5ad1127a6ad4f90979f6b127f1a517f98253eea377237bbe4")
-    version("1.5.3", sha256="a5378a5d9df4b617f51382092999eb0f20fa1a90ab49afbccfd80aa51650d27c")
-    version("1.5.2", sha256="666694db793828d1d1e9aea665f75c75ee21772693465a88b43e6370862abfa6")
+    version("1.5.6", sha256="c4492596c911b668b94fee40a53453f06aef3bc41014b9e2f4b51e640ad20528")
+    version("1.5.4", sha256="6e5bfdd6764afd036a139ff7c084b60e1badcf77aaf3552030168e77aa4eb68b")
+
+    # Launchpad - versions (superceeded by gitlab versions)
+    # homepage = "https://launchpad.net/xmlf90"
+    # url = "https://launchpad.net/xmlf90/trunk/1.5/+download/xmlf90-1.5.4.tar.gz"
+    # version("1.5.4", sha256="a0b1324ff224d5b5ad1127a6ad4f90979f6b127f1a517f98253eea377237bbe4")
+    # version("1.5.3", sha256="a5378a5d9df4b617f51382092999eb0f20fa1a90ab49afbccfd80aa51650d27c")
+    # version("1.5.2", sha256="666694db793828d1d1e9aea665f75c75ee21772693465a88b43e6370862abfa6")
 
     depends_on("autoconf@2.69:", type="build")
     depends_on("automake@1.14:", type="build")
