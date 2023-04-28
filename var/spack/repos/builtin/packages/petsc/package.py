@@ -416,16 +416,9 @@ class Petsc(Package, CudaPackage, ROCmPackage):
         if "+knl" in spec:
             options.append("--with-avx-512-kernels")
             options.append("--with-memalign=64")
-        elif "memalign=4" in spec:
-            options.append("--with-memalign=4")
-        elif "memalign=8" in spec:
-            options.append("--with-memalign=8")
-        elif "memalign=16" in spec:
-            options.append("--with-memalign=16")
-        elif "memalign=32" in spec:
-            options.append("--with-memalign=32")
-        elif "memalign=64" in spec:
-            options.append("--with-memalign=64")
+        elif self.spec.variants["memalign"].value != "none":
+            alignement = self.spec.variants["memalign"].value
+            options.append(f"--with-memalign={alignement}")
 
         if "+X" in spec:
             options.append("--with-x=1")
