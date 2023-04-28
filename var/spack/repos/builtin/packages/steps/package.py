@@ -33,7 +33,6 @@ class Steps(CMakePackage):
     variant(
         "distmesh", default=True, when="+mpi", description="Add solvers based on distributed mesh"
     )
-    variant("distmesh", default=True, when="+mpi", description="Add solvers based on distributed mesh")
     variant("petsc", default=True, description="Use PETSc library for parallel E-Field solver")
     variant("mpi", default=True, description="Use MPI for parallel solvers")
     variant("coverage", default=False, description="Enable code coverage")
