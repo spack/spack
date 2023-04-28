@@ -18,6 +18,7 @@ class PyPastml(PythonPackage):
 
     version("1.9.40", sha256="5334bc8de70a968117240b90d90878ac935be18de6e6e485fb1a8f90cd539fea")
 
+    depends_on("python@3.8:", type=("build", "run"))
     depends_on("py-setuptools", type="build")
 
     depends_on("py-ete3@3.1.1:", type=("build", "run"))

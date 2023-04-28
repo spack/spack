@@ -6,7 +6,7 @@
 from spack.package import *
 
 
-class PyTopiary(PythonPackage):
+class PyTopiaryAsr(PythonPackage):
     """Python framework for doing ancestral sequence reconstruction."""
 
     homepage = "https://github.com/harmslab/topiary"
@@ -22,17 +22,22 @@ class PyTopiary(PythonPackage):
     depends_on("python@3.8:", type=("build", "run"))
     depends_on("py-setuptools", type="build")
 
-    depends_on("py-numpy", type="run")
-    depends_on("py-pandas", type="run")
-    depends_on("py-matplotlib", type="run")
-    depends_on("py-ete3", type="run")
-    depends_on("py-toytree", type="run")
-    depends_on("py-dendropy", type="run")
-    depends_on("py-pastml", type="run")
-    depends_on("py-opentree", type="run")
-    depends_on("py-tqdm", type="run")
-    depends_on("py-mpi4py", type="run")
+    depends_on("py-biopython", type=("build", "run"))
+    depends_on("py-numpy", type=("build", "run"))
+    depends_on("py-pandas", type=("build", "run"))
+    depends_on("py-matplotlib", type=("build", "run"))
+    depends_on("py-ete3", type=("build", "run"))
+    depends_on("py-toytree", type=("build", "run"))
+    depends_on("py-dendropy", type=("build", "run"))
+    depends_on("py-pastml", type=("build", "run"))
+    depends_on("py-openpyxl", type=("build", "run"))
+    depends_on("py-opentree", type=("build", "run"))
+    depends_on("py-tqdm", type=("build", "run"))
+    depends_on("py-xlrd", type=("build", "run"))
+    # while undocumented, this requires mpi4py to run
+    depends_on("py-mpi4py", type=("build", "run"))
 
+    # runtime deps from https://topiary-asr.readthedocs.io/en/latest/installation.html#required-libraries
     depends_on("blast-plus", type="run")
     depends_on("muscle5@5.0:", type="run")
     depends_on("generax@2.0:+mpi", type="run")
@@ -48,10 +53,10 @@ class PyTopiary(PythonPackage):
             filter_file(
                 r"RAXML_BINARY\s*=\s*\"raxml-ng\"$",
                 'RAXML_BINARY = "raxml-ng-mpi"',
-                "topiary/raxml/_raxml.py",
+                join_path("topiary", "raxml", "_raxml.py"),
             )
             filter_file(
                 r"binary\s*=\s*\"raxml-ng\"",
                 'binary = "raxml-ng-mpi"',
-                "topiary/_private/installed.py",
+                join_path("topiary", "_private", "installed.py"),
             )
