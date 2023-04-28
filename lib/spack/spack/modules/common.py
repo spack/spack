@@ -804,41 +804,40 @@ class BaseContext(tengine.Context):
 
 
 def ensure_modules_are_enabled_or_warn():
-    """Ensures that, if a custom configuration file is found, module file generation is enabled.
-    If a custom configuration is found when module file generation is disabled, emits a warning.
+    """Ensures that, if a custom configuration file is found with custom configuration for the
+    default tcl module set, then tcl module file generation is enabled. Otherwise, a warning
+    is emitted.
     """
+
+    # TODO (v0.21 - Remove this function)
+    # Check if TCL module generation is enabled, return early if it is
+    enabled = spack.config.get("modules:default:enable", [])
+    if "tcl" in enabled:
+        return
+
+    # Check if we have custom TCL module sections
     for scope in spack.config.config.file_scopes:
         # Skip default configuration
         if scope.name.startswith("default"):
             continue
 
-        # Account for environment manifest files
-        if scope.name.startswith("env"):
+        data = spack.config.get("modules:default:tcl", scope=scope.name)
+        if data:
             config_file = pathlib.Path(scope.path)
-            with config_file.open() as f:
-                data = syaml.load(f)
-
-            if "modules" in data["spack"]:
-                break
-
-            continue
-
-        config_file = pathlib.Path(scope.path) / "modules.yaml"
-        if config_file.exists():
+            if not scope.name.startswith("env"):
+                config_file = config_file / "modules.yaml"
             break
     else:
         return
 
-    # If we are here we have a custom "modules" section somewhere
-    enabled = spack.config.get("modules:default:enable")
-    if not enabled:
-        msg = (
-            f"detected custom modules.yaml in {config_file}, when module file "
-            f"generation for the default module set is disabled.\n\n\t"
-            f"In Spack v0.20 module file generation has been disabled by default. You might "
-            f"want to check {config_file} and enable module generation explicitly.\n"
-        )
-        warnings.warn(msg)
+    # If we are here we have a custom "modules" section in "config_file"
+    msg = (
+        f"detected custom TCL modules configuration in {config_file}, while TCL module file "
+        f"generation for the default module set is disabled. "
+        f"In Spack v0.20 module file generation has been disabled by default. To enable "
+        f"it run:\n\n\t$ spack config add 'modules:default:enable:[tcl]'\n"
+    )
+    warnings.warn(msg)
 
 
 class BaseModuleFileWriter(object):
