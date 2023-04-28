@@ -26,6 +26,12 @@ class Tandem(CMakePackage):
     variant("domain_dimension", default="2", values=("2", "3"), multi=False)
     variant("min_quadrature_order", default="0")
     variant("libxsmm", default=False, description="installs libxsmm-generator")
+    variant(
+        "build_type",
+        default="Release",
+        description="CMake build type",
+        values=("Debug", "Release", "RelWithDebInfo"),
+    )
 
     depends_on("mpi")
     depends_on("parmetis +int64 +shared")
@@ -34,7 +40,7 @@ class Tandem(CMakePackage):
     depends_on("lua@5.3.2:5.4.4")
     depends_on("eigen@3.4.0")
     depends_on("zlib@1.2.8:1.2.13")
-    depends_on("petsc@3.14.6:3.18.5 +int64 +mumps +scalapack")
+    depends_on("petsc@3.14.6:3.18.5 +int64 +mumps +scalapack memalign=32")
     depends_on("petsc@3.14.6:3.18.5 +int64 +mumps +scalapack +knl", when="target=skylake:")
     # see https://github.com/TEAR-ERC/tandem/issues/45
     conflicts("%intel")
