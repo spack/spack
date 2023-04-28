@@ -144,6 +144,11 @@ class Pika(CMakePackage, CudaPackage, ROCmPackage):
     # Patches
     patch("transform_mpi_includes.patch", when="@0.3.0 +mpi")
     patch("mimalloc_no_version_requirement.patch", when="@:0.5 malloc=mimalloc")
+    patch("generic_context_allocate_guard_0_13_14.patch", when="@0.13:0.14 platform=darwin")
+    patch("generic_context_allocate_guard_0_10_12.patch", when="@0.10:0.12 platform=darwin")
+    patch("posix_stack_non_executable_0_13.patch", when="@0.13 platform=darwin")
+    patch("posix_stack_non_executable_0_6_0_12.patch", when="@0.6:0.12 platform=darwin")
+    patch("posix_stack_non_executable_0_1_0_5.patch", when="@:0.5 platform=darwin")
 
     # Fix missing template instantiation on macOS
     patch(
