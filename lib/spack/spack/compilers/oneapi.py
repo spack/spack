@@ -52,24 +52,26 @@ class Oneapi(Compiler):
         new_extra_rpaths = extra_rpaths or []
         temp_extra_rpaths = set()
         for path in paths:
-            extra_rpaths = [os.path.abspath(os.path.join(path, "..", "..", "lib")), os.path.abspath(os.path.join(path, "..", "..", "compiler", "lib"))]
+            extra_rpaths = [
+                os.path.abspath(os.path.join(path, "..", "..", "lib")),
+                os.path.abspath(os.path.join(path, "..", "..", "compiler", "lib")),
+            ]
             for extra_rpath in extra_rpaths:
                 if os.path.isdir(extra_rpath):
                     temp_extra_rpaths.add(extra_rpath)
         new_extra_rpaths.extend(temp_extra_rpaths)
         super(Oneapi, self).__init__(
-                cspec,
-                operating_system,
-                target,
-                paths,
-                modules,
-                alias,
-                environment,
-                new_extra_rpaths,
-                enable_implicit_rpaths,
-                **kwargs
-            )
-
+            cspec,
+            operating_system,
+            target,
+            paths,
+            modules,
+            alias,
+            environment,
+            new_extra_rpaths,
+            enable_implicit_rpaths,
+            **kwargs,
+        )
 
     @property
     def verbose_flag(self):
