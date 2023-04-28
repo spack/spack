@@ -10,8 +10,8 @@ from spack.package import *
 class Xmlf90(AutotoolsPackage):
     """xmlf90 is a suite of libraries to handle XML in Fortran."""
 
-    homepage = "https://gitlab.com/siesta-project/libraries/xmlf90" 
-    git = "https://gitlab.com/siesta-project/libraries/xmlf90.git" 
+    homepage = "https://gitlab.com/siesta-project/libraries/xmlf90"
+    git = "https://gitlab.com/siesta-project/libraries/xmlf90.git"
     url = "https://gitlab.com/siesta-project/libraries/xmlf90/-/archive/1.5.6/xmlf90-1.5.6.tar.gz"
 
     version("1.5.6", sha256="c4492596c911b668b94fee40a53453f06aef3bc41014b9e2f4b51e640ad20528")

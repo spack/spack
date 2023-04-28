@@ -8,7 +8,7 @@ import os
 from spack.package import *
 
 
-class Libgridxc(CMakePackage,MakefilePackage):
+class Libgridxc(CMakePackage, MakefilePackage):
     """A library to compute the exchange and correlation energy and potential
     in spherical (i.e. an atom) or periodic systems.
     """
@@ -48,12 +48,9 @@ class Libgridxc(CMakePackage,MakefilePackage):
     depends_on("libxc@:4.3.4", when="@0.8.0:")
 
     parallel = False
-    
+
     def cmake_args(self):
-        args = [
-            '-DWITH_MPI=ON',
-            '-DWITH_LIBXC=ON',
-        ]
+        args = ["-DWITH_MPI=ON", "-DWITH_LIBXC=ON"]
         return args
 
     def edit(self, spec, prefix):
