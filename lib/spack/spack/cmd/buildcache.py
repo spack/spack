@@ -43,13 +43,6 @@ def setup_parser(subparser):
     subparsers = subparser.add_subparsers(help="buildcache sub-commands")
 
     push = subparsers.add_parser("push", aliases=["create"], help=push_fn.__doc__)
-    # TODO: remove from Spack 0.21
-    push.add_argument(
-        "-r",
-        "--rel",
-        action="store_true",
-        help="make all rpaths relative before creating tarballs. (deprecated)",
-    )
     push.add_argument("-f", "--force", action="store_true", help="overwrite tarball if it exists.")
     push.add_argument(
         "-u", "--unsigned", action="store_true", help="push unsigned buildcache tarballs"
@@ -126,13 +119,6 @@ def setup_parser(subparser):
     )
     install.add_argument(
         "-m", "--multiple", action="store_true", help="allow all matching packages "
-    )
-    # TODO: remove from Spack 0.21
-    install.add_argument(
-        "-a",
-        "--allow-root",
-        action="store_true",
-        help="allow install root string in binary files after RPATH substitution. (deprecated)",
     )
     install.add_argument(
         "-u",
@@ -449,9 +435,6 @@ def push_fn(args):
             "Spack 0.21, use positional arguments instead."
         )
 
-    if args.rel:
-        tty.warn("The --rel flag is deprecated and will be removed in Spack 0.21")
-
     # TODO: remove this in 0.21. If we have mirror_flag, the first
     # spec is in the positional mirror arg due to argparse limitations.
     input_specs = args.specs
@@ -522,9 +505,6 @@ def install_fn(args):
     """install from a binary package"""
     if not args.specs:
         tty.die("a spec argument is required to install from a buildcache")
-
-    if args.allow_root:
-        tty.warn("The --allow-root flag is deprecated and will be removed in Spack 0.21")
 
     query = bindist.BinaryCacheQuery(all_architectures=args.otherarch)
     matches = spack.store.find(args.specs, multiple=args.multiple, query_fn=query)
