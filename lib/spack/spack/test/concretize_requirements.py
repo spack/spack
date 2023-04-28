@@ -350,8 +350,7 @@ packages:
 
 @pytest.mark.regression("37180")
 def test_require_cflags(concretize_scope, test_repo):
-    """Ensures that flags can be required from configuration.
-    """
+    """Ensures that flags can be required from configuration."""
     if spack.config.get("config:concretizer") == "original":
         pytest.skip("Original concretizer does not support configuration" " requirements")
 
