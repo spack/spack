@@ -52,7 +52,6 @@ class Steps(CMakePackage):
     # Build with `ninja` instead of `make`
     generator("ninja")
 
-    conflicts("+distmesh~mpi", msg="steps+distmesh requires +mpi")
     depends_on("benchmark", type=("build", "test"))
     depends_on("blas")
     depends_on("boost", type="build")
