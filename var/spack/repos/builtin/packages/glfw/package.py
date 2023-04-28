@@ -15,6 +15,7 @@ class Glfw(CMakePackage):
     homepage = "https://www.glfw.org/"
     url = "https://github.com/glfw/glfw/archive/3.3.2.tar.gz"
 
+    version("3.3.8", sha256="f30f42e05f11e5fc62483e513b0488d5bceeab7d9c5da0ffe2252ad81816c713")
     version("3.3.2", sha256="98768e12e615fbe9f3386f5bbfeb91b5a3b45a8c4c77159cef06b1f6ff749537")
     version("3.3.1", sha256="6bca16e69361798817a4b62a5239a77253c29577fcd5d52ae8b85096e514177f")
     version("3.3", sha256="81bf5fde487676a8af55cb317830703086bb534c53968d71936e7b48ee5a0f3e")
