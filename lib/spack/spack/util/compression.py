@@ -708,7 +708,7 @@ def extension_from_path(path):
 
 def strip_compression_extension(path, ext=None):
     """Returns path with last supported or provided archive extension stripped"""
-    path = expand_contracted_extension_in_path(path, ext)
+    path = expand_contracted_extension_in_path(path)
     exts_to_check = EXTS
     if ext:
         exts_to_check = [ext]
