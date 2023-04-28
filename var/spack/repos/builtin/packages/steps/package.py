@@ -64,7 +64,6 @@ class Steps(CMakePackage):
     depends_on("likwid", when="+likwid")
     depends_on("metis+int64")
     depends_on("mpi", when="+mpi")
-    depends_on("ninja", type="build")
     depends_on("omega-h+gmsh+mpi", when="~bundle+distmesh")
     depends_on("petsc~debug+int64+mpi", when="+petsc+mpi")
     depends_on("petsc~debug+int64~mpi", when="+petsc~mpi")
