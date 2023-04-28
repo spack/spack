@@ -83,7 +83,7 @@ def check_entry(path, data):
     if s.st_gid != data["group"]:
         res.add_error(path, "group")
 
-    # Because this was poorly implemented in the past, `stat(...).st_mode` was stored
+    # In the past, `stat(...).st_mode` was stored
     # instead of `lstat(...).st_mode`. So, ignore mode errors for symlinks.
     if not stat.S_ISLNK(s.st_mode) and s.st_mode != data["mode"]:
         res.add_error(path, "mode")
