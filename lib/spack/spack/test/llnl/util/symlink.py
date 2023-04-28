@@ -28,7 +28,7 @@ def stage(tmpdir_factory):
     shutil.rmtree(test_parent_dir)
 
 
-def test_symlink__file(stage):
+def test_symlink_file(stage):
     """Test the symlink.symlink functionality on all operating systems for a file"""
     test_dir = tempfile.mkdtemp(dir=stage)
     fd, real_file = tempfile.mkstemp(prefix="real", suffix=".txt", dir=test_dir)
@@ -43,7 +43,7 @@ def test_symlink__file(stage):
         os.close(fd)
 
 
-def test_symlink__dir(stage):
+def test_symlink_dir(stage):
     """Test the symlink.symlink functionality on all operating systems for a directory"""
     test_dir = tempfile.mkdtemp(dir=stage)
     real_dir = os.path.join(test_dir, "real_dir")
@@ -55,7 +55,7 @@ def test_symlink__dir(stage):
     assert symlink.islink(link_dir)
 
 
-def test_symlink__source_not_exists(stage):
+def test_symlink_source_not_exists(stage):
     """Test the symlink.symlink method for the case where a source path does not exist"""
     test_dir = tempfile.mkdtemp(dir=stage)
     real_dir = os.path.join(test_dir, "real_dir")
@@ -69,7 +69,7 @@ def test_symlink__source_not_exists(stage):
         ...
 
 
-def test_symlink__src_relative_to_link(stage):
+def test_symlink_src_relative_to_link(stage):
     """Test the symlink.symlink functionality where the source value exists relative to the link
     but not relative to the cwd"""
     test_dir = tempfile.mkdtemp(dir=stage)
@@ -95,7 +95,7 @@ def test_symlink__src_relative_to_link(stage):
         os.close(fd)
 
 
-def test_symlink__link_exists(stage):
+def test_symlink_link_exists(stage):
     """Test the symlink.symlink method for the case where a link already exists"""
     test_dir = tempfile.mkdtemp(dir=stage)
     real_dir = os.path.join(test_dir, "real_dir")
@@ -113,7 +113,7 @@ def test_symlink__link_exists(stage):
 
 @pytest.mark.skipif(not symlink._windows_can_symlink(), reason="Test requires elevated privileges")
 @pytest.mark.skipif(sys.platform != "win32", reason="Test is only for Windows")
-def test_symlink__win_file(stage):
+def test_symlink_win_file(stage):
     """Check that symlink.symlink makes a symlink file when run with elevated permissions"""
     test_dir = tempfile.mkdtemp(dir=stage)
     fd, real_file = tempfile.mkstemp(prefix="real", suffix=".txt", dir=test_dir)
@@ -134,7 +134,7 @@ def test_symlink__win_file(stage):
 
 @pytest.mark.skipif(not symlink._windows_can_symlink(), reason="Test requires elevated privileges")
 @pytest.mark.skipif(sys.platform != "win32", reason="Test is only for Windows")
-def test_symlink__win_dir(stage):
+def test_symlink_win_dir(stage):
     """Check that symlink.symlink makes a symlink dir when run with elevated permissions"""
     test_dir = tempfile.mkdtemp(dir=stage)
     real_dir = os.path.join(test_dir, "real")
@@ -189,7 +189,7 @@ def test_windows_create_hard_link(stage):
 
 
 @pytest.mark.skipif(sys.platform != "win32", reason="Test is only for Windows")
-def test_windows_create_link__dir(stage):
+def test_windows_create_link_dir(stage):
     """Test the functionality of the windows_create_link method with a directory
     which should result in making a junction.
     """
@@ -210,7 +210,7 @@ def test_windows_create_link__dir(stage):
 
 
 @pytest.mark.skipif(sys.platform != "win32", reason="Test is only for Windows")
-def test_windows_create_link__file(stage):
+def test_windows_create_link_file(stage):
     """Test the functionality of the windows_create_link method with a file
     which should result in the creation of a hard link.
     """
