@@ -23,7 +23,7 @@ from typing import Callable, Iterable, List, Match, Optional, Tuple, Union
 
 from llnl.util import tty
 from llnl.util.lang import dedupe, memoized
-from llnl.util.symlink import islink, symlink, resolve_link_target_relative_to_the_link
+from llnl.util.symlink import islink, resolve_link_target_relative_to_the_link, symlink
 
 from spack.util.executable import Executable, which
 from spack.util.path import path_to_os_path, system_path_filter
@@ -799,20 +799,6 @@ def copy_tree(
                 if symlinks:
                     target = os.readlink(s)
 
-                    ignore = ignore or (lambda filename: False)
-
-                    # Build an accumulating list of all parent file paths to check against the
-                    # ignores func to make sure the source file is going to be copied into the new
-                    # tree before adding the symlink to the list of links to make after files
-                    # have been copied.
-                    all_parents = accumulate(target.split(os.sep), lambda x, y: os.path.join(x, y))
-                    if any(map(ignore, all_parents)):
-                        tty.msg(
-                            f"Ignoring link {d} because the source or a part of the source's "
-                            f"path is included in the ignores."
-                        )
-                        continue
-
                     def escaped_path(path):
                         return path.replace("\\", r"\\")
 
@@ -1297,6 +1283,17 @@ def traverse_tree(
         source_child = os.path.join(source_path, f)
         dest_child = os.path.join(dest_path, f)
         rel_child = os.path.join(rel_path, f)
+
+        # If the source path is a link and the link's source is ignored, then ignore the link too.
+        if os.path.islink(source_child) and not follow_links:
+            target = os.readlink(source_child)
+            all_parents = accumulate(target.split(os.sep), lambda x, y: os.path.join(x, y))
+            if any(map(ignore, all_parents)):
+                tty.warn(
+                    f"Skipping {source_path} because the source or a part of the source's "
+                    f"path is included in the ignores."
+                )
+                continue
 
         # Treat as a directory
         # TODO: for symlinks, os.path.isdir looks for the link target. If the

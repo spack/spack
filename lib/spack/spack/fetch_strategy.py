@@ -35,7 +35,7 @@ import llnl.util
 import llnl.util.filesystem as fs
 import llnl.util.tty as tty
 from llnl.util.filesystem import get_single_file, mkdirp, temp_cwd, temp_rename, working_dir
-from llnl.util.symlink import SymlinkError, symlink
+from llnl.util.symlink import symlink
 
 import spack.config
 import spack.error

@@ -43,7 +43,7 @@ def test_fetch(tmpdir, _fetch_method):
     url = url_util.path_to_file_url(cache)
     with spack.config.override("config:url_fetch_method", _fetch_method):
         fetcher = CacheURLFetchStrategy(url=url)
-        newpath = os.path.join(testpath, '..', 'newpath')
+        newpath = os.path.join(testpath, "..", "newpath")
         mkdirp(newpath)
         with Stage(fetcher, path=newpath) as stage:
             source_path = stage.source_path
