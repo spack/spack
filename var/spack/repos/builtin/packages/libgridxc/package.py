@@ -28,6 +28,7 @@ class Libgridxc(CMakePackage, MakefilePackage):
     version("0.8.0", sha256="ff89b3302f850d1d9f651951e4ade20dfa4c71c809a2d86382c6797392064c9c")
     version("0.7.6", sha256="058b80f40c85997eea0eae3f15b7cc8105f817e59564106308b22f57a03b216b")
 
+    # Version dependens file system
     build_system(
         conditional("cmake", when="@1.1.0:"),
         conditional("makefile", when="@:0.10.1"),
@@ -49,10 +50,31 @@ class Libgridxc(CMakePackage, MakefilePackage):
 
     parallel = False
 
+    #
+    # ------- CMake Install Procedure ------
+    #
+
     def cmake_args(self):
         args = ["-DWITH_MPI=ON", "-DWITH_LIBXC=ON"]
         return args
 
+    @when("build_system=cmake")
+    def build_targets(self):
+        # Since we override build_targets for the legacy build
+        # we have to also define it for the new build path
+        return []
+
+    @when("build_system=cmake")
+    def install(self, spec, prefix):
+        # Since we override install for the legacy build
+        # we have to wrap the original CMakePackage.install here
+        super(CMakePackage, self).install(spec, prefix)
+
+    #
+    # ------- Legacy Install Procedure ------
+    #
+
+    @when("build_system=makefile")
     def edit(self, spec, prefix):
         sh = which("sh")
         with working_dir("build", create=True):
@@ -63,7 +85,7 @@ class Libgridxc(CMakePackage, MakefilePackage):
     @when("build_system=makefile")
     def build_targets(self):
         # Legacy build options
-        args += ["PREFIX={0}".format(self.prefix)]
+        args = ["PREFIX={0}".format(self.prefix)]
         if self.spec.satisfies("@0.8.0:"):
             args += ["WITH_LIBXC=1", "LIBXC_ROOT={0}".format(self.spec["libxc"].prefix)]
         return args
@@ -82,3 +104,4 @@ class Libgridxc(CMakePackage, MakefilePackage):
             join_path(self.prefix, "share", "org.siesta-project", "libxc.mk"),
         )
         os.remove(join_path(self.prefix, "libxc.mk"))
+
