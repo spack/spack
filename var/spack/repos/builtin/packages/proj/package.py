@@ -88,8 +88,7 @@ class Proj(CMakePackage, AutotoolsPackage):
     depends_on("sqlite@3.11:", when="@6:")
     depends_on("libtiff@4:", when="@7:+tiff")
     depends_on("curl@7.29:", when="@7:+curl")
-    depends_on("googletest@1.8:", when="@6", type=("build", "test"))
-    depends_on("googletest@1.8:", when="@7:", type="test")
+    depends_on("googletest@1.8:", when="@6:", type="test")
 
     build_system(
         conditional("autotools", when="@:8"), conditional("cmake", when="@5:"), default="cmake"
@@ -125,7 +124,7 @@ class CMakeBuilder(BaseBuilder, cmake.CMakeBuilder):
             self.define_from_variant("ENABLE_TIFF", "tiff"),
             self.define_from_variant("ENABLE_CURL", "curl"),
         ]
-        if self.spec.satisfies("@6:"):
+        if self.spec.satisfies("@6:") and self.pkg.run_tests:
             args.append(self.define("USE_EXTERNAL_GTEST", True))
         return args
 
