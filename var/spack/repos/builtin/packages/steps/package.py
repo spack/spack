@@ -24,11 +24,6 @@ class Steps(CMakePackage):
         default=False,
         description="Perform additional code checks like code formatting or static analysis",
     )
-    variant(
-        "native",
-        default=False if sys.platform == "darwin" else True,
-        description="Generate non-portable arch-specific code",
-    )
     variant("lapack", default=False, description="Use new BDSystem/Lapack code for E-Field solver")
     variant(
         "distmesh", default=True, when="+mpi", description="Add solvers based on distributed mesh"
@@ -100,7 +95,6 @@ class Steps(CMakePackage):
             self.define_from_variant("STEPS_USE_CALIPER_PROFILING", "caliper"),
             self.define_from_variant("STEPS_USE_DIST_MESH", "distmesh"),
             self.define_from_variant("STEPS_USE_LIKWID_PROFILING", "likwid"),
-            self.define_from_variant("TARGET_NATIVE_ARCH", "native"),
             self.define_from_variant("USE_BDSYSTEM_LAPACK", "lapack"),
             self.define_from_variant("USE_MPI", "mpi"),
             self.define_from_variant("USE_PETSC", "petsc"),
