@@ -24,7 +24,7 @@ class Daos(SConsPackage):
     patch("0001-LIBPATH-fix-for-ALT_PREFIX.2.patch", when="@2.2.0:")
 
     depends_on("argobots@1.1:")
-    depends_on("boost@develop+python", type="build")
+    depends_on("boost", type="build")
     depends_on("cmocka", type="build")
     depends_on("go", type="build")
     depends_on("hwloc")
