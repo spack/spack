@@ -28,7 +28,7 @@ def compute_hash(path, block_size=1048576):
     return base64.b32encode(hasher.digest()).decode()
 
 
-def create_manifest_entry(path) -> Dict[str, Any]:
+def create_manifest_entry(path: str) -> Dict[str, Any]:
     try:
         s = os.lstat(path)
     except OSError:
