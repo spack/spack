@@ -258,31 +258,6 @@ def test_default_rpaths_install_nondefault_layout(mirror_dir):
 @pytest.mark.requires_executables(*args)
 @pytest.mark.maybeslow
 @pytest.mark.nomockstage
-@pytest.mark.usefixtures("default_config", "cache_directory", "install_dir_default_layout")
-def test_relative_rpaths_create_default_layout(mirror_dir):
-    """
-    Test the creation and installation of buildcaches with relative
-    rpaths into the default directory layout scheme.
-    """
-
-    gspec, cspec = Spec("garply").concretized(), Spec("corge").concretized()
-
-    # Install 'corge' without using a cache
-    install_cmd("--no-cache", cspec.name)
-
-    # Create build cache with relative rpaths
-    buildcache_cmd("push", "-aur", "-d", mirror_dir, cspec.name)
-
-    # Create mirror index
-    buildcache_cmd("update-index", "-d", mirror_dir)
-
-    # Uninstall the package and deps
-    uninstall_cmd("-y", "--dependents", gspec.name)
-
-
-@pytest.mark.requires_executables(*args)
-@pytest.mark.maybeslow
-@pytest.mark.nomockstage
 @pytest.mark.usefixtures(
     "default_config", "cache_directory", "install_dir_default_layout", "test_mirror"
 )
