@@ -47,6 +47,7 @@ def mock_package_perms(monkeypatch):
     yield perms
 
 
+# TODO: johnwparent - enable test after file permissions fix
 @pytest.mark.skipif(sys.platform == "win32", reason="File permissions incorrect on windows")
 def test_modules_written_with_proper_permissions(
     mock_module_filename, mock_package_perms, mock_packages, config
@@ -61,6 +62,7 @@ def test_modules_written_with_proper_permissions(
     assert mock_package_perms & os.stat(mock_module_filename).st_mode == mock_package_perms
 
 
+# TODO: johnwparent - enable test after file permissions fix
 @pytest.mark.skipif(
     sys.platform == "win32", reason="True symlinks need admin permissions on windows"
 )
