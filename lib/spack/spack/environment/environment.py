@@ -500,6 +500,10 @@ class ViewDescriptor:
     def exclude_fn(self, spec):
         return not any(spec.satisfies(e) for e in self.exclude)
 
+    def update_root(self, new_path):
+        self.raw_root = new_path
+        self.root = spack.util.path.canonicalize_path(new_path, default_wd=self.base)
+
     def __eq__(self, other):
         return all(
             [
@@ -1560,10 +1564,30 @@ class Environment:
         return self.views[default_view_name]
 
     def update_default_view(self, path_or_bool: Union[str, bool]) -> None:
+        """Updates the path of the default view.
+
+        If the argument passed as input is False the default view is deleted, if present. The
+        manifest will have an entry "view: false".
+
+        If the argument passed as input is True a default view is created, if not already present.
+        The manifest will have an entry "view: true". If a default view is already declared, it
+        will be left untouched.
+
+        If the argument passed as input is a path a default view pointing to that path is created,
+        if not present already. If a default view is already declared, only its "root" will be
+        changed.
+
+        Args:
+            path_or_bool: either True, or False or a path
+        """
         view_path = self.view_path_default if path_or_bool is True else path_or_bool
 
         # We don't have the view, and we want to remove it
         if default_view_name not in self.views and path_or_bool is False:
+            return
+
+        # We want to enable the view, but we have it already
+        if default_view_name in self.views and path_or_bool is True:
             return
 
         # We have the view, and we want to set it to the same path
@@ -1576,7 +1600,13 @@ class Environment:
             self.manifest.remove_default_view()
             return
 
-        self.views[default_view_name] = ViewDescriptor(self.path, view_path)
+        # If we had a default view already just update its path,
+        # else create a new one and add it to views
+        if default_view_name in self.views:
+            self.default_view.update_root(view_path)
+        else:
+            self.views[default_view_name] = ViewDescriptor(self.path, view_path)
+
         self.manifest.set_default_view(self._default_view_as_yaml())
 
     def delete_default_view(self) -> None:

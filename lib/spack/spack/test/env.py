@@ -229,6 +229,7 @@ def test_removing_from_non_existing_list_fails(tmp_path):
         (True, "./view"),
         (False, True),
         ("./view", True),
+        ("./view", False),
         (True, True),
         (False, False),
     ],
@@ -240,7 +241,58 @@ def test_update_default_view(init_view, update_value, tmp_path, mock_packages, c
     env.write(regenerate=True)
     if not isinstance(update_value, bool):
         assert env.default_view.raw_root == update_value
-    assert env.manifest.pristine_yaml_content["spack"]["view"] == update_value
+
+    expected_value = update_value
+    if isinstance(init_view, str) and update_value is True:
+        expected_value = init_view
+
+    assert env.manifest.pristine_yaml_content["spack"]["view"] == expected_value
+
+
+@pytest.mark.parametrize(
+    "initial_content,update_value,expected_view",
+    [
+        (
+            """
+spack:
+  specs:
+  - mpileaks
+  view:
+    default:
+      root: ./view-gcc
+      select: ['%gcc']
+      link_type: symlink
+""",
+            "./another-view",
+            {"root": "./another-view", "select": ["%gcc"], "link_type": "symlink"},
+        ),
+        (
+            """
+spack:
+  specs:
+  - mpileaks
+  view:
+    default:
+      root: ./view-gcc
+      select: ['%gcc']
+      link_type: symlink
+""",
+            True,
+            {"root": "./view-gcc", "select": ["%gcc"], "link_type": "symlink"},
+        ),
+    ],
+)
+def test_update_default_complex_view(
+    initial_content, update_value, expected_view, tmp_path, mock_packages, config
+):
+    spack_yaml = tmp_path / "spack.yaml"
+    spack_yaml.write_text(initial_content)
+
+    env = ev.Environment(tmp_path)
+    env.update_default_view(update_value)
+    env.write(regenerate=True)
+
+    assert env.default_view.to_dict() == expected_view
 
 
 @pytest.mark.parametrize("filename", [ev.manifest_name, ev.lockfile_name])
