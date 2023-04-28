@@ -87,8 +87,9 @@ class Steps(CMakePackage):
         filter_file(r"(-Wno-double-promotion)", r"-Wno-error \1", "src/steps/util/CMakeLists.txt")
 
     def cmake_args(self):
-        python_interpreter = self.spec["python"].command
         args = [
+            self.define("BLAS_LIBRARIES", self.spec["blas"].libs.joined(";")),
+            self.define("PYTHON_EXECUTABLE", self.spec["python"].command),
             self.define("STEPS_INSTALL_PYTHON_DEPS", False),
             self.define_from_variant("BUILD_STOCHASTIC_TESTS", "stochtests"),
             self.define_from_variant("BUILD_TESTING", "codechecks"),
@@ -102,8 +103,6 @@ class Steps(CMakePackage):
             self.define_from_variant("USE_BDSYSTEM_LAPACK", "lapack"),
             self.define_from_variant("USE_MPI", "mpi"),
             self.define_from_variant("USE_PETSC", "petsc"),
-            "-DBLAS_LIBRARIES=" + self.spec["blas"].libs.joined(";"),
-            f"-DPYTHON_EXECUTABLE={python_interpreter}",
         ]
 
         args.extend(
