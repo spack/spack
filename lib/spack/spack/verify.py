@@ -5,6 +5,8 @@
 import base64
 import hashlib
 import os
+import stat
+from typing import Any, Dict
 
 import llnl.util.tty as tty
 
@@ -14,35 +16,33 @@ import spack.util.file_permissions as fp
 import spack.util.spack_json as sjson
 
 
-def compute_hash(path):
-    with open(path, "rb") as f:
-        sha1 = hashlib.sha1(f.read()).digest()
-        b32 = base64.b32encode(sha1)
-        return b32.decode()
+def compute_hash(path: str, block_size: int = 1048576) -> str:
+    # why is this not using spack.util.crypto.checksum...
+    hasher = hashlib.sha1()
+    with open(path, "rb") as file:
+        while True:
+            data = file.read(block_size)
+            if not data:
+                break
+            hasher.update(data)
+    return base64.b32encode(hasher.digest()).decode()
 
 
-def create_manifest_entry(path):
-    data = {}
+def create_manifest_entry(path: str) -> Dict[str, Any]:
+    try:
+        s = os.lstat(path)
+    except OSError:
+        return {}
 
-    if os.path.exists(path):
-        stat = os.stat(path)
+    data: Dict[str, Any] = {"mode": s.st_mode, "owner": s.st_uid, "group": s.st_gid}
 
-        data["mode"] = stat.st_mode
-        data["owner"] = stat.st_uid
-        data["group"] = stat.st_gid
+    if stat.S_ISLNK(s.st_mode):
+        data["dest"] = os.readlink(path)
 
-        if os.path.islink(path):
-            data["type"] = "link"
-            data["dest"] = os.readlink(path)
-
-        elif os.path.isdir(path):
-            data["type"] = "dir"
-
-        else:
-            data["type"] = "file"
-            data["hash"] = compute_hash(path)
-            data["time"] = stat.st_mtime
-            data["size"] = stat.st_size
+    elif stat.S_ISREG(s.st_mode):
+        data["hash"] = compute_hash(path)
+        data["time"] = s.st_mtime
+        data["size"] = s.st_size
 
     return data
 
@@ -75,38 +75,28 @@ def check_entry(path, data):
         res.add_error(path, "added")
         return res
 
-    stat = os.stat(path)
+    s = os.lstat(path)
 
     # Check for all entries
-    if stat.st_mode != data["mode"]:
-        res.add_error(path, "mode")
-    if stat.st_uid != data["owner"]:
+    if s.st_uid != data["owner"]:
         res.add_error(path, "owner")
-    if stat.st_gid != data["group"]:
+    if s.st_gid != data["group"]:
         res.add_error(path, "group")
 
-    # Check for symlink targets  and listed as symlink
-    if os.path.islink(path):
-        if data["type"] != "link":
-            res.add_error(path, "type")
-        if os.readlink(path) != data.get("dest", ""):
-            res.add_error(path, "link")
-
-    # Check directories are listed as directory
-    elif os.path.isdir(path):
-        if data["type"] != "dir":
-            res.add_error(path, "type")
-
-    else:
+    # In the past, `stat(...).st_mode` was stored
+    # instead of `lstat(...).st_mode`. So, ignore mode errors for symlinks.
+    if not stat.S_ISLNK(s.st_mode) and s.st_mode != data["mode"]:
+        res.add_error(path, "mode")
+    elif stat.S_ISLNK(s.st_mode) and os.readlink(path) != data.get("dest"):
+        res.add_error(path, "link")
+    elif stat.S_ISREG(s.st_mode):
         # Check file contents against hash and listed as file
         # Check mtime and size as well
-        if stat.st_size != data["size"]:
+        if s.st_size != data["size"]:
             res.add_error(path, "size")
-        if stat.st_mtime != data["time"]:
+        if s.st_mtime != data["time"]:
             res.add_error(path, "mtime")
-        if data["type"] != "file":
-            res.add_error(path, "type")
-        if compute_hash(path) != data.get("hash", ""):
+        if compute_hash(path) != data.get("hash"):
             res.add_error(path, "hash")
 
     return res
