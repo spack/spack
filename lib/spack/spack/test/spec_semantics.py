@@ -621,65 +621,62 @@ class TestSpecSemantics(object):
         # Testing named strings ie {string} and whether we get
         # the correct component
         # Mixed case intentional to test both
+        # Fields are as follow
+        # fmt_str: the format string to test
+        # sigil: the portion that is a sigil (may be empty string)
+        # prop: the property to get
+        # component: subcomponent of spec from which to get property
         package_segments = [
-            ("{NAME}", "name"),
-            ("{VERSION}", "versions"),
-            ("{compiler}", "compiler"),
-            ("{compiler_flags}", "compiler_flags"),
-            ("{variants}", "variants"),
-            ("{architecture}", "architecture"),
+            ("{NAME}", "", "name", lambda spec: spec),
+            ("{VERSION}", "", "versions", lambda spec: spec),
+            ("{compiler}", "", "compiler", lambda spec: spec),
+            ("{compiler_flags}", "", "compiler_flags", lambda spec: spec),
+            ("{variants}", "", "variants", lambda spec: spec),
+            ("{architecture}", "", "architecture", lambda spec: spec),
+            ("{@VERSIONS}", "@", "version", lambda spec: spec),
+            ("{%compiler}", "%", "compiler", lambda spec: spec),
+            ("{arch=architecture}", "arch=", "architecture", lambda spec: spec),
+            ("{compiler.name}", "", "name", lambda spec: spec.compiler),
+            ("{compiler.version}", "", "versions", lambda spec: spec.compiler),
+            ("{%compiler.name}", "%", "name", lambda spec: spec.compiler),
+            ("{@compiler.version}", "@", "version", lambda spec: spec.compiler),
+            ("{architecture.platform}", "", "platform", lambda spec: spec.architecture),
+            ("{architecture.os}", "", "os", lambda spec: spec.architecture),
+            ("{architecture.target}", "", "target", lambda spec: spec.architecture),
+            ("{prefix}", "", "prefix", lambda spec: spec),
         ]
 
-        sigil_package_segments = [
-            ("{@VERSIONS}", "@" + str(spec.version)),
-            ("{%compiler}", "%" + str(spec.compiler)),
-            ("{arch=architecture}", "arch=" + str(spec.architecture)),
-        ]
-
-        compiler_segments = [("{compiler.name}", "name"), ("{compiler.version}", "versions")]
-
-        sigil_compiler_segments = [
-            ("{%compiler.name}", "%" + spec.compiler.name),
-            ("{@compiler.version}", "@" + str(spec.compiler.version)),
-        ]
-
-        architecture_segments = [
-            ("{architecture.platform}", "platform"),
-            ("{architecture.os}", "os"),
-            ("{architecture.target}", "target"),
+        hash_segments = [
+            ("{hash:7}", "", lambda s: s.dag_hash(7)),
+            ("{/hash}", "/", lambda s: "/" + s.dag_hash()),
         ]
 
         other_segments = [
             ("{spack_root}", spack.paths.spack_root),
             ("{spack_install}", spack.store.layout.root),
-            ("{hash:7}", spec.dag_hash(7)),
-            ("{/hash}", "/" + spec.dag_hash()),
         ]
 
-        for named_str, prop in package_segments:
-            expected = getattr(spec, prop, "")
-            actual = spec.format(named_str)
-            assert str(expected).strip() == actual
+        def depify(depname, fmt_str, sigil):
+            sig = len(sigil)
+            opening = fmt_str[: 1 + sig]
+            closing = fmt_str[1 + sig :]
+            return spec[depname], opening + f"^{depname}." + closing
 
-        for named_str, expected in sigil_package_segments:
-            actual = spec.format(named_str)
-            assert expected == actual
+        def check_prop(check_spec, fmt_str, prop, getter):
+            actual = spec.format(fmt_str)
+            expected = getter(check_spec)
+            assert actual == str(expected).strip()
 
-        compiler = spec.compiler
-        for named_str, prop in compiler_segments:
-            expected = getattr(compiler, prop, "")
-            actual = spec.format(named_str)
-            assert str(expected) == actual
+        for named_str, sigil, prop, get_component in package_segments:
+            getter = lambda s: sigil + str(getattr(get_component(s), prop, ""))
+            check_prop(spec, named_str, prop, getter)
+            mpi, fmt_str = depify("mpi", named_str, sigil)
+            check_prop(mpi, fmt_str, prop, getter)
 
-        for named_str, expected in sigil_compiler_segments:
-            actual = spec.format(named_str)
-            assert expected == actual
-
-        arch = spec.architecture
-        for named_str, prop in architecture_segments:
-            expected = getattr(arch, prop, "")
-            actual = spec.format(named_str)
-            assert str(expected) == actual
+        for named_str, sigil, getter in hash_segments:
+            assert spec.format(named_str) == getter(spec)
+            callpath, fmt_str = depify("callpath", named_str, sigil)
+            assert spec.format(fmt_str) == getter(callpath)
 
         for named_str, expected in other_segments:
             actual = spec.format(named_str)
