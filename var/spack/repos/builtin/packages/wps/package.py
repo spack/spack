@@ -16,6 +16,7 @@ class Wps(Package):
     url = "https://github.com/wrf-model/WPS/archive/v4.2.tar.gz"
     maintainers("MichaelLaufer")
 
+    version("4.5", sha256="3cb29107f85b81af05b7dd494e5d4a13cf1b33b87d7e2911a64a7abc59bf55f3")
     version("4.4", sha256="fe9c8d8a9a4abbf800b30e6cbb378604c6040e4536f5594b8e2dae43e942e2b3")
     version("4.3.1", sha256="db6da44a2ca68cc289e98ab388a53c27283eb4ed8e92edee268466543fdedb0e")
     version("4.3", sha256="1913cb24de549f029d65635feea27f3304a8f42ec025954a0887651fc89d1e9e")
