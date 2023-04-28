@@ -58,12 +58,13 @@ class Brion(CMakePackage):
     )
 
     def patch(self):
-        filter_file(
-            r"-Werror",
-            "-Werror -Wno-error=deprecated-copy -Wno-error=range-loop-construct "
-            "-Wno-error=unused-function",
-            "CMake/CompileOptions.cmake",
-        )
+        if self.spec.satisfies("%gcc@12:"):
+            filter_file(
+                r"-Werror",
+                "-Werror -Wno-error=deprecated-copy -Wno-error=range-loop-construct "
+                "-Wno-error=unused-function",
+                "CMake/CompileOptions.cmake",
+            )
 
     def cmake_args(self):
         args = [
