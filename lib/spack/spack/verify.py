@@ -16,7 +16,7 @@ import spack.util.file_permissions as fp
 import spack.util.spack_json as sjson
 
 
-def compute_hash(path, block_size=1048576):
+def compute_hash(path: str, block_size: int = 1048576) -> str:
     # why is this not using spack.util.crypto.checksum...
     hasher = hashlib.sha1()
     with open(path, "rb") as file:
