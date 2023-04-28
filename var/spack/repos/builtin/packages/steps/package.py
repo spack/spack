@@ -87,9 +87,7 @@ class Steps(CMakePackage):
         filter_file(r"(-Wno-double-promotion)", r"-Wno-error \1", "src/steps/util/CMakeLists.txt")
 
     def cmake_args(self):
-        python_interpreter = self.spec["python"].prefix.bin.python + str(
-            self.spec["python"].version.up_to(1)
-        )
+        python_interpreter = self.spec["python"].command
         args = [
             self.define("STEPS_INSTALL_PYTHON_DEPS", False),
             self.define_from_variant("BUILD_STOCHASTIC_TESTS", "stochtests"),
