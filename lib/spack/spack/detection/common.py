@@ -218,10 +218,8 @@ def update_configuration(detected_packages, scope=None, buildable=True):
 
 
 def _windows_drive():
-    """Return Windows drive string"""
-    # HOMEDRIVE is set by shell32!RegenerateUserEnvironment
-    # Which is only set when the user logs into a desktop session
-    # Secondary logins or service logins/accounts do not have this
+    """Return Windows drive string extracted from PROGRAMFILES
+    env var, which is garunteed to be defined for all logins"""
     drive = re.match(r"([a-zA-Z]:)", os.environ["PROGRAMFILES"]).group(1)
     return drive
 
