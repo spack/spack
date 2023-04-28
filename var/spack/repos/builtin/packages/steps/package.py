@@ -30,7 +30,7 @@ class Steps(CMakePackage):
         description="Generate non-portable arch-specific code",
     )
     variant("lapack", default=False, description="Use new BDSystem/Lapack code for E-Field solver")
-    variant("distmesh", default=True, description="Add solvers based on distributed mesh")
+    variant("distmesh", default=True, when="+mpi", description="Add solvers based on distributed mesh")
     variant("petsc", default=True, description="Use PETSc library for parallel E-Field solver")
     variant("mpi", default=True, description="Use MPI for parallel solvers")
     variant("coverage", default=False, description="Enable code coverage")
