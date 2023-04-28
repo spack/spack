@@ -16,7 +16,7 @@ class PyOpentree(PythonPackage):
 
     version("1.0.1", sha256="a765ae37cd72c232c292506c170656aaaa4be81e6de6ccd4845eec01bfe45e4d")
 
-    depends_on("py-setuptools", type="build")
+    depends_on("py-setuptools", type=("build", "run"))
 
     depends_on("py-requests@2.18:", type=("build", "run"))
     depends_on("py-dendropy@4.4.0:", type=("build", "run"))
