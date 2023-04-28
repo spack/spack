@@ -1,21 +1,29 @@
-From 1fe57bb2d3611ba4804f87aed329316ce057c700 Mon Sep 17 00:00:00 2001
+From ca583dffd4f0a9295b766f47cc747a407c3d3bc5 Mon Sep 17 00:00:00 2001
 From: Renjith Ravindran <Renjith.RavindranKannath@amd.com>
-Date: Tue, 18 Apr 2023 05:54:36 +0000
-Subject: [PATCH] Patches to handle file reorg change in tests
+Date: Fri, 28 Apr 2023 22:04:26 +0000
+Subject: [PATCH] Patch to handle file reorg change in tests directory
 
 ---
- samples/0_Intro/square/CMakeLists.txt                |  4 ++--
+ samples/0_Intro/square/CMakeLists.txt                |  8 ++++++--
  samples/0_Intro/square/Makefile                      |  2 +-
  .../12_cmake_hip_add_executable/CMakeLists.txt       |  6 +++---
  .../2_Cookbook/16_assembly_to_executable/Makefile    |  8 ++++----
  samples/2_Cookbook/17_llvm_ir_to_executable/Makefile | 12 ++++++------
- 5 files changed, 16 insertions(+), 16 deletions(-)
+ 5 files changed, 20 insertions(+), 16 deletions(-)
 
 diff --git a/samples/0_Intro/square/CMakeLists.txt b/samples/0_Intro/square/CMakeLists.txt
-index 104f828..557ce9a 100644
+index 104f828..1a82e51 100644
 --- a/samples/0_Intro/square/CMakeLists.txt
 +++ b/samples/0_Intro/square/CMakeLists.txt
-@@ -32,7 +32,7 @@ endif ()
+@@ -28,11 +28,15 @@ if (NOT DEFINED ROCM_PATH )
+      set ( ROCM_PATH "/opt/rocm"  CACHE STRING "Default ROCM installation directory." )
+ endif ()
+ 
++if (NOT DEFINED HIPIFY_CLANG_PATH )
++     set(HIPIFY_CLANG_PATH $ENV{HIPIFY_CLANG_PATH} CACHE PATH "Path to which hipify-clang has been installed")
++endif ()
++
+ # Search for rocm in common locations
  list(APPEND CMAKE_PREFIX_PATH ${ROCM_PATH}/hip ${ROCM_PATH})
  
  # create square.cpp
@@ -24,7 +32,7 @@ index 104f828..557ce9a 100644
  
  # Find hip
  find_package(hip)
-@@ -45,4 +45,4 @@ set(CMAKE_CXX_LINKER   ${HIP_HIPCC_EXECUTABLE})
+@@ -45,4 +49,4 @@ set(CMAKE_CXX_LINKER   ${HIP_HIPCC_EXECUTABLE})
  add_executable(square square.cpp)
  
  # Link with HIP
@@ -125,5 +133,5 @@ index 835f4b2..0706f44 100644
  SRCS=square.cpp
  
 -- 
-2.17.1
+2.31.1
 
