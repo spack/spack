@@ -121,12 +121,6 @@ class Mbedtls(MakefilePackage):
 
     variant("pic", default=False, description="Compile with position independent code.")
     variant(
-        "build_type",
-        default="Release",
-        description="Build type",
-        values=("Debug", "Release", "RelWithDebInfo", "MinSizeRel"),
-    )
-    variant(
         "libs",
         default="static",
         values=("shared", "static"),
