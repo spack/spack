@@ -85,10 +85,9 @@ class Emacs(AutotoolsPackage, GNUMirrorPackage):
         else:
             args = ["--without-x"]
 
-        # On OS X/macOS, do not build "nextstep/Emacs.app", because
-        # doing so throws an error at build-time
+        # On OS X/macOS, do not build the self-contained "nextstep/Emacs.app"
         if sys.platform == "darwin":
-            args.append("--without-ns")
+            args.append("--disable-ns-self-contained")
 
         args += self.with_or_without("native-compilation", variant="native")
         args += self.with_or_without("gnutls", variant="tls")
@@ -96,6 +95,15 @@ class Emacs(AutotoolsPackage, GNUMirrorPackage):
         args += self.with_or_without("json")
 
         return args
+
+    @run_after("install")
+    def move_macos_app(self):
+        """Move the Emacs.app build on MacOS to <prefix>/Applications.
+        From there users can move it or link it in ~/Applications."""
+        if sys.platform == "darwin":
+            apps_dir = join_path(self.prefix, "Applications")
+            mkdir(apps_dir)
+            move("nextstep/Emacs.app", apps_dir)
 
     def _test_check_versions(self):
         """Perform version checks on installed package binaries."""
