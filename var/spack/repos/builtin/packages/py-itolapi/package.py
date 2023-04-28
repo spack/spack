@@ -18,4 +18,4 @@ class PyItolapi(PythonPackage):
 
     depends_on("py-setuptools", type="build")
 
-    depends_on("py-requests@2.0:3.0", type=("build", "run"))
+    depends_on("py-requests@2", type=("build", "run"))
