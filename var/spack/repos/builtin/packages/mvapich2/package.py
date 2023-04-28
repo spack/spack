@@ -110,7 +110,7 @@ class Mvapich2(AutotoolsPackage):
     )
 
     variant("hwlocv2", default=False, description="Builds mvapich2 with hwloc v2")
-    variant("hwloc-gpu", default=False, description="Enables hwloc graphics")
+    variant("hwloc-graphics", default=False, description="Enables hwloc graphics")
     variant(
         "file_systems",
         description="List of the ROMIO file systems to activate",
@@ -432,7 +432,7 @@ class Mvapich2(AutotoolsPackage):
             args.extend(["--enable-cuda", "--with-cuda={0}".format(spec["cuda"].prefix)])
         else:
             args.append("--disable-cuda")
-        if "~hwloc-gpu" in self.spec:
+        if "~hwloc-graphics" in self.spec:
             args.append("--disable-opencl")
             args.append("--disable-gl")
             args.append("--disable-nvml")
