@@ -383,7 +383,7 @@ def decompressor_for_win(extension):
         path (str): path of the archive file requiring decompression
         extension (str): extension
     """
-
+    extension = expand_contracted_extension(extension)
     # Windows native tar can handle .zip extensions, use standard
     # unzip method
     if re.match(r"zip$", extension):
@@ -404,15 +404,15 @@ def decompressor_for_win(extension):
     # python based decompression strategy
     # Expand extension from contracted extension i.e. tar.gz from .tgz
     # no-op on non contracted extensions
-    expanded_extension = compression_ext_from_compressed_archive(extension)
-    decompressor = _determine_py_decomp_archive_strategy(expanded_extension)
+    compression_extension = compression_ext_from_compressed_archive(extension)
+    decompressor = _determine_py_decomp_archive_strategy(compression_extension)
     if not decompressor:
         raise SpackError(
             "Spack was unable to determine a proper decompression strategy for"
             f"valid extension: {extension}"
             "This is a bug, please file an issue at https://github.com/spack/spack/issues"
         )
-    if "tar" not in expanded_extension:
+    if "tar" not in extension:
         return decompressor
 
     return _win_compressed_tarball_handler(decompressor)
