@@ -222,13 +222,7 @@ def _windows_drive():
     # HOMEDRIVE is set by shell32!RegenerateUserEnvironment
     # Which is only set when the user logs into a desktop session
     # Secondary logins or service logins/accounts do not have this
-    # set. SYSTEMDRIVE is a fallback that may be set.
-    # If that's not set, parse the drive from %USERPROFILE%
-    home_drive = os.environ.get("HOMEDRIVE")
-    sys_drive = os.environ.get("SYSTEMDRIVE")
-    drive = home_drive if home_drive else sys_drive
-    if not drive:
-        drive = re.match(r"([a-zA-Z]:)", os.environ["USERPROFILE"]).group(1)
+    drive = re.match(r"([a-zA-Z]:)", os.environ["PROGRAMFILES"]).group(1)
     return drive
 
 
