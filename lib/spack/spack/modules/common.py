@@ -812,19 +812,31 @@ def ensure_modules_are_enabled_or_warn():
         if scope.name.startswith("default"):
             continue
 
-        modules_yaml = pathlib.Path(scope.path) / "modules.yaml"
-        if modules_yaml.exists():
+        # Account for environment manifest files
+        if scope.name.startswith("env"):
+            config_file = pathlib.Path(scope.path)
+            with config_file.open() as f:
+                data = syaml.load(f)
+
+            if "modules" in data["spack"]:
+                break
+
+            continue
+
+        config_file = pathlib.Path(scope.path) / "modules.yaml"
+        if config_file.exists():
             break
     else:
         return
 
+    # If we are here we have a custom "modules" section somewhere
     enabled = spack.config.get("modules:default:enable")
     if not enabled:
         msg = (
-            f"detected custom modules.yaml in {modules_yaml}, when module file "
+            f"detected custom modules.yaml in {config_file}, when module file "
             f"generation for the default module set is disabled.\n\n\t"
             f"In Spack v0.20 module file generation has been disabled by default. You might "
-            f"want to check {modules_yaml} and enable module generation explicitly.\n"
+            f"want to check {config_file} and enable module generation explicitly.\n"
         )
         warnings.warn(msg)
 
