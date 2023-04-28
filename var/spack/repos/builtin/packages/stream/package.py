@@ -19,10 +19,19 @@ class Stream(MakefilePackage):
     variant("openmp", default=False, description="Build with OpenMP support")
 
     variant("stream_array_size", default="none", description="Size of work arrays in elements")
-    variant("ntimes", default="none", description="STREAM runs each kernel \"NTIMES\" times and reports the *best* result")
+    variant(
+        "ntimes",
+        default="none",
+        description='STREAM runs each kernel "NTIMES" times and reports the *best* result',
+    )
     variant("offset", default="none", description="Relative alignment between arrays")
-    variant("stream_type", default="none", values=( "none", "float", "double", "int", "long" ), description="Datatype of arrays elements")
-    
+    variant(
+        "stream_type",
+        default="none",
+        values=("none", "float", "double", "int", "long"),
+        description="Datatype of arrays elements",
+    )
+
     def edit(self, spec, prefix):
         makefile = FileFilter("Makefile")
 
@@ -38,16 +47,18 @@ class Stream(MakefilePackage):
         if "%aocc" in self.spec:
             cflags += " -mcmodel=large -ffp-contract=fast -fnt-store"
 
-        if self.compiler.name in { 'oneapi', 'intel' }:
-            if self.spec.target.name in { 'haswell', 'broadwell', 'skylake' }:
+        if self.compiler.name in {"oneapi", "intel"}:
+            if self.spec.target.name in {"haswell", "broadwell", "skylake"}:
                 cflags += " -xCORE-AVX2"
                 fflags += " -xCORE-AVX2"
-            elif self.spec.target.name in { 'skylake_avx512', 'cascadelake', 'icelake' }:
+            elif self.spec.target.name in {"skylake_avx512", "cascadelake", "icelake"}:
                 cflags += " -xCORE-AVX512"
                 fflags += " -xCORE-AVX512"
 
         if self.spec.variants["stream_array_size"].value != "none":
-            cflags += " -DSTREAM_ARRAY_SIZE={0}".format(self.spec.variants["stream_array_size"].value)
+            cflags += " -DSTREAM_ARRAY_SIZE={0}".format(
+                self.spec.variants["stream_array_size"].value
+            )
         if self.spec.variants["ntimes"].value != "none":
             cflags += " -DNTIMES={0}".format(self.spec.variants["ntimes"].value)
         if self.spec.variants["offset"].value != "none":
