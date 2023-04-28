@@ -348,9 +348,9 @@ packages:
     assert spec["y"].satisfies("@2.4+shared")
 
 
+@pytest.mark.regression("37180")
 def test_require_cflags(concretize_scope, test_repo):
-    """'one_of' allows forcing the concretizer to satisfy one of
-    the specs in the group (but not all have to be satisfied).
+    """Ensures that flags can be required from configuration.
     """
     if spack.config.get("config:concretizer") == "original":
         pytest.skip("Original concretizer does not support configuration" " requirements")
