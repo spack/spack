@@ -35,3 +35,4 @@ class RAffyplm(RPackage):
     depends_on("r-gcrma", type=("build", "run"))
     depends_on("r-preprocesscore@1.5.1:", type=("build", "run"))
     depends_on("r-zlibbioc", type=("build", "run"))
+    depends_on("zlib")
