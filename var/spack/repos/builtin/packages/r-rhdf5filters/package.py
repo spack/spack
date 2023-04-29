@@ -22,6 +22,7 @@ class RRhdf5filters(RPackage):
     depends_on("r-rhdf5lib", type=("build", "run"))
     depends_on("gmake", type="build")
     depends_on("zlib")
+    depends_on("zstd")
 
     def configure_args(self):
         args = []
