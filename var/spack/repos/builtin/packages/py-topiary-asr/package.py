@@ -23,7 +23,7 @@ class PyTopiaryAsr(PythonPackage):
     depends_on("py-setuptools", type="build")
 
     depends_on("py-biopython", type=("build", "run"))
-    depends_on("py-numpy", type=("build", "run"))
+    depends_on("py-numpy@:1.21", type=("build", "run"))
     depends_on("py-pandas", type=("build", "run"))
     depends_on("py-matplotlib", type=("build", "run"))
     depends_on("py-ete3", type=("build", "run"))
