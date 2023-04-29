@@ -20,6 +20,7 @@ class Cdo(AutotoolsPackage):
 
     maintainers("skosukhin", "Try2Code")
 
+    version("2.2.0", sha256="679c8d105706caffcba0960ec5ddc4a1332c1b40c52f82c3937356999d8fadf2")
     version(
         "2.1.1",
         sha256="c29d084ccbda931d71198409fb2d14f99930db6e7a3654b3c0243ceb304755d9",
