@@ -17,6 +17,8 @@ class XsdkExamples(CMakePackage, CudaPackage):
     maintainers("balay", "luszczek", "balos1", "shuds13", "v-dobrev")
 
     version("develop", branch="master")
+    # FIXME: replace the testing branch with the actual release when available:
+    version("0.4.0", branch="testing-v0.4.0")
     version("0.3.0", sha256="e7444a403c0a69eeeb34a4068be4d6f4e5b54cbfd275629019b9236a538a739e")
     version(
         "0.2.0",
