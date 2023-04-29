@@ -31,6 +31,7 @@ class XsdkExamples(CMakePackage, CudaPackage):
         depends_on("xsdk+cuda cuda_arch={0}".format(sm_), when="+cuda cuda_arch={0}".format(sm_))
 
     depends_on("xsdk@develop", when="@develop")
+    depends_on("xsdk@0.8.0", when="@0.4.0")
     depends_on("xsdk@0.7.0", when="@0.3.0")
     depends_on("xsdk@0.7.0 ^mfem+strumpack", when="@0.3.0 ^xsdk+strumpack")
     depends_on("xsdk@0.7.0 ^sundials+magma", when="@0.3.0 +cuda")
