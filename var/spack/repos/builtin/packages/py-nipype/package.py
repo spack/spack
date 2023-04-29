@@ -46,4 +46,4 @@ class PyNipype(PythonPackage):
     depends_on("py-etelemetry", type=("build", "run"))
     depends_on("py-looseversion", when="@1.8.1:", type=("build", "run"))
 
-    depends_on("py-sphinx", when="@1.8.1:", type=("test"))
+    skip_modules = ["nipype.sphinxext.apidoc"]
