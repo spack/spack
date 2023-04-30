@@ -61,6 +61,14 @@ class Dealii(CMakePackage, CudaPackage):
         description="Compile using the specified C++ standard",
         values=("default", "11", "14", "17"),
     )
+    variant(
+        "cxxstd",
+        default="17",
+        when="@9.4:",
+        multi=False,
+        description="Compile using the specified C++ standard",
+        values=("default", "11", "14", "17"),
+    )
     variant("doc", default=False, description="Compile with documentation")
     variant("examples", default=True, description="Compile tutorial programs")
     variant("int64", default=False, description="Compile with 64 bit indices support")
@@ -279,6 +287,12 @@ class Dealii(CMakePackage, CudaPackage):
         "cxxstd=14",
         when="@9.4:+cgal",
         msg="CGAL requires the C++ standard to be set to 17 or later.",
+    )
+
+    conflicts(
+        "cxxstd=default",
+        when="@9.4:+cgal",
+        msg="CGAL requires the C++ standard to be set explicitly to 17 or later.",
     )
 
     # Interfaces added in 8.5.0:
