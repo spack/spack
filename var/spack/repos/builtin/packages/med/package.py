@@ -43,6 +43,14 @@ class Med(CMakePackage):
     # fix problem where CMake "could not find TARGET hdf5"
     patch("med-4.1.0-hdf5-target.patch", when="@4.0.0:4.1.99")
 
+    def patch(self):
+        filter_file(
+            "GET_PROPERTY(_lib_lst TARGET hdf5-shared PROPERTY IMPORTED_LINK_INTERFACE_LIBRARIES_NOCONFIG)",  # noqa: E501
+            "#GET_PROPERTY(_lib_lst TARGET hdf5-shared PROPERTY IMPORTED_LINK_INTERFACE_LIBRARIES_NOCONFIG)",  # noqa: E501
+            "config/cmake_files/FindMedfileHDF5.cmake",
+            string=True,
+        )
+
     def cmake_args(self):
         spec = self.spec
 
