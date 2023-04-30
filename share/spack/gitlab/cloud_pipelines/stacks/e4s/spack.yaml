@@ -162,7 +162,7 @@ spack:
   - caliper +cuda
   - chai ~benchmarks ~tests +cuda ^umpire ~shared
   - cusz +cuda
-  - dealii +cuda
+  - dealii +cuda ~cgal cxxstd=17
   - ecp-data-vis-sdk +cuda +adios2 +hdf5 +paraview +vtkm +zfp # Removing ascent because Dray is hung in CI. +ascent
   - flecsi +cuda
   - flux-core +cuda
