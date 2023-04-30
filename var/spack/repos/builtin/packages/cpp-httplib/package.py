@@ -12,6 +12,7 @@ class CppHttplib(CMakePackage):
     homepage = "https://github.com/yhirose/cpp-httplib/"
     url = "https://github.com/yhirose/cpp-httplib/archive/v0.5.10.tar.gz"
 
+    version("0.12.3", sha256="175ced3c9cdaf221e9edf210297568d8f7d402a41d6db01254ac9e0b25487c54")
     version("0.5.9", sha256="c9e7aef3b0d4e80ee533d10413508d8a6e09a67d0d59646c43111f3993de006e")
     version("0.5.8", sha256="184d4fe79fc836ee26aa8635b3240879af4c6f17257fc7063d0b77a0cf856dfc")
     version("0.5.7", sha256="27b7f6346bdeb1ead9d17bd7cea89d9ad491f50f0479081053cc6e5742a89e64")
