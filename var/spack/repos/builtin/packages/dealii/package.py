@@ -264,12 +264,12 @@ class Dealii(CMakePackage, CudaPackage):
     patch(
         "https://github.com/dealii/dealii/commit/06bb9dc07efb6fea9912ee0d66264af548c552c8.patch?full_index=1",
         sha256="8a1f7b9a155c8c496ce08b2abb1ba5d329b3b29169f36c11678aa4e3cebf97a2",
-        when="@9.4.0 ^hdf5",
+        when="@9.4 ^hdf5",
     )
     patch(
         "https://github.com/dealii/dealii/commit/40076ac1a013cd7d221f9dda913b4d0e6452c21e.patch?full_index=1",
         sha256="7869dfab1116b6e862279bb6642c2c8fe49d87c42cfc6f031e03330f9f26a6c3",
-        when="@9.4.0 ^python",
+        when="@9.4 ^python",
     )
 
     # Fix issues with the FIND_GINKGO module for the newer Ginkgo versions
@@ -277,7 +277,7 @@ class Dealii(CMakePackage, CudaPackage):
     patch(
         "https://github.com/dealii/dealii/commit/df6c5de8d6785fce701c10575982858f3aeb4cbd.patch?full_index=1",
         sha256="c9884ebb0fe379c539012a225d8bcdcfe288edec8dc9d319fbfd64d8fbafba8e",
-        when="@:9.4.0+ginkgo ^ginkgo@1.5.0:",
+        when="@:9.4 +ginkgo ^ginkgo@1.5.0:",
     )
 
     # Check for sufficiently modern versions
