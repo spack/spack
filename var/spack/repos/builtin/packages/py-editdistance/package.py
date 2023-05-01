@@ -16,7 +16,7 @@ class PyEditdistance(PythonPackage):
     maintainers("meyersbs")
 
     # PyPI tarball for version 0.6.2 missing bycython.pyx file
-    # https://github.com/roy-ht/editdistance/issues/94#issuecomment-1426279375 
+    # https://github.com/roy-ht/editdistance/issues/94#issuecomment-1426279375
     version("0.6.2", tag="v0.6.2")
     version("0.4", sha256="c765db6f8817d38922e4a50be4b9ab338b2c539377b6fcf0bca11dea72eeb8c1")
 
