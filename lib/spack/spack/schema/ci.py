@@ -204,7 +204,7 @@ def update(data):
     # Warn if deprecated section is still in the environment
     ci_env = ev.active_environment()
     if ci_env:
-        env_config = ev.config_dict(ci_env.yaml)
+        env_config = ev.config_dict(ci_env.manifest)
         if "gitlab-ci" in env_config:
             tty.die("Error: `gitlab-ci` section detected with `ci`, these are not compatible")
 
