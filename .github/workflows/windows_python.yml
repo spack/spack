@@ -23,7 +23,7 @@ jobs:
         python-version: 3.9
     - name: Install Python packages
       run: |
-          python -m pip install --upgrade pip six pywin32 setuptools pytest-cov clingo
+          python -m pip install --upgrade pip pywin32 setuptools pytest-cov clingo
     - name: Create local develop
       run: |
         ./.github/workflows/setup_git.ps1
@@ -47,7 +47,7 @@ jobs:
         python-version: 3.9
     - name: Install Python packages
       run: |
-          python -m pip install --upgrade pip six pywin32 setuptools coverage pytest-cov clingo
+          python -m pip install --upgrade pip pywin32 setuptools coverage pytest-cov clingo
     - name: Create local develop
       run: |
         ./.github/workflows/setup_git.ps1
@@ -71,7 +71,7 @@ jobs:
         python-version: 3.9
     - name: Install Python packages
       run: |
-          python -m pip install --upgrade pip six pywin32 setuptools coverage
+          python -m pip install --upgrade pip pywin32 setuptools coverage
     - name: Build Test
       run: |
         spack compiler find
@@ -95,7 +95,7 @@ jobs:
   #       python-version: 3.9
   #   - name: Install Python packages
   #     run: |
-  #         python -m pip install --upgrade pip six pywin32 setuptools
+  #         python -m pip install --upgrade pip pywin32 setuptools
   #   - name: Add Light and Candle to Path
   #     run: |
   #       $env:WIX >> $GITHUB_PATH
@@ -126,7 +126,7 @@ jobs:
   #       python-version: 3.9
   #   - name: Install Python packages
   #     run: |
-  #         python -m pip install --upgrade pip six pywin32 setuptools
+  #         python -m pip install --upgrade pip pywin32 setuptools
   #   - name: Setup installer directory
   #     run: |
   #       mkdir -p spack_installer
