@@ -151,16 +151,6 @@ spack:
           - /sign.sh
           - aws s3 sync --exclude "*" --include "*spec.json.sig*" /tmp ${SPACK_REMOTE_MIRROR_OVERRIDE}/build_cache
           - aws s3 cp /tmp/public_keys ${SPACK_REMOTE_MIRROR_OVERRIDE}/build_cache/_pgp --recursive --exclude "*" --include "*.pub"
-    - any-job:
-        image: "ghcr.io/spack/e4s-ubuntu-18.04:v2021-10-18"
-        tags: ["spack"]
-        before_script:
-        - - uname -a || true
-          - grep -E "vendor|model name" /proc/cpuinfo 2>/dev/null | sort -u || head -n10 /proc/cpuinfo 2>/dev/null || true
-          - nproc
-        - - . "./share/spack/setup-env.sh"
-          - spack --version
-          - spack arch
 
   cdash:
     build-group: Machine Learning
