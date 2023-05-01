@@ -27,7 +27,7 @@ import time
 import traceback
 import types
 import warnings
-from typing import Any, Callable, Dict, Iterable, List, Optional, Tuple, Type
+from typing import Any, Dict, Iterable, List, Optional, Tuple
 
 import llnl.util.filesystem as fsys
 import llnl.util.tty as tty
@@ -67,7 +67,6 @@ from spack.version import GitVersion, Version, VersionBase
 FLAG_HANDLER_RETURN_TYPE = Tuple[
     Optional[Iterable[str]], Optional[Iterable[str]], Optional[Iterable[str]]
 ]
-FLAG_HANDLER_TYPE = Callable[[str, Iterable[str]], FLAG_HANDLER_RETURN_TYPE]
 
 """Allowed URL schemes for spack packages."""
 _ALLOWED_URL_SCHEMES = ["http", "https", "ftp", "file", "git"]
@@ -2067,22 +2066,19 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
         """
         return self.install_log_path if self.spec.installed else self.log_path
 
-    @classmethod
-    def inject_flags(cls: Type, name: str, flags: Iterable[str]) -> FLAG_HANDLER_RETURN_TYPE:
+    def inject_flags(self, name: str, flags: Iterable[str]) -> FLAG_HANDLER_RETURN_TYPE:
         """
         flag_handler that injects all flags through the compiler wrapper.
         """
         return flags, None, None
 
-    @classmethod
-    def env_flags(cls: Type, name: str, flags: Iterable[str]):
+    def env_flags(self, name: str, flags: Iterable[str]):
         """
         flag_handler that adds all flags to canonical environment variables.
         """
         return None, flags, None
 
-    @classmethod
-    def build_system_flags(cls: Type, name: str, flags: Iterable[str]) -> FLAG_HANDLER_RETURN_TYPE:
+    def build_system_flags(self, name: str, flags: Iterable[str]) -> FLAG_HANDLER_RETURN_TYPE:
         """
         flag_handler that passes flags to the build system arguments.  Any
         package using `build_system_flags` must also implement
@@ -2161,17 +2157,8 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
         """
         pass
 
-    _flag_handler: Optional[FLAG_HANDLER_TYPE] = None
-
-    @property
-    def flag_handler(self) -> FLAG_HANDLER_TYPE:
-        if self._flag_handler is None:
-            self._flag_handler = PackageBase.inject_flags
-        return self._flag_handler
-
-    @flag_handler.setter
-    def flag_handler(self, var: FLAG_HANDLER_TYPE):
-        self._flag_handler = var
+    def flag_handler(self, name: str, flags: Iterable[str]) -> FLAG_HANDLER_RETURN_TYPE:
+        return PackageBase.inject_flags(self, name, flags)
 
     # The flag handler method is called for each of the allowed compiler flags.
     # It returns a triple of inject_flags, env_flags, build_system_flags.

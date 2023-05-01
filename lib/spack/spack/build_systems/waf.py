@@ -3,6 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 import inspect
+from typing import Tuple
 
 from llnl.util.filesystem import working_dir
 
@@ -57,7 +58,7 @@ class WafBuilder(BaseBuilder):
     function, which passes ``--prefix=/path/to/installation/prefix``.
     """
 
-    phases = ("configure", "build", "install")
+    phases: Tuple[str, ...] = ("configure", "build", "install")
 
     #: Names associated with package methods in the old build-system format
     legacy_methods = (

@@ -1,0 +1,69 @@
+default_language_version:
+  python: python3
+
+# Most hooks should not operate on the external/vendored code, to avoid
+# refactoring all of it to fit the trend.
+exclude: ^lib/spack/external/
+
+repos:
+
+# ------------------------------------------------------------------------------------------------
+#  Formatting hooks:  Hooks that alter the syntax but not semantics of files
+# ------------------------------------------------------------------------------------------------
+
+- repo: https://github.com/psf/black
+  rev: 23.1.0
+  hooks:
+  # Blacken all Python code
+  - id: black
+    args: [--config, pyproject.toml]
+
+- repo: https://github.com/PyCQA/isort
+  rev: 5.12.0
+  hooks:
+  # Sort imports in all Python code
+  - id: isort
+    alias: isort-lib
+    args: [--settings-path, pyproject.toml]
+    files: ^lib/
+  # Sort imports in packages, and enforce a few extra rules
+  - id: isort
+    alias: isort-packages
+    args: [--settings-path, pyproject.toml,
+           # Packages should never import spack directly
+           --rm, spack, --rm, spack.pkgkit, --rm, spack.package_defs,
+           # Packages should always import spack.package.*
+           -a, 'from spack.package import *']
+    files: ^var/spack/repos/.*/package\.py$
+
+
+# ------------------------------------------------------------------------------------------------
+#  Linting hooks:  Hooks that do not alter files but ensures that they satisfy various conditions
+# ------------------------------------------------------------------------------------------------
+
+- repo: https://github.com/PyCQA/flake8
+  rev: 6.0.0
+  hooks:
+  # All Python code must be Flake8-clean
+  - id: flake8
+    args: [--config, .flake8]
+
+- repo: https://github.com/pre-commit/mirrors-mypy
+  rev: v1.0.1
+  hooks:
+  # Ensure the Spack core is also MyPy-clean
+  - id: mypy
+    alias: mypy-lib
+    args: [--config-file, pyproject.toml, --show-error-codes]
+    files: ^lib/spack/(llnl|spack)/
+  # Ensure packages are also MyPy-clean
+  - id: mypy
+    alias: mypy-packages
+    additional_dependencies: [types-six]
+    args: [--config-file, pyproject.toml, --show-error-codes, --explicit-package-bases,
+           --disable-error-code, no-redef]
+    # FIXME: We are playing tricks to make MyPy see all the package.py's as
+    # different "modules," but this trick doesn't work for packages who's names
+    # are not valid Python identifiers, e.g. 7zip or py-pip. These packages are
+    # currently excluded from the regex below.
+    files: ^var/spack/repos/builtin/packages/[a-zA-Z_]\w*/package\.py$

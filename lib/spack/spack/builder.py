@@ -7,7 +7,7 @@ import collections.abc
 import copy
 import functools
 import inspect
-from typing import List, Optional, Tuple
+from typing import TYPE_CHECKING, List, Optional, Tuple
 
 import spack.build_environment
 
@@ -582,5 +582,14 @@ class Builder(collections.abc.Sequence, metaclass=BuilderMeta):
 
 
 # Export these names as standalone to be used in packages
-run_after = PhaseCallbacksMeta.run_after
-run_before = PhaseCallbacksMeta.run_before
+if TYPE_CHECKING:
+
+    def run_after(phase, when=None):
+        return PhaseCallbacksMeta.run_after(phase, when=when)
+
+    def run_before(phase, when=None):
+        return PhaseCallbacksMeta.run_before(phase, when=when)
+
+else:
+    run_after = PhaseCallbacksMeta.run_after
+    run_before = PhaseCallbacksMeta.run_before

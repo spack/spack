@@ -4,6 +4,7 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 import inspect
 import os
+from typing import Tuple
 
 from llnl.util.filesystem import filter_file
 
@@ -50,7 +51,7 @@ class PerlBuilder(BaseBuilder):
     """
 
     #: Phases of a Perl package
-    phases = ("configure", "build", "install")
+    phases: Tuple[str, ...] = ("configure", "build", "install")
 
     #: Names associated with package methods in the old build-system format
     legacy_methods = ("configure_args", "check")

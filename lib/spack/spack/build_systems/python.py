@@ -6,7 +6,7 @@ import inspect
 import os
 import re
 import shutil
-from typing import Optional
+from typing import Optional, Tuple
 
 import archspec
 
@@ -345,7 +345,7 @@ class PythonPackage(PythonExtension):
 
 @spack.builder.builder("python_pip")
 class PythonPipBuilder(BaseBuilder):
-    phases = ("install",)
+    phases: Tuple[str, ...] = ("install",)
 
     #: Names associated with package methods in the old build-system format
     legacy_methods = ("test",)

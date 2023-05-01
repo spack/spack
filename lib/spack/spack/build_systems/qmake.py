@@ -3,6 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 import inspect
+from typing import Tuple
 
 from llnl.util.filesystem import working_dir
 
@@ -43,7 +44,7 @@ class QMakeBuilder(BaseBuilder):
     necessary will be to override :py:meth:`~.QMakeBuilder.qmake_args`.
     """
 
-    phases = ("qmake", "build", "install")
+    phases: Tuple[str, ...] = ("qmake", "build", "install")
 
     #: Names associated with package methods in the old build-system format
     legacy_methods = ("qmake_args", "check")

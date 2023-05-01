@@ -7,7 +7,7 @@ import os
 import os.path
 import stat
 import subprocess
-from typing import List
+from typing import List, Tuple
 
 import llnl.util.filesystem as fs
 import llnl.util.tty as tty
@@ -107,7 +107,7 @@ class AutotoolsBuilder(BaseBuilder):
     """
 
     #: Phases of a GNU Autotools package
-    phases = ("autoreconf", "configure", "build", "install")
+    phases: Tuple[str, ...] = ("autoreconf", "configure", "build", "install")
 
     #: Names associated with package methods in the old build-system format
     legacy_methods = ("configure_args", "check", "installcheck")

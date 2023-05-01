@@ -36,7 +36,7 @@ class Libogg(CMakePackage, AutotoolsPackage, Package):
 
 
 class GenericBuilder(GenericBuilder):
-    phases = ["build", "install"]
+    phases = ("build", "install")
 
     def is_64bit(self):
         return "64" in str(self.pkg.spec.target.family)

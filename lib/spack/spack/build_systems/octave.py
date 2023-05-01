@@ -3,6 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 import inspect
+from typing import Tuple
 
 import spack.builder
 import spack.package_base
@@ -37,7 +38,7 @@ class OctaveBuilder(BaseBuilder):
     1. :py:meth:`~.OctaveBuilder.install`
     """
 
-    phases = ("install",)
+    phases: Tuple[str, ...] = ("install",)
 
     #: Names associated with package methods in the old build-system format
     legacy_methods = ()
