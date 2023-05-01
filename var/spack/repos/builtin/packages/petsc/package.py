@@ -22,6 +22,7 @@ class Petsc(Package, CudaPackage, ROCmPackage):
 
     version("main", branch="main")
 
+    version("3.19.1", sha256="74db60c53c80b48d5c39e07bc39a883ecced88b9f24a5de17cf6f485a903e120")
     version("3.19.0", sha256="8ced753e4d2fb6565662b2b1fbba75a426cbf8438203f82717ce270f0591322c")
     version("3.18.6", sha256="8b53c8b6652459ba0bbe6361b5baf8c4d17c1d04b6654a76e3b6a9ab4a576680")
     version("3.18.5", sha256="df73ae13a4c5758325a9d69350cac423742657d8a8fc5782504b0e469ce46499")
