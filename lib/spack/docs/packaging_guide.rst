@@ -604,9 +604,9 @@ add a line like this in the package class:
 
        url = "http://example.com/foo-1.0.tar.gz"
 
-       version("8.2.1", "4136d7b4c04df68b686570afa26988ac")
-       version("8.2.0", "1c9f62f0778697a09d36121ead88e08e")
-       version("8.1.2", "d47dd09ed7ae6e7fd6f9a816d7f5fdf6")
+       version("8.2.1", md5="4136d7b4c04df68b686570afa26988ac")
+       version("8.2.0", md5="1c9f62f0778697a09d36121ead88e08e")
+       version("8.1.2", md5="d47dd09ed7ae6e7fd6f9a816d7f5fdf6")
 
 Versions should be listed in descending order, from newest to oldest.
 
@@ -695,7 +695,7 @@ of its versions, you can add an explicit URL for a particular version:
 
 .. code-block:: python
 
-   version("8.2.1", "4136d7b4c04df68b686570afa26988ac",
+   version("8.2.1", md5="4136d7b4c04df68b686570afa26988ac",
            url="http://example.com/foo-8.2.1-special-version.tar.gz")
 
 
@@ -757,7 +757,7 @@ executables and other custom archive types), you can add ``expand=False`` to a
 
 .. code-block:: python
 
-   version("8.2.1", "4136d7b4c04df68b686570afa26988ac",
+   version("8.2.1", md5="4136d7b4c04df68b686570afa26988ac",
            url="http://example.com/foo-8.2.1-special-version.sh", expand=False)
 
 When ``expand`` is set to ``False``, Spack sets the current working
@@ -955,10 +955,10 @@ file:
 .. code-block:: console
 
    ==> Checksummed new versions of libelf:
-       version("0.8.13", "4136d7b4c04df68b686570afa26988ac")
-       version("0.8.12", "e21f8273d9f5f6d43a59878dc274fec7")
-       version("0.8.11", "e931910b6d100f6caa32239849947fbf")
-       version("0.8.10", "9db4d36c283d9790d8fa7df1f4d7b4d9")
+       version("0.8.13", md5="4136d7b4c04df68b686570afa26988ac")
+       version("0.8.12", md5="e21f8273d9f5f6d43a59878dc274fec7")
+       version("0.8.11", md5="e931910b6d100f6caa32239849947fbf")
+       version("0.8.10", md5="9db4d36c283d9790d8fa7df1f4d7b4d9")
 
 By default, Spack will search for new tarball downloads by scraping
 the parent directory of the tarball you gave it.  So, if your tarball
@@ -1112,8 +1112,8 @@ class-level tarball URL and VCS. For example:
 
        version("develop", branch="develop")
        version("master",  branch="master")
-       version("12.12.1", "ecd4606fa332212433c98bf950a69cc7")
-       version("12.10.1", "667333dbd7c0f031d47d7c5511fd0810")
+       version("12.12.1", md5="ecd4606fa332212433c98bf950a69cc7")
+       version("12.10.1", md5="667333dbd7c0f031d47d7c5511fd0810")
        version("12.8.1",  "9f37f683ee2b427b5540db8a20ed6b15")
 
 If a package contains both a ``url`` and ``git`` class-level attribute,
@@ -1276,7 +1276,7 @@ checksum.
 
 .. code-block:: python
 
-       version("1.9.5.1.1", "d035e4bc704d136db79b43ab371b27d2",
+       version("1.9.5.1.1", md5="d035e4bc704d136db79b43ab371b27d2",
                url="https://www.github.com/jswhit/pyproj/tarball/0be612cc9f972e38b50a90c946a9b353e2ab140f")
 
 .. _hg-fetch:
@@ -2212,7 +2212,7 @@ looks like this:
        homepage = "http://www.openssl.org"
        url      = "http://www.openssl.org/source/openssl-1.0.1h.tar.gz"
 
-       version("1.0.1h", "8d6d684a9430d5cc98a62a5d8fbda8cf")
+       version("1.0.1h", md5="8d6d684a9430d5cc98a62a5d8fbda8cf")
        depends_on("zlib")
 
        parallel = False
@@ -2309,7 +2309,7 @@ Spack makes this relatively easy.  Let's take a look at the
        url      = "http://www.prevanders.net/libdwarf-20130729.tar.gz"
        list_url = homepage
 
-       version("20130729", "4cc5e48693f7b93b7aa0261e63c0e21d")
+       version("20130729", md5="4cc5e48693f7b93b7aa0261e63c0e21d")
        ...
 
        depends_on("libelf")
@@ -2808,7 +2808,7 @@ supplying a ``depends_on`` call in the package definition.  For example:
        homepage = "https://github.com/hpc/mpileaks"
        url = "https://github.com/hpc/mpileaks/releases/download/v1.0/mpileaks-1.0.tar.gz"
 
-       version("1.0", "8838c574b39202a57d7c2d68692718aa")
+       version("1.0", md5="8838c574b39202a57d7c2d68692718aa")
 
        depends_on("mpi")
        depends_on("adept-utils")

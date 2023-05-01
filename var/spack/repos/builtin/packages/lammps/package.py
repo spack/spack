@@ -755,7 +755,7 @@ class Lammps(CMakePackage, CudaPackage, ROCmPackage):
                 args.append(self.define("FFT", "FFTW3"))
             elif "^mkl" in spec:
                 args.append(self.define("FFT", "MKL"))
-            elif "^armpl-gcc" in spec:
+            elif "^armpl-gcc" in spec or "^acfl" in spec:
                 args.append(self.define("FFT", "FFTW3"))
                 args.append(self.define("FFTW3_LIBRARY", self.spec["fftw-api"].libs[0]))
                 args.append(

@@ -86,7 +86,6 @@ class Gromacs(CMakePackage, CudaPackage):
         default=False,
         description="Produces a double precision version of the executables",
     )
-    variant("plumed", default=False, description="Enable PLUMED support")
     variant("cufftmp", default=False, when="+cuda+mpi", description="Enable Multi GPU FFT support")
     variant("opencl", default=False, description="Enable OpenCL support")
     variant("sycl", default=False, description="Enable SYCL support")
@@ -193,49 +192,40 @@ class Gromacs(CMakePackage, CudaPackage):
     # Above dependencies can be verified, and new versions added, by going to
     # https://github.com/plumed/plumed2/tree/v2.7.1/patches
     # and switching tags.
+    plumed_patches = {
+        "2022.5": "2.8.2",
+        "2022.3": "2.8.1",
+        "2021.7": "2.8.2",
+        "2021.6": "2.8.1",
+        "2021.5": "2.7.5:2.7.6",
+        "2021.4": "2.7.3:2.8.0",
+        "2021": "2.7.1:2.7.2",
+        "2020.7": "2.8.1:2.8.2",
+        "2020.6": "2.7.2:2.8.0",
+        "2020.5": "2.7.1",
+        "2020.4": "2.6.2:2.7.0",
+        "2020.2": "2.6.1",
+        "2019.6": "2.6.1:2.8.2",
+        "2019.4": "2.5.3:2.6.0",
+        "2019.2": "2.5.2",
+        "2018.8": "2.5.3:2.6",
+        "2018.6": "2.5.1:2.5.2",
+        "2018.4": "2.5.0",
+        "2016.6": "2.5.1:2.5",
+        "2016.5": "2.5.0",
+    }
 
-    depends_on("plumed+mpi", when="+plumed+mpi")
-    depends_on("plumed~mpi", when="+plumed~mpi")
-    depends_on("plumed@2.8.2+mpi", when="@2022.5+plumed+mpi")
-    depends_on("plumed@2.8.2~mpi", when="@2022.5+plumed~mpi")
-    depends_on("plumed@2.8.1+mpi", when="@2022.3+plumed+mpi")
-    depends_on("plumed@2.8.1~mpi", when="@2022.3+plumed~mpi")
-    depends_on("plumed@2.8.2+mpi", when="@2021.7+plumed+mpi")
-    depends_on("plumed@2.8.2~mpi", when="@2021.7+plumed~mpi")
-    depends_on("plumed@2.8.1+mpi", when="@2021.6+plumed+mpi")
-    depends_on("plumed@2.8.1~mpi", when="@2021.6+plumed~mpi")
-    depends_on("plumed@2.7.5:2.7.6+mpi", when="@2021.5+plumed+mpi")
-    depends_on("plumed@2.7.5:2.7.6~mpi", when="@2021.5+plumed~mpi")
-    depends_on("plumed@2.7.3:2.8.0+mpi", when="@2021.4+plumed+mpi")
-    depends_on("plumed@2.7.3:2.8.0~mpi", when="@2021.4+plumed~mpi")
-    depends_on("plumed@2.7.1:2.7.2+mpi", when="@2021+plumed+mpi")
-    depends_on("plumed@2.7.1:2.7.2~mpi", when="@2021+plumed~mpi")
-    depends_on("plumed@2.8.1:2.8.2+mpi", when="@2020.7+plumed+mpi")
-    depends_on("plumed@2.8.1:2.8.2~mpi", when="@2020.7+plumed~mpi")
-    depends_on("plumed@2.7.2:2.8+mpi", when="@2020.6+plumed+mpi")
-    depends_on("plumed@2.7.2:2.8~mpi", when="@2020.6+plumed~mpi")
-    depends_on("plumed@2.7.1+mpi", when="@2020.5+plumed+mpi")
-    depends_on("plumed@2.7.1~mpi", when="@2020.5+plumed~mpi")
-    depends_on("plumed@2.6.2:2.7.0+mpi", when="@2020.4+plumed+mpi")
-    depends_on("plumed@2.6.2:2.7.0~mpi", when="@2020.4+plumed~mpi")
-    depends_on("plumed@2.6.1+mpi", when="@2020.2+plumed+mpi")
-    depends_on("plumed@2.6.1~mpi", when="@2020.2+plumed~mpi")
-    depends_on("plumed@2.6.1:2.8.2+mpi", when="@2019.6+plumed+mpi")
-    depends_on("plumed@2.6.1:2.8.2~mpi", when="@2019.6+plumed~mpi")
-    depends_on("plumed@2.5.3:2.6.0+mpi", when="@2019.4+plumed+mpi")
-    depends_on("plumed@2.5.3:2.6.0~mpi", when="@2019.4+plumed~mpi")
-    depends_on("plumed@2.5.2+mpi", when="@2019.2+plumed+mpi")
-    depends_on("plumed@2.5.2~mpi", when="@2019.2+plumed~mpi")
-    depends_on("plumed@2.5.3:2.6+mpi", when="@2018.8+plumed+mpi")
-    depends_on("plumed@2.5.3:2.6~mpi", when="@2018.8+plumed~mpi")
-    depends_on("plumed@2.5.1:2.5.2+mpi", when="@2018.6+plumed+mpi")
-    depends_on("plumed@2.5.1:2.5.2~mpi", when="@2018.6+plumed~mpi")
-    depends_on("plumed@2.5.0+mpi", when="@2018.4+plumed+mpi")
-    depends_on("plumed@2.5.0~mpi", when="@2018.4+plumed~mpi")
-    depends_on("plumed@2.5.1:2.5+mpi", when="@2016.6+plumed+mpi")
-    depends_on("plumed@2.5.1:2.5~mpi", when="@2016.6+plumed~mpi")
-    depends_on("plumed@2.5.0+mpi", when="@2016.5+plumed+mpi")
-    depends_on("plumed@2.5.0~mpi", when="@2016.5+plumed~mpi")
+    variant(
+        "plumed",
+        default=False,
+        description="Enable PLUMED support",
+        when="@{0}".format(",".join(plumed_patches.keys())),
+    )
+    with when("+plumed"):
+        depends_on("plumed+mpi", when="+mpi")
+        depends_on("plumed~mpi", when="~mpi")
+        for gmx_ver, plumed_vers in plumed_patches.items():
+            depends_on("plumed@{0}".format(plumed_vers), when="@{0}+plumed".format(gmx_ver))
 
     depends_on("fftw-api@3")
     depends_on("cmake@2.8.8:3", type="build")
