@@ -15,6 +15,7 @@ class RGgvis(RPackage):
 
     cran = "ggvis"
 
+    version("0.4.8", sha256="3d5480a0b97a57c26b595785f826b13d7695dab1f1dd8fcf5d7964fa8546a26a")
     version("0.4.7", sha256="9e6b067e11d497c796d42156570e2481afb554c5db265f42afbb74d2ae0865e3")
     version("0.4.4", sha256="1332ea122b768688c8a407a483be80febc4576de0ec8929077738421b27cafaf")
     version("0.4.3", sha256="34d517783016aaa1c4bef8972f4c06df5cd9ca0568035b647e60a8369043ecdc")
