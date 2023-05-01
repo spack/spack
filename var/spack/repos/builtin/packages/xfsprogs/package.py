@@ -31,7 +31,7 @@ class Xfsprogs(AutotoolsPackage):
         elif name == "ldlibs":
             if "intl" in self.spec["gettext"].libs.names:
                 flags.append("-lintl")
-        return build_system_flags(name, iflags)
+        return build_system_flags(name, flags)
 
     def setup_build_environment(self, env):
         env.append_path("C_INCLUDE_PATH", self.spec["util-linux"].prefix.include.blkid)

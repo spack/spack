@@ -118,10 +118,6 @@ class Gettext(AutotoolsPackage, GNUMirrorPackage):
         return config_args
 
     @property
-    def gettext_libs(self):
-        return self.libs
-
-    @property
     def libs(self):
         return find_libraries(
             ["libasprintf", "libgettextlib", "libgettextpo", "libgettextsrc", "libintl"],

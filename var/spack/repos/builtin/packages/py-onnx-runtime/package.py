@@ -55,7 +55,7 @@ class PyOnnxRuntime(CMakePackage, PythonExtension):
     # https://github.com/cms-externals/onnxruntime/compare/5bc92df...d594f80
     patch("cms.patch", level=1, when="@1.7.2")
     # https://github.com/cms-externals/onnxruntime/compare/0d9030e...7a6355a
-    patch("cms_1_10.patch", when="@1.10")
+    patch("cms_1_10.patch", whe="@1.10")
     # https://github.com/microsoft/onnxruntime/issues/4234#issuecomment-698077636
     # only needed when iconv is provided by libiconv
     patch("libiconv.patch", level=0, when="@1.7.2 ^libiconv")
