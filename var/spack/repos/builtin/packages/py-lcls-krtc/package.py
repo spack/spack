@@ -16,4 +16,4 @@ class PyLclsKrtc(PythonPackage):
     version("0.2.0", sha256="20e6327d488d23e29135be44504bf7df72e4425a518f4222841efcd2cd2985f9")
 
     depends_on("py-setuptools", type="build")
-    depends_on("py-kerberos", type=("build", "run"))
+    depends_on("py-pykerberos", type=("build", "run"))
