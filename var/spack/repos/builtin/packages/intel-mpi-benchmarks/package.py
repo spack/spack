@@ -57,7 +57,9 @@ class IntelMpiBenchmarks(MakefilePackage):
     variant("p2p", default=True, description="Build P2P benchmark", when="@2018")
     variant("rma", default=True, description="Build RMA benchmark")
     variant("mt", default=True, description="Build MT benchmark")
-    variant("check", default=False, description="Build with MPI implementation verification checks")
+    variant(
+        "check", default=False, description="Build with MPI implementation verification checks"
+    )
 
     # Handle missing variants in previous versions
     conflicts("+p2p", when="@:2019")
