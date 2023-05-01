@@ -352,6 +352,7 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage):
             "@11.3.0": "9.0.1",
             "@12.1.0": "13.0.1",
             "@12.2.0": "13.0.1",
+            "@13.1.0": "13.0.1",
         }
         for k, v in llvm_src_ver.items():
             depends_on(
@@ -370,6 +371,7 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage):
             "@11.3.0": "4.2.0.20211231",  # GCC: 2022-04-21, Newlib: 2021-12-31
             "@12.1.0": "4.2.0.20211231",  # GCC: 2022-05-06, Newlib: 2021-12-31
             "@12.2.0": "4.2.0.20211231",  # GCC: 2022-08-19, Newlib: 2021-12-31
+            "@13.1.0": "4.3.0.20230120",  # GCC: 2023-04-26, Newlib: 2023-01-20
             "@develop": "4.3.0.20230120",  # Newest version of Newlib
         }
         for k, v in newlib_ver.items():
