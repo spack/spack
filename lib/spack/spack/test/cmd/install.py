@@ -741,6 +741,18 @@ def test_install_deps_then_package(tmpdir, mock_fetch, install_mockery):
     assert os.path.exists(root.prefix)
 
 
+@pytest.mark.regression("30224")
+def test_install_overwrite_in_env(tmpdir, mock_fetch, install_mockery, mutable_mock_env_path):
+    env("create", "test")
+
+    with ev.read("test"):
+        install("--add", "dependency-install")
+        output = install("-y", "--overwrite", "dependency-install")
+
+    print(output)
+    assert "already installed" not in output
+
+
 @pytest.mark.regression("12002")
 def test_install_only_dependencies_in_env(
     tmpdir, mock_fetch, install_mockery, mutable_mock_env_path
