@@ -799,6 +799,7 @@ def test_install_no_add_in_env(tmpdir, mock_fetch, install_mockery, mutable_mock
     e.add("a")
     e.add("a ~bvv")
     e.concretize()
+    e.write()
     env_specs = e.all_specs()
 
     a_spec = None

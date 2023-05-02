@@ -41,6 +41,7 @@ image_schema = {
 # CI target YAML for each job.
 attributes_schema = {
     "type": "object",
+    "additionalProperties": True,
     "properties": {
         "image": image_schema,
         "tags": {"type": "array", "items": {"type": "string"}},
@@ -56,7 +57,7 @@ attributes_schema = {
 
 submapping_schema = {
     "type": "object",
-    "additinoalProperties": False,
+    "additionalProperties": False,
     "required": ["submapping"],
     "properties": {
         "match_behavior": {"type": "string", "enum": ["first", "merge"], "default": "first"},
@@ -203,7 +204,7 @@ def update(data):
     # Warn if deprecated section is still in the environment
     ci_env = ev.active_environment()
     if ci_env:
-        env_config = ev.config_dict(ci_env.yaml)
+        env_config = ev.config_dict(ci_env.manifest)
         if "gitlab-ci" in env_config:
             tty.die("Error: `gitlab-ci` section detected with `ci`, these are not compatible")
 

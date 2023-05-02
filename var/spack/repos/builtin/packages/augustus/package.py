@@ -17,6 +17,7 @@ class Augustus(MakefilePackage):
     url = "https://github.com/Gaius-Augustus/Augustus/archive/v3.3.4.tar.gz"
 
     # Releases have moved to github
+    version("3.5.0", sha256="5ed6ce6106303b800c5e91d37a250baff43b20824657b853ae04d11ad8bdd686")
     version("3.4.0", sha256="2c06cf5953da5afdce1478fa10fcd3c280a3b050f1b2367bf3e731d7374d9bb8")
     version("3.3.2", sha256="d09f972cfd88deb34b19b69878eb8af3bbbe4f1cde1434b69cedc2aa6247a0f2")
     version(
@@ -58,12 +59,12 @@ class Augustus(MakefilePackage):
 
     # Trying to use filter_file here got too complicated so use a patch with a
     # corresponding environment variable
-    patch("bam2wig_Makefile.patch", when="@3.4.0:")
+    patch("bam2wig_Makefile.patch", when="@3.4.0")
 
     def edit(self, spec, prefix):
         # Set compile commands for each compiler and
         # Fix for using 'boost' on Spack. (only after ver.3.3.1-tag1)
-        if self.version >= Version("3.3.1-tag1"):
+        if "@3.3.1-tag1:3.4.0" in spec:
             with working_dir(join_path("auxprogs", "utrrnaseq", "Debug")):
                 filter_file("g++", spack_cxx, "makefile", string=True)
                 filter_file(
@@ -173,9 +174,15 @@ class Augustus(MakefilePackage):
                 filter_file(pattern, repl, *files, backup=False)
 
     def setup_build_environment(self, env):
-        if self.version >= Version("3.4.0"):
-            htslib = self.spec["htslib"].prefix
+        htslib = self.spec["htslib"].prefix
+        bamtools = self.spec["bamtools"].prefix
+
+        if "@3.4.0" in self.spec:
             env.set("HTSLIBDIR", htslib)
+
+        if "@3.5.0:" in self.spec:
+            env.set("HTSLIB_INSTALL_DIR", htslib)
+            env.set("BAMTOOLS_INSTALL_DIR", bamtools)
 
     def setup_run_environment(self, env):
         env.set("AUGUSTUS_CONFIG_PATH", join_path(self.prefix, "config"))
