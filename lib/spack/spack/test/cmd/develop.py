@@ -32,7 +32,7 @@ class TestDevelop(object):
         assert dev_specs_entry["spec"] == str(spec)
 
         # check yaml representation
-        yaml = ev.config_dict(env.yaml)
+        yaml = ev.config_dict(env.manifest)
         assert spec.name in yaml["develop"]
         yaml_entry = yaml["develop"][spec.name]
         assert yaml_entry["spec"] == str(spec)
