@@ -72,6 +72,7 @@ def test_symlink_src_relative_to_link(stage):
     test_dir = tempfile.mkdtemp(dir=stage)
     subdir_1 = os.path.join(test_dir, "a")
     subdir_2 = os.path.join(subdir_1, "b")
+    link_dir = os.path.join(subdir_1, "c")
     os.mkdir(subdir_1)
     os.mkdir(subdir_2)
     prev_dir = os.getcwd()
@@ -87,6 +88,13 @@ def test_symlink_src_relative_to_link(stage):
         )
         assert os.path.exists(link_file)
         assert symlink.islink(link_file)
+        # Check dirs
+        assert not os.path.lexists(link_dir)
+        symlink.symlink(
+            source_path='b',
+            link_path='a/c'
+        )
+        assert os.path.lexists(link_dir)
     finally:
         os.chdir(prev_dir)
         os.close(fd)
@@ -98,6 +106,7 @@ def test_symlink_src_not_relative_to_link(stage):
     test_dir = tempfile.mkdtemp(dir=stage)
     subdir_1 = os.path.join(test_dir, "a")
     subdir_2 = os.path.join(subdir_1, "b")
+    link_dir = os.path.join(subdir_1, "c")
     os.mkdir(subdir_1)
     os.mkdir(subdir_2)
     prev_dir = os.getcwd()
@@ -110,11 +119,19 @@ def test_symlink_src_not_relative_to_link(stage):
         # Expected SymlinkError because source path does not exist relative to link path
         with pytest.raises(symlink.SymlinkError):
             symlink.symlink(
-                source_path=f"z/b/{os.path.basename(real_file)}",
+                source_path=f"d/{os.path.basename(real_file)}",
                 link_path=f"a/{os.path.basename(link_file)}",
             )
         assert not os.path.exists(link_file)
         assert not symlink.islink(link_file)
+        # Check dirs
+        assert not os.path.lexists(link_dir)
+        with pytest.raises(symlink.SymlinkError):
+            symlink.symlink(
+                source_path='d',
+                link_path='a/c'
+            )
+        assert not os.path.lexists(link_dir)
     finally:
         os.chdir(prev_dir)
         os.close(fd)
