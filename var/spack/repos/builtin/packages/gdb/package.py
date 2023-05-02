@@ -93,7 +93,7 @@ class Gdb(AutotoolsPackage, GNUMirrorPackage):
         args = [
             "--with-system-gdbinit={}".format(self.prefix.etc.gdbinit),
             "--with-system-zlib={}".format(self.spec["zlib"].prefix),
-            "--with-system-readline={}".format(self.spec["readline"].prefix)
+            "--with-system-readline={}".format(self.spec["readline"].prefix),
             *self.enable_or_disable("lto"),
             *self.with_or_without("quad"),
             *self.enable_or_disable("gold"),
