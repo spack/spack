@@ -544,7 +544,7 @@ def conflicts(conflict_spec, when=None, msg=None):
 
 
 @directive(("dependencies"))
-def depends_on(spec, when=None, type=dt.DEFAULT_TYPES, patches=None):
+def depends_on(spec, when=None, type=dt.DEFAULT_TYPES, patches=None, version_translator=None):
     """Creates a dict of deps with specs defining when they apply.
 
     Args:
@@ -554,6 +554,12 @@ def depends_on(spec, when=None, type=dt.DEFAULT_TYPES, patches=None):
         type (str or tuple): str or tuple of legal Spack deptypes
         patches (typing.Callable or list): single result of ``patch()`` directive, a
             ``str`` to be passed to ``patch``, or a list of these
+        version_translator (function): function to generate a version-ish for spec
+            from a parent version. If provided, this function will be called for
+            each version defined for pkg, and any non-vacuous result will be used to
+            add a dependency with that version as an extra constraint on spec.
+            Examples of suitable functions: ``spack.version.Version`` (NOP) or
+            ``lambda v: v.up_to(2)`` (minor version match)
 
     This directive is to be used inside a Package definition to declare
     that the package requires other packages to be built first.
@@ -562,7 +568,29 @@ def depends_on(spec, when=None, type=dt.DEFAULT_TYPES, patches=None):
     """
 
     def _execute_depends_on(pkg):
-        _depends_on(pkg, spec, when=when, type=type, patches=patches)
+        executed = False
+        if version_translator:
+            # Produce a different dependency for every package version
+            # for which version_translator returns an answer that alters
+            # the spec.
+            for pkg_version in pkg.versions:
+                version_ish = version_translator(pkg_version)
+                if version_ish is not None:
+                    constrained_spec = spack.spec.Spec(spec)
+                    if constrained_spec.constrain(f"@{version_ish}"):
+                        _depends_on(
+                            pkg,
+                            constrained_spec,
+                            when=f"@{pkg_version} {when}" if when else f"@{pkg_version}",
+                            type=type,
+                            patches=patches,
+                        )
+                        executed = True
+
+        # If we haven't already produced one or more version-specific
+        # dependencies, do the basic dependency for spec.
+        if not executed:
+            _depends_on(pkg, spec, when=when, type=type, patches=patches)
 
     return _execute_depends_on
 
