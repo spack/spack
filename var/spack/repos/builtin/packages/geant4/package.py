@@ -3,13 +3,14 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack.package import *
 from spack.directives import directive, pkg_depends_on
+from spack.package import *
 
 
 @directive(("dependencies"))
 def depends_on_geant4_data():
     """Package-specific directive to depend on the corresponding version of geant4-data."""
+
     def _execute_depends_on_geant4_data(pkg):
         for vers in pkg.versions.keys():
             pkg_depends_on(pkg, f"geant4-data@{vers}", when=f"@{vers}", type="run")
