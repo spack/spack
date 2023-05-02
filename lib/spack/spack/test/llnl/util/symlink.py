@@ -146,11 +146,8 @@ def test_symlink_link_exists(stage):
     symlink.symlink(real_dir, link_dir)
     assert os.path.exists(real_dir)
     assert os.path.exists(link_dir)
-    try:
+    with pytest.raises(symlink.SymlinkError):
         symlink.symlink(source_path=real_dir, link_path=link_dir)
-        assert False, "symlink command succeeded when it should have failed."
-    except symlink.SymlinkError:
-        ...
 
 
 @pytest.mark.skipif(not symlink._windows_can_symlink(), reason="Test requires elevated privileges")
