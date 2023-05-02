@@ -30,22 +30,17 @@ def test_fetch_missing_cache(tmpdir, _fetch_method):
 
 @pytest.mark.parametrize("_fetch_method", ["curl", "urllib"])
 def test_fetch(tmpdir, _fetch_method):
-    """Ensure a fetch after expanding is effectively a no-op.
-
-    Since the `stage.save_filename` value is the same as the `cache` path, fetch()
-    deletes the cache.tar.gz file, then tries to create a symlink that points to
-    itself for the file that it just deleted. This raises a symlink.Symlink error
-    because the resulting link is broken.
-    """
-    testpath = str(tmpdir)
-    cache = os.path.join(testpath, "cache.tar.gz")
+    """Ensure a fetch after expanding is effectively a no-op."""
+    cache_dir = tmpdir.join("cache")
+    stage_dir = tmpdir.join("stage")
+    mkdirp(cache_dir)
+    mkdirp(stage_dir)
+    cache = os.path.join(cache_dir, "cache.tar.gz")
     touch(cache)
     url = url_util.path_to_file_url(cache)
     with spack.config.override("config:url_fetch_method", _fetch_method):
         fetcher = CacheURLFetchStrategy(url=url)
-        newpath = os.path.join(testpath, "..", "newpath")
-        mkdirp(newpath)
-        with Stage(fetcher, path=newpath) as stage:
+        with Stage(fetcher, path=stage_dir) as stage:
             source_path = stage.source_path
             mkdirp(source_path)
             fetcher.fetch()
