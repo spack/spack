@@ -1325,10 +1325,34 @@ def traverse_tree(
 
 def lexists_islink_isdir(path):
     """Computes the tuple (lexists(path), islink(path), isdir(path)) in a minimal
-    number of stat calls."""
-    if not os.path.lexists(path):
-        return False, False, False
-    return os.path.lexists(path), islink(path), os.path.isdir(path)
+    number of stat calls on unix. Use os.path and symlink.islink methods for windows."""
+    if sys.platform == 'win32':
+        if not os.path.lexists(path):
+            return False, False, False
+        return os.path.lexists(path), islink(path), os.path.isdir(path)
+    else:
+        # First try to lstat, so we know if it's a link or not.
+        try:
+            lst = os.lstat(path)
+        except (IOError, OSError):
+            return False, False, False
+
+        is_link = stat.S_ISLNK(lst.st_mode)
+
+        # Check whether file is a dir.
+        if not is_link:
+            is_dir = stat.S_ISDIR(lst.st_mode)
+            return True, is_link, is_dir
+
+        # Check whether symlink points to a dir.
+        try:
+            st = os.stat(path)
+            is_dir = stat.S_ISDIR(st.st_mode)
+        except (IOError, OSError):
+            # Dangling symlink (i.e. it lexists but not exists)
+            is_dir = False
+
+        return True, is_link, is_dir
 
 
 class BaseDirectoryVisitor(object):
