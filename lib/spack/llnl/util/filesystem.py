@@ -102,7 +102,7 @@ if sys.version_info < (3, 7, 4):
             pass
 
         # follow symlinks (aka don't not follow symlinks)
-        follow = follow_symlinks or not (os.path.islink(src) and os.path.islink(dst))
+        follow = follow_symlinks or not (islink(src) and islink(dst))
         if follow:
             # use the real function if it exists
             def lookup(name):
@@ -170,7 +170,7 @@ def rename(src, dst):
     if sys.platform == "win32":
         # Windows path existence checks will sometimes fail on junctions/links/symlinks
         # so check for that case
-        if os.path.exists(dst) or os.path.islink(dst):
+        if os.path.exists(dst) or islink(dst):
             os.remove(dst)
     os.rename(src, dst)
 
@@ -567,7 +567,7 @@ def set_install_permissions(path):
     # If this points to a file maintained in a Spack prefix, it is assumed that
     # this function will be invoked on the target. If the file is outside a
     # Spack-maintained prefix, the permissions should not be modified.
-    if os.path.islink(path):
+    if islink(path):
         return
     if os.path.isdir(path):
         os.chmod(path, 0o755)
@@ -634,7 +634,7 @@ def chmod_x(entry, perms):
 @system_path_filter
 def copy_mode(src, dest):
     """Set the mode of dest to that of src unless it is a link."""
-    if os.path.islink(dest):
+    if islink(dest):
         return
     src_mode = os.stat(src).st_mode
     dest_mode = os.stat(dest).st_mode
@@ -794,7 +794,7 @@ def copy_tree(
             ignore=ignore,
             follow_nonexisting=True,
         ):
-            if os.path.islink(s):
+            if islink(s):
                 link_target = resolve_link_target_relative_to_the_link(s)
                 if symlinks:
                     target = os.readlink(s)
@@ -1285,7 +1285,7 @@ def traverse_tree(
         rel_child = os.path.join(rel_path, f)
 
         # If the source path is a link and the link's source is ignored, then ignore the link too.
-        if os.path.islink(source_child) and not follow_links:
+        if islink(source_child) and not follow_links:
             target = os.readlink(source_child)
             all_parents = accumulate(target.split(os.sep), lambda x, y: os.path.join(x, y))
             if any(map(ignore, all_parents)):
@@ -1299,7 +1299,7 @@ def traverse_tree(
         # TODO: for symlinks, os.path.isdir looks for the link target. If the
         # target is relative to the link, then that may not resolve properly
         # relative to our cwd - see resolve_link_target_relative_to_the_link
-        if os.path.isdir(source_child) and (follow_links or not os.path.islink(source_child)):
+        if os.path.isdir(source_child) and (follow_links or not islink(source_child)):
             # When follow_nonexisting isn't set, don't descend into dirs
             # in source that do not exist in dest
             if follow_nonexisting or os.path.exists(dest_child):
@@ -1521,7 +1521,7 @@ def remove_if_dead_link(path):
     Parameters:
         path (str): The potential dead link
     """
-    if os.path.islink(path) and not os.path.exists(path):
+    if islink(path) and not os.path.exists(path):
         os.unlink(path)
 
 
@@ -1580,7 +1580,7 @@ def remove_linked_tree(path):
         kwargs["onerror"] = readonly_file_handler(ignore_errors=True)
 
     if os.path.exists(path):
-        if os.path.islink(path):
+        if islink(path):
             shutil.rmtree(os.path.realpath(path), **kwargs)
             os.unlink(path)
         else:
@@ -2681,7 +2681,7 @@ def remove_directory_contents(dir):
     """Remove all contents of a directory."""
     if os.path.exists(dir):
         for entry in [os.path.join(dir, entry) for entry in os.listdir(dir)]:
-            if os.path.isfile(entry) or os.path.islink(entry):
+            if os.path.isfile(entry) or islink(entry):
                 os.unlink(entry)
             else:
                 shutil.rmtree(entry)
