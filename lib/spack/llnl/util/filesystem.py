@@ -1326,7 +1326,7 @@ def traverse_tree(
 def lexists_islink_isdir(path):
     """Computes the tuple (lexists(path), islink(path), isdir(path)) in a minimal
     number of stat calls on unix. Use os.path and symlink.islink methods for windows."""
-    if sys.platform == 'win32':
+    if sys.platform == "win32":
         if not os.path.lexists(path):
             return False, False, False
         return os.path.lexists(path), islink(path), os.path.isdir(path)

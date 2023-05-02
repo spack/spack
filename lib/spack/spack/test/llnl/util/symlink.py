@@ -90,10 +90,7 @@ def test_symlink_src_relative_to_link(stage):
         assert symlink.islink(link_file)
         # Check dirs
         assert not os.path.lexists(link_dir)
-        symlink.symlink(
-            source_path='b',
-            link_path='a/c'
-        )
+        symlink.symlink(source_path="b", link_path="a/c")
         assert os.path.lexists(link_dir)
     finally:
         os.chdir(prev_dir)
@@ -127,10 +124,7 @@ def test_symlink_src_not_relative_to_link(stage):
         # Check dirs
         assert not os.path.lexists(link_dir)
         with pytest.raises(symlink.SymlinkError):
-            symlink.symlink(
-                source_path='d',
-                link_path='a/c'
-            )
+            symlink.symlink(source_path="d", link_path="a/c")
         assert not os.path.lexists(link_dir)
     finally:
         os.chdir(prev_dir)
