@@ -190,11 +190,6 @@ def _windows_create_link(source: str, link: str):
     Attempts to create a Hard Link or Junction as an alternative
     to a symbolic link. This is called when symbolic links cannot
     be created.
-
-    os.symlink can create a link with relative paths, even if the source paths is not
-    relative to the current working directory. In order to emulate that behavior,
-    if the source path doesn't exist, check to see if the source path exists relative
-    to the link's parent directory.
     """
     if sys.platform != "win32":
         raise SymlinkError("windows_create_link method can't be used on non-Windows OS.")
