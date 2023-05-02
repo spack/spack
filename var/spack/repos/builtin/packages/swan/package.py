@@ -16,16 +16,15 @@ class Swan(MakefilePackage):
     features. This list reflects on the scientific relevance of
     the development of SWAN."""
 
-    homepage = "http://swanmodel.sourceforge.net/"
+    homepage = "https://swanmodel.sourceforge.net/"
     url = "https://swanmodel.sourceforge.io/download/zip/swan4145.tar.gz"
 
-    maintainers = ["lhxone", "stevenrbrandt"]
+    maintainers("lhxone", "stevenrbrandt")
 
     # This is very important
     parallel = False
 
-    def url_for_version(self, version):
-        return "https://swanmodel.sourceforge.io/download/zip/swan{0}.tar.gz"
+    url = "https://swanmodel.sourceforge.io/download/zip/swan{0}.tar.gz"
 
     version(
         "4145",

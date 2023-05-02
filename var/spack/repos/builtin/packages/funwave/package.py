@@ -20,13 +20,13 @@ class Funwave(MakefilePackage):
     """
 
     homepage = "https://fengyanshi.github.io/build/html/index.html"
-    url = "https://github.com/fengyanshi/FUNWAVE-TVD"
+    git = "https://github.com/fengyanshi/FUNWAVE-TVD"
 
-    maintainers = ["stevenrbrandt", "fengyanshi"]
+    maintainers("stevenrbrandt", "fengyanshi")
 
-    version("3.2", git="https://github.com/fengyanshi/FUNWAVE-TVD", tag="v3.2")
-    version("3.1", git="https://github.com/fengyanshi/FUNWAVE-TVD", tag="v3.1")
-    version("3.0", git="https://github.com/fengyanshi/FUNWAVE-TVD", tag="v3.0")
+    version("3.2", tag="v3.2")
+    version("3.1", tag="v3.1")
+    version("3.0", tag="v3.0")
 
     depends_on("mpi")
 
