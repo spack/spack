@@ -62,7 +62,7 @@ jobs:
               cmake bison libbison-dev kcov
     - name: Install Python packages
       run: |
-          pip install --upgrade pip six setuptools pytest pytest-xdist pytest-cov
+          pip install --upgrade pip setuptools pytest pytest-xdist pytest-cov
           pip install --upgrade flake8 "isort>=4.3.5" "mypy>=0.900" "click" "black"
     - name: Setup git configuration
       run: |
@@ -107,7 +107,7 @@ jobs:
           sudo apt-get install -y coreutils kcov csh zsh tcsh fish dash bash
     - name: Install Python packages
       run: |
-          pip install --upgrade pip six setuptools pytest coverage[toml] pytest-xdist
+          pip install --upgrade pip setuptools pytest coverage[toml] pytest-xdist
     - name: Setup git configuration
       run: |
           # Need this for the git tests to succeed.
@@ -163,7 +163,7 @@ jobs:
           sudo apt-get -y install coreutils cvs gfortran graphviz gnupg2 mercurial ninja-build kcov
     - name: Install Python packages
       run: |
-          pip install --upgrade pip six setuptools pytest coverage[toml] pytest-cov clingo pytest-xdist
+          pip install --upgrade pip setuptools pytest coverage[toml] pytest-cov clingo pytest-xdist
     - name: Setup git configuration
       run: |
           # Need this for the git tests to succeed.
@@ -193,7 +193,7 @@ jobs:
         python-version: ${{ matrix.python-version }}
     - name: Install Python packages
       run: |
-          pip install --upgrade pip six setuptools
+          pip install --upgrade pip setuptools
           pip install --upgrade pytest coverage[toml] pytest-xdist pytest-cov
     - name: Setup Homebrew packages
       run: |
