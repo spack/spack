@@ -21,7 +21,7 @@ class Vampirtrace(AutotoolsPackage):
     depends_on("mpi", when="+mpi")
     depends_on("otf")
     depends_on("papi")
-    depends_on("zlib")
+    depends_on("zlib-api")
 
     # VampirTrace fails to build with newer versions of MPICH due to
     # https://github.com/pmodels/mpich/commit/c3dbc09ae20a503ac4b870893e3e330d52ea5a3b
@@ -45,7 +45,7 @@ class Vampirtrace(AutotoolsPackage):
             "--with-extern-otf",
             "--with-extern-otf-dir={0}".format(spec["otf"].prefix),
             "--with-papi-dir={0}".format(spec["papi"].prefix),
-            "--with-zlib-dir={0}".format(spec["zlib"].prefix),
+            "--with-zlib-dir={0}".format(spec["zlib-api"].prefix),
             "--with-wrapper-cc-compiler={0}".format(compiler.cc),
             "--with-wrapper-cc-cpp={0} -E".format(compiler.cc),
             "--with-wrapper-cxx-compiler={0}".format(compiler.cxx),

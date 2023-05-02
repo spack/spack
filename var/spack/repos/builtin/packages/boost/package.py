@@ -229,7 +229,7 @@ class Boost(Package):
 
     depends_on("mpi", when="+mpi")
     depends_on("bzip2", when="+iostreams")
-    depends_on("zlib", when="+iostreams")
+    depends_on("zlib-api", when="+iostreams")
     depends_on("zstd", when="+iostreams")
     depends_on("xz", when="+iostreams")
     depends_on("py-numpy", when="+numpy", type=("build", "run"))
@@ -526,9 +526,9 @@ class Boost(Package):
                     "-s",
                     "BZIP2_LIBPATH=%s" % spec["bzip2"].prefix.lib,
                     "-s",
-                    "ZLIB_INCLUDE=%s" % spec["zlib"].prefix.include,
+                    "ZLIB_INCLUDE=%s" % spec["zlib-api"].prefix.include,
                     "-s",
-                    "ZLIB_LIBPATH=%s" % spec["zlib"].prefix.lib,
+                    "ZLIB_LIBPATH=%s" % spec["zlib-api"].prefix.lib,
                     "-s",
                     "LZMA_INCLUDE=%s" % spec["xz"].prefix.include,
                     "-s",

@@ -250,7 +250,7 @@ class Gdal(CMakePackage, AutotoolsPackage, PythonExtension):
     depends_on("proj@:6", when="@2.5:2")
     depends_on("proj@:5", when="@2.4")
     depends_on("proj@:4", when="@:2.3")
-    depends_on("zlib")
+    depends_on("zlib-api")
     depends_on("libtiff@4:", when="@3:")
     depends_on("libtiff@3.6.0:")  # 3.9.0+ needed to pass testsuite
     depends_on("libgeotiff@1.5:", when="@3:")
@@ -603,7 +603,7 @@ class AutotoolsBuilder(AutotoolsBuilder):
             "--with-geotiff={}".format(self.spec["libgeotiff"].prefix),
             "--with-libjson-c={}".format(self.spec["json-c"].prefix),
             "--with-libtiff={}".format(self.spec["libtiff"].prefix),
-            "--with-libz={}".format(self.spec["zlib"].prefix),
+            "--with-libz={}".format(self.spec["zlib-api"].prefix),
             # Optional dependencies
             self.with_or_without("armadillo", package="armadillo"),
             self.with_or_without("blosc", package="c-blosc"),

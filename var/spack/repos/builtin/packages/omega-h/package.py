@@ -59,7 +59,7 @@ class OmegaH(CMakePackage, CudaPackage):
     depends_on("mpi", when="+mpi")
     depends_on("trilinos +kokkos", when="+trilinos")
     depends_on("kokkos", when="+kokkos")
-    depends_on("zlib", when="+zlib")
+    depends_on("zlib-api", when="+zlib")
     # Note: '+cuda' and 'cuda_arch' variants are added by the CudaPackage
     depends_on("cuda", when="+cuda")
     conflicts(
@@ -126,7 +126,7 @@ class OmegaH(CMakePackage, CudaPackage):
             args.append("-DOmega_h_USE_Kokkos:BOOL=ON")
         if "+zlib" in self.spec:
             args.append("-DOmega_h_USE_ZLIB:BOOL=ON")
-            args.append("-DZLIB_ROOT:PATH={0}".format(self.spec["zlib"].prefix))
+            args.append("-DZLIB_ROOT:PATH={0}".format(self.spec["zlib-api"].prefix))
         else:
             args.append("-DOmega_h_USE_ZLIB:BOOL=OFF")
         if "+examples" in self.spec:

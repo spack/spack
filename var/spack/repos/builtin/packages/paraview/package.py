@@ -229,7 +229,7 @@ class Paraview(CMakePackage, CudaPackage, ROCmPackage):
     depends_on("libxml2")
     depends_on("lz4")
     depends_on("xz")
-    depends_on("zlib")
+    depends_on("zlib-api")
     depends_on("libcatalyst@2:", when="+libcatalyst")
     depends_on("hip@5.2:", when="+rocm")
     for target in ROCmPackage.amdgpu_targets:

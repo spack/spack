@@ -20,6 +20,8 @@ class ZlibNg(AutotoolsPackage, CMakePackage):
     variant("compat", default=True, description="Enable compatibility API")
     variant("opt", default=True, description="Enable optimizations")
 
+    provides("zlib-api", when="+compat")
+
     # Default to autotools, since cmake would result in circular dependencies if it's not
     # reused.
     build_system("autotools", "cmake", default="autotools")
@@ -27,6 +29,11 @@ class ZlibNg(AutotoolsPackage, CMakePackage):
     with when("build_system=cmake"):
         depends_on("cmake@3.5.1:", type="build")
         depends_on("cmake@3.14.0:", type="build", when="@2.1.0:")
+
+    @property
+    def libs(self):
+        name = "libz" if self.spec.satisfies("+compat") else "libz-ng"
+        return find_libraries(name, root=self.prefix, recursive=True, shared=True)
 
 
 class AutotoolsBuilder(autotools.AutotoolsBuilder):

@@ -40,7 +40,7 @@ class CBlosc2(CMakePackage):
     depends_on("lizard", when="+lizard")
     depends_on("lz4", when="+lz4")
     depends_on("snappy", when="+snappy")
-    depends_on("zlib", when="+zlib")
+    depends_on("zlib-api", when="+zlib")
     depends_on("zstd", when="+zstd")
 
     def cmake_args(self):
