@@ -17,6 +17,7 @@ import pytest
 
 import llnl.util.filesystem as fs
 
+import spack.install_test
 import spack.package_base
 import spack.repo
 from spack.build_systems.generic import Package
@@ -118,14 +119,14 @@ def test_possible_dependencies_with_multiple_classes(mock_packages, mpileaks_pos
     assert expected == spack.package_base.possible_dependencies(*pkgs)
 
 
-def setup_install_test(source_paths, install_test_root):
+def setup_install_test(source_paths, test_root):
     """
     Set up the install test by creating sources and install test roots.
 
     The convention used here is to create an empty file if the path name
     ends with an extension otherwise, a directory is created.
     """
-    fs.mkdirp(install_test_root)
+    fs.mkdirp(test_root)
     for path in source_paths:
         if os.path.splitext(path)[1]:
             fs.touchp(path)
@@ -160,10 +161,11 @@ def test_cache_extra_sources(install_mockery, spec, sources, extras, expect):
     """Test the package's cache extra test sources helper function."""
     s = spack.spec.Spec(spec).concretized()
     s.package.spec.concretize()
-    source_path = s.package.stage.source_path
 
+    source_path = s.package.stage.source_path
     srcs = [fs.join_path(source_path, src) for src in sources]
-    setup_install_test(srcs, s.package.install_test_root)
+    test_root = spack.install_test.install_test_root(s.package)
+    setup_install_test(srcs, test_root)
 
     emsg_dir = "Expected {0} to be a directory"
     emsg_file = "Expected {0} to be a file"
@@ -174,10 +176,10 @@ def test_cache_extra_sources(install_mockery, spec, sources, extras, expect):
         else:
             assert os.path.isdir(src), emsg_dir.format(src)
 
-    s.package.cache_extra_test_sources(extras)
+    spack.install_test.cache_extra_test_sources(s.package, extras)
 
-    src_dests = [fs.join_path(s.package.install_test_root, src) for src in sources]
-    exp_dests = [fs.join_path(s.package.install_test_root, e) for e in expect]
+    src_dests = [fs.join_path(test_root, src) for src in sources]
+    exp_dests = [fs.join_path(test_root, e) for e in expect]
     poss_dests = set(src_dests) | set(exp_dests)
 
     msg = "Expected {0} to{1} exist"
@@ -200,10 +202,29 @@ def test_cache_extra_sources_fails(install_mockery):
     s.package.spec.concretize()
 
     with pytest.raises(ValueError, match="Only relative paths"):
-        s.package.cache_extra_test_sources(["a/b", "/c/d"])
+        spack.install_test.cache_extra_test_sources(s.package, ["a/b", "/c/d"])
 
     with pytest.raises(OSError, match="does not exist"):
-        s.package.cache_extra_test_sources("no-such-file")
+        spack.install_test.cache_extra_test_sources(s.package, "no-such-file")
+
+
+# TODO (post-34236): Remove this test case when remove install_test_root
+# TODO (post-34236): and cache_extra_test_sources package methods.
+def test_cache_extra_sources_warnings(install_mockery, capfd):
+    s = spack.spec.Spec("a").concretized()
+    s.package.spec.concretize()
+    source = "example.cpp"
+
+    _ = s.package.install_test_root
+    err = capfd.readouterr()[1]
+    assert "deprecated" in err
+    assert "install_test_root(pkg)" in err
+
+    with pytest.raises(OSError):
+        s.package.cache_extra_test_sources(source)
+    out, err = capfd.readouterr()
+    assert "deprecated" in err
+    assert "cache_extra_test_sources(pkg, srcs)" in err
 
 
 def test_package_exes_and_libs():

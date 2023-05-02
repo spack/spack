@@ -1151,14 +1151,15 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
         return os.path.join(self.metadata_dir, _spack_configure_argsfile)
 
     # TODO (post-34236): Update tests and all packages that use this as a
-    # TODO (post-34236): package method to the routine made available in
-    # TODO (post-34236): package so can remove this.
-    # TODO/TLD (per alalazo): Add warning with instructions on updating and
-    # TODO/TLD (per alalazo): say the property will not be supported anymore
-    # TODO/TLD (per alalazo): in v0.21
+    # TODO (post-34236): package method to the function already available
+    # TODO (post-34236): to packages. Once done, remove this property.
     @property
     def install_test_root(self):
         """Return the install test root directory."""
+        tty.warn(
+            "This method is deprecated with removal expected v0.21. Use "
+            "'install_test_root(pkg)' instead."
+        )
         return install_test_root(self)
 
     def archive_install_test_log(self):
@@ -1845,10 +1846,8 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
         builder.install()
 
     # TODO (post-34236): Update tests and all packages that use this as a
-    # TODO (post-34236): package method to the routine made available in
-    # TODO (post-34236): package so can remove this.
-    # TODO/TLD (per alalazo): add warning that will be removed and remove on
-    # TODO/TLD (per alalazo): develop when working towards v0.21
+    # TODO (post-34236): package method to the routine made available to
+    # TODO (post-34236): packages. Once done, remove this method.
     def cache_extra_test_sources(self, srcs):
         """Copy relative source paths to the corresponding install test subdir
 
@@ -1863,6 +1862,10 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
                 be copied to the corresponding location(s) under the install
                 testing directory.
         """
+        tty.warn(
+            "This method is deprecated with removal expected in v0.21. Use "
+            "'cache_extra_test_sources(pkg, srcs)' instead."
+        )
         cache_extra_test_sources(self, srcs)
 
     def do_test(self, dirty=False, externals=False):
