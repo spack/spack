@@ -8,6 +8,7 @@ import re
 import sys
 
 from spack.package import *
+from spack.build_environment import dso_suffix
 
 
 class Mpich(AutotoolsPackage, CudaPackage, ROCmPackage):
