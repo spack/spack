@@ -35,10 +35,13 @@ class Bricks(CMakePackage):
     depends_on("cuda", when="+cuda")
     depends_on("mpi")
 
+    patch("bricks-cmakelists-option-opencl.patch")
+
     def cmake_args(self):
         """CMake arguments for configure stage"""
-        args = []
-
+        args = [self.define_from_variant("BRICK_USE_OPENCL", "cuda")]
+        if "+cuda" in self.spec:
+            args.append(f"-DOCL_ROOT:STRING={self.spec['opencl-clhpp'].prefix}")
         return args
 
     def flag_handler(self, name, flags):
