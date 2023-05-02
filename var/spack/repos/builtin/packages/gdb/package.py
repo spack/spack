@@ -79,6 +79,8 @@ class Gdb(AutotoolsPackage, GNUMirrorPackage):
     # https://bugzilla.redhat.com/show_bug.cgi?id=1829702
     depends_on("python@:3.8", when="@:9.2+python", type=("build", "link", "run"))
     depends_on("xz", when="+xz")
+    depends_on("zlib")
+    depends_on("zstd", when="@13.1:")
     depends_on("source-highlight", when="+source-highlight")
     depends_on("ncurses", when="+tui")
     depends_on("gmp", when="@11.1:")
@@ -88,7 +90,8 @@ class Gdb(AutotoolsPackage, GNUMirrorPackage):
 
     def configure_args(self):
         args = [
-            "--with-system-gdbinit={0}".format(self.prefix.etc.gdbinit),
+            "--with-system-gdbinit={}".format(self.prefix.etc.gdbinit),
+            "--with-system-zlib",
             *self.enable_or_disable("lto"),
             *self.with_or_without("quad"),
             *self.enable_or_disable("gold"),
@@ -97,12 +100,15 @@ class Gdb(AutotoolsPackage, GNUMirrorPackage):
             *self.with_or_without("debuginfod"),
         ]
 
+        if self.spec.satisfies("@13.1:"):
+            args.append("--with-zstd")
+
         if self.spec.version >= Version("11.1"):
-            args.append("--with-gmp={0}".format(self.spec["gmp"].prefix))
+            args.append("--with-gmp={}".format(self.spec["gmp"].prefix))
 
         if "+python" in self.spec:
-            args.append("--with-python={0}".format(self.spec["python"].command))
-            args.append("LDFLAGS={0}".format(self.spec["python"].libs.ld_flags))
+            args.append("--with-python={}".format(self.spec["python"].command))
+            args.append("LDFLAGS={}".format(self.spec["python"].libs.ld_flags))
 
         return args
 
