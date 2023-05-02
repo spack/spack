@@ -24,8 +24,6 @@ class Swan(MakefilePackage):
     # This is very important
     parallel = False
 
-    url = "https://swanmodel.sourceforge.io/download/zip/swan{0}.tar.gz"
-
     version(
         "4145",
         preferred=True,
