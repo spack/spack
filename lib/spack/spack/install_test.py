@@ -484,20 +484,6 @@ def test_part(pkg: Pb, test_name: str, purpose: str, work_dir: str = ".", verbos
                 tester.add_failure(exc, m)
 
 
-def test_phase_callbacks(builder: spack.builder.Builder, phase_name: str, method_names: List[str]):
-    """Execute the builder's package phase-time tests.
-
-    Args:
-        builder: builder for package being tested
-        phase_name: the name of the build-time phase (e.g., ``build``, ``install``)
-        method_names: phase-specific callback method names
-    """
-    if not builder.pkg.run_tests or not method_names:
-        return
-
-    builder.pkg.tester.phase_tests(builder, phase_name, method_names)
-
-
 def copy_test_files(pkg: Pb, test_spec: spack.spec.Spec):
     """Copy the spec's cached and custom test files to the test stage directory.
 
