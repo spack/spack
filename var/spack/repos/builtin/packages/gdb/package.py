@@ -81,7 +81,6 @@ class Gdb(AutotoolsPackage, GNUMirrorPackage):
     depends_on("xz", when="+xz")
     depends_on("zlib")
     depends_on("zstd", when="@13.1:")
-    depends_on("readline")
     depends_on("source-highlight", when="+source-highlight")
     depends_on("ncurses", when="+tui")
     depends_on("gmp", when="@11.1:")
@@ -92,8 +91,7 @@ class Gdb(AutotoolsPackage, GNUMirrorPackage):
     def configure_args(self):
         args = [
             "--with-system-gdbinit={}".format(self.prefix.etc.gdbinit),
-            "--with-system-zlib={}".format(self.spec["zlib"].prefix),
-            "--with-system-readline={}".format(self.spec["readline"].prefix),
+            "--with-system-zlib",
             *self.enable_or_disable("lto"),
             *self.with_or_without("quad"),
             *self.enable_or_disable("gold"),
@@ -103,7 +101,7 @@ class Gdb(AutotoolsPackage, GNUMirrorPackage):
         ]
 
         if self.spec.satisfies("@13.1:"):
-            args.append("--with-zstd={}".format(self.spec["zstd"].prefix))
+            args.append("--with-zstd")
 
         if self.spec.version >= Version("11.1"):
             args.append("--with-gmp={}".format(self.spec["gmp"].prefix))
