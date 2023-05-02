@@ -42,8 +42,9 @@ class GobjectIntrospection(MesonPackage, AutotoolsPackage):
     # version 1.48.0 build fails with glib 2.49.4
     depends_on("glib@2.48.1", when="@1.48.0")
     depends_on("libffi")
-    # https://gitlab.gnome.org/GNOME/gobject-introspection/-/merge_requests/283
-    depends_on("libffi@:3.3", when="@:1.72")  # libffi 3.4 caused seg faults
+    # https://gitlab.gnome.org/GNOME/gobject-introspection/-/merge_requests/301
+    # merged into 1.71.0.
+    depends_on("libffi@:3.3", when="@:1.70")  # libffi 3.4 caused seg faults
     depends_on("python")
 
     # This package creates several scripts from
