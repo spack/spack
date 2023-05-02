@@ -48,7 +48,7 @@ def symlink(source_path: str, link_path: str):
     link_path = os.path.normpath(link_path)
 
     # Perform basic checks to make sure symlinking will succeed
-    if os.path.exists(link_path):
+    if os.path.lexists(link_path):
         raise SymlinkError(f"Link path ({link_path}) already exists. Cannot create link.")
 
     if not os.path.exists(source_path):
