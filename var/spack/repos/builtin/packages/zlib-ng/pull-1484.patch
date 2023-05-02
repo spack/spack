@@ -1,0 +1,31 @@
+From 218854d8a780f80863f1f95aca5197c8d8ec8e50 Mon Sep 17 00:00:00 2001
+From: Harmen Stoppels <harmenstoppels@gmail.com>
+Date: Tue, 2 May 2023 10:36:16 +0200
+Subject: [PATCH] Include GNUInstallDirs earlier
+
+for pkg config dir
+---
+ cmake/detect-install-dirs.cmake | 6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
+
+diff --git a/cmake/detect-install-dirs.cmake b/cmake/detect-install-dirs.cmake
+index d2225f327..a7c774f47 100644
+--- a/cmake/detect-install-dirs.cmake
++++ b/cmake/detect-install-dirs.cmake
+@@ -26,6 +26,9 @@ elseif (DEFINED INSTALL_INC_DIR)
+     set(CMAKE_INSTALL_INCLUDEDIR "${INSTALL_INC_DIR}")
+ endif()
+ 
++# Define GNU standard installation directories
++include(GNUInstallDirs)
++
+ # Determine installation directory for pkgconfig files
+ if (DEFINED PKGCONFIG_INSTALL_DIR)
+     set(PKGCONFIG_INSTALL_DIR "${PKGCONFIG_INSTALL_DIR}" CACHE PATH "Installation directory for pkgconfig (.pc) files" FORCE)
+@@ -38,6 +41,3 @@ elseif (DEFINED CMAKE_INSTALL_FULL_PKGCONFIGDIR)
+ else()
+     set(PKGCONFIG_INSTALL_DIR "${CMAKE_INSTALL_LIBDIR}/pkgconfig" CACHE PATH "Installation directory for pkgconfig (.pc) files")
+ endif()
+-
+-# Define GNU standard installation directories
+-include(GNUInstallDirs)
