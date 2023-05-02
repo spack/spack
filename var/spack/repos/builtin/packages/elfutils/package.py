@@ -62,10 +62,11 @@ class Elfutils(AutotoolsPackage, SourcewarePackage):
         sha256="d786d49c28d7f0c8fc27bab39ca8714e5f4d128c7f09bb18533a8ec99b38dbf8",
     )
 
-    depends_on("bzip2", type="link", when="+bzip2")
-    depends_on("xz", type="link", when="+xz")
-    depends_on("zstd", type="link", when="@0.182:")
+    depends_on("bzip2", type="link")
+    depends_on("xz", type="link")
     depends_on("zlib", type="link")
+    depends_on("zstd", type="link", when="@0.182:")
+
     depends_on("gettext", when="+nls")
     depends_on("m4", type="build")
     depends_on("pkgconfig@0.9.0:", type=("build", "link"))
@@ -105,9 +106,9 @@ class Elfutils(AutotoolsPackage, SourcewarePackage):
     def configure_args(self):
         spec = self.spec
         args = [
-            "--with-zlib=%s" % spec["zlib"].prefix,
             "--with-bzlib=%s" % spec["bzip2"].prefix,
             "--with-lzma=%s" % spec["xz"].prefix,
+            "--with-zlib=%s" % spec["zlib"].prefix,
         ]
 
         if "@0.182:" in spec:
