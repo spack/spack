@@ -517,8 +517,7 @@ def copy_test_files(pkg: Pb, test_spec: spack.spec.Spec):
         tty.debug(f"{test_spec.name}: skipping test data copy since no package class found")
         return
 
-    package_dir = spack.package_base.package_directory(pkg_cls)
-    data_source = Prefix(package_dir).test
+    data_source = Prefix(pkg_cls.package_dir).test
     data_dir = pkg.test_suite.current_test_data_dir
     if os.path.isdir(data_source) and not os.path.exists(data_dir):
         # We assume data dir is used read-only

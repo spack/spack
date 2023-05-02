@@ -111,11 +111,6 @@ def deprecated_version(pkg, version):
     return False
 
 
-def package_directory(cls):
-    """Returns the path to the package class directory."""
-    return os.path.abspath(os.path.dirname(cls.module.__file__))
-
-
 def preferred_version(pkg):
     """
     Returns a sorted list of the preferred versions of the package.
@@ -777,7 +772,7 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
     @classproperty
     def package_dir(cls):
         """Directory where the package.py file lives."""
-        return package_directory(cls)
+        return os.path.abspath(os.path.dirname(cls.module.__file__))
 
     @classproperty
     def module(cls):
