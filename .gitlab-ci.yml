@@ -172,6 +172,18 @@ update_build_cache:
   trigger:
     project: hpc/spack-cacher
 
+# Trigger building containers equivalent to modules
+update_containers:
+  needs: [update_build_cache]
+  # Really only want to run this when builds are active: exclude running
+  # on PRs, just merges and schedules.
+  rules:
+    - if: $CI_EXTERNAL_PULL_REQUEST_IID
+      when: never
+    - when: always
+  trigger:
+    project: hpc/spackah
+
 # PRs run as a different user, after merging on `develop`, we need to trigger the cleanup
 # project that always runs with the PR builder user
 clean_merged_prs:
