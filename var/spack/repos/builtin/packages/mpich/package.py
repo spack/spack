@@ -7,6 +7,7 @@ import os
 import re
 import sys
 
+from spack.build_environment import dso_suffix
 from spack.package import *
 
 

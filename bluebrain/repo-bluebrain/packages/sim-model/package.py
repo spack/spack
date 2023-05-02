@@ -7,6 +7,7 @@ import os
 import shutil
 from contextlib import contextmanager
 
+from spack.build_environment import dso_suffix
 from spack.package import *
 
 
