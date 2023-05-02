@@ -1886,12 +1886,14 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
 
         self.tester.stand_alone_tests(kwargs)
 
-    # Deprecated: Remove this once eliminate test() methods from packages
+    # TODO (post-34236): Remove this deprecated method when eliminate test,
+    # TODO (post-34236): run_test, etc.
     def test(self):
         # Defer tests to virtual and concrete packages
-        pass
+        tty.warn("This method is deprecated. Use any name starting with 'test_' instead.")
 
-    # Deprecated: Begin run_test functionality to be replaced with test_part
+    # TODO (post-34236): Remove this deprecated method when eliminate test,
+    # TODO (post-34236): run_test, etc.
     def run_test(
         self,
         exe,
@@ -1921,7 +1923,7 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
                 in the install prefix bin directory or the provided work_dir
             work_dir (str or None): path to the smoke test directory
         """
-        tty.warn("This method is deprecated.  Use 'test_part' instead.")
+        tty.warn("This method is deprecated. Use 'test_part' instead.")
         wdir = "." if work_dir is None else work_dir
         with fsys.working_dir(wdir, create=True):
             try:
@@ -1985,7 +1987,8 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
                     self.tester.add_failure(exc, m)
                 return False
 
-    # Deprecated: remove when remove test() methods
+    # TODO (post-34236): Remove this deprecated method when eliminate test,
+    # TODO (post-34236): run_test, etc.
     def _run_test_helper(self, runner, options, expected, status, installed, purpose):
         status = [status] if isinstance(status, int) else status
         expected = [expected] if isinstance(expected, str) else expected

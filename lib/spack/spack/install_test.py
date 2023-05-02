@@ -571,6 +571,12 @@ def test_functions(pkg: TestPackageType, add_virtuals: bool = False) -> List[Tup
             except spack.repo.UnknownPackageError:
                 tty.debug(f"{vname}: virtual does not appear to have a package file")
 
+    # TODO (post-34236): Remove if removing empty test method check
+    def skip(line):
+        # This should match the lines in the deprecated test() method
+        ln = line.strip()
+        return ln.startswith("#") or (ln.startswith("tty.warn") and "deprecated" in ln)
+
     doc_regex = r'\s+("""[\w\s\(\)\-\,\;\:]+""")'
     tests = []
     for clss in classes:
@@ -581,10 +587,12 @@ def test_functions(pkg: TestPackageType, add_virtuals: bool = False) -> List[Tup
                 continue
 
             # TODO (post-34236): Could remove empty method check once remove
-            # TODO (post-34236): deprecated methods
+            # TODO (post-34236): deprecated methods though some use cases,
+            # TODO (post-34236): such as checking packages have actual, non-
+            # TODO (post-34236): empty tests, may want this check to remain.
             source = re.sub(doc_regex, r"", inspect.getsource(test_fn)).splitlines()[1:]
-            lines = [ln.strip() for ln in source if not ln.strip().startswith("#")]
-            if len(lines) > 0 and lines[0] == "pass":
+            lines = [ln.strip() for ln in source if not skip(ln)]
+            if not lines:
                 continue
 
             tests.append((clss.__name__, test_fn))  # type: ignore[union-attr]

@@ -381,3 +381,15 @@ def test_packagetest_fails(mock_packages):
     pkg = MyPackage(s)
     with pytest.raises(ValueError, match="require a concrete package"):
         spack.install_test.PackageTest(pkg)
+
+
+# TODO (post-34236): Remove this test when remove deprecated test() method, etc.
+def test_test_spec_warn(mock_packages, install_mockery, mock_test_stage, monkeypatch):
+    spec = spack.spec.Spec("py-test-callback").concretized()
+    monkeypatch.setattr(spack.spec.Spec, "installed", _true)
+    test_suite = spack.install_test.TestSuite([spec])
+    test_suite()
+
+    ensure_results(
+        test_suite.log_file_for_spec(spec), "Use any name starting with 'test_' instead"
+    )
