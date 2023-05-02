@@ -33,6 +33,7 @@ class ScitokensCpp(CMakePackage):
     depends_on("sqlite")
     depends_on("curl")
     depends_on("jwt-cpp", type="build")
+    depends_on("pkgconfig", type="build")
     depends_on("uuid", type="build")
 
     conflicts("jwt-cpp@0.5:", when="@:0.7")
