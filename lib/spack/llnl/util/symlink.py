@@ -18,7 +18,7 @@ if sys.platform == "win32":
 
 def symlink(source_path: str, link_path: str):
     """
-    Try to create a symbolic link.
+    Create a link.
 
     On non-Windows and Windows with System Administrator
     privleges this will be a normal symbolic link via
