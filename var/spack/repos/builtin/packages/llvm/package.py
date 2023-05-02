@@ -254,7 +254,7 @@ class Llvm(CMakePackage, CudaPackage):
     depends_on("py-six", when="+lldb+python")
 
     # gold support, required for some features
-    depends_on("binutils+gold+ld+plugins", when="+gold")
+    depends_on("binutils+gold+ld+plugins+headers", when="+gold")
 
     # Older LLVM do not build with newer compilers, and vice versa
     with when("@16:"):
@@ -318,8 +318,8 @@ class Llvm(CMakePackage, CudaPackage):
     patch("llvm_py37.patch", when="@4:6 ^python@3.7:")
 
     # https://github.com/spack/spack/issues/19625,
-    # merged in llvm-11.0.0_rc2, but not found in 11.0.1
-    patch("lldb_external_ncurses-10.patch", when="@10.0.0:11.0.1+lldb")
+    # merged in llvm-11.0.0_rc2, first available in 12.0.0
+    patch("lldb_external_ncurses-10.patch", when="@10.0.0:11+lldb")
 
     # https://github.com/spack/spack/issues/19908
     # merged in llvm main prior to 12.0.0
