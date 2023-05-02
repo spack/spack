@@ -216,7 +216,7 @@ def _windows_create_junction(source: str, link: str):
         raise SymlinkError("windows_create_junction method can't be used on non-Windows OS.")
     elif not os.path.exists(source):
         raise SymlinkError("Source path does not exist, cannot create a junction.")
-    elif os.path.exists(link):
+    elif os.path.lexists(link):
         raise SymlinkError("Link path already exists, cannot create a junction.")
     elif not os.path.isdir(source):
         raise SymlinkError("Source path is not a directory, cannot create a junction.")
@@ -241,7 +241,7 @@ def _windows_create_hard_link(path: str, link: str):
         raise SymlinkError("windows_create_hard_link method can't be used on non-Windows OS.")
     elif not os.path.exists(path):
         raise SymlinkError(f"File path {path} does not exist. Cannot create hard link.")
-    elif os.path.exists(link):
+    elif os.path.lexists(link):
         raise SymlinkError(f"Link path ({link}) already exists. Cannot create hard link.")
     elif not os.path.isfile(path):
         raise SymlinkError(f"File path ({link}) is not a file. Cannot create hard link.")
