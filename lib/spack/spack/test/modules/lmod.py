@@ -335,7 +335,7 @@ class TestLmod(object):
     def test_modules_relative_to_view(
         self, tmpdir, modulefile_content, module_configuration, install_mockery, mock_fetch
     ):
-        with ev.Environment(str(tmpdir), with_view=True) as e:
+        with ev.create_in_dir(str(tmpdir), with_view=True) as e:
             module_configuration("with_view")
             install("--add", "cmake")
 
