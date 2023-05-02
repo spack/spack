@@ -45,10 +45,6 @@ class Elfutils(AutotoolsPackage, SourcewarePackage):
     version("0.168", sha256="b88d07893ba1373c7dd69a7855974706d05377766568a7d9002706d5de72c276")
     version("0.163", sha256="7c774f1eef329309f3b05e730bdac50013155d437518a2ec0e24871d312f2e23")
 
-    # Libraries for reading compressed DWARF sections.
-    variant("bzip2", default=False, description="Support bzip2 compressed sections.")
-    variant("xz", default=False, description="Support xz (lzma) compressed sections.")
-
     # Native language support from libintl.
     variant("nls", default=True, description="Enable Native Language Support.")
 
@@ -108,23 +104,14 @@ class Elfutils(AutotoolsPackage, SourcewarePackage):
 
     def configure_args(self):
         spec = self.spec
-        args = []
-
-        if "+bzip2" in spec:
-            args.append("--with-bzlib=%s" % spec["bzip2"].prefix)
-        else:
-            args.append("--without-bzlib")
-
-        if "+xz" in spec:
-            args.append("--with-lzma=%s" % spec["xz"].prefix)
-        else:
-            args.append("--without-lzma")
-
-        # zlib is required
-        args.append("--with-zlib=%s" % spec["zlib"].prefix)
+        args = [
+            "--with-zlib=%s" % spec["zlib"].prefix,
+            "--with-bzlib=%s" % spec["bzip2"].prefix,
+            "--with-lzma=%s" % spec["xz"].prefix,
+        ]
 
         if "@0.182:" in spec:
-            args.append(f"--with-zstd={prefix}")
+            args.append("--with-zstd=%s" % spec["zstd"].prefix)
 
         if "+nls" in spec:
             # configure doesn't use LIBS correctly
