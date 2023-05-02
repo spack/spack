@@ -5,8 +5,6 @@
 
 import re
 
-from six import iteritems
-
 from spack.package import *
 
 
@@ -197,7 +195,7 @@ class Rust(Package):
     rust_prerelease_versions = ["beta", "nightly", "master"]
 
     for prerelease_version in rust_prerelease_versions:
-        for rust_target, rust_arch_list in iteritems(rust_archs):
+        for rust_target, rust_arch_list in rust_archs.items():
             for rust_arch in rust_arch_list:
                 # All pre-release builds are built with the latest beta
                 # compiler.
@@ -226,8 +224,8 @@ class Rust(Package):
     # _host_ architecture, not the target architecture, in order to support
     # cross compiling. I'm not sure Spack provides a way to specify a
     # distinction in the when clause, though.
-    for rust_version, rust_targets in iteritems(rust_releases):
-        for rust_target, rust_sha256 in iteritems(rust_targets):
+    for rust_version, rust_targets in rust_releases.items():
+        for rust_target, rust_sha256 in rust_targets.items():
             for rust_arch in rust_archs[rust_target]:
                 resource(
                     name="rust-{version}-{target}".format(
