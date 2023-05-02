@@ -159,6 +159,7 @@ update_spacktainerizer:
     - when: always
   trigger:
     project: hpc/spacktainerizer
+    strategy: depend
 
 # Trigger build cache population
 update_build_cache:
@@ -171,6 +172,7 @@ update_build_cache:
     - when: always
   trigger:
     project: hpc/spack-cacher
+    strategy: depend
 
 # Trigger building containers equivalent to modules
 update_containers:
