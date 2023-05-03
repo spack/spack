@@ -49,6 +49,11 @@ class Javafx(Package):
 
     extends("openjdk")
 
+    conflicts("target=ppc64le:", msg="JavaFX is not available for ppc64le")
+    conflicts("target=ppc64:", msg="JavaFX is not available for ppc64")
+    conflicts("target=riscv64:", msg="JavaFX is not available for riscv64")
+    conflicts("target=x86", msg="JavaFX is not available for x86")
+
     def install(self, spec, prefix):
         install_tree("legal", prefix.legal)
         install_tree("lib", prefix.lib)
