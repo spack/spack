@@ -2533,21 +2533,18 @@ def initialize_environment_dir(
         msg = f"cannot initialize environment, {envfile} is not a valid file"
         raise SpackEnvironmentError(msg)
 
-    if not str(envfile).endswith(manifest_name) and not str(envfile).endswith(lockfile_name):
-        msg = (
-            f"cannot initialize environment from '{envfile}', either a '{manifest_name}'"
-            f" or a '{lockfile_name}' file is needed"
-        )
-        raise SpackEnvironmentError(msg)
-
     _ensure_env_dir()
 
     # When we have a lockfile we should copy that and produce a consistent default manifest
-    if str(envfile).endswith(lockfile_name):
+    if str(envfile).endswith(".lock") or str(envfile).endswith(".json"):
         shutil.copy(envfile, target_lockfile)
         # This constructor writes a spack.yaml which is consistent with the root
         # specs in the spack.lock
-        EnvironmentManifestFile.from_lockfile(environment_dir)
+        try:
+            EnvironmentManifestFile.from_lockfile(environment_dir)
+        except Exception as e:
+            msg = f"cannot initialize environment, '{environment_dir}' from lockfile"
+            raise SpackEnvironmentError(msg) from e
         return
 
     shutil.copy(envfile, target_manifest)
