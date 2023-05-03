@@ -1063,6 +1063,12 @@ class Repo(object):
                 "Repository %s does not contain package %s." % (self.namespace, spec.fullname)
             )
 
+        package_path = self.filename_for_package_name(spec.name)
+        if not os.path.exists(package_path):
+            # Spec has no files (e.g., package, patches) to copy
+            tty.debug(f"{spec.name} does not have a package to dump")
+            return
+
         # Install patch files needed by the (concrete) package.
         fs.mkdirp(path)
         if spec.concrete:
@@ -1074,11 +1080,7 @@ class Repo(object):
                         tty.warn("Patch file did not exist: %s" % patch.path)
 
         # Install the package.py file itself.
-        try:
-            fs.install(self.filename_for_package_name(spec.name), path)
-        except IOError as e:
-            # package-less virtuals won't have a package.py to copy
-            tty.debug("Could not copy package.py for {0}: {1}".format(spec.name, str(e)))
+        fs.install(self.filename_for_package_name(spec.name), path)
 
     def purge(self):
         """Clear entire package instance cache."""
