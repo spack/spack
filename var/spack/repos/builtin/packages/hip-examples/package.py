@@ -23,18 +23,17 @@ class HipExamples(Package):
     version("5.4.3", sha256="053b8b7892e2929e3f90bd978d8bb1c9801e4803eadd7d97fc6692ce60af1d47")
 
     patch("0001-add-inc-and-lib-paths-to-openmp-helloworld.patch")
+    patch("0002-add-fpic-compile-to-add4.patch")
     depends_on("hip")
     depends_on("rocm-openmp-extras")
-    depends_on("cmake", type="build")
 
     def install(self, spec, prefix):
         stage = os.getcwd()
-
+        os.environ["ROCM_OPENMP_EXTRAS_DIR"] = self.spec["rocm-openmp-extras"].prefix
+        os.environ["LD_LIBRARY_PATH"] = self.spec["rocm-openmp-extras"].prefix.lib
         for root, dirs, files in os.walk(stage):
-            if "Makefile" in files or "CMakeLists.txt" in files:
+            if "Makefile" in files:
                 with working_dir(root, create=True):
-                    if "CMakeLists.txt" in files:
-                        cmake("-DROCM_OPENMP_EXTRAS_DIR=" + self.spec["rocm-openmp-extras"].prefix)
                     make()
                     # itterate through the files in dir to find the newly built binary
                     for file in os.listdir("."):
@@ -47,6 +46,7 @@ class HipExamples(Package):
                                 )
 
     def test(self):
+        os.environ["LD_LIBRARY_PATH"] = self.spec["rocm-openmp-extras"].prefix.lib
         test_dir = self.spec["hip-examples"].prefix
         with working_dir(test_dir, create=True):
             for file in os.listdir("."):
