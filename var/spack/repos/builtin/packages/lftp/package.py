@@ -4,6 +4,7 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 from spack.package import *
+from spack.util.environment import is_system_path
 
 
 class Lftp(AutotoolsPackage):
@@ -19,6 +20,7 @@ class Lftp(AutotoolsPackage):
     version("4.6.4", sha256="791e783779d3d6b519d0c23155430b9785f2854023eb834c716f5ba78873b15a")
 
     depends_on("expat")
+    depends_on("gettext")
     depends_on("iconv")
     depends_on("ncurses")
     depends_on("openssl")
@@ -26,11 +28,20 @@ class Lftp(AutotoolsPackage):
     depends_on("zlib")
 
     def configure_args(self):
-        return [
+        args = [
             "--with-expat={0}".format(self.spec["expat"].prefix),
-            "--with-libiconv={0}".format(self.spec["iconv"].prefix),
             "--with-openssl={0}".format(self.spec["openssl"].prefix),
             "--with-readline={0}".format(self.spec["readline"].prefix),
             "--with-zlib={0}".format(self.spec["zlib"].prefix),
             "--disable-dependency-tracking",
         ]
+        if self.spec["iconv"].name == "libc":
+            args.append("--without-libiconv-prefix")
+        elif not is_system_path(self.spec["iconv"].prefix):
+            args.append("--with-libiconv-prefix={0}".format(self.spec["iconv"].prefix))
+        if "intl" not in self.spec["gettext"].libs.names:
+            args.append("--without-libintl-prefix")
+        elif not is_system_path(self.spec["gettext"].prefix):
+            args.append("--with-libintl-prefix={0}".format(self.spec["gettext"].prefix))
+
+        return args

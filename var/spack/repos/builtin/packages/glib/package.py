@@ -6,6 +6,7 @@
 import os.path
 
 from spack.package import *
+from spack.util.environment import is_system_path
 
 
 class Glib(Package):
@@ -210,7 +211,7 @@ class Glib(Package):
         if self.spec.satisfies("@:2.72"):
             args.append("-Dgettext=external")
         if self.spec.satisfies("@:2.74"):
-            if "libc" in self.spec:
+            if self.spec["iconv"].name == "libc":
                 args.append("-Diconv=libc")
             else:
                 if self.spec.satisfies("@2.61.0:"):
@@ -244,7 +245,7 @@ class Glib(Package):
             args.append(
                 "--with-python={0}".format(os.path.basename(self.spec["python"].command.path))
             )
-        if "libc" in self.spec:
+        if self.spec["iconv"].name == "libc":
             args.append("--with-libiconv=maybe")
         else:
             args.append("--with-libiconv=gnu")
@@ -350,10 +351,14 @@ class Glib(Package):
         # Packages that link to glib were also picking up -lintl from glib's
         # glib-2.0.pc file. However, packages such as py-pygobject were
         # bypassing spack's compiler wrapper for linking and thus not finding
-        # the gettext library directory. The patch below explitly adds the
+        # the gettext library directory. The patch below explicitly adds the
         # appropriate -L path.
         spec = self.spec
-        if spec.satisfies("@2.0:2"):
+        if (
+            spec.satisfies("@2.0:2")
+            and "intl" in self.spec["gettext"].libs.names
+            and not is_system_path(spec["gettext"].prefix)
+        ):
             pattern = "Libs:"
             repl = "Libs: -L{0} -Wl,-rpath={0} ".format(spec["gettext"].libs.directories[0])
             myfile = join_path(self.spec["glib"].libs.directories[0], "pkgconfig", "glib-2.0.pc")

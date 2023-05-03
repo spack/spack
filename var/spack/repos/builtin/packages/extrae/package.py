@@ -127,14 +127,20 @@ class Extrae(AutotoolsPackage):
             make.add_default_arg("CXXFLAGS=%s" % self.compiler.cxx11_flag)
             args.append("CXXFLAGS=%s" % self.compiler.cxx11_flag)
 
+        return args
+
+    def flag_handler(self, name, flags):
         # This was added due to:
         # - configure failure
         # https://www.gnu.org/software/gettext/FAQ.html#integrating_undefined
         # - linking error
         # https://github.com/bsc-performance-tools/extrae/issues/57
-        args.append("LDFLAGS=-lintl -pthread")
-
-        return args
+        if name == "ldlibs":
+            if "intl" in self.spec["gettext"].libs.names:
+                flags.append("-lintl")
+        elif name == "ldflags":
+            flags.append("-pthread")
+        return self.build_system_flags(name, flags)
 
     def install(self, spec, prefix):
         with working_dir(self.build_directory):

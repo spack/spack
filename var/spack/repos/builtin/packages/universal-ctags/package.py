@@ -28,7 +28,7 @@ class UniversalCtags(AutotoolsPackage):
     depends_on("automake", type="build")
     depends_on("libtool", type="build")
     depends_on("m4", type="build")
-    depends_on("libiconv", type="link")
+    depends_on("iconv", type="link")
     depends_on("pkgconfig", type="build")
 
     def autoreconf(self, spec, prefix):

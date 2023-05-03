@@ -6,6 +6,7 @@
 import re
 
 from spack.package import *
+from spack.util.environment import is_system_path
 
 
 class Tar(AutotoolsPackage, GNUMirrorPackage):
@@ -62,23 +63,28 @@ class Tar(AutotoolsPackage, GNUMirrorPackage):
         return match.group(1) if match else None
 
     def configure_args(self):
+        spec = self.spec
         # Note: compression programs are passed by abs path,
         # so that tar can locate them when invoked without spack load.
         args = [
-            "--with-libiconv-prefix={0}".format(self.spec["iconv"].prefix),
-            "--with-xz={0}".format(self.spec["xz"].prefix.bin.xz),
-            "--with-lzma={0}".format(self.spec["xz"].prefix.bin.lzma),
-            "--with-bzip2={0}".format(self.spec["bzip2"].prefix.bin.bzip2),
+            "--with-xz={0}".format(spec["xz"].prefix.bin.xz),
+            "--with-lzma={0}".format(spec["xz"].prefix.bin.lzma),
+            "--with-bzip2={0}".format(spec["bzip2"].prefix.bin.bzip2),
         ]
 
-        if "^zstd" in self.spec:
-            args.append("--with-zstd={0}".format(self.spec["zstd"].prefix.bin.zstd))
+        if spec["iconv"].name == "libc":
+            args.append("--without-libiconv-prefix")
+        elif not is_system_path(spec["iconv"].prefix):
+            args.append("--with-libiconv-prefix={0}".format(spec["iconv"].prefix))
+
+        if "^zstd" in spec:
+            args.append("--with-zstd={0}".format(spec["zstd"].prefix.bin.zstd))
 
         # Choose gzip/pigz
-        zip = self.spec.variants["zip"].value
+        zip = spec.variants["zip"].value
         if zip == "gzip":
-            gzip_path = self.spec["gzip"].prefix.bin.gzip
+            gzip_path = spec["gzip"].prefix.bin.gzip
         elif zip == "pigz":
-            gzip_path = self.spec["pigz"].prefix.bin.pigz
+            gzip_path = spec["pigz"].prefix.bin.pigz
         args.append("--with-gzip={}".format(gzip_path))
         return args
