@@ -13,6 +13,7 @@ class PyMne(PythonPackage):
     pypi = "mne/mne-0.23.4.tar.gz"
     git = "https://github.com/mne-tools/mne-python.git"
 
+    version("1.3.1", sha256="0d0626d3187dd0ee6f8740d054660a1b5fce4c879f814b745b13c5a587baf32b")
     version("1.2.3", sha256="b300dcee69ffb878cdbc5c02490e877df385c1b9482622e3aa1da06a604a6e37")
     version("1.2.2", sha256="d40743d6ca7ae3919a557166fd5fc4c00a9719e40c07346baad57964e15f02bb")
     version("0.23.4", sha256="ecace5caacf10961ebb74cc5e0ead4d4dbc55fed006eab1e644da144092354e9")
@@ -23,8 +24,6 @@ class PyMne(PythonPackage):
     variant("hdf5", default=False, when="@1:", description="Enable hdf5 functionality.")
 
     depends_on("python@3.7:", when="@0.24:", type=("build", "run"))
-    depends_on("python@3.6:", when="@0.23:", type=("build", "run"))
-    depends_on("python@3.5:", type=("build", "run"))
     depends_on("py-setuptools", type="build")
 
     # requirements_base.txt with versions specified in README.rst (marked with *)
