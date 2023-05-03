@@ -35,7 +35,6 @@ class PyDatalad(PythonPackage):
     variant("duecredit", default=False, description="Enable duecredit support")
     variant("full", default=False, description="Enable support for all available variants")
 
-    variant("metadata", when="@:0.17", default=False, description="Enable metadata support")
     variant(
         "metadata-extra", when="@:0.17", default=False, description="Enable extra metadata support"
     )
@@ -83,7 +82,9 @@ class PyDatalad(PythonPackage):
     depends_on("py-jsmin", when="@:0.14", type=("build", "run"))
 
     # metadata
-    conflicts("~metadata", when="@:0.17")
+    with when("@:0.17"):
+        depends_on("py-simplejson", type=("build", "run"))
+        depends_on("py-whoosh", type=("build", "run"))
 
     with when("+downloaders-extra"):
         depends_on("py-requests-ftp", type=("build", "run"))
@@ -108,11 +109,6 @@ class PyDatalad(PythonPackage):
 
     with when("+duecredit"):
         depends_on("py-duecredit", type=("build", "run"))
-
-    # for version @:0.17
-    with when("+metadata"):
-        depends_on("py-simplejson", type=("build", "run"))
-        depends_on("py-whoosh", type=("build", "run"))
 
     # for version @:0.17
     with when("+metadata-extra"):
