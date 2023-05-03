@@ -98,7 +98,7 @@ class IntelOneapiMkl(IntelOneApiLibraryPackage):
         "cluster", default=False, description="Build with cluster support: scalapack, blacs, etc"
     )
 
-    depends_on("intel-oneapi-tbb")
+    depends_on("tbb")
     # cluster libraries need mpi
     depends_on("mpi", when="+cluster")
 
