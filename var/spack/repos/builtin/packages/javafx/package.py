@@ -42,7 +42,8 @@ class Javafx(Package):
     homepage = "https://openjfx.io/"
     for i in _versions:
         url, sha256 = _versions[i][platform.system().lower()][platform.machine()]
-        version(i, url=url, sha256=sha256)
+        if url:
+            version(i, url=url, sha256=sha256)
 
     maintainers("snehring")
 
