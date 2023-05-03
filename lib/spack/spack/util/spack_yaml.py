@@ -221,14 +221,11 @@ maxint = 2 ** (ctypes.sizeof(ctypes.c_int) * 8 - 1) - 1
 def return_string_when_no_stream(func):
     @functools.wraps(func)
     def wrapper(data, stream=None, **kwargs):
-        return_str = False
-        if stream is None:
-            stream = io.StringIO()
-            return_str = True
-        result = func(data, stream=stream, **kwargs)
-        if return_str:
-            return stream.getvalue()
-        return result
+        if stream:
+            return func(data, stream=stream, **kwargs)
+        stream = io.StringIO()
+        func(data, stream=stream, **kwargs)
+        return stream.getvalue()
 
     return wrapper
 
