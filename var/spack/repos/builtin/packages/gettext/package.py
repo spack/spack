@@ -6,6 +6,7 @@
 import re
 
 from spack.package import *
+from spack.util.environment import is_system_path
 
 
 class Gettext(AutotoolsPackage, GNUMirrorPackage):
@@ -86,8 +87,10 @@ class Gettext(AutotoolsPackage, GNUMirrorPackage):
             "--without-cvs",
         ]
 
-        if self.spec["iconv"].name != "libc":
-            config_args.append("--with-libiconv-prefix={0}".format(spec["iconv"].prefix))
+        if self.spec["iconv"].name == "libc":
+            config_args.append("--without-libiconv-prefix")
+        elif not is_system_path(self.spec["iconv"].prefix):
+            config_args.append("--with-libiconv-prefix=" + self.spec["iconv"].prefix)
 
         if "+curses" in spec:
             config_args.append("--with-ncurses-prefix={0}".format(spec["ncurses"].prefix))
@@ -113,10 +116,6 @@ class Gettext(AutotoolsPackage, GNUMirrorPackage):
             config_args.append("--with-included-libunistring")
 
         return config_args
-
-    @property
-    def gettext_libs(self):
-        return self.libs
 
     @property
     def libs(self):

@@ -27,12 +27,11 @@ class OciSystemdHook(AutotoolsPackage):
     depends_on("util-linux")
     depends_on("go-md2man")
 
-    def configure_args(self):
-        if "intl" in self.spec["gettext"].libs.names:
-            args = ["LDFLAGS=-lintl"]
-        else:
-            args = []
-        return args
+    def flag_handler(self, name, flags):
+        if name == "ldlibs":
+            if "intl" in self.spec["gettext"].libs.names:
+                flags.append("-lintl")
+        return self.build_system_flags(name, flags)
 
     def install(self, spec, prefix):
         oci_systemd_hook_jsondir = "oci_systemd_hook_jsondir="
