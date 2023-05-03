@@ -7,6 +7,8 @@ import sys
 
 import pytest
 
+from llnl.util.filesystem import touch
+
 import spack.paths
 
 
@@ -145,3 +147,18 @@ def test_monkey_patching_test_log_file():
     s.package.tester.test_log_file = "/some/file"
     assert builder.pkg.tester.test_log_file == "/some/file"
     assert builder.pkg_with_dispatcher.tester.test_log_file == "/some/file"
+
+
+def test_install_time_test_callback(tmpdir, config, mock_packages, mock_stage):
+    s = spack.spec.Spec("py-test-callback").concretized()
+    builder = spack.builder.create(s.package)
+    builder.pkg.run_tests = True
+    s.package.tester.test_log_file = tmpdir.join("install_test.log")
+    touch(s.package.tester.test_log_file)
+
+    for phase_fn in builder:
+        phase_fn.execute()
+
+    with open(s.package.tester.test_log_file, "r") as f:
+        results = f.read().replace("\n", " ")
+        assert "PyTestCallback test" in results

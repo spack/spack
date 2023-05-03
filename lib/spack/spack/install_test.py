@@ -323,7 +323,8 @@ class PackageTest:
 
             for name in method_names:
                 try:
-                    fn = getattr(builder, name)
+                    # Prefer the method in the package over the builder's
+                    fn = getattr(builder.pkg, name, getattr(builder, name))
 
                     msg = f"RUN-TESTS: {phase_name}-time tests [{name}]"
                     print_message(logger, msg, verbose)
