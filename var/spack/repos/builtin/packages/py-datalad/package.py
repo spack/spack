@@ -36,7 +36,9 @@ class PyDatalad(PythonPackage):
     variant("full", default=False, description="Enable support for all available variants")
 
     variant("metadata", when="@:0.17", default=False, description="Enable metadata support")
-    variant("metadata-extra", when="@:0.17", default=False, description="Enable extra metadata support")
+    variant(
+        "metadata-extra", when="@:0.17", default=False, description="Enable extra metadata support"
+    )
 
     depends_on("py-setuptools@40.8.0:", type="build")
     # upper bound needed because otherwise the following error occurs:
