@@ -17,6 +17,8 @@ class Beast2(Package):
     homepage = "http://beast2.org/"
     url = "https://github.com/CompEvol/beast2/releases/download/v2.6.4/BEAST.v2.6.4.Linux.tgz"
 
+    maintainers("snehring")
+
     version(
         "2.7.4",
         sha256="f5086c74a0337190ae3459ef018468fc6b2eff68ae2b53fb5c96eb7b5df84004",
