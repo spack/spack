@@ -775,7 +775,7 @@ class Environment:
         self.views: Dict[str, ViewDescriptor] = {}
 
         #: Specs from "spack.yaml"
-        self.spec_lists = {user_speclist_name: SpecList()}
+        self.spec_lists: Dict[str, SpecList] = {user_speclist_name: SpecList()}
         #: Dev-build specs from "spack.yaml"
         self.dev_specs: Dict[str, Any] = {}
         #: User specs from the last concretization
