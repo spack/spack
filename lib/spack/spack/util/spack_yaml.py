@@ -407,11 +407,9 @@ def deepcopy(data):
     if isinstance(result, comments.CommentedMap):
         # HACK to fully copy ruamel CommentedMap that doesn't provide copy
         # method. Especially necessary for environments
-        setattr(
-            result,
-            comments.Comment.attrib,
-            getattr(data, comments.Comment.attrib, comments.Comment()),
-        )
+        extracted_comments = extract_comments(data)
+        if extracted_comments:
+            set_comments(result, data_comments=extracted_comments)
 
     return result
 
