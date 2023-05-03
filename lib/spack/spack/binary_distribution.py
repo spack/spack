@@ -24,7 +24,7 @@ import urllib.request
 import warnings
 from contextlib import closing, contextmanager
 from gzip import GzipFile
-from typing import Union
+from typing import List, NamedTuple, Optional, Union
 from urllib.error import HTTPError, URLError
 
 import ruamel.yaml as yaml
@@ -509,13 +509,11 @@ binary_index: Union[BinaryCacheIndex, llnl.util.lang.Singleton] = llnl.util.lang
 
 
 class NoOverwriteException(spack.error.SpackError):
-    """
-    Raised when a file exists and must be overwritten.
-    """
+    """Raised when a file would be overwritten"""
 
     def __init__(self, file_path):
         super(NoOverwriteException, self).__init__(
-            '"{}" exists in buildcache. Use --force flag to overwrite.'.format(file_path)
+            f"Refusing to overwrite the following file: {file_path}"
         )
 
 
@@ -1205,48 +1203,42 @@ def _do_create_tarball(tarfile_path, binaries_dir, pkg_dir, buildinfo):
         tar_add_metadata(tar, buildinfo_file_name(pkg_dir), buildinfo)
 
 
-def _build_tarball(
-    spec,
-    out_url,
-    force=False,
-    relative=False,
-    unsigned=False,
-    allow_root=False,
-    key=None,
-    regenerate_index=False,
-):
+class PushOptions(NamedTuple):
+    #: Overwrite existing tarball/metadata files in buildcache
+    force: bool = False
+
+    #: Whether to use relative RPATHs
+    relative: bool = False
+
+    #: Allow absolute paths to package prefixes when creating a tarball
+    allow_root: bool = False
+
+    #: Regenerated indices after pushing
+    regenerate_index: bool = False
+
+    #: Whether to sign or not.
+    unsigned: bool = False
+
+    #: What key to use for signing
+    key: Optional[str] = None
+
+
+def push_or_raise(spec: Spec, out_url: str, options: PushOptions):
     """
     Build a tarball from given spec and put it into the directory structure
     used at the mirror (following <tarball_directory_name>).
+
+    This method raises :py:class:`NoOverwriteException` when ``force=False`` and the tarball or
+    spec.json file already exist in the buildcache.
     """
     if not spec.concrete:
         raise ValueError("spec must be concrete to build tarball")
 
     with tempfile.TemporaryDirectory(dir=spack.stage.get_stage_root()) as tmpdir:
-        _build_tarball_in_stage_dir(
-            spec,
-            out_url,
-            stage_dir=tmpdir,
-            force=force,
-            relative=relative,
-            unsigned=unsigned,
-            allow_root=allow_root,
-            key=key,
-            regenerate_index=regenerate_index,
-        )
+        _build_tarball_in_stage_dir(spec, out_url, stage_dir=tmpdir, options=options)
 
 
-def _build_tarball_in_stage_dir(
-    spec,
-    out_url,
-    stage_dir,
-    force=False,
-    relative=False,
-    unsigned=False,
-    allow_root=False,
-    key=None,
-    regenerate_index=False,
-):
+def _build_tarball_in_stage_dir(spec: Spec, out_url: str, stage_dir: str, options: PushOptions):
     cache_prefix = build_cache_prefix(stage_dir)
     tarfile_name = tarball_name(spec, ".spack")
     tarfile_dir = os.path.join(cache_prefix, tarball_directory_name(spec))
@@ -1256,7 +1248,7 @@ def _build_tarball_in_stage_dir(
 
     mkdirp(tarfile_dir)
     if web_util.url_exists(remote_spackfile_path):
-        if force:
+        if options.force:
             web_util.remove_url(remote_spackfile_path)
         else:
             raise NoOverwriteException(url_util.format(remote_spackfile_path))
@@ -1276,7 +1268,7 @@ def _build_tarball_in_stage_dir(
     remote_signed_specfile_path = "{0}.sig".format(remote_specfile_path)
 
     # If force and exists, overwrite. Otherwise raise exception on collision.
-    if force:
+    if options.force:
         if web_util.url_exists(remote_specfile_path):
             web_util.remove_url(remote_specfile_path)
         if web_util.url_exists(remote_signed_specfile_path):
@@ -1293,7 +1285,7 @@ def _build_tarball_in_stage_dir(
     # mode, Spack unfortunately *does* mutate rpaths and links ahead of time.
     # For now, we only make a full copy of the spec prefix when in relative mode.
 
-    if relative:
+    if options.relative:
         # tarfile is used because it preserves hardlink etc best.
         binaries_dir = workdir
         temp_tarfile_name = tarball_name(spec, ".tar")
@@ -1307,19 +1299,19 @@ def _build_tarball_in_stage_dir(
         binaries_dir = spec.prefix
 
     # create info for later relocation and create tar
-    buildinfo = get_buildinfo_dict(spec, relative)
+    buildinfo = get_buildinfo_dict(spec, options.relative)
 
     # optionally make the paths in the binaries relative to each other
     # in the spack install tree before creating tarball
-    if relative:
-        make_package_relative(workdir, spec, buildinfo, allow_root)
-    elif not allow_root:
+    if options.relative:
+        make_package_relative(workdir, spec, buildinfo, options.allow_root)
+    elif not options.allow_root:
         ensure_package_relocatable(buildinfo, binaries_dir)
 
     _do_create_tarball(tarfile_path, binaries_dir, pkg_dir, buildinfo)
 
     # remove copy of install directory
-    if relative:
+    if options.relative:
         shutil.rmtree(workdir)
 
     # get the sha256 checksum of the tarball
@@ -1342,7 +1334,7 @@ def _build_tarball_in_stage_dir(
     # This will be used to determine is the directory layout has changed.
     buildinfo = {}
     buildinfo["relative_prefix"] = os.path.relpath(spec.prefix, spack.store.layout.root)
-    buildinfo["relative_rpaths"] = relative
+    buildinfo["relative_rpaths"] = options.relative
     spec_dict["buildinfo"] = buildinfo
 
     with open(specfile_path, "w") as outfile:
@@ -1353,40 +1345,40 @@ def _build_tarball_in_stage_dir(
         json.dump(spec_dict, outfile, indent=0, separators=(",", ":"))
 
     # sign the tarball and spec file with gpg
-    if not unsigned:
-        key = select_signing_key(key)
-        sign_specfile(key, force, specfile_path)
+    if not options.unsigned:
+        key = select_signing_key(options.key)
+        sign_specfile(key, options.force, specfile_path)
 
     # push tarball and signed spec json to remote mirror
     web_util.push_to_url(spackfile_path, remote_spackfile_path, keep_original=False)
     web_util.push_to_url(
-        signed_specfile_path if not unsigned else specfile_path,
-        remote_signed_specfile_path if not unsigned else remote_specfile_path,
+        signed_specfile_path if not options.unsigned else specfile_path,
+        remote_signed_specfile_path if not options.unsigned else remote_specfile_path,
         keep_original=False,
     )
 
-    tty.debug('Buildcache for "{0}" written to \n {1}'.format(spec, remote_spackfile_path))
-
     # push the key to the build cache's _pgp directory so it can be
     # imported
-    if not unsigned:
-        push_keys(out_url, keys=[key], regenerate_index=regenerate_index, tmpdir=stage_dir)
+    if not options.unsigned:
+        push_keys(out_url, keys=[key], regenerate_index=options.regenerate_index, tmpdir=stage_dir)
 
     # create an index.json for the build_cache directory so specs can be
     # found
-    if regenerate_index:
+    if options.regenerate_index:
         generate_package_index(url_util.join(out_url, os.path.relpath(cache_prefix, stage_dir)))
 
     return None
 
 
-def nodes_to_be_packaged(specs, root=True, dependencies=True):
+def specs_to_be_packaged(
+    specs: List[Spec], root: bool = True, dependencies: bool = True
+) -> List[Spec]:
     """Return the list of nodes to be packaged, given a list of specs.
 
     Args:
-        specs (List[spack.spec.Spec]): list of root specs to be processed
-        root (bool): include the root of each spec in the nodes
-        dependencies (bool): include the dependencies of each
+        specs: list of root specs to be processed
+        root: include the root of each spec in the nodes
+        dependencies: include the dependencies of each
             spec in the nodes
     """
     if not root and not dependencies:
@@ -1404,32 +1396,26 @@ def nodes_to_be_packaged(specs, root=True, dependencies=True):
         return list(filter(packageable, nodes))
 
 
-def push(specs, push_url, include_root: bool = True, include_dependencies: bool = True, **kwargs):
-    """Create a binary package for each of the specs passed as input and push them
-    to a given push URL.
+def push(spec: Spec, mirror_url: str, options: PushOptions):
+    """Create and push binary package for a single spec to the specified
+    mirror url.
 
     Args:
-        specs (List[spack.spec.Spec]): installed specs to be packaged
-        push_url (str): url where to push the binary package
-        include_root (bool): include the root of each spec in the nodes
-        include_dependencies (bool): include the dependencies of each
-            spec in the nodes
-        **kwargs: TODO
+        spec: Spec to package and push
+        mirror_url: Desired destination url for binary package
+        options:
+
+    Returns:
+        True if package was pushed, False otherwise.
 
     """
-    # Be explicit about the arugment type
-    if type(include_root) != bool or type(include_dependencies) != bool:
-        raise ValueError("Expected include_root/include_dependencies to be True/False")
+    try:
+        push_or_raise(spec, mirror_url, options)
+    except NoOverwriteException as e:
+        warnings.warn(str(e))
+        return False
 
-    nodes = nodes_to_be_packaged(specs, root=include_root, dependencies=include_dependencies)
-
-    # TODO: This seems to be an easy target for task
-    # TODO: distribution using a parallel pool
-    for node in nodes:
-        try:
-            _build_tarball(node, push_url, **kwargs)
-        except NoOverwriteException as e:
-            warnings.warn(str(e))
+    return True
 
 
 def try_verify(specfile_path):

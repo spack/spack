@@ -476,16 +476,31 @@ def test_ci_process_command_fail(repro_dir, monkeypatch):
 
 
 def test_ci_create_buildcache(tmpdir, working_env, config, mock_packages, monkeypatch):
-    # Monkeypatching ci method tested elsewhere to reduce number of methods
-    # that would need to be patched here.
-    monkeypatch.setattr(spack.ci, "push_mirror_contents", lambda a, b, c, d: None)
+    """Test that create_buildcache returns a list of objects with the correct
+    keys and types."""
+    monkeypatch.setattr(spack.ci, "push_mirror_contents", lambda a, b, c: True)
 
-    args = {
-        "env": None,
-        "buildcache_mirror_url": "file://fake-url",
-        "pipeline_mirror_url": "file://fake-url",
-    }
-    ci.create_buildcache(**args)
+    results = ci.create_buildcache(
+        None,
+        pr_pipeline=True,
+        buildcache_mirror_url="file:///fake-url-one",
+        pipeline_mirror_url="file:///fake-url-two",
+    )
+
+    assert len(results) == 2
+    result1, result2 = results
+    assert result1.success
+    assert result1.url == "file:///fake-url-one"
+    assert result2.success
+    assert result2.url == "file:///fake-url-two"
+
+    results = ci.create_buildcache(
+        None, pr_pipeline=True, buildcache_mirror_url="file:///fake-url-one"
+    )
+
+    assert len(results) == 1
+    assert results[0].success
+    assert results[0].url == "file:///fake-url-one"
 
 
 def test_ci_run_standalone_tests_missing_requirements(
