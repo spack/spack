@@ -17,7 +17,7 @@ packages:
     # Keep this aligned with NEURON, otherwise the Spack solver may decide that
     # rolling back to NEURON 8.2.2 with external CoreNEURON is a net win
     require:
-      - one_of: ["%intel", "%nvhpc"]
+      - one_of: ["%intel", "%nvhpc", "%oneapi"]
   cuda:
     # Pin GCC 11 because CUDA 11.8.0 is incompatible with GCC 12
     # CUDA 12.0.0 should be compatible with GCC 12
@@ -70,7 +70,6 @@ packages:
   model-neocortex:
     variants: ~gpu
     require: "%intel"
-      # - one_of: ["%intel", "%nvhpc"]
   mxnet:
     version: [1.8.0]  # Don't build @1.master because nobody likes moving targets
   neurodamus-hippocampus:
@@ -90,10 +89,10 @@ packages:
     require: "%intel"
   neuron:
     require:
-      - one_of: ["%intel", "%nvhpc"]
+      - one_of: ["%intel", "%nvhpc", "%oneapi"]
   nmodl:
     require:
-      - one_of: ["%gcc", "%intel", "%nvhpc"]
+      - one_of: ["%gcc", "%intel", "%nvhpc", "%oneapi"]
   omega-h:
     variants: ~kokkos~trilinos
   opencv:

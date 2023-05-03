@@ -238,6 +238,9 @@ class Neuron(CMakePackage):
             if "%intel" in self.spec:
                 # This one definitely seems wise
                 compilation_flags += ["-fp-model", "consistent"]
+            elif "%oneapi" in self.spec:
+                # The documentation doesn't mention consistent for these intel compilers
+                compilation_flags.append("-fp-model=precise")
             # Remove default flags (RelWithDebInfo etc.)
             args.append("-DCMAKE_BUILD_TYPE=Custom")
 
