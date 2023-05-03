@@ -26,15 +26,12 @@ class Henson(CMakePackage):
     conflicts("^openmpi", when="+mpi-wrappers")
 
     def cmake_args(self):
-        args = []
-        if "+python" in self.spec:
-            args += ["-Dpython=on"]
-        else:
-            args += ["-Dpython=off"]
+        args = [
+            self.define_from_variant("python", "python"),
+            self.define_from_variant("mpi-wrappers", "mpi-wrappers"),
+        ]
 
-        if "+mpi-wrappers" in self.spec:
-            args += ["-Dmpi-wrappers=on"]
-        else:
-            args += ["-Dmpi-wrappers=off"]
+        if self.spec.satisfies("+python"):
+            args += [self.define("PYTHON_EXECUTABLE", self.spec["python"].command.path)]
 
         return args

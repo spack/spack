@@ -13,6 +13,7 @@ import spack.config
 import spack.database
 import spack.environment as ev
 import spack.main
+import spack.schema.config
 import spack.spec
 import spack.store
 import spack.util.spack_yaml as syaml
@@ -90,17 +91,10 @@ def test_config_edit(mutable_config, working_env):
 
 
 def test_config_get_gets_spack_yaml(mutable_mock_env_path):
-    env = ev.create("test")
-
     config("get", fail_on_error=False)
     assert config.returncode == 1
 
-    with env:
-        config("get", fail_on_error=False)
-        assert config.returncode == 1
-
-        env.write()
-
+    with ev.create("test") as env:
         assert "mpileaks" not in config("get")
 
         env.add("mpileaks")
@@ -648,3 +642,26 @@ def test_config_prefer_upstream(
 
     # Make sure a message about the conflicting hdf5's was given.
     assert "- hdf5" in output
+
+
+def test_environment_config_update(tmpdir, mutable_config, monkeypatch):
+    with open(tmpdir.join("spack.yaml"), "w") as f:
+        f.write(
+            """\
+spack:
+  config:
+    ccache: true
+"""
+        )
+
+    def update_config(data):
+        data["ccache"] = False
+        return True
+
+    monkeypatch.setattr(spack.schema.config, "update", update_config)
+
+    with ev.Environment(str(tmpdir)):
+        config("update", "-y", "config")
+
+    with ev.Environment(str(tmpdir)) as e:
+        assert not e.manifest.pristine_yaml_content["spack"]["config"]["ccache"]

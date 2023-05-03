@@ -15,6 +15,7 @@ class RQtl(RPackage):
 
     cran = "qtl"
 
+    version("1.58", sha256="6eca5ac177ae62304d63c224f161b0f3ac9327ec1a03da5d7df2d5ddf4b09d97")
     version("1.52", sha256="320ac6172f2911ee772472becd68ff49a357c99fe7454335e4a19090d5788960")
     version("1.50", sha256="2d38656f04dc4187aefe56c29a8f915b8c7e222d76b84afe7045d272294f9ed5")
     version("1.47-9", sha256="6ba4e7b40d946b3ab68d54624599284b1d352c86fb50d31b134826be758ece41")
