@@ -37,7 +37,7 @@ __all__ = ["load", "dump", "SpackYAMLError"]
 # Also, use OrderedDict instead of just dict.
 class syaml_dict(collections.OrderedDict):
     def __repr__(self):
-        mappings = ("%r: %r" % (k, v) for k, v in self.items())
+        mappings = (f"{k!r}: {v!r}" for k, v in self.items())
         return "{%s}" % ", ".join(mappings)
 
 
@@ -189,7 +189,7 @@ class OrderedLineRepresenter(representer.RoundTripRepresenter):
     def represent_str(self, data):
         if hasattr(data, "override") and data.override:
             data = data + ":"
-        return super(OrderedLineRepresenter, self).represent_str(data)
+        return super().represent_str(data)
 
 
 class SafeRepresenter(representer.RoundTripRepresenter):
@@ -502,4 +502,4 @@ class SpackYAMLError(spack.error.SpackError):
     """Raised when there are issues with YAML parsing."""
 
     def __init__(self, msg, yaml_error):
-        super(SpackYAMLError, self).__init__(msg, str(yaml_error))
+        super().__init__(msg, str(yaml_error))
