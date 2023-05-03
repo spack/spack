@@ -278,13 +278,13 @@ def test_ld_flags(wrapper_environment, wrapper_flags):
         ld,
         test_args,
         ["ld"]
-        + spack_ldflags
         + test_include_paths
         + test_library_paths
         + ["--disable-new-dtags"]
         + test_rpaths
         + test_args_without_paths
-        + spack_ldlibs,
+        + spack_ldlibs
+        + spack_ldflags,
     )
 
 
@@ -293,10 +293,10 @@ def test_cpp_flags(wrapper_environment, wrapper_flags):
         cpp,
         test_args,
         ["cpp"]
-        + spack_cppflags
         + test_include_paths
         + test_library_paths
-        + test_args_without_paths,
+        + test_args_without_paths
+        + spack_cppflags,
     )
 
 
@@ -306,11 +306,11 @@ def test_cc_flags(wrapper_environment, wrapper_flags):
         test_args,
         [real_cc]
         + target_args
+        + common_compile_args
+        + spack_ldlibs
         + spack_cppflags
         + spack_cflags
-        + spack_ldflags
-        + common_compile_args
-        + spack_ldlibs,
+        + spack_ldflags,
     )
 
 
@@ -320,11 +320,11 @@ def test_cxx_flags(wrapper_environment, wrapper_flags):
         test_args,
         [real_cc]
         + target_args
+        + common_compile_args
+        + spack_ldlibs
         + spack_cppflags
         + spack_cxxflags
-        + spack_ldflags
-        + common_compile_args
-        + spack_ldlibs,
+        + spack_ldflags,
     )
 
 
@@ -334,11 +334,11 @@ def test_fc_flags(wrapper_environment, wrapper_flags):
         test_args,
         [real_cc]
         + target_args
+        + common_compile_args
+        + spack_ldlibs
         + spack_fflags
         + spack_cppflags
-        + spack_ldflags
-        + common_compile_args
-        + spack_ldlibs,
+        + spack_ldflags,
     )
 
 
