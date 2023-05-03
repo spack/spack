@@ -511,7 +511,7 @@ def new_relocate_elf_binaries(binaries, prefix_to_prefix):
 
     # Transform to binary string
     prefix_to_prefix = OrderedDict(
-        (k.encode("utf-8"), v.encode("utf-8")) for (k, v) in prefix_to_prefix.items()
+        (k.encode("utf-8"), v.encode("utf-8")) for (k, v) in prefix_to_prefix.items() if k and v
     )
 
     for path in binaries:

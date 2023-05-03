@@ -20,7 +20,9 @@ def encode_path(p: Prefix) -> bytes:
 
 
 def _prefix_to_prefix_as_bytes(prefix_to_prefix) -> Dict[bytes, bytes]:
-    return OrderedDict((encode_path(k), encode_path(v)) for (k, v) in prefix_to_prefix.items())
+    return OrderedDict(
+        (encode_path(k), encode_path(v)) for (k, v) in prefix_to_prefix.items() if k and v
+    )
 
 
 def utf8_path_to_binary_regex(prefix: str):
