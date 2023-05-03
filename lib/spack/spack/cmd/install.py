@@ -341,7 +341,18 @@ def do_make_install(parser, args):
         f.write(makefile)
 
     jobs = spack.build_environment.determine_number_of_jobs(parallel=True)
-    os.execlp("make", "make", "-C", env.env_subdir_path, "-f", "Makefile", "-j", str(jobs), "-k")
+    os.execlp(
+        "make",
+        "make",
+        "-C",
+        env.env_subdir_path,
+        "-f",
+        "Makefile",
+        "-j",
+        str(jobs),
+        "-k",
+        f"SPACK={spack.paths.spack_script}",
+    )
 
 
 def install(parser, args):
