@@ -27,8 +27,6 @@ from gzip import GzipFile
 from typing import List, NamedTuple, Optional, Union
 from urllib.error import HTTPError, URLError
 
-import ruamel.yaml as yaml
-
 import llnl.util.filesystem as fsys
 import llnl.util.lang
 import llnl.util.tty as tty
@@ -616,7 +614,7 @@ def read_buildinfo_file(prefix):
     filename = buildinfo_file_name(prefix)
     with open(filename, "r") as inputfile:
         content = inputfile.read()
-        buildinfo = yaml.load(content)
+        buildinfo = syaml.load(content)
     return buildinfo
 
 

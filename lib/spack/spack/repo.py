@@ -26,8 +26,6 @@ import types
 import uuid
 from typing import Dict, Union
 
-import ruamel.yaml as yaml
-
 import llnl.util.filesystem as fs
 import llnl.util.lang
 import llnl.util.tty as tty
@@ -44,6 +42,7 @@ import spack.util.file_cache
 import spack.util.git
 import spack.util.naming as nm
 import spack.util.path
+import spack.util.spack_yaml as syaml
 
 #: Package modules are imported as spack.pkg.<repo-namespace>.<pkg-name>
 ROOT_PYTHON_NAMESPACE = "spack.pkg"
@@ -1008,7 +1007,7 @@ class Repo(object):
         """Check for a YAML config file in this db's root directory."""
         try:
             with open(self.config_file) as reponame_file:
-                yaml_data = yaml.load(reponame_file)
+                yaml_data = syaml.load(reponame_file)
 
                 if (
                     not yaml_data

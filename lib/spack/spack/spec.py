@@ -57,8 +57,6 @@ import re
 import warnings
 from typing import Tuple
 
-import ruamel.yaml as yaml
-
 import llnl.util.filesystem as fs
 import llnl.util.lang as lang
 import llnl.util.tty as tty
@@ -2305,11 +2303,8 @@ class Spec(object):
         Args:
             stream: string or file object to read from.
         """
-        try:
-            data = yaml.load(stream)
-            return Spec.from_dict(data)
-        except yaml.error.MarkedYAMLError as e:
-            raise syaml.SpackYAMLError("error parsing YAML spec:", str(e)) from e
+        data = syaml.load(stream)
+        return Spec.from_dict(data)
 
     @staticmethod
     def from_json(stream):
