@@ -281,9 +281,12 @@ def create(
     A managed environment is created in a root directory managed by this Spack instance, so that
     Spack can keep track of them.
 
+    Files with suffix ``.json`` or ``.lock`` are considered lockfiles. Files with any other name
+    are considered manifest files.
+
     Args:
         name: name of the managed environment
-        init_file: either a JSON lockfile (*.lock, *.json), a YAML manifest file or None
+        init_file: either a lockfile, a manifest file, or None
         with_view: whether a view should be maintained for the environment. If the value is a
             string, it specifies the path to the view
         keep_relative: if True, develop paths are copied verbatim into the new environment file,
@@ -303,9 +306,12 @@ def create_in_dir(
 ) -> "Environment":
     """Create an environment in the directory passed as input and returns it.
 
+    Files with suffix ``.json`` or ``.lock`` are considered lockfiles. Files with any other name
+    are considered manifest files.
+
     Args:
         manifest_dir: directory where to create the environment.
-        init_file: either a JSON lockfile (*.lock, *.json), a YAML manifest file or None
+        init_file: either a lockfile, a manifest file, or None
         with_view: whether a view should be maintained for the environment. If the value is a
             string, it specifies the path to the view
         keep_relative: if True, develop paths are copied verbatim into the new environment file,

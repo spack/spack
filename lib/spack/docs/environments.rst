@@ -6,7 +6,7 @@
 .. _environments:
 
 =========================
-Environments (``spack.yaml``)
+Environments (spack.yaml)
 =========================
 
 An environment is used to group together a set of specs for the
@@ -94,10 +94,9 @@ an Environment, the ``.spack-env`` directory also contains:
   * ``logs/``: A directory containing the build logs for the packages
     in this Environment.
 
-Spack Environments can also be created from either a YAML manifest file
- (usually but not necessarily named, ``spack.yaml``) or a generated JSON
- lockfile (``*.lock`` or ``*.json``). To create an Environment from a
- YAML manifest:
+Spack Environments can also be created from either a manifest file
+(usually but not necessarily named, ``spack.yaml``) or a lockfile.
+To create an Environment from a manifest:
 
 .. code-block:: console
 
