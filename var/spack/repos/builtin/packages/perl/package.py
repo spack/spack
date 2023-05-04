@@ -281,6 +281,12 @@ class Perl(Package):  # Perl doesn't use Autotools, it should subclass Package
         if sys.platform == "win32":
             return
         configure = Executable("./Configure")
+        # The Configure script plays with file descriptors and runs make towards the end,
+        # which results in job tokens not being released under the make jobserver. So, we
+        # disable the jobserver here, and let the Configure script execute make
+        # sequentially. There is barely any parallelism anyway; the most parallelism is
+        # in the build phase, in which the jobserver is enabled again, since we invoke make.
+        configure.add_default_env("MAKEFLAGS", "")
         configure(*self.configure_args())
 
     def build(self, spec, prefix):
