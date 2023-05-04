@@ -281,6 +281,7 @@ class Perl(Package):  # Perl doesn't use Autotools, it should subclass Package
         if sys.platform == "win32":
             return
         configure = Executable("./Configure")
+        configure.add_default_env("MAKEFLAGS", "")
         configure(*self.configure_args())
 
     def build(self, spec, prefix):
