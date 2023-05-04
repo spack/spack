@@ -126,7 +126,7 @@ def test_yaml_aliases():
         ),
     ],
 )
-@pytest.mark.skipif(sys.platform == "win32", reason="fails on Windows")
+@pytest.mark.xfail(sys.platform == "win32", reason="fails on Windows")
 def test_round_trip_configuration(initial_content, expected_final_content, tmp_path):
     """Test that configuration can be loaded and dumped without too many changes"""
     file = tmp_path / "test.yaml"
