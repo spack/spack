@@ -235,6 +235,7 @@ def get_uninstall_list(args, specs, env):
             tty.info("The following environments still reference these specs:")
             colify([e.name for e in other_dependent_envs.keys()], indent=4)
             msgs.append("use `spack env remove` to remove environments")
+        msgs.append("use `spack uninstall --force` to override")
         print()
         tty.die("There are still dependents.", *msgs)
 
