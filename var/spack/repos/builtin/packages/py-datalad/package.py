@@ -128,7 +128,8 @@ class PyDatalad(PythonPackage):
     conflicts("~tests", when="+full")
     conflicts("~duecredit", when="+full")
 
-    conflicts("~metadata-extra", when="+full @:0.17")
+    # for version @:0.17
+    conflicts("~metadata-extra", when="+full")
 
     install_time_test_callbacks = ["test", "installtest"]
 
