@@ -483,7 +483,7 @@ def test_config_add_to_env_preserve_comments(mutable_empty_config, mutable_mock_
 spack:  # comment
   # comment
   specs:  # comment
-    - foo  # comment
+  - foo  # comment
   # comment
   view: true  # comment
   packages:  # comment
