@@ -589,7 +589,7 @@ def test_functions(pkg: TestPackageType, add_virtuals: bool = False) -> List[Tup
     def skip(line):
         # This should match the lines in the deprecated test() method
         ln = line.strip()
-        return ln.startswith("#") or (ln.startswith("tty.warn") and "deprecated" in ln)
+        return ln.startswith("#") or ("warn" in ln and "deprecated" in ln)
 
     doc_regex = r'\s+("""[\w\s\(\)\-\,\;\:]+""")'
     tests = []

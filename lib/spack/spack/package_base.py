@@ -1856,11 +1856,12 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
                 be copied to the corresponding location(s) under the install
                 testing directory.
         """
-        tty.warn(
+        msg = (
             "'pkg.cache_extra_test_sources(srcs) is deprecated with removal "
             "expected in v0.21. Use 'cache_extra_test_sources(pkg, srcs)' "
             "instead."
         )
+        warnings.warn(msg)
         cache_extra_test_sources(self, srcs)
 
     def do_test(self, dirty=False, externals=False):
@@ -1888,10 +1889,15 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
 
     # TODO (post-34236): Remove this deprecated method when eliminate test,
     # TODO (post-34236): run_test, etc.
+    def _test_deprecated_warning(self):
+        alt = f"Use any name starting with 'test_' instead in {self.spec.name}."
+        return f"The 'test' method is deprecated. {alt}"
+
+    # TODO (post-34236): Remove this deprecated method when eliminate test,
+    # TODO (post-34236): run_test, etc.
     def test(self):
         # Defer tests to virtual and concrete packages
-        msg = f"starting with 'test_' instead in {self.spec.name}."
-        tty.warn(f"The 'test' method is deprecated. Use any name {msg}")
+        warnings.warn(self._test_deprecated_warning)
 
     # TODO (post-34236): Remove this deprecated method when eliminate test,
     # TODO (post-34236): run_test, etc.
@@ -1942,8 +1948,8 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
             return f"test: {test_name}: {purpose}"
 
         base_exe = os.path.basename(exe)
-        msg = f"instead for {self.spec.name} to process {base_exe}."
-        tty.warn(f"The 'run_test' method is deprecated. Use 'test_part' {msg}")
+        alternate = f"Use 'test_part' instead for {self.spec.name} to process {base_exe}."
+        warnings.warn(f"The 'run_test' method is deprecated. {alternate}")
 
         details = (
             [options] if isinstance(options, str) else [os.path.basename(opt) for opt in options]
