@@ -6,7 +6,7 @@
 .. _environments:
 
 =========================
-Environments (spack.yaml)
+Environments (``spack.yaml``)
 =========================
 
 An environment is used to group together a set of specs for the
@@ -46,8 +46,8 @@ provide some distinctive features:
 
 Spack uses a "manifest and lock" model similar to `Bundler gemfiles
 <https://bundler.io/man/gemfile.5.html>`_ and other package
-managers. The user input file is named ``spack.yaml`` and the lock
-file is named ``spack.lock``
+managers. The user input file is YAML (usually named ``spack.yaml``) and
+the lock file is generated as ``spack.lock``
 
 .. _environments-using:
 
@@ -94,9 +94,10 @@ an Environment, the ``.spack-env`` directory also contains:
   * ``logs/``: A directory containing the build logs for the packages
     in this Environment.
 
-Spack Environments can also be created from either a ``spack.yaml``
-manifest or a ``spack.lock`` lockfile. To create an Environment from a
-``spack.yaml`` manifest:
+Spack Environments can also be created from either a YAML manifest file
+ (usually but not necessarily named, ``spack.yaml``) or a generated JSON
+ lockfile (``*.lock`` or ``*.json``). To create an Environment from a
+ YAML manifest:
 
 .. code-block:: console
 
@@ -174,7 +175,7 @@ Anonymous specs can be created in place using the command:
 
    $ spack env create -d .
 
-In this case Spack simply creates a spack.yaml file in the requested
+In this case Spack simply creates a ``spack.yaml`` file in the requested
 directory.
 
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
