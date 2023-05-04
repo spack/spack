@@ -709,11 +709,10 @@ spack:
   - no/such/file.yaml
 """
     )
-    with pytest.raises(spack.config.ConfigFileError) as exc:
+    with pytest.raises(spack.config.ConfigFileError, match="2 missing include path"):
         with e:
             e.concretize()
 
-    assert "2 missing include path" in str(exc)
     assert ev.active_environment() is None
 
 
