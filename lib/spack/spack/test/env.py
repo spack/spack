@@ -385,3 +385,37 @@ spack:
 
     assert len(env.user_specs) == 1
     assert env.manifest.pristine_yaml_content["spack"]["specs"] == ["a"]
+
+
+@pytest.mark.parametrize(
+    "original_yaml,new_spec,expected_yaml",
+    [
+        (
+            """spack:
+  specs:
+  # baz
+  - zlib
+""",
+            "libpng",
+            """spack:
+  specs:
+  # baz
+  - zlib
+  - libpng
+""",
+        )
+    ],
+)
+def test_preserving_comments_when_adding_specs(
+    original_yaml, new_spec, expected_yaml, config, tmp_path
+):
+    """Ensure that round-tripping a spack.yaml file doesn't change its content."""
+    spack_yaml = tmp_path / "spack.yaml"
+    spack_yaml.write_text(original_yaml)
+
+    e = ev.Environment(str(tmp_path))
+    e.add(new_spec)
+    e.write()
+
+    content = spack_yaml.read_text()
+    assert content == expected_yaml
