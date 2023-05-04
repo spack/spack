@@ -193,7 +193,7 @@ def test_dev_build_env(tmpdir, mock_packages, install_mockery, mutable_mock_env_
         with open("spack.yaml", "w") as f:
             f.write(
                 """\
-env:
+spack:
   specs:
   - dev-build-test-install@0.0.0
 
@@ -233,7 +233,7 @@ def test_dev_build_env_version_mismatch(
         with open("spack.yaml", "w") as f:
             f.write(
                 """\
-env:
+spack:
   specs:
   - dev-build-test-install@0.0.0
 
@@ -286,7 +286,7 @@ def test_dev_build_multiple(
         with open("spack.yaml", "w") as f:
             f.write(
                 """\
-env:
+spack:
   specs:
   - dev-build-test-dependent@0.0.0
 
@@ -339,7 +339,7 @@ def test_dev_build_env_dependency(
         with open("spack.yaml", "w") as f:
             f.write(
                 """\
-env:
+spack:
   specs:
   - dependent-of-dev-build@0.0.0
 
@@ -397,7 +397,7 @@ def test_dev_build_rebuild_on_source_changes(
         with open("spack.yaml", "w") as f:
             f.write(
                 """\
-env:
+spack:
   specs:
   - %s@0.0.0
 

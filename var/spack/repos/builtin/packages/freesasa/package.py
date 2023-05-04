@@ -25,7 +25,7 @@ class Freesasa(AutotoolsPackage):
     depends_on("libtool", type="build")
     depends_on("m4", type="build")
     # https://github.com/mittinatten/freesasa/issues/88
-    depends_on("pkg-config", type="build")
+    depends_on("pkgconfig", type="build")
 
     depends_on("json-c", when="+json")
     depends_on("libxml2", when="+xml")
