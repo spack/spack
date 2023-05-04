@@ -1421,7 +1421,9 @@ class Environment:
             # form of concretization.
             if len(self.user_specs) > 1:
                 e.message += (
-                    ". Consider setting `concretizer:unify` to `when_possible` "
+                    ". If you have previously cached concretizations, consider using "
+                    "`spack concretize -f` to invalidate cached concretizations. If not, "
+                    "Consider setting `concretizer:unify` to `when_possible` "
                     "or `false` to relax the concretizer strictness."
                 )
             raise

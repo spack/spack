@@ -589,10 +589,10 @@ user support groups providing a large software stack for their HPC center.
 
 .. admonition:: Re-concretization of user specs
 
-   When using *unified* concretization (when possible), the entire set of specs will be
-   re-concretized after any addition of new user specs, to ensure that
-   the environment remains consistent / minimal. When instead unified concretization is
-   disabled, only the new specs will be concretized after any addition.
+   The ``spack concretize`` command without additional arguments will not change any
+   previously concretized specs. This may cause errors when ``unify: true`` or surprising
+   deviations between packages when ``unify: when_possible`` when compared to reconcretizing
+   using ``spack concretize -f``.
 
 ^^^^^^^^^^^^^
 Spec Matrices
