@@ -19,7 +19,7 @@ class Steps(CMakePackage):
     submodules = True
 
     version("develop", branch="master")
-    version("5.0.0a", commit="b4bdd64")
+    version("5.0.0a", commit="00fd852")
     version("4.1.0", tag="4.1.0", preferred=True)
 
     variant(
@@ -54,7 +54,7 @@ class Steps(CMakePackage):
     )
     variant("vesicle", default=True, when="@5:", description="Add vesicle model")
 
-    # Build with `ninja` instead of `make`
+    # Build with `Ninja` instead of `Unix Makefiles`
     generator = "Ninja"
 
     conflicts("+distmesh~mpi", msg="steps+distmesh requires +mpi")
