@@ -20,13 +20,6 @@ class Libristra(CMakePackage):
     version("master", branch="master", submodules=False, preferred=True)
     version("1.0.0", commit="33235fe0334ca7f1f99b386a90932d9f8e1e71de")
 
-    variant(
-        "build_type",
-        default="Release",
-        values=("Debug", "Release", "RelWithDebInfo", "MinSizeRel"),
-        description="The build type to build",
-        multi=False,
-    )
     variant("paraview", default=False, description="Enable ParaView")
     variant("shared_lua", default=False, description="Build with shared lua")
 
