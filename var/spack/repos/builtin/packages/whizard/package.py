@@ -87,7 +87,6 @@ class Whizard(AutotoolsPackage):
         # On 3.1.0 it doesn't seem to happen
         return self.spec.version > Version("3.0.3")
 
-
     def setup_build_environment(self, env):
         # whizard uses the compiler during runtime,
         # and seems incompatible with
