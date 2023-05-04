@@ -15,8 +15,8 @@ class PyAmici(PythonPackage):
     version("0.16.0", sha256="1a2d6633ec34241d8d8b496d18d4318482cffe125e9ddf3ca6cac5d36d235f38")
     version("0.11.28", sha256="a8ddda70d8ebdc40600b4ad2ea02eb26e765ca0e594b957f61866b8c84255d5b")
 
-    variant("boost", default=False, description="Enable boost support")
-    variant("hdf5", default=False, description="Enable HDF5 support")
+    variant("boost", default=True, description="Enable boost support")
+    variant("hdf5", default=True, description="Enable HDF5 support")
 
     depends_on("py-setuptools@48:", type=("build", "run"))
 
