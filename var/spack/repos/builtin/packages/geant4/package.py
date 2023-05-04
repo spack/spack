@@ -3,7 +3,19 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+from spack.directives import directive, pkg_depends_on
 from spack.package import *
+
+
+@directive(("dependencies"))
+def depends_on_geant4_data():
+    """Package-specific directive to depend on the corresponding version of geant4-data."""
+
+    def _execute_depends_on_geant4_data(pkg):
+        for vers in pkg.versions.keys():
+            pkg_depends_on(pkg, f"geant4-data@{vers}", when=f"@{vers}", type="run")
+
+    return _execute_depends_on_geant4_data
 
 
 class Geant4(CMakePackage):
@@ -66,23 +78,7 @@ class Geant4(CMakePackage):
     depends_on("cmake@3.8:", type="build", when="@10.6.0:")
     depends_on("cmake@3.5:", type="build")
 
-    for _vers in [
-        "10.3.3",
-        "10.4.0",
-        "10.4.3",
-        "10.5.1",
-        "10.6.0",
-        "10.6.1",
-        "10.6.2",
-        "10.6.3",
-        "10.7.0",
-        "10.7.1",
-        "10.7.2",
-        "10.7.3",
-        "11.0.0:11.0",
-        "11.1:",
-    ]:
-        depends_on("geant4-data@" + _vers, type="run", when="@" + _vers)
+    depends_on_geant4_data()
 
     depends_on("expat")
     depends_on("zlib")
