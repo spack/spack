@@ -744,12 +744,14 @@ def get_buildfile_manifest(spec):
     return data
 
 
-def prefixes_to_hashes(spec):
+def hashes_to_prefixes(spec):
+    """Return a dictionary of hashes to prefixes for a spec and its deps, excluding externals"""
     return {
-        str(s.prefix): s.dag_hash()
+        s.dag_hash(): str(s.prefix)
         for s in itertools.chain(
             spec.traverse(root=True, deptype="link"), spec.dependencies(deptype="run")
         )
+        if not s.external
     }
 
 
@@ -767,7 +769,7 @@ def get_buildinfo_dict(spec, rel=False):
         "relocate_binaries": manifest["binary_to_relocate"],
         "relocate_links": manifest["link_to_relocate"],
         "hardlinks_deduped": manifest["hardlinks_deduped"],
-        "prefix_to_hash": prefixes_to_hashes(spec),
+        "hash_to_prefix": hashes_to_prefixes(spec),
     }
 
 
@@ -1680,22 +1682,22 @@ def relocate_package(spec, allow_root):
     old_rel_prefix = buildinfo.get("relative_prefix")
     old_prefix = os.path.join(old_layout_root, old_rel_prefix)
     rel = buildinfo.get("relative_rpaths")
-    prefix_to_hash = buildinfo.get("prefix_to_hash", None)
-    if old_rel_prefix != new_rel_prefix and not prefix_to_hash:
+
+    # In the past prefix_to_hash was the default and externals were not dropped, so prefixes
+    # were not unique.
+    if "hash_to_prefix" in buildinfo:
+        hash_to_old_prefix = buildinfo["hash_to_prefix"]
+    elif "prefix_to_hash" in buildinfo:
+        hash_to_old_prefix = dict((v, k) for (k, v) in buildinfo["prefix_to_hash"].items())
+    else:
+        hash_to_old_prefix = dict()
+
+    if old_rel_prefix != new_rel_prefix and not hash_to_old_prefix:
         msg = "Package tarball was created from an install "
         msg += "prefix with a different directory layout and an older "
         msg += "buildcache create implementation. It cannot be relocated."
         raise NewLayoutException(msg)
-    # older buildcaches do not have the prefix_to_hash dictionary
-    # need to set an empty dictionary and add one entry to
-    # prefix_to_prefix to reproduce the old behavior
-    if not prefix_to_hash:
-        prefix_to_hash = dict()
-    hash_to_prefix = dict()
-    hash_to_prefix[spec.format("{hash}")] = str(spec.package.prefix)
-    new_deps = spack.build_environment.get_rpath_deps(spec.package)
-    for d in new_deps + spec.dependencies(deptype="run"):
-        hash_to_prefix[d.format("{hash}")] = str(d.prefix)
+
     # Spurious replacements (e.g. sbang) will cause issues with binaries
     # For example, the new sbang can be longer than the old one.
     # Hence 2 dictionaries are maintained here.
@@ -1709,9 +1711,11 @@ def relocate_package(spec, allow_root):
     # First match specific prefix paths. Possibly the *local* install prefix
     # of some dependency is in an upstream, so we cannot assume the original
     # spack store root can be mapped uniformly to the new spack store root.
-    for orig_prefix, hash in prefix_to_hash.items():
-        prefix_to_prefix_text[orig_prefix] = hash_to_prefix.get(hash, None)
-        prefix_to_prefix_bin[orig_prefix] = hash_to_prefix.get(hash, None)
+    for dag_hash, new_dep_prefix in hashes_to_prefixes(spec).items():
+        if dag_hash in hash_to_old_prefix:
+            old_dep_prefix = hash_to_old_prefix[dag_hash]
+            prefix_to_prefix_bin[old_dep_prefix] = new_dep_prefix
+            prefix_to_prefix_text[old_dep_prefix] = new_dep_prefix
 
     # Only then add the generic fallback of install prefix -> install prefix.
     prefix_to_prefix_text[old_prefix] = new_prefix

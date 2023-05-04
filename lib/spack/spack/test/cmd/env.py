@@ -342,7 +342,7 @@ def test_env_install_two_specs_same_dep(install_mockery, mock_fetch, tmpdir, cap
         with open(str(path), "w") as f:
             f.write(
                 """\
-env:
+spack:
   specs:
   - a
   - depb
@@ -522,7 +522,7 @@ def test_user_removed_spec(environment_from_manifest):
     """Ensure a user can remove from any position in the spack.yaml file."""
     before = environment_from_manifest(
         """\
-env:
+spack:
   specs:
   - mpileaks
   - hypre
@@ -536,7 +536,7 @@ env:
     with open(before.manifest_path, "w") as f:
         f.write(
             """\
-env:
+spack:
   specs:
   - mpileaks
   - libelf
@@ -557,7 +557,7 @@ def test_init_from_lockfile(environment_from_manifest):
     """Test that an environment can be instantiated from a lockfile."""
     e1 = environment_from_manifest(
         """
-env:
+spack:
   specs:
   - mpileaks
   - hypre
@@ -584,7 +584,7 @@ def test_init_from_yaml(environment_from_manifest):
     """Test that an environment can be instantiated from a lockfile."""
     e1 = environment_from_manifest(
         """
-env:
+spack:
   specs:
   - mpileaks
   - hypre
@@ -615,7 +615,7 @@ def test_env_view_external_prefix(tmp_path, mutable_database, mock_packages):
     manifest_file = manifest_dir / ev.manifest_name
     manifest_file.write_text(
         """
-env:
+spack:
   specs:
   - a
   view: true
@@ -663,7 +663,7 @@ def test_init_with_file_and_remove(tmpdir):
         with open(str(path), "w") as f:
             f.write(
                 """\
-env:
+spack:
   specs:
   - mpileaks
 """
@@ -686,7 +686,7 @@ env:
 def test_env_with_config(environment_from_manifest):
     e = environment_from_manifest(
         """
-env:
+spack:
   specs:
   - mpileaks
   packages:
@@ -723,7 +723,7 @@ spack:
 def test_env_with_include_config_files_same_basename(environment_from_manifest):
     e = environment_from_manifest(
         """
-env:
+spack:
   include:
   - ./path/to/included-config.yaml
   - ./second/path/to/include-config.yaml
@@ -781,7 +781,7 @@ def mpileaks_env_config(include_path):
     """Return the contents of an environment that includes the provided
     path and lists mpileaks as the sole spec."""
     return """\
-env:
+spack:
   include:
   - {0}
   specs:
@@ -798,7 +798,7 @@ def test_env_with_included_config_file(environment_from_manifest, packages_file)
     include_filename = "included-config.yaml"
     e = environment_from_manifest(
         f"""\
-env:
+spack:
   include:
   - {os.path.join(".", include_filename)}
   specs:
@@ -892,7 +892,7 @@ def test_env_with_included_config_var_path(environment_from_manifest, packages_f
 def test_env_config_precedence(environment_from_manifest):
     e = environment_from_manifest(
         """
-env:
+spack:
   packages:
     libelf:
       version: [0.8.12]
@@ -926,7 +926,7 @@ packages:
 def test_included_config_precedence(environment_from_manifest):
     e = environment_from_manifest(
         """
-env:
+spack:
   include:
   - ./high-config.yaml  # this one should take precedence
   - ./low-config.yaml
@@ -968,7 +968,7 @@ def test_bad_env_yaml_format(tmpdir):
     with open(filename, "w") as f:
         f.write(
             """\
-env:
+spack:
   spacks:
     - mpileaks
 """
@@ -1268,7 +1268,7 @@ def test_env_config_view_default(
     # This config doesn't mention whether a view is enabled
     environment_from_manifest(
         """
-env:
+spack:
   specs:
   - mpileaks
 """
@@ -1377,7 +1377,7 @@ def test_stack_yaml_definitions(tmpdir):
     with open(filename, "w") as f:
         f.write(
             """\
-env:
+spack:
   definitions:
     - packages: [mpileaks, callpath]
   specs:
@@ -1397,7 +1397,7 @@ def test_stack_yaml_definitions_as_constraints(tmpdir):
     with open(filename, "w") as f:
         f.write(
             """\
-env:
+spack:
   definitions:
     - packages: [mpileaks, callpath]
     - mpis: [mpich, openmpi]
@@ -1422,7 +1422,7 @@ def test_stack_yaml_definitions_as_constraints_on_matrix(tmpdir):
     with open(filename, "w") as f:
         f.write(
             """\
-env:
+spack:
   definitions:
     - packages: [mpileaks, callpath]
     - mpis:
@@ -1451,7 +1451,7 @@ def test_stack_yaml_definitions_write_reference(tmpdir):
     with open(filename, "w") as f:
         f.write(
             """\
-env:
+spack:
   definitions:
     - packages: [mpileaks, callpath]
     - indirect: [$packages]
@@ -1475,7 +1475,7 @@ def test_stack_yaml_add_to_list(tmpdir):
     with open(filename, "w") as f:
         f.write(
             """\
-env:
+spack:
   definitions:
     - packages: [mpileaks, callpath]
   specs:
@@ -1499,7 +1499,7 @@ def test_stack_yaml_remove_from_list(tmpdir):
     with open(filename, "w") as f:
         f.write(
             """\
-env:
+spack:
   definitions:
     - packages: [mpileaks, callpath]
   specs:
@@ -1522,7 +1522,7 @@ def test_stack_yaml_remove_from_list_force(tmpdir):
     with open(filename, "w") as f:
         f.write(
             """\
-env:
+spack:
   definitions:
     - packages: [mpileaks, callpath]
   specs:
@@ -1551,7 +1551,7 @@ def test_stack_yaml_remove_from_matrix_no_effect(tmpdir):
     with open(filename, "w") as f:
         f.write(
             """\
-env:
+spack:
   definitions:
     - packages:
         - matrix:
@@ -1576,7 +1576,7 @@ def test_stack_yaml_force_remove_from_matrix(tmpdir):
     with open(filename, "w") as f:
         f.write(
             """\
-env:
+spack:
   definitions:
     - packages:
         - matrix:
@@ -1618,7 +1618,7 @@ def test_stack_concretize_extraneous_deps(tmpdir, config, mock_packages):
     with open(filename, "w") as f:
         f.write(
             """\
-env:
+spack:
   definitions:
     - packages: [libelf, mpileaks]
     - install:
@@ -1650,7 +1650,7 @@ def test_stack_concretize_extraneous_variants(tmpdir, config, mock_packages):
     with open(filename, "w") as f:
         f.write(
             """\
-env:
+spack:
   definitions:
     - packages: [libelf, mpileaks]
     - install:
@@ -1682,7 +1682,7 @@ def test_stack_concretize_extraneous_variants_with_dash(tmpdir, config, mock_pac
     with open(filename, "w") as f:
         f.write(
             """\
-env:
+spack:
   definitions:
     - packages: [libelf, mpileaks]
     - install:
@@ -1710,7 +1710,7 @@ def test_stack_definition_extension(tmpdir):
     with open(filename, "w") as f:
         f.write(
             """\
-env:
+spack:
   definitions:
     - packages: [libelf, mpileaks]
     - packages: [callpath]
@@ -1733,7 +1733,7 @@ def test_stack_definition_conditional_false(tmpdir):
     with open(filename, "w") as f:
         f.write(
             """\
-env:
+spack:
   definitions:
     - packages: [libelf, mpileaks]
     - packages: [callpath]
@@ -1757,7 +1757,7 @@ def test_stack_definition_conditional_true(tmpdir):
     with open(filename, "w") as f:
         f.write(
             """\
-env:
+spack:
   definitions:
     - packages: [libelf, mpileaks]
     - packages: [callpath]
@@ -1781,7 +1781,7 @@ def test_stack_definition_conditional_with_variable(tmpdir):
     with open(filename, "w") as f:
         f.write(
             """\
-env:
+spack:
   definitions:
     - packages: [libelf, mpileaks]
     - packages: [callpath]
@@ -1805,7 +1805,7 @@ def test_stack_definition_conditional_with_satisfaction(tmpdir):
     with open(filename, "w") as f:
         f.write(
             """\
-env:
+spack:
   definitions:
     - packages: [libelf, mpileaks]
       when: arch.satisfies('platform=foo')  # will be "test" when testing
@@ -1830,7 +1830,7 @@ def test_stack_definition_complex_conditional(tmpdir):
     with open(filename, "w") as f:
         f.write(
             """\
-env:
+spack:
   definitions:
     - packages: [libelf, mpileaks]
     - packages: [callpath]
@@ -1854,7 +1854,7 @@ def test_stack_definition_conditional_invalid_variable(tmpdir):
     with open(filename, "w") as f:
         f.write(
             """\
-env:
+spack:
   definitions:
     - packages: [libelf, mpileaks]
     - packages: [callpath]
@@ -1873,7 +1873,7 @@ def test_stack_definition_conditional_add_write(tmpdir):
     with open(filename, "w") as f:
         f.write(
             """\
-env:
+spack:
   definitions:
     - packages: [libelf, mpileaks]
     - packages: [callpath]
@@ -1890,7 +1890,7 @@ env:
         test = ev.read("test")
 
         packages_lists = list(
-            filter(lambda x: "packages" in x, test.manifest["env"]["definitions"])
+            filter(lambda x: "packages" in x, test.manifest["spack"]["definitions"])
         )
 
         assert len(packages_lists) == 2
@@ -1908,7 +1908,7 @@ def test_stack_combinatorial_view(
     with open(filename, "w") as f:
         f.write(
             """\
-env:
+spack:
   definitions:
     - packages: [mpileaks, callpath]
     - compilers: ['%%gcc', '%%clang']
@@ -1942,7 +1942,7 @@ def test_stack_view_select(tmpdir, mock_fetch, mock_packages, mock_archive, inst
     with open(filename, "w") as f:
         f.write(
             """\
-env:
+spack:
   definitions:
     - packages: [mpileaks, callpath]
     - compilers: ['%%gcc', '%%clang']
@@ -1982,7 +1982,7 @@ def test_stack_view_exclude(tmpdir, mock_fetch, mock_packages, mock_archive, ins
     with open(filename, "w") as f:
         f.write(
             """\
-env:
+spack:
   definitions:
     - packages: [mpileaks, callpath]
     - compilers: ['%%gcc', '%%clang']
@@ -2024,7 +2024,7 @@ def test_stack_view_select_and_exclude(
     with open(filename, "w") as f:
         f.write(
             """\
-env:
+spack:
   definitions:
     - packages: [mpileaks, callpath]
     - compilers: ['%%gcc', '%%clang']
@@ -2065,7 +2065,7 @@ def test_view_link_roots(tmpdir, mock_fetch, mock_packages, mock_archive, instal
     with open(filename, "w") as f:
         f.write(
             """\
-env:
+spack:
   definitions:
     - packages: [mpileaks, callpath]
     - compilers: ['%%gcc', '%%clang']
@@ -2152,7 +2152,7 @@ def test_view_link_type(
     with open(filename, "w") as f:
         f.write(
             """\
-env:
+spack:
   specs:
     - mpileaks
   view:
@@ -2181,7 +2181,7 @@ def test_view_link_all(tmpdir, mock_fetch, mock_packages, mock_archive, install_
     with open(filename, "w") as f:
         f.write(
             """\
-env:
+spack:
   definitions:
     - packages: [mpileaks, callpath]
     - compilers: ['%%gcc', '%%clang']
@@ -2225,7 +2225,7 @@ def test_stack_view_activate_from_default(
     with open(filename, "w") as f:
         f.write(
             """\
-env:
+spack:
   definitions:
     - packages: [mpileaks, cmake]
     - compilers: ['%%gcc', '%%clang']
@@ -2260,7 +2260,7 @@ def test_stack_view_no_activate_without_default(
     with open(filename, "w") as f:
         f.write(
             """\
-env:
+spack:
   definitions:
     - packages: [mpileaks, cmake]
     - compilers: ['%%gcc', '%%clang']
@@ -2294,7 +2294,7 @@ def test_stack_view_multiple_views(
     with open(filename, "w") as f:
         f.write(
             """\
-env:
+spack:
   definitions:
     - packages: [mpileaks, cmake]
     - compilers: ['%%gcc', '%%clang']
@@ -2461,7 +2461,7 @@ def test_env_write_only_non_default_nested(tmpdir):
     filename = "spack.yaml"
     filepath = str(tmpdir.join(filename))
     contents = """\
-env:
+spack:
   specs:
   - matrix:
     - [mpileaks]
