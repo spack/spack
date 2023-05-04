@@ -52,6 +52,7 @@ import spack.util.spack_yaml as syaml
 import spack.util.url as url_util
 import spack.util.web as web_util
 from spack.caches import misc_cache_location
+from spack.package_prefs import get_package_dir_permissions, get_package_group
 from spack.relocate_text import utf8_paths_to_single_binary_regex
 from spack.spec import Spec
 from spack.stage import Stage
@@ -1791,6 +1792,26 @@ def _extract_inner_tarball(spec, filename, extract_to, unsigned, remote_checksum
     return tarfile_path
 
 
+def _tar_strip_component(tar: tarfile.TarFile, prefix: str):
+    """Strip the top-level directory `prefix` from the member names in a tarfile."""
+    # Tarfile members use '/' as the path separator.
+    regex = re.compile(re.escape(prefix) + "(/+|$)")
+
+    # Remove the top-level directory from the member names.
+    for m in tar.getmembers():
+        result = regex.match(m.name)
+        if not result:
+            continue
+
+        m.name = m.name[result.end() :]
+
+        # Both symlinks and hardlinks use linkname.
+        if m.linkname:
+            result = regex.match(m.linkname)
+            if result:
+                m.linkname = m.linkname[result.end() :]
+
+
 def extract_tarball(spec, download_result, unsigned=False, force=False):
     """
     extract binary tarball for given package into install area
@@ -1800,6 +1821,14 @@ def extract_tarball(spec, download_result, unsigned=False, force=False):
             shutil.rmtree(spec.prefix)
         else:
             raise NoOverwriteException(str(spec.prefix))
+
+    # Create the install prefix
+    fsys.mkdirp(
+        spec.prefix,
+        mode=get_package_dir_permissions(spec),
+        group=get_package_group(spec),
+        default_perms="parents",
+    )
 
     specfile_path = download_result["specfile_stage"].save_filename
 
@@ -1854,42 +1883,24 @@ def extract_tarball(spec, download_result, unsigned=False, force=False):
                 tarfile_path, size, contents, "sha256", expected, local_checksum
             )
 
-    new_relative_prefix = str(os.path.relpath(spec.prefix, spack.store.STORE.layout.root))
-    # if the original relative prefix is in the spec file use it
-    buildinfo = spec_dict.get("buildinfo", {})
-    old_relative_prefix = buildinfo.get("relative_prefix", new_relative_prefix)
-    rel = buildinfo.get("relative_rpaths")
-    info = "old relative prefix %s\nnew relative prefix %s\nrelative rpaths %s"
-    tty.debug(info % (old_relative_prefix, new_relative_prefix, rel), level=2)
-
-    # Extract the tarball into the store root, presumably on the same filesystem.
-    # The directory created is the base directory name of the old prefix.
-    # Moving the old prefix name to the new prefix location should preserve
-    # hard links and symbolic links.
-    extract_tmp = os.path.join(spack.store.STORE.layout.root, ".tmp")
-    mkdirp(extract_tmp)
-    extracted_dir = os.path.join(extract_tmp, old_relative_prefix.split(os.path.sep)[-1])
-
     with closing(tarfile.open(tarfile_path, "r")) as tar:
+        # Remove install prefix from tarfil to extract directly into spec.prefix
+        _tar_strip_component(tar, prefix=_ensure_common_prefix(tar))
+
         try:
-            tar.extractall(path=extract_tmp)
-        except Exception as e:
+            tar.extractall(path=spec.prefix)
+        except Exception:
+            shutil.rmtree(spec.prefix, ignore_errors=True)
             _delete_staged_downloads(download_result)
-            shutil.rmtree(extracted_dir)
-            raise e
-    try:
-        shutil.move(extracted_dir, spec.prefix)
-    except Exception as e:
-        _delete_staged_downloads(download_result)
-        shutil.rmtree(extracted_dir)
-        raise e
+            raise
+
     os.remove(tarfile_path)
     os.remove(specfile_path)
 
     try:
         relocate_package(spec)
     except Exception as e:
-        shutil.rmtree(spec.prefix)
+        shutil.rmtree(spec.prefix, ignore_errors=True)
         raise e
     else:
         manifest_file = os.path.join(
@@ -1902,10 +1913,26 @@ def extract_tarball(spec, download_result, unsigned=False, force=False):
             tty.warn("No manifest file in tarball for spec %s" % spec_id)
     finally:
         if tmpdir:
-            shutil.rmtree(tmpdir)
+            shutil.rmtree(tmpdir, ignore_errors=True)
         if os.path.exists(filename):
             os.remove(filename)
         _delete_staged_downloads(download_result)
+
+
+def _ensure_common_prefix(tar: tarfile.TarFile) -> str:
+    # Get the shortest length directory.
+    # Notice: we don't care about repeated directory separators as we require
+    # each member to start with the same prefix.
+    common_prefix = min((e.name for e in tar.getmembers() if e.isdir()), key=len)
+
+    # Validate that each file starts with the prefix
+    for member in tar.getmembers():
+        if not member.name.startswith(common_prefix):
+            raise ValueError(
+                f"Tarball contains file {member.name} outside of prefix {common_prefix}"
+            )
+
+    return common_prefix
 
 
 def install_root_node(spec, unsigned=False, force=False, sha256=None):
