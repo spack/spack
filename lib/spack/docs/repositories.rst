@@ -32,10 +32,15 @@ A package repository a directory structured like this::
           ...
 
 The top-level ``repo.yaml`` file contains configuration metadata for the
-repository, and the ``packages`` directory contains subdirectories for
-each package in the repository.  Each package directory contains a
-``package.py`` file and any patches or other files needed to build the
+repository. The packages subdirectory, typically ``packages``, contains
+subdirectories for each package in the repository.  Each package directory
+contains a ``package.py`` file and any patches or other files needed to build the
 package.
+
+The ``repo.yaml`` file may also contain a ``subdirectory`` key,
+which can modify the name of the subdirectory used for packages. As seen above,
+the default value is ``packages``. An empty string (``subdirectory: ''``) requires
+a flattened repo structure in which the package names are top-level subdirectories.
 
 Package repositories allow you to:
 
@@ -372,6 +377,24 @@ You can supply a custom namespace with a second argument, e.g.:
   $ cat myrepo/repo.yaml
   repo:
     namespace: 'llnl.comp'
+
+You can also create repositories with custom structure with the ``-d/--subdirectory``
+argument, e.g.:
+
+.. code-block:: console
+
+  $ spack repo create -d applications myrepo apps
+  ==> Created repo with namespace 'apps'.
+  ==> To register it with Spack, run this command:
+    spack repo add ~/myrepo
+
+  $ ls myrepo
+  applications/  repo.yaml
+
+  $ cat myrepo/repo.yaml
+  repo:
+    namespace: apps
+    subdirectory: applications
 
 ^^^^^^^^^^^^^^^^^^
 ``spack repo add``

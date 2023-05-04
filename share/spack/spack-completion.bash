@@ -1606,7 +1606,7 @@ _spack_repo() {
 _spack_repo_create() {
     if $list_options
     then
-        SPACK_COMPREPLY="-h --help"
+        SPACK_COMPREPLY="-h --help -d --subdirectory"
     else
         _repos
     fi

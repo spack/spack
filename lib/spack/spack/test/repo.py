@@ -11,11 +11,11 @@ import spack.paths
 import spack.repo
 
 
-@pytest.fixture()
-def extra_repo(tmpdir_factory):
+@pytest.fixture(params=["packages", "", "foo"])
+def extra_repo(tmpdir_factory, request):
     repo_namespace = "extra_test_repo"
     repo_dir = tmpdir_factory.mktemp(repo_namespace)
-    repo_dir.ensure("packages", dir=True)
+    repo_dir.ensure(request.param, dir=True)
 
     with open(str(repo_dir.join("repo.yaml")), "w") as f:
         f.write(
@@ -24,7 +24,9 @@ repo:
   namespace: extra_test_repo
 """
         )
-    return spack.repo.Repo(str(repo_dir))
+        if request.param != "packages":
+            f.write(f"  subdirectory: '{request.param}'")
+    return (spack.repo.Repo(str(repo_dir)), request.param)
 
 
 def test_repo_getpkg(mutable_mock_repo):
@@ -33,13 +35,13 @@ def test_repo_getpkg(mutable_mock_repo):
 
 
 def test_repo_multi_getpkg(mutable_mock_repo, extra_repo):
-    mutable_mock_repo.put_first(extra_repo)
+    mutable_mock_repo.put_first(extra_repo[0])
     mutable_mock_repo.get_pkg_class("a")
     mutable_mock_repo.get_pkg_class("builtin.mock.a")
 
 
 def test_repo_multi_getpkgclass(mutable_mock_repo, extra_repo):
-    mutable_mock_repo.put_first(extra_repo)
+    mutable_mock_repo.put_first(extra_repo[0])
     mutable_mock_repo.get_pkg_class("a")
     mutable_mock_repo.get_pkg_class("builtin.mock.a")
 
@@ -63,9 +65,9 @@ def test_repo_last_mtime():
 
 
 def test_repo_invisibles(mutable_mock_repo, extra_repo):
-    with open(os.path.join(extra_repo.root, "packages", ".invisible"), "w"):
+    with open(os.path.join(extra_repo[0].root, extra_repo[1], ".invisible"), "w"):
         pass
-    extra_repo.all_package_names()
+    extra_repo[0].all_package_names()
 
 
 @pytest.mark.parametrize("attr_name,exists", [("cmake", True), ("__sphinx_mock__", False)])
