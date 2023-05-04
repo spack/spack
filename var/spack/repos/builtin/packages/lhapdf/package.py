@@ -43,12 +43,12 @@ class Lhapdf(AutotoolsPackage):
 
     def setup_build_environment(self, env):
         # Add -lintl if provided by gettext, otherwise libintl is provided by the system's glibc:
-        if self.spec.satisfies("+python") and \
-           "gettext" in self.spec and \
-           "intl" in self.spec["gettext"].libs.names:
-            env.append_flags("LDFLAGS",
-                             "-L"
-                             + self.spec["gettext"].prefix.lib)
+        if (
+            self.spec.satisfies("+python")
+            and "gettext" in self.spec
+            and "intl" in self.spec["gettext"].libs.names
+        ):
+            env.append_flags("LDFLAGS", "-L" + self.spec["gettext"].prefix.lib)
 
     def configure_args(self):
         args = ["FCFLAGS=-O3", "CFLAGS=-O3", "CXXFLAGS=-O3"]
