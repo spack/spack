@@ -363,3 +363,25 @@ def test_error_on_nonempty_view_dir(tmpdir):
 
         with pytest.raises(SpackEnvironmentViewError):
             _error_on_nonempty_view_dir("file")
+
+
+def test_can_add_specs_to_environment_without_specs_attribute(tmp_path, mock_packages, config):
+    """Sometimes users have template manifest files, and save one line in the YAML file by
+    removing the empty 'specs: []' attribute. This test ensures that adding a spec to an
+    environment without the 'specs' attribute, creates the attribute first instead of returning
+    an error.
+    """
+    spack_yaml = tmp_path / "spack.yaml"
+    spack_yaml.write_text(
+        """
+spack:
+  view: true
+  concretizer:
+    unify: true
+    """
+    )
+    env = ev.Environment(tmp_path)
+    env.add("a")
+
+    assert len(env.user_specs) == 1
+    assert env.manifest.pristine_yaml_content["spack"]["specs"] == ["a"]

@@ -2606,8 +2606,8 @@ class EnvironmentManifestFile(collections.abc.Mapping):
         Args:
             user_spec: user spec to be appended
         """
-        config_dict(self.pristine_yaml_content)["specs"].append(user_spec)
-        config_dict(self.yaml_content)["specs"].append(user_spec)
+        config_dict(self.pristine_yaml_content).setdefault("specs", []).append(user_spec)
+        config_dict(self.yaml_content).setdefault("specs", []).append(user_spec)
         self.changed = True
 
     def remove_user_spec(self, user_spec: str) -> None:
