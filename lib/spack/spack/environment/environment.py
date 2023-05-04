@@ -1367,9 +1367,7 @@ class Environment:
         if not new_user_specs:
             return []
 
-        result = [
-            pair for pair in self.concretized_specs() if pair[0] in kept_user_specs
-        ]
+        result = [pair for pair in self.concretized_specs() if pair[0] in kept_user_specs]
         specs_to_concretize = list(new_user_specs) + [concrete for _, concrete in result]
 
         self.concretized_user_specs = []
@@ -1403,7 +1401,8 @@ class Environment:
             return []
 
         concrete_specs_to_keep = [
-            concrete for abstract, concrete in self.concretized_specs()
+            concrete
+            for abstract, concrete in self.concretized_specs()
             if abstract in kept_user_specs
         ]
         specs_to_concretize = list(new_user_specs) + concrete_specs_to_keep
