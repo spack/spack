@@ -10,3 +10,4 @@ python-levenshtein
 # https://stackoverflow.com/questions/67542699
 docutils <0.17
 pygments <2.13
+urllib3 <2
