@@ -53,7 +53,7 @@ packages:
       scalapack: [netlib-scalapack, amdscalapack]
       sycl: [hipsycl]
       szip: [libaec, libszip]
-      tbb: [intel-oneapi-tbb]
+      tbb: [intel-tbb]
       unwind: [libunwind]
       uuid: [util-linux-uuid, libuuid]
       xxd: [xxd-standalone, vim]
