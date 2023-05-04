@@ -48,6 +48,7 @@ _compiler_to_pkg = {
     "oneapi": "intel-oneapi-compilers",
     "rocmcc": "llvm-amdgpu",
     "intel@2020:": "intel-oneapi-compilers-classic",
+    "arm": "acfl",
 }
 
 # TODO: generating this from the previous dict causes docs errors
@@ -56,6 +57,7 @@ package_name_to_compiler_name = {
     "intel-oneapi-compilers": "oneapi",
     "llvm-amdgpu": "rocmcc",
     "intel-oneapi-compilers-classic": "intel",
+    "acfl": "arm",
 }
 
 
