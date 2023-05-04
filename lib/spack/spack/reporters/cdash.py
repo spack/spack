@@ -278,7 +278,7 @@ class CDash(Reporter):
         for phase in phases:
             # Write the report.
             report_name = phase.capitalize() + ".xml"
-            report_file_name = package["name"] + "_" + report_name
+            report_file_name = "_".join([package["name"], package["id"], report_name])
             phase_report = os.path.join(report_dir, report_file_name)
 
             with codecs.open(phase_report, "w", "utf-8") as f:

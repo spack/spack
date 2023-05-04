@@ -9,6 +9,8 @@ from datetime import datetime
 
 import llnl.util.tty as tty
 
+from spack.install_test import TestStatus
+
 # The keys here represent the only recognized (ctest/cdash) status values
 completed = {
     "failed": "Completed",
@@ -20,12 +22,10 @@ completed = {
 log_regexp = re.compile(r"^==> \[([0-9:.\-]*)(?:, [0-9]*)?\] (.*)")
 returns_regexp = re.compile(r"\[([0-9 ,]*)\]")
 
-skip_msgs = ["Testing package", "Results for", "Detected the following"]
+skip_msgs = ["Testing package", "Results for", "Detected the following", "Warning:"]
 skip_regexps = [re.compile(r"{0}".format(msg)) for msg in skip_msgs]
 
-# Status values need to match those in spack.install_test.TestStatus
-status_values = ["FAILED", "PASSED", "SKIPPED", "NO_TESTS"]
-status_regexps = [re.compile(r"^({0})".format(stat)) for stat in status_values]
+status_regexps = [re.compile(r"^({0})".format(str(stat))) for stat in TestStatus]
 
 
 def add_part_output(part, line):
@@ -62,7 +62,7 @@ def new_part():
         "name": None,
         "loglines": [],
         "output": None,
-        "status": "passed",
+        "status": None,
     }
 
 
@@ -82,11 +82,13 @@ def process_part_end(part, curr_time, last_time):
         stat = part["status"]
         if stat in completed:
             # TODO (post-34236): remove the expected failure mapping when
-            # TODO (post-34236): remove deprecated test methods
+            # TODO (post-34236): remove deprecated test methods.
             if stat == "passed" and expected_failure(part["desc"]):
                 part["completed"] = "Expected to fail"
             elif part["completed"] == "Unknown":
                 part["completed"] = completed[stat]
+        elif stat is None:
+            part["status"] = "passed"
         part["output"] = "\n".join(part["loglines"])
 
 
@@ -129,6 +131,18 @@ def extract_test_parts(default_name, outputs):
         if skip(line):
             continue
 
+        match = re.search(r"Test failure: (.*)", line)
+        if match:
+            stat = "failed"
+            part = new_part()
+            part["command"] = "none"
+            part["completed"] = completed[stat]
+            part["elapsed"] = 0.0
+            part["name"] = default_name
+            part["loglines"].append(match.group(1))
+            part["status"] = stat
+            return [part]
+
         # The spec was explicitly reported as skipped as determined by CI
         # (e.g., installation failed, package known to have failing tests).
         if line.startswith("Skipped") and line.endswith("package"):
@@ -152,18 +166,27 @@ def extract_test_parts(default_name, outputs):
                 if msg.startswith("Installing"):
                     continue
 
+                # Terminate without further parsing if No more test messages
+                if "Completed testing" in msg:
+                    # Process last lingering part IF it didn't generate status
+                    process_part_end(part, curr_time, last_time)
+                    return parts
+
                 # New test: means new test part assumed to be in the form
                 # "test: <name>: <desc>".
                 if msg.startswith("test: "):
-                    using_deprecated_tests = False
+                    using_deprecated_tests = msg.count(":") == 1
 
                     # Update the last part processed
                     process_part_end(part, curr_time, last_time)
 
                     part = new_part()
                     desc = msg.split(":")
-                    part["name"] = desc[1].strip()
-                    part["desc"] = ":".join(desc[2:]).strip()
+                    if using_deprecated_tests:
+                        testdesc = desc[1].strip()
+                    else:
+                        part["name"] = desc[1].strip()
+                        part["desc"] = ":".join(desc[2:]).strip()
                     parts.append(part)
 
                 # There is no guarantee of a 1-to-1 mapping of a test part and
@@ -241,12 +264,14 @@ def extract_test_parts(default_name, outputs):
     # If no parts, create a skeleton to flag that the tests are not run
     if not parts:
         part = new_part()
-        stat = "notrun"
-        part["command"] = "Not Applicable"
+        stat = "failed" if outputs[0].startswith("Cannot open log") else "notrun"
+
+        part["command"] = "unknown"
         part["completed"] = completed[stat]
         part["elapsed"] = 0.0
         part["name"] = default_name
         part["status"] = stat
+        part["output"] = "\n".join(outputs)
         parts.append(part)
 
     return parts

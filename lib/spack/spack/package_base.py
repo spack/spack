@@ -1151,8 +1151,8 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
     def install_test_root(self):
         """Return the install test root directory."""
         tty.warn(
-            "This method is deprecated with removal expected v0.21. Use "
-            "'install_test_root(pkg)' instead."
+            "The 'pkg.install_test_root' property is deprecated with removal "
+            "expected v0.21. Use 'install_test_root(pkg)' instead."
         )
         return install_test_root(self)
 
@@ -1857,8 +1857,9 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
                 testing directory.
         """
         tty.warn(
-            "This method is deprecated with removal expected in v0.21. Use "
-            "'cache_extra_test_sources(pkg, srcs)' instead."
+            "'pkg.cache_extra_test_sources(srcs) is deprecated with removal "
+            "expected in v0.21. Use 'cache_extra_test_sources(pkg, srcs)' "
+            "instead."
         )
         cache_extra_test_sources(self, srcs)
 
@@ -1889,7 +1890,8 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
     # TODO (post-34236): run_test, etc.
     def test(self):
         # Defer tests to virtual and concrete packages
-        tty.warn("This method is deprecated. Use any name starting with 'test_' instead.")
+        msg = f"starting with 'test_' instead in {self.spec.name}."
+        tty.warn(f"The 'test' method is deprecated. Use any name {msg}")
 
     # TODO (post-34236): Remove this deprecated method when eliminate test,
     # TODO (post-34236): run_test, etc.
@@ -1900,7 +1902,7 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
         expected=[],
         status=0,
         installed=False,
-        purpose="no purpose given",
+        purpose=None,
         skip_missing=False,
         work_dir=None,
     ):
@@ -1922,7 +1924,31 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
                 in the install prefix bin directory or the provided work_dir
             work_dir (str or None): path to the smoke test directory
         """
-        tty.warn("This method is deprecated. Use 'test_part' instead.")
+
+        def test_title(purpose, test_name):
+            match = re.search(r"test: ([^:]*): (.*)", purpose)
+            if match:
+                # The test title has all the expected parts
+                return purpose
+
+            match = re.search(r"test: (.*)", purpose)
+            if match:
+                reason = match.group(1)
+                return f"test: {test_name}: {reason}"
+
+            return f"test: {test_name}: {purpose}"
+
+        base_exe = os.path.basename(exe)
+        msg = f"instead for {self.spec.name} to process {base_exe}."
+        tty.warn(f"The 'run_test' method is deprecated. Use 'test_part' {msg}")
+
+        details = (
+            [options] if isinstance(options, str) else [os.path.basename(opt) for opt in options]
+        )
+        details = "_".join([" "] + details) if details else ""
+        test_name = f"test_{base_exe}{details}"
+        tty.info(test_title(purpose, test_name), format="g")
+
         wdir = "." if work_dir is None else work_dir
         with fsys.working_dir(wdir, create=True):
             try:
@@ -1932,13 +1958,20 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
                 assert runner is not None, "Failed to find executable '{0}'".format(exe)
 
                 self._run_test_helper(runner, options, expected, status, installed, purpose)
-                print("{0}: test".format(TestStatus.PASSED))
+                status = TestStatus.PASSED
+                print(f"{status}: {test_name}")
+                self.tester.status(test_name, status)
                 return True
-            except BaseException as e:
+            except (AssertionError, BaseException) as e:
                 # print a summary of the error to the log file
                 # so that cdash and junit reporters know about it
                 exc_type, _, tb = sys.exc_info()
-                print("{0}: test: {1}".format(TestStatus.FAILED, e))
+
+                status = TestStatus.FAILED
+                error = str(e)
+                print(f"{status}: {test_name}: {error}")
+                self.tester.status(test_name, status)
+
                 import traceback
 
                 # remove the current call frame to exclude the extract_stack
@@ -1993,9 +2026,7 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
         expected = [expected] if isinstance(expected, str) else expected
         options = [options] if isinstance(options, str) else options
 
-        if purpose:
-            tty.info(purpose, format="g")
-        else:
+        if not purpose:
             tty.debug("test: {0}: expect command status in {1}".format(runner.name, status))
 
         if installed:

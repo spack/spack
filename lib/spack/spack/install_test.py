@@ -12,7 +12,7 @@ import os
 import re
 import shutil
 import sys
-from collections import Counter
+from collections import Counter, OrderedDict
 from typing import Callable, List, Optional, Tuple, Type, TypeVar, Union
 
 import llnl.util.filesystem as fs
@@ -224,7 +224,7 @@ class PackageTest:
         self.counts: "Counter" = Counter()  # type: ignore[attr-defined]
         self.pkg = pkg
         self.test_failures: List[TestFailureType] = []
-        self.test_parts: List[Tuple[str, "TestStatus"]] = []
+        self.test_parts: OrderedDict[str, "TestStatus"] = OrderedDict()
         self.test_log_file: str
         self.pkg_id: str
 
@@ -294,7 +294,20 @@ class PackageTest:
         """Log the test status for the part name."""
         extra = f"::{name}" if name else ""
         part_name = f"{self.pkg.__class__.__name__}{extra}"
-        self.test_parts.append((part_name, status))
+
+        # Handle the special case of a test part consisting of subparts.
+        # The containing test part can be PASSED while sub-parts (assumed
+        # to start with the same name) may not have PASSED. This extra
+        # check is used to ensure the containing test part is not claiming
+        # to have passed when at least one subpart failed.
+        if status == TestStatus.PASSED:
+            for name, substatus in self.test_parts.items():
+                if name != part_name and name.startswith(part_name):
+                    if substatus == TestStatus.FAILED:
+                        status = substatus
+                        break
+
+        self.test_parts[part_name] = status
         self.counts[status] += 1
 
     def phase_tests(
@@ -385,7 +398,7 @@ class PackageTest:
         """Collect test results summary lines for this spec."""
         lines = []
         lines.append("{:=^80}".format(f" SUMMARY: {self.pkg_id} "))
-        for name, status in self.test_parts:
+        for name, status in self.test_parts.items():
             msg = f"{name} .. {status}"
             lines.append(msg)
 
@@ -410,7 +423,7 @@ def test_part(pkg: Pb, test_name: str, purpose: str, work_dir: str = ".", verbos
             "test(s) to methods with names starting 'test_'.".format(pkg.name)
         )
 
-    title = "test: {}: {}".format(test_name, purpose or "")
+    title = "test: {}: {}".format(test_name, purpose or "unspecified purpose")
     with fs.working_dir(wdir, create=True):
         try:
             status = TestStatus.PASSED
