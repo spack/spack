@@ -464,10 +464,8 @@ class AutotoolsBuilder(BaseBuilder, autotools.AutotoolsBuilder):
             # Prevent linking to system c-blosc:
             config_args.append("ac_cv_lib_blosc_blosc_init=no")
 
-        if self.spec.satisfies("@:4.7~dap+byterange"):
+        if "+dap" in self.spec or "+byterange" in self.spec:
             extra_libs.append(self.spec["curl"].libs)
-        elif "+dap" in self.spec or "+byterange" in self.spec:
-            lib_search_dirs.extend(self.spec["curl"].libs.directories)
         elif self.spec.satisfies("@4.7.0"):
             # This particular version fails if curl is not found, even if it is not needed
             # (see https://github.com/Unidata/netcdf-c/issues/1390). Note that the following does
