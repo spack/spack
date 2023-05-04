@@ -357,7 +357,14 @@ def ensure_env_root_path_exists():
 
 def config_dict(yaml_data):
     """Get the configuration scope section out of an spack.yaml"""
+    # TODO (env:): Remove env: as a possible top level keyword in v0.21
     key = spack.config.first_existing(yaml_data, spack.schema.env.keys)
+    if key == "env":
+        msg = (
+            "using 'env:' as a top-level attribute of a Spack environment is deprecated and "
+            "will be removed in Spack v0.21. Please use 'spack:' instead."
+        )
+        warnings.warn(msg)
     return yaml_data[key]
 
 

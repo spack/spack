@@ -82,7 +82,7 @@ def test_env_change_spec(tmp_path, mock_packages, config):
 
 
 _test_matrix_yaml = """\
-env:
+spack:
   definitions:
   - compilers: ["%gcc", "%clang"]
   - desired_specs: ["mpileaks@2.1"]
