@@ -283,7 +283,7 @@ def create(
 
     Args:
         name: name of the managed environment
-        init_file: either a "spack.yaml" or a "spack.lock" file or None
+        init_file: either a JSON lockfile (*.lock, *.json), a YAML manifest file or None
         with_view: whether a view should be maintained for the environment. If the value is a
             string, it specifies the path to the view
         keep_relative: if True, develop paths are copied verbatim into the new environment file,
@@ -305,7 +305,7 @@ def create_in_dir(
 
     Args:
         manifest_dir: directory where to create the environment.
-        init_file: either a "spack.yaml" or a "spack.lock" file or None
+        init_file: either a JSON lockfile (*.lock, *.json), a YAML manifest file or None
         with_view: whether a view should be maintained for the environment. If the value is a
             string, it specifies the path to the view
         keep_relative: if True, develop paths are copied verbatim into the new environment file,
@@ -2496,7 +2496,8 @@ def initialize_environment_dir(
 ) -> None:
     """Initialize an environment directory starting from an envfile.
 
-    The envfile can be either a "spack.yaml" manifest file, or a "spack.lock" file.
+    The envfile can be either a YAML manifest file (e.g. "spack.yaml"),
+    or a JSON lockfile (*.lock, *.json).
 
     Args:
         environment_dir: directory where the environment should be placed
