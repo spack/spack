@@ -453,7 +453,7 @@ def test_initialize_from_random_file_as_manifest(tmp_path, filename):
     same directory, and pick one of them to create an environment depending
     on external parameters e.g. while running CI jobs. This test ensures that
     Spack can create environments from manifest that are not necessarily named
-    'spack.lock' and can thus coexist in the same directory.
+    'spack.yaml' and can thus coexist in the same directory.
     """
 
     init_file = tmp_path / filename

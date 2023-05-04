@@ -46,8 +46,8 @@ provide some distinctive features:
 
 Spack uses a "manifest and lock" model similar to `Bundler gemfiles
 <https://bundler.io/man/gemfile.5.html>`_ and other package
-managers. The user input file is YAML (usually named ``spack.yaml``) and
-the lock file is generated as ``spack.lock``
+managers. The user input file is named ``spack.yaml`` and the lock
+file is named ``spack.lock``
 
 .. _environments-using:
 
