@@ -6,6 +6,7 @@
 # Build stage with Spack pre-installed and ready to be used
 FROM {{ build.image }} as builder
 
+{% block build_stage %}
 {% if os_packages_build %}
 # Install OS packages needed to build the software
 RUN {% if os_package_update %}{{ os_packages_build.update }} \
@@ -19,10 +20,11 @@ RUN mkdir {{ paths.environment }} \
 {{ manifest }} > {{ paths.environment }}/spack.yaml
 
 # Install the software, remove unnecessary deps
-RUN {% if monitor.enabled %}--mount=type=secret,id=su --mount=type=secret,id=st {% endif %}cd {{ paths.environment }} && \
-    spack env activate . {% if monitor.enabled %}{% if not monitor.disable_auth %}&& export SPACKMON_USER=$(cat /run/secrets/su) && export SPACKMON_TOKEN=$(cat /run/secrets/st) {% endif %}{% endif %}&& \
-    spack install {% if monitor.enabled %}--monitor {% if monitor.prefix %}--monitor-prefix {{ monitor.prefix }} {% endif %}{% if monitor.tags %}--monitor-tags {{ monitor.tags }} {% endif %}{% if monitor.keep_going %}--monitor-keep-going {% endif %}{% if monitor.host %}--monitor-host {{ monitor.host }} {% endif %}{% if monitor.disable_auth %}--monitor-disable-auth {% endif %}{% endif %}--fail-fast && \
-    spack gc -y
+{% if depfile %}
+RUN cd {{ paths.environment }} && spack env activate . && spack concretize && spack env depfile -o Makefile && make -j $(nproc) && spack gc -y
+{% else %}
+RUN cd {{ paths.environment }} && spack env activate . && spack install --fail-fast && spack gc -y
+{% endif %}
 {% if strip %}
 
 # Strip all the binaries
@@ -30,7 +32,7 @@ RUN find -L {{ paths.view }}/* -type f -exec readlink -f '{}' \; | \
     xargs file -i | \
     grep 'charset=binary' | \
     grep 'x-executable\|x-archive\|x-sharedlib' | \
-    awk -F: '{print $1}' | xargs strip -s
+    awk -F: '{print $1}' | xargs strip
 {% endif %}
 
 # Modifications to the environment that are necessary to run
@@ -40,15 +42,20 @@ RUN cd {{ paths.environment }} && \
 {% if extra_instructions.build %}
 {{ extra_instructions.build }}
 {% endif %}
+{% endblock build_stage %}
 {% endif %}
+
 {% if render_phase.final %}
 # Bare OS image to run the installed executables
 FROM {{ run.image }}
 
 COPY --from=builder {{ paths.environment }} {{ paths.environment }}
 COPY --from=builder {{ paths.store }} {{ paths.store }}
+COPY --from=builder {{ paths.hidden_view }} {{ paths.hidden_view }}
 COPY --from=builder {{ paths.view }} {{ paths.view }}
 COPY --from=builder /etc/profile.d/z10_spack_environment.sh /etc/profile.d/z10_spack_environment.sh
+
+{% block final_stage %}
 
 {% if os_packages_final %}
 RUN {% if os_package_update %}{{ os_packages_final.update }} \
@@ -59,8 +66,10 @@ RUN {% if os_package_update %}{{ os_packages_final.update }} \
 
 {{ extra_instructions.final }}
 {% endif %}
+{% endblock final_stage %}
 {% for label, value in labels.items() %}
 LABEL "{{ label }}"="{{ value }}"
 {% endfor %}
-ENTRYPOINT ["/bin/bash", "--rcfile", "/etc/profile", "-l"]
+ENTRYPOINT ["/bin/bash", "--rcfile", "/etc/profile", "-l", "-c", "$*", "--" ]
+CMD [ "/bin/bash" ]
 {% endif %}

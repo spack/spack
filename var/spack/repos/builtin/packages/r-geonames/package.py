@@ -1,9 +1,9 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
+from spack.package import *
 
 
 class RGeonames(RPackage):
@@ -16,7 +16,7 @@ class RGeonames(RPackage):
 
     cran = "geonames"
 
-    version('0.999', sha256='1dd7bbd82d9425d14eb36f8e5bf431feaccfe3b0c4e70bf38f44f13dfc59e17b')
+    version("0.999", sha256="1dd7bbd82d9425d14eb36f8e5bf431feaccfe3b0c4e70bf38f44f13dfc59e17b")
 
-    depends_on('r@2.2.0:', type=('build', 'run'))
-    depends_on('r-rjson', type=('build', 'run'))
+    depends_on("r@2.2.0:", type=("build", "run"))
+    depends_on("r-rjson", type=("build", "run"))

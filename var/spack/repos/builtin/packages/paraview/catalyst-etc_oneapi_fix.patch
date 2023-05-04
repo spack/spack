@@ -1,0 +1,45 @@
+diff --git a/ThirdParty/catalyst/vtkcatalyst/catalyst/thirdparty/conduit/fmt/conduit_fmt/format.h b/ThirdParty/catalyst/vtkcatalyst/catalyst/thirdparty/conduit/fmt/conduit_fmt/format.h
+index f0902169..86eb72e7 100644
+--- a/ThirdParty/catalyst/vtkcatalyst/catalyst/thirdparty/conduit/fmt/conduit_fmt/format.h
++++ b/ThirdParty/catalyst/vtkcatalyst/catalyst/thirdparty/conduit/fmt/conduit_fmt/format.h
+@@ -1726,7 +1726,7 @@ OutputIt write_nonfinite(OutputIt out, bool isinf,
+   auto str =
+       isinf ? (fspecs.upper ? "INF" : "inf") : (fspecs.upper ? "NAN" : "nan");
+   constexpr size_t str_size = 3;
+-  auto sign = fspecs.sign;
++  auto sign = static_cast<unsigned int>(fspecs.sign);
+   auto size = str_size + (sign ? 1 : 0);
+   using iterator = remove_reference_t<decltype(reserve(out, 0))>;
+   return write_padded(out, specs, size, [=](iterator it) {
+@@ -1807,7 +1807,7 @@ OutputIt write_float(OutputIt out, const DecimalFP& fp,
+   auto significand = fp.significand;
+   int significand_size = get_significand_size(fp);
+   static const Char zero = static_cast<Char>('0');
+-  auto sign = fspecs.sign;
++  auto sign = static_cast<unsigned int>(fspecs.sign);
+   size_t size = to_unsigned(significand_size) + (sign ? 1 : 0);
+   using iterator = remove_reference_t<decltype(reserve(out, 0))>;
+ 
+
+diff --git a/VTK/ThirdParty/fmt/vtkfmt/vtkfmt/format.h b/VTK/ThirdParty/fmt/vtkfmt/vtkfmt/format.h
+index 5398a23a..108b4f90 100644
+--- a/VTK/ThirdParty/fmt/vtkfmt/vtkfmt/format.h
++++ b/VTK/ThirdParty/fmt/vtkfmt/vtkfmt/format.h
+@@ -1587,7 +1587,7 @@ auto write_nonfinite(OutputIt out, bool isinf, basic_format_specs<Char> specs,
+   auto str =
+       isinf ? (fspecs.upper ? "INF" : "inf") : (fspecs.upper ? "NAN" : "nan");
+   constexpr size_t str_size = 3;
+-  auto sign = fspecs.sign;
++  auto sign = static_cast<unsigned int>(fspecs.sign);
+   auto size = str_size + (sign ? 1 : 0);
+   // Replace '0'-padding with space for non-finite values.
+   const bool is_zero_fill =
+@@ -1673,7 +1673,7 @@ auto write_float(OutputIt out, const DecimalFP& fp,
+   auto significand = fp.significand;
+   int significand_size = get_significand_size(fp);
+   static const Char zero = static_cast<Char>('0');
+-  auto sign = fspecs.sign;
++  auto sign = static_cast<unsigned int>(fspecs.sign);
+   size_t size = to_unsigned(significand_size) + (sign ? 1 : 0);
+   using iterator = reserve_iterator<OutputIt>;
+ 

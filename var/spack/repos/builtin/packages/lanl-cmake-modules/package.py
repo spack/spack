@@ -1,17 +1,16 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
+from spack.package import *
 
 
 class LanlCmakeModules(CMakePackage):
-    '''CMake modules for projects that have not yet adopted modern CMake.
-    '''
+    """CMake modules for projects that have not yet adopted modern CMake."""
 
-    maintainers = ['tuxfan']
-    homepage = 'https://lanl.github.io/cmake-modules'
-    git      = 'https://github.com/lanl/cmake-modules.git'
+    maintainers("tuxfan")
+    homepage = "https://lanl.github.io/cmake-modules"
+    git = "https://github.com/lanl/cmake-modules.git"
 
-    version('develop', branch='develop')
+    version("develop", branch="develop")

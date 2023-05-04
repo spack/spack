@@ -1,9 +1,9 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
+from spack.package import *
 
 
 class RCaroline(RPackage):
@@ -22,6 +22,7 @@ class RCaroline(RPackage):
 
     cran = "caroline"
 
-    version('0.7.6', sha256='e7ba948f7d87f091b498dd0eec2ca4fdad7af4e2bbb67e0945c2f0d3f2eadda9')
+    version("0.8.0", sha256="58f464711f7279ca2aa173e6ce29d3308e01db37dccefbbf14cd7720c0231976")
+    version("0.7.6", sha256="e7ba948f7d87f091b498dd0eec2ca4fdad7af4e2bbb67e0945c2f0d3f2eadda9")
 
-    depends_on('r@1.8.0:', type=('build', 'run'))
+    depends_on("r@1.8.0:", type=("build", "run"))

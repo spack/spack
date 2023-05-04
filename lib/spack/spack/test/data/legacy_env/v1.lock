@@ -1,0 +1,383 @@
+{
+ "_meta": {
+  "file-type": "spack-lockfile",
+  "lockfile-version": 1
+ },
+ "roots": [
+  {
+   "hash": "rtc6yg6kszj6shpc4wfnnattyxcqdwbk",
+   "spec": "dttop ^dtbuild1@0.5"
+  },
+  {
+   "hash": "rtc6yg6kszj6shpc4wfnnattyxcqdwbk",
+   "spec": "dttop ^dtbuild1@1.0"
+  }
+ ],
+ "concrete_specs": {
+  "rtc6yg6kszj6shpc4wfnnattyxcqdwbk": {
+   "dttop": {
+    "version": "1.0",
+    "arch": {
+     "platform": "darwin",
+     "platform_os": "macos",
+     "target": "x86_64"
+    },
+    "compiler": {
+     "name": "clang",
+     "version": "13.0.0"
+    },
+    "namespace": "builtin.mock",
+    "parameters": {
+     "cflags": [],
+     "cppflags": [],
+     "cxxflags": [],
+     "fflags": [],
+     "ldflags": [],
+     "ldlibs": []
+    },
+    "dependencies": {
+     "dtbuild1": {
+      "hash": "dbfu5piza5tmsxd47ccdenbpnrt4cwxp",
+      "type": [
+       "build"
+      ]
+     },
+     "dtlink1": {
+      "hash": "zlgayt66nyopbltittef4ve7w75teyyw",
+      "type": [
+       "build",
+       "link"
+      ]
+     },
+     "dtrun1": {
+      "hash": "r23pvzyjxs2citoucn2atswjdlagqs3b",
+      "type": [
+       "run"
+      ]
+     }
+    }
+   }
+  },
+  "dbfu5piza5tmsxd47ccdenbpnrt4cwxp": {
+   "dtbuild1": {
+    "version": "1.0",
+    "arch": {
+     "platform": "darwin",
+     "platform_os": "macos",
+     "target": "x86_64"
+    },
+    "compiler": {
+     "name": "clang",
+     "version": "13.0.0"
+    },
+    "namespace": "builtin.mock",
+    "parameters": {
+     "cflags": [],
+     "cppflags": [],
+     "cxxflags": [],
+     "fflags": [],
+     "ldflags": [],
+     "ldlibs": []
+    },
+    "dependencies": {
+     "dtbuild2": {
+      "hash": "rzegrliakybnu33aafpezeohibhjfbey",
+      "type": [
+       "build"
+      ]
+     },
+     "dtlink2": {
+      "hash": "z4z2hz675fiulykkquhfsidnctvna2cv",
+      "type": [
+       "build",
+       "link"
+      ]
+     },
+     "dtrun2": {
+      "hash": "powghwfbyefncy7n3rohsaa7eurksm6m",
+      "type": [
+       "run"
+      ]
+     }
+    }
+   }
+  },
+  "rzegrliakybnu33aafpezeohibhjfbey": {
+   "dtbuild2": {
+    "version": "1.0",
+    "arch": {
+     "platform": "darwin",
+     "platform_os": "macos",
+     "target": "x86_64"
+    },
+    "compiler": {
+     "name": "clang",
+     "version": "13.0.0"
+    },
+    "namespace": "builtin.mock",
+    "parameters": {
+     "cflags": [],
+     "cppflags": [],
+     "cxxflags": [],
+     "fflags": [],
+     "ldflags": [],
+     "ldlibs": []
+    }
+   }
+  },
+  "z4z2hz675fiulykkquhfsidnctvna2cv": {
+   "dtlink2": {
+    "version": "1.0",
+    "arch": {
+     "platform": "darwin",
+     "platform_os": "macos",
+     "target": "x86_64"
+    },
+    "compiler": {
+     "name": "clang",
+     "version": "13.0.0"
+    },
+    "namespace": "builtin.mock",
+    "parameters": {
+     "cflags": [],
+     "cppflags": [],
+     "cxxflags": [],
+     "fflags": [],
+     "ldflags": [],
+     "ldlibs": []
+    }
+   }
+  },
+  "powghwfbyefncy7n3rohsaa7eurksm6m": {
+   "dtrun2": {
+    "version": "1.0",
+    "arch": {
+     "platform": "darwin",
+     "platform_os": "macos",
+     "target": "x86_64"
+    },
+    "compiler": {
+     "name": "clang",
+     "version": "13.0.0"
+    },
+    "namespace": "builtin.mock",
+    "parameters": {
+     "cflags": [],
+     "cppflags": [],
+     "cxxflags": [],
+     "fflags": [],
+     "ldflags": [],
+     "ldlibs": []
+    }
+   }
+  },
+  "zlgayt66nyopbltittef4ve7w75teyyw": {
+   "dtlink1": {
+    "version": "1.0",
+    "arch": {
+     "platform": "darwin",
+     "platform_os": "macos",
+     "target": "x86_64"
+    },
+    "compiler": {
+     "name": "clang",
+     "version": "13.0.0"
+    },
+    "namespace": "builtin.mock",
+    "parameters": {
+     "cflags": [],
+     "cppflags": [],
+     "cxxflags": [],
+     "fflags": [],
+     "ldflags": [],
+     "ldlibs": []
+    },
+    "dependencies": {
+     "dtlink3": {
+      "hash": "bjgkddw2inn42okhdzhdy4xcuqmdjlzv",
+      "type": [
+       "build",
+       "link"
+      ]
+     }
+    }
+   }
+  },
+  "bjgkddw2inn42okhdzhdy4xcuqmdjlzv": {
+   "dtlink3": {
+    "version": "1.0",
+    "arch": {
+     "platform": "darwin",
+     "platform_os": "macos",
+     "target": "x86_64"
+    },
+    "compiler": {
+     "name": "clang",
+     "version": "13.0.0"
+    },
+    "namespace": "builtin.mock",
+    "parameters": {
+     "cflags": [],
+     "cppflags": [],
+     "cxxflags": [],
+     "fflags": [],
+     "ldflags": [],
+     "ldlibs": []
+    },
+    "dependencies": {
+     "dtbuild2": {
+      "hash": "rzegrliakybnu33aafpezeohibhjfbey",
+      "type": [
+       "build"
+      ]
+     },
+     "dtlink4": {
+      "hash": "tvjtpacvyky4jlplt22krwshcwgyqcxd",
+      "type": [
+       "build",
+       "link"
+      ]
+     }
+    }
+   }
+  },
+  "tvjtpacvyky4jlplt22krwshcwgyqcxd": {
+   "dtlink4": {
+    "version": "1.0",
+    "arch": {
+     "platform": "darwin",
+     "platform_os": "macos",
+     "target": "x86_64"
+    },
+    "compiler": {
+     "name": "clang",
+     "version": "13.0.0"
+    },
+    "namespace": "builtin.mock",
+    "parameters": {
+     "cflags": [],
+     "cppflags": [],
+     "cxxflags": [],
+     "fflags": [],
+     "ldflags": [],
+     "ldlibs": []
+    }
+   }
+  },
+  "r23pvzyjxs2citoucn2atswjdlagqs3b": {
+   "dtrun1": {
+    "version": "1.0",
+    "arch": {
+     "platform": "darwin",
+     "platform_os": "macos",
+     "target": "x86_64"
+    },
+    "compiler": {
+     "name": "clang",
+     "version": "13.0.0"
+    },
+    "namespace": "builtin.mock",
+    "parameters": {
+     "cflags": [],
+     "cppflags": [],
+     "cxxflags": [],
+     "fflags": [],
+     "ldflags": [],
+     "ldlibs": []
+    },
+    "dependencies": {
+     "dtlink5": {
+      "hash": "e5gnrubxp2rl4l6gfit2qb65vrmudbny",
+      "type": [
+       "build",
+       "link"
+      ]
+     },
+     "dtrun3": {
+      "hash": "4qhelrleofze5wzr7freg2zesngxxusd",
+      "type": [
+       "run"
+      ]
+     }
+    }
+   }
+  },
+  "e5gnrubxp2rl4l6gfit2qb65vrmudbny": {
+   "dtlink5": {
+    "version": "1.0",
+    "arch": {
+     "platform": "darwin",
+     "platform_os": "macos",
+     "target": "x86_64"
+    },
+    "compiler": {
+     "name": "clang",
+     "version": "13.0.0"
+    },
+    "namespace": "builtin.mock",
+    "parameters": {
+     "cflags": [],
+     "cppflags": [],
+     "cxxflags": [],
+     "fflags": [],
+     "ldflags": [],
+     "ldlibs": []
+    }
+   }
+  },
+  "4qhelrleofze5wzr7freg2zesngxxusd": {
+   "dtrun3": {
+    "version": "1.0",
+    "arch": {
+     "platform": "darwin",
+     "platform_os": "macos",
+     "target": "x86_64"
+    },
+    "compiler": {
+     "name": "clang",
+     "version": "13.0.0"
+    },
+    "namespace": "builtin.mock",
+    "parameters": {
+     "cflags": [],
+     "cppflags": [],
+     "cxxflags": [],
+     "fflags": [],
+     "ldflags": [],
+     "ldlibs": []
+    },
+    "dependencies": {
+     "dtbuild3": {
+      "hash": "7qx3epm7xmhv7myz27pmik4je6berknr",
+      "type": [
+       "build"
+      ]
+     }
+    }
+   }
+  },
+  "7qx3epm7xmhv7myz27pmik4je6berknr": {
+   "dtbuild3": {
+    "version": "1.0",
+    "arch": {
+     "platform": "darwin",
+     "platform_os": "macos",
+     "target": "x86_64"
+    },
+    "compiler": {
+     "name": "clang",
+     "version": "13.0.0"
+    },
+    "namespace": "builtin.mock",
+    "parameters": {
+     "cflags": [],
+     "cppflags": [],
+     "cxxflags": [],
+     "fflags": [],
+     "ldflags": [],
+     "ldlibs": []
+    }
+   }
+  }
+ }
+}

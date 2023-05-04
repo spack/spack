@@ -1,19 +1,22 @@
-.. Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+.. Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
    Spack Project Developers. See the top-level COPYRIGHT file for details.
 
    SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 .. _intelpackage:
 
-------------
-IntelPackage
-------------
+-----
+Intel
+-----
 
 .. contents::
 
 ^^^^^^^^^^^^^^^^^^^^^^^^
 Intel packages in Spack
 ^^^^^^^^^^^^^^^^^^^^^^^^
+
+This is an earlier version of Intel software development tools and has
+now been replaced by Intel oneAPI Toolkits.
 
 Spack can install and use several software development products offered by Intel.
 Some of these are available under no-cost terms, others require a paid license.
@@ -394,7 +397,7 @@ for specifics and examples for ``packages.yaml`` files.
 
 .. If your system administrator did not provide modules for pre-installed Intel
    tools, you could do well to ask for them, because installing multiple copies
-   of the Intel tools, as is wont to happen once Spack is in the picture, is
+   of the Intel tools, as is won't to happen once Spack is in the picture, is
    bound to stretch disk space and patience thin. If you *are* the system
    administrator and are still new to modules, then perhaps it's best to follow
    the `next section <Installing Intel tools within Spack_>`_ and install the tools
@@ -650,7 +653,7 @@ follow `the next section <intel-install-libs_>`_ instead.
    * If you specified a custom variant (for example ``+vtune``) you may want to add this as your
      preferred variant in the packages configuration for the ``intel-parallel-studio`` package
      as described in :ref:`package-preferences`. Otherwise you will have to specify
-     the variant everytime ``intel-parallel-studio`` is being used as ``mkl``, ``fftw`` or ``mpi``
+     the variant every time ``intel-parallel-studio`` is being used as ``mkl``, ``fftw`` or ``mpi``
      implementation to avoid pulling in a different variant.
 
    * To set the Intel compilers for default use in Spack, instead of the usual ``%gcc``,

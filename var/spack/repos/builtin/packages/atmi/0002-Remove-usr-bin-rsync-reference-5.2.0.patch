@@ -1,0 +1,99 @@
+From 5d2011bf498551f41ea99b77c63c33fc37518c00 Mon Sep 17 00:00:00 2001
+From: Renjith Ravindran <Renjith.RavindranKannath@amd.com>
+Date: Mon, 8 Aug 2022 19:33:10 +0000
+Subject: [PATCH] Reset the installation path and remove direct reference to
+ /usr/bin/rysnc for rsync command
+
+---
+ src/CMakeLists.txt                     | 12 ++----------
+ src/device_runtime/CMakeLists.txt      |  2 +-
+ src/runtime/core/CMakeLists.txt        |  4 ++--
+ src/runtime/interop/hsa/CMakeLists.txt |  2 +-
+ 4 files changed, 6 insertions(+), 14 deletions(-)
+
+diff --git a/src/CMakeLists.txt b/src/CMakeLists.txt
+index bb563a0..ab04424 100644
+--- a/src/CMakeLists.txt
++++ b/src/CMakeLists.txt
+@@ -40,14 +40,6 @@ endif()
+ 
+ option(FILE_REORG_BACKWARD_COMPATIBILITY "Enable File Reorg with backward compatibility" ON)
+ #TODO: The string replace statements can be removed once build scripts changes are merged
+-if(FILE_REORG_BACKWARD_COMPATIBILITY)
+-  if(CMAKE_INSTALL_PREFIX)
+-    string(REPLACE "/atmi" "" CMAKE_INSTALL_PREFIX ${CMAKE_INSTALL_PREFIX})
+-  endif()
+-  if(CPACK_PACKAGING_INSTALL_PREFIX)
+-    string(REPLACE "/atmi" "" CPACK_PACKAGING_INSTALL_PREFIX ${CPACK_PACKAGING_INSTALL_PREFIX})
+-  endif()
+-endif()
+ ################################################################################
+ # Looking for ROCM...
+ ################################################################################
+@@ -81,7 +73,7 @@ endif()
+ # make examples available in local build
+ add_custom_command(
+   OUTPUT examples
+-  COMMAND /usr/bin/rsync -rl ${CMAKE_CURRENT_SOURCE_DIR}/../examples .
++  COMMAND rsync -rl ${CMAKE_CURRENT_SOURCE_DIR}/../examples .
+   DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/../examples/*
+   )
+ add_custom_target(example ALL DEPENDS examples)
+@@ -89,7 +81,7 @@ add_custom_target(example ALL DEPENDS examples)
+ # make bin available in local build
+ add_custom_command(
+   OUTPUT bin
+-  COMMAND /usr/bin/rsync -rl ${CMAKE_CURRENT_SOURCE_DIR}/../bin .
++  COMMAND rsync -rl ${CMAKE_CURRENT_SOURCE_DIR}/../bin .
+   DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/../bin/*
+   )
+ add_custom_target(script ALL DEPENDS bin)
+diff --git a/src/device_runtime/CMakeLists.txt b/src/device_runtime/CMakeLists.txt
+index 6688af2..6901e01 100644
+--- a/src/device_runtime/CMakeLists.txt
++++ b/src/device_runtime/CMakeLists.txt
+@@ -108,7 +108,7 @@ set (OUTPUT_INC_DIRECTORY ${ATMI_RUNTIME_PATH}/include)
+ execute_process(COMMAND "/bin/mkdir" "-p" "${OUTPUT_INC_DIRECTORY}")
+ add_custom_command(
+   OUTPUT ${OUTPUT_INC_DIRECTORY}/atmi_kl.h
+-  COMMAND /usr/bin/rsync ${CMAKE_CURRENT_SOURCE_DIR}/../../include/atmi_kl.h ${OUTPUT_INC_DIRECTORY}/atmi_kl.h
++  COMMAND rsync ${CMAKE_CURRENT_SOURCE_DIR}/../../include/atmi_kl.h ${OUTPUT_INC_DIRECTORY}/atmi_kl.h
+   DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/../../include/*.h
+   )
+ add_custom_target(device_header ALL DEPENDS ${OUTPUT_INC_DIRECTORY}/atmi_kl.h)
+diff --git a/src/runtime/core/CMakeLists.txt b/src/runtime/core/CMakeLists.txt
+index 88b3a47..000153a 100644
+--- a/src/runtime/core/CMakeLists.txt
++++ b/src/runtime/core/CMakeLists.txt
+@@ -128,13 +128,13 @@ execute_process(COMMAND "/bin/mkdir" "-p" "${OUTPUT_INC_DIRECTORY}")
+ 
+ add_custom_command(
+   OUTPUT ${OUTPUT_INC_DIRECTORY}/atmi.h
+-  COMMAND /usr/bin/rsync ${CMAKE_CURRENT_SOURCE_DIR}/../../../include/atmi.h ${OUTPUT_INC_DIRECTORY}/atmi.h
++  COMMAND rsync ${CMAKE_CURRENT_SOURCE_DIR}/../../../include/atmi.h ${OUTPUT_INC_DIRECTORY}/atmi.h
+   DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/../../../include/*.h
+   )
+ 
+ add_custom_command(
+   OUTPUT ${OUTPUT_INC_DIRECTORY}/atmi_runtime.h
+-  COMMAND /usr/bin/rsync ${CMAKE_CURRENT_SOURCE_DIR}/../../../include/atmi_runtime.h ${OUTPUT_INC_DIRECTORY}/atmi_runtime.h
++  COMMAND rsync ${CMAKE_CURRENT_SOURCE_DIR}/../../../include/atmi_runtime.h ${OUTPUT_INC_DIRECTORY}/atmi_runtime.h
+   DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/../../../include/*.h
+   )
+ 
+diff --git a/src/runtime/interop/hsa/CMakeLists.txt b/src/runtime/interop/hsa/CMakeLists.txt
+index af1012d..c58b716 100644
+--- a/src/runtime/interop/hsa/CMakeLists.txt
++++ b/src/runtime/interop/hsa/CMakeLists.txt
+@@ -22,7 +22,7 @@ execute_process(COMMAND "/bin/mkdir" "-p" "${OUTPUT_INC_DIRECTORY}")
+ 
+ add_custom_command(
+   OUTPUT ${OUTPUT_INC_DIRECTORY}/atmi_interop_hsa.h
+-  COMMAND /usr/bin/rsync ${CMAKE_CURRENT_SOURCE_DIR}/../../../../include/atmi_interop_hsa.h ${OUTPUT_INC_DIRECTORY}/atmi_interop_hsa.h
++  COMMAND rsync ${CMAKE_CURRENT_SOURCE_DIR}/../../../../include/atmi_interop_hsa.h ${OUTPUT_INC_DIRECTORY}/atmi_interop_hsa.h
+   DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/../../../../include/*.h
+   )
+ 
+-- 
+2.25.1
+

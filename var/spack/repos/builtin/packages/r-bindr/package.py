@@ -1,9 +1,9 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
+from spack.package import *
 
 
 class RBindr(RPackage):
@@ -14,5 +14,5 @@ class RBindr(RPackage):
 
     cran = "bindr"
 
-    version('0.1.1', sha256='7c785ca77ceb3ab9282148bcecf64d1857d35f5b800531d49483622fe67505d0')
-    version('0.1', sha256='cca166612eeafd6e1c961b34aaf177f9b47f8b4bc37520e277b9920eaa8b2535')
+    version("0.1.1", sha256="7c785ca77ceb3ab9282148bcecf64d1857d35f5b800531d49483622fe67505d0")
+    version("0.1", sha256="cca166612eeafd6e1c961b34aaf177f9b47f8b4bc37520e277b9920eaa8b2535")

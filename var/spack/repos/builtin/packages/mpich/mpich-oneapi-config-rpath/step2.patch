@@ -1,0 +1,6 @@
+# This patch is applicable starting version 3.1.1.
+--- a/confdb/config.rpath
++++ b/confdb/config.rpath
+@@ -236 +236 @@ if test "$with_gnu_ld" = yes; then
+-          case $cc_basename in ifort*)
++          case $cc_basename in ifort* | ifx*)

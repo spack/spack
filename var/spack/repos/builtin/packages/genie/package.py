@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -6,9 +6,7 @@
 
 import os
 
-from spack.directives import depends_on, patch, variant, version
-from spack.package import Package
-from spack.util.executable import Executable
+from spack.package import *
 from spack.version import Version
 
 
@@ -21,10 +19,7 @@ class Genie(Package):
 
     tags = ["neutrino", "hep"]
 
-    maintainers = [
-        # maintainer of this recipe, not affiliated with the GENIE collaboration
-        "davehadley",
-    ]
+    maintainers("davehadley")
 
     version("master", branch="master")
     version("3.0.6", sha256="ab56ea85d0c1d09029254365bfe75a1427effa717389753b9e0c1b6c2eaa5eaf")
@@ -65,17 +60,24 @@ class Genie(Package):
     patch("genie_disable_gopt_with_compiler_check.patch", level=0, when="@2.11:")
 
     # Flags for GENIE"s optional but disabled by default features
-    variant("atmo", default=False,
-            description="Enable GENIE Atmospheric neutrino event generation app")
-    variant("fnal", default=False,
-            description="Enables FNAL experiment-specific event generation app")
-    variant("nucleondecay", default=False,
-            description="Enable GENIE Nucleon decay event generation app")
-    variant("masterclass", default=False,
-            description="Enable GENIE neutrino masterclass app")
+    variant(
+        "atmo", default=False, description="Enable GENIE Atmospheric neutrino event generation app"
+    )
+    variant(
+        "fnal", default=False, description="Enables FNAL experiment-specific event generation app"
+    )
+    variant(
+        "nucleondecay",
+        default=False,
+        description="Enable GENIE Nucleon decay event generation app",
+    )
+    variant("masterclass", default=False, description="Enable GENIE neutrino masterclass app")
     variant("t2k", default=False, description="Enable T2K-specific generation app")
-    variant("vleextension", default=False,
-            description="Enable GENIE very low energy (1 MeV - 100 MeV) extension")
+    variant(
+        "vleextension",
+        default=False,
+        description="Enable GENIE very low energy (1 MeV - 100 MeV) extension",
+    )
 
     def url_for_version(self, version):
         url = "https://github.com/GENIE-MC/Generator/archive/R-{0}.tar.gz"
@@ -109,9 +111,7 @@ class Genie(Package):
         args = [
             "--prefix=" + prefix,
             "--with-compiler=" + os.environ["CC"],
-            "--with-libxml2-inc={0}{1}libxml2".format(
-                spec["libxml2"].prefix.include, os.sep
-            ),
+            "--with-libxml2-inc={0}{1}libxml2".format(spec["libxml2"].prefix.include, os.sep),
             "--with-libxml2-lib=" + spec["libxml2"].prefix.lib,
             "--with-log4cpp-inc=" + spec["log4cpp"].prefix.include,
             "--with-log4cpp-lib=" + spec["log4cpp"].prefix.lib,
@@ -154,8 +154,4 @@ class Genie(Package):
 
     @property
     def _make_args(self):
-        return [
-            "CC=c++",
-            "CXX=c++",
-            "LD=c++",
-        ]
+        return ["CC=c++", "CXX=c++", "LD=c++"]

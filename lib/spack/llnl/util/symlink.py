@@ -1,19 +1,17 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 import errno
 import os
 import shutil
+import sys
 import tempfile
 from os.path import exists, join
-from sys import platform as _platform
 
 from llnl.util import lang
 
-is_windows = _platform == 'win32'
-
-if is_windows:
+if sys.platform == "win32":
     from win32file import CreateHardLink
 
 
@@ -23,15 +21,24 @@ def symlink(real_path, link_path):
 
     On Windows, use junctions if os.symlink fails.
     """
-    if not is_windows or _win32_can_symlink():
+    if sys.platform != "win32":
         os.symlink(real_path, link_path)
+    elif _win32_can_symlink():
+        # Windows requires target_is_directory=True when the target is a dir.
+        os.symlink(real_path, link_path, target_is_directory=os.path.isdir(real_path))
     else:
         try:
             # Try to use junctions
             _win32_junction(real_path, link_path)
-        except OSError:
-            # If all else fails, fall back to copying files
-            shutil.copyfile(real_path, link_path)
+        except OSError as e:
+            if e.errno == errno.EEXIST:
+                # EEXIST error indicates that file we're trying to "link"
+                # is already present, don't bother trying to copy which will also fail
+                # just raise
+                raise
+            else:
+                # If all else fails, fall back to copying files
+                shutil.copyfile(real_path, link_path)
 
 
 def islink(path):
@@ -47,7 +54,7 @@ def _win32_junction(path, link):
 
     # os.symlink will fail if link exists, emulate the behavior here
     if exists(link):
-        raise OSError(errno.EEXIST, 'File  exists: %s -> %s' % (link, path))
+        raise OSError(errno.EEXIST, "File  exists: %s -> %s" % (link, path))
 
     if not os.path.isabs(path):
         parent = os.path.join(link, os.pardir)
@@ -61,13 +68,14 @@ def _win32_junction(path, link):
 def _win32_can_symlink():
     tempdir = tempfile.mkdtemp()
 
-    dpath = join(tempdir, 'dpath')
-    fpath = join(tempdir, 'fpath.txt')
+    dpath = join(tempdir, "dpath")
+    fpath = join(tempdir, "fpath.txt")
 
-    dlink = join(tempdir, 'dlink')
-    flink = join(tempdir, 'flink.txt')
+    dlink = join(tempdir, "dlink")
+    flink = join(tempdir, "flink.txt")
 
     import llnl.util.filesystem as fs
+
     fs.touchp(fpath)
 
     try:
@@ -95,7 +103,7 @@ def _win32_is_junction(path):
     if os.path.islink(path):
         return False
 
-    if is_windows:
+    if sys.platform == "win32":
         import ctypes.wintypes
 
         GetFileAttributes = ctypes.windll.kernel32.GetFileAttributesW
@@ -106,7 +114,6 @@ def _win32_is_junction(path):
         FILE_ATTRIBUTE_REPARSE_POINT = 0x400
 
         res = GetFileAttributes(path)
-        return res != INVALID_FILE_ATTRIBUTES and \
-            bool(res & FILE_ATTRIBUTE_REPARSE_POINT)
+        return res != INVALID_FILE_ATTRIBUTES and bool(res & FILE_ATTRIBUTE_REPARSE_POINT)
 
     return False

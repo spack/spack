@@ -12,7 +12,6 @@ RUN zypper ref && \
     git\
     gzip\
     patch\
-    patchelf\
     python3-base \
     python3-boto3\
     tar\

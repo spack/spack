@@ -1,0 +1,12 @@
+diff --git a/cmake/HPX_SetupAllocator.cmake b/cmake/HPX_SetupAllocator.cmake
+index 221c988d997..2e9d760a778 100644
+--- a/cmake/HPX_SetupAllocator.cmake
++++ b/cmake/HPX_SetupAllocator.cmake
+@@ -78,6 +78,6 @@ if(NOT TARGET hpx_dependencies_allocator)
+     # ##########################################################################
+     # MIMALLOC
+     if("${HPX_WITH_MALLOC_UPPER}" STREQUAL "MIMALLOC")
+-      find_package(mimalloc 1.0)
++      find_package(mimalloc)
+       if(NOT mimalloc_FOUND)
+         hpx_error(${allocator_error})

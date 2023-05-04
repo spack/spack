@@ -1,0 +1,9 @@
+--- a/src/MinCollector.cpp	2020-02-16 16:27:33.000000000 -0600
++++ b/src/MinCollector.cpp	2022-07-17 13:09:47.698229720 -0500
+@@ -1,5 +1,6 @@
+ #include "MinCollector.h"
+ #include <algorithm>
++#include <limits>
+ 
+ // utility functions
+ 

@@ -1,9 +1,9 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
+from spack.package import *
 
 
 class RCaretensemble(RPackage):
@@ -18,14 +18,15 @@ class RCaretensemble(RPackage):
 
     cran = "caretEnsemble"
 
-    version('2.0.1', sha256='7e595e604ce2d9d32afbc5404e6fcbcd7f80e687316e9ca3303aca3e44c3ef88')
+    version("2.0.2", sha256="d8fcf3742beddc723b68677682708408cc11dcb8b36a0f70f03e7c4763e04f4d")
+    version("2.0.1", sha256="7e595e604ce2d9d32afbc5404e6fcbcd7f80e687316e9ca3303aca3e44c3ef88")
 
-    depends_on('r@3.2.0:', type=('build', 'run'))
-    depends_on('r-pbapply', type=('build', 'run'))
-    depends_on('r-ggplot2', type=('build', 'run'))
-    depends_on('r-digest', type=('build', 'run'))
-    depends_on('r-plyr', type=('build', 'run'))
-    depends_on('r-lattice', type=('build', 'run'))
-    depends_on('r-gridextra', type=('build', 'run'))
-    depends_on('r-data-table', type=('build', 'run'))
-    depends_on('r-caret', type=('build', 'run'))
+    depends_on("r@3.2.0:", type=("build", "run"))
+    depends_on("r-pbapply", type=("build", "run"))
+    depends_on("r-ggplot2", type=("build", "run"))
+    depends_on("r-digest", type=("build", "run"))
+    depends_on("r-plyr", type=("build", "run"))
+    depends_on("r-lattice", type=("build", "run"))
+    depends_on("r-gridextra", type=("build", "run"))
+    depends_on("r-data-table", type=("build", "run"))
+    depends_on("r-caret", type=("build", "run"))

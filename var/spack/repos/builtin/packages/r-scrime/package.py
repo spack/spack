@@ -1,9 +1,9 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
+from spack.package import *
 
 
 class RScrime(RPackage):
@@ -16,4 +16,4 @@ class RScrime(RPackage):
 
     cran = "scrime"
 
-    version('1.3.5', sha256='5d97d3e57d8eb30709340fe572746029fd139456d7a955421c4e3aa75d825578')
+    version("1.3.5", sha256="5d97d3e57d8eb30709340fe572746029fd139456d7a955421c4e3aa75d825578")

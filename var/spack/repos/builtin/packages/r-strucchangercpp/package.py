@@ -1,9 +1,9 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
+from spack.package import *
 
 
 class RStrucchangercpp(RPackage):
@@ -22,10 +22,12 @@ class RStrucchangercpp(RPackage):
 
     cran = "strucchangeRcpp"
 
-    version('1.5-3-1.0.4', sha256='f506fcb593ce4bacf1892de25154257d0fe02260ef956a75438c6330195cd86d')
+    version(
+        "1.5-3-1.0.4", sha256="f506fcb593ce4bacf1892de25154257d0fe02260ef956a75438c6330195cd86d"
+    )
 
-    depends_on('r@2.10.0:', type=('build', 'run'))
-    depends_on('r-zoo', type=('build', 'run'))
-    depends_on('r-sandwich', type=('build', 'run'))
-    depends_on('r-rcpp@0.12.7:', type=('build', 'run'))
-    depends_on('r-rcpparmadillo', type=('build', 'run'))
+    depends_on("r@2.10.0:", type=("build", "run"))
+    depends_on("r-zoo", type=("build", "run"))
+    depends_on("r-sandwich", type=("build", "run"))
+    depends_on("r-rcpp@0.12.7:", type=("build", "run"))
+    depends_on("r-rcpparmadillo", type=("build", "run"))

@@ -1,9 +1,9 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
+from spack.package import *
 
 
 class RPlogr(RPackage):
@@ -14,5 +14,5 @@ class RPlogr(RPackage):
 
     cran = "plogr"
 
-    version('0.2.0', sha256='0e63ba2e1f624005fe25c67cdd403636a912e063d682eca07f2f1d65e9870d29')
-    version('0.1-1', sha256='22755c93c76c26252841f43195df31681ea865e91aa89726010bd1b9288ef48f')
+    version("0.2.0", sha256="0e63ba2e1f624005fe25c67cdd403636a912e063d682eca07f2f1d65e9870d29")
+    version("0.1-1", sha256="22755c93c76c26252841f43195df31681ea865e91aa89726010bd1b9288ef48f")

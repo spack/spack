@@ -1,0 +1,90 @@
+diff --git a/src/cmake/thirdparty/SetupConduit.cmake b/src/cmake/thirdparty/SetupConduit.cmake
+index 737d154d..d63a5f17 100644
+--- a/src/cmake/thirdparty/SetupConduit.cmake
++++ b/src/cmake/thirdparty/SetupConduit.cmake
+@@ -71,40 +71,58 @@ message(STATUS "CONDUIT_RELAY_WEBSERVER_ENABLED = ${CONDUIT_RELAY_WEBSERVER_ENAB
+ 
+ 
+ if(ENABLE_PYTHON)
+-    find_package(PythonInterp)
+-    if(PYTHONINTERP_FOUND)
+-        execute_process(COMMAND "${PYTHON_EXECUTABLE}" "-c"
+-                                "import os; import conduit; print(os.path.split(conduit.__file__)[0]);"
+-                        RESULT_VARIABLE _FIND_CONDUIT_PYTHON_RESULT
+-                        OUTPUT_VARIABLE _FIND_CONDUIT_PYTHON_OUT
+-                        ERROR_VARIABLE  _FIND_CONDUIT_PYTHON_ERROR_VALUE
+-                        OUTPUT_STRIP_TRAILING_WHITESPACE)
+-                      message(STATUS "PYTHON found!! ${CONDUIT_DIR}")
+-        if(_FIND_CONDUIT_PYTHON_RESULT MATCHES 0)
+-            message(STATUS "FOUND conduit python module at: ${_FIND_CONDUIT_PYTHON_OUT}")
+-        else()
+-            # try find the path to the conduit python module assuming a standard conduit install
++    set(CONDUIT_PYTHON_INCLUDE_DIR)
++
++    # If conduit provides a python module directory, try to find the conduit C API header there
++    if (EXISTS "${CONDUIT_PYTHON_MODULE_DIR}/conduit/conduit_python.hpp")
++        set(CONDUIT_PYTHON_INCLUDE_DIR ${CONDUIT_PYTHON_MODULE_DIR}/conduit)
++    endif ()
++
++    # Interegate the conduit python module to find its location if the CONDUIT_PYTHON_MODULE_DIR
++    # failed.
++    if (NOT CONDUIT_PYTHON_INCLUDE_DIR)
++        find_package(PythonInterp)
++        if(PYTHONINTERP_FOUND)
+             execute_process(COMMAND "${PYTHON_EXECUTABLE}" "-c"
+-                                   "import sys; import os; sys.path.append(os.path.join('${CONDUIT_DIR}','python-modules'));  import conduit; print(os.path.split(conduit.__file__)[0]);"
+-                                    RESULT_VARIABLE _FIND_CONDUIT_PYTHON_RESULT
+-                                    OUTPUT_VARIABLE _FIND_CONDUIT_PYTHON_OUT
+-                                    ERROR_VARIABLE  _FIND_CONDUIT_PYTHON_ERROR_VALUE
+-                                    OUTPUT_STRIP_TRAILING_WHITESPACE)
++                                    "import os; import conduit; print(os.path.split(conduit.__file__)[0]);"
++                            RESULT_VARIABLE _FIND_CONDUIT_PYTHON_RESULT
++                            OUTPUT_VARIABLE _FIND_CONDUIT_PYTHON_OUT
++                            ERROR_VARIABLE  _FIND_CONDUIT_PYTHON_ERROR_VALUE
++                            OUTPUT_STRIP_TRAILING_WHITESPACE)
++                          message(STATUS "PYTHON found!! ${CONDUIT_DIR}")
+             if(_FIND_CONDUIT_PYTHON_RESULT MATCHES 0)
+-                # we will use this to make sure we can setup tests correctly
+-                set(EXTRA_PYTHON_MODULE_DIRS "${CONDUIT_DIR}/python-modules/")
+                 message(STATUS "FOUND conduit python module at: ${_FIND_CONDUIT_PYTHON_OUT}")
+             else()
+-                message(FATAL_ERROR
+-                "conduit python import failure:\n${_FIND_CONDUIT_PYTHON_OUT}")
+-
++                # try find the path to the conduit python module assuming a standard conduit install
++                execute_process(COMMAND "${PYTHON_EXECUTABLE}" "-c"
++                                       "import sys; import os; sys.path.append(os.path.join('${CONDUIT_DIR}','python-modules'));  import conduit; print(os.path.split(conduit.__file__)[0]);"
++                                        RESULT_VARIABLE _FIND_CONDUIT_PYTHON_RESULT
++                                        OUTPUT_VARIABLE _FIND_CONDUIT_PYTHON_OUT
++                                        ERROR_VARIABLE  _FIND_CONDUIT_PYTHON_ERROR_VALUE
++                                        OUTPUT_STRIP_TRAILING_WHITESPACE)
++                if(_FIND_CONDUIT_PYTHON_RESULT MATCHES 0)
++                    # we will use this to make sure we can setup tests correctly
++                    set(EXTRA_PYTHON_MODULE_DIRS "${CONDUIT_DIR}/python-modules/")
++                    message(STATUS "FOUND conduit python module at: ${_FIND_CONDUIT_PYTHON_OUT}")
++                else()
++                    message(FATAL_ERROR
++                    "conduit python import failure:\n${_FIND_CONDUIT_PYTHON_OUT}")
++
++                endif()
+             endif()
++        else()
++            message(FATAL_ERROR "PYTHON_FOUND = TRUE, but could not find a python interpreter.")
+         endif()
+-    else()
+-        message(FATAL_ERROR "PYTHON_FOUND = TRUE, but could not find a python interpreter.")
+-    endif()
+ 
+-    set(CONDUIT_PYTHON_INCLUDE_DIR ${_FIND_CONDUIT_PYTHON_OUT})
++        set(CONDUIT_PYTHON_INCLUDE_DIR ${_FIND_CONDUIT_PYTHON_OUT})
++    endif ()
++
++    # Verify that the python header was found, if not abort
++    if (NOT EXISTS "${CONDUIT_PYTHON_INCLUDE_DIR}/conduit_python.hpp")
++        message(FATAL_ERROR "Cannot find conduit_python.hpp")
++    endif ()
++
++    # Add the conduit_python.h path to the include list
+     message(STATUS "FOUND conduit python include dir: ${CONDUIT_PYTHON_INCLUDE_DIR}")
+     list(APPEND CONDUIT_INCLUDE_DIRS ${CONDUIT_PYTHON_INCLUDE_DIR})
+ endif()

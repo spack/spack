@@ -1,0 +1,207 @@
+From 05269687a201569eeaa50c03000d75ba923edd90 Mon Sep 17 00:00:00 2001
+From: Gergely Meszaros <gergely@streamhpc.com>
+Date: Fri, 28 Oct 2022 13:41:38 +0200
+Subject: [PATCH 1/2] Fix device_merge when using different types for
+ `keys_input1` and `keys_input2`.
+
+Add a test case for using device_merge with different types for
+`keys_input1` and `keys_input2`.
+---
+ .../rocprim/device/detail/device_merge.hpp    | 28 +++---
+ test/rocprim/test_device_merge.cpp            | 98 ++++++++++++++++++-
+ 2 files changed, 107 insertions(+), 19 deletions(-)
+
+diff --git a/rocprim/include/rocprim/device/detail/device_merge.hpp b/rocprim/include/rocprim/device/detail/device_merge.hpp
+index 92159810..db7df6af 100644
+--- a/rocprim/include/rocprim/device/detail/device_merge.hpp
++++ b/rocprim/include/rocprim/device/detail/device_merge.hpp
+@@ -72,26 +72,26 @@ range_t compute_range(const unsigned int id,
+     return range_t{p1, p2, diag1 - p1, diag2 - p2};
+ }
+ 
+-template <class KeysInputIterator, class OffsetT, class BinaryFunction>
+-ROCPRIM_DEVICE ROCPRIM_INLINE
+-OffsetT merge_path(KeysInputIterator keys_input1,
+-                   KeysInputIterator keys_input2,
+-                   const OffsetT input1_size,
+-                   const OffsetT input2_size,
+-                   const OffsetT diag,
+-                   BinaryFunction compare_function)
++template<class KeysInputIterator1, class KeysInputIterator2, class OffsetT, class BinaryFunction>
++ROCPRIM_DEVICE ROCPRIM_INLINE OffsetT merge_path(KeysInputIterator1 keys_input1,
++                                                 KeysInputIterator2 keys_input2,
++                                                 const OffsetT      input1_size,
++                                                 const OffsetT      input2_size,
++                                                 const OffsetT      diag,
++                                                 BinaryFunction     compare_function)
+ {
+-    using key_type = typename std::iterator_traits<KeysInputIterator>::value_type;
++    using key_type_1 = typename std::iterator_traits<KeysInputIterator1>::value_type;
++    using key_type_2 = typename std::iterator_traits<KeysInputIterator2>::value_type;
+ 
+     OffsetT begin = diag < input2_size ? 0u : diag - input2_size;
+-    OffsetT end = min(diag, input1_size);
++    OffsetT end   = min(diag, input1_size);
+ 
+     while(begin < end)
+     {
+-        OffsetT a = (begin + end) / 2;
+-        OffsetT b = diag - 1 - a;
+-        key_type input_a = keys_input1[a];
+-        key_type input_b = keys_input2[b];
++        OffsetT    a       = (begin + end) / 2;
++        OffsetT    b       = diag - 1 - a;
++        key_type_1 input_a = keys_input1[a];
++        key_type_2 input_b = keys_input2[b];
+         if(!compare_function(input_b, input_a))
+         {
+             begin = a + 1;
+diff --git a/test/rocprim/test_device_merge.cpp b/test/rocprim/test_device_merge.cpp
+index 7e21c65f..d06cafb8 100644
+--- a/test/rocprim/test_device_merge.cpp
++++ b/test/rocprim/test_device_merge.cpp
+@@ -1,6 +1,6 @@
+ // MIT License
+ //
+-// Copyright (c) 2017-2021 Advanced Micro Devices, Inc. All rights reserved.
++// Copyright (c) 2017-2022 Advanced Micro Devices, Inc. All rights reserved.
+ //
+ // Permission is hereby granted, free of charge, to any person obtaining a copy
+ // of this software and associated documentation files (the "Software"), to deal
+@@ -20,14 +20,23 @@
+ // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ // SOFTWARE.
+ 
+-#include "common_test_header.hpp"
++// required test headers
++#include "../common_test_header.hpp"
++#include "test_utils_types.hpp"
+ 
+ // required rocprim headers
+-#include <rocprim/functional.hpp>
+ #include <rocprim/device/device_merge.hpp>
++#include <rocprim/functional.hpp>
++#include <rocprim/iterator/counting_iterator.hpp>
++#include <rocprim/iterator/transform_iterator.hpp>
+ 
+-// required test headers
+-#include "test_utils_types.hpp"
++#include <gtest/gtest.h>
++
++#include <hip/hip_runtime.h>
++
++#include <algorithm>
++#include <numeric>
++#include <vector>
+ 
+ // Params for tests
+ template<
+@@ -433,3 +442,82 @@ TYPED_TEST(RocprimDeviceMergeTests, MergeKeyValue)
+ 
+     }
+ }
++
++TEST(RocprimDeviceMergeTests, MergeMismatchedIteratorTypes)
++{
++    const int device_id = test_common_utils::obtain_device_from_ctest();
++    SCOPED_TRACE(testing::Message() << "with device_id = " << device_id);
++    HIP_CHECK(hipSetDevice(device_id));
++
++    std::vector<int> keys_input1(1'024);
++    std::generate(keys_input1.begin(),
++                  keys_input1.end(),
++                  [n = 0]() mutable
++                  {
++                      const int temp = n;
++                      n += 2;
++                      return temp;
++                  });
++
++    std::vector<int> expected_keys_output(2 * keys_input1.size());
++    std::iota(expected_keys_output.begin(), expected_keys_output.end(), 0);
++
++    int* d_keys_input1 = nullptr;
++    int* d_keys_output = nullptr;
++    HIP_CHECK(test_common_utils::hipMallocHelper(&d_keys_input1,
++                                                 keys_input1.size() * sizeof(keys_input1[0])));
++    HIP_CHECK(
++        test_common_utils::hipMallocHelper(&d_keys_output,
++                                           expected_keys_output.size() * sizeof(keys_input1[0])));
++
++    HIP_CHECK(hipMemcpy(d_keys_input1,
++                        keys_input1.data(),
++                        keys_input1.size() * sizeof(keys_input1[0]),
++                        hipMemcpyHostToDevice));
++
++    const auto d_keys_input2 = rocprim::make_transform_iterator(rocprim::make_counting_iterator(0),
++                                                                [] __host__ __device__(int value)
++                                                                { return value * 2 + 1; });
++
++    static constexpr bool debug_synchronous = false;
++
++    size_t temp_storage_size_bytes = 0;
++    HIP_CHECK(rocprim::merge(nullptr,
++                             temp_storage_size_bytes,
++                             d_keys_input1,
++                             d_keys_input2,
++                             d_keys_output,
++                             keys_input1.size(),
++                             keys_input1.size(),
++                             rocprim::less<int>{},
++                             hipStreamDefault,
++                             debug_synchronous));
++
++    ASSERT_GT(temp_storage_size_bytes, 0);
++
++    void* d_temp_storage = nullptr;
++    HIP_CHECK(test_common_utils::hipMallocHelper(&d_temp_storage, temp_storage_size_bytes));
++
++    HIP_CHECK(rocprim::merge(d_temp_storage,
++                             temp_storage_size_bytes,
++                             d_keys_input1,
++                             d_keys_input2,
++                             d_keys_output,
++                             keys_input1.size(),
++                             keys_input1.size(),
++                             rocprim::less<int>{},
++                             hipStreamDefault,
++                             debug_synchronous));
++
++    std::vector<int> keys_output(expected_keys_output.size());
++    HIP_CHECK(hipMemcpy(keys_output.data(),
++                        d_keys_output,
++                        keys_output.size() * sizeof(keys_output[0]),
++                        hipMemcpyDeviceToHost));
++
++    ASSERT_NO_FATAL_FAILURE(test_utils::assert_eq(keys_output, expected_keys_output));
++
++    HIP_CHECK(hipFree(d_temp_storage));
++    HIP_CHECK(hipFree(d_keys_output));
++    HIP_CHECK(hipFree(d_keys_input1));
++}
+
+From 993541c6b21b51b5a1a838eca855cc4efcfbb19b Mon Sep 17 00:00:00 2001
+From: Vince van Heertum <vince@streamhpc.com>
+Date: Fri, 4 Nov 2022 12:56:53 +0100
+Subject: [PATCH 2/2] Update CHANGELOG.md for ROCm 5.3.2
+
+---
+ CHANGELOG.md | 5 +++++
+ 1 file changed, 5 insertions(+)
+
+diff --git a/CHANGELOG.md b/CHANGELOG.md
+index eef6aede..53739ffa 100644
+--- a/CHANGELOG.md
++++ b/CHANGELOG.md
+@@ -2,6 +2,11 @@
+ 
+ Full documentation for rocPRIM is available at [https://codedocs.xyz/ROCmSoftwarePlatform/rocPRIM/](https://codedocs.xyz/ROCmSoftwarePlatform/rocPRIM/)
+ 
++## [rocPRIM-2.11.1 for ROCm 5.3.2]
++### Fixed
++- Fix device_merge when using different types for `keys_input1` and `keys_input2`.
++- Added a test case for using device_merge with different types for `keys_input1` and `keys_input2`. 
++
+ ## [rocPRIM-2.11.0 for ROCm 5.3.0]
+ ### Added
+ - New functions `subtract_left` and `subtract_right` in `block_adjacent_difference` to apply functions

@@ -1,0 +1,61 @@
+--- a/FPLO22.00-62/install/MMakefile	2022-07-06 01:06:19.000000000 -0500
++++ b/FPLO22.00-62/install/MMakefile	2022-08-28 16:23:30.921835477 -0500
+@@ -106,7 +106,7 @@
+ 
+ # directories with source code to compile
+ parentpath=../..
+-srcdir="COMMON ISO SLABIFY FEDIT CALC CIF OPTICS"
++srcdir="COMMON SLABIFY ISO FEDIT CALC CIF OPTICS"
+ doxinstall=0
+ xsrcdir="XFPLO"
+ moddir="MODULES"
+@@ -245,17 +245,15 @@
+ 
+ ###########################
+ # mkl
+-echo "Please enter if you want to use the MKL eigenvalue solver (y/n) [default n]:" ; read YN 
+-if [ "x$YN"  = "xy" -o "x$YN" =  "xY"  ];then    mkl=1; fi
++#echo "Please enter if you want to use the MKL eigenvalue solver (y/n) [default n]:" ; read YN 
++#if [ "x$YN"  = "xy" -o "x$YN" =  "xY"  ];then    mkl=1; fi
+ if [ $mkl = 1 ] ; then
+     nmkl=$(echo "$MKLROOT" | sed -e "s/[\t\n ]*//g" | wc -c)
+     if [ $nmkl -gt 1 ] ; then
+ 	echo "I found an mkl path"
+     else
+ 	echo "I did not find the mkl path you will have to setup the \n\
+-linkage yourself (README) or restart and answer no."
+-	echo "Press enter to continue:" ;read YN
+-	mkl=1
++linkage yourself (README)."
+     fi
+ else
+     use_own_lapack=1
+@@ -346,27 +344,7 @@
+ echo ""
+ ################################################################################
+ echo "        C-Compiler  C++-Compiler F90-Compiler system specification"
+-echo "probing $CC         $CXX         $F90         $hostname"
+-if   [ -f "$configdir/$CC-$F90-$hostname" ]
+-then
+-   conffile="$configdir/$CC-$F90-$hostname"
+-else
+-    echo "probing $CC         $CXX         $F90         $hostname"
+-    if [ -f "$configdir/$CC-$F90-$sname-$os_rel" ]
+-    then
+-        conffile="$configdir/$CC-$F90-$sname-$os_rel"
+-    else
+-        echo "probing $CC         $CXX         $F90         $hostname"
+-	if [ -f "$configdir/$CC-$F90-$sname" ] 
+-	then
+-	    conffile="$configdir/$CC-$F90-$sname"
+-	else
+-	    echo "No configuration file for your settings are available!"
+-	    exit
+-	fi
+-    fi
+-fi
+-
++conffile=$configdir/
+ 
+ 
+ # make installdir

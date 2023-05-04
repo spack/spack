@@ -16,38 +16,15 @@ from flake8.style_guide import Violation
 pattern_exemptions = {
     # exemptions applied only to package.py files.
     r"package.py$": {
-        # Allow 'from spack import *' in packages, but no other wildcards
-        "F403": [
-            r"^from spack import \*$",
-            r"^from spack.pkgkit import \*$",
-        ],
-        # Exempt lines with urls and descriptions from overlong line errors.
-        "E501": [
-            r"^\s*homepage\s*=",
-            r"^\s*url\s*=",
-            r"^\s*git\s*=",
-            r"^\s*svn\s*=",
-            r"^\s*hg\s*=",
-            r"^\s*pypi\s*=",
-            r"^\s*list_url\s*=",
-            r"^\s*version\(",
-            r"^\s*variant\(",
-            r"^\s*provides\(",
-            r"^\s*extends\(",
-            r"^\s*depends_on\(",
-            r"^\s*conflicts\(",
-            r"^\s*resource\(",
-            r"^\s*patch\(",
-        ],
+        # Allow 'from spack.package import *' in packages, but no other wildcards
+        "F403": [r"^from spack.package import \*$", r"^from spack.package_defs import \*$"],
         # Exempt '@when' decorated functions from redefinition errors.
-        "F811": [
-            r"^\s*@when\(.*\)",
-        ],
+        "F811": [r"^\s*@when\(.*\)"],
     },
     # exemptions applied to all files.
     r".py$": {
         "E501": [
-            r"(https?|ftp|file)\:",  # URLs
+            r"(ssh|https?|ftp|file)\:",  # URLs
             r'([\'"])[0-9a-fA-F]{32,}\1',  # long hex checksums
         ]
     },
@@ -58,10 +35,7 @@ pattern_exemptions = {
 pattern_exemptions = dict(
     (
         re.compile(file_pattern),
-        dict(
-            (code, [re.compile(p) for p in patterns])
-            for code, patterns in error_dict.items()
-        ),
+        dict((code, [re.compile(p) for p in patterns]) for code, patterns in error_dict.items()),
     )
     for file_pattern, error_dict in pattern_exemptions.items()
 )
@@ -73,7 +47,7 @@ class SpackFormatter(Pylint):
         self.error_seen = False
         super().__init__(options)
 
-    def after_init(self):  # type: () -> None
+    def after_init(self) -> None:
         """Overriding to keep format string from being unset in Default"""
         pass
 
@@ -86,7 +60,7 @@ class SpackFormatter(Pylint):
                 for code, pat_arr in errors.items():
                     self.spack_errors[code].extend(pat_arr)
 
-    def handle(self, error):  # type: (Violation) -> None
+    def handle(self, error: Violation) -> None:
         """Handle an error reported by Flake8.
 
         This defaults to calling :meth:`format`, :meth:`show_source`, and
@@ -96,8 +70,6 @@ class SpackFormatter(Pylint):
         :param error:
             This will be an instance of
             :class:`~flake8.style_guide.Violation`.
-        :type error:
-            flake8.style_guide.Violation
         """
 
         # print(error.code)
@@ -105,9 +77,7 @@ class SpackFormatter(Pylint):
         # get list of patterns for this error code
         pats = self.spack_errors.get(error.code, None)
         # if any pattern matches, skip line
-        if pats is not None and any(
-            (pat.search(error.physical_line) for pat in pats)
-        ):
+        if pats is not None and any((pat.search(error.physical_line) for pat in pats)):
             return
 
         # Special F811 handling
@@ -117,16 +87,10 @@ class SpackFormatter(Pylint):
         # https://gitlab.com/pycqa/flake8/issues/583
         # we can only determine if F811 should be ignored given the previous
         # line, so get the previous line and check it
-        if (
-            self.spack_errors.get("F811", False)
-            and error.code == "F811"
-            and error.line_number > 1
-        ):
+        if self.spack_errors.get("F811", False) and error.code == "F811" and error.line_number > 1:
             if self.file_lines is None:
                 if self.filename in {"stdin", "-", "(none)", None}:
-                    self.file_lines = pycodestyle.stdin_get_value().splitlines(
-                        True
-                    )
+                    self.file_lines = pycodestyle.stdin_get_value().splitlines(True)
                 else:
                     self.file_lines = pycodestyle.readlines(self.filename)
             for pat in self.spack_errors["F811"]:

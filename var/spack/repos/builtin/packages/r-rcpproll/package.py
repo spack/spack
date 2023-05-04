@@ -1,0 +1,22 @@
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
+#
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
+from spack.package import *
+
+
+class RRcpproll(RPackage):
+    """Efficient Rolling / Windowed Operations.
+
+    Provides fast and efficient routines for common rolling / windowed
+    operations. Routines for the efficient computation of windowed mean,
+    median, sum, product, minimum, maximum, standard deviation and variance are
+    provided."""
+
+    cran = "RcppRoll"
+
+    version("0.3.0", sha256="cbff2096443a8a38a6f1dabf8c90b9e14a43d2196b412b5bfe5390393f743f6b")
+
+    depends_on("r@2.15.1:", type=("build", "run"))
+    depends_on("r-rcpp", type=("build", "run"))

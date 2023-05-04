@@ -1,9 +1,9 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
+from spack.package import *
 
 
 class RAskpass(RPackage):
@@ -20,6 +20,6 @@ class RAskpass(RPackage):
 
     cran = "askpass"
 
-    version('1.1', sha256='db40827d1bdbb90c0aa2846a2961d3bf9d76ad1b392302f9dd84cc2fd18c001f')
+    version("1.1", sha256="db40827d1bdbb90c0aa2846a2961d3bf9d76ad1b392302f9dd84cc2fd18c001f")
 
-    depends_on('r-sys@2.1:', type=('build', 'run'))
+    depends_on("r-sys@2.1:", type=("build", "run"))

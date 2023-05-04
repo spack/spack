@@ -1,9 +1,9 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
+from spack.package import *
 
 
 class RLmertest(RPackage):
@@ -18,10 +18,10 @@ class RLmertest(RPackage):
 
     cran = "lmerTest"
 
-    version('3.1-3', sha256='35aa75e9f5f2871398ff56a482b013e6828135ef04916ced7d1d7e35257ea8fd')
+    version("3.1-3", sha256="35aa75e9f5f2871398ff56a482b013e6828135ef04916ced7d1d7e35257ea8fd")
 
-    depends_on('r@3.2.5:', type=('build', 'run'))
-    depends_on('r-lme4@1.1-10:', type=('build', 'run'))
-    depends_on('r-numderiv', type=('build', 'run'))
-    depends_on('r-mass', type=('build', 'run'))
-    depends_on('r-ggplot2', type=('build', 'run'))
+    depends_on("r@3.2.5:", type=("build", "run"))
+    depends_on("r-lme4@1.1-10:", type=("build", "run"))
+    depends_on("r-numderiv", type=("build", "run"))
+    depends_on("r-mass", type=("build", "run"))
+    depends_on("r-ggplot2", type=("build", "run"))

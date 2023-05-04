@@ -1,9 +1,9 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
+from spack.package import *
 
 
 class RBridgesampling(RPackage):
@@ -17,12 +17,12 @@ class RBridgesampling(RPackage):
 
     cran = "bridgesampling"
 
-    version('1.1-2', sha256='54ecd39aa2e36d4d521d3d36425f9fe56a3f8547df6048c814c5931d790f3e6b')
+    version("1.1-2", sha256="54ecd39aa2e36d4d521d3d36425f9fe56a3f8547df6048c814c5931d790f3e6b")
 
-    depends_on('r@3.0.0:', type=('build', 'run'))
-    depends_on('r-mvtnorm', type=('build', 'run'))
-    depends_on('r-matrix', type=('build', 'run'))
-    depends_on('r-brobdingnag', type=('build', 'run'))
-    depends_on('r-stringr', type=('build', 'run'))
-    depends_on('r-coda', type=('build', 'run'))
-    depends_on('r-scales', type=('build', 'run'))
+    depends_on("r@3.0.0:", type=("build", "run"))
+    depends_on("r-mvtnorm", type=("build", "run"))
+    depends_on("r-matrix", type=("build", "run"))
+    depends_on("r-brobdingnag", type=("build", "run"))
+    depends_on("r-stringr", type=("build", "run"))
+    depends_on("r-coda", type=("build", "run"))
+    depends_on("r-scales", type=("build", "run"))

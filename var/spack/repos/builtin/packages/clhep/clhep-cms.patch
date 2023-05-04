@@ -1,0 +1,334 @@
+--- CLHEP/Cast/Cast-config.in	2022-09-22 13:46:29.385641965 +0200
++++ CLHEP/Cast/Cast-config.in	2022-09-22 13:45:33.780146460 +0200
+@@ -89,7 +89,7 @@
+        	;;
+ 
+     --libs)
+-       	echo @LIBS@ @Cast_LIBS@ -lm
++       	echo -lCLHEP -lm
+        	;;
+ 
+     *)
+--- CLHEP/cmake/Modules/ClhepBuildLibrary.cmake	2022-09-22 13:46:29.430641557 +0200
++++ CLHEP/cmake/Modules/ClhepBuildLibrary.cmake	2022-09-22 13:45:33.823146070 +0200
+@@ -50,15 +50,6 @@
+ 
+   target_link_libraries(${package}  ${package_library_list} )
+   target_link_libraries(${package}S ${package_library_list_static} )
+-
+-  # Install the libraries
+-  INSTALL (TARGETS ${package} ${package}S
+-      EXPORT CLHEPLibraryDepends
+-      RUNTIME DESTINATION bin
+-      LIBRARY DESTINATION lib${LIB_SUFFIX}
+-      ARCHIVE DESTINATION lib${LIB_SUFFIX}
+-      INCLUDES DESTINATION include
+-      ) 
+ endmacro(clhep_build_library)
+ 
+ macro(clhep_build_libclhep )
+@@ -88,7 +79,7 @@
+   SET_TARGET_PROPERTIES(CLHEPS PROPERTIES DEFINE_SYMBOL "")
+ 
+   # export creates library dependency files for CLHEPConfig.cmake
+-  INSTALL(TARGETS CLHEP CLHEPS
++  INSTALL(TARGETS CLHEP
+       EXPORT CLHEPLibraryDepends
+       RUNTIME DESTINATION bin
+       LIBRARY DESTINATION lib${LIB_SUFFIX}
+--- CLHEP/cmake/Modules/ClhepToolchain.cmake	2022-09-22 13:46:29.430641557 +0200
++++ CLHEP/cmake/Modules/ClhepToolchain.cmake	2022-09-22 13:45:33.823146070 +0200
+@@ -57,7 +57,7 @@
+   list(APPEND CLHEP_libraries_all "${_lib}S")
+ endforeach()
+ 
+-export(TARGETS CLHEP CLHEPS ${CLHEP_libraries_all}
++export(TARGETS CLHEP
+   NAMESPACE "CLHEP::"
+   FILE ${PROJECT_BINARY_DIR}/CLHEPLibraryDepends.cmake
+   )
+--- CLHEP/Evaluator/Evaluator-config.in	2022-09-22 13:46:29.386641956 +0200
++++ CLHEP/Evaluator/Evaluator-config.in	2022-09-22 13:45:33.783146433 +0200
+@@ -89,7 +89,7 @@
+        	;;
+ 
+     --libs)
+-       	echo @LIBS@ @Evaluator_LIBS@ -lm
++       	echo -lCLHEP -lm
+        	;;
+ 
+     *)
+--- CLHEP/Exceptions/Exceptions-config.in	2022-09-22 13:46:29.388641938 +0200
++++ CLHEP/Exceptions/Exceptions-config.in	2022-09-22 13:45:33.784146424 +0200
+@@ -89,7 +89,7 @@
+        	;;
+ 
+     --libs)
+-       	echo @LIBS@ @Exceptions_LIBS@ -lm
++       	echo -lCLHEP -lm
+        	;;
+ 
+     *)
+--- CLHEP/Fields/Fields-config.in	2022-09-22 13:46:29.391641911 +0200
++++ CLHEP/Fields/Fields-config.in	2022-09-22 13:45:33.787146397 +0200
+@@ -89,7 +89,7 @@
+        	;;
+ 
+     --libs)
+-       	echo @LIBS@ @Fields_LIBS@ -lm
++       	echo -lCLHEP -lm
+        	;;
+ 
+     *)
+--- CLHEP/GenericFunctions/GenericFunctions-config.in	2022-09-22 13:46:29.392641902 +0200
++++ CLHEP/GenericFunctions/GenericFunctions-config.in	2022-09-22 13:45:33.788146388 +0200
+@@ -89,7 +89,7 @@
+        	;;
+ 
+     --libs)
+-       	echo @LIBS@ @GenericFunctions_LIBS@ -lm
++       	echo -lCLHEP -lm
+        	;;
+ 
+     *)
+--- CLHEP/Geometry/Geometry-config.in	2022-09-22 13:46:29.400641829 +0200
++++ CLHEP/Geometry/Geometry-config.in	2022-09-22 13:45:33.797146306 +0200
+@@ -89,7 +89,7 @@
+        	;;
+ 
+     --libs)
+-       	echo @LIBS@ @Geometry_LIBS@ -lm
++       	echo -lCLHEP -lm
+        	;;
+ 
+     *)
+--- CLHEP/Matrix/Matrix/DiagMatrix.icc	2022-09-22 13:46:29.402641811 +0200
++++ CLHEP/Matrix/Matrix/DiagMatrix.icc	2022-09-22 13:45:33.799146288 +0200
+@@ -12,10 +12,6 @@
+    : m(0), nrow(0)
+ {}
+ 
+-inline int HepDiagMatrix::num_row() const { return nrow;}
+-inline int HepDiagMatrix::num_col() const  { return nrow;}
+-inline int HepDiagMatrix::num_size() const  { return nrow;}
+-
+ inline double & HepDiagMatrix::fast(int row,int col)
+ {
+ #ifdef MATRIX_BOUND_CHECK
+@@ -47,16 +43,6 @@
+   }
+ }
+ 
+-inline double & HepDiagMatrix::operator()(int row, int col)
+-{
+-   return fast(col,row);
+-}
+-
+-inline const double & HepDiagMatrix::operator()(int row, int col) const 
+-{ 
+-   return fast(col,row);
+-}
+-
+ inline void HepDiagMatrix::assign(const HepDiagMatrix &hm2) {(*this)=hm2;}
+ 
+ inline HepDiagMatrix HepDiagMatrix::T() const {return HepDiagMatrix(*this);}
+--- CLHEP/Matrix/Matrix/GenMatrix.h	2022-09-22 13:46:29.402641811 +0200
++++ CLHEP/Matrix/Matrix/GenMatrix.h	2022-09-22 13:45:33.799146288 +0200
+@@ -32,7 +32,7 @@
+ class HepGenMatrix {
+  
+ public:
+-   virtual ~HepGenMatrix() {}
++   virtual ~HepGenMatrix();
+ 
+ 
+ #ifdef DISABLE_ALLOC   // disable this non-compliant allocator
+--- CLHEP/Matrix/Matrix/SymMatrix.h	2022-09-22 13:46:29.402641811 +0200
++++ CLHEP/Matrix/Matrix/SymMatrix.h	2022-09-22 13:45:33.799146288 +0200
+@@ -106,8 +106,8 @@
+    virtual ~HepSymMatrix();
+    // Destructor.
+ 
+-   inline int num_row() const;
+-   inline int num_col() const;
++   int num_row() const;
++   int num_col() const;
+    // Returns number of rows/columns.
+ 
+    const double & operator()(int row, int col) const; 
+--- CLHEP/Matrix/Matrix/SymMatrix.icc	2022-09-22 13:46:29.402641811 +0200
++++ CLHEP/Matrix/Matrix/SymMatrix.icc	2022-09-22 13:45:33.799146288 +0200
+@@ -13,10 +13,6 @@
+   : m(0), nrow(0), size_(0)
+ {}
+ 
+-inline int HepSymMatrix::num_row() const { return nrow;}
+-inline int HepSymMatrix::num_col() const  { return nrow;}
+-inline int HepSymMatrix::num_size() const  { return size_;}
+-
+ inline double & HepSymMatrix::fast(int row,int col)
+ {
+ #ifdef MATRIX_BOUND_CHECK
+@@ -34,11 +30,6 @@
+   return *(m.begin()+(row*(row-1))/2+(col-1));
+ }
+ 
+-inline double & HepSymMatrix::operator()(int row, int col)
+-    {return (row>=col? fast(row,col) : fast(col,row));}
+-inline const double & HepSymMatrix::operator()(int row, int col) const 
+-    {return (row>=col? fast(row,col) : fast(col,row));}
+-
+ inline void HepSymMatrix::assign(const HepSymMatrix &hm2) 
+   {(*this)=hm2;}
+ 
+--- CLHEP/Matrix/Matrix-config.in	2022-09-22 13:46:29.401641820 +0200
++++ CLHEP/Matrix/Matrix-config.in	2022-09-22 13:45:33.798146297 +0200
+@@ -87,7 +87,7 @@
+        	;;
+ 
+     --libs)
+-       	echo @LIBS@ @Matrix_LIBS@ -lm
++       	echo -lCLHEP -lm
+        	;;
+ 
+     *)
+--- CLHEP/Matrix/src/DiagMatrix.cc	2022-09-22 13:46:29.402641811 +0200
++++ CLHEP/Matrix/src/DiagMatrix.cc	2022-09-22 13:45:33.799146288 +0200
+@@ -21,6 +21,20 @@
+ 
+ namespace CLHEP {
+ 
++int HepDiagMatrix::num_row() const { return nrow;}
++int HepDiagMatrix::num_col() const  { return nrow;}
++int HepDiagMatrix::num_size() const  { return nrow;}
++
++double & HepDiagMatrix::operator()(int row, int col)
++{
++   return fast(col,row);
++}
++
++const double & HepDiagMatrix::operator()(int row, int col) const
++{
++   return fast(col,row);
++}
++
+ // Simple operation for all elements
+ 
+ #define SIMPLE_UOP(OPER)          \
+--- CLHEP/Matrix/src/GenMatrix.cc	2022-09-22 13:46:29.402641811 +0200
++++ CLHEP/Matrix/src/GenMatrix.cc	2022-09-22 13:45:33.799146288 +0200
+@@ -21,6 +21,9 @@
+ 
+ namespace CLHEP {
+ 
++HepGenMatrix::~HepGenMatrix()
++{}
++
+ #ifdef HEP_THIS_FUNCTION_IS_NOT_NEEDED
+ static void delete_array(double *hm)
+ {
+--- CLHEP/Matrix/src/SymMatrix.cc	2022-09-22 13:46:29.403641802 +0200
++++ CLHEP/Matrix/src/SymMatrix.cc	2022-09-22 13:45:33.800146279 +0200
+@@ -21,6 +21,15 @@
+ 
+ namespace CLHEP {
+ 
++int HepSymMatrix::num_row() const { return nrow;}
++int HepSymMatrix::num_col() const  { return nrow;}
++int HepSymMatrix::num_size() const  { return size_;}
++
++double & HepSymMatrix::operator()(int row, int col)
++    {return (row>=col? fast(row,col) : fast(col,row));}
++const double & HepSymMatrix::operator()(int row, int col) const
++    {return (row>=col? fast(row,col) : fast(col,row));}
++
+ // Simple operation for all elements
+ 
+ #define SIMPLE_UOP(OPER)          \
+--- CLHEP/Random/Random-config.in	2022-09-22 13:46:29.405641783 +0200
++++ CLHEP/Random/Random-config.in	2022-09-22 13:45:33.801146270 +0200
+@@ -89,7 +89,7 @@
+        	;;
+ 
+     --libs)
+-       	echo @LIBS@ @Random_LIBS@ -lm
++       	echo -lCLHEP -lm
+        	;;
+ 
+     *)
+--- CLHEP/RandomObjects/RandomObjects-config.in	2022-09-22 13:46:29.420641647 +0200
++++ CLHEP/RandomObjects/RandomObjects-config.in	2022-09-22 13:45:33.815146143 +0200
+@@ -89,7 +89,7 @@
+        	;;
+ 
+     --libs)
+-       	echo @LIBS@ @RandomObjects_LIBS@ -lm
++       	echo -lCLHEP -lm
+        	;;
+ 
+     *)
+--- CLHEP/RefCount/RefCount-config.in	2022-09-22 13:46:29.421641639 +0200
++++ CLHEP/RefCount/RefCount-config.in	2022-09-22 13:45:33.816146134 +0200
+@@ -89,7 +89,7 @@
+        	;;
+ 
+     --libs)
+-       	echo @LIBS@ @RefCount_LIBS@ -lm
++       	echo -lCLHEP -lm
+        	;;
+ 
+     *)
+--- CLHEP/Units/Units/PhysicalConstants.h	2022-09-22 13:46:29.422641629 +0200
++++ CLHEP/Units/Units/PhysicalConstants.h	2022-09-22 13:45:33.816146134 +0200
+@@ -46,6 +46,9 @@
+ 
+ namespace CLHEP {
+ 
++#pragma GCC diagnostic push
++#pragma GCC diagnostic ignored "-Wunused-variable"
++
+ //
+ // 
+ //
+@@ -129,6 +132,8 @@
+ //
+ static constexpr double universe_mean_density = 1.e-25*g/cm3;
+ 
++#pragma GCC diagnostic pop
++
+ }  // namespace CLHEP
+ 
+ #ifdef ENABLE_BACKWARDS_COMPATIBILITY
+--- CLHEP/Units/Units-config.in	2022-09-22 13:46:29.422641629 +0200
++++ CLHEP/Units/Units-config.in	2022-09-22 13:45:33.816146134 +0200
+@@ -89,7 +89,7 @@
+        	;;
+ 
+     --libs)
+-       	echo @LIBS@ @Units_LIBS@ -lm
++       	echo -lCLHEP -lm
+        	;;
+ 
+     *)
+--- CLHEP/Utility/Utility-config.in	2022-09-22 13:46:29.423641620 +0200
++++ CLHEP/Utility/Utility-config.in	2022-09-22 13:45:33.817146125 +0200
+@@ -89,7 +89,7 @@
+        	;;
+ 
+     --libs)
+-       	echo @LIBS@ @Utility_LIBS@
++       	echo -lCLHEP
+        	;;
+ 
+     *)
+--- CLHEP/Vector/Vector-config.in	2022-09-22 13:46:29.424641611 +0200
++++ CLHEP/Vector/Vector-config.in	2022-09-22 13:45:33.818146116 +0200
+@@ -89,7 +89,7 @@
+        	;;
+ 
+     --libs)
+-       	echo @LIBS@ @Vector_LIBS@ -lm
++       	echo -lCLHEP -lm
+        	;;
+ 
+     *)

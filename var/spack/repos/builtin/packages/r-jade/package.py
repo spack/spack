@@ -1,9 +1,9 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
+from spack.package import *
 
 
 class RJade(RPackage):
@@ -18,6 +18,6 @@ class RJade(RPackage):
 
     cran = "JADE"
 
-    version('2.0-3', sha256='56d68a993fa16fc6dec758c843960eee840814c4ca2271e97681a9d2b9e242ba')
+    version("2.0-3", sha256="56d68a993fa16fc6dec758c843960eee840814c4ca2271e97681a9d2b9e242ba")
 
-    depends_on('r-clue', type=('build', 'run'))
+    depends_on("r-clue", type=("build", "run"))
