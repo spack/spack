@@ -1362,47 +1362,59 @@ class Environment:
         import spack.solver.asp
 
         # Exit early if the set of concretized specs is the set of user specs
-        user_specs_did_not_change = not bool(
-            set(self.user_specs) - set(self.concretized_user_specs)
-        )
-        if user_specs_did_not_change:
+        new_user_specs = set(self.user_specs) - set(self.concretized_user_specs)
+        kept_user_specs = set(self.user_specs) & set(self.concretized_user_specs)
+        if not new_user_specs:
             return []
 
-        # Proceed with concretization
+        result = [
+            pair for pair in self.concretized_specs() if pair[0] in kept_user_specs
+        ]
+        specs_to_concretize = list(new_user_specs) + [concrete for _, concrete in result]
+
         self.concretized_user_specs = []
         self.concretized_order = []
         self.specs_by_hash = {}
 
         result_by_user_spec = {}
         solver = spack.solver.asp.Solver()
-        for result in solver.solve_in_rounds(self.user_specs, tests=tests):
+        for result in solver.solve_in_rounds(specs_to_concretize, tests=tests):
             result_by_user_spec.update(result.specs_by_input)
 
         result = []
         for abstract, concrete in sorted(result_by_user_spec.items()):
+            if abstract in new_user_specs:
+                result.append((abstract, concrete))
+            else:
+                assert (abstract, concrete) in result
             self._add_concrete_spec(abstract, concrete)
-            result.append((abstract, concrete))
         return result
 
     def _concretize_together(self, tests=False):
         """Concretization strategy that concretizes all the specs
         in the same DAG.
         """
+        # This code relies on the fact that sets are ordered in python
+
         # Exit early if the set of concretized specs is the set of user specs
-        user_specs_did_not_change = not bool(
-            set(self.user_specs) - set(self.concretized_user_specs)
-        )
-        if user_specs_did_not_change:
+        new_user_specs = set(self.user_specs) - set(self.concretized_user_specs)
+        kept_user_specs = set(self.user_specs) & set(self.concretized_user_specs)
+        if not new_user_specs:
             return []
 
-        # Proceed with concretization
+        concrete_specs_to_keep = [
+            concrete for abstract, concrete in self.concretized_specs()
+            if abstract in kept_user_specs
+        ]
+        specs_to_concretize = list(new_user_specs) + concrete_specs_to_keep
+
         self.concretized_user_specs = []
         self.concretized_order = []
         self.specs_by_hash = {}
 
         try:
             concrete_specs = spack.concretize.concretize_specs_together(
-                *self.user_specs, tests=tests
+                *specs_to_concretize, tests=tests
             )
         except spack.error.UnsatisfiableSpecError as e:
             # "Enhance" the error message for multiple root specs, suggest a less strict
@@ -1414,7 +1426,8 @@ class Environment:
                 )
             raise
 
-        concretized_specs = [x for x in zip(self.user_specs, concrete_specs)]
+        # zip truncates the longer list, which is exactly what we want here
+        concretized_specs = [x for x in zip(new_user_specs | kept_user_specs, concrete_specs)]
         for abstract, concrete in concretized_specs:
             self._add_concrete_spec(abstract, concrete)
         return concretized_specs

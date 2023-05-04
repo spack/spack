@@ -2407,7 +2407,11 @@ def test_concretize_user_specs_together():
     # Concretize a second time using 'mpich2' as the MPI provider
     e.remove("mpich")
     e.add("mpich2")
-    e.concretize()
+
+    # Concretizing without invalidating the concrete spec for mpileaks fails
+    with pytest.raises(spack.error.UnsatisfiableSpecError):
+        e.concretize()
+    e.concretize(force=True)
 
     assert all("mpich2" in spec for _, spec in e.concretized_specs())
     assert all("mpich" not in spec for _, spec in e.concretized_specs())
