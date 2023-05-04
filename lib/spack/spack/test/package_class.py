@@ -333,7 +333,7 @@ def test_package_run_test(install_mockery_mutable_config, mock_fetch, capfd):
     result = pkg.run_test("no-possible-program", skip_missing=True)
     output = capfd.readouterr()[0]
     assert result is None
-    assert not output
+    assert "missing" in output
 
     # Reset the tester instance before proceeding
     pkg._tester = spack.install_test.PackageTest(pkg)

@@ -1926,6 +1926,9 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
         """
 
         def test_title(purpose, test_name):
+            if not purpose:
+                return f"test: {test_name}: execute {test_name}"
+
             match = re.search(r"test: ([^:]*): (.*)", purpose)
             if match:
                 # The test title has all the expected parts
@@ -1954,8 +1957,9 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
             try:
                 runner = which(exe)
                 if runner is None and skip_missing:
+                    tty.info(f"Skipping test: {exe} is missing")
                     return
-                assert runner is not None, "Failed to find executable '{0}'".format(exe)
+                assert runner is not None, f"Failed to find executable '{exe}'"
 
                 self._run_test_helper(runner, options, expected, status, installed, purpose)
                 status = TestStatus.PASSED
