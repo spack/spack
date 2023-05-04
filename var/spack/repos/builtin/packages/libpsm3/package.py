@@ -7,6 +7,7 @@
 # except according to those terms.
 
 import os
+
 from spack.package import *
 
 
