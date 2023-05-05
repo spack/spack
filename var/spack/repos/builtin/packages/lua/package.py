@@ -200,7 +200,6 @@ class Lua(LuaImplPackage):
     homepage = "https://www.lua.org"
     url = "https://www.lua.org/ftp/lua-5.3.4.tar.gz"
 
-    version("5.4.5", sha256="59df426a3d50ea535a460a452315c4c0d4e1121ba72ff0bdde58c2ef31d6f444")
     version("5.4.4", sha256="164c7849653b80ae67bec4b7473b884bf5cc8d2dca05653475ec2ed27b9ebf61")
     version("5.4.3", sha256="f8612276169e3bfcbcfb8f226195bfc6e466fe13042f1076cbde92b7ec96bbfb")
     version("5.4.2", sha256="11570d97e9d7303c0a59567ed1ac7c648340cd0db10d5fd594c09223ef2f524f")
