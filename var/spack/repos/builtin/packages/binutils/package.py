@@ -269,9 +269,12 @@ class AutotoolsBuilder(spack.build_systems.autotools.AutotoolsBuilder):
         # also grab the headers from the bfd directory
         install(join_path(self.build_directory, "bfd", "*.h"), extradir)
 
-    def setup_build_environment(self, env):
-        if self.spec.satisfies("%cce"):
-            env.append_flags("LDFLAGS", "-Wl,-z,muldefs")
-
-        if "+nls" in self.spec:
-            env.append_flags("LDFLAGS", "-lintl")
+    def flag_handler(self, name, flags):
+        spec = self.spec
+        if name == "ldflags":
+            if spec.satisfies("%cce"):
+                flags.append("-Wl,-z,muldefs")
+        elif name == "ldlibs":
+            if "+nls" in self.spec and "intl" in self.spec["gettext"].libs.names:
+                flags.append("-lintl")
+        return self.build_system_flags(name, flags)
