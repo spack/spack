@@ -69,24 +69,30 @@ packages:
       prefix: /usr
   model-neocortex:
     variants: ~gpu
-    require: "%intel"
+    require:
+      - one_of: ["%intel", "%oneapi"]
   mxnet:
     version: [1.8.0]  # Don't build @1.master because nobody likes moving targets
   neurodamus-hippocampus:
     variants: ~~gpu
-    require: "%intel"
+    require:
+      - one_of: ["%intel", "%oneapi"]
   neurodamus-model:
     variants: ~~gpu
-    require: "%intel"
+    require:
+      - one_of: ["%intel", "%oneapi"]
   neurodamus-mousify:
     variants: ~~gpu
-    require: "%intel"
+    require:
+      - one_of: ["%intel", "%oneapi"]
   neurodamus-neocortex:
     variants: ~~gpu
-    require: "%intel"
+    require:
+      - one_of: ["%intel", "%oneapi"]
   neurodamus-thalamus:
     variants: ~~gpu
-    require: "%intel"
+    require:
+      - one_of: ["%intel", "%oneapi"]
   neuron:
     require:
       - one_of: ["%intel", "%nvhpc", "%oneapi"]
