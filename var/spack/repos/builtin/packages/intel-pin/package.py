@@ -47,7 +47,7 @@ class IntelPin(Package):
         url="https://software.intel.com/sites/landingpage/pintool/downloads/pin-3.22-98547-g7a303a835-gcc-linux.tar.gz",
     )
     version(
-        "3.21".
+        "3.21",
         sha256="a0bd6640d7b4a53f78cf0a2df843b034f2e2ec38e77f018d8e3ef032360b0c5c",
         url="https://software.intel.com/sites/landingpage/pintool/downloads/pin-3.21-98484-ge7cd811fd-gcc-linux.tar.gz",
     )
@@ -74,7 +74,7 @@ class IntelPin(Package):
     version(
         "3.16",
         sha256="c61abc4a3de48016cdbac9b567630557ec3dfa9b0394cc03ee7ed17d15c791b6",
-        url="http://software.intel.com/sites/landingpage/pintool/downloads/pin-3.16-98275-ge0db48c31-gcc-linux.tar.gz",
+        url="https://software.intel.com/sites/landingpage/pintool/downloads/pin-3.16-98275-ge0db48c31-gcc-linux.tar.gz",
     )
     version(
         "3.15",
