@@ -85,12 +85,10 @@ class TestTcl(object):
 
         assert len([x for x in content if "prereq" in x]) == 5
 
-    # DEPRECATED: remove blacklist in v0.20
-    @pytest.mark.parametrize("config_name", ["alter_environment", "blacklist_environment"])
-    def test_alter_environment(self, modulefile_content, module_configuration, config_name):
+    def test_alter_environment(self, modulefile_content, module_configuration):
         """Tests modifications to run-time environment."""
 
-        module_configuration(config_name)
+        module_configuration("alter_environment")
         content = modulefile_content("mpileaks platform=test target=x86_64")
 
         assert len([x for x in content if x.startswith("prepend-path CMAKE_PREFIX_PATH")]) == 0
@@ -151,11 +149,10 @@ class TestTcl(object):
         )
         assert help_msg in "".join(content)
 
-    @pytest.mark.parametrize("config_name", ["exclude", "blacklist"])
-    def test_exclude(self, modulefile_content, module_configuration, config_name):
+    def test_exclude(self, modulefile_content, module_configuration):
         """Tests excluding the generation of selected modules."""
 
-        module_configuration(config_name)
+        module_configuration("exclude")
         content = modulefile_content("mpileaks ^zmpi")
 
         assert len([x for x in content if "module load " in x]) == 1
@@ -355,9 +352,8 @@ class TestTcl(object):
 
     @pytest.mark.regression("4400")
     @pytest.mark.db
-    @pytest.mark.parametrize("config_name", ["exclude_implicits", "blacklist_implicits"])
-    def test_exclude_implicits(self, module_configuration, database, config_name):
-        module_configuration(config_name)
+    def test_exclude_implicits(self, module_configuration, database):
+        module_configuration("exclude_implicits")
 
         # mpileaks has been installed explicitly when setting up
         # the tests database
@@ -374,9 +370,8 @@ class TestTcl(object):
             assert writer.conf.excluded
 
     @pytest.mark.regression("12105")
-    @pytest.mark.parametrize("config_name", ["exclude_implicits", "blacklist_implicits"])
-    def test_exclude_implicits_with_arg(self, module_configuration, config_name):
-        module_configuration(config_name)
+    def test_exclude_implicits_with_arg(self, module_configuration):
+        module_configuration("exclude_implicits")
 
         # mpileaks is defined as explicit with explicit argument set on writer
         mpileaks_spec = spack.spec.Spec("mpileaks")
