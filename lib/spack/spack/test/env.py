@@ -3,6 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 """Test environment internals without CLI"""
+import filecmp
 import os
 import pickle
 import sys
@@ -316,16 +317,9 @@ def test_cannot_initiliaze_if_dirname_exists_as_a_file(tmp_path):
         ev.create_in_dir(dir_name)
 
 
-def test_cannot_initiliaze_if_init_file_does_not_exist(tmp_path):
+def test_cannot_initialize_if_init_file_does_not_exist(tmp_path):
     """Tests that initializing an environment passing a non-existing init file raises an error."""
     init_file = tmp_path / ev.manifest_name
-    with pytest.raises(ev.SpackEnvironmentError, match="cannot initialize"):
-        ev.create_in_dir(tmp_path, init_file=init_file)
-
-
-def test_cannot_initialize_from_random_file(tmp_path):
-    init_file = tmp_path / "foo.txt"
-    init_file.touch()
     with pytest.raises(ev.SpackEnvironmentError, match="cannot initialize"):
         ev.create_in_dir(tmp_path, init_file=init_file)
 
@@ -419,3 +413,64 @@ def test_preserving_comments_when_adding_specs(
 
     content = spack_yaml.read_text()
     assert content == expected_yaml
+
+
+@pytest.mark.parametrize("filename", [ev.lockfile_name, "as9582g54.lock", "m3ia54s.json"])
+@pytest.mark.regression("37410")
+def test_initialize_from_lockfile(tmp_path, filename):
+    """Some users have workflows where they store multiple lockfiles in the
+    same directory, and pick one of them to create an environment depending
+    on external parameters e.g. while running CI jobs. This test ensures that
+    Spack can create environments from lockfiles that are not necessarily named
+    'spack.lock' and can thus coexist in the same directory.
+    """
+
+    init_file = tmp_path / filename
+    env_dir = tmp_path / "env_dir"
+    init_file.write_text('{ "roots": [] }\n')
+    ev.initialize_environment_dir(env_dir, init_file)
+
+    assert os.path.exists(env_dir / ev.lockfile_name)
+    assert filecmp.cmp(env_dir / ev.lockfile_name, init_file, shallow=False)
+
+
+def test_cannot_initialize_from_bad_lockfile(tmp_path):
+    """Test that we fail on an incorrectly constructed lockfile"""
+
+    init_file = tmp_path / ev.lockfile_name
+    env_dir = tmp_path / "env_dir"
+
+    init_file.write_text("Not a legal JSON file\n")
+
+    with pytest.raises(ev.SpackEnvironmentError, match="from lockfile"):
+        ev.initialize_environment_dir(env_dir, init_file)
+
+
+@pytest.mark.parametrize("filename", ["random.txt", "random.yaml", ev.manifest_name])
+@pytest.mark.regression("37410")
+def test_initialize_from_random_file_as_manifest(tmp_path, filename):
+    """Some users have workflows where they store multiple lockfiles in the
+    same directory, and pick one of them to create an environment depending
+    on external parameters e.g. while running CI jobs. This test ensures that
+    Spack can create environments from manifest that are not necessarily named
+    'spack.yaml' and can thus coexist in the same directory.
+    """
+
+    init_file = tmp_path / filename
+    env_dir = tmp_path / "env_dir"
+
+    init_file.write_text(
+        """\
+spack:
+  view: true
+  concretizer:
+    unify: true
+  specs: []
+"""
+    )
+
+    ev.create_in_dir(env_dir, init_file)
+
+    assert not os.path.exists(env_dir / ev.lockfile_name)
+    assert os.path.exists(env_dir / ev.manifest_name)
+    assert filecmp.cmp(env_dir / ev.manifest_name, init_file, shallow=False)
