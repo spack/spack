@@ -120,7 +120,7 @@ class Hpctoolkit(AutotoolsPackage):
     depends_on("dyninst@12.1.0:", when="@2022.0:")
     depends_on("dyninst@10.2.0:", when="@2021.0:2021.12")
     depends_on("dyninst@9.3.2:", when="@:2020")
-    depends_on("elfutils+bzip2+xz~nls", type="link")
+    depends_on("elfutils~nls", type="link")
     depends_on("gotcha@1.0.3:", when="@:2020.09")
     depends_on("intel-tbb+shared")
     depends_on("libdwarf", when="@:2022.06")

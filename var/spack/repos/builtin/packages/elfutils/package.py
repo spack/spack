@@ -46,11 +46,6 @@ class Elfutils(AutotoolsPackage, SourcewarePackage):
     version("0.168", sha256="b88d07893ba1373c7dd69a7855974706d05377766568a7d9002706d5de72c276")
     version("0.163", sha256="7c774f1eef329309f3b05e730bdac50013155d437518a2ec0e24871d312f2e23")
 
-    # Libraries for reading compressed DWARF sections.
-    variant("bzip2", default=False, description="Support bzip2 compressed sections.")
-    variant("xz", default=False, description="Support xz (lzma) compressed sections.")
-    variant("zstd", default=False, description="Support zstd compressed sections.", when="@0.182:")
-
     # Native language support from libintl.
     variant("nls", default=True, description="Enable Native Language Support.")
 
@@ -68,10 +63,11 @@ class Elfutils(AutotoolsPackage, SourcewarePackage):
         sha256="d786d49c28d7f0c8fc27bab39ca8714e5f4d128c7f09bb18533a8ec99b38dbf8",
     )
 
-    depends_on("bzip2", type="link", when="+bzip2")
-    depends_on("xz", type="link", when="+xz")
-    depends_on("zstd", type="link", when="+zstd")
+    depends_on("bzip2", type="link")
+    depends_on("xz", type="link")
     depends_on("zlib", type="link")
+    depends_on("zstd", type="link", when="@0.182:")
+
     depends_on("gettext", when="+nls")
     depends_on("m4", type="build")
     depends_on("pkgconfig@0.9.0:", type=("build", "link"))
@@ -115,22 +111,14 @@ class Elfutils(AutotoolsPackage, SourcewarePackage):
 
     def configure_args(self):
         spec = self.spec
-        args = []
+        args = [
+            "--with-bzlib=%s" % spec["bzip2"].prefix,
+            "--with-lzma=%s" % spec["xz"].prefix,
+            "--with-zlib=%s" % spec["zlib"].prefix,
+        ]
 
-        if "+bzip2" in spec:
-            args.append("--with-bzlib=%s" % spec["bzip2"].prefix)
-        else:
-            args.append("--without-bzlib")
-
-        if "+xz" in spec:
-            args.append("--with-lzma=%s" % spec["xz"].prefix)
-        else:
-            args.append("--without-lzma")
-
-        args.extend(self.with_or_without("zstd", activation_value="prefix"))
-
-        # zlib is required
-        args.append("--with-zlib=%s" % spec["zlib"].prefix)
+        if "@0.182:" in spec:
+            args.append("--with-zstd=%s" % spec["zstd"].prefix)
 
         if spec.satisfies("@0.183:"):
             if spec["iconv"].name == "libc":
