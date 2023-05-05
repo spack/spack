@@ -434,8 +434,6 @@ wl_expect_rpath=no
 xlinker_expect_rpath=no
 
 parse_Wl() {
-    # drop -Wl
-    shift
     while [ $# -ne 0 ]; do
     if [ "$wl_expect_rpath" = yes ]; then
         if system_dir "$1"; then
@@ -448,7 +446,9 @@ parse_Wl() {
         case "$1" in
             -rpath=*)
                 arg="${1#-rpath=}"
-                if system_dir "$arg"; then
+                if [ -z "$arg" ]; then
+                    shift; continue
+                elif system_dir "$arg"; then
                     append system_rpath_dirs_list "$arg"
                 else
                     append rpath_dirs_list "$arg"
@@ -456,7 +456,9 @@ parse_Wl() {
                 ;;
             --rpath=*)
                 arg="${1#--rpath=}"
-                if system_dir "$arg"; then
+                if [ -z "$arg" ]; then
+                    shift; continue
+                elif system_dir "$arg"; then
                     append system_rpath_dirs_list "$arg"
                 else
                     append rpath_dirs_list "$arg"
@@ -466,6 +468,11 @@ parse_Wl() {
                 wl_expect_rpath=yes
                 ;;
             "$dtags_to_strip")
+                ;;
+            -Wl)
+                # Nested -Wl,-Wl means we're in NAG compiler territory, we don't support
+                # it.
+                return 1
                 ;;
             *)
                 append other_args_list "-Wl,$1"
@@ -576,7 +583,9 @@ while [ $# -ne 0 ]; do
             ;;
         -Wl,*)
             IFS=,
-            parse_Wl $1
+            if ! parse_Wl ${1#-Wl,}; then
+                append other_args_list "$1"
+            fi
             unset IFS
             ;;
         -Xlinker)
