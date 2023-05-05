@@ -594,9 +594,10 @@ def test_ci_skipped_report(tmpdir, mock_packages, config):
     reason = "Testing skip"
     handler.report_skipped(spec, tmpdir.strpath, reason=reason)
 
-    report = fs.join_path(tmpdir, "{0}_Testing.xml".format(pkg))
-    expected = "Skipped {0} package".format(pkg)
-    with open(report, "r") as f:
+    reports = [name for name in tmpdir.listdir() if str(name).endswith("Testing.xml")]
+    assert len(reports) == 1
+    expected = f"Skipped {pkg} package"
+    with open(reports[0], "r") as f:
         have = [0, 0]
         for line in f:
             if expected in line:
