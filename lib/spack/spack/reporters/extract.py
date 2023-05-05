@@ -49,7 +49,7 @@ def expected_failure(line):
         return False
 
     match = returns_regexp.search(line)
-    xfail = "0" not in match.group(0) if match else False
+    xfail = "0" not in match.group(1) if match else False
     return xfail
 
 
@@ -87,7 +87,7 @@ def process_part_end(part, curr_time, last_time):
                 part["completed"] = "Expected to fail"
             elif part["completed"] == "Unknown":
                 part["completed"] = completed[stat]
-        elif stat is None:
+        elif stat is None or stat == "unknown":
             part["status"] = "passed"
         part["output"] = "\n".join(part["loglines"])
 
@@ -153,6 +153,13 @@ def extract_test_parts(default_name, outputs):
                 if msg.startswith("Installing"):
                     continue
 
+                # TODO (post-34236): Remove this check when remove run_test(),
+                # TODO (post-34236): etc. since no longer supporting expected
+                # TODO (post-34236): failures.
+                if msg.startswith("Expecting return code"):
+                    if part:
+                        part["desc"] += f"; {msg}"
+
                 # Terminate without further parsing if no more test messages
                 if "Completed testing" in msg:
                     # Process last lingering part IF it didn't generate status
@@ -178,9 +185,13 @@ def extract_test_parts(default_name, outputs):
                 # (e.g., output=str.split, error=str.split) will not have
                 # a command printed to the test log.
                 elif msg.startswith("'") and msg.endswith("'"):
-                    if part["command"]:
-                        part["command"] += "; " + msg.replace("'", "")
+                    if part:
+                        if part["command"]:
+                            part["command"] += "; " + msg.replace("'", "")
+                        else:
+                            part["command"] = msg.replace("'", "")
                     else:
+                        part = new_part()
                         part["command"] = msg.replace("'", "")
 
                 else:

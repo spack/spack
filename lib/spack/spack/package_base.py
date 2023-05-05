@@ -2039,6 +2039,8 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
             msg += f"found in {runner.path} instead"
             assert runner.path.startswith(self.spec.prefix), msg
 
+        tty.msg(f"Expecting return code in {status}")
+
         try:
             output = runner(*options, output=str.split, error=str.split)
 

@@ -126,7 +126,7 @@ def test_reporters_extract_empty_and_xfail():
     fake_bin = fs.join_path(fake_install_prefix, "bin", "fake-app")
     outputs = """
 ==> Testing package fake-1.0-abcdefg
-==> [2022-02-15-18:44:21.250165] Checking fake imports
+==> [2022-02-15-18:44:21.250165] test: test_fake: Checking fake imports
 ==> [2022-02-15-18:44:21.250175] Expecting return code in [3]
 ==> [2022-02-15-18:44:21.250200] '{0}'
 {1}
@@ -136,9 +136,9 @@ def test_reporters_extract_empty_and_xfail():
 
     parts = spack.reporters.extract.extract_test_parts("fake", outputs)
 
-    assert len(parts) == 2
+    assert len(parts) == 1
     parts[0]["command"] == "unkown"
-    parts[1]["completed"] == "Expected to fail"
+    parts[0]["completed"] == "Expected to fail"
 
 
 @pytest.mark.parametrize("state", [("not installed"), ("external")])
@@ -169,7 +169,7 @@ def test_reporters_skip():
 ==> Testing package fake-1.0-abcdefg
 ==> [2022-02-15-18:44:21.250165, 123456] Detected the following modules: fake1
 ==> {0}
-==> [2022-02-15-18:44:21.250175, 123456] running fake program
+==> [2022-02-15-18:44:21.250175, 123456] test: test_fake: running fake program
 ==> [2022-02-15-18:44:21.250200, 123456] '{1}'
 INVALID
 Results for test suite abcdefghijklmn
