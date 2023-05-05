@@ -36,6 +36,31 @@ ci:
         - aws s3 sync --exclude "*" --include "*spec.json.sig*" /tmp ${SPACK_REMOTE_MIRROR_OVERRIDE}/build_cache
         - aws s3 cp /tmp/public_keys ${SPACK_REMOTE_MIRROR_OVERRIDE}/build_cache/_pgp --recursive --exclude "*" --include "*.pub"
 
+  - copy-job:
+      tags: ["service"]
+      before_script:
+      - - if [[ $CI_COMMIT_REF_NAME == "v"* ]]; then export SPACK_REPLACE_VERSION=$(echo "$CI_COMMIT_REF_NAME" | sed 's/\(v[[:digit:]]\+\.[[:digit:]]\+\).*/releases\/\1/'); fi
+        - if [[ $CI_COMMIT_REF_NAME == "develop-"* ]]; then export SPACK_REPLACE_VERSION=develop; fi
+        - export SPACK_BUILDCACHE_SOURCE=${SPACK_SOURCE_MIRROR//SPACK_REPLACE_VERSION/${SPACK_REPLACE_VERSION}}
+      script:
+      - - cd ${SPACK_CONCRETE_ENV_DIR}
+        - spack env activate --without-view .
+        - echo Copying environment specs from ${SRC_MIRROR} to ${SPACK_BUILDCACHE_DESTINATION}
+        - spack buildcache sync "${SPACK_BUILDCACHE_SOURCE}" "${SPACK_BUILDCACHE_DESTINATION}"
+        - spack buildcache update-index "${SPACK_BUILDCACHE_DESTINATION}"
+      when: "always"
+      retry:
+        max: 2
+        when:
+        - "runner_system_failure"
+        - "stuck_or_timeout_failure"
+        - "script_failure"
+      interruptible: true
+      variables:
+        CI_JOB_SIZE: "medium"
+        KUBERNETES_CPU_REQUEST: "4000m"
+        KUBERNETES_MEMORY_REQUEST: "16G"
+
   - reindex-job:
       tags: ["service"]
       variables:

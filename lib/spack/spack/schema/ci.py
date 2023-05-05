@@ -92,6 +92,11 @@ named_attributes_schema = {
         {
             "type": "object",
             "additionalProperties": False,
+            "properties": {"copy-job": attributes_schema, "copy-job-remove": attributes_schema},
+        },
+        {
+            "type": "object",
+            "additionalProperties": False,
             "properties": {
                 "reindex-job": attributes_schema,
                 "reindex-job-remove": attributes_schema,
