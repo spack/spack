@@ -106,6 +106,11 @@ class Neuron(CMakePackage):
     )
     variant("sympy", default=False, description="Use NMODL with SymPy to solve ODEs")
     variant("sympyopt", default=False, description="Use NMODL with SymPy Optimizations")
+    variant(
+        "prcellstate",
+        default=False,
+        description="Enable tracking of voltage and conductivity with prcellstate on CoreNEURON",
+    )
 
     # Build with `ninja` instead of `make`
     generator = "Ninja"
@@ -187,7 +192,6 @@ class Neuron(CMakePackage):
             cmake_enable_option(variant)
             for variant in [
                 "+interviews",
-                "+legacy-fr",
                 "+python",
                 "+memacs",
                 "+rx3d",
@@ -306,6 +310,9 @@ class Neuron(CMakePackage):
 
             if "+legacy-unit" in self.spec:
                 options.append("-DCORENRN_ENABLE_LEGACY_UNITS=ON")
+
+            if "+prcellstate" in self.spec:
+                options.append("-DCORENRN_ENABLE_PRCELLSTATE=ON")
 
             if spec.satisfies("+nmodl"):
                 options.append("-DCORENRN_ENABLE_NMODL=ON")
