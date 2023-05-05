@@ -9,7 +9,7 @@ import sys
 from spack.build_systems.autotools import AutotoolsBuilder
 from spack.build_systems.cmake import CMakeBuilder
 from spack.package import *
-from spack.util.environment import filter_system_paths
+from spack.util.environment import filter_system_paths, is_system_path
 
 
 class Gdal(CMakePackage, AutotoolsPackage, PythonExtension):
@@ -627,7 +627,6 @@ class AutotoolsBuilder(AutotoolsBuilder):
             self.with_or_without("hdf4", package="hdf"),
             self.with_or_without("hdf5", package="hdf5"),
             self.with_or_without("hdfs", package="hadoop"),
-            self.with_or_without("libiconv-prefix", variant="iconv", package="iconv"),
             self.with_or_without("idb", package="idb"),
             self.with_or_without("ingres", package="ingres"),
             self.with_or_without("jasper", package="jasper"),
@@ -681,6 +680,11 @@ class AutotoolsBuilder(AutotoolsBuilder):
             self.with_or_without("perl"),
             self.with_or_without("php"),
         ]
+        if "+iconv" in self.spec:
+            if self.spec["iconv"].name == "libc":
+                args.append("--without-libiconv-prefix")
+            elif not is_system_path(self.spec["iconv"].prefix):
+                args.append("--with-libiconv-prefix=" + self.spec["iconv"].prefix)
 
         # Renamed or modified flags
         if self.spec.satisfies("@3:"):
