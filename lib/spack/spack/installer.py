@@ -391,7 +391,7 @@ def _process_binary_cache_tarball(
 
     with timer.measure("install"), spack.util.path.filter_padding():
         binary_distribution.extract_tarball(
-            pkg.spec, download_result, allow_root=False, unsigned=unsigned, force=False
+            pkg.spec, download_result, unsigned=unsigned, force=False
         )
 
         pkg.installed_from_binary_cache = True

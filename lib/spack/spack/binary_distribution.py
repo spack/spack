@@ -1661,7 +1661,7 @@ def dedupe_hardlinks_if_necessary(root, buildinfo):
         buildinfo[key] = new_list
 
 
-def relocate_package(spec, allow_root):
+def relocate_package(spec):
     """
     Relocate the given package
     """
@@ -1679,7 +1679,7 @@ def relocate_package(spec, allow_root):
     old_spack_prefix = str(buildinfo.get("spackprefix"))
     old_rel_prefix = buildinfo.get("relative_prefix")
     old_prefix = os.path.join(old_layout_root, old_rel_prefix)
-    rel = buildinfo.get("relative_rpaths")
+    rel = buildinfo.get("relative_rpaths", False)
 
     # In the past prefix_to_hash was the default and externals were not dropped, so prefixes
     # were not unique.
@@ -1852,7 +1852,7 @@ def _extract_inner_tarball(spec, filename, extract_to, unsigned, remote_checksum
     return tarfile_path
 
 
-def extract_tarball(spec, download_result, allow_root=False, unsigned=False, force=False):
+def extract_tarball(spec, download_result, unsigned=False, force=False):
     """
     extract binary tarball for given package into install area
     """
@@ -1948,7 +1948,7 @@ def extract_tarball(spec, download_result, allow_root=False, unsigned=False, for
     os.remove(specfile_path)
 
     try:
-        relocate_package(spec, allow_root)
+        relocate_package(spec)
     except Exception as e:
         shutil.rmtree(spec.prefix)
         raise e
@@ -1967,7 +1967,7 @@ def extract_tarball(spec, download_result, allow_root=False, unsigned=False, for
         _delete_staged_downloads(download_result)
 
 
-def install_root_node(spec, allow_root, unsigned=False, force=False, sha256=None):
+def install_root_node(spec, unsigned=False, force=False, sha256=None):
     """Install the root node of a concrete spec from a buildcache.
 
     Checking the sha256 sum of a node before installation is usually needed only
@@ -1976,8 +1976,6 @@ def install_root_node(spec, allow_root, unsigned=False, force=False, sha256=None
 
     Args:
         spec: spec to be installed (note that only the root node will be installed)
-        allow_root (bool): allows the root directory to be present in binaries
-            (may affect relocation)
         unsigned (bool): if True allows installing unsigned binaries
         force (bool): force installation if the spec is already present in the
             local store
@@ -2013,24 +2011,22 @@ def install_root_node(spec, allow_root, unsigned=False, force=False, sha256=None
     # don't print long padded paths while extracting/relocating binaries
     with spack.util.path.filter_padding():
         tty.msg('Installing "{0}" from a buildcache'.format(spec.format()))
-        extract_tarball(spec, download_result, allow_root, unsigned, force)
+        extract_tarball(spec, download_result, unsigned, force)
         spack.hooks.post_install(spec, False)
         spack.store.db.add(spec, spack.store.layout)
 
 
-def install_single_spec(spec, allow_root=False, unsigned=False, force=False):
+def install_single_spec(spec, unsigned=False, force=False):
     """Install a single concrete spec from a buildcache.
 
     Args:
         spec (spack.spec.Spec): spec to be installed
-        allow_root (bool): allows the root directory to be present in binaries
-            (may affect relocation)
         unsigned (bool): if True allows installing unsigned binaries
         force (bool): force installation if the spec is already present in the
             local store
     """
     for node in spec.traverse(root=True, order="post", deptype=("link", "run")):
-        install_root_node(node, allow_root=allow_root, unsigned=unsigned, force=force)
+        install_root_node(node, unsigned=unsigned, force=force)
 
 
 def try_direct_fetch(spec, mirrors=None):
