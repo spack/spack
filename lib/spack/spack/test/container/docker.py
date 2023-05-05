@@ -43,6 +43,28 @@ def test_packages(minimal_configuration):
     assert p.list == pkgs
 
 
+def test_container_os_packages_command(minimal_configuration):
+    # In this minimal configuration we don't have packages
+    writer = writers.create(minimal_configuration)
+    assert writer.os_packages_build is None
+    assert writer.os_packages_final is None
+
+    # If we add them a list should be returned
+    minimal_configuration["spack"]["container"]["images"] = {
+        "build": "custom-build:latest",
+        "final": "custom-final:latest",
+    }
+    minimal_configuration["spack"]["container"]["os_packages"] = {
+        "command": "zypper",
+        "final": ["libgomp1"],
+    }
+    writer = writers.create(minimal_configuration)
+    p = writer.os_packages_final
+    assert "zypper update -y" in p.update
+    assert "zypper install -y" in p.install
+    assert "zypper clean -a" in p.clean
+
+
 def test_ensure_render_works(minimal_configuration, default_config):
     # Here we just want to ensure that nothing is raised
     writer = writers.create(minimal_configuration)

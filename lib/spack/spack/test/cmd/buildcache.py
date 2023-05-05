@@ -267,3 +267,70 @@ def test_buildcache_create_install(
     tarball = spack.binary_distribution.tarball_name(spec, ".spec.json")
     assert os.path.exists(os.path.join(str(tmpdir), "build_cache", tarball_path))
     assert os.path.exists(os.path.join(str(tmpdir), "build_cache", tarball))
+
+
+@pytest.mark.parametrize(
+    "things_to_install,expected",
+    [
+        (
+            "",
+            [
+                "dttop",
+                "dtbuild1",
+                "dtbuild2",
+                "dtlink2",
+                "dtrun2",
+                "dtlink1",
+                "dtlink3",
+                "dtlink4",
+                "dtrun1",
+                "dtlink5",
+                "dtrun3",
+                "dtbuild3",
+            ],
+        ),
+        (
+            "dependencies",
+            [
+                "dtbuild1",
+                "dtbuild2",
+                "dtlink2",
+                "dtrun2",
+                "dtlink1",
+                "dtlink3",
+                "dtlink4",
+                "dtrun1",
+                "dtlink5",
+                "dtrun3",
+                "dtbuild3",
+            ],
+        ),
+        ("package", ["dttop"]),
+    ],
+)
+def test_correct_specs_are_pushed(
+    things_to_install, expected, tmpdir, monkeypatch, default_mock_concretization, temporary_store
+):
+    # Concretize dttop and add it to the temporary database (without prefixes)
+    spec = default_mock_concretization("dttop")
+    temporary_store.db.add(spec, directory_layout=None)
+    slash_hash = "/{0}".format(spec.dag_hash())
+
+    packages_to_push = []
+
+    def fake_push(node, push_url, options):
+        assert isinstance(node, Spec)
+        packages_to_push.append(node.name)
+
+    monkeypatch.setattr(spack.binary_distribution, "push_or_raise", fake_push)
+
+    buildcache_create_args = ["create", "-d", str(tmpdir), "--unsigned"]
+
+    if things_to_install != "":
+        buildcache_create_args.extend(["--only", things_to_install])
+
+    buildcache_create_args.extend([slash_hash])
+
+    buildcache(*buildcache_create_args)
+
+    assert packages_to_push == expected

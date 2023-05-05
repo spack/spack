@@ -94,7 +94,7 @@ class Neovim(CMakePackage):
     depends_on("jemalloc", type="link", when="platform=linux")
     depends_on("lua-lpeg")
     depends_on("lua-mpack")
-    depends_on("libiconv", type="link")
+    depends_on("iconv", type="link")
     depends_on("libtermkey", type="link")
     depends_on("libuv", type="link")
     depends_on("libluv", type="link")
@@ -117,7 +117,7 @@ class Neovim(CMakePackage):
     with when("@0.6:"):
         depends_on("cmake@3.10:", type="build")
         depends_on("gperf@3.1:", type="link")
-        depends_on("libiconv@1.15:", type="link")
+        conflicts("libiconv@:1.14")
         depends_on("libtermkey@0.22:", type="link")
         depends_on("libvterm@0.1.4:", type="link")
         depends_on("msgpack-c@3.0.0:", type="link")
