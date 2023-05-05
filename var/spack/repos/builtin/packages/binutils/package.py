@@ -112,7 +112,7 @@ class Binutils(AutotoolsPackage, GNUMirrorPackage):
     )
     variant(
         "compress_debug_sections",
-        default="zstd",
+        default="zlib",
         values=(conditional("zstd", when="@2.40:"), "zlib", "none"),
         description="Enable debug section compression by default in ld, gas, gold.",
         when="@2.26:",
