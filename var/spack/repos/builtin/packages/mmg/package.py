@@ -30,6 +30,7 @@ class Mmg(CMakePackage):
     homepage = "https://www.mmgtools.org/"
     url = "https://github.com/MmgTools/mmg/archive/v5.3.13.tar.gz"
 
+    version("5.7.1", sha256="27c09477ebc080f54919f76f8533a343936677c81809fe37ce4e2d62fa97237b")
     version("5.6.0", sha256="bbf9163d65bc6e0f81dd3acc5a51e4a8c47a7fdae849abc26277e01154fe2437")
     version("5.5.2", sha256="58e3b866101e6f0686758e16bcf9fb5fb06c85184533fc5054ef1c8adfd4be73")
     version("5.4.0", sha256="2b5cc505018859856766be901797ff5d4789f89377038a0211176a5571039750")
