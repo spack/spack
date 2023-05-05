@@ -10,6 +10,7 @@ import pytest
 import spack.directives
 import spack.fetch_strategy
 import spack.repo
+import spack.schema
 from spack.paths import mock_packages_path
 from spack.spec import Spec
 from spack.util.naming import mod_to_class
@@ -326,3 +327,18 @@ def test_package_deprecated_version(mock_packages, mock_fetch, mock_stage):
 
     assert spack.package_base.deprecated_version(pkg_cls, "1.1.0")
     assert not spack.package_base.deprecated_version(pkg_cls, "1.0.0")
+
+
+def test_update_require():
+    # The require value type is now a list, such that it's composable.
+    packages_yaml = {
+        "all": {"require": "+x"},
+        "pkga": {"require": "+y"},
+        "pkgb": {"require": ["+z"]},
+    }
+    assert spack.schema.packages.update(packages_yaml)
+    assert packages_yaml == {
+        "all": {"require": ["+x"]},
+        "pkga": {"require": ["+y"]},
+        "pkgb": {"require": ["+z"]},
+    }

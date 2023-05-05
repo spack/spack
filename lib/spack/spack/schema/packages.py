@@ -131,3 +131,22 @@ schema = {
     "additionalProperties": False,
     "properties": properties,
 }
+
+
+def update(data):
+    """Update package config
+
+    Args:
+        data (dict): dictionary to be updated
+
+    Returns:
+        True if data was changed, False otherwise
+    """
+    changed = False
+    for item in data.values():
+        val = item.get("require")
+        if not isinstance(val, str):
+            continue
+        item["require"] = [val]
+        changed = True
+    return changed
