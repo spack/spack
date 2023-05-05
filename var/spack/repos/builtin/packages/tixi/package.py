@@ -3,6 +3,8 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+import os
+
 from spack.package import *
 
 
@@ -38,3 +40,14 @@ class Tixi(CMakePackage):
         if self.spec.satisfies("+fortran"):
             args.append("-DTIXI_ENABLE_FORTRAN=ON")
         return args
+
+    def setup_run_environment(self, env):
+        """Add tixi3wrapper.py location to the PYTHONPATH"""
+        if self.spec.version >= Version("3.0.0"):
+            env.prepend_path(
+                "PYTHONPATH", os.path.join(self.spec.prefix, "share", "tixi3", "python")
+            )
+        else:
+            env.prepend_path(
+                "PYTHONPATH", os.path.join(self.spec.prefix, "share", "tixi", "python")
+            )
