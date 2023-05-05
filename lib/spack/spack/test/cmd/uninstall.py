@@ -3,7 +3,6 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-import itertools
 import sys
 
 import pytest
@@ -58,14 +57,11 @@ def test_correct_installed_dependents(mutable_database):
     callpath.package.do_uninstall(force=True)
 
     # Retrieve all dependent hashes
-    inside_dpts, outside_dpts = spack.cmd.uninstall.installed_runtime_dependents(
-        dependencies, None
-    )
-    dependent_hashes = [s.dag_hash() for s in itertools.chain(*outside_dpts.values())]
-    set_dependent_hashes = set(dependent_hashes)
+    dependents = spack.cmd.uninstall.installed_dependents(dependencies)
+    assert dependents
 
-    # We dont have an env, so this should be empty.
-    assert not inside_dpts
+    dependent_hashes = [s.dag_hash() for s in dependents]
+    set_dependent_hashes = set(dependent_hashes)
 
     # Assert uniqueness
     assert len(dependent_hashes) == len(set_dependent_hashes)

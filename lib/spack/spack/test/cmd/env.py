@@ -1049,7 +1049,7 @@ def test_env_blocks_uninstall(mock_stage, mock_fetch, install_mockery):
 
     out = uninstall("mpileaks", fail_on_error=False)
     assert uninstall.returncode == 1
-    assert "used by the following environments" in out
+    assert "The following environments still reference these specs" in out
 
 
 def test_roots_display_with_variants():
