@@ -402,8 +402,9 @@ class SpecNodeParser:
             elif not self.has_hash and self.ctx.accept(TokenType.DAG_HASH):
                 dag_hash = self.ctx.current_token.value[1:]
                 matches = []
-                if spack.environment.active_environment():
-                    matches = spack.environment.active_environment().get_by_hash(dag_hash)
+                active_env = spack.environment.active_environment()
+                if active_env:
+                    matches = active_env.get_by_hash(dag_hash)
                 if not matches:
                     matches = spack.store.db.get_by_hash(dag_hash)
                 if not matches:

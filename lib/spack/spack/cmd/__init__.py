@@ -13,9 +13,6 @@ import sys
 from textwrap import dedent
 from typing import List, Match, Tuple
 
-import ruamel.yaml as yaml
-from ruamel.yaml.error import MarkedYAMLError
-
 import llnl.util.tty as tty
 from llnl.util.filesystem import join_path
 from llnl.util.lang import attr_setdefault, index_by
@@ -33,6 +30,7 @@ import spack.store
 import spack.traverse as traverse
 import spack.user_environment as uenv
 import spack.util.spack_json as sjson
+import spack.util.spack_yaml as syaml
 import spack.util.string
 
 # cmd has a submodule called "list" so preserve the python list module
@@ -537,9 +535,9 @@ def is_git_repo(path):
         # we might be in a git worktree
         try:
             with open(dotgit_path, "rb") as f:
-                dotgit_content = yaml.load(f)
+                dotgit_content = syaml.load(f)
             return os.path.isdir(dotgit_content.get("gitdir", dotgit_path))
-        except MarkedYAMLError:
+        except syaml.SpackYAMLError:
             pass
     return False
 
