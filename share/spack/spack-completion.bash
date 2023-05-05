@@ -500,7 +500,7 @@ _spack_buildcache_push() {
     then
         SPACK_COMPREPLY="-h --help -r --rel -f --force -u --unsigned -a --allow-root -k --key -d --directory -m --mirror-name --mirror-url --update-index --rebuild-index --spec-file --only"
     else
-        _all_packages
+        _mirrors
     fi
 }
 
@@ -579,7 +579,12 @@ _spack_buildcache_update_index() {
 }
 
 _spack_buildcache_rebuild_index() {
-    SPACK_COMPREPLY="-h --help -d --directory -m --mirror-name --mirror-url -k --keys"
+    if $list_options
+    then
+        SPACK_COMPREPLY="-h --help -d --directory -m --mirror-name --mirror-url -k --keys"
+    else
+        _mirrors
+    fi
 }
 
 _spack_cd() {
