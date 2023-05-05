@@ -74,7 +74,7 @@ def env_yaml(tmpdir):
     with open(env_yaml, "w") as f:
         f.write(
             """\
-env:
+spack:
     config:
         verify_ssl: False
         dirty: False
@@ -918,7 +918,7 @@ config:
 
 
 def test_single_file_scope(config, env_yaml):
-    scope = spack.config.SingleFileScope("env", env_yaml, spack.schema.env.schema, ["env"])
+    scope = spack.config.SingleFileScope("env", env_yaml, spack.schema.env.schema, ["spack"])
 
     with spack.config.override(scope):
         # from the single-file config
@@ -943,7 +943,7 @@ def test_single_file_scope_section_override(tmpdir, config):
     with open(env_yaml, "w") as f:
         f.write(
             """\
-env:
+spack:
     config:
         verify_ssl: False
     packages::
@@ -954,7 +954,7 @@ env:
 """
         )
 
-    scope = spack.config.SingleFileScope("env", env_yaml, spack.schema.env.schema, ["env"])
+    scope = spack.config.SingleFileScope("env", env_yaml, spack.schema.env.schema, ["spack"])
 
     with spack.config.override(scope):
         # from the single-file config
@@ -1015,7 +1015,7 @@ def test_bad_env_yaml(tmpdir):
         check_schema(
             spack.schema.env.schema,
             """\
-env:
+spack:
     foobar:
         verify_ssl: False
         dirty: False
@@ -1169,7 +1169,7 @@ def test_license_dir_config(mutable_config, mock_packages):
 
 @pytest.mark.regression("22547")
 def test_single_file_scope_cache_clearing(env_yaml):
-    scope = spack.config.SingleFileScope("env", env_yaml, spack.schema.env.schema, ["env"])
+    scope = spack.config.SingleFileScope("env", env_yaml, spack.schema.env.schema, ["spack"])
     # Check that we can retrieve data from the single file scope
     before = scope.get_section("config")
     assert before
@@ -1414,5 +1414,5 @@ def test_config_file_read_invalid_yaml(tmpdir, mutable_empty_config):
     with open(filename, "w") as f:
         f.write("spack:\nview")
 
-    with pytest.raises(spack.config.ConfigFileError, match="parsing yaml"):
+    with pytest.raises(spack.config.ConfigFileError, match="parsing YAML"):
         spack.config.read_config_file(filename)

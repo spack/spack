@@ -1240,7 +1240,7 @@ spack:
 
     with tmpdir.as_cwd():
         env_cmd("create", "test", "./spack.yaml")
-        with ev.read("test") as env:
+        with ev.read("test"):
             concrete_spec = Spec("patchelf").concretized()
             spec_json = concrete_spec.to_json(hash=ht.dag_hash)
             json_path = str(tmpdir.join("spec.json"))
@@ -1249,8 +1249,7 @@ spack:
 
             install_cmd("--add", "--keep-stage", json_path)
 
-            # env, spec, json_path, mirror_url, build_id, sign_binaries
-            ci.push_mirror_contents(env, json_path, mirror_url, True)
+            ci.push_mirror_contents(concrete_spec, mirror_url, True)
 
             buildcache_path = os.path.join(mirror_dir.strpath, "build_cache")
 
@@ -1348,7 +1347,7 @@ def test_push_mirror_contents_exceptions(monkeypatch, capsys):
 
     # Input doesn't matter, as wwe are faking exceptional output
     url = "fakejunk"
-    ci.push_mirror_contents(None, None, url, None)
+    ci.push_mirror_contents(None, url, None)
 
     captured = capsys.readouterr()
     std_out = captured[0]
