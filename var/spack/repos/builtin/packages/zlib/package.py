@@ -50,6 +50,7 @@ class Zlib(MakefilePackage, Package):
     variant("pic", default=True, description="Produce position-independent code (for shared libs)")
     variant("shared", default=True, description="Enables the build of shared libraries.")
     variant("optimize", default=True, description="Enable -O2 for a more optimized lib")
+    variant("rebuild_please", default=True, description="CI test")
 
     conflicts("build_system=makefile", when="platform=windows")
 
