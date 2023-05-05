@@ -1027,8 +1027,10 @@ class Mfem(Package, CudaPackage, ROCmPackage):
             hiop = spec["hiop"]
             hiop_libs = hiop.libs
             hiop_libs += spec["lapack"].libs + spec["blas"].libs
-            if "^magma" in hiop:
-                hiop_libs += hiop["magma"].libs
+            hiop_opt_libs = ["magma", "raja", "umpire"]
+            for opt_lib in hiop_opt_libs:
+                if "^"+opt_lib in hiop:
+                    hiop_libs += hiop[opt_lib].libs
             options += [
                 "HIOP_OPT=-I%s" % hiop.prefix.include,
                 "HIOP_LIB=%s" % ld_flags_from_library_list(hiop_libs),

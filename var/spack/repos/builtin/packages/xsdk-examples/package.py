@@ -34,6 +34,7 @@ class XsdkExamples(CMakePackage, CudaPackage):
     depends_on("xsdk@0.8.0", when="@0.4.0")
     depends_on("xsdk@0.8.0 ^mfem+strumpack", when="@0.4.0 ^xsdk+strumpack")
     depends_on("xsdk@0.8.0 ^mfem+ginkgo", when="@0.4.0 ^xsdk+ginkgo")
+    depends_on("xsdk@0.8.0 ^mfem+hiop", when="@0.4.0 ^xsdk+hiop")
     depends_on("xsdk@0.8.0 ^sundials+magma", when="@0.4.0 +cuda")
     depends_on("xsdk@0.7.0", when="@0.3.0")
     depends_on("xsdk@0.7.0 ^mfem+strumpack", when="@0.3.0 ^xsdk+strumpack")
@@ -45,53 +46,46 @@ class XsdkExamples(CMakePackage, CudaPackage):
     def cmake_args(self):
         spec = self.spec
 
+        def enabled(pkg):
+            if type(pkg) is not list:
+                return "ON" if "^" + pkg in spec else "OFF"
+            else:
+                return "ON" if all([("^" + p in spec) for p in pkg]) else "OFF"
+
+        # Note: paths to the enabled packages are automatically added by Spack
+        # to the variable CMAKE_PREFIX_PATH.
         args = [
             "-DCMAKE_C_COMPILER=%s" % spec["mpi"].mpicc,
             "-DCMAKE_CXX_COMPILER=%s" % spec["mpi"].mpicxx,
+            "-DCMAKE_Fortran_COMPILER=%s" % spec["mpi"].mpifc,
+            "-DENABLE_AMREX=" + enabled("amrex"),
+            "-DENABLE_DEAL_II=" + enabled("dealii"),
+            "-DENABLE_GINKGO=" + enabled("ginkgo"),
             "-DENABLE_HYPRE=ON",
-            "-DHYPRE_DIR=%s" % spec["hypre"].prefix,
+            "-DENABLE_MAGMA=" + enabled("magma"),
             "-DENABLE_MFEM=ON",
-            "-DMETIS_DIR=%s" % spec["metis"].prefix,
-            "-DMFEM_DIR=%s" % spec["mfem"].prefix,
             "-DENABLE_PETSC=ON",
-            "-DPETSc_DIR=%s" % spec["petsc"].prefix,
-            "-DENABLE_PLASMA=ON",
-            "-DPLASMA_DIR=%s" % spec["plasma"].prefix,
+            # ENABLE_PLASMA also needs Slate:
+            "-DENABLE_PLASMA=" + enabled(["plasma", "slate"]),
+            "-DENABLE_STRUMPACK=" + enabled("strumpack"),
             "-DENABLE_SUNDIALS=ON",
-            "-DSUNDIALS_DIR=%s" % spec["sundials"].prefix,
             "-DENABLE_SUPERLU=ON",
-            "-DSUPERLUDIST_DIR=%s" % spec["superlu-dist"].prefix,
+            "-DENABLE_HIOP=" + enabled("hiop"),
+            "-DENABLE_TRILINOS=" + enabled("trilinos")
         ]
 
-        if "+cuda" in spec:  # if cuda variant was activated for xsdk
+        if "+cuda" in spec["xsdk"]:  # if cuda variant was activated for xsdk
             args.extend(
                 [
                     "-DENABLE_CUDA=ON",
                     "-DCMAKE_CUDA_ARCHITECTURES=%s" % spec.variants["cuda_arch"].value,
                 ]
             )
-        if "+ginkgo" in spec:  # if ginkgo variant was activated for xsdk
-            args.extend(["-DENABLE_GINKGO=ON", "-DGinkgo_DIR=%s" % spec["ginkgo"].prefix])
-        if "+magma" in spec:  # if magma variant was activated for xsdk
-            args.extend(["-DENABLE_MAGMA=ON", "-DMAGMA_DIR=%s" % spec["magma"].prefix])
-        if "+strumpack" in spec:  # if magma variant was activated for xsdk
-            args.extend(["-DENABLE_STRUMPACK=ON", "-DSTRUMPACK_DIR=%s" % spec["strumpack"].prefix])
-        if "+slate" in spec:  # if slate variant was activated for xsdk
-            args.extend(
-                [
-                    "-DENABLE_SLATE=ON",
-                    "-DSLATE_DIR=%s" % spec["slate"].prefix,
-                    "-DBLASPP_DIR=%s" % spec["blaspp"].prefix,
-                    "-DLAPACKPP_DIR=%s" % spec["lapackpp"].prefix,
-                ]
-            )
-        if "trilinos" in spec:  # if trilinos variant was activated for xsdk
-            args.extend(["ENABLE_TRILINOS=ON", "-DTRILINOS_DIR_PATH=%s" % spec["trilinos"].prefix])
-        if "zlib" in spec:  # if zlib variant was activated for MFEM
-            args.append("-DZLIB_LIBRARY_DIR=%s" % spec["zlib"].prefix.lib)
+
+        # FIXME: propagate the HIP config from the 'xsdk' package
 
         return args
 
     def check(self):
         with working_dir(self.build_directory):
-            ctest(parallel=False)
+            ctest("--output-on-failure")
