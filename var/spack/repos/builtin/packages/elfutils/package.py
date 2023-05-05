@@ -7,6 +7,7 @@ import glob
 import os.path
 
 from spack.package import *
+from spack.util.environment import is_system_path
 
 
 class Elfutils(AutotoolsPackage, SourcewarePackage):
@@ -105,7 +106,12 @@ class Elfutils(AutotoolsPackage, SourcewarePackage):
         files = glob.glob(os.path.join("*", "Makefile.in"))
         filter_file("-Werror", "", *files)
 
-    flag_handler = AutotoolsPackage.build_system_flags
+    def flag_handler(self, name, flags):
+        if name == "ldlibs":
+            spec = self.spec
+            if "+nls" in spec and "intl" in spec["gettext"].libs.names:
+                flags.append("-lintl")
+        return self.inject_flags(name, flags)
 
     def configure_args(self):
         spec = self.spec
@@ -126,9 +132,19 @@ class Elfutils(AutotoolsPackage, SourcewarePackage):
         # zlib is required
         args.append("--with-zlib=%s" % spec["zlib"].prefix)
 
+        if spec.satisfies("@0.183:"):
+            if spec["iconv"].name == "libc":
+                args.append("--without-libiconv-prefix")
+            elif not is_system_path(spec["iconv"].prefix):
+                args.append("--with-libiconv-prefix=" + format(spec["iconv"].prefix))
+
         if "+nls" in spec:
-            # configure doesn't use LIBS correctly
-            args.append("LDFLAGS=-Wl,--no-as-needed -L%s -lintl" % spec["gettext"].prefix.lib)
+            # Prior to 0.183, only msgfmt is used from gettext.
+            if spec.satisfies("@0.183:"):
+                if "intl" not in spec["gettext"].libs.names:
+                    args.append("--without-libintl-prefix")
+                elif not is_system_path(spec["gettext"].prefix):
+                    args.append("--with-libintl-prefix=" + spec["gettext"].prefix)
         else:
             args.append("--disable-nls")
 
