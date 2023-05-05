@@ -1,10 +1,10 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 
-from spack.package import *
+from spack import *
 
 
 class PyKosh(PythonPackage):
@@ -15,11 +15,14 @@ class PyKosh(PythonPackage):
     """
 
     homepage = "https://github.com/LLNL/kosh"
+    git = "ssh://git@czgitlab.llnl.gov:7999/ASCAML/kosh.git"
     url = "https://github.com/LLNL/kosh/archive/refs/tags/v2.0.tar.gz"
 
     # notify when the package is updated.
-    maintainers("doutriaux1")
+    maintainers = ["doutriaux1"]
 
+    version("3.0", sha256="6c2f1071ed4a7816ff002b4eda965754d395c917e48e1f5e18042242a4b825d2")
+    version("2.2.1", commit="5f223ac0fe9bcbceaad7df3bc9f422ea3d80c98d")
     version("2.2", sha256="3c79c3b7e7b64018ec5987dd7148886a6c619a28cda6f84e61a57439c9f3d7a3")
     version("2.1", sha256="597ed5beb4c3c3675b4af15ee7bfb60a463d5bda2222cd927061737ed073d562")
     version("2.0", sha256="059e431e3d3219b53956cb464d9e10933ca141dc89662f55d9c633e35c8b3a1e")
@@ -28,3 +31,13 @@ class PyKosh(PythonPackage):
     depends_on("py-llnl-sina@1.11:", type=("build", "run"))
     depends_on("py-networkx", type=("build", "run"))
     depends_on("py-numpy", type=("build", "run"))
+
+    with when("@3:"):
+        depends_on("py-matplotlib")
+        depends_on("py-scipy")
+        depends_on("py-h5py@3:")
+        depends_on("py-scikit-learn@1.0.2:")
+        depends_on("py-pandas")
+        depends_on("py-hdbscan@0.8.29:")
+        depends_on("py-tqdm")
+    patch("version-fix.patch", when="@3.0:3.0.0")  # will be fixed with v3.0.1
