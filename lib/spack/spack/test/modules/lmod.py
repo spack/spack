@@ -124,12 +124,10 @@ class TestLmod(object):
 
         assert len([x for x in content if "depends_on(" in x]) == 5
 
-    # DEPRECATED: remove blacklist in v0.20
-    @pytest.mark.parametrize("config_name", ["alter_environment", "blacklist_environment"])
-    def test_alter_environment(self, modulefile_content, module_configuration, config_name):
+    def test_alter_environment(self, modulefile_content, module_configuration):
         """Tests modifications to run-time environment."""
 
-        module_configuration(config_name)
+        module_configuration("alter_environment")
         content = modulefile_content("mpileaks platform=test target=x86_64")
 
         assert len([x for x in content if x.startswith('prepend_path("CMAKE_PREFIX_PATH"')]) == 0
@@ -182,11 +180,9 @@ class TestLmod(object):
         )
         assert help_msg in "".join(content)
 
-    @pytest.mark.parametrize("config_name", ["exclude", "blacklist"])
-    def test_exclude(self, modulefile_content, module_configuration, config_name):
+    def test_exclude(self, modulefile_content, module_configuration):
         """Tests excluding the generation of selected modules."""
-
-        module_configuration(config_name)
+        module_configuration("exclude")
         content = modulefile_content(mpileaks_spec_string)
 
         assert len([x for x in content if "depends_on(" in x]) == 1
