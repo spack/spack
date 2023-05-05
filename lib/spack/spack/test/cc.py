@@ -352,6 +352,24 @@ def test_Wl_parsing(wrapper_environment):
     )
 
 
+@pytest.mark.regression("37179")
+def test_Wl_parsing_with_missing_value(wrapper_environment):
+    check_args(
+        cc,
+        ["-Wl,-rpath=/a,-rpath=", "-Wl,--rpath="],
+        [real_cc] + target_args + ["-Wl,--disable-new-dtags", "-Wl,-rpath,/a"],
+    )
+
+
+@pytest.mark.regression("37179")
+def test_Wl_parsing_NAG_is_ignored(wrapper_environment):
+    check_args(
+        fc,
+        ["-Wl,-Wl,,x,,y,,z"],
+        [real_cc] + target_args + ["-Wl,--disable-new-dtags", "-Wl,-Wl,,x,,y,,z"],
+    )
+
+
 def test_Xlinker_parsing(wrapper_environment):
     # -Xlinker <x> ... -Xlinker <y> may have compiler flags inbetween, like -O3 in this
     # example. Also check that a trailing -Xlinker (which is a compiler error) is not

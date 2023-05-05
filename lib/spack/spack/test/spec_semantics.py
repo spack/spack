@@ -713,52 +713,6 @@ class TestSpecSemantics(object):
             with pytest.raises(SpecFormatStringError):
                 spec.format(fmt_str)
 
-    def test_spec_deprecated_formatting(self):
-        spec = Spec("libelf cflags==-O2")
-        spec.concretize()
-
-        # Since the default is the full spec see if the string rep of
-        # spec is the same as the output of spec.format()
-        # ignoring whitespace (though should we?)
-        assert str(spec) == spec.format("$_$@$%@+$+$=").strip()
-
-        # Testing named strings ie {string} and whether we get
-        # the correct component
-        # Mixed case intentional for testing both
-        package_segments = [
-            ("${PACKAGE}", "name"),
-            ("${VERSION}", "versions"),
-            ("${compiler}", "compiler"),
-            ("${compilerflags}", "compiler_flags"),
-            ("${options}", "variants"),
-            ("${architecture}", "architecture"),
-        ]
-
-        compiler_segments = [("${compilername}", "name"), ("${compilerver}", "versions")]
-
-        architecture_segments = [
-            ("${PLATFORM}", "platform"),
-            ("${OS}", "os"),
-            ("${TARGET}", "target"),
-        ]
-
-        for named_str, prop in package_segments:
-            expected = getattr(spec, prop, "")
-            actual = spec.format(named_str)
-            assert str(expected) == actual
-
-        compiler = spec.compiler
-        for named_str, prop in compiler_segments:
-            expected = getattr(compiler, prop, "")
-            actual = spec.format(named_str)
-            assert str(expected) == actual
-
-        arch = spec.architecture
-        for named_str, prop in architecture_segments:
-            expected = getattr(arch, prop, "")
-            actual = spec.format(named_str)
-            assert str(expected) == actual
-
     @pytest.mark.regression("9908")
     def test_spec_flags_maintain_order(self):
         # Spack was assembling flags in a manner that could result in
