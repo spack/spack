@@ -229,7 +229,7 @@ def deactivate():
     _active_environment = None
 
 
-def active_environment():
+def active_environment() -> Optional["Environment"]:
     """Returns the active environment when there is any"""
     return _active_environment
 
