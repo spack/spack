@@ -133,7 +133,7 @@ schema = {
 
 
 def update(data):
-    """Update the data in place to remove deprecated properties.
+    """Update package config
 
     Args:
         data (dict): dictionary to be updated
