@@ -352,6 +352,7 @@ def test_Wl_parsing(wrapper_environment):
     )
 
 
+@pytest.mark.regression("37179")
 def test_Wl_parsing_with_missing_value(wrapper_environment):
     check_args(
         cc,
@@ -360,6 +361,7 @@ def test_Wl_parsing_with_missing_value(wrapper_environment):
     )
 
 
+@pytest.mark.regression("37179")
 def test_Wl_parsing_NAG_is_ignored(wrapper_environment):
     check_args(
         fc,
