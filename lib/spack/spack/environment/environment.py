@@ -2502,8 +2502,8 @@ def initialize_environment_dir(
 ) -> None:
     """Initialize an environment directory starting from an envfile.
 
-    The envfile can be either a YAML manifest file (e.g. "spack.yaml"),
-    or a JSON lockfile (*.lock, *.json).
+    Files with suffix .json or .lock are considered lockfiles. Files with any other name
+    are considered manifest files.
 
     Args:
         environment_dir: directory where the environment should be placed

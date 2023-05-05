@@ -283,8 +283,7 @@ def env_create_setup_parser(subparser):
         "envfile",
         nargs="?",
         default=None,
-        help="optional init file; can be a JSON lockfile (*.lock, *.json) or a"
-        " YAML manifest file",
+        help="either a lockfile (must end with '.json' or '.lock') or a manifest file.",
     )
 
 
