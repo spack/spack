@@ -20,6 +20,7 @@ class PyKosh(PythonPackage):
     # notify when the package is updated.
     maintainers("doutriaux1")
 
+    version("3.0.1", sha256="e0d97c93476930ccfe8ed892517439d555760d66d57f9a8e52459fb5910ba398")
     version("3.0", sha256="6c2f1071ed4a7816ff002b4eda965754d395c917e48e1f5e18042242a4b825d2")
     version("2.2", sha256="3c79c3b7e7b64018ec5987dd7148886a6c619a28cda6f84e61a57439c9f3d7a3")
     version("2.1", sha256="597ed5beb4c3c3675b4af15ee7bfb60a463d5bda2222cd927061737ed073d562")
@@ -38,4 +39,4 @@ class PyKosh(PythonPackage):
         depends_on("py-pandas")
         depends_on("py-hdbscan@0.8.29:")
         depends_on("py-tqdm")
-    patch("version-fix.patch", when="@3.0:3.0.0")  # will be fixed with v3.0.1
+    patch("version-fix.patch", when="@3.0:3.0.0")  # fixed with v3.0.1
