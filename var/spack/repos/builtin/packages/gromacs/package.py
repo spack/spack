@@ -526,9 +526,6 @@ class CMakeBuilder(spack.build_systems.cmake.CMakeBuilder):
         elif target == "mic_knl":
             # Intel KNL
             options.append("-DGMX_SIMD=AVX_512_KNL")
-        elif target == "icelake" or target == "cascadelake" or target == "skylake_avx512":
-            # Intel platforms with AVX512 support
-            options.append("-DGMX_SIMD=AVX_512")
         else:
             # Other architectures
             simd_features = [
