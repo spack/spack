@@ -94,9 +94,9 @@ an Environment, the ``.spack-env`` directory also contains:
   * ``logs/``: A directory containing the build logs for the packages
     in this Environment.
 
-Spack Environments can also be created from either a ``spack.yaml``
-manifest or a ``spack.lock`` lockfile. To create an Environment from a
-``spack.yaml`` manifest:
+Spack Environments can also be created from either a manifest file
+(usually but not necessarily named, ``spack.yaml``) or a lockfile.
+To create an Environment from a manifest:
 
 .. code-block:: console
 
@@ -174,7 +174,7 @@ Anonymous specs can be created in place using the command:
 
    $ spack env create -d .
 
-In this case Spack simply creates a spack.yaml file in the requested
+In this case Spack simply creates a ``spack.yaml`` file in the requested
 directory.
 
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
