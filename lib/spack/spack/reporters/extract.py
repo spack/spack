@@ -118,10 +118,6 @@ def extract_test_parts(default_name, outputs):
     last_time = None
     curr_time = None
 
-    # TODO (post-34236): Remove once remove deprecated test processing
-    testdesc = ""
-    using_deprecated_tests = True
-
     for line in outputs:
         line = line.strip()
         if not line:
@@ -131,25 +127,16 @@ def extract_test_parts(default_name, outputs):
         if skip(line):
             continue
 
-        match = re.search(r"Test failure: (.*)", line)
-        if match:
-            stat = "failed"
-            part = new_part()
-            part["command"] = "none"
-            part["completed"] = completed[stat]
-            part["elapsed"] = 0.0
-            part["name"] = default_name
-            part["loglines"].append(match.group(1))
-            part["status"] = stat
-            return [part]
-
-        # The spec was explicitly reported as skipped as determined by CI
-        # (e.g., installation failed, package known to have failing tests).
+        # The spec was explicitly reported as skipped (e.g., installation
+        # failed, package known to have failing tests, won't test external
+        # package).
         if line.startswith("Skipped") and line.endswith("package"):
+            stat = "skipped"
             part = new_part()
             part["command"] = "Not Applicable"
-            part["completed"] = line
+            part["completed"] = completed[stat]
             part["elapsed"] = 0.0
+            part["loglines"].append(line)
             part["name"] = default_name
             part["status"] = "notrun"
             parts.append(part)
@@ -166,27 +153,21 @@ def extract_test_parts(default_name, outputs):
                 if msg.startswith("Installing"):
                     continue
 
-                # Terminate without further parsing if No more test messages
+                # Terminate without further parsing if no more test messages
                 if "Completed testing" in msg:
                     # Process last lingering part IF it didn't generate status
                     process_part_end(part, curr_time, last_time)
                     return parts
 
-                # New test: means new test part assumed to be in the form
-                # "test: <name>: <desc>".
+                # New test parts start "test: <name>: <desc>".
                 if msg.startswith("test: "):
-                    using_deprecated_tests = msg.count(":") == 1
-
                     # Update the last part processed
                     process_part_end(part, curr_time, last_time)
 
                     part = new_part()
                     desc = msg.split(":")
-                    if using_deprecated_tests:
-                        testdesc = desc[1].strip()
-                    else:
-                        part["name"] = desc[1].strip()
-                        part["desc"] = ":".join(desc[2:]).strip()
+                    part["name"] = desc[1].strip()
+                    part["desc"] = ":".join(desc[2:]).strip()
                     parts.append(part)
 
                 # There is no guarantee of a 1-to-1 mapping of a test part and
@@ -197,24 +178,7 @@ def extract_test_parts(default_name, outputs):
                 # (e.g., output=str.split, error=str.split) will not have
                 # a command printed to the test log.
                 elif msg.startswith("'") and msg.endswith("'"):
-                    if using_deprecated_tests:
-                        # Update the last part processed
-                        process_part_end(part, curr_time, last_time)
-
-                        part = new_part()
-                        part["command"] = msg
-                        part["name"] = part_name(msg)
-                        parts.append(part)
-
-                        # Save off the optional test description if it was
-                        # tty.debuged *prior to* the command and reset
-                        if testdesc:
-                            part["desc"] = testdesc
-                            testdesc = ""
-
-                    # Otherwise, the command should be associated with the last
-                    # test part.
-                    elif part["command"]:
+                    if part["command"]:
                         part["command"] += "; " + msg.replace("'", "")
                     else:
                         part["command"] = msg.replace("'", "")
@@ -223,20 +187,6 @@ def extract_test_parts(default_name, outputs):
                     # Update the last part processed since a new log message
                     # means a non-test action
                     process_part_end(part, curr_time, last_time)
-
-                    if using_deprecated_tests:
-                        if testdesc:
-                            # We had a test description but no command so treat
-                            # as a new part (e.g., some import tests)
-                            part = new_part()
-                            part["name"] = "_".join(testdesc.split())
-                            part["command"] = "unknown"
-                            part["desc"] = testdesc
-                            parts.append(part)
-                            process_part_end(part, curr_time, curr_time)
-
-                        # Assuming this is a description for the next test part
-                        testdesc = msg
 
             else:
                 tty.debug("Did not recognize test output '{0}'".format(line))

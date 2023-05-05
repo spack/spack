@@ -290,10 +290,10 @@ class PackageTest:
         """Add the failure details to the current list."""
         self.test_failures.append((exception, msg))
 
-    def status(self, name: Optional[str], status: "TestStatus"):
-        """Log the test status for the part name."""
-        extra = f"::{name}" if name else ""
-        part_name = f"{self.pkg.__class__.__name__}{extra}"
+    def status(self, name: str, status: "TestStatus", msg: Optional[str] = None):
+        """Track and print the test status for the test part name."""
+        part_name = f"{self.pkg.__class__.__name__}::{name}"
+        extra = "" if msg is None else f": {msg}"
 
         # Handle the special case of a test part consisting of subparts.
         # The containing test part can be PASSED while sub-parts (assumed
@@ -301,12 +301,15 @@ class PackageTest:
         # check is used to ensure the containing test part is not claiming
         # to have passed when at least one subpart failed.
         if status == TestStatus.PASSED:
-            for name, substatus in self.test_parts.items():
-                if name != part_name and name.startswith(part_name):
+            for pname, substatus in self.test_parts.items():
+                if pname != part_name and pname.startswith(part_name):
                     if substatus == TestStatus.FAILED:
-                        status = substatus
-                        break
+                        print(f"{substatus}: {part_name}{extra}")
+                        self.test_parts[part_name] = substatus
+                        self.counts[substatus] += 1
+                        return
 
+        print(f"{status}: {part_name}{extra}")
         self.test_parts[part_name] = status
         self.counts[status] += 1
 
@@ -426,26 +429,20 @@ def test_part(pkg: Pb, test_name: str, purpose: str, work_dir: str = ".", verbos
     title = "test: {}: {}".format(test_name, purpose or "unspecified purpose")
     with fs.working_dir(wdir, create=True):
         try:
-            status = TestStatus.PASSED
             context = tester.logger.force_echo if verbose else nullcontext
             with context():
                 tty.info(title, format="g")
                 yield
-            print(f"{status}: {test_name}")
-            tester.status(test_name, status)
+            tester.status(test_name, TestStatus.PASSED)
 
         except SkipTest as e:
-            status = TestStatus.SKIPPED
-            print(f"{status}: {test_name}: {e}")
-            tester.status(test_name, status)
+            tester.status(test_name, TestStatus.SKIPPED, str(e))
 
         except (AssertionError, BaseException) as e:
             # print a summary of the error to the log file
             # so that cdash and junit reporters know about it
             exc_type, _, tb = sys.exc_info()
-            status = TestStatus.FAILED
-            print(f"{status}: {test_name}: {e}")
-            tester.status(test_name, status)
+            tester.status(test_name, TestStatus.FAILED, str(e))
 
             import traceback
 
@@ -649,7 +646,7 @@ def test_parts_process(pkg: Pb, test_specs: List[spack.spec.Spec], verbose: bool
                 tests = []
 
             if len(tests) == 0:
-                tester.status("", TestStatus.NO_TESTS)
+                tester.status(spec.name, TestStatus.NO_TESTS)
                 continue
 
             # copy custom and cached test files to the test stage directory

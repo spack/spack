@@ -288,38 +288,41 @@ def test_test_part_fail(tmpdir, install_mockery_mutable_config, mock_fetch, mock
     pkg.tester.test_log_file = str(tmpdir.join("test-log.txt"))
     touch(pkg.tester.test_log_file)
 
-    with spack.install_test.test_part(pkg, "test_fail", "fake ProcessError"):
+    name = "test_fail"
+    with spack.install_test.test_part(pkg, name, "fake ProcessError"):
         raise spack.util.executable.ProcessError("Mock failure")
 
-    name, status = pkg.tester.test_parts[0]
-    assert name.endswith("test_fail")
-    assert status == spack.install_test.TestStatus.FAILED
+    for part_name, status in pkg.tester.test_parts.items():
+        assert part_name.endswith(name)
+        assert status == spack.install_test.TestStatus.FAILED
 
 
 def test_test_part_pass(install_mockery_mutable_config, mock_fetch, mock_test_stage):
     s = spack.spec.Spec("trivial-smoke-test").concretized()
     pkg = s.package
 
+    name = "test_echo"
     msg = "nothing"
-    with spack.install_test.test_part(pkg, "test_echo", "echo"):
+    with spack.install_test.test_part(pkg, name, "echo"):
         echo = which("echo")
         echo(msg)
 
-    name, status = pkg.tester.test_parts[0]
-    assert name.endswith("test_echo")
-    assert status == spack.install_test.TestStatus.PASSED
+    for part_name, status in pkg.tester.test_parts.items():
+        assert part_name.endswith(name)
+        assert status == spack.install_test.TestStatus.PASSED
 
 
 def test_test_part_skip(install_mockery_mutable_config, mock_fetch, mock_test_stage):
     s = spack.spec.Spec("trivial-smoke-test").concretized()
     pkg = s.package
 
-    with spack.install_test.test_part(pkg, "test_skip", "raise SkipTest"):
+    name = "test_skip"
+    with spack.install_test.test_part(pkg, name, "raise SkipTest"):
         raise spack.install_test.SkipTest("Skipping the test")
 
-    name, status = pkg.tester.test_parts[0]
-    assert name.endswith("test_skip")
-    assert status == spack.install_test.TestStatus.SKIPPED
+    for part_name, status in pkg.tester.test_parts.items():
+        assert part_name.endswith(name)
+        assert status == spack.install_test.TestStatus.SKIPPED
 
 
 def test_check_special_outputs(tmpdir):
@@ -381,15 +384,3 @@ def test_packagetest_fails(mock_packages):
     pkg = MyPackage(s)
     with pytest.raises(ValueError, match="require a concrete package"):
         spack.install_test.PackageTest(pkg)
-
-
-# TODO (post-34236): Remove this test when remove deprecated test() method, etc.
-def test_test_spec_warn(mock_packages, install_mockery, mock_test_stage, monkeypatch):
-    spec = spack.spec.Spec("py-test-callback").concretized()
-    monkeypatch.setattr(spack.spec.Spec, "installed", _true)
-    test_suite = spack.install_test.TestSuite([spec])
-    test_suite()
-
-    ensure_results(
-        test_suite.log_file_for_spec(spec), "Use any name starting with 'test_' instead"
-    )

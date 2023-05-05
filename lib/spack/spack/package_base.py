@@ -1951,10 +1951,13 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
         alternate = f"Use 'test_part' instead for {self.spec.name} to process {base_exe}."
         warnings.warn(f"The 'run_test' method is deprecated. {alternate}")
 
+        extra = re.compile(r"[\s,\- ]")
         details = (
-            [options] if isinstance(options, str) else [os.path.basename(opt) for opt in options]
+            [extra.sub("", options)]
+            if isinstance(options, str)
+            else [extra.sub("", os.path.basename(opt)) for opt in options]
         )
-        details = "_".join([" "] + details) if details else ""
+        details = "_".join([""] + details) if details else ""
         test_name = f"test_{base_exe}{details}"
         tty.info(test_title(purpose, test_name), format="g")
 
@@ -1963,24 +1966,19 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
             try:
                 runner = which(exe)
                 if runner is None and skip_missing:
-                    tty.info(f"Skipping test: {exe} is missing")
+                    self.tester.status(test_name, TestStatus.SKIPPED, f"{exe} is missing")
                     return
                 assert runner is not None, f"Failed to find executable '{exe}'"
 
                 self._run_test_helper(runner, options, expected, status, installed, purpose)
-                status = TestStatus.PASSED
-                print(f"{status}: {test_name}")
-                self.tester.status(test_name, status)
+                self.tester.status(test_name, TestStatus.PASSED, None)
                 return True
             except (AssertionError, BaseException) as e:
                 # print a summary of the error to the log file
                 # so that cdash and junit reporters know about it
                 exc_type, _, tb = sys.exc_info()
 
-                status = TestStatus.FAILED
-                error = str(e)
-                print(f"{status}: {test_name}: {error}")
-                self.tester.status(test_name, status)
+                self.tester.status(test_name, TestStatus.FAILED, str(e))
 
                 import traceback
 
@@ -2036,18 +2034,15 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
         expected = [expected] if isinstance(expected, str) else expected
         options = [options] if isinstance(options, str) else options
 
-        if not purpose:
-            tty.debug("test: {0}: expect command status in {1}".format(runner.name, status))
-
         if installed:
-            msg = "Executable '{0}' expected in prefix".format(runner.name)
-            msg += ", found in {0} instead".format(runner.path)
+            msg = f"Executable '{runner.name}' expected in prefix, "
+            msg += f"found in {runner.path} instead"
             assert runner.path.startswith(self.spec.prefix), msg
 
         try:
             output = runner(*options, output=str.split, error=str.split)
 
-            assert 0 in status, "Expected {0} execution to fail".format(runner.name)
+            assert 0 in status, f"Expected {runner.name} execution to fail"
         except ProcessError as err:
             output = str(err)
             match = re.search(r"exited with status ([0-9]+)", output)
@@ -2056,8 +2051,8 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
 
         for check in expected:
             cmd = " ".join([runner.name] + options)
-            msg = "Expected '{0}' to match output of `{1}`".format(check, cmd)
-            msg += "\n\nOutput: {0}".format(output)
+            msg = f"Expected '{check}' to match output of `{cmd}`"
+            msg += f"\n\nOutput: {output}"
             assert re.search(check, output), msg
 
     def unit_test_check(self):

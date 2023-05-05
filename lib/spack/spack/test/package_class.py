@@ -208,25 +208,6 @@ def test_cache_extra_sources_fails(install_mockery):
         spack.install_test.cache_extra_test_sources(s.package, "no-such-file")
 
 
-# TODO (post-34236): Remove this test case when remove install_test_root
-# TODO (post-34236): and cache_extra_test_sources package methods.
-def test_cache_extra_sources_warnings(install_mockery, capfd):
-    s = spack.spec.Spec("a").concretized()
-    s.package.spec.concretize()
-    source = "example.cpp"
-
-    _ = s.package.install_test_root
-    err = capfd.readouterr()[1]
-    assert "deprecated" in err
-    assert "install_test_root(pkg)" in err
-
-    with pytest.raises(OSError):
-        s.package.cache_extra_test_sources(source)
-    out, err = capfd.readouterr()
-    assert "deprecated" in err
-    assert "cache_extra_test_sources(pkg, srcs)" in err
-
-
 def test_package_exes_and_libs():
     with pytest.raises(spack.error.SpackError, match="defines both"):
 
@@ -312,9 +293,8 @@ def test_package_run_test(install_mockery_mutable_config, mock_fetch, capfd):
     # First a successful test
     msg = "do-nothing"
     pkg.run_test("echo", msg, expected=[msg], purpose="test: echo", work_dir=".")
-    output, error = capfd.readouterr()
+    output = capfd.readouterr()[0]
     assert msg in output
-    assert "method is deprecated" in error
 
     # Successful but not installed
     msg = "not installed"
