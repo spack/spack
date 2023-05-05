@@ -9,15 +9,12 @@ from spack.package import *
 
 
 class Libpsm3(AutotoolsPackage):
-    """PSM3 packge for testing new drops from Intel"""
+    """PSM3 provider for the PSM3 OFI provider"""
 
     homepage = "https://ofiwg.github.io/libfabric/v1.12.0/man/fi_psm3.7.html"
     url = "https://github.com/intel/eth-psm3-fi/archive/refs/tags/v11.4.1.0.tar.gz"
     git = "https://github.com/intel/eth-psm3-fi.git"
 
-    # For external sharing?
-    # url = "file://{0}/libpsm3-fi-11.4.0.0.tar.bz2".format(os.getcwd())
-    # manual_download = True
     version(
         "11.4.1.0",
         sha256="272adb9ec10edf709bfcfccc6b6e9296d25d892c36b845ad577caeb82b70c9ac",
