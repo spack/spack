@@ -105,7 +105,7 @@ class Libxml2(AutotoolsPackage, NMakePackage):
         """Perform smoke tests on the installed package"""
         # Start with what we already have post-install
         tty.msg("test: Performing simple import test")
-        self.import_module_test()
+        self.builder.import_module_test()
 
         data_dir = self.test_suite.current_test_data_dir
 
