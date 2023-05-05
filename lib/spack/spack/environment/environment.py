@@ -18,8 +18,6 @@ import urllib.request
 import warnings
 from typing import Any, Dict, List, Optional, Union
 
-import ruamel.yaml as yaml
-
 import llnl.util.filesystem as fs
 import llnl.util.tty as tty
 import llnl.util.tty.color as clr
@@ -231,7 +229,7 @@ def deactivate():
     _active_environment = None
 
 
-def active_environment():
+def active_environment() -> Optional["Environment"]:
     """Returns the active environment when there is any"""
     return _active_environment
 
@@ -283,9 +281,12 @@ def create(
     A managed environment is created in a root directory managed by this Spack instance, so that
     Spack can keep track of them.
 
+    Files with suffix ``.json`` or ``.lock`` are considered lockfiles. Files with any other name
+    are considered manifest files.
+
     Args:
         name: name of the managed environment
-        init_file: either a "spack.yaml" or a "spack.lock" file or None
+        init_file: either a lockfile, a manifest file, or None
         with_view: whether a view should be maintained for the environment. If the value is a
             string, it specifies the path to the view
         keep_relative: if True, develop paths are copied verbatim into the new environment file,
@@ -305,9 +306,12 @@ def create_in_dir(
 ) -> "Environment":
     """Create an environment in the directory passed as input and returns it.
 
+    Files with suffix ``.json`` or ``.lock`` are considered lockfiles. Files with any other name
+    are considered manifest files.
+
     Args:
         manifest_dir: directory where to create the environment.
-        init_file: either a "spack.yaml" or a "spack.lock" file or None
+        init_file: either a lockfile, a manifest file, or None
         with_view: whether a view should be maintained for the environment. If the value is a
             string, it specifies the path to the view
         keep_relative: if True, develop paths are copied verbatim into the new environment file,
@@ -357,7 +361,14 @@ def ensure_env_root_path_exists():
 
 def config_dict(yaml_data):
     """Get the configuration scope section out of an spack.yaml"""
+    # TODO (env:): Remove env: as a possible top level keyword in v0.21
     key = spack.config.first_existing(yaml_data, spack.schema.env.keys)
+    if key == "env":
+        msg = (
+            "using 'env:' as a top-level attribute of a Spack environment is deprecated and "
+            "will be removed in Spack v0.21. Please use 'spack:' instead."
+        )
+        warnings.warn(msg)
     return yaml_data[key]
 
 
@@ -519,11 +530,6 @@ class ViewDescriptor:
     def to_dict(self):
         ret = syaml.syaml_dict([("root", self.raw_root)])
         if self.projections:
-            # projections guaranteed to be ordered dict if true-ish
-            # for python2.6, may be syaml or ruamel.yaml implementation
-            # so we have to check for both
-            types = (collections.OrderedDict, syaml.syaml_dict, yaml.comments.CommentedMap)
-            assert isinstance(self.projections, types)
             ret["projections"] = self.projections
         if self.select:
             ret["select"] = self.select
@@ -2496,7 +2502,8 @@ def initialize_environment_dir(
 ) -> None:
     """Initialize an environment directory starting from an envfile.
 
-    The envfile can be either a "spack.yaml" manifest file, or a "spack.lock" file.
+    Files with suffix .json or .lock are considered lockfiles. Files with any other name
+    are considered manifest files.
 
     Args:
         environment_dir: directory where the environment should be placed
