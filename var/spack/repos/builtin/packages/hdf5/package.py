@@ -634,7 +634,7 @@ class Hdf5(CMakePackage):
         # at all. Here, we make sure that 'h5pfc' is available when Fortran and
         # MPI support are enabled (only for versions that generate 'h5fc').
         if self.spec.satisfies(
-            "@1.8.22:1.8," "1.10.6:1.10," "1.12.0:1.12," "develop:" "+fortran+mpi"
+            "@1.8.22:1.8," "1.10.6:1.10," "1.12.0:1.12" "+fortran+mpi"
         ):
             with working_dir(self.prefix.bin):
                 # No try/except here, fix the condition above instead:
