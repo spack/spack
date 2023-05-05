@@ -26,9 +26,7 @@ class Libxpm(AutotoolsPackage, XorgPackage):
     depends_on("pkgconfig", type="build")
     depends_on("util-macros", type="build")
 
-    def setup_build_environment(self, env):
-        # If libxpm is installed as an external package, gettext won't
-        # be available in the spec. See
-        # https://github.com/spack/spack/issues/9149 for details.
-        if "gettext" in self.spec and "intl" in self.spec["gettext"].libs.names:
-            env.append_flags("LDFLAGS", "-lintl")
+    def flag_handler(self, name, flags):
+        if name == "ldlibs" and "intl" in self.spec["gettext"].libs.names:
+            flags.append("-lintl")
+        return env_flags(name, flags)
