@@ -24,13 +24,6 @@ class SpiralSoftware(CMakePackage):
     version("8.2.1", sha256="78d7bb1c22a5b2d216eac7b6ddedd20b601ba40227e64f743cbb54d4e5a7794d")
     version("8.2.0", sha256="983f38d270ae2cb753c88cbce3f412e307c773807ad381acedeb9275afc0be32")
 
-    variant(
-        "build_type",
-        default="Release",
-        values=("Debug", "Release", "RelWithDebInfo", "MinSizeRel"),
-        description="Build the Release version by default",
-    )
-
     extendable = True
 
     # No dependencies.
