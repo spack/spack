@@ -185,9 +185,6 @@ echo $PATH"""
     shutil.rmtree(mirror_path)
     stage.destroy()
 
-    # Remove cached binary specs since we deleted the mirror
-    bindist._cached_specs = set()
-
 
 @pytest.mark.usefixtures("install_mockery")
 def test_relocate_text(tmpdir):
@@ -208,8 +205,6 @@ def test_relocate_text(tmpdir):
             for line in script:
                 assert new_dir in line
         ensure_binary_is_relocatable(os.path.realpath(filename))
-    # Remove cached binary specs since we deleted the mirror
-    bindist._cached_specs = set()
 
 
 def test_relocate_links(tmpdir):

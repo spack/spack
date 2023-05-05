@@ -10,6 +10,8 @@ import sys
 import tempfile
 
 import llnl.util.tty as tty
+import llnl.util.tty.color as clr
+from llnl.util.lang import elide_list
 
 import spack.binary_distribution as bindist
 import spack.cmd
@@ -41,11 +43,12 @@ def setup_parser(subparser):
     subparsers = subparser.add_subparsers(help="buildcache sub-commands")
 
     create = subparsers.add_parser("create", help=create_fn.__doc__)
+    # TODO: remove from Spack 0.21
     create.add_argument(
         "-r",
         "--rel",
         action="store_true",
-        help="make all rpaths relative before creating tarballs.",
+        help="make all rpaths relative before creating tarballs. (deprecated)",
     )
     create.add_argument(
         "-f", "--force", action="store_true", help="overwrite tarball if it exists."
@@ -128,11 +131,12 @@ def setup_parser(subparser):
     install.add_argument(
         "-m", "--multiple", action="store_true", help="allow all matching packages "
     )
+    # TODO: remove from Spack 0.21
     install.add_argument(
         "-a",
         "--allow-root",
         action="store_true",
-        help="allow install root string in binary files after RPATH substitution",
+        help="allow install root string in binary files after RPATH substitution. (deprecated)",
     )
     install.add_argument(
         "-u",
@@ -447,33 +451,74 @@ def create_fn(args):
             "Spack 0.21, use positional arguments instead."
         )
 
+    if args.rel:
+        tty.warn("The --rel flag is deprecated and will be removed in Spack 0.21")
+
     # TODO: remove this in 0.21. If we have mirror_flag, the first
     # spec is in the positional mirror arg due to argparse limitations.
-    specs = args.specs
+    input_specs = args.specs
     if args.mirror_flag and args.mirror:
-        specs.insert(0, args.mirror)
+        input_specs.insert(0, args.mirror)
 
     url = mirror.push_url
 
-    matches = _matching_specs(specs, args.spec_file)
-
-    msg = "Pushing binary packages to {0}/build_cache".format(url)
-    tty.msg(msg)
-    kwargs = {
-        "key": args.key,
-        "force": args.force,
-        "relative": args.rel,
-        "unsigned": args.unsigned,
-        "allow_root": args.allow_root,
-        "regenerate_index": args.rebuild_index,
-    }
-    bindist.push(
-        matches,
-        url,
-        include_root="package" in args.things_to_install,
-        include_dependencies="dependencies" in args.things_to_install,
-        **kwargs,
+    specs = bindist.specs_to_be_packaged(
+        _matching_specs(input_specs, args.spec_file),
+        root="package" in args.things_to_install,
+        dependencies="dependencies" in args.things_to_install,
     )
+
+    # When pushing multiple specs, print the url once ahead of time, as well as how
+    # many specs are being pushed.
+    if len(specs) > 1:
+        tty.info(f"Selected {len(specs)} specs to push to {url}")
+
+    skipped = []
+
+    # tty printing
+    color = clr.get_color_when()
+    format_spec = lambda s: s.format("{name}{@version}{/hash:7}", color=color)
+    total_specs = len(specs)
+    digits = len(str(total_specs))
+
+    for i, spec in enumerate(specs):
+        try:
+            bindist.push_or_raise(
+                spec,
+                url,
+                bindist.PushOptions(
+                    force=args.force,
+                    relative=args.rel,
+                    unsigned=args.unsigned,
+                    allow_root=args.allow_root,
+                    key=args.key,
+                    regenerate_index=args.rebuild_index,
+                ),
+            )
+
+            if total_specs > 1:
+                msg = f"[{i+1:{digits}}/{total_specs}] Pushed {format_spec(spec)}"
+            else:
+                msg = f"Pushed {format_spec(spec)} to {url}"
+
+            tty.info(msg)
+
+        except bindist.NoOverwriteException:
+            skipped.append(format_spec(spec))
+
+    if skipped:
+        if len(specs) == 1:
+            tty.info("The spec is already in the buildcache. Use --force to overwrite it.")
+        elif len(skipped) == len(specs):
+            tty.info("All specs are already in the buildcache. Use --force to overwite them.")
+        else:
+            tty.info(
+                "The following {} specs were skipped as they already exist in the buildcache:\n"
+                "    {}\n"
+                "    Use --force to overwrite them.".format(
+                    len(skipped), ", ".join(elide_list(skipped, 5))
+                )
+            )
 
 
 def install_fn(args):
@@ -481,12 +526,13 @@ def install_fn(args):
     if not args.specs:
         tty.die("a spec argument is required to install from a buildcache")
 
+    if args.allow_root:
+        tty.warn("The --allow-root flag is deprecated and will be removed in Spack 0.21")
+
     query = bindist.BinaryCacheQuery(all_architectures=args.otherarch)
     matches = spack.store.find(args.specs, multiple=args.multiple, query_fn=query)
     for match in matches:
-        bindist.install_single_spec(
-            match, allow_root=args.allow_root, unsigned=args.unsigned, force=args.force
-        )
+        bindist.install_single_spec(match, unsigned=args.unsigned, force=args.force)
 
 
 def list_fn(args):
