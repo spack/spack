@@ -9,6 +9,7 @@ import shutil
 
 import llnl.util.filesystem as fs
 import llnl.util.tty as tty
+import llnl.util.tty.color as clr
 
 import spack.binary_distribution as bindist
 import spack.ci as spack_ci
@@ -227,7 +228,7 @@ def ci_reindex(args):
     Use the active, gitlab-enabled environment to rebuild the buildcache
     index for the associated mirror."""
     env = spack.cmd.require_active_env(cmd_name="ci rebuild-index")
-    yaml_root = ev.config_dict(env.yaml)
+    yaml_root = ev.config_dict(env.manifest)
 
     if "mirrors" not in yaml_root or len(yaml_root["mirrors"].values()) < 1:
         tty.die("spack ci rebuild-index requires an env containing a mirror")
@@ -670,13 +671,20 @@ def ci_rebuild(args):
     # outside of the pipeline environment.
     if install_exit_code == 0:
         if buildcache_mirror_url or pipeline_mirror_url:
-            spack_ci.create_buildcache(
-                env=env,
+            for result in spack_ci.create_buildcache(
+                input_spec=job_spec,
                 buildcache_mirror_url=buildcache_mirror_url,
                 pipeline_mirror_url=pipeline_mirror_url,
                 pr_pipeline=spack_is_pr_pipeline,
-                json_path=job_spec_json_path,
-            )
+            ):
+                msg = tty.msg if result.success else tty.warn
+                msg(
+                    "{} {} to {}".format(
+                        "Pushed" if result.success else "Failed to push",
+                        job_spec.format("{name}{@version}{/hash:7}", color=clr.get_color_when()),
+                        result.url,
+                    )
+                )
 
         # If this is a develop pipeline, check if the spec that we just built is
         # on the broken-specs list. If so, remove it.
