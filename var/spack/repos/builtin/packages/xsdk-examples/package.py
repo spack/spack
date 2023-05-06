@@ -61,6 +61,8 @@ class XsdkExamples(CMakePackage, CudaPackage):
             "-DENABLE_AMREX=" + enabled("amrex"),
             "-DENABLE_DEAL_II=" + enabled("dealii"),
             "-DENABLE_GINKGO=" + enabled("ginkgo"),
+            "-DENABLE_HEFFTE=" + enabled("heffte"),
+            "-DENABLE_HIOP=" + enabled("hiop"),
             "-DENABLE_HYPRE=ON",
             "-DENABLE_MAGMA=" + enabled("magma"),
             "-DENABLE_MFEM=ON",
@@ -70,7 +72,7 @@ class XsdkExamples(CMakePackage, CudaPackage):
             "-DENABLE_STRUMPACK=" + enabled("strumpack"),
             "-DENABLE_SUNDIALS=ON",
             "-DENABLE_SUPERLU=ON",
-            "-DENABLE_HIOP=" + enabled("hiop"),
+            "-DENABLE_TASMANIAN=" + enabled("tasmanian"),
             "-DENABLE_TRILINOS=" + enabled("trilinos"),
         ]
 
