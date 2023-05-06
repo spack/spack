@@ -193,7 +193,7 @@ def test_dev_build_env(tmpdir, mock_packages, install_mockery, mutable_mock_env_
         with open("spack.yaml", "w") as f:
             f.write(
                 """\
-env:
+spack:
   specs:
   - dev-build-test-install@0.0.0
 
@@ -233,7 +233,7 @@ def test_dev_build_env_version_mismatch(
         with open("spack.yaml", "w") as f:
             f.write(
                 """\
-env:
+spack:
   specs:
   - dev-build-test-install@0.0.0
 
@@ -265,7 +265,7 @@ def test_dev_build_multiple(
     # without the environment, the user would need to set dev_path for both the
     # root and dependency if they wanted a dev build for both.
     leaf_dir = tmpdir.mkdir("leaf")
-    leaf_spec = spack.spec.Spec("dev-build-test-install@1.0.0")
+    leaf_spec = spack.spec.Spec("dev-build-test-install@=1.0.0")  # non-existing version
     leaf_pkg_cls = spack.repo.path.get_pkg_class(leaf_spec.name)
     with leaf_dir.as_cwd():
         with open(leaf_pkg_cls.filename, "w") as f:
@@ -286,14 +286,14 @@ def test_dev_build_multiple(
         with open("spack.yaml", "w") as f:
             f.write(
                 """\
-env:
+spack:
   specs:
   - dev-build-test-dependent@0.0.0
 
   develop:
     dev-build-test-install:
       path: %s
-      spec: dev-build-test-install@1.0.0
+      spec: dev-build-test-install@=1.0.0
     dev-build-test-dependent:
       spec: dev-build-test-dependent@0.0.0
       path: %s
@@ -339,7 +339,7 @@ def test_dev_build_env_dependency(
         with open("spack.yaml", "w") as f:
             f.write(
                 """\
-env:
+spack:
   specs:
   - dependent-of-dev-build@0.0.0
 
@@ -397,7 +397,7 @@ def test_dev_build_rebuild_on_source_changes(
         with open("spack.yaml", "w") as f:
             f.write(
                 """\
-env:
+spack:
   specs:
   - %s@0.0.0
 

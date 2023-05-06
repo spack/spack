@@ -24,6 +24,7 @@ import spack.error
 import spack.paths
 import spack.platforms
 import spack.spec
+import spack.version
 from spack.util.environment import get_path
 from spack.util.naming import mod_to_class
 
@@ -48,6 +49,7 @@ _compiler_to_pkg = {
     "oneapi": "intel-oneapi-compilers",
     "rocmcc": "llvm-amdgpu",
     "intel@2020:": "intel-oneapi-compilers-classic",
+    "arm": "acfl",
 }
 
 # TODO: generating this from the previous dict causes docs errors
@@ -56,6 +58,7 @@ package_name_to_compiler_name = {
     "intel-oneapi-compilers": "oneapi",
     "llvm-amdgpu": "rocmcc",
     "intel-oneapi-compilers-classic": "intel",
+    "acfl": "arm",
 }
 
 
@@ -67,7 +70,7 @@ def pkg_spec_for_compiler(cspec):
             break
     else:
         spec_str = str(cspec)
-    return spack.spec.Spec(spec_str)
+    return spack.spec.parse_with_version_concrete(spec_str)
 
 
 def _auto_compiler_spec(function):
@@ -211,7 +214,7 @@ def all_compilers_config(scope=None, init_config=True):
 def all_compiler_specs(scope=None, init_config=True):
     # Return compiler specs from the merged config.
     return [
-        spack.spec.CompilerSpec(s["compiler"]["spec"])
+        spack.spec.parse_with_version_concrete(s["compiler"]["spec"], compiler=True)
         for s in all_compilers_config(scope, init_config)
     ]
 
@@ -382,7 +385,7 @@ class CacheReference(object):
 
 
 def compiler_from_dict(items):
-    cspec = spack.spec.CompilerSpec(items["spec"])
+    cspec = spack.spec.parse_with_version_concrete(items["spec"], compiler=True)
     os = items.get("operating_system", None)
     target = items.get("target", None)
 
@@ -451,7 +454,10 @@ def get_compilers(config, cspec=None, arch_spec=None):
 
     for items in config:
         items = items["compiler"]
-        if cspec and items["spec"] != str(cspec):
+
+        # NOTE: in principle this should be equality not satisfies, but config can still
+        # be written in old format gcc@10.1.0 instead of gcc@=10.1.0.
+        if cspec and not cspec.satisfies(items["spec"]):
             continue
 
         # If an arch spec is given, confirm that this compiler

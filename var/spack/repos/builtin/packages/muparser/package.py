@@ -12,6 +12,7 @@ class Muparser(Package):
     homepage = "https://beltoforion.de/en/muparser/"
     url = "https://github.com/beltoforion/muparser/archive/v2.2.5.tar.gz"
 
+    version("2.3.4", sha256="0c3fa54a3ebf36dda0ed3e7cd5451c964afbb15102bdbcba08aafb359a290121")
     version("2.2.6.1", sha256="d2562853d972b6ddb07af47ce8a1cdeeb8bb3fa9e8da308746de391db67897b3")
     version("2.2.5", sha256="0666ef55da72c3e356ca85b6a0084d56b05dd740c3c21d26d372085aa2c6e708")
 
