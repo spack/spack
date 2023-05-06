@@ -14,6 +14,7 @@ class Fullock(AutotoolsPackage):
     homepage = "https://antpick.ax/"
     url = "https://github.com/yahoojapan/fullock/archive/v1.0.36.tar.gz"
 
+    version("1.0.50", sha256="7222976883289376c1b88fd30ecd3ab2f055316103b97df4aa71192954072848")
     version("1.0.39", sha256="0089d4446e3102b5de39e3d18c1b7e5c9567deb77a4e60963e15b5c1b23a594d")
     version("1.0.36", sha256="68d0dc9036c2c1871653b4626a594f57663973c159f083ec68647c60ddc919f7")
     version("1.0.35", sha256="613462155271bf7b90ce745bafb47d23855e1b4813d3b6caa238efffb7c42841")
