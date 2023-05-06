@@ -18,7 +18,7 @@ class CrtmFix(Package):
         "BenjaminTJohnson", "edwardhartnett", "AlexanderRichert-NOAA", "Hang-Lei-NOAA", "climbfuji"
     )
 
-    version("2.4.0_emc", sha256="88d659ae5bc4434f7fafa232ff65b4c48442d2d1a25f8fc96078094fa572ac1a")
+    version("2.4.0_emc", sha256="d0f1b2ae2905457f4c3731746892aaa8f6b84ee0691f6228dfbe48917df1e85e")
     version("2.3.0_emc", sha256="1452af2d1d11d57ef3c57b6b861646541e7042a9b0f3c230f9a82854d7e90924")
 
     variant("big_endian", default=True, description="Install big_endian fix files")
