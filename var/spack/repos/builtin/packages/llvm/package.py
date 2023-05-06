@@ -162,12 +162,6 @@ class Llvm(CMakePackage, CudaPackage):
         multi=True,
     )
     variant(
-        "build_type",
-        default="Release",
-        description="CMake build type",
-        values=("Debug", "Release", "RelWithDebInfo", "MinSizeRel"),
-    )
-    variant(
         "omp_tsan",
         default=False,
         when="@6:",

@@ -204,9 +204,9 @@ def test_default_rpaths_create_install_default_layout(mirror_dir):
     install_cmd("--no-cache", sy_spec.name)
 
     # Create a buildache
-    buildcache_cmd("create", "-au", "-d", mirror_dir, cspec.name, sy_spec.name)
+    buildcache_cmd("push", "-au", "-d", mirror_dir, cspec.name, sy_spec.name)
     # Test force overwrite create buildcache (-f option)
-    buildcache_cmd("create", "-auf", "-d", mirror_dir, cspec.name)
+    buildcache_cmd("push", "-auf", "-d", mirror_dir, cspec.name)
 
     # Create mirror index
     buildcache_cmd("update-index", "-d", mirror_dir)
@@ -271,7 +271,7 @@ def test_relative_rpaths_create_default_layout(mirror_dir):
     install_cmd("--no-cache", cspec.name)
 
     # Create build cache with relative rpaths
-    buildcache_cmd("create", "-aur", "-d", mirror_dir, cspec.name)
+    buildcache_cmd("push", "-aur", "-d", mirror_dir, cspec.name)
 
     # Create mirror index
     buildcache_cmd("update-index", "-d", mirror_dir)
@@ -404,7 +404,7 @@ def test_spec_needs_rebuild(monkeypatch, tmpdir):
     install_cmd(s.name)
 
     # Put installed package in the buildcache
-    buildcache_cmd("create", "-u", "-a", "-d", mirror_dir.strpath, s.name)
+    buildcache_cmd("push", "-u", "-a", "-d", mirror_dir.strpath, s.name)
 
     rebuild = bindist.needs_rebuild(s, mirror_url)
 
@@ -433,7 +433,7 @@ def test_generate_index_missing(monkeypatch, tmpdir, mutable_config):
     install_cmd("--no-cache", s.name)
 
     # Create a buildcache and update index
-    buildcache_cmd("create", "-uad", mirror_dir.strpath, s.name)
+    buildcache_cmd("push", "-uad", mirror_dir.strpath, s.name)
     buildcache_cmd("update-index", "-d", mirror_dir.strpath)
 
     # Check package and dependency in buildcache
@@ -522,7 +522,7 @@ def test_update_sbang(tmpdir, test_mirror):
     install_cmd("--no-cache", old_spec.name)
 
     # Create a buildcache with the installed spec.
-    buildcache_cmd("create", "-u", "-a", "-d", mirror_dir, old_spec_hash_str)
+    buildcache_cmd("push", "-u", "-a", "-d", mirror_dir, old_spec_hash_str)
 
     # Need to force an update of the buildcache index
     buildcache_cmd("update-index", "-d", mirror_dir)
@@ -887,73 +887,6 @@ def test_default_index_json_404():
 
     with pytest.raises(bindist.FetchIndexError, match="Could not fetch index"):
         fetcher.conditional_fetch()
-
-
-@pytest.mark.parametrize(
-    "root,deps,expected",
-    [
-        (
-            True,
-            True,
-            [
-                "dttop",
-                "dtbuild1",
-                "dtbuild2",
-                "dtlink2",
-                "dtrun2",
-                "dtlink1",
-                "dtlink3",
-                "dtlink4",
-                "dtrun1",
-                "dtlink5",
-                "dtrun3",
-                "dtbuild3",
-            ],
-        ),
-        (
-            False,
-            True,
-            [
-                "dtbuild1",
-                "dtbuild2",
-                "dtlink2",
-                "dtrun2",
-                "dtlink1",
-                "dtlink3",
-                "dtlink4",
-                "dtrun1",
-                "dtlink5",
-                "dtrun3",
-                "dtbuild3",
-            ],
-        ),
-        (True, False, ["dttop"]),
-        (False, False, []),
-    ],
-)
-def test_correct_specs_are_pushed(
-    root, deps, expected, default_mock_concretization, tmpdir, temporary_store, monkeypatch
-):
-    # Concretize dttop and add it to the temporary database (without prefixes)
-    spec = default_mock_concretization("dttop")
-    temporary_store.db.add(spec, directory_layout=None)
-
-    # Create a mirror push url
-    push_url = spack.mirror.Mirror.from_local_path(str(tmpdir)).push_url
-
-    packages_to_push = []
-
-    def fake_build_tarball(node, push_url, **kwargs):
-        assert push_url == push_url
-        assert not kwargs
-        assert isinstance(node, Spec)
-        packages_to_push.append(node.name)
-
-    monkeypatch.setattr(bindist, "_build_tarball", fake_build_tarball)
-
-    bindist.push([spec], push_url, include_root=root, include_dependencies=deps)
-
-    assert packages_to_push == expected
 
 
 def test_reproducible_tarball_is_reproducible(tmpdir):
