@@ -163,7 +163,10 @@ class IntelOneapiMkl(IntelOneApiLibraryPackage):
         lib_path = self.component_prefix.lib.intel64
         lib_path = lib_path if isdir(lib_path) else dirname(lib_path)
 
-        return find_libraries(libs, lib_path, shared=shared)
+        resolved_libs = find_libraries(libs, lib_path, shared=shared)
+        if "+cluster" in self.spec:
+            resolved_libs = resolved_libs + self.spec["mpi"].libs
+        return resolved_libs
 
     def _xlp64_lib(self, lib):
         return lib + ("_ilp64" if "+ilp64" in self.spec else "_lp64")
