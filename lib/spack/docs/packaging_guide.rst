@@ -2971,7 +2971,7 @@ appears as follows:
    baz/lib/libFooBaz.so
 
 The install tree shows that ``foo`` is providing the header ``include/foo.h``
-and library ``lib64/libFoo.so`` in it's install prefix.  The virtual
+and library ``lib64/libFoo.so`` in its install prefix.  The virtual
 package ``bar`` is providing ``include/bar/bar.h`` and library
 ``lib64/libFooBar.so``, also in ``foo``'s install prefix.  The ``baz``
 package, however, is provided in the ``baz`` subdirectory of ``foo``'s
@@ -3455,7 +3455,7 @@ the build system. The build systems currently supported by Spack are:
 |                                                          | licensed Intel software          |
 +----------------------------------------------------------+----------------------------------+
 | :class:`~spack.build_systems.oneapi`                     | Specialized build system for     |
-|                                                          | Intel onaAPI software            |
+|                                                          | Intel oneAPI software            |
 +----------------------------------------------------------+----------------------------------+
 | :class:`~spack.build_systems.aspell_dict`                | Specialized build system for     |
 |                                                          | Aspell dictionaries              |
@@ -5957,7 +5957,7 @@ location of a dependency.  The difference is that while ``prefix`` is the
 location on disk where a concrete package resides, ``home`` is the `logical`
 location that a package resides, which may be different than ``prefix`` in
 the case of virtual packages or other special circumstances.  For most use
-cases inside a package, it's dependency locations can be accessed via either
+cases inside a package, its dependency locations can be accessed via either
 ``self.spec["foo"].home`` or ``self.spec["foo"].prefix``.  Specific packages
 that should be consumed by dependents via ``.home`` instead of ``.prefix``
 should be noted in their respective documentation.

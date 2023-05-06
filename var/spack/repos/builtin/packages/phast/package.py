@@ -13,6 +13,7 @@ class Phast(MakefilePackage):
     homepage = "http://compgen.cshl.edu/phast/index.php"
     url = "https://github.com/CshlSiepelLab/phast/archive/v1.4.tar.gz"
 
+    version("1.6", sha256="8100f6582008c5de46d2de05cee038f0f1ca3a50147031da1bc5e8744883cbe4")
     version("1.4", sha256="287c77599c51256a3adbd62ed217cb6d6a547fcec2c29262e9d61fa32ed92b99")
 
     # phast cannot build with clapack using external blas

@@ -25,21 +25,19 @@ class Xfsprogs(AutotoolsPackage):
     depends_on("util-linux")
 
     def flag_handler(self, name, flags):
-        iflags = []
         if name == "cflags":
             if self.spec.satisfies("@:5.4.0 %gcc@10:"):
-                iflags.append("-fcommon")
-        return (iflags, None, flags)
+                flags.append("-fcommon")
+        elif name == "ldlibs":
+            if "intl" in self.spec["gettext"].libs.names:
+                flags.append("-lintl")
+        return build_system_flags(name, flags)
 
     def setup_build_environment(self, env):
         env.append_path("C_INCLUDE_PATH", self.spec["util-linux"].prefix.include.blkid)
 
     def configure_args(self):
-        args = [
-            "LDFLAGS=-lintl",
-            "--with-systemd-unit-dir=" + self.spec["xfsprogs"].prefix.lib.systemd.system,
-        ]
-        return args
+        return ["--with-systemd-unit-dir=" + self.spec["xfsprogs"].prefix.lib.systemd.system]
 
     def install(self, spec, prefix):
         make("install")
