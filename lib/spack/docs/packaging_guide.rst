@@ -4664,7 +4664,8 @@ Spack infers the status of a build based on the contents of the install
 prefix. Success is assumed if anything (e.g., a file, directory) is
 written after ``install()`` completes. Otherwise, the build is assumed
 to have failed. However, the presence of install prefix contents
-is not a sufficient indicator of success.
+is not a sufficient indicator of success so Spack supports the addition
+of tests that can be performed during `spack install` processing.
 
 Consider a simple autotools build using the following commands:
 
@@ -4688,6 +4689,16 @@ What can you do to check that the build is progressing satisfactorily?
 If there are specific files and or directories expected of a successful
 installation, you can add basic, fast ``sanity checks``. You can also add
 checks to be performed after one or more installation phases.
+
+.. note::
+
+   Build-time tests are performed when the ``--test`` option is passed
+   to ``spack install``.
+
+.. warning::
+
+   Build-time test failures result in a failed installation of the software.
+
 
 .. _sanity-checks:
 
@@ -4721,11 +4732,20 @@ that eight paths must exist within the installation prefix after the
        sanity_check_is_dir  = ["bin", "config", "docs", "reframe", "tutorials",
                                "unittests", "cscs-checks"]
 
-Spack will then ensure the installation created the **file**:
+When you run ``spack install`` with tests enabled, Spack will ensure that
+a successfully installed package has the required files and or directories.
+
+For example, running:
+
+.. code-block:: console
+
+   $ spack install --test=root reframe
+
+results in spack checking that the installation created the following **file**:
 
 * ``self.prefix/bin/reframe``
 
-It will also check for the existence of the following **directories**:
+and the following **directories**:
 
 * ``self.prefix/bin``
 * ``self.prefix/config``
@@ -4734,6 +4754,9 @@ It will also check for the existence of the following **directories**:
 * ``self.prefix/tutorials``
 * ``self.prefix/unittests``
 * ``self.prefix/cscs-checks``
+
+If **any** of these paths are missing, then Spack considers the installation
+to have failed.
 
 .. note::
 
@@ -4882,6 +4905,38 @@ installed executable. The check is implemented as follows:
     The API for adding tests is not yet considered stable and may change
     in future releases.
 
+
+""""""""""""""""""""""""""""""""
+Checking build-time test results
+""""""""""""""""""""""""""""""""
+
+Checking the results of these tests after running ``spack install --test``
+can be done by viewing the spec's ``install-time-test-log.txt`` file whose
+location will depend on whether the spec installed successfully.
+
+A successful installation results in the build and stage logs being copied
+to the ``.spack`` subdirectory of the spec's prefix. For example,
+
+.. code-block:: console
+
+   $ spack install --test=root zlib@1.2.13
+   ...
+   [+] /home/user/spack/opt/spack/linux-rhel8-broadwell/gcc-10.3.1/zlib-1.2.13-tehu6cbsujufa2tb6pu3xvc6echjstv6
+   $ cat /home/user/spack/opt/spack/linux-rhel8-broadwell/gcc-10.3.1/zlib-1.2.13-tehu6cbsujufa2tb6pu3xvc6echjstv6/.spack/install-time-test-log.txt
+
+If the installation fails due to build-time test failures, then both logs will
+be left in the build stage directory as illustrated below:
+
+.. code-block:: console
+
+   $ spack install --test=root zlib@1.2.13
+   ...
+   See build log for details:
+     /var/tmp/user/spack-stage/spack-stage-zlib-1.2.13-lxfsivs4htfdewxe7hbi2b3tekj4make/spack-build-out.txt
+
+   $ cat /var/tmp/user/spack-stage/spack-stage-zlib-1.2.13-lxfsivs4htfdewxe7hbi2b3tekj4make/install-time-test-log.txt
+
+
 .. _cmd-spack-test:
 
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -4907,8 +4962,7 @@ aspects of the installed software, or at least key functionality.
 
     Passing stand-alone (or smoke) tests can lead to more thorough
     testing, such as extensive unit or regression tests, or tests
-    that run at scale. Spack support for more thorough testing is
-    a work in progress.
+    that run at scale.
 
 Stand-alone tests have their own test stage directory, which can be
 configured. These tests can compile or build software with the compiler
