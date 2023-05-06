@@ -71,7 +71,7 @@ class XsdkExamples(CMakePackage, CudaPackage):
             "-DENABLE_SUNDIALS=ON",
             "-DENABLE_SUPERLU=ON",
             "-DENABLE_HIOP=" + enabled("hiop"),
-            "-DENABLE_TRILINOS=" + enabled("trilinos")
+            "-DENABLE_TRILINOS=" + enabled("trilinos"),
         ]
 
         if "+cuda" in spec["xsdk"]:  # if cuda variant was activated for xsdk

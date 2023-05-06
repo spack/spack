@@ -1031,16 +1031,15 @@ class Mfem(Package, CudaPackage, ROCmPackage):
             hiop_libs += spec["lapack"].libs + spec["blas"].libs
             hiop_opt_libs = ["magma", "umpire"]
             for opt_lib in hiop_opt_libs:
-                if "^"+opt_lib in hiop:
+                if "^" + opt_lib in hiop:
                     hiop_hdrs += hiop[opt_lib].headers
                     hiop_libs += hiop[opt_lib].libs
             # raja's libs property does not work
             if "^raja" in hiop:
-                raja=hiop["raja"]
+                raja = hiop["raja"]
                 hiop_hdrs += raja.headers
                 hiop_libs += find_libraries(
-                    "libRAJA", raja.prefix, shared=("+shared" in raja),
-                    recursive=True
+                    "libRAJA", raja.prefix, shared=("+shared" in raja), recursive=True
                 )
                 if raja.satisfies("^camp"):
                     camp = raja["camp"]
