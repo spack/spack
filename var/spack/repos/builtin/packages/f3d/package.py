@@ -12,6 +12,7 @@ class F3d(CMakePackage):
     homepage = "https://f3d-app.github.io"
     url = "https://github.com/f3d-app/f3d/archive/refs/tags/v1.1.1.tar.gz"
 
+    version("2.0.0", sha256="5b335de78a9f68903d7023d947090d4b36fa15b9e165749906a82153e0f56d05")
     version("1.1.1", sha256="68bdbe3a90f2cd553d5e090a95d3c847e2a2f06abbe225ffecd47d3d29978b0a")
 
     depends_on("vtk@9:", type="link")
