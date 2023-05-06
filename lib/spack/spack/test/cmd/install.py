@@ -265,10 +265,7 @@ def test_install_commit(mock_git_version_info, install_mockery, mock_packages, m
     )
 
     # Use the earliest commit in the respository
-    commit = commits[-1]
-    spec = spack.spec.Spec("git-test-commit@%s" % commit)
-    spec.concretize()
-    print(spec)
+    spec = Spec(f"git-test-commit@{commits[-1]}").concretized()
     spec.package.do_install()
 
     # Ensure first commit file contents were written
@@ -942,10 +939,10 @@ def test_compiler_bootstrap(
 ):
     monkeypatch.setattr(spack.concretize.Concretizer, "check_for_compiler_existence", False)
     spack.config.set("config:install_missing_compilers", True)
-    assert CompilerSpec("gcc@12.0") not in compilers.all_compiler_specs()
+    assert CompilerSpec("gcc@=12.0") not in compilers.all_compiler_specs()
 
     # Test succeeds if it does not raise an error
-    install("a%gcc@12.0")
+    install("a%gcc@=12.0")
 
 
 def test_compiler_bootstrap_from_binary_mirror(
@@ -966,7 +963,7 @@ def test_compiler_bootstrap_from_binary_mirror(
     mirror_url = "file://{0}".format(mirror_dir.strpath)
 
     # Install a compiler, because we want to put it in a buildcache
-    install("gcc@10.2.0")
+    install("gcc@=10.2.0")
 
     # Put installed compiler in the buildcache
     buildcache("push", "-u", "-a", "-f", "-d", mirror_dir.strpath, "gcc@10.2.0")
@@ -976,7 +973,7 @@ def test_compiler_bootstrap_from_binary_mirror(
 
     monkeypatch.setattr(spack.concretize.Concretizer, "check_for_compiler_existence", False)
     spack.config.set("config:install_missing_compilers", True)
-    assert CompilerSpec("gcc@10.2.0") not in compilers.all_compiler_specs()
+    assert CompilerSpec("gcc@=10.2.0") not in compilers.all_compiler_specs()
 
     # Configure the mirror where we put that buildcache w/ the compiler
     mirror("add", "test-mirror", mirror_url)
@@ -984,7 +981,7 @@ def test_compiler_bootstrap_from_binary_mirror(
     # Now make sure that when the compiler is installed from binary mirror,
     # it also gets configured as a compiler.  Test succeeds if it does not
     # raise an error
-    install("--no-check-signature", "--cache-only", "--only", "dependencies", "b%gcc@10.2.0")
+    install("--no-check-signature", "--cache-only", "--only", "dependencies", "b%gcc@=10.2.0")
     install("--no-cache", "--only", "package", "b%gcc@10.2.0")
 
 
@@ -1000,11 +997,11 @@ def test_compiler_bootstrap_already_installed(
     monkeypatch.setattr(spack.concretize.Concretizer, "check_for_compiler_existence", False)
     spack.config.set("config:install_missing_compilers", True)
 
-    assert CompilerSpec("gcc@12.0") not in compilers.all_compiler_specs()
+    assert CompilerSpec("gcc@=12.0") not in compilers.all_compiler_specs()
 
     # Test succeeds if it does not raise an error
-    install("gcc@12.0")
-    install("a%gcc@12.0")
+    install("gcc@=12.0")
+    install("a%gcc@=12.0")
 
 
 def test_install_fails_no_args(tmpdir):

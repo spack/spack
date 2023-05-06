@@ -851,16 +851,16 @@ Version comparison
 ^^^^^^^^^^^^^^^^^^
 
 Most Spack versions are numeric, a tuple of integers; for example,
-``apex@0.1``, ``ferret@6.96`` or ``py-netcdf@1.2.3.1``.  Spack knows
-how to compare and sort numeric versions.
+``0.1``, ``6.96`` or ``1.2.3.1``.  Spack knows how to compare and sort
+numeric versions.
 
 Some Spack versions involve slight extensions of numeric syntax; for
-example, ``py-sphinx-rtd-theme@0.1.10a0``.  In this case, numbers are
+example, ``py-sphinx-rtd-theme@=0.1.10a0``.  In this case, numbers are
 always considered to be "newer" than letters.  This is for consistency
 with `RPM <https://bugzilla.redhat.com/show_bug.cgi?id=50977>`_.
 
 Spack versions may also be arbitrary non-numeric strings, for example
-``@develop``, ``@master``, ``@local``.
+``develop``, ``master``, ``local``.
 
 The order on versions is defined as follows. A version string is split
 into a list of components based on delimiters such as ``.``, ``-`` etc.
@@ -916,6 +916,32 @@ use:
 
 #. If all else fails and ``@develop`` is the only matching version, it
    will be used.
+
+
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Ranges versus specific versions
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+When specifying versions in Spack using the ``pkg@<specifier>`` syntax,
+you can use either ranges or specific versions. It is generally
+recommended to use ranges instead of specific versions when packaging
+to avoid overly constraining dependencies, patches, and conflicts.
+
+For example, ``depends_on("python@3")`` denotes a range of versions,
+allowing Spack to pick any ``3.x.y`` version for Python, while
+``depends_on("python@=3.10.1")`` restricts it to a specific version.
+
+Specific ``@=`` versions should only be used in exceptional cases, such
+as when the package has a versioning scheme that omits the zero in the
+first patch release: ``3.1``, ``3.1.1``, ``3.1.2``. In this example,
+the specifier ``@=3.1`` is the correct way to select only the ``3.1``
+version, whereas ``@3.1`` would match all those versions.
+
+Ranges are preferred even if they would only match a single version
+defined in the package. This is because users can define custom versions
+in ``packages.yaml`` that typically include a custom suffix. For example,
+if the package defines the version ``1.2.3``, the specifier ``@1.2.3``
+will also match a user-defined version ``1.2.3-custom``.
 
 
 .. _cmd-spack-checksum:
@@ -2388,21 +2414,29 @@ requires Python 2, you can similarly leave out the lower bound:
 Notice that we didn't use ``@:3``. Version ranges are *inclusive*, so
 ``@:3`` means "up to and including any 3.x version".
 
-What if a package can only be built with Python 2.7? You might be
-inclined to use:
+You can also simply write
 
 .. code-block:: python
 
    depends_on("python@2.7")
 
-However, this would be wrong. Spack assumes that all version constraints
-are exact, so it would try to install Python not at ``2.7.18``, but
-exactly at ``2.7``, which is a non-existent version. The correct way to
-specify this would be:
+to tell Spack that the package needs Python 2.7.x. This is equivalent to
+``@2.7:2.7``.
+
+In very rare cases, you may need to specify an exact version, for example
+if you need to distinguish between ``3.2`` and ``3.2.1``:
 
 .. code-block:: python
 
-   depends_on("python@2.7.0:2.7")
+   depends_on("pkg@=3.2")
+
+But in general, you should try to use version ranges as much as possible,
+so that custom suffixes are included too. The above example can be
+rewritten in terms of ranges as follows:
+
+.. code-block:: python
+
+   depends_on("pkg@3.2:3.2.0")
 
 A spec can contain a version list of ranges and individual versions
 separated by commas. For example, if you need Boost 1.59.0 or newer,

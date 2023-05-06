@@ -3,6 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 import itertools
+from typing import List
 
 import spack.variant
 from spack.error import SpackError
@@ -59,7 +60,7 @@ class SpecList(object):
         return self._constraints
 
     @property
-    def specs(self):
+    def specs(self) -> List[Spec]:
         if self._specs is None:
             specs = []
             # This could be slightly faster done directly from yaml_list,
@@ -166,6 +167,9 @@ class SpecList(object):
 
     def __getitem__(self, key):
         return self.specs[key]
+
+    def __iter__(self):
+        return iter(self.specs)
 
 
 def _expand_matrix_constraints(matrix_config):

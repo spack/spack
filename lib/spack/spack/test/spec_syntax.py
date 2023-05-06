@@ -662,7 +662,13 @@ def test_dep_spec_by_hash(database):
     ).next_spec()
     assert "zmpi" in mpileaks_hash_zmpi
     assert mpileaks_hash_zmpi["zmpi"] == zmpi
-    assert mpileaks_hash_zmpi.compiler == mpileaks_zmpi.compiler
+
+    # notice: the round-trip str -> Spec loses specificity when
+    # since %gcc@=x gets printed as %gcc@x. So stick to satisfies
+    # here, unless/until we want to differentiate between ranges
+    # and specific versions in the future.
+    # assert mpileaks_hash_zmpi.compiler == mpileaks_zmpi.compiler
+    assert mpileaks_zmpi.compiler.satisfies(mpileaks_hash_zmpi.compiler)
 
     mpileaks_hash_fake_and_zmpi = SpecParser(
         f"mpileaks ^/{fake.dag_hash()[:4]} ^ /{zmpi.dag_hash()[:5]}"
