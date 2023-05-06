@@ -9,8 +9,10 @@ import pytest
 
 import spack.build_systems.generic
 import spack.config
+import spack.package_base
 import spack.repo
 import spack.util.spack_yaml as syaml
+import spack.version
 from spack.solver.asp import UnsatisfiableSpecError
 from spack.spec import Spec
 from spack.util.url import path_to_file_url
@@ -27,14 +29,14 @@ _pkgx = (
     "x",
     """\
 class X(Package):
-    version('1.1')
-    version('1.0')
-    version('0.9')
+    version("1.1")
+    version("1.0")
+    version("0.9")
 
-    variant('shared', default=True,
-            description='Build shared libraries')
+    variant("shared", default=True,
+            description="Build shared libraries")
 
-    depends_on('y')
+    depends_on("y")
 """,
 )
 
@@ -43,12 +45,12 @@ _pkgy = (
     "y",
     """\
 class Y(Package):
-    version('2.5')
-    version('2.4')
-    version('2.3', deprecated=True)
+    version("2.5")
+    version("2.4")
+    version("2.3", deprecated=True)
 
-    variant('shared', default=True,
-            description='Build shared libraries')
+    variant("shared", default=True,
+            description="Build shared libraries")
 """,
 )
 
@@ -57,8 +59,8 @@ _pkgv = (
     "v",
     """\
 class V(Package):
-    version('2.1')
-    version('2.0')
+    version("2.1")
+    version("2.0")
 """,
 )
 
@@ -150,27 +152,50 @@ def test_git_user_supplied_reference_satisfaction(
         spack.package_base.PackageBase, "git", path_to_file_url(repo_path), raising=False
     )
 
-    specs = ["v@{commit0}=2.2", "v@{commit0}", "v@2.2", "v@{commit0}=2.3"]
+    hash_eq_ver = Spec(f"v@{commits[0]}=2.2")
+    hash_eq_ver_copy = Spec(f"v@{commits[0]}=2.2")
+    just_hash = Spec(f"v@{commits[0]}")
+    just_ver = Spec("v@=2.2")
+    hash_eq_other_ver = Spec(f"v@{commits[0]}=2.3")
 
-    format_info = {"commit0": commits[0]}
+    assert not hash_eq_ver == just_hash
+    assert not hash_eq_ver.satisfies(just_hash)
+    assert not hash_eq_ver.intersects(just_hash)
 
-    hash_eq_ver, just_hash, just_ver, hash_eq_other_ver = [
-        Spec(x.format(**format_info)) for x in specs
-    ]
-
-    assert hash_eq_ver.satisfies(just_hash)
-    assert not just_hash.satisfies(hash_eq_ver)
-    assert hash_eq_ver.satisfies(just_ver)
+    # Git versions and literal versions are distinct versions, like
+    # pkg@10.1.0 and pkg@10.1.0-suffix are distinct versions.
+    assert not hash_eq_ver.satisfies(just_ver)
     assert not just_ver.satisfies(hash_eq_ver)
+    assert not hash_eq_ver.intersects(just_ver)
+    assert hash_eq_ver != just_ver
+    assert just_ver != hash_eq_ver
+    assert not hash_eq_ver == just_ver
+    assert not just_ver == hash_eq_ver
+
+    # When a different version is associated, they're not equal
     assert not hash_eq_ver.satisfies(hash_eq_other_ver)
     assert not hash_eq_other_ver.satisfies(hash_eq_ver)
+    assert not hash_eq_ver.intersects(hash_eq_other_ver)
+    assert not hash_eq_other_ver.intersects(hash_eq_ver)
+    assert hash_eq_ver != hash_eq_other_ver
+    assert hash_eq_other_ver != hash_eq_ver
+    assert not hash_eq_ver == hash_eq_other_ver
+    assert not hash_eq_other_ver == hash_eq_ver
+
+    # These should be equal
+    assert hash_eq_ver == hash_eq_ver_copy
+    assert not hash_eq_ver != hash_eq_ver_copy
+    assert hash_eq_ver.satisfies(hash_eq_ver_copy)
+    assert hash_eq_ver_copy.satisfies(hash_eq_ver)
+    assert hash_eq_ver.intersects(hash_eq_ver_copy)
+    assert hash_eq_ver_copy.intersects(hash_eq_ver)
 
 
 def test_requirement_adds_new_version(
     concretize_scope, test_repo, mock_git_version_info, monkeypatch
 ):
     if spack.config.get("config:concretizer") == "original":
-        pytest.skip("Original concretizer does not support configuration" " requirements")
+        pytest.skip("Original concretizer does not support configuration requirements")
 
     repo_path, filename, commits = mock_git_version_info
     monkeypatch.setattr(
@@ -189,7 +214,6 @@ packages:
 
     s1 = Spec("v").concretized()
     assert s1.satisfies("@2.2")
-    assert s1.satisfies("@{0}".format(a_commit_hash))
     # Make sure the git commit info is retained
     assert isinstance(s1.version, spack.version.GitVersion)
     assert s1.version.ref == a_commit_hash
@@ -199,7 +223,7 @@ def test_requirement_adds_git_hash_version(
     concretize_scope, test_repo, mock_git_version_info, monkeypatch
 ):
     if spack.config.get("config:concretizer") == "original":
-        pytest.skip("Original concretizer does not support configuration" " requirements")
+        pytest.skip("Original concretizer does not support configuration requirements")
 
     repo_path, filename, commits = mock_git_version_info
     monkeypatch.setattr(
@@ -207,46 +231,39 @@ def test_requirement_adds_git_hash_version(
     )
 
     a_commit_hash = commits[0]
-    conf_str = """\
+    conf_str = f"""\
 packages:
   v:
-    require: "@{0}"
-""".format(
-        a_commit_hash
-    )
+    require: "@{a_commit_hash}"
+"""
     update_packages_config(conf_str)
 
     s1 = Spec("v").concretized()
-    assert s1.satisfies("@{0}".format(a_commit_hash))
+    assert isinstance(s1.version, spack.version.GitVersion)
+    assert s1.satisfies(f"v@{a_commit_hash}")
 
 
 def test_requirement_adds_multiple_new_versions(
     concretize_scope, test_repo, mock_git_version_info, monkeypatch
 ):
     if spack.config.get("config:concretizer") == "original":
-        pytest.skip("Original concretizer does not support configuration" " requirements")
+        pytest.skip("Original concretizer does not support configuration requirements")
 
     repo_path, filename, commits = mock_git_version_info
     monkeypatch.setattr(
         spack.package_base.PackageBase, "git", path_to_file_url(repo_path), raising=False
     )
 
-    conf_str = """\
+    conf_str = f"""\
 packages:
   v:
     require:
-    - one_of: ["@{0}=2.2", "@{1}=2.3"]
-""".format(
-        commits[0], commits[1]
-    )
+    - one_of: ["@{commits[0]}=2.2", "@{commits[1]}=2.3"]
+"""
     update_packages_config(conf_str)
 
-    s1 = Spec("v").concretized()
-    assert s1.satisfies("@2.2")
-
-    s2 = Spec("v@{0}".format(commits[1])).concretized()
-    assert s2.satisfies("@{0}".format(commits[1]))
-    assert s2.satisfies("@2.3")
+    assert Spec("v").concretized().satisfies(f"@{commits[0]}=2.2")
+    assert Spec("v@2.3").concretized().satisfies(f"v@{commits[1]}=2.3")
 
 
 # TODO: this belongs in the concretize_preferences test module but uses
@@ -255,35 +272,27 @@ def test_preference_adds_new_version(
     concretize_scope, test_repo, mock_git_version_info, monkeypatch
 ):
     if spack.config.get("config:concretizer") == "original":
-        pytest.skip("Original concretizer does not support configuration" " requirements")
+        pytest.skip("Original concretizer does not support configuration requirements")
 
     repo_path, filename, commits = mock_git_version_info
     monkeypatch.setattr(
         spack.package_base.PackageBase, "git", path_to_file_url(repo_path), raising=False
     )
 
-    conf_str = """\
+    conf_str = f"""\
 packages:
   v:
-    version: ["{0}=2.2", "{1}=2.3"]
-""".format(
-        commits[0], commits[1]
-    )
+    version: ["{commits[0]}=2.2", "{commits[1]}=2.3"]
+"""
     update_packages_config(conf_str)
 
-    s1 = Spec("v").concretized()
-    assert s1.satisfies("@2.2")
-    assert s1.satisfies("@{0}".format(commits[0]))
+    assert Spec("v").concretized().satisfies(f"@{commits[0]}=2.2")
+    assert Spec("v@2.3").concretized().satisfies(f"@{commits[1]}=2.3")
 
-    s2 = Spec("v@2.3").concretized()
-    # Note: this check will fail: the command-line spec version is preferred
-    # assert s2.satisfies("@{0}".format(commits[1]))
-    assert s2.satisfies("@2.3")
-
-    s3 = Spec("v@{0}".format(commits[1])).concretized()
-    assert s3.satisfies("@{0}".format(commits[1]))
-    # Note: this check will fail: the command-line spec version is preferred
-    # assert s3.satisfies("@2.3")
+    # When installing by hash, a lookup is triggered, so it's not mapped to =2.3.
+    s3 = Spec(f"v@{commits[1]}").concretized()
+    assert s3.satisfies(f"v@{commits[1]}")
+    assert not s3.satisfies("@2.3")
 
 
 def test_requirement_is_successfully_applied(concretize_scope, test_repo):
@@ -291,7 +300,7 @@ def test_requirement_is_successfully_applied(concretize_scope, test_repo):
     concretization succeeds and the requirement spec is applied.
     """
     if spack.config.get("config:concretizer") == "original":
-        pytest.skip("Original concretizer does not support configuration" " requirements")
+        pytest.skip("Original concretizer does not support configuration requirements")
 
     s1 = Spec("x").concretized()
     # Without any requirements/preferences, the later version is preferred
@@ -313,7 +322,7 @@ def test_multiple_packages_requirements_are_respected(concretize_scope, test_rep
     succeeds and both requirements are respected.
     """
     if spack.config.get("config:concretizer") == "original":
-        pytest.skip("Original concretizer does not support configuration" " requirements")
+        pytest.skip("Original concretizer does not support configuration requirements")
 
     conf_str = """\
 packages:
@@ -333,7 +342,7 @@ def test_oneof(concretize_scope, test_repo):
     the specs in the group (but not all have to be satisfied).
     """
     if spack.config.get("config:concretizer") == "original":
-        pytest.skip("Original concretizer does not support configuration" " requirements")
+        pytest.skip("Original concretizer does not support configuration requirements")
 
     conf_str = """\
 packages:
@@ -353,7 +362,7 @@ def test_one_package_multiple_oneof_groups(concretize_scope, test_repo):
     applied.
     """
     if spack.config.get("config:concretizer") == "original":
-        pytest.skip("Original concretizer does not support configuration" " requirements")
+        pytest.skip("Original concretizer does not support configuration requirements")
 
     conf_str = """\
 packages:
@@ -377,7 +386,7 @@ def test_requirements_for_package_that_is_not_needed(concretize_scope, test_repo
     the requirements are used for the requested spec).
     """
     if spack.config.get("config:concretizer") == "original":
-        pytest.skip("Original concretizer does not support configuration" " requirements")
+        pytest.skip("Original concretizer does not support configuration requirements")
 
     # Note that the exact contents aren't important since this isn't
     # intended to be used, but the important thing is that a number of
@@ -403,7 +412,7 @@ def test_oneof_ordering(concretize_scope, test_repo):
     later versions).
     """
     if spack.config.get("config:concretizer") == "original":
-        pytest.skip("Original concretizer does not support configuration" " requirements")
+        pytest.skip("Original concretizer does not support configuration requirements")
 
     conf_str = """\
 packages:
@@ -422,7 +431,7 @@ packages:
 
 def test_reuse_oneof(concretize_scope, create_test_repo, mutable_database, fake_installs):
     if spack.config.get("config:concretizer") == "original":
-        pytest.skip("Original concretizer does not support configuration" " requirements")
+        pytest.skip("Original concretizer does not support configuration requirements")
 
     conf_str = """\
 packages:
@@ -445,7 +454,7 @@ packages:
 def test_requirements_are_higher_priority_than_deprecation(concretize_scope, test_repo):
     """Test that users can override a deprecated version with a requirement."""
     if spack.config.get("config:concretizer") == "original":
-        pytest.skip("Original concretizer does not support configuration" " requirements")
+        pytest.skip("Original concretizer does not support configuration requirements")
 
     # @2.3 is a deprecated versions. Ensure that any_of picks both constraints,
     # since they are possible
@@ -466,7 +475,7 @@ packages:
 def test_default_requirements_with_all(spec_str, requirement_str, concretize_scope, test_repo):
     """Test that default requirements are applied to all packages."""
     if spack.config.get("config:concretizer") == "original":
-        pytest.skip("Original concretizer does not support configuration" " requirements")
+        pytest.skip("Original concretizer does not support configuration requirements")
 
     conf_str = """\
 packages:
@@ -494,7 +503,7 @@ def test_default_and_package_specific_requirements(
 ):
     """Test that specific package requirements override default package requirements."""
     if spack.config.get("config:concretizer") == "original":
-        pytest.skip("Original concretizer does not support configuration" " requirements")
+        pytest.skip("Original concretizer does not support configuration requirements")
     generic_req, specific_req = requirements
     generic_exp, specific_exp = expectations
     conf_str = """\
@@ -517,7 +526,7 @@ packages:
 @pytest.mark.parametrize("mpi_requirement", ["mpich", "mpich2", "zmpi"])
 def test_requirements_on_virtual(mpi_requirement, concretize_scope, mock_packages):
     if spack.config.get("config:concretizer") == "original":
-        pytest.skip("Original concretizer does not support configuration" " requirements")
+        pytest.skip("Original concretizer does not support configuration requirements")
     conf_str = """\
 packages:
   mpi:
@@ -540,7 +549,7 @@ def test_requirements_on_virtual_and_on_package(
     mpi_requirement, specific_requirement, concretize_scope, mock_packages
 ):
     if spack.config.get("config:concretizer") == "original":
-        pytest.skip("Original concretizer does not support configuration" " requirements")
+        pytest.skip("Original concretizer does not support configuration requirements")
     conf_str = """\
 packages:
   mpi:
@@ -560,7 +569,7 @@ packages:
 
 def test_incompatible_virtual_requirements_raise(concretize_scope, mock_packages):
     if spack.config.get("config:concretizer") == "original":
-        pytest.skip("Original concretizer does not support configuration" " requirements")
+        pytest.skip("Original concretizer does not support configuration requirements")
     conf_str = """\
     packages:
       mpi:
@@ -575,7 +584,7 @@ def test_incompatible_virtual_requirements_raise(concretize_scope, mock_packages
 
 def test_non_existing_variants_under_all(concretize_scope, mock_packages):
     if spack.config.get("config:concretizer") == "original":
-        pytest.skip("Original concretizer does not support configuration" " requirements")
+        pytest.skip("Original concretizer does not support configuration requirements")
     conf_str = """\
     packages:
       all:

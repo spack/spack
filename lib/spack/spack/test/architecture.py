@@ -142,24 +142,24 @@ def test_optimization_flags(compiler_spec, target_name, expected_flags, config):
 @pytest.mark.parametrize(
     "compiler,real_version,target_str,expected_flags",
     [
-        (spack.spec.CompilerSpec("gcc@9.2.0"), None, "haswell", "-march=haswell -mtune=haswell"),
+        (spack.spec.CompilerSpec("gcc@=9.2.0"), None, "haswell", "-march=haswell -mtune=haswell"),
         # Check that custom string versions are accepted
         (
-            spack.spec.CompilerSpec("gcc@10foo"),
+            spack.spec.CompilerSpec("gcc@=10foo"),
             "9.2.0",
             "icelake",
             "-march=icelake-client -mtune=icelake-client",
         ),
         # Check that we run version detection (4.4.0 doesn't support icelake)
         (
-            spack.spec.CompilerSpec("gcc@4.4.0-special"),
+            spack.spec.CompilerSpec("gcc@=4.4.0-special"),
             "9.2.0",
             "icelake",
             "-march=icelake-client -mtune=icelake-client",
         ),
         # Check that the special case for Apple's clang is treated correctly
         # i.e. it won't try to detect the version again
-        (spack.spec.CompilerSpec("apple-clang@9.1.0"), None, "x86_64", "-march=x86-64"),
+        (spack.spec.CompilerSpec("apple-clang@=9.1.0"), None, "x86_64", "-march=x86-64"),
     ],
 )
 def test_optimization_flags_with_custom_versions(

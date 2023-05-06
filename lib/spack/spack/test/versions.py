@@ -16,7 +16,16 @@ from llnl.util.filesystem import working_dir
 
 import spack.package_base
 import spack.spec
-from spack.version import GitVersion, Version, VersionBase, VersionList, VersionRange, ver
+from spack.version import (
+    GitVersion,
+    StandardVersion,
+    Version,
+    VersionList,
+    VersionLookupError,
+    VersionRange,
+    is_git_version,
+    ver,
+)
 
 
 def assert_ver_lt(a, b):
@@ -98,160 +107,160 @@ def check_union(expected, a, b):
 
 
 def test_string_prefix():
-    assert_ver_eq("xsdk-0.2.0", "xsdk-0.2.0")
-    assert_ver_lt("xsdk-0.2.0", "xsdk-0.3")
-    assert_ver_gt("xsdk-0.3", "xsdk-0.2.0")
+    assert_ver_eq("=xsdk-0.2.0", "=xsdk-0.2.0")
+    assert_ver_lt("=xsdk-0.2.0", "=xsdk-0.3")
+    assert_ver_gt("=xsdk-0.3", "=xsdk-0.2.0")
 
 
 def test_two_segments():
-    assert_ver_eq("1.0", "1.0")
-    assert_ver_lt("1.0", "2.0")
-    assert_ver_gt("2.0", "1.0")
+    assert_ver_eq("=1.0", "=1.0")
+    assert_ver_lt("=1.0", "=2.0")
+    assert_ver_gt("=2.0", "=1.0")
 
 
 def test_develop():
-    assert_ver_eq("develop", "develop")
-    assert_ver_eq("develop.local", "develop.local")
-    assert_ver_lt("1.0", "develop")
-    assert_ver_gt("develop", "1.0")
-    assert_ver_eq("1.develop", "1.develop")
-    assert_ver_lt("1.1", "1.develop")
-    assert_ver_gt("1.develop", "1.0")
-    assert_ver_gt("0.5.develop", "0.5")
-    assert_ver_lt("0.5", "0.5.develop")
-    assert_ver_lt("1.develop", "2.1")
-    assert_ver_gt("2.1", "1.develop")
-    assert_ver_lt("1.develop.1", "1.develop.2")
-    assert_ver_gt("1.develop.2", "1.develop.1")
-    assert_ver_lt("develop.1", "develop.2")
-    assert_ver_gt("develop.2", "develop.1")
+    assert_ver_eq("=develop", "=develop")
+    assert_ver_eq("=develop.local", "=develop.local")
+    assert_ver_lt("=1.0", "=develop")
+    assert_ver_gt("=develop", "=1.0")
+    assert_ver_eq("=1.develop", "=1.develop")
+    assert_ver_lt("=1.1", "=1.develop")
+    assert_ver_gt("=1.develop", "=1.0")
+    assert_ver_gt("=0.5.develop", "=0.5")
+    assert_ver_lt("=0.5", "=0.5.develop")
+    assert_ver_lt("=1.develop", "=2.1")
+    assert_ver_gt("=2.1", "=1.develop")
+    assert_ver_lt("=1.develop.1", "=1.develop.2")
+    assert_ver_gt("=1.develop.2", "=1.develop.1")
+    assert_ver_lt("=develop.1", "=develop.2")
+    assert_ver_gt("=develop.2", "=develop.1")
     # other +infinity versions
-    assert_ver_gt("master", "9.0")
-    assert_ver_gt("head", "9.0")
-    assert_ver_gt("trunk", "9.0")
-    assert_ver_gt("develop", "9.0")
+    assert_ver_gt("=master", "=9.0")
+    assert_ver_gt("=head", "=9.0")
+    assert_ver_gt("=trunk", "=9.0")
+    assert_ver_gt("=develop", "=9.0")
     # hierarchical develop-like versions
-    assert_ver_gt("develop", "master")
-    assert_ver_gt("master", "head")
-    assert_ver_gt("head", "trunk")
-    assert_ver_gt("9.0", "system")
+    assert_ver_gt("=develop", "=master")
+    assert_ver_gt("=master", "=head")
+    assert_ver_gt("=head", "=trunk")
+    assert_ver_gt("=9.0", "=system")
     # not develop
-    assert_ver_lt("mydevelopmentnightmare", "1.1")
-    assert_ver_lt("1.mydevelopmentnightmare", "1.1")
-    assert_ver_gt("1.1", "1.mydevelopmentnightmare")
+    assert_ver_lt("=mydevelopmentnightmare", "=1.1")
+    assert_ver_lt("=1.mydevelopmentnightmare", "=1.1")
+    assert_ver_gt("=1.1", "=1.mydevelopmentnightmare")
 
 
 def test_isdevelop():
-    assert ver("develop").isdevelop()
-    assert ver("develop.1").isdevelop()
-    assert ver("develop.local").isdevelop()
-    assert ver("master").isdevelop()
-    assert ver("head").isdevelop()
-    assert ver("trunk").isdevelop()
-    assert ver("1.develop").isdevelop()
-    assert ver("1.develop.2").isdevelop()
-    assert not ver("1.1").isdevelop()
-    assert not ver("1.mydevelopmentnightmare.3").isdevelop()
-    assert not ver("mydevelopmentnightmare.3").isdevelop()
+    assert ver("=develop").isdevelop()
+    assert ver("=develop.1").isdevelop()
+    assert ver("=develop.local").isdevelop()
+    assert ver("=master").isdevelop()
+    assert ver("=head").isdevelop()
+    assert ver("=trunk").isdevelop()
+    assert ver("=1.develop").isdevelop()
+    assert ver("=1.develop.2").isdevelop()
+    assert not ver("=1.1").isdevelop()
+    assert not ver("=1.mydevelopmentnightmare.3").isdevelop()
+    assert not ver("=mydevelopmentnightmare.3").isdevelop()
 
 
 def test_three_segments():
-    assert_ver_eq("2.0.1", "2.0.1")
-    assert_ver_lt("2.0", "2.0.1")
-    assert_ver_gt("2.0.1", "2.0")
+    assert_ver_eq("=2.0.1", "=2.0.1")
+    assert_ver_lt("=2.0", "=2.0.1")
+    assert_ver_gt("=2.0.1", "=2.0")
 
 
 def test_alpha():
     # TODO: not sure whether I like this.  2.0.1a is *usually*
     # TODO: less than 2.0.1, but special-casing it makes version
     # TODO: comparison complicated.  See version.py
-    assert_ver_eq("2.0.1a", "2.0.1a")
-    assert_ver_gt("2.0.1a", "2.0.1")
-    assert_ver_lt("2.0.1", "2.0.1a")
+    assert_ver_eq("=2.0.1a", "=2.0.1a")
+    assert_ver_gt("=2.0.1a", "=2.0.1")
+    assert_ver_lt("=2.0.1", "=2.0.1a")
 
 
 def test_patch():
-    assert_ver_eq("5.5p1", "5.5p1")
-    assert_ver_lt("5.5p1", "5.5p2")
-    assert_ver_gt("5.5p2", "5.5p1")
-    assert_ver_eq("5.5p10", "5.5p10")
-    assert_ver_lt("5.5p1", "5.5p10")
-    assert_ver_gt("5.5p10", "5.5p1")
+    assert_ver_eq("=5.5p1", "=5.5p1")
+    assert_ver_lt("=5.5p1", "=5.5p2")
+    assert_ver_gt("=5.5p2", "=5.5p1")
+    assert_ver_eq("=5.5p10", "=5.5p10")
+    assert_ver_lt("=5.5p1", "=5.5p10")
+    assert_ver_gt("=5.5p10", "=5.5p1")
 
 
 def test_num_alpha_with_no_separator():
-    assert_ver_lt("10xyz", "10.1xyz")
-    assert_ver_gt("10.1xyz", "10xyz")
-    assert_ver_eq("xyz10", "xyz10")
-    assert_ver_lt("xyz10", "xyz10.1")
-    assert_ver_gt("xyz10.1", "xyz10")
+    assert_ver_lt("=10xyz", "=10.1xyz")
+    assert_ver_gt("=10.1xyz", "=10xyz")
+    assert_ver_eq("=xyz10", "=xyz10")
+    assert_ver_lt("=xyz10", "=xyz10.1")
+    assert_ver_gt("=xyz10.1", "=xyz10")
 
 
 def test_alpha_with_dots():
-    assert_ver_eq("xyz.4", "xyz.4")
-    assert_ver_lt("xyz.4", "8")
-    assert_ver_gt("8", "xyz.4")
-    assert_ver_lt("xyz.4", "2")
-    assert_ver_gt("2", "xyz.4")
+    assert_ver_eq("=xyz.4", "=xyz.4")
+    assert_ver_lt("=xyz.4", "=8")
+    assert_ver_gt("=8", "=xyz.4")
+    assert_ver_lt("=xyz.4", "=2")
+    assert_ver_gt("=2", "=xyz.4")
 
 
 def test_nums_and_patch():
-    assert_ver_lt("5.5p2", "5.6p1")
-    assert_ver_gt("5.6p1", "5.5p2")
-    assert_ver_lt("5.6p1", "6.5p1")
-    assert_ver_gt("6.5p1", "5.6p1")
+    assert_ver_lt("=5.5p2", "=5.6p1")
+    assert_ver_gt("=5.6p1", "=5.5p2")
+    assert_ver_lt("=5.6p1", "=6.5p1")
+    assert_ver_gt("=6.5p1", "=5.6p1")
 
 
 def test_rc_versions():
-    assert_ver_gt("6.0.rc1", "6.0")
-    assert_ver_lt("6.0", "6.0.rc1")
+    assert_ver_gt("=6.0.rc1", "=6.0")
+    assert_ver_lt("=6.0", "=6.0.rc1")
 
 
 def test_alpha_beta():
-    assert_ver_gt("10b2", "10a1")
-    assert_ver_lt("10a2", "10b2")
+    assert_ver_gt("=10b2", "=10a1")
+    assert_ver_lt("=10a2", "=10b2")
 
 
 def test_double_alpha():
-    assert_ver_eq("1.0aa", "1.0aa")
-    assert_ver_lt("1.0a", "1.0aa")
-    assert_ver_gt("1.0aa", "1.0a")
+    assert_ver_eq("=1.0aa", "=1.0aa")
+    assert_ver_lt("=1.0a", "=1.0aa")
+    assert_ver_gt("=1.0aa", "=1.0a")
 
 
 def test_padded_numbers():
-    assert_ver_eq("10.0001", "10.0001")
-    assert_ver_eq("10.0001", "10.1")
-    assert_ver_eq("10.1", "10.0001")
-    assert_ver_lt("10.0001", "10.0039")
-    assert_ver_gt("10.0039", "10.0001")
+    assert_ver_eq("=10.0001", "=10.0001")
+    assert_ver_eq("=10.0001", "=10.1")
+    assert_ver_eq("=10.1", "=10.0001")
+    assert_ver_lt("=10.0001", "=10.0039")
+    assert_ver_gt("=10.0039", "=10.0001")
 
 
 def test_close_numbers():
-    assert_ver_lt("4.999.9", "5.0")
-    assert_ver_gt("5.0", "4.999.9")
+    assert_ver_lt("=4.999.9", "=5.0")
+    assert_ver_gt("=5.0", "=4.999.9")
 
 
 def test_date_stamps():
-    assert_ver_eq("20101121", "20101121")
-    assert_ver_lt("20101121", "20101122")
-    assert_ver_gt("20101122", "20101121")
+    assert_ver_eq("=20101121", "=20101121")
+    assert_ver_lt("=20101121", "=20101122")
+    assert_ver_gt("=20101122", "=20101121")
 
 
 def test_underscores():
-    assert_ver_eq("2_0", "2_0")
-    assert_ver_eq("2.0", "2_0")
-    assert_ver_eq("2_0", "2.0")
-    assert_ver_eq("2-0", "2_0")
-    assert_ver_eq("2_0", "2-0")
+    assert_ver_eq("=2_0", "=2_0")
+    assert_ver_eq("=2.0", "=2_0")
+    assert_ver_eq("=2_0", "=2.0")
+    assert_ver_eq("=2-0", "=2_0")
+    assert_ver_eq("=2_0", "=2-0")
 
 
 def test_rpm_oddities():
-    assert_ver_eq("1b.fc17", "1b.fc17")
-    assert_ver_lt("1b.fc17", "1.fc17")
-    assert_ver_gt("1.fc17", "1b.fc17")
-    assert_ver_eq("1g.fc17", "1g.fc17")
-    assert_ver_gt("1g.fc17", "1.fc17")
-    assert_ver_lt("1.fc17", "1g.fc17")
+    assert_ver_eq("=1b.fc17", "=1b.fc17")
+    assert_ver_lt("=1b.fc17", "=1.fc17")
+    assert_ver_gt("=1.fc17", "=1b.fc17")
+    assert_ver_eq("=1g.fc17", "=1g.fc17")
+    assert_ver_gt("=1g.fc17", "=1.fc17")
+    assert_ver_lt("=1.fc17", "=1g.fc17")
 
 
 # Stuff below here is not taken from RPM's tests and is
@@ -267,24 +276,24 @@ def test_version_ranges():
 
 
 def test_contains():
-    assert_in("1.3", "1.2:1.4")
-    assert_in("1.2.5", "1.2:1.4")
-    assert_in("1.3.5", "1.2:1.4")
-    assert_in("1.3.5-7", "1.2:1.4")
-    assert_not_in("1.1", "1.2:1.4")
-    assert_not_in("1.5", "1.2:1.4")
-    assert_not_in("1.5", "1.5.1:1.6")
-    assert_not_in("1.5", "1.5.1:")
+    assert_in("=1.3", "1.2:1.4")
+    assert_in("=1.2.5", "1.2:1.4")
+    assert_in("=1.3.5", "1.2:1.4")
+    assert_in("=1.3.5-7", "1.2:1.4")
+    assert_not_in("=1.1", "1.2:1.4")
+    assert_not_in("=1.5", "1.2:1.4")
+    assert_not_in("=1.5", "1.5.1:1.6")
+    assert_not_in("=1.5", "1.5.1:")
 
-    assert_in("1.4.2", "1.2:1.4")
-    assert_not_in("1.4.2", "1.2:1.4.0")
+    assert_in("=1.4.2", "1.2:1.4")
+    assert_not_in("=1.4.2", "1.2:1.4.0")
 
-    assert_in("1.2.8", "1.2.7:1.4")
+    assert_in("=1.2.8", "1.2.7:1.4")
     assert_in("1.2.7:1.4", ":")
-    assert_not_in("1.2.5", "1.2.7:1.4")
+    assert_not_in("=1.2.5", "1.2.7:1.4")
 
-    assert_in("1.4.1", "1.2.7:1.4")
-    assert_not_in("1.4.1", "1.2.7:1.4.0")
+    assert_in("=1.4.1", "1.2.7:1.4")
+    assert_not_in("=1.4.1", "1.2.7:1.4.0")
 
 
 def test_in_list():
@@ -370,6 +379,8 @@ def test_intersection():
     check_intersection(["2.5:2.7"], ["1.1:2.7"], ["2.5:3.0", "1.0"])
     check_intersection(["0:1"], [":"], ["0:1"])
 
+    check_intersection(["=ref=1.0", "=1.1"], ["=ref=1.0", "1.1"], ["1:1.0", "=1.1"])
+
 
 def test_intersect_with_containment():
     check_intersection("1.6.5", "1.6.5", ":1.6")
@@ -396,6 +407,8 @@ def test_union_with_containment():
 
     # Tests successor/predecessor case.
     check_union("1:4", "1:2", "3:4")
+
+    check_union(["1:1.0", "1.1"], ["=ref=1.0", "1.1"], ["1:1.0", "=1.1"])
 
 
 def test_basic_version_satisfaction():
@@ -522,7 +535,7 @@ def test_up_to():
 def test_repr_and_str():
     def check_repr_and_str(vrs):
         a = Version(vrs)
-        assert repr(a) == "VersionBase('" + vrs + "')"
+        assert repr(a) == f'Version("{vrs}")'
         b = eval(repr(a))
         assert a == b
         assert str(a) == vrs
@@ -546,19 +559,19 @@ def test_get_item():
     assert isinstance(a[1], int)
     # Test slicing
     b = a[0:2]
-    assert isinstance(b, VersionBase)
+    assert isinstance(b, StandardVersion)
     assert b == Version("0.1")
-    assert repr(b) == "VersionBase('0.1')"
+    assert repr(b) == 'Version("0.1")'
     assert str(b) == "0.1"
     b = a[0:3]
-    assert isinstance(b, VersionBase)
+    assert isinstance(b, StandardVersion)
     assert b == Version("0.1_2")
-    assert repr(b) == "VersionBase('0.1_2')"
+    assert repr(b) == 'Version("0.1_2")'
     assert str(b) == "0.1_2"
     b = a[1:]
-    assert isinstance(b, VersionBase)
+    assert isinstance(b, StandardVersion)
     assert b == Version("1_2-3")
-    assert repr(b) == "VersionBase('1_2-3')"
+    assert repr(b) == 'Version("1_2-3")'
     assert str(b) == "1_2-3"
     # Raise TypeError on tuples
     with pytest.raises(TypeError):
@@ -566,12 +579,12 @@ def test_get_item():
 
 
 def test_list_highest():
-    vl = VersionList(["master", "1.2.3", "develop", "3.4.5", "foobar"])
+    vl = VersionList(["=master", "=1.2.3", "=develop", "=3.4.5", "=foobar"])
     assert vl.highest() == Version("develop")
     assert vl.lowest() == Version("foobar")
     assert vl.highest_numeric() == Version("3.4.5")
 
-    vl2 = VersionList(["master", "develop"])
+    vl2 = VersionList(["=master", "=develop"])
     assert vl2.highest_numeric() is None
     assert vl2.preferred() == Version("develop")
     assert vl2.lowest() == Version("master")
@@ -593,10 +606,8 @@ def test_versions_from_git(git, mock_git_version_info, monkeypatch, mock_package
 
     for commit in commits:
         spec = spack.spec.Spec("git-test-commit@%s" % commit)
-        version = spec.version
-        comparator = [
-            str(v) if not isinstance(v, int) else v for v in version._cmp(version.ref_lookup)
-        ]
+        version: GitVersion = spec.version
+        comparator = [str(v) if not isinstance(v, int) else v for v in version.ref_version]
 
         with working_dir(repo_path):
             git("checkout", commit)
@@ -655,14 +666,14 @@ def test_git_ref_comparisons(mock_git_version_info, install_mockery, mock_packag
     spec_tag.concretize()
     assert spec_tag.satisfies("@1.0")
     assert not spec_tag.satisfies("@1.1:")
-    assert str(spec_tag.version) == "git.v1.0"
+    assert str(spec_tag.version) == "git.v1.0=1.0"
 
     # Spec based on branch 1.x
     spec_branch = spack.spec.Spec("git-test-commit@git.1.x")
     spec_branch.concretize()
     assert spec_branch.satisfies("@1.2")
     assert spec_branch.satisfies("@1.1:1.3")
-    assert str(spec_branch.version) == "git.1.x"
+    assert str(spec_branch.version) == "git.1.x=1.2"
 
 
 @pytest.mark.parametrize(
@@ -676,6 +687,7 @@ def test_git_ref_comparisons(mock_git_version_info, install_mockery, mock_packag
     ],
 )
 def test_version_git_vs_base(string, git):
+    assert is_git_version(string) == git
     assert isinstance(Version(string), GitVersion) == git
 
 
@@ -713,21 +725,9 @@ def test_version_range_satisfies_means_nonempty_intersection():
     assert not y.satisfies(x)
 
 
-@pytest.mark.regression("26482")
-def test_version_list_with_range_included_in_concrete_version_interpreted_as_range():
-    # Note: this test only tests whether we can construct a version list of a range
-    # and a version, where the range is contained in the version when it is interpreted
-    # as a range. That is: Version('3.1') interpreted as VersionRange('3.1', '3.1').
-    # Cleary it *shouldn't* be interpreted that way, but that is how Spack currently
-    # behaves, and this test only ensures that creating a VersionList of this type
-    # does not throw like reported in the linked Github issue.
-    VersionList([Version("3.1"), VersionRange("3.1.1", "3.1.2")])
-
-
-@pytest.mark.xfail
 def test_version_list_with_range_and_concrete_version_is_not_concrete():
-    v = VersionList([Version("3.1"), VersionRange("3.1.1", "3.1.2")])
-    assert v.concrete
+    v = VersionList([Version("3.1"), VersionRange(Version("3.1.1"), Version("3.1.2"))])
+    assert not v.concrete
 
 
 @pytest.mark.parametrize(
@@ -744,15 +744,14 @@ def test_git_ref_can_be_assigned_a_version(vstring, eq_vstring, is_commit):
     v = Version(vstring)
     v_equivalent = Version(eq_vstring)
     assert v.is_commit == is_commit
-    assert v.is_ref
     assert not v._ref_lookup
-    assert v_equivalent.version == v.ref_version
+    assert v_equivalent == v.ref_version
 
 
 @pytest.mark.parametrize(
     "lhs_str,rhs_str,expected",
     [
-        # VersionBase
+        # StandardVersion
         ("4.7.3", "4.7.3", (True, True, True)),
         ("4.7.3", "4.7", (True, True, False)),
         ("4.7.3", "4", (True, True, False)),
@@ -808,3 +807,170 @@ def test_git_versions_without_explicit_reference(
 
     for test_str, expected in tested_intersects:
         assert spec.intersects(test_str) is expected, test_str
+
+
+def test_total_order_versions_and_ranges():
+    # The set of version ranges and individual versions are comparable, which is used in
+    # VersionList. The comparsion across types is based on default version comparsion
+    # of StandardVersion, GitVersion.ref_version, and ClosedOpenRange.lo.
+
+    # StandardVersion / GitVersion (at equal ref version)
+    assert_ver_lt("=1.2", "git.ref=1.2")
+    assert_ver_gt("git.ref=1.2", "=1.2")
+
+    # StandardVersion / GitVersion (at different ref versions)
+    assert_ver_lt("git.ref=1.2", "=1.3")
+    assert_ver_gt("=1.3", "git.ref=1.2")
+    assert_ver_lt("=1.2", "git.ref=1.3")
+    assert_ver_gt("git.ref=1.3", "=1.2")
+
+    # GitVersion / ClosedOpenRange (at equal ref/lo version)
+    assert_ver_lt("git.ref=1.2", "1.2")
+    assert_ver_gt("1.2", "git.ref=1.2")
+
+    # GitVersion / ClosedOpenRange (at different ref/lo version)
+    assert_ver_lt("git.ref=1.2", "1.3")
+    assert_ver_gt("1.3", "git.ref=1.2")
+    assert_ver_lt("1.2", "git.ref=1.3")
+    assert_ver_gt("git.ref=1.3", "1.2")
+
+    # StandardVersion / ClosedOpenRange (at equal lo version)
+    assert_ver_lt("=1.2", "1.2")
+    assert_ver_gt("1.2", "=1.2")
+
+    # StandardVersion / ClosedOpenRange (at different lo version)
+    assert_ver_lt("=1.2", "1.3")
+    assert_ver_gt("1.3", "=1.2")
+    assert_ver_lt("1.2", "=1.3")
+    assert_ver_gt("=1.3", "1.2")
+
+
+def test_git_version_accessors():
+    """Test whether iteration, indexing, slicing, dotted, dashed, and underscored works for
+    GitVersion."""
+    v = GitVersion("my_branch=1.2-3")
+    assert [x for x in v] == [1, 2, 3]
+    assert v[0] == 1
+    assert v[1] == 2
+    assert v[2] == 3
+    assert v[0:2] == Version("1.2")
+    assert v[0:10] == Version("1.2.3")
+    assert str(v.dotted) == "1.2.3"
+    assert str(v.dashed) == "1-2-3"
+    assert str(v.underscored) == "1_2_3"
+    assert v.up_to(1) == Version("1")
+    assert v.up_to(2) == Version("1.2")
+    assert len(v) == 3
+    assert not v.isdevelop()
+    assert GitVersion("my_branch=develop").isdevelop()
+
+
+def test_boolness_of_versions():
+    # We do implement __len__, but at the end of the day versions are used as elements in
+    # the first place, not as lists of version components. So VersionList(...).concrete
+    # should be truthy even when there are no version components.
+    assert bool(Version("1.2"))
+    assert bool(Version("1.2").up_to(0))
+
+    # bool(GitVersion) shouldn't trigger a ref lookup.
+    assert bool(GitVersion("a" * 40))
+
+
+def test_version_list_normalization():
+    # Git versions and ordinary versions can live together in a VersionList
+    assert len(VersionList(["=1.2", "ref=1.2"])) == 2
+
+    # But when a range is added, the only disjoint bit is the range.
+    assert VersionList(["=1.2", "ref=1.2", "ref=1.3", "1.2:1.3"]) == VersionList(["1.2:1.3"])
+
+    # Also test normalization when using ver.
+    assert ver("=1.0,ref=1.0,1.0:2.0") == ver(["1.0:2.0"])
+    assert ver("=1.0,1.0:2.0,ref=1.0") == ver(["1.0:2.0"])
+    assert ver("1.0:2.0,=1.0,ref=1.0") == ver(["1.0:2.0"])
+
+
+@pytest.mark.parametrize("version", ["=1.2", "git.ref=1.2", "1.2"])
+def test_version_comparison_with_list_fails(version):
+    vlist = VersionList(["=1.3"])
+
+    with pytest.raises(TypeError):
+        version < vlist
+
+    with pytest.raises(TypeError):
+        vlist < version
+
+    with pytest.raises(TypeError):
+        version <= vlist
+
+    with pytest.raises(TypeError):
+        vlist <= version
+
+    with pytest.raises(TypeError):
+        version >= vlist
+
+    with pytest.raises(TypeError):
+        vlist >= version
+
+    with pytest.raises(TypeError):
+        version > vlist
+
+    with pytest.raises(TypeError):
+        vlist > version
+
+
+def test_inclusion_upperbound():
+    is_specific = spack.spec.Spec("x@=1.2")
+    is_range = spack.spec.Spec("x@1.2")
+    upperbound = spack.spec.Spec("x@:1.2.0")
+
+    # The exact version is included in the range
+    assert is_specific.satisfies(upperbound)
+
+    # But the range 1.2:1.2 is not, since it includes for example 1.2.1
+    assert not is_range.satisfies(upperbound)
+
+    # They do intersect of course.
+    assert is_specific.intersects(upperbound) and is_range.intersects(upperbound)
+
+
+@pytest.mark.skipif(sys.platform == "win32", reason="Not supported on Windows (yet)")
+def test_git_version_repo_attached_after_serialization(
+    mock_git_version_info, mock_packages, monkeypatch
+):
+    """Test that a GitVersion instance can be serialized and deserialized
+    without losing its repository reference.
+    """
+    repo_path, _, commits = mock_git_version_info
+    monkeypatch.setattr(
+        spack.package_base.PackageBase, "git", "file://%s" % repo_path, raising=False
+    )
+    spec = spack.spec.Spec(f"git-test-commit@{commits[-2]}").concretized()
+
+    # Before serialization, the repo is attached
+    assert spec.satisfies("@1.0")
+
+    # After serialization, the repo is still attached
+    assert spack.spec.Spec.from_dict(spec.to_dict()).satisfies("@1.0")
+
+
+@pytest.mark.skipif(sys.platform == "win32", reason="Not supported on Windows (yet)")
+def test_resolved_git_version_is_shown_in_str(mock_git_version_info, mock_packages, monkeypatch):
+    """Test that a GitVersion from a commit without a user supplied version is printed
+    as <hash>=<version>, and not just <hash>."""
+    repo_path, _, commits = mock_git_version_info
+    monkeypatch.setattr(
+        spack.package_base.PackageBase, "git", "file://%s" % repo_path, raising=False
+    )
+    commit = commits[-3]
+    spec = spack.spec.Spec(f"git-test-commit@{commit}").concretized()
+
+    assert spec.version.satisfies(ver("1.0"))
+    assert str(spec.version) == f"{commit}=1.0-git.1"
+
+
+def test_unresolvable_git_versions_error(mock_packages):
+    """Test that VersionLookupError is raised when a git prop is not set on a package."""
+    with pytest.raises(VersionLookupError):
+        # The package exists, but does not have a git property set. When dereferencing
+        # the version, we should get VersionLookupError, not a generic AttributeError.
+        spack.spec.Spec(f"git-test-commit@{'a' * 40}").version.ref_version
