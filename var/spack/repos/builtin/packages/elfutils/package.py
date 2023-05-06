@@ -69,6 +69,7 @@ class Elfutils(AutotoolsPackage, SourcewarePackage):
     depends_on("zstd", type="link", when="@0.182:")
 
     depends_on("gettext", when="+nls")
+    depends_on("iconv")
     depends_on("m4", type="build")
     depends_on("pkgconfig@0.9.0:", type=("build", "link"))
 
