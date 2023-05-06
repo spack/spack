@@ -46,8 +46,8 @@ class DepfileNode:
     def __init__(
         self, target: spack.spec.Spec, prereqs: List[spack.spec.Spec], buildcache: UseBuildCache
     ):
-        self.target = SpecWrapper(target)
-        self.prereqs = list(SpecWrapper(x) for x in prereqs)
+        self.target = MakefileSpec(target)
+        self.prereqs = list(MakefileSpec(x) for x in prereqs)
         if buildcache == UseBuildCache.ONLY:
             self.buildcache_flag = "--use-buildcache=only"
         elif buildcache == UseBuildCache.NEVER:
@@ -90,7 +90,10 @@ class DepfileSpecVisitor:
         return True
 
 
-class SpecWrapper(object):
+class MakefileSpec(object):
+    """Limited interface to spec to help generate targets etc. without
+       introducing unwanted special characters.
+    """
     def __init__(self, spec):
         self.spec = spec
 
@@ -133,7 +136,7 @@ class MakefileModel:
         self.env_path = env.path
 
         # These specs are built in the default target.
-        self.roots = list(SpecWrapper(x) for x in roots)
+        self.roots = list(MakefileSpec(x) for x in roots)
 
         # The SPACK_PACKAGE_IDS variable is "exported", which can be used when including
         # generated makefiles to add post-install hooks, like pushing to a buildcache,
