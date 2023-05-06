@@ -13,6 +13,7 @@ class Libpcap(AutotoolsPackage):
     list_url = "https://www.tcpdump.org/release/"
     url = "https://www.tcpdump.org/release/libpcap-1.8.1.tar.gz"
 
+    version("1.10.4", sha256="ed19a0383fad72e3ad435fd239d7cd80d64916b87269550159d20e47160ebe5f")
     version("1.10.3", sha256="2a8885c403516cf7b0933ed4b14d6caa30e02052489ebd414dc75ac52e7559e6")
     version("1.10.0", sha256="8d12b42623eeefee872f123bd0dc85d535b00df4d42e865f993c40f7bfc92b1e")
     version("1.9.1", sha256="635237637c5b619bcceba91900666b64d56ecb7be63f298f601ec786ce087094")
