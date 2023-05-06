@@ -55,9 +55,7 @@ import itertools
 import os
 import re
 import warnings
-from typing import Tuple
-
-import ruamel.yaml as yaml
+from typing import Tuple, Union
 
 import llnl.util.filesystem as fs
 import llnl.util.lang as lang
@@ -147,12 +145,8 @@ color_formats = {
 #: ``color_formats.keys()``.
 _separators = "[\\%s]" % "\\".join(color_formats.keys())
 
-#: Versionlist constant so we don't have to build a list
-#: every time we call str()
-_any_version = vn.VersionList([":"])
-
-default_format = "{name}{@version}"
-default_format += "{%compiler.name}{@compiler.version}{compiler_flags}"
+default_format = "{name}{@versions}"
+default_format += "{%compiler.name}{@compiler.versions}{compiler_flags}"
 default_format += "{variants}{arch=architecture}"
 
 #: Regular expression to pull spec contents out of clearsigned signature
@@ -583,20 +577,18 @@ class CompilerSpec(object):
         elif nargs == 2:
             name, version = args
             self.name = name
-            self.versions = vn.VersionList()
-            versions = vn.ver(version)
-            self.versions.add(versions)
+            self.versions = vn.VersionList([vn.ver(version)])
 
         else:
             raise TypeError("__init__ takes 1 or 2 arguments. (%d given)" % nargs)
 
     def _add_versions(self, version_list):
         # If it already has a non-trivial version list, this is an error
-        if self.versions and self.versions != vn.VersionList(":"):
+        if self.versions and self.versions != vn.any_version:
             # Note: This may be impossible to reach by the current parser
             # Keeping it in case the implementation changes.
             raise MultipleVersionError(
-                "A spec cannot contain multiple version signifiers." " Use a version list instead."
+                "A spec cannot contain multiple version signifiers. Use a version list instead."
             )
         self.versions = vn.VersionList()
         for version in version_list:
@@ -679,9 +671,8 @@ class CompilerSpec(object):
 
     def __str__(self):
         out = self.name
-        if self.versions and self.versions != _any_version:
-            vlist = ",".join(str(v) for v in self.versions)
-            out += "@%s" % vlist
+        if self.versions and self.versions != vn.any_version:
+            out += f"@{self.versions}"
         return out
 
     def __repr__(self):
@@ -1479,7 +1470,7 @@ class Spec(object):
     def _add_versions(self, version_list):
         """Called by the parser to add an allowable version."""
         # If it already has a non-trivial version list, this is an error
-        if self.versions and self.versions != vn.VersionList(":"):
+        if self.versions and self.versions != vn.any_version:
             raise MultipleVersionError(
                 "A spec cannot contain multiple version signifiers." " Use a version list instead."
             )
@@ -2110,7 +2101,7 @@ class Spec(object):
         # (and the user spec) have dependencies
         new_spec = init_spec.copy()
         package_cls = spack.repo.path.get_pkg_class(new_spec.name)
-        if change_spec.versions and not change_spec.versions == spack.version.ver(":"):
+        if change_spec.versions and not change_spec.versions == vn.any_version:
             new_spec.versions = change_spec.versions
         for variant, value in change_spec.variants.items():
             if variant in package_cls.variants:
@@ -2291,12 +2282,17 @@ class Spec(object):
         """
         # Legacy specfile format
         if isinstance(data["spec"], list):
-            return SpecfileV1.load(data)
+            spec = SpecfileV1.load(data)
+        elif int(data["spec"]["_meta"]["version"]) == 2:
+            spec = SpecfileV2.load(data)
+        else:
+            spec = SpecfileV3.load(data)
 
-        specfile_version = int(data["spec"]["_meta"]["version"])
-        if specfile_version == 2:
-            return SpecfileV2.load(data)
-        return SpecfileV3.load(data)
+        # Any git version should
+        for s in spec.traverse():
+            s.attach_git_version_lookup()
+
+        return spec
 
     @staticmethod
     def from_yaml(stream):
@@ -2305,11 +2301,8 @@ class Spec(object):
         Args:
             stream: string or file object to read from.
         """
-        try:
-            data = yaml.load(stream)
-            return Spec.from_dict(data)
-        except yaml.error.MarkedYAMLError as e:
-            raise syaml.SpackYAMLError("error parsing YAML spec:", str(e)) from e
+        data = syaml.load(stream)
+        return Spec.from_dict(data)
 
     @staticmethod
     def from_json(stream):
@@ -2828,6 +2821,26 @@ class Spec(object):
             return
         self._normal = value
         self._concrete = value
+        self._validate_version()
+
+    def _validate_version(self):
+        # Specs that were concretized with just a git sha as version, without associated
+        # Spack version, get their Spack version mapped to develop. This should only apply
+        # when reading specs concretized with Spack 0.19 or earlier. Currently Spack always
+        # ensures that GitVersion specs have an associated Spack version.
+        v = self.versions.concrete
+        if not isinstance(v, vn.GitVersion):
+            return
+
+        try:
+            v.ref_version
+        except vn.VersionLookupError:
+            before = self.cformat("{name}{@version}{/hash:7}")
+            v._ref_version = vn.StandardVersion.from_string("develop")
+            tty.debug(
+                f"the git sha of {before} could not be resolved to spack version; "
+                f"it has been replaced by {self.cformat('{name}{@version}{/hash:7}')}."
+            )
 
     def _mark_concrete(self, value=True):
         """Mark this spec and its dependencies as concrete.
@@ -4080,15 +4093,7 @@ class Spec(object):
 
         Spec format strings use ``\`` as the escape character. Use
         ``\{`` and ``\}`` for literal braces, and ``\\`` for the
-        literal ``\`` character. Also use ``\$`` for the literal ``$``
-        to differentiate from previous, deprecated format string
-        syntax.
-
-        The previous format strings are deprecated. They can still be
-        accessed by the ``old_format`` method. The ``format`` method
-        will call ``old_format`` if the character ``$`` appears
-        unescaped in the format string.
-
+        literal ``\`` character.
 
         Args:
             format_string (str): string containing the format to be expanded
@@ -4099,10 +4104,6 @@ class Spec(object):
                 that accepts a string and returns another one
 
         """
-        # If we have an unescaped $ sigil, use the deprecated format strings
-        if re.search(r"[^\\]*\$", format_string):
-            return self.old_format(format_string, **kwargs)
-
         color = kwargs.get("color", False)
         transform = kwargs.get("transform", {})
 
@@ -4183,9 +4184,13 @@ class Spec(object):
                         if part == "arch":
                             part = "architecture"
                         elif part == "version":
-                            # Version requires concrete spec, versions does not
-                            # when concrete, they print the same thing
-                            part = "versions"
+                            # version (singular) requires a concrete versions list. Avoid
+                            # pedantic errors by using versions (plural) when not concrete.
+                            # These two are not entirely equivalent for pkg@=1.2.3:
+                            # - version prints '1.2.3'
+                            # - versions prints '=1.2.3'
+                            if not current.versions.concrete:
+                                part = "versions"
                         try:
                             current = getattr(current, part)
                         except AttributeError:
@@ -4194,7 +4199,7 @@ class Spec(object):
                             m += "Spec %s has no attribute %s" % (parent, part)
                             raise SpecFormatStringError(m)
                         if isinstance(current, vn.VersionList):
-                            if current == _any_version:
+                            if current == vn.any_version:
                                 # We don't print empty version lists
                                 return
 
@@ -4212,7 +4217,7 @@ class Spec(object):
                 col = "="
             elif "compiler" in parts or "compiler_flags" in parts:
                 col = "%"
-            elif "version" in parts:
+            elif "version" in parts or "versions" in parts:
                 col = "@"
 
             # Finally, write the output
@@ -4251,250 +4256,6 @@ class Spec(object):
 
         formatted_spec = out.getvalue()
         return formatted_spec.strip()
-
-    def old_format(self, format_string="$_$@$%@+$+$=", **kwargs):
-        """
-        The format strings you can provide are::
-
-            $_   Package name
-            $.   Full package name (with namespace)
-            $@   Version with '@' prefix
-            $%   Compiler with '%' prefix
-            $%@  Compiler with '%' prefix & compiler version with '@' prefix
-            $%+  Compiler with '%' prefix & compiler flags prefixed by name
-            $%@+ Compiler, compiler version, and compiler flags with same
-                 prefixes as above
-            $+   Options
-            $=   Architecture prefixed by 'arch='
-            $/   7-char prefix of DAG hash with '-' prefix
-            $$   $
-
-        You can also use full-string versions, which elide the prefixes::
-
-            ${PACKAGE}       Package name
-            ${FULLPACKAGE}   Full package name (with namespace)
-            ${VERSION}       Version
-            ${COMPILER}      Full compiler string
-            ${COMPILERNAME}  Compiler name
-            ${COMPILERVER}   Compiler version
-            ${COMPILERFLAGS} Compiler flags
-            ${OPTIONS}       Options
-            ${ARCHITECTURE}  Architecture
-            ${PLATFORM}      Platform
-            ${OS}            Operating System
-            ${TARGET}        Target
-            ${SHA1}          Dependencies 8-char sha1 prefix
-            ${HASH:len}      DAG hash with optional length specifier
-
-            ${DEP:name:OPTION} Evaluates as OPTION would for self['name']
-
-            ${SPACK_ROOT}    The spack root directory
-            ${SPACK_INSTALL} The default spack install directory,
-                             ${SPACK_PREFIX}/opt
-            ${PREFIX}        The package prefix
-            ${NAMESPACE}     The package namespace
-
-        Note these are case-insensitive: for example you can specify either
-        ``${PACKAGE}`` or ``${package}``.
-
-        Optionally you can provide a width, e.g. ``$20_`` for a 20-wide name.
-        Like printf, you can provide '-' for left justification, e.g.
-        ``$-20_`` for a left-justified name.
-
-        Anything else is copied verbatim into the output stream.
-
-        Args:
-            format_string (str): string containing the format to be expanded
-
-        Keyword Args:
-            color (bool): True if returned string is colored
-            transform (dict): maps full-string formats to a callable \
-                that accepts a string and returns another one
-
-        Examples:
-
-            The following line:
-
-            .. code-block:: python
-
-                s = spec.format('$_$@$+')
-
-            translates to the name, version, and options of the package, but no
-            dependencies, arch, or compiler.
-
-        TODO: allow, e.g., ``$6#`` to customize short hash length
-        TODO: allow, e.g., ``$//`` for full hash.
-        """
-        warnings.warn(
-            "Using the old Spec.format method."
-            " This method was deprecated in Spack v0.15 and will be removed in Spack v0.20"
-        )
-        color = kwargs.get("color", False)
-
-        # Dictionary of transformations for named tokens
-        token_transforms = dict((k.upper(), v) for k, v in kwargs.get("transform", {}).items())
-
-        length = len(format_string)
-        out = io.StringIO()
-        named = escape = compiler = False
-        named_str = fmt = ""
-
-        def write(s, c=None):
-            f = clr.cescape(s)
-            if c is not None:
-                f = color_formats[c] + f + "@."
-            clr.cwrite(f, stream=out, color=color)
-
-        iterator = enumerate(format_string)
-        for i, c in iterator:
-            if escape:
-                fmt = "%"
-                if c == "-":
-                    fmt += c
-                    i, c = next(iterator)
-
-                while c in "0123456789":
-                    fmt += c
-                    i, c = next(iterator)
-                fmt += "s"
-
-                if c == "_":
-                    name = self.name if self.name else ""
-                    out.write(fmt % name)
-                elif c == ".":
-                    name = self.fullname if self.fullname else ""
-                    out.write(fmt % name)
-                elif c == "@":
-                    if self.versions and self.versions != _any_version:
-                        write(fmt % (c + str(self.versions)), c)
-                elif c == "%":
-                    if self.compiler:
-                        write(fmt % (c + str(self.compiler.name)), c)
-                    compiler = True
-                elif c == "+":
-                    if self.variants:
-                        write(fmt % str(self.variants), c)
-                elif c == "=":
-                    if self.architecture and str(self.architecture):
-                        a_str = " arch" + c + str(self.architecture) + " "
-                        write(fmt % (a_str), c)
-                elif c == "/":
-                    out.write("/" + fmt % (self.dag_hash(7)))
-                elif c == "$":
-                    if fmt != "%s":
-                        raise ValueError("Can't use format width with $$.")
-                    out.write("$")
-                elif c == "{":
-                    named = True
-                    named_str = ""
-                escape = False
-
-            elif compiler:
-                if c == "@":
-                    if (
-                        self.compiler
-                        and self.compiler.versions
-                        and self.compiler.versions != _any_version
-                    ):
-                        write(c + str(self.compiler.versions), "%")
-                elif c == "+":
-                    if self.compiler_flags:
-                        write(fmt % str(self.compiler_flags), "%")
-                    compiler = False
-                elif c == "$":
-                    escape = True
-                    compiler = False
-                else:
-                    out.write(c)
-                    compiler = False
-
-            elif named:
-                if not c == "}":
-                    if i == length - 1:
-                        raise ValueError(
-                            "Error: unterminated ${ in format:" "'%s'" % format_string
-                        )
-                    named_str += c
-                    continue
-                named_str = named_str.upper()
-
-                # Retrieve the token transformation from the dictionary.
-                #
-                # The default behavior is to leave the string unchanged
-                # (`lambda x: x` is the identity function)
-                transform = token_transforms.get(named_str, lambda s, x: x)
-
-                if named_str == "PACKAGE":
-                    name = self.name if self.name else ""
-                    write(fmt % transform(self, name))
-                elif named_str == "FULLPACKAGE":
-                    name = self.fullname if self.fullname else ""
-                    write(fmt % transform(self, name))
-                elif named_str == "VERSION":
-                    if self.versions and self.versions != _any_version:
-                        write(fmt % transform(self, str(self.versions)), "@")
-                elif named_str == "COMPILER":
-                    if self.compiler:
-                        write(fmt % transform(self, self.compiler), "%")
-                elif named_str == "COMPILERNAME":
-                    if self.compiler:
-                        write(fmt % transform(self, self.compiler.name), "%")
-                elif named_str in ["COMPILERVER", "COMPILERVERSION"]:
-                    if self.compiler:
-                        write(fmt % transform(self, self.compiler.versions), "%")
-                elif named_str == "COMPILERFLAGS":
-                    if self.compiler:
-                        write(fmt % transform(self, str(self.compiler_flags)), "%")
-                elif named_str == "OPTIONS":
-                    if self.variants:
-                        write(fmt % transform(self, str(self.variants)), "+")
-                elif named_str in ["ARCHITECTURE", "PLATFORM", "TARGET", "OS"]:
-                    if self.architecture and str(self.architecture):
-                        if named_str == "ARCHITECTURE":
-                            write(fmt % transform(self, str(self.architecture)), "=")
-                        elif named_str == "PLATFORM":
-                            platform = str(self.architecture.platform)
-                            write(fmt % transform(self, platform), "=")
-                        elif named_str == "OS":
-                            operating_sys = str(self.architecture.os)
-                            write(fmt % transform(self, operating_sys), "=")
-                        elif named_str == "TARGET":
-                            target = str(self.architecture.target)
-                            write(fmt % transform(self, target), "=")
-                elif named_str == "SHA1":
-                    if self.dependencies:
-                        out.write(fmt % transform(self, str(self.dag_hash(7))))
-                elif named_str == "SPACK_ROOT":
-                    out.write(fmt % transform(self, spack.paths.prefix))
-                elif named_str == "SPACK_INSTALL":
-                    out.write(fmt % transform(self, spack.store.root))
-                elif named_str == "PREFIX":
-                    out.write(fmt % transform(self, self.prefix))
-                elif named_str.startswith("HASH"):
-                    if named_str.startswith("HASH:"):
-                        _, hashlen = named_str.split(":")
-                        hashlen = int(hashlen)
-                    else:
-                        hashlen = None
-                    out.write(fmt % (self.dag_hash(hashlen)))
-                elif named_str == "NAMESPACE":
-                    out.write(fmt % transform(self, self.namespace))
-                elif named_str.startswith("DEP:"):
-                    _, dep_name, dep_option = named_str.lower().split(":", 2)
-                    dep_spec = self[dep_name]
-                    out.write(fmt % (dep_spec.format("${%s}" % dep_option)))
-
-                named = False
-
-            elif c == "$":
-                escape = True
-                if i == length - 1:
-                    raise ValueError("Error: unterminated $ in format: '%s'" % format_string)
-            else:
-                out.write(c)
-
-        result = out.getvalue()
-        return result
 
     def cformat(self, *args, **kwargs):
         """Same as format, but color defaults to auto instead of False."""
@@ -4800,6 +4561,23 @@ class Spec(object):
     def __reduce__(self):
         return Spec.from_dict, (self.to_dict(hash=ht.process_hash),)
 
+    def attach_git_version_lookup(self):
+        # Add a git lookup method for GitVersions
+        if not self.name:
+            return
+        for v in self.versions:
+            if isinstance(v, vn.GitVersion) and v._ref_version is None:
+                v.attach_git_lookup_from_package(self.fullname)
+
+
+def parse_with_version_concrete(string: str, compiler: bool = False):
+    """Same as Spec(string), but interprets @x as @=x"""
+    s: Union[CompilerSpec, Spec] = CompilerSpec(string) if compiler else Spec(string)
+    interpreted_version = s.versions.concrete_range_as_version
+    if interpreted_version:
+        s.versions = vn.VersionList([interpreted_version])
+    return s
+
 
 def merge_abstract_anonymous_specs(*abstract_specs: Spec):
     """Merge the abstracts specs passed as input and return the result.
@@ -4841,6 +4619,7 @@ class SpecfileReaderBase:
 
         if "version" in node or "versions" in node:
             spec.versions = vn.VersionList.from_dict(node)
+            spec.attach_git_version_lookup()
 
         if "arch" in node:
             spec.architecture = ArchSpec.from_dict(node)
@@ -4875,7 +4654,8 @@ class SpecfileReaderBase:
                 )
 
         # specs read in are concrete unless marked abstract
-        spec._concrete = node.get("concrete", True)
+        if node.get("concrete", True):
+            spec._mark_root_concrete()
 
         if "patches" in node:
             patches = node["patches"]
