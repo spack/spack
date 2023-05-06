@@ -473,7 +473,7 @@ def test_part(pkg: Pb, test_name: str, purpose: str, work_dir: str = ".", verbos
             for line in out:
                 print(line.rstrip("\n"))
 
-            if exc_type is spack.util.executable.ProcessError:
+            if exc_type is spack.util.executable.ProcessError or exc_type is TypeError:
                 iostr = io.StringIO()
                 spack.build_environment.write_log_summary(
                     iostr, "test", tester.test_log_file, last=1

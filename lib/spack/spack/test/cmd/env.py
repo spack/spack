@@ -701,6 +701,7 @@ spack:
 
 
 def test_with_config_bad_include(environment_from_manifest):
+    """Confirm missing include paths raise expected exception and error."""
     e = environment_from_manifest(
         """
 spack:

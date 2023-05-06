@@ -127,6 +127,7 @@ def test_build_time_tests_are_executed_from_default_builder():
 @pytest.mark.regression("34518")
 @pytest.mark.usefixtures("builder_test_repository", "config", "working_env")
 def test_monkey_patching_wrapped_pkg():
+    """Confirm 'run_tests' is accessible through wrappers."""
     s = spack.spec.Spec("old-style-autotools").concretized()
     builder = spack.builder.create(s.package)
     assert s.package.run_tests is False
@@ -141,6 +142,7 @@ def test_monkey_patching_wrapped_pkg():
 @pytest.mark.regression("34440")
 @pytest.mark.usefixtures("builder_test_repository", "config", "working_env")
 def test_monkey_patching_test_log_file():
+    """Confirm 'test_log_file' is accessible through wrappers."""
     s = spack.spec.Spec("old-style-autotools").concretized()
     builder = spack.builder.create(s.package)
 
@@ -150,6 +152,7 @@ def test_monkey_patching_test_log_file():
 
 
 def test_install_time_test_callback(tmpdir, config, mock_packages, mock_stage):
+    """Confirm able to run stand-alone test as a post-install callback."""
     s = spack.spec.Spec("py-test-callback").concretized()
     builder = spack.builder.create(s.package)
     builder.pkg.run_tests = True

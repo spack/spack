@@ -195,12 +195,14 @@ def test_get_test_suite_too_many(mock_packages, mock_test_stage):
     [(False, ["Mpich.test_mpich"]), (True, ["Mpi.test_hello", "Mpich.test_mpich"])],
 )
 def test_test_function_names(mock_packages, install_mockery, virtuals, expected):
+    """Confirm test_function_names works as expected with/without virtuals."""
     spec = spack.spec.Spec("mpich").concretized()
     tests = spack.install_test.test_function_names(spec.package, add_virtuals=virtuals)
     assert sorted(tests) == sorted(expected)
 
 
 def test_test_functions_fails():
+    """Confirm test_functions raises error if no package."""
     with pytest.raises(ValueError, match="Expected a package"):
         spack.install_test.test_functions(str)
 
@@ -216,6 +218,8 @@ def test_test_functions_pkgless(mock_packages, install_mockery, ensure_debug, ca
 
 # TODO: This test should go away when compilers as dependencies is supported
 def test_test_virtuals():
+    """Confirm virtuals picks up non-unique, provided compilers."""
+
     # This is an unrealistic case but it is set up to retrieve all possible
     # virtual names in a single call.
     def satisfies(spec):
@@ -231,14 +235,14 @@ def test_test_virtuals():
     MyPackage = collections.namedtuple("MyPackage", ["name", "spec", "virtuals_provided"])
     pkg = MyPackage("gcc", vspec, [vspec, vspec])
 
-    # This check assumes the method will not provide a unique set of
-    # compilers
+    # This check assumes the method will not provide a unique set of compilers
     v_names = spack.install_test.virtuals(pkg)
     for name, number in [("c", 2), ("cxx", 2), ("fortran", 1), ("llvm", 1)]:
         assert v_names.count(name) == number, "Expected {0} of '{1}'".format(number, name)
 
 
 def test_package_copy_test_files_fails(mock_packages):
+    """Confirm copy_test_files fails as expected without package or test_suite."""
     vspec = spack.spec.Spec("something")
 
     # Try without a package
@@ -256,18 +260,20 @@ def test_package_copy_test_files_fails(mock_packages):
 
 
 def test_package_copy_test_files_skips(mock_packages, ensure_debug, capsys):
+    """Confirm copy_test_files errors as expected if no package class found."""
     # Try with a non-concrete spec and package with a test suite
     MockSuite = collections.namedtuple("TestSuite", ["specs"])
     MyPackage = collections.namedtuple("MyPackage", ["name", "spec", "test_suite"])
     vspec = spack.spec.Spec("something")
     pkg = MyPackage("SomePackage", vspec, MockSuite([]))
     spack.install_test.copy_test_files(pkg, vspec)
-    out = capsys.readouterr()
-    assert "skipping test data copy" in out[1]
-    assert "no package class found" in out[1]
+    out = capsys.readouterr()[1]
+    assert "skipping test data copy" in out
+    assert "no package class found" in out
 
 
 def test_test_parts_process_fails(mock_packages):
+    """Confirm test_parts_process fails as expected without package or test_suite."""
     # Try without a package
     with pytest.raises(spack.install_test.TestSuiteError) as exc_info:
         spack.install_test.test_parts_process(None, [])
@@ -283,6 +289,7 @@ def test_test_parts_process_fails(mock_packages):
 
 
 def test_test_part_fail(tmpdir, install_mockery_mutable_config, mock_fetch, mock_test_stage):
+    """Confirm test_part with a ProcessError results in FAILED status."""
     s = spack.spec.Spec("trivial-smoke-test").concretized()
     pkg = s.package
     pkg.tester.test_log_file = str(tmpdir.join("test-log.txt"))
@@ -298,6 +305,7 @@ def test_test_part_fail(tmpdir, install_mockery_mutable_config, mock_fetch, mock
 
 
 def test_test_part_pass(install_mockery_mutable_config, mock_fetch, mock_test_stage):
+    """Confirm test_part that succeeds results in PASSED status."""
     s = spack.spec.Spec("trivial-smoke-test").concretized()
     pkg = s.package
 
@@ -313,6 +321,7 @@ def test_test_part_pass(install_mockery_mutable_config, mock_fetch, mock_test_st
 
 
 def test_test_part_skip(install_mockery_mutable_config, mock_fetch, mock_test_stage):
+    """Confirm test_part that raises SkipTest results in test status SKIPPED."""
     s = spack.spec.Spec("trivial-smoke-test").concretized()
     pkg = s.package
 
@@ -323,6 +332,50 @@ def test_test_part_skip(install_mockery_mutable_config, mock_fetch, mock_test_st
     for part_name, status in pkg.tester.test_parts.items():
         assert part_name.endswith(name)
         assert status == spack.install_test.TestStatus.SKIPPED
+
+
+def test_test_part_missing_exe_fail_fast(
+    tmpdir, install_mockery_mutable_config, mock_fetch, mock_test_stage
+):
+    """Confirm test_part with fail fast enabled raises exception."""
+    s = spack.spec.Spec("trivial-smoke-test").concretized()
+    pkg = s.package
+    pkg.tester.test_log_file = str(tmpdir.join("test-log.txt"))
+    touch(pkg.tester.test_log_file)
+
+    name = "test_fail_fast"
+    with spack.config.override("config:fail_fast", True):
+        with pytest.raises(spack.install_test.TestFailure, match="object is not callable"):
+            with spack.install_test.test_part(pkg, name, "fail fast"):
+                missing = which("no-possible-program")
+                missing()
+
+    test_parts = pkg.tester.test_parts
+    assert len(test_parts) == 1
+    for part_name, status in test_parts.items():
+        assert part_name.endswith(name)
+        assert status == spack.install_test.TestStatus.FAILED
+
+
+def test_test_part_missing_exe(
+    tmpdir, install_mockery_mutable_config, mock_fetch, mock_test_stage
+):
+    """Confirm test_part with missing executable fails."""
+    s = spack.spec.Spec("trivial-smoke-test").concretized()
+    pkg = s.package
+    pkg.tester.test_log_file = str(tmpdir.join("test-log.txt"))
+    touch(pkg.tester.test_log_file)
+
+    name = "test_missing_exe"
+    with spack.install_test.test_part(pkg, name, "missing exe"):
+        missing = which("no-possible-program")
+        missing()
+
+    test_parts = pkg.tester.test_parts
+    assert len(test_parts) == 1
+    for part_name, status in test_parts.items():
+        assert part_name.endswith(name)
+        assert status == spack.install_test.TestStatus.FAILED
 
 
 def test_check_special_outputs(tmpdir):
