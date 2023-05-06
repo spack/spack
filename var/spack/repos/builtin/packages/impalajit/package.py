@@ -29,7 +29,7 @@ class Impalajit(CMakePackage):
 
     variant("shared", default=True, description="build as a shared library")
     depends_on("cmake", type="build")
-    depends_on("pkg-config", type="build", when="@main")
+    depends_on("pkgconfig", type="build", when="@main")
     depends_on("llvm@10.0.0:11.1.0", when="@llvm")
     depends_on("z3", when="@llvm")
     depends_on("llvm@10.0.0:11.1.0", when="@llvm-1.0.0")
