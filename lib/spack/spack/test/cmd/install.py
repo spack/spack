@@ -799,6 +799,7 @@ def test_install_no_add_in_env(tmpdir, mock_fetch, install_mockery, mutable_mock
     e.add("a")
     e.add("a ~bvv")
     e.concretize()
+    e.write()
     env_specs = e.all_specs()
 
     a_spec = None
@@ -968,7 +969,7 @@ def test_compiler_bootstrap_from_binary_mirror(
     install("gcc@10.2.0")
 
     # Put installed compiler in the buildcache
-    buildcache("create", "-u", "-a", "-f", "-d", mirror_dir.strpath, "gcc@10.2.0")
+    buildcache("push", "-u", "-a", "-f", "-d", mirror_dir.strpath, "gcc@10.2.0")
 
     # Now uninstall the compiler
     uninstall("-y", "gcc@10.2.0")
@@ -1133,7 +1134,7 @@ def test_install_use_buildcache(
 
     # Populate the buildcache
     install(package_name)
-    buildcache("create", "-u", "-a", "-f", "-d", mirror_dir.strpath, package_name, dependency_name)
+    buildcache("push", "-u", "-a", "-f", "-d", mirror_dir.strpath, package_name, dependency_name)
 
     # Uninstall the all of the packages for clean slate
     uninstall("-y", "-a")
