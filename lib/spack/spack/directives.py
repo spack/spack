@@ -32,7 +32,7 @@ import collections.abc
 import functools
 import os.path
 import re
-from typing import List, Optional, Set
+from typing import List, Optional, Set, Union
 
 import llnl.util.lang
 import llnl.util.tty.color
@@ -45,7 +45,13 @@ import spack.variant
 from spack.dependency import Dependency, canonical_deptype, default_deptype
 from spack.fetch_strategy import from_kwargs
 from spack.resource import Resource
-from spack.version import GitVersion, Version, VersionChecksumError, VersionLookupError
+from spack.version import (
+    GitVersion,
+    Version,
+    VersionChecksumError,
+    VersionError,
+    VersionLookupError,
+)
 
 __all__ = [
     "DirectiveError",
@@ -318,7 +324,7 @@ directive = DirectiveMeta.directive
 
 @directive("versions")
 def version(
-    ver: str,
+    ver: Union[str, int],
     # this positional argument is deprecated, use sha256=... instead
     checksum: Optional[str] = None,
     *,
@@ -362,64 +368,72 @@ def version(
     The (keyword) arguments are turned into a valid fetch strategy for
     code packages later. See ``spack.fetch_strategy.for_package_version()``.
     """
+    kwargs = {
+        key: value
+        for key, value in (
+            ("sha256", sha256),
+            ("sha384", sha384),
+            ("sha512", sha512),
+            ("preferred", preferred),
+            ("deprecated", deprecated),
+            ("expand", expand),
+            ("url", url),
+            ("extension", extension),
+            ("no_cache", no_cache),
+            ("fetch_options", fetch_options),
+            ("git", git),
+            ("svn", svn),
+            ("hg", hg),
+            ("cvs", cvs),
+            ("get_full_repo", get_full_repo),
+            ("branch", branch),
+            ("submodules", submodules),
+            ("submodules_delete", submodules_delete),
+            ("commit", commit),
+            ("tag", tag),
+            ("revision", revision),
+            ("date", date),
+            ("md5", md5),
+            ("sha1", sha1),
+            ("sha224", sha224),
+            ("checksum", checksum),
+        )
+        if value is not None
+    }
+    return lambda pkg: _execute_version(pkg, ver, **kwargs)
 
-    def _execute_version(pkg):
-        if (
-            any((sha256, sha384, sha512, md5, sha1, sha224, checksum))
-            and hasattr(pkg, "has_code")
-            and not pkg.has_code
-        ):
-            raise VersionChecksumError(
-                "{0}: Checksums not allowed in no-code packages "
-                "(see '{1}' version).".format(pkg.name, ver)
-            )
 
-        kwargs = {
-            key: value
-            for key, value in (
-                ("sha256", sha256),
-                ("sha384", sha384),
-                ("sha512", sha512),
-                ("preferred", preferred),
-                ("deprecated", deprecated),
-                ("expand", expand),
-                ("url", url),
-                ("extension", extension),
-                ("no_cache", no_cache),
-                ("fetch_options", fetch_options),
-                ("git", git),
-                ("svn", svn),
-                ("hg", hg),
-                ("cvs", cvs),
-                ("get_full_repo", get_full_repo),
-                ("branch", branch),
-                ("submodules", submodules),
-                ("submodules_delete", submodules_delete),
-                ("commit", commit),
-                ("tag", tag),
-                ("revision", revision),
-                ("date", date),
-                ("md5", md5),
-                ("sha1", sha1),
-                ("sha224", sha224),
-                ("checksum", checksum),
-            )
-            if value is not None
-        }
+def _execute_version(pkg, ver, **kwargs):
+    if (
+        any(
+            s in kwargs
+            for s in ("sha256", "sha384", "sha512", "md5", "sha1", "sha224", "checksum")
+        )
+        and hasattr(pkg, "has_code")
+        and not pkg.has_code
+    ):
+        raise VersionChecksumError(
+            "{0}: Checksums not allowed in no-code packages "
+            "(see '{1}' version).".format(pkg.name, ver)
+        )
 
-        # Store kwargs for the package to later with a fetch_strategy.
-        version = Version(ver)
-        if isinstance(version, GitVersion):
-            if git is None and not hasattr(pkg, "git"):
-                msg = "Spack version directives cannot include git hashes fetched from"
-                msg += " URLs. Error in package '%s'\n" % pkg.name
-                msg += "    version('%s', " % version.string
-                msg += ", ".join("%s='%s'" % (argname, value) for argname, value in kwargs.items())
-                msg += ")"
-                raise VersionLookupError(msg)
-        pkg.versions[version] = kwargs
+    if not isinstance(ver, (int, str)):
+        raise VersionError(
+            f"{pkg.name}: declared version '{ver!r}' in package should be a string or int."
+        )
 
-    return _execute_version
+    # Declared versions are concrete
+    version = Version(ver)
+
+    if isinstance(version, GitVersion) and not hasattr(pkg, "git") and "git" not in kwargs:
+        args = ", ".join(f"{argname}='{value}'" for argname, value in kwargs.items())
+        raise VersionLookupError(
+            f"{pkg.name}: spack version directives cannot include git hashes fetched from URLs.\n"
+            f"    version('{ver}', {args})"
+        )
+
+    # Store kwargs for the package to later with a fetch_strategy.
+    pkg.versions[version] = kwargs
 
 
 def _depends_on(pkg, spec, when=None, type=default_deptype, patches=None):

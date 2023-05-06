@@ -81,7 +81,7 @@ for further documentation regarding the spec syntax, see:
 
 def spec(parser, args):
     name_fmt = "{namespace}.{name}" if args.namespaces else "{name}"
-    fmt = "{@version}{%compiler}{compiler_flags}{variants}{arch=architecture}"
+    fmt = "{@versions}{%compiler}{compiler_flags}{variants}{arch=architecture}"
     install_status_fn = spack.spec.Spec.install_status
     tree_kwargs = {
         "cover": args.cover,
