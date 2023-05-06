@@ -18,6 +18,7 @@ class Actsvg(CMakePackage):
 
     maintainers("HadrienG2", "wdconinc")
 
+    version("0.4.33", sha256="25c93b8382bdb1864b4d8de64b146fe8ea86eec84048d594c375700d2fff1d1d")
     version("0.4.30", sha256="f7ffea39b3132914fcbb0fac6ab7395bef295cd6078dfd1c2509fd2d9aab0acb")
     version("0.4.29", sha256="971f4f344c3143b654e6a86422534c6916f785f2c2c3785664c4ae7ddf2f5e4b")
     version("0.4.28", sha256="12c6f0c41b1aeb21164c949498819976bf91a395968debcb400539713bdfc6b0")
