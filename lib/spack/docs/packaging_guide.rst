@@ -851,16 +851,16 @@ Version comparison
 ^^^^^^^^^^^^^^^^^^
 
 Most Spack versions are numeric, a tuple of integers; for example,
-``apex@0.1``, ``ferret@6.96`` or ``py-netcdf@1.2.3.1``.  Spack knows
-how to compare and sort numeric versions.
+``0.1``, ``6.96`` or ``1.2.3.1``.  Spack knows how to compare and sort
+numeric versions.
 
 Some Spack versions involve slight extensions of numeric syntax; for
-example, ``py-sphinx-rtd-theme@0.1.10a0``.  In this case, numbers are
+example, ``py-sphinx-rtd-theme@=0.1.10a0``.  In this case, numbers are
 always considered to be "newer" than letters.  This is for consistency
 with `RPM <https://bugzilla.redhat.com/show_bug.cgi?id=50977>`_.
 
 Spack versions may also be arbitrary non-numeric strings, for example
-``@develop``, ``@master``, ``@local``.
+``develop``, ``master``, ``local``.
 
 The order on versions is defined as follows. A version string is split
 into a list of components based on delimiters such as ``.``, ``-`` etc.
@@ -916,6 +916,32 @@ use:
 
 #. If all else fails and ``@develop`` is the only matching version, it
    will be used.
+
+
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Ranges versus specific versions
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+When specifying versions in Spack using the ``pkg@<specifier>`` syntax,
+you can use either ranges or specific versions. It is generally
+recommended to use ranges instead of specific versions when packaging
+to avoid overly constraining dependencies, patches, and conflicts.
+
+For example, ``depends_on("python@3")`` denotes a range of versions,
+allowing Spack to pick any ``3.x.y`` version for Python, while
+``depends_on("python@=3.10.1")`` restricts it to a specific version.
+
+Specific ``@=`` versions should only be used in exceptional cases, such
+as when the package has a versioning scheme that omits the zero in the
+first patch release: ``3.1``, ``3.1.1``, ``3.1.2``. In this example,
+the specifier ``@=3.1`` is the correct way to select only the ``3.1``
+version, whereas ``@3.1`` would match all those versions.
+
+Ranges are preferred even if they would only match a single version
+defined in the package. This is because users can define custom versions
+in ``packages.yaml`` that typically include a custom suffix. For example,
+if the package defines the version ``1.2.3``, the specifier ``@1.2.3``
+will also match a user-defined version ``1.2.3-custom``.
 
 
 .. _cmd-spack-checksum:
@@ -2388,21 +2414,29 @@ requires Python 2, you can similarly leave out the lower bound:
 Notice that we didn't use ``@:3``. Version ranges are *inclusive*, so
 ``@:3`` means "up to and including any 3.x version".
 
-What if a package can only be built with Python 2.7? You might be
-inclined to use:
+You can also simply write
 
 .. code-block:: python
 
    depends_on("python@2.7")
 
-However, this would be wrong. Spack assumes that all version constraints
-are exact, so it would try to install Python not at ``2.7.18``, but
-exactly at ``2.7``, which is a non-existent version. The correct way to
-specify this would be:
+to tell Spack that the package needs Python 2.7.x. This is equivalent to
+``@2.7:2.7``.
+
+In very rare cases, you may need to specify an exact version, for example
+if you need to distinguish between ``3.2`` and ``3.2.1``:
 
 .. code-block:: python
 
-   depends_on("python@2.7.0:2.7")
+   depends_on("pkg@=3.2")
+
+But in general, you should try to use version ranges as much as possible,
+so that custom suffixes are included too. The above example can be
+rewritten in terms of ranges as follows:
+
+.. code-block:: python
+
+   depends_on("pkg@3.2:3.2.0")
 
 A spec can contain a version list of ranges and individual versions
 separated by commas. For example, if you need Boost 1.59.0 or newer,
@@ -2971,7 +3005,7 @@ appears as follows:
    baz/lib/libFooBaz.so
 
 The install tree shows that ``foo`` is providing the header ``include/foo.h``
-and library ``lib64/libFoo.so`` in it's install prefix.  The virtual
+and library ``lib64/libFoo.so`` in its install prefix.  The virtual
 package ``bar`` is providing ``include/bar/bar.h`` and library
 ``lib64/libFooBar.so``, also in ``foo``'s install prefix.  The ``baz``
 package, however, is provided in the ``baz`` subdirectory of ``foo``'s
@@ -3455,7 +3489,7 @@ the build system. The build systems currently supported by Spack are:
 |                                                          | licensed Intel software          |
 +----------------------------------------------------------+----------------------------------+
 | :class:`~spack.build_systems.oneapi`                     | Specialized build system for     |
-|                                                          | Intel onaAPI software            |
+|                                                          | Intel oneAPI software            |
 +----------------------------------------------------------+----------------------------------+
 | :class:`~spack.build_systems.aspell_dict`                | Specialized build system for     |
 |                                                          | Aspell dictionaries              |
@@ -4630,7 +4664,8 @@ Spack infers the status of a build based on the contents of the install
 prefix. Success is assumed if anything (e.g., a file, directory) is
 written after ``install()`` completes. Otherwise, the build is assumed
 to have failed. However, the presence of install prefix contents
-is not a sufficient indicator of success.
+is not a sufficient indicator of success so Spack supports the addition
+of tests that can be performed during `spack install` processing.
 
 Consider a simple autotools build using the following commands:
 
@@ -4654,6 +4689,16 @@ What can you do to check that the build is progressing satisfactorily?
 If there are specific files and or directories expected of a successful
 installation, you can add basic, fast ``sanity checks``. You can also add
 checks to be performed after one or more installation phases.
+
+.. note::
+
+   Build-time tests are performed when the ``--test`` option is passed
+   to ``spack install``.
+
+.. warning::
+
+   Build-time test failures result in a failed installation of the software.
+
 
 .. _sanity-checks:
 
@@ -4687,11 +4732,20 @@ that eight paths must exist within the installation prefix after the
        sanity_check_is_dir  = ["bin", "config", "docs", "reframe", "tutorials",
                                "unittests", "cscs-checks"]
 
-Spack will then ensure the installation created the **file**:
+When you run ``spack install`` with tests enabled, Spack will ensure that
+a successfully installed package has the required files and or directories.
+
+For example, running:
+
+.. code-block:: console
+
+   $ spack install --test=root reframe
+
+results in spack checking that the installation created the following **file**:
 
 * ``self.prefix/bin/reframe``
 
-It will also check for the existence of the following **directories**:
+and the following **directories**:
 
 * ``self.prefix/bin``
 * ``self.prefix/config``
@@ -4700,6 +4754,9 @@ It will also check for the existence of the following **directories**:
 * ``self.prefix/tutorials``
 * ``self.prefix/unittests``
 * ``self.prefix/cscs-checks``
+
+If **any** of these paths are missing, then Spack considers the installation
+to have failed.
 
 .. note::
 
@@ -4848,6 +4905,38 @@ installed executable. The check is implemented as follows:
     The API for adding tests is not yet considered stable and may change
     in future releases.
 
+
+""""""""""""""""""""""""""""""""
+Checking build-time test results
+""""""""""""""""""""""""""""""""
+
+Checking the results of these tests after running ``spack install --test``
+can be done by viewing the spec's ``install-time-test-log.txt`` file whose
+location will depend on whether the spec installed successfully.
+
+A successful installation results in the build and stage logs being copied
+to the ``.spack`` subdirectory of the spec's prefix. For example,
+
+.. code-block:: console
+
+   $ spack install --test=root zlib@1.2.13
+   ...
+   [+] /home/user/spack/opt/spack/linux-rhel8-broadwell/gcc-10.3.1/zlib-1.2.13-tehu6cbsujufa2tb6pu3xvc6echjstv6
+   $ cat /home/user/spack/opt/spack/linux-rhel8-broadwell/gcc-10.3.1/zlib-1.2.13-tehu6cbsujufa2tb6pu3xvc6echjstv6/.spack/install-time-test-log.txt
+
+If the installation fails due to build-time test failures, then both logs will
+be left in the build stage directory as illustrated below:
+
+.. code-block:: console
+
+   $ spack install --test=root zlib@1.2.13
+   ...
+   See build log for details:
+     /var/tmp/user/spack-stage/spack-stage-zlib-1.2.13-lxfsivs4htfdewxe7hbi2b3tekj4make/spack-build-out.txt
+
+   $ cat /var/tmp/user/spack-stage/spack-stage-zlib-1.2.13-lxfsivs4htfdewxe7hbi2b3tekj4make/install-time-test-log.txt
+
+
 .. _cmd-spack-test:
 
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -4873,8 +4962,7 @@ aspects of the installed software, or at least key functionality.
 
     Passing stand-alone (or smoke) tests can lead to more thorough
     testing, such as extensive unit or regression tests, or tests
-    that run at scale. Spack support for more thorough testing is
-    a work in progress.
+    that run at scale.
 
 Stand-alone tests have their own test stage directory, which can be
 configured. These tests can compile or build software with the compiler
@@ -5957,7 +6045,7 @@ location of a dependency.  The difference is that while ``prefix`` is the
 location on disk where a concrete package resides, ``home`` is the `logical`
 location that a package resides, which may be different than ``prefix`` in
 the case of virtual packages or other special circumstances.  For most use
-cases inside a package, it's dependency locations can be accessed via either
+cases inside a package, its dependency locations can be accessed via either
 ``self.spec["foo"].home`` or ``self.spec["foo"].prefix``.  Specific packages
 that should be consumed by dependents via ``.home`` instead of ``.prefix``
 should be noted in their respective documentation.

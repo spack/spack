@@ -43,10 +43,11 @@ import spack.platforms
 import spack.repo
 import spack.spec
 import spack.store
+import spack.traverse
 import spack.util.path
 import spack.util.timer
 import spack.variant
-import spack.version
+import spack.version as vn
 
 # these are from clingo.ast and bootstrapped later
 ASTType = None
@@ -893,7 +894,7 @@ class SpackSolverSetup(object):
         most_to_least_preferred = []
         for _, group in itertools.groupby(partially_sorted_versions, key=key_fn):
             most_to_least_preferred.extend(
-                list(sorted(group, reverse=True, key=lambda x: spack.version.ver(x.version)))
+                list(sorted(group, reverse=True, key=lambda x: vn.ver(x.version)))
             )
 
         for weight, declared_version in enumerate(most_to_least_preferred):
@@ -920,7 +921,7 @@ class SpackSolverSetup(object):
         if spec.concrete:
             return [fn.attr("version", spec.name, spec.version)]
 
-        if spec.versions == spack.version.ver(":"):
+        if spec.versions == vn.any_version:
             return []
 
         # record all version constraints for later
@@ -1286,6 +1287,7 @@ class SpackSolverSetup(object):
                 spec = spack.spec.Spec(spec_str)
                 if not spec.name:
                     spec.name = pkg_name
+                spec.attach_git_version_lookup()
                 when_spec = spec
                 if virtual:
                     when_spec = spack.spec.Spec(pkg_name)
@@ -1330,7 +1332,7 @@ class SpackSolverSetup(object):
 
             # Read a list of all the specs for this package
             externals = data.get("externals", [])
-            external_specs = [spack.spec.Spec(x["spec"]) for x in externals]
+            external_specs = [spack.spec.parse_with_version_concrete(x["spec"]) for x in externals]
 
             # Order the external versions to prefer more recent versions
             # even if specs in packages.yaml are not ordered that way
@@ -1636,48 +1638,27 @@ class SpackSolverSetup(object):
             version_preferences = packages_yaml.get(pkg_name, {}).get("version", [])
             for idx, v in enumerate(version_preferences):
                 # v can be a string so force it into an actual version for comparisons
-                ver = spack.version.Version(v)
+                ver = vn.Version(v)
                 self.declared_versions[pkg_name].append(
                     DeclaredVersion(version=ver, idx=idx, origin=version_provenance.packages_yaml)
                 )
+                self.possible_versions[pkg_name].add(ver)
 
     def add_concrete_versions_from_specs(self, specs, origin):
         """Add concrete versions to possible versions from lists of CLI/dev specs."""
-        for spec in specs:
-            for dep in spec.traverse():
-                if not dep.versions.concrete:
-                    continue
+        for s in spack.traverse.traverse_nodes(specs):
+            # If there is a concrete version on the CLI *that we know nothing
+            # about*, add it to the known versions. Use idx=0, which is the
+            # best possible, so they're guaranteed to be used preferentially.
+            version = s.versions.concrete
 
-                known_versions = self.possible_versions[dep.name]
-                if not isinstance(dep.version, spack.version.GitVersion) and any(
-                    v.satisfies(dep.version) for v in known_versions
-                ):
-                    # some version we know about satisfies this constraint, so we
-                    # should use that one. e.g, if the user asks for qt@5 and we
-                    # know about qt@5.5. This ensures we don't add under-specified
-                    # versions to the solver
-                    #
-                    # For git versions, we know the version is already fully specified
-                    # so we don't have to worry about whether it's an under-specified
-                    # version
-                    continue
+            if version is None or any(v == version for v in self.possible_versions[s.name]):
+                continue
 
-                # if there is a concrete version on the CLI *that we know nothing
-                # about*, add it to the known versions. Use idx=0, which is the
-                # best possible, so they're guaranteed to be used preferentially.
-                self.declared_versions[dep.name].append(
-                    DeclaredVersion(version=dep.version, idx=0, origin=origin)
-                )
-                self.possible_versions[dep.name].add(dep.version)
-                if (
-                    isinstance(dep.version, spack.version.GitVersion)
-                    and dep.version.user_supplied_reference
-                ):
-                    defined_version = spack.version.Version(dep.version.ref_version_str)
-                    self.declared_versions[dep.name].append(
-                        DeclaredVersion(version=defined_version, idx=1, origin=origin)
-                    )
-                    self.possible_versions[dep.name].add(defined_version)
+            self.declared_versions[s.name].append(
+                DeclaredVersion(version=version, idx=0, origin=origin)
+            )
+            self.possible_versions[s.name].add(version)
 
     def _supported_targets(self, compiler_name, compiler_version, targets):
         """Get a list of which targets are supported by the compiler.
@@ -1872,28 +1853,26 @@ class SpackSolverSetup(object):
         # add compiler specs from the input line to possibilities if we
         # don't require compilers to exist.
         strict = spack.concretize.Concretizer().check_for_compiler_existence
-        for spec in specs:
-            for s in spec.traverse():
-                # we don't need to validate compilers for already-built specs
-                if s.concrete:
-                    continue
+        for s in spack.traverse.traverse_nodes(specs):
+            # we don't need to validate compilers for already-built specs
+            if s.concrete or not s.compiler:
+                continue
 
-                if not s.compiler or not s.compiler.concrete:
-                    continue
+            version = s.compiler.versions.concrete
 
-                if strict and s.compiler not in cspecs:
-                    if not s.concrete:
-                        raise spack.concretize.UnavailableCompilerVersionError(s.compiler)
-                    # Allow unknown compilers to exist if the associated spec
-                    # is already built
-                else:
-                    compiler_cls = spack.compilers.class_for_compiler_name(s.compiler.name)
-                    compilers.append(
-                        compiler_cls(
-                            s.compiler, operating_system=None, target=None, paths=[None] * 4
-                        )
-                    )
-                    self.gen.fact(fn.allow_compiler(s.compiler.name, s.compiler.version))
+            if not version or any(c.satisfies(s.compiler) for c in cspecs):
+                continue
+
+            # Error when a compiler is not found and strict mode is enabled
+            if strict:
+                raise spack.concretize.UnavailableCompilerVersionError(s.compiler)
+
+            # Make up a compiler matching the input spec. This is for bootstrapping.
+            compiler_cls = spack.compilers.class_for_compiler_name(s.compiler.name)
+            compilers.append(
+                compiler_cls(s.compiler, operating_system=None, target=None, paths=[None] * 4)
+            )
+            self.gen.fact(fn.allow_compiler(s.compiler.name, version))
 
         return list(
             sorted(
@@ -1906,25 +1885,9 @@ class SpackSolverSetup(object):
     def define_version_constraints(self):
         """Define what version_satisfies(...) means in ASP logic."""
         for pkg_name, versions in sorted(self.version_constraints):
-            # version must be *one* of the ones the spec allows.
-            # Also, "possible versions" contain only concrete versions, so satisfies is appropriate
-            allowed_versions = [
-                v for v in sorted(self.possible_versions[pkg_name]) if v.satisfies(versions)
-            ]
-
-            # This is needed to account for a variable number of
-            # numbers e.g. if both 1.0 and 1.0.2 are possible versions
-            exact_match = [
-                v
-                for v in allowed_versions
-                if v == versions and not isinstance(v, spack.version.GitVersion)
-            ]
-            if exact_match:
-                allowed_versions = exact_match
-
             # generate facts for each package constraint and the version
             # that satisfies it
-            for v in allowed_versions:
+            for v in sorted(v for v in self.possible_versions[pkg_name] if v.satisfies(versions)):
                 self.gen.fact(fn.version_satisfies(pkg_name, versions, v))
 
             self.gen.newline()
@@ -1943,13 +1906,11 @@ class SpackSolverSetup(object):
 
         # extract all the real versions mentioned in version ranges
         def versions_for(v):
-            if isinstance(v, spack.version.VersionBase):
+            if isinstance(v, vn.StandardVersion):
                 return [v]
-            elif isinstance(v, spack.version.VersionRange):
-                result = [v.start] if v.start else []
-                result += [v.end] if v.end else []
-                return result
-            elif isinstance(v, spack.version.VersionList):
+            elif isinstance(v, vn.ClosedOpenRange):
+                return [v.lo, vn.prev_version(v.hi)]
+            elif isinstance(v, vn.VersionList):
                 return sum((versions_for(e) for e in v), [])
             else:
                 raise TypeError("expected version type, found: %s" % type(v))
@@ -2237,14 +2198,9 @@ def _specs_from_requires(pkg_name, section):
                 spec.name = pkg_name
             extracted_specs.append(spec)
 
-    version_specs = []
-    for spec in extracted_specs:
-        try:
-            spec.version
-            version_specs.append(spec)
-        except spack.error.SpecError:
-            pass
-
+    version_specs = [x for x in extracted_specs if x.versions.concrete]
+    for spec in version_specs:
+        spec.attach_git_version_lookup()
     return version_specs
 
 
@@ -2320,11 +2276,11 @@ class SpecBuilder(object):
         self._specs[pkg].update_variant_validate(name, value)
 
     def version(self, pkg, version):
-        self._specs[pkg].versions = spack.version.ver([version])
+        self._specs[pkg].versions = vn.VersionList([vn.Version(version)])
 
     def node_compiler_version(self, pkg, compiler, version):
         self._specs[pkg].compiler = spack.spec.CompilerSpec(compiler)
-        self._specs[pkg].compiler.versions = spack.version.VersionList([version])
+        self._specs[pkg].compiler.versions = vn.VersionList([vn.Version(version)])
 
     def node_flag_compiler_default(self, pkg):
         self._flag_compiler_defaults.add(pkg)
@@ -2525,8 +2481,8 @@ class SpecBuilder(object):
         # concretization process)
         for root in self._specs.values():
             for spec in root.traverse():
-                if isinstance(spec.version, spack.version.GitVersion):
-                    spec.version.generate_git_lookup(spec.fullname)
+                if isinstance(spec.version, vn.GitVersion):
+                    spec.version.attach_git_lookup_from_package(spec.fullname)
 
         return self._specs
 
