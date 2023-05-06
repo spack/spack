@@ -40,29 +40,26 @@ def compare_hash_sans_name(eq, spec1, spec2):
     content2 = content2.replace(pkg_cls2.__name__, "TestPackage")
     hash2 = pkg_cls2(spec2).content_hash(content=content2)
 
-    if eq:
-        assert hash1 == hash2
-    else:
-        assert hash1 != hash2
+    assert (hash1 == hash2) == eq
 
 
 def test_hash(mock_packages, config):
-    ph.package_hash(Spec("hash-test1@1.2"))
+    ph.package_hash(Spec("hash-test1@=1.2"))
 
 
 def test_different_variants(mock_packages, config):
-    spec1 = Spec("hash-test1@1.2 +variantx")
-    spec2 = Spec("hash-test1@1.2 +varianty")
+    spec1 = Spec("hash-test1@=1.2 +variantx")
+    spec2 = Spec("hash-test1@=1.2 +varianty")
     assert ph.package_hash(spec1) == ph.package_hash(spec2)
 
 
 def test_all_same_but_name(mock_packages, config):
-    spec1 = Spec("hash-test1@1.2")
-    spec2 = Spec("hash-test2@1.2")
+    spec1 = Spec("hash-test1@=1.2")
+    spec2 = Spec("hash-test2@=1.2")
     compare_sans_name(True, spec1, spec2)
 
-    spec1 = Spec("hash-test1@1.2 +varianty")
-    spec2 = Spec("hash-test2@1.2 +varianty")
+    spec1 = Spec("hash-test1@=1.2 +varianty")
+    spec2 = Spec("hash-test2@=1.2 +varianty")
     compare_sans_name(True, spec1, spec2)
 
 
@@ -70,26 +67,26 @@ def test_all_same_but_archive_hash(mock_packages, config):
     """
     Archive hash is not intended to be reflected in Package hash.
     """
-    spec1 = Spec("hash-test1@1.3")
-    spec2 = Spec("hash-test2@1.3")
+    spec1 = Spec("hash-test1@=1.3")
+    spec2 = Spec("hash-test2@=1.3")
     compare_sans_name(True, spec1, spec2)
 
 
 def test_all_same_but_patch_contents(mock_packages, config):
-    spec1 = Spec("hash-test1@1.1")
-    spec2 = Spec("hash-test2@1.1")
+    spec1 = Spec("hash-test1@=1.1")
+    spec2 = Spec("hash-test2@=1.1")
     compare_sans_name(True, spec1, spec2)
 
 
 def test_all_same_but_patches_to_apply(mock_packages, config):
-    spec1 = Spec("hash-test1@1.4")
-    spec2 = Spec("hash-test2@1.4")
+    spec1 = Spec("hash-test1@=1.4")
+    spec2 = Spec("hash-test2@=1.4")
     compare_sans_name(True, spec1, spec2)
 
 
 def test_all_same_but_install(mock_packages, config):
-    spec1 = Spec("hash-test1@1.5")
-    spec2 = Spec("hash-test2@1.5")
+    spec1 = Spec("hash-test1@=1.5")
+    spec2 = Spec("hash-test2@=1.5")
     compare_sans_name(False, spec1, spec2)
 
 
@@ -102,14 +99,14 @@ def test_content_hash_all_same_but_patch_contents(mock_packages, config):
 def test_content_hash_not_concretized(mock_packages, config):
     """Check that Package.content_hash() works on abstract specs."""
     # these are different due to the package hash
-    spec1 = Spec("hash-test1@1.1")
-    spec2 = Spec("hash-test2@1.3")
+    spec1 = Spec("hash-test1@=1.1")
+    spec2 = Spec("hash-test2@=1.3")
     compare_hash_sans_name(False, spec1, spec2)
 
     # at v1.1 these are actually the same package when @when's are removed
     # and the name isn't considered
-    spec1 = Spec("hash-test1@1.1")
-    spec2 = Spec("hash-test2@1.1")
+    spec1 = Spec("hash-test1@=1.1")
+    spec2 = Spec("hash-test2@=1.1")
     compare_hash_sans_name(True, spec1, spec2)
 
     # these end up being different b/c we can't eliminate much of the package.py

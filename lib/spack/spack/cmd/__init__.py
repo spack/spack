@@ -231,7 +231,7 @@ def parse_specs(args, **kwargs):
             msg += "\n\n"
             msg += unquoted_flags.report()
 
-        raise spack.error.SpackError(msg)
+        raise spack.error.SpackError(msg) from e
 
 
 def matching_spec_from_env(spec):

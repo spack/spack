@@ -141,7 +141,7 @@ def _process_result(result, show, required_format, kwargs):
 def solve(parser, args):
     # these are the same options as `spack spec`
     name_fmt = "{namespace}.{name}" if args.namespaces else "{name}"
-    fmt = "{@version}{%compiler}{compiler_flags}{variants}{arch=architecture}"
+    fmt = "{@versions}{%compiler}{compiler_flags}{variants}{arch=architecture}"
     install_status_fn = spack.spec.Spec.install_status
     kwargs = {
         "cover": args.cover,

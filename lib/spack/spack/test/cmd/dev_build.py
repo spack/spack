@@ -265,7 +265,7 @@ def test_dev_build_multiple(
     # without the environment, the user would need to set dev_path for both the
     # root and dependency if they wanted a dev build for both.
     leaf_dir = tmpdir.mkdir("leaf")
-    leaf_spec = spack.spec.Spec("dev-build-test-install@1.0.0")
+    leaf_spec = spack.spec.Spec("dev-build-test-install@=1.0.0")  # non-existing version
     leaf_pkg_cls = spack.repo.path.get_pkg_class(leaf_spec.name)
     with leaf_dir.as_cwd():
         with open(leaf_pkg_cls.filename, "w") as f:
@@ -293,7 +293,7 @@ spack:
   develop:
     dev-build-test-install:
       path: %s
-      spec: dev-build-test-install@1.0.0
+      spec: dev-build-test-install@=1.0.0
     dev-build-test-dependent:
       spec: dev-build-test-dependent@0.0.0
       path: %s

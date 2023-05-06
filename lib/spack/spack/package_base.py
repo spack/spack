@@ -62,7 +62,7 @@ from spack.util.executable import ProcessError, which
 from spack.util.package_hash import package_hash
 from spack.util.prefix import Prefix
 from spack.util.web import FetchError
-from spack.version import GitVersion, Version, VersionBase
+from spack.version import GitVersion, StandardVersion, Version
 
 FLAG_HANDLER_RETURN_TYPE = Tuple[
     Optional[Iterable[str]], Optional[Iterable[str]], Optional[Iterable[str]]
@@ -97,9 +97,9 @@ def deprecated_version(pkg, version):
 
     Arguments:
         pkg (PackageBase): The package whose version is to be checked.
-        version (str or spack.version.VersionBase): The version being checked
+        version (str or spack.version.StandardVersion): The version being checked
     """
-    if not isinstance(version, VersionBase):
+    if not isinstance(version, StandardVersion):
         version = Version(version)
 
     for k, v in pkg.versions.items():
@@ -120,7 +120,7 @@ def preferred_version(pkg):
     # as preferred in the package, then on the fact that the
     # version is not develop, then lexicographically
     key_fn = lambda v: (pkg.versions[v].get("preferred", False), not v.isdevelop(), v)
-    return sorted(pkg.versions, key=key_fn).pop()
+    return max(pkg.versions, key=key_fn)
 
 
 class WindowsRPath(object):
@@ -928,7 +928,7 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
         return self._implement_all_urls_for_version(version, uf)
 
     def _implement_all_urls_for_version(self, version, custom_url_for_version=None):
-        if not isinstance(version, VersionBase):
+        if not isinstance(version, StandardVersion):
             version = Version(version)
 
         urls = []

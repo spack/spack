@@ -776,11 +776,10 @@ def tarball_directory_name(spec):
     Return name of the tarball directory according to the convention
     <os>-<architecture>/<compiler>/<package>-<version>/
     """
-    return "%s/%s/%s-%s" % (
-        spec.architecture,
-        str(spec.compiler).replace("@", "-"),
-        spec.name,
-        spec.version,
+    return os.path.join(
+        str(spec.architecture),
+        f"{spec.compiler.name}-{spec.compiler.version}",
+        f"{spec.name}-{spec.version}",
     )
 
 
@@ -789,13 +788,9 @@ def tarball_name(spec, ext):
     Return the name of the tarfile according to the convention
     <os>-<architecture>-<package>-<dag_hash><ext>
     """
-    return "%s-%s-%s-%s-%s%s" % (
-        spec.architecture,
-        str(spec.compiler).replace("@", "-"),
-        spec.name,
-        spec.version,
-        spec.dag_hash(),
-        ext,
+    return (
+        f"{spec.architecture}-{spec.compiler.name}-{spec.compiler.version}-"
+        f"{spec.name}-{spec.version}-{spec.dag_hash()}{ext}"
     )
 
 

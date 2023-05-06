@@ -54,7 +54,7 @@ class Libyogrt(AutotoolsPackage):
     variant("static", default="False", description="build static library")
 
     def url_for_version(self, version):
-        if version < Version(1.21):
+        if version < Version("1.21"):
             return "https://github.com/LLNL/libyogrt/archive/%s.tar.gz" % version
         else:
             return "https://github.com/LLNL/libyogrt/releases/download/{0}/libyogrt-{0}.tar.gz".format(

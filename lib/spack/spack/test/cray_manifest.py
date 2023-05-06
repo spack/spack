@@ -15,7 +15,12 @@ import os
 import pytest
 
 import spack
+import spack.cmd
+import spack.compilers
+import spack.config
 import spack.cray_manifest as cray_manifest
+import spack.spec
+import spack.store
 from spack.cray_manifest import compiler_from_entry, entries_to_specs
 
 example_x_json_str = """\
@@ -348,7 +353,7 @@ def test_read_cray_manifest_twice_no_compiler_duplicates(
 ):
     if spack.config.get("config:concretizer") == "clingo":
         pytest.skip(
-            "The ASP-based concretizer is currently picky about " " OS matching and will fail."
+            "The ASP-based concretizer is currently picky about OS matching and will fail."
         )
 
     with tmpdir.as_cwd():
@@ -362,7 +367,7 @@ def test_read_cray_manifest_twice_no_compiler_duplicates(
 
         compilers = spack.compilers.all_compilers()
         filtered = list(
-            c for c in compilers if c.spec == spack.spec.CompilerSpec("gcc@10.2.0.cray")
+            c for c in compilers if c.spec == spack.spec.CompilerSpec("gcc@=10.2.0.cray")
         )
         assert len(filtered) == 1
 

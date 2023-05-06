@@ -52,6 +52,7 @@ import spack.mirror
 import spack.package_base
 import spack.package_prefs as prefs
 import spack.repo
+import spack.spec
 import spack.store
 import spack.util.executable
 import spack.util.path
@@ -628,9 +629,7 @@ def package_id(pkg):
             derived
     """
     if not pkg.spec.concrete:
-        raise ValueError(
-            "Cannot provide a unique, readable id when " "the spec is not concretized."
-        )
+        raise ValueError("Cannot provide a unique, readable id when the spec is not concretized.")
 
     return "{0}-{1}-{2}".format(pkg.name, pkg.version, pkg.spec.dag_hash())
 
@@ -908,7 +907,6 @@ class PackageInstaller(object):
         """
         install_args = task.request.install_args
         keep_prefix = install_args.get("keep_prefix")
-        keep_stage = install_args.get("keep_stage")
         restage = install_args.get("restage")
 
         # Make sure the package is ready to be locally installed.
@@ -941,9 +939,9 @@ class PackageInstaller(object):
                 else:
                     tty.debug("{0} is partially installed".format(task.pkg_id))
 
-        # Destroy the stage for a locally installed, non-DIYStage, package
-        if restage and task.pkg.stage.managed_by_spack:
-            task.pkg.stage.destroy()
+            # Destroy the stage for a locally installed, non-DIYStage, package
+            if restage and task.pkg.stage.managed_by_spack:
+                task.pkg.stage.destroy()
 
         if installed_in_db and (
             rec.spec.dag_hash() not in task.request.overwrite
@@ -954,12 +952,6 @@ class PackageInstaller(object):
             # Only update the explicit entry once for the explicit package
             if task.explicit:
                 spack.store.db.update_explicit(task.pkg.spec, True)
-
-            # In case the stage directory has already been created, this
-            # check ensures it is removed after we checked that the spec is
-            # installed.
-            if not keep_stage:
-                task.pkg.stage.destroy()
 
     def _cleanup_all_tasks(self):
         """Cleanup all build tasks to include releasing their locks."""

@@ -9,9 +9,9 @@ import spack.error
 import spack.repo
 from spack.config import ConfigError
 from spack.util.path import canonicalize_path
-from spack.version import VersionList
+from spack.version import Version
 
-_lesser_spec_types = {"compiler": spack.spec.CompilerSpec, "version": VersionList}
+_lesser_spec_types = {"compiler": spack.spec.CompilerSpec, "version": Version}
 
 
 def _spec_type(component):

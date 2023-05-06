@@ -281,7 +281,7 @@ spack:
     - bootstrap:
       - gcc@3.0
   specs:
-    - dyninst%gcc@3.0
+    - dyninst%gcc@=3.0
   mirrors:
     some-mirror: https://my.fake.mirror
   ci:
@@ -341,7 +341,7 @@ spack:
     - bootstrap:
       - gcc@3.0
   specs:
-    - dyninst%gcc@3.0
+    - dyninst%gcc@=3.0
   mirrors:
     some-mirror: https://my.fake.mirror
   ci:
@@ -1527,7 +1527,7 @@ def test_ci_generate_with_workarounds(
             """\
 spack:
   specs:
-    - callpath%gcc@9.5
+    - callpath%gcc@=9.5
   mirrors:
     some-mirror: https://my.fake.mirror
   ci:
@@ -1644,7 +1644,7 @@ def test_ci_generate_bootstrap_prune_dag(
     mirror_url = "file://{0}".format(mirror_dir.strpath)
 
     # Install a compiler, because we want to put it in a buildcache
-    install_cmd("gcc@12.2.0%gcc@10.2.1")
+    install_cmd("gcc@=12.2.0%gcc@10.2.1")
 
     # Put installed compiler in the buildcache
     buildcache_cmd("push", "-u", "-a", "-f", "-d", mirror_dir.strpath, "gcc@12.2.0%gcc@10.2.1")
@@ -1654,12 +1654,12 @@ def test_ci_generate_bootstrap_prune_dag(
 
     monkeypatch.setattr(spack.concretize.Concretizer, "check_for_compiler_existence", False)
     spack.config.set("config:install_missing_compilers", True)
-    assert CompilerSpec("gcc@12.2.0") not in compilers.all_compiler_specs()
+    assert CompilerSpec("gcc@=12.2.0") not in compilers.all_compiler_specs()
 
     # Configure the mirror where we put that buildcache w/ the compiler
     mirror_cmd("add", "test-mirror", mirror_url)
 
-    install_cmd("--no-check-signature", "b%gcc@12.2.0")
+    install_cmd("--no-check-signature", "b%gcc@=12.2.0")
 
     # Put spec built with installed compiler in the buildcache
     buildcache_cmd("push", "-u", "-a", "-f", "-d", mirror_dir.strpath, "b%gcc@12.2.0")
@@ -1674,7 +1674,7 @@ def test_ci_generate_bootstrap_prune_dag(
 spack:
   definitions:
     - bootstrap:
-      - gcc@12.2.0%gcc@10.2.1
+      - gcc@=12.2.0%gcc@10.2.1
   specs:
     - b%gcc@12.2.0
   mirrors:

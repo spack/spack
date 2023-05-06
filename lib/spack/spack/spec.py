@@ -55,7 +55,7 @@ import itertools
 import os
 import re
 import warnings
-from typing import Tuple
+from typing import Tuple, Union
 
 import llnl.util.filesystem as fs
 import llnl.util.lang as lang
@@ -145,12 +145,8 @@ color_formats = {
 #: ``color_formats.keys()``.
 _separators = "[\\%s]" % "\\".join(color_formats.keys())
 
-#: Versionlist constant so we don't have to build a list
-#: every time we call str()
-_any_version = vn.VersionList([":"])
-
-default_format = "{name}{@version}"
-default_format += "{%compiler.name}{@compiler.version}{compiler_flags}"
+default_format = "{name}{@versions}"
+default_format += "{%compiler.name}{@compiler.versions}{compiler_flags}"
 default_format += "{variants}{arch=architecture}"
 
 #: Regular expression to pull spec contents out of clearsigned signature
@@ -581,20 +577,18 @@ class CompilerSpec(object):
         elif nargs == 2:
             name, version = args
             self.name = name
-            self.versions = vn.VersionList()
-            versions = vn.ver(version)
-            self.versions.add(versions)
+            self.versions = vn.VersionList([vn.ver(version)])
 
         else:
             raise TypeError("__init__ takes 1 or 2 arguments. (%d given)" % nargs)
 
     def _add_versions(self, version_list):
         # If it already has a non-trivial version list, this is an error
-        if self.versions and self.versions != vn.VersionList(":"):
+        if self.versions and self.versions != vn.any_version:
             # Note: This may be impossible to reach by the current parser
             # Keeping it in case the implementation changes.
             raise MultipleVersionError(
-                "A spec cannot contain multiple version signifiers." " Use a version list instead."
+                "A spec cannot contain multiple version signifiers. Use a version list instead."
             )
         self.versions = vn.VersionList()
         for version in version_list:
@@ -677,9 +671,8 @@ class CompilerSpec(object):
 
     def __str__(self):
         out = self.name
-        if self.versions and self.versions != _any_version:
-            vlist = ",".join(str(v) for v in self.versions)
-            out += "@%s" % vlist
+        if self.versions and self.versions != vn.any_version:
+            out += f"@{self.versions}"
         return out
 
     def __repr__(self):
@@ -1477,7 +1470,7 @@ class Spec(object):
     def _add_versions(self, version_list):
         """Called by the parser to add an allowable version."""
         # If it already has a non-trivial version list, this is an error
-        if self.versions and self.versions != vn.VersionList(":"):
+        if self.versions and self.versions != vn.any_version:
             raise MultipleVersionError(
                 "A spec cannot contain multiple version signifiers." " Use a version list instead."
             )
@@ -2108,7 +2101,7 @@ class Spec(object):
         # (and the user spec) have dependencies
         new_spec = init_spec.copy()
         package_cls = spack.repo.path.get_pkg_class(new_spec.name)
-        if change_spec.versions and not change_spec.versions == spack.version.ver(":"):
+        if change_spec.versions and not change_spec.versions == vn.any_version:
             new_spec.versions = change_spec.versions
         for variant, value in change_spec.variants.items():
             if variant in package_cls.variants:
@@ -2289,12 +2282,17 @@ class Spec(object):
         """
         # Legacy specfile format
         if isinstance(data["spec"], list):
-            return SpecfileV1.load(data)
+            spec = SpecfileV1.load(data)
+        elif int(data["spec"]["_meta"]["version"]) == 2:
+            spec = SpecfileV2.load(data)
+        else:
+            spec = SpecfileV3.load(data)
 
-        specfile_version = int(data["spec"]["_meta"]["version"])
-        if specfile_version == 2:
-            return SpecfileV2.load(data)
-        return SpecfileV3.load(data)
+        # Any git version should
+        for s in spec.traverse():
+            s.attach_git_version_lookup()
+
+        return spec
 
     @staticmethod
     def from_yaml(stream):
@@ -2823,6 +2821,26 @@ class Spec(object):
             return
         self._normal = value
         self._concrete = value
+        self._validate_version()
+
+    def _validate_version(self):
+        # Specs that were concretized with just a git sha as version, without associated
+        # Spack version, get their Spack version mapped to develop. This should only apply
+        # when reading specs concretized with Spack 0.19 or earlier. Currently Spack always
+        # ensures that GitVersion specs have an associated Spack version.
+        v = self.versions.concrete
+        if not isinstance(v, vn.GitVersion):
+            return
+
+        try:
+            v.ref_version
+        except vn.VersionLookupError:
+            before = self.cformat("{name}{@version}{/hash:7}")
+            v._ref_version = vn.StandardVersion.from_string("develop")
+            tty.debug(
+                f"the git sha of {before} could not be resolved to spack version; "
+                f"it has been replaced by {self.cformat('{name}{@version}{/hash:7}')}."
+            )
 
     def _mark_concrete(self, value=True):
         """Mark this spec and its dependencies as concrete.
@@ -4166,9 +4184,13 @@ class Spec(object):
                         if part == "arch":
                             part = "architecture"
                         elif part == "version":
-                            # Version requires concrete spec, versions does not
-                            # when concrete, they print the same thing
-                            part = "versions"
+                            # version (singular) requires a concrete versions list. Avoid
+                            # pedantic errors by using versions (plural) when not concrete.
+                            # These two are not entirely equivalent for pkg@=1.2.3:
+                            # - version prints '1.2.3'
+                            # - versions prints '=1.2.3'
+                            if not current.versions.concrete:
+                                part = "versions"
                         try:
                             current = getattr(current, part)
                         except AttributeError:
@@ -4177,7 +4199,7 @@ class Spec(object):
                             m += "Spec %s has no attribute %s" % (parent, part)
                             raise SpecFormatStringError(m)
                         if isinstance(current, vn.VersionList):
-                            if current == _any_version:
+                            if current == vn.any_version:
                                 # We don't print empty version lists
                                 return
 
@@ -4195,7 +4217,7 @@ class Spec(object):
                 col = "="
             elif "compiler" in parts or "compiler_flags" in parts:
                 col = "%"
-            elif "version" in parts:
+            elif "version" in parts or "versions" in parts:
                 col = "@"
 
             # Finally, write the output
@@ -4539,6 +4561,23 @@ class Spec(object):
     def __reduce__(self):
         return Spec.from_dict, (self.to_dict(hash=ht.process_hash),)
 
+    def attach_git_version_lookup(self):
+        # Add a git lookup method for GitVersions
+        if not self.name:
+            return
+        for v in self.versions:
+            if isinstance(v, vn.GitVersion) and v._ref_version is None:
+                v.attach_git_lookup_from_package(self.fullname)
+
+
+def parse_with_version_concrete(string: str, compiler: bool = False):
+    """Same as Spec(string), but interprets @x as @=x"""
+    s: Union[CompilerSpec, Spec] = CompilerSpec(string) if compiler else Spec(string)
+    interpreted_version = s.versions.concrete_range_as_version
+    if interpreted_version:
+        s.versions = vn.VersionList([interpreted_version])
+    return s
+
 
 def merge_abstract_anonymous_specs(*abstract_specs: Spec):
     """Merge the abstracts specs passed as input and return the result.
@@ -4580,6 +4619,7 @@ class SpecfileReaderBase:
 
         if "version" in node or "versions" in node:
             spec.versions = vn.VersionList.from_dict(node)
+            spec.attach_git_version_lookup()
 
         if "arch" in node:
             spec.architecture = ArchSpec.from_dict(node)
@@ -4614,7 +4654,8 @@ class SpecfileReaderBase:
                 )
 
         # specs read in are concrete unless marked abstract
-        spec._concrete = node.get("concrete", True)
+        if node.get("concrete", True):
+            spec._mark_root_concrete()
 
         if "patches" in node:
             patches = node["patches"]

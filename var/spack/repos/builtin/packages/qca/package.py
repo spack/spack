@@ -33,6 +33,6 @@ class Qca(CMakePackage):
     def cmake_args(self):
         args = []
         args.append("-DCMAKE_CXX_STANDARD=11")
-        if self.spec["qt"].version.up_to(1) == Version(4):
+        if self.spec["qt"].version.up_to(1) == Version("4"):
             args.append("-DQT4_BUILD=ON")
         return args
