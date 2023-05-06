@@ -4,6 +4,7 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 from spack.package import *
+from spack.util.environment import is_system_path
 
 
 class Mono(AutotoolsPackage):
@@ -74,6 +75,8 @@ class Mono(AutotoolsPackage):
 
     def configure_args(self):
         args = []
-        li = self.spec["iconv"].prefix
-        args.append("--with-libiconv-prefix={p}".format(p=li))
+        if self.spec["iconv"].name == "libc":
+            args.append("--without-libiconv-prefix")
+        elif not is_system_path(self.spec["iconv"].prefix):
+            args.append("--with-libiconv-prefix={p}".format(p=self.spec["iconv"].prefix))
         return args
