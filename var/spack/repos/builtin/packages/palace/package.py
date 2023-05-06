@@ -38,7 +38,7 @@ class Palace(CMakePackage):
 
     # Dependencies
     depends_on("cmake@3.13:", type="build")
-    depends_on("pkg-config", type="build")
+    depends_on("pkgconfig", type="build")
     depends_on("mpi")
     depends_on("zlib")
     depends_on("nlohmann-json")

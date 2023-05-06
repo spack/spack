@@ -89,12 +89,6 @@ class LlvmDoe(CMakePackage, CudaPackage):
         description="Build all supported targets, default targets "
         "<current arch>,NVPTX,AMDGPU,CppBackend",
     )
-    variant(
-        "build_type",
-        default="Release",
-        description="CMake build type",
-        values=("Debug", "Release", "RelWithDebInfo", "MinSizeRel"),
-    )
     variant("omp_tsan", default=False, description="Build with OpenMP capable thread sanitizer")
     variant(
         "omp_as_runtime",
