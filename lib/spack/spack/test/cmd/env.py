@@ -6,6 +6,7 @@ import filecmp
 import glob
 import io
 import os
+import re
 import pathlib
 import shutil
 import sys
@@ -3134,6 +3135,45 @@ def test_environment_depfile_makefile(depfile_flags, expected_installs, tmpdir, 
     # Check that all specs are there (without duplicates)
     assert set(specs_that_make_would_install) == set(expected_installs)
     assert len(specs_that_make_would_install) == len(set(specs_that_make_would_install))
+
+
+def test_environment_depfile_spec_format_special_chars(tmpdir, mock_packages, monkeypatch):
+    env("create", "test")
+    makefile = str(tmpdir.join("Makefile"))
+    with ev.read("test"):
+        add("dttop")
+        concretize()
+
+    orig_format = spack.spec.Spec.format
+
+    def _contrived_spec_format(obj, format_str):
+        if obj.name == "dtlink1":
+            return "dtlink1-githash=version-spackhash"
+        else:
+            return orig_format(obj, format_str)
+
+    monkeypatch.setattr(spack.spec.Spec, "format", _contrived_spec_format)
+
+    with ev.read("test"):
+        env(
+            "depfile",
+            "-o",
+            makefile,
+            "--make-disable-jobserver",
+            "--make-prefix=prefix",
+            "--use-buildcache=never",
+        )
+
+    with open(makefile, "r") as f:
+        makefile_lines = f.readlines()
+
+    makefile_contents = "\n".join(makefile_lines)
+
+    for line in makefile_lines:
+        if "githash=version" in line:
+            assert re.search("SPEC = dtlink1-githash=version-spackhash$", line)
+
+    assert "dtlink1-githash_version-spackhash" in makefile_contents
 
 
 @pytest.mark.parametrize(
