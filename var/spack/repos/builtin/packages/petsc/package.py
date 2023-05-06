@@ -145,7 +145,7 @@ class Petsc(Package, CudaPackage, ROCmPackage):
     variant("fortran", default=True, description="Activates fortran support")
 
     # https://github.com/spack/spack/issues/37416
-    conflicts("^rocprim@5.3.0", when="@3.19.1 +rocm")
+    conflicts("^rocprim@5.3.0:5.3.2", when="+rocm")
 
     # 3.8.0 has a build issue with MKL - so list this conflict explicitly
     conflicts("^intel-mkl", when="@3.8.0")
