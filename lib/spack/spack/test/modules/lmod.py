@@ -24,7 +24,7 @@ writer_cls = spack.modules.lmod.LmodModulefileWriter
 pytestmark = pytest.mark.skipif(sys.platform == "win32", reason="does not run on windows")
 
 
-@pytest.fixture(params=["clang@12.0.0", "gcc@10.2.1"])
+@pytest.fixture(params=["clang@=12.0.0", "gcc@=10.2.1"])
 def compiler(request):
     return request.param
 
@@ -61,10 +61,10 @@ class TestLmod(object):
         # is transformed to r"Core" if the compiler is listed among core
         # compilers
         # Check that specs listed as core_specs are transformed to "Core"
-        if compiler == "clang@3.3" or spec_string == "mpich@3.0.1":
+        if compiler == "clang@=3.3" or spec_string == "mpich@3.0.1":
             assert "Core" in layout.available_path_parts
         else:
-            assert compiler.replace("@", "/") in layout.available_path_parts
+            assert compiler.replace("@=", "/") in layout.available_path_parts
 
         # Check that the provider part instead has always an hash even if
         # hash has been disallowed in the configuration file
