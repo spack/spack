@@ -229,7 +229,8 @@ always choose to download just one tarball initially, and run
 
 Spack automatically creates a directory in the appropriate repository,
 generates a boilerplate template for your package, and opens up the new
-``package.py`` in your favorite ``$EDITOR``:
+``package.py`` in your favorite ``$EDITOR`` (see :ref:`controlling-the-editor`
+for details):
 
 .. code-block:: python
    :linenos:
@@ -334,6 +335,31 @@ The rest of the tasks you need to do are as follows:
    depending on the package and its build system.
    :ref:`installation_process` is
    covered in detail later.
+
+
+.. _controlling-the-editor:
+
+^^^^^^^^^^^^^^^^^^^^^^^^^
+Controlling the editor
+^^^^^^^^^^^^^^^^^^^^^^^^^
+
+When Spack needs to open an editor for you (e.g., for commands like
+:ref:`cmd-spack-create` or :ref:`cmd-spack-edit`, it looks at several environment variables
+to figure out what to use. The order of precedence is:
+
+* ``SPACK_EDITOR``: highest precedence, in case you want something specific for Spack;
+* ``VISUAL``: standard environment variable for full-screen editors like ``vim`` or ``emacs``;
+* ``EDITOR``: older environment variable for your editor.
+
+You can set any of these to the command you want to run, e.g., in ``bash`` you might run
+one of these::
+
+  export VISUAL=vim
+  export EDITOR="emacs -nw"
+  export SPACK_EDITOR=nano
+
+If Spack finds none of these variables set, it will look for ``vim``, ``vi``, ``emacs``,
+``nano``, and ``notepad``, in that order.
 
 ^^^^^^^^^^^^^^^^^^^^^^^^^
 Non-downloadable software
@@ -578,9 +604,9 @@ add a line like this in the package class:
 
        url = "http://example.com/foo-1.0.tar.gz"
 
-       version("8.2.1", "4136d7b4c04df68b686570afa26988ac")
-       version("8.2.0", "1c9f62f0778697a09d36121ead88e08e")
-       version("8.1.2", "d47dd09ed7ae6e7fd6f9a816d7f5fdf6")
+       version("8.2.1", md5="4136d7b4c04df68b686570afa26988ac")
+       version("8.2.0", md5="1c9f62f0778697a09d36121ead88e08e")
+       version("8.1.2", md5="d47dd09ed7ae6e7fd6f9a816d7f5fdf6")
 
 Versions should be listed in descending order, from newest to oldest.
 
@@ -669,7 +695,7 @@ of its versions, you can add an explicit URL for a particular version:
 
 .. code-block:: python
 
-   version("8.2.1", "4136d7b4c04df68b686570afa26988ac",
+   version("8.2.1", md5="4136d7b4c04df68b686570afa26988ac",
            url="http://example.com/foo-8.2.1-special-version.tar.gz")
 
 
@@ -731,7 +757,7 @@ executables and other custom archive types), you can add ``expand=False`` to a
 
 .. code-block:: python
 
-   version("8.2.1", "4136d7b4c04df68b686570afa26988ac",
+   version("8.2.1", md5="4136d7b4c04df68b686570afa26988ac",
            url="http://example.com/foo-8.2.1-special-version.sh", expand=False)
 
 When ``expand`` is set to ``False``, Spack sets the current working
@@ -825,16 +851,16 @@ Version comparison
 ^^^^^^^^^^^^^^^^^^
 
 Most Spack versions are numeric, a tuple of integers; for example,
-``apex@0.1``, ``ferret@6.96`` or ``py-netcdf@1.2.3.1``.  Spack knows
-how to compare and sort numeric versions.
+``0.1``, ``6.96`` or ``1.2.3.1``.  Spack knows how to compare and sort
+numeric versions.
 
 Some Spack versions involve slight extensions of numeric syntax; for
-example, ``py-sphinx-rtd-theme@0.1.10a0``.  In this case, numbers are
+example, ``py-sphinx-rtd-theme@=0.1.10a0``.  In this case, numbers are
 always considered to be "newer" than letters.  This is for consistency
 with `RPM <https://bugzilla.redhat.com/show_bug.cgi?id=50977>`_.
 
 Spack versions may also be arbitrary non-numeric strings, for example
-``@develop``, ``@master``, ``@local``.
+``develop``, ``master``, ``local``.
 
 The order on versions is defined as follows. A version string is split
 into a list of components based on delimiters such as ``.``, ``-`` etc.
@@ -892,6 +918,32 @@ use:
    will be used.
 
 
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Ranges versus specific versions
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+When specifying versions in Spack using the ``pkg@<specifier>`` syntax,
+you can use either ranges or specific versions. It is generally
+recommended to use ranges instead of specific versions when packaging
+to avoid overly constraining dependencies, patches, and conflicts.
+
+For example, ``depends_on("python@3")`` denotes a range of versions,
+allowing Spack to pick any ``3.x.y`` version for Python, while
+``depends_on("python@=3.10.1")`` restricts it to a specific version.
+
+Specific ``@=`` versions should only be used in exceptional cases, such
+as when the package has a versioning scheme that omits the zero in the
+first patch release: ``3.1``, ``3.1.1``, ``3.1.2``. In this example,
+the specifier ``@=3.1`` is the correct way to select only the ``3.1``
+version, whereas ``@3.1`` would match all those versions.
+
+Ranges are preferred even if they would only match a single version
+defined in the package. This is because users can define custom versions
+in ``packages.yaml`` that typically include a custom suffix. For example,
+if the package defines the version ``1.2.3``, the specifier ``@1.2.3``
+will also match a user-defined version ``1.2.3-custom``.
+
+
 .. _cmd-spack-checksum:
 
 ^^^^^^^^^^^^^^^^^^
@@ -929,10 +981,10 @@ file:
 .. code-block:: console
 
    ==> Checksummed new versions of libelf:
-       version("0.8.13", "4136d7b4c04df68b686570afa26988ac")
-       version("0.8.12", "e21f8273d9f5f6d43a59878dc274fec7")
-       version("0.8.11", "e931910b6d100f6caa32239849947fbf")
-       version("0.8.10", "9db4d36c283d9790d8fa7df1f4d7b4d9")
+       version("0.8.13", md5="4136d7b4c04df68b686570afa26988ac")
+       version("0.8.12", md5="e21f8273d9f5f6d43a59878dc274fec7")
+       version("0.8.11", md5="e931910b6d100f6caa32239849947fbf")
+       version("0.8.10", md5="9db4d36c283d9790d8fa7df1f4d7b4d9")
 
 By default, Spack will search for new tarball downloads by scraping
 the parent directory of the tarball you gave it.  So, if your tarball
@@ -1086,8 +1138,8 @@ class-level tarball URL and VCS. For example:
 
        version("develop", branch="develop")
        version("master",  branch="master")
-       version("12.12.1", "ecd4606fa332212433c98bf950a69cc7")
-       version("12.10.1", "667333dbd7c0f031d47d7c5511fd0810")
+       version("12.12.1", md5="ecd4606fa332212433c98bf950a69cc7")
+       version("12.10.1", md5="667333dbd7c0f031d47d7c5511fd0810")
        version("12.8.1",  "9f37f683ee2b427b5540db8a20ed6b15")
 
 If a package contains both a ``url`` and ``git`` class-level attribute,
@@ -1250,7 +1302,7 @@ checksum.
 
 .. code-block:: python
 
-       version("1.9.5.1.1", "d035e4bc704d136db79b43ab371b27d2",
+       version("1.9.5.1.1", md5="d035e4bc704d136db79b43ab371b27d2",
                url="https://www.github.com/jswhit/pyproj/tarball/0be612cc9f972e38b50a90c946a9b353e2ab140f")
 
 .. _hg-fetch:
@@ -1787,7 +1839,7 @@ for instructions on setting up a mirror.
 After running ``spack install pgi``, the first thing that will happen is
 Spack will create a global license file located at
 ``$SPACK_ROOT/etc/spack/licenses/pgi/license.dat``. It will then open up the
-file using the editor set in ``$EDITOR``, or vi if unset. It will look like
+file using :ref:`your favorite editor <controlling-the-editor>`. It will look like
 this:
 
 .. code-block:: sh
@@ -2186,7 +2238,7 @@ looks like this:
        homepage = "http://www.openssl.org"
        url      = "http://www.openssl.org/source/openssl-1.0.1h.tar.gz"
 
-       version("1.0.1h", "8d6d684a9430d5cc98a62a5d8fbda8cf")
+       version("1.0.1h", md5="8d6d684a9430d5cc98a62a5d8fbda8cf")
        depends_on("zlib")
 
        parallel = False
@@ -2283,7 +2335,7 @@ Spack makes this relatively easy.  Let's take a look at the
        url      = "http://www.prevanders.net/libdwarf-20130729.tar.gz"
        list_url = homepage
 
-       version("20130729", "4cc5e48693f7b93b7aa0261e63c0e21d")
+       version("20130729", md5="4cc5e48693f7b93b7aa0261e63c0e21d")
        ...
 
        depends_on("libelf")
@@ -2362,21 +2414,29 @@ requires Python 2, you can similarly leave out the lower bound:
 Notice that we didn't use ``@:3``. Version ranges are *inclusive*, so
 ``@:3`` means "up to and including any 3.x version".
 
-What if a package can only be built with Python 2.7? You might be
-inclined to use:
+You can also simply write
 
 .. code-block:: python
 
    depends_on("python@2.7")
 
-However, this would be wrong. Spack assumes that all version constraints
-are exact, so it would try to install Python not at ``2.7.18``, but
-exactly at ``2.7``, which is a non-existent version. The correct way to
-specify this would be:
+to tell Spack that the package needs Python 2.7.x. This is equivalent to
+``@2.7:2.7``.
+
+In very rare cases, you may need to specify an exact version, for example
+if you need to distinguish between ``3.2`` and ``3.2.1``:
 
 .. code-block:: python
 
-   depends_on("python@2.7.0:2.7")
+   depends_on("pkg@=3.2")
+
+But in general, you should try to use version ranges as much as possible,
+so that custom suffixes are included too. The above example can be
+rewritten in terms of ranges as follows:
+
+.. code-block:: python
+
+   depends_on("pkg@3.2:3.2.0")
 
 A spec can contain a version list of ranges and individual versions
 separated by commas. For example, if you need Boost 1.59.0 or newer,
@@ -2782,7 +2842,7 @@ supplying a ``depends_on`` call in the package definition.  For example:
        homepage = "https://github.com/hpc/mpileaks"
        url = "https://github.com/hpc/mpileaks/releases/download/v1.0/mpileaks-1.0.tar.gz"
 
-       version("1.0", "8838c574b39202a57d7c2d68692718aa")
+       version("1.0", md5="8838c574b39202a57d7c2d68692718aa")
 
        depends_on("mpi")
        depends_on("adept-utils")
@@ -2945,7 +3005,7 @@ appears as follows:
    baz/lib/libFooBaz.so
 
 The install tree shows that ``foo`` is providing the header ``include/foo.h``
-and library ``lib64/libFoo.so`` in it's install prefix.  The virtual
+and library ``lib64/libFoo.so`` in its install prefix.  The virtual
 package ``bar`` is providing ``include/bar/bar.h`` and library
 ``lib64/libFooBar.so``, also in ``foo``'s install prefix.  The ``baz``
 package, however, is provided in the ``baz`` subdirectory of ``foo``'s
@@ -3429,7 +3489,7 @@ the build system. The build systems currently supported by Spack are:
 |                                                          | licensed Intel software          |
 +----------------------------------------------------------+----------------------------------+
 | :class:`~spack.build_systems.oneapi`                     | Specialized build system for     |
-|                                                          | Intel onaAPI software            |
+|                                                          | Intel oneAPI software            |
 +----------------------------------------------------------+----------------------------------+
 | :class:`~spack.build_systems.aspell_dict`                | Specialized build system for     |
 |                                                          | Aspell dictionaries              |
@@ -4604,7 +4664,8 @@ Spack infers the status of a build based on the contents of the install
 prefix. Success is assumed if anything (e.g., a file, directory) is
 written after ``install()`` completes. Otherwise, the build is assumed
 to have failed. However, the presence of install prefix contents
-is not a sufficient indicator of success.
+is not a sufficient indicator of success so Spack supports the addition
+of tests that can be performed during `spack install` processing.
 
 Consider a simple autotools build using the following commands:
 
@@ -4628,6 +4689,16 @@ What can you do to check that the build is progressing satisfactorily?
 If there are specific files and or directories expected of a successful
 installation, you can add basic, fast ``sanity checks``. You can also add
 checks to be performed after one or more installation phases.
+
+.. note::
+
+   Build-time tests are performed when the ``--test`` option is passed
+   to ``spack install``.
+
+.. warning::
+
+   Build-time test failures result in a failed installation of the software.
+
 
 .. _sanity-checks:
 
@@ -4661,11 +4732,20 @@ that eight paths must exist within the installation prefix after the
        sanity_check_is_dir  = ["bin", "config", "docs", "reframe", "tutorials",
                                "unittests", "cscs-checks"]
 
-Spack will then ensure the installation created the **file**:
+When you run ``spack install`` with tests enabled, Spack will ensure that
+a successfully installed package has the required files and or directories.
+
+For example, running:
+
+.. code-block:: console
+
+   $ spack install --test=root reframe
+
+results in spack checking that the installation created the following **file**:
 
 * ``self.prefix/bin/reframe``
 
-It will also check for the existence of the following **directories**:
+and the following **directories**:
 
 * ``self.prefix/bin``
 * ``self.prefix/config``
@@ -4674,6 +4754,9 @@ It will also check for the existence of the following **directories**:
 * ``self.prefix/tutorials``
 * ``self.prefix/unittests``
 * ``self.prefix/cscs-checks``
+
+If **any** of these paths are missing, then Spack considers the installation
+to have failed.
 
 .. note::
 
@@ -4822,6 +4905,38 @@ installed executable. The check is implemented as follows:
     The API for adding tests is not yet considered stable and may change
     in future releases.
 
+
+""""""""""""""""""""""""""""""""
+Checking build-time test results
+""""""""""""""""""""""""""""""""
+
+Checking the results of these tests after running ``spack install --test``
+can be done by viewing the spec's ``install-time-test-log.txt`` file whose
+location will depend on whether the spec installed successfully.
+
+A successful installation results in the build and stage logs being copied
+to the ``.spack`` subdirectory of the spec's prefix. For example,
+
+.. code-block:: console
+
+   $ spack install --test=root zlib@1.2.13
+   ...
+   [+] /home/user/spack/opt/spack/linux-rhel8-broadwell/gcc-10.3.1/zlib-1.2.13-tehu6cbsujufa2tb6pu3xvc6echjstv6
+   $ cat /home/user/spack/opt/spack/linux-rhel8-broadwell/gcc-10.3.1/zlib-1.2.13-tehu6cbsujufa2tb6pu3xvc6echjstv6/.spack/install-time-test-log.txt
+
+If the installation fails due to build-time test failures, then both logs will
+be left in the build stage directory as illustrated below:
+
+.. code-block:: console
+
+   $ spack install --test=root zlib@1.2.13
+   ...
+   See build log for details:
+     /var/tmp/user/spack-stage/spack-stage-zlib-1.2.13-lxfsivs4htfdewxe7hbi2b3tekj4make/spack-build-out.txt
+
+   $ cat /var/tmp/user/spack-stage/spack-stage-zlib-1.2.13-lxfsivs4htfdewxe7hbi2b3tekj4make/install-time-test-log.txt
+
+
 .. _cmd-spack-test:
 
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -4847,8 +4962,7 @@ aspects of the installed software, or at least key functionality.
 
     Passing stand-alone (or smoke) tests can lead to more thorough
     testing, such as extensive unit or regression tests, or tests
-    that run at scale. Spack support for more thorough testing is
-    a work in progress.
+    that run at scale.
 
 Stand-alone tests have their own test stage directory, which can be
 configured. These tests can compile or build software with the compiler
@@ -5931,7 +6045,7 @@ location of a dependency.  The difference is that while ``prefix`` is the
 location on disk where a concrete package resides, ``home`` is the `logical`
 location that a package resides, which may be different than ``prefix`` in
 the case of virtual packages or other special circumstances.  For most use
-cases inside a package, it's dependency locations can be accessed via either
+cases inside a package, its dependency locations can be accessed via either
 ``self.spec["foo"].home`` or ``self.spec["foo"].prefix``.  Specific packages
 that should be consumed by dependents via ``.home`` instead of ``.prefix``
 should be noted in their respective documentation.

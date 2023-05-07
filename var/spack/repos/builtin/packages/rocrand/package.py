@@ -113,6 +113,7 @@ class Rocrand(CMakePackage):
         values=("Release", "Debug", "RelWithDebInfo"),
         description="CMake build type",
     )
+    variant("hiprand", default=True, when="@5.1.0:", description="Build the hiprand library")
 
     depends_on("cmake@3.10.2:", type="build", when="@4.5.0:")
     depends_on("cmake@3.5.1:", type="build")
@@ -123,7 +124,7 @@ class Rocrand(CMakePackage):
     # own directory first thanks to the $ORIGIN RPATH setting. Otherwise,
     # libhiprand.so cannot find dependency librocrand.so despite being in the
     # same directory.
-    patch("hiprand_prefer_samedir_rocrand.patch", working_dir="hiprand", when="@5.2.0:")
+    patch("hiprand_prefer_samedir_rocrand.patch", working_dir="hiprand", when="@5.2.0: +hiprand")
 
     # Add hiprand sources thru the below
     for d_version, d_commit in [
@@ -143,7 +144,7 @@ class Rocrand(CMakePackage):
             commit=d_commit,
             destination="",
             placement="hiprand",
-            when="@{0}".format(d_version),
+            when="@{0} +hiprand".format(d_version),
         )
     resource(
         name="hipRAND",
@@ -151,7 +152,7 @@ class Rocrand(CMakePackage):
         branch="master",
         destination="",
         placement="hiprand",
-        when="@master",
+        when="@master +hiprand",
     )
     resource(
         name="hipRAND",
@@ -159,7 +160,7 @@ class Rocrand(CMakePackage):
         branch="develop",
         destination="",
         placement="hiprand",
-        when="@develop",
+        when="@develop +hiprand",
     )
 
     for ver in [
@@ -191,7 +192,7 @@ class Rocrand(CMakePackage):
         depends_on("rocm-cmake@%s:" % ver, type="build", when="@" + ver)
 
     def patch(self):
-        if self.spec.satisfies("@5.1.0:"):
+        if self.spec.satisfies("@5.1.0: +hiprand"):
             os.rmdir("hipRAND")
             os.rename("hiprand", "hipRAND")
 
@@ -200,6 +201,8 @@ class Rocrand(CMakePackage):
 
     @run_after("install")
     def fix_library_locations(self):
+        if self.spec.satisfies("~hiprand"):
+            return
         """Fix the rocRAND and hipRAND libraries location"""
         # rocRAND installs librocrand.so* and libhiprand.so* to rocrand/lib and
         # hiprand/lib, respectively. This confuses spack's RPATH management. We
@@ -267,7 +270,7 @@ class Rocrand(CMakePackage):
         if self.spec.satisfies("^cmake@3.21.0:3.21.2"):
             args.append(self.define("__skip_rocmclang", "ON"))
 
-        if "@5.1.0:" in self.spec:
-            args.append(self.define("BUILD_HIPRAND", "ON"))
+        if self.spec.satisfies("@5.1.0:"):
+            args.append(self.define_from_variant("BUILD_HIPRAND", "hiprand"))
 
         return args
