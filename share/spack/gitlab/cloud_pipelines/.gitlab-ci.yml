@@ -870,11 +870,11 @@ aws-isc-aarch64-protected-build:
 
 tutorial-pr-generate:
   extends: [ ".tutorial", ".pr-generate"]
-  image: ghcr.io/spack/tutorial-ubuntu-22.04:v2023-05-05
+  image: ghcr.io/spack/tutorial-ubuntu-22.04:v2023-05-07
 
 tutorial-protected-generate:
   extends: [ ".tutorial", ".protected-generate"]
-  image: ghcr.io/spack/tutorial-ubuntu-22.04:v2023-05-05
+  image: ghcr.io/spack/tutorial-ubuntu-22.04:v2023-05-07
 
 tutorial-pr-build:
   extends: [ ".tutorial", ".pr-build" ]
