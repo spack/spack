@@ -35,6 +35,7 @@ class XsdkExamples(CMakePackage, CudaPackage):
     depends_on("xsdk@0.8.0 ^mfem+strumpack", when="@0.4.0 ^xsdk+strumpack")
     depends_on("xsdk@0.8.0 ^mfem+ginkgo", when="@0.4.0 ^xsdk+ginkgo")
     depends_on("xsdk@0.8.0 ^mfem+hiop", when="@0.4.0 ^xsdk+hiop")
+    depends_on("xsdk@0.8.0 ^mfem+pumi", when="@0.4.0")
     depends_on("xsdk@0.8.0 ^sundials+magma", when="@0.4.0 +cuda")
     depends_on("xsdk@0.7.0", when="@0.3.0")
     depends_on("xsdk@0.7.0 ^mfem+strumpack", when="@0.3.0 ^xsdk+strumpack")
@@ -69,6 +70,7 @@ class XsdkExamples(CMakePackage, CudaPackage):
             "-DENABLE_PETSC=ON",
             # ENABLE_PLASMA also needs Slate:
             "-DENABLE_PLASMA=" + enabled(["plasma", "slate"]),
+            "-DENABLE_PUMI=ON",
             "-DENABLE_STRUMPACK=" + enabled("strumpack"),
             "-DENABLE_SUNDIALS=ON",
             "-DENABLE_SUPERLU=ON",
