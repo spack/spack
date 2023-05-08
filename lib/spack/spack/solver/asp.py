@@ -7,12 +7,14 @@ from __future__ import division, print_function
 import collections
 import collections.abc
 import copy
+import enum
 import itertools
 import os
 import pprint
 import re
 import types
 import warnings
+from typing import List
 
 import archspec.cpu
 
@@ -98,24 +100,38 @@ def ast_getter(*names):
 ast_type = ast_getter("ast_type", "type")
 ast_sym = ast_getter("symbol", "term")
 
-#: Order of precedence for version origins. Topmost types are preferred.
-version_origin_fields = [
-    "spec",
-    "dev_spec",
-    "external",
-    "packages_yaml",
-    "package_requirements",
-    "package_py",
-    "installed",
-]
 
-#: Look up version precedence strings by enum id
-version_origin_str = {i: name for i, name in enumerate(version_origin_fields)}
+class Provenance(enum.IntEnum):
+    """Enumeration of the possible provenances of a version."""
 
-#: Enumeration like object to mark version provenance
-version_provenance = collections.namedtuple(  # type: ignore
-    "VersionProvenance", version_origin_fields
-)(**{name: i for i, name in enumerate(version_origin_fields)})
+    # A spec literal
+    SPEC = enum.auto()
+    # A dev spec literal
+    DEV_SPEC = enum.auto()
+    # An external spec declaration
+    EXTERNAL = enum.auto()
+    # The 'packages' section of the configuration
+    PACKAGES_YAML = enum.auto()
+    # A package requirement
+    PACKAGE_REQUIREMENT = enum.auto()
+    # A 'package.py' file
+    PACKAGE_PY = enum.auto()
+    # An installed spec
+    INSTALLED = enum.auto()
+
+    def __str__(self):
+        return f"{self._name_.lower()}"
+
+
+class RequirementKind(enum.Enum):
+    """Purpose / provenance of a requirement"""
+
+    #: Default requirement expressed under the 'all' attribute of packages.yaml
+    DEFAULT = enum.auto()
+    #: Requirement expressed on a virtual package
+    VIRTUAL = enum.auto()
+    #: Requirement expressed on a specific package
+    PACKAGE = enum.auto()
 
 
 DeclaredVersion = collections.namedtuple("DeclaredVersion", ["version", "idx", "origin"])
@@ -635,6 +651,12 @@ class ErrorHandler:
         raise UnsatisfiableSpecError(msg)
 
 
+#: Data class to collect information on a requirement
+RequirementRule = collections.namedtuple(
+    "RequirementRule", ["pkg_name", "policy", "requirements", "condition", "kind", "message"]
+)
+
+
 class PyclingoDriver(object):
     def __init__(self, cores=True):
         """Driver for the Python clingo interface.
@@ -883,8 +905,7 @@ class SpackSolverSetup(object):
         """
 
         def key_fn(version):
-            # Origins are sorted by precedence defined in `version_origin_str`,
-            # then by order added.
+            # Origins are sorted by "provenance" first, see the Provenance enumeration above
             return version.origin, version.idx
 
         pkg = packagize(pkg)
@@ -900,10 +921,7 @@ class SpackSolverSetup(object):
         for weight, declared_version in enumerate(most_to_least_preferred):
             self.gen.fact(
                 fn.version_declared(
-                    pkg.name,
-                    declared_version.version,
-                    weight,
-                    version_origin_str[declared_version.origin],
+                    pkg.name, declared_version.version, weight, str(declared_version.origin)
                 )
             )
 
@@ -1012,34 +1030,82 @@ class SpackSolverSetup(object):
             )
 
     def package_requirement_rules(self, pkg):
+        rules = self.requirement_rules_from_package_py(pkg)
+        rules.extend(self.requirement_rules_from_packages_yaml(pkg))
+        self.emit_facts_from_requirement_rules(rules)
+
+    def requirement_rules_from_package_py(self, pkg):
+        rules = []
+        for requirements, conditions in pkg.requirements.items():
+            for when_spec, policy, message in conditions:
+                rules.append(
+                    RequirementRule(
+                        pkg_name=pkg.name,
+                        policy=policy,
+                        requirements=requirements,
+                        kind=RequirementKind.PACKAGE,
+                        condition=when_spec,
+                        message=message,
+                    )
+                )
+        return rules
+
+    def requirement_rules_from_packages_yaml(self, pkg):
         pkg_name = pkg.name
         config = spack.config.get("packages")
-        requirements, raise_on_failure = config.get(pkg_name, {}).get("require", []), True
+        requirements = config.get(pkg_name, {}).get("require", [])
+        kind = RequirementKind.PACKAGE
         if not requirements:
-            requirements, raise_on_failure = config.get("all", {}).get("require", []), False
-        rules = self._rules_from_requirements(pkg_name, requirements)
-        self.emit_facts_from_requirement_rules(
-            rules, virtual=False, raise_on_failure=raise_on_failure
-        )
+            requirements = config.get("all", {}).get("require", [])
+            kind = RequirementKind.DEFAULT
+        return self._rules_from_requirements(pkg_name, requirements, kind=kind)
 
-    def _rules_from_requirements(self, pkg_name, requirements):
+    def _rules_from_requirements(self, pkg_name: str, requirements, *, kind: RequirementKind):
         """Manipulate requirements from packages.yaml, and return a list of tuples
         with a uniform structure (name, policy, requirements).
         """
         if isinstance(requirements, str):
-            rules = [(pkg_name, "one_of", [requirements])]
+            rules = [self._rule_from_str(pkg_name, requirements, kind)]
         else:
             rules = []
             for requirement in requirements:
                 if isinstance(requirement, str):
                     # A string represents a spec that must be satisfied. It is
                     # equivalent to a one_of group with a single element
-                    rules.append((pkg_name, "one_of", [requirement]))
+                    rules.append(self._rule_from_str(pkg_name, requirement, kind))
                 else:
-                    for policy in ("one_of", "any_of"):
+                    for policy in ("spec", "one_of", "any_of"):
                         if policy in requirement:
-                            rules.append((pkg_name, policy, requirement[policy]))
+                            constraints = requirement[policy]
+
+                            # "spec" is for specifying a single spec
+                            if policy == "spec":
+                                constraints = [constraints]
+                                policy = "one_of"
+
+                            rules.append(
+                                RequirementRule(
+                                    pkg_name=pkg_name,
+                                    policy=policy,
+                                    requirements=constraints,
+                                    kind=kind,
+                                    message=requirement.get("message"),
+                                    condition=requirement.get("when"),
+                                )
+                            )
         return rules
+
+    def _rule_from_str(
+        self, pkg_name: str, requirements: str, kind: RequirementKind
+    ) -> RequirementRule:
+        return RequirementRule(
+            pkg_name=pkg_name,
+            policy="one_of",
+            requirements=[requirements],
+            kind=kind,
+            condition=None,
+            message=None,
+        )
 
     def pkg_rules(self, pkg, tests):
         pkg = packagize(pkg)
@@ -1267,27 +1333,55 @@ class SpackSolverSetup(object):
         assert self.possible_virtuals is not None, msg
         for virtual_str in sorted(self.possible_virtuals):
             requirements = packages_yaml.get(virtual_str, {}).get("require", [])
-            rules = self._rules_from_requirements(virtual_str, requirements)
-            self.emit_facts_from_requirement_rules(rules, virtual=True)
+            rules = self._rules_from_requirements(
+                virtual_str, requirements, kind=RequirementKind.VIRTUAL
+            )
+            self.emit_facts_from_requirement_rules(rules)
 
-    def emit_facts_from_requirement_rules(self, rules, *, virtual=False, raise_on_failure=True):
-        """Generate facts to enforce requirements from packages.yaml.
+    def emit_facts_from_requirement_rules(self, rules: List[RequirementRule]):
+        """Generate facts to enforce requirements.
 
         Args:
             rules: rules for which we want facts to be emitted
-            virtual: if True the requirements are on a virtual spec
-            raise_on_failure: if True raise an exception when a requirement condition is invalid
-                for the current spec. If False, just skip that condition
         """
-        for requirement_grp_id, (pkg_name, policy, requirement_grp) in enumerate(rules):
+        for requirement_grp_id, rule in enumerate(rules):
+            virtual = rule.kind == RequirementKind.VIRTUAL
+
+            pkg_name, policy, requirement_grp = rule.pkg_name, rule.policy, rule.requirements
+
+            requirement_weight = 0
+            main_requirement_condition = spack.directives.make_when_spec(rule.condition)
+            if main_requirement_condition is False:
+                continue
+
+            # Write explicitly if a requirement is conditional or not
+            if main_requirement_condition != spack.spec.Spec():
+                msg = f"condition to activate requirement {requirement_grp_id}"
+                try:
+                    main_condition_id = self.condition(
+                        main_requirement_condition, name=pkg_name, msg=msg
+                    )
+                except Exception as e:
+                    if rule.kind != RequirementKind.DEFAULT:
+                        raise RuntimeError("cannot emit requirements for the solver") from e
+                    continue
+
+                self.gen.fact(
+                    fn.requirement_conditional(pkg_name, requirement_grp_id, main_condition_id)
+                )
+
             self.gen.fact(fn.requirement_group(pkg_name, requirement_grp_id))
             self.gen.fact(fn.requirement_policy(pkg_name, requirement_grp_id, policy))
-            requirement_weight = 0
+            if rule.message:
+                self.gen.fact(fn.requirement_message(pkg_name, requirement_grp_id, rule.message))
+            self.gen.newline()
+
             for spec_str in requirement_grp:
                 spec = spack.spec.Spec(spec_str)
                 if not spec.name:
                     spec.name = pkg_name
                 spec.attach_git_version_lookup()
+
                 when_spec = spec
                 if virtual:
                     when_spec = spack.spec.Spec(pkg_name)
@@ -1297,12 +1391,16 @@ class SpackSolverSetup(object):
                         required_spec=when_spec, imposed_spec=spec, name=pkg_name, node=virtual
                     )
                 except Exception as e:
-                    if raise_on_failure:
+                    # Do not raise if the rule comes from the 'all' subsection, since usability
+                    # would be impaired. If a rule does not apply for a specific package, just
+                    # discard it.
+                    if rule.kind != RequirementKind.DEFAULT:
                         raise RuntimeError("cannot emit requirements for the solver") from e
                     continue
 
                 self.gen.fact(fn.requirement_group_member(member_id, pkg_name, requirement_grp_id))
                 self.gen.fact(fn.requirement_has_weight(member_id, requirement_weight))
+                self.gen.newline()
                 requirement_weight += 1
 
     def external_packages(self):
@@ -1345,7 +1443,7 @@ class SpackSolverSetup(object):
             ]
             for version, idx, external_id in external_versions:
                 self.declared_versions[pkg_name].append(
-                    DeclaredVersion(version=version, idx=idx, origin=version_provenance.external)
+                    DeclaredVersion(version=version, idx=idx, origin=Provenance.EXTERNAL)
                 )
 
             # Declare external conditions with a local index into packages.yaml
@@ -1627,7 +1725,7 @@ class SpackSolverSetup(object):
                 v, version_info = item
                 self.possible_versions[pkg_name].add(v)
                 self.declared_versions[pkg_name].append(
-                    DeclaredVersion(version=v, idx=idx, origin=version_provenance.package_py)
+                    DeclaredVersion(version=v, idx=idx, origin=Provenance.PACKAGE_PY)
                 )
                 deprecated = version_info.get("deprecated", False)
                 if deprecated:
@@ -1640,7 +1738,7 @@ class SpackSolverSetup(object):
                 # v can be a string so force it into an actual version for comparisons
                 ver = vn.Version(v)
                 self.declared_versions[pkg_name].append(
-                    DeclaredVersion(version=ver, idx=idx, origin=version_provenance.packages_yaml)
+                    DeclaredVersion(version=ver, idx=idx, origin=Provenance.PACKAGES_YAML)
                 )
                 self.possible_versions[pkg_name].add(ver)
 
@@ -1684,6 +1782,7 @@ class SpackSolverSetup(object):
         self.gen.h2("Default platform")
         platform = spack.platforms.host()
         self.gen.fact(fn.node_platform_default(platform))
+        self.gen.fact(fn.allowed_platform(platform))
 
     def os_defaults(self, specs):
         self.gen.h2("Possible operating systems")
@@ -2005,9 +2104,7 @@ class SpackSolverSetup(object):
             for dep in spec.traverse():
                 self.possible_versions[dep.name].add(dep.version)
                 self.declared_versions[dep.name].append(
-                    DeclaredVersion(
-                        version=dep.version, idx=0, origin=version_provenance.installed
-                    )
+                    DeclaredVersion(version=dep.version, idx=0, origin=Provenance.INSTALLED)
                 )
                 self.possible_oses.add(dep.os)
 
@@ -2078,13 +2175,11 @@ class SpackSolverSetup(object):
 
         # traverse all specs and packages to build dict of possible versions
         self.build_version_dict(possible)
-        self.add_concrete_versions_from_specs(specs, version_provenance.spec)
-        self.add_concrete_versions_from_specs(dev_specs, version_provenance.dev_spec)
+        self.add_concrete_versions_from_specs(specs, Provenance.SPEC)
+        self.add_concrete_versions_from_specs(dev_specs, Provenance.DEV_SPEC)
 
         req_version_specs = _get_versioned_specs_from_pkg_requirements()
-        self.add_concrete_versions_from_specs(
-            req_version_specs, version_provenance.package_requirements
-        )
+        self.add_concrete_versions_from_specs(req_version_specs, Provenance.PACKAGE_REQUIREMENT)
 
         self.gen.h1("Concrete input spec definitions")
         self.define_concrete_input_specs(specs, possible)
@@ -2187,9 +2282,15 @@ def _specs_from_requires(pkg_name, section):
             if isinstance(spec_group, str):
                 spec_strs.append(spec_group)
             else:
-                # Otherwise it is a one_of or any_of: get the values
-                (x,) = spec_group.values()
-                spec_strs.extend(x)
+                # Otherwise it is an object. The object can contain a single
+                # "spec" constraint, or a list of them with "any_of" or
+                # "one_of" policy.
+                if "spec" in spec_group:
+                    new_constraints = [spec_group["spec"]]
+                else:
+                    key = "one_of" if "one_of" in spec_group else "any_of"
+                    new_constraints = spec_group[key]
+                spec_strs.extend(new_constraints)
 
         extracted_specs = []
         for spec_str in spec_strs:
