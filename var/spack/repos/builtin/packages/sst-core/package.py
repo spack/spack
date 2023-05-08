@@ -46,7 +46,11 @@ class SstCore(AutotoolsPackage):
     variant("zoltan", default=False, description="Use Zoltan for partitioning parallel runs")
     variant("hdf5", default=False, description="Build support for HDF5 statistic output")
     variant("zlib", default=False, description="Build support for ZLIB compression")
+
+    variant("trackevents", default=False, description="Enable event and activity tracking")
+    variant("trackperf", default=False, description="Enable tracking of simulator performance and component runtime")
     variant("preview", default=False, description="Preview build with deprecated features removed")
+    variant("profile", default=False, description="Enable performance profiling of core features")
 
     depends_on("python", type=("build", "run"))
     depends_on("mpi", when="+pdes_mpi")
@@ -85,8 +89,14 @@ class SstCore(AutotoolsPackage):
         else:
             args.append("--disable-mpi")
 
+        if "+trackevents" in self.spec:
+            args.append("--enable-event-tracking")
+        if "+trackperf" in self.spec:
+            args.append("--enable-perf-tracking")
         if "+preview" in self.spec:
             args.append("--enable-preview-build")
+        if "+profile" in self.spec:
+            args.append("--enable-profile")
 
         args.append("--with-python=%s" % self.spec["python"].prefix)
         return args
