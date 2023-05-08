@@ -16,7 +16,7 @@ class SstCore(AutotoolsPackage):
     git = "https://github.com/sstsimulator/sst-core.git"
     url = "https://github.com/sstsimulator/sst-core/releases/download/v13.0.0_Final/sstcore-13.0.0.tar.gz"
 
-    maintainers("berquist")
+    maintainers("berquist", "naromero77")
 
     version("13.0.0", sha256="c9d868dcdd75d59bef7c73146709a3b2a52a78f0df5ec2c3dc9f21434c51d935")
     version("12.1.0", sha256="f7530226643439678e2f4183ec4dbadf7750411bdaa44d9443887f81feb97574")
