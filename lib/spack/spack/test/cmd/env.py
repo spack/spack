@@ -5,6 +5,7 @@
 import filecmp
 import glob
 import io
+import itertools
 import os
 import pathlib
 import re
@@ -19,6 +20,7 @@ import llnl.util.link_tree
 
 import spack.cmd.env
 import spack.config
+import spack.environment.depfile as depfile
 import spack.environment as ev
 import spack.environment.environment
 import spack.environment.shell
@@ -3154,26 +3156,18 @@ def test_environment_depfile_spec_format_special_chars(tmpdir, mock_packages, mo
 
     monkeypatch.setattr(spack.spec.Spec, "format", _contrived_spec_format)
 
-    with ev.read("test"):
-        env(
-            "depfile",
-            "-o",
-            makefile,
-            "--make-disable-jobserver",
-            "--make-prefix=prefix",
-            "--use-buildcache=never",
-        )
+    with ev.read("test") as e:
+        model = depfile.MakefileModel.from_env(e)
 
-    with open(makefile, "r") as f:
-        makefile_lines = f.readlines()
+    properties_of_interest = set(itertools.chain(
+        model.all_pkg_identifiers, model.all_install_related_targets,
+        model.root_install_targets
+    ))
 
-    makefile_contents = "\n".join(makefile_lines)
-
-    for line in makefile_lines:
-        if "githash=version" in line:
-            assert re.search("SPEC = dtlink1-githash=version-spackhash$", line)
-
-    assert "dtlink1-githash_version-spackhash" in makefile_contents
+    assert not any("dtlink1-githash=version-spackhash" in x for x in
+                   properties_of_interest)
+    assert any("dtlink1-githash_version-spackhash" in x for x in
+               properties_of_interest)
 
 
 @pytest.mark.parametrize(
