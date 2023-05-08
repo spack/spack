@@ -32,12 +32,7 @@ class Ffte(Package):
 
     depends_on("mpi", when="+mpi")
 
-    conflicts("%cce", when="+cuda", msg="Must use NVHPC compiler")
-    conflicts("%clang", when="+cuda", msg="Must use NVHPC compiler")
-    conflicts("%gcc", when="+cuda", msg="Must use NVHPC compiler")
-    conflicts("%llvm", when="+cuda", msg="Must use NVHPC compiler")
-    conflicts("%nag", when="+cuda", msg="Must use NVHPC compiler")
-    conflicts("%intel", when="+cuda", msg="Must use NVHPC compiler")
+    requires("%nvhpc", when="+cuda", msg="ffte+cuda must use NVHPC compiler")
 
     def edit(self, spec, prefix):
         "No make-file, must create one from scratch."

@@ -37,8 +37,17 @@ properties = {
                                             "type": "object",
                                             "additionalProperties": False,
                                             "properties": {
-                                                "one_of": {"type": "array"},
-                                                "any_of": {"type": "array"},
+                                                "one_of": {
+                                                    "type": "array",
+                                                    "items": {"type": "string"},
+                                                },
+                                                "any_of": {
+                                                    "type": "array",
+                                                    "items": {"type": "string"},
+                                                },
+                                                "spec": {"type": "string"},
+                                                "message": {"type": "string"},
+                                                "when": {"type": "string"},
                                             },
                                         },
                                         {"type": "string"},

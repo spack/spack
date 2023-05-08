@@ -273,9 +273,7 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage):
         # See https://gcc.gnu.org/install/prerequisites.html#GDC-prerequisite
         with when("@12:"):
             # All versions starting 12 have to be built GCC:
-            for c in spack.compilers.supported_compilers():
-                if c != "gcc":
-                    conflicts("%{0}".format(c))
+            requires("%gcc")
 
             # And it has to be GCC older than the version we build:
             vv = ["11", "12.1.0", "12.2.0"]

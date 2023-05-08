@@ -770,7 +770,7 @@ def concretize_scope(mutable_config, tmpdir):
         spack.config.ConfigScope("concretize", str(tmpdir.join("concretize")))
     )
 
-    yield
+    yield str(tmpdir.join("concretize"))
 
     mutable_config.pop_scope()
     spack.repo.path._provider_index = None

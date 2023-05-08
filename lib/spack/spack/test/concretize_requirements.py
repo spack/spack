@@ -2,13 +2,14 @@
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
-
+import pathlib
 import sys
 
 import pytest
 
 import spack.build_systems.generic
 import spack.config
+import spack.error
 import spack.package_base
 import spack.repo
 import spack.util.spack_yaml as syaml
@@ -595,3 +596,216 @@ def test_non_existing_variants_under_all(concretize_scope, mock_packages):
 
     spec = Spec("callpath ^zmpi").concretized()
     assert "~foo" not in spec
+
+
+@pytest.mark.parametrize(
+    "packages_yaml,spec_str,expected_satisfies",
+    [
+        # In the tests below we set the compiler preference to "gcc" to be explicit on the
+        # fact that "clang" is not the preferred compiler. That helps making more robust the
+        # tests that verify enforcing "%clang" as a requirement.
+        (
+            """\
+    packages:
+      all:
+        compiler: ["gcc", "clang"]
+
+      libelf:
+        require:
+        - one_of: ["%clang"]
+          when: "@0.8.13"
+""",
+            "libelf",
+            [("@0.8.13%clang", True), ("%gcc", False)],
+        ),
+        (
+            """\
+    packages:
+      all:
+        compiler: ["gcc", "clang"]
+
+      libelf:
+        require:
+        - one_of: ["%clang"]
+          when: "@0.8.13"
+""",
+            "libelf@0.8.12",
+            [("%clang", False), ("%gcc", True)],
+        ),
+        (
+            """\
+    packages:
+      all:
+        compiler: ["gcc", "clang"]
+
+      libelf:
+        require:
+        - spec: "%clang"
+          when: "@0.8.13"
+""",
+            "libelf@0.8.12",
+            [("%clang", False), ("%gcc", True)],
+        ),
+        (
+            """\
+    packages:
+      all:
+        compiler: ["gcc", "clang"]
+
+      libelf:
+        require:
+        - spec: "@0.8.13"
+          when: "%clang"
+""",
+            "libelf@0.8.13%gcc",
+            [("%clang", False), ("%gcc", True), ("@0.8.13", True)],
+        ),
+    ],
+)
+def test_conditional_requirements_from_packages_yaml(
+    packages_yaml, spec_str, expected_satisfies, concretize_scope, mock_packages
+):
+    """Test that conditional requirements are required when the condition is met,
+    and optional when the condition is not met.
+    """
+    if spack.config.get("config:concretizer") == "original":
+        pytest.skip("Original concretizer does not support configuration requirements")
+
+    update_packages_config(packages_yaml)
+    spec = Spec(spec_str).concretized()
+    for match_str, expected in expected_satisfies:
+        assert spec.satisfies(match_str) is expected
+
+
+@pytest.mark.parametrize(
+    "packages_yaml,spec_str,expected_message",
+    [
+        (
+            """\
+    packages:
+      mpileaks:
+        require:
+        - one_of: ["~debug"]
+          message: "debug is not allowed"
+""",
+            "mpileaks+debug",
+            "debug is not allowed",
+        ),
+        (
+            """\
+    packages:
+      libelf:
+        require:
+        - one_of: ["%clang"]
+          message: "can only be compiled with clang"
+""",
+            "libelf%gcc",
+            "can only be compiled with clang",
+        ),
+        (
+            """\
+        packages:
+          libelf:
+            require:
+            - one_of: ["%clang"]
+              when: platform=test
+              message: "can only be compiled with clang on the test platform"
+    """,
+            "libelf%gcc",
+            "can only be compiled with clang on ",
+        ),
+        (
+            """\
+            packages:
+              libelf:
+                require:
+                - spec: "%clang"
+                  when: platform=test
+                  message: "can only be compiled with clang on the test platform"
+        """,
+            "libelf%gcc",
+            "can only be compiled with clang on ",
+        ),
+        (
+            """\
+        packages:
+          libelf:
+            require:
+            - one_of: ["%clang", "%intel"]
+              when: platform=test
+              message: "can only be compiled with clang or intel on the test platform"
+    """,
+            "libelf%gcc",
+            "can only be compiled with clang or intel",
+        ),
+    ],
+)
+def test_requirements_fail_with_custom_message(
+    packages_yaml, spec_str, expected_message, concretize_scope, mock_packages
+):
+    """Test that specs failing due to requirements not being satisfiable fail with a
+    custom error message.
+    """
+    if spack.config.get("config:concretizer") == "original":
+        pytest.skip("Original concretizer does not support configuration requirements")
+
+    update_packages_config(packages_yaml)
+    with pytest.raises(spack.error.SpackError, match=expected_message):
+        Spec(spec_str).concretized()
+
+
+def test_skip_requirement_when_default_requirement_condition_cannot_be_met(
+    concretize_scope, mock_packages
+):
+    """Tests that we can express a requirement condition under 'all' also in cases where
+    the corresponding condition spec mentions variants or versions that don't exist in the
+    package. For those packages the requirement rule is not emitted, since it can be
+    determined to be always false.
+    """
+    if spack.config.get("config:concretizer") == "original":
+        pytest.skip("Original concretizer does not support configuration requirements")
+
+    packages_yaml = """
+        packages:
+          all:
+            require:
+            - one_of: ["%clang"]
+              when: "+shared"
+    """
+    update_packages_config(packages_yaml)
+    s = Spec("mpileaks").concretized()
+
+    assert s.satisfies("%clang +shared")
+    # Sanity checks that 'callpath' doesn't have the shared variant, but that didn't
+    # cause failures during concretization.
+    assert "shared" not in s["callpath"].variants
+
+
+def test_requires_directive(concretize_scope, mock_packages):
+    if spack.config.get("config:concretizer") == "original":
+        pytest.skip("Original concretizer does not support configuration requirements")
+    compilers_yaml = pathlib.Path(concretize_scope) / "compilers.yaml"
+    compilers_yaml.write_text(
+        """
+compilers::
+- compiler:
+    spec: gcc@12.0.0
+    paths:
+      cc: /usr/bin/clang-12
+      cxx: /usr/bin/clang++-12
+      f77: null
+      fc: null
+    operating_system: debian6
+    target: x86_64
+    modules: []
+"""
+    )
+    spack.config.config.clear_caches()
+
+    # This package requires either clang or gcc
+    s = Spec("requires_clang_or_gcc").concretized()
+    assert s.satisfies("%gcc@12.0.0")
+
+    # This package can only be compiled with clang
+    with pytest.raises(spack.error.SpackError, match="can only be compiled with Clang"):
+        Spec("requires_clang").concretized()
