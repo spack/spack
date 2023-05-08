@@ -138,6 +138,7 @@ class Caliper(CMakePackage, CudaPackage, ROCmPackage):
             args.append("-DCUPTI_PREFIX=%s" % spec["cuda"].prefix)
 
         if "+rocm" in spec:
+            args.append("-DCMAKE_CXX_COMPILER={0}".format(spec["hip"].hipcc))
             args.append("-DROCM_PREFIX=%s" % spec["hsa-rocr-dev"].prefix)
 
         return args
