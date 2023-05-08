@@ -217,6 +217,7 @@ nitpick_ignore = [
     # Spack classes that intersphinx is unable to resolve
     ("py:class", "spack.version.StandardVersion"),
     ("py:class", "spack.spec.DependencySpec"),
+    ("py:class", "spack.package_base.PackageBase"),
 ]
 
 # The reST default role (used for this markup: `text`) to use for all documents.
