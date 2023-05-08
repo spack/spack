@@ -8,7 +8,6 @@ import io
 import itertools
 import os
 import pathlib
-import re
 import shutil
 import sys
 from argparse import Namespace
@@ -3139,9 +3138,8 @@ def test_environment_depfile_makefile(depfile_flags, expected_installs, tmpdir, 
     assert len(specs_that_make_would_install) == len(set(specs_that_make_would_install))
 
 
-def test_environment_depfile_spec_format_special_chars(tmpdir, mock_packages, monkeypatch):
+def test_environment_depfile_spec_format_special_chars(mock_packages, monkeypatch):
     env("create", "test")
-    makefile = str(tmpdir.join("Makefile"))
     with ev.read("test"):
         add("dttop")
         concretize()
