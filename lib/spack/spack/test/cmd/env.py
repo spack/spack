@@ -6,8 +6,8 @@ import filecmp
 import glob
 import io
 import os
-import re
 import pathlib
+import re
 import shutil
 import sys
 from argparse import Namespace

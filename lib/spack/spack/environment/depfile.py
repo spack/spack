@@ -92,8 +92,9 @@ class DepfileSpecVisitor:
 
 class MakefileSpec(object):
     """Limited interface to spec to help generate targets etc. without
-       introducing unwanted special characters.
+    introducing unwanted special characters.
     """
+
     def __init__(self, spec):
         self.spec = spec
 
@@ -156,7 +157,9 @@ class MakefileModel:
                 item.target.safe_name(),
                 " ".join(self._install_target(s.safe_name()) for s in item.prereqs),
                 item.target.spec_hash(),
-                item.target.unsafe_format("{name}{@version}{%compiler}{variants}{arch=architecture}"),
+                item.target.unsafe_format(
+                    "{name}{@version}{%compiler}{variants}{arch=architecture}"
+                ),
                 item.buildcache_flag,
             )
             for item in adjacency_list
