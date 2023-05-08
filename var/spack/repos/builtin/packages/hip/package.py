@@ -373,6 +373,7 @@ class Hip(CMakePackage):
 
             paths = {
                 "hip-path": hip_path,
+                "hipify-clang": rocm_prefix,
                 "rocm-path": rocm_prefix,
                 "llvm-amdgpu": rocm_prefix.llvm,
                 "hsa-rocr-dev": rocm_prefix.hsa,
@@ -382,6 +383,7 @@ class Hip(CMakePackage):
         else:
             paths = {
                 "hip-path": self.spec.prefix,
+                "hipify-clang": rocm_prefix,
                 "rocm-path": self.spec.prefix,
                 "llvm-amdgpu": self.spec["llvm-amdgpu"].prefix,
                 "hsa-rocr-dev": self.spec["hsa-rocr-dev"].prefix,
