@@ -31,6 +31,7 @@ class Neuron(CMakePackage):
     patch("patch-v800-cmake-nvhpc.patch", when="@8.0.0%nvhpc^cmake@3.20:")
 
     version("develop", branch="master")
+    version("9.0.a6", commit="67a672a")
     version("9.0.a5", commit="522c866")
     version("9.0.a4", commit="de2c927")
     version("9.0.a3", commit="afce1ef")
@@ -98,7 +99,7 @@ class Neuron(CMakePackage):
     variant("openmp", default=False, description="Enable OpenMP support")
     variant("report", default=True, description="Enable SONATA and binary reports")
     variant("shared", default=True, description="Build shared library")
-    variant("nmodl", default=False, description="Use NMODL instead of MOD2C")
+    variant("nmodl", default=True, description="Use NMODL instead of MOD2C")
     variant(
         "codegenopt",
         default=False,

@@ -96,6 +96,11 @@ packages:
   neuron:
     require:
       - one_of: ["%intel", "%nvhpc", "%oneapi"]
+  # Set nlohmann-json because of constraint of libsonata
+  # that has a results building multiple nmodl packages
+  # depending whether it is build with or without libsonata
+  nlohmann-json:
+    version: [3.9.1]
   nmodl:
     require:
       - one_of: ["%gcc", "%intel", "%nvhpc", "%oneapi"]
