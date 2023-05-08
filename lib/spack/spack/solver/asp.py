@@ -1044,7 +1044,7 @@ class SpackSolverSetup(object):
                         pkg_name=pkg.name,
                         policy=policy,
                         requirements=requirements,
-                        kind=Provenance.PACKAGE_PY,
+                        kind=RequirementKind.PACKAGE,
                         condition=when_spec,
                         message=message,
                     )
