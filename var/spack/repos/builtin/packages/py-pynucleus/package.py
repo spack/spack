@@ -1,0 +1,64 @@
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
+#
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
+from spack.package import *
+
+
+class PyPynucleus(PythonPackage):
+    """PyNucleus is a finite element code that specifically targets nonlocal operators."""
+
+    homepage = "https://sandialabs.github.io/PyNucleus/index.html"
+    git = "https://github.com/sandialabs/PyNucleus.git"
+
+    maintainers("cgcgcg")
+
+    refs = ["master", "develop"]
+
+    for ref in refs:
+        version(ref, branch=ref)
+
+    depends_on("py-mpi4py@2.0.0:", type=("build", "link", "run"))
+    depends_on("py-cython", type=("build", "run"))
+    depends_on("py-numpy", type=("build", "link", "run"))
+    depends_on("py-scipy", type=("build", "link", "run"))
+    depends_on("metis", type=("build", "link", "run"))
+    depends_on("parmetis", type=("build", "link", "run"))
+    depends_on("suite-sparse", type=("build", "run"))
+    depends_on("py-h5py", type=("build", "run"))
+    depends_on("py-tabulate", type=("build", "run"))
+    depends_on("py-pyyaml", type=("build", "run"))
+    depends_on("py-matplotlib", type=("build", "run"))
+    depends_on("py-scikit-sparse", type=("build", "run"))
+    depends_on("py-modepy", type=("build", "run"))
+    depends_on("py-meshpy", type=("build", "run"))
+    depends_on("py-pytools", type=("build", "run"))
+    depends_on("py-psutil", type="run")
+
+    variant("examples", default=True, description="Install examples")
+
+    import_modules = [
+        "PyNucleus",
+        "PyNucleus-packageTools",
+        "PyNucleus-base",
+        "PyNucleus-metisCy",
+        "PyNucleus-fem",
+        "PyNucleus-multilevelSolver",
+        "PyNucleus-nl",
+    ]
+
+    @run_before("install")
+    def install_python(self):
+        prefix = self.prefix
+        for subpackage in ["packageTools", "base", "metisCy", "fem", "multilevelSolver", "nl"]:
+            with working_dir(subpackage):
+                args = std_pip_args + ["--prefix=" + prefix, "."]
+                pip(*args)
+
+    @run_after("install")
+    def install_additional_files(self):
+        spec = self.spec
+        prefix = self.prefix
+        if "+examples" in spec:
+            install_tree("drivers", prefix.drivers)

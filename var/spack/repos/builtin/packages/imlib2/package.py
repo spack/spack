@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -14,7 +14,7 @@ class Imlib2(AutotoolsPackage, SourceforgePackage):
     homepage = "https://sourceforge.net/projects/enlightenment/"
     sourceforge_mirror_path = "enlightenment/imlib2-1.5.1.tar.bz2"
 
-    maintainers = ["TheQueasle"]
+    maintainers("TheQueasle")
 
     version("1.7.1", sha256="033a6a639dcbc8e03f65ff05e57068e7346d50ee2f2fff304bb9095a1b2bc407")
     version("1.7.0", sha256="1976ca3db48cbae79cd0fc737dabe39cc81494fc2560e1d22821e7dc9c22b37d")

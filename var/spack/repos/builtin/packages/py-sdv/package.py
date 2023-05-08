@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -14,7 +14,7 @@ class PySdv(PythonPackage):
     has the same format and statistical properties as the
     original dataset."""
 
-    maintainers = ["Kerilk", "jke513"]
+    maintainers("Kerilk", "jke513")
 
     homepage = "https://github.com/sdv-dev/SDV"
     pypi = "sdv/sdv-0.13.1.tar.gz"

@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -21,7 +21,6 @@ class Prank(Package):
 
     def install(self, spec, prefix):
         with working_dir("src"):
-
             filter_file("gcc", "{0}".format(spack_cc), "Makefile", string=True)
             filter_file("g++", "{0}".format(spack_cxx), "Makefile", string=True)
             if not spec.target.family == "x86_64":

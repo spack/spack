@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -12,7 +12,7 @@ class AppleGl(Package):
 
     homepage = "https://developer.apple.com/library/archive/documentation/GraphicsImaging/Conceptual/OpenGL-MacProgGuide/opengl_intro/opengl_intro.html"
 
-    maintainers = ["aphecetche"]
+    maintainers("aphecetche")
 
     has_code = False
 
@@ -23,8 +23,10 @@ class AppleGl(Package):
     # Only supported on 'platform=darwin' and compiler=apple-clang
     conflicts("platform=linux")
     conflicts("platform=cray")
+    conflicts("platform=windows")
     conflicts("%gcc")
     conflicts("%clang")
+    conflicts("%msvc")
 
     phases = []
 

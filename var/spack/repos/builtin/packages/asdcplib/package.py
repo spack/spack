@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -24,7 +24,6 @@ class Asdcplib(AutotoolsPackage):
     depends_on("openssl", type=("build", "link"))
 
     def configure_args(self):
-
         spec = self.spec
 
         args = ["--with-openssl={0}".format(spec["openssl"].prefix)]

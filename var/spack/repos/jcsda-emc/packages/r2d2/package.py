@@ -13,7 +13,7 @@ class R2d2(PythonPackage):
     git = "https://github.com/JCSDA/r2d2.git"
     url = "https://github.com/JCSDA/r2d2/archive/refs/tags/1.0.0.tar.gz"
 
-    maintainers = ['climbfuji', 'ericlingerfelt']
+    maintainers('climbfuji', 'ericlingerfelt')
 
     version('develop', branch='develop', no_cache=True)
     version('1.0.0', commit='74236aba6817e8ca7880f8109268aae1048ccdbe', preferred=True)

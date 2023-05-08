@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -16,7 +16,7 @@ class Eckit(CMakePackage):
     git = "https://github.com/ecmwf/eckit.git"
     url = "https://github.com/ecmwf/eckit/archive/refs/tags/1.16.0.tar.gz"
 
-    maintainers = ["skosukhin", "climbfuji"]
+    maintainers("skosukhin", "climbfuji")
 
     version("1.23.0", sha256="3cac55ddf7036ecd32cb0974a1ec3a2d347de574ab3a2c0bb6c6f8982e5a7a09")
     version("1.22.1", sha256="a3463d07e47e3bd3e5efa13fdc03d7d3a30ada919ccec3259c6c9c7da4cfdfd9")

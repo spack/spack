@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -19,7 +19,7 @@ class OneapiLevelZero(CMakePackage):
     homepage = "https://dgpu-docs.intel.com/technologies/level-zero.html"
     url = "https://github.com/oneapi-src/level-zero/archive/refs/tags/v1.7.15.tar.gz"
 
-    maintainers = ["rscohn2"]
+    maintainers("rscohn2")
 
     version("1.7.15", sha256="c39bb05a8e5898aa6c444e1704105b93d3f1888b9c333f8e7e73825ffbfb2617")
     version("1.7.9", sha256="b430a7f833a689c899b32172a31c3bca1d16adcad8ff866f240a3a8968433de7")

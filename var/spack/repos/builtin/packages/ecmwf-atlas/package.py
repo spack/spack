@@ -16,7 +16,7 @@ class EcmwfAtlas(CMakePackage):
     git = "https://github.com/ecmwf/atlas.git"
     url = "https://github.com/ecmwf/atlas/archive/0.22.1.tar.gz"
 
-    maintainers = ["climbfuji", "srherbener"]
+    maintainers("climbfuji", "srherbener")
 
     version("master", branch="master")
     version("develop", branch="develop")

@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -13,7 +13,7 @@ class PyVermin(PythonPackage):
     homepage = "https://github.com/netromdk/vermin"
     url = "https://github.com/netromdk/vermin/archive/v1.5.1.tar.gz"
 
-    maintainers = ["netromdk"]
+    maintainers("netromdk")
 
     version("1.5.1", sha256="2d1c7601d054da9fa5c5eb6c817c714235f9d484b74011f7f86c98f0a25e93ea")
     version("1.5.0", sha256="77207385c9cea1f02053a8f2e7f2e8c945394cf37c44c70ce217cada077a2d17")

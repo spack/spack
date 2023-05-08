@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -20,7 +20,7 @@ class Moab(AutotoolsPackage):
     git = "https://bitbucket.org/fathomteam/moab.git"
     url = "https://ftp.mcs.anl.gov/pub/fathom/moab-5.0.0.tar.gz"
 
-    maintainers = ["vijaysm", "iulian787"]
+    maintainers("vijaysm", "iulian787")
 
     version("develop", branch="develop")
     version("master", branch="master")

@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -14,7 +14,7 @@ class Kakoune(MakefilePackage):
         "https://github.com/mawww/kakoune/releases/download/v2021.11.08/kakoune-2021.11.08.tar.bz2"
     )
 
-    maintainers = ["Bambi"]
+    maintainers("Bambi")
 
     version(
         "2021.11.08", sha256="aa30889d9da11331a243a8f40fe4f6a8619321b19217debac8f565e06eddb5f4"

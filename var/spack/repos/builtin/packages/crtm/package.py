@@ -16,19 +16,16 @@ class Crtm(CMakePackage):
     git = "https://github.com/JCSDA/crtm.git"
     url = "https://github.com/JCSDA/crtm/archive/refs/tags/v2.3.0.tar.gz"
 
-    maintainers = [
+    maintainers(
         "BenjaminTJohnson",
         "t-brown",
         "edwardhartnett",
         "AlexanderRichert-NOAA",
         "Hang-Lei-NOAA",
         "climbfuji",
-    ]
-
+    )
     variant(
-        "fix",
-        default=False,
-        description='Download CRTM coeffecient or "fix" files (several GBs).',
+        "fix", default=False, description='Download CRTM coeffecient or "fix" files (several GBs).'
     )
     variant(
         "build_type",
@@ -56,6 +53,7 @@ class Crtm(CMakePackage):
     depends_on("ecbuild", type=("build"), when="@v3.0.0-rc.1")
 
     version("v3.0.0-rc.1", sha256="b7f8c251168bcc3c29586ee281ed456e3115735d65167adcbcf4f69be76b933c")
+
     version("v2.4.1-jedi", sha256="fd8bf4db4f2a3b420b4186de84483ba2a36660519dffcb1e0ff14bfe8c6f6a14")
     # REL-2.4.0_emc (v2.4.0 ecbuild does not work)
     version("2.4.0", commit="5ddd0d6")
@@ -73,4 +71,3 @@ class Crtm(CMakePackage):
             return "https://github.com/JCSDA/crtmv3/archive/refs/tags/{}.tar.gz".format(version)
         else:
             return "https://github.com/JCSDA/crtm/archive/refs/tags/{}.tar.gz".format(version)
-

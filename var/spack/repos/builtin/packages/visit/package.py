@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -51,13 +51,14 @@ class Visit(CMakePackage):
 
     tags = ["radiuss"]
 
-    maintainers = ["cyrush"]
+    maintainers("cyrush")
 
     extendable = True
 
     executables = ["^visit$"]
 
     version("develop", branch="develop")
+    version("3.3.1", sha256="2e969d3146b559fb833e4cdfaefa72f303d8ad368ef325f68506003f7bc317b9")
     version(
         "3.3.0",
         sha256="1a7485146133ac5f1e330d9029697750046ef8d9e9de23a6c2a3685c1c5f4aac",
@@ -69,7 +70,7 @@ class Visit(CMakePackage):
     version("3.0.1", sha256="a506d4d83b8973829e68787d8d721199523ce7ec73e7594e93333c214c2c12bd")
 
     root_cmakelists_dir = "src"
-    generator = "Ninja"
+    generator("ninja")
 
     variant("gui", default=True, description="Enable VisIt's GUI")
     variant("osmesa", default=False, description="Use OSMesa for off-screen CPU rendering")
@@ -90,7 +91,7 @@ class Visit(CMakePackage):
     patch("parallel-hdf5-3.3.patch", when="@3.3.0:+hdf5+mpi")
     patch("cmake-findvtkh-3.3.patch", when="@3.3.0:+vtkm")
     patch("cmake-findjpeg.patch", when="@3.1.0:3.2.2")
-    patch("cmake-findjpeg-3.3.patch", when="@3.3.0:")
+    patch("cmake-findjpeg-3.3.patch", when="@3.3.0")
 
     # Fix pthread and librt link errors
     patch("visit32-missing-link-libs.patch", when="@3.2")
@@ -99,7 +100,6 @@ class Visit(CMakePackage):
     conflicts("+gui", when="+osmesa")
 
     depends_on("cmake@3.14.7:", type="build")
-    depends_on("ninja", type="build")
 
     depends_on("mpi", when="+mpi")
 
@@ -124,7 +124,7 @@ class Visit(CMakePackage):
 
     # VisIt doesn't work with later versions of qt.
     depends_on("qt+gui+opengl@5:5.14", when="+gui")
-    depends_on("qwt", when="+gui")
+    depends_on("qwt+opengl", when="+gui")
 
     # python@3.8 doesn't work with VisIt.
     depends_on("python@3.2:3.7", when="+python")

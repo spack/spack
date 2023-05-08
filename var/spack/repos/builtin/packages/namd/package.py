@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -42,7 +42,7 @@ class Namd(MakefilePackage, CudaPackage):
         "interface",
         default="none",
         values=("none", "tcl", "python"),
-        description="Enables TCL and/or python interface",
+        description="Enables Tcl and/or python interface",
     )
 
     # init_tcl_pointers() declaration and implementation are inconsistent

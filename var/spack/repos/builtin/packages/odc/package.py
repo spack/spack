@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -12,7 +12,7 @@ class Odc(CMakePackage):
     homepage = "https://github.com/ecmwf/odc"
     url = "https://github.com/ecmwf/odc/archive/refs/tags/1.3.0.tar.gz"
 
-    maintainers = ["skosukhin", "climbfuji"]
+    maintainers("skosukhin", "climbfuji")
 
     version("1.4.6", sha256="ff99d46175e6032ddd0bdaa3f6a5e2c4729d24b698ba0191a2a4aa418f48867c")
     version("1.4.5", sha256="8532d0453531d62e1f15791d1c5c96540b842913bd211a8ef090211eaf4cccae")
