@@ -20,8 +20,8 @@ import llnl.util.link_tree
 
 import spack.cmd.env
 import spack.config
-import spack.environment.depfile as depfile
 import spack.environment as ev
+import spack.environment.depfile as depfile
 import spack.environment.environment
 import spack.environment.shell
 import spack.error
@@ -3159,15 +3159,16 @@ def test_environment_depfile_spec_format_special_chars(tmpdir, mock_packages, mo
     with ev.read("test") as e:
         model = depfile.MakefileModel.from_env(e)
 
-    properties_of_interest = set(itertools.chain(
-        model.all_pkg_identifiers, model.all_install_related_targets,
-        model.root_install_targets
-    ))
+    properties_of_interest = set(
+        itertools.chain(
+            model.all_pkg_identifiers,
+            model.all_install_related_targets,
+            model.root_install_targets,
+        )
+    )
 
-    assert not any("dtlink1-githash=version-spackhash" in x for x in
-                   properties_of_interest)
-    assert any("dtlink1-githash_version-spackhash" in x for x in
-               properties_of_interest)
+    assert not any("dtlink1-githash=version-spackhash" in x for x in properties_of_interest)
+    assert any("dtlink1-githash_version-spackhash" in x for x in properties_of_interest)
 
 
 @pytest.mark.parametrize(
