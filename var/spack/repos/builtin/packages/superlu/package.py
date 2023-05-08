@@ -43,7 +43,10 @@ class Superlu(CMakePackage, Package):
     )
 
     build_system(
-        conditional("cmake", when="@5:"), conditional("autotools", when="@:4"), conditional("cmake", when="platform=windows"), default="cmake"
+        conditional("cmake", when="@5:"),
+        conditional("autotools", when="@:4"),
+        conditional("cmake", when="platform=windows"),
+        default="cmake",
     )
 
     variant("pic", default=True, description="Build with position independent code")
