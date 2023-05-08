@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -20,6 +20,7 @@ from llnl.util.filesystem import (
 )
 from llnl.util.lang import index_by, match_predicate
 from llnl.util.link_tree import (
+    ConflictingSpecsError,
     DestinationMergeVisitor,
     LinkTree,
     MergeConflictSummary,
@@ -90,11 +91,11 @@ def view_copy(src, dst, view, spec=None):
                 prefix_to_projection[dep.prefix] = view.get_projection_for_spec(dep)
 
         if spack.relocate.is_binary(dst):
-            spack.relocate.unsafe_relocate_text_bin(binaries=[dst], prefixes=prefix_to_projection)
+            spack.relocate.relocate_text_bin(binaries=[dst], prefixes=prefix_to_projection)
         else:
             prefix_to_projection[spack.store.layout.root] = view._root
             prefix_to_projection[orig_sbang] = new_sbang
-            spack.relocate.unsafe_relocate_text(files=[dst], prefixes=prefix_to_projection)
+            spack.relocate.relocate_text(files=[dst], prefixes=prefix_to_projection)
         try:
             stat = os.stat(src)
             os.chown(dst, stat.st_uid, stat.st_gid)
@@ -638,6 +639,22 @@ class SimpleFilesystemView(FilesystemView):
     def __init__(self, root, layout, **kwargs):
         super(SimpleFilesystemView, self).__init__(root, layout, **kwargs)
 
+    def _sanity_check_view_projection(self, specs):
+        """A very common issue is that we end up with two specs of the same
+        package, that project to the same prefix. We want to catch that as
+        early as possible and give a sensible error to the user. Here we use
+        the metadata dir (.spack) projection as a quick test to see whether
+        two specs in the view are going to clash. The metadata dir is used
+        because it's always added by Spack with identical files, so a
+        guaranteed clash that's easily verified."""
+        seen = dict()
+        for current_spec in specs:
+            metadata_dir = self.relative_metadata_dir_for_spec(current_spec)
+            conflicting_spec = seen.get(metadata_dir)
+            if conflicting_spec:
+                raise ConflictingSpecsError(current_spec, conflicting_spec)
+            seen[metadata_dir] = current_spec
+
     def add_specs(self, *specs, **kwargs):
         assert all((s.concrete for s in specs))
         if len(specs) == 0:
@@ -651,6 +668,8 @@ class SimpleFilesystemView(FilesystemView):
 
         if kwargs.get("exclude", None):
             specs = set(filter_exclude(specs, kwargs["exclude"]))
+
+        self._sanity_check_view_projection(specs)
 
         # Ignore spack meta data folder.
         def skip_list(file):
@@ -686,32 +705,45 @@ class SimpleFilesystemView(FilesystemView):
         for dst in visitor.directories:
             os.mkdir(os.path.join(self._root, dst))
 
-        # Then group the files to be linked by spec...
-        # For compatibility, we have to create a merge_map dict mapping
-        # full_src => full_dst
-        files_per_spec = itertools.groupby(visitor.files.items(), key=lambda item: item[1][0])
-
-        for (spec, (src_root, rel_paths)) in zip(specs, files_per_spec):
-            merge_map = dict()
-            for dst_rel, (_, src_rel) in rel_paths:
-                full_src = os.path.join(src_root, src_rel)
-                full_dst = os.path.join(self._root, dst_rel)
-                merge_map[full_src] = full_dst
+        # Link the files using a "merge map": full src => full dst
+        merge_map_per_prefix = self._source_merge_visitor_to_merge_map(visitor)
+        for spec in specs:
+            merge_map = merge_map_per_prefix.get(spec.package.view_source(), None)
+            if not merge_map:
+                # Not every spec may have files to contribute.
+                continue
             spec.package.add_files_to_view(self, merge_map, skip_if_exists=False)
 
         # Finally create the metadata dirs.
         self.link_metadata(specs)
+
+    def _source_merge_visitor_to_merge_map(self, visitor: SourceMergeVisitor):
+        # For compatibility with add_files_to_view, we have to create a
+        # merge_map of the form join(src_root, src_rel) => join(dst_root, dst_rel),
+        # but our visitor.files format is dst_rel => (src_root, src_rel).
+        # We exploit that visitor.files is an ordered dict, and files per source
+        # prefix are contiguous.
+        source_root = lambda item: item[1][0]
+        per_source = itertools.groupby(visitor.files.items(), key=source_root)
+        return {
+            src_root: {
+                os.path.join(src_root, src_rel): os.path.join(self._root, dst_rel)
+                for dst_rel, (_, src_rel) in group
+            }
+            for src_root, group in per_source
+        }
+
+    def relative_metadata_dir_for_spec(self, spec):
+        return os.path.join(
+            self.get_relative_projection_for_spec(spec), spack.store.layout.metadata_dir, spec.name
+        )
 
     def link_metadata(self, specs):
         metadata_visitor = SourceMergeVisitor()
 
         for spec in specs:
             src_prefix = os.path.join(spec.package.view_source(), spack.store.layout.metadata_dir)
-            proj = os.path.join(
-                self.get_relative_projection_for_spec(spec),
-                spack.store.layout.metadata_dir,
-                spec.name,
-            )
+            proj = self.relative_metadata_dir_for_spec(spec)
             metadata_visitor.set_projection(proj)
             visit_directory_tree(src_prefix, metadata_visitor)
 

@@ -19,7 +19,7 @@ class Shumlib(MakefilePackage):
     git = "https://github.com/climbfuji/shumlib.git"
     url = "https://github.com/metomi/shumlib/archive/refs/tags/2021.10.1.zip"
 
-    maintainers = ['matthewrmshin', 'climbfuji']
+    maintainers('matthewrmshin', 'climbfuji')
 
     version('macos_clang_linux_intel_port', commit='84770606669463a54b51f9b8ed65a1d31f105fe9')
     version('macos_clang_port', commit='e5e5c9f23ce2656aacd75a884c26b01a5380752e')

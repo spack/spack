@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -29,10 +29,7 @@ def skip_unless_linux(f):
 @skip_unless_linux
 @pytest.mark.parametrize(
     "linker_flag,is_runpath",
-    [
-        ("-Wl,--disable-new-dtags", False),
-        ("-Wl,--enable-new-dtags", True),
-    ],
+    [("-Wl,--disable-new-dtags", False), ("-Wl,--enable-new-dtags", True)],
 )
 def test_elf_parsing_shared_linking(linker_flag, is_runpath, tmpdir):
     gcc = spack.util.executable.which("gcc")
@@ -159,9 +156,6 @@ def test_elf_get_and_replace_rpaths(binary_with_rpaths):
         elf.replace_rpath_in_place_or_raise(
             executable,
             OrderedDict(
-                [
-                    (b"/short-a", b"/very/long/prefix-a"),
-                    (b"/short-b", b"/very/long/prefix-b"),
-                ]
+                [(b"/short-a", b"/very/long/prefix-a"), (b"/short-b", b"/very/long/prefix-b")]
             ),
         )

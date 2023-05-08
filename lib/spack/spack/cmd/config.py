@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -408,13 +408,7 @@ def config_prefer_upstream(args):
     pkgs = {}
     for spec in pref_specs:
         # Collect all the upstream compilers and versions for this package.
-        pkg = pkgs.get(
-            spec.name,
-            {
-                "version": [],
-                "compiler": [],
-            },
-        )
+        pkg = pkgs.get(spec.name, {"version": [], "compiler": []})
         pkgs[spec.name] = pkg
 
         # We have no existing variant if this is our first added version.

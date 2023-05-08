@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -21,8 +21,6 @@ import spack.config
 import spack.error
 import spack.paths
 
-is_windows = sys.platform == "win32"
-
 
 class Lock(llnl.util.lock.Lock):
     """Lock that can be disabled.
@@ -34,7 +32,7 @@ class Lock(llnl.util.lock.Lock):
 
     def __init__(self, *args, **kwargs):
         super(Lock, self).__init__(*args, **kwargs)
-        self._enable = spack.config.get("config:locks", not is_windows)
+        self._enable = spack.config.get("config:locks", sys.platform != "win32")
 
     def _lock(self, op, timeout=0):
         if self._enable:

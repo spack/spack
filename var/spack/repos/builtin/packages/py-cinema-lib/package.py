@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -15,7 +15,7 @@ class PyCinemaLib(PythonPackage):
     url = "https://github.com/cinemascience/cinema_lib/archive/1.2.1.tar.gz"
     git = "https://github.com/cinemascience/cinema_lib.git"
 
-    maintainers = ["EthanS94"]
+    maintainers("EthanS94")
 
     version("master", branch="master")
     version("1.2.1", sha256="13c6c7b3df7dae3e05c2f44009b7c149841f604b7c51f36067bbcea9e2d088eb")

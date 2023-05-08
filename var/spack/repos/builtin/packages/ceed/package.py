@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -16,7 +16,7 @@ class Ceed(BundlePackage, CudaPackage, ROCmPackage):
 
     homepage = "https://ceed.exascaleproject.org"
 
-    maintainers = ["jedbrown", "v-dobrev", "tzanio"]
+    maintainers("jedbrown", "v-dobrev", "tzanio")
 
     version("5.0.0")
     version("4.0.0")

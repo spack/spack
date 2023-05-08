@@ -13,7 +13,7 @@ class EwokEnv(BundlePackage):
     homepage = "https://github.com/JCSDA-internal/ewok"
     git = "https://github.com/JCSDA-internal/ewok.git"
 
-    maintainers = ["climbfuji", "ericlingerfelt"]
+    maintainers("climbfuji", "ericlingerfelt")
 
     version("1.0.0")
 

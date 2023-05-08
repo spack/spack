@@ -12,7 +12,7 @@ class JediUfsEnv(BundlePackage):
     homepage = "https://github.com/JCSDA/ufs-bundle"
     git = "https://github.com/JCSDA/ufs-bundle.git"
 
-    maintainers = ["climbfuji", "mark-a-potts"]
+    maintainers("climbfuji", "mark-a-potts")
 
     version("1.0.0")
 

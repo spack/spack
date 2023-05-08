@@ -12,7 +12,7 @@ class SocaEnv(BundlePackage):
     homepage = "https://github.com/JCSDA/soca"
     git = "https://github.com/JCSDA/soca.git"
 
-    maintainers = ["climbfuji", "travissluka"]
+    maintainers("climbfuji", "travissluka")
 
     version("1.0.0")
 
