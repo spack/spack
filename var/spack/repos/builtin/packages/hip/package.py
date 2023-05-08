@@ -373,7 +373,6 @@ class Hip(CMakePackage):
 
             paths = {
                 "hip-path": hip_path,
-                "hipify-clang": rocm_prefix,
                 "rocm-path": rocm_prefix,
                 "llvm-amdgpu": rocm_prefix.llvm,
                 "hsa-rocr-dev": rocm_prefix.hsa,
@@ -383,13 +382,15 @@ class Hip(CMakePackage):
         else:
             paths = {
                 "hip-path": self.spec.prefix,
-                "hipify-clang": rocm_prefix,
                 "rocm-path": self.spec.prefix,
                 "llvm-amdgpu": self.spec["llvm-amdgpu"].prefix,
                 "hsa-rocr-dev": self.spec["hsa-rocr-dev"].prefix,
                 "rocminfo": self.spec["rocminfo"].prefix,
                 "rocm-device-libs": self.spec["llvm-amdgpu"].prefix,
             }
+
+        if self.spec.satisfies("@5.4:"):
+            paths["hipify-clang"] = rocm_prefix
 
         if "@:3.8.0" in self.spec:
             paths["bitcode"] = paths["rocm-device-libs"].lib
@@ -419,7 +420,7 @@ class Hip(CMakePackage):
             # there is a common prefix /opt/rocm-x.y.z.
             env.set("ROCM_PATH", paths["rocm-path"])
             if self.spec.satisfies("@5.4:"):
-                env.set("HIPIFY_CLANG_PATH", self.spec["hipify-clang"].prefix)
+                env.set("HIPIFY_CLANG_PATH", paths["hipify-clang"])
 
             # hipcc recognizes HIP_PLATFORM == hcc and HIP_COMPILER == clang, even
             # though below we specified HIP_PLATFORM=rocclr and HIP_COMPILER=clang
