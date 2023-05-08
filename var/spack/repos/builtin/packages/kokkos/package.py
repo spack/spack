@@ -207,7 +207,7 @@ class Kokkos(CMakePackage, CudaPackage, ROCmPackage):
 
     # nvcc does not currently work with C++17 or C++20
     conflicts("+cuda", when="std=17 ^cuda@:10")
-    conflicts("+cuda", when="std=20")
+    conflicts("+cuda", when="std=20 ^cuda@:11")
 
     # SYCL and OpenMPTarget require C++17 or higher
     for stdver in stds[: stds.index("17")]:
