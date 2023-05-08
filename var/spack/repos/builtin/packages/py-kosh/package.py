@@ -40,4 +40,3 @@ class PyKosh(PythonPackage):
         depends_on("py-tqdm")
         depends_on("py-networkx@2.6:", type=("build", "run"))
         depends_on("py-numpy@1.20:", type=("build", "run"))
-
