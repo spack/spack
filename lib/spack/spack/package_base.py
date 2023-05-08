@@ -1897,7 +1897,8 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
     # TODO (post-34236): run_test, etc.
     def test(self):
         # Defer tests to virtual and concrete packages
-        warnings.warn(self._test_deprecated_warning)
+        # Ensure passing warn() a string for python 3.6/rhel8,ubuntu,etc.
+        warnings.warn(str(self._test_deprecated_warning))
 
     # TODO (post-34236): Remove this deprecated method when eliminate test,
     # TODO (post-34236): run_test, etc.
