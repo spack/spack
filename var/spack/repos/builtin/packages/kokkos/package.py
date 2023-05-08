@@ -134,6 +134,7 @@ class Kokkos(CMakePackage, CudaPackage, ROCmPackage):
         "75": "turing75",
         "80": "ampere80",
         "86": "ampere86",
+        "89": "ada89",
         "90": "hopper90",
     }
     cuda_arches = spack_cuda_arch_map.values()
