@@ -26,6 +26,7 @@ The available directives are:
   * ``resource``
   * ``variant``
   * ``version``
+  * ``requires``
 
 """
 import collections.abc
@@ -66,6 +67,7 @@ __all__ = [
     "variant",
     "resource",
     "build_system",
+    "requires",
 ]
 
 #: These are variant names used by Spack internally; packages can't use them
@@ -862,6 +864,45 @@ def maintainers(*names: str):
         pkg.maintainers = list(sorted(set(maintainers_from_base + list(names))))
 
     return _execute_maintainer
+
+
+@directive("requirements")
+def requires(*requirement_specs, policy="one_of", when=None, msg=None):
+    """Allows a package to request a configuration to be present in all valid solutions.
+
+    For instance, a package that is known to compile only with GCC can declare:
+
+        requires("%gcc")
+
+    A package that requires Apple-Clang on Darwin can declare instead:
+
+        requires("%apple-clang", when="platform=darwin", msg="Apple Clang is required on Darwin")
+
+    Args:
+        requirement_specs: spec expressing the requirement
+        when: optional constraint that triggers the requirement. If None the requirement
+            is applied unconditionally.
+
+        msg: optional user defined message
+    """
+
+    def _execute_requires(pkg):
+        if policy not in ("one_of", "any_of"):
+            err_msg = (
+                f"the 'policy' argument of the 'requires' directive in {pkg.name} is set "
+                f"to a wrong value (only 'one_of' or 'any_of' are allowed)"
+            )
+            raise DirectiveError(err_msg)
+
+        when_spec = make_when_spec(when)
+        if not when_spec:
+            return
+
+        # Save in a list the requirements and the associated custom messages
+        when_spec_list = pkg.requirements.setdefault(tuple(requirement_specs), [])
+        when_spec_list.append((when_spec, policy, msg))
+
+    return _execute_requires
 
 
 class DirectiveError(spack.error.SpackError):
