@@ -36,7 +36,7 @@ class PyCutadapt(PythonPackage):
     depends_on("py-xopen@0.8.1:0.8", type=("build", "run"), when="@2.5")
     depends_on("py-xopen@0.8.4:0.8", type=("build", "run"), when="@2.6:2.10")
     depends_on("py-dnaio@0.3:", type=("build", "run"), when="@2.0:2.4")
-    depends_on("py-dnaio@0.3.0:0.3", type=("build", "run"), when="@2.5")
+    depends_on("py-dnaio@0.3", type=("build", "run"), when="@2.5")
     depends_on("py-dnaio@0.4.0:0.4", type=("build", "run"), when="@2.6")
     depends_on("py-dnaio@0.4.1:0.4", type=("build", "run"), when="@2.7:2.9")
     depends_on("py-dnaio@0.4.2:0.4", type=("build", "run"), when="@2.10")

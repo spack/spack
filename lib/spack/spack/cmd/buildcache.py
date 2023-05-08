@@ -42,32 +42,28 @@ def setup_parser(subparser):
     setup_parser.parser = subparser
     subparsers = subparser.add_subparsers(help="buildcache sub-commands")
 
-    create = subparsers.add_parser("create", help=create_fn.__doc__)
-    create.add_argument(
+    push = subparsers.add_parser("push", aliases=["create"], help=push_fn.__doc__)
+    # TODO: remove from Spack 0.21
+    push.add_argument(
         "-r",
         "--rel",
         action="store_true",
-        help="make all rpaths relative before creating tarballs.",
+        help="make all rpaths relative before creating tarballs. (deprecated)",
     )
-    create.add_argument(
-        "-f", "--force", action="store_true", help="overwrite tarball if it exists."
+    push.add_argument("-f", "--force", action="store_true", help="overwrite tarball if it exists.")
+    push.add_argument(
+        "-u", "--unsigned", action="store_true", help="push unsigned buildcache tarballs"
     )
-    create.add_argument(
-        "-u",
-        "--unsigned",
-        action="store_true",
-        help="create unsigned buildcache tarballs for testing",
-    )
-    create.add_argument(
+    push.add_argument(
         "-a",
         "--allow-root",
         action="store_true",
         help="allow install root string in binary files after RPATH substitution",
     )
-    create.add_argument(
+    push.add_argument(
         "-k", "--key", metavar="key", type=str, default=None, help="Key for signing."
     )
-    output = create.add_mutually_exclusive_group(required=False)
+    output = push.add_mutually_exclusive_group(required=False)
     # TODO: remove from Spack 0.21
     output.add_argument(
         "-d",
@@ -97,17 +93,18 @@ def setup_parser(subparser):
     # Unfortunately we cannot add this to the mutually exclusive group above,
     # because we have further positional arguments.
     # TODO: require from Spack 0.21
-    create.add_argument("mirror", type=str, help="Mirror name, path, or URL.", nargs="?")
-    create.add_argument(
+    push.add_argument("mirror", type=str, help="Mirror name, path, or URL.", nargs="?")
+    push.add_argument(
+        "--update-index",
         "--rebuild-index",
         action="store_true",
         default=False,
         help="Regenerate buildcache index after building package(s)",
     )
-    create.add_argument(
+    push.add_argument(
         "--spec-file", default=None, help="Create buildcache entry for spec from json or yaml file"
     )
-    create.add_argument(
+    push.add_argument(
         "--only",
         default="package,dependencies",
         dest="things_to_install",
@@ -120,8 +117,8 @@ def setup_parser(subparser):
             " or only the dependencies"
         ),
     )
-    arguments.add_common_arguments(create, ["specs"])
-    create.set_defaults(func=create_fn)
+    arguments.add_common_arguments(push, ["specs"])
+    push.set_defaults(func=push_fn)
 
     install = subparsers.add_parser("install", help=install_fn.__doc__)
     install.add_argument(
@@ -130,11 +127,12 @@ def setup_parser(subparser):
     install.add_argument(
         "-m", "--multiple", action="store_true", help="allow all matching packages "
     )
+    # TODO: remove from Spack 0.21
     install.add_argument(
         "-a",
         "--allow-root",
         action="store_true",
-        help="allow install root string in binary files after RPATH substitution",
+        help="allow install root string in binary files after RPATH substitution. (deprecated)",
     )
     install.add_argument(
         "-u",
@@ -343,7 +341,9 @@ def setup_parser(subparser):
     sync.set_defaults(func=sync_fn)
 
     # Update buildcache index without copying any additional packages
-    update_index = subparsers.add_parser("update-index", help=update_index_fn.__doc__)
+    update_index = subparsers.add_parser(
+        "update-index", aliases=["rebuild-index"], help=update_index_fn.__doc__
+    )
     update_index_out = update_index.add_mutually_exclusive_group(required=True)
     # TODO: remove in Spack 0.21
     update_index_out.add_argument(
@@ -434,7 +434,7 @@ def _concrete_spec_from_args(args):
     return Spec.from_specfile(specfile_path)
 
 
-def create_fn(args):
+def push_fn(args):
     """create a binary package and push it to a mirror"""
     if args.mirror_flag:
         mirror = args.mirror_flag
@@ -448,6 +448,9 @@ def create_fn(args):
             "Using flags to specify mirrors is deprecated and will be removed in "
             "Spack 0.21, use positional arguments instead."
         )
+
+    if args.rel:
+        tty.warn("The --rel flag is deprecated and will be removed in Spack 0.21")
 
     # TODO: remove this in 0.21. If we have mirror_flag, the first
     # spec is in the positional mirror arg due to argparse limitations.
@@ -487,7 +490,7 @@ def create_fn(args):
                     unsigned=args.unsigned,
                     allow_root=args.allow_root,
                     key=args.key,
-                    regenerate_index=args.rebuild_index,
+                    regenerate_index=args.update_index,
                 ),
             )
 
@@ -521,12 +524,13 @@ def install_fn(args):
     if not args.specs:
         tty.die("a spec argument is required to install from a buildcache")
 
+    if args.allow_root:
+        tty.warn("The --allow-root flag is deprecated and will be removed in Spack 0.21")
+
     query = bindist.BinaryCacheQuery(all_architectures=args.otherarch)
     matches = spack.store.find(args.specs, multiple=args.multiple, query_fn=query)
     for match in matches:
-        bindist.install_single_spec(
-            match, allow_root=args.allow_root, unsigned=args.unsigned, force=args.force
-        )
+        bindist.install_single_spec(match, unsigned=args.unsigned, force=args.force)
 
 
 def list_fn(args):
