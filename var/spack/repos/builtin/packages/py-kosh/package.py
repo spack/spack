@@ -38,3 +38,6 @@ class PyKosh(PythonPackage):
         depends_on("py-pandas")
         depends_on("py-hdbscan@0.8.29:")
         depends_on("py-tqdm")
+        depends_on("py-networkx@2.6:", type=("build", "run"))
+        depends_on("py-numpy@1.20:", type=("build", "run"))
+
