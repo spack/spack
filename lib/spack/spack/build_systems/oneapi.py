@@ -4,9 +4,9 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 """Common utilities for managing intel oneapi packages."""
 import getpass
+import os
 import platform
 import shutil
-import os
 from os.path import basename, dirname, isdir
 
 from llnl.util.filesystem import find_headers, find_libraries, join_path
@@ -152,6 +152,7 @@ class IntelOneApiPackage(Package):
                 link_tree.merge(dest_path)
             else:
                 os.symlink(src_path, dest_path)
+
 
 class IntelOneApiLibraryPackage(IntelOneApiPackage):
     """Base class for Intel oneAPI library packages.
