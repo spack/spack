@@ -52,6 +52,7 @@ import spack.mirror
 import spack.package_base
 import spack.package_prefs as prefs
 import spack.repo
+import spack.spec
 import spack.store
 import spack.util.executable
 import spack.util.path
@@ -83,9 +84,6 @@ STATUS_DEQUEUED = "dequeued"
 #: Build status indicating task has been removed (to maintain priority
 #: queue invariants).
 STATUS_REMOVED = "removed"
-
-is_windows = sys.platform == "win32"
-is_osx = sys.platform == "darwin"
 
 
 class InstallAction(object):
@@ -169,9 +167,9 @@ def _do_fake_install(pkg):
     if not pkg.name.startswith("lib"):
         library = "lib" + library
 
-    plat_shared = ".dll" if is_windows else ".so"
-    plat_static = ".lib" if is_windows else ".a"
-    dso_suffix = ".dylib" if is_osx else plat_shared
+    plat_shared = ".dll" if sys.platform == "win32" else ".so"
+    plat_static = ".lib" if sys.platform == "win32" else ".a"
+    dso_suffix = ".dylib" if sys.platform == "darwin" else plat_shared
 
     # Install fake command
     fs.mkdirp(pkg.prefix.bin)
@@ -318,7 +316,7 @@ def _install_from_cache(pkg, cache_only, explicit, unsigned=False):
     tty.debug("Successfully extracted {0} from binary cache".format(pkg_id))
     _print_timer(pre=_log_prefix(pkg.name), pkg_id=pkg_id, timer=t)
     _print_installed_pkg(pkg.spec.prefix)
-    spack.hooks.post_install(pkg.spec)
+    spack.hooks.post_install(pkg.spec, explicit)
     return True
 
 
@@ -356,7 +354,7 @@ def _process_external_package(pkg, explicit):
         # For external packages we just need to run
         # post-install hooks to generate module files.
         tty.debug("{0} generating module file".format(pre))
-        spack.hooks.post_install(spec)
+        spack.hooks.post_install(spec, explicit)
 
         # Add to the DB
         tty.debug("{0} registering into DB".format(pre))
@@ -394,7 +392,7 @@ def _process_binary_cache_tarball(
 
     with timer.measure("install"), spack.util.path.filter_padding():
         binary_distribution.extract_tarball(
-            pkg.spec, download_result, allow_root=False, unsigned=unsigned, force=False
+            pkg.spec, download_result, unsigned=unsigned, force=False
         )
 
         pkg.installed_from_binary_cache = True
@@ -631,9 +629,7 @@ def package_id(pkg):
             derived
     """
     if not pkg.spec.concrete:
-        raise ValueError(
-            "Cannot provide a unique, readable id when " "the spec is not concretized."
-        )
+        raise ValueError("Cannot provide a unique, readable id when the spec is not concretized.")
 
     return "{0}-{1}-{2}".format(pkg.name, pkg.version, pkg.spec.dag_hash())
 
@@ -911,7 +907,6 @@ class PackageInstaller(object):
         """
         install_args = task.request.install_args
         keep_prefix = install_args.get("keep_prefix")
-        keep_stage = install_args.get("keep_stage")
         restage = install_args.get("restage")
 
         # Make sure the package is ready to be locally installed.
@@ -944,9 +939,9 @@ class PackageInstaller(object):
                 else:
                     tty.debug("{0} is partially installed".format(task.pkg_id))
 
-        # Destroy the stage for a locally installed, non-DIYStage, package
-        if restage and task.pkg.stage.managed_by_spack:
-            task.pkg.stage.destroy()
+            # Destroy the stage for a locally installed, non-DIYStage, package
+            if restage and task.pkg.stage.managed_by_spack:
+                task.pkg.stage.destroy()
 
         if installed_in_db and (
             rec.spec.dag_hash() not in task.request.overwrite
@@ -957,12 +952,6 @@ class PackageInstaller(object):
             # Only update the explicit entry once for the explicit package
             if task.explicit:
                 spack.store.db.update_explicit(task.pkg.spec, True)
-
-            # In case the stage directory has already been created, this
-            # check ensures it is removed after we checked that the spec is
-            # installed.
-            if not keep_stage:
-                task.pkg.stage.destroy()
 
     def _cleanup_all_tasks(self):
         """Cleanup all build tasks to include releasing their locks."""
@@ -1262,6 +1251,10 @@ class PackageInstaller(object):
         # see unit_test_check() docs.
         if not pkg.unit_test_check():
             return
+
+        # Injecting information to know if this installation request is the root one
+        # to determine in BuildProcessInstaller whether installation is explicit or not
+        install_args["is_root"] = task.is_root
 
         try:
             self._setup_install_dir(pkg)
@@ -1882,6 +1875,9 @@ class BuildProcessInstaller(object):
         # whether to enable echoing of build output initially or not
         self.verbose = install_args.get("verbose", False)
 
+        # whether installation was explicitly requested by the user
+        self.explicit = install_args.get("is_root", False) and install_args.get("explicit", True)
+
         # env before starting installation
         self.unmodified_env = install_args.get("unmodified_env", {})
 
@@ -1942,7 +1938,7 @@ class BuildProcessInstaller(object):
                 self.timer.write_json(timelog)
 
             # Run post install hooks before build stage is removed.
-            spack.hooks.post_install(self.pkg.spec)
+            spack.hooks.post_install(self.pkg.spec, self.explicit)
 
         _print_timer(pre=self.pre, pkg_id=self.pkg_id, timer=self.timer)
         _print_installed_pkg(self.pkg.prefix)
@@ -2416,7 +2412,10 @@ class BuildRequest(object):
         else:
             cache_only = self.install_args.get("dependencies_cache_only")
 
-        if not cache_only or include_build_deps:
+        # Include build dependencies if pkg is not installed and cache_only
+        # is False, or if build depdencies are explicitly called for
+        # by include_build_deps.
+        if include_build_deps or not (cache_only or pkg.spec.installed):
             deptypes.append("build")
         if self.run_tests(pkg):
             deptypes.append("test")

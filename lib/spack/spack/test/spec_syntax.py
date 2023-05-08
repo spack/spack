@@ -662,7 +662,13 @@ def test_dep_spec_by_hash(database):
     ).next_spec()
     assert "zmpi" in mpileaks_hash_zmpi
     assert mpileaks_hash_zmpi["zmpi"] == zmpi
-    assert mpileaks_hash_zmpi.compiler == mpileaks_zmpi.compiler
+
+    # notice: the round-trip str -> Spec loses specificity when
+    # since %gcc@=x gets printed as %gcc@x. So stick to satisfies
+    # here, unless/until we want to differentiate between ranges
+    # and specific versions in the future.
+    # assert mpileaks_hash_zmpi.compiler == mpileaks_zmpi.compiler
+    assert mpileaks_zmpi.compiler.satisfies(mpileaks_hash_zmpi.compiler)
 
     mpileaks_hash_fake_and_zmpi = SpecParser(
         f"mpileaks ^/{fake.dag_hash()[:4]} ^ /{zmpi.dag_hash()[:5]}"
@@ -1040,18 +1046,44 @@ def test_compare_abstract_specs():
         assert a <= b or b < a
 
 
-def test_git_ref_spec_equivalences(mock_packages):
-    spec_hash_fmt = "develop-branch-version@git.{hash}=develop"
-    s1 = SpecParser(spec_hash_fmt.format(hash="a" * 40)).next_spec()
-    s2 = SpecParser(spec_hash_fmt.format(hash="b" * 40)).next_spec()
-    s3 = SpecParser("develop-branch-version@git.0.2.15=develop").next_spec()
-    s_no_git = SpecParser("develop-branch-version@develop").next_spec()
+@pytest.mark.parametrize(
+    "lhs_str,rhs_str,expected",
+    [
+        # Git shasum vs generic develop
+        (
+            f"develop-branch-version@git.{'a' * 40}=develop",
+            "develop-branch-version@develop",
+            (True, True, False),
+        ),
+        # Two different shasums
+        (
+            f"develop-branch-version@git.{'a' * 40}=develop",
+            f"develop-branch-version@git.{'b' * 40}=develop",
+            (False, False, False),
+        ),
+        # Git shasum vs. git tag
+        (
+            f"develop-branch-version@git.{'a' * 40}=develop",
+            "develop-branch-version@git.0.2.15=develop",
+            (False, False, False),
+        ),
+        # Git tag vs. generic develop
+        (
+            "develop-branch-version@git.0.2.15=develop",
+            "develop-branch-version@develop",
+            (True, True, False),
+        ),
+    ],
+)
+def test_git_ref_spec_equivalences(mock_packages, lhs_str, rhs_str, expected):
+    lhs = SpecParser(lhs_str).next_spec()
+    rhs = SpecParser(rhs_str).next_spec()
+    intersect, lhs_sat_rhs, rhs_sat_lhs = expected
 
-    assert s1.satisfies(s_no_git)
-    assert s2.satisfies(s_no_git)
-    assert not s_no_git.satisfies(s1)
-    assert not s2.satisfies(s1)
-    assert not s3.satisfies(s1)
+    assert lhs.intersects(rhs) is intersect
+    assert rhs.intersects(lhs) is intersect
+    assert lhs.satisfies(rhs) is lhs_sat_rhs
+    assert rhs.satisfies(lhs) is rhs_sat_lhs
 
 
 @pytest.mark.regression("32471")

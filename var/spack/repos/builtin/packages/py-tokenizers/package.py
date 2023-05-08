@@ -27,3 +27,8 @@ class PyTokenizers(PythonPackage):
     depends_on("rust@nightly", when="@:0.10", type="build")
 
     # TODO: This package currently requires internet access to install.
+
+    # cargo resolves dependencies, which includes openssl-sys somewhere, which needs
+    # system pkgconfig and openssl.
+    depends_on("pkgconfig", type="build")
+    depends_on("openssl")

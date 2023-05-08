@@ -29,12 +29,12 @@ class VtkM(CMakePackage, CudaPackage, ROCmPackage):
 
     version("master", branch="master")
     version("release", branch="release")
-    version("2.0.0-rc1", sha256="4dc018961eeeb3c6bd4e5443d72e79b9d5fb86901e38fb757f74a7a45dbbc0d8")
     version(
-        "1.9.0",
-        sha256="12355dea1a24ec32767260068037adeb71abb3df2f9f920c92ce483f35ff46e4",
+        "2.0.0",
+        sha256="32643cf3564fa77f8e2a2a5456a574b6b2355bb68918eb62ccde493993ade1a3",
         preferred=True,
     )
+    version("1.9.0", sha256="12355dea1a24ec32767260068037adeb71abb3df2f9f920c92ce483f35ff46e4")
     version("1.8.0", sha256="fcedee6e8f4ac50dde56e8c533d48604dbfb663cea1561542a837e8e80ba8768")
     version("1.7.1", sha256="7ea3e945110b837a8c2ba49b41e45e1a1d8d0029bb472b291f7674871dbbbb63")
     version("1.7.0", sha256="a86667ac22057462fc14495363cfdcc486da125b366cb568ec23c86946439be4")
@@ -50,21 +50,16 @@ class VtkM(CMakePackage, CudaPackage, ROCmPackage):
     version("1.2.0", sha256="607272992e05f8398d196f0acdcb4af025a4a96cd4f66614c6341f31d4561763")
     version("1.1.0", sha256="78618c81ca741b1fbba0853cb5d7af12c51973b514c268fc96dfb36b853cdb18")
 
-    # use release, instead of release with debug symbols b/c vtkm libs
-    # can overwhelm compilers with too many symbols
-    variant(
-        "build_type",
-        default="Release",
-        description="CMake build type",
-        values=("Debug", "Release", "RelWithDebInfo", "MinSizeRel"),
-    )
     variant("shared", default=False, description="build shared libs")
 
     variant("doubleprecision", default=True, description="enable double precision")
     variant("logging", default=False, description="build logging support")
     variant("ascent_types", default=True, description="build support for ascent types")
     variant(
-        "virtuals", default=False, description="enable support for deprecated virtual functions"
+        "virtuals",
+        default=False,
+        description="enable support for deprecated virtual functions",
+        when="@:1.9",
     )
     variant("mpi", default=False, description="build mpi support")
     variant("rendering", default=True, description="build rendering support")
@@ -124,6 +119,7 @@ class VtkM(CMakePackage, CudaPackage, ROCmPackage):
     conflicts("+rocm", when="@:1.6")
     conflicts("+rocm", when="+cuda")
     conflicts("+rocm", when="~kokkos", msg="VTK-m does not support HIP without Kokkos")
+    conflicts("+rocm", when="+virtuals", msg="VTK-m does not support virtual functions with ROCm")
 
     # Can build +shared+cuda after @1.7:
     conflicts("+shared", when="@:1.6 +cuda_native")
@@ -131,6 +127,10 @@ class VtkM(CMakePackage, CudaPackage, ROCmPackage):
     conflicts("+cuda~cuda_native", when="@:1.5", msg="Cannot have +cuda without a cuda device")
 
     conflicts("+cuda", when="cuda_arch=none", msg="vtk-m +cuda requires that cuda_arch be set")
+
+    conflicts(
+        "+ascent_types", when="+64bitids", msg="Ascent types requires 32 bit IDs for compatibility"
+    )
 
     # Patch
     patch("diy-include-cstddef.patch", when="@1.5.3:1.8.0")
@@ -247,8 +247,6 @@ class VtkM(CMakePackage, CudaPackage, ROCmPackage):
 
             # hip support
             if "+rocm" in spec:
-                options.append("-DVTKm_NO_DEPRECATED_VIRTUAL:BOOL=ON")
-
                 archs = ",".join(self.spec.variants["amdgpu_target"].value)
                 options.append("-DCMAKE_HIP_ARCHITECTURES:STRING={0}".format(archs))
 

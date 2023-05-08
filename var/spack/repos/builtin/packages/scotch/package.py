@@ -20,6 +20,7 @@ class Scotch(CMakePackage, MakefilePackage):
 
     maintainers("pghysels")
 
+    version("7.0.3", sha256="5b5351f0ffd6fcae9ae7eafeccaa5a25602845b9ffd1afb104db932dd4d4f3c5")
     version("7.0.1", sha256="0618e9bc33c02172ea7351600fce4fccd32fe00b3359c4aabb5e415f17c06fed")
     version("6.1.3", sha256="4e54f056199e6c23d46581d448fcfe2285987e5554a0aa527f7931684ef2809e")
     version("6.1.2", sha256="9c2c75c75f716914a2bd1c15dffac0e29a2f8069b2df1ad2b6207c984b699450")

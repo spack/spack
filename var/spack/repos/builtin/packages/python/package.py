@@ -22,8 +22,6 @@ from spack.package import *
 from spack.util.environment import is_system_path
 from spack.util.prefix import Prefix
 
-is_windows = sys.platform == "win32"
-
 
 class Python(Package):
     """The Python programming language."""
@@ -42,13 +40,16 @@ class Python(Package):
     install_targets = ["install"]
     build_targets: List[str] = []
 
+    version("3.11.2", sha256="2411c74bda5bbcfcddaf4531f66d1adc73f247f529aee981b029513aefdbf849")
     version("3.11.1", sha256="baed518e26b337d4d8105679caf68c5c32630d702614fc174e98cb95c46bdfa4")
     version("3.11.0", sha256="64424e96e2457abbac899b90f9530985b51eef2905951febd935f0e73414caeb")
     version(
-        "3.10.8",
-        sha256="f400c3fb394b8bef1292f6dc1292c5fadc3533039a5bc0c3e885f3e16738029a",
+        "3.10.10",
+        sha256="fba64559dde21ebdc953e4565e731573bb61159de8e4d4cedee70fb1196f610d",
         preferred=True,
     )
+    version("3.10.9", sha256="4ccd7e46c8898f4c7862910a1703aa0e63525913a519abb2f55e26220a914d88")
+    version("3.10.8", sha256="f400c3fb394b8bef1292f6dc1292c5fadc3533039a5bc0c3e885f3e16738029a")
     version("3.10.7", sha256="1b2e4e2df697c52d36731666979e648beeda5941d0f95740aafbf4163e5cc126")
     version("3.10.6", sha256="848cb06a5caa85da5c45bd7a9221bb821e33fc2bdcba088c127c58fad44e6343")
     version("3.10.5", sha256="18f57182a2de3b0be76dfc39fdcfd28156bb6dd23e5f08696f7492e9e3d0bf2d")
@@ -57,6 +58,7 @@ class Python(Package):
     version("3.10.2", sha256="3c0ede893011319f9b0a56b44953a3d52c7abf9657c23fb4bc9ced93b86e9c97")
     version("3.10.1", sha256="b76117670e7c5064344b9c138e141a377e686b9063f3a8a620ff674fa8ec90d3")
     version("3.10.0", sha256="c4e0cbad57c90690cb813fb4663ef670b4d0f587d8171e2c42bd4c9245bd2758")
+    version("3.9.16", sha256="1ad539e9dbd2b42df714b69726e0693bc6b9d2d2c8e91c2e43204026605140c5")
     version("3.9.15", sha256="48d1ccb29d5fbaf1fb8f912271d09f7450e426d4dfe95978ef6aaada70ece4d8")
     version("3.9.14", sha256="9201836e2c16361b2b7408680502393737d44f227333fe2e5729c7d5f6041675")
     version("3.9.13", sha256="829b0d26072a44689a6b0810f5b4a3933ee2a0b8a4bfc99d7c5893ffd4f97c44")
@@ -73,6 +75,7 @@ class Python(Package):
     version("3.9.2", sha256="7899e8a6f7946748830d66739f2d8f2b30214dad956e56b9ba216b3de5581519")
     version("3.9.1", sha256="29cb91ba038346da0bd9ab84a0a55a845d872c341a4da6879f462e94c741f117")
     version("3.9.0", sha256="df796b2dc8ef085edae2597a41c1c0a63625ebd92487adaef2fed22b567873e8")
+    version("3.8.16", sha256="71ca9d935637ed2feb59e90a368361dc91eca472a90acb1d344a2e8178ccaf10")
     version("3.8.15", sha256="924d46999df82aa2eaa1de5ca51d6800ffb56b4bf52486a28f40634e3362abc4")
     version("3.8.14", sha256="41f959c480c59211feb55d5a28851a56c7e22d02ef91035606ebb21011723c31")
     version("3.8.13", sha256="903b92d76354366b1d9c4434d0c81643345cef87c1600adfa36095d7b00eede4")
@@ -89,6 +92,7 @@ class Python(Package):
     version("3.8.2", sha256="e634a7a74776c2b89516b2e013dda1728c89c8149b9863b8cea21946daf9d561")
     version("3.8.1", sha256="c7cfa39a43b994621b245e029769e9126caa2a93571cee2e743b213cceac35fb")
     version("3.8.0", sha256="f1069ad3cae8e7ec467aa98a6565a62a48ef196cb8f1455a245a08db5e1792df")
+    version("3.7.16", sha256="0cf2da07fa464636755215415909e22eb1d058817af4824bc15af8390d05fb38")
     version("3.7.15", sha256="cf2993798ae8430f3af3a00d96d9fdf320719f4042f039380dca79967c25e436")
     version("3.7.14", sha256="82b2abf8978caa61a9011d166eede831b32de9cbebc0db8162900fa23437b709")
     version("3.7.13", sha256="e405417f50984bc5870c7e7a9f9aeb93e9d270f5ac67f667a0cd3a09439682b5")
@@ -125,12 +129,12 @@ class Python(Package):
     # See https://legacy.python.org/dev/peps/pep-0394/
     variant(
         "pythoncmd",
-        default=not is_windows,
+        default=sys.platform != "win32",
         description="Symlink 'python3' executable to 'python' (not PEP 394 compliant)",
     )
 
     # Optional Python modules
-    variant("readline", default=not is_windows, description="Build readline module")
+    variant("readline", default=sys.platform != "win32", description="Build readline module")
     variant("ssl", default=True, description="Build ssl module")
     variant("sqlite3", default=True, description="Build sqlite3 module")
     variant("dbm", default=True, description="Build dbm module")
@@ -147,7 +151,7 @@ class Python(Package):
     variant("crypt", default=True, description="Build crypt module", when="@:3.12 platform=darwin")
     variant("crypt", default=True, description="Build crypt module", when="@:3.12 platform=cray")
 
-    if not is_windows:
+    if sys.platform != "win32":
         depends_on("pkgconfig@0.9.0:", type="build")
         depends_on("gettext +libxml2", when="+libxml2")
         depends_on("gettext ~libxml2", when="~libxml2")
@@ -224,6 +228,9 @@ class Python(Package):
     )
     conflicts("%nvhpc")
 
+    # https://bugs.python.org/issue45405
+    conflicts("@:3.7.2,3.8.0:3.8.12,3.9.0:3.9.10,3.10.0:3.10.2", when="%apple-clang@13:")
+
     # Used to cache various attributes that are expensive to compute
     _config_vars: Dict[str, Dict[str, str]] = {}
 
@@ -298,7 +305,7 @@ class Python(Package):
                 variants += "~tix"
 
         # Some modules are platform-dependent
-        if not is_windows:
+        if sys.platform != "win32":
             try:
                 python("-c", "import crypt", error=os.devnull)
                 variants += "+crypt"
@@ -354,7 +361,7 @@ class Python(Package):
         # Fix for following issues for python with aocc%3.2.0:
         # https://github.com/spack/spack/issues/29115
         # https://github.com/spack/spack/pull/28708
-        if self.spec.satisfies("%aocc@3.2.0", strict=True):
+        if self.spec.satisfies("%aocc@3.2.0"):
             if name == "cflags":
                 flags.extend(["-mllvm", "-disable-indvar-simplify=true"])
 
@@ -475,7 +482,7 @@ class Python(Package):
                 config_args.append("--with-lto")
             config_args.append("--with-computed-gotos")
 
-        if spec.satisfies("@3.7 %intel", strict=True):
+        if spec.satisfies("@3.7 %intel"):
             config_args.append("--with-icc={0}".format(spack_cc))
 
         if "+debug" in spec:
@@ -542,7 +549,7 @@ class Python(Package):
         and an appropriately set prefix.
         """
         with working_dir(self.stage.source_path, create=True):
-            if is_windows:
+            if sys.platform == "win32":
                 pass
             else:
                 options = getattr(self, "configure_flag_args", [])
@@ -557,7 +564,7 @@ class Python(Package):
         # Windows builds use a batch script to drive
         # configure and build in one step
         with working_dir(self.stage.source_path):
-            if is_windows:
+            if sys.platform == "win32":
                 pcbuild_root = os.path.join(self.stage.source_path, "PCbuild")
                 builder_cmd = os.path.join(pcbuild_root, "build.bat")
                 try:
@@ -580,10 +587,11 @@ class Python(Package):
         :py:attr:``~.AutotoolsPackage.install_targets``
         """
         with working_dir(self.stage.source_path):
-            if is_windows:
+            if sys.platform == "win32":
                 self.win_installer(prefix)
             else:
-                make(*self.install_targets)
+                # See https://github.com/python/cpython/issues/102007
+                make(*self.install_targets, parallel=False)
 
     @run_after("install")
     def filter_compilers(self):
@@ -593,7 +601,7 @@ class Python(Package):
         If this isn't done, they'll have CC and CXX set to Spack's generic
         cc and c++. We want them to be bound to whatever compiler
         they were built with."""
-        if is_windows:
+        if sys.platform == "win32":
             return
         kwargs = {"ignore_absent": True, "backup": False, "string": True}
 
@@ -605,7 +613,7 @@ class Python(Package):
 
     @run_after("install")
     def symlink(self):
-        if is_windows:
+        if sys.platform == "win32":
             return
         spec = self.spec
         prefix = self.prefix
@@ -723,7 +731,7 @@ class Python(Package):
         # in that order if using python@3.11.0, for example.
         version = self.spec.version
         for ver in [version.up_to(2), version.up_to(1), ""]:
-            if not is_windows:
+            if sys.platform != "win32":
                 path = os.path.join(self.prefix.bin, "python{0}".format(ver))
             else:
                 path = os.path.join(self.prefix, "python{0}.exe".format(ver))
@@ -772,11 +780,11 @@ print(json.dumps(config))
 """
 
         dag_hash = self.spec.dag_hash()
-        lib_prefix = "lib" if not is_windows else ""
+        lib_prefix = "lib" if sys.platform != "win32" else ""
         if dag_hash not in self._config_vars:
             # Default config vars
             version = self.version.up_to(2)
-            if is_windows:
+            if sys.platform == "win32":
                 version = str(version).split(".")[0]
             config = {
                 # get_config_vars
@@ -886,9 +894,9 @@ print(json.dumps(config))
     @property
     def libs(self):
         py_version = self.version.up_to(2)
-        if is_windows:
+        if sys.platform == "win32":
             py_version = str(py_version).replace(".", "")
-        lib_prefix = "lib" if not is_windows else ""
+        lib_prefix = "lib" if sys.platform != "win32" else ""
         # The values of LDLIBRARY and LIBRARY aren't reliable. Intel Python uses a
         # static binary but installs shared libraries, so sysconfig reports
         # libpythonX.Y.a but only libpythonX.Y.so exists. So we add our own paths, too.
@@ -1121,7 +1129,7 @@ print(json.dumps(config))
             # fact that LDSHARED is set in the environment, therefore we export
             # the variable only if the new value is different from what we got
             # from the sysconfigdata file:
-            if config_link != new_link and not is_windows:
+            if config_link != new_link and sys.platform != "win32":
                 env.set(link_var, new_link)
 
     def setup_dependent_run_environment(self, env, dependent_spec):
@@ -1180,7 +1188,7 @@ print(json.dumps(config))
                 view.link(new_link_target, dst, spec=self.spec)
 
     def remove_files_from_view(self, view, merge_map):
-        bin_dir = self.spec.prefix.bin if not is_windows else self.spec.prefix
+        bin_dir = self.spec.prefix.bin if sys.platform != "win32" else self.spec.prefix
         for src, dst in merge_map.items():
             if not path_contains_subdirectory(src, bin_dir):
                 view.remove_file(src, dst)

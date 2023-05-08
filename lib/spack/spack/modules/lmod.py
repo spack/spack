@@ -33,24 +33,26 @@ def configuration(module_set_name):
 configuration_registry: Dict[str, Any] = {}
 
 
-def make_configuration(spec, module_set_name):
+def make_configuration(spec, module_set_name, explicit):
     """Returns the lmod configuration for spec"""
-    key = (spec.dag_hash(), module_set_name)
+    key = (spec.dag_hash(), module_set_name, explicit)
     try:
         return configuration_registry[key]
     except KeyError:
-        return configuration_registry.setdefault(key, LmodConfiguration(spec, module_set_name))
+        return configuration_registry.setdefault(
+            key, LmodConfiguration(spec, module_set_name, explicit)
+        )
 
 
-def make_layout(spec, module_set_name):
+def make_layout(spec, module_set_name, explicit):
     """Returns the layout information for spec"""
-    conf = make_configuration(spec, module_set_name)
+    conf = make_configuration(spec, module_set_name, explicit)
     return LmodFileLayout(conf)
 
 
-def make_context(spec, module_set_name):
+def make_context(spec, module_set_name, explicit):
     """Returns the context information for spec"""
-    conf = make_configuration(spec, module_set_name)
+    conf = make_configuration(spec, module_set_name, explicit)
     return LmodContext(conf)
 
 
@@ -71,7 +73,7 @@ def guess_core_compilers(name, store=False):
             # A compiler is considered to be a core compiler if any of the
             # C, C++ or Fortran compilers reside in a system directory
             is_system_compiler = any(
-                os.path.dirname(x) in spack.util.environment.system_dirs
+                os.path.dirname(x) in spack.util.environment.SYSTEM_DIRS
                 for x in compiler["paths"].values()
                 if x is not None
             )
@@ -125,6 +127,11 @@ class LmodConfiguration(BaseConfiguration):
         return configuration(self.name).get("core_specs", [])
 
     @property
+    def filter_hierarchy_specs(self):
+        """Returns the dict of specs with modified hierarchies"""
+        return configuration(self.name).get("filter_hierarchy_specs", {})
+
+    @property
     def hierarchy_tokens(self):
         """Returns the list of tokens that are part of the modulefile
         hierarchy. 'compiler' is always present.
@@ -158,11 +165,21 @@ class LmodConfiguration(BaseConfiguration):
         if any(self.spec.satisfies(core_spec) for core_spec in self.core_specs):
             return {"compiler": self.core_compilers[0]}
 
+        hierarchy_filter_list = []
+        for spec, filter_list in self.filter_hierarchy_specs.items():
+            if self.spec.satisfies(spec):
+                hierarchy_filter_list = filter_list
+                break
+
         # Keep track of the requirements that this package has in terms
         # of virtual packages that participate in the hierarchical structure
         requirements = {"compiler": self.spec.compiler}
         # For each virtual dependency in the hierarchy
         for x in self.hierarchy_tokens:
+            # Skip anything filtered for this spec
+            if x in hierarchy_filter_list:
+                continue
+
             # If I depend on it
             if x in self.spec and not self.spec.package.provides(x):
                 requirements[x] = self.spec[x]  # record the actual provider
@@ -409,7 +426,7 @@ class LmodContext(BaseContext):
     @tengine.context_property
     def unlocked_paths(self):
         """Returns the list of paths that are unlocked unconditionally."""
-        layout = make_layout(self.spec, self.conf.name)
+        layout = make_layout(self.spec, self.conf.name, self.conf.explicit)
         return [os.path.join(*parts) for parts in layout.unlocked_paths[None]]
 
     @tengine.context_property
@@ -417,7 +434,7 @@ class LmodContext(BaseContext):
         """Returns the list of paths that are unlocked conditionally.
         Each item in the list is a tuple with the structure (condition, path).
         """
-        layout = make_layout(self.spec, self.conf.name)
+        layout = make_layout(self.spec, self.conf.name, self.conf.explicit)
         value = []
         conditional_paths = layout.unlocked_paths
         conditional_paths.pop(None)

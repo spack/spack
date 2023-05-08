@@ -54,8 +54,6 @@ from spack.fetch_strategy import FetchStrategyComposite, URLFetchStrategy
 from spack.util.pattern import Bunch
 from spack.util.web import FetchError
 
-is_windows = sys.platform == "win32"
-
 
 def ensure_configuration_fixture_run_before(request):
     """Ensure that fixture mutating the configuration run before the one where
@@ -125,7 +123,7 @@ def mock_git_version_info(git, tmpdir, override_git_repos_cache_path):
        o second commit (v1.0)
        o first commit
 
-    The repo consists of a single file, in which the Version._cmp representation
+    The repo consists of a single file, in which the GitVersion._ref_version representation
     of each commit is expressed as a string.
 
     Important attributes of the repo for test coverage are: multiple branches,
@@ -159,7 +157,9 @@ def mock_git_version_info(git, tmpdir, override_git_repos_cache_path):
             return git("rev-list", "-n1", "HEAD", output=str, error=str).strip()
 
         # Add two commits on main branch
-        write_file(filename, "[]")
+
+        # A commit without a previous version counts as "0"
+        write_file(filename, "[0]")
         git("add", filename)
         commit("first commit")
         commits.append(latest_commit())
@@ -175,7 +175,7 @@ def mock_git_version_info(git, tmpdir, override_git_repos_cache_path):
 
         # Add two commits and a tag on 1.x branch
         git("checkout", "-b", "1.x")
-        write_file(filename, "[1, 0, '', 1]")
+        write_file(filename, "[1, 0, 'git', 1]")
         commit("first 1.x commit")
         commits.append(latest_commit())
 
@@ -186,7 +186,7 @@ def mock_git_version_info(git, tmpdir, override_git_repos_cache_path):
 
         # Add two commits and a tag on main branch
         git("checkout", main)
-        write_file(filename, "[1, 0, '', 1]")
+        write_file(filename, "[1, 0, 'git', 1]")
         commit("third main commit")
         commits.append(latest_commit())
         write_file(filename, "[2, 0]")
@@ -196,7 +196,7 @@ def mock_git_version_info(git, tmpdir, override_git_repos_cache_path):
 
         # Add two more commits on 1.x branch to ensure we aren't cheating by using time
         git("checkout", "1.x")
-        write_file(filename, "[1, 1, '', 1]")
+        write_file(filename, "[1, 1, 'git', 1]")
         commit("third 1.x commit")
         commits.append(latest_commit())
         write_file(filename, "[1, 2]")
@@ -621,7 +621,7 @@ def ensure_debug(monkeypatch):
     tty.set_debug(current_debug_level)
 
 
-@pytest.fixture(autouse=is_windows, scope="session")
+@pytest.fixture(autouse=sys.platform == "win32", scope="session")
 def platform_config():
     spack.config.add_default_platform_scope(spack.platforms.real_host().name)
 
@@ -633,7 +633,7 @@ def default_config():
     This ensures we can test the real default configuration without having
     tests fail when the user overrides the defaults that we test against."""
     defaults_path = os.path.join(spack.paths.etc_path, "defaults")
-    if is_windows:
+    if sys.platform == "win32":
         defaults_path = os.path.join(defaults_path, "windows")
     with spack.config.use_configuration(defaults_path) as defaults_config:
         yield defaults_config
@@ -690,7 +690,7 @@ def configuration_dir(tmpdir_factory, linux_os):
     tmpdir.ensure("user", dir=True)
 
     # Slightly modify config.yaml and compilers.yaml
-    if is_windows:
+    if sys.platform == "win32":
         locks = False
     else:
         locks = True
@@ -770,7 +770,7 @@ def concretize_scope(mutable_config, tmpdir):
         spack.config.ConfigScope("concretize", str(tmpdir.join("concretize")))
     )
 
-    yield
+    yield str(tmpdir.join("concretize"))
 
     mutable_config.pop_scope()
     spack.repo.path._provider_index = None
@@ -1675,11 +1675,11 @@ def mock_executable(tmpdir):
     """
     import jinja2
 
-    shebang = "#!/bin/sh\n" if not is_windows else "@ECHO OFF"
+    shebang = "#!/bin/sh\n" if sys.platform != "win32" else "@ECHO OFF"
 
     def _factory(name, output, subdir=("bin",)):
         f = tmpdir.ensure(*subdir, dir=True).join(name)
-        if is_windows:
+        if sys.platform == "win32":
             f += ".bat"
         t = jinja2.Template("{{ shebang }}{{ output }}\n")
         f.write(t.render(shebang=shebang, output=output))
