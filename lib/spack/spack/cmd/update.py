@@ -3,13 +3,12 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-import argparse
 import re
 import sys
 
 import llnl.util.tty as tty
-from llnl.util.tty.colify import colify
 from llnl.util.filesystem import working_dir
+from llnl.util.tty.colify import colify
 
 import spack.cmd
 import spack.util.git
