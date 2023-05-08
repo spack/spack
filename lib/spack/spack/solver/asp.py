@@ -102,7 +102,7 @@ ast_sym = ast_getter("symbol", "term")
 
 
 class Provenance(enum.IntEnum):
-    """Enumeration of the possible provenances of a fact."""
+    """Enumeration of the possible provenances of a version."""
 
     # A spec literal
     SPEC = enum.auto()
@@ -905,8 +905,7 @@ class SpackSolverSetup(object):
         """
 
         def key_fn(version):
-            # Origins are sorted by precedence defined in `version_origin_str`,
-            # then by order added.
+            # Origins are sorted by "provenance" first, see the Provenance enumeration above
             return version.origin, version.idx
 
         pkg = packagize(pkg)
@@ -1356,7 +1355,7 @@ class SpackSolverSetup(object):
                 continue
 
             # Write explicitly if a requirement is conditional or not
-            if rule.condition and main_requirement_condition != spack.spec.Spec():
+            if main_requirement_condition != spack.spec.Spec():
                 msg = f"condition to activate requirement {requirement_grp_id}"
                 try:
                     main_condition_id = self.condition(
