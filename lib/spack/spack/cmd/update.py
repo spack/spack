@@ -4,8 +4,11 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import argparse
+import re
+import sys
 
 import llnl.util.tty as tty
+from llnl.util.tty.colify import colify
 from llnl.util.filesystem import working_dir
 
 import spack.cmd
@@ -61,5 +64,35 @@ def update(parser, args):
         elif args.branch != current_branch:
             git("checkout", args.branch)
 
+        # record commit hash before pull
+        old_head = git("rev-parse", "HEAD", output=str).strip()
+
         # perform a git pull to update the repository
         git("pull", "--rebase", "-n")
+
+        # record commit hash after pull
+        new_head = git("rev-parse", "HEAD", output=str).strip()
+
+        # check to see if the repository updated
+        if old_head != new_head:
+            changed_files = git(
+                "diff-tree", "-r", "--name-status", "{old_head}..{new_head}", output=str
+            )
+            changed_packages = {"Added": [], "Updated": [], "Deleted": []}
+
+            for file in changed_files.split("\n"):
+                if file.endswith("package.py"):
+                    pkg = re.search(
+                        "var/spack/repos/builtin/packages/(.*)/package.py", file
+                    ).group(1)
+                    if file[0] == "A":
+                        changed_packages["Added"].append(pkg)
+                    elif file[0] == "M":
+                        changed_packages["Updated"].append(pkg)
+                    elif file[0] == "D":
+                        changed_packages["Deleted"].append(pkg)
+
+            for action in changed_packages.keys():
+                if len(changed_packages[action]) > 0:
+                    tty.msg(f"{action} %d packages" % len(changed_packages[action]))
+                    colify(changed_packages[action], output=sys.stdout)
