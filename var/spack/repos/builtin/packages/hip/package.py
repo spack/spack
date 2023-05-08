@@ -391,7 +391,7 @@ class Hip(CMakePackage):
                 "rocminfo": self.spec["rocminfo"].prefix,
                 "rocm-device-libs": self.spec["llvm-amdgpu"].prefix,
             }
-            
+
             if self.spec.satisfies("@5.4:"):
                 paths["hipify-clang"] = self.spec["hipify-clang"].prefix
 
