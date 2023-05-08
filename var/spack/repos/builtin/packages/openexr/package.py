@@ -13,6 +13,7 @@ class Openexr(CMakePackage):
     url = "https://github.com/AcademySoftwareFoundation/openexr/archive/refs/tags/v3.1.5.tar.gz"
 
     # New versions should come from github now
+    version("3.1.7", sha256="78dbca39115a1c526e6728588753955ee75fa7f5bb1a6e238bed5b6d66f91fd7")
     version("3.1.5", sha256="93925805c1fc4f8162b35f0ae109c4a75344e6decae5a240afdfce25f8a433ec")
     version(
         "2.3.0",
