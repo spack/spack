@@ -151,6 +151,9 @@ def test_monkey_patching_test_log_file():
     assert builder.pkg_with_dispatcher.tester.test_log_file == "/some/file"
 
 
+# Windows context manager's __exit__ fails with ValueError ("I/O operation
+# on closed file").
+@pytest.mark.skipif(sys.platform == "win32", reason="Does not run on windows")
 def test_install_time_test_callback(tmpdir, config, mock_packages, mock_stage):
     """Confirm able to run stand-alone test as a post-install callback."""
     s = spack.spec.Spec("py-test-callback").concretized()
