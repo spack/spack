@@ -95,6 +95,8 @@ class MakefileSpec(object):
     introducing unwanted special characters.
     """
 
+    _pattern = None
+
     def __init__(self, spec):
         self.spec = spec
 
@@ -106,7 +108,9 @@ class MakefileSpec(object):
 
     def safe_format(self, format_str):
         unsafe_result = self.spec.format(format_str)
-        return re.sub(r"[^A-Za-z0-9_.-]", "_", unsafe_result)
+        if not MakefileSpec._pattern:
+            MakefileSpec._pattern = re.compile(r"[^A-Za-z0-9_.-]")
+        return MakefileSpec._pattern.sub("_", unsafe_result)
 
     def unsafe_format(self, format_str):
         return self.spec.format(format_str)
