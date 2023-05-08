@@ -188,7 +188,7 @@ spack:
   - superlu-dist +cuda
   - tasmanian +cuda
   - tau +mpi +cuda
-  - trilinos@13.4.0 +belos +ifpack2 +stokhos +cuda
+  - "trilinos@13.4.0: +belos +ifpack2 +stokhos +cuda"
   - umpire ~shared +cuda
 
   # ROCm
@@ -217,7 +217,7 @@ spack:
   - superlu-dist +rocm
   - tasmanian ~openmp +rocm
   - tau +mpi +rocm
-  - trilinos@13.4.0 ~belos ~ifpack2 ~stokhos +rocm
+  - "trilinos@13.4.0: ~belos ~ifpack2 ~stokhos +rocm"
   - umpire +rocm
   - upcxx +rocm
 
