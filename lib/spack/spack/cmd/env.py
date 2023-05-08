@@ -339,15 +339,6 @@ def _env_create(name_or_path, *, init_file=None, dir=False, with_view=None, keep
         tty.msg("You can activate this environment with:")
         tty.msg("  spack env activate %s" % env.path)
 
-    # Rewrite relative develop paths when initializing a new
-    # environment in a different location from the spack.yaml file.
-    if init_file:
-        with fs.open_if_filename(init_file) as f:
-            if not keep_relative and hasattr(f, "name") and f.name.endswith(".yaml"):
-                init_file_dir = os.path.abspath(os.path.dirname(f.name))
-                with env:
-                    env._rewrite_relative_paths_on_relocation(init_file_dir)
-
     return env
 
 

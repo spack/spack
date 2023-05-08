@@ -338,6 +338,8 @@ def create_in_dir(
             if env.path != init_file_dir:
                 _rewrite_relative_dev_paths_on_relocation(init_file_dir)
 
+    return env
+
 
 def _rewrite_relative_dev_paths_on_relocation(init_file_dir):
     """When initializing the environment from a manifest file and we plan
