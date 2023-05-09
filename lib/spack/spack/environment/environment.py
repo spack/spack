@@ -332,10 +332,14 @@ def create_in_dir(
 
     env = Environment(manifest_dir)
 
-    if not keep_relative:
+    if not keep_relative and init_file:
         init_file_dir = os.path.abspath(os.path.dirname(init_file))
         with env:
             if env.path != init_file_dir:
+                # If we are here, we are creating an environment based on an
+                # spack.yaml file in another directory, and moreover we want
+                # dev paths in this environment to refer to their original
+                # locations.
                 _rewrite_relative_dev_paths_on_relocation(init_file_dir)
 
     return env
@@ -802,8 +806,6 @@ class Environment:
 
         #: Specs from "spack.yaml"
         self.spec_lists: Dict[str, SpecList] = {user_speclist_name: SpecList()}
-        #: Dev-build specs from "spack.yaml"
-        self.dev_specs: Dict[str, Any] = {}
         #: User specs from the last concretization
         self.concretized_user_specs: List[Spec] = []
         #: Roots associated with the last concretization, in order
@@ -814,6 +816,7 @@ class Environment:
         self._repo = None
         #: Previously active environment
         self._previous_active = None
+        self._dev_specs = None
 
         with lk.ReadTransaction(self.txlock):
             self.manifest = EnvironmentManifestFile(manifest_dir)
