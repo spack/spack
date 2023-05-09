@@ -33,12 +33,14 @@ from llnl.util.tty.color import colorize
 
 import spack.config
 import spack.projections
+import spack.relocate
 import spack.schema.projections
 import spack.spec
 import spack.store
 import spack.util.spack_json as s_json
 import spack.util.spack_yaml as s_yaml
 from spack.error import SpackError
+from spack.hooks import sbang
 
 __all__ = ["FilesystemView", "YamlFilesystemView"]
 
@@ -70,9 +72,6 @@ def view_copy(src: str, dst: str, view, spec: Optional[spack.spec.Spec] = None):
     if not spec or spec.external:
         return
 
-    # Break a package include cycle
-    import spack.relocate
-
     # Order of this dict is somewhat irrelevant
     prefix_to_projection = {
         s.prefix: view.get_projection_for_spec(s)
@@ -92,8 +91,6 @@ def view_copy(src: str, dst: str, view, spec: Optional[spack.spec.Spec] = None):
         prefix_to_projection[spack.store.layout.root] = view._root
 
         # This is vestigial code for the *old* location of sbang.
-        import spack.hooks.sbang as sbang
-
         prefix_to_projection[
             "#!/bin/bash {0}/bin/sbang".format(spack.paths.spack_root)
         ] = sbang.sbang_shebang_line()
