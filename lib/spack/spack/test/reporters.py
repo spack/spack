@@ -122,7 +122,7 @@ def test_reporters_extract_missing_desc():
 
 
 # TODO (post-34236): Remove this test when removing deprecated run_test(), etc.
-def test_reporters_extract_empty_and_xfail():
+def test_reporters_extract_xfail():
     fake_bin = fs.join_path(fake_install_prefix, "bin", "fake-app")
     outputs = """
 ==> Testing package fake-1.0-abcdefg
@@ -137,7 +137,7 @@ def test_reporters_extract_empty_and_xfail():
     parts = spack.reporters.extract.extract_test_parts("fake", outputs)
 
     assert len(parts) == 1
-    parts[0]["command"] == "unkown"
+    parts[0]["command"] == fake_bin
     parts[0]["completed"] == "Expected to fail"
 
 

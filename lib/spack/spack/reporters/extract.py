@@ -159,6 +159,7 @@ def extract_test_parts(default_name, outputs):
                 if msg.startswith("Expecting return code"):
                     if part:
                         part["desc"] += f"; {msg}"
+                    continue
 
                 # Terminate without further parsing if no more test messages
                 if "Completed testing" in msg:
