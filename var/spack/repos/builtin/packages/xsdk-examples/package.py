@@ -70,6 +70,7 @@ class XsdkExamples(CMakePackage, CudaPackage):
             "-DENABLE_PETSC=ON",
             # ENABLE_PLASMA also needs Slate:
             "-DENABLE_PLASMA=" + enabled(["plasma", "slate"]),
+            "-DENABLE_PRECICE=" + enabled("precice"),
             "-DENABLE_PUMI=ON",
             "-DENABLE_STRUMPACK=" + enabled("strumpack"),
             "-DENABLE_SUNDIALS=ON",
