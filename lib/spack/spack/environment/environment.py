@@ -900,8 +900,6 @@ class Environment:
         dev_specs = {}
         dev_config = spack.config.get("develop", {})
         for name, entry in dev_config.items():
-            # spec must include a concrete version
-            assert Spec(entry["spec"]).version.concrete
             local_entry = {"spec": str(entry["spec"])}
             # default path is the spec name
             if "path" not in entry:
