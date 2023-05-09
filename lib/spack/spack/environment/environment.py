@@ -334,12 +334,29 @@ def create_in_dir(
 
     if not keep_relative and init_file:
         init_file_dir = os.path.abspath(os.path.dirname(init_file))
-        with env:
-            if env.path != init_file_dir:
-                # If we are here, we are creating an environment based on an
-                # spack.yaml file in another directory, and moreover we want
-                # dev paths in this environment to refer to their original
-                # locations.
+        init_env = Environment(init_file_dir)
+        included_config_files = config_dict(init_env.manifest).get("include", [])
+        rewritten_config_paths = []
+        manifest_contains_relative_cfgs = False
+        for path in included_config_files:
+            if not os.path.isabs(path):
+                cfg_abspath = os.path.join(init_env.path, path)
+                new_env_rel_path = os.path.join(".", os.path.basename(path))
+                shutil.copy(cfg_abspath, env.path)
+                rewritten_config_paths.append(new_env_rel_path)
+                manifest_contains_relative_cfgs = True
+            else:
+                rewritten_config_paths.append(path)
+        if manifest_contains_relative_cfgs:
+            manifest.update_included_configs(rewritten_config_paths)
+            manifest.flush()
+
+        if env.path != init_file_dir:
+            # If we are here, we are creating an environment based on an
+            # spack.yaml file in another directory, and moreover we want
+            # dev paths in this environment to refer to their original
+            # locations.
+            with env, fs.working_dir(manifest_dir):
                 _rewrite_relative_dev_paths_on_relocation(init_file_dir)
 
     return env
@@ -2615,6 +2632,11 @@ class EnvironmentManifestFile(collections.abc.Mapping):
         except ValueError as e:
             msg = f"cannot override {user_spec} from {self}"
             raise SpackEnvironmentError(msg) from e
+        self.changed = True
+
+    def update_included_configs(self, config_paths):
+        # config_dict(init_env.manifest).get("include", [])
+        config_dict(self.yaml_content)["include"] = config_paths
         self.changed = True
 
     def add_definition(self, user_spec: str, list_name: str) -> None:
