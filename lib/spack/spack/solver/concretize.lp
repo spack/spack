@@ -501,11 +501,13 @@ requirement_group_satisfied(Package, X) :-
   requirement_group_member(Y, Package, _),
   activate_requirement_rules(Package),
   condition_requirement(Y,"node_flag", A1, A2, A3).
-
 { attr("node_flag_source", A1, A2, A3) } :-
   requirement_group_member(Y, Package, _),
   activate_requirement_rules(Package),
   condition_requirement(Y,"node_flag_source", A1, A2, A3).
+:- impose(ID), do_not_impose(ID).
+virtual(Virtual) :- possible_provider(Package, Virtual).
+attr("virtual_node", Virtual) :- provider(Package, Virtual).
 
 requirement_weight(Package, Group, W) :-
   W = #min {

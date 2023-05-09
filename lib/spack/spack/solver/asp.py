@@ -2137,6 +2137,10 @@ class SpackSolverSetup(object):
 
         # get list of all possible dependencies
         self.possible_virtuals = set(x.name for x in specs if x.virtual)
+        for spec in specs:
+            if not spec.virtual:
+                for provided in spec.package_class.provided:
+                    self.possible_virtuals.add(provided.name)
         possible = spack.package_base.possible_dependencies(
             *specs, virtuals=self.possible_virtuals, deptype=spack.dependency.all_deptypes
         )
@@ -2463,11 +2467,16 @@ class SpecBuilder(object):
 
                     # add flags from each source, lowest to highest precedence
                     for name in sorted_sources:
-                        source = self._specs[name] if name in self._hash_specs else cmd_specs[name]
-                        extend_flag_list(from_sources, source.compiler_flags.get(flag_type, []))
+                        all_src_flags = list()
+                        per_pkg_sources = [self._specs[name]]
+                        if name in cmd_specs:
+                            per_pkg_sources.append(cmd_specs[name])
+                        for source in per_pkg_sources:
+                            all_src_flags.extend(source.compiler_flags.get(flag_type, []))
+                        extend_flag_list(from_sources, all_src_flags)
 
                 # compiler flags from compilers config are lowest precedence
-                ordered_compiler_flags = from_compiler + from_sources
+                ordered_compiler_flags = list(llnl.util.lang.dedupe(from_compiler + from_sources))
                 compiler_flags = spec.compiler_flags.get(flag_type, [])
 
                 msg = "%s does not equal %s" % (set(compiler_flags), set(ordered_compiler_flags))
