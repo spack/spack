@@ -19,7 +19,7 @@ class Madis(MakefilePackage):
     homepage = "https://madis-data.ncep.noaa.gov/"
     url = "https://madis-data.ncep.noaa.gov/source/madis-4.3.tar.gz"
 
-    maintainers = ["AlexanderRichert-NOAA"]
+    maintainers("AlexanderRichert-NOAA")
 
     version("4.3", sha256="5d1ee9800c84e623dcf4271653aa66d17a744143e58354e70f8a0646cd6b246c")
 
