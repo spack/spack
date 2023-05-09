@@ -16,7 +16,7 @@ import time
 import urllib.parse
 import urllib.request
 import warnings
-from typing import Any, Dict, List, Optional, Union
+from typing import Dict, List, Optional, Union
 
 import llnl.util.filesystem as fs
 import llnl.util.tty as tty
@@ -882,9 +882,6 @@ class Environment:
             )
         else:
             self.views = {}
-
-        # Retrieve the current concretization strategy
-        configuration = config_dict(self.manifest)
 
         # Retrieve unification scheme for the concretizer
         self.unify = spack.config.get("concretizer:unify", False)
