@@ -337,17 +337,29 @@ def create_in_dir(
         init_env = Environment(init_file_dir)
         included_config_files = config_dict(init_env.manifest).get("include", [])
         rewritten_config_paths = []
-        manifest_contains_relative_cfgs = False
+        updated_cfg_paths = False
         for path in included_config_files:
-            if not os.path.isabs(path):
-                cfg_abspath = os.path.join(init_env.path, path)
-                new_env_rel_path = os.path.join(".", os.path.basename(path))
-                shutil.copy(cfg_abspath, env.path)
-                rewritten_config_paths.append(new_env_rel_path)
-                manifest_contains_relative_cfgs = True
+            resolved_path = substitute_path_variables(path)
+            if not os.path.isabs(resolved_path):
+                init_cfg_abspath = os.path.join(init_env.path, resolved_path)
+                cfg_abspath = os.path.join(env.path, resolved_path)
+                if fs.path_contains_subdirectory(init_cfg_abspath, init_env.path):
+                    # Relative paths that are inside the init env's directory
+                    # are copied into the new env
+                    assert fs.path_contains_subdirectory(cfg_abspath, env.path)
+                    fs.mkdirp(os.path.dirname(cfg_abspath))
+                    shutil.copy(init_cfg_abspath, cfg_abspath)
+                    rewritten_config_paths.append(path)
+                    updated_cfg_paths = True
+                else:
+                    # Relative paths that sit outide of the init env's
+                    # directory are preserved: for example $spack/../sibling
+                    rewritten_config_paths.append(path)
             else:
+                # Absolute paths are preserved
+                # This includes paths that use path config variables like "$spack"
                 rewritten_config_paths.append(path)
-        if manifest_contains_relative_cfgs:
+        if updated_cfg_paths:
             manifest.update_included_configs(rewritten_config_paths)
             manifest.flush()
 
