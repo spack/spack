@@ -498,13 +498,13 @@ requirement_group_satisfied(Package, X) :-
 % flags if their only source is from a requirement. This is overly-specific
 % and should use a more-generic approach like in https://github.com/spack/spack/pull/37180
 { attr("node_flag", A1, A2, A3) } :-
-  requirement_group_member(Y, Package, _),
-  activate_requirement_rules(Package),
+  requirement_group_member(Y, Package, X),
+  activate_requirement(Package, X),
   condition_requirement(Y,"node_flag", A1, A2, A3).
 
 { attr("node_flag_source", A1, A2, A3) } :-
-  requirement_group_member(Y, Package, _),
-  activate_requirement_rules(Package),
+  requirement_group_member(Y, Package, X),
+  activate_requirement(Package, X),
   condition_requirement(Y,"node_flag_source", A1, A2, A3).
 
 requirement_weight(Package, Group, W) :-
