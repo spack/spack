@@ -774,6 +774,8 @@ class Sundials(CMakePackage, CudaPackage, ROCmPackage):
         """(Hack) Set/get cmake dependency path."""
         filepath = join_path(self.install_test_root, "cmake_bin_path.txt")
         if set:
+            if not os.path.exists(self.install_test_root):
+                mkdirp(self.install_test_root)
             with open(filepath, "w") as out_file:
                 cmake_bin = join_path(self.spec["cmake"].prefix.bin, "cmake")
                 out_file.write("{0}\n".format(cmake_bin))
