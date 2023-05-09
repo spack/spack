@@ -21,6 +21,7 @@ import spack.install_test
 import spack.package_base
 import spack.repo
 from spack.build_systems.generic import Package
+from spack.installer import InstallError
 
 
 @pytest.fixture(scope="module")
@@ -201,11 +202,12 @@ def test_cache_extra_sources_fails(install_mockery):
     s = spack.spec.Spec("a").concretized()
     s.package.spec.concretize()
 
-    with pytest.raises(ValueError, match="Only relative paths"):
-        spack.install_test.cache_extra_test_sources(s.package, ["a/b", "/c/d"])
+    with pytest.raises(InstallError) as exc_info:
+        spack.install_test.cache_extra_test_sources(s.package, ["/a/b", "no-such-file"])
 
-    with pytest.raises(OSError, match="does not exist"):
-        spack.install_test.cache_extra_test_sources(s.package, "no-such-file")
+    errors = str(exc_info.value)
+    assert "'/a/b') must be relative" in errors
+    assert "'no-such-file') for the copy does not exist" in errors
 
 
 def test_package_exes_and_libs():

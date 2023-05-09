@@ -23,6 +23,7 @@ from llnl.util.tty.color import colorize
 import spack.error
 import spack.paths
 import spack.util.spack_json as sjson
+from spack.installer import InstallError
 from spack.spec import Spec
 from spack.util.prefix import Prefix
 from spack.util.string import plural
@@ -109,23 +110,30 @@ def cache_extra_test_sources(pkg: Pb, srcs: ListOrStringType):
             location(s) under the install testing directory.
 
     Raises:
-        OSError: if any of the source paths do not exist under the build stage
-        ValueError: if any of the source paths are absolute
+        spack.installer.InstallError: if any of the source paths are absolute
+            or do not exist
+            under the build stage
     """
+    errors = []
     paths = [srcs] if isinstance(srcs, str) else srcs
-    if any(os.path.isabs(path) for path in paths):
-        raise ValueError("Only relative paths can be used to copy test sources")
-
     for path in paths:
+        pre = f"Source path ('{path}')"
         src_path = os.path.join(pkg.stage.source_path, path)
         dest_path = os.path.join(install_test_root(pkg), path)
+        if os.path.isabs(path):
+            errors.append(f"{pre} must be relative to the build stage directory.")
+            continue
+
         if os.path.isdir(src_path):
             fs.install_tree(src_path, dest_path)
         elif os.path.exists(src_path):
             fs.mkdirp(os.path.dirname(dest_path))
             fs.copy(src_path, dest_path)
         else:
-            raise OSError(f"Source path ('{path}') for the copy does not exist")
+            errors.append(f"{pre} for the copy does not exist")
+
+    if errors:
+        raise InstallError("\n".join(errors), pkg=pkg)
 
 
 def check_outputs(expected: Union[list, set, str], actual: str):
