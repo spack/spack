@@ -347,7 +347,9 @@ class PackageTest:
 
             for name in method_names:
                 try:
-                    # Prefer the method in the package over the builder's
+                    # Prefer the method in the package over the builder's.
+                    # We need this primarily to pick up arbitrarily named test
+                    # methods but also some build-time checks.
                     fn = getattr(builder.pkg, name, getattr(builder, name))
 
                     msg = f"RUN-TESTS: {phase_name}-time tests [{name}]"
