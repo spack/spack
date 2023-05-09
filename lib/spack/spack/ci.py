@@ -2481,12 +2481,14 @@ def translate_deprecated_config(config):
         build_job["tags"] = config.pop("tags")
     if "variables" in config:
         build_job["variables"] = config.pop("variables")
+
+    # Scripts always override in old CI
     if "before_script" in config:
-        build_job["before_script"] = config.pop("before_script")
+        build_job["before_script:"] = config.pop("before_script")
     if "script" in config:
-        build_job["script"] = config.pop("script")
+        build_job["script:"] = config.pop("script")
     if "after_script" in config:
-        build_job["after_script"] = config.pop("after_script")
+        build_job["after_script:"] = config.pop("after_script")
 
     signing_job = None
     if "signing-job-attributes" in config:
@@ -2510,8 +2512,25 @@ def translate_deprecated_config(config):
     for section in mappings:
         submapping_section = {"match": section["match"]}
         if "runner-attributes" in section:
-            submapping_section["build-job"] = section["runner-attributes"]
+            remapped_attributes = {}
+            if match_behavior == "first":
+                for key, value in section["runner-attributes"].items():
+                    # Scripts always override in old CI
+                    if key == "script":
+                        remapped_attributes["script:"] = value
+                    elif key == "before_script":
+                        remapped_attributes["before_script:"] = value
+                    elif key == "after_script":
+                        remapped_attributes["after_script:"] = value
+                    else:
+                        remapped_attributes[key] = value
+            else:
+                # Handle "merge" behavior be allowing scripts to merge in submapping section
+                remapped_attributes = section["runner-attributes"]
+            submapping_section["build-job"] = remapped_attributes
+
         if "remove-attributes" in section:
+            # Old format only allowed tags in this section, so no extra checks are needed
             submapping_section["build-job-remove"] = section["remove-attributes"]
         submapping.append(submapping_section)
     pipeline_gen.append({"submapping": submapping, "match_behavior": match_behavior})
