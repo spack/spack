@@ -334,6 +334,7 @@ def create_in_dir(
 
     if not keep_relative and init_file:
         init_file_dir = os.path.abspath(os.path.dirname(init_file))
+
         init_env = Environment(init_file_dir)
         included_config_files = config_dict(init_env.manifest).get("include", [])
         for path in included_config_files:
@@ -347,14 +348,10 @@ def create_in_dir(
                     assert fs.path_contains_subdirectory(cfg_abspath, env.path)
                     fs.mkdirp(os.path.dirname(cfg_abspath))
                     shutil.copy(init_cfg_abspath, cfg_abspath)
-                else:
-                    # Relative paths that sit outide of the init env's
-                    # directory are preserved: for example $spack/../sibling
-                    pass
-            else:
-                # Absolute paths are preserved
-                # This includes paths that use path config variables like "$spack"
-                pass
+            # It is assumed that absolute paths will be accessible (this
+            # includes paths with Spack config variables like "$spack").
+            # Likewise, relative paths that point outside of the env directory
+            # are assumed valid: no rewriting of the path is attempted.
 
         if env.path != init_file_dir:
             # If we are here, we are creating an environment based on an
