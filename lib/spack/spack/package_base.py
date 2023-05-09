@@ -1889,6 +1889,7 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
 
     # TODO (post-34236): Remove this deprecated method when eliminate test,
     # TODO (post-34236): run_test, etc.
+    @property
     def _test_deprecated_warning(self):
         alt = f"Use any name starting with 'test_' instead in {self.spec.name}."
         return f"The 'test' method is deprecated. {alt}"
@@ -1897,8 +1898,7 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
     # TODO (post-34236): run_test, etc.
     def test(self):
         # Defer tests to virtual and concrete packages
-        # Ensure passing warn() a string for python 3.6/rhel8,ubuntu,etc.
-        warnings.warn(str(self._test_deprecated_warning))
+        warnings.warn(self._test_deprecated_warning)
 
     # TODO (post-34236): Remove this deprecated method when eliminate test,
     # TODO (post-34236): run_test, etc.
