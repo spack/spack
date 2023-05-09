@@ -272,11 +272,11 @@ def test_package_copy_test_files_skips(mock_packages, ensure_debug, capsys):
     assert "no package class found" in out
 
 
-def test_test_parts_process_fails(mock_packages):
-    """Confirm test_parts_process fails as expected without package or test_suite."""
+def test_process_test_parts(mock_packages):
+    """Confirm process_test_parts fails as expected without package or test_suite."""
     # Try without a package
     with pytest.raises(spack.install_test.TestSuiteError) as exc_info:
-        spack.install_test.test_parts_process(None, [])
+        spack.install_test.process_test_parts(None, [])
     assert "without a package" in str(exc_info)
 
     # Try with a package without a test suite
@@ -284,7 +284,7 @@ def test_test_parts_process_fails(mock_packages):
     pkg = MyPackage("SomePackage", None)
 
     with pytest.raises(spack.install_test.TestSuiteError) as exc_info:
-        spack.install_test.test_parts_process(pkg, [])
+        spack.install_test.process_test_parts(pkg, [])
     assert "test suite is missing" in str(exc_info)
 
 

@@ -623,7 +623,7 @@ def test_functions(
     return tests
 
 
-def test_parts_process(pkg: Pb, test_specs: List[spack.spec.Spec], verbose: bool = False):
+def process_test_parts(pkg: Pb, test_specs: List[spack.spec.Spec], verbose: bool = False):
     """Process test parts associated with the package.
 
     Args:
@@ -716,7 +716,7 @@ def test_process(pkg: Pb, kwargs):
         # run test methods from the package and all virtuals it provides
         v_names = virtuals(pkg)
         test_specs = [pkg.spec] + [spack.spec.Spec(v_name) for v_name in sorted(v_names)]
-        test_parts_process(pkg, test_specs, verbose)
+        process_test_parts(pkg, test_specs, verbose)
 
 
 def virtuals(pkg):
