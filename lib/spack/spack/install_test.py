@@ -44,7 +44,7 @@ ListOrStringType = Union[str, List[str]]
 LogType = Union["tty.log.nixlog", "tty.log.winlog"]
 
 Pb = TypeVar("Pb", bound="spack.package_base.PackageBase")
-TestPackageType = Union[Pb, Type[Pb]]
+PackageObjectOrClass = Union[Pb, Type[Pb]]
 
 
 class TestStatus(enum.Enum):
@@ -536,7 +536,7 @@ def copy_test_files(pkg: Pb, test_spec: spack.spec.Spec):
         shutil.copytree(data_source, data_dir)
 
 
-def test_function_names(pkg: TestPackageType, add_virtuals: bool = False) -> List[str]:
+def test_function_names(pkg: PackageObjectOrClass, add_virtuals: bool = False) -> List[str]:
     """Grab the names of all non-empty test functions.
 
     Args:
@@ -554,7 +554,9 @@ def test_function_names(pkg: TestPackageType, add_virtuals: bool = False) -> Lis
     return [f"{cls_name}.{fn.__name__}" for (cls_name, fn) in fns]
 
 
-def test_functions(pkg: TestPackageType, add_virtuals: bool = False) -> List[Tuple[str, Callable]]:
+def test_functions(
+    pkg: PackageObjectOrClass, add_virtuals: bool = False
+) -> List[Tuple[str, Callable]]:
     """Grab all non-empty test functions.
 
     Args:
