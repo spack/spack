@@ -336,8 +336,6 @@ def create_in_dir(
         init_file_dir = os.path.abspath(os.path.dirname(init_file))
         init_env = Environment(init_file_dir)
         included_config_files = config_dict(init_env.manifest).get("include", [])
-        rewritten_config_paths = []
-        updated_cfg_paths = False
         for path in included_config_files:
             resolved_path = substitute_path_variables(path)
             if not os.path.isabs(resolved_path):
@@ -345,23 +343,18 @@ def create_in_dir(
                 cfg_abspath = os.path.join(env.path, resolved_path)
                 if fs.path_contains_subdirectory(init_cfg_abspath, init_env.path):
                     # Relative paths that are inside the init env's directory
-                    # are copied into the new env
+                    # are copied into the new env directory
                     assert fs.path_contains_subdirectory(cfg_abspath, env.path)
                     fs.mkdirp(os.path.dirname(cfg_abspath))
                     shutil.copy(init_cfg_abspath, cfg_abspath)
-                    rewritten_config_paths.append(path)
-                    updated_cfg_paths = True
                 else:
                     # Relative paths that sit outide of the init env's
                     # directory are preserved: for example $spack/../sibling
-                    rewritten_config_paths.append(path)
+                    pass
             else:
                 # Absolute paths are preserved
                 # This includes paths that use path config variables like "$spack"
-                rewritten_config_paths.append(path)
-        if updated_cfg_paths:
-            manifest.update_included_configs(rewritten_config_paths)
-            manifest.flush()
+                pass
 
         if env.path != init_file_dir:
             # If we are here, we are creating an environment based on an
