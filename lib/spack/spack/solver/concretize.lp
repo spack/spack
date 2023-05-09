@@ -500,12 +500,12 @@ requirement_group_satisfied(Package, X) :-
 { attr("node_flag", A1, A2, A3) } :-
   requirement_group_member(Y, Package, X),
   activate_requirement(Package, X),
-  condition_requirement(Y,"node_flag", A1, A2, A3).
+  imposed_constraint(Y,"node_flag_set", A1, A2, A3).
 
 { attr("node_flag_source", A1, A2, A3) } :-
   requirement_group_member(Y, Package, X),
   activate_requirement(Package, X),
-  condition_requirement(Y,"node_flag_source", A1, A2, A3).
+  imposed_constraint(Y,"node_flag_source", A1, A2, A3).
 
 requirement_weight(Package, Group, W) :-
   W = #min {
