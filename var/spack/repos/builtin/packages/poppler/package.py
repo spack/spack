@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -105,21 +105,9 @@ class Poppler(CMakePackage):
             args.append("-DENABLE_CPP=OFF")
 
         if "+glib" in spec:
-            args.extend(
-                [
-                    "-DENABLE_GLIB=ON",
-                    "-DWITH_GLIB=ON",
-                    "-DWITH_Cairo=ON",
-                ]
-            )
+            args.extend(["-DENABLE_GLIB=ON", "-DWITH_GLIB=ON", "-DWITH_Cairo=ON"])
         else:
-            args.extend(
-                [
-                    "-DENABLE_GLIB=OFF",
-                    "-DWITH_GLIB=OFF",
-                    "-DWITH_Cairo=OFF",
-                ]
-            )
+            args.extend(["-DENABLE_GLIB=OFF", "-DWITH_GLIB=OFF", "-DWITH_Cairo=OFF"])
 
         if "+gobject" in spec:
             args.append("-DENABLE_GOBJECT_INTROSPECTION=ON")

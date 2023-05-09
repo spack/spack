@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -15,7 +15,7 @@ class Arborx(CMakePackage, CudaPackage, ROCmPackage):
 
     tags = ["e4s", "ecp"]
 
-    maintainers = ["aprokop"]
+    maintainers("aprokop")
 
     version("master", branch="master")
     version("1.3", sha256="3f1e17f029a460ab99f8396e2772cec908eefc4bf3868c8828907624a2d0ce5d")
@@ -73,6 +73,7 @@ class Arborx(CMakePackage, CudaPackage, ROCmPackage):
         rocm_dep = "+rocm amdgpu_target={0}".format(arch)
         depends_on("kokkos {0}".format(rocm_dep), when=rocm_dep)
 
+    conflicts("+cuda", when="cuda_arch=none")
     depends_on("kokkos+cuda_lambda", when="~trilinos+cuda")
 
     # Trilinos/Kokkos

@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -27,7 +27,7 @@ class Seacas(CMakePackage):
     homepage = "https://sandialabs.github.io/seacas/"
     git = "https://github.com/sandialabs/seacas.git"
     url = "https://github.com/sandialabs/seacas/archive/v2019-08-20.tar.gz"
-    maintainers = ["gsjaardema"]
+    maintainers("gsjaardema")
 
     # ###################### Versions ##########################
     version("master", branch="master")
@@ -286,10 +286,7 @@ class Seacas(CMakePackage):
         # ##################### Dependencies ##########################
         # Always need NetCDF-C
         options.extend(
-            [
-                define("TPL_ENABLE_Netcdf", True),
-                define("NetCDF_ROOT", spec["netcdf-c"].prefix),
-            ]
+            [define("TPL_ENABLE_Netcdf", True), define("NetCDF_ROOT", spec["netcdf-c"].prefix)]
         )
 
         if "+parmetis" in spec:
@@ -323,10 +320,7 @@ class Seacas(CMakePackage):
             )
         else:
             options.extend(
-                [
-                    define("TPL_ENABLE_METIS", False),
-                    define("TPL_ENABLE_ParMETIS", False),
-                ]
+                [define("TPL_ENABLE_METIS", False), define("TPL_ENABLE_ParMETIS", False)]
             )
 
         options.append(from_variant("TPL_ENABLE_Matio", "matio"))

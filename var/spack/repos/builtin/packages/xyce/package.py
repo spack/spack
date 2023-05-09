@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -22,9 +22,10 @@ class Xyce(CMakePackage):
     homepage = "https://xyce.sandia.gov"
     git = "https://github.com/Xyce/Xyce.git"
     url = "https://github.com/Xyce/Xyce/archive/Release-7.2.0.tar.gz"
-    maintainers = ["kuberry"]
+    maintainers("kuberry", "tbird2001")
 
     version("master", branch="master")
+    version("7.6.0", "fc25557e2edc82adbe0436a15fca2929a2f9ab08ddf91f1a47aab5e8b27ec88c")
     version("7.5.0", "854d7d5e19e0ee2138d1f20f10f8f27f2bebb94ec81c157040955cff7250dacd")
     version("7.4.0", "2d6bc1b7377834b2e0bf50131e96728c5be83dbb3548e765bb48911067c87c91")
     version("7.3.0", "43869a70967f573ff6f00451db3f4642684834bdad1fd3926380e3789016b446")
@@ -104,7 +105,6 @@ class Xyce(CMakePackage):
 
     # Issue #1712 forces explicitly enumerating blas packages to propagate variants
     with when("+pymi_static_tpls"):
-
         # BLAS
         depends_on("openblas~shared", when="^openblas")
         depends_on("netlib-lapack~shared", when="^netlib-lapack~external-blas")
@@ -127,6 +127,20 @@ class Xyce(CMakePackage):
         # HDF5
         depends_on("hdf5~shared", when="^hdf5")
 
+    # fix RPATH issue on mac
+    patch(
+        "https://github.com/xyce/xyce/commit/40dbc0e0341a5cf9a7fa82a87313869dc284fdd9.patch?full_index=1",
+        sha256="3c32faeeea0bb29be44ec20e414670c9fd375f9ed921a7f6e9fd3de02c28859d",
+        when="@7.3:7.5 +shared",
+    )
+
+    # fix parameter merging in pymi
+    patch(
+        "https://github.com/xyce/xyce/commit/fdf457fce1b1511b8a29d134d38e515fb7149246.patch?full_index=1",
+        sha256="077f91d2ff0649b3f7e83c224f71a030521c6fb5a84b29acd772d5657cdb6c23",
+        when="@7.4:7.6 +pymi",
+    )
+
     def cmake_args(self):
         spec = self.spec
 
@@ -135,7 +149,7 @@ class Xyce(CMakePackage):
         if "+mpi" in spec:
             options.append(self.define("CMAKE_CXX_COMPILER", spec["mpi"].mpicxx))
         else:
-            options.append(self.define("CMAKE_CXX_COMPILER", self.compiler.cxx))
+            options.append(self.define("CMAKE_CXX_COMPILER", spack_cxx))
 
         options.append(self.define_from_variant("BUILD_SHARED_LIBS", "shared"))
         options.append(self.define_from_variant("CMAKE_CXX_STANDARD", "cxxstd"))

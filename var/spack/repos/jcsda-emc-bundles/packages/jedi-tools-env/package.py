@@ -12,7 +12,7 @@ class JediToolsEnv(BundlePackage):
     homepage = "https://github.com/JCSDA-internal/jedi-tools"
     git = "https://github.com/JCSDA-internal/jedi-tools.git"
 
-    maintainers = ["climbfuji", "srherbener"]
+    maintainers("climbfuji", "srherbener")
 
     version("1.0.0")
 

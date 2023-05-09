@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -67,7 +67,6 @@ def composite(interface, implementation, request):
 
 
 def test_composite_interface_calls(interface, composite):
-
     composite.add()
     assert interface.counter == 3
 
@@ -77,7 +76,6 @@ def test_composite_interface_calls(interface, composite):
 
 
 def test_composite_wrong_container(interface):
-
     with pytest.raises(TypeError):
 
         @pattern.composite(interface=interface, container=2)
@@ -86,7 +84,6 @@ def test_composite_wrong_container(interface):
 
 
 def test_composite_no_methods():
-
     with pytest.raises(TypeError):
 
         @pattern.composite()

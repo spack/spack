@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -20,7 +20,6 @@ pytestmark = pytest.mark.skipif(sys.platform == "win32", reason="does not run on
 
 
 def test_build_tarball_overwrite(install_mockery, mock_fetch, monkeypatch, tmpdir):
-
     with tmpdir.as_cwd():
         spec = spack.spec.Spec("trivial-install-test-package").concretized()
         install(str(spec))

@@ -14,7 +14,7 @@ class Fiat(CMakePackage):
     git = "https://github.com/ecmwf-ifs/fiat.git"
     url = "https://github.com/ecmwf-ifs/fiat/archive/1.0.0.tar.gz"
 
-    maintainers = ["climbfuji"]
+    maintainers("climbfuji")
 
     version("main", branch="main", no_cache=True)
     version("1.1.0", sha256="58354e60d29a1b710bfcea9b87a72c0d89c39182cb2c9523ead76a142c695f82")

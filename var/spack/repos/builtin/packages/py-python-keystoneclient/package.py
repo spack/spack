@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -15,7 +15,7 @@ class PyPythonKeystoneclient(PythonPackage):
     homepage = "https://docs.openstack.org/python-keystoneclient"
     pypi = "python-keystoneclient/python-keystoneclient-4.2.0.tar.gz"
 
-    maintainers = ["haampie"]
+    maintainers("haampie")
 
     version("4.2.0", sha256="0248426e483b95de395086482c077d48e45990d3b1a3e334b2ec8b2e108f5a8a")
 

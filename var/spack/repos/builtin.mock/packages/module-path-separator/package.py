@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -20,3 +20,6 @@ class ModulePathSeparator(Package):
         env.append_path("SEMICOLON", "bar", separator=";")
         env.prepend_path("SEMICOLON", "bar", separator=";")
         env.remove_path("SEMICOLON", "bar", separator=";")
+
+        env.append_flags("SPACE", "qux")
+        env.remove_flags("SPACE", "qux")

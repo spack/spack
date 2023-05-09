@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -14,7 +14,7 @@ class Adiak(CMakePackage):
     url = "https://github.com/LLNL/Adiak/releases/download/v0.1/adiak-v0.1.1.tar.gz"
     git = "https://github.com/LLNL/Adiak"
 
-    maintainers = ["daboehme", "mplegendre"]
+    maintainers("daboehme", "mplegendre")
 
     variant("mpi", default=True, description="Build with MPI support")
     variant("shared", default=True, description="Build dynamic libraries")

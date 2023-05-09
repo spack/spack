@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -13,7 +13,7 @@ class PyHaphpipe(PythonPackage):
     homepage = "https://github.com/gwcbi/haphpipe"
     url = "https://github.com/gwcbi/haphpipe/archive/v1.0.3.tar.gz"
 
-    maintainers = ["dorton21"]
+    maintainers("dorton21")
 
     version("1.0.3", sha256="9a9e8632a217ff4207c1dea66887a471e0ea04bbb7c0f0d72631acaba214bd37")
 

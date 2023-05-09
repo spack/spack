@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -13,7 +13,7 @@ class SalomeMedcoupling(CMakePackage):
     """salome-medcoupling is a part of SALOME platform to manipulate meshes and
     fields in memory, and use salome-med format for files."""
 
-    maintainers = ["franciskloss"]
+    maintainers("franciskloss")
 
     homepage = "https://docs.salome-platform.org/latest/dev/MEDCoupling/developer/index.html"
     git = "https://git.salome-platform.org/gitpub/tools/medcoupling.git"

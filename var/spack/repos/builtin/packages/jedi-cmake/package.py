@@ -13,7 +13,7 @@ class JediCmake(CMakePackage):
     git = "https://github.com/JCSDA/jedi-cmake.git"
     # url = "https://github.com/JCSDA/jedi-cmake/archive/refs/tags/1.4.0.tar.gz"
 
-    maintainers = ["climbfuji"]
+    maintainers("climbfuji")
 
     version("master", branch="master", no_cache=True)
     version("develop", branch="develop", no_cache=True)
