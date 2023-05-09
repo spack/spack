@@ -3,13 +3,14 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-import collections
 import functools as ft
 import itertools
 import os
 import re
 import shutil
+import stat
 import sys
+from typing import Optional
 
 from llnl.util import tty
 from llnl.util.filesystem import (
@@ -32,12 +33,14 @@ from llnl.util.tty.color import colorize
 
 import spack.config
 import spack.projections
+import spack.relocate
 import spack.schema.projections
 import spack.spec
 import spack.store
 import spack.util.spack_json as s_json
 import spack.util.spack_yaml as s_yaml
 from spack.error import SpackError
+from spack.hooks import sbang
 
 __all__ = ["FilesystemView", "YamlFilesystemView"]
 
@@ -57,50 +60,47 @@ def view_hardlink(src, dst, **kwargs):
     os.link(src, dst)
 
 
-def view_copy(src, dst, view, spec=None):
+def view_copy(src: str, dst: str, view, spec: Optional[spack.spec.Spec] = None):
     """
     Copy a file from src to dst.
 
     Use spec and view to generate relocations
     """
-    shutil.copy2(src, dst)
-    if spec and not spec.external:
-        # Not metadata, we have to relocate it
+    shutil.copy2(src, dst, follow_symlinks=False)
 
-        # Get information on where to relocate from/to
+    # No need to relocate if no metadata or external.
+    if not spec or spec.external:
+        return
 
-        # This is vestigial code for the *old* location of sbang. Previously,
-        # sbang was a bash script, and it lived in the spack prefix. It is
-        # now a POSIX script that lives in the install prefix. Old packages
-        # will have the old sbang location in their shebangs.
-        # TODO: Not sure which one to use...
-        import spack.hooks.sbang as sbang
+    # Order of this dict is somewhat irrelevant
+    prefix_to_projection = {
+        s.prefix: view.get_projection_for_spec(s)
+        for s in spec.traverse(root=True, order="breadth")
+        if not s.external
+    }
 
-        # Break a package include cycle
-        import spack.relocate
+    src_stat = os.lstat(src)
 
-        orig_sbang = "#!/bin/bash {0}/bin/sbang".format(spack.paths.spack_root)
-        new_sbang = sbang.sbang_shebang_line()
+    # TODO: change this into a bulk operation instead of a per-file operation
 
-        prefix_to_projection = collections.OrderedDict(
-            {spec.prefix: view.get_projection_for_spec(spec)}
-        )
+    if stat.S_ISLNK(src_stat.st_mode):
+        spack.relocate.relocate_links(links=[dst], prefix_to_prefix=prefix_to_projection)
+    elif spack.relocate.is_binary(dst):
+        spack.relocate.relocate_text_bin(binaries=[dst], prefixes=prefix_to_projection)
+    else:
+        prefix_to_projection[spack.store.layout.root] = view._root
 
-        for dep in spec.traverse():
-            if not dep.external:
-                prefix_to_projection[dep.prefix] = view.get_projection_for_spec(dep)
+        # This is vestigial code for the *old* location of sbang.
+        prefix_to_projection[
+            "#!/bin/bash {0}/bin/sbang".format(spack.paths.spack_root)
+        ] = sbang.sbang_shebang_line()
 
-        if spack.relocate.is_binary(dst):
-            spack.relocate.relocate_text_bin(binaries=[dst], prefixes=prefix_to_projection)
-        else:
-            prefix_to_projection[spack.store.layout.root] = view._root
-            prefix_to_projection[orig_sbang] = new_sbang
-            spack.relocate.relocate_text(files=[dst], prefixes=prefix_to_projection)
-        try:
-            stat = os.stat(src)
-            os.chown(dst, stat.st_uid, stat.st_gid)
-        except OSError:
-            tty.debug("Can't change the permissions for %s" % dst)
+        spack.relocate.relocate_text(files=[dst], prefixes=prefix_to_projection)
+
+    try:
+        os.chown(dst, src_stat.st_uid, src_stat.st_gid)
+    except OSError:
+        tty.debug("Can't change the permissions for %s" % dst)
 
 
 def view_func_parser(parsed_name):
