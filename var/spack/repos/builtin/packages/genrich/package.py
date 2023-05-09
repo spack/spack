@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -13,6 +13,8 @@ class Genrich(MakefilePackage):
     url = "https://github.com/jsh58/Genrich/archive/v0.6.tar.gz"
 
     version("0.6", sha256="4c87aca8b7789f28b0c5c2c0ccea75668f19fa6a4cb38cd3c06d80ffd98d396f")
+
+    depends_on("zlib")
 
     def install(self, spec, prefix):
         mkdirp(prefix.bin)

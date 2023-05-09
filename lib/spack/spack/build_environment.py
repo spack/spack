@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -69,13 +69,13 @@ from spack.error import NoHeadersError, NoLibrariesError
 from spack.installer import InstallError
 from spack.util.cpus import cpus_available
 from spack.util.environment import (
+    SYSTEM_DIRS,
     EnvironmentModifications,
     env_flag,
     filter_system_paths,
     get_path,
     inspect_path,
     is_system_path,
-    system_dirs,
     validate,
 )
 from spack.util.executable import Executable
@@ -397,7 +397,7 @@ def set_compiler_environment_variables(pkg, env):
 
     env.set("SPACK_COMPILER_SPEC", str(spec.compiler))
 
-    env.set("SPACK_SYSTEM_DIRS", ":".join(system_dirs))
+    env.set("SPACK_SYSTEM_DIRS", ":".join(SYSTEM_DIRS))
 
     compiler.setup_custom_environment(pkg, env)
 
@@ -485,7 +485,13 @@ def set_wrapper_variables(pkg, env):
             query = pkg.spec[dep.name]
             dep_link_dirs = list()
             try:
+                # In some circumstances (particularly for externals) finding
+                # libraries packages can be time consuming, so indicate that
+                # we are performing this operation (and also report when it
+                # finishes).
+                tty.debug("Collecting libraries for {0}".format(dep.name))
                 dep_link_dirs.extend(query.libs.directories)
+                tty.debug("Libraries for {0} have been collected.".format(dep.name))
             except NoLibrariesError:
                 tty.debug("No libraries found for {0}".format(dep.name))
 
@@ -582,16 +588,20 @@ def set_module_variables_for_package(pkg):
 
     # TODO: make these build deps that can be installed if not found.
     m.make = MakeExecutable("make", jobs)
-    m.gmake = MakeExecutable("gmake", jobs)
     m.ninja = MakeExecutable("ninja", jobs, supports_jobserver=False)
+    # TODO: johnwparent: add package or builder support to define these build tools
+    # for now there is no entrypoint for builders to define these on their
+    # own
+    if sys.platform == "win32":
+        m.nmake = Executable("nmake")
+        m.msbuild = Executable("msbuild")
+        # analog to configure for win32
+        m.cscript = Executable("cscript")
 
     # Find the configure script in the archive path
     # Don't use which for this; we want to find it in the current dir.
     m.configure = Executable("./configure")
 
-    if sys.platform == "win32":
-        m.nmake = Executable("nmake")
-        m.msbuild = Executable("msbuild")
     # Standard CMake arguments
     m.std_cmake_args = spack.build_systems.cmake.CMakeBuilder.std_args(pkg)
     m.std_meson_args = spack.build_systems.meson.MesonBuilder.std_args(pkg)
@@ -767,7 +777,9 @@ def setup_package(pkg, dirty, context="build"):
         set_compiler_environment_variables(pkg, env_mods)
         set_wrapper_variables(pkg, env_mods)
 
+    tty.debug("setup_package: grabbing modifications from dependencies")
     env_mods.extend(modifications_from_dependencies(pkg.spec, context, custom_mods_only=False))
+    tty.debug("setup_package: collected all modifications from dependencies")
 
     # architecture specific setup
     platform = spack.platforms.by_name(pkg.spec.architecture.platform)
@@ -775,6 +787,7 @@ def setup_package(pkg, dirty, context="build"):
     platform.setup_platform_environment(pkg, env_mods)
 
     if context == "build":
+        tty.debug("setup_package: setup build environment for root")
         builder = spack.builder.create(pkg)
         builder.setup_build_environment(env_mods)
 
@@ -785,6 +798,7 @@ def setup_package(pkg, dirty, context="build"):
                 " includes and omit it when invoked with '--cflags'."
             )
     elif context == "test":
+        tty.debug("setup_package: setup test environment for root")
         env_mods.extend(
             inspect_path(
                 pkg.spec.prefix,
@@ -801,6 +815,7 @@ def setup_package(pkg, dirty, context="build"):
     # Load modules on an already clean environment, just before applying Spack's
     # own environment modifications. This ensures Spack controls CC/CXX/... variables.
     if need_compiler:
+        tty.debug("setup_package: loading compiler modules")
         for mod in pkg.compiler.modules:
             load_module(mod)
 
@@ -938,6 +953,7 @@ def modifications_from_dependencies(
             _make_runnable(dep, env)
 
     def add_modifications_for_dep(dep):
+        tty.debug("Adding env modifications for {0}".format(dep.name))
         # Some callers of this function only want the custom modifications.
         # For callers that want both custom and default modifications, we want
         # to perform the default modifications here (this groups custom
@@ -963,6 +979,7 @@ def modifications_from_dependencies(
                 builder.setup_dependent_build_environment(env, spec)
             else:
                 dpkg.setup_dependent_run_environment(env, spec)
+        tty.debug("Added env modifications for {0}".format(dep.name))
 
     # Note that we want to perform environment modifications in a fixed order.
     # The Spec.traverse method provides this: i.e. in addition to
@@ -1011,7 +1028,6 @@ def get_cmake_prefix_path(pkg):
 def _setup_pkg_and_run(
     serialized_pkg, function, kwargs, child_pipe, input_multiprocess_fd, jsfd1, jsfd2
 ):
-
     context = kwargs.get("context", "build")
 
     try:

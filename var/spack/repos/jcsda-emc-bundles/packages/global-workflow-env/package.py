@@ -12,11 +12,10 @@ class GlobalWorkflowEnv(BundlePackage):
     homepage = "https://github.com/NOAA-EMC/global-workflow"
     git = "https://github.com/NOAA-EMC/global-workflow.git"
 
-    maintainers = ["AlexanderRichert-NOAA"]
+    maintainers("AlexanderRichert-NOAA")
 
     version("1.0.0")
     variant("python", default=True, description="Build Python dependencies")
-    variant("ncl", default=True, description="Build NCL (NCAR Command Language)")
 
     depends_on("ufs-pyenv", when="+python")
     depends_on("prod-util")
@@ -43,9 +42,6 @@ class GlobalWorkflowEnv(BundlePackage):
     depends_on("met")
     depends_on("metplus")
     depends_on("gsi-ncdiag")
-    depends_on("ncl", when="+ncl")
     depends_on("crtm@2.4.0")
-
-    conflicts("platform=darwin", when="+ncl", msg="NCL doesn't build on macOS")
 
     # There is no need for install() since there is no code.

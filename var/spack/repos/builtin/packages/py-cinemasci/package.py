@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -15,7 +15,7 @@ class PyCinemasci(PythonPackage):
 
     tags = ["e4s"]
 
-    maintainers = ["EthanS94"]
+    maintainers("EthanS94")
 
     version("1.7.0", sha256="70e1fa494bcbefdbd9e8859cdf1b01163a94ecffcdfa3da1011e4ef2fcee6169")
     version("1.3", sha256="c024ca9791de9d78e5dad3fd11e8f87d8bc1afa5830f2697d7ec4116a5d23c20")

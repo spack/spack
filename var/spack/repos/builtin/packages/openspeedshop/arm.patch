@@ -1,0 +1,25 @@
+diff --git a/plugins/views/iot/iot_view.cxx b/plugins/views/iot/iot_view.cxx
+index f4cdf48..ef1b81f 100644
+--- a/plugins/views/iot/iot_view.cxx
++++ b/plugins/views/iot/iot_view.cxx
+@@ -45,6 +45,20 @@
+ # endif
+ #endif
+ /* End part 2 of 2 for Hack to get around inconsistent syscall definitions */
++/* Start Added Hack to get around inconsistent syscall definitions */
++#ifndef SYS_open
++#define SYS_open SYS_openat
++#endif
++#ifndef SYS_creat
++#define SYS_creat SYS_openat
++#endif
++#ifndef SYS_dup2
++#define SYS_dup2 SYS_dup3
++#endif
++#ifndef SYS_pipe
++#define SYS_pipe SYS_pipe2
++#endif
++/* end Added Hack to get around inconsistent syscall definitions */
+ 
+ 
+ 

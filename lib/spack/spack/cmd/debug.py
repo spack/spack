@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -17,6 +17,7 @@ from llnl.util.filesystem import working_dir
 import spack.config
 import spack.paths
 import spack.platforms
+import spack.util.git
 from spack.main import get_version
 from spack.util.executable import which
 
@@ -35,7 +36,7 @@ def _debug_tarball_suffix():
     now = datetime.now()
     suffix = now.strftime("%Y-%m-%d-%H%M%S")
 
-    git = which("git")
+    git = spack.util.git.git()
     if not git:
         return "nobranch-nogit-%s" % suffix
 
@@ -95,8 +96,5 @@ def report(args):
 
 
 def debug(parser, args):
-    action = {
-        "create-db-tarball": create_db_tarball,
-        "report": report,
-    }
+    action = {"create-db-tarball": create_db_tarball, "report": report}
     action[args.debug_command](args)

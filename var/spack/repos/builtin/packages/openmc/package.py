@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -20,7 +20,7 @@ class Openmc(CMakePackage):
     homepage = "https://docs.openmc.org/"
     url = "https://github.com/openmc-dev/openmc/tarball/v0.13.2"
     git = "https://github.com/openmc-dev/openmc.git"
-    maintainers = ["paulromano"]
+    maintainers("paulromano")
 
     version("develop", branch="develop", submodules=True)
     version("master", branch="master", submodules=True)

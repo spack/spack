@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -13,7 +13,7 @@ class SalomeConfiguration(Package):
     """salome-configuration is a part of SALOME platform and define general
     build tools for the platform."""
 
-    maintainers = ["franciskloss"]
+    maintainers("franciskloss")
 
     homepage = "https://www.salome-platform.org"
     git = "https://git.salome-platform.org/gitpub/tools/configuration.git"

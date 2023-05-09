@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -13,6 +13,7 @@ import llnl.util.tty.color as color
 from llnl.util.filesystem import working_dir
 
 import spack.paths
+import spack.util.git
 from spack.util.executable import which
 
 description = "runs source code style checks on spack"
@@ -29,23 +30,23 @@ def grouper(iterable, n, fillvalue=None):
 
 
 #: List of directories to exclude from checks -- relative to spack root
-exclude_directories = [
-    os.path.relpath(spack.paths.external_path, spack.paths.prefix),
-]
+exclude_directories = [os.path.relpath(spack.paths.external_path, spack.paths.prefix)]
 
 #: Order in which tools should be run. flake8 is last so that it can
 #: double-check the results of other tools (if, e.g., --fix was provided)
 #: The list maps an executable name to a method to ensure the tool is
 #: bootstrapped or present in the environment.
-tool_names = [
-    "isort",
-    "mypy",
-    "black",
-    "flake8",
-]
+tool_names = ["isort", "black", "flake8", "mypy"]
 
 #: tools we run in spack style
 tools = {}
+
+#: warnings to ignore in mypy
+mypy_ignores = [
+    # same as `disable_error_code = "annotation-unchecked"` in pyproject.toml, which
+    # doesn't exist in mypy 0.971 for Python 3.6
+    "[annotation-unchecked]"
+]
 
 
 def is_package(f):
@@ -81,7 +82,7 @@ def changed_files(base="develop", untracked=True, all_files=False, root=None):
     if root is None:
         root = spack.paths.prefix
 
-    git = which("git", required=True)
+    git = spack.util.git.git(required=True)
 
     # ensure base is in the repo
     base_sha = git(
@@ -142,10 +143,7 @@ def setup_parser(subparser):
         help="branch to compare against to determine changed files (default: develop)",
     )
     subparser.add_argument(
-        "-a",
-        "--all",
-        action="store_true",
-        help="check all files, not just changed files",
+        "-a", "--all", action="store_true", help="check all files, not just changed files"
     )
     subparser.add_argument(
         "-r",
@@ -170,10 +168,7 @@ def setup_parser(subparser):
         help="format automatically if possible (e.g., with isort, black)",
     )
     subparser.add_argument(
-        "--root",
-        action="store",
-        default=None,
-        help="style check a different spack instance",
+        "--root", action="store", default=None, help="style check a different spack instance"
     )
 
     tool_group = subparser.add_mutually_exclusive_group()
@@ -203,12 +198,17 @@ def rewrite_and_print_output(
     output, args, re_obj=re.compile(r"^(.+):([0-9]+):"), replacement=r"{0}:{1}:"
 ):
     """rewrite ouput with <file>:<line>: format to respect path args"""
+
     # print results relative to current working directory
     def translate(match):
         return replacement.format(cwd_relative(match.group(1), args), *list(match.groups()[1:]))
 
     for line in output.split("\n"):
         if not line:
+            continue
+        if any(ignore in line for ignore in mypy_ignores):
+            # some mypy annotations can't be disabled in older mypys (e.g. .971, which
+            # is the only mypy that supports python 3.6), so we filter them here.
             continue
         if not args.root_relative and re_obj:
             line = re_obj.sub(translate, line)
@@ -269,24 +269,10 @@ def run_mypy(mypy_cmd, file_list, args):
         os.path.join(spack.paths.prefix, "pyproject.toml"),
         "--show-error-codes",
     ]
-    mypy_arg_sets = [
-        common_mypy_args
-        + [
-            "--package",
-            "spack",
-            "--package",
-            "llnl",
-        ]
-    ]
+    mypy_arg_sets = [common_mypy_args + ["--package", "spack", "--package", "llnl"]]
     if "SPACK_MYPY_CHECK_PACKAGES" in os.environ:
         mypy_arg_sets.append(
-            common_mypy_args
-            + [
-                "--package",
-                "packages",
-                "--disable-error-code",
-                "no-redef",
-            ]
+            common_mypy_args + ["--package", "packages", "--disable-error-code", "no-redef"]
         )
 
     returncode = 0

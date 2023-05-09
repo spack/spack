@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -13,9 +13,12 @@ class PyH5py(PythonPackage):
     homepage = "https://www.h5py.org/"
     pypi = "h5py/h5py-3.3.0.tar.gz"
     git = "https://github.com/h5py/h5py.git"
-    maintainers = ["bryanherman", "takluyver"]
+    maintainers("bryanherman", "takluyver")
 
     version("master", branch="master")
+    # Version 3.8.0 seems to be broken or configured incorrectly, it's only building
+    # and installing the cpython extension, but none of the actual Python modules.
+    #version("3.8.0", sha256="6fead82f0c4000cf38d53f9c030780d81bfa0220218aee13b90b7701c937d95f")
     version("3.7.0", sha256="3fcf37884383c5da64846ab510190720027dca0768def34dd8dcb659dbe5cbf3")
     version("3.6.0", sha256="8752d2814a92aba4e2b2a5922d2782d0029102d99caaf3c201a566bc0b40db29")
     version("3.5.0", sha256="77c7be4001ac7d3ed80477de5b6942501d782de1bbe4886597bdfec2a7ab821f")
@@ -37,6 +40,7 @@ class PyH5py(PythonPackage):
     variant("mpi", default=True, description="Build with MPI support")
 
     # Python versions
+    depends_on("python@:3.9", type=("build", "run"), when="@:2.8")
     depends_on("python@3.6:", type=("build", "run"), when="@3:3.1")
     depends_on("python@3.7:", type=("build", "run"), when="@3.2:")
 
@@ -60,7 +64,9 @@ class PyH5py(PythonPackage):
     # Link dependencies (py-h5py v2 cannot build against HDF5 1.12 regardless
     # of API setting)
     depends_on("hdf5@1.8.4:1.11 +hl", when="@:2")
-    depends_on("hdf5@1.8.4: +hl", when="@3:")
+    # https://forum.hdfgroup.org/t/runtimeerror-wrong-file-driver-version/10123
+    depends_on("hdf5@1.8.4:1.12.99 +hl", when="@3:3.6")
+    depends_on("hdf5@1.8.4: +hl", when="@3.7:")
 
     # MPI dependencies
     depends_on("hdf5+mpi", when="+mpi")
@@ -69,6 +75,17 @@ class PyH5py(PythonPackage):
     depends_on("py-mpi4py@3:", when="@3:3.2+mpi^python@3:3.7", type=("build", "run"))
     depends_on("py-mpi4py@3.0.2:", when="@3.3.0:+mpi^python@3:3.7", type=("build", "run"))
     depends_on("py-mpi4py@3.0.3:", when="@3:+mpi^python@3.8.0:", type=("build", "run"))
+
+    # Patch version 3.7.0 so that it works with hdf5@1.14.0 (3.8.0 doesn't build correctly)
+    # https://github.com/h5py/h5py/pull/2194/commits
+    patch("h5py370_hdf51140.patch", when="@3.7.0")
+
+    def flag_handler(self, name, flags):
+        if name == "cflags":
+            if self.spec.satisfies("%oneapi@2023.0.0:"):
+                flags.append("-Wno-error=incompatible-function-pointer-types")
+                flags.append("-Wno-error=incompatible-pointer-types-discards-qualifiers")
+        return (flags, None, None)
 
     def setup_build_environment(self, env):
         env.set("HDF5_DIR", self.spec["hdf5"].prefix)

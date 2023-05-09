@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -15,7 +15,7 @@ class RiscvGnuToolchain(AutotoolsPackage):
     homepage = "https://spack-tutorial.readthedocs.io/"
     git = "https://github.com/riscv-collab/riscv-gnu-toolchain.git"
 
-    maintainers = ["wanlinwang"]
+    maintainers("wanlinwang")
 
     version("develop", branch="master", submodules=True)
     version("2022.08.08", tag="2022.08.08", submodules=True)

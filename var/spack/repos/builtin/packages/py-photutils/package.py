@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -17,7 +17,7 @@ class PyPhotutils(PythonPackage):
 
     version("1.5.0", sha256="014f7aa5a571401094d5cf9ffb57803b48869233feb80476ce377ecb91113689")
 
-    maintainers = ["meyersbs"]
+    maintainers("meyersbs")
 
     # From setup.cfg
     depends_on("python@3.8:", type=("build", "run"))

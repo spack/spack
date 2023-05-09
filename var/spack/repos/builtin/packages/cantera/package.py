@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -135,17 +135,11 @@ class Cantera(SConsPackage):
         # Python module
         if "+python" in spec:
             args.extend(
-                [
-                    "python_package=full",
-                    "python_cmd={0}".format(spec["python"].command.path),
-                ]
+                ["python_package=full", "python_cmd={0}".format(spec["python"].command.path)]
             )
             if spec["python"].satisfies("@3:"):
                 args.extend(
-                    [
-                        "python3_package=y",
-                        "python3_cmd={0}".format(spec["python"].command.path),
-                    ]
+                    ["python3_package=y", "python3_cmd={0}".format(spec["python"].command.path)]
                 )
             else:
                 args.append("python3_package=n")

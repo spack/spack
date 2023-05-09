@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -48,7 +48,7 @@ class LlvmOpenmpOmpt(CMakePackage):
     depends_on("elf", when="+libomptarget")
     depends_on("libffi", when="+libomptarget")
 
-    generator = "Ninja"
+    generator("ninja")
 
     def cmake_args(self):
         cmake_args = [

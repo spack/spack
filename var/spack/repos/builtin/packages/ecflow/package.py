@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -19,7 +19,7 @@ class Ecflow(CMakePackage):
     homepage = "https://confluence.ecmwf.int/display/ECFLOW/"
     url = "https://confluence.ecmwf.int/download/attachments/8650755/ecFlow-4.11.1-Source.tar.gz"
 
-    maintainers = ["climbfuji"]
+    maintainers("climbfuji")
 
     # https://confluence.ecmwf.int/download/attachments/8650755/ecFlow-5.8.3-Source.tar.gz?api=v2
     version("5.8.4", sha256="bc628556f8458c269a309e4c3b8d5a807fae7dfd415e27416fe9a3f544f88951")

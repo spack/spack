@@ -14,7 +14,7 @@ class JediUmEnv(BundlePackage):
     homepage = "https://github.com/JCSDA-internal/um-bundle"
     git = "https://github.com/JCSDA-internal/um-bundle.git"
 
-    maintainers = ["climbfuji", "srherbener"]
+    maintainers("climbfuji", "srherbener")
 
     version("1.0.0")
 

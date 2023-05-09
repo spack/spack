@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -135,6 +135,13 @@ class Mysql(CMakePackage):
     depends_on("cyrus-sasl", when="@:5.7")
 
     patch("fix-no-server-5.5.patch", level=1, when="@5.5.0:5.5")
+
+    # For spack external find
+    executables = ["^mysql_config$"]
+
+    @classmethod
+    def determine_version(cls, exe):
+        return Executable(exe)("--version", output=str, error=str)
 
     @property
     def command(self):
