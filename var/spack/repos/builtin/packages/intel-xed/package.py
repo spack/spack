@@ -35,19 +35,11 @@ class IntelXed(Package):
 
     # Match xed more closely with the version of mbuild at the time.
     resource(
-        name="mbuild",
-        placement="mbuild",
-        git=mbuild_git,
-        tag="v2022.07.28",
-        when="@2022.07:9999",
+        name="mbuild", placement="mbuild", git=mbuild_git, tag="v2022.07.28", when="@2022.07:9999"
     )
 
     resource(
-        name="mbuild",
-        placement="mbuild",
-        git=mbuild_git,
-        tag="v2022.04.17",
-        when="@:2022.06",
+        name="mbuild", placement="mbuild", git=mbuild_git, tag="v2022.04.17", when="@:2022.06"
     )
 
     variant("debug", default=False, description="Enable debug symbols")
