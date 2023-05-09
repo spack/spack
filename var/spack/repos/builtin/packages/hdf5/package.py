@@ -46,6 +46,11 @@ class Hdf5(CMakePackage):
 
     # Even versions are maintenance versions
     version(
+        "1.14.1",
+        sha256="c5c0bc37d070eb2ce2561594106ed6e2adad9ef06d889d2ee16c92b0a488017d",
+        preferred=True,
+    )
+    version(
         "1.14.0",
         sha256="a571cc83efda62e1a51a0a912dd916d01895801c5025af91669484a1575a6ef4",
         preferred=True,
