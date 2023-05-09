@@ -110,7 +110,7 @@ def test_compiler_remove(mutable_config, mock_packages):
     args = spack.util.pattern.Bunch(all=True, compiler_spec="gcc@4.5.0", add_paths=[], scope=None)
     spack.cmd.compiler.compiler_remove(args)
     compilers = spack.compilers.all_compiler_specs()
-    assert spack.spec.CompilerSpec("gcc@4.5.0") not in compilers
+    assert spack.spec.CompilerSpec("gcc@=4.5.0") not in compilers
 
 
 @pytest.mark.skipif(
@@ -204,12 +204,12 @@ def test_compiler_find_mixed_suffixes(no_compilers_yaml, working_env, clangdir):
     os.environ["PATH"] = str(clangdir)
     output = compiler("find", "--scope=site")
 
-    assert "clang@11.0.0" in output
-    assert "gcc@8.4.0" in output
+    assert "clang@=11.0.0" in output
+    assert "gcc@=8.4.0" in output
 
     config = spack.compilers.get_compiler_config("site", False)
-    clang = next(c["compiler"] for c in config if c["compiler"]["spec"] == "clang@11.0.0")
-    gcc = next(c["compiler"] for c in config if c["compiler"]["spec"] == "gcc@8.4.0")
+    clang = next(c["compiler"] for c in config if c["compiler"]["spec"] == "clang@=11.0.0")
+    gcc = next(c["compiler"] for c in config if c["compiler"]["spec"] == "gcc@=8.4.0")
 
     gfortran_path = str(clangdir.join("gfortran-8"))
 
