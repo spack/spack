@@ -39,13 +39,6 @@ class PyPennylaneLightning(CMakePackage, PythonExtension):
     variant("cpptests", default=False, description="Build CPP tests")
     variant("cppbenchmarks", default=False, description="Build CPP benchmark examples")
 
-    variant(
-        "build_type",
-        default="Release",
-        description="CMake build type",
-        values=("Debug", "Release", "RelWithDebInfo", "MinSizeRel"),
-    )
-
     extends("python")
 
     # hard dependencies
