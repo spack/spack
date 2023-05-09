@@ -158,6 +158,8 @@ class Comgr(CMakePackage):
         )
 
     root_cmakelists_dir = join_path("lib", "comgr")
+    def cmake_args(self):
+        return ["-DCMAKE_INSTALL_LIBDIR=lib"]
 
     @classmethod
     def determine_version(cls, lib):
