@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -24,7 +24,7 @@ class GaussianView(Package):
     homepage = "https://gaussian.com/gaussview6/"
     manual_download = True
 
-    maintainers = ["antoniokaust", "dev-zero"]
+    maintainers("antoniokaust", "dev-zero")
 
     version(
         "6.1.6",

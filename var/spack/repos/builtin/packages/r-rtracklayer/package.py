@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -57,3 +57,5 @@ class RRtracklayer(RPackage):
     depends_on("r-genomicalignments@1.15.6:", type=("build", "run"), when="@1.40.6:")
     depends_on("r-biocio", type=("build", "run"), when="@1.54.0:")
     depends_on("r-restfulr@0.0.13:", type=("build", "run"), when="@1.54.0:")
+    depends_on("zlib")
+    depends_on("openssl")

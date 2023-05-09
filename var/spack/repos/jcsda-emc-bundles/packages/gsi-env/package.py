@@ -12,7 +12,7 @@ class GsiEnv(BundlePackage):
     homepage = "https://github.com/NOAA-EMC/GSI"
     git = "https://github.com/NOAA-EMC/GSI.git"
 
-    maintainers = ["AlexanderRichert-NOAA"]
+    maintainers("AlexanderRichert-NOAA")
 
     version("1.0.0")
 

@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -19,7 +19,7 @@ class Bricks(CMakePackage):
     test_requires_compiler = True
 
     # List of GitHub accounts to notify when the package is updated.
-    maintainers = ["ztuowen", "drhansj"]
+    maintainers("ztuowen", "drhansj")
 
     version("r0.1", branch="r0.1")
 

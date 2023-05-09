@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -25,7 +25,7 @@ class Impalajit(CMakePackage):
     version("llvm", git="https://github.com/ravil-mobile/ImpalaJIT.git", branch="dev")
     version("llvm-1.0.0", git="https://github.com/ravil-mobile/ImpalaJIT.git", tag="v1.0.0")
 
-    maintainers = ["ravil-mobile", "Thomas-Ulrich"]
+    maintainers("ravil-mobile", "Thomas-Ulrich")
 
     variant("shared", default=True, description="build as a shared library")
     depends_on("cmake", type="build")

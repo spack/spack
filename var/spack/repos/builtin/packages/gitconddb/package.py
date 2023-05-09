@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -14,7 +14,7 @@ class Gitconddb(CMakePackage):
     url = "https://gitlab.cern.ch/lhcb/GitCondDB/-/archive/0.1.1/GitCondDB-0.1.1.tar.gz"
     git = "https://gitlab.cern.ch/lhcb/GitCondDB.git"
 
-    maintainers = ["drbenmorgan"]
+    maintainers("drbenmorgan")
 
     version("master", branch="master")
     version("0.2.0", sha256="dfbaa33581d5c6fac1102668c542b32d14499a30a2793bc55b133aba9f7295fc")

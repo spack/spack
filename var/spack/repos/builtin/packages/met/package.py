@@ -14,7 +14,7 @@ class Met(AutotoolsPackage):
     homepage = "https://dtcenter.org/community-code/model-evaluation-tools-met"
     url      = "https://github.com/dtcenter/MET/releases/download/v10.1.0/met-10.1.0.20220314.tar.gz"
 
-    maintainers = ['kgerheiser']
+    maintainers('kgerheiser')
 
     version('10.1.1', sha256='9827e65fbd1c64e776525bae072bc2d37d14465e85a952778dcc32a26d8b5c9e')
     version('10.1.0', sha256='8d4c1fb2311d8481ffd24e30e407a1b1bc72a6add9658d76b9c323f1733db336')

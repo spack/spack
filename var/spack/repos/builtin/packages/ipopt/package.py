@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -12,7 +12,7 @@ class Ipopt(AutotoolsPackage):
 
     homepage = "https://github.com/coin-or/Ipopt"
     url = "https://github.com/coin-or/Ipopt/archive/refs/tags/releases/3.13.2.tar.gz"
-    maintainers = ["goxberry"]
+    maintainers("goxberry")
 
     version("3.14.5", sha256="9ebbbbf14a64e998e3fba5d2662a8f9bd03f97b1406017e78ae54e5d105ae932")
     version("3.14.4", sha256="60865150b6fad19c5968395b57ff4a0892380125646c3afa2a714926f5ac9487")
@@ -72,11 +72,7 @@ class Ipopt(AutotoolsPackage):
         blas_lib = spec["blas"].libs.ld_flags
         lapack_lib = spec["lapack"].libs.ld_flags
 
-        args = [
-            "--prefix=%s" % self.prefix,
-            "--enable-shared",
-            "coin_skip_warn_cxxflags=yes",
-        ]
+        args = ["--prefix=%s" % self.prefix, "--enable-shared", "coin_skip_warn_cxxflags=yes"]
 
         if spec.satisfies("@:3.12.13"):
             args.extend(
@@ -88,11 +84,7 @@ class Ipopt(AutotoolsPackage):
                 ]
             )
         else:
-            args.extend(
-                [
-                    "--with-lapack-lflags={0} {1}".format(lapack_lib, blas_lib),
-                ]
-            )
+            args.extend(["--with-lapack-lflags={0} {1}".format(lapack_lib, blas_lib)])
 
         if "+mumps" in spec:
             mumps_dir = spec["mumps"].prefix

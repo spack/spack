@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -9,7 +9,7 @@ from spack.package import *
 class PyYtoptAutotune(PythonPackage):
     """Common interface for autotuning search space and method definition."""
 
-    maintainers = ["Kerilk", "liuyangzhuan"]
+    maintainers("Kerilk", "liuyangzhuan")
 
     homepage = "https://github.com/ytopt-team/autotune"
     url = "https://github.com/ytopt-team/autotune/archive/refs/tags/v1.1.0.tar.gz"

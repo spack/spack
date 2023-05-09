@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -68,3 +68,19 @@ def test_error_on_anonymous_dependency(config, mock_packages):
     pkg = spack.repo.path.get_pkg_class("a")
     with pytest.raises(spack.directives.DependencyError):
         spack.directives._depends_on(pkg, "@4.5")
+
+
+@pytest.mark.regression("34879")
+@pytest.mark.parametrize(
+    "package_name,expected_maintainers",
+    [
+        ("maintainers-1", ["user1", "user2"]),
+        # Reset from PythonPackage
+        ("py-extension1", ["adamjstewart", "pradyunsg", "user1", "user2"]),
+        # Extends maintainers-1
+        ("maintainers-3", ["user0", "user1", "user2", "user3"]),
+    ],
+)
+def test_maintainer_directive(config, mock_packages, package_name, expected_maintainers):
+    pkg_cls = spack.repo.path.get_pkg_class(package_name)
+    assert pkg_cls.maintainers == expected_maintainers
