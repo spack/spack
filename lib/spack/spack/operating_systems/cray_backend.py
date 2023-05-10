@@ -161,7 +161,7 @@ class CrayBackend(LinuxDistro):
         compilers = []
         for v in compiler_id.version:
             comp = cmp_cls(
-                spack.spec.CompilerSpec(name + "@" + v),
+                spack.spec.CompilerSpec(name + "@=" + v),
                 self,
                 "any",
                 ["cc", "CC", "ftn"],
