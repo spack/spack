@@ -195,26 +195,58 @@ class CachedCMakeBuilder(CMakeBuilder):
             "#------------------{0}\n".format("-" * 60),
         ]
 
+        # Provide standard CMake arguments for dependent CachedCMakePackages
         if spec.satisfies("^cuda"):
             entries.append("#------------------{0}".format("-" * 30))
             entries.append("# Cuda")
             entries.append("#------------------{0}\n".format("-" * 30))
 
             cudatoolkitdir = spec["cuda"].prefix
+            entries.append(cmake_cache_path("CUDAToolkit_ROOT", cudatoolkitdir))
             entries.append(cmake_cache_path("CUDA_TOOLKIT_ROOT_DIR", cudatoolkitdir))
             cudacompiler = "${CUDA_TOOLKIT_ROOT_DIR}/bin/nvcc"
             entries.append(cmake_cache_path("CMAKE_CUDA_COMPILER", cudacompiler))
             entries.append(cmake_cache_path("CMAKE_CUDA_HOST_COMPILER", "${CMAKE_CXX_COMPILER}"))
 
+            archs = spec.variants["cuda_arch"].value
+            if archs != "none":
+                arch_str = ";".join(archs)
+                entries.append(cmake_cache_string("CMAKE_CUDA_ARCHITECTURES", "{0}".format(arch_str)))
+
+        if spec.satisfies("^rocm"):
+            entries.append("#------------------{0}".format("-" * 30))
+            entries.append("# ROCm")
+            entries.append("#------------------{0}\n".format("-" * 30))
+
+#            "-DHIP_ROOT_DIR={0}".format(spec["hip"].prefix),
+#            "-DHIP_CXX_COMPILER={0}".format(self.spec["hip"].hipcc),
+            # This may be a patch that is no longer necessary
+            entries.append(cmake_cache_path("HIP_ROOT_DIR", "{0}".format(spec["hip"].prefix)))
+            # hipcc_flags = []
+            archs = self.spec.variants["amdgpu_target"].value
+            if archs != "none":
+                arch_str = ",".join(archs)
+                entries.append(cmake_cache_string("CMAKE_HIP_ARCHITECTURES", "{0}".format(arch_str)))
+            #     hipcc_flags.append("--amdgpu-target={0}".format(arch_str))
+            # entries.append(cmake_cache_string("HIP_HIPCC_FLAGS", " ".join(hipcc_flags)))
+
         return entries
 
     def std_initconfig_entries(self):
+        cmake_prefix_path_env = os.environ["CMAKE_PREFIX_PATH"]
+        cmake_prefix_path_array = cmake_prefix_path_env.split(":")
+        cmake_prefix_path = ";".join(cmake_prefix_path_array)
+        cmake_pkg_config_path_env = os.environ["PKG_CONFIG_PATH"]
+        cmake_pkg_config_path_array = cmake_prefix_path_env.split(":")
+        cmake_pkg_config_path = ";".join(cmake_prefix_path_array)
         return [
             "#------------------{0}".format("-" * 60),
             "# !!!! This is a generated file, edit at own risk !!!!",
             "#------------------{0}".format("-" * 60),
             "# CMake executable path: {0}".format(self.pkg.spec["cmake"].command.path),
             "#------------------{0}\n".format("-" * 60),
+            cmake_cache_path("CMAKE_PREFIX_PATH", cmake_prefix_path),
+            cmake_cache_path("CMAKE_PKG_CONFIG_PATH", cmake_pkg_config_path),
         ]
 
     def initconfig_package_entries(self):
