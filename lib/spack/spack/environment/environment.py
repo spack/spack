@@ -341,6 +341,9 @@ def create_in_dir(
             resolved_path = substitute_path_variables(path)
             if not os.path.isabs(resolved_path):
                 init_cfg_abspath = os.path.join(init_env.path, resolved_path)
+                if not os.path.exists(init_cfg_abspath):
+                    msg = f"Cannot locate {init_cfg_abspath} in {init_env.path}"
+                    raise spack.config.ConfigFileError(msg)
                 cfg_abspath = os.path.join(env.path, resolved_path)
                 if fs.path_contains_subdirectory(init_cfg_abspath, init_env.path):
                     # Relative paths that are inside the init env's directory
