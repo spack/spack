@@ -929,7 +929,27 @@ spack:
     assert any(x.satisfies("libelf@0.8.12") for x in e._get_environment_specs())
 
 
-def test_included_config_precedence(environment_from_manifest):
+def test_included_config_precedence(environment_from_manifest, tmpdir):
+    with open(os.path.join(tmpdir, "high-config.yaml"), "w") as f:
+        f.write(
+            """\
+packages:
+  libelf:
+    version: ["0.8.10"]  # this should override libelf version below
+"""
+        )
+
+    with open(os.path.join(tmpdir, "low-config.yaml"), "w") as f:
+        f.write(
+            """\
+packages:
+  mpileaks:
+    version: ["2.2"]
+  libelf:
+    version: ["0.8.12"]
+"""
+        )
+
     e = environment_from_manifest(
         """
 spack:
@@ -940,26 +960,6 @@ spack:
   - mpileaks
 """
     )
-
-    with open(os.path.join(e.path, "high-config.yaml"), "w") as f:
-        f.write(
-            """\
-packages:
-  libelf:
-    version: ["0.8.10"]  # this should override libelf version below
-"""
-        )
-
-    with open(os.path.join(e.path, "low-config.yaml"), "w") as f:
-        f.write(
-            """\
-packages:
-  mpileaks:
-    version: ["2.2"]
-  libelf:
-    version: ["0.8.12"]
-"""
-        )
 
     with e:
         e.concretize()
