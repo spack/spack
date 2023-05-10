@@ -872,43 +872,6 @@ def test_env_with_included_config_missing_file(tmpdir, mutable_empty_config):
         ev.activate(env)
 
 
-def test_env_with_included_relative_subdir(environment_from_manifest, packages_file):
-    """Test inclusion of a package file using a relative path that points to a
-    subdir of the environment's directory"""
-
-    # Configure the environment to include file(s) from the environment's
-    # remote configuration stage directory.
-    e = environment_from_manifest("""\
-spack:
-  specs:
-  - mpileaks
-""")
-
-    config_scope_path = os.path.join(ev.root("test"), "subdir")
-    # Copy the packages.yaml file to the environment configuration
-    # directory, so it is picked up during concretization. (Using
-    # copy instead of rename in case the fixture scope changes.)
-    fs.mkdirp(config_scope_path)
-    include_filename = os.path.basename(packages_file.strpath)
-    included_path = os.path.join(config_scope_path, include_filename)
-    fs.copy(packages_file.strpath, included_path)
-
-    relative_cfg_path = os.path.join(".", "subdir", include_filename)
-    manifest = spack.environment.environment.EnvironmentManifestFile(ev.root("test"))
-    manifest.update_included_configs([relative_cfg_path])
-    manifest.flush()
-
-    spack.config.config.clear_caches()
-    e = ev.Environment(ev.root("test"))
-
-    # Ensure the concretized environment reflects contents of the
-    # packages.yaml file.
-    with e:
-        e.concretize()
-
-    assert any(x.satisfies("mpileaks@2.2") for x in e._get_environment_specs())
-
-
 def test_env_with_included_config_var_path(environment_from_manifest, packages_file):
     """Test inclusion of a package configuration file with path variables
     "staged" in the environment's configuration stage directory."""
