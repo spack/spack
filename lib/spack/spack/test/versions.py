@@ -8,7 +8,7 @@ We try to maintain compatibility with RPM's version semantics
 where it makes sense.
 """
 import os
-import sys
+import pathlib
 
 import pytest
 
@@ -597,11 +597,10 @@ def test_invalid_versions(version_str):
         Version(version_str)
 
 
-@pytest.mark.skipif(sys.platform == "win32", reason="Not supported on Windows (yet)")
 def test_versions_from_git(git, mock_git_version_info, monkeypatch, mock_packages):
     repo_path, filename, commits = mock_git_version_info
     monkeypatch.setattr(
-        spack.package_base.PackageBase, "git", "file://%s" % repo_path, raising=False
+        spack.package_base.PackageBase, "git", pathlib.Path(repo_path).as_uri(), raising=False
     )
 
     for commit in commits:
@@ -618,7 +617,6 @@ def test_versions_from_git(git, mock_git_version_info, monkeypatch, mock_package
         assert str(comparator) == expected
 
 
-@pytest.mark.skipif(sys.platform == "win32", reason="Not supported on Windows (yet)")
 @pytest.mark.parametrize(
     "commit_idx,expected_satisfies,expected_not_satisfies",
     [
@@ -642,7 +640,7 @@ def test_git_hash_comparisons(
     """Check that hashes compare properly to versions"""
     repo_path, filename, commits = mock_git_version_info
     monkeypatch.setattr(
-        spack.package_base.PackageBase, "git", "file://%s" % repo_path, raising=False
+        spack.package_base.PackageBase, "git", pathlib.Path(repo_path).as_uri(), raising=False
     )
 
     spec = spack.spec.Spec(f"git-test-commit@{commits[commit_idx]}").concretized()
@@ -653,12 +651,11 @@ def test_git_hash_comparisons(
         assert not spec.satisfies(item)
 
 
-@pytest.mark.skipif(sys.platform == "win32", reason="Not supported on Windows (yet)")
 def test_git_ref_comparisons(mock_git_version_info, install_mockery, mock_packages, monkeypatch):
     """Check that hashes compare properly to versions"""
     repo_path, filename, commits = mock_git_version_info
     monkeypatch.setattr(
-        spack.package_base.PackageBase, "git", "file://%s" % repo_path, raising=False
+        spack.package_base.PackageBase, "git", pathlib.Path(repo_path).as_uri(), raising=False
     )
 
     # Spec based on tag v1.0
@@ -807,7 +804,6 @@ def test_version_intersects_satisfies_semantic(lhs_str, rhs_str, expected):
         ),
     ],
 )
-@pytest.mark.skipif(sys.platform == "win32", reason="Not supported on Windows (yet)")
 def test_git_versions_without_explicit_reference(
     spec_str,
     tested_intersects,
@@ -818,7 +814,7 @@ def test_git_versions_without_explicit_reference(
 ):
     repo_path, filename, commits = mock_git_version_info
     monkeypatch.setattr(
-        spack.package_base.PackageBase, "git", "file://%s" % repo_path, raising=False
+        spack.package_base.PackageBase, "git", pathlib.Path(repo_path).as_uri(), raising=False
     )
     spec = spack.spec.Spec(spec_str)
 

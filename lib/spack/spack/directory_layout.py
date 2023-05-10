@@ -10,6 +10,7 @@ import posixpath
 import re
 import shutil
 import sys
+import pathlib
 from contextlib import contextmanager
 
 import llnl.util.filesystem as fs
@@ -334,7 +335,7 @@ class DirectoryLayout:
 
         path = self.relative_path_for_spec(spec)
         assert not path.startswith(self.root)
-        return os.path.join(self.root, path)
+        return str(pathlib.Path(self.root) / pathlib.Path(path))
 
     def remove_install_directory(self, spec, deprecated=False):
         """Removes a prefix and any empty parent directories from the root.
