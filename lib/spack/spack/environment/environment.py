@@ -332,16 +332,17 @@ def create_in_dir(
 
     env = Environment(manifest_dir)
 
-    if not keep_relative and init_file and not (os.path.basename(init_file) == lockfile_name):
+    if not keep_relative and init_file:
         init_file_dir = os.path.abspath(os.path.dirname(init_file))
 
         try:
             with open(init_file) as f:
                 raw, _ = _read_yaml(f)
                 included_config_files = raw['spack'].get('include', [])
-        except Exception as e:
-            raise
-            included_config_files = []
+        except spack.config.ConfigFormatError:
+            # We were not able to parse this as a spack.yaml file (this would
+            # happen if for example we were initializing from a lockfile)
+            return env
 
         for path in included_config_files:
             resolved_path = substitute_path_variables(path)
