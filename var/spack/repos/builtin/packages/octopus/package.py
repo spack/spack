@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -19,7 +19,7 @@ class Octopus(AutotoolsPackage, CudaPackage):
     url = "https://octopus-code.org/down.php?file=6.0/octopus-6.0.tar.gz"
     git = "https://gitlab.com/octopus-code/octopus"
 
-    maintainers = ["fangohr", "RemiLacroix-IDRIS"]
+    maintainers("fangohr", "RemiLacroix-IDRIS")
 
     version("12.1", sha256="e2214e958f1e9631dbe6bf020c39f1fe4d71ab0b6118ea9bd8dc38f6d7a7959a")
     version("12.0", sha256="70beaf08573d394a766f10346a708219b355ad725642126065d12596afbc0dcc")
@@ -55,6 +55,12 @@ class Octopus(AutotoolsPackage, CudaPackage):
     variant("libyaml", default=False, description="Compile with libyaml")
     variant("elpa", default=False, description="Compile with ELPA")
     variant("nlopt", default=False, description="Compile with nlopt")
+    variant(
+        "pnfft",
+        default=False,
+        when="+pfft",
+        description="Compile with PNFFT - Parallel Nonequispaced FFT library",
+    )
     variant("debug", default=False, description="Compile with debug flags")
 
     depends_on("autoconf", type="build", when="@develop")
@@ -98,6 +104,7 @@ class Octopus(AutotoolsPackage, CudaPackage):
     depends_on("pfft", when="+pfft")
     depends_on("likwid", when="+likwid")
     depends_on("libyaml", when="+libyaml")
+    depends_on("pnfft", when="+pnfft")
     depends_on("nlopt", when="+nlopt")
 
     # optional dependencies:
@@ -128,12 +135,7 @@ class Octopus(AutotoolsPackage, CudaPackage):
                 ]
             )
         else:
-            args.extend(
-                [
-                    "CC=%s" % self.compiler.cc,
-                    "FC=%s" % self.compiler.fc,
-                ]
-            )
+            args.extend(["CC=%s" % self.compiler.cc, "FC=%s" % self.compiler.fc])
 
         if "^fftw" in spec:
             args.append("--with-fftw-prefix=%s" % spec["fftw"].prefix)
@@ -164,9 +166,7 @@ class Octopus(AutotoolsPackage, CudaPackage):
             )
         if "+arpack" in spec:
             arpack_libs = spec["arpack-ng"].libs.joined()
-            args.append(
-                "--with-arpack={0}".format(arpack_libs),
-            )
+            args.append("--with-arpack={0}".format(arpack_libs))
             if "+mpi" in spec["arpack-ng"]:
                 args.append("--with-parpack={0}".format(arpack_libs))
 
@@ -185,14 +185,14 @@ class Octopus(AutotoolsPackage, CudaPackage):
             args.append("--with-likwid-prefix=%s" % spec["likwid"].prefix)
 
         if "+pfft" in spec:
-            args.append(
-                "--with-pfft-prefix=%s" % spec["pfft"].prefix,
-            )
+            args.append("--with-pfft-prefix=%s" % spec["pfft"].prefix)
 
         # if '+poke' in spec:
         #     args.extend([
         #         '--with-poke-prefix=%s' % spec['poke'].prefix,
         #     ])
+        if "+pnfft" in spec:
+            args.append("--with-pnfft-prefix=%s" % spec["pnfft"].prefix)
 
         if "+libvdwxc" in spec:
             args.append("--with-libvdwxc-prefix=%s" % spec["libvdwxc"].prefix)
@@ -228,16 +228,33 @@ class Octopus(AutotoolsPackage, CudaPackage):
             # In case of GCC version 10, we will have errors because of
             # argument mismatching. Need to provide a flag to turn this into a
             # warning and build sucessfully
+            # We can disable variable tracking at assignments introduced in GCC10
+            # for debug variant to decrease compile time.
 
-            fcflags = "FCFLAGS=-O2 -ffree-line-length-none"
-            fflags = "FFLAGS=O2 -ffree-line-length-none"
-            if spec.satisfies("%gcc@10:"):
-                gcc10_extra = "-fallow-argument-mismatch -fallow-invalid-boz"
-                args.append(fcflags + " " + gcc10_extra)
-                args.append(fflags + " " + gcc10_extra)
-            else:
-                args.append(fcflags)
-                args.append(fflags)
+            # Set optimization level for all flags
+            opt_level = "-O2"
+            fcflags = f"FCFLAGS={opt_level} -ffree-line-length-none"
+            cxxflags = f"CXXFLAGS={opt_level}"
+            cflags = f"CFLAGS={opt_level}"
+
+            # Add extra flags for gcc 10 or higher
+            gcc10_extra = (
+                "-fallow-argument-mismatch -fallow-invalid-boz"
+                if spec.satisfies("%gcc@10:")
+                else ""
+            )
+            # Add debug flag if needed
+            if spec.satisfies("+debug"):
+                fcflags += " -g"
+                cxxflags += " -g"
+                cflags += " -g"
+                gcc10_extra += (
+                    "-fno-var-tracking-assignments" if spec.satisfies("%gcc@10:") else ""
+                )
+
+            args.append(f"{fcflags} {gcc10_extra}")
+            args.append(f"{cxxflags} {gcc10_extra}")
+            args.append(f"{cflags} {gcc10_extra}")
 
         return args
 

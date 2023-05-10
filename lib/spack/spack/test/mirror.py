@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -104,35 +104,25 @@ def test_url_mirror(mock_archive):
     repos.clear()
 
 
-@pytest.mark.skipif(not which("git"), reason="requires git to be installed")
-def test_git_mirror(mock_git_repository):
+def test_git_mirror(git, mock_git_repository):
     set_up_package("git-test", mock_git_repository, "git")
     check_mirror()
     repos.clear()
 
 
-@pytest.mark.skipif(
-    not which("svn") or not which("svnadmin"), reason="requires subversion to be installed"
-)
 def test_svn_mirror(mock_svn_repository):
     set_up_package("svn-test", mock_svn_repository, "svn")
     check_mirror()
     repos.clear()
 
 
-@pytest.mark.skipif(not which("hg"), reason="requires mercurial to be installed")
 def test_hg_mirror(mock_hg_repository):
     set_up_package("hg-test", mock_hg_repository, "hg")
     check_mirror()
     repos.clear()
 
 
-@pytest.mark.skipif(
-    not all([which("svn"), which("hg"), which("git")]),
-    reason="requires subversion, git, and mercurial to be installed",
-)
 def test_all_mirror(mock_git_repository, mock_svn_repository, mock_hg_repository, mock_archive):
-
     set_up_package("git-test", mock_git_repository, "git")
     set_up_package("svn-test", mock_svn_repository, "svn")
     set_up_package("hg-test", mock_hg_repository, "hg")
@@ -142,13 +132,7 @@ def test_all_mirror(mock_git_repository, mock_svn_repository, mock_hg_repository
 
 
 @pytest.mark.parametrize(
-    "mirror",
-    [
-        spack.mirror.Mirror(
-            "https://example.com/fetch",
-            "https://example.com/push",
-        ),
-    ],
+    "mirror", [spack.mirror.Mirror("https://example.com/fetch", "https://example.com/push")]
 )
 def test_roundtrip_mirror(mirror):
     mirror_yaml = mirror.to_yaml()
@@ -183,11 +167,10 @@ def test_invalid_json_mirror(invalid_json, error_message):
         spack.mirror.MirrorCollection(
             mirrors={
                 "example-mirror": spack.mirror.Mirror(
-                    "https://example.com/fetch",
-                    "https://example.com/push",
-                ).to_dict(),
-            },
-        ),
+                    "https://example.com/fetch", "https://example.com/push"
+                ).to_dict()
+            }
+        )
     ],
 )
 def test_roundtrip_mirror_collection(mirror_collection):

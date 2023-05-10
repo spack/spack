@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -12,7 +12,7 @@ class PyNetaddr(PythonPackage):
     homepage = "https://netaddr.readthedocs.io/en/latest/"
     pypi = "netaddr/netaddr-0.8.0.tar.gz"
 
-    maintainers = ["haampie"]
+    maintainers("haampie")
 
     version("0.8.0", sha256="d6cc57c7a07b1d9d2e917aa8b36ae8ce61c35ba3fcd1b83ca31c5a0ee2b5a243")
 

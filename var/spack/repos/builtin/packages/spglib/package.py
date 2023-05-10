@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -10,12 +10,21 @@ class Spglib(CMakePackage):
     """C library for finding and handling crystal symmetries."""
 
     homepage = "https://atztogo.github.io/spglib/"
-    url = "https://github.com/atztogo/spglib/archive/v1.10.3.tar.gz"
+    url = "https://github.com/spglib/spglib/archive/v2.0.2.tar.gz"
+
+    maintainers("RMeli")
 
     patch("fix_cmake_install.patch", when="@:1.10.3")
     # patch by Krishnendu Ghosh
     patch("fix_cpp.patch", when="@:1.10.3")
 
+    version("2.0.2", sha256="10e44a35099a0a5d0fc6ee0cdb39d472c23cb98b1f5167c0e2b08f6069f3db1e")
+    version("2.0.1", sha256="d7407c0d67174a0c5e41a82ed62948c43fcaf1b5529f97238d7fadd1123ffe22")
+    version("2.0.0", sha256="426c4004e84fdb732d86aa5fcada5257ca8bc7a6915c06ced27565176c16ee96")
+    version("1.16.5", sha256="1bbde03b6b78da756c07f458bd90d84f3c253841b9b0632db5b72c5961e87aef")
+    version("1.16.4", sha256="7a1cdfdb104040e696e887999fd53d83931ba1285aa8fc3c703dcafc38fb1009")
+    version("1.16.3", sha256="1dfe313b460f71de90ee8a01d9f2cd250cd59e16836e1bf64924500dd2aa7dc6")
+    version("1.16.2", sha256="5723789bee7371ebba91d78c729d2a608f198fad5e1c95eebe18fda9f2914ec8")
     version("1.16.1", sha256="e90682239e4ef63b492fa4e44f7dbcde2e2fe2e688579d96b01f2730dfdf5b2e")
     version("1.16.0", sha256="969311a2942fef77ee79ac9faab089b68e256f21713194969197e7f2bdb14772")
     version("1.15.1", sha256="b6dc2c8adcc7d0edee7a076e765c28b2941b2aeba590d213a0b4893c8af0c026")
@@ -37,6 +46,11 @@ class Spglib(CMakePackage):
     version("1.10.1", sha256="8ed979cda82f6d440567197ec191bffcb82ee83c5bfe8a484c5a008dd00273f0")
     version("1.10.0", sha256="117fff308731784bea2ddaf3d076f0ecbf3981b31ea1c1bfd5ce4f057a5325b1")
 
+    variant("openmp", default=True, when="@1.16.2:")
+
     @property
     def libs(self):
         return find_libraries("libsymspg", root=self.prefix, shared=True, recursive=True)
+
+    def cmake_args(self):
+        return [self.define_from_variant("USE_OMP", "openmp")]

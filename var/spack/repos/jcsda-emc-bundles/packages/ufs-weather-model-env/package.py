@@ -12,7 +12,7 @@ class UfsWeatherModelEnv(BundlePackage):
     homepage = "https://github.com/ufs-community/ufs-weather-model"
     git = "https://github.com/ufs-community/ufs-weather-model.git"
 
-    maintainers = ["AlexanderRichert-NOAA", "climbfuji"]
+    maintainers("AlexanderRichert-NOAA", "climbfuji")
 
     version("1.0.0")
 
@@ -33,7 +33,7 @@ class UfsWeatherModelEnv(BundlePackage):
     depends_on("g2tmpl", type="run")
     depends_on("ip", type="run")
     depends_on("sp", type="run")
-    depends_on("w3nco", type="run")
+    depends_on("w3emc", type="run")
 
     depends_on("esmf~debug", type="run", when="~debug")
     depends_on("esmf+debug", type="run", when="+debug")

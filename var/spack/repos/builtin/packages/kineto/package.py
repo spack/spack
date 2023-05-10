@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -26,9 +26,7 @@ class Kineto(CMakePackage):
 
     root_cmakelists_dir = "libkineto"
 
+    generator("ninja")
     depends_on("cmake@3.5:", type="build")
-    depends_on("ninja", type="build")
     depends_on("python", type="build")
     depends_on("cuda")
-
-    generator = "Ninja"

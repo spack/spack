@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -14,7 +14,7 @@ class Nvtop(CMakePackage, CudaPackage):
     homepage = "https://github.com/Syllo/nvtop"
     url = "https://github.com/Syllo/nvtop/archive/refs/tags/3.0.1.zip"
 
-    maintainers = ["marcost2"]
+    maintainers("marcost2")
 
     version("3.0.1", sha256="3cb6df2390e29792ed90de54c9332ec25e9d960abddcbb92d8544d658da2b5b3")
     version("3.0.0", sha256="711f1a1ef51ed3f7b1d61c858c4ac1fabb244595cf7b2403f80efcabe81d889e")

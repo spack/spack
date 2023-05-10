@@ -17,7 +17,7 @@ class Ectrans(CMakePackage):
     git = "https://github.com/ecmwf-ifs/ectrans.git"
     url = "https://github.com/ecmwf-ifs/ectrans/archive/1.1.0.tar.gz"
 
-    maintainers = ['climbfuji']
+    maintainers('climbfuji')
 
     version('develop', branch='develop', no_cache=True)
     version('main', branch='main', no_cache=True)

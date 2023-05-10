@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -7,10 +7,9 @@ import pytest
 import llnl.util.filesystem as fs
 import llnl.util.tty as tty
 
-import spack.reporters.cdash
 import spack.reporters.extract
 import spack.spec
-from spack.util.pattern import Bunch
+from spack.reporters import CDash, CDashConfiguration
 
 # Use a path variable to appease Spack style line length checks
 fake_install_prefix = fs.join_path(
@@ -152,24 +151,24 @@ Results for test suite abcdefghijklmn
 
 
 def test_reporters_report_for_package_no_stdout(tmpdir, monkeypatch, capfd):
-    class MockCDash(spack.reporters.cdash.CDash):
+    class MockCDash(CDash):
         def upload(*args, **kwargs):
             # Just return (Do NOT try to upload the report to the fake site)
             return
 
-    args = Bunch(
-        cdash_upload_url="https://fake-upload",
-        package="fake-package",
-        cdash_build="fake-cdash-build",
-        cdash_site="fake-site",
-        cdash_buildstamp=None,
-        cdash_track="fake-track",
+    configuration = CDashConfiguration(
+        upload_url="https://fake-upload",
+        packages="fake-package",
+        build="fake-cdash-build",
+        site="fake-site",
+        buildstamp=None,
+        track="fake-track",
     )
     monkeypatch.setattr(tty, "_debug", 1)
 
-    reporter = MockCDash(args)
+    reporter = MockCDash(configuration=configuration)
     pkg_data = {"name": "fake-package"}
-    reporter.test_report_for_package(tmpdir.strpath, pkg_data, 0, False)
+    reporter.test_report_for_package(tmpdir.strpath, pkg_data, 0)
     err = capfd.readouterr()[1]
     assert "Skipping report for" in err
     assert "No generated output" in err
