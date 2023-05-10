@@ -20,6 +20,7 @@ class Costa(CMakePackage):
     # note: The default archives produced with github do not have the archives
     #       of the submodules.
     version("master", branch="master", submodules=True)
+    version("2.2.2", sha256="e87bc37aad14ac0c5922237be5d5390145c9ac6aef0350ed17d86cb2d994e67c")
     version("2.2.1", sha256="aa8aa2a4a79de094f857c22293825de270ff72becd6bd736ff9f2dd8c192446d")
     version("2.2", sha256="3e7333f012af76ec3508276ea90800313f6136504667021fe229e710bf6acdc7")
     version("2.1", sha256="c1e86452415083f7470b292d93ec60708b7c8dbafc2bac383636bb4b28135866")
@@ -32,9 +33,11 @@ class Costa(CMakePackage):
     variant("apps", default=False, description="Enable miniapp")
     variant("benchmarks", default=False, description="Enable benchmarks")
 
-    depends_on("cmake@3.12:", type="build")
+    depends_on("cmake@3.22:", type="build")
     depends_on("mpi@3:")
     depends_on("scalapack", when="+scalapack")
+    depends_on("cxxopts", when="+apps")
+    depends_on("semiprof", when="+profiling")
 
     def url_for_version(self, version):
         if version == Version("2.0"):

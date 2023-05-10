@@ -20,7 +20,7 @@ class Cosma(CMakePackage):
     # note: The default archives produced with github do not have the archives
     #       of the submodules.
     version("master", branch="master", submodules=False)
-    version("2.6.6", sha256="e54caf70c154b5d94eeee6f9f7faac51bc21030e0b0b4f1f63d01e885faeade4")
+    version("2.6.6", sha256="1604be101e77192fbcc5551236bc87888d336e402f5409bbdd9dea900401cc37")
     version("2.6.5", sha256="10d9b7ecc1ce44ec5b9e0c0bf89278a63029912ec3ea99661be8576b553ececf")
     version("2.6.4", sha256="6d7bd5e3005874af9542a329c93e7ccd29ca1a5573dae27618fac2704fa2b6ab")
     version("2.6.3", sha256="8ca96ca41458f1e9d0da70d524c5a03c677dba7238d23a578f852163b6d45ac9")
@@ -55,11 +55,15 @@ class Cosma(CMakePackage):
     depends_on("cuda", when="+cuda")
     depends_on("rocblas", when="+rocm")
 
-    with when("@2.6.3"):
-        depends_on("tiled-mm@2.2")
-    with when("@2.6.1:"):
-        depends_on("tiled-mm+rocm", when="+rocm")
-        depends_on("tiled-mm+cuda", when="+cuda")
+    with when("@2.6.3:"):
+        depends_on("tiled-mm@2.2:+cuda", when="+cuda")
+        depends_on("tiled-mm@2.2:+rocm", when="+rocm")
+
+    with when("@2.6.1:@2.6.2"):
+        depends_on("tiled-mm@2.1+rocm", when="+rocm")
+        depends_on("tiled-mm@2.1+cuda", when="+cuda")
+
+    with when("@2.6.1:")
         depends_on("costa")
         depends_on("costa+scalapack", when="+scalapack")
         depends_on("cxxopts", when="+apps")
