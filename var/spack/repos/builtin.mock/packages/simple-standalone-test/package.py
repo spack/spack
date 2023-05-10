@@ -14,6 +14,9 @@ class SimpleStandaloneTest(Package):
 
     version("1.0", md5="0123456789abcdef0123456789abcdef")
 
-    def test(self):
-        msg = "simple stand-alone test"
-        self.run_test("echo", [msg], expected=[msg], purpose="test: running {0}".format(msg))
+    provides("standalone-test")
+
+    def test_echo(self):
+        """simple stand-alone test"""
+        echo = which("echo")
+        echo("testing echo", output=str.split, error=str.split)

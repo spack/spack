@@ -69,7 +69,15 @@ from spack.build_systems.xorg import XorgPackage
 from spack.builder import run_after, run_before
 from spack.dependency import all_deptypes
 from spack.directives import *
-from spack.install_test import get_escaped_text_output
+from spack.install_test import (
+    SkipTest,
+    cache_extra_test_sources,
+    check_outputs,
+    find_required_file,
+    get_escaped_text_output,
+    install_test_root,
+    test_part,
+)
 from spack.installer import (
     ExternalPackageError,
     InstallError,

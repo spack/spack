@@ -14,8 +14,8 @@ class FailTestAudit(MakefilePackage):
     version("1.0", md5="0123456789abcdef0123456789abcdef")
     version("2.0", md5="abcdef0123456789abcdef0123456789")
 
-    build_time_test_callbacks = ["test"]
+    build_time_test_callbacks = ["test_build_callbacks"]
 
-    def test(self):
-        print("test: test-install-callbacks")
-        print("PASSED")
+    def test_build_callbacks(self):
+        """test build time test callbacks"""
+        print("test-build-callbacks")

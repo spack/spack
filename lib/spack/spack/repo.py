@@ -1063,14 +1063,21 @@ class Repo(object):
                 "Repository %s does not contain package %s." % (self.namespace, spec.fullname)
             )
 
-        # Install patch files needed by the package.
+        package_path = self.filename_for_package_name(spec.name)
+        if not os.path.exists(package_path):
+            # Spec has no files (e.g., package, patches) to copy
+            tty.debug(f"{spec.name} does not have a package to dump")
+            return
+
+        # Install patch files needed by the (concrete) package.
         fs.mkdirp(path)
-        for patch in itertools.chain.from_iterable(spec.package.patches.values()):
-            if patch.path:
-                if os.path.exists(patch.path):
-                    fs.install(patch.path, path)
-                else:
-                    tty.warn("Patch file did not exist: %s" % patch.path)
+        if spec.concrete:
+            for patch in itertools.chain.from_iterable(spec.package.patches.values()):
+                if patch.path:
+                    if os.path.exists(patch.path):
+                        fs.install(patch.path, path)
+                    else:
+                        tty.warn("Patch file did not exist: %s" % patch.path)
 
         # Install the package.py file itself.
         fs.install(self.filename_for_package_name(spec.name), path)

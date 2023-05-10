@@ -312,14 +312,6 @@ def test_fetch_options(version_str, digest_end, extra_options):
     assert fetcher.extra_options == extra_options
 
 
-def test_has_test_method_fails(capsys):
-    with pytest.raises(SystemExit):
-        spack.package_base.has_test_method("printing-package")
-
-    captured = capsys.readouterr()[1]
-    assert "is not a class" in captured
-
-
 def test_package_deprecated_version(mock_packages, mock_fetch, mock_stage):
     spec = Spec("deprecated-versions")
     pkg_cls = spack.repo.path.get_pkg_class(spec.name)

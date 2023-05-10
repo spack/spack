@@ -17,5 +17,7 @@ class TestFail(Package):
     def install(self, spec, prefix):
         mkdirp(prefix.bin)
 
-    def test(self):
-        self.run_test("true", expected=["not in the output"])
+    def test_fails(self):
+        """trigger test failure"""
+        unknown = which("unknown-program")
+        unknown()
