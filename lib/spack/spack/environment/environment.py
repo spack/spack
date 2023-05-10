@@ -18,8 +18,6 @@ import urllib.request
 import warnings
 from typing import Any, Dict, List, Optional, Union
 
-import ruamel.yaml as yaml
-
 import llnl.util.filesystem as fs
 import llnl.util.tty as tty
 import llnl.util.tty.color as clr
@@ -51,6 +49,7 @@ import spack.util.path
 import spack.util.spack_json as sjson
 import spack.util.spack_yaml as syaml
 import spack.util.url
+import spack.version
 from spack.filesystem_view import SimpleFilesystemView, inverse_view_func_parser, view_func_parser
 from spack.installer import PackageInstaller
 from spack.spec import Spec
@@ -231,7 +230,7 @@ def deactivate():
     _active_environment = None
 
 
-def active_environment():
+def active_environment() -> Optional["Environment"]:
     """Returns the active environment when there is any"""
     return _active_environment
 
@@ -283,9 +282,12 @@ def create(
     A managed environment is created in a root directory managed by this Spack instance, so that
     Spack can keep track of them.
 
+    Files with suffix ``.json`` or ``.lock`` are considered lockfiles. Files with any other name
+    are considered manifest files.
+
     Args:
         name: name of the managed environment
-        init_file: either a "spack.yaml" or a "spack.lock" file or None
+        init_file: either a lockfile, a manifest file, or None
         with_view: whether a view should be maintained for the environment. If the value is a
             string, it specifies the path to the view
         keep_relative: if True, develop paths are copied verbatim into the new environment file,
@@ -305,9 +307,12 @@ def create_in_dir(
 ) -> "Environment":
     """Create an environment in the directory passed as input and returns it.
 
+    Files with suffix ``.json`` or ``.lock`` are considered lockfiles. Files with any other name
+    are considered manifest files.
+
     Args:
         manifest_dir: directory where to create the environment.
-        init_file: either a "spack.yaml" or a "spack.lock" file or None
+        init_file: either a lockfile, a manifest file, or None
         with_view: whether a view should be maintained for the environment. If the value is a
             string, it specifies the path to the view
         keep_relative: if True, develop paths are copied verbatim into the new environment file,
@@ -357,7 +362,14 @@ def ensure_env_root_path_exists():
 
 def config_dict(yaml_data):
     """Get the configuration scope section out of an spack.yaml"""
+    # TODO (env:): Remove env: as a possible top level keyword in v0.21
     key = spack.config.first_existing(yaml_data, spack.schema.env.keys)
+    if key == "env":
+        msg = (
+            "using 'env:' as a top-level attribute of a Spack environment is deprecated and "
+            "will be removed in Spack v0.21. Please use 'spack:' instead."
+        )
+        warnings.warn(msg)
     return yaml_data[key]
 
 
@@ -519,11 +531,6 @@ class ViewDescriptor:
     def to_dict(self):
         ret = syaml.syaml_dict([("root", self.raw_root)])
         if self.projections:
-            # projections guaranteed to be ordered dict if true-ish
-            # for python2.6, may be syaml or ruamel.yaml implementation
-            # so we have to check for both
-            types = (collections.OrderedDict, syaml.syaml_dict, yaml.comments.CommentedMap)
-            assert isinstance(self.projections, types)
             ret["projections"] = self.projections
         if self.select:
             ret["select"] = self.select
@@ -768,7 +775,7 @@ class Environment:
         self.views: Dict[str, ViewDescriptor] = {}
 
         #: Specs from "spack.yaml"
-        self.spec_lists = {user_speclist_name: SpecList()}
+        self.spec_lists: Dict[str, SpecList] = {user_speclist_name: SpecList()}
         #: Dev-build specs from "spack.yaml"
         self.dev_specs: Dict[str, Any] = {}
         #: User specs from the last concretization
@@ -857,7 +864,7 @@ class Environment:
         self.dev_specs = copy.deepcopy(configuration.get("develop", {}))
         for name, entry in self.dev_specs.items():
             # spec must include a concrete version
-            assert Spec(entry["spec"]).version.concrete
+            assert Spec(entry["spec"]).versions.concrete_range_as_version
             # default path is the spec name
             if "path" not in entry:
                 self.dev_specs[name]["path"] = name
@@ -1133,21 +1140,21 @@ class Environment:
 
     def change_existing_spec(
         self,
-        change_spec,
-        list_name=user_speclist_name,
-        match_spec=None,
+        change_spec: Spec,
+        list_name: str = user_speclist_name,
+        match_spec: Optional[Spec] = None,
         allow_changing_multiple_specs=False,
     ):
         """
         Find the spec identified by `match_spec` and change it to `change_spec`.
 
         Arguments:
-            change_spec (spack.spec.Spec): defines the spec properties that
+            change_spec: defines the spec properties that
                 need to be changed. This will not change attributes of the
                 matched spec unless they conflict with `change_spec`.
-            list_name (str): identifies the spec list in the environment that
+            list_name: identifies the spec list in the environment that
                 should be modified
-            match_spec (spack.spec.Spec): if set, this identifies the spec
+            match_spec: if set, this identifies the spec
                 that should be changed. If not set, it is assumed we are
                 looking for a spec with the same name as `change_spec`.
         """
@@ -1246,15 +1253,15 @@ class Environment:
                 del self.concretized_order[i]
                 del self.specs_by_hash[dag_hash]
 
-    def develop(self, spec, path, clone=False):
+    def develop(self, spec: Spec, path: str, clone: bool = False) -> bool:
         """Add dev-build info for package
 
         Args:
-            spec (spack.spec.Spec): Set constraints on development specs. Must include a
+            spec: Set constraints on development specs. Must include a
                 concrete version.
-            path (str): Path to find code for developer builds. Relative
+            path: Path to find code for developer builds. Relative
                 paths will be resolved relative to the environment.
-            clone (bool): Clone the package code to the path.
+            clone: Clone the package code to the path.
                 If clone is False Spack will assume the code is already present
                 at ``path``.
 
@@ -2496,7 +2503,8 @@ def initialize_environment_dir(
 ) -> None:
     """Initialize an environment directory starting from an envfile.
 
-    The envfile can be either a "spack.yaml" manifest file, or a "spack.lock" file.
+    Files with suffix .json or .lock are considered lockfiles. Files with any other name
+    are considered manifest files.
 
     Args:
         environment_dir: directory where the environment should be placed
@@ -2533,21 +2541,18 @@ def initialize_environment_dir(
         msg = f"cannot initialize environment, {envfile} is not a valid file"
         raise SpackEnvironmentError(msg)
 
-    if not str(envfile).endswith(manifest_name) and not str(envfile).endswith(lockfile_name):
-        msg = (
-            f"cannot initialize environment from '{envfile}', either a '{manifest_name}'"
-            f" or a '{lockfile_name}' file is needed"
-        )
-        raise SpackEnvironmentError(msg)
-
     _ensure_env_dir()
 
     # When we have a lockfile we should copy that and produce a consistent default manifest
-    if str(envfile).endswith(lockfile_name):
+    if str(envfile).endswith(".lock") or str(envfile).endswith(".json"):
         shutil.copy(envfile, target_lockfile)
         # This constructor writes a spack.yaml which is consistent with the root
         # specs in the spack.lock
-        EnvironmentManifestFile.from_lockfile(environment_dir)
+        try:
+            EnvironmentManifestFile.from_lockfile(environment_dir)
+        except Exception as e:
+            msg = f"cannot initialize environment, '{environment_dir}' from lockfile"
+            raise SpackEnvironmentError(msg) from e
         return
 
     shutil.copy(envfile, target_manifest)
@@ -2606,8 +2611,8 @@ class EnvironmentManifestFile(collections.abc.Mapping):
         Args:
             user_spec: user spec to be appended
         """
-        config_dict(self.pristine_yaml_content)["specs"].append(user_spec)
-        config_dict(self.yaml_content)["specs"].append(user_spec)
+        config_dict(self.pristine_yaml_content).setdefault("specs", []).append(user_spec)
+        config_dict(self.yaml_content).setdefault("specs", []).append(user_spec)
         self.changed = True
 
     def remove_user_spec(self, user_spec: str) -> None:
