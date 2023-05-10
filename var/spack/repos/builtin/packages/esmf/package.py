@@ -29,6 +29,7 @@ class Esmf(MakefilePackage):
     # Develop is a special name for spack and is always considered the newest version
     version("develop", branch="develop")
     # generate chksum with spack checksum esmf@x.y.z
+    version("8.4.2", sha256="969304efa518c7859567fa6e65efd960df2b4f6d72dbf2c3f29e39e4ab5ae594")
     version("8.4.1", sha256="1b54cee91aacaa9df400bd284614cbb0257e175f6f3ec9977a2d991ed8aa1af6")
     version(
         "8.4.0",
@@ -88,34 +89,12 @@ class Esmf(MakefilePackage):
     depends_on("netcdf-fortran@3.6:", when="+netcdf")
     depends_on("parallel-netcdf@1.2.0:", when="+pnetcdf")
     depends_on("xerces-c@3.1.0:", when="+xerces")
-    depends_on(
-        "parallelio@2.5.7: +mpi+pnetcdf", when="@8.3.0:8.3.99+external-parallelio+mpi+pnetcdf"
-    )
-    depends_on(
-        "parallelio@2.5.7: +mpi~pnetcdf", when="@8.3.0:8.3.99+external-parallelio+mpi~pnetcdf"
-    )
-    depends_on(
-        "parallelio@2.5.7: ~mpi+pnetcdf", when="@8.3.0:8.3.99+external-parallelio~mpi+pnetcdf"
-    )
-    depends_on(
-        "parallelio@2.5.7: ~mpi~pnetcdf", when="@8.3.0:8.3.99+external-parallelio~mpi~pnetcdf"
-    )
-    depends_on(
-        "parallelio@2.5.9: +mpi+pnetcdf", when="@8.4.0:8.4.99+external-parallelio+mpi+pnetcdf"
-    )
-    depends_on(
-        "parallelio@2.5.9: +mpi~pnetcdf", when="@8.4.0:8.4.99+external-parallelio+mpi~pnetcdf"
-    )
-    depends_on(
-        "parallelio@2.5.9: ~mpi+pnetcdf", when="@8.4.0:8.4.99+external-parallelio~mpi+pnetcdf"
-    )
-    depends_on(
-        "parallelio@2.5.9: ~mpi~pnetcdf", when="@8.4.0:8.4.99+external-parallelio~mpi~pnetcdf"
-    )
-    depends_on("parallelio@2.5.10: +mpi+pnetcdf", when="@8.5.0:+external-parallelio+mpi+pnetcdf")
-    depends_on("parallelio@2.5.10: +mpi~pnetcdf", when="@8.5.0:+external-parallelio+mpi~pnetcdf")
-    depends_on("parallelio@2.5.10: ~mpi+pnetcdf", when="@8.5.0:+external-parallelio~mpi+pnetcdf")
-    depends_on("parallelio@2.5.10: ~mpi~pnetcdf", when="@8.5.0:+external-parallelio~mpi~pnetcdf")
+    depends_on("parallelio@2.5.7: +mpi", when="@8.3.0:8.3.99+external-parallelio+mpi")
+    depends_on("parallelio@2.5.7: ~mpi", when="@8.3.0:8.3.99+external-parallelio~mpi")
+    depends_on("parallelio@2.5.9: +mpi", when="@8.4.0:8.4.99+external-parallelio+mpi")
+    depends_on("parallelio@2.5.9: ~mpi", when="@8.4.0:8.4.99+external-parallelio~mpi")
+    depends_on("parallelio@2.5.10: +mpi", when="@8.5.0:+external-parallelio+mpi")
+    depends_on("parallelio@2.5.10: ~mpi", when="@8.5.0:+external-parallelio~mpi")
 
     # Testing dependencies
     depends_on("perl", type="test")

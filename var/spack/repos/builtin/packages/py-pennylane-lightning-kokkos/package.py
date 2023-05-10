@@ -54,12 +54,6 @@ class PyPennylaneLightningKokkos(CMakePackage, PythonExtension, CudaPackage, ROC
 
     # build options
     extends("python")
-    variant(
-        "build_type",
-        default="Release",
-        description="CMake build type",
-        values=("Debug", "Release", "RelWithDebInfo", "MinSizeRel"),
-    )
     variant("cpptests", default=False, description="Build CPP tests")
     variant("native", default=False, description="Build natively for given hardware")
     variant("sanitize", default=False, description="Build with address sanitization")

@@ -17,12 +17,15 @@ import llnl.util.tty as tty
 
 import spack.binary_distribution
 import spack.compilers
+import spack.concretize
+import spack.config
 import spack.installer as inst
 import spack.package_prefs as prefs
 import spack.repo
 import spack.spec
 import spack.store
 import spack.util.lock as lk
+import spack.version
 
 
 def _mock_repo(root, namespace):
@@ -528,10 +531,12 @@ def test_bootstrapping_compilers_with_different_names_from_spec(
 ):
     with spack.config.override("config:install_missing_compilers", True):
         with spack.concretize.disable_compiler_existence_check():
-            spec = spack.spec.Spec("trivial-install-test-package%oneapi@22.2.0").concretized()
+            spec = spack.spec.Spec("trivial-install-test-package%oneapi@=22.2.0").concretized()
             spec.package.do_install()
 
-            assert spack.spec.CompilerSpec("oneapi@22.2.0") in spack.compilers.all_compiler_specs()
+            assert (
+                spack.spec.CompilerSpec("oneapi@=22.2.0") in spack.compilers.all_compiler_specs()
+            )
 
 
 def test_dump_packages_deps_ok(install_mockery, tmpdir, mock_packages):
@@ -1379,3 +1384,32 @@ def test_single_external_implicit_install(install_mockery, explicit_args, is_exp
     s.external_path = "/usr"
     create_installer([(s, explicit_args)]).install()
     assert spack.store.db.get_record(pkg).explicit == is_explicit
+
+
+@pytest.mark.parametrize("run_tests", [True, False])
+def test_print_install_test_log_skipped(install_mockery, mock_packages, capfd, run_tests):
+    """Confirm printing of install log skipped if not run/no failures."""
+    name = "trivial-install-test-package"
+    s = spack.spec.Spec(name).concretized()
+    pkg = s.package
+
+    pkg.run_tests = run_tests
+    spack.installer.print_install_test_log(pkg)
+    out = capfd.readouterr()[0]
+    assert out == ""
+
+
+def test_print_install_test_log_missing(
+    tmpdir, install_mockery, mock_packages, ensure_debug, capfd
+):
+    """Confirm expected error on attempt to print missing test log file."""
+    name = "trivial-install-test-package"
+    s = spack.spec.Spec(name).concretized()
+    pkg = s.package
+
+    pkg.run_tests = True
+    pkg.tester.test_log_file = str(tmpdir.join("test-log.txt"))
+    pkg.tester.add_failure(AssertionError("test"), "test-failure")
+    spack.installer.print_install_test_log(pkg)
+    err = capfd.readouterr()[1]
+    assert "no test log file" in err

@@ -37,6 +37,15 @@ def mock_spec():
     shutil.rmtree(s.package.stage.path)
 
 
+def test_location_first(install_mockery, mock_fetch, mock_archive, mock_packages):
+    """Test with and without the --first option"""
+    install = SpackCommand("install")
+    install("libelf@0.8.12")
+    install("libelf@0.8.13")
+    # This would normally return an error without --first
+    assert location("--first", "--install-dir", "libelf")
+
+
 def test_location_build_dir(mock_spec):
     """Tests spack location --build-dir."""
     spec, pkg = mock_spec
