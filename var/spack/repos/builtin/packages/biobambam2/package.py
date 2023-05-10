@@ -30,18 +30,11 @@ class Biobambam2(AutotoolsPackage):
         args = ["--with-libmaus2={0}".format(self.spec["libmaus2"].prefix)]
         return args
 
-    def _fix_shortsort(self):
-        """Fix the testshortsort.sh file copied during installation."""
-        test_dir = join_path(self.install_test_root, self.test_src_dir)
-        filter_file("../src/", "", join_path(test_dir, "testshortsort.sh"))
-
     @run_after("install")
     def cache_test_sources(self):
         """Copy the test source files after the package is installed to an
-        install test subdirectory for use during `spack test run` AND fix
-        the script path in the cached copy."""
+        install test subdirectory for use during `spack test run`."""
         self.cache_extra_test_sources(self.test_src_dir)
-        self._fix_shortsort()
 
     def test_short_sort(self):
         """run testshortsort.sh to check alignments sorted by coordinate"""
