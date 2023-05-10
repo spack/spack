@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -16,7 +16,7 @@ class Scorpio(CMakePackage):
     homepage = "https://gitlab.com/truchas/tpl-forks/scorpio"
     git = "https://gitlab.com/truchas/tpl-forks/scorpio.git"
 
-    maintainers = ["pbrady"]
+    maintainers("pbrady")
 
     version("develop", branch="truchas")
 

@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -77,6 +77,14 @@ class PyRay(PythonPackage):
         depends_on("py-pickle5", when="^python@:3.8.1", type=("build", "run"))
 
     build_directory = "python"
+
+    def patch(self):
+        filter_file(
+            'bazel_flags = ["--verbose_failures"]',
+            f'bazel_flags = ["--verbose_failures", "--jobs={make_jobs}"]',
+            join_path("python", "setup.py"),
+            string=True,
+        )
 
     def setup_build_environment(self, env):
         env.set("SKIP_THIRDPARTY_INSTALL", "1")

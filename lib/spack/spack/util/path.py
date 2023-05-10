@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -21,8 +21,6 @@ import llnl.util.tty as tty
 from llnl.util.lang import memoized
 
 import spack.util.spack_yaml as syaml
-
-is_windows = sys.platform == "win32"
 
 __all__ = ["substitute_config_variables", "substitute_path_variables", "canonicalize_path"]
 
@@ -51,26 +49,32 @@ def get_user():
         return getpass.getuser()
 
 
+# return value for replacements with no match
+NOMATCH = object()
+
+
 # Substitutions to perform
 def replacements():
-    # break circular import from spack.util.executable
+    # break circular imports
+    import spack.environment as ev
     import spack.paths
 
     arch = architecture()
 
     return {
-        "spack": spack.paths.prefix,
-        "user": get_user(),
-        "tempdir": tempfile.gettempdir(),
-        "user_cache_path": spack.paths.user_cache_path,
-        "architecture": str(arch),
-        "arch": str(arch),
-        "platform": str(arch.platform),
-        "operating_system": str(arch.os),
-        "os": str(arch.os),
-        "target": str(arch.target),
-        "target_family": str(arch.target.microarchitecture.family),
-        "date": date.today().strftime("%Y-%m-%d"),
+        "spack": lambda: spack.paths.prefix,
+        "user": lambda: get_user(),
+        "tempdir": lambda: tempfile.gettempdir(),
+        "user_cache_path": lambda: spack.paths.user_cache_path,
+        "architecture": lambda: arch,
+        "arch": lambda: arch,
+        "platform": lambda: arch.platform,
+        "operating_system": lambda: arch.os,
+        "os": lambda: arch.os,
+        "target": lambda: arch.target,
+        "target_family": lambda: arch.target.microarchitecture.family,
+        "date": lambda: date.today().strftime("%Y-%m-%d"),
+        "env": lambda: ev.active_environment().path if ev.active_environment() else NOMATCH,
     }
 
 
@@ -147,7 +151,7 @@ def sanitize_file_path(pth):
     # instances of illegal characters on join
     pth_cmpnts = pth.split(os.path.sep)
 
-    if is_windows:
+    if sys.platform == "win32":
         drive_match = r"[a-zA-Z]:"
         is_abs = bool(re.match(drive_match, pth_cmpnts[0]))
         drive = pth_cmpnts[0] + os.path.sep if is_abs else ""
@@ -204,7 +208,7 @@ def system_path_filter(_func=None, arg_slice=None):
 def get_system_path_max():
     # Choose a conservative default
     sys_max_path_length = 256
-    if is_windows:
+    if sys.platform == "win32":
         sys_max_path_length = 260
     else:
         try:
@@ -232,7 +236,7 @@ class Path:
 
     unix = 0
     windows = 1
-    platform_path = windows if is_windows else unix
+    platform_path = windows if sys.platform == "win32" else unix
 
 
 def format_os_path(path, mode=Path.unix):
@@ -293,20 +297,14 @@ def substitute_config_variables(path):
     replaced if there is an active environment, and should only be used in
     environment yaml files.
     """
-    import spack.environment as ev  # break circular
-
     _replacements = replacements()
-    env = ev.active_environment()
-    if env:
-        _replacements.update({"env": env.path})
-    else:
-        # If a previous invocation added env, remove it
-        _replacements.pop("env", None)
 
     # Look up replacements
     def repl(match):
-        m = match.group(0).strip("${}")
-        return _replacements.get(m.lower(), match.group(0))
+        m = match.group(0)
+        key = m.strip("${}").lower()
+        repl = _replacements.get(key, lambda: m)()
+        return m if repl is NOMATCH else str(repl)
 
     # Replace $var or ${var}.
     return re.sub(r"(\$\w+\b|\$\{\w+\})", repl, path)
@@ -487,7 +485,7 @@ def debug_padded_filter(string, level=1):
     Returns (str): filtered string if current debug level does not exceed
         level and not windows; otherwise, unfiltered string
     """
-    if is_windows:
+    if sys.platform == "win32":
         return string
 
     return padding_filter(string) if tty.debug_level() <= level else string

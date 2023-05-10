@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -17,7 +17,7 @@ class Simsipm(CMakePackage):
 
     tags = ["hep"]
 
-    maintainers = ["vvolkl"]
+    maintainers("vvolkl")
 
     version("1.2.4", sha256="1c633bebb19c490b5e6dfa5ada4a6bc7ec36348237c2626d57843a25af923211")
 

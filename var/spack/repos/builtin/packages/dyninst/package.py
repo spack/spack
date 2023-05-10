@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -15,11 +15,12 @@ class Dyninst(CMakePackage):
     homepage = "https://dyninst.org"
     url = "https://github.com/dyninst/dyninst/archive/refs/tags/v12.2.0.tar.gz"
     git = "https://github.com/dyninst/dyninst.git"
-    maintainers = ["hainest"]
+    maintainers("hainest")
 
     tags = ["e4s"]
 
     version("master", branch="master")
+    version("12.3.0", sha256="956b0378d2badb765a7e677c0b66c0b8b8cacca7631222bfe7a27b369abf7dd4")
     version("12.2.1", sha256="c304af3c6191e92acd27350fd9b7b02899767a0e38abb3a08a378abe01d1ef01")
     version("12.2.0", sha256="84c37efc1b220110af03f8fbb6ab295628b445c873b5115db91b64443e445a5d")
     version("12.1.0", sha256="c71c0caed12b0b65bbbd09896d0b25dde3b9062b5b2eb8426c86baa50e7af2fb")

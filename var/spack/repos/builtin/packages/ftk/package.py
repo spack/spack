@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -17,7 +17,7 @@ class Ftk(CMakePackage):
 
     # Add a list of GitHub accounts to
     # notify when the package is updated.
-    maintainers = ["hguo"]
+    maintainers("hguo")
 
     version("master", branch="master")
     version("dev", branch="dev")

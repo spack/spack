@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -14,7 +14,7 @@ class XsdkExamples(CMakePackage, CudaPackage):
     url = "https://github.com/xsdk-project/xsdk-examples/archive/v0.1.0.tar.gz"
     git = "https://github.com/xsdk-project/xsdk-examples"
 
-    maintainers = ["balay", "luszczek", "balos1", "shuds13", "v-dobrev"]
+    maintainers("balay", "luszczek", "balos1", "shuds13", "v-dobrev")
 
     version("develop", branch="master")
     version("0.3.0", sha256="e7444a403c0a69eeeb34a4068be4d6f4e5b54cbfd275629019b9236a538a739e")

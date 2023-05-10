@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -18,6 +18,7 @@ def main(argv=None):
 
     # Add external libs
     spack_external_libs = os.path.join(spack_lib_path, "external")
+    sys.path.insert(0, os.path.join(spack_external_libs, "_vendoring"))
     sys.path.insert(0, spack_external_libs)
     # Here we delete ruamel.yaml in case it has been already imported from site
     # (see #9206 for a broader description of the issue).

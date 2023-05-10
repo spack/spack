@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -15,7 +15,7 @@ class Libassuan(AutotoolsPackage):
     homepage = "https://gnupg.org/software/libassuan/index.html"
     url = "https://gnupg.org/ftp/gcrypt/libassuan/libassuan-2.4.5.tar.bz2"
 
-    maintainers = ["alalazo"]
+    maintainers("alalazo")
 
     version("2.5.5", sha256="8e8c2fcc982f9ca67dcbb1d95e2dc746b1739a4668bc20b3a3c5be632edb34e4")
     version("2.5.4", sha256="c080ee96b3bd519edd696cfcebdecf19a3952189178db9887be713ccbcb5fbf0")

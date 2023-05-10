@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -21,7 +21,7 @@ class PyCharm4py(PythonPackage):
 
     # Add a list of GitHub accounts to
     # notify when the package is updated.
-    maintainers = ["payerle"]
+    maintainers("payerle")
 
     version("1.0", sha256="8ddb9f021b7379fde94b28c31f4ab6a60ced2c2a207a2d75ce57cb91b6be92bc")
 

@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -38,7 +38,7 @@ class Upcxx(Package, CudaPackage, ROCmPackage):
     Access (RMA) and Remote Procedure Call (RPC)."""
 
     homepage = "https://upcxx.lbl.gov"
-    maintainers = ["bonachea"]
+    maintainers("bonachea")
     url = "https://bitbucket.org/berkeleylab/upcxx/downloads/upcxx-2021.3.0.tar.gz"
     git = "https://bitbucket.org/berkeleylab/upcxx.git"
 

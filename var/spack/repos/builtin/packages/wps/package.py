@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -14,8 +14,9 @@ class Wps(Package):
 
     homepage = "https://www.mmm.ucar.edu/weather-research-and-forecasting-model"
     url = "https://github.com/wrf-model/WPS/archive/v4.2.tar.gz"
-    maintainers = ["MichaelLaufer"]
+    maintainers("MichaelLaufer")
 
+    version("4.4", sha256="fe9c8d8a9a4abbf800b30e6cbb378604c6040e4536f5594b8e2dae43e942e2b3")
     version("4.3.1", sha256="db6da44a2ca68cc289e98ab388a53c27283eb4ed8e92edee268466543fdedb0e")
     version("4.3", sha256="1913cb24de549f029d65635feea27f3304a8f42ec025954a0887651fc89d1e9e")
     version("4.2", sha256="3e175d033355d3e7638be75bc7c0bc0de6da299ebd175a9bbc1b7a121acd0168")
@@ -30,10 +31,11 @@ class Wps(Package):
     # These patches deal with netcdf & netcdf-fortran being two diff things
     patch("patches/4.2/arch.Config.pl.patch", when="@4.2:")
     patch("patches/4.2/arch.configure.defaults.patch", when="@4.2")
-    patch("patches/4.2/configure.patch", when="@4.2:")
+    patch("patches/4.2/configure.patch", when="@4.2:4.3.1")
     patch("patches/4.2/preamble.patch", when="@4.2:")
     patch("patches/4.3/arch.configure.defaults.patch", when="@4.3:4.3.0")
     patch("patches/4.3.1/arch.configure.defaults.patch", when="@4.3.1")
+    patch("patches/4.4/configure.patch", when="@4.4:")
 
     # According to:
     # http://www2.mmm.ucar.edu/wrf/users/docs/user_guide_v4/v4.0/users_guide_chap2.html#_Required_Compilers_and_1

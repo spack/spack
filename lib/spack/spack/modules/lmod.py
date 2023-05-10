@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -80,7 +80,7 @@ def guess_core_compilers(name, store=False):
             # A compiler is considered to be a core compiler if any of the
             # C, C++ or Fortran compilers reside in a system directory
             is_system_compiler = any(
-                os.path.dirname(x) in spack.util.environment.system_dirs
+                os.path.dirname(x) in spack.util.environment.SYSTEM_DIRS
                 for x in compiler["paths"].values()
                 if x is not None
             )
@@ -189,7 +189,7 @@ class LmodConfiguration(BaseConfiguration):
 
         # If it is in the list of supported compilers family -> compiler
         if self.spec.name in spack.compilers.supported_compilers():
-            provides["compiler"] = spack.spec.CompilerSpec(str(self.spec))
+            provides["compiler"] = spack.spec.CompilerSpec(self.spec.format("{name}{@version}"))
         elif self.spec.name in spack.compilers.package_name_to_compiler_name:
             # If it is the package for a supported compiler, but of a different name
             cname = spack.compilers.package_name_to_compiler_name[self.spec.name]

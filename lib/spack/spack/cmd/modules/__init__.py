@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -180,10 +180,7 @@ def loads(module_type, specs, args, out=None):
         for spec in specs
     )
 
-    module_commands = {
-        "tcl": "module load ",
-        "lmod": "module load ",
-    }
+    module_commands = {"tcl": "module load ", "lmod": "module load "}
 
     d = {"command": "" if not args.shell else module_commands[module_type], "prefix": args.prefix}
 
@@ -368,18 +365,14 @@ callbacks = {"refresh": refresh, "rm": rm, "find": find, "loads": loads}
 
 
 def modules_cmd(parser, args, module_type, callbacks=callbacks):
-
     # Qualifiers to be used when querying the db for specs
-    constraint_qualifiers = {
-        "refresh": {"installed": True, "known": True},
-    }
+    constraint_qualifiers = {"refresh": {"installed": True, "known": True}}
     query_args = constraint_qualifiers.get(args.subparser_name, {})
 
     # Get the specs that match the query from the DB
     specs = args.specs(**query_args)
 
     try:
-
         callbacks[args.subparser_name](module_type, specs, args)
 
     except MultipleSpecsMatch:

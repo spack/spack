@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -18,10 +18,7 @@ from spack.schema.cray_manifest import schema as manifest_schema
 #: packages here.
 default_path = "/opt/cray/pe/cpe-descriptive-manifest/"
 
-compiler_name_translation = {
-    "nvidia": "nvhpc",
-    "rocm": "rocmcc",
-}
+compiler_name_translation = {"nvidia": "nvhpc", "rocm": "rocmcc"}
 
 
 def translated_compiler_name(manifest_compiler_name):
@@ -162,7 +159,7 @@ def entries_to_specs(entries):
                     continue
                 parent_spec = spec_dict[entry["hash"]]
                 dep_spec = spec_dict[dep_hash]
-                parent_spec._add_dependency(dep_spec, deptypes)
+                parent_spec._add_dependency(dep_spec, deptypes=deptypes)
 
     return spec_dict
 
