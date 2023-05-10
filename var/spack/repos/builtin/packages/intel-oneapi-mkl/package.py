@@ -97,6 +97,13 @@ class IntelOneapiMkl(IntelOneApiLibraryPackage):
     variant(
         "cluster", default=False, description="Build with cluster support: scalapack, blacs, etc"
     )
+    variant(
+        "threads",
+        default="none",
+        description="Multithreading support",
+        values=("openmp", "tbb", "none"),
+        multi=False,
+    )
 
     depends_on("intel-oneapi-tbb")
     # cluster libraries need mpi
@@ -155,7 +162,16 @@ class IntelOneapiMkl(IntelOneApiLibraryPackage):
         if "+cluster" in self.spec:
             libs.extend([self._xlp64_lib("libmkl_scalapack"), "libmkl_cdft_core"])
 
-        libs.extend([self._xlp64_lib("libmkl_intel"), "libmkl_sequential", "libmkl_core"])
+        libs.append(self._xlp64_lib("libmkl_intel"))
+
+        if "threads=tbb" in self.spec:
+            libs.append("libmkl_tbb_thread")
+        elif "threads=openmp" in self.spec:
+            libs.append("libmkl_intel_thread")
+        else:
+            libs.append("libmkl_sequential")
+
+        libs.append("libmkl_core")
 
         if "+cluster" in self.spec:
             libs.append(self._xlp64_lib("libmkl_blacs_intelmpi"))
