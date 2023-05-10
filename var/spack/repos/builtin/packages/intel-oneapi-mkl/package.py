@@ -170,3 +170,8 @@ class IntelOneapiMkl(IntelOneApiLibraryPackage):
 
     def _xlp64_lib(self, lib):
         return lib + ("_ilp64" if "+ilp64" in self.spec else "_lp64")
+
+    @run_after("install")
+    def fixup_prefix(self):
+        self.symlink_dir(self.component_prefix.include, self.prefix.include)
+        self.symlink_dir(self.component_prefix.lib, self.prefix.lib)
