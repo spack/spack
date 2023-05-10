@@ -343,7 +343,7 @@ def create_in_dir(
             # we just grab it directly
             with open(init_file) as f:
                 raw, _ = _read_yaml(f)
-                included_config_files = raw['spack'].get('include', [])
+                included_config_files = raw["spack"].get("include", [])
         except spack.config.ConfigFormatError:
             # We were not able to parse this as a spack.yaml file (this would
             # happen if for example we were initializing from a lockfile)
