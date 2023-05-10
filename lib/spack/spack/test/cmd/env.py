@@ -880,12 +880,12 @@ def test_env_with_included_config_var_path(environment_from_manifest, packages_f
     """Test inclusion of a package configuration file with path variables
     "staged" in the environment's configuration stage directory."""
     config_var_path = os.path.join("$tempdir", "included-config.yaml")
-    e = environment_from_manifest(mpileaks_env_config(config_var_path))
-
     config_real_path = substitute_path_variables(config_var_path)
     fs.mkdirp(os.path.dirname(config_real_path))
     shutil.move(packages_file.strpath, config_real_path)
     assert os.path.exists(config_real_path)
+
+    e = environment_from_manifest(mpileaks_env_config(config_var_path))
 
     with e:
         e.concretize()
