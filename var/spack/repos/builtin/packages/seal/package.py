@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -16,7 +16,7 @@ class Seal(CMakePackage):
     homepage = "https://github.com/microsoft/SEAL"
     url = "https://github.com/microsoft/SEAL/archive/refs/tags/v3.7.1.tar.gz"
 
-    maintainers = ["wohlbier"]
+    maintainers("wohlbier")
 
     version("3.7.1", sha256="6737177bfb582cc1a2863ef1e96cc6c39b119257e7192981a3190eb79e0fcfd3")
     version("3.7.0", sha256="06ea835d6c9cdbbc4edb72a8db4bd4b1115995f075774043b9f31938d0624543")

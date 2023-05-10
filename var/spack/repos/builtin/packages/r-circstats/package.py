@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -14,7 +14,7 @@ class RCircstats(RPackage):
 
     cran = "CircStats"
 
-    maintainers = ["dorton21"]
+    maintainers("dorton21")
 
     version("0.2-6", sha256="8efed93b75b314577341effea214e3dd6e0a515cfe1212eb051047a1f3276f1d")
 

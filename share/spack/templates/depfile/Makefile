@@ -1,6 +1,9 @@
 SPACK ?= spack
 SPACK_INSTALL_FLAGS ?=
 
+# This variable can be used to add post install hooks
+{{ pkg_ids_variable }} := {{ pkg_ids }}
+
 .PHONY: {{ all_target }} {{ clean_target }}
 
 {{ all_target }}: {{ env_target }}
@@ -16,11 +19,11 @@ SPACK_INSTALL_FLAGS ?=
 {% endif %}
 
 # The spack install commands are of the form:
-# spack -e my_env --no-add --only=package --only=concrete /hash
+# spack -e my_env --only=package --only=concrete /hash
 # This is an involved way of expressing that Spack should only install
 # an individual concrete spec from the environment without deps.
 {{ install_target }}/%: | {{ dirs_target }}
-	{{ jobserver_support }}$(SPACK) -e '{{ environment }}' install $(SPACK_BUILDCACHE_FLAG) $(SPACK_INSTALL_FLAGS) --only-concrete --only=package --no-add /$(HASH) # $(SPEC)
+	{{ jobserver_support }}$(SPACK) -e '{{ environment }}' install $(SPACK_BUILDCACHE_FLAG) $(SPACK_INSTALL_FLAGS) --only-concrete --only=package /$(HASH) # $(SPEC)
 	@touch $@
 
 {{ install_deps_target }}/%: | {{ dirs_target }}

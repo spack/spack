@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -7,7 +7,7 @@
 from spack.package import *
 
 
-class PyDgl(CMakePackage):
+class PyDgl(CMakePackage, PythonExtension):
     """Deep Graph Library (DGL).
 
     DGL is an easy-to-use, high performance and scalable Python package for
@@ -19,7 +19,7 @@ class PyDgl(CMakePackage):
     homepage = "https://www.dgl.ai/"
     git = "https://github.com/dmlc/dgl.git"
 
-    maintainers = ["adamjstewart"]
+    maintainers("adamjstewart")
 
     version("master", branch="master", submodules=True)
     version("0.4.3", tag="0.4.3", submodules=True)
@@ -138,10 +138,3 @@ class PyDgl(CMakePackage):
             )
 
         return modules
-
-    @run_after("install")
-    @on_package_attributes(run_tests=True)
-    def import_module_test(self):
-        with working_dir("spack-test", create=True):
-            for module in self.import_modules:
-                python("-c", "import {0}".format(module))

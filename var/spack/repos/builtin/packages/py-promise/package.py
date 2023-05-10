@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -15,7 +15,7 @@ class PyPromise(PythonPackage):
     homepage = "https://github.com/syrusakbary/promise"
     pypi = "promise/promise-2.3.tar.gz"
 
-    maintainers = ["dorton21"]
+    maintainers("dorton21")
 
     version("2.3", sha256="dfd18337c523ba4b6a58801c164c1904a9d4d1b1747c7d5dbf45b693a49d93d0")
 

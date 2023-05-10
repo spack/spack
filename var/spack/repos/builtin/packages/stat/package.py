@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -13,7 +13,7 @@ class Stat(AutotoolsPackage):
     homepage = "https://paradyn.org/STAT/STAT.html"
     url = "https://github.com/LLNL/STAT/archive/v2.0.0.tar.gz"
     git = "https://github.com/llnl/stat.git"
-    maintainers = ["lee218llnl"]
+    maintainers("lee218llnl")
 
     version("develop", branch="develop")
     version(

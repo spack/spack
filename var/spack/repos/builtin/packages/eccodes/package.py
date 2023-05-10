@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -45,7 +45,7 @@ class Eccodes(CMakePackage):
     git = "https://github.com/ecmwf/eccodes.git"
     list_url = "https://confluence.ecmwf.int/display/ECC/Releases"
 
-    maintainers = ["skosukhin"]
+    maintainers("skosukhin")
 
     version("develop", branch="develop")
     version("2.27.0", sha256="ede5b3ffd503967a5eac89100e8ead5e16a881b7585d02f033584ed0c4269c99")
@@ -83,19 +83,15 @@ class Eccodes(CMakePackage):
 
     variant(
         "definitions",
-        values=disjoint_sets(
-            ("auto",),
-            ("default",) + tuple(_definitions.keys()),
-        ).with_default("auto"),
+        values=disjoint_sets(("auto",), ("default",) + tuple(_definitions.keys())).with_default(
+            "auto"
+        ),
         description="List of definitions to install",
     )
 
     variant(
         "samples",
-        values=disjoint_sets(
-            ("auto",),
-            ("default",),
-        ).with_default("auto"),
+        values=disjoint_sets(("auto",), ("default",)).with_default("auto"),
         description="List of samples to install",
     )
 

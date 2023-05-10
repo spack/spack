@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -13,7 +13,7 @@ class PyH5py(PythonPackage):
     homepage = "https://www.h5py.org/"
     pypi = "h5py/h5py-3.3.0.tar.gz"
     git = "https://github.com/h5py/h5py.git"
-    maintainers = ["bryanherman", "takluyver"]
+    maintainers("bryanherman", "takluyver")
 
     version("master", branch="master")
     # Version 3.8.0 seems to be broken or configured incorrectly, it's only building
@@ -40,6 +40,7 @@ class PyH5py(PythonPackage):
     variant("mpi", default=True, description="Build with MPI support")
 
     # Python versions
+    depends_on("python@:3.9", type=("build", "run"), when="@:2.8")
     depends_on("python@3.6:", type=("build", "run"), when="@3:3.1")
     depends_on("python@3.7:", type=("build", "run"), when="@3.2:")
 
@@ -78,6 +79,13 @@ class PyH5py(PythonPackage):
     # Patch version 3.7.0 so that it works with hdf5@1.14.0 (3.8.0 doesn't build correctly)
     # https://github.com/h5py/h5py/pull/2194/commits
     patch("h5py370_hdf51140.patch", when="@3.7.0")
+
+    def flag_handler(self, name, flags):
+        if name == "cflags":
+            if self.spec.satisfies("%oneapi@2023.0.0:"):
+                flags.append("-Wno-error=incompatible-function-pointer-types")
+                flags.append("-Wno-error=incompatible-pointer-types-discards-qualifiers")
+        return (flags, None, None)
 
     def setup_build_environment(self, env):
         env.set("HDF5_DIR", self.spec["hdf5"].prefix)

@@ -13,7 +13,7 @@ class Ewok(PythonPackage):
     git = "https://github.com/JCSDA/ewok.git"
     url = "https://github.com/JCSDA/ewok/archive/refs/tags/1.0.0.tar.gz"
 
-    maintainers = ['climbfuji', 'ericlingerfelt']
+    maintainers('climbfuji', 'ericlingerfelt')
 
     version('develop', branch='develop', no_cache=True)
     version('0.1.0', commit='2f88d2ea99bc88a16154520f69f8d70d4aedafae', preferred=True)

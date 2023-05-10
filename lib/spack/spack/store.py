@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -119,7 +119,6 @@ def parse_install_tree(config_dict):
             msg = "Cannot pad %s to %s characters." % (root, padded_length)
             msg += " It is already %s characters long" % len(root)
             tty.warn(msg)
-        root = root.rstrip(os.path.sep)
     else:
         root = unpadded_root
 

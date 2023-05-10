@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -14,7 +14,7 @@ class Sw4(MakefilePackage):
     homepage = "https://github.com/geodynamics/sw4"
     git = "https://github.com/geodynamics/sw4.git"
 
-    maintainers = ["houjun", "andersp"]
+    maintainers("houjun", "andersp")
 
     version("master", branch="master")
     version("developer", branch="developer")
