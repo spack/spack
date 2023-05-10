@@ -39,6 +39,7 @@ class Go(Package):
 
     maintainers("alecbcs")
 
+    version("1.20.4", sha256="9f34ace128764b7a3a4b238b805856cc1b2184304df9e5690825b0710f4202d6")
     version("1.20.3", sha256="e447b498cde50215c4f7619e5124b0fc4e25fb5d16ea47271c47f278e7aa763a")
     version("1.20.2", sha256="4d0e2850d197b4ddad3bdb0196300179d095bb3aefd4dfbc3b36702c3728f8ab")
 
