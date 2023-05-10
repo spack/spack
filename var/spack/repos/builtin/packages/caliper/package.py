@@ -85,6 +85,7 @@ class Caliper(CMakePackage, CudaPackage, ROCmPackage):
     conflicts("+rocm+cuda")
 
     patch("for_aarch64.patch", when="target=aarch64:")
+    patch("sampler-service-missing-libunwind-include-dir.patch", when="@2.9.0 +libunwind +sampler")
 
     def cmake_args(self):
         spec = self.spec
@@ -137,6 +138,7 @@ class Caliper(CMakePackage, CudaPackage, ROCmPackage):
             args.append("-DCUPTI_PREFIX=%s" % spec["cuda"].prefix)
 
         if "+rocm" in spec:
+            args.append("-DCMAKE_CXX_COMPILER={0}".format(spec["hip"].hipcc))
             args.append("-DROCM_PREFIX=%s" % spec["hsa-rocr-dev"].prefix)
 
         return args

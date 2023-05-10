@@ -95,7 +95,7 @@ else:
 VALUE = r"([a-zA-Z_0-9\-+\*.,:=\~\/\\]+)"
 QUOTED_VALUE = r"[\"']+([a-zA-Z_0-9\-+\*.,:=\~\/\\\s]+)[\"']+"
 
-VERSION = r"([a-zA-Z0-9_][a-zA-Z_0-9\-\.]*\b)"
+VERSION = r"=?([a-zA-Z0-9_][a-zA-Z_0-9\-\.]*\b)"
 VERSION_RANGE = rf"({VERSION}\s*:\s*{VERSION}(?!\s*=)|:\s*{VERSION}(?!\s*=)|{VERSION}\s*:|:)"
 VERSION_LIST = rf"({VERSION_RANGE}|{VERSION})(\s*[,]\s*({VERSION_RANGE}|{VERSION}))*"
 
@@ -361,19 +361,10 @@ class SpecNodeParser:
                     raise spack.spec.MultipleVersionError(
                         f"{initial_spec} cannot have multiple versions"
                     )
-
-                version_list = spack.version.VersionList()
-                version_list.add(spack.version.from_string(self.ctx.current_token.value[1:]))
-                initial_spec.versions = version_list
-
-                # Add a git lookup method for GitVersions
-                if (
-                    initial_spec.name
-                    and initial_spec.versions.concrete
-                    and isinstance(initial_spec.version, spack.version.GitVersion)
-                ):
-                    initial_spec.version.generate_git_lookup(initial_spec.fullname)
-
+                initial_spec.versions = spack.version.VersionList(
+                    [spack.version.from_string(self.ctx.current_token.value[1:])]
+                )
+                initial_spec.attach_git_version_lookup()
                 self.has_version = True
             elif self.ctx.accept(TokenType.BOOL_VARIANT):
                 self.hash_not_parsed_or_raise(initial_spec, self.ctx.current_token.value)
@@ -402,8 +393,9 @@ class SpecNodeParser:
             elif not self.has_hash and self.ctx.accept(TokenType.DAG_HASH):
                 dag_hash = self.ctx.current_token.value[1:]
                 matches = []
-                if spack.environment.active_environment():
-                    matches = spack.environment.active_environment().get_by_hash(dag_hash)
+                active_env = spack.environment.active_environment()
+                if active_env:
+                    matches = active_env.get_by_hash(dag_hash)
                 if not matches:
                     matches = spack.store.db.get_by_hash(dag_hash)
                 if not matches:
