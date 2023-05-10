@@ -634,17 +634,13 @@ class SpackCI:
             # Reindex script
             {
                 "reindex-job": {
-                    "script:": [
-                        "spack buildcache update-index --keys --mirror-url {index_target_mirror}"
-                    ]
+                    "script:": ["spack buildcache update-index --keys {index_target_mirror}"]
                 }
             },
             # Cleanup script
             {
                 "cleanup-job": {
-                    "script:": [
-                        "spack -d mirror destroy --mirror-url {mirror_prefix}/$CI_PIPELINE_ID"
-                    ]
+                    "script:": ["spack -d mirror destroy {mirror_prefix}/$CI_PIPELINE_ID"]
                 }
             },
             # Add signing job tags

@@ -182,7 +182,7 @@ protected-publish:
     - spack --version
     - export COPY_SPECS_DIR=${CI_PROJECT_DIR}/jobs_scratch_dir/specs_to_copy
     - spack buildcache sync --manifest-glob "${COPY_SPECS_DIR}/*.json"
-    - spack buildcache update-index --mirror-url ${SPACK_COPY_BUILDCACHE}
+    - spack buildcache update-index "${SPACK_COPY_BUILDCACHE}"
 
 ########################################
 # TEMPLATE FOR ADDING ANOTHER PIPELINE
