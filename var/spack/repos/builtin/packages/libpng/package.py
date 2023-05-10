@@ -3,8 +3,6 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-import platform
-
 from spack.build_systems.cmake import CMakeBuilder
 from spack.package import *
 
@@ -48,6 +46,6 @@ class CMakeBuilder(CMakeBuilder):
             self.define("PNG_SHARED", "shared" in self.spec.variants["libs"].value),
             self.define("PNG_STATIC", "static" in self.spec.variants["libs"].value),
             ]
-        if platform.system() == "Darwin" and platform.machine() == "arm64":
+        if self.spec.satisfies("platform=darwin target=aarch64:"):
             args.append("-DPNG_ARM_NEON=off")
         return args
