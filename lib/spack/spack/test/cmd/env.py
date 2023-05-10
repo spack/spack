@@ -726,7 +726,27 @@ spack:
     assert ev.active_environment() is None
 
 
-def test_env_with_include_config_files_same_basename(environment_from_manifest):
+def test_env_with_include_config_files_same_basename(environment_from_manifest, tmpdir):
+    fs.mkdirp(os.path.join(tmpdir, "path", "to"))
+    with open(os.path.join(tmpdir, "./path/to/included-config.yaml"), "w") as f:
+        f.write(
+            """\
+        packages:
+          libelf:
+              version: ["0.8.10"]
+        """
+        )
+
+    fs.mkdirp(os.path.join(tmpdir, "second", "path", "to"))
+    with open(os.path.join(tmpdir, "./second/path/to/include-config.yaml"), "w") as f:
+        f.write(
+            """\
+        packages:
+          mpileaks:
+              version: ["2.2"]
+        """
+        )
+
     e = environment_from_manifest(
         """
 spack:
@@ -740,26 +760,6 @@ spack:
     )
 
     e = ev.read("test")
-
-    fs.mkdirp(os.path.join(e.path, "path", "to"))
-    with open(os.path.join(e.path, "./path/to/included-config.yaml"), "w") as f:
-        f.write(
-            """\
-        packages:
-          libelf:
-              version: ["0.8.10"]
-        """
-        )
-
-    fs.mkdirp(os.path.join(e.path, "second", "path", "to"))
-    with open(os.path.join(e.path, "./second/path/to/include-config.yaml"), "w") as f:
-        f.write(
-            """\
-        packages:
-          mpileaks:
-              version: ["2.2"]
-        """
-        )
 
     with e:
         e.concretize()
