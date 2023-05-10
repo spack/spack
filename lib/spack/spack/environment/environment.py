@@ -336,6 +336,11 @@ def create_in_dir(
         init_file_dir = os.path.abspath(os.path.dirname(init_file))
 
         try:
+            # Note: the raw yaml is read instead of constructing an env
+            # because the Environment/EnvironmentManifestFile objects require
+            # the manifest file in its associated directory be named
+            # "spack.yaml". We want to analyze the "include" property so
+            # we just grab it directly
             with open(init_file) as f:
                 raw, _ = _read_yaml(f)
                 included_config_files = raw['spack'].get('include', [])
