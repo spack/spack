@@ -246,11 +246,11 @@ def test_compiler_find_prefer_no_suffix(no_compilers_yaml, working_env, clangdir
     os.environ["PATH"] = str(clangdir)
     output = compiler("find", "--scope=site")
 
-    assert "clang@11.0.0" in output
-    assert "gcc@8.4.0" in output
+    assert "clang@=11.0.0" in output
+    assert "gcc@=8.4.0" in output
 
     config = spack.compilers.get_compiler_config("site", False)
-    clang = next(c["compiler"] for c in config if c["compiler"]["spec"] == "clang@11.0.0")
+    clang = next(c["compiler"] for c in config if c["compiler"]["spec"] == "clang@=11.0.0")
 
     assert clang["paths"]["cc"] == str(clangdir.join("clang"))
     assert clang["paths"]["cxx"] == str(clangdir.join("clang++"))
@@ -277,7 +277,7 @@ def test_compiler_find_path_order(no_compilers_yaml, working_env, clangdir):
 
     config = spack.compilers.get_compiler_config("site", False)
 
-    gcc = next(c["compiler"] for c in config if c["compiler"]["spec"] == "gcc@8.4.0")
+    gcc = next(c["compiler"] for c in config if c["compiler"]["spec"] == "gcc@=8.4.0")
 
     assert gcc["paths"] == {
         "cc": str(clangdir.join("first_in_path", "gcc-8")),
