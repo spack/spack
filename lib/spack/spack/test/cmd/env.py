@@ -801,11 +801,12 @@ def test_env_with_included_config_file(environment_from_manifest, packages_file)
     """Test inclusion of a relative packages configuration file added to an
     existing environment.
     """
+    config_name = os.path.basename(packages_file.strpath)
     e = environment_from_manifest(
         f"""\
 spack:
   include:
-  - {os.path.join(".", "packages.yaml")}
+  - {os.path.join(".", config_name)}
   specs:
   - mpileaks
 """,
