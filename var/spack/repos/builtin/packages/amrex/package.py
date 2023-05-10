@@ -315,8 +315,8 @@ class Amrex(CMakePackage, CudaPackage, ROCmPackage):
         return args
 
     @run_after("build")
-    def setup_smoke_test(self):
-        """Setup smoke tests for AMReX versions from 21.12 on."""
+    def setup_standalone_test(self):
+        """Setup stand-alonetests for AMReX versions from 21.12 on."""
         if self.spec.satisfies("@:21.11"):
             return
 
