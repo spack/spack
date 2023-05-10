@@ -3,6 +3,8 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+import platform
+
 from spack.build_systems.cmake import CMakeBuilder
 from spack.package import *
 
@@ -38,12 +40,14 @@ class Libpng(CMakePackage):
         description="Build shared libs, static libs or both",
     )
 
-
 class CMakeBuilder(CMakeBuilder):
     def cmake_args(self):
-        return [
+        args = [
             self.define("CMAKE_CXX_FLAGS", self.spec["zlib"].headers.include_flags),
             self.define("ZLIB_ROOT", self.spec["zlib"].prefix),
             self.define("PNG_SHARED", "shared" in self.spec.variants["libs"].value),
             self.define("PNG_STATIC", "static" in self.spec.variants["libs"].value),
-        ]
+            ]
+        if platform.system() == "Darwin" and platform.machine() == "arm64":
+            args.append("-DPNG_ARM_NEON=off")
+        return args
