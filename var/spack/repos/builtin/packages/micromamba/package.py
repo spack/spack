@@ -23,17 +23,18 @@ class Micromamba(CMakePackage):
 
     maintainers("charmoniumQ")
 
+    version(
+        "1.4.2",
+        sha256="bc1ec3de0dd8398fcc6f524e6607d9d8f6dfeeedb2208ebe0f2070c8fd8fdd83",
+        url="https://github.com/mamba-org/mamba/archive/refs/tags/2023.04.06.tar.gz",
+    )
     version("1.1.0", sha256="e2392cd90221234ae8ea92b37f40829fbe36d80278056269aa1994a5efe7f530")
 
     variant(
         "linkage",
         default="dynamic",
         description=f"See MICROMAMBA_LINKAGE in {linkage_url}.",
-        values=(
-            "dynamic",
-            "static",
-            # "full_static",
-        ),
+        values=("dynamic", conditional("static", when="@1.1.0")),
         multi=False,
     )
 
@@ -60,6 +61,9 @@ class Micromamba(CMakePackage):
         # https://github.com/mamba-org/mamba/blob/micromamba-1.0.0/micromamba/src/common_options.hpp#L12
         depends_on("cli11@2.2:", type="link")
 
+        depends_on("zstd build_system=cmake", type="link", when="@1.4.0:")
+
+        # 1.4.2 made the static build the old "full_static" build and it needs some work.
     with when("linkage=static"):
         # When linkage is static, BUILD_STATIC=ON
         # and then
