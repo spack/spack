@@ -708,23 +708,24 @@ spack:
 
 def test_with_config_bad_include_create(environment_from_manifest):
     with pytest.raises(spack.config.ConfigFileError) as exc:
-        e = environment_from_manifest(
+        environment_from_manifest(
             """
 spack:
   include:
   - /no/such/directory
   - no/such/file.yaml
 """
-    )
+        )
 
     err = exc.value.message
     assert re.search("Cannot locate.*no/such/file.yaml.*", err)
+
 
 def test_with_config_bad_include_activate(environment_from_manifest, tmpdir):
     tmpdir.ensure("include1.yaml")
     abs_include_path = os.path.abspath(tmpdir.join("subdir").ensure("include2.yaml"))
     e2 = environment_from_manifest(
-            f"""
+        f"""
 spack:
   include:
   - ./include1.yaml
