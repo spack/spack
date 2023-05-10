@@ -332,7 +332,7 @@ def create_in_dir(
 
     env = Environment(manifest_dir)
 
-    if not keep_relative and init_file:
+    if not keep_relative and init_file and not (os.path.basename(init_file) == lockfile_name):
         init_file_dir = os.path.abspath(os.path.dirname(init_file))
 
         init_env = Environment(init_file_dir)
