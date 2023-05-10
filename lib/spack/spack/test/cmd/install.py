@@ -1072,11 +1072,18 @@ def test_install_empty_env(
     ],
 )
 def test_installation_fail_tests(install_mockery, mock_fetch, name, method):
+    """Confirm build-time tests with unknown methods fail."""
     output = install("--test=root", "--no-cache", name, fail_on_error=False)
 
+    # Check that there is a single test failure reported
+    assert output.count("TestFailure: 1 test failed") == 1
+
+    # Check that the method appears twice: no attribute error and in message
     assert output.count(method) == 2
     assert output.count("method not implemented") == 1
-    assert output.count("TestFailure: 1 tests failed") == 1
+
+    # Check that the path to the test log file is also output
+    assert "See test log for details" in output
 
 
 def test_install_use_buildcache(

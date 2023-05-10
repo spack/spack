@@ -2,6 +2,8 @@
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
+import re
+
 import pytest
 
 import spack.container.writers as writers
@@ -149,3 +151,14 @@ def test_not_stripping_all_symbols(minimal_configuration):
     content = writers.create(minimal_configuration)()
     assert "xargs strip" in content
     assert "xargs strip -s" not in content
+
+
+@pytest.mark.regression("22341")
+def test_using_single_quotes_in_dockerfiles(minimal_configuration):
+    """Tests that Dockerfiles written by Spack use single quotes in manifest, to avoid issues
+    with shell substitution. This may happen e.g. when users have "definitions:" they want to
+    expand in dockerfiles.
+    """
+    manifest_in_docker = writers.create(minimal_configuration).manifest
+    assert not re.search(r"echo\s*\"", manifest_in_docker, flags=re.MULTILINE)
+    assert re.search(r"echo\s*'", manifest_in_docker)

@@ -707,6 +707,7 @@ spack:
 
 
 def test_with_config_bad_include_create(environment_from_manifest):
+    """Confirm missing include paths raise expected exception and error."""
     with pytest.raises(spack.config.ConfigFileError) as exc:
         environment_from_manifest(
             """
@@ -733,7 +734,11 @@ spack:
 """
     )
 
-    # We've created an environment with some included config files (which do
+    with pytest.raises(spack.config.ConfigFileError, match="2 missing include path"):
+        with e:
+            e.concretize()
+
+    # we've created an environment with some included config files (which do
     # in fact exist): now we remove them and check that we get a sensible
     # error message
 

@@ -187,7 +187,9 @@ def remove_compiler_from_config(compiler_spec, scope=None):
     filtered_compiler_config = [
         comp
         for comp in compiler_config
-        if spack.spec.CompilerSpec(comp["compiler"]["spec"]) != compiler_spec
+        if not spack.spec.parse_with_version_concrete(
+            comp["compiler"]["spec"], compiler=True
+        ).satisfies(compiler_spec)
     ]
 
     # Update the cache for changes
@@ -724,7 +726,7 @@ def make_compiler_list(detected_versions):
     def _default_make_compilers(cmp_id, paths):
         operating_system, compiler_name, version = cmp_id
         compiler_cls = spack.compilers.class_for_compiler_name(compiler_name)
-        spec = spack.spec.CompilerSpec(compiler_cls.name, version)
+        spec = spack.spec.CompilerSpec(compiler_cls.name, f"={version}")
         paths = [paths.get(x, None) for x in ("cc", "cxx", "f77", "fc")]
         # TODO: johnwparent - revist the following line as per discussion at:
         # https://github.com/spack/spack/pull/33385/files#r1040036318
