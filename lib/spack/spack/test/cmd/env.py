@@ -706,7 +706,7 @@ spack:
     assert any(x.intersects("mpileaks@2.2") for x in e._get_environment_specs())
 
 
-def test_with_config_bad_include(environment_from_manifest):
+def test_with_config_bad_include_create(environment_from_manifest):
     with pytest.raises(spack.config.ConfigFileError) as exc:
         e = environment_from_manifest(
             """
@@ -720,10 +720,32 @@ spack:
     err = exc.value.message
     assert re.search("Cannot locate.*no/such/file.yaml.*", err)
 
-    # assert "missing include" in err
-    # assert "/no/such/directory" in err
-    # assert os.path.join("no", "such", "file.yaml") in err
-    # assert ev.active_environment() is None
+def test_with_config_bad_include_activate(environment_from_manifest, tmpdir):
+    tmpdir.ensure("include1.yaml")
+    abs_include_path = os.path.abspath(tmpdir.join("subdir").ensure("include2.yaml"))
+    e2 = environment_from_manifest(
+            f"""
+spack:
+  include:
+  - ./include1.yaml
+  - {abs_include_path}
+"""
+    )
+
+    # We've created an environment with some included config files (which do
+    # in fact exist): now we remove them and check that we get a sensible
+    # error message
+
+    os.remove(abs_include_path)
+    os.remove(os.path.join(e2.path, "include1.yaml"))
+    with pytest.raises(spack.config.ConfigFileError) as exc:
+        ev.activate(e2)
+
+    err = exc.value.message
+    assert "missing include" in err
+    assert abs_include_path in err
+    assert "include1.yaml" in err
+    assert ev.active_environment() is None
 
 
 def test_env_with_include_config_files_same_basename(environment_from_manifest, tmpdir):
