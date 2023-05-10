@@ -10,6 +10,7 @@ import llnl.util.tty as tty
 from llnl.util.filesystem import find, join_path, working_dir
 
 import spack.builder
+import spack.install_test
 import spack.package_base
 from spack.directives import build_system, depends_on, extends
 from spack.multimethod import when
@@ -30,8 +31,8 @@ class SIPPackage(spack.package_base.PackageBase):
     #: Name of private sip module to install alongside package
     sip_module = "sip"
 
-    #: Callback names for install-time test
-    install_time_test_callbacks = ["test"]
+    #: Callback names for install-time testing
+    install_time_test_callbacks = ["test_imports"]
     #: Legacy buildsystem attribute used to deserialize and install old specs
     legacy_buildsystem = "sip"
 
@@ -94,7 +95,7 @@ class SIPPackage(spack.package_base.PackageBase):
         # not the ones in the source directory
         python = inspect.getmodule(self).python
         for module in self.import_modules:
-            with test_part(
+            with spack.install_test.test_part(
                 self,
                 "test_imports_{0}".format(module),
                 purpose="checking import of {0}".format(module),
