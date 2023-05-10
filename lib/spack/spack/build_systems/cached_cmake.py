@@ -2,6 +2,7 @@
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
+import collections.abc
 import os
 from typing import Tuple
 
@@ -62,6 +63,40 @@ class CachedCMakeBuilder(CMakeBuilder):
     @property
     def cache_path(self):
         return os.path.join(self.pkg.stage.source_path, self.cache_name)
+
+    # Implement a version of the define_from_variant for Cached packages
+    def define_cmake_cache_from_variant(self, cmake_var, variant=None, comment=""):
+        """Return a Cached CMake field from the given variant's value.
+           See define_from_variant in lib/spack/spack/build_systems/cmake.py package
+        """
+
+        if variant is None:
+            variant = cmake_var.lower()
+
+        if variant not in self.pkg.variants:
+            raise KeyError('"{0}" is not a variant of "{1}"'.format(variant, self.pkg.name))
+
+        if variant not in self.pkg.spec.variants:
+            return ""
+
+        value = self.pkg.spec.variants[variant].value
+        if isinstance(value, (tuple, list)):
+            # Sort multi-valued variants for reproducibility
+            value = sorted(value)
+
+        field = None
+        if isinstance(value, bool):
+            kind = "BOOL"
+            field = cmake_cache_option(cmake_var, value, comment)
+        else:
+            kind = "STRING"
+            if isinstance(value, collections.abc.Sequence) and not isinstance(value, str):
+                value = ";".join(str(v) for v in value)
+            else:
+                value = str(value)
+            field = cmake_cache_string(cmake_var, value, comment)
+
+        return field
 
     def initconfig_compiler_entries(self):
         # This will tell cmake to use the Spack compiler wrappers when run
@@ -236,9 +271,9 @@ class CachedCMakeBuilder(CMakeBuilder):
         cmake_prefix_path_env = os.environ["CMAKE_PREFIX_PATH"]
         cmake_prefix_path_array = cmake_prefix_path_env.split(":")
         cmake_prefix_path = ";".join(cmake_prefix_path_array)
-        cmake_pkg_config_path_env = os.environ["PKG_CONFIG_PATH"]
-        cmake_pkg_config_path_array = cmake_prefix_path_env.split(":")
-        cmake_pkg_config_path = ";".join(cmake_prefix_path_array)
+        # cmake_pkg_config_path_env = os.environ["PKG_CONFIG_PATH"]
+        # cmake_pkg_config_path_array = cmake_prefix_path_env.split(":")
+        # cmake_pkg_config_path = ";".join(cmake_prefix_path_array)
         return [
             "#------------------{0}".format("-" * 60),
             "# !!!! This is a generated file, edit at own risk !!!!",
@@ -246,7 +281,7 @@ class CachedCMakeBuilder(CMakeBuilder):
             "# CMake executable path: {0}".format(self.pkg.spec["cmake"].command.path),
             "#------------------{0}\n".format("-" * 60),
             cmake_cache_path("CMAKE_PREFIX_PATH", cmake_prefix_path),
-            cmake_cache_path("CMAKE_PKG_CONFIG_PATH", cmake_pkg_config_path),
+            # cmake_cache_path("CMAKE_PKG_CONFIG_PATH", cmake_pkg_config_path),
         ]
 
     def initconfig_package_entries(self):
