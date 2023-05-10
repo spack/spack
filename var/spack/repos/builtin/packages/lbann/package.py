@@ -5,11 +5,12 @@
 
 import os
 import sys
+import socket
 
 from spack.package import *
 
 
-class Lbann(CMakePackage, CudaPackage, ROCmPackage):
+class Lbann(CachedCMakePackage, CudaPackage, ROCmPackage):
     """LBANN: Livermore Big Artificial Neural Network Toolkit.  A distributed
     memory, HPC-optimized, model and data parallel training toolkit for deep
     neural networks.
@@ -316,6 +317,7 @@ class Lbann(CMakePackage, CudaPackage, ROCmPackage):
     depends_on("zstr")
 
     generator("ninja")
+    depends_on("ninja", type=("build", "run"))
 
     @property
     def common_config_args(self):
@@ -364,105 +366,105 @@ class Lbann(CMakePackage, CudaPackage, ROCmPackage):
     def cmake_args(self):
         spec = self.spec
         args = self.common_config_args
-        args.extend(
-            [
-                "-DCMAKE_CXX_STANDARD=17",
-                "-DLBANN_WITH_CNPY=%s" % ("+numpy" in spec),
-                "-DLBANN_DETERMINISTIC:BOOL=%s" % ("+deterministic" in spec),
-                "-DLBANN_WITH_HWLOC=%s" % ("+hwloc" in spec),
-                "-DLBANN_WITH_ALUMINUM:BOOL=%s" % ("+al" in spec),
-                "-DLBANN_WITH_ADDRESS_SANITIZER:BOOL=%s" % ("+asan" in spec),
-                "-DLBANN_WITH_BOOST:BOOL=%s" % ("+boost" in spec),
-                "-DLBANN_WITH_CONDUIT:BOOL=%s" % ("+conduit" in spec),
-                "-DLBANN_WITH_NVSHMEM:BOOL=%s" % ("+nvshmem" in spec),
-                "-DLBANN_WITH_FFT:BOOL=%s" % ("+fft" in spec),
-                "-DLBANN_WITH_ONEDNN:BOOL=%s" % ("+onednn" in spec),
-                "-DLBANN_WITH_ONNX:BOOL=%s" % ("+onnx" in spec),
-                "-DLBANN_WITH_EMBEDDED_PYTHON:BOOL=%s" % ("+python" in spec),
-                "-DLBANN_WITH_PYTHON_FRONTEND:BOOL=%s" % ("+pfe" in spec),
-                "-DLBANN_WITH_ROCTRACER:BOOL=%s" % ("+rocm +distconv" in spec),
-                "-DLBANN_WITH_TBINF=OFF",
-                "-DLBANN_WITH_UNIT_TESTING:BOOL=%s" % ("+unit_tests" in spec),
-                "-DLBANN_WITH_VISION:BOOL=%s" % ("+vision" in spec),
-                "-DLBANN_WITH_VTUNE:BOOL=%s" % ("+vtune" in spec),
-                "-DLBANN_DATATYPE={0}".format(spec.variants["dtype"].value),
-                "-DCEREAL_DIR={0}".format(spec["cereal"].prefix),
-                # protobuf is included by py-protobuf+cpp
-                "-DProtobuf_DIR={0}".format(spec["protobuf"].prefix),
-                "-Dprotobuf_MODULE_COMPATIBLE=ON",
-            ]
-        )
+        # args.extend(
+        #     [
+        #         "-DCMAKE_CXX_STANDARD=17",
+        #         "-DLBANN_WITH_CNPY=%s" % ("+numpy" in spec),
+        #         "-DLBANN_DETERMINISTIC:BOOL=%s" % ("+deterministic" in spec),
+        #         "-DLBANN_WITH_HWLOC=%s" % ("+hwloc" in spec),
+        #         "-DLBANN_WITH_ALUMINUM:BOOL=%s" % ("+al" in spec),
+        #         "-DLBANN_WITH_ADDRESS_SANITIZER:BOOL=%s" % ("+asan" in spec),
+        #         "-DLBANN_WITH_BOOST:BOOL=%s" % ("+boost" in spec),
+        #         "-DLBANN_WITH_CONDUIT:BOOL=%s" % ("+conduit" in spec),
+        #         "-DLBANN_WITH_NVSHMEM:BOOL=%s" % ("+nvshmem" in spec),
+        #         "-DLBANN_WITH_FFT:BOOL=%s" % ("+fft" in spec),
+        #         "-DLBANN_WITH_ONEDNN:BOOL=%s" % ("+onednn" in spec),
+        #         "-DLBANN_WITH_ONNX:BOOL=%s" % ("+onnx" in spec),
+        #         "-DLBANN_WITH_EMBEDDED_PYTHON:BOOL=%s" % ("+python" in spec),
+        #         "-DLBANN_WITH_PYTHON_FRONTEND:BOOL=%s" % ("+pfe" in spec),
+        #         "-DLBANN_WITH_ROCTRACER:BOOL=%s" % ("+rocm +distconv" in spec),
+        #         "-DLBANN_WITH_TBINF=OFF",
+        #         "-DLBANN_WITH_UNIT_TESTING:BOOL=%s" % ("+unit_tests" in spec),
+        #         "-DLBANN_WITH_VISION:BOOL=%s" % ("+vision" in spec),
+        #         "-DLBANN_WITH_VTUNE:BOOL=%s" % ("+vtune" in spec),
+        #         "-DLBANN_DATATYPE={0}".format(spec.variants["dtype"].value),
+        #         "-DCEREAL_DIR={0}".format(spec["cereal"].prefix),
+        #         # protobuf is included by py-protobuf+cpp
+        #         "-DProtobuf_DIR={0}".format(spec["protobuf"].prefix),
+        #         "-Dprotobuf_MODULE_COMPATIBLE=ON",
+        #     ]
+        # )
 
-        if not spec.satisfies("^cmake@3.23.0"):
-            # There is a bug with using Ninja generator in this version
-            # of CMake
-            args.append("-DCMAKE_EXPORT_COMPILE_COMMANDS=ON")
+        # if not spec.satisfies("^cmake@3.23.0"):
+        #     # There is a bug with using Ninja generator in this version
+        #     # of CMake
+        #     args.append("-DCMAKE_EXPORT_COMPILE_COMMANDS=ON")
 
-        if "+cuda" in spec:
-            if self.spec.satisfies("%clang"):
-                for flag in self.spec.compiler_flags["cxxflags"]:
-                    if "gcc-toolchain" in flag:
-                        args.append("-DCMAKE_CUDA_FLAGS=-Xcompiler={0}".format(flag))
-            if spec.satisfies("^cuda@11.0:"):
-                args.append("-DCMAKE_CUDA_STANDARD=17")
-            else:
-                args.append("-DCMAKE_CUDA_STANDARD=14")
-            archs = spec.variants["cuda_arch"].value
-            if archs != "none":
-                arch_str = ";".join(archs)
-                args.append("-DCMAKE_CUDA_ARCHITECTURES=%s" % arch_str)
+        # if "+cuda" in spec:
+        #     if self.spec.satisfies("%clang"):
+        #         for flag in self.spec.compiler_flags["cxxflags"]:
+        #             if "gcc-toolchain" in flag:
+        #                 args.append("-DCMAKE_CUDA_FLAGS=-Xcompiler={0}".format(flag))
+        #     if spec.satisfies("^cuda@11.0:"):
+        #         args.append("-DCMAKE_CUDA_STANDARD=17")
+        #     else:
+        #         args.append("-DCMAKE_CUDA_STANDARD=14")
+        #     archs = spec.variants["cuda_arch"].value
+        #     if archs != "none":
+        #         arch_str = ";".join(archs)
+        #         args.append("-DCMAKE_CUDA_ARCHITECTURES=%s" % arch_str)
 
-            if spec.satisfies("%cce") and spec.satisfies("^cuda+allow-unsupported-compilers"):
-                args.append("-DCMAKE_CUDA_FLAGS=-allow-unsupported-compiler")
+        #     if spec.satisfies("%cce") and spec.satisfies("^cuda+allow-unsupported-compilers"):
+        #         args.append("-DCMAKE_CUDA_FLAGS=-allow-unsupported-compiler")
 
-        if spec.satisfies("@:0.90") or spec.satisfies("@0.95:"):
-            args.append("-DHydrogen_DIR={0}/CMake/hydrogen".format(spec["hydrogen"].prefix))
-        elif spec.satisfies("@0.94"):
-            args.append("-DElemental_DIR={0}/CMake/elemental".format(spec["elemental"].prefix))
+        # if spec.satisfies("@:0.90") or spec.satisfies("@0.95:"):
+        #     args.append("-DHydrogen_DIR={0}/CMake/hydrogen".format(spec["hydrogen"].prefix))
+        # elif spec.satisfies("@0.94"):
+        #     args.append("-DElemental_DIR={0}/CMake/elemental".format(spec["elemental"].prefix))
 
-        if spec.satisfies("@0.94:0.98.2"):
-            args.append("-DLBANN_WITH_NCCL:BOOL=%s" % ("+cuda +nccl" in spec))
+        # if spec.satisfies("@0.94:0.98.2"):
+        #     args.append("-DLBANN_WITH_NCCL:BOOL=%s" % ("+cuda +nccl" in spec))
 
-        if "+vtune" in spec:
-            args.append("-DVTUNE_DIR={0}".format(spec["vtune"].prefix))
+        # if "+vtune" in spec:
+        #     args.append("-DVTUNE_DIR={0}".format(spec["vtune"].prefix))
 
-        if "+al" in spec:
-            args.append("-DAluminum_DIR={0}".format(spec["aluminum"].prefix))
+        # if "+al" in spec:
+        #     args.append("-DAluminum_DIR={0}".format(spec["aluminum"].prefix))
 
-        if "+conduit" in spec:
-            args.append("-DConduit_DIR={0}".format(spec["conduit"].prefix))
+        # if "+conduit" in spec:
+        #     args.append("-DConduit_DIR={0}".format(spec["conduit"].prefix))
 
         # Add support for OpenMP with external (Brew) clang
-        if spec.satisfies("%clang platform=darwin"):
-            clang = self.compiler.cc
-            clang_bin = os.path.dirname(clang)
-            clang_root = os.path.dirname(clang_bin)
-            args.extend(
-                [
-                    "-DOpenMP_CXX_FLAGS=-fopenmp=libomp",
-                    "-DOpenMP_CXX_LIB_NAMES=libomp",
-                    "-DOpenMP_libomp_LIBRARY={0}/lib/libomp.dylib".format(clang_root),
-                ]
-            )
+        # if spec.satisfies("%clang platform=darwin"):
+        #     clang = self.compiler.cc
+        #     clang_bin = os.path.dirname(clang)
+        #     clang_root = os.path.dirname(clang_bin)
+        #     args.extend(
+        #         [
+        #             "-DOpenMP_CXX_FLAGS=-fopenmp=libomp",
+        #             "-DOpenMP_CXX_LIB_NAMES=libomp",
+        #             "-DOpenMP_libomp_LIBRARY={0}/lib/libomp.dylib".format(clang_root),
+        #         ]
+        #     )
 
-        if "+vision" in spec:
-            args.append("-DOpenCV_DIR:STRING={0}".format(spec["opencv"].prefix))
+        # if "+vision" in spec:
+        #     args.append("-DOpenCV_DIR:STRING={0}".format(spec["opencv"].prefix))
 
-        if "+cuda" in spec:
-            args.append("-DCUDA_TOOLKIT_ROOT_DIR={0}".format(spec["cuda"].prefix))
-            args.append("-DcuDNN_DIR={0}".format(spec["cudnn"].prefix))
-            if spec.satisfies("@0.94:0.98.2"):
-                if spec.satisfies("^cuda@:10"):
-                    args.append("-DCUB_DIR={0}".format(spec["cub"].prefix))
-                if "+nccl" in spec:
-                    args.append("-DNCCL_DIR={0}".format(spec["nccl"].prefix))
-            args.append("-DLBANN_WITH_NVPROF:BOOL=%s" % ("+nvprof" in spec))
+        # if "+cuda" in spec:
+        #     args.append("-DCUDA_TOOLKIT_ROOT_DIR={0}".format(spec["cuda"].prefix))
+        #     args.append("-DcuDNN_DIR={0}".format(spec["cudnn"].prefix))
+        #     if spec.satisfies("@0.94:0.98.2"):
+        #         if spec.satisfies("^cuda@:10"):
+        #             args.append("-DCUB_DIR={0}".format(spec["cub"].prefix))
+        #         if "+nccl" in spec:
+        #             args.append("-DNCCL_DIR={0}".format(spec["nccl"].prefix))
+        #     args.append("-DLBANN_WITH_NVPROF:BOOL=%s" % ("+nvprof" in spec))
 
-        if spec.satisfies("@:0.90") or spec.satisfies("@0.100:"):
-            args.append("-DLBANN_WITH_DIHYDROGEN:BOOL=%s" % ("+dihydrogen" in spec))
+        # if spec.satisfies("@:0.90") or spec.satisfies("@0.100:"):
+        #     args.append("-DLBANN_WITH_DIHYDROGEN:BOOL=%s" % ("+dihydrogen" in spec))
 
-        if spec.satisfies("@:0.90") or spec.satisfies("@0.101:"):
-            args.append("-DLBANN_WITH_DISTCONV:BOOL=%s" % ("+distconv" in spec))
+        # if spec.satisfies("@:0.90") or spec.satisfies("@0.101:"):
+        #     args.append("-DLBANN_WITH_DISTCONV:BOOL=%s" % ("+distconv" in spec))
 
         if "+rocm" in spec:
             args.extend(
@@ -490,48 +492,157 @@ class Lbann(CMakePackage, CudaPackage, ROCmPackage):
                 )
 
         # IF IBM ESSL is used it needs help finding the proper LAPACK libraries
-        if self.spec.satisfies("^essl"):
-            args.extend(
-                [
-                    "-DLAPACK_LIBRARIES=%s;-llapack;-lblas"
-                    % ";".join("-l{0}".format(lib) for lib in self.spec["essl"].libs.names),
-                    "-DBLAS_LIBRARIES=%s;-lblas"
-                    % ";".join("-l{0}".format(lib) for lib in self.spec["essl"].libs.names),
-                ]
-            )
+        # if self.spec.satisfies("^essl"):
+        #     args.extend(
+        #         [
+        #             "-DLAPACK_LIBRARIES=%s;-llapack;-lblas"
+        #             % ";".join("-l{0}".format(lib) for lib in self.spec["essl"].libs.names),
+        #             "-DBLAS_LIBRARIES=%s;-lblas"
+        #             % ";".join("-l{0}".format(lib) for lib in self.spec["essl"].libs.names),
+        #         ]
+        #     )
 
         return args
 
-    @when("@0.91:0.93")
-    def cmake_args(self):
-        spec = self.spec
-        args = self.common_config_args
-        args.extend(
-            [
-                "-DWITH_CUDA:BOOL=%s" % ("+cuda" in spec),
-                "-DWITH_CUDNN:BOOL=%s" % ("+cuda" in spec),
-                "-DELEMENTAL_USE_CUBLAS:BOOL=%s" % ("+cublas" in spec["elemental"]),
-                "-DWITH_TBINF=OFF",
-                "-DWITH_VTUNE=OFF",
-                "-DElemental_DIR={0}".format(spec["elemental"].prefix),
-                "-DELEMENTAL_MATH_LIBS={0}".format(spec["elemental"].libs),
-                "-DVERBOSE=0",
-                "-DLBANN_HOME=.",
-            ]
+    def _get_sys_type(self, spec):
+        sys_type = spec.architecture
+        if "SYS_TYPE" in env:
+            sys_type = env["SYS_TYPE"]
+        return sys_type
+
+    @property
+    def cache_name(self):
+        hostname = socket.gethostname()
+        if "SYS_TYPE" in env:
+            hostname = hostname.rstrip("1234567890")
+        return "BVE_{0}-{1}-{2}@{3}.cmake".format(
+            hostname,
+            self._get_sys_type(self.spec),
+            self.spec.compiler.name,
+            self.spec.compiler.version,
         )
 
-        if spec.variants["dtype"].value == "float":
-            args.append("-DDATATYPE=4")
-        elif spec.variants["dtype"].value == "double":
-            args.append("-DDATATYPE=8")
+    def initconfig_compiler_entries(self):
+        spec = self.spec
+        entries = super(Lbann, self).initconfig_compiler_entries()
+        entries.append(cmake_cache_string("CMAKE_CXX_STANDARD", "17"))
+        if not spec.satisfies("^cmake@3.23.0"):
+            # There is a bug with using Ninja generator in this version
+            # of CMake
+            entries.append(cmake_cache_option("CMAKE_EXPORT_COMPILE_COMMANDS", "ON"))
+
+        entries.append(cmake_cache_string("CMAKE_MAKE_PROGRAM", "ninja"))
+
+        # if "+rocm" in spec:
+        #     entries.insert(0, cmake_cache_path("CMAKE_CXX_COMPILER", spec["hip"].hipcc))
+        return entries
+
+    def initconfig_hardware_entries(self):
+        spec = self.spec
+        entries = super(Lbann, self).initconfig_hardware_entries()
+
+        if "+cuda" in spec:
+            if self.spec.satisfies("%clang"):
+                for flag in self.spec.compiler_flags["cxxflags"]:
+                    if "gcc-toolchain" in flag:
+                        entries.append(cmake_cache_string("CMAKE_CUDA_FLAGS", "-Xcompiler={0}".format(flag)))
+            if spec.satisfies("^cuda@11.0:"):
+                entries.append(cmake_cache_string("CMAKE_CUDA_STANDARD", "17"))
+            else:
+                entries.append(cmake_cache_string("CMAKE_CUDA_STANDARD", "14"))
+
+            entries.append(cmake_cache_path("cuDNN_DIR", "{0}".format(spec["cudnn"].prefix)))
+            if "+nccl" in spec:
+                entries.append(cmake_cache_path("NCCL_DIR", "{0}".format(spec["nccl"].prefix)))
+            entries.append(cmake_cache_option("LBANN_WITH_NVPROF", "+nvprof" in spec))
+            # archs = spec.variants["cuda_arch"].value
+            # if archs != "none":
+            #     arch_str = ";".join(archs)
+            #     entries.append(cmake_cache_string("CMAKE_CUDA_ARCHITECTURES", "{0}".format(arch_str)))
+
+            if spec.satisfies("%cce") and spec.satisfies("^cuda+allow-unsupported-compilers"):
+                entries.append(cmake_cache_string("CMAKE_CUDA_FLAGS", "-allow-unsupported-compiler"))
+
+        return entries
+
+    def initconfig_package_entries(self):
+        spec = self.spec
+        entries = []
+        entries = [
+            "#------------------{0}".format("-" * 60),
+            "# LBANN",
+            "#------------------{0}\n".format("-" * 60),
+        ]
+
+        entries.append(cmake_cache_option("LBANN_WITH_CNPY", "+numpy" in spec))
+        entries.append(cmake_cache_option("LBANN_DETERMINISTIC", "+deterministic" in spec))
+        entries.append(cmake_cache_option("LBANN_WITH_HWLOC", "hwloc" in spec))
+        entries.append(cmake_cache_option("LBANN_WITH_ALUMINUM", "+al" in spec))
+        entries.append(cmake_cache_option("LBANN_WITH_ADDRESS_SANITIZER", "+asan" in spec))
+        entries.append(cmake_cache_option("LBANN_WITH_BOOST", "+boost" in spec))
+        entries.append(cmake_cache_option("LBANN_WITH_CONDUIT", "+conduit" in spec))
+        entries.append(cmake_cache_option("LBANN_WITH_NVSHMEM", "+nvshmem" in spec))
+        entries.append(cmake_cache_option("LBANN_WITH_FFT", "+fft" in spec))
+        entries.append(cmake_cache_option("LBANN_WITH_ONEDNN", "+onednn" in spec))
+        entries.append(cmake_cache_option("LBANN_WITH_ONNX", "+onnx" in spec))
+        entries.append(cmake_cache_option("LBANN_WITH_EMBEDDED_PYTHON", "+python" in spec))
+        entries.append(cmake_cache_option("LBANN_WITH_PYTHON_FRONTEND", "+pfe" in spec))
+        entries.append(cmake_cache_option("LBANN_WITH_ROCTRACER", "+rocm +distconv" in spec))
+        entries.append(cmake_cache_option("LBANN_WITH_TBINF", "OFF"))
+        entries.append(cmake_cache_option("LBANN_WITH_UNIT_TESTING", "+unit_tests" in spec))
+        entries.append(cmake_cache_option("LBANN_WITH_VISION", "+vision" in spec))
+        entries.append(cmake_cache_option("LBANN_WITH_VTUNE", "+vtune" in spec))
+        # entries.append(cmake_cache_option())
+        entries.append(cmake_cache_string("LBANN_DATATYPE", "{0}".format(spec.variants["dtype"].value)))
+        # BVE This seems unnecessary to add the part of the path
+#        entries.append(cmake_cache_path("CEREAL_DIR", "{0}/share/cmake/cereal".format(spec["cereal"].prefix)))
+        # protobuf is included by py-protobuf+cpp
+        entries.append(cmake_cache_path("Protobuf_DIR", "{0}".format(spec["protobuf"].prefix)))
+        entries.append(cmake_cache_option("protobuf_MODULE_COMPATIBLE", "ON"))
+
+#        entries.append(cmake_cache_path("Hydrogen_DIR", "{0}/lib/cmake/hydrogen/".format(spec["hydrogen"].prefix)))
+        # BVE this is wrong
+#        entries.append(cmake_cache_path("Hydrogen_DIR", "{0}/CMake/hydrogen".format(spec["hydrogen"].prefix)))
+
+        if "+vtune" in spec:
+            entries.append(cmake_cache_path("VTUNE_DIR", "{0}".format(spec["vtune"].prefix)))
+
+#         if "+al" in spec:
+# #        if spec.satisfies("^al"):
+#             entries.append(cmake_cache_path("Aluminum_DIR", "{0}/lib64".format(spec["aluminum"].prefix)))
+# #            entries.append(cmake_cache_path("Aluminum_DIR", "{0}".format(spec["aluminum"].prefix)))
+
+        # if spec.satisfies("^conduit"):
+        #     entries.append(cmake_cache_path("Conduit_DIR", "{0}".format(spec["conduit"].prefix)))
+
+        # BVE Why can't catch find itself in the prefix path
+        # if "^catch2" in spec:
+        #     entries.append(cmake_cache_path("Catch2_ROOT", spec["catch2"].prefix))
+
+        # BVE Why can't clara find itself in the prefix path
+        # if "^clara" in spec:
+        #     entries.append(cmake_cache_path("Clara_DIR", spec["clara"].prefix))
+
+        # Add support for OpenMP with external (Brew) clang
+        if spec.satisfies("%clang platform=darwin"):
+            clang = self.compiler.cc
+            clang_bin = os.path.dirname(clang)
+            clang_root = os.path.dirname(clang_bin)
+            entries.append(cmake_cache_string("OpenMP_CXX_FLAGS", "-fopenmp=libomp"))
+            entries.append(cmake_cache_string("OpenMP_CXX_LIB_NAMES", "libomp"))
+            entries.append(cmake_cache_string("OpenMP_libomp_LIBRARY", "{0}/lib/libomp.dylib".format(clang_root)))
 
         if "+vision" in spec:
-            args.append("-DOpenCV_DIR:STRING={0}".format(spec["opencv"].prefix))
+            entries.append(cmake_cache_path("OpenCV_DIR", "{0}".format(spec["opencv"].prefix)))
 
-        if "+cudnn" in spec:
-            args.append("-DcuDNN_DIR={0}".format(spec["cudnn"].prefix))
+        entries.append(cmake_cache_option("LBANN_WITH_DIHYDROGEN", "+dihydrogen" in spec))
+        entries.append(cmake_cache_option("LBANN_WITH_DISTCONV", "+distconv" in spec))
 
-        if "+cub" in spec and spec.satisfies("^cuda@:10"):
-            args.append("-DCUB_DIR={0}".format(spec["cub"].prefix))
+        # IF IBM ESSL is used it needs help finding the proper LAPACK libraries
+        if self.spec.satisfies("^essl"):
+            entries.append(cmake_cache_string("LAPACK_LIBRARIES", "%s;-llapack;-lblas"
+                    % ";".join("-l{0}".format(lib) for lib in self.spec["essl"].libs.names)))
+            entries.append(cmake_cache_string("BLAS_LIBRARIES", "%s;-lblas"
+                    % ";".join("-l{0}".format(lib) for lib in self.spec["essl"].libs.names)))
 
-        return args
+        return entries
