@@ -347,7 +347,10 @@ def create_in_dir(
                     # are copied into the new env directory
                     assert fs.path_contains_subdirectory(cfg_abspath, env.path)
                     fs.mkdirp(os.path.dirname(cfg_abspath))
-                    shutil.copy(init_cfg_abspath, cfg_abspath)
+                    if init_cfg_abspath != cfg_abspath:
+                        shutil.copy(init_cfg_abspath, cfg_abspath)
+                    # If the init file comes from the environment's directory
+                    # then there is nothing to copy
             # It is assumed that absolute paths will be accessible (this
             # includes paths with Spack config variables like "$spack").
             # Likewise, relative paths that point outside of the env directory

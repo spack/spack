@@ -893,7 +893,19 @@ def test_env_with_included_config_var_path(environment_from_manifest, packages_f
     assert any(x.satisfies("mpileaks@2.2") for x in e._get_environment_specs())
 
 
-def test_env_config_precedence(environment_from_manifest):
+def test_env_config_precedence(environment_from_manifest, tmpdir):
+    cfg_path = os.path.join(tmpdir, "included-config.yaml")
+    with open(cfg_path, "w") as f:
+        f.write(
+            """\
+packages:
+  mpileaks:
+    version: ["2.2"]
+  libelf:
+    version: ["0.8.11"]
+"""
+        )
+
     e = environment_from_manifest(
         """
 spack:
@@ -906,16 +918,6 @@ spack:
   - mpileaks
 """
     )
-    with open(os.path.join(e.path, "included-config.yaml"), "w") as f:
-        f.write(
-            """\
-packages:
-  mpileaks:
-    version: ["2.2"]
-  libelf:
-    version: ["0.8.11"]
-"""
-        )
 
     with e:
         e.concretize()
