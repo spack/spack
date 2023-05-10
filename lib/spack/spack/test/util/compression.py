@@ -5,6 +5,7 @@
 
 import os
 import shutil
+import sys
 
 import pytest
 
@@ -62,6 +63,7 @@ def test_native_unpacking(tmpdir_factory, archive_file):
         assert "TEST" in contents
 
 
+@pytest.mark.skipif(sys.platform == "win32", reason="Only Python unpacking available on Windows")
 @pytest.mark.parametrize("archive_file", ext_archive.keys(), indirect=True)
 def test_system_unpacking(tmpdir_factory, archive_file, compr_support_check):
     # actually run test
