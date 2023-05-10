@@ -701,6 +701,7 @@ spack:
 
 
 def test_with_config_bad_include(environment_from_manifest):
+    """Confirm missing include paths raise expected exception and error."""
     e = environment_from_manifest(
         """
 spack:
@@ -709,14 +710,10 @@ spack:
   - no/such/file.yaml
 """
     )
-    with pytest.raises(spack.config.ConfigFileError) as exc:
+    with pytest.raises(spack.config.ConfigFileError, match="2 missing include path"):
         with e:
             e.concretize()
 
-    err = str(exc)
-    assert "missing include" in err
-    assert "/no/such/directory" in err
-    assert os.path.join("no", "such", "file.yaml") in err
     assert ev.active_environment() is None
 
 

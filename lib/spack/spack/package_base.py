@@ -25,13 +25,12 @@ import sys
 import textwrap
 import time
 import traceback
-import types
 import warnings
-from typing import Any, Callable, Dict, Iterable, List, Optional, Tuple, Type
+from typing import Any, Callable, Dict, Iterable, List, Optional, Tuple, Type, TypeVar
 
 import llnl.util.filesystem as fsys
 import llnl.util.tty as tty
-from llnl.util.lang import classproperty, memoized, nullcontext
+from llnl.util.lang import classproperty, memoized
 from llnl.util.link_tree import LinkTree
 
 import spack.compilers
@@ -55,12 +54,18 @@ import spack.util.environment
 import spack.util.path
 import spack.util.web
 from spack.filesystem_view import YamlFilesystemView
-from spack.install_test import TestFailure, TestSuite
+from spack.install_test import (
+    PackageTest,
+    TestFailure,
+    TestStatus,
+    TestSuite,
+    cache_extra_test_sources,
+    install_test_root,
+)
 from spack.installer import InstallError, PackageInstaller
 from spack.stage import ResourceStage, Stage, StageComposite, compute_stage_name
 from spack.util.executable import ProcessError, which
 from spack.util.package_hash import package_hash
-from spack.util.prefix import Prefix
 from spack.util.web import FetchError
 from spack.version import GitVersion, StandardVersion, Version
 
@@ -73,23 +78,20 @@ FLAG_HANDLER_TYPE = Callable[[str, Iterable[str]], FLAG_HANDLER_RETURN_TYPE]
 _ALLOWED_URL_SCHEMES = ["http", "https", "ftp", "file", "git"]
 
 
-# Filename for the Spack build/install log.
+#: Filename for the Spack build/install log.
 _spack_build_logfile = "spack-build-out.txt"
 
-# Filename for the Spack build/install environment file.
+#: Filename for the Spack build/install environment file.
 _spack_build_envfile = "spack-build-env.txt"
 
-# Filename for the Spack build/install environment modifications file.
+#: Filename for the Spack build/install environment modifications file.
 _spack_build_envmodsfile = "spack-build-env-mods.txt"
 
-# Filename for the Spack install phase-time test log.
-_spack_install_test_log = "install-time-test-log.txt"
-
-# Filename of json with total build and phase times (seconds)
-_spack_times_log = "install_times.json"
-
-# Filename for the Spack configure args file.
+#: Filename for the Spack configure args file.
 _spack_configure_argsfile = "spack-configure-args.txt"
+
+#: Filename of json with total build and phase times (seconds)
+spack_times_log = "install_times.json"
 
 
 def deprecated_version(pkg, version):
@@ -181,8 +183,7 @@ class DetectablePackageMeta(object):
     def __init__(cls, name, bases, attr_dict):
         if hasattr(cls, "executables") and hasattr(cls, "libraries"):
             msg = "a package can have either an 'executables' or 'libraries' attribute"
-            msg += " [package '{0.name}' defines both]"
-            raise spack.error.SpackError(msg.format(cls))
+            raise spack.error.SpackError(f"{msg} [package '{name}' defines both]")
 
         # On windows, extend the list of regular expressions to look for
         # filenames ending with ".exe"
@@ -423,17 +424,7 @@ class PackageViewMixin(object):
         view.remove_files(merge_map.values())
 
 
-def test_log_pathname(test_stage, spec):
-    """Build the pathname of the test log file
-
-    Args:
-        test_stage (str): path to the test stage directory
-        spec (spack.spec.Spec): instance of the spec under test
-
-    Returns:
-        (str): the pathname of the test log file
-    """
-    return os.path.join(test_stage, "test-{0}-out.txt".format(TestSuite.test_pkg_id(spec)))
+Pb = TypeVar("Pb", bound="PackageBase")
 
 
 class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
@@ -638,19 +629,13 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
         "tags",
     ]
 
-    #: Boolean. If set to ``True``, the smoke/install test requires a compiler.
-    #: This is currently used by smoke tests to ensure a compiler is available
-    #: to build a custom test code.
-    test_requires_compiler = False
+    #: Set to ``True`` to indicate the stand-alone test requires a compiler.
+    #: It is used to ensure a compiler and build dependencies like 'cmake'
+    #: are available to build a custom test code.
+    test_requires_compiler: bool = False
 
-    #: List of test failures encountered during a smoke/install test run.
-    test_failures = None
-
-    #: TestSuite instance used to manage smoke/install tests for one or more specs.
-    test_suite = None
-
-    #: Path to the log file used for tests
-    test_log_file = None
+    #: TestSuite instance used to manage stand-alone tests for 1+ specs.
+    test_suite: Optional["TestSuite"] = None
 
     def __init__(self, spec):
         # this determines how the package should be built.
@@ -672,6 +657,7 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
         # init internal variables
         self._stage = None
         self._fetcher = None
+        self._tester: Optional["PackageTest"] = None
 
         # Set up timing variables
         self._fetch_time = 0.0
@@ -736,9 +722,9 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
 
         for name, conditions in cls.dependencies.items():
             # check whether this dependency could be of the type asked for
-            types = [dep.type for cond, dep in conditions.items()]
-            types = set.union(*types)
-            if not any(d in types for d in deptype):
+            deptypes = [dep.type for cond, dep in conditions.items()]
+            deptypes = set.union(*deptypes)
+            if not any(d in deptypes for d in deptype):
                 continue
 
             # expand virtuals if enabled, otherwise just stop at virtuals
@@ -1149,29 +1135,40 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
         return os.path.join(self.stage.path, _spack_configure_argsfile)
 
     @property
-    def test_install_log_path(self):
-        """Return the install phase-time test log file path, if set."""
-        return getattr(self, "test_log_file", None)
-
-    @property
-    def install_test_install_log_path(self):
-        """Return the install location for the install phase-time test log."""
-        return fsys.join_path(self.metadata_dir, _spack_install_test_log)
-
-    @property
     def times_log_path(self):
         """Return the times log json file."""
-        return os.path.join(self.metadata_dir, _spack_times_log)
+        return os.path.join(self.metadata_dir, spack_times_log)
 
     @property
     def install_configure_args_path(self):
         """Return the configure args file path on successful installation."""
         return os.path.join(self.metadata_dir, _spack_configure_argsfile)
 
+    # TODO (post-34236): Update tests and all packages that use this as a
+    # TODO (post-34236): package method to the function already available
+    # TODO (post-34236): to packages. Once done, remove this property.
     @property
     def install_test_root(self):
         """Return the install test root directory."""
-        return os.path.join(self.metadata_dir, "test")
+        tty.warn(
+            "The 'pkg.install_test_root' property is deprecated with removal "
+            "expected v0.21. Use 'install_test_root(pkg)' instead."
+        )
+        return install_test_root(self)
+
+    def archive_install_test_log(self):
+        """Archive the install-phase test log, if present."""
+        if getattr(self, "tester", None):
+            self.tester.archive_install_test_log(self.metadata_dir)
+
+    @property
+    def tester(self):
+        if not self.spec.versions.concrete:
+            raise ValueError("Cannot retrieve tester for package without concrete version.")
+
+        if not self._tester:
+            self._tester = PackageTest(self)
+        return self._tester
 
     @property
     def installed(self):
@@ -1208,7 +1205,7 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
     @property
     def fetcher(self):
         if not self.spec.versions.concrete:
-            raise ValueError("Cannot retrieve fetcher for" " package without concrete version.")
+            raise ValueError("Cannot retrieve fetcher for package without concrete version.")
         if not self._fetcher:
             self._fetcher = self._make_fetcher()
         return self._fetcher
@@ -1842,6 +1839,9 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
         builder = PackageInstaller([(self, kwargs)])
         builder.install()
 
+    # TODO (post-34236): Update tests and all packages that use this as a
+    # TODO (post-34236): package method to the routine made available to
+    # TODO (post-34236): packages. Once done, remove this method.
     def cache_extra_test_sources(self, srcs):
         """Copy relative source paths to the corresponding install test subdir
 
@@ -1856,45 +1856,13 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
                 be copied to the corresponding location(s) under the install
                 testing directory.
         """
-        paths = [srcs] if isinstance(srcs, str) else srcs
-
-        for path in paths:
-            src_path = os.path.join(self.stage.source_path, path)
-            dest_path = os.path.join(self.install_test_root, path)
-            if os.path.isdir(src_path):
-                fsys.install_tree(src_path, dest_path)
-            else:
-                fsys.mkdirp(os.path.dirname(dest_path))
-                fsys.copy(src_path, dest_path)
-
-    @contextlib.contextmanager
-    def _setup_test(self, verbose, externals):
-        self.test_failures = []
-        if self.test_suite:
-            self.test_log_file = self.test_suite.log_file_for_spec(self.spec)
-            self.tested_file = self.test_suite.tested_file_for_spec(self.spec)
-            pkg_id = self.test_suite.test_pkg_id(self.spec)
-        else:
-            self.test_log_file = fsys.join_path(self.stage.path, _spack_install_test_log)
-            self.test_suite = TestSuite([self.spec])
-            self.test_suite.stage = self.stage.path
-            pkg_id = self.spec.format("{name}-{version}-{hash:7}")
-
-        fsys.touch(self.test_log_file)  # Otherwise log_parse complains
-
-        with tty.log.log_output(self.test_log_file, verbose) as logger:
-            with logger.force_echo():
-                tty.msg("Testing package {0}".format(pkg_id))
-
-            # use debug print levels for log file to record commands
-            old_debug = tty.is_debug()
-            tty.set_debug(True)
-
-            try:
-                yield logger
-            finally:
-                # reset debug level
-                tty.set_debug(old_debug)
+        msg = (
+            "'pkg.cache_extra_test_sources(srcs) is deprecated with removal "
+            "expected in v0.21. Use 'cache_extra_test_sources(pkg, srcs)' "
+            "instead."
+        )
+        warnings.warn(msg)
+        cache_extra_test_sources(self, srcs)
 
     def do_test(self, dirty=False, externals=False):
         if self.test_requires_compiler:
@@ -1909,15 +1877,31 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
                 )
                 return
 
-        kwargs = {"dirty": dirty, "fake": False, "context": "test", "externals": externals}
-        if tty.is_verbose():
-            kwargs["verbose"] = True
-        spack.build_environment.start_build_process(self, test_process, kwargs)
+        kwargs = {
+            "dirty": dirty,
+            "fake": False,
+            "context": "test",
+            "externals": externals,
+            "verbose": tty.is_verbose(),
+        }
 
+        self.tester.stand_alone_tests(kwargs)
+
+    # TODO (post-34236): Remove this deprecated method when eliminate test,
+    # TODO (post-34236): run_test, etc.
+    @property
+    def _test_deprecated_warning(self):
+        alt = f"Use any name starting with 'test_' instead in {self.spec.name}."
+        return f"The 'test' method is deprecated. {alt}"
+
+    # TODO (post-34236): Remove this deprecated method when eliminate test,
+    # TODO (post-34236): run_test, etc.
     def test(self):
         # Defer tests to virtual and concrete packages
-        pass
+        warnings.warn(self._test_deprecated_warning)
 
+    # TODO (post-34236): Remove this deprecated method when eliminate test,
+    # TODO (post-34236): run_test, etc.
     def run_test(
         self,
         exe,
@@ -1925,7 +1909,7 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
         expected=[],
         status=0,
         installed=False,
-        purpose="",
+        purpose=None,
         skip_missing=False,
         work_dir=None,
     ):
@@ -1947,22 +1931,56 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
                 in the install prefix bin directory or the provided work_dir
             work_dir (str or None): path to the smoke test directory
         """
+
+        def test_title(purpose, test_name):
+            if not purpose:
+                return f"test: {test_name}: execute {test_name}"
+
+            match = re.search(r"test: ([^:]*): (.*)", purpose)
+            if match:
+                # The test title has all the expected parts
+                return purpose
+
+            match = re.search(r"test: (.*)", purpose)
+            if match:
+                reason = match.group(1)
+                return f"test: {test_name}: {reason}"
+
+            return f"test: {test_name}: {purpose}"
+
+        base_exe = os.path.basename(exe)
+        alternate = f"Use 'test_part' instead for {self.spec.name} to process {base_exe}."
+        warnings.warn(f"The 'run_test' method is deprecated. {alternate}")
+
+        extra = re.compile(r"[\s,\- ]")
+        details = (
+            [extra.sub("", options)]
+            if isinstance(options, str)
+            else [extra.sub("", os.path.basename(opt)) for opt in options]
+        )
+        details = "_".join([""] + details) if details else ""
+        test_name = f"test_{base_exe}{details}"
+        tty.info(test_title(purpose, test_name), format="g")
+
         wdir = "." if work_dir is None else work_dir
         with fsys.working_dir(wdir, create=True):
             try:
                 runner = which(exe)
                 if runner is None and skip_missing:
+                    self.tester.status(test_name, TestStatus.SKIPPED, f"{exe} is missing")
                     return
-                assert runner is not None, "Failed to find executable '{0}'".format(exe)
+                assert runner is not None, f"Failed to find executable '{exe}'"
 
                 self._run_test_helper(runner, options, expected, status, installed, purpose)
-                print("PASSED")
+                self.tester.status(test_name, TestStatus.PASSED, None)
                 return True
-            except BaseException as e:
+            except (AssertionError, BaseException) as e:
                 # print a summary of the error to the log file
                 # so that cdash and junit reporters know about it
                 exc_type, _, tb = sys.exc_info()
-                print("FAILED: {0}".format(e))
+
+                self.tester.status(test_name, TestStatus.FAILED, str(e))
+
                 import traceback
 
                 # remove the current call frame to exclude the extract_stack
@@ -1991,7 +2009,7 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
                 if exc_type is spack.util.executable.ProcessError:
                     out = io.StringIO()
                     spack.build_environment.write_log_summary(
-                        out, "test", self.test_log_file, last=1
+                        out, "test", self.tester.test_log_file, last=1
                     )
                     m = out.getvalue()
                 else:
@@ -2007,28 +2025,27 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
                 if spack.config.get("config:fail_fast", False):
                     raise TestFailure([(exc, m)])
                 else:
-                    self.test_failures.append((exc, m))
+                    self.tester.add_failure(exc, m)
                 return False
 
+    # TODO (post-34236): Remove this deprecated method when eliminate test,
+    # TODO (post-34236): run_test, etc.
     def _run_test_helper(self, runner, options, expected, status, installed, purpose):
         status = [status] if isinstance(status, int) else status
         expected = [expected] if isinstance(expected, str) else expected
         options = [options] if isinstance(options, str) else options
 
-        if purpose:
-            tty.msg(purpose)
-        else:
-            tty.debug("test: {0}: expect command status in {1}".format(runner.name, status))
-
         if installed:
-            msg = "Executable '{0}' expected in prefix".format(runner.name)
-            msg += ", found in {0} instead".format(runner.path)
+            msg = f"Executable '{runner.name}' expected in prefix, "
+            msg += f"found in {runner.path} instead"
             assert runner.path.startswith(self.spec.prefix), msg
+
+        tty.msg(f"Expecting return code in {status}")
 
         try:
             output = runner(*options, output=str.split, error=str.split)
 
-            assert 0 in status, "Expected {0} execution to fail".format(runner.name)
+            assert 0 in status, f"Expected {runner.name} execution to fail"
         except ProcessError as err:
             output = str(err)
             match = re.search(r"exited with status ([0-9]+)", output)
@@ -2037,8 +2054,8 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
 
         for check in expected:
             cmd = " ".join([runner.name] + options)
-            msg = "Expected '{0}' to match output of `{1}`".format(check, cmd)
-            msg += "\n\nOutput: {0}".format(output)
+            msg = f"Expected '{check}' to match output of `{cmd}`"
+            msg += f"\n\nOutput: {output}"
             assert re.search(check, output), msg
 
     def unit_test_check(self):
@@ -2068,21 +2085,23 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
         return self.install_log_path if self.spec.installed else self.log_path
 
     @classmethod
-    def inject_flags(cls: Type, name: str, flags: Iterable[str]) -> FLAG_HANDLER_RETURN_TYPE:
+    def inject_flags(cls: Type[Pb], name: str, flags: Iterable[str]) -> FLAG_HANDLER_RETURN_TYPE:
         """
         flag_handler that injects all flags through the compiler wrapper.
         """
         return flags, None, None
 
     @classmethod
-    def env_flags(cls: Type, name: str, flags: Iterable[str]):
+    def env_flags(cls: Type[Pb], name: str, flags: Iterable[str]) -> FLAG_HANDLER_RETURN_TYPE:
         """
         flag_handler that adds all flags to canonical environment variables.
         """
         return None, flags, None
 
     @classmethod
-    def build_system_flags(cls: Type, name: str, flags: Iterable[str]) -> FLAG_HANDLER_RETURN_TYPE:
+    def build_system_flags(
+        cls: Type[Pb], name: str, flags: Iterable[str]
+    ) -> FLAG_HANDLER_RETURN_TYPE:
         """
         flag_handler that passes flags to the build system arguments.  Any
         package using `build_system_flags` must also implement
@@ -2170,7 +2189,7 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
         return self._flag_handler
 
     @flag_handler.setter
-    def flag_handler(self, var: FLAG_HANDLER_TYPE):
+    def flag_handler(self, var: FLAG_HANDLER_TYPE) -> None:
         self._flag_handler = var
 
     # The flag handler method is called for each of the allowed compiler flags.
@@ -2417,165 +2436,6 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
     def builder(self):
         return spack.builder.create(self)
 
-    @staticmethod
-    def run_test_callbacks(builder, method_names, callback_type="install"):
-        """Tries to call all of the listed methods, returning immediately
-        if the list is None."""
-        if not builder.pkg.run_tests or method_names is None:
-            return
-
-        fail_fast = spack.config.get("config:fail_fast", False)
-        with builder.pkg._setup_test(verbose=False, externals=False) as logger:
-            # Report running each of the methods in the build log
-            print_test_message(logger, "Running {0}-time tests".format(callback_type), True)
-            builder.pkg.test_suite.current_test_spec = builder.pkg.spec
-            builder.pkg.test_suite.current_base_spec = builder.pkg.spec
-
-            if "test" in method_names:
-                _copy_cached_test_files(builder.pkg, builder.pkg.spec)
-
-            for name in method_names:
-                try:
-                    fn = getattr(builder, name)
-
-                    msg = "RUN-TESTS: {0}-time tests [{1}]".format(callback_type, name)
-                    print_test_message(logger, msg, True)
-
-                    fn()
-                except AttributeError as e:
-                    msg = "RUN-TESTS: method not implemented [{0}]".format(name)
-                    print_test_message(logger, msg, True)
-
-                    builder.pkg.test_failures.append((e, msg))
-                    if fail_fast:
-                        break
-
-            # Raise any collected failures here
-            if builder.pkg.test_failures:
-                raise TestFailure(builder.pkg.test_failures)
-
-
-def has_test_method(pkg):
-    """Determine if the package defines its own stand-alone test method.
-
-    Args:
-        pkg (str): the package being checked
-
-    Returns:
-        (bool): ``True`` if the package overrides the default method; else
-            ``False``
-    """
-    if not inspect.isclass(pkg):
-        tty.die("{0}: is not a class, it is {1}".format(pkg, type(pkg)))
-
-    return (issubclass(pkg, PackageBase) and pkg.test != PackageBase.test) or (
-        isinstance(pkg, PackageBase) and pkg.test.__func__ != PackageBase.test
-    )
-
-
-def print_test_message(logger, msg, verbose):
-    if verbose:
-        with logger.force_echo():
-            tty.msg(msg)
-    else:
-        tty.msg(msg)
-
-
-def _copy_cached_test_files(pkg, spec):
-    """Copy any cached stand-alone test-related files."""
-
-    # copy installed test sources cache into test cache dir
-    if spec.concrete:
-        cache_source = spec.package.install_test_root
-        cache_dir = pkg.test_suite.current_test_cache_dir
-        if os.path.isdir(cache_source) and not os.path.exists(cache_dir):
-            fsys.install_tree(cache_source, cache_dir)
-
-    # copy test data into test data dir
-    data_source = Prefix(spec.package.package_dir).test
-    data_dir = pkg.test_suite.current_test_data_dir
-    if os.path.isdir(data_source) and not os.path.exists(data_dir):
-        # We assume data dir is used read-only
-        # maybe enforce this later
-        shutil.copytree(data_source, data_dir)
-
-
-def test_process(pkg, kwargs):
-    verbose = kwargs.get("verbose", False)
-    externals = kwargs.get("externals", False)
-
-    with pkg._setup_test(verbose, externals) as logger:
-        if pkg.spec.external and not externals:
-            print_test_message(logger, "Skipped tests for external package", verbose)
-            return
-
-        if not pkg.spec.installed:
-            print_test_message(logger, "Skipped not installed package", verbose)
-            return
-
-        # run test methods from the package and all virtuals it
-        # provides virtuals have to be deduped by name
-        v_names = list(set([vspec.name for vspec in pkg.virtuals_provided]))
-
-        # hack for compilers that are not dependencies (yet)
-        # TODO: this all eventually goes away
-        c_names = ("gcc", "intel", "intel-parallel-studio", "pgi")
-        if pkg.name in c_names:
-            v_names.extend(["c", "cxx", "fortran"])
-        if pkg.spec.satisfies("llvm+clang"):
-            v_names.extend(["c", "cxx"])
-
-        test_specs = [pkg.spec] + [spack.spec.Spec(v_name) for v_name in sorted(v_names)]
-
-        ran_actual_test_function = False
-        try:
-            with fsys.working_dir(pkg.test_suite.test_dir_for_spec(pkg.spec)):
-                for spec in test_specs:
-                    pkg.test_suite.current_test_spec = spec
-                    # Fail gracefully if a virtual has no package/tests
-                    try:
-                        spec_pkg = spec.package
-                    except spack.repo.UnknownPackageError:
-                        continue
-
-                    _copy_cached_test_files(pkg, spec)
-
-                    # grab the function for each method so we can call
-                    # it with the package
-                    test_fn = spec_pkg.__class__.test
-                    if not isinstance(test_fn, types.FunctionType):
-                        test_fn = test_fn.__func__
-
-                    # Skip any test methods consisting solely of 'pass'
-                    # since they do not contribute to package testing.
-                    source = (inspect.getsource(test_fn)).splitlines()[1:]
-                    lines = (ln.strip() for ln in source)
-                    statements = [ln for ln in lines if not ln.startswith("#")]
-                    if len(statements) > 0 and statements[0] == "pass":
-                        continue
-
-                    # Run the tests
-                    ran_actual_test_function = True
-                    context = logger.force_echo if verbose else nullcontext
-                    with context():
-                        test_fn(pkg)
-
-            # If fail-fast was on, we error out above
-            # If we collect errors, raise them in batch here
-            if pkg.test_failures:
-                raise TestFailure(pkg.test_failures)
-
-        finally:
-            # flag the package as having been tested (i.e., ran one or more
-            # non-pass-only methods
-            if ran_actual_test_function:
-                fsys.touch(pkg.tested_file)
-                # log one more test message to provide a completion timestamp
-                # for CDash reporting
-                tty.msg("Completed testing")
-            else:
-                print_test_message(logger, "No tests to run", verbose)
-
 
 inject_flags = PackageBase.inject_flags
 env_flags = PackageBase.env_flags
@@ -2661,16 +2521,6 @@ class PackageError(spack.error.SpackError):
 
     def __init__(self, message, long_msg=None):
         super(PackageError, self).__init__(message, long_msg)
-
-
-class PackageVersionError(PackageError):
-    """Raised when a version URL cannot automatically be determined."""
-
-    def __init__(self, version):
-        super(PackageVersionError, self).__init__(
-            "Cannot determine a URL automatically for version %s" % version,
-            "Please provide a url for this version in the package.py file.",
-        )
 
 
 class NoURLError(PackageError):
