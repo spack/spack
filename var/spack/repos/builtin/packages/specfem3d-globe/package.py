@@ -14,6 +14,7 @@ class Specfem3dGlobe(AutotoolsPackage, CudaPackage):
     homepage = "https://github.com/geodynamics/specfem3d_globe"
     url = "https://github.com/geodynamics/specfem3d_globe/archive/v7.0.2.tar.gz"
 
+    version("8.0.0", sha256="3e234e66fce4cc5484c651584187b255f951ee6cd1ec057e6aa6d42aced9052d")
     version("7.0.2", sha256="78b4cfbe4e5121927ab82a8c2e821b65cdfff3e94d017303bf21af7805186d9b")
 
     variant("opencl", default=False, description="Build with OpenCL code generator")

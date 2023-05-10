@@ -307,8 +307,17 @@ class Cudnn(Package):
             return url.format(directory, cuda, sys_key, ver)
 
     def setup_run_environment(self, env):
+        # Package is not compiled, and does not work unless LD_LIBRARY_PATH is set
+        env.prepend_path("LD_LIBRARY_PATH", self.prefix.lib)
+
         if "target=ppc64le: platform=linux" in self.spec:
             env.set("cuDNN_ROOT", os.path.join(self.prefix, "targets", "ppc64le-linux"))
+
+    def setup_dependent_build_environment(self, env, dependent_spec):
+        self.setup_run_environment(env)
+
+    def setup_dependent_run_environment(self, env, dependent_spec):
+        self.setup_run_environment(env)
 
     def install(self, spec, prefix):
         install_tree(".", prefix)

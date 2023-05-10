@@ -52,6 +52,7 @@ import spack.mirror
 import spack.package_base
 import spack.package_prefs as prefs
 import spack.repo
+import spack.spec
 import spack.store
 import spack.util.executable
 import spack.util.path
@@ -277,6 +278,19 @@ def _print_installed_pkg(message):
     print(colorize("@*g{[+]} ") + spack.util.path.debug_padded_filter(message))
 
 
+def print_install_test_log(pkg: "spack.package_base.PackageBase"):
+    """Output install test log file path but only if have test failures.
+
+    Args:
+        pkg: instance of the package under test
+    """
+    if not pkg.run_tests or not (pkg.tester and pkg.tester.test_failures):
+        # The tests were not run or there were no test failures
+        return
+
+    pkg.tester.print_log_path()
+
+
 def _print_timer(pre, pkg_id, timer):
     phases = ["{}: {}.".format(p.capitalize(), _hms(timer.duration(p))) for p in timer.phases]
     phases.append("Total: {}".format(_hms(timer.duration())))
@@ -391,7 +405,7 @@ def _process_binary_cache_tarball(
 
     with timer.measure("install"), spack.util.path.filter_padding():
         binary_distribution.extract_tarball(
-            pkg.spec, download_result, allow_root=False, unsigned=unsigned, force=False
+            pkg.spec, download_result, unsigned=unsigned, force=False
         )
 
         pkg.installed_from_binary_cache = True
@@ -535,6 +549,25 @@ def install_msg(name, pid):
     return pre + colorize("@*{Installing} @*g{%s}" % name)
 
 
+def archive_install_logs(pkg, phase_log_dir):
+    """
+    Copy install logs to their destination directory(ies)
+    Args:
+        pkg (spack.package_base.PackageBase): the package that was built and installed
+        phase_log_dir (str): path to the archive directory
+    """
+    # Archive the whole stdout + stderr for the package
+    fs.install(pkg.log_path, pkg.install_log_path)
+
+    # Archive all phase log paths
+    for phase_log in pkg.phase_log_files:
+        log_file = os.path.basename(phase_log)
+        fs.install(phase_log, os.path.join(phase_log_dir, log_file))
+
+    # Archive the install-phase test log, if present
+    pkg.archive_install_test_log()
+
+
 def log(pkg):
     """
     Copy provenance into the install directory on success
@@ -552,21 +585,10 @@ def log(pkg):
         # FIXME : this potentially catches too many things...
         tty.debug(e)
 
-    # Archive the whole stdout + stderr for the package
-    fs.install(pkg.log_path, pkg.install_log_path)
-
-    # Archive all phase log paths
-    for phase_log in pkg.phase_log_files:
-        log_file = os.path.basename(phase_log)
-        log_file = os.path.join(os.path.dirname(packages_dir), log_file)
-        fs.install(phase_log, log_file)
+    archive_install_logs(pkg, os.path.dirname(packages_dir))
 
     # Archive the environment modifications for the build.
     fs.install(pkg.env_mods_path, pkg.install_env_path)
-
-    # Archive the install-phase test log, if present
-    if pkg.test_install_log_path and os.path.exists(pkg.test_install_log_path):
-        fs.install(pkg.test_install_log_path, pkg.install_test_install_log_path)
 
     if os.path.exists(pkg.configure_args_path):
         # Archive the args used for the build
@@ -628,9 +650,7 @@ def package_id(pkg):
             derived
     """
     if not pkg.spec.concrete:
-        raise ValueError(
-            "Cannot provide a unique, readable id when " "the spec is not concretized."
-        )
+        raise ValueError("Cannot provide a unique, readable id when the spec is not concretized.")
 
     return "{0}-{1}-{2}".format(pkg.name, pkg.version, pkg.spec.dag_hash())
 
@@ -908,7 +928,6 @@ class PackageInstaller(object):
         """
         install_args = task.request.install_args
         keep_prefix = install_args.get("keep_prefix")
-        keep_stage = install_args.get("keep_stage")
         restage = install_args.get("restage")
 
         # Make sure the package is ready to be locally installed.
@@ -941,9 +960,9 @@ class PackageInstaller(object):
                 else:
                     tty.debug("{0} is partially installed".format(task.pkg_id))
 
-        # Destroy the stage for a locally installed, non-DIYStage, package
-        if restage and task.pkg.stage.managed_by_spack:
-            task.pkg.stage.destroy()
+            # Destroy the stage for a locally installed, non-DIYStage, package
+            if restage and task.pkg.stage.managed_by_spack:
+                task.pkg.stage.destroy()
 
         if installed_in_db and (
             rec.spec.dag_hash() not in task.request.overwrite
@@ -954,12 +973,6 @@ class PackageInstaller(object):
             # Only update the explicit entry once for the explicit package
             if task.explicit:
                 spack.store.db.update_explicit(task.pkg.spec, True)
-
-            # In case the stage directory has already been created, this
-            # check ensures it is removed after we checked that the spec is
-            # installed.
-            if not keep_stage:
-                task.pkg.stage.destroy()
 
     def _cleanup_all_tasks(self):
         """Cleanup all build tasks to include releasing their locks."""
@@ -1940,14 +1953,17 @@ class BuildProcessInstaller(object):
 
                 self._real_install()
 
+            # Run post install hooks before build stage is removed.
+            self.timer.start("post-install")
+            spack.hooks.post_install(self.pkg.spec, self.explicit)
+            self.timer.stop("post-install")
+
             # Stop the timer and save results
             self.timer.stop()
             with open(self.pkg.times_log_path, "w") as timelog:
                 self.timer.write_json(timelog)
 
-            # Run post install hooks before build stage is removed.
-            spack.hooks.post_install(self.pkg.spec, self.explicit)
-
+        print_install_test_log(self.pkg)
         _print_timer(pre=self.pre, pkg_id=self.pkg_id, timer=self.timer)
         _print_installed_pkg(self.pkg.prefix)
 
@@ -2420,7 +2436,10 @@ class BuildRequest(object):
         else:
             cache_only = self.install_args.get("dependencies_cache_only")
 
-        if not cache_only or include_build_deps:
+        # Include build dependencies if pkg is not installed and cache_only
+        # is False, or if build depdencies are explicitly called for
+        # by include_build_deps.
+        if include_build_deps or not (cache_only or pkg.spec.installed):
             deptypes.append("build")
         if self.run_tests(pkg):
             deptypes.append("test")

@@ -36,7 +36,7 @@ from spack.operating_systems.cray_frontend import CrayFrontend
             "Thread model: posix\n"
             "InstalledDir:\n"
             "/opt/arm/arm-hpc-compiler-19.0_Generic-AArch64_RHEL-7_aarch64-linux/bin\n",
-            "19.0.0.73",
+            "19.0",
         ),
         (
             "Arm C/C++/Fortran Compiler version 19.3.1 (build number 75) (based on LLVM 7.0.2)\n"
@@ -44,7 +44,7 @@ from spack.operating_systems.cray_frontend import CrayFrontend
             "Thread model: posix\n"
             "InstalledDir:\n"
             "/opt/arm/arm-hpc-compiler-19.0_Generic-AArch64_RHEL-7_aarch64-linux/bin\n",
-            "19.3.1.75",
+            "19.3.1",
         ),
     ],
 )
@@ -262,6 +262,11 @@ def test_intel_version_detection(version_str, expected_version):
             "ifx (IFORT) 2022.0.0 20211123\n"
             "Copyright (C) 1985-2021 Intel Corporation. All rights reserved.",
             "2022.0.0",
+        ),
+        (  # IFX
+            "ifx (IFX) 2023.1.0 20230320\n"
+            "Copyright (C) 1985-2023 Intel Corporation. All rights reserved.",
+            "2023.1.0",
         ),
     ],
 )

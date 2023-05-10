@@ -13,13 +13,6 @@ class ScalapackBase(CMakePackage):
     of the library in the 'amdscalapack' package.
     """
 
-    variant(
-        "build_type",
-        default="Release",
-        description="CMake build type",
-        values=("Debug", "Release", "RelWithDebInfo", "MinSizeRel"),
-    )
-
     variant("shared", default=True, description="Build the shared library version")
     variant("pic", default=False, description="Build position independent code")
 
@@ -89,7 +82,12 @@ class ScalapackBase(CMakePackage):
         # Work around errors of the form:
         #   error: implicit declaration of function 'BI_smvcopy' is
         #   invalid in C99 [-Werror,-Wimplicit-function-declaration]
-        if spec.satisfies("%clang") or spec.satisfies("%apple-clang") or spec.satisfies("%oneapi"):
+        if (
+            spec.satisfies("%clang")
+            or spec.satisfies("%apple-clang")
+            or spec.satisfies("%oneapi")
+            or spec.satisfies("%arm")
+        ):
             c_flags.append("-Wno-error=implicit-function-declaration")
 
         options.append(self.define("CMAKE_C_FLAGS", " ".join(c_flags)))

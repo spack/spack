@@ -31,7 +31,7 @@ class Fsl(Package, CudaPackage):
     depends_on("expat")
     depends_on("libx11")
     depends_on("glu")
-    depends_on("libiconv")
+    depends_on("iconv")
     depends_on("openblas", when="@6:")
     depends_on("vtk@:8")
 
@@ -40,7 +40,7 @@ class Fsl(Package, CudaPackage):
 
     patch("build_log.patch")
     patch("eddy_Makefile.patch", when="@6.0.4")
-    patch("iconv.patch")
+    patch("iconv.patch", when="^libiconv")
     patch("fslpython_install_v5.patch", when="@:5")
     patch("fslpython_install_v604.patch", when="@6.0.4")
     patch("fslpython_install_v605.patch", when="@6.0.5")

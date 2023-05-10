@@ -22,6 +22,7 @@ class Coreutils(AutotoolsPackage, GNUMirrorPackage):
 
     executables = [r"^md5sum$"]
 
+    version("9.3", sha256="adbcfcfe899235b71e8768dcf07cd532520b7f54f9a8064843f8d199a904bbaa")
     version("9.2", sha256="6885ff47b9cdb211de47d368c17853f406daaf98b148aaecdf10de29cc04b0b3")
     version("9.1", sha256="61a1f410d78ba7e7f37a5a4f50e6d1320aca33375484a3255eddf17a38580423")
     version("9.0", sha256="ce30acdf4a41bc5bb30dd955e9eaa75fa216b4e3deb08889ed32433c7b3b97ce")
