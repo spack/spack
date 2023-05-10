@@ -14,8 +14,8 @@ class Fftw(Package):
     homepage = "http://www.example.com"
     url = "http://www.example.com/fftw-1.0.tar.gz"
 
-    version(2.0, md5="abcdef1234567890abcdef1234567890")
-    version(1.0, md5="1234567890abcdef1234567890abcdef")
+    version("2.0", md5="abcdef1234567890abcdef1234567890")
+    version("1.0", md5="1234567890abcdef1234567890abcdef")
 
     variant("mpi", default=False, description="Enable MPI")
 

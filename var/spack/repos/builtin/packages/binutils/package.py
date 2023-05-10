@@ -110,6 +110,13 @@ class Binutils(AutotoolsPackage, GNUMirrorPackage):
         multi=True,
         description="Build shared libs, static libs or both",
     )
+    variant(
+        "compress_debug_sections",
+        default="zlib",
+        values=(conditional("zstd", when="@2.40:"), "zlib", "none"),
+        description="Enable debug section compression by default in ld, gas, gold.",
+        when="@2.26:",
+    )
 
     patch("cr16.patch", when="@:2.29.1")
     patch("update_symbol-2.26.patch", when="@2.26")
@@ -249,6 +256,15 @@ class AutotoolsBuilder(spack.build_systems.autotools.AutotoolsBuilder):
             args.append("--enable-pgo-build=lto")
         else:
             args.append("--disable-pgo-build")
+
+        # Compressed debug symbols by default. Note that the "default" flag only applies
+        # to 2.40: but since it is ignored in earlier versions, that is not a problem.
+        if self.spec.satisfies("compress_debug_sections=zlib"):
+            args.append("--enable-compressed-debug-sections=all")
+            args.append("--enable-default-compressed-debug-sections-algorithm=zlib")
+        elif self.spec.satisfies("compress_debug_sections=zstd"):
+            args.append("--enable-compressed-debug-sections=all")
+            args.append("--enable-default-compressed-debug-sections-algorithm=zstd")
 
         # To avoid namespace collisions with Darwin/BSD system tools,
         # prefix executables with "g", e.g., gar, gnm; see Homebrew

@@ -87,18 +87,10 @@ class Dyninst(CMakePackage):
     patch("v9.3.2-auto.patch", when="@9.3.2 %gcc@:4.7")
     patch("tribool.patch", when="@9.3.0:10.0.0 ^boost@1.69:")
 
+    requires("%gcc", msg="dyninst builds only with GCC")
+
     # No Mac support (including apple-clang)
     conflicts("platform=darwin", msg="macOS is not supported")
-
-    # We currently only build with gcc
-    conflicts("%clang")
-    conflicts("%arm")
-    conflicts("%cce")
-    conflicts("%fj")
-    conflicts("%intel")
-    conflicts("%pgi")
-    conflicts("%xl")
-    conflicts("%xl_r")
 
     # Version 11.0 requires a C++11-compliant ABI
     conflicts("%gcc@:5", when="@11.0.0:")
