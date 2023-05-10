@@ -147,7 +147,7 @@ class OpenfoamOrg(Package):
 
         """
         if version <= Version("5.0"):
-            url= "https://github.com/OpenFOAM/OpenFOAM-{0}.x/archive/version-{1}.tar.gz"
+            url = "https://github.com/OpenFOAM/OpenFOAM-{0}.x/archive/version-{1}.tar.gz"
             return url.format(version.up_to(-1), version)
 
     @property
