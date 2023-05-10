@@ -317,7 +317,7 @@ class Lbann(CachedCMakePackage, CudaPackage, ROCmPackage):
     depends_on("zstr")
 
     generator("ninja")
-    depends_on("ninja", type=("build", "run"))
+    depends_on("ninja", type="build")
 
     @property
     def common_config_args(self):
@@ -515,7 +515,7 @@ class Lbann(CachedCMakePackage, CudaPackage, ROCmPackage):
         hostname = socket.gethostname()
         if "SYS_TYPE" in env:
             hostname = hostname.rstrip("1234567890")
-        return "BVE_{0}-{1}-{2}@{3}.cmake".format(
+        return "LBANN_{0}-{1}-{2}@{3}.cmake".format(
             hostname,
             self._get_sys_type(self.spec),
             self.spec.compiler.name,
@@ -560,6 +560,8 @@ class Lbann(CachedCMakePackage, CudaPackage, ROCmPackage):
             #     arch_str = ";".join(archs)
             #     entries.append(cmake_cache_string("CMAKE_CUDA_ARCHITECTURES", "{0}".format(arch_str)))
 
+            entries.append(self.define_cmake_cache_from_variant("CMAKE_CUDA_ARCHITECTURES_BVE", "cuda_arch"))
+            
             if spec.satisfies("%cce") and spec.satisfies("^cuda+allow-unsupported-compilers"):
                 entries.append(cmake_cache_string("CMAKE_CUDA_FLAGS", "-allow-unsupported-compiler"))
 
@@ -585,7 +587,11 @@ class Lbann(CachedCMakePackage, CudaPackage, ROCmPackage):
         entries.append(cmake_cache_option("LBANN_WITH_FFT", "+fft" in spec))
         entries.append(cmake_cache_option("LBANN_WITH_ONEDNN", "+onednn" in spec))
         entries.append(cmake_cache_option("LBANN_WITH_ONNX", "+onnx" in spec))
+
+        entries.append(self.define_cmake_cache_from_variant("LBANN_WITH_ONNX_BVE", "onnx"))
+
         entries.append(cmake_cache_option("LBANN_WITH_EMBEDDED_PYTHON", "+python" in spec))
+        entries.append(self.define_cmake_cache_from_variant("LBANN_WITH_EMBEDDED_PYTHON_BVE", "python"))
         entries.append(cmake_cache_option("LBANN_WITH_PYTHON_FRONTEND", "+pfe" in spec))
         entries.append(cmake_cache_option("LBANN_WITH_ROCTRACER", "+rocm +distconv" in spec))
         entries.append(cmake_cache_option("LBANN_WITH_TBINF", "OFF"))
