@@ -187,7 +187,9 @@ def remove_compiler_from_config(compiler_spec, scope=None):
     filtered_compiler_config = [
         comp
         for comp in compiler_config
-        if spack.spec.CompilerSpec(comp["compiler"]["spec"]) != compiler_spec
+        if not spack.spec.parse_with_version_concrete(
+            comp["compiler"]["spec"], compiler=True
+        ).satisfies(compiler_spec)
     ]
 
     # Update the cache for changes

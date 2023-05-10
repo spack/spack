@@ -107,10 +107,10 @@ fi
 
 
 def test_compiler_remove(mutable_config, mock_packages):
+    assert spack.spec.CompilerSpec("gcc@=4.5.0") in spack.compilers.all_compiler_specs()
     args = spack.util.pattern.Bunch(all=True, compiler_spec="gcc@4.5.0", add_paths=[], scope=None)
     spack.cmd.compiler.compiler_remove(args)
-    compilers = spack.compilers.all_compiler_specs()
-    assert spack.spec.CompilerSpec("gcc@=4.5.0") not in compilers
+    assert spack.spec.CompilerSpec("gcc@=4.5.0") not in spack.compilers.all_compiler_specs()
 
 
 @pytest.mark.skipif(
