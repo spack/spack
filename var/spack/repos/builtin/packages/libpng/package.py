@@ -38,6 +38,7 @@ class Libpng(CMakePackage):
         description="Build shared libs, static libs or both",
     )
 
+
 class CMakeBuilder(CMakeBuilder):
     def cmake_args(self):
         args = [
@@ -45,7 +46,7 @@ class CMakeBuilder(CMakeBuilder):
             self.define("ZLIB_ROOT", self.spec["zlib"].prefix),
             self.define("PNG_SHARED", "shared" in self.spec.variants["libs"].value),
             self.define("PNG_STATIC", "static" in self.spec.variants["libs"].value),
-            ]
+        ]
         if self.spec.satisfies("platform=darwin target=aarch64:"):
             args.append("-DPNG_ARM_NEON=off")
         return args
