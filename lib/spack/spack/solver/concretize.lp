@@ -494,6 +494,19 @@ requirement_group_satisfied(Package, X) :-
   activate_requirement(Package, X),
   requirement_group(Package, X).
 
+% TODO: the following two choice rules allow the solver to add compiler
+% flags if their only source is from a requirement. This is overly-specific
+% and should use a more-generic approach like in https://github.com/spack/spack/pull/37180
+{ attr("node_flag", A1, A2, A3) } :-
+  requirement_group_member(Y, Package, X),
+  activate_requirement(Package, X),
+  imposed_constraint(Y,"node_flag_set", A1, A2, A3).
+
+{ attr("node_flag_source", A1, A2, A3) } :-
+  requirement_group_member(Y, Package, X),
+  activate_requirement(Package, X),
+  imposed_constraint(Y,"node_flag_source", A1, A2, A3).
+
 requirement_weight(Package, Group, W) :-
   W = #min {
     Z : requirement_has_weight(Y, Z), condition_holds(Y), requirement_group_member(Y, Package, Group);

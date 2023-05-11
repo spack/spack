@@ -381,6 +381,22 @@ packages:
     assert s2.satisfies("%gcc+shared")
 
 
+@pytest.mark.regression("34241")
+def test_require_cflags(concretize_scope, test_repo):
+    """Ensures that flags can be required from configuration."""
+    if spack.config.get("config:concretizer") == "original":
+        pytest.skip("Original concretizer does not support configuration" " requirements")
+
+    conf_str = """\
+packages:
+  y:
+    require: cflags="-g"
+"""
+    update_packages_config(conf_str)
+    spec = Spec("y").concretized()
+    assert spec.satisfies("cflags=-g")
+
+
 def test_requirements_for_package_that_is_not_needed(concretize_scope, test_repo):
     """Specify requirements for specs that are not concretized or
     a dependency of a concretized spec (in other words, none of
