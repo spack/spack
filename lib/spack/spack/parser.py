@@ -309,7 +309,7 @@ class SpecNodeParser:
         self.has_version = False
         self.has_hash = False
 
-    def parse(self, initial_spec: Optional[spack.spec.Spec] = None) -> spack.spec.Spec:
+    def parse(self, initial_spec: Optional[spack.spec.Spec] = None) -> Optional[spack.spec.Spec]:
         """Parse a single spec node from a stream of tokens
 
         Args:
