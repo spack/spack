@@ -26,6 +26,7 @@ class Julia(MakefilePackage):
     maintainers("glennpj", "vchuravy", "haampie", "giordano")
 
     version("master", branch="master")
+    version("1.9.0", sha256="48f4c8a7d5f33d0bc6ce24226df20ab49e385c2d0c3767ec8dfdb449602095b2")
     version("1.8.5", sha256="d31026cc6b275d14abce26fd9fd5b4552ac9d2ce8bde4291e494468af5743031")
     version("1.8.4", sha256="b7b8ee64fb947db8d61104f231e1b25342fe330d29e0d2273f93c264f32c5333")
     version("1.8.3", sha256="4d8d460fcae5c6f8306a3e3c14371635c1a26f47c3ce62b2950cf9234b6ec849")
@@ -57,6 +58,19 @@ class Julia(MakefilePackage):
     # Do not use internal unwind.  We need to use a conflict, because
     # `internal_unwind` is defined only when `+clang`.
     conflicts("^llvm+internal_unwind")
+
+    with when("@1.9.0:1.9"):
+        # libssh2.so.1, libpcre2-8.so.0, mbedtls.so.14, mbedcrypto.so.7, mbedx509.so.1
+        # openlibm.so.4, libblastrampoline.so.5, libgit2.so.1.5, libnghttp2.so.14,
+        # libcurl.so.4
+        depends_on("libblastrampoline@5.4.0:5")
+        depends_on("libgit2@1.5.0:1.5")
+        depends_on("libssh2@1.10.0:1.10")
+        depends_on("llvm@14.0.6 +lld shlib_symbol_version=jl")
+        depends_on("mbedtls@2.28.0:2.28")
+        depends_on("openlibm@0.8.1:0.8", when="+openlibm")
+        depends_on("nghttp2@1.48.0:1.48")
+        depends_on("curl@7.84.0:")
 
     with when("@1.8.0:1.8"):
         # libssh2.so.1, libpcre2-8.so.0, mbedtls.so.14, mbedcrypto.so.7, mbedx509.so.1
@@ -120,6 +134,14 @@ class Julia(MakefilePackage):
             sha256="45f72c59ae5cf45461e9cd8b224ca49b739d885c79b3786026433c6c22f83b5f",
         ),
     )
+    depends_on(
+        "llvm",
+        when="^llvm@14.0.6",
+        patches=patch(
+            "https://github.com/JuliaLang/llvm-project/compare/f28c006a5895fc0e329fe15fead81e37457cb1d1...5c82f5309b10fab0adf6a94969e0dddffdb3dbce.patch",
+            sha256="9f2bc98e876e85a3edb158064aae782281ea7099e4c34e83ac456609cb7acd10",
+        ),
+    )
 
     # Patches for libuv
     depends_on(
@@ -167,7 +189,7 @@ class Julia(MakefilePackage):
     # Patches for julia
     patch("julia-1.6-system-libwhich-and-p7zip-symlink.patch", when="@1.6.0:1.6")
     patch("use-add-rpath.patch", when="@:1.8.0")
-    patch("use-add-rpath-2.patch", when="@1.8.1:")
+    patch("use-add-rpath-2.patch", when="@1.8.1:1.8")
 
     # Fix gfortran abi detection https://github.com/JuliaLang/julia/pull/44026
     patch("fix-gfortran.patch", when="@1.7.0:1.7.2")
@@ -257,6 +279,7 @@ class Julia(MakefilePackage):
             "USE_SYSTEM_LIBUNWIND:=1",
             "USE_SYSTEM_LIBUV:=1",
             "USE_SYSTEM_LIBWHICH:=1",
+            "USE_SYSTEM_LLD:=1",  # @1.9:
             "USE_SYSTEM_LLVM:=1",
             "USE_SYSTEM_MBEDTLS:=1",
             "USE_SYSTEM_MPFR:=1",
@@ -274,6 +297,8 @@ class Julia(MakefilePackage):
             "override USE_LLVM_SHLIB:=1",
             # make rebuilds a bit faster for now, not sure if this should be kept
             "JULIA_PRECOMPILE:={0}".format("1" if spec.variants["precompile"].value else "0"),
+            # we want to use `patchelf --add-rpath` instead of `patchelf --set-rpath`
+            "override PATCHELF_SET_RPATH_ARG:=--add-rpath",  # @1.9:
         ]
 
         options.append("USEGCC:={}".format("1" if "%gcc" in spec else "0"))
