@@ -70,7 +70,7 @@ def test_extends_spec(config, mock_packages):
 def test_error_on_anonymous_dependency(config, mock_packages):
     pkg = spack.repo.path.get_pkg_class("a")
     with pytest.raises(spack.directives.DependencyError):
-        spack.directives._depends_on(pkg, "@4.5")
+        spack.directives.pkg_depends_on(pkg, "@4.5")
 
 
 @pytest.mark.regression("34879")
