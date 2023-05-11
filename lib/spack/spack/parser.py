@@ -258,7 +258,7 @@ class SpecParser:
         return list(filter(lambda x: x.kind != TokenType.WS, tokenize(self.literal_str)))
 
     def next_spec(
-            self, initial_spec: Optional[spack.spec.Spec] = None
+        self, initial_spec: Optional[spack.spec.Spec] = None
     ) -> Optional[spack.spec.Spec]:
         """Return the next spec parsed from text.
 
