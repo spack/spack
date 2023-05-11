@@ -12,6 +12,7 @@ from llnl.util.filesystem import join_path, mkdirp, touch
 
 import spack.install_test
 import spack.spec
+from spack.install_test import TestStatus
 from spack.util.executable import which
 
 
@@ -94,10 +95,7 @@ def test_test_not_installed(mock_packages, install_mockery, mock_test_stage):
 
 @pytest.mark.parametrize(
     "arguments,status,msg",
-    [
-        ({}, spack.install_test.TestStatus.SKIPPED, "Skipped"),
-        ({"externals": True}, spack.install_test.TestStatus.NO_TESTS, "No tests"),
-    ],
+    [({}, TestStatus.SKIPPED, "Skipped"), ({"externals": True}, TestStatus.NO_TESTS, "No tests")],
 )
 def test_test_external(
     mock_packages, install_mockery, mock_test_stage, monkeypatch, arguments, status, msg
@@ -307,7 +305,7 @@ def test_test_part_fail(tmpdir, install_mockery_mutable_config, mock_fetch, mock
 
     for part_name, status in pkg.tester.test_parts.items():
         assert part_name.endswith(name)
-        assert status == spack.install_test.TestStatus.FAILED
+        assert status == TestStatus.FAILED
 
 
 def test_test_part_pass(install_mockery_mutable_config, mock_fetch, mock_test_stage):
@@ -323,7 +321,7 @@ def test_test_part_pass(install_mockery_mutable_config, mock_fetch, mock_test_st
 
     for part_name, status in pkg.tester.test_parts.items():
         assert part_name.endswith(name)
-        assert status == spack.install_test.TestStatus.PASSED
+        assert status == TestStatus.PASSED
 
 
 def test_test_part_skip(install_mockery_mutable_config, mock_fetch, mock_test_stage):
@@ -337,7 +335,7 @@ def test_test_part_skip(install_mockery_mutable_config, mock_fetch, mock_test_st
 
     for part_name, status in pkg.tester.test_parts.items():
         assert part_name.endswith(name)
-        assert status == spack.install_test.TestStatus.SKIPPED
+        assert status == TestStatus.SKIPPED
 
 
 def test_test_part_missing_exe_fail_fast(
@@ -360,7 +358,7 @@ def test_test_part_missing_exe_fail_fast(
     assert len(test_parts) == 1
     for part_name, status in test_parts.items():
         assert part_name.endswith(name)
-        assert status == spack.install_test.TestStatus.FAILED
+        assert status == TestStatus.FAILED
 
 
 def test_test_part_missing_exe(
@@ -381,7 +379,66 @@ def test_test_part_missing_exe(
     assert len(test_parts) == 1
     for part_name, status in test_parts.items():
         assert part_name.endswith(name)
-        assert status == spack.install_test.TestStatus.FAILED
+        assert status == TestStatus.FAILED
+
+
+# TODO (embedded test parts): Update this once embedded test part tracking
+# TODO (embedded test parts): properly handles the nested context managers.
+@pytest.mark.parametrize(
+    "current,substatuses,expected",
+    [
+        (TestStatus.PASSED, [TestStatus.PASSED, TestStatus.PASSED], TestStatus.PASSED),
+        (TestStatus.FAILED, [TestStatus.PASSED, TestStatus.PASSED], TestStatus.FAILED),
+        (TestStatus.SKIPPED, [TestStatus.PASSED, TestStatus.PASSED], TestStatus.SKIPPED),
+        (TestStatus.NO_TESTS, [TestStatus.PASSED, TestStatus.PASSED], TestStatus.NO_TESTS),
+        (TestStatus.PASSED, [TestStatus.PASSED, TestStatus.SKIPPED], TestStatus.PASSED),
+        (TestStatus.PASSED, [TestStatus.PASSED, TestStatus.FAILED], TestStatus.FAILED),
+        (TestStatus.PASSED, [TestStatus.SKIPPED, TestStatus.SKIPPED], TestStatus.SKIPPED),
+    ],
+)
+def test_embedded_test_part_status(
+    install_mockery_mutable_config, mock_fetch, mock_test_stage, current, substatuses, expected
+):
+    """Check to ensure the status of the enclosing test part reflects summary of embedded parts."""
+
+    s = spack.spec.Spec("trivial-smoke-test").concretized()
+    pkg = s.package
+    base_name = "test_example"
+    part_name = f"{pkg.__class__.__name__}::{base_name}"
+
+    pkg.tester.test_parts[part_name] = current
+    for i, status in enumerate(substatuses):
+        pkg.tester.test_parts[f"{part_name}_{i}"] = status
+
+    pkg.tester.status(base_name, current)
+    assert pkg.tester.test_parts[part_name] == expected
+
+
+@pytest.mark.parametrize(
+    "statuses,expected",
+    [
+        ([TestStatus.PASSED, TestStatus.PASSED], TestStatus.PASSED),
+        ([TestStatus.PASSED, TestStatus.SKIPPED], TestStatus.PASSED),
+        ([TestStatus.PASSED, TestStatus.FAILED], TestStatus.FAILED),
+        ([TestStatus.SKIPPED, TestStatus.SKIPPED], TestStatus.SKIPPED),
+        ([], TestStatus.NO_TESTS),
+    ],
+)
+def test_write_tested_status(
+    tmpdir, install_mockery_mutable_config, mock_fetch, mock_test_stage, statuses, expected
+):
+    """Check to ensure the status of the enclosing test part reflects summary of embedded parts."""
+    s = spack.spec.Spec("trivial-smoke-test").concretized()
+    pkg = s.package
+    for i, status in enumerate(statuses):
+        pkg.tester.test_parts[f"test_{i}"] = status
+        pkg.tester.counts[status] += 1
+
+    pkg.tester.tested_file = tmpdir.join("test-log.txt")
+    pkg.tester.write_tested_status()
+    with open(pkg.tester.tested_file, "r") as f:
+        status = int(f.read().strip("\n"))
+        assert TestStatus(status) == expected
 
 
 def test_check_special_outputs(tmpdir):
