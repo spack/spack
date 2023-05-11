@@ -217,7 +217,7 @@ spack:
   - superlu-dist +rocm
   - tasmanian ~openmp +rocm
   - tau +mpi +rocm
-  - "trilinos@13.4.0: ~belos ~ifpack2 ~stokhos +rocm"
+  - "trilinos@13.4.0: +belos ~ifpack2 ~stokhos +rocm"
   - umpire +rocm
   - upcxx +rocm
 
