@@ -162,10 +162,8 @@ protected-publish:
     max: 2
     when: ["runner_system_failure", "stuck_or_timeout_failure"]
   variables:
-  # TODO (SCOTT): Fix url before PR
-    SPACK_BUILDCACHE_DESTINATION: "s3://spack-binaries/test/${CI_COMMIT_REF_NAME}/${SPACK_CI_STACK_NAME}"
-    # TODO (SCOTT): Fix url before PR
-    SPACK_COPY_BUILDCACHE: "s3://spack-binaries/test/${CI_COMMIT_REF_NAME}"
+    SPACK_BUILDCACHE_DESTINATION: "s3://spack-binaries/${CI_COMMIT_REF_NAME}/${SPACK_CI_STACK_NAME}"
+    SPACK_COPY_BUILDCACHE: "s3://spack-binaries/${CI_COMMIT_REF_NAME}"
     SPACK_PIPELINE_TYPE: "spack_protected_branch"
     AWS_ACCESS_KEY_ID: ${PROTECTED_MIRRORS_AWS_ACCESS_KEY_ID}
     AWS_SECRET_ACCESS_KEY: ${PROTECTED_MIRRORS_AWS_SECRET_ACCESS_KEY}
