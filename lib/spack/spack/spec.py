@@ -110,7 +110,6 @@ __all__ = [
     "UnsatisfiableDependencySpecError",
     "AmbiguousHashError",
     "InvalidHashError",
-    "NoSuchHashError",
     "RedundantSpecError",
     "SpecDeprecatedError",
 ]
@@ -1837,15 +1836,19 @@ class Spec(object):
 
         matches = []
         active_env = spack.environment.active_environment()
+
         if active_env:
-            matches = active_env.get_by_hash(self.abstract_hash)
+            env_matches = active_env.get_by_hash(self.abstract_hash) or []
+            matches = [m for m in env_matches if m._satisfies(self)]
         if not matches:
-            matches = spack.store.db.get_by_hash(self.abstract_hash)
+            db_matches = spack.store.db.get_by_hash(self.abstract_hash) or []
+            matches = [m for m in db_matches if m._satisfies(self)]
         if not matches:
             query = spack.binary_distribution.BinaryCacheQuery(True)
-            matches = query("/" + self.abstract_hash)
+            remote_matches = query("/" + self.abstract_hash) or []
+            matches = [m for m in remote_matches if m._satisfies(self)]
         if not matches:
-            raise spack.spec.NoSuchHashError(self.abstract_hash)
+            raise InvalidHashError(self, self.abstract_hash)
 
         if len(matches) != 1:
             raise spack.spec.AmbiguousHashError(
@@ -1864,18 +1867,14 @@ class Spec(object):
         spec = self.copy(deps=False)
         # root spec is replaced
         if spec.abstract_hash:
-            new = spec._lookup_hash()
-            if not new._satisfies(self):
-                raise InvalidHashError(spec, spec.abstract_hash)
+            new = self._lookup_hash()
             spec._dup(new)
             return spec
 
         # Get dependencies that need to be replaced
         for node in self.traverse(root=False):
             if node.abstract_hash:
-                new = node._lookup_hash()  # do we need a defensive copy here?
-                if not new._satisfies(node):
-                    raise InvalidHashError(node, node.abstract_hash)
+                new = node._lookup_hash()
                 spec._add_dependency(new, deptypes=())
 
         # reattach nodes that were not otherwise satisfied by new dependencies
@@ -5176,14 +5175,9 @@ class AmbiguousHashError(spack.error.SpecError):
 
 class InvalidHashError(spack.error.SpecError):
     def __init__(self, spec, hash):
-        super(InvalidHashError, self).__init__(
-            "The spec specified by %s does not match provided spec %s" % (hash, spec)
-        )
-
-
-class NoSuchHashError(spack.error.SpecError):
-    def __init__(self, hash):
-        super(NoSuchHashError, self).__init__("No installed spec matches the hash: '%s'" % hash)
+        msg = f"No spec with hash {hash} could be found to match {spec}."
+        msg += " Either the hash does not exist, or it does not match other spec constraints."
+        super(InvalidHashError, self).__init__(msg)
 
 
 class SpecFilenameError(spack.error.SpecError):

@@ -23,7 +23,7 @@ from spack.parser import (
 
 FAIL_ON_WINDOWS = pytest.mark.xfail(
     sys.platform == "win32",
-    raises=(SpecTokenizationError, spack.spec.NoSuchHashError),
+    raises=(SpecTokenizationError, spack.spec.InvalidHashError),
     reason="Unix style path on Windows",
 )
 
@@ -780,28 +780,40 @@ def test_nonexistent_hash(database, config):
     hashes = [s._hash for s in specs]
     assert no_such_hash not in [h[: len(no_such_hash)] for h in hashes]
 
-    with pytest.raises(spack.spec.NoSuchHashError):
+    with pytest.raises(spack.spec.InvalidHashError):
         parsed_spec = SpecParser(f"/{no_such_hash}").next_spec()
         parsed_spec.replace_hash()
 
 
-@pytest.mark.db
 @pytest.mark.parametrize(
-    "query_str,text_fmt",
+    "spec1,spec2,constraint",
     [
-        ("mpileaks ^zmpi", r"/{hash}%{0.compiler}"),
-        ("callpath ^zmpi", r"callpath /{hash} ^a"),
-        ("dyninst", r'/{hash} cflags="-O3 -fPIC"'),
-        ("mpileaks ^mpich2", r"mpileaks/{hash} @{0.version}"),
-    ],
+        ("zlib", "hdf5", None),
+        ("zlib+shared", "zlib~shared", "+shared"),
+        ("hdf5+mpi^zmpi", "hdf5~mpi", "^zmpi"),
+        ("hdf5+mpi^mpich+debug", "hdf5+mpi^mpich~debug", "^mpich+debug"),
+    ]
 )
-def test_redundant_spec(query_str, text_fmt, database):
-    """Check that redundant spec constraints raise errors."""
-    spec = database.query_one(query_str)
-    text = text_fmt.format(spec, hash=spec.dag_hash())
-    with pytest.raises(spack.spec.RedundantSpecError):
-        parsed_spec = SpecParser(text).next_spec()
-        parsed_spec.replace_hash()
+def test_disambiguate_hash_by_spec(spec1, spec2, constraint, mock_packages, monkeypatch, config):
+    spec1_concrete = spack.spec.Spec(spec1).concretized()
+    spec2_concrete = spack.spec.Spec(spec2).concretized()
+
+    spec1_concrete._hash = "spec1"
+    spec2_concrete._hash = "spec2"
+
+    monkeypatch.setattr(
+        spack.binary_distribution,
+        "update_cache_and_get_specs",
+        lambda: [spec1_concrete, spec2_concrete]
+    )
+
+    # Ordering is tricky -- for constraints we want after, for names we want before
+    if not constraint:
+        spec = spack.spec.Spec(spec1 + "/spec")
+    else:
+        spec = spack.spec.Spec("/spec" + constraint)
+
+    assert spec.lookup_hash() == spec1_concrete
 
 
 @pytest.mark.parametrize(
