@@ -279,7 +279,7 @@ class Julia(MakefilePackage):
             "USE_SYSTEM_LIBUNWIND:=1",
             "USE_SYSTEM_LIBUV:=1",
             "USE_SYSTEM_LIBWHICH:=1",
-            "USE_SYSTEM_LLD:=1", # @1.9:
+            "USE_SYSTEM_LLD:=1",  # @1.9:
             "USE_SYSTEM_LLVM:=1",
             "USE_SYSTEM_MBEDTLS:=1",
             "USE_SYSTEM_MPFR:=1",
@@ -298,7 +298,7 @@ class Julia(MakefilePackage):
             # make rebuilds a bit faster for now, not sure if this should be kept
             "JULIA_PRECOMPILE:={0}".format("1" if spec.variants["precompile"].value else "0"),
             # we want to use `patchelf --add-rpath` instead of `patchelf --set-rpath`
-            "override PATCHELF_SET_RPATH_ARG:=--add-rpath", # @1.9:
+            "override PATCHELF_SET_RPATH_ARG:=--add-rpath",  # @1.9:
         ]
 
         options.append("USEGCC:={}".format("1" if "%gcc" in spec else "0"))
