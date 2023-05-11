@@ -115,6 +115,10 @@ class Gromacs(CMakePackage, CudaPackage):
         "+mdrun_only", when="@2021:", msg="mdrun-only build option was removed for GROMACS 2021."
     )
     variant("openmp", default=True, description="Enables OpenMP at configure time")
+    variant("openmp_max_threads", default="none", description="Max number of OpenMP threads")
+    conflicts(
+        "+openmp_max_threads", when="~openmp", msg="OpenMP is off but OpenMP Max threads is set"
+    )
     variant(
         "sve",
         default=True,
@@ -569,6 +573,11 @@ class CMakeBuilder(spack.build_systems.cmake.CMakeBuilder):
             options.append("-DGMX_CYCLE_SUBCOUNTERS:BOOL=ON")
         else:
             options.append("-DGMX_CYCLE_SUBCOUNTERS:BOOL=OFF")
+
+        if "+openmp" in self.spec and self.spec.variants["openmp_max_threads"].value != "none":
+            options.append(
+                "-DGMX_OPENMP_MAX_THREADS=%s" % self.spec.variants["openmp_max_threads"].value
+            )
 
         if "^mkl" in self.spec:
             # fftw-api@3 is provided by intel-mkl or intel-parllel-studio
