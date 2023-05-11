@@ -94,7 +94,7 @@ class XsdkExamples(CMakePackage, CudaPackage, ROCmPackage):
         if "+rocm" in spec["xsdk"]:  # if rocm variant was activated for xsdk
             args.extend(
                 [
-                    "-DENABLE_ROCM=ON",
+                    "-DENABLE_HIP=ON",
                     #"-DCMAKE_CUDA_ARCHITECTURES=%s" % spec.variants["cuda_arch"].value,
                 ]
             )
