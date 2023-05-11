@@ -88,7 +88,7 @@ def test_spec_parse_unquoted_flags_report():
     # Verify that the generated error message is nicely formatted.
     assert str(cm.value) == dedent(
         '''\
-    No installed spec matches the hash: 'usr'
+    No spec with hash usr could be found to match gcc cflags="-Os -I" ~other-arg-that-gets-ignored~pipe/usr. Either the hash does not exist, or it does not match other spec constraints.
 
     Some compiler or linker flags were provided without quoting their arguments,
     which now causes spack to try to parse the *next* argument as a spec component
