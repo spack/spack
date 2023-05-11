@@ -241,6 +241,9 @@ class TokenContext:
             return True
         return False
 
+    def expect(self, *kinds: TokenType):
+        return self.next_token and self.next_token.kind in kinds
+
 
 class SpecParser:
     """Parse text into specs"""
@@ -270,7 +273,7 @@ class SpecParser:
             The spec that was parsed
         """
         if not self.ctx.next_token:
-            return None
+            return initial_spec
 
         initial_spec = initial_spec or spack.spec.Spec()
         root_spec = SpecNodeParser(self.ctx).parse(initial_spec)
@@ -278,9 +281,9 @@ class SpecParser:
             if self.ctx.accept(TokenType.DEPENDENCY):
                 if root_spec.abstract_hash:
                     raise spack.spec.RedundantSpecError(root_spec, self.ctx.current_token)
-                dependency = SpecNodeParser(self.ctx).parse(spack.spec.Spec())
+                dependency = SpecNodeParser(self.ctx).parse()
 
-                if not dependency.abstract_hash and dependency == spack.spec.Spec():
+                if dependency is None:
                     msg = (
                         "this dependency sigil needs to be followed by a package name "
                         "or a node attribute (version, variant, etc.)"
@@ -313,7 +316,7 @@ class SpecNodeParser:
         self.has_version = False
         self.has_hash = False
 
-    def parse(self, initial_spec: spack.spec.Spec) -> spack.spec.Spec:
+    def parse(self, initial_spec: Optional[spack.spec.Spec] = None) -> Optional[spack.spec.Spec]:
         """Parse a single spec node from a stream of tokens
 
         Args:
@@ -322,6 +325,10 @@ class SpecNodeParser:
         Return
             The object passed as argument
         """
+        if not self.ctx.next_token or self.ctx.expect(TokenType.DEPENDENCY):
+            return initial_spec
+
+        initial_spec = initial_spec or spack.spec.Spec()
 
         # If we start with a package name we have a named spec, we cannot
         # accept another package name afterwards in a node
@@ -405,13 +412,13 @@ class SpecNodeParser:
                 #     )
                 #     raise spack.spec.RedundantSpecError(msg, self.ctx.current_token.value)
                 initial_spec.abstract_hash = self.ctx.current_token.value[1:]
-                if self.ctx.next_token and self.ctx.next_token.kind not in [
+                if self.ctx.next_token and not self.ctx.expect(
                     TokenType.UNQUALIFIED_PACKAGE_NAME,
                     TokenType.FULLY_QUALIFIED_PACKAGE_NAME,
                     TokenType.DAG_HASH,
                     TokenType.FILENAME,
                     TokenType.DEPENDENCY,
-                ]:
+                ):
                     raise spack.spec.RedundantSpecError(initial_spec, self.ctx.next_token)
                 break
             else:
