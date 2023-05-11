@@ -22,6 +22,6 @@ class JediNeptuneEnv(BundlePackage):
     depends_on("libyaml", type="run")
     depends_on("p4est", type="run")
     depends_on("w3emc", type="run")
-    depends_on("esmf~debug", type="run")
+    depends_on("esmf", type="run")
 
     # There is no need for install() since there is no code.

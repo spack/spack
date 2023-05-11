@@ -27,8 +27,7 @@ class JediUfsEnv(BundlePackage):
     depends_on("sigio", type="run")
     depends_on("w3emc", type="run")
     depends_on("w3nco", type="run")
-
-    depends_on("esmf~debug", type="run")
-    depends_on("mapl~debug", type="run")
+    depends_on("esmf", type="run")
+    depends_on("mapl", type="run")
 
     # There is no need for install() since there is no code.
