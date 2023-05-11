@@ -461,13 +461,24 @@ error(100, "Attempted to use external for '{0}' which does not satisfy any confi
 % Config required semantics
 %-----------------------------------------------------------------------------
 
-activate_requirement_rules(Package) :- attr("node", Package).
-activate_requirement_rules(Package) :- attr("virtual_node", Package).
+package_in_dag(Package) :-  attr("node", Package).
+package_in_dag(Package) :-  attr("virtual_node", Package).
+
+activate_requirement(Package, X) :-
+  package_in_dag(Package),
+  requirement_group(Package, X),
+  not requirement_conditional(Package, X, _).
+
+activate_requirement(Package, X) :-
+  package_in_dag(Package),
+  requirement_group(Package, X),
+  condition_holds(Y),
+  requirement_conditional(Package, X, Y).
 
 requirement_group_satisfied(Package, X) :-
   1 { condition_holds(Y) : requirement_group_member(Y, Package, X) } 1,
-  activate_requirement_rules(Package),
   requirement_policy(Package, X, "one_of"),
+  activate_requirement(Package, X),
   requirement_group(Package, X).
 
 requirement_weight(Package, Group, W) :-
@@ -479,9 +490,22 @@ requirement_weight(Package, Group, W) :-
 
 requirement_group_satisfied(Package, X) :-
   1 { condition_holds(Y) : requirement_group_member(Y, Package, X) } ,
-  activate_requirement_rules(Package),
   requirement_policy(Package, X, "any_of"),
+  activate_requirement(Package, X),
   requirement_group(Package, X).
+
+% TODO: the following two choice rules allow the solver to add compiler
+% flags if their only source is from a requirement. This is overly-specific
+% and should use a more-generic approach like in https://github.com/spack/spack/pull/37180
+{ attr("node_flag", A1, A2, A3) } :-
+  requirement_group_member(Y, Package, X),
+  activate_requirement(Package, X),
+  imposed_constraint(Y,"node_flag_set", A1, A2, A3).
+
+{ attr("node_flag_source", A1, A2, A3) } :-
+  requirement_group_member(Y, Package, X),
+  activate_requirement(Package, X),
+  imposed_constraint(Y,"node_flag_source", A1, A2, A3).
 
 requirement_weight(Package, Group, W) :-
   W = #min {
@@ -494,12 +518,23 @@ requirement_weight(Package, Group, W) :-
   requirement_policy(Package, Group, "any_of"),
   requirement_group_satisfied(Package, Group).
 
-error(100, "Cannot satisfy the requirements in packages.yaml for package '{0}'. You may want to delete them to proceed with concretization. To check where the requirements are defined run 'spack config blame packages'", Package) :-
-  activate_requirement_rules(Package),
+error(100, "cannot satisfy a requirement for package '{0}'.", Package) :-
+  activate_requirement(Package, X),
   requirement_group(Package, X),
+  not requirement_message(Package, X, _),
   not requirement_group_satisfied(Package, X).
 
+
+error(10, Message) :-
+  activate_requirement(Package, X),
+  requirement_group(Package, X),
+  requirement_message(Package, X, Message),
+  not requirement_group_satisfied(Package, X).
+
+
 #defined requirement_group/2.
+#defined requirement_conditional/3.
+#defined requirement_message/3.
 #defined requirement_group_member/3.
 #defined requirement_has_weight/2.
 #defined requirement_policy/3.
@@ -691,6 +726,8 @@ variant_single_value(Package, "dev_path")
 %-----------------------------------------------------------------------------
 
 % if no platform is set, fall back to the default
+:- attr("node_platform", _, Platform), not allowed_platform(Platform).
+
 attr("node_platform", Package, Platform)
  :- attr("node", Package),
     not attr("node_platform_set", Package),

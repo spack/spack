@@ -234,7 +234,7 @@ spack:
 
             assert "rebuild-index" in yaml_contents
             rebuild_job = yaml_contents["rebuild-index"]
-            expected = "spack buildcache update-index --keys --mirror-url {0}".format(mirror_url)
+            expected = "spack buildcache update-index --keys {0}".format(mirror_url)
             assert rebuild_job["script"][0] == expected
             assert rebuild_job["custom_attribute"] == "custom!"
 
@@ -281,7 +281,7 @@ spack:
     - bootstrap:
       - gcc@3.0
   specs:
-    - dyninst%gcc@3.0
+    - dyninst%gcc@=3.0
   mirrors:
     some-mirror: https://my.fake.mirror
   ci:
@@ -341,7 +341,7 @@ spack:
     - bootstrap:
       - gcc@3.0
   specs:
-    - dyninst%gcc@3.0
+    - dyninst%gcc@=3.0
   mirrors:
     some-mirror: https://my.fake.mirror
   ci:
@@ -1055,7 +1055,7 @@ spack:
     )
 
     install_cmd("archive-files")
-    buildcache_cmd("create", "-a", "-f", "-u", "--mirror-url", mirror_url, "archive-files")
+    buildcache_cmd("push", "-a", "-f", "-u", "--mirror-url", mirror_url, "archive-files")
 
     filename = str(tmpdir.join("spack.yaml"))
     with open(filename, "w") as f:
@@ -1155,7 +1155,7 @@ spack:
         second_ci_yaml = str(tmpdir.join(".gitlab-ci-2.yml"))
         with ev.read("test"):
             install_cmd()
-            buildcache_cmd("create", "-u", "--mirror-url", mirror_url, "patchelf")
+            buildcache_cmd("push", "-u", "--mirror-url", mirror_url, "patchelf")
             buildcache_cmd("update-index", "--mirror-url", mirror_url, output=str)
 
             # This generate should not trigger a rebuild of patchelf, since it's in
@@ -1527,7 +1527,7 @@ def test_ci_generate_with_workarounds(
             """\
 spack:
   specs:
-    - callpath%gcc@9.5
+    - callpath%gcc@=9.5
   mirrors:
     some-mirror: https://my.fake.mirror
   ci:
@@ -1613,7 +1613,7 @@ spack:
                 ypfd.write(spec_json)
 
             install_cmd("--add", "--keep-stage", "-f", json_path)
-            buildcache_cmd("create", "-u", "-a", "-f", "--mirror-url", mirror_url, "callpath")
+            buildcache_cmd("push", "-u", "-a", "-f", "--mirror-url", mirror_url, "callpath")
             ci_cmd("rebuild-index")
 
             buildcache_path = os.path.join(mirror_dir.strpath, "build_cache")
@@ -1644,25 +1644,25 @@ def test_ci_generate_bootstrap_prune_dag(
     mirror_url = "file://{0}".format(mirror_dir.strpath)
 
     # Install a compiler, because we want to put it in a buildcache
-    install_cmd("gcc@12.2.0%gcc@10.2.1")
+    install_cmd("gcc@=12.2.0%gcc@10.2.1")
 
     # Put installed compiler in the buildcache
-    buildcache_cmd("create", "-u", "-a", "-f", "-d", mirror_dir.strpath, "gcc@12.2.0%gcc@10.2.1")
+    buildcache_cmd("push", "-u", "-a", "-f", "-d", mirror_dir.strpath, "gcc@12.2.0%gcc@10.2.1")
 
     # Now uninstall the compiler
     uninstall_cmd("-y", "gcc@12.2.0%gcc@10.2.1")
 
     monkeypatch.setattr(spack.concretize.Concretizer, "check_for_compiler_existence", False)
     spack.config.set("config:install_missing_compilers", True)
-    assert CompilerSpec("gcc@12.2.0") not in compilers.all_compiler_specs()
+    assert CompilerSpec("gcc@=12.2.0") not in compilers.all_compiler_specs()
 
     # Configure the mirror where we put that buildcache w/ the compiler
     mirror_cmd("add", "test-mirror", mirror_url)
 
-    install_cmd("--no-check-signature", "b%gcc@12.2.0")
+    install_cmd("--no-check-signature", "b%gcc@=12.2.0")
 
     # Put spec built with installed compiler in the buildcache
-    buildcache_cmd("create", "-u", "-a", "-f", "-d", mirror_dir.strpath, "b%gcc@12.2.0")
+    buildcache_cmd("push", "-u", "-a", "-f", "-d", mirror_dir.strpath, "b%gcc@12.2.0")
 
     # Now uninstall the spec
     uninstall_cmd("-y", "b%gcc@12.2.0")
@@ -1674,7 +1674,7 @@ def test_ci_generate_bootstrap_prune_dag(
 spack:
   definitions:
     - bootstrap:
-      - gcc@12.2.0%gcc@10.2.1
+      - gcc@=12.2.0%gcc@10.2.1
   specs:
     - b%gcc@12.2.0
   mirrors:
@@ -2392,7 +2392,7 @@ def test_gitlab_ci_deprecated(
 
             assert "rebuild-index" in yaml_contents
             rebuild_job = yaml_contents["rebuild-index"]
-            expected = "spack buildcache update-index --keys --mirror-url {0}".format(mirror_url)
+            expected = "spack buildcache update-index --keys {0}".format(mirror_url)
             assert rebuild_job["script"][0] == expected
 
             assert "variables" in yaml_contents

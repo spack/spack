@@ -13,6 +13,7 @@ class Mlst(Package):
     homepage = "https://github.com/tseemann/mlst"
     url = "https://github.com/tseemann/mlst/archive/refs/tags/v2.22.1.tar.gz"
 
+    version("2.23.0", sha256="35bdbde309ba25293c3cce417d82e79594b9f78365133062923dc3d629bd8846")
     version("2.22.1", sha256="a8f64d7cb961a8e422e96a19309ad8707f8792d9f755a9e5a1f5742986d19bca")
 
     depends_on("perl@5.26:", type="run")
