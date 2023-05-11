@@ -216,8 +216,10 @@ def test_test_functions_pkgless(mock_packages, install_mockery, ensure_debug, ca
     spec = spack.spec.Spec("simple-standalone-test").concretized()
     fns = spack.install_test.test_functions(spec.package, add_virtuals=True)
     out = capsys.readouterr()
-    assert len(fns) == 1, "Expected only one test function"
-    assert "does not appear to have a package file" in out[1]
+    assert len(fns) == 2, "Expected two test functions"
+    for f in fns:
+        assert f[1].__name__ in ["test_echo", "test_skip"]
+    assert "virtual does not appear to have a package file" in out[1]
 
 
 # TODO: This test should go away when compilers as dependencies is supported
