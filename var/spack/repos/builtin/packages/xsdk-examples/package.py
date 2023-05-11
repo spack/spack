@@ -7,7 +7,7 @@
 from spack.package import *
 
 
-class XsdkExamples(CMakePackage, CudaPackage):
+class XsdkExamples(CMakePackage, CudaPackage, ROCmPackage):
     """xSDK Examples show usage of libraries in the xSDK package."""
 
     homepage = "http://xsdk.info"
@@ -29,6 +29,9 @@ class XsdkExamples(CMakePackage, CudaPackage):
     depends_on("xsdk+cuda", when="+cuda")
     for sm_ in CudaPackage.cuda_arch_values:
         depends_on("xsdk+cuda cuda_arch={0}".format(sm_), when="+cuda cuda_arch={0}".format(sm_))
+    depends_on("xsdk+rocm", when="+rocm")
+    for ac_ in ROCmPackage.amdgpu_targets:
+        depends_on("xsdk+rocm amdgpu_target={0}".format(ac_), when="+rocm amdgpu_target={0}".format(ac_))
 
     depends_on("xsdk@develop", when="@develop")
     depends_on("xsdk@0.8.0", when="@0.4.0")
@@ -88,6 +91,13 @@ class XsdkExamples(CMakePackage, CudaPackage):
             )
 
         # FIXME: propagate the HIP config from the 'xsdk' package
+        if "+rocm" in spec["xsdk"]:  # if rocm variant was activated for xsdk
+            args.extend(
+                [
+                    "-DENABLE_ROCM=ON",
+                    #"-DCMAKE_CUDA_ARCHITECTURES=%s" % spec.variants["cuda_arch"].value,
+                ]
+            )
 
         return args
 
