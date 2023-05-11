@@ -95,7 +95,7 @@ class TestLmod(object):
         provides = module.conf.provides
 
         assert "compiler" in provides
-        assert provides["compiler"] == spack.spec.CompilerSpec("oneapi@3.0")
+        assert provides["compiler"] == spack.spec.CompilerSpec("oneapi@=3.0")
 
     def test_simple_case(self, modulefile_content, module_configuration):
         """Tests the generation of a simple Lua module file."""
