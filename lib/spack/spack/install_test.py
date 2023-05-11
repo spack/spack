@@ -420,6 +420,20 @@ class PackageTest:
         lines.append(f"{totals:=^80}")
         return lines
 
+    def write_tested_status(self):
+        """Write the overall status to the tested file."""
+        status = TestStatus.NO_TESTS
+        if self.counts[TestStatus.FAILED] > 0:
+            status = TestStatus.FAILED
+        else:
+            skipped = self.counts[TestStatus.SKIPPED]
+            if skipped and self.parts() == skipped:
+                status = TestStatus.SKIPPED
+            elif self.counts[TestStatus.PASSED] > 0:
+                status = TestStatus.PASSED
+
+        _add_msg_to_file(self.tested_file, f"{status.value}")
+
 
 @contextlib.contextmanager
 def test_part(pkg: Pb, test_name: str, purpose: str, work_dir: str = ".", verbose: bool = False):
@@ -682,7 +696,7 @@ def process_test_parts(pkg: Pb, test_specs: List[spack.spec.Spec], verbose: bool
 
     finally:
         if tester.ran_tests():
-            fs.touch(tester.tested_file)
+            tester.write_tested_status()
 
             # log one more test message to provide a completion timestamp
             # for CDash reporting
@@ -889,20 +903,15 @@ class TestSuite:
                 if remove_directory:
                     shutil.rmtree(test_dir)
 
-                tested = os.path.exists(self.tested_file_for_spec(spec))
-                if tested:
-                    status = TestStatus.PASSED
-                else:
-                    self.ensure_stage()
-                    if spec.external and not externals:
-                        status = TestStatus.SKIPPED
-                    elif not spec.installed:
-                        status = TestStatus.SKIPPED
-                    else:
-                        status = TestStatus.NO_TESTS
+                status = self.test_status(spec, externals)
                 self.counts[status] += 1
-
                 self.write_test_result(spec, status)
+
+            except SkipTest:
+                status = TestStatus.SKIPPED
+                self.counts[status] += 1
+                self.write_test_result(spec, TestStatus.SKIPPED)
+
             except BaseException as exc:
                 status = TestStatus.FAILED
                 self.counts[status] += 1
@@ -938,6 +947,31 @@ class TestSuite:
         failures = self.counts[TestStatus.FAILED]
         if failures:
             raise TestSuiteFailure(failures)
+
+    def test_status(self, spec: spack.spec.Spec, externals: bool) -> Optional[TestStatus]:
+        """Determine the overall test results status for the spec.
+
+        Args:
+            spec: instance of the spec under test
+            externals: ``True`` if externals are to be tested, else ``False``
+
+        Returns:
+            the spec's test status if available or ``None``
+        """
+        tests_status_file = self.tested_file_for_spec(spec)
+        if not os.path.exists(tests_status_file):
+            self.ensure_stage()
+            if spec.external and not externals:
+                status = TestStatus.SKIPPED
+            elif not spec.installed:
+                status = TestStatus.SKIPPED
+            else:
+                status = TestStatus.NO_TESTS
+            return status
+
+        with open(tests_status_file, "r") as f:
+            value = (f.read()).strip("\n")
+            return TestStatus(int(value)) if value else TestStatus.NO_TESTS
 
     def ensure_stage(self):
         """Ensure the test suite stage directory exists."""
