@@ -1756,9 +1756,7 @@ class SpackSolverSetup(object):
                         version_defs = list(sorted(satisfying_versions, reverse=True))
                 for vdef in version_defs:
                     self.declared_versions[pkg_name].append(
-                        DeclaredVersion(
-                            version=vdef, idx=idx, origin=Provenance.PACKAGES_YAML
-                        )
+                        DeclaredVersion(version=vdef, idx=idx, origin=Provenance.PACKAGES_YAML)
                     )
                     idx += 1
                     self.possible_versions[pkg_name].add(vdef)
@@ -2351,9 +2349,7 @@ def _specs_from_requires(pkg_name, section):
             # Version ranges ("@1.3" without the "=", "@1.2:1.4") and lists
             # will end up here
             ordered_satisfying_versions = sorted(satisfying_versions, reverse=True)
-            vspecs = list(
-                spack.spec.Spec("@{0}".format(x)) for x in ordered_satisfying_versions
-            )
+            vspecs = list(spack.spec.Spec("@{0}".format(x)) for x in ordered_satisfying_versions)
 
         version_specs.extend(vspecs)
 
