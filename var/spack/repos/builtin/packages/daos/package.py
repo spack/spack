@@ -52,35 +52,14 @@ class Daos(SConsPackage):
             args.append("--debug=explain,findlibs,includes")
 
         # Construct ALT_PREFIX and make sure that '/usr' is last.
-        alt_prefix = [
-            format(spec["argobots"].prefix),
-            format(spec["boost"].prefix),
-            format(spec["cmocka"].prefix),
-            format(spec["dpdk"].prefix),
-            format(spec["libfabric"].prefix),
-            format(spec["libfuse"].prefix),
-            format(spec["libuuid"].prefix),
-            format(spec["libyaml"].prefix),
-            format(spec["hwloc"].prefix),
-            format(spec["isa-l"].prefix),
-            format(spec["isa-l_crypto"].prefix),
-            format(spec["mercury"].prefix),
-            format(spec["meson"].prefix),
-            format(spec["openssl"].prefix),
-            format(spec["pmdk"].prefix),
-            format(spec["protobuf-c"].prefix),
-            format(spec["spdk"].prefix),
-            format(spec["ucx"].prefix),
-        ]
-        alt_prefix_clean = []
-        for i in alt_prefix:
-            if i != "/usr":
-                alt_prefix_clean.append(i)
-        alt_prefix_clean.append("/usr")
+        alt_prefix = []
+        for node in spec.traverse():
+            alt_prefix.append(format(node.prefix))
+
         args.extend(
             [
                 "WARNING_LEVEL=warning",
-                "ALT_PREFIX=%s" % ":".join([str(elem) for elem in alt_prefix_clean]),
+                "ALT_PREFIX=%s" % ":".join([str(elem) for elem in alt_prefix]),
                 "GO_BIN={0}".format(spec["go"].prefix.bin) + "/go",
             ]
         )
