@@ -792,7 +792,7 @@ def test_nonexistent_hash(database, config):
         ("zlib+shared", "zlib~shared", "+shared"),
         ("hdf5+mpi^zmpi", "hdf5~mpi", "^zmpi"),
         ("hdf5+mpi^mpich+debug", "hdf5+mpi^mpich~debug", "^mpich+debug"),
-    ]
+    ],
 )
 def test_disambiguate_hash_by_spec(spec1, spec2, constraint, mock_packages, monkeypatch, config):
     spec1_concrete = spack.spec.Spec(spec1).concretized()
@@ -804,7 +804,7 @@ def test_disambiguate_hash_by_spec(spec1, spec2, constraint, mock_packages, monk
     monkeypatch.setattr(
         spack.binary_distribution,
         "update_cache_and_get_specs",
-        lambda: [spec1_concrete, spec2_concrete]
+        lambda: [spec1_concrete, spec2_concrete],
     )
 
     # Ordering is tricky -- for constraints we want after, for names we want before
