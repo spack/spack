@@ -269,6 +269,9 @@ class SpecParser:
         Return
             The spec that was parsed
         """
+        if not self.ctx.next_token:
+            return None
+
         initial_spec = initial_spec or spack.spec.Spec()
         root_spec = SpecNodeParser(self.ctx).parse(initial_spec)
         while True:
@@ -296,7 +299,7 @@ class SpecParser:
 
     def all_specs(self) -> List[spack.spec.Spec]:
         """Return all the specs that remain to be parsed"""
-        return list(iter(self.next_spec, spack.spec.Spec()))
+        return list(iter(self.next_spec, None))
 
 
 class SpecNodeParser:
