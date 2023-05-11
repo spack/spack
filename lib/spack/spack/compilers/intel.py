@@ -86,6 +86,14 @@ class Intel(Compiler):
             return "-std=c++14"
 
     @property
+    def cxx17_flag(self):
+        # Adapted from CMake's Intel-CXX rules.
+        if self.real_version < Version("18"):
+            raise UnsupportedCompilerFlag(self, "the C++17 standard", "cxx17_flag", "< 18")
+        else:
+            return "-std=c++17"
+
+    @property
     def c99_flag(self):
         if self.real_version < Version("12"):
             raise UnsupportedCompilerFlag(self, "the C99 standard", "c99_flag", "< 12")
@@ -98,6 +106,14 @@ class Intel(Compiler):
             raise UnsupportedCompilerFlag(self, "the C11 standard", "c11_flag", "< 16")
         else:
             return "-std=c1x"
+
+    @property
+    def c18_flag(self):
+        # c18 supported since oneapi 2022, which is classic version 2021.5.0
+        if self.real_version < Version("21.5.0"):
+            raise UnsupportedCompilerFlag(self, "the C18 standard", "c18_flag", "< 21.5.0")
+        else:
+            return "-std=c18"
 
     @property
     def cc_pic_flag(self):
