@@ -93,7 +93,7 @@ class IntelOneapiDal(IntelOneApiLibraryPackage):
         expand=False,
     )
 
-    depends_on("intel-oneapi-tbb")
+    depends_on("tbb")
 
     provides("daal")
     provides("onedal")
