@@ -15,5 +15,4 @@ class PySphinxBookTheme(PythonPackage):
 
     maintainers("chissg", "gartung", "marcmengel", "vitodb")
 
-
     version("0.3.3", sha256="0ec36208ff14c6d6bf8aee1f1f8268e0c6e2bfa3cef6e41143312b25275a6217")
