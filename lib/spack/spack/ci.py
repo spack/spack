@@ -634,17 +634,13 @@ class SpackCI:
             # Reindex script
             {
                 "reindex-job": {
-                    "script:": [
-                        "spack buildcache update-index --keys --mirror-url {index_target_mirror}"
-                    ]
+                    "script:": ["spack buildcache update-index --keys {index_target_mirror}"]
                 }
             },
             # Cleanup script
             {
                 "cleanup-job": {
-                    "script:": [
-                        "spack -d mirror destroy --mirror-url {mirror_prefix}/$CI_PIPELINE_ID"
-                    ]
+                    "script:": ["spack -d mirror destroy {mirror_prefix}/$CI_PIPELINE_ID"]
                 }
             },
             # Add signing job tags
@@ -2456,7 +2452,16 @@ class CDashHandler(object):
             msg = "Error response code ({0}) in populate_buildgroup".format(response_code)
             tty.warn(msg)
 
-    def report_skipped(self, spec, directory_name, reason):
+    def report_skipped(self, spec: spack.spec.Spec, report_dir: str, reason: Optional[str]):
+        """Explicitly report skipping testing of a spec (e.g., it's CI
+        configuration identifies it as known to have broken tests or
+        the CI installation failed).
+
+        Args:
+            spec: spec being tested
+            report_dir: directory where the report will be written
+            reason: reason the test is being skipped
+        """
         configuration = CDashConfiguration(
             upload_url=self.upload_url,
             packages=[spec.name],
@@ -2466,7 +2471,7 @@ class CDashHandler(object):
             track=None,
         )
         reporter = CDash(configuration=configuration)
-        reporter.test_skipped_report(directory_name, spec, reason)
+        reporter.test_skipped_report(report_dir, spec, reason)
 
 
 def translate_deprecated_config(config):

@@ -29,6 +29,7 @@ chosen, test dependencies are enabled for all packages in the environment.""",
     )
 
     spack.cmd.common.arguments.add_concretizer_args(subparser)
+    spack.cmd.common.arguments.add_common_arguments(subparser, ["jobs"])
 
 
 def concretize(parser, args):

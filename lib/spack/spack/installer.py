@@ -278,6 +278,19 @@ def _print_installed_pkg(message):
     print(colorize("@*g{[+]} ") + spack.util.path.debug_padded_filter(message))
 
 
+def print_install_test_log(pkg: "spack.package_base.PackageBase"):
+    """Output install test log file path but only if have test failures.
+
+    Args:
+        pkg: instance of the package under test
+    """
+    if not pkg.run_tests or not (pkg.tester and pkg.tester.test_failures):
+        # The tests were not run or there were no test failures
+        return
+
+    pkg.tester.print_log_path()
+
+
 def _print_timer(pre, pkg_id, timer):
     phases = ["{}: {}.".format(p.capitalize(), _hms(timer.duration(p))) for p in timer.phases]
     phases.append("Total: {}".format(_hms(timer.duration())))
@@ -536,6 +549,25 @@ def install_msg(name, pid):
     return pre + colorize("@*{Installing} @*g{%s}" % name)
 
 
+def archive_install_logs(pkg, phase_log_dir):
+    """
+    Copy install logs to their destination directory(ies)
+    Args:
+        pkg (spack.package_base.PackageBase): the package that was built and installed
+        phase_log_dir (str): path to the archive directory
+    """
+    # Archive the whole stdout + stderr for the package
+    fs.install(pkg.log_path, pkg.install_log_path)
+
+    # Archive all phase log paths
+    for phase_log in pkg.phase_log_files:
+        log_file = os.path.basename(phase_log)
+        fs.install(phase_log, os.path.join(phase_log_dir, log_file))
+
+    # Archive the install-phase test log, if present
+    pkg.archive_install_test_log()
+
+
 def log(pkg):
     """
     Copy provenance into the install directory on success
@@ -553,21 +585,10 @@ def log(pkg):
         # FIXME : this potentially catches too many things...
         tty.debug(e)
 
-    # Archive the whole stdout + stderr for the package
-    fs.install(pkg.log_path, pkg.install_log_path)
-
-    # Archive all phase log paths
-    for phase_log in pkg.phase_log_files:
-        log_file = os.path.basename(phase_log)
-        log_file = os.path.join(os.path.dirname(packages_dir), log_file)
-        fs.install(phase_log, log_file)
+    archive_install_logs(pkg, os.path.dirname(packages_dir))
 
     # Archive the environment modifications for the build.
     fs.install(pkg.env_mods_path, pkg.install_env_path)
-
-    # Archive the install-phase test log, if present
-    if pkg.test_install_log_path and os.path.exists(pkg.test_install_log_path):
-        fs.install(pkg.test_install_log_path, pkg.install_test_install_log_path)
 
     if os.path.exists(pkg.configure_args_path):
         # Archive the args used for the build
@@ -1932,14 +1953,17 @@ class BuildProcessInstaller(object):
 
                 self._real_install()
 
+            # Run post install hooks before build stage is removed.
+            self.timer.start("post-install")
+            spack.hooks.post_install(self.pkg.spec, self.explicit)
+            self.timer.stop("post-install")
+
             # Stop the timer and save results
             self.timer.stop()
             with open(self.pkg.times_log_path, "w") as timelog:
                 self.timer.write_json(timelog)
 
-            # Run post install hooks before build stage is removed.
-            spack.hooks.post_install(self.pkg.spec, self.explicit)
-
+        print_install_test_log(self.pkg)
         _print_timer(pre=self.pre, pkg_id=self.pkg_id, timer=self.timer)
         _print_installed_pkg(self.pkg.prefix)
 

@@ -289,9 +289,14 @@ def _check_build_test_callbacks(pkgs, error_cls):
         pkg_cls = spack.repo.path.get_pkg_class(pkg_name)
         test_callbacks = getattr(pkg_cls, "build_time_test_callbacks", None)
 
-        if test_callbacks and "test" in test_callbacks:
-            msg = '{0} package contains "test" method in ' "build_time_test_callbacks"
-            instr = 'Remove "test" from: [{0}]'.format(", ".join(test_callbacks))
+        # TODO (post-34236): "test*"->"test_*" once remove deprecated methods
+        # TODO (post-34236): "test"->"test_" once remove deprecated methods
+        has_test_method = test_callbacks and any([m.startswith("test") for m in test_callbacks])
+        if has_test_method:
+            msg = '{0} package contains "test*" method(s) in ' "build_time_test_callbacks"
+            instr = 'Remove all methods whose names start with "test" from: [{0}]'.format(
+                ", ".join(test_callbacks)
+            )
             errors.append(error_cls(msg.format(pkg_name), [instr]))
 
     return errors
