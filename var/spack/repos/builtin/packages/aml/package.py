@@ -31,7 +31,12 @@ class Aml(AutotoolsPackage):
     # version string is generated from git tags, requires entire repo
     version("master", branch="master", submodules=True, get_full_repo=True)
 
-    version("0.2.0", sha256="2044a2f3f1d7a19827dd9c0726172b690189b4d3fe938656c4160c022468cc4a")
+    version("0.2.1", sha256="bae49e89ed0f2a2ad3547430e79b7e4c018d6228c6ed951a12d59afd0b35f71c")
+    version(
+        "0.2.0",
+        sha256="2044a2f3f1d7a19827dd9c0726172b690189b4d3fe938656c4160c022468cc4a",
+        deprecated=True,
+    )
     version(
         "0.1.0",
         sha256="cc89a8768693f1f11539378b21cdca9f0ce3fc5cb564f9b3e4154a051dcea69b",
@@ -45,10 +50,12 @@ class Aml(AutotoolsPackage):
     variant("ze", default=False, description="Support for memory operations on top of Level Zero.")
     variant("hip", default=False, description="Support for memory operations on top of HIP.")
     variant("cuda", default=False, description="Support for memory operations on top of CUDA.")
-    variant("hwloc", default=False, description="Enable feature related to topology management")
+    variant("hwloc", default=True, description="Enable feature related to topology management")
     variant(
         "hip-platform",
-        values=disjoint_sets(("amd", "nvidia")),
+        values=("none", conditional("amd", when="+hip"), conditional("nvidia", when="+cuda")),
+        default="none",
+        multi=False,
         description="HIP backend platform.",
     )
 
@@ -91,9 +98,9 @@ class Aml(AutotoolsPackage):
             config_args.extend(self.with_or_without(b))
         if self.spec.satisfies("%oneapi"):
             config_args += ["--with-openmp-flags=-fiopenmp -fopenmp-targets=spir64"]
-        if "hip-platform=amd" in self.spec:
+        if self.spec.variants["hip-platform"].value == "amd":
             config_args += ["--with-hip-platform=amd"]
-        if "hip-platform=nvidia" in self.spec:
+        if self.spec.variants["hip-platform"].value == "nvidia":
             config_args += ["--with-hip-platform=nvidia"]
         return config_args
 
