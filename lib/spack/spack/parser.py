@@ -519,6 +519,11 @@ def parse_one_or_raise(
             message += color.colorize(f"@*r{{{underline}}}")
         raise ValueError(message)
 
+    if result is None:
+        message = "a single spec was requested, but none was parsed:"
+        message += f"\n{text}"
+        raise ValueError(message)
+
     return result
 
 
