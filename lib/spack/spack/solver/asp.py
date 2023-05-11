@@ -1737,19 +1737,22 @@ class SpackSolverSetup(object):
             idx = 0
             for v in version_preferences:
                 # v can be a string so force it into an actual version for comparisons
-                ver = vn.Version(v)
-                version_defs = [ver]
-                if not isinstance(ver, spack.version.GitVersion):
-                    pkg_class = spack.repo.path.get_pkg_class(pkg_name)
-                    satisfying_versions = list(
-                        v for v in pkg_class.versions if v.satisfies(ver)
-                    )
-                    if not satisfying_versions:
-                        raise spack.config.ConfigError(
-                            "Preference defines version {0} for {1} that "
-                            "is not in its associated package.py".format(str(ver), pkg_name)
+                pkg_class = spack.repo.path.get_pkg_class(pkg_name)
+                if vn.Version(v) in pkg_class.versions:
+                    version_defs = [vn.Version(v)]
+                else:
+                    ver = vn.ver(v)
+                    version_defs = [ver]
+                    if not isinstance(ver, spack.version.GitVersion):
+                        pkg_class = spack.repo.path.get_pkg_class(pkg_name)
+                        satisfying_versions = list(
+                            v for v in pkg_class.versions if v.satisfies(ver)
                         )
-                    if ver not in pkg_class.versions:
+                        if not satisfying_versions:
+                            raise spack.config.ConfigError(
+                                "Preference defines version {0} for {1} that "
+                                "is not in its associated package.py".format(str(ver), pkg_name)
+                            )
                         version_defs = list(sorted(satisfying_versions, reverse=True))
                 for vdef in version_defs:
                     self.declared_versions[pkg_name].append(
