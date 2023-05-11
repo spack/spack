@@ -3449,7 +3449,6 @@ class Spec(object):
                 self.abstract_hash = other.abstract_hash
             elif not self.abstract_hash.startswith(other.abstract_hash):
                 raise InvalidHashError(self, other.abstract_hash)
-        # other.lookup_hash()
 
         if not (self.name == other.name or (not self.name) or (not other.name)):
             raise UnsatisfiableSpecNameError(self.name, other.name)
