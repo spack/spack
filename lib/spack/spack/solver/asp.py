@@ -2328,28 +2328,28 @@ def _specs_from_requires(pkg_name, section):
     version_specs = []
     for spec in extracted_specs:
         if spec.versions.concrete:
+            # Note: this includes git versions
             version_specs.append(spec)
             continue
-
-        # cases: @1.3 (exists), @1.3 (doesnt exist), @1.3:1.4, @1.3,1.4 (multiple)
-        # what happens if we have "spack spec foo@hash1=number1,hash2=number2"?
-        vspecs = [spec]
-        if len(spec.versions) > 1:
-            ver = spec.versions
-        else:
-            ver = spec.versions[0]
 
         # Prefer spec's name if it exists, in case the spec is
         # requiring a specific implementation inside of a virtual section
         # e.g. packages:mpi:require:openmpi@4.0.1
         pkg_class = spack.repo.path.get_pkg_class(spec.name or pkg_name)
-        satisfying_versions = list(v for v in pkg_class.versions if v.satisfies(ver))
+        satisfying_versions = list(v for v in pkg_class.versions if v.satisfies(spec.versions))
         if not satisfying_versions:
             raise spack.config.ConfigError(
                 "{0} assigns a version that is not defined in"
                 " the associated package.py".format(str(spec))
             )
-        if ver not in pkg_class.versions:
+
+        if spec.versions.concrete and spec.version in pkg_class.versions:
+            # A requirement of the form "@=" will end up here (e.g.
+            # "require: @=1.0")
+            vspecs = [spec]
+        else:
+            # Version ranges ("@1.3" without the "=", "@1.2:1.4") and lists
+            # will end up here
             ordered_satisfying_versions = sorted(satisfying_versions, reverse=True)
             vspecs = list(
                 spack.spec.Spec("@{0}".format(x)) for x in ordered_satisfying_versions
