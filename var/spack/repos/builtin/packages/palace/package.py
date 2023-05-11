@@ -116,10 +116,11 @@ class Palace(CMakePackage):
             args += ["-DMUMPS_REQUIRED_PACKAGES=MPI;MPI_Fortran"]
 
         # BLAS support
-        args += ["-DBLAS_LIBRARIES={0}".format(self.spec["blas"].libs.joined(";")),
+        args += [
+            "-DBLAS_LIBRARIES={0}".format(self.spec["blas"].libs.joined(";")),
             # LAPACK support
             "-DLAPACK_LIBRARIES={0}".format(self.spec["lapack"].libs.joined(";")),
-                 ]
+        ]
 
         # HYPRE is always built with external BLAS/LAPACK
         args += ["-DHYPRE_REQUIRED_PACKAGES=LAPACK;BLAS"]
