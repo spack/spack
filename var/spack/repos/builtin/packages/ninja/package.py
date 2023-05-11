@@ -4,7 +4,6 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 import sys
 
-from spack.build_environment import MakeExecutable
 from spack.package import *
 from spack.util.executable import which_string
 

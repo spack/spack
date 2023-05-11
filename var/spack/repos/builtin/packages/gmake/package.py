@@ -6,7 +6,6 @@
 import os
 import re
 
-from spack.build_environment import MakeExecutable
 from spack.package import *
 
 
