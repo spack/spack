@@ -269,16 +269,15 @@ class SpecParser:
         Return
             The spec that was parsed
         """
+        initial_spec = initial_spec or spack.spec.Spec()
         root_spec = SpecNodeParser(self.ctx).parse(initial_spec)
         while True:
             if self.ctx.accept(TokenType.DEPENDENCY):
-                if root_spec is None:
-                    root_spec = spack.spec.Spec()
-
                 if root_spec.abstract_hash:
                     raise spack.spec.RedundantSpecError(root_spec, self.ctx.current_token)
-                dependency = SpecNodeParser(self.ctx).parse()
-                if not dependency:
+                dependency = SpecNodeParser(self.ctx).parse(spack.spec.Spec())
+
+                if not dependency.abstract_hash and dependency == spack.spec.Spec():
                     msg = (
                         "this dependency sigil needs to be followed by a package name "
                         "or a node attribute (version, variant, etc.)"
@@ -297,7 +296,7 @@ class SpecParser:
 
     def all_specs(self) -> List[spack.spec.Spec]:
         """Return all the specs that remain to be parsed"""
-        return list(iter(self.next_spec, None))
+        return list(iter(self.next_spec, spack.spec.Spec()))
 
 
 class SpecNodeParser:
@@ -311,7 +310,7 @@ class SpecNodeParser:
         self.has_version = False
         self.has_hash = False
 
-    def parse(self, initial_spec: Optional[spack.spec.Spec] = None) -> Optional[spack.spec.Spec]:
+    def parse(self, initial_spec: spack.spec.Spec) -> spack.spec.Spec:
         """Parse a single spec node from a stream of tokens
 
         Args:
@@ -324,27 +323,18 @@ class SpecNodeParser:
         # If we start with a package name we have a named spec, we cannot
         # accept another package name afterwards in a node
         if self.ctx.accept(TokenType.UNQUALIFIED_PACKAGE_NAME):
-            if initial_spec is None:
-                initial_spec = spack.spec.Spec()
             initial_spec.name = self.ctx.current_token.value
         elif self.ctx.accept(TokenType.FULLY_QUALIFIED_PACKAGE_NAME):
-            if initial_spec is None:
-                initial_spec = spack.spec.Spec()
             parts = self.ctx.current_token.value.split(".")
             name = parts[-1]
             namespace = ".".join(parts[:-1])
             initial_spec.name = name
             initial_spec.namespace = namespace
         elif self.ctx.accept(TokenType.FILENAME):
-            if initial_spec is None:
-                initial_spec = spack.spec.Spec()
             return FileParser(self.ctx).parse(initial_spec)
 
         while True:
             if self.ctx.accept(TokenType.COMPILER):
-                if initial_spec is None:
-                    initial_spec = spack.spec.Spec()
-
                 self.hash_not_parsed_or_raise(initial_spec, self.ctx.current_token.value)
                 if self.has_compiler:
                     raise spack.spec.DuplicateCompilerSpecError(
@@ -355,9 +345,6 @@ class SpecNodeParser:
                 initial_spec.compiler = spack.spec.CompilerSpec(compiler_name.strip(), ":")
                 self.has_compiler = True
             elif self.ctx.accept(TokenType.COMPILER_AND_VERSION):
-                if initial_spec is None:
-                    initial_spec = spack.spec.Spec()
-
                 self.hash_not_parsed_or_raise(initial_spec, self.ctx.current_token.value)
                 if self.has_compiler:
                     raise spack.spec.DuplicateCompilerSpecError(
@@ -372,9 +359,6 @@ class SpecNodeParser:
             elif self.ctx.accept(TokenType.VERSION) or self.ctx.accept(
                 TokenType.VERSION_HASH_PAIR
             ):
-                if initial_spec is None:
-                    initial_spec = spack.spec.Spec()
-
                 self.hash_not_parsed_or_raise(initial_spec, self.ctx.current_token.value)
                 if self.has_version:
                     raise spack.spec.MultipleVersionError(
@@ -386,45 +370,30 @@ class SpecNodeParser:
                 initial_spec.attach_git_version_lookup()
                 self.has_version = True
             elif self.ctx.accept(TokenType.BOOL_VARIANT):
-                if initial_spec is None:
-                    initial_spec = spack.spec.Spec()
-
                 self.hash_not_parsed_or_raise(initial_spec, self.ctx.current_token.value)
                 variant_value = self.ctx.current_token.value[0] == "+"
                 initial_spec._add_flag(
                     self.ctx.current_token.value[1:].strip(), variant_value, propagate=False
                 )
             elif self.ctx.accept(TokenType.PROPAGATED_BOOL_VARIANT):
-                if initial_spec is None:
-                    initial_spec = spack.spec.Spec()
-
                 self.hash_not_parsed_or_raise(initial_spec, self.ctx.current_token.value)
                 variant_value = self.ctx.current_token.value[0:2] == "++"
                 initial_spec._add_flag(
                     self.ctx.current_token.value[2:].strip(), variant_value, propagate=True
                 )
             elif self.ctx.accept(TokenType.KEY_VALUE_PAIR):
-                if initial_spec is None:
-                    initial_spec = spack.spec.Spec()
-
                 self.hash_not_parsed_or_raise(initial_spec, self.ctx.current_token.value)
                 name, value = self.ctx.current_token.value.split("=", maxsplit=1)
                 name = name.strip("'\" ")
                 value = value.strip("'\" ")
                 initial_spec._add_flag(name, value, propagate=False)
             elif self.ctx.accept(TokenType.PROPAGATED_KEY_VALUE_PAIR):
-                if initial_spec is None:
-                    initial_spec = spack.spec.Spec()
-
                 self.hash_not_parsed_or_raise(initial_spec, self.ctx.current_token.value)
                 name, value = self.ctx.current_token.value.split("==", maxsplit=1)
                 name = name.strip("'\" ")
                 value = value.strip("'\" ")
                 initial_spec._add_flag(name, value, propagate=True)
             elif self.ctx.accept(TokenType.DAG_HASH):
-                if initial_spec is None:
-                    initial_spec = spack.spec.Spec()
-
                 # if initial_spec.abstract_hash:
                 #     msg = (
                 #         f"Parsed multiple hashes /{initial_spec.abstract_hash} and "
