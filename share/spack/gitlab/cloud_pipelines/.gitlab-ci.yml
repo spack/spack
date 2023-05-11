@@ -174,7 +174,9 @@ protected-publish:
     - spack --version
     - export COPY_SPECS_DIR=${CI_PROJECT_DIR}/jobs_scratch_dir/specs_to_copy
     - spack buildcache sync --manifest-glob "${COPY_SPECS_DIR}/*.json"
-    - spack buildcache update-index "${SPACK_COPY_BUILDCACHE}"
+    - curl https://spack.github.io/keys/spack-public-binary-key.pub > /tmp/spack-public-binary-key.pub
+    - aws s3 cp /tmp/spack-public-binary-key.pub "${SPACK_COPY_BUILDCACHE}/build_cache/_pgp/spack-public-binary-key.pub"
+    - spack buildcache update-index --keys "${SPACK_COPY_BUILDCACHE}"
 
 ########################################
 # TEMPLATE FOR ADDING ANOTHER PIPELINE
