@@ -734,7 +734,7 @@ _spack_compilers() {
 }
 
 _spack_concretize() {
-    SPACK_COMPREPLY="-h --help -f --force --test -q --quiet -U --fresh --reuse --reuse-deps"
+    SPACK_COMPREPLY="-h --help -f --force --test -q --quiet -U --fresh --reuse --reuse-deps -j --jobs"
 }
 
 _spack_config() {
