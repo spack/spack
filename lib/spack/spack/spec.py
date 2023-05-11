@@ -147,7 +147,7 @@ _separators = "[\\%s]" % "\\".join(color_formats.keys())
 
 default_format = "{name}{@versions}"
 default_format += "{%compiler.name}{@compiler.versions}{compiler_flags}"
-default_format += "{variants}{arch=architecture}"
+default_format += "{variants}{arch=architecture}{/abstract_hash}"
 
 #: Regular expression to pull spec contents out of clearsigned signature
 #: file.
@@ -1617,6 +1617,10 @@ class Spec(object):
             if self.namespace
             else (self.name if self.name else "")
         )
+
+    @property
+    def anonymous(self):
+        return not self.name and not self.abstract_hash
 
     @property
     def root(self):
@@ -4250,7 +4254,7 @@ class Spec(object):
                 raise SpecFormatSigilError(sig, "versions", attribute)
             elif sig == "%" and attribute not in ("compiler", "compiler.name"):
                 raise SpecFormatSigilError(sig, "compilers", attribute)
-            elif sig == "/" and not re.match(r"hash(:\d+)?$", attribute):
+            elif sig == "/" and not re.match(r"(abstract_)?hash(:\d+)?$", attribute):
                 raise SpecFormatSigilError(sig, "DAG hashes", attribute)
             elif sig == " arch=" and attribute not in ("architecture", "arch"):
                 raise SpecFormatSigilError(sig, "the architecture", attribute)
