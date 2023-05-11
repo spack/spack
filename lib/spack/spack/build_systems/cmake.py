@@ -90,9 +90,13 @@ class CMakePackage(spack.package_base.PackageBase):
 
     with when("build_system=cmake"):
         # https://cmake.org/cmake/help/latest/variable/CMAKE_BUILD_TYPE.html
+        # See https://github.com/spack/spack/pull/36679 and related issues for a
+        # discussion of the trade-offs between Release and RelWithDebInfo for default
+        # builds. Release is chosen to maximize performance and reduce disk-space burden,
+        # at the cost of more difficulty in debugging.
         variant(
             "build_type",
-            default="RelWithDebInfo",
+            default="Release",
             description="CMake build type",
             values=("Debug", "Release", "RelWithDebInfo", "MinSizeRel"),
         )

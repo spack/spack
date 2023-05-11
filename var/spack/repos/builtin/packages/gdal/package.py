@@ -9,7 +9,7 @@ import sys
 from spack.build_systems.autotools import AutotoolsBuilder
 from spack.build_systems.cmake import CMakeBuilder
 from spack.package import *
-from spack.util.environment import filter_system_paths
+from spack.util.environment import filter_system_paths, is_system_path
 
 
 class Gdal(CMakePackage, AutotoolsPackage, PythonExtension):
@@ -681,10 +681,10 @@ class AutotoolsBuilder(AutotoolsBuilder):
             self.with_or_without("php"),
         ]
         if "+iconv" in self.spec:
-            if self.spec["iconv"] == "libc":
-                args.append("--with-libiconv-prefix=" + self.spec["iconv"].prefix)
-            else:
+            if self.spec["iconv"].name == "libc":
                 args.append("--without-libiconv-prefix")
+            elif not is_system_path(self.spec["iconv"].prefix):
+                args.append("--with-libiconv-prefix=" + self.spec["iconv"].prefix)
 
         # Renamed or modified flags
         if self.spec.satisfies("@3:"):
