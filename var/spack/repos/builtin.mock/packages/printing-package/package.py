@@ -26,7 +26,8 @@ class PrintingPackage(Package):
 
         print("AFTER INSTALL")
 
-    def test(self):
-        print("BEFORE TEST")
-        self.run_test("true")  # run /bin/true
-        print("AFTER TEST")
+    def test_print(self):
+        """Test print example."""
+
+        print("Running test_print")
+        print("And a second command")

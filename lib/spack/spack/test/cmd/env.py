@@ -691,7 +691,7 @@ spack:
   - mpileaks
   packages:
     mpileaks:
-      version: [2.2]
+      version: ["2.2"]
 """
     )
     with e:
@@ -701,6 +701,7 @@ spack:
 
 
 def test_with_config_bad_include(environment_from_manifest):
+    """Confirm missing include paths raise expected exception and error."""
     e = environment_from_manifest(
         """
 spack:
@@ -709,14 +710,10 @@ spack:
   - no/such/file.yaml
 """
     )
-    with pytest.raises(spack.config.ConfigFileError) as exc:
+    with pytest.raises(spack.config.ConfigFileError, match="2 missing include path"):
         with e:
             e.concretize()
 
-    err = str(exc)
-    assert "missing include" in err
-    assert "/no/such/directory" in err
-    assert os.path.join("no", "such", "file.yaml") in err
     assert ev.active_environment() is None
 
 
@@ -741,7 +738,7 @@ spack:
             """\
         packages:
           libelf:
-              version: [0.8.10]
+              version: ["0.8.10"]
         """
         )
 
@@ -751,7 +748,7 @@ spack:
             """\
         packages:
           mpileaks:
-              version: [2.2]
+              version: ["2.2"]
         """
         )
 
@@ -770,7 +767,7 @@ def packages_file(tmpdir):
     raw_yaml = """
 packages:
   mpileaks:
-    version: [2.2]
+    version: ["2.2"]
 """
     filename = tmpdir.ensure("testconfig", "packages.yaml")
     filename.write(raw_yaml)
@@ -829,7 +826,7 @@ def test_env_with_included_config_file_url(tmpdir, mutable_empty_config, package
     assert len(scopes) == 1
 
     cfg = spack.config.get("packages")
-    assert cfg["mpileaks"]["version"] == [2.2]
+    assert cfg["mpileaks"]["version"] == ["2.2"]
 
 
 def test_env_with_included_config_missing_file(tmpdir, mutable_empty_config):
@@ -895,7 +892,7 @@ def test_env_config_precedence(environment_from_manifest):
 spack:
   packages:
     libelf:
-      version: [0.8.12]
+      version: ["0.8.12"]
   include:
   - ./included-config.yaml
   specs:
@@ -907,9 +904,9 @@ spack:
             """\
 packages:
   mpileaks:
-    version: [2.2]
+    version: ["2.2"]
   libelf:
-    version: [0.8.11]
+    version: ["0.8.11"]
 """
         )
 
@@ -940,7 +937,7 @@ spack:
             """\
 packages:
   libelf:
-    version: [0.8.10]  # this should override libelf version below
+    version: ["0.8.10"]  # this should override libelf version below
 """
         )
 
@@ -949,9 +946,9 @@ packages:
             """\
 packages:
   mpileaks:
-    version: [2.2]
+    version: ["2.2"]
   libelf:
-    version: [0.8.12]
+    version: ["0.8.12"]
 """
         )
 
@@ -2647,11 +2644,11 @@ def test_custom_version_concretize_together(tmpdir):
     e.unify = True
 
     # Concretize a first time using 'mpich' as the MPI provider
-    e.add("hdf5@myversion")
+    e.add("hdf5@=myversion")
     e.add("mpich")
     e.concretize()
 
-    assert any("hdf5@myversion" in spec for _, spec in e.concretized_specs())
+    assert any(spec.satisfies("hdf5@myversion") for _, spec in e.concretized_specs())
 
 
 def test_modules_relative_to_views(environment_from_manifest, install_mockery, mock_fetch):
@@ -2751,7 +2748,7 @@ def test_query_develop_specs():
     with ev.read("test") as e:
         e.add("mpich")
         e.add("mpileaks")
-        e.develop(Spec("mpich@1"), "here", clone=False)
+        e.develop(Spec("mpich@=1"), "here", clone=False)
 
         assert e.is_develop(Spec("mpich"))
         assert not e.is_develop(Spec("mpileaks"))

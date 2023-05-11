@@ -14,6 +14,7 @@ class Exiv2(CMakePackage):
     homepage = "https://www.exiv2.org/"
     url = "https://github.com/Exiv2/exiv2/archive/v0.27.2.tar.gz"
 
+    version("0.27.6", sha256="f16ee5ff08b6994c66106109417857f13e711fca100ac43c6a403d4f02b59602")
     version("0.27.5", sha256="1da1721f84809e4d37b3f106adb18b70b1b0441c860746ce6812bb3df184ed6c")
     version("0.27.4", sha256="9fb2752c92f63c9853e0bef9768f21138eeac046280f40ded5f37d06a34880d9")
     version("0.27.3", sha256="6398bc743c32b85b2cb2a604273b8c90aa4eb0fd7c1700bf66cbb2712b4f00c1")

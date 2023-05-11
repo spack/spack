@@ -182,7 +182,7 @@ protected-publish:
     - spack --version
     - export COPY_SPECS_DIR=${CI_PROJECT_DIR}/jobs_scratch_dir/specs_to_copy
     - spack buildcache sync --manifest-glob "${COPY_SPECS_DIR}/*.json"
-    - spack buildcache update-index --mirror-url ${SPACK_COPY_BUILDCACHE}
+    - spack buildcache update-index "${SPACK_COPY_BUILDCACHE}"
 
 ########################################
 # TEMPLATE FOR ADDING ANOTHER PIPELINE
@@ -870,11 +870,11 @@ aws-isc-aarch64-protected-build:
 
 tutorial-pr-generate:
   extends: [ ".tutorial", ".pr-generate"]
-  image: ghcr.io/spack/tutorial-ubuntu-22.04:v2023-05-05
+  image: ghcr.io/spack/tutorial-ubuntu-22.04:v2023-05-07
 
 tutorial-protected-generate:
   extends: [ ".tutorial", ".protected-generate"]
-  image: ghcr.io/spack/tutorial-ubuntu-22.04:v2023-05-05
+  image: ghcr.io/spack/tutorial-ubuntu-22.04:v2023-05-07
 
 tutorial-pr-build:
   extends: [ ".tutorial", ".pr-build" ]
