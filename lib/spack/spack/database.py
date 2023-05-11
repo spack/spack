@@ -798,7 +798,6 @@ class Database(object):
 
         # TODO: better version checking semantics.
         version = vn.Version(db["version"])
-        spec_reader = reader(version)
         if version > _db_version:
             raise InvalidDatabaseVersionError(_db_version, version)
         elif version < _db_version:
@@ -813,6 +812,8 @@ class Database(object):
                     (k, v.to_dict(include_fields=self._record_fields))
                     for k, v in self._data.items()
                 )
+
+        spec_reader = reader(version)
 
         def invalid_record(hash_key, error):
             return CorruptDatabaseError(
@@ -1653,5 +1654,5 @@ class InvalidDatabaseVersionError(SpackError):
     def __init__(self, expected, found):
         super(InvalidDatabaseVersionError, self).__init__(
             "Expected database version %s but found version %s." % (expected, found),
-            "`spack reindex` may fix this, or you may need a newer " "Spack version.",
+            "\n\t`spack reindex` may fix this, or you may need a newer Spack version.\n",
         )
