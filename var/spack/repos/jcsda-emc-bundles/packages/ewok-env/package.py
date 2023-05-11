@@ -6,7 +6,7 @@
 from spack.package import *
 
 
-class JediEwokEnv(BundlePackage):
+class EwokEnv(BundlePackage):
     """Development environment for ewok"""
 
     # DH* TODO UPDATE FROM INTERNAL TO PUBLIC
@@ -53,7 +53,7 @@ class JediEwokEnv(BundlePackage):
 
     conflicts(
         "%gcc platform=darwin",
-        msg="jedi-ewok-env does " + "not build with gcc (11?) on macOS (12), use apple-clang",
+        msg="ewok-env does " + "not build with gcc (11?) on macOS (12), use apple-clang",
     )
 
     # There is no need for install() since there is no code.
