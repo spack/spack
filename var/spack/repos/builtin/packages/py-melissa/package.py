@@ -60,4 +60,3 @@ class PyMelissa(PythonPackage):
     depends_on("py-tensorboard@2.10.0:", type="run", when="+MELISSA_TF")
     depends_on("py-matplotlib", type="run", when="+MELISSA_TF")
     depends_on("py-tensorflow@2.8.0:", type="run", when="+MELISSA_TF")
-
