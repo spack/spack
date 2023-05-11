@@ -105,7 +105,7 @@ class IntelOneapiMkl(IntelOneApiLibraryPackage):
         multi=False,
     )
 
-    depends_on("intel-oneapi-tbb")
+    depends_on("tbb")
     # cluster libraries need mpi
     depends_on("mpi", when="+cluster")
 
