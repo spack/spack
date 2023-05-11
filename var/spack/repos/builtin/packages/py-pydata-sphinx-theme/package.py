@@ -9,7 +9,6 @@ from spack.package import *
 class PyPydataSphinxTheme(PythonPackage):
     """A clean, three-column, Bootstrap-based Sphinx theme by and for the PyData community."""
 
-
     homepage = "https://pypi.org/project/pydata-sphinx-theme/"
     pypi = "pydata_sphinx_theme/pydata_sphinx_theme-0.9.0.tar.gz"
 

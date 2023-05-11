@@ -53,7 +53,6 @@ class Spdlog(CMakePackage):
     )
     variant("pic", default=True, description="Build pic-enabled static libraries")
 
-
     depends_on("cmake@3.2:", when="@:1.7.0", type="build")
     depends_on("cmake@3.10:", when="@1.8.0:", type="build")
 
