@@ -668,8 +668,9 @@ def process_test_parts(pkg: Pb, test_specs: List[spack.spec.Spec], verbose: bool
             try:
                 tests = test_functions(spec.package_class)
             except spack.repo.UnknownPackageError:
-                # some virtuals don't have a package
-                tests = []
+                # Some virtuals don't have a package so we don't want to report
+                # them as not having tests when that isn't appropriate.
+                continue
 
             if len(tests) == 0:
                 tester.status(spec.name, TestStatus.NO_TESTS)

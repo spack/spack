@@ -20,7 +20,7 @@ def _true(*args, **kwargs):
     return True
 
 
-def ensure_results(filename, expected):
+def ensure_results(filename, expected, present=True):
     assert os.path.exists(filename)
     with open(filename, "r") as fd:
         lines = fd.readlines()
@@ -29,7 +29,10 @@ def ensure_results(filename, expected):
             if expected in line:
                 have = True
                 break
-        assert have
+        if present:
+            assert have, f"Expected '{expected}' in the file"
+        else:
+            assert not have, f"Expected '{expected}' NOT to be in the file"
 
 
 def test_test_log_name(mock_packages, config):
@@ -78,8 +81,8 @@ def test_write_test_result(mock_packages, mock_test_stage):
         assert spec.name in msg
 
 
-def test_test_uninstalled(mock_packages, install_mockery, mock_test_stage):
-    """Attempt to perform stand-alone test for uninstalled package."""
+def test_test_not_installed(mock_packages, install_mockery, mock_test_stage):
+    """Attempt to perform stand-alone test for not_installed package."""
     spec = spack.spec.Spec("trivial-smoke-test").concretized()
     test_suite = spack.install_test.TestSuite([spec])
 
@@ -156,6 +159,7 @@ def test_test_spec_passes(mock_packages, install_mockery, mock_test_stage, monke
 
     ensure_results(test_suite.results_file, "PASSED")
     ensure_results(test_suite.log_file_for_spec(spec), "simple stand-alone")
+    ensure_results(test_suite.log_file_for_spec(spec), "standalone-ifc", present=False)
 
 
 def test_get_test_suite():
