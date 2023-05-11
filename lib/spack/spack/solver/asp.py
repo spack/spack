@@ -1738,10 +1738,27 @@ class SpackSolverSetup(object):
             for v in version_preferences:
                 # v can be a string so force it into an actual version for comparisons
                 ver = vn.Version(v)
-                self.declared_versions[pkg_name].append(
-                    DeclaredVersion(version=ver, idx=idx, origin=Provenance.PACKAGES_YAML)
-                )
-                self.possible_versions[pkg_name].add(ver)
+                version_defs = [ver]
+                if not isinstance(ver, spack.version.GitVersion):
+                    pkg_class = spack.repo.path.get_pkg_class(pkg_name)
+                    satisfying_versions = list(
+                        v for v in pkg_class.versions if v.satisfies(ver)
+                    )
+                    if not satisfying_versions:
+                        raise spack.config.ConfigError(
+                            "Preference defines version {0} for {1} that "
+                            "is not in its associated package.py".format(str(ver), pkg_name)
+                        )
+                    if ver not in pkg_class.versions:
+                        version_defs = list(sorted(satisfying_versions, reverse=True))
+                for vdef in version_defs:
+                    self.declared_versions[pkg_name].append(
+                        DeclaredVersion(
+                            version=vdef, idx=idx, origin=Provenance.PACKAGES_YAML
+                        )
+                    )
+                    idx += 1
+                    self.possible_versions[pkg_name].add(vdef)
 
     def add_concrete_versions_from_specs(self, specs, origin):
         """Add concrete versions to possible versions from lists of CLI/dev specs."""
@@ -2305,7 +2322,38 @@ def _specs_from_requires(pkg_name, section):
                 spec.name = pkg_name
             extracted_specs.append(spec)
 
-    version_specs = [x for x in extracted_specs if x.versions.concrete]
+    version_specs = []
+    for spec in extracted_specs:
+        if spec.versions.concrete:
+            version_specs.append(spec)
+            continue
+
+        # cases: @1.3 (exists), @1.3 (doesnt exist), @1.3:1.4, @1.3,1.4 (multiple)
+        # what happens if we have "spack spec foo@hash1=number1,hash2=number2"?
+        vspecs = [spec]
+        if len(spec.versions) > 1:
+            ver = spec.versions
+        else:
+            ver = spec.versions[0]
+
+        # Prefer spec's name if it exists, in case the spec is
+        # requiring a specific implementation inside of a virtual section
+        # e.g. packages:mpi:require:openmpi@4.0.1
+        pkg_class = spack.repo.path.get_pkg_class(spec.name or pkg_name)
+        satisfying_versions = list(v for v in pkg_class.versions if v.satisfies(ver))
+        if not satisfying_versions:
+            raise spack.config.ConfigError(
+                "{0} assigns a version that is not defined in"
+                " the associated package.py".format(str(spec))
+            )
+        if ver not in pkg_class.versions:
+            ordered_satisfying_versions = sorted(satisfying_versions, reverse=True)
+            vspecs = list(
+                spack.spec.Spec("@{0}".format(x)) for x in ordered_satisfying_versions
+            )
+
+        version_specs.extend(vspecs)
+
     for spec in version_specs:
         spec.attach_git_version_lookup()
     return version_specs
