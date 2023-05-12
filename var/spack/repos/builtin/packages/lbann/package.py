@@ -515,7 +515,8 @@ class Lbann(CachedCMakePackage, CudaPackage, ROCmPackage):
         hostname = socket.gethostname()
         if "SYS_TYPE" in env:
             hostname = hostname.rstrip("1234567890")
-        return "LBANN_{0}-{1}-{2}@{3}.cmake".format(
+        return "LBANN_{0}_{1}-{2}-{3}@{4}.cmake".format(
+            self.spec.version,
             hostname,
             self._get_sys_type(self.spec),
             self.spec.compiler.name,
@@ -531,7 +532,8 @@ class Lbann(CachedCMakePackage, CudaPackage, ROCmPackage):
             # of CMake
             entries.append(cmake_cache_option("CMAKE_EXPORT_COMPILE_COMMANDS", "ON"))
 
-        entries.append(cmake_cache_string("CMAKE_MAKE_PROGRAM", "ninja"))
+        entries.append(cmake_cache_string("CMAKE_MAKE_PROGRAM", "{0}/ninja".format(spec["ninja"].prefix.bin)))
+        entries.append(cmake_cache_string("CMAKE_GENERATOR", "Ninja"))
 
         # if "+rocm" in spec:
         #     entries.insert(0, cmake_cache_path("CMAKE_CXX_COMPILER", spec["hip"].hipcc))
@@ -617,6 +619,13 @@ class Lbann(CachedCMakePackage, CudaPackage, ROCmPackage):
 # #        if spec.satisfies("^al"):
 #             entries.append(cmake_cache_path("Aluminum_DIR", "{0}/lib64".format(spec["aluminum"].prefix)))
 # #            entries.append(cmake_cache_path("Aluminum_DIR", "{0}".format(spec["aluminum"].prefix)))
+
+        if spec.satisfies("^python") and "+pfe" in spec:
+            entries.append(cmake_cache_path("LBANN_PFE_PYTHON_EXECUTABLE", "{0}/python".format(spec["python"].prefix.bin)))
+            entries.append(cmake_cache_string("LBANN_PFE_PYTHONPATH", env["PYTHONPATH"])) # do NOT need to sub ; for : because
+                                                                                          # value will only be interpreted by
+                                                                                          # a shell, which expects :
+        
 
         # if spec.satisfies("^conduit"):
         #     entries.append(cmake_cache_path("Conduit_DIR", "{0}".format(spec["conduit"].prefix)))
