@@ -1262,7 +1262,7 @@ def get_package_context(traceback, context=3):
     # Point out the location in the install method where we failed.
     filename = inspect.getfile(frame.f_code)
     lineno = frame.f_lineno
-    if filename.endswith("package.py"):
+    if os.path.basename(filename) == "package.py":
         # subtract 1 because we inject a magic import at the top of package files.
         # TODO: get rid of the magic import.
         lineno -= 1

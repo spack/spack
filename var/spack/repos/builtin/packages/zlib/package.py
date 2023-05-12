@@ -72,8 +72,6 @@ class SetupEnvironment(object):
 
 class MakefileBuilder(spack.build_systems.makefile.MakefileBuilder, SetupEnvironment):
     def edit(self, pkg, spec, prefix):
-        raise RuntimeError()
-
         config_args = []
         if "~shared" in self.spec:
             config_args.append("--static")
