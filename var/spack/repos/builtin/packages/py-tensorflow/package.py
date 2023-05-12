@@ -129,13 +129,15 @@ class PyTensorflow(Package, CudaPackage, ROCmPackage, PythonExtension):
     variant("aws", default=False, description="Build with Amazon AWS Platform support")
     variant("kafka", default=False, description="Build with Apache Kafka Platform support")
     variant("ignite", default=False, description="Build with Apache Ignite support")
-    variant("xla", default=False, description="Build with XLA JIT support")
+    variant("xla", default=sys.platform != "darwin", description="Build with XLA JIT support")
     variant("gdr", default=False, description="Build with GDR support")
     variant("verbs", default=False, description="Build with libverbs support")
     variant("ngraph", default=False, description="Build with Intel nGraph support")
     variant("opencl", default=False, description="Build with OpenCL SYCL support")
     variant("computecpp", default=False, description="Build with ComputeCPP support")
-    variant("tensorrt", default=False, description="Build with TensorRT support")
+    variant(
+        "tensorrt", default=False, description="Build with TensorRT support"
+    )  # TODO: enable when TensorRT in Spack
     variant("cuda", default=sys.platform != "darwin", description="Build with CUDA support")
     variant(
         "nccl", default=sys.platform.startswith("linux"), description="Enable NVIDIA NCCL support"
@@ -146,7 +148,9 @@ class PyTensorflow(Package, CudaPackage, ROCmPackage, PythonExtension):
     variant("monolithic", default=False, description="Static monolithic build")
     variant("numa", default=False, description="Build with NUMA support")
     variant(
-        "dynamic_kernels", default=False, description="Build kernels into separate shared objects"
+        "dynamic_kernels",
+        default=sys.platform.startswith("linux"),
+        description="Build kernels into separate shared objects",
     )
 
     extends("python")
