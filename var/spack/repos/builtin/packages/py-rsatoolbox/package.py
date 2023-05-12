@@ -25,7 +25,7 @@ class PyRsatoolbox(PythonPackage):
     # version restriction from pyproject.toml cannot be concretized at the
     # moment but package also builds with older versions
     depends_on("py-setuptools", type="build")
-    depends_on("py-setuptools-scm+toml@7.0.0:7.0", when="@0.0.5:", type="build")
+    depends_on("py-setuptools-scm+toml@7.0", when="@0.0.5:", type="build")
     # version restriction: same as for py-setuptools
     depends_on("py-cython", when="@0.0.5:", type="build")
     depends_on("py-twine@4.0.1:4.0", when="@0.0.5:", type="build")
