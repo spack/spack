@@ -537,6 +537,7 @@ class Stage(object):
 
             self.fetcher = self.default_fetcher
             default_msg = "All fetchers failed for {0}".format(self.name)
+            tty.info(err_msg)
             raise FetchError(err_msg or default_msg, None)
 
         print_errors(errors)
