@@ -1065,7 +1065,9 @@ def _setup_pkg_and_run(
 
         # build up some context from the offending package so we can
         # show that, too.
-        if not isinstance(e, spack.util.web.FetchError):
+        if isinstance(e, spack.util.web.FetchError):
+            package_context = None
+        else:
             package_context = get_package_context(tb)
 
         logfile = None
