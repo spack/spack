@@ -240,6 +240,9 @@ mpileaks:
 
     def test_preferred_truncated(self):
         """Preference should not specify an undefined version"""
+        if spack.config.get("config:concretizer") == "original":
+            pytest.skip("Original concretizer does not support configuration requirements")
+
         update_packages("python", "version", ["3.5"])
         spec = Spec("python")
         spec.concretize()
