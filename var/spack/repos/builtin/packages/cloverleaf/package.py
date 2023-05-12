@@ -14,7 +14,6 @@ class Cloverleaf(MakefilePackage):
     """
 
     homepage = "https://uk-mac.github.io/CloverLeaf"
-    url = "https://downloads.mantevo.org/releaseTarballs/miniapps/CloverLeaf/CloverLeaf-1.1.tar.gz"
     git = "https://github.com/UK-MAC/CloverLeaf.git"
 
     tags = ["proxy-app"]
@@ -22,7 +21,6 @@ class Cloverleaf(MakefilePackage):
     version("master", tag="master", submodules=True)
     version("1.3", tag="1.3", submodules=True)
     version("1.1", tag="1.1", submodules=True)
-#    version("1.1", sha256="de87f7ee6b917e6b3d243ccbbe620370c62df890e3ef7bdbab46569b57be132f")
 
     variant(
         "build",
@@ -41,9 +39,9 @@ class Cloverleaf(MakefilePackage):
 
     conflicts("build=cuda", when="%aocc", msg="Currently AOCC supports only ref variant")
     conflicts("build=openacc_cray", when="%aocc", msg="Currently AOCC supports only ref variant")
-    conflicts("build=serial", when="%aocc", msg="Currently AOCC supports only ref variant")
+#    conflicts("build=serial", when="%aocc", msg="Currently AOCC supports only ref variant") # can it complete: tbt ?
 
-    patch("aocc_support.patch", when="@1.1 %aocc")
+    patch("aocc_support.patch", when="@1.1:@1.3 %aocc")
 
     @property
     def type_of_build(self):
@@ -87,6 +85,8 @@ class Cloverleaf(MakefilePackage):
             targets.append("CFLAGS_INTEL=")
         elif "%aocc" in self.spec:
             targets.append("COMPILER=AOCC")
+            targets.append("FLAGS_AOCC=")
+            targets.append("CFLAGS_AOCC=") # tbt: it should override those two with blank ones
         elif "%pgi" in self.spec:
             targets.append("COMPILER=PGI")
             targets.append("FLAGS_PGI=")
