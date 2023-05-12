@@ -516,8 +516,8 @@ class Lbann(CachedCMakePackage, CudaPackage, ROCmPackage):
         if "SYS_TYPE" in env:
             hostname = hostname.rstrip("1234567890")
         return "LBANN_{0}_{1}-{2}-{3}@{4}.cmake".format(
-            self.spec.version,
             hostname,
+            self.spec.version,
             self._get_sys_type(self.spec),
             self.spec.compiler.name,
             self.spec.compiler.version,
