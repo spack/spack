@@ -498,7 +498,5 @@ def test_error_message_when_using_too_new_lockfile(tmp_path):
 """
     )
     ev.initialize_environment_dir(env_dir, init_file)
-    with pytest.raises(
-        ev.SpackEnvironmentError, match="You may need to use a newer Spack version."
-    ):
+    with pytest.raises(ev.SpackEnvironmentError, match="You need to use a newer Spack version."):
         ev.Environment(env_dir)

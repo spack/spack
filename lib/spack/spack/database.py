@@ -799,7 +799,7 @@ class Database(object):
         # TODO: better version checking semantics.
         version = vn.Version(db["version"])
         if version > _db_version:
-            raise InvalidDatabaseVersionError(_db_version, version)
+            raise InvalidDatabaseVersionError(self, _db_version, version)
         elif version < _db_version:
             if not any(old == version and new == _db_version for old, new in _skip_reindex):
                 tty.warn(
@@ -1643,7 +1643,7 @@ class CorruptDatabaseError(SpackError):
 
 
 class NonConcreteSpecAddError(SpackError):
-    """Raised when attemptint to add non-concrete spec to DB."""
+    """Raised when attempting to add non-concrete spec to DB."""
 
 
 class MissingDependenciesError(SpackError):
@@ -1651,8 +1651,11 @@ class MissingDependenciesError(SpackError):
 
 
 class InvalidDatabaseVersionError(SpackError):
-    def __init__(self, expected, found):
-        super(InvalidDatabaseVersionError, self).__init__(
-            "Expected database version %s but found version %s." % (expected, found),
-            "\n\t`spack reindex` may fix this, or you may need a newer Spack version.\n",
+    """Exception raised when the database metadata is newer than current Spack."""
+
+    def __init__(self, database, expected, found):
+        msg = (
+            f"you need a newer Spack version to read the database in '{database.root}'. "
+            f"The expected database version is '{expected}', but '{found}' was found."
         )
+        super(InvalidDatabaseVersionError, self).__init__(msg)

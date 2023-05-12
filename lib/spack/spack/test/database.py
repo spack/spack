@@ -1062,6 +1062,6 @@ def test_error_message_when_using_too_new_db(database, monkeypatch):
     """
     monkeypatch.setattr(spack.database, "_db_version", vn.Version("0"))
     with pytest.raises(
-        spack.database.InvalidDatabaseVersionError, match="you may need a newer Spack version"
+        spack.database.InvalidDatabaseVersionError, match="you need a newer Spack version"
     ):
         spack.database.Database(database.root)._read()
