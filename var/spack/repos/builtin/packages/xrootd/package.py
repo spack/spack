@@ -15,7 +15,7 @@ class Xrootd(CMakePackage):
     url = "https://xrootd.slac.stanford.edu/download/v5.5.1/xrootd-5.5.1.tar.gz"
     list_url = "https://xrootd.slac.stanford.edu/dload.html"
 
-    maintainers("wdconinc")
+    maintainers("gartung", "greenc-FNAL", "marcmengel", "vitodb", "wdconinc")
 
     version("5.5.4", sha256="41a8557ea2d118b1950282b17abea9230b252aa5ee1a5959173e2534b7d611d3")
     version("5.5.3", sha256="703829c2460204bd3c7ba8eaa23911c3c9a310f6d436211ba0af487ef7f6a980")
