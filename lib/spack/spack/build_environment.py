@@ -1055,7 +1055,7 @@ def _setup_pkg_and_run(
         # Do not create a full ChildError from this, it's not an error
         # it's a control statement.
         child_pipe.send(e)
-    except BaseException as e:
+    except BaseException:
         # catch ANYTHING that goes wrong in the child process
         exc_type, exc, tb = sys.exc_info()
 
@@ -1247,13 +1247,15 @@ def get_package_context(traceback, context=3):
 
     stack = make_stack(traceback)
 
+    basenames = tuple(base.__name__ for base in CONTEXT_BASES)
     for tb in stack:
         frame = tb.tb_frame
         if "self" in frame.f_locals:
             # Find the first proper subclass of the PackageBase or BaseBuilder, but
             # don't provide context if the code is actually in the base classes.
             obj = frame.f_locals["self"]
-            if any(type(obj) != base and isinstance(obj, base) for base in CONTEXT_BASES):
+            typename, *_ = tb.tb_frame.f_code.co_qualname.partition(".")
+            if isinstance(obj, CONTEXT_BASES) and typename not in basenames:
                 break
     else:
         return None
