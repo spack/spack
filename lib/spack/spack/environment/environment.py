@@ -2127,10 +2127,12 @@ class Environment:
             reader = READER_CLS[current_lockfile_format]
         except KeyError:
             msg = (
-                f"Spack {spack.__version__} cannot read environment lockfiles using the "
-                f"v{current_lockfile_format} format"
+                f"Spack {spack.__version__} cannot read the lockfile '{self.lock_path}', using "
+                f"the v{current_lockfile_format} format."
             )
-            raise RuntimeError(msg)
+            if lockfile_format_version < current_lockfile_format:
+                msg += " You need to use a newer Spack version."
+            raise SpackEnvironmentError(msg)
 
         # First pass: Put each spec in the map ignoring dependencies
         for lockfile_key, node_dict in json_specs_by_hash.items():
