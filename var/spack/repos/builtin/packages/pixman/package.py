@@ -70,4 +70,8 @@ class Pixman(AutotoolsPackage):
         args.extend(self.enable_or_disable("shared"))
         args.extend(self.with_or_without("pic"))
 
+        png = self.spec["libpng"]
+        if png.satisfies("libs=static") and not png.satisfies("libs=shared"):
+            args.append("LIBS=%s" % which("libpng-config")("--static", "--ldflags", output=str).strip())
+
         return args
