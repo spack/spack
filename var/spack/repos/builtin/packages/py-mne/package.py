@@ -21,7 +21,7 @@ class PyMne(PythonPackage):
     version("0.18.2", sha256="aa2e72ad3225efdad39b05e67cd5c88dbd5c3fabf5e1705e459347131f114bc6")
 
     # don't support full variant for newer versions (for now) because dependencies get out of hand
-    variant("full", default=False, when="@:23", description="Enable full functionality.")
+    variant("full", default=False, when="@:0.23", description="Enable full functionality.")
     variant("hdf5", default=False, when="@1:", description="Enable hdf5 functionality.")
 
     depends_on("python@3.8:", when="@1.4:", type=("build", "run"))
