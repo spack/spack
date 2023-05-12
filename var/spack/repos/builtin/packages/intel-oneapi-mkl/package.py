@@ -167,7 +167,10 @@ class IntelOneapiMkl(IntelOneApiLibraryPackage):
         if "threads=tbb" in self.spec:
             libs.append("libmkl_tbb_thread")
         elif "threads=openmp" in self.spec:
-            libs.append("libmkl_intel_thread")
+            if self.spec.satisfies("%oneapi") or self.spec.satisfies("%intel"):
+                libs.append("libmkl_intel_thread")
+            else:
+                libs.append("libmkl_gnu_thread")
         else:
             libs.append("libmkl_sequential")
 
