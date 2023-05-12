@@ -23,7 +23,7 @@ class PyRsatoolbox(PythonPackage):
     depends_on("python@:3.10", when="@0.0.5:", type=("build", "run"))
 
     # version restriction from pyproject.toml cannot be concretized at the
-    # moment but package builts also with older versions
+    # moment but package also builds with older versions
     depends_on("py-setuptools", type="build")
     depends_on("py-setuptools-scm+toml@7.0.0:7.0", when="@0.0.5:", type="build")
     # version restriction: same as for py-setuptools
