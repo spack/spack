@@ -2083,18 +2083,28 @@
       "compilers": {
         "gcc": [
           {
-            "versions": "10.3:",
+            "versions": "10.3:13.0",
             "name": "znver3",
             "flags": "-march={name} -mtune={name} -mavx512f -mavx512dq -mavx512ifma -mavx512cd -mavx512bw -mavx512vl -mavx512vbmi -mavx512vbmi2 -mavx512vnni -mavx512bitalg"
+          },
+          {
+            "versions": "13.1:",
+            "name": "znver4",
+            "flags": "-march={name} -mtune={name}"
           }
         ],
         "clang": [
           {
-            "versions": "12.0:",
+            "versions": "12.0:15.9",
             "name": "znver3",
             "flags": "-march={name} -mtune={name} -mavx512f -mavx512dq -mavx512ifma -mavx512cd -mavx512bw -mavx512vl -mavx512vbmi -mavx512vbmi2 -mavx512vnni -mavx512bitalg"
+          },
+          {
+            "versions": "16.0:",
+            "name": "znver4",
+            "flags": "-march={name} -mtune={name}"
           }
-        ],
+	],
         "aocc": [
           {
             "versions": "3.0:3.9",
