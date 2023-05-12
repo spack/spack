@@ -1065,9 +1065,8 @@ def _setup_pkg_and_run(
 
         # build up some context from the offending package so we can
         # show that, too.
-        tty.info(e)
-        tty.info(type(e))
-        package_context = get_package_context(tb)
+        if not isinstance(e, spack.util.web.FetchError):
+            package_context = get_package_context(tb)
 
         logfile = None
         if context == "build":
