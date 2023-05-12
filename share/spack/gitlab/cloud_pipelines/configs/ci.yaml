@@ -48,7 +48,7 @@ ci:
         - spack env activate --without-view .
         - echo Copying environment specs from ${SRC_MIRROR} to ${SPACK_BUILDCACHE_DESTINATION}
         - spack buildcache sync "${SPACK_BUILDCACHE_SOURCE}" "${SPACK_BUILDCACHE_DESTINATION}"
-        - curl https://spack.github.io/keys/spack-public-binary-key.pub > /tmp/spack-public-binary-key.pub
+        - curl -fLsS https://spack.github.io/keys/spack-public-binary-key.pub -o /tmp/spack-public-binary-key.pub
         - aws s3 cp /tmp/spack-public-binary-key.pub "${SPACK_BUILDCACHE_DESTINATION}/build_cache/_pgp/spack-public-binary-key.pub"
         - spack buildcache update-index --keys "${SPACK_BUILDCACHE_DESTINATION}"
       when: "always"
