@@ -75,6 +75,10 @@ class Aml(AutotoolsPackage):
     depends_on("hwloc@2.1:", when="+hwloc")
     # - ocl-icd >= 2.1 becomes a dependency when +opencl variant is used.
     depends_on("ocl-icd@2.1:", when="+opencl")
+    # Required on master for autoconf pull the right pkg.m4 macros,
+    # and on other builds to detect dependencies
+    # Note: This does NOT work with pkg-config but requires pkgconf!
+    depends_on("pkgconf", type="build")
 
     # when on master, we need all the autotools and extras to generate files.
     with when("@master"):
@@ -82,9 +86,6 @@ class Aml(AutotoolsPackage):
         depends_on("autoconf", type="build")
         depends_on("automake", type="build")
         depends_on("libtool", type="build")
-        # Required to have pkg config macros in configure.
-        # Note: This does NOT work with pkg-config but requires pkgconf!
-        depends_on("pkgconf", type="build")
         # Required to generate AML version in configure.
         depends_on("git", type="build")
 
