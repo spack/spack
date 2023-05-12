@@ -1063,14 +1063,9 @@ def _setup_pkg_and_run(
         # objects can't be sent to the parent.
         tb_string = traceback.format_exc()
 
-        # check to ensure package_context is not
-        # provided if package fetch fails
-        if isinstance(e, spack.util.web.FetchError):
-            package_context = None
-        else:
-            # build up some context from the offending package so we can
-            # show that, too.
-            package_context = get_package_context(tb)
+        # build up some context from the offending package so we can
+        # show that, too.
+        package_context = get_package_context(tb)
 
         logfile = None
         if context == "build":
@@ -1221,6 +1216,9 @@ def start_build_process(pkg, function, kwargs):
     return child_result
 
 
+CONTEXT_BASES = (spack.package_base.PackageBase, spack.build_systems._checks.BaseBuilder)
+
+
 def get_package_context(traceback, context=3):
     """Return some context for an error message when the build fails.
 
@@ -1252,29 +1250,30 @@ def get_package_context(traceback, context=3):
     for tb in stack:
         frame = tb.tb_frame
         if "self" in frame.f_locals:
-            # Find the first proper subclass of PackageBase.
+            # Find the first proper subclass of the PackageBase or BaseBuilder, but
+            # don't provide context if the code is actually in the base classes.
             obj = frame.f_locals["self"]
-            if isinstance(obj, spack.package_base.PackageBase):
+            if any(type(obj) != base and isinstance(obj, base) for base in CONTEXT_BASES):
                 break
     else:
         return None
 
     # We found obj, the Package implementation we care about.
     # Point out the location in the install method where we failed.
-    lines = [
-        "{0}:{1:d}, in {2}:".format(
-            inspect.getfile(frame.f_code),
-            frame.f_lineno - 1,  # subtract 1 because f_lineno is 0-indexed
-            frame.f_code.co_name,
-        )
-    ]
+    filename = inspect.getfile(frame.f_code)
+    lineno = frame.f_lineno
+    if filename.endswith("package.py"):
+        # subtract 1 because we inject a magic import at the top of package files.
+        # TODO: get rid of the magic import.
+        lineno -= 1
+
+    lines = ["{0}:{1:d}, in {2}:".format(filename, lineno, frame.f_code.co_name)]
 
     # Build a message showing context in the install method.
     sourcelines, start = inspect.getsourcelines(frame)
 
     # Calculate lineno of the error relative to the start of the function.
-    # Subtract 1 because f_lineno is 0-indexed.
-    fun_lineno = frame.f_lineno - start - 1
+    fun_lineno = lineno - start
     start_ctx = max(0, fun_lineno - context)
     sourcelines = sourcelines[start_ctx : fun_lineno + context + 1]
 

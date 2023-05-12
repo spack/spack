@@ -98,6 +98,9 @@ class MakefileBuilder(BaseBuilder):
 
     def build(self, pkg, spec, prefix):
         """Run "make" on the build targets specified by the builder."""
+
+#        raise RuntimeError()
+
         with fs.working_dir(self.build_directory):
             inspect.getmodule(self.pkg).make(*self.build_targets)
 
