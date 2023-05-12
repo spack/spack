@@ -31,6 +31,7 @@ import spack.config
 import spack.error
 import spack.hash_types as ht
 import spack.hooks
+import spack.main
 import spack.paths
 import spack.repo
 import spack.schema.env
@@ -2072,6 +2073,14 @@ class Environment:
 
         hash_spec_list = zip(self.concretized_order, self.concretized_user_specs)
 
+        spack_dict = {"version": spack.spack_version}
+        spack_commit = spack.main.get_spack_commit()
+        if spack_commit:
+            spack_dict["type"] = "git"
+            spack_dict["commit"] = spack_commit
+        else:
+            spack_dict["type"] = "release"
+
         # this is the lockfile we'll write out
         data = {
             # metadata about the format
@@ -2080,6 +2089,8 @@ class Environment:
                 "lockfile-version": lockfile_format_version,
                 "specfile-version": spack.spec.SPECFILE_FORMAT_VERSION,
             },
+            # spack version information
+            "spack": spack_dict,
             # users specs + hashes are the 'roots' of the environment
             "roots": [{"hash": h, "spec": str(s)} for h, s in hash_spec_list],
             # Concrete specs by hash, including dependencies
