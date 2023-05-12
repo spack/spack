@@ -1654,8 +1654,14 @@ class InvalidDatabaseVersionError(SpackError):
     """Exception raised when the database metadata is newer than current Spack."""
 
     def __init__(self, database, expected, found):
+        self.expected = expected
+        self.found = found
         msg = (
-            f"you need a newer Spack version to read the database in '{database.root}'. "
-            f"The expected database version is '{expected}', but '{found}' was found."
+            f"you need a newer Spack version to read the DB in '{database.root}'. "
+            f"{self.database_version_message}"
         )
         super(InvalidDatabaseVersionError, self).__init__(msg)
+
+    @property
+    def database_version_message(self):
+        return f"The expected DB version is '{self.expected}', but '{self.found}' was found."
