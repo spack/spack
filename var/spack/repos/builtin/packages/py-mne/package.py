@@ -27,7 +27,7 @@ class PyMne(PythonPackage):
     depends_on("python@3.8:", when="@1.4:", type=("build", "run"))
     depends_on("py-setuptools@45:", when="@1.4:", type="build")
     depends_on("py-setuptools", type="build")
-    depends_on("py-setuptools-scm@6.2:", when="@1.4:",  type="build")
+    depends_on("py-setuptools-scm@6.2:", when="@1.4:", type="build")
 
     # requirements_base.txt with versions specified in README.rst (marked with *)
     depends_on("py-numpy@1.20.2:", when="@1.4:", type=("build", "run"))  # *
