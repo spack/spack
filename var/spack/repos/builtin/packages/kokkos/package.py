@@ -25,6 +25,7 @@ class Kokkos(CMakePackage, CudaPackage, ROCmPackage):
 
     version("master", branch="master")
     version("develop", branch="develop")
+    version("4.0.01", sha256="bb942de8afdd519fd6d5d3974706bfc22b6585a62dd565c12e53bdb82cd154f0")
     version("4.0.00", sha256="1829a423883d4b44223c7c3a53d3c51671145aad57d7d23e6a1a4bebf710dcf6")
     version("3.7.01", sha256="0481b24893d1bcc808ec68af1d56ef09b82a1138a1226d6be27c3b3c3da65ceb")
     version("3.7.00", sha256="62e3f9f51c798998f6493ed36463f66e49723966286ef70a9dcba329b8443040")
@@ -93,6 +94,7 @@ class Kokkos(CMakePackage, CudaPackage, ROCmPackage):
         "thunderx2": "THUNDERX2",
         "zen": "ZEN",
         "zen2": "ZEN2",
+        "zen3": "ZEN3",
         "steamroller": "KAVERI",
         "excavator": "CARIZO",
         "power7": "POWER7",
@@ -133,6 +135,7 @@ class Kokkos(CMakePackage, CudaPackage, ROCmPackage):
         "75": "turing75",
         "80": "ampere80",
         "86": "ampere86",
+        "89": "ada89",
         "90": "hopper90",
     }
     cuda_arches = spack_cuda_arch_map.values()
@@ -144,6 +147,7 @@ class Kokkos(CMakePackage, CudaPackage, ROCmPackage):
         "gfx908": "vega908",
         "gfx90a": "vega90A",
         "gfx1030": "navi1030",
+        "gfx1100": "navi1100",
     }
     amd_support_conflict_msg = (
         "{0} is not supported; "
@@ -203,9 +207,8 @@ class Kokkos(CMakePackage, CudaPackage, ROCmPackage):
     variant("std", default="17", values=stds, multi=False)
     variant("pic", default=False, description="Build position independent code")
 
-    # nvcc does not currently work with C++17 or C++20
     conflicts("+cuda", when="std=17 ^cuda@:10")
-    conflicts("+cuda", when="std=20")
+    conflicts("+cuda", when="std=20 ^cuda@:12")
 
     # SYCL and OpenMPTarget require C++17 or higher
     for stdver in stds[: stds.index("17")]:
