@@ -14,6 +14,26 @@ default:
     SPACK_TARGET_PLATFORM: "linux"
     SPACK_TARGET_ARCH: "x86_64_v3"
 
+.linux_skylake:
+  variables:
+    SPACK_TARGET_PLATFORM: "linux"
+    SPACK_TARGET_ARCH: "skylake_avx512"
+
+.linux_icelake:
+  variables:
+    SPACK_TARGET_PLATFORM: "linux"
+    SPACK_TARGET_ARCH: "icelake"
+
+.linux_neoverse_n1:
+  variables:
+    SPACK_TARGET_PLATFORM: "linux"
+    SPACK_TARGET_ARCH: "neoverse_n1"
+
+.linux_neoverse_v1:
+  variables:
+    SPACK_TARGET_PLATFORM: "linux"
+    SPACK_TARGET_ARCH: "neoverse_v1"
+
 .linux_aarch64:
   variables:
     SPACK_TARGET_PLATFORM: "linux"
@@ -41,11 +61,14 @@ default:
 .pr-refs:
   only:
   - /^pr[\d]+_.*$/
+  # TODO Remove
+  - /^test-ci$/ # stesachs run CI pipeline on my branch
 
 .pr:
   extends: [ ".pr-refs" ]
   variables:
-    SPACK_BUILDCACHE_DESTINATION: "s3://spack-binaries-prs/${CI_COMMIT_REF_NAME}/${SPACK_CI_STACK_NAME}"
+    # TODO change
+    SPACK_BUILDCACHE_DESTINATION: "s3://save-stesachs/spack-binaries-prs/${CI_COMMIT_REF_NAME}/${SPACK_CI_STACK_NAME}"
     SPACK_PIPELINE_TYPE: "spack_pull_request"
     SPACK_PRUNE_UNTOUCHED: "True"
     SPACK_PRUNE_UNTOUCHED_DEPENDENT_DEPTH: "1"
@@ -55,12 +78,15 @@ default:
   - /^develop$/
   - /^releases\/v.*/
   - /^v.*/
+  # TODO Remove
+  - /^test-ci$/ # stesachs run CI pipeline on my branch
 
 .protected:
   extends: [ ".protected-refs" ]
   variables:
-    SPACK_BUILDCACHE_DESTINATION: "s3://spack-binaries/${CI_COMMIT_REF_NAME}/${SPACK_CI_STACK_NAME}"
-    SPACK_COPY_BUILDCACHE: "s3://spack-binaries/${CI_COMMIT_REF_NAME}"
+    # TODO: Change
+    SPACK_BUILDCACHE_DESTINATION: "s3://save-stesachs/spack-binaries/${CI_COMMIT_REF_NAME}/${SPACK_CI_STACK_NAME}"
+    SPACK_COPY_BUILDCACHE: "s3://save-stesachs/spack-binaries/${CI_COMMIT_REF_NAME}"
     SPACK_PIPELINE_TYPE: "spack_protected_branch"
 
 .generate-base:
@@ -1053,3 +1079,168 @@ deprecated-ci-protected-build:
   needs:
     - artifacts: True
       job: deprecated-ci-protected-generate
+
+########################################
+# AWS PCLUSTER
+########################################
+
+.aws-pcluster-generate-image:
+  # TODO: Change to image: { "name": "ghcr.io/spack/pcluster-amazonlinux-2:v2023-05-10", "entrypoint": [""] }
+  image: { "name": "679174810898.dkr.ecr.us-east-1.amazonaws.com/stesachs-gitlab:amd64", "entrypoint": [""] }
+
+.aws-pcluster:
+  variables:
+    SPACK_CI_STACK_NAME: aws-pcluster
+
+.aws-pcluster-generate:
+  before_script:
+      # Setup postinstall Spack as upstream installation
+    - - . "./share/spack/setup-env.sh"
+      - . /etc/profile.d/modules.sh
+      - if [[ -f /bootstrap/spack/etc/spack/packages.yaml ]]; then cp /bootstrap/spack/etc/spack/packages.yaml ./etc/spack/; fi
+      - if [[ -f /bootstrap/spack/etc/spack/config.yaml ]]; then cp /bootstrap/spack/etc/spack/config.yaml ./etc/spack/; fi
+      - if [[ -f /bootstrap/spack/etc/spack/modules.xyaml ]]; then cp /bootstrap/spack/etc/spack/modules.yaml ./etc/spack/; fi
+      - if [[ -f /bootstrap/spack/etc/spack/mirrors.yaml ]]; then cp /bootstrap/spack/etc/spack/mirrors.yaml ./etc/spack/; fi
+      - if [[ -d /bootstrap/spack/opt/spack ]]; then spack config add "upstreams:postinstall:install_tree:/bootstrap/spack/opt/spack"; fi
+      - cd "${CI_PROJECT_DIR}" && curl -sOL https://raw.githubusercontent.com/spack/spack-configs/main/AWS/parallelcluster/postinstall.sh
+      - sed -i -e '/nohup/s/&$//' -e 's/nohup//' -e "s/spack arch -t/echo ${SPACK_TARGET_ARCH}/g" postinstall.sh
+      - /bin/bash postinstall.sh -fg
+      - spack config --scope site add "packages:all:target:\"target=${SPACK_TARGET_ARCH}\""
+  after_script:
+    - - mv "${CI_PROJECT_DIR}/postinstall.sh" "${CI_PROJECT_DIR}/jobs_scratch_dir/"
+
+# Icelake (one pipeline per target)
+aws-pcluster-pr-generate-icelake:
+  extends: [ ".linux_icelake", ".aws-pcluster", ".pr-generate", ".tags-x86_64_v4", ".aws-pcluster-generate", ".aws-pcluster-generate-image" ]
+
+aws-pcluster-pr-build-icelake:
+  extends: [ ".linux_icelake", ".aws-pcluster", ".pr-build" ]
+  trigger:
+    include:
+      - artifact: jobs_scratch_dir/cloud-ci-pipeline.yml
+        job: aws-pcluster-pr-generate-icelake
+    strategy: depend
+  needs:
+    - artifacts: True
+      job: aws-pcluster-pr-generate-icelake
+
+aws-pcluster-protected-generate-icelake:
+  extends: [ ".linux_icelake", ".aws-pcluster", ".protected-generate", ".tags-x86_64_v4", ".aws-pcluster-generate", ".aws-pcluster-generate-image" ]
+
+aws-pcluster-protected-build-icelake:
+  extends: [ ".linux_icelake", ".aws-pcluster", ".protected-build" ]
+  trigger:
+    include:
+      - artifact: jobs_scratch_dir/cloud-ci-pipeline.yml
+        job: aws-pcluster-protected-generate-icelake
+    strategy: depend
+  needs:
+    - artifacts: True
+      job: aws-pcluster-protected-generate-icelake
+
+# Skylake_avx512 (one pipeline per target)
+aws-pcluster-pr-generate-skylake:
+  extends: [ ".linux_skylake", ".aws-pcluster", ".pr-generate", ".tags-x86_64_v4", ".aws-pcluster-generate", ".aws-pcluster-generate-image" ]
+
+aws-pcluster-pr-build-skylake:
+  extends: [ ".linux_skylake", ".aws-pcluster", ".pr-build" ]
+  trigger:
+    include:
+      - artifact: jobs_scratch_dir/cloud-ci-pipeline.yml
+        job: aws-pcluster-pr-generate-skylake
+    strategy: depend
+  needs:
+    - artifacts: True
+      job: aws-pcluster-pr-generate-skylake
+
+aws-pcluster-protected-generate-skylake:
+  extends: [ ".linux_skylake", ".aws-pcluster", ".protected-generate", ".tags-x86_64_v4", ".aws-pcluster-generate", ".aws-pcluster-generate-image" ]
+
+aws-pcluster-protected-build-skylake:
+  extends: [ ".linux_skylake", ".aws-pcluster", ".protected-build" ]
+  trigger:
+    include:
+      - artifact: jobs_scratch_dir/cloud-ci-pipeline.yml
+        job: aws-pcluster-protected-generate-skylake
+    strategy: depend
+  needs:
+    - artifacts: True
+      job: aws-pcluster-protected-generate-skylake
+
+
+# TODO zen2: Cannot guarantee AMD provisioner
+# TODO Make `intel` entry for x86_64_v3 in archspec
+
+# Neoverse_n1 (one pipeline per target)
+.aws-pcluster-generate-image-aarch64:
+  # TODO: Change to image: { "name": "ghcr.io/spack/pcluster-amazonlinux-2:v2023-05-10", "entrypoint": [""] }
+  image: { "name": "679174810898.dkr.ecr.us-east-1.amazonaws.com/stesachs-gitlab:arm64", "entrypoint": [""] }
+
+.aws-pcluster-aarch64:
+  variables:
+    SPACK_CI_STACK_NAME: aws-pcluster-aarch64
+
+aws-pcluster-pr-generate-neoverse-n1:
+  extends: [ ".linux_neoverse_n1", ".aws-pcluster-aarch64", ".pr-generate-aarch64", ".aws-pcluster-generate", ".aws-pcluster-generate-image-aarch64" ]
+
+aws-pcluster-protected-generate-neoverse-n1:
+  extends: [  ".linux_neoverse_n1", ".aws-pcluster-aarch64", ".protected-generate-aarch64", ".aws-pcluster-generate", ".aws-pcluster-generate-image-aarch64" ]
+
+aws-pcluster-pr-build-neoverse-n1:
+  extends: [  ".linux_neoverse_n1", ".aws-pcluster-aarch64", ".pr-build" ]
+  trigger:
+    include:
+      - artifact: jobs_scratch_dir/cloud-ci-pipeline.yml
+        job: aws-pcluster-pr-generate-neoverse-n1
+    strategy: depend
+  needs:
+    - artifacts: True
+      job: aws-pcluster-pr-generate-neoverse-n1
+
+aws-pcluster-protected-build-neoverse-n1:
+  extends: [ ".aws-pcluster-aarch64", ".protected-build" ]
+  trigger:
+    include:
+      - artifact: jobs_scratch_dir/cloud-ci-pipeline.yml
+        job: aws-pcluster-protected-generate-neoverse-n1
+    strategy: depend
+  needs:
+    - artifacts: True
+      job: aws-pcluster-protected-generate-neoverse-n1
+
+# Neoverse_v1 (one pipeline per target)
+.aws-pcluster-generate-image-aarch64:
+  # TODO: Change to image: { "name": "ghcr.io/spack/pcluster-amazonlinux-2:v2023-05-10", "entrypoint": [""] }
+  image: { "name": "679174810898.dkr.ecr.us-east-1.amazonaws.com/stesachs-gitlab:arm64", "entrypoint": [""] }
+
+.aws-pcluster-aarch64:
+  variables:
+    SPACK_CI_STACK_NAME: aws-pcluster-aarch64
+
+aws-pcluster-pr-generate-neoverse-v1:
+  extends: [ ".linux_neoverse_v1", ".aws-pcluster-aarch64", ".pr-generate-aarch64", ".aws-pcluster-generate", ".aws-pcluster-generate-image-aarch64" ]
+
+aws-pcluster-protected-generate-neoverse-v1:
+  extends: [  ".linux_neoverse_v1", ".aws-pcluster-aarch64", ".protected-generate-aarch64", ".aws-pcluster-generate", ".aws-pcluster-generate-image-aarch64" ]
+
+aws-pcluster-pr-build-neoverse-v1:
+  extends: [  ".linux_neoverse_v1", ".aws-pcluster-aarch64", ".pr-build" ]
+  trigger:
+    include:
+      - artifact: jobs_scratch_dir/cloud-ci-pipeline.yml
+        job: aws-pcluster-pr-generate-neoverse-v1
+    strategy: depend
+  needs:
+    - artifacts: True
+      job: aws-pcluster-pr-generate-neoverse-v1
+
+aws-pcluster-protected-build-neoverse-v1:
+  extends: [ ".aws-pcluster-aarch64", ".protected-build" ]
+  trigger:
+    include:
+      - artifact: jobs_scratch_dir/cloud-ci-pipeline.yml
+        job: aws-pcluster-protected-generate-neoverse-v1
+    strategy: depend
+  needs:
+    - artifacts: True
+      job: aws-pcluster-protected-generate-neoverse-v1
