@@ -41,11 +41,11 @@ def determine_number_of_jobs(
     if not parallel:
         return 1
 
-    if command_line is None and "command_line" in spack.config.scopes():
-        command_line = spack.config.get("config:build_jobs", scope="command_line")
-
     if command_line is not None:
         return command_line
+    elif "command_line" in spack.config.scopes():
+        command_line = spack.config.get("config:build_jobs", scope="command_line")
+
 
     max_cpus = max_cpus or cpus_available()
 
