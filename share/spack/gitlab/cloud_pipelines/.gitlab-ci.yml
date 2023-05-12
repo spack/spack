@@ -1080,7 +1080,7 @@ deprecated-ci-protected-build:
 
 .aws-pcluster-generate-image:
   # TODO: Update once built
-  image: { "name": "ghcr.io/spack/pcluster-amazonlinux-2:v2023-05-13", "entrypoint": [""] }
+  image: { "name": "ghcr.io/spack/pcluster-amazonlinux-2:main", "entrypoint": [""] }
 
 .aws-pcluster:
   variables:
@@ -1165,7 +1165,7 @@ aws-pcluster-protected-build-skylake:
 # Neoverse_n1 (one pipeline per target)
 .aws-pcluster-generate-image-aarch64:
   # TODO: Update once built
-  image: { "name": "ghcr.io/spack/pcluster-amazonlinux-2:v2023-05-13", "entrypoint": [""] }
+  image: { "name": "ghcr.io/spack/pcluster-amazonlinux-2:main", "entrypoint": [""] }
 
 .aws-pcluster-aarch64:
   variables:
@@ -1202,7 +1202,7 @@ aws-pcluster-protected-build-neoverse-n1:
 # Neoverse_v1 (one pipeline per target)
 .aws-pcluster-generate-image-aarch64:
   # TODO: Update once built
-  image: { "name": "ghcr.io/spack/pcluster-amazonlinux-2:v2023-05-13", "entrypoint": [""] }
+  image: { "name": "ghcr.io/spack/pcluster-amazonlinux-2:main", "entrypoint": [""] }
 
 .aws-pcluster-aarch64:
   variables:

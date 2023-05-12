@@ -36,7 +36,7 @@ spack:
     pipeline-gen:
     - build-job:
         # TODO: Update once built
-        image: { "name": "ghcr.io/spack/pcluster-amazonlinux-2:v2023-05-13", "entrypoint": [""] }
+        image: { "name": "ghcr.io/spack/pcluster-amazonlinux-2:main", "entrypoint": [""] }
         before_script:
         - - . "./share/spack/setup-env.sh"
           - . /etc/profile.d/modules.sh
