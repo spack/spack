@@ -34,7 +34,7 @@ class SimModel(Package):
 
     homepage = ""
 
-    variant("coreneuron", default=False, description="Enable CoreNEURON Support")
+    variant("coreneuron", default=True, description="Enable CoreNEURON Support")
     variant("caliper", default=False, description="Enable Caliper instrumentation")
 
     # neuron/corenrn get linked automatically when using nrnivmodl[-core]
