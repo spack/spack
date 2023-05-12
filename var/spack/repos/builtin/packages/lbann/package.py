@@ -578,28 +578,28 @@ class Lbann(CachedCMakePackage, CudaPackage, ROCmPackage):
             "#------------------{0}\n".format("-" * 60),
         ]
 
-        entries.append(cmake_cache_option("LBANN_WITH_CNPY", "+numpy" in spec))
-        entries.append(cmake_cache_option("LBANN_DETERMINISTIC", "+deterministic" in spec))
-        entries.append(cmake_cache_option("LBANN_WITH_HWLOC", "hwloc" in spec))
-        entries.append(cmake_cache_option("LBANN_WITH_ALUMINUM", "+al" in spec))
-        entries.append(cmake_cache_option("LBANN_WITH_ADDRESS_SANITIZER", "+asan" in spec))
-        entries.append(cmake_cache_option("LBANN_WITH_BOOST", "+boost" in spec))
-        entries.append(cmake_cache_option("LBANN_WITH_CONDUIT", "+conduit" in spec))
-        entries.append(cmake_cache_option("LBANN_WITH_NVSHMEM", "+nvshmem" in spec))
-        entries.append(cmake_cache_option("LBANN_WITH_FFT", "+fft" in spec))
-        entries.append(cmake_cache_option("LBANN_WITH_ONEDNN", "+onednn" in spec))
-        entries.append(cmake_cache_option("LBANN_WITH_ONNX", "+onnx" in spec))
+        entries.append(self.define_cmake_cache_from_variant("LBANN_WITH_CNPY", "numpy"))
+        entries.append(self.define_cmake_cache_from_variant("LBANN_DETERMINISTIC", "deterministic"))
+        entries.append(self.define_cmake_cache_from_variant("LBANN_WITH_HWLOC", "hwloc"))
+        entries.append(self.define_cmake_cache_from_variant("LBANN_WITH_ALUMINUM", "al"))
+        entries.append(self.define_cmake_cache_from_variant("LBANN_WITH_ADDRESS_SANITIZER", "asan"))
+        entries.append(self.define_cmake_cache_from_variant("LBANN_WITH_BOOST", "boost"))
+        entries.append(self.define_cmake_cache_from_variant("LBANN_WITH_CONDUIT", "conduit"))
+        entries.append(self.define_cmake_cache_from_variant("LBANN_WITH_NVSHMEM", "nvshmem"))
+        entries.append(self.define_cmake_cache_from_variant("LBANN_WITH_FFT", "fft"))
+        entries.append(self.define_cmake_cache_from_variant("LBANN_WITH_ONEDNN", "onednn"))
+        entries.append(self.define_cmake_cache_from_variant("LBANN_WITH_ONNX", "onnx"))
 
         entries.append(self.define_cmake_cache_from_variant("LBANN_WITH_ONNX_BVE", "onnx"))
 
-        entries.append(cmake_cache_option("LBANN_WITH_EMBEDDED_PYTHON", "+python" in spec))
+        entries.append(self.define_cmake_cache_from_variant("LBANN_WITH_EMBEDDED_PYTHON", "python"))
         entries.append(self.define_cmake_cache_from_variant("LBANN_WITH_EMBEDDED_PYTHON_BVE", "python"))
-        entries.append(cmake_cache_option("LBANN_WITH_PYTHON_FRONTEND", "+pfe" in spec))
+        entries.append(self.define_cmake_cache_from_variant("LBANN_WITH_PYTHON_FRONTEND", "pfe"))
         entries.append(cmake_cache_option("LBANN_WITH_ROCTRACER", "+rocm +distconv" in spec))
         entries.append(cmake_cache_option("LBANN_WITH_TBINF", "OFF"))
-        entries.append(cmake_cache_option("LBANN_WITH_UNIT_TESTING", "+unit_tests" in spec))
-        entries.append(cmake_cache_option("LBANN_WITH_VISION", "+vision" in spec))
-        entries.append(cmake_cache_option("LBANN_WITH_VTUNE", "+vtune" in spec))
+        entries.append(self.define_cmake_cache_from_variant("LBANN_WITH_UNIT_TESTING", "unit_tests"))
+        entries.append(self.define_cmake_cache_from_variant("LBANN_WITH_VISION", "vision"))
+        entries.append(self.define_cmake_cache_from_variant("LBANN_WITH_VTUNE", "vtune"))
         # entries.append(cmake_cache_option())
         entries.append(cmake_cache_string("LBANN_DATATYPE", "{0}".format(spec.variants["dtype"].value)))
         # BVE This seems unnecessary to add the part of the path
@@ -650,8 +650,8 @@ class Lbann(CachedCMakePackage, CudaPackage, ROCmPackage):
         if "+vision" in spec:
             entries.append(cmake_cache_path("OpenCV_DIR", "{0}".format(spec["opencv"].prefix)))
 
-        entries.append(cmake_cache_option("LBANN_WITH_DIHYDROGEN", "+dihydrogen" in spec))
-        entries.append(cmake_cache_option("LBANN_WITH_DISTCONV", "+distconv" in spec))
+        entries.append(self.define_cmake_cache_from_variant("LBANN_WITH_DIHYDROGEN", "dihydrogen"))
+        entries.append(self.define_cmake_cache_from_variant("LBANN_WITH_DISTCONV", "distconv"))
 
         # IF IBM ESSL is used it needs help finding the proper LAPACK libraries
         if self.spec.satisfies("^essl"):
