@@ -28,6 +28,7 @@ class Geant4(CMakePackage):
     version("11.0.2", sha256="661e1ab6f42e58910472d771e76ffd16a2b411398eed70f39808762db707799e")
     version("11.0.1", sha256="fa76d0774346b7347b1fb1424e1c1e0502264a83e185995f3c462372994f84fa")
     version("11.0.0", sha256="04d11d4d9041507e7f86f48eb45c36430f2b6544a74c0ccaff632ac51d9644f1")
+    version("10.7.4", sha256="7e381f8945c75388b79af98b95be31a0933641c1af8d74ab9b6cf39d5aa98317")
     version("10.7.3", sha256="8615d93bd4178d34f31e19d67bc81720af67cdab1c8425af8523858dcddcf65b")
     version("10.7.2", sha256="593fc85883a361487b17548ba00553501f66a811b0a79039276bb75ad59528cf")
     version("10.7.1", sha256="2aa7cb4b231081e0a35d84c707be8f35e4edc4e97aad2b233943515476955293")
@@ -79,6 +80,7 @@ class Geant4(CMakePackage):
         "10.7.1",
         "10.7.2",
         "10.7.3",
+        "10.7.4",
         "11.0.0:11.0",
         "11.1:",
     ]:
