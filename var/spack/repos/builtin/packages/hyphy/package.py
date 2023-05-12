@@ -12,6 +12,7 @@ class Hyphy(CMakePackage):
     homepage = "https://www.hyphy.org/"
     url = "https://github.com/veg/hyphy/archive/2.3.14.tar.gz"
 
+    version("2.5.50", sha256="c7597db75275cf017a64719d3134c5a0dca38e04c2e70b9d518f49bbb5f83032")
     version("2.3.14", sha256="9e6c817cb649986e3fe944bcaf88be3533e7e62968b9a486c719e951e5ed1cf6")
 
     depends_on("cmake@3.0:", type="build")
