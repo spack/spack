@@ -32,6 +32,8 @@ class Root(CMakePackage):
     # Development version (when more recent than production).
 
     # Production version
+    version("6.28.02", sha256="6643c07710e68972b00227c68b20b1016fec16f3fba5f44a571fa1ce5bb42faa")
+    version("6.28.00", sha256="afa1c5c06d0915411cb9492e474ea9ab12b09961a358e7e559013ed63b5d8084")
     version("6.26.10", sha256="8e56bec397104017aa54f9eb554de7a1a134474fe0b3bb0f43a70fc4fabd625f")
     version("6.26.08", sha256="4dda043e7918b40743ad0299ddd8d526b7078f0a3822fd06066df948af47940e")
     version("6.26.06", sha256="b1f73c976a580a5c56c8c8a0152582a1dfc560b4dd80e1b7545237b65e6c89cb")
@@ -131,7 +133,12 @@ class Root(CMakePackage):
     )
     variant("gsl", default=True, description="Enable linking against shared libraries for GSL")
     variant("http", default=False, description="Enable HTTP server support")
-    variant("jemalloc", default=False, description="Enable using the jemalloc allocator")
+    variant(
+        "jemalloc",
+        when="@:6.28",
+        default=False,
+        description="Enable using the jemalloc allocator (deprecated in 6.28)",
+    )
     variant("math", default=True, description="Build the new libMathMore extended math library")
     variant(
         "memstat",
@@ -197,6 +204,8 @@ class Root(CMakePackage):
 
     depends_on("cmake@3.4.3:", type="build", when="@:6.16")
     depends_on("cmake@3.9:", type="build", when="@6.18.00:")
+    depends_on("cmake@3.16:", type="build", when="@6.26.00:")
+    depends_on("cmake@3.19:", type="build", when="@6.28.00: platform=darwin")
     depends_on("pkgconfig", type="build")
 
     depends_on("blas")
@@ -273,7 +282,8 @@ class Root(CMakePackage):
     )
     # depends_on('intel-tbb@:2021.0', when='@:6.22 ^intel-tbb')
     depends_on("unuran", when="+unuran")
-    depends_on("vc", when="+vc")
+    depends_on("vc@1.0:", when="@6.07.04: +vc")
+    depends_on("vc@1.3.0:", when="@6.09.02: +vc")
     depends_on("vdt", when="+vdt")
     depends_on("veccore", when="+veccore")
     depends_on("libxml2", when="+xml")
@@ -505,7 +515,6 @@ class Root(CMakePackage):
             define_from_variant("gl2ps", "opengl"),
             define("glite", False),
             define("globus", False),
-            define_from_variant("gsl_shared", "gsl"),
             define_from_variant("gviz", "graphviz"),
             define("hdfs", False),
             define_from_variant("http"),  # See conflicts

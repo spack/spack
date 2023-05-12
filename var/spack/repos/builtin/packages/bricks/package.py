@@ -3,6 +3,8 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+import os
+
 from spack.package import *
 
 
@@ -35,10 +37,13 @@ class Bricks(CMakePackage):
     depends_on("cuda", when="+cuda")
     depends_on("mpi")
 
+    patch("bricks-cmakelists-option-opencl.patch")
+
     def cmake_args(self):
         """CMake arguments for configure stage"""
-        args = []
-
+        args = [self.define_from_variant("BRICK_USE_OPENCL", "cuda")]
+        if "+cuda" in self.spec:
+            args.append(f"-DOCL_ROOT:STRING={self.spec['opencl-clhpp'].prefix}")
         return args
 
     def flag_handler(self, name, flags):
@@ -68,25 +73,17 @@ class Bricks(CMakePackage):
         ]
         self.cache_extra_test_sources(srcs)
 
-    def test(self):
-        """Test bricklib package"""
-        # Test prebuilt binary
+    def test_bricklib_example(self):
+        """build and run pre-built example"""
         source_dir = join_path(self.test_suite.current_test_cache_dir, "examples", "external")
+        if not os.path.exists(source_dir):
+            raise SkipTest("{0} is missing".format(source_dir))
 
-        self.run_test(
-            exe="cmake", options=["."], purpose="Configure bricklib example", work_dir=source_dir
-        )
+        with working_dir(source_dir):
+            cmake = which(self.spec["cmake"].prefix.bin.cmake)
+            cmake(".")
 
-        self.run_test(
-            exe="cmake",
-            options=["--build", "."],
-            purpose="Build bricklib example",
-            work_dir=source_dir,
-        )
+            cmake("--build", ".")
 
-        self.run_test(
-            exe=join_path(source_dir, "example"),
-            options=[],
-            purpose="Execute bricklib example",
-            work_dir=source_dir,
-        )
+            example = which("example")
+            example()

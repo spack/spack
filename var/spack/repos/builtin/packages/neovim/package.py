@@ -17,6 +17,7 @@ class Neovim(CMakePackage):
 
     version("master", branch="master")
     version("stable", tag="stable")
+    version("0.8.3", sha256="adf45ff160e1d89f519b6114732eba03485ae469beb27919b0f7a4f6b44233c1")
     version("0.8.2", sha256="c516c8db73e1b12917a6b2e991b344d0914c057cef8266bce61a2100a28ffcc9")
     version("0.8.0", sha256="505e3dfb71e2f73495c737c034a416911c260c0ba9fd2092c6be296655be4d18")
     version("0.7.2", sha256="ccab8ca02a0c292de9ea14b39f84f90b635a69282de38a6b4ccc8565bc65d096")
@@ -93,7 +94,7 @@ class Neovim(CMakePackage):
     depends_on("jemalloc", type="link", when="platform=linux")
     depends_on("lua-lpeg")
     depends_on("lua-mpack")
-    depends_on("libiconv", type="link")
+    depends_on("iconv", type="link")
     depends_on("libtermkey", type="link")
     depends_on("libuv", type="link")
     depends_on("libluv", type="link")
@@ -116,7 +117,7 @@ class Neovim(CMakePackage):
     with when("@0.6:"):
         depends_on("cmake@3.10:", type="build")
         depends_on("gperf@3.1:", type="link")
-        depends_on("libiconv@1.15:", type="link")
+        conflicts("libiconv@:1.14")
         depends_on("libtermkey@0.22:", type="link")
         depends_on("libvterm@0.1.4:", type="link")
         depends_on("msgpack-c@3.0.0:", type="link")

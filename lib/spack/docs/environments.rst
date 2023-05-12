@@ -58,9 +58,9 @@ Using Environments
 Here we follow a typical use case of creating, concretizing,
 installing and loading an environment.
 
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-Creating a named Environment
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Creating a managed Environment
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 An environment is created by:
 
@@ -72,7 +72,8 @@ Spack then creates the directory ``var/spack/environments/myenv``.
 
 .. note::
 
-   All named environments are stored in the ``var/spack/environments`` folder.
+   All managed environments by default are stored in the ``var/spack/environments`` folder.
+   This location can be changed by setting the ``environments_root`` variable in ``config.yaml``.
 
 In the ``var/spack/environments/myenv`` directory, Spack creates the
 file ``spack.yaml`` and the hidden directory ``.spack-env``.
@@ -93,9 +94,9 @@ an Environment, the ``.spack-env`` directory also contains:
   * ``logs/``: A directory containing the build logs for the packages
     in this Environment.
 
-Spack Environments can also be created from either a ``spack.yaml``
-manifest or a ``spack.lock`` lockfile. To create an Environment from a
-``spack.yaml`` manifest:
+Spack Environments can also be created from either a manifest file
+(usually but not necessarily named, ``spack.yaml``) or a lockfile.
+To create an Environment from a manifest:
 
 .. code-block:: console
 
@@ -173,7 +174,7 @@ Anonymous specs can be created in place using the command:
 
    $ spack env create -d .
 
-In this case Spack simply creates a spack.yaml file in the requested
+In this case Spack simply creates a ``spack.yaml`` file in the requested
 directory.
 
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^

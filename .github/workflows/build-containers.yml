@@ -45,12 +45,18 @@ jobs:
                      [leap15, 'linux/amd64,linux/arm64,linux/ppc64le', 'opensuse/leap:15'],
                      [ubuntu-bionic, 'linux/amd64,linux/arm64,linux/ppc64le', 'ubuntu:18.04'],
                      [ubuntu-focal, 'linux/amd64,linux/arm64,linux/ppc64le', 'ubuntu:20.04'],
-                     [ubuntu-jammy, 'linux/amd64,linux/arm64,linux/ppc64le', 'ubuntu:22.04']]
+                     [ubuntu-jammy, 'linux/amd64,linux/arm64,linux/ppc64le', 'ubuntu:22.04'],
+                     [almalinux8, 'linux/amd64,linux/arm64,linux/ppc64le', 'almalinux:8'],
+                     [almalinux9, 'linux/amd64,linux/arm64,linux/ppc64le', 'almalinux:9'],
+                     [rockylinux8, 'linux/amd64,linux/arm64', 'rockylinux:8'],
+                     [rockylinux9, 'linux/amd64,linux/arm64,linux/ppc64le', 'rockylinux:9'],
+                     [fedora37, 'linux/amd64,linux/arm64,linux/ppc64le', 'fedora:37'],
+                     [fedora38, 'linux/amd64,linux/arm64,linux/ppc64le', 'fedora:38']]
     name: Build ${{ matrix.dockerfile[0] }}
     if: github.repository == 'spack/spack'
     steps:
       - name: Checkout
-        uses: actions/checkout@ac593985615ec2ede58e132d2e21d2b1cbd6127c # @v2
+        uses: actions/checkout@8e5e7e5ab8b370d6c329ec480221332ada57f0ab # @v2
 
       - name: Set Container Tag Normal (Nightly)
         run: |
@@ -89,7 +95,7 @@ jobs:
         uses: docker/setup-qemu-action@e81a89b1732b9c48d79cd809d8d81d79c4647a18 # @v1
 
       - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@f03ac48505955848960e80bbb68046aa35c7b9e7 # @v1
+        uses: docker/setup-buildx-action@4b4e9c3e2d4531116a6f8ba8e71fc6e2cb6e6c8c # @v1
 
       - name: Log in to GitHub Container Registry
         uses: docker/login-action@f4ef78c080cd8ba55a85445d5b36e214a81df20a # @v1

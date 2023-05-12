@@ -274,31 +274,14 @@ class Cp2k(MakefilePackage, CudaPackage):
     def edit(self, spec, prefix):
         pkgconf = which("pkg-config")
 
-        if "^fftw" in spec:
-            fftw = spec["fftw:openmp" if "+openmp" in spec else "fftw"]
-            fftw_header_dir = fftw.headers.directories[0]
-        elif "^amdfftw" in spec:
-            fftw = spec["amdfftw:openmp" if "+openmp" in spec else "amdfftw"]
-            fftw_header_dir = fftw.headers.directories[0]
-        elif "^armpl-gcc" in spec:
-            fftw = spec["armpl-gcc:openmp" if "+openmp" in spec else "armpl-gcc"]
-            fftw_header_dir = fftw.headers.directories[0]
-        elif "^intel-mkl" in spec:
-            fftw = spec["intel-mkl"]
-            fftw_header_dir = fftw.headers.directories[0] + "/fftw"
-        elif "^intel-oneapi-mkl" in spec:
-            fftw = spec["intel-oneapi-mkl"]
-            fftw_header_dir = fftw.headers.directories[0] + "/fftw"
-        elif "^intel-parallel-studio+mkl" in spec:
-            fftw = spec["intel-parallel-studio"]
-            fftw_header_dir = "<NOTFOUND>"
-            for incdir in [join_path(f, "fftw") for f in fftw.headers.directories]:
-                if os.path.exists(incdir):
-                    fftw_header_dir = incdir
-                    break
-        elif "^cray-fftw" in spec:
-            fftw = spec["cray-fftw"]
-            fftw_header_dir = fftw.headers.directories[0]
+        fftw = spec["fftw-api"]
+        fftw_header_dir = fftw.headers.directories[0]
+
+        # some providers (mainly Intel) keep the fftw headers in a subdirectory, find it
+        for incdir in [join_path(f, "fftw") for f in fftw.headers.directories]:
+            if os.path.exists(incdir):
+                fftw_header_dir = incdir
+                break
 
         optimization_flags = {
             "gcc": ["-O2", "-funroll-loops", "-ftree-vectorize"],
@@ -401,11 +384,12 @@ class Cp2k(MakefilePackage, CudaPackage):
         ldflags.append((lapack + blas).search_flags)
         libs.extend([str(x) for x in (fftw.libs, lapack, blas)])
 
-        if any(
-            p in spec for p in ("^intel-mkl", "^intel-parallel-studio+mkl", "^intel-oneapi-mkl")
-        ):
+        if self.spec.satisfies("platform=darwin"):
+            cppflags.extend(["-D__NO_STATM_ACCESS"])
+
+        if spec["blas"].name in ("intel-mkl", "intel-parallel-studio", "intel-oneapi-mkl"):
             cppflags += ["-D__MKL"]
-        elif "^accelerate" in spec:
+        elif spec["blas"].name == "accelerate":
             cppflags += ["-D__ACCELERATE"]
 
         if "+cosma" in spec:
@@ -418,15 +402,15 @@ class Cp2k(MakefilePackage, CudaPackage):
         if "+mpi" in spec:
             cppflags.extend(["-D__parallel", "-D__SCALAPACK"])
 
-            if "^intel-oneapi-mpi" in spec:
+            if spec["mpi"].name == "intel-oneapi-mpi":
                 mpi = [join_path(spec["intel-oneapi-mpi"].libs.directories[0], "libmpi.so")]
             else:
                 mpi = spec["mpi:cxx"].libs
 
             # while intel-mkl has a mpi variant and adds the scalapack
             # libs to its libs, intel-oneapi-mkl does not.
-            if "^intel-oneapi-mkl" in spec:
-                mpi_impl = "openmpi" if "^openmpi" in spec else "intelmpi"
+            if spec["scalapack"].name == "intel-oneapi-mkl":
+                mpi_impl = "openmpi" if spec["mpi"] == "openmpi" else "intelmpi"
                 scalapack = [
                     join_path(
                         spec["intel-oneapi-mkl"].libs.directories[0], "libmkl_scalapack_lp64.so"
@@ -662,10 +646,10 @@ class Cp2k(MakefilePackage, CudaPackage):
                 #
                 # and use `-fpp` instead
                 mkf.write("CPP = # {0} -P\n".format(spack_cc))
-                mkf.write("AR  = {0}/xiar -r\n".format(intel_bin_dir))
+                mkf.write("AR  = {0}/xiar -qs\n".format(intel_bin_dir))
             else:
                 mkf.write("CPP = # {0} -E\n".format(spack_cc))
-                mkf.write("AR  = ar -r\n")
+                mkf.write("AR  = ar -qs\n")  # r = qs is a GNU extension
 
             if "+cuda" in spec:
                 mkf.write(
@@ -762,7 +746,7 @@ class Cp2k(MakefilePackage, CudaPackage):
                 content += " " + self.spec["lapack"].libs.ld_flags
                 content += " " + self.spec["fftw-api"].libs.ld_flags
 
-                if "^fftw+openmp" in self.spec:
+                if (self.spec["fftw-api"].name == "fftw") and ("+openmp" in self.spec["fftw"]):
                     content += " -lfftw3_omp"
 
                 content += "\n"

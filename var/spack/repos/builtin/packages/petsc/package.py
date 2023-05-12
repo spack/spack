@@ -13,7 +13,7 @@ class Petsc(Package, CudaPackage, ROCmPackage):
     differential equations.
     """
 
-    homepage = "https://www.mcs.anl.gov/petsc/index.html"
+    homepage = "https://petsc.org"
     url = "https://ftp.mcs.anl.gov/pub/petsc/release-snapshots/petsc-3.15.0.tar.gz"
     git = "https://gitlab.com/petsc/petsc.git"
     maintainers("balay", "barrysmith", "jedbrown")
@@ -22,6 +22,11 @@ class Petsc(Package, CudaPackage, ROCmPackage):
 
     version("main", branch="main")
 
+    version("3.19.1", sha256="74db60c53c80b48d5c39e07bc39a883ecced88b9f24a5de17cf6f485a903e120")
+    version("3.19.0", sha256="8ced753e4d2fb6565662b2b1fbba75a426cbf8438203f82717ce270f0591322c")
+    version("3.18.6", sha256="8b53c8b6652459ba0bbe6361b5baf8c4d17c1d04b6654a76e3b6a9ab4a576680")
+    version("3.18.5", sha256="df73ae13a4c5758325a9d69350cac423742657d8a8fc5782504b0e469ce46499")
+    version("3.18.4", sha256="6173d30637261c5b740c0bea14747759200ca2012c7343139f9216bc296a6394")
     version("3.18.3", sha256="8aaa005479c8ec2eed2b9cbb067cfc1ac0900b0de2176439f0d4f21e09c2020b")
     version("3.18.2", sha256="4e055f92f3d5123d415f6f3ccf5ede9989f16d9e1f71cc7998ad244a3d3562f4")
     version("3.18.1", sha256="02f5979a22f5961bb775d527f8450db77bc6a8d2541f3b05fb586829b82e9bc8")
@@ -139,6 +144,9 @@ class Petsc(Package, CudaPackage, ROCmPackage):
     variant("kokkos", default=False, description="Activates support for kokkos and kokkos-kernels")
     variant("fortran", default=True, description="Activates fortran support")
 
+    # https://github.com/spack/spack/issues/37416
+    conflicts("^rocprim@5.3.0:5.3.2", when="+rocm")
+
     # 3.8.0 has a build issue with MKL - so list this conflict explicitly
     conflicts("^intel-mkl", when="@3.8.0")
 
@@ -244,24 +252,16 @@ class Petsc(Package, CudaPackage, ROCmPackage):
     # Also PETSc prefer to build it without internal superlu, likely due to
     # conflict in headers see
     # https://bitbucket.org/petsc/petsc/src/90564b43f6b05485163c147b464b5d6d28cde3ef/config/BuildSystem/config/packages/hypre.py
-    depends_on("hypre@:2.13+mpi~internal-superlu~int64", when="@:3.8+hypre+mpi~complex~int64")
-    depends_on("hypre@:2.13+mpi~internal-superlu+int64", when="@:3.8+hypre+mpi~complex+int64")
-    depends_on(
-        "hypre@2.14:2.18.2+mpi~internal-superlu~int64", when="@3.9:3.13+hypre+mpi~complex~int64"
-    )
-    depends_on(
-        "hypre@2.14:2.18.2+mpi~internal-superlu+int64", when="@3.9:3.13+hypre+mpi~complex+int64"
-    )
-    depends_on(
-        "hypre@2.14:2.22.0+mpi~internal-superlu~int64", when="@3.14:3.15+hypre+mpi~complex~int64"
-    )
-    depends_on(
-        "hypre@2.14:2.22.0+mpi~internal-superlu+int64", when="@3.14:3.15+hypre+mpi~complex+int64"
-    )
-    depends_on("hypre@2.14:+mpi~internal-superlu~int64", when="@3.16:+hypre+mpi~complex~int64")
-    depends_on("hypre@2.14:+mpi~internal-superlu+int64", when="@3.16:+hypre+mpi~complex+int64")
-    depends_on("hypre@develop+mpi~internal-superlu+int64", when="@main+hypre+mpi~complex+int64")
-    depends_on("hypre@develop+mpi~internal-superlu~int64", when="@main+hypre+mpi~complex~int64")
+    depends_on("hypre@2.14:2.18.2~internal-superlu", when="@3.11:3.13+hypre")
+    depends_on("hypre@2.14:2.22.0~internal-superlu", when="@3.14:3.15+hypre")
+    depends_on("hypre@2.14:~internal-superlu", when="@3.16:+hypre")
+    depends_on("hypre@develop~internal-superlu", when="@main+hypre")
+    depends_on("hypre+complex", when="+hypre+complex")
+    depends_on("hypre~complex", when="+hypre~complex")
+    depends_on("hypre+int64", when="+hypre+int64")
+    depends_on("hypre~int64", when="+hypre~int64")
+    depends_on("hypre+mpi", when="+hypre+mpi")
+
     depends_on("superlu-dist@:4.3~int64", when="@3.4.4:3.6.4+superlu-dist+mpi~int64")
     depends_on("superlu-dist@:4.3+int64", when="@3.4.4:3.6.4+superlu-dist+mpi+int64")
     depends_on("superlu-dist@5.0.0:5.1.3~int64", when="@3.7.0:3.7+superlu-dist+mpi~int64")
@@ -375,6 +375,7 @@ class Petsc(Package, CudaPackage, ROCmPackage):
             "--download-c2html=0",
             "--download-sowing=0",
             "--download-hwloc=0",
+            "--with-make-exec=%s" % make,
         ]
         # If 'cflags', 'fflags', and/or 'cxxflags' are not set, let the PETSc
         # configuration script choose defaults.
@@ -578,7 +579,10 @@ class Petsc(Package, CudaPackage, ROCmPackage):
 
     def build(self, spec, prefix):
         self.revert_kokkos_nvcc_wrapper()
-        make("V=1")
+        if spec.satisfies("@:3.18.5"):
+            make("OMAKE_PRINTDIR=%s" % make, "V=1")
+        else:
+            make("V=1")
 
     def install(self, spec, prefix):
         self.revert_kokkos_nvcc_wrapper()

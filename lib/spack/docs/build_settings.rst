@@ -325,48 +325,112 @@ on the command line, because it can specify constraints on packages
 is not possible to specify constraints on dependencies while also keeping
 those dependencies optional.
 
-The package requirements configuration is specified in ``packages.yaml``
-keyed by package name:
+^^^^^^^^^^^^^^^^^^^
+Requirements syntax
+^^^^^^^^^^^^^^^^^^^
+
+The package requirements configuration is specified in ``packages.yaml``,
+keyed by package name and expressed using the Spec syntax. In the simplest
+case you can specify attributes that you always want the package to have
+by providing a single spec string to ``require``:
 
 .. code-block:: yaml
 
    packages:
      libfabric:
        require: "@1.13.2"
+
+In the above example, ``libfabric`` will always build with version 1.13.2. If you
+need to compose multiple configuration scopes ``require`` accepts a list of
+strings:
+
+.. code-block:: yaml
+
+   packages:
+     libfabric:
+       require:
+       - "@1.13.2"
+       - "%gcc"
+
+In this case ``libfabric`` will always build with version 1.13.2 **and** using GCC
+as a compiler.
+
+For more complex use cases, require accepts also a list of objects. These objects
+must have either a ``any_of`` or a ``one_of`` field, containing a list of spec strings,
+and they can optionally have a ``when`` and a ``message`` attribute:
+
+.. code-block:: yaml
+
+   packages:
      openmpi:
        require:
-       - any_of: ["~cuda", "%gcc"]
+       - any_of: ["@4.1.5", "%gcc"]
+         message: "in this example only 4.1.5 can build with other compilers"
+
+``any_of`` is a list of specs. One of those specs must be satisfied
+and it is also allowed for the concretized spec to match more than one.
+In the above example, that means you could build ``openmpi@4.1.5%gcc``,
+``openmpi@4.1.5%clang`` or ``openmpi@3.9%gcc``, but
+not ``openmpi@3.9%clang``.
+
+If a custom message is provided, and the requirement is not satisfiable,
+Spack will print the custom error message:
+
+.. code-block:: console
+
+   $ spack spec openmpi@3.9%clang
+   ==> Error: in this example only 4.1.5 can build with other compilers
+
+We could express a similar requirement using the ``when`` attribute:
+
+.. code-block:: yaml
+
+   packages:
+     openmpi:
+       require:
+       - any_of: ["%gcc"]
+         when: "@:4.1.4"
+         message: "in this example only 4.1.5 can build with other compilers"
+
+In the example above, if the version turns out to be 4.1.4 or less, we require the compiler to be GCC.
+For readability, Spack also allows a ``spec`` key accepting a string when there is only a single
+constraint:
+
+.. code-block:: yaml
+
+   packages:
+     openmpi:
+       require:
+       - spec: "%gcc"
+         when: "@:4.1.4"
+         message: "in this example only 4.1.5 can build with other compilers"
+
+This code snippet and the one before it are semantically equivalent.
+
+Finally, instead of ``any_of`` you can use ``one_of`` which also takes a list of specs. The final
+concretized spec must match one and only one of them:
+
+.. code-block:: yaml
+
+   packages:
      mpich:
-      require:
-      - one_of: ["+cuda", "+rocm"]
+       require:
+       - one_of: ["+cuda", "+rocm"]
 
-Requirements are expressed using Spec syntax (the same as what is provided
-to ``spack install``). In the simplest case, you can specify attributes
-that you always want the package to have by providing a single spec to
-``require``; in the above example, ``libfabric`` will always build
-with version 1.13.2.
-
-You can provide a more-relaxed constraint and allow the concretizer to
-choose between a set of options using ``any_of`` or ``one_of``:
-
-* ``any_of`` is a list of specs. One of those specs must be satisfied
-  and it is also allowed for the concretized spec to match more than one.
-  In the above example, that means you could build ``openmpi+cuda%gcc``,
-  ``openmpi~cuda%clang`` or ``openmpi~cuda%gcc`` (in the last case,
-  note that both specs in the ``any_of`` for ``openmpi`` are
-  satisfied).
-* ``one_of`` is also a list of specs, and the final concretized spec
-  must match exactly one of them.  In the above example, that means
-  you could build ``mpich+cuda`` or ``mpich+rocm`` but not
-  ``mpich+cuda+rocm`` (note the current package definition for
-  ``mpich`` already includes a conflict, so this is redundant but
-  still demonstrates the concept).
+In the example above, that means you could build ``mpich+cuda`` or ``mpich+rocm`` but not ``mpich+cuda+rocm``.
 
 .. note::
 
    For ``any_of`` and ``one_of``, the order of specs indicates a
    preference: items that appear earlier in the list are preferred
    (note that these preferences can be ignored in favor of others).
+
+.. note::
+
+   When using a conditional requirement, Spack is allowed to actively avoid the triggering
+   condition (the ``when=...`` spec) if that leads to a concrete spec with better scores in
+   the optimization criteria. To check the current optimization criteria and their
+   priorities you can run ``spack solve zlib``.
 
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 Setting default requirements

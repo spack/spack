@@ -71,7 +71,9 @@ class R(AutotoolsPackage):
     depends_on("blas", when="+external-lapack")
     depends_on("lapack", when="+external-lapack")
     depends_on("bzip2")
-    depends_on("curl+libidn2")
+    # R didn't anticipate the celebratory
+    # non-breaking major version bump of curl 8.
+    depends_on("curl+libidn2@:7")
     depends_on("icu4c")
     depends_on("java")
     depends_on("ncurses")
@@ -174,6 +176,10 @@ class R(AutotoolsPackage):
         # Set FPICFLAGS for compilers except 'gcc'.
         if self.compiler.name != "gcc":
             config_args.append("FPICFLAGS={0}".format(self.compiler.cc_pic_flag))
+
+        if self.spec.satisfies("@:3.6.1 %gcc@10:"):
+            config_args.append("CFLAGS=-fcommon")
+            config_args.append("FFLAGS=-fallow-argument-mismatch")
 
         return config_args
 

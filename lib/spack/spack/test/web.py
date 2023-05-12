@@ -16,7 +16,7 @@ import spack.paths
 import spack.util.s3
 import spack.util.url as url_util
 import spack.util.web
-from spack.version import ver
+from spack.version import Version
 
 
 def _create_url(relative_url):
@@ -30,6 +30,8 @@ page_1 = _create_url("1.html")
 page_2 = _create_url("2.html")
 page_3 = _create_url("3.html")
 page_4 = _create_url("4.html")
+
+root_with_fragment = _create_url("index_with_fragment.html")
 
 
 @pytest.mark.skipif(sys.platform == "win32", reason="Not supported on Windows (yet)")
@@ -100,47 +102,55 @@ def test_spider_no_response(monkeypatch):
 @pytest.mark.skipif(sys.platform == "win32", reason="Not supported on Windows (yet)")
 def test_find_versions_of_archive_0():
     versions = spack.util.web.find_versions_of_archive(root_tarball, root, list_depth=0)
-    assert ver("0.0.0") in versions
+    assert Version("0.0.0") in versions
 
 
 @pytest.mark.skipif(sys.platform == "win32", reason="Not supported on Windows (yet)")
 def test_find_versions_of_archive_1():
     versions = spack.util.web.find_versions_of_archive(root_tarball, root, list_depth=1)
-    assert ver("0.0.0") in versions
-    assert ver("1.0.0") in versions
+    assert Version("0.0.0") in versions
+    assert Version("1.0.0") in versions
 
 
 @pytest.mark.skipif(sys.platform == "win32", reason="Not supported on Windows (yet)")
 def test_find_versions_of_archive_2():
     versions = spack.util.web.find_versions_of_archive(root_tarball, root, list_depth=2)
-    assert ver("0.0.0") in versions
-    assert ver("1.0.0") in versions
-    assert ver("2.0.0") in versions
+    assert Version("0.0.0") in versions
+    assert Version("1.0.0") in versions
+    assert Version("2.0.0") in versions
 
 
 @pytest.mark.skipif(sys.platform == "win32", reason="Not supported on Windows (yet)")
 def test_find_exotic_versions_of_archive_2():
     versions = spack.util.web.find_versions_of_archive(root_tarball, root, list_depth=2)
     # up for grabs to make this better.
-    assert ver("2.0.0b2") in versions
+    assert Version("2.0.0b2") in versions
 
 
 @pytest.mark.skipif(sys.platform == "win32", reason="Not supported on Windows (yet)")
 def test_find_versions_of_archive_3():
     versions = spack.util.web.find_versions_of_archive(root_tarball, root, list_depth=3)
-    assert ver("0.0.0") in versions
-    assert ver("1.0.0") in versions
-    assert ver("2.0.0") in versions
-    assert ver("3.0") in versions
-    assert ver("4.5") in versions
+    assert Version("0.0.0") in versions
+    assert Version("1.0.0") in versions
+    assert Version("2.0.0") in versions
+    assert Version("3.0") in versions
+    assert Version("4.5") in versions
 
 
 @pytest.mark.skipif(sys.platform == "win32", reason="Not supported on Windows (yet)")
 def test_find_exotic_versions_of_archive_3():
     versions = spack.util.web.find_versions_of_archive(root_tarball, root, list_depth=3)
-    assert ver("2.0.0b2") in versions
-    assert ver("3.0a1") in versions
-    assert ver("4.5-rc5") in versions
+    assert Version("2.0.0b2") in versions
+    assert Version("3.0a1") in versions
+    assert Version("4.5-rc5") in versions
+
+
+@pytest.mark.skipif(sys.platform == "win32", reason="Not supported on Windows (yet)")
+def test_find_versions_of_archive_with_fragment():
+    versions = spack.util.web.find_versions_of_archive(
+        root_tarball, root_with_fragment, list_depth=0
+    )
+    assert Version("5.0.0") in versions
 
 
 def test_get_header():

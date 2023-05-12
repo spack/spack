@@ -289,9 +289,14 @@ def _check_build_test_callbacks(pkgs, error_cls):
         pkg_cls = spack.repo.path.get_pkg_class(pkg_name)
         test_callbacks = getattr(pkg_cls, "build_time_test_callbacks", None)
 
-        if test_callbacks and "test" in test_callbacks:
-            msg = '{0} package contains "test" method in ' "build_time_test_callbacks"
-            instr = 'Remove "test" from: [{0}]'.format(", ".join(test_callbacks))
+        # TODO (post-34236): "test*"->"test_*" once remove deprecated methods
+        # TODO (post-34236): "test"->"test_" once remove deprecated methods
+        has_test_method = test_callbacks and any([m.startswith("test") for m in test_callbacks])
+        if has_test_method:
+            msg = '{0} package contains "test*" method(s) in ' "build_time_test_callbacks"
+            instr = 'Remove all methods whose names start with "test" from: [{0}]'.format(
+                ", ".join(test_callbacks)
+            )
             errors.append(error_cls(msg.format(pkg_name), [instr]))
 
     return errors
@@ -695,8 +700,11 @@ def _ensure_variant_defaults_are_parsable(pkgs, error_cls):
             try:
                 variant.validate_or_raise(vspec, pkg_cls=pkg_cls)
             except spack.variant.InvalidVariantValueError:
-                error_msg = "The variant '{}' default value in package '{}' cannot be validated"
-                errors.append(error_cls(error_msg.format(variant_name, pkg_name), []))
+                error_msg = (
+                    "The default value of the variant '{}' in package '{}' failed validation"
+                )
+                question = "Is it among the allowed values?"
+                errors.append(error_cls(error_msg.format(variant_name, pkg_name), [question]))
 
     return errors
 
@@ -721,7 +729,7 @@ def _version_constraints_are_satisfiable_by_some_version_in_repo(pkgs, error_cls
             dependency_pkg_cls = None
             try:
                 dependency_pkg_cls = spack.repo.path.get_pkg_class(s.name)
-                assert any(v.satisfies(s.versions) for v in list(dependency_pkg_cls.versions))
+                assert any(v.intersects(s.versions) for v in list(dependency_pkg_cls.versions))
             except Exception:
                 summary = (
                     "{0}: dependency on {1} cannot be satisfied " "by known versions of {1.name}"

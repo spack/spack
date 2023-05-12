@@ -408,19 +408,36 @@ def test_get_spec_filter_list(mutable_mock_env_path, config, mutable_mock_repo):
 
     touched = ["libdwarf"]
 
-    # traversing both directions from libdwarf in the graphs depicted
-    # above (and additionally including dependencies of dependents of
-    # libdwarf) results in the following possibly affected env specs:
-    # mpileaks, callpath, dyninst, libdwarf, libelf, and mpich.
-    # Unaffected specs are hypre and it's dependencies.
+    # Make sure we return the correct set of possibly affected specs,
+    # given a dependent traversal depth and the fact that the touched
+    # package is libdwarf.  Passing traversal depth of None or something
+    # equal to or larger than the greatest depth in the graph are
+    # equivalent and result in traversal of all specs from the touched
+    # package to the root.  Passing negative traversal depth results in
+    # no spec traversals.  Passing any other number yields differing
+    # numbers of possibly affected specs.
 
-    affected_specs = ci.get_spec_filter_list(e1, touched)
-    affected_pkg_names = set([s.name for s in affected_specs])
-    expected_affected_pkg_names = set(
-        ["mpileaks", "mpich", "callpath", "dyninst", "libdwarf", "libelf"]
-    )
+    full_set = set(["mpileaks", "mpich", "callpath", "dyninst", "libdwarf", "libelf"])
+    empty_set = set([])
+    depth_2_set = set(["mpich", "callpath", "dyninst", "libdwarf", "libelf"])
+    depth_1_set = set(["dyninst", "libdwarf", "libelf"])
+    depth_0_set = set(["libdwarf", "libelf"])
 
-    assert affected_pkg_names == expected_affected_pkg_names
+    expectations = {
+        None: full_set,
+        3: full_set,
+        100: full_set,
+        -1: empty_set,
+        0: depth_0_set,
+        1: depth_1_set,
+        2: depth_2_set,
+    }
+
+    for key, val in expectations.items():
+        affected_specs = ci.get_spec_filter_list(e1, touched, dependent_traverse_depth=key)
+        affected_pkg_names = set([s.name for s in affected_specs])
+        print(f"{key}: {affected_pkg_names}")
+        assert affected_pkg_names == val
 
 
 @pytest.mark.regression("29947")
@@ -459,16 +476,31 @@ def test_ci_process_command_fail(repro_dir, monkeypatch):
 
 
 def test_ci_create_buildcache(tmpdir, working_env, config, mock_packages, monkeypatch):
-    # Monkeypatching ci method tested elsewhere to reduce number of methods
-    # that would need to be patched here.
-    monkeypatch.setattr(spack.ci, "push_mirror_contents", lambda a, b, c, d: None)
+    """Test that create_buildcache returns a list of objects with the correct
+    keys and types."""
+    monkeypatch.setattr(spack.ci, "push_mirror_contents", lambda a, b, c: True)
 
-    args = {
-        "env": None,
-        "buildcache_mirror_url": "file://fake-url",
-        "pipeline_mirror_url": "file://fake-url",
-    }
-    ci.create_buildcache(**args)
+    results = ci.create_buildcache(
+        None,
+        pr_pipeline=True,
+        buildcache_mirror_url="file:///fake-url-one",
+        pipeline_mirror_url="file:///fake-url-two",
+    )
+
+    assert len(results) == 2
+    result1, result2 = results
+    assert result1.success
+    assert result1.url == "file:///fake-url-one"
+    assert result2.success
+    assert result2.url == "file:///fake-url-two"
+
+    results = ci.create_buildcache(
+        None, pr_pipeline=True, buildcache_mirror_url="file:///fake-url-one"
+    )
+
+    assert len(results) == 1
+    assert results[0].success
+    assert results[0].url == "file:///fake-url-one"
 
 
 def test_ci_run_standalone_tests_missing_requirements(
@@ -534,8 +566,7 @@ def test_ci_run_standalone_tests_not_installed_cdash(
     ci.run_standalone_tests(**args)
     out = capfd.readouterr()[0]
     # CDash *and* log file output means log file ignored
-    assert "xml option is ignored" in out
-    assert "0 passed of 0" in out
+    assert "xml option is ignored with CDash" in out
 
     # copy test results (though none)
     artifacts_dir = tmp_path / "artifacts"
@@ -563,9 +594,10 @@ def test_ci_skipped_report(tmpdir, mock_packages, config):
     reason = "Testing skip"
     handler.report_skipped(spec, tmpdir.strpath, reason=reason)
 
-    report = fs.join_path(tmpdir, "{0}_Testing.xml".format(pkg))
-    expected = "Skipped {0} package".format(pkg)
-    with open(report, "r") as f:
+    reports = [name for name in tmpdir.listdir() if str(name).endswith("Testing.xml")]
+    assert len(reports) == 1
+    expected = f"Skipped {pkg} package"
+    with open(reports[0], "r") as f:
         have = [0, 0]
         for line in f:
             if expected in line:

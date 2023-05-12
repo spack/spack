@@ -32,6 +32,17 @@ def setup_parser(subparser):
         help="namespace to identify packages in the repository. " "defaults to the directory name",
         nargs="?",
     )
+    create_parser.add_argument(
+        "-d",
+        "--subdirectory",
+        action="store",
+        dest="subdir",
+        default=spack.repo.packages_dir_name,
+        help=(
+            "subdirectory to store packages in the repository."
+            " Default 'packages'. Use an empty string for no subdirectory."
+        ),
+    )
 
     # List
     list_parser = sp.add_parser("list", help=repo_list.__doc__)
@@ -70,7 +81,7 @@ def setup_parser(subparser):
 
 def repo_create(args):
     """Create a new package repository."""
-    full_path, namespace = spack.repo.create_repo(args.directory, args.namespace)
+    full_path, namespace = spack.repo.create_repo(args.directory, args.namespace, args.subdir)
     tty.msg("Created repo with namespace '%s'." % namespace)
     tty.msg("To register it with spack, run this command:", "spack repo add %s" % full_path)
 
