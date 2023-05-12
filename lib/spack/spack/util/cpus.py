@@ -46,7 +46,6 @@ def determine_number_of_jobs(
     elif "command_line" in spack.config.scopes():
         command_line = spack.config.get("config:build_jobs", scope="command_line")
 
-
     max_cpus = max_cpus or cpus_available()
 
     # in some rare cases _builtin config may not be set, so default to max 16
