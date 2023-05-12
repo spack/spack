@@ -1055,7 +1055,7 @@ def _setup_pkg_and_run(
         # Do not create a full ChildError from this, it's not an error
         # it's a control statement.
         child_pipe.send(e)
-    except BaseException:
+    except BaseException as e:
         # catch ANYTHING that goes wrong in the child process
         exc_type, exc, tb = sys.exc_info()
 
@@ -1065,6 +1065,7 @@ def _setup_pkg_and_run(
 
         # build up some context from the offending package so we can
         # show that, too.
+        tty.info("{}".format(e))
         package_context = get_package_context(tb)
 
         logfile = None
