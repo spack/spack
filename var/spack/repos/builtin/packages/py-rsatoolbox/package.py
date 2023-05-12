@@ -20,7 +20,7 @@ class PyRsatoolbox(PythonPackage):
     version("0.0.4", sha256="84153fa4c686c95f3e83f2cb668b97b82b53dc2a565856db80aa5f8c96d09359")
     version("0.0.3", sha256="9bf6e16d9feadc081f9daaaaab7ef38fc1cd64dd8ef0ccd9f74adb5fe6166649")
 
-    depends_on("python@:3.10", when="@0.0.5:", type=("build", "run"))
+    depends_on("python@:3.10", when="@:0.1.2", type=("build", "run"))
 
     # version restriction from pyproject.toml cannot be concretized at the
     # moment but package also builds with older versions
