@@ -16,18 +16,24 @@ Spack environments have existed since Spack ``v0.12.0``, and there have been 4 d
 The high-level format of a Spack lockfile hasn't changed much between versions, but the
 contents have.  Lockfiles are JSON-formatted and their top-level sections are:
 
-  1. ``_meta`` (object): this contains deatails about the file format, including:
+  1. ``_meta`` (object): this contains details about the file format, including:
       * ``file-type``: always ``"spack-lockfile"``
       * ``lockfile-version``: an integer representing the lockfile format version
       * ``specfile-version``: an integer representing the spec format version (since
         ``v0.17``)
 
-  2. ``roots`` (list): an ordered list of records representing the roots of the Spack
+  2. ``spack`` (object): optional, this identifies information about Spack
+      used to concretize the environment:
+      * ``type``: required, identifies form Spack version took (e.g., ``git``, ``release``)
+      * ``commit``: the commit if the version is from git
+      * ``version``: the Spack version
+
+  3. ``roots`` (list): an ordered list of records representing the roots of the Spack
       environment. Each has two fields:
       * ``hash``: a Spack spec hash uniquely identifying the concrete root spec
       * ``spec``: a string representation of the abstract spec that was concretized
 
-3. ``concrete_specs``: a dictionary containing the specs in the environment.
+  4. ``concrete_specs``: a dictionary containing the specs in the environment.
 
 Compatibility
 -------------
@@ -271,6 +277,8 @@ now includes build dependencies and a canonical hash of the ``package.py`` file.
 Dependencies are keyed by ``hash`` (DAG hash) as well. There are no more ``build_hash``
 fields in the specs, and there are no more issues with lockfiles being able to store
 multiple specs with the same DAG hash (because the DAG hash is now finer-grained).
+An optional ``spack`` property may be included to track version information, such as
+the commit or version.
 
 
 .. code-block:: json
@@ -278,8 +286,8 @@ multiple specs with the same DAG hash (because the DAG hash is now finer-grained
     {
         "_meta": {
             "file-type": "spack-lockfile",
-            "lockfile-version": 3,
-            "specfile-version": 2
+            "lockfile-version": 4,
+            "specfile-version": 3
         },
         "roots": [
             {
@@ -326,7 +334,6 @@ multiple specs with the same DAG hash (because the DAG hash is now finer-grained
             }
         }
     }
-
 """
 
 from .environment import (

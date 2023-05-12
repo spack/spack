@@ -31,6 +31,7 @@ import spack.config
 import spack.error
 import spack.hash_types as ht
 import spack.hooks
+import spack.main
 import spack.paths
 import spack.repo
 import spack.schema.env
@@ -1475,7 +1476,10 @@ class Environment:
 
         # Solve the environment in parallel on Linux
         start = time.time()
-        max_processes = min(len(arguments), 16)  # Number of specs  # Cap on 16 cores
+        max_processes = min(
+            len(arguments),  # Number of specs
+            spack.config.get("config:build_jobs"),  # Cap on build jobs
+        )
 
         # TODO: revisit this print as soon as darwin is parallel too
         msg = "Starting concretization"
@@ -2069,6 +2073,14 @@ class Environment:
 
         hash_spec_list = zip(self.concretized_order, self.concretized_user_specs)
 
+        spack_dict = {"version": spack.spack_version}
+        spack_commit = spack.main.get_spack_commit()
+        if spack_commit:
+            spack_dict["type"] = "git"
+            spack_dict["commit"] = spack_commit
+        else:
+            spack_dict["type"] = "release"
+
         # this is the lockfile we'll write out
         data = {
             # metadata about the format
@@ -2077,6 +2089,8 @@ class Environment:
                 "lockfile-version": lockfile_format_version,
                 "specfile-version": spack.spec.SPECFILE_FORMAT_VERSION,
             },
+            # spack version information
+            "spack": spack_dict,
             # users specs + hashes are the 'roots' of the environment
             "roots": [{"hash": h, "spec": str(s)} for h, s in hash_spec_list],
             # Concrete specs by hash, including dependencies
@@ -2113,10 +2127,12 @@ class Environment:
             reader = READER_CLS[current_lockfile_format]
         except KeyError:
             msg = (
-                f"Spack {spack.__version__} cannot read environment lockfiles using the "
-                f"v{current_lockfile_format} format"
+                f"Spack {spack.__version__} cannot read the lockfile '{self.lock_path}', using "
+                f"the v{current_lockfile_format} format."
             )
-            raise RuntimeError(msg)
+            if lockfile_format_version < current_lockfile_format:
+                msg += " You need to use a newer Spack version."
+            raise SpackEnvironmentError(msg)
 
         # First pass: Put each spec in the map ignoring dependencies
         for lockfile_key, node_dict in json_specs_by_hash.items():
