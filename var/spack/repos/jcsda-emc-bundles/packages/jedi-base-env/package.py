@@ -9,8 +9,8 @@ from spack.package import *
 class JediBaseEnv(BundlePackage):
     """Basic development environment for JEDI applications"""
 
-    homepage = "https://github.com/noaa-emc/spack-stack"
-    git = "https://github.com/noaa-emc/spack-stack.git"
+    homepage = "https://github.com/jcsda/spack-stack"
+    git = "https://github.com/jcsda/spack-stack.git"
 
     maintainers("climbfuji", "srherbener")
 

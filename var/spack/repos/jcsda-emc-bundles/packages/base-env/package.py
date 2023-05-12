@@ -11,8 +11,8 @@ from spack.package import *
 class BaseEnv(BundlePackage):
     """Basic development environment used by other environments"""
 
-    homepage = "https://github.com/noaa-emc/spack-stack"
-    git = "https://github.com/noaa-emc/spack-stack.git"
+    homepage = "https://github.com/jcsda/spack-stack"
+    git = "https://github.com/jcsda/spack-stack.git"
 
     maintainers("climbfuji", "AlexanderRichert-NOAA")
 

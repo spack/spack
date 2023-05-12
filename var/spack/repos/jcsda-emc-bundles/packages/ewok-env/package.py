@@ -44,7 +44,7 @@ class EwokEnv(BundlePackage):
     # R2D2 mysql backend
     depends_on("mysql", type="run")
     # Comment out for now until build problems are solved
-    # https://github.com/NOAA-EMC/spack-stack/issues/522
+    # https://github.com/jcsda/spack-stack/issues/522
     #depends_on("py-mysql-connector-python", type="run")
 
     depends_on("solo", when="+solo", type="run")
