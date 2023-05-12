@@ -31,15 +31,13 @@ spack:
   - $optimized_libs
 
 
-  # TODO: change
-  mirrors: { "mirror": "s3://save-stesachs/spack-binaries/develop/aws-pcluster-aarch64" }
+  mirrors: { "mirror": "s3://spack-binaries/develop/aws-pcluster-aarch64" }
 
   ci:
     pipeline-gen:
     - build-job:
-        # TODO: Change
-        # image: { "name": "ghcr.io/spack/e4s-amazonlinux-2:v2023-03-09", "entrypoint": [""] }
-        image: { "name": "679174810898.dkr.ecr.us-east-1.amazonaws.com/stesachs-gitlab:arm64", "entrypoint": [""] }
+        # TODO: Update once built
+        image: { "name": "ghcr.io/spack/pcluster-amazonlinux-2:v2023-05-13", "entrypoint": [""] }
         tags: ["aarch64"]
         before_script:
         - - . "./share/spack/setup-env.sh"
@@ -52,10 +50,7 @@ spack:
           - if [[ -f /bootstrap/spack/etc/spack/modules.yaml ]]; then cp /bootstrap/spack/etc/spack/modules.yaml ./etc/spack/; fi
           - if [[ -f /bootstrap/spack/etc/spack/mirrors.yaml ]]; then cp /bootstrap/spack/etc/spack/mirrors.yaml ./etc/spack/; fi
           - if [[ -d /bootstrap/spack/opt/spack ]]; then spack config add "upstreams:postinstall:install_tree:/bootstrap/spack/opt/spack"; fi
-          # TODO: Add mirror here such that the 'generate' step does not need to build GCC before running. This will be part of postinstall in the future.
-        - - if [[ -r /mnt/key/spack_public_key.gpg ]]; then spack gpg trust /mnt/key/spack_public_key.gpg; fi
-          - spack mirror add local "${SPACK_REMOTE_MIRROR_OVERRIDE}"
-          - /bin/bash "${SPACK_ARTIFACTS_ROOT}/postinstall.sh" -fg
+        - - /bin/bash "${SPACK_ARTIFACTS_ROOT}/postinstall.sh" -fg
           - spack config --scope site add "packages:all:target:\"target=${SPACK_TARGET_ARCH}\""
     - signing-job:
         before_script:
