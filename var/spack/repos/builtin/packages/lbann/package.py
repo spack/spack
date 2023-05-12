@@ -324,31 +324,31 @@ class Lbann(CachedCMakePackage, CudaPackage, ROCmPackage):
         spec = self.spec
         # Environment variables
         cppflags = []
-        cppflags.append("-DLBANN_SET_EL_RNG")
-        cppflags.append("-std=c++17")
+        # cppflags.append("-DLBANN_SET_EL_RNG")
+        # cppflags.append("-std=c++17")
         args = []
-        args.extend(["-DCMAKE_CXX_FLAGS=%s" % " ".join(cppflags), "-DLBANN_VERSION=spack"])
+        # args.extend(["-DCMAKE_CXX_FLAGS=%s" % " ".join(cppflags), "-DLBANN_VERSION=spack"])
 
-        if "+numpy" in spec:
-            args.append("-DCNPY_DIR={0}".format(spec["cnpy"].prefix))
+        # if "+numpy" in spec:
+        #     args.append("-DCNPY_DIR={0}".format(spec["cnpy"].prefix))
 
-        # Use lld high performance linker
-        if "+lld" in spec:
-            args.extend(
-                [
-                    "-DCMAKE_EXE_LINKER_FLAGS=-fuse-ld=lld",
-                    "-DCMAKE_SHARED_LINKER_FLAGS=-fuse-ld=lld",
-                ]
-            )
+        # # Use lld high performance linker
+        # if "+lld" in spec:
+        #     args.extend(
+        #         [
+        #             "-DCMAKE_EXE_LINKER_FLAGS=-fuse-ld=lld",
+        #             "-DCMAKE_SHARED_LINKER_FLAGS=-fuse-ld=lld",
+        #         ]
+        #     )
 
-        # Use gold high performance linker
-        if "+gold" in spec:
-            args.extend(
-                [
-                    "-DCMAKE_EXE_LINKER_FLAGS=-fuse-ld=gold",
-                    "-DCMAKE_SHARED_LINKER_FLAGS=-fuse-ld=gold",
-                ]
-            )
+        # # Use gold high performance linker
+        # if "+gold" in spec:
+        #     args.extend(
+        #         [
+        #             "-DCMAKE_EXE_LINKER_FLAGS=-fuse-ld=gold",
+        #             "-DCMAKE_SHARED_LINKER_FLAGS=-fuse-ld=gold",
+        #         ]
+        #     )
 
         return args
 
@@ -535,6 +535,16 @@ class Lbann(CachedCMakePackage, CudaPackage, ROCmPackage):
         entries.append(cmake_cache_string("CMAKE_MAKE_PROGRAM", "{0}/ninja".format(spec["ninja"].prefix.bin)))
         entries.append(cmake_cache_string("CMAKE_GENERATOR", "Ninja"))
 
+        # Use lld high performance linker
+        if "+lld" in spec:
+            entries.append(cmake_cache_string("CMAKE_EXE_LINKER_FLAGS", "-fuse-ld=lld"))
+            entries.append(cmake_cache_string("CMAKE_SHARED_LINKER_FLAGS", "-fuse-ld=lld"))
+
+        # Use gold high performance linker
+        if "+gold" in spec:
+            entries.append(cmake_cache_string("CMAKE_EXE_LINKER_FLAGS", "-fuse-ld=gold"))
+            entries.append(cmake_cache_string("CMAKE_SHARED_LINKER_FLAGS", "-fuse-ld=gold"))
+
         # if "+rocm" in spec:
         #     entries.insert(0, cmake_cache_path("CMAKE_CXX_COMPILER", spec["hip"].hipcc))
         return entries
@@ -621,7 +631,7 @@ class Lbann(CachedCMakePackage, CudaPackage, ROCmPackage):
 # #            entries.append(cmake_cache_path("Aluminum_DIR", "{0}".format(spec["aluminum"].prefix)))
 
         if spec.satisfies("^python") and "+pfe" in spec:
-            entries.append(cmake_cache_path("LBANN_PFE_PYTHON_EXECUTABLE", "{0}/python".format(spec["python"].prefix.bin)))
+            entries.append(cmake_cache_path("LBANN_PFE_PYTHON_EXECUTABLE", "{0}/python3".format(spec["python"].prefix.bin)))
             entries.append(cmake_cache_string("LBANN_PFE_PYTHONPATH", env["PYTHONPATH"])) # do NOT need to sub ; for : because
                                                                                           # value will only be interpreted by
                                                                                           # a shell, which expects :
