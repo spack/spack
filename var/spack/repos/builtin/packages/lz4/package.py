@@ -72,6 +72,7 @@ class CMakeBuilder(CMakeBuilder):
         # # no pic on windows
         if "platform=windows" in self.spec:
             args.append(self.define("LZ4_POSITION_INDEPENDENT_LIB", False))
+        args.append(self.define_from_variant("CMAKE_POSITION_INDEPENDENT_CODE", "pic"))
         args.append(
             self.define("BUILD_SHARED_LIBS", True if "libs=shared" in self.spec else False)
         )
