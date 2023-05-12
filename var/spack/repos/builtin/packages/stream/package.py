@@ -47,14 +47,6 @@ class Stream(MakefilePackage):
         if "%aocc" in self.spec:
             cflags += " -mcmodel=large -ffp-contract=fast -fnt-store"
 
-        if self.compiler.name in {"oneapi", "intel"}:
-            if self.spec.target.name in {"haswell", "broadwell", "skylake"}:
-                cflags += " -xCORE-AVX2"
-                fflags += " -xCORE-AVX2"
-            elif self.spec.target.name in {"skylake_avx512", "cascadelake", "icelake"}:
-                cflags += " -xCORE-AVX512"
-                fflags += " -xCORE-AVX512"
-
         if self.spec.variants["stream_array_size"].value != "none":
             cflags += " -DSTREAM_ARRAY_SIZE={0}".format(
                 self.spec.variants["stream_array_size"].value
