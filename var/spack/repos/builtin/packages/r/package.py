@@ -126,6 +126,7 @@ class R(AutotoolsPackage):
         prefix = self.prefix
 
         config_args = [
+            "--with-internal-tzcode",
             "--libdir={0}".format(join_path(prefix, "rlib")),
             "--enable-R-shlib",
             "--enable-BLAS-shlib",
