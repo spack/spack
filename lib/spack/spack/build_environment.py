@@ -1063,11 +1063,13 @@ def _setup_pkg_and_run(
         # objects can't be sent to the parent.
         tb_string = traceback.format_exc()
 
-        # build up some context from the offending package so we can
-        # show that, too.
+        # check to ensure package_context is not
+        # provided if package fetch fails
         if isinstance(e, spack.util.web.FetchError):
             package_context = None
         else:
+            # build up some context from the offending package so we can
+            # show that, too.
             package_context = get_package_context(tb)
 
         logfile = None
