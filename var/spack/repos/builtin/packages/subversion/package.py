@@ -117,8 +117,7 @@ class Subversion(AutotoolsPackage):
         else:
             args.append("--disable-nls")
 
-        if spec.satisfies("+pic"):
-            args.append("CFLAGS=-fPIC")
+        args.extend(self.with_or_without("pic"))
 
         return args
 
