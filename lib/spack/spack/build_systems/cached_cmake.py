@@ -251,17 +251,14 @@ class CachedCMakeBuilder(CMakeBuilder):
             entries.append("# ROCm")
             entries.append("#------------------{0}\n".format("-" * 30))
 
-#            "-DHIP_ROOT_DIR={0}".format(spec["hip"].prefix),
-#            "-DHIP_CXX_COMPILER={0}".format(self.spec["hip"].hipcc),
             # This may be a patch that is no longer necessary
-            entries.append(cmake_cache_path("HIP_ROOT_DIR", "{0}".format(spec["hip"].prefix)))
-            # hipcc_flags = []
+#            entries.append(cmake_cache_path("HIP_ROOT_DIR", "{0}".format(spec["hip"].prefix)))
             archs = self.spec.variants["amdgpu_target"].value
             if archs != "none":
-                arch_str = ",".join(archs)
+                arch_str = ";".join(archs)
                 entries.append(cmake_cache_string("CMAKE_HIP_ARCHITECTURES", "{0}".format(arch_str)))
-            #     hipcc_flags.append("--amdgpu-target={0}".format(arch_str))
-            # entries.append(cmake_cache_string("HIP_HIPCC_FLAGS", " ".join(hipcc_flags)))
+                entries.append(cmake_cache_string("AMDGPU_TARGETS", "{0}".format(arch_str)))
+                entries.append(cmake_cache_string("GPU_TARGETS", "{0}".format(arch_str)))
 
         return entries
 
