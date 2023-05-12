@@ -24,9 +24,10 @@ class PyPysam(PythonPackage):
 
     depends_on("py-setuptools@59.0:", when="@0.21:", type="build")
     depends_on("py-setuptools", type="build")
-    depends_on("py-cython@0.29.12:2.99", when="@0.18:", type="build")
-    depends_on("py-cython@0.21:2.99", when="@0.14:", type="build")
-    depends_on("py-cython@0.17:2.99", type="build")
+    depends_on("py-cython@0.29.30:2", when="@0.21:", type="build")
+    depends_on("py-cython@0.29.12:2", when="@0.18:", type="build")
+    depends_on("py-cython@0.21:2", when="@0.14:", type="build")
+    depends_on("py-cython@0.17:2", type="build")
     depends_on("curl")
     depends_on("xz")
     depends_on("htslib@1.17", when="@0.21.0")
