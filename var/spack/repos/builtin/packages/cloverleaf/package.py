@@ -20,7 +20,9 @@ class Cloverleaf(MakefilePackage):
     tags = ["proxy-app"]
 
     version("master", tag="master", submodules=True)
-    version("1.1", sha256="de87f7ee6b917e6b3d243ccbbe620370c62df890e3ef7bdbab46569b57be132f")
+    version("1.3", tag="1.3", submodules=True)
+    version("1.1", tag="1.1", submodules=True)
+#    version("1.1", sha256="de87f7ee6b917e6b3d243ccbbe620370c62df890e3ef7bdbab46569b57be132f")
 
     variant(
         "build",
@@ -40,13 +42,8 @@ class Cloverleaf(MakefilePackage):
     conflicts("build=cuda", when="%aocc", msg="Currently AOCC supports only ref variant")
     conflicts("build=openacc_cray", when="%aocc", msg="Currently AOCC supports only ref variant")
     conflicts("build=serial", when="%aocc", msg="Currently AOCC supports only ref variant")
-    conflicts("@1.1", when="%aocc", msg="AOCC support is provided from version v.1.3 and above")
 
-    @run_before("build")
-    def patch_for_reference_module(self):
-        if self.spec.satisfies("@master %aocc"):
-            fp = join_path(self.package_dir, "aocc_support.patch")
-            which("patch")("-s", "-p0", "-i", "{0}".format(fp), "-d", ".")
+    patch("aocc_support.patch", when="@1.1 %aocc")
 
     @property
     def type_of_build(self):

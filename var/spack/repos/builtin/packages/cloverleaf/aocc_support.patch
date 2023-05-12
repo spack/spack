@@ -64,3 +64,4 @@
    I3E_SUN       = -fsimple=0 -fns=no
    I3E_GNU       = -ffloat-store
    I3E_CRAY      = -hflex_mp=intolerant
+
