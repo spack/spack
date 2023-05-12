@@ -241,6 +241,9 @@ class TokenContext:
             return True
         return False
 
+    def expect(self, *kinds: TokenType):
+        return self.next_token and self.next_token.kind in kinds
+
 
 class SpecParser:
     """Parse text into specs"""
@@ -257,7 +260,9 @@ class SpecParser:
         """
         return list(filter(lambda x: x.kind != TokenType.WS, tokenize(self.literal_str)))
 
-    def next_spec(self, initial_spec: Optional[spack.spec.Spec] = None) -> spack.spec.Spec:
+    def next_spec(
+        self, initial_spec: Optional[spack.spec.Spec] = None
+    ) -> Optional[spack.spec.Spec]:
         """Return the next spec parsed from text.
 
         Args:
@@ -267,13 +272,16 @@ class SpecParser:
         Return
             The spec that was parsed
         """
+        if not self.ctx.next_token:
+            return initial_spec
+
         initial_spec = initial_spec or spack.spec.Spec()
         root_spec = SpecNodeParser(self.ctx).parse(initial_spec)
         while True:
             if self.ctx.accept(TokenType.DEPENDENCY):
-                dependency = SpecNodeParser(self.ctx).parse(spack.spec.Spec())
+                dependency = SpecNodeParser(self.ctx).parse()
 
-                if dependency == spack.spec.Spec():
+                if dependency is None:
                     msg = (
                         "this dependency sigil needs to be followed by a package name "
                         "or a node attribute (version, variant, etc.)"
@@ -292,7 +300,7 @@ class SpecParser:
 
     def all_specs(self) -> List[spack.spec.Spec]:
         """Return all the specs that remain to be parsed"""
-        return list(iter(self.next_spec, spack.spec.Spec()))
+        return list(iter(self.next_spec, None))
 
 
 class SpecNodeParser:
@@ -306,7 +314,7 @@ class SpecNodeParser:
         self.has_version = False
         self.has_hash = False
 
-    def parse(self, initial_spec: spack.spec.Spec) -> spack.spec.Spec:
+    def parse(self, initial_spec: Optional[spack.spec.Spec] = None) -> Optional[spack.spec.Spec]:
         """Parse a single spec node from a stream of tokens
 
         Args:
@@ -315,7 +323,10 @@ class SpecNodeParser:
         Return
             The object passed as argument
         """
-        import spack.environment  # Needed to retrieve by hash
+        if not self.ctx.next_token or self.ctx.expect(TokenType.DEPENDENCY):
+            return initial_spec
+
+        initial_spec = initial_spec or spack.spec.Spec()
 
         # If we start with a package name we have a named spec, we cannot
         # accept another package name afterwards in a node
@@ -390,27 +401,11 @@ class SpecNodeParser:
                 name = name.strip("'\" ")
                 value = value.strip("'\" ")
                 initial_spec._add_flag(name, value, propagate=True)
-            elif not self.has_hash and self.ctx.accept(TokenType.DAG_HASH):
-                dag_hash = self.ctx.current_token.value[1:]
-                matches = []
-                active_env = spack.environment.active_environment()
-                if active_env:
-                    matches = active_env.get_by_hash(dag_hash)
-                if not matches:
-                    matches = spack.store.db.get_by_hash(dag_hash)
-                if not matches:
-                    raise spack.spec.NoSuchHashError(dag_hash)
-
-                if len(matches) != 1:
-                    raise spack.spec.AmbiguousHashError(
-                        f"Multiple packages specify hash beginning '{dag_hash}'.", *matches
-                    )
-                spec_by_hash = matches[0]
-                if not spec_by_hash.satisfies(initial_spec):
-                    raise spack.spec.InvalidHashError(initial_spec, spec_by_hash.dag_hash())
-                initial_spec._dup(spec_by_hash)
-
-                self.has_hash = True
+            elif self.ctx.expect(TokenType.DAG_HASH):
+                if initial_spec.abstract_hash:
+                    break
+                self.ctx.accept(TokenType.DAG_HASH)
+                initial_spec.abstract_hash = self.ctx.current_token.value[1:]
             else:
                 break
 
@@ -486,6 +481,11 @@ def parse_one_or_raise(
         if last_token is not None:
             underline = f"\n{' ' * last_token.end}{'^' * (len(text) - last_token.end)}"
             message += color.colorize(f"@*r{{{underline}}}")
+        raise ValueError(message)
+
+    if result is None:
+        message = "a single spec was requested, but none was parsed:"
+        message += f"\n{text}"
         raise ValueError(message)
 
     return result
