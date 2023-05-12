@@ -50,10 +50,22 @@ class Coin3d(AutotoolsPackage, CMakePackage):
     variant("debug", default=False, description="Make debug build")
     variant("symbols", default=False, description="Enable debug symbols")
 
+    def url_for_version(self, version):
+        if version >= Version("4.0.0"):
+            url = "https://github.com/coin3d/coin/releases/download/Coin-{0}/coin-{0}-src.tar.gz"
+        else:
+            url = "https://github.com/coin3d/coin/archive/Coin-{0}.tar.gz"
+        return url.format(version.dotted)
+
 
 class CMakeBuilder(spack.build_systems.cmake.CMakeBuilder):
     def cmake_args(self):
-        args = []
+        args = [
+            self.define_from_variant("COIN_BUILD_DOCUMENTATION_MAN", "man"),
+            self.define_from_variant("COIN_BUILD_DOCUMENTATION_CHM", "html"),
+            self.define_from_variant("COIN_BUILD_MAC_FRAMEWORK", "framework"),
+            self.define_from_variant("COIN_BUILD_SHARED_LIBS", "shared"),
+        ]
         return args
 
 

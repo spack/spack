@@ -44,6 +44,8 @@ class Med(CMakePackage):
     patch("med-4.1.0-hdf5-target.patch", when="@4.0.0:4.1.99")
 
     def patch(self):
+        # resembles FindSalomeHDF5.patch as in salome-configuration
+        # see https://cmake.org/cmake/help/latest/prop_tgt/IMPORTED_LINK_INTERFACE_LIBRARIES.html
         filter_file(
             "GET_PROPERTY(_lib_lst TARGET hdf5-shared PROPERTY IMPORTED_LINK_INTERFACE_LIBRARIES_NOCONFIG)",  # noqa: E501
             "#GET_PROPERTY(_lib_lst TARGET hdf5-shared PROPERTY IMPORTED_LINK_INTERFACE_LIBRARIES_NOCONFIG)",  # noqa: E501

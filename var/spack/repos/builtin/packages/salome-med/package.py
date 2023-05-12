@@ -48,6 +48,8 @@ class SalomeMed(CMakePackage):
             make("test", parallel=False)
 
     def patch(self):
+        # resembles FindSalomeHDF5.patch as in salome-configuration
+        # see https://cmake.org/cmake/help/latest/prop_tgt/IMPORTED_LINK_INTERFACE_LIBRARIES.html
         filter_file(
             "GET_PROPERTY(_lib_lst TARGET hdf5 PROPERTY IMPORTED_LINK_INTERFACE_LIBRARIES_NOCONFIG)",  # noqa: E501
             "#GET_PROPERTY(_lib_lst TARGET hdf5 PROPERTY IMPORTED_LINK_INTERFACE_LIBRARIES_NOCONFIG)",  # noqa: E501

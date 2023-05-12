@@ -27,7 +27,7 @@ class Freecad(CMakePackage):
         "boost+python+filesystem+date_time+graph+iostreams+program_options+regex+serialization+system+thread"  # noqa: E501
     )
     depends_on("qt@5:")
-    depends_on("swig")
+    depends_on("swig", type="build")
     depends_on("netgen")
     depends_on("pcl")
     depends_on("coin3d")
@@ -38,24 +38,14 @@ class Freecad(CMakePackage):
     depends_on("py-six@1.12.0:", type=("build", "run"))
     depends_on("py-markdown@3.2.2:", type=("build", "run"))
     depends_on("py-pivy", type=("build", "run"))
-    depends_on("py-pybind11", type=("build", "run"))
+    depends_on("py-pybind11", type="build")
 
     def patch(self):
         filter_file(
             "# include <Standard_TooManyUsers.hxx>", "", "src/Mod/Part/App/OCCError.h", string=True
         )
-        filter_file(
-            'putenv("PYTHONPATH=");',
-            '// putenv("PYTHONPATH=");',
-            "src/Main/MainGui.cpp",
-            string=True,
-        )
-        filter_file(
-            '_putenv("PYTHONPATH=");',
-            '// _putenv("PYTHONPATH=");',
-            "src/Main/MainGui.cpp",
-            string=True,
-        )
+        filter_file('putenv("PYTHONPATH=");', "", "src/Main/MainGui.cpp", string=True)
+        filter_file('_putenv("PYTHONPATH=");', "", "src/Main/MainGui.cpp", string=True)
 
     def cmake_args(self):
         args = []
@@ -63,6 +53,7 @@ class Freecad(CMakePackage):
         args.append("-DBUILD_WEB=OFF")
         args.append("-DFREECAD_USE_PYBIND11:BOOL=ON")
         args.append("-DFREECAD_USE_PCL:BOOL=ON")
+        # TODO:
         #       args.append("-DBUILD_FEM_NETGEN:BOOL=ON")
         #       args.append("-DNETGEN_INCLUDEDIR={}".format(self.spec["netgen"].prefix.include))
         return args

@@ -16,7 +16,7 @@ class PyPivy(PythonPackage):
 
     depends_on("coin3d")
     depends_on("py-setuptools", type="build")
-    depends_on("cmake", type="build")
+    depends_on("cmake@3.18:", type="build")
     depends_on("swig", type="build")
 
     def patch(self):
