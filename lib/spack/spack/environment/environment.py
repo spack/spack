@@ -1119,9 +1119,9 @@ class Environment:
             raise SpackEnvironmentError(f"No list {list_name} exists in environment {self.name}")
 
         if list_name == user_speclist_name:
-            if not spec.name:
+            if spec.anonymous:
                 raise SpackEnvironmentError("cannot add anonymous specs to an environment")
-            elif not spack.repo.path.exists(spec.name):
+            elif not spack.repo.path.exists(spec.name) and not spec.abstract_hash:
                 virtuals = spack.repo.path.provider_index.providers.keys()
                 if spec.name not in virtuals:
                     msg = "no such package: %s" % spec.name

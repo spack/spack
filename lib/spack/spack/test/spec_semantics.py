@@ -239,6 +239,22 @@ class TestSpecSemantics(object):
         assert c1 == c2
         assert c1 == expected
 
+    def test_constrain_specs_by_hash(self, default_mock_concretization, database):
+        """Test that Specs specified only by their hashes can constrain eachother."""
+        mpich_dag_hash = "/" + database.query_one("mpich").dag_hash()
+        spec = Spec(mpich_dag_hash[:7])
+        assert spec.constrain(Spec(mpich_dag_hash)) is False
+        assert spec.abstract_hash == mpich_dag_hash[1:]
+
+    def test_mismatched_constrain_spec_by_hash(self, default_mock_concretization, database):
+        """Test that Specs specified only by their incompatible hashes fail appropriately."""
+        lhs = "/" + database.query_one("callpath ^mpich").dag_hash()
+        rhs = "/" + database.query_one("callpath ^mpich2").dag_hash()
+        with pytest.raises(spack.spec.InvalidHashError):
+            Spec(lhs).constrain(Spec(rhs))
+        with pytest.raises(spack.spec.InvalidHashError):
+            Spec(lhs[:7]).constrain(Spec(rhs))
+
     @pytest.mark.parametrize(
         "lhs,rhs", [("libelf", Spec()), ("libelf", "@0:1"), ("libelf", "@0:1 %gcc")]
     )

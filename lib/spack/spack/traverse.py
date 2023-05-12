@@ -18,7 +18,7 @@ EdgeAndDepth = namedtuple("EdgeAndDepth", ["edge", "depth"])
 
 
 def sort_edges(edges):
-    edges.sort(key=lambda edge: edge.spec.name)
+    edges.sort(key=lambda edge: (edge.spec.name or "", edge.spec.abstract_hash or ""))
     return edges
 
 
