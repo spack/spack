@@ -474,3 +474,29 @@ spack:
     assert not os.path.exists(env_dir / ev.lockfile_name)
     assert os.path.exists(env_dir / ev.manifest_name)
     assert filecmp.cmp(env_dir / ev.manifest_name, init_file, shallow=False)
+
+
+def test_error_message_when_using_too_new_lockfile(tmp_path):
+    """Sometimes the lockfile format needs to be bumped. When that happens, we have forward
+    incompatibilities that need to be reported in a clear way to the user, in case we moved
+    back to an older version of Spack. This test ensures that the error message for a too
+    new lockfile version stays comprehensible across refactoring of the environment code.
+    """
+    init_file = tmp_path / ev.lockfile_name
+    env_dir = tmp_path / "env_dir"
+    init_file.write_text(
+        """
+{
+    "_meta": {
+        "file-type": "spack-lockfile",
+        "lockfile-version": 100,
+        "specfile-version": 3
+    },
+    "roots": [],
+    "concrete_specs": {}
+}\n
+"""
+    )
+    ev.initialize_environment_dir(env_dir, init_file)
+    with pytest.raises(ev.SpackEnvironmentError, match="You need to use a newer Spack version."):
+        ev.Environment(env_dir)

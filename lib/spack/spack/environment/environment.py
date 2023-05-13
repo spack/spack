@@ -1119,9 +1119,9 @@ class Environment:
             raise SpackEnvironmentError(f"No list {list_name} exists in environment {self.name}")
 
         if list_name == user_speclist_name:
-            if not spec.name:
+            if spec.anonymous:
                 raise SpackEnvironmentError("cannot add anonymous specs to an environment")
-            elif not spack.repo.path.exists(spec.name):
+            elif not spack.repo.path.exists(spec.name) and not spec.abstract_hash:
                 virtuals = spack.repo.path.provider_index.providers.keys()
                 if spec.name not in virtuals:
                     msg = "no such package: %s" % spec.name
@@ -2127,10 +2127,12 @@ class Environment:
             reader = READER_CLS[current_lockfile_format]
         except KeyError:
             msg = (
-                f"Spack {spack.__version__} cannot read environment lockfiles using the "
-                f"v{current_lockfile_format} format"
+                f"Spack {spack.__version__} cannot read the lockfile '{self.lock_path}', using "
+                f"the v{current_lockfile_format} format."
             )
-            raise RuntimeError(msg)
+            if lockfile_format_version < current_lockfile_format:
+                msg += " You need to use a newer Spack version."
+            raise SpackEnvironmentError(msg)
 
         # First pass: Put each spec in the map ignoring dependencies
         for lockfile_key, node_dict in json_specs_by_hash.items():
