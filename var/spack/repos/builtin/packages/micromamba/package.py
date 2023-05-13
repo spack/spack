@@ -23,11 +23,7 @@ class Micromamba(CMakePackage):
 
     maintainers("charmoniumQ")
 
-    version(
-        "1.4.2",
-        sha256="bc1ec3de0dd8398fcc6f524e6607d9d8f6dfeeedb2208ebe0f2070c8fd8fdd83",
-        url="https://github.com/mamba-org/mamba/archive/refs/tags/2023.04.06.tar.gz",
-    )
+    version("1.4.2", sha256="dce034908d02d991c5e9aadeb9d01f139d027ba199aaeb1d47d543e3f24895d1")
     version("1.1.0", sha256="e2392cd90221234ae8ea92b37f40829fbe36d80278056269aa1994a5efe7f530")
 
     variant(
