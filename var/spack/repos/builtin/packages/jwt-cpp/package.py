@@ -9,7 +9,7 @@ from spack.package import *
 class JwtCpp(CMakePackage):
     """A header only library for creating and validating JSON Web Tokens in C++11."""
 
-    homepage = "https://github.com/Thalhammer/jwt-cpp"
+    homepage = "https://thalhammer.github.io/jwt-cpp/"    
     url = "https://github.com/Thalhammer/jwt-cpp/archive/refs/tags/v0.4.0.tar.gz"
 
     maintainers("gartung", "greenc-FNAL", "marcmengel", "vitodb")
