@@ -16,7 +16,7 @@ import time
 import urllib.parse
 import urllib.request
 import warnings
-from typing import Any, Dict, List, Optional, Union
+from typing import Any, Dict, List, Optional, Set, Tuple, Union
 
 import llnl.util.filesystem as fs
 import llnl.util.tty as tty
@@ -1357,18 +1357,42 @@ class Environment:
         msg = "concretization strategy not implemented [{0}]"
         raise SpackEnvironmentError(msg.format(self.unify))
 
-    def _concretize_together_where_possible(self, tests=False):
-        # Avoid cyclic dependency
-        import spack.solver.asp
+    def _get_specs_to_concretize(
+        self,
+    ) -> Tuple[Set[spack.spec.Spec], Set[spack.spec.Spec], List[spack.spec.Spec]]:
+        """Compute specs to concretize for unify:true and unify:when_possible.
 
+        This includes new user specs and any already concretized specs.
+
+        Returns:
+            Tuple of new user specs, user specs to keep, and the specs to concretize.
+
+        """
         # Exit early if the set of concretized specs is the set of user specs
         new_user_specs = set(self.user_specs) - set(self.concretized_user_specs)
         kept_user_specs = set(self.user_specs) & set(self.concretized_user_specs)
         if not new_user_specs:
-            return []
+            return new_user_specs, kept_user_specs, []
 
-        result = [pair for pair in self.concretized_specs() if pair[0] in kept_user_specs]
-        specs_to_concretize = list(new_user_specs) + [concrete for _, concrete in result]
+        concrete_specs_to_keep = [
+            concrete
+            for abstract, concrete in self.concretized_specs()
+            if abstract in kept_user_specs
+        ]
+
+        specs_to_concretize = list(new_user_specs) + concrete_specs_to_keep
+        return new_user_specs, kept_user_specs, specs_to_concretize
+
+    def _concretize_together_where_possible(
+        self, tests: bool = False
+    ) -> List[Tuple[spack.spec.Spec, spack.spec.Spec]]:
+        # Avoid cyclic dependency
+        import spack.solver.asp
+
+        # Exit early if the set of concretized specs is the set of user specs
+        new_user_specs, _, specs_to_concretize = self._get_specs_to_concretize()
+        if not new_user_specs:
+            return []
 
         self.concretized_user_specs = []
         self.concretized_order = []
@@ -1388,24 +1412,16 @@ class Environment:
             self._add_concrete_spec(abstract, concrete)
         return result
 
-    def _concretize_together(self, tests=False):
+    def _concretize_together(
+        self, tests: bool = False
+    ) -> List[Tuple[spack.spec.Spec, spack.spec.Spec]]:
         """Concretization strategy that concretizes all the specs
         in the same DAG.
         """
-        # This code relies on the fact that sets are ordered in python
-
         # Exit early if the set of concretized specs is the set of user specs
-        new_user_specs = set(self.user_specs) - set(self.concretized_user_specs)
-        kept_user_specs = set(self.user_specs) & set(self.concretized_user_specs)
+        new_user_specs, kept_user_specs, specs_to_concretize = self._get_specs_to_concretize()
         if not new_user_specs:
             return []
-
-        concrete_specs_to_keep = [
-            concrete
-            for abstract, concrete in self.concretized_specs()
-            if abstract in kept_user_specs
-        ]
-        specs_to_concretize = list(new_user_specs) + concrete_specs_to_keep
 
         self.concretized_user_specs = []
         self.concretized_order = []
