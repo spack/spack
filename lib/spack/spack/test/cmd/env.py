@@ -734,9 +734,8 @@ spack:
 """
     )
 
-    with pytest.raises(spack.config.ConfigFileError, match="2 missing include path"):
-        with e:
-            e.concretize()
+    with e2:
+        e2.concretize()
 
     # we've created an environment with some included config files (which do
     # in fact exist): now we remove them and check that we get a sensible
