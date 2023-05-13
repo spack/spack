@@ -1254,7 +1254,10 @@ def get_package_context(traceback, context=3):
             # Find the first proper subclass of the PackageBase or BaseBuilder, but
             # don't provide context if the code is actually in the base classes.
             obj = frame.f_locals["self"]
-            typename, *_ = tb.tb_frame.f_code.co_qualname.partition(".")
+            func = getattr(obj, tb.tb_frame.f_code.co_name, "")
+            if func:
+                typename, *_ = func.__qualname__.partition(".")
+
             if isinstance(obj, CONTEXT_BASES) and typename not in basenames:
                 break
     else:
