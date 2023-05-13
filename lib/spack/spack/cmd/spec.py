@@ -79,24 +79,16 @@ for further documentation regarding the spec syntax, see:
     arguments.add_concretizer_args(subparser)
 
 
-def get_default_fmt(args):
-    """Get the format we'll use to print out specs."""
-    fmt = "{namespace}.{name}" if args.namespaces else "{name}"
-    fmt += (
-        "{@version}"
-        "{%compiler.name}{@compiler.version}"
-        "{compiler_flags}"
-        "{variants}"
-        "{arch=architecture}"
-    )
-    return fmt
-
-
 def spec(parser, args):
     install_status_fn = spack.spec.Spec.install_status
+
+    fmt = spack.spec.display_format
+    if args.namespaces:
+        fmt = "{namespace}." + fmt
+
     tree_kwargs = {
         "cover": args.cover,
-        "format": get_default_fmt(args),
+        "format": fmt,
         "hashlen": None if args.very_long else 7,
         "show_types": args.types,
         "status_fn": install_status_fn if args.install_status else None,

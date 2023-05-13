@@ -141,9 +141,14 @@ def _process_result(result, show, required_format, kwargs):
 def solve(parser, args):
     # these are the same options as `spack spec`
     install_status_fn = spack.spec.Spec.install_status
+
+    fmt = spack.spec.display_format
+    if args.namespaces:
+        fmt = "{namespace}." + fmt
+
     kwargs = {
         "cover": args.cover,
-        "format": spack.cmd.spec.get_default_fmt(args),
+        "format": fmt,
         "hashlen": None if args.very_long else 7,
         "show_types": args.types,
         "status_fn": install_status_fn if args.install_status else None,
