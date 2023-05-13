@@ -27,13 +27,13 @@ spack:
 
   # JAX
   - py-jax
-  - py-jaxlib
+  # - py-jaxlib     # bazel codesign
 
   # Keras
-  - py-keras
   - py-keras-applications
   - py-keras-preprocessing
   - py-keras2onnx
+  # - py-keras      # bazel codesign
 
   # MXNet
   - mxnet
@@ -64,12 +64,12 @@ spack:
   - py-tensorboardx
 
   # TensorFlow
-  - py-tensorflow
+  # - py-tensorflow               # bazel codesign
   - py-tensorflow-datasets
-  - py-tensorflow-estimator
-  - py-tensorflow-hub
+  # - py-tensorflow-hub           # bazel codesign
   - py-tensorflow-metadata
-  - py-tensorflow-probability
+  # - py-tensorflow-estimator     # bazel codesign
+  # - py-tensorflow-probability   # py-dm-tree due to bazel codesign
 
   # XGBoost
   - py-xgboost

@@ -70,10 +70,10 @@ spack:
   # TensorFlow
   - py-tensorflow
   - py-tensorflow-datasets
-  - py-tensorflow-estimator
   - py-tensorflow-hub
   - py-tensorflow-metadata
-  - py-tensorflow-probability
+  # - py-tensorflow-estimator   # bazel codesign
+  # - py-tensorflow-probability # py-dm-tree fails due to bazel codesign
 
   # XGBoost
   - py-xgboost
