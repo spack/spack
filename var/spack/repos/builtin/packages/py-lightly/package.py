@@ -42,4 +42,4 @@ class PyLightly(PythonPackage):
     depends_on("py-pytorch-lightning@1.0.4:1", when="@:1.4.1", type=("build", "run"))
 
     # https://github.com/lightly-ai/lightly/issues/1153
-    depends_on("py-torch+distributed", type=("build", "run"))
+    depends_on("py-torch+distributed", when="@:1.4.4", type=("build", "run"))
