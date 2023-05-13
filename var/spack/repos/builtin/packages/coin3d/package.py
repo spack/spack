@@ -47,8 +47,10 @@ class Coin3d(AutotoolsPackage, CMakePackage):
 
     variant("framework", default=False, description="Do 'UNIX-style' installation on Mac OS X")
     variant("shared", default=True, description="Build shared library (off: build static library)")
-    variant("debug", default=False, description="Make debug build")
-    variant("symbols", default=False, description="Enable debug symbols")
+    variant("debug", default=False, description="Make debug build", when="build_system=autotools")
+    variant(
+        "symbols", default=False, description="Enable debug symbols", when="build_system=autotools"
+    )
 
     def url_for_version(self, version):
         if version >= Version("4.0.0"):
