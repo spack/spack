@@ -1435,11 +1435,15 @@ class Environment:
             # "Enhance" the error message for multiple root specs, suggest a less strict
             # form of concretization.
             if len(self.user_specs) > 1:
+                e.message += ". "
+                if kept_user_specs:
+                    e.message += (
+                        "Couldn't concretize without changing the existing environment. "
+                        "If you are ok with changing it, try `spack concretize --force`. "
+                    )
                 e.message += (
-                    ". If you have previously cached concretizations, consider using "
-                    "`spack concretize -f` to invalidate cached concretizations. If not, "
-                    "Consider setting `concretizer:unify` to `when_possible` "
-                    "or `false` to relax the concretizer strictness."
+                    "You could consider setting `concretizer:unify` to `when_possible` "
+                    "or `false` to allow multiple versions of some packages."
                 )
             raise
 
