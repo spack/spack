@@ -2442,7 +2442,7 @@ def test_duplicate_packages_raise_when_concretizing_together():
     e.add("mpich")
 
     with pytest.raises(
-        spack.error.UnsatisfiableSpecError, match=r"relax the concretizer strictness"
+        spack.error.UnsatisfiableSpecError, match=r"You could consider setting `concretizer:unify`"
     ):
         e.concretize()
 
