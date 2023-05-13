@@ -1072,7 +1072,7 @@ deprecated-ci-protected-build:
     strategy: depend
   needs:
     - artifacts: True
-      job: deprecated-ci-protected-generate
+      job: deprecated-ci-generate
 
 ########################################
 # AWS PCLUSTER
