@@ -115,7 +115,7 @@ class Palace(CMakePackage):
         if "+mumps" in self.spec:
             args += ["-DMUMPS_REQUIRED_PACKAGES=MPI;MPI_Fortran"]
 
-        # BLAS support
+        # BLAS/LAPACK linkage
         args += [
             "-DBLAS_LIBRARIES={0}".format(self.spec["blas"].libs.joined(";")),
             # LAPACK support
