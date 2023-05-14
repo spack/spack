@@ -14,6 +14,7 @@ class PyTimm(PythonPackage):
 
     maintainers("adamjstewart")
 
+    version("0.9.2", sha256="d0977cc5e02c69bda979fca8b52aa315a5f2cb64ebf8ad2c4631b1e452762c14")
     version("0.9.1", sha256="171420ac499e7999d38fb8b08fffa5ca3950b38db23bba84763cd92621ca80a2")
     version("0.9.0", sha256="f0159bbeea5c8d11551ac3077752ee77008d2638578571303296054b5ffddad4")
     version("0.6.13", sha256="745c54f7b7985a18e08bd66c997b018c1c3fef99bbb8c018879a6f85571782f5")
