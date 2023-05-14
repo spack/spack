@@ -16,7 +16,7 @@ import time
 import urllib.parse
 import urllib.request
 import warnings
-from typing import Any, Dict, List, Optional, Union
+from typing import Any, Dict, List, Optional, Set, Tuple, Union
 
 import llnl.util.filesystem as fs
 import llnl.util.tty as tty
@@ -1365,64 +1365,98 @@ class Environment:
         msg = "concretization strategy not implemented [{0}]"
         raise SpackEnvironmentError(msg.format(self.unify))
 
-    def _concretize_together_where_possible(self, tests=False):
+    def _get_specs_to_concretize(
+        self,
+    ) -> Tuple[Set[spack.spec.Spec], Set[spack.spec.Spec], List[spack.spec.Spec]]:
+        """Compute specs to concretize for unify:true and unify:when_possible.
+
+        This includes new user specs and any already concretized specs.
+
+        Returns:
+            Tuple of new user specs, user specs to keep, and the specs to concretize.
+
+        """
+        # Exit early if the set of concretized specs is the set of user specs
+        new_user_specs = set(self.user_specs) - set(self.concretized_user_specs)
+        kept_user_specs = set(self.user_specs) & set(self.concretized_user_specs)
+        if not new_user_specs:
+            return new_user_specs, kept_user_specs, []
+
+        concrete_specs_to_keep = [
+            concrete
+            for abstract, concrete in self.concretized_specs()
+            if abstract in kept_user_specs
+        ]
+
+        specs_to_concretize = list(new_user_specs) + concrete_specs_to_keep
+        return new_user_specs, kept_user_specs, specs_to_concretize
+
+    def _concretize_together_where_possible(
+        self, tests: bool = False
+    ) -> List[Tuple[spack.spec.Spec, spack.spec.Spec]]:
         # Avoid cyclic dependency
         import spack.solver.asp
 
         # Exit early if the set of concretized specs is the set of user specs
-        user_specs_did_not_change = not bool(
-            set(self.user_specs) - set(self.concretized_user_specs)
-        )
-        if user_specs_did_not_change:
+        new_user_specs, _, specs_to_concretize = self._get_specs_to_concretize()
+        if not new_user_specs:
             return []
 
-        # Proceed with concretization
         self.concretized_user_specs = []
         self.concretized_order = []
         self.specs_by_hash = {}
 
         result_by_user_spec = {}
         solver = spack.solver.asp.Solver()
-        for result in solver.solve_in_rounds(self.user_specs, tests=tests):
+        for result in solver.solve_in_rounds(specs_to_concretize, tests=tests):
             result_by_user_spec.update(result.specs_by_input)
 
         result = []
         for abstract, concrete in sorted(result_by_user_spec.items()):
+            if abstract in new_user_specs:
+                result.append((abstract, concrete))
+            else:
+                assert (abstract, concrete) in result
             self._add_concrete_spec(abstract, concrete)
-            result.append((abstract, concrete))
         return result
 
-    def _concretize_together(self, tests=False):
+    def _concretize_together(
+        self, tests: bool = False
+    ) -> List[Tuple[spack.spec.Spec, spack.spec.Spec]]:
         """Concretization strategy that concretizes all the specs
         in the same DAG.
         """
         # Exit early if the set of concretized specs is the set of user specs
-        user_specs_did_not_change = not bool(
-            set(self.user_specs) - set(self.concretized_user_specs)
-        )
-        if user_specs_did_not_change:
+        new_user_specs, kept_user_specs, specs_to_concretize = self._get_specs_to_concretize()
+        if not new_user_specs:
             return []
 
-        # Proceed with concretization
         self.concretized_user_specs = []
         self.concretized_order = []
         self.specs_by_hash = {}
 
         try:
             concrete_specs = spack.concretize.concretize_specs_together(
-                *self.user_specs, tests=tests
+                *specs_to_concretize, tests=tests
             )
         except spack.error.UnsatisfiableSpecError as e:
             # "Enhance" the error message for multiple root specs, suggest a less strict
             # form of concretization.
             if len(self.user_specs) > 1:
+                e.message += ". "
+                if kept_user_specs:
+                    e.message += (
+                        "Couldn't concretize without changing the existing environment. "
+                        "If you are ok with changing it, try `spack concretize --force`. "
+                    )
                 e.message += (
-                    ". Consider setting `concretizer:unify` to `when_possible` "
-                    "or `false` to relax the concretizer strictness."
+                    "You could consider setting `concretizer:unify` to `when_possible` "
+                    "or `false` to allow multiple versions of some packages."
                 )
             raise
 
-        concretized_specs = [x for x in zip(self.user_specs, concrete_specs)]
+        # zip truncates the longer list, which is exactly what we want here
+        concretized_specs = [x for x in zip(new_user_specs | kept_user_specs, concrete_specs)]
         for abstract, concrete in concretized_specs:
             self._add_concrete_spec(abstract, concrete)
         return concretized_specs
