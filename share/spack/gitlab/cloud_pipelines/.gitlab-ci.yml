@@ -788,7 +788,6 @@ deprecated-ci-build:
 ########################################
 
 .aws-pcluster-generate-image:
-  # TODO: Update once built
   image: { "name": "ghcr.io/spack/pcluster-amazonlinux-2:main", "entrypoint": [""] }
 
 .aws-pcluster:
@@ -844,7 +843,6 @@ aws-pcluster-build-skylake:
 
 # Neoverse_n1 (one pipeline per target)
 .aws-pcluster-generate-image-aarch64:
-  # TODO: Update once built
   image: { "name": "ghcr.io/spack/pcluster-amazonlinux-2:main", "entrypoint": [""] }
 
 .aws-pcluster-aarch64:
@@ -867,7 +865,6 @@ aws-pcluster-build-neoverse-n1:
 
 # Neoverse_v1 (one pipeline per target)
 .aws-pcluster-generate-image-aarch64:
-  # TODO: Update once built
   image: { "name": "ghcr.io/spack/pcluster-amazonlinux-2:main", "entrypoint": [""] }
 
 .aws-pcluster-aarch64:

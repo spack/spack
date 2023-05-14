@@ -16,7 +16,8 @@ spack:
     - openfoam
     # - palace
     # - py-devito
-    - quantum-espresso
+    # TODO: Re-enable when https://github.com/spack/spack/pull/37607 is merged
+    # - quantum-espresso
     - wrf
 
   - optimized_libs:
@@ -35,7 +36,6 @@ spack:
   ci:
     pipeline-gen:
     - build-job:
-        # TODO: Update once built
         image: { "name": "ghcr.io/spack/pcluster-amazonlinux-2:main", "entrypoint": [""] }
         before_script:
         - - . "./share/spack/setup-env.sh"

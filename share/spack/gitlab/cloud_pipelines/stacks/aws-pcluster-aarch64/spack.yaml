@@ -36,7 +36,6 @@ spack:
   ci:
     pipeline-gen:
     - build-job:
-        # TODO: Update once built
         image: { "name": "ghcr.io/spack/pcluster-amazonlinux-2:main", "entrypoint": [""] }
         tags: ["aarch64"]
         before_script:
