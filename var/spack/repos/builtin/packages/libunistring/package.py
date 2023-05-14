@@ -42,7 +42,7 @@ class Libunistring(AutotoolsPackage, GNUMirrorPackage):
         filter_file("#  pragma weak pthread_create", "", "tests/glthread/thread.h")
 
     def flag_handler(self, name, flags):
-        if name == "cflags" and self.spec.satisfies("@1.1:"):
+        if name == "cflags" and self.spec.satisfies("@1.1:") and self.spec.satisfies("%intel"):
             flags.append(self.compiler.c18_flag)
         return (flags, None, None)
 
