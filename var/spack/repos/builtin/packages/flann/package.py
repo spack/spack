@@ -21,6 +21,7 @@ class Flann(CMakePackage):
     homepage = "https://github.com/mariusmuja/flann"
     url = "https://github.com/mariusmuja/flann/archive/1.9.1.tar.gz"
 
+    version("1.9.2", sha256="e26829bb0017f317d9cc45ab83ddcb8b16d75ada1ae07157006c1e7d601c8824")
     version("1.9.1", sha256="b23b5f4e71139faa3bcb39e6bbcc76967fbaf308c4ee9d4f5bfbeceaa76cc5d3")
     version("1.8.5", sha256="59a9925dac0705b281496ae52b5dfd79d6b69316d37015e3d3b38c859bac4f2f")
     version("1.8.4", sha256="ed5843113150b3d6bc4c325fecb51337838a9fc09ad64bdb6aea79d6e610ee13")
@@ -61,6 +62,7 @@ class Flann(CMakePackage):
     depends_on("cuda", when="+cuda")
     depends_on("mpi", when="+mpi")
     depends_on("hdf5", when="+hdf5")
+    depends_on("lz4", when="@1.9.2:")
     # HDF5_IS_PARALLEL actually comes from hdf5+mpi
     # https://github.com/mariusmuja/flann/blob/06a49513138009d19a1f4e0ace67fbff13270c69/CMakeLists.txt#L108-L112
     depends_on(
@@ -77,7 +79,7 @@ class Flann(CMakePackage):
     depends_on("googletest", type="test")
 
     # See: https://github.com/mariusmuja/flann/issues/369
-    patch("linux-gcc-cmakev3.11-plus.patch", when="%gcc^cmake@3.11:")
+    patch("linux-gcc-cmakev3.11-plus.patch", when="@:1.9.1%gcc^cmake@3.11:")
 
     def patch(self):
         # Fix up the python setup.py call inside the install(CODE

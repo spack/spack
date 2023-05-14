@@ -47,6 +47,16 @@ class SalomeMed(CMakePackage):
         with working_dir(self.build_directory):
             make("test", parallel=False)
 
+    def patch(self):
+        # resembles FindSalomeHDF5.patch as in salome-configuration
+        # see https://cmake.org/cmake/help/latest/prop_tgt/IMPORTED_LINK_INTERFACE_LIBRARIES.html
+        filter_file(
+            "GET_PROPERTY(_lib_lst TARGET hdf5 PROPERTY IMPORTED_LINK_INTERFACE_LIBRARIES_NOCONFIG)",  # noqa: E501
+            "#GET_PROPERTY(_lib_lst TARGET hdf5 PROPERTY IMPORTED_LINK_INTERFACE_LIBRARIES_NOCONFIG)",  # noqa: E501
+            "config/cmake_files/FindMedfileHDF5.cmake",
+            string=True,
+        )
+
     def setup_dependent_build_environment(self, env, dependent_spec):
         env.set("HDF5_ROOT_DIR", self.spec["hdf5"].prefix)
 
