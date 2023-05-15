@@ -1402,6 +1402,10 @@ class Environment:
         if not new_user_specs:
             return []
 
+        old_concrete_to_abstract = {
+            concrete: abstract for (abstract, concrete) in self.concretized_specs()
+        }
+
         self.concretized_user_specs = []
         self.concretized_order = []
         self.specs_by_hash = {}
@@ -1413,11 +1417,13 @@ class Environment:
 
         result = []
         for abstract, concrete in sorted(result_by_user_spec.items()):
+            # If the "abstract" spec is a concrete spec from the previous concretization
+            # translate it back to an abstract spec. Otherwise, keep the abstract spec
+            abstract = old_concrete_to_abstract.get(abstract, abstract)
             if abstract in new_user_specs:
                 result.append((abstract, concrete))
-            else:
-                assert (abstract, concrete) in result
             self._add_concrete_spec(abstract, concrete)
+
         return result
 
     def _concretize_together(
