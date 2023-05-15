@@ -63,19 +63,12 @@ def setup_parser(subparser):
     )
 
     subparser.add_argument(
-        "--first",
+        "--best", "--first"
         action="store_true",
         default=False,
         dest="load_best",
-        help="load the first match if multiple packages match the spec",
-    )
-
-    subparser.add_argument(
-        "--best",
-        action="store_true",
-        default=False,
-        dest="load_best",
-        help="load the best match for the architecture if multiple packages match the spec",
+        help="""load the best match for the architecture if multiple 
+packages match the spec, otherwise load the first found""",
     )
 
     subparser.add_argument(
