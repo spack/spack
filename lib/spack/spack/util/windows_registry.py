@@ -7,9 +7,9 @@
 Utility module for dealing with Windows Registry.
 """
 
-import os
 import sys
 from contextlib import contextmanager
+from pathlib import PurePath, Path
 
 from llnl.util import tty
 
@@ -34,8 +34,8 @@ class RegistryKey:
     """
 
     def __init__(self, name, handle):
-        self.path = name
-        self.name = os.path.split(name)[-1]
+        self.path = Path(name)
+        self.name = self.path.name #os.path.split(name)[-1]
         self._handle = handle
         self._keys = []
         self._values = {}
@@ -69,7 +69,7 @@ class RegistryKey:
         for i in range(sub_keys):
             sub_name = winreg.EnumKey(self.hkey, i)
             sub_handle = winreg.OpenKeyEx(self.hkey, sub_name, access=winreg.KEY_READ)
-            self._keys.append(RegistryKey(os.path.join(self.path, sub_name), sub_handle))
+            self._keys.append(RegistryKey((self.path / sub_name), sub_handle))
 
     def _gather_value_info(self):
         """Compose all values for this key into a dict of form value name: RegistryValue Object"""
@@ -83,7 +83,7 @@ class RegistryKey:
     def get_subkey(self, sub_key):
         """Returns subkey of name sub_key in a RegistryKey objects"""
         return RegistryKey(
-            os.path.join(self.path, sub_key),
+            (self.path / sub_key),
             winreg.OpenKeyEx(self.hkey, sub_key, access=winreg.KEY_READ),
         )
 
@@ -111,7 +111,7 @@ class _HKEY_CONSTANT(RegistryKey):
     @property
     def hkey(self):
         if not self._handle:
-            self._handle = self._get_hkey(self.path)
+            self._handle = self._get_hkey(str(self.path))
         return self._handle
 
 
@@ -177,7 +177,7 @@ class WindowsRegistryView:
     def _load_key(self):
         try:
             self._reg = RegistryKey(
-                os.path.join(str(self.root), self.key),
+                PurePath(str(self.root), self.key),
                 winreg.OpenKeyEx(self.root.hkey, self.key, access=winreg.KEY_READ),
             )
         except FileNotFoundError as e:
