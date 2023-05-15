@@ -14,7 +14,6 @@ class PyMesonPython(PythonPackage):
 
     maintainers("eli-schwartz", "adamjstewart", "rgommers")
 
-    # Needed for py-scikit-image, deprecate and remove once 0.13.0 is officially released
     version(
         "0.13.1", sha256="63b3170001425c42fa4cfedadb9051cbd28925ff8eed7c40d36ba0099e3c7618"
     )
@@ -34,7 +33,7 @@ class PyMesonPython(PythonPackage):
     depends_on("py-pyproject-metadata@0.5:", type=("build", "run"))
     depends_on("py-tomli@1:", when="@0.11: ^python@:3.10", type=("build", "run"))
     depends_on("py-tomli@1:", when="@:0.10", type=("build", "run"))
-    depends_on("py-typing-extensions@3.7.4:", when="@0.12: ^python@:3.9", type=("build", "run"))
+    depends_on("py-typing-extensions@3.7.4:", when="@0.12 ^python@:3.9", type=("build", "run"))
     depends_on("py-typing-extensions@3.7.4:", when="@:0.11 ^python@:3.7", type=("build", "run"))
     depends_on("py-colorama", when="platform=windows", type=("build", "run"))
 
