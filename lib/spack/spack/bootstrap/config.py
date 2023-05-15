@@ -24,6 +24,8 @@ import spack.util.path
 #: Reference counter for the bootstrapping configuration context manager
 _REF_COUNT = 0
 
+#: Whether the current platform is Windows
+IS_WINDOWS = sys.platform == "win32"
 
 def is_bootstrapping() -> bool:
     """Return True if we are in a bootstrapping context, False otherwise."""
@@ -170,6 +172,8 @@ def _ensure_bootstrap_configuration() -> Generator:
                 _add_compilers_if_missing()
                 spack.config.set("bootstrap", user_configuration["bootstrap"])
                 spack.config.set("config", user_configuration["config"])
+                if IS_WINDOWS:
+                    spack.config.add("repos", "$spack/var/spack/repos/compiler.wrappers")
                 with spack.modules.disable_modules():
                     with spack_python_interpreter():
                         yield
