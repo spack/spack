@@ -1771,18 +1771,17 @@ class SpackSolverSetup(object):
                             "Preference for version {0} for does not match any version "
                             " defined in {1}".format(str(v), pkg_name)
                         )
-                    # Note: version definitions that appear earlier in the list
-                    # are prioritized, so we sort from greatest to least (i.e.
-                    # amongst all defined versions satisfying this specific
+                    # Amongst all defined versions satisfying this specific
                     # preference, the highest-numbered version is the
-                    # most-preferred)
+                    # most-preferred: therefore sort satisfying versions
+                    # from greatest to least
                     version_defs.extend(sorted(satisfying_versions, reverse=True))
 
-                for weight, vdef in enumerate(version_defs):
-                    self.declared_versions[pkg_name].append(
-                        DeclaredVersion(version=vdef, idx=weight, origin=Provenance.PACKAGES_YAML)
-                    )
-                    self.possible_versions[pkg_name].add(vdef)
+            for weight, vdef in enumerate(version_defs):
+                self.declared_versions[pkg_name].append(
+                    DeclaredVersion(version=vdef, idx=weight, origin=Provenance.PACKAGES_YAML)
+                )
+                self.possible_versions[pkg_name].add(vdef)
 
     def add_concrete_versions_from_specs(self, specs, origin):
         """Add concrete versions to possible versions from lists of CLI/dev specs."""
