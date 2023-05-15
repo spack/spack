@@ -1442,7 +1442,7 @@ class Environment:
         self.specs_by_hash = {}
 
         try:
-            concrete_specs = spack.concretize.concretize_specs_together(
+            concrete_specs: List[spack.spec.Spec] = spack.concretize.concretize_specs_together(
                 *specs_to_concretize, tests=tests
             )
         except spack.error.UnsatisfiableSpecError as e:
@@ -1468,7 +1468,7 @@ class Environment:
             self._add_concrete_spec(abstract, concrete)
 
         # zip truncates the longer list, which is exactly what we want here
-        return zip(new_user_specs, concrete_specs)
+        return list(zip(new_user_specs, concrete_specs))
 
     def _concretize_separately(self, tests=False):
         """Concretization strategy that concretizes separately one
