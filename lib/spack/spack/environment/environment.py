@@ -1461,11 +1461,14 @@ class Environment:
                 )
             raise
 
-        # zip truncates the longer list, which is exactly what we want here
-        concretized_specs = [x for x in zip(new_user_specs | kept_user_specs, concrete_specs)]
+        # set() | set() does not preserve ordering, even though sets are ordered
+        ordered_user_specs = list(new_user_specs) + list(kept_user_specs)
+        concretized_specs = [x for x in zip(ordered_user_specs, concrete_specs)]
         for abstract, concrete in concretized_specs:
             self._add_concrete_spec(abstract, concrete)
-        return concretized_specs
+
+        # zip truncates the longer list, which is exactly what we want here
+        return zip(new_user_specs, concrete_specs)
 
     def _concretize_separately(self, tests=False):
         """Concretization strategy that concretizes separately one
