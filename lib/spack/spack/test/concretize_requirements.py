@@ -187,11 +187,10 @@ packages:
 
 
 def test_require_truncated(concretize_scope, test_repo):
-    """If a requirement specifies a numbered version that isn't in
-    the associated package.py and isn't part of a Git hash
-    equivalence (hash=number), then Spack should raise an error
-    (it is assumed this is a typo, and raising the error here
-    avoids a likely error when Spack attempts to fetch the version).
+    """A requirement specifies a version range, with satisfying
+    versions defined in the package.py. Make sure we choose one
+    of the defined versions (vs. allowing the requirement to
+    define a new version).
     """
     if spack.config.get("config:concretizer") == "original":
         pytest.skip("Original concretizer does not support configuration requirements")
