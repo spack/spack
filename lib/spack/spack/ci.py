@@ -531,7 +531,7 @@ class SpackCI:
         """
 
         self.ci_config = ci_config
-        self.named_jobs = ["any", "build", "cleanup", "noop", "reindex", "signing"]
+        self.named_jobs = ["any", "build", "copy", "cleanup", "noop", "reindex", "signing"]
 
         self.ir = {
             "jobs": {},
@@ -634,17 +634,13 @@ class SpackCI:
             # Reindex script
             {
                 "reindex-job": {
-                    "script:": [
-                        "spack buildcache update-index --keys --mirror-url {index_target_mirror}"
-                    ]
+                    "script:": ["spack buildcache update-index --keys {index_target_mirror}"]
                 }
             },
             # Cleanup script
             {
                 "cleanup-job": {
-                    "script:": [
-                        "spack -d mirror destroy --mirror-url {mirror_prefix}/$CI_PIPELINE_ID"
-                    ]
+                    "script:": ["spack -d mirror destroy {mirror_prefix}/$CI_PIPELINE_ID"]
                 }
             },
             # Add signing job tags
@@ -1211,7 +1207,7 @@ def generate_gitlab_ci_yaml(
                             ).format(c_spec, release_spec)
                             tty.debug(debug_msg)
 
-                if prune_dag and not rebuild_spec:
+                if prune_dag and not rebuild_spec and spack_pipeline_type != "spack_copy_only":
                     tty.debug(
                         "Pruning {0}/{1}, does not need rebuild.".format(
                             release_spec.name, release_spec.dag_hash()
@@ -1302,8 +1298,9 @@ def generate_gitlab_ci_yaml(
                     max_length_needs = length_needs
                     max_needs_job = job_name
 
-                output_object[job_name] = job_object
-                job_id += 1
+                if spack_pipeline_type != "spack_copy_only":
+                    output_object[job_name] = job_object
+                    job_id += 1
 
     if print_summary:
         for phase in phases:
@@ -1332,6 +1329,17 @@ def generate_gitlab_ci_yaml(
         "max": 2,
         "when": ["runner_system_failure", "stuck_or_timeout_failure", "script_failure"],
     }
+
+    if spack_pipeline_type == "spack_copy_only":
+        stage_names.append("copy")
+        sync_job = copy.deepcopy(spack_ci_ir["jobs"]["copy"]["attributes"])
+        sync_job["stage"] = "copy"
+        if artifacts_root:
+            sync_job["needs"] = [
+                {"job": generate_job_name, "pipeline": "{0}".format(parent_pipeline_id)}
+            ]
+        output_object["copy"] = sync_job
+        job_id += 1
 
     if job_id > 0:
         if temp_storage_url_prefix:
@@ -2456,7 +2464,16 @@ class CDashHandler(object):
             msg = "Error response code ({0}) in populate_buildgroup".format(response_code)
             tty.warn(msg)
 
-    def report_skipped(self, spec, directory_name, reason):
+    def report_skipped(self, spec: spack.spec.Spec, report_dir: str, reason: Optional[str]):
+        """Explicitly report skipping testing of a spec (e.g., it's CI
+        configuration identifies it as known to have broken tests or
+        the CI installation failed).
+
+        Args:
+            spec: spec being tested
+            report_dir: directory where the report will be written
+            reason: reason the test is being skipped
+        """
         configuration = CDashConfiguration(
             upload_url=self.upload_url,
             packages=[spec.name],
@@ -2466,7 +2483,7 @@ class CDashHandler(object):
             track=None,
         )
         reporter = CDash(configuration=configuration)
-        reporter.test_skipped_report(directory_name, spec, reason)
+        reporter.test_skipped_report(report_dir, spec, reason)
 
 
 def translate_deprecated_config(config):
@@ -2481,12 +2498,14 @@ def translate_deprecated_config(config):
         build_job["tags"] = config.pop("tags")
     if "variables" in config:
         build_job["variables"] = config.pop("variables")
+
+    # Scripts always override in old CI
     if "before_script" in config:
-        build_job["before_script"] = config.pop("before_script")
+        build_job["before_script:"] = config.pop("before_script")
     if "script" in config:
-        build_job["script"] = config.pop("script")
+        build_job["script:"] = config.pop("script")
     if "after_script" in config:
-        build_job["after_script"] = config.pop("after_script")
+        build_job["after_script:"] = config.pop("after_script")
 
     signing_job = None
     if "signing-job-attributes" in config:
@@ -2510,8 +2529,25 @@ def translate_deprecated_config(config):
     for section in mappings:
         submapping_section = {"match": section["match"]}
         if "runner-attributes" in section:
-            submapping_section["build-job"] = section["runner-attributes"]
+            remapped_attributes = {}
+            if match_behavior == "first":
+                for key, value in section["runner-attributes"].items():
+                    # Scripts always override in old CI
+                    if key == "script":
+                        remapped_attributes["script:"] = value
+                    elif key == "before_script":
+                        remapped_attributes["before_script:"] = value
+                    elif key == "after_script":
+                        remapped_attributes["after_script:"] = value
+                    else:
+                        remapped_attributes[key] = value
+            else:
+                # Handle "merge" behavior be allowing scripts to merge in submapping section
+                remapped_attributes = section["runner-attributes"]
+            submapping_section["build-job"] = remapped_attributes
+
         if "remove-attributes" in section:
+            # Old format only allowed tags in this section, so no extra checks are needed
             submapping_section["build-job-remove"] = section["remove-attributes"]
         submapping.append(submapping_section)
     pipeline_gen.append({"submapping": submapping, "match_behavior": match_behavior})

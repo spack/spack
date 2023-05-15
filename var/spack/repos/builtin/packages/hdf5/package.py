@@ -46,6 +46,11 @@ class Hdf5(CMakePackage):
 
     # Even versions are maintenance versions
     version(
+        "1.14.1-2",
+        sha256="cbe93f275d5231df28ced9549253793e40cd2b555e3d288df09d7b89a9967b07",
+        preferred=True,
+    )
+    version(
         "1.14.0",
         sha256="a571cc83efda62e1a51a0a912dd916d01895801c5025af91669484a1575a6ef4",
         preferred=True,
@@ -637,9 +642,7 @@ class Hdf5(CMakePackage):
         # 1.10.6 and 1.12.0. The current develop versions do not produce 'h5pfc'
         # at all. Here, we make sure that 'h5pfc' is available when Fortran and
         # MPI support are enabled (only for versions that generate 'h5fc').
-        if self.spec.satisfies(
-            "@1.8.22:1.8," "1.10.6:1.10," "1.12.0:1.12," "develop:" "+fortran+mpi"
-        ):
+        if self.spec.satisfies("@1.8.22:1.8," "1.10.6:1.10," "1.12.0:1.12" "+fortran+mpi"):
             with working_dir(self.prefix.bin):
                 # No try/except here, fix the condition above instead:
                 symlink("h5fc", "h5pfc")
