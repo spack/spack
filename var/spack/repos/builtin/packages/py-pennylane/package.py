@@ -26,6 +26,7 @@ class PyPennylane(PythonPackage):
     )
 
     depends_on("python@3.8:", type=("build", "run"))
+    depends_on("py-pip", type=("build", "run")) # Runtime req for pennylane.about()
     depends_on("py-setuptools", type="build")
 
     depends_on("py-numpy@:1.23", type=("build", "run"))

@@ -48,8 +48,8 @@ class PyPennylaneLightning(CMakePackage, PythonExtension):
 
     # variant defined dependencies
     depends_on("blas", when="+blas")
-    depends_on("kokkos@3.7.00", when="+kokkos")
-    depends_on("kokkos-kernels@3.7.00", when="+kokkos")
+    depends_on("kokkos@:3.7.01", when="+kokkos")
+    depends_on("kokkos-kernels@:3.7.01", when="+kokkos")
     depends_on("llvm-openmp", when="+openmp %apple-clang")
 
     depends_on("python@3.8:", type=("build", "run"))
