@@ -1759,24 +1759,22 @@ class SpackSolverSetup(object):
             # All the preferred version from packages.yaml, versions in external
             # specs will be computed later
             version_preferences = packages_yaml.get(pkg_name, {}).get("version", [])
-            if isinstance(version_preferences, str) and bool(version_preferences):
-                version_preferences = [version_preferences]
-            if version_preferences:
-                preferred_ver_spec = vn.VersionList(version_preferences)
-                pkg_class = spack.repo.path.get_pkg_class(pkg_name)
-                version_defs = []
-                for v in preferred_ver_spec:
+            version_defs = []
+            pkg_class = spack.repo.path.get_pkg_class(pkg_name)
+            for vstr in version_preferences:
+                v = vn.ver(vstr)
+                if isinstance(v, vn.GitVersion):
+                    version_defs.append(v)
+                else:
                     satisfying_versions = list(
-                        x for x in pkg_class.versions if x.satisfies(preferred_ver_spec)
+                        x for x in pkg_class.versions if x.satisfies(v)
                     )
                     if not satisfying_versions and not isinstance(v, vn.GitVersion):
                         raise spack.config.ConfigError(
                             "Preference for version {0} for does not match any version "
-                            " defined in {1}".format(str(preferred_ver_spec), pkg_name)
+                            " defined in {1}".format(str(v), pkg_name)
                         )
-                    import pdb; pdb.set_trace()
-                    # Be careful to approve order of version preferences
-                    version_defs.append(v)
+                    version_defs.extend(satisfying_versions)
 
                 for weight, vdef in enumerate(version_defs):
                     self.declared_versions[pkg_name].append(
