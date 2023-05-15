@@ -1772,7 +1772,12 @@ class SpackSolverSetup(object):
                             "Preference for version {0} for does not match any version "
                             " defined in {1}".format(str(v), pkg_name)
                         )
-                    version_defs.extend(satisfying_versions)
+                    # Note: version definitions that appear earlier in the list
+                    # are prioritized, so we sort from greatest to least (i.e.
+                    # amongst all defined versions satisfying this specific
+                    # preference, the highest-numbered version is the
+                    # most-preferred)
+                    version_defs.extend(sorted(satisfying_versions, reverse=True))
 
                 for weight, vdef in enumerate(version_defs):
                     self.declared_versions[pkg_name].append(
