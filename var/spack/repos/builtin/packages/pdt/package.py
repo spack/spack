@@ -36,6 +36,7 @@ class Pdt(AutotoolsPackage):
     version("3.18.1", sha256="d06c2d1793fadebf169752511e5046d7e02cf3fead6135a35c34b1fee6d6d3b2")
 
     variant("pic", default=False, description="Builds with pic")
+    variant("rebuildme", default=True, description="Rebuild me please")
 
     patch("cray_configure.patch", when="%cce")
 
