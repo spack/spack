@@ -14,4 +14,3 @@ class PyDotmap(PythonPackage):
     version("1.3.30", sha256="5821a7933f075fb47563417c0e92e0b7c031158b4c9a6a7e56163479b658b368")
 
     depends_on("py-setuptools", type=("build", "run"))
-
