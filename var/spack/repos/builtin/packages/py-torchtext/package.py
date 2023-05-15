@@ -16,6 +16,7 @@ class PyTorchtext(PythonPackage):
     maintainers("adamjstewart")
 
     version("main", branch="main", submodules=True)
+    version("0.15.2", tag="v0.15.2", submodules=True)
     version("0.15.1", tag="v0.15.1", submodules=True)
     version("0.14.1", tag="v0.14.1", submodules=True)
     version("0.14.0", tag="v0.14.0", submodules=True)
@@ -55,6 +56,7 @@ class PyTorchtext(PythonPackage):
 
     # https://github.com/pytorch/text#installation
     depends_on("py-torch@master", when="@main", type=("build", "link", "run"))
+    depends_on("py-torch@2.0.1", when="@0.15.2", type=("build", "link", "run"))
     depends_on("py-torch@2.0.0", when="@0.15.1", type=("build", "link", "run"))
     depends_on("py-torch@1.13.1", when="@0.14.1", type=("build", "link", "run"))
     depends_on("py-torch@1.13.0", when="@0.14.0", type=("build", "link", "run"))

@@ -23,6 +23,7 @@ class PyTorchaudio(PythonPackage):
     git = "https://github.com/pytorch/audio.git"
 
     version("main", branch="main", submodules=True)
+    version("2.0.2", tag="v2.0.2", submodules=True)
     version("2.0.1", tag="v2.0.1", submodules=True)
     version("0.13.1", tag="v0.13.1", submodules=True)
     version("0.13.0", tag="v0.13.0", submodules=True)
@@ -66,6 +67,7 @@ class PyTorchaudio(PythonPackage):
 
     # https://github.com/pytorch/audio#dependencies
     depends_on("py-torch@master", when="@main", type=("build", "link", "run"))
+    depends_on("py-torch@2.0.1", when="@2.0.2", type=("build", "link", "run"))
     depends_on("py-torch@2.0.0", when="@2.0.1", type=("build", "link", "run"))
     depends_on("py-torch@1.13.1", when="@0.13.1", type=("build", "link", "run"))
     depends_on("py-torch@1.13.0", when="@0.13.0", type=("build", "link", "run"))
