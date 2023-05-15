@@ -10,6 +10,7 @@ import re
 import shutil
 import sys
 from itertools import product
+from pathlib import Path, PurePath
 
 from llnl.util import tty
 
@@ -78,14 +79,15 @@ def _system_untar(archive_file):
         archive_file (str): absolute path to the archive to be extracted.
         Can be one of .tar(.[gz|bz2|xz|Z]) or .(tgz|tbz|tbz2|txz).
     """
-    archive_file_no_ext = strip_extension(archive_file)
-    outfile = os.path.basename(archive_file_no_ext)
-    if archive_file_no_ext == archive_file:
+    archive_file = Path(archive_file)
+    outfile = archive_file.name
+    if not archive_file.suffix:
         # the archive file has no extension. Tar on windows cannot untar onto itself
         # archive_file can be a tar file (which causes the problem on windows) but it can
         # also have other extensions (on Unix) such as tgz, tbz2, ...
-        archive_file = archive_file_no_ext + "-input"
-        shutil.move(archive_file_no_ext, archive_file)
+        archive_file = archive_file.parent / (archive_file.stem + "-input")
+        shutil.move(archive_file.with_suffix(""), archive_file)
+
     tar = which("tar", required=True)
     tar.add_default_arg("-oxf")
     tar(archive_file)
@@ -109,29 +111,29 @@ def _bunzip2(archive_file):
 def _py_bunzip(archive_file):
     """Returns path to decompressed file.
     Decompresses bz2 compressed archives/files via python's bz2 module"""
-    decompressed_file = os.path.basename(strip_compression_extension(archive_file, "bz2"))
-    working_dir = os.getcwd()
-    archive_out = os.path.join(working_dir, decompressed_file)
+    decompressed_file = PurePath(strip_compression_extension(archive_file, "bz2")).name
+    working_dir = Path.cwd()
+    archive_out = working_dir / decompressed_file
     f_bz = bz2.BZ2File(archive_file, mode="rb")
     with open(archive_out, "wb") as ar:
         shutil.copyfileobj(f_bz, ar)
     f_bz.close()
-    return archive_out
+    return str(archive_out)
 
 
 def _system_bunzip(archive_file):
     """Returns path to decompressed file.
     Decompresses bz2 compressed archives/files via system bzip2 utility"""
-    compressed_file_name = os.path.basename(archive_file)
-    decompressed_file = os.path.basename(strip_compression_extension(archive_file, "bz2"))
-    working_dir = os.getcwd()
-    archive_out = os.path.join(working_dir, decompressed_file)
-    copy_path = os.path.join(working_dir, compressed_file_name)
+    compressed_file_name = PurePath(archive_file).name
+    decompressed_file = PurePath(strip_compression_extension(archive_file, "bz2")).name
+    working_dir = Path.cwd()
+    archive_out = working_dir / decompressed_file
+    copy_path = str(working_dir / compressed_file_name)
     shutil.copy(archive_file, copy_path)
     bunzip2 = which("bunzip2", required=True)
     bunzip2.add_default_arg("-q")
     bunzip2(copy_path)
-    return archive_out
+    return str(archive_out)
 
 
 def _gunzip(archive_file):
@@ -153,34 +155,35 @@ def _gunzip(archive_file):
 def _py_gunzip(archive_file):
     """Returns path to gunzip'd file
     Decompresses `.gz` compressed archvies via python gzip module"""
-    decompressed_file = os.path.basename(strip_compression_extension(archive_file, "gz"))
-    working_dir = os.getcwd()
-    destination_abspath = os.path.join(working_dir, decompressed_file)
+    decompressed_file = PurePath(strip_compression_extension(archive_file, "gz")).name
+    working_dir = Path.cwd()
+    destination_abspath = working_dir / decompressed_file
     f_in = gzip.open(archive_file, "rb")
     with open(destination_abspath, "wb") as f_out:
         shutil.copyfileobj(f_in, f_out)
     f_in.close()
-    return destination_abspath
+    return str(destination_abspath)
 
 
 def _system_gunzip(archive_file):
     """Returns path to gunzip'd file
     Decompresses `.gz` compressed files via system gzip"""
-    archive_file_no_ext = strip_compression_extension(archive_file)
-    if archive_file_no_ext == archive_file:
+    archive_file = Path(archive_file)
+    if not archive_file.suffix:
         # the zip file has no extension. On Unix gunzip cannot unzip onto itself
-        archive_file = archive_file + ".gz"
-        shutil.move(archive_file_no_ext, archive_file)
-    decompressed_file = os.path.basename(archive_file_no_ext)
-    working_dir = os.getcwd()
-    destination_abspath = os.path.join(working_dir, decompressed_file)
-    compressed_file = os.path.basename(archive_file)
-    copy_path = os.path.join(working_dir, compressed_file)
+        archive_file = archive_file.with_suffix(".gz")
+        shutil.move(archive_file.with_suffix(""), archive_file)
+
+    decompressed_file = archive_file.stem
+    working_dir = Path.cwd()
+    destination_abspath = working_dir / decompressed_file
+    compressed_file = archive_file.name
+    copy_path = str(working_dir / compressed_file)
     shutil.copy(archive_file, copy_path)
     gzip = which("gzip", required=True)
     gzip.add_default_arg("-d")
     gzip(copy_path)
-    return destination_abspath
+    return str(destination_abspath)
 
 
 def _unzip(archive_file):
@@ -191,7 +194,7 @@ def _unzip(archive_file):
     Args:
         archive_file (str): absolute path of the file to be decompressed
     """
-    extracted_file = os.path.basename(strip_extension(archive_file, "zip"))
+    extracted_file = PurePath(strip_extension(archive_file, "zip")).name
     if sys.platform == "win32":
         return _system_untar(archive_file)
     else:
@@ -258,12 +261,12 @@ def _win_compressed_tarball_handler(decompressor):
 def _py_lzma(archive_file):
     """Returns path to decompressed .xz files
     Decompress lzma compressed .xz files via python lzma module"""
-    decompressed_file = os.path.basename(strip_compression_extension(archive_file, "xz"))
-    archive_out = os.path.join(os.getcwd(), decompressed_file)
+    decompressed_file = PurePath(strip_compression_extension(archive_file, "xz")).name
+    archive_out = Path.cwd() / decompressed_file
     with open(archive_out, "wb") as ar:
         with lzma.open(archive_file) as lar:
             shutil.copyfileobj(lar, ar)
-    return archive_out
+    return str(archive_out)
 
 
 def _xz(archive_file):
@@ -271,16 +274,16 @@ def _xz(archive_file):
     Decompress lzma compressed .xz files via xz command line
     tool.
     """
-    decompressed_file = os.path.basename(strip_extension(archive_file, "xz"))
-    working_dir = os.getcwd()
-    destination_abspath = os.path.join(working_dir, decompressed_file)
-    compressed_file = os.path.basename(archive_file)
-    copy_path = os.path.join(working_dir, compressed_file)
+    decompressed_file = PurePath(strip_extension(archive_file, "xz")).name
+    working_dir = Path.cwd()
+    destination_abspath = working_dir / decompressed_file
+    compressed_file = PurePath(archive_file).name
+    copy_path = str(working_dir / compressed_file)
     shutil.copy(archive_file, copy_path)
     xz = which("xz", required=True)
     xz.add_default_arg("-d")
     xz(copy_path)
-    return destination_abspath
+    return str(destination_abspath)
 
 
 def _system_7zip(archive_file):
@@ -296,7 +299,7 @@ def _system_7zip(archive_file):
     Args:
         archive_file (str): absolute path of file to be unarchived
     """
-    outfile = os.path.basename(strip_compression_extension(archive_file))
+    outfile = PurePath(strip_compression_extension(archive_file)).name
     _7z = which("7z")
     if not _7z:
         raise CommandNotFoundError(
@@ -306,7 +309,7 @@ unable to extract %s files. 7z can be installed via Spack"
         )
     _7z.add_default_arg("e")
     _7z(archive_file)
-    return outfile
+    return str(outfile)
 
 
 def decompressor_for(path, extension=None):
@@ -683,7 +686,7 @@ def extension_from_file(file, decompress=False):
          file name. If file is not on system or is of an type not recognized by Spack as
          an archive or compression type, None is returned.
     """
-    if os.path.exists(file):
+    if Path(file).exists():
         with open(file, "rb") as f:
             ext = extension_from_stream(f, decompress)
             # based on magic number, file is compressed
