@@ -6,6 +6,7 @@
 import re
 
 from spack.package import *
+from spack.util.environment import is_system_path
 
 
 class Subversion(AutotoolsPackage):
@@ -102,16 +103,14 @@ class Subversion(AutotoolsPackage):
             args.append("APXS=no")
 
         if "+nls" in spec:
-            args.extend(
-                [
-                    "LDFLAGS={0}".format(spec["gettext"].libs.search_flags),
-                    # Using .libs.link_flags is the canonical way to add these arguments,
-                    # but since libintl is much smaller than the rest and also the only
-                    # necessary one, we specify it by hand here.
-                    "LIBS=-lintl",
-                    "--enable-nls",
-                ]
-            )
+            args.append("--enable-nls")
+            if "intl" in spec["gettext"].libs.names:
+                # Using .libs.link_flags is the canonical way to add these arguments,
+                # but since libintl is much smaller than the rest and also the only
+                # necessary one, we would specify it by hand here
+                args.append("LIBS=-lintl")
+                if not is_system_path(spec["gettext"].prefix):
+                    args.append("LDFLAGS={0}".format(spec["gettext"].libs.search_flags))
         else:
             args.append("--disable-nls")
 

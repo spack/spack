@@ -16,7 +16,7 @@ class ScineSerenity(CMakePackage):
     git = "https://github.com/qcscine/serenity_wrapper"
 
     version("master", branch="master")
-    version("1.0.1", "e2e5cc265a68ccab05f1bc934b957ca07c4f1c6004e662684023da451da69299")
+    version("1.0.1", sha256="e2e5cc265a68ccab05f1bc934b957ca07c4f1c6004e662684023da451da69299")
 
     resource(
         name="dev",

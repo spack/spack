@@ -24,7 +24,7 @@ writer_cls = spack.modules.lmod.LmodModulefileWriter
 pytestmark = pytest.mark.skipif(sys.platform == "win32", reason="does not run on windows")
 
 
-@pytest.fixture(params=["clang@12.0.0", "gcc@10.2.1"])
+@pytest.fixture(params=["clang@=12.0.0", "gcc@=10.2.1"])
 def compiler(request):
     return request.param
 
@@ -35,6 +35,8 @@ def compiler(request):
         ("mpich@3.0.1", []),
         ("openblas@0.2.15", ("blas",)),
         ("openblas-with-lapack@0.2.15", ("blas", "lapack")),
+        ("mpileaks@2.3", ("mpi",)),
+        ("mpileaks@2.1", []),
     ]
 )
 def provider(request):
@@ -59,22 +61,30 @@ class TestLmod(object):
         # is transformed to r"Core" if the compiler is listed among core
         # compilers
         # Check that specs listed as core_specs are transformed to "Core"
-        if compiler == "clang@3.3" or spec_string == "mpich@3.0.1":
+        if compiler == "clang@=3.3" or spec_string == "mpich@3.0.1":
             assert "Core" in layout.available_path_parts
         else:
-            assert compiler.replace("@", "/") in layout.available_path_parts
+            assert compiler.replace("@=", "/") in layout.available_path_parts
 
         # Check that the provider part instead has always an hash even if
         # hash has been disallowed in the configuration file
         path_parts = layout.available_path_parts
         service_part = spec_string.replace("@", "/")
         service_part = "-".join([service_part, layout.spec.dag_hash(length=7)])
-        assert service_part in path_parts
+
+        if "mpileaks" in spec_string:
+            # It's a user, not a provider, so create the provider string
+            service_part = layout.spec["mpi"].format("{name}/{version}-{hash:7}")
+        else:
+            # Only relevant for providers, not users, of virtuals
+            assert service_part in path_parts
 
         # Check that multi-providers have repetitions in path parts
         repetitions = len([x for x in path_parts if service_part == x])
         if spec_string == "openblas-with-lapack@0.2.15":
             assert repetitions == 2
+        elif spec_string == "mpileaks@2.1":
+            assert repetitions == 0
         else:
             assert repetitions == 1
 
@@ -85,7 +95,7 @@ class TestLmod(object):
         provides = module.conf.provides
 
         assert "compiler" in provides
-        assert provides["compiler"] == spack.spec.CompilerSpec("oneapi@3.0")
+        assert provides["compiler"] == spack.spec.CompilerSpec("oneapi@=3.0")
 
     def test_simple_case(self, modulefile_content, module_configuration):
         """Tests the generation of a simple Lua module file."""
@@ -114,12 +124,10 @@ class TestLmod(object):
 
         assert len([x for x in content if "depends_on(" in x]) == 5
 
-    # DEPRECATED: remove blacklist in v0.20
-    @pytest.mark.parametrize("config_name", ["alter_environment", "blacklist_environment"])
-    def test_alter_environment(self, modulefile_content, module_configuration, config_name):
+    def test_alter_environment(self, modulefile_content, module_configuration):
         """Tests modifications to run-time environment."""
 
-        module_configuration(config_name)
+        module_configuration("alter_environment")
         content = modulefile_content("mpileaks platform=test target=x86_64")
 
         assert len([x for x in content if x.startswith('prepend_path("CMAKE_PREFIX_PATH"')]) == 0
@@ -172,11 +180,9 @@ class TestLmod(object):
         )
         assert help_msg in "".join(content)
 
-    @pytest.mark.parametrize("config_name", ["exclude", "blacklist"])
-    def test_exclude(self, modulefile_content, module_configuration, config_name):
+    def test_exclude(self, modulefile_content, module_configuration):
         """Tests excluding the generation of selected modules."""
-
-        module_configuration(config_name)
+        module_configuration("exclude")
         content = modulefile_content(mpileaks_spec_string)
 
         assert len([x for x in content if "depends_on(" in x]) == 1
@@ -325,7 +331,7 @@ class TestLmod(object):
     def test_modules_relative_to_view(
         self, tmpdir, modulefile_content, module_configuration, install_mockery, mock_fetch
     ):
-        with ev.Environment(str(tmpdir), with_view=True) as e:
+        with ev.create_in_dir(str(tmpdir), with_view=True) as e:
             module_configuration("with_view")
             install("--add", "cmake")
 

@@ -52,7 +52,9 @@ class Ascent(CMakePackage, CudaPackage):
 
     version("develop", branch="develop", submodules=True)
 
-    version("0.9.0", tag="v0.9.0", submodules=True, preferred=True)
+    version("0.9.1", tag="v0.9.1", submodules=True, preferred=True)
+
+    version("0.9.0", tag="v0.9.0", submodules=True)
 
     version("0.8.0", tag="v0.8.0", submodules=True)
 
@@ -114,6 +116,9 @@ class Ascent(CMakePackage, CudaPackage):
     # patch for finding Conduit python more reliably
     # https://github.com/Alpine-DAV/ascent/pull/935
     patch("ascent-find-conduit-python-pr935.patch", when="@0.8.0")
+    # patch for finding RAJA more reliably
+    # https://github.com/Alpine-DAV/ascent/pull/1123
+    patch("ascent-find-raja-pr1123.patch", when="@0.9.0")
 
     ##########################################################################
     # package dependencies

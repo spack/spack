@@ -21,6 +21,11 @@ class Adios2(CMakePackage, CudaPackage):
     tags = ["e4s"]
 
     version("master", branch="master")
+    version(
+        "2.9.0",
+        sha256="69f98ef58c818bb5410133e1891ac192653b0ec96eb9468590140f2552b6e5d1",
+        preferred=True,
+    )
     version("2.8.3", sha256="4906ab1899721c41dd918dddb039ba2848a1fb0cf84f3a563a1179b9d6ee0d9f")
     version("2.8.2", sha256="9909f6409dc44b2c28c1fda0042dab4b711f25ec3277ef0cb6ffc40f5483910d")
     version("2.8.1", sha256="3f515b442bbd52e3189866b121613fe3b59edb8845692ea86fad83d1eba35d93")
@@ -31,14 +36,6 @@ class Adios2(CMakePackage, CudaPackage):
     version("2.5.0", sha256="7c8ff3bf5441dd662806df9650c56a669359cb0185ea232ecb3578de7b065329")
     version("2.4.0", sha256="50ecea04b1e41c88835b4b3fd4e7bf0a0a2a3129855c9cc4ba6cf6a1575106e2")
     version("2.3.1", sha256="3bf81ccc20a7f2715935349336a76ba4c8402355e1dc3848fcd6f4c3c5931893")
-
-    # General build options
-    variant(
-        "build_type",
-        default="Release",
-        description="CMake build type",
-        values=("Debug", "Release", "RelWithDebInfo", "MinSizeRel"),
-    )
 
     # There's not really any consistency about how static and shared libs are
     # implemented across spack.  What we're trying to support is specifically three

@@ -35,6 +35,8 @@ class Llvm(CMakePackage, CudaPackage):
     family = "compiler"  # Used by lmod
 
     version("main", branch="main")
+    version("16.0.2", sha256="97c3c6aafb53c4bb0ed2781a18d6f05e75445e24bb1dc57a32b74f8d710ac19f")
+    version("16.0.1", sha256="b5a9ff1793b1e2d388a3819bf35797002b1d2e40bb35a10c65605e0ea1435271")
     version("16.0.0", sha256="cba969a0782a3a398658d439f047b5e548ea04724f4fbfdbe17cfc946f4cd3ed")
     version("15.0.7", sha256="42a0088f148edcf6c770dfc780a7273014a9a89b66f357c761b4ca7c8dfa10ba")
     version("15.0.6", sha256="4d857d7a180918bdacd09a5910bf9743c9861a1e49cb065a85f7a990f812161d")
@@ -160,12 +162,6 @@ class Llvm(CMakePackage, CudaPackage):
         multi=True,
     )
     variant(
-        "build_type",
-        default="Release",
-        description="CMake build type",
-        values=("Debug", "Release", "RelWithDebInfo", "MinSizeRel"),
-    )
-    variant(
         "omp_tsan",
         default=False,
         when="@6:",
@@ -252,7 +248,7 @@ class Llvm(CMakePackage, CudaPackage):
     depends_on("py-six", when="+lldb+python")
 
     # gold support, required for some features
-    depends_on("binutils+gold+ld+plugins", when="+gold")
+    depends_on("binutils+gold+ld+plugins+headers", when="+gold")
 
     # Older LLVM do not build with newer compilers, and vice versa
     with when("@16:"):
@@ -316,8 +312,8 @@ class Llvm(CMakePackage, CudaPackage):
     patch("llvm_py37.patch", when="@4:6 ^python@3.7:")
 
     # https://github.com/spack/spack/issues/19625,
-    # merged in llvm-11.0.0_rc2, but not found in 11.0.1
-    patch("lldb_external_ncurses-10.patch", when="@10.0.0:11.0.1+lldb")
+    # merged in llvm-11.0.0_rc2, first available in 12.0.0
+    patch("lldb_external_ncurses-10.patch", when="@10.0.0:11+lldb")
 
     # https://github.com/spack/spack/issues/19908
     # merged in llvm main prior to 12.0.0

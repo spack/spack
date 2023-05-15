@@ -15,6 +15,7 @@ class OpenalSoft(CMakePackage):
     homepage = "https://openal-soft.org"
     url = "https://openal-soft.org/openal-releases/openal-soft-1.21.1.tar.bz2"
 
+    version("1.23.1", sha256="796f4b89134c4e57270b7f0d755f0fa3435b90da437b745160a49bd41c845b21")
     version("1.23.0", sha256="057dcf96c3cdfcf40159800a93f57740fe79c2956f76247bee10e436b6657183")
     version("1.21.1", sha256="c8ad767e9a3230df66756a21cc8ebf218a9d47288f2514014832204e666af5d8")
 

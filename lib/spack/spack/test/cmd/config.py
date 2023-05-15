@@ -91,17 +91,10 @@ def test_config_edit(mutable_config, working_env):
 
 
 def test_config_get_gets_spack_yaml(mutable_mock_env_path):
-    env = ev.create("test")
-
     config("get", fail_on_error=False)
     assert config.returncode == 1
 
-    with env:
-        config("get", fail_on_error=False)
-        assert config.returncode == 1
-
-        env.write()
-
+    with ev.create("test") as env:
         assert "mpileaks" not in config("get")
 
         env.add("mpileaks")
@@ -490,7 +483,7 @@ def test_config_add_to_env_preserve_comments(mutable_empty_config, mutable_mock_
 spack:  # comment
   # comment
   specs:  # comment
-    - foo  # comment
+  - foo  # comment
   # comment
   view: true  # comment
   packages:  # comment
@@ -639,13 +632,13 @@ def test_config_prefer_upstream(
 
     # Make sure only the non-default variants are set.
     assert packages["boost"] == {
-        "compiler": ["gcc@10.2.1"],
+        "compiler": ["gcc@=10.2.1"],
         "variants": "+debug +graph",
         "version": ["1.63.0"],
     }
-    assert packages["dependency-install"] == {"compiler": ["gcc@10.2.1"], "version": ["2.0"]}
+    assert packages["dependency-install"] == {"compiler": ["gcc@=10.2.1"], "version": ["2.0"]}
     # Ensure that neither variant gets listed for hdf5, since they conflict
-    assert packages["hdf5"] == {"compiler": ["gcc@10.2.1"], "version": ["2.3"]}
+    assert packages["hdf5"] == {"compiler": ["gcc@=10.2.1"], "version": ["2.3"]}
 
     # Make sure a message about the conflicting hdf5's was given.
     assert "- hdf5" in output
@@ -671,4 +664,4 @@ spack:
         config("update", "-y", "config")
 
     with ev.Environment(str(tmpdir)) as e:
-        assert not e.raw_yaml["spack"]["config"]["ccache"]
+        assert not e.manifest.pristine_yaml_content["spack"]["config"]["ccache"]

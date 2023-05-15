@@ -13,6 +13,7 @@ class PyImportlibMetadata(PythonPackage):
     pypi = "importlib_metadata/importlib_metadata-1.2.0.tar.gz"
     git = "https://github.com/python/importlib_metadata"
 
+    version("6.6.0", sha256="92501cdf9cc66ebd3e612f1b4f0c0765dfa42f0fa38ffb319b6bd84dd675d705")
     version("5.1.0", sha256="d5059f9f1e8e41f80e9c56c2ee58811450c31984dfa625329ffd7c0dad88a73b")
     version("4.12.0", sha256="637245b8bab2b6502fcbc752cc4b7a6f6243bb02b31c5c26156ad103d3d45670")
     version("4.11.1", sha256="175f4ee440a0317f6e8d81b7f8d4869f93316170a65ad2b007d2929186c8052c")
@@ -28,9 +29,6 @@ class PyImportlibMetadata(PythonPackage):
     version("0.19", sha256="23d3d873e008a513952355379d93cbcab874c58f4f034ff657c7a87422fa64e8")
     version("0.18", sha256="cb6ee23b46173539939964df59d3d72c3e0c1b5d54b84f1d8a7e912fe43612db")
 
-    depends_on("python@3.7:", when="@4.9:", type=("build", "run"))
-    depends_on("python@3.6:", when="@3:", type=("build", "run"))
-    depends_on("python@2.7:2.8,3.5:", type=("build", "run"))
     depends_on("py-setuptools@56:", when="@4.6.4:", type="build")
     depends_on("py-setuptools", type="build")
     depends_on("py-setuptools-scm@3.4.1:+toml", when="@3:", type="build")

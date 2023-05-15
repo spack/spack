@@ -10,15 +10,21 @@ from spack.package import *
 
 
 def is_CrayXC():
-    return (spack.platforms.host().name == "cray") and (
+    return (spack.platforms.host().name in ["linux", "cray"]) and (
         os.environ.get("CRAYPE_NETWORK_TARGET") == "aries"
     )
 
 
 def is_CrayEX():
-    return (spack.platforms.host().name in ["linux", "cray"]) and (
-        os.environ.get("CRAYPE_NETWORK_TARGET") in ["ofi", "ucx"]
-    )
+    if spack.platforms.host().name in ["linux", "cray"]:
+        target = os.environ.get("CRAYPE_NETWORK_TARGET")
+        if target in ["ofi", "ucx"]:  # normal case
+            return True
+        elif target is None:  # but some systems lack Cray PrgEnv
+            fi_info = which("fi_info")
+            if fi_info and fi_info("-l", output=str).find("cxi") >= 0:
+                return True
+    return False
 
 
 def cross_detect():
@@ -150,15 +156,7 @@ class Upcxx(Package, CudaPackage, ROCmPackage):
         else:
             options.append("--with-cross=" + spec.variants["cross"].value)
 
-        if is_CrayXC():
-            # Spack loads the cray-libsci module incorrectly on ALCF theta,
-            # breaking the Cray compiler wrappers
-            # cray-libsci is irrelevant to our build, so disable it
-            for var in ["PE_PKGCONFIG_PRODUCTS", "PE_PKGCONFIG_LIBS"]:
-                env[var] = ":".join(
-                    filter(lambda x: "libsci" not in x.lower(), env[var].split(":"))
-                )
-        if is_CrayXC() or is_CrayEX():
+        if (is_CrayXC() or is_CrayEX()) and env.get("CRAYPE_DIR"):
             # Undo spack compiler wrappers:
             # the C/C++ compilers must work post-install
             real_cc = join_path(env["CRAYPE_DIR"], "bin", "cc")
@@ -188,7 +186,10 @@ class Upcxx(Package, CudaPackage, ROCmPackage):
             # Append the recommended options for Cray Shasta
             # This list can be pruned once the floor version reaches 2022.9.0
             options.append("--with-pmi-version=cray")
-            options.append("--with-pmi-runcmd='srun -n %N -- %C'")
+            if which("srun"):
+                options.append("--with-pmi-runcmd=srun -n %N -- %C")
+            elif which("aprun"):
+                options.append("--with-pmi-runcmd=aprun -n %N %C")
             options.append("--disable-ibv")
             options.append("--enable-ofi")
             options.append("--with-default-network=ofi")
@@ -286,4 +287,8 @@ class Upcxx(Package, CudaPackage, ROCmPackage):
             variants += "+rocm"
         else:
             variants += "~rocm"
+        if re.search(r"-DUPCXXI_ZE_ENABLED=1", output):
+            variants += "+level_zero"
+        else:
+            variants += "~level_zero"
         return variants
