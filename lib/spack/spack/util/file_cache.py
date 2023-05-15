@@ -6,6 +6,7 @@
 import errno
 import os
 import shutil
+from pathlib import Path, PurePath
 
 from llnl.util.filesystem import mkdirp, rename
 
@@ -36,8 +37,8 @@ class FileCache:
                 for cache files, this specifies how long Spack should wait
                 before assuming that there is a deadlock.
         """
-        self.root = root.rstrip(os.path.sep)
-        if not os.path.exists(self.root):
+        self.root = Path(root.rstrip(os.path.sep))
+        if not self.root.exists():
             mkdirp(self.root)
 
         self._locks = {}
@@ -45,23 +46,24 @@ class FileCache:
 
     def destroy(self):
         """Remove all files under the cache root."""
-        for f in os.listdir(self.root):
-            path = os.path.join(self.root, f)
-            if os.path.isdir(path):
+        for f in self.root.iterdir():
+            path = self.root / f
+            if path.is_dir():
                 shutil.rmtree(path, True)
             else:
-                os.remove(path)
+                path.unlink()
 
     def cache_path(self, key):
         """Path to the file in the cache for a particular key."""
-        return os.path.join(self.root, key)
+        return str(self.root / key)
 
     def _lock_path(self, key):
         """Path to the file in the cache for a particular key."""
-        keyfile = os.path.basename(key)
-        keydir = os.path.dirname(key)
+        key = PurePath(key)
+        keyfile_lock = "." + key.name + ".lock"
+        keydir = key.parent
 
-        return os.path.join(self.root, keydir, "." + keyfile + ".lock")
+        return str(self.root / keydir / keyfile_lock)
 
     def _get_lock(self, key):
         """Create a lock for a key, if necessary, and return a lock object."""
@@ -74,19 +76,23 @@ class FileCache:
 
         Return whether the cache file exists yet or not.
         """
-        cache_path = self.cache_path(key)
+        cache_path = Path(self.cache_path(key))
 
-        exists = os.path.exists(cache_path)
+        try:
+            exists = cache_path.exists()
+        except PermissionError:
+            exists = False
+
         if exists:
-            if not os.path.isfile(cache_path):
+            if not cache_path.is_file():
                 raise CacheError("Cache file is not a file: %s" % cache_path)
 
             if not os.access(cache_path, os.R_OK):
                 raise CacheError("Cannot access cache file: %s" % cache_path)
         else:
             # if the file is hierarchical, make parent directories
-            parent = os.path.dirname(cache_path)
-            if parent.rstrip(os.path.sep) != self.root:
+            parent = cache_path.parent
+            if parent != self.root:
                 mkdirp(parent)
 
             if not os.access(parent, os.R_OK | os.W_OK):
@@ -116,8 +122,8 @@ class FileCache:
         moves the file into place on top of the old file atomically.
 
         """
-        filename = self.cache_path(key)
-        if os.path.exists(filename) and not os.access(filename, os.W_OK):
+        filename = Path(self.cache_path(key))
+        if filename.exists() and not os.access(filename, os.W_OK):
             raise CacheError(
                 "Insufficient permissions to write to file cache at {0}".format(filename)
             )
@@ -128,9 +134,9 @@ class FileCache:
         # TODO: the locking code.
         class WriteContextManager:
             def __enter__(cm):
-                cm.orig_filename = self.cache_path(key)
+                cm.orig_filename = Path(self.cache_path(key))
                 cm.orig_file = None
-                if os.path.exists(cm.orig_filename):
+                if cm.orig_filename.exists():
                     cm.orig_file = open(cm.orig_filename, "r")
 
                 cm.tmp_filename = self.cache_path(key) + ".tmp"
@@ -165,11 +171,11 @@ class FileCache:
             return sinfo.st_mtime
 
     def remove(self, key):
-        file = self.cache_path(key)
+        file = Path(self.cache_path(key))
         lock = self._get_lock(key)
         try:
             lock.acquire_write()
-            os.unlink(file)
+            file.unlink()
         except OSError as e:
             # File not found is OK, so remove is idempotent.
             if e.errno != errno.ENOENT:
