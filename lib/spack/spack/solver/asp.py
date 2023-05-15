@@ -1778,7 +1778,7 @@ class SpackSolverSetup(object):
                     # from greatest to least
                     version_defs.extend(sorted(satisfying_versions, reverse=True))
 
-            for weight, vdef in enumerate(version_defs):
+            for weight, vdef in enumerate(llnl.util.lang.dedupe(version_defs)):
                 self.declared_versions[pkg_name].append(
                     DeclaredVersion(version=vdef, idx=weight, origin=Provenance.PACKAGES_YAML)
                 )
