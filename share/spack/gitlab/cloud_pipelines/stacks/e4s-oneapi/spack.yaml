@@ -272,7 +272,6 @@ spack:
         before_script:
         - - . /bootstrap/runner/view/lmod/lmod/init/bash
           - module use /opt/intel/oneapi/modulefiles
-          - module load compiler
 
   cdash:
     build-group: E4S OneAPI
