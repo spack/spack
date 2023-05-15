@@ -1768,7 +1768,7 @@ class SpackSolverSetup(object):
                     satisfying_versions = list(x for x in pkg_class.versions if x.satisfies(v))
                     if not satisfying_versions:
                         raise spack.config.ConfigError(
-                            "Preference for version {0} for does not match any version "
+                            "Preference for version {0} does not match any version "
                             " defined in {1}".format(str(v), pkg_name)
                         )
                     # Amongst all defined versions satisfying this specific
