@@ -13,11 +13,13 @@ class PyPennylaneLightningKokkos(CMakePackage, PythonExtension, CudaPackage, ROC
 
     homepage = "https://docs.pennylane.ai/projects/lightning-kokkos"
     git = "https://github.com/PennyLaneAI/pennylane-lightning-kokkos.git"
-    url = "https://github.com/PennyLaneAI/pennylane-lightning-kokkos/archive/refs/tags/v0.29.1.tar.gz"
+    url = "https://github.com/PennyLaneAI/pennylane-lightning-kokkos/archive/refs/tags/v0.30.0.tar.gz"
 
     maintainers("AmintorDusko", "vincentmr")
 
     version("main", branch="main")
+
+    version("0.30.0", sha256="7c8f0e0431f8052993cd8033a316f53590c7bf5419445d0725e214b93cbc661b")
     version("0.29.1", sha256="f51ba7718defc7bb5064f690f381e04b2ec58cb09f22a171ae5f410860716e30")
 
     # kokkos backends
@@ -67,7 +69,8 @@ class PyPennylaneLightningKokkos(CMakePackage, PythonExtension, CudaPackage, ROC
     depends_on("py-pip", type="build")
     depends_on("py-wheel", type="build")
     depends_on("py-pennylane@0.28:", type=("build", "run"))
-    depends_on("py-pennylane-lightning@0.28:~kokkos", type=("build", "run"))
+    depends_on("py-pennylane-lightning@0.30:~kokkos", type=("build", "run"), when="@0.30.0:")
+    depends_on("py-pennylane-lightning@0.28:0.29~kokkos", type=("build", "run"), when="@0.29.1")
 
     # variant defined dependencies
     depends_on("llvm-openmp", when="+openmp %apple-clang")
