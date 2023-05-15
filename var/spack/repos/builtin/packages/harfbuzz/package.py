@@ -18,6 +18,7 @@ class Harfbuzz(MesonPackage, AutotoolsPackage):
         conditional("autotools", when="@:2.9"), conditional("meson", when="@3:"), default="meson"
     )
 
+    version("7.2.0", sha256="fc5560c807eae0efd5f95b5aa4c65800c7a8eed6642008a6b1e7e3ffff7873cc")
     version("6.0.0", sha256="1d1010a1751d076d5291e433c138502a794d679a7498d1268ee21e2d4a140eb4")
     version(
         "5.3.1",
