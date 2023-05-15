@@ -2365,16 +2365,10 @@ def _specs_from_requires(pkg_name, section):
                 " the associated package.py".format(str(spec))
             )
 
-        if spec.versions.concrete and spec.version in pkg_class.versions:
-            # A requirement of the form "@=" will end up here (e.g.
-            # "require: @=1.0")
-            vspecs = [spec]
-        else:
-            # Version ranges ("@1.3" without the "=", "@1.2:1.4") and lists
-            # will end up here
-            ordered_satisfying_versions = sorted(satisfying_versions, reverse=True)
-            vspecs = list(spack.spec.Spec("@{0}".format(x)) for x in ordered_satisfying_versions)
-
+        # Version ranges ("@1.3" without the "=", "@1.2:1.4") and lists
+        # will end up here
+        ordered_satisfying_versions = sorted(satisfying_versions, reverse=True)
+        vspecs = list(spack.spec.Spec("@{0}".format(x)) for x in ordered_satisfying_versions)
         version_specs.extend(vspecs)
 
     for spec in version_specs:
