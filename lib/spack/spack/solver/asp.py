@@ -1761,8 +1761,7 @@ class SpackSolverSetup(object):
             version_preferences = packages_yaml.get(pkg_name, {}).get("version", [])
             version_defs = []
             pkg_class = spack.repo.path.get_pkg_class(pkg_name)
-            for vstr in version_preferences:
-                v = vn.ver(vstr)
+            for v in vn.VersionList(version_preferences):
                 if isinstance(v, vn.GitVersion):
                     version_defs.append(v)
                 else:
