@@ -5,6 +5,7 @@
 
 from spack.package import *
 
+
 class PyDotmap(PythonPackage):
     """Dot access dictionary with dynamic hierarchy creation and ordered iteration"""
 
