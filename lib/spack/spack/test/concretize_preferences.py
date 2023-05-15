@@ -241,7 +241,10 @@ mpileaks:
             spec.concretize()
 
     def test_preferred_truncated(self):
-        """Preference should not specify an undefined version"""
+        """Versions without "=" are treated as version ranges: if there is
+        a satisfying version defined in the package.py, we should use that
+        (don't define a new version).
+        """
         if spack.config.get("config:concretizer") == "original":
             pytest.skip("This behavior is not enforced for the old concretizer")
 
