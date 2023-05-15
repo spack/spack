@@ -33,7 +33,9 @@ class XsdkExamples(CMakePackage, CudaPackage, ROCmPackage):
     depends_on("xsdk+rocm", when="+rocm")
     depends_on("xsdk~rocm", when="~rocm")
     for ac_ in ROCmPackage.amdgpu_targets:
-        depends_on("xsdk+rocm amdgpu_target={0}".format(ac_), when="+rocm amdgpu_target={0}".format(ac_))
+        depends_on(
+            "xsdk+rocm amdgpu_target={0}".format(ac_), when="+rocm amdgpu_target={0}".format(ac_)
+        )
 
     depends_on("xsdk@develop", when="@develop")
     depends_on("xsdk@0.8.0", when="@0.4.0")
@@ -86,21 +88,11 @@ class XsdkExamples(CMakePackage, CudaPackage, ROCmPackage):
 
         if "+cuda" in spec:
             archs = ";".join(spec.variants["cuda_arch"].value)
-            args.extend(
-                [
-                    "-DENABLE_CUDA=ON",
-                    "-DCMAKE_CUDA_ARCHITECTURES=%s" % archs,
-                ]
-            )
+            args.extend(["-DENABLE_CUDA=ON", "-DCMAKE_CUDA_ARCHITECTURES=%s" % archs])
 
         if "+rocm" in spec:
             archs = ";".join(spec.variants["amdgpu_target"].value)
-            args.extend(
-                [
-                    "-DENABLE_HIP=ON",
-                    "-DCMAKE_HIP_ARCHITECTURES=%s" % archs,
-                ]
-            )
+            args.extend(["-DENABLE_HIP=ON", "-DCMAKE_HIP_ARCHITECTURES=%s" % archs])
 
         return args
 
