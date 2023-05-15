@@ -537,7 +537,10 @@ class Mfem(Package, CudaPackage, ROCmPackage):
                 mfem_mpiexec = "jsrun"
                 mfem_mpiexec_np = "-p"
         elif "FLUX_EXEC_PATH" in os.environ:
-            mfem_mpiexec = "flux mini run"
+            mfem_mpiexec = "flux run"
+            mfem_mpiexec_np = "-n"
+        elif "PBS_JOBID" in os.environ:
+            mfem_mpiexec = "mpiexec"
             mfem_mpiexec_np = "-n"
 
         metis5_str = "NO"
