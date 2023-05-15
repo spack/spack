@@ -7,6 +7,7 @@ import glob
 import os
 import re
 import sys
+from pathlib import Path, PurePath
 
 from llnl.util.lang import dedupe
 
@@ -23,13 +24,14 @@ def parse_ld_so_conf(conf_file="/etc/ld.so.conf"):
     Returns:
         list: List of absolute search paths
     """
+    # import pdb; pdb.set_trace()
     # Parse in binary mode since it's faster
     is_bytes = isinstance(conf_file, bytes)
     if not is_bytes:
         conf_file = conf_file.encode("utf-8")
 
     # For globbing in Python2 we need to chdir.
-    cwd = os.getcwd()
+    cwd = Path.cwd()
     try:
         paths = _process_ld_so_conf_queue([conf_file])
     finally:
@@ -120,19 +122,19 @@ def host_dynamic_linker_search_paths():
         # If we have a dynamic linker, try to retrieve the config file relative
         # to its prefix.
         if elf.has_pt_interp:
-            dynamic_linker = elf.pt_interp_str.decode("utf-8")
-            dynamic_linker_name = os.path.basename(dynamic_linker)
+            dynamic_linker = Path(elf.pt_interp_str.decode("utf-8"))
+            dynamic_linker_name = dynamic_linker.name
             conf_name = get_conf_file_from_dynamic_linker(dynamic_linker_name)
 
             # Typically it is /lib/ld.so, but on Gentoo Prefix it is something
             # like <long glibc prefix>/lib/ld.so. And on Debian /lib64 is actually
             # a symlink to /usr/lib64. So, best effort attempt is to just strip
             # two path components and join with etc/ld.so.conf.
-            possible_prefix = os.path.dirname(os.path.dirname(dynamic_linker))
-            possible_conf = os.path.join(possible_prefix, "etc", conf_name)
+            possible_prefix = dynamic_linker.parent.parent
+            possible_conf = possible_prefix / "etc" / conf_name
 
-            if os.path.exists(possible_conf):
-                conf_file = possible_conf
+            if possible_conf.exists():
+                conf_file = str(possible_conf)
     except (IOError, OSError, elf_utils.ElfParsingError):
         pass
 
