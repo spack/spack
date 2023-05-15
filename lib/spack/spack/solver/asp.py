@@ -1766,9 +1766,7 @@ class SpackSolverSetup(object):
                 if isinstance(v, vn.GitVersion):
                     version_defs.append(v)
                 else:
-                    satisfying_versions = list(
-                        x for x in pkg_class.versions if x.satisfies(v)
-                    )
+                    satisfying_versions = list(x for x in pkg_class.versions if x.satisfies(v))
                     if not satisfying_versions and not isinstance(v, vn.GitVersion):
                         raise spack.config.ConfigError(
                             "Preference for version {0} for does not match any version "
