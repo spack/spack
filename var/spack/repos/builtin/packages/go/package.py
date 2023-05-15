@@ -39,13 +39,25 @@ class Go(Package):
 
     maintainers("alecbcs")
 
+    version("1.20.4", sha256="9f34ace128764b7a3a4b238b805856cc1b2184304df9e5690825b0710f4202d6")
     version("1.20.3", sha256="e447b498cde50215c4f7619e5124b0fc4e25fb5d16ea47271c47f278e7aa763a")
-    version("1.20.2", sha256="4d0e2850d197b4ddad3bdb0196300179d095bb3aefd4dfbc3b36702c3728f8ab")
 
+    version("1.19.9", sha256="131190a4697a70c5b1d232df5d3f55a3f9ec0e78e40516196ffb3f09ae6a5744")
     version("1.19.8", sha256="1d7a67929dccafeaf8a29e55985bc2b789e0499cb1a17100039f084e3238da2f")
-    version("1.19.7", sha256="775bdf285ceaba940da8a2fe20122500efd7a0b65dbcee85247854a8d7402633")
 
     # Deprecated Versions
+    # https://nvd.nist.gov/vuln/detail/CVE-2023-24538
+    version(
+        "1.20.2",
+        sha256="4d0e2850d197b4ddad3bdb0196300179d095bb3aefd4dfbc3b36702c3728f8ab",
+        deprecated=True,
+    )
+    version(
+        "1.19.7",
+        sha256="775bdf285ceaba940da8a2fe20122500efd7a0b65dbcee85247854a8d7402633",
+        deprecated=True,
+    )
+
     # https://nvd.nist.gov/vuln/detail/CVE-2023-24532
     version(
         "1.20.1",
