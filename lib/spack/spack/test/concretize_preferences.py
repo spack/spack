@@ -152,6 +152,8 @@ class TestConcretizePreferences(object):
         assert spec.version == Version("2.2")
 
     def test_preferred_versions_mixed_version_types(self):
+        if spack.config.get("config:concretizer") == "original":
+            pytest.skip("This behavior is not enforced for the old concretizer")
         update_packages("mixedversions", "version", ["=2.0"])
         spec = concretize("mixedversions")
         assert spec.version == Version("2.0")
@@ -241,7 +243,7 @@ mpileaks:
     def test_preferred_truncated(self):
         """Preference should not specify an undefined version"""
         if spack.config.get("config:concretizer") == "original":
-            pytest.skip("Original concretizer does not support configuration requirements")
+            pytest.skip("This behavior is not enforced for the old concretizer")
 
         update_packages("python", "version", ["3.5"])
         spec = Spec("python")
