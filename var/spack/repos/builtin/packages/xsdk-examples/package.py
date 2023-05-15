@@ -27,9 +27,11 @@ class XsdkExamples(CMakePackage, CudaPackage, ROCmPackage):
     )
 
     depends_on("xsdk+cuda", when="+cuda")
+    depends_on("xsdk~cuda", when="~cuda")
     for sm_ in CudaPackage.cuda_arch_values:
         depends_on("xsdk+cuda cuda_arch={0}".format(sm_), when="+cuda cuda_arch={0}".format(sm_))
     depends_on("xsdk+rocm", when="+rocm")
+    depends_on("xsdk~rocm", when="~rocm")
     for ac_ in ROCmPackage.amdgpu_targets:
         depends_on("xsdk+rocm amdgpu_target={0}".format(ac_), when="+rocm amdgpu_target={0}".format(ac_))
 
@@ -82,20 +84,21 @@ class XsdkExamples(CMakePackage, CudaPackage, ROCmPackage):
             "-DENABLE_TRILINOS=" + enabled("trilinos"),
         ]
 
-        if "+cuda" in spec["xsdk"]:  # if cuda variant was activated for xsdk
+        if "+cuda" in spec:
+            archs = ";".join(spec.variants["cuda_arch"].value)
             args.extend(
                 [
                     "-DENABLE_CUDA=ON",
-                    "-DCMAKE_CUDA_ARCHITECTURES=%s" % spec.variants["cuda_arch"].value,
+                    "-DCMAKE_CUDA_ARCHITECTURES=%s" % archs,
                 ]
             )
 
-        # FIXME: propagate the HIP config from the 'xsdk' package
-        if "+rocm" in spec["xsdk"]:  # if rocm variant was activated for xsdk
+        if "+rocm" in spec:
+            archs = ";".join(spec.variants["amdgpu_target"].value)
             args.extend(
                 [
                     "-DENABLE_HIP=ON",
-                    #"-DCMAKE_CUDA_ARCHITECTURES=%s" % spec.variants["cuda_arch"].value,
+                    "-DCMAKE_HIP_ARCHITECTURES=%s" % archs,
                 ]
             )
 
