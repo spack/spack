@@ -1751,41 +1751,8 @@ class Environment(object):
         self.install_specs(None, **install_args)
 
     def install_specs(self, specs=None, **install_args):
-        tty.debug("Assessing installation status of environment packages")
-        # If "spack install" is invoked repeatedly for a large environment
-        # where all specs are already installed, the operation can take
-        # a large amount of time due to repeatedly acquiring and releasing
-        # locks. As a small optimization, drop already installed root specs.
-        installed_roots, uninstalled_roots = self._partition_roots_by_install_status()
-        overwrite = install_args.get("overwrite", [])
-
-        # Specs to install are those that aren't installed yet or are overwritten
-        if specs:
-            # Filter specs to install by CLI arguments
-            specs_to_install = [
-                s for s in specs if s not in installed_roots or s.dag_hash() in overwrite
-            ]
-            specs_dropped = [
-                s for s in specs if s in installed_roots and s.dag_hash() not in overwrite
-            ]
-        else:
-            specs_to_install = uninstalled_roots + [
-                s for s in installed_roots if s.dag_hash() in overwrite
-            ]
-            specs_dropped = [s for s in installed_roots if s.dag_hash() not in overwrite]
-
-        # We need to repeat the work of the installer thanks to the above optimization:
-        # Already installed root specs should be marked explicitly installed in the
-        # database.
-        if specs_dropped:
-            with spack.store.db.write_transaction():  # do all in one transaction
-                for spec in specs_dropped:
-                    spack.store.db.update_explicit(spec, True)
-
-        if not specs_to_install:
-            tty.msg("All of the packages are already installed")
-        else:
-            tty.debug("Processing {0} uninstalled specs".format(len(specs_to_install)))
+        specs_to_install = specs or [concrete for _, concrete in self.concretized_specs()]
+        tty.debug("Processing {0} specs".format(len(specs_to_install)))
 
         specs_to_overwrite = self._get_overwrite_specs()
         tty.debug("{0} specs need to be overwritten".format(len(specs_to_overwrite)))
