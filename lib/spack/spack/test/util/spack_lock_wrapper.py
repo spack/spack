@@ -4,7 +4,7 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 """Tests for Spack's wrapper module around llnl.util.lock."""
-import os
+from pathlib import Path
 
 import pytest
 
@@ -18,18 +18,19 @@ def test_disable_locking(tmpdir):
     """Ensure that locks do no real locking when disabled."""
     lock_path = str(tmpdir.join("lockfile"))
     lock = lk.Lock(lock_path, enable=False)
+    lock_path = Path(lock_path)
 
     lock.acquire_read()
-    assert not os.path.exists(lock_path)
+    assert not lock_path.exists()
 
     lock.acquire_write()
-    assert not os.path.exists(lock_path)
+    assert not lock_path.exists()
 
     lock.release_write()
-    assert not os.path.exists(lock_path)
+    assert not lock_path.exists()
 
     lock.release_read()
-    assert not os.path.exists(lock_path)
+    assert not lock_path.exists()
 
 
 # "Disable" mock_stage fixture to avoid subdir permissions issues on cleanup.
