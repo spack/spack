@@ -10,15 +10,14 @@ spack:
     - '%gcc@7.3.1 target=x86_64_v3'
 
   - optimized_configs:
-    - gromacs
+    # - gromacs
     - lammps
     - mpas-model
     - openfoam
     # - palace
     # - py-devito
-    # TODO: Re-enable when https://github.com/spack/spack/pull/37607 is merged
-    # - quantum-espresso
-    - wrf
+    - quantum-espresso
+    # - wrf
 
   - optimized_libs:
     - mpich
