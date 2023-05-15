@@ -20,7 +20,7 @@ class Zoltan(AutotoolsPackage):
 
     """
 
-    homepage = "http://www.cs.sandia.gov/zoltan"
+    homepage = "https://sandialabs.github.io/Zoltan/"
     url = "https://github.com/sandialabs/Zoltan/archive/v3.83.tar.gz"
 
     version("3.901", sha256="030c22d9f7532d3076e40cba1f03a63b2ee961d8cc9a35149af4a3684922a910")
