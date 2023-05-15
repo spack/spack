@@ -118,7 +118,6 @@ class Palace(CMakePackage):
         # BLAS/LAPACK linkage
         args += [
             "-DBLAS_LIBRARIES={0}".format(self.spec["blas"].libs.joined(";")),
-            # LAPACK support
             "-DLAPACK_LIBRARIES={0}".format(self.spec["lapack"].libs.joined(";")),
         ]
 
