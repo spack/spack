@@ -94,7 +94,7 @@ class IntelOneapiIpp(IntelOneApiLibraryPackage):
         expand=False,
     )
 
-    depends_on("intel-oneapi-tbb")
+    depends_on("tbb")
 
     provides("ipp")
 
