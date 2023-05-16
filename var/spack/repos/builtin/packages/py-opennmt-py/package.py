@@ -16,7 +16,7 @@ class PyOpennmtPy(PythonPackage):
     pypi = "OpenNMT-py/OpenNMT-py-3.1.1.tar.gz"
 
     maintainers("meyersbs")
-    
+
     version("3.1.1", sha256="2191d17df6872ebc0e4f5886a35eb22d49c92528bd6eb019d01b2c46247dcc71")
 
     depends_on("py-setuptools", type="build")

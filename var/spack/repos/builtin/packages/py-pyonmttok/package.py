@@ -26,7 +26,7 @@ class PyPyonmttok(CMakePackage, PythonExtension):
     depends_on("py-pip@19.3:", type="build")
     depends_on("python@3.6:3.11", type=("build", "run"))
     depends_on("cmake@3.1.0:", type="build")
-    
+
     variant("cli", default=True, description="Build CLI")
 
     def setup_build_environment(self, env):
