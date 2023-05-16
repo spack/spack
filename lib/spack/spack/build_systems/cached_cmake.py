@@ -14,21 +14,24 @@ import spack.builder
 from .cmake import CMakeBuilder, CMakePackage
 
 
-def cmake_cache_path(name, value, comment=""):
+def cmake_cache_path(name, value, comment="", force=True):
     """Generate a string for a cmake cache variable"""
-    return 'set({0} "{1}" CACHE PATH "{2}")\n'.format(name, value, comment)
+    force_str = "FORCE" if force else ""
+    return 'set({0} "{1}" CACHE PATH "{2}" {3})\n'.format(name, value, comment, force_str)
 
 
-def cmake_cache_string(name, value, comment=""):
+def cmake_cache_string(name, value, comment="", force=True):
     """Generate a string for a cmake cache variable"""
-    return 'set({0} "{1}" CACHE STRING "{2}")\n'.format(name, value, comment)
+    force_str = "FORCE" if force else ""
+    return 'set({0} "{1}" CACHE STRING "{2}" {3})\n'.format(name, value, comment, force_str)
 
 
-def cmake_cache_option(name, boolean_value, comment=""):
+def cmake_cache_option(name, boolean_value, comment="", force=True):
     """Generate a string for a cmake configuration option"""
 
     value = "ON" if boolean_value else "OFF"
-    return 'set({0} {1} CACHE BOOL "{2}")\n'.format(name, value, comment)
+    force_str = "FORCE" if force else ""
+    return 'set({0} {1} CACHE BOOL "{2}" {3})\n'.format(name, value, comment, force_str)
 
 
 class CachedCMakeBuilder(CMakeBuilder):
@@ -252,7 +255,6 @@ class CachedCMakeBuilder(CMakeBuilder):
             entries.append("#------------------{0}\n".format("-" * 30))
 
             # This may be a patch that is no longer necessary
-#            entries.append(cmake_cache_path("HIP_ROOT_DIR", "{0}".format(spec["hip"].prefix)))
             archs = self.spec.variants["amdgpu_target"].value
             if archs != "none":
                 arch_str = ";".join(archs)
@@ -266,9 +268,6 @@ class CachedCMakeBuilder(CMakeBuilder):
         cmake_prefix_path_env = os.environ["CMAKE_PREFIX_PATH"]
         cmake_prefix_path_array = cmake_prefix_path_env.split(":")
         cmake_prefix_path = ";".join(cmake_prefix_path_array)
-        # cmake_pkg_config_path_env = os.environ["PKG_CONFIG_PATH"]
-        # cmake_pkg_config_path_array = cmake_prefix_path_env.split(":")
-        # cmake_pkg_config_path = ";".join(cmake_prefix_path_array)
         return [
             "#------------------{0}".format("-" * 60),
             "# !!!! This is a generated file, edit at own risk !!!!",
@@ -276,7 +275,6 @@ class CachedCMakeBuilder(CMakeBuilder):
             "# CMake executable path: {0}".format(self.pkg.spec["cmake"].command.path),
             "#------------------{0}\n".format("-" * 60),
             cmake_cache_path("CMAKE_PREFIX_PATH", cmake_prefix_path),
-            # cmake_cache_path("CMAKE_PKG_CONFIG_PATH", cmake_pkg_config_path),
         ]
 
     def initconfig_package_entries(self):
