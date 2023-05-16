@@ -30,5 +30,5 @@ class PyMorphTool(PythonPackage):
     depends_on("neuron+python@7.8:", type=("build", "run"))
     depends_on("py-bluepyopt@1.9.37:", type=("build", "run"))
 
-    depends_on("py-neurom@3.0:3.999", type=("build", "run"))
-    depends_on("py-morphio@3.0:3.999", type=("build", "run"))
+    depends_on("py-neurom@3.0:3.999,develop", type=("build", "run"))
+    depends_on("py-morphio@3.0:3.999,develop", type=("build", "run"))
