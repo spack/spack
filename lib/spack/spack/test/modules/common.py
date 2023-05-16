@@ -212,7 +212,7 @@ def test_check_module_set_name(mutable_config):
 
     # Invalid module set names
     msg = "Valid module set names are"
-    with pytest.raises(spack.config.ConfigError, match=msg) as e:
+    with pytest.raises(spack.config.ConfigError, match=msg):
         spack.cmd.modules.check_module_set_name("prefix_inspections")
 
     with pytest.raises(spack.config.ConfigError, match=msg):
