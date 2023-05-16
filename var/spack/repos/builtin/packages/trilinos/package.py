@@ -656,6 +656,9 @@ class Trilinos(CMakePackage, CudaPackage, ROCmPackage):
             ]
         )
 
+        if spec.satisfies("@develop +stokhos"):
+            options.append(self.define("Stokhos_ENABLE_PCE_Scalar_Type", False))
+
         if "+dtk" in spec:
             options.extend(
                 [
@@ -771,7 +774,7 @@ class Trilinos(CMakePackage, CudaPackage, ROCmPackage):
         ]
         if spec.satisfies("@12.12.1:"):
             tpl_dep_map.append(("Pnetcdf", "parallel-netcdf"))
-        if spec.satisfies("@13:"):
+        if spec.satisfies("@13:") and not spec.satisfies("@develop"):
             tpl_dep_map.append(("HWLOC", "hwloc"))
 
         for tpl_name, dep_name in tpl_dep_map:
