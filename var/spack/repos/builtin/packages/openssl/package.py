@@ -385,7 +385,7 @@ class Openssl(Package):  # Uses Fake Autotools, should subclass Package
             # where it happens automatically?)
             env["KERNEL_BITS"] = "64"
 
-        options = ["zlib", "shared"]
+        options = ["zlib"]
         if spec.satisfies("@1.0"):
             options.append("no-krb5")
         # clang does not support the .arch directive in assembly files.
@@ -422,6 +422,8 @@ class Openssl(Package):  # Uses Fake Autotools, should subclass Package
 
         if spec.satisfies("~shared"):
             base_args.append("no-shared")
+        else:
+            base_args.append("shared")
 
         # On Windows, we use perl for configuration and build through MSVC
         # nmake.
