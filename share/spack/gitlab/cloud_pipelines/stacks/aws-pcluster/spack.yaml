@@ -16,7 +16,7 @@ spack:
     - openfoam
     # - palace
     # - py-devito
-    - quantum-espresso
+    # - quantum-espresso
     # - wrf
 
   - optimized_libs:
