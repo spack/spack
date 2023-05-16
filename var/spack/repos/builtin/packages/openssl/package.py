@@ -334,7 +334,9 @@ class Openssl(Package):  # Uses Fake Autotools, should subclass Package
         ),
     )
     variant("docs", default=False, description="Install docs and manpages")
-    variant("shared", default=False, description="Build shared library version")
+    variant("shared", default=True, description="Build shared library version", when="platform=linux")
+    variant("shared", default=True, description="Build shared library version", when="platform=macos")
+    variant("shared", default=False, description="Build shared library version", when="platform=windows")
     with when("platform=windows"):
         variant("dynamic", default=False, description="Link with MSVC's dynamic runtime library")
 
