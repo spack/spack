@@ -687,24 +687,6 @@ class Hdf5(CMakePackage):
                         symlink(src_filename, tgt_filename)
 
     @run_after("install")
-    def fix_showconfig(self):
-        # The 'Extra libraries' entry of the 'h5cc -showconfig' command is a space-separated list
-        # of linker flags if the package is installed with Autotools, and a semicolon-separated
-        # list of library names if the package is installed with CMake. There are use cases that
-        # rely on the old Autotools behavior. Here, we make sure that the output of the command
-        # looks like it was before we switch to CMake.
-        filter_file(
-            r"^(\s*Extra libraries: )(.*)",
-            lambda match: "{0}{1}".format(
-                match.group(1),
-                " ".join("-l{0}".format(name) for name in filter(None, match.group(2).split(";"))),
-            ),
-            self.prefix.lib.join("libhdf5.settings"),
-            backup=False,
-            ignore_absent=True,
-        )
-
-    @run_after("install")
     @on_package_attributes(run_tests=True)
     def check_install(self):
         self._check_install()
