@@ -121,8 +121,17 @@ def check_module_set_name(name):
         return
 
     names = [k for k in modules if k != "prefix_inspections"]
+
+    if not names:
+        raise spack.config.ConfigError(
+            f"Module set configuration is missing. Cannot use module set '{name}'"
+        )
+
+    pretty_names = "', '".join(names)
+
     raise spack.config.ConfigError(
-        f"Cannot use invalid module set {name}.", f"Valid module set names are {names}"
+        f"Cannot use invalid module set '{name}'.",
+        f"Valid module set names are: '{pretty_names}'.",
     )
 
 
