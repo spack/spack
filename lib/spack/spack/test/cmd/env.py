@@ -906,7 +906,7 @@ packages:
   mpileaks:
     version: ["2.2"]
   libelf:
-    version: ["0.8.11"]
+    version: ["0.8.10"]
 """
         )
 

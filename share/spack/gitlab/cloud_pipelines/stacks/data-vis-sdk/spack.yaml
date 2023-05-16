@@ -6,9 +6,9 @@ spack:
     mesa:
       require: "+glx +osmesa +opengl ~opengles +llvm"
     libosmesa:
-      require: ^mesa +osmesa
+      require: "mesa +osmesa"
     libglx:
-      require: ^mesa +glx
+      require: "mesa +glx"
     ospray:
       require: "@2.8.0 +denoiser +mpi"
     llvm:
