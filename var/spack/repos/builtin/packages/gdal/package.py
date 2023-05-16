@@ -553,8 +553,8 @@ class CMakeBuilder(CMakeBuilder):
             self.define_from_variant("BUILD_JAVA_BINDINGS", "java"),
             self.define_from_variant("BUILD_CSHARP_BINDINGS", "csharp"),
         ]
-        args.extend(self.define_from_variant("BUILD_SHARED_LIBS", "shared"))
-        args.extend(self.define_from_variant("CMAKE_POSITION_INDEPENDENT_CODE", "pic"))
+        args.append(self.define_from_variant("BUILD_SHARED_LIBS", "shared"))
+        args.append(self.define_from_variant("CMAKE_POSITION_INDEPENDENT_CODE", "pic"))
 
         # Remove empty strings
         args = [arg for arg in args if arg]
