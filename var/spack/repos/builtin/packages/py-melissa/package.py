@@ -14,9 +14,8 @@ class PyMelissa(PythonPackage):
     """
 
     homepage = "https://gitlab.inria.fr/melissa/melissa"
-    # url = <url-to-archive>
     git = "https://gitlab.inria.fr/melissa/melissa.git"
-    maintainers = ["robcaulk", "mschouler", "raffino"]
+    maintainers("robcaulk", "mschouler", "raffino")
 
     version("develop", branch="develop")
 
