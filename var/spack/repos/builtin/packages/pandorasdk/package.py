@@ -4,6 +4,9 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 
+from spack.package import *
+
+
 class Pandorasdk(CMakePackage):
     """Metadata package to bring together and build multiple Pandora libraries.
     NOTE: for proper version control with spack, this should be broken up and

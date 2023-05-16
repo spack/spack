@@ -4,6 +4,9 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 
+from spack.package import *
+
+
 class Pandorapfa(Package):
     """Metadata package to bring together and build multiple Pandora libraries.
     NOTE: this recipe is not used to install  other pandora packages, for which
