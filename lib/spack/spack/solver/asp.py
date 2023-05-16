@@ -1669,9 +1669,34 @@ class SpackSolverSetup(object):
                         if concrete_build_deps or dtype != "build":
                             clauses.append(fn.attr("depends_on", spec.name, dep.name, dtype))
 
-                            # Ensure Spack will not coconcretize this with another provider
-                            # for the same virtual
-                            for virtual in dep.package.virtuals_provided:
+                            # TODO: We have to look up info from package.py here, but we'd
+                            # TODO: like to avoid this entirely. We should not need to look
+                            # TODO: up potentially wrong info if we have virtual edge info.
+                            try:
+                                try:
+                                    pkg = dep.package
+
+                                except spack.repo.UnknownNamespaceError:
+                                    # Try to look up the package of the same name and use its
+                                    # providers. This is as good as we can do without edge info.
+                                    pkg_class = spack.repo.path.get_pkg_class(dep.name)
+                                    spec = spack.spec.Spec(f"{dep.name}@{dep.version}")
+                                    pkg = pkg_class(spec)
+
+                                virtuals = pkg.virtuals_provided
+
+                            except spack.repo.UnknownPackageError:
+                                # Skip virtual node constriants for renamed/deleted packages,
+                                # so their binaries can still be installed.
+                                # NOTE: with current specs (which lack edge attributes) this
+                                # can allow concretizations with two providers, but it's unlikely.
+                                continue
+
+                            # Don't concretize with two providers of the same virtual.
+                            # See above for exception for unknown packages.
+                            # TODO: we will eventually record provider information on edges,
+                            # TODO: which avoids the need for the package lookup above.
+                            for virtual in virtuals:
                                 clauses.append(fn.attr("virtual_node", virtual.name))
                                 clauses.append(fn.provider(dep.name, virtual.name))
 
@@ -2463,11 +2488,16 @@ class SpecBuilder(object):
 
                     # add flags from each source, lowest to highest precedence
                     for name in sorted_sources:
-                        source = self._specs[name] if name in self._hash_specs else cmd_specs[name]
-                        extend_flag_list(from_sources, source.compiler_flags.get(flag_type, []))
+                        all_src_flags = list()
+                        per_pkg_sources = [self._specs[name]]
+                        if name in cmd_specs:
+                            per_pkg_sources.append(cmd_specs[name])
+                        for source in per_pkg_sources:
+                            all_src_flags.extend(source.compiler_flags.get(flag_type, []))
+                        extend_flag_list(from_sources, all_src_flags)
 
                 # compiler flags from compilers config are lowest precedence
-                ordered_compiler_flags = from_compiler + from_sources
+                ordered_compiler_flags = list(llnl.util.lang.dedupe(from_compiler + from_sources))
                 compiler_flags = spec.compiler_flags.get(flag_type, [])
 
                 msg = "%s does not equal %s" % (set(compiler_flags), set(ordered_compiler_flags))

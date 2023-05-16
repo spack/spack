@@ -531,7 +531,7 @@ class SpackCI:
         """
 
         self.ci_config = ci_config
-        self.named_jobs = ["any", "build", "cleanup", "noop", "reindex", "signing"]
+        self.named_jobs = ["any", "build", "copy", "cleanup", "noop", "reindex", "signing"]
 
         self.ir = {
             "jobs": {},
@@ -634,17 +634,13 @@ class SpackCI:
             # Reindex script
             {
                 "reindex-job": {
-                    "script:": [
-                        "spack buildcache update-index --keys --mirror-url {index_target_mirror}"
-                    ]
+                    "script:": ["spack buildcache update-index --keys {index_target_mirror}"]
                 }
             },
             # Cleanup script
             {
                 "cleanup-job": {
-                    "script:": [
-                        "spack -d mirror destroy --mirror-url {mirror_prefix}/$CI_PIPELINE_ID"
-                    ]
+                    "script:": ["spack -d mirror destroy {mirror_prefix}/$CI_PIPELINE_ID"]
                 }
             },
             # Add signing job tags
@@ -1211,7 +1207,7 @@ def generate_gitlab_ci_yaml(
                             ).format(c_spec, release_spec)
                             tty.debug(debug_msg)
 
-                if prune_dag and not rebuild_spec:
+                if prune_dag and not rebuild_spec and spack_pipeline_type != "spack_copy_only":
                     tty.debug(
                         "Pruning {0}/{1}, does not need rebuild.".format(
                             release_spec.name, release_spec.dag_hash()
@@ -1302,8 +1298,9 @@ def generate_gitlab_ci_yaml(
                     max_length_needs = length_needs
                     max_needs_job = job_name
 
-                output_object[job_name] = job_object
-                job_id += 1
+                if spack_pipeline_type != "spack_copy_only":
+                    output_object[job_name] = job_object
+                    job_id += 1
 
     if print_summary:
         for phase in phases:
@@ -1332,6 +1329,17 @@ def generate_gitlab_ci_yaml(
         "max": 2,
         "when": ["runner_system_failure", "stuck_or_timeout_failure", "script_failure"],
     }
+
+    if spack_pipeline_type == "spack_copy_only":
+        stage_names.append("copy")
+        sync_job = copy.deepcopy(spack_ci_ir["jobs"]["copy"]["attributes"])
+        sync_job["stage"] = "copy"
+        if artifacts_root:
+            sync_job["needs"] = [
+                {"job": generate_job_name, "pipeline": "{0}".format(parent_pipeline_id)}
+            ]
+        output_object["copy"] = sync_job
+        job_id += 1
 
     if job_id > 0:
         if temp_storage_url_prefix:

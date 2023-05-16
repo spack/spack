@@ -234,7 +234,7 @@ spack:
 
             assert "rebuild-index" in yaml_contents
             rebuild_job = yaml_contents["rebuild-index"]
-            expected = "spack buildcache update-index --keys --mirror-url {0}".format(mirror_url)
+            expected = "spack buildcache update-index --keys {0}".format(mirror_url)
             assert rebuild_job["script"][0] == expected
             assert rebuild_job["custom_attribute"] == "custom!"
 
@@ -2392,7 +2392,7 @@ def test_gitlab_ci_deprecated(
 
             assert "rebuild-index" in yaml_contents
             rebuild_job = yaml_contents["rebuild-index"]
-            expected = "spack buildcache update-index --keys --mirror-url {0}".format(mirror_url)
+            expected = "spack buildcache update-index --keys {0}".format(mirror_url)
             assert rebuild_job["script"][0] == expected
 
             assert "variables" in yaml_contents
