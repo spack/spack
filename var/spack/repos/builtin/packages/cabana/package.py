@@ -37,6 +37,7 @@ class Cabana(CMakePackage, CudaPackage, ROCmPackage):
     variant("heffte", default=False, description="Build with heFFTe support")
     variant("hypre", default=False, description="Build with HYPRE support")
     variant("silo", default=False, description="Build with SILO support")
+    variant("hdf5", default=False, description="Build with HDF5 support")
     variant("cajita", default=False, description="Build Cajita subpackage")
     variant("testing", default=False, description="Build unit tests")
     variant("examples", default=False, description="Build tutorial examples")
@@ -79,6 +80,7 @@ class Cabana(CMakePackage, CudaPackage, ROCmPackage):
     depends_on("heffte@2.0.0", when="@0.4.0+heffte")
     depends_on("heffte@2.1.0", when="@0.5.0:+heffte")
     depends_on("silo", when="@0.5.0:+silo")
+    depends_on("hdf5", when="@master:+hdf5")
     depends_on("mpi", when="+mpi")
 
     conflicts("+cajita ~mpi")
@@ -90,7 +92,7 @@ class Cabana(CMakePackage, CudaPackage, ROCmPackage):
         options = [self.define_from_variant("BUILD_SHARED_LIBS", "shared")]
 
         enable = ["CAJITA", "TESTING", "EXAMPLES", "PERFORMANCE_TESTING"]
-        require = ["ARBORX", "HEFFTE", "HYPRE", "SILO"]
+        require = ["ARBORX", "HEFFTE", "HYPRE", "SILO", "HDF5"]
 
         # These variables were removed in 0.3.0 (where backends are
         # automatically used from Kokkos)
