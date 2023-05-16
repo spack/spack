@@ -30,7 +30,7 @@ class Gsl(AutotoolsPackage, GNUMirrorPackage):
 
     variant("external-cblas", default=False, description="Build against external blas")
     variant("shared", default=True, description="Build shared library")
-    variant("pic", default=False, description="Enable position-independent code (PIC)")
+    variant("pic", default=True, description="Enable position-independent code (PIC)")
 
     # from https://dev.gentoo.org/~mgorny/dist/gsl-2.3-cblas.patch.bz2
     patch("gsl-2.3-cblas.patch", when="@2.3:2.5+external-cblas")
