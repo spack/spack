@@ -1402,6 +1402,10 @@ class Environment:
         if not new_user_specs:
             return []
 
+        old_concrete_to_abstract = {
+            concrete: abstract for (abstract, concrete) in self.concretized_specs()
+        }
+
         self.concretized_user_specs = []
         self.concretized_order = []
         self.specs_by_hash = {}
@@ -1413,11 +1417,13 @@ class Environment:
 
         result = []
         for abstract, concrete in sorted(result_by_user_spec.items()):
+            # If the "abstract" spec is a concrete spec from the previous concretization
+            # translate it back to an abstract spec. Otherwise, keep the abstract spec
+            abstract = old_concrete_to_abstract.get(abstract, abstract)
             if abstract in new_user_specs:
                 result.append((abstract, concrete))
-            else:
-                assert (abstract, concrete) in result
             self._add_concrete_spec(abstract, concrete)
+
         return result
 
     def _concretize_together(
@@ -1436,7 +1442,7 @@ class Environment:
         self.specs_by_hash = {}
 
         try:
-            concrete_specs = spack.concretize.concretize_specs_together(
+            concrete_specs: List[spack.spec.Spec] = spack.concretize.concretize_specs_together(
                 *specs_to_concretize, tests=tests
             )
         except spack.error.UnsatisfiableSpecError as e:
@@ -1455,11 +1461,14 @@ class Environment:
                 )
             raise
 
-        # zip truncates the longer list, which is exactly what we want here
-        concretized_specs = [x for x in zip(new_user_specs | kept_user_specs, concrete_specs)]
+        # set() | set() does not preserve ordering, even though sets are ordered
+        ordered_user_specs = list(new_user_specs) + list(kept_user_specs)
+        concretized_specs = [x for x in zip(ordered_user_specs, concrete_specs)]
         for abstract, concrete in concretized_specs:
             self._add_concrete_spec(abstract, concrete)
-        return concretized_specs
+
+        # zip truncates the longer list, which is exactly what we want here
+        return list(zip(new_user_specs, concrete_specs))
 
     def _concretize_separately(self, tests=False):
         """Concretization strategy that concretizes separately one
