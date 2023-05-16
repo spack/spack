@@ -12,7 +12,7 @@ spack:
   - optimized_configs:
     # - gromacs
     - lammps
-    - mpas-model
+    # - mpas-model
     - openfoam
     # - palace
     # - py-devito
@@ -28,7 +28,7 @@ spack:
     - - $compiler_specs
     - - $compiler_target
   - $optimized_configs
-  - $optimized_libs
+  # - $optimized_libs
 
   mirrors: { "mirror": "s3://spack-binaries/develop/aws-pcluster" }
 
