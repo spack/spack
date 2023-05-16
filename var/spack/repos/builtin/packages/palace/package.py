@@ -19,6 +19,7 @@ class Palace(CMakePackage):
     maintainers("sebastiangrimberg")
 
     version("develop", branch="main")
+    version("0.11.1", tag="v0.11.1")
     version("0.11.0", tag="v0.11.0")
 
     variant("int64", default=False, description="Use 64 bit integers")
@@ -113,6 +114,12 @@ class Palace(CMakePackage):
             args += ["-DSTRUMPACK_REQUIRED_PACKAGES=MPI;MPI_Fortran"]
         if "+mumps" in self.spec:
             args += ["-DMUMPS_REQUIRED_PACKAGES=MPI;MPI_Fortran"]
+
+        # BLAS/LAPACK linkage
+        args += [
+            "-DBLAS_LIBRARIES={0}".format(self.spec["blas"].libs.joined(";")),
+            "-DLAPACK_LIBRARIES={0}".format(self.spec["lapack"].libs.joined(";")),
+        ]
 
         # HYPRE is always built with external BLAS/LAPACK
         args += ["-DHYPRE_REQUIRED_PACKAGES=LAPACK;BLAS"]

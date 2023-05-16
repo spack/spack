@@ -144,9 +144,20 @@ color_formats = {
 #: ``color_formats.keys()``.
 _separators = "[\\%s]" % "\\".join(color_formats.keys())
 
-default_format = "{name}{@versions}"
-default_format += "{%compiler.name}{@compiler.versions}{compiler_flags}"
-default_format += "{variants}{arch=architecture}{/abstract_hash}"
+#: Default format for Spec.format(). This format can be round-tripped, so that:
+#:     Spec(Spec("string").format()) == Spec("string)"
+default_format = (
+    "{name}{@versions}"
+    "{%compiler.name}{@compiler.versions}{compiler_flags}"
+    "{variants}{arch=architecture}{/abstract_hash}"
+)
+
+#: Display format, which eliminates extra `@=` in the output, for readability.
+display_format = (
+    "{name}{@version}"
+    "{%compiler.name}{@compiler.version}{compiler_flags}"
+    "{variants}{arch=architecture}{/abstract_hash}"
+)
 
 #: Regular expression to pull spec contents out of clearsigned signature
 #: file.
@@ -2778,11 +2789,11 @@ class Spec(object):
         # Also record all patches required on dependencies by
         # depends_on(..., patch=...)
         for dspec in root.traverse_edges(deptype=all, cover="edges", root=False):
-            pkg_deps = dspec.parent.package_class.dependencies
-            if dspec.spec.name not in pkg_deps:
+            if dspec.spec.concrete:
                 continue
 
-            if dspec.spec.concrete:
+            pkg_deps = dspec.parent.package_class.dependencies
+            if dspec.spec.name not in pkg_deps:
                 continue
 
             patches = []
