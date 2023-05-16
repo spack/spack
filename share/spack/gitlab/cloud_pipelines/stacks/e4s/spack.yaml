@@ -165,7 +165,7 @@ spack:
   - chai ~benchmarks ~tests +cuda ^umpire ~shared
   - cusz +cuda
   - dealii +cuda
-  - ecp-data-vis-sdk +cuda +ascent +adios2 +hdf5 +paraview +sz +vtkm +zfp  ^hdf5@1.14 # Removing ascent because Dray is hung in CI. +ascent
+  - ecp-data-vis-sdk +cuda ~ascent +adios2 +hdf5 +paraview +sz +vtkm +zfp  ^hdf5@1.14 # Removing ascent because RAJA build failure
   - flecsi +cuda
   - flux-core +cuda
   - ginkgo +cuda
