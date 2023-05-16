@@ -207,6 +207,8 @@ class Kokkos(CMakePackage, CudaPackage, ROCmPackage):
     variant("std", default="17", values=stds, multi=False)
     variant("pic", default=False, description="Build position independent code")
 
+    conflicts("std=11", when="@3.7:")
+
     conflicts("+cuda", when="std=17 ^cuda@:10")
     conflicts("+cuda", when="std=20 ^cuda@:12")
 
