@@ -185,7 +185,7 @@ class Cdo(AutotoolsPackage):
     conflicts("%gcc@9:", when="@:1.9.6", msg="GCC 9 changed OpenMP data sharing behavior")
 
     # Internal compiler error when building with Intel 2022.1.2
-    # https://github.com/NOAA-EMC/spack-stack/issues/248
+    # https://github.com/jcsda/spack-stack/issues/248
     patch("intel-compare.patch", when="%intel@2022.1.2")
 
     def configure_args(self):
@@ -317,7 +317,7 @@ class Cdo(AutotoolsPackage):
             flags["CPPFLAGS"].append("-DOMPI_SKIP_MPICXX -DMPICH_SKIP_MPICXX")
 
         # Workaround compiler issues
-        # https://github.com/NOAA-EMC/spack-stack/issues/468
+        # https://github.com/jcsda/spack-stack/issues/468
         if self.spec.satisfies("%intel"):
             flags["CFLAGS"].append("-O1")
             flags["CXXFLAGS"].append("-O1")
