@@ -66,6 +66,28 @@ class V(Package):
 )
 
 
+_pkgt = (
+    "t",
+    """\
+class T(Package):
+    version('2.1')
+    version('2.0')
+
+    depends_on('u', when='@2.1:')
+""",
+)
+
+
+_pkgu = (
+    "u",
+    """\
+class U(Package):
+    version('1.1')
+    version('1.0')
+""",
+)
+
+
 @pytest.fixture
 def create_test_repo(tmpdir, mutable_config):
     repo_path = str(tmpdir)
@@ -79,7 +101,7 @@ repo:
         )
 
     packages_dir = tmpdir.join("packages")
-    for pkg_name, pkg_str in [_pkgx, _pkgy, _pkgv]:
+    for pkg_name, pkg_str in [_pkgx, _pkgy, _pkgv, _pkgt, _pkgu]:
         pkg_dir = packages_dir.ensure(pkg_name, dir=True)
         pkg_file = pkg_dir.join("package.py")
         with open(str(pkg_file), "w") as f:
@@ -142,6 +164,45 @@ packages:
     update_packages_config(conf_str)
     with pytest.raises(UnsatisfiableSpecError):
         Spec("x@1.1").concretize()
+
+
+def test_require_undefined_version(concretize_scope, test_repo):
+    """If a requirement specifies a numbered version that isn't in
+    the associated package.py and isn't part of a Git hash
+    equivalence (hash=number), then Spack should raise an error
+    (it is assumed this is a typo, and raising the error here
+    avoids a likely error when Spack attempts to fetch the version).
+    """
+    if spack.config.get("config:concretizer") == "original":
+        pytest.skip("Original concretizer does not support configuration requirements")
+
+    conf_str = """\
+packages:
+  x:
+    require: "@1.2"
+"""
+    update_packages_config(conf_str)
+    with pytest.raises(spack.config.ConfigError):
+        Spec("x").concretize()
+
+
+def test_require_truncated(concretize_scope, test_repo):
+    """A requirement specifies a version range, with satisfying
+    versions defined in the package.py. Make sure we choose one
+    of the defined versions (vs. allowing the requirement to
+    define a new version).
+    """
+    if spack.config.get("config:concretizer") == "original":
+        pytest.skip("Original concretizer does not support configuration requirements")
+
+    conf_str = """\
+packages:
+  x:
+    require: "@1"
+"""
+    update_packages_config(conf_str)
+    xspec = Spec("x").concretized()
+    assert xspec.satisfies("@1.1")
 
 
 def test_git_user_supplied_reference_satisfaction(
@@ -218,6 +279,40 @@ packages:
     # Make sure the git commit info is retained
     assert isinstance(s1.version, spack.version.GitVersion)
     assert s1.version.ref == a_commit_hash
+
+
+def test_requirement_adds_version_satisfies(
+    concretize_scope, test_repo, mock_git_version_info, monkeypatch
+):
+    """Make sure that new versions added by requirements are factored into
+    conditions. In this case create a new version that satisfies a
+    depends_on condition and make sure it is triggered (i.e. the
+    dependency is added).
+    """
+    if spack.config.get("config:concretizer") == "original":
+        pytest.skip("Original concretizer does not support configuration" " requirements")
+
+    repo_path, filename, commits = mock_git_version_info
+    monkeypatch.setattr(
+        spack.package_base.PackageBase, "git", path_to_file_url(repo_path), raising=False
+    )
+
+    # Sanity check: early version of T does not include U
+    s0 = Spec("t@2.0").concretized()
+    assert not ("u" in s0)
+
+    conf_str = """\
+packages:
+  t:
+    require: "@{0}=2.2"
+""".format(
+        commits[0]
+    )
+    update_packages_config(conf_str)
+
+    s1 = Spec("t").concretized()
+    assert "u" in s1
+    assert s1.satisfies("@2.2")
 
 
 def test_requirement_adds_git_hash_version(
