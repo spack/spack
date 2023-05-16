@@ -81,11 +81,9 @@ def test_normal_spec(mock_packages):
     "invalid_yaml", ["playing_playlist: {{ action }} playlist {{ playlist_name }}"]
 )
 def test_invalid_yaml_spec(invalid_yaml):
-    with pytest.raises(SpackYAMLError) as e:
+    with pytest.raises(SpackYAMLError, match="error parsing YAML") as e:
         Spec.from_yaml(invalid_yaml)
-    exc_msg = str(e.value)
-    assert exc_msg.startswith("error parsing YAML spec:")
-    assert invalid_yaml in exc_msg
+    assert invalid_yaml in str(e)
 
 
 @pytest.mark.parametrize("invalid_json, error_message", [("{13:", "Expecting property name")])

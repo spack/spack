@@ -85,6 +85,8 @@ spack:
   - gptune
   - h5bench
   - hdf5-vol-async
+  - hdf5-vol-cache
+  - hdf5-vol-log
   - heffte +fftw
   - hpctoolkit
   - hpx max_cpu_count=512 networking=mpi
@@ -188,7 +190,7 @@ spack:
   - superlu-dist +cuda
   - tasmanian +cuda
   - tau +mpi +cuda
-  - trilinos@13.4.0 +belos +ifpack2 +stokhos +cuda
+  - "trilinos@13.4.0: +belos +ifpack2 +stokhos +cuda"
   - umpire ~shared +cuda
 
   # ROCm
@@ -217,7 +219,7 @@ spack:
   - superlu-dist +rocm
   - tasmanian ~openmp +rocm
   - tau +mpi +rocm
-  - trilinos@13.4.0 ~belos ~ifpack2 ~stokhos +rocm
+  - "trilinos@13.4.0: +belos ~ifpack2 ~stokhos +rocm"
   - umpire +rocm
   - upcxx +rocm
 
