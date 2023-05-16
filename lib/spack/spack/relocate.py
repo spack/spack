@@ -139,11 +139,6 @@ def _normalize_relative_paths(start_path, relative_paths):
     return normalized_paths
 
 
-def _placeholder(dirname):
-    """String of  of @'s with same length of the argument"""
-    return "@" * len(dirname)
-
-
 def _decode_macho_data(bytestring):
     return bytestring.rstrip(b"\x00").decode("ascii")
 

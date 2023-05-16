@@ -54,7 +54,7 @@ class IntelMpiBenchmarks(MakefilePackage):
     variant("ext", default=True, description="Build EXT benchmark")
     variant("io", default=True, description="Build IO benchmark")
     variant("nbc", default=True, description="Build NBC benchmark")
-    variant("p2p", default=True, description="Build P2P benchmark", when="@2018")
+    variant("p2p", default=True, description="Build P2P benchmark", when="@2018:")
     variant("rma", default=True, description="Build RMA benchmark")
     variant("mt", default=True, description="Build MT benchmark")
 

@@ -32,11 +32,8 @@ class Libxcb(AutotoolsPackage):
     depends_on("xcb-proto@1.12:", when="@1.12:1.12.999")
     depends_on("xcb-proto@1.11:", when="@1.11:1.11.999")
 
-    # TODO: uncomment once build deps can be resolved separately
-    # See #7646, #4145, #4063, and #2548 for details
     # libxcb 1.13 added Python 3 support
-    # depends_on('python', type='build')
-    # depends_on('python@2:2.8', when='@:1.12', type='build')
+    depends_on("python@3", when="@1.13:", type="build")
 
     depends_on("pkgconfig", type="build")
     depends_on("util-macros", type="build")

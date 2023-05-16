@@ -15,6 +15,7 @@ class Hohqmesh(CMakePackage):
 
     maintainers("fluidnumerics-joe")
 
+    version("1.3.0", sha256="31ea80de15ece886df0dd1b941714d86ec06a9ed02c1415308b4ba23d8314eff")
     version("1.2.1", sha256="b1b13a680c3ef6b8d6a8d05406f68c1ff641c26f69c468ccf2d7bed8d556dd7e")
     version("1.1.0", sha256="5fdb75157d9dc29bba55e6ae9dc2be71294754204f4f0912795532ae66aada10")
     version("1.0.1", sha256="8435f13c96d714a287f3c24392330047e2131d53fafe251a77eba365bd2b3141")

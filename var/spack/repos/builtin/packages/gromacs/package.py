@@ -30,6 +30,7 @@ class Gromacs(CMakePackage, CudaPackage):
 
     version("main", branch="main")
     version("master", branch="main", deprecated=True)
+    version("2023.1", sha256="eef2bb4a6cb6314cf9da47f26df2a0d27af4bf7b3099723d43601073ab0a42f4")
     version("2023", sha256="ac92c6da72fbbcca414fd8a8d979e56ecf17c4c1cdabed2da5cfb4e7277b7ba8")
     version("2022.5", sha256="083cc3c424bb93ffe86c12f952e3e5b4e6c9f6520de5338761f24b75e018c223")
     version("2022.4", sha256="c511be602ff29402065b50906841def98752639b92a95f1b0a1060d9b5e27297")
@@ -86,7 +87,6 @@ class Gromacs(CMakePackage, CudaPackage):
         default=False,
         description="Produces a double precision version of the executables",
     )
-    variant("plumed", default=False, description="Enable PLUMED support")
     variant("cufftmp", default=False, when="+cuda+mpi", description="Enable Multi GPU FFT support")
     variant("opencl", default=False, description="Enable OpenCL support")
     variant("sycl", default=False, description="Enable SYCL support")
@@ -115,6 +115,10 @@ class Gromacs(CMakePackage, CudaPackage):
         "+mdrun_only", when="@2021:", msg="mdrun-only build option was removed for GROMACS 2021."
     )
     variant("openmp", default=True, description="Enables OpenMP at configure time")
+    variant("openmp_max_threads", default="none", description="Max number of OpenMP threads")
+    conflicts(
+        "+openmp_max_threads", when="~openmp", msg="OpenMP is off but OpenMP Max threads is set"
+    )
     variant(
         "sve",
         default=True,
@@ -193,49 +197,40 @@ class Gromacs(CMakePackage, CudaPackage):
     # Above dependencies can be verified, and new versions added, by going to
     # https://github.com/plumed/plumed2/tree/v2.7.1/patches
     # and switching tags.
+    plumed_patches = {
+        "2022.5": "2.8.2",
+        "2022.3": "2.8.1",
+        "2021.7": "2.8.2",
+        "2021.6": "2.8.1",
+        "2021.5": "2.7.5:2.7.6",
+        "2021.4": "2.7.3:2.8.0",
+        "2021": "2.7.1:2.7.2",
+        "2020.7": "2.8.1:2.8.2",
+        "2020.6": "2.7.2:2.8.0",
+        "2020.5": "2.7.1",
+        "2020.4": "2.6.2:2.7.0",
+        "2020.2": "2.6.1",
+        "2019.6": "2.6.1:2.8.2",
+        "2019.4": "2.5.3:2.6.0",
+        "2019.2": "2.5.2",
+        "2018.8": "2.5.3:2.6",
+        "2018.6": "2.5.1:2.5.2",
+        "2018.4": "2.5.0",
+        "2016.6": "2.5.1:2.5",
+        "2016.5": "2.5.0",
+    }
 
-    depends_on("plumed+mpi", when="+plumed+mpi")
-    depends_on("plumed~mpi", when="+plumed~mpi")
-    depends_on("plumed@2.8.2+mpi", when="@2022.5+plumed+mpi")
-    depends_on("plumed@2.8.2~mpi", when="@2022.5+plumed~mpi")
-    depends_on("plumed@2.8.1+mpi", when="@2022.3+plumed+mpi")
-    depends_on("plumed@2.8.1~mpi", when="@2022.3+plumed~mpi")
-    depends_on("plumed@2.8.2+mpi", when="@2021.7+plumed+mpi")
-    depends_on("plumed@2.8.2~mpi", when="@2021.7+plumed~mpi")
-    depends_on("plumed@2.8.1+mpi", when="@2021.6+plumed+mpi")
-    depends_on("plumed@2.8.1~mpi", when="@2021.6+plumed~mpi")
-    depends_on("plumed@2.7.5:2.7.6+mpi", when="@2021.5+plumed+mpi")
-    depends_on("plumed@2.7.5:2.7.6~mpi", when="@2021.5+plumed~mpi")
-    depends_on("plumed@2.7.3:2.8.0+mpi", when="@2021.4+plumed+mpi")
-    depends_on("plumed@2.7.3:2.8.0~mpi", when="@2021.4+plumed~mpi")
-    depends_on("plumed@2.7.1:2.7.2+mpi", when="@2021+plumed+mpi")
-    depends_on("plumed@2.7.1:2.7.2~mpi", when="@2021+plumed~mpi")
-    depends_on("plumed@2.8.1:2.8.2+mpi", when="@2020.7+plumed+mpi")
-    depends_on("plumed@2.8.1:2.8.2~mpi", when="@2020.7+plumed~mpi")
-    depends_on("plumed@2.7.2:2.8+mpi", when="@2020.6+plumed+mpi")
-    depends_on("plumed@2.7.2:2.8~mpi", when="@2020.6+plumed~mpi")
-    depends_on("plumed@2.7.1+mpi", when="@2020.5+plumed+mpi")
-    depends_on("plumed@2.7.1~mpi", when="@2020.5+plumed~mpi")
-    depends_on("plumed@2.6.2:2.7.0+mpi", when="@2020.4+plumed+mpi")
-    depends_on("plumed@2.6.2:2.7.0~mpi", when="@2020.4+plumed~mpi")
-    depends_on("plumed@2.6.1+mpi", when="@2020.2+plumed+mpi")
-    depends_on("plumed@2.6.1~mpi", when="@2020.2+plumed~mpi")
-    depends_on("plumed@2.6.1:2.8.2+mpi", when="@2019.6+plumed+mpi")
-    depends_on("plumed@2.6.1:2.8.2~mpi", when="@2019.6+plumed~mpi")
-    depends_on("plumed@2.5.3:2.6.0+mpi", when="@2019.4+plumed+mpi")
-    depends_on("plumed@2.5.3:2.6.0~mpi", when="@2019.4+plumed~mpi")
-    depends_on("plumed@2.5.2+mpi", when="@2019.2+plumed+mpi")
-    depends_on("plumed@2.5.2~mpi", when="@2019.2+plumed~mpi")
-    depends_on("plumed@2.5.3:2.6+mpi", when="@2018.8+plumed+mpi")
-    depends_on("plumed@2.5.3:2.6~mpi", when="@2018.8+plumed~mpi")
-    depends_on("plumed@2.5.1:2.5.2+mpi", when="@2018.6+plumed+mpi")
-    depends_on("plumed@2.5.1:2.5.2~mpi", when="@2018.6+plumed~mpi")
-    depends_on("plumed@2.5.0+mpi", when="@2018.4+plumed+mpi")
-    depends_on("plumed@2.5.0~mpi", when="@2018.4+plumed~mpi")
-    depends_on("plumed@2.5.1:2.5+mpi", when="@2016.6+plumed+mpi")
-    depends_on("plumed@2.5.1:2.5~mpi", when="@2016.6+plumed~mpi")
-    depends_on("plumed@2.5.0+mpi", when="@2016.5+plumed+mpi")
-    depends_on("plumed@2.5.0~mpi", when="@2016.5+plumed~mpi")
+    variant(
+        "plumed",
+        default=False,
+        description="Enable PLUMED support",
+        when="@{0}".format(",".join(plumed_patches.keys())),
+    )
+    with when("+plumed"):
+        depends_on("plumed+mpi", when="+mpi")
+        depends_on("plumed~mpi", when="~mpi")
+        for gmx_ver, plumed_vers in plumed_patches.items():
+            depends_on("plumed@{0}".format(plumed_vers), when="@{0}+plumed".format(gmx_ver))
 
     depends_on("fftw-api@3")
     depends_on("cmake@2.8.8:3", type="build")
@@ -578,6 +573,11 @@ class CMakeBuilder(spack.build_systems.cmake.CMakeBuilder):
             options.append("-DGMX_CYCLE_SUBCOUNTERS:BOOL=ON")
         else:
             options.append("-DGMX_CYCLE_SUBCOUNTERS:BOOL=OFF")
+
+        if "+openmp" in self.spec and self.spec.variants["openmp_max_threads"].value != "none":
+            options.append(
+                "-DGMX_OPENMP_MAX_THREADS=%s" % self.spec.variants["openmp_max_threads"].value
+            )
 
         if "^mkl" in self.spec:
             # fftw-api@3 is provided by intel-mkl or intel-parllel-studio

@@ -350,7 +350,9 @@ class ArmplGcc(Package):
                 symlink(f, f + ".pc")
 
     def setup_dependent_build_environment(self, env, dependent_spec):
+        armpl_dir = get_armpl_prefix(self.spec)
         if self.spec.satisfies("@:22"):
             # pkgconfig directory is not in standard ("lib", "lib64", "share") location
-            armpl_dir = get_armpl_prefix(self.spec)
             env.append_path("PKG_CONFIG_PATH", join_path(armpl_dir, "pkgconfig"))
+        else:
+            env.append_path("PKG_CONFIG_PATH", join_path(armpl_dir, "lib/pkgconfig"))

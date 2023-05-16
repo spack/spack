@@ -46,6 +46,11 @@ class Hdf5(CMakePackage):
 
     # Even versions are maintenance versions
     version(
+        "1.14.1-2",
+        sha256="cbe93f275d5231df28ced9549253793e40cd2b555e3d288df09d7b89a9967b07",
+        preferred=True,
+    )
+    version(
         "1.14.0",
         sha256="a571cc83efda62e1a51a0a912dd916d01895801c5025af91669484a1575a6ef4",
         preferred=True,
@@ -238,6 +243,10 @@ class Hdf5(CMakePackage):
     conflicts("+fortran", when="+shared@:1.8.15")
     # See https://github.com/spack/spack/issues/31085
     conflicts("+fortran+mpi", when="@1.8.22")
+    # See https://github.com/HDFGroup/hdf5/issues/2906#issue-1697749645
+    conflicts(
+        "+fortran", when="@1.13.3:^cmake@:3.22", msg="cmake_minimum_required is not set correctly."
+    )
 
     # There are several officially unsupported combinations of the features:
     # 1. Thread safety is not guaranteed via high-level C-API but in some cases
@@ -633,9 +642,7 @@ class Hdf5(CMakePackage):
         # 1.10.6 and 1.12.0. The current develop versions do not produce 'h5pfc'
         # at all. Here, we make sure that 'h5pfc' is available when Fortran and
         # MPI support are enabled (only for versions that generate 'h5fc').
-        if self.spec.satisfies(
-            "@1.8.22:1.8," "1.10.6:1.10," "1.12.0:1.12," "develop:" "+fortran+mpi"
-        ):
+        if self.spec.satisfies("@1.8.22:1.8," "1.10.6:1.10," "1.12.0:1.12" "+fortran+mpi"):
             with working_dir(self.prefix.bin):
                 # No try/except here, fix the condition above instead:
                 symlink("h5fc", "h5pfc")
@@ -678,6 +685,24 @@ class Hdf5(CMakePackage):
                     tgt_filename = src_filename[:version_sep_idx] + ".pc"
                     if not os.path.exists(tgt_filename):
                         symlink(src_filename, tgt_filename)
+
+    @run_after("install")
+    def fix_showconfig(self):
+        # The 'Extra libraries' entry of the 'h5cc -showconfig' command is a space-separated list
+        # of linker flags if the package is installed with Autotools, and a semicolon-separated
+        # list of library names if the package is installed with CMake. There are use cases that
+        # rely on the old Autotools behavior. Here, we make sure that the output of the command
+        # looks like it was before we switch to CMake.
+        filter_file(
+            r"^(\s*Extra libraries: )(.*)",
+            lambda match: "{0}{1}".format(
+                match.group(1),
+                " ".join("-l{0}".format(name) for name in filter(None, match.group(2).split(";"))),
+            ),
+            self.prefix.lib.join("libhdf5.settings"),
+            backup=False,
+            ignore_absent=True,
+        )
 
     @run_after("install")
     @on_package_attributes(run_tests=True)

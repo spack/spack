@@ -10,10 +10,10 @@ class MultivalueVariant(Package):
     homepage = "http://www.llnl.gov"
     url = "http://www.llnl.gov/mpileaks-1.0.tar.gz"
 
-    version(1.0, md5="0123456789abcdef0123456789abcdef")
-    version(2.1, md5="0123456789abcdef0123456789abcdef")
-    version(2.2, md5="0123456789abcdef0123456789abcdef")
-    version(2.3, md5="0123456789abcdef0123456789abcdef")
+    version("1.0", md5="0123456789abcdef0123456789abcdef")
+    version("2.1", md5="0123456789abcdef0123456789abcdef")
+    version("2.2", md5="0123456789abcdef0123456789abcdef")
+    version("2.3", md5="0123456789abcdef0123456789abcdef")
 
     variant("debug", default=False, description="Debug variant")
     variant(
