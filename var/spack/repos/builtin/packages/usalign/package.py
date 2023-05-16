@@ -14,6 +14,11 @@ class Usalign(Package):
     alignments."""
 
     homepage = "https://zhanggroup.org/US-align"
+    # this group prefers to distribute their software as single
+    # source files without any actual versioning.
+    # as such this recipe will likely need updating any time
+    # they update the source, with the old version being
+    # deprecated.
     url = "https://zhanggroup.org/US-align/bin/module/USalign.cpp"
 
     maintainers("snehring")
@@ -21,7 +26,7 @@ class Usalign(Package):
     # date assumed from paper publication date
     version(
         "20220829",
-        sha256="30274251f4123601af102cf6d4f1a9cc496878c1ae776702f554e2fc25658d7f",
+        sha256="9ee129017a68125c22ce89123ecbac9421add87ee077cd1994c6e8a39a8a8b21",
         expand=False,
     )
 
