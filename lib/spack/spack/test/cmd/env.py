@@ -295,7 +295,7 @@ def test_env_install_same_spec_twice(install_mockery, mock_fetch):
 
         # The second installation reports all packages already installed
         out = install("cmake-client")
-        assert "already installed" in out
+        assert "Executing phase" not in output
 
 
 def test_env_definition_symlink(install_mockery, mock_fetch, tmpdir):

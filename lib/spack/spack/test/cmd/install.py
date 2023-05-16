@@ -749,8 +749,7 @@ def test_install_overwrite_in_env(tmpdir, mock_fetch, install_mockery, mutable_m
         install("--add", "dependency-install")
         output = install("-y", "--overwrite", "dependency-install")
 
-    print(output)
-    assert "already installed" not in output
+    assert "Executing phase" in output
 
 
 @pytest.mark.regression("12002")
