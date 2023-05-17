@@ -40,9 +40,17 @@ class Openmpi(AutotoolsPackage, CudaPackage):
 
     version("main", branch="main", submodules=True)
 
+    #
+    # UPDATE the depends_on autoconf etc. when 5.0.0 is actually released
+    #
+    # Release candidate 5.0.0rc11
+    version("5.0.0", commit="775d0aa17bb0ed5b9da2e0a543ebbac819feea52", submodules=True)
+
     # Current
     version(
-        "4.1.5", sha256="a640986bc257389dd379886fdae6264c8cfa56bc98b71ce3ae3dfbd8ce61dbe3"
+        "4.1.5",
+        sha256="a640986bc257389dd379886fdae6264c8cfa56bc98b71ce3ae3dfbd8ce61dbe3",
+        preferred=True,
     )  # libmpi.so.40.30.5
 
     # Still supported
@@ -503,10 +511,17 @@ class Openmpi(AutotoolsPackage, CudaPackage):
     if sys.platform != "darwin":
         depends_on("numactl")
 
-    depends_on("autoconf @2.69:", type="build", when="@main")
-    depends_on("automake @1.13.4:", type="build", when="@main")
-    depends_on("libtool @2.4.2:", type="build", when="@main")
-    depends_on("m4", type="build", when="@main")
+    #
+    # UPDATE WHEN 5.0.0 is actually released
+    #
+    depends_on("autoconf @2.69:", type="build", when="@5.0.0:")
+    depends_on("automake @1.13.4:", type="build", when="@5.0.0:")
+    depends_on("libtool @2.4.2:", type="build", when="@5.0.0:")
+    depends_on("m4", type="build", when="@5.0.0:")
+    #   depends_on("autoconf @2.69:", type="build", when="@main")
+    #   depends_on("automake @1.13.4:", type="build", when="@main")
+    #   depends_on("libtool @2.4.2:", type="build", when="@main")
+    #   depends_on("m4", type="build", when="@main")
 
     depends_on("perl", type="build")
     depends_on("pkgconfig", type="build")
@@ -554,7 +569,7 @@ class Openmpi(AutotoolsPackage, CudaPackage):
     # depends_on('pmix@3.2.3', when='@4.1.2')
     depends_on("pmix@1.0:1", when="@2.0:2")
     depends_on("pmix@3.2:", when="@4.0:4")
-    depends_on("pmix@4.2:", when="@5.0:5")
+    depends_on("pmix@4.2:4", when="@5.0.0:5")
 
     # Libevent is required when *vendored* PMIx is used
     depends_on("libevent@2:", when="@main")
@@ -899,6 +914,7 @@ class Openmpi(AutotoolsPackage, CudaPackage):
             raise InstallError("OpenMPI requires both C and Fortran compilers!")
 
     @when("@main")
+    @when("@5.0.0")
     def autoreconf(self, spec, prefix):
         perl = which("perl")
         perl("autogen.pl")
