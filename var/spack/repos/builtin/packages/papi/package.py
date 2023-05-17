@@ -68,9 +68,7 @@ class Papi(AutotoolsPackage, ROCmPackage):
     conflicts("+sde", when="@:5", msg="Software defined events (SDE) added in 6.0.0")
     conflicts("^cuda", when="@:5", msg="CUDA support for versions < 6.0.0 not implemented")
 
-    conflicts(
-        "@=6.0.0", when="+static_tools", msg="Static tools cannot build on version 6.0.0"
-    )
+    conflicts("@=6.0.0", when="+static_tools", msg="Static tools cannot build on version 6.0.0")
 
     # Does not build with newer versions of gcc, see
     # https://bitbucket.org/icl/papi/issues/46/cannot-compile-on-arch-linux
