@@ -170,17 +170,12 @@ def merge_config_rules(configuration, spec):
     Returns:
         dict: actions to be taken on the spec passed as an argument
     """
-
-    # Get the top-level configuration for the module type we are using
-    module_specific_configuration = copy.deepcopy(configuration)
-
-    # Construct a dictionary with the actions we need to perform on the spec
-    # passed as a parameter
-
+    # Construct a dictionary with the actions we need to perform on the spec passed as a parameter
+    spec_configuration = {}
     # The keyword 'all' is always evaluated first, all the others are
     # evaluated in order of appearance in the module file
-    spec_configuration = module_specific_configuration.pop("all", {})
-    for constraint, action in module_specific_configuration.items():
+    spec_configuration.update(copy.deepcopy(configuration.get("all", {})))
+    for constraint, action in configuration.items():
         if spec.satisfies(constraint):
             if hasattr(constraint, "override") and constraint.override:
                 spec_configuration = {}
@@ -200,14 +195,14 @@ def merge_config_rules(configuration, spec):
     # configuration
 
     # Hash length in module files
-    hash_length = module_specific_configuration.get("hash_length", 7)
+    hash_length = configuration.get("hash_length", 7)
     spec_configuration["hash_length"] = hash_length
 
-    verbose = module_specific_configuration.get("verbose", False)
+    verbose = configuration.get("verbose", False)
     spec_configuration["verbose"] = verbose
 
     # module defaults per-package
-    defaults = module_specific_configuration.get("defaults", [])
+    defaults = configuration.get("defaults", [])
     spec_configuration["defaults"] = defaults
 
     return spec_configuration
