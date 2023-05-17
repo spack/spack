@@ -68,10 +68,8 @@ class Papi(AutotoolsPackage, ROCmPackage):
     conflicts("+sde", when="@:5", msg="Software defined events (SDE) added in 6.0.0")
     conflicts("^cuda", when="@:5", msg="CUDA support for versions < 6.0.0 not implemented")
 
-    # This is the only way to match exactly version 6.0.0 without also
-    # including version 6.0.0.1 due to spack version matching logic
     conflicts(
-        "@6.0:6.0.0.a", when="+static_tools", msg="Static tools cannot build on version 6.0.0"
+        "@=6.0.0", when="+static_tools", msg="Static tools cannot build on version 6.0.0"
     )
 
     # Does not build with newer versions of gcc, see
