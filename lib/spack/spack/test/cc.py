@@ -173,7 +173,7 @@ def wrapper_environment(working_env):
         SPACK_DTAGS_TO_ADD="--disable-new-dtags",
         SPACK_DTAGS_TO_STRIP="--enable-new-dtags",
         SPACK_COMPILER_FLAGS_KEEP="",
-        SPACK_COMPILER_FLAGS_REPLACE="-Werror*",
+        SPACK_COMPILER_FLAGS_REPLACE="-Werror*|",
     ):
         yield
 
@@ -279,12 +279,12 @@ def test_ld_flags(wrapper_environment, wrapper_flags):
         test_args,
         ["ld"]
         + test_include_paths
+        + ["".join(spack_ldflags)]
         + test_library_paths
         + ["--disable-new-dtags"]
         + test_rpaths
         + test_args_without_paths
-        + spack_ldlibs
-        + spack_ldflags,
+        + spack_ldlibs,
     )
 
 
@@ -306,11 +306,15 @@ def test_cc_flags(wrapper_environment, wrapper_flags):
         test_args,
         [real_cc]
         + target_args
-        + common_compile_args
-        + spack_ldlibs
+        + test_include_paths
+        + ["".join(spack_ldflags)]
+        + test_library_paths
+        + ["-Wl,--disable-new-dtags"]
+        + test_wl_rpaths
+        + test_args_without_paths
         + spack_cppflags
         + spack_cflags
-        + spack_ldflags,
+        + spack_ldlibs,
     )
 
 
@@ -320,11 +324,14 @@ def test_cxx_flags(wrapper_environment, wrapper_flags):
         test_args,
         [real_cc]
         + target_args
-        + common_compile_args
-        + spack_ldlibs
+        + test_include_paths
+        + ["".join(spack_ldflags)]
+        + test_library_paths
+        + ["-Wl,--disable-new-dtags"]
+        + test_wl_rpaths
+        + test_args_without_paths
         + spack_cppflags
-        + spack_cxxflags
-        + spack_ldflags,
+        + spack_ldlibs,
     )
 
 
@@ -334,11 +341,15 @@ def test_fc_flags(wrapper_environment, wrapper_flags):
         test_args,
         [real_cc]
         + target_args
-        + common_compile_args
-        + spack_ldlibs
+        + test_include_paths
+        + ["".join(spack_ldflags)]
+        + test_library_paths
+        + ["-Wl,--disable-new-dtags"]
+        + test_wl_rpaths
+        + test_args_without_paths
         + spack_fflags
         + spack_cppflags
-        + spack_ldflags,
+        + spack_ldlibs,
     )
 
 
