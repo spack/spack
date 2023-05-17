@@ -116,8 +116,7 @@ class CMakeBuilder(CMakeBuilder):
         args = [self.define_from_variant(var) for var in VARIANTS]
         args.append("-Dsphinx=OFF")
         args += [self.define_from_variant("BUILD_SHARED_LIBS", "shared")]
-#        args += [self.define_from_variant("CMAKE_POSITION_INDEPENDENT_CODE", "pic")]
-        args += ["-DCMAKE_POSITION_INDEPENDENT_CODE=ON"]
+        args += [self.define_from_variant("CMAKE_POSITION_INDEPENDENT_CODE", "pic")]
 
         # Remove empty strings
         args = [arg for arg in args if arg]
