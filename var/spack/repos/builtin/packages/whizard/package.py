@@ -43,17 +43,11 @@ class Whizard(AutotoolsPackage):
     )
 
     variant("pythia8", default=True, description="builds with pythia8")
-
     variant("fastjet", default=False, description="builds with fastjet")
-
     variant("lcio", default=False, description="builds with lcio")
-
     variant("lhapdf", default=False, description="builds with fastjet")
-
     variant("openmp", default=False, description="builds with openmp")
-
     variant("openloops", default=False, description="builds with openloops")
-
     variant("latex", default=False, description="data visualization with latex")
 
     depends_on("libtirpc")
@@ -86,9 +80,12 @@ class Whizard(AutotoolsPackage):
         msg="The fortran compiler needs to support Fortran 2008. For more detailed information see https://whizard.hepforge.org/compilers.html",
     )
 
-    # Trying to build in parallel leads to a race condition at the build step.
-    # See: https://github.com/key4hep/k4-spack/issues/71
-    parallel = False
+    @property
+    def parallel(self):
+        # Trying to build in parallel leads to a race condition at the build step.
+        # See: https://github.com/key4hep/key4hep-spack/issues/71
+        # On 3.1.0 it doesn't seem to happen
+        return self.spec.version > Version("3.0.3")
 
     def setup_build_environment(self, env):
         # whizard uses the compiler during runtime,
