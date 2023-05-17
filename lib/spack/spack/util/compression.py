@@ -233,14 +233,12 @@ def _win_compressed_tarball_handler(decompressor):
         # record name of new archive so we can extract
         # and later clean up
         decomped_tarball = decompressor(archive_file)
-        if check_extension(decomped_tarball, "tar"):
-            # run tar on newly decomped archive
-            outfile = _system_untar(decomped_tarball)
-            # clean intermediate archive to mimic end result
-            # produced by one shot decomp/extraction
-            os.remove(decomped_tarball)
-            return outfile
-        return decomped_tarball
+        # run tar on newly decomped archive
+        outfile = _system_untar(decomped_tarball)
+        # clean intermediate archive to mimic end result
+        # produced by one shot decomp/extraction
+        os.remove(decomped_tarball)
+        return outfile
 
     return unarchive
 
