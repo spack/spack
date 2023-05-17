@@ -5,6 +5,7 @@
 
 import codecs
 import collections
+import datetime
 import hashlib
 import io
 import itertools
@@ -1319,6 +1320,9 @@ def _build_tarball_in_stage_dir(spec: Spec, out_url: str, stage_dir: str, option
     # get the sha256 checksum of the tarball
     checksum = checksum_tarball(tarfile_path)
 
+    size, _ = fsys.filesummary(tarfile_path)
+    timestamp = datetime.datetime.now().astimezone().isoformat()
+
     # add sha256 checksum to spec.json
 
     with open(spec_file, "r") as inputfile:
@@ -1327,7 +1331,7 @@ def _build_tarball_in_stage_dir(spec: Spec, out_url: str, stage_dir: str, option
             spec_dict = sjson.load(content)
         else:
             raise ValueError("{0} not a valid spec file type".format(spec_file))
-    spec_dict["buildcache_layout_version"] = 1
+    spec_dict["buildcache_layout_version"] = 2
     bchecksum = {}
     bchecksum["hash_algorithm"] = "sha256"
     bchecksum["hash"] = checksum
@@ -1337,6 +1341,8 @@ def _build_tarball_in_stage_dir(spec: Spec, out_url: str, stage_dir: str, option
     buildinfo = {}
     buildinfo["relative_prefix"] = os.path.relpath(spec.prefix, spack.store.layout.root)
     buildinfo["relative_rpaths"] = options.relative
+    buildinfo["archive_size"] = size
+    buildinfo["archive_timestamp"] = timestamp
     spec_dict["buildinfo"] = buildinfo
 
     with open(specfile_path, "w") as outfile:
