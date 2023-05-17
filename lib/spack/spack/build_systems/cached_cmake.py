@@ -254,7 +254,9 @@ class CachedCMakeBuilder(CMakeBuilder):
             entries.append("# ROCm")
             entries.append("#------------------{0}\n".format("-" * 30))
 
-            # This may be a patch that is no longer necessary
+            # Explicitly setting HIP_ROOT_DIR may be a patch that is no longer necessary
+            entries.append(cmake_cache_path("HIP_ROOT_DIR", "{0}".format(spec["hip"].prefix)))
+            entries.append(cmake_cache_path("HIP_CXX_COMPILER", "{0}".format(self.spec["hip"].hipcc)))
             archs = self.spec.variants["amdgpu_target"].value
             if archs != "none":
                 arch_str = ";".join(archs)
