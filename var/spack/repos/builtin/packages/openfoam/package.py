@@ -340,11 +340,11 @@ class Openfoam(Package):
         "source", default=True, description="Install library/application sources and tutorials"
     )
     variant(
-        "precision", default="dp", description="Precision option",
-        values=("sp", "dp",
-                conditional("spdp", when="@1906:")
-               ),
-        multi=False
+        "precision",
+        default="dp",
+        description="Precision option",
+        values=("sp", "dp", conditional("spdp", when="@1906:")),
+        multi=False,
     )
 
     depends_on("mpi")
