@@ -35,4 +35,4 @@ class Mkfontscale(AutotoolsPackage, XorgPackage):
         if ldflags:
             args.append("LDFLAGS=%s" % " ".join(ldflags))
             args.append("LIBS=%s" % " ".join(libs))
-            return args
+        return args
