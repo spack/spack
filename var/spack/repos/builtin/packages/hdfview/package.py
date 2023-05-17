@@ -15,26 +15,14 @@ class Hdfview(Package):
     homepage = "https://www.hdfgroup.org/downloads/hdfview/"
     url = "https://support.hdfgroup.org/ftp/HDF5/releases/HDF-JAVA/hdfview-3.1.4/src/hdfview-3.1.4.tar.gz"
 
-    version(
-        "3.3.0",
-        sha256="0916161861c21fa8dd354b445b48eff5a53d80a5c0b383e79eb64b7b108e2430",
-    )
-    version(
-        "3.2.0",
-        sha256="d3c0deff2cbd959508c4da9c712da72fb204ff6818a3434f00a7071f8e8cf2b8",
-    )
-    version(
-        "3.1.4",
-        sha256="898fcd5227d4e7b697efde5e5a969405f96b72517f9dfbdbdce2991290fd56a0",
-    )
-    version(
-        "3.1.1",
-        sha256="1cfd127ebb4c3b0ab1cfe54649a410fc7a1c2d73f45564697d3729f4aa6b0ba3",
-    )
+    version("3.3.0", sha256="0916161861c21fa8dd354b445b48eff5a53d80a5c0b383e79eb64b7b108e2430")
+    version("3.2.0", sha256="d3c0deff2cbd959508c4da9c712da72fb204ff6818a3434f00a7071f8e8cf2b8")
+    version("3.1.4", sha256="898fcd5227d4e7b697efde5e5a969405f96b72517f9dfbdbdce2991290fd56a0")
+    version("3.1.1", sha256="1cfd127ebb4c3b0ab1cfe54649a410fc7a1c2d73f45564697d3729f4aa6b0ba3")
     version(
         "3.0",
         sha256="e2a16d3842d8947f3d4f154ee9f48a106c7f445914a9e626a53976d678a0e934",
-        url="https://s3.amazonaws.com/hdf-wordpress-1/wp-content/uploads/manual/HDFView/hdfview-3.0.tar.gz"
+        url="https://s3.amazonaws.com/hdf-wordpress-1/wp-content/uploads/manual/HDFView/hdfview-3.0.tar.gz",
     )
 
     # unknown flag: --ignore-missing-deps
@@ -67,4 +55,4 @@ class Hdfview(Package):
     def setup_build_environment(self, env):
         env.set("HDF5LIBS", self.spec["hdf5"].prefix)
         env.set("HDFLIBS", self.spec["hdf"].prefix)
-        env.set('ANT_HOME', self.spec['ant'].prefix)
+        env.set("ANT_HOME", self.spec["ant"].prefix)
