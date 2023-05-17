@@ -30,7 +30,7 @@ fortran_mapping = {
 
 
 def get_valid_fortran_pth(comp_ver):
-    cl_ver = str(comp_ver).split("@")[1]
+    cl_ver = str(comp_ver)
     sort_fn = lambda fc_ver: StrictVersion(fc_ver)
     sort_fc_ver = sorted(list(avail_fc_version), key=sort_fn)
     for ver in sort_fc_ver:
@@ -75,7 +75,7 @@ class Msvc(Compiler):
     # file based on compiler executable path.
 
     def __init__(self, *args, **kwargs):
-        new_pth = [pth if pth else get_valid_fortran_pth(args[0]) for pth in args[3]]
+        new_pth = [pth if pth else get_valid_fortran_pth(args[0].version) for pth in args[3]]
         args[3][:] = new_pth
         super(Msvc, self).__init__(*args, **kwargs)
         if os.getenv("ONEAPI_ROOT"):
@@ -164,15 +164,16 @@ class Msvc(Compiler):
             out = out.decode("utf-16le", errors="replace")  # novermin
 
         int_env = dict(
-            (key.lower(), value)
+            (key, value)
             for key, _, value in (line.partition("=") for line in out.splitlines())
             if key and value
         )
 
-        if "path" in int_env:
-            env.set_path("PATH", int_env["path"].split(";"))
-        env.set_path("INCLUDE", int_env.get("include", "").split(";"))
-        env.set_path("LIB", int_env.get("lib", "").split(";"))
+        for env_var in int_env:
+            if os.pathsep not in int_env[env_var]:
+                env.set(env_var, int_env[env_var])
+            else:
+                env.set_path(env_var, int_env[env_var].split(os.pathsep))
 
         env.set("CC", self.cc)
         env.set("CXX", self.cxx)

@@ -20,6 +20,7 @@ class PyIpython(PythonPackage):
     # for py-ipython@8: "IPython.kernel" was removed
     skip_modules = ["IPython.kernel"]
 
+    version("8.11.0", sha256="735cede4099dbc903ee540307b9171fbfef4aa75cfcacc5a273b2cda2f02be04")
     version("8.5.0", sha256="097bdf5cd87576fd066179c9f7f208004f7a6864ee1b20f37d346c0bcb099f84")
     version("8.0.1", sha256="ab564d4521ea8ceaac26c3a2c6e5ddbca15c8848fd5a5cc325f960da88d42974")
     version("7.31.1", sha256="b5548ec5329a4bcf054a5deed5099b0f9622eb9ea51aaa7104d215fece201d8c")
@@ -44,11 +45,6 @@ class PyIpython(PythonPackage):
     )
 
     depends_on("python@3.8:", when="@8:", type=("build", "run"))
-    depends_on("python@3.7:", when="@7.17:", type=("build", "run"))
-    depends_on("python@3.6:", when="@7.10:", type=("build", "run"))
-    depends_on("python@3.5:", when="@7:", type=("build", "run"))
-    depends_on("python@3.3:", when="@6:", type=("build", "run"))
-    depends_on("python@2.7:2.8,3.3:", type=("build", "run"))
     depends_on("py-setuptools@51:", when="@8:", type="build")
     depends_on("py-setuptools@18.5:", when="@4.1:7", type="run")
     depends_on("py-setuptools", type="build")
@@ -67,6 +63,7 @@ class PyIpython(PythonPackage):
     depends_on("py-pexpect", when="@4: platform=darwin", type=("build", "run"))
     depends_on("py-pexpect", when="@4: platform=cray", type=("build", "run"))
     depends_on("py-pickleshare", when="@4:", type=("build", "run"))
+    depends_on("py-prompt-toolkit@3.0.30:3.0.36,3.0.38:3.0", when="@8.11:", type=("build", "run"))
     depends_on("py-prompt-toolkit@3.0.2:3.0", when="@8.5:", type=("build", "run"))
     depends_on("py-prompt-toolkit@2.0.0:2,3.0.2:3.0", when="@7.26:", type=("build", "run"))
     depends_on("py-prompt-toolkit@3.0.2:3.0", when="@7.18:7.25", type=("build", "run"))
@@ -81,5 +78,6 @@ class PyIpython(PythonPackage):
     depends_on("py-traitlets@4.2:", when="@5:", type=("build", "run"))
     depends_on("py-traitlets", when="@4:", type=("build", "run"))
 
+    # Historical dependencies
     depends_on("py-black", when="@8.0", type=("build", "run"))
     depends_on("py-simplegeneric@0.8:", when="@4:7.0.0", type=("build", "run"))

@@ -33,7 +33,9 @@ import copy
 import datetime
 import inspect
 import os.path
+import pathlib
 import re
+import warnings
 from typing import Optional
 
 import llnl.util.filesystem
@@ -55,34 +57,6 @@ import spack.util.environment
 import spack.util.file_permissions as fp
 import spack.util.path
 import spack.util.spack_yaml as syaml
-
-
-def get_deprecated(dictionary, name, old_name, default):
-    """Get a deprecated property from a ``dict``.
-
-    Arguments:
-        dictionary (dict): dictionary to get a value from.
-        name (str): New name for the property. If present, supersedes ``old_name``.
-        old_name (str): Deprecated name for the property. If present, a warning
-            is printed.
-        default (object): value to return if neither name is found.
-    """
-    value = default
-
-    # always warn if old name is present
-    if old_name in dictionary:
-        value = dictionary.get(old_name, value)
-        main_msg = "`{}:` is deprecated in module config and will be removed in v0.20."
-        details = (
-            "Use `{}:` instead. You can run `spack config update` to translate your "
-            "configuration files automatically."
-        )
-        tty.warn(main_msg.format(old_name), details.format(name))
-
-    # name overrides old name if present
-    value = dictionary.get(name, value)
-
-    return value
 
 
 #: config section for this file
@@ -428,12 +402,17 @@ class BaseConfiguration(object):
 
     default_projections = {"all": "{name}-{version}-{compiler.name}-{compiler.version}"}
 
-    def __init__(self, spec, module_set_name):
+    def __init__(self, spec, module_set_name, explicit=None):
         # Module where type(self) is defined
         self.module = inspect.getmodule(self)
         # Spec for which we want to generate a module file
         self.spec = spec
         self.name = module_set_name
+        # Software installation has been explicitly asked (get this information from
+        # db when querying an existing module, like during a refresh or rm operations)
+        if explicit is None:
+            explicit = spec._installed_explicitly()
+        self.explicit = explicit
         # Dictionary of configuration options that should be applied
         # to the spec
         self.conf = merge_config_rules(self.module.configuration(self.name), self.spec)
@@ -507,20 +486,16 @@ class BaseConfiguration(object):
         conf = self.module.configuration(self.name)
 
         # Compute the list of include rules that match
-        # DEPRECATED: remove 'whitelist' in v0.20
-        include_rules = get_deprecated(conf, "include", "whitelist", [])
+        include_rules = conf.get("include", [])
         include_matches = [x for x in include_rules if spec.satisfies(x)]
 
         # Compute the list of exclude rules that match
-        # DEPRECATED: remove 'blacklist' in v0.20
-        exclude_rules = get_deprecated(conf, "exclude", "blacklist", [])
+        exclude_rules = conf.get("exclude", [])
         exclude_matches = [x for x in exclude_rules if spec.satisfies(x)]
 
         # Should I exclude the module because it's implicit?
-        # DEPRECATED: remove 'blacklist_implicits' in v0.20
-        exclude_implicits = get_deprecated(conf, "exclude_implicits", "blacklist_implicits", None)
-        installed_implicitly = not spec._installed_explicitly()
-        excluded_as_implicit = exclude_implicits and installed_implicitly
+        exclude_implicits = conf.get("exclude_implicits", None)
+        excluded_as_implicit = exclude_implicits and not self.explicit
 
         def debug_info(line_header, match_list):
             if match_list:
@@ -564,10 +539,8 @@ class BaseConfiguration(object):
     @property
     def exclude_env_vars(self):
         """List of variables that should be left unmodified."""
-        filter = self.conf.get("filter", {})
-
-        # DEPRECATED: remove in v0.20
-        return get_deprecated(filter, "exclude_env_vars", "environment_blacklist", {})
+        filter_subsection = self.conf.get("filter", {})
+        return filter_subsection.get("exclude_env_vars", {})
 
     def _create_list_for(self, what):
         include = []
@@ -699,7 +672,7 @@ class BaseContext(tengine.Context):
 
         if os.path.exists(pkg.install_configure_args_path):
             with open(pkg.install_configure_args_path, "r") as args_file:
-                return args_file.read()
+                return spack.util.path.padding_filter(args_file.read())
 
         # Returning a false-like value makes the default templates skip
         # the configure option section
@@ -788,7 +761,8 @@ class BaseContext(tengine.Context):
     def _create_module_list_of(self, what):
         m = self.conf.module
         name = self.conf.name
-        return [m.make_layout(x, name).use_name for x in getattr(self.conf, what)]
+        explicit = self.conf.explicit
+        return [m.make_layout(x, name, explicit).use_name for x in getattr(self.conf, what)]
 
     @tengine.context_property
     def verbose(self):
@@ -796,8 +770,45 @@ class BaseContext(tengine.Context):
         return self.conf.verbose
 
 
+def ensure_modules_are_enabled_or_warn():
+    """Ensures that, if a custom configuration file is found with custom configuration for the
+    default tcl module set, then tcl module file generation is enabled. Otherwise, a warning
+    is emitted.
+    """
+
+    # TODO (v0.21 - Remove this function)
+    # Check if TCL module generation is enabled, return early if it is
+    enabled = spack.config.get("modules:default:enable", [])
+    if "tcl" in enabled:
+        return
+
+    # Check if we have custom TCL module sections
+    for scope in spack.config.config.file_scopes:
+        # Skip default configuration
+        if scope.name.startswith("default"):
+            continue
+
+        data = spack.config.get("modules:default:tcl", scope=scope.name)
+        if data:
+            config_file = pathlib.Path(scope.path)
+            if not scope.name.startswith("env"):
+                config_file = config_file / "modules.yaml"
+            break
+    else:
+        return
+
+    # If we are here we have a custom "modules" section in "config_file"
+    msg = (
+        f"detected custom TCL modules configuration in {config_file}, while TCL module file "
+        f"generation for the default module set is disabled. "
+        f"In Spack v0.20 module file generation has been disabled by default. To enable "
+        f"it run:\n\n\t$ spack config add 'modules:default:enable:[tcl]'\n"
+    )
+    warnings.warn(msg)
+
+
 class BaseModuleFileWriter(object):
-    def __init__(self, spec, module_set_name):
+    def __init__(self, spec, module_set_name, explicit=None):
         self.spec = spec
 
         # This class is meant to be derived. Get the module of the
@@ -806,9 +817,9 @@ class BaseModuleFileWriter(object):
         m = self.module
 
         # Create the triplet of configuration/layout/context
-        self.conf = m.make_configuration(spec, module_set_name)
-        self.layout = m.make_layout(spec, module_set_name)
-        self.context = m.make_context(spec, module_set_name)
+        self.conf = m.make_configuration(spec, module_set_name, explicit)
+        self.layout = m.make_layout(spec, module_set_name, explicit)
+        self.context = m.make_context(spec, module_set_name, explicit)
 
         # Check if a default template has been defined,
         # throw if not found
@@ -930,12 +941,25 @@ class BaseModuleFileWriter(object):
         if os.path.exists(mod_file):
             try:
                 os.remove(mod_file)  # Remove the module file
+                self.remove_module_defaults()  # Remove default targeting module file
                 os.removedirs(
                     os.path.dirname(mod_file)
                 )  # Remove all the empty directories from the leaf up
             except OSError:
                 # removedirs throws OSError on first non-empty directory found
                 pass
+
+    def remove_module_defaults(self):
+        if not any(self.spec.satisfies(default) for default in self.conf.defaults):
+            return
+
+        # This spec matches a default, symlink needs to be removed as we remove the module
+        # file it targets.
+        default_symlink = os.path.join(os.path.dirname(self.layout.filename), "default")
+        try:
+            os.unlink(default_symlink)
+        except OSError:
+            pass
 
 
 @contextlib.contextmanager

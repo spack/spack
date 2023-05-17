@@ -151,3 +151,21 @@ def test_reverse_environment_modifications(working_env):
 
     start_env.pop("UNSET")
     assert os.environ == start_env
+
+
+def test_escape_double_quotes_in_shell_modifications():
+    to_validate = envutil.EnvironmentModifications()
+
+    to_validate.set("VAR", "$PATH")
+    to_validate.append_path("VAR", "$ANOTHER_PATH")
+
+    to_validate.set("QUOTED_VAR", '"MY_VAL"')
+
+    cmds = to_validate.shell_modifications()
+
+    if sys.platform != "win32":
+        assert 'export VAR="$PATH:$ANOTHER_PATH"' in cmds
+        assert r'export QUOTED_VAR="\"MY_VAL\""' in cmds
+    else:
+        assert "export VAR=$PATH;$ANOTHER_PATH" in cmds
+        assert r'export QUOTED_VAR="MY_VAL"' in cmds

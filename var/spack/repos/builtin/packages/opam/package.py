@@ -18,6 +18,7 @@ class Opam(AutotoolsPackage):
 
     maintainers("scemama")
 
+    version("2.1.3", sha256="cb2ab00661566178318939918085aa4b5c35c727df83751fd92d114fdd2fa001")
     version("2.0.6", sha256="7c4bff5e5f3628ad00c53ee1b044ced8128ffdcfbb7582f8773fb433e12e07f4")
     version("2.0.5", sha256="776c7e64d6e24c2ef1efd1e6a71d36e007645efae94eaf860c05c1929effc76f")
     version("2.0.4", sha256="debfb828b400fb511ca290f1bfc928db91cad74ec1ccbddcfdbfeff26f7099e5")

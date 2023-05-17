@@ -18,6 +18,7 @@ class PyMdanalysis(PythonPackage):
 
     maintainers("RMeli")
 
+    version("2.4.3", sha256="c4fbdc414e4fdda69052fff2a6e412180fe6fa90a42c24793beee04123648c92")
     version("2.4.2", sha256="ae2ee5627391e73f74eaa3c547af3ec6ab8b040d27dedffe3a7ece8e0cd27636")
     version(
         "1.0.0",
@@ -87,24 +88,11 @@ class PyMdanalysis(PythonPackage):
     depends_on("python@3.8:", type=("build", "run"), when="@2.4.0:")
 
     depends_on("py-setuptools", type="build")
+
     depends_on("py-cython@0.16:", type="build", when="@:1.0.0")
     depends_on("py-cython@0.28:", type="build", when="@2.4.0:")
 
-    depends_on("py-threadpoolctl", when="@2.4.0:")
-
-    depends_on("py-six@1.4.0:", type=("build", "run"), when="@:1.0.0")
-    depends_on("py-networkx@1.0:", type=("build", "run"), when="@:1.0.0")
-    depends_on("py-networkx@2.0:", type=("build", "run"), when="@2.4.0:")
-
-    depends_on("py-gsd@1.4.0:", when="@0.17.0:1.0.0", type=("build", "run"))
-    depends_on("py-gsd@1.9.3:", when="@2.4.0:", type=("build", "run"))
-    depends_on("py-mmtf-python@1.0.0:", when="@0.16.0:", type=("build", "run"))
-    depends_on("py-mock", when="@0.18.0:1.0.0", type=("build", "run"))
-    depends_on("py-tqdm@4.43.0:", when="@1.0.0:", type=("build", "run"))
-
-    depends_on("py-joblib", when="@0.16.0:0.20.1", type=("build", "run"))
-    depends_on("py-joblib@0.12:", when="@1.0.0:", type=("build", "run"))
-
+    # MDAnalysis required dependencies (install_requires)
     depends_on("py-numpy@1.5.0:", when="@:0.15.0", type=("build", "run"))
     depends_on("py-numpy@1.10.4:", when="@0.16.0:0.19.2", type=("build", "run"))
     depends_on("py-numpy@1.13.3:", when="@0.20.1:1.0.0", type=("build", "run"))
@@ -114,29 +102,57 @@ class PyMdanalysis(PythonPackage):
     depends_on("py-biopython@1.71:", when="@0.18.0:1.0.0", type=("build", "run"))
     depends_on("py-biopython@1.80:", when="@2.4.0:", type=("build", "run"))
 
+    depends_on("py-networkx@1.0:", type=("build", "run"), when="@:1.0.0")
+    depends_on("py-networkx@2.0:", type=("build", "run"), when="@2.4.0:")
+
     depends_on("py-griddataformats@0.3.2:", when="@:0.16.2", type=("build", "run"))
     depends_on("py-griddataformats@0.4.0:", when="@0.17.0:", type=("build", "run"))
 
-    depends_on("py-matplotlib", when="@:0.15.0+analysis", type=("build", "run"))
-    depends_on("py-matplotlib@1.5.1:", when="@0.16.0:0.16.1+analysis", type=("build", "run"))
-    depends_on("py-matplotlib@1.5.1:", when="@0.16.2:", type=("build", "run"))
+    depends_on("py-mmtf-python@1.0.0:", when="@0.16.0:", type=("build", "run"))
+
+    depends_on("py-joblib", when="@0.16.0:0.20.1", type=("build", "run"))
+    depends_on("py-joblib@0.12:", when="@1.0.0:", type=("build", "run"))
 
     depends_on("py-scipy", when="@:0.16.1+analysis", type=("build", "run"))
     depends_on("py-scipy", when="@0.16.2:0.17.0", type=("build", "run"))
     depends_on("py-scipy@1.0.0:", when="@0.18.0:1.0.0", type=("build", "run"))
     depends_on("py-scipy@1.5.0:", when="@2.4.0:", type=("build", "run"))
 
-    depends_on("py-scikit-learn", when="@0.16.0:+analysis", type=("build", "run"))
-    depends_on("py-seaborn", when="+analysis", type=("build", "run"))
+    depends_on("py-matplotlib", when="@:0.15.0+analysis", type=("build", "run"))
+    depends_on("py-matplotlib@1.5.1:", when="@0.16.0:0.16.1+analysis", type=("build", "run"))
+    depends_on("py-matplotlib@1.5.1:", when="@0.16.2:", type=("build", "run"))
 
+    depends_on("py-tqdm@4.43.0:", when="@1.0.0:", type=("build", "run"))
+
+    depends_on("py-threadpoolctl", type=("build", "run"), when="@2.4.0:")  # Requirement from
+
+    depends_on("py-packaging", when="@2.4.2:", type=("build", "run"))
+
+    depends_on("py-fasteners", when="@2.4.2:", type=("build", "run"))
+
+    depends_on("py-gsd@1.4.0:", when="@0.17.0:1.0.0", type=("build", "run"))
+    depends_on("py-gsd@1.9.3:", when="@2.4.0:", type=("build", "run"))
+
+    # extra_format (extras_require)
     depends_on("py-netcdf4@1.0:", when="+amber", type=("build", "run"))
-    depends_on("hdf5", when="+amber", type=("run"))
     depends_on("py-netcdf4@1.0:", when="+extra_formats", type=("build", "run"))
+
+    depends_on("hdf5", when="+amber", type=("run"))
     depends_on("py-h5py@2.10:", when="+extra_formats", type=("build", "run"))
 
     depends_on("py-pytng@0.2.3:", when="@2.4.0:+extra_formats", type=("build", "run"))
+
     depends_on("py-chemfiles@0.10:", when="@2.4.0:+extra_formats", type=("build", "run"))
+
     depends_on("py-pyedr@0.7.0:", when="@2.4.0:+extra_formats", type=("build", "run"))
 
-    depends_on("py-fasteners", when="@2.4.2:", type=("build", "run"))
-    depends_on("py-packaging", when="@2.4.2:", type=("build", "run"))
+    # analysis (extras_require)
+    depends_on("py-seaborn", when="+analysis", type=("build", "run"))
+
+    depends_on("py-scikit-learn", when="@0.16.0:+analysis", type=("build", "run"))
+
+    depends_on("py-tidynamics@1:", when="@2.4.0:+analysis", type=("build", "run"))
+
+    # Deprecated after @1
+    depends_on("py-mock", when="@0.18.0:1.0.0", type=("build", "run"))
+    depends_on("py-six@1.4.0:", type=("build", "run"), when="@:1.0.0")
