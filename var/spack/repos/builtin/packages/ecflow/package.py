@@ -74,7 +74,7 @@ class Ecflow(CMakePackage):
             "Pyext/CMakeLists.txt",
         )
 
-    @when("+ssl")
+    @when("+ssl ^openssl~shared")
     def setup_build_environment(self, env):
         env.set("LIBS", self.spec["zlib"].libs.search_flags)
 
@@ -108,7 +108,7 @@ class Ecflow(CMakePackage):
     def remove_recursive_symlink_in_source_code(self):
         force_remove(join_path(self.prefix, "share/ecflow/src/cereal/cereal"))
 
-    @when("+ssl")
+    @when("+ssl ^openssl~shared")
     def patch(self):
         for sdir in ["Client", "Server"]:
             filter_file("(target_link_libraries.*pthread)", r"\1 ssl crypto z", os.path.join(sdir, "CMakeLists.txt"))
