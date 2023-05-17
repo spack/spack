@@ -31,7 +31,7 @@ spack:
   - $optimized_libs
 
 
-  mirrors: { "mirror": "s3://spack-binaries/develop/aws-pcluster-aarch64" }
+  mirrors: { "mirror": "s3://spack-binaries/develop/aws-pcluster-neoverse_v1" }
 
   ci:
     pipeline-gen:
