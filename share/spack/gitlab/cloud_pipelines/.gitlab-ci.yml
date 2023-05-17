@@ -790,10 +790,6 @@ deprecated-ci-build:
 .aws-pcluster-generate-image:
   image: { "name": "ghcr.io/spack/pcluster-amazonlinux-2:latest", "entrypoint": [""] }
 
-.aws-pcluster:
-  variables:
-    SPACK_CI_STACK_NAME: aws-pcluster
-
 .aws-pcluster-generate:
   before_script:
       # Setup postinstall Spack as upstream installation
@@ -812,11 +808,15 @@ deprecated-ci-build:
     - - mv "${CI_PROJECT_DIR}/postinstall.sh" "${CI_PROJECT_DIR}/jobs_scratch_dir/"
 
 # Icelake (one pipeline per target)
+.aws-pcluster-icelake:
+  variables:
+    SPACK_CI_STACK_NAME: aws-pcluster-icelake
+
 aws-pcluster-generate-icelake:
-  extends: [ ".linux_icelake", ".aws-pcluster", ".generate", ".tags-x86_64_v4", ".aws-pcluster-generate", ".aws-pcluster-generate-image" ]
+  extends: [ ".linux_icelake", ".aws-pcluster-icelake", ".generate", ".tags-x86_64_v4", ".aws-pcluster-generate", ".aws-pcluster-generate-image" ]
 
 aws-pcluster-build-icelake:
-  extends: [ ".linux_icelake", ".aws-pcluster", ".build" ]
+  extends: [ ".linux_icelake", ".aws-pcluster-icelake", ".build" ]
   trigger:
     include:
       - artifact: jobs_scratch_dir/cloud-ci-pipeline.yml
@@ -827,11 +827,15 @@ aws-pcluster-build-icelake:
       job: aws-pcluster-generate-icelake
 
 # Skylake_avx512 (one pipeline per target)
+.aws-pcluster-icelake:
+  variables:
+    SPACK_CI_STACK_NAME: aws-pcluster-skylake
+
 aws-pcluster-generate-skylake:
-  extends: [ ".linux_skylake", ".aws-pcluster", ".generate", ".tags-x86_64_v4", ".aws-pcluster-generate", ".aws-pcluster-generate-image" ]
+  extends: [ ".linux_skylake", ".aws-pcluster-skylake", ".generate", ".tags-x86_64_v4", ".aws-pcluster-generate", ".aws-pcluster-generate-image" ]
 
 aws-pcluster-build-skylake:
-  extends: [ ".linux_skylake", ".aws-pcluster", ".build" ]
+  extends: [ ".linux_skylake", ".aws-pcluster-skylake", ".build" ]
   trigger:
     include:
       - artifact: jobs_scratch_dir/cloud-ci-pipeline.yml
@@ -842,45 +846,39 @@ aws-pcluster-build-skylake:
       job: aws-pcluster-generate-skylake
 
 # Neoverse_n1 (one pipeline per target)
-.aws-pcluster-generate-image-aarch64:
-  image: { "name": "ghcr.io/spack/pcluster-amazonlinux-2:latest", "entrypoint": [""] }
-
-.aws-pcluster-aarch64:
+.aws-pcluster-neoverse_n1:
   variables:
-    SPACK_CI_STACK_NAME: aws-pcluster-aarch64
+    SPACK_CI_STACK_NAME: aws-pcluster-neoverse_n1
 
-aws-pcluster-generate-neoverse-n1:
-  extends: [ ".linux_neoverse_n1", ".aws-pcluster-aarch64", ".generate-aarch64", ".aws-pcluster-generate", ".aws-pcluster-generate-image-aarch64" ]
+aws-pcluster-generate-neoverse_n1:
+  extends: [ ".linux_neoverse_n1", ".aws-pcluster-neoverse_n1", ".generate-aarch64", ".aws-pcluster-generate", ".aws-pcluster-generate-image" ]
 
-aws-pcluster-build-neoverse-n1:
-  extends: [  ".linux_neoverse_n1", ".aws-pcluster-aarch64", ".build" ]
+aws-pcluster-build-neoverse_n1:
+  extends: [  ".linux_neoverse_n1", ".aws-pcluster-neoverse_n1", ".build" ]
   trigger:
     include:
       - artifact: jobs_scratch_dir/cloud-ci-pipeline.yml
-        job: aws-pcluster-generate-neoverse-n1
+        job: aws-pcluster-generate-neoverse_n1
     strategy: depend
   needs:
     - artifacts: True
-      job: aws-pcluster-generate-neoverse-n1
+      job: aws-pcluster-generate-neoverse_n1
 
 # Neoverse_v1 (one pipeline per target)
-.aws-pcluster-generate-image-aarch64:
-  image: { "name": "ghcr.io/spack/pcluster-amazonlinux-2:latest", "entrypoint": [""] }
-
-.aws-pcluster-aarch64:
+.aws-pcluster-neoverse_v1:
   variables:
-    SPACK_CI_STACK_NAME: aws-pcluster-aarch64
+    SPACK_CI_STACK_NAME: aws-pcluster-neoverse_v1
 
-aws-pcluster-generate-neoverse-v1:
-  extends: [ ".linux_neoverse_v1", ".aws-pcluster-aarch64", ".generate-aarch64", ".aws-pcluster-generate", ".aws-pcluster-generate-image-aarch64" ]
+aws-pcluster-generate-neoverse_v1:
+  extends: [ ".linux_neoverse_v1", ".aws-pcluster-neoverse_v1", ".generate-aarch64", ".aws-pcluster-generate", ".aws-pcluster-generate-image" ]
 
-aws-pcluster-build-neoverse-v1:
-  extends: [  ".linux_neoverse_v1", ".aws-pcluster-aarch64", ".build" ]
+aws-pcluster-build-neoverse_v1:
+  extends: [  ".linux_neoverse_v1", ".aws-pcluster-neoverse_v1", ".build" ]
   trigger:
     include:
       - artifact: jobs_scratch_dir/cloud-ci-pipeline.yml
-        job: aws-pcluster-generate-neoverse-v1
+        job: aws-pcluster-generate-neoverse_v1
     strategy: depend
   needs:
     - artifacts: True
-      job: aws-pcluster-generate-neoverse-v1
+      job: aws-pcluster-generate-neoverse_v1
