@@ -16,6 +16,7 @@ import spack.config
 import spack.package_base
 import spack.paths
 import spack.store
+from spack.install_test import TestStatus
 from spack.main import SpackCommand
 
 install = SpackCommand("install")
@@ -59,15 +60,14 @@ def test_test_dup_alias(
     """Ensure re-using an alias fails with suggestion to change."""
     install("libdwarf")
 
-    # Run the tests with the alias once
-    out = spack_test("run", "--alias", "libdwarf", "libdwarf")
-    assert "Spack test libdwarf" in out
+    # Run the (no) tests with the alias once
+    spack_test("run", "--alias", "libdwarf", "libdwarf")
 
     # Try again with the alias but don't let it fail on the error
     with capfd.disabled():
         out = spack_test("run", "--alias", "libdwarf", "libdwarf", fail_on_error=False)
 
-    assert "already exists" in out
+    assert "already exists" in out and "Try another alias" in out
 
 
 def test_test_output(
@@ -83,51 +83,39 @@ def test_test_output(
     # Grab test stage directory contents
     testdir = os.path.join(mock_test_stage, stage_files[0])
     testdir_files = os.listdir(testdir)
+    testlogs = [name for name in testdir_files if str(name).endswith("out.txt")]
+    assert len(testlogs) == 1
 
-    # Grab the output from the test log
-    testlog = list(filter(lambda x: x.endswith("out.txt") and x != "results.txt", testdir_files))
-    outfile = os.path.join(testdir, testlog[0])
+    # Grab the output from the test log to confirm expected result
+    outfile = os.path.join(testdir, testlogs[0])
     with open(outfile, "r") as f:
         output = f.read()
-    assert "BEFORE TEST" in output
-    assert "true: expect command status in [" in output
-    assert "AFTER TEST" in output
-    assert "FAILED" not in output
+    assert "test_print" in output
+    assert "PASSED" in output
 
 
-def test_test_output_on_error(
-    mock_packages, mock_archive, mock_fetch, install_mockery_mutable_config, capfd, mock_test_stage
+@pytest.mark.parametrize(
+    "pkg_name,failure", [("test-error", "exited with status 1"), ("test-fail", "not callable")]
+)
+def test_test_output_fails(
+    mock_packages,
+    mock_archive,
+    mock_fetch,
+    install_mockery_mutable_config,
+    mock_test_stage,
+    pkg_name,
+    failure,
 ):
-    install("test-error")
-    # capfd interferes with Spack's capturing
-    with capfd.disabled():
-        out = spack_test("run", "test-error", fail_on_error=False)
+    """Confirm stand-alone test failure with expected outputs."""
+    install(pkg_name)
+    out = spack_test("run", pkg_name, fail_on_error=False)
 
+    # Confirm package-specific failure is in the output
+    assert failure in out
+
+    # Confirm standard failure tagging AND test log reference also output
     assert "TestFailure" in out
-    assert "Command exited with status 1" in out
-
-
-def test_test_output_on_failure(
-    mock_packages, mock_archive, mock_fetch, install_mockery_mutable_config, capfd, mock_test_stage
-):
-    install("test-fail")
-    with capfd.disabled():
-        out = spack_test("run", "test-fail", fail_on_error=False)
-
-    assert "Expected 'not in the output' to match output of `true`" in out
-    assert "TestFailure" in out
-
-
-def test_show_log_on_error(
-    mock_packages, mock_archive, mock_fetch, install_mockery_mutable_config, capfd, mock_test_stage
-):
-    """Make sure spack prints location of test log on failure."""
-    install("test-error")
-    with capfd.disabled():
-        out = spack_test("run", "test-error", fail_on_error=False)
-
-    assert "See test log" in out
-    assert mock_test_stage in out
+    assert "See test log for details" in out
 
 
 @pytest.mark.usefixtures(
@@ -136,11 +124,12 @@ def test_show_log_on_error(
 @pytest.mark.parametrize(
     "pkg_name,msgs",
     [
-        ("test-error", ["FAILED: Command exited", "TestFailure"]),
-        ("test-fail", ["FAILED: Expected", "TestFailure"]),
+        ("test-error", ["exited with status 1", "TestFailure"]),
+        ("test-fail", ["not callable", "TestFailure"]),
     ],
 )
 def test_junit_output_with_failures(tmpdir, mock_test_stage, pkg_name, msgs):
+    """Confirm stand-alone test failure expected outputs in JUnit reporting."""
     install(pkg_name)
     with tmpdir.as_cwd():
         spack_test(
@@ -173,6 +162,7 @@ def test_cdash_output_test_error(
     mock_test_stage,
     capfd,
 ):
+    """Confirm stand-alone test error expected outputs in CDash reporting."""
     install("test-error")
     with tmpdir.as_cwd():
         spack_test(
@@ -183,12 +173,10 @@ def test_cdash_output_test_error(
             fail_on_error=False,
         )
         report_dir = tmpdir.join("cdash_reports")
-        print(tmpdir.listdir())
-        assert report_dir in tmpdir.listdir()
-        report_file = report_dir.join("test-error_Testing.xml")
-        assert report_file in report_dir.listdir()
-        content = report_file.open().read()
-        assert "FAILED: Command exited with status 1" in content
+        reports = [name for name in report_dir.listdir() if str(name).endswith("Testing.xml")]
+        assert len(reports) == 1
+        content = reports[0].open().read()
+        assert "Command exited with status 1" in content
 
 
 def test_cdash_upload_clean_test(
@@ -203,10 +191,12 @@ def test_cdash_upload_clean_test(
     with tmpdir.as_cwd():
         spack_test("run", "--log-file=cdash_reports", "--log-format=cdash", "printing-package")
         report_dir = tmpdir.join("cdash_reports")
-        assert report_dir in tmpdir.listdir()
-        report_file = report_dir.join("printing-package_Testing.xml")
-        assert report_file in report_dir.listdir()
-        content = report_file.open().read()
+        reports = [name for name in report_dir.listdir() if str(name).endswith("Testing.xml")]
+        assert len(reports) == 1
+        content = reports[0].open().read()
+        assert "passed" in content
+        assert "Running test_print" in content, "Expected first command output"
+        assert "second command" in content, "Expected second command output"
         assert "</Test>" in content
         assert "<Text>" not in content
 
@@ -226,17 +216,19 @@ def test_test_help_cdash(mock_test_stage):
 
 
 def test_test_list_all(mock_packages):
-    """make sure `spack test list --all` returns all packages with tests"""
+    """Confirm `spack test list --all` returns all packages with test methods"""
     pkgs = spack_test("list", "--all").strip().split()
     assert set(pkgs) == set(
         [
+            "fail-test-audit",
+            "mpich",
             "printing-package",
             "py-extension1",
             "py-extension2",
+            "py-test-callback",
             "simple-standalone-test",
             "test-error",
             "test-fail",
-            "fail-test-audit",
         ]
     )
 
@@ -246,15 +238,6 @@ def test_test_list(mock_packages, mock_archive, mock_fetch, install_mockery_muta
     install(pkg_with_tests)
     output = spack_test("list")
     assert pkg_with_tests in output
-
-
-@pytest.mark.skipif(sys.platform == "win32", reason="Not supported on Windows (yet)")
-def test_has_test_method_fails(capsys):
-    with pytest.raises(SystemExit):
-        spack.package_base.has_test_method("printing-package")
-
-    captured = capsys.readouterr()[1]
-    assert "is not a class" in captured
 
 
 def test_read_old_results(mock_packages, mock_test_stage):
@@ -276,7 +259,7 @@ def test_read_old_results(mock_packages, mock_test_stage):
 
     # The results command should still print the old test results
     results_output = spack_test("results")
-    assert "PASSED" in results_output
+    assert str(TestStatus.PASSED) in results_output
 
 
 def test_test_results_none(mock_packages, mock_test_stage):
@@ -291,15 +274,10 @@ def test_test_results_none(mock_packages, mock_test_stage):
 
 
 @pytest.mark.parametrize(
-    "status,expected",
-    [
-        ("FAILED", "1 failed"),
-        ("NO-TESTS", "1 no-tests"),
-        ("SKIPPED", "1 skipped"),
-        ("PASSED", "1 passed"),
-    ],
+    "status", [TestStatus.FAILED, TestStatus.NO_TESTS, TestStatus.SKIPPED, TestStatus.PASSED]
 )
-def test_test_results_status(mock_packages, mock_test_stage, status, expected):
+def test_test_results_status(mock_packages, mock_test_stage, status):
+    """Confirm 'spack test results' returns expected status."""
     name = "trivial"
     spec = spack.spec.Spec("trivial-smoke-test").concretized()
     suite = spack.install_test.TestSuite([spec], name)
@@ -313,11 +291,11 @@ def test_test_results_status(mock_packages, mock_test_stage, status, expected):
             args.insert(1, opt)
 
         results = spack_test(*args)
-        if opt == "--failed" and status != "FAILED":
-            assert status not in results
+        if opt == "--failed" and status != TestStatus.FAILED:
+            assert str(status) not in results
         else:
-            assert status in results
-        assert expected in results
+            assert str(status) in results
+        assert "1 {0}".format(status.lower()) in results
 
 
 @pytest.mark.regression("35337")

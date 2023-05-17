@@ -38,10 +38,6 @@ import sys
 from contextlib import contextmanager
 from typing import Dict, List, Optional, Union
 
-import ruamel.yaml as yaml
-from ruamel.yaml.comments import Comment
-from ruamel.yaml.error import MarkedYAMLError
-
 import llnl.util.lang
 import llnl.util.tty as tty
 from llnl.util.filesystem import mkdirp, rename
@@ -163,8 +159,8 @@ class ConfigScope(object):
             mkdirp(self.path)
             with open(filename, "w") as f:
                 syaml.dump_config(data, stream=f, default_flow_style=False)
-        except (yaml.YAMLError, IOError) as e:
-            raise ConfigFileError("Error writing to config file: '%s'" % str(e))
+        except (syaml.SpackYAMLError, IOError) as e:
+            raise ConfigFileError(f"cannot write to '{filename}'") from e
 
     def clear(self):
         """Empty cached config information."""
@@ -293,8 +289,8 @@ class SingleFileScope(ConfigScope):
                 syaml.dump_config(data_to_write, stream=f, default_flow_style=False)
             rename(tmp, self.path)
 
-        except (yaml.YAMLError, IOError) as e:
-            raise ConfigFileError("Error writing to config file: '%s'" % str(e))
+        except (syaml.SpackYAMLError, IOError) as e:
+            raise ConfigFileError(f"cannot write to config file {str(e)}") from e
 
     def __repr__(self):
         return "<SingleFileScope: %s: %s>" % (self.name, self.path)
@@ -546,12 +542,12 @@ class Configuration(object):
         # manually preserve comments
         need_comment_copy = section in scope.sections and scope.sections[section]
         if need_comment_copy:
-            comments = getattr(scope.sections[section][section], Comment.attrib, None)
+            comments = syaml.extract_comments(scope.sections[section][section])
 
         # read only the requested section's data.
         scope.sections[section] = syaml.syaml_dict({section: update_data})
         if need_comment_copy and comments:
-            setattr(scope.sections[section][section], Comment.attrib, comments)
+            syaml.set_comments(scope.sections[section][section], data_comments=comments)
 
         scope._write_section(section)
 
@@ -704,8 +700,8 @@ class Configuration(object):
             data = syaml.syaml_dict()
             data[section] = self.get_config(section)
             syaml.dump_config(data, stream=sys.stdout, default_flow_style=False, blame=blame)
-        except (yaml.YAMLError, IOError):
-            raise ConfigError("Error reading configuration: %s" % section)
+        except (syaml.SpackYAMLError, IOError) as e:
+            raise ConfigError(f"cannot read '{section}' configuration") from e
 
 
 @contextmanager
@@ -959,19 +955,9 @@ def validate(data, schema, filename=None):
     """
     import jsonschema
 
-    # validate a copy to avoid adding defaults
+    # Validate a copy to avoid adding defaults
     # This allows us to round-trip data without adding to it.
-    test_data = copy.deepcopy(data)
-
-    if isinstance(test_data, yaml.comments.CommentedMap):
-        # HACK to fully copy ruamel CommentedMap that doesn't provide copy
-        # method. Especially necessary for environments
-        setattr(
-            test_data,
-            yaml.comments.Comment.attrib,
-            getattr(data, yaml.comments.Comment.attrib, yaml.comments.Comment()),
-        )
-
+    test_data = syaml.deepcopy(data)
     try:
         spack.schema.Validator(schema).validate(test_data)
     except jsonschema.ValidationError as e:
@@ -1019,21 +1005,13 @@ def read_config_file(filename, schema=None):
         return data
 
     except StopIteration:
-        raise ConfigFileError("Config file is empty or is not a valid YAML dict: %s" % filename)
+        raise ConfigFileError(f"Config file is empty or is not a valid YAML dict: {filename}")
 
-    except MarkedYAMLError as e:
-        msg = "Error parsing yaml"
-        mark = e.context_mark if e.context_mark else e.problem_mark
-        if mark:
-            line, column = mark.line, mark.column
-            msg += ": near %s, %s, %s" % (mark.name, str(line), str(column))
-        else:
-            msg += ": %s" % (filename)
-        msg += ": %s" % (e.problem)
-        raise ConfigFileError(msg)
+    except syaml.SpackYAMLError as e:
+        raise ConfigFileError(str(e)) from e
 
     except IOError as e:
-        raise ConfigFileError("Error reading configuration file %s: %s" % (filename, str(e)))
+        raise ConfigFileError(f"Error reading configuration file {filename}: {str(e)}") from e
 
 
 def _override(string):
@@ -1089,8 +1067,8 @@ def _mark_internal(data, name):
         d = syaml.syaml_type(data)
 
     if syaml.markable(d):
-        d._start_mark = yaml.Mark(name, None, None, None, None, None)
-        d._end_mark = yaml.Mark(name, None, None, None, None, None)
+        d._start_mark = syaml.name_mark(name)
+        d._end_mark = syaml.name_mark(name)
 
     return d
 

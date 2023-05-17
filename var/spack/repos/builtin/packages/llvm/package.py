@@ -88,11 +88,6 @@ class Llvm(CMakePackage, CudaPackage):
         description="Build the LLVM Fortran compiler frontend "
         "(experimental - parser only, needs GCC)",
     )
-    variant(
-        "omp_debug",
-        default=False,
-        description="Include debugging code in OpenMP runtime libraries",
-    )
     variant("lldb", default=True, when="+clang", description="Build the LLVM debugger")
     variant("lld", default=True, description="Build the LLVM linker")
     variant("mlir", default=False, when="@10:", description="Build with MLIR support")
@@ -106,6 +101,18 @@ class Llvm(CMakePackage, CudaPackage):
     )
     variant(
         "libcxx", default=True, when="+clang", description="Build the LLVM C++ standard library"
+    )
+    variant(
+        "libomptarget",
+        default=True,
+        when="+clang",
+        description="Build the OpenMP offloading library",
+    )
+    variant(
+        "omp_debug",
+        default=False,
+        when="+libomptarget",
+        description="Include debugging code in OpenMP runtime libraries",
     )
     variant(
         "compiler-rt",
@@ -132,7 +139,7 @@ class Llvm(CMakePackage, CudaPackage):
     )
     variant(
         "targets",
-        default="none",
+        default="all",
         description=(
             "What targets to build. Spack's target family is always added "
             "(e.g. X86 is automatically enabled when targeting znver2)."
@@ -160,12 +167,6 @@ class Llvm(CMakePackage, CudaPackage):
             "xcore",
         ),
         multi=True,
-    )
-    variant(
-        "build_type",
-        default="Release",
-        description="CMake build type",
-        values=("Debug", "Release", "RelWithDebInfo", "MinSizeRel"),
     )
     variant(
         "omp_tsan",
@@ -236,7 +237,7 @@ class Llvm(CMakePackage, CudaPackage):
     depends_on("hwloc")
     depends_on("hwloc@2.0.1:", when="@9:")
     depends_on("elf", when="+cuda")  # libomptarget
-    depends_on("libffi", when="+cuda")  # libomptarget
+    depends_on("libffi", when="+libomptarget")  # libomptarget
 
     # llvm-config --system-libs libraries.
     depends_on("zlib")
@@ -278,6 +279,15 @@ class Llvm(CMakePackage, CudaPackage):
     conflicts("%clang@:10", when="@13:+libcxx")
     conflicts("%apple-clang@:11", when="@13:+libcxx")
 
+    # libomptarget
+    conflicts("+cuda", when="@15:")  # +cuda variant is obselete since LLVM 15
+    conflicts(
+        "targets=none",
+        when="+libomptarget",
+        msg="Non-host backends needed for offloading, set targets=all",
+    )
+    conflicts("~lld", when="+libomptarget")
+
     # cuda_arch value must be specified
     conflicts("cuda_arch=none", when="+cuda", msg="A value for cuda_arch must be specified.")
 
@@ -318,8 +328,8 @@ class Llvm(CMakePackage, CudaPackage):
     patch("llvm_py37.patch", when="@4:6 ^python@3.7:")
 
     # https://github.com/spack/spack/issues/19625,
-    # merged in llvm-11.0.0_rc2, but not found in 11.0.1
-    patch("lldb_external_ncurses-10.patch", when="@10.0.0:11.0.1+lldb")
+    # merged in llvm-11.0.0_rc2, first available in 12.0.0
+    patch("lldb_external_ncurses-10.patch", when="@10.0.0:11+lldb")
 
     # https://github.com/spack/spack/issues/19908
     # merged in llvm main prior to 12.0.0
@@ -649,6 +659,11 @@ class Llvm(CMakePackage, CudaPackage):
                 runtimes.append("openmp")
             else:
                 projects.append("openmp")
+
+            if "+libomptarget" in spec:
+                cmake_args.append(define("OPENMP_ENABLE_LIBOMPTARGET", True))
+            else:
+                cmake_args.append(define("OPENMP_ENABLE_LIBOMPTARGET", False))
 
             if "@8" in spec:
                 cmake_args.append(from_variant("CLANG_ANALYZER_ENABLE_Z3_SOLVER", "z3"))

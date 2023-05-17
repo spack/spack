@@ -7,6 +7,8 @@ import sys
 
 import pytest
 
+from llnl.util.filesystem import touch
+
 import spack.paths
 
 
@@ -125,6 +127,7 @@ def test_build_time_tests_are_executed_from_default_builder():
 @pytest.mark.regression("34518")
 @pytest.mark.usefixtures("builder_test_repository", "config", "working_env")
 def test_monkey_patching_wrapped_pkg():
+    """Confirm 'run_tests' is accessible through wrappers."""
     s = spack.spec.Spec("old-style-autotools").concretized()
     builder = spack.builder.create(s.package)
     assert s.package.run_tests is False
@@ -139,12 +142,29 @@ def test_monkey_patching_wrapped_pkg():
 @pytest.mark.regression("34440")
 @pytest.mark.usefixtures("builder_test_repository", "config", "working_env")
 def test_monkey_patching_test_log_file():
+    """Confirm 'test_log_file' is accessible through wrappers."""
     s = spack.spec.Spec("old-style-autotools").concretized()
     builder = spack.builder.create(s.package)
-    assert s.package.test_log_file is None
-    assert builder.pkg.test_log_file is None
-    assert builder.pkg_with_dispatcher.test_log_file is None
 
-    s.package.test_log_file = "/some/file"
-    assert builder.pkg.test_log_file == "/some/file"
-    assert builder.pkg_with_dispatcher.test_log_file == "/some/file"
+    s.package.tester.test_log_file = "/some/file"
+    assert builder.pkg.tester.test_log_file == "/some/file"
+    assert builder.pkg_with_dispatcher.tester.test_log_file == "/some/file"
+
+
+# Windows context manager's __exit__ fails with ValueError ("I/O operation
+# on closed file").
+@pytest.mark.skipif(sys.platform == "win32", reason="Does not run on windows")
+def test_install_time_test_callback(tmpdir, config, mock_packages, mock_stage):
+    """Confirm able to run stand-alone test as a post-install callback."""
+    s = spack.spec.Spec("py-test-callback").concretized()
+    builder = spack.builder.create(s.package)
+    builder.pkg.run_tests = True
+    s.package.tester.test_log_file = tmpdir.join("install_test.log")
+    touch(s.package.tester.test_log_file)
+
+    for phase_fn in builder:
+        phase_fn.execute()
+
+    with open(s.package.tester.test_log_file, "r") as f:
+        results = f.read().replace("\n", " ")
+        assert "PyTestCallback test" in results
