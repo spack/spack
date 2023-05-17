@@ -16,7 +16,7 @@ class Dpmjet(MakefilePackage):
     list_url = "https://github.com/DPMJET/DPMJET/tags"
     git = "https://github.com/DPMJET/DPMJET.git"
 
-    maintainers = ["wdconinc"]
+    maintainers("wdconinc")
 
     version("19.3.5", sha256="5a546ca20f86abaecda1828eb5b577aee8a532dffb2c5e7244667d5f25777909")
     version("19.3.4", sha256="646f520aa67ef6355c45cde155a5dd55f7c9d661314358a7668f6ff472f5d5f9")

@@ -12,7 +12,7 @@ class PyAmityping(PythonPackage):
     homepage = "https://github.com/slac-lcls/amityping"
     url = "https://github.com/slac-lcls/amityping/archive/refs/tags/1.1.12.tar.gz"
 
-    maintainers = ["valmar"]
+    maintainers("valmar")
 
     version("1.1.12", sha256="e00e7102a53fa6ee343f018669f6b811d703a2da4728b497f80579bf89efbd3c")
 

@@ -16,7 +16,7 @@ class Estarlight(CMakePackage):
     list_url = "https://github.com/eic/estarlight/tags"
     git = "https://github.com/eic/estarlight.git"
 
-    maintainers = ["wdconinc"]
+    maintainers("wdconinc")
 
     version("master", branch="master")
     version("1.0.1", sha256="b43c1dd3663d8f325f30b17dd7cf4b49f2eb8ceeed7319c5aabebec8676279fd")

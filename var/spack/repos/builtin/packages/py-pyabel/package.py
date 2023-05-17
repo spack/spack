@@ -12,7 +12,7 @@ class PyPyabel(PythonPackage):
     homepage = "https://github.com/PyAbel/PyAbel"
     pypi = "PyAbel/PyAbel-0.9.0.tar.gz"
 
-    maintainers = ["valmar"]
+    maintainers("valmar")
 
     version("0.9.0", sha256="4052143de9da19be13bb321fb0524090ffc8cdc56e0e990e5d6f557f18109f08")
 

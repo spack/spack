@@ -11,7 +11,7 @@ class PyLclsKrtc(PythonPackage):
 
     pypi = "lcls-krtc/lcls-krtc-0.2.0.tar.gz"
 
-    maintainers = ["valmar"]
+    maintainers("valmar")
 
     version("0.2.0", sha256="20e6327d488d23e29135be44504bf7df72e4425a518f4222841efcd2cd2985f9")
 
