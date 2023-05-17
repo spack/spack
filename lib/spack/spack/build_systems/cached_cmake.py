@@ -70,7 +70,7 @@ class CachedCMakeBuilder(CMakeBuilder):
     # Implement a version of the define_from_variant for Cached packages
     def define_cmake_cache_from_variant(self, cmake_var, variant=None, comment=""):
         """Return a Cached CMake field from the given variant's value.
-           See define_from_variant in lib/spack/spack/build_systems/cmake.py package
+        See define_from_variant in lib/spack/spack/build_systems/cmake.py package
         """
 
         if variant is None:
@@ -247,7 +247,9 @@ class CachedCMakeBuilder(CMakeBuilder):
             archs = spec.variants["cuda_arch"].value
             if archs != "none":
                 arch_str = ";".join(archs)
-                entries.append(cmake_cache_string("CMAKE_CUDA_ARCHITECTURES", "{0}".format(arch_str)))
+                entries.append(
+                    cmake_cache_string("CMAKE_CUDA_ARCHITECTURES", "{0}".format(arch_str))
+                )
 
         # Since there is no rocm package, look for the variant
         if "+rocm" in spec:
@@ -257,11 +259,15 @@ class CachedCMakeBuilder(CMakeBuilder):
 
             # Explicitly setting HIP_ROOT_DIR may be a patch that is no longer necessary
             entries.append(cmake_cache_path("HIP_ROOT_DIR", "{0}".format(spec["hip"].prefix)))
-            entries.append(cmake_cache_path("HIP_CXX_COMPILER", "{0}".format(self.spec["hip"].hipcc)))
+            entries.append(
+                cmake_cache_path("HIP_CXX_COMPILER", "{0}".format(self.spec["hip"].hipcc))
+            )
             archs = self.spec.variants["amdgpu_target"].value
             if archs != "none":
                 arch_str = ";".join(archs)
-                entries.append(cmake_cache_string("CMAKE_HIP_ARCHITECTURES", "{0}".format(arch_str)))
+                entries.append(
+                    cmake_cache_string("CMAKE_HIP_ARCHITECTURES", "{0}".format(arch_str))
+                )
                 entries.append(cmake_cache_string("AMDGPU_TARGETS", "{0}".format(arch_str)))
                 entries.append(cmake_cache_string("GPU_TARGETS", "{0}".format(arch_str)))
 

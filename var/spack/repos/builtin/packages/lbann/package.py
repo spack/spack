@@ -4,8 +4,8 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import os
-import sys
 import socket
+import sys
 
 from spack.package import *
 
@@ -354,7 +354,9 @@ class Lbann(CachedCMakePackage, CudaPackage, ROCmPackage):
             # of CMake
             entries.append(cmake_cache_option("CMAKE_EXPORT_COMPILE_COMMANDS", True))
 
-        entries.append(cmake_cache_string("CMAKE_MAKE_PROGRAM", "{0}/ninja".format(spec["ninja"].prefix.bin)))
+        entries.append(
+            cmake_cache_string("CMAKE_MAKE_PROGRAM", "{0}/ninja".format(spec["ninja"].prefix.bin))
+        )
         entries.append(cmake_cache_string("CMAKE_GENERATOR", "Ninja"))
 
         # Use lld high performance linker
@@ -379,7 +381,9 @@ class Lbann(CachedCMakePackage, CudaPackage, ROCmPackage):
             if self.spec.satisfies("%clang"):
                 for flag in self.spec.compiler_flags["cxxflags"]:
                     if "gcc-toolchain" in flag:
-                        entries.append(cmake_cache_string("CMAKE_CUDA_FLAGS", "-Xcompiler={0}".format(flag)))
+                        entries.append(
+                            cmake_cache_string("CMAKE_CUDA_FLAGS", "-Xcompiler={0}".format(flag))
+                        )
             if spec.satisfies("^cuda@11.0:"):
                 entries.append(cmake_cache_string("CMAKE_CUDA_STANDARD", "17"))
             else:
@@ -388,7 +392,9 @@ class Lbann(CachedCMakePackage, CudaPackage, ROCmPackage):
             entries.append(self.define_cmake_cache_from_variant("LBANN_WITH_NVPROF", "nvprof"))
 
             if spec.satisfies("%cce") and spec.satisfies("^cuda+allow-unsupported-compilers"):
-                entries.append(cmake_cache_string("CMAKE_CUDA_FLAGS", "-allow-unsupported-compiler"))
+                entries.append(
+                    cmake_cache_string("CMAKE_CUDA_FLAGS", "-allow-unsupported-compiler")
+                )
 
         if "+rocm" in spec:
             # args.extend(
@@ -401,8 +407,12 @@ class Lbann(CachedCMakePackage, CudaPackage, ROCmPackage):
                 entries.append(cmake_cache_option("MPI_ASSUME_NO_BUILTIN_MPI", True))
 
             cxxflags_str = " ".join(self.spec.compiler_flags["cxxflags"])
-            entries.append(cmake_cache_string("HIP_HIPCC_FLAGS",
-                    "-g -fsized-deallocation -fPIC -std=c++17 {0}".format(cxxflags_str)))
+            entries.append(
+                cmake_cache_string(
+                    "HIP_HIPCC_FLAGS",
+                    "-g -fsized-deallocation -fPIC -std=c++17 {0}".format(cxxflags_str),
+                )
+            )
 
         return entries
 
@@ -416,31 +426,47 @@ class Lbann(CachedCMakePackage, CudaPackage, ROCmPackage):
         ]
 
         entries.append(self.define_cmake_cache_from_variant("LBANN_WITH_CNPY", "numpy"))
-        entries.append(self.define_cmake_cache_from_variant("LBANN_DETERMINISTIC", "deterministic"))
+        entries.append(
+            self.define_cmake_cache_from_variant("LBANN_DETERMINISTIC", "deterministic")
+        )
         entries.append(self.define_cmake_cache_from_variant("LBANN_WITH_HWLOC", "hwloc"))
         entries.append(self.define_cmake_cache_from_variant("LBANN_WITH_ALUMINUM", "al"))
-        entries.append(self.define_cmake_cache_from_variant("LBANN_WITH_ADDRESS_SANITIZER", "asan"))
+        entries.append(
+            self.define_cmake_cache_from_variant("LBANN_WITH_ADDRESS_SANITIZER", "asan")
+        )
         entries.append(self.define_cmake_cache_from_variant("LBANN_WITH_BOOST", "boost"))
         entries.append(self.define_cmake_cache_from_variant("LBANN_WITH_CONDUIT", "conduit"))
         entries.append(self.define_cmake_cache_from_variant("LBANN_WITH_NVSHMEM", "nvshmem"))
         entries.append(self.define_cmake_cache_from_variant("LBANN_WITH_FFT", "fft"))
         entries.append(self.define_cmake_cache_from_variant("LBANN_WITH_ONEDNN", "onednn"))
         entries.append(self.define_cmake_cache_from_variant("LBANN_WITH_ONNX", "onnx"))
-        entries.append(self.define_cmake_cache_from_variant("LBANN_WITH_EMBEDDED_PYTHON", "python"))
+        entries.append(
+            self.define_cmake_cache_from_variant("LBANN_WITH_EMBEDDED_PYTHON", "python")
+        )
         entries.append(self.define_cmake_cache_from_variant("LBANN_WITH_PYTHON_FRONTEND", "pfe"))
         entries.append(cmake_cache_option("LBANN_WITH_ROCTRACER", "+rocm +distconv" in spec))
         entries.append(cmake_cache_option("LBANN_WITH_TBINF", False))
-        entries.append(self.define_cmake_cache_from_variant("LBANN_WITH_UNIT_TESTING", "unit_tests"))
+        entries.append(
+            self.define_cmake_cache_from_variant("LBANN_WITH_UNIT_TESTING", "unit_tests")
+        )
         entries.append(self.define_cmake_cache_from_variant("LBANN_WITH_VISION", "vision"))
         entries.append(self.define_cmake_cache_from_variant("LBANN_WITH_VTUNE", "vtune"))
-        entries.append(cmake_cache_string("LBANN_DATATYPE", "{0}".format(spec.variants["dtype"].value)))
+        entries.append(
+            cmake_cache_string("LBANN_DATATYPE", "{0}".format(spec.variants["dtype"].value))
+        )
         entries.append(cmake_cache_option("protobuf_MODULE_COMPATIBLE", True))
 
         if spec.satisfies("^python") and "+pfe" in spec:
-            entries.append(cmake_cache_path("LBANN_PFE_PYTHON_EXECUTABLE", "{0}/python3".format(spec["python"].prefix.bin)))
-            entries.append(cmake_cache_string("LBANN_PFE_PYTHONPATH", env["PYTHONPATH"])) # do NOT need to sub ; for : because
-                                                                                          # value will only be interpreted by
-                                                                                          # a shell, which expects :
+            entries.append(
+                cmake_cache_path(
+                    "LBANN_PFE_PYTHON_EXECUTABLE", "{0}/python3".format(spec["python"].prefix.bin)
+                )
+            )
+            entries.append(
+                cmake_cache_string("LBANN_PFE_PYTHONPATH", env["PYTHONPATH"])
+            )  # do NOT need to sub ; for : because
+            # value will only be interpreted by
+            # a shell, which expects :
 
         # Add support for OpenMP with external (Brew) clang
         if spec.satisfies("%clang platform=darwin"):
@@ -449,16 +475,30 @@ class Lbann(CachedCMakePackage, CudaPackage, ROCmPackage):
             clang_root = os.path.dirname(clang_bin)
             entries.append(cmake_cache_string("OpenMP_CXX_FLAGS", "-fopenmp=libomp"))
             entries.append(cmake_cache_string("OpenMP_CXX_LIB_NAMES", "libomp"))
-            entries.append(cmake_cache_string("OpenMP_libomp_LIBRARY", "{0}/lib/libomp.dylib".format(clang_root)))
+            entries.append(
+                cmake_cache_string(
+                    "OpenMP_libomp_LIBRARY", "{0}/lib/libomp.dylib".format(clang_root)
+                )
+            )
 
         entries.append(self.define_cmake_cache_from_variant("LBANN_WITH_DIHYDROGEN", "dihydrogen"))
         entries.append(self.define_cmake_cache_from_variant("LBANN_WITH_DISTCONV", "distconv"))
 
         # IF IBM ESSL is used it needs help finding the proper LAPACK libraries
         if self.spec.satisfies("^essl"):
-            entries.append(cmake_cache_string("LAPACK_LIBRARIES", "%s;-llapack;-lblas"
-                    % ";".join("-l{0}".format(lib) for lib in self.spec["essl"].libs.names)))
-            entries.append(cmake_cache_string("BLAS_LIBRARIES", "%s;-lblas"
-                    % ";".join("-l{0}".format(lib) for lib in self.spec["essl"].libs.names)))
+            entries.append(
+                cmake_cache_string(
+                    "LAPACK_LIBRARIES",
+                    "%s;-llapack;-lblas"
+                    % ";".join("-l{0}".format(lib) for lib in self.spec["essl"].libs.names),
+                )
+            )
+            entries.append(
+                cmake_cache_string(
+                    "BLAS_LIBRARIES",
+                    "%s;-lblas"
+                    % ";".join("-l{0}".format(lib) for lib in self.spec["essl"].libs.names),
+                )
+            )
 
         return entries
