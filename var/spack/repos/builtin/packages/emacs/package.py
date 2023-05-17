@@ -3,6 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+import os
 import sys
 
 from spack.package import *
@@ -97,18 +98,32 @@ class Emacs(AutotoolsPackage, GNUMirrorPackage):
 
         return args
 
-    def _test_check_versions(self):
-        """Perform version checks on installed package binaries."""
-        checks = ["ctags", "ebrowse", "emacs", "emacsclient", "etags"]
+    def run_version_check(self, bin):
+        """Runs and checks output of the installed binary."""
+        exe_path = join_path(self.prefix.bin, bin)
+        if not os.path.exists(exe_path):
+            raise SkipTest(f"{exe_path} is not installed")
 
-        for exe in checks:
-            expected = str(self.spec.version)
-            reason = "test version of {0} is {1}".format(exe, expected)
-            self.run_test(
-                exe, ["--version"], expected, installed=True, purpose=reason, skip_missing=True
-            )
+        exe = which(exe_path)
+        out = exe("--version", output=str.split, error=str.split)
+        assert str(self.spec.version) in out
 
-    def test(self):
-        """Perform smoke tests on the installed package."""
-        # Simple version check tests on known binaries
-        self._test_check_versions()
+    def test_ctags(self):
+        """check ctags version"""
+        self.run_version_check("ctags")
+
+    def test_ebrowse(self):
+        """check ebrowse version"""
+        self.run_version_check("ebrowse")
+
+    def test_emacs(self):
+        """check emacs version"""
+        self.run_version_check("emacs")
+
+    def test_emacsclient(self):
+        """check emacsclient version"""
+        self.run_version_check("emacsclient")
+
+    def test_etags(self):
+        """check etags version"""
+        self.run_version_check("etags")
