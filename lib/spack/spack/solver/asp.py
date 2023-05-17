@@ -1782,8 +1782,7 @@ class SpackSolverSetup(object):
         if not satisfying_versions:
             raise spack.config.ConfigError(
                 "Preference for version {0} does not match any version"
-                " defined for {1} (in it's package.py or any external)"
-                .format(str(v), pkg_name)
+                " defined for {1} (in it's package.py or any external)".format(str(v), pkg_name)
             )
         return satisfying_versions
 
@@ -2299,7 +2298,6 @@ class SpackSolverSetup(object):
         if self.concretize_everything:
             self.gen.fact(fn.concretize_everything())
 
-
     def _get_versioned_specs_from_pkg_requirements(self):
         """If package requirements mention versions that are not mentioned
         elsewhere, then we need to collect those to mark them as possible
@@ -2313,7 +2311,6 @@ class SpackSolverSetup(object):
             if "require" in d:
                 req_version_specs.extend(self._specs_from_requires(pkg_name, d["require"]))
         return req_version_specs
-
 
     def _specs_from_requires(self, pkg_name, section):
         """Collect specs from requirements which define versions (i.e. those that

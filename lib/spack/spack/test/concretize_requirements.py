@@ -391,9 +391,7 @@ packages:
     assert not s3.satisfies("@2.3")
 
 
-def test_external_adds_new_version_that_is_preferred(
-    concretize_scope, test_repo,
-):
+def test_external_adds_new_version_that_is_preferred(concretize_scope, test_repo):
     if spack.config.get("config:concretizer") == "original":
         pytest.skip("Original concretizer does not support configuration requirements")
 
