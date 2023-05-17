@@ -367,8 +367,11 @@ packages:
 def test_preference_adds_new_version(
     concretize_scope, test_repo, mock_git_version_info, monkeypatch
 ):
+    """Normally a preference cannot define a new version, but that constraint
+    is ignored if the version is a Git hash-based version.
+    """
     if spack.config.get("config:concretizer") == "original":
-        pytest.skip("Original concretizer does not support configuration requirements")
+        pytest.skip("Original concretizer does not enforce this constraint for preferences")
 
     repo_path, filename, commits = mock_git_version_info
     monkeypatch.setattr(
@@ -392,8 +395,11 @@ packages:
 
 
 def test_external_adds_new_version_that_is_preferred(concretize_scope, test_repo):
+    """Test that we can use a version, not declared in package recipe, as the
+    preferred version if that version appears in an external spec.
+    """
     if spack.config.get("config:concretizer") == "original":
-        pytest.skip("Original concretizer does not support configuration requirements")
+        pytest.skip("Original concretizer does not enforce this constraint for preferences")
 
     conf_str = """\
 packages:
