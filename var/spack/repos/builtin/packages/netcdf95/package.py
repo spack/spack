@@ -13,7 +13,7 @@ class Netcdf95(CMakePackage):
     homepage = "https://lguez.github.io/NetCDF95/"
     git = "https://github.com/lguez/NetCDF95.git"
 
-    maintainers = ["RemiLacroix-IDRIS"]
+    maintainers("RemiLacroix-IDRIS")
 
     version("0.3", tag="v0.3", submodules=True)
 
