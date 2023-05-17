@@ -5,6 +5,8 @@
 
 import os
 
+from llnl.util.filesystem import find_first
+
 from spack.package import *
 
 
@@ -125,9 +127,9 @@ class Tk(AutotoolsPackage, SourceforgePackage):
             self.prefix,
         ]
         for prefix in check_prefixes:
-            result = find(prefix, "tk.tcl")
+            result = find_first(prefix, "tk.tcl")
             if result:
-                return os.path.dirname(sorted(result)[0])
+                return os.path.dirname(result)
         raise RuntimeError("Cannot locate tk.tcl")
 
     def setup_run_environment(self, env):

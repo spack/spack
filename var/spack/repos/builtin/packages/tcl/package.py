@@ -5,6 +5,8 @@
 
 import os
 
+from llnl.util.filesystem import find_first
+
 from spack.package import *
 from spack.util.environment import is_system_path
 
@@ -100,9 +102,9 @@ class Tcl(AutotoolsPackage, SourceforgePackage):
             self.prefix,
         ]
         for prefix in check_prefixes:
-            result = find(prefix, "init.tcl")
+            result = find_first(prefix, "init.tcl")
             if result:
-                return os.path.dirname(sorted(result)[0])
+                return os.path.dirname(result)
         raise RuntimeError("Cannot locate init.tcl")
 
     def setup_run_environment(self, env):
