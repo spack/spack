@@ -6,6 +6,8 @@ import os
 import posixpath
 import sys
 
+from llnl.util import tty
+
 import spack.paths
 import spack.util.executable
 from spack.spec import Spec
@@ -68,8 +70,19 @@ def make_installer(parser, args):
         output_dir = args.output_dir
         cmake_spec = Spec("cmake")
         cmake_spec.concretize()
-        cmake_path = os.path.join(cmake_spec.prefix, "bin", "cmake.exe")
-        cpack_path = os.path.join(cmake_spec.prefix, "bin", "cpack.exe")
+        if not (cmake_spec.installed or cmake_spec.external):
+            # Spack is not aware of a CMake, fallback on one being present in PATH
+            # but warn user it may not be available.
+            cmake_path = "cmake.exe"
+            cpack_path = "cpack.exe"
+            tty.warn(
+                "Spack is not aware of a CMake installation. Defaulting to what is available on the PATH to create the installer"
+                "\nYou may want to consider installing or externally detecting via Spack for better results."
+            )
+        else:
+            cmake_path = os.path.join(cmake_spec.prefix, "bin", "cmake.exe")
+            cpack_path = os.path.join(cmake_spec.prefix, "bin", "cpack.exe")
+
         spack_source = args.spack_source
         git_verbosity = ""
         if args.git_verbosity:
@@ -111,17 +124,17 @@ def make_installer(parser, args):
                 "-DSPACK_LOGO=%s" % spack_logo,
                 "-DSPACK_GIT_VERBOSITY=%s" % git_verbosity,
             )
-        except spack.util.executable.ProcessError:
-            print("Failed to generate installer")
-            return spack.util.executable.ProcessError.returncode
+        except spack.util.executable.ProcessError as pe:
+            tty.error("Failed to generate installer")
+            raise pe
 
         try:
             spack.util.executable.Executable(cpack_path)(
                 "--config", "%s/CPackConfig.cmake" % output_dir, "-B", "%s/" % output_dir
             )
-        except spack.util.executable.ProcessError:
-            print("Failed to generate installer")
-            return spack.util.executable.ProcessError.returncode
+        except spack.util.executable.ProcessError as pe:
+            tty.error("Failed to generate installer")
+            raise pe
         try:
             spack.util.executable.Executable(os.environ.get("WIX") + "/bin/candle.exe")(
                 "-ext",
@@ -130,9 +143,9 @@ def make_installer(parser, args):
                 "-out",
                 "%s/bundle.wixobj" % output_dir,
             )
-        except spack.util.executable.ProcessError:
-            print("Failed to generate installer chain")
-            return spack.util.executable.ProcessError.returncode
+        except spack.util.executable.ProcessError as pe:
+            tty.error("Failed to generate installer chain")
+            raise pe
         try:
             spack.util.executable.Executable(os.environ.get("WIX") + "/bin/light.exe")(
                 "-sw1134",
@@ -142,9 +155,9 @@ def make_installer(parser, args):
                 "-out",
                 "%s/Spack.exe" % output_dir,
             )
-        except spack.util.executable.ProcessError:
-            print("Failed to generate installer chain")
-            return spack.util.executable.ProcessError.returncode
-        print("Successfully generated Spack.exe in %s" % (output_dir))
+        except spack.util.executable.ProcessError as pe:
+            tty.error("Failed to generate installer chain")
+            raise pe
+        tty.info("Successfully generated Spack.exe in %s" % (output_dir))
     else:
-        print("The make-installer command is currently only supported on Windows.")
+        tty.error("The make-installer command is currently only supported on Windows.")

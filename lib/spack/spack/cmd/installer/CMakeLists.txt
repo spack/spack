@@ -34,6 +34,10 @@ if (SPACK_VERSION)
   SET(SPACK_SOURCE "${CMAKE_CURRENT_BINARY_DIR}/${SPACK_DIR}")
 elseif(SPACK_SOURCE)
   get_filename_component(SPACK_DIR ${SPACK_SOURCE} NAME)
+  # Get current version of Spack being bundled to tag the installer
+  execute_process(COMMAND spack.bat --version OUTPUT_VARIABLE SPACK_FULL_VERSION)
+  # Strip off commit hash, just need version
+  string(REGEX REPLACE " \\([A-Za-z0-9]+\\) *\n*$" "" SPACK_VERSION ${SPACK_FULL_VERSION})
 else()
   message(FATAL_ERROR "Must specify SPACK_VERSION or SPACK_SOURCE")
 endif()
@@ -89,7 +93,7 @@ install(DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/Python-${PYTHON_VERSION}-win64/"
 # CPACK Installer Instructions
 set(CPACK_PACKAGE_NAME "Spack")
 set(CPACK_PACKAGE_VENDOR "Lawrence Livermore National Laboratories")
-set(CPACK_PACKAGE_VERSION "0.16.0")
+set(CPACK_PACKAGE_VERSION "${SPACK_VERSION}")
 set(CPACK_PACKAGE_DESCRIPTION "A flexible package manager designed to support multiple versions, configurations, platforms, and compilers.")
 set(CPACK_PACKAGE_HOMEPAGE_URL "https://spack.io")
 set(CPACK_PACKAGE_FILE_NAME "${CPACK_PACKAGE_NAME}")
