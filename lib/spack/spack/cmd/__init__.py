@@ -347,7 +347,7 @@ def iter_groups(specs, indent, all_headers):
             spack.spec.architecture_color,
             architecture if architecture else "no arch",
             spack.spec.compiler_color,
-            f"{compiler.name}@{compiler.version}" if compiler else "no compiler",
+            f"{compiler}" if compiler else "no compiler",
         )
 
         # Sometimes we want to display specs that are not yet concretized.
