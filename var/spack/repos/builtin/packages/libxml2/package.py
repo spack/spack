@@ -109,9 +109,7 @@ class Libxml2(AutotoolsPackage, NMakePackage):
             args.append("--without-python")
 
         args.extend(self.enable_or_disable("shared"))
-
-        if spec.satisfies("+pic"):
-            args.append("CFLAGS=-fPIC")
+        args.extend(self.with_or_without("pic"))
 
         return args
 
