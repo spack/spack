@@ -756,6 +756,7 @@ def generate_gitlab_ci_yaml(
     # Get the joined "ci" config with all of the current scopes resolved
     ci_config = cfg.get("ci")
 
+    config_deprecated = False
     if not ci_config:
         tty.warn("Environment does not have `ci` a configuration")
         gitlabci_config = yaml_root.get("gitlab-ci")
@@ -768,6 +769,7 @@ def generate_gitlab_ci_yaml(
         )
         translate_deprecated_config(gitlabci_config)
         ci_config = gitlabci_config
+        config_deprecated = True
 
     # Default target is gitlab...and only target is gitlab
     if not ci_config.get("target", "gitlab") == "gitlab":
@@ -830,6 +832,14 @@ def generate_gitlab_ci_yaml(
 
     # Values: "spack_pull_request", "spack_protected_branch", or not set
     spack_pipeline_type = os.environ.get("SPACK_PIPELINE_TYPE", None)
+
+    copy_only_pipeline = spack_pipeline_type == "spack_copy_only"
+    if copy_only_pipeline and config_deprecated:
+        tty.warn(
+            "SPACK_PIPELINE_TYPE=spack_copy_only is not supported when using\n",
+            "deprecated ci configuration, a no-op pipeline will be generated\n",
+            "instead.",
+        )
 
     if "mirrors" not in yaml_root or len(yaml_root["mirrors"].values()) < 1:
         tty.die("spack ci generate requires an env containing a mirror")
@@ -1207,7 +1217,7 @@ def generate_gitlab_ci_yaml(
                             ).format(c_spec, release_spec)
                             tty.debug(debug_msg)
 
-                if prune_dag and not rebuild_spec and spack_pipeline_type != "spack_copy_only":
+                if prune_dag and not rebuild_spec and not copy_only_pipeline:
                     tty.debug(
                         "Pruning {0}/{1}, does not need rebuild.".format(
                             release_spec.name, release_spec.dag_hash()
@@ -1298,7 +1308,7 @@ def generate_gitlab_ci_yaml(
                     max_length_needs = length_needs
                     max_needs_job = job_name
 
-                if spack_pipeline_type != "spack_copy_only":
+                if not copy_only_pipeline:
                     output_object[job_name] = job_object
                     job_id += 1
 
@@ -1330,7 +1340,7 @@ def generate_gitlab_ci_yaml(
         "when": ["runner_system_failure", "stuck_or_timeout_failure", "script_failure"],
     }
 
-    if spack_pipeline_type == "spack_copy_only":
+    if copy_only_pipeline and not config_deprecated:
         stage_names.append("copy")
         sync_job = copy.deepcopy(spack_ci_ir["jobs"]["copy"]["attributes"])
         sync_job["stage"] = "copy"
@@ -1474,12 +1484,18 @@ def generate_gitlab_ci_yaml(
             sorted_output = cinw.needs_to_dependencies(sorted_output)
     else:
         # No jobs were generated
-        tty.debug("No specs to rebuild, generating no-op job")
         noop_job = spack_ci_ir["jobs"]["noop"]["attributes"]
-
         noop_job["retry"] = service_job_retries
 
-        sorted_output = {"no-specs-to-rebuild": noop_job}
+        if copy_only_pipeline and config_deprecated:
+            tty.debug("Generating no-op job as copy-only is unsupported here.")
+            noop_job["script"] = [
+                'echo "copy-only pipelines are not supported with deprecated ci configs"'
+            ]
+            sorted_output = {"unsupported-copy": noop_job}
+        else:
+            tty.debug("No specs to rebuild, generating no-op job")
+            sorted_output = {"no-specs-to-rebuild": noop_job}
 
     if known_broken_specs_encountered:
         tty.error("This pipeline generated hashes known to be broken on develop:")
