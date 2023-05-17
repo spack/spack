@@ -89,10 +89,8 @@ class CachedCMakeBuilder(CMakeBuilder):
 
         field = None
         if isinstance(value, bool):
-            kind = "BOOL"
             field = cmake_cache_option(cmake_var, value, comment)
         else:
-            kind = "STRING"
             if isinstance(value, collections.abc.Sequence) and not isinstance(value, str):
                 value = ";".join(str(v) for v in value)
             else:
