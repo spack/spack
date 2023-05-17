@@ -38,15 +38,13 @@ class XsdkExamples(CMakePackage, CudaPackage, ROCmPackage):
         )
 
     depends_on("xsdk@develop", when="@develop")
-    # Use ^dealii~hdf5 because of HDF5 linking issue in deal.II 9.4.0
-    depends_on("xsdk@0.8.0 ^dealii~hdf5", when="@0.4.0")
+    # Use ^dealii~hdf5 because of HDF5 linking issue in deal.II 9.4.0.
     # Disable 'arborx' to remove the 'kokkos' dependency which conflicts with
     # the internal Kokkos used by 'trilinos':
-    depends_on("xsdk@0.8.0~arborx", when="@0.4.0 ^xsdk+trilinos")
+    depends_on("xsdk@0.8.0 ~arborx ^mfem+pumi ^dealii~hdf5", when="@0.4.0")
     depends_on("xsdk@0.8.0 ^mfem+strumpack", when="@0.4.0 ^xsdk+strumpack")
     depends_on("xsdk@0.8.0 ^mfem+ginkgo", when="@0.4.0 ^xsdk+ginkgo")
     depends_on("xsdk@0.8.0 ^mfem+hiop", when="@0.4.0 ^xsdk+hiop")
-    depends_on("xsdk@0.8.0 ^mfem+pumi", when="@0.4.0")
     depends_on("xsdk@0.8.0 ^sundials+magma", when="@0.4.0 +cuda")
     depends_on("xsdk@0.7.0", when="@0.3.0")
     depends_on("xsdk@0.7.0 ^mfem+strumpack", when="@0.3.0 ^xsdk+strumpack")

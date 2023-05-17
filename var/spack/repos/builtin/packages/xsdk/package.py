@@ -89,7 +89,7 @@ class Xsdk(BundlePackage, CudaPackage, ROCmPackage):
     version("0.7.0")
     version("0.6.0", deprecated=True)
 
-    variant("trilinos", default=True, description="Enable trilinos package build")
+    variant("trilinos", default=True, sticky=True, description="Enable trilinos package build")
     variant("datatransferkit", default=True, description="Enable datatransferkit package build")
     variant("omega-h", default=True, description="Enable omega-h package build")
     variant("strumpack", default=True, description="Enable strumpack package build")
