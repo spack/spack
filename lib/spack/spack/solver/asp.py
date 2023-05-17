@@ -1782,7 +1782,7 @@ class SpackSolverSetup(object):
         if not satisfying_versions:
             raise spack.config.ConfigError(
                 "Preference for version {0} does not match any version"
-                " defined for {1} (in it's package.py or any external)".format(str(v), pkg_name)
+                " defined for {1} (in its package.py or any external)".format(str(v), pkg_name)
             )
         return satisfying_versions
 
