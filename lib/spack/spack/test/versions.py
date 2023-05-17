@@ -897,10 +897,13 @@ def test_boolness_of_versions():
 
 
 def test_version_list_normalization():
-    # Git versions and ordinary versions can live together in a VersionList
-    assert len(VersionList(["=1.2", "ref=1.2"])) == 2
+    # These semantics can be quite confusing, but the idea is that a git version is a more
+    # specific version than a standard version. Kind of like a version with a variant.
+    # The normalization rule is: if one is strictly contained in another (satisfies), the more
+    # specific one is removed. So, the git version is swallowed by the standard version.
+    assert VersionList(["=1.2", "ref=1.2"]) == VersionList(["=1.2"])
 
-    # But when a range is added, the only disjoint bit is the range.
+    # A range is even more abstract, so it swallows both standard versions and git versions.
     assert VersionList(["=1.2", "ref=1.2", "ref=1.3", "1.2:1.3"]) == VersionList(["1.2:1.3"])
 
     # Also test normalization when using ver.
@@ -996,3 +999,10 @@ def test_unresolvable_git_versions_error(config, mock_packages):
         # The package exists, but does not have a git property set. When dereferencing
         # the version, we should get VersionLookupError, not a generic AttributeError.
         spack.spec.Spec(f"git-test-commit@{'a' * 40}").version.ref_version
+
+
+def test_satisfies_git_version_and_ordinary_version():
+    assert_satisfies("ref=1.2", "=1.2")
+    assert_does_not_satisfy("=1.2", "ref=1.2")
+    assert_overlaps("ref=1.2", "=1.2")
+    assert_overlaps("=1.2", "ref=1.2")

@@ -433,7 +433,7 @@ class GitVersion(ConcreteVersion):
         if isinstance(other, GitVersion):
             return self == other
         if isinstance(other, StandardVersion):
-            return False
+            return self.ref_version == other
         if isinstance(other, ClosedOpenRange):
             return self.ref_version.intersects(other)
         if isinstance(other, VersionList):
@@ -441,8 +441,10 @@ class GitVersion(ConcreteVersion):
         raise ValueError(f"Unexpected type {type(other)}")
 
     def intersection(self, other):
-        if isinstance(other, ConcreteVersion):
+        if isinstance(other, GitVersion):
             return self if self == other else VersionList()
+        if isinstance(other, StandardVersion):
+            return self if self.ref_version == other else VersionList()
         return other.intersection(self)
 
     def overlaps(self, other) -> bool:
@@ -455,7 +457,7 @@ class GitVersion(ConcreteVersion):
         if isinstance(other, GitVersion):
             return self == other
         if isinstance(other, StandardVersion):
-            return False
+            return self.ref_version == other
         if isinstance(other, ClosedOpenRange):
             return self.ref_version.satisfies(other)
         if isinstance(other, VersionList):

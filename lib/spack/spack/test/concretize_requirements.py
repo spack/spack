@@ -224,11 +224,11 @@ def test_git_user_supplied_reference_satisfaction(
     assert not hash_eq_ver.satisfies(just_hash)
     assert not hash_eq_ver.intersects(just_hash)
 
-    # Git versions and literal versions are distinct versions, like
-    # pkg@10.1.0 and pkg@10.1.0-suffix are distinct versions.
-    assert not hash_eq_ver.satisfies(just_ver)
+    # Git versions and literal versions are distinct versions,
+    # but ref=x does satisfy x, kinda like a variant on a version
+    assert hash_eq_ver.satisfies(just_ver)
     assert not just_ver.satisfies(hash_eq_ver)
-    assert not hash_eq_ver.intersects(just_ver)
+    assert hash_eq_ver.intersects(just_ver)
     assert hash_eq_ver != just_ver
     assert just_ver != hash_eq_ver
     assert not hash_eq_ver == just_ver
