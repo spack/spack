@@ -38,7 +38,11 @@ class XsdkExamples(CMakePackage, CudaPackage, ROCmPackage):
         )
 
     depends_on("xsdk@develop", when="@develop")
-    depends_on("xsdk@0.8.0", when="@0.4.0")
+    # Use ^dealii~hdf5 because of HDF5 linking issue in deal.II 9.4.0
+    depends_on("xsdk@0.8.0 ^dealii~hdf5", when="@0.4.0")
+    # Disable 'arborx' to remove the 'kokkos' dependency which conflicts with
+    # the internal Kokkos used by 'trilinos':
+    depends_on("xsdk@0.8.0~arborx", when="@0.4.0 ^xsdk+trilinos")
     depends_on("xsdk@0.8.0 ^mfem+strumpack", when="@0.4.0 ^xsdk+strumpack")
     depends_on("xsdk@0.8.0 ^mfem+ginkgo", when="@0.4.0 ^xsdk+ginkgo")
     depends_on("xsdk@0.8.0 ^mfem+hiop", when="@0.4.0 ^xsdk+hiop")
@@ -63,8 +67,12 @@ class XsdkExamples(CMakePackage, CudaPackage, ROCmPackage):
         # Note: paths to the enabled packages are automatically added by Spack
         # to the variable CMAKE_PREFIX_PATH.
         args = [
-            "-DCMAKE_C_COMPILER=%s" % spec["mpi"].mpicc,
-            "-DCMAKE_CXX_COMPILER=%s" % spec["mpi"].mpicxx,
+            # Using the MPI wrappers for C and C++ may cause linking issues
+            # when CUDA is enabled.
+            # "-DCMAKE_C_COMPILER=%s" % spec["mpi"].mpicc,
+            # "-DCMAKE_CXX_COMPILER=%s" % spec["mpi"].mpicxx,
+            # Use the Fortran MPI wrapper as a workaround for a linking issue
+            # with some versions of apple-clang on Mac.
             "-DCMAKE_Fortran_COMPILER=%s" % spec["mpi"].mpifc,
             "-DENABLE_AMREX=" + enabled("amrex"),
             "-DENABLE_DEAL_II=" + enabled("dealii"),
