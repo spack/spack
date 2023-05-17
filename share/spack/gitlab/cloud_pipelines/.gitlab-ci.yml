@@ -827,7 +827,7 @@ aws-pcluster-build-icelake:
       job: aws-pcluster-generate-icelake
 
 # Skylake_avx512 (one pipeline per target)
-.aws-pcluster-icelake:
+.aws-pcluster-skylake:
   variables:
     SPACK_CI_STACK_NAME: aws-pcluster-skylake
 
