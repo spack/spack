@@ -17,6 +17,7 @@ class Mrcpp(CMakePackage):
 
     maintainers("robertodr", "stigrj", "ilfreddy")
 
+    version("1.4.2", sha256="cc7a4200eb0383967d984e770a95e621e76c88b79c5e7443433f5e642aee035b")
     version("1.3.6", sha256="2502e71f086a8bb5ea635d0c6b86e7ff60220a45583e96a08b3cfe7c9db4cecf")
     version("1.3.5", sha256="3072cf60db6fa1e621bc6e6dfb6d35f9367a44d9d312a4b8c455894769140aed")
     version("1.3.4", sha256="fe6d1ad5804f605c7ba0da6831a8dc7fed72de6f2476b162961038aaa2321656")

@@ -14,9 +14,9 @@ class PyTensorboardDataServer(PythonPackage):
     homepage = "https://github.com/tensorflow/tensorboard/tree/master/tensorboard/data/server"
     git = "https://github.com/tensorflow/tensorboard"
 
+    version("0.7.0", commit="f1cb31c86d871e0258250248ab9488575410e784")
     version("0.6.1", commit="6acf0be88b5727e546dd64a8b9b12d790601d561")
 
-    depends_on("python@3.6:", type=("build", "run"))
     depends_on("py-setuptools", type="build")
     depends_on("rust+rustfmt", type="build")
 

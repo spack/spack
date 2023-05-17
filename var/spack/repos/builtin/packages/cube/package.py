@@ -17,6 +17,9 @@ class Cube(AutotoolsPackage):
     homepage = "https://www.scalasca.org/software/cube-4.x/download.html"
     url = "https://apps.fz-juelich.de/scalasca/releases/cube/4.4/dist/cubegui-4.4.2.tar.gz"
 
+    version("4.8", sha256="1df8fcaea95323e7eaf0cc010784a41243532c2123a27ce93cb7e3241557ff76")
+    version("4.7.1", sha256="7c96bf9ffb8cc132945f706657756fe6f88b7f7a5243ecd3741f599c2006d428")
+    version("4.7", sha256="103fe00fa9846685746ce56231f64d850764a87737dc0407c9d0a24037590f68")
     version("4.6", sha256="1871c6736121d94a22314cb5daa8f3cbb978b58bfe54f677c4c9c9693757d0c5")
     version("4.5", sha256="ffe84108adce0adf06dca80820d941b1a60a5580a8bacc8f7c1b6989c8ab1bfa")
     version("4.4.4", sha256="9b7b96d5a64b558a9017cc3599bba93a42095534e018e3de9b1f80ab6d04cc34")
@@ -32,8 +35,10 @@ class Cube(AutotoolsPackage):
 
     patch("qt-version.patch", when="@4.3.0:4.3 +gui")
 
-    depends_on("cubelib@4.6", when="@4.6")
-    depends_on("cubelib@4.5", when="@4.5")
+    depends_on("cubelib@4.8:4.8.99", when="@4.8:4.8.99")
+    depends_on("cubelib@4.7:4.7.99", when="@4.7:4.7.99")
+    depends_on("cubelib@4.6:4.6.99", when="@4.6:4.6.99")
+    depends_on("cubelib@4.5:4.5.99", when="@4.5:4.5.99")
     # There is a backwards dependency in series 4
     depends_on("cubelib@4.4:4.4.4", when="@4.4.4")
     depends_on("cubelib@4.4:4.4.3", when="@4.4.3")

@@ -27,6 +27,7 @@ class Hpctoolkit(AutotoolsPackage):
     test_requires_compiler = True
 
     version("develop", branch="develop")
+    version("2023.03.stable", branch="release/2023.03")
     version("2023.03.01", commit="9e0daf2ad169f6c7f6c60408475b3c2f71baebbf")
     version("2022.10.01", commit="e8a5cc87e8f5ddfd14338459a4106f8e0d162c83")
     version("2022.05.15", commit="8ac72d9963c4ed7b7f56acb65feb02fbce353479")
@@ -119,7 +120,7 @@ class Hpctoolkit(AutotoolsPackage):
     depends_on("dyninst@12.1.0:", when="@2022.0:")
     depends_on("dyninst@10.2.0:", when="@2021.0:2021.12")
     depends_on("dyninst@9.3.2:", when="@:2020")
-    depends_on("elfutils+bzip2+xz~nls", type="link")
+    depends_on("elfutils~nls", type="link")
     depends_on("gotcha@1.0.3:", when="@:2020.09")
     depends_on("intel-tbb+shared")
     depends_on("libdwarf", when="@:2022.06")
@@ -131,7 +132,7 @@ class Hpctoolkit(AutotoolsPackage):
     depends_on("libunwind@1.4: +xz+pic")
     depends_on("mbedtls+pic", when="@:2022.03")
     depends_on("xerces-c transcoder=iconv")
-    depends_on("xz+pic@:5.2.6", type="link")
+    depends_on("xz+pic libs=static", type="link")
     depends_on("yaml-cpp@0.7.0: +shared", when="@2022.10:")
     depends_on("zlib+shared")
 
@@ -163,6 +164,7 @@ class Hpctoolkit(AutotoolsPackage):
     conflicts("%gcc@:4", when="@:2020", msg="hpctoolkit requires gnu gcc 5.x or later")
 
     conflicts("^binutils@2.35:2.35.1", msg="avoid binutils 2.35 and 2.35.1 (spews errors)")
+    conflicts("xz@5.2.7:5.2.8", msg="avoid xz 5.2.7:5.2.8 (broken symbol versions)")
 
     conflicts("+cray", when="@2022.10.01", msg="hpcprof-mpi is not available in 2022.10.01")
     conflicts("+mpi", when="@2022.10.01", msg="hpcprof-mpi is not available in 2022.10.01")

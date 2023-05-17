@@ -7,7 +7,14 @@ from spack.package import *
 
 
 class Hdf5VolAsync(CMakePackage):
-    """This package enables asynchronous IO in HDF5."""
+    """This package enables asynchronous IO in HDF5.
+
+    Usage: Set the HDF5_VOL_CONNECTOR environment variable to enable this adaptor, i.e.
+
+        $export HDF5_VOL_CONNECTOR="async under_vol=0;under_info={}"
+
+    ref. https://hdf5-vol-async.readthedocs.io/en/latest/gettingstarted.html#set-environmental-variables
+    """
 
     homepage = "https://hdf5-vol-async.readthedocs.io"
     git = "https://github.com/hpc-io/vol-async.git"
@@ -24,16 +31,20 @@ class Hdf5VolAsync(CMakePackage):
     version("1.1", tag="v1.1")
     version("1.0", tag="v1.0")
 
+    variant("memcpy", default=False, description="Enable buffer copy for dataset write")
+
     depends_on("mpi")
-    depends_on("argobots@main")
+    depends_on("argobots@1.1:")
     depends_on("hdf5 +mpi +threadsafe")
     depends_on("hdf5@1.13.0:1.13.2", when="@:1.3")
     depends_on("hdf5@1.13.3:", when="@1.4:")
 
+    # Require MPI_THREAD_MULTIPLE.
+    depends_on("openmpi +thread_multiple", when="^openmpi")
+    depends_on("mvapich2 threads=multiple", when="^mvapich2")
+
     def setup_run_environment(self, env):
-        env.set("HDF5_PLUGIN_PATH", self.spec.prefix.lib)
-        vol_connector = "async under_vol=0;under_info=[]"
-        env.set("HDF5_VOL_CONNECTOR", vol_connector)
+        env.prepend_path("HDF5_PLUGIN_PATH", self.spec.prefix.lib)
         env.set("MPICH_MAX_THREAD_SAFETY", "multiple")
 
     def cmake_args(self):
@@ -42,6 +53,7 @@ class Hdf5VolAsync(CMakePackage):
             self.define("CMAKE_C_COMPILER", self.spec["mpi"].mpicc),
             self.define("BUILD_SHARED_LIBS", True),
             self.define("BUILD_TESTING", self.run_tests),
+            self.define_from_variant("ENABLE_WRITE_MEMCPY", "memcpy"),
         ]
         return args
 

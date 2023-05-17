@@ -15,6 +15,8 @@ class Emacs(AutotoolsPackage, GNUMirrorPackage):
     git = "git://git.savannah.gnu.org/emacs.git"
     gnu_mirror_path = "emacs/emacs-24.5.tar.gz"
 
+    maintainers("alecbcs")
+
     version("master", branch="master")
     version("28.2", sha256="a6912b14ef4abb1edab7f88191bfd61c3edd7085e084de960a4f86485cb7cad8")
     version("28.1", sha256="1439bf7f24e5769f35601dbf332e74dfc07634da6b1e9500af67188a92340a28")
@@ -35,7 +37,7 @@ class Emacs(AutotoolsPackage, GNUMirrorPackage):
         values=("gtk", "athena"),
         description="Select an X toolkit (gtk, athena)",
     )
-    variant("tls", default=False, description="Build Emacs with gnutls")
+    variant("tls", default=True, description="Build Emacs with gnutls")
     variant("native", default=False, when="@28:", description="enable native compilation of elisp")
     variant("treesitter", default=False, when="@29:", description="Build with tree-sitter support")
     variant("json", default=False, when="@27:", description="Build with json support")
