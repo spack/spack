@@ -395,7 +395,7 @@ def test_external_adds_new_version_that_is_preferred(concretize_scope, test_repo
     if spack.config.get("config:concretizer") == "original":
         pytest.skip("Original concretizer does not support configuration requirements")
 
-    conf_str = f"""\
+    conf_str = """\
 packages:
   y:
     version: ["2.7"]

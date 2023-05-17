@@ -1762,7 +1762,7 @@ class SpackSolverSetup(object):
                 if isinstance(v, vn.GitVersion):
                     version_defs.append(v)
                 else:
-                    satisfying_versions = self._verify_requested_version(pkg_class, v)
+                    satisfying_versions = self._check_for_defined_matching_versions(pkg_class, v)
                     # Amongst all defined versions satisfying this specific
                     # preference, the highest-numbered version is the
                     # most-preferred: therefore sort satisfying versions
@@ -1775,7 +1775,18 @@ class SpackSolverSetup(object):
                 )
                 self.possible_versions[pkg_name].add(vdef)
 
-    def _verify_requested_version(self, pkg_class, v):
+    def _check_for_defined_matching_versions(self, pkg_class, v):
+        """Given a version specification (which may be a concrete version,
+        range, etc.), determine if any package.py version declarations
+        or externals define a version which satisfies it.
+
+        This is primarily for determining whether a version request (e.g.
+        version preferences, which should not themselves define versions)
+        refers to a defined version.
+
+        This function raises an exception if no satisfying versions are
+        found.
+        """
         pkg_name = pkg_class.name
         satisfying_versions = list(x for x in pkg_class.versions if x.satisfies(v))
         satisfying_versions.extend(x for x in self.possible_versions[pkg_name] if x.satisfies(v))
@@ -2357,7 +2368,9 @@ class SpackSolverSetup(object):
             # requiring a specific implementation inside of a virtual section
             # e.g. packages:mpi:require:openmpi@4.0.1
             pkg_class = spack.repo.path.get_pkg_class(spec.name or pkg_name)
-            satisfying_versions = self._verify_requested_version(pkg_class, spec.versions)
+            satisfying_versions = self._check_for_defined_matching_versions(
+                pkg_class, spec.versions
+            )
 
             # Version ranges ("@1.3" without the "=", "@1.2:1.4") and lists
             # will end up here
