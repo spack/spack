@@ -391,6 +391,28 @@ packages:
     assert not s3.satisfies("@2.3")
 
 
+def test_external_adds_new_version_that_is_preferred(
+    concretize_scope, test_repo,
+):
+    if spack.config.get("config:concretizer") == "original":
+        pytest.skip("Original concretizer does not support configuration requirements")
+
+    conf_str = f"""\
+packages:
+  y:
+    version: ["2.7"]
+    externals:
+    - spec: y@2.7 # Not defined in y
+      prefix: /fake/nonexistent/path/
+    buildable: false
+"""
+    update_packages_config(conf_str)
+
+    spec = Spec("x").concretized()
+    assert spec["y"].satisfies("@2.7")
+    assert spack.version.Version("2.7") not in spec["y"].package.versions
+
+
 def test_requirement_is_successfully_applied(concretize_scope, test_repo):
     """If a simple requirement can be satisfied, make sure the
     concretization succeeds and the requirement spec is applied.
