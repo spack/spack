@@ -215,6 +215,31 @@ def print_message(logger: LogType, msg: str, verbose: bool = False):
         tty.info(msg, format="g")
 
 
+def overall_status(current_status: "TestStatus", substatuses: List["TestStatus"]) -> "TestStatus":
+    """Determine the overall status based on the current and associated sub status values.
+
+    Args:
+        current_status: current overall status, assumed to default to PASSED
+        substatuses: status of each test part or overall status of each test spec
+    Returns:
+        test status encompassing the main test and all subtests
+    """
+    if current_status in [TestStatus.SKIPPED, TestStatus.NO_TESTS, TestStatus.FAILED]:
+        return current_status
+
+    skipped = 0
+    for status in substatuses:
+        if status == TestStatus.FAILED:
+            return status
+        elif status == TestStatus.SKIPPED:
+            skipped += 1
+
+    if skipped and skipped == len(substatuses):
+        return TestStatus.SKIPPED
+
+    return current_status
+
+
 class PackageTest:
     """The class that manages stand-alone (post-install) package tests."""
 
@@ -308,14 +333,12 @@ class PackageTest:
         # to start with the same name) may not have PASSED. This extra
         # check is used to ensure the containing test part is not claiming
         # to have passed when at least one subpart failed.
-        if status == TestStatus.PASSED:
-            for pname, substatus in self.test_parts.items():
-                if pname != part_name and pname.startswith(part_name):
-                    if substatus == TestStatus.FAILED:
-                        print(f"{substatus}: {part_name}{extra}")
-                        self.test_parts[part_name] = substatus
-                        self.counts[substatus] += 1
-                        return
+        substatuses = []
+        for pname, substatus in self.test_parts.items():
+            if pname != part_name and pname.startswith(part_name):
+                substatuses.append(substatus)
+        if substatuses:
+            status = overall_status(status, substatuses)
 
         print(f"{status}: {part_name}{extra}")
         self.test_parts[part_name] = status
@@ -419,6 +442,25 @@ class PackageTest:
         totals = " {} of {} parts ".format(", ".join(summary), self.parts())
         lines.append(f"{totals:=^80}")
         return lines
+
+    def write_tested_status(self):
+        """Write the overall status to the tested file.
+
+        If there any test part failures, then the tests failed. If all test
+        parts are skipped, then the tests were skipped. If any tests passed
+        then the tests passed; otherwise, there were not tests executed.
+        """
+        status = TestStatus.NO_TESTS
+        if self.counts[TestStatus.FAILED] > 0:
+            status = TestStatus.FAILED
+        else:
+            skipped = self.counts[TestStatus.SKIPPED]
+            if skipped and self.parts() == skipped:
+                status = TestStatus.SKIPPED
+            elif self.counts[TestStatus.PASSED] > 0:
+                status = TestStatus.PASSED
+
+        _add_msg_to_file(self.tested_file, f"{status.value}")
 
 
 @contextlib.contextmanager
@@ -654,8 +696,9 @@ def process_test_parts(pkg: Pb, test_specs: List[spack.spec.Spec], verbose: bool
             try:
                 tests = test_functions(spec.package_class)
             except spack.repo.UnknownPackageError:
-                # some virtuals don't have a package
-                tests = []
+                # Some virtuals don't have a package so we don't want to report
+                # them as not having tests when that isn't appropriate.
+                continue
 
             if len(tests) == 0:
                 tester.status(spec.name, TestStatus.NO_TESTS)
@@ -682,7 +725,7 @@ def process_test_parts(pkg: Pb, test_specs: List[spack.spec.Spec], verbose: bool
 
     finally:
         if tester.ran_tests():
-            fs.touch(tester.tested_file)
+            tester.write_tested_status()
 
             # log one more test message to provide a completion timestamp
             # for CDash reporting
@@ -889,20 +932,15 @@ class TestSuite:
                 if remove_directory:
                     shutil.rmtree(test_dir)
 
-                tested = os.path.exists(self.tested_file_for_spec(spec))
-                if tested:
-                    status = TestStatus.PASSED
-                else:
-                    self.ensure_stage()
-                    if spec.external and not externals:
-                        status = TestStatus.SKIPPED
-                    elif not spec.installed:
-                        status = TestStatus.SKIPPED
-                    else:
-                        status = TestStatus.NO_TESTS
+                status = self.test_status(spec, externals)
                 self.counts[status] += 1
-
                 self.write_test_result(spec, status)
+
+            except SkipTest:
+                status = TestStatus.SKIPPED
+                self.counts[status] += 1
+                self.write_test_result(spec, TestStatus.SKIPPED)
+
             except BaseException as exc:
                 status = TestStatus.FAILED
                 self.counts[status] += 1
@@ -938,6 +976,31 @@ class TestSuite:
         failures = self.counts[TestStatus.FAILED]
         if failures:
             raise TestSuiteFailure(failures)
+
+    def test_status(self, spec: spack.spec.Spec, externals: bool) -> Optional[TestStatus]:
+        """Determine the overall test results status for the spec.
+
+        Args:
+            spec: instance of the spec under test
+            externals: ``True`` if externals are to be tested, else ``False``
+
+        Returns:
+            the spec's test status if available or ``None``
+        """
+        tests_status_file = self.tested_file_for_spec(spec)
+        if not os.path.exists(tests_status_file):
+            self.ensure_stage()
+            if spec.external and not externals:
+                status = TestStatus.SKIPPED
+            elif not spec.installed:
+                status = TestStatus.SKIPPED
+            else:
+                status = TestStatus.NO_TESTS
+            return status
+
+        with open(tests_status_file, "r") as f:
+            value = (f.read()).strip("\n")
+            return TestStatus(int(value)) if value else TestStatus.NO_TESTS
 
     def ensure_stage(self):
         """Ensure the test suite stage directory exists."""

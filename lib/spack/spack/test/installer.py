@@ -1399,17 +1399,24 @@ def test_print_install_test_log_skipped(install_mockery, mock_packages, capfd, r
     assert out == ""
 
 
-def test_print_install_test_log_missing(
+def test_print_install_test_log_failures(
     tmpdir, install_mockery, mock_packages, ensure_debug, capfd
 ):
-    """Confirm expected error on attempt to print missing test log file."""
+    """Confirm expected outputs when there are test failures."""
     name = "trivial-install-test-package"
     s = spack.spec.Spec(name).concretized()
     pkg = s.package
 
+    # Missing test log is an error
     pkg.run_tests = True
     pkg.tester.test_log_file = str(tmpdir.join("test-log.txt"))
     pkg.tester.add_failure(AssertionError("test"), "test-failure")
     spack.installer.print_install_test_log(pkg)
     err = capfd.readouterr()[1]
     assert "no test log file" in err
+
+    # Having test log results in path being output
+    fs.touch(pkg.tester.test_log_file)
+    spack.installer.print_install_test_log(pkg)
+    out = capfd.readouterr()[0]
+    assert "See test results at" in out

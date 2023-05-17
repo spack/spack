@@ -319,3 +319,17 @@ def test_report_filename_for_cdash(install_mockery_mutable_config, mock_fetch):
     spack.cmd.common.arguments.sanitize_reporter_options(args)
     filename = spack.cmd.test.report_filename(args, suite)
     assert filename != "https://blahblah/submit.php?project=debugging"
+
+
+def test_test_output_multiple_specs(
+    mock_test_stage, mock_packages, mock_archive, mock_fetch, install_mockery_mutable_config
+):
+    """Ensure proper reporting for suite with skipped, failing, and passed tests."""
+    install("test-error", "simple-standalone-test@0.9", "simple-standalone-test@1.0")
+    out = spack_test("run", "test-error", "simple-standalone-test", fail_on_error=False)
+
+    # Note that a spec with passing *and* skipped tests is still considered
+    # to have passed at this level. If you want to see the spec-specific
+    # part result summaries, you'll have to look at the "test-out.txt" files
+    # for each spec.
+    assert "1 failed, 2 passed of 3 specs" in out
