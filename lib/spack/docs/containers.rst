@@ -143,6 +143,26 @@ The OS that are currently supported are summarized in the table below:
    * - Amazon Linux 2
      - ``amazonlinux:2``
      - ``spack/amazon-linux``
+   * - AlmaLinux 8
+     - ``almalinux:8``
+     - ``spack/almalinux8``
+   * - AlmaLinux 9
+     - ``almalinux:9``
+     - ``spack/almalinux9``
+   * - Rocky Linux 8
+     - ``rockylinux:8``
+     - ``spack/rockylinux8``
+   * - Rocky Linux 9
+     - ``rockylinux:9``
+     - ``spack/rockylinux9``
+   * - Fedora Linux 37
+     - ``fedora:37``
+     - ``spack/fedora37``
+   * - Fedora Linux 38
+     - ``fedora:38``
+     - ``spack/fedora38``
+
+
 
 All the images are tagged with the corresponding release of Spack:
 
