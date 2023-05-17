@@ -81,11 +81,13 @@ class VtkM(CMakePackage, CudaPackage, ROCmPackage):
     variant(
         "cuda_native", default=True, description="build using native cuda backend", when="+cuda"
     )
+    # Missing OpenMP extensions in ROCm package
+    # https://github.com/spack/spack/issues/32197
     variant(
         "openmp",
         default=(sys.platform != "darwin"),
-        when="@1.3:",
         description="build openmp support",
+        when="@1.3: ~rocm",
     )
     variant("tbb", default=(sys.platform == "darwin"), description="build TBB support")
 
@@ -95,6 +97,10 @@ class VtkM(CMakePackage, CudaPackage, ROCmPackage):
     conflicts("%gcc@:4.10", msg="vtk-m requires gcc >= 5. Please install a newer version")
     conflicts("%gcc@11:", when="@:1.5.2", msg="DIY has a issue building with gcc 11")
 
+    # Internal compiler bug
+    # https://github.com/spack/spack/issues/31830
+    conflicts("%oneapi@2022.1.0 +openmp")
+
     depends_on("cuda@10.1.0:", when="+cuda_native")
     depends_on("tbb", when="+tbb")
     depends_on("mpi", when="+mpi")
@@ -103,6 +109,11 @@ class VtkM(CMakePackage, CudaPackage, ROCmPackage):
     # VTK-m uses the default Kokkos backend
     depends_on("kokkos", when="+kokkos")
     depends_on("kokkos@3.7:3.9", when="@2.0 +kokkos")
+
+    # VTK-m currently does not work with SYCL
+    # https://gitlab.kitware.com/vtk/vtk-m/-/issues/780
+    depends_on("kokkos ~sycl", when="@:1.9 +kokkos")
+
     # VTK-m native CUDA and Kokkos CUDA backends are not compatible
     depends_on("kokkos ~cuda", when="+kokkos +cuda +cuda_native")
     depends_on("kokkos +cuda", when="+kokkos +cuda ~cuda_native")

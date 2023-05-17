@@ -201,6 +201,7 @@ class Paraview(CMakePackage, CudaPackage, ROCmPackage):
     depends_on("double-conversion")
     depends_on("expat")
     depends_on("eigen@3:")
+    depends_on("fmt@9:", when="@5.10:")
     depends_on("freetype")
     # depends_on('hdf5+mpi', when='+mpi')
     # depends_on('hdf5~mpi', when='~mpi')
@@ -286,6 +287,7 @@ class Paraview(CMakePackage, CudaPackage, ROCmPackage):
     # Fix IOADIOS2 module to work with kits
     # https://gitlab.kitware.com/vtk/vtk/-/merge_requests/8653
     patch("vtk-adios2-module-no-kit.patch", when="@5.8:5.11")
+
     # https://gitlab.kitware.com/vtk/vtk/-/merge_requests/8653
     patch("vtk-adios2-module-no-kit-5.12.patch", when="@5.12:")
 
@@ -302,11 +304,11 @@ class Paraview(CMakePackage, CudaPackage, ROCmPackage):
     patch("vtk-xdmf2-hdf51.13.2.patch", when="@5.10:5.11.0")
 
     # Fix VTK to work with external freetype using CONFIG mode for find_package
-    patch("FindFreetype.cmake.patch", when="@5.10.1:")
+    patch("FindFreetype.cmake.patch", when="@5.10.1:5.11")
 
     # Fix VTK to remove deprecated ADIOS2 functions
     # https://gitlab.kitware.com/vtk/vtk/-/merge_requests/10113
-    patch("adios2-remove-deprecated-functions.patch", when="@5.10: ^adios2@2.9:")
+    patch("adios2-remove-deprecated-functions.patch", when="@5.10:5.11 ^adios2@2.9:")
 
     patch("exodusII-netcdf4.9.0.patch", when="@:5.10.2")
 
@@ -438,15 +440,15 @@ class Paraview(CMakePackage, CudaPackage, ROCmPackage):
             cmake_args.append("-DVTK_MODULE_USE_EXTERNAL_VTK_token:BOOL=OFF")
 
         if spec.satisfies("@5.11:"):
-            cmake_args.append("-DVTK_MODULE_USE_EXTERNAL_VTK_verdict:BOOL=OFF")
+            cmake_args.append(self.define("VTK_MODULE_USE_EXTERNAL_VTK_verdict", False))
 
         if spec.satisfies("@5.10:"):
             cmake_args.extend(
                 [
-                    "-DVTK_MODULE_USE_EXTERNAL_ParaView_vtkcatalyst:BOOL=OFF",
-                    "-DVTK_MODULE_USE_EXTERNAL_VTK_ioss:BOOL=OFF",
-                    "-DVTK_MODULE_USE_EXTERNAL_VTK_exprtk:BOOL=OFF",
-                    "-DVTK_MODULE_USE_EXTERNAL_VTK_fmt:BOOL=OFF",
+                    self.define("VTK_MODULE_USE_EXTERNAL_ParaView_vtkcatalyst", False),
+                    self.define("VTK_MODULE_USE_EXTERNAL_VTK_ioss", False),
+                    self.define("VTK_MODULE_USE_EXTERNAL_VTK_exprtk", False),
+                    self.define("VTK_MODULE_USE_EXTERNAL_VTK_fmt", True),
                 ]
             )
 

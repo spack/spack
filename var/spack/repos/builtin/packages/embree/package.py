@@ -36,6 +36,10 @@ class Embree(CMakePackage):
     variant("ispc", default=True, description="Enable ISPC support")
     depends_on("ispc", when="+ispc", type="build")
 
+    # CMake 3.20 changed OneAPI compire id from LLVM -> IntelLLVM
+    # fixed in 3.13.4
+    conflicts("cmake@3.20:", when="@:3.13.3 %oneapi")
+
     depends_on("tbb")
 
     # official aarch64 support on macOS starting with 3.13.0, on Linux since 4.0.0
