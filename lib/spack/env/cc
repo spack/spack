@@ -467,7 +467,7 @@ parse_Wl() {
     done
 }
 
-function categorize_arguments() {
+categorize_arguments() {
 
     unset IFS
 
