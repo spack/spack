@@ -59,9 +59,7 @@ class Fontconfig(AutotoolsPackage):
             args.append("LDFLAGS=%s" % " ".join(ldflags))
             args.append("LIBS=%s" % " ".join(libs))
 
-        if self.spec.satisfies("+pic"):
-            args.append("CFLAGS=-fPIC")
-            args.append("FFLAGS=-fPIC")
+        args.extend(self.with_or_without("pic"))
 
         return args
         
