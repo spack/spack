@@ -249,7 +249,8 @@ class CachedCMakeBuilder(CMakeBuilder):
                 arch_str = ";".join(archs)
                 entries.append(cmake_cache_string("CMAKE_CUDA_ARCHITECTURES", "{0}".format(arch_str)))
 
-        if spec.satisfies("^rocm"):
+        # Since there is no rocm package, look for the variant
+        if "+rocm" in spec:
             entries.append("#------------------{0}".format("-" * 30))
             entries.append("# ROCm")
             entries.append("#------------------{0}\n".format("-" * 30))
