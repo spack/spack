@@ -133,13 +133,16 @@ def checksum(parser, args):
     d_splitter = re.compile(r"^(\s*version\()(\")([^\"]+)(\"(?:,.*?))\)$")
     for line in version_lines.splitlines():
         v_match = d_splitter.match(line)
-        url = vstring_url_dict[v_match.group(3)]
-        if url in pkg.version_urls().values() or url != pkg.url_for_version(ver(v_match.group(3))):
+        matched_version = v_match.group(3)
+        url = vstring_url_dict[matched_version]
+        if url in pkg.version_urls().values() or url != pkg.url_for_version(
+            Version(matched_version)
+        ):
             print(
                 *v_match.group(1, 2, 3, 4),
                 ",\n",
                 re.sub(r".", " ", v_match.group(1)),
-                'url="{0}"'.format(vstring_url_dict[v_match.group(3)]),
+                'url="{0}"'.format(vstring_url_dict[url]),
                 ")",
                 sep="",
             )
