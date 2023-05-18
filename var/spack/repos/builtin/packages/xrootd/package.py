@@ -15,8 +15,9 @@ class Xrootd(CMakePackage):
     url = "https://xrootd.slac.stanford.edu/download/v5.5.1/xrootd-5.5.1.tar.gz"
     list_url = "https://xrootd.slac.stanford.edu/dload.html"
 
-    maintainers("wdconinc")
+    maintainers("gartung", "greenc-FNAL", "marcmengel", "vitodb", "wdconinc")
 
+    version("5.5.5", sha256="0710caae527082e73d3bf8f9d1dffe95808afd3fcaaaa15ab0b937b8b226bc1f")
     version("5.5.4", sha256="41a8557ea2d118b1950282b17abea9230b252aa5ee1a5959173e2534b7d611d3")
     version("5.5.3", sha256="703829c2460204bd3c7ba8eaa23911c3c9a310f6d436211ba0af487ef7f6a980")
     version("5.5.2", sha256="ec4e0490b8ee6a3254a4ea4449342aa364bc95b78dc9a8669151be30353863c6")
@@ -49,35 +50,69 @@ class Xrootd(CMakePackage):
     version("4.4.0", sha256="f066e7488390c0bc50938d23f6582fb154466204209ca92681f0aa06340e77c8")
     version("4.3.0", sha256="d34865772d975b5d58ad80bb05312bf49aaf124d5431e54dc8618c05a0870e3c")
 
+    variant("davix", default=True, description="Build with Davix")
     variant("http", default=True, description="Build with HTTP support")
-
+    variant("krb5", default=False, description="Build with KRB5 support")
     variant("python", default=False, description="Build pyxroot Python extension")
-
     variant("readline", default=True, description="Use readline")
 
-    variant("krb5", default=False, description="Build with KRB5 support")
+    variant(
+        "cxxstd",
+        default="98",
+        values=("98", "11", "14", "17", "20"),
+        multi=False,
+        description="Use the specified C++ standard when building",
+        when="@:4.5.99",
+    )
 
     variant(
         "cxxstd",
         default="11",
-        values=("98", "11", "14", "17"),
+        values=("98", "11", "14", "17", "20"),
         multi=False,
-        description="Use the specified C++ standard when building.",
+        description="Use the specified C++ standard when building",
+        when="@4.6.0:5.1.99",
+    )
+
+    variant(
+        "cxxstd",
+        default="14",
+        values=("98", "11", "14", "17", "20"),
+        multi=False,
+        description="Use the specified C++ standard when building",
+        when="@5.2.0:",
     )
 
     variant(
         "scitokens-cpp", default=False, when="@5.1.0:", description="Enable support for SciTokens"
     )
 
+    variant(
+        "client_only", default=False, description="Build and install client only", when="@4.10.0:"
+    )
+
     conflicts("cxxstd=98", when="@4.7.0:")
+    # C++ standard is not honored without
+    # https://github.com/xrootd/xrootd/pull/1929
+    # Related: C++>14 causes compilation errors with ~client_only. See
+    # also https://github.com/xrootd/xrootd/pull/1933.
+    conflicts("cxxstd=17", when="@5.0:5.5.2")
+    conflicts("cxxstd=20", when="@5.0:5.5.2")
+    conflicts("cxxstd=17", when="@5 ~client_only")
+    conflicts("cxxstd=20", when="@5 ~client_only")
+    conflicts("scitokens-cpp", when="@:5.5.2 +client_only")
 
     depends_on("bzip2")
-    depends_on("cmake@2.6:", type="build")
+    depends_on("cmake@2.6:", type="build", when="@3.1.0:")
+    conflicts("cmake@:3.0", when="@5.0.0")
+    conflicts("cmake@:3.15.99", when="@5.5.4:")
+    depends_on("davix", when="+davix")
     depends_on("libxml2", when="+http")
     depends_on("uuid", when="@4.11.0:")
     depends_on("openssl@:1", when="@:5.4")
     depends_on("openssl")
     depends_on("python", when="+python")
+    depends_on("py-setuptools", type="build", when="+python")
     depends_on("readline", when="+readline")
     depends_on("xz")
     depends_on("zlib")
@@ -85,6 +120,7 @@ class Xrootd(CMakePackage):
     depends_on("krb5", when="+krb5")
     depends_on("json-c")
     depends_on("scitokens-cpp", when="+scitokens-cpp")
+    conflicts("openssl@3:", when="@:5.3.99")
 
     extends("python", when="+python")
     patch("python-support.patch", level=1, when="@:4.8+python")
@@ -94,35 +130,73 @@ class Xrootd(CMakePackage):
         sha256="2655e2d609d80bf9c9ab58557f4f6940408a1af9c686e7aa214ac0348c89c8fa",
         when="@5.5.1",
     )
+    # https://github.com/xrootd/xrootd/pull/1930
+    patch(
+        "https://patch-diff.githubusercontent.com/raw/xrootd/xrootd/pull/1930.patch?full_index=1",
+        sha256="969f8b07edff42449ad76b02f3e57d93b8d6c829be1ba14bccf831c27bc971e1",
+        when="@5.5.3",
+    )
 
+    # do not use systemd
+    patch("no-systemd-pre-5.5.2.patch", when="@:5.5.1")
+    patch("no-systemd-5.5.2.patch", when="@5.5.2:")
+
+    @when("@4.7.0:5.1.99")
     def patch(self):
-        # Do not use systemd
-        filter_file(
-            r"(add_definitions\(\s*-DHAVE_SYSTEMD\s*\))", r"#\1", "cmake/XRootDFindLibs.cmake"
-        )
+        """Remove hardcoded -std=c++0x flag"""
+        filter_file(r"\-std=c\+\+0x", r"", "cmake/XRootDOSDefs.cmake")
 
-        # Remove hardcoded -std=c++0x flag
-        if self.spec.satisfies("@4.7.0:"):
-            filter_file(r"\-std=c\+\+0x", r"", "cmake/XRootDOSDefs.cmake")
+    @when("@5.2.0:5 +client_only")
+    def patch(self):
+        """Allow CMAKE_CXX_STANDARD to be set in cache"""
+        # See https://github.com/xrootd/xrootd/pull/1929
+        filter_file(
+            r"^(\s+(?i:set)\s*\(\s*CMAKE_CXX_STANDARD\s+\d+)(\s*\).*)$",
+            r'\1 CACHE STRING "C++ Standard"\2',
+            "cmake/XRootDOSDefs.cmake",
+        )
 
     def cmake_args(self):
         spec = self.spec
-        options = [
-            "-DENABLE_HTTP:BOOL={0}".format("ON" if "+http" in spec else "OFF"),
-            "-DENABLE_PYTHON:BOOL={0}".format("ON" if "+python" in spec else "OFF"),
-            "-DENABLE_READLINE:BOOL={0}".format("ON" if "+readline" in spec else "OFF"),
-            "-DENABLE_KRB5:BOOL={0}".format("ON" if "+krb5" in spec else "OFF"),
-            "-DENABLE_CEPH:BOOL=OFF",
+        define = self.define
+        define_from_variant = self.define_from_variant
+        options = []
+        if spec.satisfies("@5.2.0: +client_only") or spec.satisfies("@6:"):
+            options += [
+                define_from_variant("CMAKE_CXX_STANDARD", "cxxstd"),
+                define("CMAKE_CXX_STANDARD_REQUIRED", True),
+            ]
+
+        options += [
+            define_from_variant("ENABLE_HTTP", "http"),
+            define_from_variant("ENABLE_XRDCLHTTP", "davix"),
+            define_from_variant("ENABLE_PYTHON", "python"),
+            define_from_variant("ENABLE_READLINE", "readline"),
+            define_from_variant("ENABLE_KRB5", "krb5"),
+            define_from_variant("ENABLE_SCITOKENS", "scitokens-cpp"),
+            define_from_variant("XRDCL_ONLY", "client_only"),
+            define("ENABLE_CEPH", False),
+            define("ENABLE_CRYPTO", True),
+            define("ENABLE_FUSE", False),
+            define("ENABLE_MACAROONS", False),
+            define("ENABLE_VOMS", False),
+            define("FORCE_ENABLED", True),
         ]
         # see https://github.com/spack/spack/pull/11581
         if "+python" in self.spec:
-            options.append("-DPYTHON_EXECUTABLE=%s" % spec["python"].command.path)
+            options.extend(
+                [
+                    define("PYTHON_EXECUTABLE", spec["python"].command.path),
+                    define("XRD_PYTHON_REQ_VERSION", spec["python"].version.up_to(2)),
+                ]
+            )
 
         if "+scitokens-cpp" in self.spec:
             options.append("-DSCITOKENS_CPP_DIR=%s" % spec["scitokens-cpp"].prefix)
 
         return options
 
+    @when("@:5.1.99")
     def setup_build_environment(self, env):
         cxxstdflag = ""
         if self.spec.variants["cxxstd"].value == "98":
