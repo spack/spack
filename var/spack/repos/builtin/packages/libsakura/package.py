@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -13,7 +13,7 @@ class Libsakura(CMakePackage):
     homepage = "https://alma-intweb.mtk.nao.ac.jp/~sakura/api/html/index.html"
     url = "https://alma-dl.mtk.nao.ac.jp/ftp/sakura/releases/src/libsakura-4.0.2065/libsakura-4.0.2065.tar.gz"
 
-    maintainers = ["mpokorny"]
+    maintainers("mpokorny")
 
     version("4.0.2065", sha256="3fde3713b1ca539f0b2397ec72a0086a3138ef63f89dce4be51ee60585df995f")
     version("3.0.2025", sha256="381a49d57cbc88dea15e08f7ed64ba57481d25bce8e5f68938dd4b6a30589c16")

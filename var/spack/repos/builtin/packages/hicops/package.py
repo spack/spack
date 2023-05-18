@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -15,7 +15,7 @@ class Hicops(CMakePackage):
 
     homepage = "https://hicops.github.io/index"
     git = "https://github.com/hicops/hicops.git"
-    maintainers = ["pcdslab", "mhaseeb123", "nessiecancode"]
+    maintainers("pcdslab", "mhaseeb123", "nessiecancode")
 
     version("release", branch="release")
     version("develop", branch="develop")

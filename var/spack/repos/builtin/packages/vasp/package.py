@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -66,7 +66,6 @@ class Vasp(MakefilePackage):
     parallel = False
 
     def edit(self, spec, prefix):
-
         if "%gcc" in spec:
             if "+openmp" in spec:
                 make_include = join_path("arch", "makefile.include.linux_gnu_omp")

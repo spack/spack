@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -6,6 +6,7 @@ import pickle
 
 import pytest
 
+import spack.error
 from spack.main import SpackCommand
 
 build_env = SpackCommand("build-env")
@@ -23,14 +24,7 @@ def test_error_when_multiple_specs_are_given():
     assert "only takes one spec" in output
 
 
-@pytest.mark.parametrize(
-    "args",
-    [
-        ("--", "/bin/bash", "-c", "echo test"),
-        ("--",),
-        (),
-    ],
-)
+@pytest.mark.parametrize("args", [("--", "/bin/bash", "-c", "echo test"), ("--",), ()])
 @pytest.mark.usefixtures("config", "mock_packages", "working_env")
 def test_build_env_requires_a_spec(args):
     output = build_env(*args, fail_on_error=False)
@@ -55,3 +49,10 @@ def test_pickle(tmpdir):
         environment = pickle.load(open(_out_file, "rb"))
         assert type(environment) == dict
         assert "PATH" in environment
+
+
+def test_failure_when_uninstalled_deps(config, mock_packages):
+    with pytest.raises(
+        spack.error.SpackError, match="Not all dependencies of dttop are installed"
+    ):
+        build_env("dttop")

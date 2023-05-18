@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -15,8 +15,10 @@ class Pika(CMakePackage, CudaPackage, ROCmPackage):
     homepage = "https://github.com/pika-org/pika/"
     url = "https://github.com/pika-org/pika/archive/0.0.0.tar.gz"
     git = "https://github.com/pika-org/pika.git"
-    maintainers = ["msimberg", "albestro", "teonnik", "aurianer"]
+    maintainers("msimberg", "albestro", "teonnik", "aurianer")
 
+    version("0.13.0", sha256="67e0843141fb711787e71171a7a669c9cdb9587e4afd851ee2b0339a62b9a254")
+    version("0.12.0", sha256="daa1422eb73d6a897ce7b8ff8022e09e7b0fec83d92728ed941a92e57dec5da3")
     version("0.11.0", sha256="3c3d94ca1a3960884bad7272bb9434d61723f4047ebdb097fcf522c6301c3fda")
     version("0.10.0", sha256="3b443b8f0f75b9a558accbaef0334a113a71b0205770e6c7ff02ea2d7c6aca5b")
     version("0.9.0", sha256="c349b2a96476d6974d2421288ca4d2e14ef9e5897d44cd7d5343165faa2d1299")
@@ -30,7 +32,7 @@ class Pika(CMakePackage, CudaPackage, ROCmPackage):
     version("0.1.0", sha256="aa0ae2396cd264d821a73c4c7ecb118729bb3de042920c9248909d33755e7327")
     version("main", branch="main")
 
-    generator = "Ninja"
+    generator("ninja")
 
     map_cxxstd = lambda cxxstd: "2a" if cxxstd == "20" else cxxstd
     cxxstds = ("17", "20")
@@ -43,7 +45,7 @@ class Pika(CMakePackage, CudaPackage, ROCmPackage):
 
     variant(
         "malloc",
-        default="tcmalloc",
+        default="mimalloc",
         description="Define which allocator will be linked in",
         values=("system", "jemalloc", "mimalloc", "tbbmalloc", "tcmalloc"),
     )
@@ -63,15 +65,14 @@ class Pika(CMakePackage, CudaPackage, ROCmPackage):
     variant("apex", default=False, description="Enable APEX support", when="@0.2:")
     variant("tracy", default=False, description="Enable Tracy support", when="@0.7:")
     variant(
-        "p2300",
+        "stdexec",
         default=False,
-        description="Use P2300 reference implementation for sender/receiver functionality",
+        description="Use stdexec for sender/receiver functionality",
         when="@0.9:",
     )
 
     # Build dependencies
     depends_on("git", type="build")
-    depends_on("ninja", type="build")
     depends_on("cmake@3.18:", type="build")
     depends_on("cmake@3.22:", when="@0.8:", type="build")
 
@@ -80,11 +81,11 @@ class Pika(CMakePackage, CudaPackage, ROCmPackage):
     # Pika is requiring the std::filesystem support starting from version 0.2.0
     conflicts("%gcc@:8", when="@0.2:")
     conflicts("%clang@:8", when="@0.2:")
-    conflicts("+p2300", when="cxxstd=17")
+    conflicts("+stdexec", when="cxxstd=17")
 
     # Other dependencies
     depends_on("boost@1.71:")
-    depends_on("fmt@0.9:", when="@0.11:")
+    depends_on("fmt@9:", when="@0.11:")
     depends_on("hwloc@1.11.5:")
 
     depends_on("gperftools", when="malloc=tcmalloc")
@@ -97,17 +98,37 @@ class Pika(CMakePackage, CudaPackage, ROCmPackage):
     depends_on("hip@5.2:", when="@0.8: +rocm")
     depends_on("hipblas", when="@:0.8 +rocm")
     depends_on("mpi", when="+mpi")
-    depends_on("stdexec", when="+p2300")
+    depends_on("stdexec", when="+stdexec")
     depends_on("rocblas", when="+rocm")
     depends_on("rocsolver", when="@0.5: +rocm")
     depends_on("tracy-client", when="+tracy")
     conflicts("tracy-client@0.9:", when="@:0.9")
-    depends_on("whip+rocm", when="@0.9: +rocm")
-    depends_on("whip+cuda", when="@0.9: +cuda")
+    depends_on("whip@0.1: +rocm", when="@0.9: +rocm")
+    depends_on("whip@0.1: +cuda", when="@0.9: +cuda")
+
+    with when("+rocm"):
+        for val in ROCmPackage.amdgpu_targets:
+            depends_on(
+                "whip@0.1: amdgpu_target={0}".format(val),
+                when="@0.9: amdgpu_target={0}".format(val),
+            )
+            depends_on(
+                "rocsolver amdgpu_target={0}".format(val),
+                when="@0.5: amdgpu_target={0}".format(val),
+            )
+            depends_on(
+                "rocblas amdgpu_target={0}".format(val), when="amdgpu_target={0}".format(val)
+            )
+
+    with when("+cuda"):
+        for val in CudaPackage.cuda_arch_values:
+            depends_on(
+                "whip@0.1: cuda_arch={0}".format(val), when="@0.9: cuda_arch={0}".format(val)
+            )
 
     for cxxstd in cxxstds:
         depends_on("boost cxxstd={0}".format(map_cxxstd(cxxstd)), when="cxxstd={0}".format(cxxstd))
-        depends_on("fmt cxxstd={0}".format(cxxstd), when="cxxstd={0}".format(cxxstd))
+        depends_on("fmt cxxstd={0}".format(cxxstd), when="@0.11: cxxstd={0}".format(cxxstd))
 
     # COROUTINES
     # ~generic_coroutines conflict is not fully implemented
@@ -150,7 +171,7 @@ class Pika(CMakePackage, CudaPackage, ROCmPackage):
             self.define_from_variant("PIKA_WITH_TRACY", "tracy"),
             self.define("PIKA_WITH_TESTS", self.run_tests),
             self.define_from_variant("PIKA_WITH_GENERIC_CONTEXT_COROUTINES", "generic_coroutines"),
-            self.define_from_variant("PIKA_WITH_P2300_REFERENCE_IMPLEMENTATION", "p2300"),
+            self.define_from_variant("PIKA_WITH_P2300_REFERENCE_IMPLEMENTATION", "stdexec"),
             self.define("BOOST_ROOT", spec["boost"].prefix),
             self.define("HWLOC_ROOT", spec["hwloc"].prefix),
         ]

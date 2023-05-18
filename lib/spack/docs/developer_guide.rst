@@ -1,4 +1,4 @@
-.. Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+.. Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
    Spack Project Developers. See the top-level COPYRIGHT file for details.
 
    SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -232,7 +232,7 @@ Spack Subcommands
 Unit tests
 ^^^^^^^^^^
 
-:mod:`spack.test`
+``spack.test``
   Implements Spack's test suite.  Add a module and put its name in
   the test suite in ``__init__.py`` to add more unit tests.
 
@@ -472,7 +472,7 @@ use my new hook as follows:
 .. code-block:: python
 
     def post_log_write(message, level):
-        """Do something custom with the messsage and level every time we write
+        """Do something custom with the message and level every time we write
         to the log
         """
         print('running post_log_write!')

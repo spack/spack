@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -33,10 +33,7 @@ def _create_config(scope=None, data={}, section="packages"):
 def config_yaml_v015(mutable_config):
     """Create a packages.yaml in the old format"""
     old_data = {
-        "config": {
-            "install_tree": "/fake/path",
-            "install_path_scheme": "{name}-{version}",
-        }
+        "config": {"install_tree": "/fake/path", "install_path_scheme": "{name}-{version}"}
     }
     return functools.partial(_create_config, data=old_data, section="config")
 
@@ -232,7 +229,6 @@ def test_config_add_update_dict(mutable_empty_config):
 
 
 def test_config_with_c_argument(mutable_empty_config):
-
     # I don't know how to add a spack argument to a Spack Command, so we test this way
     config_file = "config:install_root:root:/path/to/config.yaml"
     parser = spack.main.make_argument_parser()

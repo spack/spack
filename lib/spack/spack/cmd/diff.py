@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -80,22 +80,12 @@ def compare_specs(a, b, to_string=False, color=None):
     # specs and to descend into dependency hashes so we include all facts.
     a_facts = set(
         shift(func)
-        for func in setup.spec_clauses(
-            a,
-            body=True,
-            expand_hashes=True,
-            concrete_build_deps=True,
-        )
+        for func in setup.spec_clauses(a, body=True, expand_hashes=True, concrete_build_deps=True)
         if func.name == "attr"
     )
     b_facts = set(
         shift(func)
-        for func in setup.spec_clauses(
-            b,
-            body=True,
-            expand_hashes=True,
-            concrete_build_deps=True,
-        )
+        for func in setup.spec_clauses(b, body=True, expand_hashes=True, concrete_build_deps=True)
         if func.name == "attr"
     )
 

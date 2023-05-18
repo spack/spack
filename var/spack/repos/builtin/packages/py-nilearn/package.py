@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -13,6 +13,7 @@ class PyNilearn(PythonPackage):
     pypi = "nilearn/nilearn-0.7.1.tar.gz"
     git = "https://github.com/nilearn/nilearn"
 
+    version("0.10.0", sha256="cc7f1068e038076527ead1bd363436f88f5e8d21e8bb57b323b30b926fc7553a")
     version("0.9.2", sha256="8da8d3835d92cd7b8a6cc92455a489d7e7f5994cf64fc71bce653e362773b9e4")
     version("0.9.0", sha256="f9c8e30adef51489910aec7724b5699de178427d3ae63873dad9b23dd321fe76")
     version("0.8.1", sha256="a0489940855130f35bbc4cac0750479a6f82025215ea7b1d778faca064219298")
@@ -21,6 +22,7 @@ class PyNilearn(PythonPackage):
     version("0.6.2", sha256="cfc6cfda59a6f4247189f8ccf92e364de450460a15c0ec21bdb857c420dd198c")
     version("0.4.2", sha256="5049363eb6da2e7c35589477dfc79bf69929ca66de2d7ed2e9dc07acf78636f4")
 
+    depends_on("python@3.7:", when="@0.10:", type=("build", "run"))
     depends_on("python@3.6:", when="@0.8:", type=("build", "run"))
     depends_on("python@3.5:", when="@0.6:", type=("build", "run"))
     depends_on("python@2.7:", type=("build", "run"))
@@ -28,21 +30,27 @@ class PyNilearn(PythonPackage):
 
     variant("plotting", default=False, description="Enable plotting functionalities")
 
+    depends_on("py-joblib@1:", when="@0.10:", type=("build", "run"))
     depends_on("py-joblib@0.15:", when="@0.9.1:", type=("build", "run"))
     depends_on("py-joblib@0.12:", when="@0.7:", type=("build", "run"))
     depends_on("py-joblib@0.11:", when="@0.6:", type=("build", "run"))
     depends_on("py-lxml", when="@0.9.1:", type=("build", "run"))
+    depends_on("py-nibabel@3.2:", when="@0.10:", type=("build", "run"))
     depends_on("py-nibabel@3:", when="@0.9.1:", type=("build", "run"))
     depends_on("py-nibabel@2.5:", when="@0.8:", type=("build", "run"))
     depends_on("py-nibabel@2.0.2:", type=("build", "run"))
+    depends_on("py-numpy@1.19:", when="@0.10:", type=("build", "run"))
     depends_on("py-numpy@1.18:", when="@0.9.1:", type=("build", "run"))
     depends_on("py-numpy@1.16:", when="@0.8:", type=("build", "run"))
     depends_on("py-numpy@1.11:", when="@0.5:", type=("build", "run"))
     depends_on("py-numpy@1.6.1:", type=("build", "run"))
+    depends_on("py-pandas@1.1.5:", when="@0.10:", type=("build", "run"))
     depends_on("py-pandas@1:", when="@0.9.1:", type=("build", "run"))
     depends_on("py-pandas@0.24.0:", when="@0.8:", type=("build", "run"))
     depends_on("py-pandas@0.18.0:", when="@0.7:", type=("build", "run"))
+    depends_on("py-requests@2.25:", when="@0.10:", type=("build", "run"))
     depends_on("py-requests@2:", when="@0.7:", type=("build", "run"))
+    depends_on("py-scikit-learn@1:", when="@0.10:", type=("build", "run"))
     depends_on("py-scikit-learn@0.22:", when="@0.9.1:", type=("build", "run"))
     depends_on("py-scikit-learn@0.21:", when="@0.8:", type=("build", "run"))
     depends_on("py-scikit-learn@0.19:", when="@0.7:", type=("build", "run"))
@@ -51,12 +59,14 @@ class PyNilearn(PythonPackage):
     # older py-nilearn versions use import sklearn.external.joblib which was
     # deprecated in py-scikit-learn@0.23:
     depends_on("py-scikit-learn@0.15:0.22", when="@:0.5", type=("build", "run"))
+    depends_on("py-scipy@1.6:", when="@0.10:", type=("build", "run"))
     depends_on("py-scipy@1.5:", when="@0.9.1:", type=("build", "run"))
     depends_on("py-scipy@1.2:", when="@0.8:", type=("build", "run"))
     depends_on("py-scipy@0.19:", when="@0.6:", type=("build", "run"))
     depends_on("py-scipy@0.17:", when="@0.5:", type=("build", "run"))
     depends_on("py-scipy@0.14:", type=("build", "run"))
 
+    depends_on("py-matplotlib@3.3:", when="@0.10: +plotting", type=("build", "run"))
     depends_on("py-matplotlib@3:", when="@0.9.1: +plotting", type=("build", "run"))
     depends_on("py-matplotlib@2:", when="@0.6: +plotting", type=("build", "run"))
     # older py-nilearn versions use matplotlib.cm.revcmap which was deprecated

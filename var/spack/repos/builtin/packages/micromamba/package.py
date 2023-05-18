@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -21,7 +21,7 @@ class Micromamba(CMakePackage):
     homepage = "https://mamba.readthedocs.io/"
     url = "https://github.com/mamba-org/mamba/archive/micromamba-1.1.0.tar.gz"
 
-    maintainers = ["charmoniumQ"]
+    maintainers("charmoniumQ")
 
     version("1.1.0", sha256="e2392cd90221234ae8ea92b37f40829fbe36d80278056269aa1994a5efe7f530")
 

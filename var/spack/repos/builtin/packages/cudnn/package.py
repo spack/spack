@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -240,7 +240,7 @@ class Cudnn(Package):
     #     https://developer.nvidia.com/rdp/cudnn-archive
     # Note that download links don't work from command line,
     # need to use modified URLs like in url_for_version.
-    maintainers = ["adamjstewart", "bvanessen"]
+    maintainers("adamjstewart", "bvanessen")
 
     for ver, packages in _versions.items():
         key = "{0}-{1}".format(platform.system(), platform.machine())

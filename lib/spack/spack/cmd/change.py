@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -20,9 +20,7 @@ def setup_parser(subparser):
         help="name of the list to remove specs from",
     )
     subparser.add_argument(
-        "--match-spec",
-        dest="match_spec",
-        help="if name is ambiguous, supply a spec to match",
+        "--match-spec", dest="match_spec", help="if name is ambiguous, supply a spec to match"
     )
     subparser.add_argument(
         "-a",

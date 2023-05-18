@@ -12,7 +12,7 @@ class UppEnv(BundlePackage):
     homepage = "https://github.com/NOAA-EMC/UPP"
     git = "https://github.com/NOAA-EMC/UPP.git"
 
-    maintainers = ["AlexanderRichert-NOAA"]
+    maintainers("AlexanderRichert-NOAA")
 
     version("1.0.0")
 

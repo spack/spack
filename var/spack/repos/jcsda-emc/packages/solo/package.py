@@ -14,7 +14,7 @@ class Solo(PythonPackage):
     git = "https://github.com/JCSDA/solo.git"
     url = "https://github.com/JCSDA/solo/archive/refs/tags/1.0.0.tar.gz"
 
-    maintainers = ['climbfuji', 'ericlingerfelt']
+    maintainers('climbfuji', 'ericlingerfelt')
 
     version('develop', branch='develop', no_cache=True)
     version('1.0.0', commit='4231f2f917225704cc53b5238a51853a1beeb9b0', preferred=True)

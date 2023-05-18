@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -13,7 +13,7 @@ class Libwmf(AutotoolsPackage):
     homepage = "https://github.com/caolanm/libwmf"
     url = "https://github.com/caolanm/libwmf/archive/refs/tags/v0.2.12.tar.gz"
 
-    maintainers = ["benkirk"]
+    maintainers("benkirk")
 
     parallel = False
 

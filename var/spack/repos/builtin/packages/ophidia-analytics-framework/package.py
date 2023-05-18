@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -11,11 +11,8 @@ class OphidiaAnalyticsFramework(AutotoolsPackage):
 
     homepage = "https://github.com/OphidiaBigData/ophidia-analytics-framework"
     url = "https://github.com/OphidiaBigData/ophidia-analytics-framework/archive/refs/tags/v1.7.1.tar.gz"
-    maintainers = ["eldoo", "SoniaScard"]
-    version(
-        "1.7.1",
-        sha256="565050b90ce1cefc59136c835a335ca7981fec792df7a1ee9309b24c05b275d6",
-    )
+    maintainers("eldoo", "SoniaScard")
+    version("1.7.1", sha256="565050b90ce1cefc59136c835a335ca7981fec792df7a1ee9309b24c05b275d6")
 
     depends_on("autoconf", type="build")
     depends_on("automake", type="build")

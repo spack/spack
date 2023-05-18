@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -12,7 +12,7 @@ class Nextflow(Package):
     homepage = "https://www.nextflow.io"
     url = "https://github.com/nextflow-io/nextflow/releases/download/v21.04.3/nextflow"
 
-    maintainers = ["dialvarezs", "marcodelapierre"]
+    maintainers("dialvarezs", "marcodelapierre")
 
     version(
         "22.10.4",

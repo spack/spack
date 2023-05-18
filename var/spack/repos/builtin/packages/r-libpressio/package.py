@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -12,7 +12,7 @@ class RLibpressio(RPackage):
     homepage = "https://github.com/robertu94/libpressio-r"
     url = "https://github.com/robertu94/libpressio-r/archive/0.0.1.tar.gz"
 
-    maintainers = ["robertu94"]
+    maintainers("robertu94")
 
     version("1.6.0", sha256="4f8a712e5e84a201373a104e73b10282fcf98f1c7672cc1dd5a2ff07a32d54f6")
     version("1.5.0", sha256="6b0e095610f190aad5dded0dbc6c0783893d4d5e773afc80328fc8c5befeff58")

@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -11,7 +11,7 @@ class Dftfe(CMakePackage):
     homepage = "https://sites.google.com/umich.edu/dftfe/"
     url = "https://github.com/dftfeDevelopers/dftfe/archive/0.5.1.tar.gz"
 
-    maintainers = ["rmsds"]
+    maintainers("rmsds")
 
     version("0.6.0", sha256="66b633a3aae2f557f241ee45b2faa41aa179e4a0bdf39c4ae2e679a2970845a1")
     version("0.5.2", sha256="9dc4fa9f16b00be6fb1890d8af4a1cd3e4a2f06a2539df999671a09f3d26ec64")

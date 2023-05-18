@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -183,7 +183,7 @@ def test_optimization_flags_with_custom_versions(
 def test_satisfy_strict_constraint_when_not_concrete(architecture_tuple, constraint_tuple):
     architecture = spack.spec.ArchSpec(architecture_tuple)
     constraint = spack.spec.ArchSpec(constraint_tuple)
-    assert not architecture.satisfies(constraint, strict=True)
+    assert not architecture.satisfies(constraint)
 
 
 @pytest.mark.parametrize(

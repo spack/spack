@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -77,6 +77,9 @@ class Krb5(AutotoolsPackage):
         # https://github.com/spack/spack/issues/34193
         if "%gcc@10:" in self.spec:
             args.append("CFLAGS=-fcommon")
+
+        if self.spec["openssl"].satisfies("~shared"):
+            args.append("LDFLAGS=-L%s -lz" % self.spec["zlib"].prefix.lib)
 
         return args
 

@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -13,7 +13,7 @@ class Ocaml(Package):
     homepage = "https://ocaml.org/"
     url = "https://caml.inria.fr/pub/distrib/ocaml-4.06/ocaml-4.06.0.tar.gz"
 
-    maintainers = ["scemama"]
+    maintainers("scemama")
     version("4.13.1", sha256="66a5353c5e7b33a8981446e857657aad45a3b82080ea5c67d4baa434eacfcf5f")
     version("4.12.0", sha256="9825e5903b852a7a5edb71a1ed68f5d5d55d6417e2dda514dda602bc6efeed7b")
     version("4.11.0", sha256="b5bd04bf794a676389b167633f01f8275acdd853149b137f7575f2c2ddef1377")

@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -23,7 +23,7 @@ class Caliper(CMakePackage, CudaPackage, ROCmPackage):
     url = "https://github.com/LLNL/Caliper/archive/v2.9.0.tar.gz"
     tags = ["e4s", "radiuss"]
 
-    maintainers = ["daboehme"]
+    maintainers("daboehme")
 
     test_requires_compiler = True
 

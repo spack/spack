@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -13,7 +13,7 @@ class SalomeMed(CMakePackage):
     """salome-med is the MED file format that is the SALOME platform standard
     file for meshes and fields and salome-med is based on HDF5 library."""
 
-    maintainers = ["franciskloss"]
+    maintainers("franciskloss")
 
     homepage = "https://docs.salome-platform.org/latest/dev/MEDCoupling/developer/med-file.html"
     url = "ftp://ftp.cea.fr/pub/salome/prerequisites/med-4.1.0.tar.gz"

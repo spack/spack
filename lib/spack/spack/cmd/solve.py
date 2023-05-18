@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -182,11 +182,7 @@ def solve(parser, args):
         # set up solver parameters
         # Note: reuse and other concretizer prefs are passed as configuration
         result = solver.solve(
-            specs,
-            out=output,
-            timers=args.timers,
-            stats=args.stats,
-            setup_only=setup_only,
+            specs, out=output, timers=args.timers, stats=args.stats, setup_only=setup_only
         )
         if not setup_only:
             _process_result(result, show, required_format, kwargs)

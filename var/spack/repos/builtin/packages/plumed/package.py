@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -26,7 +26,7 @@ class Plumed(AutotoolsPackage):
     homepage = "https://www.plumed.org/"
     url = "https://github.com/plumed/plumed2/archive/v2.7.4.tar.gz"
     git = "https://github.com/plumed/plumed2.git"
-    maintainers = ["marcodelapierre"]
+    maintainers("marcodelapierre")
 
     version("master", branch="master")
 
@@ -167,7 +167,6 @@ class Plumed(AutotoolsPackage):
     parallel = False
 
     def apply_patch(self, other):
-
         # The name of MD engines differ slightly from the ones used in Spack
         format_strings = collections.defaultdict(lambda: "{0.name}-{0.version}")
         format_strings["espresso"] = "q{0.name}-{0.version}"

@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -16,7 +16,7 @@ class Sensei(CMakePackage):
     homepage = "https://sensei-insitu.org"
     url = "https://github.com/SENSEI-insitu/SENSEI/releases/download/v3.2.1/SENSEI-3.2.1.tar.gz"
     git = "https://github.com/SENSEI-insitu/SENSEI.git"
-    maintainers = ["sshudler", "kwryankrattiger"]
+    maintainers("sshudler", "kwryankrattiger")
 
     version("develop", branch="develop")
     version("4.0.0", sha256="fc1538aa1051789dbdefbe18b7f251bc46e7a6ae1db3a940c123552e0318db8b")

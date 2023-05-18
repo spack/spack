@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -23,7 +23,7 @@ class Catalyst(CMakePackage):
     homepage = "http://www.paraview.org"
     url = "https://www.paraview.org/files/v5.6/ParaView-v5.6.0.tar.xz"
 
-    maintainers = ["chuckatkins", "danlipsa"]
+    maintainers("chuckatkins", "danlipsa")
 
     version("5.6.0", sha256="5b49cb96ab78eee0427e25200530ac892f9a3da7725109ce1790f8010cb5b377")
 

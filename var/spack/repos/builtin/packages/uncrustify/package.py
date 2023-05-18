@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -13,7 +13,7 @@ class Uncrustify(CMakePackage, AutotoolsPackage):
     git = "https://github.com/uncrustify/uncrustify"
     url = "https://sourceforge.net/projects/uncrustify/files/uncrustify/uncrustify-0.69/uncrustify-0.69.tar.gz"
 
-    maintainers = ["gmaurel"]
+    maintainers("gmaurel")
 
     version("master", branch="master")
     version("0.74", commit="62048b")

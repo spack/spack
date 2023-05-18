@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -17,7 +17,7 @@ class KokkosKernels(CMakePackage, CudaPackage):
 
     test_requires_compiler = True
 
-    maintainers = ["lucbv", "srajama1", "brian-kelley"]
+    maintainers("lucbv", "srajama1", "brian-kelley")
 
     # generate checksum for each release tarball with the following command
     # openssl sha256 kokkos-kernels-x.y.z.tar.gz

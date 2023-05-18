@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -22,7 +22,7 @@ class Fplo(MakefilePackage):
     url = "file://{0}/FPLO22.00-62.tar.gz".format(os.getcwd())
     manual_download = True
 
-    maintainers = ["glennpj"]
+    maintainers("glennpj")
 
     version("22.00-62", sha256="0d1d4e9c1e8e41900901e26c3cd08ee39dcfdeb3f2c4c8862055eaf704b6d69e")
 
@@ -95,14 +95,7 @@ class Fplo(MakefilePackage):
 
     def build(self, spec, prefix):
         mmakefile = Executable(join_path(self.build_directory, "install", "MMakefile"))
-        mmakefile_args = [
-            "-f90",
-            spack_fc,
-            "-cc",
-            spack_cc,
-            "-c+",
-            spack_cxx,
-        ]
+        mmakefile_args = ["-f90", spack_fc, "-cc", spack_cc, "-c+", spack_cxx]
 
         with working_dir(self.build_directory):
             # copy contents of bin
@@ -144,13 +137,6 @@ class Fplo(MakefilePackage):
         with working_dir(self.prefix.bin):
             pattern = "^#!.*/usr/bin/perl"
             repl = "#!{0}".format(self.spec["perl"].command.path)
-            files = [
-                "fconv2",
-                "fconvdens2",
-                "fdowngrad.pl",
-                "fout2in",
-                "grBhfat",
-                "grpop",
-            ]
+            files = ["fconv2", "fconvdens2", "fdowngrad.pl", "fout2in", "grBhfat", "grpop"]
             for file in files:
                 filter_file(pattern, repl, *files, backup=False)

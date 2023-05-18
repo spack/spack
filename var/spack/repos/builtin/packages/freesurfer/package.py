@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -16,7 +16,7 @@ class Freesurfer(Package):
     license_required = True
     license_files = ["./license.txt"]
 
-    maintainers = ["robgics"]
+    maintainers("robgics")
 
     version("7.2.0", sha256="4cca78602f898bf633428b9d82cbb9b07e3ab97a86c620122050803779c86d62")
     version("7.1.1", sha256="6098b166fee8644f44f9ec88f3ffe88d05f2bc033cca60443e99e3e56f2e166b")

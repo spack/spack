@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -185,34 +185,13 @@ class KokkosLegacy(Package):
     )
 
     # Checks on Kokkos version and Kokkos options
-    conflicts(
-        "+aggressive_vectorization",
-        when="@:2.0",
-    )
-    conflicts(
-        "+disable_profiling",
-        when="@:2.0",
-    )
-    conflicts(
-        "+disable_dualview_modify_check",
-        when="@:2.03.04",
-    )
-    conflicts(
-        "+enable_profile_load_print",
-        when="@:2.03.04",
-    )
-    conflicts(
-        "+compiler_warnings",
-        when="@:2.03.14",
-    )
-    conflicts(
-        "+disable_deprecated_code",
-        when="@:2.5",
-    )
-    conflicts(
-        "+enable_eti",
-        when="@:2.6",
-    )
+    conflicts("+aggressive_vectorization", when="@:2.0")
+    conflicts("+disable_profiling", when="@:2.0")
+    conflicts("+disable_dualview_modify_check", when="@:2.03.04")
+    conflicts("+enable_profile_load_print", when="@:2.03.04")
+    conflicts("+compiler_warnings", when="@:2.03.14")
+    conflicts("+disable_deprecated_code", when="@:2.5")
+    conflicts("+enable_eti", when="@:2.6")
 
     # Check that we haven't specified a gpu architecture
     # without specifying CUDA
@@ -256,10 +235,7 @@ class KokkosLegacy(Package):
     def install(self, spec, prefix):
         generate = which(join_path(self.stage.source_path, "generate_makefile.bash"))
         with working_dir("build", create=True):
-            g_args = [
-                "--prefix=%s" % prefix,
-                "--with-hwloc=%s" % spec["hwloc"].prefix,
-            ]
+            g_args = ["--prefix=%s" % prefix, "--with-hwloc=%s" % spec["hwloc"].prefix]
             arch_args = []
             kokkos_options_args = []
             cuda_options_args = []

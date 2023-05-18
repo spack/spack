@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -15,7 +15,7 @@ class Hipace(CMakePackage):
     url = "https://github.com/Hi-PACE/hipace/archive/refs/tags/v21.09.tar.gz"
     git = "https://github.com/Hi-PACE/hipace.git"
 
-    maintainers = ["ax3l", "MaxThevenet", "SeverinDiederichs"]
+    maintainers("ax3l", "MaxThevenet", "SeverinDiederichs")
 
     version("develop", branch="development")
     version("21.09", sha256="5d27824fe6aac47ce26ca69759140ab4d7844f9042e436c343c03ea4852825f1")

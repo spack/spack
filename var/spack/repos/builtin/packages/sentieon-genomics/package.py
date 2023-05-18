@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -24,7 +24,7 @@ class SentieonGenomics(Package):
     # https://github.com/Sentieon/sentieon-docker/blob/master/Dockerfile
     # See also: https://github.com/spack/spack/pull/30145/files#r853275635
     url = "https://s3.amazonaws.com/sentieon-release/software/sentieon-genomics-201808.01.tar.gz"
-    maintainers = ["snehring"]
+    maintainers("snehring")
 
     version("202112.06", sha256="18306036f01c3d41dd7ae738b18ae76fd6b666f1172dd4696cd55b4a8465270d")
     version("202112.05", sha256="c97b14b0484a0c0025115ad7b911453af7bdcd09874c26cbc39fd0bc5588a306")

@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -13,7 +13,7 @@ class MpiSerial(AutotoolsPackage):
     url = "https://github.com/MCSclimate/mpi-serial/archive/refs/tags/MPIserial_2.3.0.tar.gz"
 
     # notify when the package is updated.
-    maintainers = ["jedwards4b"]
+    maintainers("jedwards4b")
 
     version("2.3.0", sha256="cc55e6bf0ae5e1d93aafa31ba91bfc13e896642a511c3101695ea05eccf97988")
 
@@ -36,19 +36,11 @@ class MpiSerial(AutotoolsPackage):
     provides("mpi")
 
     def configure_args(self):
-        args = []
+        args = ["CFLAGS={0}".format(self.compiler.cc_pic_flag)]
         realsize = int(self.spec.variants["fort-real-size"].value)
         if realsize != 4:
-            args.extend(
-                [
-                    "--enable-fort-real={0}".format(realsize),
-                ]
-            )
+            args.extend(["--enable-fort-real={0}".format(realsize)])
         doublesize = int(self.spec.variants["fort-double-size"].value)
         if doublesize != 8:
-            args.extend(
-                [
-                    "--enable-fort-double={0}".format(doublesize),
-                ]
-            )
+            args.extend(["--enable-fort-double={0}".format(doublesize)])
         return args

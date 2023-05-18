@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -283,7 +283,7 @@ def print_tests(pkg):
     c_names = ("gcc", "intel", "intel-parallel-studio", "pgi")
     if pkg.name in c_names:
         v_names.extend(["c", "cxx", "fortran"])
-    if pkg.spec.satisfies("llvm+clang"):
+    if pkg.spec.intersects("llvm+clang"):
         v_names.extend(["c", "cxx"])
     # TODO Refactor END
 

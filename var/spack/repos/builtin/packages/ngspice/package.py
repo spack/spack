@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -14,7 +14,7 @@ class Ngspice(AutotoolsPackage):
     url = "https://sourceforge.net/projects/ngspice/files/ngspice-33.tar.gz"
     git = "git://git.code.sf.net/p/ngspice/ngspice"
 
-    maintainers = ["aweits", "cessenat"]
+    maintainers("aweits", "cessenat")
 
     # Master version by default adds the experimental adms feature
     version("master", branch="master")
@@ -104,10 +104,7 @@ class Ngspice(AutotoolsPackage):
                 args.append("--with-x")
                 x = spec["libx11"]
                 args.extend(
-                    [
-                        "--x-includes=%s" % x.prefix.include,
-                        "--x-libraries=%s" % x.prefix.lib,
-                    ]
+                    ["--x-includes=%s" % x.prefix.include, "--x-libraries=%s" % x.prefix.lib]
                 )
             else:
                 args.append("--without-x")

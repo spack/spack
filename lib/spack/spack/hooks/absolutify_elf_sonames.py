@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -37,7 +37,6 @@ class SharedLibrariesVisitor(BaseDirectoryVisitor):
     exception of an exclude list."""
 
     def __init__(self, exclude_list):
-
         # List of file and directory names to be excluded
         self.exclude_list = frozenset(exclude_list)
 

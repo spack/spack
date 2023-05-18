@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -15,8 +15,9 @@ class Parallelio(CMakePackage):
     url = "https://github.com/NCAR/ParallelIO/archive/pio2_5_8.tar.gz"
     git = "https://github.com/NCAR/ParallelIO.git"
 
-    maintainers = ["jedwards4b"]
+    maintainers("jedwards4b")
 
+    version("2.5.10", sha256="fac694827c81434a7766976711ba7179940e361e8ed0c189c7b397fd44d401de")
     version("2.5.9", sha256="e5dbc153d8637111de3a51a9655660bf15367d55842de78240dcfc024380553d")
     version("2.5.8", sha256="f2584fb4310ff7da39d51efbe3f334efd0ac53ae2995e5fc157decccc0570a89")
     version("2.5.7", sha256="af8af04e41af17f98f2c90b996ef0d8bcd980377e0b35e57b38938c7fdc87cbd")
@@ -33,9 +34,9 @@ class Parallelio(CMakePackage):
     )
     variant("mpi", default=True, description="Use mpi to build, otherwise use mpi-serial")
 
-    patch('remove_redefinition_of_mpi_offset.patch', when='@:2.5.6')
+    patch("remove_redefinition_of_mpi_offset.patch", when="@:2.5.6")
 
-    depends_on("cmake@3.7:")
+    depends_on("cmake@3.7:", type="build")
     depends_on("mpi", when="+mpi")
     depends_on("mpi-serial", when="~mpi")
     depends_on("netcdf-c +mpi", type="link", when="+mpi")
@@ -43,13 +44,11 @@ class Parallelio(CMakePackage):
     depends_on("netcdf-fortran", type="link", when="+fortran")
     depends_on("parallel-netcdf", type="link", when="+pnetcdf")
 
-    resource(name="genf90",
-             git="https://github.com/PARALLELIO/genf90.git",
-             tag="genf90_200608")
-
     def url_for_version(self, version):
         url = 'https://github.com/NCAR/ParallelIO/archive/refs/tags/pio{}.tar.gz'
         return url.format(version.underscored)
+
+    resource(name="genf90", git="https://github.com/PARALLELIO/genf90.git", tag="genf90_200608")
 
     # Allow argument mismatch in gfortran versions > 10 for mpi library compatibility
     patch("gfortran.patch", when="@:2.5.8 +fortran %gcc@10:")
@@ -69,17 +68,9 @@ class Parallelio(CMakePackage):
             define("PIO_ENABLE_EXAMPLES", False),
         ]
         if spec.satisfies("+pnetcdf"):
-            args.extend(
-                [
-                    define("PnetCDF_C_PATH", spec["parallel-netcdf"].prefix),
-                ]
-            )
+            args.extend([define("PnetCDF_C_PATH", spec["parallel-netcdf"].prefix)])
         if spec.satisfies("+fortran"):
-            args.extend(
-                [
-                    define("NetCDF_Fortran_PATH", spec["netcdf-fortran"].prefix),
-                ]
-            )
+            args.extend([define("NetCDF_Fortran_PATH", spec["netcdf-fortran"].prefix)])
         if spec.satisfies("+mpi"):
             env["CC"] = spec["mpi"].mpicc
             env["FC"] = spec["mpi"].mpifc

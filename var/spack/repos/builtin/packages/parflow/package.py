@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -17,7 +17,7 @@ class Parflow(CMakePackage):
     url = "https://github.com/parflow/parflow/archive/v3.9.0.tar.gz"
     git = "https://github.com/parflow/parflow.git"
 
-    maintainers = ["smithsg84"]
+    maintainers("smithsg84")
 
     version("develop", branch="master")
     version("3.9.0", sha256="0ac610208baf973ac07ca93187ec289ba3f6e904d3f01d721ee96a2ace0f5e48")

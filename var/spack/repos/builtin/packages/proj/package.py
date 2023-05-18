@@ -1,12 +1,13 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+from spack.build_systems import autotools, cmake
 from spack.package import *
 
 
-class Proj(AutotoolsPackage):
+class Proj(CMakePackage, AutotoolsPackage):
     """PROJ is a generic coordinate transformation software, that transforms
     geospatial coordinates from one coordinate reference system (CRS) to
     another. This includes cartographic projections as well as geodetic
@@ -15,7 +16,7 @@ class Proj(AutotoolsPackage):
     homepage = "https://proj.org/"
     url = "https://download.osgeo.org/proj/proj-7.2.1.tar.gz"
 
-    maintainers = ["adamjstewart"]
+    maintainers("adamjstewart")
 
     # Version 6 removes projects.h, while version 7 removes proj_api.h.
     # Many packages that depend on proj do not yet support the newer API.
@@ -47,6 +48,8 @@ class Proj(AutotoolsPackage):
 
     variant("tiff", default=True, description="Enable TIFF support")
     variant("curl", default=True, description="Enable curl support")
+    variant("shared", default=True, description="Enable shared libraries")
+    variant("pic", default=False, description="Enable position-independent code (PIC)")
 
     # https://github.com/OSGeo/PROJ#distribution-files-and-format
     # https://github.com/OSGeo/PROJ-data
@@ -83,30 +86,14 @@ class Proj(AutotoolsPackage):
     )
 
     # https://proj.org/install.html#build-requirements
-    depends_on("pkgconfig@0.9.0:", type="build", when="@6:")
     depends_on("googletest", when="@6:")
     depends_on("sqlite@3.11:", when="@6:")
     depends_on("libtiff@4.0:", when="@7:+tiff")
     depends_on("curl@7.29.0:", when="@7:+curl")
+    depends_on("pkgconfig@0.9.0:", type="build", when="@6: build_system=autotools")
+    depends_on("cmake@2.6.0:", type="build", when="build_system=cmake")
 
-    def configure_args(self):
-        args = ["PROJ_LIB={0}".format(join_path(self.stage.source_path, "nad"))]
-
-        if self.spec.satisfies("@6:"):
-            args.append("--with-external-gtest")
-
-        if self.spec.satisfies("@7:"):
-            if "+tiff" in self.spec:
-                args.append("--enable-tiff")
-            else:
-                args.append("--disable-tiff")
-
-            if "+curl" in self.spec:
-                args.append("--with-curl=" + self.spec["curl"].prefix.bin.join("curl-config"))
-            else:
-                args.append("--without-curl")
-
-        return args
+    build_system("autotools", conditional("cmake", when="@5.0.0:"), default="cmake")
 
     def setup_run_environment(self, env):
         # PROJ_LIB doesn't need to be set. However, it may be set by conda.
@@ -116,8 +103,49 @@ class Proj(AutotoolsPackage):
         # * https://rasterio.readthedocs.io/en/latest/faq.html
         env.set("PROJ_LIB", self.prefix.share.proj)
 
-    def setup_dependent_build_environment(self, env, dependent_spec):
-        self.setup_run_environment(env)
-
     def setup_dependent_run_environment(self, env, dependent_spec):
         self.setup_run_environment(env)
+
+
+class Setup:
+    def setup_dependent_build_environment(self, env, dependent_spec):
+        self.pkg.setup_run_environment(env)
+
+    def setup_build_environment(self, env):
+        env.set("PROJ_LIB", join_path(self.pkg.stage.source_path, "nad"))
+
+
+class CMakeBuilder(cmake.CMakeBuilder, Setup):
+    def cmake_args(self):
+        args = [
+            self.define_from_variant("ENABLE_TIFF", "tiff"),
+            self.define_from_variant("ENABLE_CURL", "curl"),
+        ]
+        if self.spec.satisfies("@6:"):
+            args.append(self.define("USE_EXTERNAL_GTEST", True))
+        return args
+
+
+class AutotoolsBuilder(autotools.AutotoolsBuilder, Setup):
+    def configure_args(self):
+        args = []
+
+        if self.spec.satisfies("@6:"):
+            args.append("--with-external-gtest")
+
+        if self.spec.satisfies("@7:"):
+            args.extend(self.enable_or_disable("tiff"))
+
+            if "+curl" in self.spec:
+                args.append("--with-curl=" + self.spec["curl"].prefix.bin.join("curl-config"))
+            else:
+                args.append("--without-curl")
+
+        args.extend(self.enable_or_disable("shared"))
+        args.extend(self.with_or_without("pic"))
+
+        if self.spec["libtiff"].satisfies("+jpeg~shared"):
+            args.append("LDFLAGS=%s" % self.spec["jpeg"].libs.ld_flags)
+            args.append("LIBS=%s" % self.spec["jpeg"].libs.link_flags)
+
+        return args

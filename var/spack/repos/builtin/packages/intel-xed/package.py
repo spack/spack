@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -15,12 +15,14 @@ class IntelXed(Package):
 
     homepage = "https://intelxed.github.io/"
     git = "https://github.com/intelxed/xed.git"
-    maintainers = ["mwkrentel"]
+    maintainers("mwkrentel")
 
     mbuild_git = "https://github.com/intelxed/mbuild.git"
 
     # Current versions now have actual releases and tags.
     version("main", branch="main")
+    version("2022.10.11", tag="v2022.10.11")
+    version("2022.08.11", tag="v2022.08.11")
     version("2022.04.17", tag="v2022.04.17")
     version("12.0.1", tag="12.0.1")
     version("11.2.0", tag="11.2.0")

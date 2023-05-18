@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -24,7 +24,7 @@ pytestmark = pytest.mark.skipif(sys.platform == "win32", reason="does not run on
 @pytest.mark.usefixtures("config", "mock_packages", "mock_module_filename")
 class TestTcl(object):
     def test_simple_case(self, modulefile_content, module_configuration):
-        """Tests the generation of a simple TCL module file."""
+        """Tests the generation of a simple Tcl module file."""
 
         module_configuration("autoload_direct")
         content = modulefile_content(mpich_spec_string)
@@ -37,7 +37,6 @@ class TestTcl(object):
         module_configuration("autoload_direct")
         content = modulefile_content(mpileaks_spec_string)
 
-        assert len([x for x in content if "is-loaded" in x]) == 2
         assert len([x for x in content if "module load " in x]) == 2
 
         # dtbuild1 has
@@ -47,7 +46,6 @@ class TestTcl(object):
         # Just make sure the 'build' dependency is not there
         content = modulefile_content("dtbuild1")
 
-        assert len([x for x in content if "is-loaded" in x]) == 2
         assert len([x for x in content if "module load " in x]) == 2
 
         # The configuration file sets the verbose keyword to False
@@ -60,7 +58,6 @@ class TestTcl(object):
         module_configuration("autoload_all")
         content = modulefile_content(mpileaks_spec_string)
 
-        assert len([x for x in content if "is-loaded" in x]) == 5
         assert len([x for x in content if "module load " in x]) == 5
 
         # dtbuild1 has
@@ -70,12 +67,7 @@ class TestTcl(object):
         # Just make sure the 'build' dependency is not there
         content = modulefile_content("dtbuild1")
 
-        assert len([x for x in content if "is-loaded" in x]) == 2
         assert len([x for x in content if "module load " in x]) == 2
-
-        # The configuration file sets the verbose keyword to True
-        messages = [x for x in content if 'puts stderr "Autoloading' in x]
-        assert len(messages) == 2
 
     def test_prerequisites_direct(self, modulefile_content, module_configuration):
         """Tests asking direct dependencies as prerequisites."""
@@ -113,9 +105,51 @@ class TestTcl(object):
         assert len([x for x in content if x.startswith("prepend-path CMAKE_PREFIX_PATH")]) == 0
         assert len([x for x in content if 'setenv FOO "foo"' in x]) == 0
         assert len([x for x in content if "unsetenv BAR" in x]) == 0
-        assert len([x for x in content if "is-loaded 'foo/bar'" in x]) == 1
         assert len([x for x in content if "module load foo/bar" in x]) == 1
         assert len([x for x in content if "setenv LIBDWARF_ROOT" in x]) == 1 or len([x for x in content if "setenv libdwarf_ROOT" in x]) == 1
+
+    def test_prepend_path_separator(self, modulefile_content, module_configuration):
+        """Tests that we can use custom delimiters to manipulate path lists."""
+
+        module_configuration("module_path_separator")
+        content = modulefile_content("module-path-separator")
+
+        assert len([x for x in content if 'append-path --delim ":" COLON "foo"' in x]) == 1
+        assert len([x for x in content if 'prepend-path --delim ":" COLON "foo"' in x]) == 1
+        assert len([x for x in content if 'remove-path --delim ":" COLON "foo"' in x]) == 1
+        assert len([x for x in content if 'append-path --delim ";" SEMICOLON "bar"' in x]) == 1
+        assert len([x for x in content if 'prepend-path --delim ";" SEMICOLON "bar"' in x]) == 1
+        assert len([x for x in content if 'remove-path --delim ";" SEMICOLON "bar"' in x]) == 1
+        assert len([x for x in content if 'append-path --delim " " SPACE "qux"' in x]) == 1
+        assert len([x for x in content if 'remove-path --delim " " SPACE "qux"' in x]) == 1
+
+    def test_help_message(self, modulefile_content, module_configuration):
+        """Tests the generation of module help message."""
+
+        module_configuration("autoload_direct")
+        content = modulefile_content("mpileaks target=core2")
+
+        help_msg = (
+            "proc ModulesHelp { } {"
+            '    puts stderr "Name   : mpileaks"'
+            '    puts stderr "Version: 2.3"'
+            '    puts stderr "Target : core2"'
+            '    puts stderr ""'
+            '    puts stderr "Mpileaks is a mock package that passes audits"'
+            "}"
+        )
+        assert help_msg in "".join(content)
+
+        content = modulefile_content("libdwarf target=core2")
+
+        help_msg = (
+            "proc ModulesHelp { } {"
+            '    puts stderr "Name   : libdwarf"'
+            '    puts stderr "Version: 20130729"'
+            '    puts stderr "Target : core2"'
+            "}"
+        )
+        assert help_msg in "".join(content)
 
     @pytest.mark.parametrize("config_name", ["exclude", "blacklist"])
     def test_exclude(self, modulefile_content, module_configuration, config_name):
@@ -124,7 +158,6 @@ class TestTcl(object):
         module_configuration(config_name)
         content = modulefile_content("mpileaks ^zmpi")
 
-        assert len([x for x in content if "is-loaded" in x]) == 1
         assert len([x for x in content if "module load " in x]) == 1
 
         # Catch "Exception" to avoid using FileNotFoundError on Python 3
@@ -135,7 +168,6 @@ class TestTcl(object):
 
         content = modulefile_content("zmpi target=x86_64")
 
-        assert len([x for x in content if "is-loaded" in x]) == 1
         assert len([x for x in content if "module load " in x]) == 1
 
     def test_naming_scheme_compat(self, factory, module_configuration):
@@ -218,7 +250,6 @@ class TestTcl(object):
             modulefile_content("mpileaks")
 
     def test_module_index(self, module_configuration, factory, tmpdir_factory):
-
         module_configuration("suffix")
 
         w1, s1 = factory("mpileaks")
@@ -319,7 +350,7 @@ class TestTcl(object):
 
         assert 'puts stderr "sentence from package"' in content
 
-        short_description = 'module-whatis "This package updates the context for TCL modulefiles."'
+        short_description = 'module-whatis "This package updates the context for Tcl modulefiles."'
         assert short_description in content
 
     @pytest.mark.regression("4400")
@@ -353,11 +384,11 @@ class TestTcl(object):
 
         # Test the mpileaks that should have the autoloaded dependencies
         content = modulefile_content("mpileaks ^mpich2")
-        assert len([x for x in content if "is-loaded" in x]) == 2
+        assert len([x for x in content if "module load " in x]) == 2
 
         # Test the mpileaks that should NOT have the autoloaded dependencies
         content = modulefile_content("mpileaks ^mpich")
-        assert len([x for x in content if "is-loaded" in x]) == 0
+        assert len([x for x in content if "module load " in x]) == 0
 
     def test_modules_no_arch(self, factory, module_configuration):
         module_configuration("no_arch")

@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -17,6 +17,7 @@ import llnl.util.tty as tty
 from llnl.util.filesystem import getuid, join_path, mkdirp, touch, touchp
 
 import spack.config
+import spack.directory_layout
 import spack.environment as ev
 import spack.main
 import spack.package_base
@@ -28,6 +29,7 @@ import spack.schema.env
 import spack.schema.mirrors
 import spack.schema.packages
 import spack.schema.repos
+import spack.store
 import spack.util.path as spack_path
 import spack.util.spack_yaml as syaml
 
@@ -143,10 +145,7 @@ a_comps = {
         {
             "compiler": {
                 "paths": {"cc": "/gcc422", "cxx": "/g++422", "f77": "gfortran", "fc": "gfortran"},
-                "flags": {
-                    "cppflags": "-O0 -fpic",
-                    "fflags": "-f77",
-                },
+                "flags": {"cppflags": "-O0 -fpic", "fflags": "-f77"},
                 "modules": None,
                 "spec": "gcc@4.2.2",
                 "operating_system": "CNL10",
@@ -189,10 +188,7 @@ b_comps = {
         {
             "compiler": {
                 "paths": {"cc": "/icc123", "cxx": "/icp123", "f77": "ifort", "fc": "ifort"},
-                "flags": {
-                    "cppflags": "-O3",
-                    "fflags": "-f77rtl",
-                },
+                "flags": {"cppflags": "-O3", "fflags": "-f77rtl"},
                 "modules": None,
                 "spec": "icc@12.3",
                 "operating_system": "CNL10",
@@ -296,7 +292,6 @@ def test_add_config_path_with_enumerated_type(mutable_config):
 
 
 def test_add_config_filename(mock_low_high_config, tmpdir):
-
     config_yaml = tmpdir.join("config-filename.yaml")
     config_yaml.ensure()
     with config_yaml.open("w") as f:
@@ -451,9 +446,9 @@ def test_substitute_date(mock_low_high_config):
     assert date.today().strftime("%Y-%m-%d") in new_path
 
 
-PAD_STRING = spack.util.path.SPACK_PATH_PADDING_CHARS
-MAX_PATH_LEN = spack.util.path.get_system_path_max()
-MAX_PADDED_LEN = MAX_PATH_LEN - spack.util.path.SPACK_MAX_INSTALL_PATH_LENGTH
+PAD_STRING = spack_path.SPACK_PATH_PADDING_CHARS
+MAX_PATH_LEN = spack_path.get_system_path_max()
+MAX_PADDED_LEN = MAX_PATH_LEN - spack_path.SPACK_MAX_INSTALL_PATH_LENGTH
 reps = [PAD_STRING for _ in range((MAX_PADDED_LEN // len(PAD_STRING) + 1) + 2)]
 full_padded_string = os.path.join(os.sep + "path", os.sep.join(reps))[:MAX_PADDED_LEN]
 
@@ -584,21 +579,9 @@ def test_read_config_override_list(mock_low_high_config, write_config_file):
 
 def test_ordereddict_merge_order():
     """ "Test that source keys come before dest keys in merge_yaml results."""
-    source = syaml.syaml_dict(
-        [
-            ("k1", "v1"),
-            ("k2", "v2"),
-            ("k3", "v3"),
-        ]
-    )
+    source = syaml.syaml_dict([("k1", "v1"), ("k2", "v2"), ("k3", "v3")])
 
-    dest = syaml.syaml_dict(
-        [
-            ("k4", "v4"),
-            ("k3", "WRONG"),
-            ("k5", "v5"),
-        ]
-    )
+    dest = syaml.syaml_dict([("k4", "v4"), ("k3", "WRONG"), ("k5", "v5")])
 
     result = spack.config.merge_yaml(dest, source)
     assert "WRONG" not in result.values()
@@ -655,11 +638,7 @@ def test_mark_internal():
             "int": 6,
             "numbers": [1, 2, 3],
             "string": "foo",
-            "dict": {
-                "more_numbers": [1, 2, 3],
-                "another_string": "foo",
-                "another_int": 7,
-            },
+            "dict": {"more_numbers": [1, 2, 3], "another_string": "foo", "another_int": 7},
         }
     }
 
@@ -698,13 +677,7 @@ def test_internal_config_from_data():
     # add an internal config initialized from an inline dict
     config.push_scope(
         spack.config.InternalConfigScope(
-            "_builtin",
-            {
-                "config": {
-                    "verify_ssl": False,
-                    "build_jobs": 6,
-                }
-            },
+            "_builtin", {"config": {"verify_ssl": False, "build_jobs": 6}}
         )
     )
 
@@ -717,13 +690,7 @@ def test_internal_config_from_data():
     # push one on top and see what happens.
     config.push_scope(
         spack.config.InternalConfigScope(
-            "higher",
-            {
-                "config": {
-                    "checksum": True,
-                    "verify_ssl": True,
-                }
-            },
+            "higher", {"config": {"checksum": True, "verify_ssl": True}}
         )
     )
 
@@ -1334,13 +1301,7 @@ def test_config_collect_urls(mutable_empty_config, mock_spider_configs, url, isf
     ],
 )
 def test_config_fetch_remote_configs(
-    tmpdir,
-    mutable_empty_config,
-    mock_collect_urls,
-    mock_curl_configs,
-    url,
-    isfile,
-    fail,
+    tmpdir, mutable_empty_config, mock_collect_urls, mock_curl_configs, url, isfile, fail
 ):
     def _has_content(filename):
         # The first element of all configuration files for this test happen to
@@ -1397,10 +1358,7 @@ def mock_collect_urls(mock_config_data, monkeypatch):
 
 @pytest.mark.parametrize(
     "url,skip",
-    [
-        (github_url.format("tree"), True),
-        ("{0}/compilers.yaml".format(gitlab_url), True),
-    ],
+    [(github_url.format("tree"), True), ("{0}/compilers.yaml".format(gitlab_url), True)],
 )
 def test_config_fetch_remote_configs_skip(
     tmpdir, mutable_empty_config, mock_collect_urls, mock_curl_configs, url, skip

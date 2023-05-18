@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -28,8 +28,10 @@ class Gdal(CMakePackage, AutotoolsPackage, PythonExtension):
     list_url = "https://download.osgeo.org/gdal/"
     list_depth = 1
 
-    maintainers = ["adamjstewart"]
+    maintainers("adamjstewart")
 
+    version("3.6.3", sha256="3cccbed883b1fb99b913966aa3a650ad930e7c3afc714f5823f9754176ee49ea")
+    version("3.6.2", sha256="35f40d2e08061b342513cdcddc2b997b3814ef8254514f0ef1e8bc7aa56cf681")
     version("3.6.1", sha256="68f1c03547ff7152289789db7f67ee634167c9b7bfec4872b88406b236f9c230")
     version("3.6.0", sha256="f7afa4aa8d32d0799e011a9f573c6a67e9471f78e70d3d0d0b45b45c8c0c1a94")
     version("3.5.3", sha256="d32223ddf145aafbbaec5ccfa5dbc164147fb3348a3413057f9b1600bb5b3890")
@@ -227,16 +229,17 @@ class Gdal(CMakePackage, AutotoolsPackage, PythonExtension):
     variant("perl", default=False, when="@:3.4", description="Build Perl bindings")
     variant("php", default=False, when="@:2.3", description="Build PHP bindings")
 
+    variant("shared", default=True, description="Build shared libraries")
+    variant("pic", default=False, description="Enable position-independent code (PIC)")
+
     # Build system
     build_system(
-        conditional("cmake", when="@3.5:"),
-        conditional("autotools", when="@:3.5"),
-        default="cmake",
+        conditional("cmake", when="@3.5:"), conditional("autotools", when="@:3.5"), default="cmake"
     )
 
     with when("build_system=cmake"):
+        generator("ninja")
         depends_on("cmake@3.9:", type="build")
-        depends_on("ninja", type="build")
 
     with when("build_system=autotools"):
         depends_on("gmake", type="build")
@@ -463,8 +466,6 @@ class Gdal(CMakePackage, AutotoolsPackage, PythonExtension):
 
 
 class CMakeBuilder(CMakeBuilder):
-    generator = "Ninja"
-
     def cmake_args(self):
         # https://gdal.org/build_hints.html
         args = [
@@ -552,6 +553,8 @@ class CMakeBuilder(CMakeBuilder):
             self.define_from_variant("BUILD_JAVA_BINDINGS", "java"),
             self.define_from_variant("BUILD_CSHARP_BINDINGS", "csharp"),
         ]
+        args.append(self.define_from_variant("BUILD_SHARED_LIBS", "shared"))
+        args.append(self.define_from_variant("CMAKE_POSITION_INDEPENDENT_CODE", "pic"))
 
         # Remove empty strings
         args = [arg for arg in args if arg]
@@ -683,6 +686,9 @@ class AutotoolsBuilder(AutotoolsBuilder):
             self.with_or_without("php"),
         ]
 
+        args.extend(self.enable_or_disable("shared"))
+        args.append(self.with_or_without("pic"))
+
         # Renamed or modified flags
         if self.spec.satisfies("@3:"):
             args.extend(
@@ -713,15 +719,39 @@ class AutotoolsBuilder(AutotoolsBuilder):
         else:
             args.append(self.with_or_without("dwgdirect", variant="teigha", package="teigha"))
 
+        ldflags = []
+        libs = []
+
         if "+hdf4" in self.spec:
             hdf4 = self.spec["hdf"]
             if "+external-xdr" in hdf4 and hdf4["rpc"].name != "libc":
-                args.append("LIBS=" + hdf4["rpc"].libs.link_flags)
+                libs.append(hdf4["rpc"].libs.link_flags)
+
+        deps = []
+        if self.spec["proj"].satisfies("~shared"):
+            deps += ["sqlite", "libtiff", "curl", "openssl"]
+        for dep in deps:
+            if dep not in self.spec:
+                continue
+            ldflags.append(self.spec[dep].libs.search_flags)
+            libs.append(self.spec[dep].libs.link_flags)
+        if self.spec.satisfies("+iconv") and self.spec["libiconv"].satisfies("~shared"):
+            libs.append("-liconv")
+
+        if ldflags or libs:
+            args.append("LDFLAGS=%s" % " ".join(ldflags+libs))
+            args.append("LIBS=%s" % " ".join(libs))
+
 
         # Remove empty strings
         args = [arg for arg in args if arg]
 
         return args
+
+    @run_after("autoreconf")
+    @when("^geos~shared")
+    def patch(self):
+        filter_file("--ldflags` -lgeos_c", "--ldflags` -lgeos_c -lgeos", "configure")
 
     def build(self, pkg, spec, prefix):
         # https://trac.osgeo.org/gdal/wiki/GdalOgrInJavaBuildInstructionsUnix

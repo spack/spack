@@ -12,12 +12,12 @@ class JediUfsEnv(BundlePackage):
     homepage = "https://github.com/JCSDA/ufs-bundle"
     git = "https://github.com/JCSDA/ufs-bundle.git"
 
-    maintainers = ["climbfuji", "mark-a-potts"]
+    maintainers("climbfuji", "mark-a-potts")
 
     version("1.0.0")
 
     depends_on("jedi-base-env", type="run")
-    depends_on("fms@2022.04+fpic", type="run")
+    depends_on("fms@2022.04+pic", type="run")
 
     depends_on("bacio", type="run")
     depends_on("g2", type="run")
@@ -27,8 +27,7 @@ class JediUfsEnv(BundlePackage):
     depends_on("sigio", type="run")
     depends_on("w3emc", type="run")
     depends_on("w3nco", type="run")
-
-    depends_on("esmf~debug", type="run")
-    depends_on("mapl~debug", type="run")
+    depends_on("esmf", type="run")
+    depends_on("mapl", type="run")
 
     # There is no need for install() since there is no code.

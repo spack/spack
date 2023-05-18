@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -19,7 +19,7 @@ _os_map = {
 _versions = {
     "22.1": {
         "RHEL-7": (
-            "189119a72b2cf2840dc85d4fab74435c018e145d03dd3098f23364bd235ffb7b",
+            "bfbfef9099bf0e90480d48b3a1a741d583fc939284f869958e9c09e177098c73",
             "https://developer.arm.com/-/media/Files/downloads/hpc/arm-compiler-for-linux/22-1/arm-compiler-for-linux_22.1_RHEL-7_aarch64.tar",
         ),
         "RHEL-8": (
@@ -126,7 +126,7 @@ class Acfl(Package):
     homepage = "https://developer.arm.com/tools-and-software/server-and-hpc/arm-allinea-studio"
     url = "https://developer.arm.com/-/media/Files/downloads/hpc/arm-compiler-for-linux/22-1/arm-compiler-for-linux_22.1_Ubuntu-20.04_aarch64.tar"
 
-    maintainers = ["annop-w"]
+    maintainers("annop-w")
 
     # Build Versions: establish OS for URL
     acfl_os = get_os()

@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -17,11 +17,12 @@ class Unifyfs(AutotoolsPackage):
     homepage = "https://github.com/LLNL/UnifyFS"
     git = "https://github.com/LLNL/UnifyFS.git"
     url = "https://github.com/LLNL/UnifyFS/releases/download/v0.9.2/unifyfs-0.9.2.tar.gz"
-    maintainers = ["CamStan"]
+    maintainers("CamStan")
 
     tags = ["e4s"]
 
     version("develop", branch="dev")
+    version("1.0.1", sha256="d92800778661b15ab50275c4efe345a6c60d8f1802a0d5909fda38db91b12116")
     version("1.0", sha256="c9ad0d15d382773841a3dab89c661fbdcfd686ec37fa263eb22713f6404258f5")
     version(
         "0.9.2",
@@ -47,6 +48,12 @@ class Unifyfs(AutotoolsPackage):
     variant("fortran", default="True", description="Build with gfortran support")
     variant("pmi", default="False", description="Enable PMI2 build options")
     variant("pmix", default="False", description="Enable PMIx build options")
+    variant(
+        "preload",
+        default="False",
+        when="@1.0.1:",
+        description="Enable support for LD_PRELOAD library",
+    )
     variant("spath", default="True", description="Use spath library to normalize relative paths")
 
     depends_on("autoconf", type="build")
@@ -122,6 +129,7 @@ class Unifyfs(AutotoolsPackage):
         args.extend(self.enable_or_disable("fortran"))
         args.extend(self.enable_or_disable("pmi"))
         args.extend(self.enable_or_disable("pmix"))
+        args.extend(self.enable_or_disable("preload"))
 
         if self.debug_build:
             args.append("--disable-silent-rules")

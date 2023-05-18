@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -14,7 +14,7 @@ class Libressl(AutotoolsPackage):
     homepage = "https://www.libressl.org"
     url = "https://ftp.openbsd.org/pub/OpenBSD/LibreSSL/libressl-3.6.1.tar.gz"
 
-    maintainers = ["eschnett"]
+    maintainers("eschnett")
 
     version("3.6.1", sha256="acfac61316e93b919c28d62d53037ca734de85c46b4d703f19fd8395cf006774")
 

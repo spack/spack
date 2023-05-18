@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -59,10 +59,7 @@ def _try_import_from_store(module, query_spec, query_info=None):
         # to be picked up and used, possibly depending on something in the store, first
         # allows the bootstrap version to work when an incompatible version is in
         # sys.path
-        orders = [
-            module_paths + sys.path,
-            sys.path + module_paths,
-        ]
+        orders = [module_paths + sys.path, sys.path + module_paths]
         for path in orders:
             sys.path = path
             try:

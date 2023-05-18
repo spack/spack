@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -17,7 +17,7 @@ class Libdap4(AutotoolsPackage):
     homepage = "https://www.opendap.org/"
     url = "https://github.com/OPENDAP/libdap4/archive/version-3.20.4.tar.gz"
 
-    maintainers = ["tjhei"]
+    maintainers("tjhei")
 
     version("3.20.4", sha256="c39fa310985cc8963029ad0d0aba784e7dbf1f70c566bd7ae58242f1bb06d24a")
 

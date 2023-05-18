@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -15,7 +15,7 @@ class PyAlphafold(PythonPackage, CudaPackage):
 
     homepage = "https://github.com/deepmind/alphafold"
     url = "https://github.com/deepmind/alphafold/archive/refs/tags/v2.1.1.tar.gz"
-    maintainers = ["aweits"]
+    maintainers("aweits")
 
     version("2.2.4", sha256="8d756e16f6dc7897331d834aade8493820d0ff6a03bf60ce511bac4756c1b1e8")
     version("2.1.1", sha256="1adb6e213ba9ac321fc1acb1c563ba9b4fc054c1cebe1191bc0e2aaa671dadf7")
@@ -37,12 +37,6 @@ class PyAlphafold(PythonPackage, CudaPackage):
     depends_on("py-immutabledict@2.0.0:", type=("build", "run"))
     depends_on("py-jax@0.2.14:", type=("build", "run"), when="@2.1.1")
     depends_on("py-jax@0.3.17:", type=("build", "run"), when="@2.2.4")
-    for arch in CudaPackage.cuda_arch_values:
-        depends_on(
-            "py-jax+cuda cuda_arch={0}".format(arch),
-            type=("build", "run"),
-            when="cuda_arch={0}".format(arch),
-        )
     depends_on("py-ml-collections@0.1.0:", type=("build", "run"))
     depends_on("py-numpy@1.19.5:", type=("build", "run"), when="@2.1.1")
     depends_on("py-numpy@1.21.6:", type=("build", "run"), when="@2.2.4")

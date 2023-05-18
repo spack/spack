@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -17,7 +17,7 @@ class Jblob(Package):
     homepage = "https://cera-www.dkrz.de/WDCC/ui/cerasearch"
     url = "https://cera-www.dkrz.de/jblob/jblob-3.0.zip"
 
-    maintainers = ["ajkotobi"]
+    maintainers("ajkotobi")
 
     version("3.0", sha256="576b5956358386a8832c6d1d13c410705e54888354a10cfd4f094513458067e4")
 

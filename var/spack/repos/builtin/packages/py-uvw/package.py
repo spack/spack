@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -16,9 +16,10 @@ class PyUvw(PythonPackage):
     git = "https://github.com/prs513rosewood/uvw.git"
     pypi = "uvw/uvw-0.3.1.tar.gz"
 
-    maintainers = ["prs513rosewood"]
+    maintainers("prs513rosewood")
 
     version("master", branch="master")
+    version("0.5.0", sha256="dd4501bc2f8c6080467f19d7537a282123a51d849c6b7ace18191ab751ec7621")
     version("0.4.0", sha256="688052832c96ac6ead93f15e577d4f1c2339376300e781520c43cf8652ed3dd8")
     version("0.3.2", sha256="24f0d0f116e55cd80bf8f29fb45eb515a659849623017587c654230eeee3c4d9")
     version("0.3.1", sha256="31e3347ec342bd5381091f3c782ea1a1bfa4709d1de41cd700509e0b813f2265")

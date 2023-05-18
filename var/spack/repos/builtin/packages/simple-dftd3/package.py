@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -12,12 +12,13 @@ class SimpleDftd3(MesonPackage):
     """
 
     homepage = "https://dftd3.readthedocs.io"
-    url = "https://github.com/dftd3/simple-dftd3/releases/download/v0.6.0/s-dftd3-0.6.0-source.tar.xz"
+    url = "https://github.com/dftd3/simple-dftd3/releases/download/v0.7.0/s-dftd3-0.7.0-source.tar.xz"
     git = "https://github.com/dftd3/simple-dftd3.git"
 
-    maintainers = ["awvwgk"]
+    maintainers("awvwgk")
 
     version("main", branch="main")
+    version("0.7.0", "5390b20102474a3c37240f38226f3a54a809b34bcb910317bdd109b8c2865f4e")
     version("0.6.0", "c057361565f570cb128489c70131487f71b6891a40e5292dfe37041596810dfe")
     version("0.5.1", "0411fdaebe438f652a970cb232ae3199c4cc840366ed05fda4c38e634632040d")
 
@@ -31,10 +32,10 @@ class SimpleDftd3(MesonPackage):
     depends_on("py-cffi", when="+python")
     depends_on("python@3.6:", when="+python")
 
-    def meson_args(self):
+    extends("python", when="+python")
 
+    def meson_args(self):
         return [
-            "--wrap-mode=nodownload",
             "-Dopenmp={0}".format(str("+openmp" in self.spec).lower()),
             "-Dpython={0}".format(str("+python" in self.spec).lower()),
         ]

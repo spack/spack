@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -13,7 +13,7 @@ class Cusz(CMakePackage, CudaPackage):
     git = "https://github.com/szcompressor/cusz"
     url = "https://github.com/szcompressor/cuSZ/archive/refs/tags/v0.3.tar.gz"
 
-    maintainers = ["jtian0", "dingwentao"]
+    maintainers("jtian0", "dingwentao")
     tags = ["e4s"]
 
     conflicts("~cuda")

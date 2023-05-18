@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -11,7 +11,7 @@ class Form(AutotoolsPackage):
 
     homepage = "https://www.nikhef.nl/~form/"
     url = "https://github.com/vermaseren/form/releases/download/v4.2.1/form-4.2.1.tar.gz"
-    maintainers = ["iarspider", "tueda"]
+    maintainers("iarspider", "tueda")
 
     version("4.3.0", sha256="b234e0d095f73ecb0904cdc3b0d8d8323a9fa7f46770a52fb22267c624aafbf6")
     version("4.2.1", sha256="f2722d6d4ccb034e01cf786d55342e1c21ff55b182a4825adf05d50702ab1a28")

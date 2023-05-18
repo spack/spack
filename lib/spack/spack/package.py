@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -36,7 +36,7 @@ from spack.build_systems.cached_cmake import (
     cmake_cache_path,
     cmake_cache_string,
 )
-from spack.build_systems.cmake import CMakePackage
+from spack.build_systems.cmake import CMakePackage, generator
 from spack.build_systems.cuda import CudaPackage
 from spack.build_systems.generic import Package
 from spack.build_systems.gnu import GNUMirrorPackage
@@ -45,6 +45,7 @@ from spack.build_systems.lua import LuaPackage
 from spack.build_systems.makefile import MakefilePackage
 from spack.build_systems.maven import MavenPackage
 from spack.build_systems.meson import MesonPackage
+from spack.build_systems.msbuild import MSBuildPackage
 from spack.build_systems.nmake import NMakePackage
 from spack.build_systems.octave import OctavePackage
 from spack.build_systems.oneapi import (
@@ -99,6 +100,5 @@ from spack.version import Version, ver
 # These are just here for editor support; they will be replaced when the build env
 # is set up.
 make = MakeExecutable("make", jobs=1)
-gmake = MakeExecutable("gmake", jobs=1)
 ninja = MakeExecutable("ninja", jobs=1)
 configure = Executable(join_path(".", "configure"))

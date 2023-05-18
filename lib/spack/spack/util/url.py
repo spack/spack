@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -71,6 +71,20 @@ def file_url_string_to_path(url):
     return urllib.request.url2pathname(urllib.parse.urlparse(url).path)
 
 
+def is_path_instead_of_url(path_or_url):
+    """Historically some config files and spack commands used paths
+    where urls should be used. This utility can be used to validate
+    and promote paths to urls."""
+    scheme = urllib.parse.urlparse(path_or_url).scheme
+
+    # On non-Windows, no scheme means it's likely a path
+    if not sys.platform == "win32":
+        return not scheme
+
+    # On Windows, we may have drive letters.
+    return "A" <= scheme <= "Z"
+
+
 def format(parsed_url):
     """Format a URL string
 
@@ -133,11 +147,7 @@ def join(base_url, path, *extra, **kwargs):
     last_abs_component = None
     scheme = ""
     for i in range(n - 1, -1, -1):
-        obj = urllib.parse.urlparse(
-            paths[i],
-            scheme="",
-            allow_fragments=False,
-        )
+        obj = urllib.parse.urlparse(paths[i], scheme="", allow_fragments=False)
 
         scheme = obj.scheme
 
@@ -147,11 +157,7 @@ def join(base_url, path, *extra, **kwargs):
                 # Without a scheme, we have to go back looking for the
                 # next-last component that specifies a scheme.
                 for j in range(i - 1, -1, -1):
-                    obj = urllib.parse.urlparse(
-                        paths[j],
-                        scheme="",
-                        allow_fragments=False,
-                    )
+                    obj = urllib.parse.urlparse(paths[j], scheme="", allow_fragments=False)
 
                     if obj.scheme:
                         paths[i] = "{SM}://{NL}{PATH}".format(
@@ -167,11 +173,7 @@ def join(base_url, path, *extra, **kwargs):
     if last_abs_component is not None:
         paths = paths[last_abs_component:]
         if len(paths) == 1:
-            result = urllib.parse.urlparse(
-                paths[0],
-                scheme="file",
-                allow_fragments=False,
-            )
+            result = urllib.parse.urlparse(paths[0], scheme="file", allow_fragments=False)
 
             # another subtlety: If the last argument to join() is an absolute
             # file:// URL component with a relative path, the relative path
@@ -236,12 +238,7 @@ def _join(base_url, path, *extra, **kwargs):
 
     return format(
         urllib.parse.ParseResult(
-            scheme=scheme,
-            netloc=netloc,
-            path=base_path,
-            params=params,
-            query=query,
-            fragment=None,
+            scheme=scheme, netloc=netloc, path=base_path, params=params, query=query, fragment=None
         )
     )
 

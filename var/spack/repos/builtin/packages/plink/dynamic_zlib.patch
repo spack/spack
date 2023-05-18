@@ -1,0 +1,70 @@
+diff -ur a/1.9/dose2plink.c b/1.9/dose2plink.c
+--- a/1.9/dose2plink.c	2022-12-19 11:00:05.000000000 -0600
++++ b/1.9/dose2plink.c	2022-12-19 13:08:50.022275377 -0600
+@@ -15,6 +15,8 @@
+ // You should have received a copy of the GNU General Public License
+ // along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ 
++#include "plink_common.h"
++
+ #include <stdio.h>
+ #include <stdlib.h>
+ #include <string.h>
+@@ -96,7 +98,11 @@
+   #endif
+ #endif
+ 
+-#include "../zlib-1.2.12/zlib.h"
++#ifdef DYNAMIC_ZLIB
++  #include <zlib.h>
++#else
++  #include "../zlib-1.2.12/zlib.h"
++#endif
+ 
+ #ifdef __APPLE__
+   #include <sys/sysctl.h>
+diff -ur a/1.9/pigz.c b/1.9/pigz.c
+--- a/1.9/pigz.c	2022-12-19 11:00:05.000000000 -0600
++++ b/1.9/pigz.c	2022-12-19 13:06:08.562023953 -0600
+@@ -485,6 +485,8 @@
+ }
+ #else
+ 
++#include "pigz.h"
++
+ #define VERSION "pigz 2.3\n"
+ 
+ /* use large file functions if available */
+@@ -543,8 +545,6 @@
+                            release(), peek_lock(), free_lock(), yarn_name */
+ #endif
+ 
+-#include "pigz.h"
+-
+ 
+ /* for local functions and globals */
+ #define local static
+diff -ur a/1.9/pigz.h b/1.9/pigz.h
+--- a/1.9/pigz.h	2022-12-19 11:00:05.000000000 -0600
++++ b/1.9/pigz.h	2022-12-19 12:58:40.385103423 -0600
+@@ -1,6 +1,8 @@
+ #ifndef __PIGZ_H__
+ #define __PIGZ_H__
+ 
++#include "plink_common.h"
++
+ #include <stdint.h>
+ #include <inttypes.h>
+ 
+diff -ur a/1.9/plink_common.h b/1.9/plink_common.h
+--- a/1.9/plink_common.h	2022-12-19 11:00:06.000000000 -0600
++++ b/1.9/plink_common.h	2022-12-19 12:58:06.819259147 -0600
+@@ -41,6 +41,8 @@
+ // Uncomment this to build this without CBLAS/CLAPACK.
+ // #define NOLAPACK
+ 
++#define DYNAMIC_ZLIB
++
+ // Uncomment this to prevent all unstable features from being accessible from
+ // the command line.
+ #define STABLE_BUILD

@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -120,6 +120,7 @@ class MesonBuilder(BaseBuilder):
         of package writers.
         """
         # standard Meson arguments
+
         std_meson_args = MesonBuilder.std_args(self.pkg)
         std_meson_args += getattr(self, "meson_flag_args", [])
         return std_meson_args
@@ -182,7 +183,10 @@ class MesonBuilder(BaseBuilder):
 
     def meson(self, pkg, spec, prefix):
         """Run ``meson`` in the build directory"""
-        options = [os.path.abspath(self.root_mesonlists_dir)]
+        options = []
+        if self.spec["meson"].satisfies("@0.64:"):
+            options.append("setup")
+        options.append(os.path.abspath(self.root_mesonlists_dir))
         options += self.std_meson_args
         options += self.meson_args()
         with fs.working_dir(self.build_directory, create=True):

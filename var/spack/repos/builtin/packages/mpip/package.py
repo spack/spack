@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -13,7 +13,7 @@ class Mpip(AutotoolsPackage):
     homepage = "https://software.llnl.gov/mpiP/"
     url = "https://github.com/LLNL/mpiP/releases/download/3.5/mpip-3.5.tgz"
     git = "https://github.com/llnl/mpip.git"
-    maintainers = ["cchambreau"]
+    maintainers("cchambreau")
 
     version("master", branch="master")
     version("3.5", sha256="e366843d53fa016fb03903e51c8aac901aa5155edabe64698a8d6fa618a03bbd")

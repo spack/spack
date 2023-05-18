@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -31,7 +31,7 @@ class PyNumba(PythonPackage):
     depends_on("python@3.6:3.8", when="@0.48:0.51", type=("build", "run"))
     depends_on("python@3.3:3.7", when="@0.40.1:0.47", type=("build", "run"))
     depends_on("py-numpy@1.18:1.23", when="@0.56.1:", type=("build", "run"))
-    depends_on("py-numpy@1.18:1.22", when="@0.55.2:", type=("build", "run"))
+    depends_on("py-numpy@1.18:1.22", when="@0.55.2:0.56.0", type=("build", "run"))
     depends_on("py-numpy@1.18:1.21", when="@0.55.0:0.55.1", type=("build", "run"))
     depends_on("py-numpy@1.17:1.20", when="@0.54", type=("build", "run"))
     # set upper bound for py-numpy the same as newer release

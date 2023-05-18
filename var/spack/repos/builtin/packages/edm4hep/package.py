@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -14,7 +14,7 @@ class Edm4hep(CMakePackage):
     url = "https://github.com/key4hep/EDM4hep/archive/v00-01.tar.gz"
     git = "https://github.com/key4hep/EDM4hep.git"
 
-    maintainers = ["vvolkl"]
+    maintainers("vvolkl")
 
     tags = ["hep", "key4hep"]
 
@@ -70,6 +70,7 @@ class Edm4hep(CMakePackage):
     depends_on("python", type="build")
 
     depends_on("root@6.08:")
+    depends_on("nlohmann-json@3.10:", when="@0.7.1:")
     depends_on("podio@0.15:", when="@0.6:")
     depends_on("podio@0.14.1:", when="@0.4.1:")
     depends_on("podio@0.14", when="@0.4")

@@ -1,4 +1,4 @@
-.. Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+.. Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
    Spack Project Developers. See the top-level COPYRIGHT file for details.
 
    SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -272,7 +272,7 @@ Selection of the target microarchitectures
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 The options under the ``targets`` attribute control which targets are considered during a solve.
-Currently the options in this section are only configurable from the ``concretization.yaml`` file
+Currently the options in this section are only configurable from the ``concretizer.yaml`` file
 and there are no corresponding command line arguments to enable them for a single solve.
 
 The ``granularity`` option can take two possible values: ``microarchitectures`` and ``generic``.

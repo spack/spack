@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -46,14 +46,13 @@ import spack.store
 import spack.subprocess_context
 import spack.test.cray_manifest
 import spack.util.executable
+import spack.util.git
 import spack.util.gpg
 import spack.util.spack_yaml as syaml
 import spack.util.url as url_util
 from spack.fetch_strategy import FetchStrategyComposite, URLFetchStrategy
 from spack.util.pattern import Bunch
 from spack.util.web import FetchError
-
-is_windows = sys.platform == "win32"
 
 
 def ensure_configuration_fixture_run_before(request):
@@ -66,12 +65,20 @@ def ensure_configuration_fixture_run_before(request):
         request.getfixturevalue("mutable_config")
 
 
+@pytest.fixture(scope="session")
+def git():
+    """Fixture for tests that use git."""
+    if not spack.util.git.git():
+        pytest.skip("requires git to be installed")
+
+    return spack.util.git.git(required=True)
+
+
 #
 # Return list of shas for latest two git commits in local spack repo
 #
 @pytest.fixture(scope="session")
-def last_two_git_commits():
-    git = spack.util.executable.which("git", required=True)
+def last_two_git_commits(git):
     spack_git_path = spack.paths.prefix
     with working_dir(spack_git_path):
         git_log_out = git("log", "-n", "2", output=str, error=os.devnull)
@@ -98,7 +105,7 @@ def override_git_repos_cache_path(tmpdir):
 
 
 @pytest.fixture
-def mock_git_version_info(tmpdir, override_git_repos_cache_path):
+def mock_git_version_info(git, tmpdir, override_git_repos_cache_path):
     """Create a mock git repo with known structure
 
     The structure of commits in this repo is as follows::
@@ -123,7 +130,6 @@ def mock_git_version_info(tmpdir, override_git_repos_cache_path):
     version tags on multiple branches, and version order is not equal to time
     order or topological order.
     """
-    git = spack.util.executable.which("git", required=True)
     repo_path = str(tmpdir.mkdir("git_repo"))
     filename = "file.txt"
 
@@ -151,7 +157,9 @@ def mock_git_version_info(tmpdir, override_git_repos_cache_path):
             return git("rev-list", "-n1", "HEAD", output=str, error=str).strip()
 
         # Add two commits on main branch
-        write_file(filename, "[]")
+
+        # A commit without a previous version counts as "0"
+        write_file(filename, "[0]")
         git("add", filename)
         commit("first commit")
         commits.append(latest_commit())
@@ -613,7 +621,7 @@ def ensure_debug(monkeypatch):
     tty.set_debug(current_debug_level)
 
 
-@pytest.fixture(autouse=is_windows, scope="session")
+@pytest.fixture(autouse=sys.platform == "win32", scope="session")
 def platform_config():
     spack.config.add_default_platform_scope(spack.platforms.real_host().name)
 
@@ -625,7 +633,7 @@ def default_config():
     This ensures we can test the real default configuration without having
     tests fail when the user overrides the defaults that we test against."""
     defaults_path = os.path.join(spack.paths.etc_path, "defaults")
-    if is_windows:
+    if sys.platform == "win32":
         defaults_path = os.path.join(defaults_path, "windows")
     with spack.config.use_configuration(defaults_path) as defaults_config:
         yield defaults_config
@@ -682,7 +690,7 @@ def configuration_dir(tmpdir_factory, linux_os):
     tmpdir.ensure("user", dir=True)
 
     # Slightly modify config.yaml and compilers.yaml
-    if is_windows:
+    if sys.platform == "win32":
         locks = False
     else:
         locks = True
@@ -708,9 +716,7 @@ def configuration_dir(tmpdir_factory, linux_os):
 
 def _create_mock_configuration_scopes(configuration_dir):
     """Create the configuration scopes used in `config` and `mutable_config`."""
-    scopes = [
-        spack.config.InternalConfigScope("_builtin", spack.config.config_defaults),
-    ]
+    scopes = [spack.config.InternalConfigScope("_builtin", spack.config.config_defaults)]
     scopes += [
         spack.config.ConfigScope(name, str(configuration_dir.join(name)))
         for name in ["site", "system", "user"]
@@ -1100,7 +1106,9 @@ def mock_archive(request, tmpdir_factory):
     """Creates a very simple archive directory with a configure script and a
     makefile that installs to a prefix. Tars it up into an archive.
     """
-    tar = spack.util.executable.which("tar", required=True)
+    tar = spack.util.executable.which("tar")
+    if not tar:
+        pytest.skip("requires tar to be installed")
 
     tmpdir = tmpdir_factory.mktemp("mock-archive-dir")
     tmpdir.ensure(spack.stage._source_path_subdir, dir=True)
@@ -1267,12 +1275,7 @@ def mock_cvs_repository(tmpdir_factory):
         return format_date(timestamp)
 
     checks = {
-        "default": Bunch(
-            file=r1_file,
-            branch=None,
-            date=None,
-            args={"cvs": url},
-        ),
+        "default": Bunch(file=r1_file, branch=None, date=None, args={"cvs": url}),
         "branch": Bunch(
             file=r1_file,
             branch="mock-branch",
@@ -1288,18 +1291,14 @@ def mock_cvs_repository(tmpdir_factory):
     }
 
     test = Bunch(
-        checks=checks,
-        url=url,
-        get_branch=get_branch,
-        get_date=get_date,
-        path=str(repodir),
+        checks=checks, url=url, get_branch=get_branch, get_date=get_date, path=str(repodir)
     )
 
     yield test
 
 
 @pytest.fixture(scope="session")
-def mock_git_repository(tmpdir_factory):
+def mock_git_repository(git, tmpdir_factory):
     """Creates a git repository multiple commits, branches, submodules, and
     a tag. Visual representation of the commit history (starting with the
     earliest commit at c0)::
@@ -1323,8 +1322,6 @@ def mock_git_repository(tmpdir_factory):
     associated builtin.mock package 'git-test'. c3 is a commit in the
     repository but does not have an associated explicit package version.
     """
-    git = spack.util.executable.which("git", required=True)
-
     suburls = []
     # Create two git repositories which will be used as submodules in the
     # main repository
@@ -1394,12 +1391,7 @@ def mock_git_repository(tmpdir_factory):
         git("tag", tag)
 
         try:
-            default_branch = git(
-                "config",
-                "--get",
-                "init.defaultBranch",
-                output=str,
-            ).strip()
+            default_branch = git("config", "--get", "init.defaultBranch", output=str).strip()
         except Exception:
             default_branch = "master"
         git("checkout", default_branch)
@@ -1452,7 +1444,9 @@ def mock_git_repository(tmpdir_factory):
 @pytest.fixture(scope="session")
 def mock_hg_repository(tmpdir_factory):
     """Creates a very simple hg repository with two commits."""
-    hg = spack.util.executable.which("hg", required=True)
+    hg = spack.util.executable.which("hg")
+    if not hg:
+        pytest.skip("requires mercurial to be installed")
 
     tmpdir = tmpdir_factory.mktemp("mock-hg-repo-dir")
     tmpdir.ensure(spack.stage._source_path_subdir, dir=True)
@@ -1490,7 +1484,10 @@ def mock_hg_repository(tmpdir_factory):
 @pytest.fixture(scope="session")
 def mock_svn_repository(tmpdir_factory):
     """Creates a very simple svn repository with two commits."""
-    svn = spack.util.executable.which("svn", required=True)
+    svn = spack.util.executable.which("svn")
+    if not svn:
+        pytest.skip("requires svn to be installed")
+
     svnadmin = spack.util.executable.which("svnadmin", required=True)
 
     tmpdir = tmpdir_factory.mktemp("mock-svn-stage")
@@ -1538,14 +1535,14 @@ def mock_svn_repository(tmpdir_factory):
     yield t
 
 
-@pytest.fixture()
-def mutable_mock_env_path(tmpdir_factory):
+@pytest.fixture(scope="function")
+def mutable_mock_env_path(tmpdir_factory, mutable_config):
     """Fixture for mocking the internal spack environments directory."""
-    saved_path = ev.environment.env_path
+    saved_path = ev.environment.default_env_path
     mock_path = tmpdir_factory.mktemp("mock-env-path")
-    ev.environment.env_path = str(mock_path)
+    ev.environment.default_env_path = str(mock_path)
     yield mock_path
-    ev.environment.env_path = saved_path
+    ev.environment.default_env_path = saved_path
 
 
 @pytest.fixture()
@@ -1678,11 +1675,11 @@ def mock_executable(tmpdir):
     """
     import jinja2
 
-    shebang = "#!/bin/sh\n" if not is_windows else "@ECHO OFF"
+    shebang = "#!/bin/sh\n" if sys.platform != "win32" else "@ECHO OFF"
 
     def _factory(name, output, subdir=("bin",)):
         f = tmpdir.ensure(*subdir, dir=True).join(name)
-        if is_windows:
+        if sys.platform == "win32":
             f += ".bat"
         t = jinja2.Template("{{ shebang }}{{ output }}\n")
         f.write(t.render(shebang=shebang, output=output))

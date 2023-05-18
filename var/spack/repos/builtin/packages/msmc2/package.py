@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -15,7 +15,7 @@ class Msmc2(MakefilePackage):
     homepage = "https://github.com/stschiff/msmc2"
     url = "https://github.com/stschiff/msmc2/archive/v2.1.1.tar.gz"
 
-    maintainers = ["robqiao"]
+    maintainers("robqiao")
 
     version("2.1.2", sha256="c8c2b6ed6ef1b5d6e6e15ec0d968288e5bdae2bea1f3b4ec790f599e96bb26cd")
     version("2.1.1", sha256="151dd75a8b0371ff94eed9504a7a73a2924e10466de30c230c1bb3c35a1a0913")

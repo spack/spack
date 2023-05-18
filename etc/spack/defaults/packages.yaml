@@ -28,7 +28,7 @@ packages:
       gl: [glx, osmesa]
       glu: [mesa-glu, openglu]
       golang: [go, gcc]
-      go-external-or-gccgo-bootstrap: [go-bootstrap, gcc]
+      go-or-gccgo-bootstrap: [go-bootstrap, gcc]
       iconv: [libiconv]
       ipp: [intel-ipp]
       java: [openjdk, jdk, ibm-java]

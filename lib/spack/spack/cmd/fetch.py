@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -25,10 +25,7 @@ def setup_parser(subparser):
         help="fetch only missing (not yet installed) dependencies",
     )
     subparser.add_argument(
-        "-D",
-        "--dependencies",
-        action="store_true",
-        help="also fetch all dependencies",
+        "-D", "--dependencies", action="store_true", help="also fetch all dependencies"
     )
     arguments.add_common_arguments(subparser, ["specs"])
     subparser.epilog = (

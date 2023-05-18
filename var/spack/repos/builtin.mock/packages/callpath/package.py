@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -18,9 +18,8 @@ class Callpath(Package):
     depends_on("mpi")
 
     def install(self, spec, prefix):
-        configure("--prefix=%s" % prefix)
-        make()
-        make("install")
+        mkdirp(prefix)
+        touch(join_path(prefix, "dummyfile"))
 
     def setup_run_environment(self, env):
         env.set("FOOBAR", self.name)

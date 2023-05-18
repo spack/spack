@@ -1,4 +1,4 @@
-.. Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+.. Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
    Spack Project Developers. See the top-level COPYRIGHT file for details.
 
    SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -28,11 +28,14 @@ This package provides the following variants:
 
 * **cuda_arch**
 
-  This variant supports the optional specification of the architecture.
+  This variant supports the optional specification of one or multiple architectures.
   Valid values are maintained in the ``cuda_arch_values`` property and
   are the numeric character equivalent of the compute capability version
   (e.g., '10' for version 1.0). Each provided value affects associated
   ``CUDA`` dependencies and compiler conflicts.
+  
+  The variant builds both PTX code for the _virtual_ architecture
+  (e.g. ``compute_10``) and binary code for the _real_ architecture (e.g. ``sm_10``).
 
   GPUs and their compute capability versions are listed at
   https://developer.nvidia.com/cuda-gpus .

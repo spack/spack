@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -258,7 +258,7 @@ class Openfoam(Package):
     in 2004.
     """
 
-    maintainers = ["olesenm"]
+    maintainers("olesenm")
     homepage = "https://www.openfoam.com/"
     url = "https://sourceforge.net/projects/openfoam/files/v1906/OpenFOAM-v1906.tgz"
     git = "https://develop.openfoam.com/Development/openfoam.git"
@@ -374,7 +374,7 @@ class Openfoam(Package):
     depends_on("parmgridgen", when="+mgridgen", type="build")
     depends_on("zoltan", when="+zoltan")
     depends_on("vtk", when="+vtk")
-    depends_on("adios2", when="@1912:")
+    depends_on("adios2~fortran", when="@1912:")
 
     # For OpenFOAM plugins and run-time post-processing this should just be
     # 'paraview+plugins' but that resolves poorly.
@@ -385,6 +385,9 @@ class Openfoam(Package):
     depends_on("paraview@5.4:", when="@1706:+paraview")
     # 1612 plugins need older paraview
     depends_on("paraview@:5.0.1", when="@1612+paraview")
+
+    # Icx only support from v2106 onwards
+    conflicts("%oneapi", when="@:2012", msg="OneAPI compiler not supported. Try v2106 or greater.")
 
     # General patches
     common = ["spack-Allwmake", "README-spack"]
@@ -492,7 +495,7 @@ class Openfoam(Package):
                         "(FOAM|WM)_.*USER_.*",
                     ],
                     whitelist=[  # Whitelist these
-                        "MPI_ARCH_PATH",  # Can be required for compilation
+                        "MPI_ARCH_PATH"  # Can be required for compilation
                     ],
                 )
 
@@ -566,7 +569,7 @@ class Openfoam(Package):
         # Avoid WM_PROJECT_INST_DIR for ThirdParty
         # This modification is non-critical
         edits = {
-            "WM_THIRD_PARTY_DIR": r"$WM_PROJECT_DIR/ThirdParty  #SPACK: No separate third-party",
+            "WM_THIRD_PARTY_DIR": r"$WM_PROJECT_DIR/ThirdParty  #SPACK: No separate third-party"
         }
         rewrite_environ_files(  # etc/{bashrc,cshrc}
             edits, posix=join_path("etc", "bashrc"), cshell=join_path("etc", "cshrc")
@@ -717,14 +720,10 @@ class Openfoam(Package):
             }
 
         if "+kahip" in spec:
-            self.etc_config["kahip"] = {
-                "KAHIP_ARCH_PATH": spec["kahip"].prefix,
-            }
+            self.etc_config["kahip"] = {"KAHIP_ARCH_PATH": spec["kahip"].prefix}
 
         if "+metis" in spec:
-            self.etc_config["metis"] = {
-                "METIS_ARCH_PATH": spec["metis"].prefix,
-            }
+            self.etc_config["metis"] = {"METIS_ARCH_PATH": spec["metis"].prefix}
 
         # ParaView_INCLUDE_DIR is not used in 1812, but has no ill-effect
         if "+paraview" in spec:
@@ -786,9 +785,7 @@ class Openfoam(Package):
         mkdirp(self.projectdir)
 
         # Filtering: bashrc, cshrc
-        edits = {
-            "WM_PROJECT_DIR": self.projectdir,
-        }
+        edits = {"WM_PROJECT_DIR": self.projectdir}
         etc_dir = join_path(self.projectdir, "etc")
         rewrite_environ_files(  # Adjust etc/bashrc and etc/cshrc
             edits, posix=join_path(etc_dir, "bashrc"), cshell=join_path(etc_dir, "cshrc")

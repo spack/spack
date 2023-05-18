@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -12,7 +12,7 @@ class PyMetpy(PythonPackage):
 
     homepage = "https://github.com/Unidata/MetPy"
     pypi = "MetPy/MetPy-1.0.1.tar.gz"
-    maintainers = ["dopplershift"]
+    maintainers("dopplershift")
 
     # Importing 'metpy.io' results in downloads, so skip it.
     # https://github.com/Unidata/MetPy/issues/1888

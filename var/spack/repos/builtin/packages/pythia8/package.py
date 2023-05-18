@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -17,7 +17,7 @@ class Pythia8(AutotoolsPackage):
 
     tags = ["hep"]
 
-    maintainers = ["ChristianTackeGSI"]
+    maintainers("ChristianTackeGSI")
 
     version("8.306", sha256="734803b722b1c1b53c8cf2f0d3c30747c80fc2dde5e0ba141bc9397dad37a8f6")
     version("8.304", sha256="d3897018fb6d545eaf93bf43f32580c984a9bff49259d9dd29dff6edfbe9d9a1")

@@ -16,10 +16,11 @@ class Fckit(CMakePackage):
     git = "https://github.com/ecmwf/fckit.git"
     url = "https://github.com/ecmwf/fckit/archive/0.9.0.tar.gz"
 
-    maintainers = ['climbfuji']
+    maintainers('climbfuji')
 
     version('master', branch='master')
     version('develop', branch='develop')
+    version("0.10.1", sha256="9cde04fefa50624bf89068ab793cc2e9437c0cd1c271a41af7d54dbd37c306be")
     version("0.10.0", sha256="f16829f63a01cdef5e158ed2a51f6d4200b3fe6dce8f251af158141a1afe482b")
     version("0.9.5", sha256="183cd78e66d3283d9e6e8e9888d3145f453690a4509fb701b28d1ac6757db5de")
 

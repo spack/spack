@@ -46,7 +46,7 @@ modules:
 
     tcl:
       all:
-        autoload: none
+        autoload: direct
 
     # Default configurations if lmod is enabled
     lmod:

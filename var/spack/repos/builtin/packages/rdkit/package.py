@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -14,7 +14,7 @@ class Rdkit(CMakePackage):
     homepage = "https://www.rdkit.org"
     url = "https://github.com/rdkit/rdkit/archive/refs/tags/Release_2021_03_2.tar.gz"
 
-    maintainers = ["bvanessen"]
+    maintainers("bvanessen")
 
     version("2021_09_5", sha256="f720b3f6292c4cd0a412a073d848ffac01a43960082e33ee54b68798de0cbfa1")
     version("2021_09_4", sha256="ce192e85bbdc1dcf24d327197229099c8625ee20ef022fcbd980791fdbfc7203")
@@ -42,14 +42,19 @@ class Rdkit(CMakePackage):
     version("2020_09_1", sha256="ac105498be52ff77f7e9328c41d0e61a2318cac0789d6efc30f5f50dc78a992c")
     version("2020_03_6", sha256="a3663295a149aa0307ace6d1995094d0334180bc8f892fa325558a110154272b")
 
+    variant("freetype", default=True, description="Build freetype support")
+
     depends_on("python@3:")
     depends_on("boost@1.53.0: +python +serialization +iostreams +system")
 
     depends_on("py-numpy")
     depends_on("sqlite")
 
+    depends_on("freetype", when="@2020_09_1: +freetype")
+
     extends("python")
 
     def cmake_args(self):
         args = ["-DCMAKE_CXX_STANDARD=14", "-DRDK_INSTALL_INTREE=OFF"]
+        args.append(self.define_from_variant("RDK_BUILD_FREETYPE_SUPPORT", "freetype"))
         return args

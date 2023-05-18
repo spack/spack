@@ -1,9 +1,11 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import os
+
+import llnl.util.filesystem as fs
 
 from spack.package import *
 
@@ -24,15 +26,18 @@ class Gromacs(CMakePackage):
     url = "https://ftp.gromacs.org/gromacs/gromacs-2022.2.tar.gz"
     list_url = "https://ftp.gromacs.org/gromacs"
     git = "https://gitlab.com/gromacs/gromacs.git"
-    maintainers = ["junghans", "marvinbernhardt"]
+    maintainers("junghans", "marvinbernhardt")
 
     version("main", branch="main")
     version("master", branch="main", deprecated=True)
+    version("2023", sha256="ac92c6da72fbbcca414fd8a8d979e56ecf17c4c1cdabed2da5cfb4e7277b7ba8")
+    version("2022.5", sha256="083cc3c424bb93ffe86c12f952e3e5b4e6c9f6520de5338761f24b75e018c223")
     version("2022.4", sha256="c511be602ff29402065b50906841def98752639b92a95f1b0a1060d9b5e27297")
     version("2022.3", sha256="14cfb130ddaf8f759a3af643c04f5a0d0d32b09bc3448b16afa5b617f5e35dae")
     version("2022.2", sha256="656404f884d2fa2244c97d2a5b92af148d0dbea94ad13004724b3fcbf45e01bf")
     version("2022.1", sha256="85ddab5197d79524a702c4959c2c43be875e0fc471df3a35224939dce8512450")
     version("2022", sha256="fad60d606c02e6164018692c6c9f2c159a9130c2bf32e8c5f4f1b6ba2dda2b68")
+    version("2021.7", sha256="4db7bbbfe5424de48373686ec0e8c5bfa7175d5cd74290ef1c1e840e6df67f06")
     version("2021.6", sha256="52df2c1d7586fd028d9397985c68bd6dd26e6e905ead382b7e6c473d087902c3")
     version("2021.5", sha256="eba63fe6106812f72711ef7f76447b12dd1ee6c81b3d8d4d0e3098cd9ea009b6")
     version("2021.4", sha256="cb708a3e3e83abef5ba475fdb62ef8d42ce8868d68f52dafdb6702dc9742ba1d")
@@ -88,7 +93,7 @@ class Gromacs(CMakePackage):
     variant("nosuffix", default=False, description="Disable default suffixes")
     variant(
         "build_type",
-        default="RelWithDebInfo",
+        default="Release",
         description="The build type to build",
         values=(
             "Debug",
@@ -110,6 +115,15 @@ class Gromacs(CMakePackage):
         "+mdrun_only", when="@2021:", msg="mdrun-only build option was removed for GROMACS 2021."
     )
     variant("openmp", default=True, description="Enables OpenMP at configure time")
+    variant(
+        "sve",
+        default=True,
+        description="Enable SVE on aarch64 if available",
+        when="target=neoverse_v1",
+    )
+    variant(
+        "sve", default=True, description="Enable SVE on aarch64 if available", when="target=a64fx"
+    )
     variant(
         "relaxed_double_precision",
         default=False,
@@ -139,6 +153,13 @@ class Gromacs(CMakePackage):
         "~blas",
         when="+cp2k",
         msg="GROMACS and CP2K should use the same blas, please disable bundled blas",
+    )
+    conflicts("%intel", when="@2022:", msg="GROMACS %intel support was removed in version 2022")
+    conflicts("%gcc@:8", when="@2023:", msg="GROMACS requires GCC 9 or later since version 2023")
+    conflicts(
+        "intel-oneapi-mkl@:2021.2",
+        when="@2023:",
+        msg="GROMACS requires oneMKL 2021.3 or later since version 2023",
     )
 
     depends_on("mpi", when="+mpi")
@@ -263,6 +284,15 @@ class Gromacs(CMakePackage):
                 "#include <queue>\n#include <limits>",
                 "src/gromacs/modularsimulator/modularsimulator.h",
             )
+        # Ref: https://gitlab.com/gromacs/gromacs/-/merge_requests/3504
+        if self.spec.satisfies("@2023"):
+            filter_file(
+                "        if (std::filesystem::equivalent(searchPath, buildBinPath))",
+                "        if (std::error_code c; std::filesystem::equivalent(searchPath,"
+                " buildBinPath, c))",
+                "src/gromacs/commandline/cmdlineprogramcontext.cpp",
+                string=True,
+            )
 
         if "+plumed" in self.spec:
             self.spec["plumed"].package.apply_patch(self)
@@ -307,13 +337,54 @@ class Gromacs(CMakePackage):
                     r"-gencode;arch=compute_20,code=sm_21;?", "", "cmake/gmxManageNvccConfig.cmake"
                 )
 
-    def cmake_args(self):
 
+class CMakeBuilder(spack.build_systems.cmake.CMakeBuilder):
+    @run_after("build")
+    def build_test_binaries(self):
+        """Build the test binaries.
+
+        GROMACS usually excludes tests from the default build target, but building
+        the tests during spack's ``check`` phase takes a long time while producing
+        no visible output, even with ``--verbose``.
+
+        Here, we make sure the test binaries are built during the build phase
+        (as would normally be expected when configured with BUILD_TESTING)
+        when the ``--test`` flag is used.
+
+        Note: the GMX_DEVELOPER_BUILD option disables the EXCLUDE_FROM_ALL on the
+        test binaries, but the option incurs additional side effects that may
+        not be intended with ``--test``.
+        """
+        if self.pkg.run_tests:
+            with fs.working_dir(self.build_directory):
+                make("tests")
+
+    def check(self):
+        """Run the ``check`` target (skipping the ``test`` target).
+
+        Override the standard CMakeBuilder behavior. GROMACS has both `test`
+        and `check` targets, but we are only interested in the latter.
+        """
+        with fs.working_dir(self.build_directory):
+            if self.generator == "Unix Makefiles":
+                make("check")
+            elif self.generator == "Ninja":
+                ninja("check")
+
+    def cmake_args(self):
         options = []
+        # Warning: Use `define_from_variant()` with caution.
+        # GROMACS may use unexpected conventions for CMake variable values.
+        # For example: variables that accept boolean values like "OFF"
+        # may actually be STRING type, and undefined variables may trigger
+        # different defaults for dependent options than explicitly defined variables.
+        # `-DGMX_VAR=OFF` may not have the same meaning as `-DGMX_VAR=`.
+        # In other words, the mapping between package variants and the
+        # GMX CMake variables is often non-trivial.
 
         if "+mpi" in self.spec:
             options.append("-DGMX_MPI:BOOL=ON")
-            if self.version < Version("2020"):
+            if self.pkg.version < Version("2020"):
                 # Ensures gmxapi builds properly
                 options.extend(
                     [
@@ -322,7 +393,7 @@ class Gromacs(CMakePackage):
                         "-DCMAKE_Fortran_COMPILER=%s" % self.spec["mpi"].mpifc,
                     ]
                 )
-            elif self.version == Version("2021"):
+            elif self.pkg.version == Version("2021"):
                 # Work around https://gitlab.com/gromacs/gromacs/-/issues/3896
                 # Ensures gmxapi builds properly
                 options.extend(
@@ -368,7 +439,7 @@ class Gromacs(CMakePackage):
         else:
             options.append("-DGMX_HWLOC:BOOL=OFF")
 
-        if self.version >= Version("2021"):
+        if self.pkg.version >= Version("2021"):
             if "+cuda" in self.spec:
                 options.append("-DGMX_GPU:STRING=CUDA")
             elif "+opencl" in self.spec:
@@ -410,7 +481,10 @@ class Gromacs(CMakePackage):
 
         # Activate SIMD based on properties of the target
         target = self.spec.target
-        if target >= "zen2":
+        if target >= "zen4":
+            # AMD Family 17h (EPYC Genoa)
+            options.append("-DGMX_SIMD=AVX_512")
+        elif target >= "zen2":
             # AMD Family 17h (EPYC Rome)
             options.append("-DGMX_SIMD=AVX2_256")
         elif target >= "zen":
@@ -429,6 +503,8 @@ class Gromacs(CMakePackage):
             # ARMv8
             if self.spec.satisfies("%nvhpc"):
                 options.append("-DGMX_SIMD=None")
+            elif "sve" in target.features and "+sve" in self.spec:
+                options.append("-DGMX_SIMD=ARM_SVE")
             else:
                 options.append("-DGMX_SIMD=ARM_NEON_ASIMD")
         elif target == "mic_knl":

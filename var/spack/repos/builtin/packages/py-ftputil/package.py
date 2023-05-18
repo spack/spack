@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -11,7 +11,7 @@ class PyFtputil(PythonPackage):
 
     homepage = "https://ftputil.sschwarzer.net"
     pypi = "ftputil/ftputil-5.0.4.tar.gz"
-    maintainers = ["charmoniumQ"]
+    maintainers("charmoniumQ")
 
     version("5.0.4", sha256="6889db8649dd20d9b6d40a6c5f0f84ccf340a7dac1e0bfc0f0024090fc2afb33")
 

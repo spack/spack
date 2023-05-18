@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -27,10 +27,11 @@ class Qt(Package):
     url = "https://download.qt.io/archive/qt/5.15/5.15.2/single/qt-everywhere-src-5.15.2.tar.xz"
     list_url = "https://download.qt.io/archive/qt/"
     list_depth = 3
-    maintainers = ["sethrj"]
+    maintainers("sethrj")
 
     phases = ["configure", "build", "install"]
 
+    version("5.15.8", sha256="776a9302c336671f9406a53bd30b8e36f825742b2ec44a57c08217bff0fa86b9")
     version("5.15.7", sha256="8a71986676a3f37a198a9113acedbfd5bc5606a459b6b85816d951458adbe9a0")
     version("5.15.6", sha256="ebc77d27934b70b25b3dc34fbec7c4471eb451848e891c42b32409ea30fe309f")
     version("5.15.5", sha256="5a97827bdf9fd515f43bc7651defaf64fecb7a55e051c79b8f80510d0e990f06")
@@ -329,6 +330,10 @@ class Qt(Package):
                 llvm_path = "/spack-disable-llvm"
             env.set("LLVM_INSTALL_DIR", llvm_path)
 
+        if self.spec.satisfies("+ssl"):
+            if self.spec["openssl"].satisfies("~shared"):
+                env.set("OPENSSL_LIBS", "-lssl -lcrypto -lz")
+
     def setup_run_environment(self, env):
         env.set("QTDIR", self.prefix)
         env.set("QTINC", self.prefix.inc)
@@ -342,7 +347,7 @@ class Qt(Package):
         env.prepend_path("QT_PLUGIN_PATH", self.prefix.plugins)
 
     def setup_dependent_package(self, module, dependent_spec):
-        module.qmake = Executable(join_path(self.spec.prefix.bin, "qmake"))
+        module.qmake = Executable(self.spec.prefix.bin.qmake)
 
     def get_mkspec(self):
         """Determine the mkspecs root directory and QT platform."""
@@ -506,6 +511,12 @@ class Qt(Package):
             with open(conf_file, "a") as f:
                 f.write("QMAKE_CXXFLAGS += -std=gnu++98\n")
 
+    @when("~shared")
+    @run_before("configure")
+    def patch(self):
+        filter_file("libs-only-L", "libs-only-L --static", "qtbase/mkspecs/features/qt_configure.prf")
+        filter_file("libs-only-l", "libs-only-l --static", "qtbase/mkspecs/features/qt_configure.prf")
+
     def _dep_appender_factory(self, config_args):
         spec = self.spec
 
@@ -576,6 +587,7 @@ class Qt(Package):
             config_args.append("-no-openvg")
         else:
             # FIXME: those could work for other versions
+            use_spack_dep("libtiff", "tiff")
             use_spack_dep("libpng")
             use_spack_dep("jpeg", "libjpeg")
             use_spack_dep("zlib")
@@ -585,7 +597,7 @@ class Qt(Package):
                 [
                     # NIS is deprecated in more recent glibc,
                     # but qt-5.6.3 does not recognize this option
-                    "-no-nis",
+                    "-no-nis"
                 ]
             )
 
@@ -705,12 +717,7 @@ class Qt(Package):
                 config_args.append("-no-feature-getentropy")
 
         if "~webkit" in spec:
-            config_args.extend(
-                [
-                    "-skip",
-                    "webengine" if version >= Version("5.6") else "qtwebkit",
-                ]
-            )
+            config_args.extend(["-skip", "webengine" if version >= Version("5.6") else "qtwebkit"])
 
         if spec.satisfies("@5.7"):
             config_args.extend(["-skip", "virtualkeyboard"])
@@ -750,12 +757,7 @@ class Qt(Package):
             # These options are only valid if 'multimedia' is enabled, i.e.
             # +opengl is selected. Force them to be off on macOS, but let other
             # platforms decide for themselves.
-            config_args.extend(
-                [
-                    "-no-pulseaudio",
-                    "-no-alsa",
-                ]
-            )
+            config_args.extend(["-no-pulseaudio", "-no-alsa"])
 
         if spec.satisfies("platform=darwin target=aarch64:"):
             # https://www.qt.io/blog/qt-on-apple-silicon

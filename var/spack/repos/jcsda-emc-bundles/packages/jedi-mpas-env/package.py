@@ -12,7 +12,7 @@ class JediMpasEnv(BundlePackage):
     homepage = "https://github.com/JCSDA/mpas-bundle"
     git = "https://github.com/JCSDA/mpas-bundle.git"
 
-    maintainers = ["climbfuji", "srherbener"]
+    maintainers("climbfuji", "srherbener")
 
     version("1.0.0")
 

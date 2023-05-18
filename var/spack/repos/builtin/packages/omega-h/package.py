@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -16,7 +16,7 @@ class OmegaH(CMakePackage, CudaPackage):
     url = "https://github.com/sandialabs/omega_h/archive/v9.34.1.tar.gz"
     git = "https://github.com/sandialabs/omega_h.git"
 
-    maintainers = ["cwsmith"]
+    maintainers("cwsmith")
     tags = ["e4s"]
     version("main", branch="main")
     version(

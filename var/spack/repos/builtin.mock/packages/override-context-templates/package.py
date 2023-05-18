@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -7,7 +7,7 @@ from spack.package import *
 
 
 class OverrideContextTemplates(Package):
-    """This package updates the context for TCL modulefiles.
+    """This package updates the context for Tcl modulefiles.
 
     And additional lines that shouldn't be in the short description.
     """

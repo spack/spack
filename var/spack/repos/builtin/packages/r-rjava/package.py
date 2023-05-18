@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -30,6 +30,7 @@ class RRjava(RPackage):
     depends_on("libiconv")
     depends_on("pcre2")
     depends_on("xz")
+    depends_on("zlib")
 
     def setup_build_environment(self, env):
         spec = self.spec

@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -34,6 +34,11 @@ class Udunits(AutotoolsPackage):
 
     depends_on("expat")
 
+    variant("shared", default=True, description="Build shared library")
+
     @property
     def libs(self):
         return find_libraries(["libudunits2"], root=self.prefix, recursive=True, shared=True)
+
+    def configure_args(self):
+        return self.enable_or_disable("shared")

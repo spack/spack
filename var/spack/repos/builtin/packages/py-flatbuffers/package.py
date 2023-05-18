@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -16,7 +16,7 @@ class PyFlatbuffers(PythonPackage):
     homepage = "https://google.github.io/flatbuffers/"
     pypi = "flatbuffers/flatbuffers-2.0.tar.gz"
 
-    maintainers = ["gperrotta"]
+    maintainers("gperrotta")
 
     version("2.0.7", sha256="0ae7d69c5b82bf41962ca5fde9cc43033bc9501311d975fd5a25e8a7d29c1245")
     version("2.0", sha256="12158ab0272375eab8db2d663ae97370c33f152b27801fa6024e1d6105fd4dd2")
