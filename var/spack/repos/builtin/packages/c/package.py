@@ -14,21 +14,17 @@ class C(Package):
     homepage = "http://open-std.org/JTC1/SC22/WG14/www/standards"
     virtual = True
 
-    def test_c_exes(self):
+    def test_c(self):
         """build and run C examples"""
+        cc = which(os.environ["CC"])
+        expected = ["Hello world", "YES!"]
+
         test_source = self.test_suite.current_test_data_dir
-
         for test in os.listdir(test_source):
-            with test_part(
-                self, "test_{0}".format(test), purpose="build and run {0}".format(test)
-            ):
+            with test_part(self, f"test_c_{test}", purpose=f"build and run {test}"):
                 filepath = test_source.join(test)
-                exe_name = "{0}.exe".format(test)
-
-                cc = which(os.environ["CC"])
+                exe_name = f"{test}.exe"
                 cc("-o", exe_name, filepath)
-
                 exe = which(exe_name)
                 out = exe(output=str.split, error=str.split)
-                for expected in ["Hello world", "YES!"]:
-                    assert expected in out
+                checkoutputs(expected, out)

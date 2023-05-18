@@ -14,15 +14,15 @@ class Cxx(Package):
     homepage = "https://isocpp.org/std/the-standard"
     virtual = True
 
-    def test_cxx_exes(self):
+    def test_cxx(self):
         """build and run basic Cxx executables"""
-        test_source = self.test_suite.current_test_data_dir
+        cxx = which(os.environ["CXX"])
+        expected = ["Hello world", "YES!"]
 
+        test_source = self.test_suite.current_test_data_dir
         for test in os.listdir(test_source):
             filepath = os.path.join(test_source, test)
-            exe_name = "%s.exe" % test
-
-            cxx_exe = os.environ["CXX"]
+            exe_name = f"{test}.exe"
 
             # standard options
             # Hack to get compiler attributes
@@ -33,19 +33,10 @@ class Cxx(Package):
             compiler = c_cls(c_spec, None, None, ["fakecc", "fakecxx"])
 
             cxx_opts = [compiler.cxx11_flag] if "c++11" in test else []
-
             cxx_opts += ["-o", exe_name, filepath]
 
-            with test_part(
-                self,
-                "test_cxx_exes_{0}".format(exe_name),
-                purpose="build and run {0}".format(exe_name),
-            ):
-                cxx = which(cxx_exe)
+            with test_part(self, f"test_cxx_{exe_name}", purpose=f"build and run {exe_name}"):
                 cxx(*cxx_opts)
-
                 exe = which(exe_name)
                 out = exe(output=str.split, error=str.split)
-
-                expected = ["Hello world", "YES!"]
                 check_outputs(expected, out)

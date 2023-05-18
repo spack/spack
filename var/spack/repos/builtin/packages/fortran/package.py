@@ -16,16 +16,14 @@ class Fortran(Package):
 
     def test_hello(self):
         """build and run hello examples"""
-        test_source = self.test_suite.current_test_data_dir
         expected = ["Hello world", "YES!"]
+        fc = which(os.environ["FC"])
 
+        test_source = self.test_suite.current_test_data_dir
         for test in os.listdir(test_source):
-            exe_name = "%s.exe" % test
-
+            exe_name = f"{test}.exe"
             filepath = os.path.join(test_source, test)
-            fc = which(os.environ["FC"])
             fc("-o", exe_name, filepath)
-
             exe = which(exe_name)
             out = exe(output=str.split, error=str.split)
             checkoutputs(expected, out)
