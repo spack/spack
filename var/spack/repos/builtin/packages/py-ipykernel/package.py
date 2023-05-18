@@ -13,6 +13,7 @@ class PyIpykernel(PythonPackage):
     homepage = "https://github.com/ipython/ipykernel"
     pypi = "ipykernel/ipykernel-5.3.4.tar.gz"
 
+    version("6.22.0", sha256="302558b81f1bc22dc259fb2a0c5c7cf2f4c0bdb21b50484348f7bafe7fb71421")
     version("6.16.0", sha256="7fe42c0d58435e971dc15fd42189f20d66bf35f3056bda4f6554271bc1fa3d0d")
     version("6.15.2", sha256="e7481083b438609c9c8a22d6362e8e1bc6ec94ba0741b666941e634f2d61bdf3")
     version("6.9.1", sha256="f95070a2dfd3147f8ab19f18ee46733310813758593745e07ec18fb08b409f1d")
@@ -36,20 +37,18 @@ class PyIpykernel(PythonPackage):
     version("4.1.1", sha256="d8c5555386d0f18f1336dea9800f9f0fe96dcecc9757c0f980e11fdfadb661ff")
     version("4.1.0", sha256="e0e150ad55e487e49054efc9a4b0e2e17f27e1de77444b26760789077b146d86")
 
-    depends_on("python@3.7:", when="@6.0:", type=("build", "run"))
-    depends_on("python@3.5:", when="@5.2:", type=("build", "run"))
-    depends_on("python@3.4:", when="@5.0:", type=("build", "run"))
-    depends_on("python@2.7:2.8,3.3:", type=("build", "run"))
+    depends_on("python@3.8:", when="@6.22:", type=("build", "run"))
     depends_on("py-hatchling@1.4:", when="@6.13.1:", type="build")
-    depends_on("py-setuptools", when="@5:6.13.0", type="build")
-    depends_on("py-jupyter-core@4.2:", when="@5:6.13.0", type="build")
 
+    depends_on("py-debugpy@1.6.5:", when="@6.22:", type=("build", "run"))
     depends_on("py-debugpy@1:", when="@6.11:", type=("build", "run"))
     depends_on("py-debugpy@1.0:1", when="@6:6.10", type=("build", "run"))
     depends_on("py-ipython@7.23.1:", when="@6.5.1:", type=("build", "run"))
     depends_on("py-ipython@7.23.1:7", when="@6.0.0:6.5.0", type=("build", "run"))
     depends_on("py-ipython@5.0:", when="@5", type=("build", "run"))
     depends_on("py-ipython@4.0:", when="@:4", type=("build", "run"))
+    depends_on("py-comm@0.1.1:", when="@6.22:", type=("build", "run"))
+    depends_on("py-traitlets@5.4:", when="@6.22:", type=("build", "run"))
     depends_on("py-traitlets@5.1:", when="@6.11:", type=("build", "run"))
     depends_on("py-traitlets@5.1.0:5", when="@6.5:6.10", type=("build", "run"))
     depends_on("py-traitlets@4.1.0:5", when="@6.0:6.4", type=("build", "run"))
@@ -58,6 +57,8 @@ class PyIpykernel(PythonPackage):
     depends_on("py-jupyter-client@:7", when="@6.2:6.10", type=("build", "run"))
     depends_on("py-jupyter-client@:6", when="@6.0.2:6.1", type=("build", "run"))
     depends_on("py-jupyter-client", type=("build", "run"))
+    depends_on("py-jupyter-core@4.12:", when="@6.22:", type=("build", "run"))
+    depends_on("py-nest-asyncio", when="@6.6.1:", type=("build", "run"))
     depends_on("py-tornado@6.1:", when="@6.11:", type=("build", "run"))
     depends_on("py-tornado@5:6", when="@6.10", type=("build", "run"))
     depends_on("py-tornado@4.2:6", when="@6:6.9", type=("build", "run"))
@@ -66,12 +67,16 @@ class PyIpykernel(PythonPackage):
     depends_on("py-matplotlib-inline@0.1:", when="@6.11:", type=("build", "run"))
     depends_on("py-matplotlib-inline@0.1.0:0.1", when="@6:6.10", type=("build", "run"))
     depends_on("py-appnope", when="@5.1.3: platform=darwin", type=("build", "run"))
+    depends_on("py-pyzmq@20:", when="@6.22:", type=("build", "run"))
     depends_on("py-pyzmq@17:", when="@6.15:", type=("build", "run"))
     depends_on("py-psutil", when="@6.9.2:", type=("build", "run"))
-    depends_on("py-nest-asyncio", when="@6.6.1:", type=("build", "run"))
     depends_on("py-packaging", when="@6.12:", type=("build", "run"))
 
-    # old
+    conflicts("^py-jupyter-core@5.0")
+
+    # Historical dependencies
+    depends_on("py-setuptools", when="@5:6.13.0", type="build")
+    depends_on("py-jupyter-core@4.2:", when="@5:6.13.0", type="build")
     depends_on("py-ipython-genutils", when="@6.3.1:6.4", type=("build", "run"))
     depends_on("py-ipython-genutils", when="@5.5.6", type=("build", "run"))
     depends_on("py-importlib-metadata@:4", when="@6.1:6.6 ^python@:3.7", type=("build", "run"))

@@ -22,6 +22,7 @@ class Hiop(CMakePackage, CudaPackage, ROCmPackage):
     maintainers("ryandanehy", "CameronRutherford", "pelesh")
 
     # Most recent tagged snapshot is the preferred version when profiling.
+    version("0.7.2", commit="d0f57c880d4202a72c62dd1f5c92e3bc8acb9788", submodules=True)
     version("0.7.1", commit="8064ef6b2249ad2feca92a9d1e90060bad3eebc7", submodules=True)
     version("0.7.0", commit="5f42ab34b419b7cf64d0fffb29d443b009dbfd75", submodules=True)
     version("0.6.2", commit="55652fbe923ab9107d002d0d070865bd22375b28")

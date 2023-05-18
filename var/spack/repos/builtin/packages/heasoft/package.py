@@ -53,7 +53,7 @@ class Heasoft(AutotoolsPackage):
     # headers in different directories
     #
     # xspec: The HEASOFT project provides a tarball of replacement files for
-    # Xspec, along with a TCL patch utility. This is meant for updating a
+    # Xspec, along with a Tcl patch utility. This is meant for updating a
     # source tree in place with minimal rebuilding. This does not fit Spack's
     # model so convert those to patches. These are kept in sync with what is on
     # https://heasarc.gsfc.nasa.gov/docs/software/lheasoft/xanadu/xspec/issues/issues.html

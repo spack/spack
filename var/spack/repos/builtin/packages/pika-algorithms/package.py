@@ -20,7 +20,7 @@ class PikaAlgorithms(CMakePackage):
     version("0.1.0", sha256="64da008897dfa7373155595c46d2ce6b97a8a3cb5bea33ae7f2d1ff359f0d9b6")
     version("main", branch="main")
 
-    generator = "Ninja"
+    generator("ninja")
 
     map_cxxstd = lambda cxxstd: "2a" if cxxstd == "20" else cxxstd
     cxxstds = ("17", "20")
@@ -33,7 +33,6 @@ class PikaAlgorithms(CMakePackage):
 
     # Build dependencies
     depends_on("git", type="build")
-    depends_on("ninja", type="build")
     depends_on("cmake@3.22:", type="build")
 
     conflicts("%gcc@:8")

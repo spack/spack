@@ -15,6 +15,7 @@ class Libcap(MakefilePackage):
     homepage = "https://sites.google.com/site/fullycapable/"
     url = "https://www.kernel.org/pub/linux/libs/security/linux-privs/libcap2/libcap-2.25.tar.gz"
 
+    version("2.68", sha256="046e55716e0643b565efcd1dab1d26c5625709fcd0b5c271290c7ea1524cf906")
     version("2.67", sha256="2d0b679a431c06afd8651a8ada906303eda8b3ac67c308e5fe1937eea5c018aa")
     version("2.66", sha256="5f65dc5b2e9f63a0748ea1b05be7965a38548db1cbfd53b30271ff02186b3a4a")
     version("2.65", sha256="25718d9c45ef6beccb55b509ed4bae94ae2bdfeb808709662b264aec0a7016f4")

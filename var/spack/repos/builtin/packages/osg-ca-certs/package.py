@@ -14,18 +14,24 @@ class OsgCaCerts(Package):
     url = "https://github.com/opensciencegrid/osg-certificates/archive/v1.109.igtf.1.117/osg-certificates-1.109.igtf.1.117.tar.gz"
 
     _osg_base_url = "https://github.com/opensciencegrid/osg-certificates/archive/v{osg_version}.igtf.{igtf_version}/osg-certificates-{osg_version}.igtf.{igtf_version}.tar.gz"
-    _igtf_base_url = "https://dist.eugridpma.info/distribution/igtf/current/igtf-policy-installation-bundle-{igtf_version}.tar.gz"
+    _igtf_base_url = "https://dist.eugridpma.info/distribution/igtf/{igtf_version}/igtf-policy-installation-bundle-{igtf_version}.tar.gz"
     _letsencrypt_base_url = "https://github.com/opensciencegrid/letsencrypt-certificates/archive/v{letsencrypt_version}/letsencrypt-certificates.tar.gz"
 
     maintainers("wdconinc")
 
     releases = [
         {
+            "osg_version": "1.110",
+            "igtf_version": "1.119",
+            "osg_sha256": "025969d415bf27c1609699caf63d0d79540a01df500187195f2bd973fe69e00d",
+            "igtf_sha256": "cc4db07a86fc27f0e0dfd15c797d1a0da7b5620f4b611dbb686543712b2f335a",
+        },
+        {
             "osg_version": "1.109",
             "igtf_version": "1.117",
             "osg_sha256": "41e12c05aedb4df729bf326318cc29b9b79eb097564fd68c6af2e1448ec74f75",
             "igtf_sha256": "130d4d95cd65d01d2db250ee24c539341e3adc899b7eff1beafef1ba4674807d",
-        }
+        },
     ]
 
     for release in releases:

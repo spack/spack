@@ -23,6 +23,7 @@ class PyNumpy(PythonPackage):
     maintainers("adamjstewart", "rgommers")
 
     version("main", branch="main")
+    version("1.24.3", sha256="ab344f1bf21f140adab8e47fdbc7c35a477dc01408791f8ba00d018dd0bc5155")
     version("1.24.2", sha256="003a9f530e880cb2cd177cba1af7220b9aa42def9c4afc2a2fc3ee6be7eb2b22")
     version("1.24.1", sha256="2386da9a471cc00a1f47845e27d916d5ec5346ae9696e01a8a34760858fe9dd2")
     version("1.24.0", sha256="c4ab7c9711fe6b235e86487ca74c1b092a6dd59a3cb45b63241ea0a148501853")
@@ -81,21 +82,18 @@ class PyNumpy(PythonPackage):
     version("1.15.0", sha256="f28e73cf18d37a413f7d5de35d024e6b98f14566a10d82100f9dc491a7d449f9")
     version("1.14.6", sha256="1250edf6f6c43e1d7823f0967416bc18258bb271dc536298eb0ea00a9e45b80a")
     version("1.14.5", sha256="a4a433b3a264dbc9aa9c7c241e87c0358a503ea6394f8737df1683c7c9a102ac")
-    version("1.14.4", sha256="2185a0f31ecaa0792264fa968c8e0ba6d96acf144b26e2e1d1cd5b77fc11a691")
-    version("1.14.3", sha256="9016692c7d390f9d378fc88b7a799dc9caa7eb938163dda5276d3f3d6f75debf")
-    version("1.14.2", sha256="facc6f925c3099ac01a1f03758100772560a0b020fb9d70f210404be08006bcb")
-    version("1.14.1", sha256="fa0944650d5d3fb95869eaacd8eedbd2d83610c85e271bd9d3495ffa9bc4dc9c")
-    version("1.14.0", sha256="3de643935b212307b420248018323a44ec51987a336d1d747c1322afc3c099fb")
 
     variant("blas", default=True, description="Build with BLAS support")
     variant("lapack", default=True, description="Build with LAPACK support")
 
-    depends_on("python@2.7:2.8,3.4:3.8", type=("build", "link", "run"), when="@1.14:1.15")
-    depends_on("python@2.7:2.8,3.5:3.9", type=("build", "link", "run"), when="@1.16")
-    depends_on("python@3.5:3.9", type=("build", "link", "run"), when="@1.17:1.18")
-    depends_on("python@3.6:3.10", type=("build", "link", "run"), when="@1.19")
-    depends_on("python@3.7:3.10", type=("build", "link", "run"), when="@1.20:1.21")
-    depends_on("python@3.8:", type=("build", "link", "run"), when="@1.22:")
+    # Based on wheel availability on PyPI
+    depends_on("python@3.8:3.11", when="@1.23.2:", type=("build", "link", "run"))
+    depends_on("python@3.8:3.10", when="@1.22:1.23.1", type=("build", "link", "run"))
+    depends_on("python@:3.10", when="@1.21.2:1.21", type=("build", "link", "run"))
+    depends_on("python@:3.9", when="@1.19.3:1.21.1", type=("build", "link", "run"))
+    depends_on("python@:3.8", when="@1.17.3:1.19.2", type=("build", "link", "run"))
+    depends_on("python@:3.7", when="@1.14.5:1.17.2", type=("build", "link", "run"))
+
     # https://github.com/spack/spack/pull/32078
     depends_on("py-setuptools@:63", type=("build", "run"))
     depends_on("py-setuptools@:59", when="@:1.22.1", type=("build", "run"))
@@ -269,6 +267,9 @@ class PyNumpy(PythonPackage):
                 f.write("libraries = {0}\n".format(lapackblas_lib_names))
                 write_library_dirs(f, lapackblas_lib_dirs)
                 f.write("include_dirs = {0}\n".format(lapackblas_header_dirs))
+                symbol_suffix = spec["openblas"].variants["symbol_suffix"].value
+                if symbol_suffix != "none":
+                    f.write("symbol_suffix = {0}\n".format(symbol_suffix))
 
             if "^libflame" in spec or "^amdlibflame" in spec:
                 f.write("[flame]\n")

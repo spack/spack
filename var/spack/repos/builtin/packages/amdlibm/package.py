@@ -24,7 +24,7 @@ class Amdlibm(SConsPackage):
     """
 
     _name = "amdlibm"
-    homepage = "https://developer.amd.com/amd-aocl/amd-math-library-libm/"
+    homepage = "https://www.amd.com/en/developer/aocl/libm.html"
     git = "https://github.com/amd/aocl-libm-ose.git"
     url = "https://github.com/amd/aocl-libm-ose/archive/refs/tags/3.0.tar.gz"
     maintainers("amd-toolchain-support")
