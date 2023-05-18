@@ -46,7 +46,7 @@ class Namd(MakefilePackage, CudaPackage):
         description="Enables Tcl and/or python interface",
     )
 
-    variant("avxtiles", default=False, description="Enable avxtiles")
+    variant("avxtiles", when="target=x86_64_v4:", default=False, description="Enable avxtiles")
 
     # init_tcl_pointers() declaration and implementation are inconsistent
     # "src/colvarproxy_namd.C", line 482: error: inherited member is not
@@ -143,7 +143,7 @@ class Namd(MakefilePackage, CudaPackage):
                         + archopt,
                     }
 
-                if "avx512" in spec.target and self.spec.satisfies("+avxtiles"):
+                if self.spec.satisfies("+avxtiles"):
                     optims_opts["aocc"] += " -DNAMD_AVXTILES"
                     optims_opts["clang"] += " -DNAMD_AVXTILES"
                     optims_opts["gcc"] += " -DNAMD_AVXTILES"
