@@ -148,7 +148,7 @@ OASIS_LIB=""
 
 %CPP            {CC} -E
 %FPP            {CC} -E -P -x c
-%MAKE           gmake
+%MAKE           make
 """.format(
                 **param
             )
