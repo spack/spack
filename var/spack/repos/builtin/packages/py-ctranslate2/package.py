@@ -21,7 +21,7 @@ class PyCtranslate2(CMakePackage, PythonExtension, CudaPackage):
 
     # From setup.py, CMakeLists.txt, requirements.txt
     depends_on("py-setuptools", type=("build", "run"))
-    depends_on("cmake@3.15:", type="build")
+    depends_on("cmake@3.7:", type="build")
     depends_on("py-pip", type="build")
     depends_on("py-pybind11", type=("build", "run"))
     depends_on("python@3.7:", type=("build", "run"))
