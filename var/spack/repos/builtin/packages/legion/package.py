@@ -71,7 +71,7 @@ class Legion(CMakePackage, ROCmPackage):
     depends_on("kokkos@3.3.01:~cuda+openmp", when="+kokkos+openmp")
 
     # https://github.com/spack/spack/issues/37232#issuecomment-1553376552
-    patch("hip-offload-arch.patch", when="+rocm")
+    patch("hip-offload-arch.patch", when="@23.03.0 +rocm")
 
     # HIP specific
     variant(
