@@ -12,6 +12,7 @@ class Tig(AutotoolsPackage):
     homepage = "https://jonas.github.io/tig/"
     url = "https://github.com/jonas/tig/releases/download/tig-2.2.2/tig-2.2.2.tar.gz"
 
+    version("2.5.8", sha256="b70e0a42aed74a4a3990ccfe35262305917175e3164330c0889bd70580406391")
     version("2.2.2", sha256="316214d87f7693abc0cbe8ebbb85decdf5e1b49d7ad760ac801af3dd73385e35")
 
     depends_on("ncurses")

@@ -12,4 +12,5 @@ class PerlExtutilsDepends(PerlPackage):
     homepage = "https://metacpan.org/pod/ExtUtils::Depends"
     url = "http://search.cpan.org/CPAN/authors/id/X/XA/XAOC/ExtUtils-Depends-0.405.tar.gz"
 
+    version("0.8001", sha256="673c4387e7896c1a216099c1fbb3faaa7763d7f5f95a1a56a60a2a2906c131c5")
     version("0.405", sha256="8ad6401ad7559b03ceda1fe4b191c95f417bdec7c542a984761a4656715a8a2c")

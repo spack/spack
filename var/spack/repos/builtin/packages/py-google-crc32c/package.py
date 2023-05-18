@@ -15,7 +15,7 @@ class PyGoogleCrc32c(PythonPackage):
 
     maintainers("marcusboden")
 
-    version("1.3.0", "276de6273eb074a35bc598f8efbc00c7869c5cf2e29c90748fccc8c898c244df")
+    version("1.3.0", sha256="276de6273eb074a35bc598f8efbc00c7869c5cf2e29c90748fccc8c898c244df")
 
     depends_on("py-setuptools", type="build")
     depends_on("google-crc32c", type=("build", "run"))

@@ -476,16 +476,31 @@ def test_ci_process_command_fail(repro_dir, monkeypatch):
 
 
 def test_ci_create_buildcache(tmpdir, working_env, config, mock_packages, monkeypatch):
-    # Monkeypatching ci method tested elsewhere to reduce number of methods
-    # that would need to be patched here.
-    monkeypatch.setattr(spack.ci, "push_mirror_contents", lambda a, b, c, d: None)
+    """Test that create_buildcache returns a list of objects with the correct
+    keys and types."""
+    monkeypatch.setattr(spack.ci, "push_mirror_contents", lambda a, b, c: True)
 
-    args = {
-        "env": None,
-        "buildcache_mirror_url": "file://fake-url",
-        "pipeline_mirror_url": "file://fake-url",
-    }
-    ci.create_buildcache(**args)
+    results = ci.create_buildcache(
+        None,
+        pr_pipeline=True,
+        buildcache_mirror_url="file:///fake-url-one",
+        pipeline_mirror_url="file:///fake-url-two",
+    )
+
+    assert len(results) == 2
+    result1, result2 = results
+    assert result1.success
+    assert result1.url == "file:///fake-url-one"
+    assert result2.success
+    assert result2.url == "file:///fake-url-two"
+
+    results = ci.create_buildcache(
+        None, pr_pipeline=True, buildcache_mirror_url="file:///fake-url-one"
+    )
+
+    assert len(results) == 1
+    assert results[0].success
+    assert results[0].url == "file:///fake-url-one"
 
 
 def test_ci_run_standalone_tests_missing_requirements(
@@ -551,8 +566,7 @@ def test_ci_run_standalone_tests_not_installed_cdash(
     ci.run_standalone_tests(**args)
     out = capfd.readouterr()[0]
     # CDash *and* log file output means log file ignored
-    assert "xml option is ignored" in out
-    assert "0 passed of 0" in out
+    assert "xml option is ignored with CDash" in out
 
     # copy test results (though none)
     artifacts_dir = tmp_path / "artifacts"
@@ -580,9 +594,10 @@ def test_ci_skipped_report(tmpdir, mock_packages, config):
     reason = "Testing skip"
     handler.report_skipped(spec, tmpdir.strpath, reason=reason)
 
-    report = fs.join_path(tmpdir, "{0}_Testing.xml".format(pkg))
-    expected = "Skipped {0} package".format(pkg)
-    with open(report, "r") as f:
+    reports = [name for name in tmpdir.listdir() if str(name).endswith("Testing.xml")]
+    assert len(reports) == 1
+    expected = f"Skipped {pkg} package"
+    with open(reports[0], "r") as f:
         have = [0, 0]
         for line in f:
             if expected in line:
