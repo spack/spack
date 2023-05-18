@@ -25,7 +25,7 @@ class UfsSrwAppEnv(BundlePackage):
     depends_on("netcdf-fortran")
     depends_on("parallelio")
     depends_on("esmf")
-    depends_on("fms@2022.04")
+    depends_on("fms@2023.01")
     depends_on("bacio")
     depends_on("crtm@2.4.0")
     depends_on("g2")
