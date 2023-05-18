@@ -34,6 +34,7 @@ class Ecflow(CMakePackage):
         "static_boost", default=False, description="Use also static boost libraries when compiling"
     )
     variant("ui", default=False, description="Enable ecflow_ui")
+    variant("pic", default=False, description="Enable position-independent code (PIC)")
 
     extends("python")
 
@@ -90,7 +91,7 @@ class Ecflow(CMakePackage):
             self.define_from_variant("ENABLE_STATIC_BOOST_LIBS", "static_boost"),
             self.define("Python3_EXECUTABLE", spec["python"].package.command),
             self.define("BOOST_ROOT", spec["boost"].prefix),
-            self.define("CMAKE_POSITION_INDEPENDENT_CODE", "ON"),
+            self.define_from_variant("CMAKE_POSITION_INDEPENDENT_CODE", "pic"),
         ]
 
         if spec.satisfies("+ssl ^openssl ~shared"):
