@@ -16,6 +16,7 @@ class RBlavaan(RPackage):
 
     cran = "blavaan"
 
+    version("0.4-7", sha256="43577264a1faff3cf98fce2c03b729816b40a82d36846458b8026b62da3008c3")
     version("0.4-3", sha256="a9f9f7b32aab7e7f179340c9f0f9d154b5fac51352c4fd590d317c201fe81b74")
     version("0.4-1", sha256="afb077d72f84ef0b6f45ef2ccb8335358042943c32a3472a9ca239ebca1c4aa4")
     version("0.3-18", sha256="373960a22fc741c765e2ad2e0d99c1d4b2162f5f2a230ef314778ef8f433e865")
@@ -25,6 +26,7 @@ class RBlavaan(RPackage):
     depends_on("r-lavaan@0.6-5:", type=("build", "run"))
     depends_on("r-lavaan@0.6-7:", type=("build", "run"), when="@0.3-18:")
     depends_on("r-lavaan@0.6-10:", type=("build", "run"), when="@0.4-1:")
+    depends_on("r-lavaan@0.6-14:", type=("build", "run"), when="@0.4-7:")
     depends_on("r-rcpp@0.12.15:", type=("build", "run"))
     depends_on("r-coda", type=("build", "run"))
     depends_on("r-mnormt", type=("build", "run"))

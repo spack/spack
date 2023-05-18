@@ -16,6 +16,9 @@ class RProdlim(RPackage):
     cran = "prodlim"
 
     version(
+        "2023.03.31", sha256="5510454f8511ca956666f27dfb77d875c56b9166188c33f22cd22b7615797800"
+    )
+    version(
         "2019.11.13", sha256="6809924f503a14681de84730489cdaf9240d7951c64f5b98ca37dc1ce7809b0f"
     )
     version(
@@ -26,6 +29,8 @@ class RProdlim(RPackage):
 
     depends_on("r@2.9.0:", type=("build", "run"))
     depends_on("r-rcpp@0.11.5:", type=("build", "run"))
+    depends_on("r-diagram", type=("build", "run"), when="@2023.03.31:")
+    depends_on("r-data-table", type=("build", "run"), when="@2023.03.31:")
     depends_on("r-survival", type=("build", "run"))
     depends_on("r-kernsmooth", type=("build", "run"))
     depends_on("r-lava", type=("build", "run"))

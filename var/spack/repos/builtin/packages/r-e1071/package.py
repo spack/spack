@@ -16,6 +16,7 @@ class RE1071(RPackage):
 
     cran = "e1071"
 
+    version("1.7-13", sha256="da94e191af6e69aa0f9e3250d4b823674cc869339d914f761ebf2824177b6b2f")
     version("1.7-12", sha256="91e052d0a521db74a66df90adb28db601f2a2cca38b03dcad030ac2fdc5c5dcf")
     version("1.7-11", sha256="48c18e10e7cabc742d37b563672e2eddb6061f2378b69e5563be79ab9948d92f")
     version("1.7-9", sha256="9bf9a15e7ce0b9b1a57ce3048d29cbea7f2a5bb2e91271b1b6aaafe07c852226")

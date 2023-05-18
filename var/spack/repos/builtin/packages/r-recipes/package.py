@@ -17,6 +17,7 @@ class RRecipes(RPackage):
 
     cran = "recipes"
 
+    version("1.0.6", sha256="105e97127cdd6aaeb9fb3348e51a9c46e21fb8bcb734cb3bbd6dbdf2b6b2fc8f")
     version("1.0.2", sha256="1a7b5a9a2946fa34599935b6d93101ec559d8a901d49cc691972c75df8d5670e")
     version("1.0.1", sha256="9e3ae212413409bf41ec7d1a311586e12c0ca79943cef436707d041c57125bc9")
     version("0.2.0", sha256="3d0073e3eb98ac089a94bf8430f3c50915ff1f495d8e967c37baa6a0f6cea0a4")
@@ -27,7 +28,9 @@ class RRecipes(RPackage):
     depends_on("r@3.1:", type=("build", "run"))
     depends_on("r@3.4:", type=("build", "run"), when="@1.0.1:")
     depends_on("r-dplyr", type=("build", "run"))
+    depends_on("r-dplyr@1.1.0:", type=("build", "run"), when="@1.0.6:")
     depends_on("r-cli", type=("build", "run"), when="@1.0.1:")
+    depends_on("r-clock@0.6.1:", type=("build", "run"), when="@1.0.6:")
     depends_on("r-ellipsis", type=("build", "run"), when="@0.1.17:")
     depends_on("r-generics", type=("build", "run"))
     depends_on("r-generics@0.1.0:", type=("build", "run"), when="@0.1.15:")
@@ -37,6 +40,7 @@ class RRecipes(RPackage):
     depends_on("r-gower", type=("build", "run"))
     depends_on("r-hardhat@0.1.6.9001:", type=("build", "run"), when="@0.2.0:")
     depends_on("r-hardhat@1.2.0:", type=("build", "run"), when="@1.0.1:")
+    depends_on("r-hardhat@1.3.0:", type=("build", "run"), when="@1.0.6:")
     depends_on("r-ipred", type=("build", "run"))
     depends_on("r-ipred@0.9-12:", type=("build", "run"), when="@0.1.17:")
     depends_on("r-lifecycle", type=("build", "run"), when="@0.1.15:")
@@ -46,6 +50,7 @@ class RRecipes(RPackage):
     depends_on("r-magrittr", type=("build", "run"))
     depends_on("r-matrix", type=("build", "run"))
     depends_on("r-purrr@0.2.3:", type=("build", "run"))
+    depends_on("r-purrr@1.0.0:", type=("build", "run"), when="@1.0.6:")
     depends_on("r-rlang@0.4.0:", type=("build", "run"))
     depends_on("r-rlang@1.0.3:", type=("build", "run"), when="@1.0.1:")
     depends_on("r-tibble", type=("build", "run"))
@@ -57,4 +62,5 @@ class RRecipes(RPackage):
     depends_on("r-tidyselect@1.2.0:", type=("build", "run"), when="@1.0.2:")
     depends_on("r-timedate", type=("build", "run"))
     depends_on("r-vctrs", type=("build", "run"), when="@0.1.17:")
+    depends_on("r-vctrs@0.5.0:", type=("build", "run"), when="@1.0.6:")
     depends_on("r-withr", type=("build", "run"))

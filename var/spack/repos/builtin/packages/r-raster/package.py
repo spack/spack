@@ -16,6 +16,7 @@ class RRaster(RPackage):
 
     cran = "raster"
 
+    version("3.6-20", sha256="7e5be49f4e37a2c14a3b87661b252956643b959146cbdb08e983660c1d59a813")
     version("3.6-3", sha256="9f06e0f7c36258790a97421b3a26d98c9b6a2cb702f941e58ab0b18f21b0c3c6")
     version("3.5-15", sha256="29c7d3c5d34284f8b5a2ddc9989fbcf092ce209d5eb5310ebc772b5ebdfdd685")
     version("3.5-11", sha256="e6c4823925260c65fe98585d7a0d47778616ae2e4eb1a1782b219580a9db61a3")
@@ -33,3 +34,4 @@ class RRaster(RPackage):
     depends_on("r-terra@1.4-11:", type=("build", "run"), when="@3.5-11:")
     depends_on("r-terra@1.5-12:", type=("build", "run"), when="@3.5-15:")
     depends_on("r-terra@1.6-16:", type=("build", "run"), when="@3.6-3:")
+    depends_on("r-terra@1.6-41:", type=("build", "run"), when="@3.6-20:")

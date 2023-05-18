@@ -11,6 +11,7 @@ class RFindpython(RPackage):
 
     cran = "findpython"
 
+    version("1.0.8", sha256="0f8a90cbafd4949c0333a86808383a358fb7ec3268953d8a4887d5d22264cdb7")
     version("1.0.7", sha256="59f904b9c2ec84b589380de59d13afbf14d1ec3b670e3a07e820298aaf04c149")
     version("1.0.5", sha256="3e9a21988cb78833769b02680d128a0cc01bcb41aa9c9725ab1742f349759145")
     version("1.0.4", sha256="a58fb46d53d3bdea1e00b2f4f9bdb5e98be9329ea9d8e2fe150d91462e6bccfd")

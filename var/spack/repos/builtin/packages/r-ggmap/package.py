@@ -16,6 +16,7 @@ class RGgmap(RPackage):
 
     cran = "ggmap"
 
+    version("3.0.2", sha256="ba5fe3975fd4ca1a5fbda4910c9705ac2edacec75c658177edaf87f1c55cdcae")
     version("3.0.1", sha256="fc824b547f1fd0b52b6fbd18a82fe6f29f97b1f592e2c61baf4686ddfd47e35d")
     version("3.0.0", sha256="96c24ffdc0710d0633ac4721d599d2c06f43a29c59d1e85c94ff0af30dfdb58d")
     version("2.6.2", sha256="4e9cf53ab108fc70805d971dadb69b26fe67ea289c23c38adf6e30b198379d90")
@@ -45,5 +46,4 @@ class RGgmap(RPackage):
     depends_on("r-reshape2", type=("build", "run"), when="@:2.6.2")
     depends_on("r-mapproj", type=("build", "run"), when="@:2.6.2")
     depends_on("r-geosphere", type=("build", "run"), when="@:2.6.2")
-    depends_on("r-rjson", type=("build", "run"))
-    depends_on("r-rjson", when="@:3.0.0")
+    depends_on("r-rjson", type=("build", "run"), when="@:3.0.0")

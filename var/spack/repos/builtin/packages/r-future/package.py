@@ -26,6 +26,7 @@ class RFuture(RPackage):
 
     cran = "future"
 
+    version("1.32.0", sha256="d5bb74512d069745184dd580a36449dc0b50d95b1cbbbc1605db82de596f2f76")
     version("1.29.0", sha256="856d1fd51d2f998c6572490c49fdcc27e5f3e0c1ade75eecdbf64a2cd0954373")
     version("1.28.0", sha256="6fdda66acd9a255e5baa70ff5dacd3c57ab2ecc2d87fd6abeebdfb939c051bf6")
     version("1.26.1", sha256="a35c0bdae86265ebe86119231802b6fbf7b1d533b57cb423d8483fbe779390d5")
@@ -48,3 +49,4 @@ class RFuture(RPackage):
     depends_on("r-parallelly@1.26.1:", type=("build", "run"), when="@1.22.0:")
     depends_on("r-parallelly@1.30.0:", type=("build", "run"), when="@1.24.0:")
     depends_on("r-parallelly@1.32.1:", type=("build", "run"), when="@1.28.0:")
+    depends_on("r-parallelly@1.34.0:", type=("build", "run"), when="@1.32.0:")

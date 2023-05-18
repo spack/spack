@@ -16,6 +16,7 @@ class RGgplot2(RPackage):
 
     cran = "ggplot2"
 
+    version("3.4.2", sha256="70230aa70a2c6f844fc41dd93e5f62af6859dfed390026ae58f223637e5283ca")
     version("3.4.0", sha256="a82f9e52f974389439765f71a8206ec26e3be30a8864d2c784d5ea8abcb0473e")
     version("3.3.6", sha256="bfcb4eb92a0fcd3fab713aca4bb25e916e05914f2540271a45522ad7e43943a9")
     version("3.3.5", sha256="b075294faf3af31b18e415f260c62d6000b218770e430484fe38819bdc3224ea")
@@ -33,11 +34,13 @@ class RGgplot2(RPackage):
     depends_on("r-gtable@0.1.1:", type=("build", "run"))
     depends_on("r-isoband", type=("build", "run"), when="@3.3.3:")
     depends_on("r-lifecycle@1.0.1:", type=("build", "run"), when="@3.4.0:")
+    depends_on("r-lifecycle@unknown:", type=("build", "run"), when="@3.4.2:")
     depends_on("r-mass", type=("build", "run"))
     depends_on("r-mgcv", type=("build", "run"), when="@3.2.0:")
     depends_on("r-rlang@0.3.0:", type=("build", "run"), when="@3.0.0:")
     depends_on("r-rlang@0.4.10:", type=("build", "run"), when="@3.3.4:")
     depends_on("r-rlang@1.0.0:", type=("build", "run"), when="@3.4.0:")
+    depends_on("r-rlang@1.1.0:", type=("build", "run"), when="@3.4.2:")
     depends_on("r-scales@0.5.0:", type=("build", "run"))
     depends_on("r-scales@1.2.0:", type=("build", "run"), when="@3.4.0:")
     depends_on("r-tibble", type=("build", "run"))
@@ -49,5 +52,4 @@ class RGgplot2(RPackage):
     depends_on("r-reshape2", type=("build", "run"), when="@:3.2.0")
     depends_on("r-lazyeval", type=("build", "run"), when="@:3.2.0")
     depends_on("r-viridislite", type=("build", "run"), when="@3.0.0:3.2.0")
-    depends_on("r-digest", type=("build", "run"))
-    depends_on("r-digest", when="@:3.3.6")
+    depends_on("r-digest", type=("build", "run"), when="@:3.3.6")

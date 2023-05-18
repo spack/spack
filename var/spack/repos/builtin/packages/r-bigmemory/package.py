@@ -24,3 +24,4 @@ class RBigmemory(RPackage):
     depends_on("r-rcpp", type=("build", "run"))
     depends_on("r-uuid@1.0-2:", type=("build", "run"), when="@4.6.1:")
     depends_on("r-bh", type=("build", "run"))
+    depends_on("uuid", when="@4.6.1:")

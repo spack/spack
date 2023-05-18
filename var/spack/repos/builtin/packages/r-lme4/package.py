@@ -16,6 +16,7 @@ class RLme4(RPackage):
 
     cran = "lme4"
 
+    version("1.1-33", sha256="d956a5ed7cbcc016114a836bad89acf6cdafcd0f82a7d85e3805ced936b40910")
     version("1.1-31", sha256="5affd1e33d3fece5ec0a6c7663eb12328e64147f8aa92675ce6453c4fe72edfd")
     version("1.1-30", sha256="fdabdfc4b64cff05ae9506a766c948a953eeb6db71761f9401b36d6d9979300f")
     version("1.1-29", sha256="83d97de48cc4706a5a9615b126ba1a86f1a3009d3f38b8da3e57dd619519e826")

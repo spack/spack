@@ -14,6 +14,7 @@ class RYaml(RPackage):
 
     cran = "yaml"
 
+    version("2.3.7", sha256="d20cb219e0f9c48aba02f132f81cfa9ecda5e22c925e36726840218ed56680ab")
     version("2.3.6", sha256="5dd19d8d6654ef2e4ccd6216ce8e96ca5185ae6143f95194955f6908a6e1ba26")
     version("2.3.5", sha256="3edf6c0554a0e184a25e8bec5721a2e66b4ab0dceb3737428e22705e52eb5140")
     version("2.2.2", sha256="a5dc6aba2719eb4422bdd7d3a7b2223bbb00e4470fa234d8c5b3a6835d99f730")

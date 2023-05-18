@@ -26,6 +26,7 @@ class RBh(RPackage):
 
     cran = "BH"
 
+    version("1.81.0-1", sha256="f51c8badd6f181e06353314e1d15a6ec1495cc498ee74b6fa4ea8aba6e97ff64")
     version("1.78.0-0", sha256="3b9e9d07682013e0c06a396dda176b405eab99a7273eca6c40d1b4c4110e8cb3")
     version("1.75.0-0", sha256="ae4c10992607dd697663f60675a46a5770851da159330bb63c4a68890bdd6f5a")
     version("1.72.0-3", sha256="888ec1a3316bb69e1ba749b08ba7e0903ebc4742e3a185de8d148c13cddac8ab")
