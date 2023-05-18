@@ -15,7 +15,7 @@ class Gsoap(AutotoolsPackage, SourceforgePackage):
 
     sourceforge_mirror_path = "gsoap2/gsoap_2.8.127.zip"
 
-    maintainers("chissg", "gartung", "marcmengel", "vitodb")  # AUTO-CPAN2Spack
+    maintainers("greenc-FNAL", "gartung", "marcmengel", "vitodb")
 
     version("2.8.127", sha256="25ecad1bbc363494eb7ea95a68508e4c93cc20596fad9ebc196c6572bbbd3c08")
     version("2.8.124", sha256="4b798780989338f665ef8e171bbcc422a271004d62d5852666d5eeca33a6a636")
@@ -37,9 +37,7 @@ class Gsoap(AutotoolsPackage, SourceforgePackage):
         spack_env.prepend_path("PKG_CONFIG_PATH", "%s/lib/ldconfig" % self.prefix)
 
     def flag_handler(self, name, flags):
-        if name not in ["cflags", "cxxflags", "cppflags"]:
-            return (flags, None, None)
+        if name in ["cflags", "cxxflags", "cppflags"]:
+            flags.append(self.compiler.cc_pic_flag)
 
-        flags.append(self.compiler.cc_pic_flag)
-
-        return (None, None, flags)
+        return self.build_system_flags(name, flags)
