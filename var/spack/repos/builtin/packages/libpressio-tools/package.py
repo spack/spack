@@ -45,7 +45,7 @@ class LibpressioTools(CMakePackage):
     depends_on("boost")
 
     # 0.1.0 changed a bunch of things in the build system, make sure everything is up to date
-    depends_on('libpressio@0.89.0:', when="@0.2.0:")
+    depends_on("libpressio@0.89.0:", when="@0.2.0:")
     depends_on("libpressio@0.88.0:", when="@0.1.6:")
     depends_on("libpressio@0.85.0:", when="@0.1.0:0.1.5")
     depends_on("libpressio-opt@0.13.3:", when="@0.1.0:+opt")
