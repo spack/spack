@@ -142,7 +142,7 @@ class IntelPackage(Package):
         # The Intel libraries are provided without requiring a license as of
         # version 2017.2. Trying to specify one anyway will fail. See:
         # https://software.intel.com/en-us/articles/free-ipsxe-tools-and-libraries
-        return self._has_compilers or self.version < ver("2017.2")
+        return self._has_compilers or self.version < Version("2017.2")
 
     #: Comment symbol used in the license.lic file
     license_comment = "#"
@@ -341,7 +341,7 @@ class IntelPackage(Package):
                     v_year = year
                     break
 
-        return ver("%s.%s" % (v_year, v_tail))
+        return Version("%s.%s" % (v_year, v_tail))
 
     # ---------------------------------------------------------------------
     # Directory handling common to all Intel components
@@ -764,9 +764,9 @@ class IntelPackage(Package):
         elif matches:
             # TODO: Confirm that this covers clang (needed on Linux only)
             gcc_version = Version(matches.groups()[1])
-            if gcc_version >= ver("4.7"):
+            if gcc_version >= Version("4.7"):
                 abi = "gcc4.7"
-            elif gcc_version >= ver("4.4"):
+            elif gcc_version >= Version("4.4"):
                 abi = "gcc4.4"
             else:
                 abi = "gcc4.1"  # unlikely, one hopes.
@@ -1019,7 +1019,7 @@ class IntelPackage(Package):
             # Intel MPI since 2019 depends on libfabric which is not in the
             # lib directory but in a directory of its own which should be
             # included in the rpath
-            if self.version_yearlike >= ver("2019"):
+            if self.version_yearlike >= Version("2019"):
                 d = ancestor(self.component_lib_dir("mpi"))
                 if "+external-libfabric" in self.spec:
                     result += self.spec["libfabric"].libs

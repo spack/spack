@@ -85,7 +85,7 @@ def tests_buildcache_create(install_mockery, mock_fetch, monkeypatch, tmpdir):
     pkg = "trivial-install-test-package"
     install(pkg)
 
-    buildcache("create", "-d", str(tmpdir), "--unsigned", pkg)
+    buildcache("push", "-d", str(tmpdir), "--unsigned", pkg)
 
     spec = Spec(pkg).concretized()
     tarball_path = spack.binary_distribution.tarball_path_name(spec, ".spack")
@@ -105,7 +105,7 @@ def tests_buildcache_create_env(
         add(pkg)
         install()
 
-        buildcache("create", "-d", str(tmpdir), "--unsigned")
+        buildcache("push", "-d", str(tmpdir), "--unsigned")
 
     spec = Spec(pkg).concretized()
     tarball_path = spack.binary_distribution.tarball_path_name(spec, ".spack")
@@ -118,7 +118,7 @@ def test_buildcache_create_fails_on_noargs(tmpdir):
     """Ensure that buildcache create fails when given no args or
     environment."""
     with pytest.raises(spack.main.SpackCommandError):
-        buildcache("create", "-d", str(tmpdir), "--unsigned")
+        buildcache("push", "-d", str(tmpdir), "--unsigned")
 
 
 def test_buildcache_create_fail_on_perm_denied(install_mockery, mock_fetch, monkeypatch, tmpdir):
@@ -127,7 +127,7 @@ def test_buildcache_create_fail_on_perm_denied(install_mockery, mock_fetch, monk
 
     tmpdir.chmod(0)
     with pytest.raises(OSError) as error:
-        buildcache("create", "-d", str(tmpdir), "--unsigned", "trivial-install-test-package")
+        buildcache("push", "-d", str(tmpdir), "--unsigned", "trivial-install-test-package")
     assert error.value.errno == errno.EACCES
     tmpdir.chmod(0o700)
 
@@ -159,7 +159,7 @@ def test_update_key_index(
     # Put installed package in the buildcache, which, because we're signing
     # it, should result in the public key getting pushed to the buildcache
     # as well.
-    buildcache("create", "-a", "-d", mirror_dir.strpath, s.name)
+    buildcache("push", "-a", "-d", mirror_dir.strpath, s.name)
 
     # Now make sure that when we pass the "--keys" argument to update-index
     # it causes the index to get update.
@@ -213,13 +213,13 @@ def test_buildcache_sync(
     # Install a package and put it in the buildcache
     s = Spec(out_env_pkg).concretized()
     install(s.name)
-    buildcache("create", "-u", "-f", "-a", "--mirror-url", src_mirror_url, s.name)
+    buildcache("push", "-u", "-f", "-a", "--mirror-url", src_mirror_url, s.name)
 
     env("create", "test")
     with ev.read("test"):
         add(in_env_pkg)
         install()
-        buildcache("create", "-u", "-f", "-a", "--mirror-url", src_mirror_url, in_env_pkg)
+        buildcache("push", "-u", "-f", "-a", "--mirror-url", src_mirror_url, in_env_pkg)
 
         # Now run the spack buildcache sync command with all the various options
         # for specifying mirrors
@@ -260,10 +260,77 @@ def test_buildcache_create_install(
     pkg = "trivial-install-test-package"
     install(pkg)
 
-    buildcache("create", "-d", str(tmpdir), "--unsigned", pkg)
+    buildcache("push", "-d", str(tmpdir), "--unsigned", pkg)
 
     spec = Spec(pkg).concretized()
     tarball_path = spack.binary_distribution.tarball_path_name(spec, ".spack")
     tarball = spack.binary_distribution.tarball_name(spec, ".spec.json")
     assert os.path.exists(os.path.join(str(tmpdir), "build_cache", tarball_path))
     assert os.path.exists(os.path.join(str(tmpdir), "build_cache", tarball))
+
+
+@pytest.mark.parametrize(
+    "things_to_install,expected",
+    [
+        (
+            "",
+            [
+                "dttop",
+                "dtbuild1",
+                "dtbuild2",
+                "dtlink2",
+                "dtrun2",
+                "dtlink1",
+                "dtlink3",
+                "dtlink4",
+                "dtrun1",
+                "dtlink5",
+                "dtrun3",
+                "dtbuild3",
+            ],
+        ),
+        (
+            "dependencies",
+            [
+                "dtbuild1",
+                "dtbuild2",
+                "dtlink2",
+                "dtrun2",
+                "dtlink1",
+                "dtlink3",
+                "dtlink4",
+                "dtrun1",
+                "dtlink5",
+                "dtrun3",
+                "dtbuild3",
+            ],
+        ),
+        ("package", ["dttop"]),
+    ],
+)
+def test_correct_specs_are_pushed(
+    things_to_install, expected, tmpdir, monkeypatch, default_mock_concretization, temporary_store
+):
+    # Concretize dttop and add it to the temporary database (without prefixes)
+    spec = default_mock_concretization("dttop")
+    temporary_store.db.add(spec, directory_layout=None)
+    slash_hash = "/{0}".format(spec.dag_hash())
+
+    packages_to_push = []
+
+    def fake_push(node, push_url, options):
+        assert isinstance(node, Spec)
+        packages_to_push.append(node.name)
+
+    monkeypatch.setattr(spack.binary_distribution, "push_or_raise", fake_push)
+
+    buildcache_create_args = ["create", "-d", str(tmpdir), "--unsigned"]
+
+    if things_to_install != "":
+        buildcache_create_args.extend(["--only", things_to_install])
+
+    buildcache_create_args.extend([slash_hash])
+
+    buildcache(*buildcache_create_args)
+
+    assert packages_to_push == expected

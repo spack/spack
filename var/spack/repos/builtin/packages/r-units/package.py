@@ -20,6 +20,7 @@ class RUnits(RPackage):
 
     cran = "units"
 
+    version("0.8-1", sha256="d3e1ba246b4c97205bc3da3cf45d6b5bd5c196b8d421b84b4e94b2090985cd9a")
     version("0.8-0", sha256="9c46fe138e8c1c3d3a51268776412f02d09673656516148cccb71b1071beb21a")
     version("0.7-2", sha256="b90be023431100632b3081747af9e743e615452b4ad38810991f7b024b7040eb")
     version("0.6-7", sha256="3f73a62bafdbe0f93bbf00ac4b1adb8f919dd04649ff8f1d007f2986e35cb7e5")

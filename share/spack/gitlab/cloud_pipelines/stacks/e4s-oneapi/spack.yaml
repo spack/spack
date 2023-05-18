@@ -269,6 +269,10 @@ spack:
     pipeline-gen:
     - build-job:
         image: ecpe4s/ubuntu20.04-runner-x86_64-oneapi:2023-01-01
+        before_script:
+        - - . /bootstrap/runner/view/lmod/lmod/init/bash
+          - module use /opt/intel/oneapi/modulefiles
+          - module load compiler
 
   cdash:
     build-group: E4S OneAPI

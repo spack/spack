@@ -28,13 +28,6 @@ class Compadre(CMakePackage):
     depends_on("kokkos-kernels@3.3.01:3.6")
     depends_on("cmake@3.13:", type="build")
 
-    variant(
-        "build_type",
-        default="Release",
-        description="CMake build type",
-        values=("Debug", "Release", "RelWithDebInfo", "MinSizeRel"),
-    )
-
     variant("mpi", default=False, description="Enable MPI support")
     depends_on("mpi", when="+mpi")
 
