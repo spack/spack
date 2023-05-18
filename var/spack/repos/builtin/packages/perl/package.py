@@ -152,6 +152,10 @@ class Perl(Package):  # Perl doesn't use Autotools, it should subclass Package
         # https://github.com/Perl/perl5/issues/15544 long PATH(>1000 chars) fails a test
         os.chmod("lib/perlbug.t", 0o644)
         filter_file("!/$B/", "! (/(?:$B|PATH)/)", "lib/perlbug.t")
+        # Several non-existent flags cause Intel@19.1.3 to fail
+        with when("%intel@19.1.3"):
+            os.chmod("hints/linux.sh", 0o644)
+            filter_file("-we147 -mp -no-gcc", "", "hints/linux.sh")
 
     @classmethod
     def determine_version(cls, exe):

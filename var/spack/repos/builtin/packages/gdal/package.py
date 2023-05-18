@@ -229,6 +229,9 @@ class Gdal(CMakePackage, AutotoolsPackage, PythonExtension):
     variant("perl", default=False, when="@:3.4", description="Build Perl bindings")
     variant("php", default=False, when="@:2.3", description="Build PHP bindings")
 
+    variant("shared", default=True, description="Build shared libraries")
+    variant("pic", default=False, description="Enable position-independent code (PIC)")
+
     # Build system
     build_system(
         conditional("cmake", when="@3.5:"), conditional("autotools", when="@:3.5"), default="cmake"
@@ -550,6 +553,8 @@ class CMakeBuilder(CMakeBuilder):
             self.define_from_variant("BUILD_JAVA_BINDINGS", "java"),
             self.define_from_variant("BUILD_CSHARP_BINDINGS", "csharp"),
         ]
+        args.append(self.define_from_variant("BUILD_SHARED_LIBS", "shared"))
+        args.append(self.define_from_variant("CMAKE_POSITION_INDEPENDENT_CODE", "pic"))
 
         # Remove empty strings
         args = [arg for arg in args if arg]
@@ -681,6 +686,9 @@ class AutotoolsBuilder(AutotoolsBuilder):
             self.with_or_without("php"),
         ]
 
+        args.extend(self.enable_or_disable("shared"))
+        args.append(self.with_or_without("pic"))
+
         # Renamed or modified flags
         if self.spec.satisfies("@3:"):
             args.extend(
@@ -711,15 +719,39 @@ class AutotoolsBuilder(AutotoolsBuilder):
         else:
             args.append(self.with_or_without("dwgdirect", variant="teigha", package="teigha"))
 
+        ldflags = []
+        libs = []
+
         if "+hdf4" in self.spec:
             hdf4 = self.spec["hdf"]
             if "+external-xdr" in hdf4 and hdf4["rpc"].name != "libc":
-                args.append("LIBS=" + hdf4["rpc"].libs.link_flags)
+                libs.append(hdf4["rpc"].libs.link_flags)
+
+        deps = []
+        if self.spec["proj"].satisfies("~shared"):
+            deps += ["sqlite", "libtiff", "curl", "openssl"]
+        for dep in deps:
+            if dep not in self.spec:
+                continue
+            ldflags.append(self.spec[dep].libs.search_flags)
+            libs.append(self.spec[dep].libs.link_flags)
+        if self.spec.satisfies("+iconv") and self.spec["libiconv"].satisfies("~shared"):
+            libs.append("-liconv")
+
+        if ldflags or libs:
+            args.append("LDFLAGS=%s" % " ".join(ldflags+libs))
+            args.append("LIBS=%s" % " ".join(libs))
+
 
         # Remove empty strings
         args = [arg for arg in args if arg]
 
         return args
+
+    @run_after("autoreconf")
+    @when("^geos~shared")
+    def patch(self):
+        filter_file("--ldflags` -lgeos_c", "--ldflags` -lgeos_c -lgeos", "configure")
 
     def build(self, pkg, spec, prefix):
         # https://trac.osgeo.org/gdal/wiki/GdalOgrInJavaBuildInstructionsUnix

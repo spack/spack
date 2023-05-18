@@ -71,6 +71,8 @@ class Libtiff(CMakePackage, AutotoolsPackage):
     variant("lzma", default=False, description="use liblzma", when="@4:")
     variant("zstd", default=False, description="use libzstd", when="@4.0.10:")
     variant("webp", default=False, description="use libwebp", when="@4.0.10:")
+    variant("shared", default=True, description="Build shared")
+    variant("pic", default=False, description="Enable position-independent code (PIC)")
 
     build_system(conditional("cmake", when="@4.0.5:"), "autotools", default="cmake")
 
@@ -110,6 +112,8 @@ class Libtiff(CMakePackage, AutotoolsPackage):
 class CMakeBuilder(CMakeBuilder):
     def cmake_args(self):
         args = [self.define_from_variant(var) for var in VARIANTS]
+        args += [self.define_from_variant("BUILD_SHARED_LIBS", "shared")]
+        args += [self.define_from_variant("CMAKE_POSITION_INDEPENDENT_CODE", "pic")]
 
         # Remove empty strings
         args = [arg for arg in args if arg]
@@ -122,5 +126,7 @@ class AutotoolsBuilder(AutotoolsBuilder):
         args = []
         for var in VARIANTS:
             args.extend(self.enable_or_disable(var))
+        args.extend(self.enable_or_disable("shared"))
+        args.extend(self.with_or_without("pic"))
 
         return args

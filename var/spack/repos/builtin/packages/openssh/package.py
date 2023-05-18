@@ -93,6 +93,11 @@ class Openssh(AutotoolsPackage):
         # Somehow creating pie executables fails with nvhpc, not with gcc.
         if "%nvhpc" in self.spec:
             args.append("--without-pie")
+
+        if self.spec["openssl"].satisfies("~shared"):
+            z = self.spec["zlib"]
+            args.append("LIBS=-L{0} -lz".format(z.prefix.lib))
+
         return args
 
     def install(self, spec, prefix):

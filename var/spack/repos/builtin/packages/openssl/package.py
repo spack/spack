@@ -333,7 +333,9 @@ class Openssl(Package):  # Uses Fake Autotools, should subclass Package
         ),
     )
     variant("docs", default=False, description="Install docs and manpages")
-    variant("shared", default=False, description="Build shared library version")
+    variant("shared", default=True, description="Build shared library version", when="platform=linux")
+    variant("shared", default=True, description="Build shared library version", when="platform=darwin")
+    variant("shared", default=False, description="Build shared library version", when="platform=windows")
     with when("platform=windows"):
         variant("dynamic", default=False, description="Link with MSVC's dynamic runtime library")
 
@@ -356,7 +358,12 @@ class Openssl(Package):  # Uses Fake Autotools, should subclass Package
 
     @property
     def libs(self):
-        return find_libraries(["libssl", "libcrypto"], root=self.prefix, recursive=True)
+        return find_libraries(
+            ["libssl", "libcrypto"],
+            root=self.prefix,
+            recursive=True,
+            shared=self.spec.variants["shared"].value
+        )
 
     def handle_fetch_error(self, error):
         tty.warn(
@@ -377,7 +384,7 @@ class Openssl(Package):  # Uses Fake Autotools, should subclass Package
             # where it happens automatically?)
             env["KERNEL_BITS"] = "64"
 
-        options = ["zlib", "shared"]
+        options = ["zlib"]
         if spec.satisfies("@1.0"):
             options.append("no-krb5")
         # clang does not support the .arch directive in assembly files.
@@ -403,8 +410,6 @@ class Openssl(Package):  # Uses Fake Autotools, should subclass Package
             base_args.extend(
                 ['CC="%s"' % os.environ.get("CC"), 'CXX="%s"' % os.environ.get("CXX"), "VC-WIN64A"]
             )
-            if spec.satisfies("~shared"):
-                base_args.append("no-shared")
         else:
             base_args.extend(
                 [
@@ -413,6 +418,12 @@ class Openssl(Package):  # Uses Fake Autotools, should subclass Package
                 ]
             )
             base_args.extend(options)
+
+        if spec.satisfies("~shared"):
+            base_args.append("no-shared")
+        else:
+            base_args.append("shared")
+
         # On Windows, we use perl for configuration and build through MSVC
         # nmake.
         if spec.satisfies("platform=windows"):

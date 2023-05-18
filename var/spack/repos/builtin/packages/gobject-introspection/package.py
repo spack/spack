@@ -87,6 +87,20 @@ class GobjectIntrospection(MesonPackage, AutotoolsPackage):
         if self.spec.satisfies("@:1.60"):
             env.set("SPACK_SBANG", sbang.sbang_install_path())
 
+        cairo = self.spec["cairo"]
+        if cairo.satisfies("~shared"):
+            ldflags = []
+            libs = []
+            if cairo.satisfies("+fc"):
+                ldflags.append("-L%s" % cairo["fontconfig"].prefix.lib)
+                libs.append("-lfontconfig")
+            if cairo.satisfies("+ft"):
+                ldflags.append("-L%s" % cairo["freetype"].prefix.lib)
+                libs.append("-lfreetype")
+            ldflags.append("-L%s" % cairo["pixman"].prefix.lib)
+            libs.append("-lpixman-1")
+            env.set("CFLAGS", " ".join(ldflags)+" "+" ".join(libs))
+
     def setup_run_environment(self, env):
         env.prepend_path("GI_TYPELIB_PATH", join_path(self.prefix.lib, "girepository-1.0"))
 

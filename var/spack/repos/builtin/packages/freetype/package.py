@@ -44,6 +44,14 @@ class Freetype(AutotoolsPackage, CMakePackage):
         "support __builtin_shuffle)",
     )
 
+    variant("shared", default=True, description="Build shared libraries")
+    variant(
+        "pic",
+        default=False,
+        description="Enable position-independent code (PIC)",
+        when="build_system=cmake",
+    )
+
     patch("windows.patch", when="@2.9.1")
 
     @property
@@ -51,7 +59,6 @@ class Freetype(AutotoolsPackage, CMakePackage):
         headers = find_headers("*", self.prefix.include, recursive=True)
         headers.directories = [self.prefix.include.freetype2]
         return headers
-
 
 class AutotoolsBuilder(AutotoolsBuilder):
     def configure_args(self):
@@ -64,8 +71,12 @@ class AutotoolsBuilder(AutotoolsBuilder):
         ]
         if self.spec.satisfies("@2.9.1:"):
             args.append("--enable-freetype-config")
+        args.extend(self.enable_or_disable("shared"))
         return args
 
+    def setup_build_environment(self, env):
+        if self.spec.satisfies("+pic"):
+            env.set("CFLAGS", "-fPIC")
 
 class CMakeBuilder(CMakeBuilder):
     def cmake_args(self):
@@ -75,4 +86,6 @@ class CMakeBuilder(CMakeBuilder):
             self.define("FT_DISABLE_HARFBUZZ", True),
             self.define("FT_REQUIRE_PNG", True),
             self.define("FT_REQUIRE_BZIP2", True),
+            self.define_from_variant("BUILD_SHARED_LIBS", "shared"),
+            self.define_from_variant("CMAKE_POSITION_INDEPENDENT_CODE", "pic"),
         ]

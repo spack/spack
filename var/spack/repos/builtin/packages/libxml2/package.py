@@ -41,6 +41,8 @@ class Libxml2(AutotoolsPackage, NMakePackage):
     version("2.7.8", sha256="cda23bc9ebd26474ca8f3d67e7d1c4a1f1e7106364b690d822e009fdc3c417ec")
 
     variant("python", default=False, description="Enable Python support")
+    variant("shared", default=True, description="Build shared library")
+    variant("pic", default=False, description="Enable position-independent code (PIC)")
 
     depends_on("pkgconfig@0.9.0:", type="build", when="build_system=autotools")
     # conditional on non Windows, but rather than specify for each platform
@@ -87,6 +89,29 @@ class Libxml2(AutotoolsPackage, NMakePackage):
         hl = find_all_headers(include_dir)
         hl.directories = [include_dir, self.spec.prefix.include]
         return hl
+
+    def configure_args(self):
+        spec = self.spec
+
+        args = [
+            "--with-lzma={0}".format(spec["xz"].prefix),
+            "--with-iconv={0}".format(spec["iconv"].prefix),
+        ]
+
+        if "+python" in spec:
+            args.extend(
+                [
+                    "--with-python={0}".format(spec["python"].home),
+                    "--with-python-install-dir={0}".format(python_platlib),
+                ]
+            )
+        else:
+            args.append("--without-python")
+
+        args.extend(self.enable_or_disable("shared"))
+        args.extend(self.with_or_without("pic"))
+
+        return args
 
     def patch(self):
         # Remove flags not recognized by the NVIDIA compiler

@@ -3,6 +3,8 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+import os
+
 from spack.package import *
 from spack.pkg.builtin.boost import Boost
 
@@ -33,6 +35,7 @@ class Ecflow(CMakePackage):
         "static_boost", default=False, description="Use also static boost libraries when compiling"
     )
     variant("ui", default=False, description="Enable ecflow_ui")
+    variant("pic", default=False, description="Enable position-independent code (PIC)")
 
     extends("python")
 
@@ -73,18 +76,31 @@ class Ecflow(CMakePackage):
             "Pyext/CMakeLists.txt",
         )
 
+    @when("+ssl ^openssl~shared")
+    def setup_build_environment(self, env):
+        env.set("LIBS", self.spec["zlib"].libs.search_flags)
+
     def cmake_args(self):
-        boost_lib = self.spec["boost"].prefix.lib
-        return [
+        spec = self.spec
+        boost_lib = spec["boost"].prefix.lib
+        args = [
             self.define("Boost_PYTHON_LIBRARY_RELEASE", boost_lib),
             self.define_from_variant("ENABLE_UI", "ui"),
             self.define_from_variant("ENABLE_GUI", "ui"),
             self.define_from_variant("ENABLE_SSL", "ssl"),
             # https://jira.ecmwf.int/browse/SUP-2641#comment-208943
             self.define_from_variant("ENABLE_STATIC_BOOST_LIBS", "static_boost"),
-            self.define("Python3_EXECUTABLE", self.spec["python"].package.command),
-            self.define("BOOST_ROOT", self.spec["boost"].prefix),
+            self.define("Python3_EXECUTABLE", spec["python"].package.command),
+            self.define("BOOST_ROOT", spec["boost"].prefix),
+            self.define_from_variant("CMAKE_POSITION_INDEPENDENT_CODE", "pic"),
         ]
+
+        if spec.satisfies("+ssl ^openssl ~shared"):
+            ssl_libs = [os.path.join(spec["openssl"].prefix.lib, "libcrypto.a")]
+            ssl_libs.extend(spec["zlib"].libs)
+            args.append(self.define("OPENSSL_CRYPTO_LIBRARY", ";".join(ssl_libs)))
+
+        return args
 
     # A recursive link in the ecflow source code causes the binary cache
     # creation to fail. This file is only in the install tree if the
@@ -93,3 +109,8 @@ class Ecflow(CMakePackage):
     @run_after("install")
     def remove_recursive_symlink_in_source_code(self):
         force_remove(join_path(self.prefix, "share/ecflow/src/cereal/cereal"))
+
+    @when("+ssl ^openssl~shared")
+    def patch(self):
+        for sdir in ["Client", "Server"]:
+            filter_file("(target_link_libraries.*pthread)", r"\1 ssl crypto z", os.path.join(sdir, "CMakeLists.txt"))

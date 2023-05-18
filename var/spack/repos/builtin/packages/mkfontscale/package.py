@@ -22,3 +22,17 @@ class Mkfontscale(AutotoolsPackage, XorgPackage):
     depends_on("xproto@7.0.25:")
     depends_on("pkgconfig", type="build")
     depends_on("util-macros", type="build")
+
+    def configure_args(self):
+        args = []
+        ldflags = []
+        libs = []
+        for lib in ["libpng", "bzip2"]:
+            if self.spec[lib].satisfies("+shared") or self.spec[lib].satisfies("libs=shared"):
+                continue
+            ldflags.append(self.spec[lib].libs.ld_flags)
+            libs.append(self.spec[lib].libs.link_flags)
+        if ldflags:
+            args.append("LDFLAGS=%s" % " ".join(ldflags))
+            args.append("LIBS=%s" % " ".join(libs))
+        return args

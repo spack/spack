@@ -40,6 +40,7 @@ class Lz4(CMakePackage, MakefilePackage):
         multi=True,
         description="Build shared libs, static libs or both",
     )
+    variant("pic", default=False, description="PIC")
 
     def url_for_version(self, version):
         url = "https://github.com/lz4/lz4/archive"
@@ -48,6 +49,10 @@ class Lz4(CMakePackage, MakefilePackage):
             return "{0}/v{1}.tar.gz".format(url, version)
         else:
             return "{0}/r{1}.tar.gz".format(url, version.joined)
+
+    def setup_build_environment(self, env):
+        if self.spec.satisfies("+pic"):
+            env.set("CFLAGS", "-fPIC")
 
     def patch(self):
         # Remove flags not recognized by the NVIDIA compiler
@@ -67,6 +72,7 @@ class CMakeBuilder(CMakeBuilder):
         # # no pic on windows
         if "platform=windows" in self.spec:
             args.append(self.define("LZ4_POSITION_INDEPENDENT_LIB", False))
+        args.append(self.define_from_variant("CMAKE_POSITION_INDEPENDENT_CODE", "pic"))
         args.append(
             self.define("BUILD_SHARED_LIBS", True if "libs=shared" in self.spec else False)
         )
@@ -77,7 +83,7 @@ class CMakeBuilder(CMakeBuilder):
 
 
 class MakefileBuilder(MakefileBuilder):
-    def build(self, spec, prefix):
+    def build(self, pkg, spec, prefix):
         par = True
         if spec.compiler.name == "nvhpc":
             # relocation error when building shared and dynamic libs in
@@ -89,7 +95,7 @@ class MakefileBuilder(MakefileBuilder):
         else:
             make(parallel=par)
 
-    def install(self, spec, prefix):
+    def install(self, pkg, spec, prefix):
         make(
             "install",
             "PREFIX={0}".format(prefix),

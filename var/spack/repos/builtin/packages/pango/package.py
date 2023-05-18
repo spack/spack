@@ -127,6 +127,15 @@ class Pango(MesonPackage):
         args.append("GTKDOC_MKPDF={0}".format(true))
         args.append("GTKDOC_REBASE={0}".format(true))
 
+        if self.spec["cairo"].satisfies("~shared"):
+            ldflags = [self.spec["pixman"].libs.search_flags]
+            libs = [self.spec["pixman"].libs.link_flags]
+            if self.spec["cairo"].satisfies("+png"):
+                ldflags.append(self.spec["libpng"].libs.search_flags)
+                libs.append(self.spec["libpng"].libs.link_flags)
+            args.append("LDFLAGS=%s" % " ".join(ldflags))
+            args.append("LIBS=%s" % " ".join(libs))
+
         return args
 
     def setup_run_environment(self, env):

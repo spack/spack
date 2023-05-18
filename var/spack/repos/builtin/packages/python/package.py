@@ -538,6 +538,13 @@ class Python(Package):
         if cflags:
             config_args.append("CFLAGS={0}".format(" ".join(cflags)))
 
+        if spec["gettext"].satisfies("~shared"):
+            config_args.append(
+                "LIBS=-L{0} -L{1} -lintl -liconv".format(
+                    spec["gettext"].prefix.lib, spec["iconv"].prefix.lib
+                )
+            )
+
         return config_args
 
     def configure(self, spec, prefix):
