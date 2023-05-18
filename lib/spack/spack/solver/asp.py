@@ -1669,9 +1669,34 @@ class SpackSolverSetup(object):
                         if concrete_build_deps or dtype != "build":
                             clauses.append(fn.attr("depends_on", spec.name, dep.name, dtype))
 
-                            # Ensure Spack will not coconcretize this with another provider
-                            # for the same virtual
-                            for virtual in dep.package.virtuals_provided:
+                            # TODO: We have to look up info from package.py here, but we'd
+                            # TODO: like to avoid this entirely. We should not need to look
+                            # TODO: up potentially wrong info if we have virtual edge info.
+                            try:
+                                try:
+                                    pkg = dep.package
+
+                                except spack.repo.UnknownNamespaceError:
+                                    # Try to look up the package of the same name and use its
+                                    # providers. This is as good as we can do without edge info.
+                                    pkg_class = spack.repo.path.get_pkg_class(dep.name)
+                                    spec = spack.spec.Spec(f"{dep.name}@{dep.version}")
+                                    pkg = pkg_class(spec)
+
+                                virtuals = pkg.virtuals_provided
+
+                            except spack.repo.UnknownPackageError:
+                                # Skip virtual node constriants for renamed/deleted packages,
+                                # so their binaries can still be installed.
+                                # NOTE: with current specs (which lack edge attributes) this
+                                # can allow concretizations with two providers, but it's unlikely.
+                                continue
+
+                            # Don't concretize with two providers of the same virtual.
+                            # See above for exception for unknown packages.
+                            # TODO: we will eventually record provider information on edges,
+                            # TODO: which avoids the need for the package lookup above.
+                            for virtual in virtuals:
                                 clauses.append(fn.attr("virtual_node", virtual.name))
                                 clauses.append(fn.provider(dep.name, virtual.name))
 
@@ -1734,13 +1759,30 @@ class SpackSolverSetup(object):
             # All the preferred version from packages.yaml, versions in external
             # specs will be computed later
             version_preferences = packages_yaml.get(pkg_name, {}).get("version", [])
-            for idx, v in enumerate(version_preferences):
-                # v can be a string so force it into an actual version for comparisons
-                ver = vn.Version(v)
+            version_defs = []
+            pkg_class = spack.repo.path.get_pkg_class(pkg_name)
+            for vstr in version_preferences:
+                v = vn.ver(vstr)
+                if isinstance(v, vn.GitVersion):
+                    version_defs.append(v)
+                else:
+                    satisfying_versions = list(x for x in pkg_class.versions if x.satisfies(v))
+                    if not satisfying_versions:
+                        raise spack.config.ConfigError(
+                            "Preference for version {0} does not match any version "
+                            " defined in {1}".format(str(v), pkg_name)
+                        )
+                    # Amongst all defined versions satisfying this specific
+                    # preference, the highest-numbered version is the
+                    # most-preferred: therefore sort satisfying versions
+                    # from greatest to least
+                    version_defs.extend(sorted(satisfying_versions, reverse=True))
+
+            for weight, vdef in enumerate(llnl.util.lang.dedupe(version_defs)):
                 self.declared_versions[pkg_name].append(
-                    DeclaredVersion(version=ver, idx=idx, origin=Provenance.PACKAGES_YAML)
+                    DeclaredVersion(version=vdef, idx=weight, origin=Provenance.PACKAGES_YAML)
                 )
-                self.possible_versions[pkg_name].add(ver)
+                self.possible_versions[pkg_name].add(vdef)
 
     def add_concrete_versions_from_specs(self, specs, origin):
         """Add concrete versions to possible versions from lists of CLI/dev specs."""
@@ -2271,6 +2313,11 @@ def _get_versioned_specs_from_pkg_requirements():
 
 
 def _specs_from_requires(pkg_name, section):
+    """Collect specs from requirements which define versions (i.e. those that
+    have a concrete version). Requirements can define *new* versions if
+    they are included as part of an equivalence (hash=number) but not
+    otherwise.
+    """
     if isinstance(section, str):
         spec = spack.spec.Spec(section)
         if not spec.name:
@@ -2299,7 +2346,30 @@ def _specs_from_requires(pkg_name, section):
                 spec.name = pkg_name
             extracted_specs.append(spec)
 
-    version_specs = [x for x in extracted_specs if x.versions.concrete]
+    version_specs = []
+    for spec in extracted_specs:
+        if spec.versions.concrete:
+            # Note: this includes git versions
+            version_specs.append(spec)
+            continue
+
+        # Prefer spec's name if it exists, in case the spec is
+        # requiring a specific implementation inside of a virtual section
+        # e.g. packages:mpi:require:openmpi@4.0.1
+        pkg_class = spack.repo.path.get_pkg_class(spec.name or pkg_name)
+        satisfying_versions = list(v for v in pkg_class.versions if v.satisfies(spec.versions))
+        if not satisfying_versions:
+            raise spack.config.ConfigError(
+                "{0} assigns a version that is not defined in"
+                " the associated package.py".format(str(spec))
+            )
+
+        # Version ranges ("@1.3" without the "=", "@1.2:1.4") and lists
+        # will end up here
+        ordered_satisfying_versions = sorted(satisfying_versions, reverse=True)
+        vspecs = list(spack.spec.Spec("@{0}".format(x)) for x in ordered_satisfying_versions)
+        version_specs.extend(vspecs)
+
     for spec in version_specs:
         spec.attach_git_version_lookup()
     return version_specs
@@ -2463,11 +2533,16 @@ class SpecBuilder(object):
 
                     # add flags from each source, lowest to highest precedence
                     for name in sorted_sources:
-                        source = self._specs[name] if name in self._hash_specs else cmd_specs[name]
-                        extend_flag_list(from_sources, source.compiler_flags.get(flag_type, []))
+                        all_src_flags = list()
+                        per_pkg_sources = [self._specs[name]]
+                        if name in cmd_specs:
+                            per_pkg_sources.append(cmd_specs[name])
+                        for source in per_pkg_sources:
+                            all_src_flags.extend(source.compiler_flags.get(flag_type, []))
+                        extend_flag_list(from_sources, all_src_flags)
 
                 # compiler flags from compilers config are lowest precedence
-                ordered_compiler_flags = from_compiler + from_sources
+                ordered_compiler_flags = list(llnl.util.lang.dedupe(from_compiler + from_sources))
                 compiler_flags = spec.compiler_flags.get(flag_type, [])
 
                 msg = "%s does not equal %s" % (set(compiler_flags), set(ordered_compiler_flags))

@@ -12,6 +12,7 @@ class Krakenuniq(Package):
     homepage = "https://genomebiology.biomedcentral.com/articles/10.1186/s13059-018-1568-0"
     url = "https://github.com/fbreitwieser/krakenuniq/archive/refs/tags/v0.7.3.tar.gz"
 
+    version("1.0.4", sha256="5e2ef21878c1c4ce92be9925e47b9ccae0ecb59a79d71cc4cbb53d057e0de9ec")
     version("0.7.3", sha256="140dccbabec00153c8231ac3c92eb8aecc0277c8947055d4d41abe949ae658c3")
     version("0.7.2", sha256="e6b4c04dbe8276c44fa9e2613cca78429439d75d59e22303094e6577ba333627")
     version("0.7.1", sha256="7f3da1efa1377f8615ad3587c4028fa462e7d802fa3f676b9c4e05d15215fad4")

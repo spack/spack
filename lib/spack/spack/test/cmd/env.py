@@ -701,6 +701,7 @@ spack:
 
 
 def test_with_config_bad_include(environment_from_manifest):
+    """Confirm missing include paths raise expected exception and error."""
     e = environment_from_manifest(
         """
 spack:
@@ -709,14 +710,10 @@ spack:
   - no/such/file.yaml
 """
     )
-    with pytest.raises(spack.config.ConfigFileError) as exc:
+    with pytest.raises(spack.config.ConfigFileError, match="2 missing include path"):
         with e:
             e.concretize()
 
-    err = str(exc)
-    assert "missing include" in err
-    assert "/no/such/directory" in err
-    assert os.path.join("no", "such", "file.yaml") in err
     assert ev.active_environment() is None
 
 
@@ -909,7 +906,7 @@ packages:
   mpileaks:
     version: ["2.2"]
   libelf:
-    version: ["0.8.11"]
+    version: ["0.8.10"]
 """
         )
 
@@ -2407,7 +2404,11 @@ def test_concretize_user_specs_together():
     # Concretize a second time using 'mpich2' as the MPI provider
     e.remove("mpich")
     e.add("mpich2")
-    e.concretize()
+
+    # Concretizing without invalidating the concrete spec for mpileaks fails
+    with pytest.raises(spack.error.UnsatisfiableSpecError):
+        e.concretize()
+    e.concretize(force=True)
 
     assert all("mpich2" in spec for _, spec in e.concretized_specs())
     assert all("mpich" not in spec for _, spec in e.concretized_specs())
@@ -2438,7 +2439,7 @@ def test_duplicate_packages_raise_when_concretizing_together():
     e.add("mpich")
 
     with pytest.raises(
-        spack.error.UnsatisfiableSpecError, match=r"relax the concretizer strictness"
+        spack.error.UnsatisfiableSpecError, match=r"You could consider setting `concretizer:unify`"
     ):
         e.concretize()
 
