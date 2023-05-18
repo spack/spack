@@ -107,7 +107,7 @@ class Slate(CMakePackage, CudaPackage, ROCmPackage):
             config.append("-DCMAKE_CUDA_ARCHITECTURES=%s" % archs)
         if "+rocm" in spec:
             archs = ";".join(spec.variants["amdgpu_target"].value)
-            args.append("-DCMAKE_HIP_ARCHITECTURES=%s" % archs)
+            config.append("-DCMAKE_HIP_ARCHITECTURES=%s" % archs)
 
         if self.run_tests:
             config.append("-DSCALAPACK_LIBRARIES=%s" % spec["scalapack"].libs.joined(";"))
