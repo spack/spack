@@ -17,7 +17,7 @@
         "template": "container/fedora_38.dockerfile",
         "image": "docker.io/fedora:38"
       },
-      "os_package_manager": "yum",
+      "os_package_manager": "yum_fedora",
       "build": "spack/fedora38",
       "build_tags": {
         "develop": "latest"
@@ -31,7 +31,7 @@
         "template": "container/fedora_37.dockerfile",
         "image": "docker.io/fedora:37"
       },
-      "os_package_manager": "yum",
+      "os_package_manager": "yum_fedora",
       "build": "spack/fedora37",
       "build_tags": {
         "develop": "latest"
@@ -187,6 +187,11 @@
     },
     "yum": {
       "update": "yum update -y && yum install -y epel-release && yum update -y",
+      "install": "yum install -y",
+      "clean": "rm -rf /var/cache/yum  && yum clean all"
+    },
+    "yum_fedora": {
+      "update": "yum update -y",
       "install": "yum install -y",
       "clean": "rm -rf /var/cache/yum  && yum clean all"
     },
