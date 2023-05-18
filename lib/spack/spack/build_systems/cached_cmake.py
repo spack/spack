@@ -239,7 +239,7 @@ class CachedCMakeBuilder(CMakeBuilder):
 
             cudatoolkitdir = spec["cuda"].prefix
             entries.append(cmake_cache_path("CUDAToolkit_ROOT", cudatoolkitdir))
-            entries.append(cmake_cache_path("CMAKE_CUDA_COMPILER", f"{cudatoolkitdir}/bin/nvcc"))
+            entries.append(cmake_cache_path("CMAKE_CUDA_COMPILER", "${CUDAToolkit_ROOT}/bin/nvcc"))
             entries.append(cmake_cache_path("CMAKE_CUDA_HOST_COMPILER", "${CMAKE_CXX_COMPILER}"))
 
             archs = spec.variants["cuda_arch"].value
