@@ -589,7 +589,6 @@ def set_module_variables_for_package(pkg):
 
     # TODO: make these build deps that can be installed if not found.
     m.make = MakeExecutable("make", jobs)
-    m.gmake = MakeExecutable("gmake", jobs)
     m.ninja = MakeExecutable("ninja", jobs, supports_jobserver=False)
     # TODO: johnwparent: add package or builder support to define these build tools
     # for now there is no entrypoint for builders to define these on their
