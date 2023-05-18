@@ -24,6 +24,7 @@ import spack.error
 import spack.paths
 import spack.platforms
 import spack.spec
+import spack.version
 from spack.util.environment import get_path
 from spack.util.naming import mod_to_class
 
@@ -69,7 +70,7 @@ def pkg_spec_for_compiler(cspec):
             break
     else:
         spec_str = str(cspec)
-    return spack.spec.Spec(spec_str)
+    return spack.spec.parse_with_version_concrete(spec_str)
 
 
 def _auto_compiler_spec(function):
@@ -186,7 +187,9 @@ def remove_compiler_from_config(compiler_spec, scope=None):
     filtered_compiler_config = [
         comp
         for comp in compiler_config
-        if spack.spec.CompilerSpec(comp["compiler"]["spec"]) != compiler_spec
+        if not spack.spec.parse_with_version_concrete(
+            comp["compiler"]["spec"], compiler=True
+        ).satisfies(compiler_spec)
     ]
 
     # Update the cache for changes
@@ -213,7 +216,7 @@ def all_compilers_config(scope=None, init_config=True):
 def all_compiler_specs(scope=None, init_config=True):
     # Return compiler specs from the merged config.
     return [
-        spack.spec.CompilerSpec(s["compiler"]["spec"])
+        spack.spec.parse_with_version_concrete(s["compiler"]["spec"], compiler=True)
         for s in all_compilers_config(scope, init_config)
     ]
 
@@ -384,7 +387,7 @@ class CacheReference(object):
 
 
 def compiler_from_dict(items):
-    cspec = spack.spec.CompilerSpec(items["spec"])
+    cspec = spack.spec.parse_with_version_concrete(items["spec"], compiler=True)
     os = items.get("operating_system", None)
     target = items.get("target", None)
 
@@ -453,7 +456,10 @@ def get_compilers(config, cspec=None, arch_spec=None):
 
     for items in config:
         items = items["compiler"]
-        if cspec and items["spec"] != str(cspec):
+
+        # NOTE: in principle this should be equality not satisfies, but config can still
+        # be written in old format gcc@10.1.0 instead of gcc@=10.1.0.
+        if cspec and not cspec.satisfies(items["spec"]):
             continue
 
         # If an arch spec is given, confirm that this compiler
@@ -720,7 +726,7 @@ def make_compiler_list(detected_versions):
     def _default_make_compilers(cmp_id, paths):
         operating_system, compiler_name, version = cmp_id
         compiler_cls = spack.compilers.class_for_compiler_name(compiler_name)
-        spec = spack.spec.CompilerSpec(compiler_cls.name, version)
+        spec = spack.spec.CompilerSpec(compiler_cls.name, f"={version}")
         paths = [paths.get(x, None) for x in ("cc", "cxx", "f77", "fc")]
         # TODO: johnwparent - revist the following line as per discussion at:
         # https://github.com/spack/spack/pull/33385/files#r1040036318
@@ -798,8 +804,10 @@ def is_mixed_toolchain(compiler):
             toolchains.add(compiler_cls.__name__)
 
     if len(toolchains) > 1:
-        if toolchains == set(["Clang", "AppleClang", "Aocc"]) or toolchains == set(
-            ["Dpcpp", "Oneapi"]
+        if (
+            toolchains == set(["Clang", "AppleClang", "Aocc"])
+            # Msvc toolchain uses Intel ifx
+            or toolchains == set(["Msvc", "Dpcpp", "Oneapi"])
         ):
             return False
         tty.debug("[TOOLCHAINS] {0}".format(toolchains))

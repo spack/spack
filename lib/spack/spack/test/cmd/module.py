@@ -41,7 +41,7 @@ def _module_files(module_type, *specs):
         ["rm", "doesnotexist"],  # Try to remove a non existing module
         ["find", "mpileaks"],  # Try to find a module with multiple matches
         ["find", "doesnotexist"],  # Try to find a module with no matches
-        ["find", "--unkown_args"],  # Try to give an unknown argument
+        ["find", "--unknown_args"],  # Try to give an unknown argument
     ]
 )
 def failure_args(request):

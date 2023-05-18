@@ -109,15 +109,13 @@ class Aml(AutotoolsPackage):
         install test subdirectory for use during `spack test run`."""
         self.cache_extra_test_sources(self.smoke_test_src)
 
-    def run_install_tutorial_check(self):
-        """Run tutorial tests as install checks"""
-
-        src = join_path(self.test_suite.current_test_cache_dir, self.smoke_test_src)
-        cc_exe = os.environ["CC"]
+    def test_check_tutorial(self):
+        """Compile and run the tutorial tests as install checks"""
+        cc = which(os.environ["CC"])
         cc_options = [
             "-o",
             self.smoke_test,
-            src,
+            join_path(self.test_suite.current_test_cache_dir, self.smoke_test_src),
             "-I{0}".format(self.prefix.include),
             "-I{0}".format(self.spec["numactl"].prefix.include),
             "-L{0}".format(self.prefix.lib),
@@ -125,11 +123,8 @@ class Aml(AutotoolsPackage):
             "-lexcit",
             "-lpthread",
         ]
+        cc(*cc_options)
 
-        self.run_test(
-            cc_exe, cc_options, purpose="test: compile {0} tutorial".format(self.smoke_test)
-        )
-        self.run_test(self.smoke_test, purpose="test: run {0} tutorial".format(self.smoke_test))
-
-    def test(self):
-        self.run_install_tutorial_check()
+        smoke_test = which(self.smoke_test)
+        out = smoke_test(output=str.split, error=str.split)
+        assert "Hello world" in out
