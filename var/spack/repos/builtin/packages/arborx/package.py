@@ -141,9 +141,9 @@ class Arborx(CMakePackage, CudaPackage, ROCmPackage):
         ]
         cmake = which(self.spec["cmake"].prefix.bin.cmake)
         make = which("make")
+        ctest = which("ctest")
 
         with working_dir(self.cached_tests_work_dir):
             cmake(*cmake_args)
             make()
-            ctest = which("ctest")
             ctest("-V")
