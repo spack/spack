@@ -34,7 +34,7 @@ class Oneapi(Compiler):
     PrgEnv_compiler = "oneapi"
 
     version_argument = "--version"
-    version_regex = r"(?:(?:oneAPI DPC\+\+(?:\/C\+\+)? Compiler)|(?:\(IFORT\))) (\S+)"
+    version_regex = r"(?:(?:oneAPI DPC\+\+(?:\/C\+\+)? Compiler)|(?:\(IFORT\))|(?:\(IFX\))) (\S+)"
 
     @property
     def verbose_flag(self):

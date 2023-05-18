@@ -193,10 +193,17 @@ class BinaryCacheIndex(object):
             db_root_dir = os.path.join(tmpdir, "db_root")
             db = spack_db.Database(None, db_dir=db_root_dir, enable_transaction_locking=False)
 
-            self._index_file_cache.init_entry(cache_key)
-            cache_path = self._index_file_cache.cache_path(cache_key)
-            with self._index_file_cache.read_transaction(cache_key):
-                db._read_from_file(cache_path)
+            try:
+                self._index_file_cache.init_entry(cache_key)
+                cache_path = self._index_file_cache.cache_path(cache_key)
+                with self._index_file_cache.read_transaction(cache_key):
+                    db._read_from_file(cache_path)
+            except spack_db.InvalidDatabaseVersionError as e:
+                msg = (
+                    f"you need a newer Spack version to read the buildcache index for the "
+                    f"following mirror: '{mirror_url}'. {e.database_version_message}"
+                )
+                raise BuildcacheIndexError(msg) from e
 
             spec_list = db.query_local(installed=False, in_buildcache=True)
 
@@ -419,7 +426,7 @@ class BinaryCacheIndex(object):
 
         self._write_local_index_cache()
 
-        if all_methods_failed:
+        if configured_mirror_urls and all_methods_failed:
             raise FetchCacheError(fetch_errors)
         if fetch_errors:
             tty.warn(
@@ -776,11 +783,10 @@ def tarball_directory_name(spec):
     Return name of the tarball directory according to the convention
     <os>-<architecture>/<compiler>/<package>-<version>/
     """
-    return "%s/%s/%s-%s" % (
-        spec.architecture,
-        str(spec.compiler).replace("@", "-"),
-        spec.name,
-        spec.version,
+    return os.path.join(
+        str(spec.architecture),
+        f"{spec.compiler.name}-{spec.compiler.version}",
+        f"{spec.name}-{spec.version}",
     )
 
 
@@ -789,13 +795,9 @@ def tarball_name(spec, ext):
     Return the name of the tarfile according to the convention
     <os>-<architecture>-<package>-<dag_hash><ext>
     """
-    return "%s-%s-%s-%s-%s%s" % (
-        spec.architecture,
-        str(spec.compiler).replace("@", "-"),
-        spec.name,
-        spec.version,
-        spec.dag_hash(),
-        ext,
+    return (
+        f"{spec.architecture}-{spec.compiler.name}-{spec.compiler.version}-"
+        f"{spec.name}-{spec.version}-{spec.dag_hash()}{ext}"
     )
 
 
@@ -1661,7 +1663,7 @@ def dedupe_hardlinks_if_necessary(root, buildinfo):
         buildinfo[key] = new_list
 
 
-def relocate_package(spec, allow_root):
+def relocate_package(spec):
     """
     Relocate the given package
     """
@@ -1679,7 +1681,7 @@ def relocate_package(spec, allow_root):
     old_spack_prefix = str(buildinfo.get("spackprefix"))
     old_rel_prefix = buildinfo.get("relative_prefix")
     old_prefix = os.path.join(old_layout_root, old_rel_prefix)
-    rel = buildinfo.get("relative_rpaths")
+    rel = buildinfo.get("relative_rpaths", False)
 
     # In the past prefix_to_hash was the default and externals were not dropped, so prefixes
     # were not unique.
@@ -1852,7 +1854,7 @@ def _extract_inner_tarball(spec, filename, extract_to, unsigned, remote_checksum
     return tarfile_path
 
 
-def extract_tarball(spec, download_result, allow_root=False, unsigned=False, force=False):
+def extract_tarball(spec, download_result, unsigned=False, force=False):
     """
     extract binary tarball for given package into install area
     """
@@ -1948,7 +1950,7 @@ def extract_tarball(spec, download_result, allow_root=False, unsigned=False, for
     os.remove(specfile_path)
 
     try:
-        relocate_package(spec, allow_root)
+        relocate_package(spec)
     except Exception as e:
         shutil.rmtree(spec.prefix)
         raise e
@@ -1967,7 +1969,7 @@ def extract_tarball(spec, download_result, allow_root=False, unsigned=False, for
         _delete_staged_downloads(download_result)
 
 
-def install_root_node(spec, allow_root, unsigned=False, force=False, sha256=None):
+def install_root_node(spec, unsigned=False, force=False, sha256=None):
     """Install the root node of a concrete spec from a buildcache.
 
     Checking the sha256 sum of a node before installation is usually needed only
@@ -1976,8 +1978,6 @@ def install_root_node(spec, allow_root, unsigned=False, force=False, sha256=None
 
     Args:
         spec: spec to be installed (note that only the root node will be installed)
-        allow_root (bool): allows the root directory to be present in binaries
-            (may affect relocation)
         unsigned (bool): if True allows installing unsigned binaries
         force (bool): force installation if the spec is already present in the
             local store
@@ -2013,24 +2013,22 @@ def install_root_node(spec, allow_root, unsigned=False, force=False, sha256=None
     # don't print long padded paths while extracting/relocating binaries
     with spack.util.path.filter_padding():
         tty.msg('Installing "{0}" from a buildcache'.format(spec.format()))
-        extract_tarball(spec, download_result, allow_root, unsigned, force)
+        extract_tarball(spec, download_result, unsigned, force)
         spack.hooks.post_install(spec, False)
         spack.store.db.add(spec, spack.store.layout)
 
 
-def install_single_spec(spec, allow_root=False, unsigned=False, force=False):
+def install_single_spec(spec, unsigned=False, force=False):
     """Install a single concrete spec from a buildcache.
 
     Args:
         spec (spack.spec.Spec): spec to be installed
-        allow_root (bool): allows the root directory to be present in binaries
-            (may affect relocation)
         unsigned (bool): if True allows installing unsigned binaries
         force (bool): force installation if the spec is already present in the
             local store
     """
     for node in spec.traverse(root=True, order="post", deptype=("link", "run")):
-        install_root_node(node, allow_root=allow_root, unsigned=unsigned, force=force)
+        install_root_node(node, unsigned=unsigned, force=force)
 
 
 def try_direct_fetch(spec, mirrors=None):
@@ -2417,6 +2415,10 @@ class BinaryCacheQuery(object):
         self.possible_specs = specs
 
     def __call__(self, spec, **kwargs):
+        """
+        Args:
+            spec (str): The spec being searched for in its string representation or hash.
+        """
         matches = []
         if spec.startswith("/"):
             # Matching a DAG hash
@@ -2436,6 +2438,10 @@ class FetchIndexError(Exception):
             return str(self.args[0])
         else:
             return "{}, due to: {}".format(self.args[0], self.args[1])
+
+
+class BuildcacheIndexError(spack.error.SpackError):
+    """Raised when a buildcache cannot be read for any reason"""
 
 
 FetchIndexResult = collections.namedtuple("FetchIndexResult", "etag hash data fresh")

@@ -197,7 +197,7 @@ def test_invalid_json_mirror_collection(invalid_json, error_message):
 
 
 def test_mirror_archive_paths_no_version(mock_packages, config, mock_archive):
-    spec = Spec("trivial-install-test-package@nonexistingversion").concretized()
+    spec = Spec("trivial-install-test-package@=nonexistingversion").concretized()
     fetcher = spack.fetch_strategy.URLFetchStrategy(mock_archive.url)
     spack.mirror.mirror_archive_paths(fetcher, "per-package-ref", spec)
 
@@ -281,8 +281,8 @@ def test_mirror_cache_symlinks(tmpdir):
 @pytest.mark.parametrize(
     "specs,expected_specs",
     [
-        (["a"], ["a@1.0", "a@2.0"]),
-        (["a", "brillig"], ["a@1.0", "a@2.0", "brillig@1.0.0", "brillig@2.0.0"]),
+        (["a"], ["a@=1.0", "a@=2.0"]),
+        (["a", "brillig"], ["a@=1.0", "a@=2.0", "brillig@=1.0.0", "brillig@=2.0.0"]),
     ],
 )
 def test_get_all_versions(specs, expected_specs):

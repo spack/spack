@@ -239,6 +239,22 @@ class TestSpecSemantics(object):
         assert c1 == c2
         assert c1 == expected
 
+    def test_constrain_specs_by_hash(self, default_mock_concretization, database):
+        """Test that Specs specified only by their hashes can constrain eachother."""
+        mpich_dag_hash = "/" + database.query_one("mpich").dag_hash()
+        spec = Spec(mpich_dag_hash[:7])
+        assert spec.constrain(Spec(mpich_dag_hash)) is False
+        assert spec.abstract_hash == mpich_dag_hash[1:]
+
+    def test_mismatched_constrain_spec_by_hash(self, default_mock_concretization, database):
+        """Test that Specs specified only by their incompatible hashes fail appropriately."""
+        lhs = "/" + database.query_one("callpath ^mpich").dag_hash()
+        rhs = "/" + database.query_one("callpath ^mpich2").dag_hash()
+        with pytest.raises(spack.spec.InvalidHashError):
+            Spec(lhs).constrain(Spec(rhs))
+        with pytest.raises(spack.spec.InvalidHashError):
+            Spec(lhs[:7]).constrain(Spec(rhs))
+
     @pytest.mark.parametrize(
         "lhs,rhs", [("libelf", Spec()), ("libelf", "@0:1"), ("libelf", "@0:1 %gcc")]
     )
@@ -628,16 +644,16 @@ class TestSpecSemantics(object):
         # component: subcomponent of spec from which to get property
         package_segments = [
             ("{NAME}", "", "name", lambda spec: spec),
-            ("{VERSION}", "", "versions", lambda spec: spec),
+            ("{VERSION}", "", "version", lambda spec: spec),
             ("{compiler}", "", "compiler", lambda spec: spec),
             ("{compiler_flags}", "", "compiler_flags", lambda spec: spec),
             ("{variants}", "", "variants", lambda spec: spec),
             ("{architecture}", "", "architecture", lambda spec: spec),
-            ("{@VERSIONS}", "@", "version", lambda spec: spec),
+            ("{@VERSIONS}", "@", "versions", lambda spec: spec),
             ("{%compiler}", "%", "compiler", lambda spec: spec),
             ("{arch=architecture}", "arch=", "architecture", lambda spec: spec),
             ("{compiler.name}", "", "name", lambda spec: spec.compiler),
-            ("{compiler.version}", "", "versions", lambda spec: spec.compiler),
+            ("{compiler.version}", "", "version", lambda spec: spec.compiler),
             ("{%compiler.name}", "%", "name", lambda spec: spec.compiler),
             ("{@compiler.version}", "@", "version", lambda spec: spec.compiler),
             ("{architecture.platform}", "", "platform", lambda spec: spec.architecture),

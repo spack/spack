@@ -380,21 +380,23 @@ with '-Wl,-commons,use_dylibs' and without
             results.append(" ".join(variants))
         return results
 
+    def flag_handler(self, name, flags):
+        if name == "fflags":
+            # https://bugzilla.redhat.com/show_bug.cgi?id=1795817
+            # https://github.com/spack/spack/issues/17934
+            # TODO: we should add the flag depending on the real Fortran compiler spec and not the
+            #  toolchain spec, which might be mixed.
+            if any(self.spec.satisfies(s) for s in ["%gcc@10:", "%apple-clang@11:", "%clang@11:"]):
+                # Note that the flag is not needed to build the package starting version 4.1
+                # (see https://github.com/pmodels/mpich/pull/5840) but we keep adding the flag here
+                # to avoid its presence in the MPI compiler wrappers.
+                flags.append("-fallow-argument-mismatch")
+
+        return flags, None, None
+
     def setup_build_environment(self, env):
         env.unset("F90")
         env.unset("F90FLAGS")
-
-        # https://bugzilla.redhat.com/show_bug.cgi?id=1795817
-        if self.spec.satisfies("%gcc@10:"):
-            env.set("FFLAGS", "-fallow-argument-mismatch")
-            env.set("FCFLAGS", "-fallow-argument-mismatch")
-        # Same fix but for macOS - avoids issue #17934
-        if self.spec.satisfies("%apple-clang@11:"):
-            env.set("FFLAGS", "-fallow-argument-mismatch")
-            env.set("FCFLAGS", "-fallow-argument-mismatch")
-        if self.spec.satisfies("%clang@11:"):
-            env.set("FFLAGS", "-fallow-argument-mismatch")
-            env.set("FCFLAGS", "-fallow-argument-mismatch")
 
         if "pmi=cray" in self.spec:
             env.set("CRAY_PMI_INCLUDE_OPTS", "-I" + self.spec["cray-pmi"].headers.directories[0])

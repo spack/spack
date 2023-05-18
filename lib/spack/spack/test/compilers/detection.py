@@ -263,6 +263,11 @@ def test_intel_version_detection(version_str, expected_version):
             "Copyright (C) 1985-2021 Intel Corporation. All rights reserved.",
             "2022.0.0",
         ),
+        (  # IFX
+            "ifx (IFX) 2023.1.0 20230320\n"
+            "Copyright (C) 1985-2023 Intel Corporation. All rights reserved.",
+            "2023.1.0",
+        ),
     ],
 )
 def test_oneapi_version_detection(version_str, expected_version):
