@@ -72,4 +72,16 @@ class Libgeotiff(AutotoolsPackage):
         else:
             args.append("--with-proj=no")
 
+        if self.spec["proj"].satisfies("~shared"):
+            ldflags = []
+            libs = []
+            for dep in ["sqlite", "libtiff", "curl", "openssl"]:
+                if dep not in self.spec:
+                    continue
+                ldflags.append(self.spec[dep].libs.search_flags)
+                libs.append(self.spec[dep].libs.link_flags) 
+            if ldflags or libs:
+                args.append("LDFLAGS=%s" % " ".join(ldflags))
+                args.append("LIBS=%s" % " ".join(libs))
+
         return args

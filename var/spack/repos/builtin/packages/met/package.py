@@ -3,7 +3,9 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
+import os
+
+from spack.package import *
 
 
 class Met(AutotoolsPackage):
@@ -12,8 +14,7 @@ class Met(AutotoolsPackage):
     configurable methods to compute statistics and diagnostics"""
 
     homepage = "https://dtcenter.org/community-code/model-evaluation-tools-met"
-    url      = "https://github.com/dtcenter/MET/releases/download/v10.1.0/met-10.1.0.20220314.tar.gz"
-
+    url      = "https://github.com/dtcenter/MET/archive/refs/tags/v11.0.1.tar.gz"
 
     maintainers('AlexanderRichert-NOAA')
 
@@ -59,6 +60,7 @@ class Met(AutotoolsPackage):
     patch('openmp_shape_patch.patch', when='@10.1.0')
 
     def url_for_version(self, version):
+
         if version < Version("11"):
             release_date = {
                 '10.1.1': '20220419',
@@ -82,20 +84,25 @@ class Met(AutotoolsPackage):
         gsl = spec['gsl']
         env.set('MET_GSL', gsl.prefix)
 
-        netcdfc = spec['netcdf-c']
         netcdfcxx = spec['netcdf-cxx4']
+        cppflags.append(netcdfcxx.libs.search_flags)
+        ldflags.append(netcdfcxx.libs.ld_flags)
+        libs.append(netcdfcxx.libs.link_flags)
+
+        netcdfc = spec['netcdf-c']
+        if netcdfc.satisfies("+shared"):
+            cppflags.append('-I' + netcdfc.prefix.include)
+            ldflags.append('-L' + netcdfc.prefix.lib)
+            libs.append(netcdfc.libs.link_flags)
+        else:
+            nc_config = which(os.path.join(netcdfc.prefix.bin, "nc-config"))
+            cppflags.append(nc_config("--cflags", output=str).strip())
+            ldflags.append(nc_config("--libs", "--static", output=str).strip())
+            libs.append(nc_config("--libs", "--static", output=str).strip())
+
         zlib = spec['zlib']
-
-        cppflags.append('-I' + netcdfc.prefix.include)
-        cppflags.append('-I' + netcdfcxx.prefix.include)
         cppflags.append('-D__64BIT__')
-
-        ldflags.append('-L' + netcdfc.prefix.lib)
-        ldflags.append('-L' + netcdfcxx.prefix.lib)
         ldflags.append('-L' + zlib.prefix.lib)
-
-        libs.append('-lnetcdf')
-        libs.append('-lnetcdf_c++4')
         libs.append('-lz')
 
         bufr = spec['bufr']
@@ -118,7 +125,13 @@ class Met(AutotoolsPackage):
             python = spec['python']
             env.set('MET_PYTHON', python.command.path)
             env.set('MET_PYTHON_CC', '-I' + python.headers.directories[0])
-            env.set('MET_PYTHON_LD', python.libs.ld_flags)
+            py_ld = [python.libs.ld_flags]
+            if spec["python"].satisfies("~shared"):
+                py_ld.append(spec["gettext"].libs.ld_flags)
+                py_ld.append(spec["gettext"].libs.ld_flags)
+                py_ld.append(spec["libiconv"].libs.ld_flags)
+                py_ld.append("-lutil")
+            env.set('MET_PYTHON_LD', " ".join(py_ld))
 
         if '+lidar2nc' in spec or '+modis' in spec:
             hdf = spec['hdf']

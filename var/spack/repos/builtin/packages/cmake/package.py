@@ -390,6 +390,18 @@ class Cmake(Package):
             ]
         )
 
+        if self.spec["openssl"].satisfies("~shared"):
+            args.append(
+                "-DOPENSSL_CRYPTO_LIBRARY={0};{1}".format(
+                    find_libraries("libcrypto", self.spec["openssl"].prefix.lib, shared=False),
+                    find_libraries(
+                        "libz",
+                        self.spec["zlib"].prefix.lib,
+                        shared=self.spec["zlib"].satisfies("+shared"),
+                    )
+                )
+            )
+
         return args
 
     def cmake_bootstrap(self):

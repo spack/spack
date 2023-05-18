@@ -171,6 +171,15 @@ class Glib(Package):
     def libs(self):
         return find_libraries(["libglib*"], root=self.prefix, recursive=True)
 
+    def setup_build_environment(self, env):
+        spec = self.spec
+        if spec["gettext"].satisfies("~shared"):
+            ldflags = [spec["gettext"].libs.search_flags]
+            libs = ["-lintl"]
+            ldflags.append(spec["iconv"].libs.search_flags)
+            libs.append(spec["iconv"].libs.link_flags)
+            env.set("LDFLAGS", " ".join(ldflags+libs))
+
     def meson_args(self):
         args = []
         if self.spec.satisfies("@:2.72"):

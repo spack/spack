@@ -34,6 +34,11 @@ class Udunits(AutotoolsPackage):
 
     depends_on("expat")
 
+    variant("shared", default=True, description="Build shared library")
+
     @property
     def libs(self):
         return find_libraries(["libudunits2"], root=self.prefix, recursive=True, shared=True)
+
+    def configure_args(self):
+        return self.enable_or_disable("shared")

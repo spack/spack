@@ -28,6 +28,8 @@ class Fontconfig(AutotoolsPackage):
     depends_on("uuid", when="@2.13.1:")
     depends_on("python@3:", type="build", when="@2.13.93:")
 
+    variant("pic", default=False, description="Enable position-independent code (PIC)")
+
     def patch(self):
         """Make test/run-test.sh compatible with dash"""
         filter_file("SIGINT SIGTERM SIGABRT EXIT", "2 15 6 0", "test/run-test.sh")
@@ -40,8 +42,27 @@ class Fontconfig(AutotoolsPackage):
 
     def configure_args(self):
         font_path = join_path(self.spec["font-util"].prefix, "share", "fonts")
+        args = ["--enable-libxml2", "--disable-docs", "--with-default-fonts={0}".format(font_path)]
+        ldflags = []
+        libs = []
+        deps = []
+        if self.spec["bzip2"].satisfies("~shared"):
+            deps.append("bzip2")
+        if not self.spec["libpng"].satisfies("libs=shared"):
+            deps.append("libpng")
+        if self.spec["libxml2"].satisfies("~shared"):
+            deps.extend(["zlib", "xz", "iconv"])
+        if deps:
+            for lib in deps:
+                ldflags.append(self.spec[lib].libs.ld_flags)
+                libs.append(self.spec[lib].libs.link_flags)
+            args.append("LDFLAGS=%s" % " ".join(ldflags))
+            args.append("LIBS=%s" % " ".join(libs))
 
-        return ["--enable-libxml2", "--disable-docs", "--with-default-fonts={0}".format(font_path)]
+        args.extend(self.with_or_without("pic"))
+
+        return args
+        
 
     @run_after("install")
     def system_fonts(self):

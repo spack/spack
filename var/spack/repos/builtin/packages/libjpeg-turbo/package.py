@@ -56,6 +56,7 @@ class LibjpegTurbo(CMakePackage, AutotoolsPackage):
     variant("shared", default=True, description="Build shared libs")
     variant("static", default=True, description="Build static libs")
     variant("jpeg8", default=False, description="Emulate libjpeg v8 API/ABI")
+    variant("pic", default=True, description="Enable position independent code")
 
     # Can use either of these. But in the current version of the package
     # only nasm is used. In order to use yasm an environmental variable
@@ -87,6 +88,7 @@ class CMakeBuilder(spack.build_systems.cmake.CMakeBuilder):
             self.define_from_variant("ENABLE_SHARED", "shared"),
             self.define_from_variant("ENABLE_STATIC", "static"),
             self.define_from_variant("WITH_JPEG8", "jpeg8"),
+            self.define_from_variant("CMAKE_POSITION_INDEPENDENT_CODE", "pic"),
         ]
 
         return args

@@ -85,6 +85,11 @@ class AprUtil(AutotoolsPackage):
         else:
             args.append("--without-odbc")
 
+        if "+crypto" in spec:
+            if spec["openssl"].satisfies("~shared"):
+                zlibs = self.spec["zlib"].libs
+                args.append("LIBS={0} {1}".format(zlibs.ld_flags, zlibs.link_flags))
+
         return args
 
     def check(self):

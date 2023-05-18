@@ -49,20 +49,29 @@ class Libxkbcommon(MesonPackage, AutotoolsPackage):
     depends_on("wayland@1.2.0:", when="+wayland")
     depends_on("wayland-protocols@1.7:", when="+wayland")
 
-
 class MesonBuilder(spack.build_systems.meson.MesonBuilder):
     def meson_args(self):
-        return [
+        args = [
             "-Dxkb-config-root={0}".format(self.spec["xkbdata"].prefix),
             "-Denable-docs=false",
             "-Denable-wayland=" + str(self.spec.satisfies("+wayland")),
         ]
 
+        return args
+
+    def setup_build_environment(self, env):
+        if self.spec["libxml2"].satisfies("~shared"):
+            deps = ["zlib", "xz", "iconv"]
+            ldflags = [self.spec[lib].libs.search_flags for lib in deps]
+            libs = [self.spec[lib].libs.link_flags for lib in deps]
+            env.set("LDFLAGS", " ".join(ldflags+libs))
 
 class AutotoolsBuilder(spack.build_systems.autotools.AutotoolsBuilder):
     def configure_args(self):
         """Configure arguments are passed using meson_args functions"""
-        return [
+        args = [
             "--with-xkb-config-root={0}".format(self.spec["xkbdata"].prefix),
             "--disable-docs",
         ] + self.enable_or_disable("wayland")
+
+        return args
