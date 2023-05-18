@@ -115,6 +115,9 @@ class Hpl(AutotoolsPackage):
         ):
             config.append("LDFLAGS={0}".format(self.spec["blas"].libs.ld_flags))
 
+        if "%aocc@4.0:" in self.spec:
+            config.append("LDFLAGS=-lamdalloc -lamdlibm -lm")
+
         return config
 
     @when("@:2.2")
