@@ -738,7 +738,7 @@ class AutotoolsBuilder(AutotoolsBuilder):
         if self.spec.satisfies("+iconv") and self.spec["libiconv"].satisfies("~shared"):
             libs.append("-liconv")
 
-        if ldflags: # or libs:
+        if ldflags or libs:
             args.append("LDFLAGS=%s" % " ".join(ldflags+libs))
             args.append("LIBS=%s" % " ".join(libs))
 
