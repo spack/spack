@@ -37,6 +37,8 @@ class Scotch(CMakePackage, MakefilePackage):
     version("5.1.10b", sha256="54c9e7fafefd49d8b2017d179d4f11a655abe10365961583baaddc4eeb6a9add")
 
     build_system(conditional("cmake", when="@7:"), "makefile", default="cmake")
+    variant("threads", default=True, description="use POSIX Pthreads within Scotch and PT-Scotch")
+    variant("mpi_thread", default=True, description="use multi-threaded algorithms in conjunction with MPI")
     variant("mpi", default=True, description="Compile parallel libraries")
     variant("compression", default=True, description="May use compressed files")
     variant("esmumps", default=False, description="Compile esmumps (needed by mumps)")
@@ -115,6 +117,8 @@ class CMakeBuilder(spack.build_systems.cmake.CMakeBuilder):
             self.define_from_variant("BUILD_LIBESMUMPS", "esmumps"),
             self.define_from_variant("BUILD_SHARED_LIBS", "shared"),
             self.define_from_variant("BUILD_PTSCOTCH", "mpi"),
+            self.define_from_variant("THREADS", "threads"),
+            self.define_from_variant("MPI_THREAD_MULTIPLE", "mpi_thread")
         ]
 
         # TODO should we enable/disable THREADS?
