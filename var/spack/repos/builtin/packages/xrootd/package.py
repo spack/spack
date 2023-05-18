@@ -15,8 +15,9 @@ class Xrootd(CMakePackage):
     url = "https://xrootd.slac.stanford.edu/download/v5.5.1/xrootd-5.5.1.tar.gz"
     list_url = "https://xrootd.slac.stanford.edu/dload.html"
 
-    maintainers("wdconinc")
+    maintainers("gartung", "greenc-FNAL", "marcmengel", "vitodb", "wdconinc")
 
+    version("5.5.5", sha256="0710caae527082e73d3bf8f9d1dffe95808afd3fcaaaa15ab0b937b8b226bc1f")
     version("5.5.4", sha256="41a8557ea2d118b1950282b17abea9230b252aa5ee1a5959173e2534b7d611d3")
     version("5.5.3", sha256="703829c2460204bd3c7ba8eaa23911c3c9a310f6d436211ba0af487ef7f6a980")
     version("5.5.2", sha256="ec4e0490b8ee6a3254a4ea4449342aa364bc95b78dc9a8669151be30353863c6")
@@ -135,12 +136,6 @@ class Xrootd(CMakePackage):
         sha256="969f8b07edff42449ad76b02f3e57d93b8d6c829be1ba14bccf831c27bc971e1",
         when="@5.5.3",
     )
-    # https://github.com/xrootd/xrootd/pull/1929
-    patch(
-        "https://patch-diff.githubusercontent.com/raw/xrootd/xrootd/pull/1929.patch?full_index=1",
-        sha256="0c7abb0fc0f0ae3c012be84d1aebd67fc00021aee37c2e0d8d315bd108b5dbec",
-        when="@5.0.0:5.5.3 +client_only",
-    )
 
     # do not use systemd
     patch("no-systemd-pre-5.5.2.patch", when="@:5.5.1")
@@ -150,6 +145,16 @@ class Xrootd(CMakePackage):
     def patch(self):
         """Remove hardcoded -std=c++0x flag"""
         filter_file(r"\-std=c\+\+0x", r"", "cmake/XRootDOSDefs.cmake")
+
+    @when("@5.2.0:5 +client_only")
+    def patch(self):
+        """Allow CMAKE_CXX_STANDARD to be set in cache"""
+        # See https://github.com/xrootd/xrootd/pull/1929
+        filter_file(
+            r"^(\s+(?i:set)\s*\(\s*CMAKE_CXX_STANDARD\s+\d+)(\s*\).*)$",
+            r'\1 CACHE STRING "C++ Standard"\2',
+            "cmake/XRootDOSDefs.cmake",
+        )
 
     def cmake_args(self):
         spec = self.spec
