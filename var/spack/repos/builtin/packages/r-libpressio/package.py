@@ -14,7 +14,6 @@ class RLibpressio(RPackage):
 
     maintainers("robertu94")
 
-    # FIXME: Added by `spack checksum`
     version("1.6.0", sha256="4f8a712e5e84a201373a104e73b10282fcf98f1c7672cc1dd5a2ff07a32d54f6")
 
     version("1.6.0", sha256="4f8a712e5e84a201373a104e73b10282fcf98f1c7672cc1dd5a2ff07a32d54f6")
