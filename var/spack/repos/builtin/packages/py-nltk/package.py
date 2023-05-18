@@ -23,7 +23,7 @@ class PyNltk(PythonPackage):
 
     depends_on("python@3.7:", when="@3.8.1:", type=("build", "run"))
     depends_on("python@3.5:", type=("build", "run"))
-    depends_on("py-setuptools", type=("build", "run"))
+    depends_on("py-setuptools", type="build")
     depends_on("py-joblib", type=("build", "run"))
     depends_on("py-click", type=("build", "run"))
     depends_on("py-regex@2021.8.3:", when="@3.8.1:", type=("build", "run"))
