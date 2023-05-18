@@ -20,5 +20,5 @@ class PyJarvisUtil(PythonPackage):
     version("0.0.1", sha256="1c5fbbfec410f1df8dc28edc87dd4421c3708f5bd22bf7ef010138d5c4a1ff8f")
 
     depends_on("py-setuptools", type="build")
-    depends_on("py-psutil")
-    depends_on("py-pyaml")
+    depends_on("py-psutil", type=("build", "run"))
+    depends_on("py-pyaml", type=("build", "run"))
