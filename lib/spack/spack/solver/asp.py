@@ -861,9 +861,9 @@ class SpackSolverSetup(object):
     def __init__(self, tests=False):
         self.gen = None  # set by setup()
 
-        self.declared_versions = {}
-        self.possible_versions = {}
-        self.deprecated_versions = {}
+        self.declared_versions = collections.defaultdict(list)
+        self.possible_versions = collections.defaultdict(set)
+        self.deprecated_versions = collections.defaultdict(set)
 
         self.possible_virtuals = None
         self.possible_compilers = []
@@ -1722,10 +1722,6 @@ class SpackSolverSetup(object):
 
     def build_version_dict(self, possible_pkgs):
         """Declare any versions in specs not declared in packages."""
-        self.declared_versions = collections.defaultdict(list)
-        self.possible_versions = collections.defaultdict(set)
-        self.deprecated_versions = collections.defaultdict(set)
-
         packages_yaml = spack.config.get("packages")
         packages_yaml = _normalize_packages_yaml(packages_yaml)
         for pkg_name in possible_pkgs:
@@ -1766,12 +1762,7 @@ class SpackSolverSetup(object):
                 if isinstance(v, vn.GitVersion):
                     version_defs.append(v)
                 else:
-                    satisfying_versions = list(x for x in pkg_class.versions if x.satisfies(v))
-                    if not satisfying_versions:
-                        raise spack.config.ConfigError(
-                            "Preference for version {0} does not match any version "
-                            " defined in {1}".format(str(v), pkg_name)
-                        )
+                    satisfying_versions = self._check_for_defined_matching_versions(pkg_class, v)
                     # Amongst all defined versions satisfying this specific
                     # preference, the highest-numbered version is the
                     # most-preferred: therefore sort satisfying versions
@@ -1783,6 +1774,28 @@ class SpackSolverSetup(object):
                     DeclaredVersion(version=vdef, idx=weight, origin=Provenance.PACKAGES_YAML)
                 )
                 self.possible_versions[pkg_name].add(vdef)
+
+    def _check_for_defined_matching_versions(self, pkg_class, v):
+        """Given a version specification (which may be a concrete version,
+        range, etc.), determine if any package.py version declarations
+        or externals define a version which satisfies it.
+
+        This is primarily for determining whether a version request (e.g.
+        version preferences, which should not themselves define versions)
+        refers to a defined version.
+
+        This function raises an exception if no satisfying versions are
+        found.
+        """
+        pkg_name = pkg_class.name
+        satisfying_versions = list(x for x in pkg_class.versions if x.satisfies(v))
+        satisfying_versions.extend(x for x in self.possible_versions[pkg_name] if x.satisfies(v))
+        if not satisfying_versions:
+            raise spack.config.ConfigError(
+                "Preference for version {0} does not match any version"
+                " defined for {1} (in its package.py or any external)".format(str(v), pkg_name)
+            )
+        return satisfying_versions
 
     def add_concrete_versions_from_specs(self, specs, origin):
         """Add concrete versions to possible versions from lists of CLI/dev specs."""
@@ -2215,14 +2228,6 @@ class SpackSolverSetup(object):
         # get possible compilers
         self.possible_compilers = self.generate_possible_compilers(specs)
 
-        # traverse all specs and packages to build dict of possible versions
-        self.build_version_dict(possible)
-        self.add_concrete_versions_from_specs(specs, Provenance.SPEC)
-        self.add_concrete_versions_from_specs(dev_specs, Provenance.DEV_SPEC)
-
-        req_version_specs = _get_versioned_specs_from_pkg_requirements()
-        self.add_concrete_versions_from_specs(req_version_specs, Provenance.PACKAGE_REQUIREMENT)
-
         self.gen.h1("Concrete input spec definitions")
         self.define_concrete_input_specs(specs, possible)
 
@@ -2249,6 +2254,14 @@ class SpackSolverSetup(object):
         self.provider_defaults()
         self.provider_requirements()
         self.external_packages()
+
+        # traverse all specs and packages to build dict of possible versions
+        self.build_version_dict(possible)
+        self.add_concrete_versions_from_specs(specs, Provenance.SPEC)
+        self.add_concrete_versions_from_specs(dev_specs, Provenance.DEV_SPEC)
+
+        req_version_specs = self._get_versioned_specs_from_pkg_requirements()
+        self.add_concrete_versions_from_specs(req_version_specs, Provenance.PACKAGE_REQUIREMENT)
 
         self.gen.h1("Package Constraints")
         for pkg in sorted(self.pkgs):
@@ -2296,83 +2309,78 @@ class SpackSolverSetup(object):
         if self.concretize_everything:
             self.gen.fact(fn.concretize_everything())
 
+    def _get_versioned_specs_from_pkg_requirements(self):
+        """If package requirements mention versions that are not mentioned
+        elsewhere, then we need to collect those to mark them as possible
+        versions.
+        """
+        req_version_specs = list()
+        config = spack.config.get("packages")
+        for pkg_name, d in config.items():
+            if pkg_name == "all":
+                continue
+            if "require" in d:
+                req_version_specs.extend(self._specs_from_requires(pkg_name, d["require"]))
+        return req_version_specs
 
-def _get_versioned_specs_from_pkg_requirements():
-    """If package requirements mention versions that are not mentioned
-    elsewhere, then we need to collect those to mark them as possible
-    versions.
-    """
-    req_version_specs = list()
-    config = spack.config.get("packages")
-    for pkg_name, d in config.items():
-        if pkg_name == "all":
-            continue
-        if "require" in d:
-            req_version_specs.extend(_specs_from_requires(pkg_name, d["require"]))
-    return req_version_specs
-
-
-def _specs_from_requires(pkg_name, section):
-    """Collect specs from requirements which define versions (i.e. those that
-    have a concrete version). Requirements can define *new* versions if
-    they are included as part of an equivalence (hash=number) but not
-    otherwise.
-    """
-    if isinstance(section, str):
-        spec = spack.spec.Spec(section)
-        if not spec.name:
-            spec.name = pkg_name
-        extracted_specs = [spec]
-    else:
-        spec_strs = []
-        for spec_group in section:
-            if isinstance(spec_group, str):
-                spec_strs.append(spec_group)
-            else:
-                # Otherwise it is an object. The object can contain a single
-                # "spec" constraint, or a list of them with "any_of" or
-                # "one_of" policy.
-                if "spec" in spec_group:
-                    new_constraints = [spec_group["spec"]]
-                else:
-                    key = "one_of" if "one_of" in spec_group else "any_of"
-                    new_constraints = spec_group[key]
-                spec_strs.extend(new_constraints)
-
-        extracted_specs = []
-        for spec_str in spec_strs:
-            spec = spack.spec.Spec(spec_str)
+    def _specs_from_requires(self, pkg_name, section):
+        """Collect specs from requirements which define versions (i.e. those that
+        have a concrete version). Requirements can define *new* versions if
+        they are included as part of an equivalence (hash=number) but not
+        otherwise.
+        """
+        if isinstance(section, str):
+            spec = spack.spec.Spec(section)
             if not spec.name:
                 spec.name = pkg_name
-            extracted_specs.append(spec)
+            extracted_specs = [spec]
+        else:
+            spec_strs = []
+            for spec_group in section:
+                if isinstance(spec_group, str):
+                    spec_strs.append(spec_group)
+                else:
+                    # Otherwise it is an object. The object can contain a single
+                    # "spec" constraint, or a list of them with "any_of" or
+                    # "one_of" policy.
+                    if "spec" in spec_group:
+                        new_constraints = [spec_group["spec"]]
+                    else:
+                        key = "one_of" if "one_of" in spec_group else "any_of"
+                        new_constraints = spec_group[key]
+                    spec_strs.extend(new_constraints)
 
-    version_specs = []
-    for spec in extracted_specs:
-        if spec.versions.concrete:
-            # Note: this includes git versions
-            version_specs.append(spec)
-            continue
+            extracted_specs = []
+            for spec_str in spec_strs:
+                spec = spack.spec.Spec(spec_str)
+                if not spec.name:
+                    spec.name = pkg_name
+                extracted_specs.append(spec)
 
-        # Prefer spec's name if it exists, in case the spec is
-        # requiring a specific implementation inside of a virtual section
-        # e.g. packages:mpi:require:openmpi@4.0.1
-        pkg_class = spack.repo.path.get_pkg_class(spec.name or pkg_name)
-        satisfying_versions = list(v for v in pkg_class.versions if v.satisfies(spec.versions))
-        if not satisfying_versions:
-            raise spack.config.ConfigError(
-                "{0} assigns a version that is not defined in"
-                " the associated package.py".format(str(spec))
+        version_specs = []
+        for spec in extracted_specs:
+            if spec.versions.concrete:
+                # Note: this includes git versions
+                version_specs.append(spec)
+                continue
+
+            # Prefer spec's name if it exists, in case the spec is
+            # requiring a specific implementation inside of a virtual section
+            # e.g. packages:mpi:require:openmpi@4.0.1
+            pkg_class = spack.repo.path.get_pkg_class(spec.name or pkg_name)
+            satisfying_versions = self._check_for_defined_matching_versions(
+                pkg_class, spec.versions
             )
 
-        # Version ranges ("@1.3" without the "=", "@1.2:1.4") and lists
-        # will end up here
-        ordered_satisfying_versions = sorted(satisfying_versions, reverse=True)
-        vspecs = list(spack.spec.Spec("@{0}".format(x)) for x in ordered_satisfying_versions)
-        version_specs.extend(vspecs)
+            # Version ranges ("@1.3" without the "=", "@1.2:1.4") and lists
+            # will end up here
+            ordered_satisfying_versions = sorted(satisfying_versions, reverse=True)
+            vspecs = list(spack.spec.Spec("@{0}".format(x)) for x in ordered_satisfying_versions)
+            version_specs.extend(vspecs)
 
-    for spec in version_specs:
-        spec.attach_git_version_lookup()
-    return version_specs
+        for spec in version_specs:
+            spec.attach_git_version_lookup()
+        return version_specs
 
 
 class SpecBuilder(object):
