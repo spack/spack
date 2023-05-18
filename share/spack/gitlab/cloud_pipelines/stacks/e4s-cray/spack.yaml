@@ -1,0 +1,125 @@
+spack:
+  view: false
+
+  concretizer:
+    reuse: false
+    unify: false
+
+  compilers:
+  - compiler:
+      spec: cce@15.0.1
+      paths:
+        cc: cc
+        cxx: CC
+        f77: ftn
+        fc: ftn
+      flags: {}
+      operating_system: rhel8
+      target: any
+      modules:
+      - PrgEnv-cray/8.3.3
+      - cce/15.0.1
+      environment:
+        set:
+          MACHTYPE: x86_64
+  - compiler:
+      spec: gcc@11.2.0
+      paths:
+        cc: gcc
+        cxx: g++
+        f77: gfortran
+        fc: gfortran
+      flags: {}
+      operating_system: rhel8
+      target: any
+      modules:
+      - PrgEnv-gnu
+      - gcc/11.2.0
+      environment: {}
+
+  packages:
+    all:
+      require: '%cce@15.0.1'
+      compiler: [cce@15.0.1]
+      providers:
+        blas: [cray-libsci]
+        lapack: [cray-libsci]
+        mpi: [cray-mpich]
+        tbb: [intel-tbb]
+        scalapack: [netlib-scalapack]
+      target: [zen4]
+      variants: +mpi
+
+    binutils:
+      variants: +ld +gold +headers +libiberty ~nls
+    hdf5:
+      variants: +fortran +hl +shared
+    libunwind:
+      variants: +pic +xz
+    ncurses:
+      require: '@6.3 +termlib'
+    openblas:
+      require: '@0.3.20'
+      variants: threads=openmp
+    python:
+      require: '@3.7.15'
+    xz:
+      variants: +pic
+    elfutils:
+      variants: +bzip2 ~nls +xz
+      require: '%gcc'
+
+    # EXTERNALS
+    cray-mpich:
+      buildable: false
+      externals:
+      - spec: cray-mpich@8.1.25 %cce@15.0.1
+        prefix: /opt/cray/pe/mpich/8.1.25/ofi/cray/10.0
+        modules:
+        - cray-mpich/8.1.25
+
+  specs:
+  - butterflypack
+  - hypre
+  - kokkos
+  - kokkos-kernels
+  - petsc
+  - raja
+  - slepc
+  - superlu-dist
+  - tau
+
+  ci:
+    pipeline-gen:
+    - build-job-remove:
+        image: no-image
+        tags: [spack, public]
+    - build-job:
+        tags:  [ "craype", "cce@15.0.1", "zen4" ]
+        script::
+        - - spack compiler find
+          - cd ${SPACK_CONCRETE_ENV_DIR}
+          - spack env activate --without-view .
+          - if [ -n "$SPACK_BUILD_JOBS" ]; then spack config add "config:build_jobs:$SPACK_BUILD_JOBS"; fi
+          - mkdir -p ${SPACK_ARTIFACTS_ROOT}/user_data
+          - spack --color=always --backtrace ci rebuild --tests > >(tee ${SPACK_ARTIFACTS_ROOT}/user_data/pipeline_out.txt) 2> >(tee ${SPACK_ARTIFACTS_ROOT}/user_data/pipeline_err.txt >&2)
+        after_script:
+        - - cat /proc/loadavg || true
+    - signing-job:
+        image: { "name": "ghcr.io/spack/notary:latest", "entrypoint": [""] }
+        tags: ["aws"]
+        script:
+        - - aws s3 sync --exclude "*" --include "*spec.json*" ${SPACK_REMOTE_MIRROR_OVERRIDE}/build_cache /tmp
+          - /sign.sh
+          - aws s3 sync --exclude "*" --include "*spec.json.sig*" /tmp ${SPACK_REMOTE_MIRROR_OVERRIDE}/build_cache
+          - aws s3 cp /tmp/public_keys ${SPACK_REMOTE_MIRROR_OVERRIDE}/build_cache/_pgp --recursive --exclude "*" --include "*.pub"
+    - any-job:
+        image: "ghcr.io/spack/e4s-ubuntu-18.04:v2021-10-18"
+        tags: ["spack"]
+        before_script:
+        - - uname -a || true
+          - grep -E "vendor|model name" /proc/cpuinfo 2>/dev/null | sort -u || head -n10 /proc/cpuinfo 2>/dev/null || true
+          - nproc || true
+        - - . "./share/spack/setup-env.sh"
+          - spack --version
+          - spack arch
