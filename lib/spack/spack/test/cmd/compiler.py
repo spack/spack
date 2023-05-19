@@ -204,8 +204,8 @@ def test_compiler_find_mixed_suffixes(no_compilers_yaml, working_env, clangdir):
     os.environ["PATH"] = str(clangdir)
     output = compiler("find", "--scope=site")
 
-    assert "clang@=11.0.0" in output
-    assert "gcc@=8.4.0" in output
+    assert "clang@11.0.0" in output
+    assert "gcc@8.4.0" in output
 
     config = spack.compilers.get_compiler_config("site", False)
     clang = next(c["compiler"] for c in config if c["compiler"]["spec"] == "clang@=11.0.0")
@@ -246,8 +246,8 @@ def test_compiler_find_prefer_no_suffix(no_compilers_yaml, working_env, clangdir
     os.environ["PATH"] = str(clangdir)
     output = compiler("find", "--scope=site")
 
-    assert "clang@=11.0.0" in output
-    assert "gcc@=8.4.0" in output
+    assert "clang@11.0.0" in output
+    assert "gcc@8.4.0" in output
 
     config = spack.compilers.get_compiler_config("site", False)
     clang = next(c["compiler"] for c in config if c["compiler"]["spec"] == "clang@=11.0.0")
