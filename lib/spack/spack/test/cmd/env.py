@@ -3299,3 +3299,22 @@ def test_environment_created_in_users_location(mutable_config, tmpdir):
     assert dir_name in out
     assert env_dir in ev.root(dir_name)
     assert os.path.isdir(os.path.join(env_dir, dir_name))
+
+
+def test_environment_created_from_lockfile_has_view(mock_packages, tmpdir):
+    """When an env is created from a lockfile, a view should be generated for it"""
+    env_a = str(tmpdir.join("a"))
+    env_b = str(tmpdir.join("b"))
+
+    # Create an environment and install a package in it
+    env("create", "-d", env_a)
+    with ev.Environment(env_a):
+        add("libelf")
+        install("--fake")
+
+    # Create another environment from the lockfile of the first environment
+    env("create", "-d", env_b, os.path.join(env_a, "spack.lock"))
+
+    # Make sure the view was created
+    with ev.Environment(env_b) as e:
+        assert os.path.isdir(e.view_path_default)
