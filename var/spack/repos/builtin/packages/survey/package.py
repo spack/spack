@@ -48,7 +48,7 @@ class Survey(CMakePackage):
 
     variant(
         "tls_model",
-        default="implicit",
+        default="explicit",
         description="The TLS model to build with",
         values=("implicit", "explicit"),
     )
