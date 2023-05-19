@@ -71,9 +71,8 @@ class Spack(Package):
     depends_on("lmod@7.5.12:", type="run", when="@0.18:")
 
     # Buildcache
-    # We just need the 'strings' executable, we don't want to install
-    # binutil's linkers.
-    depends_on("binutils~plugins~gold~libiberty~nls~headers~lto~ld~gas~interwork", type="run")
+    # We really just need the 'strings' from binutils
+    depends_on("binutils", type="run")
     depends_on("gnupg", type="run")
     depends_on("patchelf", type="run", when="platform=linux")
     depends_on("patchelf", type="run", when="platform=cray")
