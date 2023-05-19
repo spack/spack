@@ -32,11 +32,7 @@ class Aml(AutotoolsPackage):
     version("master", branch="master", submodules=True, get_full_repo=True)
 
     version("0.2.1", sha256="bae49e89ed0f2a2ad3547430e79b7e4c018d6228c6ed951a12d59afd0b35f71c")
-    version(
-        "0.2.0",
-        sha256="2044a2f3f1d7a19827dd9c0726172b690189b4d3fe938656c4160c022468cc4a",
-        deprecated=True,
-    )
+    version("0.2.0", sha256="2044a2f3f1d7a19827dd9c0726172b690189b4d3fe938656c4160c022468cc4a")
     version(
         "0.1.0",
         sha256="cc89a8768693f1f11539378b21cdca9f0ce3fc5cb564f9b3e4154a051dcea69b",
