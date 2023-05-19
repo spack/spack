@@ -37,4 +37,7 @@ class Odc(CMakePackage):
         # https://github.com/JCSDA/spack-stack/issues/585
         if self.spec.satisfies("%apple-clang@14.0.3"):
             args.append(self.define("CMAKE_C_FLAGS_RELEASE", "-O1"))
+            args.append(self.define("CMAKE_CXX_FLAGS_RELEASE", "-O1"))
+            args.append(self.define("CMAKE_C_FLAGS_RELWITHDEBINFO", "-O1"))
+            args.append(self.define("CMAKE_CXX_FLAGS_RELWITHDEBINFO", "-O1"))
         return args
