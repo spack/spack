@@ -133,7 +133,7 @@ default:
       - always
 
 .generate-win64:
-  extends: [ ".generate-base-windows" ]
+  extends: [".base-job", ".generate-base-windows" ]
   tags: ["spack", "protected", "medium", "win64"]
 
 .generate-base:
