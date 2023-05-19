@@ -41,6 +41,7 @@ class PySlepc4py(PythonPackage):
     depends_on("py-cython@0.29.32:", when="^python@3.11:", type="build")
     depends_on("py-cython@0.24:", type="build")
     depends_on("py-setuptools", type="build")
+    depends_on("py-numpy", type=("build", "run"))
 
     depends_on("py-petsc4py", type=("build", "run"))
     depends_on("py-petsc4py@main", when="@main", type=("build", "run"))
