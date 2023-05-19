@@ -2803,7 +2803,7 @@
                   "flags" : "-march=armv8.2-a+fp16+dotprod+crypto -mtune=cortex-a72"
               },
               {
-                  "versions": "10.2",
+                  "versions": "10.2:10.2.99",
                   "flags" : "-mcpu=zeus"
               },
               {
