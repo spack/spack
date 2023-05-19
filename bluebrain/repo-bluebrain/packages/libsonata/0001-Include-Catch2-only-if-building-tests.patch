@@ -1,0 +1,27 @@
+From 96462e554984d2d02629e2f092d26cdf84efc376 Mon Sep 17 00:00:00 2001
+From: Nicolas Cornu <nicolas.cornu@epfl.ch>
+Date: Wed, 17 May 2023 16:02:08 +0200
+Subject: [PATCH] Include Catch2 only if building tests
+
+---
+ CMakeLists.txt | 4 +++-
+ 1 file changed, 3 insertions(+), 1 deletion(-)
+
+diff --git a/CMakeLists.txt b/CMakeLists.txt
+index a3a687c..a4045ae 100644
+--- a/CMakeLists.txt
++++ b/CMakeLists.txt
+@@ -73,7 +73,9 @@ endif()
+ if (EXTLIB_FROM_SUBMODULES)
+     add_subdirectory(extlib EXCLUDE_FROM_ALL)
+ else()
+-    find_package(Catch2 REQUIRED)
++    if (SONATA_TESTS)
++        find_package(Catch2 REQUIRED)
++    endif()
+     find_package(HighFive REQUIRED)
+     find_package(fmt REQUIRED)
+     find_package(nlohmann_json REQUIRED)
+-- 
+2.40.1
+

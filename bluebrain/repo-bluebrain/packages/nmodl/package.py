@@ -31,7 +31,8 @@ class Nmodl(CMakePackage):
     depends_on("cuda", when="+llvm_cuda")
 
     depends_on("bison@3.0.5:", type="build")
-    depends_on("catch2@2")
+    depends_on("catch2@2", when="@:0.6.1")
+    depends_on("catch2@3:", when="@0.6.1:")
     depends_on("cli11")
     depends_on("cmake@3.17.0:", type="build")
     depends_on("flex@2.6:", type="build")
