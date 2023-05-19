@@ -283,16 +283,18 @@ class LmodFileLayout(BaseFileLayout):
 
         # If we are dealing with a core compiler, return 'Core'
         core_compilers = self.conf.core_compilers
-        if name == "compiler" and str(value) in core_compilers:
+        if name == "compiler" and any(
+            spack.spec.CompilerSpec(value).satisfies(c) for c in core_compilers
+        ):
             return "Core"
 
-        # CompilerSpec does not have an hash, as we are not allowed to
+        # CompilerSpec does not have a hash, as we are not allowed to
         # use different flavors of the same compiler
         if name == "compiler":
             return path_part_fmt.format(token=value)
 
         # In case the hierarchy token refers to a virtual provider
-        # we need to append an hash to the version to distinguish
+        # we need to append a hash to the version to distinguish
         # among flavors of the same library (e.g. openblas~openmp vs.
         # openblas+openmp)
         path = path_part_fmt.format(token=value)
