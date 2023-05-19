@@ -7,7 +7,7 @@ import collections
 import itertools
 import os.path
 import posixpath
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List
 
 import llnl.util.lang as lang
 
@@ -56,7 +56,7 @@ def make_context(spec, module_set_name, explicit):
     return LmodContext(conf)
 
 
-def guess_core_compilers(name, store=False) -> Optional[List[spack.spec.CompilerSpec]]:
+def guess_core_compilers(name, store=False) -> List[spack.spec.CompilerSpec]:
     """Guesses the list of core compilers installed in the system.
 
     Args:
@@ -64,7 +64,7 @@ def guess_core_compilers(name, store=False) -> Optional[List[spack.spec.Compiler
             modules.yaml configuration file
 
     Returns:
-        List of core compilers, if found, or None
+        List of found core compilers
     """
     core_compilers = []
     for compiler in spack.compilers.all_compilers():
@@ -90,7 +90,7 @@ def guess_core_compilers(name, store=False) -> Optional[List[spack.spec.Compiler
         modules_cfg.setdefault("lmod", {})["core_compilers"] = [str(x) for x in core_compilers]
         spack.config.set("modules:" + name, modules_cfg, scope=spack.config.default_modify_scope())
 
-    return core_compilers or None
+    return core_compilers
 
 
 class LmodConfiguration(BaseConfiguration):
@@ -111,8 +111,11 @@ class LmodConfiguration(BaseConfiguration):
                 is empty
         """
         compilers = [
-            spack.spec.CompilerSpec(c) for c in configuration(self.name).get("core_compilers")
-        ] or guess_core_compilers(self.name, store=True)
+            spack.spec.CompilerSpec(c) for c in configuration(self.name).get("core_compilers", [])
+        ]
+
+        if not compilers:
+            compilers = guess_core_compilers(self.name, store=True)
 
         if not compilers:
             msg = 'the key "core_compilers" must be set in modules.yaml'
