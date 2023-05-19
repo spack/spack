@@ -127,6 +127,7 @@ default:
     - $SPACK_CI_CONFIG_ROOT = ".\share\spack\gitlab\cloud_pipelines\configs"
     - dir "env:"
     - spack
+      --env-dir .\share\spack\gitlab\cloud_pipelines\stacks\$env:SPACK_CI_STACK_NAME
       --config-scope $SPACK_CI_CONFIG_ROOT
       --config-scope $SPACK_CI_CONFIG_ROOT\$env:SPACK_TARGET_PLATFORM
       ci generate --check-index-only
