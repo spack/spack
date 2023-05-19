@@ -7,7 +7,7 @@ import collections
 import itertools
 import os.path
 import posixpath
-from typing import Any, Dict
+from typing import Any, Dict, List, Optional
 
 import llnl.util.lang as lang
 
@@ -56,7 +56,7 @@ def make_context(spec, module_set_name, explicit):
     return LmodContext(conf)
 
 
-def guess_core_compilers(name, store=False):
+def guess_core_compilers(name, store=False) -> Optional[List[spack.spec.CompilerSpec]]:
     """Guesses the list of core compilers installed in the system.
 
     Args:
@@ -67,18 +67,16 @@ def guess_core_compilers(name, store=False):
         List of core compilers, if found, or None
     """
     core_compilers = []
-    for compiler_config in spack.compilers.all_compilers_config():
+    for compiler in spack.compilers.all_compilers():
         try:
-            compiler = compiler_config["compiler"]
             # A compiler is considered to be a core compiler if any of the
             # C, C++ or Fortran compilers reside in a system directory
             is_system_compiler = any(
-                os.path.dirname(x) in spack.util.environment.SYSTEM_DIRS
-                for x in compiler["paths"].values()
-                if x is not None
+                os.path.dirname(getattr(compiler, x, "")) in spack.util.environment.SYSTEM_DIRS
+                for x in ("cc", "cxx", "f77", "fc")
             )
             if is_system_compiler:
-                core_compilers.append(str(compiler["spec"]))
+                core_compilers.append(compiler.spec)
         except (KeyError, TypeError, AttributeError):
             continue
 
@@ -89,7 +87,7 @@ def guess_core_compilers(name, store=False):
         modules_cfg = spack.config.get(
             "modules:" + name, {}, scope=spack.config.default_modify_scope()
         )
-        modules_cfg.setdefault("lmod", {})["core_compilers"] = core_compilers
+        modules_cfg.setdefault("lmod", {})["core_compilers"] = [str(x) for x in core_compilers]
         spack.config.set("modules:" + name, modules_cfg, scope=spack.config.default_modify_scope())
 
     return core_compilers or None
@@ -104,7 +102,7 @@ class LmodConfiguration(BaseConfiguration):
     default_projections = {"all": posixpath.join("{name}", "{version}")}
 
     @property
-    def core_compilers(self):
+    def core_compilers(self) -> List[spack.spec.CompilerSpec]:
         """Returns the list of "Core" compilers
 
         Raises:
@@ -112,14 +110,15 @@ class LmodConfiguration(BaseConfiguration):
                 specified in the configuration file or the sequence
                 is empty
         """
-        value = configuration(self.name).get("core_compilers") or guess_core_compilers(
+        compiler_strs = configuration(self.name).get("core_compilers") or guess_core_compilers(
             self.name, store=True
         )
 
-        if not value:
+        if not compiler_strs:
             msg = 'the key "core_compilers" must be set in modules.yaml'
             raise CoreCompilersNotFoundError(msg)
-        return value
+
+        return [spack.spec.CompilerSpec(s) for s in compiler_strs]
 
     @property
     def core_specs(self):
