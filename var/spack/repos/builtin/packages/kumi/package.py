@@ -5,6 +5,7 @@
 
 from spack.package import *
 
+
 class Kumi(CMakePackage):
     """KUMI - C++20 Tuple & Tuple-base Algorithms Library."""
 
