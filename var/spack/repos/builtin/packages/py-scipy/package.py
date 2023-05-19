@@ -195,7 +195,8 @@ class PyScipy(PythonPackage):
                 env.set("NPY_DISTUTILS_APPEND_FLAGS", "1")
 
         # https://github.com/scipy/scipy/issues/14935
-        # Newer pythran versions 0.12+ work with newer Intel compilers only for py-scipy
+        # Newer pythran versions 0.12+ work with newer Intel compilers only for py-scipy.
+        # Tested to work: intel@2022.0.1; tested to not work: 19.1.1.217; in between unknown
         if self.spec.satisfies("%intel ^py-pythran") or self.spec.satisfies("%oneapi ^py-pythran"):
             if self.spec["py-pythran"].version < Version("0.12") or \
                     self.spec.satisfies("%intel@:19.99.99"):
