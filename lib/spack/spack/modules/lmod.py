@@ -110,15 +110,16 @@ class LmodConfiguration(BaseConfiguration):
                 specified in the configuration file or the sequence
                 is empty
         """
-        compiler_strs = configuration(self.name).get("core_compilers") or guess_core_compilers(
-            self.name, store=True
-        )
+        compilers = [spack.spec.CompilerSpec(c) for c in configuration(self.name).get("core_compilers")]
 
-        if not compiler_strs:
+        if not compilers:
+            compilers = guess_core_compilers(self.name, store=True)
+
+        if not compilers:
             msg = 'the key "core_compilers" must be set in modules.yaml'
             raise CoreCompilersNotFoundError(msg)
 
-        return [spack.spec.CompilerSpec(s) for s in compiler_strs]
+        return compilers
 
     @property
     def core_specs(self):
