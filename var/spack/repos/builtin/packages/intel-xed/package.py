@@ -29,17 +29,20 @@ class IntelXed(Package):
     version("11.2.0", tag="11.2.0")
 
     # The old 2019.03.01 version (before there were tags).
-    version("10.2019.03", commit="b7231de4c808db821d64f4018d15412640c34113")
+    version("10.2019.03", commit="b7231de4c808db821d64f4018d15412640c34113", deprecated=True)
 
-    resource(name="mbuild", placement="mbuild", git=mbuild_git, branch="main", when="@main")
+    # XED wants the mbuild directory adjacent to xed in the same directory.
+    mdir = join_path("..", "mbuild")
+
+    resource(name="mbuild", placement=mdir, git=mbuild_git, branch="main", when="@main")
 
     # Match xed more closely with the version of mbuild at the time.
     resource(
-        name="mbuild", placement="mbuild", git=mbuild_git, tag="v2022.07.28", when="@2022.07:9999"
+        name="mbuild", placement=mdir, git=mbuild_git, tag="v2022.07.28", when="@2022.07:9999"
     )
 
     resource(
-        name="mbuild", placement="mbuild", git=mbuild_git, tag="v2022.04.17", when="@:2022.06"
+        name="mbuild", placement=mdir, git=mbuild_git, tag="v2022.04.17", when="@:2022.06"
     )
 
     variant("debug", default=False, description="Enable debug symbols")
@@ -68,9 +71,18 @@ class IntelXed(Package):
 
     def install(self, spec, prefix):
         # XED needs PYTHONPATH to find the mbuild directory.
-        mbuild_dir = join_path(self.stage.source_path, "mbuild")
+        mbuild_dir = join_path(self.stage.source_path, "..", "mbuild")
         python_path = os.getenv("PYTHONPATH", "")
         os.environ["PYTHONPATH"] = mbuild_dir + ":" + python_path
+
+        # In 2023.04.16, the xed source directory must be exactly 'xed',
+        # so add a symlink, but don't fail if the link already exists.
+        # See: https://github.com/intelxed/xed/issues/300
+        try:
+            lname = join_path(self.stage.source_path, "..", "xed")
+            os.symlink("spack-src", lname)
+        except:
+            pass
 
         mfile = Executable(join_path(".", "mfile.py"))
 
