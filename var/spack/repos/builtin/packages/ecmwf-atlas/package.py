@@ -20,6 +20,8 @@ class EcmwfAtlas(CMakePackage):
 
     version("master", branch="master")
     version("develop", branch="develop")
+    # To be replaced by tag 0.33.1 (?) once available
+    version("0.33.1-pre-jcsda", sha256="36fb0412c4e56d1189d7beb9dc81bacef6a40c6fb60ae1591a9317f1de90a3a2")
     version("0.33.0", sha256="a91fffe9cecb51c6ee8549cbc20f8279e7b1f67dd90448e6c04c1889281b0600")
     version("0.32.1", sha256="3d1a46cb7f50e1a6ae9e7627c158760e132cc9f568152358e5f78460f1aaf01b")
     version("0.31.1", sha256="fa9274c74c40c2115b9c6120a7040e357b0c7f37b20b601b684d2a83a479cdfb")
@@ -27,6 +29,7 @@ class EcmwfAtlas(CMakePackage):
 
     depends_on("ecbuild", type=("build"))
     depends_on("eckit")
+    # Switch this to cxxstd=17 for 0.33.1+ ?
     depends_on("boost cxxstd=14 visibility=hidden", when="@0.26.0:", type=("build", "run"))
     variant("fckit", default=True)
     depends_on("fckit", when="+fckit")
@@ -58,6 +61,15 @@ class EcmwfAtlas(CMakePackage):
     depends_on("fftw-api", when="+fftw")
 
     variant("fismahigh", default=False, description="Apply patching for FISMA-high compliance")
+
+    # DH* 20230519 - temporary until 0.33.1-jcsda is replaced with a tag
+    def url_for_version(self, version):
+        """Handle version string."""
+        if version == Version("0.33.1-pre-jcsda"):
+            return ("https://github.com/jcsda/atlas/archive/0.33.1-pre-jcsda.tar.gz")
+        else:
+            return ("https://github.com/ecmwf/atlas/archive/{0}.tar.gz".format(version))
+    # *DH 20230519
 
     def cmake_args(self):
         args = [
