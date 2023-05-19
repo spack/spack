@@ -81,7 +81,7 @@ class IntelXed(Package):
         try:
             lname = join_path(self.stage.source_path, "..", "xed")
             os.symlink("spack-src", lname)
-        except:
+        except OSError:
             pass
 
         mfile = Executable(join_path(".", "mfile.py"))
