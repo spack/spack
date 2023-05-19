@@ -130,7 +130,7 @@ def compiler_info(args):
         tty.die("No compilers match spec %s" % cspec)
     else:
         for c in compilers:
-            print(str(c.spec) + ":")
+            print(c.spec.display_str + ":")
             print("\tpaths:")
             for cpath in ["cc", "cxx", "f77", "fc"]:
                 print("\t\t%s = %s" % (cpath, getattr(c, cpath, None)))
@@ -188,7 +188,7 @@ def compiler_list(args):
             os_str += "-%s" % target
         cname = "%s{%s} %s" % (spack.spec.compiler_color, name, os_str)
         tty.hline(colorize(cname), char="-")
-        colify(reversed(sorted(c.spec for c in compilers)))
+        colify(reversed(sorted(c.spec.display_str for c in compilers)))
 
 
 def compiler(parser, args):
