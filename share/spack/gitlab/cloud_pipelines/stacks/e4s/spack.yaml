@@ -71,7 +71,7 @@ spack:
   - conduit
   - datatransferkit
   - dyninst
-  - ecp-data-vis-sdk ~cuda ~rocm +adios2 +ascent +cinema +darshan +faodel +hdf5 +paraview +pnetcdf +sz +unifyfs +veloc +visit +vtkm +zfp
+  - ecp-data-vis-sdk ~cuda ~rocm +adios2 +ascent +cinema +darshan +faodel +hdf5 +paraview +pnetcdf +sz +unifyfs +veloc ~visit +vtkm +zfp ^hdf5@1.14
   - exaworks
   - flecsi
   - flit
@@ -165,7 +165,7 @@ spack:
   - chai ~benchmarks ~tests +cuda ^umpire ~shared
   - cusz +cuda
   - dealii +cuda
-  - ecp-data-vis-sdk +cuda +adios2 +hdf5 +paraview +vtkm +zfp # Removing ascent because Dray is hung in CI. +ascent
+  - ecp-data-vis-sdk +cuda ~ascent +adios2 +hdf5 +paraview +sz +vtkm +zfp  ^hdf5@1.14 # Removing ascent because RAJA build failure
   - flecsi +cuda
   - flux-core +cuda
   - ginkgo +cuda
@@ -199,7 +199,7 @@ spack:
   - cabana +rocm
   - caliper +rocm
   - chai ~benchmarks +rocm
-  - ecp-data-vis-sdk +paraview +vtkm +rocm
+  - ecp-data-vis-sdk +adios2 +hdf5 +paraview +pnetcdf +sz +vtkm +zfp +rocm ^hdf5@1.14 # Excludes ascent for now due to C++ standard issues
   - gasnet +rocm
   - ginkgo +rocm
   - heffte +rocm
