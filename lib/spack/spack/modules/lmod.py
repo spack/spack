@@ -112,10 +112,7 @@ class LmodConfiguration(BaseConfiguration):
         """
         compilers = [
             spack.spec.CompilerSpec(c) for c in configuration(self.name).get("core_compilers")
-        ]
-
-        if not compilers:
-            compilers = guess_core_compilers(self.name, store=True)
+        ] or guess_core_compilers(self.name, store=True)
 
         if not compilers:
             msg = 'the key "core_compilers" must be set in modules.yaml'
