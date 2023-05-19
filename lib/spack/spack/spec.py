@@ -681,12 +681,13 @@ class CompilerSpec(object):
 
     @property
     def display_str(self):
-        out = self.name
-        if self.versions and self.concrete:
-            out += f"@{self.version}"
-        elif self.versions and self.versions != vn.any_version:
-            out += f"@{self.versions}"
-        return out
+        """Equivalent to {compiler.name}{@compiler.version} for Specs, without extra
+        @= for readability."""
+        if self.concrete:
+            return f"{self.name}@{self.version}"
+        elif self.versions != vn.any_version:
+            return f"{self.name}@{self.versions}"
+        return self.name
 
     def __str__(self):
         out = self.name
