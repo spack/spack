@@ -24,7 +24,7 @@ writer_cls = spack.modules.lmod.LmodModulefileWriter
 pytestmark = pytest.mark.skipif(sys.platform == "win32", reason="does not run on windows")
 
 
-@pytest.fixture(params=["clang@12.0.0", "gcc@10.2.1"])
+@pytest.fixture(params=["clang@=12.0.0", "gcc@=10.2.1"])
 def compiler(request):
     return request.param
 
@@ -45,6 +45,18 @@ def provider(request):
 
 @pytest.mark.usefixtures("config", "mock_packages")
 class TestLmod(object):
+    @pytest.mark.regression("37788")
+    @pytest.mark.parametrize("modules_config", ["core_compilers", "core_compilers_at_equal"])
+    def test_layout_for_specs_compiled_with_core_compilers(
+        self, modules_config, module_configuration, factory
+    ):
+        """Tests that specs compiled with core compilers are in the 'Core' folder. Also tests that
+        we can use both ``compiler@version`` and ``compiler@=version`` to specify a core compiler.
+        """
+        module_configuration(modules_config)
+        module, spec = factory("libelf%clang@12.0.0")
+        assert "Core" in module.layout.available_path_parts
+
     def test_file_layout(self, compiler, provider, factory, module_configuration):
         """Tests the layout of files in the hierarchy is the one expected."""
         module_configuration("complex_hierarchy")
@@ -61,10 +73,10 @@ class TestLmod(object):
         # is transformed to r"Core" if the compiler is listed among core
         # compilers
         # Check that specs listed as core_specs are transformed to "Core"
-        if compiler == "clang@3.3" or spec_string == "mpich@3.0.1":
+        if compiler == "clang@=12.0.0" or spec_string == "mpich@3.0.1":
             assert "Core" in layout.available_path_parts
         else:
-            assert compiler.replace("@", "/") in layout.available_path_parts
+            assert compiler.replace("@=", "/") in layout.available_path_parts
 
         # Check that the provider part instead has always an hash even if
         # hash has been disallowed in the configuration file
@@ -95,7 +107,7 @@ class TestLmod(object):
         provides = module.conf.provides
 
         assert "compiler" in provides
-        assert provides["compiler"] == spack.spec.CompilerSpec("oneapi@3.0")
+        assert provides["compiler"] == spack.spec.CompilerSpec("oneapi@=3.0")
 
     def test_simple_case(self, modulefile_content, module_configuration):
         """Tests the generation of a simple Lua module file."""
@@ -124,12 +136,10 @@ class TestLmod(object):
 
         assert len([x for x in content if "depends_on(" in x]) == 5
 
-    # DEPRECATED: remove blacklist in v0.20
-    @pytest.mark.parametrize("config_name", ["alter_environment", "blacklist_environment"])
-    def test_alter_environment(self, modulefile_content, module_configuration, config_name):
+    def test_alter_environment(self, modulefile_content, module_configuration):
         """Tests modifications to run-time environment."""
 
-        module_configuration(config_name)
+        module_configuration("alter_environment")
         content = modulefile_content("mpileaks platform=test target=x86_64")
 
         assert len([x for x in content if x.startswith('prepend_path("CMAKE_PREFIX_PATH"')]) == 0
@@ -182,11 +192,9 @@ class TestLmod(object):
         )
         assert help_msg in "".join(content)
 
-    @pytest.mark.parametrize("config_name", ["exclude", "blacklist"])
-    def test_exclude(self, modulefile_content, module_configuration, config_name):
+    def test_exclude(self, modulefile_content, module_configuration):
         """Tests excluding the generation of selected modules."""
-
-        module_configuration(config_name)
+        module_configuration("exclude")
         content = modulefile_content(mpileaks_spec_string)
 
         assert len([x for x in content if "depends_on(" in x]) == 1
@@ -335,7 +343,7 @@ class TestLmod(object):
     def test_modules_relative_to_view(
         self, tmpdir, modulefile_content, module_configuration, install_mockery, mock_fetch
     ):
-        with ev.Environment(str(tmpdir), with_view=True) as e:
+        with ev.create_in_dir(str(tmpdir), with_view=True) as e:
             module_configuration("with_view")
             install("--add", "cmake")
 

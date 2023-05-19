@@ -163,7 +163,7 @@ def env_activate(args):
         env = create_temp_env_directory()
         env_path = os.path.abspath(env)
         short_name = os.path.basename(env_path)
-        ev.Environment(env).write(regenerate=False)
+        ev.create_in_dir(env).write(regenerate=False)
 
     # Managed environment
     elif ev.exists(env_name_or_dir) and not args.dir:
@@ -283,7 +283,7 @@ def env_create_setup_parser(subparser):
         "envfile",
         nargs="?",
         default=None,
-        help="optional init file; can be spack.yaml or spack.lock",
+        help="either a lockfile (must end with '.json' or '.lock') or a manifest file.",
     )
 
 
@@ -292,7 +292,7 @@ def env_create(args):
         # Expand relative paths provided on the command line to the current working directory
         # This way we interpret `spack env create --with-view ./view --dir ./env` as
         # a view in $PWD/view, not $PWD/env/view. This is different from specifying a relative
-        # path in spack.yaml, which is resolved relative to the environment file.
+        # path in the manifest, which is resolved relative to the manifest file's location.
         with_view = os.path.abspath(args.with_view)
     elif args.without_view:
         with_view = False
@@ -301,40 +301,47 @@ def env_create(args):
         # object could choose to enable a view by default. False means that
         # the environment should not include a view.
         with_view = None
-    if args.envfile:
-        with open(args.envfile) as f:
-            _env_create(
-                args.create_env, f, args.dir, with_view=with_view, keep_relative=args.keep_relative
-            )
-    else:
-        _env_create(args.create_env, None, args.dir, with_view=with_view)
+
+    env = _env_create(
+        args.create_env,
+        init_file=args.envfile,
+        dir=args.dir,
+        with_view=with_view,
+        keep_relative=args.keep_relative,
+    )
+
+    # Generate views, only really useful for environments created from spack.lock files.
+    env.regenerate_views()
 
 
-def _env_create(name_or_path, init_file=None, dir=False, with_view=None, keep_relative=False):
+def _env_create(name_or_path, *, init_file=None, dir=False, with_view=None, keep_relative=False):
     """Create a new environment, with an optional yaml description.
 
     Arguments:
         name_or_path (str): name of the environment to create, or path to it
         init_file (str or file): optional initialization file -- can be
-            spack.yaml or spack.lock
+            a JSON lockfile (*.lock, *.json) or YAML manifest file
         dir (bool): if True, create an environment in a directory instead
             of a named environment
         keep_relative (bool): if True, develop paths are copied verbatim into
             the new environment file, otherwise they may be made absolute if the
             new environment is in a different location
     """
-    if dir:
-        env = ev.Environment(name_or_path, init_file, with_view, keep_relative)
-        env.write()
-        tty.msg("Created environment in %s" % env.path)
-        tty.msg("You can activate this environment with:")
-        tty.msg("  spack env activate %s" % env.path)
-    else:
-        env = ev.create(name_or_path, init_file, with_view, keep_relative)
-        env.write()
+    if not dir:
+        env = ev.create(
+            name_or_path, init_file=init_file, with_view=with_view, keep_relative=keep_relative
+        )
         tty.msg("Created environment '%s' in %s" % (name_or_path, env.path))
         tty.msg("You can activate this environment with:")
         tty.msg("  spack env activate %s" % (name_or_path))
+        return env
+
+    env = ev.create_in_dir(
+        name_or_path, init_file=init_file, with_view=with_view, keep_relative=keep_relative
+    )
+    tty.msg("Created environment in %s" % env.path)
+    tty.msg("You can activate this environment with:")
+    tty.msg("  spack env activate %s" % env.path)
     return env
 
 
@@ -351,8 +358,7 @@ def env_remove(args):
     """Remove a *named* environment.
 
     This removes an environment managed by Spack. Directory environments
-    and `spack.yaml` files embedded in repositories should be removed
-    manually.
+    and manifests embedded in repositories should be removed manually.
     """
     read_envs = []
     for env_name in args.rm_env:
@@ -431,21 +437,22 @@ def env_view_setup_parser(subparser):
 def env_view(args):
     env = ev.active_environment()
 
-    if env:
-        if args.action == ViewAction.regenerate:
-            env.regenerate_views()
-        elif args.action == ViewAction.enable:
-            if args.view_path:
-                view_path = args.view_path
-            else:
-                view_path = env.view_path_default
-            env.update_default_view(view_path)
-            env.write()
-        elif args.action == ViewAction.disable:
-            env.update_default_view(None)
-            env.write()
-    else:
+    if not env:
         tty.msg("No active environment")
+        return
+
+    if args.action == ViewAction.regenerate:
+        env.regenerate_views()
+    elif args.action == ViewAction.enable:
+        if args.view_path:
+            view_path = args.view_path
+        else:
+            view_path = env.view_path_default
+        env.update_default_view(view_path)
+        env.write()
+    elif args.action == ViewAction.disable:
+        env.update_default_view(path_or_bool=False)
+        env.write()
 
 
 #
@@ -563,7 +570,7 @@ def env_revert(args):
     # Check that both the spack.yaml and the backup exist, the inform user
     # on what is going to happen and ask for confirmation
     if not os.path.exists(manifest_file):
-        msg = "cannot fine the manifest file of the environment [file={0}]"
+        msg = "cannot find the manifest file of the environment [file={0}]"
         tty.die(msg.format(manifest_file))
     if not os.path.exists(backup_file):
         msg = "cannot find the old manifest file to be restored [file={0}]"
