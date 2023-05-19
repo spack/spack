@@ -24,10 +24,7 @@ class KokkosNvccWrapper(Package):
     version("master", branch="master")
     version("develop", branch="develop")
 
-    variant("mpi", default=True, description="use with MPI as the underlying compiler")
     depends_on("cuda")
-    depends_on("mpi", when="+mpi")
-    depends_on("cmake@3.10:", type="build")
 
     def install(self, spec, prefix):
         src = os.path.join("bin", "nvcc_wrapper")
