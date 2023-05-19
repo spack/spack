@@ -17,6 +17,8 @@ class LibpressioTools(CMakePackage):
     tags = ["e4s"]
 
     version("master", branch="master")
+    version("0.3.0", sha256="2f309557df3e8df9e492691213933865a5dbfb051c03404e33918f4765223025")
+    version("0.2.0", sha256="75048950f0dfa0e20f2651991875822f36fceb84bdda12d1c0361d49912392b8")
     version("0.1.6", sha256="a67a364f46dea29ff1b3e5c52c0a5abf2d9d53412fb8d424f6bd71252bfa7792")
     version("0.1.5", sha256="b35f495fae53df87dd2abf58c0c51ed17710b16aaa2d0842a543fddd3b2a8035")
     version("0.1.4", sha256="39adc4b09a63548a416ee4b1dcc87ec8578b15a176a11a2845c276c6c211f2d0")
@@ -43,6 +45,7 @@ class LibpressioTools(CMakePackage):
     depends_on("boost")
 
     # 0.1.0 changed a bunch of things in the build system, make sure everything is up to date
+    depends_on("libpressio@0.89.0:", when="@0.2.0:")
     depends_on("libpressio@0.88.0:", when="@0.1.6:")
     depends_on("libpressio@0.85.0:", when="@0.1.0:0.1.5")
     depends_on("libpressio-opt@0.13.3:", when="@0.1.0:+opt")
