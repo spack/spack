@@ -110,7 +110,9 @@ class LmodConfiguration(BaseConfiguration):
                 specified in the configuration file or the sequence
                 is empty
         """
-        compilers = [spack.spec.CompilerSpec(c) for c in configuration(self.name).get("core_compilers")]
+        compilers = [
+            spack.spec.CompilerSpec(c) for c in configuration(self.name).get("core_compilers")
+        ]
 
         if not compilers:
             compilers = guess_core_compilers(self.name, store=True)
