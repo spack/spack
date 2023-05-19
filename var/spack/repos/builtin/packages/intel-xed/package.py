@@ -41,9 +41,7 @@ class IntelXed(Package):
         name="mbuild", placement=mdir, git=mbuild_git, tag="v2022.07.28", when="@2022.07:9999"
     )
 
-    resource(
-        name="mbuild", placement=mdir, git=mbuild_git, tag="v2022.04.17", when="@:2022.06"
-    )
+    resource(name="mbuild", placement=mdir, git=mbuild_git, tag="v2022.04.17", when="@:2022.06")
 
     variant("debug", default=False, description="Enable debug symbols")
     variant("pic", default=False, description="Compile with position independent code.")
