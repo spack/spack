@@ -4,6 +4,7 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 from spack.package import *
+from spack.util.environment import is_system_path
 
 
 class Gnupg(AutotoolsPackage):
@@ -143,7 +144,6 @@ class Gnupg(AutotoolsPackage):
             "--disable-regex",
             "--with-zlib=" + self.spec["zlib"].prefix,
             "--without-tar",
-            "--without-libiconv-prefix",
             "--without-readline",
         ]
 
@@ -159,9 +159,12 @@ class Gnupg(AutotoolsPackage):
                     "--with-libassuan-prefix=" + self.spec["libassuan"].prefix,
                     "--with-ksba-prefix=" + self.spec["libksba"].prefix,
                     "--with-npth-prefix=" + self.spec["npth"].prefix,
-                    "--with-libiconv-prefix=" + self.spec["iconv"].prefix,
                 ]
             )
+            if self.spec["iconv"].name == "libc":
+                args.append("--without-libiconv-prefix")
+            elif not is_system_path(self.spec["iconv"].prefix):
+                args.append("--with-libiconv-prefix=" + self.spec["iconv"].prefix)
 
         if self.spec.satisfies("@:1"):
             args.extend(

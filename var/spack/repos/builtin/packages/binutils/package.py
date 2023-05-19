@@ -110,6 +110,13 @@ class Binutils(AutotoolsPackage, GNUMirrorPackage):
         multi=True,
         description="Build shared libs, static libs or both",
     )
+    variant(
+        "compress_debug_sections",
+        default="zlib",
+        values=(conditional("zstd", when="@2.40:"), "zlib", "none"),
+        description="Enable debug section compression by default in ld, gas, gold.",
+        when="@2.26:",
+    )
 
     patch("cr16.patch", when="@:2.29.1")
     patch("update_symbol-2.26.patch", when="@2.26")
@@ -250,6 +257,15 @@ class AutotoolsBuilder(spack.build_systems.autotools.AutotoolsBuilder):
         else:
             args.append("--disable-pgo-build")
 
+        # Compressed debug symbols by default. Note that the "default" flag only applies
+        # to 2.40: but since it is ignored in earlier versions, that is not a problem.
+        if self.spec.satisfies("compress_debug_sections=zlib"):
+            args.append("--enable-compressed-debug-sections=all")
+            args.append("--enable-default-compressed-debug-sections-algorithm=zlib")
+        elif self.spec.satisfies("compress_debug_sections=zstd"):
+            args.append("--enable-compressed-debug-sections=all")
+            args.append("--enable-default-compressed-debug-sections-algorithm=zstd")
+
         # To avoid namespace collisions with Darwin/BSD system tools,
         # prefix executables with "g", e.g., gar, gnm; see Homebrew
         # https://github.com/Homebrew/homebrew-core/blob/master/Formula/binutils.rb
@@ -269,9 +285,12 @@ class AutotoolsBuilder(spack.build_systems.autotools.AutotoolsBuilder):
         # also grab the headers from the bfd directory
         install(join_path(self.build_directory, "bfd", "*.h"), extradir)
 
-    def setup_build_environment(self, env):
-        if self.spec.satisfies("%cce"):
-            env.append_flags("LDFLAGS", "-Wl,-z,muldefs")
-
-        if "+nls" in self.spec:
-            env.append_flags("LDFLAGS", "-lintl")
+    def flag_handler(self, name, flags):
+        spec = self.spec
+        if name == "ldflags":
+            if spec.satisfies("%cce"):
+                flags.append("-Wl,-z,muldefs")
+        elif name == "ldlibs":
+            if "+nls" in self.spec and "intl" in self.spec["gettext"].libs.names:
+                flags.append("-lintl")
+        return self.build_system_flags(name, flags)

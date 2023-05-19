@@ -41,12 +41,9 @@ A build matrix showing which packages are working on which systems is shown belo
 
       .. code-block:: console
 
-         yum update -y
-         yum install -y epel-release
-         yum update -y
-         yum --enablerepo epel groupinstall -y "Development Tools"
-         yum --enablerepo epel install -y curl findutils gcc-c++ gcc gcc-gfortran git gnupg2 hostname iproute redhat-lsb-core make patch python3 python3-pip python3-setuptools unzip
-         python3 -m pip install boto3
+         dnf install epel-release
+         dnf group install "Development Tools"
+         dnf install curl findutils gcc-gfortran gnupg2 hostname iproute redhat-lsb-core python3 python3-pip python3-setuptools unzip python3-boto3
 
    .. tab-item:: macOS Brew
 

@@ -37,14 +37,6 @@ class Adios2(CMakePackage, CudaPackage):
     version("2.4.0", sha256="50ecea04b1e41c88835b4b3fd4e7bf0a0a2a3129855c9cc4ba6cf6a1575106e2")
     version("2.3.1", sha256="3bf81ccc20a7f2715935349336a76ba4c8402355e1dc3848fcd6f4c3c5931893")
 
-    # General build options
-    variant(
-        "build_type",
-        default="Release",
-        description="CMake build type",
-        values=("Debug", "Release", "RelWithDebInfo", "MinSizeRel"),
-    )
-
     # There's not really any consistency about how static and shared libs are
     # implemented across spack.  What we're trying to support is specifically three
     # library build types:
