@@ -37,7 +37,7 @@ class PyPennylaneLightningKokkos(CMakePackage, PythonExtension, CudaPackage, ROC
         deflt_bool, descr = backends[backend]
         variant(backend.lower(), default=deflt_bool, description=descr)
         depends_on(
-            f"kokkos@:3.7.01+{backend.lower()}", when=f"+{backend.lower()}", type=("run", "build")
+            f"kokkos@3.7+{backend.lower()}", when=f"+{backend.lower()}", type=("run", "build")
         )
 
     # CUDA
