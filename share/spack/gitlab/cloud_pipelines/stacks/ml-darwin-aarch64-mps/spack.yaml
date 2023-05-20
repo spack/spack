@@ -98,7 +98,7 @@ spack:
         image: no-image
         tags: [spack, public]
     - build-job:
-        tags:  [ "macos-ventura", "apple-clang-14", "aarch64-macos" ]
+        tags: [ "macos-ventura", "apple-clang-14", "aarch64-macos" ]
         script::
         - - spack compiler find
           - cd ${SPACK_CONCRETE_ENV_DIR}

@@ -680,11 +680,11 @@ ml-linux-x86_64-rocm-build:
 # Machine Learning - Darwin aarch64 (CPU)
 ########################################
 .ml-darwin-aarch64-cpu:
-  tags: [ "macos-ventura", "apple-clang-14", "aarch64-macos" ]
   variables:
     SPACK_CI_STACK_NAME: ml-darwin-aarch64-cpu
 
 ml-darwin-aarch64-cpu-generate:
+  tags: [ "macos-ventura", "apple-clang-14", "aarch64-macos" ]
   extends: [ ".ml-darwin-aarch64-cpu", ".darwin-generate"]
 
 ml-darwin-aarch64-cpu-build:
@@ -702,11 +702,11 @@ ml-darwin-aarch64-cpu-build:
 # Machine Learning - Darwin aarch64 (MPS)
 ########################################
 .ml-darwin-aarch64-mps:
-  tags: [ "macos-ventura", "apple-clang-14", "aarch64-macos" ]
   variables:
     SPACK_CI_STACK_NAME: ml-darwin-aarch64-mps
 
 ml-darwin-aarch64-mps-generate:
+  tags: [ "macos-ventura", "apple-clang-14", "aarch64-macos" ]
   extends: [ ".ml-darwin-aarch64-mps", ".darwin-generate"]
 
 ml-darwin-aarch64-mps-build:
