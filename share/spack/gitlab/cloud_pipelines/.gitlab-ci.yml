@@ -676,17 +676,6 @@ ml-linux-x86_64-rocm-build:
     - artifacts: True
       job: ml-linux-x86_64-rocm-generate
 
-ml-linux-x86_64-rocm-protected-build:
-  extends: [ ".protected-build", ".ml-linux-x86_64-rocm" ]
-  trigger:
-    include:
-      - artifact: jobs_scratch_dir/cloud-ci-pipeline.yml
-        job: ml-linux-x86_64-rocm-protected-generate
-    strategy: depend
-  needs:
-    - artifacts: True
-      job: ml-linux-x86_64-rocm-protected-generate
-
 ########################################
 # Machine Learning - Darwin aarch64 (CPU)
 ########################################
