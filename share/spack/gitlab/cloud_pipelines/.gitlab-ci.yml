@@ -196,12 +196,6 @@ default:
   extends: [ ".base-job", ".generate" ]
   tags: ["spack", "public", "medium", "aarch64"]
 
-.pr-generate-deprecated:
-  extends: [ ".pr", ".generate-deprecated" ]
-
-.protected-generate-deprecated:
-  extends: [ ".protected", ".generate-deprecated" ]
-
 .build:
   extends: [ ".base-job" ]
   stage: build
