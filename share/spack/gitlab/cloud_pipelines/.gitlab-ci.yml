@@ -688,7 +688,7 @@ ml-darwin-aarch64-cpu-generate:
   extends: [ ".ml-darwin-aarch64-cpu", ".darwin-generate"]
 
 ml-darwin-aarch64-cpu-build:
-  extends: [ ".ml-darwin-aarch64-cpu", ".darwin-build" ]
+  extends: [ ".ml-darwin-aarch64-cpu", ".build" ]
   trigger:
     include:
       - artifact: jobs_scratch_dir/cloud-ci-pipeline.yml
