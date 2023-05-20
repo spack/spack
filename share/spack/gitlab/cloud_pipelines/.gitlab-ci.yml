@@ -677,28 +677,6 @@ ml-linux-x86_64-rocm-build:
       job: ml-linux-x86_64-rocm-generate
 
 ########################################
-# Machine Learning - Darwin aarch64 (CPU)
-########################################
-.ml-darwin-aarch64-cpu:
-  variables:
-    SPACK_CI_STACK_NAME: ml-darwin-aarch64-cpu
-
-ml-darwin-aarch64-cpu-generate:
-  tags: [ "macos-ventura", "apple-clang-14", "aarch64-macos" ]
-  extends: [ ".ml-darwin-aarch64-cpu", ".darwin-generate"]
-
-ml-darwin-aarch64-cpu-build:
-  extends: [ ".ml-darwin-aarch64-cpu", ".build" ]
-  trigger:
-    include:
-      - artifact: jobs_scratch_dir/cloud-ci-pipeline.yml
-        job: ml-darwin-aarch64-cpu-generate
-    strategy: depend
-  needs:
-    - artifacts: True
-      job: ml-darwin-aarch64-cpu-generate
-
-########################################
 # Machine Learning - Darwin aarch64 (MPS)
 ########################################
 .ml-darwin-aarch64-mps:

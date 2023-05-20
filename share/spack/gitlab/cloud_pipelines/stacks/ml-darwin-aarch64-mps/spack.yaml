@@ -65,9 +65,9 @@ spack:
 
   # TensorFlow
   # - py-tensorflow               # bazel codesign
-  - py-tensorflow-datasets
+  # - py-tensorflow-datasets      # bazel codesign
   # - py-tensorflow-hub           # bazel codesign
-  - py-tensorflow-metadata
+  # - py-tensorflow-metadata      # bazel codesign
   # - py-tensorflow-estimator     # bazel codesign
   # - py-tensorflow-probability   # py-dm-tree due to bazel codesign
 
