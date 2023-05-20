@@ -20,7 +20,7 @@ class PyArgcomplete(PythonPackage):
 
     depends_on("py-setuptools", type="build")
     depends_on("py-importlib-metadata@0.23:6", when="@3.0.6: ^python@:3.7", type=("build", "run"))
-    depends_on("py-importlib-metadata@0.23:4", when="@1.12.3: ^python@:3.7", type=("build", "run"))
+    depends_on("py-importlib-metadata@0.23:4", when="@1.12.3:2 ^python@:3.7", type=("build", "run"))
     depends_on("py-importlib-metadata@0.23:3", when="@1.12.2 ^python@:3.7", type=("build", "run"))
     depends_on("py-importlib-metadata@0.23:2", when="@1.12.1 ^python@:3.7", type=("build", "run"))
     depends_on("py-importlib-metadata@0.23:1", when="@1.12.0 ^python@:3.7", type=("build", "run"))
