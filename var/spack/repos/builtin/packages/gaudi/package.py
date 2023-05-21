@@ -53,6 +53,7 @@ class Gaudi(CMakePackage):
     # fixes for the cmake config which could not find newer boost versions
     patch("link_target_fixes.patch", when="@33.0:34")
     patch("link_target_fixes32.patch", when="@:32.2")
+    patch("fmt_fix.patch", when="@36.6:36.12 ^fmt@10:")
 
     # These dependencies are needed for a minimal Gaudi build
     depends_on("aida")
