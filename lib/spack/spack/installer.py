@@ -325,11 +325,12 @@ def _install_from_cache(pkg, cache_only, explicit, unsigned=False):
 
         tty.msg("{0}: installing from source".format(pre))
         return False
+    with t.measure("post-install"):
+        spack.hooks.post_install(pkg.spec, explicit)
     t.stop()
     tty.debug("Successfully extracted {0} from binary cache".format(pkg_id))
     _print_timer(pre=_log_prefix(pkg.name), pkg_id=pkg_id, timer=t)
     _print_installed_pkg(pkg.spec.prefix)
-    spack.hooks.post_install(pkg.spec, explicit)
     return True
 
 
@@ -1954,9 +1955,8 @@ class BuildProcessInstaller(object):
                 self._real_install()
 
             # Run post install hooks before build stage is removed.
-            self.timer.start("post-install")
-            spack.hooks.post_install(self.pkg.spec, self.explicit)
-            self.timer.stop("post-install")
+            with self.timer.measure("post-install"):
+                spack.hooks.post_install(self.pkg.spec, self.explicit)
 
             # Stop the timer and save results
             self.timer.stop()
