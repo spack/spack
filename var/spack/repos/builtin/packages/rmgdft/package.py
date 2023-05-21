@@ -16,7 +16,7 @@ class Rmgdft(CMakePackage):
     maintainers("elbriggs")
     tags = ["ecp", "ecp-apps"]
     version("master", branch="master")
-    version("5.3.0", tag="v5.3.0")
+    version("5.3.1", tag="v5.3.1")
     version("5.2.0", tag="v5.2.0")
     version("5.0.5", tag="v5.0.5")
     version("5.0.4", tag="v5.0.4")
