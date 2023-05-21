@@ -16,14 +16,11 @@ class Rmgdft(CMakePackage):
     maintainers("elbriggs")
     tags = ["ecp", "ecp-apps"]
     version("master", branch="master")
+    version("5.3.0", tag="v5.3.0")
     version("5.2.0", tag="v5.2.0")
     version("5.0.5", tag="v5.0.5")
     version("5.0.4", tag="v5.0.4")
     version("5.0.1", tag="v5.0.1")
-    version("4.3.1", tag="v4.3.1")
-    version("4.3.0", tag="v4.3.0")
-    version("4.2.2", tag="v4.2.2")
-    version("4.2.1", tag="v4.2.1")
 
     variant(
         "build_type",
@@ -35,6 +32,8 @@ class Rmgdft(CMakePackage):
     variant("qmcpack", default=True, description="Build with qmcpack interface.")
 
     variant("local_orbitals", default=True, description="Build O(N) variant.")
+
+    variant("cuda", default=False, description="Build cuda enabled variant.")
 
     # Normally we want this but some compilers (e.g. IBM) are
     # very slow when this is on so provide the option to disable
@@ -63,6 +62,7 @@ class Rmgdft(CMakePackage):
     depends_on("fftw-api@3")
     depends_on("mpi")
     depends_on("hdf5")
+    depends_on("cuda", when="+cuda")
 
     # RMG is a hybrid MPI/threads code and performance is
     # highly dependent on the threading model of the blas
@@ -75,9 +75,14 @@ class Rmgdft(CMakePackage):
     @property
     def build_targets(self):
         spec = self.spec
-        targets = ["rmg-cpu"]
-        if "+local_orbitals" in spec:
-            targets.append("rmg-on-cpu")
+        if "+cuda" in spec:
+            targets = ["rmg-gpu"]
+            if "+local_orbitals" in spec:
+                targets.append("rmg-on-gpu")
+        else:
+            targets = ["rmg-cpu"]
+            if "+local_orbitals" in spec:
+                targets.append("rmg-on-cpu")
         return targets
 
     def cmake_args(self):
@@ -91,6 +96,8 @@ class Rmgdft(CMakePackage):
             args.append("-DUSE_INTERNAL_PSEUDOPOTENTIALS=1")
         else:
             args.append("-DUSE_INTERNAL_PSEUDOPOTENTIALS=0")
+        if "+cuda" in spec:
+            args.append("-DRMG_CUDA_ENABLED=1")
         return args
 
     def install(self, spec, prefix):
@@ -99,9 +106,14 @@ class Rmgdft(CMakePackage):
         mkdirp(prefix.share.tests.RMG)
 
         with working_dir(self.build_directory):
-            install("rmg-cpu", prefix.bin)
-            if "+local_orbitals" in spec:
-                install("rmg-on-cpu", prefix.bin)
+            if "+cuda" in spec:
+                install("rmg-gpu", prefix.bin)
+                if "+local_orbitals" in spec:
+                    install("rmg-on-gpu", prefix.bin)
+            else:
+                install("rmg-cpu", prefix.bin)
+                if "+local_orbitals" in spec:
+                    install("rmg-on-cpu", prefix.bin)
 
         # install tests
         with working_dir(self.build_directory):
