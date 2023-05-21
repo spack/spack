@@ -18,6 +18,7 @@ class Arborx(CMakePackage, CudaPackage, ROCmPackage):
     maintainers("aprokop")
 
     version("master", branch="master")
+    version("1.4", sha256="803a1018a6305cf3fea161172b3ada49537f59261279d91c2abbcce9492ee7af")
     version("1.3", sha256="3f1e17f029a460ab99f8396e2772cec908eefc4bf3868c8828907624a2d0ce5d")
     version("1.2", sha256="ed1939110b2330b7994dcbba649b100c241a2353ed2624e627a200a398096c20")
     version("1.1", sha256="2b5f2d2d5cec57c52f470c2bf4f42621b40271f870b4f80cb57e52df1acd90ce")
@@ -61,7 +62,8 @@ class Arborx(CMakePackage, CudaPackage, ROCmPackage):
     # Standalone Kokkos
     depends_on("kokkos@3.1.00:", when="~trilinos")
     depends_on("kokkos@3.4.00:", when="@1.2~trilinos")
-    depends_on("kokkos@3.6.00:", when="@1.3:~trilinos")
+    depends_on("kokkos@3.6.00:", when="@1.3~trilinos")
+    depends_on("kokkos@3.7.01:", when="@1.4:~trilinos")
     for backend in kokkos_backends:
         depends_on("kokkos+%s" % backend.lower(), when="~trilinos+%s" % backend.lower())
 
@@ -83,7 +85,8 @@ class Arborx(CMakePackage, CudaPackage, ROCmPackage):
     depends_on("trilinos+kokkos", when="+trilinos")
     depends_on("trilinos+openmp", when="+trilinos+openmp")
     depends_on("trilinos@13.2.0:", when="@1.2+trilinos")
-    depends_on("trilinos@13.4.0:", when="@1.3:+trilinos")
+    depends_on("trilinos@13.4.0:", when="@1.3+trilinos")
+    depends_on("trilinos@14.0.0:", when="@1.4:+trilinos")
     conflicts("~serial", when="+trilinos")
     conflicts("+cuda", when="+trilinos")
 
