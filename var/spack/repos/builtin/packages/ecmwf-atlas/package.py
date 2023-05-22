@@ -29,7 +29,7 @@ class EcmwfAtlas(CMakePackage):
 
     depends_on("ecbuild", type=("build"))
     depends_on("eckit")
-    depends_on("eckit@1.23.1:", when="@0.33.1:")
+    depends_on("eckit@1.23.2:", when="@0.33.1:")
     # Switch this to cxxstd=17 for 0.33.1+ ?
     depends_on("boost cxxstd=14 visibility=hidden", when="@0.26.0:", type=("build", "run"))
     variant("fckit", default=True)
