@@ -19,7 +19,12 @@ class PyHuggingfaceHub(PythonPackage):
     version("0.0.10", sha256="556765e4c7edd2d2c4c733809bae1069dca20e10ff043870ec40d53e498efae2")
     version("0.0.8", sha256="be5b9a7ed36437bb10a780d500154d426798ec16803ff3406f7a61107e4ebfc2")
 
-    variant("cli", default=False, when="@0.10:", description="Install dependencies for CLI-specific features")
+    variant(
+        "cli",
+        default=False,
+        when="@0.10:",
+        description="Install dependencies for CLI-specific features",
+    )
 
     depends_on("py-setuptools", type="build")
     depends_on("py-filelock", type=("build", "run"))
