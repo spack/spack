@@ -105,14 +105,6 @@ spack:
           - spack --color=always --backtrace ci rebuild --tests > >(tee ${SPACK_ARTIFACTS_ROOT}/user_data/pipeline_out.txt) 2> >(tee ${SPACK_ARTIFACTS_ROOT}/user_data/pipeline_err.txt >&2)
         after_script:
         - - cat /proc/loadavg || true
-    - signing-job:
-        image: { "name": "ghcr.io/spack/notary:latest", "entrypoint": [""] }
-        tags: ["aws"]
-        script:
-        - - aws s3 sync --exclude "*" --include "*spec.json*" ${SPACK_REMOTE_MIRROR_OVERRIDE}/build_cache /tmp
-          - /sign.sh
-          - aws s3 sync --exclude "*" --include "*spec.json.sig*" /tmp ${SPACK_REMOTE_MIRROR_OVERRIDE}/build_cache
-          - aws s3 cp /tmp/public_keys ${SPACK_REMOTE_MIRROR_OVERRIDE}/build_cache/_pgp --recursive --exclude "*" --include "*.pub"
     - any-job:
         image: "ghcr.io/spack/e4s-ubuntu-18.04:v2021-10-18"
         tags: ["spack"]
