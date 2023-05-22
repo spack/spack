@@ -684,7 +684,7 @@ ml-linux-x86_64-rocm-build:
     SPACK_CI_STACK_NAME: e4s-cray
 
 e4s-cray-generate:
-  tags: [ "craype", "cce@15.0.1" ]
+  tags: [ "craype", "cce@15.0.1", "zen4" ]
   extends: [ ".generate", .e4s-cray, ".tags-x86_64_v4" ]
 
 e4s-cray-build:
