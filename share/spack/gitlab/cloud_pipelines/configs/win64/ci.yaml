@@ -14,7 +14,7 @@ ci:
       - spack config add "config:install_tree:root:C:\ci\${CI_COMMIT_SHA}"
       - md ${SPACK_ARTIFACTS_ROOT}/user_data
       - spack --backtrace ci rebuild > >(tee ${SPACK_ARTIFACTS_ROOT}/user_data/pipeline_out.txt) 2> >(tee ${SPACK_ARTIFACTS_ROOT}/user_data/pipeline_err.txt >&2)
-    build-job-remove:
+  - build-job-remove:
       after_script: [no-after-script-on-windows]
   - signing-job-remove:
       script: [no-signing-on-windows]
