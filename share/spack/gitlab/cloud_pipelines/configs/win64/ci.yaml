@@ -15,6 +15,6 @@ ci:
       - md ${SPACK_ARTIFACTS_ROOT}/user_data
       - spack --backtrace ci rebuild > >(tee ${SPACK_ARTIFACTS_ROOT}/user_data/pipeline_out.txt) 2> >(tee ${SPACK_ARTIFACTS_ROOT}/user_data/pipeline_err.txt >&2)
     build-job-remove:
-      after_script:: [no-after-script-on-windows]
+      after_script: [no-after-script-on-windows]
   - signing-job-remove:
-      script:: [no-signing-on-windows]
+      script: [no-signing-on-windows]
