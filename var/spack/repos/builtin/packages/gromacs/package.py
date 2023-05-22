@@ -431,7 +431,7 @@ class CMakeBuilder(spack.build_systems.cmake.CMakeBuilder):
             options.append("-DGMX_INSTALL_LEGACY_API=ON")
 
         if self.spec.satisfies("%oneapi") or self.spec.satisfies("%intel"):
-            with open (".".join([os.environ["SPACK_CXX"], "cfg"]), "r") as f:
+            with open(".".join([os.environ["SPACK_CXX"], "cfg"]), "r") as f:
                 options.append("-DCMAKE_CXX_FLAGS={}".format(f.read()))
 
         if "+double" in self.spec:
