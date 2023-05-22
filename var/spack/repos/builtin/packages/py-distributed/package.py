@@ -30,6 +30,7 @@ class PyDistributed(PythonPackage):
         "distributed.diagnostics",
     ]
 
+    version("2023.4.1", sha256="0140376338efdcf8db1d03f7c1fdbb5eab2a337b03e955d927c116824ee94ac5")
     version("2022.10.2", sha256="53f0a5bf6efab9a5ab3345cd913f6d3f3d4ea444ee2edbea331c7fef96fd67d0")
     version("2022.2.1", sha256="fb62a75af8ef33bbe1aa80a68c01a33a93c1cd5a332dd017ab44955bf7ecf65b")
     version("2021.6.2", sha256="d7d112a86ab049dcefa3b21fd1baea4212a2c03d22c24bd55ad38d21a7f5d148")
@@ -50,22 +51,29 @@ class PyDistributed(PythonPackage):
     depends_on("python@3.6:", when="@2:", type=("build", "run"))
     depends_on("python@3.7:", when="@2021.4.1:", type=("build", "run"))
     depends_on("python@3.8:", when="@2022.2.1:", type=("build", "run"))
-    depends_on("py-setuptools", type=("build", "run"))
+    depends_on("py-setuptools", type="build")
+    depends_on("py-setuptools@62.6:", type="build", when="@2023.4.1:")
+    depends_on("py-versioneer@0.28+toml", type="build", when="@2023.4.1:")
 
     # In Spack py-dask+distributed depends on py-distributed, not the other way around.
     # Hence, no need for depends_on("py-dask", ...)
     depends_on("py-click@6.6:", type=("build", "run"))
+    depends_on("py-click@8.0:", type=("build", "run"), when="@2023.4.1:")
     depends_on("py-cloudpickle@0.2.2:", type=("build", "run"), when="@:2.16.0")
     depends_on("py-cloudpickle@1.3.0:", type=("build", "run"), when="@2.17.0:2.20.0")
     depends_on("py-cloudpickle@1.5.0:", type=("build", "run"), when="@2.21.0:")
     depends_on("py-jinja2", type=("build", "run"), when="@2022.2.1:")
+    depends_on("py-jinja2@2.10.3", type=("build", "run"), when="@2023.4.1:")
     depends_on("py-locket@1:", type=("build", "run"), when="@2022.2.1:")
     depends_on("py-msgpack", type=("build", "run"), when="@:2.10.0")
     depends_on("py-msgpack@0.6.0:", type=("build", "run"), when="@2.11.0:")
+    depends_on("py-msgpack@1.0.0:", type=("build", "run"), when="@2023.4.1:")
     depends_on("py-packaging@20.0:", type=("build", "run"), when="@2022.2.1:")
     depends_on("py-psutil@5.0:", type=("build", "run"))
+    depends_on("py-psutil@5.7.0:", type=("build", "run"), when="@2023.4.1:")
     depends_on("py-six", type=("build", "run"), when="@:1")
     depends_on("py-sortedcontainers@:1,2.0.2:", type=("build", "run"))
+    depends_on("py-sortedcontainers@2.0.5:", type=("build", "run"), when="@2023.4.1:")
     depends_on("py-tblib", type=("build", "run"), when="@:2.10.0")
     depends_on("py-tblib@1.6.0:", type=("build", "run"), when="@2.11.0:")
     depends_on("py-toolz@0.7.4:", type=("build", "run"), when="@:2.12.0")
@@ -77,8 +85,12 @@ class PyDistributed(PythonPackage):
     depends_on("py-tornado@6.0.3:", type=("build", "run"), when="^python@3.8:")
     depends_on("py-tornado@6.0.3:6.1", type=("build", "run"), when="@2022.10.2:")
     depends_on("py-zict@0.1.3:", type=("build", "run"))
+    depends_on("py-zict@2.2.0:", type=("build", "run"), when="@2023.4.1:")
     depends_on("py-pyyaml", type=("build", "run"))
+    depends_on("py-pyyaml@5.3.1:", type=("build", "run"), when="@2023.4.1:")
     depends_on("py-urllib3", type=("build", "run"), when="@2022.10.2:")
+    depends_on("py-urllib3@1.24.3:", type=("build", "run"), when="@2023.4.1:")
 
     def patch(self):
-        filter_file("^dask .*", "", "requirements.txt")
+        if self.spec.satisfies("@:2023.3"):
+            filter_file("^dask .*", "", "requirements.txt")
