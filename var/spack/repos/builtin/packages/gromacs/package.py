@@ -439,7 +439,8 @@ class CMakeBuilder(spack.build_systems.cmake.CMakeBuilder):
             options.append("-DGMX_INSTALL_LEGACY_API=ON")
 
         if self.spec.satisfies("%oneapi") or self.spec.satisfies("%intel"):
-            # If intel-oneapi-compilers was installed through spack the gcc is added to the configuration file
+            # If intel-oneapi-compilers was installed through spack the gcc is added to the
+            # configuration file.
             if self.spec.satisfies("+spack_intel") and os.path.exists(
                 ".".join([os.environ["SPACK_CXX"], "cfg"])
             ):
