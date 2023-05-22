@@ -1,0 +1,60 @@
+FILE = Table
+PRODUCT = {{spec.name|replace("-", "_")}}
+
+FLAVOR=ANY
+
+{% if   (spec.compiler|string).find('gcc@9.3.0')==0   %}{%set upscompquals = 'e20' %}
+{% elif (spec.compiler|string).find('gcc@8.2.0')==0   %}{%set upscompquals = 'e19' %}
+{% elif (spec.compiler|string).find('gcc@7.3.0')==0   %}{%set upscompquals = 'e17' %}
+{% elif (spec.compiler|string).find('gcc@6.4.0')==0   %}{%set upscompquals = 'e15' %}
+{% elif (spec.compiler|string).find('gcc@6.3.0')==0   %}{%set upscompquals = 'e14' %}
+{% elif (spec.compiler|string).find('gcc@4.9.3')==0   %}{%set upscompquals = 'e10' %}
+{% elif (spec.compiler|string).find('gcc@6.4.0')==0   %}{%set upscompquals = 'e17' %}
+{% elif (spec.compiler|string).find('clang@5.0.1')==0 %}{%set upscompquals = 'c2' %}
+{% endif %}
+
+{% if (spec.compiler_flags|string).find('-g')>0 %}{%set upsdebugquals="debug"%}
+{%else%}{%set upsdebugquals="opt"%}
+{%endif%}
+
+{%if  upscompquals  %}
+QUALIFIERS="{{upscompquals}}:{{upsdebugquals}}"
+{%else%}
+QUALIFIERS=""
+{%endif%}
+
+
+{%set spack_root = os.environ['SPACK_ROOT'] %}
+{%set install_root =  spack_root[0:spack_root.find('/spack/')] %}
+{%if spec.prefix[0:spec.prefix.find('/'+spec.name)] == install_root %}
+
+Action = setup
+    prodDir()
+    setupEnv()
+{% for package in spec._dependencies.keys() %}
+    setupRequired({{package|replace("-","_")}} {%for c in (spec|string|replace('\n',' ')).split('^')%}{%if c.split('@')[0] == package%}{{c.split('@')[1].split('%')[0]}}{%endif%}{%endfor%} -f ${UPS_PROD_FLAVOR} -q "${UPS_PROD_QUALIFIERS}")
+{% endfor %}
+
+{% block environment %}
+{% for command_name, cmd in environment_modifications %}
+{# A non-standard separator is required #}
+{% if command_name == 'PrependPath' %}
+    PathPrepend({{ cmd.name }}, "{{ cmd.value|replace(spec.prefix,'${UPS_PROD_DIR}') }}", "{{cmd.separator}}")
+{% elif command_name == 'AppendPath' %}
+    PathAppend({{ cmd.name }}, "{{ cmd.value|replace(spec.prefix,'${UPS_PROD_DIR}') }}", "{{cmd.separator}}")
+{% elif command_name == 'RemovePath' %}
+    PathRemove({{ cmd.name }}, "{{ cmd.value|replace(spec.prefix,'${UPS_PROD_DIR}') }}", "{{ cmd.separator }}")
+{% elif command_name == 'SetEnv' %}
+    EnvSet({{ cmd.name }}, "{{ cmd.value|replace(spec.prefix,'${UPS_PROD_DIR}') }}")
+{% elif command_name == 'UnsetEnv' %}
+    EnvUnset({{ cmd.name }})
+{% endif %}
+{#  #}
+{% endfor %}
+{% endblock %}
+
+{%endif%}
+
+{% block footer %}
+{# In case he module needs to be extended with custom TCL code #}
+{% endblock %}

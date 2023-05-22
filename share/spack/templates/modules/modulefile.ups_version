@@ -1,0 +1,57 @@
+FILE = version
+PRODUCT = {{spec.name|replace("-","_")}}
+VERSION = {{spec.version}}
+
+{% if   (spec.architecture|string).find('i686')>0   %}{%set upsbits = '' %}
+{% elif (spec.architecture|string).find('x86_64')>0 %}{%set upsbits = '64bit' %}
+{% else  %}{%set upsbits = '64bit' %}
+{% endif %}
+
+{% if   (spec.architecture|string).find('darwin')>=0 %}{%set upsos = 'Darwin' %}
+{% elif (spec.architecture|string).find('linux')>=0   %}{%set upsos = 'Linux' %}
+{% else %} {% set upsos = 'Linux' %}
+{% endif %}
+
+{% if   (spec.architecture|string).find('scientific5')>0 %}{%set upsrelglibc = '+2.6-2.5' %}
+{% elif (spec.architecture|string).find('scientific6')>0 %}{%set upsrelglibc = '+2.6-2.12' %}
+{% elif (spec.architecture|string).find('scientific7')>0 %}{%set upsrelglibc = '+3.10-2.17' %}
+{% elif (spec.architecture|string).find('rhel5')>0 %}{%set upsrelglibc = '+2.6-2.5' %}
+{% elif (spec.architecture|string).find('rhel6')>0 %}{%set upsrelglibc = '+2.6-2.12' %}
+{% elif (spec.architecture|string).find('rhel7')>0 %}{%set upsrelglibc = '+3.10-2.17' %}
+{% elif (spec.architecture|string).find('maverics')>0    %}{%set upsrelglibc = '+13' %}
+{% elif (spec.architecture|string).find('yosemite')>0    %}{%set upsrelglibc = '+14' %}
+{% elif (spec.architecture|string).find('elcapitan')>0   %}{%set upsrelglibc = '+15' %}
+{% elif (spec.architecture|string).find('sierra')>0      %}{%set upsrelglibc = '+16' %}
+{% elif (spec.architecture|string).find('highsierra')>0  %}{%set upsrelglibc = '+17' %}
+{% elif (spec.architecture|string).find('mojave')>0      %}{%set upsrelglibc = '+18' %}
+{% else %}{%set upsrelglibc = '' %}
+{% endif %}
+
+
+{% if   (spec.compiler|string).find('gcc@9.3.0')==0   %}{%set upscompquals = 'e20' %}
+{% elif (spec.compiler|string).find('gcc@8.2.0')==0   %}{%set upscompquals = 'e19' %}
+{% elif (spec.compiler|string).find('gcc@7.3.0')==0   %}{%set upscompquals = 'e17' %}
+{% elif (spec.compiler|string).find('gcc@6.4.0')==0   %}{%set upscompquals = 'e15' %}
+{% elif (spec.compiler|string).find('gcc@6.3.0')==0   %}{%set upscompquals = 'e14' %}
+{% elif (spec.compiler|string).find('gcc@4.9.3')==0   %}{%set upscompquals = 'e10' %}
+{% elif (spec.compiler|string).find('gcc@6.4.0')==0   %}{%set upscompquals = 'e17' %}
+{% elif (spec.compiler|string).find('clang@5.0.1')==0 %}{%set upscompquals = 'c2' %}
+{% endif %}
+
+{% if (spec.compiler_flags|string).find('-g')>0 %}{%set upsdebugquals="debug"%}
+{%else%}{%set upsdebugquals="opt"%}
+{%endif%}
+
+FLAVOR="{{upsos}}{{upsbits}}{{upsrelglibc}}"
+{%if  upscompquals  %}
+QUALIFIERS="{{upscompquals}}:{{upsdebugquals}}"
+{%else%}
+QUALIFIERS=""
+{%endif%}
+
+  DECLARER = {{username}}
+  DECLARED = {{timestamp}}
+  MODIFIER = {{username}}
+  MODIFIED = {{timestamp}}
+  PROD_DIR = {{spec.prefix}}
+  TABLE_FILE = {{spec.name|replace("-","_")}}_{{spec.version}}_{{spec._hash}}.table
