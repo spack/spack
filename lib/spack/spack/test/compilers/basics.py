@@ -841,9 +841,12 @@ def test_apple_clang_setup_environment(mock_executable, monkeypatch):
     class MockPackage(object):
         use_xcode = False
 
-    apple_clang_cls = spack.compilers.class_for_compiler_name("apple-clang")
+    apple_clang = 'apple-clang'
+    apple_clang_version = '11.0.0'
+
+    apple_clang_cls = spack.compilers.class_for_compiler_name(apple_clang)
     compiler = apple_clang_cls(
-        spack.spec.CompilerSpec("apple-clang@=11.0.0"),
+        spack.spec.CompilerSpec(f"{apple_clang}@={apple_clang_version}"),
         "catalina",
         "x86_64",
         ["/usr/bin/clang", "/usr/bin/clang++", None, None],
@@ -892,6 +895,10 @@ echo "/Library/Developer"
     monkeypatch.setattr(os, "symlink", noop)
     monkeypatch.setattr(os, "listdir", _listdir)
 
+    xcode_sel = os.path.join(spack.stage.get_stage_root(), "xcode-select")
+    ver_dir = os.path.join(xcode_sel, apple_clang, apple_clang_version)
+    os.makedirs(ver_dir)
+
     # Qt is so far the only package that uses this code path, change
     # introduced in https://github.com/spack/spack/pull/1832
     pkg.use_xcode = True
@@ -900,6 +907,8 @@ echo "/Library/Developer"
     assert env.env_modifications[0].name == "SPACK_CC"
     assert env.env_modifications[1].name == "SPACK_CXX"
     assert env.env_modifications[2].name == "DEVELOPER_DIR"
+
+    shutil.rmtree(xcode_sel)
 
 
 @pytest.mark.skipif(sys.platform == "win32", reason="Not supported on Windows (yet)")
