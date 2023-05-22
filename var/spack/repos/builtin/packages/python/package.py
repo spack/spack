@@ -837,6 +837,7 @@ class Python(Package):
             else:
                 path = os.path.join(self.prefix, "python{0}.exe".format(ver))
             if os.path.exists(path):
+                path = f"""\"{path}\""""
                 return Executable(path)
 
         else:
