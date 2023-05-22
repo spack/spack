@@ -1608,9 +1608,6 @@ def relocate_package(spec):
     new_prefix = str(spec.prefix)
     new_rel_prefix = str(os.path.relpath(new_prefix, new_layout_root))
 
-    old_sbang_install_path = None
-    if "sbang_install_path" in buildinfo:
-        old_sbang_install_path = str(buildinfo["sbang_install_path"])
     old_layout_root = str(buildinfo["buildpath"])
     old_rel_prefix = buildinfo.get("relative_prefix")
     old_prefix = os.path.join(old_layout_root, old_rel_prefix)
@@ -1631,35 +1628,27 @@ def relocate_package(spec):
             "layout and an older buildcache create implementation. It cannot be relocated."
         )
 
-    # Spurious replacements (e.g. sbang) will cause issues with binaries
-    # For example, the new sbang can be longer than the old one.
-    # Hence 2 dictionaries are maintained here.
-    prefix_to_prefix_text = collections.OrderedDict()
-    prefix_to_prefix_bin = collections.OrderedDict()
-
-    if old_sbang_install_path:
-        prefix_to_prefix_text[old_sbang_install_path] = spack.hooks.sbang.sbang_install_path()
+    prefix_to_prefix = dict()
 
     # First match specific prefix paths. Possibly the *local* install prefix
     # of some dependency is in an upstream, so we cannot assume the original
     # spack store root can be mapped uniformly to the new spack store root.
     for dag_hash, new_dep_prefix in hashes_to_prefixes(spec).items():
         if dag_hash in hash_to_old_prefix:
-            old_dep_prefix = hash_to_old_prefix[dag_hash]
-            prefix_to_prefix_bin[old_dep_prefix] = new_dep_prefix
-            prefix_to_prefix_text[old_dep_prefix] = new_dep_prefix
+            prefix_to_prefix[hash_to_old_prefix[dag_hash]] = new_dep_prefix
 
     # Only then add the generic fallback of install prefix -> install prefix.
-    prefix_to_prefix_text[old_prefix] = new_prefix
-    prefix_to_prefix_bin[old_prefix] = new_prefix
-    prefix_to_prefix_text[old_layout_root] = new_layout_root
-    prefix_to_prefix_bin[old_layout_root] = new_layout_root
+    prefix_to_prefix[old_prefix] = new_prefix
+    prefix_to_prefix[old_layout_root] = new_layout_root
 
     # Remove identity mappings
-    prefix_to_prefix_text = dict((k, v) for (k, v) in prefix_to_prefix_text.items() if k != v)
-    prefix_to_prefix_bin = dict((k, v) for (k, v) in prefix_to_prefix_bin.items() if k != v)
+    prefix_to_prefix = dict((k, v) for (k, v) in prefix_to_prefix.items() if k != v)
 
-    tty.debug("Relocating package from", "%s to %s." % (old_layout_root, new_layout_root))
+    # Early exit when installig to the same prefix.
+    if not prefix_to_prefix:
+        return
+
+    tty.debug(f"Relocating package from {old_layout_root} to {new_layout_root}.")
 
     # Old archives maybe have hardlinks repeated.
     dedupe_hardlinks_if_necessary(workdir, buildinfo)
@@ -1669,45 +1658,41 @@ def relocate_package(spec):
     binaries = [os.path.join(workdir, f) for f in buildinfo.get("relocate_binaries", [])]
     links = [os.path.join(workdir, f) for f in buildinfo.get("relocate_links", [])]
 
-    # Relocate binaries if any path has changed
-    if prefix_to_prefix_bin:
-        platform = spack.platforms.by_name(spec.platform)
-        if "macho" in platform.binary_formats:
-            relocate.relocate_macho_binaries(
-                binaries,
-                old_layout_root,
-                new_layout_root,
-                prefix_to_prefix_bin,
-                rel,
-                old_prefix,
-                new_prefix,
-            )
-        elif "elf" in platform.binary_formats and not rel:
-            # The new ELF dynamic section relocation logic only handles absolute to
-            # absolute relocation.
-            relocate.new_relocate_elf_binaries(binaries, prefix_to_prefix_bin)
-        elif "elf" in platform.binary_formats and rel:
-            relocate.relocate_elf_binaries(
-                binaries,
-                old_layout_root,
-                new_layout_root,
-                prefix_to_prefix_bin,
-                rel,
-                old_prefix,
-                new_prefix,
-            )
+    # First relocate dynamic sections in binaries
+    platform = spack.platforms.by_name(spec.platform)
+    if "macho" in platform.binary_formats:
+        relocate.relocate_macho_binaries(
+            binaries,
+            old_layout_root,
+            new_layout_root,
+            prefix_to_prefix,
+            rel,
+            old_prefix,
+            new_prefix,
+        )
+    elif "elf" in platform.binary_formats and not rel:
+        # The new ELF dynamic section relocation logic only handles absolute to
+        # absolute relocation.
+        relocate.new_relocate_elf_binaries(binaries, prefix_to_prefix)
+    elif "elf" in platform.binary_formats and rel:
+        relocate.relocate_elf_binaries(
+            binaries,
+            old_layout_root,
+            new_layout_root,
+            prefix_to_prefix,
+            rel,
+            old_prefix,
+            new_prefix,
+        )
 
-        # Relocate links to the new install prefix
-        relocate.relocate_links(links, prefix_to_prefix_bin)
+    # Relocate links to the new install prefix
+    relocate.relocate_links(links, prefix_to_prefix)
 
-        # relocate the install prefixes in binary files including dependencies
-        patched_binaries = relocate.relocate_text_bin(binaries, prefix_to_prefix_bin)
-    else:
-        patched_binaries = []
+    # relocate the install prefixes in binary files including dependencies
+    patched_binaries = relocate.relocate_text_bin(binaries, prefix_to_prefix)
 
     # Relocate textfiles if any path has changed
-    if prefix_to_prefix_text:
-        relocate.relocate_text(textfiles, prefix_to_prefix_text)
+    relocate.relocate_text(textfiles, prefix_to_prefix)
 
     # Add ad-hoc signatures to patched macho files when on macOS.
     if "macho" in platform.binary_formats and sys.platform == "darwin":
