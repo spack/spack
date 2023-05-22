@@ -1,0 +1,8 @@
+enable:
+  - ups_table
+ups_table:
+  ^mpich2:
+    autoload: 'direct'
+
+  ^python:
+    autoload: 'direct'

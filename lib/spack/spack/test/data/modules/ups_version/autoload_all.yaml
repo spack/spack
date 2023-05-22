@@ -1,0 +1,6 @@
+enable:
+  - ups_version
+ups_version:
+  verbose: true
+  all:
+    autoload: 'all'

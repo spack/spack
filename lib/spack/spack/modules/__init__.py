@@ -12,12 +12,21 @@ from __future__ import absolute_import
 from .common import disable_modules, ensure_modules_are_enabled_or_warn
 from .lmod import LmodModulefileWriter
 from .tcl import TclModulefileWriter
+from .ups_table import UpsTableModulefileWriter
+from .ups_version import UpsVersionModulefileWriter
 
 __all__ = [
     "TclModulefileWriter",
     "LmodModulefileWriter",
+    "UpsTableModulefileWriter",
+    "UpsVersionModulefileWriter",
     "disable_modules",
     "ensure_modules_are_enabled_or_warn",
 ]
 
-module_types = {"tcl": TclModulefileWriter, "lmod": LmodModulefileWriter}
+module_types = {
+    "tcl": TclModulefileWriter,
+    "lmod": LmodModulefileWriter,
+    "ups_table": UpsTableModulefileWriter,
+    "ups_version": UpsVersionModulefileWriter,
+}

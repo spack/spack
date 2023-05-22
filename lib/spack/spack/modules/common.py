@@ -32,6 +32,7 @@ import contextlib
 import copy
 import datetime
 import inspect
+import os
 import os.path
 import pathlib
 import re
@@ -907,6 +908,7 @@ class BaseModuleFileWriter(object):
         conf_update = self.conf.context
         context.update(conf_update)
 
+        context.update({"os": os})
         # Render the template
         text = template.render(context)
         # Write it to file
