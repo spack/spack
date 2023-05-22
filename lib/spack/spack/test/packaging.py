@@ -100,7 +100,7 @@ echo $PATH"""
     parser = argparse.ArgumentParser()
     buildcache.setup_parser(parser)
 
-    create_args = ["create", "-a", "-f", "-d", mirror_path, pkghash]
+    create_args = ["create", "-a", "-f", mirror_path, pkghash]
     # Create a private key to sign package with if gpg2 available
     spack.util.gpg.create(
         name="test key 1", expires="0", email="spack@googlegroups.com", comment="Spack test key"
@@ -116,7 +116,7 @@ echo $PATH"""
     # Uninstall the package
     pkg.do_uninstall(force=True)
 
-    install_args = ["install", "-a", "-f", pkghash]
+    install_args = ["install", "-f", pkghash]
     args = parser.parse_args(install_args)
     # Test install
     buildcache.buildcache(parser, args)

@@ -1138,7 +1138,7 @@ def test_install_use_buildcache(
 
     # Populate the buildcache
     install(package_name)
-    buildcache("push", "-u", "-a", "-f", "-d", mirror_dir.strpath, package_name, dependency_name)
+    buildcache("push", "-u", "-a", "-f", mirror_dir.strpath, package_name, dependency_name)
 
     # Uninstall the all of the packages for clean slate
     uninstall("-y", "-a")
