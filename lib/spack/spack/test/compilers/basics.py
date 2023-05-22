@@ -841,8 +841,8 @@ def test_apple_clang_setup_environment(mock_executable, monkeypatch):
     class MockPackage(object):
         use_xcode = False
 
-    apple_clang = 'apple-clang'
-    apple_clang_version = '11.0.0'
+    apple_clang = "apple-clang"
+    apple_clang_version = "11.0.0"
 
     apple_clang_cls = spack.compilers.class_for_compiler_name(apple_clang)
     compiler = apple_clang_cls(
