@@ -647,8 +647,9 @@ class Cuda(Package):
                 filtered_libs.append(lib)
                 non_stub_libs.add(parts[-1])
         # Add all stub libraries that don't have a non-stub version.
-        for lib in find_libraries(os.path.join("stubs", "*"), root=self.prefix,
-                                  shared=True, recursive=True):
+        for lib in find_libraries(
+            os.path.join("stubs", "*"), root=self.prefix, shared=True, recursive=True
+        ):
             parts = lib.split(os.sep)
             if "compat" not in parts and parts[-1] not in non_stub_libs:
                 filtered_libs.append(lib)
