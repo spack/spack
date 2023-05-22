@@ -34,7 +34,6 @@ class PyGmxapi(PythonPackage):
     depends_on("py-pybind11@2.6:", type="build")
     depends_on("py-pybind11@2.6:", when="@:0.4", type=("build", "run"))
     depends_on("py-pytest@4.6:", type="test")
-    depends_on("py-wheel", when="@:0.4", type="build")
 
     def setup_build_environment(self, env):
         env.set("GROMACS_DIR", self.spec["gromacs"].prefix)
