@@ -87,4 +87,3 @@ class H5bench(CMakePackage):
             installed=True,
             work_dir=self.test_suite.current_test_cache_dir,
         )
-
