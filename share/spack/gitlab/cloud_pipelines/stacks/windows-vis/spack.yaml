@@ -14,9 +14,14 @@ spack:
 
   packages:
     all:
-      require: [target=x86_64_v3]
+      providers:
+        mpi: [msmpi]
+        gl: [wgl]
+        jpeg: [libjpeg-turbo]
     tbb:
       require: "intel-tbb"
+    protobuf:
+      version: [3.21.12] # newer protobuf have broken CMake support on Windows
 
   specs:
   - paraview
