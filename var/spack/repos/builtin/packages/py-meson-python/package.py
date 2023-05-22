@@ -34,7 +34,9 @@ class PyMesonPython(PythonPackage):
     depends_on("py-setuptools@60:", when="@0.13: ^python@3.12:", type="build")
     depends_on("py-colorama", when="platform=windows", type=("build", "run"))
 
-    depends_on("py-typing-extensions@3.7.4:", when="@0.12.0:0.12.1 ^python@:3.9", type=("build", "run"))
+    depends_on(
+        "py-typing-extensions@3.7.4:", when="@0.12.0:0.12.1 ^python@:3.9", type=("build", "run")
+    )
     depends_on("py-typing-extensions@3.7.4:", when="@:0.11 ^python@:3.7", type=("build", "run"))
 
     # https://github.com/mesonbuild/meson-python/pull/111
