@@ -3,12 +3,12 @@ ci:
   - build-job:
       tags: [win64, kitware]
       # Windows CI uses Powershell
-      before_script::
+      before_script:
       - .\bin\spack_pwsh.ps1
       - spack compiler find
       # These should exist in the MSVC installation
       - spack external find --not-buildable cmake ninja
-      script::
+      script:
       - spack env activate --without-view ${SPACK_CONCRETE_ENV_DIR}
       - spack config add "config:install_tree:projections:${SPACK_JOB_SPEC_PKG_NAME}:'morepadding/{architecture}/{compiler.name}-{compiler.version}/{name}-{version}-{hash}'"
       - spack config add "config:install_tree:root:C:\ci\${CI_COMMIT_SHA}"
