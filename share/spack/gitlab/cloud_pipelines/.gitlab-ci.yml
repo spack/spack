@@ -676,6 +676,28 @@ ml-linux-x86_64-rocm-build:
     - artifacts: True
       job: ml-linux-x86_64-rocm-generate
 
+#######################################
+# E4S - Cray
+#######################################
+.e4s-cray:
+  variables:
+    SPACK_CI_STACK_NAME: e4s-cray
+
+e4s-cray-generate:
+  tags: [ "craype", "cce@15.0.1" ]
+  extends: [ ".generate", .e4s-cray, ".tags-x86_64_v4" ]
+
+e4s-cray-build:
+  extends: [ ".build", ".e4s-cray-cpu" ]
+  trigger:
+    include:
+      - artifact: jobs_scratch_dir/cloud-ci-pipeline.yml
+        job: e4s-cray-generate
+    strategy: depend
+  needs:
+    - artifacts: True
+      job: e4s-cray-generate
+
 ########################################
 # Machine Learning - Darwin aarch64 (MPS)
 ########################################
