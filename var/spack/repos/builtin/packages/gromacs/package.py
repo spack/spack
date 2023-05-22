@@ -232,6 +232,12 @@ class Gromacs(CMakePackage, CudaPackage):
         for gmx_ver, plumed_vers in plumed_patches.items():
             depends_on("plumed@{0}".format(plumed_vers), when="@{0}+plumed".format(gmx_ver))
 
+    variant(
+        "spack_intel",
+        default=False,
+        description="If Intel compiler is installed through spack libstdc++ location is known.",
+    )
+
     depends_on("fftw-api@3")
     depends_on("cmake@2.8.8:3", type="build")
     depends_on("cmake@3.4.3:3", type="build", when="@2018:")
@@ -244,6 +250,8 @@ class Gromacs(CMakePackage, CudaPackage):
     depends_on("sycl", when="+sycl")
     depends_on("lapack", when="+lapack")
     depends_on("blas", when="+blas")
+    depends_on("gcc", when="%oneapi ~spack_intel")
+    depends_on("gcc", when="%intel ~spack_intel")
 
     depends_on("hwloc@1.0:1", when="+hwloc@2016:2018")
     depends_on("hwloc", when="+hwloc@2019:")
@@ -431,8 +439,14 @@ class CMakeBuilder(spack.build_systems.cmake.CMakeBuilder):
             options.append("-DGMX_INSTALL_LEGACY_API=ON")
 
         if self.spec.satisfies("%oneapi") or self.spec.satisfies("%intel"):
-            with open(".".join([os.environ["SPACK_CXX"], "cfg"]), "r") as f:
-                options.append("-DCMAKE_CXX_FLAGS={}".format(f.read()))
+            # If intel-oneapi-compilers was installed through spack the gcc is added to the configuration file
+            if self.spec.satisfies("+spack_intel") and os.path.exists(
+                ".".join([os.environ["SPACK_CXX"], "cfg"])
+            ):
+                with open(".".join([os.environ["SPACK_CXX"], "cfg"]), "r") as f:
+                    options.append("-DCMAKE_CXX_FLAGS={}".format(f.read()))
+            else:
+                options.append("-DGMX_GPLUSPLUS_PATH=%s/g++" % self.spec["gcc"].prefix.bin)
 
         if "+double" in self.spec:
             options.append("-DGMX_DOUBLE:BOOL=ON")
