@@ -966,7 +966,7 @@ def test_compiler_bootstrap_from_binary_mirror(
     install("gcc@=10.2.0")
 
     # Put installed compiler in the buildcache
-    buildcache("push", "-u", "-a", "-f", "-d", mirror_dir.strpath, "gcc@10.2.0")
+    buildcache("push", "-u", "-a", "-f", mirror_dir.strpath, "gcc@10.2.0")
 
     # Now uninstall the compiler
     uninstall("-y", "gcc@10.2.0")
