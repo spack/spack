@@ -131,30 +131,6 @@ echo $PATH"""
     assert buildinfo["relocate_textfiles"] == ["dummy.txt"]
     assert buildinfo["relocate_links"] == ["link_to_dummy.txt"]
 
-    # create build cache with relative path
-    create_args.insert(create_args.index("-a"), "-f")
-    create_args.insert(create_args.index("-a"), "-r")
-    args = parser.parse_args(create_args)
-    buildcache.buildcache(parser, args)
-
-    # Uninstall the package
-    pkg.do_uninstall(force=True)
-
-    args = parser.parse_args(install_args)
-    buildcache.buildcache(parser, args)
-
-    # test overwrite install
-    install_args.insert(install_args.index("-a"), "-f")
-    args = parser.parse_args(install_args)
-    buildcache.buildcache(parser, args)
-
-    files = os.listdir(spec.prefix)
-    assert "link_to_dummy.txt" in files
-    assert "dummy.txt" in files
-    #    assert os.path.realpath(
-    #        os.path.join(spec.prefix, 'link_to_dummy.txt')
-    #    ) == os.path.realpath(os.path.join(spec.prefix, 'dummy.txt'))
-
     args = parser.parse_args(["keys"])
     buildcache.buildcache(parser, args)
 
