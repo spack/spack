@@ -33,6 +33,7 @@ class Prrte(AutotoolsPackage):
     depends_on("automake", type=("build"))
     depends_on("libtool", type=("build"))
     depends_on("flex", type=("build"))
+    depends_on("pkgconfig", type="build")
 
     def autoreconf(self, spec, prefix):
         # If configure exists nothing needs to be done

@@ -9,6 +9,7 @@ import shutil
 
 import llnl.util.filesystem as fs
 import llnl.util.tty as tty
+import llnl.util.tty.color as clr
 
 import spack.binary_distribution as bindist
 import spack.ci as spack_ci
@@ -31,12 +32,6 @@ INSTALL_FAIL_CODE = 1
 
 def deindent(desc):
     return desc.replace("    ", "")
-
-
-def get_env_var(variable_name):
-    if variable_name in os.environ:
-        return os.environ.get(variable_name)
-    return None
 
 
 def setup_parser(subparser):
@@ -233,7 +228,7 @@ def ci_reindex(args):
     Use the active, gitlab-enabled environment to rebuild the buildcache
     index for the associated mirror."""
     env = spack.cmd.require_active_env(cmd_name="ci rebuild-index")
-    yaml_root = ev.config_dict(env.yaml)
+    yaml_root = ev.config_dict(env.manifest)
 
     if "mirrors" not in yaml_root or len(yaml_root["mirrors"].values()) < 1:
         tty.die("spack ci rebuild-index requires an env containing a mirror")
@@ -268,27 +263,27 @@ def ci_rebuild(args):
     # Grab the environment variables we need.  These either come from the
     # pipeline generation step ("spack ci generate"), where they were written
     # out as variables, or else provided by GitLab itself.
-    pipeline_artifacts_dir = get_env_var("SPACK_ARTIFACTS_ROOT")
-    job_log_dir = get_env_var("SPACK_JOB_LOG_DIR")
-    job_test_dir = get_env_var("SPACK_JOB_TEST_DIR")
-    repro_dir = get_env_var("SPACK_JOB_REPRO_DIR")
-    local_mirror_dir = get_env_var("SPACK_LOCAL_MIRROR_DIR")
-    concrete_env_dir = get_env_var("SPACK_CONCRETE_ENV_DIR")
-    ci_pipeline_id = get_env_var("CI_PIPELINE_ID")
-    ci_job_name = get_env_var("CI_JOB_NAME")
-    signing_key = get_env_var("SPACK_SIGNING_KEY")
-    job_spec_pkg_name = get_env_var("SPACK_JOB_SPEC_PKG_NAME")
-    job_spec_dag_hash = get_env_var("SPACK_JOB_SPEC_DAG_HASH")
-    compiler_action = get_env_var("SPACK_COMPILER_ACTION")
-    spack_pipeline_type = get_env_var("SPACK_PIPELINE_TYPE")
-    remote_mirror_override = get_env_var("SPACK_REMOTE_MIRROR_OVERRIDE")
-    remote_mirror_url = get_env_var("SPACK_REMOTE_MIRROR_URL")
-    spack_ci_stack_name = get_env_var("SPACK_CI_STACK_NAME")
-    shared_pr_mirror_url = get_env_var("SPACK_CI_SHARED_PR_MIRROR_URL")
-    rebuild_everything = get_env_var("SPACK_REBUILD_EVERYTHING")
+    pipeline_artifacts_dir = os.environ.get("SPACK_ARTIFACTS_ROOT")
+    job_log_dir = os.environ.get("SPACK_JOB_LOG_DIR")
+    job_test_dir = os.environ.get("SPACK_JOB_TEST_DIR")
+    repro_dir = os.environ.get("SPACK_JOB_REPRO_DIR")
+    local_mirror_dir = os.environ.get("SPACK_LOCAL_MIRROR_DIR")
+    concrete_env_dir = os.environ.get("SPACK_CONCRETE_ENV_DIR")
+    ci_pipeline_id = os.environ.get("CI_PIPELINE_ID")
+    ci_job_name = os.environ.get("CI_JOB_NAME")
+    signing_key = os.environ.get("SPACK_SIGNING_KEY")
+    job_spec_pkg_name = os.environ.get("SPACK_JOB_SPEC_PKG_NAME")
+    job_spec_dag_hash = os.environ.get("SPACK_JOB_SPEC_DAG_HASH")
+    compiler_action = os.environ.get("SPACK_COMPILER_ACTION")
+    spack_pipeline_type = os.environ.get("SPACK_PIPELINE_TYPE")
+    remote_mirror_override = os.environ.get("SPACK_REMOTE_MIRROR_OVERRIDE")
+    remote_mirror_url = os.environ.get("SPACK_REMOTE_MIRROR_URL")
+    spack_ci_stack_name = os.environ.get("SPACK_CI_STACK_NAME")
+    shared_pr_mirror_url = os.environ.get("SPACK_CI_SHARED_PR_MIRROR_URL")
+    rebuild_everything = os.environ.get("SPACK_REBUILD_EVERYTHING")
 
     # Construct absolute paths relative to current $CI_PROJECT_DIR
-    ci_project_dir = get_env_var("CI_PROJECT_DIR")
+    ci_project_dir = os.environ.get("CI_PROJECT_DIR")
     pipeline_artifacts_dir = os.path.join(ci_project_dir, pipeline_artifacts_dir)
     job_log_dir = os.path.join(ci_project_dir, job_log_dir)
     job_test_dir = os.path.join(ci_project_dir, job_test_dir)
@@ -603,8 +598,8 @@ def ci_rebuild(args):
                 broken_spec_path,
                 job_spec_pkg_name,
                 spack_ci_stack_name,
-                get_env_var("CI_JOB_URL"),
-                get_env_var("CI_PIPELINE_URL"),
+                os.environ.get("CI_JOB_URL"),
+                os.environ.get("CI_PIPELINE_URL"),
                 job_spec.to_dict(hash=ht.dag_hash),
             )
 
@@ -676,13 +671,20 @@ def ci_rebuild(args):
     # outside of the pipeline environment.
     if install_exit_code == 0:
         if buildcache_mirror_url or pipeline_mirror_url:
-            spack_ci.create_buildcache(
-                env=env,
+            for result in spack_ci.create_buildcache(
+                input_spec=job_spec,
                 buildcache_mirror_url=buildcache_mirror_url,
                 pipeline_mirror_url=pipeline_mirror_url,
                 pr_pipeline=spack_is_pr_pipeline,
-                json_path=job_spec_json_path,
-            )
+            ):
+                msg = tty.msg if result.success else tty.warn
+                msg(
+                    "{} {} to {}".format(
+                        "Pushed" if result.success else "Failed to push",
+                        job_spec.format("{name}{@version}{/hash:7}", color=clr.get_color_when()),
+                        result.url,
+                    )
+                )
 
         # If this is a develop pipeline, check if the spec that we just built is
         # on the broken-specs list. If so, remove it.
@@ -704,9 +706,9 @@ def ci_rebuild(args):
     else:
         tty.debug("spack install exited non-zero, will not create buildcache")
 
-        api_root_url = get_env_var("CI_API_V4_URL")
-        ci_project_id = get_env_var("CI_PROJECT_ID")
-        ci_job_id = get_env_var("CI_JOB_ID")
+        api_root_url = os.environ.get("CI_API_V4_URL")
+        ci_project_id = os.environ.get("CI_PROJECT_ID")
+        ci_job_id = os.environ.get("CI_JOB_ID")
 
         repro_job_url = "{0}/projects/{1}/jobs/{2}/artifacts".format(
             api_root_url, ci_project_id, ci_job_id

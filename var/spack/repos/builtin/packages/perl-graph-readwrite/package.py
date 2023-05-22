@@ -12,4 +12,5 @@ class PerlGraphReadwrite(PerlPackage):
     homepage = "https://metacpan.org/pod/Graph::ReadWrite"
     url = "http://search.cpan.org/CPAN/authors/id/N/NE/NEILB/Graph-ReadWrite-2.09.tar.gz"
 
+    version("2.10", sha256="516c1ea9facb995dbc38d1735d58974b2399862567e731b729c8d0bc2ee5a14b")
     version("2.09", sha256="b01ef06ce922eea12d5ce614d63ddc5f3ee7ad0d05f9577051d3f87a89799a4a")

@@ -78,6 +78,13 @@ class M4(AutotoolsPackage, GNUMirrorPackage):
         # https://www.gnu.org/software/autoconf/manual/autoconf-2.67/html_node/autom4te-Invocation.html
         env.set("M4", self.prefix.bin.m4)
 
+    def setup_build_environment(self, env):
+        # The default optimization level for icx/icpx is "-O2",
+        # but building m4 with this level breaks the build of dependents.
+        # So we set it explicitely to "-O0".
+        if self.spec.satisfies("%intel") or self.spec.satisfies("%oneapi"):
+            env.append_flags("CFLAGS", "-O0")
+
     def setup_run_environment(self, env):
         env.set("M4", self.prefix.bin.m4)
 

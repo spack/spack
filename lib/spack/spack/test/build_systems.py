@@ -268,16 +268,18 @@ class TestCMakePackage(object):
         s = default_mock_concretization("mpich")
         assert spack.build_systems.cmake.CMakeBuilder.std_args(s.package)
 
-    def test_cmake_bad_generator(self, monkeypatch, default_mock_concretization):
+    def test_cmake_bad_generator(self, default_mock_concretization):
         s = default_mock_concretization("cmake-client")
-        monkeypatch.setattr(type(s.package), "generator", "Yellow Sticky Notes", raising=False)
         with pytest.raises(spack.package_base.InstallError):
-            s.package.builder.std_cmake_args
+            spack.build_systems.cmake.CMakeBuilder.std_args(
+                s.package, generator="Yellow Sticky Notes"
+            )
 
     def test_cmake_secondary_generator(self, default_mock_concretization):
         s = default_mock_concretization("cmake-client")
-        s.package.generator = "CodeBlocks - Unix Makefiles"
-        assert s.package.builder.std_cmake_args
+        assert spack.build_systems.cmake.CMakeBuilder.std_args(
+            s.package, generator="CodeBlocks - Unix Makefiles"
+        )
 
     def test_define(self, default_mock_concretization):
         s = default_mock_concretization("cmake-client")

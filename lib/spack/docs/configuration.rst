@@ -20,8 +20,9 @@ case you want to skip directly to specific docs:
 * :ref:`packages.yaml <build-settings>`
 * :ref:`repos.yaml <repositories>`
 
-You can also add any of these as inline configuration in ``spack.yaml``
-in an :ref:`environment <environment-configuration>`.
+You can also add any of these as inline configuration in the YAML
+manifest file (``spack.yaml``) describing an :ref:`environment
+<environment-configuration>`.
 
 -----------
 YAML Format
@@ -296,7 +297,7 @@ String Concatenation
 Above, the user ``config.yaml`` *completely* overrides specific settings in the
 default ``config.yaml``. Sometimes, it is useful to add a suffix/prefix
 to a path or name. To do this, you can use the ``-:`` notation for *append*
-string concatentation at the end of a key in a configuration file. For example:
+string concatenation at the end of a key in a configuration file. For example:
 
 .. code-block:: yaml
    :emphasize-lines: 1
