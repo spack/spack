@@ -43,12 +43,21 @@ class SstCore(AutotoolsPackage):
         default=True,
         description="Build support for parallel discrete event simulation",
     )
-    variant("zoltan", default=False, when='@:12.0', description="Use Zoltan for partitioning parallel runs")
+    variant(
+        "zoltan",
+        default=False,
+        when="@:12.0",
+        description="Use Zoltan for partitioning parallel runs",
+    )
     variant("hdf5", default=False, description="Build support for HDF5 statistic output")
     variant("zlib", default=False, description="Build support for ZLIB compression")
 
     variant("trackevents", default=False, description="Enable event and activity tracking")
-    variant("trackperf", default=False, description="Enable tracking of simulator performance and component runtime")
+    variant(
+        "trackperf",
+        default=False,
+        description="Enable tracking of simulator performance and component runtime",
+    )
     variant("preview", default=False, description="Preview build with deprecated features removed")
     variant("profile", default=False, description="Enable performance profiling of core features")
 
