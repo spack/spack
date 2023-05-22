@@ -244,7 +244,6 @@ class Gromacs(CMakePackage, CudaPackage):
     depends_on("sycl", when="+sycl")
     depends_on("lapack", when="+lapack")
     depends_on("blas", when="+blas")
-    depends_on("gcc", when="%oneapi")
 
     depends_on("hwloc@1.0:1", when="+hwloc@2016:2018")
     depends_on("hwloc", when="+hwloc@2019:")
@@ -431,8 +430,9 @@ class CMakeBuilder(spack.build_systems.cmake.CMakeBuilder):
         if self.spec.satisfies("@2020:"):
             options.append("-DGMX_INSTALL_LEGACY_API=ON")
 
-        if self.spec.satisfies("%oneapi"):
-            options.append("-DGMX_GPLUSPLUS_PATH=%s/g++" % self.spec["gcc"].prefix.bin)
+        if self.spec.satisfies("%oneapi") or self.spec.satisfies("%intel"):
+            with open (".".join([os.environ["SPACK_CXX"], "cfg"]), "r") as f:
+                options.append("-DCMAKE_CXX_FLAGS={}".format(f.read()))
 
         if "+double" in self.spec:
             options.append("-DGMX_DOUBLE:BOOL=ON")
