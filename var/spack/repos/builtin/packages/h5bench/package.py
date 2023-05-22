@@ -2,7 +2,6 @@
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
-
 from spack.package import *
 
 
@@ -58,3 +57,33 @@ class H5bench(CMakePackage):
         ]
 
         return args
+
+    def check(self):
+        if self.run_tests:
+            with working_dir(self.build_directory):
+                make("test")
+
+    @run_after("install")
+    def setup_build_tests(self):
+        """Copy the example source files after the package is installed to an
+        install test subdirectory for use during `spack test run`."""
+        self.cache_extra_test_sources(["tests", "samples"])
+
+    def test(self):
+        """Perform stand-alone/smoke tests on the installed package."""
+        self.run_test(
+            "h5bench",
+            ["-h"],
+            purpose="test: smoke h5bench test",
+            installed=True,
+            work_dir=self.test_suite.current_test_cache_dir,
+        )
+
+        self.run_test(
+            "h5bench",
+            ["--debug", "--abort", "samples/sync-write-1d-contig-contig.json"],
+            purpose="test: sample h5bench test",
+            installed=True,
+            work_dir=self.test_suite.current_test_cache_dir,
+        )
+
