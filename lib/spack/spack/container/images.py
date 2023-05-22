@@ -83,10 +83,10 @@ def commands_for(package_manager):
         package_manager (str): package manager to be used
 
     Returns:
-        A tuple of (update, install, clean) commands.
+        A tuple of (preinstall, update, install, clean) commands.
     """
     info = data()["os_package_managers"][package_manager]
-    return info["update"], info["install"], info["clean"]
+    return info.get("preinstall", "true"), info["update"], info["install"], info["clean"]
 
 
 def bootstrap_template_for(image):

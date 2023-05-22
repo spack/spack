@@ -255,10 +255,14 @@ class PathContext(tengine.Context):
         else:
             os_pkg_manager = self._os_pkg_manager()
 
-        update, install, clean = commands_for(os_pkg_manager)
+        preinstall, update, install, clean = commands_for(os_pkg_manager)
 
-        Packages = collections.namedtuple("Packages", ["update", "install", "list", "clean"])
-        return Packages(update=update, install=install, list=package_list, clean=clean)
+        Packages = collections.namedtuple(
+            "Packages", ["preinstall", "update", "install", "list", "clean"]
+        )
+        return Packages(
+            preinstall=preinstall, update=update, install=install, list=package_list, clean=clean
+        )
 
     def _os_pkg_manager(self):
         try:

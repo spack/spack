@@ -6,6 +6,7 @@ Stage: build
 {% block build_stage %}
 {% if os_packages_build.list %}
   # Update, install and cleanup of system packages needed at build-time
+  {{ os_packages_build.preinstall }}
   {% if os_package_update %}
   {{ os_packages_build.update }}
   {% endif %}
@@ -69,6 +70,7 @@ Stage: final
 {% block final_stage %}
 {% if os_packages_final.list %}
   # Update, install and cleanup of system packages needed at run-time
+  {{ os_packages_final.preinstall }}
   {% if os_package_update %}
   {{ os_packages_final.update }}
   {% endif %}

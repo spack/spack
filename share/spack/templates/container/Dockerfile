@@ -9,7 +9,8 @@ FROM {{ build.image }} as builder
 {% block build_stage %}
 {% if os_packages_build %}
 # Install OS packages needed to build the software
-RUN {% if os_package_update %}{{ os_packages_build.update }} \
+RUN {{ os_packages_build.preinstall }} \
+ && {% if os_package_update %}{{ os_packages_build.update }} \
  && {% endif %}{{ os_packages_build.install }} {{ os_packages_build.list | join | replace('\n', ' ') }} \
  && {{ os_packages_build.clean }}
 {% endif %}
@@ -58,7 +59,8 @@ COPY --from=builder /etc/profile.d/z10_spack_environment.sh /etc/profile.d/z10_s
 {% block final_stage %}
 
 {% if os_packages_final %}
-RUN {% if os_package_update %}{{ os_packages_final.update }} \
+RUN {{ os_packages_final.preinstall }} \
+ && {% if os_package_update %}{{ os_packages_final.update }} \
  && {% endif %}{{ os_packages_final.install }} {{ os_packages_final.list | join | replace('\n', ' ') }} \
  && {{ os_packages_final.clean }}
 {% endif %}

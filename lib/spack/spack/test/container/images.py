@@ -24,7 +24,8 @@ def test_build_info(image, spack_version, expected):
 @pytest.mark.parametrize("image", ["ubuntu:18.04"])
 def test_package_info(image):
     pkg_manager = spack.container.images.os_package_manager_for(image)
-    update, install, clean = spack.container.images.commands_for(pkg_manager)
+    preinstall, update, install, clean = spack.container.images.commands_for(pkg_manager)
+    assert preinstall
     assert update
     assert install
     assert clean
