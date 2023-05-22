@@ -676,28 +676,6 @@ ml-linux-x86_64-rocm-build:
     - artifacts: True
       job: ml-linux-x86_64-rocm-generate
 
-#######################################
-# E4S - Cray
-#######################################
-.e4s-cray:
-  variables:
-    SPACK_CI_STACK_NAME: e4s-cray
-
-e4s-cray-generate:
-  tags: [ "craype", "cce@15.0.1", "zen4" ]
-  extends: [ ".generate", .e4s-cray, ".tags-x86_64_v4" ]
-
-e4s-cray-build:
-  extends: [ ".build", ".e4s-cray-cpu" ]
-  trigger:
-    include:
-      - artifact: jobs_scratch_dir/cloud-ci-pipeline.yml
-        job: e4s-cray-generate
-    strategy: depend
-  needs:
-    - artifacts: True
-      job: e4s-cray-generate
-
 ########################################
 # Machine Learning - Darwin aarch64 (MPS)
 ########################################
@@ -837,3 +815,86 @@ aws-pcluster-build-neoverse_v1:
   needs:
     - artifacts: True
       job: aws-pcluster-generate-neoverse_v1
+
+# Cray definitions
+.base-cray-job:
+  variables:
+    SPACK_BUILDCACHE_DESTINATION: "s3://spack-binaries-cray/${CI_COMMIT_REF_NAME}/${SPACK_CI_STACK_NAME}"
+    AWS_ACCESS_KEY_ID: ${CRAY_MIRRORS_AWS_ACCESS_KEY_ID}
+    AWS_SECRET_ACCESS_KEY: ${CRAY_MIRRORS_AWS_SECRET_ACCESS_KEY}
+  rules:
+    - if: $CI_COMMIT_REF_NAME == "develop"
+      # Pipelines on develop only rebuild what is missing from the mirror
+      when: always
+      variables:
+        SPACK_PIPELINE_TYPE: "spack_protected_branch"
+    - if: $CI_COMMIT_REF_NAME =~ /^pr[\d]+_.*$/
+      # Pipelines on PR branches rebuild only what's missing, and do extra pruning
+      when: always
+      variables:
+        SPACK_PIPELINE_TYPE: "spack_pull_request"
+        SPACK_BUILDCACHE_DESTINATION: "s3://spack-binaries-cray/prs/${CI_COMMIT_REF_NAME}/${SPACK_CI_STACK_NAME}"
+        SPACK_PRUNE_UNTOUCHED: "True"
+        SPACK_PRUNE_UNTOUCHED_DEPENDENT_DEPTH: "1"
+
+.generate-cray:
+  extends: [ ".base-cray-job" ]
+  stage: generate
+  script:
+    - uname -a || true
+    - grep -E 'vendor|model name' /proc/cpuinfo 2>/dev/null | sort -u || head -n10 /proc/cpuinfo 2>/dev/null || true
+    - nproc || true
+    - . "./share/spack/setup-env.sh"
+    - spack --version
+    - cd share/spack/gitlab/cloud_pipelines/stacks/${SPACK_CI_STACK_NAME}
+    - spack env activate --without-view .
+    - export SPACK_CI_CONFIG_ROOT="${SPACK_ROOT}/share/spack/gitlab/cloud_pipelines/configs"
+    - spack
+      --config-scope "${SPACK_CI_CONFIG_ROOT}"
+      --config-scope "${SPACK_CI_CONFIG_ROOT}/${SPACK_TARGET_PLATFORM}"
+      --config-scope "${SPACK_CI_CONFIG_ROOT}/${SPACK_TARGET_PLATFORM}/${SPACK_TARGET_ARCH}"
+      ${CI_STACK_CONFIG_SCOPES}
+      ci generate --check-index-only
+      --buildcache-destination "${SPACK_BUILDCACHE_DESTINATION}"
+      --artifacts-root "${CI_PROJECT_DIR}/jobs_scratch_dir"
+      --output-file "${CI_PROJECT_DIR}/jobs_scratch_dir/cloud-ci-pipeline.yml"
+  after_script:
+    - cat /proc/loadavg || true
+  artifacts:
+    paths:
+      - "${CI_PROJECT_DIR}/jobs_scratch_dir"
+  variables:
+    KUBERNETES_CPU_REQUEST: 4000m
+    KUBERNETES_MEMORY_REQUEST: 16G
+  interruptible: true
+  timeout: 60 minutes
+  retry:
+    max: 2
+    when:
+      - always
+
+.build-cray:
+  extends: [ ".base-cray-job" ]
+  stage: build
+
+#######################################
+# E4S - Cray
+#######################################
+.e4s-cray:
+  variables:
+    SPACK_CI_STACK_NAME: e4s-cray
+
+e4s-cray-generate:
+  tags: [ "craype", "cce@15.0.1", "zen4" ]
+  extends: [ ".generate-cray", .e4s-cray, ".tags-x86_64_v4" ]
+
+e4s-cray-build:
+  extends: [ ".build-cray", ".e4s-cray" ]
+  trigger:
+    include:
+      - artifact: jobs_scratch_dir/cloud-ci-pipeline.yml
+        job: e4s-cray-generate
+    strategy: depend
+  needs:
+    - artifacts: True
+      job: e4s-cray-generate
