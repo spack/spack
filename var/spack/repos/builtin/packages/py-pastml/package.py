@@ -17,13 +17,15 @@ class PyPastml(PythonPackage):
     maintainers("snehring")
 
     version("1.9.40", sha256="5334bc8de70a968117240b90d90878ac935be18de6e6e485fb1a8f90cd539fea")
+    version("1.9.38", sha256="43bf7d2a3a9b9b67da7c5881ecdeb2ee9cccd1585b8f65700e53761609945cc6")
 
     depends_on("python@3.8:", type=("build", "run"))
     depends_on("py-setuptools", type="build")
 
     depends_on("py-ete3@3.1.1:", type=("build", "run"))
     depends_on("py-pandas@1.0.0:", type=("build", "run"))
-    depends_on("py-numpy@1.22:", type=("build", "run"))
+    depends_on("py-numpy@1.19.0:", type=("build", "run"), when="@1.9.38")
+    depends_on("py-numpy@1.22:", type=("build", "run"), when="@1.9.40")
     depends_on("py-jinja2@2.11.0:", type=("build", "run"))
     depends_on("py-scipy@1.5.0:", type=("build", "run"))
     depends_on("py-itolapi@4.0.0:", type=("build", "run"))
