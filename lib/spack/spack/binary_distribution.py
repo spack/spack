@@ -1277,7 +1277,6 @@ def _build_tarball_in_stage_dir(spec: Spec, out_url: str, stage_dir: str, option
         raise NoOverwriteException(url_util.format(remote_specfile_path))
 
     pkg_dir = os.path.basename(spec.prefix.rstrip(os.path.sep))
-    workdir = os.path.join(stage_dir, pkg_dir)
 
     binaries_dir = spec.prefix
 
