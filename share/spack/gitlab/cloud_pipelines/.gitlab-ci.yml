@@ -119,6 +119,7 @@ default:
   stage: generate
   script:
     - .\share\spack\setup-env.ps1
+    - spack python -m pip install --user boto3 # spack python ensures we're pip installing with Spack's python
     - spack --version
     - spack compiler find
     # These should exist in the MSVC installation
