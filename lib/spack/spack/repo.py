@@ -1239,7 +1239,7 @@ class Repo(object):
         try:
             module = importlib.import_module(fullname)
         except ImportError:
-            raise UnknownPackageError(pkg_name)
+            raise UnknownPackageError(fullname)
         except Exception as e:
             msg = f"cannot load package '{pkg_name}' from the '{self.namespace}' repository: {e}"
             raise RepoError(msg) from e
