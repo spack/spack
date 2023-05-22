@@ -4,6 +4,7 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import os
+from pathlib import PurePath
 
 from spack.package import *
 
@@ -109,7 +110,7 @@ class CmakeClient(CMakePackage):
         print(cmake)
         print(cmake.exe)
         check(
-            cmake.exe[0].startswith(spec["cmake"].prefix.bin),
+            str(PurePath(cmake.exe[0])).startswith(spec["cmake"].prefix.bin),
             "Wrong cmake was in environment: %s" % cmake,
         )
 

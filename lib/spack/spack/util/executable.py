@@ -8,11 +8,11 @@ import re
 import shlex
 import subprocess
 import sys
+from pathlib import Path, PurePath
 
 import llnl.util.tty as tty
 
 import spack.error
-from spack.util.path import Path, format_os_path, path_to_os_path, system_path_filter
 
 __all__ = ["Executable", "which", "ProcessError"]
 
@@ -21,11 +21,10 @@ class Executable:
     """Class representing a program that can be run on the command line."""
 
     def __init__(self, name):
-        # necesary here for the shlex call to succeed
-        name = format_os_path(name, mode=Path.unix)
-        self.exe = shlex.split(str(name))
-        # filter back to platform dependent path
-        self.exe = path_to_os_path(*self.exe)
+        if not isinstance(name, PurePath):
+            name = Path(name).as_posix()
+        self.exe = shlex.split(name)
+
         self.default_env = {}
         from spack.util.environment import EnvironmentModifications  # no cycle
 
@@ -35,12 +34,10 @@ class Executable:
         if not self.exe:
             raise ProcessError("Cannot construct executable for '%s'" % name)
 
-    @system_path_filter
     def add_default_arg(self, arg):
         """Add a default argument to the command."""
         self.exe.append(arg)
 
-    @system_path_filter
     def add_default_env(self, key, value):
         """Set an environment variable when the command is run.
 
@@ -70,7 +67,7 @@ class Executable:
         Returns:
             str: The basename of the executable
         """
-        return os.path.basename(self.path)
+        return PurePath(self.path).name
 
     @property
     def path(self):
@@ -79,7 +76,7 @@ class Executable:
         Returns:
             str: The path to the executable
         """
-        return self.exe[0]
+        return str(PurePath(self.exe[0]))
 
     def __call__(self, *args, **kwargs):
         """Run this executable in a subprocess.
@@ -122,6 +119,10 @@ class Executable:
         By default, the subprocess inherits the parent's file descriptors.
 
         """
+        # Find exe full path if in current directory
+        if Path(self.exe[0]).exists():
+            self.exe[0] = (Path.cwd() / self.exe[0]).as_posix()
+
         # Environment
         env_arg = kwargs.get("env", None)
 
@@ -269,39 +270,38 @@ class Executable:
         return " ".join(self.exe)
 
 
-@system_path_filter
 def which_string(*args, **kwargs):
     """Like ``which()``, but return a string instead of an ``Executable``."""
     path = kwargs.get("path", os.environ.get("PATH", ""))
     required = kwargs.get("required", False)
 
+    if isinstance(path, list):
+        paths = [Path(str(x)) for x in path]
+
     if isinstance(path, str):
-        path = path.split(os.pathsep)
+        paths = [Path(x) for x in path.split(os.pathsep)]
 
-    for name in args:
-        win_candidates = []
-        if sys.platform == "win32" and (not name.endswith(".exe") and not name.endswith(".bat")):
-            win_candidates = [name + ext for ext in [".exe", ".bat"]]
-        candidate_names = [name] if not win_candidates else win_candidates
-
+    for search_item in args:
+        search_item = Path(search_item)
+        candidate_items = [Path(search_item)]
         if sys.platform == "win32":
-            new_path = path[:]
-            for p in path:
-                if os.path.basename(p) == "bin":
-                    new_path.append(os.path.dirname(p))
-            path = new_path
+            if not search_item.suffix:
+                candidate_items = [
+                    search_item.parent / (search_item.name + ext) for ext in [".exe", ".bat"]
+                ]
 
-        for candidate_name in candidate_names:
-            if os.path.sep in candidate_name:
-                exe = os.path.abspath(candidate_name)
-                if os.path.isfile(exe) and os.access(exe, os.X_OK):
-                    return exe
-            else:
-                for directory in path:
-                    directory = path_to_os_path(directory).pop()
-                    exe = os.path.join(directory, candidate_name)
-                    if os.path.isfile(exe) and os.access(exe, os.X_OK):
-                        return exe
+            paths_copy = paths
+            for p in paths_copy:
+                if p.name == "bin":
+                    paths.append(p.parent)
+
+        for candidate_item in candidate_items:
+            search_paths = [Path.cwd()] + paths
+
+            for directory in search_paths:
+                exe = directory / candidate_item
+                if exe.is_file() and os.access(str(exe), os.X_OK):
+                    return str(exe)
 
     if required:
         raise CommandNotFoundError("spack requires '%s'. Make sure it is in your path." % args[0])
