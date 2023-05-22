@@ -1647,7 +1647,7 @@ def test_ci_generate_bootstrap_prune_dag(
     install_cmd("gcc@=12.2.0%gcc@10.2.1")
 
     # Put installed compiler in the buildcache
-    buildcache_cmd("push", "-u", "-a", "-f", "-d", mirror_dir.strpath, "gcc@12.2.0%gcc@10.2.1")
+    buildcache_cmd("push", "-u", "-a", "-f", mirror_dir.strpath, "gcc@12.2.0%gcc@10.2.1")
 
     # Now uninstall the compiler
     uninstall_cmd("-y", "gcc@12.2.0%gcc@10.2.1")
@@ -1662,7 +1662,7 @@ def test_ci_generate_bootstrap_prune_dag(
     install_cmd("--no-check-signature", "b%gcc@=12.2.0")
 
     # Put spec built with installed compiler in the buildcache
-    buildcache_cmd("push", "-u", "-a", "-f", "-d", mirror_dir.strpath, "b%gcc@12.2.0")
+    buildcache_cmd("push", "-u", "-a", "-f", mirror_dir.strpath, "b%gcc@12.2.0")
 
     # Now uninstall the spec
     uninstall_cmd("-y", "b%gcc@12.2.0")
