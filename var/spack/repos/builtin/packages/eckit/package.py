@@ -18,8 +18,8 @@ class Eckit(CMakePackage):
 
     maintainers("skosukhin", "climbfuji")
 
-    # To be replaced with 1.23.1 when tag is available
-    version("1.23.1-pre", commit="046ffb1597a619fd873b6bae4af1150a1beec62a")
+    # To be replaced with 1.23.2 when tag is available
+    version("1.23.2-pre", commit="046ffb1597a619fd873b6bae4af1150a1beec62a")
     version("1.23.0", sha256="3cac55ddf7036ecd32cb0974a1ec3a2d347de574ab3a2c0bb6c6f8982e5a7a09")
     version("1.22.1", sha256="a3463d07e47e3bd3e5efa13fdc03d7d3a30ada919ccec3259c6c9c7da4cfdfd9")
     version("1.20.2", sha256="9c11ddaaf346e40d11312b81ca7f1b510017f26618f4c0f5c5c59c37623fbac8")
