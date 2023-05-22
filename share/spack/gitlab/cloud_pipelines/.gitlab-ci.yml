@@ -122,10 +122,9 @@ default:
     - spack --version
     - spack compiler find
     # These should exist in the MSVC installation
-    - spack external find --not-buildable cmake ninja
+    - spack external find --not-buildable cmake ninja win-wdk win-sdk wgl msmpi
     - spack env activate --without-view .\share\spack\gitlab\cloud_pipelines\stacks\$env:SPACK_CI_STACK_NAME
     - $SPACK_CI_CONFIG_ROOT = ".\share\spack\gitlab\cloud_pipelines\configs"
-    - dir "env:"
     - spack
       --env-dir .\share\spack\gitlab\cloud_pipelines\stacks\$env:SPACK_CI_STACK_NAME
       --config-scope $SPACK_CI_CONFIG_ROOT
