@@ -14,6 +14,7 @@ class RGeiger(RPackage):
 
     cran = "geiger"
 
+    version("2.0.11", sha256="dcc5a0a988439110078867e0aaf09b048e27db7f02e4cbdfe35783611fde3f69")
     version("2.0.10", sha256="2895cfb73fb91764be2ec3f931e4f3b2e75ae00a1431af4b40dc90e7c0693be0")
     version("2.0.9", sha256="c8c8c871b4eb03ba1dc2fd49db304741b16ede99fe49bb5f9b2c220b9e2a8066")
     version("2.0.7", sha256="d200736c4ad7ed4bc55a13e7d0126ddc7fed88e245cd5706d4692aaa437e9596")
@@ -33,3 +34,4 @@ class RGeiger(RPackage):
     depends_on("r-ncbit", type=("build", "run"))
     depends_on("r-colorspace", type=("build", "run"))
     depends_on("r-phytools@0.7.31:", type=("build", "run"), when="@2.0.7:")
+    depends_on("r-phytools@1.5-1:", type=("build", "run"), when="@2.0.11:")

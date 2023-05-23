@@ -231,7 +231,7 @@ def parse_specs(args, **kwargs):
             msg += "\n\n"
             msg += unquoted_flags.report()
 
-        raise spack.error.SpackError(msg)
+        raise spack.error.SpackError(msg) from e
 
 
 def matching_spec_from_env(spec):
@@ -347,7 +347,7 @@ def iter_groups(specs, indent, all_headers):
             spack.spec.architecture_color,
             architecture if architecture else "no arch",
             spack.spec.compiler_color,
-            compiler if compiler else "no compiler",
+            f"{compiler.display_str}" if compiler else "no compiler",
         )
 
         # Sometimes we want to display specs that are not yet concretized.

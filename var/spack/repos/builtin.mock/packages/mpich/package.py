@@ -28,3 +28,6 @@ class Mpich(Package):
 
     def install(self, spec, prefix):
         touch(prefix.mpich)
+
+    def test_mpich(self):
+        print("Testing mpich")
