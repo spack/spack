@@ -12,6 +12,7 @@ class PyGrpcio(PythonPackage):
     homepage = "https://grpc.io/"
     pypi = "grpcio/grpcio-1.32.0.tar.gz"
 
+    version("1.52.0", sha256="a5d4a83d29fc39af429c10b9b326c174fec49b73398e4a966a1f2a4f30aa4fdb")
     version("1.48.1", sha256="660217eccd2943bf23ea9a36e2a292024305aec04bf747fbcff1f5032b83610e")
     version("1.43.0", sha256="735d9a437c262ab039d02defddcb9f8f545d7009ae61c0114e19dda3843febe5")
     version("1.42.0", sha256="4a8f2c7490fe3696e0cdd566e2f099fb91b51bc75446125175c55581c2f7bc11")
@@ -34,11 +35,8 @@ class PyGrpcio(PythonPackage):
     version("1.25.0", sha256="c948c034d8997526011960db54f512756fb0b4be1b81140a15b4ef094c6594a4")
     version("1.16.0", sha256="d99db0b39b490d2469a8ef74197d5f211fa740fc9581dccecbb76c56d080fce1")
 
-    depends_on("python@3.6:", when="@1.42:", type=("build", "link", "run"))
-    depends_on("python@3.5:", when="@1.30:", type=("build", "link", "run"))
-    depends_on("python@2.7:2.8,3.5:", type=("build", "link", "run"))
     depends_on("py-setuptools", type="build")
-    depends_on("py-six@1.5.2:", type=("build", "run"))
+    depends_on("py-six@1.5.2:", when="@:1.48", type=("build", "run"))
     depends_on("py-cython@0.23:", type="build")
     depends_on("openssl")
     depends_on("zlib")

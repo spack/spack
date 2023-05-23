@@ -13,11 +13,15 @@ class Prism(MakefilePackage):
     homepage = "https://www.prismmodelchecker.org/"
     url = "https://github.com/prismmodelchecker/prism/archive/v4.5.tar.gz"
 
+    maintainers("snehring")
+
+    version("4.7", sha256="16186047ba49efc6532de6e9c3993c8c73841a7c76c99758d6ee769e72092d6d")
     version("4.5", sha256="1cb7a77538b5c997d98a8c209030c46f9e8f021f7a8332e5eb2fd3b4a23936fd")
 
     build_directory = "prism"
 
-    depends_on("java", type=("build", "run"))
+    depends_on("java@9:", type=("build", "run"))
+    depends_on("java@9:11", type=("build", "run"), when="@:4.5")
 
     patch("Makefile.patch", when="target=aarch64:")
 

@@ -14,7 +14,7 @@ class Scorep(AutotoolsPackage):
 
     homepage = "https://www.vi-hps.org/projects/score-p"
     url = "https://perftools.pages.jsc.fz-juelich.de/cicd/scorep/tags/scorep-7.1/scorep-7.1.tar.gz"
-    maintainers = ["wrwilliams"]
+    maintainers("wrwilliams")
 
     version("8.0", sha256="4c0f34f20999f92ebe6ca1ff706d0846b8ce6cd537ffbedb49dfaef0faa66311")
     version("7.1", sha256="98dea497982001fb82da3429ca55669b2917a0858c71abe2cfe7cd113381f1f7")
@@ -90,18 +90,20 @@ class Scorep(AutotoolsPackage):
     # two components of cube -- cubew and cubelib.
 
     # SCOREP 8
+    depends_on("binutils", type="link", when="@8:")
     depends_on("otf2@3:", when="@8:")
     depends_on("cubew@4.8:", when="@8:")
     depends_on("cubelib@4.8:", when="@8:")
+    # fall through to Score-P 7's OPARI2, no new release
     # SCOREP 7
-    depends_on("otf2@2.3:2.3.99", when="@7:")
-    depends_on("cubew@4.6:", when="@7:")
-    depends_on("cubelib@4.6:", when="@7:")
+    depends_on("otf2@2.3:2.3.99", when="@7.0:7")
+    depends_on("cubew@4.6:4.7.99", when="@7.0:7")
+    depends_on("cubelib@4.6:4.7.99", when="@7.0:7")
     depends_on("opari2@2.0.6:", when="@7:")
     # SCOREP 6
-    depends_on("otf2@2.2:", when="@6:")
+    depends_on("otf2@2.2:", when="@6.0:6")
     # SCOREP 4 and 5
-    depends_on("otf2@2.1:", when="@4:")
+    depends_on("otf2@2.1:", when="@4:5")
     depends_on("cubew@4.4:4.5", when="@4:6")
     depends_on("cubelib@4.4:4.5", when="@4:6")
     # SCOREP 3
@@ -184,6 +186,9 @@ class Scorep(AutotoolsPackage):
             config_args.append("--with-mpi=mpich3")
         elif spec.satisfies("^openmpi"):
             config_args.append("--with-mpi=openmpi")
+
+        if spec.satisfies("^binutils"):
+            config_args.append("--with-libbfd=%s" % spec["binutils"].prefix)
 
         config_args.extend(
             [

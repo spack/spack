@@ -12,6 +12,7 @@ class Highway(CMakePackage):
     homepage = "https://github.com/google/highway"
     url = "https://github.com/google/highway/archive/refs/tags/1.0.0.tar.gz"
 
+    version("1.0.4", sha256="faccd343935c9e98afd1016e9d20e0b8b89d908508d1af958496f8c2d3004ac2")
     version("1.0.0", sha256="ab4f5f864932268356f9f6aa86f612fa4430a7db3c8de0391076750197e876b8")
 
     depends_on("cmake@3.10:", type="build")

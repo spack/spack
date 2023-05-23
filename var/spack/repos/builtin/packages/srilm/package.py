@@ -71,7 +71,7 @@ class Srilm(MakefilePackage):
         makefile_machine.filter(r"PIC_FLAG\s*=.*", "")
 
         with open(makefile_machine_fn, "a") as makefile_machine:
-            # TCL is only needed for tests so disable it
+            # Tcl is only needed for tests so disable it
             makefile_machine.write("\nNO_TCL = 1\n")
             if "+pic" in spec:
                 makefile_machine.write("MAKE_PIC = 1\n")

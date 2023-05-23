@@ -24,5 +24,14 @@ class Direnv(Package):
     depends_on("go@1.16:", type="build", when="@2.28:")
     depends_on("go", type="build")
 
+    phases = ["build", "install"]
+
+    def setup_build_environment(self, env):
+        # Point GOPATH at the top of the staging dir for the build step.
+        env.prepend_path("GOPATH", self.stage.path)
+
+    def build(self, spec, prefix):
+        make()
+
     def install(self, spec, prefix):
         make("install", "PREFIX=%s" % prefix)

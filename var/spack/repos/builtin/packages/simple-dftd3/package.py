@@ -18,9 +18,9 @@ class SimpleDftd3(MesonPackage):
     maintainers("awvwgk")
 
     version("main", branch="main")
-    version("0.7.0", "5390b20102474a3c37240f38226f3a54a809b34bcb910317bdd109b8c2865f4e")
-    version("0.6.0", "c057361565f570cb128489c70131487f71b6891a40e5292dfe37041596810dfe")
-    version("0.5.1", "0411fdaebe438f652a970cb232ae3199c4cc840366ed05fda4c38e634632040d")
+    version("0.7.0", sha256="5390b20102474a3c37240f38226f3a54a809b34bcb910317bdd109b8c2865f4e")
+    version("0.6.0", sha256="c057361565f570cb128489c70131487f71b6891a40e5292dfe37041596810dfe")
+    version("0.5.1", sha256="0411fdaebe438f652a970cb232ae3199c4cc840366ed05fda4c38e634632040d")
 
     variant("openmp", default=True, description="Use OpenMP parallelisation")
     variant("python", default=False, description="Build Python extension module")
