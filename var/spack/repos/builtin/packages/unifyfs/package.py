@@ -22,6 +22,7 @@ class Unifyfs(AutotoolsPackage):
     tags = ["e4s"]
 
     version("develop", branch="dev")
+    version("1.1", sha256="1bf5593099d272c9a12c46090d217c61dfeea1504dd4f7184972da3db5afc5f3")
     version("1.0.1", sha256="d92800778661b15ab50275c4efe345a6c60d8f1802a0d5909fda38db91b12116")
     version("1.0", sha256="c9ad0d15d382773841a3dab89c661fbdcfd686ec37fa263eb22713f6404258f5")
     version(
@@ -66,8 +67,11 @@ class Unifyfs(AutotoolsPackage):
     # Required dependencies
     depends_on("gotcha@1.0.4:")
     depends_on("mochi-margo@0.4.3", when="@:0.9.1")
-    depends_on("mochi-margo@0.9.6", when="@0.9.2:1.0")
-    depends_on("mochi-margo@0.9.6:0.9.9", when="@develop")
+    depends_on("mochi-margo@0.9.6:0.9.9", when="@0.9.2:1.0.1")
+    # Version 1.1 mostly tested on mochi-margo@0.13.1. Leaving this all
+    # inclusive from v0.10 on until any bugs are reported on versions before or
+    # after v0.13.1.
+    depends_on("mochi-margo@0.10:", when="@1.1:")
     depends_on("mpi")
     depends_on("openssl@:1")
 
@@ -80,7 +84,7 @@ class Unifyfs(AutotoolsPackage):
     # Optional dependencies
     depends_on("spath~mpi", when="+spath")
 
-    conflicts("^libfabric@1.13")
+    conflicts("^libfabric@1.13:1.13.1")
     conflicts("^mercury~bmi~ofi")
     conflicts("^mercury~sm")
     # Known compatibility issues with ifort and xlf. Fixes coming.

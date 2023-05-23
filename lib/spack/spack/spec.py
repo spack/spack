@@ -679,6 +679,16 @@ class CompilerSpec(object):
         d = d["compiler"]
         return CompilerSpec(d["name"], vn.VersionList.from_dict(d))
 
+    @property
+    def display_str(self):
+        """Equivalent to {compiler.name}{@compiler.version} for Specs, without extra
+        @= for readability."""
+        if self.concrete:
+            return f"{self.name}@{self.version}"
+        elif self.versions != vn.any_version:
+            return f"{self.name}@{self.versions}"
+        return self.name
+
     def __str__(self):
         out = self.name
         if self.versions and self.versions != vn.any_version:
@@ -1730,14 +1740,14 @@ class Spec(object):
     def short_spec(self):
         """Returns a version of the spec with the dependencies hashed
         instead of completely enumerated."""
-        spec_format = "{name}{@version}{%compiler}"
+        spec_format = "{name}{@version}{%compiler.name}{@compiler.version}"
         spec_format += "{variants}{arch=architecture}{/hash:7}"
         return self.format(spec_format)
 
     @property
     def cshort_spec(self):
         """Returns an auto-colorized version of ``self.short_spec``."""
-        spec_format = "{name}{@version}{%compiler}"
+        spec_format = "{name}{@version}{%compiler.name}{@compiler.version}"
         spec_format += "{variants}{arch=architecture}{/hash:7}"
         return self.cformat(spec_format)
 
