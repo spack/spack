@@ -157,6 +157,7 @@ class Dd4hep(CMakePackage):
     depends_on("lcio", when="+lcio")
     depends_on("edm4hep", when="+edm4hep")
     depends_on("podio", when="+edm4hep")
+    depends_on("podio@:0.16.03", when="@:1.23 +edm4hep")
     depends_on("podio@0.16:", when="@1.24: +edm4hep")
     depends_on("py-pytest", type=("build", "test"))
 
