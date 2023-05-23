@@ -233,38 +233,25 @@ def find_compilers(path_hints=None):
         path_hints = get_path("PATH")
     default_paths = fs.search_paths_for_executables(*path_hints)
 
-    # To detect the version of the compilers, we dispatch a certain number
-    # of function calls to different workers. Here we construct the list
-    # of arguments for each call.
-    arguments = []
-    for o in all_os_classes():
-        search_paths = getattr(o, "compiler_search_paths", default_paths)
-        arguments.extend(arguments_to_detect_version_fn(o, search_paths))
+    pkg_cls_to_check = [spack.repo.path.get_pkg_class(pkg) for pkg in ["apple-clang"]]
+    detected_compilers = spack.detection.by_executable(pkg_cls_to_check, path_hints=default_paths)
 
-    # Here we map the function arguments to the corresponding calls
-    tp = multiprocessing.pool.ThreadPool()
-    try:
-        detected_versions = tp.map(detect_version, arguments)
-    finally:
-        tp.close()
+    platform = spack.platforms.host()
+    operating_system = platform.operating_system("default_os")
+    target = platform.target("default_target")
 
-    def valid_version(item):
-        value, error = item
-        if error is None:
-            return True
-        try:
-            # This will fail on Python 2.6 if a non ascii
-            # character is in the error
-            tty.debug(error)
-        except UnicodeEncodeError:
-            pass
-        return False
+    compilers = []
+    for name, detected in detected_compilers.items():
+        for entry in detected:
+            compiler_cls = spack.compilers.class_for_compiler_name(name)
+            spec = spack.spec.CompilerSpec(entry.spec.name, f"={entry.spec.versions}")
+            paths = [
+                entry.spec.extra_attributes["compilers"].get(x, None)
+                for x in ("c", "cxx", "f77", "fc")
+            ]
+            compilers.append(compiler_cls(spec, str(operating_system), str(target), paths))
 
-    def remove_errors(item):
-        value, _ = item
-        return value
-
-    return make_compiler_list(map(remove_errors, filter(valid_version, detected_versions)))
+    return compilers
 
 
 def find_new_compilers(path_hints=None, scope=None):
