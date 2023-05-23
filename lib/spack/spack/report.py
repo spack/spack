@@ -133,8 +133,9 @@ class InfoCollector:
                     # Everything else is an error (the installation
                     # failed outside of the child process)
                     package["result"] = "error"
-                    package["stdout"] = self.fetch_log(pkg)
                     package["message"] = str(exc) or "Unknown error"
+                    package["stdout"] = self.fetch_log(pkg)
+                    package["stdout"] += package["message"]
                     package["exception"] = traceback.format_exc()
                     raise
 

@@ -4,6 +4,7 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 from spack.package import *
+from spack.util.environment import is_system_path
 
 
 class Procps(AutotoolsPackage):
@@ -17,6 +18,8 @@ class Procps(AutotoolsPackage):
     version("master", branch="master")
     version("3.3.15", tag="v3.3.15")
 
+    variant("nls", default=True, description="Enable Native Language Support.")
+
     depends_on("autoconf", type="build")
     depends_on("automake", type="build")
     depends_on("libtool", type="build")
@@ -24,7 +27,7 @@ class Procps(AutotoolsPackage):
     depends_on("pkgconfig@0.9.0:", type="build")
     depends_on("dejagnu", type="test")
     depends_on("iconv")
-    depends_on("gettext")
+    depends_on("gettext", when="+nls")
     depends_on("ncurses")
 
     conflicts("platform=darwin", msg="procps is linux-only")
@@ -33,11 +36,29 @@ class Procps(AutotoolsPackage):
         sh = which("sh")
         sh("autogen.sh")
 
+    def flag_handler(self, name, flags):
+        if name == "ldlibs":
+            spec = self.spec
+            if "+nls" in spec and "intl" in spec["gettext"].libs.names:
+                flags.append("-lintl")
+        return self.build_system_flags(name, flags)
+
     def configure_args(self):
-        return [
-            "--with-libiconv-prefix={0}".format(self.spec["iconv"].prefix),
-            "--with-libintl-prefix={0}".format(self.spec["gettext"].prefix),
-            "--with-ncurses",
-            # Required to avoid libintl linking errors
-            "--disable-nls",
-        ]
+        spec = self.spec
+        args = ["--with-ncurses"]
+
+        if "+nls" in spec:
+            args.append("--enable-nls")
+            if "intl" not in spec["gettext"].libs.names:
+                args.append("--without-libintl-prefix")
+            elif not is_system_path(spec["gettext"].prefix):
+                args.append("--with-libintl-prefix=" + spec["gettext"].prefix)
+        else:
+            args.append("--disable-nls")
+
+        if spec["iconv"].name == "libc":
+            args.append("--without-libiconv-prefix")
+        elif not is_system_path(spec["iconv"].prefix):
+            args.append("--with-libiconv-prefix={0}".format(spec["iconv"].prefix))
+
+        return args

@@ -72,7 +72,7 @@ class SuperluDist(CMakePackage, CudaPackage, ROCmPackage):
 
     patch("xl-611.patch", when="@:6.1.1 %xl")
     patch("xl-611.patch", when="@:6.1.1 %xl_r")
-    patch("superlu-cray-ftn-case.patch", when="@7.1.1: %cce")
+    patch("superlu-cray-ftn-case.patch", when="@7.1.1 %cce")
     patch("CMAKE_INSTALL_LIBDIR.patch", when="@7.0.0:7.2.0")
 
     def cmake_args(self):
@@ -100,16 +100,6 @@ class SuperluDist(CMakePackage, CudaPackage, ROCmPackage):
             "TPL_PARMETIS_INCLUDE_DIRS",
             [spec["parmetis"].prefix.include, spec["metis"].prefix.include],
         )
-
-        if (spec.satisfies("%xl") or spec.satisfies("%xl_r")) and spec.satisfies("@:6.1.1"):
-            append_define("CMAKE_C_FLAGS", "-DNoChange")
-        if spec.satisfies("%oneapi"):
-            #
-            # 2022 and later  Intel OneAPI compilers throws errors compiling
-            # some of the non ISO C99 compliant code in this package
-            # see https://reviews.llvm.org/D122983
-            #
-            append_define("CMAKE_C_FLAGS", "-Wno-error=implicit-function-declaration")
 
         append_define("XSDK_INDEX_SIZE", "64" if "+int64" in spec else "32")
 
@@ -142,7 +132,20 @@ class SuperluDist(CMakePackage, CudaPackage, ROCmPackage):
             flags.append(self.compiler.cxx11_flag)
         if name == "cflags" and "%pgi" not in self.spec:
             flags.append("-std=c99")
-        if name == "cflags" and self.spec.satisfies("%oneapi"):
+        if (
+            name == "cflags"
+            and (self.spec.satisfies("%xl") or self.spec.satisfies("%xl_r"))
+            and self.spec.satisfies("@:6.1.1")
+        ):
+            flags.append("-DNoChange")
+        if name == "cflags" and (
+            self.spec.satisfies("%oneapi") or self.spec.satisfies("%arm@23.04:")
+        ):
+            #
+            # 2022 and later Intel OneAPI compilers and Arm compilers version 23.04 and later
+            # throw errors compiling some of the non ISO C99 compliant code in this package
+            # see https://reviews.llvm.org/D122983
+            #
             flags.append("-Wno-error=implicit-function-declaration")
         return (None, None, flags)
 

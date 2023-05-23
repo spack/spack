@@ -16,6 +16,7 @@ class PyFenicsDolfinx(PythonPackage):
     maintainers("chrisrichardson", "garth-wells", "nate-sime", "jhale")
 
     version("main", branch="main")
+    version("0.6.0", sha256="eb8ac2bb2f032b0d393977993e1ab6b4101a84d54023a67206e3eac1a8d79b80")
     version("0.5.1", sha256="a570e3f6ed8e7c570e7e61d0e6fd44fa9dad2c5f8f1f48a6dc9ad22bacfbc973")
     version("0.5.0", sha256="503c70c01a44d1ffe48e052ca987693a49f8d201877652cabbe2a44eb3b7c040")
     version("0.4.1", sha256="68dcf29a26c750fcea5e02d8d58411e3b054313c3bf6fcbc1d0f08dd2851117f")
@@ -37,10 +38,12 @@ class PyFenicsDolfinx(PythonPackage):
 
     depends_on("cmake@3.19:", type="build")
     depends_on("hdf5", type="build")
-    depends_on("pkgconfig", type=("build", "run"))
+    depends_on("pkgconfig", type="build")
+    depends_on("python@3.8:", type=("build", "run"), when="@0.5:")
     depends_on("python@3.7:", type=("build", "run"))
 
     depends_on("fenics-dolfinx@main", when="@main")
+    depends_on("fenics-dolfinx@0.6.0", when="@0.6.0")
     depends_on("fenics-dolfinx@0.5.1", when="@0.5.1")
     depends_on("fenics-dolfinx@0.5.0", when="@0.5.0")
     depends_on("fenics-dolfinx@0.4.1", when="@0.4.1")
@@ -49,32 +52,37 @@ class PyFenicsDolfinx(PythonPackage):
     depends_on("fenics-dolfinx@0.1.0", when="@0.1.0")
 
     depends_on("fenics-basix@main", type=("build", "link"), when="@main")
+    depends_on("fenics-basix@0.6.0:0.6", type=("build", "link"), when="@0.6.0:0.6")
     depends_on("fenics-basix@0.5.1:0.5", type=("build", "link"), when="@0.5.0:0.5")
     depends_on("fenics-basix@0.4.2", type=("build", "link"), when="@0.4.1")
     depends_on("fenics-basix@0.3.0", type=("build", "link"), when="@0.3.0")
     depends_on("fenics-basix@0.2.0", type=("build", "link"), when="@0.2.0")
     depends_on("fenics-basix@0.1.0", type=("build", "link"), when="@0.1.0")
 
-    depends_on("py-fenics-ffcx@main", type="run", when="@main")
-    depends_on("py-fenics-ffcx@0.5.0.post0", type="run", when="@0.5.0:0.5")
-    depends_on("py-fenics-ffcx@0.4.2", type="run", when="@0.4.1")
-    depends_on("py-fenics-ffcx@0.3.0", type="run", when="@0.3.0")
-    depends_on("py-fenics-ffcx@0.2.0", type="run", when="@0.2.0")
-    depends_on("py-fenics-ffcx@0.1.0", type="run", when="@0.1.0")
+    depends_on("py-fenics-ffcx@main", type=("build", "run"), when="@main")
+    depends_on("py-fenics-ffcx@0.6", type=("build", "run"), when="@0.6")
+    depends_on("py-fenics-ffcx@0.5.0.post0", type=("build", "run"), when="@0.5.0:0.5")
+    depends_on("py-fenics-ffcx@0.4.2", type=("build", "run"), when="@0.4.1")
+    depends_on("py-fenics-ffcx@0.3.0", type=("build", "run"), when="@0.3.0")
+    depends_on("py-fenics-ffcx@0.2.0", type=("build", "run"), when="@0.2.0")
+    depends_on("py-fenics-ffcx@0.1.0", type=("build", "run"), when="@0.1.0")
 
-    depends_on("py-fenics-ufl@main", type="run", when="@main")
-    depends_on("py-fenics-ufl@2022.2.0", type="run", when="@0.5.0:0.5")
-    depends_on("py-fenics-ufl@2022.1.0", type="run", when="@0.4.1")
-    depends_on("py-fenics-ufl@2021.1.0", type="run", when="@0.1:0.3.99")
+    depends_on("py-fenics-ufl@main", type=("build", "run"), when="@main")
+    depends_on("py-fenics-ufl@2023.1", type=("build", "run"), when="@0.6")
+    depends_on("py-fenics-ufl@2022.2.0", type=("build", "run"), when="@0.5.0:0.5")
+    depends_on("py-fenics-ufl@2022.1.0", type=("build", "run"), when="@0.4.1")
+    depends_on("py-fenics-ufl@2021.1.0", type=("build", "run"), when="@0.1:0.3.99")
 
-    depends_on("py-numpy@1.21:", type=("build", "run"), when="@0.5.0:")
-    depends_on("py-numpy", type=("build", "run"))
-
+    depends_on("py-numpy@1.21:", type=("build", "run"))
     depends_on("py-mpi4py", type=("build", "run"))
     depends_on("py-petsc4py", type=("build", "run"))
-    depends_on("py-pybind11@2.6.2:", type=("build", "run"))
+    depends_on("py-pybind11@2.7.0:", type=("build", "run"), when="@0.4:")
+    depends_on("py-pybind11@2.2.4:", type=("build", "run"))
     depends_on("xtensor@0.23.10:", type="build", when="@:0.5")
 
-    depends_on("py-cffi", type="run")
+    depends_on("py-setuptools@42:", type="build", when="@0.4:")
+    depends_on("py-setuptools@40:", type="build")
+
+    depends_on("py-cffi", type=("build", "run"))
 
     build_directory = "python"

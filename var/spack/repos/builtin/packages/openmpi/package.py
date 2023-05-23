@@ -42,10 +42,13 @@ class Openmpi(AutotoolsPackage, CudaPackage):
 
     # Current
     version(
-        "4.1.4", sha256="92912e175fd1234368c8730c03f4996fe5942e7479bb1d10059405e7f2b3930d"
-    )  # libmpi.so.40.30.4
+        "4.1.5", sha256="a640986bc257389dd379886fdae6264c8cfa56bc98b71ce3ae3dfbd8ce61dbe3"
+    )  # libmpi.so.40.30.5
 
     # Still supported
+    version(
+        "4.1.4", sha256="92912e175fd1234368c8730c03f4996fe5942e7479bb1d10059405e7f2b3930d"
+    )  # libmpi.so.40.30.4
     version(
         "4.1.3", sha256="3d81d04c54efb55d3871a465ffb098d8d72c1f48ff1cbaf2580eb058567c0a3b"
     )  # libmpi.so.40.30.3
@@ -481,6 +484,7 @@ class Openmpi(AutotoolsPackage, CudaPackage):
         "memchecker",
         default=False,
         description="Memchecker support for debugging [degrades performance]",
+        sticky=True,
     )
 
     variant(
@@ -550,7 +554,7 @@ class Openmpi(AutotoolsPackage, CudaPackage):
     # depends_on('pmix@3.2.3', when='@4.1.2')
     depends_on("pmix@1.0:1", when="@2.0:2")
     depends_on("pmix@3.2:", when="@4.0:4")
-    depends_on("pmix@5:", when="@5.0:5")
+    depends_on("pmix@4.2:", when="@5.0:5")
 
     # Libevent is required when *vendored* PMIx is used
     depends_on("libevent@2:", when="@main")
@@ -951,7 +955,7 @@ class Openmpi(AutotoolsPackage, CudaPackage):
             config_args.extend(self.with_or_without("schedulers"))
 
         config_args.extend(self.enable_or_disable("memchecker"))
-        if spec.satisfies("+memchecker", strict=True):
+        if spec.satisfies("+memchecker"):
             config_args.extend(["--enable-debug"])
 
         # Package dependencies
@@ -1002,6 +1006,11 @@ class Openmpi(AutotoolsPackage, CudaPackage):
                 # This option was removed from later versions
                 config_args.append(
                     "--with-cuda-libdir={0}".format(spec["cuda"].libs.directories[0])
+                )
+            if spec.satisfies("@5.0:"):
+                # And then it returned
+                config_args.append(
+                    "--with-cuda-libdir={0}".format(spec["cuda"].libs.directories[0] + "/stubs")
                 )
             if spec.satisfies("@1.7.2"):
                 # There was a bug in 1.7.2 when --enable-static is used

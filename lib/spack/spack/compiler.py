@@ -28,8 +28,6 @@ from spack.util.path import system_path_filter
 
 __all__ = ["Compiler"]
 
-is_windows = sys.platform == "win32"
-
 
 @llnl.util.lang.memoized
 def _get_compiler_version_output(compiler_path, version_arg, ignore_errors=()):
@@ -598,7 +596,7 @@ class Compiler(object):
         suffixes = [""]
         # Windows compilers generally have an extension of some sort
         # as do most files on Windows, handle that case here
-        if is_windows:
+        if sys.platform == "win32":
             ext = r"\.(?:exe|bat)"
             cls_suf = [suf + ext for suf in cls.suffixes]
             ext_suf = [ext]

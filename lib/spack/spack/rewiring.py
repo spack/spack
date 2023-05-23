@@ -119,7 +119,7 @@ def rewire_node(spec, explicit):
     spack.store.db.add(spec, spack.store.layout, explicit=explicit)
 
     # run post install hooks
-    spack.hooks.post_install(spec)
+    spack.hooks.post_install(spec, explicit)
 
 
 class RewireError(spack.error.SpackError):

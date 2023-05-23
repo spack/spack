@@ -16,6 +16,7 @@ class Aspell(AutotoolsPackage, GNUMirrorPackage):
 
     extendable = True  # support activating dictionaries
 
+    version("0.60.8", sha256="f9b77e515334a751b2e60daab5db23499e26c9209f5e7b7443b05235ad0226f2")
     version("0.60.6.1", sha256="f52583a83a63633701c5f71db3dc40aab87b7f76b29723aeb27941eff42df6e1")
 
     patch("fix_cpp.patch")

@@ -2,11 +2,13 @@
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
+import filecmp
 import glob
 import io
 import os
 import platform
 import sys
+import tarfile
 import urllib.error
 import urllib.request
 import urllib.response
@@ -202,9 +204,9 @@ def test_default_rpaths_create_install_default_layout(mirror_dir):
     install_cmd("--no-cache", sy_spec.name)
 
     # Create a buildache
-    buildcache_cmd("create", "-au", "-d", mirror_dir, cspec.name, sy_spec.name)
+    buildcache_cmd("push", "-au", "-d", mirror_dir, cspec.name, sy_spec.name)
     # Test force overwrite create buildcache (-f option)
-    buildcache_cmd("create", "-auf", "-d", mirror_dir, cspec.name)
+    buildcache_cmd("push", "-auf", "-d", mirror_dir, cspec.name)
 
     # Create mirror index
     buildcache_cmd("update-index", "-d", mirror_dir)
@@ -269,7 +271,7 @@ def test_relative_rpaths_create_default_layout(mirror_dir):
     install_cmd("--no-cache", cspec.name)
 
     # Create build cache with relative rpaths
-    buildcache_cmd("create", "-aur", "-d", mirror_dir, cspec.name)
+    buildcache_cmd("push", "-aur", "-d", mirror_dir, cspec.name)
 
     # Create mirror index
     buildcache_cmd("update-index", "-d", mirror_dir)
@@ -402,7 +404,7 @@ def test_spec_needs_rebuild(monkeypatch, tmpdir):
     install_cmd(s.name)
 
     # Put installed package in the buildcache
-    buildcache_cmd("create", "-u", "-a", "-d", mirror_dir.strpath, s.name)
+    buildcache_cmd("push", "-u", "-a", "-d", mirror_dir.strpath, s.name)
 
     rebuild = bindist.needs_rebuild(s, mirror_url)
 
@@ -431,7 +433,7 @@ def test_generate_index_missing(monkeypatch, tmpdir, mutable_config):
     install_cmd("--no-cache", s.name)
 
     # Create a buildcache and update index
-    buildcache_cmd("create", "-uad", mirror_dir.strpath, s.name)
+    buildcache_cmd("push", "-uad", mirror_dir.strpath, s.name)
     buildcache_cmd("update-index", "-d", mirror_dir.strpath)
 
     # Check package and dependency in buildcache
@@ -520,7 +522,7 @@ def test_update_sbang(tmpdir, test_mirror):
     install_cmd("--no-cache", old_spec.name)
 
     # Create a buildcache with the installed spec.
-    buildcache_cmd("create", "-u", "-a", "-d", mirror_dir, old_spec_hash_str)
+    buildcache_cmd("push", "-u", "-a", "-d", mirror_dir, old_spec_hash_str)
 
     # Need to force an update of the buildcache index
     buildcache_cmd("update-index", "-d", mirror_dir)
@@ -887,68 +889,79 @@ def test_default_index_json_404():
         fetcher.conditional_fetch()
 
 
-@pytest.mark.parametrize(
-    "root,deps,expected",
-    [
-        (
-            True,
-            True,
-            [
-                "dttop",
-                "dtbuild1",
-                "dtbuild2",
-                "dtlink2",
-                "dtrun2",
-                "dtlink1",
-                "dtlink3",
-                "dtlink4",
-                "dtrun1",
-                "dtlink5",
-                "dtrun3",
-                "dtbuild3",
-            ],
-        ),
-        (
-            False,
-            True,
-            [
-                "dtbuild1",
-                "dtbuild2",
-                "dtlink2",
-                "dtrun2",
-                "dtlink1",
-                "dtlink3",
-                "dtlink4",
-                "dtrun1",
-                "dtlink5",
-                "dtrun3",
-                "dtbuild3",
-            ],
-        ),
-        (True, False, ["dttop"]),
-        (False, False, []),
-    ],
-)
-def test_correct_specs_are_pushed(
-    root, deps, expected, default_mock_concretization, tmpdir, temporary_store, monkeypatch
-):
-    # Concretize dttop and add it to the temporary database (without prefixes)
-    spec = default_mock_concretization("dttop")
-    temporary_store.db.add(spec, directory_layout=None)
+def test_reproducible_tarball_is_reproducible(tmpdir):
+    p = tmpdir.mkdir("prefix")
+    p.mkdir("bin")
+    p.mkdir(".spack")
 
-    # Create a mirror push url
-    push_url = spack.mirror.Mirror.from_local_path(str(tmpdir)).push_url
+    app = p.join("bin", "app")
 
-    packages_to_push = []
+    tarball_1 = str(tmpdir.join("prefix-1.tar.gz"))
+    tarball_2 = str(tmpdir.join("prefix-2.tar.gz"))
 
-    def fake_build_tarball(node, push_url, **kwargs):
-        assert push_url == push_url
-        assert not kwargs
-        assert isinstance(node, Spec)
-        packages_to_push.append(node.name)
+    with open(app, "w") as f:
+        f.write("hello world")
 
-    monkeypatch.setattr(bindist, "_build_tarball", fake_build_tarball)
+    buildinfo = {"metadata": "yes please"}
 
-    bindist.push([spec], push_url, include_root=root, include_dependencies=deps)
+    # Create a tarball with a certain mtime of bin/app
+    os.utime(app, times=(0, 0))
+    bindist._do_create_tarball(tarball_1, binaries_dir=p, pkg_dir="pkg", buildinfo=buildinfo)
 
-    assert packages_to_push == expected
+    # Do it another time with different mtime of bin/app
+    os.utime(app, times=(10, 10))
+    bindist._do_create_tarball(tarball_2, binaries_dir=p, pkg_dir="pkg", buildinfo=buildinfo)
+
+    # They should be bitwise identical:
+    assert filecmp.cmp(tarball_1, tarball_2, shallow=False)
+
+    # Sanity check for contents:
+    with tarfile.open(tarball_1, mode="r") as f:
+        for m in f.getmembers():
+            assert m.uid == m.gid == m.mtime == 0
+            assert m.uname == m.gname == ""
+
+        assert set(f.getnames()) == {
+            "pkg",
+            "pkg/bin",
+            "pkg/bin/app",
+            "pkg/.spack",
+            "pkg/.spack/binary_distribution",
+        }
+
+
+def test_tarball_normalized_permissions(tmpdir):
+    p = tmpdir.mkdir("prefix")
+    p.mkdir("bin")
+    p.mkdir("share")
+    p.mkdir(".spack")
+
+    app = p.join("bin", "app")
+    data = p.join("share", "file")
+    tarball = str(tmpdir.join("prefix.tar.gz"))
+
+    # Everyone can write & execute. This should turn into 0o755 when the tarball is
+    # extracted (on a different system).
+    with open(app, "w", opener=lambda path, flags: os.open(path, flags, 0o777)) as f:
+        f.write("hello world")
+
+    # User doesn't have execute permissions, but group/world have; this should also
+    # turn into 0o644 (user read/write, group&world only read).
+    with open(data, "w", opener=lambda path, flags: os.open(path, flags, 0o477)) as f:
+        f.write("hello world")
+
+    bindist._do_create_tarball(tarball, binaries_dir=p, pkg_dir="pkg", buildinfo={})
+
+    with tarfile.open(tarball) as tar:
+        path_to_member = {member.name: member for member in tar.getmembers()}
+
+    # directories should have 0o755
+    assert path_to_member["pkg"].mode == 0o755
+    assert path_to_member["pkg/bin"].mode == 0o755
+    assert path_to_member["pkg/.spack"].mode == 0o755
+
+    # executable-by-user files should be 0o755
+    assert path_to_member["pkg/bin/app"].mode == 0o755
+
+    # not-executable-by-user files should be 0o644
+    assert path_to_member["pkg/share/file"].mode == 0o644

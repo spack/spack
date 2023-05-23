@@ -23,9 +23,12 @@ class Julia(MakefilePackage):
     url = "https://github.com/JuliaLang/julia/releases/download/v1.7.0/julia-1.7.0.tar.gz"
     git = "https://github.com/JuliaLang/julia.git"
 
-    maintainers("glennpj", "vchuravy", "haampie")
+    maintainers("glennpj", "vchuravy", "haampie", "giordano")
 
     version("master", branch="master")
+    version("1.9.0", sha256="48f4c8a7d5f33d0bc6ce24226df20ab49e385c2d0c3767ec8dfdb449602095b2")
+    version("1.8.5", sha256="d31026cc6b275d14abce26fd9fd5b4552ac9d2ce8bde4291e494468af5743031")
+    version("1.8.4", sha256="b7b8ee64fb947db8d61104f231e1b25342fe330d29e0d2273f93c264f32c5333")
     version("1.8.3", sha256="4d8d460fcae5c6f8306a3e3c14371635c1a26f47c3ce62b2950cf9234b6ec849")
     version("1.8.2", sha256="3e2cea35bf5df963ed7b75a83e8febfc000acf1e664ecd657a0772508eb1fb5d")
     version("1.8.1", sha256="066f4ca7a2ad39b003e2af77dbecfbfb9b0a1cb1664033f657ffdbe2f374d956")
@@ -47,14 +50,27 @@ class Julia(MakefilePackage):
     # Note, we just use link_llvm_dylib so that we not only get a libLLVM,
     # but also so that llvm-config --libfiles gives only the dylib. Without
     # it it also gives static libraries, and breaks Julia's build.
-    depends_on(
-        "llvm"
-        " targets=amdgpu,bpf,nvptx,webassembly"
-        " version_suffix=jl +link_llvm_dylib ~internal_unwind"
-    )
+    depends_on("llvm targets=amdgpu,bpf,nvptx,webassembly version_suffix=jl +link_llvm_dylib")
     depends_on("libuv", when="@:1.7")
     depends_on("libuv-julia@1.42.0", when="@1.8.0:1.8.1")
     depends_on("libuv-julia@1.44.2", when="@1.8.2:")
+
+    # Do not use internal unwind.  We need to use a conflict, because
+    # `internal_unwind` is defined only when `+clang`.
+    conflicts("^llvm+internal_unwind")
+
+    with when("@1.9.0:1.9"):
+        # libssh2.so.1, libpcre2-8.so.0, mbedtls.so.14, mbedcrypto.so.7, mbedx509.so.1
+        # openlibm.so.4, libblastrampoline.so.5, libgit2.so.1.5, libnghttp2.so.14,
+        # libcurl.so.4
+        depends_on("libblastrampoline@5.4.0:5")
+        depends_on("libgit2@1.5.0:1.5")
+        depends_on("libssh2@1.10.0:1.10")
+        depends_on("llvm@14.0.6 +lld shlib_symbol_version=JL_LLVM_14.0")
+        depends_on("mbedtls@2.28.0:2.28")
+        depends_on("openlibm@0.8.1:0.8", when="+openlibm")
+        depends_on("nghttp2@1.48.0:1.48")
+        depends_on("curl@7.84.0:")
 
     with when("@1.8.0:1.8"):
         # libssh2.so.1, libpcre2-8.so.0, mbedtls.so.14, mbedcrypto.so.7, mbedx509.so.1
@@ -63,10 +79,11 @@ class Julia(MakefilePackage):
         depends_on("libblastrampoline@5.1.0:5")
         depends_on("libgit2@1.3.0:1.3")
         depends_on("libssh2@1.10.0:1.10")
-        depends_on("llvm@13.0.1 shlib_symbol_version=jl")
+        depends_on("llvm@13.0.1 shlib_symbol_version=JL_LLVM_13.0")
         depends_on("mbedtls@2.28.0:2.28")
         depends_on("openlibm@0.8.1:0.8", when="+openlibm")
         depends_on("nghttp2@1.47.0:1.47")
+        depends_on("curl@7.84.0:")
 
     with when("@1.7.0:1.7"):
         # libssh2.so.1, libpcre2-8.so.0, mbedtls.so.13, mbedcrypto.so.5, mbedx509.so.1
@@ -78,6 +95,7 @@ class Julia(MakefilePackage):
         depends_on("llvm@12.0.1")
         depends_on("mbedtls@2.24.0:2.24")
         depends_on("openlibm@0.7.0:0.7", when="+openlibm")
+        depends_on("curl@7.73.0:")
 
     with when("@1.6.0:1.6"):
         # libssh2.so.1, libpcre2-8.so.0, mbedtls.so.13, mbedcrypto.so.5, mbedx509.so.1
@@ -88,6 +106,7 @@ class Julia(MakefilePackage):
         depends_on("llvm@11.0.1")
         depends_on("mbedtls@2.24.0:2.24")
         depends_on("openlibm@0.7.0:0.7", when="+openlibm")
+        depends_on("curl@7.73.0:")
 
     # Patches for llvm
     depends_on("llvm", patches="llvm7-symver-jlprefix.patch", when="@:1.7")
@@ -113,6 +132,14 @@ class Julia(MakefilePackage):
         patches=patch(
             "https://github.com/JuliaLang/llvm-project/compare/75e33f71c2dae584b13a7d1186ae0a038ba98838...2f4460bd46aa80d4fe0d80c3dabcb10379e8d61b.patch",
             sha256="45f72c59ae5cf45461e9cd8b224ca49b739d885c79b3786026433c6c22f83b5f",
+        ),
+    )
+    depends_on(
+        "llvm",
+        when="^llvm@14.0.6",
+        patches=patch(
+            "https://github.com/JuliaLang/llvm-project/compare/f28c006a5895fc0e329fe15fead81e37457cb1d1...5c82f5309b10fab0adf6a94969e0dddffdb3dbce.patch",
+            sha256="9f2bc98e876e85a3edb158064aae782281ea7099e4c34e83ac456609cb7acd10",
         ),
     )
 
@@ -162,7 +189,7 @@ class Julia(MakefilePackage):
     # Patches for julia
     patch("julia-1.6-system-libwhich-and-p7zip-symlink.patch", when="@1.6.0:1.6")
     patch("use-add-rpath.patch", when="@:1.8.0")
-    patch("use-add-rpath-2.patch", when="@1.8.1:")
+    patch("use-add-rpath-2.patch", when="@1.8.1:1.8")
 
     # Fix gfortran abi detection https://github.com/JuliaLang/julia/pull/44026
     patch("fix-gfortran.patch", when="@1.7.0:1.7.2")
@@ -252,6 +279,7 @@ class Julia(MakefilePackage):
             "USE_SYSTEM_LIBUNWIND:=1",
             "USE_SYSTEM_LIBUV:=1",
             "USE_SYSTEM_LIBWHICH:=1",
+            "USE_SYSTEM_LLD:=1",  # @1.9:
             "USE_SYSTEM_LLVM:=1",
             "USE_SYSTEM_MBEDTLS:=1",
             "USE_SYSTEM_MPFR:=1",
@@ -269,6 +297,8 @@ class Julia(MakefilePackage):
             "override USE_LLVM_SHLIB:=1",
             # make rebuilds a bit faster for now, not sure if this should be kept
             "JULIA_PRECOMPILE:={0}".format("1" if spec.variants["precompile"].value else "0"),
+            # we want to use `patchelf --add-rpath` instead of `patchelf --set-rpath`
+            "override PATCHELF_SET_RPATH_ARG:=--add-rpath",  # @1.9:
         ]
 
         options.append("USEGCC:={}".format("1" if "%gcc" in spec else "0"))
