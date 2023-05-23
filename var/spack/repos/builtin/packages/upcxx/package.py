@@ -246,7 +246,7 @@ class Upcxx(Package, CudaPackage, ROCmPackage):
         make("tests-clean")  # cleanup
 
     def test_upcxx_install(self):
-        """checking UPC++ compiler+link for all installed backends"""
+        """checking UPC++ compile+link for all installed backends"""
         test_install = join_path(self.prefix.bin, "test-upcxx-install.sh")
         test_upcxx_install = which(test_install)
         out = test_upcxx_install(output=str.split, error=str.split)
