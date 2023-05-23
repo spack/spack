@@ -103,7 +103,7 @@ class Molgw(MakefilePackage):
             flags["FC"] = self.compiler.fc_names[0]
 
         # Set FCFLAGS
-        if "%intel" or "%oneapi" in spec in spec:
+        if "%intel" in spec or "%oneapi"  in spec:
             flags["FCFLAGS"] = "-fpp "
         else:
             flags["FCFLAGS"] = "-cpp "
