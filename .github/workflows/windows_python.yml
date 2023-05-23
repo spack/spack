@@ -14,6 +14,8 @@ defaults:
 jobs:
   unit-tests:
     runs-on: windows-latest
+    if not is_admin:
+      fail("Tests must be run with administrator privileges")
     steps:
     - uses: actions/checkout@8e5e7e5ab8b370d6c329ec480221332ada57f0ab
       with:
