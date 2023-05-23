@@ -69,10 +69,10 @@ class PyPennylaneLightningKokkos(CMakePackage, PythonExtension, CudaPackage, ROC
     depends_on("ninja", type="build")
     depends_on("python@3.8:", type=("build", "run"))
     depends_on("py-setuptools", type="build")
-    depends_on("py-pybind11", type="build")
+    depends_on("py-pybind11", type="link")
     depends_on("py-pip", type="build")
     depends_on("py-wheel", type="build")
-    depends_on("py-pennylane@:0.28", type=("build", "run"))
+    depends_on("py-pennylane@0.28:", type=("build", "run"))
     depends_on("py-pennylane-lightning@0.30:~kokkos", type=("build", "run"), when="@0.30.0:")
     depends_on("py-pennylane-lightning@0.28:0.29~kokkos", type=("build", "run"), when="@0.29.1")
 
