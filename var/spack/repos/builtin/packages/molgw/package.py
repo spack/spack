@@ -36,8 +36,8 @@ class Molgw(MakefilePackage):
     url = "https://github.com/bruneval/molgw/archive/v3.2.tar.gz"
     git = "https://github.com/bruneval/molgw.git"
 
-    #version("rolling-release", branch="master")
-    version('3.2', sha256='a3f9a99db52d95ce03bc3636b5999e6d92b503ec2f4afca33d030480c3e10242')
+    # version("rolling-release", branch="master")
+    version("3.2", sha256="a3f9a99db52d95ce03bc3636b5999e6d92b503ec2f4afca33d030480c3e10242")
 
     depends_on("blas")
     depends_on("lapack")
@@ -59,31 +59,30 @@ class Molgw(MakefilePackage):
     # variant('hdf5', default=False, description='Build with HDF5 support')
     # depends_on('hdf5', when='+hdf5')
 
-    def _get_mkl_ld_flags(self,spec):
-        #command=["/home/spack/spack-latest/opt/spack/linux-rocky8-skylake_avx512/oneapi-2022.1.0/intel-oneapi-mkl-2023.1.0-22utcrfpxiz3hg36rijq36ln37twer76/mkl/latest/bin/intel64/mkl_link_tool","-libs","--quiet"]
-        mklroot=str(getenv('MKLROOT'))
-        command=[mklroot + "/bin/intel64/mkl_link_tool","-libs","--quiet"]
+    def _get_mkl_ld_flags(self, spec):
+        mklroot = str(getenv("MKLROOT"))
+        command = [mklroot + "/bin/intel64/mkl_link_tool", "-libs", "--quiet"]
         if "%intel" in spec or "%oneapi" in spec:
-            command.extend(["-c","intel_f"])
+            command.extend(["-c", "intel_f"])
             if "+openmp" in spec:
-                command.extend(["-o","tbb"])
+                command.extend(["-o", "tbb"])
         elif "%gcc" in spec:
-            command.extend(["-c","gnu_f"])
+            command.extend(["-c", "gnu_f"])
             if "+openmp" in spec:
-                command.extend(["-o","gomp"])
+                command.extend(["-o", "gomp"])
 
         if "+scalapack" in spec:
             command.extend(["--cluster_library=scalapack"])
             if "openmpi" in spec:
-                command.extend(["-m","openmpi"])
+                command.extend(["-m", "openmpi"])
             elif "mpich" in spec:
-                command.extend(["-m","mpich2"])
+                command.extend(["-m", "mpich2"])
             elif "intelmpi" in spec:
-                command.extend(["-m","intelmpi"])
-        #result = run(command,capture_output=True, text=True)
-        #return result.stdout.strip()
-        result = run(command,stdout=PIPE)
-        return result.stdout.decode(encoding='utf-8').strip()
+                command.extend(["-m", "intelmpi"])
+        # result = run(command,capture_output=True, text=True)
+        # return result.stdout.strip()
+        result = run(command, stdout=PIPE)
+        return result.stdout.decode(encoding="utf-8").strip()
 
     def edit(self, spec, prefix):
         flags = {}
@@ -96,7 +95,6 @@ class Molgw(MakefilePackage):
             flags["LAPACK"] = spec["lapack"].libs.ld_flags
             if "+scalapack" in spec:
                 flags["SCALAPACK"] = spec["scalapack"].libs.ld_flags
-        #print(flags["SCALAPACK"])
 
         # Set FC
         if "+scalapack" in spec:
@@ -105,16 +103,15 @@ class Molgw(MakefilePackage):
             flags["FC"] = self.compiler.fc_names[0]
 
         # Set FCFLAGS
-        if "%intel" in spec or "%oneapi"  in spec:
+        if "%intel" in spec or "%oneapi" in spec:
             flags["FCFLAGS"] = "-fpp "
         else:
             flags["FCFLAGS"] = "-cpp "
 
         if self.compiler.flags.get("fflags") is not None:
-            flags["FCFLAGS"] = ' '.join(self.compiler.flags.get("fflags"))
+            flags["FCFLAGS"] = " ".join(self.compiler.flags.get("fflags"))
         if "+openmp" in spec:
             flags["FCFLAGS"] = flags.get("FCFLAGS", "") + " {0}".format(self.compiler.openmp_flag)
-
 
         # Set CPPFLAGS
         if "+scalapack" in spec:
