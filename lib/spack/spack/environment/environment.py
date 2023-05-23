@@ -1346,24 +1346,33 @@ class Environment:
             List of specs that have been concretized. Each entry is a tuple of
             the user spec and the corresponding concretized spec.
         """
-        if force:
-            # Clear previously concretized specs
-            self.concretized_user_specs = []
-            self.concretized_order = []
-            self.specs_by_hash = {}
+        old_concretized_user_specs = self.concretized_user_specs[:]
+        old_concretized_order = self.concretized_order
+        old_specs_by_hash = self.specs_by_hash
 
-        # Pick the right concretization strategy
-        if self.unify == "when_possible":
-            return self._concretize_together_where_possible(tests=tests)
+        try:
+            if force:
+                # Clear previously concretized specs
+                self.concretized_user_specs = []
+                self.concretized_order = []
+                self.specs_by_hash = {}
 
-        if self.unify is True:
-            return self._concretize_together(tests=tests)
+            # Pick the right concretization strategy
+            if self.unify == "when_possible":
+                return self._concretize_together_where_possible(tests=tests)
 
-        if self.unify is False:
-            return self._concretize_separately(tests=tests)
+            if self.unify is True:
+                return self._concretize_together(tests=tests)
 
-        msg = "concretization strategy not implemented [{0}]"
-        raise SpackEnvironmentError(msg.format(self.unify))
+            if self.unify is False:
+                return self._concretize_separately(tests=tests)
+
+            msg = "concretization strategy not implemented [{0}]"
+            raise SpackEnvironmentError(msg.format(self.unify))
+        except Exception:
+            self.concretized_user_specs = old_concretized_user_specs
+            self.concretized_order = old_concretized_order
+            self.specs_by_hash = old_specs_by_hash
 
     def _get_specs_to_concretize(
         self,
