@@ -46,7 +46,6 @@ spack:
         # Use gcc from local container buildcache
         - - spack mirror add local-cache /bootstrap/local-cache
           - spack gpg trust /bootstrap/public-key
-          - spack install --cache-only $(spack buildcache list gcc | tail -n1)
         - - /bin/bash "${SPACK_ARTIFACTS_ROOT}/postinstall.sh" -fg
           - spack config --scope site add "packages:all:target:\"target=${SPACK_TARGET_ARCH}\""
     - signing-job:

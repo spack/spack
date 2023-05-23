@@ -797,7 +797,6 @@ deprecated-ci-build:
       - . /etc/profile.d/modules.sh
       - spack mirror add local-cache /bootstrap/local-cache
       - spack gpg trust /bootstrap/public-key
-      - spack install --cache-only $(spack buildcache list gcc | tail -n1)
       - cd "${CI_PROJECT_DIR}" && curl -sOL https://raw.githubusercontent.com/spack/spack-configs/main/AWS/parallelcluster/postinstall.sh
       - sed -i -e "s/spack arch -t/echo ${SPACK_TARGET_ARCH}/g" postinstall.sh
       - /bin/bash postinstall.sh -fg
