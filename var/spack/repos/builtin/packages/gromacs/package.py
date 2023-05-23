@@ -233,9 +233,9 @@ class Gromacs(CMakePackage, CudaPackage):
             depends_on("plumed@{0}".format(plumed_vers), when="@{0}+plumed".format(gmx_ver))
 
     variant(
-        "spack_intel",
+        "intel_provided_gcc",
         default=False,
-        description="If Intel compiler is installed through spack libstdc++ location is known.",
+        description="Use this if Intel compiler is installed through spack. The g++ location is written to icp{c,x}.cfg",
     )
 
     depends_on("fftw-api@3")
@@ -250,8 +250,8 @@ class Gromacs(CMakePackage, CudaPackage):
     depends_on("sycl", when="+sycl")
     depends_on("lapack", when="+lapack")
     depends_on("blas", when="+blas")
-    depends_on("gcc", when="%oneapi ~spack_intel")
-    depends_on("gcc", when="%intel ~spack_intel")
+    depends_on("gcc", when="%oneapi ~intel_provided_gcc")
+    depends_on("gcc", when="%intel ~intel_provided_gcc")
 
     depends_on("hwloc@1.0:1", when="+hwloc@2016:2018")
     depends_on("hwloc", when="+hwloc@2019:")
@@ -260,6 +260,14 @@ class Gromacs(CMakePackage, CudaPackage):
     depends_on("dbcsr", when="+cp2k")
 
     depends_on("nvhpc", when="+cufftmp")
+
+    requires(
+        "%intel",
+        "%oneapi",
+        policy="one_of",
+        when="+intel_provided_gcc",
+        msg="Only attempt to find gcc libs for Intel compiler if Intel compiler is used.",
+    )
 
     patch("gmxDetectCpu-cmake-3.14.patch", when="@2018:2019.3^cmake@3.14.0:")
     patch("gmxDetectSimd-cmake-3.14.patch", when="@5.0:2017^cmake@3.14.0:")
@@ -441,7 +449,7 @@ class CMakeBuilder(spack.build_systems.cmake.CMakeBuilder):
         if self.spec.satisfies("%oneapi") or self.spec.satisfies("%intel"):
             # If intel-oneapi-compilers was installed through spack the gcc is added to the
             # configuration file.
-            if self.spec.satisfies("+spack_intel") and os.path.exists(
+            if self.spec.satisfies("+intel_provided_gcc") and os.path.exists(
                 ".".join([os.environ["SPACK_CXX"], "cfg"])
             ):
                 with open(".".join([os.environ["SPACK_CXX"], "cfg"]), "r") as f:
