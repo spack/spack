@@ -39,6 +39,9 @@ RUN find -L {{ paths.view }}/* -type f -exec readlink -f '{}' \; | \
 RUN cd {{ paths.environment }} && \
     spack env activate --sh -d . > activate.sh
 
+# The view is a symlink. Copy it into a separate directory to preserve it's symlink status.
+RUN mkdir /view-final && mv {{ paths.view }} /view-final/
+
 {% if extra_instructions.build %}
 {{ extra_instructions.build }}
 {% endif %}
@@ -52,7 +55,7 @@ FROM {{ run.image }}
 COPY --from=builder {{ paths.environment }} {{ paths.environment }}
 COPY --from=builder {{ paths.store }} {{ paths.store }}
 COPY --from=builder {{ paths.hidden_view }} {{ paths.hidden_view }}
-COPY --from=builder {{ paths.view }} {{ paths.view }}
+COPY --from=builder /view-final {{ paths.view_parent }}/
 
 RUN { \
       echo '#!/bin/sh' \
