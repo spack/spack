@@ -22,3 +22,7 @@ class PySphinxDesign(PythonPackage):
     depends_on("py-flit-core@3.4:3", type=("build"))
     depends_on("py-sphinx@4:5", when="@0.3", type=("build", "run"))
     depends_on("py-sphinx@4:6", when="@0.4:", type=("build", "run"))
+    depends_on("py-pytest@7.1:", type="test")
+    depends_on("py-pytest-cov", type="test")
+    depends_on("py-pytest-regressions", type="test")
+    depends_on("py-myst-parser@0.18.0:", type="test")
