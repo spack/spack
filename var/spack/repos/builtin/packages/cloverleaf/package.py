@@ -3,30 +3,45 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-
+from os import *
 from spack.package import *
-
 
 class Cloverleaf(MakefilePackage):
     """Proxy Application. CloverLeaf is a miniapp that solves the
     compressible Euler equations on a Cartesian grid,
     using an explicit, second-order accurate method.
     """
-
     homepage = "https://uk-mac.github.io/CloverLeaf"
-    git = "https://github.com/UK-MAC/CloverLeaf.git"
 
-    tags = ["proxy-app"]
-
-    version("master", tag="master", submodules=True)
-    version("1.3", tag="1.3", submodules=True)
-    version("1.1", tag="1.1", submodules=True)
+    # cuda: done
+    version("master", branch="master",git="https://github.com/UK-MAC/CloverLeaf_CUDA", when="build=cuda")
+    # mpi_only: done
+    version("master", branch="master",git="https://github.com/UK-MAC/CloverLeaf_MPI", when="build=mpi_only")
+    version("1.3", commit="a675f0d63ea72ef386c7c497b08d1e6ca4f89479",git="https://github.com/UK-MAC/CloverLeaf_MPI", when="build=mpi_only")
+    # openacc_cray: done
+    version("master", branch="master",git="https://github.com/UK-MAC/CloverLeaf_OpenACC", when="build=openacc_cray")
+    version("1.3", commit="0ddf495cf21cc59f84e274617522a1383e2c328c",git="https://github.com/UK-MAC/CloverLeaf_OpenACC", when="build=openacc_cray")
+    version("1.1", commit="5667c3aa565c79cb43b7d956c84c68b6d82d1e94",git="https://github.com/UK-MAC/CloverLeaf_OpenACC", when="build=openacc_cray")
+    # openmp_only: done
+    version("master", branch="master",git="https://github.com/UK-MAC/CloverLeaf_OpenMP", when="build=openmp_only")
+    version("1.3", commit="0fdb917bf10d20363dd8b88d762851908643925b",git="https://github.com/UK-MAC/CloverLeaf_OpenMP", when="build=openmp_only")
+    # openmp4_only: done
+    version("master", branch="master",git="https://github.com/UK-MAC/CloverLeaf_OpenMP4", when="build=openmp4_only")
+    # openmp_offload: done
+    version("master", branch="master",git="https://github.com/UK-MAC/CloverLeaf_Offload", when="build=openmp_offload")
+    # ref: done
+    version("master", branch="master",git="https://github.com/UK-MAC/CloverLeaf_ref", when="build=ref")
+    version("1.3", commit="0ddf495cf21cc59f84e274617522a1383e2c328c",git="https://github.com/UK-MAC/CloverLeaf_ref", when="build=ref")
+    version("1.1", commit="5667c3aa565c79cb43b7d956c84c68b6d82d1e94", git="https://github.com/UK-MAC/CloverLeaf_ref", when="build=ref")
+    # serial: done
+    version("master", branch="master",git="https://github.com/UK-MAC/CloverLeaf_Serial", when="build=serial")
+    version("1.3", commit="b9a2b9c496b5eb1e7e30912d58e32d9dce930a0c",git="https://github.com/UK-MAC/CloverLeaf_Serial", when="build=serial")
 
     variant(
         "build",
         default="ref",
         description="Type of Parallelism Build",
-        values=("cuda", "mpi_only", "openacc_cray", "openmp_only", "ref", "serial"),
+        values=("cuda", "mpi_only", "openacc_cray", "openmp_only", "ref", "serial", "openmp4_only", "openmp_offload"),
     )
     variant("ieee", default=False, description="Build with IEEE standards")
     variant("debug", default=False, description="Build with DEBUG flags")
@@ -37,32 +52,16 @@ class Cloverleaf(MakefilePackage):
     depends_on("mpi", when="build=ref")
     depends_on("cuda", when="build=cuda")
 
-    conflicts("build=cuda", when="%aocc", msg="Currently AOCC supports only ref variant")
-    conflicts("build=openacc_cray", when="%aocc", msg="Currently AOCC supports only ref variant")
-#    conflicts("build=serial", when="%aocc", msg="Currently AOCC supports only ref variant") # can it complete: tbt ?
-
-    patch("aocc_support.patch", when="@1.1:@1.3 %aocc")
-
-    @property
-    def type_of_build(self):
-        build = "ref"
-
-        if "build=cuda" in self.spec:
-            build = "CUDA"
-        elif "build=mpi_only" in self.spec:
-            build = "MPI"
-        elif "build=openacc_cray" in self.spec:
-            build = "OpenACC_CRAY"
-        elif "build=openmp_only" in self.spec:
-            build = "OpenMP"
-        elif "build=serial" in self.spec:
-            build = "Serial"
-
-        return build
+    conflicts("build=cuda", when="%aocc", msg="Currently AOCC supports only ref and MPI variants")
+    conflicts("build=openacc_cray", when="%aocc", msg="Currently AOCC supports only ref and MPI variants")
+    conflicts("build=serial", when="%aocc", msg="Currently AOCC supports only ref and MPI variants")
+    conflicts("build=openmp_only", when="%aocc", msg="Currently AOCC supports only ref and MPI variants")
+    conflicts("build=openmp4_only", when="%aocc", msg="Currently AOCC supports only ref and MPI variants")
+    conflicts("build=openmp_offload", when="%aocc", msg="Currently AOCC supports only ref and MPI variants")
 
     @property
     def build_targets(self):
-        targets = ["--directory=CloverLeaf_{0}".format(self.type_of_build)]
+        targets = ["--directory=./"]
 
         if "mpi" in self.spec:
             targets.append("MPI_COMPILER={0}".format(self.spec["mpi"].mpifc))
@@ -81,12 +80,11 @@ class Cloverleaf(MakefilePackage):
             targets.append("CFLAGS_CRAY=")
         elif "%intel" in self.spec:
             targets.append("COMPILER=INTEL")
-            targets.append("FLAGS_INTEL=")
-            targets.append("CFLAGS_INTEL=")
         elif "%aocc" in self.spec:
             targets.append("COMPILER=AOCC")
-            targets.append("FLAGS_AOCC=")
-            targets.append("CFLAGS_AOCC=") # tbt: it should override those two with blank ones
+            targets.append("OMP_AOCC=-fopenmp")
+            targets.append("FLAGS_AOCC=   -Ofast -fnt-store=aggressive")
+            targets.append("CFLAGS_AOCC= -Ofast -fnt-store=aggressive")
         elif "%pgi" in self.spec:
             targets.append("COMPILER=PGI")
             targets.append("FLAGS_PGI=")
@@ -101,19 +99,21 @@ class Cloverleaf(MakefilePackage):
         if "+debug" in self.spec:
             targets.append("DEBUG=1")
 
-        if "+ieee" in self.spec:
+        if "%aocc +ieee" in self.spec:
             targets.append("IEEE=1")
-
+            targets.append("OMP_AOCC=-fopenmp")
+            targets.append("FLAGS_AOCC=")
+            targets.append("CFLAGS_AOCC=")
+            targets.append("I3E_AOCC=-O3 -ffp-model=precise")
+        
         return targets
 
     def install(self, spec, prefix):
-        # Manual Installation
+
         mkdirp(prefix.bin)
         mkdirp(prefix.doc.tests)
 
-        install("README.md", prefix.doc)
-        install("documentation.txt", prefix.doc)
+        install("./clover_leaf", prefix.bin)
+        install("./clover.in", prefix.bin)
+        install("./*.in", prefix.doc.tests)
 
-        install("CloverLeaf_{0}/clover_leaf".format(self.type_of_build), prefix.bin)
-        install("CloverLeaf_{0}/clover.in".format(self.type_of_build), prefix.bin)
-        install("CloverLeaf_{0}/*.in".format(self.type_of_build), prefix.doc.tests)
