@@ -223,6 +223,8 @@ class Dd4hep(CMakePackage):
         env.set("DD4HEP", self.prefix.examples)
         env.set("DD4hep_DIR", self.prefix)
         env.set("DD4hep_ROOT", self.prefix)
+        env.set("LD_LIBRARY_PATH", self.prefix.lib)
+        env.set("LD_LIBRARY_PATH", self.prefix.lib64)
 
     def url_for_version(self, version):
         # dd4hep releases are dashes and padded with a leading zero
