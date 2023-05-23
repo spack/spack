@@ -1725,6 +1725,7 @@ class Environment:
         except BaseException:
             self.concretized_user_specs = old_concretized_user_specs[:]
             self.specs_by_hash = old_specs_by_hash
+            raise
 
     def sync_concretized_specs(self) -> None:
         """Removes concrete specs that no longer correlate to a user spec"""
