@@ -22,6 +22,7 @@
 
 from spack import *
 from subprocess import run, PIPE
+from os import getenv
 
 
 class Molgw(MakefilePackage):
@@ -32,15 +33,15 @@ class Molgw(MakefilePackage):
     """
 
     homepage = "https://github.com/bruneval/molgw"
-    url = "https://github.com/bruneval/molgw/archive/v3.1.tar.gz"
+    url = "https://github.com/bruneval/molgw/archive/v3.2.tar.gz"
     git = "https://github.com/bruneval/molgw.git"
 
-    version("rolling-release", branch="master")
-    # version('3.1', sha256='9eb5eadf59d8715c46e9ee8f6eb94e65b7167b9012fc15013803aeafb8ec3a8c')
+    #version("rolling-release", branch="master")
+    version('3.2', sha256='a3f9a99db52d95ce03bc3636b5999e6d92b503ec2f4afca33d030480c3e10242')
 
     depends_on("blas")
     depends_on("lapack")
-    depends_on("libxc")
+    depends_on("libxc@5:")
     depends_on("libcint+pypzpx+coulomb_erf")
 
     variant("openmp", default=False, description="Build with OpenMP support")
@@ -60,7 +61,8 @@ class Molgw(MakefilePackage):
 
     def _get_mkl_ld_flags(self,spec):
         #command=["/home/spack/spack-latest/opt/spack/linux-rocky8-skylake_avx512/oneapi-2022.1.0/intel-oneapi-mkl-2023.1.0-22utcrfpxiz3hg36rijq36ln37twer76/mkl/latest/bin/intel64/mkl_link_tool","-libs","--quiet"]
-        command=["mkl_link_tool","-libs","--quiet"]
+        mklroot=str(getenv('MKLROOT'))
+        command=[mklroot + "/bin/intel64/mkl_link_tool","-libs","--quiet"]
         if "%intel" in spec or "%oneapi" in spec:
             command.extend(["-c","intel_f"])
             if "+openmp" in spec:
