@@ -1373,6 +1373,7 @@ class Environment:
             self.concretized_user_specs = old_concretized_user_specs
             self.concretized_order = old_concretized_order
             self.specs_by_hash = old_specs_by_hash
+            raise
 
     def _get_specs_to_concretize(
         self,
