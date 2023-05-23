@@ -1352,6 +1352,11 @@ class Environment:
             self.concretized_order = []
             self.specs_by_hash = {}
 
+        # Remove concrete specs that no longer correlate to a user spec
+        abstract_to_concrete = dict(self.concretized_specs())
+        for spec in set(self.concretized_user_specs) - set(self.user_specs):
+            self.deconcretize(abstract_to_concrete[spec])
+
         # Pick the right concretization strategy
         if self.unify == "when_possible":
             return self._concretize_together_where_possible(tests=tests)
@@ -1364,6 +1369,15 @@ class Environment:
 
         msg = "concretization strategy not implemented [{0}]"
         raise SpackEnvironmentError(msg.format(self.unify))
+
+    def deconcretize(self, spec):
+        dag_hash = spec.dag_hash()
+        assert dag_hash in self.specs_by_hash, f"Spec {spec} is not in environment"
+
+        index = self.concretized_order.index(dag_hash)
+        del self.concretized_order[index]
+        del self.concretized_user_specs[index]
+        del self.specs_by_hash[dag_hash]
 
     def _get_specs_to_concretize(
         self,
