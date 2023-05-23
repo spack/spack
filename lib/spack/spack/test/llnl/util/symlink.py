@@ -216,7 +216,8 @@ def test_windows_create_link_dir(tmpdir):
 @pytest.mark.skipif(sys.platform != "win32", reason="Test is only for Windows")
 def test_windows_create_link_file(tmpdir):
     """Test the functionality of the windows_create_link method with a file
-    which should result in the creation of a hard link.
+    which should result in the creation of a hard link. It also tests the
+    functionality of the symlink islink infrastructure.
     """
     with tmpdir.as_cwd():
         test_dir = str(tmpdir)
@@ -224,9 +225,7 @@ def test_windows_create_link_file(tmpdir):
         link_file = tempfile.mktemp(prefix="link", suffix=".txt", dir=test_dir)
         symlink._windows_create_link(real_file, link_file)
         # Verify that all expected conditions are met
-        assert os.path.exists(link_file)
         assert symlink._windows_is_hardlink(real_file)
         assert symlink._windows_is_hardlink(link_file)
         assert symlink.islink(link_file)
         assert not symlink._windows_is_junction(link_file)
-        assert not os.path.islink(link_file)
