@@ -235,7 +235,8 @@ class Gromacs(CMakePackage, CudaPackage):
     variant(
         "intel_provided_gcc",
         default=False,
-        description="Use this if Intel compiler is installed through spack. The g++ location is written to icp{c,x}.cfg",
+        description="Use this if Intel compiler is installed through spack."
+        + "The g++ location is written to icp{c,x}.cfg",
     )
 
     depends_on("fftw-api@3")
