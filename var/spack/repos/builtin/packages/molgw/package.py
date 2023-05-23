@@ -49,7 +49,6 @@ class Molgw(MakefilePackage):
     variant("scalapack", default=False, description="Build with ScaLAPACK support")
     depends_on("scalapack", when="+scalapack")
     depends_on("mpi", when="+scalapack")
-    depends_on("mpi", when="+scalapack")
 
     # enforce scalapack capable mkl when asking +scalapack (and using intel-oneapi-mkl)
     depends_on("intel-oneapi-mkl+cluster", when="+scalapack ^intel-oneapi-mkl")
@@ -79,6 +78,7 @@ class Molgw(MakefilePackage):
                 command.extend(["-m", "mpich2"])
             elif "intelmpi" in spec:
                 command.extend(["-m", "intelmpi"])
+        # only works with recent python3
         # result = run(command,capture_output=True, text=True)
         # return result.stdout.strip()
         result = run(command, stdout=PIPE)
