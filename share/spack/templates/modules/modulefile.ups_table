@@ -26,15 +26,15 @@ QUALIFIERS=""
 
 {%set spack_root = os.environ['SPACK_ROOT'] %}
 {%set install_root =  spack_root[0:spack_root.find('/spack/')] %}
-{%if spec.prefix[0:spec.prefix.find('/'+spec.name)] == install_root %}
+{%if spec.prefix.startswith(install_root) %}
 
 Action = setup
     prodDir()
     setupEnv()
 {% for package in spec._dependencies.keys() %}
-  {%if spec[package].prefix != "/usr" %}
-    setupRequired({{package|replace("-","_")}} {%for c in (spec|string|replace('\n',' ')).split('^')%}{%if c.split('@')[0] == package%}{{c.split('@')[1].split('%')[0]}}{%endif%}{%endfor%} -f ${UPS_PROD_FLAVOR} -q "${UPS_PROD_QUALIFIERS}")
-  {%endif%}
+   {% if spec[package].prefix != "/usr" %}
+    setupRequired({{package|replace("-","_")}} {%for c in (spec|string|replace('\n',' ')).split('^')%}{%if c.split('@=')[0] == package%}{{c.split('@=')[1].split('%')[0]}}{%endif%}{%endfor%} -f ${UPS_PROD_FLAVOR} -q "${UPS_PROD_QUALIFIERS}")
+   {% endif %}
 {% endfor %}
 
 {% block environment %}
