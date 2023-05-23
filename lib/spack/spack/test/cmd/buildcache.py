@@ -334,3 +334,14 @@ def test_correct_specs_are_pushed(
     buildcache(*buildcache_create_args)
 
     assert packages_to_push == expected
+
+
+def test_matching_specs_without_args(default_mock_concretization, temporary_store):
+    # Add dttop + deps to the store
+    temporary_store.db.add(default_mock_concretization("dttop"), directory_layout=None)
+
+    # Collect matching specs
+    to_be_pushed = spack.cmd.buildcache._matching_specs(specs=[], spec_file=None)
+
+    # Assert that all specs in the store are collected
+    assert set(to_be_pushed) == set(temporary_store.db.query_local())
