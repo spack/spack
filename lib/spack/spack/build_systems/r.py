@@ -7,7 +7,7 @@ from typing import Optional, Tuple
 
 import llnl.util.lang as lang
 
-from spack.directives import extends, maintainers
+from spack.directives import extends
 
 from .generic import GenericBuilder, Package
 
