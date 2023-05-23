@@ -13,15 +13,14 @@ class PyEntityManagement(PythonPackage):
     git = "ssh://git@bbpgitlab.epfl.ch/nse/entity-management.git"
 
     version("1.2.19", tag="entity-management-v1.2.19")
-    version("0.1.12", tag="entity-management-v0.1.12")
 
-    depends_on("py-setuptools", type=("build"))
+    depends_on("py-setuptools", type="build")
 
-    depends_on("py-requests", type="run")
-    depends_on("py-attrs", type="run")
-    depends_on("py-python-dateutil", type="run")
-    depends_on("py-sparqlwrapper", type="run")
-    depends_on("py-rdflib", type="run")
-    depends_on("py-pyjwt", type="run")
-    depends_on("py-python-keycloak", type="run")
-    depends_on("py-devtools+pygments", type="run")
+    depends_on("py-requests", type=("build", "run"))
+    depends_on("py-attrs", type=("build", "run"))
+    depends_on("py-python-dateutil", type=("build", "run"))
+    depends_on("py-sparqlwrapper", type=("build", "run"))
+    depends_on("py-rdflib", type=("build", "run"))
+    depends_on("py-pyjwt", type=("build", "run"))
+    depends_on("py-python-keycloak", type=("build", "run"))
+    depends_on("py-devtools+pygments", type=("build", "run"))
