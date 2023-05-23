@@ -111,6 +111,7 @@ class Libtiff(CMakePackage, AutotoolsPackage):
 class CMakeBuilder(CMakeBuilder):
     def cmake_args(self):
         args = [self.define_from_variant(var) for var in VARIANTS]
+        args.append("-Dsphinx=OFF")
 
         # Remove empty strings
         args = [arg for arg in args if arg]
@@ -123,5 +124,6 @@ class AutotoolsBuilder(AutotoolsBuilder):
         args = []
         for var in VARIANTS:
             args.extend(self.enable_or_disable(var))
+        args.append("--disable-sphinx")
 
         return args
