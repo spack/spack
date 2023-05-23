@@ -183,3 +183,8 @@ class Dyninst(CMakePackage):
                 args.append("-DENABLE_STATIC_LIBS=NO")
 
         return args
+
+    def test_ptls(self):
+      parseThat = which(join_path(self.prefix.bin, "parseThat"))
+      os.environ["DYNINSTAPI_RT_LIB"] = join_path(self.prefix, "lib", "libdyninstAPI_RT.so")
+      parseThat("--binary-edit={0:s}".format(join_path(self.test_suite.stage, "ls.rewritten")), "/bin/ls")
