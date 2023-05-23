@@ -16,6 +16,7 @@ class RInteractivedisplaybase(RPackage):
 
     bioc = "interactiveDisplayBase"
 
+    version("1.38.0", commit="3b3a3fdc4bafca767ae66c5f8869e2d93a9a4cb3")
     version("1.36.0", commit="79a0552bd467367866ceda2efc2b60a04a81f5fb")
     version("1.34.0", commit="fafbb13a42bb7549f17aa08cdb0e51728c5e825e")
     version("1.32.0", commit="0f88b2ac3689d51abb6ac0045b3207ca77963a5a")

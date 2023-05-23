@@ -15,6 +15,7 @@ class RAffyio(RPackage):
 
     bioc = "affyio"
 
+    version("1.70.0", commit="95560567e27088863c64e868a8e5069fc725b8d7")
     version("1.68.0", commit="33080c5eeb14c0ca40f0d231706af4e0c2c1ef8b")
     version("1.66.0", commit="3a0b90704fc46cddd99a72b985a6bdb348f69b50")
     version("1.64.0", commit="aa7ce48f3f4110431f6f488d45961fde4019ffb0")

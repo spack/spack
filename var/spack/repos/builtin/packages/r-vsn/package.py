@@ -24,6 +24,7 @@ class RVsn(RPackage):
 
     bioc = "vsn"
 
+    version("3.68.0", commit="b8c9cef9730a00a810e8ec08e472b26d0bff5357")
     version("3.66.0", commit="ddccd6c74ebea426056794c2bfad2dfd02631092")
     version("3.64.0", commit="1f09f20ee7f81100fb0bf66288c4caf0049b5508")
     version("3.62.0", commit="6ae7f4e07ec1a5a9482cab892d98175983bfcd50")

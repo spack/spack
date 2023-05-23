@@ -14,6 +14,7 @@ class RRgraphviz(RPackage):
 
     bioc = "Rgraphviz"
 
+    version("2.44.0", commit="1a1540d66afa0b5a693eee2acac8ad96cfc0a2e6")
     version("2.42.0", commit="f6877441ab256876ef6a62c2e6faf980c2190b20")
     version("2.40.0", commit="d864c9741c9177bc627cca1198673be2b1bfbc3e")
     version("2.38.0", commit="004de09a5b171211aff6cbaa1969ab8e3a5d6c61")

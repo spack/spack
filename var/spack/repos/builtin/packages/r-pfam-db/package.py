@@ -16,6 +16,11 @@ class RPfamDb(RPackage):
     url = "https://www.bioconductor.org/packages/release/data/annotation/src/contrib/PFAM.db_3.4.1.tar.gz"
 
     version(
+        "3.17.0",
+        url="https://bioconductor.org/packages/3.17/data/annotation/src/contrib/PFAM.db_3.17.0.tar.gz",
+        sha256="8c4f8bebbf002df87ef7e4c4116be1676072e5c3ba0af1070d281a2ea6101712",
+    )
+    version(
         "3.16.0",
         url="https://bioconductor.org/packages/3.16/data/annotation/src/contrib/PFAM.db_3.16.0.tar.gz",
         sha256="8082aaa94eb962b2cf42cfaead8ff9e1bdbd12fdeae82a49d0f3b37bd50eb30c",
@@ -52,3 +57,5 @@ class RPfamDb(RPackage):
     depends_on("r-annotationdbi@1.51.3:", type=("build", "run"), when="@3.12.0:")
     depends_on("r-annotationdbi@1.55.1:", type=("build", "run"), when="@3.14.0:")
     depends_on("r-annotationdbi@1.57.1:", type=("build", "run"), when="@3.15.0:")
+    depends_on("r-annotationdbi@1.59.1:", type=("build", "run"), when="@3.16.0:")
+    depends_on("r-annotationdbi@1.61.0:", type=("build", "run"), when="@3.17.0:")
