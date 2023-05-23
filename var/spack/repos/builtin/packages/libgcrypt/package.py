@@ -38,6 +38,10 @@ class Libgcrypt(AutotoolsPackage):
         # flags, and the build system ensures that
         return (None, flags, None)
 
+    # 1.10.2 fails on macOS when trying to use the Linux getrandom() call
+    # https://dev.gnupg.org/T6442
+    patch("rndgetentropy_no_getrandom.patch", when="@=1.10.2 platform=darwin")
+
     def check(self):
         # Without this hack, `make check` fails on macOS when SIP is enabled
         # https://bugs.gnupg.org/gnupg/issue2056
