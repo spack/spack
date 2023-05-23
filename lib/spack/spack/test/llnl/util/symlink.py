@@ -33,7 +33,6 @@ def test_symlink_file(tmpdir):
     with tmpdir.as_cwd():
         test_dir = str(tmpdir)
         fd, real_file = tempfile.mkstemp(prefix="real", suffix=".txt", dir=test_dir)
-        assert os.path.exists(real_file)
         link_file = tempfile.mktemp(prefix="link", suffix=".txt", dir=test_dir)
         assert os.path.exists(link_file) is False
         symlink.symlink(source_path=real_file, link_path=link_file)
@@ -48,7 +47,6 @@ def test_symlink_dir(tmpdir):
         real_dir = os.path.join(test_dir, "real_dir")
         link_dir = os.path.join(test_dir, "link_dir")
         os.mkdir(real_dir)
-        assert os.path.exists(real_dir)
         symlink.symlink(source_path=real_dir, link_path=link_dir)
         assert os.path.exists(link_dir)
         assert symlink.islink(link_dir)
@@ -60,8 +58,6 @@ def test_symlink_source_not_exists(tmpdir):
         test_dir = str(tmpdir)
         real_dir = os.path.join(test_dir, "real_dir")
         link_dir = os.path.join(test_dir, "link_dir")
-        assert not os.path.exists(real_dir)
-        assert not os.path.exists(link_dir)
         with pytest.raises(symlink.SymlinkError):
             symlink.symlink(source_path=real_dir, link_path=link_dir)
 
@@ -77,9 +73,7 @@ def test_symlink_src_relative_to_link(tmpdir):
         os.mkdir(subdir_1)
         os.mkdir(subdir_2)
         fd, real_file = tempfile.mkstemp(prefix="real", suffix=".txt", dir=subdir_2)
-        assert os.path.exists(real_file)
         link_file = tempfile.mktemp(prefix="link", suffix=".txt", dir=subdir_1)
-        assert os.path.exists(link_file) is False
         symlink.symlink(
             source_path=f"b/{os.path.basename(real_file)}",
             link_path=f"a/{os.path.basename(link_file)}",
@@ -103,9 +97,7 @@ def test_symlink_src_not_relative_to_link(tmpdir):
         os.mkdir(subdir_1)
         os.mkdir(subdir_2)
         fd, real_file = tempfile.mkstemp(prefix="real", suffix=".txt", dir=subdir_2)
-        assert os.path.exists(real_file)
         link_file = tempfile.mktemp(prefix="link", suffix=".txt", dir=subdir_1)
-        assert os.path.exists(link_file) is False
         # Expected SymlinkError because source path does not exist relative to link path
         with pytest.raises(symlink.SymlinkError):
             symlink.symlink(
@@ -129,7 +121,6 @@ def test_symlink_link_exists(tmpdir):
         link_dir = os.path.join(test_dir, "link_dir")
         os.mkdir(real_dir)
         symlink.symlink(real_dir, link_dir)
-        assert os.path.exists(real_dir)
         assert os.path.exists(link_dir)
         with pytest.raises(symlink.SymlinkError):
             symlink.symlink(source_path=real_dir, link_path=link_dir)
@@ -142,9 +133,7 @@ def test_symlink_win_file(tmpdir):
     with tmpdir.as_cwd():
         test_dir = str(tmpdir)
         fd, real_file = tempfile.mkstemp(prefix="real", suffix=".txt", dir=test_dir)
-        assert os.path.exists(real_file)
         link_file = tempfile.mktemp(prefix="link", suffix=".txt", dir=test_dir)
-        assert os.path.exists(link_file) is False
         symlink.symlink(source_path=real_file, link_path=link_file)
         # Verify that all expected conditions are met
         assert os.path.exists(link_file)
@@ -163,7 +152,6 @@ def test_symlink_win_dir(tmpdir):
         real_dir = os.path.join(test_dir, "real")
         link_dir = os.path.join(test_dir, "link")
         os.mkdir(real_dir)
-        assert os.path.exists(real_dir)
         symlink.symlink(source_path=real_dir, link_path=link_dir)
         # Verify that all expected conditions are met
         assert os.path.exists(link_dir)
@@ -181,8 +169,6 @@ def test_windows_create_junction(tmpdir):
         junction_real_dir = os.path.join(test_dir, "real_dir")
         junction_link_dir = os.path.join(test_dir, "link_dir")
         os.mkdir(junction_real_dir)
-        assert os.path.exists(junction_real_dir)
-        assert not os.path.exists(junction_link_dir)
         assert symlink._windows_is_junction(junction_real_dir) is False
         symlink._windows_create_junction(junction_real_dir, junction_link_dir)
         # Verify that all expected conditions are met
@@ -198,9 +184,7 @@ def test_windows_create_hard_link(tmpdir):
     with tmpdir.as_cwd():
         test_dir = str(tmpdir)
         fd, real_file = tempfile.mkstemp(prefix="real", suffix=".txt", dir=test_dir)
-        assert os.path.exists(real_file)
         link_file = tempfile.mktemp(prefix="link", suffix=".txt", dir=test_dir)
-        assert os.path.exists(link_file) is False
         symlink._windows_create_hard_link(real_file, link_file)
         # Verify that all expected conditions are met
         assert os.path.exists(link_file)
@@ -220,11 +204,8 @@ def test_windows_create_link_dir(tmpdir):
         real_dir = os.path.join(test_dir, "real")
         link_dir = os.path.join(test_dir, "link")
         os.mkdir(real_dir)
-        assert os.path.exists(real_dir)
-        assert not os.path.exists(link_dir)
         symlink._windows_create_link(real_dir, link_dir)
         # Verify that all expected conditions are met
-        assert os.path.exists(real_dir)
         assert os.path.exists(link_dir)
         assert symlink.islink(link_dir)
         assert not symlink._windows_is_hardlink(link_dir)
@@ -240,9 +221,7 @@ def test_windows_create_link_file(tmpdir):
     with tmpdir.as_cwd():
         test_dir = str(tmpdir)
         fd, real_file = tempfile.mkstemp(prefix="real", suffix=".txt", dir=test_dir)
-        assert os.path.exists(real_file)
         link_file = tempfile.mktemp(prefix="link", suffix=".txt", dir=test_dir)
-        assert os.path.exists(link_file) is False
         symlink._windows_create_link(real_file, link_file)
         # Verify that all expected conditions are met
         assert os.path.exists(link_file)
