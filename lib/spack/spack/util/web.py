@@ -10,7 +10,7 @@ import errno
 import multiprocessing.pool
 import os
 import os.path
-import posixpath
+from pathlib import PurePosixPath
 import re
 import shutil
 import ssl
@@ -740,7 +740,7 @@ def find_versions_of_archive(
         # We'll be a bit more liberal and just look for the archive
         # part, not the full path.
         # this is a URL so it is a posixpath even on Windows
-        url_regex = posixpath.basename(url_regex)
+        url_regex = PurePosixPath(url_regex).name
 
         # We need to add a / to the beginning of the regex to prevent
         # Spack from picking up similarly named packages like:
