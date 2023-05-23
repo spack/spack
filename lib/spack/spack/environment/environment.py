@@ -1716,7 +1716,15 @@ class Environment:
             List of specs that have been concretized. Each entry is a tuple of
             the user spec and the corresponding concretized spec.
         """
-        return EnvironmentConcretizer(self).concretize(force=force, tests=tests)
+        # TODO: should this revert the updates coming from included envs
+        old_concretized_roots = self.concretized_roots[:]
+        old_specs_by_hash = self.specs_by_hash
+
+        try:
+            return EnvironmentConcretizer(self).concretize(force=force, tests=tests)
+        except BaseException:
+            self.concretized_user_specs = old_concretized_user_specs[:]
+            self.specs_by_hash = old_specs_by_hash
 
     def sync_concretized_specs(self) -> None:
         """Removes concrete specs that no longer correlate to a user spec"""
