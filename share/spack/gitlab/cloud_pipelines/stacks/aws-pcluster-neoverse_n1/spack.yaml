@@ -36,10 +36,7 @@ spack:
   ci:
     pipeline-gen:
     - build-job:
-        image:
-          "name": "ghcr.io/spack/pcluster-amazonlinux-2:latest"
-          "entrypoint": [""]
-          pull_policy: "always"
+        image: { "name": "ghcr.io/spack/pcluster-amazonlinux-2:latest", "entrypoint": [""] }
         tags: ["aarch64"]
         before_script:
         - - . "./share/spack/setup-env.sh"

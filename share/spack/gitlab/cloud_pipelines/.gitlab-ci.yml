@@ -788,10 +788,7 @@ deprecated-ci-build:
 ########################################
 
 .aws-pcluster-generate-image:
-  image:
-    "name": "ghcr.io/spack/pcluster-amazonlinux-2:latest"
-    "entrypoint": [""]
-    pull_policy: "always"
+  image: { "name": "ghcr.io/spack/pcluster-amazonlinux-2:latest", "entrypoint": [""] }
 
 .aws-pcluster-generate:
   before_script:
