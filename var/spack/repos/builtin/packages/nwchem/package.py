@@ -67,6 +67,7 @@ class Nwchem(Package):
                 "MRCC_METHODS=y",  # TCE extra module
                 "IPCCSD=y",  # TCE extra module
                 "EACCSD=y",  # TCE extra module
+                "V=1",  # verbose build
             ]
         )
         if self.spec.satisfies("@7.2.0:"):
