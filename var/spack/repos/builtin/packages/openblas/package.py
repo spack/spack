@@ -21,7 +21,7 @@ class Openblas(CMakePackage, MakefilePackage):
     )
     git = "https://github.com/OpenMathLib/OpenBLAS.git"
 
-    libraries = ["libopenblas"]
+    libraries = ["libopenblas", "openblas.lib"]
 
     version("develop", branch="develop")
     version("0.3.24", sha256="ceadc5065da97bd92404cac7254da66cc6eb192679cf1002098688978d4d5132")
