@@ -37,7 +37,7 @@ _other_instance_vars = [
     "implicit_rpaths",
     "extra_rpaths",
 ]
-_cache_config_file = []
+_CACHE_CONFIG_FILES = []
 
 # TODO: Caches at module level make it difficult to mock configurations in
 # TODO: unit tests. It might be worth reworking their implementation.
@@ -152,11 +152,11 @@ def add_compilers_to_config(compilers, scope=None, init_config=True):
         compilers: a list of Compiler objects.
         scope: configuration scope to modify.
     """
+    global _CACHE_CONFIG_FILES
     compiler_config = get_compiler_config(scope, init_config)
     for compiler in compilers:
         compiler_config.append(_to_dict(compiler))
-    global _cache_config_file
-    _cache_config_file = compiler_config
+    _CACHE_CONFIG_FILES = compiler_config
     spack.config.set("compilers", compiler_config, scope=scope)
 
 
@@ -169,7 +169,7 @@ def remove_compiler_from_config(compiler_spec, scope=None):
         scope: configuration scope to modify.
     """
     # Need a better way for this
-    global _cache_config_file
+    global _CACHE_CONFIG_FILES
 
     compiler_config = get_compiler_config(scope)
     config_length = len(compiler_config)
@@ -183,7 +183,7 @@ def remove_compiler_from_config(compiler_spec, scope=None):
     ]
 
     # Update the cache for changes
-    _cache_config_file = filtered_compiler_config
+    _CACHE_CONFIG_FILES = filtered_compiler_config
     if len(filtered_compiler_config) == config_length:  # No items removed
         CompilerSpecInsufficientlySpecificError(compiler_spec)
     spack.config.set("compilers", filtered_compiler_config, scope=scope)
@@ -195,12 +195,12 @@ def all_compilers_config(scope=None, init_config=True):
     """
     # Get compilers for this architecture.
     # Create a cache of the config file so we don't load all the time.
-    global _cache_config_file
-    if not _cache_config_file:
-        _cache_config_file = get_compiler_config(scope, init_config)
-        return _cache_config_file
+    global _CACHE_CONFIG_FILES
+    if not _CACHE_CONFIG_FILES:
+        _CACHE_CONFIG_FILES = get_compiler_config(scope, init_config)
+        return _CACHE_CONFIG_FILES
     else:
-        return _cache_config_file
+        return _CACHE_CONFIG_FILES
 
 
 def all_compiler_specs(scope=None, init_config=True):
