@@ -78,7 +78,7 @@ class H5bench(CMakePackage):
         commands = ["srun", "mpirun", "mpiexec"]
         return which(*commands, path=searchpath) or which(*commands)
 
-    def test_h5bench(self):
+    def test_help(self):
         """Stand-alone/smoke test."""
         h5bench = which(self.prefix.bin.h5bench)
         h5bench("-h")
