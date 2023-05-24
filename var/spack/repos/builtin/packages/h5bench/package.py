@@ -59,31 +59,23 @@ class H5bench(CMakePackage):
 
         return args
 
-    def check(self):
-        if self.run_tests:
-            with working_dir(self.build_directory):
-                make("test")
-
     @run_after("install")
     def setup_build_tests(self):
         """Copy the example source files after the package is installed to an
         install test subdirectory for use during `spack test run`."""
         self.cache_extra_test_sources(["tests", "samples"])
 
-    def test(self):
+    def test_help(self):
         """Perform stand-alone/smoke tests on the installed package."""
-        self.run_test(
-            "h5bench",
-            ["-h"],
-            purpose="test: smoke h5bench test",
-            installed=True,
-            work_dir=self.test_suite.current_test_cache_dir,
+        h5bench = which(self.prefix.bin.h5bench)
+        h5bench("-h")
+
+    def test_h5bench(self):
+        """Perform stand-alone/smoke tests on the installed package."""
+        samples_dir = join_path(
+            self.test_suite.current_test_cache_dir
         )
 
-        self.run_test(
-            "h5bench",
-            ["--debug", "--abort", "samples/sync-write-1d-contig-contig.json"],
-            purpose="test: sample h5bench test",
-            installed=True,
-            work_dir=self.test_suite.current_test_cache_dir,
-        )
+        with working_dir(samples_dir):
+            h5bench = which(self.prefix.bin.h5bench)
+            h5bench("--debug", "--abort", "samples/sync-write-1d-contig-contig.json")
