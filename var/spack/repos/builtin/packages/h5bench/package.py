@@ -65,8 +65,21 @@ class H5bench(CMakePackage):
         install test subdirectory for use during `spack test run`."""
         self.cache_extra_test_sources(["tests", "samples"])
 
-    def test_help(self):
-        """Perform stand-alone/smoke tests on the installed package."""
+        launcher = self.mpi_launcher()
+
+        filter_file(r"mpirun", launcher.command, "samples/sync-write-1d-contig-contig.json")
+
+    def mpi_launcher(self):
+        searchpath = [self.spec["mpi"].prefix.bin]
+        try:
+            searchpath.insert(0, self.spec["slurm"].prefix.bin)
+        except KeyError:
+            print("Slurm not found, ignoring.")
+        commands = ["srun", "mpirun", "mpiexec"]
+        return which(*commands, path=searchpath) or which(*commands)
+
+    def test_h5bench(self):
+        """Stand-alone/smoke test."""
         h5bench = which(self.prefix.bin.h5bench)
         h5bench("-h")
 
