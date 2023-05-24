@@ -83,22 +83,23 @@ def _auto_compiler_spec(function):
 
 def _to_dict(compiler):
     """Return a dict version of compiler suitable to insert in YAML."""
-    d = {}
-    d["spec"] = str(compiler.spec)
-    d["paths"] = dict((attr, getattr(compiler, attr, None)) for attr in _PATH_INSTANCE_VARS)
-    d["flags"] = dict((fname, " ".join(fvals)) for fname, fvals in compiler.flags.items())
+    d = {
+        "spec": str(compiler.spec),
+        "paths": {attr: getattr(compiler, attr, None) for attr in _PATH_INSTANCE_VARS},
+        "flags": {fname: " ".join(fvals) for fname, fvals in compiler.flags.items()},
+        "operating_system": str(compiler.operating_system),
+        "target": str(compiler.target),
+        "modules": compiler.modules or [],
+        "environment": compiler.environment or {},
+        "extra_rpaths": compiler.extra_rpaths or [],
+    }
     d["flags"].update(
-        dict(
-            (attr, getattr(compiler, attr, None))
+        {
+            attr: getattr(compiler, attr, None)
             for attr in _flags_instance_vars
             if hasattr(compiler, attr)
-        )
+        }
     )
-    d["operating_system"] = str(compiler.operating_system)
-    d["target"] = str(compiler.target)
-    d["modules"] = compiler.modules or []
-    d["environment"] = compiler.environment or {}
-    d["extra_rpaths"] = compiler.extra_rpaths or []
     if compiler.enable_implicit_rpaths is not None:
         d["implicit_rpaths"] = compiler.enable_implicit_rpaths
 
