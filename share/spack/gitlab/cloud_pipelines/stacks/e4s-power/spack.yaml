@@ -82,6 +82,7 @@ spack:
   - h5bench
   - hdf5-vol-async
   - hdf5-vol-cache
+  - hdf5-vol-daos
   - hdf5-vol-log
   - heffte +fftw
   - hpctoolkit
