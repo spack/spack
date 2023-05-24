@@ -104,6 +104,9 @@ class Nwchem(Package):
             args.extend(["FFTW3_INCLUDE={0}".format(spec["fftw-api"].prefix.include)])
 
         with working_dir("src"):
+            # archspec flags are injected through the compiler wrapper
+            filter_file("(-mtune=native|-mcpu=native)", "", "config/makefile.h")
+
             make("nwchem_config", *args)
             if use_32_bit_lin_alg:
                 make("64_to_32", *args)
