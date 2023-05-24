@@ -788,20 +788,17 @@ deprecated-ci-build:
 ########################################
 
 .aws-pcluster-generate-image:
-  image: { "name": "ghcr.io/spack/pcluster-amazonlinux-2:latest", "entrypoint": [""] }
+  image: { "name": "ghcr.io/spack/pcluster-amazonlinux-2:v2023-05-25", "entrypoint": [""] }
 
 .aws-pcluster-generate:
   before_script:
-      # Setup postinstall Spack as upstream installation
+    # Use gcc from local container buildcache
     - - . "./share/spack/setup-env.sh"
       - . /etc/profile.d/modules.sh
-      - if [[ -f /bootstrap/spack/etc/spack/packages.yaml ]]; then cp /bootstrap/spack/etc/spack/packages.yaml ./etc/spack/; fi
-      - if [[ -f /bootstrap/spack/etc/spack/config.yaml ]]; then cp /bootstrap/spack/etc/spack/config.yaml ./etc/spack/; fi
-      - if [[ -f /bootstrap/spack/etc/spack/modules.xyaml ]]; then cp /bootstrap/spack/etc/spack/modules.yaml ./etc/spack/; fi
-      - if [[ -f /bootstrap/spack/etc/spack/mirrors.yaml ]]; then cp /bootstrap/spack/etc/spack/mirrors.yaml ./etc/spack/; fi
-      - if [[ -d /bootstrap/spack/opt/spack ]]; then spack config add "upstreams:postinstall:install_tree:/bootstrap/spack/opt/spack"; fi
+      - spack mirror add local-cache /bootstrap/local-cache
+      - spack gpg trust /bootstrap/public-key
       - cd "${CI_PROJECT_DIR}" && curl -sOL https://raw.githubusercontent.com/spack/spack-configs/main/AWS/parallelcluster/postinstall.sh
-      - sed -i -e '/nohup/s/&$//' -e 's/nohup//' -e "s/spack arch -t/echo ${SPACK_TARGET_ARCH}/g" postinstall.sh
+      - sed -i -e "s/spack arch -t/echo ${SPACK_TARGET_ARCH}/g" postinstall.sh
       - /bin/bash postinstall.sh -fg
       - spack config --scope site add "packages:all:target:\"target=${SPACK_TARGET_ARCH}\""
   after_script:
