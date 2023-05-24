@@ -19,7 +19,7 @@ class Molgw(MakefilePackage):
     url = "https://github.com/bruneval/molgw/archive/v3.2.tar.gz"
     git = "https://github.com/bruneval/molgw.git"
 
-    maintainers=("bruneval")
+    maintainers("bruneval")
 
     # version("rolling-release", branch="master")
     version("3.2", sha256="a3f9a99db52d95ce03bc3636b5999e6d92b503ec2f4afca33d030480c3e10242")
