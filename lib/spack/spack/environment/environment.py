@@ -1221,28 +1221,27 @@ class Environment:
         old_specs = set(self.user_specs)
         new_specs = set()
         for spec in matches:
-            if spec in list_to_change:
-                try:
-                    list_to_change.remove(spec)
-                    self.update_stale_references(list_name)
-                    new_specs = set(self.user_specs)
-                except spack.spec_list.SpecListError:
-                    # define new specs list
-                    new_specs = set(self.user_specs)
-                    msg = f"Spec '{spec}' is part of a spec matrix and "
-                    msg += f"cannot be removed from list '{list_to_change}'."
-                    if force:
-                        msg += " It will be removed from the concrete specs."
-                        # Mock new specs, so we can remove this spec from concrete spec lists
-                        new_specs.remove(spec)
-                    tty.warn(msg)
+            if spec not in list_to_change:
+                continue
+            try:
+                list_to_change.remove(spec)
+                self.update_stale_references(list_name)
+                new_specs = set(self.user_specs)
+            except spack.spec_list.SpecListError:
+                # define new specs list
+                new_specs = set(self.user_specs)
+                msg = f"Spec '{spec}' is part of a spec matrix and "
+                msg += f"cannot be removed from list '{list_to_change}'."
+                if force:
+                    msg += " It will be removed from the concrete specs."
+                    # Mock new specs, so we can remove this spec from concrete spec lists
+                    new_specs.remove(spec)
+                tty.warn(msg)
+            else:
+                if list_name == user_speclist_name:
+                    self.manifest.remove_user_spec(str(spec))
                 else:
-                    if list_name == user_speclist_name:
-                        for user_spec in matches:
-                            self.manifest.remove_user_spec(str(user_spec))
-                    else:
-                        for user_spec in matches:
-                            self.manifest.remove_definition(str(user_spec), list_name=list_name)
+                    self.manifest.remove_definition(str(spec), list_name=list_name)
 
         # If force, update stale concretized specs
         for spec in old_specs - new_specs:
