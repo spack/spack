@@ -1346,8 +1346,8 @@ class Environment:
             the user spec and the corresponding concretized spec.
         """
         old_concretized_user_specs = self.concretized_user_specs[:]
-        old_concretized_order = self.concretized_order
-        old_specs_by_hash = self.specs_by_hash
+        old_concretized_order = self.concretized_order[:]
+        old_specs_by_hash = self.specs_by_hash.copy()
 
         try:
             if force:

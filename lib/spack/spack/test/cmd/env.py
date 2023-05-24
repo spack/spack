@@ -2766,6 +2766,11 @@ def test_virtual_spec_concretize_together(tmpdir):
     [
         (True, (spack.concretize, "concretize_specs_together")),
         ("when_possible", (spack.solver.asp.Solver, "solve_in_rounds")),
+        # An earlier failure so that we test the case where the internal state
+        # has been changed, but the pointer to the internal variables has not change.
+        # This effectively tests that we are properly copying by value not by
+        # reference for the transactional concretization
+        (True, (spack.environment.Environment, "_get_specs_to_concretize")),
     ],
 )
 def test_concretize_transactional(unify, method_to_fail, monkeypatch):
@@ -2773,7 +2778,13 @@ def test_concretize_transactional(unify, method_to_fail, monkeypatch):
     e.unify = unify
 
     e.add("mpi")
+    e.add("zlib")
     e.concretize()
+
+    # remove one spec and add another to ensure we test with changes before
+    # and after the environment is cleared during concretization
+    e.remove("zlib")
+    e.add("libelf")
 
     def fail(*args, **kwargs):
         raise Exception("Test failures")
@@ -2781,12 +2792,12 @@ def test_concretize_transactional(unify, method_to_fail, monkeypatch):
     location, method = method_to_fail
     monkeypatch.setattr(location, method, fail)
 
-    first_user_specs = e.concretized_user_specs
-    first_order = e.concretized_order
-    first_hash_dict = e.specs_by_hash
+    first_user_specs = e.concretized_user_specs[:]
+    first_order = e.concretized_order[:]
+    first_hash_dict = e.specs_by_hash.copy()
 
     try:
-        e.concretize(force=True)
+        e.concretize()
     except Exception:
         pass
 
