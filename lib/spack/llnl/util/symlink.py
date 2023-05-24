@@ -3,9 +3,11 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 import os
+import re
 import shutil
 import sys
 import tempfile
+import subprocess
 
 from llnl.util import lang, tty
 
@@ -243,6 +245,70 @@ def _windows_create_hard_link(path: str, link: str):
     else:
         tty.debug(f"Creating hard link {link} pointing to {path}")
         CreateHardLink(link, path)
+
+
+def readlink(path: str):
+    """Spack utility to override of os.readlink method to work cross platform"""
+    if _windows_is_hardlink(path):
+        return _windows_read_hard_link(path)
+    elif _windows_is_junction(path):
+        return _windows_read_junction(path)
+    else:
+        return os.readlink(path)
+
+
+def _windows_read_hard_link(link: str) -> str:
+    """Find all of the files that point to the same inode as the link"""
+    if sys.platform != "win32":
+        raise SymlinkError("Can\'t read hard link on non-Windows OS.")
+    link = os.path.abspath(link)
+    fsutil_cmd = ["fsutil", "hardlink", "list", link]
+    proc = subprocess.Popen(
+        fsutil_cmd,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+        shell=True
+    )
+    out, err = proc.communicate()
+    if proc.returncode != 0:
+        raise SymlinkError(f"An error occurred while reading hard link: {err.decode()}")
+
+    # fsutil response does not include the drive name, so append it back to each linked file.
+    drive, link_tail = os.path.splitdrive(os.path.abspath(link))
+    links = set([os.path.join(drive, p) for p in out.decode().splitlines()])
+    links.remove(link)
+    if len(links) == 1:
+        return links.pop()
+    elif len(links) > 1:
+        # TODO: How best to handle the case where 3 or more paths point to a single inode?
+        raise SymlinkError(f'Found multiple paths pointing to the same inode {links}')
+    else:
+        raise SymlinkError('Cannot determine hard link source path.')
+
+
+def _windows_read_junction(link: str):
+    """Find the path that a junction points to."""
+    if sys.platform != "win32":
+        raise SymlinkError("Can\'t read junction on non-Windows OS.")
+
+    link = os.path.abspath(link)
+    link_basename = os.path.basename(link)
+    link_parent = os.path.dirname(link)
+    fsutil_cmd = ["dir", "/a:l", link_parent]
+    proc = subprocess.Popen(
+        fsutil_cmd,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+        shell=True
+    )
+    out, err = proc.communicate()
+    if proc.returncode != 0:
+        raise SymlinkError(f"An error occurred while reading junction: {err.decode()}")
+    matches = re.search(rf"<JUNCTION>\s+{link_basename} \[(.*)]", out.decode())
+    if matches:
+        return matches.group(1)
+    else:
+        raise SymlinkError("Could not find junction path.")
 
 
 @system_path_filter
