@@ -188,6 +188,6 @@ class Dyninst(CMakePackage):
       """
       Run parseThat on /bin/ls to rewrite with basic instrumentation
       """
-      parseThat = which(join_path(self.prefix.bin, "parseThat"))
-      os.environ["DYNINSTAPI_RT_LIB"] = join_path(self.prefix, "lib", "libdyninstAPI_RT.so")
+      parseThat = which(self.prefix.bin.parseThat)
+      os.environ["DYNINSTAPI_RT_LIB"] = join_path(self.prefix.lib, "libdyninstAPI_RT.so")
       parseThat("--binary-edit={0:s}".format(join_path(self.test_suite.stage, "ls.rewritten")), "/bin/ls")
