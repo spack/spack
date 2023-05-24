@@ -515,22 +515,21 @@ class MakefileBuilder(spack.build_systems.makefile.MakefileBuilder, SetupEnviron
 
 class CMakeBuilder(spack.build_systems.cmake.CMakeBuilder, SetupEnvironment):
     def cmake_args(self):
-        cmake_defs = []
-        cmake_defs += ["-DTARGET:STRING=GENERIC"]
+        cmake_defs = [self.define("TARGET", "GENERIC")]
         if self.spec.satisfies("platform=windows"):
-            cmake_defs += ["-DDYNAMIC_ARCH:BOOL=FALSE", "-DBUILD_WITHOUT_LAPACK:BOOL=TRUE"]
+            cmake_defs += [self.define("DYNAMIC_ARCH", "OFF"), self.define("BUILD_WITHOUT_LAPACK", "ON")]
 
         if "~fortran" in self.spec:
-            cmake_defs += ["-DNOFORTRAN:BOOL=TRUE"]
+            cmake_defs += [self.define("NOFORTRAN", "ON")]
 
         if "+shared" in self.spec:
-            cmake_defs += ["-DBUILD_SHARED_LIBS:BOOL=TRUE"]
+            cmake_defs += [self.define("BUILD_SHARED_LIBS", "ON")]
 
         if self.spec.satisfies("threads=openmp"):
-            cmake_defs += ["-DUSE_OPENMP:BOOL=TRUE", "-DUSE_THREAD:BOOL=TRUE"]
+            cmake_defs += [self.define("USE_OPENMP", "ON"), self.define("USE_THREAD", "ON")]
         elif self.spec.satisfies("threads=pthreads"):
-            cmake_defs += ["-DUSE_OPENMP:BOOL=FALSE", "-DUSE_THREAD:BOOL=TRUE"]
+            cmake_defs += [self.define("USE_OPENMP", "OFF"), self.define("USE_THREAD", "ON")]
         else:
-            cmake_defs += ["-DUSE_OPENMP:BOOL=FALSE", "-DUSE_THREAD:BOOL=FALSE"]
+            cmake_defs += [self.define("USE_OPENMP", "OFF"), self.define("USE_THREAD", "OFF")]
 
         return cmake_defs
