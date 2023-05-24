@@ -173,7 +173,7 @@ default:
 
 .generate:
   extends: [ ".base-job", ".generate-base" ]
-  tags: ["spack", "public", "medium", "x86_64"]
+  tags: ["spack", "public", "medium", "x86_64", "norun"]
 
 .darwin-generate-base:
   stage: generate
@@ -237,11 +237,11 @@ default:
     max: 2
     when:
       - always
-  tags: ["spack", "public", "medium", "x86_64"]
+  tags: ["spack", "public", "medium", "x86_64", "norun"]
 
 .generate-aarch64:
   extends: [ ".base-job", ".generate" ]
-  tags: ["spack", "public", "medium", "aarch64"]
+  tags: ["spack", "public", "medium", "aarch64", "norun"]
 
 .build:
   extends: [ ".base-job" ]
@@ -256,7 +256,7 @@ protected-publish:
   - /^v.*/
   - /^develop-[\d]{4}-[\d]{2}-[\d]{2}$/
   image: "ghcr.io/spack/python-aws-bash:0.0.1"
-  tags: ["spack", "public", "medium", "aws", "x86_64"]
+  tags: ["spack", "public", "medium", "aws", "x86_64", "norun"]
   retry:
     max: 2
     when: ["runner_system_failure", "stuck_or_timeout_failure"]
