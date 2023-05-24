@@ -59,7 +59,7 @@ class Sensei(CMakePackage):
     depends_on("paraview@5.5.0:5.5.2", when="@:2.1.1 +catalyst")
     depends_on("paraview@5.6:5.7", when="@3:3.2.1 +catalyst")
     depends_on("paraview@5.7:5.9", when="@3.2.2 +catalyst")
-    depends_on("paraview@5.7:5.10", when="@4: +catalyst")
+    depends_on("paraview@5.7:5.10", when="@4:4 +catalyst")
 
     # Visit Dep
     depends_on("visit", when="+libsim")
