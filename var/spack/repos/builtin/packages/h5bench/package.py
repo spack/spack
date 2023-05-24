@@ -72,10 +72,6 @@ class H5bench(CMakePackage):
 
     def test_h5bench(self):
         """Perform stand-alone/smoke tests on the installed package."""
-        samples_dir = join_path(
-            self.test_suite.current_test_cache_dir
-        )
-
-        with working_dir(samples_dir):
+        with working_dir(self.test_suite.current_test_cache_dir):
             h5bench = which(self.prefix.bin.h5bench)
             h5bench("--debug", "--abort", "samples/sync-write-1d-contig-contig.json")
