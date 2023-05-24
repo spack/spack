@@ -6,7 +6,7 @@
 from spack.package import *
 
 
-class PyMelissa(PythonPackage):
+class PyMelissaCore(PythonPackage):
     """Melissa is a file-avoiding, adaptive, fault-tolerant and elastic
     framework, to run large-scale sensitivity analysis or deep-surrogate
     training on supercomputers.
