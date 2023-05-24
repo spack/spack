@@ -392,6 +392,19 @@ def test_remove_after_concretize():
     assert not any(s.name == "mpileaks" for s in env_specs)
 
 
+def test_remove_before_concretize():
+    e = ev.create("test")
+    e.unify = True
+
+    e.add("mpileaks")
+    e.concretize()
+
+    e.remove("mpileaks")
+    e.concretize()
+
+    assert not list(e.concretized_specs())
+
+
 def test_remove_command():
     env("create", "test")
     assert "test" in env("list")

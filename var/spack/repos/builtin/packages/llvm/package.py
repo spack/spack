@@ -236,7 +236,7 @@ class Llvm(CMakePackage, CudaPackage):
     # openmp dependencies
     depends_on("perl-data-dumper", type=("build"))
     depends_on("hwloc")
-    depends_on("hwloc@2.0.1:", when="@9:")
+    depends_on("hwloc@2.0.1:", when="@13")
     depends_on("elf", when="+cuda")  # libomptarget
     depends_on("libffi", when="+libomptarget")  # libomptarget
 
@@ -374,6 +374,13 @@ class Llvm(CMakePackage, CudaPackage):
     # TODO: adjust version constraint and switch to fetching from the upstream GitHub repo
     #  when/if the bugfix is merged
     patch("D133513.diff", level=0, when="@14:15+lldb+python")
+
+    # Fix hwloc@:2.3 (Conditionally disable hwloc@2.0 and hwloc@2.4 code)
+    patch(
+        "https://github.com/llvm/llvm-project/commit/3a362a9f38b95978160377ee408dbc7d14af9aad.patch?full_index=1",
+        sha256="25bc503f7855229620e56e76161cf4654945aef0be493a2d8d9e94a088157b7c",
+        when="@14:15",
+    )
 
     # The functions and attributes below implement external package
     # detection for LLVM. See:
