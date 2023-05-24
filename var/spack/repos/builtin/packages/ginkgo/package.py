@@ -4,7 +4,6 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import os
-import re
 import sys
 
 from spack.package import *
@@ -181,8 +180,8 @@ class Ginkgo(CMakePackage, CudaPackage, ROCmPackage):
         src_dir = self._cached_tests_src_dir(script)
 
         cmake_args = [
-            "-DCMAKE_C_COMPILER={0}".format(self.compiler.cc),
-            "-DCMAKE_CXX_COMPILER={0}".format(self.compiler.cxx),
+            f"-DCMAKE_C_COMPILER={os.environ['CC']}",
+            f"-DCMAKE_CXX_COMPILER={os.environ['CXX']}",
             src_dir,
         ]
 
@@ -200,13 +199,11 @@ class Ginkgo(CMakePackage, CudaPackage, ROCmPackage):
             cmakelists.write(data)
             cmakelists.close()
 
+        cmake = which(self.spec["cmake"].prefix.bin.cmake)
+        make = which("make")
         with working_dir(src_dir):
-            cmake = which(self.spec["cmake"].prefix.bin.cmake)
             cmake(*cmake_args)
-
-            make = which("make")
             make()
-
             exe = which(script)
             output = exe(output=str.split, error=str.split)
             assert "correctly detected and is complete" in output
