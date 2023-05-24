@@ -3,9 +3,10 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
-from subprocess import run, PIPE
 from os import getenv
+from subprocess import PIPE, run
+
+from spack.package import *
 
 
 class Molgw(MakefilePackage):
