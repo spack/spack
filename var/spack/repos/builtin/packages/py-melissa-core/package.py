@@ -43,7 +43,7 @@ class PyMelissaCore(PythonPackage):
     depends_on("py-mpi4py@3.1.3:", type="run")
     depends_on("py-numpy@1.21:", type="run")
     depends_on("py-jsonschema@4.5:", type="run")
-    depends_on("py-python-rapidjson@1.9:", type="run")
+    depends_on("py-python-rapidjson@1.8:", type="run")
     depends_on("py-scipy@1.10.0:", type="run")
     depends_on("py-cloudpickle@2.2.0:", type="run")
     # requirements_deep_learning.txt (DL)
