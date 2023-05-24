@@ -1718,7 +1718,7 @@ class Environment:
         """
         # TODO: should this revert the updates coming from included envs
         old_concretized_roots = self.concretized_roots[:]
-        old_specs_by_hash = self.specs_by_hash
+        old_specs_by_hash = self.specs_by_hash.copy()
 
         try:
             return EnvironmentConcretizer(self).concretize(force=force, tests=tests)
