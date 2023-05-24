@@ -906,7 +906,7 @@ packages:
   mpileaks:
     version: ["2.2"]
   libelf:
-    version: ["0.8.11"]
+    version: ["0.8.10"]
 """
         )
 
@@ -2404,7 +2404,11 @@ def test_concretize_user_specs_together():
     # Concretize a second time using 'mpich2' as the MPI provider
     e.remove("mpich")
     e.add("mpich2")
-    e.concretize()
+
+    # Concretizing without invalidating the concrete spec for mpileaks fails
+    with pytest.raises(spack.error.UnsatisfiableSpecError):
+        e.concretize()
+    e.concretize(force=True)
 
     assert all("mpich2" in spec for _, spec in e.concretized_specs())
     assert all("mpich" not in spec for _, spec in e.concretized_specs())
@@ -2435,7 +2439,7 @@ def test_duplicate_packages_raise_when_concretizing_together():
     e.add("mpich")
 
     with pytest.raises(
-        spack.error.UnsatisfiableSpecError, match=r"relax the concretizer strictness"
+        spack.error.UnsatisfiableSpecError, match=r"You could consider setting `concretizer:unify`"
     ):
         e.concretize()
 
@@ -3295,3 +3299,22 @@ def test_environment_created_in_users_location(mutable_config, tmpdir):
     assert dir_name in out
     assert env_dir in ev.root(dir_name)
     assert os.path.isdir(os.path.join(env_dir, dir_name))
+
+
+def test_environment_created_from_lockfile_has_view(mock_packages, tmpdir):
+    """When an env is created from a lockfile, a view should be generated for it"""
+    env_a = str(tmpdir.join("a"))
+    env_b = str(tmpdir.join("b"))
+
+    # Create an environment and install a package in it
+    env("create", "-d", env_a)
+    with ev.Environment(env_a):
+        add("libelf")
+        install("--fake")
+
+    # Create another environment from the lockfile of the first environment
+    env("create", "-d", env_b, os.path.join(env_a, "spack.lock"))
+
+    # Make sure the view was created
+    with ev.Environment(env_b) as e:
+        assert os.path.isdir(e.view_path_default)

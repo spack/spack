@@ -2017,7 +2017,8 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
                     # stack instead of from traceback.
                     # The traceback is truncated here, so we can't use it to
                     # traverse the stack.
-                    m = "\n".join(spack.build_environment.get_package_context(tb))
+                    context = spack.build_environment.get_package_context(tb)
+                    m = "\n".join(context) if context else ""
 
                 exc = e  # e is deleted after this block
 

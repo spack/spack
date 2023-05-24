@@ -12,7 +12,7 @@ class GsiNcdiag(CMakePackage):
     homepage = "https://github.com/NOAA-EMC/GSI-ncdiag"
     url = "https://github.com/NOAA-EMC/GSI-ncdiag/archive/refs/tags/v1.0.0.tar.gz"
 
-    maintainers = ["ulmononian"]
+    maintainers("ulmononian")
 
     version("1.0.0", sha256="7251d6139c2bc1580db5f7f019e10a4c73d188ddd52ccf21ecc9e39d50a6af51")
 

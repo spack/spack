@@ -347,7 +347,7 @@ the Environment and then install the concretized specs.
    (see :ref:`build-jobs`). To speed up environment builds further, independent
    packages can be installed in parallel by launching more Spack instances. For
    example, the following will build at most four packages in parallel using
-   three background jobs: 
+   three background jobs:
 
    .. code-block:: console
 
@@ -395,7 +395,7 @@ version (and other constraints) passed as the spec argument to the
 
 For packages with ``git`` attributes, git branches, tags, and commits can
 also be used as valid concrete versions (see :ref:`version-specifier`).
-This means that for a package ``foo``, ``spack develop foo@git.main`` will clone 
+This means that for a package ``foo``, ``spack develop foo@git.main`` will clone
 the ``main`` branch of the package, and ``spack install`` will install from
 that git clone if ``foo`` is in the environment.
 Further development on ``foo`` can be tested by reinstalling the environment,
@@ -589,10 +589,11 @@ user support groups providing a large software stack for their HPC center.
 
 .. admonition:: Re-concretization of user specs
 
-   When using *unified* concretization (when possible), the entire set of specs will be
-   re-concretized after any addition of new user specs, to ensure that
-   the environment remains consistent / minimal. When instead unified concretization is
-   disabled, only the new specs will be concretized after any addition.
+   The ``spack concretize`` command without additional arguments will *not* change any
+   previously concretized specs. This may prevent it from finding a solution when using
+   ``unify: true``, and it may prevent it from finding a minimal solution when using
+   ``unify: when_possible``. You can force Spack to ignore the existing concrete environment
+   with ``spack concretize -f``.
 
 ^^^^^^^^^^^^^
 Spec Matrices
@@ -1121,19 +1122,19 @@ index once every package is pushed. Note how this target uses the generated
 
    SPACK ?= spack
    BUILDCACHE_DIR = $(CURDIR)/tarballs
-   
+
    .PHONY: all
-   
+
    all: push
-   
+
    include env.mk
-   
+
    example/push/%: example/install/%
    	@mkdir -p $(dir $@)
    	$(info About to push $(SPEC) to a buildcache)
    	$(SPACK) -e . buildcache create --allow-root --only=package --directory $(BUILDCACHE_DIR) /$(HASH)
    	@touch $@
-   
+
    push: $(addprefix example/push/,$(example/SPACK_PACKAGE_IDS))
    	$(info Updating the buildcache index)
    	$(SPACK) -e . buildcache update-index --directory $(BUILDCACHE_DIR)
