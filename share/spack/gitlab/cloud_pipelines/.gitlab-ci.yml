@@ -217,18 +217,6 @@ default:
   extends: [ ".generate-base" ]
   tags: ["spack", "public", "medium", "x86_64"]
 
-.generate-aarch64:
-  extends: [ ".generate-base" ]
-  tags: ["spack", "public", "medium", "aarch64"]
-
-.generate-neoverse_v1:
-  extends: [ ".generate-base" ]
-  tags: ["spack", "public", "medium", "aarch64", "graviton3"]
-
-.generate-neoverse-v2:
-  extends: [ ".generate-base" ]
-  tags: ["spack", "public", "medium", "neoverse_v2"]
-
 .generate-deprecated:
   extends: [ ".base-job" ]
   stage: generate
