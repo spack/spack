@@ -203,6 +203,8 @@ class Sirius(CMakePackage, CudaPackage, ROCmPackage):
     depends_on("spla+openmp", when="+openmp ^spla")
 
     depends_on("nlcglib", when="+nlcglib")
+    depends_on("nlcglib+rocm", when="+nlcglib+rocm")
+    depends_on("nlcglib+cuda", when="+nlcglib+cuda")
 
     depends_on("libvdwxc@0.3.0:+mpi", when="+vdwxc")
 
@@ -309,7 +311,7 @@ class Sirius(CMakePackage, CudaPackage, ROCmPackage):
         if "^cray-libsci" in spec:
             args.append(self.define("USE_CRAY_LIBSCI", "ON"))
 
-        if spec["blas"].name in ["intel-mkl", "intel-parallel-studio"]:
+        if spec["blas"].name in ["intel-mkl", "intel-parallel-studio", "intel-oneapi-mkl"]:
             args.append(self.define("USE_MKL", "ON"))
 
         if "+elpa" in spec:
