@@ -26,6 +26,3 @@ class MelissaApi(CMakePackage):
     def setup_run_environment(self, env):
         env.prepend_path("PYTHONPATH", self.prefix.lib)
 
-    def cmake_args(self):
-        args = []
-        return args
