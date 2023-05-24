@@ -10,8 +10,10 @@ from spack.package import *
 
 
 class Molgw(MakefilePackage):
-    """MOLGW is a code that implements the many-body perturbation theory (MBPT) to describe the excited electronic states in finite systems (atoms, molecules, clusters).
-    MOLGW implements the GW approximation for the self-energy (ionization and affinity) and the Bethe-Salpeter equation for the optical excitations.
+    """MOLGW is a quantum chemistry code that implements the many-body perturbation theory (MBPT)
+    to describe the excited electronic states in finite systems (atoms, molecules, clusters).
+    MOLGW implements the GW approximation for the self-energy (ionization and affinity)
+    and the Bethe-Salpeter equation for the optical excitations.
     MOLGW also applies the real-time time-dependent density-functional theory (RT-TDDFT).
     MOLGW employs standard Gaussian basis set.
     """
