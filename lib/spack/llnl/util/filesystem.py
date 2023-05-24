@@ -23,7 +23,7 @@ from typing import Callable, Iterable, List, Match, Optional, Tuple, Union
 
 from llnl.util import tty
 from llnl.util.lang import dedupe, memoized
-from llnl.util.symlink import islink, resolve_link_target_relative_to_the_link, symlink
+from llnl.util.symlink import islink, resolve_link_target_relative_to_the_link, symlink, readlink
 
 from spack.util.executable import Executable, which
 from spack.util.path import path_to_os_path, system_path_filter
@@ -1289,7 +1289,7 @@ def traverse_tree(
 
         # If the source path is a link and the link's source is ignored, then ignore the link too.
         if islink(source_child) and not follow_links:
-            target = os.readlink(source_child)
+            target = readlink(source_child)
             all_parents = accumulate(target.split(os.sep), lambda x, y: os.path.join(x, y))
             if any(map(ignore, all_parents)):
                 tty.warn(
