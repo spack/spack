@@ -69,7 +69,8 @@ class Whizard(AutotoolsPackage):
     # Fix for https://github.com/key4hep/key4hep-spack/issues/71
     # NOTE: This will become obsolete in a future release of whizard, so once
     # that happens, this needs to be adapted with a when clause
-    patch("parallel_build_fix.patch")
+    patch("parallel_build_fix.patch", when="@3:")
+    patch("parallel_build_fix_2.8.patch", when="@2.8")
     # Make sure that the patch actually has an effect by running autoreconf
     force_autoreconf = True
     # Which then requires the following build dependencies
