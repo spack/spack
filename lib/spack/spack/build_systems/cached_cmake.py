@@ -14,24 +14,24 @@ import spack.builder
 from .cmake import CMakeBuilder, CMakePackage
 
 
-def cmake_cache_path(name, value, comment="", force=True):
+def cmake_cache_path(name, value, comment="", force=False):
     """Generate a string for a cmake cache variable"""
-    force_str = "FORCE" if force else ""
-    return 'set({0} "{1}" CACHE PATH "{2}" {3})\n'.format(name, value, comment, force_str)
+    force_str = " FORCE" if force else ""
+    return 'set({0} "{1}" CACHE PATH "{2}"{3})\n'.format(name, value, comment, force_str)
 
 
-def cmake_cache_string(name, value, comment="", force=True):
+def cmake_cache_string(name, value, comment="", force=False):
     """Generate a string for a cmake cache variable"""
-    force_str = "FORCE" if force else ""
-    return 'set({0} "{1}" CACHE STRING "{2}" {3})\n'.format(name, value, comment, force_str)
+    force_str = " FORCE" if force else ""
+    return 'set({0} "{1}" CACHE STRING "{2}"{3})\n'.format(name, value, comment, force_str)
 
 
-def cmake_cache_option(name, boolean_value, comment="", force=True):
+def cmake_cache_option(name, boolean_value, comment="", force=False):
     """Generate a string for a cmake configuration option"""
 
     value = "ON" if boolean_value else "OFF"
-    force_str = "FORCE" if force else ""
-    return 'set({0} {1} CACHE BOOL "{2}" {3})\n'.format(name, value, comment, force_str)
+    force_str = " FORCE" if force else ""
+    return 'set({0} {1} CACHE BOOL "{2}"{3})\n'.format(name, value, comment, force_str)
 
 
 class CachedCMakeBuilder(CMakeBuilder):
