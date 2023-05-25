@@ -317,7 +317,6 @@ class Lbann(CachedCMakePackage, CudaPackage, ROCmPackage):
     depends_on("zstr")
 
     generator("ninja")
-    depends_on("ninja", type="build")
 
     def setup_build_environment(self, env):
         if self.spec.satisfies("%apple-clang"):
@@ -353,11 +352,6 @@ class Lbann(CachedCMakePackage, CudaPackage, ROCmPackage):
             # There is a bug with using Ninja generator in this version
             # of CMake
             entries.append(cmake_cache_option("CMAKE_EXPORT_COMPILE_COMMANDS", True))
-
-        entries.append(
-            cmake_cache_string("CMAKE_MAKE_PROGRAM", "{0}/ninja".format(spec["ninja"].prefix.bin))
-        )
-        entries.append(cmake_cache_string("CMAKE_GENERATOR", "Ninja"))
 
         # Use lld high performance linker
         if "+lld" in spec:
@@ -397,12 +391,6 @@ class Lbann(CachedCMakePackage, CudaPackage, ROCmPackage):
                 )
 
         if "+rocm" in spec:
-            # args.extend(
-            #     [
-            #         "-DHIP_ROOT_DIR={0}".format(spec["hip"].prefix),
-            #         "-DHIP_CXX_COMPILER={0}".format(self.spec["hip"].hipcc),
-            #     ]
-            # )
             if "platform=cray" in spec:
                 entries.append(cmake_cache_option("MPI_ASSUME_NO_BUILTIN_MPI", True))
 
@@ -425,32 +413,30 @@ class Lbann(CachedCMakePackage, CudaPackage, ROCmPackage):
             "#------------------{0}\n".format("-" * 60),
         ]
 
-        entries.append(self.define_cmake_cache_from_variant("LBANN_WITH_CNPY", "numpy"))
-        entries.append(
-            self.define_cmake_cache_from_variant("LBANN_DETERMINISTIC", "deterministic")
-        )
-        entries.append(self.define_cmake_cache_from_variant("LBANN_WITH_HWLOC", "hwloc"))
-        entries.append(self.define_cmake_cache_from_variant("LBANN_WITH_ALUMINUM", "al"))
-        entries.append(
-            self.define_cmake_cache_from_variant("LBANN_WITH_ADDRESS_SANITIZER", "asan")
-        )
-        entries.append(self.define_cmake_cache_from_variant("LBANN_WITH_BOOST", "boost"))
-        entries.append(self.define_cmake_cache_from_variant("LBANN_WITH_CONDUIT", "conduit"))
-        entries.append(self.define_cmake_cache_from_variant("LBANN_WITH_NVSHMEM", "nvshmem"))
-        entries.append(self.define_cmake_cache_from_variant("LBANN_WITH_FFT", "fft"))
-        entries.append(self.define_cmake_cache_from_variant("LBANN_WITH_ONEDNN", "onednn"))
-        entries.append(self.define_cmake_cache_from_variant("LBANN_WITH_ONNX", "onnx"))
-        entries.append(
-            self.define_cmake_cache_from_variant("LBANN_WITH_EMBEDDED_PYTHON", "python")
-        )
-        entries.append(self.define_cmake_cache_from_variant("LBANN_WITH_PYTHON_FRONTEND", "pfe"))
+        cmake_variant_fields = [
+            ("LBANN_WITH_CNPY", "numpy"),
+            ("LBANN_DETERMINISTIC", "deterministic"),
+            ("LBANN_WITH_HWLOC", "hwloc"),
+            ("LBANN_WITH_ALUMINUM", "al"),
+            ("LBANN_WITH_ADDRESS_SANITIZER", "asan"),
+            ("LBANN_WITH_BOOST", "boost"),
+            ("LBANN_WITH_CONDUIT", "conduit"),
+            ("LBANN_WITH_NVSHMEM", "nvshmem"),
+            ("LBANN_WITH_FFT", "fft"),
+            ("LBANN_WITH_ONEDNN", "onednn"),
+            ("LBANN_WITH_ONNX", "onnx"),
+            ("LBANN_WITH_EMBEDDED_PYTHON", "python"),
+            ("LBANN_WITH_PYTHON_FRONTEND", "pfe"),
+            ("LBANN_WITH_UNIT_TESTING", "unit_tests"),
+            ("LBANN_WITH_VISION", "vision"),
+            ("LBANN_WITH_VTUNE", "vtune"),
+            ]
+
+        for opt, val in cmake_variant_fields:
+            entries.append(self.define_cmake_cache_from_variant(opt, val))
+
         entries.append(cmake_cache_option("LBANN_WITH_ROCTRACER", "+rocm +distconv" in spec))
         entries.append(cmake_cache_option("LBANN_WITH_TBINF", False))
-        entries.append(
-            self.define_cmake_cache_from_variant("LBANN_WITH_UNIT_TESTING", "unit_tests")
-        )
-        entries.append(self.define_cmake_cache_from_variant("LBANN_WITH_VISION", "vision"))
-        entries.append(self.define_cmake_cache_from_variant("LBANN_WITH_VTUNE", "vtune"))
         entries.append(
             cmake_cache_string("LBANN_DATATYPE", "{0}".format(spec.variants["dtype"].value))
         )
