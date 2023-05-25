@@ -71,11 +71,8 @@ class AutotoolsBuilder(AutotoolsBuilder):
         if self.spec.satisfies("@2.9.1:"):
             args.append("--enable-freetype-config")
         args.extend(self.enable_or_disable("shared"))
+        args.extend(self.with_or_without("pic"))
         return args
-
-    def setup_build_environment(self, env):
-        if self.spec.satisfies("+pic"):
-            env.set("CFLAGS", "-fPIC")
 
 class CMakeBuilder(CMakeBuilder):
     def cmake_args(self):
