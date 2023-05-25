@@ -45,7 +45,7 @@ class Freetype(AutotoolsPackage, CMakePackage):
     )
 
     variant("shared", default=True, description="Build shared libraries")
-    variant("pic", default=False, description="Enable position-independent code (PIC)")
+    variant("pic", default=True, description="Enable position-independent code (PIC)")
 
     patch("windows.patch", when="@2.9.1")
 
