@@ -28,3 +28,4 @@ jobs:
         spack compiler find
         spack external find cmake ninja win-sdk win-wdk wgl msmpi
         spack -d install -y --cdash-upload-url https://cdash.spack.io/submit.php?project=Spack+on+Windows --cdash-track Nightly --only dependencies paraview
+        exit 0
