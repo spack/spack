@@ -15,7 +15,6 @@ class PyHtml5lib(PythonPackage):
     version(
         "1.1",
         sha256="b2e5b40261e20f354d198eae92afc10d750afb487ed5e50f9c4eaf07c184146f",
-        preferred=True
     )
     version("1.0.1", sha256="66cb0dcfdbbc4f9c3ba1a63fdb511ffdbd4f513b2b6d81b80cd26ce6b3fb3736")
     version("0.99", sha256="aff6fd3031c563883197e5a04b7df324086ff5f358278a0386808c463a077e59")
