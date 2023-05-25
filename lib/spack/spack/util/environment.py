@@ -170,8 +170,9 @@ def path_put_first(var_name: str, directories: List[Path]):
 
 BASH_FUNCTION_FINDER = re.compile(r"BASH_FUNC_(.*?)\(\)")
 
+
 def _win_env_var_to_set_line(var: str, val: str) -> str:
-    return f"set \"{var}={val}\""
+    return f'set "{var}={val}"'
 
 
 def _nix_env_var_to_source_line(var: str, val: str) -> str:
