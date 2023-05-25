@@ -56,6 +56,8 @@ class Geos(CMakePackage):
     depends_on("cmake@3.13:", when="@3.10:", type="build")
     depends_on("cmake@3.8:", type="build")
 
+    variant("shared", default=True, description="Build shared library")
+
     patch(
         "https://github.com/libgeos/geos/pull/461.patch?full_index=1",
         sha256="ab78db7ff2e8fc89e899b8233cf77d90b24d88940dd202c4219decba479c8d35",
@@ -72,5 +74,7 @@ class Geos(CMakePackage):
         # https://github.com/libgeos/geos/issues/460
         if "%intel" in self.spec:
             args.append(self.define("BUILD_ASTYLE", False))
+
+        args.append(self.define_from_variant("BUILD_SHARED_LIBS", "shared"))
 
         return args
