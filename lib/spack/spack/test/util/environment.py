@@ -120,7 +120,7 @@ def test_dump_environment(prepare_environment_for_tests, tmpdir):
     envutil.dump_environment(dumpfile_path)
     with open(dumpfile_path, "r") as dumpfile:
         if sys.platform == "win32":
-            assert "set \"TEST_ENV_VAR={}\"\n".format(test_paths) in list(dumpfile)
+            assert 'set "TEST_ENV_VAR={}"\n'.format(test_paths) in list(dumpfile)
         else:
             assert "TEST_ENV_VAR={0}; export TEST_ENV_VAR\n".format(test_paths) in list(dumpfile)
 

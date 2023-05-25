@@ -41,7 +41,7 @@ def test_dump(tmpdir):
         build_env("--dump", _out_file, "zlib")
         with open(_out_file) as f:
             if sys.platform == "win32":
-                assert any(line.startswith("set \"PATH=") for line in f.readlines())
+                assert any(line.startswith('set "PATH=') for line in f.readlines())
             else:
                 assert any(line.startswith("PATH=") for line in f.readlines())
 
