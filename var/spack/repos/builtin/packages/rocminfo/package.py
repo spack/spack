@@ -12,13 +12,14 @@ class Rocminfo(CMakePackage):
 
     homepage = "https://github.com/RadeonOpenCompute/rocminfo"
     git = "https://github.com/RadeonOpenCompute/rocminfo.git"
-    url = "https://github.com/RadeonOpenCompute/rocminfo/archive/rocm-5.4.3.tar.gz"
+    url = "https://github.com/RadeonOpenCompute/rocminfo/archive/rocm-5.5.0.tar.gz"
     tags = ["rocm"]
 
     maintainers("srekolam", "renjithravindrankannath", "haampie")
 
     version("master", branch="master")
 
+    version("5.5.0", sha256="b6107d362b70e20a10911741eb44247139b4eb43489f7fa648daff880b6de37f")
     version("5.4.3", sha256="72159eed31f8deee0df9228b9e306a18fe9efdd4d6c0eead871cad4617874170")
     version("5.4.0", sha256="79123b92992cce75ae679caf9a6bf57b16d24e96e54b36eb002511f3800e29c6")
     version("5.3.3", sha256="77e6adc81da6c1d153517e1d28db774205531a2ec188e6518f998328ef7897c6")
@@ -132,6 +133,7 @@ class Rocminfo(CMakePackage):
         "5.3.3",
         "5.4.0",
         "5.4.3",
+        "5.5.0",
         "master",
     ]:
         depends_on("hsakmt-roct@" + ver, when="@" + ver)

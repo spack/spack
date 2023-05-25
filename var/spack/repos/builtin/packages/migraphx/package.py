@@ -19,6 +19,7 @@ class Migraphx(CMakePackage):
     maintainers("srekolam", "renjithravindrankannath")
     libraries = ["libmigraphx"]
 
+    version("5.5.0", sha256="6084eb596b170f5e38f22b5fa37e66aa43a8cbc626712c9f03cde48c8fecfc8f")
     version("5.4.3", sha256="f83e7bbe5d6d0951fb2cf0abf7e8b3530e9a5e45f7cec6d760da055d6905d568")
     version("5.4.0", sha256="b6e7f4a1bf445ea0dae644ed5722369cde66fbee82a5917722f5d3f8c48b0a8c")
     version("5.3.3", sha256="91d91902bbedd5e1951a231e8e5c9a328360b128c731912ed17c8059df38e02a")
@@ -119,7 +120,8 @@ class Migraphx(CMakePackage):
     # Restrict Python 2.7 usage to fix the issue below
     # https://github.com/spack/spack/issues/24429
     patch("0002-restrict-python-2.7-usage.patch", when="@3.9.0:5.1.3")
-    patch("0003-restrict-python-2.7-usage.patch", when="@5.2.0:")
+    patch("0003-restrict-python-2.7-usage.patch", when="@5.2.0:5.4")
+    patch("0004-restrict-python2.7-usage-for-5.5.0.patch", when="@5.5.0:")
 
     depends_on("cmake@3.5:", type="build")
     depends_on("protobuf", type="link")
@@ -156,6 +158,7 @@ class Migraphx(CMakePackage):
         "5.3.3",
         "5.4.0",
         "5.4.3",
+        "5.5.0",
     ]:
         depends_on("rocm-cmake@%s:" % ver, type="build", when="@" + ver)
         depends_on("hip@" + ver, when="@" + ver)
@@ -183,12 +186,15 @@ class Migraphx(CMakePackage):
         return ver
 
     def cmake_args(self):
+        spec = self.spec
+        abspath = spec["abseil-cpp"].prefix.include
         args = ["-DCMAKE_CXX_COMPILER={0}/bin/clang++".format(self.spec["llvm-amdgpu"].prefix)]
         if "@3.9.0:" in self.spec:
             args.append(
                 "-DNLOHMANN_JSON_INCLUDE={0}".format(self.spec["nlohmann-json"].prefix.include)
             )
-
         if self.spec["cmake"].satisfies("@3.16.0:"):
             args += self.cmake_python_hints
+        if "@5.5.0:" in self.spec:
+            args.append(self.define("CMAKE_CXX_FLAGS", "-I{0}".format(abspath)))
         return args

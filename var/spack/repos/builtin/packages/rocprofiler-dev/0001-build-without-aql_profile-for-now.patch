@@ -1,0 +1,44 @@
+diff --git a/cmake_modules/env.cmake b/cmake_modules/env.cmake
+index 6647578..70b411e 100644
+--- a/cmake_modules/env.cmake
++++ b/cmake_modules/env.cmake
+@@ -75,5 +75,5 @@ endif ()
+ 
+ find_library ( FIND_AQL_PROFILE_LIB "libhsa-amd-aqlprofile64.so" HINTS ${CMAKE_INSTALL_PREFIX} PATHS ${ROCM_ROOT_DIR})
+ if (  NOT FIND_AQL_PROFILE_LIB )
+-  message ( FATAL_ERROR "AQL_PROFILE not installed. Please install AQL_PROFILE" )
++  message ( "AQL_PROFILE not installed. Please install AQL_PROFILE" )
+ endif()
+diff --git a/src/api/CMakeLists.txt b/src/api/CMakeLists.txt
+index 822ee41..a704fcc 100644
+--- a/src/api/CMakeLists.txt
++++ b/src/api/CMakeLists.txt
+@@ -40,7 +40,7 @@ get_filename_component(HSA_RUNTIME_INC_PATH ${HSA_H} DIRECTORY)
+ find_library(AQLPROFILE_LIB "libhsa-amd-aqlprofile64.so" HINTS ${CMAKE_PREFIX_PATH} PATHS ${ROCM_PATH} PATH_SUFFIXES lib)
+ 
+ if(NOT AQLPROFILE_LIB)
+-  message(FATAL_ERROR "AQL_PROFILE not installed. Please install hsa-amd-aqlprofile!")
++  message("AQL_PROFILE not installed. Please install hsa-amd-aqlprofile!")
+ endif()
+ 
+ # ############################################################################################################################################
+diff --git a/src/tools/rocprofv2/CMakeLists.txt b/src/tools/rocprofv2/CMakeLists.txt
+index b2dc968..5efc5d0 100644
+--- a/src/tools/rocprofv2/CMakeLists.txt
++++ b/src/tools/rocprofv2/CMakeLists.txt
+@@ -6,7 +6,7 @@ get_property(HSA_RUNTIME_INCLUDE_DIRECTORIES TARGET hsa-runtime64::hsa-runtime64
+ 
+ find_library(AQLPROFILE_LIB "libhsa-amd-aqlprofile64.so" HINTS ${CMAKE_PREFIX_PATH} PATHS ${ROCM_PATH} PATH_SUFFIXES lib)
+ if(NOT AQLPROFILE_LIB)
+-  message(FATAL_ERROR "AQL_PROFILE not installed. Please install hsa-amd-aqlprofile!")
++  message("AQL_PROFILE not installed. Please install hsa-amd-aqlprofile!")
+ endif()
+ 
+ file(GLOB ROCPROFV2_SRC_FILES ${CMAKE_CURRENT_SOURCE_DIR}/*.cpp)
+@@ -26,4 +26,4 @@ target_include_directories(rocprofv2
+ target_link_libraries(rocprofv2 PRIVATE ${AQLPROFILE_LIB} hsa-runtime64::hsa-runtime64 stdc++fs Threads::Threads atomic -ldl)
+ # install(TARGETS rocprofv2 RUNTIME
+ #   DESTINATION ${CMAKE_INSTALL_BINDIR}
+-#   COMPONENT runtime)
+\ No newline at end of file
++#   COMPONENT runtime)
