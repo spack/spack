@@ -30,7 +30,7 @@ class PyCutadapt(PythonPackage):
     depends_on("py-setuptools-scm@6.2:", type="build", when="@2.0:")
     depends_on("python@3.7:", type=("build", "run"), when="@4.1:")
     depends_on("py-cython@0.29.20:", type=("build", "run"))
-    depends_on("py-dnaio@0.10.1:", type=("build", "run"), when="@4.3:")
+    depends_on("py-dnaio@0.10:", type=("build", "run"), when="@4.3:")
     depends_on("py-dnaio@0.9.1:", type=("build", "run"), when="@4.2")
     depends_on("py-dnaio@0.7.1:", type=("build", "run"), when="@4.1")
     depends_on("py-xopen@1.6:", type=("build", "run"), when="@4.2:")
