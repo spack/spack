@@ -47,6 +47,7 @@ def symlink(source_path: str, link_path: str):
     need System Administrator privileges.
     """
     source_path = os.path.normpath(source_path)
+    win_source_path = source_path
     link_path = os.path.normpath(link_path)
 
     # Perform basic checks to make sure symlinking will succeed
@@ -67,7 +68,12 @@ def symlink(source_path: str, link_path: str):
             # links from being made.
             link_parent_dir = os.path.dirname(link_path)
             relative_path = os.path.join(link_parent_dir, source_path)
-            if not os.path.exists(relative_path):
+            if os.path.exists(relative_path):
+                # In order to work on windows, the source path needs to be modified to be
+                # relative because hardlink/junction dont resolve relative paths the same way as
+                # os.symlink. This is ignored on other operating systems.
+                win_source_path = source_path
+            else:
                 raise SymlinkError(
                     f"The source path ({source_path}) is not relative to the link path "
                     f"({link_path}). Resulting link would be broken so not making link."
@@ -75,7 +81,7 @@ def symlink(source_path: str, link_path: str):
 
     # Create the symlink
     if sys.platform == "win32" and not _windows_can_symlink():
-        _windows_create_link(source_path, link_path)
+        _windows_create_link(win_source_path, link_path)
     else:
         os.symlink(source_path, link_path, target_is_directory=os.path.isdir(source_path))
 
@@ -319,7 +325,7 @@ def resolve_link_target_relative_to_the_link(link):
     the link, we need to construct a pathname that is valid from
     our cwd (which may not be the same as the link's directory)
     """
-    target = os.readlink(link)
+    target = readlink(link)
     if os.path.isabs(target):
         return target
     link_dir = os.path.dirname(os.path.abspath(link))

@@ -136,6 +136,7 @@ def test_merge_to_new_directory_relative(stage, link_tree):
 
 @pytest.mark.skipif(sys.platform != "win32", reason="Windows only.")
 def test_merge_to_new_directory_relative__win32_base(stage, link_tree, monkeypatch):
+    """Test merge with relative=True on Windows without admin permissions"""
     with working_dir(stage.path):
         monkeypatch.setattr(llnl.util.symlink, '_windows_can_symlink', lambda: False)
         link_tree.merge("dest", relative=True)
