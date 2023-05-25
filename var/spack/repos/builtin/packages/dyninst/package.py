@@ -185,9 +185,7 @@ class Dyninst(CMakePackage):
         return args
 
     def test_ptls(self):
-        """
-        Run parseThat on /bin/ls to rewrite with basic instrumentation
-        """
+        """Run parseThat on /bin/ls to rewrite with basic instrumentation"""
         parseThat = which(self.prefix.bin.parseThat)
         os.environ["DYNINSTAPI_RT_LIB"] = join_path(self.prefix.lib, "libdyninstAPI_RT.so")
         parseThat(
