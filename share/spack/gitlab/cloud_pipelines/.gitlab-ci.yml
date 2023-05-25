@@ -965,11 +965,11 @@ windows-vis-generate:
   extends: [ ".generate-win64", ".windows-vis", ".tags-win64-msvc2019" ]
 
 windows-vis-build:
-  extends: [ ".build", ".windows-vis", ".tags-win64-msvc2019" ]
+  extends: [ ".build", ".windows-vis"]
   trigger:
     include:
       - artifact: jobs_scratch_dir/cloud-ci-pipeline.yml
-        job: windows-vis-protected-generate
+        job: windows-vis-generate
     strategy: depend
   needs:
     - artifacts: True
