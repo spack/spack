@@ -23,7 +23,7 @@ from typing import Callable, Iterable, List, Match, Optional, Tuple, Union
 
 from llnl.util import tty
 from llnl.util.lang import dedupe, memoized
-from llnl.util.symlink import islink, resolve_link_target_relative_to_the_link, symlink, readlink
+from llnl.util.symlink import islink, readlink, resolve_link_target_relative_to_the_link, symlink
 
 from spack.util.executable import Executable, which
 from spack.util.path import path_to_os_path, system_path_filter

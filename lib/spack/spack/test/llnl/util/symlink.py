@@ -237,18 +237,18 @@ def test_windows_read_link(tmpdir):
     symlink.readlink
     """
     with tmpdir.as_cwd():
-        real_dir_1 = 'real_dir_1'
-        real_dir_2 = 'real_dir_2'
-        link_dir_1 = 'link_dir_1'
-        link_dir_2 = 'link_dir_2'
+        real_dir_1 = "real_dir_1"
+        real_dir_2 = "real_dir_2"
+        link_dir_1 = "link_dir_1"
+        link_dir_2 = "link_dir_2"
         os.mkdir(real_dir_1)
         os.mkdir(real_dir_2)
 
         # Create a file and a directory
-        _, real_file_1 = tempfile.mkstemp(prefix="real_1", suffix=".txt", dir='.')
-        _, real_file_2 = tempfile.mkstemp(prefix="real_2", suffix=".txt", dir='.')
-        link_file_1 = 'link_1.txt'
-        link_file_2 = 'link_2.txt'
+        _, real_file_1 = tempfile.mkstemp(prefix="real_1", suffix=".txt", dir=".")
+        _, real_file_2 = tempfile.mkstemp(prefix="real_2", suffix=".txt", dir=".")
+        link_file_1 = "link_1.txt"
+        link_file_2 = "link_2.txt"
 
         # Make hard link/junction
         symlink._windows_create_hard_link(real_file_1, link_file_1)

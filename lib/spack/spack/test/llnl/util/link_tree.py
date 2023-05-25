@@ -8,10 +8,10 @@ import sys
 
 import pytest
 
+import llnl.util.symlink
 from llnl.util.filesystem import mkdirp, touchp, visit_directory_tree, working_dir
 from llnl.util.link_tree import DestinationMergeVisitor, LinkTree, SourceMergeVisitor
 from llnl.util.symlink import _windows_can_symlink, islink, symlink
-import llnl.util.symlink
 
 from spack.stage import Stage
 
@@ -85,7 +85,7 @@ def test_merge_to_new_directory(stage, link_tree):
 def test_merge_to_new_directory__win32_base(stage, link_tree, monkeypatch):
     """Test for link_tree.merge for windows with base permissions"""
     with working_dir(stage.path):
-        monkeypatch.setattr(llnl.util.symlink, '_windows_can_symlink', lambda: False)
+        monkeypatch.setattr(llnl.util.symlink, "_windows_can_symlink", lambda: False)
         link_tree.merge("dest")
 
         files = [
@@ -138,7 +138,7 @@ def test_merge_to_new_directory_relative(stage, link_tree):
 def test_merge_to_new_directory_relative__win32_base(stage, link_tree, monkeypatch):
     """Test merge with relative=True on Windows without admin permissions"""
     with working_dir(stage.path):
-        monkeypatch.setattr(llnl.util.symlink, '_windows_can_symlink', lambda: False)
+        monkeypatch.setattr(llnl.util.symlink, "_windows_can_symlink", lambda: False)
         link_tree.merge("dest", relative=True)
 
         files = [
@@ -197,7 +197,7 @@ def test_merge_to_existing_directory(stage, link_tree):
 @pytest.mark.skipif(sys.platform != "win32", reason="Windows only.")
 def test_merge_to_existing_directory__win32_base(stage, link_tree, monkeypatch):
     with working_dir(stage.path):
-        monkeypatch.setattr(llnl.util.symlink, '_windows_can_symlink', lambda: False)
+        monkeypatch.setattr(llnl.util.symlink, "_windows_can_symlink", lambda: False)
 
         touchp("dest/x")
         touchp("dest/a/b/y")

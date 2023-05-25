@@ -5,9 +5,9 @@
 import os
 import re
 import shutil
+import subprocess
 import sys
 import tempfile
-import subprocess
 
 from llnl.util import lang, tty
 
@@ -266,15 +266,10 @@ def readlink(path: str):
 def _windows_read_hard_link(link: str) -> str:
     """Find all of the files that point to the same inode as the link"""
     if sys.platform != "win32":
-        raise SymlinkError("Can\'t read hard link on non-Windows OS.")
+        raise SymlinkError("Can't read hard link on non-Windows OS.")
     link = os.path.abspath(link)
     fsutil_cmd = ["fsutil", "hardlink", "list", link]
-    proc = subprocess.Popen(
-        fsutil_cmd,
-        stdout=subprocess.PIPE,
-        stderr=subprocess.PIPE,
-        shell=True
-    )
+    proc = subprocess.Popen(fsutil_cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True)
     out, err = proc.communicate()
     if proc.returncode != 0:
         raise SymlinkError(f"An error occurred while reading hard link: {err.decode()}")
@@ -287,26 +282,21 @@ def _windows_read_hard_link(link: str) -> str:
         return links.pop()
     elif len(links) > 1:
         # TODO: How best to handle the case where 3 or more paths point to a single inode?
-        raise SymlinkError(f'Found multiple paths pointing to the same inode {links}')
+        raise SymlinkError(f"Found multiple paths pointing to the same inode {links}")
     else:
-        raise SymlinkError('Cannot determine hard link source path.')
+        raise SymlinkError("Cannot determine hard link source path.")
 
 
 def _windows_read_junction(link: str):
     """Find the path that a junction points to."""
     if sys.platform != "win32":
-        raise SymlinkError("Can\'t read junction on non-Windows OS.")
+        raise SymlinkError("Can't read junction on non-Windows OS.")
 
     link = os.path.abspath(link)
     link_basename = os.path.basename(link)
     link_parent = os.path.dirname(link)
     fsutil_cmd = ["dir", "/a:l", link_parent]
-    proc = subprocess.Popen(
-        fsutil_cmd,
-        stdout=subprocess.PIPE,
-        stderr=subprocess.PIPE,
-        shell=True
-    )
+    proc = subprocess.Popen(fsutil_cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True)
     out, err = proc.communicate()
     if proc.returncode != 0:
         raise SymlinkError(f"An error occurred while reading junction: {err.decode()}")
