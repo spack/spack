@@ -517,7 +517,10 @@ class CMakeBuilder(spack.build_systems.cmake.CMakeBuilder, SetupEnvironment):
     def cmake_args(self):
         cmake_defs = [self.define("TARGET", "GENERIC")]
         if self.spec.satisfies("platform=windows"):
-            cmake_defs += [self.define("DYNAMIC_ARCH", "OFF"), self.define("BUILD_WITHOUT_LAPACK", "ON")]
+            cmake_defs += [
+                self.define("DYNAMIC_ARCH", "OFF"),
+                self.define("BUILD_WITHOUT_LAPACK", "ON"),
+                ]
 
         if "~fortran" in self.spec:
             cmake_defs += [self.define("NOFORTRAN", "ON")]
