@@ -72,6 +72,7 @@ class Nwchem(Package):
         )
         if self.spec.satisfies("@7.2.0:"):
             args.extend(["NWCHEM_MODULES=all python gwmol"])
+            args.extend(["USE_HWOPT=n"])
         else:
             args.extend(["NWCHEM_MODULES=all python"])
             # archspec flags are injected through the compiler wrapper
