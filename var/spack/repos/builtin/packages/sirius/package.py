@@ -211,6 +211,7 @@ class Sirius(CMakePackage, CudaPackage, ROCmPackage):
     depends_on("scalapack", when="+scalapack")
 
     depends_on("rocblas", when="+rocm")
+    depends_on("rocsolver", when="@7.5.0: +rocm")
 
     # FindHIP cmake script only works for < 4.1
     depends_on("hip@:4.0", when="@:7.2.0 +rocm")
