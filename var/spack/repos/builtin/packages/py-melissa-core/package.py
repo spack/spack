@@ -19,19 +19,14 @@ class PyMelissaCore(PythonPackage):
 
     version("develop", branch="develop")
 
-    # define variants (DL, DL-Torch, DL-Tensorflow)
+    # define variants for the deep learning server (torch, tf)
     variant(
-        "MELISSA_DL",
-        default=False,
-        description="Install all Deep Learning requirements (Pytorch and TensorFlow)",
-    )
-    variant(
-        "MELISSA_TORCH",
+        "torch",
         default=False,
         description="Install Deep Learning requirements with Pytorch only",
     )
     variant(
-        "MELISSA_TF",
+        "tf",
         default=False,
         description="Install Deep Learning requirements with TensorFlow only",
     )
