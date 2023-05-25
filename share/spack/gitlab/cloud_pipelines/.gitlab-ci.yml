@@ -973,4 +973,4 @@ windows-vis-build:
     strategy: depend
   needs:
     - artifacts: True
-      job: windows-vis-protected-generate
+      job: windows-vis-generate
