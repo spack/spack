@@ -7,6 +7,7 @@ import os
 import re
 
 from spack.package import *
+from spack.util.environment import is_system_path
 
 
 class Git(AutotoolsPackage):
@@ -466,12 +467,18 @@ class Git(AutotoolsPackage):
         # The test avoids failures when git is an external package.
         # In that case the node in the DAG gets truncated and git DOES NOT
         # have a gettext dependency.
-        if "+nls" in self.spec:
-            if "intl" in self.spec["gettext"].libs.names:
-                env.append_flags("EXTLIBS", "-L{0} -lintl".format(self.spec["gettext"].prefix.lib))
-            env.append_flags("CFLAGS", "-I{0}".format(self.spec["gettext"].prefix.include))
+        spec = self.spec
+        if "+nls" in spec:
+            if "intl" in spec["gettext"].libs.names:
+                extlib_bits = []
+                if not is_system_path(spec["gettext"].prefix):
+                    extlib_bits.append(spec["gettext"].libs.search_flags)
+                extlib_bits.append("-lintl")
+                env.append_flags("EXTLIBS", " ".join(extlib_bits))
+            if not is_system_path(spec["gettext"].prefix):
+                env.append_flags("CFLAGS", spec["gettext"].headers.include_flags)
 
-        if "~perl" in self.spec:
+        if "~perl" in spec:
             env.append_flags("NO_PERL", "1")
 
     def configure_args(self):
@@ -480,10 +487,16 @@ class Git(AutotoolsPackage):
         configure_args = [
             "--with-curl={0}".format(spec["curl"].prefix),
             "--with-expat={0}".format(spec["expat"].prefix),
-            "--with-iconv={0}".format(spec["iconv"].prefix),
             "--with-openssl={0}".format(spec["openssl"].prefix),
             "--with-zlib={0}".format(spec["zlib"].prefix),
         ]
+
+        if not self.spec["iconv"].name == "libc":
+            configure_args.append(
+                "--with-iconv={0}".format(
+                    "yes" if is_system_path(spec["iconv"].prefix) else spec["iconv"].prefix
+                )
+            )
 
         if "+perl" in self.spec:
             configure_args.append("--with-perl={0}".format(spec["perl"].command.path))

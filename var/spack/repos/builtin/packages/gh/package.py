@@ -14,6 +14,7 @@ class Gh(Package):
 
     maintainers("lcnzg")
 
+    version("2.28.0", sha256="cf3c0fb7f601d717d8b5177707a197c49fd426f5dc3c9aa52a932e96ba7166af")
     version("2.25.1", sha256="d3b28da03f49600697d2e80c2393425bd382e340040c34641bf3569593c7fbe8")
     version("2.25.0", sha256="b445dbb863643d30cc7991b134c694ea14492e7fac363a9e2648f245f67184f7")
     version("2.24.3", sha256="f5c8a273d3adabee9d4a07d38e738df589f1e9dcdae03f9c7b8e3d8aa4b58cf4")
@@ -27,6 +28,8 @@ class Gh(Package):
     version("2.0.0", sha256="5d93535395a6684dee1d9d1d3cde859addd76f56581e0111d95a9c685d582426")
     version("1.14.0", sha256="1a99050644b4821477aabc7642bbcae8a19b3191e9227cd8078016d78cdd83ac")
     version("1.13.1", sha256="1a19ab2bfdf265b5e2dcba53c3bd0b5a88f36eff4864dcc38865e33388b600c5")
+
+    conflicts("platform=darwin", when="@2.28.0")
 
     depends_on("go@1.16:", type="build")
 

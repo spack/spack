@@ -368,10 +368,11 @@ class Qt(Package):
     # webkit requires libintl (gettext), but does not test for it
     # correctly, so add it here.
     def flag_handler(self, name, flags):
-        if "+webkit" in self.spec and name == "ldlibs":
-            flags.append("-lintl")
-
-        return (flags, None, None)
+        if self.name == "ldlibs":
+            spec = self.spec
+            if "+webkit" in spec and "intl" in spec["gettext"].libs.names:
+                flags.append("-lintl")
+        return self.inject_flags(name, flags)
 
     @when("@4 platform=darwin")
     def patch(self):

@@ -14,6 +14,7 @@ class Fplll(AutotoolsPackage):
     homepage = "https://github.com/fplll/fplll"
     url = "https://github.com/fplll/fplll/releases/download/5.4.0/fplll-5.4.0.tar.gz"
 
+    version("5.4.4", sha256="0fd9d378f04ff886d8864728baf5d90b8b0b82c1e541e92550644fb54f75691d")
     version("5.4.1", sha256="7bd887957173aa592091772c1c36f6aa606b3b2ace0d14e2c26c7463dcf2deb7")
     version("5.4.0", sha256="fe192a65a56439b098e26e3b7ee224dda7c2c73a58f36ef2cc6f9185ae8c482b")
     version("5.3.3", sha256="5e7c46c30623795feeac19cf607583b7c82b0490ceb91498f0f712789be20ccd")
