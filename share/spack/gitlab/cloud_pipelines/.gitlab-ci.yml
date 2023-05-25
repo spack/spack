@@ -784,6 +784,7 @@ aws-pcluster-build-skylake:
     SPACK_CI_STACK_NAME: aws-pcluster-neoverse_n1
 
 aws-pcluster-generate-neoverse_n1:
+  tags: [ "pcluster" ]
   extends: [ ".linux_neoverse_n1", ".aws-pcluster-neoverse_n1", ".generate-aarch64", ".aws-pcluster-generate", ".aws-pcluster-generate-image" ]
 
 aws-pcluster-build-neoverse_n1:
