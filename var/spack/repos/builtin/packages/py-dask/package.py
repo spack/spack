@@ -21,7 +21,9 @@ class PyDask(PythonPackage):
     version("2020.12.0", sha256="43e745afd4b464e6c0113131e430a16dce6ac42460b06e24d799093d098f7ab0")
 
     variant("array", default=True, description="Install requirements for dask.array")
-    variant("bag", default=True, when="@:2021.3.0", description="Install requirements for dask.bag")
+    variant(
+        "bag", default=True, when="@:2021.3.0", description="Install requirements for dask.bag"
+    )
     variant("dataframe", default=True, description="Install requirements for dask.dataframe")
     variant("distributed", default=True, description="Install requirements for dask.distributed")
     variant("diagnostics", default=False, description="Install requirements for dask.diagnostics")
@@ -90,9 +92,7 @@ class PyDask(PythonPackage):
 
     # Requirements for dask.distributed
     depends_on(
-        "py-distributed@2020.12.0:2021.8.0",
-        type=("build", "run"),
-        when="@:2021.6.1 +distributed",
+        "py-distributed@2020.12.0:2021.8.0", type=("build", "run"), when="@:2021.6.1 +distributed"
     )
     depends_on("py-distributed@2021.6.2", type=("build", "run"), when="@2021.6.2 +distributed")
     depends_on("py-distributed@2022.10.2", type=("build", "run"), when="@2022.10.2 +distributed")
