@@ -73,10 +73,26 @@ def setup_parser(subparser):
         dest="all",
         help="Perform all system checks, takes precedence over provided flags",
     )
+    subparser.add_argument(
+        "--require",
+        action="store_true",
+        default=False,
+        dest="req",
+        required=False,
+        help="Require that the specified checks pass. If not the command will exit failure",
+    )
+    subparser.add_argument(
+        "--require-only",
+        action="store_true",
+        default=False,
+        dest="req_only",
+        required=False,
+        help="""Require that specified checks pass. If not, the command will exit failure,
+with no output to stdout""",
+    )
 
 
 def _get_reg_val_from_key(key, val, root):
-    # import pdb; pdb.set_trace()
     regpath = wr.WindowsRegistryView(key, root_key=root)
     return regpath.get_value(val).value
 
@@ -87,6 +103,7 @@ def long_path_check():
         "LongPathsEnabled",
         wr.HKEY.HKEY_LOCAL_MACHINE,
     )
+    health = True
     if long_path_support == 1:
         long_path_support = "Enabled"
     else:
@@ -95,8 +112,9 @@ def long_path_check():
         It is recommended to enable support while using Spack.
         This can be accomplished by following the instructions at:
         https://learn.microsoft.com/en-us/windows/win32/fileio/maximum-file-path-limitation?tabs=registry#enable-long-paths-in-windows-10-version-1607-and-later"""
+        health = False
     msg = f"Long Path Support: {long_path_support}"
-    return msg
+    return msg, health
 
 
 def developer_mode_check():
@@ -105,6 +123,7 @@ def developer_mode_check():
         "AllowDevelopmentWithoutDevLicense",
         wr.HKEY.HKEY_LOCAL_MACHINE,
     )
+    health = True
     if dev_mode == 1:
         dev_mode_support_string = "Enabled"
     else:
@@ -112,20 +131,22 @@ def developer_mode_check():
         Spack requires developer mode for some basic functions.
         Developer mode can be turned on by following these instructions:
         https://learn.microsoft.com/en-us/windows/apps/get-started/enable-your-device-for-development"""
-
+        health = False
     msg = f"Developer Mode: {dev_mode_support_string}"
-    return msg
+    return msg, health
 
 
 def install_prefix_length_check():
     opt_dir = spack.paths.opt_path
     opt_char_count = len(opt_dir)
+    health = True
     if opt_char_count > 260:
         excess_chars = opt_char_count - 260
         status_msg = f"""Install prefix: Danger
     Install prefix exceeds max path length by {excess_chars} characters.
     You must enable long path support to use this path
     and even then some Windows features/tools may not work"""
+        health = False
     elif abs(opt_char_count - 260) < 100:
         # 100 characters is chosen here as Spack adds about 80 to the install prefix
         # not including any files the packages themselves may install, so that seems
@@ -136,8 +157,8 @@ def install_prefix_length_check():
     You may encounter issues without long path support
     and even then some Windows features/tools may not work"""
     else:
-        status_msg = f"Install prefix: Healthy\n\t Install prefix length is {opt_char_count}"
-    return status_msg
+        status_msg = f"Install prefix: Healthy\n\t\tInstall prefix length is {opt_char_count}"
+    return status_msg, health
 
 
 check_map = {
@@ -157,12 +178,20 @@ Windows System Status Check:
 """
 
     if (not args.checks and not args.all) or args.all:
-        system_status_report += long_path_check() + "\n"
-        system_status_report += developer_mode_check() + "\n"
-        system_status_report += install_prefix_length_check() + "\n"
+        long_path_report, lp_status = long_path_check()
+        dev_mode_report, dm_status = developer_mode_check()
+        ip_report, ip_status = install_prefix_length_check()
+        for report in (long_path_report, dev_mode_report, ip_report):
+            system_status_report += report + "\n"
+        status = lp_status and dm_status and ip_status
     else:
+        status = True
         for check in args.checks:
-            system_status_report += check_map[check]()
-            system_status_report += "\n"
+            report, check_status = check_map[check]()
+            system_status_report += report + "\n"
+            status = status and check_status
     system_status_report += "****************************"
-    tty.info(system_status_report)
+    if not args.req_only:
+        tty.info(system_status_report)
+    if (args.req or args.req_only) and not status:
+        tty.die("Windows system configuration is invalid for Spack useage")
