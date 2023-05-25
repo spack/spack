@@ -95,6 +95,9 @@ class Gmt(CMakePackage, AutotoolsPackage):
         destination="share",
         placement="dcw",
     )
+    depends_on("py-sphinx@1.4:", when="+docs", type="build")
+
+    depends_on("graphicsmagick", type="test")
 
     # https://github.com/spack/spack/issues/26661
     conflicts(
