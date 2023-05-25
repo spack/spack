@@ -113,6 +113,7 @@ class Gmt(CMakePackage, AutotoolsPackage):
     def determine_version(cls, exe):
         return Executable(exe)("--version", output=str, error=str).rstrip()
 
+
 class CMakeBuilder(CMakeBuilder):
     def cmake_args(self):
         spec = self.spec
@@ -161,6 +162,7 @@ class CMakeBuilder(CMakeBuilder):
             args.append(self.define("FFMPEG", spec["ffmpeg"].prefix.bin.ffmpeg))
 
         return args
+
 
 class AutotoolsBuilder(AutotoolsBuilder):
     def configure_args(self):
