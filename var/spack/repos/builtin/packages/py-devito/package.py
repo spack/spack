@@ -21,8 +21,7 @@ class PyDevito(PythonPackage):
     version("4.8.1", sha256="56d0957a3226ed2a81c408107a614f04faa896d42c83a8b2bd1c8b1100adf51d")
 
     variant("mpi", default=False, description="Enable MPI support")
-    variant("matplotlib", default=False, description="Enable matplolib support")
-    variant("pandas", default=False, description="Enable pandas support")
+    variant("optional", default=False, description="Enable matplolib & pandas support")
 
     depends_on("py-pip@9.0.1:", type="build")
     depends_on("py-setuptools", type="build")
@@ -51,10 +50,10 @@ class PyDevito(PythonPackage):
     depends_on("py-ipyparallel@:8.5", type=("build", "run"), when="+mpi")
 
     # requirements-optional.txt
-    depends_on("py-matplotlib", type=("build", "run"), when="+matplotlib")
-    depends_on("py-pandas", type=("build", "run"), when="+pandas")
+    depends_on("py-matplotlib", type=("build", "run"), when="+optional")
+    depends_on("py-pandas", type=("build", "run"), when="+optional")
 
-    depends_on("mpi", type=("build", "run"))
+    depends_on("mpi", type=("build", "run"), when="+mpi")
 
     depends_on("intel-parallel-studio", type="run", when="%intel@:2021.1.1")
     depends_on("intel-oneapi-compilers", type="run", when="%intel@2021.1.2:")
