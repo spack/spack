@@ -49,7 +49,7 @@ class PyMelissaCore(PythonPackage):
     # requirements_deep_learning.txt (DL with torch)
     depends_on("py-tensorboard@2.10.0:", type="run", when="+torch")
     depends_on("py-matplotlib", type="run", when="+torch")
-    depends_on("py-torch@1.13.0:", type="run", when="+torch")
+    depends_on("py-torch@1.12.1:", type="run", when="+torch")
     # requirements_deep_learning.txt  (DL with tensorflow)
     depends_on("py-tensorboard@2.10.0:", type="run", when="+tf")
     depends_on("py-matplotlib", type="run", when="+tf")
