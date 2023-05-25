@@ -430,7 +430,7 @@ class Lbann(CachedCMakePackage, CudaPackage, ROCmPackage):
             ("LBANN_WITH_UNIT_TESTING", "unit_tests"),
             ("LBANN_WITH_VISION", "vision"),
             ("LBANN_WITH_VTUNE", "vtune"),
-            ]
+        ]
 
         for opt, val in cmake_variant_fields:
             entries.append(self.define_cmake_cache_from_variant(opt, val))

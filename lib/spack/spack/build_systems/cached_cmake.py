@@ -168,7 +168,9 @@ class CachedCMakeBuilder(CMakeBuilder):
         if self.spec.satisfies("generator=ninja"):
             entries.append(cmake_cache_string("CMAKE_GENERATOR", "Ninja"))
             entries.append(
-                cmake_cache_string("CMAKE_MAKE_PROGRAM", "{0}/ninja".format(spec["ninja"].prefix.bin))
+                cmake_cache_string(
+                    "CMAKE_MAKE_PROGRAM", "{0}/ninja".format(spec["ninja"].prefix.bin)
+                )
             )
 
         return entries
