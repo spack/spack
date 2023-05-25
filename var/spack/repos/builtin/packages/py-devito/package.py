@@ -27,7 +27,7 @@ class PyDevito(PythonPackage):
     depends_on("py-pip@9.0.1:", type="build")
     depends_on("py-setuptools", type="build")
 
-    depends_on("py-numpy@1.16:", type=("build", "run"))
+    depends_on("py-numpy@1.17:", type=("build", "run"))
     depends_on("py-sympy@1.9:1.12", type=("build", "run"))
     depends_on("py-scipy", type=("build", "run"))
     depends_on("py-flake8@2.1.0:", type=("build", "run"))
