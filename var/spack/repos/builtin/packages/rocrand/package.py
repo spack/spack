@@ -126,7 +126,9 @@ class Rocrand(CMakePackage):
     # own directory first thanks to the $ORIGIN RPATH setting. Otherwise,
     # libhiprand.so cannot find dependency librocrand.so despite being in the
     # same directory.
-    patch("hiprand_prefer_samedir_rocrand.patch", working_dir="hiprand", when="@5.2.0:5.4 +hiprand")
+    patch(
+        "hiprand_prefer_samedir_rocrand.patch", working_dir="hiprand", when="@5.2.0:5.4 +hiprand"
+    )
 
     # Add hiprand sources thru the below
     for d_version, d_commit in [

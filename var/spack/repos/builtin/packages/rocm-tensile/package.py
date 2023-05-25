@@ -210,7 +210,6 @@ class RocmTensile(CMakePackage):
         env.set("CXX", self.spec["hip"].hipcc)
         env.append_flags("LDFLAGS", "-pthread")
 
-
     def get_gpulist_for_tensile_support(self):
         arch = self.spec.variants["tensile_architecture"].value
         if arch[0] == "all":

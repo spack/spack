@@ -143,14 +143,9 @@ class RocprofilerDev(CMakePackage):
     depends_on("googletest@1.10.0:", when="@5.5.0:")
     depends_on("py-pyyaml", when="@5.5.0:")
     depends_on("py-lxml", when="@5.5.0:")
-    #depends_on("py-pip", when="@5.5.0:")
     depends_on("py-cppheaderparser", when="@5.5.0:")
 
-    for ver in [
-        "5.4.0",
-        "5.4.3",
-        "5.5.0",
-    ]:
+    for ver in ["5.4.0", "5.4.3", "5.5.0"]:
         depends_on("comgr@" + ver, when="@" + ver)
         depends_on("llvm-amdgpu@" + ver, when="@" + ver)
         depends_on("hip@" + ver, when="@" + ver)
