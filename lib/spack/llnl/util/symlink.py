@@ -72,7 +72,7 @@ def symlink(source_path: str, link_path: str):
                 # In order to work on windows, the source path needs to be modified to be
                 # relative because hardlink/junction dont resolve relative paths the same way as
                 # os.symlink. This is ignored on other operating systems.
-                win_source_path = source_path
+                win_source_path = relative_path
             else:
                 raise SymlinkError(
                     f"The source path ({source_path}) is not relative to the link path "
