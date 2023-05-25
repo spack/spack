@@ -62,6 +62,9 @@ class EnvironmentModules(Package):
     depends_on("automake", type="build", when="@main")
     depends_on("libtool", type="build", when="@main")
     depends_on("m4", type="build", when="@main")
+    depends_on("python", type="build", when="@main")
+    depends_on("py-sphinx@1.0:", type="build", when="@main")
+    depends_on("gzip", type="build", when="@main")
 
     # Dependencies:
     depends_on("tcl", type=("build", "link", "run"))
