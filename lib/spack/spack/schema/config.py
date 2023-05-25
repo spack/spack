@@ -87,6 +87,7 @@ properties = {
                 "anyOf": [{"type": "integer", "minimum": 1}, {"type": "null"}]
             },
             "allow_sgid": {"type": "boolean"},
+            "install_status": {"type": "boolean"},
             "binary_index_root": {"type": "string"},
             "url_fetch_method": {"type": "string", "enum": ["urllib", "curl"]},
             "additional_external_search_paths": {"type": "array", "items": {"type": "string"}},
