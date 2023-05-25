@@ -1,13 +1,8 @@
 name: Windows Paraview Nightly
 
 on:
-  workflow_call:
   schedule:
     - cron: '0 2 * * *' # Run at 2 am
-
-concurrency:
-  group: windows-${{github.ref}}-${{github.event.pull_request.number || github.run_number}}
-  cancel-in-progress: true
 
 defaults:
   run:
@@ -16,7 +11,7 @@ defaults:
 
 
 jobs:
-  build-paraview:
+  build-paraview-deps:
     runs-on: windows-latest
     steps:
     - uses: actions/checkout@8e5e7e5ab8b370d6c329ec480221332ada57f0ab
@@ -32,4 +27,4 @@ jobs:
       run: |
         spack compiler find
         spack external find cmake ninja win-sdk win-wdk wgl msmpi
-        spack -d install paraview --cdash-upload-url https://cdash.spack.io/submit.php?project=Spack+on+Windows --cdash-track Nightly
+        spack -d install -y --cdash-upload-url https://cdash.spack.io/submit.php?project=Spack+on+Windows --cdash-track Nightly --only dependencies paraview
