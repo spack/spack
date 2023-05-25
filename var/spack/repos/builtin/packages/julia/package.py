@@ -23,7 +23,7 @@ class Julia(MakefilePackage):
     url = "https://github.com/JuliaLang/julia/releases/download/v1.7.0/julia-1.7.0.tar.gz"
     git = "https://github.com/JuliaLang/julia.git"
 
-    maintainers("glennpj", "vchuravy", "haampie", "giordano")
+    maintainers("vchuravy", "haampie", "giordano")
 
     version("master", branch="master")
     version("1.9.0", sha256="48f4c8a7d5f33d0bc6ce24226df20ab49e385c2d0c3767ec8dfdb449602095b2")
