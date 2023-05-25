@@ -106,10 +106,10 @@ spack:
           - if [ -n "$SPACK_BUILD_JOBS" ]; then spack config add "config:build_jobs:$SPACK_BUILD_JOBS"; fi
           - mkdir -p ${SPACK_ARTIFACTS_ROOT}/user_data
           # AWS runners mount E4S public key (verification), UO runners mount public/private (signing/verification)
-          - if [[ -r /mnt/key/e4s.gpg ]]; then spack gpg trust /mnt/key/e4s.gpg; fi
+          - if [[ -r /etc/protected-runner/e4s.gpg ]]; then spack gpg trust /etc/protected-runner/e4s.gpg; fi
           # UO runners mount intermediate ci public key (verification), AWS runners mount public/private (signing/verification)
-          - if [[ -r /mnt/key/intermediate_ci_signing_key.gpg ]]; then spack gpg trust /mnt/key/intermediate_ci_signing_key.gpg; fi
-          - if [[ -r /mnt/key/spack_public_key.gpg ]]; then spack gpg trust /mnt/key/spack_public_key.gpg; fi
+          - if [[ -r /etc/protected-runner/intermediate_ci_signing_key.gpg ]]; then spack gpg trust /etc/protected-runner/intermediate_ci_signing_key.gpg; fi
+          - if [[ -r /etc/protected-runner/spack_public_key.gpg ]]; then spack gpg trust /etc/protected-runner/spack_public_key.gpg; fi
           - spack --color=always --backtrace ci rebuild --tests > >(tee ${SPACK_ARTIFACTS_ROOT}/user_data/pipeline_out.txt) 2> >(tee ${SPACK_ARTIFACTS_ROOT}/user_data/pipeline_err.txt >&2)
         after_script:
         - - cat /proc/loadavg || true
