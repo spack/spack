@@ -25,7 +25,8 @@ class PyCutadapt(PythonPackage):
     version("1.13", sha256="aa9f2c1f33dc081fe94f42b1250e4382b8fb42cabbf6e70a76ff079f211d5fc0")
 
     # universal deps
-    depends_on("py-setuptools@43:", type=("build", "run"))
+    depends_on("py-setuptools@63:", type=("build", "run"), when="@4.2:")
+    depends_on("py-setuptools@43:", type=("build", "run"), when="@:4.1")
     depends_on("py-setuptools-scm@6.2:", type="build", when="@2.0:")
     depends_on("python@3.7:", type=("build", "run"), when="@4.1:")
     depends_on("py-cython@0.29.20:", type=("build", "run"))
