@@ -21,14 +21,10 @@ class PyMelissaCore(PythonPackage):
 
     # define variants for the deep learning server (torch, tf)
     variant(
-        "torch",
-        default=False,
-        description="Install Deep Learning requirements with Pytorch only",
+        "torch", default=False, description="Install Deep Learning requirements with Pytorch only"
     )
     variant(
-        "tf",
-        default=False,
-        description="Install Deep Learning requirements with TensorFlow only",
+        "tf", default=False, description="Install Deep Learning requirements with TensorFlow only"
     )
 
     depends_on("python@3.8.0:", type=("build", "run"))
