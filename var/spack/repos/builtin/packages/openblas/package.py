@@ -21,7 +21,7 @@ class Openblas(CMakePackage, MakefilePackage):
     )
     git = "https://github.com/OpenMathLib/OpenBLAS.git"
 
-    libraries = ["libopenblas", "openblas.lib"]
+    libraries = ["libopenblas", "openblas"]
 
     version("develop", branch="develop")
     version("0.3.24", sha256="ceadc5065da97bd92404cac7254da66cc6eb192679cf1002098688978d4d5132")
@@ -520,7 +520,7 @@ class CMakeBuilder(spack.build_systems.cmake.CMakeBuilder, SetupEnvironment):
             cmake_defs += [
                 self.define("DYNAMIC_ARCH", "OFF"),
                 self.define("BUILD_WITHOUT_LAPACK", "ON"),
-                ]
+            ]
 
         if "~fortran" in self.spec:
             cmake_defs += [self.define("NOFORTRAN", "ON")]
