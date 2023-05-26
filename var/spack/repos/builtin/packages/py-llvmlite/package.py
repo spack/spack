@@ -46,7 +46,9 @@ class PyLlvmlite(PythonPackage):
         "x86:",
         "x86_64:",
     ]:
-        depends_on("llvm@10.0.0:10.0~flang", when="@0.34.0:0.36 target={0}".format(t), type="build")
+        depends_on(
+            "llvm@10.0.0:10.0~flang", when="@0.34.0:0.36 target={0}".format(t), type="build"
+        )
     depends_on("llvm@9.0.0:9.0~flang", when="@0.34.0:0.36 target=aarch64:", type="build")
     depends_on("llvm@9.0.0:9.0~flang", when="@0.33.0:0.33", type="build")
     depends_on("llvm@7.0.0:8.0~flang", when="@0.29.0:0.32", type="build")
