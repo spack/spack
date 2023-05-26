@@ -34,7 +34,7 @@ class PyLlvmlite(PythonPackage):
     depends_on("python@2.6:2.8,3.4:", type=("build", "run"))
 
     # llvmlite compatibility information taken from https://github.com/numba/llvmlite#compatibility
-    depends_on("llvm@11.0:11~flang", when="@0.37.0:")
+    depends_on("llvm@11.0:11~flang", when="@0.37.0:", type="build")
     for t in [
         "arm:",
         "ppc:",
@@ -46,12 +46,12 @@ class PyLlvmlite(PythonPackage):
         "x86:",
         "x86_64:",
     ]:
-        depends_on("llvm@10.0.0:10.0~flang", when="@0.34.0:0.36 target={0}".format(t))
-    depends_on("llvm@9.0.0:9.0~flang", when="@0.34.0:0.36 target=aarch64:")
-    depends_on("llvm@9.0.0:9.0~flang", when="@0.33.0:0.33")
-    depends_on("llvm@7.0.0:8.0~flang", when="@0.29.0:0.32")
-    depends_on("llvm@7.0.0:7.0~flang", when="@0.27.0:0.28")
-    depends_on("llvm@6.0.0:6.0~flang", when="@0.23.0:0.26")
+        depends_on("llvm@10.0.0:10.0~flang", when="@0.34.0:0.36 target={0}".format(t), type="build")
+    depends_on("llvm@9.0.0:9.0~flang", when="@0.34.0:0.36 target=aarch64:", type="build")
+    depends_on("llvm@9.0.0:9.0~flang", when="@0.33.0:0.33", type="build")
+    depends_on("llvm@7.0.0:8.0~flang", when="@0.29.0:0.32", type="build")
+    depends_on("llvm@7.0.0:7.0~flang", when="@0.27.0:0.28", type="build")
+    depends_on("llvm@6.0.0:6.0~flang", when="@0.23.0:0.26", type="build")
     depends_on("binutils", type="build")
 
     def setup_build_environment(self, env):
