@@ -39,6 +39,9 @@ class Fckit(CMakePackage):
     depends_on("llvm-openmp", when="+openmp %apple-clang", type=("build", "run"))
     variant('shared', default=True)
     variant("fismahigh", default=False, description="Apply patching for FISMA-high compliance")
+    variant("finalize_ddts", default="auto",
+            description="Enable / disable automatic finalization of derived types",
+            values=("auto", "no", "yes"))
 
     def cmake_args(self):
         args = [
@@ -50,6 +53,9 @@ class Fckit(CMakePackage):
 
         if '~shared' in self.spec:
             args.append('-DBUILD_SHARED_LIBS=OFF')
+        
+        if 'finalize_ddts=auto' not in self.spec:
+            args.append(self.define_from_variant('ENABLE_FINAL', 'finalize_ddts'))
 
         if self.spec.satisfies('%intel') or self.spec.satisfies('%gcc'):
             cxxlib = 'stdc++'
