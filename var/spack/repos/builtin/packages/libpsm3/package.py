@@ -35,10 +35,10 @@ class Libpsm3(AutotoolsPackage):
 
     def configure_args(self):
         config_args = []
-        config_args.extend(self.enable_or_disable('atomics'))
-        config_args.extend(self.enable_or_disable('debug'))
-        config_args += self.enable_or_disable('psm3-sockets', variant='sockets')
-        config_args += self.enable_or_disable('psm3-verbs', variant='verbs')
+        config_args.extend(self.enable_or_disable("atomics"))
+        config_args.extend(self.enable_or_disable("debug"))
+        config_args += self.enable_or_disable("psm3-sockets", variant="sockets")
+        config_args += self.enable_or_disable("psm3-verbs", variant="verbs")
         return config_args
 
     def build(self, spec, prefix):
