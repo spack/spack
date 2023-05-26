@@ -45,7 +45,7 @@ class Prrte(AutotoolsPackage):
 
     def configure_args(self):
         spec = self.spec
-        config_args = ["--enable-shared", "--enable-static"]
+        config_args = ["--enable-shared", "--enable-static", "--disable-sphinx"]
 
         # libevent
         config_args.append("--with-libevent={0}".format(spec["libevent"].prefix))
