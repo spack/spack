@@ -335,6 +335,7 @@ class Lbann(CachedCMakePackage, CudaPackage, ROCmPackage):
     def cache_name(self):
         hostname = socket.gethostname()
         if "SYS_TYPE" in env:
+            # Get a hostname that has no node identifier
             hostname = hostname.rstrip("1234567890")
         return "LBANN_{0}_{1}-{2}-{3}@{4}.cmake".format(
             hostname,
@@ -363,8 +364,6 @@ class Lbann(CachedCMakePackage, CudaPackage, ROCmPackage):
             entries.append(cmake_cache_string("CMAKE_EXE_LINKER_FLAGS", "-fuse-ld=gold"))
             entries.append(cmake_cache_string("CMAKE_SHARED_LINKER_FLAGS", "-fuse-ld=gold"))
 
-        # if "+rocm" in spec:
-        #     entries.insert(0, cmake_cache_path("CMAKE_CXX_COMPILER", spec["hip"].hipcc))
         return entries
 
     def initconfig_hardware_entries(self):
