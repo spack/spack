@@ -53,7 +53,7 @@ def shell_init_instructions(cmd, equivalent):
             equivalent.format(sh_arg="--csh ") + "  # csh/tcsh",
             equivalent.format(sh_arg="--fish") + "  # fish",
             equivalent.format(sh_arg="--bat ") + "  # batch",
-            equivalent.format(sh_arg="--pwsh") + "  # powershell"
+            equivalent.format(sh_arg="--pwsh") + "  # powershell",
         ]
     else:
         msg += ["  " + equivalent]

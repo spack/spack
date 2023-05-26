@@ -47,7 +47,7 @@ _SHELL_SET_STRINGS = {
     "csh": "setenv {0} {1};\n",
     "fish": "set -gx {0} {1};\n",
     "bat": 'set "{0}={1}"\n',
-    "pwsh": "$Env:{0}={1}\n"
+    "pwsh": "$Env:{0}={1}\n",
 }
 
 
@@ -56,7 +56,7 @@ _SHELL_UNSET_STRINGS = {
     "csh": "unsetenv {0};\n",
     "fish": "set -e {0};\n",
     "bat": 'set "{0}="\n',
-    "pwsh": "Remove-Item Env:{0}\n"
+    "pwsh": "Remove-Item Env:{0}\n",
 }
 
 
@@ -175,7 +175,7 @@ BASH_FUNCTION_FINDER = re.compile(r"BASH_FUNC_(.*?)\(\)")
 
 def _win_env_var_to_set_line(var: str, val: str) -> str:
     is_pwsh = os.environ.get("SPACK_SHELL", None) == "pwsh"
-    env_set_phrase = f'$Env:{var}={val}' if is_pwsh else f'set "{var}={val}"'
+    env_set_phrase = f"$Env:{var}={val}" if is_pwsh else f'set "{var}={val}"'
     return env_set_phrase
 
 
@@ -698,7 +698,7 @@ class EnvironmentModifications:
 
     def shell_modifications(
         self,
-        shell: str = "sh",
+        shell: str = "sh" if sys.platform != "win32" else os.environ.get("SPACK_SHELL", "bat"),
         explicit: bool = False,
         env: Optional[MutableMapping[str, str]] = None,
     ) -> str:

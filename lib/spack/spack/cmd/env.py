@@ -91,7 +91,7 @@ def env_activate_setup_parser(subparser):
         action="store_const",
         dest="shell",
         const="pwsh",
-        help="print powershell commands to activate environment"
+        help="print powershell commands to activate environment",
     )
 
     view_options = subparser.add_mutually_exclusive_group()
