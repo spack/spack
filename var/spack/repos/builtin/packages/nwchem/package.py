@@ -76,7 +76,7 @@ class Nwchem(Package):
         else:
             args.extend(["NWCHEM_MODULES=all python"])
             # archspec flags are injected through the compiler wrapper
-            filter_file("(-mtune=native|-mcpu=native)", "", "src/config/makefile.h")
+            filter_file("(-mtune=native|-mcpu=native|-xHost)", "", "src/config/makefile.h")
 
         # TODO: query if blas/lapack/scalapack uses 64bit Ints
         # A flag to distinguish between 32bit and 64bit integers in linear
