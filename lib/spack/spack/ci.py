@@ -941,12 +941,13 @@ def generate_gitlab_ci_yaml(
     shutil.copyfile(env.manifest_path, os.path.join(concrete_env_dir, "spack.yaml"))
     shutil.copyfile(env.lock_path, os.path.join(concrete_env_dir, "spack.lock"))
 
+    ci_project_dir = os.environ.get("CI_PROJECT_DIR", os.getcwd())
     with open(env.manifest_path, "r") as env_fd:
         env_yaml_root = syaml.load(env_fd)
         # Add config scopes to environment
         env_includes = env_yaml_root["spack"].get("include", [])
         cli_scopes = [
-            os.path.abspath(s.path)
+            os.path.relpath(s.path, ci_project_dir)
             for s in cfg.scopes().values()
             if type(s) == cfg.ImmutableConfigScope
             and s.path not in env_includes
@@ -977,7 +978,6 @@ def generate_gitlab_ci_yaml(
     # generation job and the rebuild jobs.  This can happen when gitlab
     # checks out the project into a runner-specific directory, for example,
     # and different runners are picked for generate and rebuild jobs.
-    ci_project_dir = os.environ.get("CI_PROJECT_DIR", os.getcwd())
     rel_artifacts_root = os.path.relpath(pipeline_artifacts_dir, ci_project_dir)
     rel_concrete_env_dir = os.path.relpath(concrete_env_dir, ci_project_dir)
     rel_job_log_dir = os.path.relpath(job_log_dir, ci_project_dir)
