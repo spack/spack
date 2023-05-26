@@ -21,42 +21,25 @@ class Libpsm3(AutotoolsPackage):
         preferred=True,
     )
 
-    variant("verbs", default=False, description="Enable PSM3 verbs")
-
-    variant("sockets", default=True, description="Enable PSM3 sockets")
-
     variant("atomics", default=True, description="Enable atomics")
-
     variant("debug", default=False, description="Enable debugging")
+    variant("sockets", default=True, description="Enable PSM3 sockets")
+    variant("verbs", default=False, description="Enable PSM3 verbs")
 
     depends_on("autoconf", type="build")
     depends_on("automake", type="build")
     depends_on("numactl")
     depends_on("uuid")
 
-    maintainers = ["dodecatheon"]
+    maintainers("dodecatheon", "douglasjacobsen")
 
     def configure_args(self):
-        args = []
-
-        args.extend(self.enable_or_disable("debug"))
-
-        if "+verbs" in self.spec:
-            args.append("--enable-psm3-verbs")
-        else:
-            args.append("--disable-psm3-verbs")
-
-        if "+atomics" in self.spec:
-            args.append("--enable-atomics")
-        else:
-            args.append("--disable-atomics")
-
-        if "+sockets" in self.spec:
-            args.append("--enable-psm3-sockets")
-        else:
-            args.append("--disable-psm3-sockets")
-
-        return args
+        config_args = []
+        config_args.extend(self.enable_or_disable('atomics'))
+        config_args.extend(self.enable_or_disable('debug'))
+        config_args += self.enable_or_disable('psm3-sockets', variant='sockets')
+        config_args += self.enable_or_disable('psm3-verbs', variant='verbs')
+        return config_args
 
     def build(self, spec, prefix):
         make()
