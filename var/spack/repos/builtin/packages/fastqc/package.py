@@ -24,10 +24,8 @@ class Fastqc(Package):
     patch("fastqc_0.12.x.patch", level=0, when="@0.12:")
     patch("fastqc_0.11.x.patch", level=0, when="@:0.11.9")
 
-
     def patch(self):
         filter_file("/usr/bin/perl", self.spec["perl"].command.path, "fastqc", backup=False)
-
 
     def install(self, spec, prefix):
         mkdir(prefix.bin)
