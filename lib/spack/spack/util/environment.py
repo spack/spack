@@ -174,7 +174,9 @@ BASH_FUNCTION_FINDER = re.compile(r"BASH_FUNC_(.*?)\(\)")
 
 
 def _win_env_var_to_set_line(var: str, val: str) -> str:
-    return f'set "{var}={val}"'
+    is_pwsh = os.environ.get("SPACK_SHELL", None) == "pwsh"
+    env_set_phrase = f'$Env:{var}={val}' if is_pwsh else f'set "{var}={val}"'
+    return env_set_phrase
 
 
 def _nix_env_var_to_source_line(var: str, val: str) -> str:
