@@ -843,7 +843,7 @@ aws-pcluster-build-neoverse_v1:
         SPACK_PRUNE_UNTOUCHED_DEPENDENT_DEPTH: "1"
 
 .generate-cray:
-  tags: [ "cce@15.0.1", "cray-zen4" ]
+  tags: [ "cce@15.0.1", "cray-zen4", "public" ]
   extends: [ ".base-cray-job" ]
   stage: generate
   script:
