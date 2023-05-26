@@ -3,8 +3,8 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from os import chmod
 import sys
+from os import chmod
 
 from spack.package import *
 
