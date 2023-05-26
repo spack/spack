@@ -1994,11 +1994,13 @@ class BuildProcessInstaller(object):
         # Do the real install in the source directory.
         with fs.working_dir(pkg.stage.source_path):
             # Save the build environment in a file before building.
+            # Need pwsh support here
             dump_environment(pkg.env_path)
 
             # Save just the changes to the environment.  This file can be
             # safely installed, since it does not contain secret variables.
             with open(pkg.env_mods_path, "w") as env_mods_file:
+                # Need pwsh support here
                 mods = self.env_mods.shell_modifications(explicit=True, env=self.unmodified_env)
                 env_mods_file.write(mods)
 

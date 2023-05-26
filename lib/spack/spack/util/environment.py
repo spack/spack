@@ -47,6 +47,7 @@ _SHELL_SET_STRINGS = {
     "csh": "setenv {0} {1};\n",
     "fish": "set -gx {0} {1};\n",
     "bat": 'set "{0}={1}"\n',
+    "pwsh": "$Env:{0}={1}\n"
 }
 
 
@@ -55,6 +56,7 @@ _SHELL_UNSET_STRINGS = {
     "csh": "unsetenv {0};\n",
     "fish": "set -e {0};\n",
     "bat": 'set "{0}="\n',
+    "pwsh": "Remove-Item Env:{0}\n"
 }
 
 
@@ -181,6 +183,7 @@ def _nix_env_var_to_source_line(var: str, val: str) -> str:
             fname=BASH_FUNCTION_FINDER.sub(r"\1", var), decl=val
         )
     else:
+        # Need pwsh support here
         source_line = f"{var}={double_quote_escape(val)}; export {var}"
     return source_line
 

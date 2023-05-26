@@ -42,6 +42,8 @@ def activate_header(env, shell, prompt=None):
         cmds += 'set "SPACK_ENV=%s"\n' % env.path
         # TODO: despacktivate
         # TODO: prompt
+    elif shell == "pwsh":
+        cmds += "$Env:SPACK_ENV=%s\n" % env.path
     else:
         if "color" in os.getenv("TERM", "") and prompt:
             prompt = colorize("@G{%s}" % prompt, color=True, enclose=True)
