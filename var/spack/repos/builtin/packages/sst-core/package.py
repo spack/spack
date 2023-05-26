@@ -61,7 +61,7 @@ class SstCore(AutotoolsPackage):
     variant("preview", default=False, description="Preview build with deprecated features removed")
     variant("profile", default=False, description="Enable performance profiling of core features")
 
-    depends_on("python", type=("build", "run"))
+    depends_on("python", type=("build", "run", "link"))
     depends_on("mpi", when="+pdes_mpi")
     depends_on("zoltan", when="+zoltan")
     depends_on("hdf5", when="+hdf5")
@@ -109,3 +109,8 @@ class SstCore(AutotoolsPackage):
 
         args.append("--with-python=%s" % self.spec["python"].prefix)
         return args
+
+    def patch(self):
+        """The Autotools-based setup does not add Python to the RPATH or RUNPATH.
+        """
+        self.rpath.append(self.spec["python"].prefix.lib)
