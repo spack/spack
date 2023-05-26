@@ -31,12 +31,13 @@ class Fastqc(Package):
         mkdir(prefix.bin)
         mkdir(prefix.lib)
         install("fastqc", prefix.bin)
+        install("cisd-jhdf5.jar", prefix.lib)
+        install("jbzip2-0.9.jar", prefix.lib)
+        
         if self.spec.satisfies("@:0.11.9"):
-            for j in ["cisd-jhdf5.jar", "jbzip2-0.9.jar", "sam-1.103.jar"]:
-                install(j, prefix.lib)
+                install("sam-1.103.jar", prefix.lib)
         else:
-            for j in ["cisd-jhdf5.jar", "jbzip2-0.9.jar", "htsjdk.jar"]:
-                install(j, prefix.lib)
+                install("htsjdk.jar", prefix.lib)
         for d in ["Configuration", "net", "org", "Templates", "uk"]:
             install_tree(d, join_path(prefix.lib, d))
         chmod = which("chmod")
