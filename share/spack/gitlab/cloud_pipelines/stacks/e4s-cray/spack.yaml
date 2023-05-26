@@ -102,7 +102,6 @@ spack:
     pipeline-gen:
     - build-job-remove:
         image: no-image
-        tags: [spack, public]
     - build-job:
         tags:  [ "craype", "cce@15.0.1", "zen4" ]
         script::
