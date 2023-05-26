@@ -22,11 +22,11 @@ properties = {
                     "compiler": {
                         "type": "object",
                         "additionalProperties": False,
-                        "required": ["paths", "spec", "modules", "operating_system"],
+                        "required": ["paths", "spec", "operating_system"],
                         "properties": {
                             "paths": {
                                 "type": "object",
-                                "required": ["cc", "cxx", "f77", "fc"],
+                                "required": ["cc"],
                                 "additionalProperties": False,
                                 "properties": {
                                     "cc": {"anyOf": [{"type": "string"}, {"type": "null"}]},
