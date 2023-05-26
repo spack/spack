@@ -15,11 +15,11 @@ class SstMacro(AutotoolsPackage):
     services, and processor models.
     """
 
-    homepage = "http://sst.sandia.gov/about_sstmacro.html"
+    homepage = "https://github.com/sstsimulator"
     git = "https://github.com/sstsimulator/sst-macro.git"
     url = "https://github.com/sstsimulator/sst-macro/releases/download/v13.0.0_Final/sstmacro-13.0.0.tar.gz"
 
-    maintainers("jjwilke", "berquist")
+    maintainers("berquist")
 
     version("13.0.0", sha256="410dad4ac0c7a4c0e16c54da308b6c6b631112af18ae2c37585c8a14472987d4")
     version("12.1.0", sha256="ee57e08acfd4b6429a0500d981d468ee6ded2638ec5abec7b47f172388b267f1")
