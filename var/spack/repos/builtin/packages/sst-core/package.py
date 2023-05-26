@@ -111,6 +111,5 @@ class SstCore(AutotoolsPackage):
         return args
 
     def patch(self):
-        """The Autotools-based setup does not add Python to the RPATH or RUNPATH.
-        """
+        """The Autotools-based setup does not add Python to the RPATH or RUNPATH."""
         self.rpath.append(self.spec["python"].prefix.lib)
