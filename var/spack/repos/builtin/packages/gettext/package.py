@@ -119,8 +119,7 @@ class Gettext(AutotoolsPackage, GNUMirrorPackage):
         else:
             config_args.append("--with-included-libunistring")
 
-        if spec.satisfies("+pic"):
-            config_args.append("CFLAGS=-fPIC")
+        config_args.extend(self.with_or_without("pic"))
 
         return config_args
 
