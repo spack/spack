@@ -17,7 +17,11 @@ class Hdf5VolCache(CMakePackage):
     version("v1.1", tag="v1.1")
     version("v1.0", tag="v1.0")
 
+    depends_on("hdf5@1.13: +mpi +threadsafe")
     depends_on("hdf5-vol-async")
+
+    def setup_run_environment(self, env):
+        env.prepend_path("HDF5_PLUGIN_PATH", self.spec.prefix.lib)
 
     def cmake_args(self):
         """Populate cmake arguments for HDF5 VOL."""

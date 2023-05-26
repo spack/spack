@@ -31,6 +31,7 @@ class PyPyqt4(SIPPackage):
 
     # Supposedly can also be built with Qt 5 compatibility layer
     depends_on("qt@:4")
+    depends_on("qt@4.1:", when="@4.12.3")
     depends_on("py-sip@:4.19.18 module=PyQt4.sip")
 
     # https://www.riverbankcomputing.com/static/Docs/PyQt4/installation.html

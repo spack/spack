@@ -25,7 +25,7 @@ class PyPylint(PythonPackage):
         "pylint.reporters.ureports",
     ]
 
-    version("2.16.2", sha236="13b2c805a404a9bf57d002cd5f054ca4d40b0b87542bdaba5e05321ae8262c84")
+    version("2.16.2", sha256="13b2c805a404a9bf57d002cd5f054ca4d40b0b87542bdaba5e05321ae8262c84")
     version("2.15.0", sha256="4f3f7e869646b0bd63b3dfb79f3c0f28fc3d2d923ea220d52620fd625aed92b0")
     version("2.14.4", sha256="47705453aa9dce520e123a7d51843d5f0032cbfa06870f89f00927aa1f735a4a")
     version("2.13.5", sha256="dab221658368c7a05242e673c275c488670144123f4bd262b2777249c1c0de9b")
@@ -34,7 +34,6 @@ class PyPylint(PythonPackage):
     version("2.3.1", sha256="723e3db49555abaf9bf79dc474c6b9e2935ad82230b10c1138a71ea41ac0fff1")
     version("2.3.0", sha256="ee80c7af4f127b2a480d83010c9f0e97beb8eaa652b78c2837d3ed30b12e1182")
 
-    extends("python", ignore=r"bin/pytest")
     depends_on("python@3.4:", when="@2:2.7", type=("build", "run"))
     depends_on("python@3.6:", when="@2.8.2:", type=("build", "run"))
     depends_on("python@3.6.2:", when="@2.13.5:", type=("build", "run"))

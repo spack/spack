@@ -53,10 +53,28 @@ class PyCython(PythonPackage):
     depends_on("py-setuptools", type=("build", "run"))
     depends_on("gdb@7.2:", type="test")
 
+    # Backports CYTHON_FORCE_REGEN environment variable
+    patch("5307.patch", when="@0.29:0.29.33")
+
     @property
     def command(self):
         """Returns the Cython command"""
         return Executable(self.prefix.bin.cython)
+
+    def setup_dependent_build_environment(self, env, dependent_spec):
+        # If cython is used as a dep, ensure it's used even when pre-generated
+        # C files are distributed in the tarball. Cython is a small build dep, and
+        # the time generating C-files is typically less than compiling them. So it's
+        # fine. It solves an issue where distributed C-sources were generated with
+        # an old, buggy Cython. In particular Cython regularly depends on cpython
+        # internals, which can change even in Python patch releases. It looks like
+        # the Cython folks are coming back from their recommendation to *include*
+        # pre-generated C-sources in tarballs, see also
+        # https://github.com/cython/cython/issues/5089
+
+        # Support for this was backported to 0.29.34, but we patch any 0.29 release
+        if self.spec.version >= Version("0.29"):
+            env.set("CYTHON_FORCE_REGEN", "1")
 
     @run_after("install")
     @on_package_attributes(run_tests=True)

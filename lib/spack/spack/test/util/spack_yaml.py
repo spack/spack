@@ -92,5 +92,5 @@ def test_config_blame_defaults():
                 val = val.lower()
 
             lines = get_file_lines(filename)
-            assert key in lines[line]
+            assert key in lines[line], filename
             assert val in lines[line]

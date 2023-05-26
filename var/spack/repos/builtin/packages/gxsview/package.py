@@ -21,6 +21,9 @@ class Gxsview(QMakePackage):
     maintainers("cessenat")
 
     version(
+        "2022.11.04", sha256="28c299e4f87836b93e4a42934777364a166e35d305050ee5623a1b7cbc0ab561"
+    )
+    version(
         "2022.05.09", sha256="c052797aee1fa9588574b28e6cf24d8ca9135c9a20cd86d134a58a7bbcbde67b"
     )
     version(

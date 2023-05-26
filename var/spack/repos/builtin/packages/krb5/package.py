@@ -31,7 +31,8 @@ class Krb5(AutotoolsPackage):
 
     depends_on("diffutils", type="build")
     depends_on("bison", type="build")
-    depends_on("openssl@:1")
+    depends_on("openssl@:1", when="@:1.19")
+    depends_on("openssl")
     depends_on("gettext")
 
     variant(
@@ -80,10 +81,7 @@ class Krb5(AutotoolsPackage):
 
         return args
 
-    def setup_build_environment(self, env):
-        env.prepend_path("LD_LIBRARY_PATH", self.spec["gettext"].prefix.lib)
-
     def flag_handler(self, name, flags):
-        if name == "ldlibs":
+        if name == "ldlibs" and "intl" in self.spec["gettext"].libs.names:
             flags.append("-lintl")
-        return (flags, None, None)
+        return inject_flags(name, flags)

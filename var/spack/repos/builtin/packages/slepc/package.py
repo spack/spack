@@ -22,6 +22,9 @@ class Slepc(Package, CudaPackage, ROCmPackage):
     test_requires_compiler = True
 
     version("main", branch="main")
+    version("3.19.1", sha256="280737e9ef762d7f0079ad3ad29913215c799ebf124651c723c1972f71fbc0db")
+    version("3.19.0", sha256="724f6610a2e38b1be7586fd494fe350b58f5aee1ca734bd85e783aa9d3daa8de")
+    version("3.18.3", sha256="1b02bdf87c083749e81b3735aae7728098eaab78143b262b92c2ab164924c6f5")
     version("3.18.2", sha256="5bd90a755934e702ab1fdb3320b9fe75ab5fc28c93d364248ea86a372fbe6a62")
     version("3.18.1", sha256="f6e6e16d8399c3f94d187da9d4bfdfca160de50ebda7d63f6fa8ef417597e9b4")
     version("3.18.0", sha256="18af535d979a646363df01f407c75f0e3b0dd97b3fdeb20dca25b30cd89239ee")
@@ -52,12 +55,14 @@ class Slepc(Package, CudaPackage, ROCmPackage):
 
     variant("arpack", default=True, description="Enables Arpack wrappers")
     variant("blopex", default=False, description="Enables BLOPEX wrappers")
+    variant("hpddm", default=False, description="Enables HPDDM wrappers")
 
     # NOTE: make sure PETSc and SLEPc use the same python.
     depends_on("python@2.6:2.8,3.4:", type="build")
 
     # Cannot mix release and development versions of SLEPc and PETSc:
     depends_on("petsc@main", when="@main")
+    depends_on("petsc@3.19.0:3.19", when="@3.19.0:3.19")
     depends_on("petsc@3.18.0:3.18", when="@3.18.0:3.18")
     depends_on("petsc@3.17.0:3.17", when="@3.17.0:3.17")
     depends_on("petsc@3.16.0:3.16", when="@3.16.0:3.16")
@@ -79,6 +84,8 @@ class Slepc(Package, CudaPackage, ROCmPackage):
     # Arpack can not be used with 64bit integers.
     conflicts("+arpack", when="@:3.12 ^petsc+int64")
     conflicts("+blopex", when="^petsc+int64")
+    # HPDDM cannot be used in both PETSc and SLEPc prior to 3.19.0
+    conflicts("+hpddm", when="@:3.18 ^petsc+hpddm")
 
     resource(
         name="blopex",
@@ -146,6 +153,11 @@ class Slepc(Package, CudaPackage, ROCmPackage):
         # BLOPEX has to be downloaded with SLEPc at configure time
         if "+blopex" in spec:
             options.append("--download-blopex")
+
+        # For the moment, HPDDM does not work as a dependency
+        # using download instead
+        if "+hpddm" in spec:
+            options.append("--download-hpddm")
 
         python("configure", "--prefix=%s" % prefix, *options)
 

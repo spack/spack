@@ -19,7 +19,7 @@ class Dd4hep(CMakePackage):
     url = "https://github.com/AIDASoft/DD4hep/archive/v01-12-01.tar.gz"
     git = "https://github.com/AIDASoft/DD4hep.git"
 
-    maintainers("vvolkl", "drbenmorgan")
+    maintainers("vvolkl", "drbenmorgan", "jmcarcell")
 
     tags = ["hep"]
 
@@ -101,7 +101,7 @@ class Dd4hep(CMakePackage):
         deprecated=True,
     )
 
-    generator = "Ninja"
+    generator("ninja")
 
     # Workarounds for various TBB issues in DD4hep v1.11
     # See https://github.com/AIDASoft/DD4hep/pull/613 .
@@ -137,7 +137,6 @@ class Dd4hep(CMakePackage):
     )
 
     depends_on("cmake @3.12:", type="build")
-    depends_on("ninja", type="build")
     depends_on("boost @1.49:")
     depends_on("boost +iostreams", when="+ddg4")
     depends_on("boost +system +filesystem", when="%gcc@:7")
@@ -158,6 +157,7 @@ class Dd4hep(CMakePackage):
     depends_on("lcio", when="+lcio")
     depends_on("edm4hep", when="+edm4hep")
     depends_on("podio", when="+edm4hep")
+    depends_on("podio@:0.16.03", when="@:1.23 +edm4hep")
     depends_on("podio@0.16:", when="@1.24: +edm4hep")
     depends_on("py-pytest", type=("build", "test"))
 
@@ -223,6 +223,8 @@ class Dd4hep(CMakePackage):
         env.set("DD4HEP", self.prefix.examples)
         env.set("DD4hep_DIR", self.prefix)
         env.set("DD4hep_ROOT", self.prefix)
+        env.set("LD_LIBRARY_PATH", self.prefix.lib)
+        env.set("LD_LIBRARY_PATH", self.prefix.lib64)
 
     def url_for_version(self, version):
         # dd4hep releases are dashes and padded with a leading zero

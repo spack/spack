@@ -13,6 +13,7 @@ class Pstreams(Package):
     homepage = "http://pstreams.sourceforge.net/"
     url = "https://sourceforge.net/projects/pstreams/files/pstreams/Release%201.0/pstreams-1.0.1.tar.gz"
 
+    version("1.0.3", sha256="e9ca807bc6046840deae63207183f9ac516e67187d035429772a5fc7bd3e8fc8")
     version("1.0.1", sha256="a5f1f2e014392cd0e2cdb508a429e11afe64140db05b7f0a83d7534faa1a9226")
 
     def install(self, spec, prefix):

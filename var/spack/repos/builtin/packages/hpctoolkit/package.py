@@ -27,6 +27,7 @@ class Hpctoolkit(AutotoolsPackage):
     test_requires_compiler = True
 
     version("develop", branch="develop")
+    version("2023.03.stable", branch="release/2023.03")
     version("2023.03.01", commit="9e0daf2ad169f6c7f6c60408475b3c2f71baebbf")
     version("2022.10.01", commit="e8a5cc87e8f5ddfd14338459a4106f8e0d162c83")
     version("2022.05.15", commit="8ac72d9963c4ed7b7f56acb65feb02fbce353479")
@@ -119,7 +120,7 @@ class Hpctoolkit(AutotoolsPackage):
     depends_on("dyninst@12.1.0:", when="@2022.0:")
     depends_on("dyninst@10.2.0:", when="@2021.0:2021.12")
     depends_on("dyninst@9.3.2:", when="@:2020")
-    depends_on("elfutils+bzip2+xz~nls", type="link")
+    depends_on("elfutils~nls", type="link")
     depends_on("gotcha@1.0.3:", when="@:2020.09")
     depends_on("intel-tbb+shared")
     depends_on("libdwarf", when="@:2022.06")

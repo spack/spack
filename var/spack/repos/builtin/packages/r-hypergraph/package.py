@@ -14,6 +14,7 @@ class RHypergraph(RPackage):
 
     bioc = "hypergraph"
 
+    version("1.72.0", commit="1b619b8dfeaf13dca7857013495d52dcfe4276b4")
     version("1.70.0", commit="a5ffeafa8b999b5e7e77f93f4e6284abafc81621")
     version("1.68.0", commit="7d53b5050f4ebe0a7007c02b76e93498195da3a4")
     version("1.66.0", commit="e9c47336df6409006622818f541f258103163a39")
