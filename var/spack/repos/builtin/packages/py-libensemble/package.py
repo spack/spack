@@ -45,8 +45,6 @@ class PyLibensemble(PythonPackage):
     variant("mpmath", default=False, description="Install with mpmath")
     variant("deap", default=False, description="Install with DEAP")
     variant("tasmanian", default=False, description="Install with tasmanian")
-    variant("pyyaml", default=False, description="Install with pyyaml")
-    variant("pytoml", default=False, description="Install with pytoml")
 
     depends_on("py-setuptools", type="build")
     depends_on("py-numpy", type=("build", "run"))
@@ -62,8 +60,8 @@ class PyLibensemble(PythonPackage):
     depends_on("py-mpmath", type=("build", "run"), when="+mpmath")
     depends_on("py-deap", type=("build", "run"), when="+deap")
     depends_on("tasmanian+python", type=("build", "run"), when="+tasmanian")
-    depends_on("py-pyyaml", type=("build", "run"), when="+pyyaml")
-    depends_on("py-toml", type=("build", "run"), when="+pytoml")
+    depends_on("py-pyyaml", type=("build", "run"), when="@:0.10.0")
+    depends_on("py-toml", type=("build", "run"), when="@:0.10.0")
     conflicts("~mpi", when="@:0.4.1")
 
     @run_after("install")
