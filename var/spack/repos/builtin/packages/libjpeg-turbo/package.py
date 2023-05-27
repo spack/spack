@@ -14,11 +14,12 @@ class LibjpegTurbo(CMakePackage, AutotoolsPackage):
     transcoding.
     """
 
+    maintainers("AlexanderRichert-NOAA")
+
     # https://github.com/libjpeg-turbo/libjpeg-turbo/blob/master/BUILDING.md
     homepage = "https://libjpeg-turbo.org/"
     url = "https://github.com/libjpeg-turbo/libjpeg-turbo/archive/2.0.3.tar.gz"
 
-    version("2.1.5", sha256="254f3642b04e309fee775123133c6464181addc150499561020312ec61c1bf7c")
     version("2.1.4", sha256="a78b05c0d8427a90eb5b4eb08af25309770c8379592bb0b8a863373128e6143f")
     version("2.1.3", sha256="dbda0c685942aa3ea908496592491e5ec8160d2cf1ec9d5fd5470e50768e7859")
     version("2.1.2", sha256="e7fdc8a255c45bc8fbd9aa11c1a49c23092fcd7379296aeaeb14d3343a3d1bed")
@@ -54,9 +55,10 @@ class LibjpegTurbo(CMakePackage, AutotoolsPackage):
         default="cmake",
     )
 
-    variant("shared", default=True, description="Build shared libs")
-    variant("static", default=True, description="Build static libs")
+    variant("shared", default=True, description="Build shared libraries")
+    variant("static", default=True, description="Build static libraries")
     variant("jpeg8", default=False, description="Emulate libjpeg v8 API/ABI")
+    variant("pic", default=True, description="Enable position independent code")
 
     # Can use either of these. But in the current version of the package
     # only nasm is used. In order to use yasm an environmental variable
@@ -74,7 +76,9 @@ class LibjpegTurbo(CMakePackage, AutotoolsPackage):
 
     @property
     def libs(self):
-        return find_libraries("libjpeg*", root=self.prefix, recursive=True)
+        shared = "+shared" in self.spec
+        return find_libraries("libjpeg*", root=self.prefix,
+                              shared=shared, recursive=True)
 
 
 class CMakeBuilder(spack.build_systems.cmake.CMakeBuilder):
@@ -83,6 +87,7 @@ class CMakeBuilder(spack.build_systems.cmake.CMakeBuilder):
             self.define_from_variant("ENABLE_SHARED", "shared"),
             self.define_from_variant("ENABLE_STATIC", "static"),
             self.define_from_variant("WITH_JPEG8", "jpeg8"),
+            self.define_from_variant("CMAKE_POSITION_INDEPENDENT_CODE", "pic"),
         ]
 
         return args
