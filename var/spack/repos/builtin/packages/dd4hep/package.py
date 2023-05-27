@@ -157,6 +157,7 @@ class Dd4hep(CMakePackage):
     depends_on("lcio", when="+lcio")
     depends_on("edm4hep", when="+edm4hep")
     depends_on("podio", when="+edm4hep")
+    depends_on("podio@:0.16.03", when="@:1.23 +edm4hep")
     depends_on("podio@0.16:", when="@1.24: +edm4hep")
     depends_on("py-pytest", type=("build", "test"))
 
@@ -222,6 +223,8 @@ class Dd4hep(CMakePackage):
         env.set("DD4HEP", self.prefix.examples)
         env.set("DD4hep_DIR", self.prefix)
         env.set("DD4hep_ROOT", self.prefix)
+        env.set("LD_LIBRARY_PATH", self.prefix.lib)
+        env.set("LD_LIBRARY_PATH", self.prefix.lib64)
 
     def url_for_version(self, version):
         # dd4hep releases are dashes and padded with a leading zero

@@ -34,6 +34,7 @@ class Maker(Package):
     homepage = "https://www.yandell-lab.org/software/maker.html"
     manual_download = True
 
+    version("3.01.04", sha256="87be5b0fad92d7d7b359f233877830e8a353a80277c3c88aa89f359899fa8bfb")
     version("3.01.03", sha256="d3979af9710d61754a3b53f6682d0e2052c6c3f36be6f2df2286d2587406f07d")
     version("2.31.10", sha256="d3979af9710d61754a3b53f6682d0e2052c6c3f36be6f2df2286d2587406f07d")
 
