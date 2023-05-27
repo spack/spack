@@ -17,7 +17,7 @@ class PyMdanalysis(PythonPackage):
     pypi = "MDAnalysis/MDAnalysis-2.4.2.tar.gz"
 
     maintainers("RMeli")
-    
+
     version("2.5.0", sha256="06ce4efab6ca1dbd2ee2959fc668049e1d574a8fe94ab948a4608244da1d016b")
     version("2.4.3", sha256="c4fbdc414e4fdda69052fff2a6e412180fe6fa90a42c24793beee04123648c92")
     version("2.4.2", sha256="ae2ee5627391e73f74eaa3c547af3ec6ab8b040d27dedffe3a7ece8e0cd27636")
