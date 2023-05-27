@@ -30,10 +30,8 @@ class PyMacs2(PythonPackage):
     # version 2.2.4 does not build with python-3.10
     depends_on("python@3.5:3.9", when="@2.2.4", type=("build", "run"))
 
-    # Most Python packages only require py-setuptools as a build dependency.
-    # However, py-macs2 requires py-setuptools during runtime as well.
-    depends_on("py-setuptools", type=("build", "run"))
-    depends_on("py-setuptools@41.2:", when="@2.2.4:", type=("build", "run"))
+    depends_on("py-setuptools", type="build")
+    depends_on("py-setuptools@41.2:", when="@2.2.4:", type="build")
     depends_on("py-numpy@1.17:", when="@2.2.4:", type=("build", "run"))
     depends_on("py-cython@0.29.24:", when="@2.2.8:", type="build")
     depends_on("py-cython@0.29:", when="@2.2.4:2.2.7.1", type="build")
