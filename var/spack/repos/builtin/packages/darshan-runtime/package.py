@@ -144,70 +144,39 @@ class DarshanRuntime(AutotoolsPackage):
         test_inputs = [join_path(self.basepath, "mpi-io-test.c")]
         self.cache_extra_test_sources(test_inputs)
 
-    def _test_intercept(self):
+    def test_mpi_io_test(self):
+        """build, run, and check outputs"""
+        if "+mpi" not in self.spec:
+            raise SkipTest("Test requires +mpi build")
+
         testdir = "intercept-test"
+        logname = join_path(os.getcwd(), testdir, "test.darshan")
+        testexe = "mpi-io-test"
+
         with working_dir(testdir, create=True):
-            if "+mpi" in self.spec:
-                # compile a test program
-                logname = join_path(os.getcwd(), "test.darshan")
-                fname = join_path(
-                    self.test_suite.current_test_cache_dir,
-                    join_path(self.basepath, "mpi-io-test.c"),
-                )
-                cc = Executable(self.spec["mpi"].mpicc)
-                compile_opt = ["-c", fname]
-                link_opt = ["-o", "mpi-io-test", "mpi-io-test.o"]
-                cc(*(compile_opt))
-                cc(*(link_opt))
+            env["LD_PRELOAD"] = join_path(self.prefix.lib, "libdarshan.so")
+            env["DARSHAN_LOGFILE"] = logname
 
-                # run test program and intercept
-                purpose = "Test running code built against darshan"
-                exe = "./mpi-io-test"
-                options = ["-f", "tmp.dat"]
-                status = [0]
-                installed = False
-                expected_output = [
-                    r"Write bandwidth = \d+.\d+ Mbytes/sec",
-                    r"Read bandwidth = \d+.\d+ Mbytes/sec",
-                ]
-                env["LD_PRELOAD"] = "libdarshan.so"
-                env["DARSHAN_LOGFILE"] = logname
-                self.run_test(
-                    exe,
-                    options,
-                    expected_output,
-                    status,
-                    installed,
-                    purpose,
-                    skip_missing=False,
-                    work_dir=None,
-                )
-                env.pop("LD_PRELOAD")
+            # compile the program
+            fname = join_path(
+                self.test_suite.current_test_cache_dir, self.basepath, f"{testexe}.c"
+            )
+            cc = Executable(self.spec["mpi"].mpicc)
+            compile_opt = ["-c", fname]
+            link_opt = ["-o", "mpi-io-test", "mpi-io-test.o"]
+            cc(*(compile_opt))
+            cc(*(link_opt))
 
-                import llnl.util.tty as tty
+            # run test program and intercept
+            mpi_io_test = which(join_path(".", testexe))
+            out = mpi_io_test("-f", "tmp.dat", output=str.split, error=str.split)
+            env.pop("LD_PRELOAD")
 
-                # verify existence of log and size is > 0
-                tty.msg("Test for existince of log:")
-                if os.path.exists(logname):
-                    sr = os.stat(logname)
-                    print("PASSED")
-                    tty.msg("Test for size of log:")
-                    if not sr.st_size > 0:
-                        exc = BaseException("log size is 0")
-                        m = None
-                        if spack.config.get("config:fail_fast", False):
-                            raise TestFailure([(exc, m)])
-                        else:
-                            self.test_failures.append((exc, m))
-                    else:
-                        print("PASSED")
-                else:
-                    exc = BaseException("log does not exist")
-                    m = None
-                    if spack.config.get("config:fail_fast", False):
-                        raise TestFailure([(exc, m)])
-                    else:
-                        self.test_failures.append((exc, m))
+            expected_output = [
+                r"Write bandwidth = \d+.\d+ Mbytes/sec",
+                r"Read bandwidth = \d+.\d+ Mbytes/sec",
+            ]
+            check_outputs(expected_output, out)
 
-    def test(self):
-        self._test_intercept()
+            assert os.path.exists(logname), f"Expected {logname} to exist"
+            assert (os.stat(logname)).st_size > 0, f"Expected non-empty {logname}"
