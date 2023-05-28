@@ -66,6 +66,19 @@ class Whizard(AutotoolsPackage):
     depends_on("texlive", when="+latex")
     depends_on("zlib")
 
+    # Fix for https://github.com/key4hep/key4hep-spack/issues/71
+    # NOTE: This will become obsolete in a future release of whizard, so once
+    # that happens, this needs to be adapted with a when clause
+    patch("parallel_build_fix.patch", when="@3:")
+    patch("parallel_build_fix_2.8.patch", when="@2.8")
+    # Make sure that the patch actually has an effect by running autoreconf
+    force_autoreconf = True
+    # Which then requires the following build dependencies
+    depends_on("autoconf", type="build")
+    depends_on("automake", type="build")
+    depends_on("libtool", type="build")
+    depends_on("pkgconf", type="build")
+
     conflicts(
         "%gcc@:5.0",
         msg="gfortran needs to support Fortran 2008. For more detailed information see https://whizard.hepforge.org/compilers.html",
@@ -79,13 +92,6 @@ class Whizard(AutotoolsPackage):
         "%intel@:17",
         msg="The fortran compiler needs to support Fortran 2008. For more detailed information see https://whizard.hepforge.org/compilers.html",
     )
-
-    @property
-    def parallel(self):
-        # Trying to build in parallel leads to a race condition at the build step.
-        # See: https://github.com/key4hep/key4hep-spack/issues/71
-        # On 3.1.0 it doesn't seem to happen
-        return self.spec.version > Version("3.0.3")
 
     def setup_build_environment(self, env):
         # whizard uses the compiler during runtime,
