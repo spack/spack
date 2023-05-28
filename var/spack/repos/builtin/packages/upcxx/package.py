@@ -233,7 +233,7 @@ class Upcxx(Package, CudaPackage, ROCmPackage):
 
     @run_after("install")
     @on_package_attributes(run_tests=True)
-    def test_install(self):
+    def check_install(self):
         # enable testing of unofficial conduits (mpi)
         test_networks = "NETWORKS=$(CONDUITS)"
         # build hello world against installed tree in all configurations
@@ -245,16 +245,12 @@ class Upcxx(Package, CudaPackage, ROCmPackage):
             make("run-tests", "NETWORKS=smp")  # runs tests for smp backend
         make("tests-clean")  # cleanup
 
-    def test(self):
-        # run post-install smoke test:
+    def test_upcxx_install(self):
+        """checking UPC++ compile+link for all installed backends"""
         test_install = join_path(self.prefix.bin, "test-upcxx-install.sh")
-        self.run_test(
-            test_install,
-            expected=["SUCCESS"],
-            status=0,
-            installed=True,
-            purpose="Checking UPC++ compile+link " + "for all installed backends",
-        )
+        test_upcxx_install = which(test_install)
+        out = test_upcxx_install(output=str.split, error=str.split)
+        assert "SUCCESS" in out
 
     # `spack external find` support
     executables = ["^upcxx$"]
