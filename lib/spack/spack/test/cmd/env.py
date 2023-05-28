@@ -2688,7 +2688,7 @@ spack:
 
         spec = e.specs_by_hash[e.concretized_order[0]]
         view_prefix = e.default_view.get_projection_for_spec(spec)
-        modules_glob = "%s/modules/**/*" % e.path
+        modules_glob = "%s/modules/**/*/*" % e.path
         modules = glob.glob(modules_glob)
         assert len(modules) == 1
         module = modules[0]
@@ -2724,12 +2724,12 @@ spack:
 
         spec = e.specs_by_hash[e.concretized_order[0]]
         view_prefix = e.default_view.get_projection_for_spec(spec)
-        modules_glob = "%s/modules/**/*" % e.path
+        modules_glob = "%s/modules/**/*/*" % e.path
         modules = glob.glob(modules_glob)
         assert len(modules) == 1
         module = modules[0]
 
-        full_modules_glob = "%s/full_modules/**/*" % e.path
+        full_modules_glob = "%s/full_modules/**/*/*" % e.path
         full_modules = glob.glob(full_modules_glob)
         assert len(full_modules) == 1
         full_module = full_modules[0]
