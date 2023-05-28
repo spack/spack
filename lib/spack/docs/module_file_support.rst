@@ -35,27 +35,27 @@ showing lots of installed packages:
    $ module avail
 
    --------------------------------------------------------------- ~/spack/share/spack/modules/linux-ubuntu14-x86_64 ---------------------------------------------------------------
-   autoconf-2.69-gcc-4.8-qextxkq       hwloc-1.11.6-gcc-6.3.0-akcisez             m4-1.4.18-gcc-4.8-ev2znoc                   openblas-0.2.19-gcc-6.3.0-dhkmed6        py-setuptools-34.2.0-gcc-6.3.0-fadur4s
-   automake-1.15-gcc-4.8-maqvukj       isl-0.18-gcc-4.8-afi6taq                   m4-1.4.18-gcc-6.3.0-uppywnz                 openmpi-2.1.0-gcc-6.3.0-go2s4z5          py-six-1.10.0-gcc-6.3.0-p4dhkaw
-   binutils-2.28-gcc-4.8-5s7c6rs       libiconv-1.15-gcc-4.8-at46wg3              mawk-1.3.4-gcc-4.8-acjez57                  openssl-1.0.2k-gcc-4.8-dkls5tk           python-2.7.13-gcc-6.3.0-tyehea7
-   bison-3.0.4-gcc-4.8-ek4luo5         libpciaccess-0.13.4-gcc-6.3.0-gmufnvh      mawk-1.3.4-gcc-6.3.0-ostdoms                openssl-1.0.2k-gcc-6.3.0-gxgr5or         readline-7.0-gcc-4.8-xhufqhn
-   bzip2-1.0.6-gcc-4.8-iffrxzn         libsigsegv-2.11-gcc-4.8-pp2cvte            mpc-1.0.3-gcc-4.8-g5mztc5                   pcre-8.40-gcc-4.8-r5pbrxb                readline-7.0-gcc-6.3.0-zzcyicg
-   bzip2-1.0.6-gcc-6.3.0-bequudr       libsigsegv-2.11-gcc-6.3.0-7enifnh          mpfr-3.1.5-gcc-4.8-o7xm7az                  perl-5.24.1-gcc-4.8-dg5j65u              sqlite-3.8.5-gcc-6.3.0-6zoruzj
-   cmake-3.7.2-gcc-6.3.0-fowuuby       libtool-2.4.6-gcc-4.8-7a523za              mpich-3.2-gcc-6.3.0-dmvd3aw                 perl-5.24.1-gcc-6.3.0-6uzkpt6            tar-1.29-gcc-4.8-wse2ass
-   curl-7.53.1-gcc-4.8-3fz46n6         libtool-2.4.6-gcc-6.3.0-n7zmbzt            ncurses-6.0-gcc-4.8-dcpe7ia                 pkg-config-0.29.2-gcc-4.8-ib33t75        tcl-8.6.6-gcc-4.8-tfxzqbr
-   expat-2.2.0-gcc-4.8-mrv6bd4         libxml2-2.9.4-gcc-4.8-ryzxnsu              ncurses-6.0-gcc-6.3.0-ucbhcdy               pkg-config-0.29.2-gcc-6.3.0-jpgubk3      util-macros-1.19.1-gcc-6.3.0-xorz2x2
-   flex-2.6.3-gcc-4.8-yf345oo          libxml2-2.9.4-gcc-6.3.0-rltzsdh            netlib-lapack-3.6.1-gcc-6.3.0-js33dog       py-appdirs-1.4.0-gcc-6.3.0-jxawmw7       xz-5.2.3-gcc-4.8-mew4log
-   gcc-6.3.0-gcc-4.8-24puqve           lmod-7.4.1-gcc-4.8-je4srhr                 netlib-scalapack-2.0.2-gcc-6.3.0-5aidk4l    py-numpy-1.12.0-gcc-6.3.0-oemmoeu        xz-5.2.3-gcc-6.3.0-3vqeuvb
-   gettext-0.19.8.1-gcc-4.8-yymghlh    lua-5.3.4-gcc-4.8-im75yaz                  netlib-scalapack-2.0.2-gcc-6.3.0-hjsemcn    py-packaging-16.8-gcc-6.3.0-i2n3dtl      zip-3.0-gcc-4.8-rwar22d
-   gmp-6.1.2-gcc-4.8-5ub2wu5           lua-luafilesystem-1_6_3-gcc-4.8-wkey3nl    netlib-scalapack-2.0.2-gcc-6.3.0-jva724b    py-pyparsing-2.1.10-gcc-6.3.0-tbo6gmw    zlib-1.2.11-gcc-4.8-pgxsxv7
-   help2man-1.47.4-gcc-4.8-kcnqmau     lua-luaposix-33.4.0-gcc-4.8-mdod2ry        netlib-scalapack-2.0.2-gcc-6.3.0-rgqfr6d    py-scipy-0.19.0-gcc-6.3.0-kr7nat4        zlib-1.2.11-gcc-6.3.0-7cqp6cj
+   autoconf/2.69-gcc-4.8-qextxkq       hwloc/1.11.6-gcc-6.3.0-akcisez             m4/1.4.18-gcc-4.8-ev2znoc                   openblas/0.2.19-gcc-6.3.0-dhkmed6        py-setuptools/34.2.0-gcc-6.3.0-fadur4s
+   automake/1.15-gcc-4.8-maqvukj       isl/0.18-gcc-4.8-afi6taq                   m4/1.4.18-gcc-6.3.0-uppywnz                 openmpi/2.1.0-gcc-6.3.0-go2s4z5          py-six/1.10.0-gcc-6.3.0-p4dhkaw
+   binutils/2.28-gcc-4.8-5s7c6rs       libiconv/1.15-gcc-4.8-at46wg3              mawk/1.3.4-gcc-4.8-acjez57                  openssl/1.0.2k-gcc-4.8-dkls5tk           python/2.7.13-gcc-6.3.0-tyehea7
+   bison/3.0.4-gcc-4.8-ek4luo5         libpciaccess/0.13.4-gcc-6.3.0-gmufnvh      mawk/1.3.4-gcc-6.3.0-ostdoms                openssl/1.0.2k-gcc-6.3.0-gxgr5or         readline/7.0-gcc-4.8-xhufqhn
+   bzip2/1.0.6-gcc-4.8-iffrxzn         libsigsegv/2.11-gcc-4.8-pp2cvte            mpc/1.0.3-gcc-4.8-g5mztc5                   pcre/8.40-gcc-4.8-r5pbrxb                readline/7.0-gcc-6.3.0-zzcyicg
+   bzip2/1.0.6-gcc-6.3.0-bequudr       libsigsegv/2.11-gcc-6.3.0-7enifnh          mpfr/3.1.5-gcc-4.8-o7xm7az                  perl/5.24.1-gcc-4.8-dg5j65u              sqlite/3.8.5-gcc-6.3.0-6zoruzj
+   cmake/3.7.2-gcc-6.3.0-fowuuby       libtool/2.4.6-gcc-4.8-7a523za              mpich/3.2-gcc-6.3.0-dmvd3aw                 perl/5.24.1-gcc-6.3.0-6uzkpt6            tar/1.29-gcc-4.8-wse2ass
+   curl/7.53.1-gcc-4.8-3fz46n6         libtool/2.4.6-gcc-6.3.0-n7zmbzt            ncurses/6.0-gcc-4.8-dcpe7ia                 pkg-config/0.29.2-gcc-4.8-ib33t75        tcl/8.6.6-gcc-4.8-tfxzqbr
+   expat/2.2.0-gcc-4.8-mrv6bd4         libxml2/2.9.4-gcc-4.8-ryzxnsu              ncurses/6.0-gcc-6.3.0-ucbhcdy               pkg-config/0.29.2-gcc-6.3.0-jpgubk3      util-macros/1.19.1-gcc-6.3.0-xorz2x2
+   flex/2.6.3-gcc-4.8-yf345oo          libxml2/2.9.4-gcc-6.3.0-rltzsdh            netlib-lapack/3.6.1-gcc-6.3.0-js33dog       py-appdirs/1.4.0-gcc-6.3.0-jxawmw7       xz/5.2.3-gcc-4.8-mew4log
+   gcc/6.3.0-gcc-4.8-24puqve           lmod/7.4.1-gcc-4.8-je4srhr                 netlib-scalapack/2.0.2-gcc-6.3.0-5aidk4l    py-numpy/1.12.0-gcc-6.3.0-oemmoeu        xz/5.2.3-gcc-6.3.0-3vqeuvb
+   gettext/0.19.8.1-gcc-4.8-yymghlh    lua/5.3.4-gcc-4.8-im75yaz                  netlib-scalapack/2.0.2-gcc-6.3.0-hjsemcn    py-packaging/16.8-gcc-6.3.0-i2n3dtl      zip/3.0-gcc-4.8-rwar22d
+   gmp/6.1.2-gcc-4.8-5ub2wu5           lua-luafilesystem/1_6_3-gcc-4.8-wkey3nl    netlib-scalapack/2.0.2-gcc-6.3.0-jva724b    py-pyparsing/2.1.10-gcc-6.3.0-tbo6gmw    zlib/1.2.11-gcc-4.8-pgxsxv7
+   help2man/1.47.4-gcc-4.8-kcnqmau     lua-luaposix/33.4.0-gcc-4.8-mdod2ry        netlib-scalapack/2.0.2-gcc-6.3.0-rgqfr6d    py-scipy/0.19.0-gcc-6.3.0-kr7nat4        zlib/1.2.11-gcc-6.3.0-7cqp6cj
 
 The names should look familiar, as they resemble the output from ``spack find``.
 For example, you could type the following command to load the ``cmake`` module:
 
 .. code-block:: console
 
-   $ module load cmake-3.7.2-gcc-6.3.0-fowuuby
+   $ module load cmake/3.7.2-gcc-6.3.0-fowuuby
 
 Neither of these is particularly pretty, easy to remember, or easy to
 type. Luckily, Spack offers many facilities for customizing the module
@@ -779,35 +779,35 @@ cut-and-pasted into a shell script.  For example:
 
     $ spack module tcl loads --dependencies py-numpy git
     # bzip2@1.0.6%gcc@4.9.3=linux-x86_64
-    module load bzip2-1.0.6-gcc-4.9.3-ktnrhkrmbbtlvnagfatrarzjojmkvzsx
+    module load bzip2/1.0.6-gcc-4.9.3-ktnrhkrmbbtlvnagfatrarzjojmkvzsx
     # ncurses@6.0%gcc@4.9.3=linux-x86_64
-    module load ncurses-6.0-gcc-4.9.3-kaazyneh3bjkfnalunchyqtygoe2mncv
+    module load ncurses/6.0-gcc-4.9.3-kaazyneh3bjkfnalunchyqtygoe2mncv
     # zlib@1.2.8%gcc@4.9.3=linux-x86_64
-    module load zlib-1.2.8-gcc-4.9.3-v3ufwaahjnviyvgjcelo36nywx2ufj7z
+    module load zlib/1.2.8-gcc-4.9.3-v3ufwaahjnviyvgjcelo36nywx2ufj7z
     # sqlite@3.8.5%gcc@4.9.3=linux-x86_64
-    module load sqlite-3.8.5-gcc-4.9.3-a3eediswgd5f3rmto7g3szoew5nhehbr
+    module load sqlite/3.8.5-gcc-4.9.3-a3eediswgd5f3rmto7g3szoew5nhehbr
     # readline@6.3%gcc@4.9.3=linux-x86_64
-    module load readline-6.3-gcc-4.9.3-se6r3lsycrwxyhreg4lqirp6xixxejh3
+    module load readline/6.3-gcc-4.9.3-se6r3lsycrwxyhreg4lqirp6xixxejh3
     # python@3.5.1%gcc@4.9.3=linux-x86_64
-    module load python-3.5.1-gcc-4.9.3-5q5rsrtjld4u6jiicuvtnx52m7tfhegi
+    module load python/3.5.1-gcc-4.9.3-5q5rsrtjld4u6jiicuvtnx52m7tfhegi
     # py-setuptools@20.5%gcc@4.9.3=linux-x86_64
-    module load py-setuptools-20.5-gcc-4.9.3-4qr2suj6p6glepnedmwhl4f62x64wxw2
+    module load py-setuptools/20.5-gcc-4.9.3-4qr2suj6p6glepnedmwhl4f62x64wxw2
     # py-nose@1.3.7%gcc@4.9.3=linux-x86_64
-    module load py-nose-1.3.7-gcc-4.9.3-pwhtjw2dvdvfzjwuuztkzr7b4l6zepli
+    module load py-nose/1.3.7-gcc-4.9.3-pwhtjw2dvdvfzjwuuztkzr7b4l6zepli
     # openblas@0.2.17%gcc@4.9.3+shared=linux-x86_64
-    module load openblas-0.2.17-gcc-4.9.3-pw6rmlom7apfsnjtzfttyayzc7nx5e7y
+    module load openblas/0.2.17-gcc-4.9.3-pw6rmlom7apfsnjtzfttyayzc7nx5e7y
     # py-numpy@1.11.0%gcc@4.9.3+blas+lapack=linux-x86_64
-    module load py-numpy-1.11.0-gcc-4.9.3-mulodttw5pcyjufva4htsktwty4qd52r
+    module load py-numpy/1.11.0-gcc-4.9.3-mulodttw5pcyjufva4htsktwty4qd52r
     # curl@7.47.1%gcc@4.9.3=linux-x86_64
-    module load curl-7.47.1-gcc-4.9.3-ohz3fwsepm3b462p5lnaquv7op7naqbi
+    module load curl/7.47.1-gcc-4.9.3-ohz3fwsepm3b462p5lnaquv7op7naqbi
     # autoconf@2.69%gcc@4.9.3=linux-x86_64
-    module load autoconf-2.69-gcc-4.9.3-bkibjqhgqm5e3o423ogfv2y3o6h2uoq4
+    module load autoconf/2.69-gcc-4.9.3-bkibjqhgqm5e3o423ogfv2y3o6h2uoq4
     # cmake@3.5.0%gcc@4.9.3~doc+ncurses+openssl~qt=linux-x86_64
-    module load cmake-3.5.0-gcc-4.9.3-x7xnsklmgwla3ubfgzppamtbqk5rwn7t
+    module load cmake/3.5.0-gcc-4.9.3-x7xnsklmgwla3ubfgzppamtbqk5rwn7t
     # expat@2.1.0%gcc@4.9.3=linux-x86_64
-    module load expat-2.1.0-gcc-4.9.3-6pkz2ucnk2e62imwakejjvbv6egncppd
+    module load expat/2.1.0-gcc-4.9.3-6pkz2ucnk2e62imwakejjvbv6egncppd
     # git@2.8.0-rc2%gcc@4.9.3+curl+expat=linux-x86_64
-    module load git-2.8.0-rc2-gcc-4.9.3-3bib4hqtnv5xjjoq5ugt3inblt4xrgkd
+    module load git/2.8.0-rc2-gcc-4.9.3-3bib4hqtnv5xjjoq5ugt3inblt4xrgkd
 
 The script may be further edited by removing unnecessary modules.
 
@@ -826,12 +826,12 @@ For example, consider the following on one system:
 .. code-block:: console
 
     $ module avail
-    linux-SuSE11-x86_64/antlr-2.7.7-gcc-5.3.0-bdpl46y
+    linux-SuSE11-x86_64/antlr/2.7.7-gcc-5.3.0-bdpl46y
 
     $ spack module tcl loads antlr    # WRONG!
     # antlr@2.7.7%gcc@5.3.0~csharp+cxx~java~python arch=linux-SuSE11-x86_64
-    module load antlr-2.7.7-gcc-5.3.0-bdpl46y
+    module load antlr/2.7.7-gcc-5.3.0-bdpl46y
 
     $ spack module tcl loads --prefix linux-SuSE11-x86_64/ antlr
     # antlr@2.7.7%gcc@5.3.0~csharp+cxx~java~python arch=linux-SuSE11-x86_64
-    module load linux-SuSE11-x86_64/antlr-2.7.7-gcc-5.3.0-bdpl46y
+    module load linux-SuSE11-x86_64/antlr/2.7.7-gcc-5.3.0-bdpl46y

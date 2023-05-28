@@ -395,7 +395,7 @@ class BaseConfiguration(object):
     querying easier. It needs to be sub-classed for specific module types.
     """
 
-    default_projections = {"all": "{name}-{version}-{compiler.name}-{compiler.version}"}
+    default_projections = {"all": "{name}/{version}-{compiler.name}-{compiler.version}"}
 
     def __init__(self, spec, module_set_name, explicit=None):
         # Module where type(self) is defined
