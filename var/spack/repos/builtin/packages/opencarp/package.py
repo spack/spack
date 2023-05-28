@@ -34,7 +34,7 @@ class Opencarp(CMakePackage):
     # Patch removing problematic steps in CMake process
     patch("opencarp7.patch", when="@7.0")
 
-    depends_on("git")
+    depends_on("git", type=("build", "run"))
     depends_on("petsc")
     depends_on("binutils")
     depends_on("gengetopt")
@@ -43,8 +43,8 @@ class Opencarp(CMakePackage):
     depends_on("zlib")
     depends_on("perl")
 
-    depends_on("py-carputils", when="+carputils")
-    depends_on("meshtool", when="+meshtool")
+    depends_on("py-carputils", when="+carputils", type=("build", "run"))
+    depends_on("meshtool", when="+meshtool", type=("build", "run"))
     # Use specific versions of carputils and meshtool for releases
     for ver in ["13.0", "12.0", "11.0", "10.0", "9.0", "8.2", "7.0", "8.1"]:
         depends_on("py-carputils@oc" + ver, when="@" + ver + " +carputils")
