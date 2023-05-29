@@ -14,6 +14,7 @@ class CyrusSasl(AutotoolsPackage):
     homepage = "https://github.com/cyrusimap/cyrus-sasl"
     url = "https://github.com/cyrusimap/cyrus-sasl/archive/cyrus-sasl-2.1.27.tar.gz"
 
+    version("2.1.28", sha256="3e38933a30b9ce183a5488b4f6a5937a702549cde0d3287903d80968ad4ec341")
     version("2.1.27", sha256="b564d773803dc4cff42d2bdc04c80f2b105897a724c247817d4e4a99dd6b9976")
     version("2.1.26", sha256="7c14d1b5bd1434adf2dd79f70538617e6aa2a7bde447454b90b84ac5c4d034ba")
     version("2.1.25", sha256="8bfd4fa4def54c760e5061f2a74c278384c3b9807f02c4b07dab68b5894cc7c1")
