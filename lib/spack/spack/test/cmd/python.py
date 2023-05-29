@@ -15,9 +15,9 @@ python = SpackCommand("python")
 
 
 def test_python(capsys):
-    with capsys.disabled():
-        out = python("-c", "import spack; print(spack.spack_version)")
-        assert out.strip() == spack.spack_version
+    python("-c", "import spack; print(spack.spack_version)")
+    out, _ = capsys.readouterr()
+    assert out.strip() == spack.spack_version
 
 
 def test_python_interpreter_path():
@@ -31,9 +31,9 @@ def test_python_version():
 
 
 def test_python_with_module(capsys):
-    with capsys.disabled():
-        out = python("-m", "sys", fail_on_error=False)
-        assert "No code object" in out
+    python("-m", "sys", fail_on_error=False)
+    out, _ = capsys.readouterr()
+    assert "No code object" in out
 
 
 def test_python_raises_on_bad_arg():
