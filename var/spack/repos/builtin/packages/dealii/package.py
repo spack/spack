@@ -105,6 +105,7 @@ class Dealii(CMakePackage, CudaPackage):
     # (NB: only if tbb is removed in 9.3, as planned!!!)
     variant("threads", default=True, description="Compile with multi-threading via TBB")
     variant("trilinos", default=True, description="Compile with Trilinos (only with MPI)")
+    variant("platform-introspection", default=True, description="Enable platform introspection")
 
     # Required dependencies: Light version
     depends_on("blas")
@@ -634,6 +635,12 @@ class Dealii(CMakePackage, CudaPackage):
         # and user code is built.
         # See https://github.com/dealii/dealii/issues/9164
         options.append(self.define("DEAL_II_CXX_FLAGS", os.environ["SPACK_TARGET_ARGS"]))
+
+        # platform introspection - needs to be disabled in some environments
+        if "+platform-introspection" in spec:
+            options.append(self.define("DEAL_II_ALLOW_PLATFORM_INTROSPECTION", True))
+        else:
+            options.append(self.define("DEAL_II_ALLOW_PLATFORM_INTROSPECTION", False))
 
         return options
 
