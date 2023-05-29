@@ -100,7 +100,7 @@ class Nwchem(Package):
 
         if "+fftw3" in spec:
             args.extend(["USE_FFTW3=y"])
-            args.extend(["FFTW3_LIB=%s" % fftw.ld_flags])
+            args.extend(["LIBFFTW3=%s" % fftw.ld_flags])
             args.extend(["FFTW3_INCLUDE={0}".format(spec["fftw-api"].prefix.include)])
 
         with working_dir("src"):
