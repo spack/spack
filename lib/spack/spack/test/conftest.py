@@ -1678,12 +1678,12 @@ def mock_executable(tmp_path):
     def _factory(name, output, subdir=("bin",)):
         executable_dir = tmp_path.joinpath(*subdir)
         executable_dir.mkdir(parents=True, exist_ok=True)
-        f = executable_dir / name
+        executable_path = executable_dir / name
         if sys.platform == "win32":
-            f += ".bat"
-        f.write_text(f"{ shebang }{ output }\n")
-        f.chmod(0o755)
-        return str(f)
+            executable_path += ".bat"
+        executable_path.write_text(f"{ shebang }{ output }\n")
+        executable_path.chmod(0o755)
+        return executable_path
 
     return _factory
 

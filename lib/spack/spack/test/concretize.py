@@ -2137,7 +2137,7 @@ class TestConcretize(object):
             {
                 "compiler": {
                     "spec": "gcc@foo",
-                    "paths": {"cc": gcc_path, "cxx": gcc_path, "f77": None, "fc": None},
+                    "paths": {"cc": str(gcc_path), "cxx": str(gcc_path), "f77": None, "fc": None},
                     "operating_system": "debian6",
                     "modules": [],
                 }
