@@ -30,15 +30,12 @@ def test_python_version():
     assert platform.python_version() in out
 
 
-def test_python_with_module():
-    # pytest rewrites a lot of modules, which interferes with runpy, so
-    # it's hard to test this.  Trying to import a module like sys, that
-    # has no code associated with it, raises an error reliably in python
-    # 2 and 3, which indicates we successfully ran runpy.run_module.
-    with pytest.raises(ImportError, match="No code object"):
-        python("-m", "sys")
+def test_python_with_module(capsys):
+    with capsys.disabled():
+        out = python("-m", "sys", fail_on_error=False)
+        assert "No code object" in out
 
 
-def test_python_raises():
-    out = python("--foobar", fail_on_error=False)
-    assert "Error: Unknown arguments" in out
+def test_python_raises_on_bad_arg():
+    with pytest.raises(spack.util.executable.ProcessError):
+        python("--foobar")
