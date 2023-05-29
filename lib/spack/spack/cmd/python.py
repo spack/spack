@@ -8,6 +8,8 @@ import os
 import platform
 import sys
 
+import spack_installable.main as sim
+
 import llnl.util.tty as tty
 
 import spack
@@ -38,12 +40,6 @@ def setup_parser(subparser):
     ex.add_argument("-c", dest="python_command", metavar="COMMAND", help="command to execute")
     ex.add_argument("-m", dest="module", action="store", help="run library module as a script")
 
-    subparser.add_argument(
-        "-u",
-        dest="unbuffered",
-        action="store_true",
-        help="for compatibility with xdist, do not use without adding -u to the interpreter",
-    )
     subparser.add_argument(
         "-i",
         dest="python_interpreter",
@@ -129,8 +125,9 @@ def python_interpreter(args, unknown_args):
     # create a new environment for the spack python instance that sets PYTHONPATH to
     # include Spack packages.
     mods = sue.EnvironmentModifications()
-    mods.prepend_path("PYTHONPATH", spack.paths.lib_path)
-    mods.prepend_path("PYTHONPATH", spack.paths.external_path)
+    sys_paths = sim.get_spack_sys_paths(spack.paths.prefix)
+    for path in reversed(sys_paths):
+        mods.prepend_path("PYTHONPATH", path)
 
     env = os.environ.copy()
     mods.apply_modifications(env)

@@ -33,6 +33,7 @@ import llnl.util.lang
 import llnl.util.tty as tty
 from llnl.util.filesystem import working_dir
 
+import spack
 import spack.caches
 import spack.config
 import spack.error
@@ -46,9 +47,6 @@ import spack.util.naming as nm
 import spack.util.path
 import spack.util.spack_yaml as syaml
 
-#: Package modules are imported as spack.pkg.<repo-namespace>.<pkg-name>
-ROOT_PYTHON_NAMESPACE = "spack.pkg"
-
 
 def python_package_for_repo(namespace):
     """Returns the full namespace of a repository, given its relative one
@@ -60,7 +58,7 @@ def python_package_for_repo(namespace):
     Args:
         namespace (str): repo namespace
     """
-    return "{0}.{1}".format(ROOT_PYTHON_NAMESPACE, namespace)
+    return "{0}.{1}".format(spack.ROOT_PYTHON_NAMESPACE, namespace)
 
 
 def namespace_from_fullname(fullname):
@@ -74,7 +72,7 @@ def namespace_from_fullname(fullname):
         fullname (str): full name for the Python module
     """
     namespace, dot, module = fullname.rpartition(".")
-    prefix_and_dot = "{0}.".format(ROOT_PYTHON_NAMESPACE)
+    prefix_and_dot = "{0}.".format(spack.ROOT_PYTHON_NAMESPACE)
     if namespace.startswith(prefix_and_dot):
         namespace = namespace[len(prefix_and_dot) :]
     return namespace
@@ -137,7 +135,7 @@ class ReposFinder:
             raise RuntimeError('cannot reload module "{0}"'.format(fullname))
 
         # Preferred API from https://peps.python.org/pep-0451/
-        if not fullname.startswith(ROOT_PYTHON_NAMESPACE):
+        if not fullname.startswith(spack.ROOT_PYTHON_NAMESPACE):
             return None
 
         loader = self.compute_loader(fullname)
