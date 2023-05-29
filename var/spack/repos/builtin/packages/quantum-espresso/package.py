@@ -310,7 +310,7 @@ class QuantumEspresso(CMakePackage, Package):
     # 6.4
     patch_url = "https://raw.githubusercontent.com/QMCPACK/qmcpack/v3.13.0/external_codes/quantum_espresso/add_pw2qmcpack_to_qe-6.4.diff"
     patch_checksum = "ef08f5089951be902f0854a4dbddaa7b01f08924cdb27decfade6bef0e2b8994"
-    patch(patch_url, sha256=patch_checksum, when="@6.4:6.4.0+qmcpack")
+    patch(patch_url, sha256=patch_checksum, when="@=6.4+qmcpack")
     # 6.3
     patch_url = "https://raw.githubusercontent.com/QMCPACK/qmcpack/v3.13.0/external_codes/quantum_espresso/add_pw2qmcpack_to_qe-6.3.diff"
     patch_checksum = "2ee346e24926479f5e96f8dc47812173a8847a58354bbc32cf2114af7a521c13"
@@ -346,14 +346,14 @@ class QuantumEspresso(CMakePackage, Package):
     patch(
         "https://gitlab.com/QEF/q-e/commit/0796e1b7c55c9361ecb6515a0979280e78865e36.diff",
         sha256="bc8c5b8523156cee002d97dab42a5976dffae20605da485a427b902a236d7e6b",
-        when="+patch@6.3:6.3.0",
+        when="+patch@=6.3",
     )
 
     # QE 6.3 `make install` broken and a patch must be applied
     patch(
         "https://gitlab.com/QEF/q-e/commit/88e6558646dbbcfcafa5f3fa758217f6062ab91c.diff",
         sha256="b776890d008e16cca28c31299c62f47de0ba606b900b17cbc27c041f45e564ca",
-        when="+patch@6.3:6.3.0",
+        when="+patch@=6.3",
     )
 
     # QE 6.4.1 patch to work around configure issues that only appear in the
