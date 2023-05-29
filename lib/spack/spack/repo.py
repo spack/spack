@@ -58,7 +58,8 @@ def python_package_for_repo(namespace):
     Args:
         namespace (str): repo namespace
     """
-    return "{0}.{1}".format(spack.ROOT_PYTHON_NAMESPACE, namespace)
+    #    return "{0}.{1}".format(spack.ROOT_PYTHON_NAMESPACE, namespace)
+    return f"{spack.ROOT_PYTHON_NAMESPACE}.{namespace}"
 
 
 def namespace_from_fullname(fullname):
@@ -72,7 +73,7 @@ def namespace_from_fullname(fullname):
         fullname (str): full name for the Python module
     """
     namespace, dot, module = fullname.rpartition(".")
-    prefix_and_dot = "{0}.".format(spack.ROOT_PYTHON_NAMESPACE)
+    prefix_and_dot = f"{spack.ROOT_PYTHON_NAMESPACE}."
     if namespace.startswith(prefix_and_dot):
         namespace = namespace[len(prefix_and_dot) :]
     return namespace
