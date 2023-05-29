@@ -17,31 +17,26 @@ compiler = spack.main.SpackCommand("compiler")
 
 @pytest.mark.skipif(sys.platform == "win32", reason="Cannot execute bash script on Windows")
 @pytest.mark.regression("11678,13138")
-def test_compiler_find_without_paths(no_compilers_yaml, working_env, tmpdir):
-    with tmpdir.as_cwd():
-        with open("gcc", "w") as f:
-            f.write(
-                """\
-#!/bin/sh
-echo "0.0.0"
-"""
-            )
-        os.chmod("gcc", 0o700)
+def test_compiler_find_without_paths(no_compilers_yaml, working_env, mock_executable):
+    """Tests that 'spack compiler find' looks into PATH by default, if no specific path
+    is given.
+    """
+    gcc_path = mock_executable("gcc", output='echo "0.0.0"')
 
-    os.environ["PATH"] = str(tmpdir)
+    os.environ["PATH"] = str(gcc_path.parent)
     output = compiler("find", "--scope=site")
 
     assert "gcc" in output
 
 
 @pytest.mark.regression("17589")
-def test_compiler_find_no_apple_gcc(no_compilers_yaml, working_env, tmpdir):
-    with tmpdir.as_cwd():
-        # make a script to emulate apple gcc's version args
-        with open("gcc", "w") as f:
-            f.write(
-                """\
-#!/bin/sh
+def test_compiler_find_no_apple_gcc(no_compilers_yaml, working_env, mock_executable):
+    """Tests that Spack won't mistake Apple's GCC as a "real" GCC, since it's really
+    Clang with a few tweaks.
+    """
+    gcc_path = mock_executable(
+        "gcc",
+        output="""
 if [ "$1" = "-dumpversion" ]; then
     echo "4.2.1"
 elif [ "$1" = "--version" ]; then
@@ -53,17 +48,17 @@ elif [ "$1" = "--version" ]; then
 else
     echo "clang: error: no input files"
 fi
-"""
-            )
-        os.chmod("gcc", 0o700)
+""",
+    )
 
-    os.environ["PATH"] = str(tmpdir)
+    os.environ["PATH"] = str(gcc_path.parent)
     output = compiler("find", "--scope=site")
 
     assert "gcc" not in output
 
 
 def test_compiler_remove(mutable_config, mock_packages):
+    """Tests that we can remove a compiler from configuration."""
     assert spack.spec.CompilerSpec("gcc@=4.5.0") in spack.compilers.all_compiler_specs()
     args = spack.util.pattern.Bunch(all=True, compiler_spec="gcc@4.5.0", add_paths=[], scope=None)
     spack.cmd.compiler.compiler_remove(args)
@@ -72,6 +67,7 @@ def test_compiler_remove(mutable_config, mock_packages):
 
 @pytest.mark.skipif(sys.platform == "win32", reason="Cannot execute bash script on Windows")
 def test_compiler_add(mutable_config, mock_packages, mock_executable):
+    """Tests that we can add a compiler to configuration."""
     expected_version = "4.5.3"
     gcc_path = mock_executable(
         "gcc",
@@ -100,8 +96,8 @@ done
 
 
 @pytest.fixture
-def clangdir(tmpdir):
-    """Create a directory with some dummy compiler scripts in it.
+def compilers_dir(mock_executable):
+    """Create a directory with some mock compiler scripts in it.
 
     Scripts are:
       - clang
@@ -111,11 +107,9 @@ def clangdir(tmpdir):
       - gfortran-8
 
     """
-    with tmpdir.as_cwd():
-        with open("clang", "w") as f:
-            f.write(
-                """\
-#!/bin/sh
+    clang_path = mock_executable(
+        "clang",
+        output="""
 if [ "$1" = "--version" ]; then
     echo "clang version 11.0.0 (clang-1100.0.33.16)"
     echo "Target: x86_64-apple-darwin18.7.0"
@@ -125,12 +119,11 @@ else
     echo "clang: error: no input files"
     exit 1
 fi
-"""
-            )
-        shutil.copy("clang", "clang++")
+""",
+    )
+    shutil.copy(clang_path, clang_path.parent / "clang++")
 
-        gcc_script = """\
-#!/bin/sh
+    gcc_script = """
 if [ "$1" = "-dumpversion" ]; then
     echo "8"
 elif [ "$1" = "-dumpfullversion" ]; then
@@ -144,30 +137,18 @@ else
     exit 1
 fi
 """
-        with open("gcc-8", "w") as f:
-            f.write(gcc_script.format("gcc", "gcc-8"))
-        with open("g++-8", "w") as f:
-            f.write(gcc_script.format("g++", "g++-8"))
-        with open("gfortran-8", "w") as f:
-            f.write(gcc_script.format("GNU Fortran", "gfortran-8"))
-        os.chmod("clang", 0o700)
-        os.chmod("clang++", 0o700)
-        os.chmod("gcc-8", 0o700)
-        os.chmod("g++-8", 0o700)
-        os.chmod("gfortran-8", 0o700)
+    mock_executable("gcc-8", output=gcc_script.format("gcc", "gcc-8"))
+    mock_executable("g++-8", output=gcc_script.format("g++", "g++-8"))
+    mock_executable("gfortran-8", output=gcc_script.format("GNU Fortran", "gfortran-8"))
 
-    yield tmpdir
+    return clang_path.parent
 
 
-@pytest.mark.skipif(
-    sys.platform == "win32",
-    reason="Cannot execute bash \
-                                                     script on Windows",
-)
+@pytest.mark.skipif(sys.platform == "win32", reason="Cannot execute bash script on Windows")
 @pytest.mark.regression("17590")
-def test_compiler_find_mixed_suffixes(no_compilers_yaml, working_env, clangdir):
+def test_compiler_find_mixed_suffixes(no_compilers_yaml, working_env, compilers_dir):
     """Ensure that we'll mix compilers with different suffixes when necessary."""
-    os.environ["PATH"] = str(clangdir)
+    os.environ["PATH"] = str(compilers_dir)
     output = compiler("find", "--scope=site")
 
     assert "clang@11.0.0" in output
@@ -177,39 +158,33 @@ def test_compiler_find_mixed_suffixes(no_compilers_yaml, working_env, clangdir):
     clang = next(c["compiler"] for c in config if c["compiler"]["spec"] == "clang@=11.0.0")
     gcc = next(c["compiler"] for c in config if c["compiler"]["spec"] == "gcc@=8.4.0")
 
-    gfortran_path = str(clangdir.join("gfortran-8"))
+    gfortran_path = str(compilers_dir / "gfortran-8")
 
     assert clang["paths"] == {
-        "cc": str(clangdir.join("clang")),
-        "cxx": str(clangdir.join("clang++")),
+        "cc": str(compilers_dir / "clang"),
+        "cxx": str(compilers_dir / "clang++"),
         # we only auto-detect mixed clang on macos
         "f77": gfortran_path if sys.platform == "darwin" else None,
         "fc": gfortran_path if sys.platform == "darwin" else None,
     }
 
     assert gcc["paths"] == {
-        "cc": str(clangdir.join("gcc-8")),
-        "cxx": str(clangdir.join("g++-8")),
+        "cc": str(compilers_dir / "gcc-8"),
+        "cxx": str(compilers_dir / "g++-8"),
         "f77": gfortran_path,
         "fc": gfortran_path,
     }
 
 
-@pytest.mark.skipif(
-    sys.platform == "win32",
-    reason="Cannot execute bash \
-                                                     script on Windows",
-)
+@pytest.mark.skipif(sys.platform == "win32", reason="Cannot execute bash script on Windows")
 @pytest.mark.regression("17590")
-def test_compiler_find_prefer_no_suffix(no_compilers_yaml, working_env, clangdir):
+def test_compiler_find_prefer_no_suffix(no_compilers_yaml, working_env, compilers_dir):
     """Ensure that we'll pick 'clang' over 'clang-gpu' when there is a choice."""
-    with clangdir.as_cwd():
-        shutil.copy("clang", "clang-gpu")
-        shutil.copy("clang++", "clang++-gpu")
-        os.chmod("clang-gpu", 0o700)
-        os.chmod("clang++-gpu", 0o700)
+    clang_path = compilers_dir / "clang"
+    shutil.copy(clang_path, clang_path.parent / "clang-gpu")
+    shutil.copy(clang_path, clang_path.parent / "clang++-gpu")
 
-    os.environ["PATH"] = str(clangdir)
+    os.environ["PATH"] = str(compilers_dir)
     output = compiler("find", "--scope=site")
 
     assert "clang@11.0.0" in output
@@ -218,46 +193,38 @@ def test_compiler_find_prefer_no_suffix(no_compilers_yaml, working_env, clangdir
     config = spack.compilers.get_compiler_config("site", False)
     clang = next(c["compiler"] for c in config if c["compiler"]["spec"] == "clang@=11.0.0")
 
-    assert clang["paths"]["cc"] == str(clangdir.join("clang"))
-    assert clang["paths"]["cxx"] == str(clangdir.join("clang++"))
+    assert clang["paths"]["cc"] == str(compilers_dir / "clang")
+    assert clang["paths"]["cxx"] == str(compilers_dir / "clang++")
 
 
-@pytest.mark.skipif(
-    sys.platform == "win32",
-    reason="Cannot execute bash \
-                                                     script on Windows",
-)
-def test_compiler_find_path_order(no_compilers_yaml, working_env, clangdir):
-    """Ensure that we find compilers that come first in the PATH first"""
-
-    with clangdir.as_cwd():
-        os.mkdir("first_in_path")
-        shutil.copy("gcc-8", "first_in_path/gcc-8")
-        shutil.copy("g++-8", "first_in_path/g++-8")
-        shutil.copy("gfortran-8", "first_in_path/gfortran-8")
-
-    # the first_in_path folder should be searched first
-    os.environ["PATH"] = "{}:{}".format(str(clangdir.join("first_in_path")), str(clangdir))
+@pytest.mark.skipif(sys.platform == "win32", reason="Cannot execute bash script on Windows")
+def test_compiler_find_path_order(no_compilers_yaml, working_env, compilers_dir):
+    """Ensure that we look for compilers in the same order as PATH, when there are duplicates"""
+    new_dir = compilers_dir / "first_in_path"
+    new_dir.mkdir()
+    for name in ("gcc-8", "g++-8", "gfortran-8"):
+        shutil.copy(compilers_dir / name, new_dir / name)
+    # Set PATH to have the new folder searched first
+    os.environ["PATH"] = "{}:{}".format(str(new_dir), str(compilers_dir))
 
     compiler("find", "--scope=site")
 
     config = spack.compilers.get_compiler_config("site", False)
-
     gcc = next(c["compiler"] for c in config if c["compiler"]["spec"] == "gcc@=8.4.0")
-
     assert gcc["paths"] == {
-        "cc": str(clangdir.join("first_in_path", "gcc-8")),
-        "cxx": str(clangdir.join("first_in_path", "g++-8")),
-        "f77": str(clangdir.join("first_in_path", "gfortran-8")),
-        "fc": str(clangdir.join("first_in_path", "gfortran-8")),
+        "cc": str(new_dir / "gcc-8"),
+        "cxx": str(new_dir / "g++-8"),
+        "f77": str(new_dir / "gfortran-8"),
+        "fc": str(new_dir / "gfortran-8"),
     }
 
 
-def test_compiler_list_empty(no_compilers_yaml, working_env, clangdir):
-    # Spack should not automatically search for compilers when listing them and none
-    # are available. And when stdout is not a tty like in tests, there should be no
-    # output and no error exit code.
-    os.environ["PATH"] = str(clangdir)
+def test_compiler_list_empty(no_compilers_yaml, working_env, compilers_dir):
+    """Spack should not automatically search for compilers when listing them and none are
+    available. And when stdout is not a tty like in tests, there should be no output and
+    no error exit code.
+    """
+    os.environ["PATH"] = str(compilers_dir)
     out = compiler("list")
     assert not out
     assert compiler.returncode == 0
