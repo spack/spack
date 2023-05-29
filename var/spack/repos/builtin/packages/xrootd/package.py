@@ -136,6 +136,12 @@ class Xrootd(CMakePackage):
         sha256="969f8b07edff42449ad76b02f3e57d93b8d6c829be1ba14bccf831c27bc971e1",
         when="@5.5.3",
     )
+    # https://github.com/xrootd/xrootd/pull/2013
+    patch(
+        "https://patch-diff.githubusercontent.com/raw/xrootd/xrootd/pull/2013.patch?full_index=1",
+        sha256="3596f45234c421abb00d0d0539033207596587f00b2d35897da8ba3302811bba",
+        when="@5.5.0:5.5.5",
+    )
 
     # do not use systemd
     patch("no-systemd-pre-5.5.2.patch", when="@:5.5.1")
