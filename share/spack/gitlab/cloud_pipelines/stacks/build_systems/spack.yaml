@@ -24,4 +24,4 @@ spack:
   mirrors: { "mirror": "s3://spack-binaries/develop/build_systems" }
 
   cdash:
-    build-group: Build tests for different build systems
+    build-group: Build Systems

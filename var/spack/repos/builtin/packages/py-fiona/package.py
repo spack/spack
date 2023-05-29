@@ -16,6 +16,7 @@ class PyFiona(PythonPackage):
     maintainers("adamjstewart")
 
     version("master", branch="master")
+    version("1.9.4", sha256="49f18cbcd3b1f97128c1bb038c3451b2e1be25baa52f02ce906c25cf75af95b6")
     version("1.9.3", sha256="60f3789ad9633c3a26acf7cbe39e82e3c7a12562c59af1d599fc3e4e8f7f8f25")
     version("1.9.2", sha256="f9263c5f97206bf2eb2c010d52e8ffc54e96886b0e698badde25ff109b32952a")
     version("1.9.1", sha256="3a3725e94840a387fef48726d60db6a6791563f366939d22378a4661f8941be7")
@@ -51,8 +52,8 @@ class PyFiona(PythonPackage):
     depends_on("py-click-plugins@1:", type=("build", "run"))
     depends_on("py-cligj@0.5:", type=("build", "run"))
     depends_on("py-importlib-metadata", when="@1.9.2: ^python@:3.9", type=("build", "run"))
-    depends_on("py-munch@2.3.2:", when="@1.9:", type=("build", "run"))
-    depends_on("py-munch", type=("build", "run"))
+    depends_on("py-six", when="@1.9.4:", type=("build", "run"))
+    depends_on("py-six@1.7:", when="@:1.8", type=("build", "run"))
 
     # setup.py or release notes
     depends_on("gdal@3.1:", when="@1.9:", type=("build", "link", "run"))
@@ -60,7 +61,8 @@ class PyFiona(PythonPackage):
 
     # Historical dependencies
     depends_on("py-setuptools", when="@:1.9.1", type=("build", "run"))
-    depends_on("py-six@1.7:", when="@:1.8", type=("build", "run"))
+    depends_on("py-munch@2.3.2:", when="@1.9.0:1.9.3", type=("build", "run"))
+    depends_on("py-munch", when="@:1.8", type=("build", "run"))
 
     # error: implicit declaration of function 'OSRFixup' is invalid in C99
     conflicts("%apple-clang@12:", when="@:1.8.9")
