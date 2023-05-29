@@ -2,6 +2,7 @@
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
+import os
 
 from spack.package import *
 
@@ -16,6 +17,8 @@ class Arborx(CMakePackage, CudaPackage, ROCmPackage):
     tags = ["e4s", "ecp"]
 
     maintainers("aprokop")
+
+    test_requires_compiler = True
 
     version("master", branch="master")
     version("1.4", sha256="803a1018a6305cf3fea161172b3ada49537f59261279d91c2abbcce9492ee7af")
@@ -120,18 +123,18 @@ class Arborx(CMakePackage, CudaPackage, ROCmPackage):
         """The working directory for cached test sources."""
         return join_path(self.test_suite.current_test_cache_dir, self.examples_src_dir)
 
-    def build_tests(self):
-        """Build the stand-alone/smoke test."""
+    def test_run_ctest(self):
+        """run ctest tests on the installed package"""
 
         arborx_dir = self.spec["arborx"].prefix
-        cmake_prefix_path = "-DCMAKE_PREFIX_PATH={0}".format(arborx_dir)
+        cmake_prefix_path = f"-DCMAKE_PREFIX_PATH={arborx_dir}"
         if "+mpi" in self.spec:
-            cmake_prefix_path += ";{0}".format(self.spec["mpi"].prefix)
+            cmake_prefix_path += f";{self.spec['mpi'].prefix}"
 
         cmake_args = [
             ".",
             cmake_prefix_path,
-            "-DCMAKE_CXX_COMPILER={0}".format(self.compiler.cxx),
+            f"-DCMAKE_CXX_COMPILER={os.environ['CXX']}",
             self.define(
                 "Kokkos_ROOT",
                 self.spec["kokkos"].prefix
@@ -139,23 +142,11 @@ class Arborx(CMakePackage, CudaPackage, ROCmPackage):
                 else self.spec["trilinos"].prefix,
             ),
         ]
+        cmake = which(self.spec["cmake"].prefix.bin.cmake)
+        make = which("make")
+        ctest = which("ctest")
 
-        self.run_test(
-            "cmake", cmake_args, purpose="test: calling cmake", work_dir=self.cached_tests_work_dir
-        )
-
-        self.run_test(
-            "make", [], purpose="test: building the tests", work_dir=self.cached_tests_work_dir
-        )
-
-    def test(self):
-        """Perform stand-alone/smoke tests on the installed package."""
-        self.build_tests()
-
-        self.run_test(
-            "ctest",
-            ["-V"],
-            purpose="test: running the tests",
-            installed=False,
-            work_dir=self.cached_tests_work_dir,
-        )
+        with working_dir(self.cached_tests_work_dir):
+            cmake(*cmake_args)
+            make()
+            ctest("-V")
