@@ -15,6 +15,55 @@ import spack.version
 compiler = spack.main.SpackCommand("compiler")
 
 
+@pytest.fixture
+def compilers_dir(mock_executable):
+    """Create a directory with some mock compiler scripts in it.
+
+    Scripts are:
+      - clang
+      - clang++
+      - gcc
+      - g++
+      - gfortran-8
+
+    """
+    clang_path = mock_executable(
+        "clang",
+        output="""
+if [ "$1" = "--version" ]; then
+    echo "clang version 11.0.0 (clang-1100.0.33.16)"
+    echo "Target: x86_64-apple-darwin18.7.0"
+    echo "Thread model: posix"
+    echo "InstalledDir: /dummy"
+else
+    echo "clang: error: no input files"
+    exit 1
+fi
+""",
+    )
+    shutil.copy(clang_path, clang_path.parent / "clang++")
+
+    gcc_script = """
+if [ "$1" = "-dumpversion" ]; then
+    echo "8"
+elif [ "$1" = "-dumpfullversion" ]; then
+    echo "8.4.0"
+elif [ "$1" = "--version" ]; then
+    echo "{0} (GCC) 8.4.0 20120313 (Red Hat 8.4.0-1)"
+    echo "Copyright (C) 2010 Free Software Foundation, Inc."
+else
+    echo "{1}: fatal error: no input files"
+    echo "compilation terminated."
+    exit 1
+fi
+"""
+    mock_executable("gcc-8", output=gcc_script.format("gcc", "gcc-8"))
+    mock_executable("g++-8", output=gcc_script.format("g++", "g++-8"))
+    mock_executable("gfortran-8", output=gcc_script.format("GNU Fortran", "gfortran-8"))
+
+    return clang_path.parent
+
+
 @pytest.mark.skipif(sys.platform == "win32", reason="Cannot execute bash script on Windows")
 @pytest.mark.regression("11678,13138")
 def test_compiler_find_without_paths(no_compilers_yaml, working_env, mock_executable):
@@ -93,55 +142,6 @@ done
     assert len(compilers_added_by_find) == 1
     new_compiler = compilers_added_by_find.pop()
     assert new_compiler.version == spack.version.Version(expected_version)
-
-
-@pytest.fixture
-def compilers_dir(mock_executable):
-    """Create a directory with some mock compiler scripts in it.
-
-    Scripts are:
-      - clang
-      - clang++
-      - gcc
-      - g++
-      - gfortran-8
-
-    """
-    clang_path = mock_executable(
-        "clang",
-        output="""
-if [ "$1" = "--version" ]; then
-    echo "clang version 11.0.0 (clang-1100.0.33.16)"
-    echo "Target: x86_64-apple-darwin18.7.0"
-    echo "Thread model: posix"
-    echo "InstalledDir: /dummy"
-else
-    echo "clang: error: no input files"
-    exit 1
-fi
-""",
-    )
-    shutil.copy(clang_path, clang_path.parent / "clang++")
-
-    gcc_script = """
-if [ "$1" = "-dumpversion" ]; then
-    echo "8"
-elif [ "$1" = "-dumpfullversion" ]; then
-    echo "8.4.0"
-elif [ "$1" = "--version" ]; then
-    echo "{0} (GCC) 8.4.0 20120313 (Red Hat 8.4.0-1)"
-    echo "Copyright (C) 2010 Free Software Foundation, Inc."
-else
-    echo "{1}: fatal error: no input files"
-    echo "compilation terminated."
-    exit 1
-fi
-"""
-    mock_executable("gcc-8", output=gcc_script.format("gcc", "gcc-8"))
-    mock_executable("g++-8", output=gcc_script.format("g++", "g++-8"))
-    mock_executable("gfortran-8", output=gcc_script.format("GNU Fortran", "gfortran-8"))
-
-    return clang_path.parent
 
 
 @pytest.mark.skipif(sys.platform == "win32", reason="Cannot execute bash script on Windows")
