@@ -165,7 +165,7 @@ class Hipsparse(CMakePackage, CudaPackage, ROCmPackage):
 
     patch("e79985dccde22d826aceb3badfc643a3227979d2.patch", when="@3.5.0")
     patch("530047af4a0f437dafc02f76b3a17e3b1536c7ec.patch", when="@3.5.0")
-    patch("0a90ddc4c33ed409a938513b9dbdca8bfad65e06.patch")
+    patch("0a90ddc4c33ed409a938513b9dbdca8bfad65e06.patch", when="@:5.4")
 
     @classmethod
     def determine_version(cls, lib):
