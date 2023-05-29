@@ -190,6 +190,7 @@ class Glib(MesonPackage, AutotoolsPackage):
     def libs(self):
         return find_libraries(["libglib*"], root=self.prefix, recursive=True)
 
+
 class BaseBuilder(metaclass=spack.builder.PhaseCallbacksMeta):
     @property
     def dtrace_copy_path(self):
