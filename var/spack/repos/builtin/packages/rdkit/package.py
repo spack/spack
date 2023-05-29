@@ -45,42 +45,41 @@ class Rdkit(CMakePackage):
     version("2020_03_6", sha256="a3663295a149aa0307ace6d1995094d0334180bc8f892fa325558a110154272b")
 
     variant("freetype", default=True, description="Build freetype support")
-    variant(
-        "python", default=True, when="@2022_09_5:", description="Build standard Python wrappers"
-    )
-    variant("contrib", default=False, when="@2022_09_5:", description="Build Contrib directory")
-    variant("freesasa", default=False, when="@2022_09_5:", description="Build freesasa wrapper")
-    variant("coordgen", default=True, when="@2022_09_5:", description="Build coordgen wrapper")
-    variant("maeparser", default=True, when="@2022_09_5:", description="Build MAE parser wrapper")
-    variant("yaehmop", default=True, when="@2022_09_5:", description="Build YAeHMOP wrapper")
-    variant(
-        "xyz2mol", default=False, when="@2022_09_5:", description="Build support for RDKit xyz2mol"
-    )
-    variant(
-        "descriptors3d",
-        default=True,
-        when="@2022_09_5:",
-        description="Build 3D descriptors calculators",
-    )
 
-    conflicts("+xyz2mol", when="~yaehmop", msg="XY2MOL requires YAeHMOP")
+    with when("@2022_09_5:"):
+        variant(
+            "python",
+            default=True,
+            when="@2022_09_5:",
+            description="Build standard Python wrappers",
+        )
+        variant("contrib", default=False, description="Build Contrib directory")
+        variant("freesasa", default=False, description="Build freesasa wrapper")
+        variant("coordgen", default=True, description="Build coordgen wrapper")
+        variant("maeparser", default=True, description="Build MAE parser wrapper")
+        variant("yaehmop", default=True, description="Build YAeHMOP wrapper")
+        variant("xyz2mol", default=False, description="Build support for RDKit xyz2mol")
+        variant("descriptors3d", default=True, description="Build 3D descriptors calculators")
+
+        depends_on("freesasa", when="+freesasa")
+        depends_on("coordgen", when="+coordgen")
+        depends_on("maeparser", when="+maeparser")
+        depends_on("eigen@3:", when="+descriptors3d")
+        depends_on("python@3:", when="+python")
+        depends_on("py-numpy", when="+python")
+
+        extends("python", when="+python")
+
+        conflicts("+xyz2mol", when="~yaehmop", msg="XY2MOL requires YAeHMOP")
 
     depends_on("boost@1.53.0: +python +serialization +iostreams +system")
-
     depends_on("sqlite")
-
     depends_on("freetype", when="@2020_09_1: +freetype")
-    depends_on("freesasa", when="@2022_09_5: +freesasa")
-    depends_on("coordgen", when="@2022_09_5: +coordgen")
-    depends_on("maeparser", when="@2022_09_5: +maeparser")
-    depends_on("eigen@3:", when="@2022_09_5: +descriptors3d")
 
-    depends_on("python@3:", when="@:2021_09_5")
-    depends_on("python@3:", when="@2022_09_5: +python")
-    depends_on("py-numpy", when="@:2021_09_5")
-    depends_on("py-numpy", when="@2022_09_5: +python")
-    extends("python", when="@:2021_09_5")
-    extends("python", when="@2022_09_5: +python")
+    with when("@:2021_09_5"):
+        depends_on("python@3:")
+        depends_on("py-numpy")
+        extends("python")
 
     def cmake_args(self):
         args = [
