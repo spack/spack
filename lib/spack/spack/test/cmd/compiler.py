@@ -8,37 +8,11 @@ import sys
 
 import pytest
 
-import llnl.util.filesystem
-
 import spack.compilers
 import spack.main
 import spack.version
 
 compiler = spack.main.SpackCommand("compiler")
-
-
-@pytest.fixture()
-def mock_gcc(tmp_path):
-    """Return a directory containing a fake, but detectable compiler."""
-
-    def _factory(content):
-        bin_dir = tmp_path / "bin"
-        bin_dir.mkdir()
-
-        gcc_path = bin_dir / "gcc"
-        gxx_path = bin_dir / "g++"
-        gfortran_path = bin_dir / "gfortran"
-
-        gcc_path.write_text(content)
-
-        # Create some mock compilers in the temporary directory
-        llnl.util.filesystem.set_executable(str(gcc_path))
-        shutil.copy(gcc_path, gxx_path)
-        shutil.copy(gcc_path, gfortran_path)
-
-        return str(tmp_path)
-
-    return _factory
 
 
 @pytest.mark.skipif(sys.platform == "win32", reason="Cannot execute bash script on Windows")
@@ -97,31 +71,32 @@ def test_compiler_remove(mutable_config, mock_packages):
 
 
 @pytest.mark.skipif(sys.platform == "win32", reason="Cannot execute bash script on Windows")
-def test_compiler_add(mutable_config, mock_packages, mock_gcc):
-    mock_compiler_version = "4.5.3"
-    mock_compiler_dir = mock_gcc(
-        f"""\
-#!/bin/sh
-
+def test_compiler_add(mutable_config, mock_packages, mock_executable):
+    expected_version = "4.5.3"
+    gcc_path = mock_executable(
+        "gcc",
+        output=f"""\
 for arg in "$@"; do
     if [ "$arg" = -dumpversion ]; then
-        echo '{mock_compiler_version}'
+        echo '{expected_version}'
     fi
 done
-"""
+""",
     )
-    # Compilers available by default.
-    old_compilers = set(spack.compilers.all_compiler_specs())
+    bin_dir = gcc_path.parent
+    root_dir = bin_dir.parent
 
+    compilers_before_find = set(spack.compilers.all_compiler_specs())
     args = spack.util.pattern.Bunch(
-        all=None, compiler_spec=None, add_paths=[mock_compiler_dir], scope=None
+        all=None, compiler_spec=None, add_paths=[str(root_dir)], scope=None
     )
     spack.cmd.compiler.compiler_find(args)
+    compilers_after_find = set(spack.compilers.all_compiler_specs())
 
-    # Ensure new compiler is in there
-    new_compilers = set(spack.compilers.all_compiler_specs())
-    new_compiler = new_compilers - old_compilers
-    assert any(c.version == spack.version.Version(mock_compiler_version) for c in new_compiler)
+    compilers_added_by_find = compilers_after_find - compilers_before_find
+    assert len(compilers_added_by_find) == 1
+    new_compiler = compilers_added_by_find.pop()
+    assert new_compiler.version == spack.version.Version(expected_version)
 
 
 @pytest.fixture
