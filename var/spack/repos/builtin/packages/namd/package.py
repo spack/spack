@@ -22,6 +22,7 @@ class Namd(MakefilePackage, CudaPackage):
     manual_download = True
 
     version("master", branch="master")
+    version("2.15a2", sha256="8748cbaa93fc480f92fc263d9323e55bce6623fc693dbfd4a40f59b92669713e")
     version("2.15a1", branch="master", tag="release-2-15-alpha-1")
     # Same as above, but lets you use a local file instead of git
     version(
@@ -32,8 +33,8 @@ class Namd(MakefilePackage, CudaPackage):
         sha256="34044d85d9b4ae61650ccdba5cda4794088c3a9075932392dd0752ef8c049235",
         preferred=True,
     )
-    version("2.13", "9e3323ed856e36e34d5c17a7b0341e38")
-    version("2.12", "2a1191909b1ab03bf0205971ad4d8ee9")
+    version("2.13", md5="9e3323ed856e36e34d5c17a7b0341e38")
+    version("2.12", md5="2a1191909b1ab03bf0205971ad4d8ee9")
 
     variant(
         "fftw",
@@ -48,6 +49,8 @@ class Namd(MakefilePackage, CudaPackage):
         values=("none", "tcl", "python"),
         description="Enables Tcl and/or python interface",
     )
+
+    variant("avxtiles", when="target=x86_64_v4:", default=False, description="Enable avxtiles")
 
     # init_tcl_pointers() declaration and implementation are inconsistent
     # "src/colvarproxy_namd.C", line 482: error: inherited member is not
@@ -72,6 +75,8 @@ class Namd(MakefilePackage, CudaPackage):
 
     depends_on("tcl", when="interface=python")
     depends_on("python", when="interface=python")
+
+    conflicts("+avxtiles", when="@:2.14,3:", msg="AVXTiles algorithm requires NAMD 2.15")
 
     # https://www.ks.uiuc.edu/Research/namd/2.12/features.html
     # https://www.ks.uiuc.edu/Research/namd/2.13/features.html
@@ -127,6 +132,7 @@ class Namd(MakefilePackage, CudaPackage):
                                         -ffast-math -lpthread "
                         + archopt,
                         "intel": "-O2 -ip -qopenmp-simd" + archopt,
+                        "clang": m64 + "-O3 -ffast-math -fopenmp " + archopt,
                         "aocc": m64
                         + "-O3 -ffp-contract=fast -ffast-math \
                                         -fopenmp "
@@ -139,11 +145,18 @@ class Namd(MakefilePackage, CudaPackage):
                                         -ffast-math -lpthread "
                         + archopt,
                         "intel": "-O2 -ip " + archopt,
+                        "clang": m64 + "-O3 -ffast-math -fopenmp " + archopt,
                         "aocc": m64
                         + "-O3 -ffp-contract=fast \
                                         -ffast-math "
                         + archopt,
                     }
+
+                if self.spec.satisfies("+avxtiles"):
+                    optims_opts["aocc"] += " -DNAMD_AVXTILES"
+                    optims_opts["clang"] += " -DNAMD_AVXTILES"
+                    optims_opts["gcc"] += " -DNAMD_AVXTILES"
+                    optims_opts["intel"] += " -DNAMD_AVXTILES"
 
                 optim_opts = (
                     optims_opts[self.compiler.name] if self.compiler.name in optims_opts else ""
@@ -265,6 +278,7 @@ class Namd(MakefilePackage, CudaPackage):
         with working_dir(self.build_directory):
             mkdirp(prefix.bin)
             install("namd2", prefix.bin)
+            install("psfgen", prefix.bin)
 
             # I'm not sure this is a good idea or if an autoload of the charm
             # module would not be better.

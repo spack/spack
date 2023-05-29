@@ -986,8 +986,8 @@ def test_synthetic_construction_of_split_dependencies_from_same_package(mock_pac
     # To demonstrate that a spec can now hold two direct
     # dependencies from the same package
     root = Spec("b").concretized()
-    link_run_spec = Spec("c@1.0").concretized()
-    build_spec = Spec("c@2.0").concretized()
+    link_run_spec = Spec("c@=1.0").concretized()
+    build_spec = Spec("c@=2.0").concretized()
 
     root.add_dependency_edge(link_run_spec, deptypes="link")
     root.add_dependency_edge(link_run_spec, deptypes="run")
@@ -1014,8 +1014,8 @@ def test_synthetic_construction_bootstrapping(mock_packages, config):
     #    | build
     #  b@1.0
     #
-    root = Spec("b@2.0").concretized()
-    bootstrap = Spec("b@1.0").concretized()
+    root = Spec("b@=2.0").concretized()
+    bootstrap = Spec("b@=1.0").concretized()
 
     root.add_dependency_edge(bootstrap, deptypes="build")
 
@@ -1032,8 +1032,8 @@ def test_addition_of_different_deptypes_in_multiple_calls(mock_packages, config)
     #  b@1.0
     #
     # with three calls and check we always have a single edge
-    root = Spec("b@2.0").concretized()
-    bootstrap = Spec("b@1.0").concretized()
+    root = Spec("b@=2.0").concretized()
+    bootstrap = Spec("b@=1.0").concretized()
 
     for current_deptype in ("build", "link", "run"):
         root.add_dependency_edge(bootstrap, deptypes=current_deptype)
@@ -1059,9 +1059,9 @@ def test_addition_of_different_deptypes_in_multiple_calls(mock_packages, config)
 def test_adding_same_deptype_with_the_same_name_raises(
     mock_packages, config, c1_deptypes, c2_deptypes
 ):
-    p = Spec("b@2.0").concretized()
-    c1 = Spec("b@1.0").concretized()
-    c2 = Spec("b@2.0").concretized()
+    p = Spec("b@=2.0").concretized()
+    c1 = Spec("b@=1.0").concretized()
+    c2 = Spec("b@=2.0").concretized()
 
     p.add_dependency_edge(c1, deptypes=c1_deptypes)
     with pytest.raises(spack.error.SpackError):

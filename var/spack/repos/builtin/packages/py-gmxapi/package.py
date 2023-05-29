@@ -19,6 +19,7 @@ class PyGmxapi(PythonPackage):
     maintainers("eirrgang", "peterkasson")
 
     pypi = "gmxapi/gmxapi-0.4.0.tar.gz"
+    version("0.4.1", sha256="cc7a2e509ab8a59c187d388dcfd21ea78b785c3b355149b1818085f34dbda62a")
     version("0.4.0", sha256="7fd58e6a4b1391043379e8ba55555ebeba255c5b394f5df9d676e6a5571d7eba")
 
     depends_on("gromacs@2022.1:~mdrun_only+shared")
@@ -30,9 +31,9 @@ class PyGmxapi(PythonPackage):
     depends_on("py-numpy@1.8:", type=("build", "run"))
     depends_on("py-setuptools@42:", type="build")
     depends_on("py-packaging", type=("build", "run"))
-    depends_on("py-pybind11@2.6:", type=("build", "run"))
+    depends_on("py-pybind11@2.6:", type="build")
+    depends_on("py-pybind11@2.6:", when="@:0.4", type=("build", "run"))
     depends_on("py-pytest@4.6:", type="test")
-    depends_on("py-wheel", type="build")
 
     def setup_build_environment(self, env):
         env.set("GROMACS_DIR", self.spec["gromacs"].prefix)

@@ -35,7 +35,7 @@ class Gaudi(CMakePackage):
     version("33.0", sha256="76a967c41f579acc432593d498875dd4dc1f8afd5061e692741a355a9cf233c8")
     version("32.2", sha256="e9ef3eb57fd9ac7b9d5647e278a84b2e6263f29f0b14dbe1321667d44d969d2e")
 
-    maintainers("drbenmorgan", "vvolkl")
+    maintainers("drbenmorgan", "vvolkl", "jmcarcell")
 
     variant("aida", default=False, description="Build AIDA interfaces support")
     variant("cppunit", default=False, description="Build with CppUnit unit testing")
@@ -53,6 +53,7 @@ class Gaudi(CMakePackage):
     # fixes for the cmake config which could not find newer boost versions
     patch("link_target_fixes.patch", when="@33.0:34")
     patch("link_target_fixes32.patch", when="@:32.2")
+    patch("fmt_fix.patch", when="@36.6:36.12 ^fmt@10:")
 
     # These dependencies are needed for a minimal Gaudi build
     depends_on("aida")
@@ -137,6 +138,8 @@ class Gaudi(CMakePackage):
         # environment as in Gaudi.xenv
         env.prepend_path("PATH", self.prefix.scripts)
         env.prepend_path("PYTHONPATH", self.prefix.python)
+        env.prepend_path("LD_LIBRARY_PATH", self.prefix.lib)
+        env.prepend_path("LD_LIBRARY_PATH", self.prefix.lib64)
 
     def url_for_version(self, version):
         major = str(version[0])

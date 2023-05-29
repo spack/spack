@@ -75,13 +75,28 @@ class LinkParser(HTMLParser):
     links.  Good enough for a really simple spider."""
 
     def __init__(self):
-        HTMLParser.__init__(self)
+        super().__init__()
         self.links = []
 
     def handle_starttag(self, tag, attrs):
         if tag == "a":
             for attr, val in attrs:
                 if attr == "href":
+                    self.links.append(val)
+
+
+class IncludeFragmentParser(HTMLParser):
+    """This parser takes an HTML page and selects the include-fragments,
+    used on GitHub, https://github.github.io/include-fragment-element."""
+
+    def __init__(self):
+        super().__init__()
+        self.links = []
+
+    def handle_starttag(self, tag, attrs):
+        if tag == "include-fragment":
+            for attr, val in attrs:
+                if attr == "src":
                     self.links.append(val)
 
 
@@ -550,9 +565,38 @@ def spider(root_urls, depth=0, concurrency=32):
             page = codecs.getreader("utf-8")(response).read()
             pages[response_url] = page
 
-            # Parse out the links in the page
+            # Parse out the include-fragments in the page
+            # https://github.github.io/include-fragment-element
+            include_fragment_parser = IncludeFragmentParser()
+            include_fragment_parser.feed(page)
+
+            fragments = set()
+            while include_fragment_parser.links:
+                raw_link = include_fragment_parser.links.pop()
+                abs_link = url_util.join(response_url, raw_link.strip(), resolve_href=True)
+
+                try:
+                    # This seems to be text/html, though text/fragment+html is also used
+                    fragment_response_url, _, fragment_response = read_from_url(
+                        abs_link, "text/html"
+                    )
+                except Exception as e:
+                    msg = f"Error reading fragment: {(type(e), str(e))}:{traceback.format_exc()}"
+                    tty.debug(msg)
+
+                if not fragment_response_url or not fragment_response:
+                    continue
+
+                fragment = codecs.getreader("utf-8")(fragment_response).read()
+                fragments.add(fragment)
+
+                pages[fragment_response_url] = fragment
+
+            # Parse out the links in the page and all fragments
             link_parser = LinkParser()
             link_parser.feed(page)
+            for fragment in fragments:
+                link_parser.feed(fragment)
 
             while link_parser.links:
                 raw_link = link_parser.links.pop()

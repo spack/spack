@@ -29,9 +29,8 @@ class NfsUtils(AutotoolsPackage):
     depends_on("util-linux")
     depends_on("gettext")
 
-    def setup_build_environment(self, env):
-        env.append_flags("LIBS", "-lintl")
-
     def configure_args(self):
         args = ["--disable-gss", "--with-rpcgen=internal"]
+        if "intl" in self.spec["gettext"].libs.names:
+            args.append("LIBS=-lintl")
         return args

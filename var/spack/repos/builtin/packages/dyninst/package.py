@@ -75,6 +75,7 @@ class Dyninst(CMakePackage):
     # package layout. Need to use tbb provided config instead.
     conflicts("intel-tbb@2021.1:")
     conflicts("intel-oneapi-tbb@2021.1:")
+    conflicts("intel-parallel-studio", when="@12.0.0:")
     depends_on("tbb@2018.6.0:", when="@10.0.0:")
 
     depends_on("cmake@3.4.0:", type="build", when="@10.1.0:")
@@ -86,18 +87,10 @@ class Dyninst(CMakePackage):
     patch("v9.3.2-auto.patch", when="@9.3.2 %gcc@:4.7")
     patch("tribool.patch", when="@9.3.0:10.0.0 ^boost@1.69:")
 
+    requires("%gcc", msg="dyninst builds only with GCC")
+
     # No Mac support (including apple-clang)
     conflicts("platform=darwin", msg="macOS is not supported")
-
-    # We currently only build with gcc
-    conflicts("%clang")
-    conflicts("%arm")
-    conflicts("%cce")
-    conflicts("%fj")
-    conflicts("%intel")
-    conflicts("%pgi")
-    conflicts("%xl")
-    conflicts("%xl_r")
 
     # Version 11.0 requires a C++11-compliant ABI
     conflicts("%gcc@:5", when="@11.0.0:")
@@ -190,3 +183,12 @@ class Dyninst(CMakePackage):
                 args.append("-DENABLE_STATIC_LIBS=NO")
 
         return args
+
+    def test_ptls(self):
+        """Run parseThat on /bin/ls to rewrite with basic instrumentation"""
+        parseThat = which(self.prefix.bin.parseThat)
+        os.environ["DYNINSTAPI_RT_LIB"] = join_path(self.prefix.lib, "libdyninstAPI_RT.so")
+        parseThat(
+            "--binary-edit={0:s}".format(join_path(self.test_suite.stage, "ls.rewritten")),
+            "/bin/ls",
+        )
