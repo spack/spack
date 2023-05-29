@@ -21,6 +21,8 @@ class Amgx(CMakePackage, CudaPackage):
 
     maintainers("js947")
 
+    version("2.3.0", sha256="419b3cd5bd3eb3469cbef79d64a8d19d5db88dd5cce809e49cac6fc4fc2edff1")
+    version("2.2.0", sha256="dac78516bb528135cad903399fe0093aa0904e304565ef2d3da4fae05eda7928")
     version("2.1.0", sha256="6245112b768a1dc3486b2b3c049342e232eb6281a6021fffa8b20c11631f63cc")
     version("2.0.1", sha256="6f9991f1836fbf4ba2114ce9f49febd0edc069a24f533bd94fd9aa9be72435a7")
     version("2.0.0", sha256="8ec7ea8412be3de216fcf7243c4e2a8bcf76878e6865468e4238630a082a431b")
