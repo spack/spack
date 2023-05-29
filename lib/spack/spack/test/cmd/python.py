@@ -15,8 +15,8 @@ python = SpackCommand("python")
 
 
 def test_python(capsys):
-    python("-c", "import spack; print(spack.spack_version)")
-    out, _ = capsys.readouterr()
+    with capsys.disabled():
+        out = python("-c", "import spack; print(spack.spack_version)")
     assert out.strip() == spack.spack_version
 
 
