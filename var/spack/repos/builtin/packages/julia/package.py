@@ -191,6 +191,13 @@ class Julia(MakefilePackage):
     patch("use-add-rpath.patch", when="@:1.8.0")
     patch("use-add-rpath-2.patch", when="@1.8.1:1.8")
 
+    # Fix libstdc++ not being found (https://github.com/JuliaLang/julia/issues/47987)
+    patch(
+        "https://github.com/JuliaLang/julia/pull/48342.patch?full_index=1",
+        sha256="10f7cab89c8353b2648a968d2c8e8ed8bd90961df3227084f1d69d3d482933d7",
+        when="@1.8.4:1.8.5",
+    )
+
     # Fix gfortran abi detection https://github.com/JuliaLang/julia/pull/44026
     patch("fix-gfortran.patch", when="@1.7.0:1.7.2")
 
