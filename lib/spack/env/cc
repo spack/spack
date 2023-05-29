@@ -709,12 +709,10 @@ case "$mode" in
         ;;
 esac
 
-# Linker flags
-case "$mode" in
-    ld|ccld)
-        extend flags_list SPACK_LDFLAGS
-        ;;
-esac
+# Compiler flags used during linking
+if [ "$mode" == ccld ]; then
+    extend flags_list SPACK_LDFLAGS
+fi
 
 # On macOS insert headerpad_max_install_names linker flag
 if [ "$mode" = ld ] || [ "$mode" = ccld ]; then
