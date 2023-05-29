@@ -17,48 +17,31 @@ import spack.version
 compiler = spack.main.SpackCommand("compiler")
 
 
-@pytest.fixture
-def mock_compiler_version():
-    return "4.5.3"
-
-
 @pytest.fixture()
-def mock_compiler_dir(tmpdir, mock_compiler_version):
+def mock_gcc(tmp_path):
     """Return a directory containing a fake, but detectable compiler."""
 
-    tmpdir.ensure("bin", dir=True)
-    bin_dir = tmpdir.join("bin")
+    def _factory(content):
+        bin_dir = tmp_path / "bin"
+        bin_dir.mkdir()
 
-    gcc_path = bin_dir.join("gcc")
-    gxx_path = bin_dir.join("g++")
-    gfortran_path = bin_dir.join("gfortran")
+        gcc_path = bin_dir / "gcc"
+        gxx_path = bin_dir / "g++"
+        gfortran_path = bin_dir / "gfortran"
 
-    gcc_path.write(
-        """\
-#!/bin/sh
+        gcc_path.write_text(content)
 
-for arg in "$@"; do
-    if [ "$arg" = -dumpversion ]; then
-        echo '%s'
-    fi
-done
-"""
-        % mock_compiler_version
-    )
+        # Create some mock compilers in the temporary directory
+        llnl.util.filesystem.set_executable(str(gcc_path))
+        shutil.copy(gcc_path, gxx_path)
+        shutil.copy(gcc_path, gfortran_path)
 
-    # Create some mock compilers in the temporary directory
-    llnl.util.filesystem.set_executable(str(gcc_path))
-    gcc_path.copy(gxx_path, mode=True)
-    gcc_path.copy(gfortran_path, mode=True)
+        return str(tmp_path)
 
-    return str(tmpdir)
+    return _factory
 
 
-@pytest.mark.skipif(
-    sys.platform == "win32",
-    reason="Cannot execute bash \
-                                                     script on Windows",
-)
+@pytest.mark.skipif(sys.platform == "win32", reason="Cannot execute bash script on Windows")
 @pytest.mark.regression("11678,13138")
 def test_compiler_find_without_paths(no_compilers_yaml, working_env, tmpdir):
     with tmpdir.as_cwd():
@@ -113,12 +96,20 @@ def test_compiler_remove(mutable_config, mock_packages):
     assert spack.spec.CompilerSpec("gcc@=4.5.0") not in spack.compilers.all_compiler_specs()
 
 
-@pytest.mark.skipif(
-    sys.platform == "win32",
-    reason="Cannot execute bash \
-                                                     script on Windows",
-)
-def test_compiler_add(mutable_config, mock_packages, mock_compiler_dir, mock_compiler_version):
+@pytest.mark.skipif(sys.platform == "win32", reason="Cannot execute bash script on Windows")
+def test_compiler_add(mutable_config, mock_packages, mock_gcc):
+    mock_compiler_version = "4.5.3"
+    mock_compiler_dir = mock_gcc(
+        f"""\
+#!/bin/sh
+
+for arg in "$@"; do
+    if [ "$arg" = -dumpversion ]; then
+        echo '{mock_compiler_version}'
+    fi
+done
+"""
+    )
     # Compilers available by default.
     old_compilers = set(spack.compilers.all_compiler_specs())
 
@@ -271,7 +262,7 @@ def test_compiler_find_path_order(no_compilers_yaml, working_env, clangdir):
         shutil.copy("gfortran-8", "first_in_path/gfortran-8")
 
     # the first_in_path folder should be searched first
-    os.environ["PATH"] = "{0}:{1}".format(str(clangdir.join("first_in_path")), str(clangdir))
+    os.environ["PATH"] = "{}:{}".format(str(clangdir.join("first_in_path")), str(clangdir))
 
     compiler("find", "--scope=site")
 
