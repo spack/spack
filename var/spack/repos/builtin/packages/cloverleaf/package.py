@@ -5,33 +5,73 @@
 
 from spack.package import *
 
+
 class Cloverleaf(MakefilePackage):
     """Proxy Application. CloverLeaf is a miniapp that solves the
     compressible Euler equations on a Cartesian grid,
     using an explicit, second-order accurate method.
-    
+
     Due to the fact that the repos are separate, the version number
-    must include the build time (e.g. 1.3_ref). 
+    must include the build time (e.g. 1.3_ref).
     """
+
     homepage = "https://uk-mac.github.io/CloverLeaf"
 
-    version("master_cuda", branch="master",git="https://github.com/UK-MAC/CloverLeaf_CUDA")
-    version("master_mpi_only", branch="master",git="https://github.com/UK-MAC/CloverLeaf_MPI")
-    version("master_serial", branch="master",git="https://github.com/UK-MAC/CloverLeaf_Serial")
-    version("master_openacc_cray", branch="master",git="https://github.com/UK-MAC/CloverLeaf_OpenACC")
-    version("master_openmp_only", branch="master",git="https://github.com/UK-MAC/CloverLeaf_OpenMP")
-    version("master_openmp4_only", branch="master",git="https://github.com/UK-MAC/CloverLeaf_OpenMP4")
-    version("master_openmp_offload", branch="master",git="https://github.com/UK-MAC/CloverLeaf_Offload")
-    version("master_ref", branch="master",git="https://github.com/UK-MAC/CloverLeaf_ref")
+    version("master_cuda", branch="master", git="https://github.com/UK-MAC/CloverLeaf_CUDA")
+    version("master_mpi_only", branch="master", git="https://github.com/UK-MAC/CloverLeaf_MPI")
+    version("master_serial", branch="master", git="https://github.com/UK-MAC/CloverLeaf_Serial")
+    version(
+        "master_openacc_cray", branch="master", git="https://github.com/UK-MAC/CloverLeaf_OpenACC"
+    )
+    version(
+        "master_openmp_only", branch="master", git="https://github.com/UK-MAC/CloverLeaf_OpenMP"
+    )
+    version(
+        "master_openmp4_only", branch="master", git="https://github.com/UK-MAC/CloverLeaf_OpenMP4"
+    )
+    version(
+        "master_openmp_offload",
+        branch="master",
+        git="https://github.com/UK-MAC/CloverLeaf_Offload",
+    )
+    version("master_ref", branch="master", git="https://github.com/UK-MAC/CloverLeaf_ref")
 
-    version("1.3_mpi_only", commit="a675f0d63ea72ef386c7c497b08d1e6ca4f89479",git="https://github.com/UK-MAC/CloverLeaf_MPI")
-    version("1.3_openacc_cray", commit="0ddf495cf21cc59f84e274617522a1383e2c328c",git="https://github.com/UK-MAC/CloverLeaf_OpenACC")
-    version("1.3_openmp_only", commit="0fdb917bf10d20363dd8b88d762851908643925b",git="https://github.com/UK-MAC/CloverLeaf_OpenMP")
-    version("1.3_ref", commit="0ddf495cf21cc59f84e274617522a1383e2c328c",git="https://github.com/UK-MAC/CloverLeaf_ref")
-    version("1.3_serial", commit="b9a2b9c496b5eb1e7e30912d58e32d9dce930a0c",git="https://github.com/UK-MAC/CloverLeaf_Serial")
+    version(
+        "1.3_mpi_only",
+        commit="a675f0d63ea72ef386c7c497b08d1e6ca4f89479",
+        git="https://github.com/UK-MAC/CloverLeaf_MPI",
+    )
+    version(
+        "1.3_openacc_cray",
+        commit="0ddf495cf21cc59f84e274617522a1383e2c328c",
+        git="https://github.com/UK-MAC/CloverLeaf_OpenACC",
+    )
+    version(
+        "1.3_openmp_only",
+        commit="0fdb917bf10d20363dd8b88d762851908643925b",
+        git="https://github.com/UK-MAC/CloverLeaf_OpenMP",
+    )
+    version(
+        "1.3_ref",
+        commit="0ddf495cf21cc59f84e274617522a1383e2c328c",
+        git="https://github.com/UK-MAC/CloverLeaf_ref",
+    )
+    version(
+        "1.3_serial",
+        commit="b9a2b9c496b5eb1e7e30912d58e32d9dce930a0c",
+        git="https://github.com/UK-MAC/CloverLeaf_Serial",
+    )
 
-    version("1.1_ref", commit="5667c3aa565c79cb43b7d956c84c68b6d82d1e94", git="https://github.com/UK-MAC/CloverLeaf_ref")
-    version("1.1_openacc_cray", commit="5667c3aa565c79cb43b7d956c84c68b6d82d1e94",git="https://github.com/UK-MAC/CloverLeaf_OpenACC")
+    version(
+        "1.1_ref",
+        commit="5667c3aa565c79cb43b7d956c84c68b6d82d1e94",
+        git="https://github.com/UK-MAC/CloverLeaf_ref",
+    )
+    version(
+        "1.1_openacc_cray",
+        commit="5667c3aa565c79cb43b7d956c84c68b6d82d1e94",
+        git="https://github.com/UK-MAC/CloverLeaf_OpenACC",
+    )
 
     variant("ieee", default=False, description="Build with IEEE standards")
     variant("debug", default=False, description="Build with DEBUG flags")
@@ -51,21 +91,52 @@ class Cloverleaf(MakefilePackage):
     depends_on("mpi", when="@1.1_ref")
     depends_on("mpi", when="@1.1_openacc_cray")
 
-    conflicts("@master_cuda", when="%aocc", msg="Currently AOCC supports only ref and MPI variants")
-    conflicts("@master_openacc_cray", when="%aocc", msg="Currently AOCC supports only ref and MPI variants")
-    conflicts("@master_serial", when="%aocc", msg="Currently AOCC supports only ref and MPI variants")
-    conflicts("@master_openmp_only", when="%aocc", msg="Currently AOCC supports only ref and MPI variants")
-    conflicts("@master_oenmp4_only", when="%aocc", msg="Currently AOCC supports only ref and MPI variants")
-    conflicts("@master_openmp_offload", when="%aocc", msg="Currently AOCC supports only ref and MPI variants")
+    conflicts(
+        "@master_cuda", when="%aocc", msg="Currently AOCC supports only ref and MPI variants"
+    )
+    conflicts(
+        "@master_openacc_cray",
+        when="%aocc",
+        msg="Currently AOCC supports only ref and MPI variants",
+    )
+    conflicts(
+        "@master_serial", when="%aocc", msg="Currently AOCC supports only ref and MPI variants"
+    )
+    conflicts(
+        "@master_openmp_only",
+        when="%aocc",
+        msg="Currently AOCC supports only ref and MPI variants",
+    )
+    conflicts(
+        "@master_oenmp4_only",
+        when="%aocc",
+        msg="Currently AOCC supports only ref and MPI variants",
+    )
+    conflicts(
+        "@master_openmp_offload",
+        when="%aocc",
+        msg="Currently AOCC supports only ref and MPI variants",
+    )
 
-    conflicts("@1.3_openacc_cray", when="%aocc", msg="Currently AOCC supports only ref and MPI variants")
+    conflicts(
+        "@1.3_openacc_cray", when="%aocc", msg="Currently AOCC supports only ref and MPI variants"
+    )
     conflicts("@1.3_serial", when="%aocc", msg="Currently AOCC supports only ref and MPI variants")
-    conflicts("@1.3_openmp_only", when="%aocc", msg="Currently AOCC supports only ref and MPI variants")
-    conflicts("@1.3_oenmp4_only", when="%aocc", msg="Currently AOCC supports only ref and MPI variants")
-    conflicts("@1.3_openmp_offload", when="%aocc", msg="Currently AOCC supports only ref and MPI variants")
+    conflicts(
+        "@1.3_openmp_only", when="%aocc", msg="Currently AOCC supports only ref and MPI variants"
+    )
+    conflicts(
+        "@1.3_oenmp4_only", when="%aocc", msg="Currently AOCC supports only ref and MPI variants"
+    )
+    conflicts(
+        "@1.3_openmp_offload",
+        when="%aocc",
+        msg="Currently AOCC supports only ref and MPI variants",
+    )
 
-    conflicts("@1.1_openacc_cray", when="%aocc", msg="Currently AOCC supports only ref and MPI variants")
-
+    conflicts(
+        "@1.1_openacc_cray", when="%aocc", msg="Currently AOCC supports only ref and MPI variants"
+    )
 
     @property
     def build_targets(self):
@@ -113,11 +184,10 @@ class Cloverleaf(MakefilePackage):
             targets.append("FLAGS_AOCC=")
             targets.append("CFLAGS_AOCC=")
             targets.append("I3E_AOCC=-O3 -ffp-model=precise")
-        
+
         return targets
 
     def install(self, spec, prefix):
-
         mkdirp(prefix.bin)
         mkdirp(prefix.doc.tests)
 
