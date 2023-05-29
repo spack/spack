@@ -838,8 +838,8 @@ class Opencv(CMakePackage, CudaPackage):
     @classmethod
     def determine_variants(cls, libs, version_str):
         variants = []
-        remaining_modules = set(Opencv.modules + Opencv.contrib_modules)
-        contrib_module_set = set(Opencv.contrib_modules)
+        remaining_modules = set(cls.modules + cls.contrib_modules)
+        contrib_module_set = set(cls.contrib_modules)
         has_contrib = False
         for lib in libs:
             for ext in library_extensions:
