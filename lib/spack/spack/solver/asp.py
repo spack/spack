@@ -2836,12 +2836,13 @@ class InternalConcretizerError(spack.error.UnsatisfiableSpecError):
     """
 
     def __init__(self, provided, conflicts):
-        indented = ["  %s\n" % conflict for conflict in conflicts]
-        error_msg = "".join(indented)
-        msg = "Spack concretizer internal error. Please submit a bug report"
-        msg += "\n    Please include the command, environment if applicable,"
-        msg += "\n    and the following error message."
-        msg = "\n        %s is unsatisfiable, errors are:\n%s" % (provided, error_msg)
+        msg = (
+            "Spack concretizer internal error. Please submit a bug report and include the "
+            "command, environment if applicable and the following error message."
+            f"\n    {provided} is unsatisfiable, errors are:"
+        )
+
+        msg += "".join([f"\n    {conflict}" for conflict in conflicts])
 
         super(spack.error.UnsatisfiableSpecError, self).__init__(msg)
 
