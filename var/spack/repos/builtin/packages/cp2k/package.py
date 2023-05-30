@@ -58,7 +58,7 @@ class Cp2k(MakefilePackage, CudaPackage):
         "elpa",
         default=False,
         description="Enable optimised diagonalisation routines from ELPA",
-        when="@8.3:",
+        when="@6.1:",
     )
     variant(
         "sirius",
@@ -246,6 +246,7 @@ class Cp2k(MakefilePackage, CudaPackage):
         sha256="3617abb877812c4b933f601438c70f95e21c6161bea177277b1d4125fd1c0bf9",
         when="@8.2",
     )
+    patch("posix_c_source.patch", when="%aocc")
 
     def url_for_version(self, version):
         url = "https://github.com/cp2k/cp2k/releases/download/v{0}/cp2k-{0}.tar.bz2"
@@ -274,7 +275,7 @@ class Cp2k(MakefilePackage, CudaPackage):
     def edit(self, spec, prefix):
         pkgconf = which("pkg-config")
 
-        fftw = spec["fftw-api"]
+        fftw = spec["fftw-api:openmp" if "+openmp" in spec else "fftw-api"]
         fftw_header_dir = fftw.headers.directories[0]
 
         # some providers (mainly Intel) keep the fftw headers in a subdirectory, find it
