@@ -436,17 +436,28 @@ class Cmake(Package):
         module.cmake = Executable(self.spec.prefix.bin.cmake)
         module.ctest = Executable(self.spec.prefix.bin.ctest)
 
-    def test(self):
-        """Perform smoke tests on the installed package."""
-        spec_vers_str = "version {0}".format(self.spec.version)
+    def run_version_check(self, bin):
+        """Runs and checks output of the installed binary."""
+        exe_path = join_path(self.prefix.bin, bin)
+        if not os.path.exists(exe_path):
+            raise SkipTest(f"{exe} is not installed")
 
-        for exe in ["ccmake", "cmake", "cpack", "ctest"]:
-            reason = "test version of {0} is {1}".format(exe, spec_vers_str)
-            self.run_test(
-                exe,
-                ["--version"],
-                [spec_vers_str],
-                installed=True,
-                purpose=reason,
-                skip_missing=True,
-            )
+        exe = which(exe_path)
+        out = exe("--version", output=str.split, error=str.split)
+        assert f"version {self.spec.version}" in out
+
+    def test_ccmake(self):
+        """check version from ccmake"""
+        self.run_version_check("ccmake")
+
+    def test_cmake(self):
+        """check version from cmake"""
+        self.run_version_check("cmake")
+
+    def test_cpack(self):
+        """check version from cpack"""
+        self.run_version_check("cpack")
+
+    def test_ctest(self):
+        """check version from ctest"""
+        self.run_version_check("ctest")

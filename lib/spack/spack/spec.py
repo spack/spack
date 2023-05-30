@@ -110,7 +110,6 @@ __all__ = [
     "UnsatisfiableDependencySpecError",
     "AmbiguousHashError",
     "InvalidHashError",
-    "NoSuchHashError",
     "RedundantSpecError",
     "SpecDeprecatedError",
 ]
@@ -145,9 +144,20 @@ color_formats = {
 #: ``color_formats.keys()``.
 _separators = "[\\%s]" % "\\".join(color_formats.keys())
 
-default_format = "{name}{@versions}"
-default_format += "{%compiler.name}{@compiler.versions}{compiler_flags}"
-default_format += "{variants}{arch=architecture}"
+#: Default format for Spec.format(). This format can be round-tripped, so that:
+#:     Spec(Spec("string").format()) == Spec("string)"
+default_format = (
+    "{name}{@versions}"
+    "{%compiler.name}{@compiler.versions}{compiler_flags}"
+    "{variants}{arch=architecture}{/abstract_hash}"
+)
+
+#: Display format, which eliminates extra `@=` in the output, for readability.
+display_format = (
+    "{name}{@version}"
+    "{%compiler.name}{@compiler.version}{compiler_flags}"
+    "{variants}{arch=architecture}{/abstract_hash}"
+)
 
 #: Regular expression to pull spec contents out of clearsigned signature
 #: file.
@@ -668,6 +678,16 @@ class CompilerSpec(object):
     def from_dict(d):
         d = d["compiler"]
         return CompilerSpec(d["name"], vn.VersionList.from_dict(d))
+
+    @property
+    def display_str(self):
+        """Equivalent to {compiler.name}{@compiler.version} for Specs, without extra
+        @= for readability."""
+        if self.concrete:
+            return f"{self.name}@{self.version}"
+        elif self.versions != vn.any_version:
+            return f"{self.name}@{self.versions}"
+        return self.name
 
     def __str__(self):
         out = self.name
@@ -1249,6 +1269,7 @@ class SpecBuildInterface(lang.ObjectWrapper):
 class Spec(object):
     #: Cache for spec's prefix, computed lazily in the corresponding property
     _prefix = None
+    abstract_hash = None
 
     @staticmethod
     def default_arch():
@@ -1556,7 +1577,7 @@ class Spec(object):
 
     def _add_dependency(self, spec: "Spec", *, deptypes: dp.DependencyArgument):
         """Called by the parser to add another spec as a dependency."""
-        if spec.name not in self._dependencies:
+        if spec.name not in self._dependencies or not spec.name:
             self.add_dependency_edge(spec, deptypes=deptypes)
             return
 
@@ -1618,6 +1639,10 @@ class Spec(object):
         )
 
     @property
+    def anonymous(self):
+        return not self.name and not self.abstract_hash
+
+    @property
     def root(self):
         """Follow dependent links and find the root of this spec's DAG.
 
@@ -1632,7 +1657,9 @@ class Spec(object):
 
     @property
     def package(self):
-        assert self.concrete, "Spec.package can only be called on concrete specs"
+        assert self.concrete, "{0}: Spec.package can only be called on concrete specs".format(
+            self.name
+        )
         if not self._package:
             self._package = spack.repo.path.get(self)
         return self._package
@@ -1713,14 +1740,14 @@ class Spec(object):
     def short_spec(self):
         """Returns a version of the spec with the dependencies hashed
         instead of completely enumerated."""
-        spec_format = "{name}{@version}{%compiler}"
+        spec_format = "{name}{@version}{%compiler.name}{@compiler.version}"
         spec_format += "{variants}{arch=architecture}{/hash:7}"
         return self.format(spec_format)
 
     @property
     def cshort_spec(self):
         """Returns an auto-colorized version of ``self.short_spec``."""
-        spec_format = "{name}{@version}{%compiler}"
+        spec_format = "{name}{@version}{%compiler.name}{@compiler.version}"
         spec_format += "{variants}{arch=architecture}{/hash:7}"
         return self.cformat(spec_format)
 
@@ -1822,6 +1849,73 @@ class Spec(object):
     def process_hash_bit_prefix(self, bits):
         """Get the first <bits> bits of the DAG hash as an integer type."""
         return spack.util.hash.base32_prefix_bits(self.process_hash(), bits)
+
+    def _lookup_hash(self):
+        """Lookup just one spec with an abstract hash, returning a spec from the the environment,
+        store, or finally, binary caches."""
+        import spack.environment
+
+        matches = []
+        active_env = spack.environment.active_environment()
+
+        if active_env:
+            env_matches = active_env.get_by_hash(self.abstract_hash) or []
+            matches = [m for m in env_matches if m._satisfies(self)]
+        if not matches:
+            db_matches = spack.store.db.get_by_hash(self.abstract_hash) or []
+            matches = [m for m in db_matches if m._satisfies(self)]
+        if not matches:
+            query = spack.binary_distribution.BinaryCacheQuery(True)
+            remote_matches = query("/" + self.abstract_hash) or []
+            matches = [m for m in remote_matches if m._satisfies(self)]
+        if not matches:
+            raise InvalidHashError(self, self.abstract_hash)
+
+        if len(matches) != 1:
+            raise spack.spec.AmbiguousHashError(
+                f"Multiple packages specify hash beginning '{self.abstract_hash}'.", *matches
+            )
+
+        return matches[0]
+
+    def lookup_hash(self):
+        """Given a spec with an abstract hash, return a copy of the spec with all properties and
+        dependencies by looking up the hash in the environment, store, or finally, binary caches.
+        This is non-destructive."""
+        if self.concrete or not any(node.abstract_hash for node in self.traverse()):
+            return self
+
+        spec = self.copy(deps=False)
+        # root spec is replaced
+        if spec.abstract_hash:
+            new = self._lookup_hash()
+            spec._dup(new)
+            return spec
+
+        # Get dependencies that need to be replaced
+        for node in self.traverse(root=False):
+            if node.abstract_hash:
+                new = node._lookup_hash()
+                spec._add_dependency(new, deptypes=())
+
+        # reattach nodes that were not otherwise satisfied by new dependencies
+        for node in self.traverse(root=False):
+            if not any(n._satisfies(node) for n in spec.traverse()):
+                spec._add_dependency(node.copy(), deptypes=())
+
+        return spec
+
+    def replace_hash(self):
+        """Given a spec with an abstract hash, attempt to populate all properties and dependencies
+        by looking up the hash in the environment, store, or finally, binary caches.
+        This is destructive."""
+
+        if not any(node for node in self.traverse(order="post") if node.abstract_hash):
+            return
+
+        spec_by_hash = self.lookup_hash()
+
+        self._dup(spec_by_hash)
 
     def to_node_dict(self, hash=ht.dag_hash):
         """Create a dictionary representing the state of this Spec.
@@ -2581,6 +2675,8 @@ class Spec(object):
             )
             warnings.warn(msg)
 
+        self.replace_hash()
+
         if not self.name:
             raise spack.error.SpecError("Attempting to concretize anonymous spec")
 
@@ -2703,11 +2799,11 @@ class Spec(object):
         # Also record all patches required on dependencies by
         # depends_on(..., patch=...)
         for dspec in root.traverse_edges(deptype=all, cover="edges", root=False):
-            pkg_deps = dspec.parent.package_class.dependencies
-            if dspec.spec.name not in pkg_deps:
+            if dspec.spec.concrete:
                 continue
 
-            if dspec.spec.concrete:
+            pkg_deps = dspec.parent.package_class.dependencies
+            if dspec.spec.name not in pkg_deps:
                 continue
 
             patches = []
@@ -2779,8 +2875,13 @@ class Spec(object):
     def _new_concretize(self, tests=False):
         import spack.solver.asp
 
-        if not self.name:
-            raise spack.error.SpecError("Spec has no name; cannot concretize an anonymous spec")
+        self.replace_hash()
+
+        for node in self.traverse():
+            if not node.name:
+                raise spack.error.SpecError(
+                    f"Spec {node} has no name; cannot concretize an anonymous spec"
+                )
 
         if self._concrete:
             return
@@ -3363,6 +3464,11 @@ class Spec(object):
                 raise spack.error.UnsatisfiableSpecError(self, other, "constrain a concrete spec")
 
         other = self._autospec(other)
+        if other.abstract_hash:
+            if not self.abstract_hash or other.abstract_hash.startswith(self.abstract_hash):
+                self.abstract_hash = other.abstract_hash
+            elif not self.abstract_hash.startswith(other.abstract_hash):
+                raise InvalidHashError(self, other.abstract_hash)
 
         if not (self.name == other.name or (not self.name) or (not other.name)):
             raise UnsatisfiableSpecNameError(self.name, other.name)
@@ -3521,6 +3627,12 @@ class Spec(object):
         """
         other = self._autospec(other)
 
+        lhs = self.lookup_hash() or self
+        rhs = other.lookup_hash() or other
+
+        return lhs._intersects(rhs, deps)
+
+    def _intersects(self, other: "Spec", deps: bool = True) -> bool:
         if other.concrete and self.concrete:
             return self.dag_hash() == other.dag_hash()
 
@@ -3586,9 +3698,18 @@ class Spec(object):
         else:
             return True
 
-    def _intersects_dependencies(self, other):
+    def satisfies(self, other, deps=True):
+        """
+        This checks constraints on common dependencies against each other.
+        """
         other = self._autospec(other)
 
+        lhs = self.lookup_hash() or self
+        rhs = other.lookup_hash() or other
+
+        return lhs._satisfies(rhs, deps=deps)
+
+    def _intersects_dependencies(self, other):
         if not other._dependencies or not self._dependencies:
             # one spec *could* eventually satisfy the other
             return True
@@ -3623,7 +3744,7 @@ class Spec(object):
 
         return True
 
-    def satisfies(self, other: "Spec", deps: bool = True) -> bool:
+    def _satisfies(self, other: "Spec", deps: bool = True) -> bool:
         """Return True if all concrete specs matching self also match other, otherwise False.
 
         Args:
@@ -3768,6 +3889,7 @@ class Spec(object):
                 and self.external_path != other.external_path
                 and self.external_modules != other.external_modules
                 and self.compiler_flags != other.compiler_flags
+                and self.abstract_hash != other.abstract_hash
             )
 
         self._package = None
@@ -3809,6 +3931,8 @@ class Spec(object):
             self._dup_deps(other, deptypes)
 
         self._concrete = other._concrete
+
+        self.abstract_hash = other.abstract_hash
 
         if self._concrete:
             self._dunder_hash = other._dunder_hash
@@ -3999,6 +4123,7 @@ class Spec(object):
         yield self.compiler
         yield self.compiler_flags
         yield self.architecture
+        yield self.abstract_hash
 
         # this is not present on older specs
         yield getattr(self, "_package_hash", None)
@@ -4009,7 +4134,10 @@ class Spec(object):
 
     def _cmp_iter(self):
         """Lazily yield components of self for comparison."""
-        for item in self._cmp_node():
+
+        cmp_spec = self.lookup_hash() or self
+
+        for item in cmp_spec._cmp_node():
             yield item
 
         # This needs to be in _cmp_iter so that no specs with different process hashes
@@ -4020,10 +4148,10 @@ class Spec(object):
         # TODO: they exist for speed.  We should benchmark whether it's really worth
         # TODO: having two types of hashing now that we use `json` instead of `yaml` for
         # TODO: spec hashing.
-        yield self.process_hash() if self.concrete else None
+        yield cmp_spec.process_hash() if cmp_spec.concrete else None
 
         def deps():
-            for dep in sorted(itertools.chain.from_iterable(self._dependencies.values())):
+            for dep in sorted(itertools.chain.from_iterable(cmp_spec._dependencies.values())):
                 yield dep.spec.name
                 yield tuple(sorted(dep.deptypes))
                 yield hash(dep.spec)
@@ -4144,7 +4272,7 @@ class Spec(object):
                 raise SpecFormatSigilError(sig, "versions", attribute)
             elif sig == "%" and attribute not in ("compiler", "compiler.name"):
                 raise SpecFormatSigilError(sig, "compilers", attribute)
-            elif sig == "/" and not re.match(r"hash(:\d+)?$", attribute):
+            elif sig == "/" and not re.match(r"(abstract_)?hash(:\d+)?$", attribute):
                 raise SpecFormatSigilError(sig, "DAG hashes", attribute)
             elif sig == " arch=" and attribute not in ("architecture", "arch"):
                 raise SpecFormatSigilError(sig, "the architecture", attribute)
@@ -4264,7 +4392,9 @@ class Spec(object):
         return self.format(*args, **kwargs)
 
     def __str__(self):
-        sorted_nodes = [self] + sorted(self.traverse(root=False), key=lambda x: x.name)
+        sorted_nodes = [self] + sorted(
+            self.traverse(root=False), key=lambda x: x.name or x.abstract_hash
+        )
         spec_str = " ^".join(d.format() for d in sorted_nodes)
         return spec_str.strip()
 
@@ -5064,14 +5194,9 @@ class AmbiguousHashError(spack.error.SpecError):
 
 class InvalidHashError(spack.error.SpecError):
     def __init__(self, spec, hash):
-        super(InvalidHashError, self).__init__(
-            "The spec specified by %s does not match provided spec %s" % (hash, spec)
-        )
-
-
-class NoSuchHashError(spack.error.SpecError):
-    def __init__(self, hash):
-        super(NoSuchHashError, self).__init__("No installed spec matches the hash: '%s'" % hash)
+        msg = f"No spec with hash {hash} could be found to match {spec}."
+        msg += " Either the hash does not exist, or it does not match other spec constraints."
+        super(InvalidHashError, self).__init__(msg)
 
 
 class SpecFilenameError(spack.error.SpecError):

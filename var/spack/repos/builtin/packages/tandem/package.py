@@ -21,7 +21,7 @@ class Tandem(CMakePackage):
     version("1.0", tag="v1.0", submodules=True)
     patch("fix_v1.0_compilation.diff", when="@1.0")
 
-    maintainers = ["dmay23", "Thomas-Ulrich"]
+    maintainers("dmay23", "Thomas-Ulrich")
     variant("polynomial_degree", default="2")
     variant("domain_dimension", default="2", values=("2", "3"), multi=False)
     variant("min_quadrature_order", default="0")

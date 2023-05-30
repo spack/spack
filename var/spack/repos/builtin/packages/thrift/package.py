@@ -22,7 +22,7 @@ class Thrift(Package):
     list_url = "http://archive.apache.org/dist/thrift/"
     list_depth = 1
 
-    maintainers = ["thomas-bouvier"]
+    maintainers("thomas-bouvier")
 
     version("0.18.1", sha256="04c6f10e5d788ca78e13ee2ef0d2152c7b070c0af55483d6b942e29cff296726")
     version("0.17.0", sha256="b272c1788bb165d99521a2599b31b97fa69e5931d099015d91ae107a0b0cc58f")

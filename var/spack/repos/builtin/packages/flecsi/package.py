@@ -27,11 +27,21 @@ class Flecsi(CMakePackage, CudaPackage, ROCmPackage):
     version("2.2.0", tag="v2.2.0", preferred=True)
     version("2.1.0", tag="v2.1.0")
     version("2.0.0", tag="v2.0.0")
-    version("1.4.1", tag="v1.4.1")
+    version("1.4.1", tag="v1.4.1", submodules=True)
     version(
-        "1.4.develop", git="https://github.com/laristra/flecsi.git", branch="1.4", deprecated=True
+        "1.4.develop",
+        git="https://github.com/laristra/flecsi.git",
+        branch="1.4",
+        submodules=True,
+        deprecated=True,
     )
-    version("1.4.2", git="https://github.com/laristra/flecsi.git", tag="v1.4.2", deprecated=True)
+    version(
+        "1.4.2",
+        git="https://github.com/laristra/flecsi.git",
+        tag="v1.4.2",
+        submodules=True,
+        deprecated=True,
+    )
     version(
         "flecsph",
         git="https://github.com/laristra/flecsi.git",
@@ -71,7 +81,7 @@ class Flecsi(CMakePackage, CudaPackage, ROCmPackage):
     variant("doxygen", default=False, description="Enable doxygen", when="@:1")
     variant("tutorial", default=False, description="Build FleCSI Tutorials", when="@:1")
     variant("flecstan", default=False, description="Build FleCSI Static Analyzer", when="@:1")
-    variant("external_cinch", default=True, description="Enable External Cinch", when="@:1")
+    variant("external_cinch", default=False, description="Enable External Cinch", when="@:1")
     variant("unit_tests", default=False, description="Build with Unit Tests Enabled", when="@:1")
 
     # All Current FleCSI Releases

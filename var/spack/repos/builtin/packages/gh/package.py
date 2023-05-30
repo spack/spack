@@ -29,6 +29,8 @@ class Gh(Package):
     version("1.14.0", sha256="1a99050644b4821477aabc7642bbcae8a19b3191e9227cd8078016d78cdd83ac")
     version("1.13.1", sha256="1a19ab2bfdf265b5e2dcba53c3bd0b5a88f36eff4864dcc38865e33388b600c5")
 
+    conflicts("platform=darwin", when="@2.28.0")
+
     depends_on("go@1.16:", type="build")
 
     phases = ["build", "install"]
