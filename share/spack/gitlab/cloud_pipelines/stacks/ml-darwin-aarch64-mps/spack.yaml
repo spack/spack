@@ -1,0 +1,139 @@
+spack:
+  view: false
+
+  concretizer:
+    unify: false
+    reuse: false
+
+  config:
+    concretizer: clingo
+    db_lock_timeout: 120
+    install_tree:
+      root: $spack/opt/spack
+      padded_length: 256
+      projections:
+        all: '{architecture}/{compiler.name}-{compiler.version}/{name}-{version}-{hash}'
+
+  packages:
+    all:
+      require: target=aarch64
+      variants: +mps~cuda~rocm
+    mpi:
+      require: openmpi
+
+  specs:
+  # Hugging Face
+  - py-transformers
+
+  # JAX
+  - py-jax
+  # - py-jaxlib     # bazel codesign
+
+  # Keras
+  - py-keras-applications
+  - py-keras-preprocessing
+  - py-keras2onnx
+  # - py-keras      # bazel codesign
+
+  # MXNet
+  - mxnet
+
+  # PyTorch
+  - py-botorch
+  - py-gpytorch
+  - py-pytorch-gradual-warmup-lr
+  - py-segmentation-models-pytorch
+  - py-timm
+  - py-torch
+  - py-torch-cluster
+  - py-torch-geometric
+  - py-torch-sparse
+  - py-torchdata
+  - py-torchfile
+  - py-torchgeo
+  - py-torchvision
+
+  # scikit-learn
+  - py-scikit-learn
+  - py-scikit-learn-extra
+
+  # TensorBoard
+  - py-tensorboard
+  - py-tensorboard-data-server
+  - py-tensorboard-plugin-wit
+  - py-tensorboardx
+
+  # TensorFlow
+  # - py-tensorflow               # bazel codesign
+  # - py-tensorflow-datasets      # bazel codesign
+  # - py-tensorflow-hub           # bazel codesign
+  # - py-tensorflow-metadata      # bazel codesign
+  # - py-tensorflow-estimator     # bazel codesign
+  # - py-tensorflow-probability   # py-dm-tree due to bazel codesign
+
+  # XGBoost
+  - py-xgboost
+  - xgboost
+
+  # ERRORS
+  # - py-efficientnet-pytorch     # py-torch
+  # - py-horovod                  # py-torch
+  # - py-kornia                   # py-torch
+  # - py-lightning                # py-torch
+  # - py-pytorch-lightning        # py-torch
+  # - py-torch-nvidia-apex        # py-torch
+  # - py-torch-scatter            # py-torch
+  # - py-torch-spline-conv        # py-torch
+  # - py-torchaudio               # py-torchaudio
+  # - py-torchmetrics             # py-torch
+  # - py-torchtext                # py-torchtext
+  # - py-vector-quantize-pytorch  # py-torch
+  # - r-xgboost                   # r
+
+  mirrors: { "mirror": "s3://spack-binaries/develop/ml-darwin-aarch64-cpu" }
+
+  ci:
+    pipeline-gen:
+    - build-job-remove:
+        image: no-image
+        tags: [spack, public]
+    - build-job:
+        tags: [ "macos-ventura", "apple-clang-14", "aarch64-macos" ]
+        script::
+        - - spack compiler find
+          - cd ${SPACK_CONCRETE_ENV_DIR}
+          - spack env activate --without-view .
+          - if [ -n "$SPACK_BUILD_JOBS" ]; then spack config add "config:build_jobs:$SPACK_BUILD_JOBS"; fi
+          - mkdir -p ${SPACK_ARTIFACTS_ROOT}/user_data
+          # AWS runners mount E4S public key (verification), UO runners mount public/private (signing/verification)
+          - if [[ -r /etc/protected-runner/e4s.gpg ]]; then spack gpg trust /etc/protected-runner/e4s.gpg; fi
+          # UO runners mount intermediate ci public key (verification), AWS runners mount public/private (signing/verification)
+          - if [[ -r /etc/protected-runner/intermediate_ci_signing_key.gpg ]]; then spack gpg trust /etc/protected-runner/intermediate_ci_signing_key.gpg; fi
+          - if [[ -r /etc/protected-runner/spack_public_key.gpg ]]; then spack gpg trust /etc/protected-runner/spack_public_key.gpg; fi
+          - spack --color=always --backtrace ci rebuild --tests > >(tee ${SPACK_ARTIFACTS_ROOT}/user_data/pipeline_out.txt) 2> >(tee ${SPACK_ARTIFACTS_ROOT}/user_data/pipeline_err.txt >&2)
+        after_script:
+        - - cat /proc/loadavg || true
+    - signing-job:
+        image: { "name": "ghcr.io/spack/notary:latest", "entrypoint": [""] }
+        tags: ["aws"]
+        script:
+        - - aws s3 sync --exclude "*" --include "*spec.json*" ${SPACK_REMOTE_MIRROR_OVERRIDE}/build_cache /tmp
+          - /sign.sh
+          - aws s3 sync --exclude "*" --include "*spec.json.sig*" /tmp ${SPACK_REMOTE_MIRROR_OVERRIDE}/build_cache
+          - aws s3 cp /tmp/public_keys ${SPACK_REMOTE_MIRROR_OVERRIDE}/build_cache/_pgp --recursive --exclude "*" --include "*.pub"
+    - any-job:
+        image: "ghcr.io/spack/e4s-ubuntu-18.04:v2021-10-18"
+        tags: ["spack"]
+        before_script:
+        - - uname -a || true
+          - grep -E "vendor|model name" /proc/cpuinfo 2>/dev/null | sort -u || head -n10 /proc/cpuinfo 2>/dev/null || true
+          - nproc || true
+        - - . "./share/spack/setup-env.sh"
+          - spack --version
+          - spack arch
+
+  cdash:
+    build-group: Machine Learning MPS
+    url: https://cdash.spack.io
+    project: Spack Testing
+    site: Cloud Gitlab Infrastructure

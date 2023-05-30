@@ -220,53 +220,28 @@ class Sqlite(AutotoolsPackage):
             )
             install(libraryname, self.prefix.lib)
 
-    def _test_example(self):
-        """Ensure a sequence of commands on example db are successful."""
+    def test_example(self):
+        """check example table dump"""
 
         test_data_dir = self.test_suite.current_test_data_dir
         db_filename = test_data_dir.join("packages.db")
-        exe = "sqlite3"
 
         # Ensure the database only contains one table
-        expected = "packages"
-        reason = 'test: ensuring only table is "{0}"'.format(expected)
-        self.run_test(
-            exe,
-            [db_filename, ".tables"],
-            expected,
-            installed=True,
-            purpose=reason,
-            skip_missing=False,
-        )
+        sqlite3 = which(self.prefix.bin.sqlite3)
+        out = sqlite3(db_filename, ".tables", output=str.split, error=str.split)
+        assert "packages" in out
 
         # Ensure the database dump matches expectations, where special
         # characters are replaced with spaces in the expected and actual
         # output to avoid pattern errors.
-        reason = "test: checking dump output"
         expected = get_escaped_text_output(test_data_dir.join("dump.out"))
-        self.run_test(
-            exe,
-            [db_filename, ".dump"],
-            expected,
-            installed=True,
-            purpose=reason,
-            skip_missing=False,
-        )
+        out = sqlite3(db_filename, ".dump", output=str.split, error=str.split)
+        check_outputs(expected, out)
 
-    def _test_version(self):
-        """Perform version check on the installed package."""
-        exe = "sqlite3"
+    def test_version(self):
+        """ensure version is expected"""
         vers_str = str(self.spec.version)
 
-        reason = "test: ensuring version of {0} is {1}".format(exe, vers_str)
-        self.run_test(
-            exe, "-version", vers_str, installed=True, purpose=reason, skip_missing=False
-        )
-
-    def test(self):
-        """Perform smoke tests on the installed package."""
-        # Perform a simple version check
-        self._test_version()
-
-        # Run a sequence of operations
-        self._test_example()
+        sqlite3 = which(self.prefix.bin.sqlite3)
+        out = sqlite3("-version", output=str.split, error=str.split)
+        assert vers_str in out
