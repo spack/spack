@@ -42,14 +42,6 @@ _other_instance_vars = [
 #: cache of compilers constructed from config data, keyed by config entry id.
 _compiler_cache: Dict[str, "spack.compiler.Compiler"] = {}
 
-_compiler_to_pkg = {
-    "clang": "llvm+clang",
-    "oneapi": "intel-oneapi-compilers",
-    "rocmcc": "llvm-amdgpu",
-    "intel@2020:": "intel-oneapi-compilers-classic",
-    "arm": "acfl",
-}
-
 # TODO: generating this from the previous dict causes docs errors
 package_name_to_compiler_name = {
     "llvm": "clang",
@@ -62,9 +54,16 @@ package_name_to_compiler_name = {
 
 def pkg_spec_for_compiler(cspec):
     """Return the spec of the package that provides the compiler."""
-    for spec, package in _compiler_to_pkg.items():
-        if cspec.satisfies(spec):
-            spec_str = "%s@%s" % (package, cspec.versions)
+    compiler_to_package = {
+        "clang": "llvm+clang",
+        "oneapi": "intel-oneapi-compilers",
+        "rocmcc": "llvm-amdgpu",
+        "intel@2020:": "intel-oneapi-compilers-classic",
+        "arm": "acfl",
+    }
+    for compiler_spec, package in compiler_to_package.items():
+        if cspec.satisfies(compiler_spec):
+            spec_str = f"{package}@{cspec.versions}"
             break
     else:
         spec_str = str(cspec)
