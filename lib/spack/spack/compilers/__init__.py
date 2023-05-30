@@ -42,8 +42,9 @@ _other_instance_vars = [
 #: cache of compilers constructed from config data, keyed by config entry id.
 _compiler_cache: Dict[str, "spack.compiler.Compiler"] = {}
 
-# TODO: generating this from the previous dict causes docs errors
-package_name_to_compiler_name = {
+
+#: Maps package names in Spack to the compiler name they provide
+PACKAGE_TO_COMPILER = {
     "llvm": "clang",
     "intel-oneapi-compilers": "oneapi",
     "llvm-amdgpu": "rocmcc",
