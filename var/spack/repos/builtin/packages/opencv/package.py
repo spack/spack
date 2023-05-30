@@ -822,9 +822,7 @@ class Opencv(CMakePackage, CudaPackage):
 
     @classmethod
     def determine_version(cls, lib):
-        ver = None
         for ext in library_extensions:
-            pattern = None
             if ext == "dylib":
                 # Darwin switches the order of the version compared to Linux
                 pattern = re.compile(r"libopencv_(\S*?)\.(\d+\.\d+\.\d+)\.%s" % ext)
@@ -832,8 +830,8 @@ class Opencv(CMakePackage, CudaPackage):
                 pattern = re.compile(r"libopencv_(\S*?)\.%s\.(\d+\.\d+\.\d+)" % ext)
             match = pattern.search(lib)
             if match:
-                ver = match.group(2)
-        return ver
+                return match.group(2)
+        return None
 
     @classmethod
     def determine_variants(cls, libs, version_str):
