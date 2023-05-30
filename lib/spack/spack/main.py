@@ -42,7 +42,6 @@ import spack.repo
 import spack.solver.asp
 import spack.spec
 import spack.store
-import spack.util.debug
 import spack.util.environment
 import spack.util.git
 import spack.util.path
@@ -585,6 +584,8 @@ def setup_main_options(args):
         SHOW_BACKTRACE = True
 
     if args.debug:
+        import spack.util.debug
+
         spack.util.debug.register_interrupt_handler()
         spack.config.set("config:debug", True, scope="command_line")
         spack.util.environment.TRACING_ENABLED = True

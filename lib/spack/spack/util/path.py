@@ -52,19 +52,38 @@ def get_user():
 NOMATCH = object()
 
 
+def _active_environment_or_nomatch():
+    """Lazily import spack.environment, return the active environment or NOMATCH.
+
+    This avoids pulling in spack.environment for every format string replacement.
+
+    """
+    import spack.environment as ev
+
+    env = ev.active_environment()
+    return env.path if env else NOMATCH
+
+
+def _path_getter(name):
+    """Return a function that lazily imports spack.paths and returns an attribute from it."""
+
+    def getter():
+        import spack.paths
+
+        return getattr(spack.paths, name)
+
+    return getter
+
+
 # Substitutions to perform
 def replacements():
-    # break circular imports
-    import spack.environment as ev
-    import spack.paths
-
     arch = architecture()
 
     return {
-        "spack": lambda: spack.paths.prefix,
+        "spack": _path_getter("prefix"),
         "user": lambda: get_user(),
         "tempdir": lambda: tempfile.gettempdir(),
-        "user_cache_path": lambda: spack.paths.user_cache_path,
+        "user_cache_path": _path_getter("user_cache_path"),
         "architecture": lambda: arch,
         "arch": lambda: arch,
         "platform": lambda: arch.platform,
@@ -73,7 +92,7 @@ def replacements():
         "target": lambda: arch.target,
         "target_family": lambda: arch.target.microarchitecture.family,
         "date": lambda: date.today().strftime("%Y-%m-%d"),
-        "env": lambda: ev.active_environment().path if ev.active_environment() else NOMATCH,
+        "env": _active_environment_or_nomatch,
     }
 
 

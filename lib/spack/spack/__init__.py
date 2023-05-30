@@ -39,6 +39,7 @@ class LazyRepoImporter:
 
     def find_spec(self, fullname, python_path, target=None):
         if fullname.startswith(ROOT_PYTHON_NAMESPACE):
+            sys.meta_path.remove(self)  # remove so we don't do this twice
             import spack.repo  # noqa: F401
         return None
 

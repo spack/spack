@@ -115,7 +115,6 @@ def ipython_interpreter(args, unknown_args):
 
     print_spack_version_if_interactive(args)
 
-    # if args.python_args or args.module or args.python_command:
     python_args = construct_python_args(args, unknown_args)
     IPython.start_ipython(argv=python_args)
 
