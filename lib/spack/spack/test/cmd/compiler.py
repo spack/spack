@@ -106,8 +106,21 @@ fi
     assert "gcc" not in output
 
 
+@pytest.mark.regression("37996")
 def test_compiler_remove(mutable_config, mock_packages):
     """Tests that we can remove a compiler from configuration."""
+    assert spack.spec.CompilerSpec("gcc@=4.5.0") in spack.compilers.all_compiler_specs()
+    args = spack.util.pattern.Bunch(all=True, compiler_spec="gcc@4.5.0", add_paths=[], scope=None)
+    spack.cmd.compiler.compiler_remove(args)
+    assert spack.spec.CompilerSpec("gcc@=4.5.0") not in spack.compilers.all_compiler_specs()
+
+
+@pytest.mark.regression("37996")
+def test_removing_compilers_from_multiple_scopes(mutable_config, mock_packages):
+    # Duplicate "site" scope into "user" scope
+    site_config = spack.config.get("compilers", scope="site")
+    spack.config.set("compilers", site_config, scope="user")
+
     assert spack.spec.CompilerSpec("gcc@=4.5.0") in spack.compilers.all_compiler_specs()
     args = spack.util.pattern.Bunch(all=True, compiler_spec="gcc@4.5.0", add_paths=[], scope=None)
     spack.cmd.compiler.compiler_remove(args)
