@@ -106,9 +106,15 @@ def _to_dict(compiler):
     return {"compiler": d}
 
 
-def get_compiler_config(scope=None, init_config=True):
-    """Return the compiler configuration for the specified architecture."""
+def compiler_config(*, scope=None, init_config=True):
+    """Returns the compiler configuration for a given scope.
 
+    If scope is None, the merged configuration is returned.
+
+    Args:
+        scope: configuration scope to get
+        init_config: if True, initialize configuration files if no compilers are available
+    """
     config = spack.config.get("compilers", scope=scope) or []
     if config or not init_config:
         return config
@@ -149,10 +155,10 @@ def add_compilers_to_config(compilers, scope=None, init_config=True):
         compilers: a list of Compiler objects.
         scope: configuration scope to modify.
     """
-    compiler_config = get_compiler_config(scope, init_config)
+    compiler_cfg = compiler_config(scope=scope, init_config=init_config)
     for compiler in compilers:
-        compiler_config.append(_to_dict(compiler))
-    spack.config.set("compilers", compiler_config, scope=scope)
+        compiler_cfg.append(_to_dict(compiler))
+    spack.config.set("compilers", compiler_cfg, scope=scope)
 
 
 @_auto_compiler_spec
@@ -187,22 +193,22 @@ def _remove_compiler_from_scope(compiler_spec, scope):
          True if one or more compiler entries were actually removed, False otherwise
     """
     assert scope is not None, "a specific scope is needed when calling this function"
-    compiler_config = get_compiler_config(scope)
+    compiler_cfg = compiler_config(scope=scope)
     filtered_compiler_config = [
         compiler_entry
-        for compiler_entry in compiler_config
+        for compiler_entry in compiler_cfg
         if not spack.spec.parse_with_version_concrete(
             compiler_entry["compiler"]["spec"], compiler=True
         ).satisfies(compiler_spec)
     ]
 
-    if len(filtered_compiler_config) == len(compiler_config):
+    if len(filtered_compiler_config) == len(compiler_cfg):
         return False
 
     # We need to preserve the YAML type for comments, hence we are copying the
     # items in the list that has just been retrieved
-    compiler_config[:] = filtered_compiler_config
-    spack.config.set("compilers", compiler_config, scope=scope)
+    compiler_cfg[:] = filtered_compiler_config
+    spack.config.set("compilers", compiler_cfg, scope=scope)
     return True
 
 
@@ -210,7 +216,7 @@ def all_compiler_specs(scope=None, init_config=True):
     # Return compiler specs from the merged config.
     return [
         spack.spec.parse_with_version_concrete(s["compiler"]["spec"], compiler=True)
-        for s in get_compiler_config(scope, init_config)
+        for s in compiler_config(scope=scope, init_config=init_config)
     ]
 
 
@@ -324,7 +330,7 @@ def find_specs_by_arch(compiler_spec, arch_spec, scope=None, init_config=True):
 
 
 def all_compilers(scope=None, init_config=True):
-    config = get_compiler_config(scope, init_config=init_config)
+    config = compiler_config(scope=scope, init_config=init_config)
     compilers = list()
     for items in config:
         items = items["compiler"]
@@ -340,9 +346,9 @@ def compilers_for_spec(
     Returns an empty list if none are found.
     """
     if use_cache:
-        config = get_compiler_config(scope, init_config)
+        config = compiler_config(scope=scope, init_config=init_config)
     else:
-        config = get_compiler_config(scope, init_config)
+        config = compiler_config(scope=scope, init_config=init_config)
 
     matches = set(find(compiler_spec, scope, init_config))
     compilers = []
@@ -352,7 +358,7 @@ def compilers_for_spec(
 
 
 def compilers_for_arch(arch_spec, scope=None):
-    config = get_compiler_config(scope, True)
+    config = compiler_config(scope=scope, init_config=True)
     return list(get_compilers(config, arch_spec=arch_spec))
 
 

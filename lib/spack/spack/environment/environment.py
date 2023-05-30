@@ -1486,7 +1486,7 @@ class Environment:
 
         # Ensure we have compilers in compilers.yaml to avoid that
         # processes try to write the config file in parallel
-        _ = spack.compilers.get_compiler_config()
+        _ = spack.compilers.compiler_config()
 
         # Early return if there is nothing to do
         if len(arguments) == 0:
