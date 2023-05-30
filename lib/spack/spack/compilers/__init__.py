@@ -51,8 +51,8 @@ PACKAGE_TO_COMPILER = {
 }
 
 
-def pkg_spec_for_compiler(cspec):
-    """Return the spec of the package that provides the compiler."""
+def pkg_spec_for_compiler(compiler_spec):
+    """Returns the spec of the package that provides the compiler spec passed as input."""
     compiler_to_package = {
         "clang": "llvm+clang",
         "oneapi": "intel-oneapi-compilers",
@@ -60,12 +60,12 @@ def pkg_spec_for_compiler(cspec):
         "intel@2020:": "intel-oneapi-compilers-classic",
         "arm": "acfl",
     }
-    for compiler_spec, package in compiler_to_package.items():
-        if cspec.satisfies(compiler_spec):
-            spec_str = f"{package}@{cspec.versions}"
+    for compiler_constraint, package in compiler_to_package.items():
+        if compiler_spec.satisfies(compiler_constraint):
+            spec_str = f"{package}@{compiler_spec.versions}"
             break
     else:
-        spec_str = str(cspec)
+        spec_str = str(compiler_spec)
     return spack.spec.parse_with_version_concrete(spec_str)
 
 
