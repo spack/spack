@@ -13,6 +13,7 @@ class PyCryptography(PythonPackage):
     homepage = "https://github.com/pyca/cryptography"
     pypi = "cryptography/cryptography-1.8.1.tar.gz"
 
+    version("40.0.2", sha256="c33c0d32b8594fa647d2e01dbccc303478e16fdd7cf98652d5b3ed11aa5e5c99")
     version("38.0.1", sha256="1db3d807a14931fa317f96435695d9ec386be7b84b618cc61cfa5d08b0ae33d7")
     version("37.0.4", sha256="63f9c17c0e2474ccbebc9302ce2f07b55b3b3fcb211ded18a42d5764f5c10a82")
     version("36.0.1", sha256="53e5c1dc3d7a953de055d77bef2ff607ceef7a2aac0353b5d630ab67f7423638")
@@ -27,11 +28,6 @@ class PyCryptography(PythonPackage):
 
     variant("idna", default=False, when="@2.5:3.0", description="Deprecated U-label support")
 
-    depends_on("python@3.6:", when="@3.4:", type=("build", "run"))
-    depends_on("python@2.7:2.8,3.6:", when="@3.3.0:3.3", type=("build", "run"))
-    depends_on("python@2.7:2.8,3.4:", when="@2.3.1:", type=("build", "run"))
-    depends_on("python@2.6:2.8,3.4:", type=("build", "run"))
-
     depends_on("py-setuptools@40.6:60.8,60.9.1:", when="@37:", type="build")
     depends_on("py-setuptools@40.6:", when="@2.7:36", type="build")
     depends_on("py-setuptools@18.5:", when="@2.2:2.6", type="build")
@@ -40,6 +36,7 @@ class PyCryptography(PythonPackage):
     depends_on("rust@1.48:", when="@38:", type="build")
     depends_on("rust@1.41:", when="@3.4.5:", type="build")
     depends_on("rust@1.45:", when="@3.4.3:3.4.4", type="build")
+    depends_on("pkgconfig", when="@40:", type="build")
 
     depends_on("py-cffi@1.12:", when="@3.3:", type=("build", "run"))
     depends_on("py-cffi@1.8:1.11.2,1.11.4:", when="@2.5:3.2", type=("build", "run"))
