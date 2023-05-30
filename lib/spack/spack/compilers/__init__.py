@@ -37,10 +37,8 @@ _other_instance_vars = [
     "extra_rpaths",
 ]
 
-# TODO: Caches at module level make it difficult to mock configurations in
-# TODO: unit tests. It might be worth reworking their implementation.
 #: cache of compilers constructed from config data, keyed by config entry id.
-_compiler_cache: Dict[str, "spack.compiler.Compiler"] = {}
+CACHE: Dict["CacheReference", "spack.compiler.Compiler"] = {}
 
 
 #: Maps package names in Spack to the compiler name they provide
@@ -444,11 +442,11 @@ def _compiler_from_config_entry(items):
     entries have changed).
     """
     config_id = CacheReference(items)
-    compiler = _compiler_cache.get(config_id, None)
+    compiler = CACHE.get(config_id, None)
 
     if compiler is None:
         compiler = compiler_from_dict(items)
-        _compiler_cache[config_id] = compiler
+        CACHE[config_id] = compiler
 
     return compiler
 
