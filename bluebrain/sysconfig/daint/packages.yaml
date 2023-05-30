@@ -106,8 +106,6 @@ packages:
       prefix: /opt/python/3.6.5.7
   neuron:
     variants: +mpi +cross-compile
-  reportinglib:
-    variants: +static
   all:
     compiler: [intel@19.0.1.144]
     providers:

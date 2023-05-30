@@ -70,7 +70,7 @@ class SimModel(Package):
         upon the spec that user has used, grab appropriate nrnivmodl-core
         binary. Note that `which` uses $PATH to find out binary and it could
         be "wrong" one i.e. coreneuron built under neuron may not have linked
-        with sonatareport and reportinglib.
+        with sonatareport.
         TODO: this is temporary change until we move to 9.0a soon.
         """
         if self.spec.satisfies("^coreneuron"):

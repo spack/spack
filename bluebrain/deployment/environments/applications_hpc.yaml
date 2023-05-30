@@ -17,7 +17,6 @@ spack:
           - py-mvdtool
           - py-neurodamus
           - py-pytouchreader
-          - reportinglib
           - spatial-index
           - spykfunc
           - steps
@@ -51,7 +50,6 @@ spack:
     - py-archive-advisor
     - py-neurodamus
     - py-pytouchreader
-    - reportinglib
     - spatial-index
     - spykfunc
     - steps

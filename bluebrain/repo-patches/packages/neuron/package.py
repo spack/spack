@@ -97,7 +97,7 @@ class Neuron(CMakePackage):
     variant("knl", default=False, description="Enable KNL specific flags")
     variant("unified", default=False, description="Enable Unified Memory with GPU build")
     variant("openmp", default=False, description="Enable OpenMP support")
-    variant("report", default=True, description="Enable SONATA and binary reports")
+    variant("report", default=True, description="Enable SONATA reports")
     variant("shared", default=True, description="Build shared library")
     variant("nmodl", default=True, description="Use NMODL instead of MOD2C")
     variant(
@@ -158,7 +158,6 @@ class Neuron(CMakePackage):
     depends_on("cuda", when="@8.99:+gpu")
     depends_on("flex@2.6:", type="build", when="+nmodl")
     depends_on("nmodl@0.4.0:", when="@8.99:+nmodl")
-    depends_on("reportinglib", when="@8.99:+report+coreneuron")
     depends_on("libsonata-report", when="@8.99:+report+coreneuron")
 
     conflicts("+rx3d", when="~python")
