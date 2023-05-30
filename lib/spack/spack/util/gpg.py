@@ -71,11 +71,12 @@ def init(gnupghome=None, force=False):
         SOCKET_DIR = _socket_dir(GPGCONF)
 
     # Make sure that the GNUPGHOME exists
-    if not Path(GNUPGHOME).exists():
-        os.makedirs(GNUPGHOME)
-        Path(GNUPGHOME).chmod(0o700)
+    path_gnupghome = Path(GNUPGHOME)
+    if not path_gnupghome.exists():
+        path_gnupghome.mkdir()
+        path_gnupghome.chmod(0o700)
 
-    if not Path(GNUPGHOME).is_dir():
+    if not path_gnupghome.is_dir():
         msg = 'GNUPGHOME "{0}" exists and is not a directory'.format(GNUPGHOME)
         raise SpackGPGError(msg)
 

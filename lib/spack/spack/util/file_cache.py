@@ -37,7 +37,7 @@ class FileCache:
                 for cache files, this specifies how long Spack should wait
                 before assuming that there is a deadlock.
         """
-        self.root = Path(root.rstrip(os.path.sep))
+        self.root = Path(root)
         if not self.root.exists():
             mkdirp(self.root)
 

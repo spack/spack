@@ -5,7 +5,6 @@
 
 import inspect
 import io
-import os
 import re
 import shutil
 import sys
@@ -252,7 +251,7 @@ def _win_compressed_tarball_handler(decompressor):
         outfile = _system_untar(decomped_tarball)
         # clean intermediate archive to mimic end result
         # produced by one shot decomp/extraction
-        os.remove(decomped_tarball)
+        Path(decomped_tarball).unlink()
         return outfile
 
     return unarchive
