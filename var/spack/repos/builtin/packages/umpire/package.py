@@ -24,6 +24,7 @@ class Umpire(CachedCMakePackage, CudaPackage, ROCmPackage):
 
     version("develop", branch="develop", submodules=False)
     version("main", branch="main", submodules=False)
+    version("2022.10.0", tag="v2022.10.0", submodules=False)
     version("2022.03.1", tag="v2022.03.1", submodules=False)
     version("2022.03.0", tag="v2022.03.0", submodules=False)
     version("6.0.0", tag="v6.0.0", submodules=True)
@@ -86,6 +87,7 @@ class Umpire(CachedCMakePackage, CudaPackage, ROCmPackage):
     depends_on("cmake@3.9:", when="+cuda", type="build")
     depends_on("cmake@3.14:", when="@2022.03.0:")
 
+    depends_on("blt@0.5.2:", type="build", when="@2022.10.0:")
     depends_on("blt@0.5.0:", type="build", when="@2022.03.0:")
     depends_on("blt@0.4.1", type="build", when="@6.0.0")
     depends_on("blt@0.4.0:", type="build", when="@4.1.3:5.0.1")
