@@ -7,7 +7,8 @@ from spack.package import *
 
 
 class PyDataladDeprecated(PythonPackage):
-    """DataLad extension package for deprecated functionality that was phased out in the core package."""
+    """DataLad extension package for deprecated functionality that was phased
+    out in the core package."""
 
     homepage = "https://github.com/datalad/datalad-deprecated"
     pypi = "datalad_deprecated/datalad_deprecated-0.3.0.tar.gz"
