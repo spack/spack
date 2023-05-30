@@ -17,7 +17,6 @@ from llnl.util.tty.colify import colify
 from llnl.util.tty.color import colorize
 
 import spack.config
-import spack.environment as ev
 import spack.error
 import spack.extensions
 import spack.parser
@@ -184,6 +183,8 @@ def matching_spec_from_env(spec):
     If no matching spec is found in the environment (or if no environment is
     active), this will return the given spec but concretized.
     """
+    import spack.environment as ev
+
     env = ev.active_environment()
     if env:
         return env.matching_spec(spec) or spec.concretized()
@@ -526,6 +527,8 @@ def require_active_env(cmd_name):
     Returns:
         (spack.environment.Environment): the active environment
     """
+    import spack.environment as ev
+
     env = ev.active_environment()
 
     if env:
@@ -555,6 +558,7 @@ def find_environment(args):
     Returns:
         (spack.environment.Environment): a found environment, or ``None``
     """
+    import spack.environment as ev
 
     # treat env as a name
     env = args.env
