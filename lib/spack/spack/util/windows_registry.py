@@ -9,7 +9,7 @@ Utility module for dealing with Windows Registry.
 
 import sys
 from contextlib import contextmanager
-from pathlib import PurePath, Path
+from pathlib import Path, PurePath
 
 from llnl.util import tty
 
@@ -35,7 +35,7 @@ class RegistryKey:
 
     def __init__(self, name, handle):
         self.path = Path(name)
-        self.name = self.path.name #os.path.split(name)[-1]
+        self.name = self.path.name
         self._handle = handle
         self._keys = []
         self._values = {}
@@ -83,8 +83,7 @@ class RegistryKey:
     def get_subkey(self, sub_key):
         """Returns subkey of name sub_key in a RegistryKey objects"""
         return RegistryKey(
-            (self.path / sub_key),
-            winreg.OpenKeyEx(self.hkey, sub_key, access=winreg.KEY_READ),
+            (self.path / sub_key), winreg.OpenKeyEx(self.hkey, sub_key, access=winreg.KEY_READ)
         )
 
     def get_value(self, val_name):

@@ -14,23 +14,25 @@ from spack.util.prefix import Prefix
 def test_prefix_attributes():
     """Test normal prefix attributes like ``prefix.bin``"""
     prefix = Prefix(os.sep + "usr")
+    prefix_path = PurePath("usr")
 
-    assert prefix.bin == os.sep + str(PurePath("usr", "bin"))
-    assert prefix.lib == os.sep + str(PurePath("usr", "lib"))
-    assert prefix.include == os.sep + str(PurePath("usr", "include"))
+    assert prefix.bin == os.sep + str(prefix_path / "bin")
+    assert prefix.lib == os.sep + str(prefix_path / "lib")
+    assert prefix.include == os.sep + str(prefix_path / "include")
 
 
 def test_prefix_join():
     """Test prefix join  ``prefix.join(...)``"""
     prefix = Prefix(os.sep + "usr")
+    prefix_path = PurePath("usr")
 
     a1 = prefix.join("a_{0}".format(1)).lib64
     a2 = prefix.join("a-{0}".format(1)).lib64
     a3 = prefix.join("a.{0}".format(1)).lib64
 
-    assert a1 == os.sep + str(PurePath("usr", "a_1", "lib64"))
-    assert a2 == os.sep + str(PurePath("usr", "a-1", "lib64"))
-    assert a3 == os.sep + str(PurePath("usr", "a.1", "lib64"))
+    assert a1 == os.sep + str(prefix_path / "a_1" / "lib64")
+    assert a2 == os.sep + str(prefix_path / "a-1" / "lib64")
+    assert a3 == os.sep + str(prefix_path / "a.1" / "lib64")
 
     assert isinstance(a1, Prefix)
     assert isinstance(a2, Prefix)
@@ -40,9 +42,9 @@ def test_prefix_join():
     p2 = prefix.share.join("pkg-config").join("foo.pc")
     p3 = prefix.join("dashed-directory").foo
 
-    assert p1 == os.sep + str(PurePath("usr", "bin", "executable.sh"))
-    assert p2 == os.sep + str(PurePath("usr", "share", "pkg-config", "foo.pc"))
-    assert p3 == os.sep + str(PurePath("usr", "dashed-directory", "foo"))
+    assert p1 == os.sep + str(prefix_path / "bin" / "executable.sh")
+    assert p2 == os.sep + str(prefix_path / "share" / "pkg-config" / "foo.pc")
+    assert p3 == os.sep + str(prefix_path / "dashed-directory" / "foo")
 
     assert isinstance(p1, Prefix)
     assert isinstance(p2, Prefix)
@@ -52,15 +54,16 @@ def test_prefix_join():
 def test_multilevel_attributes():
     """Test attributes of attributes, like ``prefix.share.man``"""
     prefix = Prefix(os.sep + "usr" + os.sep)
+    prefix_path = PurePath("usr")
 
-    assert prefix.share.man == os.sep + str(PurePath("usr", "share", "man"))
-    assert prefix.man.man8 == os.sep + str(PurePath("usr", "man", "man8"))
-    assert prefix.foo.bar.baz == os.sep + str(PurePath("usr", "foo", "bar", "baz"))
+    assert prefix.share.man == os.sep + str(prefix_path / "share" / "man")
+    assert prefix.man.man8 == os.sep + str(prefix_path / "man" / "man8")
+    assert prefix.foo.bar.baz == os.sep + str(prefix_path / "foo" / "bar" / "baz")
 
     share = prefix.share
 
     assert isinstance(share, Prefix)
-    assert share.man == os.sep + str(PurePath("usr", "share", "man"))
+    assert share.man == os.sep + str(prefix_path / "share" / "man")
 
 
 def test_string_like_behavior():

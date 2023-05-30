@@ -94,7 +94,7 @@ def test_cache_init_entry_fails(file_cache):
 
     # Ensure directory causes exception
     with pytest.raises(CacheError, match="not a file"):
-        file_cache.init_entry(PurePath(relpath).parent)
+        file_cache.init_entry(Path(relpath).parent)
 
     # Ensure non-readable file causes exception
     Path(cachefile).chmod(0o200)

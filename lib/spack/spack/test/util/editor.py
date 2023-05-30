@@ -5,7 +5,7 @@
 
 import os
 import sys
-from pathlib import PurePath
+from pathlib import Path
 
 import pytest
 
@@ -191,7 +191,7 @@ def test_editor_both_bad(nosuch_exe, vim_exe):
     os.environ["VISUAL"] = nosuch_exe
     os.environ["EDITOR"] = nosuch_exe
 
-    os.environ["PATH"] = "%s%s%s" % (PurePath(vim_exe).parent, os.pathsep, os.environ["PATH"])
+    os.environ["PATH"] = "%s%s%s" % (Path(vim_exe).parent, os.pathsep, os.environ["PATH"])
 
     def assert_exec(exe, args):
         assert exe == vim_exe

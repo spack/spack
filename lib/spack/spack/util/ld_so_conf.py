@@ -7,7 +7,7 @@ import glob
 import os
 import re
 import sys
-from pathlib import Path, PurePath
+from pathlib import Path
 
 from llnl.util.lang import dedupe
 
@@ -24,7 +24,6 @@ def parse_ld_so_conf(conf_file="/etc/ld.so.conf"):
     Returns:
         list: List of absolute search paths
     """
-    # import pdb; pdb.set_trace()
     # Parse in binary mode since it's faster
     is_bytes = isinstance(conf_file, bytes)
     if not is_bytes:
