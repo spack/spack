@@ -28,7 +28,7 @@ import spack.version
 from spack.util.environment import get_path
 from spack.util.naming import mod_to_class
 
-_path_instance_vars = ["cc", "cxx", "f77", "fc"]
+_PATH_INSTANCE_VARS = ["cc", "cxx", "f77", "fc"]
 _flags_instance_vars = ["cflags", "cppflags", "cxxflags", "fflags"]
 _other_instance_vars = [
     "modules",
@@ -85,7 +85,7 @@ def _to_dict(compiler):
     """Return a dict version of compiler suitable to insert in YAML."""
     d = {}
     d["spec"] = str(compiler.spec)
-    d["paths"] = dict((attr, getattr(compiler, attr, None)) for attr in _path_instance_vars)
+    d["paths"] = dict((attr, getattr(compiler, attr, None)) for attr in _PATH_INSTANCE_VARS)
     d["flags"] = dict((fname, " ".join(fvals)) for fname, fvals in compiler.flags.items())
     d["flags"].update(
         dict(
@@ -393,13 +393,13 @@ def compiler_from_dict(items):
     os = items.get("operating_system", None)
     target = items.get("target", None)
 
-    if not ("paths" in items and all(n in items["paths"] for n in _path_instance_vars)):
+    if not ("paths" in items and all(n in items["paths"] for n in _PATH_INSTANCE_VARS)):
         raise InvalidCompilerConfigurationError(cspec)
 
     cls = class_for_compiler_name(cspec.name)
 
     compiler_paths = []
-    for c in _path_instance_vars:
+    for c in _PATH_INSTANCE_VARS:
         compiler_path = items["paths"][c]
         if compiler_path != "None":
             compiler_paths.append(compiler_path)
@@ -823,7 +823,7 @@ class InvalidCompilerConfigurationError(spack.error.SpackError):
         super().__init__(
             'Invalid configuration for [compiler "%s"]: ' % compiler_spec,
             "Compiler configuration must contain entries for all compilers: %s"
-            % _path_instance_vars,
+            % _PATH_INSTANCE_VARS,
         )
 
 
