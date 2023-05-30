@@ -40,15 +40,11 @@ class SimModel(Package):
     # neuron/corenrn get linked automatically when using nrnivmodl[-core]
     # Dont duplicate the link dependency (only 'build' and 'run')
     depends_on("neuron+mpi", type=("build", "run"))
-    depends_on("coreneuron", when="+coreneuron ^neuron@:8.99", type=("build", "run"))
-    depends_on(
-        "coreneuron+caliper", when="+coreneuron+caliper ^neuron@:8.99", type=("build", "run")
-    )
+    depends_on("neuron+coreneuron+python", type=("build", "run"), when="+coreneuron")
+    depends_on("coreneuron", when="+coreneuron ^neuron@:8", type=("build", "run"))
+    depends_on("coreneuron+caliper", when="+coreneuron+caliper ^neuron@:8", type=("build", "run"))
     depends_on("neuron+caliper", when="+caliper", type=("build", "run"))
     depends_on("gettext", when="^neuron+binary")
-
-    conflicts("^neuron~python", when="+coreneuron")
-    conflicts("^neuron~coreneuron", when="+coreneuron")
 
     phases = ("build", "install")
 
@@ -73,7 +69,7 @@ class SimModel(Package):
         with sonatareport.
         TODO: this is temporary change until we move to 9.0a soon.
         """
-        if self.spec.satisfies("^coreneuron"):
+        if self.spec.satisfies("^coreneuron") and self.spec["neuron"].satisfies("@:8.99"):
             return which("nrnivmodl-core", path=self.spec["coreneuron"].prefix.bin, required=True)
         else:
             return which("nrnivmodl-core", path=self.spec["neuron"].prefix.bin, required=True)
@@ -169,7 +165,7 @@ class SimModel(Package):
             with working_dir("build_" + mech_name):
                 if self.spec.satisfies("^coreneuron@0.0:0.14"):
                     raise Exception(
-                        "Coreneuron versions before 0.14 are" "not supported by Neurodamus model"
+                        "Coreneuron versions before 0.14 are not supported by Neurodamus model"
                     )
                 elif self.spec.satisfies("^coreneuron@0.14:0.16.99"):
                     which("nrnivmech_install.sh", path=".")(prefix)
