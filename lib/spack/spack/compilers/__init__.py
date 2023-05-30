@@ -29,13 +29,6 @@ from spack.util.environment import get_path
 from spack.util.naming import mod_to_class
 
 _PATH_INSTANCE_VARS = ["cc", "cxx", "f77", "fc"]
-_other_instance_vars = [
-    "modules",
-    "operating_system",
-    "environment",
-    "implicit_rpaths",
-    "extra_rpaths",
-]
 
 #: cache of compilers constructed from config data, keyed by config entry id.
 CACHE: Dict["CacheReference", "spack.compiler.Compiler"] = {}
@@ -288,7 +281,9 @@ def select_new_compilers(compilers, scope=None):
     compilers_not_in_config = []
     for c in compilers:
         arch_spec = spack.spec.ArchSpec((None, c.operating_system, c.target))
-        same_specs = compilers_for_spec(c.spec, arch_spec, scope=scope, init_config=False)
+        same_specs = compilers_for_spec(
+            c.spec, arch_spec=arch_spec, scope=scope, init_config=False
+        )
         if not same_specs:
             compilers_not_in_config.append(c)
 
@@ -326,7 +321,12 @@ def find(compiler_spec, scope=None, init_config=True):
 def find_specs_by_arch(compiler_spec, arch_spec, scope=None, init_config=True):
     """Return specs of available compilers that match the supplied
     compiler spec.  Return an empty list if nothing found."""
-    return [c.spec for c in compilers_for_spec(compiler_spec, arch_spec, scope, True, init_config)]
+    return [
+        c.spec
+        for c in compilers_for_spec(
+            compiler_spec, arch_spec=arch_spec, scope=scope, init_config=init_config
+        )
+    ]
 
 
 def all_compilers(scope=None, init_config=True):
@@ -339,17 +339,11 @@ def all_compilers(scope=None, init_config=True):
 
 
 @_auto_compiler_spec
-def compilers_for_spec(
-    compiler_spec, arch_spec=None, scope=None, use_cache=True, init_config=True
-):
+def compilers_for_spec(compiler_spec, *, arch_spec=None, scope=None, init_config=True):
     """This gets all compilers that satisfy the supplied CompilerSpec.
     Returns an empty list if none are found.
     """
-    if use_cache:
-        config = compiler_config(scope=scope, init_config=init_config)
-    else:
-        config = compiler_config(scope=scope, init_config=init_config)
-
+    config = compiler_config(scope=scope, init_config=init_config)
     matches = set(find(compiler_spec, scope, init_config))
     compilers = []
     for cspec in matches:
@@ -524,9 +518,7 @@ def get_compiler_duplicates(compiler_spec, arch_spec):
 
     scope_to_compilers = {}
     for scope in config.scopes:
-        compilers = compilers_for_spec(
-            compiler_spec, arch_spec=arch_spec, scope=scope, use_cache=False
-        )
+        compilers = compilers_for_spec(compiler_spec, arch_spec=arch_spec, scope=scope)
         if compilers:
             scope_to_compilers[scope] = compilers
 
