@@ -206,18 +206,11 @@ def _remove_compiler_from_scope(compiler_spec, scope):
     return True
 
 
-def all_compilers_config(scope=None, init_config=True):
-    """Return a set of specs for all the compiler versions currently
-    available to build with.  These are instances of CompilerSpec.
-    """
-    return get_compiler_config(scope, init_config)
-
-
 def all_compiler_specs(scope=None, init_config=True):
     # Return compiler specs from the merged config.
     return [
         spack.spec.parse_with_version_concrete(s["compiler"]["spec"], compiler=True)
-        for s in all_compilers_config(scope, init_config)
+        for s in get_compiler_config(scope, init_config)
     ]
 
 
@@ -347,7 +340,7 @@ def compilers_for_spec(
     Returns an empty list if none are found.
     """
     if use_cache:
-        config = all_compilers_config(scope, init_config)
+        config = get_compiler_config(scope, init_config)
     else:
         config = get_compiler_config(scope, init_config)
 
@@ -359,7 +352,7 @@ def compilers_for_spec(
 
 
 def compilers_for_arch(arch_spec, scope=None):
-    config = all_compilers_config(scope)
+    config = get_compiler_config(scope, True)
     return list(get_compilers(config, arch_spec=arch_spec))
 
 
