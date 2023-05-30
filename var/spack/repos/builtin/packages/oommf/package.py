@@ -39,13 +39,6 @@ class Oommf(Package):
     # default URL for versions
     url = "https://github.com/fangohr/oommf/archive/refs/tags/20a1_20180930_ext.tar.gz"
 
-    #: post-install phase methods used to check the installation
-    install_time_test_callbacks = [
-        "check_install_version",
-        "check_install_platform",
-        "check_install_stdprob3",
-    ]
-
     maintainers("fangohr")
 
     version(
@@ -210,14 +203,20 @@ class Oommf(Package):
         # set OOMMFTCL so ubermag / oommf can find oommf
         env.set("OOMMFTCL", join_path(oommfdir, "oommf.tcl"))
 
+    @run_after("install")
+    @on_package_attributes(run_tests=True)
     def check_install_version(self):
         print("checking oommf.tcl can execute (+version)")
         self.test_version()
 
+    @run_after("install")
+    @on_package_attributes(run_tests=True)
     def check_install_platform(self):
         print("checking oommf.tcl can execute (+platform)")
         self.test_platform()
 
+    @run_after("install")
+    @on_package_attributes(run_tests=True)
     def check_install_stdprob3(self):
         print("Testing oommf.tcl standard problem 3")
         self.test_stdprob3()
