@@ -15,6 +15,7 @@ class RXde(RPackage):
 
     bioc = "XDE"
 
+    version("2.46.0", commit="f94324fba1ad6dca129d86e61abc219f766321e8")
     version("2.44.0", commit="a6ddedb91afe381f223e52ae49c6704f8f046916")
     version("2.42.0", commit="298e83eff7fc5f72a2bb76b559c5115c6cd3ee84")
     version("2.40.0", commit="bfc3c54787aec97b70bef7b99a6adc75d2cf5ed2")

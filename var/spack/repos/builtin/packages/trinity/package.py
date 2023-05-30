@@ -23,6 +23,11 @@ class Trinity(MakefilePackage):
     url = "https://github.com/trinityrnaseq/trinityrnaseq/archive/Trinity-v2.6.6.tar.gz"
 
     version(
+        "2.15.1.FULL",
+        sha256="ba37e5f696d3d54e8749c4ba439901a3e97e14a4314a5229d7a069ad7b1ee580",
+        url="https://github.com/trinityrnaseq/trinityrnaseq/releases/download/Trinity-v2.15.1/trinityrnaseq-v2.15.1.FULL.tar.gz",
+    )
+    version(
         "2.15.0.FULL",
         sha256="d67de43e535e1173be75de98dcfbdab0bf67f814c9e465a44dfd056cefeb529d",
         url="https://github.com/trinityrnaseq/trinityrnaseq/releases/download/Trinity-v2.15.0/trinityrnaseq-v2.15.0.FULL.tar.gz",
@@ -86,6 +91,8 @@ class Trinity(MakefilePackage):
     depends_on("r-goplot", type="run")
     depends_on("r-argparse", type="run")
     depends_on("r-sm", type="run")
+
+    patch("2.15.1.patch", when="@2.15.1.FULL")
 
     def build(self, spec, prefix):
         make()

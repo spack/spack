@@ -36,10 +36,15 @@ spack:
     python:
       version: [3.8.13]
     trilinos:
-      require: +amesos +amesos2 +anasazi +aztec +boost +epetra +epetraext
-        +ifpack +intrepid +intrepid2 +isorropia +kokkos +ml +minitensor +muelu
-        +nox +piro +phalanx +rol +rythmos +sacado +stk +shards +shylu +stratimikos
-        +teko +tempus +tpetra +trilinoscouplings +zoltan +zoltan2 +superlu-dist gotype=long_long
+      require:
+      - one_of: [+amesos +amesos2 +anasazi +aztec +boost +epetra +epetraext +ifpack
+            +intrepid +intrepid2 +isorropia +kokkos +minitensor +nox +piro +phalanx
+            +rol +rythmos +sacado +stk +shards +stratimikos +tempus +tpetra
+            +trilinoscouplings +zoltan]
+      - one_of: [gotype=long_long, gotype=all]
+      - one_of: [~ml ~muelu ~zoltan2 ~teko, +ml +muelu +zoltan2 +teko]
+      - one_of: [+superlu-dist, ~superlu-dist]
+      - one_of: [+shylu, ~shylu]
     xz:
       variants: +pic
     mesa:
@@ -65,8 +70,9 @@ spack:
   - charliecloud
   - conduit
   - datatransferkit
+  - dealii
   - dyninst
-  - ecp-data-vis-sdk ~cuda ~rocm +adios2 +ascent +cinema +darshan +faodel +hdf5 +paraview +pnetcdf +sz +unifyfs +veloc +visit +vtkm +zfp
+  - ecp-data-vis-sdk ~cuda ~rocm +adios2 +ascent +cinema +darshan +faodel +hdf5 +paraview +pnetcdf +sz +unifyfs +veloc ~visit +vtkm +zfp ^hdf5@1.14
   - exaworks
   - flecsi
   - flit
@@ -80,6 +86,8 @@ spack:
   - gptune
   - h5bench
   - hdf5-vol-async
+  - hdf5-vol-cache
+  - hdf5-vol-log
   - heffte +fftw
   - hpctoolkit
   - hpx max_cpu_count=512 networking=mpi
@@ -94,6 +102,7 @@ spack:
   - mercury
   - metall
   - mfem
+  - mgard +serial +openmp +timing +unstructured ~cuda
   - mpark-variant
   - mpifileutils ~xattr
   - nccmp
@@ -146,6 +155,7 @@ spack:
   - variorum
   - veloc
   - wannier90
+  - xyce +mpi +shared +pymi +pymi_static_tpls ^trilinos~shylu
 
   # CUDA
   - amrex +cuda
@@ -156,7 +166,7 @@ spack:
   - chai ~benchmarks ~tests +cuda ^umpire ~shared
   - cusz +cuda
   - dealii +cuda
-  - ecp-data-vis-sdk +cuda +adios2 +hdf5 +paraview +vtkm +zfp # Removing ascent because Dray is hung in CI. +ascent
+  - ecp-data-vis-sdk +cuda ~ascent +adios2 +hdf5 +paraview +sz +vtkm +zfp  ^hdf5@1.14 # Removing ascent because RAJA build failure
   - flecsi +cuda
   - flux-core +cuda
   - ginkgo +cuda
@@ -168,6 +178,7 @@ spack:
   - kokkos-kernels +cuda ^kokkos +wrapper +cuda
   - magma +cuda
   - mfem +cuda
+  - mgard +serial +openmp +timing +unstructured +cuda
   - omega-h +cuda
   - papi +cuda
   - petsc +cuda
@@ -180,7 +191,7 @@ spack:
   - superlu-dist +cuda
   - tasmanian +cuda
   - tau +mpi +cuda
-  - trilinos@13.4.0 +belos +ifpack2 +stokhos +cuda
+  - "trilinos@13.4.0: +belos +ifpack2 +stokhos +cuda"
   - umpire ~shared +cuda
 
   # ROCm
@@ -189,7 +200,7 @@ spack:
   - cabana +rocm
   - caliper +rocm
   - chai ~benchmarks +rocm
-  - ecp-data-vis-sdk +paraview +vtkm +rocm
+  - ecp-data-vis-sdk +adios2 +hdf5 +paraview +pnetcdf +sz +vtkm +zfp +rocm ^hdf5@1.14 # Excludes ascent for now due to C++ standard issues
   - gasnet +rocm
   - ginkgo +rocm
   - heffte +rocm
@@ -209,7 +220,7 @@ spack:
   - superlu-dist +rocm
   - tasmanian ~openmp +rocm
   - tau +mpi +rocm
-  - trilinos@13.4.0 ~belos ~ifpack2 ~stokhos +rocm
+  - "trilinos@13.4.0: +belos ~ifpack2 ~stokhos +rocm"
   - umpire +rocm
   - upcxx +rocm
 

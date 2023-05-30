@@ -590,7 +590,8 @@ class Python(Package):
             if sys.platform == "win32":
                 self.win_installer(prefix)
             else:
-                make(*self.install_targets)
+                # See https://github.com/python/cpython/issues/102007
+                make(*self.install_targets, parallel=False)
 
     @run_after("install")
     def filter_compilers(self):
