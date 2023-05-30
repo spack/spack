@@ -29,7 +29,6 @@ from spack.util.environment import get_path
 from spack.util.naming import mod_to_class
 
 _PATH_INSTANCE_VARS = ["cc", "cxx", "f77", "fc"]
-_flags_instance_vars = ["cflags", "cppflags", "cxxflags", "fflags"]
 _other_instance_vars = [
     "modules",
     "operating_system",
@@ -96,7 +95,7 @@ def _to_dict(compiler):
     d["flags"].update(
         {
             attr: getattr(compiler, attr, None)
-            for attr in _flags_instance_vars
+            for attr in spack.spec.FlagMap.valid_compiler_flags()
             if hasattr(compiler, attr)
         }
     )
