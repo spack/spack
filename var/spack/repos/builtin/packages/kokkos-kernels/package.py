@@ -57,7 +57,7 @@ class KokkosKernels(CMakePackage, CudaPackage):
         "serial": (False, "enable Serial backend (default)"),
         "cuda": (False, "enable Cuda backend"),
         "openmp": (False, "enable OpenMP backend"),
-        "pthread": (False, "enable Pthread backend"),
+        "threads": (False, "enable C++ threads backend"),
     }
 
     for backend in backends:
@@ -68,7 +68,7 @@ class KokkosKernels(CMakePackage, CudaPackage):
     space_etis = {
         "execspace_cuda": ("auto", "", "cuda"),
         "execspace_openmp": ("auto", "", "openmp"),
-        "execspace_threads": ("auto", "", "pthread"),
+        "execspace_threads": ("auto", "", "threads"),
         "execspace_serial": ("auto", "", "serial"),
         "memspace_cudauvmspace": ("auto", "", "cuda"),
         "memspace_cudaspace": ("auto", "", "cuda"),

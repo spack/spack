@@ -1373,7 +1373,7 @@ class ChildError(InstallError):
             test_log = join_path(os.path.dirname(self.log_name), spack_install_test_log)
             if os.path.isfile(test_log):
                 out.write("\nSee test log for details:\n")
-                out.write("  {0}n".format(test_log))
+                out.write("  {0}\n".format(test_log))
 
         return out.getvalue()
 
