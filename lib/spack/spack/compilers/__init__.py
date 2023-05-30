@@ -112,36 +112,26 @@ def _to_dict(compiler):
 def get_compiler_config(scope=None, init_config=True):
     """Return the compiler configuration for the specified architecture."""
 
-    def init_compiler_config():
-        """Compiler search used when Spack has no compilers."""
-        compilers = find_compilers()
-        compilers_dict = []
-        for compiler in compilers:
-            compilers_dict.append(_to_dict(compiler))
-        spack.config.set("compilers", compilers_dict, scope=scope)
+    config = spack.config.get("compilers", scope=scope) or []
+    if config or not init_config:
+        return config
 
+    merged_config = spack.config.get("compilers")
+    if merged_config:
+        return config
+
+    _init_compiler_config(scope=scope)
     config = spack.config.get("compilers", scope=scope)
-    # Update the configuration if there are currently no compilers
-    # configured.  Avoid updating automatically if there ARE site
-    # compilers configured but no user ones.
-    if not config and init_config:
-        if scope is None:
-            # We know no compilers were configured in any scope.
-            init_compiler_config()
-            config = spack.config.get("compilers", scope=scope)
-        elif scope == "user":
-            # Check the site config and update the user config if
-            # nothing is configured at the site level.
-            site_config = spack.config.get("compilers", scope="site")
-            sys_config = spack.config.get("compilers", scope="system")
-            if not site_config and not sys_config:
-                init_compiler_config()
-                config = spack.config.get("compilers", scope=scope)
-        return config
-    elif config:
-        return config
-    else:
-        return []  # Return empty list which we will later append to.
+    return config
+
+
+def _init_compiler_config(*, scope):
+    """Compiler search used when Spack has no compilers."""
+    compilers = find_compilers()
+    compilers_dict = []
+    for compiler in compilers:
+        compilers_dict.append(_to_dict(compiler))
+    spack.config.set("compilers", compilers_dict, scope=scope)
 
 
 def compiler_config_files():
