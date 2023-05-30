@@ -24,7 +24,6 @@ import spack.paths
 import spack.spec
 import spack.store
 import spack.traverse as traverse
-import spack.user_environment as uenv
 import spack.util.spack_json as sjson
 import spack.util.spack_yaml as syaml
 
@@ -448,6 +447,8 @@ def display_specs(specs, args=None, **kwargs):
 def filter_loaded_specs(specs):
     """Filter a list of specs returning only those that are
     currently loaded."""
+    import spack.user_environment as uenv
+
     hashes = os.environ.get(uenv.spack_loaded_hashes_var, "").split(":")
     return [x for x in specs if x.dag_hash() in hashes]
 
