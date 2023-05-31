@@ -731,7 +731,7 @@ def detect_version(
         path = fn_args.path
 
         # Get compiler names and the callback to detect their versions
-        callback = getattr(compiler_cls, "{0}_version".format(language))
+        callback = getattr(compiler_cls, f"{language}_version")
 
         try:
             version = callback(path)
@@ -739,13 +739,13 @@ def detect_version(
                 value = fn_args._replace(id=compiler_id._replace(version=version))
                 return value, None
 
-            error = "Couldn't get version for compiler {0}".format(path)
+            error = f"Couldn't get version for compiler {path}"
         except spack.util.executable.ProcessError as e:
-            error = "Couldn't get version for compiler {0}\n".format(path) + str(e)
+            error = f"Couldn't get version for compiler {path}\n" + str(e)
         except Exception as e:
             # Catching "Exception" here is fine because it just
             # means something went wrong running a candidate executable.
-            error = "Error while executing candidate compiler {0}" "\n{1}: {2}".format(
+            error = "Error while executing candidate compiler {}" "\n{}: {}".format(
                 path, e.__class__.__name__, str(e)
             )
         return None, error
@@ -855,17 +855,17 @@ def is_mixed_toolchain(compiler: spack.compiler.Compiler) -> bool:
                 name_matches(fc, compiler_cls.fc_names),
             ]
         ):
-            tty.debug("[TOOLCHAIN] MATCH {0}".format(compiler_cls.__name__))
+            tty.debug(f"[TOOLCHAIN] MATCH {compiler_cls.__name__}")
             toolchains.add(compiler_cls.__name__)
 
     if len(toolchains) > 1:
         if (
-            toolchains == set(["Clang", "AppleClang", "Aocc"])
+            toolchains == {"Clang", "AppleClang", "Aocc"}
             # Msvc toolchain uses Intel ifx
-            or toolchains == set(["Msvc", "Dpcpp", "Oneapi"])
+            or toolchains == {"Msvc", "Dpcpp", "Oneapi"}
         ):
             return False
-        tty.debug("[TOOLCHAINS] {0}".format(toolchains))
+        tty.debug(f"[TOOLCHAINS] {toolchains}")
         return True
 
     return False
@@ -874,9 +874,8 @@ def is_mixed_toolchain(compiler: spack.compiler.Compiler) -> bool:
 class InvalidCompilerConfigurationError(spack.error.SpackError):
     def __init__(self, compiler_spec):
         super().__init__(
-            'Invalid configuration for [compiler "%s"]: ' % compiler_spec,
-            "Compiler configuration must contain entries for all compilers: %s"
-            % _PATH_INSTANCE_VARS,
+            f'Invalid configuration for [compiler "{compiler_spec}"]: ',
+            f"Compiler configuration must contain the following entries: {_PATH_INSTANCE_VARS}",
         )
 
 
@@ -887,13 +886,13 @@ class NoCompilersError(spack.error.SpackError):
 
 class UnknownCompilerError(spack.error.SpackError):
     def __init__(self, compiler_name):
-        super().__init__("Spack doesn't support the requested compiler: {0}".format(compiler_name))
+        super().__init__(f"Spack doesn't support the requested compiler: {compiler_name}")
 
 
 class NoCompilerForSpecError(spack.error.SpackError):
     def __init__(self, compiler_spec, target):
         super().__init__(
-            "No compilers for operating system %s satisfy spec %s" % (target, compiler_spec)
+            f"No compilers for operating system {target} satisfy spec {compiler_spec}"
         )
 
 
@@ -902,12 +901,12 @@ class CompilerDuplicateError(spack.error.SpackError):
         config_file_to_duplicates = get_compiler_duplicates(compiler_spec, arch_spec)
         duplicate_table = list((x, len(y)) for x, y in config_file_to_duplicates.items())
         descriptor = lambda num: "time" if num == 1 else "times"
-        duplicate_msg = lambda cfgfile, count: "{0}: {1} {2}".format(
+        duplicate_msg = lambda cfgfile, count: "{}: {} {}".format(
             cfgfile, str(count), descriptor(count)
         )
         msg = (
             "Compiler configuration contains entries with duplicate"
-            + " specification ({0}, {1})".format(compiler_spec, arch_spec)
+            + f" specification ({compiler_spec}, {arch_spec})"
             + " in the following files:\n\t"
             + "\n\t".join(duplicate_msg(x, y) for x, y in duplicate_table)
         )
@@ -916,4 +915,4 @@ class CompilerDuplicateError(spack.error.SpackError):
 
 class CompilerSpecInsufficientlySpecificError(spack.error.SpackError):
     def __init__(self, compiler_spec):
-        super().__init__("Multiple compilers satisfy spec %s" % compiler_spec)
+        super().__init__(f"Multiple compilers satisfy spec {compiler_spec}")
