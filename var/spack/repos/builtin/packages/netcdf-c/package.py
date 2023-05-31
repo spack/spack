@@ -211,7 +211,7 @@ class NetcdfC(CMakePackage, AutotoolsPackage):
         # The macro usage was adjusted (required when versions 1.8.23+, 1.10.8+, 1.12.1+ and
         # 1.13.0+ of HDF5 are used) in NetCDF 4.8.1
         # (see https://github.com/Unidata/netcdf-c/pull/2034):
-        depends_on("hdf5@:1.8.22,1.10.0:1.10.7,1.12.0", when="@:4.8.0")
+        depends_on("hdf5@:1.8.22,1.10.0:1.10.7,1.12.0,1.13:", when="@:4.8.0")
         # Compatibility with HDF5 1.14.x was introduced in NetCDF 4.9.2
         # (see https://github.com/Unidata/netcdf-c/pull/2615):
         depends_on("hdf5@:1.12", when="@:4.9.1")
