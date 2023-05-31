@@ -615,7 +615,7 @@ class CompilerSpec:
         for version in version_list:
             self.versions.add(version)
 
-    def _autospec(self, compiler_spec_like):
+    def _autospec(self, compiler_spec_like: Union[str, "CompilerSpec"]) -> "CompilerSpec":
         if isinstance(compiler_spec_like, CompilerSpec):
             return compiler_spec_like
         return CompilerSpec(compiler_spec_like)
@@ -632,7 +632,7 @@ class CompilerSpec:
         other = self._autospec(other)
         return self.name == other.name and self.versions.intersects(other.versions)
 
-    def satisfies(self, other: "CompilerSpec") -> bool:
+    def satisfies(self, other: Union[str, "CompilerSpec"]) -> bool:
         """Return True if all concrete specs matching self also match other, otherwise False.
 
         For compiler specs this means that the name of the compiler must be the same for
