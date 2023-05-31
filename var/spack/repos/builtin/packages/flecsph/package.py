@@ -28,7 +28,7 @@ class Flecsph(CMakePackage):
     depends_on("hdf5+hl@1.8:")
     depends_on("flecsi@2.2 +flog backend=mpi")
     depends_on("gsl")
-    depends_on("googletest")
+    depends_on("googletest", type="test")
     depends_on("pkgconfig", type="build")
 
     def setup_run_environment(self, env):
