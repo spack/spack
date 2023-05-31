@@ -16,8 +16,11 @@ class Libraqm(MesonPackage):
     version("0.9.0", sha256="9ed6fdf41da6391fc9bf7038662cbe412c330aa6eb22b19704af2258e448107c")
 
     variant(
-        "bidi_algo", default="fribidi", description="Unicode Bidirectional Algorithm",
-        values=("fribidi", "sheenbidi"), multi=False
+        "bidi_algo",
+        default="fribidi",
+        description="Unicode Bidirectional Algorithm",
+        values=("fribidi", "sheenbidi"),
+        multi=False,
     )
 
     depends_on("freetype")
