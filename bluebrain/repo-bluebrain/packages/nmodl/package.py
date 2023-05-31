@@ -19,7 +19,7 @@ class Nmodl(CMakePackage):
     version("0.5.0", tag="0.5")
     version("0.4.0", tag="0.4")
 
-    variant("legacy-unit", default=True, description="Enable legacy units")
+    variant("legacy-unit", default=False, description="Enable legacy units")
     variant("python", default=False, description="Enable python bindings")
     variant("llvm", default=False, description="Enable llvm codegen")
     variant("llvm_cuda", default=False, description="Enable llvm codegen with CUDA backend")

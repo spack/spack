@@ -48,7 +48,7 @@ class Coreneuron(CMakePackage):
     )
     variant("sympy", default=False, description="Use NMODL with SymPy to solve ODEs")
     variant("sympyopt", default=False, description="Use NMODL with SymPy Optimizations")
-    variant("legacy-unit", default=True, description="Enable legacy units")
+    variant("legacy-unit", default=False, description="Enable legacy units")
 
     # Build with `ninja` instead of `make`
     generator = "Ninja"
