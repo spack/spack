@@ -25,13 +25,14 @@ class Neuron(CMakePackage):
     git = "https://github.com/neuronsimulator/nrn"
 
     # Patch which reverts 81a7a39 for numerical compat
-    patch("revert_Import3d_numerical_format.master.patch", when="@7.8.1:")
+    patch("revert_Import3d_numerical_format.master.patch", when="@7.8.1:9.0.a6")
+
     # Patch which reverts d9605cb for not hanging on ExperimentalMechComplex
     # Patch for recent CMake versions that don't identify NVHPC as PGI
     patch("patch-v800-cmake-nvhpc.patch", when="@8.0.0%nvhpc^cmake@3.20:")
 
     version("develop", branch="master")
-    version("9.0.a6", commit="67a672a")
+    version("9.0.a7", commit="67a672a")
     version("9.0.a5", commit="522c866")
     version("9.0.a4", commit="de2c927")
     version("9.0.a3", commit="afce1ef")
@@ -101,7 +102,7 @@ class Neuron(CMakePackage):
     variant("openmp", default=False, description="Enable OpenMP support", when="@9:")
     variant("report", default=True, description="Enable SONATA reports")
     variant("shared", default=True, description="Build shared library")
-    nmodl_variant_exists = "@9:9.0.a6 +coreneuron"
+    nmodl_variant_exists = "@9:9.0.a7 +coreneuron"
     variant(
         "nmodl",
         default=True,
