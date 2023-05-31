@@ -14,7 +14,7 @@ class PyHorovod(PythonPackage, CudaPackage):
     homepage = "https://github.com/horovod"
     git = "https://github.com/horovod/horovod.git"
 
-    maintainers("adamjstewart", "aweits", "tgaddair"), "thomas-bouvier"
+    maintainers("adamjstewart", "aweits", "tgaddair", "thomas-bouvier")
 
     version("master", branch="master", submodules=True)
     version("0.28.0", tag="v0.28.0", submodules=True)
