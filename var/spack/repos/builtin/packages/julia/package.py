@@ -191,6 +191,22 @@ class Julia(MakefilePackage):
     patch("use-add-rpath.patch", when="@:1.8.0")
     patch("use-add-rpath-2.patch", when="@1.8.1:1.8")
 
+    # Fix libstdc++ not being found (https://github.com/JuliaLang/julia/issues/47987)
+    patch(
+        "https://github.com/JuliaLang/julia/pull/48342.patch?full_index=1",
+        sha256="10f7cab89c8353b2648a968d2c8e8ed8bd90961df3227084f1d69d3d482933d7",
+        when="@1.8.4:1.8.5",
+    )
+
+    # Fix printing of `BigFloat`s when using MPFR 4.2.0, but the patch is
+    # applicable to previous versions of the library too
+    # (https://github.com/JuliaLang/julia/issues/49895).
+    patch(
+        "https://github.com/JuliaLang/julia/pull/49909.patch?full_index=1",
+        sha256="7fa53516b97d83ccf06f6d387c04d337849808f7e8ee2bdc2e79894d84578afc",
+        when="@1.6.4:1.9.0",
+    )
+
     # Fix gfortran abi detection https://github.com/JuliaLang/julia/pull/44026
     patch("fix-gfortran.patch", when="@1.7.0:1.7.2")
 
