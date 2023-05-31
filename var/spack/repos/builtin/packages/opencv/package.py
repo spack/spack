@@ -831,7 +831,6 @@ class Opencv(CMakePackage, CudaPackage):
             match = pattern.search(lib)
             if match:
                 return match.group(2)
-        return None
 
     @classmethod
     def determine_variants(cls, libs, version_str):
