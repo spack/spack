@@ -567,6 +567,8 @@ def send_warning_to_tty(message, *args):
 
 def setup_main_options(args):
     """Configure spack globals based on the basic options."""
+    import spack.util.debug
+
     # Assign a custom function to show warnings
     warnings.showwarning = send_warning_to_tty
 
@@ -584,8 +586,6 @@ def setup_main_options(args):
         SHOW_BACKTRACE = True
 
     if args.debug:
-        import spack.util.debug
-
         spack.util.debug.register_interrupt_handler()
         spack.config.set("config:debug", True, scope="command_line")
         spack.util.environment.TRACING_ENABLED = True
