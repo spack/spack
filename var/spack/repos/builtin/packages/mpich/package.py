@@ -175,18 +175,16 @@ with '-Wl,-commons,use_dylibs' and without
     # fix MPI_Barrier segmentation fault
     # see https://lists.mpich.org/pipermail/discuss/2016-May/004764.html
     # and https://lists.mpich.org/pipermail/discuss/2016-June/004768.html
-    patch("mpich32_clang.patch", when="@3.2:3.2.0%clang")
-    patch("mpich32_clang.patch", when="@3.2:3.2.0%apple-clang")
+    patch("mpich32_clang.patch", when="@=3.2%clang")
+    patch("mpich32_clang.patch", when="@=3.2%apple-clang")
 
     # Fix SLURM node list parsing
     # See https://github.com/pmodels/mpich/issues/3572
     # and https://github.com/pmodels/mpich/pull/3578
-    # Even though there is no version 3.3.0, we need to specify 3.3:3.3.0 in
-    # the when clause, otherwise the patch will be applied to 3.3.1, too.
     patch(
         "https://github.com/pmodels/mpich/commit/b324d2de860a7a2848dc38aefb8c7627a72d2003.patch?full_index=1",
         sha256="5f48d2dd8cc9f681cf710b864f0d9b00c599f573a75b1e1391de0a3d697eba2d",
-        when="@3.3:3.3.0",
+        when="@=3.3",
     )
 
     # Fix reduce operations for unsigned integers
@@ -380,21 +378,23 @@ with '-Wl,-commons,use_dylibs' and without
             results.append(" ".join(variants))
         return results
 
+    def flag_handler(self, name, flags):
+        if name == "fflags":
+            # https://bugzilla.redhat.com/show_bug.cgi?id=1795817
+            # https://github.com/spack/spack/issues/17934
+            # TODO: we should add the flag depending on the real Fortran compiler spec and not the
+            #  toolchain spec, which might be mixed.
+            if any(self.spec.satisfies(s) for s in ["%gcc@10:", "%apple-clang@11:", "%clang@11:"]):
+                # Note that the flag is not needed to build the package starting version 4.1
+                # (see https://github.com/pmodels/mpich/pull/5840) but we keep adding the flag here
+                # to avoid its presence in the MPI compiler wrappers.
+                flags.append("-fallow-argument-mismatch")
+
+        return flags, None, None
+
     def setup_build_environment(self, env):
         env.unset("F90")
         env.unset("F90FLAGS")
-
-        # https://bugzilla.redhat.com/show_bug.cgi?id=1795817
-        if self.spec.satisfies("%gcc@10:"):
-            env.set("FFLAGS", "-fallow-argument-mismatch")
-            env.set("FCFLAGS", "-fallow-argument-mismatch")
-        # Same fix but for macOS - avoids issue #17934
-        if self.spec.satisfies("%apple-clang@11:"):
-            env.set("FFLAGS", "-fallow-argument-mismatch")
-            env.set("FCFLAGS", "-fallow-argument-mismatch")
-        if self.spec.satisfies("%clang@11:"):
-            env.set("FFLAGS", "-fallow-argument-mismatch")
-            env.set("FCFLAGS", "-fallow-argument-mismatch")
 
         if "pmi=cray" in self.spec:
             env.set("CRAY_PMI_INCLUDE_OPTS", "-I" + self.spec["cray-pmi"].headers.directories[0])

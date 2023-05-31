@@ -26,8 +26,6 @@ import types
 import uuid
 from typing import Dict, Union
 
-import ruamel.yaml as yaml
-
 import llnl.util.filesystem as fs
 import llnl.util.lang
 import llnl.util.tty as tty
@@ -44,6 +42,7 @@ import spack.util.file_cache
 import spack.util.git
 import spack.util.naming as nm
 import spack.util.path
+import spack.util.spack_yaml as syaml
 
 #: Package modules are imported as spack.pkg.<repo-namespace>.<pkg-name>
 ROOT_PYTHON_NAMESPACE = "spack.pkg"
@@ -936,12 +935,6 @@ class Repo(object):
         self.config_file = os.path.join(self.root, repo_config_name)
         check(os.path.isfile(self.config_file), "No %s found in '%s'" % (repo_config_name, root))
 
-        self.packages_path = os.path.join(self.root, packages_dir_name)
-        check(
-            os.path.isdir(self.packages_path),
-            "No directory '%s' found in '%s'" % (packages_dir_name, root),
-        )
-
         # Read configuration and validate namespace
         config = self._read_config()
         check(
@@ -961,6 +954,13 @@ class Repo(object):
 
         # Keep name components around for checking prefixes.
         self._names = self.full_namespace.split(".")
+
+        packages_dir = config.get("subdirectory", packages_dir_name)
+        self.packages_path = os.path.join(self.root, packages_dir)
+        check(
+            os.path.isdir(self.packages_path),
+            "No directory '%s' found in '%s'" % (packages_dir, root),
+        )
 
         # These are internal cache variables.
         self._modules = {}
@@ -1008,7 +1008,7 @@ class Repo(object):
         """Check for a YAML config file in this db's root directory."""
         try:
             with open(self.config_file) as reponame_file:
-                yaml_data = yaml.load(reponame_file)
+                yaml_data = syaml.load(reponame_file)
 
                 if (
                     not yaml_data
@@ -1063,14 +1063,21 @@ class Repo(object):
                 "Repository %s does not contain package %s." % (self.namespace, spec.fullname)
             )
 
-        # Install patch files needed by the package.
+        package_path = self.filename_for_package_name(spec.name)
+        if not os.path.exists(package_path):
+            # Spec has no files (e.g., package, patches) to copy
+            tty.debug(f"{spec.name} does not have a package to dump")
+            return
+
+        # Install patch files needed by the (concrete) package.
         fs.mkdirp(path)
-        for patch in itertools.chain.from_iterable(spec.package.patches.values()):
-            if patch.path:
-                if os.path.exists(patch.path):
-                    fs.install(patch.path, path)
-                else:
-                    tty.warn("Patch file did not exist: %s" % patch.path)
+        if spec.concrete:
+            for patch in itertools.chain.from_iterable(spec.package.patches.values()):
+                if patch.path:
+                    if os.path.exists(patch.path):
+                        fs.install(patch.path, path)
+                    else:
+                        tty.warn("Patch file did not exist: %s" % patch.path)
 
         # Install the package.py file itself.
         fs.install(self.filename_for_package_name(spec.name), path)
@@ -1151,7 +1158,7 @@ class Repo(object):
 
     def package_path(self, name):
         """Get path to package.py file for this repo."""
-        return os.path.join(self.root, packages_dir_name, name, package_file_name)
+        return os.path.join(self.packages_path, name, package_file_name)
 
     def all_package_paths(self):
         for name in self.all_package_names():
@@ -1232,7 +1239,10 @@ class Repo(object):
         try:
             module = importlib.import_module(fullname)
         except ImportError:
-            raise UnknownPackageError(pkg_name)
+            raise UnknownPackageError(fullname)
+        except Exception as e:
+            msg = f"cannot load package '{pkg_name}' from the '{self.namespace}' repository: {e}"
+            raise RepoError(msg) from e
 
         cls = getattr(module, class_name)
         if not inspect.isclass(cls):
@@ -1288,7 +1298,7 @@ class Repo(object):
 RepoType = Union[Repo, RepoPath]
 
 
-def create_repo(root, namespace=None):
+def create_repo(root, namespace=None, subdir=packages_dir_name):
     """Create a new repository in root with the specified namespace.
 
     If the namespace is not provided, use basename of root.
@@ -1319,12 +1329,14 @@ def create_repo(root, namespace=None):
 
     try:
         config_path = os.path.join(root, repo_config_name)
-        packages_path = os.path.join(root, packages_dir_name)
+        packages_path = os.path.join(root, subdir)
 
         fs.mkdirp(packages_path)
         with open(config_path, "w") as config:
             config.write("repo:\n")
-            config.write("  namespace: '%s'\n" % namespace)
+            config.write(f"  namespace: '{namespace}'\n")
+            if subdir != packages_dir_name:
+                config.write(f"  subdirectory: '{subdir}'\n")
 
     except (IOError, OSError) as e:
         # try to clean up.

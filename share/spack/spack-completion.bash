@@ -491,14 +491,23 @@ _spack_buildcache() {
     then
         SPACK_COMPREPLY="-h --help"
     else
-        SPACK_COMPREPLY="create install list keys preview check download get-buildcache-name save-specfile sync update-index"
+        SPACK_COMPREPLY="push create install list keys preview check download get-buildcache-name save-specfile sync update-index rebuild-index"
+    fi
+}
+
+_spack_buildcache_push() {
+    if $list_options
+    then
+        SPACK_COMPREPLY="-h --help -r --rel -f --force -u --unsigned -a --allow-root -k --key -d --directory -m --mirror-name --mirror-url --update-index --rebuild-index --spec-file --only"
+    else
+        _mirrors
     fi
 }
 
 _spack_buildcache_create() {
     if $list_options
     then
-        SPACK_COMPREPLY="-h --help -r --rel -f --force -u --unsigned -a --allow-root -k --key -d --directory -m --mirror-name --mirror-url --rebuild-index --spec-file --only"
+        SPACK_COMPREPLY="-h --help -r --rel -f --force -u --unsigned -a --allow-root -k --key -d --directory -m --mirror-name --mirror-url --update-index --rebuild-index --spec-file --only"
     else
         _mirrors
     fi
@@ -569,10 +578,19 @@ _spack_buildcache_update_index() {
     fi
 }
 
+_spack_buildcache_rebuild_index() {
+    if $list_options
+    then
+        SPACK_COMPREPLY="-h --help -d --directory -m --mirror-name --mirror-url -k --keys"
+    else
+        _mirrors
+    fi
+}
+
 _spack_cd() {
     if $list_options
     then
-        SPACK_COMPREPLY="-h --help -m --module-dir -r --spack-root -i --install-dir -p --package-dir -P --packages -s --stage-dir -S --stages --source-dir -b --build-dir -e --env"
+        SPACK_COMPREPLY="-h --help -m --module-dir -r --spack-root -i --install-dir -p --package-dir -P --packages -s --stage-dir -S --stages --source-dir -b --build-dir -e --env --first"
     else
         _all_packages
     fi
@@ -716,7 +734,7 @@ _spack_compilers() {
 }
 
 _spack_concretize() {
-    SPACK_COMPREPLY="-h --help -f --force --test -q --quiet -U --fresh --reuse --reuse-deps"
+    SPACK_COMPREPLY="-h --help -f --force --test -q --quiet -U --fresh --reuse --reuse-deps -j --jobs"
 }
 
 _spack_config() {
@@ -1042,7 +1060,7 @@ _spack_external_list() {
 }
 
 _spack_external_read_cray_manifest() {
-    SPACK_COMPREPLY="-h --help --file --directory --dry-run --fail-on-error"
+    SPACK_COMPREPLY="-h --help --file --directory --ignore-default-dir --dry-run --fail-on-error"
 }
 
 _spack_fetch() {
@@ -1225,7 +1243,7 @@ _spack_load() {
 _spack_location() {
     if $list_options
     then
-        SPACK_COMPREPLY="-h --help -m --module-dir -r --spack-root -i --install-dir -p --package-dir -P --packages -s --stage-dir -S --stages --source-dir -b --build-dir -e --env"
+        SPACK_COMPREPLY="-h --help -m --module-dir -r --spack-root -i --install-dir -p --package-dir -P --packages -s --stage-dir -S --stages --source-dir -b --build-dir -e --env --first"
     else
         _all_packages
     fi
@@ -1606,7 +1624,7 @@ _spack_repo() {
 _spack_repo_create() {
     if $list_options
     then
-        SPACK_COMPREPLY="-h --help"
+        SPACK_COMPREPLY="-h --help -d --subdirectory"
     else
         _repos
     fi

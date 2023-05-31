@@ -102,6 +102,8 @@ class Protobuf(CMakePackage):
         sha256="fa1abf042eddc1b3b43875dc018c651c90cd1c0c5299975a818a1610bee54ab8",
     )
 
+    patch("msvc-abseil-target-namespace.patch", when="@3.22 %msvc")
+
     def fetch_remote_versions(self, *args, **kwargs):
         """Ignore additional source artifacts uploaded with releases,
         only keep known versions
