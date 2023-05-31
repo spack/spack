@@ -17,6 +17,7 @@ class H5bench(CMakePackage):
     version("latest", branch="master", submodules=True)
     version("develop", branch="develop", submodules=True)
 
+    version("1.4", commit="67a3e6d91508e5ab77db79c6187b2eb3c96119e0", submodules=True)
     version("1.3", commit="ec75a466a77c337b4252c0afe1055c7fbe841e16", submodules=True)
     version(
         "1.2", commit="866af6777573d20740d02acc47a9080de093e4ad", submodules=True, deprecated=True
