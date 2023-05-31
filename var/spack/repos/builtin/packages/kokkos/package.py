@@ -47,7 +47,7 @@ class Kokkos(CMakePackage, CudaPackage, ROCmPackage):
     devices_variants = {
         "cuda": [False, "Whether to build CUDA backend"],
         "openmp": [False, "Whether to build OpenMP backend"],
-        "pthread": [False, "Whether to build Pthread backend"],
+        "threads": [False, "Whether to build the C++ threads backend"],
         "serial": [True, "Whether to build serial backend"],
         "rocm": [False, "Whether to build HIP backend"],
         "sycl": [False, "Whether to build the SYCL backend"],
@@ -81,12 +81,8 @@ class Kokkos(CMakePackage, CudaPackage, ROCmPackage):
         "debug_dualview_modify_check": [False, "Debug check on dual views"],
         "deprecated_code": [False, "Whether to enable deprecated code"],
         "examples": [False, "Whether to build examples"],
-        "explicit_instantiation": [False, "Explicitly instantiate template types"],
         "hpx_async_dispatch": [False, "Whether HPX supports asynchronous dispath"],
-        "profiling": [True, "Create bindings for profiling tools"],
         "tuning": [False, "Create bindings for tuning tools"],
-        "profiling_load_print": [False, "Print which profiling tools got loaded"],
-        "qthread": [False, "Eenable the QTHREAD library"],
         "tests": [False, "Build for tests"],
     }
 
@@ -208,6 +204,7 @@ class Kokkos(CMakePackage, CudaPackage, ROCmPackage):
     variant("pic", default=False, description="Build position independent code")
 
     conflicts("std=11", when="@3.7:")
+    conflicts("std=14", when="@4.0:")
 
     conflicts("+cuda", when="std=17 ^cuda@:10")
     conflicts("+cuda", when="std=20 ^cuda@:12")
