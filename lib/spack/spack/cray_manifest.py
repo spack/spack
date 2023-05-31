@@ -48,7 +48,8 @@ def translated_compiler_name(manifest_compiler_name):
 def compiler_from_entry(entry):
     compiler_name = translated_compiler_name(entry["name"])
     paths = entry["executables"]
-    version = entry["version"]
+    # to instantiate a compiler class we may need a concrete version:
+    version = "={}".format(entry["version"])
     arch = entry["arch"]
     operating_system = arch["os"]
     target = arch["target"]

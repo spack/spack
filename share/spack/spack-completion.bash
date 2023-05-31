@@ -1060,7 +1060,7 @@ _spack_external_list() {
 }
 
 _spack_external_read_cray_manifest() {
-    SPACK_COMPREPLY="-h --help --file --directory --dry-run --fail-on-error"
+    SPACK_COMPREPLY="-h --help --file --directory --ignore-default-dir --dry-run --fail-on-error"
 }
 
 _spack_fetch() {
