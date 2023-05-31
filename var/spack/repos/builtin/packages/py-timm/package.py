@@ -29,8 +29,8 @@ class PyTimm(PythonPackage):
     depends_on("python@:3.10", when="@:0.6.12", type=("build", "run"))
 
     depends_on("py-setuptools", type="build")
-    depends_on("py-torch@1.7:", when="@0.6:", type=("build", "run"))
-    depends_on("py-torch@1.4:", type=("build", "run"))
+    depends_on("py-torch@1.7:1", when="@0.6:", type=("build", "run"))
+    depends_on("py-torch@1.4:1", type=("build", "run"))
     depends_on("py-torchvision", type=("build", "run"))
     depends_on("py-pyyaml", when="@0.6:", type=("build", "run"))
     depends_on("py-huggingface-hub", when="@0.6:", type=("build", "run"))
