@@ -14,6 +14,7 @@ class Busybox(MakefilePackage):
     homepage = "https://busybox.net"
     url = "https://busybox.net/downloads/busybox-1.31.0.tar.bz2"
 
+    version("1.36.0", sha256="542750c8af7cb2630e201780b4f99f3dcceeb06f505b479ec68241c1e6af61a5")
     version("1.31.1", sha256="d0f940a72f648943c1f2211e0e3117387c31d765137d92bd8284a3fb9752a998")
     version("1.31.0", sha256="0e4925392fd9f3743cc517e031b68b012b24a63b0cf6c1ff03cce7bb3846cc99")
     version("1.30.1", sha256="3d1d04a4dbd34048f4794815a5c48ebb9eb53c5277e09ffffc060323b95dfbdc")

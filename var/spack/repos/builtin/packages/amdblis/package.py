@@ -26,7 +26,7 @@ class Amdblis(BlisBase):
     """
 
     _name = "amdblis"
-    homepage = "https://developer.amd.com/amd-aocl/blas-library/"
+    homepage = "https://www.amd.com/en/developer/aocl/blis.html"
     url = "https://github.com/amd/blis/archive/3.0.tar.gz"
     git = "https://github.com/amd/blis.git"
 

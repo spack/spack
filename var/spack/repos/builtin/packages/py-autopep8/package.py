@@ -21,7 +21,6 @@ class PyAutopep8(PythonPackage):
     version("1.2.4", sha256="38e31e266e29808e8a65a307778ed8e402e1f0d87472009420d6d18146cdeaa2")
     version("1.2.2", sha256="ecc51614755c7f697e83478f87eb6bbd009075a397c15080f0311aaecbbdfca8")
 
-    extends("python", ignore="bin/pep8")
     depends_on("python@2.6:2.8,3.2:", type=("build", "run"))
 
     depends_on("py-pycodestyle@1.5.7:1.7.0", when="@:1.2.4", type=("build", "run"))

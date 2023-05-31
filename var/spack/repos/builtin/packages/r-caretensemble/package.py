@@ -18,6 +18,7 @@ class RCaretensemble(RPackage):
 
     cran = "caretEnsemble"
 
+    version("2.0.2", sha256="d8fcf3742beddc723b68677682708408cc11dcb8b36a0f70f03e7c4763e04f4d")
     version("2.0.1", sha256="7e595e604ce2d9d32afbc5404e6fcbcd7f80e687316e9ca3303aca3e44c3ef88")
 
     depends_on("r@3.2.0:", type=("build", "run"))
