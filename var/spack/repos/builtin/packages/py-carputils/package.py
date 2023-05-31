@@ -29,7 +29,7 @@ class PyCarputils(PythonPackage):
     depends_on("git", type=("build", "run"))
 
     depends_on("py-numpy@1.14.5:", type=("build", "run"))
-    depends_on("py-setuptools@41.6.0:", type="build")
+    depends_on("py-setuptools@41.6.0:", type=("build", "run"))
     depends_on("py-python-dateutil@2.8.1:", type=("build", "run"))
     depends_on("py-scipy@1.5.0:", type=("build", "run"))
     depends_on("py-matplotlib@3.0.0:", type=("build", "run"))
