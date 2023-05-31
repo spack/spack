@@ -25,7 +25,7 @@ def set_permissions_by_spec(path, spec):
 
 def set_permissions(path, perms, group=None):
     # Preserve higher-order bits of file permissions
-    perms |= Path(path).st_mode & (st.S_ISUID | st.S_ISGID | st.S_ISVTX)
+    perms |= Path(path).stat().st_mode & (st.S_ISUID | st.S_ISGID | st.S_ISVTX)
 
     # Do not let users create world/group writable suid binaries
     if perms & st.S_ISUID:
