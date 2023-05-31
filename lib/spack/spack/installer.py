@@ -286,7 +286,7 @@ def _packages_needed_to_bootstrap_compiler(
             (``False``).  The list will be empty if there are no compilers.
     """
     tty.debug("Bootstrapping {0} compiler".format(compiler))
-    compilers = spack.compilers.compilers_for_spec(compiler, arch_spec=architecture)
+    compilers = spack.compilers.CompilerQuery(compiler).all_compilers(arch_spec=architecture)
     if compilers:
         return []
 
@@ -977,7 +977,7 @@ class BuildTask:
         # a dependency of the build task. Here we add it to self.dependencies
         compiler_spec = self.pkg.spec.compiler
         arch_spec = self.pkg.spec.architecture
-        if not spack.compilers.compilers_for_spec(compiler_spec, arch_spec=arch_spec):
+        if not spack.compilers.CompilerQuery(compiler_spec).all_compilers(arch_spec=arch_spec):
             # The compiler is in the queue, identify it as dependency
             dep = spack.compilers.pkg_spec_for_compiler(compiler_spec)
             dep.constrain("platform=%s" % str(arch_spec.platform))

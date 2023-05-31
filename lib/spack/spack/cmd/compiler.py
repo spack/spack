@@ -105,7 +105,9 @@ def compiler_find(args):
 
 def compiler_remove(args):
     compiler_spec = spack.spec.CompilerSpec(args.compiler_spec)
-    candidate_compilers = spack.compilers.compilers_for_spec(compiler_spec, scope=args.scope)
+    candidate_compilers = spack.compilers.CompilerQuery(compiler_spec).all_compilers(
+        scope=args.scope
+    )
 
     if not candidate_compilers:
         tty.die("No compilers match spec %s" % compiler_spec)
@@ -124,7 +126,7 @@ def compiler_remove(args):
 def compiler_info(args):
     """Print info about all compilers matching a spec."""
     cspec = spack.spec.CompilerSpec(args.compiler_spec)
-    compilers = spack.compilers.compilers_for_spec(cspec, scope=args.scope)
+    compilers = spack.compilers.CompilerQuery(cspec).all_compilers(scope=args.scope)
 
     if not compilers:
         tty.die("No compilers match spec %s" % cspec)

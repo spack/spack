@@ -1334,7 +1334,9 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
         if not self.spec.concrete:
             raise ValueError("Can only get a compiler for a concrete package.")
 
-        return spack.compilers.compiler_for_spec(self.spec.compiler, self.spec.architecture)
+        return spack.compilers.CompilerQuery(self.spec.compiler).ensure_one(
+            arch_spec=self.spec.architecture
+        )
 
     def url_version(self, version):
         """
@@ -1857,9 +1859,12 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
 
     def do_test(self, dirty=False, externals=False):
         if self.test_requires_compiler:
-            compilers = spack.compilers.compilers_for_spec(
-                self.spec.compiler, arch_spec=self.spec.architecture
-            )
+            try:
+                query = spack.compilers.CompilerQuery(self.spec.compiler)
+                compilers = query.all_compilers(arch_spec=self.spec.architecture)
+            except TypeError:
+                compilers = []
+
             if not compilers:
                 tty.error(
                     "Skipping tests for package %s\n"

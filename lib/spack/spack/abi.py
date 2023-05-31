@@ -35,7 +35,7 @@ class ABI:
         from spack.build_environment import dso_suffix
 
         spec = CompilerSpec("gcc", version)
-        compilers = spack.compilers.compilers_for_spec(spec)
+        compilers = spack.compilers.CompilerQuery(spec).all_compilers()
         if not compilers:
             return None
         compiler = compilers[0]

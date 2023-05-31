@@ -134,7 +134,7 @@ def test_arch_spec_container_semantic(item, architecture_str):
 @pytest.mark.filterwarnings("ignore:microarchitecture specific")
 def test_optimization_flags(compiler_spec, target_name, expected_flags, config):
     target = spack.target.Target(target_name)
-    compiler = spack.compilers.compilers_for_spec(compiler_spec).pop()
+    compiler = spack.compilers.CompilerQuery(compiler_spec).all_compilers().pop()
     opt_flags = target.optimization_flags(compiler)
     assert opt_flags == expected_flags
 

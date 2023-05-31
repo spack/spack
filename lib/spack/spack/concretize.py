@@ -449,7 +449,7 @@ class Concretizer:
         # compiler_for_spec Should think whether this can be more
         # efficient
         def _proper_compiler_style(cspec, aspec):
-            compilers = spack.compilers.compilers_for_spec(cspec, arch_spec=aspec)
+            compilers = spack.compilers.CompilerQuery(cspec).all_compilers(arch_spec=aspec)
             # If the spec passed as argument is concrete we want to check
             # the versions match exactly
             if (
@@ -483,7 +483,9 @@ class Concretizer:
             return True
 
         if other_compiler:  # Another node has abstract compiler information
-            compiler_list = spack.compilers.find_specs_by_arch(other_compiler, spec.architecture)
+            compiler_list = spack.compilers.CompilerQuery(other_compiler).all_specs(
+                arch_spec=spec.architecture
+            )
             if not compiler_list:
                 # We don't have a matching compiler installed
                 if not self.check_for_compiler_existence:
@@ -561,7 +563,9 @@ class Concretizer:
         # This ensures that spack will detect conflicts that stem from a change
         # in default compiler flags.
         try:
-            compiler = spack.compilers.compiler_for_spec(spec.compiler, spec.architecture)
+            compiler = spack.compilers.CompilerQuery(spec.compiler).ensure_one(
+                arch_spec=spec.architecture
+            )
         except spack.compilers.NoCompilerForSpecError:
             if self.check_for_compiler_existence:
                 raise

@@ -498,9 +498,7 @@ def test_packages_needed_to_bootstrap_compiler_packages(install_mockery, monkeyp
     def _conc_spec(compiler):
         return spack.spec.Spec("a").concretized()
 
-    # Ensure we can get past functions that are precluding obtaining
-    # packages.
-    monkeypatch.setattr(spack.compilers, "compilers_for_spec", _none)
+    # Ensure we can get past functions that are precluding obtaining packages.
     monkeypatch.setattr(spack.compilers, "pkg_spec_for_compiler", _conc_spec)
     monkeypatch.setattr(spack.spec.Spec, "concretize", _noop)
 

@@ -58,7 +58,7 @@ def test_multiple_conflicting_compiler_definitions(mutable_config):
     mutable_config.update_config("compilers", compiler_config)
 
     arch_spec = spack.spec.ArchSpec(("test", "test", "test"))
-    cmp = compilers.compiler_for_spec("clang@=0.0.0", arch_spec)
+    cmp = compilers.CompilerQuery("clang@=0.0.0").ensure_one(arch_spec=arch_spec)
     assert cmp.f77 == "f77"
 
 
@@ -661,7 +661,7 @@ def test_xl_r_flags():
     [("gcc@4.7.2", False), ("clang@3.3", False), ("clang@8.0.0", True)],
 )
 def test_detecting_mixed_toolchains(compiler_spec, expected_result, config):
-    compiler = compilers.compilers_for_spec(compiler_spec).pop()
+    compiler = compilers.CompilerQuery(compiler_spec).all_compilers().pop()
     assert compilers.is_mixed_toolchain(compiler) is expected_result
 
 
