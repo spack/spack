@@ -1507,7 +1507,7 @@ def last_modification_time_recursive(path):
     path = path.resolve()
     times = [path.stat().st_mtime]
     times.extend(
-        os.lstat(root / name).st_mtime
+        os.lstat(Path(root) / name).st_mtime
         for root, dirs, files in os.walk(path)
         for name in dirs + files
     )
