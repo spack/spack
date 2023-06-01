@@ -20,6 +20,7 @@ class Openturns(CMakePackage):
     git = "https://github.com/openturns/openturns.git"
     maintainers("liuyangzhuan")
 
+    version("1.20", sha256="2be5247f0266d153619b35dfb1eeeb46736c502dad993b40aff8857d6314f293")
     version("1.18", sha256="1840d3fd8b38fd5967b1fa04e49d8f760c2c497400430e97623595ca48754ae0")
     version("master", branch="master")
 
@@ -38,6 +39,7 @@ class Openturns(CMakePackage):
     depends_on("intel-tbb", type=("build", "run"))
     depends_on("py-cloudpickle", type=("build", "run"))
     depends_on("py-urllib3", type=("build", "run"))
+    depends_on("libxml2", type=("build", "run"))
 
     def cmake_args(self):
         spec = self.spec
