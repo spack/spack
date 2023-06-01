@@ -1061,11 +1061,7 @@ print(json.dumps(config))
         # Add direct build/run/test dependencies to PYTHONPATH,
         # needed to build the package and to run import tests
         for direct_dep in dependent_spec.dependencies(deptype=("build", "run", "test")):
-            print()
-            print("Direct dependency: {}".format(direct_dep))
-            print("{}".format(direct_dep.package.extendees))
             if direct_dep.package.extends(self.spec):
-                print("dep added")
                 prefixes.add(direct_dep.prefix)
 
                 # Add recursive run dependencies of all direct dependencies,
