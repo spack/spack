@@ -743,7 +743,7 @@ def resolve_link_target_relative_to_the_link(link):
     # as pathlib cannot handle invalid Windows directory links
     target = os.readlink(link)
     if PurePath(target).is_absolute():
-        return target
+        return PurePath(target)
 
     link_dir = link.parent
     return link_dir / target
@@ -820,16 +820,18 @@ def copy_tree(
             ignore=ignore,
             follow_nonexisting=True,
         ):
+            s = Path(s)
+            d = Path(d)
             if s.is_symlink():
-                link_target = resolve_link_target_relative_to_the_link(s)
+                link_target = Path(resolve_link_target_relative_to_the_link(s))
                 if symlinks:
-                    target = os.readlink(s)
+                    target = Path(os.readlink(s))
                     if target.is_absolute():
 
                         def escaped_path(path):
                             return path.replace("\\", r"\\")
 
-                        new_target = re.sub(escaped_path(abs_src), escaped_path(abs_dest), target)
+                        new_target = re.sub(escaped_path(str(abs_src)), escaped_path(str(abs_dest)), str(target))
                         if new_target != target:
                             tty.debug("Redirecting link {0} to {1}".format(target, new_target))
                             target = new_target
@@ -1277,6 +1279,7 @@ def traverse_tree(
             ``src`` that do not exit in ``dest``. Default is True
         follow_links (bool): Whether to descend into symlinks in ``src``
     """
+    rel_path = Path(rel_path) if rel_path is not Path else rel_path
     if order not in ("pre", "post"):
         raise ValueError("Order must be 'pre' or 'post'.")
 
