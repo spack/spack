@@ -1254,6 +1254,7 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
         # if the spec is concrete already, then it extends something
         # that is an *optional* dependency, and the dep isn't there.
         if self.spec._concrete:
+            print("Spec is already concrete, extendee_spec is None")
             return None
         else:
             # TODO: do something sane here with more than one extendee
@@ -1296,7 +1297,10 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
         """
         if spec.name not in self.extendees:
             return False
+        print("{} is in self.extendees".format(spec.name))
+        print("{} is concrete? {}".format(self.spec.name, self.spec.concrete))
         s = self.extendee_spec
+        print("Extendee spec is {}".format(s))
         return s and spec.satisfies(s)
 
     def provides(self, vpkg_name):
