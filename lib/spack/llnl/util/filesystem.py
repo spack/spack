@@ -831,7 +831,9 @@ def copy_tree(
                         def escaped_path(path):
                             return path.replace("\\", r"\\")
 
-                        new_target = re.sub(escaped_path(str(abs_src)), escaped_path(str(abs_dest)), str(target))
+                        new_target = re.sub(
+                            escaped_path(str(abs_src)), escaped_path(str(abs_dest)), str(target)
+                        )
                         if new_target != target:
                             tty.debug("Redirecting link {0} to {1}".format(target, new_target))
                             target = new_target
