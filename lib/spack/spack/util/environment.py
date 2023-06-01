@@ -185,7 +185,6 @@ def _nix_env_var_to_source_line(var: str, val: str) -> str:
             fname=BASH_FUNCTION_FINDER.sub(r"\1", var), decl=val
         )
     else:
-        # Need pwsh support here
         source_line = f"{var}={double_quote_escape(val)}; export {var}"
     return source_line
 

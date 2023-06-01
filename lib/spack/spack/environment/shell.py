@@ -81,6 +81,8 @@ def deactivate_header(shell):
         cmds += 'set "SPACK_ENV="\n'
         # TODO: despacktivate
         # TODO: prompt
+    elif shell == "pwsh":
+        cmds += "Remove-Item Env:SPACK_ENV"
     else:
         cmds += "if [ ! -z ${SPACK_ENV+x} ]; then\n"
         cmds += "unset SPACK_ENV; export SPACK_ENV;\n"
