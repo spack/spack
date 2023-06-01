@@ -11,6 +11,7 @@ class PyIterativeStats(PythonPackage):
 
     homepage = "https://github.com/IterativeStatistics/BasicIterativeStatistics"
     url = "https://github.com/IterativeStatistics/BasicIterativeStatistics/archive/refs/heads/main.zip"
+    git = "https://github.com/IterativeStatistics/BasicIterativeStatistics.git"
 
     version("0.0.4", sha256="6e5194ff5ca11e901157aa2a2a9a15ab9bb22ce55d95596b5b3b703b0ea80e69")
     version("main", branch="main")
