@@ -1,8 +1,7 @@
 # The name of the Pygments (syntax highlighting) style to use.
 # We use our own extension of the default style with a few modifications
-from pygments.style import Style
 from pygments.styles.default import DefaultStyle
-from pygments.token import Comment, Generic, Text
+from pygments.token import Generic
 
 
 class SpackStyle(DefaultStyle):
