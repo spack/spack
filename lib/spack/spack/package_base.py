@@ -1253,7 +1253,7 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
 
         # if the spec is concrete already, then it extends something
         # that is an *optional* dependency, and the dep isn't there.
-        if self.spec._concrete:
+        if self.spec._concrete and not self.spec.external:
             print("Spec is already concrete, extendee_spec is None")
             return None
         else:
