@@ -348,7 +348,6 @@ def compilers_for_spec(
     """This gets all compilers that satisfy the supplied CompilerSpec.
     Returns an empty list if none are found.
     """
-    # FIXME (compilers refactoring): Remove the "use_cache" argument
     if use_cache:
         config = all_compilers_config(scope, init_config)
     else:
