@@ -26,7 +26,7 @@ class PyFuture(PythonPackage):
     def skip_modules(self):
         modules = []
 
-        if "+tkinter" not in self.spec["python"]:
+        if "~tkinter" in self.spec["python"]:
             modules.extend(["tkinter", "future.moves.tkinter"])
 
         if self.spec.satisfies("@:0.17.1 ^python@3.10:"):
