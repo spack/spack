@@ -62,7 +62,7 @@ def source_file(tmpdir, is_relocatable):
         src = tmpdir.join("relocatable.c")
         shutil.copy(template_src, str(src))
     else:
-        template_dirs = [os.path.join(spack.paths.test_path, "data", "templates")]
+        template_dirs = (os.path.join(spack.paths.test_path, "data", "templates"),)
         env = spack.tengine.make_environment(template_dirs)
         template = env.get_template("non_relocatable.c")
         text = template.render({"prefix": spack.store.layout.root})
