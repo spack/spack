@@ -1,3 +1,8 @@
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
+#
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 # The name of the Pygments (syntax highlighting) style to use.
 # We use our own extension of the default style with a few modifications
 from pygments.styles.default import DefaultStyle
