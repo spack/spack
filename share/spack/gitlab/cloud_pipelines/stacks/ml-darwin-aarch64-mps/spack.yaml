@@ -42,15 +42,15 @@ spack:
   - py-botorch
   - py-gpytorch
   - py-pytorch-gradual-warmup-lr
-  - py-segmentation-models-pytorch
-  - py-timm
+  # - py-segmentation-models-pytorch
+  # - py-timm
   - py-torch
   - py-torch-cluster
   - py-torch-geometric
   - py-torch-sparse
   - py-torchdata
   - py-torchfile
-  - py-torchgeo
+  # - py-torchgeo
   - py-torchvision
 
   # scikit-learn
