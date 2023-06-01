@@ -15,6 +15,7 @@ class PyArchspec(PythonPackage):
 
     maintainers("alalazo")
 
+    version("0.2.1", sha256="0974a8a95831d2d43cce906c5b79a35d5fd2bf9be478b0e3b7d83ccc51ac815e")
     version("0.2.0", sha256="6aaba5ebdb5c3633c400d8c221a6a18716da0c64b367a8509f4217b22e91a5f5")
     version(
         "0.1.3",
