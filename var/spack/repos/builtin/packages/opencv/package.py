@@ -822,35 +822,40 @@ class Opencv(CMakePackage, CudaPackage):
 
     @classmethod
     def determine_version(cls, lib):
-        ver = None
         for ext in library_extensions:
-            pattern = None
             if ext == "dylib":
                 # Darwin switches the order of the version compared to Linux
-                pattern = re.compile(r"lib(\S*?)_(\S*)\.(\d+\.\d+\.\d+)\.%s" % ext)
+                pattern = re.compile(r"libopencv_(\S*?)\.(\d+\.\d+\.\d+)\.%s" % ext)
             else:
-                pattern = re.compile(r"lib(\S*?)_(\S*)\.%s\.(\d+\.\d+\.\d+)" % ext)
+                pattern = re.compile(r"libopencv_(\S*?)\.%s\.(\d+\.\d+\.\d+)" % ext)
             match = pattern.search(lib)
             if match:
-                ver = match.group(3)
-        return ver
+                return match.group(2)
 
     @classmethod
     def determine_variants(cls, libs, version_str):
         variants = []
-        remaining_modules = set(Opencv.modules)
+        remaining_modules = set(cls.modules + cls.contrib_modules)
+        contrib_module_set = set(cls.contrib_modules)
+        has_contrib = False
         for lib in libs:
             for ext in library_extensions:
                 pattern = None
                 if ext == "dylib":
                     # Darwin switches the order of the version compared to Linux
-                    pattern = re.compile(r"lib(\S*?)_(\S*)\.(\d+\.\d+\.\d+)\.%s" % ext)
+                    pattern = re.compile(r"libopencv_(\S*)\.(\d+\.\d+\.\d+)\.%s" % ext)
                 else:
-                    pattern = re.compile(r"lib(\S*?)_(\S*)\.%s\.(\d+\.\d+\.\d+)" % ext)
+                    pattern = re.compile(r"libopencv_(\S*)\.%s\.(\d+\.\d+\.\d+)" % ext)
                 match = pattern.search(lib)
-                if match and not match.group(2) == "core":
-                    variants.append("+" + match.group(2))
-                    remaining_modules.remove(match.group(2))
+                if match:
+                    name = match.group(1)
+                    if name in contrib_module_set:
+                        has_contrib = True
+                    if name in remaining_modules:
+                        variants.append("+" + name)
+                        remaining_modules.remove(name)
+        if has_contrib:
+            variants.append("+contrib")
 
         # If libraries are not found, mark those variants as disabled
         for mod in remaining_modules:
