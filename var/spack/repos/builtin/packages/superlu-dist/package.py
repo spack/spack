@@ -123,6 +123,10 @@ class SuperluDist(CMakePackage, CudaPackage, ROCmPackage):
                     "HIP_HIPCC_FLAGS", "--amdgpu-target=" + ",".join(rocm_archs) + " -I/" + mpiinc
                 )
 
+        # Workaround for linking issue on Mac:
+        if spec.satisfies("%apple-clang"):
+            append_define("CMAKE_Fortran_COMPILER", spec["mpi"].mpifc)
+
         append_from_variant("BUILD_SHARED_LIBS", "shared")
         return cmake_args
 

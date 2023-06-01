@@ -91,6 +91,10 @@ class Hypre(AutotoolsPackage, CudaPackage, ROCmPackage):
     # Patch to get config flags right
     patch("detect-compiler.patch", when="@2.15.0:2.20.0")
 
+    @when("@2.26.0")
+    def patch(self):  # fix sequential compilation in 'src/seq_mv'
+        filter_file("\tmake", "\t$(MAKE)", "src/seq_mv/Makefile")
+
     depends_on("mpi", when="+mpi")
     depends_on("blas")
     depends_on("lapack")
