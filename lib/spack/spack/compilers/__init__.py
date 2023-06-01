@@ -175,8 +175,7 @@ def remove_compiler_from_config(compiler_spec, scope=None):
     for current_scope in candidate_scopes:
         removal_happened |= _remove_compiler_from_scope(compiler_spec, scope=current_scope)
 
-    if not removal_happened:
-        CompilerSpecInsufficientlySpecificError(compiler_spec)
+    return removal_happened
 
 
 def _remove_compiler_from_scope(compiler_spec, scope):
