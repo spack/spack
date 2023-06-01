@@ -660,6 +660,7 @@ class TestSpecSemantics(object):
             ("{architecture.os}", "", "os", lambda spec: spec.architecture),
             ("{architecture.target}", "", "target", lambda spec: spec.architecture),
             ("{prefix}", "", "prefix", lambda spec: spec),
+            ("{external}", "", "external", lambda spec: spec),  # test we print "False"
         ]
 
         hash_segments = [
