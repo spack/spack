@@ -1680,7 +1680,7 @@ def mock_executable(tmp_path):
         executable_dir.mkdir(parents=True, exist_ok=True)
         executable_path = executable_dir / name
         if sys.platform == "win32":
-            executable_path += ".bat"
+            executable_path = executable_dir / (name + ".bat")
         executable_path.write_text(f"{ shebang }{ output }\n")
         executable_path.chmod(0o755)
         return executable_path
