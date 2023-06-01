@@ -175,18 +175,16 @@ with '-Wl,-commons,use_dylibs' and without
     # fix MPI_Barrier segmentation fault
     # see https://lists.mpich.org/pipermail/discuss/2016-May/004764.html
     # and https://lists.mpich.org/pipermail/discuss/2016-June/004768.html
-    patch("mpich32_clang.patch", when="@3.2:3.2.0%clang")
-    patch("mpich32_clang.patch", when="@3.2:3.2.0%apple-clang")
+    patch("mpich32_clang.patch", when="@=3.2%clang")
+    patch("mpich32_clang.patch", when="@=3.2%apple-clang")
 
     # Fix SLURM node list parsing
     # See https://github.com/pmodels/mpich/issues/3572
     # and https://github.com/pmodels/mpich/pull/3578
-    # Even though there is no version 3.3.0, we need to specify 3.3:3.3.0 in
-    # the when clause, otherwise the patch will be applied to 3.3.1, too.
     patch(
         "https://github.com/pmodels/mpich/commit/b324d2de860a7a2848dc38aefb8c7627a72d2003.patch?full_index=1",
         sha256="5f48d2dd8cc9f681cf710b864f0d9b00c599f573a75b1e1391de0a3d697eba2d",
-        when="@3.3:3.3.0",
+        when="@=3.3",
     )
 
     # Fix reduce operations for unsigned integers

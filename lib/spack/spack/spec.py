@@ -4333,7 +4333,7 @@ class Spec(object):
 
                     if callable(current):
                         raise SpecFormatStringError("Attempted to format callable object")
-                    if not current:
+                    if current is None:
                         # We're not printing anything
                         return
 
