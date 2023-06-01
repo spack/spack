@@ -59,7 +59,7 @@ class Scotch(CMakePackage, MakefilePackage):
     depends_on("bison@3.4:", type="build")
     depends_on("mpi", when="+mpi")
     depends_on("zlib", when="+compression")
-    depends_on("openmpi +threads_multiple", when="+mpi +mpi_thread ^openmpi")
+    depends_on("openmpi +thread_multiple", when="+mpi +mpi_thread ^openmpi")
 
     # Version-specific patches
     patch("nonthreaded-6.0.4.patch", when="@6.0.4")
