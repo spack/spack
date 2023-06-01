@@ -1113,7 +1113,7 @@ class Mfem(Package, CudaPackage, ROCmPackage):
         install test subdirectory for use during `spack test run`."""
         # Clean the 'examples' directory -- at least one example is always built
         # and we do not want to cache executables.
-        make(join_path("examples", "clean"), parallel=False)
+        make("examples/clean", parallel=False)
         self.cache_extra_test_sources([self.examples_src_dir, self.examples_data_dir])
 
     def test_ex10(self):
@@ -1123,13 +1123,12 @@ class Mfem(Package, CudaPackage, ROCmPackage):
         # MPI and without it
         test_dir = join_path(self.test_suite.current_test_cache_dir, self.examples_src_dir)
 
-        makefile = join_path(self.prefix.share.mfem, "config.mk")
         mesh = join_path("..", self.examples_data_dir, "beam-quad.mesh")
         test_exe = "ex10p" if ("+mpi" in self.spec) else "ex10"
 
         with working_dir(test_dir):
             make = which("make")
-            make("CONFIG_MK={0}".format(makefile), test_exe, "parallel=False")
+            make(f"CONFIG_MK={self.config_mk}", test_exe, "parallel=False")
 
             ex10 = which(test_exe)
             ex10("--mesh", mesh)
