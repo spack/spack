@@ -391,7 +391,7 @@ def _socket_dir(gpgconf):
             user_dir = var_run_user / str(os.getuid())
 
             if not user_dir.exists():
-                user_dir.mkdir()
+                user_dir.mkdir(parents=True)
                 user_dir.chmod(0o700)
 
         # If the above operation fails due to lack of permissions, then
