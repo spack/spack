@@ -38,7 +38,7 @@ class Scotch(CMakePackage, MakefilePackage):
 
     build_system(conditional("cmake", when="@7:"), "makefile", default="cmake")
     variant("threads", default=True, description="use POSIX Pthreads within Scotch and PT-Scotch")
-    variant("mpi_thread", default=True, description="use multi-threaded algorithms")
+    variant("mpi_thread", default=False, description="use multi-threaded algorithms")
     variant("mpi", default=True, description="Compile parallel libraries")
     variant("compression", default=True, description="May use compressed files")
     variant("esmumps", default=False, description="Compile esmumps (needed by mumps)")
@@ -59,6 +59,7 @@ class Scotch(CMakePackage, MakefilePackage):
     depends_on("bison@3.4:", type="build")
     depends_on("mpi", when="+mpi")
     depends_on("zlib", when="+compression")
+    depends_on("openmpi +threads_multiple", when="+mpi +mpi_thread ^openmpi")
 
     # Version-specific patches
     patch("nonthreaded-6.0.4.patch", when="@6.0.4")
