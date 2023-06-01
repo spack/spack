@@ -831,9 +831,9 @@ def copy_tree(
                         def escaped_path(path):
                             return path.replace("\\", r"\\")
 
-                        new_target = re.sub(
+                        new_target = Path(re.sub(
                             escaped_path(str(abs_src)), escaped_path(str(abs_dest)), str(target)
-                        )
+                        ))
                         if new_target != target:
                             tty.debug("Redirecting link {0} to {1}".format(target, new_target))
                             target = new_target
@@ -1289,7 +1289,7 @@ def traverse_tree(
     ignore = ignore or (lambda filename: False)
 
     # Don't descend into ignored directories
-    if ignore(rel_path):
+    if ignore(str(rel_path)):
         return
     source_path = source_root / rel_path  # type: ignore
     dest_path = dest_root / rel_path  # type: ignore
