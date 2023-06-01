@@ -1298,7 +1298,7 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
         if spec.name not in self.extendees:
             return False
         print("{} is in self.extendees".format(spec.name))
-        print("{} is concrete? {}".format(self.spec.name, self.spec.concrete))
+        print("{} is {}concrete".format(self.spec.name, '' if self.spec.concrete else 'not '))
         s = self.extendee_spec
         print("Extendee spec is {}".format(s))
         return s and spec.satisfies(s)
