@@ -13,9 +13,7 @@ class PyIterativeStats(PythonPackage):
     url = "https://github.com/IterativeStatistics/BasicIterativeStatistics/archive/refs/heads/main.zip"
 
     version("0.0.4", sha256="6e5194ff5ca11e901157aa2a2a9a15ab9bb22ce55d95596b5b3b703b0ea80e69")
-    version("master", branch="master")
-
-    # variant("dev", default=False, description="dev dependencies")
+    version("main", branch="main")
 
     # main dependencies
     depends_on("python@3.8.0:", type=("build", "run"))
