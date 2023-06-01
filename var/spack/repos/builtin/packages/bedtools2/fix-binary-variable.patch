@@ -1,0 +1,13 @@
+diff --git a/test/merge/test-merge.sh b/test/merge/test-merge.sh
+index 586940bf..d7e2cf51 100644
+--- a/test/merge/test-merge.sh
++++ b/test/merge/test-merge.sh
+@@ -444,7 +444,7 @@ chr1	30	100	.,.,.
+ chr2	10	20	.
+ chr2	30	40	.
+ chr2	42	100	.,." >exp
+-../../bin/bedtools merge -i a.full.bam  -c 7 -o collapse > obs
++$BT merge -i a.full.bam  -c 7 -o collapse > obs
+ check exp obs
+ rm obs exp
+ 
