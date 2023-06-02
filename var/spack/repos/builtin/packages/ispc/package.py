@@ -51,6 +51,8 @@ class Ispc(CMakePackage):
     depends_on("llvm@11:", when="@1.16")
     depends_on("llvm@10:11", when="@1.15.0:1.15")
     depends_on("llvm@10.0:10", when="@1.13:1.14")
+    depends_on("llvm targets=arm,aarch64", when="target=arm:")
+    depends_on("llvm targets=arm,aarch64", when="target=aarch64:")
 
     patch(
         "don-t-assume-that-ncurses-zlib-are-system-libraries.patch",
@@ -78,6 +80,7 @@ class Ispc(CMakePackage):
             filter_file("bit 32 64", "bit 64", "cmake/GenerateBuiltins.cmake")
 
     def cmake_args(self):
+        spec = self.spec
         args = []
         args.append("-DARM_ENABLED=FALSE")
         args.append("-DISPC_NO_DUMPS=ON")  # otherwise, LLVM needs patching
@@ -85,6 +88,10 @@ class Ispc(CMakePackage):
         args.append("-DISPC_INCLUDE_EXAMPLES=OFF")
         args.append("-DISPC_INCLUDE_TESTS=OFF")
         args.append("-DISPC_INCLUDE_UTILS=OFF")
+        if spec.satisfies("target=x86_64:") or spec.satisfies("target=x86:"):
+            args.append("-DARM_ENABLED=OFF")
+        elif spec.satisfies("target=aarch64:"):
+            args.append("-DARM_ENABLED=ON")
         return args
 
     @run_after("install")
