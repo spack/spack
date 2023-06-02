@@ -475,12 +475,20 @@ class Llvm(CMakePackage, CudaPackage):
     # following patch is applicable starting at least version 5.0.0, the oldest we try to support.
     patch("no_cyclades9.patch", when="@5:9")
 
-    # add -lpthread to build OpenMP libraries with Fujitsu compiler
-    patch("llvm12-thread.patch", when="@12 %fj")
-
-    # add -lpthread to build OpenMP libraries
-    patch("llvm13-14-thread.patch", when="@13:14")
-    patch("llvm15-thread.patch", when="@15")
+    with when("+libomptarget"):
+        # libomptarget makes use of multithreading via the standard C++ library (e.g.
+        # std::call_once), which, depending on the platform and the implementation of the standard
+        # library, might or might not require linking to libpthread (note that the failure might
+        # happen at the linking time as well as at the runtime). In some cases, the required linker
+        # flag comes as a transitive dependency (e.g. from the static LLVMSupport component). The
+        # following patches enforce linking to the thread library that is relevant for the system,
+        # which might lead to overlinking in some cases though.
+        # TODO: figure out why we do not use LLVM_PTHREAD_LIB but run find_package(Threads), at
+        #  least for newer versions (the solution must work with both openmp=runtime and
+        #  openmp=project)
+        patch("llvm12-thread.patch", when="@12")
+        patch("llvm13-14-thread.patch", when="@13:14")
+        patch("llvm15-thread.patch", when="@15")
 
     # avoid build failed with Fujitsu compiler
     patch("llvm13-fujitsu.patch", when="@13 %fj")
