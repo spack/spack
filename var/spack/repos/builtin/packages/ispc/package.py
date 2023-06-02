@@ -43,6 +43,7 @@ class Ispc(CMakePackage):
     depends_on("ncurses", type="link")
     depends_on("zlib", type="link")
     depends_on("llvm+clang")
+    depends_on("llvm~libcxx", when="platform=darwin")
     depends_on("llvm@13:15", when="@1.19:")
     depends_on("llvm@11.0:14.0", when="@1.18")
     depends_on("llvm@11:14", when="@1.17")
@@ -65,7 +66,7 @@ class Ispc(CMakePackage):
 
     def setup_build_environment(self, env):
         if self.spec.satisfies("@1.18.0:"):
-            env.append_flags("LDFLAGS", "-lcurses")
+            env.append_flags("LDFLAGS", "-ltinfo")
             env.append_flags("LDFLAGS", "-lz")
 
     def patch(self):
@@ -80,6 +81,7 @@ class Ispc(CMakePackage):
         args = []
         args.append("-DARM_ENABLED=FALSE")
         args.append("-DISPC_NO_DUMPS=ON")  # otherwise, LLVM needs patching
+        args.append("-DCURSES_NEED_NCURSES=TRUE")
         args.append("-DISPC_INCLUDE_EXAMPLES=OFF")
         args.append("-DISPC_INCLUDE_TESTS=OFF")
         args.append("-DISPC_INCLUDE_UTILS=OFF")
