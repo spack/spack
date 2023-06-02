@@ -60,14 +60,16 @@ class Embree(CMakePackage):
             avx512_suffix = ""
             if spec.satisfies("@:3.12"):
                 avx512_suffix = "SKX"
-            args.append(self.define("EMBREE_ISA_AVX512{0}".format(avx512_suffix), True)),
+            args.append(self.define("EMBREE_ISA_AVX512" + avx512_suffix, True)),
             if spec.satisfies("%gcc@:7"):
                 # remove unsupported -mprefer-vector-width=256, otherwise copied
                 # from common/cmake/gnu.cmake
                 args.append(
-                    "-DFLAGS_AVX512{0}=-mavx512f -mavx512dq -mavx512cd"
-                    " -mavx512bw -mavx512vl -mf16c -mavx2 -mfma -mlzcnt"
-                    " -mbmi -mbmi2".format(avx512_suffix)
+                    self.define(
+                        "FLAGS_AVX512" + avx512_suffix,
+                        "-mavx512f -mavx512dq -mavx512cd -mavx512bw -mavx512vl"
+                        " -mf16c -mavx2 -mfma -mlzcnt -mbmi -mbmi2",
+                    )
                 )
 
         return args
