@@ -170,11 +170,9 @@ def merge_config_rules(configuration, spec):
     Returns:
         dict: actions to be taken on the spec passed as an argument
     """
-    # Construct a dictionary with the actions we need to perform on the spec passed as a parameter
-    spec_configuration = {}
     # The keyword 'all' is always evaluated first, all the others are
     # evaluated in order of appearance in the module file
-    spec_configuration.update(copy.deepcopy(configuration.get("all", {})))
+    spec_configuration = copy.deepcopy(configuration.get("all", {}))
     for constraint, action in configuration.items():
         if spec.satisfies(constraint):
             if hasattr(constraint, "override") and constraint.override:
