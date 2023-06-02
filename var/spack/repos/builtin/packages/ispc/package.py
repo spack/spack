@@ -85,6 +85,12 @@ class Ispc(CMakePackage):
         args.append("-DISPC_INCLUDE_UTILS=OFF")
         return args
 
+    @run_after("install")
+    def check_install(self):
+        with working_dir(self.stage.source_path):
+            ispc = Executable(join_path(self.prefix, "bin", "ispc"))
+            ispc("--version")
+
     @classmethod
     def determine_version(cls, exe):
         output = Executable(exe)("--version", output=str, error=str)
