@@ -82,7 +82,6 @@ class Ispc(CMakePackage):
     def cmake_args(self):
         spec = self.spec
         args = []
-        args.append("-DARM_ENABLED=FALSE")
         args.append("-DISPC_NO_DUMPS=ON")  # otherwise, LLVM needs patching
         args.append("-DCURSES_NEED_NCURSES=TRUE")
         args.append("-DISPC_INCLUDE_EXAMPLES=OFF")
