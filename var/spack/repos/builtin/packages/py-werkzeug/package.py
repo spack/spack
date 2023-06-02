@@ -13,6 +13,7 @@ class PyWerkzeug(PythonPackage):
     pypi = "Werkzeug/Werkzeug-0.16.0.tar.gz"
     git = "https://github.com/pallets/werkzeug.git"
 
+    version("2.3.4", sha256="1d5a58e0377d1fe39d061a5de4469e414e78ccb1e1e59c0f5ad6fa1c36c52b76")
     version("2.2.2", sha256="7ea2d48322cc7c0f8b3a215ed73eabd7b5d75d0b50e31ab006286ccff9e00b8f")
     version("2.0.2", sha256="aa2bb6fc8dee8d6c504c0ac1e7f5f7dc5810a9903e793b6f715a9f015bdadb9a")
     version("0.16.0", sha256="7280924747b5733b246fe23972186c6b348f9ae29724135a6dfc1e53cea433e7")
@@ -26,8 +27,6 @@ class PyWerkzeug(PythonPackage):
     version("0.11.15", sha256="455d7798ac263266dbd38d4841f7534dd35ca9c3da4a8df303f8488f38f3bcc0")
     version("0.11.11", sha256="e72c46bc14405cba7a26bd2ce28df734471bc9016bc8b4cb69466c2c14c2f7e5")
 
-    depends_on("python@3.7:", when="@2.1:", type=("build", "run"))
-    depends_on("python@3.6:", when="@2:", type=("build", "run"))
-    depends_on("python@2.7:2.8,3.4:", type=("build", "run"))
+    depends_on("python@3.8:", when="@2.3:", type=("build", "run"))
     depends_on("py-setuptools", type="build")
     depends_on("py-markupsafe@2.1.1:", when="@2.2:", type=("build", "run"))
