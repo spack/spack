@@ -7,9 +7,9 @@ from spack.package import *
 
 
 class EprosimaFastcdr(CMakePackage):
-    """eProsima Fast CDR is a C++ library that provides two serialization mechanisms. 
-    One is the standard CDR serialization mechanism, 
-    while the other is a faster implementation that modifies the standard."""
+    """eProsima Fast CDR is a C++ library that provides two serialization mechanisms.
+    One is the standard CDR serialization mechanism, while the other is a
+    faster implementation that modifies the standard."""
 
     homepage = "https://www.eprosima.com/"
     url = "https://github.com/eProsima/Fast-CDR/archive/v1.0.27.tar.gz"

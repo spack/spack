@@ -7,7 +7,7 @@ from spack.package import *
 
 
 class FoonathanMemory(CMakePackage):
-    """STL compatible C++ memory allocator library using a new RawAllocator concept 
+    """STL compatible C++ memory allocator library using a new RawAllocator concept
     that is similar to an Allocator but easier to use and write."""
 
     homepage = "https://memory.foonathan.net/"
