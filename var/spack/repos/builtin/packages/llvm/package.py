@@ -349,6 +349,7 @@ class Llvm(CMakePackage, CudaPackage):
         when="+libomptarget",
         msg="Non-host backends needed for offloading, set targets=all",
     )
+    # See https://github.com/spack/spack/pull/32476#issuecomment-1573770361
     conflicts("~lld", when="+libomptarget")
 
     # cuda_arch value must be specified
