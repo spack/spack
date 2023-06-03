@@ -14,6 +14,9 @@ class Botan(MakefilePackage):
 
     maintainers("aumuell")
 
+    version("3.0.0", sha256="5da552e00fa1c047a90c22eb5f0247ec27e7432b68b78e10a7ce0955269ccad7")
+    version("2.19.3", sha256="dae047f399c5a47f087db5d3d9d9e8f11ae4985d14c928d71da1aff801802d55")
+    version("2.19.2", sha256="3af5f17615c6b5cd8b832d269fb6cb4d54ec64f9eb09ddbf1add5093941b4d75")
     version("2.19.1", sha256="e26e00cfefda64082afdd540d3c537924f645d6a674afed2cd171005deff5560")
     version("2.19.0", sha256="240d9e56e6acb91ef4cf06a8a1c6c0f101c61d40cf48cccf139faef821d7040b")
     version("2.18.2", sha256="541a3b13f1b9d30f977c6c1ae4c7bfdfda763cda6e44de807369dce79f42307e")
@@ -33,6 +36,8 @@ class Botan(MakefilePackage):
 
     variant("doc", default=False, description="Build documentation")
 
+    executables = ["^botan$"]
+
     depends_on("python", type="build")
     depends_on("py-sphinx@1.2:", type="build", when="+doc")
 
@@ -48,3 +53,8 @@ class Botan(MakefilePackage):
         else:
             args.append("--without-documentation")
         return args
+
+    @classmethod
+    def determine_version(cls, exe):
+        output = Executable(exe)("--version", output=str, error=str)
+        return output
