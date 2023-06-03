@@ -18,7 +18,8 @@ class PyGmxapi(PythonPackage):
     homepage = "https://manual.gromacs.org/current/gmxapi/index.html"
     maintainers("eirrgang", "peterkasson")
 
-    pypi = "gmxapi/gmxapi-0.4.0.tar.gz"
+    pypi = "gmxapi/gmxapi-0.4.2.tar.gz"
+    version("0.4.2", sha256="c746c6498c73a75913d7fcb01c13cc001d4bcb82999e9bf91d63578565ed1a1f")
     version("0.4.1", sha256="cc7a2e509ab8a59c187d388dcfd21ea78b785c3b355149b1818085f34dbda62a")
     version("0.4.0", sha256="7fd58e6a4b1391043379e8ba55555ebeba255c5b394f5df9d676e6a5571d7eba")
 
