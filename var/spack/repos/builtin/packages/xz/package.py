@@ -67,7 +67,7 @@ class Xz(MSBuildPackage, AutotoolsPackage, SourceforgePackage):
             ["liblzma"],
             root=self.prefix,
             recursive=True,
-            shared=self.spec.satisfies("libs=shared")
+            shared=self.spec.satisfies("libs=shared"),
         )
 
     @classmethod
