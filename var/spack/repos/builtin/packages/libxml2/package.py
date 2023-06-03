@@ -20,6 +20,8 @@ class Libxml2(AutotoolsPackage, NMakePackage):
     url = "https://download.gnome.org/sources/libxml2/2.9/libxml2-2.9.13.tar.xz"
     list_url = "https://gitlab.gnome.org/GNOME/libxml2/-/releases"
 
+    maintainers("AlexanderRichert-NOAA")
+    
     def url_for_version(self, version):
         if version >= Version("2.9.13"):
             url = "https://download.gnome.org/sources/libxml2/{0}/libxml2-{1}.tar.xz"
