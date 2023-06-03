@@ -41,6 +41,8 @@ class Libxml2(AutotoolsPackage, NMakePackage):
     version("2.7.8", sha256="cda23bc9ebd26474ca8f3d67e7d1c4a1f1e7106364b690d822e009fdc3c417ec")
 
     variant("python", default=False, description="Enable Python support")
+    variant("shared", default=True, description="Build shared library")
+    variant("pic", default=True, description="Enable position-independent code (PIC)")
 
     depends_on("pkgconfig@0.9.0:", type="build", when="build_system=autotools")
     # conditional on non Windows, but rather than specify for each platform
@@ -165,6 +167,9 @@ class AutotoolsBuilder(autotools.AutotoolsBuilder, RunAfter):
             )
         else:
             args.append("--without-python")
+
+        args.extend(self.enable_or_disable("shared"))
+        args.extend(self.with_or_without("pic"))
 
         return args
 
