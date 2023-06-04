@@ -25,8 +25,8 @@ class PyHtseq(PythonPackage):
 
     # build-only dependencies
     depends_on("py-setuptools", type="build")
-    depends_on("py-cython", type="build")
-    depends_on("swig", type="build")
+    depends_on("py-cython@0.29.5:", type="build")
+    depends_on("swig@3.0.8:", type="build")
     # run dependencies
     depends_on("py-numpy", type=("build", "run"))
     depends_on("py-pysam", type=("build", "run"))
