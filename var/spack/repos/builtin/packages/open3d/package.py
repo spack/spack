@@ -24,7 +24,7 @@ class Open3d(CMakePackage, CudaPackage):
     depends_on("cmake@3.19:", type="build")
     # https://github.com/isl-org/Open3D/issues/3762
     # https://github.com/isl-org/Open3D/issues/4570
-    depends_on("llvm@7:+clang+libcxx")
+    depends_on("llvm@7:+clang")
     depends_on("eigen")
     depends_on("flann")
     # https://github.com/isl-org/Open3D/issues/4360
@@ -53,6 +53,9 @@ class Open3d(CMakePackage, CudaPackage):
     # C++14 compiler required
     conflicts("%gcc@:4")
     conflicts("%clang@:6")
+
+    # LLVM must be built with the C++ library
+    conflicts("^llvm libcxx=none")
 
     def patch(self):
         # Force Python libraries to be installed to self.prefix

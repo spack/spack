@@ -14,7 +14,7 @@ spack:
     llvm:
       require: "@14:"
       # Minimize LLVM
-      variants: ~lldb~lld~internal_unwind~polly~compiler-rt~gold
+      variants: "~lldb~lld~polly~gold libunwind=none compiler-rt=none"
     all:
       require: target=x86_64_v3
 
