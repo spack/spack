@@ -23,7 +23,6 @@ class PyHtseq(PythonPackage):
     variant("h5ad", default=True, description="h5ad output files", when="@2:")
     variant("loom", default=True, description="loom output files", when="@2:")
 
-    depends_on("python@3.7:", type=("build", "run"), when="@:0.12.3")
     # build-only dependencies
     depends_on("py-setuptools", type="build")
     depends_on("py-cython", type="build")
