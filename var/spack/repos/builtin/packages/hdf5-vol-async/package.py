@@ -26,19 +26,12 @@ class Hdf5VolAsync(CMakePackage):
     version("develop", branch="develop")
     version("1.6", tag="v1.6")
     version("1.5", tag="v1.5")
-    version("1.4", tag="v1.4")
-    version("1.3", tag="v1.3")
-    version("1.2", tag="v1.2")
-    version("1.1", tag="v1.1")
-    version("1.0", tag="v1.0")
 
     variant("memcpy", default=False, description="Enable buffer copy for dataset write")
 
     depends_on("mpi")
     depends_on("argobots@1.1:")
-    depends_on("hdf5 +mpi +threadsafe")
-    depends_on("hdf5@1.13.0:1.13.2", when="@:1.3")
-    depends_on("hdf5@1.13.3:", when="@1.4:")
+    depends_on("hdf5@1.14.0: +mpi +threadsafe")
 
     # Require MPI_THREAD_MULTIPLE.
     depends_on("openmpi +thread_multiple", when="^openmpi")
