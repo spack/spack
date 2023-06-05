@@ -137,7 +137,14 @@ class RequirementKind(enum.Enum):
     PACKAGE = enum.auto()
 
 
-DeclaredVersion = collections.namedtuple("DeclaredVersion", ["version", "idx", "origin"])
+class DeclaredVersion(NamedTuple):
+    """Data class to contain information on declared versions used in the solve"""
+    #: String representation of the version
+    version: str
+    #: Unique index assigned to this version
+    idx: int
+    #: Provenance of the version
+    origin: Provenance
 
 
 # Below numbers are used to map names of criteria to the order
