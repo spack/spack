@@ -19,7 +19,7 @@ class Atmi(CMakePackage):
     tags = ["rocm"]
 
     maintainers("srekolam", "renjithravindrankannath")
-
+    version("5.5.1", sha256="6b3ee68433506315b55d093a4b47463916874fb6f3f602098eaff2ec283e69ab")
     version("5.5.0", sha256="b8bfd32e5c386f5169da62172964343f9b7fad207e0e74dd1093c7acf06d9811")
     version("5.4.3", sha256="243aae6614e5bd136a099102957a6d65a01434b620291349613ad63701868ef8")
     version("5.4.0", sha256="b5cce10d7099fecbb40a0d9c2f29a7675315471fe145212b375e37e4c8ba5618")
@@ -136,6 +136,7 @@ class Atmi(CMakePackage):
         "5.4.0",
         "5.4.3",
         "5.5.0",
+        "5.5.1",
     ]:
         depends_on("comgr@" + ver, type="link", when="@" + ver)
         depends_on("hsa-rocr-dev@" + ver, type="link", when="@" + ver)

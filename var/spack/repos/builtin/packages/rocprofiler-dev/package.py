@@ -18,7 +18,7 @@ class RocprofilerDev(CMakePackage):
 
     maintainers("srekolam", "renjithravindrankannath")
     libraries = ["librocprofiler64"]
-
+    version("5.5.1", sha256="f5dbece5c205e37383fed4a2bd6042ff1c11f11f64dfbf65d7e23c0af6889a5a")
     version("5.5.0", sha256="d9dd38c42b4b12d4149f1cc3fca1af5bec69c72f455653a8f4fd8195b3b95703")
     version("5.4.3", sha256="86c3f43ee6cb9808796a21409c853cc8fd496578b9eef4de67ca77830229cac1")
     version("5.4.0", sha256="0322cbe5d1d3182e616f472da31f0707ad6040833c38c28f2b39381a85210f43")
@@ -133,6 +133,7 @@ class RocprofilerDev(CMakePackage):
         "5.4.0",
         "5.4.3",
         "5.5.0",
+        "5.5.1",
     ]:
         depends_on("hsakmt-roct@" + ver, when="@" + ver)
         depends_on("hsa-rocr-dev@" + ver, when="@" + ver)
@@ -146,7 +147,7 @@ class RocprofilerDev(CMakePackage):
     depends_on("py-cppheaderparser", when="@5.5.0:")
     depends_on("libpciaccess", when="@5.5.0:")
 
-    for ver in ["5.4.0", "5.4.3", "5.5.0"]:
+    for ver in ["5.4.0", "5.4.3", "5.5.0", "5.5.1"]:
         depends_on("comgr@" + ver, when="@" + ver)
         depends_on("llvm-amdgpu@" + ver, when="@" + ver)
         depends_on("hip@" + ver, when="@" + ver)

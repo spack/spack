@@ -21,7 +21,7 @@ class Comgr(CMakePackage):
     libraries = ["libamd_comgr"]
 
     version("master", branch="amd-stg-open")
-
+    version("5.5.1", sha256="0fbb15fe5a95c2e141ccd360bc413e1feda283334781540a6e5095ab27fd8019")
     version("5.5.0", sha256="97dfff03226ce0902b9d5d1c8c7bebb7a15978a81b6e9c750bf2d2473890bd42")
     version("5.4.3", sha256="8af18035550977fe0aa9cca8dfacbe65fe292e971de5a0e160710bafda05a81f")
     version("5.4.0", sha256="f4b83b27ff6195679d695c3f41fa25456e9c50bae6d978f46d3541b472aef757")
@@ -148,6 +148,7 @@ class Comgr(CMakePackage):
         "5.4.0",
         "5.4.3",
         "5.5.0",
+        "5.5.1",
         "master",
     ]:
         # llvm libs are linked statically, so this *could* be a build dep

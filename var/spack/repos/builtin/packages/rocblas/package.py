@@ -21,7 +21,7 @@ class Rocblas(CMakePackage):
 
     version("develop", branch="develop")
     version("master", branch="master")
-
+    version("5.5.1", sha256="7916a8d238d51cc239949d799f0b61c9d5cd63c6ccaed0e16749489b89ca8ff3")
     version("5.5.0", sha256="b5260517f199e806ae18f2c4495f163884e0d7a0a7c67af0770f7428ea50f898")
     version("5.4.3", sha256="d82cd334b7a9b40d16ec4f4bb1fb5662382dcbfc86ee5e262413ed63d9e6a701")
     version("5.4.0", sha256="261e05375024a01e68697c5d175210a07f0f5fc63a756234d996ddedffde78a2")
@@ -174,6 +174,7 @@ class Rocblas(CMakePackage):
         "5.4.0",
         "5.4.3",
         "5.5.0",
+        "5.5.1",
     ]:
         depends_on("hip@" + ver, when="@" + ver)
         depends_on("llvm-amdgpu@" + ver, type="build", when="@" + ver)
@@ -217,6 +218,7 @@ class Rocblas(CMakePackage):
         ("@5.4.0", "5aec08937473b27865fa969bb38a83bcf9463c2b"),
         ("@5.4.3", "5aec08937473b27865fa969bb38a83bcf9463c2b"),
         ("@5.5.0", "38d444a9f2b6cddfeaeedcb39a5688150fa27093"),
+        ("@5.5.1", "38d444a9f2b6cddfeaeedcb39a5688150fa27093"),
     ]:
         resource(
             name="Tensile",
