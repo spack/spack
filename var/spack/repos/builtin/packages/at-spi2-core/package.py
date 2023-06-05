@@ -16,6 +16,7 @@ class AtSpi2Core(MesonPackage):
     list_url = "http://ftp.gnome.org/pub/gnome/sources/at-spi2-core"
     list_depth = 1
 
+    version("2.48.3", sha256="37316df43ca9989ce539d54cf429a768c28bb38a0b34950beadd0421827edf55")
     version("2.48.0", sha256="905a5b6f1790b68ee803bffa9f5fab4ceb591fb4fae0b2f8c612c54f1d4e8a30")
     version("2.47.90", sha256="71189c21af7bd084a12ab85b229c2d798936470b12fb0c3f177e37181fb6c00c")
     version("2.40.1", sha256="9f66e3a4ee42db897af478a826b1366d7011a6d55ddb7e9d4bfeb3300ab23856")
