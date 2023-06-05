@@ -29,8 +29,8 @@ class PyLlvmlite(PythonPackage):
     version("0.23.0", sha256="bc8b1b46274d05b578fe9e980a6d98fa71c8727f6f9ed31d4d8468dce7aa5762")
 
     depends_on("py-setuptools", type="build")
-    depends_on("python@3.8:", type=("build", "run"), when="@0.40.0:")
-    depends_on("python@3.7:3.10", type=("build", "run"), when="@0.38.0:")
+    depends_on("python@3.8:3.11", type=("build", "run"), when="@0.40.0:")
+    depends_on("python@3.7:3.10", type=("build", "run"), when="@0.38.0:0.39")
     depends_on("python@3.7:3.9", type=("build", "run"), when="@0.37")
     depends_on("python@3.6:", type=("build", "run"), when="@0.33:")
     depends_on("python@2.6:2.8,3.4:", type=("build", "run"))
