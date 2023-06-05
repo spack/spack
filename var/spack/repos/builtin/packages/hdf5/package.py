@@ -7,6 +7,7 @@ import os
 import re
 import shutil
 
+import llnl.util.lang
 import llnl.util.tty as tty
 
 from spack.package import *
@@ -556,6 +557,12 @@ class Hdf5(CMakePackage):
     def setup_build_environment(self, env):
         env.set("SZIP_INSTALL", self.spec["szip"].prefix)
 
+    def setup_run_environment(self, env):
+        # According to related github posts and problems running test_install
+        # as a stand-alone test, it appears the lib path must be added to
+        # LD_LIBRARY_PATH.
+        env.append_path("LD_LIBRARY_PATH", self.prefix.lib)
+
     @run_before("cmake")
     def fortran_check(self):
         if "+fortran" in self.spec and not self.compiler.fc:
@@ -686,67 +693,60 @@ class Hdf5(CMakePackage):
                     if not os.path.exists(tgt_filename):
                         symlink(src_filename, tgt_filename)
 
+    @property
+    @llnl.util.lang.memoized
+    def _output_version(self):
+        spec_vers_str = str(self.spec.version.up_to(3))
+        if "develop" in spec_vers_str:
+            # Remove 'develop-' from the version in spack for checking
+            # version against the version in the HDF5 code.
+            spec_vers_str = spec_vers_str.partition("-")[2]
+        return spec_vers_str
+
     @run_after("install")
     @on_package_attributes(run_tests=True)
     def check_install(self):
-        self._check_install()
+        self.test_check_prog()
 
-    def _check_install(self):
-        # Build and run a small program to test the installed HDF5 library
-        spec = self.spec
+    def test_check_prog(self):
+        """build, run and check output of check.c"""
         print("Checking HDF5 installation...")
+        prog = "check.c"
+
+        spec = self.spec
         checkdir = "spack-check"
+
+        # Because the release number in a develop branch is not fixed,
+        # only the major and minor version numbers are compared.
+        # Otherwise all 3 numbers are checked.
+        fmt = "%d.%d %u.%u"
+        arg_line1 = "H5_VERS_MAJOR, H5_VERS_MINOR"
+        arg_line2 = "majnum, minnum"
+        if not spec.version.isdevelop():
+            fmt = "%d." + fmt + ".%u"
+            arg_line2 = "H5_VERS_RELEASE, " + arg_line2 + ", relnum"
+
+        source = r"""
+#include <hdf5.h>
+#include <assert.h>
+#include <stdio.h>
+int main(int argc, char **argv) {{
+  unsigned majnum, minnum, relnum;
+  herr_t herr = H5get_libversion(&majnum, &minnum, &relnum);
+  assert(!herr);
+  printf("HDF5 version {}\n", {},
+         {});
+  return 0;
+}}
+"""
+
+        expected = f"HDF5 version {self._output_version} {self._output_version}\n"
+
         with working_dir(checkdir, create=True):
-            # Because the release number in a develop branch is not fixed,
-            # only the major and minor version numbers are compared.
-            # Otherwise all 3 numbers are checked.
-            if "develop" in str(spec.version.up_to(3)):
-                source = r"""
-#include <hdf5.h>
-#include <assert.h>
-#include <stdio.h>
-int main(int argc, char **argv) {
-  unsigned majnum, minnum, relnum;
-  herr_t herr = H5get_libversion(&majnum, &minnum, &relnum);
-  assert(!herr);
-  printf("HDF5 version %d.%d %u.%u\n", H5_VERS_MAJOR, H5_VERS_MINOR,
-         majnum, minnum);
-  return 0;
-}
-"""
-            else:
-                source = r"""
-#include <hdf5.h>
-#include <assert.h>
-#include <stdio.h>
-int main(int argc, char **argv) {
-  unsigned majnum, minnum, relnum;
-  herr_t herr = H5get_libversion(&majnum, &minnum, &relnum);
-  assert(!herr);
-  printf("HDF5 version %d.%d.%d %u.%u.%u\n", H5_VERS_MAJOR, H5_VERS_MINOR,
-         H5_VERS_RELEASE, majnum, minnum, relnum);
-  return 0;
-}
-"""
-            expected = """\
-HDF5 version {version} {version}
-""".format(
-                version=str(spec.version.up_to(3))
-            )
-            if "develop" in expected:
-                # Remove 'develop-' from the version in spack for checking
-                # version against the version in the HDF5 code.
-                expected = """\
-HDF5 version {version} {version}
-""".format(
-                    version=str(spec.version.up_to(3)).partition("-")[2]
-                )
-            with open("check.c", "w") as f:
-                f.write(source)
-            if "+mpi" in spec:
-                cc = Executable(spec["mpi"].mpicc)
-            else:
-                cc = Executable(self.compiler.cc)
+            with open(prog, "w") as f:
+                f.write(source.format(fmt, arg_line1, arg_line2))
+
+            cc = Executable(os.environ["CC"])
             cc(*(["-c", "check.c"] + spec["hdf5"].headers.cpp_flags.split()))
             cc(*(["-o", "check", "check.o"] + spec["hdf5"].libs.ld_flags.split()))
             try:
@@ -768,13 +768,9 @@ HDF5 version {version} {version}
                 raise RuntimeError("HDF5 install check failed")
         shutil.rmtree(checkdir)
 
-    def _test_check_versions(self):
+    def test_version(self):
         """Perform version checks on selected installed package binaries."""
-        spec_vers_str = "Version {0}".format(self.spec.version)
-        if "develop" in spec_vers_str:
-            # Remove 'develop-' from the version in spack for checking
-            # version against the version in the HDF5 code.
-            spec_vers_str = spec_vers_str.partition("-")[2]
+        expected = f"Version {self._output_version}"
 
         exes = [
             "h5copy",
@@ -789,55 +785,31 @@ HDF5 version {version} {version}
         ]
         use_short_opt = ["h52gif", "h5repart", "h5unjam"]
         for exe in exes:
-            reason = "test: ensuring version of {0} is {1}".format(exe, spec_vers_str)
+            reason = f"ensure version of {exe} is {self._output_version}"
             option = "-V" if exe in use_short_opt else "--version"
-            self.run_test(
-                exe, option, spec_vers_str, installed=True, purpose=reason, skip_missing=True
-            )
+            with test_part(self, f"test_version_{exe}", purpose=reason):
+                path = join_path(self.prefix.bin, exe)
+                if not os.path.isfile(path):
+                    raise SkipTest(f"{path} is not installed")
 
-    def _test_example(self):
-        """This test performs copy, dump, and diff on an example hdf5 file."""
+                prog = which(path)
+                output = prog(option, output=str.split, error=str.split)
+                assert expected in output
+
+    def test_example(self):
+        """copy, dump, and diff example hdf5 file"""
         test_data_dir = self.test_suite.current_test_data_dir
+        with working_dir(test_data_dir, create=True):
+            filename = "spack.h5"
+            h5dump = which(self.prefix.bin.h5dump)
+            out = h5dump(filename, output=str.split, error=str.split)
+            expected = get_escaped_text_output("dump.out")
+            check_outputs(expected, out)
 
-        filename = "spack.h5"
-        h5_file = test_data_dir.join(filename)
+            h5copy = which(self.prefix.bin.h5copy)
+            copyname = "test.h5"
+            options = ["-i", filename, "-s", "Spack", "-o", copyname, "-d", "Spack"]
+            h5copy(*options)
 
-        reason = "test: ensuring h5dump produces expected output"
-        expected = get_escaped_text_output(test_data_dir.join("dump.out"))
-        self.run_test(
-            "h5dump",
-            filename,
-            expected,
-            installed=True,
-            purpose=reason,
-            skip_missing=True,
-            work_dir=test_data_dir,
-        )
-
-        reason = "test: ensuring h5copy runs"
-        options = ["-i", h5_file, "-s", "Spack", "-o", "test.h5", "-d", "Spack"]
-        self.run_test(
-            "h5copy", options, [], installed=True, purpose=reason, skip_missing=True, work_dir="."
-        )
-
-        reason = "test: ensuring h5diff shows no differences between orig and" " copy"
-        self.run_test(
-            "h5diff",
-            [h5_file, "test.h5"],
-            [],
-            installed=True,
-            purpose=reason,
-            skip_missing=True,
-            work_dir=".",
-        )
-
-    def test(self):
-        """Perform smoke tests on the installed package."""
-        # Simple version check tests on known binaries
-        self._test_check_versions()
-
-        # Run sequence of commands on an hdf5 file
-        self._test_example()
-
-        # Run existing install check
-        self._check_install()
+            h5diff = which(self.prefix.bin.h5diff)
+            h5diff(filename, copyname)

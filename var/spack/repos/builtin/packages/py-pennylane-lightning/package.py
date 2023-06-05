@@ -12,11 +12,12 @@ class PyPennylaneLightning(CMakePackage, PythonExtension):
 
     homepage = "https://docs.pennylane.ai/projects/lightning"
     git = "https://github.com/PennyLaneAI/pennylane-lightning.git"
-    url = "https://github.com/PennyLaneAI/pennylane-lightning/archive/refs/tags/v0.28.2.tar.gz"
+    url = "https://github.com/PennyLaneAI/pennylane-lightning/archive/refs/tags/v0.30.0.tar.gz"
 
     maintainers("mlxd", "AmintorDusko")
 
     version("master", branch="master")
+    version("0.30.0", sha256="0f4032409d20d00991b5d14fe0b2b928baca4a13c5a1b16eab91f61f9273e58d")
     version("0.29.0", sha256="da9912f0286d1a54051cc19cf8bdbdcd732795636274c95f376db72a88e52d85")
     version(
         "0.28.0",
@@ -47,14 +48,14 @@ class PyPennylaneLightning(CMakePackage, PythonExtension):
 
     # variant defined dependencies
     depends_on("blas", when="+blas")
-    depends_on("kokkos@3.7.00", when="+kokkos")
-    depends_on("kokkos-kernels@3.7.00", when="+kokkos")
+    depends_on("kokkos@:3.7.01", when="+kokkos")
+    depends_on("kokkos-kernels@:3.7.01", when="+kokkos")
     depends_on("llvm-openmp", when="+openmp %apple-clang")
 
     depends_on("python@3.8:", type=("build", "run"))
     depends_on("py-setuptools", type="build")
     depends_on("py-numpy", type=("build", "run"))
-    depends_on("py-pybind11", type=("build"))
+    depends_on("py-pybind11", type="link")
     depends_on("py-pip", type="build")
     depends_on("py-wheel", type="build")
     # depends_on("py-pennylane@0.28:", type=("build", "run"))  # circular dependency

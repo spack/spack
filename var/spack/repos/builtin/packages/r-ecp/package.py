@@ -24,5 +24,4 @@ class REcp(RPackage):
     version("3.1.1", sha256="d2ab194e22e6ab0168222fbccfcf2e25c6cd51a73edc959086b0c6e0a7410268")
 
     depends_on("r@3.0.0:", type=("build", "run"))
-    depends_on("r@3.00:", type=("build", "run"), when="@3.1.4:")
     depends_on("r-rcpp", type=("build", "run"))

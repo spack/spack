@@ -2,6 +2,7 @@
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
+import os
 
 from spack.package import *
 
@@ -17,7 +18,10 @@ class Arborx(CMakePackage, CudaPackage, ROCmPackage):
 
     maintainers("aprokop")
 
+    test_requires_compiler = True
+
     version("master", branch="master")
+    version("1.4", sha256="803a1018a6305cf3fea161172b3ada49537f59261279d91c2abbcce9492ee7af")
     version("1.3", sha256="3f1e17f029a460ab99f8396e2772cec908eefc4bf3868c8828907624a2d0ce5d")
     version("1.2", sha256="ed1939110b2330b7994dcbba649b100c241a2353ed2624e627a200a398096c20")
     version("1.1", sha256="2b5f2d2d5cec57c52f470c2bf4f42621b40271f870b4f80cb57e52df1acd90ce")
@@ -61,7 +65,8 @@ class Arborx(CMakePackage, CudaPackage, ROCmPackage):
     # Standalone Kokkos
     depends_on("kokkos@3.1.00:", when="~trilinos")
     depends_on("kokkos@3.4.00:", when="@1.2~trilinos")
-    depends_on("kokkos@3.6.00:", when="@1.3:~trilinos")
+    depends_on("kokkos@3.6.00:", when="@1.3~trilinos")
+    depends_on("kokkos@3.7.01:", when="@1.4:~trilinos")
     for backend in kokkos_backends:
         depends_on("kokkos+%s" % backend.lower(), when="~trilinos+%s" % backend.lower())
 
@@ -83,7 +88,8 @@ class Arborx(CMakePackage, CudaPackage, ROCmPackage):
     depends_on("trilinos+kokkos", when="+trilinos")
     depends_on("trilinos+openmp", when="+trilinos+openmp")
     depends_on("trilinos@13.2.0:", when="@1.2+trilinos")
-    depends_on("trilinos@13.4.0:", when="@1.3:+trilinos")
+    depends_on("trilinos@13.4.0:", when="@1.3+trilinos")
+    depends_on("trilinos@14.0.0:", when="@1.4:+trilinos")
     conflicts("~serial", when="+trilinos")
     conflicts("+cuda", when="+trilinos")
 
@@ -117,18 +123,18 @@ class Arborx(CMakePackage, CudaPackage, ROCmPackage):
         """The working directory for cached test sources."""
         return join_path(self.test_suite.current_test_cache_dir, self.examples_src_dir)
 
-    def build_tests(self):
-        """Build the stand-alone/smoke test."""
+    def test_run_ctest(self):
+        """run ctest tests on the installed package"""
 
         arborx_dir = self.spec["arborx"].prefix
-        cmake_prefix_path = "-DCMAKE_PREFIX_PATH={0}".format(arborx_dir)
+        cmake_prefix_path = f"-DCMAKE_PREFIX_PATH={arborx_dir}"
         if "+mpi" in self.spec:
-            cmake_prefix_path += ";{0}".format(self.spec["mpi"].prefix)
+            cmake_prefix_path += f";{self.spec['mpi'].prefix}"
 
         cmake_args = [
             ".",
             cmake_prefix_path,
-            "-DCMAKE_CXX_COMPILER={0}".format(self.compiler.cxx),
+            f"-DCMAKE_CXX_COMPILER={os.environ['CXX']}",
             self.define(
                 "Kokkos_ROOT",
                 self.spec["kokkos"].prefix
@@ -136,23 +142,11 @@ class Arborx(CMakePackage, CudaPackage, ROCmPackage):
                 else self.spec["trilinos"].prefix,
             ),
         ]
+        cmake = which(self.spec["cmake"].prefix.bin.cmake)
+        make = which("make")
+        ctest = which("ctest")
 
-        self.run_test(
-            "cmake", cmake_args, purpose="test: calling cmake", work_dir=self.cached_tests_work_dir
-        )
-
-        self.run_test(
-            "make", [], purpose="test: building the tests", work_dir=self.cached_tests_work_dir
-        )
-
-    def test(self):
-        """Perform stand-alone/smoke tests on the installed package."""
-        self.build_tests()
-
-        self.run_test(
-            "ctest",
-            ["-V"],
-            purpose="test: running the tests",
-            installed=False,
-            work_dir=self.cached_tests_work_dir,
-        )
+        with working_dir(self.cached_tests_work_dir):
+            cmake(*cmake_args)
+            make()
+            ctest("-V")
