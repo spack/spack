@@ -25,7 +25,6 @@ spack:
           - py-morph-tool
           - py-morphology-repair-workflow
           - py-region-grower
-          - py-sonata-network-reduction
           - py-cwl-registry
   packages:
     libsonata:
@@ -61,5 +60,4 @@ spack:
     - py-morphology-repair-workflow
     - py-morph-tool
     - py-region-grower
-    - py-sonata-network-reduction
     - py-cwl-registry

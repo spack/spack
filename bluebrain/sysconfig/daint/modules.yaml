@@ -41,7 +41,6 @@ modules:
       - 'py-bluepy'
       - 'py-bluepyopt'
       - 'brion+python'
-      - 'py-sonata-network-reduction'
     blacklist:
       - '%gcc'
       - '%intel'

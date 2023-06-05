@@ -82,9 +82,6 @@ spack install --dirty --keep-stage -v neuron~mpi %intel ^python@3.6.8
 spack spec -Il py-bluepy%gcc ^python@3.6.8
 spack install --dirty --keep-stage -v py-bluepy%gcc ^python@3.6.8
 
-spack spec -Il py-sonata-network-reduction%gcc ^python@3.6.8 ^zeromq%intel
-spack install --dirty --keep-stage -v py-sonata-network-reduction%gcc ^python@3.6.8 ^zeromq%intel
-
 spack spec -Il py-bluepyopt%gcc ^python@3.6.8 ^zeromq%intel
 spack install --keep-stage --dirty -v py-bluepyopt%gcc ^python@3.6.8 ^zeromq%intel
 
