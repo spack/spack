@@ -302,13 +302,16 @@ def env_create(args):
         # the environment should not include a view.
         with_view = None
 
-    _env_create(
+    env = _env_create(
         args.create_env,
         init_file=args.envfile,
         dir=args.dir,
         with_view=with_view,
         keep_relative=args.keep_relative,
     )
+
+    # Generate views, only really useful for environments created from spack.lock files.
+    env.regenerate_views()
 
 
 def _env_create(name_or_path, *, init_file=None, dir=False, with_view=None, keep_relative=False):

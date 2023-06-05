@@ -17,6 +17,7 @@ class PyPandas(PythonPackage):
 
     maintainers("adamjstewart")
 
+    version("2.0.2", sha256="dd5476b6c3fe410ee95926873f377b856dbc4e81a9c605a0dc05aaccc6a7c6c6")
     version("2.0.1", sha256="19b8e5270da32b41ebf12f0e7165efa7024492e9513fb46fb631c5022ae5709d")
     version("2.0.0", sha256="cda9789e61b44463c1c4fe17ef755de77bcd13b09ba31c940d20f193d63a5dc8")
     version("1.5.3", sha256="74a3fd7e5a7ec052f183273dc7b0acd3a863edf7520f5d3a1765c04ffdb3b0b1")

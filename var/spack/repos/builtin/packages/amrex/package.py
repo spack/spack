@@ -314,43 +314,20 @@ class Amrex(CMakePackage, CudaPackage, ROCmPackage):
 
         return args
 
-    # TODO: Replace this method and its 'get' use for cmake path with
-    #   join_path(self.spec['cmake'].prefix.bin, 'cmake') once stand-alone
-    #   tests can access build dependencies through self.spec['cmake'].
-    def cmake_bin(self, set=True):
-        """(Hack) Set/get cmake dependency path."""
-        filepath = join_path(self.install_test_root, "cmake_bin_path.txt")
-        if set:
-            with open(filepath, "w") as out_file:
-                cmake_bin = join_path(self.spec["cmake"].prefix.bin, "cmake")
-                out_file.write("{0}\n".format(cmake_bin))
-        else:
-            with open(filepath, "r") as in_file:
-                return in_file.read().strip()
-
     @run_after("build")
-    def setup_smoke_test(self):
-        """Skip setup smoke tests for AMReX versions less than 21.12."""
+    def setup_standalone_test(self):
+        """Setup stand-alonetests for AMReX versions from 21.12 on."""
         if self.spec.satisfies("@:21.11"):
             return
 
         self.cache_extra_test_sources(["Tests"])
 
-        # TODO: Remove once self.spec['cmake'] is available here
-        self.cmake_bin(set=True)
-
-    def test(self):
-        """Skip smoke tests for AMReX versions less than 21.12."""
+    def test_run_install_test(self):
+        """build and run AmrCore test"""
         if self.spec.satisfies("@:21.11"):
-            print("SKIPPED: Stand-alone tests not supported for this version of AMReX.")
-            return
+            raise SkipTest("Test is not supported for versions @:21.11")
 
-        """Perform smoke tests on installed package."""
-        # TODO: Remove/replace once self.spec['cmake'] is available here
-        cmake_bin = self.cmake_bin(set=False)
-
-        args = []
-        args.append("-S./cache/amrex/Tests/SpackSmokeTest")
+        args = ["-S{0}".format(join_path(".", "cache", "amrex", "Tests", "SpackSmokeTest"))]
         args.append("-DAMReX_ROOT=" + self.prefix)
         if "+mpi" in self.spec:
             args.append("-DMPI_C_COMPILER=" + self.spec["mpi"].mpicc)
@@ -360,15 +337,15 @@ class Amrex(CMakePackage, CudaPackage, ROCmPackage):
             args.append("-DCMAKE_CUDA_COMPILER=" + join_path(self.spec["cuda"].prefix.bin, "nvcc"))
 
         args.extend(self.cmake_args())
-        self.run_test(cmake_bin, args, purpose="Configure with CMake")
+        cmake = which(self.spec["cmake"].prefix.bin.cmake)
+        cmake(*args)
 
-        self.run_test("make", [], purpose="Compile")
+        make = which("make")
+        make()
 
-        self.run_test(
-            "install_test",
-            ["./cache/amrex/Tests/Amr/Advection_AmrCore/Exec/inputs-ci"],
-            ["finalized"],
-            installed=False,
-            purpose="AMReX Stand-Alone Smoke Test -- AmrCore",
-            skip_missing=False,
+        install_test = which("install_test")
+        inputs_path = join_path(
+            ".", "cache", "amrex", "Tests", "Amr", "Advection_AmrCore", "Exec", "inputs-ci"
         )
+        out = install_test(inputs_path, output=str.split, error=str.split)
+        assert "finalized" in out

@@ -16,7 +16,7 @@ import time
 import urllib.parse
 import urllib.request
 import warnings
-from typing import Any, Dict, List, Optional, Union
+from typing import Any, Dict, List, Optional, Set, Tuple, Union
 
 import llnl.util.filesystem as fs
 import llnl.util.tty as tty
@@ -1221,28 +1221,27 @@ class Environment:
         old_specs = set(self.user_specs)
         new_specs = set()
         for spec in matches:
-            if spec in list_to_change:
-                try:
-                    list_to_change.remove(spec)
-                    self.update_stale_references(list_name)
-                    new_specs = set(self.user_specs)
-                except spack.spec_list.SpecListError:
-                    # define new specs list
-                    new_specs = set(self.user_specs)
-                    msg = f"Spec '{spec}' is part of a spec matrix and "
-                    msg += f"cannot be removed from list '{list_to_change}'."
-                    if force:
-                        msg += " It will be removed from the concrete specs."
-                        # Mock new specs, so we can remove this spec from concrete spec lists
-                        new_specs.remove(spec)
-                    tty.warn(msg)
+            if spec not in list_to_change:
+                continue
+            try:
+                list_to_change.remove(spec)
+                self.update_stale_references(list_name)
+                new_specs = set(self.user_specs)
+            except spack.spec_list.SpecListError:
+                # define new specs list
+                new_specs = set(self.user_specs)
+                msg = f"Spec '{spec}' is part of a spec matrix and "
+                msg += f"cannot be removed from list '{list_to_change}'."
+                if force:
+                    msg += " It will be removed from the concrete specs."
+                    # Mock new specs, so we can remove this spec from concrete spec lists
+                    new_specs.remove(spec)
+                tty.warn(msg)
+            else:
+                if list_name == user_speclist_name:
+                    self.manifest.remove_user_spec(str(spec))
                 else:
-                    if list_name == user_speclist_name:
-                        for user_spec in matches:
-                            self.manifest.remove_user_spec(str(user_spec))
-                    else:
-                        for user_spec in matches:
-                            self.manifest.remove_definition(str(user_spec), list_name=list_name)
+                    self.manifest.remove_definition(str(spec), list_name=list_name)
 
         # If force, update stale concretized specs
         for spec in old_specs - new_specs:
@@ -1352,6 +1351,10 @@ class Environment:
             self.concretized_order = []
             self.specs_by_hash = {}
 
+        # Remove concrete specs that no longer correlate to a user spec
+        for spec in set(self.concretized_user_specs) - set(self.user_specs):
+            self.deconcretize(spec)
+
         # Pick the right concretization strategy
         if self.unify == "when_possible":
             return self._concretize_together_where_possible(tests=tests)
@@ -1365,67 +1368,120 @@ class Environment:
         msg = "concretization strategy not implemented [{0}]"
         raise SpackEnvironmentError(msg.format(self.unify))
 
-    def _concretize_together_where_possible(self, tests=False):
+    def deconcretize(self, spec):
+        # spec has to be a root of the environment
+        index = self.concretized_user_specs.index(spec)
+        dag_hash = self.concretized_order.pop(index)
+        del self.concretized_user_specs[index]
+
+        # If this was the only user spec that concretized to this concrete spec, remove it
+        if dag_hash not in self.concretized_order:
+            del self.specs_by_hash[dag_hash]
+
+    def _get_specs_to_concretize(
+        self,
+    ) -> Tuple[Set[spack.spec.Spec], Set[spack.spec.Spec], List[spack.spec.Spec]]:
+        """Compute specs to concretize for unify:true and unify:when_possible.
+
+        This includes new user specs and any already concretized specs.
+
+        Returns:
+            Tuple of new user specs, user specs to keep, and the specs to concretize.
+
+        """
+        # Exit early if the set of concretized specs is the set of user specs
+        new_user_specs = set(self.user_specs) - set(self.concretized_user_specs)
+        kept_user_specs = set(self.user_specs) & set(self.concretized_user_specs)
+        if not new_user_specs:
+            return new_user_specs, kept_user_specs, []
+
+        concrete_specs_to_keep = [
+            concrete
+            for abstract, concrete in self.concretized_specs()
+            if abstract in kept_user_specs
+        ]
+
+        specs_to_concretize = list(new_user_specs) + concrete_specs_to_keep
+        return new_user_specs, kept_user_specs, specs_to_concretize
+
+    def _concretize_together_where_possible(
+        self, tests: bool = False
+    ) -> List[Tuple[spack.spec.Spec, spack.spec.Spec]]:
         # Avoid cyclic dependency
         import spack.solver.asp
 
         # Exit early if the set of concretized specs is the set of user specs
-        user_specs_did_not_change = not bool(
-            set(self.user_specs) - set(self.concretized_user_specs)
-        )
-        if user_specs_did_not_change:
+        new_user_specs, _, specs_to_concretize = self._get_specs_to_concretize()
+        if not new_user_specs:
             return []
 
-        # Proceed with concretization
+        old_concrete_to_abstract = {
+            concrete: abstract for (abstract, concrete) in self.concretized_specs()
+        }
+
         self.concretized_user_specs = []
         self.concretized_order = []
         self.specs_by_hash = {}
 
         result_by_user_spec = {}
         solver = spack.solver.asp.Solver()
-        for result in solver.solve_in_rounds(self.user_specs, tests=tests):
+        for result in solver.solve_in_rounds(specs_to_concretize, tests=tests):
             result_by_user_spec.update(result.specs_by_input)
 
         result = []
         for abstract, concrete in sorted(result_by_user_spec.items()):
+            # If the "abstract" spec is a concrete spec from the previous concretization
+            # translate it back to an abstract spec. Otherwise, keep the abstract spec
+            abstract = old_concrete_to_abstract.get(abstract, abstract)
+            if abstract in new_user_specs:
+                result.append((abstract, concrete))
             self._add_concrete_spec(abstract, concrete)
-            result.append((abstract, concrete))
+
         return result
 
-    def _concretize_together(self, tests=False):
+    def _concretize_together(
+        self, tests: bool = False
+    ) -> List[Tuple[spack.spec.Spec, spack.spec.Spec]]:
         """Concretization strategy that concretizes all the specs
         in the same DAG.
         """
         # Exit early if the set of concretized specs is the set of user specs
-        user_specs_did_not_change = not bool(
-            set(self.user_specs) - set(self.concretized_user_specs)
-        )
-        if user_specs_did_not_change:
+        new_user_specs, kept_user_specs, specs_to_concretize = self._get_specs_to_concretize()
+        if not new_user_specs:
             return []
 
-        # Proceed with concretization
         self.concretized_user_specs = []
         self.concretized_order = []
         self.specs_by_hash = {}
 
         try:
-            concrete_specs = spack.concretize.concretize_specs_together(
-                *self.user_specs, tests=tests
+            concrete_specs: List[spack.spec.Spec] = spack.concretize.concretize_specs_together(
+                *specs_to_concretize, tests=tests
             )
         except spack.error.UnsatisfiableSpecError as e:
             # "Enhance" the error message for multiple root specs, suggest a less strict
             # form of concretization.
             if len(self.user_specs) > 1:
+                e.message += ". "
+                if kept_user_specs:
+                    e.message += (
+                        "Couldn't concretize without changing the existing environment. "
+                        "If you are ok with changing it, try `spack concretize --force`. "
+                    )
                 e.message += (
-                    ". Consider setting `concretizer:unify` to `when_possible` "
-                    "or `false` to relax the concretizer strictness."
+                    "You could consider setting `concretizer:unify` to `when_possible` "
+                    "or `false` to allow multiple versions of some packages."
                 )
             raise
 
-        concretized_specs = [x for x in zip(self.user_specs, concrete_specs)]
+        # set() | set() does not preserve ordering, even though sets are ordered
+        ordered_user_specs = list(new_user_specs) + list(kept_user_specs)
+        concretized_specs = [x for x in zip(ordered_user_specs, concrete_specs)]
         for abstract, concrete in concretized_specs:
             self._add_concrete_spec(abstract, concrete)
-        return concretized_specs
+
+        # zip truncates the longer list, which is exactly what we want here
+        return list(zip(new_user_specs, concrete_specs))
 
     def _concretize_separately(self, tests=False):
         """Concretization strategy that concretizes separately one

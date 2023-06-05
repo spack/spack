@@ -16,6 +16,7 @@ class Rdkit(CMakePackage):
 
     maintainers("bvanessen")
 
+    version("2023_03_1", sha256="db346afbd0ba52c843926a2a62f8a38c7b774ffab37eaf382d789a824f21996c")
     version("2022_09_5", sha256="2efe7ce3b527df529ed3e355e2aaaf14623e51876be460fa4ad2b7f7ad54c9b1")
     version("2021_09_5", sha256="f720b3f6292c4cd0a412a073d848ffac01a43960082e33ee54b68798de0cbfa1")
     version("2021_09_4", sha256="ce192e85bbdc1dcf24d327197229099c8625ee20ef022fcbd980791fdbfc7203")

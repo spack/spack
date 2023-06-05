@@ -14,6 +14,7 @@ class RXlconnect(RPackage):
 
     cran = "XLConnect"
 
+    version("1.0.7", sha256="821dba231c3c3147455e7525119b51e5dc001984c638b7ce519d0974b32de677")
     version("1.0.6", sha256="b233b9f74d1464b78d5dd28bd8a1fa46ca6254518da2d3bda3c978a3f4aaa4f9")
     version("1.0.5", sha256="975c2ef57f28ccfac79ae5d285b7e82e60791fb121052616c10bc52e2bca16ad")
     version("1.0.1", sha256="927aa34a3c81c12bf156e55edca9e2f5186c31435cce23feda4b906d049d6e39")

@@ -905,7 +905,7 @@ class Openmpi(AutotoolsPackage, CudaPackage):
 
     def configure_args(self):
         spec = self.spec
-        config_args = ["--enable-shared", "--disable-silent-rules"]
+        config_args = ["--enable-shared", "--disable-silent-rules", "--disable-sphinx"]
 
         # All rpath flags should be appended with self.compiler.cc_rpath_arg.
         # Later, we might need to update share/openmpi/mpic++-wrapper-data.txt
