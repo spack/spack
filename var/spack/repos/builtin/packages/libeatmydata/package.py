@@ -15,6 +15,7 @@ class Libeatmydata(AutotoolsPackage):
     homepage = "https://www.flamingspork.com/projects/libeatmydata/"
     url = "https://www.flamingspork.com/projects/libeatmydata/libeatmydata-105.tar.gz"
 
+    version("131", sha256="cf18a8c52138a38541be3478af446c06048108729d7e18476492d62d54baabc4")
     version("105", sha256="bdd2d068b6b27cf47cd22aa4c5da43b3d4a05944cfe0ad1b0d843d360ed3a8dd")
 
     depends_on("strace", type="test")
