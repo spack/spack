@@ -120,7 +120,7 @@ class PyHorovod(PythonPackage, CudaPackage):
     depends_on("py-petastorm@0.9.8:", type=("build", "run"), when="frameworks=spark @0.21.1:")
     depends_on("py-petastorm@0.11:", type=("build", "run"), when="frameworks=spark @0.22:")
     depends_on("py-petastorm@0.12:", type=("build", "run"), when="frameworks=spark @0.26:")
-    depends_on("py-pyarrow@0.15.0:", type=("build", "run"), when="frameworks=spark")
+    depends_on("py-pyarrow@0.15.0:10", type=("build", "run"), when="frameworks=spark")
     depends_on("py-pyspark@2.3.2:", type=("build", "run"), when="frameworks=spark ^python@:3.7")
     depends_on("py-pyspark@3.0.0:", type=("build", "run"), when="frameworks=spark ^python@3.8:")
     depends_on("py-fsspec", type=("build", "run"), when="frameworks=spark @0.22.1:0.24.1")
