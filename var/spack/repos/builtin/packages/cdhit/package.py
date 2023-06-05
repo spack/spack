@@ -3,6 +3,8 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+from glob import glob
+
 from spack.package import *
 
 
@@ -20,7 +22,12 @@ class Cdhit(MakefilePackage):
     variant("zlib", default=True, description="Compile with zlib")
 
     depends_on("perl", type=("build", "run"))
+    depends_on("perl-text-nsp", type="run")
     depends_on("zlib", when="+zlib", type="link")
+
+    def patch(self):
+        for f in glob("*.pl"):
+            filter_file("^#!/usr/bin/perl.*$", "#!/usr/bin/env perl", f)
 
     def build(self, spec, prefix):
         mkdirp(prefix.bin)
