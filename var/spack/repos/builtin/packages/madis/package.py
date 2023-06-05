@@ -67,4 +67,4 @@ class Madis(MakefilePackage):
 
     def patch(self):
         for pattern in ["NETCDF_LIB", "NETCDF_INC", "FC", "FFLAGS", "LDFLAGS"]:
-            filter_file(pattern+"=", "#"+pattern+"=", "src/makefile")
+            filter_file(pattern + "=", "#" + pattern + "=", "src/makefile")
