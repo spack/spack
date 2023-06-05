@@ -138,14 +138,15 @@ dependency, since ``autoconf`` already depends on it.
 Using a custom autoreconf phase
 """""""""""""""""""""""""""""""
 
-In some cases, it might be needed to replace the default implementation
-of the autoreconf phase with one running a script interpreter. In this
-example, the ``bash`` shell is used to run the ``autogen.sh`` script.
+In some cases, packages will provide a custom script to generate ``configure``,
+often named ``autogen.sh``. The default implementation of the autoreconf phase
+can be overridden to execute such a script.
 
 .. code-block:: python
 
    def autoreconf(self, spec, prefix):
-       which('bash')('autogen.sh')
+       autogen = Executable("./autogen.sh")
+       autogen()
 
 """""""""""""""""""""""""""""""""""""""
 patching configure or Makefile.in files

@@ -1,0 +1,30 @@
+diff --git a/./Makefile b/./Makefile
+index dce32d30e3..60becd7a7e 100644
+--- a/./Makefile
++++ b/./Makefile
+@@ -62,24 +62,11 @@ endif
+ # versions will copy those files anyway, and don't understand -i.
+ LIBTOOLIZE_INSTALL = `libtoolize -n -i >/dev/null 2>/dev/null && echo -i`
+ 
+-configure include/builddefs:
++autoconf include/builddefs:
+ 	libtoolize -c $(LIBTOOLIZE_INSTALL) -f
+ 	cp include/install-sh .
+ 	aclocal -I m4
+ 	autoconf
+-	./configure \
+-		--prefix=/ \
+-		--exec-prefix=/ \
+-		--sbindir=/bin \
+-		--bindir=/usr/bin \
+-		--libdir=/lib \
+-		--libexecdir=/usr/lib \
+-		--enable-lib64=yes \
+-		--includedir=/usr/include \
+-		--mandir=/usr/share/man \
+-		--datadir=/usr/share \
+-		$$LOCAL_CONFIGURE_OPTIONS
+-	touch .census
+ 
+ include/config.h: include/builddefs
+ ## Recover from the removal of $@
