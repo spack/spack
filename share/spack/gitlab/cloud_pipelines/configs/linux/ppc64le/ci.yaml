@@ -19,4 +19,5 @@ ci:
       - mkdir -p ${SPACK_ARTIFACTS_ROOT}/user_data
       - if [[ -r /mnt/key/e4s.gpg ]]; then spack gpg trust /mnt/key/e4s.gpg; fi
       - if [[ -r /mnt/key/spack_public_key.gpg ]]; then spack gpg trust /mnt/key/spack_public_key.gpg; fi
-      - spack --color=always --backtrace ci rebuild > >(tee ${SPACK_ARTIFACTS_ROOT}/user_data/pipeline_out.txt) 2> >(tee ${SPACK_ARTIFACTS_ROOT}/user_data/pipeline_err.txt >&2)
+      - spack --color=always --backtrace ${CI_REBUILD_SPACK_ARGS}
+        ci rebuild > >(tee ${SPACK_ARTIFACTS_ROOT}/user_data/pipeline_out.txt) 2> >(tee ${SPACK_ARTIFACTS_ROOT}/user_data/pipeline_err.txt >&2)
