@@ -23,5 +23,4 @@ class RMnormt(RPackage):
     version("1.5-5", sha256="ff78d5f935278935f1814a69e5a913d93d6dd2ac1b5681ba86b30c6773ef64ac")
 
     depends_on("r@2.2.0:", type=("build", "run"))
-    depends_on("r-tmvnsim@1.0-2:", type=("build", "run"), when="@2.0.2:")
-    depends_on("r-tmvnsim", when="@:2.0.2")
+    depends_on("r-tmvnsim@1.0-2:", type=("build", "run"), when="@2.0.2")

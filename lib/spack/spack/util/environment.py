@@ -171,7 +171,11 @@ def path_put_first(var_name: str, directories: List[Path]):
 BASH_FUNCTION_FINDER = re.compile(r"BASH_FUNC_(.*?)\(\)")
 
 
-def _env_var_to_source_line(var: str, val: str) -> str:
+def _win_env_var_to_set_line(var: str, val: str) -> str:
+    return f'set "{var}={val}"'
+
+
+def _nix_env_var_to_source_line(var: str, val: str) -> str:
     if var.startswith("BASH_FUNC"):
         source_line = "function {fname}{decl}; export -f {fname}".format(
             fname=BASH_FUNCTION_FINDER.sub(r"\1", var), decl=val
@@ -179,6 +183,13 @@ def _env_var_to_source_line(var: str, val: str) -> str:
     else:
         source_line = f"{var}={double_quote_escape(val)}; export {var}"
     return source_line
+
+
+def _env_var_to_source_line(var: str, val: str) -> str:
+    if sys.platform == "win32":
+        return _win_env_var_to_set_line(var, val)
+    else:
+        return _nix_env_var_to_source_line(var, val)
 
 
 @system_path_filter(arg_slice=slice(1))
