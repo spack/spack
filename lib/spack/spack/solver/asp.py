@@ -2951,7 +2951,16 @@ class Solver:
 
         return reusable_specs
 
-    def solve(self, specs, out=None, timers=False, stats=False, tests=False, setup_only=False):
+    def solve(
+        self,
+        specs,
+        out=None,
+        timers=False,
+        stats=False,
+        tests=False,
+        setup_only=False,
+        deprecated=False,
+    ):
         """
         Arguments:
           specs (list): List of ``Spec`` objects to solve for.
@@ -2962,6 +2971,7 @@ class Solver:
             If a tuple of package names, concretize test dependencies for named
             packages (defaults to False: do not concretize test dependencies).
           setup_only (bool): if True, stop after setup and don't solve (default False).
+          deprecated (bool): allow deprecated version in the solve
         """
         # Check upfront that the variants are admissible
         specs = [s.lookup_hash() for s in specs]
@@ -2969,10 +2979,14 @@ class Solver:
         reusable_specs.extend(self._reusable_specs(specs))
         setup = SpackSolverSetup(tests=tests)
         output = OutputConfiguration(timers=timers, stats=stats, out=out, setup_only=setup_only)
-        result, _, _ = self.driver.solve(setup, specs, reuse=reusable_specs, output=output)
+        result, _, _ = self.driver.solve(
+            setup, specs, reuse=reusable_specs, output=output, deprecated=deprecated
+        )
         return result
 
-    def solve_in_rounds(self, specs, out=None, timers=False, stats=False, tests=False):
+    def solve_in_rounds(
+        self, specs, out=None, timers=False, stats=False, tests=False, deprecated=False
+    ):
         """Solve for a stable model of specs in multiple rounds.
 
         This relaxes the assumption of solve that everything must be consistent and
@@ -2987,6 +3001,7 @@ class Solver:
             timers (bool): print timing if set to True
             stats (bool): print internal statistics if set to True
             tests (bool): add test dependencies to the solve
+            deprecated (bool): allow deprecated version in the solve
         """
         specs = [s.lookup_hash() for s in specs]
         reusable_specs = self._check_input_and_extract_concrete_specs(specs)
@@ -3000,7 +3015,7 @@ class Solver:
         output = OutputConfiguration(timers=timers, stats=stats, out=out, setup_only=False)
         while True:
             result, _, _ = self.driver.solve(
-                setup, input_specs, reuse=reusable_specs, output=output
+                setup, input_specs, reuse=reusable_specs, output=output, deprecated=deprecated
             )
             yield result
 
