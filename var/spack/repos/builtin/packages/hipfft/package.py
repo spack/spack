@@ -23,6 +23,7 @@ class Hipfft(CMakePackage, CudaPackage, ROCmPackage):
 
     version("master", branch="master")
 
+    version("5.5.1", sha256="3addd15a459752ad657e84c2a7b6b6289600d1d0a5f90d6e0946ba11e8148fc0")
     version("5.5.0", sha256="47ec6f7da7346c312b80daaa8f763e86c7bdc33ac8617cfa3344068e5b20dd9e")
     version("5.4.3", sha256="ae37f40b6019a11f10646ef193716836f366d269eab3c5cc2ed09af85355b945")
     version("5.4.0", sha256="d0a8e790182928b3d19774b8db1eece9b881a422f6a7055c051b12739fded624")
@@ -120,6 +121,7 @@ class Hipfft(CMakePackage, CudaPackage, ROCmPackage):
         "5.4.0",
         "5.4.3",
         "5.5.0",
+        "5.5.1",
     ]:
         depends_on("rocm-cmake@%s:" % ver, type="build", when="@" + ver)
         depends_on("rocfft@" + ver, when="+rocm @" + ver)

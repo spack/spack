@@ -17,6 +17,8 @@ class RocmTensile(CMakePackage):
     tags = ["rocm"]
 
     maintainers("srekolam", "renjithravindrankannath", "haampie")
+
+    version("5.5.1", sha256="b65cb7335abe51ba33be9d46a5ede992b4e5932fa33797397899a6bf33a770e9")
     version("5.5.0", sha256="70fd736d40bb4c3461f07c77ad3ae6c485e3e842671ce9b223d023d836884ae2")
     version("5.4.3", sha256="a4c5e62edd33ea6b8528eb3f017a14c28eaa67c540f5c9023f6a245340198b0f")
     version("5.4.0", sha256="2da9c1df3c6d9b44afdad621ef59a03389fb1a38a61a8b8bad9c9991b97157eb")
@@ -154,6 +156,7 @@ class RocmTensile(CMakePackage):
         "5.4.0",
         "5.4.3",
         "5.5.0",
+        "5.5.1",
     ]:
         depends_on("rocm-cmake@" + ver, type="build", when="@" + ver)
         depends_on("hip@" + ver, when="@" + ver)
@@ -170,6 +173,7 @@ class RocmTensile(CMakePackage):
         "5.4.0",
         "5.4.3",
         "5.5.0",
+        "5.5.1",
     ]:
         depends_on("rocm-openmp-extras@" + ver, when="@" + ver)
 
@@ -196,6 +200,7 @@ class RocmTensile(CMakePackage):
         "5.4.0",
         "5.4.3",
         "5.5.0",
+        "5.5.1",
     ]:
         depends_on("rocm-smi-lib@" + ver, type="build", when="@" + ver)
 

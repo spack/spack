@@ -18,12 +18,13 @@ class Rocalution(CMakePackage):
 
     homepage = "https://github.com/ROCmSoftwarePlatform/rocALUTION"
     git = "https://github.com/ROCmSoftwarePlatform/rocALUTION.git"
-    url = "https://github.com/ROCmSoftwarePlatform/rocALUTION/archive/rocm-5.4.3.tar.gz"
+    url = "https://github.com/ROCmSoftwarePlatform/rocALUTION/archive/rocm-5.5.0.tar.gz"
     tags = ["rocm"]
 
     maintainers("cgmb", "srekolam", "renjithravindrankannath")
     libraries = ["librocalution_hip"]
 
+    version("5.5.1", sha256="4612e30a0290b1732c8862eea655122abc2d22ce4345b8498fe4127697e880b4")
     version("5.5.0", sha256="626e966b67b83a1ef79f9bf27aba998c49cf65c4208092516aa1e32a6cbd8c36")
     version("5.4.3", sha256="39d00951a9b3cbdc4205a7e3ce75c026d9428c71c784815288c445f84a7f8a0e")
     version("5.4.0", sha256="dccf004434e0fee6d0c7bedd46827f5a2af0392bc4807a08403b130e461f55eb")
@@ -153,6 +154,7 @@ class Rocalution(CMakePackage):
         "5.4.0",
         "5.4.3",
         "5.5.0",
+        "5.5.1",
     ]:
         depends_on("hip@" + ver, when="@" + ver)
         depends_on("rocprim@" + ver, when="@" + ver)

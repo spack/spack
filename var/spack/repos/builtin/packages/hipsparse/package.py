@@ -19,7 +19,7 @@ class Hipsparse(CMakePackage, CudaPackage, ROCmPackage):
 
     maintainers("cgmb", "srekolam", "renjithravindrankannath", "haampie")
     libraries = ["libhipsparse"]
-
+    version("5.5.1", sha256="3d291e4fe2c611d555e54de66149b204fe7ac59f5dd00a9ad93bc6dca0528880")
     version("5.5.0", sha256="8122c8f17d899385de83efb7ac0d8a4fabfcd2aa21bbed63e63ea7adf0d22df6")
     version("5.4.3", sha256="b373eccd03679a13fab4e740fc780da25cbd598abca3a1e5e3613ae14954f9db")
     version("5.4.0", sha256="47420d38483c8124813b744971e428a0352c83d9b62a5a50f74ffa8f9b785b20")
@@ -154,6 +154,7 @@ class Hipsparse(CMakePackage, CudaPackage, ROCmPackage):
         "5.4.0",
         "5.4.3",
         "5.5.0",
+        "5.5.1",
     ]:
         depends_on("rocm-cmake@%s:" % ver, type="build", when="@" + ver)
         depends_on("rocsparse@" + ver, when="+rocm @" + ver)

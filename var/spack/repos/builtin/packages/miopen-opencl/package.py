@@ -20,6 +20,7 @@ class MiopenOpencl(CMakePackage):
     maintainers("srekolam", "renjithravindrankannath")
     libraries = ["libMIOpen"]
 
+    version("5.5.1", sha256="2cd75071b8ee876c69a94f028b6c8a9346d6d2fde7d4b64e6d635f3b6c994262")
     version("5.5.0", sha256="791087242551669e546225e36123c21663f0dad14dbcfd6d0ce0e7bad0ab0de1")
     version("5.4.3", sha256="37ffe2ed3d7942da8ea2f6bdb85c7a2f58e3ccd31767db158a322769d3604efd")
     version("5.4.0", sha256="b4153791f9eeee4cbc5534bc6ad8b32c0947bcd38e08b77ebe144065a4fa5456")
@@ -148,6 +149,7 @@ class MiopenOpencl(CMakePackage):
         "5.4.0",
         "5.4.3",
         "5.5.0",
+        "5.5.1",
     ]:
         depends_on("rocm-cmake@%s:" % ver, type="build", when="@" + ver)
         depends_on("rocm-opencl@" + ver, when="@" + ver)
@@ -156,7 +158,7 @@ class MiopenOpencl(CMakePackage):
     for ver in ["5.1.0", "5.1.3", "5.2.0", "5.2.1", "5.2.3", "5.3.0", "5.3.3"]:
         depends_on("mlirmiopen@" + ver, when="@" + ver)
 
-    for ver in ["5.4.0", "5.4.3", "5.5.0"]:
+    for ver in ["5.4.0", "5.4.3", "5.5.0", "5.5.1"]:
         depends_on("nlohmann-json", type="link")
         depends_on("rocblas", type="link")
         depends_on("rocmlir@" + ver, when="@" + ver)
