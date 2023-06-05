@@ -30,9 +30,14 @@ class Madis(MakefilePackage):
     depends_on("parallel-netcdf", when="+pnetcdf")
 
     def setup_build_environment(self, env):
+        fflags = []
+        if self.spec.satisfies("%gcc@10:"):
+            fflags += ["-fallow-argument-mismatch"]
+
         if self.spec.satisfies("+pic"):
-            env.set("FFLAGS", "-fPIC")
-            env.set("CFLAGS", "-fPIC")
+            fflags += ["-fPIC"]
+
+        env.set("FFLAGS", " ".join(fflags))
 
         ldflags = []
         libs = []
