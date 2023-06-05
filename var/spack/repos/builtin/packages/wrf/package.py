@@ -141,7 +141,7 @@ class Wrf(Package):
     patch("patches/4.0/add_aarch64.patch", when="@4.0")
 
     patch("patches/4.2/arch.Config.pl.patch", when="@4.2:")
-    patch("patches/4.2/arch.configure.defaults.patch", when="@4.2:4.2.0")
+    patch("patches/4.2/arch.configure.defaults.patch", when="@=4.2")
     patch("patches/4.2/4.2.2_arch.configure.defaults.patch", when="@4.2.2")
     patch("patches/4.2/arch.conf_tokens.patch", when="@4.2:")
     patch("patches/4.2/arch.postamble.patch", when="@4.2")
