@@ -18,6 +18,7 @@ class Met(AutotoolsPackage):
 
     maintainers('AlexanderRichert-NOAA')
 
+    version("11.0.2", sha256="f720d15e1d6c235c9a41fd97dbeb0eb1082fb8ae99e1bcdcb5e51be9b50bdfbf")
     version('11.0.1', sha256='48d471ad4634f1b969d9358c51925ce36bf0a1cec5312a6755203a4794b81646')
     version('11.0.0', sha256='648ebb54d07ca099680f4fc23b7ef5095c1a8ac5537c0a5d0e8587bf15991cff')
     version('10.1.1', sha256='9827e65fbd1c64e776525bae072bc2d37d14465e85a952778dcc32a26d8b5c9e')
@@ -58,6 +59,12 @@ class Met(AutotoolsPackage):
     depends_on('py-pandas', when='+python', type=('build', 'run'))
 
     patch('openmp_shape_patch.patch', when='@10.1.0')
+
+    # https://github.com/JCSDA/spack-stack/issues/615
+    # TODO(srherbener) Apple clang 14.x is getting pickier! When these updates are
+    # merged into the MET code base, the following two patches can be removed.
+    patch("apple-clang-string-cast-operator.patch", when="@10.1.1: %apple-clang@14:")
+    patch("apple-clang-no-register.patch", when="@10.1.1: %apple-clang@14:") 
 
     def url_for_version(self, version):
 
@@ -172,6 +179,8 @@ class Met(AutotoolsPackage):
         if '+graphics' in spec:
             args.append('--enable-mode_graphics')
 
+        if self.spec.satisfies("%apple-clang@14:"):
+            args.append('CXXFLAGS=-std=gnu++17')
         return args
 
     def setup_run_environment(self, env):
