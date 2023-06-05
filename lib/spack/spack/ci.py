@@ -341,6 +341,10 @@ def _compute_spec_deps(spec_list, check_index_only=False, mirrors_to_check=None)
                 spec=s, mirrors_to_check=mirrors_to_check, index_only=check_index_only
             )
 
+            tty.debug("Mirrors containing {0}:".format(s.format("{name}/{hash:7}")))
+            for m_dict in up_to_date_mirrors:
+                tty.debug("  {0}".format(m_dict["mirror_url"]))
+
             skey = _spec_deps_key(s)
             spec_labels[skey] = {"spec": s, "needs_rebuild": not up_to_date_mirrors}
 
