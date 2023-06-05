@@ -102,6 +102,13 @@ class Slate(CMakePackage, CudaPackage, ROCmPackage):
             backend_config,
             "-Duse_mpi=%s" % ("+mpi" in spec),
         ]
+        if "+cuda" in spec:
+            archs = ";".join(spec.variants["cuda_arch"].value)
+            config.append("-DCMAKE_CUDA_ARCHITECTURES=%s" % archs)
+        if "+rocm" in spec:
+            archs = ";".join(spec.variants["amdgpu_target"].value)
+            config.append("-DCMAKE_HIP_ARCHITECTURES=%s" % archs)
+
         if self.run_tests:
             config.append("-DSCALAPACK_LIBRARIES=%s" % spec["scalapack"].libs.joined(";"))
         return config

@@ -436,17 +436,44 @@ class Cmake(Package):
         module.cmake = Executable(self.spec.prefix.bin.cmake)
         module.ctest = Executable(self.spec.prefix.bin.ctest)
 
-    def test(self):
-        """Perform smoke tests on the installed package."""
-        spec_vers_str = "version {0}".format(self.spec.version)
+    @property
+    def libs(self):
+        """CMake has no libraries, so if you ask for `spec['cmake'].libs`
+        (which happens automatically for packages that depend on CMake as
+        a link dependency) the default implementation of ``.libs` will
+        search the entire root prefix recursively before failing.
 
-        for exe in ["ccmake", "cmake", "cpack", "ctest"]:
-            reason = "test version of {0} is {1}".format(exe, spec_vers_str)
-            self.run_test(
-                exe,
-                ["--version"],
-                [spec_vers_str],
-                installed=True,
-                purpose=reason,
-                skip_missing=True,
-            )
+        The longer term solution is for all dependents of CMake to change
+        their deptype. For now, this returns an empty set of libraries.
+        """
+        return LibraryList([])
+
+    @property
+    def headers(self):
+        return HeaderList([])
+
+    def run_version_check(self, bin):
+        """Runs and checks output of the installed binary."""
+        exe_path = join_path(self.prefix.bin, bin)
+        if not os.path.exists(exe_path):
+            raise SkipTest(f"{exe} is not installed")
+
+        exe = which(exe_path)
+        out = exe("--version", output=str.split, error=str.split)
+        assert f"version {self.spec.version}" in out
+
+    def test_ccmake(self):
+        """check version from ccmake"""
+        self.run_version_check("ccmake")
+
+    def test_cmake(self):
+        """check version from cmake"""
+        self.run_version_check("cmake")
+
+    def test_cpack(self):
+        """check version from cpack"""
+        self.run_version_check("cpack")
+
+    def test_ctest(self):
+        """check version from ctest"""
+        self.run_version_check("ctest")

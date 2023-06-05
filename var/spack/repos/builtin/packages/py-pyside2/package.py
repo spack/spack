@@ -34,7 +34,9 @@ class PyPyside2(PythonPackage):
     depends_on("python@2.7.0:2.7,3.5.0:3.5,3.6.1:3.8", when="@:5.14", type=("build", "run"))
 
     depends_on("cmake@3.1:", type="build")
-    depends_on("llvm@6:", type="build")
+    # libclang versioning from sources/shiboken2/doc/gettingstarted.rst
+    depends_on("llvm@6", type="build", when="@5.12:5.13")
+    depends_on("llvm@10", type="build", when="@5.15")
     depends_on("py-setuptools", type="build")
     depends_on("py-packaging", type="build")
     depends_on("py-wheel", type="build")
@@ -51,8 +53,13 @@ class PyPyside2(PythonPackage):
         args = [
             "--parallel={0}".format(make_jobs),
             "--ignore-git",
+            # if you want to debug build problems, uncomment this
+            # "--verbose-build",
             "--qmake={0}".format(spec["qt"].prefix.bin.qmake),
         ]
+        if spec.satisfies("^python@3.10:"):
+            args.append("--limited-api=yes")
+
         if self.run_tests:
             args.append("--build-tests")
         return args

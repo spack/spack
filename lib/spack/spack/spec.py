@@ -144,9 +144,20 @@ color_formats = {
 #: ``color_formats.keys()``.
 _separators = "[\\%s]" % "\\".join(color_formats.keys())
 
-default_format = "{name}{@versions}"
-default_format += "{%compiler.name}{@compiler.versions}{compiler_flags}"
-default_format += "{variants}{arch=architecture}{/abstract_hash}"
+#: Default format for Spec.format(). This format can be round-tripped, so that:
+#:     Spec(Spec("string").format()) == Spec("string)"
+default_format = (
+    "{name}{@versions}"
+    "{%compiler.name}{@compiler.versions}{compiler_flags}"
+    "{variants}{arch=architecture}{/abstract_hash}"
+)
+
+#: Display format, which eliminates extra `@=` in the output, for readability.
+display_format = (
+    "{name}{@version}"
+    "{%compiler.name}{@compiler.version}{compiler_flags}"
+    "{variants}{arch=architecture}{/abstract_hash}"
+)
 
 #: Regular expression to pull spec contents out of clearsigned signature
 #: file.
@@ -667,6 +678,16 @@ class CompilerSpec(object):
     def from_dict(d):
         d = d["compiler"]
         return CompilerSpec(d["name"], vn.VersionList.from_dict(d))
+
+    @property
+    def display_str(self):
+        """Equivalent to {compiler.name}{@compiler.version} for Specs, without extra
+        @= for readability."""
+        if self.concrete:
+            return f"{self.name}@{self.version}"
+        elif self.versions != vn.any_version:
+            return f"{self.name}@{self.versions}"
+        return self.name
 
     def __str__(self):
         out = self.name
@@ -1719,14 +1740,14 @@ class Spec(object):
     def short_spec(self):
         """Returns a version of the spec with the dependencies hashed
         instead of completely enumerated."""
-        spec_format = "{name}{@version}{%compiler}"
+        spec_format = "{name}{@version}{%compiler.name}{@compiler.version}"
         spec_format += "{variants}{arch=architecture}{/hash:7}"
         return self.format(spec_format)
 
     @property
     def cshort_spec(self):
         """Returns an auto-colorized version of ``self.short_spec``."""
-        spec_format = "{name}{@version}{%compiler}"
+        spec_format = "{name}{@version}{%compiler.name}{@compiler.version}"
         spec_format += "{variants}{arch=architecture}{/hash:7}"
         return self.cformat(spec_format)
 
@@ -2778,11 +2799,11 @@ class Spec(object):
         # Also record all patches required on dependencies by
         # depends_on(..., patch=...)
         for dspec in root.traverse_edges(deptype=all, cover="edges", root=False):
-            pkg_deps = dspec.parent.package_class.dependencies
-            if dspec.spec.name not in pkg_deps:
+            if dspec.spec.concrete:
                 continue
 
-            if dspec.spec.concrete:
+            pkg_deps = dspec.parent.package_class.dependencies
+            if dspec.spec.name not in pkg_deps:
                 continue
 
             patches = []
@@ -4312,7 +4333,7 @@ class Spec(object):
 
                     if callable(current):
                         raise SpecFormatStringError("Attempted to format callable object")
-                    if not current:
+                    if current is None:
                         # We're not printing anything
                         return
 
