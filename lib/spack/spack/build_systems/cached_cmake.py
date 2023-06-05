@@ -2,6 +2,7 @@
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
+import collections.abc
 import os
 from typing import Tuple
 
@@ -13,21 +14,24 @@ import spack.builder
 from .cmake import CMakeBuilder, CMakePackage
 
 
-def cmake_cache_path(name, value, comment=""):
+def cmake_cache_path(name, value, comment="", force=False):
     """Generate a string for a cmake cache variable"""
-    return 'set({0} "{1}" CACHE PATH "{2}")\n'.format(name, value, comment)
+    force_str = " FORCE" if force else ""
+    return 'set({0} "{1}" CACHE PATH "{2}"{3})\n'.format(name, value, comment, force_str)
 
 
-def cmake_cache_string(name, value, comment=""):
+def cmake_cache_string(name, value, comment="", force=False):
     """Generate a string for a cmake cache variable"""
-    return 'set({0} "{1}" CACHE STRING "{2}")\n'.format(name, value, comment)
+    force_str = " FORCE" if force else ""
+    return 'set({0} "{1}" CACHE STRING "{2}"{3})\n'.format(name, value, comment, force_str)
 
 
-def cmake_cache_option(name, boolean_value, comment=""):
+def cmake_cache_option(name, boolean_value, comment="", force=False):
     """Generate a string for a cmake configuration option"""
 
     value = "ON" if boolean_value else "OFF"
-    return 'set({0} {1} CACHE BOOL "{2}")\n'.format(name, value, comment)
+    force_str = " FORCE" if force else ""
+    return 'set({0} {1} CACHE BOOL "{2}"{3})\n'.format(name, value, comment, force_str)
 
 
 class CachedCMakeBuilder(CMakeBuilder):
@@ -62,6 +66,34 @@ class CachedCMakeBuilder(CMakeBuilder):
     @property
     def cache_path(self):
         return os.path.join(self.pkg.stage.source_path, self.cache_name)
+
+    # Implement a version of the define_from_variant for Cached packages
+    def define_cmake_cache_from_variant(self, cmake_var, variant=None, comment=""):
+        """Return a Cached CMake field from the given variant's value.
+        See define_from_variant in lib/spack/spack/build_systems/cmake.py package
+        """
+
+        if variant is None:
+            variant = cmake_var.lower()
+
+        if variant not in self.pkg.variants:
+            raise KeyError('"{0}" is not a variant of "{1}"'.format(variant, self.pkg.name))
+
+        if variant not in self.pkg.spec.variants:
+            return ""
+
+        value = self.pkg.spec.variants[variant].value
+        field = None
+        if isinstance(value, bool):
+            field = cmake_cache_option(cmake_var, value, comment)
+        else:
+            if isinstance(value, collections.abc.Sequence) and not isinstance(value, str):
+                value = ";".join(str(v) for v in value)
+            else:
+                value = str(value)
+            field = cmake_cache_string(cmake_var, value, comment)
+
+        return field
 
     def initconfig_compiler_entries(self):
         # This will tell cmake to use the Spack compiler wrappers when run
@@ -130,6 +162,17 @@ class CachedCMakeBuilder(CMakeBuilder):
                 libs_string = libs_format_string.format(lang)
                 entries.append(cmake_cache_string(libs_string, libs_flags))
 
+        # Set the generator in the cached config
+        if self.spec.satisfies("generator=make"):
+            entries.append(cmake_cache_string("CMAKE_GENERATOR", "Unix Makefiles"))
+        if self.spec.satisfies("generator=ninja"):
+            entries.append(cmake_cache_string("CMAKE_GENERATOR", "Ninja"))
+            entries.append(
+                cmake_cache_string(
+                    "CMAKE_MAKE_PROGRAM", "{0}/ninja".format(spec["ninja"].prefix.bin)
+                )
+            )
+
         return entries
 
     def initconfig_mpi_entries(self):
@@ -195,26 +238,57 @@ class CachedCMakeBuilder(CMakeBuilder):
             "#------------------{0}\n".format("-" * 60),
         ]
 
+        # Provide standard CMake arguments for dependent CachedCMakePackages
         if spec.satisfies("^cuda"):
             entries.append("#------------------{0}".format("-" * 30))
             entries.append("# Cuda")
             entries.append("#------------------{0}\n".format("-" * 30))
 
             cudatoolkitdir = spec["cuda"].prefix
-            entries.append(cmake_cache_path("CUDA_TOOLKIT_ROOT_DIR", cudatoolkitdir))
-            cudacompiler = "${CUDA_TOOLKIT_ROOT_DIR}/bin/nvcc"
-            entries.append(cmake_cache_path("CMAKE_CUDA_COMPILER", cudacompiler))
+            entries.append(cmake_cache_path("CUDAToolkit_ROOT", cudatoolkitdir))
+            entries.append(cmake_cache_path("CMAKE_CUDA_COMPILER", "${CUDAToolkit_ROOT}/bin/nvcc"))
             entries.append(cmake_cache_path("CMAKE_CUDA_HOST_COMPILER", "${CMAKE_CXX_COMPILER}"))
+            # Include the deprecated CUDA_TOOLKIT_ROOT_DIR for supporting BLT packages
+            entries.append(cmake_cache_path("CUDA_TOOLKIT_ROOT_DIR", cudatoolkitdir))
+
+            archs = spec.variants["cuda_arch"].value
+            if archs != "none":
+                arch_str = ";".join(archs)
+                entries.append(
+                    cmake_cache_string("CMAKE_CUDA_ARCHITECTURES", "{0}".format(arch_str))
+                )
+
+        if "+rocm" in spec:
+            entries.append("#------------------{0}".format("-" * 30))
+            entries.append("# ROCm")
+            entries.append("#------------------{0}\n".format("-" * 30))
+
+            # Explicitly setting HIP_ROOT_DIR may be a patch that is no longer necessary
+            entries.append(cmake_cache_path("HIP_ROOT_DIR", "{0}".format(spec["hip"].prefix)))
+            entries.append(
+                cmake_cache_path("HIP_CXX_COMPILER", "{0}".format(self.spec["hip"].hipcc))
+            )
+            archs = self.spec.variants["amdgpu_target"].value
+            if archs != "none":
+                arch_str = ";".join(archs)
+                entries.append(
+                    cmake_cache_string("CMAKE_HIP_ARCHITECTURES", "{0}".format(arch_str))
+                )
+                entries.append(cmake_cache_string("AMDGPU_TARGETS", "{0}".format(arch_str)))
+                entries.append(cmake_cache_string("GPU_TARGETS", "{0}".format(arch_str)))
 
         return entries
 
     def std_initconfig_entries(self):
+        cmake_prefix_path_env = os.environ["CMAKE_PREFIX_PATH"]
+        cmake_prefix_path = cmake_prefix_path_env.replace(os.pathsep, ";")
         return [
             "#------------------{0}".format("-" * 60),
             "# !!!! This is a generated file, edit at own risk !!!!",
             "#------------------{0}".format("-" * 60),
             "# CMake executable path: {0}".format(self.pkg.spec["cmake"].command.path),
             "#------------------{0}\n".format("-" * 60),
+            cmake_cache_path("CMAKE_PREFIX_PATH", cmake_prefix_path),
         ]
 
     def initconfig_package_entries(self):
