@@ -138,8 +138,8 @@ class Julia(MakefilePackage):
         "llvm",
         when="^llvm@14.0.6",
         patches=patch(
-            "https://github.com/JuliaLang/llvm-project/compare/f28c006a5895fc0e329fe15fead81e37457cb1d1...5c82f5309b10fab0adf6a94969e0dddffdb3dbce.patch",
-            sha256="9f2bc98e876e85a3edb158064aae782281ea7099e4c34e83ac456609cb7acd10",
+            "https://github.com/JuliaLang/llvm-project/compare/f28c006a5895fc0e329fe15fead81e37457cb1d1...381043941d2c7a5157a011510b6d0386c171aae7.diff",
+            sha256="f3def26930832532bbcd861d41b31ae03db993bc2b3510f89ef831a30bd3e099",
         ),
     )
 
