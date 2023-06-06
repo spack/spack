@@ -153,49 +153,33 @@ def _add_dependency(spec_label, dep_label, deps):
     deps[spec_label].add(dep_label)
 
 
-def _get_spec_dependencies(
-    specs, deps, spec_labels, check_index_only=False, mirrors_to_check=None
-):
-    spec_deps_obj = _compute_spec_deps(
-        specs, check_index_only=check_index_only, mirrors_to_check=mirrors_to_check
-    )
+def _get_spec_dependencies(specs, deps, spec_labels):
+    spec_deps_obj = _compute_spec_deps(specs)
 
     if spec_deps_obj:
         dependencies = spec_deps_obj["dependencies"]
         specs = spec_deps_obj["specs"]
 
         for entry in specs:
-            spec_labels[entry["label"]] = {
-                "spec": entry["spec"],
-                "needs_rebuild": entry["needs_rebuild"],
-            }
+            spec_labels[entry["label"]] = entry["spec"]
 
         for entry in dependencies:
             _add_dependency(entry["spec"], entry["depends"], deps)
 
 
-def stage_spec_jobs(specs, check_index_only=False, mirrors_to_check=None):
+def stage_spec_jobs(specs):
     """Take a set of release specs and generate a list of "stages", where the
         jobs in any stage are dependent only on jobs in previous stages.  This
         allows us to maximize build parallelism within the gitlab-ci framework.
 
     Arguments:
         specs (Iterable): Specs to build
-        check_index_only (bool): Regardless of whether DAG pruning is enabled,
-            all configured mirrors are searched to see if binaries for specs
-            are up to date on those mirrors.  This flag limits that search to
-            the binary cache indices on those mirrors to speed the process up,
-            even though there is no garantee the index is up to date.
-        mirrors_to_checK: Optional mapping giving mirrors to check instead of
-            any configured mirrors.
 
     Returns: A tuple of information objects describing the specs, dependencies
         and stages:
 
         spec_labels: A dictionary mapping the spec labels which are made of
-            (pkg-name/hash-prefix), to objects containing "spec" and "needs_rebuild"
-            keys.  The root spec is the spec of which this spec is a dependency
-            and the spec is the formatted spec string for this spec.
+            (pkg-name/hash-prefix), to concrete specs.
 
         deps: A dictionary where the keys should also have appeared as keys in
             the spec_labels dictionary, and the values are the set of
@@ -224,13 +208,7 @@ def stage_spec_jobs(specs, check_index_only=False, mirrors_to_check=None):
     deps = {}
     spec_labels = {}
 
-    _get_spec_dependencies(
-        specs,
-        deps,
-        spec_labels,
-        check_index_only=check_index_only,
-        mirrors_to_check=mirrors_to_check,
-    )
+    _get_spec_dependencies(specs, deps, spec_labels)
 
     # Save the original deps, as we need to return them at the end of the
     # function.  In the while loop below, the "dependencies" variable is
@@ -256,7 +234,7 @@ def stage_spec_jobs(specs, check_index_only=False, mirrors_to_check=None):
     return spec_labels, deps, stages
 
 
-def _print_staging_summary(spec_labels, dependencies, stages):
+def _print_staging_summary(spec_labels, stages, rebuild_decisions):
     if not stages:
         return
 
@@ -265,12 +243,19 @@ def _print_staging_summary(spec_labels, dependencies, stages):
         tty.msg("    stage {0} ({1} jobs):".format(stage_index, len(stage)))
 
         for job in sorted(stage):
-            s = spec_labels[job]["spec"]
+            s = spec_labels[job]
+            rebuild = rebuild_decisions[job].rebuild
+            reason = rebuild_decisions[job].reason
+            reason_msg = " ({0})".format(reason) if reason else ""
             tty.msg(
-                "      [{1}] {0} -> {2}".format(
-                    job, "x" if spec_labels[job]["needs_rebuild"] else " ", _get_spec_string(s)
+                "      [{1}] {0} -> {2}{3}".format(
+                    job, "x" if rebuild else " ", _get_spec_string(s), reason_msg
                 )
             )
+            if rebuild_decisions[job].mirrors:
+                tty.debug("        present on mirrors:")
+                for murl in rebuild_decisions[job].mirrors:
+                    tty.debug("        {0}".format(murl))
 
 
 def _compute_spec_deps(spec_list, check_index_only=False, mirrors_to_check=None):
@@ -337,16 +322,8 @@ def _compute_spec_deps(spec_list, check_index_only=False, mirrors_to_check=None)
                 tty.msg("Will not stage external pkg: {0}".format(s))
                 continue
 
-            up_to_date_mirrors = bindist.get_mirrors_for_spec(
-                spec=s, mirrors_to_check=mirrors_to_check, index_only=check_index_only
-            )
-
-            tty.debug("Mirrors containing {0}:".format(s.format("{name}/{hash:7}")))
-            for m_dict in up_to_date_mirrors:
-                tty.debug("  {0}".format(m_dict["mirror_url"]))
-
             skey = _spec_deps_key(s)
-            spec_labels[skey] = {"spec": s, "needs_rebuild": not up_to_date_mirrors}
+            spec_labels[skey] = s
 
             for d in s.dependencies(deptype=all):
                 dkey = _spec_deps_key(d)
@@ -356,14 +333,8 @@ def _compute_spec_deps(spec_list, check_index_only=False, mirrors_to_check=None)
 
                 append_dep(skey, dkey)
 
-    for spec_label, spec_holder in spec_labels.items():
-        specs.append(
-            {
-                "label": spec_label,
-                "spec": spec_holder["spec"],
-                "needs_rebuild": spec_holder["needs_rebuild"],
-            }
-        )
+    for spec_label, concrete_spec in spec_labels.items():
+        specs.append({"label": spec_label, "spec": concrete_spec})
 
     deps_json_obj = {"specs": specs, "dependencies": dependencies}
 
@@ -381,15 +352,15 @@ def _format_job_needs(
     osname,
     build_group,
     prune_dag,
-    stage_spec_dict,
+    rebuild_decisions,
     enable_artifacts_buildcache,
 ):
     needs_list = []
     for dep_job in dep_jobs:
         dep_spec_key = _spec_deps_key(dep_job)
-        dep_spec_info = stage_spec_dict[dep_spec_key]
+        rebuild = rebuild_decisions[dep_spec_key].rebuild
 
-        if not prune_dag or dep_spec_info["needs_rebuild"]:
+        if not prune_dag or rebuild:
             needs_list.append(
                 {
                     "job": get_job_name(
@@ -501,8 +472,7 @@ def _build_jobs(phases, staged_phases):
 
         for stage_jobs in stages:
             for spec_label in stage_jobs:
-                spec_record = spec_labels[spec_label]
-                release_spec = spec_record["spec"]
+                release_spec = spec_labels[spec_label]
                 release_spec_dag_hash = release_spec.dag_hash()
                 yield release_spec, release_spec_dag_hash
 
@@ -521,6 +491,13 @@ def _unpack_script(script_section, op=_noop):
             script.append(op(cmd))
 
     return script
+
+
+class RebuildDecision(object):
+    def __init__(self):
+        self.rebuild = True
+        self.mirrors = []
+        self.reason = ""
 
 
 class SpackCI:
@@ -998,38 +975,28 @@ def generate_gitlab_ci_yaml(
         tty.warn(e)
 
     staged_phases = {}
-    try:
-        for phase in phases:
-            phase_name = phase["name"]
-            if phase_name == "specs":
-                # Anything in the "specs" of the environment are already
-                # concretized by the block at the top of this method, so we
-                # only need to find the concrete versions, and then avoid
-                # re-concretizing them needlessly later on.
-                concrete_phase_specs = [
-                    concrete
-                    for abstract, concrete in env.concretized_specs()
-                    if abstract in env.spec_lists[phase_name]
-                ]
-            else:
-                # Any specs lists in other definitions (but not in the
-                # "specs") of the environment are not yet concretized so we
-                # have to concretize them explicitly here.
-                concrete_phase_specs = env.spec_lists[phase_name]
-                with spack.concretize.disable_compiler_existence_check():
-                    for phase_spec in concrete_phase_specs:
-                        phase_spec.concretize()
-            staged_phases[phase_name] = stage_spec_jobs(
-                concrete_phase_specs,
-                check_index_only=check_index_only,
-                mirrors_to_check=mirrors_to_check,
-            )
-    finally:
-        # Clean up remote mirror override if enabled
-        if remote_mirror_override:
-            spack.mirror.remove("ci_pr_mirror", cfg.default_modify_scope())
-        if spack_pipeline_type == "spack_pull_request":
-            spack.mirror.remove("ci_shared_pr_mirror", cfg.default_modify_scope())
+
+    for phase in phases:
+        phase_name = phase["name"]
+        if phase_name == "specs":
+            # Anything in the "specs" of the environment are already
+            # concretized by the block at the top of this method, so we
+            # only need to find the concrete versions, and then avoid
+            # re-concretizing them needlessly later on.
+            concrete_phase_specs = [
+                concrete
+                for abstract, concrete in env.concretized_specs()
+                if abstract in env.spec_lists[phase_name]
+            ]
+        else:
+            # Any specs lists in other definitions (but not in the
+            # "specs") of the environment are not yet concretized so we
+            # have to concretize them explicitly here.
+            concrete_phase_specs = env.spec_lists[phase_name]
+            with spack.concretize.disable_compiler_existence_check():
+                for phase_spec in concrete_phase_specs:
+                    phase_spec.concretize()
+        staged_phases[phase_name] = stage_spec_jobs(concrete_phase_specs)
 
     all_job_names = []
     output_object = {}
@@ -1055,6 +1022,8 @@ def generate_gitlab_ci_yaml(
     spack_ci = SpackCI(ci_config, phases, staged_phases)
     spack_ci_ir = spack_ci.generate_ir()
 
+    rebuild_decisions = {}
+
     for phase in phases:
         phase_name = phase["name"]
         strip_compilers = phase["strip-compilers"]
@@ -1067,19 +1036,27 @@ def generate_gitlab_ci_yaml(
             stage_id += 1
 
             for spec_label in stage_jobs:
-                spec_record = spec_labels[spec_label]
-                release_spec = spec_record["spec"]
+                release_spec = spec_labels[spec_label]
                 release_spec_dag_hash = release_spec.dag_hash()
+
+                spec_record = RebuildDecision()
+                rebuild_decisions[spec_label] = spec_record
 
                 if prune_untouched_packages:
                     if release_spec not in affected_specs:
-                        tty.debug(
-                            "Pruning {0}/{1}, untouched by change.".format(
-                                release_spec.name, release_spec.dag_hash()[:7]
-                            )
-                        )
-                        spec_record["needs_rebuild"] = False
+                        spec_record.rebuild = False
+                        spec_record.reason = "Pruned, untouched by change."
                         continue
+
+                up_to_date_mirrors = bindist.get_mirrors_for_spec(
+                    spec=release_spec,
+                    mirrors_to_check=mirrors_to_check,
+                    index_only=check_index_only,
+                )
+
+                spec_record.rebuild = not up_to_date_mirrors
+                if up_to_date_mirrors:
+                    spec_record.mirrors = [m["mirror_url"] for m in up_to_date_mirrors]
 
                 job_object = spack_ci_ir["jobs"][release_spec_dag_hash]["attributes"]
 
@@ -1138,7 +1115,7 @@ def generate_gitlab_ci_yaml(
                         # purposes, so we only get the direct dependencies.
                         dep_jobs = []
                         for dep_label in dependencies[spec_label]:
-                            dep_jobs.append(spec_labels[dep_label]["spec"])
+                            dep_jobs.append(spec_labels[dep_label])
 
                     job_object["needs"].extend(
                         _format_job_needs(
@@ -1148,12 +1125,12 @@ def generate_gitlab_ci_yaml(
                             osname,
                             build_group,
                             prune_dag,
-                            spec_labels,
+                            rebuild_decisions,
                             enable_artifacts_buildcache,
                         )
                     )
 
-                rebuild_spec = spec_record["needs_rebuild"]
+                rebuild_spec = spec_record.rebuild
 
                 # This next section helps gitlab make sure the right
                 # bootstrapped compiler exists in the artifacts buildcache by
@@ -1185,13 +1162,12 @@ def generate_gitlab_ci_yaml(
                             # dependencies, we artificially force the spec to
                             # be rebuilt if the compiler targeted to build it
                             # needs to be rebuilt.
-                            bs_specs, _, _ = staged_phases[bs["phase-name"]]
                             c_spec_key = _spec_deps_key(c_spec)
-                            rbld_comp = bs_specs[c_spec_key]["needs_rebuild"]
+                            rbld_comp = rebuild_decisions[c_spec_key].rebuild
                             rebuild_spec = rebuild_spec or rbld_comp
                             # Also update record so dependents do not fail to
                             # add this spec to their "needs"
-                            spec_record["needs_rebuild"] = rebuild_spec
+                            spec_record.rebuild = rebuild_spec
 
                             dep_jobs = [c_spec]
                             if enable_artifacts_buildcache:
@@ -1205,7 +1181,7 @@ def generate_gitlab_ci_yaml(
                                     str(bs_arch),
                                     build_group,
                                     prune_dag,
-                                    bs_specs,
+                                    rebuild_decisions,
                                     enable_artifacts_buildcache,
                                 )
                             )
@@ -1221,13 +1197,13 @@ def generate_gitlab_ci_yaml(
                             ).format(c_spec, release_spec)
                             tty.debug(debug_msg)
 
-                if prune_dag and not rebuild_spec and not copy_only_pipeline:
-                    tty.debug(
-                        "Pruning {0}/{1}, does not need rebuild.".format(
-                            release_spec.name, release_spec.dag_hash()
-                        )
-                    )
-                    continue
+                if not rebuild_spec and not copy_only_pipeline:
+                    if prune_dag:
+                        spec_record.reason = "Pruned, up-to-date"
+                        continue
+                    else:
+                        spec_record.rebuild = True
+                        spec_record.reason = "Scheduled, DAG pruning disabled"
 
                 if broken_spec_urls is not None and release_spec_dag_hash in broken_spec_urls:
                     known_broken_specs_encountered.append(release_spec_dag_hash)
@@ -1316,12 +1292,18 @@ def generate_gitlab_ci_yaml(
                     output_object[job_name] = job_object
                     job_id += 1
 
+    # Clean up remote mirror override if enabled
+    if remote_mirror_override:
+        spack.mirror.remove("ci_pr_mirror", cfg.default_modify_scope())
+    if spack_pipeline_type == "spack_pull_request":
+        spack.mirror.remove("ci_shared_pr_mirror", cfg.default_modify_scope())
+
     if print_summary:
         for phase in phases:
             phase_name = phase["name"]
             tty.msg('Stages for phase "{0}"'.format(phase_name))
-            phase_stages = staged_phases[phase_name]
-            _print_staging_summary(*phase_stages)
+            phase_spec_labels, _, phase_stages = staged_phases[phase_name]
+            _print_staging_summary(phase_spec_labels, phase_stages, rebuild_decisions)
 
     tty.debug("{0} build jobs generated in {1} stages".format(job_id, stage_id))
 
