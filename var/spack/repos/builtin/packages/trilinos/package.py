@@ -656,9 +656,6 @@ class Trilinos(CMakePackage, CudaPackage, ROCmPackage):
             ]
         )
 
-        if spec.satisfies("@develop +stokhos"):
-            options.append(self.define("Stokhos_ENABLE_PCE_Scalar_Type", False))
-
         if "+dtk" in spec:
             options.extend(
                 [
