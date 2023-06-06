@@ -3,9 +3,6 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from llnl.util.filesystem import join_path, set_executable
-
-from spack.util.executable import which
 from spack.package import *
 
 
@@ -32,8 +29,7 @@ class Seqkit(Package):
         """Build using `go build`"""
 
         if self.spec.satisfies("@0.15.0:"):
-            go_exec = which("go")
-            go_exec("build", "-C", "seqkit")
+            go("build", "-C", "seqkit")
 
     def install(self, spec, prefix):
         mkdirp(prefix.bin)
@@ -41,4 +37,3 @@ class Seqkit(Package):
             install(join_path("seqkit", "seqkit"), prefix.bin)
         else:
             install("seqkit", prefix.bin)
-        set_executable(join_path(prefix.bin, "seqkit"))
