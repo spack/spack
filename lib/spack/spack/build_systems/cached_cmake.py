@@ -252,7 +252,7 @@ class CachedCMakeBuilder(CMakeBuilder):
             entries.append(cmake_cache_path("CUDA_TOOLKIT_ROOT_DIR", cudatoolkitdir))
 
             archs = spec.variants["cuda_arch"].value
-            if archs != "none":
+            if archs[0] != "none":
                 arch_str = ";".join(archs)
                 entries.append(
                     cmake_cache_string("CMAKE_CUDA_ARCHITECTURES", "{0}".format(arch_str))
@@ -269,7 +269,7 @@ class CachedCMakeBuilder(CMakeBuilder):
                 cmake_cache_path("HIP_CXX_COMPILER", "{0}".format(self.spec["hip"].hipcc))
             )
             archs = self.spec.variants["amdgpu_target"].value
-            if archs != "none":
+            if archs[0] != "none":
                 arch_str = ";".join(archs)
                 entries.append(
                     cmake_cache_string("CMAKE_HIP_ARCHITECTURES", "{0}".format(arch_str))
