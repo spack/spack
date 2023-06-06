@@ -47,8 +47,8 @@ schema = {
     "title": "Spack environment file schema",
     "type": "object",
     "additionalProperties": False,
-    "patternProperties": {
-        "^env|spack$": {
+    "properties": {
+        "spack": {
             "type": "object",
             "default": {},
             "additionalProperties": False,
