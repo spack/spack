@@ -18,6 +18,7 @@ class Synapsetool(CMakePackage):
     submodules = True
 
     version("develop", branch="main")
+    version("0.6.4", tag="v0.6.4")
     version("0.6.3", tag="v0.6.3")
     version("0.6.2", tag="v0.6.2")
     version("0.6.1", tag="v0.6.1")
