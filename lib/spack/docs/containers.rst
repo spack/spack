@@ -616,7 +616,7 @@ to customize the generation of container recipes:
      - No
    * - ``os_packages:command``
      - Tool used to manage system packages
-     - ``apt``, ``yum``, ``zypper``, ``apk``, ``yum_amazon``
+     - ``apt``, ``yum``, ``dnf``, ``dnf_epel``, ``zypper``, ``apk``, ``yum_amazon``
      - Only with custom base images
    * - ``os_packages:update``
      - Whether or not to update the list of available packages
