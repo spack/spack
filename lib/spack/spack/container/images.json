@@ -17,7 +17,7 @@
         "template": "container/fedora_38.dockerfile",
         "image": "docker.io/fedora:38"
       },
-      "os_package_manager": "yum",
+      "os_package_manager": "dnf",
       "build": "spack/fedora38",
       "build_tags": {
         "develop": "latest"
@@ -31,7 +31,7 @@
         "template": "container/fedora_37.dockerfile",
         "image": "docker.io/fedora:37"
       },
-      "os_package_manager": "yum",
+      "os_package_manager": "dnf",
       "build": "spack/fedora37",
       "build_tags": {
         "develop": "latest"
@@ -45,7 +45,7 @@
         "template": "container/rockylinux_9.dockerfile",
         "image": "docker.io/rockylinux:9"
       },
-      "os_package_manager": "yum",
+      "os_package_manager": "dnf_epel",
       "build": "spack/rockylinux9",
       "build_tags": {
         "develop": "latest"
@@ -59,7 +59,7 @@
         "template": "container/rockylinux_8.dockerfile",
         "image": "docker.io/rockylinux:8"
       },
-      "os_package_manager": "yum",
+      "os_package_manager": "dnf_epel",
       "build": "spack/rockylinux8",
       "build_tags": {
         "develop": "latest"
@@ -73,7 +73,7 @@
         "template": "container/almalinux_9.dockerfile",
         "image": "quay.io/almalinux/almalinux:9"
       },
-      "os_package_manager": "yum",
+      "os_package_manager": "dnf_epel",
       "build": "spack/almalinux9",
       "build_tags": {
         "develop": "latest"
@@ -87,7 +87,7 @@
         "template": "container/almalinux_8.dockerfile",
         "image": "quay.io/almalinux/almalinux:8"
       },
-      "os_package_manager": "yum",
+      "os_package_manager": "dnf_epel",
       "build": "spack/almalinux8",
       "build_tags": {
         "develop": "latest"
@@ -101,7 +101,7 @@
         "template": "container/centos_stream.dockerfile",
         "image": "quay.io/centos/centos:stream"
       },
-      "os_package_manager": "yum",
+      "os_package_manager": "dnf_epel",
       "build": "spack/centos-stream",
       "final": {
         "image": "quay.io/centos/centos:stream"
@@ -184,6 +184,16 @@
       "update": "apt-get -yqq update && apt-get -yqq upgrade",
       "install": "apt-get -yqq install",
       "clean": "rm -rf /var/lib/apt/lists/*"
+    },
+    "dnf": {
+      "update": "dnf update -y",
+      "install": "dnf install -y",
+      "clean": "rm -rf /var/cache/dnf && dnf clean all"
+    },
+    "dnf_epel": {
+      "update": "dnf update -y && dnf install -y epel-release && dnf update -y",
+      "install": "dnf install -y",
+      "clean": "rm -rf /var/cache/dnf && dnf clean all"
     },
     "yum": {
       "update": "yum update -y && yum install -y epel-release && yum update -y",
