@@ -5,6 +5,7 @@
 
 from spack.package import *
 
+
 class Ncvis(CMakePackage):
     """A NetCDF file viewer. ncvis is inspired by David Pierce's
     most excellent ncview utility."""
@@ -15,7 +16,9 @@ class Ncvis(CMakePackage):
 
     maintainers("vanderwb")
 
-    version("2022.08.28", sha256="a522926739b2a05ef0b436fe67a2014557f9e5fecf3b7d7700964e9006a4bf3e")
+    version(
+        "2022.08.28", sha256="a522926739b2a05ef0b436fe67a2014557f9e5fecf3b7d7700964e9006a4bf3e"
+    )
 
     depends_on("cmake", type="build")
     depends_on("netcdf-c", type="link")
