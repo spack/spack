@@ -80,7 +80,6 @@ section_schemas = {
 
 # Same as above, but including keys for environments
 # this allows us to unify config reading between configs and environments
-# FIXME: double check this one
 all_schemas = copy.deepcopy(section_schemas)
 all_schemas.update({spack.schema.env.TOP_LEVEL_KEY: spack.schema.env.schema})
 
@@ -831,12 +830,10 @@ config: Union[Configuration, llnl.util.lang.Singleton] = llnl.util.lang.Singleto
 
 def add_from_file(filename, scope=None):
     """Add updates to a config from a filename"""
-    import spack.environment as ev
-
-    # Get file as config dict
+    # Extract internal attributes, if we are dealing with an environment
     data = read_config_file(filename)
     if spack.schema.env.TOP_LEVEL_KEY in data:
-        data = ev.config_dict(data)
+        data = data[spack.schema.env.TOP_LEVEL_KEY]
 
     # update all sections from config dict
     # We have to iterate on keys to keep overrides from the file
