@@ -53,6 +53,7 @@ import spack.util.url
 import spack.version
 from spack.filesystem_view import SimpleFilesystemView, inverse_view_func_parser, view_func_parser
 from spack.installer import PackageInstaller
+from spack.schema.env import TOP_LEVEL_KEY
 from spack.spec import Spec
 from spack.spec_list import InvalidSpecConstraintError, SpecList
 from spack.util.path import substitute_path_variables
@@ -363,15 +364,7 @@ def ensure_env_root_path_exists():
 
 def config_dict(yaml_data):
     """Get the configuration scope section out of an spack.yaml"""
-    # TODO (env:): Remove env: as a possible top level keyword in v0.21
-    key = spack.config.first_existing(yaml_data, spack.schema.env.keys)
-    if key == "env":
-        msg = (
-            "using 'env:' as a top-level attribute of a Spack environment is deprecated and "
-            "will be removed in Spack v0.21. Please use 'spack:' instead."
-        )
-        warnings.warn(msg)
-    return yaml_data[key]
+    return yaml_data[TOP_LEVEL_KEY]
 
 
 def all_environment_names():
@@ -1075,10 +1068,7 @@ class Environment:
         """Get the configuration scope for the environment's manifest file."""
         config_name = self.env_file_config_scope_name()
         return spack.config.SingleFileScope(
-            config_name,
-            self.manifest_path,
-            spack.schema.env.schema,
-            [spack.config.first_existing(self.manifest, spack.schema.env.keys)],
+            config_name, self.manifest_path, spack.schema.env.schema, [TOP_LEVEL_KEY]
         )
 
     def config_scopes(self):

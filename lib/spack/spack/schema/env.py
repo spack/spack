@@ -15,8 +15,8 @@ import spack.schema.merged
 import spack.schema.packages
 import spack.schema.projections
 
-#: legal first keys in the schema
-keys = ("spack", "env")
+#: Top level key in a manifest file
+TOP_LEVEL_KEY = "spack"
 
 spec_list_schema = {
     "type": "array",
