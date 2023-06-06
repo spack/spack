@@ -129,12 +129,11 @@ class Llvm(CMakePackage, CudaPackage):
         "or as a project (with the compiler in use)",
     )
 
-    variant(
-        "libomptarget",
-        default=(sys.platform == "linux"),
-        description="Build the OpenMP offloading library",
-    )
+    variant("libomptarget", default=True, description="Build the OpenMP offloading library")
     conflicts("+libomptarget", when="~clang")
+    for _p in ["darwin", "windows"]:
+        conflicts("+libomptarget", when="platform={0}".format(_p))
+    del _p
 
     variant(
         "libomptarget_debug",
