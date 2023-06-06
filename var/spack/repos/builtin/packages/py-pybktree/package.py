@@ -7,7 +7,7 @@ from spack.package import *
 
 
 class PyPybktree(PythonPackage):
-    """pykbtree: pure-Python BK-tree data structure to allow fast querying of close matches"""
+    """pybktree: pure-Python BK-tree data structure to allow fast querying of close matches"""
 
     homepage = "https://github.com/benhoyt/pybktree"
     pypi = "pybktree/pybktree-1.1.tar.gz"
