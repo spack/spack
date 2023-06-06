@@ -1,0 +1,45 @@
+diff --git a/smartsim/_core/utils/redis.py b/smartsim/_core/utils/redis.py
+index 5eb849a..7755bc1 100644
+--- a/smartsim/_core/utils/redis.py
++++ b/smartsim/_core/utils/redis.py
+@@ -26,10 +26,11 @@
+ 
+ import logging
+ import time
++from itertools import product
+ 
+ import redis
+-from rediscluster import RedisCluster
+-from rediscluster.exceptions import ClusterDownError, RedisClusterException
++from redis.cluster import RedisCluster, ClusterNode
++from redis.exceptions import ClusterDownError, RedisClusterException
+ from smartredis import Client
+ from smartredis.error import RedisReplyError
+ 
+@@ -90,20 +91,18 @@ def check_cluster_status(hosts, ports, trials=10):  # cov-wlm
+ 
+     :raises SmartSimError: If cluster status cannot be verified
+     """
+-    host_list = []
+-    for host in hosts:
+-        for port in ports:
+-            host_dict = dict()
+-            host_dict["host"] = get_ip_from_host(host)
+-            host_dict["port"] = port
+-            host_list.append(host_dict)
++    cluster_nodes = [ClusterNode(get_ip_from_host(host), port)
++                     for host, port in product(hosts, ports)]
++
++    if not cluster_nodes:
++        raise SSInternalError("No cluster nodes have been set for database status check.")
+ 
+     logger.debug("Beginning database cluster status check...")
+     while trials > 0:
+         # wait for cluster to spin up
+         time.sleep(5)
+         try:
+-            redis_tester = RedisCluster(startup_nodes=host_list)
++            redis_tester = RedisCluster(startup_nodes=cluster_nodes)
+             redis_tester.set("__test__", "__test__")
+             redis_tester.delete("__test__")
+             logger.debug("Cluster status verified")
