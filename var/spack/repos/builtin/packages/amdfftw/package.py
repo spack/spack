@@ -75,7 +75,12 @@ class Amdfftw(FftwBase):
         when="~mpi ~openmp ~threads",
         description="Build with amd-trans suppport"
     )
-    variant("amd-app-opt", default=False, description="Build with amd-app-opt suppport")
+    variant(
+        "amd-app-opt",
+        default=False,
+        when="@3.1: ~mpi",
+        description="Build with amd-app-opt suppport"
+    )
     variant(
         "amd-dynamic-dispatcher",
         default=False,
@@ -130,8 +135,6 @@ class Amdfftw(FftwBase):
     conflicts(
         "+amd-trans", when="precision=quad", msg="Quad precision is not supported with amd-trans"
     )
-    conflicts("+amd-app-opt", when="@:3.0.1", msg="amd-app-opt is supported from 3.1 onwards")
-    conflicts("+amd-app-opt", when="+mpi", msg="mpi thread is not supported with amd-app-opt")
     conflicts(
         "+amd-app-opt",
         when="precision=long_double",
