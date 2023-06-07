@@ -82,9 +82,9 @@ class ABI:
         are ABI compatible"""
 
         # Test major and minor versions.  Ignore build version.
-        if len(pversion.version) < 2 or len(cversion.version) < 2:
-            return False
-        return pversion.version[:2] == cversion.version[:2]
+        pv = pversion.lo
+        cv = cversion.lo
+        return pv.up_to(2) == cv.up_to(2)
 
     def compiler_compatible(self, parent, child, **kwargs):
         """Return true if compilers for parent and child are ABI compatible."""
