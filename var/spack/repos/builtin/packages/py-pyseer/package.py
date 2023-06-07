@@ -34,6 +34,7 @@ class PyPyseer(PythonPackage):
     depends_on("py-pysam@0.15.1:", type=("build", "run"))
     depends_on("py-glmnet-python@1.0", type=("build", "run"))
     depends_on("py-dendropy@4.4.0:", type=("build", "run"))
+    depends_on("py-tqdm@4.20.0:", type=("build", "run"))
 
     # optional deps
     depends_on("py-matplotlib@2.1.0:", when="+matplotlib", type=("build", "run"))
