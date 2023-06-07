@@ -231,11 +231,11 @@ spack:
   - cabana +sycl ^kokkos +sycl +openmp std=17 +tests +examples
   - kokkos +sycl +openmp std=17 +tests +examples
   - kokkos-kernels build_type=Release %oneapi ^kokkos +sycl +openmp std=17 +tests +examples
-  - tau +mpi +opencl +level_zero ~pdt
   # --
-  # - ginkgo +oneapi            # InstallError: Ginkgo's oneAPI backend requires theDPC++ compiler as main CXX compiler.
-  # - hpctoolkit +level_zero    # intel-tbb: icpx: error: unknown argument: '-flifetime-dse=1'
-  # - sundials +sycl cxxstd=17  # sundials: include/sunmemory/sunmemory_sycl.h:20:10: fatal error: 'CL/sycl.hpp' file not found
+  # - ginkgo +oneapi                    # InstallError: Ginkgo's oneAPI backend requires theDPC++ compiler as main CXX compiler.
+  # - hpctoolkit +level_zero            # intel-tbb: icpx: error: unknown argument: '-flifetime-dse=1'
+  # - sundials +sycl cxxstd=17          # sundials: include/sunmemory/sunmemory_sycl.h:20:10: fatal error: 'CL/sycl.hpp' file not found
+  # - tau +mpi +opencl +level_zero ~pdt # builds ok in container, but needs libdrm, will update container
 
   # SKIPPED
   # - nvhpc
