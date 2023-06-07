@@ -146,7 +146,7 @@ def _make_a_repo(git, tmpdir, override_git_repos_cache_path):
         commit_counter += 1
 
     def _make(branch_name=None):
-        branch_name = "1.x" or branch_name
+        branch_name = branch_name or "1.x"
         with working_dir(repo_path):
             git("init")
 
@@ -154,7 +154,6 @@ def _make_a_repo(git, tmpdir, override_git_repos_cache_path):
             git("config", "user.email", "spack@spack.io")
 
             commits = []
-            branch_name = "1.x"
 
             def latest_commit():
                 return git("rev-list", "-n1", "HEAD", output=str, error=str).strip()
