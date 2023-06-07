@@ -21,5 +21,5 @@ class PyEnum34(PythonPackage):
 
     version("1.1.10", sha256="cce6a7477ed816bd2542d03d53db9f0db935dd013b70f336a95c73979289f248")
 
-    depends_on("python@2.4:2.7,3.1:3.3", type=("build", "run"))
+    depends_on("python", type=("build", "run"))
     depends_on("py-setuptools", type="build")
