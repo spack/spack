@@ -222,45 +222,8 @@ def mock_git_version_info(_make_a_repo):
 
 
 @pytest.fixture
-def mock_git_branch_repo(git, tmpdir, override_git_repos_cache_path):
-    """
-       | o fourth 1.x commit (1.2)
-       | o third 1.x commit
-       | |
-       o | fourth main commit (v2.0)
-       o | third main commit
-       | |
-       | o second 1.x commit (v1.1)
-       | o first 1.x commit
-       | /
-       |/
-       o second commit (v1.0)
-       o first commit
-    """
-    repo_path = str(tmpdir.mkdir("git_repo"))
-    filename = "file.txt"
-
-    def commit(message):
-        global commit_counter
-        git(
-            "commit",
-            "--no-gpg-sign",
-            "--date",
-            "2020-01-%02d 12:0:00 +0300" % commit_counter,
-            "-am",
-            message,
-        )
-        commit_counter += 1
-
-    with working_dir(repo_path):
-        git("init")
-
-        git("config", "user.name", "Spack")
-        git("config", "user.email", "spack@spack.io")
-
-        commits = []
-
-
+def mock_git_branch_repo(_make_a_repo):
+    yield _make_a_repo(branch_name="feature/withslash")
 
 
 @pytest.fixture(autouse=True)
