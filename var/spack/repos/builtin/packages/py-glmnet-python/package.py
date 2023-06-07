@@ -9,7 +9,7 @@ from spack.package import *
 
 class PyGlmnetPython(PythonPackage):
     """Python implementation of glmnet, a package that fits a generalized
-       linear model via penalized maximum likelihood"""
+    linear model via penalized maximum likelihood"""
 
     homepage = "https://glmnet-python.readthedocs.io/en/latest/glmnet_vignette.html"
 
