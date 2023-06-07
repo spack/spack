@@ -146,6 +146,7 @@ class RocprofilerDev(CMakePackage):
     depends_on("py-lxml", when="@5.5.0:")
     depends_on("py-cppheaderparser", when="@5.5.0:")
     depends_on("libpciaccess", when="@5.5.0:")
+    depends_on("py-barectf", when="@5.5.0:")
 
     for ver in ["5.4.0", "5.4.3", "5.5.0", "5.5.1"]:
         depends_on("comgr@" + ver, when="@" + ver)

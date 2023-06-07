@@ -1,18 +1,3 @@
-From 20b4e35899b3698b8c621e7f4b90699259880fc1 Mon Sep 17 00:00:00 2001
-From: sreenivasa murthy kolam <sreenivasamurthy.kolam@amd.com>
-Date: Wed, 31 May 2023 10:11:26 +0000
-Subject: [PATCH] Build with out libhsa-amd-aqlprofile64.so in spack for now as
- Aqlprofile is a closed source and needs a new recipe for downloading the
- library
-
----
- cmake_modules/env.cmake                 |  2 +-
- src/api/CMakeLists.txt                  | 10 ++++++++--
- src/tools/rocprofv2/CMakeLists.txt      |  9 +++++++--
- tests/unittests/core/CMakeLists.txt     | 13 +++++++++----
- tests/unittests/profiler/CMakeLists.txt | 16 +++++++++++-----
- 5 files changed, 36 insertions(+), 14 deletions(-)
-
 diff --git a/cmake_modules/env.cmake b/cmake_modules/env.cmake
 index 6647578..70b411e 100644
 --- a/cmake_modules/env.cmake
@@ -25,7 +10,7 @@ index 6647578..70b411e 100644
 +  message ( "AQL_PROFILE not installed. Please install AQL_PROFILE" )
  endif()
 diff --git a/src/api/CMakeLists.txt b/src/api/CMakeLists.txt
-index 822ee41..95fc4e0 100644
+index 822ee41..2956ceb 100644
 --- a/src/api/CMakeLists.txt
 +++ b/src/api/CMakeLists.txt
 @@ -40,7 +40,7 @@ get_filename_component(HSA_RUNTIME_INC_PATH ${HSA_H} DIRECTORY)
@@ -37,7 +22,16 @@ index 822ee41..95fc4e0 100644
  endif()
  
  # ############################################################################################################################################
-@@ -241,7 +241,13 @@ if(ASAN)
+@@ -224,7 +224,7 @@ target_compile_definitions(${ROCPROFILER_TARGET}
+ target_include_directories(${ROCPROFILER_TARGET}
+   PUBLIC
+   ${ROCM_PATH}/include
+-  ${HIP_INCLUDE_DIRECTORIES} ${HSA_RUNTIME_INCLUDE_DIRECTORIES}
++  ${HIP_INCLUDE_DIRECTORIES} ${HSA_RUNTIME_INCLUDE_DIRECTORIES} ${PCIACCESS_INCLUDE_DIR}
+   $<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}>
+   $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/tools>
+   $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/inc>
+@@ -241,7 +241,12 @@ if(ASAN)
    target_link_libraries(${ROCPROFILER_TARGET} PRIVATE ${AQLPROFILE_LIB} hsa-runtime64::hsa-runtime64 Threads::Threads atomic asan dl c stdc++ stdc++fs amd_comgr ${PCIACCESS_LIBRARIES})
  else()
    target_link_options(${ROCPROFILER_TARGET} PRIVATE -Wl,--version-script=${CMAKE_CURRENT_SOURCE_DIR}/exportmap -Wl,--no-undefined)
@@ -48,12 +42,11 @@ index 822ee41..95fc4e0 100644
 +  else()
 +    target_link_libraries(${ROCPROFILER_TARGET} PRIVATE ${AQLPROFILE_LIB} hsa-runtime64::hsa-runtime64 Threads::Threads atomic dl c stdc++ stdc++fs amd_comgr ${PCIACCESS_LIBRARIES})
 +  endif()
-+
  endif()
  
  ## Install libraries: Non versioned lib file in dev package
 diff --git a/src/tools/rocprofv2/CMakeLists.txt b/src/tools/rocprofv2/CMakeLists.txt
-index b2dc968..6cb0073 100644
+index b2dc968..f8bbe4a 100644
 --- a/src/tools/rocprofv2/CMakeLists.txt
 +++ b/src/tools/rocprofv2/CMakeLists.txt
 @@ -6,7 +6,7 @@ get_property(HSA_RUNTIME_INCLUDE_DIRECTORIES TARGET hsa-runtime64::hsa-runtime64
@@ -65,35 +58,48 @@ index b2dc968..6cb0073 100644
  endif()
  
  file(GLOB ROCPROFV2_SRC_FILES ${CMAKE_CURRENT_SOURCE_DIR}/*.cpp)
-@@ -23,7 +23,12 @@ target_include_directories(rocprofv2
+@@ -23,7 +23,11 @@ target_include_directories(rocprofv2
    PRIVATE
      ${PROJECT_SOURCE_DIR}
      ${PROJECT_SOURCE_DIR}/inc)
-+
+-target_link_libraries(rocprofv2 PRIVATE ${AQLPROFILE_LIB} hsa-runtime64::hsa-runtime64 stdc++fs Threads::Threads atomic -ldl)
 +if(NOT AQLPROFILE_LIB)
 +target_link_libraries(rocprofv2 PRIVATE hsa-runtime64::hsa-runtime64 stdc++fs Threads::Threads atomic -ldl)
 +else()
- target_link_libraries(rocprofv2 PRIVATE ${AQLPROFILE_LIB} hsa-runtime64::hsa-runtime64 stdc++fs Threads::Threads atomic -ldl)
++ target_link_libraries(rocprofv2 PRIVATE ${AQLPROFILE_LIB} hsa-runtime64::hsa-runtime64 stdc++fs Threads::Threads atomic -ldl)
 +endif()
  # install(TARGETS rocprofv2 RUNTIME
  #   DESTINATION ${CMAKE_INSTALL_BINDIR}
 -#   COMPONENT runtime)
 \ No newline at end of file
 +#   COMPONENT runtime)
+diff --git a/test/CMakeLists.txt b/test/CMakeLists.txt
+index 625dcd7..efa2011 100644
+--- a/test/CMakeLists.txt
++++ b/test/CMakeLists.txt
+@@ -118,7 +118,7 @@ execute_process ( COMMAND sh -xc "mkdir -p ${PROJECT_BINARY_DIR}/RESULTS" )
+ set ( TEST_LIB "rocprof-tool" )
+ set ( TEST_LIB_SRC ${TEST_DIR}/tool/tool.cpp ${UTIL_SRC} )
+ add_library ( ${TEST_LIB} SHARED ${TEST_LIB_SRC} )
+-target_include_directories ( ${TEST_LIB} PRIVATE ${TEST_DIR} ${ROOT_DIR} )
++target_include_directories ( ${TEST_LIB} PRIVATE ${TEST_DIR} ${ROOT_DIR} ${PCIACCESS_INCLUDE_DIR})
+ target_link_libraries ( ${TEST_LIB} ${ROCPROFILER_TARGET} hsa-runtime64::hsa-runtime64 Threads::Threads dl )
+ 
+ ## Build memory test bench
 diff --git a/tests/unittests/core/CMakeLists.txt b/tests/unittests/core/CMakeLists.txt
-index 5efc625..5505d18 100644
+index 5efc625..348650a 100644
 --- a/tests/unittests/core/CMakeLists.txt
 +++ b/tests/unittests/core/CMakeLists.txt
-@@ -96,11 +96,16 @@ target_include_directories(runCoreUnitTests PRIVATE ${PROJECT_SOURCE_DIR}
- target_compile_definitions(runCoreUnitTests
+@@ -97,10 +97,16 @@ target_compile_definitions(runCoreUnitTests
    PUBLIC AMD_INTERNAL_BUILD
    PRIVATE PROF_API_IMPL HIP_PROF_HIP_API_STRING=1 __HIP_PLATFORM_AMD__=1)
--
-+if(NOT AQLPROFILE_LIB )
- # Link test executable against gtest & gtest_main
+ 
+-# Link test executable against gtest & gtest_main
 -target_link_libraries(runCoreUnitTests PRIVATE ${ROCPROFILER_TARGET} ${AQLPROFILE_LIB}
 -  hsa-runtime64::hsa-runtime64 c stdc++
 -  GTest::gtest GTest::gtest_main stdc++fs dl ${PCIACCESS_LIBRARIES})
++ # Link test executable against gtest & gtest_main
++if(NOT AQLPROFILE_LIB )
 +  target_link_libraries(runCoreUnitTests PRIVATE ${ROCPROFILER_TARGET}
 +    hsa-runtime64::hsa-runtime64 c stdc++
 +    GTest::gtest GTest::gtest_main stdc++fs dl ${PCIACCESS_LIBRARIES})
@@ -106,14 +112,13 @@ index 5efc625..5505d18 100644
  add_dependencies(tests runCoreUnitTests)
  install(TARGETS runCoreUnitTests RUNTIME DESTINATION ${CMAKE_INSTALL_DATAROOTDIR}/${PROJECT_NAME}/tests COMPONENT tests)
 diff --git a/tests/unittests/profiler/CMakeLists.txt b/tests/unittests/profiler/CMakeLists.txt
-index 7e08ace..17e86e2 100644
+index 7e08ace..35cb945 100644
 --- a/tests/unittests/profiler/CMakeLists.txt
 +++ b/tests/unittests/profiler/CMakeLists.txt
-@@ -83,11 +83,17 @@ target_include_directories(runProfilerUnitTests PRIVATE ${PROJECT_SOURCE_DIR}
- target_compile_definitions(runProfilerUnitTests
+@@ -84,10 +84,17 @@ target_compile_definitions(runProfilerUnitTests
    PUBLIC AMD_INTERNAL_BUILD
    PRIVATE PROF_API_IMPL HIP_PROF_HIP_API_STRING=1 __HIP_PLATFORM_AMD__=1)
--
+ 
 -target_link_libraries(runProfilerUnitTests PRIVATE rocprofiler_tool ${AQLPROFILE_LIB}
 -  hsa-runtime64::hsa-runtime64
 -  GTest::gtest GTest::gtest_main stdc++fs
@@ -132,6 +137,3 @@ index 7e08ace..17e86e2 100644
  
  add_dependencies(tests runProfilerUnitTests)
  install(TARGETS runProfilerUnitTests RUNTIME DESTINATION ${CMAKE_INSTALL_DATAROOTDIR}/${PROJECT_NAME}/tests COMPONENT tests)
--- 
-2.39.1
-
