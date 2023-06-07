@@ -28,10 +28,10 @@ class Pandorasdk(CMakePackage):
 
     def cmake_args(self):
         args = [
-            "-DLC_PANDORA_CONTENT=ON",
-            "-DLAR_PANDORA_CONTENT=ON",
-            "-DCMAKE_MODULE_PATH=%s" % self.spec["pandorapfa"].prefix.cmakemodules,
-            "-DCMAKE_CXX_FLAGS=-std=c++17",
+            self.define("LC_PANDORA_CONTENT", True),
+            self.define("LAR_PANDORA_CONTENT", True),
+            self.define("CMAKE_MODULE_PATH", self.spec["pandorapfa"].prefix.cmakemodules),
+            self.define("CMAKE_CXX_FLAGS", "-std=c++17"),
         ]
         return args
 
