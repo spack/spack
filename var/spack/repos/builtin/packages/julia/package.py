@@ -50,14 +50,14 @@ class Julia(MakefilePackage):
     # Note, we just use link_llvm_dylib so that we not only get a libLLVM,
     # but also so that llvm-config --libfiles gives only the dylib. Without
     # it it also gives static libraries, and breaks Julia's build.
-    depends_on("llvm targets=amdgpu,bpf,nvptx,webassembly version_suffix=jl +link_llvm_dylib")
+    depends_on(
+        "llvm"
+        " targets=amdgpu,bpf,nvptx,webassembly"
+        " version_suffix=jl +link_llvm_dylib libunwind=none"
+    )
     depends_on("libuv", when="@:1.7")
     depends_on("libuv-julia@1.42.0", when="@1.8.0:1.8.1")
     depends_on("libuv-julia@1.44.2", when="@1.8.2:")
-
-    # Do not use internal unwind.  We need to use a conflict, because
-    # `internal_unwind` is defined only when `+clang`.
-    conflicts("^llvm+internal_unwind")
 
     with when("@1.9.0:1.9"):
         # libssh2.so.1, libpcre2-8.so.0, mbedtls.so.14, mbedcrypto.so.7, mbedx509.so.1
@@ -138,8 +138,8 @@ class Julia(MakefilePackage):
         "llvm",
         when="^llvm@14.0.6",
         patches=patch(
-            "https://github.com/JuliaLang/llvm-project/compare/f28c006a5895fc0e329fe15fead81e37457cb1d1...5c82f5309b10fab0adf6a94969e0dddffdb3dbce.patch",
-            sha256="9f2bc98e876e85a3edb158064aae782281ea7099e4c34e83ac456609cb7acd10",
+            "https://github.com/JuliaLang/llvm-project/compare/f28c006a5895fc0e329fe15fead81e37457cb1d1...381043941d2c7a5157a011510b6d0386c171aae7.diff",
+            sha256="f3def26930832532bbcd861d41b31ae03db993bc2b3510f89ef831a30bd3e099",
         ),
     )
 
