@@ -60,26 +60,26 @@ class Amdfftw(FftwBase):
         "amd-top-n-planner",
         default=False,
         when="@3.0.1: ~amd-fast-planner ~mpi ~openmp ~threads",
-        description="Build with amd-top-n-planner support"
+        description="Build with amd-top-n-planner support",
     )
     variant(
         "amd-mpi-vader-limit",
         default=False,
         when="@3.0.1:",
-        description="Build with amd-mpi-vader-limit support"
+        description="Build with amd-mpi-vader-limit support",
     )
     variant("static", default=False, description="Build with static suppport")
     variant(
         "amd-trans",
         default=False,
         when="~mpi ~openmp ~threads",
-        description="Build with amd-trans suppport"
+        description="Build with amd-trans suppport",
     )
     variant(
         "amd-app-opt",
         default=False,
         when="@3.1: ~mpi",
-        description="Build with amd-app-opt suppport"
+        description="Build with amd-app-opt suppport",
     )
     variant(
         "amd-dynamic-dispatcher",
