@@ -105,7 +105,7 @@ def override_git_repos_cache_path(tmpdir):
 
 
 @pytest.fixture
-def mock_git_version_info(git, tmpdir, override_git_repos_cache_path):
+def _make_a_repo(git, tmpdir, override_git_repos_cache_path):
     """Create a mock git repo with known structure
 
     The structure of commits in this repo is as follows::
@@ -145,71 +145,80 @@ def mock_git_version_info(git, tmpdir, override_git_repos_cache_path):
         )
         commit_counter += 1
 
-    with working_dir(repo_path):
-        git("init")
+    def _make(branch_name=None):
+        branch_name = "1.x" or branch_name
+        with working_dir(repo_path):
+            git("init")
 
-        git("config", "user.name", "Spack")
-        git("config", "user.email", "spack@spack.io")
+            git("config", "user.name", "Spack")
+            git("config", "user.email", "spack@spack.io")
 
-        commits = []
-        branch_name = "1.x"
+            commits = []
+            branch_name = "1.x"
 
-        def latest_commit():
-            return git("rev-list", "-n1", "HEAD", output=str, error=str).strip()
+            def latest_commit():
+                return git("rev-list", "-n1", "HEAD", output=str, error=str).strip()
 
-        # Add two commits on main branch
+            # Add two commits on main branch
 
-        # A commit without a previous version counts as "0"
-        write_file(filename, "[0]")
-        git("add", filename)
-        commit("first commit")
-        commits.append(latest_commit())
+            # A commit without a previous version counts as "0"
+            write_file(filename, "[0]")
+            git("add", filename)
+            commit("first commit")
+            commits.append(latest_commit())
 
-        # Get name of default branch (differs by git version)
-        main = git("rev-parse", "--abbrev-ref", "HEAD", output=str, error=str).strip()
+            # Get name of default branch (differs by git version)
+            main = git("rev-parse", "--abbrev-ref", "HEAD", output=str, error=str).strip()
 
-        # Tag second commit as v1.0
-        write_file(filename, "[1, 0]")
-        commit("second commit")
-        commits.append(latest_commit())
-        git("tag", "v1.0")
+            # Tag second commit as v1.0
+            write_file(filename, "[1, 0]")
+            commit("second commit")
+            commits.append(latest_commit())
+            git("tag", "v1.0")
 
-        # Add two commits and a tag on 1.x branch
-        git("checkout", "-b", branch_name)
-        write_file(filename, "[1, 0, 'git', 1]")
-        commit(f"first {branch_name} commit")
-        commits.append(latest_commit())
+            # Add two commits and a tag on 1.x branch
+            git("checkout", "-b", branch_name)
+            write_file(filename, "[1, 0, 'git', 1]")
+            commit(f"first {branch_name} commit")
+            commits.append(latest_commit())
 
-        write_file(filename, "[1, 1]")
-        commit(f"second {branch_name} commit")
-        commits.append(latest_commit())
-        git("tag", "v1.1")
+            write_file(filename, "[1, 1]")
+            commit(f"second {branch_name} commit")
+            commits.append(latest_commit())
+            git("tag", "v1.1")
 
-        # Add two commits and a tag on main branch
-        git("checkout", main)
-        write_file(filename, "[1, 0, 'git', 1]")
-        commit("third main commit")
-        commits.append(latest_commit())
-        write_file(filename, "[2, 0]")
-        commit("fourth main commit")
-        commits.append(latest_commit())
-        git("tag", "v2.0")
+            # Add two commits and a tag on main branch
+            git("checkout", main)
+            write_file(filename, "[1, 0, 'git', 1]")
+            commit("third main commit")
+            commits.append(latest_commit())
+            write_file(filename, "[2, 0]")
+            commit("fourth main commit")
+            commits.append(latest_commit())
+            git("tag", "v2.0")
 
-        # Add two more commits on 1.x branch to ensure we aren't cheating by using time
-        git("checkout", branch_name)
-        write_file(filename, "[1, 1, 'git', 1]")
-        commit(f"third {branch_name} commit")
-        commits.append(latest_commit())
-        write_file(filename, "[1, 2]")
-        commit(f"fourth {branch_name} commit")
-        commits.append(latest_commit())
-        git("tag", "1.2")  # test robust parsing to different syntax, no v
+            # Add two more commits on 1.x branch to ensure we aren't cheating by using time
+            git("checkout", branch_name)
+            write_file(filename, "[1, 1, 'git', 1]")
+            commit(f"third {branch_name} commit")
+            commits.append(latest_commit())
+            write_file(filename, "[1, 2]")
+            commit(f"fourth {branch_name} commit")
+            commits.append(latest_commit())
+            git("tag", "1.2")  # test robust parsing to different syntax, no v
 
-        # The commits are ordered with the last commit first in the list
-        commits = list(reversed(commits))
+            # The commits are ordered with the last commit first in the list
+            commits = list(reversed(commits))
 
-    # Return the git directory to install, the filename used, and the commits
-    yield repo_path, filename, commits
+        # Return the git directory to install, the filename used, and the commits
+        return repo_path, filename, commits
+
+    return _make
+
+
+@pytest.fixture
+def mock_git_version_info(_make_a_repo):
+    yield _make_a_repo()
 
 
 @pytest.fixture
