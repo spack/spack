@@ -19,7 +19,7 @@ class Berkeleygw(MakefilePackage):
     version(
         "3.0.1",
         sha256="7d8c2cc1ee679afb48efbdd676689d4d537226b50e13a049dbcb052aaaf3654f",
-        url="https://berkeley.box.com/shared/static/m1dgnhiemo47lhxczrn6si71bwxoxor8.gz",
+        url="https://files.berkeleygw.org/BerkeleyGW-3.0.1.tar.gz",
         expand=False,
     )
     version(
