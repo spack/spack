@@ -946,7 +946,7 @@ def generate_gitlab_ci_yaml(
         # Add config scopes to environment
         env_includes = env_yaml_root["spack"].get("include", [])
         cli_scopes = [
-            os.path.abspath(s.path)
+            os.path.relpath(s.path, concrete_env_dir)
             for s in cfg.scopes().values()
             if type(s) == cfg.ImmutableConfigScope
             and s.path not in env_includes
@@ -1095,7 +1095,7 @@ def generate_gitlab_ci_yaml(
                     raise AttributeError
 
                 def main_script_replacements(cmd):
-                    return cmd.replace("{env_dir}", concrete_env_dir)
+                    return cmd.replace("{env_dir}", rel_concrete_env_dir)
 
                 job_object["script"] = _unpack_script(
                     job_object["script"], op=main_script_replacements
