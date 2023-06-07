@@ -152,6 +152,7 @@ def mock_git_version_info(git, tmpdir, override_git_repos_cache_path):
         git("config", "user.email", "spack@spack.io")
 
         commits = []
+        branch_name = "1.x"
 
         def latest_commit():
             return git("rev-list", "-n1", "HEAD", output=str, error=str).strip()
@@ -174,13 +175,13 @@ def mock_git_version_info(git, tmpdir, override_git_repos_cache_path):
         git("tag", "v1.0")
 
         # Add two commits and a tag on 1.x branch
-        git("checkout", "-b", "1.x")
+        git("checkout", "-b", branch_name)
         write_file(filename, "[1, 0, 'git', 1]")
-        commit("first 1.x commit")
+        commit(f"first {branch_name} commit")
         commits.append(latest_commit())
 
         write_file(filename, "[1, 1]")
-        commit("second 1.x commit")
+        commit(f"second {branch_name} commit")
         commits.append(latest_commit())
         git("tag", "v1.1")
 
@@ -195,12 +196,12 @@ def mock_git_version_info(git, tmpdir, override_git_repos_cache_path):
         git("tag", "v2.0")
 
         # Add two more commits on 1.x branch to ensure we aren't cheating by using time
-        git("checkout", "1.x")
+        git("checkout", branch_name)
         write_file(filename, "[1, 1, 'git', 1]")
-        commit("third 1.x commit")
+        commit(f"third {branch_name} commit")
         commits.append(latest_commit())
         write_file(filename, "[1, 2]")
-        commit("fourth 1.x commit")
+        commit(f"fourth {branch_name} commit")
         commits.append(latest_commit())
         git("tag", "1.2")  # test robust parsing to different syntax, no v
 
@@ -209,6 +210,48 @@ def mock_git_version_info(git, tmpdir, override_git_repos_cache_path):
 
     # Return the git directory to install, the filename used, and the commits
     yield repo_path, filename, commits
+
+
+@pytest.fixture
+def mock_git_branch_repo(git, tmpdir, override_git_repos_cache_path):
+    """
+       | o fourth 1.x commit (1.2)
+       | o third 1.x commit
+       | |
+       o | fourth main commit (v2.0)
+       o | third main commit
+       | |
+       | o second 1.x commit (v1.1)
+       | o first 1.x commit
+       | /
+       |/
+       o second commit (v1.0)
+       o first commit
+    """
+    repo_path = str(tmpdir.mkdir("git_repo"))
+    filename = "file.txt"
+
+    def commit(message):
+        global commit_counter
+        git(
+            "commit",
+            "--no-gpg-sign",
+            "--date",
+            "2020-01-%02d 12:0:00 +0300" % commit_counter,
+            "-am",
+            message,
+        )
+        commit_counter += 1
+
+    with working_dir(repo_path):
+        git("init")
+
+        git("config", "user.name", "Spack")
+        git("config", "user.email", "spack@spack.io")
+
+        commits = []
+
+
 
 
 @pytest.fixture(autouse=True)
