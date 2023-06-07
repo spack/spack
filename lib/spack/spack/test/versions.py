@@ -689,6 +689,10 @@ def test_git_ref_withslash(mock_git_branch_repo, install_mockery, mock_packages,
     assert spec_branch.satisfies("@1.1:1.3")
     assert str(spec_branch.version) == "git.feature/withslash=1.2"
 
+    serialized = spec_branch.to_dict()
+    deserialized = spack.spec.Spec.from_dict(serialized)
+    assert str(deserialized.version) == "git.feature/withslash=1.2"
+
 
 @pytest.mark.parametrize(
     "string,git",
