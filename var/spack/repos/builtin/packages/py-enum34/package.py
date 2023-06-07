@@ -16,7 +16,7 @@ class PyEnum34(PythonPackage):
 
     homepage = "https://pypi.org/project/enum34/"
     pypi = "enum34/enum34-1.1.10.tar.gz"
-    
+
     # NOTE: This project no longer appears to be maintained.
 
     version("1.1.10", sha256="cce6a7477ed816bd2542d03d53db9f0db935dd013b70f336a95c73979289f248")

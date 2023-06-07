@@ -44,7 +44,9 @@ class PyPyomo(PythonPackage):
 
     variant("cython", default=False, description="Enable cythonization of Pyomo.")
     variant("tests", default=False, description="Install testing dependencies. (Version 6.1+)")
-    variant("docs", default=False, description="Install docs generation dependencies. (Version 6.1+)")
+    variant(
+        "docs", default=False, description="Install docs generation dependencies. (Version 6.1+)"
+    )
     variant("optional", default=False, description="Install optional dependencies. (Version 6.1+)")
 
     # python_requires
@@ -101,7 +103,6 @@ class PyPyomo(PythonPackage):
     depends_on("py-seaborn", when="@6.1:+optional", type=("build", "run"))
     depends_on("py-numdifftools", when="@6.1:+optional", type=("build", "run"))
     depends_on("py-plotly", when="@6.6:+optional", type=("build", "run"))
-
 
     def global_options(self, spec, prefix):
         options = []
