@@ -367,7 +367,11 @@ class SpecNodeParser:
                     compiler_name.strip(), compiler_version
                 )
                 self.has_compiler = True
-            elif self.ctx.accept(TokenType.VERSION_HASH_PAIR) or self.ctx.accept(TokenType.GIT_VERSION) or self.ctx.accept(TokenType.VERSION):
+            elif (
+                self.ctx.accept(TokenType.VERSION_HASH_PAIR)
+                or self.ctx.accept(TokenType.GIT_VERSION)
+                or self.ctx.accept(TokenType.VERSION)
+            ):
                 self.hash_not_parsed_or_raise(initial_spec, self.ctx.current_token.value)
                 if self.has_version:
                     raise spack.spec.MultipleVersionError(
