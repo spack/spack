@@ -56,7 +56,12 @@ class Amdfftw(FftwBase):
         "tradeoff in the performance. It is supported for "
         "float and double precisions only.",
     )
-    variant("amd-top-n-planner", default=False, description="Build with amd-top-n-planner support")
+    variant(
+        "amd-top-n-planner",
+        default=False,
+        when="@3.0.1: ~amd-fast-planner ~mpi ~openmp ~threads",
+        description="Build with amd-top-n-planner support"
+    )
     variant(
         "amd-mpi-vader-limit", default=False, description="Build with amd-mpi-vader-limit support"
     )
@@ -96,11 +101,6 @@ class Amdfftw(FftwBase):
     )
     conflicts(
         "+amd-top-n-planner",
-        when="@:3.0.0",
-        msg="amd-top-n-planner is supported from 3.0.1 onwards",
-    )
-    conflicts(
-        "+amd-top-n-planner",
         when="precision=long_double",
         msg="long_double precision is not supported with amd-top-n-planner",
     )
@@ -108,22 +108,6 @@ class Amdfftw(FftwBase):
         "+amd-top-n-planner",
         when="precision=quad",
         msg="Quad precision is not supported with amd-top-n-planner",
-    )
-    conflicts(
-        "+amd-top-n-planner",
-        when="+amd-fast-planner",
-        msg="amd-top-n-planner cannot be used with amd-fast-planner",
-    )
-    conflicts(
-        "+amd-top-n-planner", when="+threads", msg="amd-top-n-planner works only for single thread"
-    )
-    conflicts(
-        "+amd-top-n-planner", when="+mpi", msg="mpi thread is not supported with amd-top-n-planner"
-    )
-    conflicts(
-        "+amd-top-n-planner",
-        when="+openmp",
-        msg="openmp thread is not supported with amd-top-n-planner",
     )
     conflicts(
         "+amd-mpi-vader-limit",
