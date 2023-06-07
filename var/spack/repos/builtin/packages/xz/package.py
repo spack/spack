@@ -115,12 +115,9 @@ class MSBuildBuilder(MSBuildBuilder):
             mkdirp(prefix.bin)
             libs_to_find = []
             dlls_to_find = []
-            if self.pkg.spec.satisfies("libs=shared,static"):
-                libs_to_find.append("*.lib")
+            if self.pkg.spec.satisfies("libs=shared"):
                 dlls_to_find.append("*.dll")
-            elif self.pkg.spec.satisfies("libs=shared"):
-                dlls_to_find.append("*.dll")
-            else:
+            if self.pkg.spec.satisfies("libs=static"):
                 libs_to_find.append("*.lib")
             for lib in libs_to_find:
                 libs_to_install = glob.glob(
