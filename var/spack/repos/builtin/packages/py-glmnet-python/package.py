@@ -19,3 +19,5 @@ class PyGlmnetPython(PythonPackage):
 
     depends_on("py-setuptools", type="build")
     depends_on("py-joblib@0.10.3:", type=("build", "run"))
+    # https://github.com/bbalasub1/glmnet_python/issues/64
+    depends_on("py-scipy@:1.8.1", type=("build", "run"))
