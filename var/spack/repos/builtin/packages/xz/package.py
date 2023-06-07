@@ -111,11 +111,8 @@ class MSBuildBuilder(MSBuildBuilder):
 
     def install(self, pkg, spec, prefix):
         with working_dir(self.build_directory):
-            # Ensure we have libs directory
-            if not os.path.isdir(prefix.lib):
-                mkdirp(prefix.lib)
-            if not os.path.isdir(prefix.bin):
-                mkdirp(prefix.bin)
+            mkdirp(prefix.lib)
+            mkdirp(prefix.bin)
             libs_to_find = []
             dlls_to_find = []
             if self.pkg.spec.satisfies("libs=shared,static"):
