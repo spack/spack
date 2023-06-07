@@ -69,7 +69,12 @@ class Amdfftw(FftwBase):
         description="Build with amd-mpi-vader-limit support"
     )
     variant("static", default=False, description="Build with static suppport")
-    variant("amd-trans", default=False, description="Build with amd-trans suppport")
+    variant(
+        "amd-trans",
+        default=False,
+        when="~mpi ~openmp ~threads",
+        description="Build with amd-trans suppport"
+    )
     variant("amd-app-opt", default=False, description="Build with amd-app-opt suppport")
     variant(
         "amd-dynamic-dispatcher",
@@ -117,9 +122,6 @@ class Amdfftw(FftwBase):
         when="precision=quad",
         msg="Quad precision is not supported with amd-mpi-vader-limit",
     )
-    conflicts("+amd-trans", when="+threads", msg="amd-trans works only for single thread")
-    conflicts("+amd-trans", when="+mpi", msg="mpi thread is not supported with amd-trans")
-    conflicts("+amd-trans", when="+openmp", msg="openmp thread is not supported with amd-trans")
     conflicts(
         "+amd-trans",
         when="precision=long_double",
