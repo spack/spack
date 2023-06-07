@@ -41,7 +41,7 @@ class PyPyseer(PythonPackage):
 
     # optional deps
     depends_on("py-matplotlib@2.1.0:", when="+matplotlib", type=("build", "run"))
-    depends_on("py-dendropy@4.3.0", when="+dendropy", type=("build", "run"))
-    depends_on("py-pybedtools@2.27.0:", when="+kmer", type=("build", "run"))
+    depends_on("py-dendropy@4.3.0:", when="+dendropy", type=("build", "run"))
+    depends_on("py-pybedtools@0.7.10:", when="+kmer", type=("build", "run"))
     depends_on("bedops@2.4.9:", when="+kmer", type=("build", "run"))
     depends_on("bwa", when="+kmer", type=("build", "run"))
