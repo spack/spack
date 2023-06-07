@@ -26,7 +26,8 @@ class Podman(Package):
 
     # See <https://github.com/containers/podman/issues/16996> for the
     # respective issue and the suggested patch
-    patch("markdown-utf8.diff", when="@4:4.3.14.3.14.3.14.3.1")
+    # issue was fixed as of 4.4.0
+    patch("markdown-utf8.diff", when="@4:4.3.1")
 
     depends_on("go", type="build")
     depends_on("go-md2man", type="build")
