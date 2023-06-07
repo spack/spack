@@ -817,7 +817,13 @@ class Environment:
             self.views = {}
 
         # Retrieve unification scheme for the concretizer
-        self.unify = spack.config.get("concretizer:unify", False)
+        concretizer = configuration.get("concretizer", {})
+        unify = None
+        for entry, value in concretizer.items():
+            if entry == "unify":
+                unify = value
+                break
+        self.unify = unify if unify is not None else spack.config.get("concretizer:unify", False)
 
         # Retrieve dev-build packages:
         self.dev_specs = copy.deepcopy(env_configuration.get("develop", {}))

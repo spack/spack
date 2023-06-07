@@ -500,3 +500,37 @@ def test_error_message_when_using_too_new_lockfile(tmp_path):
     ev.initialize_environment_dir(env_dir, init_file)
     with pytest.raises(ev.SpackEnvironmentError, match="You need to use a newer Spack version."):
         ev.Environment(env_dir)
+
+
+@pytest.mark.regression("38240")
+@pytest.mark.parametrize(
+    "config_scheme,env_scheme",
+    [
+        (True, False),
+        (True, "when_possible"),
+        (False, True),
+        (False, "when_possible"),
+        ("when_possible", False),
+        ("when_possible", True),
+    ],
+)
+def test_environment_concretizer_scheme_used(tmpdir, config_scheme, env_scheme):
+    """Test to ensure environment's concretizer:unify option is read and takes precedence."""
+    filename = str(tmpdir.join("spack.yaml"))
+    with open(filename, "w") as f:
+        f.write(
+            """\
+spack:
+  specs:
+  - mpileaks
+  concretizer:
+    unify: {0}
+""".format(
+                str(env_scheme).lower()
+            )
+        )
+
+    with tmpdir.as_cwd():
+        with spack.config.override("concretizer:unify", config_scheme):
+            e = ev.Environment(tmpdir.strpath)
+            assert e.unify == env_scheme
