@@ -63,7 +63,10 @@ class Amdfftw(FftwBase):
         description="Build with amd-top-n-planner support"
     )
     variant(
-        "amd-mpi-vader-limit", default=False, description="Build with amd-mpi-vader-limit support"
+        "amd-mpi-vader-limit",
+        default=False,
+        when="@3.0.1:",
+        description="Build with amd-mpi-vader-limit support"
     )
     variant("static", default=False, description="Build with static suppport")
     variant("amd-trans", default=False, description="Build with amd-trans suppport")
@@ -108,11 +111,6 @@ class Amdfftw(FftwBase):
         "+amd-top-n-planner",
         when="precision=quad",
         msg="Quad precision is not supported with amd-top-n-planner",
-    )
-    conflicts(
-        "+amd-mpi-vader-limit",
-        when="@:3.0.0",
-        msg="amd-mpi-vader-limit is supported from 3.0.1 onwards",
     )
     conflicts(
         "+amd-mpi-vader-limit",
