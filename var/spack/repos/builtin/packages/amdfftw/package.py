@@ -51,6 +51,7 @@ class Amdfftw(FftwBase):
     variant(
         "amd-fast-planner",
         default=False,
+        when="@3.0:",
         description="Option to reduce the planning time without much "
         "tradeoff in the performance. It is supported for "
         "float and double precisions only.",
@@ -83,9 +84,6 @@ class Amdfftw(FftwBase):
         "+debug", when="@2.2 %aocc", msg="debug mode is not supported by AOCC clang version 2.2"
     )
     conflicts("%gcc@:7.2", when="@2.2:", msg="GCC version above 7.2 is required for AMDFFTW")
-    conflicts(
-        "+amd-fast-planner", when="@2.2", msg="amd-fast-planner is supported from 3.0 onwards"
-    )
     conflicts(
         "+amd-fast-planner",
         when="precision=quad",
