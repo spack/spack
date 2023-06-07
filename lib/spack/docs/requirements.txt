@@ -5,4 +5,4 @@ sphinx-rtd-theme==1.2.1
 python-levenshtein==0.21.0
 docutils==0.18.1
 pygments==2.15.1
-urllib3==2.0.2
+urllib3==2.0.3
