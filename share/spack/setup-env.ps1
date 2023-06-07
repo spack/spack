@@ -47,7 +47,7 @@ if ($null -eq $Env:EDITOR)
 }
 
 # Set spack shell so we can detect powershell context
-$Env:SPACK_SHELL=pwsh
+$Env:SPACK_SHELL="pwsh"
 
 doskey /exename=powershell.exe spack=$Env:SPACK_ROOT\bin\spack.ps1 $args
 
