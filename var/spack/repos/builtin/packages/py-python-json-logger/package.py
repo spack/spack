@@ -12,7 +12,7 @@ class PyPythonJsonLogger(PythonPackage):
     homepage = "https://github.com/madzak/python-json-logger"
     pypi = "python-json-logger/python-json-logger-0.1.11.tar.gz"
 
+    version("2.0.7", sha256="23e7ec02d34237c5aa1e29a070193a4ea87583bb4e7f8fd06d3de8264c4b2e1c")
     version("0.1.11", sha256="b7a31162f2a01965a5efb94453ce69230ed208468b0bbc7fdfc56e6d8df2e281")
 
-    depends_on("python@2.7:", type=("build", "run"))
-    depends_on("py-setuptools")
+    depends_on("py-setuptools", type="build")

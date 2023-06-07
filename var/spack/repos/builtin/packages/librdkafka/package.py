@@ -13,6 +13,7 @@ class Librdkafka(AutotoolsPackage):
     homepage = "https://github.com/edenhill/librdkafka"
     url = "https://github.com/edenhill/librdkafka/archive/v1.5.0.tar.gz"
 
+    version("2.1.1", sha256="7be1fc37ab10ebdc037d5c5a9b35b48931edafffae054b488faaff99e60e0108")
     version("2.1.0", sha256="d8e76c4b1cde99e283a19868feaaff5778aa5c6f35790036c5ef44bc5b5187aa")
     version("2.0.2", sha256="f321bcb1e015a34114c83cf1aa7b99ee260236aab096b85c003170c90a47ca9d")
     version("1.9.2", sha256="3fba157a9f80a0889c982acdd44608be8a46142270a389008b22d921be1198ad")
