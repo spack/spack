@@ -12,6 +12,7 @@ class PyPyspark(PythonPackage):
     homepage = "https://spark.apache.org"
     pypi = "pyspark/pyspark-3.0.1.tar.gz"
 
+    version("3.4.0", sha256="167a23e11854adb37f8602de6fcc3a4f96fd5f1e323b9bb83325f38408c5aafd")
     version("3.3.1", sha256="e99fa7de92be406884bfd831c32b9306a3a99de44cfc39a2eefb6ed07445d5fa")
     version("3.3.0", sha256="7ebe8e9505647b4d124d5a82fca60dfd3891021cf8ad6c5ec88777eeece92cf7")
     version("3.2.1", sha256="0b81359262ec6e9ac78c353344e7de026027d140c6def949ff0d80ab70f89a54")
@@ -27,7 +28,8 @@ class PyPyspark(PythonPackage):
     depends_on("python@2.7:3.7", when="@:2", type=("build", "run"))
     depends_on("python@2.7:", type=("build", "run"))
     depends_on("py-setuptools", type="build")
-    depends_on("py-py4j@0.10.9.5", when="@3.3.0:", type=("build", "run"))
+    depends_on("py-py4j@0.10.9.7", when="@3.4.0:", type=("build", "run"))
+    depends_on("py-py4j@0.10.9.5", when="@3.3", type=("build", "run"))
     depends_on("py-py4j@0.10.9.3", when="@3.2.1", type=("build", "run"))
     depends_on("py-py4j@0.10.9", when="@3.0.1:3.1.3", type=("build", "run"))
     depends_on("py-py4j@0.10.7", when="@2.3.2:2.4.4", type=("build", "run"))
