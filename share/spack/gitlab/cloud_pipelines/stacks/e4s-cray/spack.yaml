@@ -1,0 +1,102 @@
+spack:
+  view: false
+
+  concretizer:
+    reuse: false
+    unify: false
+
+  compilers:
+  - compiler:
+      spec: cce@15.0.1
+      paths:
+        cc: cc
+        cxx: CC
+        f77: ftn
+        fc: ftn
+      flags: {}
+      operating_system: rhel8
+      target: any
+      modules:
+      - PrgEnv-cray/8.3.3
+      - cce/15.0.1
+      environment:
+        set:
+          MACHTYPE: x86_64
+  - compiler:
+      spec: gcc@11.2.0
+      paths:
+        cc: gcc
+        cxx: g++
+        f77: gfortran
+        fc: gfortran
+      flags: {}
+      operating_system: rhel8
+      target: any
+      modules:
+      - PrgEnv-gnu
+      - gcc/11.2.0
+      environment: {}
+
+  packages:
+    all:
+      require: '%cce@15.0.1'
+      compiler: [cce@15.0.1]
+      providers:
+        blas: [cray-libsci]
+        lapack: [cray-libsci]
+        mpi: [cray-mpich]
+        tbb: [intel-tbb]
+        scalapack: [netlib-scalapack]
+      target: [zen4]
+      variants: +mpi
+
+    binutils:
+      variants: +ld +gold +headers +libiberty ~nls
+    hdf5:
+      variants: +fortran +hl +shared
+    libunwind:
+      variants: +pic +xz
+    ncurses:
+      require: '@6.3 +termlib'
+    openblas:
+      require: '@0.3.20'
+      variants: threads=openmp
+    python:
+      require: '@3.7.15'
+    xz:
+      variants: +pic
+    elfutils:
+      variants: +bzip2 ~nls +xz
+      require: '%gcc'
+
+    # EXTERNALS
+    cray-mpich:
+      buildable: false
+      externals:
+      - spec: cray-mpich@8.1.25 %cce@15.0.1
+        prefix: /opt/cray/pe/mpich/8.1.25/ofi/cray/10.0
+        modules:
+        - cray-mpich/8.1.25
+    cray-libsci:
+      buildable: false
+      externals:
+      - spec: cray-libsci@23.02.1.1 %cce@15.0.1
+        prefix: /opt/cray/pe/libsci/23.02.1.1/CRAY/9.0/x86_64/
+        modules:
+        - cray-libsci/23.02.1.1
+
+  specs:
+  - butterflypack
+  - hypre
+  - kokkos
+  - kokkos-kernels
+  - petsc
+  - raja
+  - slepc
+  - superlu-dist
+  - tau
+
+  mirrors: { "mirror": "s3://spack-binaries-cray/develop/e4s-cray" }
+
+  cdash:
+    build-group: E4S Cray
