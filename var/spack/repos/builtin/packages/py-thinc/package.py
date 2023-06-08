@@ -19,10 +19,10 @@ class PyThinc(PythonPackage):
 
     depends_on("py-setuptools", type="build")
     depends_on("py-cython@0.25:2", type="build")
-    
+
     depends_on("py-murmurhash@0.28:1.0", type=("build", "run"), when="@7.4.0:7.4.1")
     depends_on("py-murmurhash@1.0.2:1.0", type=("build", "run"), when="@8.1.10:")
-    
+
     depends_on("py-cymem@2.0.2:2.0", type=("build", "run"))
 
     depends_on("py-preshed@1.0.1:3.0", type=("build", "run"), when="@7.4.0:7.4.1")
