@@ -120,7 +120,11 @@ def test_dump_environment(prepare_environment_for_tests, tmpdir):
     envutil.dump_environment(dumpfile_path)
     with open(dumpfile_path, "r") as dumpfile:
         if sys.platform == "win32":
-            assert 'set "TEST_ENV_VAR={}"\n'.format(test_paths) in list(dumpfile)
+            is_pwsh = os.environ.get("SPACK_SHELL", None) == "pwsh"
+            if is_pwsh:
+                assert '$Env:TEST_ENV_VAR={}\n'.format(test_paths) in list(dumpfile)
+            else:
+                assert 'set "TEST_ENV_VAR={}"\n'.format(test_paths) in list(dumpfile)
         else:
             assert "TEST_ENV_VAR={0}; export TEST_ENV_VAR\n".format(test_paths) in list(dumpfile)
 
@@ -170,5 +174,10 @@ def test_escape_double_quotes_in_shell_modifications():
         assert 'export VAR="$PATH:$ANOTHER_PATH"' in cmds
         assert r'export QUOTED_VAR="\"MY_VAL\""' in cmds
     else:
-        assert "export VAR=$PATH;$ANOTHER_PATH" in cmds
-        assert r'export QUOTED_VAR="MY_VAL"' in cmds
+        is_pwsh = os.environ.get("SPACK_SHELL", None) == "pwsh"
+        if is_pwsh:
+            assert "$Env:VAR=$PATH;$ANOTHER_PATH" in cmds
+            assert r'$Env:QUOTED_VAR="MY_VAL"' in cmds
+        else:
+            assert "set VAR=$PATH;$ANOTHER_PATH" in cmds
+            assert r'set QUOTED_VAR="MY_VAL"' in cmds

@@ -2,6 +2,7 @@
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
+import os
 import pickle
 import sys
 
@@ -41,7 +42,11 @@ def test_dump(tmpdir):
         build_env("--dump", _out_file, "zlib")
         with open(_out_file) as f:
             if sys.platform == "win32":
-                assert any(line.startswith('set "PATH=') for line in f.readlines())
+                is_pwsh = os.environ.get("SPACK_SHELL", None) == "pwsh"
+                if is_pwsh:
+                    assert(any(line.startswith("$Env:PATH") for line in f.readlines()))
+                else:
+                    assert any(line.startswith('set "PATH=') for line in f.readlines())
             else:
                 assert any(line.startswith("PATH=") for line in f.readlines())
 
