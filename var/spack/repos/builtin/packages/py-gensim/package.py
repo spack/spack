@@ -25,7 +25,7 @@ class PyGensim(PythonPackage):
     depends_on("python@3.8:", type=("build", "run"), when="@4.3.1:")
     depends_on("py-setuptools", type="build")
 
-    depends_on("py-cython@0.29.32:", type=("build", "run"), when="@4.3.1:") 
+    depends_on("py-cython@0.29.32:", type=("build", "run"), when="@4.3.1:")
 
     depends_on("py-numpy@1.11.3:", type=("build", "run"))
     depends_on("py-numpy@1.18.5:", type=("build", "run"), when="@4.3.1:")
