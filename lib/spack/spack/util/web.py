@@ -17,7 +17,7 @@ import sys
 import traceback
 import urllib.parse
 from html.parser import HTMLParser
-from pathlib import PurePosixPath, Path
+from pathlib import Path, PurePosixPath
 from urllib.error import URLError
 from urllib.request import HTTPSHandler, Request, build_opener
 
