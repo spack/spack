@@ -1,0 +1,13 @@
+diff --git a/src/nwpw/nwpwlib/D3dB/D3dBs-new.F b/src/nwpw/nwpwlib/D3dB/D3dBs-new.F
+index 90127b7ff1..1ce2c4ed3b 100644
+--- a/src/nwpw/nwpwlib/D3dB/D3dBs-new.F
++++ b/src/nwpw/nwpwlib/D3dB/D3dBs-new.F
+@@ -497,7 +497,7 @@ c     call D3dBs_c_transpose_jk(nb,A,dcpl_mb(tmp2(1)),dbl_mb(tmp3(1)))
+ #ifdef FFTW3
+       do q=1,nq(nb)
+         indx = 1+(q-1)*nxhz
+-        call fftw_execute_dft(pslans(1,nb),A(indx),A(indx))
++        call fftw_execute_dft(splans(1,nb),A(indx),A(indx))
+       end do
+ #else
+       indx0 = 0
