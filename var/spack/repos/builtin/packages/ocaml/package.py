@@ -70,7 +70,7 @@ class Ocaml(Package):
                     string=True,
                 )
 
-        configure(*(base_args))
+        configure(*(base_args), f"CC={self.compiler.cc}")
 
         make("world.opt")
         make("install", "PREFIX={0}".format(prefix))
