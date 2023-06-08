@@ -91,7 +91,7 @@ class DarshanUtil(AutotoolsPackage):
         return extra_args
 
     @property
-    def test_log_path(self):
+    def tests_log_path(self):
         if self.version < Version("3.4.1"):
             return join_path(
                 "darshan-test",
@@ -105,36 +105,23 @@ class DarshanUtil(AutotoolsPackage):
 
     @run_after("install")
     def _copy_test_inputs(self):
-        test_inputs = [self.test_log_path]
+        test_inputs = [self.tests_log_path]
         self.cache_extra_test_sources(test_inputs)
 
-    def _test_parser(self):
-        purpose = "Verify darshan-parser can parse an example log \
-                   and check some expected counter values"
-        # Switch to loading the expected strings from the darshan source in future
+    def test_parser(self):
+        """process example log and check counters"""
+
+        # TODO: Switch to loading the expected strings from the darshan source in future
         # filename = self.test_suite.current_test_cache_dir.
         #            join(join_path(self.basepath, "mpi-io-test-spack-expected.txt"))
         # expected_output = self.get_escaped_text_output(filename)
+
         expected_output = [
             r"POSIX\s+-1\s+\w+\s+POSIX_OPENS\s+\d+",
             r"MPI-IO\s+-1\s+\w+\s+MPIIO_INDEP_OPENS\s+\d+",
             r"STDIO\s+0\s+\w+\s+STDIO_OPENS\s+\d+",
         ]
-        logname = self.test_suite.current_test_cache_dir.join(self.test_log_path)
-        exe = "darshan-parser"
-        options = [logname]
-        status = [0]
-        installed = True
-        self.run_test(
-            exe,
-            options,
-            expected_output,
-            status,
-            installed,
-            purpose,
-            skip_missing=False,
-            work_dir=None,
-        )
-
-    def test(self):
-        self._test_parser()
+        logname = self.test_suite.current_test_cache_dir.join(self.tests_log_path)
+        parser = which(join_path(self.prefix.bin, "darshan-parser"))
+        out = parser(logname, output=str.split, error=str.split)
+        check_outputs(expected_output, out)
