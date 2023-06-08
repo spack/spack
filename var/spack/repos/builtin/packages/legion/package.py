@@ -25,8 +25,16 @@ class Legion(CMakePackage, ROCmPackage):
     homepage = "https://legion.stanford.edu/"
     git = "https://github.com/StanfordLegion/legion.git"
 
-    maintainers("pmccormick", "streichler")
+    maintainers("pmccormick", "streichler", "elliottslaughter")
     tags = ["e4s"]
+    version("23.03.0", tag="legion-23.03.0")
+    version("22.12.0", tag="legion-22.12.0")
+    version("22.09.0", tag="legion-22.09.0")
+    version("22.06.0", tag="legion-22.06.0")
+    version("22.03.0", tag="legion-22.03.0")
+    version("21.12.0", tag="legion-21.12.0")
+    version("21.09.0", tag="legion-21.09.0")
+    version("21.06.0", tag="legion-21.06.0")
     version("21.03.0", tag="legion-21.03.0")
     version("stable", branch="stable")
     version("master", branch="master")
@@ -61,6 +69,9 @@ class Legion(CMakePackage, ROCmPackage):
 
     depends_on("kokkos@3.3.01:~cuda", when="+kokkos~cuda")
     depends_on("kokkos@3.3.01:~cuda+openmp", when="+kokkos+openmp")
+
+    # https://github.com/spack/spack/issues/37232#issuecomment-1553376552
+    patch("hip-offload-arch.patch", when="@23.03.0 +rocm")
 
     # HIP specific
     variant(

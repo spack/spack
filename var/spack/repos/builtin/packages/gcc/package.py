@@ -35,9 +35,13 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage):
 
     version("master", branch="master")
 
+    version("13.1.0", sha256="61d684f0aa5e76ac6585ad8898a2427aade8979ed5e7f85492286c4dfc13ee86")
+
+    version("12.3.0", sha256="949a5d4f99e786421a93b532b22ffab5578de7321369975b91aec97adfda8c3b")
     version("12.2.0", sha256="e549cf9cf3594a00e27b6589d4322d70e0720cdd213f39beb4181e06926230ff")
     version("12.1.0", sha256="62fd634889f31c02b64af2c468f064b47ad1ca78411c45abe6ac4b5f8dd19c7b")
 
+    version("11.4.0", sha256="3f2db222b007e8a4a23cd5ba56726ef08e8b1f1eb2055ee72c1402cea73a8dd9")
     version("11.3.0", sha256="b47cf2818691f5b1e21df2bb38c795fac2cfbd640ede2d0a5e1c89e338a3ac39")
     version("11.2.0", sha256="d08edc536b54c372a1010ff6619dd274c0f1603aa49212ba20f7aa2cda36fa8b")
     version("11.1.0", sha256="4c4a6fb8a8396059241c2e674b85b351c26a5d678274007f076957afa1cc9ddf")
@@ -157,6 +161,9 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage):
     depends_on("automake@1.15.1:", when="@master", type="build")
     depends_on("autoconf@2.69:", when="@master", type="build")
 
+    depends_on("gmake@3.80:", type="build")
+    depends_on("perl@5", type="build")
+
     # GCC 7.3 does not compile with newer releases on some platforms, see
     #   https://github.com/spack/spack/issues/6902#issuecomment-433030376
     depends_on("mpfr@2.4.2:3.1.6", when="@:9.9")
@@ -197,36 +204,33 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage):
     depends_on("autogen@5.5.4:", type="test")
     depends_on("guile@1.4.1:", type="test")
 
-    # See https://golang.org/doc/install/gccgo#Releases
+    # See https://go.dev/doc/install/gccgo#Releases
     with when("languages=go"):
-        provides("golang", when="@4.6:")
-        provides("golang@:1", when="@4.7.1:")
-        provides("golang@:1.1", when="@4.8:")
-        provides("golang@:1.1.2", when="@4.8.2:")
+        provides("go-or-gccgo-bootstrap@:1.0", when="@4.7.1:")
+        provides("go-or-gccgo-bootstrap@:1.2", when="@4.9:")
+        provides("go-or-gccgo-bootstrap@:1.4", when="@5:")
+        provides("go-or-gccgo-bootstrap@:1.6.1", when="@6:")
+        provides("go-or-gccgo-bootstrap@:1.8.1", when="@7:")
+        provides("go-or-gccgo-bootstrap@:1.10.1", when="@8:")
+        provides("go-or-gccgo-bootstrap@:1.12.2", when="@9:")
+        provides("go-or-gccgo-bootstrap@:1.14.6", when="@10:")
+        provides("go-or-gccgo-bootstrap@1.16.3:1.16.5", when="@11:")
+
+        provides("golang@:1.0", when="@4.7.1:")
         provides("golang@:1.2", when="@4.9:")
         provides("golang@:1.4", when="@5:")
         provides("golang@:1.6.1", when="@6:")
-        provides("golang@:1.8", when="@7:")
-        provides("golang@:1.10", when="@8:")
-        provides("golang@:1.12", when="@9:")
-        provides("golang@:1.14", when="@10:")
-        provides("golang@:1.16", when="@11:")
-        provides("golang@:1.18", when="@11:")
-        # GCC 4.6 added support for the Go programming language.
-        # See https://gcc.gnu.org/gcc-4.6/changes.html
-        conflicts("@:4.5", msg="support for Go has been added in GCC 4.6")
-        # aarch64 machines (including Macs with Apple silicon) can't use
-        # go-bootstrap because it pre-dates aarch64 support in Go. When not
-        # using an external go bootstrap go, These machines have to rely on
-        # Go support in gcc (which may require compiling a version of gcc
-        # with Go support just to satisfy this requirement).  However,
-        # there's also a bug in some versions of GCC's Go front-end that prevents
-        # these versions from properly bootstrapping Go.  (See issue #47771
-        # https://github.com/golang/go/issues/47771 )  On the 10.x branch, we need
-        # at least 10.4.  On the 11.x branch, we need at least 11.3:
-        provides("go-external-or-gccgo-bootstrap", when="gcc@10.4.0:10,11.3.0:target=aarch64:")
+        provides("golang@:1.8.1", when="@7:")
+        provides("golang@:1.10.1", when="@8:")
+        provides("golang@:1.12.2", when="@9:")
+        provides("golang@:1.14.6", when="@10:")
+        provides("golang@1.16.3:1.16.5", when="@11:")
+
+        # GCC 4.7.1 added full support for the Go 1.x programming language.
+        conflicts("@:4.7.0")
+
         # Go is not supported on macOS
-        conflicts("platform=darwin", msg="Go not supported on MacOS")
+        conflicts("platform=darwin", msg="GCC cannot build Go support on MacOS")
 
     # For a list of valid languages for a specific release,
     # run the following command in the GCC source directory:
@@ -271,9 +275,7 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage):
         # See https://gcc.gnu.org/install/prerequisites.html#GDC-prerequisite
         with when("@12:"):
             # All versions starting 12 have to be built GCC:
-            for c in spack.compilers.supported_compilers():
-                if c != "gcc":
-                    conflicts("%{0}".format(c))
+            requires("%gcc")
 
             # And it has to be GCC older than the version we build:
             vv = ["11", "12.1.0", "12.2.0"]
@@ -356,7 +358,7 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage):
     conflicts("%gcc@:4.7", when="@11:")
 
     # https://github.com/iains/gcc-12-branch/issues/6
-    conflicts("%apple-clang@14.0")
+    conflicts("@:12", when="%apple-clang@14:14.0")
 
     if sys.platform == "darwin":
         # Fix parallel build on APFS filesystem
@@ -437,6 +439,11 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage):
         when="@6.5.0,7.4.0:7.5.0,8.2.0:9.3.0",
     )
     patch("patch-745dae5923aba02982563481d75a21595df22ff8.patch", when="@10.1.0:10.3.0,11.1.0")
+
+    # Backport libsanitizer patch for glibc >= 2.36
+    # https://reviews.llvm.org/D129471
+    patch("glibc-2.36-libsanitizer-gcc-5-9.patch", when="@5.1:5.5,6.1:6.5,7.1:7.5,8.1:8.5,9.1:9.5")
+    patch("glibc-2.36-libsanitizer-gcc-10-12.patch", when="@10.1:10.4,11.1:11.3,12.1.0")
 
     # Older versions do not compile with newer versions of glibc
     # https://gcc.gnu.org/bugzilla/show_bug.cgi?id=81712
@@ -575,7 +582,7 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage):
             "languages=d": "d",
             "languages=fortran": "fortran",
         }.items():
-            if spec.satisfies(constraint, strict=True):
+            if spec.satisfies(constraint):
                 msg = "{0} not in {1}"
                 assert key in compilers, msg.format(key, spec)
 
@@ -966,12 +973,7 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage):
 
             # Add easily-overridable rpath string at the end
             out.write("*link_libgcc_rpath:\n")
-            if "platform=darwin" in self.spec:
-                # macOS linker requires separate rpath commands
-                out.write(" ".join("-rpath " + lib for lib in rpath_libdirs))
-            else:
-                # linux linker uses colon-separated rpath
-                out.write("-rpath " + ":".join(rpath_libdirs))
+            out.write(" ".join("-rpath " + lib for lib in rpath_libdirs))
             out.write("\n")
         set_install_permissions(specs_file)
         tty.info("Wrote new spec file to {0}".format(specs_file))

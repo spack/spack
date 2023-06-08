@@ -59,7 +59,7 @@ class Sensei(CMakePackage):
     depends_on("paraview@5.5.0:5.5.2", when="@:2.1.1 +catalyst")
     depends_on("paraview@5.6:5.7", when="@3:3.2.1 +catalyst")
     depends_on("paraview@5.7:5.9", when="@3.2.2 +catalyst")
-    depends_on("paraview@5.7:5.10", when="@4: +catalyst")
+    depends_on("paraview@5.7:5.10", when="@4:4 +catalyst")
 
     # Visit Dep
     depends_on("visit", when="+libsim")
@@ -90,12 +90,16 @@ class Sensei(CMakePackage):
     depends_on("pugixml")
     depends_on("mpi")
 
+    depends_on("paraview use_vtkm=off", when="+catalyst+ascent ^ascent+vtkh")
+    depends_on("paraview use_vtkm=off", when="+catalyst+ascent ^ascent+fides")
+
     # Can have either LibSim or Catalyst or Ascent, but not a combination
     conflicts("+libsim", when="+catalyst")
-    conflicts("+ascent", when="+catalyst")
     conflicts("+ascent", when="+libsim")
 
     # Patches
+    # https://github.com/SENSEI-insitu/SENSEI/pull/114
+    patch("adios2-remove-deprecated-functions.patch", when="@4:4.1 ^adios2@2.9:")
     patch("libsim-add-missing-symbol-visibility-pr67.patch", when="@4.0.0")
     patch("sensei-find-mpi-component-cxx-pr68.patch", when="@4.0.0")
     patch("sensei-install-external-pugixml-pr69.patch", when="@4.0.0")

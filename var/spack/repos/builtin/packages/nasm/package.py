@@ -8,7 +8,7 @@ import os
 from spack.package import *
 
 
-class Nasm(AutotoolsPackage):
+class Nasm(AutotoolsPackage, Package):
     """NASM (Netwide Assembler) is an 80x86 assembler designed for
     portability and modularity. It includes a disassembler as well."""
 
@@ -40,6 +40,8 @@ class Nasm(AutotoolsPackage):
 
     conflicts("%intel@:14", when="@2.14:", msg="Intel <= 14 lacks support for C11")
 
+    build_system("autotools", "generic", default="autotools")
+
     def patch(self):
         # Remove flags not recognized by the NVIDIA compiler
         if self.spec.satisfies("%nvhpc@:20.11"):
@@ -56,7 +58,7 @@ class Nasm(AutotoolsPackage):
 
 
 class GenericBuilder(spack.build_systems.generic.GenericBuilder):
-    def install(self, spec, prefix):
+    def install(self, pkg, spec, prefix):
         with working_dir(self.stage.source_path, create=True):
             # build NASM with nmake
             touch("asm\\warnings.time")

@@ -30,8 +30,7 @@ else:
 
 #: Groupdb does not exist on Windows, prevent imports
 #: on supported systems
-is_windows = sys.platform == "win32"
-if not is_windows:
+if sys.platform != "win32":
     import grp
 
 #: Spack itself also limits the shebang line to at most 4KB, which should be plenty.
@@ -225,7 +224,7 @@ def install_sbang():
     os.rename(sbang_tmp_path, sbang_path)
 
 
-def post_install(spec):
+def post_install(spec, explicit=None):
     """This hook edits scripts so that they call /bin/bash
     $spack_prefix/bin/sbang instead of something longer than the
     shebang limit.

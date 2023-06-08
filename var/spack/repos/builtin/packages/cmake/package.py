@@ -10,8 +10,6 @@ import sys
 import spack.build_environment
 from spack.package import *
 
-is_windows = sys.platform == "win32"
-
 
 class Cmake(Package):
     """A cross-platform, open-source build system. CMake is a family of
@@ -28,9 +26,15 @@ class Cmake(Package):
     executables = ["^cmake[0-9]*$"]
 
     version("master", branch="master")
+    version("3.26.3", sha256="bbd8d39217509d163cb544a40d6428ac666ddc83e22905d3e52c925781f0f659")
+    version("3.26.2", sha256="d54f25707300064308ef01d4d21b0f98f508f52dda5d527d882b9d88379f89a8")
+    version("3.26.1", sha256="f29964290ad3ced782a1e58ca9fda394a82406a647e24d6afd4e6c32e42c412f")
+    version("3.26.0", sha256="4256613188857e95700621f7cdaaeb954f3546a9249e942bc2f9b3c26e381365")
+    version("3.25.3", sha256="cc995701d590ca6debc4245e9989939099ca52827dd46b5d3592f093afe1901c")
     version("3.25.2", sha256="c026f22cb931dd532f648f087d587f07a1843c6e66a3dfca4fb0ea21944ed33c")
     version("3.25.1", sha256="1c511d09516af493694ed9baf13c55947a36389674d657a2d5e0ccedc6b291d8")
     version("3.25.0", sha256="306463f541555da0942e6f5a0736560f70c487178b9d94a5ae7f34d0538cdd48")
+    version("3.24.4", sha256="32c9e499510eff7070d3f0adfbabe0afea2058608c5fa93e231beb49fbfa2296")
     version("3.24.3", sha256="b53aa10fa82bff84ccdb59065927b72d3bee49f4d86261249fc0984b3b367291")
     version("3.24.2", sha256="0d9020f06f3ddf17fb537dc228e1a56c927ee506b486f55fe2dc19f69bf0c8db")
     version("3.24.1", sha256="4931e277a4db1a805f13baa7013a7757a0cbfe5b7932882925c7061d9d1fa82b")
@@ -187,7 +191,11 @@ class Cmake(Package):
         default=False,
         description="Enables the generation of html and man page documentation",
     )
-    variant("ncurses", default=not is_windows, description="Enables the build of the ncurses gui")
+    variant(
+        "ncurses",
+        default=sys.platform != "win32",
+        description="Enables the build of the ncurses gui",
+    )
 
     # See https://gitlab.kitware.com/cmake/cmake/-/issues/21135
     conflicts(
@@ -428,17 +436,44 @@ class Cmake(Package):
         module.cmake = Executable(self.spec.prefix.bin.cmake)
         module.ctest = Executable(self.spec.prefix.bin.ctest)
 
-    def test(self):
-        """Perform smoke tests on the installed package."""
-        spec_vers_str = "version {0}".format(self.spec.version)
+    @property
+    def libs(self):
+        """CMake has no libraries, so if you ask for `spec['cmake'].libs`
+        (which happens automatically for packages that depend on CMake as
+        a link dependency) the default implementation of ``.libs` will
+        search the entire root prefix recursively before failing.
 
-        for exe in ["ccmake", "cmake", "cpack", "ctest"]:
-            reason = "test version of {0} is {1}".format(exe, spec_vers_str)
-            self.run_test(
-                exe,
-                ["--version"],
-                [spec_vers_str],
-                installed=True,
-                purpose=reason,
-                skip_missing=True,
-            )
+        The longer term solution is for all dependents of CMake to change
+        their deptype. For now, this returns an empty set of libraries.
+        """
+        return LibraryList([])
+
+    @property
+    def headers(self):
+        return HeaderList([])
+
+    def run_version_check(self, bin):
+        """Runs and checks output of the installed binary."""
+        exe_path = join_path(self.prefix.bin, bin)
+        if not os.path.exists(exe_path):
+            raise SkipTest(f"{exe} is not installed")
+
+        exe = which(exe_path)
+        out = exe("--version", output=str.split, error=str.split)
+        assert f"version {self.spec.version}" in out
+
+    def test_ccmake(self):
+        """check version from ccmake"""
+        self.run_version_check("ccmake")
+
+    def test_cmake(self):
+        """check version from cmake"""
+        self.run_version_check("cmake")
+
+    def test_cpack(self):
+        """check version from cpack"""
+        self.run_version_check("cpack")
+
+    def test_ctest(self):
+        """check version from ctest"""
+        self.run_version_check("ctest")
