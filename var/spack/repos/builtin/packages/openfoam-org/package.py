@@ -146,9 +146,17 @@ class OpenfoamOrg(Package):
         the old directory naming convention for these versions.
 
         """
-        if version <= Version("5.0"):
-            url = "https://github.com/OpenFOAM/OpenFOAM-{0}.x/archive/version-{1}.tar.gz"
-            return url.format(version.up_to(-1), version)
+        if version == Version("2.3.1"):
+            return "http://downloads.sourceforge.net/foam/OpenFOAM-2.3.1.tgz"
+        elif version <= Version("5.0"):
+            version_prefix = str(version.up_to(-1)) + ".x"
+        else:
+            version_prefix = version
+
+        url = "https://github.com/OpenFOAM/OpenFOAM-{}/archive/version-{}.tar.gz".format(
+            version_prefix, version
+        )
+        return url
 
     @property
     def config(self):
