@@ -29,5 +29,7 @@ class Bedtools2(Package):
     depends_on("xz", when="@2.29:")
     depends_on("python", type="build")
 
+    patch("bedtools-gcc13.patch", level=1, when="@2.27:%gcc@13:")
+
     def install(self, spec, prefix):
         make("prefix=%s" % prefix, "install")
