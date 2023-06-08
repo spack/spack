@@ -17,4 +17,5 @@ class PyWasabi(PythonPackage):
     version("0.6.0", sha256="b8dd3e963cd693fde1eb6bfbecf51790171aa3534fa299faf35cf269f2fd6063")
 
     depends_on("py-setuptools", type="build")
-    depends_on("py-typing-extensions@3.7.4.1:4.4", type=("build", "run"), when="@1.1.2:^python@:3.7")
+    depends_on("py-typing-extensions@3.7.4.1:4.4", type=("build", "run"),
+               when="@1.1.2:^python@:3.7")
