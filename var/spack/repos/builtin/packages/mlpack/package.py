@@ -16,6 +16,7 @@ class Mlpack(CMakePackage):
     homepage = "https://www.mlpack.org/"
     url = "https://github.com/mlpack/mlpack/archive/refs/tags/4.0.1.tar.gz"
 
+maintainers("wdconinc")
     version("4.1.0", sha256="e0c760baf15fd0af5601010b7cbc536e469115e9dd45f96712caa3b651b1852a")
     version("4.0.1", sha256="4c746936ed9da9f16744240ed7b9f2815d3abb90c904071a1d1a628a9bbfb3a5")
 
