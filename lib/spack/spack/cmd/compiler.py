@@ -53,7 +53,7 @@ def setup_parser(subparser):
         "--scope",
         choices=scopes,
         metavar=scopes_metavar,
-        default=spack.config.default_modify_scope("compilers"),
+        default=None,
         help="configuration scope to modify",
     )
 
@@ -106,19 +106,21 @@ def compiler_find(args):
 
 
 def compiler_remove(args):
-    cspec = spack.spec.CompilerSpec(args.compiler_spec)
-    compilers = spack.compilers.compilers_for_spec(cspec, scope=args.scope)
-    if not compilers:
-        tty.die("No compilers match spec %s" % cspec)
-    elif not args.all and len(compilers) > 1:
-        tty.error("Multiple compilers match spec %s. Choose one:" % cspec)
-        colify(reversed(sorted([c.spec.display_str for c in compilers])), indent=4)
+    compiler_spec = spack.spec.CompilerSpec(args.compiler_spec)
+    candidate_compilers = spack.compilers.compilers_for_spec(compiler_spec, scope=args.scope)
+
+    if not candidate_compilers:
+        tty.die("No compilers match spec %s" % compiler_spec)
+
+    if not args.all and len(candidate_compilers) > 1:
+        tty.error(f"Multiple compilers match spec {compiler_spec}. Choose one:")
+        colify(reversed(sorted([c.spec.display_str for c in candidate_compilers])), indent=4)
         tty.msg("Or, use `spack compiler remove -a` to remove all of them.")
         sys.exit(1)
 
-    for compiler in compilers:
-        spack.compilers.remove_compiler_from_config(compiler.spec, scope=args.scope)
-        tty.msg("Removed compiler %s" % compiler.spec.display_str)
+    for current_compiler in candidate_compilers:
+        spack.compilers.remove_compiler_from_config(current_compiler.spec, scope=args.scope)
+        tty.msg(f"{current_compiler.spec.display_str} has been removed")
 
 
 def compiler_info(args):
