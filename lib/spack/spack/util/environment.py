@@ -25,7 +25,6 @@ import spack.platforms
 import spack.spec
 
 from .executable import Executable, which
-from .path import path_to_os_path, system_path_filter
 
 if sys.platform == "win32":
     SYSTEM_PATHS = [
@@ -37,11 +36,7 @@ if sys.platform == "win32":
     ]
     SUFFIXES = []
 else:
-    SYSTEM_PATHS = [
-        pathlib.Path("/"),
-        pathlib.Path("/usr"),
-        pathlib.Path("/usr/local")
-    ]
+    SYSTEM_PATHS = [pathlib.Path("/"), pathlib.Path("/usr"), pathlib.Path("/usr/local")]
     SUFFIXES = ["bin", "bin64", "include", "lib", "lib64"]
 
 SYSTEM_DIRS = [p / s for s in SUFFIXES for p in SYSTEM_PATHS] + SYSTEM_PATHS
@@ -186,7 +181,6 @@ def _env_var_to_source_line(var: str, val: str) -> str:
     return source_line
 
 
-@system_path_filter(arg_slice=slice(1))
 def dump_environment(path: Path, environment: Optional[MutableMapping[str, str]] = None):
     """Dump an environment dictionary to a source-able file.
 
@@ -207,7 +201,6 @@ def dump_environment(path: Path, environment: Optional[MutableMapping[str, str]]
             )
 
 
-@system_path_filter(arg_slice=slice(1))
 def pickle_environment(path: Path, environment: Optional[Dict[str, str]] = None):
     """Pickle an environment dictionary to a file."""
     with pathlib.Path(path).open("wb") as pickle_file:
