@@ -17,7 +17,9 @@ class Ycruncher(Package):
     url = "http://www.numberworld.org/y-cruncher/y-cruncher%20v0.7.10.9513-static.tar.xz"
     maintainers("saqibkh")
 
-    version("0.7.10.9513", "292006496bba83bf0f8c354ceb1c2ea571f0c67b9fe46297701a8d387773db1b")
+    version(
+        "0.7.10.9513", sha256="292006496bba83bf0f8c354ceb1c2ea571f0c67b9fe46297701a8d387773db1b"
+    )
 
     depends_on("autoconf")
 

@@ -102,6 +102,13 @@ class Slate(CMakePackage, CudaPackage, ROCmPackage):
             backend_config,
             "-Duse_mpi=%s" % ("+mpi" in spec),
         ]
+        if "+cuda" in spec:
+            archs = ";".join(spec.variants["cuda_arch"].value)
+            config.append("-DCMAKE_CUDA_ARCHITECTURES=%s" % archs)
+        if "+rocm" in spec:
+            archs = ";".join(spec.variants["amdgpu_target"].value)
+            config.append("-DCMAKE_HIP_ARCHITECTURES=%s" % archs)
+
         if self.run_tests:
             config.append("-DSCALAPACK_LIBRARIES=%s" % spec["scalapack"].libs.joined(";"))
         return config
@@ -113,6 +120,15 @@ class Slate(CMakePackage, CudaPackage, ROCmPackage):
         """Copy the example source files after the package is installed to an
         install test subdirectory for use during `spack test run`."""
         self.cache_extra_test_sources(["examples"])
+
+    def mpi_launcher(self):
+        searchpath = [self.spec["mpi"].prefix.bin]
+        try:
+            searchpath.insert(0, self.spec["slurm"].prefix.bin)
+        except KeyError:
+            print("Slurm not found, ignoring.")
+        commands = ["srun", "mpirun", "mpiexec"]
+        return which(*commands, path=searchpath) or which(*commands)
 
     def test(self):
         if self.spec.satisfies("@2020.10.00") or "+mpi" not in self.spec:
@@ -129,7 +145,8 @@ class Slate(CMakePackage, CudaPackage, ROCmPackage):
             self.run_test(cmake_bin, ["-DCMAKE_PREFIX_PATH=" + prefixes, ".."])
             make()
             test_args = ["-n", "4", "./ex05_blas"]
-            mpi_path = self.spec["mpi"].prefix.bin
-            mpiexe_f = which("srun", "mpirun", "mpiexec", path=mpi_path)
-            self.run_test(mpiexe_f.command, test_args, purpose="SLATE smoke test")
+            launcher = self.mpi_launcher()
+            if not launcher:
+                raise RuntimeError("Cannot run tests due to absence of MPI launcher")
+            self.run_test(launcher.command, test_args, purpose="SLATE smoke test")
             make("clean")

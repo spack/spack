@@ -22,8 +22,6 @@ class PyPytestMock(PythonPackage):
         url="https://pypi.io/packages/source/p/pytest-mock/pytest-mock-1.2.zip",
     )
 
-    extends("python", ignore=r"bin/*")
-
     depends_on("python@2.7:2.8,3.4:", type=("build", "run"), when="@:1.11.1")
     depends_on("python@3.7:", type=("build", "run"), when="@3.10.0:")
 

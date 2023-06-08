@@ -6,6 +6,8 @@
 import codecs
 import collections
 import hashlib
+import io
+import itertools
 import json
 import multiprocessing.pool
 import os
@@ -20,10 +22,10 @@ import urllib.error
 import urllib.parse
 import urllib.request
 import warnings
-from contextlib import closing
+from contextlib import closing, contextmanager
+from gzip import GzipFile
+from typing import List, NamedTuple, Optional, Union
 from urllib.error import HTTPError, URLError
-
-import ruamel.yaml as yaml
 
 import llnl.util.filesystem as fsys
 import llnl.util.lang
@@ -39,6 +41,7 @@ import spack.mirror
 import spack.platforms
 import spack.relocate as relocate
 import spack.repo
+import spack.stage
 import spack.store
 import spack.traverse as traverse
 import spack.util.crypto
@@ -190,10 +193,17 @@ class BinaryCacheIndex(object):
             db_root_dir = os.path.join(tmpdir, "db_root")
             db = spack_db.Database(None, db_dir=db_root_dir, enable_transaction_locking=False)
 
-            self._index_file_cache.init_entry(cache_key)
-            cache_path = self._index_file_cache.cache_path(cache_key)
-            with self._index_file_cache.read_transaction(cache_key):
-                db._read_from_file(cache_path)
+            try:
+                self._index_file_cache.init_entry(cache_key)
+                cache_path = self._index_file_cache.cache_path(cache_key)
+                with self._index_file_cache.read_transaction(cache_key):
+                    db._read_from_file(cache_path)
+            except spack_db.InvalidDatabaseVersionError as e:
+                msg = (
+                    f"you need a newer Spack version to read the buildcache index for the "
+                    f"following mirror: '{mirror_url}'. {e.database_version_message}"
+                )
+                raise BuildcacheIndexError(msg) from e
 
             spec_list = db.query_local(installed=False, in_buildcache=True)
 
@@ -416,7 +426,7 @@ class BinaryCacheIndex(object):
 
         self._write_local_index_cache()
 
-        if all_methods_failed:
+        if configured_mirror_urls and all_methods_failed:
             raise FetchCacheError(fetch_errors)
         if fetch_errors:
             tty.warn(
@@ -498,17 +508,17 @@ def _binary_index():
 
 
 #: Singleton binary_index instance
-binary_index = llnl.util.lang.Singleton(_binary_index)
+binary_index: Union[BinaryCacheIndex, llnl.util.lang.Singleton] = llnl.util.lang.Singleton(
+    _binary_index
+)
 
 
 class NoOverwriteException(spack.error.SpackError):
-    """
-    Raised when a file exists and must be overwritten.
-    """
+    """Raised when a file would be overwritten"""
 
     def __init__(self, file_path):
         super(NoOverwriteException, self).__init__(
-            '"{}" exists in buildcache. Use --force flag to overwrite.'.format(file_path)
+            f"Refusing to overwrite the following file: {file_path}"
         )
 
 
@@ -611,7 +621,7 @@ def read_buildinfo_file(prefix):
     filename = buildinfo_file_name(prefix)
     with open(filename, "r") as inputfile:
         content = inputfile.read()
-        buildinfo = yaml.load(content)
+        buildinfo = syaml.load(content)
     return buildinfo
 
 
@@ -739,34 +749,33 @@ def get_buildfile_manifest(spec):
     return data
 
 
-def write_buildinfo_file(spec, workdir, rel=False):
-    """
-    Create a cache file containing information
-    required for the relocation
-    """
+def hashes_to_prefixes(spec):
+    """Return a dictionary of hashes to prefixes for a spec and its deps, excluding externals"""
+    return {
+        s.dag_hash(): str(s.prefix)
+        for s in itertools.chain(
+            spec.traverse(root=True, deptype="link"), spec.dependencies(deptype="run")
+        )
+        if not s.external
+    }
+
+
+def get_buildinfo_dict(spec, rel=False):
+    """Create metadata for a tarball"""
     manifest = get_buildfile_manifest(spec)
 
-    prefix_to_hash = dict()
-    prefix_to_hash[str(spec.package.prefix)] = spec.dag_hash()
-    deps = spack.build_environment.get_rpath_deps(spec.package)
-    for d in deps + spec.dependencies(deptype="run"):
-        prefix_to_hash[str(d.prefix)] = d.dag_hash()
-
-    # Create buildinfo data and write it to disk
-    buildinfo = {}
-    buildinfo["sbang_install_path"] = spack.hooks.sbang.sbang_install_path()
-    buildinfo["relative_rpaths"] = rel
-    buildinfo["buildpath"] = spack.store.layout.root
-    buildinfo["spackprefix"] = spack.paths.prefix
-    buildinfo["relative_prefix"] = os.path.relpath(spec.prefix, spack.store.layout.root)
-    buildinfo["relocate_textfiles"] = manifest["text_to_relocate"]
-    buildinfo["relocate_binaries"] = manifest["binary_to_relocate"]
-    buildinfo["relocate_links"] = manifest["link_to_relocate"]
-    buildinfo["hardlinks_deduped"] = manifest["hardlinks_deduped"]
-    buildinfo["prefix_to_hash"] = prefix_to_hash
-    filename = buildinfo_file_name(workdir)
-    with open(filename, "w") as outfile:
-        outfile.write(syaml.dump(buildinfo, default_flow_style=True))
+    return {
+        "sbang_install_path": spack.hooks.sbang.sbang_install_path(),
+        "relative_rpaths": rel,
+        "buildpath": spack.store.layout.root,
+        "spackprefix": spack.paths.prefix,
+        "relative_prefix": os.path.relpath(spec.prefix, spack.store.layout.root),
+        "relocate_textfiles": manifest["text_to_relocate"],
+        "relocate_binaries": manifest["binary_to_relocate"],
+        "relocate_links": manifest["link_to_relocate"],
+        "hardlinks_deduped": manifest["hardlinks_deduped"],
+        "hash_to_prefix": hashes_to_prefixes(spec),
+    }
 
 
 def tarball_directory_name(spec):
@@ -774,11 +783,10 @@ def tarball_directory_name(spec):
     Return name of the tarball directory according to the convention
     <os>-<architecture>/<compiler>/<package>-<version>/
     """
-    return "%s/%s/%s-%s" % (
-        spec.architecture,
-        str(spec.compiler).replace("@", "-"),
-        spec.name,
-        spec.version,
+    return os.path.join(
+        str(spec.architecture),
+        f"{spec.compiler.name}-{spec.compiler.version}",
+        f"{spec.name}-{spec.version}",
     )
 
 
@@ -787,13 +795,9 @@ def tarball_name(spec, ext):
     Return the name of the tarfile according to the convention
     <os>-<architecture>-<package>-<dag_hash><ext>
     """
-    return "%s-%s-%s-%s-%s%s" % (
-        spec.architecture,
-        str(spec.compiler).replace("@", "-"),
-        spec.name,
-        spec.version,
-        spec.dag_hash(),
-        ext,
+    return (
+        f"{spec.architecture}-{spec.compiler.name}-{spec.compiler.version}-"
+        f"{spec.name}-{spec.version}-{spec.dag_hash()}{ext}"
     )
 
 
@@ -1139,36 +1143,114 @@ def generate_key_index(key_prefix, tmpdir=None):
                 shutil.rmtree(tmpdir)
 
 
-def _build_tarball(
-    spec,
-    out_url,
-    force=False,
-    relative=False,
-    unsigned=False,
-    allow_root=False,
-    key=None,
-    regenerate_index=False,
-):
+@contextmanager
+def gzip_compressed_tarfile(path):
+    """Create a reproducible, compressed tarfile"""
+    # Create gzip compressed tarball of the install prefix
+    # 1) Use explicit empty filename and mtime 0 for gzip header reproducibility.
+    #    If the filename="" is dropped, Python will use fileobj.name instead.
+    #    This should effectively mimick `gzip --no-name`.
+    # 2) On AMD Ryzen 3700X and an SSD disk, we have the following on compression speed:
+    # compresslevel=6 gzip default: llvm takes 4mins, roughly 2.1GB
+    # compresslevel=9 python default: llvm takes 12mins, roughly 2.1GB
+    # So we follow gzip.
+    with open(path, "wb") as fileobj, closing(
+        GzipFile(filename="", mode="wb", compresslevel=6, mtime=0, fileobj=fileobj)
+    ) as gzip_file, tarfile.TarFile(name="", mode="w", fileobj=gzip_file) as tar:
+        yield tar
+
+
+def deterministic_tarinfo(tarinfo: tarfile.TarInfo):
+    # We only add files, symlinks, hardlinks, and directories
+    # No character devices, block devices and FIFOs should ever enter a tarball.
+    if tarinfo.isdev():
+        return None
+
+    # For distribution, it makes no sense to user/group data; since (a) they don't exist
+    # on other machines, and (b) they lead to surprises as `tar x` run as root will change
+    # ownership if it can. We want to extract as the current user. By setting owner to root,
+    # root will extract as root, and non-privileged user will extract as themselves.
+    tarinfo.uid = 0
+    tarinfo.gid = 0
+    tarinfo.uname = ""
+    tarinfo.gname = ""
+
+    # Reset mtime to epoch time, our prefixes are not truly immutable, so files may get
+    # touched; as long as the content does not change, this ensures we get stable tarballs.
+    tarinfo.mtime = 0
+
+    # Normalize mode
+    if tarinfo.isfile() or tarinfo.islnk():
+        # If user can execute, use 0o755; else 0o644
+        # This is to avoid potentially unsafe world writable & exeutable files that may get
+        # extracted when Python or tar is run with privileges
+        tarinfo.mode = 0o644 if tarinfo.mode & 0o100 == 0 else 0o755
+    else:  # symbolic link and directories
+        tarinfo.mode = 0o755
+
+    return tarinfo
+
+
+def tar_add_metadata(tar: tarfile.TarFile, path: str, data: dict):
+    # Serialize buildinfo for the tarball
+    bstring = syaml.dump(data, default_flow_style=True).encode("utf-8")
+    tarinfo = tarfile.TarInfo(name=path)
+    tarinfo.size = len(bstring)
+    tar.addfile(deterministic_tarinfo(tarinfo), io.BytesIO(bstring))
+
+
+def _do_create_tarball(tarfile_path, binaries_dir, pkg_dir, buildinfo):
+    with gzip_compressed_tarfile(tarfile_path) as tar:
+        tar.add(name=binaries_dir, arcname=pkg_dir, filter=deterministic_tarinfo)
+        tar_add_metadata(tar, buildinfo_file_name(pkg_dir), buildinfo)
+
+
+class PushOptions(NamedTuple):
+    #: Overwrite existing tarball/metadata files in buildcache
+    force: bool = False
+
+    #: Whether to use relative RPATHs
+    relative: bool = False
+
+    #: Allow absolute paths to package prefixes when creating a tarball
+    allow_root: bool = False
+
+    #: Regenerated indices after pushing
+    regenerate_index: bool = False
+
+    #: Whether to sign or not.
+    unsigned: bool = False
+
+    #: What key to use for signing
+    key: Optional[str] = None
+
+
+def push_or_raise(spec: Spec, out_url: str, options: PushOptions):
     """
     Build a tarball from given spec and put it into the directory structure
     used at the mirror (following <tarball_directory_name>).
+
+    This method raises :py:class:`NoOverwriteException` when ``force=False`` and the tarball or
+    spec.json file already exist in the buildcache.
     """
     if not spec.concrete:
         raise ValueError("spec must be concrete to build tarball")
 
-    # set up some paths
-    tmpdir = tempfile.mkdtemp()
-    cache_prefix = build_cache_prefix(tmpdir)
+    with tempfile.TemporaryDirectory(dir=spack.stage.get_stage_root()) as tmpdir:
+        _build_tarball_in_stage_dir(spec, out_url, stage_dir=tmpdir, options=options)
 
+
+def _build_tarball_in_stage_dir(spec: Spec, out_url: str, stage_dir: str, options: PushOptions):
+    cache_prefix = build_cache_prefix(stage_dir)
     tarfile_name = tarball_name(spec, ".spack")
     tarfile_dir = os.path.join(cache_prefix, tarball_directory_name(spec))
     tarfile_path = os.path.join(tarfile_dir, tarfile_name)
     spackfile_path = os.path.join(cache_prefix, tarball_path_name(spec, ".spack"))
-    remote_spackfile_path = url_util.join(out_url, os.path.relpath(spackfile_path, tmpdir))
+    remote_spackfile_path = url_util.join(out_url, os.path.relpath(spackfile_path, stage_dir))
 
     mkdirp(tarfile_dir)
     if web_util.url_exists(remote_spackfile_path):
-        if force:
+        if options.force:
             web_util.remove_url(remote_spackfile_path)
         else:
             raise NoOverwriteException(url_util.format(remote_spackfile_path))
@@ -1183,12 +1265,12 @@ def _build_tarball(
     signed_specfile_path = "{0}.sig".format(specfile_path)
 
     remote_specfile_path = url_util.join(
-        out_url, os.path.relpath(specfile_path, os.path.realpath(tmpdir))
+        out_url, os.path.relpath(specfile_path, os.path.realpath(stage_dir))
     )
     remote_signed_specfile_path = "{0}.sig".format(remote_specfile_path)
 
     # If force and exists, overwrite. Otherwise raise exception on collision.
-    if force:
+    if options.force:
         if web_util.url_exists(remote_specfile_path):
             web_util.remove_url(remote_specfile_path)
         if web_util.url_exists(remote_signed_specfile_path):
@@ -1199,13 +1281,13 @@ def _build_tarball(
         raise NoOverwriteException(url_util.format(remote_specfile_path))
 
     pkg_dir = os.path.basename(spec.prefix.rstrip(os.path.sep))
-    workdir = os.path.join(tmpdir, pkg_dir)
+    workdir = os.path.join(stage_dir, pkg_dir)
 
     # TODO: We generally don't want to mutate any files, but when using relative
     # mode, Spack unfortunately *does* mutate rpaths and links ahead of time.
     # For now, we only make a full copy of the spec prefix when in relative mode.
 
-    if relative:
+    if options.relative:
         # tarfile is used because it preserves hardlink etc best.
         binaries_dir = workdir
         temp_tarfile_name = tarball_name(spec, ".tar")
@@ -1217,39 +1299,22 @@ def _build_tarball(
         os.remove(temp_tarfile_path)
     else:
         binaries_dir = spec.prefix
-        mkdirp(os.path.join(workdir, ".spack"))
 
     # create info for later relocation and create tar
-    write_buildinfo_file(spec, workdir, relative)
+    buildinfo = get_buildinfo_dict(spec, options.relative)
 
     # optionally make the paths in the binaries relative to each other
     # in the spack install tree before creating tarball
-    try:
-        if relative:
-            make_package_relative(workdir, spec, allow_root)
-        elif not allow_root:
-            ensure_package_relocatable(workdir, binaries_dir)
-    except Exception as e:
-        shutil.rmtree(workdir)
-        shutil.rmtree(tarfile_dir)
-        shutil.rmtree(tmpdir)
-        tty.die(e)
+    if options.relative:
+        make_package_relative(workdir, spec, buildinfo, options.allow_root)
+    elif not options.allow_root:
+        ensure_package_relocatable(buildinfo, binaries_dir)
 
-    # create gzip compressed tarball of the install prefix
-    # On AMD Ryzen 3700X and an SSD disk, we have the following on compression speed:
-    # compresslevel=6 gzip default: llvm takes 4mins, roughly 2.1GB
-    # compresslevel=9 python default: llvm takes 12mins, roughly 2.1GB
-    # So we follow gzip.
-    with closing(tarfile.open(tarfile_path, "w:gz", compresslevel=6)) as tar:
-        tar.add(name=binaries_dir, arcname=pkg_dir)
-        if not relative:
-            # Add buildinfo file
-            buildinfo_path = buildinfo_file_name(workdir)
-            buildinfo_arcname = buildinfo_file_name(pkg_dir)
-            tar.add(name=buildinfo_path, arcname=buildinfo_arcname)
+    _do_create_tarball(tarfile_path, binaries_dir, pkg_dir, buildinfo)
 
     # remove copy of install directory
-    shutil.rmtree(workdir)
+    if options.relative:
+        shutil.rmtree(workdir)
 
     # get the sha256 checksum of the tarball
     checksum = checksum_tarball(tarfile_path)
@@ -1271,50 +1336,51 @@ def _build_tarball(
     # This will be used to determine is the directory layout has changed.
     buildinfo = {}
     buildinfo["relative_prefix"] = os.path.relpath(spec.prefix, spack.store.layout.root)
-    buildinfo["relative_rpaths"] = relative
+    buildinfo["relative_rpaths"] = options.relative
     spec_dict["buildinfo"] = buildinfo
 
     with open(specfile_path, "w") as outfile:
-        outfile.write(sjson.dump(spec_dict))
+        # Note: when using gpg clear sign, we need to avoid long lines (19995 chars).
+        # If lines are longer, they are truncated without error. Thanks GPG!
+        # So, here we still add newlines, but no indent, so save on file size and
+        # line length.
+        json.dump(spec_dict, outfile, indent=0, separators=(",", ":"))
 
     # sign the tarball and spec file with gpg
-    if not unsigned:
-        key = select_signing_key(key)
-        sign_specfile(key, force, specfile_path)
+    if not options.unsigned:
+        key = select_signing_key(options.key)
+        sign_specfile(key, options.force, specfile_path)
 
     # push tarball and signed spec json to remote mirror
     web_util.push_to_url(spackfile_path, remote_spackfile_path, keep_original=False)
     web_util.push_to_url(
-        signed_specfile_path if not unsigned else specfile_path,
-        remote_signed_specfile_path if not unsigned else remote_specfile_path,
+        signed_specfile_path if not options.unsigned else specfile_path,
+        remote_signed_specfile_path if not options.unsigned else remote_specfile_path,
         keep_original=False,
     )
 
-    tty.debug('Buildcache for "{0}" written to \n {1}'.format(spec, remote_spackfile_path))
+    # push the key to the build cache's _pgp directory so it can be
+    # imported
+    if not options.unsigned:
+        push_keys(out_url, keys=[key], regenerate_index=options.regenerate_index, tmpdir=stage_dir)
 
-    try:
-        # push the key to the build cache's _pgp directory so it can be
-        # imported
-        if not unsigned:
-            push_keys(out_url, keys=[key], regenerate_index=regenerate_index, tmpdir=tmpdir)
-
-        # create an index.json for the build_cache directory so specs can be
-        # found
-        if regenerate_index:
-            generate_package_index(url_util.join(out_url, os.path.relpath(cache_prefix, tmpdir)))
-    finally:
-        shutil.rmtree(tmpdir)
+    # create an index.json for the build_cache directory so specs can be
+    # found
+    if options.regenerate_index:
+        generate_package_index(url_util.join(out_url, os.path.relpath(cache_prefix, stage_dir)))
 
     return None
 
 
-def nodes_to_be_packaged(specs, root=True, dependencies=True):
+def specs_to_be_packaged(
+    specs: List[Spec], root: bool = True, dependencies: bool = True
+) -> List[Spec]:
     """Return the list of nodes to be packaged, given a list of specs.
 
     Args:
-        specs (List[spack.spec.Spec]): list of root specs to be processed
-        root (bool): include the root of each spec in the nodes
-        dependencies (bool): include the dependencies of each
+        specs: list of root specs to be processed
+        root: include the root of each spec in the nodes
+        dependencies: include the dependencies of each
             spec in the nodes
     """
     if not root and not dependencies:
@@ -1332,28 +1398,26 @@ def nodes_to_be_packaged(specs, root=True, dependencies=True):
         return list(filter(packageable, nodes))
 
 
-def push(specs, push_url, include_root=True, include_dependencies=True, **kwargs):
-    """Create a binary package for each of the specs passed as input and push them
-    to a given push URL.
+def push(spec: Spec, mirror_url: str, options: PushOptions):
+    """Create and push binary package for a single spec to the specified
+    mirror url.
 
     Args:
-        specs (List[spack.spec.Spec]): installed specs to be packaged
-        push_url (str): url where to push the binary package
-        include_root (bool): include the root of each spec in the nodes
-        include_dependencies (bool): include the dependencies of each
-            spec in the nodes
-        **kwargs: TODO
+        spec: Spec to package and push
+        mirror_url: Desired destination url for binary package
+        options:
+
+    Returns:
+        True if package was pushed, False otherwise.
 
     """
-    nodes = nodes_to_be_packaged(specs, root=include_root, dependencies=include_dependencies)
+    try:
+        push_or_raise(spec, mirror_url, options)
+    except NoOverwriteException as e:
+        warnings.warn(str(e))
+        return False
 
-    # TODO: This seems to be an easy target for task
-    # TODO: distribution using a parallel pool
-    for node in nodes:
-        try:
-            _build_tarball(node, push_url, **kwargs)
-        except NoOverwriteException as e:
-            warnings.warn(str(e))
+    return True
 
 
 def try_verify(specfile_path):
@@ -1532,13 +1596,12 @@ def download_tarball(spec, unsigned=False, mirrors_for_spec=None):
     return None
 
 
-def make_package_relative(workdir, spec, allow_root):
+def make_package_relative(workdir, spec, buildinfo, allow_root):
     """
     Change paths in binaries to relative paths. Change absolute symlinks
     to relative symlinks.
     """
     prefix = spec.prefix
-    buildinfo = read_buildinfo_file(workdir)
     old_layout_root = buildinfo["buildpath"]
     orig_path_names = list()
     cur_path_names = list()
@@ -1562,9 +1625,8 @@ def make_package_relative(workdir, spec, allow_root):
     relocate.make_link_relative(cur_path_names, orig_path_names)
 
 
-def ensure_package_relocatable(workdir, binaries_dir):
+def ensure_package_relocatable(buildinfo, binaries_dir):
     """Check if package binaries are relocatable."""
-    buildinfo = read_buildinfo_file(workdir)
     binaries = [os.path.join(binaries_dir, f) for f in buildinfo["relocate_binaries"]]
     relocate.ensure_binaries_are_relocatable(binaries)
 
@@ -1601,7 +1663,7 @@ def dedupe_hardlinks_if_necessary(root, buildinfo):
         buildinfo[key] = new_list
 
 
-def relocate_package(spec, allow_root):
+def relocate_package(spec):
     """
     Relocate the given package
     """
@@ -1619,23 +1681,23 @@ def relocate_package(spec, allow_root):
     old_spack_prefix = str(buildinfo.get("spackprefix"))
     old_rel_prefix = buildinfo.get("relative_prefix")
     old_prefix = os.path.join(old_layout_root, old_rel_prefix)
-    rel = buildinfo.get("relative_rpaths")
-    prefix_to_hash = buildinfo.get("prefix_to_hash", None)
-    if old_rel_prefix != new_rel_prefix and not prefix_to_hash:
+    rel = buildinfo.get("relative_rpaths", False)
+
+    # In the past prefix_to_hash was the default and externals were not dropped, so prefixes
+    # were not unique.
+    if "hash_to_prefix" in buildinfo:
+        hash_to_old_prefix = buildinfo["hash_to_prefix"]
+    elif "prefix_to_hash" in buildinfo:
+        hash_to_old_prefix = dict((v, k) for (k, v) in buildinfo["prefix_to_hash"].items())
+    else:
+        hash_to_old_prefix = dict()
+
+    if old_rel_prefix != new_rel_prefix and not hash_to_old_prefix:
         msg = "Package tarball was created from an install "
         msg += "prefix with a different directory layout and an older "
         msg += "buildcache create implementation. It cannot be relocated."
         raise NewLayoutException(msg)
-    # older buildcaches do not have the prefix_to_hash dictionary
-    # need to set an empty dictionary and add one entry to
-    # prefix_to_prefix to reproduce the old behavior
-    if not prefix_to_hash:
-        prefix_to_hash = dict()
-    hash_to_prefix = dict()
-    hash_to_prefix[spec.format("{hash}")] = str(spec.package.prefix)
-    new_deps = spack.build_environment.get_rpath_deps(spec.package)
-    for d in new_deps + spec.dependencies(deptype="run"):
-        hash_to_prefix[d.format("{hash}")] = str(d.prefix)
+
     # Spurious replacements (e.g. sbang) will cause issues with binaries
     # For example, the new sbang can be longer than the old one.
     # Hence 2 dictionaries are maintained here.
@@ -1649,9 +1711,11 @@ def relocate_package(spec, allow_root):
     # First match specific prefix paths. Possibly the *local* install prefix
     # of some dependency is in an upstream, so we cannot assume the original
     # spack store root can be mapped uniformly to the new spack store root.
-    for orig_prefix, hash in prefix_to_hash.items():
-        prefix_to_prefix_text[orig_prefix] = hash_to_prefix.get(hash, None)
-        prefix_to_prefix_bin[orig_prefix] = hash_to_prefix.get(hash, None)
+    for dag_hash, new_dep_prefix in hashes_to_prefixes(spec).items():
+        if dag_hash in hash_to_old_prefix:
+            old_dep_prefix = hash_to_old_prefix[dag_hash]
+            prefix_to_prefix_bin[old_dep_prefix] = new_dep_prefix
+            prefix_to_prefix_text[old_dep_prefix] = new_dep_prefix
 
     # Only then add the generic fallback of install prefix -> install prefix.
     prefix_to_prefix_text[old_prefix] = new_prefix
@@ -1725,7 +1789,15 @@ def relocate_package(spec, allow_root):
         relocate.relocate_text(text_names, prefix_to_prefix_text)
 
         # relocate the install prefixes in binary files including dependencies
-        relocate.relocate_text_bin(files_to_relocate, prefix_to_prefix_bin)
+        changed_files = relocate.relocate_text_bin(files_to_relocate, prefix_to_prefix_bin)
+
+        # Add ad-hoc signatures to patched macho files when on macOS.
+        if "macho" in platform.binary_formats and sys.platform == "darwin":
+            codesign = which("codesign")
+            if not codesign:
+                return
+            for binary in changed_files:
+                codesign("-fs-", binary)
 
     # If we are installing back to the same location
     # relocate the sbang location if the spack directory changed
@@ -1782,7 +1854,7 @@ def _extract_inner_tarball(spec, filename, extract_to, unsigned, remote_checksum
     return tarfile_path
 
 
-def extract_tarball(spec, download_result, allow_root=False, unsigned=False, force=False):
+def extract_tarball(spec, download_result, unsigned=False, force=False):
     """
     extract binary tarball for given package into install area
     """
@@ -1878,7 +1950,7 @@ def extract_tarball(spec, download_result, allow_root=False, unsigned=False, for
     os.remove(specfile_path)
 
     try:
-        relocate_package(spec, allow_root)
+        relocate_package(spec)
     except Exception as e:
         shutil.rmtree(spec.prefix)
         raise e
@@ -1897,7 +1969,7 @@ def extract_tarball(spec, download_result, allow_root=False, unsigned=False, for
         _delete_staged_downloads(download_result)
 
 
-def install_root_node(spec, allow_root, unsigned=False, force=False, sha256=None):
+def install_root_node(spec, unsigned=False, force=False, sha256=None):
     """Install the root node of a concrete spec from a buildcache.
 
     Checking the sha256 sum of a node before installation is usually needed only
@@ -1906,8 +1978,6 @@ def install_root_node(spec, allow_root, unsigned=False, force=False, sha256=None
 
     Args:
         spec: spec to be installed (note that only the root node will be installed)
-        allow_root (bool): allows the root directory to be present in binaries
-            (may affect relocation)
         unsigned (bool): if True allows installing unsigned binaries
         force (bool): force installation if the spec is already present in the
             local store
@@ -1943,24 +2013,22 @@ def install_root_node(spec, allow_root, unsigned=False, force=False, sha256=None
     # don't print long padded paths while extracting/relocating binaries
     with spack.util.path.filter_padding():
         tty.msg('Installing "{0}" from a buildcache'.format(spec.format()))
-        extract_tarball(spec, download_result, allow_root, unsigned, force)
-        spack.hooks.post_install(spec)
+        extract_tarball(spec, download_result, unsigned, force)
+        spack.hooks.post_install(spec, False)
         spack.store.db.add(spec, spack.store.layout)
 
 
-def install_single_spec(spec, allow_root=False, unsigned=False, force=False):
+def install_single_spec(spec, unsigned=False, force=False):
     """Install a single concrete spec from a buildcache.
 
     Args:
         spec (spack.spec.Spec): spec to be installed
-        allow_root (bool): allows the root directory to be present in binaries
-            (may affect relocation)
         unsigned (bool): if True allows installing unsigned binaries
         force (bool): force installation if the spec is already present in the
             local store
     """
     for node in spec.traverse(root=True, order="post", deptype=("link", "run")):
-        install_root_node(node, allow_root=allow_root, unsigned=unsigned, force=force)
+        install_root_node(node, unsigned=unsigned, force=force)
 
 
 def try_direct_fetch(spec, mirrors=None):
@@ -2347,6 +2415,10 @@ class BinaryCacheQuery(object):
         self.possible_specs = specs
 
     def __call__(self, spec, **kwargs):
+        """
+        Args:
+            spec (str): The spec being searched for in its string representation or hash.
+        """
         matches = []
         if spec.startswith("/"):
             # Matching a DAG hash
@@ -2366,6 +2438,10 @@ class FetchIndexError(Exception):
             return str(self.args[0])
         else:
             return "{}, due to: {}".format(self.args[0], self.args[1])
+
+
+class BuildcacheIndexError(spack.error.SpackError):
+    """Raised when a buildcache cannot be read for any reason"""
 
 
 FetchIndexResult = collections.namedtuple("FetchIndexResult", "etag hash data fresh")

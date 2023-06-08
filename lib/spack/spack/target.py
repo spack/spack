@@ -3,7 +3,6 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 import functools
-import warnings
 
 import archspec.cpu
 
@@ -33,14 +32,6 @@ def _ensure_other_is_target(method):
     return _impl
 
 
-#: Translation table from archspec deprecated names
-_DEPRECATED_ARCHSPEC_NAMES = {
-    "graviton": "cortex_a72",
-    "graviton2": "neoverse_n1",
-    "graviton3": "neoverse_v1",
-}
-
-
 class Target(object):
     def __init__(self, name, module_name=None):
         """Target models microarchitectures and their compatibility.
@@ -52,10 +43,6 @@ class Target(object):
                 like Cray (e.g. craype-compiler)
         """
         if not isinstance(name, archspec.cpu.Microarchitecture):
-            if name in _DEPRECATED_ARCHSPEC_NAMES:
-                msg = "'target={}' is deprecated, use 'target={}' instead"
-                name, old_name = _DEPRECATED_ARCHSPEC_NAMES[name], name
-                warnings.warn(msg.format(old_name, name))
             name = archspec.cpu.TARGETS.get(name, archspec.cpu.generic_microarchitecture(name))
         self.microarchitecture = name
         self.module_name = module_name

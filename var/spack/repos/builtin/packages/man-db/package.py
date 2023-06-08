@@ -16,6 +16,7 @@ class ManDb(AutotoolsPackage):
     git = "https://gitlab.com/cjwatson/man-db"
     url = "https://download.savannah.nongnu.org/releases/man-db/man-db-2.10.1.tar.xz"
 
+    version("2.11.2", sha256="cffa1ee4e974be78646c46508e6dd2f37e7c589aaab2938cc1064f058fef9f8d")
     version("2.10.2", sha256="ee97954d492a13731903c9d0727b9b01e5089edbd695f0cdb58d405a5af5514d")
     version("2.10.1", sha256="2ffd8f2e80122fe72e60c740c851e6a3e15c9a7921185eb4752c1c672824bed6")
     version("2.7.6.1", sha256="08edbc52f24aca3eebac429b5444efd48b9b90b9b84ca0ed5507e5c13ed10f3f")

@@ -203,8 +203,7 @@ def implicit_variant_conversion(method):
 
     @functools.wraps(method)
     def convert(self, other):
-        # We don't care if types are different as long as I can convert
-        # other to type(self)
+        # We don't care if types are different as long as I can convert other to type(self)
         try:
             other = type(self)(other.name, other._original_value)
         except (error.SpecError, ValueError):
@@ -349,7 +348,12 @@ class AbstractVariant(object):
         # (`foo=bar` will never satisfy `baz=bar`)
         return other.name == self.name
 
-    @implicit_variant_conversion
+    def intersects(self, other):
+        """Returns True if there are variant matching both self and other, False otherwise."""
+        if isinstance(other, (SingleValuedVariant, BoolValuedVariant)):
+            return other.intersects(self)
+        return other.name == self.name
+
     def compatible(self, other):
         """Returns True if self and other are compatible, False otherwise.
 
@@ -364,7 +368,7 @@ class AbstractVariant(object):
         """
         # If names are different then `self` is not compatible with `other`
         # (`foo=bar` is incompatible with `baz=bar`)
-        return other.name == self.name
+        return self.intersects(other)
 
     @implicit_variant_conversion
     def constrain(self, other):
@@ -475,6 +479,9 @@ class SingleValuedVariant(AbstractVariant):
             self.value == other.value or other.value == "*" or self.value == "*"
         )
 
+    def intersects(self, other):
+        return self.satisfies(other)
+
     def compatible(self, other):
         return self.satisfies(other)
 
@@ -575,29 +582,11 @@ class VariantMap(lang.HashableMap):
         # Set the item
         super(VariantMap, self).__setitem__(vspec.name, vspec)
 
-    def satisfies(self, other, strict=False):
-        """Returns True if this VariantMap is more constrained than other,
-        False otherwise.
+    def satisfies(self, other):
+        return all(k in self and self[k].satisfies(other[k]) for k in other)
 
-        Args:
-            other (VariantMap): VariantMap instance to satisfy
-            strict (bool): if True return False if a key is in other and
-                not in self, otherwise discard that key and proceed with
-                evaluation
-
-        Returns:
-            bool: True or False
-        """
-        to_be_checked = [k for k in other]
-
-        strict_or_concrete = strict
-        if self.spec is not None:
-            strict_or_concrete |= self.spec._concrete
-
-        if not strict_or_concrete:
-            to_be_checked = filter(lambda x: x in self, to_be_checked)
-
-        return all(k in self and self[k].satisfies(other[k]) for k in to_be_checked)
+    def intersects(self, other):
+        return all(self[k].intersects(other[k]) for k in other if k in self)
 
     def constrain(self, other):
         """Add all variants in other that aren't in self to self. Also

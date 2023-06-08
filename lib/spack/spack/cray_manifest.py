@@ -11,7 +11,11 @@ import jsonschema.exceptions
 import llnl.util.tty as tty
 
 import spack.cmd
+import spack.error
 import spack.hash_types as hash_types
+import spack.platforms
+import spack.repo
+import spack.spec
 from spack.schema.cray_manifest import schema as manifest_schema
 
 #: Cray systems can store a Spack-compatible description of system
@@ -44,7 +48,8 @@ def translated_compiler_name(manifest_compiler_name):
 def compiler_from_entry(entry):
     compiler_name = translated_compiler_name(entry["name"])
     paths = entry["executables"]
-    version = entry["version"]
+    # to instantiate a compiler class we may need a concrete version:
+    version = "={}".format(entry["version"])
     arch = entry["arch"]
     operating_system = arch["os"]
     target = arch["target"]
@@ -74,13 +79,13 @@ def spec_from_entry(entry):
 
     compiler_str = ""
     if "compiler" in entry:
-        compiler_format = "%{name}@{version}"
+        compiler_format = "%{name}@={version}"
         compiler_str = compiler_format.format(
             name=translated_compiler_name(entry["compiler"]["name"]),
             version=entry["compiler"]["version"],
         )
 
-    spec_format = "{name}@{version} {compiler} {arch}"
+    spec_format = "{name}@={version} {compiler} {arch}"
     spec_str = spec_format.format(
         name=entry["name"], version=entry["version"], compiler=compiler_str, arch=arch_str
     )

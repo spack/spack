@@ -28,7 +28,7 @@ class Papi(AutotoolsPackage, ROCmPackage):
     tags = ["e4s"]
 
     url = "https://icl.cs.utk.edu/projects/papi/downloads/papi-5.4.1.tar.gz"
-    git = "https://bitbucket.org/icl/papi/src/master/"
+    git = "https://github.com/icl-utk-edu/papi"
 
     version("master", branch="master")
     version("6.0.0.1", sha256="3cd7ed50c65b0d21d66e46d0ba34cd171178af4bbf9d94e693915c1aca1e287f")
@@ -68,11 +68,7 @@ class Papi(AutotoolsPackage, ROCmPackage):
     conflicts("+sde", when="@:5", msg="Software defined events (SDE) added in 6.0.0")
     conflicts("^cuda", when="@:5", msg="CUDA support for versions < 6.0.0 not implemented")
 
-    # This is the only way to match exactly version 6.0.0 without also
-    # including version 6.0.0.1 due to spack version matching logic
-    conflicts(
-        "@6.0:6.0.0.a", when="+static_tools", msg="Static tools cannot build on version 6.0.0"
-    )
+    conflicts("@=6.0.0", when="+static_tools", msg="Static tools cannot build on version 6.0.0")
 
     # Does not build with newer versions of gcc, see
     # https://bitbucket.org/icl/papi/issues/46/cannot-compile-on-arch-linux
@@ -82,6 +78,7 @@ class Papi(AutotoolsPackage, ROCmPackage):
         when="@5.4.0:5.6%gcc@8:",
     )
     patch("crayftn-fixes.patch", when="@6.0.0:%cce@9:")
+    patch("intel-oneapi-compiler-fixes.patch", when="@6.0.0:%oneapi")
 
     configure_directory = "src"
 
@@ -112,6 +109,11 @@ class Papi(AutotoolsPackage, ROCmPackage):
             env.set("DBG", "")
 
     setup_run_environment = setup_build_environment
+
+    @when("@6.0.0:%oneapi")
+    def autoreconf(self, spec, prefix):
+        bash = which("bash")
+        bash("-c", "cd src && autoreconf -ivf")
 
     def configure_args(self):
         spec = self.spec

@@ -3,9 +3,11 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 import pickle
+import sys
 
 import pytest
 
+import spack.error
 from spack.main import SpackCommand
 
 build_env = SpackCommand("build-env")
@@ -38,7 +40,10 @@ def test_dump(tmpdir):
     with tmpdir.as_cwd():
         build_env("--dump", _out_file, "zlib")
         with open(_out_file) as f:
-            assert any(line.startswith("PATH=") for line in f.readlines())
+            if sys.platform == "win32":
+                assert any(line.startswith('set "PATH=') for line in f.readlines())
+            else:
+                assert any(line.startswith("PATH=") for line in f.readlines())
 
 
 @pytest.mark.usefixtures("config", "mock_packages", "working_env")
@@ -48,3 +53,10 @@ def test_pickle(tmpdir):
         environment = pickle.load(open(_out_file, "rb"))
         assert type(environment) == dict
         assert "PATH" in environment
+
+
+def test_failure_when_uninstalled_deps(config, mock_packages):
+    with pytest.raises(
+        spack.error.SpackError, match="Not all dependencies of dttop are installed"
+    ):
+        build_env("dttop")
