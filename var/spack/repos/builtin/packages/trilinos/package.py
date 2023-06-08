@@ -814,7 +814,7 @@ class Trilinos(CMakePackage, CudaPackage, ROCmPackage):
                     define("CMAKE_C_COMPILER", spec["mpi"].mpicc),
                     define("CMAKE_CXX_COMPILER", spec["mpi"].mpicxx),
                     define("CMAKE_Fortran_COMPILER", spec["mpi"].mpifc),
-                    define("MPI_BASE_DIR", spec["mpi"].prefix),
+                    define("MPI_BASE_DIR", str(pathlib.PosixPath(spec["mpi"].prefix))),
                 ]
             )
 

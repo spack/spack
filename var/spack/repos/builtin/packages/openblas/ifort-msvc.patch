@@ -6,7 +6,7 @@ diff -ruN spack-src/cmake/fc.cmake spack-src-new/cmake/fc.cmake
  if (${F_COMPILER} STREQUAL "INTEL")
    set(CCOMMON_OPT "${CCOMMON_OPT} -DF_INTERFACE_INTEL")
 +  if (MSVC)
-+    set(FCOMMON_OPT "${FCOMMON_OPT} -names:lowercase -assume:underscore")
++    set(FCOMMON_OPT "${FCOMMON_OPT} -names:uppercase -assume:underscore")
 +  endif ()  
    if (INTERFACE64)
      set(FCOMMON_OPT "${FCOMMON_OPT} -i8")
