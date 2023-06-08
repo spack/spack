@@ -115,9 +115,6 @@ def default_config(tmpdir, config_directory, monkeypatch, install_mockery_mutabl
 
     spack.config.config, old_config = cfg, spack.config.config
     spack.config.config.set("repos", [spack.paths.mock_packages_path])
-    # This is essential, otherwise the cache will create weird side effects
-    # that will compromise subsequent tests if compilers.yaml is modified
-    monkeypatch.setattr(spack.compilers, "_cache_config_file", [])
     njobs = spack.config.get("config:build_jobs")
     if not njobs:
         spack.config.set("config:build_jobs", 4, scope="user")

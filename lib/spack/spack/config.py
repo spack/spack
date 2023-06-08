@@ -1353,17 +1353,11 @@ def use_configuration(*scopes_or_paths):
     configuration = _config_from(scopes_or_paths)
     config.clear_caches(), configuration.clear_caches()
 
-    # Save and clear the current compiler cache
-    saved_compiler_cache = spack.compilers._cache_config_file
-    spack.compilers._cache_config_file = []
-
     saved_config, config = config, configuration
 
     try:
         yield configuration
     finally:
-        # Restore previous config files
-        spack.compilers._cache_config_file = saved_compiler_cache
         config = saved_config
 
 

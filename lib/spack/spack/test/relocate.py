@@ -246,12 +246,12 @@ def test_set_elf_rpaths(mock_patchelf):
     # the call made to patchelf itself
     patchelf = mock_patchelf("echo $@")
     rpaths = ["/usr/lib", "/usr/lib64", "/opt/local/lib"]
-    output = spack.relocate._set_elf_rpaths(patchelf, rpaths)
+    output = spack.relocate._set_elf_rpaths(str(patchelf), rpaths)
 
     # Assert that the arguments of the call to patchelf are as expected
     assert "--force-rpath" in output
     assert "--set-rpath " + ":".join(rpaths) in output
-    assert patchelf in output
+    assert str(patchelf) in output
 
 
 @skip_unless_linux
@@ -261,7 +261,7 @@ def test_set_elf_rpaths_warning(mock_patchelf):
     rpaths = ["/usr/lib", "/usr/lib64", "/opt/local/lib"]
     # To avoid using capfd in order to check if the warning was triggered
     # here we just check that output is not set
-    output = spack.relocate._set_elf_rpaths(patchelf, rpaths)
+    output = spack.relocate._set_elf_rpaths(str(patchelf), rpaths)
     assert output is None
 
 
