@@ -24,10 +24,12 @@ class Hipsycl(CMakePackage):
     provides("sycl")
 
     version("stable", branch="stable", submodules=True)
+    version("0.9.4", commit="99d9e24d462b35e815e0e59c1b611936c70464ae", submodules=True)
     version("0.9.3", commit="51507bad524c33afe8b124804091b10fa25618dc", submodules=True)
     version("0.9.2", commit="49fd02499841ae884c61c738610e58c27ab51fdb", submodules=True)
     version("0.9.1", commit="fe8465cd5399a932f7221343c07c9942b0fe644c", submodules=True)
     version("0.8.0", commit="2daf8407e49dd32ebd1c266e8e944e390d28b22a", submodules=True)
+    version("develop", branch="develop", submodules=True)
 
     variant("cuda", default=False, description="Enable CUDA backend for SYCL kernels")
 
@@ -37,6 +39,8 @@ class Hipsycl(CMakePackage):
     depends_on("python@3:")
     depends_on("llvm@8: +clang", when="~cuda")
     depends_on("llvm@9: +clang", when="+cuda")
+    # https://github.com/OpenSYCL/OpenSYCL/pull/918 was introduced after 0.9.4
+    conflicts("llvm@16:", when="@:0.9.4")
     # LLVM PTX backend requires cuda7:10.1 (https://tinyurl.com/v82k5qq)
     depends_on("cuda@9:10.1", when="@0.8.1: +cuda ^llvm@9")
     depends_on("cuda@9:", when="@0.8.1: +cuda ^llvm@10:")

@@ -12,6 +12,7 @@ class PyDunamai(PythonPackage):
     homepage = "https://github.com/mtkennerly/dunamai"
     pypi = "dunamai/dunamai-1.13.1.tar.gz"
 
+    version("1.17.0", sha256="459381b585a1e78e4070f0d38a6afb4d67de2ee95064bf6b0438ec620dde0820")
     version("1.13.1", sha256="49597bdf653bdacdeb51ec6e0f1d4d2327309376fc83e6f1d42af6e29600515f")
 
     depends_on("python@3.5:3", type=("build", "run"))

@@ -1384,3 +1384,39 @@ def test_single_external_implicit_install(install_mockery, explicit_args, is_exp
     s.external_path = "/usr"
     create_installer([(s, explicit_args)]).install()
     assert spack.store.db.get_record(pkg).explicit == is_explicit
+
+
+@pytest.mark.parametrize("run_tests", [True, False])
+def test_print_install_test_log_skipped(install_mockery, mock_packages, capfd, run_tests):
+    """Confirm printing of install log skipped if not run/no failures."""
+    name = "trivial-install-test-package"
+    s = spack.spec.Spec(name).concretized()
+    pkg = s.package
+
+    pkg.run_tests = run_tests
+    spack.installer.print_install_test_log(pkg)
+    out = capfd.readouterr()[0]
+    assert out == ""
+
+
+def test_print_install_test_log_failures(
+    tmpdir, install_mockery, mock_packages, ensure_debug, capfd
+):
+    """Confirm expected outputs when there are test failures."""
+    name = "trivial-install-test-package"
+    s = spack.spec.Spec(name).concretized()
+    pkg = s.package
+
+    # Missing test log is an error
+    pkg.run_tests = True
+    pkg.tester.test_log_file = str(tmpdir.join("test-log.txt"))
+    pkg.tester.add_failure(AssertionError("test"), "test-failure")
+    spack.installer.print_install_test_log(pkg)
+    err = capfd.readouterr()[1]
+    assert "no test log file" in err
+
+    # Having test log results in path being output
+    fs.touch(pkg.tester.test_log_file)
+    spack.installer.print_install_test_log(pkg)
+    out = capfd.readouterr()[0]
+    assert "See test results at" in out
