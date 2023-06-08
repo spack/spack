@@ -23,7 +23,7 @@ class Julia(MakefilePackage):
     url = "https://github.com/JuliaLang/julia/releases/download/v1.7.0/julia-1.7.0.tar.gz"
     git = "https://github.com/JuliaLang/julia.git"
 
-    maintainers("glennpj", "vchuravy", "haampie", "giordano")
+    maintainers("vchuravy", "haampie", "giordano")
 
     version("master", branch="master")
     version("1.9.0", sha256="48f4c8a7d5f33d0bc6ce24226df20ab49e385c2d0c3767ec8dfdb449602095b2")
@@ -50,14 +50,14 @@ class Julia(MakefilePackage):
     # Note, we just use link_llvm_dylib so that we not only get a libLLVM,
     # but also so that llvm-config --libfiles gives only the dylib. Without
     # it it also gives static libraries, and breaks Julia's build.
-    depends_on("llvm targets=amdgpu,bpf,nvptx,webassembly version_suffix=jl +link_llvm_dylib")
+    depends_on(
+        "llvm"
+        " targets=amdgpu,bpf,nvptx,webassembly"
+        " version_suffix=jl +link_llvm_dylib libunwind=none"
+    )
     depends_on("libuv", when="@:1.7")
     depends_on("libuv-julia@1.42.0", when="@1.8.0:1.8.1")
     depends_on("libuv-julia@1.44.2", when="@1.8.2:")
-
-    # Do not use internal unwind.  We need to use a conflict, because
-    # `internal_unwind` is defined only when `+clang`.
-    conflicts("^llvm+internal_unwind")
 
     with when("@1.9.0:1.9"):
         # libssh2.so.1, libpcre2-8.so.0, mbedtls.so.14, mbedcrypto.so.7, mbedx509.so.1
@@ -138,8 +138,8 @@ class Julia(MakefilePackage):
         "llvm",
         when="^llvm@14.0.6",
         patches=patch(
-            "https://github.com/JuliaLang/llvm-project/compare/f28c006a5895fc0e329fe15fead81e37457cb1d1...5c82f5309b10fab0adf6a94969e0dddffdb3dbce.patch",
-            sha256="9f2bc98e876e85a3edb158064aae782281ea7099e4c34e83ac456609cb7acd10",
+            "https://github.com/JuliaLang/llvm-project/compare/f28c006a5895fc0e329fe15fead81e37457cb1d1...381043941d2c7a5157a011510b6d0386c171aae7.diff",
+            sha256="f3def26930832532bbcd861d41b31ae03db993bc2b3510f89ef831a30bd3e099",
         ),
     )
 
@@ -190,6 +190,22 @@ class Julia(MakefilePackage):
     patch("julia-1.6-system-libwhich-and-p7zip-symlink.patch", when="@1.6.0:1.6")
     patch("use-add-rpath.patch", when="@:1.8.0")
     patch("use-add-rpath-2.patch", when="@1.8.1:1.8")
+
+    # Fix libstdc++ not being found (https://github.com/JuliaLang/julia/issues/47987)
+    patch(
+        "https://github.com/JuliaLang/julia/pull/48342.patch?full_index=1",
+        sha256="10f7cab89c8353b2648a968d2c8e8ed8bd90961df3227084f1d69d3d482933d7",
+        when="@1.8.4:1.8.5",
+    )
+
+    # Fix printing of `BigFloat`s when using MPFR 4.2.0, but the patch is
+    # applicable to previous versions of the library too
+    # (https://github.com/JuliaLang/julia/issues/49895).
+    patch(
+        "https://github.com/JuliaLang/julia/pull/49909.patch?full_index=1",
+        sha256="7fa53516b97d83ccf06f6d387c04d337849808f7e8ee2bdc2e79894d84578afc",
+        when="@1.6.4:1.9.0",
+    )
 
     # Fix gfortran abi detection https://github.com/JuliaLang/julia/pull/44026
     patch("fix-gfortran.patch", when="@1.7.0:1.7.2")
