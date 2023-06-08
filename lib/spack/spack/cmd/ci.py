@@ -228,7 +228,7 @@ def ci_reindex(args):
     Use the active, gitlab-enabled environment to rebuild the buildcache
     index for the associated mirror."""
     env = spack.cmd.require_active_env(cmd_name="ci rebuild-index")
-    yaml_root = ev.config_dict(env.manifest)
+    yaml_root = env.manifest[ev.TOP_LEVEL_KEY]
 
     if "mirrors" not in yaml_root or len(yaml_root["mirrors"].values()) < 1:
         tty.die("spack ci rebuild-index requires an env containing a mirror")

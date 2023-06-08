@@ -50,7 +50,7 @@ def create(configuration, last_phase=None):
         configuration (dict): how to generate the current recipe
         last_phase (str): last phase to be printed or None to print them all
     """
-    name = ev.config_dict(configuration)["container"]["format"]
+    name = configuration[ev.TOP_LEVEL_KEY]["container"]["format"]
     return _writer_factory[name](configuration, last_phase)
 
 
@@ -138,7 +138,7 @@ class PathContext(tengine.Context):
     template_name: Optional[str] = None
 
     def __init__(self, config, last_phase):
-        self.config = ev.config_dict(config)
+        self.config = config[ev.TOP_LEVEL_KEY]
         self.container_config = self.config["container"]
 
         # Operating system tag as written in the configuration file

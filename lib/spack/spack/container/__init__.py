@@ -37,7 +37,7 @@ def validate(configuration_file):
         config = syaml.load(f)
 
     # Ensure we have a "container" attribute with sensible defaults set
-    env_dict = ev.config_dict(config)
+    env_dict = config[ev.TOP_LEVEL_KEY]
     env_dict.setdefault(
         "container", {"format": "docker", "images": {"os": "ubuntu:22.04", "spack": "develop"}}
     )

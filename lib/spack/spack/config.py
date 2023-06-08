@@ -81,7 +81,7 @@ section_schemas = {
 # Same as above, but including keys for environments
 # this allows us to unify config reading between configs and environments
 all_schemas = copy.deepcopy(section_schemas)
-all_schemas.update(dict((key, spack.schema.env.schema) for key in spack.schema.env.keys))
+all_schemas.update({spack.schema.env.TOP_LEVEL_KEY: spack.schema.env.schema})
 
 #: Path to the default configuration
 configuration_defaults_path = ("defaults", os.path.join(spack.paths.etc_path, "defaults"))
@@ -109,14 +109,6 @@ scopes_metavar = "{defaults,system,site,user}[/PLATFORM] or env:ENVIRONMENT"
 
 #: Base name for the (internal) overrides scope.
 overrides_base_name = "overrides-"
-
-
-def first_existing(dictionary, keys):
-    """Get the value of the first key in keys that is in the dictionary."""
-    try:
-        return next(k for k in keys if k in dictionary)
-    except StopIteration:
-        raise KeyError("None of %s is in dict!" % str(keys))
 
 
 class ConfigScope(object):
@@ -838,12 +830,10 @@ config: Union[Configuration, llnl.util.lang.Singleton] = llnl.util.lang.Singleto
 
 def add_from_file(filename, scope=None):
     """Add updates to a config from a filename"""
-    import spack.environment as ev
-
-    # Get file as config dict
+    # Extract internal attributes, if we are dealing with an environment
     data = read_config_file(filename)
-    if any(k in data for k in spack.schema.env.keys):
-        data = ev.config_dict(data)
+    if spack.schema.env.TOP_LEVEL_KEY in data:
+        data = data[spack.schema.env.TOP_LEVEL_KEY]
 
     # update all sections from config dict
     # We have to iterate on keys to keep overrides from the file
