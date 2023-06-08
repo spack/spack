@@ -36,7 +36,8 @@ class PyLlvmlite(PythonPackage):
     depends_on("python@2.6:2.8,3.4:", type=("build", "run"))
 
     # llvmlite compatibility information taken from https://github.com/numba/llvmlite#compatibility
-    depends_on("llvm@11,14~flang", when="@0.40.0:")
+    depends_on("llvm@14:~flang", when="@0.41:")
+    depends_on("llvm@11:14~flang", when="@0.40")
     depends_on("llvm@11~flang", when="@0.37.0:0.39")
     for t in [
         "arm:",
