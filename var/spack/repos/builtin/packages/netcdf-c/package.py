@@ -5,7 +5,6 @@
 
 import itertools
 import os
-import sys
 
 from llnl.util.lang import dedupe
 
