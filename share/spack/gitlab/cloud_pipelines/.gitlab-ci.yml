@@ -736,6 +736,9 @@ deprecated-ci-build:
     # Use gcc from local container buildcache
     - - . "./share/spack/setup-env.sh"
       - . /etc/profile.d/modules.sh
+      - spack buildcache rebuild-index /bootstrap/local-cache/
+      - sed -i.bkp s/"spack install gcc"/"spack install --cache-only --reuse gcc"/ /bootstrap/postinstall.sh
+      - diff /bootstrap/postinstall.sh /bootstrap/postinstall.sh.bkp
       - spack mirror add local-cache /bootstrap/local-cache
       - spack gpg trust /bootstrap/public-key
       - cd "${CI_PROJECT_DIR}" && curl -sOL https://raw.githubusercontent.com/spack/spack-configs/main/AWS/parallelcluster/postinstall.sh
