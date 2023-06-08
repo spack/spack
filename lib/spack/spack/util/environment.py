@@ -9,6 +9,7 @@ import inspect
 import json
 import os
 import os.path
+import pathlib
 import pickle
 import platform
 import re
@@ -28,19 +29,22 @@ from .path import path_to_os_path, system_path_filter
 
 if sys.platform == "win32":
     SYSTEM_PATHS = [
-        "C:\\",
-        "C:\\Program Files",
-        "C:\\Program Files (x86)",
-        "C:\\Users",
-        "C:\\ProgramData",
+        pathlib.Path("C:\\"),
+        pathlib.Path("C:\\Program Files"),
+        pathlib.Path("C:\\Program Files (x86)"),
+        pathlib.Path("C:\\Users"),
+        pathlib.Path("C:\\ProgramData"),
     ]
     SUFFIXES = []
 else:
-    SYSTEM_PATHS = ["/", "/usr", "/usr/local"]
+    SYSTEM_PATHS = [
+        pathlib.Path("/"),
+        pathlib.Path("/usr"),
+        pathlib.Path("/usr/local")
+    ]
     SUFFIXES = ["bin", "bin64", "include", "lib", "lib64"]
 
-SYSTEM_DIRS = [os.path.join(p, s) for s in SUFFIXES for p in SYSTEM_PATHS] + SYSTEM_PATHS
-
+SYSTEM_DIRS = [p / s for s in SUFFIXES for p in SYSTEM_PATHS] + SYSTEM_PATHS
 
 _SHELL_SET_STRINGS = {
     "sh": "export {0}={1};\n",
@@ -108,7 +112,7 @@ def system_env_normalize(func):
 
 def is_system_path(path: Path) -> bool:
     """Returns True if the argument is a system path, False otherwise."""
-    return bool(path) and (os.path.normpath(path) in SYSTEM_DIRS)
+    return bool(path) and pathlib.Path(path).resolve(strict=False) in SYSTEM_DIRS
 
 
 def filter_system_paths(paths: List[Path]) -> List[Path]:
@@ -134,7 +138,7 @@ def get_path(name: str) -> List[Path]:
     """
     path = os.environ.get(name, "").strip()
     if path:
-        return path.split(os.pathsep)
+        return [str(pathlib.Path(p)) for p in path.split(os.pathsep)]
     return []
 
 
@@ -150,7 +154,7 @@ def env_flag(name: str) -> bool:
 
 def path_set(var_name: str, directories: List[Path]):
     """Sets the variable passed as input to the `os.pathsep` joined list of directories."""
-    path_str = os.pathsep.join(str(dir) for dir in directories)
+    path_str = os.pathsep.join(str(pathlib.Path(dir)) for dir in directories)
     os.environ[var_name] = path_str
 
 
@@ -158,13 +162,14 @@ def path_put_first(var_name: str, directories: List[Path]):
     """Puts the provided directories first in the path, adding them
     if they're not already there.
     """
-    path = os.environ.get(var_name, "").split(os.pathsep)
+    paths = [str(pathlib.Path(p)) for p in os.environ.get(var_name, "").split(os.pathsep)]
 
     for directory in directories:
-        if directory in path:
-            path.remove(directory)
+        directory = str(pathlib.Path(directory))
+        if directory in paths:
+            paths.remove(directory)
 
-    new_path = list(directories) + list(path)
+    new_path = list(directories) + list(paths)
     path_set(var_name, new_path)
 
 
@@ -205,7 +210,7 @@ def dump_environment(path: Path, environment: Optional[MutableMapping[str, str]]
 @system_path_filter(arg_slice=slice(1))
 def pickle_environment(path: Path, environment: Optional[Dict[str, str]] = None):
     """Pickle an environment dictionary to a file."""
-    with open(path, "wb") as pickle_file:
+    with pathlib.Path(path).open("wb") as pickle_file:
         pickle.dump(dict(environment if environment else os.environ), pickle_file, protocol=2)
 
 
@@ -380,7 +385,7 @@ class RemoveFlagsEnv(NameValueModifier):
 
 class SetPath(NameValueModifier):
     def execute(self, env: MutableMapping[str, str]):
-        string_path = self.separator.join(str(item) for item in self.value)
+        string_path = self.separator.join(str(pathlib.Path(item)) for item in self.value)
         tty.debug(f"SetPath: {self.name}={string_path}", level=3)
         env[self.name] = string_path
 
@@ -390,7 +395,7 @@ class AppendPath(NameValueModifier):
         tty.debug(f"AppendPath: {self.name}+{str(self.value)}", level=3)
         environment_value = env.get(self.name, "")
         directories = environment_value.split(self.separator) if environment_value else []
-        directories.append(path_to_os_path(os.path.normpath(self.value)).pop())
+        directories.append(str(pathlib.Path(self.value)))
         env[self.name] = self.separator.join(directories)
 
 
@@ -399,7 +404,7 @@ class PrependPath(NameValueModifier):
         tty.debug(f"PrependPath: {self.name}+{str(self.value)}", level=3)
         environment_value = env.get(self.name, "")
         directories = environment_value.split(self.separator) if environment_value else []
-        directories = [path_to_os_path(os.path.normpath(self.value)).pop()] + directories
+        directories = [str(pathlib.Path(self.value))] + directories
         env[self.name] = self.separator.join(directories)
 
 
@@ -409,9 +414,7 @@ class RemovePath(NameValueModifier):
         environment_value = env.get(self.name, "")
         directories = environment_value.split(self.separator) if environment_value else []
         directories = [
-            path_to_os_path(os.path.normpath(x)).pop()
-            for x in directories
-            if x != path_to_os_path(os.path.normpath(self.value)).pop()
+            str(pathlib.Path(x)) for x in directories if x != str(pathlib.Path(self.value))
         ]
         env[self.name] = self.separator.join(directories)
 
@@ -421,9 +424,7 @@ class DeprioritizeSystemPaths(NameModifier):
         tty.debug(f"DeprioritizeSystemPaths: {self.name}", level=3)
         environment_value = env.get(self.name, "")
         directories = environment_value.split(self.separator) if environment_value else []
-        directories = deprioritize_system_paths(
-            [path_to_os_path(os.path.normpath(x)).pop() for x in directories]
-        )
+        directories = deprioritize_system_paths([str(pathlib.Path(x)) for x in directories])
         env[self.name] = self.separator.join(directories)
 
 
@@ -432,9 +433,7 @@ class PruneDuplicatePaths(NameModifier):
         tty.debug(f"PruneDuplicatePaths: {self.name}", level=3)
         environment_value = env.get(self.name, "")
         directories = environment_value.split(self.separator) if environment_value else []
-        directories = prune_duplicate_paths(
-            [path_to_os_path(os.path.normpath(x)).pop() for x in directories]
-        )
+        directories = prune_duplicate_paths([str(pathlib.Path(x)) for x in directories])
         env[self.name] = self.separator.join(directories)
 
 
@@ -737,7 +736,8 @@ class EnvironmentModifications:
         """
         tty.debug(f"EnvironmentModifications.from_sourcing_file: {filename}")
         # Check if the file actually exists
-        if not os.path.isfile(filename):
+        filename = pathlib.Path(filename)
+        if not filename.is_file():
             msg = f"Trying to source non-existing file: {filename}"
             raise RuntimeError(msg)
 
@@ -977,7 +977,7 @@ def inspect_path(
     env = EnvironmentModifications()
     # Inspect the prefix to check for the existence of common directories
     for relative_path, variables in inspections.items():
-        expected = os.path.join(root, os.path.normpath(relative_path))
+        expected = pathlib.Path(root) / relative_path
 
         if os.path.isdir(expected) and not exclude(expected):
             for variable in variables:

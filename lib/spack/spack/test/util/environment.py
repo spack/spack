@@ -6,6 +6,7 @@
 """Test Spack's environment utility functions."""
 import os
 import sys
+from pathlib import Path
 
 import pytest
 
@@ -71,6 +72,8 @@ def test_prune_duplicate_paths():
 def test_get_path(prepare_environment_for_tests):
     os.environ["TEST_ENV_VAR"] = os.pathsep.join(["/a", "/b", "/c/d"])
     expected = ["/a", "/b", "/c/d"]
+    if sys.platform == "win32":
+        expected = ["\\a", "\\b", "\\c\\d"]
     assert envutil.get_path("TEST_ENV_VAR") == expected
 
 
@@ -102,12 +105,18 @@ def test_env_flag(prepare_environment_for_tests):
 
 def test_path_set(prepare_environment_for_tests):
     envutil.path_set("TEST_ENV_VAR", ["/a", "/a/b", "/a/a"])
-    assert os.environ["TEST_ENV_VAR"] == "/a" + os.pathsep + "/a/b" + os.pathsep + "/a/a"
+    paths = ["/a", "/a/b", "/a/a"]
+    if sys.platform == "win32":
+        paths = ["\\a", "\\a\\b", "\\a\\a"]
+    expected = os.pathsep.join(paths)
+    assert os.environ["TEST_ENV_VAR"] == expected
 
 
 def test_path_put_first(prepare_environment_for_tests):
     envutil.path_set("TEST_ENV_VAR", test_paths)
     expected = ["/usr/bin", "/new_nonsense_path/a/b"]
+    if sys.platform == "win32":
+        expected = ["\\usr\\bin", "\\new_nonsense_path\\a\\b"]
     expected.extend([p for p in test_paths if p != "/usr/bin"])
     envutil.path_put_first("TEST_ENV_VAR", expected)
     assert envutil.get_path("TEST_ENV_VAR") == expected
@@ -124,8 +133,8 @@ def test_dump_environment(prepare_environment_for_tests, tmpdir):
 
 def test_reverse_environment_modifications(working_env):
     start_env = {
-        "PREPEND_PATH": os.sep + os.path.join("path", "to", "prepend", "to"),
-        "APPEND_PATH": os.sep + os.path.join("path", "to", "append", "to"),
+        "PREPEND_PATH": str(Path("path", "to", "prepend", "to")),
+        "APPEND_PATH": str(Path("path", "to", "append", "to")),
         "UNSET": "var_to_unset",
         "APPEND_FLAGS": "flags to append to",
     }
