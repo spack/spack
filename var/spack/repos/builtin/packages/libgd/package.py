@@ -47,7 +47,7 @@ class Libgd(AutotoolsPackage):
             string=True,
         )
         filter_file(
-            "#include<string.h>", 
-            "#include<string.h>\n#include<limits.h>",
+            "#include *<string.h>",
+            "#include <string.h>\n#include <limits.h>",
             "src/gd_gd2.c"
         )

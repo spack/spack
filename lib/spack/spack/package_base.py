@@ -1248,6 +1248,8 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
 
         # TODO: allow more than one active extendee.
         if deps:
+            if len(deps) == 2 and repr(deps[0]) == repr(deps[1]):
+                return deps[0]
             assert len(deps) == 1
             return deps[0]
 

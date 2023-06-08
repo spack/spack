@@ -209,7 +209,11 @@ class Glib(Package):
 
         # arguments for older versions
         if self.spec.satisfies("@:2.72"):
-            args.append("-Dgettext=external")
+            if self.spec["iconv"].name == "libc":
+                args.append("-Dgettext=libc")
+            else:
+                args.append("-Dgettext=external")
+
         if self.spec.satisfies("@:2.74"):
             if self.spec["iconv"].name == "libc":
                 args.append("-Diconv=libc")
