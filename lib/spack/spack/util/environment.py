@@ -983,7 +983,7 @@ def inspect_path(
     for relative_path, variables in inspections.items():
         expected = pathlib.Path(root) / relative_path
 
-        if os.path.isdir(expected) and not exclude(expected):
+        if os.path.isdir(expected) and not exclude(str(expected)):
             for variable in variables:
                 env.prepend_path(variable, str(expected))
 
