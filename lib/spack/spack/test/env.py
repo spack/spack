@@ -534,3 +534,22 @@ spack:
         with spack.config.override("concretizer:unify", config_scheme):
             e = ev.Environment(tmpdir.strpath)
             assert e.unify == env_scheme
+
+
+@pytest.mark.parametrize("config_scheme", [True, False, "when_possible"])
+def test_environment_config_scheme_used(tmpdir, config_scheme):
+    """Test to ensure environment uses the configuration concretization scheme."""
+    filename = str(tmpdir.join("spack.yaml"))
+    with open(filename, "w") as f:
+        f.write(
+            """\
+spack:
+  specs:
+  - mpileaks
+"""
+        )
+
+    with tmpdir.as_cwd():
+        with spack.config.override("concretizer:unify", config_scheme):
+            e = ev.Environment(tmpdir.strpath)
+            assert e.unify == config_scheme
