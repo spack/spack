@@ -769,7 +769,7 @@ class EnvironmentModifications:
             exclude=exclude,
             include=include,
         )
-        file_and_args = (filename,) + arguments
+        file_and_args = (str(filename),) + arguments
         after = sanitize(
             environment_after_sourcing_files(file_and_args, **kwargs),
             exclude=exclude,
@@ -974,7 +974,7 @@ def inspect_path(
 
         if os.path.isdir(expected) and not exclude(expected):
             for variable in variables:
-                env.prepend_path(variable, expected)
+                env.prepend_path(variable, str(expected))
 
     return env
 
