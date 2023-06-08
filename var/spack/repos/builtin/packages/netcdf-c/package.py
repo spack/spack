@@ -252,9 +252,7 @@ class NetcdfC(CMakePackage, AutotoolsPackage):
         conflicts("+blosc")
         conflicts("+zstd")
 
-    default_build_system = "cmake" if sys.platform == "win32" else "autotools"
-
-    build_system("cmake", "autotools", default=default_build_system)
+    build_system("cmake", "autotools", default="cmake")
 
     def setup_run_environment(self, env):
         if self.spec.satisfies("@4.9.0:+shared"):
