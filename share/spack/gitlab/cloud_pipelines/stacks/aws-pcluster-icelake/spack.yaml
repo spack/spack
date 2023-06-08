@@ -42,7 +42,8 @@ spack:
           - spack --version
           - spack arch
         # Use gcc from local container buildcache
-        - - spack mirror add local-cache /bootstrap/local-cache
+        - - spack buildcache rebuild-index /bootstrap/local-cache/
+          - spack mirror add local-cache /bootstrap/local-cache
           - spack gpg trust /bootstrap/public-key
         - - /bin/bash "${SPACK_ARTIFACTS_ROOT}/postinstall.sh" -fg
           - spack config --scope site add "packages:all:target:\"target=${SPACK_TARGET_ARCH}\""
