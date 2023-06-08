@@ -4469,7 +4469,7 @@ class Spec(object):
             if status_fn:
                 status = status_fn(node)
                 if status == InstallStatus.external:
-                    out += clr.colorize("@g{[<]}  ", color=color)
+                    out += clr.colorize("@g{[e]}  ", color=color)
                 elif status == InstallStatus.upstream:
                     out += clr.colorize("@g{[^]}  ", color=color)
                 elif status == InstallStatus.absent:
