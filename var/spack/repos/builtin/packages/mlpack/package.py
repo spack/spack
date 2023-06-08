@@ -20,7 +20,7 @@ class Mlpack(CMakePackage):
     version("4.0.1", sha256="4c746936ed9da9f16744240ed7b9f2815d3abb90c904071a1d1a628a9bbfb3a5")
 
     # TODO: Go bindings are not supported due to the absence of gonum in spack
-    #variant("go", default=False, description="Build Go bindings")
+    # variant("go", default=False, description="Build Go bindings")
     variant("julia", default=False, description="Build Julia bindings")
     variant("python", default=False, description="Build Ppython bindings")
     variant("r", default=False, description="Build R bindings")
@@ -33,10 +33,10 @@ class Mlpack(CMakePackage):
     depends_on("cereal@1.1.2:")
 
     # TODO: Go bindings are not supported due to the absence of gonum in spack
-    #with when("+go"):
-        # ref: src/mlpack/bindings/go/CMakeLists.txt
-        #depends_on("go@1.11.0:")
-        #depends_on("gonum")
+    # with when("+go"):
+    #    # ref: src/mlpack/bindings/go/CMakeLists.txt
+    #    depends_on("go@1.11.0:")
+    #    depends_on("gonum")
     with when("+julia"):
         # ref: src/mlpack/bindings/julia/CMakeLists.txt
         depends_on("julia@0.7.0:")
