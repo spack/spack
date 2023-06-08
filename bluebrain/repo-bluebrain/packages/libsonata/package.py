@@ -19,6 +19,7 @@ class Libsonata(CMakePackage):
     url = "https://pypi.io/packages/source/l/libsonata/libsonata-0.1.14.tar.gz"
 
     version("develop", branch="master", get_full_repo=True)
+    version("0.1.21", tag="v0.1.21")
     version("0.1.20", tag="v0.1.20")
     version("0.1.18", tag="v0.1.18")
     version("0.1.17", tag="v0.1.17")
@@ -32,7 +33,7 @@ class Libsonata(CMakePackage):
 
     # This was added to be able to build nmodl with catch2@3
     # TODO: remove in the next version
-    patch("0001-Include-Catch2-only-if-building-tests.patch")
+    patch("0001-Include-Catch2-only-if-building-tests.patch", when="@:0.1.20")
 
     variant("mpi", default=True, description="Enable MPI backend")
     variant("tests", default=False, description="Enable building tests")
