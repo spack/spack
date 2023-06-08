@@ -27,7 +27,5 @@ class Ensmallen(CMakePackage):
     depends_on("armadillo@9.800.0:")
 
     def cmake_args(self):
-        args = [
-            self.define_from_variant("USE_OPENMP", "openmp")
-        ]
+        args = [self.define_from_variant("USE_OPENMP", "openmp")]
         return args
