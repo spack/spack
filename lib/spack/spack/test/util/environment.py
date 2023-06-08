@@ -122,7 +122,7 @@ def test_dump_environment(prepare_environment_for_tests, tmpdir):
         if sys.platform == "win32":
             is_pwsh = os.environ.get("SPACK_SHELL", None) == "pwsh"
             if is_pwsh:
-                assert '$Env:TEST_ENV_VAR={}\n'.format(test_paths) in list(dumpfile)
+                assert "$Env:TEST_ENV_VAR={}\n".format(test_paths) in list(dumpfile)
             else:
                 assert 'set "TEST_ENV_VAR={}"\n'.format(test_paths) in list(dumpfile)
         else:

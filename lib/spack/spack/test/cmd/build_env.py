@@ -44,7 +44,7 @@ def test_dump(tmpdir):
             if sys.platform == "win32":
                 is_pwsh = os.environ.get("SPACK_SHELL", None) == "pwsh"
                 if is_pwsh:
-                    assert(any(line.startswith("$Env:PATH") for line in f.readlines()))
+                    assert any(line.startswith("$Env:PATH") for line in f.readlines())
                 else:
                     assert any(line.startswith('set "PATH=') for line in f.readlines())
             else:
