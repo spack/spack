@@ -181,7 +181,7 @@ class InstallStatus(enum.Enum):
     upstream = "@g{[^]}  "
     missing = "@g{[e]}  "
     absent = "@K{ - }  "
-    external = "@r{[-]} "
+    external = "@r{[-]}  "
 
 
 def colorize_spec(spec):
@@ -4477,9 +4477,9 @@ class Spec(object):
                 if status in list(InstallStatus):
                     out += clr.colorize(status.value, color=color)
                 elif status:
-                    out += clr.colorize("@g{[+]} ", color=color)
+                    out += clr.colorize("@g{[+]}  ", color=color)
                 else:
-                    out += clr.colorize("@r{ - } ", color=color)
+                    out += clr.colorize("@r{ - }  ", color=color)
 
             if hashes:
                 out += clr.colorize("@K{%s}  ", color=color) % node.dag_hash(hlen)
