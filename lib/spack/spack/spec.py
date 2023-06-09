@@ -4479,7 +4479,7 @@ class Spec(object):
                 elif status:
                     out += clr.colorize("@g{[+]}  ", color=color)
                 else:
-                    out += clr.colorize("@r{ - }  ", color=color)
+                    out += clr.colorize("@r{[-]}  ", color=color)
 
             if hashes:
                 out += clr.colorize("@K{%s}  ", color=color) % node.dag_hash(hlen)
