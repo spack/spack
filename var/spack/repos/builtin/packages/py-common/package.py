@@ -14,4 +14,4 @@ class PyCommon(PythonPackage):
 
     version("0.1.2", sha256="3dfa982670abefc870043b239eaa0ecd860be7aa952b1931c1356b426ff8c76a")
 
-    depends_on("py-setuptools", type=("build", "run"))
+    depends_on("py-setuptools", type="build")
