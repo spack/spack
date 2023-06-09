@@ -602,9 +602,7 @@ class PyTorch(PythonPackage, CudaPackage, ROCmPackage):
         # environment that one gets with spack load py-torch
         env.prepend_path("CMAKE_PREFIX_PATH", self.cmake_prefix_paths[0])
         # Similarly the libraries do not live at their "standard location"
-        ld_lib_base = join_path(self.prefix, self.spec["python"].package.platlib, "torch")
-        env.prepend_path("LD_LIBRARY_PATH", join_path(ld_lib_base, "lib"))
-        env.prepend_path("LD_LIBRARY_PATH", join_path(ld_lib_base, "lib64"))
+        env.prepend_path("LD_LIBRARY_PATH", self.spec["py-torch"].libs.directories[0])
 
     @run_before("install")
     def build_amd(self):
