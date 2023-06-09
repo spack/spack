@@ -179,9 +179,9 @@ SPECFILE_FORMAT_VERSION = 3
 class InstallStatus(enum.Enum):
     installed = "@g{[+]}  "
     upstream = "@g{[^]}  "
-    missing = "@g{[e]}  "
+    external = "@g{[e]}  "
     absent = "@K{ - }  "
-    external = "@r{[-]}  "
+    missing = "@r{[-]}  "
 
 
 def colorize_spec(spec):
