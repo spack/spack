@@ -31,7 +31,11 @@ specs are used instead
 for further documentation regarding the spec syntax, see:
     spack help --spec
 """
-    arguments.add_common_arguments(subparser, ["long", "very_long", "install_status"])
+    arguments.add_common_arguments(subparser, ["long", "very_long"])
+
+    install_status_group = subparser.add_mutually_exclusive_group()
+    arguments.add_common_arguments(install_status_group, ["install_status", "no_install_status"])
+
     format_group = subparser.add_mutually_exclusive_group()
     format_group.add_argument(
         "-y",

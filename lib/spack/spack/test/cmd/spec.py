@@ -157,7 +157,7 @@ def _parse_types(string):
 
 
 def test_spec_deptypes_nodes():
-    output = spec("--types", "--cover", "nodes", "dt-diamond")
+    output = spec("--types", "--cover", "nodes", "--no-install-status", "dt-diamond")
     types = _parse_types(output)
 
     assert types["dt-diamond"] == ["    "]
@@ -167,7 +167,7 @@ def test_spec_deptypes_nodes():
 
 
 def test_spec_deptypes_edges():
-    output = spec("--types", "--cover", "edges", "dt-diamond")
+    output = spec("--types", "--cover", "edges", "--no-install-status", "dt-diamond")
     types = _parse_types(output)
 
     assert types["dt-diamond"] == ["    "]

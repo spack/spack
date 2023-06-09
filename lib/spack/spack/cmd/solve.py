@@ -44,7 +44,11 @@ def setup_parser(subparser):
     )
 
     # Below are arguments w.r.t. spec display (like spack spec)
-    arguments.add_common_arguments(subparser, ["long", "very_long", "install_status"])
+    arguments.add_common_arguments(subparser, ["long", "very_long"])
+
+    install_status_group = subparser.add_mutually_exclusive_group()
+    arguments.add_common_arguments(install_status_group, ["install_status", "no_install_status"])
+
     subparser.add_argument(
         "-y",
         "--yaml",
