@@ -13,17 +13,15 @@ class PyArchngv(PythonPackage):
     git = "ssh://git@bbpgitlab.epfl.ch/nse/ArchNGV.git"
 
     version("develop", branch="main")
-    version("2.0.2", tag="ArchNGV-v2.0.2")
-    version("2.0.1", tag="ArchNGV-v2.0.1")
-    version("3.0.0", tag="ArchNGV-v3.0.0")
+    version("3.0.2", tag="ArchNGV-v3.0.2")
 
     depends_on("py-setuptools@42:", type="build")
 
-    depends_on("py-numpy@1.19.5:", type=("build", "run"))
+    depends_on("py-numpy@1.19.5:1.22", type=("build", "run"))
     depends_on("py-scipy@1.5.0:", type=("build", "run"))
     depends_on("py-h5py@3.1.0:", type=("build", "run"))
-    depends_on("py-libsonata@0.1.8:", type=("build", "run"))
-    depends_on("py-bluepysnap@0.13:0.99", type=("build", "run"))
+    depends_on("py-libsonata@0.1.21:", type=("build", "run"))
+    depends_on("py-bluepysnap@1.0.5:", type=("build", "run"))
     depends_on("py-cached-property@1.5:", type=("build", "run"))
     depends_on("py-voxcell@3.0.0:", type=("build", "run"))
     depends_on("py-vascpy@0.1.0:", type=("build", "run"))
@@ -46,12 +44,13 @@ class PyArchngv(PythonPackage):
     depends_on("py-neurots@2.5.0", type=("build", "run"))
     depends_on("py-diameter-synthesis@0.2.5", type=("build", "run"))
     depends_on("py-trimesh@2.38.10:", type=("build", "run"))
+    # needed for trimesh marchingcubes
+    depends_on("py-scikit-image", type=("build", "run"))
 
     depends_on("py-dask+distributed+bag@2.0:", type=("build", "run"))
     depends_on("py-distributed@2.0:", type=("build", "run"))
     depends_on("py-dask-mpi@2.0:", type=("build", "run"))
 
-    depends_on("py-mock", type="test")
     depends_on("py-pytest", type="test")
 
     @run_after("install")

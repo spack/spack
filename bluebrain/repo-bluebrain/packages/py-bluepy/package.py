@@ -14,7 +14,6 @@ class PyBluepy(PythonPackage):
 
     version("develop", branch="main")
     version("2.5.1", tag="bluepy-v2.5.1")
-    version("2.4.5", tag="bluepy-v2.4.5")
 
     depends_on("py-setuptools", type=("build", "run"))
 
@@ -26,7 +25,6 @@ class PyBluepy(PythonPackage):
     depends_on("py-morph-tool@2.4.3:2", type=("build", "run"))
     depends_on("py-morphio@3.0.1:3", type=("build", "run"))
     depends_on("py-voxcell@3", type=("build", "run"))
-    depends_on("py-bluepysnap@0.13.0:0", type=("build", "run"), when="@:2.4")
     depends_on("py-cached-property@1.0:", type=("build", "run"))
     depends_on("brion+python@3.3.0:3", type=("build", "run"))
 
