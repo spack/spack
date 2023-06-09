@@ -41,7 +41,7 @@ class SpatialIndex(PythonPackage):
     conflicts("py-libsonata@0.1.15")
     depends_on("py-morphio", type=("build", "run"), when="@:2.0.0")
     depends_on("py-morphio@3.3.5:", type=("build", "run"), when="@2.1.0:")
-    depends_on("py-morpho-kit", type=("build", "run"))
+    depends_on("py-morpho-kit", type=("build", "run"), when="@:0.8.3")
     depends_on("py-mvdtool~mpi", type=("build", "run"), when="@:0.8.3")
     depends_on("py-numpy-quaternion", type=("build", "run"))
     depends_on("py-numpy", type=("build", "run"))
