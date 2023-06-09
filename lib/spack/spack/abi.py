@@ -7,9 +7,6 @@ import os
 
 from llnl.util.lang import memoized
 
-import spack.spec
-from spack.compilers.clang import Clang
-from spack.spec import CompilerSpec
 from spack.util.executable import Executable, ProcessError
 
 
@@ -32,9 +29,11 @@ class ABI:
     def _gcc_get_libstdcxx_version(self, version):
         """Returns gcc ABI compatibility info by getting the library version of
         a compiler's libstdc++ or libgcc_s"""
+        import spack.spec
         from spack.build_environment import dso_suffix
+        from spack.compilers.clang import Clang
 
-        spec = CompilerSpec("gcc", version)
+        spec = spack.spec.CompilerSpec("gcc", version)
         compilers = spack.compilers.CompilerQuery(spec).all_compilers()
         if not compilers:
             return None
