@@ -13,11 +13,13 @@ class PyGlmnetPython(PythonPackage):
 
     homepage = "https://glmnet-python.readthedocs.io/en/latest/glmnet_vignette.html"
 
-    url = "https://github.com/bbalasub1/glmnet_python/archive/refs/tags/1.0.tar.gz"
+    # This is a fork of the bbalasub1/glmnet_python repo. The docs frequently
+    # reference the original, but conda downloads this source instead as it
+    # fixes an issue with out-of-date scipy functions
+    url = "https://github.com/johnlees/glmnet_python/archive/refs/tags/v1.0.2.tar.gz"
 
-    version("1.0", sha256="33ee0af8ed3ff4349f6d8275a53b27b9447ba1b5df475369c05d17a85991b2cd")
+    version("1.0.2", sha256="7a5550514140dabbd27ad4eb1c04db64199d9bb89541e088d9bb162570205e76")
 
     depends_on("py-setuptools", type="build")
     depends_on("py-joblib@0.10.3:", type=("build", "run"))
-    # https://github.com/bbalasub1/glmnet_python/issues/64
-    depends_on("py-scipy@:1.8.1", type=("build", "run"))
+    depends_on("py-scipy", type=("build", "run"))
