@@ -50,6 +50,7 @@ line is a spec for a particular installation of the mpileaks package.
 """
 import collections
 import collections.abc
+import enum
 import io
 import itertools
 import os
@@ -173,7 +174,7 @@ CLEARSIGN_FILE_REGEX = re.compile(
 SPECFILE_FORMAT_VERSION = 3
 
 
-class InstallStatus:
+class InstallStatus(enum.Enum):
     installed = 0
     upstream = 1
     missing = 2
