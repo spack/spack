@@ -46,6 +46,12 @@ class Nvshmem(CMakePackage, MakefilePackage, CudaPackage):
         when="@2.6:",
         description="Build with support for IBRC remote transport",
     )
+    variant(
+        "ofi_libfabric_plugin",
+        default=spack.platforms.cray.slingshot_network(),
+        when="+nccl",
+        description="Builds with support for OFI libfabric enhanced NCCL communication lib",
+    )
     conflicts("~cuda")
 
     build_system("makefile", "cmake", default="makefile")
@@ -63,6 +69,7 @@ class Nvshmem(CMakePackage, MakefilePackage, CudaPackage):
     depends_on("ucx", when="+ucx")
     depends_on("gdrcopy", when="+gdrcopy")
     depends_on("nccl", when="+nccl")
+    depends_on("aws-ofi-nccl", when="+nccl +ofi_libfabric_plugin")
 
     def setup_build_environment(self, env):
         env.set("CUDA_HOME", self.spec["cuda"].prefix)
@@ -84,34 +91,57 @@ class Nvshmem(CMakePackage, MakefilePackage, CudaPackage):
             env.set("NVSHMEM_MPI_SUPPORT", "1")
             env.set("MPI_HOME", self.spec["mpi"].prefix)
 
+            if self.spec.satisfies("^spectrum-mpi"):
+                env.set("NVSHMEM_LMPI","-lmpi_ibm")
+            else:
+                env.set("NVSHMEM_LMPI","-lmpi")
+
             if self.spec.satisfies("^spectrum-mpi") or self.spec.satisfies("^openmpi"):
                 env.set("NVSHMEM_MPI_IS_OMPI", "1")
                 if self.spec.satisfies("^openmpi") and self.spec.satisfies("^openmpi +pmix"):
                     env.set("NVSHMEM_PMIX_SUPPORT", "1")
+                    env.set("NVSHMEM_DEFAULT_PMIX", "1")
                 else:
                     env.set("NVSHMEM_PMIX_SUPPORT", "0")
+                    env.set("NVSHMEM_DEFAULT_PMIX", "0")
+
+                env.set("NVSHMEM_DEFAULT_PMI2", "0")
             else:
                 env.set("NVSHMEM_MPI_IS_OMPI", "0")
                 env.set("NVSHMEM_PMIX_SUPPORT", "0")
+
+        if "+ofi_libfabric_plugin" in self.spec:
+            env.set("export NVSHMEM_LIBFABRIC_SUPPORT", "1")
+        else:
+            env.set("export NVSHMEM_LIBFABRIC_SUPPORT", "0")
 
         if "+shmem" in self.spec:
             env.set("NVSHMEM_SHMEM_SUPPORT", "1")
             env.set("SHMEM_HOME", self.spec["mpi"].prefix)
             env.set("NVSHMEM_LSHMEM", "-loshmem")
+        else:
+            env.set("NVSHMEM_SHMEM_SUPPORT", "0")
 
         if "+gpu_initiated_support" in self.spec:
             if self.spec.satisfies("@2.9:"):
-#                env.set("NVSHMEM_IBGDA_SUPPORT", "1")
+                # Disable temporarily
+                env.set("NVSHMEM_IBGDA_SUPPORT", "0")
                 env.set("NVSHMEM_IBGDA_SUPPORT_GPUMEM_ONLY", "1")
-#-L$(NON_STANDARD_MLX5_LOCATION) -lmlx5
             else:
                 env.set("NVSHMEM_GPUINITIATED_SUPPORT", "1")
+                if self.spec.satisfies("@2.9:"):
+                    env.set("NVSHMEM_IBGDA_SUPPORT", "0")
+                    env.set("NVSHMEM_IBGDA_SUPPORT_GPUMEM_ONLY", "0")
 
         if "+ibrc" in self.spec:
             env.set("NVSHMEM_IBRC_SUPPORT", "1")
+        else:
+            env.set("NVSHMEM_IBRC_SUPPORT", "0")
 
     @when("@2.6:")
     def setup_run_environment(self, env):
+        nvshmem_home = self.spec["nvshmem"].prefix
+        env.append_path("LD_LIBRARY_PATH", nvshmem_home.lib)
         if "+gpu_initiated_support" in self.spec:
             if self.spec.satisfies("@2.9:"):
                 env.set("NVSHMEM_IB_ENABLE_IBGDA", "1")
@@ -120,10 +150,13 @@ class Nvshmem(CMakePackage, MakefilePackage, CudaPackage):
             env.set("NVSHMEM_BOOTSTRAP", "MPI")
         if self.spec.satisfies("^spectrum-mpi") or self.spec.satisfies("^openmpi"):
             env.set("NVSHMEM_MPI_IS_OMPI", "1")
-            env.set("NVSHMEM_BOOTSTRAP_PMI", "PMIX")
             if self.spec.satisfies("^openmpi") and self.spec.satisfies("^openmpi +pmix"):
                 env.set("NVSHMEM_PMIX_SUPPORT", "1")
                 env.set("NVSHMEM_BOOTSTRAP_PMI", "PMIX")
             else:
                 env.set("NVSHMEM_PMIX_SUPPORT", "0")
                 env.set("NVSHMEM_BOOTSTRAP_PMI", "PMI")
+
+    @when("@2.6:")
+    def setup_dependent_run_environment(self, env, dependent_spec):
+        self.setup_run_environment(env)
