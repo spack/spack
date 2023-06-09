@@ -311,7 +311,7 @@ class Lbann(CachedCMakePackage, CudaPackage, ROCmPackage):
 
     depends_on("onednn cpu_runtime=omp gpu_runtime=none", when="+onednn")
     depends_on("onnx", when="+onnx")
-    depends_on("nvshmem", when="+nvshmem")
+    depends_on("nvshmem +gpu_initiated_support +ibrc", when="+nvshmem")
 
     depends_on("spdlog", when="@:0.90,0.102:")
     depends_on("zstr")
