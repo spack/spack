@@ -13,6 +13,11 @@ class Libvterm(MakefilePackage):
     homepage = "http://www.leonerd.org.uk/code/libvterm/"
     url = "http://www.leonerd.org.uk/code/libvterm/libvterm-0.1.3.tar.gz"
 
+    version(
+        "0.3.2",
+        sha256="91eb5088069f4e6edab69e14c4212f6da0192e65695956dc048016a0dab8bcf6",
+        url="https://github.com/neovim/deps/raw/6c0a5213d062f2210fd5fecb9524ac27ca018ef4/opt/libvterm-0.3.2.tar.gz",
+    )
     version("0.3.1", sha256="25a8ad9c15485368dfd0a8a9dca1aec8fea5c27da3fa74ec518d5d3787f0c397")
     version("0.3", sha256="61eb0d6628c52bdf02900dfd4468aa86a1a7125228bab8a67328981887483358")
     version("0.2", sha256="4c5150655438cfb8c57e7bd133041140857eb04defd0e544521c0e469258e105")
