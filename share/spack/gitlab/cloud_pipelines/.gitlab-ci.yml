@@ -736,12 +736,15 @@ deprecated-ci-build:
     # Use gcc from local container buildcache
     - - . "./share/spack/setup-env.sh"
       - . /etc/profile.d/modules.sh
+      - spack buildcache rebuild-index /bootstrap/local-cache/
       - spack mirror add local-cache /bootstrap/local-cache
       - spack gpg trust /bootstrap/public-key
       - cd "${CI_PROJECT_DIR}" && curl -sOL https://raw.githubusercontent.com/spack/spack-configs/main/AWS/parallelcluster/postinstall.sh
       - sed -i -e "s/spack arch -t/echo ${SPACK_TARGET_ARCH}/g" postinstall.sh
+      - sed -i.bkp s/"spack install gcc"/"spack install --cache-only --reuse gcc"/ postinstall.sh
+      - diff postinstall.sh postinstall.sh.bkp || echo Done
       - /bin/bash postinstall.sh -fg
-      - spack config --scope site add "packages:all:target:\"target=${SPACK_TARGET_ARCH}\""
+      - spack config --scope site add "packages:all:target:\"${SPACK_TARGET_ARCH}\""
   after_script:
     - - mv "${CI_PROJECT_DIR}/postinstall.sh" "${CI_PROJECT_DIR}/jobs_scratch_dir/"
 
