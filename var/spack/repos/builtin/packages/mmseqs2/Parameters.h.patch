@@ -1,0 +1,10 @@
+--- src/commons/Parameters.h	2022-10-13 09:59:33.000000000 +0100
++++ src/commons/Parameters.h.patched	2023-06-09 14:44:40.914761371 +0100
+@@ -10,6 +10,7 @@
+ #include <typeinfo>
+ #include <cstddef>
+ #include <utility>
++#include <cstdint>
+ 
+ #include "Command.h"
+ #include "MultiParam.h"

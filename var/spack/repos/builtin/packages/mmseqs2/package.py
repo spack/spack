@@ -23,6 +23,11 @@ class Mmseqs2(CMakePackage):
     depends_on("zstd")
     depends_on("mpi", when="+mpi")
 
+    patch("Debug.h.patch", level=0, when="%gcc@13:")
+    patch("Parameters.h.patch", level=0, when="%gcc@13:")
+    patch("Util.h.patch", level=0, when="%gcc@13:")
+    patch("Indexer.h.patch", level=0, when="%gcc@13:")
+
     # apple-clang will build with +openmp with llvm-openmp as a dependency
     # however when running with real data, it threw segmentation faults
     conflicts("%apple-clang", when="+openmp")
