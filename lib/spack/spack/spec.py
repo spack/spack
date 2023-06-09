@@ -174,12 +174,14 @@ CLEARSIGN_FILE_REGEX = re.compile(
 SPECFILE_FORMAT_VERSION = 3
 
 
+# InstallStatus is used to map install statuses to symbols for display
+# Options are artificially disjoint for dispay purposes
 class InstallStatus(enum.Enum):
-    installed = 0
-    upstream = 1
-    missing = 2
-    absent = 3
-    external = 4
+    installed = "@g{[+]}  "
+    upstream = "@g{[^]}  "
+    missing = "@g{[e]}  "
+    absent = "@K{ - }  "
+    external = "@r{[-]} "
 
 
 def colorize_spec(spec):
@@ -4437,7 +4439,10 @@ class Spec(object):
 
     def tree(self, **kwargs):
         """Prints out this spec and its dependencies, tree-formatted
-        with indentation."""
+        with indentation.
+
+        Status function may either output a boolean or an InstallStatus
+        """
         color = kwargs.pop("color", clr.get_color_when())
         depth = kwargs.pop("depth", False)
         hashes = kwargs.pop("hashes", False)
@@ -4469,20 +4474,12 @@ class Spec(object):
 
             if status_fn:
                 status = status_fn(node)
-                if status == InstallStatus.external:
-                    out += clr.colorize("@g{[e]}  ", color=color)
-                elif status == InstallStatus.upstream:
-                    out += clr.colorize("@g{[^]}  ", color=color)
-                elif status == InstallStatus.absent:
-                    out += clr.colorize("@K{ - }  ", color=color)
-                elif status == InstallStatus.installed:
-                    out += clr.colorize("@g{[+]}  ", color=color)
-                elif status == InstallStatus.missing:
-                    out += clr.colorize("@r{[-]}  ", color=color)
+                if status in list(InstallStatus):
+                    out += clr.colorize(status.value, color=color)
+                elif status:
+                    out += clr.colorize("@g{[+]} ", color=color)
                 else:
-                    raise ValueError(
-                        "Node %s status %s is not a valid install status" % (node, status)
-                    )
+                    out += clr.colorize("@r{ - } ", color=color)
 
             if hashes:
                 out += clr.colorize("@K{%s}  ", color=color) % node.dag_hash(hlen)
