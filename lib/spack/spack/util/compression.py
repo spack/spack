@@ -77,8 +77,12 @@ def _system_untar(archive_file):
         archive_file (str): absolute path to the archive to be extracted.
         Can be one of .tar(.[gz|bz2|xz|Z]) or .(tgz|tbz|tbz2|txz).
     """
-    outfile = os.path.basename(strip_extension(archive_file, "tar"))
-
+    archive_file_no_ext = strip_extension(archive_file, "tar")
+    outfile = os.path.basename(archive_file_no_ext)
+    if archive_file_no_ext == archive_file:
+        # the archive file has no extension. Tar on windows cannot untar onto itself
+        archive_file = archive_file_no_ext + ".tar"
+        shutil.copy(archive_file_no_ext, archive_file)
     tar = which("tar", required=True)
     tar.add_default_arg("-oxf")
     tar(archive_file)
