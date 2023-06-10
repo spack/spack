@@ -20,12 +20,12 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@8e5e7e5ab8b370d6c329ec480221332ada57f0ab # @v2
-    - uses: actions/setup-python@d27e3f3d7c64b4bbf8e4abfb9b63b83e846e0435 # @v2
+    - uses: actions/setup-python@bd6b4b6205c4dbad673328db7b31b7fab9e241c0 # @v2
       with:
         python-version: ${{inputs.python_version}}
     - name: Install Python packages
       run: |
-        pip install --upgrade pip six setuptools pytest coverage[toml]
+        pip install --upgrade pip setuptools pytest coverage[toml]
     - name: Package audits (with coverage)
       if: ${{ inputs.with_coverage == 'true' }}
       run: |
@@ -38,7 +38,7 @@ jobs:
       run: |
           . share/spack/setup-env.sh
           $(which spack) audit packages
-    - uses: codecov/codecov-action@40a12dcee2df644d47232dde008099a3e9e4f865 # @v2.1.0
+    - uses: codecov/codecov-action@eaaf4bedf32dbdc6b720b63067d99c4d77d6047d # @v2.1.0
       if: ${{ inputs.with_coverage == 'true' }}
       with:
         flags: unittests,linux,audits

@@ -21,6 +21,7 @@ class IntelXed(Package):
 
     # Current versions now have actual releases and tags.
     version("main", branch="main")
+    version("2023.04.16", tag="v2023.04.16")
     version("2022.10.11", tag="v2022.10.11")
     version("2022.08.11", tag="v2022.08.11")
     version("2022.04.17", tag="v2022.04.17")
@@ -28,30 +29,31 @@ class IntelXed(Package):
     version("11.2.0", tag="11.2.0")
 
     # The old 2019.03.01 version (before there were tags).
-    version("10.2019.03", commit="b7231de4c808db821d64f4018d15412640c34113")
+    version("10.2019.03", commit="b7231de4c808db821d64f4018d15412640c34113", deprecated=True)
 
-    resource(name="mbuild", placement="mbuild", git=mbuild_git, branch="main", when="@main")
+    # XED wants the mbuild directory adjacent to xed in the same directory.
+    mdir = join_path("..", "mbuild")
 
+    resource(name="mbuild", placement=mdir, git=mbuild_git, branch="main", when="@main")
+
+    # Match xed more closely with the version of mbuild at the time.
     resource(
-        name="mbuild",
-        placement="mbuild",
-        git=mbuild_git,
-        commit="09b6654be0c52bf1df44e88c88b411a67b624cbd",
-        when="@:9999",
+        name="mbuild", placement=mdir, git=mbuild_git, tag="v2022.07.28", when="@2022.07:9999"
     )
+
+    resource(name="mbuild", placement=mdir, git=mbuild_git, tag="v2022.04.17", when="@:2022.06")
 
     variant("debug", default=False, description="Enable debug symbols")
     variant("pic", default=False, description="Compile with position independent code.")
 
     # The current mfile uses python3 by name.
-    depends_on("python@3.4:", type="build")
+    depends_on("python@3.6:", type="build")
 
     patch("1201-segv.patch", when="@12.0.1")
     patch("2019-python3.patch", when="@10.2019.03")
+    patch("libxed-ild.patch", when="@12.0:2022.12")
 
-    conflicts("target=ppc64:", msg="intel-xed only runs on x86")
-    conflicts("target=ppc64le:", msg="intel-xed only runs on x86")
-    conflicts("target=aarch64:", msg="intel-xed only runs on x86")
+    requires("target=x86_64:", msg="intel-xed only runs on x86/x86_64")
 
     mycflags = []  # type: List[str]
 
@@ -67,9 +69,18 @@ class IntelXed(Package):
 
     def install(self, spec, prefix):
         # XED needs PYTHONPATH to find the mbuild directory.
-        mbuild_dir = join_path(self.stage.source_path, "mbuild")
+        mbuild_dir = join_path(self.stage.source_path, "..", "mbuild")
         python_path = os.getenv("PYTHONPATH", "")
         os.environ["PYTHONPATH"] = mbuild_dir + ":" + python_path
+
+        # In 2023.04.16, the xed source directory must be exactly 'xed',
+        # so add a symlink, but don't fail if the link already exists.
+        # See: https://github.com/intelxed/xed/issues/300
+        try:
+            lname = join_path(self.stage.source_path, "..", "xed")
+            os.symlink("spack-src", lname)
+        except OSError:
+            pass
 
         mfile = Executable(join_path(".", "mfile.py"))
 

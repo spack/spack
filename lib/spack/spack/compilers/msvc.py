@@ -30,7 +30,7 @@ fortran_mapping = {
 
 
 def get_valid_fortran_pth(comp_ver):
-    cl_ver = str(comp_ver).split("@")[1]
+    cl_ver = str(comp_ver)
     sort_fn = lambda fc_ver: StrictVersion(fc_ver)
     sort_fc_ver = sorted(list(avail_fc_version), key=sort_fn)
     for ver in sort_fc_ver:
@@ -75,7 +75,7 @@ class Msvc(Compiler):
     # file based on compiler executable path.
 
     def __init__(self, *args, **kwargs):
-        new_pth = [pth if pth else get_valid_fortran_pth(args[0]) for pth in args[3]]
+        new_pth = [pth if pth else get_valid_fortran_pth(args[0].version) for pth in args[3]]
         args[3][:] = new_pth
         super(Msvc, self).__init__(*args, **kwargs)
         if os.getenv("ONEAPI_ROOT"):
@@ -151,7 +151,11 @@ class Msvc(Compiler):
         arch = arch.replace("-", "_")
         # vcvars can target specific sdk versions, force it to pick up concretized sdk
         # version, if needed by spec
-        sdk_ver = "" if "win-sdk" not in pkg.spec else pkg.spec["win-sdk"].version.string + ".0"
+        sdk_ver = (
+            ""
+            if "win-sdk" not in pkg.spec or pkg.name == "win-sdk"
+            else pkg.spec["win-sdk"].version.string + ".0"
+        )
         # provide vcvars with msvc version selected by concretization,
         # not whatever it happens to pick up on the system (highest available version)
         out = subprocess.check_output(  # novermin
@@ -164,7 +168,7 @@ class Msvc(Compiler):
             out = out.decode("utf-16le", errors="replace")  # novermin
 
         int_env = dict(
-            (key.lower(), value)
+            (key, value)
             for key, _, value in (line.partition("=") for line in out.splitlines())
             if key and value
         )

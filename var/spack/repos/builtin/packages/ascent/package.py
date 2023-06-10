@@ -52,7 +52,9 @@ class Ascent(CMakePackage, CudaPackage):
 
     version("develop", branch="develop", submodules=True)
 
-    version("0.9.0", tag="v0.9.0", submodules=True, preferred=True)
+    version("0.9.1", tag="v0.9.1", submodules=True, preferred=True)
+
+    version("0.9.0", tag="v0.9.0", submodules=True)
 
     version("0.8.0", tag="v0.8.0", submodules=True)
 
@@ -181,6 +183,8 @@ class Ascent(CMakePackage, CudaPackage):
     depends_on("vtk-m+cuda", when="@0.9.0: +vtkh+cuda")
     depends_on("vtk-m+fpic", when="@0.8.0: +vtkh")
     depends_on("vtk-m~shared+fpic", when="@0.8.0: +vtkh~shared")
+    # Ascent defaults to C++11
+    depends_on("kokkos std=11", when="+vtkh ^vtk-m +kokkos")
 
     #######################
     # VTK-h
