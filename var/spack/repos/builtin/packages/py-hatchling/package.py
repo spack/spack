@@ -13,6 +13,7 @@ class PyHatchling(PythonPackage):
     pypi = "hatchling/hatchling-1.4.1.tar.gz"
     git = "https://github.com/pypa/hatch"
 
+    version("1.17.0", sha256="b1244db3f45b4ef5a00106a46612da107cdfaf85f1580b8e1c059fefc98b0930")
     version("1.14.0", sha256="462ea91df03ff5d52813b5613fec1313a1a2059d2e37343e572b3f979867c5da")
     version("1.13.0", sha256="f8d275a2cc720735286b7c2e2bc35da05761e6d3695c2fa416550395f10c53c7")
     version("1.10.0", sha256="5d31f43dffaf6265c808e1b5353662ffa5146d844278b55caa6c7f74f427ec50")

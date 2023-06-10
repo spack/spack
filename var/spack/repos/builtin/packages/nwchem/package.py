@@ -67,12 +67,16 @@ class Nwchem(Package):
                 "MRCC_METHODS=y",  # TCE extra module
                 "IPCCSD=y",  # TCE extra module
                 "EACCSD=y",  # TCE extra module
+                "V=1",  # verbose build
             ]
         )
         if self.spec.satisfies("@7.2.0:"):
             args.extend(["NWCHEM_MODULES=all python gwmol"])
+            args.extend(["USE_HWOPT=n"])
         else:
             args.extend(["NWCHEM_MODULES=all python"])
+            # archspec flags are injected through the compiler wrapper
+            filter_file("(-mtune=native|-mcpu=native|-xHost)", "", "src/config/makefile.h")
 
         # TODO: query if blas/lapack/scalapack uses 64bit Ints
         # A flag to distinguish between 32bit and 64bit integers in linear
@@ -100,7 +104,7 @@ class Nwchem(Package):
 
         if "+fftw3" in spec:
             args.extend(["USE_FFTW3=y"])
-            args.extend(["FFTW3_LIB=%s" % fftw.ld_flags])
+            args.extend(["LIBFFTW3=%s" % fftw.ld_flags])
             args.extend(["FFTW3_INCLUDE={0}".format(spec["fftw-api"].prefix.include)])
 
         with working_dir("src"):

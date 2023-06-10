@@ -217,6 +217,12 @@ class Paraview(CMakePackage, CudaPackage, ROCmPackage):
     depends_on("netcdf-c")
     depends_on("pegtl")
     depends_on("protobuf@3.4:")
+    # Paraview 5.10 can't build with protobuf > 3.18
+    # https://github.com/spack/spack/issues/37437
+    depends_on("protobuf@3.4:3.18", when="@:5.10%oneapi")
+    depends_on("protobuf@3.4:3.18", when="@:5.10%intel@2021:")
+    depends_on("protobuf@3.4:3.18", when="@:5.10%xl")
+    depends_on("protobuf@3.4:3.18", when="@:5.10%xl_r")
     depends_on("libxml2")
     depends_on("lz4")
     depends_on("xz")
@@ -288,6 +294,8 @@ class Paraview(CMakePackage, CudaPackage, ROCmPackage):
     # Fix VTK to remove deprecated ADIOS2 functions
     # https://gitlab.kitware.com/vtk/vtk/-/merge_requests/10113
     patch("adios2-remove-deprecated-functions.patch", when="@5.10: ^adios2@2.9:")
+
+    patch("exodusII-netcdf4.9.0.patch", when="@:5.10.2")
 
     generator("ninja", "make", default="ninja")
     # https://gitlab.kitware.com/paraview/paraview/-/issues/21223

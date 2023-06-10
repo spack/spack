@@ -16,6 +16,7 @@ class Libcint(CMakePackage):
     #
     # Versions
     #
+    version("5.3.0", sha256="9d4fae074b53a8ce0335e2672d423deca2bda6df8020352e59d23c17a0c1239d")
     version("5.2.0", sha256="f9dba1040c445ee81ae5a2a59d9f1291fc0406edad0fb5ea37fceb66c2ef7799")
     version("5.1.3", sha256="a239275a0464360c904fd06e67d2e76ef1147e04bc634befb40c67d3e79b3638")
     version("3.0.13", sha256="ee64f0bc7fb6073063ac3c9bbef8951feada141e197b1a5cc389c8cccf8dc360")

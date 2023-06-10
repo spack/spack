@@ -76,6 +76,7 @@ or refer to the full manual below.
    chain
    extensions
    pipelines
+   signing
 
 .. toctree::
    :maxdepth: 2
