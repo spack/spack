@@ -13,9 +13,9 @@ class PyGlmnetPython(PythonPackage):
 
     homepage = "https://glmnet-python.readthedocs.io/en/latest/glmnet_vignette.html"
 
-    # This is a fork of the bbalasub1/glmnet_python repo. The docs frequently
-    # reference the original, but conda downloads this source instead as it
-    # fixes an issue with out-of-date scipy functions
+    # This is a fork of the bbalasub1/glmnet_python repo that fixes out-of-date
+    # scipy functions. The docs frequently reference the original repo, but this
+    # is version that is on conda-forge
     url = "https://github.com/johnlees/glmnet_python/archive/refs/tags/v1.0.2.tar.gz"
 
     version("1.0.2", sha256="7a5550514140dabbd27ad4eb1c04db64199d9bb89541e088d9bb162570205e76")
