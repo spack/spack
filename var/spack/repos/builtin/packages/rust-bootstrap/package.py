@@ -75,9 +75,13 @@ class RustBootstrap(Package):
     os = platform.system().lower()
     target = rust_targets[platform.machine().lower()]
 
-    # Set unchecksumed nightly version
+    # Pre-release versions of the bootstrap compiler.
+    # Note: These versions are unchecksumed since they will change
+    # periodically as new versions are released.
+    version("beta")
     version("nightly")
 
+    # Stable releases of the bootstrap compiler.
     # Construct releases for current system configuration.
     for release in rust_releases:
         if os in rust_releases[release] and target in rust_releases[release][os]:

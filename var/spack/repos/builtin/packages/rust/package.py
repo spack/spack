@@ -17,6 +17,7 @@ class Rust(Package):
 
     maintainers("alecbcs", "AndrewGaspar")
 
+    # Core dependencies
     depends_on("cmake@3.13.4:", type="build")
     depends_on("curl+nghttp2")
     depends_on("libgit2")
@@ -25,22 +26,32 @@ class Rust(Package):
     depends_on("pkgconfig", type="build")
     depends_on("python", type="build")
 
-    # Compiling Rust requires a previous version of Rust. The
-    # easiest way to bootstrap a Rust environment is to download the binary
-    # distribution of the compiler and build with that.
+    # Compiling Rust requires a previous version of Rust.
+    # The easiest way to bootstrap a Rust environment is to
+    # download the binary distribution of the compiler and build with that.
     depends_on("rust-bootstrap", type="build")
+
+    # Pre-release version dependencies
+    depends_on("rust-bootstrap@beta", type="build", when="@beta")
+    depends_on("rust-bootstrap@nightly", type="build", when="@master")
     depends_on("rust-bootstrap@nightly", type="build", when="@nightly")
+
+    # Stable version dependencies
     depends_on("rust-bootstrap@1.59:1.60", type="build", when="@1.60")
     depends_on("rust-bootstrap@1.64:1.65", type="build", when="@1.65")
     depends_on("rust-bootstrap@1.69:1.70", type="build", when="@1.70")
 
-    # When adding a version of Rust you may need to add an additional
-    # version to rust-bootstrap as the minimum bootstrapping requirements
-    # increase. As a general rule of thumb Rust can be built with the previous
-    # major version of the compiler or the current version of the compiler as
-    # shown above.
+    # When adding a version of Rust you may need to add an additional version
+    # to rust-bootstrap as the minimum bootstrapping requirements increase.
+    # As a general rule of thumb Rust can be built with either the previous major
+    # version or the current version of the compiler as shown above.
+
+    # Pre-release versions
+    version("beta")
+    version("master", branch="master", submodules=True)
     version("nightly")
 
+    # Stable versions
     version("1.70.0", sha256="b2bfae000b7a5040e4ec4bbc50a09f21548190cb7570b0ed77358368413bd27c")
     version("1.65.0", sha256="5828bb67f677eabf8c384020582b0ce7af884e1c84389484f7f8d00dd82c0038")
     version("1.60.0", sha256="20ca826d1cf674daf8e22c4f8c4b9743af07973211c839b85839742314c838b7")
@@ -71,9 +82,11 @@ class Rust(Package):
         return match.group(1) if match else None
 
     def setup_build_environment(self, env):
+        # Manually inject the path of ar for build.
         ar = which("ar", required=True)
         env.set("AR", ar.path)
 
+        # Manually inject the path of openssl's certs for build.
         certs = join_path(self.spec["openssl"].prefix, "etc/openssl/cert.pem")
         env.set("CARGO_HTTP_CAINFO", certs)
 
