@@ -69,10 +69,7 @@ class RustBootstrap(Package):
 
     # Convert operating system names into the format used for Rust
     # download server.
-    rust_os = {
-        "darwin": "apple-darwin",
-        "linux": "unknown-linux-gnu",
-    }
+    rust_os = {"darwin": "apple-darwin", "linux": "unknown-linux-gnu"}
 
     # Determine system os and architecture/target.
     os = platform.system().lower()
