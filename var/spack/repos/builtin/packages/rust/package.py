@@ -13,7 +13,7 @@ class Rust(Package):
 
     homepage = "https://www.rust-lang.org"
     url = "https://static.rust-lang.org/dist/rustc-1.42.0-src.tar.gz"
-    git = "git://github.com/rust-lang/rust.git"
+    git = "https://github.com/rust-lang/rust.git"
 
     maintainers("alecbcs", "AndrewGaspar")
 
@@ -46,12 +46,17 @@ class Rust(Package):
     # As a general rule of thumb Rust can be built with either the previous major
     # version or the current version of the compiler as shown above.
 
-    # Pre-release versions
+    # Pre-release versions.
+    # Note: If you plan to use these versions remember to install with
+    # `-n` to prevent Spack from failing due to failed checksums.
+    #
+    #     $ spack install -n rust@pre-release-version
+    #
     version("beta")
     version("master", branch="master", submodules=True)
     version("nightly")
 
-    # Stable versions
+    # Stable versions.
     version("1.70.0", sha256="b2bfae000b7a5040e4ec4bbc50a09f21548190cb7570b0ed77358368413bd27c")
     version("1.65.0", sha256="5828bb67f677eabf8c384020582b0ce7af884e1c84389484f7f8d00dd82c0038")
     version("1.60.0", sha256="20ca826d1cf674daf8e22c4f8c4b9743af07973211c839b85839742314c838b7")
