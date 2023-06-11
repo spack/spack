@@ -26,7 +26,7 @@ class PyDeeptools(PythonPackage):
     depends_on("py-py2bit@0.2.0:", type=("build", "run"))
     depends_on("py-pybigwig@0.2.1:", type=("build", "run"))
     depends_on("py-pysam@0.14.0:", type=("build", "run"))
-    depends_on("py-matplotlib@3.3.0:", type=("build", "run"), when="@3.5:")
+    depends_on("py-matplotlib@3.3.0:", type=("build", "run"), when="@3.5.1:")
     depends_on("py-matplotlib@2.1.2:", type=("build", "run"), when="@:3.3.0")
     depends_on("py-numpydoc@0.5:", type=("build", "run"))
     depends_on("py-plotly@4.9:", type=("build", "run"), when="@3.5.1")
