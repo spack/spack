@@ -63,6 +63,9 @@ class PyMypy(PythonPackage):
     depends_on("py-types-setuptools", when="@0.981:", type="build")
     depends_on("py-types-typed-ast@1.5.8:1.5", when="@0.981:", type="build")
 
+    # setup.py
+    depends_on("python@3.7:", when="@0.981:", type=("build", "run"))
+
     # Historical dependencies
     depends_on("py-toml", when="@0.900:0.910", type=("build", "run"))
 
