@@ -29,6 +29,7 @@ class Rust(Package):
     # easiest way to bootstrap a Rust environment is to download the binary
     # distribution of the compiler and build with that.
     depends_on("rust-bootstrap", type="build")
+    depends_on("rust-bootstrap@nightly", type="build", when="@nightly")
     depends_on("rust-bootstrap@1.59:1.60", type="build", when="@1.60")
     depends_on("rust-bootstrap@1.64:1.65", type="build", when="@1.65")
     depends_on("rust-bootstrap@1.69:1.70", type="build", when="@1.70")
@@ -72,6 +73,9 @@ class Rust(Package):
     def setup_build_environment(self, env):
         ar = which("ar", required=True)
         env.set("AR", ar.path)
+
+        certs = join_path(self.spec["openssl"].prefix, "etc/openssl/cert.pem")
+        env.set("CARGO_HTTP_CAINFO", certs)
 
     def configure(self, spec, prefix):
         opts = []
