@@ -56,6 +56,7 @@ class Rust(Package):
     variant("rustfmt", default=True, description="Formatting tool for Rust code.")
     variant("src", default=True, description="Include standard library source files.")
 
+    extendable = True
     executables = ["^rustc$", "^cargo$"]
 
     phases = ["configure", "build", "install"]
