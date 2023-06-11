@@ -49,6 +49,7 @@ def archive_file_and_extension(tmpdir_factory, request):
     shutil.copy(archive_file_stub + "." + extension, tmp_archive_file)
     return (tmp_archive_file, extension)
 
+
 @pytest.mark.parametrize("archive_file_and_extension", native_archive_list, indirect=True)
 def test_native_unpacking_no_ext(tmpdir_factory, archive_file_and_extension):
     archive_file, extension = archive_file_and_extension
@@ -62,7 +63,6 @@ def test_native_unpacking_no_ext(tmpdir_factory, archive_file_and_extension):
         with open(files[0], "r") as f:
             contents = f.read()
         assert "TEST" in contents
-
 
 
 @pytest.fixture
