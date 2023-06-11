@@ -75,6 +75,9 @@ class RustBootstrap(Package):
     os = platform.system().lower()
     target = rust_targets[platform.machine().lower()]
 
+    # Set unchecksumed nightly version
+    version("nightly")
+
     # Construct releases for current system configuration.
     for release in rust_releases:
         if os in rust_releases[release] and target in rust_releases[release][os]:

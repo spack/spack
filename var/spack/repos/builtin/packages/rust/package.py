@@ -38,6 +38,8 @@ class Rust(Package):
     # increase. As a general rule of thumb Rust can be built with the previous
     # major version of the compiler or the current version of the compiler as
     # shown above.
+    version("nightly")
+
     version("1.70.0", sha256="b2bfae000b7a5040e4ec4bbc50a09f21548190cb7570b0ed77358368413bd27c")
     version("1.65.0", sha256="5828bb67f677eabf8c384020582b0ce7af884e1c84389484f7f8d00dd82c0038")
     version("1.60.0", sha256="20ca826d1cf674daf8e22c4f8c4b9743af07973211c839b85839742314c838b7")
