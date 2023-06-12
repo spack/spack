@@ -1296,8 +1296,12 @@ class Environment:
         if clone:
             abspath = spack.util.path.canonicalize_path(path, default_wd=self.path)
             pkg_cls = spack.repo.path.get_pkg_class(spec.name)
-            fullclone = spack.fetch_strategy.GitFullRepoCheckout(pkg_cls(spec), abspath)
-            fullclone.get()
+            package = pkg_cls(spec)
+            if isinstance(package.fetcher[0], spack.fetch_strategy.GitFetchStrategy):
+                fullclone = spack.fetch_strategy.GitFullRepoCheckout(package, abspath)
+                fullclone.get()
+            else:
+                package.stage.steal_source(abspath)
 
         # If it wasn't already in the list, append it
         entry = {"path": path, "spec": str(spec)}
