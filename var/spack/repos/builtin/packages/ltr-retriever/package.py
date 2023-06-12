@@ -15,6 +15,9 @@ class LtrRetriever(Package):
     homepage = "https://github.com/oushujun/LTR_retriever"
     url = "https://github.com/oushujun/LTR_retriever/archive/v2.8.7.tar.gz"
 
+    maintainers("snehring")
+
+    version("2.9.4", sha256="a9f4668113d2d75ab97cd85b456f11b00afd4876848a8ef099622ec0d9e505e7")
     version("2.8.7", sha256="29ca6f699c57b5e964aa0ee6c7d3e1e4cd5362dadd789e5f0e8c82fe0bb29369")
 
     depends_on("perl", type="run")
@@ -22,6 +25,7 @@ class LtrRetriever(Package):
     depends_on("hmmer@3.1b2:", type="run")
     depends_on("cdhit", type="run")
     depends_on("repeatmasker", type="run")
+    depends_on("py-tesorter", type="run", when="@2.9.4:")
 
     def install(self, spec, prefix):
         filter_file(r"BLAST\+=.*", "BLAST+=%s" % spec["blast-plus"].prefix.bin, "paths")
@@ -29,8 +33,12 @@ class LtrRetriever(Package):
             "RepeatMasker=.*", "RepeatMasker=%s" % spec["repeatmasker"].prefix.bin, "paths"
         )
         filter_file("HMMER=.*", "HMMER=%s" % spec["hmmer"].prefix.bin, "paths")
-        filter_file("CDHIT=.*", "CDHIT=%s" % spec["cdhit"].prefix, "paths")
+        filter_file("CDHIT=.*", "CDHIT=%s" % spec["cdhit"].prefix.bin, "paths")
         filter_file("BLAST=.*", "", "paths")
+        if spec.satisfies("@2.9.4:"):
+            filter_file(
+                "^TEsorter=.*$", "TEsorter={}".format(spec["py-tesorter"].prefix.bin), "paths"
+            )
 
         mkdirp(prefix.opt)
         mkdirp(prefix.bin)
