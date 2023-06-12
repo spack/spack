@@ -70,6 +70,11 @@ class Wrf(Package):
     tags = ["windows"]
 
     version(
+        "4.5.0",
+        sha256="14fd78abd4e32c1d99e2e97df0370030a5c58ec84c343591bdc5e74f163c5525",
+        url="https://github.com/wrf-model/WRF/releases/download/v4.5/v4.5.tar.gz",
+    )
+    version(
         "4.4.2",
         sha256="488b992e8e994637c58e3c69e869ad05acfe79419c01fbef6ade1f624e50dc3a",
         url="https://github.com/wrf-model/WRF/releases/download/v4.4.2/v4.4.2.tar.gz",
@@ -118,6 +123,7 @@ class Wrf(Package):
     variant("pnetcdf", default=True, description="Parallel IO support through Pnetcdf library")
     variant("chem", default=False, description="Enable WRF-Chem", when="@4:")
     variant("netcdf_classic", default=False, description="Use NetCDF without HDF5 compression")
+    variant("adios2", default=False, description="Enable IO support through ADIOS2 library")
 
     patch("patches/3.9/netcdf_backport.patch", when="@3.9.1.1")
     patch("patches/3.9/tirpc_detect.patch", when="@3.9.1.1")
@@ -157,7 +163,13 @@ class Wrf(Package):
     patch("patches/4.2/derf_fix.patch", when="@4.2 %aocc")
 
     patch("patches/4.4/arch.postamble.patch", when="@4.4:")
-    patch("patches/4.4/configure.patch", when="@4.4:")
+    patch("patches/4.4/configure.patch", when="@4.4:4.4.2")
+
+    patch("patches/4.5/configure.patch", when="@4.5:")
+    # Fix WRF to remove deprecated ADIOS2 functions
+    # https://github.com/wrf-model/WRF/pull/1860
+    patch("patches/4.5/adios2-remove-deprecated-functions.patch", when="@4.5: ^adios2@2.9:")
+
     # Various syntax fixes found by FPT tool
     patch(
         "https://github.com/wrf-model/WRF/commit/6502d5d9c15f5f9a652dec244cc12434af737c3c.patch?full_index=1",
@@ -205,6 +217,7 @@ class Wrf(Package):
     depends_on("time", type=("build"))
     depends_on("m4", type="build")
     depends_on("libtool", type="build")
+    depends_on("adios2", when="@4.5: +adios2")
     phases = ["configure", "build", "install"]
 
     def setup_run_environment(self, env):
@@ -239,6 +252,9 @@ class Wrf(Package):
             env.set("WRFIO_NCD_LARGE_FILE_SUPPORT", 1)
             env.set("HDF5", self.spec["hdf5"].prefix)
             env.prepend_path("PATH", ancestor(self.compiler.cc))
+
+        if "+adios2" in self.spec:
+            env.set("ADIOS2", self.spec["adios2"].prefix)
 
     def flag_handler(self, name, flags):
         # Same flags as FCFLAGS/FFLAGS above, but forced through the compiler
@@ -379,7 +395,7 @@ class Wrf(Package):
         csh = Executable(csh_bin)
 
         # num of compile jobs capped at 20 in wrf
-        num_jobs = str(min(int(make_jobs), 10))
+        num_jobs = str(min(int(make_jobs), 20))
 
         # Now run the compile script and track the output to check for
         # failure/success We need to do this because upstream use `make -i -k`
