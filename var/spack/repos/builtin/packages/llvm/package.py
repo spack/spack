@@ -403,7 +403,8 @@ class Llvm(CMakePackage, CudaPackage):
     )
     #
     # fix compilation against libstdc++13
-    patch("https://github.com/llvm/llvm-project/commit/1b4fdf18bc2aaa2d46bf072475dd9cbcd44a9fee.patch?full_index=1",
+    patch(
+        "https://github.com/llvm/llvm-project/commit/1b4fdf18bc2aaa2d46bf072475dd9cbcd44a9fee.patch?full_index=1",
         sha256="82481418766b4b949ea808d956ff3800b9a241a576370114862428bb0e25ee1f",
         when="@14:15",
     )
