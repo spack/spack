@@ -45,7 +45,6 @@ class Molgw(MakefilePackage):
     # enforce threaded openblas when asking +openmp (and using openblas)
     depends_on("openblas threads=openmp", when="+openmp ^openblas")
 
-
     def _get_mkl_ld_flags(self, spec):
         mklroot = str(getenv("MKLROOT"))
         command = [mklroot + "/bin/intel64/mkl_link_tool", "-libs", "--quiet"]
@@ -74,7 +73,7 @@ class Molgw(MakefilePackage):
         # result = run(command,capture_output=True, text=True)
         # return result.stdout.strip()
         result = run(command, stdout=PIPE)
-        #with open("my_machine.arch", "w") as f:
+        # with open("my_machine.arch", "w") as f:
         #    f.write("#" + " ".join(command) + "\n")
         #    f.write("#" + result.stdout.decode(encoding="utf-8").strip() + "\n")
         return result.stdout.decode(encoding="utf-8").strip()
@@ -118,4 +117,3 @@ class Molgw(MakefilePackage):
         with open("my_machine.arch", "w") as f:
             for k, v in flags.items():
                 f.write(k + "=" + v + "\n")
-
