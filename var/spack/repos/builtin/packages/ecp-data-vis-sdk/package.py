@@ -171,7 +171,8 @@ class EcpDataVisSdk(BundlePackage, CudaPackage, ROCmPackage):
     # ParaView needs @5.11: in order to use CUDA/ROCM, therefore it is the minimum
     # required version since GPU capability is desired for ECP
     dav_sdk_depends_on(
-        "paraview@5.11:+mpi+openpmd+python+kits+shared+catalyst+libcatalyst+raytracing",
+        "paraview@5.11:+mpi+openpmd+python+kits+shared+catalyst+libcatalyst+raytracing"
+        " use_vtkm=on",
         when="+paraview",
         propagate=["adios2", "cuda", "hdf5", "rocm"] + amdgpu_target_variants + cuda_arch_variants,
     )
