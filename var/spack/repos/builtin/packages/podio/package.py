@@ -105,7 +105,8 @@ class Podio(CMakePackage):
     depends_on("py-pyyaml", type=("build", "run"))
     depends_on("py-jinja2@2.10.1:", type=("build", "run"), when="@0.12.0:")
     depends_on("sio", type=("build", "link"), when="+sio")
-    depends_on("catch2@3.0.1:", type=("test"), when="@0.13:")
+    depends_on("catch2@3.0.1:", type=("test"), when="@0.13:0.16.5")
+    depends_on("catch2@3.1:", type=("test"), when="@0.16.6:")
 
     conflicts("+sio", when="@:0.12", msg="sio support requires at least podio@0.13")
 
