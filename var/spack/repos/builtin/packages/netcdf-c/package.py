@@ -112,6 +112,13 @@ class NetcdfC(CMakePackage, AutotoolsPackage):
         when="@4.9.0:4.9.1~mpi+parallel-netcdf",
     )
 
+    # See https://github.com/Unidata/netcdf-c/issues/2674
+    patch(
+        "https://github.com/Unidata/netcdf-c/commit/f8904d5a1d89420dde0f9d2c0e051ba08d08e086.patch?full_index=1",
+        sha256="0161eb870fdfaf61be9d70132c9447a537320342366362e76b8460c823bf95ca",
+        when="@4.9.0:4.9.2",
+    )
+
     variant("mpi", default=True, description="Enable parallel I/O for netcdf-4")
     variant("parallel-netcdf", default=False, description="Enable parallel I/O for classic files")
     variant("hdf4", default=False, description="Enable HDF4 support")
