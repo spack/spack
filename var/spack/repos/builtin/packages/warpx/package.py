@@ -151,6 +151,8 @@ class Warpx(CMakePackage):
         msg="WarpX spectral solvers are not yet tested with SYCL " '(use "warpx ~psatd")',
     )
 
+    build_directory = "spack-build"
+
     # The symbolic aliases for our +lib target were missing in the install
     # location
     # https://github.com/ECP-WarpX/WarpX/pull/2626
