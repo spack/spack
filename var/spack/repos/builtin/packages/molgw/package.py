@@ -27,14 +27,16 @@ class Molgw(MakefilePackage):
     # version("rolling-release", branch="master")
     version("3.2", sha256="a3f9a99db52d95ce03bc3636b5999e6d92b503ec2f4afca33d030480c3e10242")
 
+    # variants
+    variant("openmp", default=False, description="Build with OpenMP support")
+    variant("scalapack", default=False, description="Build with ScaLAPACK support")
+
+    # dependences
     depends_on("blas")
     depends_on("lapack")
     depends_on("libxc@5:")
     depends_on("libcint+pypzpx+coulomb_erf")
 
-    variant("openmp", default=False, description="Build with OpenMP support")
-
-    variant("scalapack", default=False, description="Build with ScaLAPACK support")
     depends_on("scalapack", when="+scalapack")
     depends_on("mpi", when="+scalapack")
 
@@ -43,8 +45,6 @@ class Molgw(MakefilePackage):
     # enforce threaded openblas when asking +openmp (and using openblas)
     depends_on("openblas threads=openmp", when="+openmp ^openblas")
 
-    # variant('hdf5', default=False, description='Build with HDF5 support')
-    # depends_on('hdf5', when='+hdf5')
 
     def _get_mkl_ld_flags(self, spec):
         mklroot = str(getenv("MKLROOT"))
@@ -53,10 +53,14 @@ class Molgw(MakefilePackage):
             command.extend(["-c", "intel_f"])
             if "+openmp" in spec:
                 command.extend(["-o", "tbb"])
+            else:
+                command.extend(["--parallel=no"])
         elif "%gcc" in spec:
             command.extend(["-c", "gnu_f"])
             if "+openmp" in spec:
                 command.extend(["-o", "gomp"])
+            else:
+                command.extend(["--parallel=no"])
 
         if "+scalapack" in spec:
             command.extend(["--cluster_library=scalapack"])
@@ -70,6 +74,9 @@ class Molgw(MakefilePackage):
         # result = run(command,capture_output=True, text=True)
         # return result.stdout.strip()
         result = run(command, stdout=PIPE)
+        #with open("my_machine.arch", "w") as f:
+        #    f.write("#" + " ".join(command) + "\n")
+        #    f.write("#" + result.stdout.decode(encoding="utf-8").strip() + "\n")
         return result.stdout.decode(encoding="utf-8").strip()
 
     def edit(self, spec, prefix):
@@ -91,15 +98,14 @@ class Molgw(MakefilePackage):
             flags["FC"] = self.compiler.fc_names[0]
 
         # Set FCFLAGS
-        if "%intel" in spec or "%oneapi" in spec:
-            flags["FCFLAGS"] = "-fpp "
-        else:
-            flags["FCFLAGS"] = "-cpp "
-
         if self.compiler.flags.get("fflags") is not None:
-            flags["FCFLAGS"] = " ".join(self.compiler.flags.get("fflags"))
+            flags["FCFLAGS"] = " ".join(self.compiler.flags.get("fflags")) + " "
         if "+openmp" in spec:
             flags["FCFLAGS"] = flags.get("FCFLAGS", "") + " {0}".format(self.compiler.openmp_flag)
+        if "%intel" in spec or "%oneapi" in spec:
+            flags["FCFLAGS"] = flags.get("FCFLAGS", "") + "-fpp "
+        else:
+            flags["FCFLAGS"] = flags.get("FCFLAGS", "") + "-cpp "
 
         # Set CPPFLAGS
         if "+scalapack" in spec:
@@ -113,8 +119,3 @@ class Molgw(MakefilePackage):
             for k, v in flags.items():
                 f.write(k + "=" + v + "\n")
 
-    def build(self, spec, prefix):
-        make()
-
-    def install(self, spec, prefix):
-        make("install")
