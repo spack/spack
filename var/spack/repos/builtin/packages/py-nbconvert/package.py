@@ -59,6 +59,12 @@ class PyNbconvert(PythonPackage):
     depends_on("py-traitlets@4.2:", when="@5:", type=("build", "run"))
     depends_on("py-traitlets", type=("build", "run"))
 
+    # https://bugs.gentoo.org/720870
+    # https://github.com/jupyter/nbconvert/pull/937
+    depends_on("py-tornado@6.1:", when="@6.5: +serve", type=("build", "run"))
+    depends_on("py-tornado@4.0:", when="@5.4.1: +serve", type=("build", "run"))
+    depends_on("py-tornado@4.0:5", when="@:5.4.0 +serve", type=("build", "run"))
+
     # Historical dependencies
     depends_on("py-setuptools", when="@5:6", type=("build", "run"))
     depends_on("py-setuptools@60:", when="@6.5:6", type=("build", "run"))
@@ -66,12 +72,6 @@ class PyNbconvert(PythonPackage):
     depends_on("py-entrypoints@0.2.2:", when="@5:6", type=("build", "run"))
     depends_on("py-testpath", when="@5:6.4", type=("build", "run"))
     depends_on("py-lxml", when="@6.5.1:7.0", type=("build", "run"))
-
-    # https://bugs.gentoo.org/720870
-    # https://github.com/jupyter/nbconvert/pull/937
-    depends_on("py-tornado@6.1:", when="@6.5: +serve", type=("build", "run"))
-    depends_on("py-tornado@4.0:", when="@5.4.1: +serve", type=("build", "run"))
-    depends_on("py-tornado@4.0:5", when="@:5.4.0 +serve", type=("build", "run"))
 
     def patch(self):
         # We bundle this with the spack package so that the installer
