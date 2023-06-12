@@ -22,4 +22,7 @@ class PyGlmnetPython(PythonPackage):
 
     depends_on("py-setuptools", type="build")
     depends_on("py-joblib@0.10.3:", type=("build", "run"))
+    # github.com/conda-forge/glmnet_py-feedstock/blob/main/recipe/meta.yaml
+    depends_on("py-numpy", type=("build", "run"))
     depends_on("py-scipy", type=("build", "run"))
+    depends_on("py-matplotlib", type=("build", "run"))

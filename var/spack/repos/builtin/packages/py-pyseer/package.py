@@ -16,25 +16,28 @@ class PyPyseer(PythonPackage):
 
     version("1.3.11", sha256="06ea2987509f9c1952bbb90e4b59c6f5a4f2ca9e88e7dac5f5cb7f43aa693a1b")
 
-    # build deps
+    # build dependencies
     depends_on("py-setuptools", type="build")
 
     # additional dependencies, version numbers mostly from:
     # github.com/mgalardini/pyseer/blob/master/README.md#prerequisites
+    # also from:
     # pyseer.readthedocs.io/en/master/installation.html
     depends_on("py-numpy@1.15.2:", type=("build", "run"))
     depends_on("py-scipy@1.1.0:", type=("build", "run"))
     depends_on("py-pandas@0.23.4:", type=("build", "run"))
     depends_on("py-scikit-learn@0.20.0:", type=("build", "run"))
-    depends_on("py-statsmodels@0.10.0:", type=("build", "run"))
+    # pysam and statsmodels version from:
     # github.com/mgalardini/pyseer/blob/master/conda-recipe/meta.yaml#L39
     depends_on("py-pysam@0.15.3:", type=("build", "run"))
+    depends_on("py-statsmodels@0.10.0:", type=("build", "run"))
+    # glmnet-python fork/version from setup.py
     depends_on("py-glmnet-python@1.0.2", type=("build", "run"))
     depends_on("py-dendropy@4.4.0:", type=("build", "run"))
     depends_on("py-tqdm@4.20.0:", type=("build", "run"))
     depends_on("py-matplotlib@2.1.0:", type=("build", "run"))
-    depends_on("py-dendropy@4.3.0:", type=("build", "run"))
+    depends_on("py-dendropy@4.4.0:", type=("build", "run"))
     depends_on("py-pybedtools@0.7.10:", type=("build", "run"))
     depends_on("bedops@2.4.9:", type=("build", "run"))
-    # required for kmer mapping and annotation
+    # bwa required for kmer mapping and annotation, in conda recipe
     depends_on("bwa", type=("build", "run"))
