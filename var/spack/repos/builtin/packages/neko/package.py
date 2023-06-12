@@ -16,6 +16,9 @@ class Neko(AutotoolsPackage, CudaPackage, ROCmPackage):
     url = "https://github.com/ExtremeFLOW/neko/releases/download/v0.3.2/neko-0.3.2.tar.gz"
     maintainers("njansson")
 
+    version("0.6.0", sha256="ce37c7cea1a7bf1bf554c5717aa7fed35bbd079ff68c2fc9d3529facc717e31a")
+    version("0.5.2", sha256="8873f5ada106f92f21c9bb13ea8164550bccde9301589b9e7f1c1a82a2efe2b8")
+    version("0.5.1", sha256="8b176bcc9f2d4a6804b68dd93a2f5e02e2dfa986d5c88063bbc72d39e9659cc4")
     version("0.5.0", sha256="01a745f2e19dd278330889a0dd6c5ab8af49da99c888d95c10adb5accc1cbfc4")
     version("0.4.3", sha256="ba8fde09cbc052bb4791a03f69c880705615b572982cd3177ee31e4e14931da2")
     version("0.4.2", sha256="927f926bdbf027c30e8e383e1790e84b60f5a9ed61e48a413092aac2ab24abcc")
@@ -44,7 +47,7 @@ class Neko(AutotoolsPackage, CudaPackage, ROCmPackage):
         args += self.with_or_without("metis", variant="parmetis", activation_value="prefix")
         args += self.with_or_without("libxsmm", variant="xsmm")
         args += self.with_or_without("cuda", activation_value="prefix")
-        rocm_fn = lambda x: spec["hip"].prefix
+        rocm_fn = lambda x: self.spec["hip"].prefix
         args += self.with_or_without("hip", variant="rocm", activation_value=rocm_fn)
 
         return args
