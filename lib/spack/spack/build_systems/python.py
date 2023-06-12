@@ -180,51 +180,6 @@ class PythonExtension(spack.package_base.PackageBase):
                 work_dir="spack-test",
             )
 
-
-class PythonPackage(PythonExtension):
-    """Specialized class for packages that are built using pip."""
-
-    #: Package name, version, and extension on PyPI
-    pypi: Optional[str] = None
-
-    # To be used in UI queries that require to know which
-    # build-system class we are using
-    build_system_class = "PythonPackage"
-    #: Legacy buildsystem attribute used to deserialize and install old specs
-    legacy_buildsystem = "python_pip"
-
-    #: Callback names for install-time test
-    install_time_test_callbacks = ["test"]
-
-    build_system("python_pip")
-
-    with spack.multimethod.when("build_system=python_pip"):
-        extends("python")
-        depends_on("py-pip", type="build")
-        # FIXME: technically wheel is only needed when building from source, not when
-        # installing a downloaded wheel, but I don't want to add wheel as a dep to every
-        # package manually
-        depends_on("py-wheel", type="build")
-
-    py_namespace: Optional[str] = None
-
-    @lang.classproperty
-    def homepage(cls):
-        if cls.pypi:
-            name = cls.pypi.split("/")[0]
-            return "https://pypi.org/project/" + name + "/"
-
-    @lang.classproperty
-    def url(cls):
-        if cls.pypi:
-            return "https://files.pythonhosted.org/packages/source/" + cls.pypi[0] + "/" + cls.pypi
-
-    @lang.classproperty
-    def list_url(cls):
-        if cls.pypi:
-            name = cls.pypi.split("/")[0]
-            return "https://pypi.org/simple/" + name + "/"
-
     def update_external_dependencies(self, extendee_spec=None):
         """
         Ensure all external python packages have a python dependency
@@ -269,6 +224,51 @@ class PythonPackage(PythonExtension):
                     python.external_path = self.spec.external_path
                     python._mark_concrete()
             self.spec.add_dependency_edge(python, deptypes=("build", "link", "run"))
+
+
+class PythonPackage(PythonExtension):
+    """Specialized class for packages that are built using pip."""
+
+    #: Package name, version, and extension on PyPI
+    pypi: Optional[str] = None
+
+    # To be used in UI queries that require to know which
+    # build-system class we are using
+    build_system_class = "PythonPackage"
+    #: Legacy buildsystem attribute used to deserialize and install old specs
+    legacy_buildsystem = "python_pip"
+
+    #: Callback names for install-time test
+    install_time_test_callbacks = ["test"]
+
+    build_system("python_pip")
+
+    with spack.multimethod.when("build_system=python_pip"):
+        extends("python")
+        depends_on("py-pip", type="build")
+        # FIXME: technically wheel is only needed when building from source, not when
+        # installing a downloaded wheel, but I don't want to add wheel as a dep to every
+        # package manually
+        depends_on("py-wheel", type="build")
+
+    py_namespace: Optional[str] = None
+
+    @lang.classproperty
+    def homepage(cls):
+        if cls.pypi:
+            name = cls.pypi.split("/")[0]
+            return "https://pypi.org/project/" + name + "/"
+
+    @lang.classproperty
+    def url(cls):
+        if cls.pypi:
+            return "https://files.pythonhosted.org/packages/source/" + cls.pypi[0] + "/" + cls.pypi
+
+    @lang.classproperty
+    def list_url(cls):
+        if cls.pypi:
+            name = cls.pypi.split("/")[0]
+            return "https://pypi.org/simple/" + name + "/"
 
     def get_external_python_for_prefix(self):
         """
