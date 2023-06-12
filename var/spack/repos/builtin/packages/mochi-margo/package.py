@@ -67,7 +67,7 @@ class MochiMargo(AutotoolsPackage):
 
     # Fix pthread detection
     # https://github.com/mochi-hpc/mochi-margo/pull/177
-    patch("mochi-margo-pthreads.patch", when="@0.9,0.9.1:0.9.7")
+    patch("mochi-margo-pthreads.patch", when="@0.9:0.9.7")
 
     def autoreconf(self, spec, prefix):
         sh = which("sh")
