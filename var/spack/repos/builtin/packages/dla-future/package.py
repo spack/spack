@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -15,7 +15,7 @@ class DlaFuture(CMakePackage, CudaPackage, ROCmPackage):
     maintainers = ["rasolca", "albestro", "msimberg", "aurianer"]
 
     version("0.1.0", sha256="f7ffcde22edabb3dc24a624e2888f98829ee526da384cd752b2b271c731ca9b1")
-    version("develop", branch="master")
+    version("master", branch="master")
 
     cxxstds = ("17", "20")
     variant(
@@ -51,15 +51,6 @@ class DlaFuture(CMakePackage, CudaPackage, ROCmPackage):
     for cxxstd in cxxstds:
         depends_on("pika cxxstd={0}".format(cxxstd), when="cxxstd={0}".format(cxxstd))
         depends_on("pika-algorithms cxxstd={0}".format(cxxstd), when="cxxstd={0}".format(cxxstd))
-
-    for build_type in ("Debug", "RelWithDebInfo", "Release"):
-        depends_on(
-            "pika build_type={0}".format(build_type), when="build_type={0}".format(build_type)
-        )
-        depends_on(
-            "pika-algorithms build_type={0}".format(build_type),
-            when="build_type={0}".format(build_type),
-        )
 
     depends_on("whip +cuda", when="+cuda")
     depends_on("whip +rocm", when="+rocm")
