@@ -60,8 +60,8 @@ class Cosma(CMakePackage):
         depends_on("tiled-mm@2.2:+rocm", when="+rocm")
 
     with when("@2.6.1:2.6.2"):
-        depends_on("tiled-mm@2.1+rocm", when="+rocm")
-        depends_on("tiled-mm@2.1+cuda", when="+cuda")
+        depends_on("tiled-mm@2.0+rocm", when="+rocm")
+        depends_on("tiled-mm@2.0+cuda", when="+cuda")
 
     with when("@2.6.1:"):
         depends_on("costa")
