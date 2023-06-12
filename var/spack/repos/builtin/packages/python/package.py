@@ -1195,19 +1195,18 @@ print(json.dumps(config))
             else:
                 os.remove(dst)
 
-    def test(self):
+    def test_hello_world(self):
+        """run simple hello world program"""
         # do not use self.command because we are also testing the run env
-        exe = self.spec["python"].command.name
+        python = self.spec["python"].command
 
-        # test hello world
         msg = "hello world!"
-        reason = "test: running {0}".format(msg)
-        options = ["-c", 'print("{0}")'.format(msg)]
-        self.run_test(exe, options=options, expected=[msg], installed=True, purpose=reason)
+        out = python("-c", f'print("{msg}")', output=str.split, error=str.split)
+        assert msg in out
 
-        # checks import works and executable comes from the spec prefix
-        reason = "test: checking import and executable"
-        options = ["-c", "import sys; print(sys.executable)"]
-        self.run_test(
-            exe, options=options, expected=[self.spec.prefix], installed=True, purpose=reason
-        )
+    def test_import_executable(self):
+        """ensure import of installed executable works"""
+        python = self.spec["python"].command
+
+        out = python("-c", "import sys; print(sys.executable)", output=str.split, error=str.split)
+        assert self.spec.prefix in out
