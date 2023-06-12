@@ -1300,8 +1300,9 @@ class Environment:
             if isinstance(package.fetcher[0], spack.fetch_strategy.GitFetchStrategy):
                 package.fetcher[0].get_full_repo = True
                 # If we retrieved this version before and cached it, we may have
-                # done so without cloning the full git repo
-                package.fetcher[0].cache_enabled = False
+                # done so without cloning the full git repo; likewise, any
+                # mirror might store an instance with truncated history.
+                package.stage[0].mirror_paths = []
 
             package.stage.steal_source(abspath)
 
