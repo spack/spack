@@ -37,7 +37,16 @@ class Nwchem(Package):
     # will be merged to the next release of NWChem (see https://github.com/nwchemgit/nwchem/issues/347
     # for more detail.
     patch("fj.patch", when="@7.0.2 %fj")
-    patch("fftw_splans.patch")
+    # This patch is for linking the FFTW library in NWChem.
+    # It applys only to the 7.2.0 source code.
+    # will be merged to the next release of NWChem (see https://github.com/nwchemgit/nwchem/issues/792
+    # for more detail.
+    # This patch is the combination of the following commits
+    # https://github.com/nwchemgit/nwchem/commit/b4ec4ade1af434bc80470d6874aebf6fdcd12489
+    # https://github.com/nwchemgit/nwchem/commit/376f86f96eb982e83f10514e9dcd994564f973b4
+    # https://github.com/nwchemgit/nwchem/commit/c89fc9d1eca6689bce12564a63fdea95d962a123
+    # Prior versions of NWChem, including 7.0.2, were not able to link with FFTW
+    patch("fftw_splans.patch", when="@7.2.0")
 
     depends_on("blas")
     depends_on("lapack")
