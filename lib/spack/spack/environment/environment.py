@@ -1298,10 +1298,12 @@ class Environment:
             pkg_cls = spack.repo.path.get_pkg_class(spec.name)
             package = pkg_cls(spec)
             if isinstance(package.fetcher[0], spack.fetch_strategy.GitFetchStrategy):
-                fullclone = spack.fetch_strategy.GitFullRepoCheckout(package, abspath)
-                fullclone.get()
-            else:
-                package.stage.steal_source(abspath)
+                package.fetcher[0].get_full_repo = True
+                # If we retrieved this version before and cached it, we may have
+                # done so without cloning the full git repo
+                package.fetcher[0].cache_enabled = False
+
+            package.stage.steal_source(abspath)
 
         # If it wasn't already in the list, append it
         entry = {"path": path, "spec": str(spec)}
