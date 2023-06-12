@@ -291,7 +291,7 @@ def test_ci_workarounds():
     def make_rebuild_index_job(use_artifact_buildcache, optimize, use_dependencies):
         result = {
             "stage": "stage-rebuild-index",
-            "script": "spack buildcache update-index --mirror-url s3://mirror",
+            "script": "spack buildcache update-index s3://mirror",
             "tags": ["tag-0", "tag-1"],
             "image": {"name": "spack/centos7", "entrypoint": [""]},
             "after_script": ['rm -rf "./spack"'],
