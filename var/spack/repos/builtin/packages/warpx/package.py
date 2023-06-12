@@ -71,7 +71,7 @@ class Warpx(CMakePackage):
         values=("1", "2", "3", "rz"),
         multi=False,
         description="Number of spatial dimensions",
-        when="@:23.05"
+        when="@:23.05",
     )
     variant(
         "dims",
@@ -79,7 +79,7 @@ class Warpx(CMakePackage):
         values=("1", "2", "3", "rz"),
         multi=True,
         description="Number of spatial dimensions",
-        when="@23.06:"
+        when="@23.06:",
     )
     variant("eb", default=False, description="Embedded boundary support (in development)")
     variant("lib", default=True, description="Build WarpX as a shared library")
