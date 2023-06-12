@@ -19,6 +19,7 @@ import spack.build_environment
 import spack.environment
 import spack.tengine
 import spack.util.executable
+from spack.environment import depfile
 
 from ._common import _root_spec
 from .config import root_path, spec_for_current_python, store_path
@@ -121,15 +122,12 @@ class BootstrapEnvironment(spack.environment.Environment):
         )
 
     def _install_with_depfile(self) -> None:
-        spackcmd = spack.util.executable.which("spack")
-        spackcmd(
-            "-e",
-            str(self.environment_root()),
-            "env",
-            "depfile",
-            "-o",
-            str(self.environment_root().joinpath("Makefile")),
+        model = depfile.MakefileModel.from_env(self)
+        template = spack.tengine.make_environment().get_template(
+            os.path.join("depfile", "Makefile")
         )
+        makefile = self.environment_root() / "Makefile"
+        makefile.write_text(template.render(model.to_dict()))
         make = spack.util.executable.which("make")
         kwargs = {}
         if not tty.is_debug():

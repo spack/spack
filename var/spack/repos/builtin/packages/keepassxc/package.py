@@ -21,13 +21,6 @@ class Keepassxc(CMakePackage):
     version("2.6.6", sha256="3603b11ac39b289c47fac77fa150e05fd64b393d8cfdf5732dc3ef106650a4e2")
     version("2.6.4", sha256="e536e2a71c90fcf264eb831fb1a8b518ee1b03829828f862eeea748d3310f82b")
 
-    variant(
-        "build_type",
-        default="Release",
-        description="The build type for the installation (only Debug or"
-        " ( Documentation indicates Release).",
-        values=("Debug", "Release", "RelWithDebInfo", "MinSizeRel"),
-    )
     variant("autotype", default=False, description="enable auto-type")
     variant("docs", default=True, description="Build documentation")
 

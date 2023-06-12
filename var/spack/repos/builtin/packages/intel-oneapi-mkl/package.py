@@ -26,7 +26,7 @@ class IntelOneapiMkl(IntelOneApiLibraryPackage):
     )
 
     version(
-        "2023.1",
+        "2023.1.0",
         url="https://registrationcenter-download.intel.com/akdlm/IRC_NAS/cd17b7fe-500e-4305-a89b-bd5b42bfd9f8/l_onemkl_p_2023.1.0.46342_offline.sh",
         sha256="cc28c94cab23c185520b93c5a04f3979d8da6b4c90cee8c0681dd89819d76167",
         expand=False,
@@ -97,8 +97,15 @@ class IntelOneapiMkl(IntelOneApiLibraryPackage):
     variant(
         "cluster", default=False, description="Build with cluster support: scalapack, blacs, etc"
     )
+    variant(
+        "threads",
+        default="none",
+        description="Multithreading support",
+        values=("openmp", "tbb", "none"),
+        multi=False,
+    )
 
-    depends_on("intel-oneapi-tbb")
+    depends_on("tbb")
     # cluster libraries need mpi
     depends_on("mpi", when="+cluster")
 
@@ -155,7 +162,19 @@ class IntelOneapiMkl(IntelOneApiLibraryPackage):
         if "+cluster" in self.spec:
             libs.extend([self._xlp64_lib("libmkl_scalapack"), "libmkl_cdft_core"])
 
-        libs.extend([self._xlp64_lib("libmkl_intel"), "libmkl_sequential", "libmkl_core"])
+        libs.append(self._xlp64_lib("libmkl_intel"))
+
+        if "threads=tbb" in self.spec:
+            libs.append("libmkl_tbb_thread")
+        elif "threads=openmp" in self.spec:
+            if self.spec.satisfies("%oneapi") or self.spec.satisfies("%intel"):
+                libs.append("libmkl_intel_thread")
+            else:
+                libs.append("libmkl_gnu_thread")
+        else:
+            libs.append("libmkl_sequential")
+
+        libs.append("libmkl_core")
 
         if "+cluster" in self.spec:
             libs.append(self._xlp64_lib("libmkl_blacs_intelmpi"))
@@ -163,7 +182,15 @@ class IntelOneapiMkl(IntelOneApiLibraryPackage):
         lib_path = self.component_prefix.lib.intel64
         lib_path = lib_path if isdir(lib_path) else dirname(lib_path)
 
-        return find_libraries(libs, lib_path, shared=shared)
+        resolved_libs = find_libraries(libs, lib_path, shared=shared)
+        if "+cluster" in self.spec:
+            resolved_libs = resolved_libs + self.spec["mpi"].libs
+        return resolved_libs
 
     def _xlp64_lib(self, lib):
         return lib + ("_ilp64" if "+ilp64" in self.spec else "_lp64")
+
+    @run_after("install")
+    def fixup_prefix(self):
+        self.symlink_dir(self.component_prefix.include, self.prefix.include)
+        self.symlink_dir(self.component_prefix.lib, self.prefix.lib)

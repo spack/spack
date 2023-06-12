@@ -13,6 +13,7 @@ class Conserver(AutotoolsPackage):
     homepage = "https://www.conserver.com/"
     url = "https://github.com/bstansell/conserver/releases/download/v8.2.5/conserver-8.2.5.tar.gz"
 
+    version("8.2.7", sha256="0607f2147a4d384f1e677fbe4e6c68b66a3f015136b21bcf83ef9575985273d8")
     version("8.2.5", sha256="7db192f304126d7e5c15421c4c83cd5c08039f2f2b3c61b2998e71881ae47eea")
     version("8.2.4", sha256="a591eabb4abb632322d2f3058a2f0bd6502754069a99a153efe2d6d05bd97f6f")
     version("8.2.3", sha256="764443b2798047f7429747510eeb3207240260590551700d13dbbad8a5bdee08")

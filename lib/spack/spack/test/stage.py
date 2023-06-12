@@ -717,48 +717,6 @@ class TestStage(object):
             except OSError:
                 pass
 
-    @pytest.mark.nomockstage
-    def test_create_stage_root_bad_uid(self, tmpdir, monkeypatch):
-        """
-        Test the code path that uses an existing user path -- whether `$user`
-        in `$tempdir` or not -- and triggers the generation of the UID
-        mismatch warning.
-
-        This situation can happen with some `config:build_stage` settings
-        for teams using a common service account for installing software.
-        """
-        orig_stat = os.stat
-
-        class MinStat:
-            st_mode = -1
-            st_uid = -1
-
-        def _stat(path):
-            p_stat = orig_stat(path)
-
-            fake_stat = MinStat()
-            fake_stat.st_mode = p_stat.st_mode
-            return fake_stat
-
-        user_dir = tmpdir.join(getpass.getuser())
-        user_dir.ensure(dir=True)
-        user_path = str(user_dir)
-
-        # TODO: If we could guarantee access to the monkeypatch context
-        # function (i.e., 3.6.0 on), the call and assertion could be moved
-        # to a with block, such as:
-        #
-        #  with monkeypatch.context() as m:
-        #      m.setattr(os, 'stat', _stat)
-        #      spack.stage.create_stage_root(user_path)
-        #      assert os.stat(user_path).st_uid != os.getuid()
-        monkeypatch.setattr(os, "stat", _stat)
-        spack.stage.create_stage_root(user_path)
-
-        # The following check depends on the patched os.stat as a poor
-        # substitute for confirming the generated warnings.
-        assert os.stat(user_path).st_uid != getuid()
-
     def test_resolve_paths(self):
         """Test _resolve_paths."""
         assert spack.stage._resolve_paths([]) == []

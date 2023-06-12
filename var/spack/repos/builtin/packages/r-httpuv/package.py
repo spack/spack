@@ -19,6 +19,7 @@ class RHttpuv(RPackage):
 
     cran = "httpuv"
 
+    version("1.6.9", sha256="8d77f25b22fa7473b45007c2048e9a38d3792d59b2716e1fcdf9e99bd585d95d")
     version("1.6.6", sha256="41395fd324c5cb884d4f2a8060744758904119db22eeb312f2ea1e7ad7711293")
     version("1.6.5", sha256="f5f63629ca5e9d0e396a89982d95b5286726c0cb425166f35a3ad32a60a79156")
     version("1.5.5", sha256="0be6c98927c7859d4bbfbbec8822c9f5e95352077d87640a76bc2ade07c83117")
