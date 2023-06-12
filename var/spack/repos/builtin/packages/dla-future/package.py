@@ -17,15 +17,6 @@ class DlaFuture(CMakePackage, CudaPackage, ROCmPackage):
     version("0.1.0", sha256="f7ffcde22edabb3dc24a624e2888f98829ee526da384cd752b2b271c731ca9b1")
     version("master", branch="master")
 
-    cxxstds = ("17", "20")
-    variant(
-        "cxxstd",
-        default="17",
-        values=cxxstds,
-        description="Use the specified C++ standard when building",
-    )
-    conflicts("cxxstd=20", when="+cuda")
-
     variant("shared", default=True, description="Build shared libraries.")
 
     variant("doc", default=False, description="Build documentation.")
@@ -48,9 +39,8 @@ class DlaFuture(CMakePackage, CudaPackage, ROCmPackage):
     depends_on("pika +mpi")
     depends_on("pika +cuda", when="+cuda")
     depends_on("pika +rocm", when="+rocm")
-    for cxxstd in cxxstds:
-        depends_on("pika cxxstd={0}".format(cxxstd), when="cxxstd={0}".format(cxxstd))
-        depends_on("pika-algorithms cxxstd={0}".format(cxxstd), when="cxxstd={0}".format(cxxstd))
+
+    conflicts("pika cxxstd=20", when="+cuda")
 
     depends_on("whip +cuda", when="+cuda")
     depends_on("whip +rocm", when="+rocm")
