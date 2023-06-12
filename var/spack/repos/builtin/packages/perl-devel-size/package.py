@@ -7,7 +7,7 @@ from spack.package import *
 
 
 class PerlDevelSize(PerlPackage):
-    """FIXME: Put a proper description of your package here."""
+    """Devel::Size - Perl extension for finding the memory usage of Perl variables"""
 
     homepage = "https://metacpan.org/pod/Devel::Size"
     url = "https://cpan.metacpan.org/authors/id/N/NW/NWCLARK/Devel-Size-0.83.tar.gz"
