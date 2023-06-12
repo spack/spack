@@ -28,6 +28,7 @@ class TiledMm(CMakePackage, CudaPackage, ROCmPackage):
     depends_on("cxxopts", when="+examples")
 
     conflicts("~cuda~rocm")
+    conflicts("+cuda", when="+rocm")
 
     def cmake_args(self):
         args = [
