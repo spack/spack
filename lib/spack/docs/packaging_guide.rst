@@ -3071,7 +3071,7 @@ follows:
        # The library provided by the bar virtual package
        @property
        def bar_libs(self):
-           return find_libraries("libFooBar", root=sef.home, recursive=True)
+           return find_libraries("libFooBar", root=self.home, recursive=True)
 
        # The baz virtual package home
        @property
