@@ -110,6 +110,12 @@ class Dd4hep(CMakePackage):
     # Workaround for failing build file generation in some cases
     # See https://github.com/spack/spack/issues/24232
     patch("cmake_language.patch", when="@:1.17")
+    # Fix missing SimCaloHits when using the LCIO format
+    patch(
+        "https://patch-diff.githubusercontent.com/raw/AIDASoft/DD4hep/pull/1019.patch?full_index=1",
+        when="@1.19:1.23",
+        sha256="6466719c82de830ce728db57004fb7db03983587a63b804f6dc95c6b92b3fc76",
+    )
 
     # variants for subpackages
     variant("ddcad", default=True, description="Enable CAD interface based on Assimp")
@@ -157,6 +163,7 @@ class Dd4hep(CMakePackage):
     depends_on("lcio", when="+lcio")
     depends_on("edm4hep", when="+edm4hep")
     depends_on("podio", when="+edm4hep")
+    depends_on("podio@:0.16.03", when="@:1.23 +edm4hep")
     depends_on("podio@0.16:", when="@1.24: +edm4hep")
     depends_on("py-pytest", type=("build", "test"))
 
@@ -222,6 +229,8 @@ class Dd4hep(CMakePackage):
         env.set("DD4HEP", self.prefix.examples)
         env.set("DD4hep_DIR", self.prefix)
         env.set("DD4hep_ROOT", self.prefix)
+        env.set("LD_LIBRARY_PATH", self.prefix.lib)
+        env.set("LD_LIBRARY_PATH", self.prefix.lib64)
 
     def url_for_version(self, version):
         # dd4hep releases are dashes and padded with a leading zero

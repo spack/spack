@@ -145,11 +145,9 @@ def test_roundtrip_mirror(mirror):
     "invalid_yaml", ["playing_playlist: {{ action }} playlist {{ playlist_name }}"]
 )
 def test_invalid_yaml_mirror(invalid_yaml):
-    with pytest.raises(SpackYAMLError) as e:
+    with pytest.raises(SpackYAMLError, match="error parsing YAML") as e:
         spack.mirror.Mirror.from_yaml(invalid_yaml)
-    exc_msg = str(e.value)
-    assert exc_msg.startswith("error parsing YAML mirror:")
-    assert invalid_yaml in exc_msg
+    assert invalid_yaml in str(e.value)
 
 
 @pytest.mark.parametrize("invalid_json, error_message", [("{13:", "Expecting property name")])
@@ -184,11 +182,9 @@ def test_roundtrip_mirror_collection(mirror_collection):
     "invalid_yaml", ["playing_playlist: {{ action }} playlist {{ playlist_name }}"]
 )
 def test_invalid_yaml_mirror_collection(invalid_yaml):
-    with pytest.raises(SpackYAMLError) as e:
+    with pytest.raises(SpackYAMLError, match="error parsing YAML") as e:
         spack.mirror.MirrorCollection.from_yaml(invalid_yaml)
-    exc_msg = str(e.value)
-    assert exc_msg.startswith("error parsing YAML mirror collection:")
-    assert invalid_yaml in exc_msg
+    assert invalid_yaml in str(e.value)
 
 
 @pytest.mark.parametrize("invalid_json, error_message", [("{13:", "Expecting property name")])
@@ -201,7 +197,7 @@ def test_invalid_json_mirror_collection(invalid_json, error_message):
 
 
 def test_mirror_archive_paths_no_version(mock_packages, config, mock_archive):
-    spec = Spec("trivial-install-test-package@nonexistingversion").concretized()
+    spec = Spec("trivial-install-test-package@=nonexistingversion").concretized()
     fetcher = spack.fetch_strategy.URLFetchStrategy(mock_archive.url)
     spack.mirror.mirror_archive_paths(fetcher, "per-package-ref", spec)
 
@@ -285,8 +281,8 @@ def test_mirror_cache_symlinks(tmpdir):
 @pytest.mark.parametrize(
     "specs,expected_specs",
     [
-        (["a"], ["a@1.0", "a@2.0"]),
-        (["a", "brillig"], ["a@1.0", "a@2.0", "brillig@1.0.0", "brillig@2.0.0"]),
+        (["a"], ["a@=1.0", "a@=2.0"]),
+        (["a", "brillig"], ["a@=1.0", "a@=2.0", "brillig@=1.0.0", "brillig@=2.0.0"]),
     ],
 )
 def test_get_all_versions(specs, expected_specs):

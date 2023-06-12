@@ -17,6 +17,7 @@ class PyImageio(PythonPackage):
     homepage = "https://github.com/imageio/imageio"
     pypi = "imageio/imageio-2.3.0.tar.gz"
 
+    version("2.30.0", sha256="7fc6ad5b5677cb1e58077875a72512aa8c392b6d40885eca0a6ab250efb4b8f4")
     version("2.22.0", sha256="a332d127ec387b2d3dca967fd065a90f1c1a4ba2343570b03fe2cebb6ed064ea")
     version("2.16.0", sha256="7f7d8d8e1eb6f8bb1d15e0dd93bee3f72026a4c3b96e9c690e42f403f7bdea3e")
     version("2.10.3", sha256="469c59fe71c81cdc41c84f842d62dd2739a08fac8cb85f5a518a92a6227e2ed6")
@@ -27,9 +28,6 @@ class PyImageio(PythonPackage):
 
     # TODO: Add variants for plugins, and optional dependencies
 
-    depends_on("python@3.7:", when="@2.16.1:", type=("build", "run"))
-    depends_on("python@3.5:", when="@2.9.0:", type=("build", "run"))
-    depends_on("python@2.7:2.8,3.4:", when="@:2.5.0", type=("build", "run"))
     depends_on("py-setuptools", type="build")
 
     depends_on("py-numpy", type=("build", "run"))
