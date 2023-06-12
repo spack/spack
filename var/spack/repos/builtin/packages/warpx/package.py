@@ -234,7 +234,10 @@ class Warpx(CMakePackage):
                 ["libwarpx." + libsuffix[dim]], root=self.prefix, recursive=True, shared=True
             )
             libs += find_libraries(
-                ["libablastr"], root=self.prefix, recursive=True, shared=self.spec.variants["shared"]
+                ["libablastr"],
+                root=self.prefix,
+                recursive=True,
+                shared=self.spec.variants["shared"],
             )
         return libs
 
@@ -295,5 +298,10 @@ class Warpx(CMakePackage):
 
             cli_args = self._get_input_options(dim, True)
             self.run_test(
-                exe, cli_args, [], installed=True, purpose="Smoke test for WarpX", skip_missing=False
+                exe,
+                cli_args,
+                [],
+                installed=True,
+                purpose="Smoke test for WarpX",
+                skip_missing=False,
             )
