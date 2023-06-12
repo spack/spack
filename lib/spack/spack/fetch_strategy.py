@@ -700,6 +700,36 @@ class GoFetchStrategy(VCSFetchStrategy):
         return "[go] %s" % self.url
 
 
+class GitFullRepoCheckout(object):
+    def __init__(self, package, destination):
+        self.package = package
+        self.destination = destination
+        self._git = None
+
+    def get(self):
+        fetcher = for_package_version(self.package)
+        assert isinstance(fetcher, GitFetchStrategy)
+        self.git("clone", fetcher.url, self.destination)
+        with working_dir(self.destination):
+            self.git("fetch", "--all")
+            checkout_ref = None
+            for ref in ["tag", "branch", "commit"]:
+                try:
+                    checkout_ref = getattr(fetcher, ref)
+                    if checkout_ref:
+                        break
+                except AttributeError:
+                    pass
+            assert checkout_ref
+            self.git("checkout", checkout_ref)
+
+    @property
+    def git(self):
+        if not self._git:
+            self._git = spack.util.git.git()
+        return self._git
+
+
 @fetcher
 class GitFetchStrategy(VCSFetchStrategy):
 
