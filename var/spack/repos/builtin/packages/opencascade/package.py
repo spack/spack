@@ -177,7 +177,7 @@ class Opencascade(CMakePackage):
         args.append("-DBUILD_DOC_Overview=OFF")
 
         # Always build the foundation classes
-        args.append(self.define("BUILD_MODULE_foundation_classes", true))
+        args.append(self.define("BUILD_MODULE_FoundationClasses", true))
         # Specify which modules to build
         for module in [
             "ApplicationFramework",
