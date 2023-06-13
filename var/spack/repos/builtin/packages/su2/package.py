@@ -61,7 +61,7 @@ class Su2(MesonPackage):
     depends_on("openblas", when="+openblas ~mkl")
     depends_on("cmake", type="build", when="+mpp")
 
-    # Remove the part that fixes the meson version to 0.61.1. 
+    # Remove the part that fixes the meson version to 0.61.1.
     # This fix is considered meaningless and will be removed in the next version(@7.6:) of SU2.
     patch("meson_version.patch", when="@7.4.0:7.5.1")
 
