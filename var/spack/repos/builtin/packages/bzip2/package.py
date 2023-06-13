@@ -160,3 +160,21 @@ class Bzip2(Package, SourcewarePackage):
                 force_remove("bunzip2", "bzcat")
                 symlink("bzip2", "bunzip2")
                 symlink("bzip2", "bzcat")
+
+    @run_after("install")
+    def install_pkgconfig(self):
+        pkg_path = join_path(self.prefix.lib, "pkgconfig")
+        mkdirp(pkg_path)
+
+        with open(join_path(pkg_path, "zlib.pc"), "w") as f:
+            f.write("prefix={0}\n".format(self.prefix))
+            f.write("exec_prefix=${prefix}/bin\n")
+            f.write("libdir=${prefix}/lib\n")
+            f.write("includedir=${prefix}/include\n")
+            f.write("\n")
+            f.write("Name: bzip2\n")
+            f.write("Description: bzip2 compression library\n")
+            f.write("Version: {0}\n".format(self.spec.version))
+            f.write("Requires:\n")
+            f.write("Libs: -L${libdir} -L${sharedlibdir} -lbzip2 -lbzip -lBZIP\n")
+            f.write("Cflags: -I${includedir}\n")
