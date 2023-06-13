@@ -14,7 +14,7 @@ class PyIterativeStats(PythonPackage):
     maintainers("frobinou")
 
     version("main", branch="main")
-    version("0.0.4", sha256="6e5194ff5ca11e901157aa2a2a9a15ab9bb22ce55d95596b5b3b703b0ea80e69")
+    version("0.0.4", sha256="7e838aa79de867b0e312be8cdf9319bb70824b624c684e968636cc8d4c9d5712")
 
     # main dependencies
     depends_on("python@3.8.0:3.10", type=("build", "run"))
