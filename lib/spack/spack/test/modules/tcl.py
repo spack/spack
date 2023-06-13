@@ -37,6 +37,11 @@ class TestTcl(object):
         module_configuration("autoload_direct")
         content = modulefile_content(mpileaks_spec_string)
 
+        assert (
+            len([x for x in content if "if {![info exists ::env(LMOD_VERSION_MAJOR)]} {" in x])
+            == 1
+        )
+        assert len([x for x in content if "depends-on " in x]) == 2
         assert len([x for x in content if "module load " in x]) == 2
 
         # dtbuild1 has
@@ -46,6 +51,11 @@ class TestTcl(object):
         # Just make sure the 'build' dependency is not there
         content = modulefile_content("dtbuild1")
 
+        assert (
+            len([x for x in content if "if {![info exists ::env(LMOD_VERSION_MAJOR)]} {" in x])
+            == 1
+        )
+        assert len([x for x in content if "depends-on " in x]) == 2
         assert len([x for x in content if "module load " in x]) == 2
 
         # The configuration file sets the verbose keyword to False
@@ -58,6 +68,11 @@ class TestTcl(object):
         module_configuration("autoload_all")
         content = modulefile_content(mpileaks_spec_string)
 
+        assert (
+            len([x for x in content if "if {![info exists ::env(LMOD_VERSION_MAJOR)]} {" in x])
+            == 1
+        )
+        assert len([x for x in content if "depends-on " in x]) == 5
         assert len([x for x in content if "module load " in x]) == 5
 
         # dtbuild1 has
@@ -67,6 +82,11 @@ class TestTcl(object):
         # Just make sure the 'build' dependency is not there
         content = modulefile_content("dtbuild1")
 
+        assert (
+            len([x for x in content if "if {![info exists ::env(LMOD_VERSION_MAJOR)]} {" in x])
+            == 1
+        )
+        assert len([x for x in content if "depends-on " in x]) == 2
         assert len([x for x in content if "module load " in x]) == 2
 
     def test_prerequisites_direct(self, modulefile_content, module_configuration):
@@ -103,6 +123,7 @@ class TestTcl(object):
         assert len([x for x in content if x.startswith("prepend-path CMAKE_PREFIX_PATH")]) == 0
         assert len([x for x in content if 'setenv FOO "foo"' in x]) == 0
         assert len([x for x in content if "unsetenv BAR" in x]) == 0
+        assert len([x for x in content if "depends-on foo/bar" in x]) == 1
         assert len([x for x in content if "module load foo/bar" in x]) == 1
         assert len([x for x in content if "setenv LIBDWARF_ROOT" in x]) == 1
 
@@ -434,10 +455,16 @@ class TestTcl(object):
 
         # Test the mpileaks that should have the autoloaded dependencies
         content = modulefile_content("mpileaks ^mpich2")
+        assert len([x for x in content if "depends-on " in x]) == 2
         assert len([x for x in content if "module load " in x]) == 2
 
         # Test the mpileaks that should NOT have the autoloaded dependencies
         content = modulefile_content("mpileaks ^mpich")
+        assert (
+            len([x for x in content if "if {![info exists ::env(LMOD_VERSION_MAJOR)]} {" in x])
+            == 0
+        )
+        assert len([x for x in content if "depends-on " in x]) == 0
         assert len([x for x in content if "module load " in x]) == 0
 
     def test_modules_no_arch(self, factory, module_configuration):
