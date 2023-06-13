@@ -82,12 +82,11 @@ class NetcdfC(CMakePackage, AutotoolsPackage):
         # See https://github.com/Unidata/netcdf-c/pull/2710
         # Versions 4.9.0 and 4.9.1 had a bug in the configure script, which worked to our benefit.
         # The bug has been fixed in
-        # https://github.com/Unidata/netcdf-c/commit/267b26f1239310ca7ba8304315834939f7cc9886.
-        # So, now we need a patch in cases when we build for macOS with DAP disabled:
-        # TODO: update the patch URL when/if the referenced PR is accepted.
+        # https://github.com/Unidata/netcdf-c/commit/267b26f1239310ca7ba8304315834939f7cc9886 and
+        # now we need a patch in cases when we build for macOS with DAP disabled:
         patch(
-            "https://github.com/Unidata/netcdf-c/pull/2710/commits/4cdbef4a02b6f0922e805181d4943d5d682ff27c.patch?full_index=1",
-            sha256="75bc04336e26a65fd4a8348226298173001254676ccebebda8ebd4d8b829852c",
+            "https://github.com/Unidata/netcdf-c/commit/cfe6231aa6b018062b443cbe2fd9073f15283344.patch?full_index=1",
+            sha256="4e105472de95a1bb5d8b0b910d6935ce9152777d4fe18b678b58347fa0122abc",
             when="@4.9.2~dap platform=darwin",
         )
         _force_autoreconf_when.append("@4.9.2~dap platform=darwin")
