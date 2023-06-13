@@ -174,6 +174,7 @@ def _do_fake_install(pkg):
     # Install fake command
     fs.mkdirp(pkg.prefix.bin)
     fs.touch(os.path.join(pkg.prefix.bin, command))
+    fs.touchp(pkg.install_log_path)
     if sys.platform != "win32":
         chmod = which("chmod")
         chmod("+x", os.path.join(pkg.prefix.bin, command))
