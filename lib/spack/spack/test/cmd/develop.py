@@ -149,7 +149,16 @@ class TestDevelop(object):
             assert spack.spec.Spec("mpich@1.0").concretized().satisfies("dev_path=%s" % abspath)
 
 
-def test_develop_full_git_repo(mutable_mock_env_path, mock_git_version_info, install_mockery, mock_packages, monkeypatch, tmpdir, mutable_config, request):
+def test_develop_full_git_repo(
+    mutable_mock_env_path,
+    mock_git_version_info,
+    install_mockery,
+    mock_packages,
+    monkeypatch,
+    tmpdir,
+    mutable_config,
+    request,
+):
     repo_path, filename, commits = mock_git_version_info
     monkeypatch.setattr(
         spack.package_base.PackageBase, "git", "file://%s" % repo_path, raising=False
