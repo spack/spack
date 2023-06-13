@@ -40,7 +40,7 @@ class Molgw(MakefilePackage):
     depends_on("scalapack", when="+scalapack")
     depends_on("mpi", when="+scalapack")
 
-    # enforce scalapack capable mkl when asking +scalapack (and using intel-oneapi-mkl)
+    # enforce scalapack-capable mkl when asking +scalapack (and using intel-oneapi-mkl)
     depends_on("intel-oneapi-mkl+cluster", when="+scalapack ^intel-oneapi-mkl")
     # enforce threaded openblas when asking +openmp (and using openblas)
     depends_on("openblas threads=openmp", when="+openmp ^openblas")
@@ -48,18 +48,20 @@ class Molgw(MakefilePackage):
     def _get_mkl_ld_flags(self, spec):
         mklroot = str(getenv("MKLROOT"))
         command = [mklroot + "/bin/intel64/mkl_link_tool", "-libs", "--quiet"]
-        if "%intel" in spec or "%oneapi" in spec:
-            command.extend(["-c", "intel_f"])
-            if "+openmp" in spec:
-                command.extend(["-o", "tbb"])
-            else:
-                command.extend(["--parallel=no"])
-        elif "%gcc" in spec:
-            command.extend(["-c", "gnu_f"])
-            if "+openmp" in spec:
-                command.extend(["-o", "gomp"])
-            else:
-                command.extend(["--parallel=no"])
+
+        if "+openmp" not in spec:
+            command.extend(["--parallel=no"])
+        else:
+            command.extend(["--parallel=yes"])
+
+            if "%intel" in spec or "%oneapi" in spec:
+                command.extend(["-c", "intel_f"])
+                if "+openmp" in spec:
+                    command.extend(["-o", "iomp5"])
+            elif "%gcc" in spec:
+                command.extend(["-c", "gnu_f"])
+                if "+openmp" in spec:
+                    command.extend(["-o", "gomp"])
 
         if "+scalapack" in spec:
             command.extend(["--cluster_library=scalapack"])
@@ -86,7 +88,7 @@ class Molgw(MakefilePackage):
         if "^mkl" in spec:
             flags["LAPACK"] = self._get_mkl_ld_flags(spec)
         else:
-            flags["LAPACK"] = spec["lapack"].libs.ld_flags
+            flags["LAPACK"] = spec["lapack"].libs.ld_flags + " " + spec["blas"].libs.ld_flags
             if "+scalapack" in spec:
                 flags["SCALAPACK"] = spec["scalapack"].libs.ld_flags
 
@@ -100,18 +102,18 @@ class Molgw(MakefilePackage):
         if self.compiler.flags.get("fflags") is not None:
             flags["FCFLAGS"] = " ".join(self.compiler.flags.get("fflags")) + " "
         if "+openmp" in spec:
-            flags["FCFLAGS"] = flags.get("FCFLAGS", "") + " {0}".format(self.compiler.openmp_flag)
+            flags["FCFLAGS"] = flags.get("FCFLAGS", "") + " {0} ".format(self.compiler.openmp_flag)
         if "%intel" in spec or "%oneapi" in spec:
-            flags["FCFLAGS"] = flags.get("FCFLAGS", "") + "-fpp "
+            flags["FCFLAGS"] = flags.get("FCFLAGS", "") + " -fpp "
         else:
-            flags["FCFLAGS"] = flags.get("FCFLAGS", "") + "-cpp "
+            flags["FCFLAGS"] = flags.get("FCFLAGS", "") + " -cpp "
 
         # Set CPPFLAGS
         if "+scalapack" in spec:
-            flags["CPPFLAGS"] = flags.get("CPPFLAGS", "") + "-DHAVE_SCALAPACK -DHAVE_MPI "
+            flags["CPPFLAGS"] = flags.get("CPPFLAGS", "") + " -DHAVE_SCALAPACK -DHAVE_MPI "
 
         if "^mkl" in spec:
-            flags["CPPFLAGS"] = flags.get("CPPFLAGS", "") + "-DHAVE_MKL "
+            flags["CPPFLAGS"] = flags.get("CPPFLAGS", "") + " -DHAVE_MKL "
 
         # Write configuration file
         with open("my_machine.arch", "w") as f:
