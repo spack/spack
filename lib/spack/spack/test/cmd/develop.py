@@ -174,7 +174,7 @@ def test_develop_full_git_repo(
     mirrors = {"test-mirror-develop_full_git_repo": url_util.path_to_file_url(mirror_dir)}
     with spack.config.override("mirrors", mirrors):
         env("create", "test")
-        with ev.read("test") as e:
+        with ev.read("test"):
             develop("git-test-commit@git.1.2")
 
             location = SpackCommand("location")
