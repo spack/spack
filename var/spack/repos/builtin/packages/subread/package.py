@@ -12,7 +12,7 @@ class Subread(MakefilePackage):
     """The Subread software package is a tool kit for processing next-gen
     sequencing data."""
 
-    homepage = "http://subread.sourceforge.net/"
+    homepage = "https://subread.sourceforge.net/"
     url = "https://sourceforge.net/projects/subread/files/subread-1.5.2/subread-1.5.2-source.tar.gz/download"
 
     version("2.0.6", sha256="f0fdda6b98634d2946028948c220253e10a0f27c7fa5f24913b65b3ac6cbb045")
