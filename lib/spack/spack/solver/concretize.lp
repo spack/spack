@@ -64,23 +64,23 @@ error(100, multiple_values_error, Attribute, Package)
 
 % Versions are declared with a weight and an origin, which indicates where the
 % version was declared (e.g. "package_py" or "external").
-version_declared(Package, Version, Weight) :- version_declared(Package, Version, Weight, _).
+facts(Package, version_declared(Version, Weight)) :- facts(Package, version_declared(Version, Weight, _)).
 
 % We can't emit the same version **with the same weight** from two different sources
-:- version_declared(Package, Version, Weight, Origin1),
-   version_declared(Package, Version, Weight, Origin2),
+:- facts(Package, version_declared(Version, Weight, Origin1)),
+   facts(Package, version_declared(Version, Weight, Origin2)),
    Origin1 < Origin2,
    internal_error("Two versions with identical weights").
 
 % We cannot use a version declared for an installed package if we end up building it
-:- version_declared(Package, Version, Weight, "installed"),
+:- facts(Package, version_declared(Version, Weight, "installed")),
    attr("version", Package, Version),
    version_weight(Package, Weight),
    not attr("hash", Package, _),
    internal_error("Reuse version weight used for built package").
 
 % versions are declared w/priority -- declared with priority implies declared
-version_declared(Package, Version) :- version_declared(Package, Version, _).
+facts(Package, version_declared(Version)) :- facts(Package, version_declared(Version, _)).
 
 % a spec with a git hash version is equivalent to one with the same matched version
 version_satisfies(Package, Constraint, HashVersion) :- version_satisfies(Package, Constraint, EquivalentVersion),
@@ -93,7 +93,7 @@ version_satisfies(Package, Constraint, HashVersion) :- version_satisfies(Package
 % is not precisely one version chosen. Error facts are heavily optimized
 % against to ensure they cannot be inferred when a non-error solution is
 % possible
-{ attr("version", Package, Version) : version_declared(Package, Version) }
+{ attr("version", Package, Version) : facts(Package, version_declared(Version)) }
  :- attr("node", Package).
 
 % A virtual package may or may not have a version, but never has more than one
@@ -104,17 +104,17 @@ error(100, "Cannot select a single version for virtual '{0}'", Virtual)
 % If we select a deprecated version, mark the package as deprecated
 attr("deprecated", Package, Version) :-
      attr("version", Package, Version),
-     deprecated_version(Package, Version).
+     facts(Package, deprecated_version(Version)).
 
 possible_version_weight(Package, Weight)
  :- attr("version", Package, Version),
-    version_declared(Package, Version, Weight).
+    facts(Package, version_declared(Version, Weight)).
 
 % we can't use the weight for an external version if we don't use the
 % corresponding external spec.
 :- attr("version", Package, Version),
    version_weight(Package, Weight),
-   version_declared(Package, Version, Weight, "external"),
+   facts(Package, version_declared(Version, Weight, "external")),
    not external(Package),
    internal_error("External weight used for built package").
 
@@ -122,17 +122,17 @@ possible_version_weight(Package, Weight)
 % and vice-versa
 :- attr("version", Package, Version),
    version_weight(Package, Weight),
-   version_declared(Package, Version, Weight, "installed"),
+   facts(Package, version_declared(Version, Weight, "installed")),
    build(Package),
    internal_error("Reuse version weight used for build package").
 
 :- attr("version", Package, Version),
    version_weight(Package, Weight),
-   not version_declared(Package, Version, Weight, "installed"),
+   not facts(Package, version_declared(Version, Weight, "installed")),
    not build(Package),
    internal_error("Build version weight used for reused package").
 
-1 { version_weight(Package, Weight) : version_declared(Package, Version, Weight) } 1
+1 { version_weight(Package, Weight) : facts(Package, version_declared(Version, Weight)) } 1
   :- attr("version", Package, Version),
      attr("node", Package).
 
@@ -141,24 +141,24 @@ possible_version_weight(Package, Weight)
 % While this choice rule appears redundant with the initial choice rule for
 % versions, virtual nodes with version constraints require this rule to be
 % able to choose versions
-{ attr("version", Package, Version) : version_satisfies(Package, Constraint, Version) }
+{ attr("version", Package, Version) : facts(Package, version_satisfies(Constraint, Version)) }
   :- attr("node_version_satisfies", Package, Constraint).
 
 % If there is at least a version that satisfy the constraint, impose a lower
 % bound on the choice rule to avoid false positives with the error below
-1 { attr("version", Package, Version) : version_satisfies(Package, Constraint, Version) }
+1 { attr("version", Package, Version) : facts(Package, version_satisfies(Constraint, Version)) }
   :- attr("node_version_satisfies", Package, Constraint),
-     version_satisfies(Package, Constraint, _).
+     facts(Package, version_satisfies(Constraint, _)).
 
 % More specific error message if the version cannot satisfy some constraint
 % Otherwise covered by `no_version_error` and `versions_conflict_error`.
 error(10, "Cannot satisfy '{0}@{1}'", Package, Constraint)
   :- attr("node_version_satisfies", Package, Constraint),
      attr("version", Package, Version),
-     not version_satisfies(Package, Constraint, Version).
+     not facts(Package, version_satisfies(Constraint, Version)).
 
 attr("node_version_satisfies", Package, Constraint)
-  :- attr("version", Package, Version), version_satisfies(Package, Constraint, Version).
+  :- attr("version", Package, Version), facts(Package, version_satisfies(Constraint, Version)).
 
 #defined version_satisfies/3.
 #defined deprecated_version/2.
@@ -175,22 +175,22 @@ attr("node_version_satisfies", Package, Constraint)
 %-----------------------------------------------------------------------------
 % conditions are specified with `condition_requirement` and hold when
 % corresponding spec attributes hold.
-condition_holds(ID) :-
-  condition(ID, _);
+condition_holds(ID, Package) :-
+  facts(Package, condition(ID));
   attr(Name, A1)             : condition_requirement(ID, Name, A1);
   attr(Name, A1, A2)         : condition_requirement(ID, Name, A1, A2);
   attr(Name, A1, A2, A3)     : condition_requirement(ID, Name, A1, A2, A3);
   attr(Name, A1, A2, A3, A4) : condition_requirement(ID, Name, A1, A2, A3, A4).
 
-% condition_holds(ID) implies all imposed_constraints, unless do_not_impose(ID)
+% condition_holds(ID, Package) implies all imposed_constraints, unless do_not_impose(ID, Package)
 % is derived. This allows imposed constraints to be canceled in special cases.
-impose(ID) :- condition_holds(ID), not do_not_impose(ID).
+impose(ID, Package) :- condition_holds(ID, Package), not do_not_impose(ID, Package).
 
 % conditions that hold impose constraints on other specs
-attr(Name, A1)             :- impose(ID), imposed_constraint(ID, Name, A1).
-attr(Name, A1, A2)         :- impose(ID), imposed_constraint(ID, Name, A1, A2).
-attr(Name, A1, A2, A3)     :- impose(ID), imposed_constraint(ID, Name, A1, A2, A3).
-attr(Name, A1, A2, A3, A4) :- impose(ID), imposed_constraint(ID, Name, A1, A2, A3, A4).
+attr(Name, A1)             :- impose(ID, Package), imposed_constraint(ID, Name, A1).
+attr(Name, A1, A2)         :- impose(ID, Package), imposed_constraint(ID, Name, A1, A2).
+attr(Name, A1, A2, A3)     :- impose(ID, Package), imposed_constraint(ID, Name, A1, A2, A3).
+attr(Name, A1, A2, A3, A4) :- impose(ID, Package), imposed_constraint(ID, Name, A1, A2, A3, A4).
 
 % we cannot have additional variant values when we are working with concrete specs
 :- attr("node", Package), attr("hash", Package, Hash),
@@ -231,17 +231,17 @@ depends_on(Package, Dependency) :- attr("depends_on", Package, Dependency, _).
 % concrete specs don't need to be resolved -- they arise from the concrete
 % specs themselves.
 dependency_holds(Package, Dependency, Type) :-
-  dependency_condition(ID, Package, Dependency),
+  facts(Package, dependency_condition(ID, Dependency)),
   dependency_type(ID, Type),
   build(Package),
   not external(Package),
-  condition_holds(ID).
+  condition_holds(ID, Package).
 
 % We cut off dependencies of externals (as we don't really know them).
 % Don't impose constraints on dependencies that don't exist.
-do_not_impose(ID) :-
+do_not_impose(ID, Package) :-
   not dependency_holds(Package, Dependency, _),
-  dependency_condition(ID, Package, Dependency).
+  facts(Package, dependency_condition(ID, Dependency)).
 
 % declared dependencies are real if they're not virtual AND
 % the package is not an external.
@@ -281,9 +281,9 @@ error(100, "Cyclic dependency detected between '{0}' and '{1}' (consider changin
 % Conflicts
 %-----------------------------------------------------------------------------
 error(1, Msg) :- attr("node", Package),
-   conflict(Package, TriggerID, ConstraintID, Msg),
-   condition_holds(TriggerID),
-   condition_holds(ConstraintID),
+   facts(Package, conflict(TriggerID, ConstraintID, Msg)),
+   condition_holds(TriggerID, Package),
+   condition_holds(ConstraintID, Package),
    not external(Package),  % ignore conflicts for externals
    not attr("hash", Package, _).  % ignore conflicts for installed packages
 
@@ -312,7 +312,7 @@ attr("virtual_node", Virtual)
 
 % If there's a virtual node, we must select one and only one provider.
 % The provider must be selected among the possible providers.
-{ provider(Package, Virtual) : possible_provider(Package, Virtual) }
+{ provider(Package, Virtual) : facts(Package, possible_provider(Virtual)) }
   :- attr("virtual_node", Virtual).
 
 error(100, "Cannot find valid provider for virtual {0}", Virtual)
@@ -339,8 +339,8 @@ provider(Package, Virtual) :- attr("node", Package), virtual_condition_holds(Pac
 
 % The provider provides the virtual if some provider condition holds.
 virtual_condition_holds(Provider, Virtual) :-
-   provider_condition(ID, Provider, Virtual),
-   condition_holds(ID),
+   facts(Provider, provider_condition(ID, Virtual)),
+   condition_holds(ID, Provider),
    virtual(Virtual).
 
 % A package cannot be the actual provider for a virtual if it does not
@@ -374,7 +374,7 @@ possible_provider_weight(Dependency, Virtual, 0, "external")
 possible_provider_weight(Dependency, Virtual, Weight, "packages_yaml")
   :- provider(Dependency, Virtual),
      depends_on(Package, Dependency),
-     pkg_provider_preference(Package, Virtual, Dependency, Weight).
+     facts(Package, provider_preference(Virtual, Dependency, Weight)).
 
 % A provider mentioned in the default configuration can use a weight
 % according to its priority in the list of providers
@@ -408,7 +408,7 @@ possible_provider_weight(Dependency, Virtual, 100, "fallback") :- provider(Depen
 
 % if a package is external its version must be one of the external versions
 { external_version(Package, Version, Weight):
-    version_declared(Package, Version, Weight, "external") }
+    facts(Package, version_declared(Version, Weight, "external")) }
     :- external(Package).
 error(100, "Attempted to use external for '{0}' which does not satisfy any configured external spec", Package)
   :- external(Package),
@@ -436,7 +436,7 @@ external(Package) :- attr("external_spec_selected", Package, _).
 % corresponding external spec.
 :- attr("version", Package, Version),
    version_weight(Package, Weight),
-   version_declared(Package, Version, Weight, "external"),
+   facts(Package, version_declared(Version, Weight, "external")),
    not external(Package),
    internal_error("External weight used for internal spec").
 
@@ -447,7 +447,7 @@ attr("external_spec_selected", Package, LocalIndex) :-
     not attr("hash", Package, _).
 
 external_conditions_hold(Package, LocalIndex) :-
-    possible_external(ID, Package, LocalIndex), condition_holds(ID).
+    facts(Package, possible_external(ID, LocalIndex)), condition_holds(ID, Package).
 
 % it cannot happen that a spec is external, but none of the external specs
 % conditions hold.
@@ -477,24 +477,24 @@ activate_requirement(Package, X) :-
 activate_requirement(Package, X) :-
   package_in_dag(Package),
   requirement_group(Package, X),
-  condition_holds(Y),
+  condition_holds(Y, Package),
   requirement_conditional(Package, X, Y).
 
 requirement_group_satisfied(Package, X) :-
-  1 { condition_holds(Y) : requirement_group_member(Y, Package, X) } 1,
+  1 { condition_holds(Y, Package) : requirement_group_member(Y, Package, X) } 1,
   requirement_policy(Package, X, "one_of"),
   activate_requirement(Package, X),
   requirement_group(Package, X).
 
 requirement_weight(Package, Group, W) :-
-  condition_holds(Y),
+  condition_holds(Y, Package),
   requirement_has_weight(Y, W),
   requirement_group_member(Y, Package, Group),
   requirement_policy(Package, Group, "one_of"),
   requirement_group_satisfied(Package, Group).
 
 requirement_group_satisfied(Package, X) :-
-  1 { condition_holds(Y) : requirement_group_member(Y, Package, X) } ,
+  1 { condition_holds(Y, Package) : requirement_group_member(Y, Package, X) } ,
   requirement_policy(Package, X, "any_of"),
   activate_requirement(Package, X),
   requirement_group(Package, X).
@@ -514,7 +514,7 @@ requirement_group_satisfied(Package, X) :-
 
 requirement_weight(Package, Group, W) :-
   W = #min {
-    Z : requirement_has_weight(Y, Z), condition_holds(Y), requirement_group_member(Y, Package, Group);
+    Z : requirement_has_weight(Y, Z), condition_holds(Y, Package), requirement_group_member(Y, Package, Group);
     % We need this to avoid an annoying warning during the solve
     %   concretize.lp:1151:5-11: info: tuple ignored:
     %   #sup@73
@@ -549,8 +549,12 @@ error(10, Message) :-
 %-----------------------------------------------------------------------------
 % a variant is a variant of a package if it is a variant under some condition
 % and that condition holds
-variant(Package, Variant) :- variant_condition(ID, Package, Variant),
-                             condition_holds(ID).
+node_has_variant(Package, variant(Variant)) :-
+  facts(Package, conditional_variant(ID, Variant)),
+  condition_holds(ID, Package).
+
+node_has_variant(Package, variant(Variant)) :- facts(Package, variant(Variant)).
+
 
 attr("variant_propagate", Package, Variant, Value, Source) :-
   attr("node", Package),
@@ -560,56 +564,56 @@ attr("variant_propagate", Package, Variant, Value, Source) :-
 
 attr("variant_value", Package, Variant, Value) :-
   attr("node", Package),
-  variant(Package, Variant),
+  node_has_variant(Package, variant(Variant)),
   attr("variant_propagate", Package, Variant, Value, _),
-  variant_possible_value(Package, Variant, Value).
+  facts(Package, variant_possible_value(Variant, Value)).
 
 error(100, "{0} and {1} cannot both propagate variant '{2}' to package {3} with values '{4}' and '{5}'", Source1, Source2, Variant, Package, Value1, Value2) :-
   attr("variant_propagate", Package, Variant, Value1, Source1),
   attr("variant_propagate", Package, Variant, Value2, Source2),
-  variant(Package, Variant),
+  node_has_variant(Package, variant(Variant)),
   Value1 < Value2.
 
 % a variant cannot be set if it is not a variant on the package
 error(100, "Cannot set variant '{0}' for package '{1}' because the variant condition cannot be satisfied for the given spec", Variant, Package)
   :- attr("variant_set", Package, Variant),
-     not variant(Package, Variant),
+     not node_has_variant(Package, variant(Variant)),
      build(Package).
 
 % a variant cannot take on a value if it is not a variant of the package
 error(100, "Cannot set variant '{0}' for package '{1}' because the variant condition cannot be satisfied for the given spec", Variant, Package)
   :- attr("variant_value", Package, Variant, _),
-     not variant(Package, Variant),
+     not node_has_variant(Package, variant(Variant)),
      build(Package).
 
 % if a variant is sticky and not set its value is the default value
 attr("variant_value", Package, Variant, Value) :-
-  variant(Package, Variant),
+  node_has_variant(Package, variant(Variant)),
   not attr("variant_set", Package, Variant),
-  variant_sticky(Package, Variant),
+  facts(Package, variant_sticky(Variant)),
   variant_default_value(Package, Variant, Value),
   build(Package).
 
 % at most one variant value for single-valued variants.
 {
   attr("variant_value", Package, Variant, Value)
-  : variant_possible_value(Package, Variant, Value)
+  : facts(Package, variant_possible_value(Variant, Value))
 }
  :- attr("node", Package),
-    variant(Package, Variant),
+    node_has_variant(Package, variant(Variant)),
     build(Package).
 
 
 error(100, "'{0}' required multiple values for single-valued variant '{1}'", Package, Variant)
   :- attr("node", Package),
-     variant(Package, Variant),
-     variant_single_value(Package, Variant),
+     node_has_variant(Package, variant(Variant)),
+     facts(Package, variant_single_value(Variant)),
      build(Package),
      2 { attr("variant_value", Package, Variant, Value) }.
 
 error(100, "No valid value for variant '{1}' of package '{0}'", Package, Variant)
   :- attr("node", Package),
-     variant(Package, Variant),
+     node_has_variant(Package, variant(Variant)),
      build(Package),
      not attr("variant_value", Package, Variant, _).
 
@@ -621,7 +625,7 @@ attr("variant_set", Package, Variant) :- attr("variant_set", Package, Variant, _
 % have been built w/different variants from older/different package versions.
 error(10, "'Spec({1}={2})' is not a valid value for '{0}' variant '{1}'", Package, Variant, Value)
  :- attr("variant_value", Package, Variant, Value),
-    not variant_possible_value(Package, Variant, Value),
+    not facts(Package, variant_possible_value(Variant, Value)),
     build(Package).
 
 % Some multi valued variants accept multiple values from disjoint sets.
@@ -630,8 +634,8 @@ error(10, "'Spec({1}={2})' is not a valid value for '{0}' variant '{1}'", Packag
 error(100, "{0} variant '{1}' cannot have values '{2}' and '{3}' as they come from disjoint value sets", Package, Variant, Value1, Value2)
   :- attr("variant_value", Package, Variant, Value1),
      attr("variant_value", Package, Variant, Value2),
-     variant_value_from_disjoint_sets(Package, Variant, Value1, Set1),
-     variant_value_from_disjoint_sets(Package, Variant, Value2, Set2),
+     facts(Package, variant_value_from_disjoint_sets(Variant, Value1, Set1)),
+     facts(Package, variant_value_from_disjoint_sets(Variant, Value2, Set2)),
      Set1 < Set2, % see[1]
      build(Package).
 
@@ -639,7 +643,7 @@ error(100, "{0} variant '{1}' cannot have values '{2}' and '{3}' as they come fr
 % we revert to the default value. If it is set, we force the set value
 attr("variant_value", Package, Variant, Value)
  :- attr("node", Package),
-    variant(Package, Variant),
+    node_has_variant(Package, variant(Variant)),
     attr("variant_set", Package, Variant, Value).
 
 % The rules below allow us to prefer default values for variants
@@ -662,7 +666,7 @@ variant_not_default(Package, Variant, Value)
 % A default variant value that is not used
 variant_default_not_used(Package, Variant, Value)
   :- variant_default_value(Package, Variant, Value),
-     variant(Package, Variant),
+     node_has_variant(Package, variant(Variant)),
      not attr("variant_value", Package, Variant, Value),
      attr("node", Package).
 
@@ -670,7 +674,7 @@ variant_default_not_used(Package, Variant, Value)
 external_with_variant_set(Package, Variant, Value)
  :- attr("variant_value", Package, Variant, Value),
     condition_requirement(ID, "variant_value", Package, Variant, Value),
-    possible_external(ID, Package, _),
+    facts(Package, possible_external(ID, _)),
     external(Package),
     attr("node", Package).
 
@@ -682,7 +686,7 @@ external_with_variant_set(Package, Variant, Value)
 %    packages.yaml and the command line)
 %
 variant_default_value(Package, Variant, Value)
- :- variant_default_value_from_package_py(Package, Variant, Value),
+ :- facts(Package, variant_default_value_from_package_py(Variant, Value)),
     not variant_default_value_from_packages_yaml(Package, Variant, _),
     not attr("variant_default_value_from_cli", Package, Variant, _).
 
@@ -706,9 +710,11 @@ error(100, "{0} variant '{1}' cannot have values '{2}' and 'none'", Package, Var
 % when assigned a value.
 auto_variant("dev_path").
 auto_variant("patches").
-variant(Package, Variant)
+
+node_has_variant(Package, variant(Variant))
   :- attr("variant_set", Package, Variant, _), auto_variant(Variant).
-variant_single_value(Package, "dev_path")
+
+facts(Package, variant_single_value("dev_path"))
   :- attr("variant_set", Package, "dev_path", _).
 
 % suppress warnings about this atom being unset.  It's only set if some
@@ -848,7 +854,7 @@ attr("node_target", Package, Target)
 node_target_weight(Package, Weight)
  :- attr("node", Package),
     attr("node_target", Package, Target),
-    target_weight(Package, Target, Weight).
+    facts(Package, target_weight(Target, Weight)).
 
 % compatibility rules for targets among nodes
 node_target_match(Parent, Dependency)
@@ -865,8 +871,6 @@ error(100, "'{0} target={1}' is not compatible with this machine", Package, Targ
   :- attr("node", Package),
      attr("node_target", Package, Target),
      not target(Target).
-
-#defined package_target_weight/3.
 
 %-----------------------------------------------------------------------------
 % Compiler semantics
@@ -981,18 +985,18 @@ compiler_weight(Package, Weight)
  :- node_compiler(Package, CompilerID),
     compiler_name(CompilerID, Compiler),
     compiler_version(CompilerID, V),
-    node_compiler_preference(Package, Compiler, V, Weight).
+    facts(Package, node_compiler_preference(Compiler, V, Weight)).
 compiler_weight(Package, Weight)
  :- node_compiler(Package, CompilerID),
     compiler_name(CompilerID, Compiler),
     compiler_version(CompilerID, V),
-    not node_compiler_preference(Package, Compiler, V, _),
+    not facts(Package, node_compiler_preference(Compiler, V, _)),
     default_compiler_preference(CompilerID, Weight).
 compiler_weight(Package, 100)
  :- node_compiler(Package, CompilerID),
     compiler_name(CompilerID, Compiler),
     compiler_version(CompilerID, V),
-    not node_compiler_preference(Package, Compiler, V, _),
+    not facts(Package, node_compiler_preference(Compiler, V, _)),
     not default_compiler_preference(CompilerID, _).
 
 % For the time being, be strict and reuse only if the compiler match one we have on the system
@@ -1085,7 +1089,7 @@ attr("no_flags", Package, FlagType)
 :- attr("node", Package), 2 { attr("hash", Package, Hash) }.
 
 % if a hash is selected, we impose all the constraints that implies
-impose(Hash) :- attr("hash", Package, Hash).
+impose(Hash, Package) :- attr("hash", Package, Hash).
 
 % if we haven't selected a hash for a package, we'll be building it
 build(Package) :- not attr("hash", Package, _), attr("node", Package).
@@ -1124,7 +1128,7 @@ build_priority(Package, 0)   :- attr("node", Package), not optimize_for_reuse().
 % build deps in the solve, consider using them as a preference to resolve this.
 :- attr("version", Package, Version),
    version_weight(Package, Weight),
-   version_declared(Package, Version, Weight, "installed"),
+   facts(Package, version_declared(Version, Weight, "installed")),
    not optimize_for_reuse().
 
 #defined installed_hash/2.
@@ -1339,10 +1343,10 @@ opt_criterion(5, "non-preferred targets").
 #heuristic literal_solved(ID) : literal(ID). [50, init]
 #heuristic attr("hash", Package, Hash) : attr("root", Package). [45, init]
 
-#heuristic attr("version", Package, Version) : version_declared(Package, Version, 0), attr("root", Package). [40, true]
-#heuristic version_weight(Package, 0) : version_declared(Package, Version, 0), attr("root", Package). [40, true]
+#heuristic attr("version", Package, Version) : facts(Package, version_declared(Version, 0)), attr("root", Package). [40, true]
+#heuristic version_weight(Package, 0) : facts(Package, version_declared(Version, 0)), attr("root", Package). [40, true]
 #heuristic attr("variant_value", Package, Variant, Value) : variant_default_value(Package, Variant, Value), attr("root", Package). [40, true]
-#heuristic attr("node_target", Package, Target) : package_target_weight(Target, Package, 0), attr("root", Package). [40, true]
+#heuristic attr("node_target", Package, Target) : facts(Package, target_weight(Target, 0)), attr("root", Package). [40, true]
 #heuristic node_target_weight(Package, 0) : attr("root", Package). [40, true]
 #heuristic node_compiler(Package, CompilerID) : default_compiler_preference(ID, 0), compiler_id(ID), attr("root", Package). [40, true]
 
@@ -1350,10 +1354,10 @@ opt_criterion(5, "non-preferred targets").
 #heuristic provider_weight(Package, Virtual, 0, R) : possible_provider_weight(Package, Virtual, 0, R), attr("virtual_node", Virtual). [30, true]
 #heuristic attr("node", Package) : possible_provider_weight(Package, Virtual, 0, _), attr("virtual_node", Virtual). [30, true]
 
-#heuristic attr("version", Package, Version) : version_declared(Package, Version, 0), attr("node", Package). [20, true]
-#heuristic version_weight(Package, 0) : version_declared(Package, Version, 0), attr("node", Package). [20, true]
+#heuristic attr("version", Package, Version) : facts(Package, version_declared(Version, 0)), attr("node", Package). [20, true]
+#heuristic version_weight(Package, 0) : facts(Package, version_declared(Version, 0)), attr("node", Package). [20, true]
 
-#heuristic attr("node_target", Package, Target) : package_target_weight(Target, Package, 0), attr("node", Package). [20, true]
+#heuristic attr("node_target", Package, Target) : facts(Package, target_weight(Target, 0)), attr("node", Package). [20, true]
 #heuristic node_target_weight(Package, 0) : attr("node", Package). [20, true]
 #heuristic node_compiler(Package, CompilerID) : default_compiler_preference(ID, 0), compiler_id(ID), attr("node", Package). [15, true]
 
