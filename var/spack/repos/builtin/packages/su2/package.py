@@ -55,7 +55,7 @@ class Su2(MesonPackage):
     depends_on("zlib")
     depends_on("pkg-config")
     depends_on("mpi", when="+mpi")
-    depends_on("swig", when="+pywrapper")
+    depends_on("swig", type="build", when="+pywrapper")
     depends_on("py-mpi4py", when="+pywrapper")
     depends_on("intel-oneapi-mkl", when="+mkl")
     depends_on("openblas", when="+openblas ~mkl")
