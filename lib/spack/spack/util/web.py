@@ -17,6 +17,7 @@ import sys
 import traceback
 import urllib.parse
 from html.parser import HTMLParser
+from pathlib import Path, PurePosixPath
 from urllib.error import URLError
 from urllib.request import HTTPSHandler, Request, build_opener
 
@@ -498,7 +499,8 @@ def list_url(url, recursive=False):
 
     if local_path:
         if recursive:
-            return list(_iter_local_prefix(local_path))
+            # convert backslash to forward slash as required for URLs
+            return [str(PurePosixPath(Path(p))) for p in list(_iter_local_prefix(local_path))]
         return [
             subpath
             for subpath in os.listdir(local_path)
@@ -738,7 +740,8 @@ def find_versions_of_archive(
 
         # We'll be a bit more liberal and just look for the archive
         # part, not the full path.
-        url_regex = os.path.basename(url_regex)
+        # this is a URL so it is a posixpath even on Windows
+        url_regex = PurePosixPath(url_regex).name
 
         # We need to add a / to the beginning of the regex to prevent
         # Spack from picking up similarly named packages like:
