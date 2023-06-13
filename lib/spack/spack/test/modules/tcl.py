@@ -121,6 +121,46 @@ class TestTcl(object):
         assert len([x for x in content if 'append-path --delim " " SPACE "qux"' in x]) == 1
         assert len([x for x in content if 'remove-path --delim " " SPACE "qux"' in x]) == 1
 
+    @pytest.mark.regression("11355")
+    def test_manpath_setup(self, modulefile_content, module_configuration):
+        """Tests specific setup of MANPATH environment variable."""
+
+        module_configuration("autoload_direct")
+
+        # no manpath set by module
+        content = modulefile_content("mpileaks")
+        assert len([x for x in content if 'append-path --delim ":" MANPATH ""' in x]) == 0
+
+        # manpath set by module with prepend-path
+        content = modulefile_content("module-manpath-prepend")
+        assert (
+            len([x for x in content if 'prepend-path --delim ":" MANPATH "/path/to/man"' in x])
+            == 1
+        )
+        assert (
+            len(
+                [
+                    x
+                    for x in content
+                    if 'prepend-path --delim ":" MANPATH "/path/to/share/man"' in x
+                ]
+            )
+            == 1
+        )
+        assert len([x for x in content if 'append-path --delim ":" MANPATH ""' in x]) == 1
+
+        # manpath set by module with append-path
+        content = modulefile_content("module-manpath-append")
+        assert (
+            len([x for x in content if 'append-path --delim ":" MANPATH "/path/to/man"' in x]) == 1
+        )
+        assert len([x for x in content if 'append-path --delim ":" MANPATH ""' in x]) == 1
+
+        # manpath set by module with setenv
+        content = modulefile_content("module-manpath-setenv")
+        assert len([x for x in content if 'setenv MANPATH "/path/to/man"' in x]) == 1
+        assert len([x for x in content if 'append-path --delim ":" MANPATH ""' in x]) == 0
+
     def test_help_message(self, modulefile_content, module_configuration):
         """Tests the generation of module help message."""
 

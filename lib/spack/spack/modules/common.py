@@ -40,7 +40,7 @@ from typing import Optional
 
 import llnl.util.filesystem
 import llnl.util.tty as tty
-from llnl.util.lang import dedupe
+from llnl.util.lang import dedupe, memoized
 
 import spack.build_environment
 import spack.config
@@ -672,6 +672,7 @@ class BaseContext(tengine.Context):
         return None
 
     @tengine.context_property
+    @memoized
     def environment_modifications(self):
         """List of environment modifications to be processed."""
         # Modifications guessed by inspecting the spec prefix
@@ -741,6 +742,19 @@ class BaseContext(tengine.Context):
             x.name = str(x.name).replace("-", "_")
 
         return [(type(x).__name__, x) for x in env if x.name not in exclude]
+
+    @tengine.context_property
+    def has_manpath_modifications(self):
+        """True if MANPATH environment variable is modified."""
+        for modification_type, cmd in self.environment_modifications:
+            if not isinstance(
+                cmd, (spack.util.environment.PrependPath, spack.util.environment.AppendPath)
+            ):
+                continue
+            if cmd.name == "MANPATH":
+                return True
+        else:
+            return False
 
     @tengine.context_property
     def autoload(self):
