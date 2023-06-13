@@ -9,7 +9,7 @@ from spack.package import *
 class PyIterativeStats(PythonPackage):
     """Bacis iterative statistics implementation."""
 
-    pypi = "iterative-stats/iterative-stats-4.0.0.zip"
+    pypi = "iterative-stats/iterative_stats-0.0.4.tar.gz"
     git = "https://github.com/IterativeStatistics/BasicIterativeStatistics.git"
     maintainers("frobinou")
 
