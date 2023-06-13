@@ -24,7 +24,7 @@ class OpenradiossStarter(CMakePackage):
     git = "https://github.com/OpenRadioss/OpenRadioss.git"
 
     maintainers("kjrstory")
-    version("develop", branch="main")
+    version("main", branch="main")
 
     variant("sp", default=False, description="Using single precision option")
     variant("debug", default=False, description="Debug Option")
