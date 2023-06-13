@@ -13,13 +13,11 @@ class RocprofilerDev(CMakePackage):
 
     homepage = "https://github.com/ROCm-Developer-Tools/rocprofiler"
     git = "https://github.com/ROCm-Developer-Tools/rocprofiler.git"
-    url = "https://github.com/ROCm-Developer-Tools/rocprofiler/archive/refs/tags/rocm-5.5.0.tar.gz"
+    url = "https://github.com/ROCm-Developer-Tools/rocprofiler/archive/refs/tags/rocm-5.4.3.tar.gz"
     tags = ["rocm"]
 
     maintainers("srekolam", "renjithravindrankannath")
     libraries = ["librocprofiler64"]
-    version("5.5.1", sha256="f5dbece5c205e37383fed4a2bd6042ff1c11f11f64dfbf65d7e23c0af6889a5a")
-    version("5.5.0", sha256="d9dd38c42b4b12d4149f1cc3fca1af5bec69c72f455653a8f4fd8195b3b95703")
     version("5.4.3", sha256="86c3f43ee6cb9808796a21409c853cc8fd496578b9eef4de67ca77830229cac1")
     version("5.4.0", sha256="0322cbe5d1d3182e616f472da31f0707ad6040833c38c28f2b39381a85210f43")
     version("5.3.3", sha256="07ee28f3420a07fc9d45910e78ad7961b388109cfc0e74cfdf2666789e6af171")
@@ -132,8 +130,6 @@ class RocprofilerDev(CMakePackage):
         "5.3.3",
         "5.4.0",
         "5.4.3",
-        "5.5.0",
-        "5.5.1",
     ]:
         depends_on("hsakmt-roct@" + ver, when="@" + ver)
         depends_on("hsa-rocr-dev@" + ver, when="@" + ver)
@@ -141,25 +137,9 @@ class RocprofilerDev(CMakePackage):
         depends_on("roctracer-dev-api@" + ver, when="@" + ver)
 
     depends_on("numactl", type="link", when="@4.3.1")
-    depends_on("googletest@1.10.0:", when="@5.5.0:")
-    depends_on("py-pyyaml", when="@5.5.0:")
-    depends_on("py-lxml", when="@5.5.0:")
-    depends_on("py-cppheaderparser", when="@5.5.0:")
-    depends_on("libpciaccess", when="@5.5.0:")
-    depends_on("py-barectf", when="@5.5.0:")
-
-    for ver in ["5.4.0", "5.4.3", "5.5.0", "5.5.1"]:
-        depends_on("comgr@" + ver, when="@" + ver)
-        depends_on("llvm-amdgpu@" + ver, when="@" + ver)
-        depends_on("hip@" + ver, when="@" + ver)
-
     # See https://github.com/ROCm-Developer-Tools/rocprofiler/pull/50
     patch("fix-includes.patch")
-    patch("0001-Continue-build-in-absence-of-aql-profile-lib.patch", when="@5.3:5.4")
-    patch("0001-build-without-aql_profile-for-now.patch", when="@5.5:")
-
-    def setup_build_environment(self, env):
-        env.set("CXX", self.spec["hip"].hipcc)
+    patch("0001-Continue-build-in-absence-of-aql-profile-lib.patch", when="@5.3:")
 
     def patch(self):
         filter_file(
