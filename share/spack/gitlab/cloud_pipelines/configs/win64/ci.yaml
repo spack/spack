@@ -1,5 +1,10 @@
 ci:
   pipeline-gen:
+  - any-job:
+      before_script:
+      - - .\bin\spack_pwsh.ps1
+        - spack --version
+        - spack arch
   - build-job:
       tags: [win64, kitware]
       # Windows CI uses Powershell
