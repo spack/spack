@@ -111,6 +111,9 @@ class RocmCmake(CMakePackage):
     depends_on("cmake@3:", type="build")
     depends_on("cmake@3.6:", type="build", when="@4.1.0:")
 
+    for ver in ["5.5.0", "5.5.1"]:
+        depends_on("rocm-core@" + ver, when="@" + ver)
+
     test_src_dir = "test"
 
     @run_after("install")

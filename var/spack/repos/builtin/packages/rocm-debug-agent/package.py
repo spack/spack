@@ -178,6 +178,9 @@ class RocmDebugAgent(CMakePackage):
         depends_on("rocm-dbgapi@" + ver, when="@" + ver)
         depends_on("hip@" + ver, when="@" + ver)
 
+    for ver in ["5.5.0", "5.5.1"]:
+        depends_on("rocm-core@" + ver, when="@" + ver)
+
     # https://github.com/ROCm-Developer-Tools/rocr_debug_agent/pull/4
     patch("0001-Drop-overly-strict-Werror-flag.patch", when="@3.7.0:")
     patch("0002-add-hip-architecture.patch", when="@3.9.0:")

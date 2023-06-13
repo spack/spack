@@ -142,6 +142,9 @@ class Atmi(CMakePackage):
         depends_on("hsa-rocr-dev@" + ver, type="link", when="@" + ver)
         depends_on("elf", type="link", when="@" + ver)
 
+    for ver in ["5.5.0", "5.5.1"]:
+        depends_on("rocm-core@" + ver, when="@" + ver)
+
     root_cmakelists_dir = "src"
 
     patch("0001-Remove-relative-link-paths-to-external-libraries.patch", when="@3.5.0")

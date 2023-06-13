@@ -159,6 +159,8 @@ class HsaRocrDev(CMakePackage):
         depends_on(
             "rocm-device-libs@" + ver, when="@{0} ^llvm-amdgpu ~rocm-device-libs".format(ver)
         )
+    for ver in ["5.5.0", "5.5.1"]:
+        depends_on("rocm-core@" + ver, when="@" + ver)
 
     # Both 3.5.0 and 3.7.0 force INSTALL_RPATH in different ways
     patch("0001-Do-not-set-an-explicit-rpath-by-default-since-packag.patch", when="@3.5.0")

@@ -149,6 +149,9 @@ class RocmDeviceLibs(CMakePackage):
     ]:
         depends_on("llvm-amdgpu@" + ver, when="@" + ver)
 
+    for ver in ["5.5.0", "5.5.1"]:
+        depends_on("rocm-core@" + ver, when="@" + ver)
+
     def cmake_args(self):
         spec = self.spec
         return [

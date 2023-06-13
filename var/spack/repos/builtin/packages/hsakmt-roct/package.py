@@ -116,7 +116,13 @@ class HsakmtRoct(CMakePackage):
     depends_on("cmake@3:", type="build")
     depends_on("numactl")
     depends_on("libdrm", when="@4.5.0:")
-    depends_on("llvm-amdgpu", type="test", when="@5.3.0:")
+
+    for ver in ["5.3.0", "5.4.0", "5.4.3"]:
+        depends_on("llvm-amdgpu@" +ver , type="test", when="@" + ver)
+
+    for ver in ["5.5.0", "5.5.1"]:
+        depends_on("rocm-core@" + ver, when="@" + ver)
+        depends_on("llvm-amdgpu@" + ver, type="test", when="@" + ver)
 
     # See https://github.com/RadeonOpenCompute/ROCT-Thunk-Interface/issues/72
     # and https://github.com/spack/spack/issues/28398

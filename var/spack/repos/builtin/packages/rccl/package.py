@@ -196,6 +196,9 @@ class Rccl(CMakePackage):
         depends_on("rocm-smi-lib@" + ver, when="@" + ver)
         depends_on("chrpath", when="@5.3.0:")
 
+    for ver in ["5.5.0", "5.5.1"]:
+        depends_on("rocm-core@" + ver, when="@" + ver)
+
     @classmethod
     def determine_version(cls, lib):
         match = re.search(r"lib\S*\.so\.\d+\.\d+\.(\d)(\d\d)(\d\d)", lib)

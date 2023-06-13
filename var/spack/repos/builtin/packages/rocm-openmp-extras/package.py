@@ -243,6 +243,9 @@ class RocmOpenmpExtras(Package):
         depends_on("hsa-rocr-dev@" + ver, when="@" + ver)
         depends_on("llvm-amdgpu@{0} ~openmp".format(ver), when="@" + ver)
 
+    for ver in ["5.5.0", "5.5.1"]:
+        depends_on("rocm-core@" + ver, when="@" + ver)
+
         # tag changed to 'rocm-' in 4.0.0
         if ver == "3.9.0" or ver == "3.10.0":
             tag = "rocm-uc-"

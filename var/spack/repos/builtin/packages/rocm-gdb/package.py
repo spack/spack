@@ -139,6 +139,9 @@ class RocmGdb(AutotoolsPackage):
         depends_on("rocm-dbgapi@" + ver, type="link", when="@" + ver)
         depends_on("comgr@" + ver, type="link", when="@" + ver)
 
+    for ver in ["5.5.0", "5.5.1"]:
+        depends_on("rocm-core@" + ver, when="@" + ver)
+
     build_directory = "spack-build"
 
     def configure_args(self):

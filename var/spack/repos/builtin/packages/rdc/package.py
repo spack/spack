@@ -155,6 +155,9 @@ class Rdc(CMakePackage):
     ]:
         depends_on("hsa-rocr-dev@" + ver, when="@" + ver)
 
+    for ver in ["5.5.0", "5.5.1"]:
+        depends_on("rocm-core@" + ver, when="@" + ver)
+
     def patch(self):
         filter_file(r"\${ROCM_DIR}/rocm_smi", "${ROCM_SMI_DIR}", "CMakeLists.txt")
         filter_file(

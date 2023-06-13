@@ -142,6 +142,9 @@ class HipifyClang(CMakePackage):
     ]:
         depends_on("llvm-amdgpu@" + ver, when="@" + ver)
 
+    for ver in ["5.5.0", "5.5.1"]:
+        depends_on("rocm-core@" + ver, when="@" + ver)
+
     def setup_run_environment(self, env):
         # The installer puts the binaries directly into the prefix
         # instead of prefix/bin, so add prefix to the PATH

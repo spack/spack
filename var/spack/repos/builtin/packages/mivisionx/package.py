@@ -266,6 +266,9 @@ class Mivisionx(CMakePackage):
         for ver in ["5.3.3", "5.4.0", "5.4.3", "5.5.0", "5.5.1"]:
             depends_on("migraphx@" + ver, when="@" + ver)
 
+    for ver in ["5.5.0", "5.5.1"]:
+        depends_on("rocm-core@" + ver, when="@" + ver)
+
     def flag_handler(self, name, flags):
         spec = self.spec
         protobuf = spec["protobuf"].prefix.include

@@ -140,5 +140,8 @@ class Rocminfo(CMakePackage):
         depends_on("hsakmt-roct@" + ver, when="@" + ver)
         depends_on("hsa-rocr-dev@" + ver, when="@" + ver)
 
+    for ver in ["5.5.0", "5.5.1"]:
+        depends_on("rocm-core@" + ver, when="@" + ver)
+
     def cmake_args(self):
         return [self.define("ROCM_DIR", self.spec["hsa-rocr-dev"].prefix)]

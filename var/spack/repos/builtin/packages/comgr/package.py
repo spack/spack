@@ -160,6 +160,9 @@ class Comgr(CMakePackage):
             "rocm-device-libs@" + ver, when="@{0} ^llvm-amdgpu ~rocm-device-libs".format(ver)
         )
 
+    for ver in ["5.5.0", "5.5.1"]:
+        depends_on("rocm-core@" + ver, when="@" + ver)
+
     root_cmakelists_dir = join_path("lib", "comgr")
 
     @classmethod
