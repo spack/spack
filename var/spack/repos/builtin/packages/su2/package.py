@@ -59,7 +59,7 @@ class Su2(MesonPackage):
     depends_on("py-mpi4py", when="+pywrapper")
     depends_on("intel-oneapi-mkl", when="+mkl")
     depends_on("openblas", when="+openblas ~mkl")
-    depends_on("cmake", when="+mpp")
+    depends_on("cmake", type="build", when="+mpp")
 
     patch("meson_version.patch", when="@7.4.0:7.5.1")
 
