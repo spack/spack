@@ -849,6 +849,8 @@ class PyclingoDriver(object):
             error_handler = ErrorHandler(best_model)
             error_handler.raise_if_errors()
 
+            # build specs from spec attributes in the model
+            spec_attrs = [(name, tuple(rest)) for name, *rest in extract_args(best_model, "attr")]
             answers = builder.build_specs(spec_attrs)
 
             # add best spec to the results
