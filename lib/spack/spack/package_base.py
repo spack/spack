@@ -1231,6 +1231,7 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
             if any(dt in cls.dependencies[name][cond].type for cond in conds for dt in deptypes)
         )
 
+    # TODO: allow more than one active extendee.
     @property
     def extendee_spec(self):
         """
@@ -1246,7 +1247,6 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
             if dep.name in self.extendees:
                 deps.append(dep)
 
-        # TODO: allow more than one active extendee.
         if deps:
             assert len(deps) == 1
             return deps[0]
@@ -1256,7 +1256,6 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
         if self.spec._concrete:
             return None
         else:
-            # TODO: do something sane here with more than one extendee
             # If it's not concrete, then return the spec from the
             # extends() directive since that is all we know so far.
             spec_str, kwargs = next(iter(self.extendees.items()))

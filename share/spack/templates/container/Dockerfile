@@ -37,7 +37,7 @@ RUN find -L {{ paths.view }}/* -type f -exec readlink -f '{}' \; | \
 
 # Modifications to the environment that are necessary to run
 RUN cd {{ paths.environment }} && \
-    spack env activate --sh -d . >> /etc/profile.d/z10_spack_environment.sh
+    spack env activate --sh -d . > activate.sh
 
 {% if extra_instructions.build %}
 {{ extra_instructions.build }}
@@ -53,7 +53,13 @@ COPY --from=builder {{ paths.environment }} {{ paths.environment }}
 COPY --from=builder {{ paths.store }} {{ paths.store }}
 COPY --from=builder {{ paths.hidden_view }} {{ paths.hidden_view }}
 COPY --from=builder {{ paths.view }} {{ paths.view }}
-COPY --from=builder /etc/profile.d/z10_spack_environment.sh /etc/profile.d/z10_spack_environment.sh
+
+RUN { \
+      echo '#!/bin/sh' \
+      && echo '.' {{ paths.environment }}/activate.sh \
+      && echo 'exec "$@"'; \
+    } > /entrypoint.sh \
+&&  chmod a+x /entrypoint.sh
 
 {% block final_stage %}
 
@@ -70,6 +76,6 @@ RUN {% if os_package_update %}{{ os_packages_final.update }} \
 {% for label, value in labels.items() %}
 LABEL "{{ label }}"="{{ value }}"
 {% endfor %}
-ENTRYPOINT ["/bin/bash", "--rcfile", "/etc/profile", "-l", "-c", "$*", "--" ]
+ENTRYPOINT [ "/entrypoint.sh" ]
 CMD [ "/bin/bash" ]
 {% endif %}
