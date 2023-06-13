@@ -152,7 +152,7 @@ class Root(Package):
     version("1.0", sha256="abcde")
     depends_on("changing")
 
-    conflicts("changing~foo")
+    conflicts("^changing~foo")
 """
     packages_dir.join("root", "package.py").write(root_pkg_str, ensure=True)
 
@@ -1599,7 +1599,7 @@ class TestConcretize:
             pytest.xfail("Known failure of the original concretizer")
 
         # Install a dependency that cannot be reused with "root"
-        # because of a conflict a variant, then delete its version
+        # because of a conflict in a variant, then delete its version
         dependency = Spec("changing@1.0~foo").concretized()
         dependency.package.do_install(fake=True, explicit=True)
         repo_with_changing_recipe.change({"delete_version": True})
