@@ -14,6 +14,7 @@ class PyDarshan(PythonPackage):
 
     maintainers("jeanbez", "shanedsnyder")
 
+    version("3.4.3.0", sha256="e0708fc5445f2d491ebd381a253cd67534cef13b963f1d749dd605a10f5c0f8f")
     version("3.4.2.0", sha256="eb00eb758c96899c0d523b71eb00caa3b967509c27fd504c579ac8c9b521845c")
     version("3.4.1.0", sha256="41a033ebac6fcd0ca05b8ccf07e11191286dee923ec334b876a7ec8e8a6add84")
     version("3.4.0.1", sha256="0142fc7c0b12a9e5c22358aa26cca7083d28af42aeea7dfcc5698c56b6aee6b7")
@@ -32,6 +33,7 @@ class PyDarshan(PythonPackage):
     depends_on("py-matplotlib@3.4", type=("build", "run"))
     depends_on("py-seaborn", type=("build", "run"))
     depends_on("py-mako", type=("build", "run"))
+    depends_on("py-humanize", type=("build", "run"))
     depends_on("py-pytest", type="test")
     # NOTE: lxml is test-only indirect dependency via pandas
     #       It will become optional in the next release
