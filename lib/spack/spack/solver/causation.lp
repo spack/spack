@@ -64,9 +64,9 @@ error(0, "Version '{0}' of {1} does not satisfy '@{2}'", Version, Virtual, Const
 
 % More specific error message if the version cannot satisfy some constraint
 % Otherwise covered by `no_version_error` and `versions_conflict_error`.
-error(0, "No valid version for '{0}' satisfies '@{1}'", Package, Constraint, startcauses, ConstraintCause)
+error(0, "Cannot satisfy '{0}@{1}'", Package, Constraint, startcauses, ConstraintCause)
   :- attr("node_version_satisfies", Package, Constraint),
      imposed_constraint(ConstraintCause, "node_version_satisfies", Package, Constraint),
      condition_holds(ConstraintCause),
-     C = #count{ Version : attr("version", Package, Version), version_satisfies(Package, Constraint, Version)},
-     C < 1.
+     attr("version", Package, Version),
+     not version_satisfies(Package, Constraint, Version).

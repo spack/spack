@@ -614,7 +614,7 @@ class ErrorHandler:
     def no_value_error(self, attribute, pkg):
         return f'Cannot select a single "{attribute}" for package "{pkg}"'
 
-    def _get_cause_tree(self, cause, conditions, condition_causes, literals, indent=""):
+    def _get_cause_tree(self, cause, conditions, condition_causes, literals, indent="        "):
         parents = [c for e, c in condition_causes if e == cause]
         local = "required because %s " % conditions[cause]
 
@@ -626,9 +626,9 @@ class ErrorHandler:
             )
         ]
 
-    def get_cause_tree(self, result, best_model, cause):
-        conditions = dict(extract_args(best_model, "condition"))
-        condition_causes = list(extract_args(best_model, "condition_cause"))
+    def get_cause_tree(self, cause):
+        conditions = dict(extract_args(self.model, "condition"))
+        condition_causes = list(extract_args(self.model, "condition_cause"))
         return self._get_cause_tree(cause, conditions, condition_causes, [])
 
     def handle_error(self, msg, *args):
