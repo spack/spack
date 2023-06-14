@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -10,10 +10,11 @@ class BlastPlus(AutotoolsPackage):
     """Basic Local Alignment Search Tool."""
 
     homepage = "https://blast.ncbi.nlm.nih.gov/"
-    url = "https://ftp.ncbi.nlm.nih.gov/blast/executables/blast+/2.12.0/ncbi-blast-2.12.0+-src.tar.gz"
+    url = "https://ftp.ncbi.nlm.nih.gov/blast/executables/blast+/2.13.0/ncbi-blast-2.13.0+-src.tar.gz"
 
-    maintainers = ["weijianwen"]
+    maintainers("weijianwen")
 
+    version("2.13.0", sha256="89553714d133daf28c477f83d333794b3c62e4148408c072a1b4620e5ec4feb2")
     version("2.12.0", sha256="fda3c9c9d488cad6c1880a98a236d842bcf3610e3e702af61f7a48cf0a714b88")
     version("2.11.0", sha256="d88e1858ae7ce553545a795a2120e657a799a6d334f2a07ef0330cc3e74e1954")
     version("2.9.0", sha256="a390cc2d7a09422759fc178db84de9def822cbe485916bbb2ec0d215dacdc257")
@@ -44,6 +45,8 @@ class BlastPlus(AutotoolsPackage):
 
     # No...
     # depends_on :mysql => :optional
+
+    depends_on("cpio", type="build")
 
     variant("static", default=False, description="Build with static linkage")
     variant("jpeg", default=True, description="Build with jpeg support")
@@ -81,12 +84,7 @@ class BlastPlus(AutotoolsPackage):
     def configure_args(self):
         spec = self.spec
 
-        config_args = [
-            "--with-bin-release",
-            "--without-debug",
-            "--with-mt",
-            "--without-boost",
-        ]
+        config_args = ["--with-bin-release", "--without-debug", "--with-mt", "--without-boost"]
 
         if spec.target.family != "aarch64":
             config_args.append("--with-64")

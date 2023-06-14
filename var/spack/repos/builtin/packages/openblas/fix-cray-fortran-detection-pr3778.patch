@@ -1,0 +1,54 @@
+diff -ruN spack-src/f_check spack-src-patched/f_check
+--- spack-src/f_check	2022-08-07 16:36:26.000000000 -0400
++++ spack-src-patched/f_check	2022-10-20 15:06:34.296845220 -0400
+@@ -82,10 +82,6 @@
+                 vendor=FUJITSU
+                 openmp='-Kopenmp'
+                 ;;
+-	    *Cray*)
+-		vendor=CRAY
+-		openmp='-fopenmp'
+-		;;
+             *GNU*|*GCC*)
+ 
+                 v="${data#*GCC: *\) }"
+@@ -117,6 +113,10 @@
+                     esac
+                 fi
+                 ;;
++            *Cray*)
++		vendor=CRAY
++		openmp='-fopenmp'
++		;;
+             *g95*)
+                 vendor=G95
+                 openmp=''
+diff -ruN spack-src/f_check.pl spack-src-patched/f_check.pl
+--- spack-src/f_check.pl	2022-08-07 16:36:26.000000000 -0400
++++ spack-src-patched/f_check.pl	2022-10-20 15:07:50.884794505 -0400
+@@ -76,11 +76,6 @@
+ 	    $vendor = FUJITSU;
+ 	    $openmp = "-Kopenmp";
+ 
+-	} elsif ($data =~ /Cray/) {
+-
+-	    $vendor = CRAY;
+-	    $openmp = "-fopenmp";
+-
+ 	} elsif ($data =~ /GNU/ || $data =~ /GCC/ ) {
+ 
+             $data =~ s/\(+.*?\)+//g;
+@@ -106,8 +101,12 @@
+ 		    $openmp = "";
+ 		}
+ 	    }
++	} elsif ($data =~ /Cray/) {
++
++            $vendor = CRAY;
++	    $openmp = "-fopenmp";
+ 
+-	}
++        }
+ 
+ 	if ($data =~ /g95/) {
+ 	    $vendor = G95;

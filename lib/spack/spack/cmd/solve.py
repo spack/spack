@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -140,12 +140,15 @@ def _process_result(result, show, required_format, kwargs):
 
 def solve(parser, args):
     # these are the same options as `spack spec`
-    name_fmt = "{namespace}.{name}" if args.namespaces else "{name}"
-    fmt = "{@version}{%compiler}{compiler_flags}{variants}{arch=architecture}"
     install_status_fn = spack.spec.Spec.install_status
+
+    fmt = spack.spec.display_format
+    if args.namespaces:
+        fmt = "{namespace}." + fmt
+
     kwargs = {
         "cover": args.cover,
-        "format": name_fmt + fmt,
+        "format": fmt,
         "hashlen": None if args.very_long else 7,
         "show_types": args.types,
         "status_fn": install_status_fn if args.install_status else None,
@@ -182,11 +185,7 @@ def solve(parser, args):
         # set up solver parameters
         # Note: reuse and other concretizer prefs are passed as configuration
         result = solver.solve(
-            specs,
-            out=output,
-            timers=args.timers,
-            stats=args.stats,
-            setup_only=setup_only,
+            specs, out=output, timers=args.timers, stats=args.stats, setup_only=setup_only
         )
         if not setup_only:
             _process_result(result, show, required_format, kwargs)

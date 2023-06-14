@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -33,7 +33,6 @@ class PyAiohttp(PythonPackage):
     depends_on("py-async-timeout@4.0:4", type=("build", "run"), when="@3.8.0:")
     depends_on("py-asynctest@0.13.0", type=("build", "run"), when="@3.8.0: ^python@:3.7")
     depends_on("py-yarl@1.0:1", type=("build", "run"))
-    depends_on("py-idna-ssl@1.0:", type=("build", "run"), when="^python@:3.6")
     depends_on("py-typing-extensions@3.7.4:", type=("build", "run"), when="@3.8: ^python@:3.7")
     depends_on("py-typing-extensions@3.6.5:", type=("build", "run"), when="@3.7")
     depends_on("py-typing-extensions@3.6.5:", type=("build", "run"), when="@:3.6 ^python@:3.7")

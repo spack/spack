@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -36,12 +36,7 @@ import os
 import re
 import sys
 from contextlib import contextmanager
-from typing import List  # novm
-
-import ruamel.yaml as yaml
-import six
-from ruamel.yaml.error import MarkedYAMLError
-from six import iteritems
+from typing import Dict, List, Optional, Union
 
 import llnl.util.lang
 import llnl.util.tty as tty
@@ -79,6 +74,8 @@ section_schemas = {
     "config": spack.schema.config.schema,
     "upstreams": spack.schema.upstreams.schema,
     "bootstrap": spack.schema.bootstrap.schema,
+    "ci": spack.schema.ci.schema,
+    "cdash": spack.schema.cdash.schema,
 }
 
 # Same as above, but including keys for environments
@@ -162,8 +159,8 @@ class ConfigScope(object):
             mkdirp(self.path)
             with open(filename, "w") as f:
                 syaml.dump_config(data, stream=f, default_flow_style=False)
-        except (yaml.YAMLError, IOError) as e:
-            raise ConfigFileError("Error writing to config file: '%s'" % str(e))
+        except (syaml.SpackYAMLError, IOError) as e:
+            raise ConfigFileError(f"cannot write to '{filename}'") from e
 
     def clear(self):
         """Empty cached config information."""
@@ -292,8 +289,8 @@ class SingleFileScope(ConfigScope):
                 syaml.dump_config(data_to_write, stream=f, default_flow_style=False)
             rename(tmp, self.path)
 
-        except (yaml.YAMLError, IOError) as e:
-            raise ConfigFileError("Error writing to config file: '%s'" % str(e))
+        except (syaml.SpackYAMLError, IOError) as e:
+            raise ConfigFileError(f"cannot write to config file {str(e)}") from e
 
     def __repr__(self):
         return "<SingleFileScope: %s: %s>" % (self.name, self.path)
@@ -358,10 +355,16 @@ class InternalConfigScope(ConfigScope):
     def _process_dict_keyname_overrides(data):
         """Turn a trailing `:' in a key name into an override attribute."""
         result = {}
-        for sk, sv in iteritems(data):
+        for sk, sv in data.items():
             if sk.endswith(":"):
                 key = syaml.syaml_str(sk[:-1])
                 key.override = True
+            elif sk.endswith("+"):
+                key = syaml.syaml_str(sk[:-1])
+                key.prepend = True
+            elif sk.endswith("-"):
+                key = syaml.syaml_str(sk[:-1])
+                key.append = True
             else:
                 key = sk
 
@@ -393,47 +396,44 @@ class Configuration(object):
     This class makes it easy to add a new scope on top of an existing one.
     """
 
-    def __init__(self, *scopes):
+    # convert to typing.OrderedDict when we drop 3.6, or OrderedDict when we reach 3.9
+    scopes: Dict[str, ConfigScope]
+
+    def __init__(self, *scopes: ConfigScope):
         """Initialize a configuration with an initial list of scopes.
 
         Args:
-            scopes (list of ConfigScope): list of scopes to add to this
+            scopes: list of scopes to add to this
                 Configuration, ordered from lowest to highest precedence
 
         """
         self.scopes = collections.OrderedDict()
         for scope in scopes:
             self.push_scope(scope)
-        self.format_updates = collections.defaultdict(list)
+        self.format_updates: Dict[str, List[str]] = collections.defaultdict(list)
 
     @_config_mutator
-    def push_scope(self, scope):
+    def push_scope(self, scope: ConfigScope):
         """Add a higher precedence scope to the Configuration."""
-        cmd_line_scope = None
-        if self.scopes:
-            highest_precedence_scope = list(self.scopes.values())[-1]
-            if highest_precedence_scope.name == "command_line":
-                # If the command-line scope is present, it should always
-                # be the scope of highest precedence
-                cmd_line_scope = self.pop_scope()
-
+        tty.debug("[CONFIGURATION: PUSH SCOPE]: {}".format(str(scope)), level=2)
         self.scopes[scope.name] = scope
-        if cmd_line_scope:
-            self.scopes["command_line"] = cmd_line_scope
 
     @_config_mutator
-    def pop_scope(self):
+    def pop_scope(self) -> ConfigScope:
         """Remove the highest precedence scope and return it."""
-        name, scope = self.scopes.popitem(last=True)
+        name, scope = self.scopes.popitem(last=True)  # type: ignore[call-arg]
+        tty.debug("[CONFIGURATION: POP SCOPE]: {}".format(str(scope)), level=2)
         return scope
 
     @_config_mutator
-    def remove_scope(self, scope_name):
+    def remove_scope(self, scope_name: str) -> Optional[ConfigScope]:
         """Remove scope by name; has no effect when ``scope_name`` does not exist"""
-        return self.scopes.pop(scope_name, None)
+        scope = self.scopes.pop(scope_name, None)
+        tty.debug("[CONFIGURATION: POP SCOPE]: {}".format(str(scope)), level=2)
+        return scope
 
     @property
-    def file_scopes(self):
+    def file_scopes(self) -> List[ConfigScope]:
         """List of writable scopes with an associated file."""
         return [
             s
@@ -441,21 +441,21 @@ class Configuration(object):
             if (type(s) == ConfigScope or type(s) == SingleFileScope)
         ]
 
-    def highest_precedence_scope(self):
+    def highest_precedence_scope(self) -> ConfigScope:
         """Non-internal scope with highest precedence."""
-        return next(reversed(self.file_scopes), None)
+        return next(reversed(self.file_scopes))
 
-    def highest_precedence_non_platform_scope(self):
+    def highest_precedence_non_platform_scope(self) -> ConfigScope:
         """Non-internal non-platform scope with highest precedence
 
         Platform-specific scopes are of the form scope/platform"""
         generator = reversed(self.file_scopes)
-        highest = next(generator, None)
+        highest = next(generator)
         while highest and highest.is_platform_dependent:
-            highest = next(generator, None)
+            highest = next(generator)
         return highest
 
-    def matching_scopes(self, reg_expr):
+    def matching_scopes(self, reg_expr) -> List[ConfigScope]:
         """
         List of all scopes whose names match the provided regular expression.
 
@@ -464,7 +464,7 @@ class Configuration(object):
         """
         return [s for s in self.scopes.values() if re.search(reg_expr, s.name)]
 
-    def _validate_scope(self, scope):
+    def _validate_scope(self, scope: Optional[str]) -> ConfigScope:
         """Ensure that scope is valid in this configuration.
 
         This should be used by routines in ``config.py`` to validate
@@ -489,7 +489,7 @@ class Configuration(object):
                 "Invalid config scope: '%s'.  Must be one of %s" % (scope, self.scopes.keys())
             )
 
-    def get_config_filename(self, scope, section):
+    def get_config_filename(self, scope, section) -> str:
         """For some scope and section, get the name of the configuration file."""
         scope = self._validate_scope(scope)
         return scope.get_section_filename(section)
@@ -503,7 +503,9 @@ class Configuration(object):
             scope.clear()
 
     @_config_mutator
-    def update_config(self, section, update_data, scope=None, force=False):
+    def update_config(
+        self, section: str, update_data: Dict, scope: Optional[str] = None, force: bool = False
+    ):
         """Update the configuration file for a particular scope.
 
         Overwrites contents of a section in a scope with update_data,
@@ -538,16 +540,14 @@ class Configuration(object):
         scope = self._validate_scope(scope)  # get ConfigScope object
 
         # manually preserve comments
-        need_comment_copy = section in scope.sections and scope.sections[section] is not None
+        need_comment_copy = section in scope.sections and scope.sections[section]
         if need_comment_copy:
-            comments = getattr(
-                scope.sections[section][section], yaml.comments.Comment.attrib, None
-            )
+            comments = syaml.extract_comments(scope.sections[section][section])
 
         # read only the requested section's data.
         scope.sections[section] = syaml.syaml_dict({section: update_data})
         if need_comment_copy and comments:
-            setattr(scope.sections[section][section], yaml.comments.Comment.attrib, comments)
+            syaml.set_comments(scope.sections[section][section], data_comments=comments)
 
         scope._write_section(section)
 
@@ -700,8 +700,8 @@ class Configuration(object):
             data = syaml.syaml_dict()
             data[section] = self.get_config(section)
             syaml.dump_config(data, stream=sys.stdout, default_flow_style=False, blame=blame)
-        except (yaml.YAMLError, IOError):
-            raise ConfigError("Error reading configuration: %s" % section)
+        except (syaml.SpackYAMLError, IOError) as e:
+            raise ConfigError(f"cannot read '{section}' configuration") from e
 
 
 @contextmanager
@@ -745,7 +745,7 @@ def override(path_or_scope, value=None):
 
 #: configuration scopes added on the command line
 #: set by ``spack.main.main()``.
-command_line_scopes = []  # type: List[str]
+command_line_scopes: List[str] = []
 
 
 def _add_platform_scope(cfg, scope_type, name, path):
@@ -796,7 +796,7 @@ def _config():
     configuration_paths = [
         # Default configuration scope is the lowest-level scope. These are
         # versioned with Spack and can be overridden by systems, sites or users
-        configuration_defaults_path,
+        configuration_defaults_path
     ]
 
     disable_local_config = "SPACK_DISABLE_LOCAL_CONFIG" in os.environ
@@ -804,15 +804,11 @@ def _config():
     # System configuration is per machine.
     # This is disabled if user asks for no local configuration.
     if not disable_local_config:
-        configuration_paths.append(
-            ("system", spack.paths.system_config_path),
-        )
+        configuration_paths.append(("system", spack.paths.system_config_path))
 
     # Site configuration is per spack instance, for sites or projects
     # No site-level configs should be checked into spack by default.
-    configuration_paths.append(
-        ("site", os.path.join(spack.paths.etc_path)),
-    )
+    configuration_paths.append(("site", os.path.join(spack.paths.etc_path)))
 
     # User configuration can override both spack defaults and site config
     # This is disabled if user asks for no local configuration.
@@ -837,7 +833,7 @@ def _config():
 
 
 #: This is the singleton configuration instance for Spack.
-config = llnl.util.lang.Singleton(_config)
+config: Union[Configuration, llnl.util.lang.Singleton] = llnl.util.lang.Singleton(_config)
 
 
 def add_from_file(filename, scope=None):
@@ -959,19 +955,9 @@ def validate(data, schema, filename=None):
     """
     import jsonschema
 
-    # validate a copy to avoid adding defaults
+    # Validate a copy to avoid adding defaults
     # This allows us to round-trip data without adding to it.
-    test_data = copy.deepcopy(data)
-
-    if isinstance(test_data, yaml.comments.CommentedMap):
-        # HACK to fully copy ruamel CommentedMap that doesn't provide copy
-        # method. Especially necessary for environments
-        setattr(
-            test_data,
-            yaml.comments.Comment.attrib,
-            getattr(data, yaml.comments.Comment.attrib, yaml.comments.Comment()),
-        )
-
+    test_data = syaml.deepcopy(data)
     try:
         spack.schema.Validator(schema).validate(test_data)
     except jsonschema.ValidationError as e:
@@ -979,7 +965,7 @@ def validate(data, schema, filename=None):
             line_number = e.instance.lc.line + 1
         else:
             line_number = None
-        raise six.raise_from(ConfigFormatError(e, data, filename, line_number), e)
+        raise ConfigFormatError(e, data, filename, line_number) from e
     # return the validated data so that we can access the raw data
     # mostly relevant for environments
     return test_data
@@ -997,7 +983,7 @@ def read_config_file(filename, schema=None):
 
     if not os.path.exists(filename):
         # Ignore nonexistent files.
-        tty.debug("Skipping nonexistent config path {0}".format(filename))
+        tty.debug("Skipping nonexistent config path {0}".format(filename), level=3)
         return None
 
     elif not os.path.isfile(filename):
@@ -1019,21 +1005,13 @@ def read_config_file(filename, schema=None):
         return data
 
     except StopIteration:
-        raise ConfigFileError("Config file is empty or is not a valid YAML dict: %s" % filename)
+        raise ConfigFileError(f"Config file is empty or is not a valid YAML dict: {filename}")
 
-    except MarkedYAMLError as e:
-        msg = "Error parsing yaml"
-        mark = e.context_mark if e.context_mark else e.problem_mark
-        if mark:
-            line, column = mark.line, mark.column
-            msg += ": near %s, %s, %s" % (mark.name, str(line), str(column))
-        else:
-            msg += ": %s" % (filename)
-        msg += ": %s" % (e.problem)
-        raise ConfigFileError(msg)
+    except syaml.SpackYAMLError as e:
+        raise ConfigFileError(str(e)) from e
 
     except IOError as e:
-        raise ConfigFileError("Error reading configuration file %s: %s" % (filename, str(e)))
+        raise ConfigFileError(f"Error reading configuration file {filename}: {str(e)}") from e
 
 
 def _override(string):
@@ -1045,6 +1023,33 @@ def _override(string):
 
     """
     return hasattr(string, "override") and string.override
+
+
+def _append(string):
+    """Test if a spack YAML string is an override.
+
+    See ``spack_yaml`` for details.  Keys in Spack YAML can end in `+:`,
+    and if they do, their values append lower-precedence
+    configs.
+
+    str, str : concatenate strings.
+    [obj], [obj] : append lists.
+
+    """
+    return getattr(string, "append", False)
+
+
+def _prepend(string):
+    """Test if a spack YAML string is an override.
+
+    See ``spack_yaml`` for details.  Keys in Spack YAML can end in `+:`,
+    and if they do, their values prepend lower-precedence
+    configs.
+
+    str, str : concatenate strings.
+    [obj], [obj] : prepend lists. (default behavior)
+    """
+    return getattr(string, "prepend", False)
 
 
 def _mark_internal(data, name):
@@ -1062,8 +1067,8 @@ def _mark_internal(data, name):
         d = syaml.syaml_type(data)
 
     if syaml.markable(d):
-        d._start_mark = yaml.Mark(name, None, None, None, None, None)
-        d._end_mark = yaml.Mark(name, None, None, None, None, None)
+        d._start_mark = syaml.name_mark(name)
+        d._end_mark = syaml.name_mark(name)
 
     return d
 
@@ -1109,7 +1114,57 @@ def get_valid_type(path):
     raise ConfigError("Cannot determine valid type for path '%s'." % path)
 
 
-def merge_yaml(dest, source):
+def remove_yaml(dest, source):
+    """UnMerges source from dest; entries in source take precedence over dest.
+
+    This routine may modify dest and should be assigned to dest, in
+    case dest was None to begin with, e.g.:
+
+       dest = remove_yaml(dest, source)
+
+    In the result, elements from lists from ``source`` will not appear
+    as elements of lists from ``dest``. Likewise, when iterating over keys
+    or items in merged ``OrderedDict`` objects, keys from ``source`` will not
+    appear as keys in ``dest``.
+
+    Config file authors can optionally end any attribute in a dict
+    with `::` instead of `:`, and the key will remove the entire section
+    from ``dest``
+    """
+
+    def they_are(t):
+        return isinstance(dest, t) and isinstance(source, t)
+
+    # If source is None, overwrite with source.
+    if source is None:
+        return dest
+
+    # Source list is prepended (for precedence)
+    if they_are(list):
+        # Make sure to copy ruamel comments
+        dest[:] = [x for x in dest if x not in source]
+        return dest
+
+    # Source dict is merged into dest.
+    elif they_are(dict):
+        for sk, sv in source.items():
+            # always remove the dest items. Python dicts do not overwrite
+            # keys on insert, so this ensures that source keys are copied
+            # into dest along with mark provenance (i.e., file/line info).
+            unmerge = sk in dest
+            old_dest_value = dest.pop(sk, None)
+
+            if unmerge and not spack.config._override(sk):
+                dest[sk] = remove_yaml(old_dest_value, sv)
+
+        return dest
+
+    # If we reach here source and dest are either different types or are
+    # not both lists or dicts: replace with source.
+    return dest
+
+
+def merge_yaml(dest, source, prepend=False, append=False):
     """Merges source into dest; entries in source take precedence over dest.
 
     This routine may modify dest and should be assigned to dest, in
@@ -1125,6 +1180,9 @@ def merge_yaml(dest, source):
     Config file authors can optionally end any attribute in a dict
     with `::` instead of `:`, and the key will override that of the
     parent instead of merging.
+
+    `+:` will extend the default prepend merge strategy to include string concatenation
+    `-:` will change the merge strategy to append, it also includes string concatentation
     """
 
     def they_are(t):
@@ -1136,8 +1194,12 @@ def merge_yaml(dest, source):
 
     # Source list is prepended (for precedence)
     if they_are(list):
-        # Make sure to copy ruamel comments
-        dest[:] = source + [x for x in dest if x not in source]
+        if append:
+            # Make sure to copy ruamel comments
+            dest[:] = [x for x in dest if x not in source] + source
+        else:
+            # Make sure to copy ruamel comments
+            dest[:] = source + [x for x in dest if x not in source]
         return dest
 
     # Source dict is merged into dest.
@@ -1146,7 +1208,7 @@ def merge_yaml(dest, source):
         # come *before* dest in OrderdDicts
         dest_keys = [dk for dk in dest.keys() if dk not in source]
 
-        for sk, sv in iteritems(source):
+        for sk, sv in source.items():
             # always remove the dest items. Python dicts do not overwrite
             # keys on insert, so this ensures that source keys are copied
             # into dest along with mark provenance (i.e., file/line info).
@@ -1154,7 +1216,7 @@ def merge_yaml(dest, source):
             old_dest_value = dest.pop(sk, None)
 
             if merge and not _override(sk):
-                dest[sk] = merge_yaml(old_dest_value, sv)
+                dest[sk] = merge_yaml(old_dest_value, sv, _prepend(sk), _append(sk))
             else:
                 # if sk ended with ::, or if it's new, completely override
                 dest[sk] = copy.deepcopy(sv)
@@ -1164,6 +1226,13 @@ def merge_yaml(dest, source):
             dest[dk] = dest.pop(dk)
 
         return dest
+
+    elif they_are(str):
+        # Concatenate strings in prepend mode
+        if prepend:
+            return source + dest
+        elif append:
+            return dest + source
 
     # If we reach here source and dest are either different types or are
     # not both lists or dicts: replace with source.
@@ -1190,6 +1259,17 @@ def process_config_path(path):
             front = syaml.syaml_str(front)
             front.override = True
             seen_override_in_path = True
+
+        elif front.endswith("+"):
+            front = front.rstrip("+")
+            front = syaml.syaml_str(front)
+            front.prepend = True
+
+        elif front.endswith("-"):
+            front = front.rstrip("-")
+            front = syaml.syaml_str(front)
+            front.append = True
+
         result.append(front)
     return result
 
@@ -1323,14 +1403,15 @@ def raw_github_gitlab_url(url):
     return url
 
 
-def collect_urls(base_url):
+def collect_urls(base_url: str) -> list:
     """Return a list of configuration URLs.
 
     Arguments:
-        base_url (str): URL for a configuration (yaml) file or a directory
+        base_url: URL for a configuration (yaml) file or a directory
             containing yaml file(s)
 
-    Returns: (list) list of configuration file(s) or empty list if none
+    Returns:
+        List of configuration file(s) or empty list if none
     """
     if not base_url:
         return []
@@ -1345,20 +1426,21 @@ def collect_urls(base_url):
     return [link for link in links if link.endswith(extension)]
 
 
-def fetch_remote_configs(url, dest_dir, skip_existing=True):
+def fetch_remote_configs(url: str, dest_dir: str, skip_existing: bool = True) -> str:
     """Retrieve configuration file(s) at the specified URL.
 
     Arguments:
-        url (str): URL for a configuration (yaml) file or a directory containing
+        url: URL for a configuration (yaml) file or a directory containing
             yaml file(s)
-        dest_dir (str): destination directory
-        skip_existing (bool): Skip files that already exist in dest_dir if
+        dest_dir: destination directory
+        skip_existing: Skip files that already exist in dest_dir if
             ``True``; otherwise, replace those files
 
-    Returns: (str) path to the corresponding file if URL is or contains a
-       single file and it is the only file in the destination directory or
-       the root (dest_dir) directory if multiple configuration files exist
-       or are retrieved.
+    Returns:
+        Path to the corresponding file if URL is or contains a
+        single file and it is the only file in the destination directory or
+        the root (dest_dir) directory if multiple configuration files exist
+        or are retrieved.
     """
 
     def _fetch_file(url):

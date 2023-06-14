@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -7,8 +7,6 @@ from __future__ import print_function
 
 import argparse
 import sys
-
-from six import iteritems
 
 import llnl.util.tty as tty
 from llnl.util.lang import index_by
@@ -100,7 +98,7 @@ def compiler_find(args):
         config = spack.config.config
         filename = config.get_config_filename(args.scope, "compilers")
         tty.msg("Added %d new compiler%s to %s" % (n, s, filename))
-        colify(reversed(sorted(c.spec for c in new_compilers)), indent=4)
+        colify(reversed(sorted(c.spec.display_str for c in new_compilers)), indent=4)
     else:
         tty.msg("Found no new compilers")
     tty.msg("Compilers are defined in the following files:")
@@ -114,13 +112,13 @@ def compiler_remove(args):
         tty.die("No compilers match spec %s" % cspec)
     elif not args.all and len(compilers) > 1:
         tty.error("Multiple compilers match spec %s. Choose one:" % cspec)
-        colify(reversed(sorted([c.spec for c in compilers])), indent=4)
+        colify(reversed(sorted([c.spec.display_str for c in compilers])), indent=4)
         tty.msg("Or, use `spack compiler remove -a` to remove all of them.")
         sys.exit(1)
 
     for compiler in compilers:
         spack.compilers.remove_compiler_from_config(compiler.spec, scope=args.scope)
-        tty.msg("Removed compiler %s" % compiler.spec)
+        tty.msg("Removed compiler %s" % compiler.spec.display_str)
 
 
 def compiler_info(args):
@@ -132,19 +130,19 @@ def compiler_info(args):
         tty.die("No compilers match spec %s" % cspec)
     else:
         for c in compilers:
-            print(str(c.spec) + ":")
+            print(c.spec.display_str + ":")
             print("\tpaths:")
             for cpath in ["cc", "cxx", "f77", "fc"]:
                 print("\t\t%s = %s" % (cpath, getattr(c, cpath, None)))
             if c.flags:
                 print("\tflags:")
-                for flag, flag_value in iteritems(c.flags):
+                for flag, flag_value in c.flags.items():
                     print("\t\t%s = %s" % (flag, flag_value))
             if len(c.environment) != 0:
                 if len(c.environment.get("set", {})) != 0:
                     print("\tenvironment:")
                     print("\t    set:")
-                    for key, value in iteritems(c.environment["set"]):
+                    for key, value in c.environment["set"].items():
                         print("\t        %s = %s" % (key, value))
             if c.extra_rpaths:
                 print("\tExtra rpaths:")
@@ -190,7 +188,7 @@ def compiler_list(args):
             os_str += "-%s" % target
         cname = "%s{%s} %s" % (spack.spec.compiler_color, name, os_str)
         tty.hline(colorize(cname), char="-")
-        colify(reversed(sorted(c.spec for c in compilers)))
+        colify(reversed(sorted(c.spec.display_str for c in compilers)))
 
 
 def compiler(parser, args):

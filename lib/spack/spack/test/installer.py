@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -17,14 +17,15 @@ import llnl.util.tty as tty
 
 import spack.binary_distribution
 import spack.compilers
+import spack.concretize
+import spack.config
 import spack.installer as inst
 import spack.package_prefs as prefs
 import spack.repo
 import spack.spec
 import spack.store
 import spack.util.lock as lk
-
-is_windows = sys.platform == "win32"
+import spack.version
 
 
 def _mock_repo(root, namespace):
@@ -205,16 +206,6 @@ def test_process_external_package_module(install_mockery, monkeypatch, capfd):
     assert "has external module in {0}".format(spec.external_modules) in out
 
 
-def test_process_binary_cache_tarball_none(install_mockery, monkeypatch, capfd):
-    """Tests of _process_binary_cache_tarball when no tarball."""
-    monkeypatch.setattr(spack.binary_distribution, "download_tarball", _none)
-
-    s = spack.spec.Spec("trivial-install-test-package").concretized()
-    assert not inst._process_binary_cache_tarball(s.package, None, False, False)
-
-    assert "exists in binary cache but" in capfd.readouterr()[0]
-
-
 def test_process_binary_cache_tarball_tar(install_mockery, monkeypatch, capfd):
     """Tests of _process_binary_cache_tarball with a tar file."""
 
@@ -229,7 +220,7 @@ def test_process_binary_cache_tarball_tar(install_mockery, monkeypatch, capfd):
     monkeypatch.setattr(spack.database.Database, "add", _noop)
 
     spec = spack.spec.Spec("a").concretized()
-    assert inst._process_binary_cache_tarball(spec.package, spec, False, False)
+    assert inst._process_binary_cache_tarball(spec.package, explicit=False, unsigned=False)
 
     out = capfd.readouterr()[0]
     assert "Extracting a" in out
@@ -262,6 +253,54 @@ def test_installer_str(install_mockery):
     assert "#tasks=0" in istr
     assert "installed (0)" in istr
     assert "failed (0)" in istr
+
+
+def test_installer_prune_built_build_deps(install_mockery, monkeypatch, tmpdir):
+    r"""
+    Ensure that build dependencies of installed deps are pruned
+    from installer package queues.
+
+               (a)
+              /   \
+             /     \
+           (b)     (c) <--- is installed already so we should
+              \   / | \     prune (f) from this install since
+               \ /  |  \    it is *only* needed to build (b)
+               (d) (e) (f)
+
+    Thus since (c) is already installed our build_pq dag should
+    only include four packages. [(a), (b), (c), (d), (e)]
+    """
+
+    @property
+    def _mock_installed(self):
+        return self.name in ["c"]
+
+    # Mock the installed property to say that (b) is installed
+    monkeypatch.setattr(spack.spec.Spec, "installed", _mock_installed)
+
+    # Create mock repository with packages (a), (b), (c), (d), and (e)
+    builder = spack.repo.MockRepositoryBuilder(tmpdir.mkdir("mock-repo"))
+
+    builder.add_package("a", dependencies=[("b", "build", None), ("c", "build", None)])
+    builder.add_package("b", dependencies=[("d", "build", None)])
+    builder.add_package(
+        "c", dependencies=[("d", "build", None), ("e", "all", None), ("f", "build", None)]
+    )
+    builder.add_package("d")
+    builder.add_package("e")
+    builder.add_package("f")
+
+    with spack.repo.use_repositories(builder.root):
+        const_arg = installer_args(["a"], {})
+        installer = create_installer(const_arg)
+
+        installer._init_queue()
+
+        # Assert that (c) is not in the build_pq
+        result = set([task.pkg_id[0] for _, task in installer.build_pq])
+        expected = set(["a", "b", "c", "d", "e"])
+        assert result == expected
 
 
 def test_check_before_phase_error(install_mockery):
@@ -467,6 +506,39 @@ def test_packages_needed_to_bootstrap_compiler_packages(install_mockery, monkeyp
     assert packages
 
 
+def test_update_tasks_for_compiler_packages_as_compiler(mock_packages, config, monkeypatch):
+    spec = spack.spec.Spec("trivial-install-test-package").concretized()
+    installer = inst.PackageInstaller([(spec.package, {})])
+
+    # Add a task to the queue
+    installer._add_init_task(spec.package, installer.build_requests[0], False, {})
+
+    # monkeypatch to make the list of compilers be what we test
+    def fake_package_list(compiler, architecture, pkgs):
+        return [(spec.package, True)]
+
+    monkeypatch.setattr(inst, "_packages_needed_to_bootstrap_compiler", fake_package_list)
+
+    installer._add_bootstrap_compilers("fake", "fake", "fake", None, {})
+
+    # Check that the only task is now a compiler task
+    assert len(installer.build_pq) == 1
+    assert installer.build_pq[0][1].compiler
+
+
+def test_bootstrapping_compilers_with_different_names_from_spec(
+    install_mockery, mutable_config, mock_fetch, archspec_host_is_spack_test_host
+):
+    with spack.config.override("config:install_missing_compilers", True):
+        with spack.concretize.disable_compiler_existence_check():
+            spec = spack.spec.Spec("trivial-install-test-package%oneapi@=22.2.0").concretized()
+            spec.package.do_install()
+
+            assert (
+                spack.spec.CompilerSpec("oneapi@=22.2.0") in spack.compilers.all_compiler_specs()
+            )
+
+
 def test_dump_packages_deps_ok(install_mockery, tmpdir, mock_packages):
     """Test happy path for dump_packages with dependencies."""
 
@@ -507,7 +579,7 @@ def test_dump_packages_deps_errs(install_mockery, tmpdir, monkeypatch, capsys):
 
     # The call to install_tree will raise the exception since not mocking
     # creation of dependency package files within *install* directories.
-    with pytest.raises(IOError, match=path if not is_windows else ""):
+    with pytest.raises(IOError, match=path if sys.platform != "win32" else ""):
         inst.dump_packages(spec, path)
 
     # Now try the error path, which requires the mock directory structure
@@ -591,13 +663,29 @@ def test_combine_phase_logs(tmpdir):
 
     # This is the output log we will combine them into
     combined_log = os.path.join(str(tmpdir), "combined-out.txt")
-    spack.installer.combine_phase_logs(phase_log_files, combined_log)
+    inst.combine_phase_logs(phase_log_files, combined_log)
     with open(combined_log, "r") as log_file:
         out = log_file.read()
 
     # Ensure each phase log file is represented
     for log_file in log_files:
         assert "Output from %s\n" % log_file in out
+
+
+def test_combine_phase_logs_does_not_care_about_encoding(tmpdir):
+    # this is invalid utf-8 at a minimum
+    data = b"\x00\xF4\xBF\x00\xBF\xBF"
+    input = [str(tmpdir.join("a")), str(tmpdir.join("b"))]
+    output = str(tmpdir.join("c"))
+
+    for path in input:
+        with open(path, "wb") as f:
+            f.write(data)
+
+    inst.combine_phase_logs(input, output)
+
+    with open(output, "rb") as f:
+        assert f.read() == data * 2
 
 
 def test_check_deps_status_install_failure(install_mockery, monkeypatch):
@@ -632,7 +720,10 @@ def test_check_deps_status_external(install_mockery, monkeypatch):
     # Mock the known dependent, b, as external so assumed to be installed
     monkeypatch.setattr(spack.spec.Spec, "external", True)
     installer._check_deps_status(request)
-    assert list(installer.installed)[0].startswith("b")
+
+    # exotic architectures will add dependencies on gnuconfig, which we want to ignore
+    installed = [x for x in installer.installed if not x.startswith("gnuconfig")]
+    assert installed[0].startswith("b")
 
 
 def test_check_deps_status_upstream(install_mockery, monkeypatch):
@@ -643,7 +734,10 @@ def test_check_deps_status_upstream(install_mockery, monkeypatch):
     # Mock the known dependent, b, as installed upstream
     monkeypatch.setattr(spack.spec.Spec, "installed_upstream", True)
     installer._check_deps_status(request)
-    assert list(installer.installed)[0].startswith("b")
+
+    # exotic architectures will add dependencies on gnuconfig, which we want to ignore
+    installed = [x for x in installer.installed if not x.startswith("gnuconfig")]
+    assert installed[0].startswith("b")
 
 
 def test_add_bootstrap_compilers(install_mockery, monkeypatch):
@@ -836,7 +930,7 @@ def test_setup_install_dir_grp(install_mockery, monkeypatch, capfd):
     metadatadir = spack.store.layout.metadata_path(spec)
     # Regex matching with Windows style paths typically fails
     # so we skip the match check here
-    if is_windows:
+    if sys.platform == "win32":
         metadatadir = None
     # Should fail with a "not a directory" error
     with pytest.raises(OSError, match=metadatadir):
@@ -1290,3 +1384,39 @@ def test_single_external_implicit_install(install_mockery, explicit_args, is_exp
     s.external_path = "/usr"
     create_installer([(s, explicit_args)]).install()
     assert spack.store.db.get_record(pkg).explicit == is_explicit
+
+
+@pytest.mark.parametrize("run_tests", [True, False])
+def test_print_install_test_log_skipped(install_mockery, mock_packages, capfd, run_tests):
+    """Confirm printing of install log skipped if not run/no failures."""
+    name = "trivial-install-test-package"
+    s = spack.spec.Spec(name).concretized()
+    pkg = s.package
+
+    pkg.run_tests = run_tests
+    spack.installer.print_install_test_log(pkg)
+    out = capfd.readouterr()[0]
+    assert out == ""
+
+
+def test_print_install_test_log_failures(
+    tmpdir, install_mockery, mock_packages, ensure_debug, capfd
+):
+    """Confirm expected outputs when there are test failures."""
+    name = "trivial-install-test-package"
+    s = spack.spec.Spec(name).concretized()
+    pkg = s.package
+
+    # Missing test log is an error
+    pkg.run_tests = True
+    pkg.tester.test_log_file = str(tmpdir.join("test-log.txt"))
+    pkg.tester.add_failure(AssertionError("test"), "test-failure")
+    spack.installer.print_install_test_log(pkg)
+    err = capfd.readouterr()[1]
+    assert "no test log file" in err
+
+    # Having test log results in path being output
+    fs.touch(pkg.tester.test_log_file)
+    spack.installer.print_install_test_log(pkg)
+    out = capfd.readouterr()[0]
+    assert "See test results at" in out

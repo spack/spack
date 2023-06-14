@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -16,13 +16,13 @@ class AwsOfiRccl(AutotoolsPackage):
     url = "https://github.com/ROCmSoftwarePlatform/aws-ofi-rccl.git"
     tags = ["rocm"]
 
-    maintainers = ["bvanessen"]
+    maintainers("bvanessen")
 
-    version("cxi", branch="cxi", default=True)
+    version("cxi", branch="cxi", preferred=True)
     version("master", branch="master")
 
-    variant("enable-trace", default=False, description="Enable printing trace messages")
-    variant("disable-tests", default=False, description="Disable build of tests")
+    variant("trace", default=False, description="Enable printing trace messages")
+    variant("tests", default=False, description="Build tests")
 
     depends_on("libfabric")
     depends_on("hip")
@@ -46,6 +46,8 @@ class AwsOfiRccl(AutotoolsPackage):
         spec = self.spec
         args = []
 
+        # Always set configure's external paths to use the Spack
+        # provided dependencies
         args.extend(
             [
                 "--with-libfabric={0}".format(spec["libfabric"].prefix),
@@ -55,10 +57,7 @@ class AwsOfiRccl(AutotoolsPackage):
             ]
         )
 
-        if "+enable-trace" in self.spec:
-            args.append("--enable-trace")
-
-        if "+disable-tests" in self.spec:
-            args.append("--disable-tests")
+        args.extend(self.enable_or_disable("trace"))
+        args.extend(self.enable_or_disable("tests"))
 
         return args

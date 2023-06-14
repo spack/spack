@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -14,14 +14,15 @@ class Hpx(CMakePackage, CudaPackage, ROCmPackage):
     """C++ runtime system for parallel and distributed applications."""
 
     homepage = "https://hpx.stellar-group.org/"
-    url = "https://github.com/STEllAR-GROUP/hpx/archive/1.2.1.tar.gz"
+    url = "https://github.com/STEllAR-GROUP/hpx/archive/v0.0.0.tar.gz"
     git = "https://github.com/STEllAR-GROUP/hpx.git"
-    maintainers = ["msimberg", "albestro", "teonnik", "hkaiser"]
+    maintainers("msimberg", "albestro", "teonnik", "hkaiser")
 
     tags = ["e4s"]
 
     version("master", branch="master")
     version("stable", tag="stable")
+    version("1.9.0", sha256="2a8dca78172fbb15eae5a5e9facf26ab021c845f9c09e61b1912e6cf9e72915a")
     version("1.8.1", sha256="2fc4c10f55e2e6bcdc6f6ff950e26c6d8e218e138fdbd885ee71ccf5c5549054")
     version("1.8.0", sha256="93f147ab7cf0ab4161f37680ea720d3baeb86540a95382f2fb591645b2a9b135")
     version("1.7.1", sha256="008a0335def3c551cba31452eda035d7e914e3e4f77eec679eea070ac71bd83b")
@@ -36,7 +37,7 @@ class Hpx(CMakePackage, CudaPackage, ROCmPackage):
     version("1.2.0", sha256="20942314bd90064d9775f63b0e58a8ea146af5260a4c84d0854f9f968077c170")
     version("1.1.0", sha256="1f28bbe58d8f0da600d60c3a74a644d75ac777b20a018a5c1c6030a470e8a1c9")
 
-    generator = "Ninja"
+    generator("ninja")
 
     map_cxxstd = lambda cxxstd: "2a" if cxxstd == "20" else cxxstd
     cxxstds = ("11", "14", "17", "20")
@@ -91,7 +92,6 @@ class Hpx(CMakePackage, CudaPackage, ROCmPackage):
 
     # Build dependencies
     depends_on("python", type=("build", "test", "run"))
-    depends_on("ninja", type="build")
     depends_on("pkgconfig", type="build")
     depends_on("git", type="build")
     depends_on("cmake", type="build")
@@ -105,8 +105,7 @@ class Hpx(CMakePackage, CudaPackage, ROCmPackage):
     depends_on("asio", when="@1.7:")
     for cxxstd in cxxstds:
         depends_on(
-            "asio cxxstd={0}".format(map_cxxstd(cxxstd)),
-            when="cxxstd={0} ^asio".format(cxxstd),
+            "asio cxxstd={0}".format(map_cxxstd(cxxstd)), when="cxxstd={0} ^asio".format(cxxstd)
         )
 
     depends_on("gperftools", when="malloc=tcmalloc")
@@ -126,6 +125,11 @@ class Hpx(CMakePackage, CudaPackage, ROCmPackage):
 
     # Only ROCm or CUDA maybe be enabled at once
     conflicts("+rocm", when="+cuda")
+
+    # Restrictions for 1.9.X
+    with when("@1.9:"):
+        conflicts("%gcc@:8")
+        conflicts("%clang@:9")
 
     # Restrictions for 1.8.X
     with when("@1.8:"):
@@ -188,7 +192,12 @@ class Hpx(CMakePackage, CudaPackage, ROCmPackage):
 
     # Patches APEX
     patch("git_external.patch", when="@1.3.0 instrumentation=apex")
-    patch("mimalloc_no_version_requirement.patch", when="@:1.8 malloc=mimalloc")
+    patch("mimalloc_no_version_requirement.patch", when="@:1.8.0 malloc=mimalloc")
+
+    def url_for_version(self, version):
+        if version >= Version("1.9.0"):
+            return "https://github.com/STEllAR-GROUP/hpx/archive/v{}.tar.gz".format(version)
+        return "https://github.com/STEllAR-GROUP/hpx/archive/{}.tar.gz".format(version)
 
     def instrumentation_args(self):
         args = []

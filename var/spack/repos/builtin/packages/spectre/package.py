@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -24,11 +24,38 @@ class Spectre(CMakePackage):
     url = "https://github.com/sxs-collaboration/spectre/archive/v2021.12.15.tar.gz"
     git = "https://github.com/sxs-collaboration/spectre.git"
 
-    maintainers = ["nilsvu"]
+    maintainers("nilsvu")
 
-    generator = "Ninja"
+    generator("ninja")
 
     version("develop", branch="develop")
+    version(
+        "2023.05.16", sha256="9cfe585e85b63e69d1b9b3922c68d3bd83d95853b6955e706133f2aaa933bd2b"
+    )
+    version(
+        "2023.04.07", sha256="f18238788155413c4c1f73c5591f4bf60a3d331f0c926b3737a61b33c99dfb9c"
+    )
+    version(
+        "2023.03.09", sha256="d8cd3512a8477b0b9ac83141d18fc7c55280bd886c6d97b60e8ae26c16c648ab"
+    )
+    version(
+        "2023.02.09", sha256="cdd85aed10ea7d372a7989da16a379e684276978c1e53438cb562910601fd471"
+    )
+    version(
+        "2023.01.13", sha256="fa1392015e4a8900483e0428e6b7b51a6c129f3d64f7ff862d810cfea0e04b40"
+    )
+    version(
+        "2022.12.16", sha256="2b692ff1be889c86bc2d95ef523dc1a4880e66b9bdf75883e299643f4ccbcb50"
+    )
+    version(
+        "2022.12.02", sha256="a930a41fe16834bf8dd9191180fd9db8fd8a871fbd10cc2c48a5360c0990a5b7"
+    )
+    version(
+        "2022.11.15", sha256="3860fdb49b5ca5bc067a291f744f67f59081db21c82beb92b4c033edf39fc62e"
+    )
+    version(
+        "2022.10.04", sha256="f9666ad7e546b2b6b5bc7743db1ab20eaada77ce5016f4467a96c9aab838ae1b"
+    )
     version(
         "2022.09.02", sha256="8a218237c76f85debf8a1c65de67a6c7fe41c5df51efd7b5c160868ba5d40927"
     )
@@ -125,7 +152,6 @@ class Spectre(CMakePackage):
 
     # Build dependencies
     depends_on("cmake@3.12:", type="build")
-    depends_on("ninja", type="build")
     depends_on("python@2.7:", type="build")
 
     # Link dependencies

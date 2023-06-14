@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -14,7 +14,8 @@ class NcbiVdb(CMakePackage):
     homepage = "https://github.com/ncbi/ncbi-vdb"
     git = "https://github.com/ncbi/ncbi-vdb.git"
 
-    version("3.0.0", tags="3.0.0")
+    version("3.0.2", tag="3.0.2")
+    version("3.0.0", tag="3.0.0")
 
     depends_on("openjdk")
     depends_on("flex@2.6:")

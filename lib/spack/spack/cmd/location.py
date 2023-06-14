@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -9,6 +9,7 @@ import os
 
 import llnl.util.tty as tty
 
+import spack.builder
 import spack.cmd
 import spack.cmd.common.arguments as arguments
 import spack.environment as ev
@@ -75,6 +76,14 @@ def setup_parser(subparser):
         help="location of the named or current environment",
     )
 
+    subparser.add_argument(
+        "--first",
+        action="store_true",
+        default=False,
+        dest="find_first",
+        help="use the first match if multiple packages match the spec",
+    )
+
     arguments.add_common_arguments(subparser, ["spec"])
 
 
@@ -94,7 +103,7 @@ def location(parser, args):
             spack.cmd.require_active_env("location -e")
             path = ev.active_environment().path
         else:
-            # Get named environment path
+            # Get path of requested environment
             if not ev.exists(args.location_env):
                 tty.die("no such environment: '%s'" % args.location_env)
             path = ev.root(args.location_env)
@@ -120,7 +129,7 @@ def location(parser, args):
     # install_dir command matches against installed specs.
     if args.install_dir:
         env = ev.active_environment()
-        spec = spack.cmd.disambiguate_spec(specs[0], env)
+        spec = spack.cmd.disambiguate_spec(specs[0], env, first=args.find_first)
         print(spec.prefix)
         return
 
@@ -134,6 +143,7 @@ def location(parser, args):
     # Either concretize or filter from already concretized environment
     spec = spack.cmd.matching_spec_from_env(spec)
     pkg = spec.package
+    builder = spack.builder.create(pkg)
 
     if args.stage_dir:
         print(pkg.stage.path)
@@ -141,10 +151,10 @@ def location(parser, args):
 
     if args.build_dir:
         # Out of source builds have build_directory defined
-        if hasattr(pkg, "build_directory"):
+        if hasattr(builder, "build_directory"):
             # build_directory can be either absolute or relative to the stage path
             # in either case os.path.join makes it absolute
-            print(os.path.normpath(os.path.join(pkg.stage.path, pkg.build_directory)))
+            print(os.path.normpath(os.path.join(pkg.stage.path, builder.build_directory)))
             return
 
         # Otherwise assume in-source builds

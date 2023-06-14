@@ -1,30 +1,20 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
-
-from __future__ import print_function
-
 import argparse
 import os
 import re
 import sys
+from itertools import zip_longest
 
 import llnl.util.tty as tty
 import llnl.util.tty.color as color
 from llnl.util.filesystem import working_dir
 
-import spack.bootstrap
 import spack.paths
+import spack.util.git
 from spack.util.executable import which
-
-if sys.version_info < (3, 0):
-    from itertools import izip_longest  # novm
-
-    zip_longest = izip_longest
-else:
-    from itertools import zip_longest  # novm
-
 
 description = "runs source code style checks on spack"
 section = "developer"
@@ -32,7 +22,7 @@ level = "long"
 
 
 def grouper(iterable, n, fillvalue=None):
-    "Collect data into fixed-length chunks or blocks"
+    """Collect data into fixed-length chunks or blocks"""
     # grouper('ABCDEFG', 3, 'x') --> ABC DEF Gxx"
     args = [iter(iterable)] * n
     for group in zip_longest(*args, fillvalue=fillvalue):
@@ -40,26 +30,23 @@ def grouper(iterable, n, fillvalue=None):
 
 
 #: List of directories to exclude from checks -- relative to spack root
-exclude_directories = [
-    os.path.relpath(spack.paths.external_path, spack.paths.prefix),
-]
+exclude_directories = [os.path.relpath(spack.paths.external_path, spack.paths.prefix)]
 
 #: Order in which tools should be run. flake8 is last so that it can
 #: double-check the results of other tools (if, e.g., --fix was provided)
 #: The list maps an executable name to a method to ensure the tool is
 #: bootstrapped or present in the environment.
-tool_order = [
-    ("isort", spack.bootstrap.ensure_isort_in_path_or_raise),
-    ("mypy", spack.bootstrap.ensure_mypy_in_path_or_raise),
-    ("black", spack.bootstrap.ensure_black_in_path_or_raise),
-    ("flake8", spack.bootstrap.ensure_flake8_in_path_or_raise),
-]
-
-#: list of just the tool names -- for argparse
-tool_names = [k for k, _ in tool_order]
+tool_names = ["isort", "black", "flake8", "mypy"]
 
 #: tools we run in spack style
 tools = {}
+
+#: warnings to ignore in mypy
+mypy_ignores = [
+    # same as `disable_error_code = "annotation-unchecked"` in pyproject.toml, which
+    # doesn't exist in mypy 0.971 for Python 3.6
+    "[annotation-unchecked]"
+]
 
 
 def is_package(f):
@@ -95,7 +82,7 @@ def changed_files(base="develop", untracked=True, all_files=False, root=None):
     if root is None:
         root = spack.paths.prefix
 
-    git = which("git", required=True)
+    git = spack.util.git.git(required=True)
 
     # ensure base is in the repo
     base_sha = git(
@@ -156,10 +143,7 @@ def setup_parser(subparser):
         help="branch to compare against to determine changed files (default: develop)",
     )
     subparser.add_argument(
-        "-a",
-        "--all",
-        action="store_true",
-        help="check all files, not just changed files",
+        "-a", "--all", action="store_true", help="check all files, not just changed files"
     )
     subparser.add_argument(
         "-r",
@@ -184,10 +168,7 @@ def setup_parser(subparser):
         help="format automatically if possible (e.g., with isort, black)",
     )
     subparser.add_argument(
-        "--root",
-        action="store",
-        default=None,
-        help="style check a different spack instance",
+        "--root", action="store", default=None, help="style check a different spack instance"
     )
 
     tool_group = subparser.add_mutually_exclusive_group()
@@ -217,6 +198,7 @@ def rewrite_and_print_output(
     output, args, re_obj=re.compile(r"^(.+):([0-9]+):"), replacement=r"{0}:{1}:"
 ):
     """rewrite ouput with <file>:<line>: format to respect path args"""
+
     # print results relative to current working directory
     def translate(match):
         return replacement.format(cwd_relative(match.group(1), args), *list(match.groups()[1:]))
@@ -224,15 +206,17 @@ def rewrite_and_print_output(
     for line in output.split("\n"):
         if not line:
             continue
+        if any(ignore in line for ignore in mypy_ignores):
+            # some mypy annotations can't be disabled in older mypys (e.g. .971, which
+            # is the only mypy that supports python 3.6), so we filter them here.
+            continue
         if not args.root_relative and re_obj:
             line = re_obj.sub(translate, line)
         print(line)
 
 
-def print_style_header(file_list, args, selected):
-    tools = [tool for tool in tool_names if tool in selected]
-    tty.msg("Running style checks on spack", "selected: " + ", ".join(tools))
-
+def print_style_header(file_list, args, tools_to_run):
+    tty.msg("Running style checks on spack", "selected: " + ", ".join(tools_to_run))
     # translate modified paths to cwd_relative if needed
     paths = [filename.strip() for filename in file_list]
     if not args.root_relative:
@@ -267,7 +251,7 @@ def run_flake8(flake8_cmd, file_list, args):
             "--config=%s" % os.path.join(spack.paths.prefix, ".flake8"),
             *chunk,
             fail_on_error=False,
-            output=str
+            output=str,
         )
         returncode |= flake8_cmd.returncode
 
@@ -285,24 +269,10 @@ def run_mypy(mypy_cmd, file_list, args):
         os.path.join(spack.paths.prefix, "pyproject.toml"),
         "--show-error-codes",
     ]
-    mypy_arg_sets = [
-        common_mypy_args
-        + [
-            "--package",
-            "spack",
-            "--package",
-            "llnl",
-        ]
-    ]
+    mypy_arg_sets = [common_mypy_args + ["--package", "spack", "--package", "llnl"]]
     if "SPACK_MYPY_CHECK_PACKAGES" in os.environ:
         mypy_arg_sets.append(
-            common_mypy_args
-            + [
-                "--package",
-                "packages",
-                "--disable-error-code",
-                "no-redef",
-            ]
+            common_mypy_args + ["--package", "packages", "--disable-error-code", "no-redef"]
         )
 
     returncode = 0
@@ -375,14 +345,6 @@ def run_black(black_cmd, file_list, args):
         packed_args = black_args + tuple(chunk)
         output = black_cmd(*packed_args, fail_on_error=False, output=str, error=str)
         returncode |= black_cmd.returncode
-
-        # ignore Python 2.7 deprecation error because we already know it's deprecated.
-        output = "\n".join(
-            line
-            for line in output.split("\n")
-            if "DEPRECATION: Python 2 support will be removed" not in line
-        )
-
         rewrite_and_print_output(output, args, pat, replacement)
 
     print_tool_result("black", returncode)
@@ -399,11 +361,18 @@ def validate_toolset(arg_value):
     return tools
 
 
-def style(parser, args):
-    # ensure python version is new enough
-    if sys.version_info < (3, 6):
-        tty.die("spack style requires Python 3.6 or later.")
+def missing_tools(tools_to_run):
+    return [t for t in tools_to_run if which(t) is None]
 
+
+def _bootstrap_dev_dependencies():
+    import spack.bootstrap
+
+    with spack.bootstrap.ensure_bootstrap_configuration():
+        spack.bootstrap.ensure_environment_dependencies()
+
+
+def style(parser, args):
     # save initial working directory for relativizing paths later
     args.initial_working_dir = os.getcwd()
 
@@ -437,25 +406,20 @@ def style(parser, args):
         tty.msg("Nothing to run.")
         return
 
+    tools_to_run = [t for t in tool_names if t in selected]
+    if missing_tools(tools_to_run):
+        _bootstrap_dev_dependencies()
+
     return_code = 0
     with working_dir(args.root):
         if not file_list:
             file_list = changed_files(args.base, args.untracked, args.all)
 
-        print_style_header(file_list, args, selected)
-
-        tools_to_run = [(tool, fn) for tool, fn in tool_order if tool in selected]
-        commands = {}
-        with spack.bootstrap.ensure_bootstrap_configuration():
-            # bootstrap everything first to get commands
-            for tool_name, bootstrap_fn in tools_to_run:
-                commands[tool_name] = bootstrap_fn()
-
-            # run tools once bootstrapping is done
-            for tool_name, bootstrap_fn in tools_to_run:
-                run_function, required = tools[tool_name]
-                print_tool_header(tool_name)
-                return_code |= run_function(commands[tool_name], file_list, args)
+        print_style_header(file_list, args, tools_to_run)
+        for tool_name in tools_to_run:
+            run_function, required = tools[tool_name]
+            print_tool_header(tool_name)
+            return_code |= run_function(which(tool_name), file_list, args)
 
     if return_code == 0:
         tty.msg(color.colorize("@*{spack style checks were clean}"))

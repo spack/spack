@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -19,6 +19,9 @@ class Graphviz(AutotoolsPackage):
     git = "https://gitlab.com/graphviz/graphviz.git"
     url = "https://gitlab.com/graphviz/graphviz/-/archive/2.46.0/graphviz-2.46.0.tar.bz2"
 
+    version("8.0.5", sha256="c1901fe52483fad55fbf893ccd59a3dcaedd53f0d50b5aebbbf3deaba93b674d")
+    version("8.0.1", sha256="19928f09f759676578b50101420b24475eb35f712ffbe8a97254f64b20fdbd03")
+    version("7.1.0", sha256="7943c3fa0c55c779f595259f3b9e41c7ea6ed92f0aca0d24df917f631322dc01")
     version("2.49.0", sha256="b129555743bb9bfb7b63c55825da51763b2f1ee7c0eaa6234a42a61a3aff6cc9")
     version("2.47.2", sha256="b5ebb00d4283c6d12cf16b2323e1820b535cc3823c8f261b783f7903b1d5b7fb")
     version("2.46.0", sha256="1b11684fd5488940b45bf4624393140da6032abafae08f33dc3e986cffd55d71")
@@ -110,13 +113,13 @@ class Graphviz(AutotoolsPackage):
     depends_on("ghostscript", when="+ghostscript")
     depends_on("gtkplus", when="+gtkplus")
     depends_on("gts", when="+gts")
-    depends_on("cairo+pdf+png+svg", when="+pangocairo")
+    depends_on("cairo+pdf+png", when="+pangocairo")
     depends_on("fontconfig", when="+pangocairo")
     depends_on("freetype", when="+pangocairo")
     depends_on("glib", when="+pangocairo")
     depends_on("libpng", when="+pangocairo")
     depends_on("pango", when="+pangocairo")
-    depends_on("poppler+glib", when="+poppler")
+    depends_on("poppler", when="+poppler")
     depends_on("qt", when="+qt")
     depends_on("libx11", when="+x")
 

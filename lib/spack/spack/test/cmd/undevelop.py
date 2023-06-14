@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -25,7 +25,7 @@ def test_undevelop(tmpdir, config, mock_packages, mutable_mock_env_path):
         with open("spack.yaml", "w") as f:
             f.write(
                 """\
-env:
+spack:
   specs:
   - mpich
 
@@ -54,7 +54,7 @@ def test_undevelop_nonexistent(tmpdir, config, mock_packages, mutable_mock_env_p
         with open("spack.yaml", "w") as f:
             f.write(
                 """\
-env:
+spack:
   specs:
   - mpich
 

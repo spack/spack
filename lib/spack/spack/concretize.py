@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -17,15 +17,14 @@ TODO: make this customizable and allow users to configure
 from __future__ import print_function
 
 import functools
-import os.path
 import platform
 import tempfile
 from contextlib import contextmanager
 from itertools import chain
+from typing import Union
 
 import archspec.cpu
 
-import llnl.util.filesystem as fs
 import llnl.util.lang
 import llnl.util.tty as tty
 
@@ -42,10 +41,12 @@ import spack.util.path
 import spack.variant as vt
 from spack.config import config
 from spack.package_prefs import PackagePrefs, is_spec_buildable, spec_externals
-from spack.version import Version, VersionList, VersionRange, ver
+from spack.version import ClosedOpenRange, VersionList, ver
 
 #: impements rudimentary logic for ABI compatibility
-_abi = llnl.util.lang.Singleton(lambda: spack.abi.ABI())
+_abi: Union[spack.abi.ABI, llnl.util.lang.Singleton] = llnl.util.lang.Singleton(
+    lambda: spack.abi.ABI()
+)
 
 
 @functools.total_ordering
@@ -136,7 +137,7 @@ class Concretizer(object):
 
             externals = spec_externals(cspec)
             for ext in externals:
-                if ext.satisfies(spec):
+                if ext.intersects(spec):
                     usable.append(ext)
 
         # If nothing is in the usable list now, it's because we aren't
@@ -202,7 +203,7 @@ class Concretizer(object):
 
         # List of versions we could consider, in sorted order
         pkg_versions = spec.package_class.versions
-        usable = [v for v in pkg_versions if any(v.satisfies(sv) for sv in spec.versions)]
+        usable = [v for v in pkg_versions if any(v.intersects(sv) for sv in spec.versions)]
 
         yaml_prefs = PackagePrefs(spec.name, "version")
 
@@ -218,7 +219,7 @@ class Concretizer(object):
             # Respect order listed in packages.yaml
             -yaml_prefs(v),
             # The preferred=True flag (packages or packages.yaml or both?)
-            pkg_versions.get(Version(v)).get("preferred", False),
+            pkg_versions.get(v).get("preferred", False),
             # ------- Regular case: use latest non-develop version by default.
             # Avoid @develop version, which would otherwise be the "largest"
             # in straight version comparisons
@@ -245,11 +246,12 @@ class Concretizer(object):
                 raise NoValidVersionError(spec)
             else:
                 last = spec.versions[-1]
-                if isinstance(last, VersionRange):
-                    if last.end:
-                        spec.versions = ver([last.end])
+                if isinstance(last, ClosedOpenRange):
+                    range_as_version = VersionList([last]).concrete_range_as_version
+                    if range_as_version:
+                        spec.versions = ver([range_as_version])
                     else:
-                        spec.versions = ver([last.start])
+                        raise NoValidVersionError(spec)
                 else:
                     spec.versions = ver([last])
 
@@ -346,7 +348,7 @@ class Concretizer(object):
                     new_target_arch = spack.spec.ArchSpec((None, None, str(new_target)))
                     curr_target_arch = spack.spec.ArchSpec((None, None, str(curr_target)))
 
-                    if not new_target_arch.satisfies(curr_target_arch):
+                    if not new_target_arch.intersects(curr_target_arch):
                         # new_target is an incorrect guess based on preferences
                         # and/or default
                         valid_target_ranges = str(curr_target).split(",")
@@ -736,7 +738,7 @@ def concretize_specs_together(*abstract_specs, **kwargs):
     Returns:
         List of concretized specs
     """
-    if spack.config.get("config:concretizer") == "original":
+    if spack.config.get("config:concretizer", "clingo") == "original":
         return _concretize_specs_together_original(*abstract_specs, **kwargs)
     return _concretize_specs_together_new(*abstract_specs, **kwargs)
 
@@ -745,45 +747,26 @@ def _concretize_specs_together_new(*abstract_specs, **kwargs):
     import spack.solver.asp
 
     solver = spack.solver.asp.Solver()
-    solver.tests = kwargs.get("tests", False)
-
-    result = solver.solve(abstract_specs)
+    result = solver.solve(abstract_specs, tests=kwargs.get("tests", False))
     result.raise_if_unsat()
     return [s.copy() for s in result.specs]
 
 
 def _concretize_specs_together_original(*abstract_specs, **kwargs):
-    def make_concretization_repository(abstract_specs):
-        """Returns the path to a temporary repository created to contain
-        a fake package that depends on all of the abstract specs.
-        """
-        tmpdir = tempfile.mkdtemp()
-        repo_path, _ = spack.repo.create_repo(tmpdir)
-
-        debug_msg = "[CONCRETIZATION]: Creating helper repository in {0}"
-        tty.debug(debug_msg.format(repo_path))
-
-        pkg_dir = os.path.join(repo_path, "packages", "concretizationroot")
-        fs.mkdirp(pkg_dir)
-        environment = spack.tengine.make_environment()
-        template = environment.get_template("misc/coconcretization.pyt")
-
-        # Split recursive specs, as it seems the concretizer has issue
-        # respecting conditions on dependents expressed like
-        # depends_on('foo ^bar@1.0'), see issue #11160
-        split_specs = [
-            dep.copy(deps=False) for spec in abstract_specs for dep in spec.traverse(root=True)
-        ]
-
-        with open(os.path.join(pkg_dir, "package.py"), "w") as f:
-            f.write(template.render(specs=[str(s) for s in split_specs]))
-
-        return spack.repo.Repo(repo_path)
-
     abstract_specs = [spack.spec.Spec(s) for s in abstract_specs]
-    concretization_repository = make_concretization_repository(abstract_specs)
+    tmpdir = tempfile.mkdtemp()
+    builder = spack.repo.MockRepositoryBuilder(tmpdir)
+    # Split recursive specs, as it seems the concretizer has issue
+    # respecting conditions on dependents expressed like
+    # depends_on('foo ^bar@1.0'), see issue #11160
+    split_specs = [
+        dep.copy(deps=False) for spec1 in abstract_specs for dep in spec1.traverse(root=True)
+    ]
+    builder.add_package(
+        "concretizationroot", dependencies=[(str(x), None, None) for x in split_specs]
+    )
 
-    with spack.repo.additional_repository(concretization_repository):
+    with spack.repo.use_repositories(builder.root, override=False):
         # Spec from a helper package that depends on all the abstract_specs
         concretization_root = spack.spec.Spec("concretizationroot")
         concretization_root.concretize(tests=kwargs.get("tests", False))

@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -12,7 +12,7 @@ class Yarn(Package):
     homepage = "https://yarnpkg.com"
     url = "https://github.com/yarnpkg/yarn/releases/download/v1.22.4/yarn-v1.22.4.tar.gz"
 
-    maintainers = ["cosmicexplorer"]
+    maintainers("cosmicexplorer")
 
     depends_on("node-js@4.0:", type="run")
 

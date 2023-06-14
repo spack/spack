@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -30,7 +30,7 @@ def test_fetch_single_spec(tmpdir, mock_archive, mock_stage, mock_fetch, install
 
 @pytest.mark.disable_clean_stage_check
 def test_fetch_multiple_specs(tmpdir, mock_archive, mock_stage, mock_fetch, install_mockery):
-    SpackCommand("fetch")("mpileaks", "gcc@10.2.0", "python")
+    SpackCommand("fetch")("mpileaks", "gcc@3.0", "python")
 
 
 def test_fetch_no_argument():

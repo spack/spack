@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -17,15 +17,17 @@ class Dealii(CMakePackage, CudaPackage):
     url = "https://github.com/dealii/dealii/releases/download/v8.4.1/dealii-8.4.1.tar.gz"
     git = "https://github.com/dealii/dealii.git"
 
-    maintainers = ["jppelteret", "luca-heltai"]
+    maintainers("jppelteret", "luca-heltai")
 
     # Don't add RPATHs to this package for the full build DAG.
     # only add for immediate deps.
     transitive_rpaths = False
 
-    generator = "Ninja"
+    generator("ninja")
 
     version("master", branch="master")
+    version("9.4.2", sha256="45a76cb400bfcff25cc2d9093d9a5c91545c8367985e6798811c5e9d2a6a6fd4")
+    version("9.4.1", sha256="bfe5e4bf069159f93feb0f78529498bfee3da35baf5a9c6852aa59d7ea7c7a48")
     version("9.4.0", sha256="238677006cd9173658e5b69cdd1861f800556982db6005a3cc5eb8329cc1e36c")
     version("9.3.3", sha256="5dfb59174b341589e92b434398a1b7cc11ad053ce2315cf673f5efc5ba271a29")
     version("9.3.2", sha256="5341d76bfd75d3402fc6907a875513efb5fe8a8b99af688d94443c492d5713e8")
@@ -55,6 +57,14 @@ class Dealii(CMakePackage, CudaPackage):
     variant(
         "cxxstd",
         default="default",
+        multi=False,
+        description="Compile using the specified C++ standard",
+        values=("default", "11", "14", "17"),
+    )
+    variant(
+        "cxxstd",
+        default="17",
+        when="@9.4:",
         multi=False,
         description="Compile using the specified C++ standard",
         values=("default", "11", "14", "17"),
@@ -95,6 +105,7 @@ class Dealii(CMakePackage, CudaPackage):
     # (NB: only if tbb is removed in 9.3, as planned!!!)
     variant("threads", default=True, description="Compile with multi-threading via TBB")
     variant("trilinos", default=True, description="Compile with Trilinos (only with MPI)")
+    variant("platform-introspection", default=True, description="Enable platform introspection")
 
     # Required dependencies: Light version
     depends_on("blas")
@@ -106,8 +117,11 @@ class Dealii(CMakePackage, CudaPackage):
     # more precisely its variation https://github.com/dealii/dealii/pull/5572#issuecomment-349742019
     # 1.68.0 has issues with serialization https://github.com/dealii/dealii/issues/7074
     # adopt https://github.com/boostorg/serialization/pull/105 as a fix
+    #
+    # dealii does not build with Boost 1.80.0
+    # (https://github.com/spack/spack/pull/32879#issuecomment-1265933265)
     depends_on(
-        "boost@1.59.0:1.63,1.65.1,1.67.0:+thread+system+serialization+iostreams",
+        "boost@1.59.0:1.63,1.65.1,1.67.0:1.79+thread+system+serialization+iostreams",
         patches=[
             patch("boost_1.65.1_singleton.patch", level=1, when="@1.65.1"),
             patch("boost_1.68.0.patch", level=1, when="@1.68.0"),
@@ -115,7 +129,7 @@ class Dealii(CMakePackage, CudaPackage):
         when="~python",
     )
     depends_on(
-        "boost@1.59.0:1.63,1.65.1,1.67.0:+thread+system+serialization+iostreams+python",
+        "boost@1.59.0:1.63,1.65.1,1.67.0:1.79+thread+system+serialization+iostreams+python",
         patches=[
             patch("boost_1.65.1_singleton.patch", level=1, when="@1.65.1"),
             patch("boost_1.68.0.patch", level=1, when="@1.68.0"),
@@ -137,7 +151,6 @@ class Dealii(CMakePackage, CudaPackage):
     # See https://github.com/spack/spack/pull/22303 for reference
     depends_on(Boost.with_default_variants)
     depends_on("lapack")
-    depends_on("ninja", type="build")
     depends_on("suite-sparse")
     depends_on("zlib")
 
@@ -179,10 +192,8 @@ class Dealii(CMakePackage, CudaPackage):
     depends_on("p4est", when="+p4est+mpi")
     depends_on("petsc+mpi~int64", when="+petsc+mpi~int64")
     depends_on("petsc+mpi+int64", when="+petsc+mpi+int64")
-    depends_on("petsc@:3.6.4", when="@:8.4.1+petsc+mpi")
     depends_on("scalapack", when="@9.0:+scalapack")
     depends_on("slepc", when="+slepc+petsc+mpi")
-    depends_on("slepc@:3.6.3", when="@:8.4.1+slepc+petsc+mpi")
     depends_on("slepc~arpack", when="+slepc+petsc+mpi+int64")
     depends_on("sundials@:3~pthread", when="@9.0:9.2+sundials")
     depends_on("sundials@5:5.8", when="@9.3:9.3.3+sundials")
@@ -254,12 +265,20 @@ class Dealii(CMakePackage, CudaPackage):
     patch(
         "https://github.com/dealii/dealii/commit/06bb9dc07efb6fea9912ee0d66264af548c552c8.patch?full_index=1",
         sha256="8a1f7b9a155c8c496ce08b2abb1ba5d329b3b29169f36c11678aa4e3cebf97a2",
-        when="@9.4.0 ^hdf5",
+        when="@9.4 ^hdf5",
     )
     patch(
         "https://github.com/dealii/dealii/commit/40076ac1a013cd7d221f9dda913b4d0e6452c21e.patch?full_index=1",
         sha256="7869dfab1116b6e862279bb6642c2c8fe49d87c42cfc6f031e03330f9f26a6c3",
-        when="@9.4.0 ^python",
+        when="@9.4 ^python",
+    )
+
+    # Fix issues with the FIND_GINKGO module for the newer Ginkgo versions
+    # https://github.com/dealii/dealii/pull/14413
+    patch(
+        "https://github.com/dealii/dealii/commit/df6c5de8d6785fce701c10575982858f3aeb4cbd.patch?full_index=1",
+        sha256="c9884ebb0fe379c539012a225d8bcdcfe288edec8dc9d319fbfd64d8fbafba8e",
+        when="@:9.4 +ginkgo ^ginkgo@1.5.0:",
     )
 
     # Check for sufficiently modern versions
@@ -269,6 +288,12 @@ class Dealii(CMakePackage, CudaPackage):
         "cxxstd=14",
         when="@9.4:+cgal",
         msg="CGAL requires the C++ standard to be set to 17 or later.",
+    )
+
+    conflicts(
+        "cxxstd=default",
+        when="@9.4:+cgal",
+        msg="CGAL requires the C++ standard to be set explicitly to 17 or later.",
     )
 
     # Interfaces added in 8.5.0:
@@ -588,6 +613,9 @@ class Dealii(CMakePackage, CudaPackage):
                     self.define("SCALAPACK_FOUND", True),
                     self.define("SCALAPACK_INCLUDE_DIRS", spec["scalapack"].prefix.include),
                     self.define("SCALAPACK_LIBRARIES", scalapack_libs.joined(";")),
+                    # If SCALAPACK_LIBRARY is not set, deal.II still searches
+                    # for SCALAPACK despite the above settings:
+                    self.define("SCALAPACK_LIBRARY", scalapack_libs.joined(";")),
                 ]
             )
 
@@ -599,22 +627,20 @@ class Dealii(CMakePackage, CudaPackage):
         # As a final step, collect CXX flags that may have been
         # added anywhere above:
         if len(cxx_flags_release) > 0 and "+optflags" in spec:
-            options.extend(
-                [
-                    self.define("CMAKE_CXX_FLAGS_RELEASE", " ".join(cxx_flags_release)),
-                ]
-            )
+            options.extend([self.define("CMAKE_CXX_FLAGS_RELEASE", " ".join(cxx_flags_release))])
         if len(cxx_flags) > 0:
-            options.extend(
-                [
-                    self.define("CMAKE_CXX_FLAGS", " ".join(cxx_flags)),
-                ]
-            )
+            options.extend([self.define("CMAKE_CXX_FLAGS", " ".join(cxx_flags))])
 
         # Add flags for machine vectorization, used when tutorials
         # and user code is built.
         # See https://github.com/dealii/dealii/issues/9164
         options.append(self.define("DEAL_II_CXX_FLAGS", os.environ["SPACK_TARGET_ARGS"]))
+
+        # platform introspection - needs to be disabled in some environments
+        if "+platform-introspection" in spec:
+            options.append(self.define("DEAL_II_ALLOW_PLATFORM_INTROSPECTION", True))
+        else:
+            options.append(self.define("DEAL_II_ALLOW_PLATFORM_INTROSPECTION", False))
 
         return options
 

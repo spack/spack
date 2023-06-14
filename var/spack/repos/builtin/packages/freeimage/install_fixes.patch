@@ -1,5 +1,16 @@
 --- a/Makefile.gnu	2015-03-10 09:04:00.000000000 +0100
-+++ b/Makefile.gnu	2019-03-15 13:20:12.480698778 +0100
++++ b/Makefile.gnu      2023-01-21 15:53:35.782911926 -0600
+@@ -5,8 +5,8 @@
+
+ # General configuration variables:
+ DESTDIR ?= /
+-INCDIR ?= $(DESTDIR)/usr/include
+-INSTALLDIR ?= $(DESTDIR)/usr/lib
++INCDIR ?= $(DESTDIR)/include
++INSTALLDIR ?= $(DESTDIR)/lib
+
+ # Converts cr/lf to just lf
+ DOS2UNIX = dos2unix
 @@ -71,9 +71,9 @@
  
  install:

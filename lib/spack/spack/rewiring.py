@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -119,7 +119,7 @@ def rewire_node(spec, explicit):
     spack.store.db.add(spec, spack.store.layout, explicit=explicit)
 
     # run post install hooks
-    spack.hooks.post_install(spec)
+    spack.hooks.post_install(spec, explicit)
 
 
 class RewireError(spack.error.SpackError):

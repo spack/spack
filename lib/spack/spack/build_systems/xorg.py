@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -14,7 +14,7 @@ class XorgPackage(spack.package_base.PackageBase):
     packages."""
 
     #: Path of the package in a x.org mirror
-    xorg_mirror_path = None  # type: Optional[str]
+    xorg_mirror_path: Optional[str] = None
 
     #: List of x.org mirrors used by Spack
     #  Note: x.org mirrors are a bit tricky, since many are out-of-sync or off.

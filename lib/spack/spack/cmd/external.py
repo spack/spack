@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -38,6 +38,7 @@ def setup_parser(subparser):
         default=False,
         help="packages with detected externals won't be built with Spack",
     )
+    find_parser.add_argument("--exclude", action="append", help="packages to exclude from search")
     find_parser.add_argument(
         "-p",
         "--path",
@@ -77,6 +78,12 @@ def setup_parser(subparser):
     )
     read_cray_manifest.add_argument(
         "--directory", default=None, help="specify a directory storing a group of manifest files"
+    )
+    read_cray_manifest.add_argument(
+        "--ignore-default-dir",
+        action="store_true",
+        default=False,
+        help="ignore the default directory of manifest files",
     )
     read_cray_manifest.add_argument(
         "--dry-run",
@@ -151,6 +158,10 @@ def external_find(args):
     if not args.tags and not pkg_cls_to_check:
         pkg_cls_to_check = list(spack.repo.path.all_package_classes())
 
+    # If the user specified any packages to exclude from external find, add them here
+    if args.exclude:
+        pkg_cls_to_check = [pkg for pkg in pkg_cls_to_check if pkg.name not in args.exclude]
+
     detected_packages = spack.detection.by_executable(pkg_cls_to_check, path_hints=args.path)
     detected_packages.update(spack.detection.by_library(pkg_cls_to_check, path_hints=args.path))
 
@@ -172,13 +183,17 @@ def external_read_cray_manifest(args):
         manifest_directory=args.directory,
         dry_run=args.dry_run,
         fail_on_error=args.fail_on_error,
+        ignore_default_dir=args.ignore_default_dir,
     )
 
 
 def _collect_and_consume_cray_manifest_files(
-    manifest_file=None, manifest_directory=None, dry_run=False, fail_on_error=False
+    manifest_file=None,
+    manifest_directory=None,
+    dry_run=False,
+    fail_on_error=False,
+    ignore_default_dir=False,
 ):
-
     manifest_files = []
     if manifest_file:
         manifest_files.append(manifest_file)
@@ -187,7 +202,7 @@ def _collect_and_consume_cray_manifest_files(
     if manifest_directory:
         manifest_dirs.append(manifest_directory)
 
-    if os.path.isdir(cray_manifest.default_path):
+    if not ignore_default_dir and os.path.isdir(cray_manifest.default_path):
         tty.debug(
             "Cray manifest path {0} exists: collecting all files to read.".format(
                 cray_manifest.default_path

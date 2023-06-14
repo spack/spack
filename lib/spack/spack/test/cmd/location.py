@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -35,6 +35,15 @@ def mock_spec():
     yield s, s.package
     # Remove the spec from the mock stage area.
     shutil.rmtree(s.package.stage.path)
+
+
+def test_location_first(install_mockery, mock_fetch, mock_archive, mock_packages):
+    """Test with and without the --first option"""
+    install = SpackCommand("install")
+    install("libelf@0.8.12")
+    install("libelf@0.8.13")
+    # This would normally return an error without --first
+    assert location("--first", "--install-dir", "libelf")
 
 
 def test_location_build_dir(mock_spec):

@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -12,13 +12,14 @@ class PyLibensemble(PythonPackage):
     """Library for managing ensemble-like collections of computations."""
 
     homepage = "https://libensemble.readthedocs.io"
-    pypi = "libensemble/libensemble-0.9.2.tar.gz"
+    pypi = "libensemble/libensemble-0.9.3.tar.gz"
     git = "https://github.com/Libensemble/libensemble.git"
-    maintainers = ["shuds13"]
+    maintainers("shuds13", "jlnav")
 
     tags = ["e4s"]
 
     version("develop", branch="develop")
+    version("0.9.3", sha256="00e5a65d6891feee6a686c048d8de72097b8bff164431f163be96ec130a9c390")
     version("0.9.2", sha256="e46598e5696f770cbff4cb90507b52867faad5654f1b80de35405a95228c909f")
     version("0.9.1", sha256="684e52b0ea64f5ec610e7868b7e4c9fa5fd2316a370a726870aa5fd5fb1b0ede")
     version("0.9.0", sha256="34976e775f0d2ba5955744560104eab214fd22cb47173440eb5136e852a8ec38")
@@ -36,7 +37,7 @@ class PyLibensemble(PythonPackage):
     version("0.2.0", sha256="ecac7275d4d0f4a5e497e5c9ef2cd998da82b2c020a0fb87546eeea262f495ff")
     version("0.1.0", sha256="0b27c59ae80f7af8b1bee92fcf2eb6c9a8fd3494bf2eb6b3ea17a7c03d3726bb")
 
-    variant("mpi", default=False, description="Install with MPI")
+    variant("mpi", default=True, description="Install with MPI")
     variant("scipy", default=False, description="Install with scipy")
     variant("petsc4py", default=False, description="Install with petsc4py")
     variant("nlopt", default=False, description="Install with nlopt")
@@ -45,9 +46,6 @@ class PyLibensemble(PythonPackage):
     variant("tasmanian", default=False, description="Install with tasmanian")
     variant("pyyaml", default=False, description="Install with pyyaml")
 
-    # depends_on('python@2.7:2.8,3.3:', when='@:0.4.1')
-    # depends_on('python@3.5:', when='@0.5.0:')
-    depends_on("python@3.5:", type=("build", "run"))
     depends_on("py-setuptools", type="build")
     depends_on("py-numpy", type=("build", "run"))
     depends_on("py-psutil", type=("build", "run"), when="@0.7.1:")
@@ -82,7 +80,7 @@ class PyLibensemble(PythonPackage):
         )
 
         if not os.path.isfile(join_path(test_dir, exe)):
-            print("Skipping {0} test".format(exe))
+            print("SKIPPED: {0} test does not exist".format(exe))
             return
 
         self.run_test(
@@ -93,4 +91,6 @@ class PyLibensemble(PythonPackage):
         )
 
     def test(self):
-        self.run_tutorial_tests("test_uniform_sampling.py")
+        super(__class__, self).test()
+        for tutorial in ["test_uniform_sampling.py", "test_1d_sampling.py"]:
+            self.run_tutorial_tests(tutorial)

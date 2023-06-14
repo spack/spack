@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -17,9 +17,10 @@ class Whizard(AutotoolsPackage):
 
     tags = ["hep"]
 
-    maintainers = ["vvolkl"]
+    maintainers("vvolkl")
 
     version("master", branch="master")
+    version("3.1.0", sha256="9dc5e6d1a25d2fc708625f85010cb81b63559ff02cceb9b35024cf9f426c0ad9")
     version("3.0.3", sha256="20f2269d302fc162a6aed8e781b504ba5112ef0711c078cdb08b293059ed67cf")
     version("3.0.2", sha256="f1db92cd95a0281f6afbf4ac32ab027670cb97a57ad8f5139c0d1f61593d66ec")
     version("3.0.1", sha256="1463abd6c50ffe72029abc6f5a7d28ec63013852bfe5914cb464b58202c1437c")
@@ -42,17 +43,11 @@ class Whizard(AutotoolsPackage):
     )
 
     variant("pythia8", default=True, description="builds with pythia8")
-
     variant("fastjet", default=False, description="builds with fastjet")
-
     variant("lcio", default=False, description="builds with lcio")
-
     variant("lhapdf", default=False, description="builds with fastjet")
-
     variant("openmp", default=False, description="builds with openmp")
-
     variant("openloops", default=False, description="builds with openloops")
-
     variant("latex", default=False, description="data visualization with latex")
 
     depends_on("libtirpc")
@@ -71,6 +66,19 @@ class Whizard(AutotoolsPackage):
     depends_on("texlive", when="+latex")
     depends_on("zlib")
 
+    # Fix for https://github.com/key4hep/key4hep-spack/issues/71
+    # NOTE: This will become obsolete in a future release of whizard, so once
+    # that happens, this needs to be adapted with a when clause
+    patch("parallel_build_fix.patch", when="@3:")
+    patch("parallel_build_fix_2.8.patch", when="@2.8")
+    # Make sure that the patch actually has an effect by running autoreconf
+    force_autoreconf = True
+    # Which then requires the following build dependencies
+    depends_on("autoconf", type="build")
+    depends_on("automake", type="build")
+    depends_on("libtool", type="build")
+    depends_on("pkgconf", type="build")
+
     conflicts(
         "%gcc@:5.0",
         msg="gfortran needs to support Fortran 2008. For more detailed information see https://whizard.hepforge.org/compilers.html",
@@ -84,10 +92,6 @@ class Whizard(AutotoolsPackage):
         "%intel@:17",
         msg="The fortran compiler needs to support Fortran 2008. For more detailed information see https://whizard.hepforge.org/compilers.html",
     )
-
-    # Trying to build in parallel leads to a race condition at the build step.
-    # See: https://github.com/key4hep/k4-spack/issues/71
-    parallel = False
 
     def setup_build_environment(self, env):
         # whizard uses the compiler during runtime,

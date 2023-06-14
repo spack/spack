@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -15,37 +15,53 @@ class Tasmanian(CMakePackage, CudaPackage, ROCmPackage):
     ApproximatioN is a robust library for high dimensional integration and
     interpolation as well as parameter calibration."""
 
-    homepage = "http://tasmanian.ornl.gov"
-    url = "https://github.com/ORNL/TASMANIAN/archive/v7.5.tar.gz"
+    homepage = "https://ornl.github.io/TASMANIAN/stable/"
+    url = "https://github.com/ORNL/TASMANIAN/archive/v7.9.tar.gz"
     git = "https://github.com/ORNL/TASMANIAN.git"
 
     tags = ["e4s"]
-    maintainers = ["mkstoyanov"]
+    maintainers("mkstoyanov")
 
     version("develop", branch="master")
 
+    version("7.9", sha256="decba62e6bbccf1bc26c6e773a8d4fd51d7f3e3e534ddd386ec41300694ce5cc")
     version("7.7", sha256="85fb3a7b302ea21a3b700712767a59a623d9ab93da03308fa47d4413654c3878")
     version("7.5", sha256="d621bd36dced4db86ef638693ba89b336762e7a3d7fedb3b5bcefb03390712b3")
     version("7.3", sha256="5bd1dd89cc5c84506f6900b6569b17e50becd73eb31ec85cfa11d6f1f912c4fa")
-    version("7.1", sha256="9c24a591506a478745b802f1fa5c557da7bc80b12d8070855de6bc7aaca7547a")
+
+    # API is very stable since 7.0, but the refactoring made 7.0 and 7.1 rocky
     version(
-        "7.0", sha256="4094ba4ee2f1831c575d00368c8471d3038f813398be2e500739cef5c7c4a47b"
+        "7.1",
+        sha256="9c24a591506a478745b802f1fa5c557da7bc80b12d8070855de6bc7aaca7547a",
+        deprecated=True,
+    )
+    version(
+        "7.0",
+        sha256="4094ba4ee2f1831c575d00368c8471d3038f813398be2e500739cef5c7c4a47b",
+        deprecated=True,
     )  # use for xsdk-0.5.0
+    # 5.0, 5.1 and 6.0 use older API from 2018, all users have moved up by now
     version(
-        "6.0", sha256="ceab842e9fbce2f2de971ba6226967caaf1627b3e5d10799c3bd2e7c3285ba8b"
+        "6.0",
+        sha256="ceab842e9fbce2f2de971ba6226967caaf1627b3e5d10799c3bd2e7c3285ba8b",
+        deprecated=True,
     )  # use for xsdk-0.4.0
-    version("5.1", sha256="b0c1be505ce5f8041984c63edca9100d81df655733681858f5cc10e8c0c72711")
+    version(
+        "5.1",
+        sha256="b0c1be505ce5f8041984c63edca9100d81df655733681858f5cc10e8c0c72711",
+        deprecated=True,
+    )
 
     version(
         "5.0",
         sha256="2540bb63dea987ab205f7b375aff41f320b1de9bd7f1d1064ef96b22eeda1251",
         url="https://tasmanian.ornl.gov/documents/Tasmanian_v5.0.zip",
+        deprecated=True,
     )
 
     variant("xsdkflags", default=False, description="enable XSDK defaults for Tasmanian")
 
-    variant("openmp", default=True, description="add OpenMP support to Tasmanian")
-    # tested with OpenMP 3.1 (clang4) through 4.0-4.5 (gcc 5 - 8)
+    variant("openmp", default=False, description="add OpenMP support to Tasmanian")
 
     variant("blas", default=False, description="add BLAS support to Tasmanian")
 
@@ -71,6 +87,7 @@ class Tasmanian(CMakePackage, CudaPackage, ROCmPackage):
     depends_on("cmake@2.8:", type="build")
     depends_on("cmake@3.5:", type="build", when="@6.0:")
     depends_on("cmake@3.10:", type=("build", "run"), when="@7.0:")
+    depends_on("cmake@3.22:", type=("build", "run"), when="@develop")
 
     depends_on("python@2.7:", when="+python", type=("build", "run"))
     depends_on("py-numpy", when="+python", type=("build", "run"))
@@ -93,7 +110,7 @@ class Tasmanian(CMakePackage, CudaPackage, ROCmPackage):
     depends_on("magma@2.4.0:", when="+magma @6.0:", type=("build", "run"))
     depends_on("magma@2.5.0:", when="+magma @7.0:", type=("build", "run"))
 
-    conflicts("-cuda", when="+magma")  # currently MAGMA only works with CUDA
+    conflicts("+magma", when="~cuda~rocm")  # currently MAGMA only works with CUDA
     conflicts("+cuda", when="+rocm")  # can pick CUDA or ROCm, not both
 
     # old versions
@@ -193,7 +210,44 @@ class Tasmanian(CMakePackage, CudaPackage, ROCmPackage):
         # using the tests copied from <prefix>/share/Tasmanian/testing
         cmake_dir = self.test_suite.current_test_cache_dir.testing
 
-        if not self.run_test(cmake_bin, options=[cmake_dir], purpose="Generate the Makefile"):
+        options = [cmake_dir]
+        if "+rocm" in self.spec:
+            options.append(
+                "-DAMDDeviceLibs_DIR="
+                + join_path(self.spec["llvm-amdgpu"].prefix, "lib", "cmake", "AMDDeviceLibs")
+            )
+            options.append(
+                "-Damd_comgr_DIR="
+                + join_path(self.spec["comgr"].prefix, "lib", "cmake", "amd_comgr")
+            )
+            options.append(
+                "-Dhsa-runtime64_DIR="
+                + join_path(self.spec["hsa-rocr-dev"].prefix, "lib", "cmake", "hsa-runtime64")
+            )
+            options.append(
+                "-DHSA_HEADER=" + join_path(self.spec["hsa-rocr-dev"].prefix, "include")
+            )
+            options.append(
+                "-DCMAKE_INCLUDE_PATH="
+                + join_path(self.spec["hsa-rocr-dev"].prefix, "include", "hsa")
+            )
+            options.append(
+                "-Drocblas_DIR="
+                + join_path(self.spec["rocblas"].prefix, "lib", "cmake", "rocblas")
+            )
+            options.append(
+                "-Drocsparse_DIR="
+                + join_path(self.spec["rocsparse"].prefix, "lib", "cmake", "rocsparse")
+            )
+            options.append(
+                "-Drocsolver_DIR="
+                + join_path(self.spec["rocsolver"].prefix, "lib", "cmake", "rocsolver")
+            )
+
+        if "+mpi" in self.spec:
+            options.append("-DMPI_HOME=" + self.spec["mpi"].prefix)
+
+        if not self.run_test(cmake_bin, options=options, purpose="Generate the Makefile"):
             tty.msg("Skipping tasmanian test: failed to generate Makefile")
             return
 

@@ -1,41 +1,128 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
+import os
 import re
 
 from spack.package import *
 
-_os_map = {
+_os_map_before_23 = {
     "ubuntu18.04": "Ubuntu-18.04",
     "ubuntu20.04": "Ubuntu-20.04",
+    "ubuntu22.04": "Ubuntu-20.04",
     "sles15": "SLES-15",
     "centos7": "RHEL-7",
     "centos8": "RHEL-8",
+    "rhel7": "RHEL-7",
+    "rhel8": "RHEL-8",
+    "rocky8": "RHEL-8",
     "amzn2": "RHEL-7",
+    "amzn2023": "RHEL-7",
 }
 
+_os_map = {
+    "ubuntu20.04": "Ubuntu-20.04",
+    "ubuntu22.04": "Ubuntu-22.04",
+    "sles15": "SLES-15",
+    "centos7": "RHEL-7",
+    "centos8": "RHEL-8",
+    "rhel7": "RHEL-7",
+    "rhel8": "RHEL-8",
+    "rhel9": "RHEL-9",
+    "rocky8": "RHEL-8",
+    "amzn2": "AmazonLinux-2",
+    "amzn2023": "AmazonLinux-2023",
+}
 
 _versions = {
+    "23.04.1": {
+        "RHEL-7": (
+            "5e84daaf0510f73c235723112f9241bbd744ed89eb4f70f089bac05cf2aad2c4",
+            "https://developer.arm.com/-/media/Files/downloads/hpc/arm-compiler-for-linux/23-04-1/arm-compiler-for-linux_23.04.1_RHEL-7_aarch64.tar",
+        ),
+        "RHEL-8": (
+            "6ec1f2c7338ea8a2831a7ff353ab44f87804f56716d1f3686576fb950c2f730f",
+            "https://developer.arm.com/-/media/Files/downloads/hpc/arm-compiler-for-linux/23-04-1/arm-compiler-for-linux_23.04.1_RHEL-8_aarch64.tar",
+        ),
+        "RHEL-9": (
+            "dbd6493ea762b9b4c6cb54a76ad42e2223360882165ee3c223c1b7d1ebe927e2",
+            "https://developer.arm.com/-/media/Files/downloads/hpc/arm-compiler-for-linux/23-04-1/arm-compiler-for-linux_23.04.1_RHEL-9_aarch64.tar",
+        ),
+        "SLES-15": (
+            "74c29890d47556114922c77e5a9797b055f8fe49f0c8665d17102465fca766b4",
+            "https://developer.arm.com/-/media/Files/downloads/hpc/arm-compiler-for-linux/23-04-1/arm-compiler-for-linux_23.04.1_SLES-15_aarch64.tar",
+        ),
+        "Ubuntu-20.04": (
+            "78015ff5a246facfe45219a03a3774221b2f3b58db6fa3d9840d2574d103310c",
+            "https://developer.arm.com/-/media/Files/downloads/hpc/arm-compiler-for-linux/23-04-1/arm-compiler-for-linux_23.04.1_Ubuntu-20.04_aarch64.tar",
+        ),
+        "Ubuntu-22.04": (
+            "19213db67aa11de44b617255e9e32efd294f930c6b6145192acf9ee331452ea6",
+            "https://developer.arm.com/-/media/Files/downloads/hpc/arm-compiler-for-linux/23-04-1/arm-compiler-for-linux_23.04.1_Ubuntu-22.04_aarch64.tar",
+        ),
+        "AmazonLinux-2": (
+            "31ba559302a2889e5f0897f1c07563b20a5a8eaa671e623bef406b6490d1f4f2",
+            "https://developer.arm.com/-/media/Files/downloads/hpc/arm-compiler-for-linux/23-04-1/arm-compiler-for-linux_23.04.1_AmazonLinux-2_aarch64.tar",
+        ),
+        "AmazonLinux-2023": (
+            "fa38f3d79775e9a537c59c8ba39c3b10505e895a3602bbd93c09445170db571f",
+            "https://developer.arm.com/-/media/Files/downloads/hpc/arm-compiler-for-linux/23-04-1/arm-compiler-for-linux_23.04.1_AmazonLinux-2023_aarch64.tar",
+        ),
+    },
+    "23.04": {
+        "RHEL-7": (
+            "6526218484e87c195c1145f60536552fabbd25ba98c05cf096f54de18381a422",
+            "https://developer.arm.com/-/media/Files/downloads/hpc/arm-compiler-for-linux/23-04/arm-compiler-for-linux_23.04_RHEL-7_aarch64.tar",
+        ),
+        "RHEL-8": (
+            "e658c9d85693cc818f2be9942d8aa71465a84e00046d6f8da72c46a76cc8a747",
+            "https://developer.arm.com/-/media/Files/downloads/hpc/arm-compiler-for-linux/23-04/arm-compiler-for-linux_23.04_RHEL-8_aarch64.tar",
+        ),
+        "RHEL-9": (
+            "b71431a16e09ae910737f920aab9c720b5ec83586dba8041b0daa45fa13521d1",
+            "https://developer.arm.com/-/media/Files/downloads/hpc/arm-compiler-for-linux/23-04/arm-compiler-for-linux_23.04_RHEL-9_aarch64.tar",
+        ),
+        "SLES-15": (
+            "5dc880272942f5ac2cad7556bdbdf177b62a0736061c1acb1c80ca51ccaba3be",
+            "https://developer.arm.com/-/media/Files/downloads/hpc/arm-compiler-for-linux/23-04/arm-compiler-for-linux_23.04_SLES-15_aarch64.tar",
+        ),
+        "Ubuntu-20.04": (
+            "a0b3bcec541a1e78b1a48d6fa876cc0ef2846f40219c95c60ab9852882ee05d2",
+            "https://developer.arm.com/-/media/Files/downloads/hpc/arm-compiler-for-linux/23-04/arm-compiler-for-linux_23.04_Ubuntu-20.04_aarch64.tar",
+        ),
+        "Ubuntu-22.04": (
+            "10cf29da14830b3a9f0f51cda893e4255ffd1093297a71886865f97958d100f7",
+            "https://developer.arm.com/-/media/Files/downloads/hpc/arm-compiler-for-linux/23-04/arm-compiler-for-linux_23.04_Ubuntu-22.04_aarch64.tar",
+        ),
+        "AmazonLinux-2": (
+            "65637a34abd076906bcbd56f2a7861ec873bc8d62e321217ade6008939a0bf6b",
+            "https://developer.arm.com/-/media/Files/downloads/hpc/arm-compiler-for-linux/23-04/arm-compiler-for-linux_23.04_AmazonLinux-2_aarch64.tar",
+        ),
+        "AmazonLinux-2023": (
+            "415f8e908baf550e92ef21d4146904fac0a339132cb7921b4046e47ac71cf4c9",
+            "https://developer.arm.com/-/media/Files/downloads/hpc/arm-compiler-for-linux/23-04/arm-compiler-for-linux_23.04_AmazonLinux-2023_aarch64.tar",
+        ),
+    },
     "22.1": {
         "RHEL-7": (
-            "189119a72b2cf2840dc85d4fab74435c018e145d03dd3098f23364bd235ffb7b",
+            "367b9a60fa13b5fcf2fa787122c12d4bfb14d6f3e3e7b0460efc7627484a56a4",
             "https://developer.arm.com/-/media/Files/downloads/hpc/arm-compiler-for-linux/22-1/arm-compiler-for-linux_22.1_RHEL-7_aarch64.tar",
         ),
         "RHEL-8": (
-            "28116f6030c95ee8f69eba89023966974d6b44d4a686098f5c3c03e34f7495f6",
+            "f03ad3381a74df73a4c25baf5f1c15bd466cfd6286498c38b37ddeaa85c9965e",
             "https://developer.arm.com/-/media/Files/downloads/hpc/arm-compiler-for-linux/22-1/arm-compiler-for-linux_22.1_RHEL-8_aarch64.tar",
         ),
         "SLES-15": (
-            "6616dba1af4a73300ce822b645a0f1dfd363f507db5ea44cab1c6051ea388554",
+            "8a1c5bd570bd195982c342da8dafb7075f8f6b373b44539d4c810e69e8157c1f",
             "https://developer.arm.com/-/media/Files/downloads/hpc/arm-compiler-for-linux/22-1/arm-compiler-for-linux_22.1_SLES-15_aarch64.tar",
         ),
         "Ubuntu-18.04": (
-            "3b3dd6f416299fbd14fbaf0b1bddf7e2f4445a186de7a87e9efdae0b9d0dc3d5",
+            "4628599d389efcee07d0986cc3e791931e6a37eddb6e4b93c7846e17efe2148f",
             "https://developer.arm.com/-/media/Files/downloads/hpc/arm-compiler-for-linux/22-1/arm-compiler-for-linux_22.1_Ubuntu-18.04_aarch64.tar",
         ),
         "Ubuntu-20.04": (
-            "e6361a08f75817c8dbfb56dc72578810eaf5ffb65591215e394cb3ec6bdd9c10",
+            "20d950d16e6bb0b3a4c4f3c8ad393aae2356d4c998303b319da9e9833d4a6d12",
             "https://developer.arm.com/-/media/Files/downloads/hpc/arm-compiler-for-linux/22-1/arm-compiler-for-linux_22.1_Ubuntu-20.04_aarch64.tar",
         ),
     },
@@ -86,17 +173,59 @@ _versions = {
 }
 
 
-def get_os():
+def get_os(ver):
     spack_os = spack.platforms.host().default_os
-    return _os_map.get(spack_os, "RHEL-7")
+    if ver.startswith("22."):
+        return _os_map_before_23.get(spack_os, "")
+    else:
+        return _os_map.get(spack_os, "RHEL-7")
+
+
+def get_armpl_version_to_3(spec):
+    """Return version string with 3 numbers"""
+    version_len = len(spec.version)
+    assert version_len == 2 or version_len == 3
+    if version_len == 2:
+        return spec.version.string + ".0"
+    elif version_len == 3:
+        return spec.version.string
+
+
+def get_armpl_prefix(spec):
+    if spec.version.string.startswith("22."):
+        return join_path(
+            spec.prefix,
+            "armpl-{}_AArch64_{}_arm-linux-compiler_aarch64-linux".format(
+                get_armpl_version_to_3(spec), get_os(spec.version.string)
+            ),
+        )
+    else:
+        return join_path(
+            spec.prefix,
+            "armpl-{}_{}_arm-linux-compiler".format(
+                get_armpl_version_to_3(spec), get_os(spec.version.string)
+            ),
+        )
 
 
 def get_acfl_prefix(spec):
-    acfl_prefix = spec.prefix
-    return join_path(
-        acfl_prefix,
-        "arm-linux-compiler-{0}_Generic-AArch64_{1}_aarch64-linux".format(spec.version, get_os()),
-    )
+    if spec.version.string.startswith("22."):
+        return join_path(
+            spec.prefix,
+            "arm-linux-compiler-{0}_Generic-AArch64_{1}_aarch64-linux".format(
+                spec.version, get_os(spec.version.string)
+            ),
+        )
+    else:
+        return join_path(
+            spec.prefix,
+            "arm-linux-compiler-{0}_{1}".format(spec.version, get_os(spec.version.string)),
+        )
+
+
+def get_gcc_prefix(spec):
+    dirlist = next(os.walk(spec.prefix))[1]
+    return join_path(spec.prefix, next(dir for dir in dirlist if dir.startswith("gcc")))
 
 
 class Acfl(Package):
@@ -104,16 +233,14 @@ class Acfl(Package):
     with a modern LLVM-based compiler framework.
     """
 
-    homepage = "https://developer.arm.com/tools-and-software/server-and-hpc/arm-allinea-studio"
-    url = "https://developer.arm.com/-/media/Files/downloads/hpc/arm-compiler-for-linux/22-1/arm-compiler-for-linux_22.1_Ubuntu-20.04_aarch64.tar"
+    homepage = "https://developer.arm.com/Tools%20and%20Software/Arm%20Compiler%20for%20Linux"
+    url = "https://developer.arm.com/-/media/Files/downloads/hpc/arm-compiler-for-linux/23-04-1/arm-compiler-for-linux_23.04.1_Ubuntu-22.04_aarch64.tar"
 
-    maintainers = ["annop-w"]
-
-    # Build Versions: establish OS for URL
-    acfl_os = get_os()
+    maintainers("annop-w")
 
     # Build Versions
     for ver, packages in _versions.items():
+        acfl_os = get_os(ver)
         pkg = packages.get(acfl_os)
         if pkg:
             version(ver, sha256=pkg[0], url=pkg[1])
@@ -122,14 +249,30 @@ class Acfl(Package):
     conflicts("target=x86_64:", msg="Only available on Aarch64")
     conflicts("target=ppc64:", msg="Only available on Aarch64")
     conflicts("target=ppc64le:", msg="Only available on Aarch64")
-    depends_on("ncurses abi=5")
+
     executables = [r"armclang", r"armclang\+\+", r"armflang"]
+
+    variant("ilp64", default=False, description="use ilp64 specific Armpl library")
+    variant("shared", default=True, description="enable shared libs")
+    variant(
+        "threads",
+        default="none",
+        description="Multithreading support",
+        values=("openmp", "none"),
+        multi=False,
+    )
+
+    provides("blas")
+    provides("lapack")
+    provides("fftw-api@3")
 
     # Licensing - Not required from 22.0.1 on.
 
     # Run the installer with the desired install directory
     def install(self, spec, prefix):
-        exe = Executable("./arm-compiler-for-linux_{0}_{1}.sh".format(spec.version, get_os()))
+        exe = Executable(
+            "./arm-compiler-for-linux_{0}_{1}.sh".format(spec.version, get_os(spec.version.string))
+        )
         exe("--accept", "--force", "--install-to", prefix)
 
     @classmethod
@@ -184,14 +327,97 @@ class Acfl(Package):
             return self.spec.extra_attributes["compilers"].get("fortran", None)
         return join_path(get_acfl_prefix(self.spec), "bin", "armflang")
 
+    @property
+    def lib_suffix(self):
+        suffix = ""
+        suffix += "_ilp64" if self.spec.satisfies("+ilp64") else ""
+        suffix += "_mp" if self.spec.satisfies("threads=openmp") else ""
+        return suffix
+
+    @property
+    def blas_libs(self):
+        armpl_prefix = get_armpl_prefix(self.spec)
+
+        libname = "libarmpl" + self.lib_suffix
+
+        # Get ArmPL Lib
+        armpl_libs = find_libraries(
+            [libname, "libamath", "libastring"],
+            root=armpl_prefix,
+            shared=self.spec.satisfies("+shared"),
+            recursive=True,
+        )
+
+        armpl_libs += find_system_libraries(["libm"])
+
+        return armpl_libs
+
+    @property
+    def lapack_libs(self):
+        return self.blas_libs
+
+    @property
+    def fftw_libs(self):
+        return self.blas_libs
+
+    @property
+    def libs(self):
+        return self.blas_libs
+
+    @property
+    def headers(self):
+        armpl_dir = get_armpl_prefix(self.spec)
+
+        suffix = "include" + self.lib_suffix
+
+        incdir = join_path(armpl_dir, suffix)
+
+        hlist = find_all_headers(incdir)
+        hlist.directories = [incdir]
+        return hlist
+
     def setup_run_environment(self, env):
         arm_dir = get_acfl_prefix(self.spec)
+        armpl_dir = get_armpl_prefix(self.spec)
+        gcc_dir = get_gcc_prefix(self.spec)
+
         env.set("ARM_LINUX_COMPILER_DIR", arm_dir)
         env.set("ARM_LINUX_COMPILER_INCLUDES", join_path(arm_dir, "includes"))
-        env.prepend_path("LD_LIBRARY_PATH", join_path(arm_dir, "lib"))
+        env.append_path("ARM_LINUX_COMPILER_LIBRARIES", join_path(arm_dir, "lib"))
         env.prepend_path("PATH", join_path(arm_dir, "bin"))
         env.prepend_path("CPATH", join_path(arm_dir, "include"))
+        env.prepend_path("LD_LIBRARY_PATH", join_path(arm_dir, "lib"))
+        env.append_path("LD_LIBRARY_PATH", join_path(armpl_dir, "lib"))
+        env.prepend_path("LIBRARY_PATH", join_path(arm_dir, "lib"))
         env.prepend_path("MANPATH", join_path(arm_dir, "share", "man"))
-        env.prepend_path("ARM_LICENSE_DIR", join_path(self.prefix, "licences"))
-        if "ncurses" in self.spec:
-            env.prepend_path("LD_LIBRARY_PATH", join_path(self.spec["ncurses"].prefix, "lib"))
+
+        env.set("GCC_DIR", gcc_dir)
+        env.set("GCC_INCLUDES", join_path(gcc_dir, "include"))
+        env.append_path("GCC_LIBRARIES", join_path(gcc_dir, "lib"))
+        env.append_path("GCC_LIBRARIES", join_path(gcc_dir, "lib64"))
+        env.set("COMPILER_PATH", gcc_dir)
+        env.prepend_path("PATH", join_path(gcc_dir, "binutils_bin"))
+        env.prepend_path("CPATH", join_path(gcc_dir, "include"))
+        env.prepend_path("LD_LIBRARY_PATH", join_path(gcc_dir, "lib"))
+        env.prepend_path("LD_LIBRARY_PATH", join_path(gcc_dir, "lib64"))
+        env.prepend_path("LIBRARY_PATH", join_path(gcc_dir, "lib"))
+        env.prepend_path("LIBRARY_PATH", join_path(gcc_dir, "lib64"))
+        env.prepend_path("MANPATH", join_path(gcc_dir, "share", "man"))
+
+    @run_after("install")
+    def check_install(self):
+        arm_dir = get_acfl_prefix(self.spec)
+        armpl_dir = get_armpl_prefix(self.spec)
+        gcc_dir = get_gcc_prefix(self.spec)
+        armpl_example_dir = join_path(armpl_dir, "examples")
+        # run example makefile
+        make(
+            "-C",
+            armpl_example_dir,
+            "CC=" + self.cc,
+            "F90=" + self.fortran,
+            "CPATH=" + join_path(arm_dir, "include"),
+            "COMPILER_PATH=" + gcc_dir,
+        )
+        # clean up
+        make("-C", armpl_example_dir, "clean")

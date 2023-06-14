@@ -1,7 +1,7 @@
 #!/bin/sh -f
 # shellcheck disable=SC2034  # evals in this script fool shellcheck
 #
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -241,28 +241,28 @@ case "$command" in
         mode=cpp
         debug_flags="-g"
         ;;
-    cc|c89|c99|gcc|clang|armclang|icc|icx|pgcc|nvc|xlc|xlc_r|fcc|amdclang|cl.exe)
+    cc|c89|c99|gcc|clang|armclang|icc|icx|pgcc|nvc|xlc|xlc_r|fcc|amdclang|cl.exe|craycc)
         command="$SPACK_CC"
         language="C"
         comp="CC"
         lang_flags=C
         debug_flags="-g"
         ;;
-    c++|CC|g++|clang++|armclang++|icpc|icpx|dpcpp|pgc++|nvc++|xlc++|xlc++_r|FCC|amdclang++)
+    c++|CC|g++|clang++|armclang++|icpc|icpx|dpcpp|pgc++|nvc++|xlc++|xlc++_r|FCC|amdclang++|crayCC)
         command="$SPACK_CXX"
         language="C++"
         comp="CXX"
         lang_flags=CXX
         debug_flags="-g"
         ;;
-    ftn|f90|fc|f95|gfortran|flang|armflang|ifort|ifx|pgfortran|nvfortran|xlf90|xlf90_r|nagfor|frt|amdflang)
+    ftn|f90|fc|f95|gfortran|flang|armflang|ifort|ifx|pgfortran|nvfortran|xlf90|xlf90_r|nagfor|frt|amdflang|crayftn)
         command="$SPACK_FC"
         language="Fortran 90"
         comp="FC"
         lang_flags=F
         debug_flags="-g"
         ;;
-    f77|xlf|xlf_r|pgf77|amdflang)
+    f77|xlf|xlf_r|pgf77)
         command="$SPACK_F77"
         language="Fortran 77"
         comp="F77"
@@ -427,6 +427,62 @@ isystem_include_dirs_list=""
 libs_list=""
 other_args_list=""
 
+# Global state for keeping track of -Wl,-rpath -Wl,/path
+wl_expect_rpath=no
+
+# Same, but for -Xlinker -rpath -Xlinker /path
+xlinker_expect_rpath=no
+
+parse_Wl() {
+    while [ $# -ne 0 ]; do
+    if [ "$wl_expect_rpath" = yes ]; then
+        if system_dir "$1"; then
+            append system_rpath_dirs_list "$1"
+        else
+            append rpath_dirs_list "$1"
+        fi
+        wl_expect_rpath=no
+    else
+        case "$1" in
+            -rpath=*)
+                arg="${1#-rpath=}"
+                if [ -z "$arg" ]; then
+                    shift; continue
+                elif system_dir "$arg"; then
+                    append system_rpath_dirs_list "$arg"
+                else
+                    append rpath_dirs_list "$arg"
+                fi
+                ;;
+            --rpath=*)
+                arg="${1#--rpath=}"
+                if [ -z "$arg" ]; then
+                    shift; continue
+                elif system_dir "$arg"; then
+                    append system_rpath_dirs_list "$arg"
+                else
+                    append rpath_dirs_list "$arg"
+                fi
+                ;;
+            -rpath|--rpath)
+                wl_expect_rpath=yes
+                ;;
+            "$dtags_to_strip")
+                ;;
+            -Wl)
+                # Nested -Wl,-Wl means we're in NAG compiler territory, we don't support
+                # it.
+                return 1
+                ;;
+            *)
+                append other_args_list "-Wl,$1"
+                ;;
+        esac
+    fi
+    shift
+    done
+}
+
 
 while [ $# -ne 0 ]; do
 
@@ -438,6 +494,47 @@ while [ $# -ne 0 ]; do
     if [ -z "$1" ]; then
         shift
         continue
+    fi
+
+    if [ -n "${SPACK_COMPILER_FLAGS_KEEP}" ] ; then
+        # NOTE: the eval is required to allow `|` alternatives inside the variable
+        eval "\
+        case \"\$1\" in
+            $SPACK_COMPILER_FLAGS_KEEP)
+                append other_args_list \"\$1\"
+                shift
+                continue
+                ;;
+        esac
+        "
+    fi
+    # the replace list is a space-separated list of pipe-separated pairs,
+    # the first in each pair is the original prefix to be matched, the
+    # second is the replacement prefix
+    if [ -n "${SPACK_COMPILER_FLAGS_REPLACE}" ] ; then
+        for rep in ${SPACK_COMPILER_FLAGS_REPLACE} ; do
+            before=${rep%|*}
+            after=${rep#*|}
+            eval "\
+            stripped=\"\${1##$before}\"
+            "
+            if [ "$stripped" = "$1" ] ; then
+                continue
+            fi
+
+            replaced="$after$stripped" 
+
+            # it matched, remove it
+            shift
+
+            if [ -z "$replaced" ] ; then
+                # completely removed, continue OUTER loop
+                continue 2
+            fi
+
+            # re-build argument list with replacement
+            set -- "$replaced" "$@"
+        done
     fi
 
     case "$1" in
@@ -485,87 +582,78 @@ while [ $# -ne 0 ]; do
             append other_args_list "-l$arg"
             ;;
         -Wl,*)
-            arg="${1#-Wl,}"
-            if [ -z "$arg" ]; then shift; arg="$1"; fi
-            case "$arg" in
-                -rpath=*)  rp="${arg#-rpath=}"  ;;
-                --rpath=*) rp="${arg#--rpath=}" ;;
-                -rpath,*)  rp="${arg#-rpath,}"  ;;
-                --rpath,*) rp="${arg#--rpath,}" ;;
-                -rpath|--rpath)
-                    shift; arg="$1"
-                    case "$arg" in
-                        -Wl,*)
-                            rp="${arg#-Wl,}"
-                            ;;
-                        *)
-                            die "-Wl,-rpath was not followed by -Wl,*"
-                            ;;
-                    esac
-                    ;;
-                "$dtags_to_strip")
-                    :  # We want to remove explicitly this flag
-                    ;;
-                *)
-                    append other_args_list "-Wl,$arg"
-                    ;;
-            esac
-            ;;
-        -Xlinker,*)
-            arg="${1#-Xlinker,}"
-            if [ -z "$arg" ]; then shift; arg="$1"; fi
-
-            case "$arg" in
-                -rpath=*)  rp="${arg#-rpath=}"  ;;
-                --rpath=*) rp="${arg#--rpath=}" ;;
-                -rpath|--rpath)
-                    shift; arg="$1"
-                    case "$arg" in
-                        -Xlinker,*)
-                            rp="${arg#-Xlinker,}"
-                        ;;
-                        *)
-                            die "-Xlinker,-rpath was not followed by -Xlinker,*"
-                            ;;
-                    esac
-                    ;;
-                *)
-                    append other_args_list "-Xlinker,$arg"
-                    ;;
-            esac
+            IFS=,
+            if ! parse_Wl ${1#-Wl,}; then
+                append other_args_list "$1"
+            fi
+            unset IFS
             ;;
         -Xlinker)
-            if [ "$2" = "-rpath" ]; then
-                if [ "$3" != "-Xlinker" ]; then
-                    die "-Xlinker,-rpath was not followed by -Xlinker,*"
+            shift
+            if [ $# -eq 0 ]; then
+                # -Xlinker without value: let the compiler error about it.
+                append other_args_list -Xlinker
+                xlinker_expect_rpath=no
+                break
+            elif [ "$xlinker_expect_rpath" = yes ]; then
+                # Register the path of -Xlinker -rpath <other args> -Xlinker <path>
+                if system_dir "$1"; then
+                    append system_rpath_dirs_list "$1"
+                else
+                    append rpath_dirs_list "$1"
                 fi
-                shift 3;
-                rp="$1"
-            elif [ "$2" = "$dtags_to_strip" ]; then
-                shift  # We want to remove explicitly this flag
+                xlinker_expect_rpath=no
             else
-                append other_args_list "$1"
+                case "$1" in
+                    -rpath=*)
+                        arg="${1#-rpath=}"
+                        if system_dir "$arg"; then
+                            append system_rpath_dirs_list "$arg"
+                        else
+                            append rpath_dirs_list "$arg"
+                        fi
+                        ;;
+                    --rpath=*)
+                        arg="${1#--rpath=}"
+                        if system_dir "$arg"; then
+                            append system_rpath_dirs_list "$arg"
+                        else
+                            append rpath_dirs_list "$arg"
+                        fi
+                        ;;
+                    -rpath|--rpath)
+                        xlinker_expect_rpath=yes
+                        ;;
+                    "$dtags_to_strip")
+                        ;;
+                    *)
+                        append other_args_list -Xlinker
+                        append other_args_list "$1"
+                        ;;
+                esac
             fi
+            ;;
+        "$dtags_to_strip")
             ;;
         *)
-            if [ "$1" = "$dtags_to_strip" ]; then
-                :  # We want to remove explicitly this flag
-            else
-                append other_args_list "$1"
-            fi
+            append other_args_list "$1"
             ;;
     esac
-
-    # test rpaths against system directories in one place.
-    if [ -n "$rp" ]; then
-        if system_dir "$rp"; then
-            append system_rpath_dirs_list "$rp"
-        else
-            append rpath_dirs_list "$rp"
-        fi
-    fi
     shift
 done
+
+# We found `-Xlinker -rpath` but no matching value `-Xlinker /path`. Just append
+# `-Xlinker -rpath` again and let the compiler or linker handle the error during arg
+# parsing.
+if [ "$xlinker_expect_rpath" = yes ]; then
+    append other_args_list -Xlinker
+    append other_args_list -rpath
+fi
+
+# Same, but for -Wl flags.
+if [ "$wl_expect_rpath" = yes ]; then
+    append other_args_list -Wl,-rpath
+fi
 
 #
 # Add flags from Spack's cppflags, cflags, cxxflags, fcflags, fflags, and

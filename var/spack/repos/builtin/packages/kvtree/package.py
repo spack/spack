@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -15,9 +15,10 @@ class Kvtree(CMakePackage):
     git = "https://github.com/ecp-veloc/kvtree.git"
     tags = ["ecp"]
 
-    maintainers = ["CamStan", "gonsie"]
+    maintainers("CamStan", "gonsie")
 
     version("main", branch="main")
+    version("1.4.0", sha256="48a36fd578f0d1198a9c1512d6446c830b915ace5bb97539eec615495bee5a51")
     version("1.3.0", sha256="8281e075772d3534183c46133553d5765455d79ed98a895743663db891755ca9")
     version("1.2.0", sha256="ecd4b8bc479c33ab4f23fc764445a3bb353a1d15c208d011f5577a32c182477f")
     version("1.1.1", sha256="4776bd55a559b7f9bb594454ae6b14ebff0087c93c3d59ac7d1ab27df4aa4d74")

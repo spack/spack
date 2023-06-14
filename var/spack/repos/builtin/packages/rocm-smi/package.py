@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -20,7 +20,7 @@ class RocmSmi(MakefilePackage):
     homepage = "https://github.com/RadeonOpenCompute/ROC-smi"
     url = "https://github.com/RadeonOpenCompute/ROC-smi/archive/rocm-4.1.0.tar.gz"
 
-    maintainers = ["srekolam", "renjithravindrankannath"]
+    maintainers("srekolam", "renjithravindrankannath")
     tags = ["rocm"]
 
     version(

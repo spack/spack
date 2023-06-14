@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -24,9 +24,12 @@ class Boost(Package):
     git = "https://github.com/boostorg/boost.git"
     list_url = "https://sourceforge.net/projects/boost/files/boost/"
     list_depth = 1
-    maintainers = ["hainest"]
+    maintainers("hainest")
 
     version("develop", branch="develop", submodules=True)
+    version("1.82.0", sha256="a6e1ab9b0860e6a2881dd7b21fe9f737a095e5f33a3a874afc6a345228597ee6")
+    version("1.81.0", sha256="71feeed900fbccca04a3b4f2f84a7c217186f28a940ed8b7ed4725986baf99fa")
+    version("1.80.0", sha256="1e19565d82e43bc59209a168f5ac899d3ba471d55c7610c677d4ccf2c9c500c0")
     version("1.79.0", sha256="475d589d51a7f8b3ba2ba4eda022b170e562ca3b760ee922c146b6c65856ef39")
     version("1.78.0", sha256="8681f175d4bdb26c52222665793eef08490d7758529330f98d3b29dd0735bccc")
     version("1.77.0", sha256="fc9f85fc030e233142908241af7a846e60630aa7388de9a5fafb1f3a26840854")
@@ -43,10 +46,6 @@ class Boost(Package):
     version("1.66.0", sha256="5721818253e6a0989583192f96782c4a98eb6204965316df9f5ad75819225ca9")
     version("1.65.1", sha256="9807a5d16566c57fd74fb522764e0b134a8bbe6b6e8967b83afefd30dcd3be81")
     version("1.65.0", sha256="ea26712742e2fb079c2a566a31f3266973b76e38222b9f88b387e3c8b2f9902c")
-    # NOTE: 1.64.0 seems fine for *most* applications, but if you need
-    #       +python and +mpi, there seem to be errors with out-of-date
-    #       API calls from mpi/python.
-    #       See: https://github.com/spack/spack/issues/3963
     version("1.64.0", sha256="7bcc5caace97baa948931d712ea5f37038dbb1c5d89b43ad4def4ed7cb683332")
     version("1.63.0", sha256="beae2529f759f6b3bf3f4969a19c2e9d6f0c503edcb2de4a61d1428519fcb3b0")
     version("1.62.0", sha256="36c96b0f6155c98404091d8ceb48319a28279ca0333fba1ad8611eb90afb2ca0")
@@ -225,9 +224,14 @@ class Boost(Package):
     conflicts("cxxstd=98", when="+icu")  # Requires c++11 at least
 
     depends_on("python", when="+python")
+    # https://github.com/boostorg/python/commit/cbd2d9f033c61d29d0a1df14951f4ec91e7d05cd
+    depends_on("python@:3.9", when="@:1.75 +python")
+
     depends_on("mpi", when="+mpi")
     depends_on("bzip2", when="+iostreams")
     depends_on("zlib", when="+iostreams")
+    depends_on("zstd", when="+iostreams")
+    depends_on("xz", when="+iostreams")
     depends_on("py-numpy", when="+numpy", type=("build", "run"))
 
     # Improve the error message when the context-impl variant is conflicting
@@ -243,6 +247,13 @@ class Boost(Package):
     conflicts("+fiber", when="@:1.61")  # Fiber since 1.62.0.
     conflicts("cxxstd=98", when="+fiber")  # Fiber requires >=C++11.
     conflicts("~context", when="+fiber")  # Fiber requires Context.
+
+    # NOTE: 1.64.0 seems fine for *most* applications, but if you need
+    #       +python and +mpi, there seem to be errors with out-of-date
+    #       API calls from mpi/python.
+    #       See: https://github.com/spack/spack/issues/3963
+    conflicts("@1.64.0", when="+python", msg="Errors with out-of-date API calls from Python")
+    conflicts("@1.64.0", when="+mpi", msg="Errors with out-of-date API calls from MPI")
 
     conflicts("+taggedlayout", when="+versionedlayout")
     conflicts("+numpy", when="~python")
@@ -260,6 +271,10 @@ class Boost(Package):
     # https://github.com/STEllAR-GROUP/hpx/issues/5442#issuecomment-878889166
     # https://github.com/STEllAR-GROUP/hpx/issues/5442#issuecomment-878913339
     conflicts("%gcc", when="@:1.76 +system platform=darwin")
+
+    # Boost 1.80 does not build with the Intel oneapi compiler
+    # (https://github.com/spack/spack/pull/32879#issuecomment-1265933265)
+    conflicts("%oneapi", when="@1.80")
 
     # Patch fix from https://svn.boost.org/trac/boost/ticket/11856
     patch("boost_11856.patch", when="@1.60.0%gcc@4.4.7")
@@ -380,7 +395,17 @@ class Boost(Package):
     patch("pthread-stack-min-fix.patch", when="@1.69.0:1.72.0")
 
     # https://www.intel.com/content/www/us/en/developer/articles/technical/building-boost-with-oneapi.html
-    patch("intel-oneapi-linux-jam.patch", when="@1.76:1.79 %oneapi")
+    patch("intel-oneapi-linux-jam.patch", when="@1.76: %oneapi")
+
+    # https://github.com/boostorg/phoenix/issues/111
+    patch("boost_phoenix_1.81.0.patch", level=2, when="@1.81.0:1.82.0")
+
+    # https://github.com/boostorg/filesystem/issues/284
+    patch(
+        "https://www.boost.org/patches/1_82_0/0002-filesystem-fix-win-smbv1-dir-iterator.patch",
+        sha256="738ba8e0d7b5cdcf5fae4998f9450b51577bbde1bb0d220a0721551609714ca4",
+        when="@1.82.0 platform=windows",
+    )
 
     def patch(self):
         # Disable SSSE3 and AVX2 when using the NVIDIA compiler
@@ -505,11 +530,18 @@ class Boost(Package):
                     "-s",
                     "ZLIB_LIBPATH=%s" % spec["zlib"].prefix.lib,
                     "-s",
-                    "NO_LZMA=1",
+                    "LZMA_INCLUDE=%s" % spec["xz"].prefix.include,
                     "-s",
-                    "NO_ZSTD=1",
+                    "LZMA_LIBPATH=%s" % spec["xz"].prefix.lib,
+                    "-s",
+                    "ZSTD_INCLUDE=%s" % spec["zstd"].prefix.include,
+                    "-s",
+                    "ZSTD_LIBPATH=%s" % spec["zstd"].prefix.lib,
                 ]
             )
+            # At least with older Xcode, _lzma_cputhreads is missing (#33998)
+            if "platform=darwin" in self.spec:
+                options.extend(["-s", "NO_LZMA=1"])
 
         link_types = ["static"]
         if "+shared" in spec:
@@ -703,14 +735,13 @@ class Boost(Package):
         # Disable find package's config mode for versions of Boost that
         # didn't provide it. See https://github.com/spack/spack/issues/20169
         # and https://cmake.org/cmake/help/latest/module/FindBoost.html
-        is_cmake = isinstance(dependent_spec.package, CMakePackage)
-        if self.spec.satisfies("boost@:1.69.0") and is_cmake:
-            args_fn = type(dependent_spec.package).cmake_args
+        if self.spec.satisfies("boost@:1.69.0") and dependent_spec.satisfies("build_system=cmake"):
+            args_fn = type(dependent_spec.package.builder).cmake_args
 
             def _cmake_args(self):
                 return ["-DBoost_NO_BOOST_CMAKE=ON"] + args_fn(self)
 
-            type(dependent_spec.package).cmake_args = _cmake_args
+            type(dependent_spec.package.builder).cmake_args = _cmake_args
 
     def setup_dependent_build_environment(self, env, dependent_spec):
         if "+context" in self.spec and "context-impl" in self.spec.variants:

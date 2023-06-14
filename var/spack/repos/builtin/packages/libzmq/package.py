@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -100,7 +100,7 @@ class Libzmq(AutotoolsPackage):
         config_args.extend(self.enable_or_disable("libunwind"))
 
         if "+libsodium" in self.spec:
-            config_args.append("--with-libsodium")
+            config_args.append("--with-libsodium=" + self.spec["libsodium"].prefix)
         if "~docs" in self.spec:
             config_args.append("--without-docs")
         if "clang" in self.compiler.cc:

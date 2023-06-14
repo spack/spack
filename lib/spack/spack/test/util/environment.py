@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -11,8 +11,6 @@ import pytest
 
 import spack.util.environment as envutil
 
-is_windows = sys.platform == "win32"
-
 
 @pytest.fixture()
 def prepare_environment_for_tests():
@@ -23,14 +21,14 @@ def prepare_environment_for_tests():
 
 
 def test_is_system_path():
-    sys_path = "C:\\Users" if is_windows else "/usr/bin"
+    sys_path = "C:\\Users" if sys.platform == "win32" else "/usr/bin"
     assert envutil.is_system_path(sys_path)
     assert not envutil.is_system_path("/nonsense_path/bin")
     assert not envutil.is_system_path("")
     assert not envutil.is_system_path(None)
 
 
-if is_windows:
+if sys.platform == "win32":
     test_paths = [
         "C:\\Users",
         "C:\\",
@@ -51,7 +49,7 @@ else:
 
 
 def test_filter_system_paths():
-    nonsense_prefix = "C:\\nonsense_path" if is_windows else "/nonsense_path"
+    nonsense_prefix = "C:\\nonsense_path" if sys.platform == "win32" else "/nonsense_path"
     expected = [p for p in test_paths if p.startswith(nonsense_prefix)]
     filtered = envutil.filter_system_paths(test_paths)
     assert expected == filtered
@@ -121,7 +119,10 @@ def test_dump_environment(prepare_environment_for_tests, tmpdir):
     dumpfile_path = str(tmpdir.join("envdump.txt"))
     envutil.dump_environment(dumpfile_path)
     with open(dumpfile_path, "r") as dumpfile:
-        assert "TEST_ENV_VAR={0}; export TEST_ENV_VAR\n".format(test_paths) in list(dumpfile)
+        if sys.platform == "win32":
+            assert 'set "TEST_ENV_VAR={}"\n'.format(test_paths) in list(dumpfile)
+        else:
+            assert "TEST_ENV_VAR={0}; export TEST_ENV_VAR\n".format(test_paths) in list(dumpfile)
 
 
 def test_reverse_environment_modifications(working_env):
@@ -153,3 +154,21 @@ def test_reverse_environment_modifications(working_env):
 
     start_env.pop("UNSET")
     assert os.environ == start_env
+
+
+def test_escape_double_quotes_in_shell_modifications():
+    to_validate = envutil.EnvironmentModifications()
+
+    to_validate.set("VAR", "$PATH")
+    to_validate.append_path("VAR", "$ANOTHER_PATH")
+
+    to_validate.set("QUOTED_VAR", '"MY_VAL"')
+
+    cmds = to_validate.shell_modifications()
+
+    if sys.platform != "win32":
+        assert 'export VAR="$PATH:$ANOTHER_PATH"' in cmds
+        assert r'export QUOTED_VAR="\"MY_VAL\""' in cmds
+    else:
+        assert "export VAR=$PATH;$ANOTHER_PATH" in cmds
+        assert r'export QUOTED_VAR="MY_VAL"' in cmds

@@ -1,0 +1,39 @@
+From 2eb146f180cd6ff35685ac23f79da4fe16dd295b Mon Sep 17 00:00:00 2001
+From: Renjith Ravindran <Renjith.RavindranKannath@amd.com>
+Date: Fri, 21 Oct 2022 14:02:37 -0700
+Subject: [PATCH] New patch removing the fix for the compilation without git
+
+---
+ bin/hipcc.pl               | 3 ++-
+ hipamd/hip-config.cmake.in | 1 -
+ 2 files changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/bin/hipcc.pl b/bin/hipcc.pl
+index 645ae62..d3cf824 100755
+--- a/bin/hipcc.pl
++++ b/bin/hipcc.pl
+@@ -612,7 +612,8 @@ if($HIP_PLATFORM eq "amd"){
+             $targetsStr = $ENV{HCC_AMDGPU_TARGET};
+         } elsif (not $isWindows) {
+             # Else try using rocm_agent_enumerator
+-            $ROCM_AGENT_ENUM = "${ROCM_PATH}/bin/rocm_agent_enumerator";
++            $ROCMINFO_PATH = $ENV{'ROCMINFO_PATH'} // $ROCM_PATH;
++            $ROCM_AGENT_ENUM = "${ROCMINFO_PATH}/bin/rocm_agent_enumerator";
+             $targetsStr = `${ROCM_AGENT_ENUM} -t GPU`;
+             $targetsStr =~ s/\n/,/g;
+         }
+diff --git a/hipamd/hip-config.cmake.in b/hipamd/hip-config.cmake.in
+index 89d1224..8c4f9b7 100755
+--- a/hipamd/hip-config.cmake.in
++++ b/hipamd/hip-config.cmake.in
+@@ -306,7 +306,6 @@ if(HIP_COMPILER STREQUAL "clang")
+   if(NOT CLANGRT_BUILTINS)
+     message(FATAL_ERROR "clangrt builtins lib not found")
+   else()
+-    set_property(TARGET hip::host APPEND PROPERTY INTERFACE_LINK_LIBRARIES "${CLANGRT_BUILTINS}")
+     set_property(TARGET hip::device APPEND PROPERTY INTERFACE_LINK_LIBRARIES "${CLANGRT_BUILTINS}")
+   endif()
+ endif()
+-- 
+2.22.0
+

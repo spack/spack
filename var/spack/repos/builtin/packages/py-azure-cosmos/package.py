@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -23,7 +23,4 @@ class PyAzureCosmos(PythonPackage):
     depends_on("py-setuptools", type="build")
     depends_on("py-six@1.6:", type=("build", "run"))
     depends_on("py-azure-core@1.0.0:1", when="@4:", type=("build", "run"))
-    depends_on("py-enum34@1.0.4:", when="@4: ^python@:3.3", type=("build", "run"))
-    depends_on("py-azure-nspkg", when="^python@:2", type=("build", "run"))
-    depends_on("py-typing", when="@4: ^python@:3.4", type=("build", "run"))
     depends_on("py-requests@2.10.0:", when="@:3", type=("build", "run"))

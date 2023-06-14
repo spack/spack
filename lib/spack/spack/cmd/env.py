@@ -1,20 +1,21 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+import argparse
 import os
 import shutil
 import sys
 import tempfile
-
-import six
 
 import llnl.util.filesystem as fs
 import llnl.util.tty as tty
 from llnl.util.tty.colify import colify
 from llnl.util.tty.color import colorize
 
+import spack.cmd
+import spack.cmd.common
 import spack.cmd.common.arguments
 import spack.cmd.common.arguments as arguments
 import spack.cmd.install
@@ -22,8 +23,11 @@ import spack.cmd.modules
 import spack.cmd.uninstall
 import spack.config
 import spack.environment as ev
+import spack.environment.depfile as depfile
 import spack.environment.shell
 import spack.schema.env
+import spack.spec
+import spack.tengine
 import spack.util.string as string
 from spack.util.environment import EnvironmentModifications
 
@@ -144,8 +148,7 @@ def env_activate(args):
 
     if not args.shell:
         spack.cmd.common.shell_init_instructions(
-            "spack env activate",
-            "    eval `spack env activate {sh_arg} [...]`",
+            "spack env activate", "    eval `spack env activate {sh_arg} [...]`"
         )
         return 1
 
@@ -160,9 +163,9 @@ def env_activate(args):
         env = create_temp_env_directory()
         env_path = os.path.abspath(env)
         short_name = os.path.basename(env_path)
-        ev.Environment(env).write(regenerate=False)
+        ev.create_in_dir(env).write(regenerate=False)
 
-    # Named environment
+    # Managed environment
     elif ev.exists(env_name_or_dir) and not args.dir:
         env_path = ev.root(env_name_or_dir)
         short_name = env_name_or_dir
@@ -234,8 +237,7 @@ def env_deactivate_setup_parser(subparser):
 def env_deactivate(args):
     if not args.shell:
         spack.cmd.common.shell_init_instructions(
-            "spack env deactivate",
-            "    eval `spack env deactivate {sh_arg}`",
+            "spack env deactivate", "    eval `spack env deactivate {sh_arg}`"
         )
         return 1
 
@@ -281,13 +283,17 @@ def env_create_setup_parser(subparser):
         "envfile",
         nargs="?",
         default=None,
-        help="optional init file; can be spack.yaml or spack.lock",
+        help="either a lockfile (must end with '.json' or '.lock') or a manifest file.",
     )
 
 
 def env_create(args):
     if args.with_view:
-        with_view = args.with_view
+        # Expand relative paths provided on the command line to the current working directory
+        # This way we interpret `spack env create --with-view ./view --dir ./env` as
+        # a view in $PWD/view, not $PWD/env/view. This is different from specifying a relative
+        # path in the manifest, which is resolved relative to the manifest file's location.
+        with_view = os.path.abspath(args.with_view)
     elif args.without_view:
         with_view = False
     else:
@@ -295,40 +301,47 @@ def env_create(args):
         # object could choose to enable a view by default. False means that
         # the environment should not include a view.
         with_view = None
-    if args.envfile:
-        with open(args.envfile) as f:
-            _env_create(
-                args.create_env, f, args.dir, with_view=with_view, keep_relative=args.keep_relative
-            )
-    else:
-        _env_create(args.create_env, None, args.dir, with_view=with_view)
+
+    env = _env_create(
+        args.create_env,
+        init_file=args.envfile,
+        dir=args.dir,
+        with_view=with_view,
+        keep_relative=args.keep_relative,
+    )
+
+    # Generate views, only really useful for environments created from spack.lock files.
+    env.regenerate_views()
 
 
-def _env_create(name_or_path, init_file=None, dir=False, with_view=None, keep_relative=False):
+def _env_create(name_or_path, *, init_file=None, dir=False, with_view=None, keep_relative=False):
     """Create a new environment, with an optional yaml description.
 
     Arguments:
         name_or_path (str): name of the environment to create, or path to it
         init_file (str or file): optional initialization file -- can be
-            spack.yaml or spack.lock
+            a JSON lockfile (*.lock, *.json) or YAML manifest file
         dir (bool): if True, create an environment in a directory instead
             of a named environment
         keep_relative (bool): if True, develop paths are copied verbatim into
             the new environment file, otherwise they may be made absolute if the
             new environment is in a different location
     """
-    if dir:
-        env = ev.Environment(name_or_path, init_file, with_view, keep_relative)
-        env.write()
-        tty.msg("Created environment in %s" % env.path)
-        tty.msg("You can activate this environment with:")
-        tty.msg("  spack env activate %s" % env.path)
-    else:
-        env = ev.create(name_or_path, init_file, with_view, keep_relative)
-        env.write()
+    if not dir:
+        env = ev.create(
+            name_or_path, init_file=init_file, with_view=with_view, keep_relative=keep_relative
+        )
         tty.msg("Created environment '%s' in %s" % (name_or_path, env.path))
         tty.msg("You can activate this environment with:")
         tty.msg("  spack env activate %s" % (name_or_path))
+        return env
+
+    env = ev.create_in_dir(
+        name_or_path, init_file=init_file, with_view=with_view, keep_relative=keep_relative
+    )
+    tty.msg("Created environment in %s" % env.path)
+    tty.msg("You can activate this environment with:")
+    tty.msg("  spack env activate %s" % env.path)
     return env
 
 
@@ -345,8 +358,7 @@ def env_remove(args):
     """Remove a *named* environment.
 
     This removes an environment managed by Spack. Directory environments
-    and `spack.yaml` files embedded in repositories should be removed
-    manually.
+    and manifests embedded in repositories should be removed manually.
     """
     read_envs = []
     for env_name in args.rm_env:
@@ -425,21 +437,22 @@ def env_view_setup_parser(subparser):
 def env_view(args):
     env = ev.active_environment()
 
-    if env:
-        if args.action == ViewAction.regenerate:
-            env.regenerate_views()
-        elif args.action == ViewAction.enable:
-            if args.view_path:
-                view_path = args.view_path
-            else:
-                view_path = env.view_path_default
-            env.update_default_view(view_path)
-            env.write()
-        elif args.action == ViewAction.disable:
-            env.update_default_view(None)
-            env.write()
-    else:
+    if not env:
         tty.msg("No active environment")
+        return
+
+    if args.action == ViewAction.regenerate:
+        env.regenerate_views()
+    elif args.action == ViewAction.enable:
+        if args.view_path:
+            view_path = args.view_path
+        else:
+            view_path = env.view_path_default
+        env.update_default_view(view_path)
+        env.write()
+    elif args.action == ViewAction.disable:
+        env.update_default_view(path_or_bool=False)
+        env.write()
 
 
 #
@@ -557,7 +570,7 @@ def env_revert(args):
     # Check that both the spack.yaml and the backup exist, the inform user
     # on what is going to happen and ask for confirmation
     if not os.path.exists(manifest_file):
-        msg = "cannot fine the manifest file of the environment [file={0}]"
+        msg = "cannot find the manifest file of the environment [file={0}]"
         tty.die(msg.format(manifest_file))
     if not os.path.exists(backup_file):
         msg = "cannot find the old manifest file to be restored [file={0}]"
@@ -584,12 +597,13 @@ def env_revert(args):
 def env_depfile_setup_parser(subparser):
     """generate a depfile from the concrete environment specs"""
     subparser.add_argument(
+        "--make-prefix",
         "--make-target-prefix",
         default=None,
         metavar="TARGET",
-        help="prefix Makefile targets with <TARGET>/<name>. By default the absolute "
-        "path to the directory makedeps under the environment metadata dir is "
-        "used. Can be set to an empty string --make-target-prefix ''.",
+        help="prefix Makefile targets (and variables) with <TARGET>/<name>. By default "
+        "the absolute path to the directory makedeps under the environment metadata dir is "
+        "used. Can be set to an empty string --make-prefix ''.",
     )
     subparser.add_argument(
         "--make-disable-jobserver",
@@ -597,6 +611,15 @@ def env_depfile_setup_parser(subparser):
         action="store_false",
         dest="jobserver",
         help="disable POSIX jobserver support.",
+    )
+    subparser.add_argument(
+        "--use-buildcache",
+        dest="use_buildcache",
+        type=arguments.use_buildcache,
+        default="package:auto,dependencies:auto",
+        metavar="[{auto,only,never},][package:{auto,only,never},][dependencies:{auto,only,never}]",
+        help="When using `only`, redundant build dependencies are pruned from the DAG. "
+        "This flag is passed on to the generated spack install commands.",
     )
     subparser.add_argument(
         "-o",
@@ -612,120 +635,32 @@ def env_depfile_setup_parser(subparser):
         choices=("make",),
         help="specify the depfile type. Currently only make is supported.",
     )
+    subparser.add_argument(
+        metavar="specs",
+        dest="specs",
+        nargs=argparse.REMAINDER,
+        default=None,
+        help="generate a depfile only for matching specs in the environment",
+    )
 
 
 def env_depfile(args):
     # Currently only make is supported.
     spack.cmd.require_active_env(cmd_name="env depfile")
-    env = ev.active_environment()
 
-    # Maps each hash in the environment to a string of install prereqs
-    hash_to_prereqs = {}
-    hash_to_spec = {}
-
-    if args.make_target_prefix is None:
-        target_prefix = os.path.join(env.env_subdir_path, "makedeps")
-    else:
-        target_prefix = args.make_target_prefix
-
-    def get_target(name):
-        # The `all` and `clean` targets are phony. It doesn't make sense to
-        # have /abs/path/to/env/metadir/{all,clean} targets. But it *does* make
-        # sense to have a prefix like `env/all`, `env/clean` when they are
-        # supposed to be included
-        if name in ("all", "clean") and os.path.isabs(target_prefix):
-            return name
-        else:
-            return os.path.join(target_prefix, name)
-
-    def get_install_target(name):
-        return os.path.join(target_prefix, ".install", name)
-
-    for _, spec in env.concretized_specs():
-        for s in spec.traverse(root=True):
-            hash_to_spec[s.dag_hash()] = s
-            hash_to_prereqs[s.dag_hash()] = [
-                get_install_target(dep.dag_hash()) for dep in s.dependencies()
-            ]
-
-    root_dags = [s.dag_hash() for _, s in env.concretized_specs()]
-
-    # Root specs without deps are the prereqs for the environment target
-    root_install_targets = [get_install_target(h) for h in root_dags]
-
-    # All package install targets, not just roots.
-    all_install_targets = [get_install_target(h) for h in hash_to_spec.keys()]
-
-    buf = six.StringIO()
-
-    buf.write(
-        """SPACK ?= spack
-
-.PHONY: {} {}
-
-{}: {}
-
-{}: {}
-\t@touch $@
-
-{}:
-\t@mkdir -p {}
-
-{}: | {}
-\t$(info Installing $(SPEC))
-\t{}$(SPACK) -e '{}' install $(SPACK_INSTALL_FLAGS) --only-concrete --only=package \
---no-add /$(notdir $@) && touch $@
-
-""".format(
-            get_target("all"),
-            get_target("clean"),
-            get_target("all"),
-            get_target("env"),
-            get_target("env"),
-            " ".join(root_install_targets),
-            get_target("dirs"),
-            get_target(".install"),
-            get_target(".install/%"),
-            get_target("dirs"),
-            "+" if args.jobserver else "",
-            env.path,
-        )
+    # What things do we build when running make? By default, we build the
+    # root specs. If specific specs are provided as input, we build those.
+    filter_specs = spack.cmd.parse_specs(args.specs) if args.specs else None
+    template = spack.tengine.make_environment().get_template(os.path.join("depfile", "Makefile"))
+    model = depfile.MakefileModel.from_env(
+        ev.active_environment(),
+        filter_specs=filter_specs,
+        pkg_buildcache=depfile.UseBuildCache.from_string(args.use_buildcache[0]),
+        dep_buildcache=depfile.UseBuildCache.from_string(args.use_buildcache[1]),
+        make_prefix=args.make_prefix,
+        jobserver=args.jobserver,
     )
-
-    # Targets are of the form <prefix>/<name>: [<prefix>/<depname>]...,
-    # The prefix can be an empty string, in that case we don't add the `/`.
-    # The name is currently the dag hash of the spec. In principle it
-    # could be the package name in case of `concretization: together` so
-    # it can be more easily referred to, but for now we don't special case
-    # this.
-    fmt = "{name}{@version}{%compiler}{variants}{arch=architecture}"
-
-    # Set SPEC for each hash
-    buf.write("# Set the human-readable spec for each target\n")
-    for dag_hash in hash_to_prereqs.keys():
-        formatted_spec = hash_to_spec[dag_hash].format(fmt)
-        buf.write("{}: SPEC = {}\n".format(get_target("%/" + dag_hash), formatted_spec))
-    buf.write("\n")
-
-    # Set install dependencies
-    buf.write("# Install dependencies\n")
-    for parent, children in hash_to_prereqs.items():
-        if not children:
-            continue
-        buf.write("{}: {}\n".format(get_install_target(parent), " ".join(children)))
-    buf.write("\n")
-
-    # Clean target: remove target files but not their folders, cause
-    # --make-target-prefix can be any existing directory we do not control,
-    # including empty string (which means deleting the containing folder
-    # would delete the folder with the Makefile)
-    buf.write(
-        "{}:\n\trm -f -- {} {}\n".format(
-            get_target("clean"), get_target("env"), " ".join(all_install_targets)
-        )
-    )
-
-    makefile = buf.getvalue()
+    makefile = template.render(model.to_dict())
 
     # Finally write to stdout/file.
     if args.output:

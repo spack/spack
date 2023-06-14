@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -12,6 +12,9 @@ class Apr(AutotoolsPackage):
     homepage = "https://apr.apache.org/"
     url = "https://archive.apache.org/dist/apr/apr-1.7.0.tar.gz"
 
+    version("1.7.4", sha256="a4137dd82a185076fa50ba54232d920a17c6469c30b0876569e1c2a05ff311d9")
+    version("1.7.3", sha256="af9bfd5b8a04425d6b419673f3e0a7656fade226aae78180d93f8a6f2d3d1c09")
+    version("1.7.2", sha256="3d8999b216f7b6235343a4e3d456ce9379aa9a380ffb308512f133f0c5eb2db9")
     version("1.7.0", sha256="48e9dbf45ae3fdc7b491259ffb6ccf7d63049ffacbc1c0977cced095e4c2d5a2")
     version("1.6.2", sha256="4fc24506c968c5faf57614f5d0aebe0e9d0b90afa47a883e1a1ca94f15f4a42e")
     version("1.5.2", sha256="1af06e1720a58851d90694a984af18355b65bb0d047be03ec7d659c746d6dbdb")
@@ -23,7 +26,5 @@ class Apr(AutotoolsPackage):
     @property
     def libs(self):
         return find_libraries(
-            ["libapr-{0}".format(self.version.up_to(1))],
-            root=self.prefix,
-            recursive=True,
+            ["libapr-{0}".format(self.version.up_to(1))], root=self.prefix, recursive=True
         )

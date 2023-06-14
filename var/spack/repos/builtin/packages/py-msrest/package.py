@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -21,5 +21,3 @@ class PyMsrest(PythonPackage):
     depends_on("py-requests-oauthlib@0.5.0:", type=("build", "run"))
     depends_on("py-isodate@0.6.0:", type=("build", "run"))
     depends_on("py-certifi@2017.4.17:", type=("build", "run"))
-    depends_on("py-enum34@1.0.4:", when="^python@:3.3", type=("build", "run"))
-    depends_on("py-typing", when="^python@:3.4", type=("build", "run"))

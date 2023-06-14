@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -37,7 +37,7 @@ class Pulseaudio(AutotoolsPackage):
     depends_on("gconf", when="+gconf")
     depends_on("json-c@0.11:")
     depends_on("libcap")
-    depends_on("libiconv")
+    depends_on("iconv")
     depends_on("libsndfile@1.0.18:")
     depends_on("libtool@2.4:")  # links to libltdl.so
     depends_on("libsm", when="+x11")

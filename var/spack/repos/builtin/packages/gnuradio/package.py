@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -20,7 +20,7 @@ class Gnuradio(CMakePackage):
     homepage = "https://www.gnuradio.org/"
     url = "https://github.com/gnuradio/gnuradio/archive/v3.8.2.0.tar.gz"
 
-    maintainers = ["aweits"]
+    maintainers("aweits")
 
     version("3.8.2.0", sha256="ddda12b55e3e1d925eefb24afb9d604bca7c9bbe0a431707aa48a2eed53eec2f")
 

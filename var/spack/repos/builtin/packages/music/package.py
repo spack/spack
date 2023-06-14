@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -19,7 +19,7 @@ class Music(CMakePackage):
     homepage = "https://www-n.oca.eu/ohahn/MUSIC/"
     git = "https://bitbucket.org/ohahn/music.git"
 
-    maintainers = ["charmoniumQ"]
+    maintainers("charmoniumQ")
 
     version("2021-12-01", commit="6747c54f3b73ec36719c265fd96362849a83cb45")
 

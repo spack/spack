@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -23,11 +23,10 @@ class MtMetis(CMakePackage):
     variant("shared", default=True, description="Enable build of shared libraries")
 
     def cmake_args(self):
-        define = CMakePackage.define
         cmake_args = [
-            define("DOMLIB_PATH", "domlib"),
-            define("WILDRIVER_PATH", "wildriver"),
-            define("METIS_PATH", "metis"),
+            self.define("DOMLIB_PATH", "domlib"),
+            self.define("WILDRIVER_PATH", "wildriver"),
+            self.define("METIS_PATH", "metis"),
             self.define_from_variant("SHARED", "shared"),
         ]
         return cmake_args

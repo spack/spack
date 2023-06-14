@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -15,6 +15,8 @@ class RMlinterfaces(RPackage):
 
     bioc = "MLInterfaces"
 
+    version("1.80.0", commit="275f8d39f05c46ab3ab7096d1e0539a33bab3a54")
+    version("1.78.0", commit="0988b95d282a6bffe56b7df4da2e23485e96d12c")
     version("1.76.0", commit="935323d8ce1e4bbf41844a1f9b6c946c5a30c673")
     version("1.74.0", commit="5ee73b6491b1d68d7b49ddce6483df98ad880946")
     version("1.70.0", commit="7b076c3e85314dd5fd5bd8a98e8123d08d9acd3b")
@@ -46,5 +48,6 @@ class RMlinterfaces(RPackage):
     depends_on("r-threejs@0.2.2:", type=("build", "run"))
     depends_on("r-mlbench", type=("build", "run"))
     depends_on("r-magrittr", type=("build", "run"), when="@1.74.0:")
+    depends_on("r-summarizedexperiment", type=("build", "run"), when="@1.78.0:")
 
     depends_on("r-rda", type=("build", "run"), when="@:1.64.1")

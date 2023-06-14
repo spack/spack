@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -6,6 +6,7 @@
 import re
 
 from spack.package import *
+from spack.util.environment import is_system_path
 
 
 class Gettext(AutotoolsPackage, GNUMirrorPackage):
@@ -14,8 +15,11 @@ class Gettext(AutotoolsPackage, GNUMirrorPackage):
     homepage = "https://www.gnu.org/software/gettext/"
     gnu_mirror_path = "gettext/gettext-0.20.1.tar.xz"
 
+    maintainers("michaelkuhn")
+
     executables = [r"^gettext$"]
 
+    version("0.21.1", sha256="50dbc8f39797950aa2c98e939947c527e5ac9ebd2c1b99dd7b06ba33a6767ae6")
     version("0.21", sha256="d20fcbb537e02dcf1383197ba05bd0734ef7bf5db06bdb241eb69b7d16b73192")
     version("0.20.2", sha256="b22b818e644c37f6e3d1643a1943c32c3a9bff726d601e53047d2682019ceaba")
     version("0.20.1", sha256="53f02fbbec9e798b0faaf7c73272f83608e835c6288dd58be6c9bb54624a3800")
@@ -51,9 +55,16 @@ class Gettext(AutotoolsPackage, GNUMirrorPackage):
     # depends_on('cvs')
 
     patch("test-verify-parallel-make-check.patch", when="@:0.19.8.1")
-    patch("nvhpc-builtin.patch", when="%nvhpc")
+    patch("nvhpc-builtin.patch", when="@:0.21.0 %nvhpc")
     patch("nvhpc-export-symbols.patch", when="%nvhpc")
     patch("nvhpc-long-width.patch", when="%nvhpc")
+
+    # Apply this only where we know that the system libc is glibc, be very careful:
+    @when("@:0.21.0 target=ppc64le:")
+    def patch(self):
+        for fn in ("gettext-tools/gnulib-lib/cdefs.h", "gettext-tools/libgrep/cdefs.h"):
+            with open(fn, "w") as f:
+                f.write("#include <sys/cdefs.h>\n")
 
     @classmethod
     def determine_version(cls, exe):
@@ -68,7 +79,6 @@ class Gettext(AutotoolsPackage, GNUMirrorPackage):
         config_args = [
             "--disable-java",
             "--disable-csharp",
-            "--with-libiconv-prefix={0}".format(spec["iconv"].prefix),
             "--with-included-glib",
             "--with-included-gettext",
             "--with-included-libcroco",
@@ -76,6 +86,11 @@ class Gettext(AutotoolsPackage, GNUMirrorPackage):
             "--with-lispdir=%s/emacs/site-lisp/gettext" % self.prefix.share,
             "--without-cvs",
         ]
+
+        if self.spec["iconv"].name == "libc":
+            config_args.append("--without-libiconv-prefix")
+        elif not is_system_path(self.spec["iconv"].prefix):
+            config_args.append("--with-libiconv-prefix=" + self.spec["iconv"].prefix)
 
         if "+curses" in spec:
             config_args.append("--with-ncurses-prefix={0}".format(spec["ncurses"].prefix))

@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -16,9 +16,9 @@ class Slate(CMakePackage, CudaPackage, ROCmPackage):
     solvers."""
 
     homepage = "https://icl.utk.edu/slate/"
-    git = "https://bitbucket.org/icl/slate"
-    url = "https://bitbucket.org/icl/slate/downloads/slate-2020.10.00.tar.gz"
-    maintainers = ["G-Ragghianti", "mgates3"]
+    git = "https://github.com/icl-utk-edu/slate"
+    url = "https://github.com/icl-utk-edu/slate/releases/download/v2022.07.00/slate-2022.07.00.tar.gz"
+    maintainers("G-Ragghianti", "mgates3")
 
     tags = ["e4s"]
     test_requires_compiler = True
@@ -60,6 +60,9 @@ class Slate(CMakePackage, CudaPackage, ROCmPackage):
     depends_on("lapackpp ~cuda", when="~cuda")
     depends_on("lapackpp +cuda", when="+cuda")
     depends_on("lapackpp ~rocm", when="~rocm")
+    for val in CudaPackage.cuda_arch_values:
+        depends_on("blaspp +cuda cuda_arch=%s" % val, when="cuda_arch=%s" % val)
+        depends_on("lapackpp +cuda cuda_arch=%s" % val, when="cuda_arch=%s" % val)
     for val in ROCmPackage.amdgpu_targets:
         depends_on("blaspp +rocm amdgpu_target=%s" % val, when="amdgpu_target=%s" % val)
         depends_on("lapackpp +rocm amdgpu_target=%s" % val, when="amdgpu_target=%s" % val)
@@ -68,7 +71,7 @@ class Slate(CMakePackage, CudaPackage, ROCmPackage):
     depends_on("lapackpp@2021.04.00:", when="@2021.05.01:")
     depends_on("lapackpp@2020.10.02", when="@2020.10.00")
     depends_on("lapackpp@master", when="@master")
-    depends_on("scalapack")
+    depends_on("scalapack", type="test")
     depends_on("hipify-clang", when="@:2021.05.02 +rocm ^hip@5:")
 
     cpp_17_msg = "Requires C++17 compiler support"
@@ -92,14 +95,23 @@ class Slate(CMakePackage, CudaPackage, ROCmPackage):
                 backend = "hip"
             backend_config = "-Dgpu_backend=%s" % backend
 
-        return [
+        config = [
             "-Dbuild_tests=%s" % self.run_tests,
             "-Duse_openmp=%s" % ("+openmp" in spec),
             "-DBUILD_SHARED_LIBS=%s" % ("+shared" in spec),
             backend_config,
             "-Duse_mpi=%s" % ("+mpi" in spec),
-            "-DSCALAPACK_LIBRARIES=%s" % spec["scalapack"].libs.joined(";"),
         ]
+        if "+cuda" in spec:
+            archs = ";".join(spec.variants["cuda_arch"].value)
+            config.append("-DCMAKE_CUDA_ARCHITECTURES=%s" % archs)
+        if "+rocm" in spec:
+            archs = ";".join(spec.variants["amdgpu_target"].value)
+            config.append("-DCMAKE_HIP_ARCHITECTURES=%s" % archs)
+
+        if self.run_tests:
+            config.append("-DSCALAPACK_LIBRARIES=%s" % spec["scalapack"].libs.joined(";"))
+        return config
 
     @run_after("install")
     def cache_test_sources(self):
@@ -109,6 +121,15 @@ class Slate(CMakePackage, CudaPackage, ROCmPackage):
         install test subdirectory for use during `spack test run`."""
         self.cache_extra_test_sources(["examples"])
 
+    def mpi_launcher(self):
+        searchpath = [self.spec["mpi"].prefix.bin]
+        try:
+            searchpath.insert(0, self.spec["slurm"].prefix.bin)
+        except KeyError:
+            print("Slurm not found, ignoring.")
+        commands = ["srun", "mpirun", "mpiexec"]
+        return which(*commands, path=searchpath) or which(*commands)
+
     def test(self):
         if self.spec.satisfies("@2020.10.00") or "+mpi" not in self.spec:
             print("Skipping: stand-alone tests")
@@ -117,17 +138,15 @@ class Slate(CMakePackage, CudaPackage, ROCmPackage):
         test_dir = join_path(self.test_suite.current_test_cache_dir, "examples", "build")
         with working_dir(test_dir, create=True):
             cmake_bin = join_path(self.spec["cmake"].prefix.bin, "cmake")
-            prefixes = ";".join(
-                [
-                    self.spec["blaspp"].prefix,
-                    self.spec["lapackpp"].prefix,
-                    self.spec["mpi"].prefix,
-                ]
-            )
+            deps = "blaspp lapackpp mpi"
+            if self.spec.satisfies("+rocm"):
+                deps += " rocblas hip llvm-amdgpu comgr hsa-rocr-dev rocsolver"
+            prefixes = ";".join([self.spec[x].prefix for x in deps.split()])
             self.run_test(cmake_bin, ["-DCMAKE_PREFIX_PATH=" + prefixes, ".."])
             make()
             test_args = ["-n", "4", "./ex05_blas"]
-            mpi_path = self.spec["mpi"].prefix.bin
-            mpiexe_f = which("srun", "mpirun", "mpiexec", path=mpi_path)
-            self.run_test(mpiexe_f.command, test_args, purpose="SLATE smoke test")
+            launcher = self.mpi_launcher()
+            if not launcher:
+                raise RuntimeError("Cannot run tests due to absence of MPI launcher")
+            self.run_test(launcher.command, test_args, purpose="SLATE smoke test")
             make("clean")

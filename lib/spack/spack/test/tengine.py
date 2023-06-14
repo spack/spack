@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -71,7 +71,7 @@ class TestTengineEnvironment(object):
         """Tests the template retrieval mechanism hooked into config files"""
         # Check the directories are correct
         template_dirs = spack.config.get("config:template_dirs")
-        template_dirs = [canonicalize_path(x) for x in template_dirs]
+        template_dirs = tuple([canonicalize_path(x) for x in template_dirs])
         assert len(template_dirs) == 3
 
         env = tengine.make_environment(template_dirs)

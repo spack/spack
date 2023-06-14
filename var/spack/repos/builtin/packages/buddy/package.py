@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -20,7 +20,5 @@ class Buddy(AutotoolsPackage):
 
     def configure_args(self):
         if platform.machine() == "aarch64":
-            config_args = [
-                "--build=aarch64-unknown-linux-gnu",
-            ]
+            config_args = ["--build=aarch64-unknown-linux-gnu"]
             return config_args

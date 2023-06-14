@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -13,21 +13,41 @@ class Rocfft(CMakePackage):
 
     homepage = "https://github.com/ROCmSoftwarePlatform/rocFFT/"
     git = "https://github.com/ROCmSoftwarePlatform/rocFFT.git"
-    url = "https://github.com/ROCmSoftwarePlatform/rocfft/archive/rocm-5.2.0.tar.gz"
+    url = "https://github.com/ROCmSoftwarePlatform/rocfft/archive/rocm-5.4.3.tar.gz"
     tags = ["rocm"]
 
-    maintainers = ["cgmb", "srekolam", "renjithravindrankannath", "haampie"]
+    maintainers("cgmb", "srekolam", "renjithravindrankannath", "haampie")
     libraries = ["librocfft"]
 
+    version("5.4.3", sha256="ed9664adc9825c237327497bc4b23f020d50be7645647f14a45f4d943dd506e7")
+    version("5.4.0", sha256="d35a67332f4425fba1824eed78cf98d5c9a17a422614ff3f4cba2461df952336")
+    version("5.3.3", sha256="678c18710578c1fb36a0009311bb79de7607c3468f9102cfba56a866ebb7ff78")
+    version("5.3.0", sha256="d655c5541c4aff4267e80e36d002fc3a55c2f84a0ae8631197c12af3bf03fa7d")
     version("5.2.3", sha256="0cee37886f01f1afb3ae5dad1164c819573c13c6675bff4eb668de334adbff27")
     version("5.2.1", sha256="6302349b6cc610a9a939377e2c7ffba946656a8d43f2e438ff0b3088f0f963ad")
     version("5.2.0", sha256="ebba280b7879fb4bc529a68072b98d4e815201f90d24144d672094bc241743d4")
     version("5.1.3", sha256="b4fcd03c1b07d465bb307ec33cc7fb50036dff688e497c5e52b2dec37f4cb618")
     version("5.1.0", sha256="dc11c9061753ae43a9d5db9c4674aa113a8adaf50818b2701cbb940894147f68")
-    version("5.0.2", sha256="30d4bd5fa85185ddafc69fa6d284edd8033c9d77d1e351fa328267242995eb0a")
-    version("5.0.0", sha256="c16374dac2f85fbaf145511653e93f6db3151425ce39b282187745c716b67405")
-    version("4.5.2", sha256="2724118ca00b9e97ac9578fe0b7e64a82d86c4fb0246d0da88d8ddd9c608b1e1")
-    version("4.5.0", sha256="045c1cf1737db6e7ee332c274dacdb565f99c976ed4cc5626a116878dc80a48c")
+    version(
+        "5.0.2",
+        sha256="30d4bd5fa85185ddafc69fa6d284edd8033c9d77d1e351fa328267242995eb0a",
+        deprecated=True,
+    )
+    version(
+        "5.0.0",
+        sha256="c16374dac2f85fbaf145511653e93f6db3151425ce39b282187745c716b67405",
+        deprecated=True,
+    )
+    version(
+        "4.5.2",
+        sha256="2724118ca00b9e97ac9578fe0b7e64a82d86c4fb0246d0da88d8ddd9c608b1e1",
+        deprecated=True,
+    )
+    version(
+        "4.5.0",
+        sha256="045c1cf1737db6e7ee332c274dacdb565f99c976ed4cc5626a116878dc80a48c",
+        deprecated=True,
+    )
     version(
         "4.3.1",
         sha256="fcdc4d12b93d967b6f992b4045da98433eabf2ee0ba84fc6b6f81e380584fbc9",
@@ -87,8 +107,10 @@ class Rocfft(CMakePackage):
         values=("Release", "Debug", "RelWithDebInfo"),
         description="CMake build type",
     )
-    variant("amdgpu_target", values=auto_or_any_combination_of(*amdgpu_targets))
-    variant("amdgpu_target_sram_ecc", values=auto_or_any_combination_of(*amdgpu_targets))
+    variant("amdgpu_target", values=auto_or_any_combination_of(*amdgpu_targets), sticky=True)
+    variant(
+        "amdgpu_target_sram_ecc", values=auto_or_any_combination_of(*amdgpu_targets), sticky=True
+    )
 
     depends_on("cmake@3.16:", type="build", when="@4.5.0:")
     depends_on("cmake@3.5:", type="build")
@@ -124,6 +146,10 @@ class Rocfft(CMakePackage):
         "5.2.0",
         "5.2.1",
         "5.2.3",
+        "5.3.0",
+        "5.3.3",
+        "5.4.0",
+        "5.4.3",
     ]:
         depends_on("hip@" + ver, when="@" + ver)
         depends_on("rocm-cmake@%s:" % ver, type="build", when="@" + ver)
@@ -132,6 +158,8 @@ class Rocfft(CMakePackage):
     # Patch to add spack build test support. No longer required from 5.2
     patch("0002-Fix-clients-fftw3-include-dirs-rocm-4.2.patch", when="@4.2.0:4.3.1")
     patch("0003-Fix-clients-fftw3-include-dirs-rocm-4.5.patch", when="@4.5.0:5.1")
+    # Patch to add install prefix header location for sqlite for 5.4
+    patch("0004-fix-missing-sqlite-include-paths.patch", when="@5.4.0:5.4")
 
     def setup_build_environment(self, env):
         env.set("CXX", self.spec["hip"].hipcc)
@@ -148,9 +176,7 @@ class Rocfft(CMakePackage):
         return ver
 
     def cmake_args(self):
-        args = [
-            self.define("BUILD_CLIENTS_TESTS", self.run_tests),
-        ]
+        args = [self.define("BUILD_CLIENTS_TESTS", self.run_tests)]
         tgt = self.spec.variants["amdgpu_target"]
 
         if "auto" not in tgt:
@@ -180,4 +206,8 @@ class Rocfft(CMakePackage):
 
         if self.spec.satisfies("@5.2.0:"):
             args.append(self.define("BUILD_FILE_REORG_BACKWARD_COMPATIBILITY", True))
+
+        if self.spec.satisfies("@5.3.0:"):
+            args.append("-DCMAKE_INSTALL_LIBDIR=lib")
+
         return args

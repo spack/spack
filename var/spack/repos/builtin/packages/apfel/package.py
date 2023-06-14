@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -17,6 +17,7 @@ class Apfel(AutotoolsPackage):
 
     tags = ["hep"]
 
+    version("3.0.6", sha256="7063c9eee457e030b97926ac166cdaedd84625b31397e1dfd01ae47371fb9f61")
     version("3.0.4", sha256="c7bfae7fe2dc0185981850f2fe6ae4842749339d064c25bf525b4ef412bbb224")
 
     depends_on("swig", when="+python")

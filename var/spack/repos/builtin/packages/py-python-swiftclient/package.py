@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -12,7 +12,7 @@ class PyPythonSwiftclient(PythonPackage):
     homepage = "https://docs.openstack.org/python-swiftclient"
     pypi = "python-swiftclient/python-swiftclient-3.9.0.tar.gz"
 
-    maintainers = ["ajkotobi"]
+    maintainers("ajkotobi")
 
     version("3.12.0", sha256="313b444a14d0f9b628cbf3e8c52f2c4271658f9e8a33d4222851c2e4f0f7b7a0")
     version("3.11.1", sha256="06919d59676d3e215f4da4f3f930d71880dda3528289842b25199509df712411")
@@ -28,7 +28,6 @@ class PyPythonSwiftclient(PythonPackage):
     depends_on("py-setuptools", type="build")
     depends_on("py-pbr", type="build")
 
-    depends_on("py-futures@3:", type=("build", "run"), when="^python@:2")
     depends_on("py-requests@1.1.0:", type=("build", "run"))
     depends_on("py-six@1.9:", type=("build", "run"))
 

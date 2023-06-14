@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -10,9 +10,7 @@ import collections
 import itertools
 import multiprocessing.pool
 import os
-from typing import Dict  # novm
-
-import six
+from typing import Dict
 
 import archspec.cpu
 
@@ -26,6 +24,7 @@ import spack.error
 import spack.paths
 import spack.platforms
 import spack.spec
+import spack.version
 from spack.util.environment import get_path
 from spack.util.naming import mod_to_class
 
@@ -43,19 +42,35 @@ _cache_config_file = []
 # TODO: Caches at module level make it difficult to mock configurations in
 # TODO: unit tests. It might be worth reworking their implementation.
 #: cache of compilers constructed from config data, keyed by config entry id.
-_compiler_cache = {}  # type: Dict[str, spack.compiler.Compiler]
+_compiler_cache: Dict[str, "spack.compiler.Compiler"] = {}
 
 _compiler_to_pkg = {
     "clang": "llvm+clang",
     "oneapi": "intel-oneapi-compilers",
     "rocmcc": "llvm-amdgpu",
+    "intel@2020:": "intel-oneapi-compilers-classic",
+    "arm": "acfl",
+}
+
+# TODO: generating this from the previous dict causes docs errors
+package_name_to_compiler_name = {
+    "llvm": "clang",
+    "intel-oneapi-compilers": "oneapi",
+    "llvm-amdgpu": "rocmcc",
+    "intel-oneapi-compilers-classic": "intel",
+    "acfl": "arm",
 }
 
 
 def pkg_spec_for_compiler(cspec):
     """Return the spec of the package that provides the compiler."""
-    spec_str = "%s@%s" % (_compiler_to_pkg.get(cspec.name, cspec.name), cspec.versions)
-    return spack.spec.Spec(spec_str)
+    for spec, package in _compiler_to_pkg.items():
+        if cspec.satisfies(spec):
+            spec_str = "%s@%s" % (package, cspec.versions)
+            break
+    else:
+        spec_str = str(cspec)
+    return spack.spec.parse_with_version_concrete(spec_str)
 
 
 def _auto_compiler_spec(function):
@@ -72,7 +87,7 @@ def _to_dict(compiler):
     d = {}
     d["spec"] = str(compiler.spec)
     d["paths"] = dict((attr, getattr(compiler, attr, None)) for attr in _path_instance_vars)
-    d["flags"] = dict((fname, fvals) for fname, fvals in compiler.flags)
+    d["flags"] = dict((fname, " ".join(fvals)) for fname, fvals in compiler.flags.items())
     d["flags"].update(
         dict(
             (attr, getattr(compiler, attr, None))
@@ -97,36 +112,26 @@ def _to_dict(compiler):
 def get_compiler_config(scope=None, init_config=True):
     """Return the compiler configuration for the specified architecture."""
 
-    def init_compiler_config():
-        """Compiler search used when Spack has no compilers."""
-        compilers = find_compilers()
-        compilers_dict = []
-        for compiler in compilers:
-            compilers_dict.append(_to_dict(compiler))
-        spack.config.set("compilers", compilers_dict, scope=scope)
+    config = spack.config.get("compilers", scope=scope) or []
+    if config or not init_config:
+        return config
 
+    merged_config = spack.config.get("compilers")
+    if merged_config:
+        return config
+
+    _init_compiler_config(scope=scope)
     config = spack.config.get("compilers", scope=scope)
-    # Update the configuration if there are currently no compilers
-    # configured.  Avoid updating automatically if there ARE site
-    # compilers configured but no user ones.
-    if not config and init_config:
-        if scope is None:
-            # We know no compilers were configured in any scope.
-            init_compiler_config()
-            config = spack.config.get("compilers", scope=scope)
-        elif scope == "user":
-            # Check the site config and update the user config if
-            # nothing is configured at the site level.
-            site_config = spack.config.get("compilers", scope="site")
-            sys_config = spack.config.get("compilers", scope="system")
-            if not site_config and not sys_config:
-                init_compiler_config()
-                config = spack.config.get("compilers", scope=scope)
-        return config
-    elif config:
-        return config
-    else:
-        return []  # Return empty list which we will later append to.
+    return config
+
+
+def _init_compiler_config(*, scope):
+    """Compiler search used when Spack has no compilers."""
+    compilers = find_compilers()
+    compilers_dict = []
+    for compiler in compilers:
+        compilers_dict.append(_to_dict(compiler))
+    spack.config.set("compilers", compilers_dict, scope=scope)
 
 
 def compiler_config_files():
@@ -172,7 +177,9 @@ def remove_compiler_from_config(compiler_spec, scope=None):
     filtered_compiler_config = [
         comp
         for comp in compiler_config
-        if spack.spec.CompilerSpec(comp["compiler"]["spec"]) != compiler_spec
+        if not spack.spec.parse_with_version_concrete(
+            comp["compiler"]["spec"], compiler=True
+        ).satisfies(compiler_spec)
     ]
 
     # Update the cache for changes
@@ -199,7 +206,7 @@ def all_compilers_config(scope=None, init_config=True):
 def all_compiler_specs(scope=None, init_config=True):
     # Return compiler specs from the merged config.
     return [
-        spack.spec.CompilerSpec(s["compiler"]["spec"])
+        spack.spec.parse_with_version_concrete(s["compiler"]["spec"], compiler=True)
         for s in all_compilers_config(scope, init_config)
     ]
 
@@ -346,6 +353,10 @@ def compilers_for_arch(arch_spec, scope=None):
     return list(get_compilers(config, arch_spec=arch_spec))
 
 
+def compiler_specs_for_arch(arch_spec, scope=None):
+    return [c.spec for c in compilers_for_arch(arch_spec, scope)]
+
+
 class CacheReference(object):
     """This acts as a hashable reference to any object (regardless of whether
     the object itself is hashable) and also prevents the object from being
@@ -366,7 +377,7 @@ class CacheReference(object):
 
 
 def compiler_from_dict(items):
-    cspec = spack.spec.CompilerSpec(items["spec"])
+    cspec = spack.spec.parse_with_version_concrete(items["spec"], compiler=True)
     os = items.get("operating_system", None)
     target = items.get("target", None)
 
@@ -409,7 +420,7 @@ def compiler_from_dict(items):
         environment,
         extra_rpaths,
         enable_implicit_rpaths=implicit_rpaths,
-        **compiler_flags
+        **compiler_flags,
     )
 
 
@@ -435,7 +446,10 @@ def get_compilers(config, cspec=None, arch_spec=None):
 
     for items in config:
         items = items["compiler"]
-        if cspec and items["spec"] != str(cspec):
+
+        # NOTE: in principle this should be equality not satisfies, but config can still
+        # be written in old format gcc@10.1.0 instead of gcc@=10.1.0.
+        if cspec and not cspec.satisfies(items["spec"]):
             continue
 
         # If an arch spec is given, confirm that this compiler
@@ -603,11 +617,9 @@ def arguments_to_detect_version_fn(operating_system, paths):
         command_arguments = []
         files_to_be_tested = fs.files_in(*search_paths)
         for compiler_name in spack.compilers.supported_compilers():
-
             compiler_cls = class_for_compiler_name(compiler_name)
 
             for language in ("cc", "cxx", "f77", "fc"):
-
                 # Select only the files matching a regexp
                 for (file, full_path), regexp in itertools.product(
                     files_to_be_tested, compiler_cls.search_regexps(language)
@@ -659,18 +671,18 @@ def detect_version(detect_version_args):
 
         try:
             version = callback(path)
-            if version and six.text_type(version).strip() and version != "unknown":
+            if version and str(version).strip() and version != "unknown":
                 value = fn_args._replace(id=compiler_id._replace(version=version))
                 return value, None
 
             error = "Couldn't get version for compiler {0}".format(path)
         except spack.util.executable.ProcessError as e:
-            error = "Couldn't get version for compiler {0}\n".format(path) + six.text_type(e)
+            error = "Couldn't get version for compiler {0}\n".format(path) + str(e)
         except Exception as e:
             # Catching "Exception" here is fine because it just
             # means something went wrong running a candidate executable.
             error = "Error while executing candidate compiler {0}" "\n{1}: {2}".format(
-                path, e.__class__.__name__, six.text_type(e)
+                path, e.__class__.__name__, str(e)
             )
         return None, error
 
@@ -704,8 +716,10 @@ def make_compiler_list(detected_versions):
     def _default_make_compilers(cmp_id, paths):
         operating_system, compiler_name, version = cmp_id
         compiler_cls = spack.compilers.class_for_compiler_name(compiler_name)
-        spec = spack.spec.CompilerSpec(compiler_cls.name, version)
+        spec = spack.spec.CompilerSpec(compiler_cls.name, f"={version}")
         paths = [paths.get(x, None) for x in ("cc", "cxx", "f77", "fc")]
+        # TODO: johnwparent - revist the following line as per discussion at:
+        # https://github.com/spack/spack/pull/33385/files#r1040036318
         target = archspec.cpu.host()
         compiler = compiler_cls(spec, operating_system, str(target.family), paths)
         return [compiler]
@@ -780,8 +794,10 @@ def is_mixed_toolchain(compiler):
             toolchains.add(compiler_cls.__name__)
 
     if len(toolchains) > 1:
-        if toolchains == set(["Clang", "AppleClang", "Aocc"]) or toolchains == set(
-            ["Dpcpp", "Oneapi"]
+        if (
+            toolchains == set(["Clang", "AppleClang", "Aocc"])
+            # Msvc toolchain uses Intel ifx
+            or toolchains == set(["Msvc", "Dpcpp", "Oneapi"])
         ):
             return False
         tty.debug("[TOOLCHAINS] {0}".format(toolchains))

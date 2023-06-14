@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -28,9 +28,6 @@ class Sysstat(AutotoolsPackage):
         env.append_flags("conf_dir", self.spec.prefix.etc.sysconfig)
 
     def configure_args(self):
-        args = [
-            "--disable-pcp",
-            "--disable-file-attr",
-        ]
+        args = ["--disable-pcp", "--disable-file-attr"]
 
         return args

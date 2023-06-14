@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -21,7 +21,6 @@ import spack.util.web as web_util
 from spack.spec import Spec
 from spack.stage import Stage
 from spack.util.executable import which
-from spack.version import ver
 
 
 @pytest.fixture(params=list(crypto.hashes.keys()))
@@ -136,20 +135,27 @@ if sys.platform != "win32":
 @pytest.mark.parametrize("secure", [True, False])
 @pytest.mark.parametrize("_fetch_method", ["curl", "urllib"])
 @pytest.mark.parametrize("mock_archive", files, indirect=True)
-def test_fetch(mock_archive, secure, _fetch_method, checksum_type, config, mutable_mock_repo):
+def test_fetch(
+    mock_archive,
+    secure,
+    _fetch_method,
+    checksum_type,
+    default_mock_concretization,
+    mutable_mock_repo,
+):
     """Fetch an archive and make sure we can checksum it."""
-    mock_archive.url
-    mock_archive.path
-
     algo = crypto.hash_fun_for_algo(checksum_type)()
     with open(mock_archive.archive_file, "rb") as f:
         algo.update(f.read())
     checksum = algo.hexdigest()
 
-    # Get a spec and tweak the test package with new chcecksum params
-    s = Spec("url-test").concretized()
+    # Get a spec and tweak the test package with new checksum params
+    s = default_mock_concretization("url-test")
     s.package.url = mock_archive.url
-    s.package.versions[ver("test")] = {checksum_type: checksum, "url": s.package.url}
+    s.package.versions[spack.version.Version("test")] = {
+        checksum_type: checksum,
+        "url": s.package.url,
+    }
 
     # Enter the stage directory and check some properties
     with s.package.stage:
@@ -171,13 +177,13 @@ def test_fetch(mock_archive, secure, _fetch_method, checksum_type, config, mutab
 @pytest.mark.parametrize(
     "spec,url,digest",
     [
-        ("url-list-test @0.0.0", "foo-0.0.0.tar.gz", "00000000000000000000000000000000"),
-        ("url-list-test @1.0.0", "foo-1.0.0.tar.gz", "00000000000000000000000000000100"),
-        ("url-list-test @3.0", "foo-3.0.tar.gz", "00000000000000000000000000000030"),
-        ("url-list-test @4.5", "foo-4.5.tar.gz", "00000000000000000000000000000450"),
-        ("url-list-test @2.0.0b2", "foo-2.0.0b2.tar.gz", "000000000000000000000000000200b2"),
-        ("url-list-test @3.0a1", "foo-3.0a1.tar.gz", "000000000000000000000000000030a1"),
-        ("url-list-test @4.5-rc5", "foo-4.5-rc5.tar.gz", "000000000000000000000000000045c5"),
+        ("url-list-test @=0.0.0", "foo-0.0.0.tar.gz", "00000000000000000000000000000000"),
+        ("url-list-test @=1.0.0", "foo-1.0.0.tar.gz", "00000000000000000000000000000100"),
+        ("url-list-test @=3.0", "foo-3.0.tar.gz", "00000000000000000000000000000030"),
+        ("url-list-test @=4.5", "foo-4.5.tar.gz", "00000000000000000000000000000450"),
+        ("url-list-test @=2.0.0b2", "foo-2.0.0b2.tar.gz", "000000000000000000000000000200b2"),
+        ("url-list-test @=3.0a1", "foo-3.0a1.tar.gz", "000000000000000000000000000030a1"),
+        ("url-list-test @=4.5-rc5", "foo-4.5-rc5.tar.gz", "000000000000000000000000000045c5"),
     ],
 )
 @pytest.mark.parametrize("_fetch_method", ["curl", "urllib"])
@@ -205,7 +211,7 @@ def test_from_list_url(mock_packages, config, spec, url, digest, _fetch_method):
     [
         # This version is in the web data path (test/data/web/4.html), but not in the
         # url-list-test package. We expect Spack to generate a URL with the new version.
-        ("4.5.0", "foo-4.5.0.tar.gz", None),
+        ("=4.5.0", "foo-4.5.0.tar.gz", None),
         # This version is in web data path and not in the package file, BUT the 2.0.0b2
         # version in the package file satisfies 2.0.0, so Spack will use the known version.
         # TODO: this is *probably* not what the user wants, but it's here as an example

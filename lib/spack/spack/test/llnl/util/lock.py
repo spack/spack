@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -62,8 +62,7 @@ import llnl.util.lock as lk
 import llnl.util.multiproc as mp
 from llnl.util.filesystem import getuid, touch
 
-is_windows = sys.platform == "win32"
-if not is_windows:
+if sys.platform != "win32":
     import fcntl
 
 pytestmark = pytest.mark.skipif(sys.platform == "win32", reason="does not run on windows")
@@ -127,7 +126,7 @@ def make_readable(*paths):
     # stat.S_IREAD constants or a corresponding integer value). All other
     # bits are ignored."
     for path in paths:
-        if not is_windows:
+        if sys.platform != "win32":
             mode = 0o555 if os.path.isdir(path) else 0o444
         else:
             mode = stat.S_IREAD
@@ -136,7 +135,7 @@ def make_readable(*paths):
 
 def make_writable(*paths):
     for path in paths:
-        if not is_windows:
+        if sys.platform != "win32":
             mode = 0o755 if os.path.isdir(path) else 0o744
         else:
             mode = stat.S_IWRITE
@@ -616,7 +615,7 @@ def test_read_lock_read_only_dir_writable_lockfile(lock_dir, lock_path):
             pass
 
 
-@pytest.mark.skipif(False if is_windows else getuid() == 0, reason="user is root")
+@pytest.mark.skipif(False if sys.platform == "win32" else getuid() == 0, reason="user is root")
 def test_read_lock_no_lockfile(lock_dir, lock_path):
     """read-only directory, no lockfile (so can't create)."""
     with read_only(lock_dir):
@@ -687,7 +686,9 @@ def test_upgrade_read_to_write_fails_with_readonly_file(private_lock_path):
         # upgrade to write here
         with pytest.raises(lk.LockROFileError):
             lock.acquire_write()
-        lk.file_tracker.release_fh(lock.path)
+
+        # TODO: lk.file_tracker does not release private_lock_path
+        lk.file_tracker.release_by_stat(os.stat(private_lock_path))
 
 
 class ComplexAcquireAndRelease(object):
@@ -1294,7 +1295,7 @@ def test_lock_in_current_directory(tmpdir):
 def test_attempts_str():
     assert lk._attempts_str(0, 0) == ""
     assert lk._attempts_str(0.12, 1) == ""
-    assert lk._attempts_str(12.345, 2) == " after 12.35s and 2 attempts"
+    assert lk._attempts_str(12.345, 2) == " after 12.345s and 2 attempts"
 
 
 def test_lock_str():
@@ -1313,6 +1314,7 @@ def test_downgrade_write_okay(tmpdir):
         lock.downgrade_write_to_read()
         assert lock._reads == 1
         assert lock._writes == 0
+        lock.release_read()
 
 
 def test_downgrade_write_fails(tmpdir):
@@ -1323,6 +1325,7 @@ def test_downgrade_write_fails(tmpdir):
         msg = "Cannot downgrade lock from write to read on file: lockfile"
         with pytest.raises(lk.LockDowngradeError, match=msg):
             lock.downgrade_write_to_read()
+        lock.release_read()
 
 
 @pytest.mark.parametrize(
@@ -1362,6 +1365,7 @@ def test_upgrade_read_okay(tmpdir):
         lock.upgrade_read_to_write()
         assert lock._reads == 0
         assert lock._writes == 1
+        lock.release_write()
 
 
 def test_upgrade_read_fails(tmpdir):
@@ -1372,3 +1376,4 @@ def test_upgrade_read_fails(tmpdir):
         msg = "Cannot upgrade lock from read to write on file: lockfile"
         with pytest.raises(lk.LockUpgradeError, match=msg):
             lock.upgrade_read_to_write()
+        lock.release_write()

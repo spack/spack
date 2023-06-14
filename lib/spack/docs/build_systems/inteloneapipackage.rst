@@ -1,4 +1,4 @@
-.. Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+.. Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
    Spack Project Developers. See the top-level COPYRIGHT file for details.
 
    SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -6,9 +6,9 @@
 .. _inteloneapipackage:
 
 
-====================
- IntelOneapiPackage
-====================
+===========
+IntelOneapi
+===========
 
 
 .. contents::
@@ -32,11 +32,11 @@ oneAPI packages or use::
 
 For more information on a specific package, do::
 
-  spack info <package-name>
+  spack info --all <package-name>
 
 Intel no longer releases new versions of Parallel Studio, which can be
 used in Spack via the :ref:`intelpackage`. All of its components can
-now be found in oneAPI. 
+now be found in oneAPI.
 
 Examples
 ========
@@ -124,7 +124,7 @@ Using oneAPI Tools Installed by Spack
 =====================================
 
 Spack can be a convenient way to install and configure compilers and
-libaries, even if you do not intend to build a Spack package. If you
+libraries, even if you do not intend to build a Spack package. If you
 want to build a Makefile project using Spack-installed oneAPI compilers,
 then use spack to configure your environment::
 

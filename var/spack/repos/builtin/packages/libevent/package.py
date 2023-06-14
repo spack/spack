@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -48,6 +48,11 @@ class Libevent(AutotoolsPackage):
             url = "https://github.com/downloads/libevent/libevent/libevent-{0}-stable.tar.gz"
 
         return url.format(version)
+
+    @property
+    def libs(self):
+        libs = find_libraries("libevent", root=self.prefix, shared=True, recursive=True)
+        return LibraryList(libs)
 
     def configure_args(self):
         spec = self.spec

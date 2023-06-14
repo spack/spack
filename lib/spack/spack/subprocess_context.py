@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -102,8 +102,8 @@ class TestState(object):
 
     def restore(self):
         if _serialize:
-            spack.repo.path = spack.repo._path(self.repo_dirs)
             spack.config.config = self.config
+            spack.repo.path = spack.repo._path(self.config)
             spack.platforms.host = self.platform
 
             new_store = spack.store.Store.deserialize(self.store_token)

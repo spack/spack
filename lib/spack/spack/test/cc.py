@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -12,8 +12,11 @@ import sys
 
 import pytest
 
+import spack.build_environment
+import spack.config
+import spack.spec
 from spack.paths import build_env_path
-from spack.util.environment import set_env, system_dirs
+from spack.util.environment import SYSTEM_DIRS, set_env
 from spack.util.executable import Executable, ProcessError
 
 #
@@ -50,6 +53,7 @@ test_args = [
     "-llib4",
     "arg5",
     "arg6",
+    "-DGCC_ARG_WITH_PERENS=(A B C)",
     '"-DDOUBLE_QUOTED_ARG"',
     "'-DSINGLE_QUOTED_ARG'",
 ]
@@ -101,6 +105,7 @@ test_args_without_paths = [
     "-llib4",
     "arg5",
     "arg6",
+    "-DGCC_ARG_WITH_PERENS=(A B C)",
     '"-DDOUBLE_QUOTED_ARG"',
     "'-DSINGLE_QUOTED_ARG'",
 ]
@@ -144,7 +149,7 @@ pytestmark = pytest.mark.skipif(sys.platform == "win32", reason="does not run on
 
 
 @pytest.fixture(scope="function")
-def wrapper_environment():
+def wrapper_environment(working_env):
     with set_env(
         SPACK_CC=real_cc,
         SPACK_CXX=real_cc,
@@ -155,7 +160,7 @@ def wrapper_environment():
         SPACK_DEBUG_LOG_ID="foo-hashabc",
         SPACK_COMPILER_SPEC="gcc@4.4.7",
         SPACK_SHORT_SPEC="foo@1.2 arch=linux-rhel6-x86_64 /hashabc",
-        SPACK_SYSTEM_DIRS=":".join(system_dirs),
+        SPACK_SYSTEM_DIRS=":".join(SYSTEM_DIRS),
         SPACK_CC_RPATH_ARG="-Wl,-rpath,",
         SPACK_CXX_RPATH_ARG="-Wl,-rpath,",
         SPACK_F77_RPATH_ARG="-Wl,-rpath,",
@@ -167,6 +172,8 @@ def wrapper_environment():
         SPACK_LINKER_ARG="-Wl,",
         SPACK_DTAGS_TO_ADD="--disable-new-dtags",
         SPACK_DTAGS_TO_STRIP="--enable-new-dtags",
+        SPACK_COMPILER_FLAGS_KEEP="",
+        SPACK_COMPILER_FLAGS_REPLACE="-Werror*",
     ):
         yield
 
@@ -194,6 +201,22 @@ def check_args(cc, args, expected):
     with set_env(SPACK_TEST_COMMAND="dump-args"):
         cc_modified_args = cc(*args, output=str).strip().split("\n")
         assert expected == cc_modified_args
+
+
+def check_args_contents(cc, args, must_contain, must_not_contain):
+    """Check output arguments that cc produces when called with args.
+
+    This assumes that cc will print debug command output with one element
+    per line, so that we see whether arguments that should (or shouldn't)
+    contain spaces are parsed correctly.
+    """
+    with set_env(SPACK_TEST_COMMAND="dump-args"):
+        cc_modified_args = cc(*args, output=str).strip().split("\n")
+        print(cc_modified_args)
+        for a in must_contain:
+            assert a in cc_modified_args
+        for a in must_not_contain:
+            assert a not in cc_modified_args
 
 
 def check_env_var(executable, var, expected):
@@ -316,6 +339,81 @@ def test_fc_flags(wrapper_environment, wrapper_flags):
         + spack_ldflags
         + common_compile_args
         + spack_ldlibs,
+    )
+
+
+def test_Wl_parsing(wrapper_environment):
+    check_args(
+        cc,
+        ["-Wl,-rpath,/a,--enable-new-dtags,-rpath=/b,--rpath", "-Wl,/c"],
+        [real_cc]
+        + target_args
+        + ["-Wl,--disable-new-dtags", "-Wl,-rpath,/a", "-Wl,-rpath,/b", "-Wl,-rpath,/c"],
+    )
+
+
+@pytest.mark.regression("37179")
+def test_Wl_parsing_with_missing_value(wrapper_environment):
+    check_args(
+        cc,
+        ["-Wl,-rpath=/a,-rpath=", "-Wl,--rpath="],
+        [real_cc] + target_args + ["-Wl,--disable-new-dtags", "-Wl,-rpath,/a"],
+    )
+
+
+@pytest.mark.regression("37179")
+def test_Wl_parsing_NAG_is_ignored(wrapper_environment):
+    check_args(
+        fc,
+        ["-Wl,-Wl,,x,,y,,z"],
+        [real_cc] + target_args + ["-Wl,--disable-new-dtags", "-Wl,-Wl,,x,,y,,z"],
+    )
+
+
+def test_Xlinker_parsing(wrapper_environment):
+    # -Xlinker <x> ... -Xlinker <y> may have compiler flags inbetween, like -O3 in this
+    # example. Also check that a trailing -Xlinker (which is a compiler error) is not
+    # dropped or given an empty argument.
+    check_args(
+        cc,
+        [
+            "-Xlinker",
+            "-rpath",
+            "-O3",
+            "-Xlinker",
+            "/a",
+            "-Xlinker",
+            "--flag",
+            "-Xlinker",
+            "-rpath=/b",
+            "-Xlinker",
+        ],
+        [real_cc]
+        + target_args
+        + [
+            "-Wl,--disable-new-dtags",
+            "-Wl,-rpath,/a",
+            "-Wl,-rpath,/b",
+            "-O3",
+            "-Xlinker",
+            "--flag",
+            "-Xlinker",
+        ],
+    )
+
+
+def test_rpath_without_value(wrapper_environment):
+    # cc -Wl,-rpath without a value shouldn't drop -Wl,-rpath;
+    # same for -Xlinker
+    check_args(
+        cc,
+        ["-Wl,-rpath", "-O3", "-g"],
+        [real_cc] + target_args + ["-Wl,--disable-new-dtags", "-O3", "-g", "-Wl,-rpath"],
+    )
+    check_args(
+        cc,
+        ["-Xlinker", "-rpath", "-O3", "-g"],
+        [real_cc] + target_args + ["-Wl,--disable-new-dtags", "-O3", "-g", "-Xlinker", "-rpath"],
     )
 
 
@@ -491,7 +589,6 @@ def test_ccld_with_system_dirs(wrapper_environment):
         SPACK_RPATH_DIRS="xlib:ylib:zlib",
         SPACK_LINK_DIRS="xlib:ylib:zlib",
     ):
-
         sys_path_args = [
             "-I/usr/include",
             "-L/usr/local/lib",
@@ -528,7 +625,6 @@ def test_ccld_with_system_dirs_isystem(wrapper_environment):
         SPACK_RPATH_DIRS="xlib:ylib:zlib",
         SPACK_LINK_DIRS="xlib:ylib:zlib",
     ):
-
         sys_path_args = [
             "-isystem",
             "/usr/include",
@@ -688,6 +784,77 @@ def test_no_ccache_prepend_for_fc(wrapper_environment):
         # no ccache for Fortran
         [real_cc] + target_args + lheaderpad + common_compile_args,
     )
+
+
+def test_keep_and_replace(wrapper_environment):
+    werror_specific = ["-Werror=meh"]
+    werror = ["-Werror"]
+    werror_all = werror_specific + werror
+    with set_env(SPACK_COMPILER_FLAGS_KEEP="", SPACK_COMPILER_FLAGS_REPLACE="-Werror*|"):
+        check_args_contents(cc, test_args + werror_all, ["-Wl,--end-group"], werror_all)
+    with set_env(SPACK_COMPILER_FLAGS_KEEP="-Werror=*", SPACK_COMPILER_FLAGS_REPLACE="-Werror*|"):
+        check_args_contents(cc, test_args + werror_all, werror_specific, werror)
+    with set_env(
+        SPACK_COMPILER_FLAGS_KEEP="-Werror=*",
+        SPACK_COMPILER_FLAGS_REPLACE="-Werror*| -llib1| -Wl*|",
+    ):
+        check_args_contents(
+            cc, test_args + werror_all, werror_specific, werror + ["-llib1", "-Wl,--rpath"]
+        )
+
+
+@pytest.mark.parametrize(
+    "cfg_override,initial,expected,must_be_gone",
+    [
+        # Set and unset variables
+        (
+            "config:flags:keep_werror:all",
+            ["-Werror", "-Werror=specific", "-bah"],
+            ["-Werror", "-Werror=specific", "-bah"],
+            [],
+        ),
+        (
+            "config:flags:keep_werror:specific",
+            ["-Werror", "-Werror=specific", "-bah"],
+            ["-Werror=specific", "-bah"],
+            ["-Werror"],
+        ),
+        (
+            "config:flags:keep_werror:none",
+            ["-Werror", "-Werror=specific", "-bah"],
+            ["-bah", "-Wno-error", "-Wno-error=specific"],
+            ["-Werror", "-Werror=specific"],
+        ),
+        # check non-standard -Werror opts like -Werror-implicit-function-declaration
+        (
+            "config:flags:keep_werror:all",
+            ["-Werror", "-Werror-implicit-function-declaration", "-bah"],
+            ["-Werror", "-Werror-implicit-function-declaration", "-bah"],
+            [],
+        ),
+        (
+            "config:flags:keep_werror:specific",
+            ["-Werror", "-Werror-implicit-function-declaration", "-bah"],
+            ["-Werror-implicit-function-declaration", "-bah", "-Wno-error"],
+            ["-Werror"],
+        ),
+        (
+            "config:flags:keep_werror:none",
+            ["-Werror", "-Werror-implicit-function-declaration", "-bah"],
+            ["-bah", "-Wno-error=implicit-function-declaration"],
+            ["-Werror", "-Werror-implicit-function-declaration"],
+        ),
+    ],
+)
+@pytest.mark.usefixtures("wrapper_environment", "mutable_config")
+def test_flag_modification(cfg_override, initial, expected, must_be_gone):
+    spack.config.add(cfg_override)
+    env = spack.build_environment.clean_environment()
+
+    keep_werror = spack.config.get("config:flags:keep_werror")
+    spack.build_environment._add_werror_handling(keep_werror, env)
+    env.apply_modifications()
+    check_args_contents(cc, test_args[:3] + initial, expected, must_be_gone)
 
 
 @pytest.mark.regression("9160")

@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -56,7 +56,7 @@ class Cbench(MakefilePackage):
 
     @run_before("build")
     @on_package_attributes(run_tests=True)
-    def test_blas_linkage(self):
+    def check_blas_linkage(self):
         """Quick test to ensure that BLAS linkage is working correctly."""
 
         make("-C", "opensource/maketests", "clean")
