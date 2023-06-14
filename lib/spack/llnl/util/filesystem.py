@@ -861,7 +861,10 @@ def install_tree(src, dest, symlinks=True, ignore=None, allow_broken_symlinks=Fa
         IOError: if *src* does not match any files or directories
         ValueError: if *src* is a parent directory of *dest*
     """
-    copy_tree(src, dest, symlinks=symlinks, ignore=ignore, _permissions=True)
+    copy_tree(
+        src, dest, symlinks=symlinks, allow_broken_symlinks=allow_broken_symlinks,
+        ignore=ignore, _permissions=True
+    )
 
 
 @system_path_filter

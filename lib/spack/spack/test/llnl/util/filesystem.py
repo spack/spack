@@ -275,6 +275,17 @@ class TestInstallTree:
                 assert not os.path.islink("dest/2")
             check_added_exe_permissions("source/2", "dest/2")
 
+    @pytest.mark.skipif(sys.platform == 'win32', reason='Broken symlinks not allowed on Windows')
+    def test_allow_broken_symlinks(self, stage):
+        """Test installing with a broken symlink."""
+        with fs.working_dir(str(stage)):
+            symlink('nonexistant.txt', 'source/broken', allow_broken_symlinks=True)
+            fs.install_tree("source", "dest", symlinks=True, allow_broken_symlinks=True)
+            import subprocess
+            subprocess.call(['tree'])
+            assert os.path.islink('dest/broken')
+            assert not os.path.exists(os.readlink('dest/broken'))
+
     def test_glob_src(self, stage):
         """Test using a glob as the source."""
 
