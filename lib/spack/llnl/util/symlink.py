@@ -18,7 +18,7 @@ if sys.platform == "win32":
     from win32file import CreateHardLink
 
 
-def symlink(source_path: str, link_path: str):
+def symlink(source_path: str, link_path: str, allow_broken_symlinks: bool = False):
     """
     Create a link.
 
@@ -45,17 +45,28 @@ def symlink(source_path: str, link_path: str):
     Junction: A link to a directory on the same or different
     volume (drive letter) but not to a remote directory. Don't
     need System Administrator privileges.
+
+    Parameters:
+        source_path (str): The real file or directory that the link points to.
+            Must be absolute OR relative to the link.
+        link_path (str): The path where the link will exist.
+        allow_broken_symlinks (bool): On Linux or Mac, don't raise an exception if the source_path
+            doesn't exist. This will still raise an exception on Windows.
     """
     source_path = os.path.normpath(source_path)
     win_source_path = source_path
     link_path = os.path.normpath(link_path)
+
+    # Never allow broken links on Windows.
+    if sys.platform == "win32":
+        allow_broken_symlinks = False
 
     # Perform basic checks to make sure symlinking will succeed
     if os.path.lexists(link_path):
         raise SymlinkError(f"Link path ({link_path}) already exists. Cannot create link.")
 
     if not os.path.exists(source_path):
-        if os.path.isabs(source_path):
+        if os.path.isabs(source_path) and not allow_broken_symlinks:
             # An absolute source path that does not exist will result in a broken link.
             raise SymlinkError(
                 f"Source path ({source_path}) is absolute but does not exist. Resulting "
@@ -73,7 +84,7 @@ def symlink(source_path: str, link_path: str):
                 # relative because hardlink/junction dont resolve relative paths the same way as
                 # os.symlink. This is ignored on other operating systems.
                 win_source_path = relative_path
-            else:
+            elif not allow_broken_symlinks:
                 raise SymlinkError(
                     f"The source path ({source_path}) is not relative to the link path "
                     f"({link_path}). Resulting link would be broken so not making link."

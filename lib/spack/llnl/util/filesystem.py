@@ -21,6 +21,7 @@ from contextlib import contextmanager
 from itertools import accumulate
 from typing import Callable, Iterable, List, Match, Optional, Tuple, Union
 
+import llnl.util.symlink
 from llnl.util import tty
 from llnl.util.lang import dedupe, memoized
 from llnl.util.symlink import islink, readlink, resolve_link_target_relative_to_the_link, symlink
@@ -725,6 +726,7 @@ def copy_tree(
     src: str,
     dest: str,
     symlinks: bool = True,
+    allow_broken_symlinks: bool = False,
     ignore: Optional[Callable[[str], bool]] = None,
     _permissions: bool = False,
 ):
@@ -747,6 +749,8 @@ def copy_tree(
         src (str): the directory to copy
         dest (str): the destination directory
         symlinks (bool): whether or not to preserve symlinks
+        allow_broken_symlinks (bool): whether or not to allow broken (dangling) symlinks,
+            On Windows, setting this to True will raise an exception.
         ignore (typing.Callable): function indicating which files to ignore
         _permissions (bool): for internal use only
 
@@ -754,6 +758,8 @@ def copy_tree(
         IOError: if *src* does not match any files or directories
         ValueError: if *src* is a parent directory of *dest*
     """
+    if allow_broken_symlinks and sys.platform == 'win32':
+        raise llnl.util.symlink.SymlinkError('Cannot allow broken symlinks on Windows!')
     if _permissions:
         tty.debug("Installing {0} to {1}".format(src, dest))
     else:
@@ -830,14 +836,14 @@ def copy_tree(
                 copy_mode(s, d)
 
     for target, d, s in links:
-        symlink(target, d)
+        symlink(target, d, allow_broken_symlinks=allow_broken_symlinks)
         if _permissions:
             set_install_permissions(d)
             copy_mode(s, d)
 
 
 @system_path_filter
-def install_tree(src, dest, symlinks=True, ignore=None):
+def install_tree(src, dest, symlinks=True, ignore=None, allow_broken_symlinks=False):
     """Recursively install an entire directory tree rooted at *src*.
 
     Same as :py:func:`copy_tree` with the addition of setting proper
@@ -848,6 +854,8 @@ def install_tree(src, dest, symlinks=True, ignore=None):
         dest (str): the destination directory
         symlinks (bool): whether or not to preserve symlinks
         ignore (typing.Callable): function indicating which files to ignore
+        allow_broken_symlinks (bool): whether or not to allow broken (dangling) symlinks,
+            On Windows, setting this to True will raise an exception.
 
     Raises:
         IOError: if *src* does not match any files or directories
