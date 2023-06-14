@@ -5,6 +5,7 @@
 
 from spack.package import *
 
+
 class BioconductorEbseq(RPackage):
     """An R package for gene and isoform differential expression analysis of RNA-seq data.
 
@@ -26,4 +27,3 @@ class BioconductorEbseq(RPackage):
     depends_on("r-blockmodeling")
     depends_on("r-gplots")
     depends_on("r-testthat")
-
