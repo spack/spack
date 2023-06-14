@@ -17,6 +17,7 @@ class Fzf(MakefilePackage):
 
     executables = ["^fzf$"]
 
+    version("0.41.1", sha256="982682eaac377c8a55ae8d7491fcd0e888d6c13915d01da9ebb6b7c434d7f4b5")
     version("0.40.0", sha256="9597f297a6811d300f619fff5aadab8003adbcc1566199a43886d2ea09109a65")
 
     depends_on("go@1.17:", type="build")
