@@ -295,6 +295,8 @@ class Paraview(CMakePackage, CudaPackage, ROCmPackage):
     # https://gitlab.kitware.com/vtk/vtk/-/merge_requests/10113
     patch("adios2-remove-deprecated-functions.patch", when="@5.10: ^adios2@2.9:")
 
+    patch("exodusII-netcdf4.9.0.patch", when="@:5.10.2")
+
     generator("ninja", "make", default="ninja")
     # https://gitlab.kitware.com/paraview/paraview/-/issues/21223
     conflicts("generator=ninja", when="%xl")
