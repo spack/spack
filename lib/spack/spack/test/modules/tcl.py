@@ -133,9 +133,9 @@ class TestTcl:
         module_configuration("module_path_separator")
         content = modulefile_content("module-path-separator")
 
-        assert len([x for x in content if "append-path --delim {:} COLON {foo}" in x]) == 1
-        assert len([x for x in content if "prepend-path --delim {:} COLON {foo}" in x]) == 1
-        assert len([x for x in content if "remove-path --delim {:} COLON {foo}" in x]) == 1
+        assert len([x for x in content if "append-path COLON {foo}" in x]) == 1
+        assert len([x for x in content if "prepend-path COLON {foo}" in x]) == 1
+        assert len([x for x in content if "remove-path COLON {foo}" in x]) == 1
         assert len([x for x in content if "append-path --delim {;} SEMICOLON {bar}" in x]) == 1
         assert len([x for x in content if "prepend-path --delim {;} SEMICOLON {bar}" in x]) == 1
         assert len([x for x in content if "remove-path --delim {;} SEMICOLON {bar}" in x]) == 1
@@ -150,37 +150,23 @@ class TestTcl:
 
         # no manpath set by module
         content = modulefile_content("mpileaks")
-        assert len([x for x in content if "append-path --delim {:} MANPATH {}" in x]) == 0
+        assert len([x for x in content if "append-path MANPATH {}" in x]) == 0
 
         # manpath set by module with prepend-path
         content = modulefile_content("module-manpath-prepend")
-        assert (
-            len([x for x in content if "prepend-path --delim {:} MANPATH {/path/to/man}" in x])
-            == 1
-        )
-        assert (
-            len(
-                [
-                    x
-                    for x in content
-                    if "prepend-path --delim {:} MANPATH {/path/to/share/man}" in x
-                ]
-            )
-            == 1
-        )
-        assert len([x for x in content if "append-path --delim {:} MANPATH {}" in x]) == 1
+        assert len([x for x in content if "prepend-path MANPATH {/path/to/man}" in x]) == 1
+        assert len([x for x in content if "prepend-path MANPATH {/path/to/share/man}" in x]) == 1
+        assert len([x for x in content if "append-path MANPATH {}" in x]) == 1
 
         # manpath set by module with append-path
         content = modulefile_content("module-manpath-append")
-        assert (
-            len([x for x in content if "append-path --delim {:} MANPATH {/path/to/man}" in x]) == 1
-        )
-        assert len([x for x in content if "append-path --delim {:} MANPATH {}" in x]) == 1
+        assert len([x for x in content if "append-path MANPATH {/path/to/man}" in x]) == 1
+        assert len([x for x in content if "append-path MANPATH {}" in x]) == 1
 
         # manpath set by module with setenv
         content = modulefile_content("module-manpath-setenv")
         assert len([x for x in content if "setenv MANPATH {/path/to/man}" in x]) == 1
-        assert len([x for x in content if "append-path --delim {:} MANPATH {}" in x]) == 0
+        assert len([x for x in content if "append-path MANPATH {}" in x]) == 0
 
     @pytest.mark.regression("29578")
     def test_setenv_raw_value(self, modulefile_content, module_configuration):
