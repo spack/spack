@@ -1651,12 +1651,28 @@ class Spec(object):
         # Check if we need to update edges that are already present
         selected = self._dependencies.select(child=dependency_spec.name)
         for edge in selected:
+            has_errors, details = False, []
+            msg = f"cannot update the edge from {edge.parent.name} to {edge.spec.name}"
             if any(d in edge.deptypes for d in deptypes):
-                msg = (
-                    'cannot add a dependency on "{0.spec}" of {1} type '
-                    'when the "{0.parent}" has the edge {0!s} already'
+                has_errors = True
+                details.append(
+                    (
+                        f"{edge.parent.name} has already an edge matching any"
+                        f" of these types {str(deptypes)}"
+                    )
                 )
-                raise spack.error.SpecError(msg.format(edge, deptypes))
+
+            if any(v in edge.virtuals for v in virtuals):
+                has_errors = True
+                details.append(
+                    (
+                        f"{edge.parent.name} has already an edge matching any"
+                        f" of these virtuals {str(virtuals)}"
+                    )
+                )
+
+            if has_errors:
+                raise spack.error.SpecError(msg, "\n".join(details))
 
         for edge in selected:
             if id(dependency_spec) == id(edge.spec):
@@ -1664,6 +1680,7 @@ class Spec(object):
                 # both the parent and the child. When we update this object they'll
                 # both see the deptype modification.
                 edge.update_deptypes(deptypes=deptypes)
+                edge.update_virtuals(virtuals=virtuals)
                 return
 
         edge = DependencySpec(self, dependency_spec, deptypes=deptypes, virtuals=virtuals)
