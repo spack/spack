@@ -270,7 +270,6 @@ error(100, "Cyclic dependency detected between '{0}' and '{1}' (consider changin
      path(B, A).
 
 #defined dependency_type/2.
-#defined dependency_condition/3.
 
 %-----------------------------------------------------------------------------
 % Conflicts
@@ -281,8 +280,6 @@ error(1, Msg) :- attr("node", Package),
    condition_holds(ConstraintID, Package),
    not external(Package),  % ignore conflicts for externals
    not attr("hash", Package, _).  % ignore conflicts for installed packages
-
-#defined conflict/4.
 
 %-----------------------------------------------------------------------------
 % Virtual dependencies
@@ -343,8 +340,6 @@ virtual_condition_holds(Provider, Virtual) :-
 :- provider(Package, Virtual), not virtual_condition_holds(Package, Virtual),
    internal_error("Virtual when provides not respected").
 
-#defined possible_provider/2.
-
 %-----------------------------------------------------------------------------
 % Virtual dependency weights
 %-----------------------------------------------------------------------------
@@ -381,20 +376,10 @@ possible_provider_weight(Dependency, Virtual, Weight, "default")
 possible_provider_weight(Dependency, Virtual, 100, "fallback") :- provider(Dependency, Virtual).
 
 % do not warn if generated program contains none of these.
-#defined possible_provider/2.
-#defined provider_condition/3.
-#defined required_provider_condition/3.
-#defined required_provider_condition/4.
-#defined required_provider_condition/5.
-#defined required_provider_condition/6.
-#defined declared_dependency/3.
 #defined virtual/1.
 #defined virtual_condition_holds/2.
 #defined external/1.
-#defined external_spec/2.
-#defined external_version_declared/4.
 #defined buildable_false/1.
-#defined pkg_provider_preference/4.
 #defined default_provider_preference/3.
 
 %-----------------------------------------------------------------------------
@@ -449,13 +434,6 @@ external_conditions_hold(Package, LocalIndex) :-
 error(100, "Attempted to use external for '{0}' which does not satisfy any configured external spec", Package)
  :- external(Package),
     not external_conditions_hold(Package, _).
-
-#defined possible_external/3.
-#defined external_spec_index/3.
-#defined external_spec_condition/3.
-#defined external_spec_condition/4.
-#defined external_spec_condition/5.
-#defined external_spec_condition/6.
 
 %-----------------------------------------------------------------------------
 % Config required semantics
@@ -715,17 +693,8 @@ facts(Package, variant_single_value("dev_path"))
 % suppress warnings about this atom being unset.  It's only set if some
 % spec or some package sets it, and without this, clingo will give
 % warnings like 'info: atom does not occur in any rule head'.
-#defined variant/2.
-#defined variant_sticky/2.
-#defined variant_set/3.
-#defined variant_condition/3.
-#defined variant_single_value/2.
 #defined variant_default_value/3.
-#defined variant_possible_value/3.
-#defined variant_default_value_from_cli/3.
 #defined variant_default_value_from_packages_yaml/3.
-#defined variant_default_value_from_package_py/3.
-#defined variant_value_from_disjoint_sets/4.
 
 %-----------------------------------------------------------------------------
 % Platform semantics
