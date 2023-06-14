@@ -41,13 +41,12 @@ class Binder(CMakePackage):
                 "-DLLVM_DIR:FILEPATH={0}".format(llvm_dir),
                 "-DClang_DIR:FILEPATH={0}".format(clang_dir),
                 "-DCMAKE_CXX_FLAGS=-Wl,--verbose",
-                "-DBINDER_ENABLE_TEST=OFF"
+                "-DBINDER_ENABLE_TEST=OFF",
             ]
         )
         return options
 
     def setup_dependent_package(self, module, dependent_spec):
-
         llvm_dir = self.spec["llvm"].prefix
         self.spec.clang_include_dirs = llvm_dir.include
         self.spec.LibClang_include_dir = llvm_dir.lib.clang.join(
