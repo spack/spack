@@ -65,7 +65,7 @@ class Rpp(CMakePackage):
         "+calib3d+features2d+highgui+imgcodecs+imgproc"
         "+video+videoio+flann+photo+objdetect",
         type="build",
-        when="@5.3:",
+        when="@1.0:",
     )
     depends_on("llvm@10:+clang openmp=project")
     depends_on("libjpeg-turbo", type="build")
