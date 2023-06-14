@@ -80,6 +80,13 @@ class Libzmq(AutotoolsPackage):
         when="@4.3.4 %gcc@12:",
     )
 
+    # Fix static assertion failure with gcc-13
+    patch(
+        "https://github.com/zeromq/libzmq/commit/438d5d88392baffa6c2c5e0737d9de19d6686f0d.patch?full_index=1",
+        sha256="e15a8bfe8131f3e648fd79f3c1c931f99cd896b2733a7df1760f5b4354a0687c",
+        when="@4.3.3:4.3.4 %gcc@13:",
+    )
+
     def url_for_version(self, version):
         if version <= Version("4.1.4"):
             url = "http://download.zeromq.org/zeromq-{0}.tar.gz"
