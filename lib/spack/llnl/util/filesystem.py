@@ -274,6 +274,27 @@ def paths_containing_libs(paths, library_names):
 
 
 @system_path_filter
+def is_str_valid_path(path):
+    """Return True if string 'path' could represent a legal
+    path on the current filesystem. 'path' does not need to be
+    writeable - just a properly formed path.
+    Returns false otherwise"""
+    ret = True
+    try:
+        os.lstat(path)
+    except OSError as exc:
+        if hasattr(exc, "winerror"):
+            # Win error code for invalid path
+            if exc.winerror == 123:
+                ret = False
+        elif exc.errno in (errno.ENAMETOOLONG, errno.ERANGE):
+            ret = False
+    except TypeError:
+        ret = False
+    return ret
+
+
+@system_path_filter
 def same_path(path1, path2):
     norm1 = os.path.abspath(path1).rstrip(os.path.sep)
     norm2 = os.path.abspath(path2).rstrip(os.path.sep)
