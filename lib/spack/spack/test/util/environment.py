@@ -6,6 +6,7 @@
 """Test Spack's environment utility functions."""
 import os
 import sys
+from contextlib import contextmanager
 
 import pytest
 
@@ -168,16 +169,27 @@ def test_escape_double_quotes_in_shell_modifications():
 
     to_validate.set("QUOTED_VAR", '"MY_VAL"')
 
-    cmds = to_validate.shell_modifications()
+    # context manager to toggle shell on Windows
+    @contextmanager
+    def shell_set(shell):
+        try:
+            # stash previous set
+            _spack_shell = os.environ.get("SPACK_SHELL", "cmd")
+            os.environ["SPACK_SHELL"] = shell
+            yield
+        finally:
+            os.environ["SPACK_SHELL"] = _spack_shell
 
-    if sys.platform != "win32":
-        assert 'export VAR="$PATH:$ANOTHER_PATH"' in cmds
-        assert r'export QUOTED_VAR="\"MY_VAL\""' in cmds
-    else:
-        is_pwsh = os.environ.get("SPACK_SHELL", None) == "pwsh"
-        if is_pwsh:
+    if sys.patform == "win32":
+        with shell_set("pwsh"):
+            cmds = to_validate.shell_modifications()
             assert "$Env:VAR=$PATH;$ANOTHER_PATH" in cmds
             assert r'$Env:QUOTED_VAR="MY_VAL"' in cmds
-        else:
+        with shell_set("cmd"):
+            cmds = to_validate.shell_modifications()
             assert "set VAR=$PATH;$ANOTHER_PATH" in cmds
             assert r'set QUOTED_VAR="MY_VAL"' in cmds
+    else:
+        cmds = to_validate.shell_modifications()
+        assert 'export VAR="$PATH:$ANOTHER_PATH"' in cmds
+        assert r'export QUOTED_VAR="\"MY_VAL\""' in cmds
