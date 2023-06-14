@@ -1257,10 +1257,12 @@ def traverse_tree(
     Keyword Arguments:
         order (str): Whether to do pre- or post-order traversal. Accepted
             values are 'pre' and 'post'
-        ignore (typing.Callable): function indicating which files to ignore. Note
-            that an error may occur if the ignore function ignores a directory
-            or file that is symlinked but not the symlink path too. To avoid this,
-            make sure the ignore function also ignores the symlink paths too.
+        ignore (typing.Callable): function indicating which files to ignore. This will also
+            ignore symlinks if they point to an ignored file (regardless of whether the symlink
+            is explicitly ignored); note this only supports one layer of indirection (i.e. if
+            you have x -> y -> z, and z is ignored but x/y are not, then y would be ignored
+            but not x). To avoid this, make sure the ignore function also ignores the symlink
+            paths too.
         follow_nonexisting (bool): Whether to descend into directories in
             ``src`` that do not exit in ``dest``. Default is True
         follow_links (bool): Whether to descend into symlinks in ``src``
