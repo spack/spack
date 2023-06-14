@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -10,8 +10,8 @@ from spack.pkg.builtin.boost import Boost
 
 class Rpp(CMakePackage):
     """Radeon Performance Primitives (RPP) library is a comprehensive high-
-       performance computer vision library for AMD (CPU and GPU) with HIP 
-       and OPENCL back-ends"""
+    performance computer vision library for AMD (CPU and GPU) with HIP
+    and OPENCL back-ends"""
 
     homepage = "https://github.com/GPUOpen-ProfessionalCompute-Libraries/rpp"
     git = "https://github.com/GPUOpen-ProfessionalCompute-Libraries/rpp.git"
@@ -20,6 +20,10 @@ class Rpp(CMakePackage):
     maintainers = ['srekolam']
     tags = ["rocm"]
 
+    version("1.1.0", sha256="9b1b9e721df27ee577819710b261071c68b2dccba96d9daf5d0535ee5f0e045f")
+    version("1.0.0", sha256="040601e356b0a06c4ffb2043320ae822ab0da78af867392002c7b68dbd85989c")
+    version("0.99", sha256="f1d7ec65d0148ddb7b3ce836a7e058727036df940d72d1683dee590a913fd44a")
+    version("0.98", sha256="191b5d89bf990ae22b5ef73675b89ed4371c3ce342ab9cc65383fa12ef13086e")
     version("0.97", sha256="8ce1a869ff67a29579d87d399d8b0bd97bf12ae1b6b1ca1f161cb8a262fb9939")
     variant(
         "build_type",
@@ -49,21 +53,29 @@ class Rpp(CMakePackage):
                 "cmake/FindOpenCL.cmake",
                 string=True,
             )
-    depends_on("cmake@3.5:", type="build")   
+    depends_on("cmake@3.5:", type="build")
     depends_on("pkgconfig", type="build")
     depends_on(Boost.with_default_variants)
-    depends_on("boost@1.67.0:1.72.0")
+    depends_on("boost@1.72.0:1.80.0")
     depends_on("bzip2")
     depends_on("half")
     depends_on("hwloc")
-    depends_on("rocm-opencl@5:", when= "+opencl")
+    depends_on(
+        "opencv@4.5:"
+        "+calib3d+features2d+highgui+imgcodecs+imgproc"
+        "+video+videoio+flann+photo+objdetect",
+        type="build",
+        when="@5.3:",
+    )
+    depends_on("llvm@10:+clang openmp=project")
+    depends_on("libjpeg-turbo", type="build")
     conflicts("+opencl+hip")
 
-    with when("~hip"):
-        depends_on("llvm@10:+clang") 
     with when("+hip"):
         depends_on("hip@5:")
-        depends_on("rocm-openmp-extras@5:")
+    with when("~hip"):
+        depends_on("rocm-opencl@5:")
+
     def cmake_args(self):
         spec = self.spec
         args = []
