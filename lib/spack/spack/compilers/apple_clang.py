@@ -7,8 +7,8 @@ import re
 import shutil
 
 import llnl.util.lang
-import llnl.util.tty as tty
 import llnl.util.symlink as symlink
+import llnl.util.tty as tty
 
 import spack.compiler
 import spack.compilers.clang
