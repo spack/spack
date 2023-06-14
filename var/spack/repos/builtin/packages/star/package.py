@@ -36,8 +36,11 @@ class Star(Package):
     depends_on("zlib")
 
     def install(self, spec, prefix):
+        make_args = ["STAR", "STARlong"]
+        if "avx2" not in spec.target:
+            make_args += ["CXXFLAGS_SIMD=sse"]
         with working_dir("source"):
-            make("STAR", "STARlong")
+            make(*make_args)
             mkdirp(prefix.bin)
             install("STAR", prefix.bin)
             install("STARlong", prefix.bin)
