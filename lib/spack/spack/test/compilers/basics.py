@@ -11,6 +11,7 @@ from copy import copy
 import pytest
 
 import llnl.util.filesystem as fs
+import llnl.util.symlink as symlink
 
 import spack.compiler
 import spack.compilers as compilers
@@ -892,12 +893,8 @@ echo "/Library/Developer"
     # Set a few operations to noop
     monkeypatch.setattr(shutil, "copytree", noop)
     monkeypatch.setattr(os, "unlink", noop)
-    monkeypatch.setattr(os, "symlink", noop)
+    monkeypatch.setattr(symlink, "symlink", noop)
     monkeypatch.setattr(os, "listdir", _listdir)
-
-    xcode_sel = os.path.join(spack.stage.get_stage_root(), "xcode-select")
-    ver_dir = os.path.join(xcode_sel, apple_clang, apple_clang_version)
-    os.makedirs(ver_dir)
 
     # Qt is so far the only package that uses this code path, change
     # introduced in https://github.com/spack/spack/pull/1832
@@ -907,8 +904,6 @@ echo "/Library/Developer"
     assert env.env_modifications[0].name == "SPACK_CC"
     assert env.env_modifications[1].name == "SPACK_CXX"
     assert env.env_modifications[2].name == "DEVELOPER_DIR"
-
-    shutil.rmtree(xcode_sel)
 
 
 @pytest.mark.skipif(sys.platform == "win32", reason="Not supported on Windows (yet)")
