@@ -2171,10 +2171,13 @@ class TestConcretize(object):
             s = spack.spec.Spec("a").concretized()
         assert s.satisfies("%gcc@12.1.0")
 
-    def test_virtuals_are_annotated_on_edges(self, default_mock_concretization):
-        spec = default_mock_concretization("mpileaks ^mpich")
+    @pytest.mark.parametrize("spec_str", ["mpileaks", "mpileaks ^mpich"])
+    def test_virtuals_are_annotated_on_edges(self, spec_str, default_mock_concretization):
+        """Tests that information on virtuals is annotated on DAG edges"""
+        spec = default_mock_concretization(spec_str)
+        mpi_provider = spec["mpi"].name
 
-        edges = spec.edges_to_dependencies(name="mpich")
+        edges = spec.edges_to_dependencies(name=mpi_provider)
         assert len(edges) == 1 and edges[0].virtuals == ("mpi",)
         edges = spec.edges_to_dependencies(name="callpath")
         assert len(edges) == 1 and edges[0].virtuals == ()
