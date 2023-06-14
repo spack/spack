@@ -38,7 +38,7 @@ class PyLightly(PythonPackage):
     depends_on("py-tqdm@4.44:", type=("build", "run"))
     depends_on("py-urllib3@1.15.1:", type=("build", "run"))
 
-    # requirements/oneapi.txt
+    # requirements/openapi.txt
     depends_on("py-python-dateutil@2.5.3:", when="@1.4.8:", type=("build", "run"))
     depends_on("py-setuptools@21:", when="@1.4.8:", type=("build", "run"))
     depends_on("py-urllib3@1.25.3:", when="@1.4.8:", type=("build", "run"))
