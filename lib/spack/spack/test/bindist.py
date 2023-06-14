@@ -201,12 +201,12 @@ def test_default_rpaths_create_install_default_layout(mirror_dir):
     install_cmd("--no-cache", sy_spec.name)
 
     # Create a buildache
-    buildcache_cmd("push", "-au", "-d", mirror_dir, cspec.name, sy_spec.name)
+    buildcache_cmd("push", "-au", mirror_dir, cspec.name, sy_spec.name)
     # Test force overwrite create buildcache (-f option)
-    buildcache_cmd("push", "-auf", "-d", mirror_dir, cspec.name)
+    buildcache_cmd("push", "-auf", mirror_dir, cspec.name)
 
     # Create mirror index
-    buildcache_cmd("update-index", "-d", mirror_dir)
+    buildcache_cmd("update-index", mirror_dir)
     # List the buildcaches in the mirror
     buildcache_cmd("list", "-alv")
 
@@ -214,13 +214,13 @@ def test_default_rpaths_create_install_default_layout(mirror_dir):
     uninstall_cmd("-y", "--dependents", gspec.name)
 
     # Test installing from build caches
-    buildcache_cmd("install", "-au", cspec.name, sy_spec.name)
+    buildcache_cmd("install", "-u", cspec.name, sy_spec.name)
 
     # This gives warning that spec is already installed
-    buildcache_cmd("install", "-au", cspec.name)
+    buildcache_cmd("install", "-u", cspec.name)
 
     # Test overwrite install
-    buildcache_cmd("install", "-afu", cspec.name)
+    buildcache_cmd("install", "-fu", cspec.name)
 
     buildcache_cmd("keys", "-f")
     buildcache_cmd("list")
@@ -246,35 +246,10 @@ def test_default_rpaths_install_nondefault_layout(mirror_dir):
 
     # Install some packages with dependent packages
     # test install in non-default install path scheme
-    buildcache_cmd("install", "-au", cspec.name, sy_spec.name)
+    buildcache_cmd("install", "-u", cspec.name, sy_spec.name)
 
     # Test force install in non-default install path scheme
-    buildcache_cmd("install", "-auf", cspec.name)
-
-
-@pytest.mark.requires_executables(*args)
-@pytest.mark.maybeslow
-@pytest.mark.nomockstage
-@pytest.mark.usefixtures("default_config", "cache_directory", "install_dir_default_layout")
-def test_relative_rpaths_create_default_layout(mirror_dir):
-    """
-    Test the creation and installation of buildcaches with relative
-    rpaths into the default directory layout scheme.
-    """
-
-    gspec, cspec = Spec("garply").concretized(), Spec("corge").concretized()
-
-    # Install 'corge' without using a cache
-    install_cmd("--no-cache", cspec.name)
-
-    # Create build cache with relative rpaths
-    buildcache_cmd("push", "-aur", "-d", mirror_dir, cspec.name)
-
-    # Create mirror index
-    buildcache_cmd("update-index", "-d", mirror_dir)
-
-    # Uninstall the package and deps
-    uninstall_cmd("-y", "--dependents", gspec.name)
+    buildcache_cmd("install", "-uf", cspec.name)
 
 
 @pytest.mark.requires_executables(*args)
@@ -291,19 +266,19 @@ def test_relative_rpaths_install_default_layout(mirror_dir):
     gspec, cspec = Spec("garply").concretized(), Spec("corge").concretized()
 
     # Install buildcache created with relativized rpaths
-    buildcache_cmd("install", "-auf", cspec.name)
+    buildcache_cmd("install", "-uf", cspec.name)
 
     # This gives warning that spec is already installed
-    buildcache_cmd("install", "-auf", cspec.name)
+    buildcache_cmd("install", "-uf", cspec.name)
 
     # Uninstall the package and deps
     uninstall_cmd("-y", "--dependents", gspec.name)
 
     # Install build cache
-    buildcache_cmd("install", "-auf", cspec.name)
+    buildcache_cmd("install", "-uf", cspec.name)
 
     # Test overwrite install
-    buildcache_cmd("install", "-auf", cspec.name)
+    buildcache_cmd("install", "-uf", cspec.name)
 
 
 @pytest.mark.requires_executables(*args)
@@ -320,7 +295,7 @@ def test_relative_rpaths_install_nondefault(mirror_dir):
     cspec = Spec("corge").concretized()
 
     # Test install in non-default install path scheme and relative path
-    buildcache_cmd("install", "-auf", cspec.name)
+    buildcache_cmd("install", "-uf", cspec.name)
 
 
 def test_push_and_fetch_keys(mock_gnupghome):
@@ -401,7 +376,7 @@ def test_spec_needs_rebuild(monkeypatch, tmpdir):
     install_cmd(s.name)
 
     # Put installed package in the buildcache
-    buildcache_cmd("push", "-u", "-a", "-d", mirror_dir.strpath, s.name)
+    buildcache_cmd("push", "-u", "-a", mirror_dir.strpath, s.name)
 
     rebuild = bindist.needs_rebuild(s, mirror_url)
 
@@ -430,8 +405,8 @@ def test_generate_index_missing(monkeypatch, tmpdir, mutable_config):
     install_cmd("--no-cache", s.name)
 
     # Create a buildcache and update index
-    buildcache_cmd("push", "-uad", mirror_dir.strpath, s.name)
-    buildcache_cmd("update-index", "-d", mirror_dir.strpath)
+    buildcache_cmd("push", "-ua", mirror_dir.strpath, s.name)
+    buildcache_cmd("update-index", mirror_dir.strpath)
 
     # Check package and dependency in buildcache
     cache_list = buildcache_cmd("list", "--allarch")
@@ -443,7 +418,7 @@ def test_generate_index_missing(monkeypatch, tmpdir, mutable_config):
     os.remove(*libelf_files)
 
     # Update index
-    buildcache_cmd("update-index", "-d", mirror_dir.strpath)
+    buildcache_cmd("update-index", mirror_dir.strpath)
 
     with spack.config.override("config:binary_index_ttl", 0):
         # Check dependency not in buildcache
@@ -519,10 +494,10 @@ def test_update_sbang(tmpdir, test_mirror):
     install_cmd("--no-cache", old_spec.name)
 
     # Create a buildcache with the installed spec.
-    buildcache_cmd("push", "-u", "-a", "-d", mirror_dir, old_spec_hash_str)
+    buildcache_cmd("push", "-u", "-a", mirror_dir, old_spec_hash_str)
 
     # Need to force an update of the buildcache index
-    buildcache_cmd("update-index", "-d", mirror_dir)
+    buildcache_cmd("update-index", mirror_dir)
 
     # Uninstall the original package.
     uninstall_cmd("-y", old_spec_hash_str)
@@ -538,7 +513,7 @@ def test_update_sbang(tmpdir, test_mirror):
         assert new_spec.dag_hash() == old_spec.dag_hash()
 
         # Install package from buildcache
-        buildcache_cmd("install", "-a", "-u", "-f", new_spec.name)
+        buildcache_cmd("install", "-u", "-f", new_spec.name)
 
         # Continue blowing away caches
         bindist.clear_spec_cache()
