@@ -29,4 +29,4 @@ class Half(Package):
         mkdirp(prefix.include)
         install_tree("include", prefix.include)
         mkdirp(prefix.include.half)
-        install_tree("include", prefix.include.half)
+        symlink("../half.hpp", join_path(self.prefix.include.half, "half.hpp"))
