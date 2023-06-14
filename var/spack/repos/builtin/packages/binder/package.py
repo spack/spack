@@ -8,9 +8,12 @@ from spack.package import *
 
 class Binder(CMakePackage):
     """
-    Binder is a tool for automatic generation of Python bindings for C++11 projects using Pybind11 and Clang LibTooling libraries. 
-    That is, Binder, takes a C++ project and compiles it into objects and functions that are all usable within Python. 
-    Binder is different from prior tools in that it handles special features new in C++11.
+    Binder is a tool for automatic generation of Python bindings
+    for C++11 projects using Pybind11 and Clang LibTooling libraries.
+    That is, Binder, takes a C++ project and compiles it into objects
+    and functions that are all usable within Python.
+    Binder is different from prior tools in that it handles special
+    features new in C++11.
     """
 
     homepage = "https://github.com/RosettaCommons/binder"
@@ -34,10 +37,11 @@ class Binder(CMakePackage):
         options = []
 
         options.extend(
-            ["-DLLVM_DIR:FILEPATH={0}".format(llvm_dir), 
-             "-DClang_DIR:FILEPATH={0}".format(clang_dir),
-             "-DCMAKE_CXX_FLAGS=-Wl,--verbose",
-             "-DBINDER_ENABLE_TEST=OFF"
+            [
+                "-DLLVM_DIR:FILEPATH={0}".format(llvm_dir),
+                "-DClang_DIR:FILEPATH={0}".format(clang_dir),
+                "-DCMAKE_CXX_FLAGS=-Wl,--verbose",
+                "-DBINDER_ENABLE_TEST=OFF"
             ]
         )
         return options
@@ -46,4 +50,6 @@ class Binder(CMakePackage):
 
         llvm_dir = self.spec["llvm"].prefix
         self.spec.clang_include_dirs = llvm_dir.include
-        self.spec.LibClang_include_dir = llvm_dir.lib.clang.join(format(self.spec["llvm"].version)).include
+        self.spec.LibClang_include_dir = llvm_dir.lib.clang.join(
+            format(self.spec["llvm"].version)
+        ).include
