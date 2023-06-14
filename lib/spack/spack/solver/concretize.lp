@@ -82,11 +82,6 @@ facts(Package, version_declared(Version, Weight)) :- facts(Package, version_decl
 % versions are declared w/priority -- declared with priority implies declared
 facts(Package, version_declared(Version)) :- facts(Package, version_declared(Version, _)).
 
-% a spec with a git hash version is equivalent to one with the same matched version
-version_satisfies(Package, Constraint, HashVersion) :- version_satisfies(Package, Constraint, EquivalentVersion),
-  version_equivalent(Package, HashVersion, EquivalentVersion).
-#defined version_equivalent/3.
-
 % If something is a package, it has only one version and that must be a
 % declared version.
 % We allow clingo to choose any version(s), and infer an error if there
