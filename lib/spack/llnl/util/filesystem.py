@@ -758,8 +758,8 @@ def copy_tree(
         IOError: if *src* does not match any files or directories
         ValueError: if *src* is a parent directory of *dest*
     """
-    if allow_broken_symlinks and sys.platform == 'win32':
-        raise llnl.util.symlink.SymlinkError('Cannot allow broken symlinks on Windows!')
+    if allow_broken_symlinks and sys.platform == "win32":
+        raise llnl.util.symlink.SymlinkError("Cannot allow broken symlinks on Windows!")
     if _permissions:
         tty.debug("Installing {0} to {1}".format(src, dest))
     else:
@@ -862,8 +862,12 @@ def install_tree(src, dest, symlinks=True, ignore=None, allow_broken_symlinks=Fa
         ValueError: if *src* is a parent directory of *dest*
     """
     copy_tree(
-        src, dest, symlinks=symlinks, allow_broken_symlinks=allow_broken_symlinks,
-        ignore=ignore, _permissions=True
+        src,
+        dest,
+        symlinks=symlinks,
+        allow_broken_symlinks=allow_broken_symlinks,
+        ignore=ignore,
+        _permissions=True,
     )
 
 
