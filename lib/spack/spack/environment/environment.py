@@ -1549,12 +1549,13 @@ class Environment:
             for h in self.specs_by_hash:
                 current_spec, computed_spec = self.specs_by_hash[h], by_hash[h]
                 for node in computed_spec.traverse():
-                    test_deps = node.dependencies(deptype="test")
-                    for test_dependency in test_deps:
+                    test_edges = node.edges_to_dependencies(deptype="test")
+                    for current_edge in test_edges:
+                        test_dependency = current_edge.spec
                         if test_dependency in current_spec[node.name]:
                             continue
                         current_spec[node.name].add_dependency_edge(
-                            test_dependency.copy(), deptypes="test", virtuals=()
+                            test_dependency.copy(), deptypes="test", virtuals=current_edge.virtuals
                         )
 
         results = [
