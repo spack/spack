@@ -4804,9 +4804,11 @@ def merge_abstract_anonymous_specs(*abstract_specs: Spec):
     return merged_spec
 
 
-def _reconstruct_virtuals_on_edges(spec):
-    """Reconstruct virtuals on edges. Used to read from old DB
-    and reindex.
+def reconstruct_virtuals_on_edges(spec):
+    """Reconstruct virtuals on edges. Used to read from old DB and reindex.
+
+    Args:
+        spec: spec on which we want to reconstruct virtuals
     """
     # Collect all possible virtuals
     possible_virtuals = set()
@@ -4983,7 +4985,7 @@ class SpecfileV1(SpecfileReaderBase):
             for dname, _, dtypes, _, virtuals in cls.dependencies_from_node_dict(data):
                 deps[name]._add_dependency(deps[dname], deptypes=dtypes, virtuals=virtuals)
 
-        _reconstruct_virtuals_on_edges(result)
+        reconstruct_virtuals_on_edges(result)
         return result
 
     @classmethod
@@ -5025,7 +5027,7 @@ class SpecfileV2(SpecfileReaderBase):
     @classmethod
     def load(cls, data):
         result = cls._load(data)
-        _reconstruct_virtuals_on_edges(result)
+        reconstruct_virtuals_on_edges(result)
         return result
 
     @classmethod
