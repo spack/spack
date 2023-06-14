@@ -18,7 +18,6 @@ class PyUmiTools(PythonPackage):
     version("0.5.4", sha256="a03e6babf188d0618a63f083b4da18120b9e8b4d473af71b585dba7de347e962")
     version("0.5.3", sha256="d599f15c48c96a96ba667db1f364ebfed4ba733dd30469f9656c1717282d2ecb")
 
-    depends_on("python@2.7:")
     depends_on("py-setuptools@1.1:", type="build")
     depends_on("py-numpy@1.7:", type=("build", "run"))
     depends_on("py-pandas@0.12:", type=("build", "run"))
