@@ -15,6 +15,7 @@ class Ucc(AutotoolsPackage, CudaPackage):
 
     # maintainers("github_user1", "github_user2")
 
+    version("1.2.0", sha256="c1552797600835c0cf401b82dc89c4d27d5717f4fb805d41daca8e19f65e509d")
     version("1.1.0", sha256="74c8ba75037b5bd88cb703e8c8ae55639af3fecfd4428912a433c010c97b4df7")
     version("1.0.0", sha256="d3b4aa7004bf339d35952a1699a6e408064ba578bdc93861f5f07527ad0a5e8c")
 
