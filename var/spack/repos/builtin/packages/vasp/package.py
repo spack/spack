@@ -48,7 +48,6 @@ class Vasp(MakefilePackage):
     variant("cuda", default=False, description="Enables running on Nvidia GPUs")
     variant("fftlib", default=False, description="Enables fftlib build")
     with when("+fftlib"):
-        conflicts("^mkl", msg="fftlib is not supported for Intel MKL")
         conflicts("@:6.1.1", msg="fftlib support started from 6.2.0")
         conflicts("~openmp", msg="fftlib is intended to be used with openmp")
 
