@@ -13,8 +13,6 @@ class Ucc(AutotoolsPackage, CudaPackage):
     homepage = "https://openucx.github.io/ucc/"
     url = "https://github.com/openucx/ucc/archive/refs/tags/v1.1.0.tar.gz"
 
-    # FIXME: Add a list of GitHub accounts to
-    # notify when the package is updated.
     # maintainers("github_user1", "github_user2")
 
     version("1.1.0", sha256="74c8ba75037b5bd88cb703e8c8ae55639af3fecfd4428912a433c010c97b4df7")
