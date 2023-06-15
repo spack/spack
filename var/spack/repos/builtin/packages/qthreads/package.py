@@ -29,24 +29,24 @@ class Qthreads(AutotoolsPackage):
 
     homepage = "http://www.cs.sandia.gov/qthreads/"
 
-    url = "https://github.com/Qthreads/qthreads/releases/download/1.18/qthread-1.18.tar.gz"
+    def url_for_version(self, version):
+        # if version is greater than 1.17, use new default
+        if version >= Version("1.17"):
+            url_fmt = "https://github.com/Qthreads/qthreads/releases/download/{0}/qthread-{0}.tar.gz"
+        # otherwise, use .bz2 file format
+        else:
+            url_fmt = "https://github.com/Qthreads/qthreads/releases/download/{0}/qthread-{0}.tar.bz2"
+        return url_fmt.format(version)
+
     test_requires_compiler = True
     test_base_path = "test/basics/"
     test_list = ["hello_world_multi", "hello_world"]
 
     tags = ["e4s"]
 
-    def url_for_version(self, version):
-        # if version is greater than 1.17, use new default
-        if version >= Version("1.17"):
-            return super(Qthreads, self).url_for_version(version)
-        # otherwise, use .bz2 format
-        url_fmt = "https://github.com/Qthreads/qthreads/releases/download/{0}/qthread-{0}.tar.bz2"
-        return url_fmt.format(version)
-
     version("1.18", sha256="d1a808b35d3af0012194a8f3afe72241dfcffca7e88a7104fa02a46c73022880")
     version("1.17", sha256="b17efb3c94c2027b8edd759584f4b1fa1e2725f1878a7a098d7bc58ad38d82f1")
-    version("1.16", sha256="0a95e20b08cb486de6c33bff16590f41e444ca64ab738aee697ef982fbb021d8")
+    version("1.16", sha256="923d58f3ecf7d838a18c3616948ea32ddace7196c6805518d052c51a27219970")
     version("1.15", sha256="3ac2dc24debff004a2998933de5724b1e14e1ae262fa9942acbb01f77819a23b")
     version("1.14", sha256="16f15e5b2e35b6329a857d24c283a1e43cd49921ee49a1446d4f31bf9c6f5cf9")
     version("1.12", sha256="2c13a5f6f45bc2f22038d272be2e748e027649d3343a9f824da9e86a88b594c9")
