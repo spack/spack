@@ -973,54 +973,23 @@ class Unparser:
         with self.delimit("(", ")"):
             comma = False
 
-            # starred arguments last in Python 3.5+, for consistency w/earlier versions
-            star_and_kwargs = []
-            move_stars_last = sys.version_info[:2] >= (3, 5)
+            # NOTE: this code is no longer compatible with python versions < 3.5
+            # If you run on python < 3.5, you will see instability in package hashes
+            # across python versions
 
             for e in args:
-                if move_stars_last and isinstance(e, ast.Starred):
-                    star_and_kwargs.append(e)
+                if comma:
+                    self.write(", ")
                 else:
-                    if comma:
-                        self.write(", ")
-                    else:
-                        comma = True
-                    self.dispatch(e)
+                    comma = True
+                self.dispatch(e)
 
             for e in node.keywords:
-                # starting from Python 3.5 this denotes a kwargs part of the invocation
-                if e.arg is None and move_stars_last:
-                    star_and_kwargs.append(e)
+                if comma:
+                    self.write(", ")
                 else:
-                    if comma:
-                        self.write(", ")
-                    else:
-                        comma = True
-                    self.dispatch(e)
-
-            if move_stars_last:
-                for e in star_and_kwargs:
-                    if comma:
-                        self.write(", ")
-                    else:
-                        comma = True
-                    self.dispatch(e)
-
-            if sys.version_info[:2] < (3, 5):
-                if node.starargs:
-                    if comma:
-                        self.write(", ")
-                    else:
-                        comma = True
-                    self.write("*")
-                    self.dispatch(node.starargs)
-                if node.kwargs:
-                    if comma:
-                        self.write(", ")
-                    else:
-                        comma = True
-                    self.write("**")
-                    self.dispatch(node.kwargs)
+                    comma = True
+                self.dispatch(e)
 
     def visit_Subscript(self, node):
         self.set_precedence(_Precedence.ATOM, node.value)
