@@ -127,7 +127,7 @@ class Ucx(AutotoolsPackage, CudaPackage):
     depends_on("knem", when="+knem")
     depends_on("libfuse@3:", when="+vfs")
     depends_on("maven", when="+java")
-    depends_on("numactl", when="+numa")
+    depends_on("numactl")
     depends_on("pkgconfig", type="build")
     depends_on("rdma-core", when="+rdmacm")
     depends_on("rdma-core", when="+verbs")
