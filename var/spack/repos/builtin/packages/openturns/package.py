@@ -26,7 +26,7 @@ class Openturns(CMakePackage):
     version("1.18", sha256="1840d3fd8b38fd5967b1fa04e49d8f760c2c497400430e97623595ca48754ae0")
 
     variant("python", default=True, description="Build Python bindings")
-    variant("libxml2", description="Use LibXML2 for XML support")
+    variant("libxml2", default=False, description="Use LibXML2 for XML support")
 
     extends("python", when="+python")
 
