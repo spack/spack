@@ -23,10 +23,13 @@ class Mmseqs2(CMakePackage):
     depends_on("zstd")
     depends_on("mpi", when="+mpi")
 
-    patch("Debug.h.patch", level=0, when="%gcc@13:")
-    patch("Parameters.h.patch", level=0, when="%gcc@13:")
-    patch("Util.h.patch", level=0, when="%gcc@13:")
-    patch("Indexer.h.patch", level=0, when="%gcc@13:")
+    # patch to support building with gcc@13:
+    patch(
+        "https://github.com/soedinglab/MMseqs2/commit/3e43617.patch?full_index=1",
+        sha256="673737ac545260e7800ca191c6eee14feef3318d9cfa5005db32bd2ab3c006fe",
+        when="%gcc@13:",
+        level=1,
+    )
 
     # apple-clang will build with +openmp with llvm-openmp as a dependency
     # however when running with real data, it threw segmentation faults
