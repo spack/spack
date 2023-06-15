@@ -36,7 +36,7 @@ class Qthreads(AutotoolsPackage):
 
     tags = ["e4s"]
 
-    version("1.18", sha256="d1a808b35d3af0012194a8f3afe72241dfcffca7e88a7104fa02a46c73022880") 
+    version("1.18", sha256="d1a808b35d3af0012194a8f3afe72241dfcffca7e88a7104fa02a46c73022880")
     version("1.17", sha256="b17efb3c94c2027b8edd759584f4b1fa1e2725f1878a7a098d7bc58ad38d82f1")
     version("1.16", sha256="0a95e20b08cb486de6c33bff16590f41e444ca64ab738aee697ef982fbb021d8")
     version("1.15", sha256="3ac2dc24debff004a2998933de5724b1e14e1ae262fa9942acbb01f77819a23b")
