@@ -32,10 +32,14 @@ class Qthreads(AutotoolsPackage):
     def url_for_version(self, version):
         # if version is greater than 1.17, use new default
         if version >= Version("1.17"):
-            url_fmt = "https://github.com/Qthreads/qthreads/releases/download/{0}/qthread-{0}.tar.gz"
+            url_fmt = (
+                "https://github.com/Qthreads/qthreads/releases/download/{0}/qthread-{0}.tar.gz"
+            )
         # otherwise, use .bz2 file format
         else:
-            url_fmt = "https://github.com/Qthreads/qthreads/releases/download/{0}/qthread-{0}.tar.bz2"
+            url_fmt = (
+                "https://github.com/Qthreads/qthreads/releases/download/{0}/qthread-{0}.tar.bz2"
+            )
         return url_fmt.format(version)
 
     test_requires_compiler = True
