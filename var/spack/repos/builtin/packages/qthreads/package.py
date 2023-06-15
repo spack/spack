@@ -35,7 +35,7 @@ class Qthreads(AutotoolsPackage):
     test_list = ["hello_world_multi", "hello_world"]
 
     tags = ["e4s"]
-    
+
     def url_for_version(self, version):
         # if version is greater than 1.17, use new default
         if version >= Version("1.17"):
