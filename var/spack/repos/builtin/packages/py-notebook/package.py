@@ -76,4 +76,4 @@ class PyNotebook(PythonPackage):
     depends_on("py-terminado@0.8.1:", when="@5.7.0:", type=("build", "run"))
     depends_on("py-terminado@0.3.3:", when="@:5.7.0", type=("build", "run"))
     depends_on("py-prometheus-client", when="@5.7.0:", type=("build", "run"))
-    depends_on('py-nbclassic@0.4.7:', when='@6.5:', type=('build', "run"))
+    depends_on("py-nbclassic@0.4.7:", when="@6.5:", type=("build", "run"))
