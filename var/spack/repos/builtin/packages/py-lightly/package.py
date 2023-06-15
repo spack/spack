@@ -40,7 +40,6 @@ class PyLightly(PythonPackage):
 
     # requirements/openapi.txt
     depends_on("py-python-dateutil@2.5.3:", when="@1.4.8:", type=("build", "run"))
-    depends_on("py-setuptools@21:", when="@1.4.8:", type=("build", "run"))
     depends_on("py-urllib3@1.25.3:", when="@1.4.8:", type=("build", "run"))
     depends_on("py-pydantic@1.10.5:1", when="@1.4.8:", type=("build", "run"))
     depends_on("py-aenum@3.1.11:", when="@1.4.8:", type=("build", "run"))
@@ -56,4 +55,5 @@ class PyLightly(PythonPackage):
     depends_on("py-torch+distributed", when="@:1.4.4", type=("build", "run"))
 
     # Historical dependencies
+    depends_on("py-setuptools@21:", when="@1.4.8", type=("build", "run"))
     depends_on("py-setuptools@21:65.5.1", when="@:1.4.1", type=("build", "run"))
