@@ -66,7 +66,7 @@ class Qthreads(AutotoolsPackage):
 
     depends_on("hwloc@1.0:1", when="@:1.15 +hwloc")
     depends_on("hwloc@1.5:2", when="@1.16: +hwloc")
-    
+
     def url_for_version(self, version):
         # if version is greater than 1.17, use new default
         if version >= Version("1.17"):
