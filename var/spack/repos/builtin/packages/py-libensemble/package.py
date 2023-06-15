@@ -69,28 +69,24 @@ class PyLibensemble(PythonPackage):
         install test subdirectory for use during `spack test run`."""
         self.cache_extra_test_sources(join_path("examples", "calling_scripts", "regression_tests"))
 
-    def run_tutorial_tests(self, exe):
-        """Run example stand alone test"""
+    def run_tutorial_script(self, script):
+        """run the tutorial example regression test"""
 
-        test_dir = join_path(
-            self.test_suite.current_test_cache_dir,
-            "examples",
-            "calling_scripts",
-            "regression_tests",
+        exe = (
+            self.test_suite.current_test_cache_dir.examples.calling_scripts.regression_tests.join(
+                script
+            )
         )
+        if not os.path.isfile(exe):
+            raise SkipTest(f"{script} is missing")
 
-        if not os.path.isfile(join_path(test_dir, exe)):
-            print("SKIPPED: {0} test does not exist".format(exe))
-            return
+        python = self.spec["python"].command
+        python(exe, "--comms", "local", "--nworkers", "2")
 
-        self.run_test(
-            self.spec["python"].command.path,
-            options=[exe, "--comms", "local", "--nworkers", "2"],
-            purpose="test: run {0} example".format(exe),
-            work_dir=test_dir,
-        )
+    def test_uniform_sampling(self):
+        """run test_uniform_sampling.py"""
+        self.run_tutorial_script("test_uniform_sampling.py")
 
-    def test(self):
-        super(__class__, self).test()
-        for tutorial in ["test_uniform_sampling.py", "test_1d_sampling.py"]:
-            self.run_tutorial_tests(tutorial)
+    def test_1d_sampling(self):
+        """run test_1d_sampling.py"""
+        self.run_tutorial_script("test_1d_sampling.py")
