@@ -27,12 +27,7 @@ class Demuxlet(AutotoolsPackage):
     def patch(self):
         filter_file("-I ../../htslib/htslib", "", "Makefile.am", string=True)
         filter_file("-I ../htslib/", "", "Makefile.am", string=True)
-        filter_file(
-            "../htslib/libhts.a",
-            join_path(self.spec["htslib"].prefix.lib, "libhts.a"),
-            "Makefile.am",
-            string=True,
-        )
+        filter_file("../htslib/libhts.a", "-lhts", "Makefile.am", string=True)
         if self.spec.satisfies("^htslib+libdeflate"):
             filter_file("-lcrypto", "-lcrypto -ldeflate", "Makefile.am", string=True)
 
