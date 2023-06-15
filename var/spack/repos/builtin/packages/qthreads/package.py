@@ -29,19 +29,6 @@ class Qthreads(AutotoolsPackage):
 
     homepage = "http://www.cs.sandia.gov/qthreads/"
 
-    def url_for_version(self, version):
-        # if version is greater than 1.17, use new default
-        if version >= Version("1.17"):
-            url_fmt = (
-                "https://github.com/Qthreads/qthreads/releases/download/{0}/qthread-{0}.tar.gz"
-            )
-        # otherwise, use .bz2 file format
-        else:
-            url_fmt = (
-                "https://github.com/Qthreads/qthreads/releases/download/{0}/qthread-{0}.tar.bz2"
-            )
-        return url_fmt.format(version)
-
     test_requires_compiler = True
     test_base_path = "test/basics/"
     test_list = ["hello_world_multi", "hello_world"]
@@ -79,6 +66,19 @@ class Qthreads(AutotoolsPackage):
 
     depends_on("hwloc@1.0:1", when="@:1.15 +hwloc")
     depends_on("hwloc@1.5:2", when="@1.16: +hwloc")
+    
+    def url_for_version(self, version):
+        # if version is greater than 1.17, use new default
+        if version >= Version("1.17"):
+            url_fmt = (
+                "https://github.com/Qthreads/qthreads/releases/download/{0}/qthread-{0}.tar.gz"
+            )
+        # otherwise, use .bz2 file format
+        else:
+            url_fmt = (
+                "https://github.com/Qthreads/qthreads/releases/download/{0}/qthread-{0}.tar.bz2"
+            )
+        return url_fmt.format(version)
 
     def configure_args(self):
         spec = self.spec
