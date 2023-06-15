@@ -300,6 +300,11 @@ attr("depends_on", Package, Provider, Type)
      provider(Provider, Virtual),
      not external(Package).
 
+attr("virtual_on_edge", Package, Provider, Virtual)
+  :- dependency_holds(Package, Virtual, Type),
+     provider(Provider, Virtual),
+     not external(Package).
+
 % dependencies on virtuals also imply that the virtual is a virtual node
 attr("virtual_node", Virtual)
   :- dependency_holds(Package, Virtual, Type),

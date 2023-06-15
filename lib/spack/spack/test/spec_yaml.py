@@ -43,12 +43,6 @@ def check_json_round_trip(spec):
     assert spec.eq_dag(spec_from_json)
 
 
-def test_simple_spec():
-    spec = Spec("mpileaks")
-    check_yaml_round_trip(spec)
-    check_json_round_trip(spec)
-
-
 def test_read_spec_from_signed_json():
     spec_dir = os.path.join(spack.paths.test_path, "data", "mirrors", "signed_json")
     file_name = (
@@ -70,13 +64,6 @@ def test_read_spec_from_signed_json():
         check_spec(s)
 
 
-def test_normal_spec(mock_packages):
-    spec = Spec("mpileaks+debug~opt")
-    spec.normalize()
-    check_yaml_round_trip(spec)
-    check_json_round_trip(spec)
-
-
 @pytest.mark.parametrize(
     "invalid_yaml", ["playing_playlist: {{ action }} playlist {{ playlist_name }}"]
 )
@@ -95,37 +82,28 @@ def test_invalid_json_spec(invalid_json, error_message):
     assert error_message in exc_msg
 
 
-def test_external_spec(config, mock_packages):
-    spec = Spec("externaltool")
-    spec.concretize()
-    check_yaml_round_trip(spec)
-    check_json_round_trip(spec)
-
-    spec = Spec("externaltest")
-    spec.concretize()
-    check_yaml_round_trip(spec)
-    check_json_round_trip(spec)
-
-
-def test_ambiguous_version_spec(mock_packages):
-    spec = Spec("mpileaks@1.0:5.0,6.1,7.3+debug~opt")
-    spec.normalize()
-    check_yaml_round_trip(spec)
-    check_json_round_trip(spec)
-
-
-def test_concrete_spec(config, mock_packages):
-    spec = Spec("mpileaks+debug~opt")
-    spec.concretize()
-    check_yaml_round_trip(spec)
-    check_json_round_trip(spec)
-
-
-def test_yaml_multivalue(config, mock_packages):
-    spec = Spec('multivalue-variant foo="bar,baz"')
-    spec.concretize()
-    check_yaml_round_trip(spec)
-    check_json_round_trip(spec)
+@pytest.mark.parametrize(
+    "abstract_spec",
+    [
+        # Externals
+        "externaltool",
+        "externaltest",
+        # Ambiguous version spec
+        "mpileaks@1.0:5.0,6.1,7.3+debug~opt",
+        # Variants
+        "mpileaks+debug~opt",
+        'multivalue-variant foo="bar,baz"',
+        # Virtuals on edges
+        "callpath",
+        "mpileaks",
+    ],
+)
+def test_roundtrip_concrete_specs(abstract_spec, default_mock_concretization):
+    check_yaml_round_trip(Spec(abstract_spec))
+    check_json_round_trip(Spec(abstract_spec))
+    concrete_spec = default_mock_concretization(abstract_spec)
+    check_yaml_round_trip(concrete_spec)
+    check_json_round_trip(concrete_spec)
 
 
 def test_yaml_subdag(config, mock_packages):
@@ -506,6 +484,8 @@ ordered_spec = collections.OrderedDict(
         ("specfiles/hdf5.v017.json.gz", "xqh5iyjjtrp2jw632cchacn3l7vqzf3m", spack.spec.SpecfileV2),
         # Use "full hash" everywhere, see https://github.com/spack/spack/pull/28504
         ("specfiles/hdf5.v019.json.gz", "iulacrbz7o5v5sbj7njbkyank3juh6d3", spack.spec.SpecfileV3),
+        # Add properties on edges, see https://github.com/spack/spack/pull/34821
+        ("specfiles/hdf5.v020.json.gz", "vlirlcgazhvsvtundz4kug75xkkqqgou", spack.spec.SpecfileV4),
     ],
 )
 def test_load_json_specfiles(specfile, expected_hash, reader_cls):

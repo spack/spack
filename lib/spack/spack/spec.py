@@ -170,7 +170,7 @@ CLEARSIGN_FILE_REGEX = re.compile(
 )
 
 #: specfile format version. Must increase monotonically
-SPECFILE_FORMAT_VERSION = 3
+SPECFILE_FORMAT_VERSION = 4
 
 
 def colorize_spec(spec):
@@ -714,47 +714,81 @@ class DependencySpec:
         parent: starting node of the edge
         spec: ending node of the edge.
         deptypes: list of strings, representing dependency relationships.
+        virtuals: virtual packages provided from child to parent node.
     """
 
-    __slots__ = "parent", "spec", "deptypes"
+    __slots__ = "parent", "spec", "parameters"
 
-    def __init__(self, parent: "Spec", spec: "Spec", *, deptypes: dp.DependencyArgument):
+    def __init__(
+        self,
+        parent: "Spec",
+        spec: "Spec",
+        *,
+        deptypes: dp.DependencyArgument,
+        virtuals: Tuple[str, ...],
+    ):
         self.parent = parent
         self.spec = spec
-        self.deptypes = dp.canonical_deptype(deptypes)
+        self.parameters = {
+            "deptypes": dp.canonical_deptype(deptypes),
+            "virtuals": tuple(sorted(set(virtuals))),
+        }
 
-    def update_deptypes(self, deptypes: dp.DependencyArgument) -> bool:
-        deptypes = set(deptypes)
-        deptypes.update(self.deptypes)
-        deptypes = tuple(sorted(deptypes))
-        changed = self.deptypes != deptypes
+    @property
+    def deptypes(self) -> Tuple[str, ...]:
+        return self.parameters["deptypes"]
 
-        self.deptypes = deptypes
-        return changed
+    @property
+    def virtuals(self) -> Tuple[str, ...]:
+        return self.parameters["virtuals"]
+
+    def _update_edge_multivalued_property(
+        self, property_name: str, value: Tuple[str, ...]
+    ) -> bool:
+        current = self.parameters[property_name]
+        update = set(current) | set(value)
+        update = tuple(sorted(update))
+        changed = current != update
+
+        if not changed:
+            return False
+
+        self.parameters[property_name] = update
+        return True
+
+    def update_deptypes(self, deptypes: Tuple[str, ...]) -> bool:
+        """Update the current dependency types"""
+        return self._update_edge_multivalued_property("deptypes", deptypes)
+
+    def update_virtuals(self, virtuals: Tuple[str, ...]) -> bool:
+        """Update the list of provided virtuals"""
+        return self._update_edge_multivalued_property("virtuals", virtuals)
 
     def copy(self) -> "DependencySpec":
-        return DependencySpec(self.parent, self.spec, deptypes=self.deptypes)
-
-    def add_type(self, type: dp.DependencyArgument):
-        self.deptypes = dp.canonical_deptype(self.deptypes + dp.canonical_deptype(type))
+        """Return a copy of this edge"""
+        return DependencySpec(
+            self.parent, self.spec, deptypes=self.deptypes, virtuals=self.virtuals
+        )
 
     def _cmp_iter(self):
         yield self.parent.name if self.parent else None
         yield self.spec.name if self.spec else None
         yield self.deptypes
+        yield self.virtuals
 
     def __str__(self) -> str:
-        return "%s %s--> %s" % (
-            self.parent.name if self.parent else None,
-            self.deptypes,
-            self.spec.name if self.spec else None,
-        )
+        parent = self.parent.name if self.parent else None
+        child = self.spec.name if self.spec else None
+        return f"{parent} {self.deptypes}[virtuals={','.join(self.virtuals)}] --> {child}"
 
-    def canonical(self) -> Tuple[str, str, Tuple[str, ...]]:
-        return self.parent.dag_hash(), self.spec.dag_hash(), self.deptypes
+    def canonical(self) -> Tuple[str, str, Tuple[str, ...], Tuple[str, ...]]:
+        return self.parent.dag_hash(), self.spec.dag_hash(), self.deptypes, self.virtuals
 
     def flip(self) -> "DependencySpec":
-        return DependencySpec(parent=self.spec, spec=self.parent, deptypes=self.deptypes)
+        """Flip the dependency, and drop virtual information"""
+        return DependencySpec(
+            parent=self.spec, spec=self.parent, deptypes=self.deptypes, virtuals=()
+        )
 
 
 class CompilerFlag(str):
@@ -1575,10 +1609,12 @@ class Spec(object):
             )
         self.compiler = compiler
 
-    def _add_dependency(self, spec: "Spec", *, deptypes: dp.DependencyArgument):
+    def _add_dependency(
+        self, spec: "Spec", *, deptypes: dp.DependencyArgument, virtuals: Tuple[str, ...]
+    ):
         """Called by the parser to add another spec as a dependency."""
         if spec.name not in self._dependencies or not spec.name:
-            self.add_dependency_edge(spec, deptypes=deptypes)
+            self.add_dependency_edge(spec, deptypes=deptypes, virtuals=virtuals)
             return
 
         # Keep the intersection of constraints when a dependency is added
@@ -1596,34 +1632,58 @@ class Spec(object):
                 "Cannot depend on incompatible specs '%s' and '%s'" % (dspec.spec, spec)
             )
 
-    def add_dependency_edge(self, dependency_spec: "Spec", *, deptypes: dp.DependencyArgument):
+    def add_dependency_edge(
+        self,
+        dependency_spec: "Spec",
+        *,
+        deptypes: dp.DependencyArgument,
+        virtuals: Tuple[str, ...],
+    ):
         """Add a dependency edge to this spec.
 
         Args:
             dependency_spec: spec of the dependency
             deptypes: dependency types for this edge
+            virtuals: virtuals provided by this edge
         """
         deptypes = dp.canonical_deptype(deptypes)
 
         # Check if we need to update edges that are already present
         selected = self._dependencies.select(child=dependency_spec.name)
         for edge in selected:
+            has_errors, details = False, []
+            msg = f"cannot update the edge from {edge.parent.name} to {edge.spec.name}"
             if any(d in edge.deptypes for d in deptypes):
-                msg = (
-                    'cannot add a dependency on "{0.spec}" of {1} type '
-                    'when the "{0.parent}" has the edge {0!s} already'
+                has_errors = True
+                details.append(
+                    (
+                        f"{edge.parent.name} has already an edge matching any"
+                        f" of these types {str(deptypes)}"
+                    )
                 )
-                raise spack.error.SpecError(msg.format(edge, deptypes))
+
+            if any(v in edge.virtuals for v in virtuals):
+                has_errors = True
+                details.append(
+                    (
+                        f"{edge.parent.name} has already an edge matching any"
+                        f" of these virtuals {str(virtuals)}"
+                    )
+                )
+
+            if has_errors:
+                raise spack.error.SpecError(msg, "\n".join(details))
 
         for edge in selected:
             if id(dependency_spec) == id(edge.spec):
                 # If we are here, it means the edge object was previously added to
                 # both the parent and the child. When we update this object they'll
                 # both see the deptype modification.
-                edge.add_type(deptypes)
+                edge.update_deptypes(deptypes=deptypes)
+                edge.update_virtuals(virtuals=virtuals)
                 return
 
-        edge = DependencySpec(self, dependency_spec, deptypes=deptypes)
+        edge = DependencySpec(self, dependency_spec, deptypes=deptypes, virtuals=virtuals)
         self._dependencies.add(edge)
         dependency_spec._dependents.add(edge)
 
@@ -1896,12 +1956,12 @@ class Spec(object):
         for node in self.traverse(root=False):
             if node.abstract_hash:
                 new = node._lookup_hash()
-                spec._add_dependency(new, deptypes=())
+                spec._add_dependency(new, deptypes=(), virtuals=())
 
         # reattach nodes that were not otherwise satisfied by new dependencies
         for node in self.traverse(root=False):
             if not any(n._satisfies(node) for n in spec.traverse()):
-                spec._add_dependency(node.copy(), deptypes=())
+                spec._add_dependency(node.copy(), deptypes=(), virtuals=())
 
         return spec
 
@@ -2036,8 +2096,14 @@ class Spec(object):
                 name_tuple = ("name", name)
                 for dspec in edges_for_name:
                     hash_tuple = (hash.name, dspec.spec._cached_hash(hash))
-                    type_tuple = ("type", sorted(str(s) for s in dspec.deptypes))
-                    deps_list.append(syaml.syaml_dict([name_tuple, hash_tuple, type_tuple]))
+                    parameters_tuple = (
+                        "parameters",
+                        syaml.syaml_dict(
+                            (key, dspec.parameters[key]) for key in sorted(dspec.parameters)
+                        ),
+                    )
+                    ordered_entries = [name_tuple, hash_tuple, parameters_tuple]
+                    deps_list.append(syaml.syaml_dict(ordered_entries))
             d["dependencies"] = deps_list
 
         # Name is included in case this is replacing a virtual.
@@ -2361,7 +2427,7 @@ class Spec(object):
                     dag_node, dependency_types = spec_and_dependency_types(s)
 
                 dependency_spec = spec_builder({dag_node: s_dependencies})
-                spec._add_dependency(dependency_spec, deptypes=dependency_types)
+                spec._add_dependency(dependency_spec, deptypes=dependency_types, virtuals=())
 
             return spec
 
@@ -2379,8 +2445,10 @@ class Spec(object):
             spec = SpecfileV1.load(data)
         elif int(data["spec"]["_meta"]["version"]) == 2:
             spec = SpecfileV2.load(data)
-        else:
+        elif int(data["spec"]["_meta"]["version"]) == 3:
             spec = SpecfileV3.load(data)
+        else:
+            spec = SpecfileV4.load(data)
 
         # Any git version should
         for s in spec.traverse():
@@ -2529,6 +2597,7 @@ class Spec(object):
     def _replace_with(self, concrete):
         """Replace this virtual spec with a concrete spec."""
         assert self.virtual
+        virtuals = (self.name,)
         for dep_spec in itertools.chain.from_iterable(self._dependents.values()):
             dependent = dep_spec.parent
             deptypes = dep_spec.deptypes
@@ -2539,7 +2608,11 @@ class Spec(object):
 
             # add the replacement, unless it is already a dep of dependent.
             if concrete.name not in dependent._dependencies:
-                dependent._add_dependency(concrete, deptypes=deptypes)
+                dependent._add_dependency(concrete, deptypes=deptypes, virtuals=virtuals)
+            else:
+                dependent.edges_to_dependencies(name=concrete.name)[0].update_virtuals(
+                    virtuals=virtuals
+                )
 
     def _expand_virtual_packages(self, concretizer):
         """Find virtual packages in this spec, replace them with providers,
@@ -3180,7 +3253,9 @@ class Spec(object):
 
         # If it's a virtual dependency, try to find an existing
         # provider in the spec, and merge that.
+        virtuals = ()
         if spack.repo.path.is_virtual_safe(dep.name):
+            virtuals = (dep.name,)
             visited.add(dep.name)
             provider = self._find_provider(dep, provider_index)
             if provider:
@@ -3236,7 +3311,7 @@ class Spec(object):
         # Add merged spec to my deps and recurse
         spec_dependency = spec_deps[dep.name]
         if dep.name not in self._dependencies:
-            self._add_dependency(spec_dependency, deptypes=dependency.type)
+            self._add_dependency(spec_dependency, deptypes=dependency.type, virtuals=virtuals)
 
         changed |= spec_dependency._normalize_helper(visited, spec_deps, provider_index, tests)
         return changed
@@ -3573,15 +3648,20 @@ class Spec(object):
                 changed |= edges_from_name[0].update_deptypes(
                     other._dependencies[name][0].deptypes
                 )
+                changed |= edges_from_name[0].update_virtuals(
+                    other._dependencies[name][0].virtuals
+                )
 
         # Update with additional constraints from other spec
         # operate on direct dependencies only, because a concrete dep
         # represented by hash may have structure that needs to be preserved
         for name in other.direct_dep_difference(self):
             dep_spec_copy = other._get_dependency(name)
-            dep_copy = dep_spec_copy.spec
-            deptypes = dep_spec_copy.deptypes
-            self._add_dependency(dep_copy.copy(), deptypes=deptypes)
+            self._add_dependency(
+                dep_spec_copy.spec.copy(),
+                deptypes=dep_spec_copy.deptypes,
+                virtuals=dep_spec_copy.virtuals,
+            )
             changed = True
 
         return changed
@@ -3965,7 +4045,7 @@ class Spec(object):
                 new_specs[spid(edge.spec)] = edge.spec.copy(deps=False)
 
             new_specs[spid(edge.parent)].add_dependency_edge(
-                new_specs[spid(edge.spec)], deptypes=edge.deptypes
+                new_specs[spid(edge.spec)], deptypes=edge.deptypes, virtuals=edge.virtuals
             )
 
     def copy(self, deps=True, **kwargs):
@@ -4635,12 +4715,16 @@ class Spec(object):
             if name in self_nodes:
                 for edge in self[name].edges_to_dependencies():
                     dep_name = deps_to_replace.get(edge.spec, edge.spec).name
-                    nodes[name].add_dependency_edge(nodes[dep_name], deptypes=edge.deptypes)
+                    nodes[name].add_dependency_edge(
+                        nodes[dep_name], deptypes=edge.deptypes, virtuals=edge.virtuals
+                    )
                 if any(dep not in self_nodes for dep in self[name]._dependencies):
                     nodes[name].build_spec = self[name].build_spec
             else:
                 for edge in other[name].edges_to_dependencies():
-                    nodes[name].add_dependency_edge(nodes[edge.spec.name], deptypes=edge.deptypes)
+                    nodes[name].add_dependency_edge(
+                        nodes[edge.spec.name], deptypes=edge.deptypes, virtuals=edge.virtuals
+                    )
                 if any(dep not in other_nodes for dep in other[name]._dependencies):
                     nodes[name].build_spec = other[name].build_spec
 
@@ -4730,9 +4814,38 @@ def merge_abstract_anonymous_specs(*abstract_specs: Spec):
         # Update with additional constraints from other spec
         for name in current_spec_constraint.direct_dep_difference(merged_spec):
             edge = next(iter(current_spec_constraint.edges_to_dependencies(name)))
-            merged_spec._add_dependency(edge.spec.copy(), deptypes=edge.deptypes)
+            merged_spec._add_dependency(
+                edge.spec.copy(), deptypes=edge.deptypes, virtuals=edge.virtuals
+            )
 
     return merged_spec
+
+
+def reconstruct_virtuals_on_edges(spec):
+    """Reconstruct virtuals on edges. Used to read from old DB and reindex.
+
+    Args:
+        spec: spec on which we want to reconstruct virtuals
+    """
+    # Collect all possible virtuals
+    possible_virtuals = set()
+    for node in spec.traverse():
+        try:
+            possible_virtuals.update({x for x in node.package.dependencies if Spec(x).virtual})
+        except Exception as e:
+            warnings.warn(f"cannot reconstruct virtual dependencies on package {node.name}: {e}")
+            continue
+
+    # Assume all incoming edges to provider are marked with virtuals=
+    for vspec in possible_virtuals:
+        try:
+            provider = spec[vspec]
+        except KeyError:
+            # Virtual not in the DAG
+            continue
+
+        for edge in provider.edges_from_dependents():
+            edge.update_virtuals([vspec])
 
 
 class SpecfileReaderBase:
@@ -4818,7 +4931,7 @@ class SpecfileReaderBase:
 
         # Pass 0: Determine hash type
         for node in nodes:
-            for _, _, _, dhash_type in cls.dependencies_from_node_dict(node):
+            for _, _, _, dhash_type, _ in cls.dependencies_from_node_dict(node):
                 any_deps = True
                 if dhash_type:
                     hash_type = dhash_type
@@ -4849,8 +4962,10 @@ class SpecfileReaderBase:
         # Pass 2: Finish construction of all DAG edges (including build specs)
         for node_hash, node in hash_dict.items():
             node_spec = node["node_spec"]
-            for _, dhash, dtypes, _ in cls.dependencies_from_node_dict(node):
-                node_spec._add_dependency(hash_dict[dhash]["node_spec"], deptypes=dtypes)
+            for _, dhash, dtypes, _, virtuals in cls.dependencies_from_node_dict(node):
+                node_spec._add_dependency(
+                    hash_dict[dhash]["node_spec"], deptypes=dtypes, virtuals=virtuals
+                )
             if "build_spec" in node.keys():
                 _, bhash, _ = cls.build_spec_from_node_dict(node, hash_type=hash_type)
                 node_spec._build_spec = hash_dict[bhash]["node_spec"]
@@ -4884,9 +4999,10 @@ class SpecfileV1(SpecfileReaderBase):
         for node in nodes:
             # get dependency dict from the node.
             name, data = cls.name_and_data(node)
-            for dname, _, dtypes, _ in cls.dependencies_from_node_dict(data):
-                deps[name]._add_dependency(deps[dname], deptypes=dtypes)
+            for dname, _, dtypes, _, virtuals in cls.dependencies_from_node_dict(data):
+                deps[name]._add_dependency(deps[dname], deptypes=dtypes, virtuals=virtuals)
 
+        reconstruct_virtuals_on_edges(result)
         return result
 
     @classmethod
@@ -4915,18 +5031,20 @@ class SpecfileV1(SpecfileReaderBase):
                     if h.name in elt:
                         dep_hash, deptypes = elt[h.name], elt["type"]
                         hash_type = h.name
+                        virtuals = []
                         break
                 else:  # We never determined a hash type...
                     raise spack.error.SpecError("Couldn't parse dependency spec.")
             else:
                 raise spack.error.SpecError("Couldn't parse dependency types in spec.")
-            yield dep_name, dep_hash, list(deptypes), hash_type
+            yield dep_name, dep_hash, list(deptypes), hash_type, list(virtuals)
 
 
 class SpecfileV2(SpecfileReaderBase):
     @classmethod
     def load(cls, data):
         result = cls._load(data)
+        reconstruct_virtuals_on_edges(result)
         return result
 
     @classmethod
@@ -4960,7 +5078,7 @@ class SpecfileV2(SpecfileReaderBase):
                     raise spack.error.SpecError("Couldn't parse dependency spec.")
             else:
                 raise spack.error.SpecError("Couldn't parse dependency types in spec.")
-            result.append((dep_name, dep_hash, list(deptypes), hash_type))
+            result.append((dep_name, dep_hash, list(deptypes), hash_type, list(virtuals)))
         return result
 
     @classmethod
@@ -4978,6 +5096,20 @@ class SpecfileV2(SpecfileReaderBase):
 
 class SpecfileV3(SpecfileV2):
     pass
+
+
+class SpecfileV4(SpecfileV2):
+    @classmethod
+    def extract_info_from_dep(cls, elt, hash):
+        dep_hash = elt[hash.name]
+        deptypes = elt["parameters"]["deptypes"]
+        hash_type = hash.name
+        virtuals = elt["parameters"]["virtuals"]
+        return dep_hash, deptypes, hash_type, virtuals
+
+    @classmethod
+    def load(cls, data):
+        return cls._load(data)
 
 
 class LazySpecCache(collections.defaultdict):

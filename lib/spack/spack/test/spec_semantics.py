@@ -971,7 +971,7 @@ class TestSpecSemantics(object):
     def test_satisfies_dependencies_ordered(self):
         d = Spec("zmpi ^fake")
         s = Spec("mpileaks")
-        s._add_dependency(d, deptypes=())
+        s._add_dependency(d, deptypes=(), virtuals=())
         assert s.satisfies("mpileaks ^zmpi ^fake")
 
     @pytest.mark.parametrize("transitive", [True, False])
@@ -1018,6 +1018,7 @@ def test_is_extension_after_round_trip_to_dict(config, mock_packages, spec_str):
 
 
 def test_malformed_spec_dict():
+    # FIXME: This test was really testing the specific implementation with an ad-hoc test
     with pytest.raises(SpecError, match="malformed"):
         Spec.from_dict(
             {"spec": {"_meta": {"version": 2}, "nodes": [{"dependencies": {"name": "foo"}}]}}
@@ -1025,6 +1026,7 @@ def test_malformed_spec_dict():
 
 
 def test_spec_dict_hashless_dep():
+    # FIXME: This test was really testing the specific implementation with an ad-hoc test
     with pytest.raises(SpecError, match="Couldn't parse"):
         Spec.from_dict(
             {
@@ -1118,7 +1120,7 @@ def test_concretize_partial_old_dag_hash_spec(mock_packages, config):
 
     # add it to an abstract spec as a dependency
     top = Spec("dt-diamond")
-    top.add_dependency_edge(bottom, deptypes=())
+    top.add_dependency_edge(bottom, deptypes=(), virtuals=())
 
     # concretize with the already-concrete dependency
     top.concretize()
