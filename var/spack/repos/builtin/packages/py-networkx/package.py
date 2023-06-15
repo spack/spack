@@ -28,6 +28,8 @@ class PyNetworkx(PythonPackage):
     version("1.11", sha256="0d0e70e10dfb47601cbb3425a00e03e2a2e97477be6f80638fef91d54dd1e4b8")
     version("1.10", sha256="ced4095ab83b7451cec1172183eff419ed32e21397ea4e1971d92a5808ed6fb8")
 
+    variant("default", default=True, description="Enable installation of default dependencies.")
+
     # variant would be available for earlier versions as well, but then the
     # dependencies increase a lot
     variant(
@@ -41,12 +43,19 @@ class PyNetworkx(PythonPackage):
     depends_on("python@3.7:", when="@2.6:", type=("build", "run"))
     depends_on("py-setuptools", type="build")
 
-    # From requirements/default.txt
-    depends_on("py-numpy@1.20:", when="@3:", type=("build", "run"))
-    depends_on("py-numpy@1.19:", when="@2.8.6:", type=("build", "run"))
-    depends_on("py-scipy@1.8:", when="@2.8.6:", type=("build", "run"))
-    depends_on("py-matplotlib@3.4:", when="@2.8.6:", type=("build", "run"))
-    depends_on("py-pandas@1.3:", when="@2.8.6:", type=("build", "run"))
+    with when("+default"):
+        # From requirements/default.txt
+        depends_on("py-numpy@1.20:", when="@3:", type=("build", "run"))
+        depends_on("py-numpy@1.19:", when="@2.8.6:", type=("build", "run"))
+        depends_on("py-scipy@1.8:", when="@2.8.6:", type=("build", "run"))
+        depends_on("py-matplotlib@3.4:", when="@2.8.6:", type=("build", "run"))
+        depends_on("py-pandas@1.3:", when="@2.8.6:", type=("build", "run"))
+
+        # Historical dependencies
+        depends_on("py-decorator@4.3.0:4", when="@2.5.1:2.5", type=("build", "run"))
+        depends_on("py-decorator@4.3.0:", when="@2.2:2.4", type=("build", "run"))
+        depends_on("py-decorator@4.1.0:", when="@2.0:2.1", type=("build", "run"))
+        depends_on("py-decorator@3.4.0:", when="@:1", type=("build", "run"))
 
     with when("+extra"):
         # From requirements/extra.txt
@@ -59,12 +68,6 @@ class PyNetworkx(PythonPackage):
         depends_on("py-pydot@1.4.2:", when="@2.7:", type=("build", "run"))
         depends_on("py-pydot@1.4.1:", type=("build", "run"))
         depends_on("py-sympy@1.10:", when="@2.8:", type=("build", "run"))
-
-    # Historical dependencies
-    depends_on("py-decorator@4.3.0:4", when="@2.5.1:2.5", type=("build", "run"))
-    depends_on("py-decorator@4.3.0:", when="@2.2:2.4", type=("build", "run"))
-    depends_on("py-decorator@4.1.0:", when="@2.0:2.1", type=("build", "run"))
-    depends_on("py-decorator@3.4.0:", when="@:1", type=("build", "run"))
 
     def url_for_version(self, version):
         ext = "tar.gz"
