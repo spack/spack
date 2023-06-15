@@ -21,7 +21,7 @@ class PyPydantic(PythonPackage):
 
     depends_on("py-setuptools", type="build")
     depends_on("py-typing-extensions@4.2:", when="@1.10.9:", type=("build", "run"))
-    depends_on("py-typing-extensions@4.1:", when="@1.10.2:", type=("build", "run"))
+    depends_on("py-typing-extensions@4.1:", when="@1.10:", type=("build", "run"))
     depends_on("py-typing-extensions@3.7.4.3:", type=("build", "run"))
 
     depends_on("py-python-dotenv@0.10.4:", when="+dotenv", type=("build", "run"))
