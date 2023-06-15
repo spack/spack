@@ -13,7 +13,6 @@ class PerlGd(PerlPackage):
     url = "https://cpan.metacpan.org/authors/id/R/RU/RURBAN/GD-2.77.tar.gz"
 
     version("2.77", sha256="b56c88b8ef3be016ce29bb62dd1f1b6f6b5fbcaa57fea59e9468af6901016fb5")
-    version("2.56", sha256="1f103d1c98de8621504642ed7fb79f1b40f5f6a63c2abe9390a8ab78617248f9")
     version("2.53", sha256="d05d01fe95e581adb3468cf05ab5d405db7497c0fb3ec7ecf23d023705fab7aa")
 
     depends_on("perl-module-build", type="build")
