@@ -92,9 +92,9 @@ class Mxnet(CMakePackage, CudaPackage, PythonExtension):
             self.define("BLAS_LIBRARIES", self.spec["blas"].libs[0]),
         ]
 
-        if self.spec.satisfies("@:1.8"):
+        if self.spec.satisfies("@:1"):
             args.append(self.define_from_variant("USE_MKLDNN", "mkldnn"))
-        elif self.spec.satisfies("@1.9:"):
+        elif self.spec.satisfies("@2:"):
             args.append(self.define_from_variant("USE_ONEDNN", "mkldnn"))
             args.append(self.define("USE_CUTENSOR", False))
 
