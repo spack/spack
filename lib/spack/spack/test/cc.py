@@ -279,7 +279,7 @@ def test_ld_flags(wrapper_environment, wrapper_flags):
         test_args,
         ["ld"]
         + test_include_paths
-        + ["".join(spack_ldflags)]
+        + [spack_ldflags[i] + spack_ldflags[i + 1] for i in range(0, len(spack_ldflags), 2)]
         + test_library_paths
         + ["--disable-new-dtags"]
         + test_rpaths
@@ -307,7 +307,7 @@ def test_cc_flags(wrapper_environment, wrapper_flags):
         [real_cc]
         + target_args
         + test_include_paths
-        + ["".join(spack_ldflags)]
+        + [spack_ldflags[i] + spack_ldflags[i + 1] for i in range(0, len(spack_ldflags), 2)]
         + test_library_paths
         + ["-Wl,--disable-new-dtags"]
         + test_wl_rpaths
@@ -325,7 +325,7 @@ def test_cxx_flags(wrapper_environment, wrapper_flags):
         [real_cc]
         + target_args
         + test_include_paths
-        + ["".join(spack_ldflags)]
+        + [spack_ldflags[i] + spack_ldflags[i + 1] for i in range(0, len(spack_ldflags), 2)]
         + test_library_paths
         + ["-Wl,--disable-new-dtags"]
         + test_wl_rpaths
@@ -342,7 +342,7 @@ def test_fc_flags(wrapper_environment, wrapper_flags):
         [real_cc]
         + target_args
         + test_include_paths
-        + ["".join(spack_ldflags)]
+        + [spack_ldflags[i] + spack_ldflags[i + 1] for i in range(0, len(spack_ldflags), 2)]
         + test_library_paths
         + ["-Wl,--disable-new-dtags"]
         + test_wl_rpaths
