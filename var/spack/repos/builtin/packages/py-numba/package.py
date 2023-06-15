@@ -24,9 +24,8 @@ class PyNumba(PythonPackage):
     version("0.48.0", sha256="9d21bc77e67006b5723052840c88cc59248e079a907cc68f1a1a264e1eaba017")
     version("0.40.1", sha256="52d046c13bcf0de79dbfb936874b7228f141b9b8e3447cc35855e9ad3e12aa33")
 
-    depends_on("python@3.8:3.12", when="@0.57", type=("build", "run"))
-    depends_on("python@3.7:3.11", when="@0.56", type=("build", "run"))
-    depends_on("python@3.7:3.10", when="@0.55", type=("build", "run"))
+    depends_on("python@3.8:3.11", when="@0.57", type=("build", "run"))
+    depends_on("python@3.7:3.10", when="@0.55:0.56", type=("build", "run"))
     depends_on("python@3.7:3.9", when="@0.54", type=("build", "run"))
     depends_on("python@3.6:3.9", when="@0.53", type=("build", "run"))
     depends_on("python@3.6:3.8", when="@0.52", type=("build", "run"))
