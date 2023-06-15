@@ -274,6 +274,7 @@ class PyHorovod(PythonPackage, CudaPackage):
         else:
             env.set("HOROVOD_CPU_OPERATIONS", self.spec.variants["tensor_ops"].value.upper())
 
-    def test(self):
-        super(PyHorovod, self).test()
-        self.run_test(self.prefix.bin.horovodrun, "--check-build")
+    def test_check_build(self):
+        """run horovodrun --check-build"""
+        horovodrun = which(self.prefix.bin.horovodrun)
+        horovodrun("--check-build")
