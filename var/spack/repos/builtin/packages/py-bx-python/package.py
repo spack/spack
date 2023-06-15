@@ -21,5 +21,4 @@ class PyBxPython(PythonPackage):
     depends_on("py-cython", type="build")
     depends_on("py-numpy", type=("build", "run"))
     depends_on("py-six", when="@:0.8.9", type=("build", "run"))
-    depends_on("lzo", type="build")
     depends_on("py-python-lzo@1.14:", type=("build", "run"))
