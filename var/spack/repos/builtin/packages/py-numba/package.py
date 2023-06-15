@@ -31,7 +31,7 @@ class PyNumba(PythonPackage):
     depends_on("python@3.6:3.8", when="@0.52", type=("build", "run"))
     depends_on("python@3.6:3.8", when="@0.48:0.51", type=("build", "run"))
     depends_on("python@3.3:3.7", when="@0.40.1:0.47", type=("build", "run"))
-    depends_on("py-numpy@1.21:1.25", when="@0.57.0:", type=("build", "run"))
+    depends_on("py-numpy@1.21:1.24", when="@0.57:", type=("build", "run"))
     depends_on("py-numpy@1.18:1.23", when="@0.56.1:0.56.4", type=("build", "run"))
     depends_on("py-numpy@1.18:1.22", when="@0.55.2:0.56.0", type=("build", "run"))
     depends_on("py-numpy@1.18:1.21", when="@0.55.0:0.55.1", type=("build", "run"))
