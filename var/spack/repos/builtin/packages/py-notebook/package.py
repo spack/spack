@@ -44,7 +44,7 @@ class PyNotebook(PythonPackage):
     depends_on("py-jupyter-packaging11", when="@6.4.1:", type="build")
     # depends_on('py-jupyter-packaging@0.9:0', when='@6.4.1:', type='build')
 
-    depends_on("py-setuptools", when="@5:", type=("build", "run"))
+    depends_on("py-setuptools", when="@5:", type="build")
     depends_on("py-jinja2", type=("build", "run"))
     depends_on("py-tornado@6.1:", when="@6.4.5:", type=("build", "run"))
     depends_on("py-tornado@5.0:", when="@6:", type=("build", "run"))
