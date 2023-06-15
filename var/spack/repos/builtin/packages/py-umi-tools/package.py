@@ -23,7 +23,6 @@ class PyUmiTools(PythonPackage):
     depends_on("py-pandas@0.12:", type=("build", "run"))
     depends_on("py-pysam@0.8.4:", type=("build", "run"))
     depends_on("py-future", type=("build", "run"))
-    depends_on("py-six", type=("build", "run"))
     depends_on("py-regex", type=("build", "run"))
     depends_on("py-scipy", type=("build", "run"))
     depends_on("py-matplotlib", type=("build", "run"))
