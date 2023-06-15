@@ -27,6 +27,6 @@ class Libxpm(AutotoolsPackage, XorgPackage):
     depends_on("util-macros", type="build")
 
     def flag_handler(self, name, flags):
-        if name == "ldlibs" and "intl" in self.spec["gettext"].libs.names:
+        if name == "ldflags" and "intl" in self.spec["gettext"].libs.names:
             flags.append("-lintl")
         return env_flags(name, flags)

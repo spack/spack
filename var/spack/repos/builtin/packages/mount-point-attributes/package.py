@@ -27,4 +27,4 @@ class MountPointAttributes(AutotoolsPackage):
     depends_on("automake", type="build", when="@master")
     depends_on("libtool", type="build", when="@master")
 
-    patch("mpa_type_conversion.patch", when="@1.1:1.1.0")
+    patch("mpa_type_conversion.patch", when="@=1.1")

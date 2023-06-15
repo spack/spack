@@ -5,6 +5,7 @@
 import collections.abc
 import inspect
 import os
+import pathlib
 import platform
 import re
 import sys
@@ -15,7 +16,6 @@ import llnl.util.filesystem as fs
 import spack.build_environment
 import spack.builder
 import spack.package_base
-import spack.util.path
 from spack.directives import build_system, conflicts, depends_on, variant
 from spack.multimethod import when
 
@@ -271,7 +271,7 @@ class CMakeBuilder(BaseBuilder):
         args = [
             "-G",
             generator,
-            define("CMAKE_INSTALL_PREFIX", pkg.prefix),
+            define("CMAKE_INSTALL_PREFIX", pathlib.Path(pkg.prefix).as_posix()),
             define("CMAKE_BUILD_TYPE", build_type),
             define("BUILD_TESTING", pkg.run_tests),
         ]

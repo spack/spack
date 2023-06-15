@@ -118,17 +118,18 @@ class M4(AutotoolsPackage, GNUMirrorPackage):
 
         return args
 
-    def test(self):
-        spec_vers = str(self.spec.version)
-        reason = "test: ensuring m4 version is {0}".format(spec_vers)
-        self.run_test(
-            "m4", "--version", spec_vers, installed=True, purpose=reason, skip_missing=False
-        )
+    def test_version(self):
+        """ensure m4 version matches installed spec"""
+        m4 = which(self.prefix.bin.m4)
+        out = m4("--version", output=str.split, error=str.split)
+        assert str(self.spec.version) in out
 
-        reason = "test: ensuring m4 example succeeds"
+    def test_hello(self):
+        """ensure m4 hello example runs"""
         test_data_dir = self.test_suite.current_test_data_dir
         hello_file = test_data_dir.join("hello.m4")
+        m4 = which(self.prefix.bin.m4)
+        out = m4(hello_file, output=str.split, error=str.split)
+
         expected = get_escaped_text_output(test_data_dir.join("hello.out"))
-        self.run_test(
-            "m4", hello_file, expected, installed=True, purpose=reason, skip_missing=False
-        )
+        check_outputs(expected, out)
