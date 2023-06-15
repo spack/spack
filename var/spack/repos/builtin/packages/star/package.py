@@ -6,7 +6,7 @@
 from spack.package import *
 
 
-class Star(Package):
+class Star(MakefilePackage):
     """STAR is an ultrafast universal RNA-seq aligner."""
 
     homepage = "https://github.com/alexdobin/STAR"
@@ -35,12 +35,18 @@ class Star(Package):
 
     depends_on("zlib")
 
-    def install(self, spec, prefix):
-        make_args = ["STAR", "STARlong"]
+    build_directory = "source"
+
+    def edit(self, spec, prefix):
         if "avx2" not in spec.target:
-            make_args += ["CXXFLAGS_SIMD=sse"]
-        with working_dir("source"):
-            make(*make_args)
-            mkdirp(prefix.bin)
+            env["CXXFLAGS_SIMD"]=""
+
+    def build(self, spec, prefix):
+        with working_dir(self.build_directory):
+            make("STAR", "STARlong")
+
+    def install(self, spec, prefix):
+        mkdirp(prefix.bin)
+        with working_dir(self.build_directory):
             install("STAR", prefix.bin)
             install("STARlong", prefix.bin)
