@@ -39,15 +39,16 @@ class PyNumba(PythonPackage):
     depends_on("py-numpy@1.15:1.20", when="@0.48:0.53", type=("build", "run"))
     depends_on("py-numpy@1.10:1.20", when="@:0.47", type=("build", "run"))
     depends_on("py-setuptools", type=("build", "run"))
-    depends_on("py-llvmlite@0.40:0.41", when="@0.57", type=("build", "run"))
-    depends_on("py-llvmlite@0.39:0.40", when="@0.56", type=("build", "run"))
-    depends_on("py-llvmlite@0.38:0.39", when="@0.55", type=("build", "run"))
-    depends_on("py-llvmlite@0.37:0.38", when="@0.54.0", type=("build", "run"))
-    depends_on("py-llvmlite@0.34:0.35", when="@0.51.1", type=("build", "run"))
-    depends_on("py-llvmlite@0.33:0.34", when="@0.50.1", type=("build", "run"))
+    depends_on("py-llvmlite@0.40", when="@0.57", type=("build", "run"))
+    depends_on("py-llvmlite@0.39", when="@0.56", type=("build", "run"))
+    depends_on("py-llvmlite@0.38", when="@0.55", type=("build", "run"))
+    depends_on("py-llvmlite@0.37", when="@0.54.0", type=("build", "run"))
+    depends_on("py-llvmlite@0.34", when="@0.51.1", type=("build", "run"))
+    depends_on("py-llvmlite@0.33", when="@0.50.1", type=("build", "run"))
     depends_on("py-llvmlite@0.31", when="@0.47,0.48", type=("build", "run"))
     depends_on("py-llvmlite@0.25", when="@0.40", type=("build", "run"))
     depends_on("py-llvmlite@0.20:0.25", when="@0.35.1", type=("build", "run"))
+    depends_on("py-importlib-metadata", when="@0.56:^python@:3.8", type=("build", "run"))
 
     # Version 6.0.0 of llvm had a hidden symbol which breaks numba at runtime.
     # See https://reviews.llvm.org/D44140
