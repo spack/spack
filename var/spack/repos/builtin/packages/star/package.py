@@ -39,7 +39,7 @@ class Star(MakefilePackage):
 
     def edit(self, spec, prefix):
         if "avx2" not in spec.target:
-            env["CXXFLAGS_SIMD"]=""
+            env["CXXFLAGS_SIMD"] = ""
 
     def build(self, spec, prefix):
         with working_dir(self.build_directory):
