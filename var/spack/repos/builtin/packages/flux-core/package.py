@@ -122,6 +122,7 @@ class FluxCore(AutotoolsPackage):
     conflicts("platform=darwin", msg="flux-core does not support MacOS based platforms.")
     conflicts("platform=windows", msg="flux-core does not support Windows based platforms.")
 
+    depends_on("ply", when="@0.47.0:")
     depends_on("libarchive", when="@0.38.0:")
     depends_on("ncurses@6.2:", when="@0.32.0:")
     depends_on("libzmq@4.0.4:")
