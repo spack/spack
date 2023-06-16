@@ -50,6 +50,7 @@ line is a spec for a particular installation of the mpileaks package.
 """
 import collections
 import collections.abc
+import enum
 import io
 import itertools
 import os
@@ -171,6 +172,16 @@ CLEARSIGN_FILE_REGEX = re.compile(
 
 #: specfile format version. Must increase monotonically
 SPECFILE_FORMAT_VERSION = 3
+
+
+# InstallStatus is used to map install statuses to symbols for display
+# Options are artificially disjoint for dispay purposes
+class InstallStatus(enum.Enum):
+    installed = "@g{[+]}  "
+    upstream = "@g{[^]}  "
+    external = "@g{[e]}  "
+    absent = "@K{ - }  "
+    missing = "@r{[-]}  "
 
 
 def colorize_spec(spec):
@@ -4401,12 +4412,20 @@ class Spec(object):
     def install_status(self):
         """Helper for tree to print DB install status."""
         if not self.concrete:
-            return None
-        try:
-            record = spack.store.db.get_record(self)
-            return record.installed
-        except KeyError:
-            return None
+            return InstallStatus.absent
+
+        if self.external:
+            return InstallStatus.external
+
+        upstream, record = spack.store.db.query_by_spec_hash(self.dag_hash())
+        if not record:
+            return InstallStatus.absent
+        elif upstream and record.installed:
+            return InstallStatus.upstream
+        elif record.installed:
+            return InstallStatus.installed
+        else:
+            return InstallStatus.missing
 
     def _installed_explicitly(self):
         """Helper for tree to print DB install status."""
@@ -4420,7 +4439,10 @@ class Spec(object):
 
     def tree(self, **kwargs):
         """Prints out this spec and its dependencies, tree-formatted
-        with indentation."""
+        with indentation.
+
+        Status function may either output a boolean or an InstallStatus
+        """
         color = kwargs.pop("color", clr.get_color_when())
         depth = kwargs.pop("depth", False)
         hashes = kwargs.pop("hashes", False)
@@ -4452,14 +4474,12 @@ class Spec(object):
 
             if status_fn:
                 status = status_fn(node)
-                if node.installed_upstream:
-                    out += clr.colorize("@g{[^]}  ", color=color)
-                elif status is None:
-                    out += clr.colorize("@K{ - }  ", color=color)  # !installed
+                if status in list(InstallStatus):
+                    out += clr.colorize(status.value, color=color)
                 elif status:
-                    out += clr.colorize("@g{[+]}  ", color=color)  # installed
+                    out += clr.colorize("@g{[+]}  ", color=color)
                 else:
-                    out += clr.colorize("@r{[-]}  ", color=color)  # missing
+                    out += clr.colorize("@r{[-]}  ", color=color)
 
             if hashes:
                 out += clr.colorize("@K{%s}  ", color=color) % node.dag_hash(hlen)
