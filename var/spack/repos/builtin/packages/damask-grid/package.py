@@ -40,6 +40,7 @@ class DamaskGrid(CMakePackage):
     depends_on("fftw+mpi")
     depends_on("libfyaml", when="@3.0.0-alpha7:")
 
+    patch("T-init.patch", when="@3.0.0-alpha7")
     patch("long-lines.patch", when="@3.0.0-alpha7")
     patch("CMakeDebugRelease.patch", when="@3.0.0-alpha4")
 
