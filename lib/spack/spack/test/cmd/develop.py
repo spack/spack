@@ -148,6 +148,13 @@ class TestDevelop(object):
             assert spack.spec.Spec("mpich@1.0").concretized().satisfies("dev_path=%s" % abspath)
 
 
+def _git_commit_list(git_repo_dir):
+    git = spack.util.git.git()
+    with fs.working_dir(git_repo_dir):
+        output = git("log", "--pretty=format:%h", "-n", "20", output=str)
+    return output.strip().split()
+
+
 def test_develop_full_git_repo(
     mutable_mock_env_path,
     mock_git_version_info,
@@ -162,13 +169,6 @@ def test_develop_full_git_repo(
     monkeypatch.setattr(
         spack.package_base.PackageBase, "git", "file://%s" % repo_path, raising=False
     )
-
-    git = spack.util.git.git()
-
-    def _git_commit_list(git_repo_dir):
-        with fs.working_dir(git_repo_dir):
-            output = git("log", "--pretty=format:%h", "-n", "20", output=str)
-        return output.strip().split()
 
     spec = spack.spec.Spec("git-test-commit@1.2").concretized()
     try:
