@@ -51,11 +51,6 @@ spack:
           - diff /bootstrap/postinstall.sh /bootstrap/postinstall.sh.bkp || echo Done
         - - /bin/bash "${SPACK_ARTIFACTS_ROOT}/postinstall.sh" -fg
           - spack config --scope site add "packages:all:target:\"target=${SPACK_TARGET_ARCH}\""
-    - signing-job:
-        before_script:
-          # Do not distribute Intel & ARM binaries
-          - - for i in $(aws s3 ls --recursive ${SPACK_REMOTE_MIRROR_OVERRIDE}/build_cache/ | grep intel-oneapi | awk '{print $4}' | sed -e 's?^.*build_cache/??g'); do aws s3 rm ${SPACK_REMOTE_MIRROR_OVERRIDE}/build_cache/$i; done
-            - for i in $(aws s3 ls --recursive ${SPACK_REMOTE_MIRROR_OVERRIDE}/build_cache/ | grep armpl | awk '{print $4}' | sed -e 's?^.*build_cache/??g'); do aws s3 rm ${SPACK_REMOTE_MIRROR_OVERRIDE}/build_cache/$i; done
 
   cdash:
     build-group: AWS Packages
