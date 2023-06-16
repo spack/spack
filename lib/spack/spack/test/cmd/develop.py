@@ -164,10 +164,6 @@ def test_develop_full_git_repo(
         spack.package_base.PackageBase, "git", "file://%s" % repo_path, raising=False
     )
 
-    mirror_dir = str(tmpdir)
-    mirror = SpackCommand("mirror")
-    mirror("create", "-d", mirror_dir, "git-test-commit@1.2")
-
     git = spack.util.git.git()
     def _git_commit_list(git_repo_dir):
         with fs.working_dir(git_repo_dir):
@@ -184,13 +180,14 @@ def test_develop_full_git_repo(
     finally:
         spec.package.do_clean()
 
-    mirrors = {"test-mirror-develop_full_git_repo": url_util.path_to_file_url(mirror_dir)}
-    with spack.config.override("mirrors", mirrors):
-        env("create", "test")
-        with ev.read("test"):
-            develop("git-test-commit@1.2")
+    # Now use "spack develop": look at the resulting stage directory and make
+    # sure the git repo pulled includes the full branch history (or rather,
+    # more than just one commit).
+    env("create", "test")
+    with ev.read("test"):
+        develop("git-test-commit@1.2")
 
-            location = SpackCommand("location")
-            develop_stage_dir = location("git-test-commit").strip()
-            commits = _git_commit_list(develop_stage_dir)
-            assert len(commits) > 1
+        location = SpackCommand("location")
+        develop_stage_dir = location("git-test-commit").strip()
+        commits = _git_commit_list(develop_stage_dir)
+        assert len(commits) > 1
