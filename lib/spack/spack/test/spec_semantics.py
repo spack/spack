@@ -239,6 +239,22 @@ class TestSpecSemantics(object):
         assert c1 == c2
         assert c1 == expected
 
+    def test_constrain_specs_by_hash(self, default_mock_concretization, database):
+        """Test that Specs specified only by their hashes can constrain eachother."""
+        mpich_dag_hash = "/" + database.query_one("mpich").dag_hash()
+        spec = Spec(mpich_dag_hash[:7])
+        assert spec.constrain(Spec(mpich_dag_hash)) is False
+        assert spec.abstract_hash == mpich_dag_hash[1:]
+
+    def test_mismatched_constrain_spec_by_hash(self, default_mock_concretization, database):
+        """Test that Specs specified only by their incompatible hashes fail appropriately."""
+        lhs = "/" + database.query_one("callpath ^mpich").dag_hash()
+        rhs = "/" + database.query_one("callpath ^mpich2").dag_hash()
+        with pytest.raises(spack.spec.InvalidHashError):
+            Spec(lhs).constrain(Spec(rhs))
+        with pytest.raises(spack.spec.InvalidHashError):
+            Spec(lhs[:7]).constrain(Spec(rhs))
+
     @pytest.mark.parametrize(
         "lhs,rhs", [("libelf", Spec()), ("libelf", "@0:1"), ("libelf", "@0:1 %gcc")]
     )
@@ -644,6 +660,7 @@ class TestSpecSemantics(object):
             ("{architecture.os}", "", "os", lambda spec: spec.architecture),
             ("{architecture.target}", "", "target", lambda spec: spec.architecture),
             ("{prefix}", "", "prefix", lambda spec: spec),
+            ("{external}", "", "external", lambda spec: spec),  # test we print "False"
         ]
 
         hash_segments = [
@@ -954,7 +971,7 @@ class TestSpecSemantics(object):
     def test_satisfies_dependencies_ordered(self):
         d = Spec("zmpi ^fake")
         s = Spec("mpileaks")
-        s._add_dependency(d, deptypes=())
+        s._add_dependency(d, deptypes=(), virtuals=())
         assert s.satisfies("mpileaks ^zmpi ^fake")
 
     @pytest.mark.parametrize("transitive", [True, False])
@@ -1001,6 +1018,7 @@ def test_is_extension_after_round_trip_to_dict(config, mock_packages, spec_str):
 
 
 def test_malformed_spec_dict():
+    # FIXME: This test was really testing the specific implementation with an ad-hoc test
     with pytest.raises(SpecError, match="malformed"):
         Spec.from_dict(
             {"spec": {"_meta": {"version": 2}, "nodes": [{"dependencies": {"name": "foo"}}]}}
@@ -1008,6 +1026,7 @@ def test_malformed_spec_dict():
 
 
 def test_spec_dict_hashless_dep():
+    # FIXME: This test was really testing the specific implementation with an ad-hoc test
     with pytest.raises(SpecError, match="Couldn't parse"):
         Spec.from_dict(
             {
@@ -1101,7 +1120,7 @@ def test_concretize_partial_old_dag_hash_spec(mock_packages, config):
 
     # add it to an abstract spec as a dependency
     top = Spec("dt-diamond")
-    top.add_dependency_edge(bottom, deptypes=())
+    top.add_dependency_edge(bottom, deptypes=(), virtuals=())
 
     # concretize with the already-concrete dependency
     top.concretize()

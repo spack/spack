@@ -89,7 +89,7 @@ class Xsdk(BundlePackage, CudaPackage, ROCmPackage):
     version("0.7.0")
     version("0.6.0", deprecated=True)
 
-    variant("trilinos", default=True, description="Enable trilinos package build")
+    variant("trilinos", default=True, sticky=True, description="Enable trilinos package build")
     variant("datatransferkit", default=True, description="Enable datatransferkit package build")
     variant("omega-h", default=True, description="Enable omega-h package build")
     variant("strumpack", default=True, description="Enable strumpack package build")
@@ -205,12 +205,12 @@ class Xsdk(BundlePackage, CudaPackage, ROCmPackage):
     xsdk_depends_on("dealii +trilinos~adol-c", when="+trilinos +dealii")
     xsdk_depends_on("dealii ~trilinos", when="~trilinos +dealii")
     xsdk_depends_on(
-        "dealii@master~assimp~python~doc~gmsh+petsc+slepc+mpi~int64+hdf5"
+        "dealii@master~assimp~python~doc~gmsh+petsc+slepc+mpi~int64"
         + "~netcdf+metis+sundials~ginkgo~symengine~nanoflann~simplex~arborx~cgal",
         when="@develop +dealii",
     )
     xsdk_depends_on(
-        "dealii@9.4.0~assimp~python~doc~gmsh+petsc+slepc+mpi~int64+hdf5"
+        "dealii@9.4.0~assimp~python~doc~gmsh+petsc+slepc+mpi~int64"
         + "~netcdf+metis+sundials~ginkgo~symengine~simplex~arborx~cgal",
         when="@0.8.0 +dealii",
     )

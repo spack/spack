@@ -966,7 +966,7 @@ def test_compiler_bootstrap_from_binary_mirror(
     install("gcc@=10.2.0")
 
     # Put installed compiler in the buildcache
-    buildcache("push", "-u", "-a", "-f", "-d", mirror_dir.strpath, "gcc@10.2.0")
+    buildcache("push", "-u", "-a", "-f", mirror_dir.strpath, "gcc@10.2.0")
 
     # Now uninstall the compiler
     uninstall("-y", "gcc@10.2.0")
@@ -1072,11 +1072,18 @@ def test_install_empty_env(
     ],
 )
 def test_installation_fail_tests(install_mockery, mock_fetch, name, method):
+    """Confirm build-time tests with unknown methods fail."""
     output = install("--test=root", "--no-cache", name, fail_on_error=False)
 
+    # Check that there is a single test failure reported
+    assert output.count("TestFailure: 1 test failed") == 1
+
+    # Check that the method appears twice: no attribute error and in message
     assert output.count(method) == 2
     assert output.count("method not implemented") == 1
-    assert output.count("TestFailure: 1 tests failed") == 1
+
+    # Check that the path to the test log file is also output
+    assert "See test log for details" in output
 
 
 def test_install_use_buildcache(
@@ -1131,7 +1138,7 @@ def test_install_use_buildcache(
 
     # Populate the buildcache
     install(package_name)
-    buildcache("push", "-u", "-a", "-f", "-d", mirror_dir.strpath, package_name, dependency_name)
+    buildcache("push", "-u", "-a", "-f", mirror_dir.strpath, package_name, dependency_name)
 
     # Uninstall the all of the packages for clean slate
     uninstall("-y", "-a")

@@ -115,6 +115,10 @@ class Gromacs(CMakePackage, CudaPackage):
         "+mdrun_only", when="@2021:", msg="mdrun-only build option was removed for GROMACS 2021."
     )
     variant("openmp", default=True, description="Enables OpenMP at configure time")
+    variant("openmp_max_threads", default="none", description="Max number of OpenMP threads")
+    conflicts(
+        "+openmp_max_threads", when="~openmp", msg="OpenMP is off but OpenMP Max threads is set"
+    )
     variant(
         "sve",
         default=True,
@@ -228,6 +232,13 @@ class Gromacs(CMakePackage, CudaPackage):
         for gmx_ver, plumed_vers in plumed_patches.items():
             depends_on("plumed@{0}".format(plumed_vers), when="@{0}+plumed".format(gmx_ver))
 
+    variant(
+        "intel_provided_gcc",
+        default=False,
+        description="Use this if Intel compiler is installed through spack."
+        + "The g++ location is written to icp{c,x}.cfg",
+    )
+
     depends_on("fftw-api@3")
     depends_on("cmake@2.8.8:3", type="build")
     depends_on("cmake@3.4.3:3", type="build", when="@2018:")
@@ -240,7 +251,8 @@ class Gromacs(CMakePackage, CudaPackage):
     depends_on("sycl", when="+sycl")
     depends_on("lapack", when="+lapack")
     depends_on("blas", when="+blas")
-    depends_on("gcc", when="%oneapi")
+    depends_on("gcc", when="%oneapi ~intel_provided_gcc")
+    depends_on("gcc", when="%intel ~intel_provided_gcc")
 
     depends_on("hwloc@1.0:1", when="+hwloc@2016:2018")
     depends_on("hwloc", when="+hwloc@2019:")
@@ -249,6 +261,14 @@ class Gromacs(CMakePackage, CudaPackage):
     depends_on("dbcsr", when="+cp2k")
 
     depends_on("nvhpc", when="+cufftmp")
+
+    requires(
+        "%intel",
+        "%oneapi",
+        policy="one_of",
+        when="+intel_provided_gcc",
+        msg="Only attempt to find gcc libs for Intel compiler if Intel compiler is used.",
+    )
 
     patch("gmxDetectCpu-cmake-3.14.patch", when="@2018:2019.3^cmake@3.14.0:")
     patch("gmxDetectSimd-cmake-3.14.patch", when="@5.0:2017^cmake@3.14.0:")
@@ -427,8 +447,16 @@ class CMakeBuilder(spack.build_systems.cmake.CMakeBuilder):
         if self.spec.satisfies("@2020:"):
             options.append("-DGMX_INSTALL_LEGACY_API=ON")
 
-        if self.spec.satisfies("%oneapi"):
-            options.append("-DGMX_GPLUSPLUS_PATH=%s/g++" % self.spec["gcc"].prefix.bin)
+        if self.spec.satisfies("%oneapi") or self.spec.satisfies("%intel"):
+            # If intel-oneapi-compilers was installed through spack the gcc is added to the
+            # configuration file.
+            if self.spec.satisfies("+intel_provided_gcc") and os.path.exists(
+                ".".join([os.environ["SPACK_CXX"], "cfg"])
+            ):
+                with open(".".join([os.environ["SPACK_CXX"], "cfg"]), "r") as f:
+                    options.append("-DCMAKE_CXX_FLAGS={}".format(f.read()))
+            else:
+                options.append("-DGMX_GPLUSPLUS_PATH=%s/g++" % self.spec["gcc"].prefix.bin)
 
         if "+double" in self.spec:
             options.append("-DGMX_DOUBLE:BOOL=ON")
@@ -569,6 +597,11 @@ class CMakeBuilder(spack.build_systems.cmake.CMakeBuilder):
             options.append("-DGMX_CYCLE_SUBCOUNTERS:BOOL=ON")
         else:
             options.append("-DGMX_CYCLE_SUBCOUNTERS:BOOL=OFF")
+
+        if "+openmp" in self.spec and self.spec.variants["openmp_max_threads"].value != "none":
+            options.append(
+                "-DGMX_OPENMP_MAX_THREADS=%s" % self.spec.variants["openmp_max_threads"].value
+            )
 
         if "^mkl" in self.spec:
             # fftw-api@3 is provided by intel-mkl or intel-parllel-studio

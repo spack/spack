@@ -193,10 +193,17 @@ class BinaryCacheIndex(object):
             db_root_dir = os.path.join(tmpdir, "db_root")
             db = spack_db.Database(None, db_dir=db_root_dir, enable_transaction_locking=False)
 
-            self._index_file_cache.init_entry(cache_key)
-            cache_path = self._index_file_cache.cache_path(cache_key)
-            with self._index_file_cache.read_transaction(cache_key):
-                db._read_from_file(cache_path)
+            try:
+                self._index_file_cache.init_entry(cache_key)
+                cache_path = self._index_file_cache.cache_path(cache_key)
+                with self._index_file_cache.read_transaction(cache_key):
+                    db._read_from_file(cache_path)
+            except spack_db.InvalidDatabaseVersionError as e:
+                msg = (
+                    f"you need a newer Spack version to read the buildcache index for the "
+                    f"following mirror: '{mirror_url}'. {e.database_version_message}"
+                )
+                raise BuildcacheIndexError(msg) from e
 
             spec_list = db.query_local(installed=False, in_buildcache=True)
 
@@ -419,7 +426,7 @@ class BinaryCacheIndex(object):
 
         self._write_local_index_cache()
 
-        if all_methods_failed:
+        if configured_mirror_urls and all_methods_failed:
             raise FetchCacheError(fetch_errors)
         if fetch_errors:
             tty.warn(
@@ -753,13 +760,12 @@ def hashes_to_prefixes(spec):
     }
 
 
-def get_buildinfo_dict(spec, rel=False):
+def get_buildinfo_dict(spec):
     """Create metadata for a tarball"""
     manifest = get_buildfile_manifest(spec)
 
     return {
         "sbang_install_path": spack.hooks.sbang.sbang_install_path(),
-        "relative_rpaths": rel,
         "buildpath": spack.store.layout.root,
         "spackprefix": spack.paths.prefix,
         "relative_prefix": os.path.relpath(spec.prefix, spack.store.layout.root),
@@ -1202,9 +1208,6 @@ class PushOptions(NamedTuple):
     #: Overwrite existing tarball/metadata files in buildcache
     force: bool = False
 
-    #: Whether to use relative RPATHs
-    relative: bool = False
-
     #: Allow absolute paths to package prefixes when creating a tarball
     allow_root: bool = False
 
@@ -1274,40 +1277,16 @@ def _build_tarball_in_stage_dir(spec: Spec, out_url: str, stage_dir: str, option
         raise NoOverwriteException(url_util.format(remote_specfile_path))
 
     pkg_dir = os.path.basename(spec.prefix.rstrip(os.path.sep))
-    workdir = os.path.join(stage_dir, pkg_dir)
 
-    # TODO: We generally don't want to mutate any files, but when using relative
-    # mode, Spack unfortunately *does* mutate rpaths and links ahead of time.
-    # For now, we only make a full copy of the spec prefix when in relative mode.
-
-    if options.relative:
-        # tarfile is used because it preserves hardlink etc best.
-        binaries_dir = workdir
-        temp_tarfile_name = tarball_name(spec, ".tar")
-        temp_tarfile_path = os.path.join(tarfile_dir, temp_tarfile_name)
-        with closing(tarfile.open(temp_tarfile_path, "w")) as tar:
-            tar.add(name="%s" % spec.prefix, arcname=".")
-        with closing(tarfile.open(temp_tarfile_path, "r")) as tar:
-            tar.extractall(workdir)
-        os.remove(temp_tarfile_path)
-    else:
-        binaries_dir = spec.prefix
+    binaries_dir = spec.prefix
 
     # create info for later relocation and create tar
-    buildinfo = get_buildinfo_dict(spec, options.relative)
+    buildinfo = get_buildinfo_dict(spec)
 
-    # optionally make the paths in the binaries relative to each other
-    # in the spack install tree before creating tarball
-    if options.relative:
-        make_package_relative(workdir, spec, buildinfo, options.allow_root)
-    elif not options.allow_root:
+    if not options.allow_root:
         ensure_package_relocatable(buildinfo, binaries_dir)
 
     _do_create_tarball(tarfile_path, binaries_dir, pkg_dir, buildinfo)
-
-    # remove copy of install directory
-    if options.relative:
-        shutil.rmtree(workdir)
 
     # get the sha256 checksum of the tarball
     checksum = checksum_tarball(tarfile_path)
@@ -1329,7 +1308,6 @@ def _build_tarball_in_stage_dir(spec: Spec, out_url: str, stage_dir: str, option
     # This will be used to determine is the directory layout has changed.
     buildinfo = {}
     buildinfo["relative_prefix"] = os.path.relpath(spec.prefix, spack.store.layout.root)
-    buildinfo["relative_rpaths"] = options.relative
     spec_dict["buildinfo"] = buildinfo
 
     with open(specfile_path, "w") as outfile:
@@ -1587,35 +1565,6 @@ def download_tarball(spec, unsigned=False, mirrors_for_spec=None):
         )
 
     return None
-
-
-def make_package_relative(workdir, spec, buildinfo, allow_root):
-    """
-    Change paths in binaries to relative paths. Change absolute symlinks
-    to relative symlinks.
-    """
-    prefix = spec.prefix
-    old_layout_root = buildinfo["buildpath"]
-    orig_path_names = list()
-    cur_path_names = list()
-    for filename in buildinfo["relocate_binaries"]:
-        orig_path_names.append(os.path.join(prefix, filename))
-        cur_path_names.append(os.path.join(workdir, filename))
-
-    platform = spack.platforms.by_name(spec.platform)
-    if "macho" in platform.binary_formats:
-        relocate.make_macho_binaries_relative(cur_path_names, orig_path_names, old_layout_root)
-
-    if "elf" in platform.binary_formats:
-        relocate.make_elf_binaries_relative(cur_path_names, orig_path_names, old_layout_root)
-
-    allow_root or relocate.ensure_binaries_are_relocatable(cur_path_names)
-    orig_path_names = list()
-    cur_path_names = list()
-    for linkname in buildinfo.get("relocate_links", []):
-        orig_path_names.append(os.path.join(prefix, linkname))
-        cur_path_names.append(os.path.join(workdir, linkname))
-    relocate.make_link_relative(cur_path_names, orig_path_names)
 
 
 def ensure_package_relocatable(buildinfo, binaries_dir):
@@ -2408,6 +2357,10 @@ class BinaryCacheQuery(object):
         self.possible_specs = specs
 
     def __call__(self, spec, **kwargs):
+        """
+        Args:
+            spec (str): The spec being searched for in its string representation or hash.
+        """
         matches = []
         if spec.startswith("/"):
             # Matching a DAG hash
@@ -2427,6 +2380,10 @@ class FetchIndexError(Exception):
             return str(self.args[0])
         else:
             return "{}, due to: {}".format(self.args[0], self.args[1])
+
+
+class BuildcacheIndexError(spack.error.SpackError):
+    """Raised when a buildcache cannot be read for any reason"""
 
 
 FetchIndexResult = collections.namedtuple("FetchIndexResult", "etag hash data fresh")

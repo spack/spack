@@ -23,6 +23,7 @@ from spack.package_base import (
     _spack_build_envfile,
     _spack_build_logfile,
     _spack_configure_argsfile,
+    spack_times_log,
 )
 from spack.spec import Spec
 
@@ -243,7 +244,7 @@ def test_install_times(install_mockery, mock_fetch, mutable_mock_repo):
     spec.package.do_install()
 
     # Ensure dependency directory exists after the installation.
-    install_times = os.path.join(spec.package.prefix, ".spack", "install_times.json")
+    install_times = os.path.join(spec.package.prefix, ".spack", spack_times_log)
     assert os.path.isfile(install_times)
 
     # Ensure the phases are included
@@ -252,7 +253,7 @@ def test_install_times(install_mockery, mock_fetch, mutable_mock_repo):
 
     # The order should be maintained
     phases = [x["name"] for x in times["phases"]]
-    assert phases == ["stage", "one", "two", "three", "install"]
+    assert phases == ["stage", "one", "two", "three", "install", "post-install"]
     assert all(isinstance(x["seconds"], float) for x in times["phases"])
 
 

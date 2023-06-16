@@ -60,7 +60,7 @@ _db_dirname = ".spack-db"
 # DB version.  This is stuck in the DB file to track changes in format.
 # Increment by one when the database format changes.
 # Versions before 5 were not integers.
-_db_version = vn.Version("6")
+_db_version = vn.Version("7")
 
 # For any version combinations here, skip reindex when upgrading.
 # Reindexing can take considerable time and is not always necessary.
@@ -72,6 +72,7 @@ _skip_reindex = [
     # version is saved to disk the first time the DB is written.
     (vn.Version("0.9.3"), vn.Version("5")),
     (vn.Version("5"), vn.Version("6")),
+    (vn.Version("6"), vn.Version("7")),
 ]
 
 # Default timeout for spack database locks in seconds or None (no timeout).
@@ -105,7 +106,11 @@ default_install_record_fields = [
 
 
 def reader(version):
-    reader_cls = {vn.Version("5"): spack.spec.SpecfileV1, vn.Version("6"): spack.spec.SpecfileV3}
+    reader_cls = {
+        vn.Version("5"): spack.spec.SpecfileV1,
+        vn.Version("6"): spack.spec.SpecfileV3,
+        vn.Version("7"): spack.spec.SpecfileV4,
+    }
     return reader_cls[version]
 
 
@@ -743,7 +748,9 @@ class Database(object):
             spec_node_dict = spec_node_dict[spec.name]
         if "dependencies" in spec_node_dict:
             yaml_deps = spec_node_dict["dependencies"]
-            for dname, dhash, dtypes, _ in spec_reader.read_specfile_dep_specs(yaml_deps):
+            for dname, dhash, dtypes, _, virtuals in spec_reader.read_specfile_dep_specs(
+                yaml_deps
+            ):
                 # It is important that we always check upstream installations
                 # in the same order, and that we always check the local
                 # installation first: if a downstream Spack installs a package
@@ -766,7 +773,7 @@ class Database(object):
                     tty.warn(msg)
                     continue
 
-                spec._add_dependency(child, deptypes=dtypes)
+                spec._add_dependency(child, deptypes=dtypes, virtuals=virtuals)
 
     def _read_from_file(self, filename):
         """Fill database from file, do not maintain old data.
@@ -798,9 +805,8 @@ class Database(object):
 
         # TODO: better version checking semantics.
         version = vn.Version(db["version"])
-        spec_reader = reader(version)
         if version > _db_version:
-            raise InvalidDatabaseVersionError(_db_version, version)
+            raise InvalidDatabaseVersionError(self, _db_version, version)
         elif version < _db_version:
             if not any(old == version and new == _db_version for old, new in _skip_reindex):
                 tty.warn(
@@ -813,6 +819,8 @@ class Database(object):
                     (k, v.to_dict(include_fields=self._record_fields))
                     for k, v in self._data.items()
                 )
+
+        spec_reader = reader(version)
 
         def invalid_record(hash_key, error):
             return CorruptDatabaseError(
@@ -1171,7 +1179,7 @@ class Database(object):
             for dep in spec.edges_to_dependencies(deptype=_tracked_deps):
                 dkey = dep.spec.dag_hash()
                 upstream, record = self.query_by_spec_hash(dkey)
-                new_spec._add_dependency(record.spec, deptypes=dep.deptypes)
+                new_spec._add_dependency(record.spec, deptypes=dep.deptypes, virtuals=dep.virtuals)
                 if not upstream:
                     record.ref_count += 1
 
@@ -1642,7 +1650,7 @@ class CorruptDatabaseError(SpackError):
 
 
 class NonConcreteSpecAddError(SpackError):
-    """Raised when attemptint to add non-concrete spec to DB."""
+    """Raised when attempting to add non-concrete spec to DB."""
 
 
 class MissingDependenciesError(SpackError):
@@ -1650,8 +1658,17 @@ class MissingDependenciesError(SpackError):
 
 
 class InvalidDatabaseVersionError(SpackError):
-    def __init__(self, expected, found):
-        super(InvalidDatabaseVersionError, self).__init__(
-            "Expected database version %s but found version %s." % (expected, found),
-            "`spack reindex` may fix this, or you may need a newer " "Spack version.",
+    """Exception raised when the database metadata is newer than current Spack."""
+
+    def __init__(self, database, expected, found):
+        self.expected = expected
+        self.found = found
+        msg = (
+            f"you need a newer Spack version to read the DB in '{database.root}'. "
+            f"{self.database_version_message}"
         )
+        super(InvalidDatabaseVersionError, self).__init__(msg)
+
+    @property
+    def database_version_message(self):
+        return f"The expected DB version is '{self.expected}', but '{self.found}' was found."

@@ -40,7 +40,7 @@ from typing import Optional
 
 import llnl.util.filesystem
 import llnl.util.tty as tty
-from llnl.util.lang import dedupe
+from llnl.util.lang import dedupe, memoized
 
 import spack.build_environment
 import spack.config
@@ -170,17 +170,10 @@ def merge_config_rules(configuration, spec):
     Returns:
         dict: actions to be taken on the spec passed as an argument
     """
-
-    # Get the top-level configuration for the module type we are using
-    module_specific_configuration = copy.deepcopy(configuration)
-
-    # Construct a dictionary with the actions we need to perform on the spec
-    # passed as a parameter
-
     # The keyword 'all' is always evaluated first, all the others are
     # evaluated in order of appearance in the module file
-    spec_configuration = module_specific_configuration.pop("all", {})
-    for constraint, action in module_specific_configuration.items():
+    spec_configuration = copy.deepcopy(configuration.get("all", {}))
+    for constraint, action in configuration.items():
         if spec.satisfies(constraint):
             if hasattr(constraint, "override") and constraint.override:
                 spec_configuration = {}
@@ -200,14 +193,14 @@ def merge_config_rules(configuration, spec):
     # configuration
 
     # Hash length in module files
-    hash_length = module_specific_configuration.get("hash_length", 7)
+    hash_length = configuration.get("hash_length", 7)
     spec_configuration["hash_length"] = hash_length
 
-    verbose = module_specific_configuration.get("verbose", False)
+    verbose = configuration.get("verbose", False)
     spec_configuration["verbose"] = verbose
 
     # module defaults per-package
-    defaults = module_specific_configuration.get("defaults", [])
+    defaults = configuration.get("defaults", [])
     spec_configuration["defaults"] = defaults
 
     return spec_configuration
@@ -400,7 +393,7 @@ class BaseConfiguration(object):
     querying easier. It needs to be sub-classed for specific module types.
     """
 
-    default_projections = {"all": "{name}-{version}-{compiler.name}-{compiler.version}"}
+    default_projections = {"all": "{name}/{version}-{compiler.name}-{compiler.version}"}
 
     def __init__(self, spec, module_set_name, explicit=None):
         # Module where type(self) is defined
@@ -679,6 +672,7 @@ class BaseContext(tengine.Context):
         return None
 
     @tengine.context_property
+    @memoized
     def environment_modifications(self):
         """List of environment modifications to be processed."""
         # Modifications guessed by inspecting the spec prefix
@@ -748,6 +742,19 @@ class BaseContext(tengine.Context):
             x.name = str(x.name).replace("-", "_")
 
         return [(type(x).__name__, x) for x in env if x.name not in exclude]
+
+    @tengine.context_property
+    def has_manpath_modifications(self):
+        """True if MANPATH environment variable is modified."""
+        for modification_type, cmd in self.environment_modifications:
+            if not isinstance(
+                cmd, (spack.util.environment.PrependPath, spack.util.environment.AppendPath)
+            ):
+                continue
+            if cmd.name == "MANPATH":
+                return True
+        else:
+            return False
 
     @tengine.context_property
     def autoload(self):

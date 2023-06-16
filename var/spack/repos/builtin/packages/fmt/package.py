@@ -15,6 +15,7 @@ class Fmt(CMakePackage):
     url = "https://github.com/fmtlib/fmt/releases/download/7.1.3/fmt-7.1.3.zip"
     maintainers("msimberg")
 
+    version("10.0.0", sha256="4943cb165f3f587f26da834d3056ee8733c397e024145ca7d2a8a96bb71ac281")
     version("9.1.0", sha256="cceb4cb9366e18a5742128cb3524ce5f50e88b476f1e54737a47ffdf4df4c996")
     version("9.0.0", sha256="fc96dd2d2fdf2bded630787adba892c23cb9e35c6fd3273c136b0c57d4651ad6")
     version("8.1.1", sha256="23778bad8edba12d76e4075da06db591f3b0e3c6c04928ced4a7282ca3400e5d")
