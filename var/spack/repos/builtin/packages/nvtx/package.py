@@ -7,6 +7,7 @@ from spack.package import *
 
 
 class Nvtx(Package, PythonExtension):
+    """Python code annotation library"""
     
     git = "https://github.com/NVIDIA/NVTX.git"
     url = "https://github.com/NVIDIA/NVTX/archive/refs/tags/v3.1.0.tar.gz"
@@ -18,15 +19,19 @@ class Nvtx(Package, PythonExtension):
 
     variant("python", default=True, description="Install python bindings.")
     extends("python", when="+python")
+    depends_on("py-pip", type="build", when="+python")
     depends_on("py-setuptools", type="build", when="+python")
     depends_on("py-wheel", type="build", when="+python")
     depends_on("py-cython", type="build", when="+python")
 
-    #depends_on("cmake@3.10:", type="build")
-    #root_cmakelists_dir = "c"
-    #install_targets = []
-
     build_directory = 'python'
+
+    def patch(self):
+        """Patch setup.py to provide include directory."""
+
+        include_dir = prefix.include
+        setup = FileFilter("python/setup.py")
+        setup.filter("include_dirs=include_dirs", f"include_dirs=['{include_dir}']", string=True)
 
     def install(self, spec, prefix):
         install_tree('c/include', prefix.include)
@@ -35,4 +40,6 @@ class Nvtx(Package, PythonExtension):
     @run_after("install")
     def install_python(self):
         """Install everything from build directory."""
-        pass
+        args = std_pip_args + ["--prefix=" + prefix, "."]
+        with working_dir(self.build_directory):
+            pip(*args)
