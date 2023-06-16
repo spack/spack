@@ -159,6 +159,12 @@ def setup_parser(subparser):
         default="all",
         help="Install trees to query: 'all' (default), 'local', 'upstream', upstream name or path",
     )
+    subparser.add_argument(
+        "--tests",
+        action="store_true",
+        default=False,
+        help="""show relevant stand-alone test methods in json output""",
+    )
 
     subparser.add_argument("--start-date", help="earliest date of installation [YYYY-MM-DD]")
     subparser.add_argument("--end-date", help="latest date of installation [YYYY-MM-DD]")
@@ -377,9 +383,13 @@ def find(parser, args):
     else:
         status_fn = None
 
+    if args.tests and args.json:
+        for res in results:
+            res.tests = spack.install_test.test_function_names(res.package, add_virtuals=True)
+
     # Display the result
     if args.json:
-        cmd.display_specs_as_json(results, deps=args.deps)
+        cmd.display_specs_as_json(results, deps=args.deps, tests=args.tests)
     else:
         decorator = make_env_decorator(env) if env else lambda s, f: f
 

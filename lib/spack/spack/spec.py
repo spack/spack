@@ -2517,13 +2517,15 @@ class Spec:
 
         return {"spec": {"_meta": {"version": SPECFILE_FORMAT_VERSION}, "nodes": node_list}}
 
-    def node_dict_with_hashes(self, hash=ht.dag_hash):
+    def node_dict_with_hashes(self, hash=ht.dag_hash, tests=None):
         """Returns a node_dict of this spec with the dag hash added.  If this
         spec is concrete, the full hash is added as well.  If 'build' is in
         the hash_type, the build hash is also added."""
         node = self.to_node_dict(hash)
         # All specs have at least a DAG hash
         node[ht.dag_hash.name] = self.dag_hash()
+        if tests is not None and hasattr(self, "tests") and self.tests:
+            node["tests"] = self.tests
 
         if not self.concrete:
             node["concrete"] = False

@@ -491,7 +491,7 @@ def test_005_db_exists(database):
 def test_010_all_install_sanity(database):
     """Ensure that the install layout reflects what we think it does."""
     all_specs = spack.store.STORE.layout.all_specs()
-    assert len(all_specs) == 15
+    assert len(all_specs) == 16
 
     # Query specs with multiple configurations
     mpileaks_specs = [s for s in all_specs if s.satisfies("mpileaks")]
@@ -608,7 +608,7 @@ def test_050_basic_query(database):
     """Ensure querying database is consistent with what is installed."""
     # query everything
     total_specs = len(spack.store.STORE.db.query())
-    assert total_specs == 17
+    assert total_specs == 18
 
     # query specs with multiple configurations
     mpileaks_specs = database.query("mpileaks")
@@ -820,6 +820,7 @@ def test_query_unused_specs(mutable_database):
     ml_mpich2 = spack.store.STORE.db.query_one("mpileaks ^mpich2").dag_hash()
     ml_zmpi = spack.store.STORE.db.query_one("mpileaks ^zmpi").dag_hash()
     externaltest = spack.store.STORE.db.query_one("externaltest").dag_hash()
+    simple_standalone_test = spack.store.STORE.db.query_one("simple-standalone-test").dag_hash()
     trivial_smoke_test = spack.store.STORE.db.query_one("trivial-smoke-test").dag_hash()
 
     def check_unused(roots, deptype, expected):
@@ -831,22 +832,29 @@ def test_query_unused_specs(mutable_database):
     check_unused(
         [si, ml_mpich, ml_mpich2, ml_zmpi, externaltest],
         default_dt,
-        ["trivial-smoke-test", "cmake"],
+        ["trivial-smoke-test", "simple-standalone-test", "cmake"],
     )
     check_unused(
         [si, ml_mpich, ml_mpich2, ml_zmpi, externaltest],
         dt.LINK | dt.RUN | dt.BUILD,
-        ["trivial-smoke-test"],
+        ["trivial-smoke-test", "simple-standalone-test"],
     )
     check_unused(
-        [si, ml_mpich, ml_mpich2, externaltest, trivial_smoke_test],
+        [si, ml_mpich, ml_mpich2, externaltest, simple_standalone_test, trivial_smoke_test],
         dt.LINK | dt.RUN | dt.BUILD,
         ["mpileaks", "callpath", "zmpi", "fake"],
     )
     check_unused(
         [si, ml_mpich, ml_mpich2, ml_zmpi],
         default_dt,
-        ["trivial-smoke-test", "cmake", "externaltest", "externaltool", "externalvirtual"],
+        [
+            "trivial-smoke-test",
+            "cmake",
+            "simple-standalone-test",
+            "externaltest",
+            "externaltool",
+            "externalvirtual",
+        ],
     )
 
 
@@ -1080,7 +1088,7 @@ def test_check_parents(spec_str, parent_name, expected_nparents, database):
 def test_db_all_hashes(database):
     # ensure we get the right number of hashes without a read transaction
     hashes = database.all_hashes()
-    assert len(hashes) == 17
+    assert len(hashes) == 18
 
     # and make sure the hashes match
     with database.read_transaction():

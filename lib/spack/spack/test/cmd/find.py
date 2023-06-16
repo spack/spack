@@ -612,3 +612,10 @@ def test_find_concretized_not_installed(
         assert _nresults(_query(e, "--tag=tag0")) == (1, 0)
         assert _nresults(_query(e, "--tag=tag1")) == (1, 1)
         assert _nresults(_query(e, "--tag=tag2")) == (0, 1)
+
+
+@pytest.mark.db
+def test_find_json_tests(mutable_database):
+    output = find("--json", "--tests", "simple-standalone-test")
+    tests = json.loads(output)[0]["tests"]
+    assert all([name.startswith("SimpleStandaloneTest.test_") for name in tests])
