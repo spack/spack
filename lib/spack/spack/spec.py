@@ -2983,9 +2983,10 @@ class Spec:
             providers = [spec.name for spec in answer.values() if spec.package.provides(name)]
             name = providers[0]
 
-        assert name in answer
+        node = spack.solver.asp.SpecBuilder.root_node(pkg=name)
+        assert node in answer, f"cannot find {name} in the list of specs {','.join(answer.keys())}"
 
-        concretized = answer[name]
+        concretized = answer[node]
         self._dup(concretized)
 
     def concretize(self, tests=False):
@@ -3519,7 +3520,8 @@ class Spec:
         for value in values:
             if self.variants.get(variant_name):
                 msg = (
-                    "Cannot append a value to a single-valued " "variant with an already set value"
+                    f"cannot append the new value '{value}' to the single-valued "
+                    f"variant '{self.variants[variant_name]}'"
                 )
                 assert pkg_variant.multi, msg
                 self.variants[variant_name].append(value)
