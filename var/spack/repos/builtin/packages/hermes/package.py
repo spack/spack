@@ -30,7 +30,7 @@ class Hermes(CMakePackage):
     depends_on("glpk")
     depends_on("glog@0.4.0:")
     depends_on("mpi")
-    depends_on("hdf5@1.13.0:", when="+vfd")
+    depends_on("hdf5@1.14.0:", when="+vfd")
     depends_on("yaml-cpp")
 
     def cmake_args(self):
