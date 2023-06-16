@@ -20,7 +20,7 @@ from spack.package_base import deprecated_version, preferred_version
 from spack.util.editor import editor
 from spack.util.format import get_version_lines
 from spack.util.naming import valid_fully_qualified_module_name
-from spack.version import Version, parse_string_components
+from spack.version import Version
 
 description = "checksum available versions of a package"
 section = "packaging"
@@ -161,7 +161,7 @@ def verify_checksums(pkg, version_hashes, url_dict):
     num_total = len(version_hashes)
 
     for version, sha in version_hashes.items():
-        if not version in pkg.versions:
+        if version not in pkg.versions:
             msg = "No previous checksum"
             status = "-"
 
@@ -178,7 +178,7 @@ def verify_checksums(pkg, version_hashes, url_dict):
         results.append("{0:{1}}  {2} {3}".format(str(version), max_len, f"[{status}]", msg))
 
     # Display table of checksum results.
-    tty.msg(f"Found {num_verified} of {num_total}", "", *llnl.util.lang.elide_list(results))
+    tty.msg(f"Found {num_verified} of {num_total}", "", *llnl.util.lang.elide_list(results), "")
 
     # Terminate at the end of function to prevent additional output.
     if failed:
@@ -225,7 +225,7 @@ def add_versions_to_package(pkg, version_hashes, url_dict):
                 parsed_version = Version(contents_version.group(1))
 
                 if parsed_version < new_versions[0][0]:
-                    split_contents[i:i] = [new_versions.pop(0)[1], " #FIX ME", "\n"]
+                    split_contents[i:i] = [new_versions.pop(0)[1], " # FIX ME", "\n"]
 
                 elif parsed_version == new_versions[0][0]:
                     new_versions.pop(0)
@@ -237,4 +237,4 @@ def add_versions_to_package(pkg, version_hashes, url_dict):
     if sys.stdout.isatty():
         editor(filename)
     else:
-        tty.warn("Could not add new versions to {0}.".format(args.package))
+        tty.warn("Could not add new versions to {0}.".format(pkg.name))

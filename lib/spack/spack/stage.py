@@ -947,7 +947,9 @@ def get_checksums_for_versions(url_dict, name, **kwargs):
                     first_stage_function(stage, url)
 
                 # Checksum the archive and add it to the list
-                version_hashes[version] = spack.util.crypto.checksum(hashlib.sha256, stage.archive_file)
+                version_hashes[version] = spack.util.crypto.checksum(
+                    hashlib.sha256, stage.archive_file
+                )
                 i += 1
         except FailedDownloadError:
             errors.append("Failed to fetch {0}".format(url))
