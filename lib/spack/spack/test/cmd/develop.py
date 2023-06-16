@@ -165,6 +165,7 @@ def test_develop_full_git_repo(
     )
 
     git = spack.util.git.git()
+
     def _git_commit_list(git_repo_dir):
         with fs.working_dir(git_repo_dir):
             output = git("log", "--pretty=format:%h", "-n", "20", output=str)
