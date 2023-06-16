@@ -624,7 +624,7 @@ class Ascent(CMakePackage, CudaPackage):
         #######################
         if "+occa" in spec:
             cfg.write("# occa from spack \n")
-            cfg.write(cmake_cache_entry("OCCA_DIR", spec['occa'].prefix))
+            cfg.write(cmake_cache_entry("OCCA_DIR", spec["occa"].prefix))
         else:
             cfg.write("# occa not built by spack \n")
 
