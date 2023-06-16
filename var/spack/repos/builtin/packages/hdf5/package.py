@@ -40,11 +40,6 @@ class Hdf5(CMakePackage):
     version("develop-1.8", branch="hdf5_1_8")
 
     # Odd versions are considered experimental releases
-    # Note: These are still required to build some VOL adapters, but even releases should be
-    #       preferred.
-    version("1.13.3", sha256="83c7c06671f975cee6944b0b217f95005faa55f79ea5532cf4ac268989866af4")
-    version("1.13.2", sha256="01643fa5b37dba7be7c4db6bbf3c5d07adf5c1fa17dbfaaa632a279b1b2f06da")
-
     # Even versions are maintenance versions
     version(
         "1.14.1-2",
@@ -69,6 +64,11 @@ class Hdf5(CMakePackage):
     version(
         "1.12.0",
         sha256="a62dcb276658cb78e6795dd29bf926ed7a9bc4edf6e77025cd2c689a8f97c17a",
+        preferred=True,
+    )
+    version(
+        "1.10.10",
+        sha256="a6877ab7bd5d769d2d68618fdb54beb50263dcc2a8c157fe7e2186925cdb02db",
         preferred=True,
     )
     version(
