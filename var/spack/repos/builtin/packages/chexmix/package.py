@@ -9,8 +9,8 @@ from spack.package import *
 
 
 class Chexmix(Package):
-    """ChExMix: the ChIP-exo mixture model. ChExMix aims to characterize protein-DNA binding subtypes
-    in ChIP-exo experiments."""
+    """ChExMix: the ChIP-exo mixture model. ChExMix aims to characterize protein-DNA binding
+    subtypes in ChIP-exo experiments."""
 
     homepage = "http://mahonylab.org/software/chexmix"
     url = "https://github.com/seqcode/chexmix/releases/download/v0.52/chexmix.v0.52.public.jar"
