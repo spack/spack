@@ -21,4 +21,4 @@ class PyHttplib2(PythonPackage):
     depends_on("py-setuptools", type="build")
 
     depends_on("py-pyparsing@2.4.2:3", when="@0.19:", type=("build", "run"))
-    conflicts("py-pyparsing@3.0.1:3.0.3", when="@0.19:")
+    conflicts("^py-pyparsing@3.0.1:3.0.3", when="@0.19:")
