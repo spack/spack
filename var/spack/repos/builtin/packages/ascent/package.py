@@ -215,7 +215,7 @@ class Ascent(CMakePackage, CudaPackage):
     depends_on("mfem~shared", when="+mfem~shared")
 
     # occa
-     depends_on("occa", when="+occa")
+    depends_on("occa", when="+occa")
 
     # fides
     depends_on("fides", when="+fides")
