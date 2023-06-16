@@ -28,7 +28,7 @@ class PyGsutil(PythonPackage):
     depends_on("py-gcs-oauth2-boto-plugin@3:", when="@5:", type=("build", "run"))
     depends_on("py-gcs-oauth2-boto-plugin@2.7:", type=("build", "run"))
     depends_on("py-google-apitools@0.5.32:", type=("build", "run"))
-    depends_on("py-httplib2@0.20.4:", when="@5.7:", type=("build", "run"))
+    depends_on("py-httplib2@0.20.4", when="@5.17:", type=("build", "run"))
     depends_on("py-httplib2@0.18:", type=("build", "run"))
     depends_on("py-google-reauth@0.1.0:", type=("build", "run"))
     depends_on("py-monotonic@1.4:", type=("build", "run"))
