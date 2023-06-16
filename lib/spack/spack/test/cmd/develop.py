@@ -164,9 +164,6 @@ def test_develop_full_git_repo(
         spack.package_base.PackageBase, "git", "file://%s" % repo_path, raising=False
     )
 
-    spec = spack.spec.Spec("git-test-commit@1.2")
-    spec.concretize()
-
     mirror_dir = str(tmpdir)
     mirror = SpackCommand("mirror")
     mirror("create", "-d", mirror_dir, "git-test-commit@1.2")

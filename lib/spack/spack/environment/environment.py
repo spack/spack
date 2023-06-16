@@ -1294,6 +1294,10 @@ class Environment:
             tty.msg("Configuring spec %s for development at path %s" % (spec, path))
 
         if clone:
+            # "steal" the source code via staging API. We ask for a stage
+            # to be created, then copy it afterwards somewhere else. It would be
+            # better if we can create the `source_path` directly into its final
+            # destination.
             abspath = spack.util.path.canonicalize_path(path, default_wd=self.path)
             pkg_cls = spack.repo.path.get_pkg_class(spec.name)
             package = pkg_cls(spec)
