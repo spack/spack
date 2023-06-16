@@ -168,16 +168,29 @@ def test_develop_full_git_repo(
     mirror = SpackCommand("mirror")
     mirror("create", "-d", mirror_dir, "git-test-commit@1.2")
 
+    git = spack.util.git.git()
+    def _git_commit_list(git_repo_dir):
+        with fs.working_dir(git_repo_dir):
+            output = git("log", "--pretty=format:%h", "-n", "20", output=str)
+        return output.strip().split()
+
+    spec = spack.spec.Spec("git-test-commit@1.2").concretized()
+    try:
+        spec.package.do_stage()
+        commits = _git_commit_list(spec.package.stage[0].source_path)
+        # Outside of "spack develop" Spack will only pull exactly the commit it
+        # needs, with no additional history
+        assert len(commits) == 1
+    finally:
+        spec.package.do_clean()
+
     mirrors = {"test-mirror-develop_full_git_repo": url_util.path_to_file_url(mirror_dir)}
     with spack.config.override("mirrors", mirrors):
         env("create", "test")
         with ev.read("test"):
-            develop("git-test-commit@git.1.2")
+            develop("git-test-commit@1.2")
 
             location = SpackCommand("location")
             develop_stage_dir = location("git-test-commit").strip()
-            with fs.working_dir(develop_stage_dir):
-                git = spack.util.git.git()
-                output = git("log", "--pretty=format:%h", "-n", "20", output=str)
-                commits = output.strip().split()
-                assert len(commits) > 1
+            commits = _git_commit_list(develop_stage_dir)
+            assert len(commits) > 1

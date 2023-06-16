@@ -1300,6 +1300,8 @@ class Environment:
             # destination.
             abspath = spack.util.path.canonicalize_path(path, default_wd=self.path)
             pkg_cls = spack.repo.path.get_pkg_class(spec.name)
+            # We construct a package class ourselves, rather than asking for
+            # Spec.package, since Spec only allows this when it is concrete
             package = pkg_cls(spec)
             if isinstance(package.fetcher[0], spack.fetch_strategy.GitFetchStrategy):
                 package.fetcher[0].get_full_repo = True
