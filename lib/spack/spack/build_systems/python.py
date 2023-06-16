@@ -223,7 +223,7 @@ class PythonExtension(spack.package_base.PackageBase):
 
                     python.external_path = self.spec.external_path
                     python._mark_concrete()
-            self.spec.add_dependency_edge(python, deptypes=("build", "link", "run"))
+            self.spec.add_dependency_edge(python, deptypes=("build", "link", "run"), virtuals=())
 
 
 class PythonPackage(PythonExtension):
