@@ -4,8 +4,10 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import argparse
+import re
 import sys
 
+import llnl.util.lang
 import llnl.util.tty as tty
 
 import spack.cmd
@@ -16,8 +18,9 @@ import spack.stage
 import spack.util.crypto
 from spack.package_base import deprecated_version, preferred_version
 from spack.util.editor import editor
+from spack.util.format import get_version_lines
 from spack.util.naming import valid_fully_qualified_module_name
-from spack.version import Version
+from spack.version import Version, parse_string_components
 
 description = "checksum available versions of a package"
 section = "packaging"
@@ -53,12 +56,16 @@ def setup_parser(subparser):
         default=False,
         help="checksum the preferred version only",
     )
-    subparser.add_argument(
+    modes_parser = subparser.add_mutually_exclusive_group()
+    modes_parser.add_argument(
         "-a",
         "--add-to-package",
         action="store_true",
         default=False,
         help="add new versions to package",
+    )
+    modes_parser.add_argument(
+        "--verify", action="store_true", default=False, help="verify known package checksums"
     )
     arguments.add_common_arguments(subparser, ["package"])
     subparser.add_argument(
@@ -80,6 +87,7 @@ def checksum(parser, args):
     pkg_cls = spack.repo.path.get_pkg_class(args.package)
     pkg = pkg_cls(spack.spec.Spec(args.package))
 
+    # Store a dict of the form version -> URL
     url_dict = {}
     if not args.versions and args.preferred:
         versions = [preferred_version(pkg)]
@@ -108,7 +116,10 @@ def checksum(parser, args):
     if not url_dict:
         tty.die("Could not find any remote versions for {0}".format(pkg.name))
 
-    version_lines = spack.stage.get_checksums_for_versions(
+    # print an empty line to create a new output section block
+    print()
+
+    version_hashes = spack.stage.get_checksums_for_versions(
         url_dict,
         pkg.name,
         keep_stage=args.keep_stage,
@@ -117,49 +128,113 @@ def checksum(parser, args):
         fetch_options=pkg.fetch_options,
     )
 
-    print()
-    print(version_lines)
-    print()
+    if args.verify:
+        verify_checksums(pkg, version_hashes, url_dict)
 
-    if args.add_to_package:
-        filename = spack.repo.path.filename_for_package_name(pkg.name)
-        # Make sure we also have a newline after the last version
-        versions = [v + "\n" for v in version_lines.splitlines()]
-        versions.append("\n")
-        # We need to insert the versions in reversed order
-        versions.reverse()
-        versions.append("    # FIXME: Added by `spack checksum`\n")
-        version_line = None
+    elif args.add_to_package:
+        add_versions_to_package(pkg, version_hashes, url_dict)
 
-        with open(filename, "r") as f:
-            lines = f.readlines()
-            for i in range(len(lines)):
-                # Black is drunk, so this is what it looks like for now
-                # See https://github.com/psf/black/issues/2156 for more information
-                if lines[i].startswith("    # FIXME: Added by `spack checksum`") or lines[
-                    i
-                ].startswith("    version("):
-                    version_line = i
-                    break
+    else:
+        # convert dict into package.py version statements
+        version_lines = get_version_lines(version_hashes, url_dict)
+        print()
+        print(version_lines)
+        print()
 
-        if version_line is not None:
-            for v in versions:
-                lines.insert(version_line, v)
 
-            with open(filename, "w") as f:
-                f.writelines(lines)
+def verify_checksums(pkg, version_hashes, url_dict):
+    """
+    Verify checksums present in version_hashes against those present
+    in the package's instructions.
 
-            msg = "opening editor to verify"
+    Args:
+        pkg (package): A package class for a given package in Spack.
+        version_hashes (dict): A dictionary of the form: version -> checksum.
+        url_dict (dict): A dictionary of the form: version -> URL.
 
-            if not sys.stdout.isatty():
-                msg = "please verify"
+    """
+    results = []
+    num_verified = 0
+    failed = False
 
-            tty.info(
-                "Added {0} new versions to {1}, "
-                "{2}.".format(len(versions) - 2, args.package, msg)
-            )
+    max_len = max(len(str(v)) for v in version_hashes)
+    num_total = len(version_hashes)
 
-            if sys.stdout.isatty():
-                editor(filename)
+    for version, sha in version_hashes.items():
+        if not version in pkg.versions:
+            msg = "No previous checksum"
+            status = "-"
+
+        elif sha == pkg.versions[version]["sha256"]:
+            msg = "Correct"
+            status = "="
+            num_verified += 1
+
         else:
-            tty.warn("Could not add new versions to {0}.".format(args.package))
+            msg = sha
+            status = "x"
+            failed = True
+
+        results.append("{0:{1}}  {2} {3}".format(str(version), max_len, f"[{status}]", msg))
+
+    # Display table of checksum results.
+    tty.msg(f"Found {num_verified} of {num_total}", "", *llnl.util.lang.elide_list(results))
+
+    # Terminate at the end of function to prevent additional output.
+    if failed:
+        tty.die("Invalid checksums found.")
+
+
+def add_versions_to_package(pkg, version_hashes, url_dict):
+    """
+    Add checksumed versions to a package's instructions and open a user's
+    editor so they may double check the work of the function.
+
+    Args:
+        pkg (package): A package class for a given package in Spack.
+        version_hashes (dict): A dictionary of the form: version -> checksum.
+        url_dict (dict): A dictionary of the form: version -> URL.
+
+    """
+    # Get filename and path for package
+    filename = spack.repo.path.filename_for_package_name(pkg.name)
+
+    version_statement_re = re.compile(r"([\t ]+version\([^\)]*\))")
+    version_re = re.compile(r'[\t ]+version\("([^"]+)"[^\)]*\)')
+
+    new_version_lines = get_version_lines(version_hashes, url_dict).split("\n")
+
+    # Split rendered version lines into tuple of (version, version_line)
+    # We reverse sort here to make sure the versions match the version_lines
+    new_versions = [
+        (v, new_version_lines.pop(0)) for v in sorted(version_hashes.keys(), reverse=True)
+    ]
+
+    with open(filename, "r+") as f:
+        contents = f.read()
+        split_contents = version_statement_re.split(contents)
+
+        for i, section in enumerate(split_contents):
+            # If there are no more versions to add we should exit
+            if len(new_versions) <= 0:
+                break
+
+            # Check if the section contains a version
+            contents_version = version_re.match(section)
+            if contents_version is not None:
+                parsed_version = Version(contents_version.group(1))
+
+                if parsed_version < new_versions[0][0]:
+                    split_contents[i:i] = [new_versions.pop(0)[1], " #FIX ME", "\n"]
+
+                elif parsed_version == new_versions[0][0]:
+                    new_versions.pop(0)
+
+        # Seek back to the start of the file so we can rewrite the file contents.
+        f.seek(0)
+        f.writelines("".join(split_contents))
+
+    if sys.stdout.isatty():
+        editor(filename)
+    else:
+        tty.warn("Could not add new versions to {0}.".format(args.package))
