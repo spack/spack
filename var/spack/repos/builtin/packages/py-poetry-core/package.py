@@ -19,6 +19,7 @@ class PyPoetryCore(PythonPackage):
     version("1.0.7", sha256="98c11c755a16ef6c5673c22ca94a3802a7df4746a0853a70b6fae8b9f5cac206")
 
     depends_on("python@3.7:3", when="@1.1.0:", type=("build", "run"))
+    depends_on("python@:3", type=("build", "run"))
     depends_on("py-importlib-metadata@1.7:", when="@1.1: ^python@:3.7", type=("build", "run"))
     depends_on("py-importlib-metadata@1.7:1", when="@:1.0 ^python@:3.7", type=("build", "run"))
 
