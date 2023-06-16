@@ -140,6 +140,12 @@ def setup_parser(subparser):
     subparser.add_argument(
         "--only-deprecated", action="store_true", help="show only deprecated packages"
     )
+    subparser.add_argument(
+        "--tests",
+        action="store_true",
+        default=False,
+        help="""show relevant stand-alone test methods in json output""",
+    )
 
     subparser.add_argument("--start-date", help="earliest date of installation [YYYY-MM-DD]")
     subparser.add_argument("--end-date", help="latest date of installation [YYYY-MM-DD]")
@@ -274,9 +280,13 @@ def find(parser, args):
     if args.loaded:
         results = spack.cmd.filter_loaded_specs(results)
 
+    if args.tests and args.json:
+        for res in results:
+            res.tests = spack.install_test.test_function_names(res.package, add_virtuals=True)
+
     # Display the result
     if args.json:
-        cmd.display_specs_as_json(results, deps=args.deps)
+        cmd.display_specs_as_json(results, deps=args.deps, tests=args.tests)
     else:
         if not args.format:
             if env:
