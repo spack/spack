@@ -14,6 +14,7 @@ class Ospray(CMakePackage):
     git = "https://github.com/BlueBrain/ospray.git"
 
     version("2.10.1", tag="v2.10.1")
+    version("2.10.2", tag="v2.10.2")
 
     variant("apps", default=False, description="Enable building OSPRay Apps")
     variant("denoiser", default=False, description="Enable denoiser image operation")
