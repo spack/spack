@@ -12,7 +12,6 @@ import llnl.util.filesystem as fs
 
 import spack.environment as ev
 import spack.spec
-import spack.util.url as url_util
 from spack.main import SpackCommand
 
 develop = SpackCommand("develop")
