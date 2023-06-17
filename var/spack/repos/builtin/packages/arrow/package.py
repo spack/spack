@@ -15,6 +15,7 @@ class Arrow(CMakePackage, CudaPackage):
     homepage = "https://arrow.apache.org"
     url = "https://github.com/apache/arrow/archive/apache-arrow-0.9.0.tar.gz"
 
+    version("12.0.1", sha256="f01b76a42ceb30409e7b1953ef64379297dd0c08502547cae6aaafd2c4a4d92e")
     version("10.0.1", sha256="28c3e0402bc1c3c1e047b6e26cedb8d1d89b2b9497d576af24b0b700eef11701")
     version("9.0.0", sha256="bb187b4b0af8dcc027fffed3700a7b891c9f76c9b63ad8925b4afb8257a2bb1b")
     version("8.0.0", sha256="19ece12de48e51ce4287d2dee00dc358fbc5ff02f41629d16076f77b8579e272")
@@ -117,7 +118,7 @@ class Arrow(CMakePackage, CudaPackage):
             )
 
     def cmake_args(self):
-        args = ["-DARROW_DEPENDENCY_SOURCE=SYSTEM", "-DARROW_NO_DEPRECATED_API=ON"]
+        args = ["-DARROW_DEPENDENCY_SOURCE=SYSTEM", "-DARROW_FILESYSTEM=ON", "-DARROW_NO_DEPRECATED_API=ON"]
 
         if self.spec.satisfies("+shared"):
             args.append(self.define("BUILD_SHARED", "ON"))
@@ -148,10 +149,10 @@ class Arrow(CMakePackage, CudaPackage):
         args.append(self.define_from_variant("ARROW_WITH_ZSTD", "zstd"))
 
         with when("@:8"):
-            dep_list = ("flatbuffers", "rapidjson", "zlib", "zstd")
+            dep_list = ("flatbuffers", "rapidjson", "snappy", "zlib", "zstd")
 
-            if self.spec.satisfies("+snappy"):
-                dep_list.append("snappy")
+            #if self.spec.satisfies("+snappy"):
+            #    dep_list.append("snappy")
 
             for dep in dep_list:
                 args.append("-D{0}_HOME={1}".format(dep.upper(), self.spec[dep].prefix))
