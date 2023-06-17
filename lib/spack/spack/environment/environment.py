@@ -1294,8 +1294,14 @@ class Environment:
             tty.msg("Configuring spec %s for development at path %s" % (spec, path))
 
         if clone:
+            # "steal" the source code via staging API. We ask for a stage
+            # to be created, then copy it afterwards somewhere else. It would be
+            # better if we can create the `source_path` directly into its final
+            # destination.
             abspath = spack.util.path.canonicalize_path(path, default_wd=self.path)
             pkg_cls = spack.repo.path.get_pkg_class(spec.name)
+            # We construct a package class ourselves, rather than asking for
+            # Spec.package, since Spec only allows this when it is concrete
             package = pkg_cls(spec)
             if isinstance(package.fetcher[0], spack.fetch_strategy.GitFetchStrategy):
                 package.fetcher[0].get_full_repo = True
