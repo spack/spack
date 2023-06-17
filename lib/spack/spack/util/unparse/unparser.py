@@ -87,28 +87,11 @@ class Unparser:
 
         Arguments:
             py_ver_consistent (bool): if True, generate unparsed code that is
-                consistent between Python 2.7 and 3.5-3.10.
+                consistent between Python versions 3.5-3.11.
 
-        Consistency is achieved by:
-            1. Ensuring that *args and **kwargs are always the last arguments,
-               regardless of the python version, because Python 2's AST does not
-               have sufficient information to reconstruct star-arg order.
-            2. Always unparsing print as a function.
-            3. Unparsing Python3 unicode literals the way Python 2 would.
-
-        Without these changes, the same source can generate different code for Python 2
-        and Python 3, depending on subtle AST differences.  The first of these two
-        causes this module to behave differently from Python 3.8+'s `ast.unparse()`
-
-        One place where single source will generate an inconsistent AST is with
-        multi-argument print statements, e.g.::
-
-            print("foo", "bar", "baz")
-
-        In Python 2, this prints a tuple; in Python 3, it is the print function with
-        multiple arguments.  Use ``from __future__ import print_function`` to avoid
-        this inconsistency.
-
+        For legacy reasons, consistency is achieved by unparsing Python3 unicode literals
+        the way Python 2 would. This preserved Spack package hash consistency during the
+        python2/3 transition
         """
         self.future_imports = []
         self._indent = 0
@@ -298,61 +281,6 @@ class Unparser:
         if node.locals:
             self.write(", ")
             self.dispatch(node.locals)
-
-    def visit_Print(self, node):
-        # Use print function so that python 2 unparsing is consistent with 3
-        if self._py_ver_consistent:
-            self.fill("print")
-            with self.delimit("(", ")"):
-                values = node.values
-
-                # Can't tell print(foo, bar, baz) and print((foo, bar, baz)) apart in
-                # python 2 and 3, so treat them the same to make hashes consistent.
-                # Single-tuple print are rare and unlikely to affect package hashes,
-                # esp. as they likely print to stdout.
-                if len(values) == 1 and isinstance(values[0], ast.Tuple):
-                    values = node.values[0].elts
-
-                do_comma = False
-                for e in values:
-                    if do_comma:
-                        self.write(", ")
-                    else:
-                        do_comma = True
-                    self.dispatch(e)
-
-                if not node.nl:
-                    if do_comma:
-                        self.write(", ")
-                    else:
-                        do_comma = True
-                    self.write("end=''")
-
-                if node.dest:
-                    if do_comma:
-                        self.write(", ")
-                    else:
-                        do_comma = True
-                    self.write("file=")
-                    self.dispatch(node.dest)
-
-        else:
-            # unparse Python 2 print statements
-            self.fill("print ")
-
-            do_comma = False
-            if node.dest:
-                self.write(">>")
-                self.dispatch(node.dest)
-                do_comma = True
-            for e in node.values:
-                if do_comma:
-                    self.write(", ")
-                else:
-                    do_comma = True
-                self.dispatch(e)
-            if not node.nl:
-                self.write(",")
 
     def visit_Global(self, node):
         self.fill("global ")
@@ -962,65 +890,28 @@ class Unparser:
         self.set_precedence(_Precedence.ATOM, node.func)
 
         args = node.args
-        if self._py_ver_consistent:
-            # make print(a, b, c) and print((a, b, c)) equivalent, since you can't
-            # tell them apart between Python 2 and 3. See _Print() for more details.
-            if getattr(node.func, "id", None) == "print":
-                if len(node.args) == 1 and isinstance(node.args[0], ast.Tuple):
-                    args = node.args[0].elts
-
         self.dispatch(node.func)
+
         with self.delimit("(", ")"):
             comma = False
 
-            # starred arguments last in Python 3.5+, for consistency w/earlier versions
-            star_and_kwargs = []
-            move_stars_last = sys.version_info[:2] >= (3, 5)
+            # NOTE: this code is no longer compatible with python versions 2.7:3.4
+            # If you run on python@:3.4, you will see instability in package hashes
+            # across python versions
 
             for e in args:
-                if move_stars_last and isinstance(e, ast.Starred):
-                    star_and_kwargs.append(e)
+                if comma:
+                    self.write(", ")
                 else:
-                    if comma:
-                        self.write(", ")
-                    else:
-                        comma = True
-                    self.dispatch(e)
+                    comma = True
+                self.dispatch(e)
 
             for e in node.keywords:
-                # starting from Python 3.5 this denotes a kwargs part of the invocation
-                if e.arg is None and move_stars_last:
-                    star_and_kwargs.append(e)
+                if comma:
+                    self.write(", ")
                 else:
-                    if comma:
-                        self.write(", ")
-                    else:
-                        comma = True
-                    self.dispatch(e)
-
-            if move_stars_last:
-                for e in star_and_kwargs:
-                    if comma:
-                        self.write(", ")
-                    else:
-                        comma = True
-                    self.dispatch(e)
-
-            if sys.version_info[:2] < (3, 5):
-                if node.starargs:
-                    if comma:
-                        self.write(", ")
-                    else:
-                        comma = True
-                    self.write("*")
-                    self.dispatch(node.starargs)
-                if node.kwargs:
-                    if comma:
-                        self.write(", ")
-                    else:
-                        comma = True
-                    self.write("**")
-                    self.dispatch(node.kwargs)
+                    comma = True
+                self.dispatch(e)
 
     def visit_Subscript(self, node):
         self.set_precedence(_Precedence.ATOM, node.value)
