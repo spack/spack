@@ -13,6 +13,7 @@ class PyLlvmlite(PythonPackage):
     pypi = "llvmlite/llvmlite-0.23.0.tar.gz"
     git = "https://github.com/numba/llvmlite.git"
 
+    version("0.40.0", sha256="c910b8fbfd67b8e9d0b10ebc012b23cd67cbecef1b96f00d391ddd298d71671c")
     version("0.39.1", sha256="b43abd7c82e805261c425d50335be9a6c4f84264e34d6d6e475207300005d572")
     version("0.39.0", sha256="01098be54f1aa25e391cebba8ea71cd1533f8cd1f50e34c7dd7540c2560a93af")
     version("0.38.1", sha256="0622a86301fcf81cc50d7ed5b4bebe992c030580d413a8443b328ed4f4d82561")
@@ -28,13 +29,16 @@ class PyLlvmlite(PythonPackage):
     version("0.23.0", sha256="bc8b1b46274d05b578fe9e980a6d98fa71c8727f6f9ed31d4d8468dce7aa5762")
 
     depends_on("py-setuptools", type="build")
-    depends_on("python@3.7:3.10", type=("build", "run"), when="@0.38.0:")
+    depends_on("python@3.8:3.11", type=("build", "run"), when="@0.40.0:")
+    depends_on("python@3.7:3.10", type=("build", "run"), when="@0.38.0:0.39")
     depends_on("python@3.7:3.9", type=("build", "run"), when="@0.37")
     depends_on("python@3.6:", type=("build", "run"), when="@0.33:")
     depends_on("python@2.6:2.8,3.4:", type=("build", "run"))
 
     # llvmlite compatibility information taken from https://github.com/numba/llvmlite#compatibility
-    depends_on("llvm@11.0:11~flang", when="@0.37.0:")
+    depends_on("llvm@14:~flang", when="@0.41:")
+    depends_on("llvm@11:14~flang", when="@0.40")
+    depends_on("llvm@11~flang", when="@0.37.0:0.39")
     for t in [
         "arm:",
         "ppc:",
