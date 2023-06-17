@@ -17,7 +17,7 @@ class DoubleBatchedFftLibrary(CMakePackage):
     url = "https://github.com/intel/double-batched-fft-library/archive/refs/tags/v0.3.6.tar.gz"
     git = "https://github.com/intel/double-batched-fft-library.git"
 
-    maintainers = ["uphoffc"]
+    maintainers("uphoffc")
 
     version("main", branch="main")
     version("develop", branch="develop")
@@ -33,6 +33,8 @@ class DoubleBatchedFftLibrary(CMakePackage):
     depends_on("oneapi-level-zero", when="+sycl")
     depends_on("oneapi-level-zero", when="+level-zero")
     depends_on("opencl", when="+opencl")
+
+    patch("0001-Add-CPATH-and-LIBRARY_PATHs-to-OpenCL-search-paths.patch", when="@:0.3.6")
 
     def cmake_args(self):
         cxx_compiler = os.path.basename(self.compiler.cxx)

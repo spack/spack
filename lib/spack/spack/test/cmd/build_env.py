@@ -3,6 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 import pickle
+import sys
 
 import pytest
 
@@ -39,7 +40,10 @@ def test_dump(tmpdir):
     with tmpdir.as_cwd():
         build_env("--dump", _out_file, "zlib")
         with open(_out_file) as f:
-            assert any(line.startswith("PATH=") for line in f.readlines())
+            if sys.platform == "win32":
+                assert any(line.startswith('set "PATH=') for line in f.readlines())
+            else:
+                assert any(line.startswith("PATH=") for line in f.readlines())
 
 
 @pytest.mark.usefixtures("config", "mock_packages", "working_env")

@@ -498,7 +498,7 @@ _spack_buildcache() {
 _spack_buildcache_push() {
     if $list_options
     then
-        SPACK_COMPREPLY="-h --help -r --rel -f --force -u --unsigned -a --allow-root -k --key -d --directory -m --mirror-name --mirror-url --update-index --rebuild-index --spec-file --only"
+        SPACK_COMPREPLY="-h --help -f --force -u --unsigned -a --allow-root -k --key --update-index --rebuild-index --spec-file --only"
     else
         _mirrors
     fi
@@ -507,7 +507,7 @@ _spack_buildcache_push() {
 _spack_buildcache_create() {
     if $list_options
     then
-        SPACK_COMPREPLY="-h --help -r --rel -f --force -u --unsigned -a --allow-root -k --key -d --directory -m --mirror-name --mirror-url --update-index --rebuild-index --spec-file --only"
+        SPACK_COMPREPLY="-h --help -f --force -u --unsigned -a --allow-root -k --key --update-index --rebuild-index --spec-file --only"
     else
         _mirrors
     fi
@@ -516,7 +516,7 @@ _spack_buildcache_create() {
 _spack_buildcache_install() {
     if $list_options
     then
-        SPACK_COMPREPLY="-h --help -f --force -m --multiple -a --allow-root -u --unsigned -o --otherarch"
+        SPACK_COMPREPLY="-h --help -f --force -m --multiple -u --unsigned -o --otherarch"
     else
         _all_packages
     fi
@@ -563,7 +563,7 @@ _spack_buildcache_save_specfile() {
 _spack_buildcache_sync() {
     if $list_options
     then
-        SPACK_COMPREPLY="-h --help --manifest-glob --src-directory --src-mirror-name --src-mirror-url --dest-directory --dest-mirror-name --dest-mirror-url"
+        SPACK_COMPREPLY="-h --help --manifest-glob"
     else
         SPACK_COMPREPLY=""
     fi
@@ -572,7 +572,7 @@ _spack_buildcache_sync() {
 _spack_buildcache_update_index() {
     if $list_options
     then
-        SPACK_COMPREPLY="-h --help -d --directory -m --mirror-name --mirror-url -k --keys"
+        SPACK_COMPREPLY="-h --help -k --keys"
     else
         _mirrors
     fi
@@ -581,7 +581,7 @@ _spack_buildcache_update_index() {
 _spack_buildcache_rebuild_index() {
     if $list_options
     then
-        SPACK_COMPREPLY="-h --help -d --directory -m --mirror-name --mirror-url -k --keys"
+        SPACK_COMPREPLY="-h --help -k --keys"
     else
         _mirrors
     fi
@@ -1060,7 +1060,7 @@ _spack_external_list() {
 }
 
 _spack_external_read_cray_manifest() {
-    SPACK_COMPREPLY="-h --help --file --directory --dry-run --fail-on-error"
+    SPACK_COMPREPLY="-h --help --file --directory --ignore-default-dir --dry-run --fail-on-error"
 }
 
 _spack_fetch() {
@@ -1695,7 +1695,7 @@ _spack_restage() {
 _spack_solve() {
     if $list_options
     then
-        SPACK_COMPREPLY="-h --help --show -l --long -L --very-long -I --install-status -y --yaml -j --json -c --cover -N --namespaces -t --types --timers --stats -U --fresh --reuse --reuse-deps"
+        SPACK_COMPREPLY="-h --help --show -l --long -L --very-long -I --install-status --no-install-status -y --yaml -j --json -c --cover -N --namespaces -t --types --timers --stats -U --fresh --reuse --reuse-deps"
     else
         _all_packages
     fi
@@ -1704,7 +1704,7 @@ _spack_solve() {
 _spack_spec() {
     if $list_options
     then
-        SPACK_COMPREPLY="-h --help -l --long -L --very-long -I --install-status -y --yaml -j --json --format -c --cover -N --namespaces -t --types -U --fresh --reuse --reuse-deps"
+        SPACK_COMPREPLY="-h --help -l --long -L --very-long -I --install-status --no-install-status -y --yaml -j --json --format -c --cover -N --namespaces -t --types -U --fresh --reuse --reuse-deps"
     else
         _all_packages
     fi
