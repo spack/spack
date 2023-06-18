@@ -487,21 +487,22 @@ def _iter_s3_prefix(client, url, num_entries=1024):
 def _iter_local_prefix(path):
     for root, _, files in os.walk(path):
         for f in files:
-            yield os.path.relpath(os.path.join(root, f), path)
+            yield Path(root, f).relative_to(path)
 
 
 def list_url(url, recursive=False):
     url = urllib.parse.urlparse(url)
     local_path = url_util.local_file_path(url)
-
     if local_path:
+        local_path = Path(local_path)
         if recursive:
             # convert backslash to forward slash as required for URLs
-            return [str(PurePosixPath(Path(p))) for p in list(_iter_local_prefix(local_path))]
+            return [p.as_posix() for p in list(_iter_local_prefix(local_path))]
+
         return [
-            subpath
-            for subpath in os.listdir(local_path)
-            if os.path.isfile(os.path.join(local_path, subpath))
+            str(subpath.relative_to(local_path))
+            for subpath in local_path.iterdir()
+            if subpath.is_file()
         ]
 
     if url.scheme == "s3":
