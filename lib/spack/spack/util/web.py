@@ -35,7 +35,6 @@ import spack.util.s3 as s3_util
 import spack.util.url as url_util
 from spack.util.compression import ALLOWED_ARCHIVE_TYPES
 from spack.util.executable import CommandNotFoundError, which
-from spack.util.path import convert_to_posix_path
 
 
 def _urlopen():
@@ -769,7 +768,6 @@ def find_versions_of_archive(
     versions = {}
     matched = set()
     for url in sorted(links):
-        url = convert_to_posix_path(url)
         if any(re.search(r, url) for r in regexes):
             try:
                 ver = spack.url.parse_version(url)
@@ -790,7 +788,6 @@ def find_versions_of_archive(
                 continue
 
     for url in archive_urls:
-        url = convert_to_posix_path(url)
         ver = spack.url.parse_version(url)
         if ver not in versions:
             versions[ver] = url
