@@ -181,25 +181,9 @@ def test_url_join_absolute_paths():
     join_result = url_util.join(p, "resource")
     assert join_result == "http://example.com/path/to/resource"
 
-    # works as if everything before the http:// URL was left out
-    # assert url_util.join("literally", "does", "not", "matter", p, "resource") == join_result
-
     assert url_util.join("file:///a/b/c", "./d") == "file:///a/b/c/d"
 
-    # Finally, resolve_href should have no effect for how absolute path
-    # components are handled because local hrefs can not be absolute path
-    # components.
-    args = [
-        # "s3://does",
-        # "not",
-        # "matter",
-        "http://example.com",
-        # "also",
-        # "does",
-        # "not",
-        # "matter",
-        "/path",
-    ]
+    args = ["http://example.com", "/path"]
 
     expected = "http://example.com/path"
     assert url_util.join(*args, resolve_href=True) == expected
@@ -209,8 +193,6 @@ def test_url_join_absolute_paths():
     # argument list.
     args[-1] = "/path/to/page"
     args.extend(("..", "..", "resource"))
-    # import pdb; pdb.set_trace()
-    # assert url_util.join(*args, resolve_href=True) == "http://example.com/resource"
 
     assert url_util.join(*args, resolve_href=False) == "http://example.com/path/resource"
 
