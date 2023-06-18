@@ -55,3 +55,6 @@ class Gsl(AutotoolsPackage, GNUMirrorPackage):
             configure_args.append("CBLAS_LIBS=%s" % self.spec["blas"].libs.ld_flags)
 
         return configure_args
+
+    def setup_run_environment(self, env):
+        env.set("GSL_ROOT_DIR", self.prefix)
