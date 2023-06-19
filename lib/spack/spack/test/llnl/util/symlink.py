@@ -5,27 +5,12 @@
 
 """Tests for ``llnl/util/symlink.py``"""
 import os
-import shutil
 import sys
 import tempfile
 
 import pytest
 
 from llnl.util import symlink
-
-
-@pytest.fixture(scope="session")
-def stage(tmpdir_factory):
-    """Creates a stage with the parent directory for the tests to run in."""
-
-    test_parent_dir = tmpdir_factory.mktemp("symlink_test")
-    assert os.path.exists(test_parent_dir)
-
-    # Run tests
-    yield test_parent_dir
-
-    # Clean up test directory
-    shutil.rmtree(test_parent_dir)
 
 
 def test_symlink_file(tmpdir):
