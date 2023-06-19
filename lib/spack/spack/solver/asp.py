@@ -1122,6 +1122,8 @@ class SpackSolverSetup:
     def pkg_rules(self, pkg, tests):
         pkg = packagize(pkg)
 
+        self.gen.fact(fn.max_nodes(pkg.name, 1))
+
         # versions
         self.pkg_version_rules(pkg)
         self.gen.newline()
