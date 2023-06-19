@@ -776,6 +776,7 @@ class PyclingoDriver:
 
         # Load the file itself
         self.control.load(os.path.join(parent_dir, "concretize.lp"))
+        self.control.load(os.path.join(parent_dir, "heuristic.lp"))
         self.control.load(os.path.join(parent_dir, "os_compatibility.lp"))
         self.control.load(os.path.join(parent_dir, "display.lp"))
         timer.stop("load")
@@ -1284,9 +1285,13 @@ class SpackSolverSetup:
 
     def package_provider_rules(self, pkg):
         for provider_name in sorted(set(s.name for s in pkg.provided.keys())):
+            if provider_name not in self.possible_virtuals:
+                continue
             self.gen.fact(fn.facts(pkg.name, fn.possible_provider(provider_name)))
 
         for provided, whens in pkg.provided.items():
+            if provided.name not in self.possible_virtuals:
+                continue
             for when in whens:
                 msg = "%s provides %s when %s" % (pkg.name, provided, when)
                 condition_id = self.condition(when, provided, pkg.name, msg)
