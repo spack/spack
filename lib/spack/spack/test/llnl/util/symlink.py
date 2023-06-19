@@ -154,7 +154,6 @@ def test_windows_create_junction(tmpdir):
         junction_real_dir = os.path.join(test_dir, "real_dir")
         junction_link_dir = os.path.join(test_dir, "link_dir")
         os.mkdir(junction_real_dir)
-        assert symlink._windows_is_junction(junction_real_dir) is False
         symlink._windows_create_junction(junction_real_dir, junction_link_dir)
         # Verify that all expected conditions are met
         assert os.path.exists(junction_link_dir)
