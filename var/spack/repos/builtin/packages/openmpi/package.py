@@ -1005,12 +1005,6 @@ class Openmpi(AutotoolsPackage, CudaPackage):
             self.enable_or_disable("mpi-thread-multiple", variant="thread_multiple")
         )
 
-        # With OpenMPI 4.0 and above, there could be compilation errors from “btl_uct” component.
-        # This component is not critical for using UCX; so it could be disabled.
-        # See https://openucx.readthedocs.io/en/master/running.html#id1
-        if "^ucx" in spec and spec.satisfies("@4:"):
-            config_args.append("--enable-mca-no-build=btl-uct")
-
         # CUDA support
         # See https://www.open-mpi.org/faq/?category=buildcuda
         if "+cuda" in spec:
