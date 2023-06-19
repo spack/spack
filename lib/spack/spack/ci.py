@@ -751,7 +751,7 @@ def generate_gitlab_ci_yaml(
             env.concretize()
             env.write()
 
-    yaml_root = ev.config_dict(env.manifest)
+    yaml_root = env.manifest[ev.TOP_LEVEL_KEY]
 
     # Get the joined "ci" config with all of the current scopes resolved
     ci_config = cfg.get("ci")

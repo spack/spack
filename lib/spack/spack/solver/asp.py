@@ -2500,10 +2500,15 @@ class SpecBuilder(object):
         assert len(dependencies) < 2, msg
 
         if not dependencies:
-            self._specs[pkg].add_dependency_edge(self._specs[dep], deptypes=(type,))
+            self._specs[pkg].add_dependency_edge(self._specs[dep], deptypes=(type,), virtuals=())
         else:
             # TODO: This assumes that each solve unifies dependencies
-            dependencies[0].add_type(type)
+            dependencies[0].update_deptypes(deptypes=(type,))
+
+    def virtual_on_edge(self, pkg, provider, virtual):
+        dependencies = self._specs[pkg].edges_to_dependencies(name=provider)
+        assert len(dependencies) == 1
+        dependencies[0].update_virtuals((virtual,))
 
     def reorder_flags(self):
         """Order compiler flags on specs in predefined order.
@@ -2581,6 +2586,8 @@ class SpecBuilder(object):
             return (-2, 0)
         elif name == "external_spec_selected":
             return (0, 0)  # note out of order so this goes last
+        elif name == "virtual_on_edge":
+            return (1, 0)
         else:
             return (-1, 0)
 

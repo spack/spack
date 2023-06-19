@@ -50,7 +50,7 @@ class Whizard(AutotoolsPackage):
     variant("openloops", default=False, description="builds with openloops")
     variant("latex", default=False, description="data visualization with latex")
 
-    depends_on("libtirpc")
+    depends_on("libtirpc", type=("build", "link", "run"))
     depends_on("ocaml@4.02.3:", type="build", when="@3:")
     depends_on("ocaml@4.02.3:~force-safe-string", type="build", when="@:2")
     depends_on("hepmc", when="hepmc=2")
@@ -107,7 +107,7 @@ class Whizard(AutotoolsPackage):
         spec = self.spec
         args = [
             "TIRPC_CFLAGS=-I%s" % spec["libtirpc"].prefix.include.tirpc,
-            "TIRPC_LIBS=-ltirpc",
+            f"TIRPC_LIBS= -L{spec['libtirpc'].prefix.lib} -ltirpc",
             "--enable-hepmc=%s" % ("no" if "hepmc=off" in spec else "yes"),
             "--enable-fastjet=%s" % ("yes" if "+fastjet" in spec else "no"),
             "--enable-pythia8=%s" % ("yes" if "+pythia8" in spec else "no"),
