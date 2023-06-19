@@ -28,7 +28,7 @@ jobs:
         pip install --upgrade pip
         pip install --upgrade vermin
     - name: vermin (Spack's Core)
-      run: vermin --backport importlib --backport argparse --violations --backport typing -t=2.7- -t=3.6- -vvv lib/spack/spack/ lib/spack/llnl/ bin/
+      run: vermin --backport importlib --backport argparse --violations --backport typing -t=3.6- -vvv lib/spack/spack/ lib/spack/llnl/ bin/
     - name: vermin (Repositories)
       run: vermin --backport importlib --backport argparse --violations --backport typing -t=3.6- -vvv var/spack/repos
   # Run style checks on the files that have been changed
