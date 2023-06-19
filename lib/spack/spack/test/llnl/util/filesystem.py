@@ -281,9 +281,6 @@ class TestInstallTree:
         with fs.working_dir(str(stage)):
             symlink("nonexistant.txt", "source/broken", allow_broken_symlinks=True)
             fs.install_tree("source", "dest", symlinks=True, allow_broken_symlinks=True)
-            import subprocess
-
-            subprocess.call(["tree"])
             assert os.path.islink("dest/broken")
             assert not os.path.exists(os.readlink("dest/broken"))
 
