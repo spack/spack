@@ -14,7 +14,10 @@
 #const root_node_id = 0.
 
 % Allow clingo to create nodes
-{ attr("node", node(0..X-1, Package)) } :- max_nodes(Package, X).
+{ attr("node", node(0..X-1, Package)) } :- max_nodes(Package, X), not virtual(Package).
+
+max_nodes(Package, 1) :- virtual(Package).
+{ attr("virtual_node", node(0..X-1, Package)) } :- max_nodes(Package, X), virtual(Package).
 
 % Integrity constraints on DAG nodes
 :- attr("root", PackageNode), not attr("node", PackageNode).
@@ -36,6 +39,12 @@
 :- attr("node_flag_source", ParentNode, _, _), not attr("node", ParentNode).
 :- attr("node_flag_source", _, _, ChildNode), not attr("node", ChildNode).
 
+% Rules on "unification sets", i.e. on sets of nodes allowing a single configuration of any given package
+unification_set("root", PackageNode) :- attr("root", PackageNode).
+unification_set(SetID, ChildNode) :- attr("depends_on", ParentNode, ChildNode, _), unification_set(SetID, ParentNode).
+unify(SetID, PackageName) :- unification_set(SetID, node(_, PackageName)).
+:- 2 { unification_set(SetID, node(_, PackageName)) }, unify(SetID, PackageName).
+
 % Give clingo the choice to solve an input spec or not
 { literal_solved(ID) } :- literal(ID).
 literal_not_solved(ID) :- not literal_solved(ID), literal(ID).
@@ -51,6 +60,8 @@ literal_not_solved(ID) :- not literal_solved(ID), literal(ID).
 opt_criterion(300, "number of input specs not concretized").
 #minimize{ 0@300: #true }.
 #minimize { 1@300,ID : literal_not_solved(ID) }.
+
+% TODO: literals, at the moment, can only influence the "root" unification set. This needs to be extended later.
 
 % Map constraint on the literal ID to facts on the node
 attr(Name, node(root_node_id, A1))             :- literal(LiteralID, Name, A1), literal_solved(LiteralID).
@@ -209,8 +220,7 @@ condition_holds(ID, node(root_node_id, Package)) :-
   attr(Name, node(root_node_id, A1), A2, A3)     : condition_requirement(ID, Name, A1, A2, A3), Name != "node_flag_source";
   attr(Name, node(root_node_id, A1), A2, A3, A4) : condition_requirement(ID, Name, A1, A2, A3, A4);
   % Special cases
-  % FIXME (node transformation): is node_flag_source needed?
-  attr("node_flag_source", node(NodeID, Package), A2, node(ID, A3)) : condition_requirement(ID, "node_flag_source", Package, A2, A3).
+  attr("node_flag_source", node(root_node_id, Package), A2, node(root_node_id, A3)) : condition_requirement(ID, "node_flag_source", Package, A2, A3).
 
 % condition_holds(ID, node(ID, Package)) implies all imposed_constraints, unless do_not_impose(ID, node(ID, Package))
 % is derived. This allows imposed constraints to be canceled in special cases.
@@ -225,8 +235,6 @@ attr(Name, node(root_node_id, A1), A2, A3, A4) :- impose(ID, node(NodeID, Packag
 % Special cases
 special_case(ID, Name, A1, A2, A3) :- imposed_constraint(ID, Name, A1, A2, A3), Name == "node_flag_source".
 special_case(ID, Name, A1, A2, A3) :- imposed_constraint(ID, Name, A1, A2, A3), Name == "depends_on".
-
-% FIXME (node transformation): is node_flag_source needed?
 attr("node_flag_source", node(NodeID, Package), A2, node(0, A3)) :- impose(ID, node(NodeID, Package)), imposed_constraint(ID, "node_flag_source", Package, A2, A3).
 attr("depends_on", node(NodeID, Package), node(0, A2), A3) :- impose(ID, node(NodeID, Package)), imposed_constraint(ID, "depends_on", Package, A2, A3).
 
