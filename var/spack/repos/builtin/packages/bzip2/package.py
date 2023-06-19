@@ -169,7 +169,7 @@ class Bzip2(Package, SourcewarePackage):
         pkg_path = join_path(self.prefix.lib, "pkgconfig")
         mkdirp(pkg_path)
 
-        with open(join_path(pkg_path, "zlib.pc"), "w") as f:
+        with open(join_path(pkg_path, "bzip2.pc"), "w") as f:
             f.write("prefix={0}\n".format(self.prefix))
             f.write("exec_prefix=${prefix}/bin\n")
             f.write("libdir={0}\n".format(libdir))
