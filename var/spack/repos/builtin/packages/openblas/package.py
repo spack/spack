@@ -92,7 +92,7 @@ class Openblas(CMakePackage, MakefilePackage):
     provides("lapack")
     provides("lapack@3.9.1:", when="@0.3.15:")
     provides("lapack@3.7.0", when="@0.2.20")
-    
+
     # https://github.com/xianyi/OpenBLAS/pull/2519/files
     patch("ifort-msvc.patch", when="%msvc")
 
