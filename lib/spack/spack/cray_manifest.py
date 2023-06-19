@@ -48,7 +48,8 @@ def translated_compiler_name(manifest_compiler_name):
 def compiler_from_entry(entry):
     compiler_name = translated_compiler_name(entry["name"])
     paths = entry["executables"]
-    version = entry["version"]
+    # to instantiate a compiler class we may need a concrete version:
+    version = "={}".format(entry["version"])
     arch = entry["arch"]
     operating_system = arch["os"]
     target = arch["target"]
@@ -163,7 +164,10 @@ def entries_to_specs(entries):
                     continue
                 parent_spec = spec_dict[entry["hash"]]
                 dep_spec = spec_dict[dep_hash]
-                parent_spec._add_dependency(dep_spec, deptypes=deptypes)
+                parent_spec._add_dependency(dep_spec, deptypes=deptypes, virtuals=())
+
+    for spec in spec_dict.values():
+        spack.spec.reconstruct_virtuals_on_edges(spec)
 
     return spec_dict
 

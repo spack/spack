@@ -53,6 +53,7 @@ import spack.util.url
 import spack.version
 from spack.filesystem_view import SimpleFilesystemView, inverse_view_func_parser, view_func_parser
 from spack.installer import PackageInstaller
+from spack.schema.env import TOP_LEVEL_KEY
 from spack.spec import Spec
 from spack.spec_list import InvalidSpecConstraintError, SpecList
 from spack.util.path import substitute_path_variables
@@ -124,7 +125,7 @@ spack:
 valid_environment_name_re = r"^\w[\w-]*$"
 
 #: version of the lockfile format. Must increase monotonically.
-lockfile_format_version = 4
+lockfile_format_version = 5
 
 
 READER_CLS = {
@@ -132,6 +133,7 @@ READER_CLS = {
     2: spack.spec.SpecfileV1,
     3: spack.spec.SpecfileV2,
     4: spack.spec.SpecfileV3,
+    5: spack.spec.SpecfileV4,
 }
 
 
@@ -359,19 +361,6 @@ def environment_dir_from_name(name: str, exists_ok: bool = True) -> str:
 def ensure_env_root_path_exists():
     if not os.path.isdir(env_root_path()):
         fs.mkdirp(env_root_path())
-
-
-def config_dict(yaml_data):
-    """Get the configuration scope section out of an spack.yaml"""
-    # TODO (env:): Remove env: as a possible top level keyword in v0.21
-    key = spack.config.first_existing(yaml_data, spack.schema.env.keys)
-    if key == "env":
-        msg = (
-            "using 'env:' as a top-level attribute of a Spack environment is deprecated and "
-            "will be removed in Spack v0.21. Please use 'spack:' instead."
-        )
-        warnings.warn(msg)
-    return yaml_data[key]
 
 
 def all_environment_names():
@@ -821,8 +810,8 @@ class Environment:
     def _construct_state_from_manifest(self):
         """Read manifest file and set up user specs."""
         self.spec_lists = collections.OrderedDict()
-
-        for item in config_dict(self.manifest).get("definitions", []):
+        env_configuration = self.manifest[TOP_LEVEL_KEY]
+        for item in env_configuration.get("definitions", []):
             entry = copy.deepcopy(item)
             when = _eval_conditional(entry.pop("when", "True"))
             assert len(entry) == 1
@@ -834,13 +823,13 @@ class Environment:
                 else:
                     self.spec_lists[name] = user_specs
 
-        spec_list = config_dict(self.manifest).get(user_speclist_name, [])
+        spec_list = env_configuration.get(user_speclist_name, [])
         user_specs = SpecList(
             user_speclist_name, [s for s in spec_list if s], self.spec_lists.copy()
         )
         self.spec_lists[user_speclist_name] = user_specs
 
-        enable_view = config_dict(self.manifest).get("view")
+        enable_view = env_configuration.get("view")
         # enable_view can be boolean, string, or None
         if enable_view is True or enable_view is None:
             self.views = {default_view_name: ViewDescriptor(self.path, self.view_path_default)}
@@ -855,14 +844,11 @@ class Environment:
         else:
             self.views = {}
 
-        # Retrieve the current concretization strategy
-        configuration = config_dict(self.manifest)
-
         # Retrieve unification scheme for the concretizer
         self.unify = spack.config.get("concretizer:unify", False)
 
         # Retrieve dev-build packages:
-        self.dev_specs = copy.deepcopy(configuration.get("develop", {}))
+        self.dev_specs = copy.deepcopy(env_configuration.get("develop", {}))
         for name, entry in self.dev_specs.items():
             # spec must include a concrete version
             assert Spec(entry["spec"]).versions.concrete_range_as_version
@@ -982,7 +968,7 @@ class Environment:
 
         # load config scopes added via 'include:', in reverse so that
         # highest-precedence scopes are last.
-        includes = config_dict(self.manifest).get("include", [])
+        includes = self.manifest[TOP_LEVEL_KEY].get("include", [])
         missing = []
         for i, config_path in enumerate(reversed(includes)):
             # allow paths to contain spack config/environment variables, etc.
@@ -1075,10 +1061,7 @@ class Environment:
         """Get the configuration scope for the environment's manifest file."""
         config_name = self.env_file_config_scope_name()
         return spack.config.SingleFileScope(
-            config_name,
-            self.manifest_path,
-            spack.schema.env.schema,
-            [spack.config.first_existing(self.manifest, spack.schema.env.keys)],
+            config_name, self.manifest_path, spack.schema.env.schema, [TOP_LEVEL_KEY]
         )
 
     def config_scopes(self):
@@ -1221,28 +1204,27 @@ class Environment:
         old_specs = set(self.user_specs)
         new_specs = set()
         for spec in matches:
-            if spec in list_to_change:
-                try:
-                    list_to_change.remove(spec)
-                    self.update_stale_references(list_name)
-                    new_specs = set(self.user_specs)
-                except spack.spec_list.SpecListError:
-                    # define new specs list
-                    new_specs = set(self.user_specs)
-                    msg = f"Spec '{spec}' is part of a spec matrix and "
-                    msg += f"cannot be removed from list '{list_to_change}'."
-                    if force:
-                        msg += " It will be removed from the concrete specs."
-                        # Mock new specs, so we can remove this spec from concrete spec lists
-                        new_specs.remove(spec)
-                    tty.warn(msg)
+            if spec not in list_to_change:
+                continue
+            try:
+                list_to_change.remove(spec)
+                self.update_stale_references(list_name)
+                new_specs = set(self.user_specs)
+            except spack.spec_list.SpecListError:
+                # define new specs list
+                new_specs = set(self.user_specs)
+                msg = f"Spec '{spec}' is part of a spec matrix and "
+                msg += f"cannot be removed from list '{list_to_change}'."
+                if force:
+                    msg += " It will be removed from the concrete specs."
+                    # Mock new specs, so we can remove this spec from concrete spec lists
+                    new_specs.remove(spec)
+                tty.warn(msg)
+            else:
+                if list_name == user_speclist_name:
+                    self.manifest.remove_user_spec(str(spec))
                 else:
-                    if list_name == user_speclist_name:
-                        for user_spec in matches:
-                            self.manifest.remove_user_spec(str(user_spec))
-                    else:
-                        for user_spec in matches:
-                            self.manifest.remove_definition(str(user_spec), list_name=list_name)
+                    self.manifest.remove_definition(str(spec), list_name=list_name)
 
         # If force, update stale concretized specs
         for spec in old_specs - new_specs:
@@ -1352,6 +1334,10 @@ class Environment:
             self.concretized_order = []
             self.specs_by_hash = {}
 
+        # Remove concrete specs that no longer correlate to a user spec
+        for spec in set(self.concretized_user_specs) - set(self.user_specs):
+            self.deconcretize(spec)
+
         # Pick the right concretization strategy
         if self.unify == "when_possible":
             return self._concretize_together_where_possible(tests=tests)
@@ -1364,6 +1350,16 @@ class Environment:
 
         msg = "concretization strategy not implemented [{0}]"
         raise SpackEnvironmentError(msg.format(self.unify))
+
+    def deconcretize(self, spec):
+        # spec has to be a root of the environment
+        index = self.concretized_user_specs.index(spec)
+        dag_hash = self.concretized_order.pop(index)
+        del self.concretized_user_specs[index]
+
+        # If this was the only user spec that concretized to this concrete spec, remove it
+        if dag_hash not in self.concretized_order:
+            del self.specs_by_hash[dag_hash]
 
     def _get_specs_to_concretize(
         self,
@@ -1553,12 +1549,13 @@ class Environment:
             for h in self.specs_by_hash:
                 current_spec, computed_spec = self.specs_by_hash[h], by_hash[h]
                 for node in computed_spec.traverse():
-                    test_deps = node.dependencies(deptype="test")
-                    for test_dependency in test_deps:
+                    test_edges = node.edges_to_dependencies(deptype="test")
+                    for current_edge in test_edges:
+                        test_dependency = current_edge.spec
                         if test_dependency in current_spec[node.name]:
                             continue
                         current_spec[node.name].add_dependency_edge(
-                            test_dependency.copy(), deptypes="test"
+                            test_dependency.copy(), deptypes="test", virtuals=current_edge.virtuals
                         )
 
         results = [
@@ -2189,9 +2186,9 @@ class Environment:
         # and add them to the spec
         for lockfile_key, node_dict in json_specs_by_hash.items():
             name, data = reader.name_and_data(node_dict)
-            for _, dep_hash, deptypes, _ in reader.dependencies_from_node_dict(data):
+            for _, dep_hash, deptypes, _, virtuals in reader.dependencies_from_node_dict(data):
                 specs_by_hash[lockfile_key]._add_dependency(
-                    specs_by_hash[dep_hash], deptypes=deptypes
+                    specs_by_hash[dep_hash], deptypes=deptypes, virtuals=virtuals
                 )
 
         # Traverse the root specs one at a time in the order they appear.
@@ -2671,8 +2668,8 @@ class EnvironmentManifestFile(collections.abc.Mapping):
         Args:
             user_spec: user spec to be appended
         """
-        config_dict(self.pristine_yaml_content).setdefault("specs", []).append(user_spec)
-        config_dict(self.yaml_content).setdefault("specs", []).append(user_spec)
+        self.pristine_configuration.setdefault("specs", []).append(user_spec)
+        self.configuration.setdefault("specs", []).append(user_spec)
         self.changed = True
 
     def remove_user_spec(self, user_spec: str) -> None:
@@ -2685,8 +2682,8 @@ class EnvironmentManifestFile(collections.abc.Mapping):
             SpackEnvironmentError: when the user spec is not in the list
         """
         try:
-            config_dict(self.pristine_yaml_content)["specs"].remove(user_spec)
-            config_dict(self.yaml_content)["specs"].remove(user_spec)
+            self.pristine_configuration["specs"].remove(user_spec)
+            self.configuration["specs"].remove(user_spec)
         except ValueError as e:
             msg = f"cannot remove {user_spec} from {self}, no such spec exists"
             raise SpackEnvironmentError(msg) from e
@@ -2703,8 +2700,8 @@ class EnvironmentManifestFile(collections.abc.Mapping):
             SpackEnvironmentError: when the user spec cannot be overridden
         """
         try:
-            config_dict(self.pristine_yaml_content)["specs"][idx] = user_spec
-            config_dict(self.yaml_content)["specs"][idx] = user_spec
+            self.pristine_configuration["specs"][idx] = user_spec
+            self.configuration["specs"][idx] = user_spec
         except ValueError as e:
             msg = f"cannot override {user_spec} from {self}"
             raise SpackEnvironmentError(msg) from e
@@ -2720,14 +2717,14 @@ class EnvironmentManifestFile(collections.abc.Mapping):
         Raises:
             SpackEnvironmentError: is no valid definition exists already
         """
-        defs = config_dict(self.pristine_yaml_content).get("definitions", [])
+        defs = self.pristine_configuration.get("definitions", [])
         msg = f"cannot add {user_spec} to the '{list_name}' definition, no valid list exists"
 
         for idx, item in self._iterate_on_definitions(defs, list_name=list_name, err_msg=msg):
             item[list_name].append(user_spec)
             break
 
-        config_dict(self.yaml_content)["definitions"][idx][list_name].append(user_spec)
+        self.configuration["definitions"][idx][list_name].append(user_spec)
         self.changed = True
 
     def remove_definition(self, user_spec: str, list_name: str) -> None:
@@ -2741,7 +2738,7 @@ class EnvironmentManifestFile(collections.abc.Mapping):
             SpackEnvironmentError: if the user spec cannot be removed from the list,
                 or the list does not exist
         """
-        defs = config_dict(self.pristine_yaml_content).get("definitions", [])
+        defs = self.pristine_configuration.get("definitions", [])
         msg = (
             f"cannot remove {user_spec} from the '{list_name}' definition, "
             f"no valid list exists"
@@ -2754,7 +2751,7 @@ class EnvironmentManifestFile(collections.abc.Mapping):
             except ValueError:
                 pass
 
-        config_dict(self.yaml_content)["definitions"][idx][list_name].remove(user_spec)
+        self.configuration["definitions"][idx][list_name].remove(user_spec)
         self.changed = True
 
     def override_definition(self, user_spec: str, *, override: str, list_name: str) -> None:
@@ -2769,7 +2766,7 @@ class EnvironmentManifestFile(collections.abc.Mapping):
         Raises:
             SpackEnvironmentError: if the user spec cannot be overridden
         """
-        defs = config_dict(self.pristine_yaml_content).get("definitions", [])
+        defs = self.pristine_configuration.get("definitions", [])
         msg = f"cannot override {user_spec} with {override} in the '{list_name}' definition"
 
         for idx, item in self._iterate_on_definitions(defs, list_name=list_name, err_msg=msg):
@@ -2780,7 +2777,7 @@ class EnvironmentManifestFile(collections.abc.Mapping):
             except ValueError:
                 pass
 
-        config_dict(self.yaml_content)["definitions"][idx][list_name][sub_index] = override
+        self.configuration["definitions"][idx][list_name][sub_index] = override
         self.changed = True
 
     def _iterate_on_definitions(self, definitions, *, list_name, err_msg):
@@ -2812,24 +2809,24 @@ class EnvironmentManifestFile(collections.abc.Mapping):
                 True the default view is used for the environment, if False there's no view.
         """
         if isinstance(view, dict):
-            config_dict(self.pristine_yaml_content)["view"][default_view_name].update(view)
-            config_dict(self.yaml_content)["view"][default_view_name].update(view)
+            self.pristine_configuration["view"][default_view_name].update(view)
+            self.configuration["view"][default_view_name].update(view)
             self.changed = True
             return
 
         if not isinstance(view, bool):
             view = str(view)
 
-        config_dict(self.pristine_yaml_content)["view"] = view
-        config_dict(self.yaml_content)["view"] = view
+        self.pristine_configuration["view"] = view
+        self.configuration["view"] = view
         self.changed = True
 
     def remove_default_view(self) -> None:
         """Removes the default view from the manifest file"""
-        view_data = config_dict(self.pristine_yaml_content).get("view")
+        view_data = self.pristine_configuration.get("view")
         if isinstance(view_data, collections.abc.Mapping):
-            config_dict(self.pristine_yaml_content)["view"].pop(default_view_name)
-            config_dict(self.yaml_content)["view"].pop(default_view_name)
+            self.pristine_configuration["view"].pop(default_view_name)
+            self.configuration["view"].pop(default_view_name)
             self.changed = True
             return
 
@@ -2846,12 +2843,10 @@ class EnvironmentManifestFile(collections.abc.Mapping):
         if entry["path"] == pkg_name:
             entry.pop("path")
 
-        config_dict(self.pristine_yaml_content).setdefault("develop", {}).setdefault(
-            pkg_name, {}
-        ).update(entry)
-        config_dict(self.yaml_content).setdefault("develop", {}).setdefault(pkg_name, {}).update(
+        self.pristine_configuration.setdefault("develop", {}).setdefault(pkg_name, {}).update(
             entry
         )
+        self.configuration.setdefault("develop", {}).setdefault(pkg_name, {}).update(entry)
         self.changed = True
 
     def remove_develop_spec(self, pkg_name: str) -> None:
@@ -2864,11 +2859,11 @@ class EnvironmentManifestFile(collections.abc.Mapping):
             SpackEnvironmentError: if there is nothing to remove
         """
         try:
-            del config_dict(self.pristine_yaml_content)["develop"][pkg_name]
+            del self.pristine_configuration["develop"][pkg_name]
         except KeyError as e:
             msg = f"cannot remove '{pkg_name}' from develop specs in {self}, entry does not exist"
             raise SpackEnvironmentError(msg) from e
-        del config_dict(self.yaml_content)["develop"][pkg_name]
+        del self.configuration["develop"][pkg_name]
         self.changed = True
 
     def absolutify_dev_paths(self, init_file_dir: Union[str, pathlib.Path]) -> None:
@@ -2879,11 +2874,11 @@ class EnvironmentManifestFile(collections.abc.Mapping):
             init_file_dir: directory with the "spack.yaml" used to initialize the environment.
         """
         init_file_dir = pathlib.Path(init_file_dir).absolute()
-        for _, entry in config_dict(self.pristine_yaml_content).get("develop", {}).items():
+        for _, entry in self.pristine_configuration.get("develop", {}).items():
             expanded_path = os.path.normpath(str(init_file_dir / entry["path"]))
             entry["path"] = str(expanded_path)
 
-        for _, entry in config_dict(self.yaml_content).get("develop", {}).items():
+        for _, entry in self.configuration.get("develop", {}).items():
             expanded_path = os.path.normpath(str(init_file_dir / entry["path"]))
             entry["path"] = str(expanded_path)
         self.changed = True
@@ -2896,6 +2891,16 @@ class EnvironmentManifestFile(collections.abc.Mapping):
         with fs.write_tmp_and_move(os.path.realpath(self.manifest_file)) as f:
             _write_yaml(self.pristine_yaml_content, f)
         self.changed = False
+
+    @property
+    def pristine_configuration(self):
+        """Return the dictionaries in the pristine YAML, without the top level attribute"""
+        return self.pristine_yaml_content[TOP_LEVEL_KEY]
+
+    @property
+    def configuration(self):
+        """Return the dictionaries in the YAML, without the top level attribute"""
+        return self.yaml_content[TOP_LEVEL_KEY]
 
     def __len__(self):
         return len(self.yaml_content)

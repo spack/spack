@@ -134,6 +134,7 @@ class LmodConfiguration(BaseConfiguration):
         return configuration(self.name).get("filter_hierarchy_specs", {})
 
     @property
+    @lang.memoized
     def hierarchy_tokens(self):
         """Returns the list of tokens that are part of the modulefile
         hierarchy. 'compiler' is always present.
@@ -158,6 +159,7 @@ class LmodConfiguration(BaseConfiguration):
         return tokens
 
     @property
+    @lang.memoized
     def requires(self):
         """Returns a dictionary mapping all the requirements of this spec
         to the actual provider. 'compiler' is always present among the
@@ -224,6 +226,7 @@ class LmodConfiguration(BaseConfiguration):
         return available
 
     @property
+    @lang.memoized
     def missing(self):
         """Returns the list of tokens that are not available."""
         return [x for x in self.hierarchy_tokens if x not in self.available]
@@ -317,6 +320,7 @@ class LmodFileLayout(BaseFileLayout):
         return parts
 
     @property
+    @lang.memoized
     def unlocked_paths(self):
         """Returns a dictionary mapping conditions to a list of unlocked
         paths.
@@ -428,6 +432,7 @@ class LmodContext(BaseContext):
         return self.conf.missing
 
     @tengine.context_property
+    @lang.memoized
     def unlocked_paths(self):
         """Returns the list of paths that are unlocked unconditionally."""
         layout = make_layout(self.spec, self.conf.name, self.conf.explicit)

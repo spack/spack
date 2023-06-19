@@ -53,6 +53,7 @@ class Gaudi(CMakePackage):
     # fixes for the cmake config which could not find newer boost versions
     patch("link_target_fixes.patch", when="@33.0:34")
     patch("link_target_fixes32.patch", when="@:32.2")
+    patch("fmt_fix.patch", when="@36.6:36.12 ^fmt@10:")
 
     # These dependencies are needed for a minimal Gaudi build
     depends_on("aida")
@@ -81,12 +82,7 @@ class Gaudi(CMakePackage):
 
     # Testing dependencies
     # Note: gaudi only builds examples when testing enabled
-    for pv in (
-        ["catch2", "@36.8:"],
-        ["py-nose", "@35:"],
-        ["py-pytest", "@36.2:"],
-        ["py-qmtest", "@35:"],
-    ):
+    for pv in (["catch2", "@36.8:"], ["py-nose", "@35:"], ["py-pytest", "@36.2:"]):
         depends_on(pv[0], when=pv[1], type="test")
         depends_on(pv[0], when=pv[1] + " +examples")
 
@@ -137,6 +133,8 @@ class Gaudi(CMakePackage):
         # environment as in Gaudi.xenv
         env.prepend_path("PATH", self.prefix.scripts)
         env.prepend_path("PYTHONPATH", self.prefix.python)
+        env.prepend_path("LD_LIBRARY_PATH", self.prefix.lib)
+        env.prepend_path("LD_LIBRARY_PATH", self.prefix.lib64)
 
     def url_for_version(self, version):
         major = str(version[0])

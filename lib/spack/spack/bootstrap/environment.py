@@ -175,12 +175,12 @@ def black_root_spec() -> str:
 
 def flake8_root_spec() -> str:
     """Return the root spec used to bootstrap flake8"""
-    return _root_spec("py-flake8")
+    return _root_spec("py-flake8@3.8.2:")
 
 
 def pytest_root_spec() -> str:
     """Return the root spec used to bootstrap flake8"""
-    return _root_spec("py-pytest")
+    return _root_spec("py-pytest@6.2.4:")
 
 
 def ensure_environment_dependencies() -> None:
