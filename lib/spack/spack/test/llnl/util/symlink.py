@@ -168,7 +168,7 @@ def test_windows_create_hard_link(tmpdir):
     with tmpdir.as_cwd():
         test_dir = str(tmpdir)
         fd, real_file = tempfile.mkstemp(prefix="real", suffix=".txt", dir=test_dir)
-        link_file = tempfile.mktemp(prefix="link", suffix=".txt", dir=test_dir)
+        link_file = str(tmpdir.join("link.txt"))
         symlink._windows_create_hard_link(real_file, link_file)
         # Verify that all expected conditions are met
         assert os.path.exists(link_file)
