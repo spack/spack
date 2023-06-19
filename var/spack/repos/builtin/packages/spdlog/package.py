@@ -60,6 +60,13 @@ class Spdlog(CMakePackage):
     depends_on("fmt@8:", when="@1.9: +fmt_external")
     depends_on("fmt@9:", when="@1.11: +fmt_external")
 
+    # spdlog@1.11.0 with fmt@10  https://github.com/gabime/spdlog/pull/2694
+    patch(
+        "https://github.com/gabime/spdlog/commit/0ca574ae168820da0268b3ec7607ca7b33024d05.patch?full_index=1",
+        sha256="31b22a9bfa6790fdabff186c0a9b0fd588439485f05cbef5e661231d15fec49b",
+        when="@1.11.0 +fmt_external ^fmt@10:",
+    )
+
     def cmake_args(self):
         args = []
 
