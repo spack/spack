@@ -98,7 +98,7 @@ def test_symlink_src_not_relative_to_link(tmpdir):
         assert not os.path.lexists(link_dir)
 
 
-def test_symlink_link_exists(tmpdir):
+def test_symlink_link_already_exists(tmpdir):
     """Test the symlink.symlink method for the case where a link already exists"""
     with tmpdir.as_cwd():
         test_dir = str(tmpdir)
