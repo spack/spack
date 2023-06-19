@@ -56,5 +56,7 @@ class Gsl(AutotoolsPackage, GNUMirrorPackage):
 
         return configure_args
 
+    # cmake looks for GSL_ROOT_DIR to find GSL so this helps pick the spack one
+    # when there are multiple installations (e.g. a system one and a spack one)
     def setup_run_environment(self, env):
         env.set("GSL_ROOT_DIR", self.prefix)
