@@ -13,6 +13,29 @@
 
 #const root_node_id = 0.
 
+% Allow clingo to create nodes
+{ attr("node", node(0..X-1, Package)) } :- max_nodes(Package, X).
+
+% Integrity constraints on DAG nodes
+:- attr("root", PackageNode), not attr("node", PackageNode).
+:- attr("version", PackageNode), not attr("node", PackageNode).
+:- attr("node_version_satisfies", PackageNode), not attr("node", PackageNode).
+:- attr("hash", PackageNode, _), not attr("node", PackageNode).
+:- attr("node_platform", PackageNode, _), not attr("node", PackageNode).
+:- attr("node_os", PackageNode, _), not attr("node", PackageNode).
+:- attr("node_target", PackageNode, _), not attr("node", PackageNode).
+:- attr("node_compiler_version", PackageNode, _, _), not attr("node", PackageNode).
+:- attr("variant_value", PackageNode, _, _), not attr("node", PackageNode).
+:- attr("node_flag_compiler_default", PackageNode), not attr("node", PackageNode).
+:- attr("node_flag", PackageNode, _, _), not attr("node", PackageNode).
+:- attr("node_flag_source", PackageNode, _, _), not attr("node", PackageNode).
+:- attr("no_flags", PackageNode, _), not attr("node", PackageNode).
+:- attr("external_spec_selected", PackageNode, _), not attr("node", PackageNode).
+:- attr("depends_on", ParentNode, _, _), not attr("node", ParentNode).
+:- attr("depends_on", _, ChildNode, _), not attr("node", ChildNode).
+:- attr("node_flag_source", ParentNode, _, _), not attr("node", ParentNode).
+:- attr("node_flag_source", _, _, ChildNode), not attr("node", ChildNode).
+
 % Give clingo the choice to solve an input spec or not
 { literal_solved(ID) } :- literal(ID).
 literal_not_solved(ID) :- not literal_solved(ID), literal(ID).
@@ -199,14 +222,13 @@ attr(Name, node(root_node_id, A1), A2)         :- impose(ID, node(NodeID, Packag
 attr(Name, node(root_node_id, A1), A2, A3)     :- impose(ID, node(NodeID, Package)), imposed_constraint(ID, Name, A1, A2, A3), not special_case(ID, Name, A1, A2, A3).
 attr(Name, node(root_node_id, A1), A2, A3, A4) :- impose(ID, node(NodeID, Package)), imposed_constraint(ID, Name, A1, A2, A3, A4).
 
-
 % Special cases
 special_case(ID, Name, A1, A2, A3) :- imposed_constraint(ID, Name, A1, A2, A3), Name == "node_flag_source".
 special_case(ID, Name, A1, A2, A3) :- imposed_constraint(ID, Name, A1, A2, A3), Name == "depends_on".
 
 % FIXME (node transformation): is node_flag_source needed?
-attr("node_flag_source", node(0, Package), A2, node(0, A3)) :- impose(ID, node(NodeID, Package)), imposed_constraint(ID, "node_flag_source", Package, A2, A3).
-attr("depends_on", node(0, Package), node(0, A2), A3) :- impose(ID, node(NodeID, Package)), imposed_constraint(ID, "depends_on", Package, A2, A3).
+attr("node_flag_source", node(NodeID, Package), A2, node(0, A3)) :- impose(ID, node(NodeID, Package)), imposed_constraint(ID, "node_flag_source", Package, A2, A3).
+attr("depends_on", node(NodeID, Package), node(0, A2), A3) :- impose(ID, node(NodeID, Package)), imposed_constraint(ID, "depends_on", Package, A2, A3).
 
 % we cannot have additional variant values when we are working with concrete specs
 :- attr("node", node(ID, Package)),
@@ -262,20 +284,10 @@ do_not_impose(ID, node(NodeID, Package)) :-
   attr("node", node(NodeID, Package)),
   facts(Package, dependency_condition(ID, Dependency)).
 
-% declared dependencies are real if they're not virtual AND
-% the package is not an external.
-% They're only triggered if the associated dependnecy condition holds.
-
-% TODO (node transformation): here we infer node id 0
-attr("depends_on", node(NodeID, Package), node(0, Dependency), Type)
- :- dependency_holds(node(NodeID, Package), Dependency, Type),
-    not virtual(Dependency).
-
-% every root must be a node
-attr("node", PackageNode) :- attr("root", PackageNode).
-
-% dependencies imply new nodes
-attr("node", DependencyNode) :- attr("node", PackageNode), depends_on(PackageNode, DependencyNode).
+% If a dependency holds on a package node, there must be one and only one dependency node satisfying it
+1 { attr("depends_on", PackageNode, node(0..Y-1, Dependency), Type) : max_nodes(Dependency, Y) } 1
+  :- dependency_holds(PackageNode, Dependency, Type),
+     not virtual(Dependency).
 
 % all nodes in the graph must be reachable from some root
 % this ensures a user can't say `zlib ^libiconv` (neither of which have any
@@ -332,9 +344,8 @@ attr("virtual_node", node(0, Virtual))
 % If there's a virtual node, we must select one and only one provider.
 % The provider must be selected among the possible providers.
 
-% FIXME (node transformation): here we use root_node_id
-{ provider(node(0, Package), node(VirtualID, Virtual))
-  : facts(Package, possible_provider(Virtual)) }
+{ provider(node(0..X-1, Package), node(VirtualID, Virtual))
+  : facts(Package, possible_provider(Virtual)), max_nodes(Package, X) }
   :- attr("virtual_node", node(VirtualID, Virtual)).
 
 error(100, "Cannot find valid provider for virtual {0}", VirtualNode)
