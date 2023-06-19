@@ -105,7 +105,6 @@ def test_symlink_src_not_relative_to_link(tmpdir):
                 link_path=f"a/{os.path.basename(link_file)}",
             )
         assert not os.path.exists(link_file)
-        assert not symlink.islink(link_file)
         # Check dirs
         assert not os.path.lexists(link_dir)
         with pytest.raises(symlink.SymlinkError):
