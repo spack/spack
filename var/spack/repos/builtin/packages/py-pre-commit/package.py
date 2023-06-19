@@ -19,7 +19,7 @@ class PyPreCommit(PythonPackage):
     version("2.10.1", sha256="399baf78f13f4de82a29b649afd74bef2c4e28eb4f021661fc7f29246e8c7a3a")
     version("1.20.0", sha256="9f152687127ec90642a2cc3e4d9e1e6240c4eb153615cb02aa1ad41d331cbb6e")
 
-    depends_on("python@3.8:", when="@:", type=("build", "run"))
+    depends_on("python@3.8:", when="@3:", type=("build", "run"))
     depends_on("python@3.7:", when="@2.20.0:", type=("build", "run"))
     depends_on("python@3.6.1:", when="@2.1.0:", type=("build", "run"))
     depends_on("py-setuptools", type="build")
