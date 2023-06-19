@@ -232,9 +232,8 @@ def test_windows_create_link_file(tmpdir):
 
 @pytest.mark.skipif(sys.platform != "win32", reason="Test is only for Windows")
 def test_windows_read_link(tmpdir):
-    """Test the functionality of the windows-specific implementations of
-    symlink.readlink
-    """
+    """Makes sure symlink.readlink can read the link source for hard links and
+    junctions on windows."""
     with tmpdir.as_cwd():
         real_dir_1 = "real_dir_1"
         real_dir_2 = "real_dir_2"
@@ -255,12 +254,7 @@ def test_windows_read_link(tmpdir):
         symlink._windows_create_junction(real_dir_1, link_dir_1)
         symlink._windows_create_junction(real_dir_2, link_dir_2)
 
-        # Read the links
-        hard_link_1 = symlink._windows_read_hard_link(link_file_1)
-        hard_link_2 = symlink._windows_read_hard_link(link_file_2)
-        junction_1 = symlink._windows_read_junction(link_dir_1)
-        junction_2 = symlink._windows_read_junction(link_dir_2)
-        assert hard_link_1 == os.path.abspath(real_file_1)
-        assert hard_link_2 == os.path.abspath(real_file_2)
-        assert junction_1 == os.path.abspath(real_dir_1)
-        assert junction_2 == os.path.abspath(real_dir_2)
+        assert symlink.readlink(link_file_1) == os.path.abspath(real_file_1)
+        assert symlink.readlink(link_file_2) == os.path.abspath(real_file_2)
+        assert symlink.readlink(link_dir_1) == os.path.abspath(real_dir_1)
+        assert symlink.readlink(link_dir_2) == os.path.abspath(real_dir_2)
