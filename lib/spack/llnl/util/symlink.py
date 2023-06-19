@@ -59,7 +59,7 @@ def symlink(source_path: str, link_path: str, allow_broken_symlinks: bool = Fals
 
     # Never allow broken links on Windows.
     if sys.platform == "win32" and allow_broken_symlinks:
-        raise ValueError('allow_broken_symlinks parameter cannot be True on Windows.')
+        raise ValueError("allow_broken_symlinks parameter cannot be True on Windows.")
 
     # Perform basic checks to make sure symlinking will succeed
     if os.path.lexists(link_path):
