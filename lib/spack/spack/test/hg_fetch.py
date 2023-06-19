@@ -14,7 +14,8 @@ import spack.repo
 from spack.fetch_strategy import HgFetchStrategy
 from spack.spec import Spec
 from spack.stage import Stage
-from spack.version import ver
+from spack.util.executable import which
+from spack.version import Version
 
 
 @pytest.mark.parametrize("type_of_test", ["default", "rev0"])
@@ -35,7 +36,7 @@ def test_fetch(type_of_test, secure, mock_hg_repository, config, mutable_mock_re
 
     # Construct the package under test
     s = Spec("hg-test").concretized()
-    monkeypatch.setitem(s.package.versions, ver("hg"), t.args)
+    monkeypatch.setitem(s.package.versions, Version("hg"), t.args)
 
     # Enter the stage directory and check some properties
     with s.package.stage:

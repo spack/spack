@@ -6,6 +6,7 @@
 """Tests for the `spack.verify` module"""
 import os
 import shutil
+import stat
 import sys
 
 import pytest
@@ -30,21 +31,11 @@ def test_link_manifest_entry(tmpdir):
     os.symlink(file, link)
 
     data = spack.verify.create_manifest_entry(link)
-    assert data["type"] == "link"
     assert data["dest"] == file
     assert all(x in data for x in ("mode", "owner", "group"))
 
     results = spack.verify.check_entry(link, data)
     assert not results.has_errors()
-
-    data["type"] = "garbage"
-
-    results = spack.verify.check_entry(link, data)
-    assert results.has_errors()
-    assert link in results.errors
-    assert results.errors[link] == ["type"]
-
-    data["type"] = "link"
 
     file2 = str(tmpdir.join("file2"))
     open(file2, "a").close()
@@ -64,18 +55,18 @@ def test_dir_manifest_entry(tmpdir):
     fs.mkdirp(dirent)
 
     data = spack.verify.create_manifest_entry(dirent)
-    assert data["type"] == "dir"
+    assert stat.S_ISDIR(data["mode"])
     assert all(x in data for x in ("mode", "owner", "group"))
 
     results = spack.verify.check_entry(dirent, data)
     assert not results.has_errors()
 
-    data["type"] = "garbage"
+    data["mode"] = "garbage"
 
     results = spack.verify.check_entry(dirent, data)
     assert results.has_errors()
     assert dirent in results.errors
-    assert results.errors[dirent] == ["type"]
+    assert results.errors[dirent] == ["mode"]
 
 
 def test_file_manifest_entry(tmpdir):
@@ -89,24 +80,24 @@ def test_file_manifest_entry(tmpdir):
         f.write(orig_str)
 
     data = spack.verify.create_manifest_entry(file)
-    assert data["type"] == "file"
+    assert stat.S_ISREG(data["mode"])
     assert data["size"] == len(orig_str)
-    assert all(x in data for x in ("mode", "owner", "group"))
+    assert all(x in data for x in ("owner", "group"))
 
     results = spack.verify.check_entry(file, data)
     assert not results.has_errors()
 
-    data["type"] = "garbage"
+    data["mode"] = 0x99999
 
     results = spack.verify.check_entry(file, data)
     assert results.has_errors()
     assert file in results.errors
-    assert results.errors[file] == ["type"]
-
-    data["type"] = "file"
+    assert results.errors[file] == ["mode"]
 
     with open(file, "w") as f:
         f.write(new_str)
+
+    data["mode"] = os.stat(file).st_mode
 
     results = spack.verify.check_entry(file, data)
 

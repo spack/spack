@@ -19,6 +19,7 @@ class Solr(Package):
 
     depends_on("java", type="run")
 
+    version("8.11.2", sha256="54d6ebd392942f0798a60d50a910e26794b2c344ee97c2d9b50e678a7066d3a6")
     version("8.6.0", sha256="4519ccdb531619df770f1065db6adcedc052c7aa94b42806d541966550956aa5")
     version("8.5.2", sha256="c457d6c7243241cad141e1df34c6f669d58a6c60e537f4217d032616dd066dcf")
     version("8.5.1", sha256="47b68073b37bbcc0517a355ef722f20827c3f1416537ebbccf5239dda8064a0b")

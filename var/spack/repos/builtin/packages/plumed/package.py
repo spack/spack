@@ -30,9 +30,11 @@ class Plumed(AutotoolsPackage):
 
     version("master", branch="master")
 
+    version("2.8.2", sha256="a2064bacba1dde36b05aaf351ba4b7e6d30a165b332b0a83b7a6db04b477be9f")
     version("2.8.1", sha256="f56bc9266c8a47241385c595717c2734a9b67148a7f4122b808bc0733710173e")
     version("2.8.0", sha256="8357eca6f280125037ad4e7c427f96f2af2f60ddfedce1a2e36e1e1cc3bff32b")
 
+    version("2.7.6", sha256="9ca7b1e84bf2343a09a5b604222dd04aa0fc8b62a7cb82d1d68b795b6b189c06")
     version("2.7.5", sha256="39cb01108706df7ef71c7c315ddfc4306137f62ac72222b8582ab892221f7972")
     version("2.7.4", sha256="6f5dc16a753c71ed719f17f9cbb61642ab8e716fb7f77e22960dfa145c3b8211")
     version("2.7.3", sha256="aa1f6200c2ed351e40ce4391a9590f171532474b30f384feddfab10e36d7e08e")

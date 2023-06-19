@@ -25,6 +25,10 @@ class BigdftChess(AutotoolsPackage, CudaPackage):
     variant("ntpoly", default=False, description="Option to use NTPoly")
     # variant('minpack', default=False,  description='Give the link-line for MINPACK')
 
+    depends_on("autoconf", type="build")
+    depends_on("automake", type="build")
+    depends_on("libtool", type="build")
+
     depends_on("python@3.0:", type=("build", "run"))
 
     depends_on("blas")
@@ -39,13 +43,7 @@ class BigdftChess(AutotoolsPackage, CudaPackage):
         depends_on("bigdft-futile@{0}".format(vers), when="@{0}".format(vers))
         depends_on("bigdft-atlab@{0}".format(vers), when="@{0}".format(vers))
 
-    build_directory = "chess"
-
-    def autoreconf(self, spec, prefix):
-        autoreconf = which("autoreconf")
-
-        with working_dir(self.build_directory):
-            autoreconf("-fi")
+    configure_directory = "chess"
 
     def configure_args(self):
         spec = self.spec
@@ -61,12 +59,15 @@ class BigdftChess(AutotoolsPackage, CudaPackage):
         linalg = []
         if "+scalapack" in spec:
             linalg.append(spec["scalapack"].libs.ld_flags)
+        linalg.append(spec["lapack"].libs.ld_flags)
+        linalg.append(spec["blas"].libs.ld_flags)
 
         args = [
             "FCFLAGS=%s" % " ".join(openmp_flag),
+            "LDFLAGS=%s" % " ".join(linalg),
             "--with-ext-linalg=%s" % " ".join(linalg),
             "--with-pyyaml-path=%s" % pyyaml,
-            "--with-futile-libs=%s" % spec["bigdft-futile"].prefix.lib,
+            "--with-futile-libs=%s" % spec["bigdft-futile"].libs.ld_flags,
             "--with-futile-incs=%s" % spec["bigdft-futile"].headers.include_flags,
             "--with-moduledir=%s" % prefix.include,
             "--prefix=%s" % prefix,

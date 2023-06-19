@@ -107,7 +107,7 @@ class EcpDataVisSdk(BundlePackage, CudaPackage, ROCmPackage):
         propagate=["cuda", "hdf5", "sz", "zfp", "fortran"] + cuda_arch_variants,
     )
 
-    dav_sdk_depends_on("darshan-runtime+mpi", when="+darshan", propagate=["hdf5"])
+    dav_sdk_depends_on("darshan-runtime+mpi", when="+darshan")
     dav_sdk_depends_on("darshan-util", when="+darshan")
 
     dav_sdk_depends_on("faodel+shared+mpi network=libfabric", when="+faodel", propagate=["hdf5"])
@@ -141,6 +141,7 @@ class EcpDataVisSdk(BundlePackage, CudaPackage, ROCmPackage):
     dav_sdk_depends_on("parallel-netcdf+shared", when="+pnetcdf", propagate=["fortran"])
 
     dav_sdk_depends_on("unifyfs", when="+unifyfs ")
+    conflicts("unifyfs@develop")
 
     dav_sdk_depends_on("veloc", when="+veloc")
 
@@ -151,7 +152,7 @@ class EcpDataVisSdk(BundlePackage, CudaPackage, ROCmPackage):
     # Fortran support with ascent is problematic on some Cray platforms so the
     # SDK is explicitly disabling it until the issues are resolved.
     dav_sdk_depends_on(
-        "ascent+mpi~fortran+openmp+python+shared+vtkh+dray~test",
+        "ascent+mpi~fortran+python+shared+vtkh+dray~test",
         when="+ascent",
         propagate=["adios2", "cuda"] + cuda_arch_variants,
     )
@@ -170,7 +171,8 @@ class EcpDataVisSdk(BundlePackage, CudaPackage, ROCmPackage):
     # ParaView needs @5.11: in order to use CUDA/ROCM, therefore it is the minimum
     # required version since GPU capability is desired for ECP
     dav_sdk_depends_on(
-        "paraview@5.11:+mpi+openpmd+python+kits+shared+catalyst+libcatalyst",
+        "paraview@5.11:+mpi+openpmd+python+kits+shared+catalyst+libcatalyst+raytracing"
+        " use_vtkm=on",
         when="+paraview",
         propagate=["adios2", "cuda", "hdf5", "rocm"] + amdgpu_target_variants + cuda_arch_variants,
     )

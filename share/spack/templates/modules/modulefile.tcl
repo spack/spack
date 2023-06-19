@@ -26,9 +26,17 @@ proc ModulesHelp { } {
 {% endblock %}
 
 {% block autoloads %}
+{% if autoload|length > 0 %}
+if {![info exists ::env(LMOD_VERSION_MAJOR)]} {
 {% for module in autoload %}
-module load {{ module }}
+    module load {{ module }}
 {% endfor %}
+} else {
+{% for module in autoload %}
+    depends-on {{ module }}
+{% endfor %}
+}
+{% endif %}
 {% endblock %}
 {#  #}
 {% block prerequisite %}
@@ -58,6 +66,10 @@ unsetenv {{ cmd.name }}
 {% endif %}
 {#  #}
 {% endfor %}
+{# Make sure system man pages are enabled by appending trailing delimiter to MANPATH #}
+{% if has_manpath_modifications %}
+append-path --delim ":" MANPATH ""
+{% endif %}
 {% endblock %}
 
 {% block footer %}

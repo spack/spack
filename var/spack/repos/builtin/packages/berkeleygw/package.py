@@ -18,19 +18,19 @@ class Berkeleygw(MakefilePackage):
 
     version(
         "3.0.1",
-        "7d8c2cc1ee679afb48efbdd676689d4d537226b50e13a049dbcb052aaaf3654f",
+        sha256="7d8c2cc1ee679afb48efbdd676689d4d537226b50e13a049dbcb052aaaf3654f",
         url="https://berkeley.box.com/shared/static/m1dgnhiemo47lhxczrn6si71bwxoxor8.gz",
         expand=False,
     )
     version(
         "3.0",
-        "ab411acead5e979fd42b8d298dbb0a12ce152e7be9eee0bb87e9e5a06a638e2a",
+        sha256="ab411acead5e979fd42b8d298dbb0a12ce152e7be9eee0bb87e9e5a06a638e2a",
         url="https://berkeley.box.com/shared/static/lp6hj4kxr459l5a6t05qfuzl2ucyo03q.gz",
         expand=False,
     )
     version(
         "2.1",
-        "31f3b643dd937350c3866338321d675d4a1b1f54c730b43ad74ae67e75a9e6f2",
+        sha256="31f3b643dd937350c3866338321d675d4a1b1f54c730b43ad74ae67e75a9e6f2",
         url="https://berkeley.box.com/shared/static/ze3azi5vlyw7hpwvl9i5f82kaiid6g0x.gz",
         expand=False,
     )

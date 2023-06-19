@@ -42,7 +42,7 @@ class Ispc(CMakePackage):
     depends_on("ncurses", type="link")
     depends_on("zlib", type="link")
     depends_on("llvm+clang")
-    depends_on("llvm@13:15", when="@1.19")
+    depends_on("llvm@13:15", when="@1.19:")
     depends_on("llvm@11.0:14.0", when="@1.18")
     depends_on("llvm@11:14", when="@1.17")
     depends_on("llvm@:12", when="@:1.16")

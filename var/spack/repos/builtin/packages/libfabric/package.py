@@ -22,6 +22,7 @@ class Libfabric(AutotoolsPackage):
     executables = ["^fi_info$"]
 
     version("main", branch="main")
+    version("1.18.0", sha256="912fb7c7b3cf2a91140520962b004a1c5d2f39184adbbd98ae5919b0178afd43")
     version("1.17.1", sha256="8b372ddb3f46784c53fdad50a701a6eb0e661239aee45a42169afbedf3644035")
     version("1.17.0", sha256="579c0f5ef636c0c72f4d3d6bd4da91a5aed9ac3ac4ea387404c45dbbdee4745d")
     version("1.16.1", sha256="53f992d33f9afe94b8a4ea3d105504887f4311cf4b68cea99a24a85fcc39193f")
@@ -112,7 +113,6 @@ class Libfabric(AutotoolsPackage):
     depends_on("ucx", when="fabrics=mlx")
     depends_on("uuid", when="fabrics=opx")
     depends_on("numactl", when="fabrics=opx")
-    depends_on("linux-headers", when="fabrics=opx")
 
     depends_on("m4", when="@main", type="build")
     depends_on("autoconf", when="@main", type="build")

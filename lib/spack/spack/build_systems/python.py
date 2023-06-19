@@ -180,6 +180,51 @@ class PythonExtension(spack.package_base.PackageBase):
                 work_dir="spack-test",
             )
 
+    def update_external_dependencies(self, extendee_spec=None):
+        """
+        Ensure all external python packages have a python dependency
+
+        If another package in the DAG depends on python, we use that
+        python for the dependency of the external. If not, we assume
+        that the external PythonPackage is installed into the same
+        directory as the python it depends on.
+        """
+        # TODO: Include this in the solve, rather than instantiating post-concretization
+        if "python" not in self.spec:
+            if extendee_spec:
+                python = extendee_spec
+            elif "python" in self.spec.root:
+                python = self.spec.root["python"]
+            else:
+                python = self.get_external_python_for_prefix()
+                if not python.concrete:
+                    repo = spack.repo.path.repo_for_pkg(python)
+                    python.namespace = repo.namespace
+
+                    # Ensure architecture information is present
+                    if not python.architecture:
+                        host_platform = spack.platforms.host()
+                        host_os = host_platform.operating_system("default_os")
+                        host_target = host_platform.target("default_target")
+                        python.architecture = spack.spec.ArchSpec(
+                            (str(host_platform), str(host_os), str(host_target))
+                        )
+                    else:
+                        if not python.architecture.platform:
+                            python.architecture.platform = spack.platforms.host()
+                        if not python.architecture.os:
+                            python.architecture.os = "default_os"
+                        if not python.architecture.target:
+                            python.architecture.target = archspec.cpu.host().family.name
+
+                    # Ensure compiler information is present
+                    if not python.compiler:
+                        python.compiler = self.spec.compiler
+
+                    python.external_path = self.spec.external_path
+                    python._mark_concrete()
+            self.spec.add_dependency_edge(python, deptypes=("build", "link", "run"), virtuals=())
+
 
 class PythonPackage(PythonExtension):
     """Specialized class for packages that are built using pip."""
@@ -225,51 +270,6 @@ class PythonPackage(PythonExtension):
             name = cls.pypi.split("/")[0]
             return "https://pypi.org/simple/" + name + "/"
 
-    def update_external_dependencies(self, extendee_spec=None):
-        """
-        Ensure all external python packages have a python dependency
-
-        If another package in the DAG depends on python, we use that
-        python for the dependency of the external. If not, we assume
-        that the external PythonPackage is installed into the same
-        directory as the python it depends on.
-        """
-        # TODO: Include this in the solve, rather than instantiating post-concretization
-        if "python" not in self.spec:
-            if extendee_spec:
-                python = extendee_spec
-            elif "python" in self.spec.root:
-                python = self.spec.root["python"]
-            else:
-                python = self.get_external_python_for_prefix()
-                if not python.concrete:
-                    repo = spack.repo.path.repo_for_pkg(python)
-                    python.namespace = repo.namespace
-
-                    # Ensure architecture information is present
-                    if not python.architecture:
-                        host_platform = spack.platforms.host()
-                        host_os = host_platform.operating_system("default_os")
-                        host_target = host_platform.target("default_target")
-                        python.architecture = spack.spec.ArchSpec(
-                            (str(host_platform), str(host_os), str(host_target))
-                        )
-                    else:
-                        if not python.architecture.platform:
-                            python.architecture.platform = spack.platforms.host()
-                        if not python.architecture.os:
-                            python.architecture.os = "default_os"
-                        if not python.architecture.target:
-                            python.architecture.target = archspec.cpu.host().family.name
-
-                    # Ensure compiler information is present
-                    if not python.compiler:
-                        python.compiler = self.spec.compiler
-
-                    python.external_path = self.spec.external_path
-                    python._mark_concrete()
-            self.spec.add_dependency_edge(python, deptypes=("build", "link", "run"))
-
     def get_external_python_for_prefix(self):
         """
         For an external package that extends python, find the most likely spec for the python
@@ -290,7 +290,7 @@ class PythonPackage(PythonExtension):
 
         python_external_config = spack.config.get("packages:python:externals", [])
         python_externals_configured = [
-            spack.spec.Spec(item["spec"])
+            spack.spec.parse_with_version_concrete(item["spec"])
             for item in python_external_config
             if item["prefix"] == self.spec.external_path
         ]

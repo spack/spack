@@ -44,7 +44,11 @@ def setup_parser(subparser):
     )
 
     # Below are arguments w.r.t. spec display (like spack spec)
-    arguments.add_common_arguments(subparser, ["long", "very_long", "install_status"])
+    arguments.add_common_arguments(subparser, ["long", "very_long"])
+
+    install_status_group = subparser.add_mutually_exclusive_group()
+    arguments.add_common_arguments(install_status_group, ["install_status", "no_install_status"])
+
     subparser.add_argument(
         "-y",
         "--yaml",
@@ -140,12 +144,15 @@ def _process_result(result, show, required_format, kwargs):
 
 def solve(parser, args):
     # these are the same options as `spack spec`
-    name_fmt = "{namespace}.{name}" if args.namespaces else "{name}"
-    fmt = "{@version}{%compiler}{compiler_flags}{variants}{arch=architecture}"
     install_status_fn = spack.spec.Spec.install_status
+
+    fmt = spack.spec.display_format
+    if args.namespaces:
+        fmt = "{namespace}." + fmt
+
     kwargs = {
         "cover": args.cover,
-        "format": name_fmt + fmt,
+        "format": fmt,
         "hashlen": None if args.very_long else 7,
         "show_types": args.types,
         "status_fn": install_status_fn if args.install_status else None,
