@@ -407,10 +407,9 @@ class Stage(object):
     def save_filename(self):
         possible_filenames = self.expected_archive_files
         if possible_filenames:
-            # This prefers using the URL associated with the default fetcher if
-            # available, so that the fetched resource name matches the remote
-            # name
-            return possible_filenames[0]
+            # We use per_package_ref (package name, version and extension).
+            # See mirror_archive_paths for more information.
+            return possible_filenames[len(possible_filenames) - 1]
 
     @property
     def archive_file(self):
