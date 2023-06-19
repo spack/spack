@@ -1,7 +1,7 @@
 diff -Naur papi-7.0.1-orig/src/components/sde/tests/Makefile papi-7.0.1/src/components/sde/tests/Makefile
 --- papi-7.0.1-orig/src/components/sde/tests/Makefile	2023-06-19 14:27:44.224943877 -0400
-+++ papi-7.0.1/src/components/sde/tests/Makefile	2023-06-19 14:46:18.462536297 -0400
-@@ -1,11 +1,13 @@
++++ papi-7.0.1/src/components/sde/tests/Makefile	2023-06-19 16:25:16.749303194 -0400
+@@ -1,12 +1,16 @@
  NAME=sde
  include ../../Makefile_comp_tests.target
  INCLUDE += -I$(datadir)/sde_lib -I..
@@ -14,12 +14,15 @@ diff -Naur papi-7.0.1-orig/src/components/sde/tests/Makefile papi-7.0.1/src/comp
 -else
 +else ifneq ($(findstring $(notdir $(F77)),$(intel_compilers)),)
  	FFLAGS +=-free
++else ifeq ($(notdir $(F77)),crayftn)
++	FFLAGS +=-ffree
  endif
  FFLAGS +=-g
+ CFLAGS +=-g
 diff -Naur papi-7.0.1-orig/src/components/sysdetect/tests/Makefile papi-7.0.1/src/components/sysdetect/tests/Makefile
 --- papi-7.0.1-orig/src/components/sysdetect/tests/Makefile	2023-06-19 14:27:44.220943888 -0400
-+++ papi-7.0.1/src/components/sysdetect/tests/Makefile	2023-06-19 14:46:20.678540592 -0400
-@@ -19,11 +19,12 @@
++++ papi-7.0.1/src/components/sysdetect/tests/Makefile	2023-06-19 16:25:43.213238526 -0400
+@@ -19,12 +19,15 @@
      FTESTS =
  endif
  
@@ -31,5 +34,8 @@ diff -Naur papi-7.0.1-orig/src/components/sysdetect/tests/Makefile papi-7.0.1/sr
 -else
 +else ifneq ($(findstring $(notdir $(F77)),$(intel_compilers)),)
      FFLAGS +=-free
++else ifeq ($(notdir $(F77)),crayftn)
++    FFLAGS +=-ffree
  endif
  
+ TESTS = query_device_simple \
