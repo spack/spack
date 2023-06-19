@@ -40,6 +40,7 @@ import re
 import sys
 import traceback
 import types
+from pathlib import Path
 from typing import List, Tuple
 
 import llnl.util.tty as tty
@@ -601,7 +602,8 @@ def set_module_variables_for_package(pkg):
 
     # Find the configure script in the archive path
     # Don't use which for this; we want to find it in the current dir.
-    m.configure = Executable("./configure")
+    config = str(Path(pkg.stage.source_path, "configure"))
+    m.configure = Executable(config)
 
     # Standard CMake arguments
     m.std_cmake_args = spack.build_systems.cmake.CMakeBuilder.std_args(pkg)

@@ -5,7 +5,6 @@
 
 import os
 import re
-import shlex
 import subprocess
 import sys
 from pathlib import Path, PurePath
@@ -21,9 +20,17 @@ class Executable:
     """Class representing a program that can be run on the command line."""
 
     def __init__(self, name):
-        if not isinstance(name, PurePath):
-            name = Path(name).as_posix()
-        self.exe = shlex.split(name)
+        # if " " in name:
+        # raise NotImplementedError("Space in name: `%s`" % name)
+        # names = name.split()
+
+        file_path = which_string(name)
+        if not file_path:
+            # the file does not currently exist but it will exist in the cwd by
+            # the time the executable is called
+            file_path = Path(name).resolve()
+
+        self.exe = [Path(file_path).as_posix()]
 
         self.default_env = {}
         from spack.util.environment import EnvironmentModifications  # no cycle
@@ -119,10 +126,6 @@ class Executable:
         By default, the subprocess inherits the parent's file descriptors.
 
         """
-        # Find exe full path if in current directory
-        if Path(self.exe[0]).exists():
-            self.exe[0] = (Path.cwd() / self.exe[0]).as_posix()
-
         # Environment
         env_arg = kwargs.get("env", None)
 
@@ -326,7 +329,7 @@ def which(*args, **kwargs):
         Executable: The first executable that is found in the path
     """
     exe = which_string(*args, **kwargs)
-    return Executable(shlex.quote(exe)) if exe else None
+    return Executable(exe) if exe else None
 
 
 class ProcessError(spack.error.SpackError):
