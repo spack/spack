@@ -88,7 +88,8 @@ def test_symlink_src_relative_to_link(tmpdir):
 
 def test_symlink_src_not_relative_to_link(tmpdir):
     """Test the symlink.symlink functionality where the source value does not exist relative to
-    the link and not relative to the cwd"""
+    the link and not relative to the cwd. NOTE that this symlink api call is EXPECTED to raise
+    a symlink.SymlinkError exception that we catch."""
     with tmpdir.as_cwd():
         test_dir = str(tmpdir)
         subdir_1 = os.path.join(test_dir, "a")
