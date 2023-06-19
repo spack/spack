@@ -81,7 +81,7 @@ class Papi(AutotoolsPackage, ROCmPackage):
     )
     patch("crayftn-fixes.patch", when="@6.0.0:%cce@9:")
     patch("intel-oneapi-compiler-fixes.patch", when="@6.0.0:%oneapi")
-    patch("intel-freeform.patch", when="@7.0.1:%cce")
+    patch("intel-freeform.patch", when="@7.0.1")
 
     configure_directory = "src"
 
