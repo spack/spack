@@ -13,6 +13,9 @@
 
 #const root_node_id = 0.
 
+#const link_run = 0.
+#const direct_build = 1.
+
 % Allow clingo to create nodes
 { attr("node", node(0..X-1, Package)) } :- max_nodes(Package, X), not virtual(Package).
 
@@ -39,11 +42,41 @@ max_nodes(Package, 1) :- virtual(Package).
 :- attr("node_flag_source", ParentNode, _, _), not attr("node", ParentNode).
 :- attr("node_flag_source", _, _, ChildNode), not attr("node", ChildNode).
 
+:- attr("virtual_node", VirtualNode), not provider(_, VirtualNode).
+:- provider(_, VirtualNode), not attr("virtual_node", VirtualNode).
+:- provider(PackageNode, _), not attr("node", PackageNode).
+
+:- attr("root", node(ID, PackageNode)), ID> root_node_id.
+
+% Root nodes cannot depend on non-root nodes if the dependency is "link" or "run"
+:- attr("depends_on", node(root_node_id, _), node(ID, _), "link"), ID != root_node_id.
+:- attr("depends_on", node(root_node_id, _), node(ID, _), "run"),  ID != root_node_id.
+
 % Rules on "unification sets", i.e. on sets of nodes allowing a single configuration of any given package
-unification_set("root", PackageNode) :- attr("root", PackageNode).
-unification_set(SetID, ChildNode) :- attr("depends_on", ParentNode, ChildNode, _), unification_set(SetID, ParentNode).
 unify(SetID, PackageName) :- unification_set(SetID, node(_, PackageName)).
 :- 2 { unification_set(SetID, node(_, PackageName)) }, unify(SetID, PackageName).
+
+unification_set("root", PackageNode) :- attr("root", PackageNode).
+unification_set(SetID, ChildNode) :- attr("depends_on", ParentNode, ChildNode, Type), Type != "build", unification_set(SetID, ParentNode).
+unification_set(("build", ParentNode), ChildNode) :- attr("depends_on", ParentNode, ChildNode, Type), Type == "build", unification_set("root", ParentNode).
+unification_set(SetID, ChildNode) :- attr("depends_on", ParentNode, ChildNode, Type), Type == "build", SetID != "root", unification_set(SetID, ParentNode).
+unification_set(SetID, VirtualNode) :- provider(PackageNode, VirtualNode), unification_set(SetID, PackageNode).
+
+%----
+% Rules to break symmetry and speed-up searches
+%----
+
+% In the "root" unification set only ID = 0 are allowed
+:- unification_set("root", node(ID, _)), ID != 0.
+
+% Cannot have a node with an ID, if lower ID of the same package are not used
+:- attr("node", node(ID1, Package)),
+   not attr("node", node(ID2, Package)),
+   max_nodes(Package, X), ID1=0..X-1, ID2=0..X-1, ID2 < ID1.
+
+:- attr("virtual_node", node(ID1, Package)),
+   not attr("virtual_node", node(ID2, Package)),
+   max_nodes(Package, X), ID1=0..X-1, ID2=0..X-1, ID2 < ID1.
 
 % Give clingo the choice to solve an input spec or not
 { literal_solved(ID) } :- literal(ID).
@@ -63,15 +96,16 @@ opt_criterion(300, "number of input specs not concretized").
 
 % TODO: literals, at the moment, can only influence the "root" unification set. This needs to be extended later.
 
+special_case("node_flag_source").
+special_case("depends_on").
+
 % Map constraint on the literal ID to facts on the node
 attr(Name, node(root_node_id, A1))             :- literal(LiteralID, Name, A1), literal_solved(LiteralID).
 attr(Name, node(root_node_id, A1), A2)         :- literal(LiteralID, Name, A1, A2), literal_solved(LiteralID).
-attr(Name, node(root_node_id, A1), A2, A3)     :- literal(LiteralID, Name, A1, A2, A3), literal_solved(LiteralID), not literal_special_case(LiteralID, Name, A1, A2, A3).
+attr(Name, node(root_node_id, A1), A2, A3)     :- literal(LiteralID, Name, A1, A2, A3), literal_solved(LiteralID), not special_case(Name).
 attr(Name, node(root_node_id, A1), A2, A3, A4) :- literal(LiteralID, Name, A1, A2, A3, A4), literal_solved(LiteralID).
 
 % Special cases where nodes occur in arguments other than A1
-literal_special_case(LiteralID, Name, A1, A2, A3) :- literal(LiteralID, Name, A1, A2, A3), Name == "node_flag_source".
-literal_special_case(LiteralID, Name, A1, A2, A3) :- literal(LiteralID, Name, A1, A2, A3), Name == "depends_on".
 attr("node_flag_source", node(root_node_id, A1), A2, node(root_node_id, A3)) :- literal(LiteralID, "node_flag_source", A1, A2, A3), literal_solved(LiteralID).
 attr("depends_on",       node(root_node_id, A1), node(root_node_id, A2), A3) :- literal(LiteralID, "depends_on",       A1, A2, A3), literal_solved(LiteralID).
 
@@ -213,30 +247,100 @@ attr("node_version_satisfies", node(ID, Package), Constraint)
 %-----------------------------------------------------------------------------
 % conditions are specified with `condition_requirement` and hold when
 % corresponding spec attributes hold.
-condition_holds(ID, node(root_node_id, Package)) :-
-  facts(Package, condition(ID));
-  attr(Name, node(root_node_id, A1))             : condition_requirement(ID, Name, A1);
-  attr(Name, node(root_node_id, A1), A2)         : condition_requirement(ID, Name, A1, A2);
-  attr(Name, node(root_node_id, A1), A2, A3)     : condition_requirement(ID, Name, A1, A2, A3), Name != "node_flag_source";
-  attr(Name, node(root_node_id, A1), A2, A3, A4) : condition_requirement(ID, Name, A1, A2, A3, A4);
+
+% A "condition_set(PackageNode, _)" is the set of nodes on which PackageNode can require / impose conditions
+% Currently, for a given node, this is the link-run sub-DAG of PackageNode and its direct build dependencies
+condition_set(PackageNode, PackageNode, link_run) :- attr("node", PackageNode).
+
+condition_set(PackageNode, PackageNode, link_run) :- provider(PackageNode, VirtualNode).
+condition_set(PackageNode, VirtualNode, link_run) :- provider(PackageNode, VirtualNode).
+
+:- condition_set(node(root_node_id, Package), node(ID, A1), link_run), ID > root_node_id.
+
+condition_set(ID, DependencyNode, link_run)
+  :- condition_set(ID, PackageNode, link_run),
+     attr("depends_on", PackageNode, DependencyNode, Type),
+     Type != "build".
+
+condition_set(PackageNode, DependencyNode, direct_build) :- condition_set(PackageNode, PackageNode, link_run), attr("depends_on", PackageNode, DependencyNode, "build").
+condition_set(ID, VirtualNode, Type) :- condition_set(ID, PackageNode, Type), provider(PackageNode, VirtualNode).
+
+condition_set(ID, PackageNode) :- condition_set(ID, PackageNode, _).
+
+condition_packages(ID, A1) :- condition_requirement(ID, _, A1).
+condition_packages(ID, A1) :- condition_requirement(ID, _, A1, _).
+condition_packages(ID, A1) :- condition_requirement(ID, _, A1, _, _).
+condition_packages(ID, A1) :- condition_requirement(ID, _, A1, _, _, _).
+
+node_condition(ID, node(PackageID, Package)) :- facts(Package, condition(ID)), attr("node", node(PackageID, Package)).
+node_condition(ID, node(PackageID, Package)) :- facts(Virtual, condition(ID)), provider(node(PackageID, Package), node(_, Virtual)).
+
+condition_nodes(ConditionID, PackageNode, node(X, A1))
+  :- condition_packages(ConditionID, A1),
+     condition_set(PackageNode, node(X, A1)),
+     node_condition(ConditionID, PackageNode).
+
+cannot_hold(ConditionID, PackageNode)
+  :- condition_packages(ConditionID, A1),
+     not condition_set(PackageNode, node(_, A1), _),
+     node_condition(ConditionID, PackageNode).
+
+condition_holds(ID, PackageNode) :-
+  node_condition(ID, PackageNode);
+  attr(Name, node(X, A1))             : condition_requirement(ID, Name, A1),             condition_nodes(ID, PackageNode, node(X, A1));
+  attr(Name, node(X, A1), A2)         : condition_requirement(ID, Name, A1, A2),         condition_nodes(ID, PackageNode, node(X, A1));
+  attr(Name, node(X, A1), A2, A3)     : condition_requirement(ID, Name, A1, A2, A3),     condition_nodes(ID, PackageNode, node(X, A1)), not special_case(Name);
+  attr(Name, node(X, A1), A2, A3, A4) : condition_requirement(ID, Name, A1, A2, A3, A4), condition_nodes(ID, PackageNode, node(X, A1));
   % Special cases
-  attr("node_flag_source", node(root_node_id, Package), A2, node(root_node_id, A3)) : condition_requirement(ID, "node_flag_source", Package, A2, A3).
+  attr("node_flag_source", node(X, A1), A2, node(Y, A3)) : condition_requirement(ID, "node_flag_source", A1, A2, A3), condition_nodes(ID, PackageNode, node(X, A1)), condition_nodes(ID, PackageNode, node(Y, A3));
+  not cannot_hold(ID, PackageNode).
+
+condition_holds(ID, node(VirtualID, Virtual))
+  :- condition_holds(ID, PackageNode),
+     facts(Virtual, condition(ID)),
+     provider(PackageNode, node(VirtualID, Virtual)).
 
 % condition_holds(ID, node(ID, Package)) implies all imposed_constraints, unless do_not_impose(ID, node(ID, Package))
 % is derived. This allows imposed constraints to be canceled in special cases.
-impose(ID, PackageNode) :- condition_holds(ID, PackageNode), not do_not_impose(ID, PackageNode).
+impose(ID, PackageNode) :- condition_holds(ID, PackageNode), node_condition(ID, PackageNode), not do_not_impose(ID, PackageNode).
+
+imposed_packages(ID, A1) :- imposed_constraint(ID, _, A1).
+imposed_packages(ID, A1) :- imposed_constraint(ID, _, A1, _).
+imposed_packages(ID, A1) :- imposed_constraint(ID, _, A1, _, _).
+imposed_packages(ID, A1) :- imposed_constraint(ID, _, A1, _, _, _).
+imposed_packages(ID, A1) :- imposed_constraint(ID, "depends_on", _, A1, _).
+
+imposed_nodes(ConditionID, PackageNode, node(X, A1))
+  :- imposed_packages(ConditionID, A1),
+     condition_set(PackageNode, node(X, A1), _),
+     node_condition(ConditionID, PackageNode).
+
+imposed_nodes(ConditionID, PackageNode, node(X, A1))
+  :- imposed_packages(ConditionID, A1),
+     condition_set(PackageNode, node(X, A1), _),
+     attr("hash", PackageNode, ConditionID).
+
+:- imposed_packages(ID, A1), impose(ID, PackageNode), not condition_set(PackageNode, node(_, A1)).
 
 % Conditions that hold impose may impose constraints on other specs
-attr(Name, node(root_node_id, A1))             :- impose(ID, node(NodeID, Package)), imposed_constraint(ID, Name, A1).
-attr(Name, node(root_node_id, A1), A2)         :- impose(ID, node(NodeID, Package)), imposed_constraint(ID, Name, A1, A2).
-attr(Name, node(root_node_id, A1), A2, A3)     :- impose(ID, node(NodeID, Package)), imposed_constraint(ID, Name, A1, A2, A3), not special_case(ID, Name, A1, A2, A3).
-attr(Name, node(root_node_id, A1), A2, A3, A4) :- impose(ID, node(NodeID, Package)), imposed_constraint(ID, Name, A1, A2, A3, A4).
+attr(Name, node(X, A1))             :- impose(ID, PackageNode), imposed_constraint(ID, Name, A1),             imposed_nodes(ID, PackageNode, node(X, A1)).
+attr(Name, node(X, A1), A2)         :- impose(ID, PackageNode), imposed_constraint(ID, Name, A1, A2),         imposed_nodes(ID, PackageNode, node(X, A1)).
+attr(Name, node(X, A1), A2, A3)     :- impose(ID, PackageNode), imposed_constraint(ID, Name, A1, A2, A3),     imposed_nodes(ID, PackageNode, node(X, A1)), not special_case(Name).
+attr(Name, node(X, A1), A2, A3, A4) :- impose(ID, PackageNode), imposed_constraint(ID, Name, A1, A2, A3, A4), imposed_nodes(ID, PackageNode, node(X, A1)).
 
-% Special cases
-special_case(ID, Name, A1, A2, A3) :- imposed_constraint(ID, Name, A1, A2, A3), Name == "node_flag_source".
-special_case(ID, Name, A1, A2, A3) :- imposed_constraint(ID, Name, A1, A2, A3), Name == "depends_on".
-attr("node_flag_source", node(NodeID, Package), A2, node(0, A3)) :- impose(ID, node(NodeID, Package)), imposed_constraint(ID, "node_flag_source", Package, A2, A3).
-attr("depends_on", node(NodeID, Package), node(0, A2), A3) :- impose(ID, node(NodeID, Package)), imposed_constraint(ID, "depends_on", Package, A2, A3).
+% For node flag sources we need to look at the condition_set of the source, since it is the dependent
+% of the package on which I want to impose the constraint
+attr("node_flag_source", node(X, A1), A2, node(Y, A3))
+  :- impose(ID, node(X, A1)),
+     imposed_constraint(ID, "node_flag_source", A1, A2, A3),
+     condition_set(node(Y, A3), node(X, A1)).
+
+% Here we can't use the condition set because it's a recursive definition, that doesn't define the
+% node index, and leads to unsatisfiability. Hence we say that one and only one node index must
+% satisfy the dependency.
+1 { attr("depends_on", node(X, A1), node(0..Y-1, A2), A3) : max_nodes(A2, Y) } 1
+  :- impose(ID, node(X, A1)),
+     imposed_constraint(ID, "depends_on", A1, A2, A3).
 
 % we cannot have additional variant values when we are working with concrete specs
 :- attr("node", node(ID, Package)),
@@ -336,25 +440,21 @@ error(1, Msg)
 % provider for that virtual then it depends on the provider
 attr("depends_on", PackageNode, ProviderNode, Type)
   :- dependency_holds(PackageNode, Virtual, Type),
-     provider(ProviderNode, node(0, Virtual)),
+     provider(ProviderNode, node(VirtualID, Virtual)),
      not external(PackageNode).
 
 attr("virtual_on_edge", PackageNode, ProviderNode, Virtual)
   :- dependency_holds(PackageNode, Virtual, Type),
-     provider(ProviderNode, node(0, Virtual)),
+     provider(ProviderNode, node(VirtualID, Virtual)),
      not external(PackageNode).
 
 % dependencies on virtuals also imply that the virtual is a virtual node
-attr("virtual_node", node(0, Virtual))
+1 { attr("virtual_node", node(0..X-1, Virtual)) : max_nodes(Virtual, X) }
   :- dependency_holds(PackageNode, Virtual, Type),
      virtual(Virtual), not external(PackageNode).
 
 % If there's a virtual node, we must select one and only one provider.
 % The provider must be selected among the possible providers.
-
-{ provider(node(0..X-1, Package), node(VirtualID, Virtual))
-  : facts(Package, possible_provider(Virtual)), max_nodes(Package, X) }
-  :- attr("virtual_node", node(VirtualID, Virtual)).
 
 error(100, "Cannot find valid provider for virtual {0}", VirtualNode)
   :- attr("virtual_node", VirtualNode),
@@ -376,10 +476,11 @@ attr("root", PackageNode) :- attr("virtual_root", VirtualNode), provider(Package
 % for environments that are concretized together (e.g. where we
 % asks to install "mpich" and "hdf5+mpi" and we want "mpich" to
 % be the mpi provider)
-provider(PackageNode, node(0, Virtual)) :- attr("node", PackageNode), virtual_condition_holds(PackageNode, Virtual).
+1 { provider(PackageNode, node(0..X-1, Virtual)) : max_nodes(Virtual, X) } 1 :- attr("node", PackageNode), virtual_condition_holds(PackageNode, Virtual).
+:- 2 { provider(PackageNode, VirtualNode) }, attr("virtual_node", VirtualNode).
 
 % The provider provides the virtual if some provider condition holds.
-virtual_condition_holds(node(ProviderID, Provider), Virtual) :-virtual_condition_holds(ID, node(ProviderID, Provider), Virtual).
+virtual_condition_holds(node(ProviderID, Provider), Virtual) :- virtual_condition_holds(ID, node(ProviderID, Provider), Virtual).
 virtual_condition_holds(ID, node(ProviderID, Provider), Virtual) :-
    facts(Provider, provider_condition(ID, Virtual)),
    condition_holds(ID, node(ProviderID, Provider)),
@@ -387,7 +488,7 @@ virtual_condition_holds(ID, node(ProviderID, Provider), Virtual) :-
 
 % A package cannot be the actual provider for a virtual if it does not
 % fulfill the conditions to provide that virtual
-:- provider(PackageNode, node(0, Virtual)),
+:- provider(PackageNode, node(VirtualID, Virtual)),
    not virtual_condition_holds(PackageNode, Virtual),
    internal_error("Virtual when provides not respected").
 
@@ -398,12 +499,9 @@ virtual_condition_holds(ID, node(ProviderID, Provider), Virtual) :-
 % A provider may have different possible weights depending on whether it's an external
 % or not, or on preferences expressed in packages.yaml etc. This rule ensures that
 % we select the weight, among the possible ones, that minimizes the overall objective function.
-1 { provider_weight(DependencyNode, VirtualNode, Weight, Reason) :
-    possible_provider_weight(DependencyNode, VirtualNode, Weight, Reason) } 1
+1 { provider_weight(DependencyNode, VirtualNode, Weight) :
+    possible_provider_weight(DependencyNode, VirtualNode, Weight, _) } 1
  :- provider(DependencyNode, VirtualNode), internal_error("Package provider weights must be unique").
-
-% Get rid or the reason for enabling the possible weight (useful for debugging)
-provider_weight(DependencyNode, VirtualNode, Weight) :- provider_weight(DependencyNode, VirtualNode, Weight, _).
 
 % A provider that is an external can use a weight of 0
 possible_provider_weight(DependencyNode, VirtualNode, 0, "external")
@@ -412,15 +510,15 @@ possible_provider_weight(DependencyNode, VirtualNode, 0, "external")
 
 % A provider mentioned in packages.yaml can use a weight
 % according to its priority in the list of providers
-possible_provider_weight(node(DependencyID, Dependency), node(0, Virtual), Weight, "packages_yaml")
-  :- provider(node(DependencyID, Dependency), node(0, Virtual)),
+possible_provider_weight(node(DependencyID, Dependency), node(VirtualID, Virtual), Weight, "packages_yaml")
+  :- provider(node(DependencyID, Dependency), node(VirtualID, Virtual)),
      depends_on(node(ID, Package), node(DependencyID, Dependency)),
      facts(Package, provider_preference(Virtual, Dependency, Weight)).
 
 % A provider mentioned in the default configuration can use a weight
 % according to its priority in the list of providers
-possible_provider_weight(node(DependencyID, Dependency), node(0, Virtual), Weight, "default")
-  :- provider(node(DependencyID, Dependency), node(0, Virtual)),
+possible_provider_weight(node(DependencyID, Dependency), node(VirtualID, Virtual), Weight, "default")
+  :- provider(node(DependencyID, Dependency), node(VirtualID, Virtual)),
      default_provider_preference(Virtual, Dependency, Weight).
 
 % Any provider can use 100 as a weight, which is very high and discourage its use
@@ -718,14 +816,14 @@ external_with_variant_set(node(NodeID, Package), Variant, Value)
 variant_default_value(Package, Variant, Value)
  :- facts(Package, variant_default_value_from_package_py(Variant, Value)),
     not variant_default_value_from_packages_yaml(Package, Variant, _),
-    not attr("variant_default_value_from_cli", node(0, Package), Variant, _).
+    not attr("variant_default_value_from_cli", node(root_node_id, Package), Variant, _).
 
 variant_default_value(Package, Variant, Value)
  :- variant_default_value_from_packages_yaml(Package, Variant, Value),
-    not attr("variant_default_value_from_cli", node(0, Package), Variant, _).
+    not attr("variant_default_value_from_cli", node(root_node_id, Package), Variant, _).
 
 variant_default_value(Package, Variant, Value) :-
-    attr("variant_default_value_from_cli", node(0, Package), Variant, Value).
+    attr("variant_default_value_from_cli", node(root_node_id, Package), Variant, Value).
 
 % Treat 'none' in a special way - it cannot be combined with other
 % values even if the variant is multi-valued
@@ -883,12 +981,12 @@ node_target_weight(node(ID, Package), Weight)
 
 % compatibility rules for targets among nodes
 node_target_match(ParentNode, DependencyNode)
-  :- depends_on(ParentNode, DependencyNode),
+  :- attr("depends_on", ParentNode, DependencyNode, Type), Type != "build",
      attr("node_target", ParentNode, Target),
      attr("node_target", DependencyNode, Target).
 
 node_target_mismatch(ParentNode, DependencyNode)
-  :- depends_on(ParentNode, DependencyNode),
+  :- attr("depends_on", ParentNode, DependencyNode, Type), Type != "build",
      not node_target_match(ParentNode, DependencyNode).
 
 % disallow reusing concrete specs that don't have a compatible target
@@ -1186,9 +1284,14 @@ build_priority(PackageNode, 0)   :- attr("node", PackageNode), not optimize_for_
 %      is displayed (clingo doesn't display sums over empty sets by default)
 
 % Try hard to reuse installed packages (i.e., minimize the number built)
-opt_criterion(100, "number of packages to build (vs. reuse)").
+opt_criterion(110, "number of packages to build (vs. reuse)").
+#minimize { 0@110: #true }.
+#minimize { 1@110,PackageNode : build(PackageNode), optimize_for_reuse() }.
+
+opt_criterion(100, "number of nodes from the same package").
 #minimize { 0@100: #true }.
-#minimize { 1@100,PackageNode : build(PackageNode), optimize_for_reuse() }.
+#minimize { ID@100,Package : attr("node", node(ID, Package)) }.
+#minimize { ID@100,Package : attr("virtual_node", node(ID, Package)) }.
 #defined optimize_for_reuse/0.
 
 % A condition group specifies one or more specs that must be satisfied.
@@ -1368,34 +1471,6 @@ opt_criterion(5, "non-preferred targets").
     : node_target_weight(PackageNode, Weight),
       build_priority(PackageNode, Priority)
 }.
-
-%-----------------
-% Domain heuristic
-%-----------------
-#heuristic literal_solved(ID) : literal(ID). [1, sign]
-#heuristic literal_solved(ID) : literal(ID). [50, init]
-#heuristic attr("hash", PackageNode, Hash) : attr("root", PackageNode). [45, init]
-
-#heuristic attr("version", node(0, Package), Version) : facts(Package, version_declared(Version, 0)), attr("root", node(0, Package)). [40, true]
-#heuristic version_weight(node(0, Package), 0) : facts(Package, version_declared(Version, 0)), attr("root", node(0, Package)). [40, true]
-#heuristic attr("variant_value", node(0, Package), Variant, Value) : variant_default_value(Package, Variant, Value), attr("root", node(0, Package)). [40, true]
-#heuristic attr("node_target", node(0, Package), Target) : facts(Package, target_weight(Target, 0)), attr("root", node(0, Package)). [40, true]
-#heuristic node_target_weight(node(0, Package), 0) : attr("root", node(0, Package)). [40, true]
-#heuristic node_compiler(node(0, Package), CompilerID) : default_compiler_preference(ID, 0), compiler_id(ID), attr("root", node(0, Package)). [40, true]
-
-#heuristic provider(PackageNode, VirtualNode) : possible_provider_weight(PackageNode, VirtualNode, 0, _), attr("virtual_node", VirtualNode). [30, true]
-#heuristic provider_weight(Package, Virtual, 0, R) : possible_provider_weight(Package, Virtual, 0, R), attr("virtual_node", Virtual). [30, true]
-#heuristic attr("node", Package) : possible_provider_weight(Package, Virtual, 0, _), attr("virtual_node", Virtual). [30, true]
-
-#heuristic attr("version", node(ID, Package), Version) : facts(Package, version_declared(Version, 0)), attr("node", node(ID, Package)). [20, true]
-#heuristic version_weight(node(ID, Package), 0) : facts(Package, version_declared(Version, 0)), attr("node", node(ID, Package)). [20, true]
-
-#heuristic attr("node_target", node(ID, Package), Target) : facts(Package, target_weight(Target, 0)), attr("node", node(ID, Package)). [20, true]
-#heuristic node_target_weight(Package, 0) : attr("node", Package). [20, true]
-#heuristic node_compiler(node(ID, Package), ID) : default_compiler_preference(ID, 0), compiler_id(ID), attr("node", node(NodeID, Package)). [15, true]
-
-#heuristic attr("variant_value", node(ID, Package), Variant, Value) : variant_default_value(Package, Variant, Value), attr("node", node(ID, Package)). [10, true]
-#heuristic attr("node_os", PackageNode, OS) : buildable_os(OS). [10, true]
 
 %-----------
 % Notes
