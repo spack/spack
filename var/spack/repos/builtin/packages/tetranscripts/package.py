@@ -21,6 +21,3 @@ class Tetranscripts(PythonPackage):
     # external dependencies
     depends_on("r@2.15:", type="run")
     depends_on("r-deseq2@1.10:", type="run")
-
-    def instal(self, spec, prefix):
-        install_tree("bin", prefix.bin)
