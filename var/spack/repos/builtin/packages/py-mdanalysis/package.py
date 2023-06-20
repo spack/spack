@@ -27,7 +27,7 @@ class PyMdanalysis(PythonPackage):
         default=True,
         description="Enable analysis packages: matplotlib, scipy, seaborn",
     )
-    variant("extra_formats", default=False, when="@2.4.0:", description="Support extra formats")
+    variant("extra_formats", default=False, description="Support extra formats")
 
     depends_on("python@3.8:", type=("build", "run"), when="@2.4.0:")
     depends_on("python@3.9:", type=("build", "run"), when="@2.5.0:")
