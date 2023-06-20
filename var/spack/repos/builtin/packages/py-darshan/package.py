@@ -31,7 +31,7 @@ class PyDarshan(PythonPackage):
     depends_on("py-matplotlib", type=("build", "run"))
     depends_on("py-seaborn", type=("build", "run"))
     depends_on("py-mako", type=("build", "run"))
-    depends_on("py-humanize", when="@3.4.3.0:",  type=("build", "run"))
+    depends_on("py-humanize", when="@3.4.3.0:", type=("build", "run"))
     depends_on("py-pytest", type="test")
 
     # py-darshan depends on specific darshan-util versions corresponding
