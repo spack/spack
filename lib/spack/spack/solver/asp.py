@@ -1643,8 +1643,8 @@ class SpackSolverSetup:
 
     def package_dependencies_rules(self, pkg):
         """Translate 'depends_on' directives into ASP logic."""
-        for _, conditions in sorted(pkg.dependencies.items()):
-            for cond, dep in sorted(conditions.items()):
+        for cond, deps_by_name in sorted(pkg.dependencies.items()):
+            for _, dep in sorted(deps_by_name.items()):
                 depflag = dep.depflag
                 # Skip test dependencies if they're not requested
                 if not self.tests:
@@ -1741,6 +1741,7 @@ class SpackSolverSetup:
             pkg_name, policy, requirement_grp = rule.pkg_name, rule.policy, rule.requirements
 
             requirement_weight = 0
+            # TODO: don't call make_when_spec here; do it in directives.
             main_requirement_condition = spack.directives.make_when_spec(rule.condition)
             if main_requirement_condition is False:
                 continue
@@ -1750,7 +1751,7 @@ class SpackSolverSetup:
                 msg = f"condition to activate requirement {requirement_grp_id}"
                 try:
                     main_condition_id = self.condition(
-                        main_requirement_condition, name=pkg_name, msg=msg
+                        main_requirement_condition, name=pkg_name, msg=msg  # type: ignore
                     )
                 except Exception as e:
                     if rule.kind != RequirementKind.DEFAULT:

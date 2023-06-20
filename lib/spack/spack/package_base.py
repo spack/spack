@@ -25,7 +25,7 @@ import textwrap
 import time
 import traceback
 import warnings
-from typing import Any, Callable, Dict, Iterable, List, Optional, Tuple, Type, TypeVar
+from typing import Any, Callable, Dict, Iterable, List, Optional, Tuple, Type, TypeVar, Union
 
 import llnl.util.filesystem as fsys
 import llnl.util.tty as tty
@@ -432,6 +432,43 @@ class PackageViewMixin:
 
 Pb = TypeVar("Pb", bound="PackageBase")
 
+WhenDict = Dict[spack.spec.Spec, Dict[str, Any]]
+NameValuesDict = Dict[str, List[Any]]
+NameWhenDict = Dict[str, Dict[spack.spec.Spec, List[Any]]]
+
+
+def _by_name(
+    when_indexed_dictionary: WhenDict, when: bool = False
+) -> Union[NameValuesDict, NameWhenDict]:
+    """Convert a dict of dicts keyed by when/name into a dict of lists keyed by name.
+
+    Optional Arguments:
+        when: if ``True``, don't discared the ``when`` specs; return a 2-level dictionary
+            keyed by name and when spec.
+    """
+    # very hard to define this type to be conditional on `when`
+    all_by_name: Dict[str, Any] = {}
+
+    for when_spec, by_name in when_indexed_dictionary.items():
+        for name, value in by_name.items():
+            if when:
+                when_dict = all_by_name.setdefault(name, {})
+                when_dict.setdefault(when_spec, []).append(value)
+            else:
+                all_by_name.setdefault(name, []).append(value)
+
+    return dict(sorted(all_by_name.items()))
+
+
+def _names(when_indexed_dictionary):
+    """Get sorted names from dicts keyed by when/name."""
+    all_names = set()
+    for when, by_name in when_indexed_dictionary.items():
+        for name in by_name:
+            all_names.add(name)
+
+    return sorted(all_names)
+
 
 class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
     """This is the superclass for all spack packages.
@@ -525,7 +562,10 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
     versions: dict
 
     # Same for dependencies
-    dependencies: dict
+    dependencies: Dict["spack.spec.Spec", Dict[str, "spack.dependency.Dependency"]]
+
+    # and patches
+    patches: Dict["spack.spec.Spec", List["spack.patch.Patch"]]
 
     #: By default, packages are not virtual
     #: Virtual packages override this attribute
@@ -680,6 +720,14 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
         super().__init__()
 
     @classmethod
+    def dependency_names(cls):
+        return _names(cls.dependencies)
+
+    @classmethod
+    def dependencies_by_name(cls, when: bool = False):
+        return _by_name(cls.dependencies, when=when)
+
+    @classmethod
     def possible_dependencies(
         cls,
         transitive=True,
@@ -727,11 +775,12 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
 
         visited.setdefault(cls.name, set())
 
-        for name, conditions in cls.dependencies.items():
+        for name, conditions in cls.dependencies_by_name(when=True).items():
             # check whether this dependency could be of the type asked for
             depflag_union = 0
-            for dep in conditions.values():
-                depflag_union |= dep.depflag
+            for deplist in conditions.values():
+                for dep in deplist:
+                    depflag_union |= dep.depflag
             if not (depflag & depflag_union):
                 continue
 
@@ -1219,7 +1268,7 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
 
     @classmethod
     def dependencies_of_type(cls, deptypes: dt.DepFlag):
-        """Get dependencies that can possibly have these deptypes.
+        """Get names of dependencies that can possibly have these deptypes.
 
         This analyzes the package and determines which dependencies *can*
         be a certain kind of dependency. Note that they may not *always*
@@ -1227,11 +1276,11 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
         so something may be a build dependency in one configuration and a
         run dependency in another.
         """
-        return dict(
-            (name, conds)
-            for name, conds in cls.dependencies.items()
-            if any(deptypes & cls.dependencies[name][cond].depflag for cond in conds)
-        )
+        return {
+            name
+            for name, dependencies in cls.dependencies_by_name().items()
+            if any(deptypes & dep.depflag for dep in dependencies)
+        }
 
     # TODO: allow more than one active extendee.
     @property
