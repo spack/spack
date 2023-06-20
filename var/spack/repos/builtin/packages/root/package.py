@@ -408,8 +408,11 @@ class Root(CMakePackage):
         _add_variant(v, f, ("qt", "qtgsi"), "+qt4")
         _add_variant(v, f, "r", "+r")
         _add_variant(v, f, "roofit", "+roofit")
-        _add_variant(v, f, ("root7", "webgui"), "+webgui")  # for root version >= 6.18.00
-        _add_variant(v, f, ("root7", "webui"), "+webgui")  # for root version <= 6.17.02
+        # webui feature renamed to webgui in 6.18
+        if Version(version_str).satisfies("@6.18:"):
+            _add_variant(v, f, ("root7", "webgui"), "+webgui")
+        else:
+            _add_variant(v, f, ("root7", "webui"), "+webgui")
         _add_variant(v, f, "rpath", "+rpath")
         _add_variant(v, f, "shadowpw", "+shadow")
         _add_variant(v, f, "spectrum", "+spectrum")
