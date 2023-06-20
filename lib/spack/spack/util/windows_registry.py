@@ -9,6 +9,7 @@ Utility module for dealing with Windows Registry.
 
 import os
 import sys
+import re
 from contextlib import contextmanager
 
 from llnl.util import tty
@@ -68,8 +69,20 @@ class RegistryKey:
         sub_keys, _, _ = winreg.QueryInfoKey(self.hkey)
         for i in range(sub_keys):
             sub_name = winreg.EnumKey(self.hkey, i)
-            sub_handle = winreg.OpenKeyEx(self.hkey, sub_name, access=winreg.KEY_READ)
-            self._keys.append(RegistryKey(os.path.join(self.path, sub_name), sub_handle))
+            try:
+                sub_handle = winreg.OpenKeyEx(self.hkey, sub_name, access=winreg.KEY_READ)
+                self._keys.append(RegistryKey(os.path.join(self.path, sub_name), sub_handle))
+            except OSError as e:
+                if hasattr(e, "winerror"):
+                    if e.winerror == 5:
+                        # This is a permission error, we can't read this key
+                        # move on
+                        # TODO: johnwparent add a flag toggling whether we throw here or not
+                        pass
+                    else:
+                        raise
+                else:
+                    raise
 
     def _gather_value_info(self):
         """Compose all values for this key into a dict of form value name: RegistryValue Object"""
@@ -193,6 +206,10 @@ class WindowsRegistryView:
             return False
         return True
 
+    def _regex_match_subkeys(self, subkey):
+        r_subkey = re.compile(subkey)
+        return [key for key in self.get_subkeys() if r_subkey.match(key.name)]
+
     @property
     def reg(self):
         if not self._reg:
@@ -217,6 +234,9 @@ class WindowsRegistryView:
             raise RegistryError("Cannot query subkeys from invalid key %s" % self.key)
         with self.invalid_reg_ref_error_handler():
             return self.reg.subkeys
+
+    def get_matching_subkeys(self, subkey_name):
+        self._regex_match_subkeys(subkey_name)
 
     def get_values(self):
         if not self._valid_reg_check():
@@ -257,12 +277,18 @@ class WindowsRegistryView:
         Return:
             the desired subkey as a RegistryKey object, or none
         """
+        # If subkey we're looking for is a regex, perform a regex search
+        try:
+            re.compile(subkey_name)
+            regex = True
+        except re.error:
+            regex = False
 
         if not recursive:
-            return self.get_subkey(subkey_name)
-
+            return self.get_matching_subkeys(subkey_name) if regex else self.get_subkey(subkey_name)
         else:
-            return self._traverse_subkeys(lambda x: x.name == subkey_name)
+            condition = lambda x: re.match(subkey_name, x.name) if regex else lambda x: x.name == subkey_name
+            return self._traverse_subkeys(condition)
 
     def find_value(self, val_name, recursive=True):
         """
