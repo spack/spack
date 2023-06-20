@@ -34,7 +34,7 @@ class PyMdanalysis(PythonPackage):
 
     depends_on("py-setuptools", type="build")
 
-    depends_on("py-cython@0.28:", type="build", when="@2.4.0:")
+    depends_on("py-cython@0.28:", type="build")
 
     # MDAnalysis required dependencies (install_requires)
     depends_on("py-numpy@1.20.0:", when="@2.4.0:", type=("build", "run"))
