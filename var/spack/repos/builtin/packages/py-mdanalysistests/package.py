@@ -23,8 +23,8 @@ class PyMdanalysistests(PythonPackage):
     depends_on("py-mdanalysis@2.4.3", when="@2.4.3", type=("build", "run"))
     depends_on("py-mdanalysis@2.4.2", when="@2.4.2", type=("build", "run"))
 
-    depends_on("python@3.8:", type=("build", "run"))
     depends_on("python@3.9:", when="@2.5.0", type=("build", "run"))
+    depends_on("python@3.8:", type=("build", "run"))
 
     depends_on("py-pytest@3.3.0:", type=("build", "run"))
     depends_on("py-hypothesis", type=("build", "run"))
