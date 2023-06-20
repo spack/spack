@@ -32,6 +32,7 @@ class Neuron(CMakePackage):
     patch("patch-v800-cmake-nvhpc.patch", when="@8.0.0%nvhpc^cmake@3.20:")
 
     version("develop", branch="master")
+    version("9.0.a9", commit="baf3b14")
     version("9.0.a8", commit="67a672a")
     version("9.0.a5", commit="522c866")
     version("9.0.a4", commit="de2c927")
@@ -111,10 +112,10 @@ class Neuron(CMakePackage):
     )
     # There are three different eras relevant for these variants:
     # * neuron@:9 -- coreneuron was a separate package, so nmodl is irrelevant to this recipe
-    # * neuron@9:9.0.a6 -- coreneuron exists inside neuron, nmodl is active if +coreneuron+nmodl
-    # * neuron@develop -- coreneuron exists inside neuron,
-    #                     mod2c is dead so nmodl active if +coreneuron
-    nmodl_enabled_specs = [nmodl_variant_exists + "+nmodl", "@develop +coreneuron"]
+    # * neuron@9:9.0.a8 -- coreneuron exists inside neuron, nmodl is active if +coreneuron+nmodl
+    # * neuron@9.0.a9   -- coreneuron exists inside neuron, mod2c is dead so nmodl active if
+    #                      +coreneuron
+    nmodl_enabled_specs = [nmodl_variant_exists + "+nmodl", "@9.0.a9: +coreneuron"]
     for nmodl_spec in nmodl_enabled_specs:
         # The lack of version constraint is a lie
         # most neuron/coreneuron versions are only compatible with one

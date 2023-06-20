@@ -32,10 +32,10 @@ spack:
           ^petsc+complex: '{name}-complex/{version}'
   specs:
     - neuron+tests+coreneuron
-    - neuron+tests+nmodl+sympy+coreneuron
+    - neuron+tests+coreneuron+sympy
     - neuron%nvhpc+caliper+coreneuron+gpu+tests+openmp
-    - neuron%nvhpc+caliper+coreneuron+gpu+tests~openmp+nmodl
-    - neuron%nvhpc+caliper+coreneuron+gpu+tests+openmp+nmodl+sympy
+    - neuron%nvhpc+caliper+coreneuron+gpu+tests~openmp
+    - neuron%nvhpc+caliper+coreneuron+gpu+tests+openmp+sympy
     - nest@2.20.1
     - neurodamus-hippocampus+coreneuron+caliper
     - neurodamus-mousify+coreneuron+caliper
