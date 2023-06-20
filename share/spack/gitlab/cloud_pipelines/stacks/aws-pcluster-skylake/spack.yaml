@@ -3,11 +3,7 @@ spack:
 
   definitions:
   - compiler_specs:
-    - gcc
-    - gettext
-
-  - compiler_target:
-    - '%gcc@7.3.1 target=x86_64_v3'
+    - /yyvkvlgimaaxjhy32oa5x5eexqekrevc
 
   - optimized_configs:
     # - gromacs
@@ -24,9 +20,7 @@ spack:
     - openmpi
 
   specs:
-  - matrix:
-    - - $compiler_specs
-    - - $compiler_target
+  - $compiler_specs
   - $optimized_configs
   # - $optimized_libs
 
