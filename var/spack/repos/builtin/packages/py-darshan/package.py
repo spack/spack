@@ -28,9 +28,7 @@ class PyDarshan(PythonPackage):
     depends_on("py-scipy", when="@3.4.0.1", type=("build", "run"))
     depends_on("py-numpy@1.21:", type=("build", "run"))
     depends_on("py-pandas", type=("build", "run"))
-    # NOTE: matplotlib should be pinned until next release, for details:
-    #       https://github.com/darshan-hpc/darshan/issues/742
-    depends_on("py-matplotlib@3.4", type=("build", "run"))
+    depends_on("py-matplotlib", type=("build", "run"))
     depends_on("py-seaborn", type=("build", "run"))
     depends_on("py-mako", type=("build", "run"))
     depends_on("py-humanize", when="@3.4.3.0:",  type=("build", "run"))
