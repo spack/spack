@@ -46,7 +46,6 @@ class PyMdanalysis(PythonPackage):
     depends_on("py-mmtf-python@1.0.0:", type=("build", "run"))
     depends_on("py-joblib@0.12:", type=("build", "run"))
 
-    depends_on("py-scipy@1.5.1:", when="@2.5.0:", type=("build", "run"))
     depends_on("py-scipy@1.5.0:", type=("build", "run"))
 
     depends_on("py-matplotlib@1.5.1:", type=("build", "run"))
@@ -59,9 +58,9 @@ class PyMdanalysis(PythonPackage):
     # extra_format (extras_require)
     depends_on("py-netcdf4@1.0:", when="+extra_formats", type=("build", "run"))
     depends_on("py-h5py@2.10:", when="+extra_formats", type=("build", "run"))
-    depends_on("py-pytng@0.2.3:", when="+extra_formats", type=("build", "run"))
     depends_on("py-chemfiles@0.10:", when="+extra_formats", type=("build", "run"))
     depends_on("py-pyedr@0.7.0:", when="+extra_formats", type=("build", "run"))
+    depends_on("py-pytng@0.2.3:", when="+extra_formats", type=("build", "run"))
 
     # analysis (extras_require)
     depends_on("py-seaborn", when="+analysis", type=("build", "run"))
