@@ -29,8 +29,8 @@ def test_true_directives_exist(mock_packages):
     cls = spack.repo.PATH.get_pkg_class("when-directives-true")
 
     assert cls.dependencies
-    assert spack.spec.Spec() in cls.dependencies["extendee"]
-    assert spack.spec.Spec() in cls.dependencies["b"]
+    assert "extendee" in cls.dependencies[spack.spec.Spec()]
+    assert "b" in cls.dependencies[spack.spec.Spec()]
 
     assert cls.resources
     assert spack.spec.Spec() in cls.resources
@@ -43,7 +43,7 @@ def test_constraints_from_context(mock_packages):
     pkg_cls = spack.repo.PATH.get_pkg_class("with-constraint-met")
 
     assert pkg_cls.dependencies
-    assert spack.spec.Spec("@1.0") in pkg_cls.dependencies["b"]
+    assert "b" in pkg_cls.dependencies[spack.spec.Spec("@1.0")]
 
     assert pkg_cls.conflicts
     assert (spack.spec.Spec("+foo@1.0"), None) in pkg_cls.conflicts["%gcc"]
@@ -54,7 +54,7 @@ def test_constraints_from_context_are_merged(mock_packages):
     pkg_cls = spack.repo.PATH.get_pkg_class("with-constraint-met")
 
     assert pkg_cls.dependencies
-    assert spack.spec.Spec("@0.14:15 ^b@3.8:4.0") in pkg_cls.dependencies["c"]
+    assert "c" in pkg_cls.dependencies[spack.spec.Spec("@0.14:15 ^b@3.8:4.0")]
 
 
 @pytest.mark.regression("27754")

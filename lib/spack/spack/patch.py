@@ -389,10 +389,9 @@ class PatchCache:
                 patch_dict.pop("sha256")  # save some space
                 index[patch.sha256] = {pkg_class.fullname: patch_dict}
 
-        # and patches on dependencies
-        for name, conditions in pkg_class.dependencies.items():
-            for cond, dependency in conditions.items():
-                for pcond, patch_list in dependency.patches.items():
+        for deps_by_name in pkg_class.dependencies.values():
+            for dependency in deps_by_name.values():
+                for patch_list in dependency.patches.values():
                     for patch in patch_list:
                         dspec_cls = repository.get_pkg_class(dependency.spec.name)
                         patch_dict = patch.to_dict()

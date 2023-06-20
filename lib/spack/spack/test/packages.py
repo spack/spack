@@ -61,14 +61,15 @@ class TestPackage:
         import spack.pkg.builtin.mock.mpich as mp  # noqa: F401
         from spack.pkg.builtin import mock  # noqa: F401
 
-    def test_inheritance_of_diretives(self):
+    def test_inheritance_of_directives(self):
         pkg_cls = spack.repo.PATH.get_pkg_class("simple-inheritance")
 
         # Check dictionaries that should have been filled by directives
-        assert len(pkg_cls.dependencies) == 3
-        assert "cmake" in pkg_cls.dependencies
-        assert "openblas" in pkg_cls.dependencies
-        assert "mpi" in pkg_cls.dependencies
+        dependencies = pkg_cls.dependencies_by_name()
+        assert len(dependencies) == 3
+        assert "cmake" in dependencies
+        assert "openblas" in dependencies
+        assert "mpi" in dependencies
         assert len(pkg_cls.provided) == 2
 
         # Check that Spec instantiation behaves as we expect
