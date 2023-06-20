@@ -26,17 +26,39 @@ spack:
   ci:
     pipeline-gen:
     - build-job:
+<<<<<<< HEAD
         image: { "name": "ghcr.io/spack/pcluster-amazonlinux-2:v2023-07-01", "entrypoint": [""] }
+=======
+        image: { "name": "ghcr.io/spack/pcluster-amazonlinux-2:pr-30", "entrypoint": [""] }
+>>>>>>> 577fd2489d ([aws-pcluster-pipelines] Install compilers into spack store)
         before_script:
         - - . "./share/spack/setup-env.sh"
           - . /etc/profile.d/modules.sh
           - spack --version
           - spack arch
+<<<<<<< HEAD
         # Use gcc from pre-installed spack store
         - - cp share/spack/gitlab/cloud_pipelines/configs/config.yaml etc/spack/
           - /bin/bash "${SPACK_ROOT}/share/spack/gitlab/cloud_pipelines/stacks/aws-pcluster-neoverse_n1/setup-pcluster.sh"
           - rm etc/spack/config.yaml
+=======
+<<<<<<< HEAD
+        # Use gcc from local container buildcache
+        - - spack buildcache rebuild-index /bootstrap/local-cache/
+          - sed -i.bkp s/"spack install gcc"/"spack install --cache-only --reuse gcc"/ /bootstrap/postinstall.sh
+          - spack mirror add local-cache /bootstrap/local-cache
+          - spack gpg trust /bootstrap/public-key
+          - diff /bootstrap/postinstall.sh /bootstrap/postinstall.sh.bkp || echo Done
+        - - /bin/bash "${SPACK_ARTIFACTS_ROOT}/postinstall.sh" -fg
+>>>>>>> 577fd2489d ([aws-pcluster-pipelines] Install compilers into spack store)
           - spack config --scope site add "packages:all:target:[${SPACK_TARGET_ARCH}]"
+=======
+        # Use gcc from pre-installed spack store
+        - - cp share/spack/gitlab/cloud_pipelines/configs/config.yaml etc/spack/
+          - /bin/bash "${SPACK_ARTIFACTS_ROOT}/postinstall.sh" -fg
+          - rm spack/etc/spack/config.yaml
+          - spack config --scope site add "packages:all:target:\"target=${SPACK_TARGET_ARCH}\""
+>>>>>>> 4c6b33e551 ([aws-pcluster-pipelines] Install compilers into spack store)
     - signing-job:
         before_script:
           # Do not distribute Intel & ARM binaries
