@@ -25,7 +25,7 @@ class PyDarshan(PythonPackage):
     # NOTE: SciPy is an indirect dependency needed for interpolate usage in pandas
     #       This indirect dependency was dropped starting with v3.4.1.0
     depends_on("py-scipy", when="@3.4.0.1", type=("build", "run"))
-    depends_on("py-numpy@1.21:", type=("build", "run"))
+    depends_on("py-numpy", type=("build", "run"))
     depends_on("py-pandas", type=("build", "run"))
     depends_on("py-matplotlib", type=("build", "run"))
     depends_on("py-seaborn", type=("build", "run"))
