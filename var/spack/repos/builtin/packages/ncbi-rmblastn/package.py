@@ -43,6 +43,9 @@ class NcbiRmblastn(AutotoolsPackage):
         archive_sha256="e746ee480ade608052306fd21f015c8a323f27029f65399275216f9a4c882d59",
         when="@2.9.0",
     )
+
+    patch("gcc13.patch", level=0, when="@2.14.0:%gcc@13:")
+
     depends_on("cpio", type="build")
     depends_on("boost")
     depends_on("lzo")
