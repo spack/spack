@@ -5,12 +5,13 @@
 
 import glob
 import os
+import pathlib
 import platform
 import subprocess
 
 from spack.error import SpackError
 from spack.version import Version
-
+from spack.util import windows_registry as winreg
 from ._operating_system import OperatingSystem
 
 
@@ -31,7 +32,8 @@ class WindowsOs(OperatingSystem):
     10.
     """
 
-    # Find MSVC directories using vswhere
+    # First Strategy: Find MSVC directories using vswhere
+    _compiler_search_paths = []
     comp_search_paths = []
     vs_install_paths = []
     root = os.environ.get("ProgramFiles(x86)") or os.environ.get("ProgramFiles")
@@ -65,8 +67,30 @@ class WindowsOs(OperatingSystem):
                 )
         except (subprocess.CalledProcessError, OSError, UnicodeDecodeError):
             pass
-    if comp_search_paths:
-        compiler_search_paths = comp_search_paths
+    _compiler_search_paths.extend(comp_search_paths)
+    # Second strategy: Find MSVC via the registry
+    msft = winreg.WindowsRegistryView("SOFTWARE\\WOW6432Node\\Microsoft", winreg.HKEY.HKEY_LOCAL_MACHINE)
+    vs_entries = msft.find_subkeys(r"VisualStudio_.*")
+    vs_paths = []
+    def clean_vs_path(path):
+        path = path.split(",")[0].lstrip("@")
+        return str(pathlib.Path(path).parent / "..\\..")
+    for entry in vs_entries:
+        try:
+            val = entry.get_subkey("Capabilities").get_value("ApplicationDescription").value
+            vs_paths.append(clean_vs_path(val))
+        except FileNotFoundError as e:
+            if hasattr(e, "winerror"):
+                if e.winerror == 2:
+                    pass
+                else:
+                    raise
+            else:
+                raise
+
+    _compiler_search_paths.extend(vs_paths)
+    if _compiler_search_paths:
+        compiler_search_paths = _compiler_search_paths
 
     def __init__(self):
         plat_ver = windows_version()
