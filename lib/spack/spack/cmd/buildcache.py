@@ -78,6 +78,11 @@ def setup_parser(subparser: argparse.ArgumentParser):
         "Alternatively, one can decide to build a cache for only the package or only the "
         "dependencies",
     )
+    push.add_argument(
+        "--fail-fast",
+        action="store_true",
+        help="stop creating build caches if any build fails (default is best effort)",
+    )
     arguments.add_common_arguments(push, ["specs"])
     push.set_defaults(func=push_fn)
 
@@ -296,6 +301,7 @@ def push_fn(args):
         tty.info(f"Selected {len(specs)} specs to push to {url}")
 
     skipped = []
+    failed = []
 
     # tty printing
     color = clr.get_color_when()
@@ -326,6 +332,12 @@ def push_fn(args):
         except bindist.NoOverwriteException:
             skipped.append(format_spec(spec))
 
+        # Catch any other exception unless the fail fast option is set
+        except Exception as e:
+            if args.fail_fast:
+                raise(e)
+            failed.append(format_spec(spec))
+
     if skipped:
         if len(specs) == 1:
             tty.info("The spec is already in the buildcache. Use --force to overwrite it.")
@@ -340,6 +352,13 @@ def push_fn(args):
                 )
             )
 
+    if failed:
+        tty.info(
+            "The following {} specs were skipped due to errors during the buildcache creation:\n"
+            "    {}".format(
+                len(failed), ", ".join(elide_list(failed, 5))
+            )
+        )
 
 def install_fn(args):
     """install from a binary package"""
