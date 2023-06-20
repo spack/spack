@@ -6,7 +6,7 @@
 from spack.package import *
 
 
-class PyBulker(PythonPackage):
+class Bulker(PythonPackage):
     """Bulker: multi-container environment manager"""
 
     homepage = "https://bulker.databio.org/"
