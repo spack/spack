@@ -335,7 +335,7 @@ def push_fn(args):
         # Catch any other exception unless the fail fast option is set
         except Exception as e:
             if args.fail_fast:
-                raise(e)
+                raise (e)
             failed.append(format_spec(spec))
 
     if skipped:
@@ -355,10 +355,9 @@ def push_fn(args):
     if failed:
         tty.info(
             "The following {} specs were skipped due to errors during the buildcache creation:\n"
-            "    {}".format(
-                len(failed), ", ".join(elide_list(failed, 5))
-            )
+            "    {}".format(len(failed), ", ".join(elide_list(failed, 5)))
         )
+
 
 def install_fn(args):
     """install from a binary package"""
