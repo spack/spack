@@ -46,7 +46,7 @@ spack:
         # Use gcc from pre-installed spack store
         - - cp share/spack/gitlab/cloud_pipelines/configs/config.yaml etc/spack/
           - /bin/bash "${SPACK_ARTIFACTS_ROOT}/postinstall.sh" -fg
-          - rm spack/etc/spack/config.yaml
+          - rm etc/spack/config.yaml
           - spack config --scope site add "packages:all:target:\"target=${SPACK_TARGET_ARCH}\""
     - signing-job:
         before_script:
