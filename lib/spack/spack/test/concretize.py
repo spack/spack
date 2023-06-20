@@ -348,10 +348,11 @@ class TestConcretize:
             assert spec.satisfies("cflags=-O2")
 
     def test_concretize_compiler_flag_propagate(self):
-        spec = Spec("hypre cflags=='-g' ^openblas")
+        spec = Spec("callpath cflags=='-g'")
         spec.concretize()
 
-        assert spec.satisfies("^openblas cflags='-g'")
+        assert spec.satisfies("^dyninst cflags='-g'")
+        assert spec.satisfies("^libelf cflags='-g'")
 
     @pytest.mark.only_clingo(
         "Optional compiler propagation isn't deprecated for original concretizer"
