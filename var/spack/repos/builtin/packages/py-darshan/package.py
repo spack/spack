@@ -24,8 +24,8 @@ class PyDarshan(PythonPackage):
     depends_on("py-importlib-resources", when="^python@:3.8", type=("build", "run"))
     depends_on("py-cffi", type=("build", "run"))
     # NOTE: SciPy is an indirect dependency needed for interpolate usage in pandas
-    #       It will be fixed in the next release
-    depends_on("py-scipy", type=("build", "run"))
+    #       This indirect dependency was dropped starting with v3.4.1.0
+    depends_on("py-scipy", when="@3.4.0.1", type=("build", "run"))
     depends_on("py-numpy@1.21:", type=("build", "run"))
     depends_on("py-pandas", type=("build", "run"))
     # NOTE: matplotlib should be pinned until next release, for details:
