@@ -733,7 +733,7 @@ deprecated-ci-build:
 
 .aws-pcluster-generate:
   before_script:
-    # Use gcc from pre-installed s3pack store
+    # Use gcc from pre-installed spack store
     - - . "./share/spack/setup-env.sh"
       - . /etc/profile.d/modules.sh
       - curl -sOL https://raw.githubusercontent.com/spack/spack-configs/main/AWS/parallelcluster/postinstall.sh
@@ -744,7 +744,7 @@ deprecated-ci-build:
       - cp share/spack/gitlab/cloud_pipelines/configs/config.yaml etc/spack/
       - /bin/bash postinstall.sh -fg
       - rm spack/etc/spack/config.yaml
-      - mv postinstall.sh ${CI_PROJECT_DIR}/
+      - mv postinstall.sh "${CI_PROJECT_DIR}"/
 
   after_script:
     - - mv "${CI_PROJECT_DIR}/postinstall.sh" "${CI_PROJECT_DIR}/jobs_scratch_dir/"
