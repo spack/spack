@@ -27,7 +27,7 @@ class PyPennylaneLightningKokkos(CMakePackage, PythonExtension, CudaPackage, ROC
         "cuda": [False, "Whether to build CUDA backend"],
         "openmp": [False, "Whether to build OpenMP backend"],
         "openmptarget": [False, "Whether to build the OpenMPTarget backend"],
-        "pthread": [False, "Whether to build Pthread backend"],
+        "threads": [False, "Whether to build the C++ threads backend"],
         "rocm": [False, "Whether to build HIP backend"],
         "serial": [True, "Whether to build serial backend"],
         "sycl": [False, "Whether to build the SYCL backend"],

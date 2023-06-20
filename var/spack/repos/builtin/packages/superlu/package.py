@@ -21,7 +21,12 @@ class Superlu(CMakePackage, Package):
 
     tags = ["e4s"]
 
-    version("5.3.0", sha256="3e464afa77335de200aeb739074a11e96d9bef6d0b519950cfa6684c4be1f350")
+    version("6.0.0", sha256="5c199eac2dc57092c337cfea7e422053e8f8229f24e029825b0950edd1d17e8e")
+    version(
+        "5.3.0",
+        sha256="3e464afa77335de200aeb739074a11e96d9bef6d0b519950cfa6684c4be1f350",
+        preferred=True,
+    )
     version("5.2.2", sha256="470334a72ba637578e34057f46948495e601a5988a602604f5576367e606a28c")
     version("5.2.1", sha256="28fb66d6107ee66248d5cf508c79de03d0621852a0ddeba7301801d3d859f463")
     version(

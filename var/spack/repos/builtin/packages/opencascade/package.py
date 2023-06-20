@@ -3,6 +3,8 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+import re
+
 from spack.package import *
 
 
@@ -40,6 +42,11 @@ class Opencascade(CMakePackage):
         sha256="e7f989d52348c3b3acb7eb4ee001bb5c2eed5250cdcceaa6ae97edc294f2cabd",
     )
     version(
+        "7.5.3p4",
+        extension="tar.gz",
+        sha256="f7571462041694f6bc7fadd94b0c251762078713cb5b0484845b6b8a4d8a0b99",
+    )
+    version(
         "7.5.3",
         extension="tar.gz",
         sha256="cc3d3fd9f76526502c3d9025b651f45b034187430f231414c97dda756572410b",
@@ -72,23 +79,64 @@ class Opencascade(CMakePackage):
         when="@:7.7.0",
     )
 
+    # Modules, per DAG at https://dev.opencascade.org/doc/refman/html/
+    variant("modeling_data", default=True, description="Build Modeling Data module")
+    variant(
+        "modeling_algorithms",
+        default=True,
+        description="Build Modeling Algorithms module",
+        when="+modeling_data",
+    )
+    variant(
+        "visualization",
+        default=True,
+        description="Bulid Visualization module",
+        when="+modeling_algorithms",
+    )
+    variant(
+        "application_framework",
+        default=True,
+        description="Build Application Framework module",
+        when="+visualization",
+    )
+    variant(
+        "data_exchange",
+        default=True,
+        description="Build Data Exchange module",
+        when="+application_framework",
+    )
+    variant("draw", default=True, description="Build Draw module", when="+data_exchange")
+
+    # 3rd party
     variant("tbb", default=False, description="Build with Intel Threading Building Blocks")
+    variant("tk", default=False, description="Build with Tk support")
     variant("vtk", default=False, description="Enable VTK support")
+    variant("ffmpeg", default=False, description="Enable FFmpeg support")
     variant("freeimage", default=False, description="Build with FreeImage")
+    variant("freetype", default=False, description="Build with freetype")
     variant("rapidjson", default=False, description="Build with rapidjson")
 
-    depends_on("intel-tbb", when="+tbb")
+    depends_on("tbb", when="+tbb")
+    depends_on("intel-tbb@2021.5: build_type=Release", when="@7.7 +tbb")
+    depends_on("intel-tbb@:2020.3", when="@7.6 +tbb")
+
     depends_on("vtk", when="+vtk")
+    depends_on("vtk", when="@7.6 +vtk")
+
+    depends_on("ffmpeg", when="+ffmpeg")
     depends_on("freeimage", when="+freeimage")
+    depends_on("freetype", when="+freetype")
     depends_on("rapidjson", when="+rapidjson")
-    depends_on("freetype")
+
     depends_on("libxext")
     depends_on("libxmu")
     depends_on("libxi")
     depends_on("libxt")
     depends_on("tcl")
-    depends_on("tk")
+    depends_on("tk", when="+tk")
     depends_on("gl")
+
+    conflicts("vtk@9.2", when="@:7.7.0 +vtk")
 
     def url_for_version(self, version):
         url = (
@@ -97,34 +145,63 @@ class Opencascade(CMakePackage):
         return url.format(version.underscored)
 
     def cmake_args(self):
+        spec = self.spec
+
+        def build_module(occt_module):
+            # CamelCase to snake_case
+            spack_variant = re.sub(r"(?<!^)(?=[A-Z])", "_", occt_module).lower()
+            enabled = spec.satisfies("+" + spack_variant)
+            return self.define(f"BUILD_MODULE_{occt_module}", enabled)
+
+        def use_3rdparty(feature, spack_variant=None, depends_on=None, extra_dirs=[]):
+            if spack_variant is None:
+                spack_variant = feature.lower()
+            if depends_on is None:
+                depends_on = feature.lower()
+            if spack_variant in spec.variants:
+                enabled = spec.satisfies("+" + spack_variant)
+            else:
+                enabled = True
+            args = []
+            args.append("-DUSE_{}={}".format(feature.upper(), enabled))
+            if enabled:
+                args.append(
+                    "-D3RDPARTY_{}_DIR={}".format(feature.upper(), spec[depends_on].prefix)
+                )
+                for dir in extra_dirs:
+                    args.append(
+                        "-D3RDPARTY_{}_{}_DIR={}".format(
+                            feature.upper(), dir.upper(), join_path(spec[depends_on].prefix, dir)
+                        )
+                    )
+            return args
+
         args = []
 
-        if "+tbb" in self.spec:
-            args.append("-DUSE_TBB=ON")
-            args.append("-D3RDPARTY_TBB_DIR=%s" % self.spec["intel-tbb"].prefix)
-        else:
-            args.append("-DUSE_TBB=OFF")
+        # Disable documentation building
+        args.append("-DBUILD_DOC_Overview=OFF")
 
-        if "+vtk" in self.spec:
-            args.append("-DUSE_VTK=ON")
-            args.append("-D3RDPARTY_VTK_DIR=%s" % self.spec["vtk"].prefix)
-            args.append("-D3RDPARTY_VTK_INCLUDE_DIR=%s" % self.spec["vtk"].prefix.include)
-        else:
-            args.append("-DUSE_VTK=OFF")
+        # Always build the foundation classes
+        args.append(self.define("BUILD_MODULE_FoundationClasses", true))
+        # Specify which modules to build
+        for module in [
+            "ApplicationFramework",
+            "Draw",
+            "DataExchange",
+            "ModelingAlgorithms",
+            "ModelingData",
+            "Visualization",
+        ]:
+            args.append(build_module(module))
 
-        if "+freeimage" in self.spec:
-            args.append("-DUSE_FREEIMAGE=ON")
-            args.append("-D3RDPARTY_FREEIMAGE_DIR=%s" % self.spec["freeimage"].prefix)
-            args.append(
-                "-D3RDPARTY_FREEIMAGE_INCLUDE_DIR=%s" % self.spec["freeimage"].prefix.include
-            )
-        else:
-            args.append("-DUSE_FREEIMAGE=OFF")
-
-        if "+rapidjson" in self.spec:
-            args.append("-DUSE_RAPIDJSON=ON")
-            args.append("-D3RDPARTY_RAPIDJSON_DIR=%s" % self.spec["rapidjson"].prefix)
-        else:
-            args.append("-DUSE_RAPIDJSON=OFF")
+        # Specify which 3rd party features to build
+        args += use_3rdparty("tcl")
+        args += use_3rdparty("tk")
+        args += use_3rdparty("ffmpeg")
+        args += use_3rdparty("freeimage")
+        args += use_3rdparty("freetype")
+        args += use_3rdparty("rapidjson")
+        args += use_3rdparty("tbb", depends_on="intel-tbb")
+        args += use_3rdparty("vtk", extra_dirs=["lib", "include"])
 
         return args
