@@ -743,7 +743,9 @@ deprecated-ci-build:
       - cp "share/spack/gitlab/cloud_pipelines/configs/config.yaml" "etc/spack/"
       - /bin/bash postinstall.sh -fg
       - rm "etc/spack/config.yaml"
-      - mv postinstall.sh "${CI_PROJECT_DIR}/jobs_scratch_dir/"
+
+  after_script:
+    - - mv "${CI_PROJECT_DIR}/postinstall.sh" "${CI_PROJECT_DIR}/jobs_scratch_dir/"
 
 # Icelake (one pipeline per target)
 .aws-pcluster-icelake:
