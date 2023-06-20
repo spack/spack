@@ -735,15 +735,15 @@ deprecated-ci-build:
   before_script:
     # Use gcc from pre-installed spack store
     - - . "./share/spack/setup-env.sh"
-      - . /etc/profile.d/modules.sh
-      - curl -sOL https://raw.githubusercontent.com/spack/spack-configs/main/AWS/parallelcluster/postinstall.sh
+      - . "/etc/profile.d/modules.sh"
+      - curl -sOL "https://raw.githubusercontent.com/spack/spack-configs/main/AWS/parallelcluster/postinstall.sh"
       - sed -i -e "s/spack arch -t/echo ${SPACK_TARGET_ARCH}/g" postinstall.sh
       - sed -i -e "s|spack install gcc|spack install /${GCC_HASH}|g" postinstall.sh
-      - diff -q /bootstrap/cloud_pipelines-config.yaml share/spack/gitlab/cloud_pipelines/configs/config.yaml || echo "Warning: Install tree might have changed. You need to rebuild the pcluster-amazonlinux-2 container in spack/gitlab-runners."
-      - cp share/spack/gitlab/cloud_pipelines/configs/config.yaml etc/spack/
+      - diff -q "/bootstrap/cloud_pipelines-config.yaml" "share/spack/gitlab/cloud_pipelines/configs/config.yaml" || echo "Warning Install tree might have changed. You need to rebuild the pcluster-amazonlinux-2 container in spack/gitlab-runners."
+      - cp "share/spack/gitlab/cloud_pipelines/configs/config.yaml" "etc/spack/"
       - /bin/bash postinstall.sh -fg
-      - rm spack/etc/spack/config.yaml
-      - mv postinstall.sh "${CI_PROJECT_DIR}"/
+      - rm "spack/etc/spack/config.yaml"
+      - mv postinstall.sh "${CI_PROJECT_DIR}/"
 
   after_script:
     - - mv "${CI_PROJECT_DIR}/postinstall.sh" "${CI_PROJECT_DIR}/jobs_scratch_dir/"
