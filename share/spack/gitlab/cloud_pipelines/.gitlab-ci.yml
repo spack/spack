@@ -739,7 +739,7 @@ deprecated-ci-build:
       - curl -sOL https://raw.githubusercontent.com/spack/spack-configs/main/AWS/parallelcluster/postinstall.sh
       - sed -i -e "s/spack arch -t/echo ${SPACK_TARGET_ARCH}/g" postinstall.sh
       # TODO: Remove when we change this in postinstall.sh
-      - sed -i -e "s?spack install gcc?spack install /${GCC_HASH}?g" postinstall.sh
+      - sed -i -e "s|spack install gcc|spack install /${GCC_HASH}|g" postinstall.sh
       - diff -q /bootstrap/cloud_pipelines-config.yaml share/spack/gitlab/cloud_pipelines/configs/config.yaml || echo "Warning: Install tree might have changed. You need to rebuild the pcluster-amazonlinux-2 container in spack/gitlab-runners."
       - cp share/spack/gitlab/cloud_pipelines/configs/config.yaml etc/spack/
       - /bin/bash postinstall.sh -fg
