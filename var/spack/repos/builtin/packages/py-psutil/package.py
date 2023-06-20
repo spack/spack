@@ -28,7 +28,3 @@ class PyPsutil(PythonPackage):
     # pyproject.toml
     depends_on("py-setuptools@43:", when="@5.9.4:", type="build")
     depends_on("py-setuptools", type="build")
-
-    # setup.py
-    # depends_on("py-pywin32", when="platform=windows", type=("build", "run"))
-    # depends_on("py-wmi", when="platform=windows", type=("build", "run"))
