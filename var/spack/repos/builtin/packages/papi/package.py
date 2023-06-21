@@ -90,11 +90,12 @@ class Papi(AutotoolsPackage, ROCmPackage):
         spec = self.spec
         if "+lmsensors" in spec and self.version >= Version("6"):
             env.set("PAPI_LMSENSORS_ROOT", spec["lm-sensors"].prefix)
-        if "^cuda" in spec:
+        if "+cuda" in spec:
             env.set("PAPI_CUDA_ROOT", spec["cuda"].prefix)
         if "+rocm" in spec:
             env.set("PAPI_ROCM_ROOT", spec["hsa-rocr-dev"].prefix)
             env.append_flags("CFLAGS", "-I%s/rocprofiler/include" % spec["rocprofiler-dev"].prefix)
+            env.append_flags("LDFLAGS", "-L%s/lib" % spec["llvm-amdgpu"].prefix)
             env.set(
                 "ROCP_METRICS", "%s/rocprofiler/lib/metrics.xml" % spec["rocprofiler-dev"].prefix
             )
