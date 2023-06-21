@@ -240,14 +240,6 @@ class Wrf(Package):
         env.set("JASPERINC", self.spec["jasper"].prefix.include)
         env.set("JASPERLIB", self.spec["jasper"].prefix.lib)
 
-        # These flags should be used also in v3, but FCFLAGS/FFLAGS aren't used
-        # consistently in that version of WRF, so we have to force them through
-        # `flag_handler` below.
-        if self.spec.satisfies("@4.0: %gcc@10:"):
-            args = "-w -O2 -fallow-argument-mismatch -fallow-invalid-boz"
-            env.set("FCFLAGS", args)
-            env.set("FFLAGS", args)
-
         if self.spec.satisfies("%aocc"):
             env.set("WRFIO_NCD_LARGE_FILE_SUPPORT", 1)
             env.set("HDF5", self.spec["hdf5"].prefix)
@@ -257,10 +249,9 @@ class Wrf(Package):
             env.set("ADIOS2", self.spec["adios2"].prefix)
 
     def flag_handler(self, name, flags):
-        # Same flags as FCFLAGS/FFLAGS above, but forced through the compiler
-        # wrapper when compiling v3.9.1.1.
-        if self.spec.satisfies("@3.9.1.1 %gcc@10:") and name == "fflags":
-            flags.extend(["-w", "-O2", "-fallow-argument-mismatch", "-fallow-invalid-boz"])
+        # Force FCFLAGS/FFLAGS by adding directly into spack compiler wrappers.
+        if self.spec.satisfies("@3.9.1.1: %gcc@10:") and name == "fflags":
+            flags.extend(["-fallow-argument-mismatch", "-fallow-invalid-boz"])
         return (flags, None, None)
 
     def patch(self):
