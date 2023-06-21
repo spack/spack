@@ -15,6 +15,8 @@ class PyLightly(PythonPackage):
 
     maintainers("adamjstewart")
 
+    version("1.4.9", sha256="33c7988b41447c9beeb1781805ad24c8a61aa174e1a37b0b95d8e91e4a7c7f96")
+    version("1.4.8", sha256="3af5d8da0ac981f362bd61cbd4935dadbc32d24995c40ac2a511e6d743a03fd7")
     version("1.4.7", sha256="dce719996d9b01b2a3c652e9cbab3ff80d078c4ed86d1adb39220d20e1f3fdf2")
     version("1.4.6", sha256="1c8b904a96fadaefbaa00296eea0ac1e8b50cb10e94595c74b0abada5f4f5a64")
     version("1.4.5", sha256="67b1de64950ff5bc35ef86fec3049f437ed1c9cb4a191c43b52384460207535f")
@@ -37,6 +39,12 @@ class PyLightly(PythonPackage):
     depends_on("py-tqdm@4.44:", type=("build", "run"))
     depends_on("py-urllib3@1.15.1:", type=("build", "run"))
 
+    # requirements/openapi.txt
+    depends_on("py-python-dateutil@2.5.3:", when="@1.4.8:", type=("build", "run"))
+    depends_on("py-urllib3@1.25.3:", when="@1.4.8:", type=("build", "run"))
+    depends_on("py-pydantic@1.10.5:1", when="@1.4.8:", type=("build", "run"))
+    depends_on("py-aenum@3.1.11:", when="@1.4.8:", type=("build", "run"))
+
     # requirements/torch.txt
     depends_on("py-torch", type=("build", "run"))
     depends_on("py-torch@:1", when="@:1.4.1", type=("build", "run"))
@@ -48,4 +56,5 @@ class PyLightly(PythonPackage):
     depends_on("py-torch+distributed", when="@:1.4.4", type=("build", "run"))
 
     # Historical dependencies
+    depends_on("py-setuptools@21:", when="@1.4.8", type=("build", "run"))
     depends_on("py-setuptools@21:65.5.1", when="@:1.4.1", type=("build", "run"))
