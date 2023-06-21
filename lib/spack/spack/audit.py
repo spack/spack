@@ -967,10 +967,10 @@ def _named_specs_in_when_arguments(pkgs, error_cls):
             summary = f"{pkg_name}: wrong 'when=' condition for the '{provided}' virtual"
             errors.extend(_extracts_errors(triggers, summary))
 
-        for _, triggers in pkg_cls.requirements.items():
-            triggers = [when_spec for when_spec, _, _ in triggers]
-            summary = f"{pkg_name}: wrong 'when=' condition in 'requires' directive"
-            errors.extend(_extracts_errors(triggers, summary))
+        for when, requirements, details in _error_items(pkg_cls.requirements):
+            errors.append(
+                error_cls(f"{pkg_name}: wrong 'when=' condition in 'requires' directive", details)
+            )
 
         for when, _, details in _error_items(pkg_cls.patches):
             errors.append(
