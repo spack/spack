@@ -15,6 +15,7 @@ class Nmodl(CMakePackage):
 
     version("develop", branch="master", submodules=True)
     version("llvm", branch="llvm", submodules=True)
+    version("0.7.a1", commit="2ce4a2b91dfcfe6356b6a5003c4e99b8711564ee")
     version("0.6.0", tag="0.6")
     version("0.5.0", tag="0.5")
     version("0.4.0", tag="0.4")
