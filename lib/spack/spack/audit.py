@@ -667,8 +667,8 @@ def _unknown_variants_in_directives(pkgs, error_cls):
         pkg_cls = spack.repo.PATH.get_pkg_class(pkg_name)
 
         # Check "conflicts" directive
-        for conflict, triggers in pkg_cls.conflicts.items():
-            for trigger, _ in triggers:
+        for trigger, conflicts in pkg_cls.conflicts.items():
+            for conflict, _ in conflicts:
                 vrn = spack.spec.Spec(conflict)
                 try:
                     vrn.constrain(trigger)
