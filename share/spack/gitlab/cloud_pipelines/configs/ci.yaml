@@ -11,11 +11,11 @@ ci:
       before_script-:
       - - spack list --count  # ensure that spack's cache is populated
       script::
-      - - spack compiler find
+      - - export SPACK_USER_CACHE_PATH="${CI_PROJECT_DIR}/_user_cache/"
+        - spack compiler find
         - cd ${SPACK_CONCRETE_ENV_DIR}
         - spack env activate --without-view .
         - if [ -n "$SPACK_BUILD_JOBS" ]; then spack config add "config:build_jobs:$SPACK_BUILD_JOBS"; fi
-        - spack config add "config:install_tree:projections:${SPACK_JOB_SPEC_PKG_NAME}:'morepadding/{architecture}/{compiler.name}-{compiler.version}/{name}-{version}-{hash}'"
         - mkdir -p ${SPACK_ARTIFACTS_ROOT}/user_data
         # AWS runners mount E4S public key (verification), UO runners mount public/private (signing/verification)
         - k=$CI_GPG_KEY_ROOT/e4s.gpg; [[ -r $k ]] && spack gpg trust $k
@@ -89,12 +89,12 @@ ci:
         KUBERNETES_MEMORY_REQUEST: "500M"
 
   - any-job:
-      image: "ghcr.io/spack/e4s-ubuntu-18.04:v2021-10-18"
       tags: ["spack"]
+      image: "ghcr.io/spack/e4s-ubuntu-18.04:v2021-10-18"
       before_script:
       - - uname -a || true
         - grep -E "vendor|model name" /proc/cpuinfo 2>/dev/null | sort -u || head -n10 /proc/cpuinfo 2>/dev/null || true
-        - nproc
+        - nproc || true
       - - . "./share/spack/setup-env.sh"
         - spack --version
         - spack arch
