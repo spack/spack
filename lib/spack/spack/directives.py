@@ -525,7 +525,7 @@ def _depends_on(
 
 
 @directive("conflicts")
-def conflicts(conflict_spec, when=None, msg=None):
+def conflicts(conflict_spec: SpecType, when: WhenType = None, msg: Optional[str] = None):
     """Allows a package to define a conflict.
 
     Currently, a "conflict" is a concretized configuration that is known
@@ -545,16 +545,16 @@ def conflicts(conflict_spec, when=None, msg=None):
         msg (str): optional user defined message
     """
 
-    def _execute_conflicts(pkg):
+    def _execute_conflicts(pkg: "spack.package_base.PackageBase"):
         # If when is not specified the conflict always holds
         when_spec = make_when_spec(when)
         if not when_spec:
             return
 
         # Save in a list the conflicts and the associated custom messages
-        when_spec_list = pkg.conflicts.setdefault(conflict_spec, [])
+        conflict_spec_list = pkg.conflicts.setdefault(when_spec, [])
         msg_with_name = f"{pkg.name}: {msg}" if msg is not None else msg
-        when_spec_list.append((when_spec, msg_with_name))
+        conflict_spec_list.append((spack.spec.Spec(conflict_spec), msg_with_name))
 
     return _execute_conflicts
 
