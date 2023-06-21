@@ -349,6 +349,10 @@ class TestConcretize:
             spec.concretize()
             assert spec.satisfies("cflags=-O2")
 
+    @pytest.mark.skipif(
+        os.environ.get("SPACK_TEST_SOLVER") == "original",
+        reason="Optional compiler propagation isn't deprecated for original concretizer",
+    )
     def test_concretize_compiler_flag_propagate(self):
         spec = Spec("hypre cflags=='-g' ^openblas")
         spec.concretize()
@@ -464,13 +468,19 @@ class TestConcretize:
         spec.concretize()
 
         assert spec.satisfies("^openblas~shared")
+        assert spec.satisfies("^zlib~shared")
 
+    @pytest.mark.skipif(
+        os.environ.get("SPACK_TEST_SOLVER") == "original",
+        reason="Optional compiler propagation isn't deprecated for original concretizer",
+    )
     def test_concretize_propagated_variant_is_not_passed_to_dependent(self):
         """Test a package variant value was passed from its parent."""
         spec = Spec("hypre~~shared ^openblas+shared")
         spec.concretize()
 
         assert spec.satisfies("^openblas+shared")
+        assert spec.satisfies("^zlib~shared")
 
     def test_no_matching_compiler_specs(self, mock_low_high_config):
         # only relevant when not building compilers as needed
