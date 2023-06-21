@@ -397,16 +397,9 @@ class Lbann(CachedCMakePackage, CudaPackage, ROCmPackage):
             cxxflags_str = " ".join(self.spec.compiler_flags["cxxflags"])
             entries.append(
                 cmake_cache_string(
-                    "HIP_HIPCC_FLAGS",
-                    "-g -fsized-deallocation -fPIC {0}".format(cxxflags_str),
+                    "HIP_HIPCC_FLAGS", "-g -fsized-deallocation -fPIC {0}".format(cxxflags_str),
                 )
             )
-            # entries.append(
-            #     cmake_cache_string(
-            #         "HIP_HIPCC_FLAGS",
-            #         "-g -fsized-deallocation -fPIC -std=c++17 {0}".format(cxxflags_str),
-            #     )
-            # )
 
         return entries
 
