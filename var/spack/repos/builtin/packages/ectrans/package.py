@@ -39,7 +39,7 @@ class Ectrans(CMakePackage):
 
     variant('transi', default=True, description='Compile TransI C-interface to trans?')
 
-    depends_on('ecbuild')
+    depends_on('ecbuild', type='build')
     depends_on('mpi', when='+mpi')
     depends_on('blas')
     depends_on('lapack')

@@ -74,7 +74,7 @@ class Mapl(CMakePackage):
     variant("extdata2g", default=False, description="Use ExtData2G")
     variant("pnetcdf", default=True, description="Use parallel netCDF")
 
-    depends_on("cmake@3.17:")
+    depends_on("cmake@3.17:", type="build")
     depends_on("mpi")
     depends_on("hdf5")
     depends_on("netcdf-c")
@@ -91,7 +91,7 @@ class Mapl(CMakePackage):
     # fArgParse not yet available
     conflicts("+fargparse")
 
-    depends_on("ecbuild")
+    depends_on("ecbuild", type="build")
 
     def cmake_args(self):
         args = [
