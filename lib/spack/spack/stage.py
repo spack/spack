@@ -884,7 +884,6 @@ def get_checksums_for_versions(url_dict, name, **kwargs):
         keep_stage (bool): whether to keep staging area when command completes
         batch (bool): whether to ask user how many versions to fetch (false)
             or fetch all versions (true)
-        latest (bool): whether to take the latest version (true) or all (false)
         fetch_options (dict): Options used for the fetcher (such as timeout
             or cookies)
 
@@ -912,7 +911,7 @@ def get_checksums_for_versions(url_dict, name, **kwargs):
     )
     print()
 
-    if batch or latest:
+    if batch:
         archives_to_fetch = len(sorted_versions)
     else:
         archives_to_fetch = tty.get_number(
