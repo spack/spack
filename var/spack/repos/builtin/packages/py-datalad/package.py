@@ -19,8 +19,9 @@ class PyDatalad(PythonPackage):
 
     homepage = "https://datalad.org/"
     pypi = "datalad/datalad-0.14.6.tar.gz"
-    git = "https://github.com/datalad/datalad"
+    git = "https://github.com/datalad/datalad.git"
 
+    version("0.18.4", sha256="d832f3d70b79b7b66519ca30315791a6a265bdf8a86ddac5846489b75385cb09")
     version("0.18.3", sha256="2da57df609f62a52a6652ade802e8ce0f229d498a5b93b15df2b8c69f8875b6e")
     version("0.17.5", sha256="a221312c58b0b9b57605cc1a2288838f24932491b2e50475dd7a940151cafccd")
     version("0.15.5", sha256="e569494a5bd4e0f100013ec30529d5ac02e78ba476a75fc533c0d89c0e5473bc")
@@ -62,6 +63,7 @@ class PyDatalad(PythonPackage):
     depends_on("py-packaging", when="@0.15.4:", type=("build", "run"))
     depends_on("py-patool@1.7:", type=("build", "run"))
     depends_on("py-tqdm", type=("build", "run"))
+    depends_on("py-typing-extensions@4:", when="@0.18.4: ^python@:3.10", type=("build", "run"))
     depends_on("py-typing-extensions", when="@0.18.3: ^python@:3.9", type=("build", "run"))
     depends_on("py-annexremote", type=("build", "run"))
     depends_on("py-looseversion", when="@0.18:", type=("build", "run"))

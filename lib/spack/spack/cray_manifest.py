@@ -164,7 +164,10 @@ def entries_to_specs(entries):
                     continue
                 parent_spec = spec_dict[entry["hash"]]
                 dep_spec = spec_dict[dep_hash]
-                parent_spec._add_dependency(dep_spec, deptypes=deptypes)
+                parent_spec._add_dependency(dep_spec, deptypes=deptypes, virtuals=())
+
+    for spec in spec_dict.values():
+        spack.spec.reconstruct_virtuals_on_edges(spec)
 
     return spec_dict
 
