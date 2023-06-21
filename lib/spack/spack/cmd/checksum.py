@@ -34,27 +34,26 @@ def setup_parser(subparser):
         default=False,
         help="don't clean up staging area when command completes",
     )
-    sp = subparser.add_mutually_exclusive_group()
-    sp.add_argument(
+    subparser.add_argument(
         "-b",
         "--batch",
         action="store_true",
         default=False,
         help="don't ask which versions to checksum",
     )
-    sp.add_argument(
+    subparser.add_argument(
         "-l",
         "--latest",
         action="store_true",
         default=False,
-        help="checksum the latest available version only",
+        help="checksum the latest available version",
     )
-    sp.add_argument(
+    subparser.add_argument(
         "-p",
         "--preferred",
         action="store_true",
         default=False,
-        help="checksum the preferred version only",
+        help="checksum the known Spack preferred version",
     )
     modes_parser = subparser.add_mutually_exclusive_group()
     modes_parser.add_argument(
@@ -87,30 +86,44 @@ def checksum(parser, args):
     pkg_cls = spack.repo.path.get_pkg_class(args.package)
     pkg = pkg_cls(spack.spec.Spec(args.package))
 
+    # Build a list of versions to checksum
+    versions = [Version(v) for v in args.versions]
+
+    # Define placeholder for remote versions.
+    # This'll help reduce redundant work if we need to check for the existance
+    # of remote versions more than once.
+    remote_versions = None
+
+    # Add latest version if requested
+    if args.latest:
+        remote_versions = pkg.fetch_remote_versions()
+        if len(remote_versions) > 0:
+            latest_version = sorted(remote_versions.keys(), reverse=True)[0]
+            versions.append(latest_version)
+
+    # Add preferred version if requested
+    if args.preferred:
+        versions.append(preferred_version(pkg))
+
     # Store a dict of the form version -> URL
     url_dict = {}
-    if not args.versions and args.preferred:
-        versions = [preferred_version(pkg)]
-    else:
-        versions = [Version(v) for v in args.versions]
 
-    if versions:
-        remote_versions = None
-        for version in versions:
-            if deprecated_version(pkg, version):
-                tty.warn("Version {0} is deprecated".format(version))
+    for version in versions:
+        if deprecated_version(pkg, version):
+            tty.warn("Version {0} is deprecated".format(version))
 
-            url = pkg.find_valid_url_for_version(version)
-            if url is not None:
-                url_dict[version] = url
-                continue
-            # if we get here, it's because no valid url was provided by the package
-            # do expensive fallback to try to recover
-            if remote_versions is None:
-                remote_versions = pkg.fetch_remote_versions()
-            if version in remote_versions:
-                url_dict[version] = remote_versions[version]
-    else:
+        url = pkg.find_valid_url_for_version(version)
+        if url is not None:
+            url_dict[version] = url
+            continue
+        # if we get here, it's because no valid url was provided by the package
+        # do expensive fallback to try to recover
+        if remote_versions is None:
+            remote_versions = pkg.fetch_remote_versions()
+        if version in remote_versions:
+            url_dict[version] = remote_versions[version]
+
+    if len(versions) <= 0:
         url_dict = pkg.fetch_remote_versions()
 
     if not url_dict:
@@ -123,23 +136,21 @@ def checksum(parser, args):
         url_dict,
         pkg.name,
         keep_stage=args.keep_stage,
-        batch=(args.batch or len(args.versions) > 0 or len(url_dict) == 1),
-        latest=args.latest,
+        batch=(args.batch or len(versions) > 0 or len(url_dict) == 1),
         fetch_options=pkg.fetch_options,
     )
 
     if args.verify:
         verify_checksums(pkg, version_hashes, url_dict)
 
-    elif args.add_to_package:
-        add_versions_to_package(pkg, version_hashes, url_dict)
+    # convert dict into package.py version statements
+    version_lines = get_version_lines(version_hashes, url_dict)
+    print()
+    print(version_lines)
+    print()
 
-    else:
-        # convert dict into package.py version statements
-        version_lines = get_version_lines(version_hashes, url_dict)
-        print()
-        print(version_lines)
-        print()
+    if args.add_to_package:
+        add_versions_to_package(pkg, version_hashes, url_dict)
 
 
 def verify_checksums(pkg, version_hashes, url_dict):
@@ -178,11 +189,13 @@ def verify_checksums(pkg, version_hashes, url_dict):
         results.append("{0:{1}}  {2} {3}".format(str(version), max_len, f"[{status}]", msg))
 
     # Display table of checksum results.
-    tty.msg(f"Found {num_verified} of {num_total}", "", *llnl.util.lang.elide_list(results), "")
+    tty.msg(f"Verified {num_verified} of {num_total}", "", *llnl.util.lang.elide_list(results), "")
 
     # Terminate at the end of function to prevent additional output.
     if failed:
         tty.die("Invalid checksums found.")
+
+    exit(0)
 
 
 def add_versions_to_package(pkg, version_hashes, url_dict):
@@ -210,6 +223,8 @@ def add_versions_to_package(pkg, version_hashes, url_dict):
         (v, new_version_lines.pop(0)) for v in sorted(version_hashes.keys(), reverse=True)
     ]
 
+    num_versions_added = 0
+
     with open(filename, "r+") as f:
         contents = f.read()
         split_contents = version_statement_re.split(contents)
@@ -226,6 +241,7 @@ def add_versions_to_package(pkg, version_hashes, url_dict):
 
                 if parsed_version < new_versions[0][0]:
                     split_contents[i:i] = [new_versions.pop(0)[1], " # FIX ME", "\n"]
+                    num_versions_added += 1
 
                 elif parsed_version == new_versions[0][0]:
                     new_versions.pop(0)
@@ -234,7 +250,8 @@ def add_versions_to_package(pkg, version_hashes, url_dict):
         f.seek(0)
         f.writelines("".join(split_contents))
 
+        tty.msg(f"Added {num_versions_added} new versions to {pkg.name}")
+        tty.msg(f"Open {filename} to review the additions.")
+
     if sys.stdout.isatty():
         editor(filename)
-    else:
-        tty.warn("Could not add new versions to {0}.".format(pkg.name))

@@ -896,11 +896,8 @@ def get_checksums_for_versions(url_dict, name, **kwargs):
     fetch_options = kwargs.get("fetch_options", None)
     first_stage_function = kwargs.get("first_stage_function", None)
     keep_stage = kwargs.get("keep_stage", False)
-    latest = kwargs.get("latest", False)
 
     sorted_versions = sorted(url_dict.keys(), reverse=True)
-    if latest:
-        sorted_versions = sorted_versions[:1]
 
     # Find length of longest string in the list for padding
     max_len = max(len(str(v)) for v in sorted_versions)

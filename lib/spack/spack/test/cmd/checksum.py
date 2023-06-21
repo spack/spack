@@ -20,17 +20,18 @@ spack_checksum = SpackCommand("checksum")
 @pytest.mark.parametrize(
     "arguments,expected",
     [
-        (["--batch", "patch"], (True, False, False, False)),
-        (["--latest", "patch"], (False, True, False, False)),
-        (["--preferred", "patch"], (False, False, True, False)),
-        (["--add-to-package", "patch"], (False, False, False, True)),
+        (["--batch", "patch"], (True, False, False, False, False)),
+        (["--latest", "patch"], (False, True, False, False, False)),
+        (["--preferred", "patch"], (False, False, True, False, False)),
+        (["--add-to-package", "patch"], (False, False, False, True, False)),
+        (["--verify", "patch"], (False, False, False, False, True)),
     ],
 )
 def test_checksum_args(arguments, expected):
     parser = argparse.ArgumentParser()
     spack.cmd.checksum.setup_parser(parser)
     args = parser.parse_args(arguments)
-    check = args.batch, args.latest, args.preferred, args.add_to_package
+    check = args.batch, args.latest, args.preferred, args.add_to_package, args.verify
     assert check == expected
 
 
@@ -41,13 +42,17 @@ def test_checksum_args(arguments, expected):
         (["--batch", "preferred-test"], "version of preferred-test"),
         (["--latest", "preferred-test"], "Found 1 version"),
         (["--preferred", "preferred-test"], "Found 1 version"),
-        (["--add-to-package", "preferred-test"], "Added 1 new versions to"),
+        (["--add-to-package", "preferred-test"], "Added 0 new versions to"),
+        (["--verify", "preferred-test"], "Verified 1 of 1"),
     ],
 )
 def test_checksum(arguments, expected, mock_packages, mock_clone_repo, mock_stage):
     output = spack_checksum(*arguments)
     assert expected in output
-    assert "version(" in output
+
+    # --verify doesn't print versions strings like other flags
+    if "--verify" not in arguments:
+        assert "version(" in output
 
 
 @pytest.mark.skipif(sys.platform == "win32", reason="Not supported on Windows (yet)")
@@ -65,15 +70,14 @@ def test_checksum_interactive(mock_packages, mock_fetch, mock_stage, monkeypatch
 
 
 def test_checksum_versions(mock_packages, mock_clone_repo, mock_fetch, mock_stage):
-    pkg_cls = spack.repo.path.get_pkg_class("preferred-test")
-    versions = [str(v) for v in pkg_cls.versions if not v.isdevelop()]
-    output = spack_checksum("preferred-test", versions[0])
-    assert "Found 1 version" in output
+    pkg_cls = spack.repo.path.get_pkg_class("zlib")
+    versions = [str(v) for v in pkg_cls.versions]
+    output = spack_checksum("zlib", *versions)
+    assert "Found 3 versions" in output
     assert "version(" in output
-    output = spack_checksum("--add-to-package", "preferred-test", versions[0])
-    assert "Found 1 version" in output
-    assert "version(" in output
-    assert "Added 1 new versions to" in output
+    output = spack_checksum("--add-to-package", "zlib", *versions)
+    assert "Found 3 versions" in output
+    assert "Added 0 new versions to" in output
 
 
 def test_checksum_missing_version(mock_packages, mock_clone_repo, mock_fetch, mock_stage):
@@ -91,4 +95,4 @@ def test_checksum_deprecated_version(mock_packages, mock_clone_repo, mock_fetch,
         "--add-to-package", "deprecated-versions", "1.1.0", fail_on_error=False
     )
     assert "Version 1.1.0 is deprecated" in output
-    assert "Added 1 new versions to" not in output
+    assert "Added 0 new versions to" not in output
