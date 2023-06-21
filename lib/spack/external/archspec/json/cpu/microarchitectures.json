@@ -91,7 +91,12 @@
         ],
         "oneapi": [
           {
-            "versions": ":",
+            "versions": ":2022",
+            "name": "core2",
+            "flags": "-march={name} -mtune=generic"
+          },
+          {
+            "versions": "2022.1:",
             "name": "x86-64",
             "flags": "-march={name} -mtune=generic"
           }
