@@ -474,13 +474,7 @@ def print_virtuals(pkg, args):
     color.cprint("")
     color.cprint(section_title("Virtual Packages: "))
     if pkg.provided:
-        inverse_map = {}
-        for spec, whens in pkg.provided.items():
-            for when in whens:
-                if when not in inverse_map:
-                    inverse_map[when] = set()
-                inverse_map[when].add(spec)
-        for when, specs in reversed(sorted(inverse_map.items())):
+        for when, specs in reversed(sorted(pkg.provided.items())):
             line = "    %s provides %s" % (
                 when.colorized(),
                 ", ".join(s.colorized() for s in specs),

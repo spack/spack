@@ -702,15 +702,13 @@ def _unknown_variants_in_directives(pkgs, error_cls):
                 )
             )
 
-        # Check "patch" directive
-        for _, triggers in pkg_cls.provided.items():
-            triggers = [spack.spec.Spec(x) for x in triggers]
-            for vrn in triggers:
-                errors.extend(
-                    _analyze_variants_in_directive(
-                        pkg_cls, vrn, directive="patch", error_cls=error_cls
-                    )
+        # Check "provides" directive
+        for when_spec in pkg_cls.provided:
+            errors.extend(
+                _analyze_variants_in_directive(
+                    pkg_cls, when_spec, directive="provides", error_cls=error_cls
                 )
+            )
 
         # Check "resource" directive
         for vrn in pkg_cls.resources:
@@ -751,6 +749,18 @@ def _issues_in_depends_on_directive(pkgs, error_cls):
                         f"in {filename}",
                     ]
                     errors.append(error_cls(summary=summary, details=details))
+
+                def check_virtual_with_variants(spec, msg):
+                    if not spec.virtual or not spec.variants:
+                        return
+                    error = error_cls(
+                        f"{pkg_name}: {msg}",
+                        f"remove variants from '{spec}' in depends_on directive in {filename}",
+                    )
+                    errors.append(error)
+
+                check_virtual_with_variants(dep.spec, "virtual dependency cannot have variants")
+                check_virtual_with_variants(dep.spec, "virtual when= spec cannot have variants")
 
                 # No need to analyze virtual packages
                 if spack.repo.PATH.is_virtual(dep_name):
@@ -963,9 +973,11 @@ def _named_specs_in_when_arguments(pkgs, error_cls):
             summary = f"{pkg_name}: wrong 'when=' condition for the '{vname}' variant"
             errors.extend(_extracts_errors(triggers, summary))
 
-        for provided, triggers in pkg_cls.provided.items():
-            summary = f"{pkg_name}: wrong 'when=' condition for the '{provided}' virtual"
-            errors.extend(_extracts_errors(triggers, summary))
+        for when, providers, details in _error_items(pkg_cls.provided):
+            errors.extend(
+                error_cls(f"{pkg_name}: wrong 'when=' condition for '{provided}' virtual", details)
+                for provided in providers
+            )
 
         for when, requirements, details in _error_items(pkg_cls.requirements):
             errors.append(

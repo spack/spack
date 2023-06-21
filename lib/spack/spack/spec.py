@@ -2788,7 +2788,7 @@ class Spec:
         for dep in self.traverse():
             visited_user_specs.add(dep.name)
             pkg_cls = spack.repo.PATH.get_pkg_class(dep.name)
-            visited_user_specs.update(x.name for x in pkg_cls(dep).provided)
+            visited_user_specs.update(pkg_cls(dep).provided_virtual_names())
 
         extra = set(user_spec_deps.keys()).difference(visited_user_specs)
         if extra:
@@ -3774,11 +3774,9 @@ class Spec:
                     return False
 
                 if pkg.provides(virtual_spec.name):
-                    for provided, when_specs in pkg.provided.items():
-                        if any(
-                            non_virtual_spec.intersects(when, deps=False) for when in when_specs
-                        ):
-                            if provided.intersects(virtual_spec):
+                    for when_spec, provided in pkg.provided.items():
+                        if non_virtual_spec.intersects(when_spec, deps=False):
+                            if any(vpkg.intersects(virtual_spec) for vpkg in provided):
                                 return True
             return False
 
@@ -3881,9 +3879,9 @@ class Spec:
                     return False
 
                 if pkg.provides(other.name):
-                    for provided, when_specs in pkg.provided.items():
-                        if any(self.satisfies(when, deps=False) for when in when_specs):
-                            if provided.intersects(other):
+                    for when_spec, provided in pkg.provided.items():
+                        if self.satisfies(when_spec, deps=False):
+                            if any(vpkg.intersects(other) for vpkg in provided):
                                 return True
             return False
 

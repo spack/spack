@@ -1628,19 +1628,20 @@ class SpackSolverSetup:
             self.gen.fact(fn.imposed_constraint(condition_id, *pred.args))
 
     def package_provider_rules(self, pkg):
-        for provider_name in sorted(set(s.name for s in pkg.provided.keys())):
-            if provider_name not in self.possible_virtuals:
+        for vpkg_name in pkg.provided_virtual_names():
+            if vpkg_name not in self.possible_virtuals:
                 continue
-            self.gen.fact(fn.pkg_fact(pkg.name, fn.possible_provider(provider_name)))
+            self.gen.fact(fn.pkg_fact(pkg.name, fn.possible_provider(vpkg_name)))
 
-        for provided, whens in pkg.provided.items():
-            if provided.name not in self.possible_virtuals:
-                continue
-            for when in whens:
-                msg = "%s provides %s when %s" % (pkg.name, provided, when)
-                condition_id = self.condition(when, provided, pkg.name, msg)
+        for when, provided in pkg.provided.items():
+            for vpkg in provided:
+                if vpkg.name not in self.possible_virtuals:
+                    continue
+
+                msg = f"{pkg.name} provides {vpkg} when {when}"
+                condition_id = self.condition(when, vpkg, pkg.name, msg)
                 self.gen.fact(
-                    fn.pkg_fact(when.name, fn.provider_condition(condition_id, provided.name))
+                    fn.pkg_fact(when.name, fn.provider_condition(condition_id, vpkg.name))
                 )
             self.gen.newline()
 
@@ -3383,7 +3384,7 @@ def _is_reusable(spec: spack.spec.Spec, packages, local: bool) -> bool:
             return True
 
     try:
-        provided = [p.name for p in spec.package.provided]
+        provided = spack.repo.PATH.get(spec).provided_virtual_names()
     except spack.repo.RepoError:
         provided = []
 
