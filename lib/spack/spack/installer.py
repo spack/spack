@@ -857,6 +857,9 @@ class PackageInstaller:
                 setattr(task, attr, value)
                 self.build_pq[i] = (key, task)
 
+    def _add_rewire_task(self):
+        pass
+
     def _add_init_task(
         self,
         pkg: "spack.package_base.PackageBase",
@@ -1250,6 +1253,7 @@ class PackageInstaller:
 
                 dep_id = package_id(dep_pkg)
                 if dep_id not in self.build_tasks:
+                    # Add init tasks for build dependency
                     self._add_init_task(dep_pkg, request, False, all_deps)
 
                 # Clear any persistent failure markings _unless_ they are
@@ -1268,7 +1272,10 @@ class PackageInstaller:
                 self._check_deps_status(request)
 
             # Now add the package itself, if appropriate
+            # Add init task for build spec
             self._add_init_task(request.pkg, request, False, all_deps)
+
+            # Add a rewire tasks for spec if request.spec.spliced.
 
         # Ensure if one request is to fail fast then all requests will.
         fail_fast = bool(request.install_args.get("fail_fast"))
@@ -1288,65 +1295,23 @@ class PackageInstaller:
         Args:
             task: the installation build task for a package
             install_status: the installation status for the package"""
-
-        explicit = task.explicit
-        install_args = task.request.install_args
-        cache_only = task.cache_only
-        use_cache = task.use_cache
-        tests = install_args.get("tests", False)
-        assert isinstance(tests, (bool, list))  # make mypy happy.
-        unsigned = bool(install_args.get("unsigned"))
-
-        pkg, pkg_id = task.pkg, task.pkg_id
-
-        tty.msg(install_msg(pkg_id, self.pid, install_status))
-        task.start = task.start or time.time()
-        task.status = STATUS_INSTALLING
-
-        # Use the binary cache if requested
-        if use_cache and _install_from_cache(pkg, cache_only, explicit, unsigned):
-            self._update_installed(task)
-            if task.compiler:
-                self._add_compiler_package_to_config(pkg)
-            return
-
-        pkg.run_tests = tests if isinstance(tests, bool) else pkg.name in tests
-
-        # hook that allows tests to inspect the Package before installation
-        # see unit_test_check() docs.
-        if not pkg.unit_test_check():
-            return
-
-        # Injecting information to know if this installation request is the root one
-        # to determine in BuildProcessInstaller whether installation is explicit or not
-        install_args["is_root"] = task.is_root
-
+        # TODO: use install_status
         try:
-            self._setup_install_dir(pkg)
-
-            # Create a child process to do the actual installation.
-            # Preserve verbosity settings across installs.
-            spack.package_base.PackageBase._verbose = spack.build_environment.start_build_process(
-                pkg, build_process, install_args
-            )
-            # Currently this is how RPATH-like behavior is achieved on Windows, after install
-            # establish runtime linkage via Windows Runtime link object
-            # Note: this is a no-op on non Windows platforms
-            pkg.windows_establish_runtime_linkage()
-            # Note: PARENT of the build process adds the new package to
-            # the database, so that we don't need to re-read from file.
-            spack.store.STORE.db.add(pkg.spec, spack.store.STORE.layout, explicit=explicit)
-
-            # If a compiler, ensure it is added to the configuration
-            if task.compiler:
-                self._add_compiler_package_to_config(pkg)
-        except spack.build_environment.StopPhase as e:
-            # A StopPhase exception means that do_install was asked to
-            # stop early from clients, and is not an error at this point
-            spack.hooks.on_install_failure(task.request.pkg.spec)
-            pid = "{0}: ".format(self.pid) if tty.show_pid() else ""
-            tty.debug("{0}{1}".format(pid, str(e)))
-            tty.debug("Package stage directory: {0}".format(pkg.stage.source_path))
+            rc = task.execute(self.pid)  # Why pass PID?
+            # BuildTask.execute gets most of the logic from _install_task
+            # RewireTask.execute gets the rewiring logic
+            # _add_compiler_package_to_config goes to module scope
+            # _setup_install_dir goes to BuildTask class or it goes on the generic Task class
+        except InstallError as e:
+            # wrap exception and reraise
+            raise InstallError(
+                    "Cannot proceed with {0}: {1}".format(
+                        self.pid, e.msg
+                    )
+                )
+        else:
+            if rc == "updated_installed":  # probably just use true for this
+                self._updated_installed(task)
 
     def _next_is_pri0(self) -> bool:
         """
@@ -1475,6 +1440,7 @@ class PackageInstaller:
         Args:
             pkg: the package to be built and installed
         """
+        # Move to a module level method.
         if not os.path.exists(pkg.spec.prefix):
             path = spack.util.path.debug_padded_filter(pkg.spec.prefix)
             tty.debug("Creating the installation directory {0}".format(path))
@@ -1588,6 +1554,7 @@ class PackageInstaller:
 
         # Add any missing dependents to ensure proper uninstalled dependency
         # tracking when installing multiple specs
+        # Modify to make sure dependencies across rewire and build tasks are properly
         tty.debug("Ensure all dependencies know all dependents across specs")
         for dep_id in all_dependencies:
             if dep_id in self.build_tasks:
@@ -2176,8 +2143,8 @@ class OverwriteInstall:
             raise e.inner_exception
 
 
-class BuildTask:
-    """Class for representing the build task for a package."""
+class Task:
+    """Base class for representing a task for a package."""
 
     def __init__(
         self,
@@ -2203,32 +2170,6 @@ class BuildTask:
             installed: the identifiers of packages that have
                 been installed so far
         """
-
-        # Ensure dealing with a package that has a concrete spec
-        if not isinstance(pkg, spack.package_base.PackageBase):
-            raise ValueError("{0} must be a package".format(str(pkg)))
-
-        self.pkg = pkg
-        if not self.pkg.spec.concrete:
-            raise ValueError("{0} must have a concrete spec".format(self.pkg.name))
-
-        # The "unique" identifier for the task's package
-        self.pkg_id = package_id(self.pkg)
-
-        # The explicit build request associated with the package
-        if not isinstance(request, BuildRequest):
-            raise ValueError("{0} must have a build request".format(str(pkg)))
-
-        self.request = request
-
-        # Initialize the status to an active state.  The status is used to
-        # ensure priority queue invariants when tasks are "removed" from the
-        # queue.
-        if status == STATUS_REMOVED:
-            msg = "Cannot create a build task for {0} with status '{1}'"
-            raise InstallError(msg.format(self.pkg_id, status), pkg=pkg)
-
-        self.status = status
 
         # Package is associated with a bootstrap compiler
         self.compiler = compiler
@@ -2397,6 +2338,85 @@ class BuildTask:
     def priority(self):
         """The priority is based on the remaining uninstalled dependencies."""
         return len(self.uninstalled_deps)
+
+
+class BuildTask(Task):
+    """Class for representing a build task for a package."""
+    def __init__(self, pkg, request, compiler, start, attempts, status, installed):
+        super(BuildTask, self).__init__(pkg, request, compiler, start, attempts, status, installed)
+
+    def execute(self):
+        """
+        Perform the installation of the requested spec and/or dependency
+        represented by the build task.
+
+        Args:
+            task (BuildTask): the installation build task for a package"""
+        # Refactor to put most of the work in BuildTask
+        # Also could put a switch at the top that would determine build or rewire
+
+        # explicit = task.explicit
+        install_args = self.request.install_args
+        # cache_only = task.cache_only
+        # use_cache = task.use_cache
+        tests = install_args.get("tests")
+        unsigned = install_args.get("unsigned")
+
+        pkg, pkg_id = self.pkg, self.pkg_id
+
+        tty.msg(install_msg(pkg_id, self.pid))
+        self.start = self.start or time.time()
+        self.status = STATUS_INSTALLING
+
+        # Use the binary cache if requested
+        if self.use_cache and _install_from_cache(pkg, self.cache_only, self.explicit, unsigned):
+            self.pkg._update_installed(self)
+            if self.compiler:
+                self._add_compiler_package_to_config(pkg)
+            return
+
+        pkg.run_tests = tests is True or tests and pkg.name in tests
+
+        # hook that allows tests to inspect the Package before installation
+        # see unit_test_check() docs.
+        if not pkg.unit_test_check():
+            return
+
+        # Injecting information to know if this installation request is the root one
+        # to determine in BuildProcessInstaller whether installation is explicit or not
+        install_args["is_root"] = self.is_root
+
+        try:
+            self._setup_install_dir(pkg)
+
+            # Create a child process to do the actual installation.
+            # Preserve verbosity settings across installs.
+            spack.package_base.PackageBase._verbose = spack.build_environment.start_build_process(
+                pkg, build_process, install_args
+            )
+            # Currently this is how RPATH-like behavior is achieved on Windows, after install
+            # establish runtime linkage via Windows Runtime link object
+            # Note: this is a no-op on non Windows platforms
+            pkg.windows_establish_runtime_linkage()
+            # Note: PARENT of the build process adds the new package to
+            # the database, so that we don't need to re-read from file.
+            spack.store.db.add(pkg.spec, spack.store.layout, explicit=self.explicit)
+
+            # If a compiler, ensure it is added to the configuration
+            if self.compiler:
+                self._add_compiler_package_to_config(pkg)
+        except spack.build_environment.StopPhase as e:
+            # A StopPhase exception means that do_install was asked to
+            # stop early from clients, and is not an error at this point
+            spack.hooks.on_install_failure(self.request.pkg.spec)
+            pid = "{0}: ".format(self.pid) if tty.show_pid() else ""
+            tty.debug("{0}{1}".format(pid, str(e)))
+            tty.debug("Package stage directory: {0}".format(pkg.stage.source_path))
+
+
+class RewireTask(Task):
+    """Class for representing a rewiring of splcied specs."""
+    pass
 
 
 class BuildRequest:
