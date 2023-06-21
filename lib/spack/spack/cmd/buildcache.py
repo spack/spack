@@ -342,7 +342,7 @@ def push_fn(args):
         if len(specs) == 1:
             tty.info("The spec is already in the buildcache. Use --force to overwrite it.")
         elif len(skipped) == len(specs):
-            tty.info("All specs are already in the buildcache. Use --force to overwite them.")
+            tty.info("All specs are already in the buildcache. Use --force to overwrite them.")
         else:
             tty.info(
                 "The following {} specs were skipped as they already exist in the buildcache:\n"
@@ -353,10 +353,16 @@ def push_fn(args):
             )
 
     if failed:
-        tty.info(
-            "The following {} specs were skipped due to errors during the buildcache creation:\n"
-            "    {}".format(len(failed), ", ".join(elide_list(failed, 5)))
-        )
+        if len(failed) == 1:
+            tty.info(
+                "The following spec was skipped due to errors during the buildcache creation:\n"
+                "    {}".format(", ".join(elide_list(failed, 5)))
+            )
+        else:
+            tty.info(
+                "The following {} specs were skipped due to errors during the buildcache creation:\n"
+                "    {}".format(len(failed), ", ".join(elide_list(failed, 5)))
+            )
 
 
 def install_fn(args):
