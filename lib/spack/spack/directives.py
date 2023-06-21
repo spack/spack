@@ -965,7 +965,7 @@ def license(
 
 
 @directive("requirements")
-def requires(*requirement_specs, policy="one_of", when=None, msg=None):
+def requires(*requirement_specs: str, policy="one_of", when=None, msg=None):
     """Allows a package to request a configuration to be present in all valid solutions.
 
     For instance, a package that is known to compile only with GCC can declare:
@@ -984,7 +984,7 @@ def requires(*requirement_specs, policy="one_of", when=None, msg=None):
         msg: optional user defined message
     """
 
-    def _execute_requires(pkg):
+    def _execute_requires(pkg: "spack.package_base.PackageBase"):
         if policy not in ("one_of", "any_of"):
             err_msg = (
                 f"the 'policy' argument of the 'requires' directive in {pkg.name} is set "
@@ -997,9 +997,10 @@ def requires(*requirement_specs, policy="one_of", when=None, msg=None):
             return
 
         # Save in a list the requirements and the associated custom messages
-        when_spec_list = pkg.requirements.setdefault(tuple(requirement_specs), [])
+        requirement_list = pkg.requirements.setdefault(when_spec, [])
         msg_with_name = f"{pkg.name}: {msg}" if msg is not None else msg
-        when_spec_list.append((when_spec, policy, msg_with_name))
+        requirements = tuple(spack.spec.Spec(s) for s in requirement_specs)
+        requirement_list.append((requirements, policy, msg_with_name))
 
     return _execute_requires
 
