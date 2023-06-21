@@ -2402,7 +2402,7 @@ def test_env_activate_default_view_root_unconditional(mutable_mock_env_path):
     )
 
 
-@pytest.mark.regression("")
+@pytest.mark.regression("38510")
 def test_concretize_separately_abstract_hash(install_mockery, mock_fetch):
     """Check that a root can have no name if it has a hash."""
     s = Spec("trivial-install-test-package").concretized()
