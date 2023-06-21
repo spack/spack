@@ -23,6 +23,7 @@ class PyNumpy(PythonPackage):
     maintainers("adamjstewart", "rgommers")
 
     version("main", branch="main")
+    version("1.25.0", sha256="f1accae9a28dc3cda46a91de86acf69de0d1b5f4edd44a9b0c3ceb8036dfff19")
     version("1.24.3", sha256="ab344f1bf21f140adab8e47fdbc7c35a477dc01408791f8ba00d018dd0bc5155")
     version("1.24.2", sha256="003a9f530e880cb2cd177cba1af7220b9aa42def9c4afc2a2fc3ee6be7eb2b22")
     version("1.24.1", sha256="2386da9a471cc00a1f47845e27d916d5ec5346ae9696e01a8a34760858fe9dd2")
@@ -87,7 +88,8 @@ class PyNumpy(PythonPackage):
     variant("lapack", default=True, description="Build with LAPACK support")
 
     # Based on wheel availability on PyPI
-    depends_on("python@3.8:3.11", when="@1.23.2:", type=("build", "link", "run"))
+    depends_on("python@3.9:3.11", when="@1.25:", type=("build", "link", "run"))
+    depends_on("python@3.8:3.11", when="@1.23.2:1.24", type=("build", "link", "run"))
     depends_on("python@3.8:3.10", when="@1.22:1.23.1", type=("build", "link", "run"))
     depends_on("python@:3.10", when="@1.21.2:1.21", type=("build", "link", "run"))
     depends_on("python@:3.9", when="@1.19.3:1.21.1", type=("build", "link", "run"))
@@ -98,6 +100,7 @@ class PyNumpy(PythonPackage):
     depends_on("py-setuptools@:63", type=("build", "run"))
     depends_on("py-setuptools@:59", when="@:1.22.1", type=("build", "run"))
     # Check pyproject.toml for updates to the required cython version
+    depends_on("py-cython@0.29.34:2", when="@1.25:", type="build")
     depends_on("py-cython@0.29.13:2", when="@1.18.0:", type="build")
     depends_on("py-cython@0.29.14:2", when="@1.18.1:", type="build")
     depends_on("py-cython@0.29.21:2", when="@1.19.1:", type="build")
