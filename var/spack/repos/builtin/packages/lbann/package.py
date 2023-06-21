@@ -347,6 +347,7 @@ class Lbann(CachedCMakePackage, CudaPackage, ROCmPackage):
 
     def initconfig_compiler_entries(self):
         spec = self.spec
+        spec.compiler_flags["cxxflags"].append("-std=c++17")
         entries = super(Lbann, self).initconfig_compiler_entries()
         entries.append(cmake_cache_string("CMAKE_CXX_STANDARD", "17"))
         if not spec.satisfies("^cmake@3.23.0"):
@@ -397,9 +398,15 @@ class Lbann(CachedCMakePackage, CudaPackage, ROCmPackage):
             entries.append(
                 cmake_cache_string(
                     "HIP_HIPCC_FLAGS",
-                    "-g -fsized-deallocation -fPIC -std=c++17 {0}".format(cxxflags_str),
+                    "-g -fsized-deallocation -fPIC {0}".format(cxxflags_str),
                 )
             )
+            # entries.append(
+            #     cmake_cache_string(
+            #         "HIP_HIPCC_FLAGS",
+            #         "-g -fsized-deallocation -fPIC -std=c++17 {0}".format(cxxflags_str),
+            #     )
+            # )
 
         return entries
 
