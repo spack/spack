@@ -355,12 +355,12 @@ def push_fn(args):
     if failed:
         if len(failed) == 1:
             tty.info(
-                "The following spec was skipped due to errors during the buildcache creation:\n"
+                "The following spec was skipped due to errors in the buildcache creation:\n"
                 "    {}".format(", ".join(elide_list(failed, 5)))
             )
         else:
             tty.info(
-                "The following {} specs were skipped due to errors during the buildcache creation:\n"
+                "The following {} specs were skipped due to errors in the buildcache creation:\n"
                 "    {}".format(len(failed), ", ".join(elide_list(failed, 5)))
             )
 
