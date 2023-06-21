@@ -2380,17 +2380,28 @@ def _concretize_from_constraints(spec_constraints, tests=False):
     # Accept only valid constraints from list and concretize spec
     # Get the named spec even if out of order
     root_spec = [s for s in spec_constraints if s.name]
-    if len(root_spec) != 1:
-        m = "The constraints %s are not a valid spec " % spec_constraints
-        m += "concretization target. all specs must have a single name "
-        m += "constraint for concretization."
-        raise InvalidSpecConstraintError(m)
-    spec_constraints.remove(root_spec[0])
+    hash_spec = [s for s in spec_constraints if s.abstract_hash]
+
+    error_message = "The constraints %s are not a valid spec " % spec_constraints
+    error_message += "concretization target. all specs must have a single name "
+    error_message += "constraint for concretization."
+
+    if len(root_spec) > 1:
+        raise InvalidSpecConstraintError(error_message)
+
+    if len(root_spec) < 1:
+        if len(hash_spec) < 1:
+            raise InvalidSpecConstraintError(error_message)
+
+    if root_spec:
+        spec_constraints.remove(root_spec[0])
+
+    root_spec = root_spec[0] if root_spec else Spec()
 
     invalid_constraints = []
     while True:
         # Attach all anonymous constraints to one named spec
-        s = root_spec[0].copy()
+        s = root_spec.copy()
         for c in spec_constraints:
             if c not in invalid_constraints:
                 s.constrain(c)

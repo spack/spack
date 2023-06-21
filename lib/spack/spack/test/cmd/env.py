@@ -2402,6 +2402,21 @@ def test_env_activate_default_view_root_unconditional(mutable_mock_env_path):
     )
 
 
+@pytest.mark.regression("")
+def test_concretize_separately_abstract_hash(install_mockery, mock_fetch):
+    """Check that a root can have no name if it has a hash."""
+    s = Spec("trivial-install-test-package").concretized()
+    install(str(s))
+
+    e = ev.create("test")
+    e.unify = False
+
+    e.add(f"/{s.dag_hash()}")
+    e.concretize()
+
+    assert list(e.concretized_specs()) == [(Spec(f"/{s.dag_hash()}"), s)]
+
+
 def test_concretize_user_specs_together():
     e = ev.create("coconcretization")
     e.unify = True
