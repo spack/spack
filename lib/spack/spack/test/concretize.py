@@ -367,11 +367,12 @@ class TestConcretize:
         "Optional compiler propagation isn't deprecated for original concretizer"
     )
     def test_concretize_propagate_compiler_flag_not_passed_to_dependent(self):
-        spec = Spec("hypre cflags=='-g' ^openblas cflags='-O3'")
+        spec = Spec("callpath cflags=='-g' ^dyninst cflags='-O3'")
         spec.concretize()
 
         assert set(spec.compiler_flags["cflags"]) == set(["-g"])
-        assert spec.satisfies("^openblas cflags='-O3'")
+        assert spec.satisfies("^dyninst cflags='-O3'")
+        assert spec.satisfies("^libelf cflags='-g'")
 
     def test_mixing_compilers_only_affects_subdag(self):
         spack.config.set("packages:all:compiler", ["clang", "gcc"])
