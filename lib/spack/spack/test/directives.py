@@ -46,7 +46,7 @@ def test_constraints_from_context(mock_packages):
     assert "b" in pkg_cls.dependencies[spack.spec.Spec("@1.0")]
 
     assert pkg_cls.conflicts
-    assert (spack.spec.Spec("+foo@1.0"), None) in pkg_cls.conflicts["%gcc"]
+    assert (spack.spec.Spec("%gcc"), None) in pkg_cls.conflicts[spack.spec.Spec("+foo@1.0")]
 
 
 @pytest.mark.regression("26656")

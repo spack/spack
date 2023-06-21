@@ -2823,10 +2823,11 @@ class Spec:
                 # external specs are already built, don't worry about whether
                 # it's possible to build that configuration with Spack
                 continue
-            for conflict_spec, when_list in x.package_class.conflicts.items():
-                if x.satisfies(conflict_spec):
-                    for when_spec, msg in when_list:
-                        if x.satisfies(when_spec):
+
+            for when_spec, conflict_list in x.package_class.conflicts.items():
+                if x.satisfies(when_spec):
+                    for conflict_spec, msg in conflict_list:
+                        if x.satisfies(conflict_spec):
                             when = when_spec.copy()
                             when.name = x.name
                             matches.append((x, conflict_spec, when, msg))
