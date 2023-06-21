@@ -1123,8 +1123,6 @@ class SpackSolverSetup:
     def pkg_rules(self, pkg, tests):
         pkg = packagize(pkg)
 
-        self.gen.fact(fn.max_nodes(pkg.name, 1))
-
         # versions
         self.pkg_version_rules(pkg)
         self.gen.newline()
@@ -1321,6 +1319,8 @@ class SpackSolverSetup:
                 msg = "%s depends on %s" % (pkg.name, dep.spec.name)
                 if cond != spack.spec.Spec():
                     msg += " when %s" % cond
+                else:
+                    pass
 
                 condition_id = self.condition(cond, dep.spec, pkg.name, msg)
                 self.gen.fact(
@@ -2227,9 +2227,24 @@ class SpackSolverSetup:
 
         # get list of all possible dependencies
         self.possible_virtuals = set(x.name for x in specs if x.virtual)
-        possible = spack.package_base.possible_dependencies(
-            *specs, virtuals=self.possible_virtuals, deptype=spack.dependency.all_deptypes
+
+        link_run_dependency_types = ("link", "run", "test")
+        dependency_types = spack.dependency.all_deptypes
+        if not self.tests:
+            link_run_dependency_types = ("link", "run")
+            dependency_types = ("link", "run", "build")
+
+        link_run = spack.package_base.possible_dependencies(
+            *specs, virtuals=self.possible_virtuals, deptype=link_run_dependency_types
         )
+        direct_build = set()
+        for x in link_run:
+            current = spack.repo.path.get_pkg_class(x).dependencies_of_type("build")
+            direct_build.update(current)
+        total_build = spack.package_base.possible_dependencies(
+            *direct_build, virtuals=self.possible_virtuals, deptype=dependency_types
+        )
+        possible = set(link_run) | set(total_build)
 
         # Fail if we already know an unreachable node is requested
         for spec in specs:
@@ -2271,6 +2286,12 @@ class SpackSolverSetup:
             self.gen.fact(fn.optimize_for_reuse())
             for reusable_spec in reuse:
                 self._facts_from_concrete_spec(reusable_spec, possible)
+
+        self.gen.h1("Maximum number of nodes")
+        counter = collections.Counter(list(link_run) + list(total_build))
+        for pkg, count in sorted(counter.items()):
+            # FIXME (multiple nodes): should be count
+            self.gen.fact(fn.max_nodes(pkg, 1))
 
         self.gen.h1("Possible flags on nodes")
         for flag in spack.spec.FlagMap.valid_compiler_flags():
