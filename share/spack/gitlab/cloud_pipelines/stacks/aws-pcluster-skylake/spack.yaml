@@ -2,8 +2,6 @@ spack:
   view: false
 
   definitions:
-  - compiler_specs:
-    - /yyvkvlgimaaxjhy32oa5x5eexqekrevc
 
   - optimized_configs:
     # - gromacs
@@ -20,7 +18,7 @@ spack:
     - openmpi
 
   specs:
-  - $compiler_specs
+  - /yyvkvlgimaaxjhy32oa5x5eexqekrevc
   - $optimized_configs
   # - $optimized_libs
 
