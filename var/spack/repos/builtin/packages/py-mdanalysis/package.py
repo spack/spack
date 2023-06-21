@@ -31,18 +31,23 @@ class PyMdanalysis(PythonPackage):
 
     depends_on("python@3.9:", type=("build", "run"), when="@2.5.0:")
     depends_on("python@3.8:", type=("build", "run"))
+
     depends_on("py-setuptools", type="build")
+
     depends_on("py-cython@0.28:", type="build")
 
     # MDAnalysis required dependencies (install_requires)
     depends_on("py-numpy@1.21.0:", when="@2.5.0:", type=("build", "run"))
     depends_on("py-numpy@1.20.0:", type=("build", "run"))
+
     depends_on("py-biopython@1.80:", type=("build", "run"))
     depends_on("py-networkx@2.0:", type=("build", "run"))
     depends_on("py-griddataformats@0.4.0:", type=("build", "run"))
     depends_on("py-mmtf-python@1.0.0:", type=("build", "run"))
     depends_on("py-joblib@0.12:", type=("build", "run"))
+
     depends_on("py-scipy@1.5.0:", type=("build", "run"))
+
     depends_on("py-matplotlib@1.5.1:", type=("build", "run"))
     depends_on("py-tqdm@4.43.0:", type=("build", "run"))
     depends_on("py-threadpoolctl", type=("build", "run"))
