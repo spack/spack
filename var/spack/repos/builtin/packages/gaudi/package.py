@@ -82,12 +82,7 @@ class Gaudi(CMakePackage):
 
     # Testing dependencies
     # Note: gaudi only builds examples when testing enabled
-    for pv in (
-        ["catch2", "@36.8:"],
-        ["py-nose", "@35:"],
-        ["py-pytest", "@36.2:"],
-        ["py-qmtest", "@35:"],
-    ):
+    for pv in (["catch2", "@36.8:"], ["py-nose", "@35:"], ["py-pytest", "@36.2:"]):
         depends_on(pv[0], when=pv[1], type="test")
         depends_on(pv[0], when=pv[1] + " +examples")
 
