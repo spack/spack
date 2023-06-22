@@ -125,8 +125,7 @@ class Edm4hep(CMakePackage):
         return args
 
     def setup_run_environment(self, env):
-        env.prepend_path("LD_LIBRARY_PATH", self.spec["edm4hep"].prefix.lib)
-        env.prepend_path("LD_LIBRARY_PATH", self.spec["edm4hep"].prefix.lib64)
+        env.prepend_path("LD_LIBRARY_PATH", self.spec["edm4hep"].libs.directories[0])
 
     def url_for_version(self, version):
         """Translate version numbers to ilcsoft conventions.
