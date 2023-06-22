@@ -20,10 +20,13 @@ class Openturns(CMakePackage):
     git = "https://github.com/openturns/openturns.git"
     maintainers("liuyangzhuan")
 
-    version("1.18", sha256="1840d3fd8b38fd5967b1fa04e49d8f760c2c497400430e97623595ca48754ae0")
     version("master", branch="master")
+    version("1.20", sha256="2be5247f0266d153619b35dfb1eeeb46736c502dad993b40aff8857d6314f293")
+    version("1.19", sha256="1d61cb6ce8ec1121db9f1e9fb490aaa056d2ff250db26df05d2e3e30ceb32344")
+    version("1.18", sha256="1840d3fd8b38fd5967b1fa04e49d8f760c2c497400430e97623595ca48754ae0")
 
     variant("python", default=True, description="Build Python bindings")
+    variant("libxml2", default=False, description="Use LibXML2 for XML support")
 
     extends("python", when="+python")
 
@@ -38,6 +41,7 @@ class Openturns(CMakePackage):
     depends_on("intel-tbb", type=("build", "run"))
     depends_on("py-cloudpickle", type=("build", "run"))
     depends_on("py-urllib3", type=("build", "run"))
+    depends_on("libxml2", type=("build", "run"), when="+libxml2")
 
     def cmake_args(self):
         spec = self.spec
