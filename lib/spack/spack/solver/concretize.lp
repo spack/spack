@@ -7,10 +7,6 @@
 % This logic program implements Spack's concretizer
 %=============================================================================
 
-%-----------------------------------------------------------------------------
-% Map literal input specs to facts that drive the solve
-%-----------------------------------------------------------------------------
-
 #const root_node_id = 0.
 
 #const link_run = 0.
@@ -78,21 +74,9 @@ unification_set(SetID, VirtualNode) :- provider(PackageNode, VirtualNode), unifi
    not attr("virtual_node", node(ID2, Package)),
    max_nodes(Package, X), ID1=0..X-1, ID2=0..X-1, ID2 < ID1.
 
-% Give clingo the choice to solve an input spec or not
-{ literal_solved(ID) } :- literal(ID).
-literal_not_solved(ID) :- not literal_solved(ID), literal(ID).
-
-% If concretize_everything() is a fact, then we cannot have unsolved specs
-:- literal_not_solved(ID), concretize_everything.
-
-% Make a problem with "zero literals solved" unsat. This is to trigger
-% looking for solutions to the ASP problem with "errors", which results
-% in better reporting for users. See #30669 for details.
-1 { literal_solved(ID) : literal(ID) }.
-
-opt_criterion(300, "number of input specs not concretized").
-#minimize{ 0@300: #true }.
-#minimize { 1@300,ID : literal_not_solved(ID) }.
+%-----------------------------------------------------------------------------
+% Map literal input specs to facts that drive the solve
+%-----------------------------------------------------------------------------
 
 % TODO: literals, at the moment, can only influence the "root" unification set. This needs to be extended later.
 
@@ -100,14 +84,14 @@ special_case("node_flag_source").
 special_case("depends_on").
 
 % Map constraint on the literal ID to facts on the node
-attr(Name, node(root_node_id, A1))             :- literal(LiteralID, Name, A1), literal_solved(LiteralID).
-attr(Name, node(root_node_id, A1), A2)         :- literal(LiteralID, Name, A1, A2), literal_solved(LiteralID).
-attr(Name, node(root_node_id, A1), A2, A3)     :- literal(LiteralID, Name, A1, A2, A3), literal_solved(LiteralID), not special_case(Name).
-attr(Name, node(root_node_id, A1), A2, A3, A4) :- literal(LiteralID, Name, A1, A2, A3, A4), literal_solved(LiteralID).
+attr(Name, node(root_node_id, A1))             :- literal(LiteralID, Name, A1), solve_literal(LiteralID).
+attr(Name, node(root_node_id, A1), A2)         :- literal(LiteralID, Name, A1, A2), solve_literal(LiteralID).
+attr(Name, node(root_node_id, A1), A2, A3)     :- literal(LiteralID, Name, A1, A2, A3), solve_literal(LiteralID), not special_case(Name).
+attr(Name, node(root_node_id, A1), A2, A3, A4) :- literal(LiteralID, Name, A1, A2, A3, A4), solve_literal(LiteralID).
 
 % Special cases where nodes occur in arguments other than A1
-attr("node_flag_source", node(root_node_id, A1), A2, node(root_node_id, A3)) :- literal(LiteralID, "node_flag_source", A1, A2, A3), literal_solved(LiteralID).
-attr("depends_on",       node(root_node_id, A1), node(root_node_id, A2), A3) :- literal(LiteralID, "depends_on",       A1, A2, A3), literal_solved(LiteralID).
+attr("node_flag_source", node(root_node_id, A1), A2, node(root_node_id, A3)) :- literal(LiteralID, "node_flag_source", A1, A2, A3), solve_literal(LiteralID).
+attr("depends_on",       node(root_node_id, A1), node(root_node_id, A2), A3) :- literal(LiteralID, "depends_on",       A1, A2, A3), solve_literal(LiteralID).
 
 #defined concretize_everything/0.
 #defined literal/1.
