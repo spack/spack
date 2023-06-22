@@ -30,6 +30,18 @@ class Freefem(AutotoolsPackage):
     variant("mpi", default=False, description="Activate MPI support")
     variant("petsc", default=False, description="Compile with PETSc/SLEPc")
 
+    depends_on("autoconf", type="build")
+    depends_on("automake", type="build")
+    depends_on("libtool", type="build")
+
+    depends_on("bison", type="build")
+    depends_on("flex", type="build")
+    depends_on("m4", type="build")
+    # depends_on("patch", type="build")
+    # depends_on("unzip", type="build")
+
+    depends_on("netlib-lapack")
+
     depends_on("mpi", when="+mpi")
     depends_on("slepc", when="+petsc")
 
@@ -45,10 +57,6 @@ class Freefem(AutotoolsPackage):
         when="@:4.8",
         sha256="be84f7b1b8182ff0151c258056a09bda70d72a611b0a4da1fa1954df2e0fe84e",
     )
-
-    def autoreconf(self, spec, prefix):
-        autoreconf = which("autoreconf")
-        autoreconf("-i")
 
     def configure_args(self):
         spec = self.spec
