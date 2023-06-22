@@ -15,7 +15,7 @@ class Rust(Package):
     url = "https://static.rust-lang.org/dist/rustc-1.42.0-src.tar.gz"
     git = "https://github.com/rust-lang/rust.git"
 
-    maintainers("alecbcs", "AndrewGaspar")
+    maintainers("alecbcs")
 
     # Core dependencies
     depends_on("cmake@3.13.4:", type="build")

@@ -14,7 +14,7 @@ class RustBootstrap(Package):
     homepage = "https://www.rust-lang.org"
     url = "https://static.rust-lang.org/dist/rust-1.65.0-aarch64-apple-darwin.tar.gz"
 
-    maintainers("alecbcs", "AndrewGaspar")
+    maintainers("alecbcs")
 
     # List binary rust releases for multiple operating systems and architectures.
     # These binary versions are not intended to stay up-to-date. Instead we
