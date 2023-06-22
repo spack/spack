@@ -366,10 +366,18 @@ class Trilinos(CMakePackage, CudaPackage, ROCmPackage):
     # stokhos fails on xl/xl_r
     conflicts("+stokhos", when="%xl")
     conflicts("+stokhos", when="%xl_r")
-    
+
     # Current Windows support, only have serial static builds
-    conflicts("+shared", when="platform=windows", msg="Only serial static builds are supported on Windows currently.")
-    conflicts("+mpi", when="platform=windows", msg="Only serial static builds are supported on Windows currently.")
+    conflicts(
+        "+shared",
+        when="platform=windows",
+        msg="Only serial static builds are supported on Windows currently.",
+    )
+    conflicts(
+        "+mpi",
+        when="platform=windows",
+        msg="Only serial static builds are supported on Windows currently.",
+    )
 
     # ###################### Dependencies ##########################
 
