@@ -736,7 +736,7 @@ deprecated-ci-build:
       - cd "${CI_PROJECT_DIR}" && curl -sOL https://raw.githubusercontent.com/spack/spack-configs/main/AWS/parallelcluster/postinstall.sh
       - sed -i -e "s/spack arch -t/echo ${SPACK_TARGET_ARCH}/g" postinstall.sh
       - /bin/bash postinstall.sh -fg
-      - spack config --scope site add "packages:all:target:\"${SPACK_TARGET_ARCH}\""
+      - spack config --scope site add "packages:all:target:\"[${SPACK_TARGET_ARCH}]\""
   after_script:
     - - mv "${CI_PROJECT_DIR}/postinstall.sh" "${CI_PROJECT_DIR}/jobs_scratch_dir/"
 
