@@ -8,8 +8,8 @@ Utility module for dealing with Windows Registry.
 """
 
 import os
-import sys
 import re
+import sys
 from contextlib import contextmanager
 
 from llnl.util import tty
@@ -292,7 +292,11 @@ class WindowsRegistryView:
             ret = self.get_matching_subkeys(subkey_name) if regex else self.get_subkey(subkey_name)
             return ret[0] if ret else None
         else:
-            condition = lambda x: re.match(subkey_name, x.name) if regex else lambda x: x.name == subkey_name
+            condition = (
+                lambda x: re.match(subkey_name, x.name)
+                if regex
+                else lambda x: x.name == subkey_name
+            )
             return self._traverse_subkeys(condition)
 
     def find_subkeys(self, subkey_name, recursive=True):

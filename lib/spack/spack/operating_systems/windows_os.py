@@ -10,8 +10,9 @@ import platform
 import subprocess
 
 from spack.error import SpackError
-from spack.version import Version
 from spack.util import windows_registry as winreg
+from spack.version import Version
+
 from ._operating_system import OperatingSystem
 
 
@@ -69,12 +70,16 @@ class WindowsOs(OperatingSystem):
             pass
     _compiler_search_paths.extend(comp_search_paths)
     # Second strategy: Find MSVC via the registry
-    msft = winreg.WindowsRegistryView("SOFTWARE\\WOW6432Node\\Microsoft", winreg.HKEY.HKEY_LOCAL_MACHINE)
+    msft = winreg.WindowsRegistryView(
+        "SOFTWARE\\WOW6432Node\\Microsoft", winreg.HKEY.HKEY_LOCAL_MACHINE
+    )
     vs_entries = msft.find_subkeys(r"VisualStudio_.*")
     vs_paths = []
+
     def clean_vs_path(path):
         path = path.split(",")[0].lstrip("@")
         return str(pathlib.Path(path).parent / "..\\..")
+
     for entry in vs_entries:
         try:
             val = entry.get_subkey("Capabilities").get_value("ApplicationDescription").value
