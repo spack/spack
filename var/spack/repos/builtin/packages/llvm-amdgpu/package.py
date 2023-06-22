@@ -149,6 +149,7 @@ class LlvmAmdgpu(CMakePackage):
     depends_on("perl-data-dumper", type=("build"), when="+openmp")
     depends_on("hwloc", when="+openmp")
     depends_on("elf", type="link", when="+openmp")
+    requires("%clang", when="+openmp", msg="libomptarget builds only with Clang")
 
     # Will likely only be fixed in LLVM 12 upstream
     patch("fix-system-zlib-ncurses.patch", when="@3.5.0:3.8.0")
