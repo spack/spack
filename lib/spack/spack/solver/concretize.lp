@@ -251,26 +251,28 @@ condition_set(ID, VirtualNode, Type) :- condition_set(ID, PackageNode, Type), pr
 
 condition_set(ID, PackageNode) :- condition_set(ID, PackageNode, _).
 
+condition_set(VirtualNode, X) :- provider(PackageNode, VirtualNode), condition_set(PackageNode, X).
+
 condition_packages(ID, A1) :- condition_requirement(ID, _, A1).
 condition_packages(ID, A1) :- condition_requirement(ID, _, A1, _).
 condition_packages(ID, A1) :- condition_requirement(ID, _, A1, _, _).
 condition_packages(ID, A1) :- condition_requirement(ID, _, A1, _, _, _).
 
-node_condition(ID, node(PackageID, Package)) :- facts(Package, condition(ID)), attr("node", node(PackageID, Package)).
-node_condition(ID, node(PackageID, Package)) :- facts(Virtual, condition(ID)), provider(node(PackageID, Package), node(_, Virtual)).
+trigger_node(ID, node(PackageID, Package), node(PackageID, Package)) :- facts(Package, trigger_id(ID)), attr("node", node(PackageID, Package)).
+trigger_node(ID, node(PackageID, Package), node(VirtualID, Virtual)) :- facts(Virtual, trigger_id(ID)), provider(node(PackageID, Package), node(VirtualID, Virtual)).
 
-condition_nodes(ConditionID, PackageNode, node(X, A1))
-  :- condition_packages(ConditionID, A1),
+condition_nodes(TriggerID, PackageNode, node(X, A1))
+  :- condition_packages(TriggerID, A1),
      condition_set(PackageNode, node(X, A1)),
-     node_condition(ConditionID, PackageNode).
+     trigger_node(TriggerID, PackageNode, _).
 
-cannot_hold(ConditionID, PackageNode)
-  :- condition_packages(ConditionID, A1),
-     not condition_set(PackageNode, node(_, A1), _),
-     node_condition(ConditionID, PackageNode).
+cannot_hold(TriggerID, PackageNode)
+  :- condition_packages(TriggerID, A1),
+     not condition_set(PackageNode, node(_, A1)),
+     trigger_node(TriggerID, PackageNode, _).
 
-condition_holds(ID, PackageNode) :-
-  node_condition(ID, PackageNode);
+trigger_condition_holds(ID, RequestorNode) :-
+  trigger_node(ID, PackageNode, RequestorNode);
   attr(Name, node(X, A1))             : condition_requirement(ID, Name, A1),             condition_nodes(ID, PackageNode, node(X, A1));
   attr(Name, node(X, A1), A2)         : condition_requirement(ID, Name, A1, A2),         condition_nodes(ID, PackageNode, node(X, A1));
   attr(Name, node(X, A1), A2, A3)     : condition_requirement(ID, Name, A1, A2, A3),     condition_nodes(ID, PackageNode, node(X, A1)), not special_case(Name);
@@ -279,14 +281,21 @@ condition_holds(ID, PackageNode) :-
   attr("node_flag_source", node(X, A1), A2, node(Y, A3)) : condition_requirement(ID, "node_flag_source", A1, A2, A3), condition_nodes(ID, PackageNode, node(X, A1)), condition_nodes(ID, PackageNode, node(Y, A3));
   not cannot_hold(ID, PackageNode).
 
-condition_holds(ID, node(VirtualID, Virtual))
-  :- condition_holds(ID, PackageNode),
-     facts(Virtual, condition(ID)),
-     provider(PackageNode, node(VirtualID, Virtual)).
+condition_holds(ConditionID, node(X, Package))
+  :- facts(Package, condition_trigger(ConditionID, TriggerID)),
+     trigger_condition_holds(TriggerID, node(X, Package)).
+
+trigger_and_effect(Package, TriggerID, EffectID)
+  :- facts(Package, condition_trigger(ID, TriggerID)),
+     facts(Package, condition_effect(ID, EffectID)).
 
 % condition_holds(ID, node(ID, Package)) implies all imposed_constraints, unless do_not_impose(ID, node(ID, Package))
 % is derived. This allows imposed constraints to be canceled in special cases.
-impose(ID, PackageNode) :- condition_holds(ID, PackageNode), node_condition(ID, PackageNode), not do_not_impose(ID, PackageNode).
+impose(EffectID, node(X, Package))
+  :- trigger_and_effect(Package, TriggerID, EffectID),
+     trigger_node(TriggerID, _, node(X, Package)),
+     trigger_condition_holds(TriggerID, node(X, Package)),
+     not do_not_impose(EffectID, node(X, Package)).
 
 imposed_packages(ID, A1) :- imposed_constraint(ID, _, A1).
 imposed_packages(ID, A1) :- imposed_constraint(ID, _, A1, _).
@@ -294,17 +303,20 @@ imposed_packages(ID, A1) :- imposed_constraint(ID, _, A1, _, _).
 imposed_packages(ID, A1) :- imposed_constraint(ID, _, A1, _, _, _).
 imposed_packages(ID, A1) :- imposed_constraint(ID, "depends_on", _, A1, _).
 
-imposed_nodes(ConditionID, PackageNode, node(X, A1))
-  :- imposed_packages(ConditionID, A1),
-     condition_set(PackageNode, node(X, A1), _),
-     node_condition(ConditionID, PackageNode).
+imposed_nodes(EffectID, node(NodeID, Package), node(X, A1))
+  :- facts(Package, condition_trigger(ID, TriggerID)),
+     facts(Package, condition_effect(ID, EffectID)),
+     imposed_packages(EffectID, A1),
+     condition_set(node(NodeID, Package), node(X, A1)),
+     trigger_node(TriggerID, _, node(NodeID, Package)).
 
 imposed_nodes(ConditionID, PackageNode, node(X, A1))
   :- imposed_packages(ConditionID, A1),
-     condition_set(PackageNode, node(X, A1), _),
+     condition_set(PackageNode, node(X, A1)),
      attr("hash", PackageNode, ConditionID).
 
 :- imposed_packages(ID, A1), impose(ID, PackageNode), not condition_set(PackageNode, node(_, A1)).
+:- imposed_packages(ID, A1), impose(ID, PackageNode), not imposed_nodes(ID, PackageNode, node(_, A1)).
 
 % Conditions that hold impose may impose constraints on other specs
 attr(Name, node(X, A1))             :- impose(ID, PackageNode), imposed_constraint(ID, Name, A1),             imposed_nodes(ID, PackageNode, node(X, A1)).
@@ -375,10 +387,11 @@ dependency_holds(node(NodeID, Package), Dependency, Type) :-
 
 % We cut off dependencies of externals (as we don't really know them).
 % Don't impose constraints on dependencies that don't exist.
-do_not_impose(ID, node(NodeID, Package)) :-
+do_not_impose(EffectID, node(NodeID, Package)) :-
   not dependency_holds(node(NodeID, Package), Dependency, _),
   attr("node", node(NodeID, Package)),
-  facts(Package, dependency_condition(ID, Dependency)).
+  facts(Package, dependency_condition(ID, Dependency)),
+  facts(Package, condition_effect(ID, EffectID)).
 
 % If a dependency holds on a package node, there must be one and only one dependency node satisfying it
 1 { attr("depends_on", PackageNode, node(0..Y-1, Dependency), Type) : max_nodes(Dependency, Y) } 1

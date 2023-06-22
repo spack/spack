@@ -890,6 +890,10 @@ class SpackSolverSetup:
 
         # id for dummy variables
         self._condition_id_counter = itertools.count()
+        self._trigger_id_counter = itertools.count()
+        self._trigger_cache = collections.defaultdict(dict)
+        self._effect_id_counter = itertools.count()
+        self._effect_cache = collections.defaultdict(dict)
 
         # Caches to optimize the setup phase of the solver
         self.target_specs_cache = None
@@ -1152,6 +1156,32 @@ class SpackSolverSetup:
 
         self.package_requirement_rules(pkg)
 
+        # trigger and effect tables
+        self.trigger_rules(pkg.name)
+        self.effect_rules(pkg.name)
+
+    def trigger_rules(self, name):
+        self.gen.h2("Trigger conditions")
+        cache = self._trigger_cache[name]
+        for spec_str, (trigger_id, requirements) in cache.items():
+            self.gen.fact(fn.facts(name, fn.trigger_id(trigger_id)))
+            self.gen.fact(fn.facts(name, fn.trigger_msg(spec_str)))
+            for predicate in requirements:
+                self.gen.fact(fn.condition_requirement(trigger_id, *predicate.args))
+            self.gen.newline()
+        cache.clear()
+
+    def effect_rules(self, name):
+        self.gen.h2("Imposed requirements")
+        cache = self._effect_cache[name]
+        for spec_str, (effect_id, requirements) in cache.items():
+            self.gen.fact(fn.facts(name, fn.effect_id(effect_id)))
+            self.gen.fact(fn.facts(name, fn.effect_msg(spec_str)))
+            for predicate in requirements:
+                self.gen.fact(fn.imposed_constraint(effect_id, *predicate.args))
+            self.gen.newline()
+        cache.clear()
+
     def variant_rules(self, pkg):
         for name, entry in sorted(pkg.variants.items()):
             variant, when = entry
@@ -1265,16 +1295,35 @@ class SpackSolverSetup:
         # Check if we can emit the requirements before updating the condition ID counter.
         # In this way, if a condition can't be emitted but the exception is handled in the caller,
         # we won't emit partial facts.
-        requirements = self.spec_clauses(named_cond, body=True, required_from=name)
 
         condition_id = next(self._condition_id_counter)
         self.gen.fact(fn.facts(named_cond.name, fn.condition(condition_id)))
         self.gen.fact(fn.condition_reason(condition_id, msg))
-        for pred in requirements:
-            self.gen.fact(fn.condition_requirement(condition_id, *pred.args))
 
-        if imposed_spec:
-            self.impose(condition_id, imposed_spec, node=node, name=name)
+        cache = self._trigger_cache[named_cond.name]
+        if named_cond not in cache:
+            trigger_id = next(self._trigger_id_counter)
+            requirements = self.spec_clauses(named_cond, body=True, required_from=name)
+            cache[named_cond] = (trigger_id, requirements)
+        trigger_id, requirements = cache[named_cond]
+        self.gen.fact(fn.facts(named_cond.name, fn.condition_trigger(condition_id, trigger_id)))
+
+        if not imposed_spec:
+            return condition_id
+
+        cache = self._effect_cache[named_cond.name]
+        if imposed_spec not in cache:
+            effect_id = next(self._effect_id_counter)
+            requirements = self.spec_clauses(imposed_spec, body=False, required_from=name)
+            if not node:
+                requirements = list(
+                    filter(lambda x: x.args[0] not in ("node", "virtual_node"), requirements)
+                )
+            cache[imposed_spec] = (effect_id, requirements)
+        effect_id, requirements = cache[imposed_spec]
+        self.gen.fact(fn.facts(named_cond.name, fn.condition_effect(condition_id, effect_id)))
+
+        # FIXME: self.gen.fact(fn.imposed_constraint(condition_id, *predicate.args))
 
         return condition_id
 
@@ -1375,6 +1424,8 @@ class SpackSolverSetup:
                 virtual_str, requirements, kind=RequirementKind.VIRTUAL
             )
             self.emit_facts_from_requirement_rules(rules)
+            self.trigger_rules(virtual_str)
+            self.effect_rules(virtual_str)
 
     def emit_facts_from_requirement_rules(self, rules: List[RequirementRule]):
         """Generate facts to enforce requirements.
@@ -2332,9 +2383,12 @@ class SpackSolverSetup:
             self.preferred_variants(pkg)
             self.target_preferences(pkg)
 
+        self.gen.h1("Develop specs")
         # Inject dev_path from environment
         for ds in dev_specs:
             self.condition(spack.spec.Spec(ds.name), ds, msg="%s is a develop spec" % ds.name)
+            self.trigger_rules(ds.name)
+            self.effect_rules(ds.name)
 
         self.gen.h1("Spec Constraints")
         self.literal_specs(specs)
