@@ -1130,6 +1130,29 @@ class SpackSolverSetup:
         self.gen.newline()
 
         # variants
+        self.variant_rules(pkg)
+
+        # conflicts
+        self.conflict_rules(pkg)
+
+        # default compilers for this package
+        self.package_compiler_defaults(pkg)
+
+        # virtuals
+        self.package_provider_rules(pkg)
+
+        # dependencies
+        self.package_dependencies_rules(pkg)
+
+        # virtual preferences
+        self.virtual_preferences(
+            pkg.name,
+            lambda v, p, i: self.gen.fact(fn.facts(pkg.name, fn.provider_preference(v, p, i))),
+        )
+
+        self.package_requirement_rules(pkg)
+
+    def variant_rules(self, pkg):
         for name, entry in sorted(pkg.variants.items()):
             variant, when = entry
 
@@ -1219,26 +1242,6 @@ class SpackSolverSetup:
                 self.gen.fact(fn.facts(pkg.name, fn.variant_sticky(name)))
 
             self.gen.newline()
-
-        # conflicts
-        self.conflict_rules(pkg)
-
-        # default compilers for this package
-        self.package_compiler_defaults(pkg)
-
-        # virtuals
-        self.package_provider_rules(pkg)
-
-        # dependencies
-        self.package_dependencies_rules(pkg)
-
-        # virtual preferences
-        self.virtual_preferences(
-            pkg.name,
-            lambda v, p, i: self.gen.fact(fn.facts(pkg.name, fn.provider_preference(v, p, i))),
-        )
-
-        self.package_requirement_rules(pkg)
 
     def condition(self, required_spec, imposed_spec=None, name=None, msg=None, node=False):
         """Generate facts for a dependency or virtual provider condition.
