@@ -159,7 +159,7 @@ def verify_checksums(pkg, version_hashes, url_dict):
     in the package's instructions.
 
     Args:
-        pkg (package): A package class for a given package in Spack.
+        pkg (spack.package_base.PackageBase): A package class for a given package in Spack.
         version_hashes (dict): A dictionary of the form: version -> checksum.
         url_dict (dict): A dictionary of the form: version -> URL.
 
@@ -204,7 +204,7 @@ def add_versions_to_package(pkg, version_hashes, url_dict):
     editor so they may double check the work of the function.
 
     Args:
-        pkg (package): A package class for a given package in Spack.
+        pkg (spack.package_base.PackageBase): A package class for a given package in Spack.
         version_hashes (dict): A dictionary of the form: version -> checksum.
         url_dict (dict): A dictionary of the form: version -> URL.
 
