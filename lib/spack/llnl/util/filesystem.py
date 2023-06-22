@@ -279,7 +279,7 @@ def is_str_valid_path(path):
     path on the current filesystem and contains at least one path sep.
     'path' does not need to be writeable - just a properly formed path.
     Returns false otherwise"""
-    ret = False if not os.path.sep in path else True
+    ret = False if os.path.sep not in path else True
     if not ret:
         return ret
     try:
