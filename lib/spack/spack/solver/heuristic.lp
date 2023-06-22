@@ -6,9 +6,6 @@
 %-----------------
 % Domain heuristic
 %-----------------
-#heuristic literal_solved(ID) : literal(ID). [1, sign]
-#heuristic literal_solved(ID) : literal(ID). [50, init]
-
 #heuristic attr("hash", node(0, Package), Hash) : literal(_, "root", Package). [45, init]
 #heuristic attr("root", node(0, Package)) : literal(_, "root", Package). [45, true]
 #heuristic attr("node", node(0, Package)) : literal(_, "root", Package). [45, true]
