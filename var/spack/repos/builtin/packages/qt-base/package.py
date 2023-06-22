@@ -149,6 +149,13 @@ class QtBase(QtPackage):
     # Qt6 requires newer compilers: see https://github.com/spack/spack/issues/34418
     conflicts("%gcc@:7")
 
+    # ensure that Qt links against GSS framework on macOS: https://bugreports.qt.io/browse/QTBUG-114537
+    with when("@6.3.2:6.5.1"):
+        patch("https://github.com/qt/qtbase/commit/c3d3e7312499189dde2ff9c0cb14bd608d6fd1cd.patch?full_index=1",
+               sha256="85c16db15406b0094831bb57016dab7e0c0fd0978b082a1dc103c87334db7915")
+        patch("https://github.com/qt/qtbase/commit/1bf144ba78ff10d712b4de55d2797b9256948a1d.patch?full_index=1",
+               sha256="e4d9f1aee0566558e77eef5609b63c1fde3f3986bea1b9d5d7930b297f916a5e")
+
     @property
     def archive_files(self):
         """Save both the CMakeCache and the config summary."""
