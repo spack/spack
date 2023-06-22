@@ -143,7 +143,8 @@ class QtBase(QtPackage):
             depends_on("libxrender")
 
     with when("+network"):
-        depends_on("libproxy")
+        if not bool(MACOS_VERSION):
+            depends_on("libproxy")
         depends_on("openssl")
 
     # Qt6 requires newer compilers: see https://github.com/spack/spack/issues/34418
@@ -213,7 +214,9 @@ class QtBase(QtPackage):
         if "+dbus" in spec:
             features.append("dbus_linked")
         if "+network" in spec:
-            features += ["openssl_linked", "openssl", "libproxy"]
+            features += ["openssl_linked", "openssl"]
+            if not bool(MACOS_VERSION):
+                features += ["libproxy"]
         for k in features:
             define("FEATURE_" + k, True)
 
