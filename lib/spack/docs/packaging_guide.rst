@@ -2640,7 +2640,7 @@ Another good example of how a dependency can influence
 the build environment of dependents is the Python package:
 
 .. literalinclude:: _spack_root/var/spack/repos/builtin/packages/python/package.py
-   :pyobject: Python.setup_dependent_build_environment
+   :pyobject: BuildEnvironment.setup_dependent_build_environment
    :linenos:
 
 In the method above it is ensured that any package that depends on Python
