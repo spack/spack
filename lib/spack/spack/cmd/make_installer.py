@@ -63,15 +63,31 @@ def setup_parser(subparser):
         "--arch",
         default="64",
         choices=["64", "32"],
-        help="Architecture targeted by bundled Git/Python"
+        help="Architecture targeted by bundled Git/Python",
     )
     python_version_group = subparser.add_argument_group("Python version and hash", required=False)
-    python_version_group.add_argument("-pv", "--python-version", default="", help="Python version to be bundled with installer")
-    python_version_group.add_argument("-ph", "--python-hash", default="", help="Python distribution hash for associated version, must be provided if --python-version is specified")
+    python_version_group.add_argument(
+        "-pv", "--python-version", default="", help="Python version to be bundled with installer"
+    )
+    python_version_group.add_argument(
+        "-ph",
+        "--python-hash",
+        default="",
+        help="Python distribution hash for associated version,"
+        " must be provided if --python-version is specified",
+    )
 
     git_version_group = subparser.add_argument_group("Git version and hash", required=False)
-    git_version_group.add_argument("-gv", "--git-version", default="", help="Git version to be bundled with installer" )
-    git_version_group.add_argument("-gh", "--git-hash", default="", help="Git installer hash for associated version, must be provided if --git-version is specified")
+    git_version_group.add_argument(
+        "-gv", "--git-version", default="", help="Git version to be bundled with installer"
+    )
+    git_version_group.add_argument(
+        "-gh",
+        "--git-hash",
+        default="",
+        help="Git installer hash for associated version"
+        " must be provided if --git-version is specified",
+    )
 
     subparser.add_argument("output_dir", help="output directory")
 
@@ -84,12 +100,16 @@ def make_installer(parser, args):
         git_version = args.git_version
         python_version = args.python_version
         if git_version and not args.git_hash:
-            parser.error("Git version specified without hash"
-                         "\nPlease specify sha256 hash for installer if specifying Git version")
+            parser.error(
+                "Git version specified without hash"
+                "\nPlease specify sha256 hash for installer if specifying Git version"
+            )
         git_hash = args.git_hash
         if python_version and not args.python_hash:
-            parser.error("Python version specified without hash"
-                         "\nPlease specify sha256 hash for distribution if specifying Python version")
+            parser.error(
+                "Python version specified without hash"
+                "\nPlease specify sha256 hash for distribution if specifying Python version"
+            )
         python_hash = args.python_hash
         output_dir = args.output_dir
         cmake_spec = Spec("cmake")
@@ -100,8 +120,10 @@ def make_installer(parser, args):
             cmake_path = "cmake.exe"
             cpack_path = "cpack.exe"
             tty.warn(
-                "Spack is not aware of a CMake installation. Defaulting to what is available on the PATH to create the installer"
-                "\nYou may want to consider installing or externally detecting via Spack for better results."
+                "Spack is not aware of a CMake installation."
+                " Defaulting to what is available on the PATH to create the installer"
+                "\nYou may want to consider installing or externally detecting via"
+                " Spack for better results."
             )
         else:
             cmake_path = os.path.join(cmake_spec.prefix, "bin", "cmake.exe")
@@ -146,23 +168,17 @@ def make_installer(parser, args):
             "-DSPACK_LICENSE=%s" % spack_license,
             "-DSPACK_LOGO=%s" % spack_logo,
             "-DSPACK_GIT_VERBOSITY=%s" % git_verbosity,
-            "-DARCH=%s" % args.arch
+            "-DARCH=%s" % args.arch,
         ]
         if python_version:
-            cmake_args.extend([
-                "-DPYTHON_VERSION=%s" % python_version,
-                "-DPYTHON_HASH=%s" % python_hash,
-            ])
+            cmake_args.extend(
+                ["-DPYTHON_VERSION=%s" % python_version, "-DPYTHON_HASH=%s" % python_hash]
+            )
         if git_version:
-            cmake_args.extend([
-                "-DGIT_VERSION=%s" % git_version,
-                "-DGIT_HASH=%s" % git_hash
-            ])
+            cmake_args.extend(["-DGIT_VERSION=%s" % git_version, "-DGIT_HASH=%s" % git_hash])
 
         try:
-            spack.util.executable.Executable(cmake_path)(
-                *cmake_args
-            )
+            spack.util.executable.Executable(cmake_path)(*cmake_args)
         except spack.util.executable.ProcessError as pe:
             tty.error("Failed to generate installer")
             raise pe
