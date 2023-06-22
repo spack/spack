@@ -180,7 +180,7 @@ def test_escape_double_quotes_in_shell_modifications():
         finally:
             os.environ["SPACK_SHELL"] = _spack_shell
 
-    if sys.patform == "win32":
+    if sys.platform == "win32":
         with shell_set("pwsh"):
             cmds = to_validate.shell_modifications()
             assert "$Env:VAR=$PATH;$ANOTHER_PATH" in cmds
