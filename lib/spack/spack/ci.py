@@ -6,6 +6,7 @@
 import base64
 import codecs
 import copy
+import datetime
 import json
 import os
 import re
@@ -28,6 +29,7 @@ from llnl.util.lang import memoized
 
 import spack
 import spack.binary_distribution as bindist
+import spack.cmd
 import spack.compilers as compilers
 import spack.config as cfg
 import spack.environment as ev
