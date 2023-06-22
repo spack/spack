@@ -81,7 +81,7 @@ class Genie(Package):
 
     def url_for_version(self, version):
         url = "https://github.com/GENIE-MC/Generator/archive/R-{0}.tar.gz"
-        if version >= Version(3):
+        if version >= Version("3"):
             return url.format("{0}_{1:02d}_{2:02d}".format(*version))
         else:
             return url.format(version.underscored)

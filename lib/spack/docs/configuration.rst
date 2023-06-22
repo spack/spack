@@ -20,8 +20,9 @@ case you want to skip directly to specific docs:
 * :ref:`packages.yaml <build-settings>`
 * :ref:`repos.yaml <repositories>`
 
-You can also add any of these as inline configuration in ``spack.yaml``
-in an :ref:`environment <environment-configuration>`.
+You can also add any of these as inline configuration in the YAML
+manifest file (``spack.yaml``) describing an :ref:`environment
+<environment-configuration>`.
 
 -----------
 YAML Format

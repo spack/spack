@@ -17,7 +17,7 @@ class Heffte(CMakePackage, CudaPackage, ROCmPackage):
     url = "https://github.com/icl-utk-edu/heffte/archive/refs/tags/v2.3.0.tar.gz"
     git = "https://github.com/icl-utk-edu/heffte/"
 
-    maintainers("mkstoyanov")
+    maintainers("mkstoyanov", "G-Ragghianti")
     tags = ["e4s", "ecp"]
 
     test_requires_compiler = True
@@ -49,6 +49,7 @@ class Heffte(CMakePackage, CudaPackage, ROCmPackage):
 
     patch("threads10.patch", when="@1.0")
     patch("fortran200.patch", when="@2.0.0")
+    patch("cmake-magma-v230.patch", when="@2.3.0")
 
     depends_on("cmake@3.10:", type=("build", "run"))
     depends_on("cmake@3.19:", when="@develop", type=("build", "run"))
@@ -113,6 +114,8 @@ class Heffte(CMakePackage, CudaPackage, ROCmPackage):
                     nvcc_flags += "{0};".format(nvflag)
 
                 args.append("-DCUDA_NVCC_FLAGS={0}".format(nvcc_flags))
+                archs = ";".join(cuda_arch)
+                args.append("-DCMAKE_CUDA_ARCHITECTURES=%s" % archs)
 
         if "+rocm" in self.spec and self.spec.satisfies("@:2.3.0"):
             args.append("-DCMAKE_CXX_COMPILER={0}".format(self.spec["hip"].hipcc))
@@ -178,6 +181,9 @@ class Heffte(CMakePackage, CudaPackage, ROCmPackage):
             options.append(
                 "-Drocfft_DIR=" + join_path(self.spec["rocfft"].prefix, "lib", "cmake", "rocfft")
             )
+
+        # Provide the path to the MPI dependency so that the test can find an MPI launcher
+        options.append("-DMPI_HOME=" + self.spec["mpi"].prefix)
 
         if not self.run_test(cmake_bin, options=options, purpose="Generate the Makefile"):
             tty.msg("Skipping heffte test: failed to generate Makefile")

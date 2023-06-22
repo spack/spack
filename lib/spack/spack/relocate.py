@@ -6,7 +6,6 @@ import collections
 import itertools
 import os
 import re
-import shutil
 from collections import OrderedDict
 
 import macholib.mach_o
@@ -137,11 +136,6 @@ def _normalize_relative_paths(start_path, relative_paths):
         normalized_paths.append(path)
 
     return normalized_paths
-
-
-def _placeholder(dirname):
-    """String of  of @'s with same length of the argument"""
-    return "@" * len(dirname)
 
 
 def _decode_macho_data(bytestring):
@@ -361,13 +355,7 @@ def _set_elf_rpaths(target, rpaths):
     # Join the paths using ':' as a separator
     rpaths_str = ":".join(rpaths)
 
-    # If we're relocating patchelf itself, make a copy and use it
-    bak_path = None
-    if target.endswith("/bin/patchelf"):
-        bak_path = target + ".bak"
-        shutil.copy(target, bak_path)
-
-    patchelf, output = executable.Executable(bak_path or _patchelf()), None
+    patchelf, output = executable.Executable(_patchelf()), None
     try:
         # TODO: revisit the use of --force-rpath as it might be conditional
         # TODO: if we want to support setting RUNPATH from binary packages
@@ -376,9 +364,6 @@ def _set_elf_rpaths(target, rpaths):
     except executable.ProcessError as e:
         msg = "patchelf --force-rpath --set-rpath {0} failed with error {1}"
         tty.warn(msg.format(target, e))
-    finally:
-        if bak_path and os.path.exists(bak_path):
-            os.remove(bak_path)
     return output
 
 
@@ -675,7 +660,7 @@ def relocate_text_bin(binaries, prefixes):
     Raises:
       spack.relocate_text.BinaryTextReplaceError: when the new path is longer than the old path
     """
-    BinaryFilePrefixReplacer.from_strings_or_bytes(prefixes).apply(binaries)
+    return BinaryFilePrefixReplacer.from_strings_or_bytes(prefixes).apply(binaries)
 
 
 def is_relocatable(spec):
@@ -691,7 +676,7 @@ def is_relocatable(spec):
     Raises:
         ValueError: if the spec is not installed
     """
-    if not spec.install_status():
+    if not spec.installed:
         raise ValueError("spec is not installed [{0}]".format(str(spec)))
 
     if spec.external or spec.virtual:

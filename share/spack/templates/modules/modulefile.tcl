@@ -14,17 +14,29 @@
 module-whatis "{{ short_description }}"
 {% endif %}
 
-{% if long_description %}
 proc ModulesHelp { } {
-{{ long_description| textwrap(72)| quote()| prepend_to_line('puts stderr ')| join() }}
-}
+    puts stderr "Name   : {{ spec.name }}"
+    puts stderr "Version: {{ spec.version }}"
+    puts stderr "Target : {{ spec.target }}"
+{% if long_description %}
+    puts stderr ""
+{{ long_description| textwrap(72)| quote()| prepend_to_line('    puts stderr ')| join() }}
 {% endif %}
+}
 {% endblock %}
 
 {% block autoloads %}
+{% if autoload|length > 0 %}
+if {![info exists ::env(LMOD_VERSION_MAJOR)]} {
 {% for module in autoload %}
-module load {{ module }}
+    module load {{ module }}
 {% endfor %}
+} else {
+{% for module in autoload %}
+    depends-on {{ module }}
+{% endfor %}
+}
+{% endif %}
 {% endblock %}
 {#  #}
 {% block prerequisite %}
@@ -54,6 +66,10 @@ unsetenv {{ cmd.name }}
 {% endif %}
 {#  #}
 {% endfor %}
+{# Make sure system man pages are enabled by appending trailing delimiter to MANPATH #}
+{% if has_manpath_modifications %}
+append-path --delim ":" MANPATH ""
+{% endif %}
 {% endblock %}
 
 {% block footer %}

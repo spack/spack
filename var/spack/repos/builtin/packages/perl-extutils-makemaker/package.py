@@ -15,6 +15,7 @@ class PerlExtutilsMakemaker(PerlPackage):
     homepage = "https://github.com/Perl-Toolchain-Gang/ExtUtils-MakeMaker"
     url = "http://search.cpan.org/CPAN/authors/id/B/BI/BINGOS/ExtUtils-MakeMaker-7.24.tar.gz"
 
+    version("7.70", sha256="f108bd46420d2f00d242825f865b0f68851084924924f92261d684c49e3e7a74")
     version("7.68", sha256="270238d253343b833daa005fb57a3a5d8916b59da197698a632b141e7acad779")
     version("7.24", sha256="416abc97c3bb2cc72bef28852522f2859de53e37bf3d0ae8b292067d78755e69")
 

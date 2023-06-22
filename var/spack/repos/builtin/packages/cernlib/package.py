@@ -28,7 +28,7 @@ class Cernlib(CMakePackage):
     depends_on("libxt")
     depends_on("libxcrypt")
 
-    depends_on("openssl", when="os=linux")
+    depends_on("openssl", when="platform=linux")
 
     @when("@2022.11.08.0-free")
     def patch(self):

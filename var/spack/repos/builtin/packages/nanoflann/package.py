@@ -12,6 +12,7 @@ class Nanoflann(CMakePackage):
     homepage = "https://github.com/jlblancoc/nanoflann"
     url = "https://github.com/jlblancoc/nanoflann/archive/v1.2.3.tar.gz"
 
+    version("1.4.3", sha256="cbcecf22bec528a8673a113ee9b0e134f91f1f96be57e913fa1f74e98e4449fa")
     version("1.2.3", sha256="5ef4dfb23872379fe9eb306aabd19c9df4cae852b72a923af01aea5e8d7a59c3")
 
     def patch(self):

@@ -26,7 +26,7 @@ index e3eddc0f..0493cb9d 100644
  
  IF(MPI_C_INCLUDE_PATH)
      target_include_directories(netcdf PUBLIC ${MPI_C_INCLUDE_PATH})
-+    target_link_libraries(netcdf PUBLIC MPI::MPI_C)
++    target_link_libraries(netcdf MPI::MPI_C)
  ENDIF(MPI_C_INCLUDE_PATH)
  
  IF(MOD_NETCDF_NAME)
