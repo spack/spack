@@ -126,14 +126,4 @@ class PyPandas(PythonPackage):
     # Optional dependencies
     # https://pandas.pydata.org/pandas-docs/stable/getting_started/install.html#optional-dependencies
 
-    @property
-    def import_modules(self):
-        modules = super(__class__, self).import_modules
-
-        ignored_imports = [
-            "pandas.tests",
-            "pandas.plotting._matplotlib",
-            "pandas.core._numba.kernels",
-        ]
-
-        return [i for i in modules if not any(map(i.startswith, ignored_imports))]
+    skip_modules = ["pandas.tests", "pandas.plotting._matplotlib", "pandas.core._numba.kernels"]
