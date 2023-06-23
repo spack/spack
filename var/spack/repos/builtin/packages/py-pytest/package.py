@@ -37,6 +37,8 @@ class PyPytest(PythonPackage):
 
     # python_requires
     depends_on("python@3.7:", when="@7.1:", type=("build", "run"))
+    # see https://github.com/pytest-dev/pytest/releases/tag/7.3.2
+    depends_on("python@:3.11", when="@:7.3.1", type=("build", "run"))
 
     # setup_requires
     depends_on("py-setuptools@45.0:", when="@7:", type=("build", "run"))
