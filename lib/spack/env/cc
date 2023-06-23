@@ -811,9 +811,6 @@ esac
 #
 args_list="$flags_list"
 
-if [ ! -z $opt_flag ] ; then
-    append args_list "$opt_flag"
-fi
 
 # Insert include directories just prior to any system include directories
 # NOTE: adding ${lsep} to the prefix here turns every added element into two
@@ -870,6 +867,11 @@ esac
 # Other arguments from the input command
 extend args_list other_args_list
 extend args_list spack_flags_other_args_list
+
+# Optimization flag
+if [ ! -z $opt_flag ] ; then
+    append args_list "$opt_flag"
+fi
 
 # Inject SPACK_LDLIBS, if supplied
 extend args_list libs_list "-l"

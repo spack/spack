@@ -124,7 +124,7 @@ fc = Executable(os.path.join(build_env_path, "fc"))
 real_cc = "/bin/mycc"
 
 # mock flags to use in the wrapper environment
-spack_cppflags = ["-g", "-O1", "-DVAR=VALUE"]
+spack_cppflags = ["-g", "-DVAR=VALUE", "-O1"]
 spack_cflags = ["-Wall"]
 spack_cxxflags = ["-Werror"]
 spack_fflags = ["-w"]
