@@ -65,8 +65,16 @@ class RangeV3(CMakePackage):
 
     depends_on("cmake@3.6:", type="build")
     depends_on("doxygen+graphviz", type="build", when="+doc")
-    depends_on("boost+date_time+program_options@1.59.0: cxxstd=14", type="build", when="+examples cxxstd=14")
-    depends_on("boost+date_time+program_options@1.59.0: cxxstd=17", type="build", when="+examples cxxstd=17")
+    depends_on(
+        "boost+date_time+program_options@1.59.0: cxxstd=14",
+        type="build",
+        when="+examples cxxstd=14",
+    )
+    depends_on(
+        "boost+date_time+program_options@1.59.0: cxxstd=17",
+        type="build",
+        when="+examples cxxstd=17",
+    )
 
     # Fix reported upstream issue
     # https://github.com/ericniebler/range-v3/issues/1196 per PR
