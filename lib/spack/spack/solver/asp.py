@@ -781,6 +781,9 @@ class PyclingoDriver:
         self.control.load(os.path.join(parent_dir, "display.lp"))
         if not setup.concretize_everything:
             self.control.load(os.path.join(parent_dir, "when_possible.lp"))
+
+        if setup.use_cycle_detection:
+            self.control.load(os.path.join(parent_dir, "cycle_detection.lp"))
         timer.stop("load")
 
         # Grounding is the first step in the solve -- it turns our facts
@@ -903,6 +906,7 @@ class SpackSolverSetup:
 
         # If False allows for input specs that are not solved
         self.concretize_everything = True
+        self.use_cycle_detection = False
 
         # Set during the call to setup
         self.pkgs = None
@@ -2797,10 +2801,17 @@ class SpecBuilder:
         # fix flags after all specs are constructed
         self.reorder_flags()
 
+        # cycle detection
+        try:
+            roots = [spec.root for spec in self._specs.values() if not spec.root.installed]
+        except RecursionError as e:
+            raise CycleDetectedError(
+                "detected cycles using a fast solve, falling back to slower algorithm"
+            ) from e
+
         # inject patches -- note that we' can't use set() to unique the
         # roots here, because the specs aren't complete, and the hash
         # function will loop forever.
-        roots = [spec.root for spec in self._specs.values() if not spec.root.installed]
         roots = dict((id(r), r) for r in roots)
         for root in roots.values():
             spack.spec.Spec.inject_patches_variant(root)
@@ -2932,7 +2943,12 @@ class Solver:
         reusable_specs.extend(self._reusable_specs(specs))
         setup = SpackSolverSetup(tests=tests)
         output = OutputConfiguration(timers=timers, stats=stats, out=out, setup_only=setup_only)
-        result, _, _ = self.driver.solve(setup, specs, reuse=reusable_specs, output=output)
+        try:
+            result, _, _ = self.driver.solve(setup, specs, reuse=reusable_specs, output=output)
+        except CycleDetectedError as e:
+            warnings.warn(e)
+            setup.use_cycle_detection = True
+            result, _, _ = self.driver.solve(setup, specs, reuse=reusable_specs, output=output)
         return result
 
     def solve_in_rounds(self, specs, out=None, timers=False, stats=False, tests=False):
@@ -3012,3 +3028,7 @@ class InternalConcretizerError(spack.error.UnsatisfiableSpecError):
         # Add attribute expected of the superclass interface
         self.required = None
         self.constraint_type = None
+
+
+class CycleDetectedError(spack.error.SpackError):
+    pass
