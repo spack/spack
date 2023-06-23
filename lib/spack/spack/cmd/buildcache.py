@@ -224,20 +224,20 @@ def setup_parser(subparser):
     # Sync buildcache entries from one mirror to another
     sync = subparsers.add_parser("sync", help=sync_fn.__doc__)
     sync.add_argument(
-        "--manifest-glob",
-        default=None,
-        help="A quoted glob pattern identifying copy manifest files",
+        "--manifest-glob", help="A quoted glob pattern identifying copy manifest files"
     )
     sync.add_argument(
         "src_mirror",
         metavar="source mirror",
         type=arguments.mirror_name_or_url,
+        nargs="?",
         help="Source mirror name, path, or URL",
     )
     sync.add_argument(
         "dest_mirror",
         metavar="destination mirror",
         type=arguments.mirror_name_or_url,
+        nargs="?",
         help="Destination mirror name, path, or URL",
     )
     sync.set_defaults(func=sync_fn)
@@ -556,6 +556,9 @@ def sync_fn(args):
     if args.manifest_glob:
         manifest_copy(glob.glob(args.manifest_glob))
         return 0
+
+    if args.src_mirror is None or args.dest_mirror is None:
+        tty.die("Provide mirrors to sync from and to.")
 
     src_mirror = args.src_mirror
     dest_mirror = args.dest_mirror
