@@ -50,6 +50,7 @@ class Mlpack(CMakePackage):
         depends_on("py-pandas@0.15.0:")
         # ref: src/mlpack/bindings/python/PythonInstall.cmake
         depends_on("py-pip")
+        depends_on("py-wheel")
     with when("+r"):
         # ref: src/mlpack/bindings/R/CMakeLists.txt
         depends_on("r@4.0:")
