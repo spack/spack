@@ -25,7 +25,7 @@ class PyIterativeStats(PythonPackage):
     # dev dependencies
     depends_on("py-pytest@6.2.1:6", type=("test"))
     depends_on("py-autopep8@1.6.0", type=("test"))
-    depends_on("openturns@1.19+libxml2", type=("test"))
+    depends_on("openturns@1.19+python+libxml2", type=("test"))
     depends_on("py-scipy@1.8", type=("test"))
 
     @run_after("install")
