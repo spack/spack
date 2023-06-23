@@ -13,6 +13,7 @@ class PyChex(PythonPackage):
     homepage = "https://github.com/deepmind/chex"
     pypi = "chex/chex-0.1.0.tar.gz"
 
+    version("0.1.7", sha256="74ed49799ac4d229881456d468136f1b19a9f9839e3de72b058824e2a4f4dedd")
     version("0.1.0", sha256="9e032058f5fed2fc1d5e9bf8e12ece5910cf6a478c12d402b6d30984695f2161")
 
     depends_on("python@3.7:", type=("build", "run"))
@@ -20,6 +21,8 @@ class PyChex(PythonPackage):
     depends_on("py-absl-py@0.9.0:", type=("build", "run"))
     depends_on("py-dm-tree@0.1.5:", type=("build", "run"))
     depends_on("py-jax@0.1.55:", type=("build", "run"))
+    depends_on("py-jax@0.4.6:", when="@0.1.7:", type=("build", "run"))
     depends_on("py-jaxlib@0.1.37:", type=("build", "run"))
     depends_on("py-numpy@1.18.0:", type=("build", "run"))
     depends_on("py-toolz@0.9.0:", type=("build", "run"))
+    depends_on("py-typing-extensions@4.2.0:", when="@0.1.6: ^python@:3.10", type=("build", "run"))
