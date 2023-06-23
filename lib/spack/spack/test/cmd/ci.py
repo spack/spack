@@ -17,7 +17,6 @@ from llnl.util.filesystem import mkdirp, working_dir
 import spack
 import spack.binary_distribution
 import spack.ci as ci
-import spack.compilers as compilers
 import spack.config
 import spack.environment as ev
 import spack.hash_types as ht
@@ -30,7 +29,7 @@ import spack.util.url as url_util
 from spack.schema.buildcache_spec import schema as specfile_schema
 from spack.schema.ci import schema as ci_schema
 from spack.schema.database_index import schema as db_idx_schema
-from spack.spec import CompilerSpec, Spec
+from spack.spec import Spec
 from spack.util.pattern import Bunch
 
 config_cmd = spack.main.SpackCommand("config")
@@ -163,8 +162,6 @@ def test_ci_generate_with_env(
             """\
 spack:
   definitions:
-    - bootstrap:
-      - cmake@3.4.3
     - old-gcc-pkgs:
       - archive-files
       - callpath
@@ -179,9 +176,6 @@ spack:
   mirrors:
     some-mirror: {0}
   ci:
-    bootstrap:
-      - name: bootstrap
-        compiler-agnostic: true
     pipeline-gen:
     - submapping:
       - match:
@@ -221,16 +215,10 @@ spack:
         with open(outputfile) as f:
             contents = f.read()
             yaml_contents = syaml.load(contents)
-            found_spec = False
-            for ci_key in yaml_contents.keys():
-                if "(bootstrap)" in ci_key:
-                    found_spec = True
-                    assert "cmake" in ci_key
-            assert found_spec
             assert "stages" in yaml_contents
-            assert len(yaml_contents["stages"]) == 6
+            assert len(yaml_contents["stages"]) == 5
             assert yaml_contents["stages"][0] == "stage-0"
-            assert yaml_contents["stages"][5] == "stage-rebuild-index"
+            assert yaml_contents["stages"][4] == "stage-rebuild-index"
 
             assert "rebuild-index" in yaml_contents
             rebuild_job = yaml_contents["rebuild-index"]
@@ -242,155 +230,6 @@ spack:
             assert "SPACK_ARTIFACTS_ROOT" in yaml_contents["variables"]
             artifacts_root = yaml_contents["variables"]["SPACK_ARTIFACTS_ROOT"]
             assert artifacts_root == "jobs_scratch_dir"
-
-
-def _validate_needs_graph(yaml_contents, needs_graph, artifacts):
-    """Validate the needs graph in the generate CI"""
-
-    # TODO: Fix the logic to catch errors where expected packages/needs are not
-    #       found.
-    for job_name, job_def in yaml_contents.items():
-        for needs_def_name, needs_list in needs_graph.items():
-            if job_name.startswith(needs_def_name):
-                # check job needs against the expected needs definition
-                j_needs = job_def["needs"]
-                assert all(
-                    [
-                        job_needs["job"][: job_needs["job"].index("/")] in needs_list
-                        for job_needs in j_needs
-                    ]
-                )
-                assert all(
-                    [nl in [n["job"][: n["job"].index("/")] for n in j_needs] for nl in needs_list]
-                )
-                assert all([job_needs["artifacts"] == artifacts for job_needs in j_needs])
-                break
-
-
-def test_ci_generate_bootstrap_gcc(
-    tmpdir, working_env, mutable_mock_env_path, install_mockery, mock_packages, ci_base_environment
-):
-    """Test that we can bootstrap a compiler and use it as the
-    compiler for a spec in the environment"""
-    filename = str(tmpdir.join("spack.yaml"))
-    with open(filename, "w") as f:
-        f.write(
-            """\
-spack:
-  definitions:
-    - bootstrap:
-      - gcc@3.0
-  specs:
-    - dyninst%gcc@=3.0
-  mirrors:
-    some-mirror: https://my.fake.mirror
-  ci:
-    bootstrap:
-      - name: bootstrap
-        compiler-agnostic: true
-    pipeline-gen:
-    - submapping:
-      - match:
-          - arch=test-debian6-x86_64
-        build-job:
-          tags:
-            - donotcare
-      - match:
-          - arch=test-debian6-aarch64
-        build-job:
-          tags:
-            - donotcare
-    - any-job:
-        tags:
-          - donotcare
-"""
-        )
-
-    needs_graph = {
-        "(bootstrap) conflict": [],
-        "(bootstrap) gcc": ["(bootstrap) conflict"],
-        "(specs) libelf": ["(bootstrap) gcc"],
-        "(specs) libdwarf": ["(bootstrap) gcc", "(specs) libelf"],
-        "(specs) dyninst": ["(bootstrap) gcc", "(specs) libelf", "(specs) libdwarf"],
-    }
-
-    with tmpdir.as_cwd():
-        env_cmd("create", "test", "./spack.yaml")
-        outputfile = str(tmpdir.join(".gitlab-ci.yml"))
-
-        with ev.read("test"):
-            ci_cmd("generate", "--output-file", outputfile)
-
-        with open(outputfile) as f:
-            contents = f.read()
-            yaml_contents = syaml.load(contents)
-            _validate_needs_graph(yaml_contents, needs_graph, False)
-
-
-def test_ci_generate_bootstrap_artifacts_buildcache(
-    tmpdir, working_env, mutable_mock_env_path, install_mockery, mock_packages, ci_base_environment
-):
-    """Test that we can bootstrap a compiler when artifacts buildcache
-    is turned on"""
-    filename = str(tmpdir.join("spack.yaml"))
-    with open(filename, "w") as f:
-        f.write(
-            """\
-spack:
-  definitions:
-    - bootstrap:
-      - gcc@3.0
-  specs:
-    - dyninst%gcc@=3.0
-  mirrors:
-    some-mirror: https://my.fake.mirror
-  ci:
-    bootstrap:
-      - name: bootstrap
-        compiler-agnostic: true
-    pipeline-gen:
-    - submapping:
-      - match:
-          - arch=test-debian6-x86_64
-        build-job:
-          tags:
-            - donotcare
-      - match:
-          - arch=test-debian6-aarch64
-        build-job:
-          tags:
-            - donotcare
-    - any-job:
-        tags:
-        - donotcare
-    enable-artifacts-buildcache: True
-"""
-        )
-
-    needs_graph = {
-        "(bootstrap) conflict": [],
-        "(bootstrap) gcc": ["(bootstrap) conflict"],
-        "(specs) libelf": ["(bootstrap) gcc", "(bootstrap) conflict"],
-        "(specs) libdwarf": ["(bootstrap) gcc", "(bootstrap) conflict", "(specs) libelf"],
-        "(specs) dyninst": [
-            "(bootstrap) gcc",
-            "(bootstrap) conflict",
-            "(specs) libelf",
-            "(specs) libdwarf",
-        ],
-    }
-
-    with tmpdir.as_cwd():
-        env_cmd("create", "test", "./spack.yaml")
-        outputfile = str(tmpdir.join(".gitlab-ci.yml"))
-
-        with ev.read("test"):
-            ci_cmd("generate", "--output-file", outputfile)
-
-        with open(outputfile) as f:
-            contents = f.read()
-            yaml_contents = syaml.load(contents)
-            _validate_needs_graph(yaml_contents, needs_graph, True)
 
 
 def test_ci_generate_with_env_missing_section(
@@ -889,7 +728,7 @@ def activate_rebuild_env(tmpdir, pkg_name, rebuild_env):
             "SPACK_JOB_SPEC_DAG_HASH": rebuild_env.root_spec_dag_hash,
             "SPACK_JOB_SPEC_PKG_NAME": pkg_name,
             "SPACK_COMPILER_ACTION": "NONE",
-            "SPACK_CDASH_BUILD_NAME": "(specs) {0}".format(pkg_name),
+            "SPACK_CDASH_BUILD_NAME": pkg_name,
             "SPACK_REMOTE_MIRROR_URL": rebuild_env.mirror_url,
             "SPACK_PIPELINE_TYPE": "spack_protected_branch",
             "CI_JOB_URL": rebuild_env.ci_job_url,
@@ -1283,7 +1122,7 @@ spack:
                 found_spec_job = False
 
                 for ci_key in yaml_contents.keys():
-                    if "(specs) patchelf" in ci_key:
+                    if "patchelf" in ci_key:
                         the_elt = yaml_contents[ci_key]
                         assert "variables" in the_elt
                         job_vars = the_elt["variables"]
@@ -1457,7 +1296,7 @@ spack:
             assert global_vars["SPACK_CHECKOUT_VERSION"] == "12ad69eb1"
 
             for ci_key in yaml_contents.keys():
-                if "(specs) a" in ci_key:
+                if ci_key.startswith("a"):
                     # Make sure a's attributes override variables, and all the
                     # scripts.  Also, make sure the 'toplevel' tag doesn't
                     # appear twice, but that a's specific extra tag does appear
@@ -1477,7 +1316,7 @@ spack:
                     assert the_elt["script"][0] == "custom main step"
                     assert len(the_elt["after_script"]) == 1
                     assert the_elt["after_script"][0] == "custom post step one"
-                if "(specs) dependency-install" in ci_key:
+                if "dependency-install" in ci_key:
                     # Since the dependency-install match omits any
                     # runner-attributes, make sure it inherited all the
                     # top-level attributes.
@@ -1495,7 +1334,7 @@ spack:
                     assert the_elt["script"][0] == "main step"
                     assert len(the_elt["after_script"]) == 1
                     assert the_elt["after_script"][0] == "post step one"
-                if "(specs) flatten-deps" in ci_key:
+                if "flatten-deps" in ci_key:
                     # The flatten-deps match specifies that we keep the two
                     # top level variables, but add a third specifc one.  It
                     # also adds a custom tag which should be combined with
@@ -1554,9 +1393,10 @@ spack:
                 yaml_contents = syaml.load(contents)
 
                 found_one = False
+                non_rebuild_keys = ["workflow", "stages", "variables", "rebuild-index"]
 
                 for ci_key in yaml_contents.keys():
-                    if ci_key.startswith("(specs) "):
+                    if ci_key not in non_rebuild_keys:
                         found_one = True
                         job_obj = yaml_contents[ci_key]
                         assert "needs" not in job_obj
@@ -1621,140 +1461,6 @@ spack:
             with open(index_path) as idx_fd:
                 index_object = json.load(idx_fd)
                 jsonschema.validate(index_object, db_idx_schema)
-
-
-def test_ci_generate_bootstrap_prune_dag(
-    install_mockery_mutable_config,
-    mock_packages,
-    mock_fetch,
-    mock_archive,
-    mutable_config,
-    monkeypatch,
-    tmpdir,
-    mutable_mock_env_path,
-    ci_base_environment,
-):
-    """Test compiler bootstrapping with DAG pruning.  Specifically, make
-    sure that if we detect the bootstrapped compiler needs to be rebuilt,
-    we ensure the spec we want to build with that compiler is scheduled
-    for rebuild as well."""
-
-    # Create a temp mirror directory for buildcache usage
-    mirror_dir = tmpdir.join("mirror_dir")
-    mirror_url = "file://{0}".format(mirror_dir.strpath)
-
-    # Install a compiler, because we want to put it in a buildcache
-    install_cmd("gcc@=12.2.0%gcc@10.2.1")
-
-    # Put installed compiler in the buildcache
-    buildcache_cmd("push", "-u", "-a", "-f", mirror_dir.strpath, "gcc@12.2.0%gcc@10.2.1")
-
-    # Now uninstall the compiler
-    uninstall_cmd("-y", "gcc@12.2.0%gcc@10.2.1")
-
-    monkeypatch.setattr(spack.concretize.Concretizer, "check_for_compiler_existence", False)
-    spack.config.set("config:install_missing_compilers", True)
-    assert CompilerSpec("gcc@=12.2.0") not in compilers.all_compiler_specs()
-
-    # Configure the mirror where we put that buildcache w/ the compiler
-    mirror_cmd("add", "test-mirror", mirror_url)
-
-    install_cmd("--no-check-signature", "b%gcc@=12.2.0")
-
-    # Put spec built with installed compiler in the buildcache
-    buildcache_cmd("push", "-u", "-a", "-f", mirror_dir.strpath, "b%gcc@12.2.0")
-
-    # Now uninstall the spec
-    uninstall_cmd("-y", "b%gcc@12.2.0")
-
-    filename = str(tmpdir.join("spack.yaml"))
-    with open(filename, "w") as f:
-        f.write(
-            """\
-spack:
-  definitions:
-    - bootstrap:
-      - gcc@=12.2.0%gcc@10.2.1
-  specs:
-    - b%gcc@12.2.0
-  mirrors:
-    atestm: {0}
-  ci:
-    bootstrap:
-      - name: bootstrap
-        compiler-agnostic: true
-    pipeline-gen:
-    - submapping:
-      - match:
-          - arch=test-debian6-x86_64
-        build-job:
-          tags:
-            - donotcare
-      - match:
-          - arch=test-debian6-core2
-        build-job:
-          tags:
-            - meh
-      - match:
-          - arch=test-debian6-aarch64
-        build-job:
-          tags:
-            - donotcare
-      - match:
-          - arch=test-debian6-m1
-        build-job:
-          tags:
-            - meh
-""".format(
-                mirror_url
-            )
-        )
-
-    # Without this monkeypatch, pipeline generation process would think that
-    # nothing in the environment needs rebuilding.  With the monkeypatch, the
-    # process sees the compiler as needing a rebuild, which should then result
-    # in the specs built with that compiler needing a rebuild too.
-    def fake_get_mirrors_for_spec(spec=None, mirrors_to_check=None, index_only=False):
-        if spec.name == "gcc":
-            return []
-        else:
-            return [{"spec": spec, "mirror_url": mirror_url}]
-
-    with tmpdir.as_cwd():
-        env_cmd("create", "test", "./spack.yaml")
-        outputfile = str(tmpdir.join(".gitlab-ci.yml"))
-
-        with ev.read("test"):
-            ci_cmd("generate", "--output-file", outputfile)
-
-            with open(outputfile) as of:
-                yaml_contents = of.read()
-                original_yaml_contents = syaml.load(yaml_contents)
-
-            # without the monkeypatch, everything appears up to date and no
-            # rebuild jobs are generated.
-            assert original_yaml_contents
-            assert "no-specs-to-rebuild" in original_yaml_contents
-
-            monkeypatch.setattr(
-                spack.binary_distribution, "get_mirrors_for_spec", fake_get_mirrors_for_spec
-            )
-
-            ci_cmd("generate", "--output-file", outputfile)
-
-            with open(outputfile) as of:
-                yaml_contents = of.read()
-                new_yaml_contents = syaml.load(yaml_contents)
-
-            assert new_yaml_contents
-
-            # This 'needs' graph reflects that even though specs 'a' and 'b' do
-            # not otherwise need to be rebuilt (thanks to DAG pruning), they
-            # both end up in the generated pipeline because the compiler they
-            # depend on is bootstrapped, and *does* need to be rebuilt.
-            needs_graph = {"(bootstrap) gcc": [], "(specs) b": ["(bootstrap) gcc"]}
-
-            _validate_needs_graph(new_yaml_contents, needs_graph, False)
 
 
 def test_ci_get_stack_changed(mock_git_repo, monkeypatch):
@@ -1828,7 +1534,7 @@ spack:
             generated_hashes = []
 
             for ci_key in yaml_contents.keys():
-                if ci_key.startswith("(specs)"):
+                if "variables" in yaml_contents[ci_key]:
                     generated_hashes.append(
                         yaml_contents[ci_key]["variables"]["SPACK_JOB_SPEC_DAG_HASH"]
                     )
@@ -2240,9 +1946,7 @@ spack:
             ci_cmd("generate", "--output-file", pipeline_path, "--artifacts-root", artifacts_root)
 
             target_name = spack.platforms.test.Test.default
-            job_name = ci.get_job_name(
-                "specs", False, job_spec, "test-debian6-%s" % target_name, None
-            )
+            job_name = ci.get_job_name(job_spec, "test-debian6-%s" % target_name, None)
 
             repro_file = os.path.join(working_dir.strpath, "repro.json")
             repro_details = {
@@ -2309,8 +2013,6 @@ def test_cmd_first_line():
 legacy_spack_yaml_contents = """
 spack:
   definitions:
-    - bootstrap:
-      - cmake@3.4.3
     - old-gcc-pkgs:
       - archive-files
       - callpath
@@ -2325,9 +2027,6 @@ spack:
   mirrors:
     test-mirror: file:///some/fake/mirror
   {0}:
-    bootstrap:
-      - name: bootstrap
-        compiler-agnostic: true
     match_behavior: first
     mappings:
       - match:
@@ -2379,16 +2078,10 @@ def test_gitlab_ci_deprecated(
             contents = f.read()
             yaml_contents = syaml.load(contents)
 
-            found_spec = False
-            for ci_key in yaml_contents.keys():
-                if "(bootstrap)" in ci_key:
-                    found_spec = True
-                    assert "cmake" in ci_key
-            assert found_spec
             assert "stages" in yaml_contents
-            assert len(yaml_contents["stages"]) == 6
+            assert len(yaml_contents["stages"]) == 5
             assert yaml_contents["stages"][0] == "stage-0"
-            assert yaml_contents["stages"][5] == "stage-rebuild-index"
+            assert yaml_contents["stages"][4] == "stage-rebuild-index"
 
             assert "rebuild-index" in yaml_contents
             rebuild_job = yaml_contents["rebuild-index"]
