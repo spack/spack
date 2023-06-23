@@ -24,7 +24,7 @@ class Nvtx(Package, PythonExtension):
     depends_on("py-wheel", type="build", when="+python")
     depends_on("py-cython", type="build", when="+python")
 
-    build_directory = 'python'
+    build_directory = "python"
 
     def patch(self):
         """Patch setup.py to provide include directory."""
@@ -34,10 +34,10 @@ class Nvtx(Package, PythonExtension):
         setup.filter("include_dirs=include_dirs", f"include_dirs=['{include_dir}']", string=True)
 
     def install(self, spec, prefix):
-        install_tree('c/include', prefix.include)
+        install_tree("c/include", prefix.include)
         install("c/CMakeLists.txt", prefix)
         install("c/nvtxImportedTargets.cmake", prefix)
-        install('./LICENSE.txt', "%s" % prefix)
+        install("./LICENSE.txt", "%s" % prefix)
 
         args = std_pip_args + ["--prefix=" + prefix, "."]
         with working_dir(self.build_directory):
