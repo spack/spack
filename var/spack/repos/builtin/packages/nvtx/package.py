@@ -8,16 +8,16 @@ from spack.package import *
 
 class Nvtx(Package, PythonExtension):
     """Python code annotation library"""
-    
+
     git = "https://github.com/NVIDIA/NVTX.git"
     url = "https://github.com/NVIDIA/NVTX/archive/refs/tags/v3.1.0.tar.gz"
-    
+
     maintainers("thomas-bouvier")
 
     version("main", branch="dev")
     version("3.1.0", sha256="dc4e4a227d04d3da46ad920dfee5f7599ac8d6b2ee1809c9067110fb1cc71ced")
 
-    variant("python", default=True, description="Install python bindings.")
+    variant("python", default=True, description="Install Python bindings.")
     extends("python", when="+python")
     depends_on("py-pip", type="build", when="+python")
     depends_on("py-setuptools", type="build", when="+python")
@@ -35,11 +35,10 @@ class Nvtx(Package, PythonExtension):
 
     def install(self, spec, prefix):
         install_tree('c/include', prefix.include)
+        install("c/CMakeLists.txt", prefix)
+        install("c/nvtxImportedTargets.cmake", prefix)
         install('./LICENSE.txt', "%s" % prefix)
 
-    @run_after("install")
-    def install_python(self):
-        """Install everything from build directory."""
         args = std_pip_args + ["--prefix=" + prefix, "."]
         with working_dir(self.build_directory):
             pip(*args)
