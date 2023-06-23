@@ -54,7 +54,7 @@ unify(SetID, PackageName) :- unification_set(SetID, node(_, PackageName)).
 
 unification_set("root", PackageNode) :- attr("root", PackageNode).
 unification_set(SetID, ChildNode) :- attr("depends_on", ParentNode, ChildNode, Type), Type != "build", unification_set(SetID, ParentNode).
-unification_set(("build", ParentNode), ChildNode) :- attr("depends_on", ParentNode, ChildNode, Type), Type == "build", unification_set("root", ParentNode).
+unification_set("build", ChildNode) :- attr("depends_on", ParentNode, ChildNode, Type), Type == "build", unification_set("root", ParentNode).
 unification_set(SetID, ChildNode) :- attr("depends_on", ParentNode, ChildNode, Type), Type == "build", SetID != "root", unification_set(SetID, ParentNode).
 unification_set(SetID, VirtualNode) :- provider(PackageNode, VirtualNode), unification_set(SetID, PackageNode).
 
@@ -64,6 +64,7 @@ unification_set(SetID, VirtualNode) :- provider(PackageNode, VirtualNode), unifi
 
 % In the "root" unification set only ID = 0 are allowed
 :- unification_set("root", node(ID, _)), ID != 0.
+:- attr("node", PackageNode), not unification_set(_, PackageNode).
 
 % Cannot have a node with an ID, if lower ID of the same package are not used
 :- attr("node", node(ID1, Package)),
