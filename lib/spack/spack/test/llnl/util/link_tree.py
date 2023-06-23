@@ -11,7 +11,7 @@ import pytest
 import llnl.util.symlink
 from llnl.util.filesystem import mkdirp, touchp, visit_directory_tree, working_dir
 from llnl.util.link_tree import DestinationMergeVisitor, LinkTree, SourceMergeVisitor
-from llnl.util.symlink import _windows_can_symlink, islink, symlink
+from llnl.util.symlink import _windows_can_symlink, islink, symlink, readlink
 
 from spack.stage import Stage
 
@@ -46,7 +46,7 @@ def link_tree(stage):
 def check_file_link(filename, expected_target):
     assert os.path.isfile(filename)
     assert islink(filename)
-    if sys.platform != "win32" or _windows_can_symlink():
+    if sys.platform != "win32" or llnl.util.symlink._windows_can_symlink():
         assert os.path.abspath(os.path.realpath(filename)) == os.path.abspath(expected_target)
 
 
@@ -82,7 +82,7 @@ def test_merge_to_new_directory(stage, link_tree, monkeypatch, run_as_root):
 
         for dest, source in files:
             check_file_link(dest, source)
-            assert os.path.isabs(os.readlink(dest))
+            assert os.path.isabs(readlink(dest))
 
         link_tree.unmerge("dest")
 
@@ -117,7 +117,9 @@ def test_merge_to_new_directory_relative(stage, link_tree, monkeypatch, run_as_r
 
         for dest, source in files:
             check_file_link(dest, source)
-            assert not os.path.isabs(os.readlink(dest))
+            # Hard links/junctions are inherently absolute.
+            if sys.platform != "win32" or run_as_root:
+                assert not os.path.isabs(readlink(dest))
 
         link_tree.unmerge("dest")
 
