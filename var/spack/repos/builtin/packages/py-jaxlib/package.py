@@ -17,6 +17,7 @@ class PyJaxlib(PythonPackage, CudaPackage):
     tmp_path = ""
     buildtmp = ""
 
+    version("0.4.7", sha256="0578d5dd5035b5225cadb6a62ca5f93dd76b70292268502fc01a0fd9ca7001d0")
     version("0.4.3", sha256="2104735dc22be2b105e5517bd5bc6ae97f40e8e9e54928cac1585c6112a3d910")
     version("0.3.22", sha256="680a6f5265ba26d5515617a95ae47244005366f879a5c321782fde60f34e6d0d")
     version("0.1.74", sha256="bbc78c7a4927012dcb1b7cd135c7521f782d7dad516a2401b56d3190f81afe35")
@@ -26,9 +27,12 @@ class PyJaxlib(PythonPackage, CudaPackage):
     # jaxlib/setup.py
     depends_on("python@3.8:", when="@0.4:", type=("build", "run"))
     depends_on("py-setuptools", type="build")
+    depends_on("py-numpy@1.21:", when="@0.4.7:", type=("build", "run"))
     depends_on("py-numpy@1.20:", when="@0.3:", type=("build", "run"))
     depends_on("py-numpy@1.18:", type=("build", "run"))
     depends_on("py-scipy@1.5:", type=("build", "run"))
+    depends_on("py-scipy@1.7:", when="@0.4.7:", type=("build", "run"))
+    depends_on("py-ml-dtypes@0.0.3:", when="@0.4.7:", type=("build", "run"))
 
     # .bazelversion
     depends_on("bazel@5.1.1:5.9", when="@0.3:", type="build")
