@@ -18,7 +18,7 @@ def test_symlink_file(tmpdir):
     with tmpdir.as_cwd():
         test_dir = str(tmpdir)
         fd, real_file = tempfile.mkstemp(prefix="real", suffix=".txt", dir=test_dir)
-        link_file = tempfile.mktemp(prefix="link", suffix=".txt", dir=test_dir)
+        link_file = str(tmpdir.join("link.txt"))
         assert os.path.exists(link_file) is False
         symlink.symlink(source_path=real_file, link_path=link_file)
         assert os.path.exists(link_file)
@@ -58,7 +58,7 @@ def test_symlink_src_relative_to_link(tmpdir):
         os.mkdir(subdir_1)
         os.mkdir(subdir_2)
         fd, real_file = tempfile.mkstemp(prefix="real", suffix=".txt", dir=subdir_2)
-        link_file = tempfile.mktemp(prefix="link", suffix=".txt", dir=subdir_1)
+        link_file = str(tmpdir.join("link.txt"))
         symlink.symlink(
             source_path=f"b/{os.path.basename(real_file)}",
             link_path=f"a/{os.path.basename(link_file)}",
@@ -83,7 +83,7 @@ def test_symlink_src_not_relative_to_link(tmpdir):
         os.mkdir(subdir_1)
         os.mkdir(subdir_2)
         fd, real_file = tempfile.mkstemp(prefix="real", suffix=".txt", dir=subdir_2)
-        link_file = tempfile.mktemp(prefix="link", suffix=".txt", dir=subdir_1)
+        link_file = str(tmpdir.join("link.txt"))
         # Expected SymlinkError because source path does not exist relative to link path
         with pytest.raises(symlink.SymlinkError):
             symlink.symlink(
@@ -118,7 +118,7 @@ def test_symlink_win_file(tmpdir):
     with tmpdir.as_cwd():
         test_dir = str(tmpdir)
         fd, real_file = tempfile.mkstemp(prefix="real", suffix=".txt", dir=test_dir)
-        link_file = tempfile.mktemp(prefix="link", suffix=".txt", dir=test_dir)
+        link_file = str(tmpdir.join("link.txt"))
         symlink.symlink(source_path=real_file, link_path=link_file)
         # Verify that all expected conditions are met
         assert os.path.exists(link_file)
@@ -206,7 +206,7 @@ def test_windows_create_link_file(tmpdir):
     with tmpdir.as_cwd():
         test_dir = str(tmpdir)
         fd, real_file = tempfile.mkstemp(prefix="real", suffix=".txt", dir=test_dir)
-        link_file = tempfile.mktemp(prefix="link", suffix=".txt", dir=test_dir)
+        link_file = str(tmpdir.join("link.txt"))
         symlink._windows_create_link(real_file, link_file)
         # Verify that all expected conditions are met
         assert symlink._windows_is_hardlink(link_file)
