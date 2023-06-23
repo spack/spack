@@ -11,7 +11,7 @@ import pytest
 import llnl.util.symlink
 from llnl.util.filesystem import mkdirp, touchp, visit_directory_tree, working_dir
 from llnl.util.link_tree import DestinationMergeVisitor, LinkTree, SourceMergeVisitor
-from llnl.util.symlink import _windows_can_symlink, islink, symlink, readlink
+from llnl.util.symlink import _windows_can_symlink, islink, readlink, symlink
 
 from spack.stage import Stage
 
