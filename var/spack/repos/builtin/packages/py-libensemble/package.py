@@ -60,9 +60,9 @@ class PyLibensemble(PythonPackage):
     depends_on("py-mpmath", type=("build", "run"), when="+mpmath")
     depends_on("py-deap", type=("build", "run"), when="+deap")
     depends_on("tasmanian+python", type=("build", "run"), when="+tasmanian")
-    depends_on("py-pyyaml", type=("build", "run"), when="@:0.10.0")
-    depends_on("py-tomli", type=("build", "run"), when="@:0.10.0")
-    depends_on("py-pydantic", type=("build", "run"), when="@:0.10.0")
+    depends_on("py-pyyaml", type=("build", "run"), when="@0.10:")
+    depends_on("py-tomli", type=("build", "run"), when="@0.10:")
+    depends_on("py-pydantic", type=("build", "run"), when="@0.10:")
     conflicts("~mpi", when="@:0.4.1")
 
     @run_after("install")
