@@ -46,7 +46,7 @@ class PyLibensemble(PythonPackage):
     variant("deap", default=False, description="Install with DEAP")
     variant("tasmanian", default=False, description="Install with tasmanian")
 
-    depends_on("py-setuptools", type="build", "run")
+    depends_on("py-setuptools", type=("build", "run"))
     depends_on("py-numpy", type=("build", "run"))
     depends_on("py-psutil", type=("build", "run"), when="@0.7.1:")
     depends_on("mpi", when="@:0.4.1")
