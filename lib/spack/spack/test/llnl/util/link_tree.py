@@ -54,18 +54,18 @@ def check_dir(filename):
     assert os.path.isdir(filename)
 
 
-@pytest.mark.parametrize('run_as_root', [True, False])
+@pytest.mark.parametrize("run_as_root", [True, False])
 def test_merge_to_new_directory(stage, link_tree, monkeypatch, run_as_root):
     if sys.platform != "win32":
         if run_as_root:
             pass
         else:
-            pytest.skip('Skipping duplicate test.')
+            pytest.skip("Skipping duplicate test.")
     elif _windows_can_symlink() or not run_as_root:
-        monkeypatch.setattr(llnl.util.symlink, '_windows_can_symlink', lambda: run_as_root)
+        monkeypatch.setattr(llnl.util.symlink, "_windows_can_symlink", lambda: run_as_root)
     else:
         # Skip if trying to run as dev-mode without having dev-mode.
-        pytest.skip('Skipping portion of test which required dev-mode privileges.')
+        pytest.skip("Skipping portion of test which required dev-mode privileges.")
 
     with working_dir(stage.path):
         link_tree.merge("dest")
@@ -77,7 +77,7 @@ def test_merge_to_new_directory(stage, link_tree, monkeypatch, run_as_root):
             ("dest/c/4", "source/c/4"),
             ("dest/c/d/5", "source/c/d/5"),
             ("dest/c/d/6", "source/c/d/6"),
-            ("dest/c/d/e/7", "source/c/d/e/7")
+            ("dest/c/d/e/7", "source/c/d/e/7"),
         ]
 
         for dest, source in files:
@@ -89,18 +89,18 @@ def test_merge_to_new_directory(stage, link_tree, monkeypatch, run_as_root):
         assert not os.path.exists("dest")
 
 
-@pytest.mark.parametrize('run_as_root', [True, False])
+@pytest.mark.parametrize("run_as_root", [True, False])
 def test_merge_to_new_directory_relative(stage, link_tree, monkeypatch, run_as_root):
     if sys.platform != "win32":
         if run_as_root:
             pass
         else:
-            pytest.skip('Skipping duplicate test.')
+            pytest.skip("Skipping duplicate test.")
     elif _windows_can_symlink() or not run_as_root:
-        monkeypatch.setattr(llnl.util.symlink, '_windows_can_symlink', lambda: run_as_root)
+        monkeypatch.setattr(llnl.util.symlink, "_windows_can_symlink", lambda: run_as_root)
     else:
         # Skip if trying to run as dev-mode without having dev-mode.
-        pytest.skip('Skipping portion of test which required dev-mode privileges.')
+        pytest.skip("Skipping portion of test which required dev-mode privileges.")
 
     with working_dir(stage.path):
         link_tree.merge("dest", relative=True)
@@ -112,7 +112,7 @@ def test_merge_to_new_directory_relative(stage, link_tree, monkeypatch, run_as_r
             ("dest/c/4", "source/c/4"),
             ("dest/c/d/5", "source/c/d/5"),
             ("dest/c/d/6", "source/c/d/6"),
-            ("dest/c/d/e/7", "source/c/d/e/7")
+            ("dest/c/d/e/7", "source/c/d/e/7"),
         ]
 
         for dest, source in files:
@@ -124,18 +124,18 @@ def test_merge_to_new_directory_relative(stage, link_tree, monkeypatch, run_as_r
         assert not os.path.exists("dest")
 
 
-@pytest.mark.parametrize('run_as_root', [True, False])
+@pytest.mark.parametrize("run_as_root", [True, False])
 def test_merge_to_existing_directory(stage, link_tree, monkeypatch, run_as_root):
     if sys.platform != "win32":
         if run_as_root:
             pass
         else:
-            pytest.skip('Skipping duplicate test.')
+            pytest.skip("Skipping duplicate test.")
     elif _windows_can_symlink() or not run_as_root:
-        monkeypatch.setattr(llnl.util.symlink, '_windows_can_symlink', lambda: run_as_root)
+        monkeypatch.setattr(llnl.util.symlink, "_windows_can_symlink", lambda: run_as_root)
     else:
         # Skip if trying to run as dev-mode without having dev-mode.
-        pytest.skip('Skipping portion of test which required dev-mode privileges.')
+        pytest.skip("Skipping portion of test which required dev-mode privileges.")
 
     with working_dir(stage.path):
         touchp("dest/x")
@@ -150,7 +150,7 @@ def test_merge_to_existing_directory(stage, link_tree, monkeypatch, run_as_root)
             ("dest/c/4", "source/c/4"),
             ("dest/c/d/5", "source/c/d/5"),
             ("dest/c/d/6", "source/c/d/6"),
-            ("dest/c/d/e/7", "source/c/d/e/7")
+            ("dest/c/d/e/7", "source/c/d/e/7"),
         ]
         for dest, source in files:
             check_file_link(dest, source)
