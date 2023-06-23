@@ -150,7 +150,6 @@ class TestInstall:
                 fs.install("source/a/*/*", "dest/1")
 
 
-@pytest.mark.skipif(sys.platform == "win32", reason="Skip test on Windows")
 class TestCopyTree:
     """Tests for ``filesystem.copy_tree``"""
 
@@ -189,7 +188,7 @@ class TestCopyTree:
     def test_symlinks_true_ignore(self, stage):
         """Test copying when specifying relative paths that should be ignored"""
         with fs.working_dir(str(stage)):
-            ignore = lambda p: p in ["c/d/e", "a"]
+            ignore = lambda p: p in [os.path.join("c", "d", "e"), "a"]
             fs.copy_tree("source", "dest", symlinks=True, ignore=ignore)
             assert not os.path.exists("dest/a")
             assert os.path.exists("dest/c/d")
@@ -231,7 +230,6 @@ class TestCopyTree:
                 fs.copy_tree("source", "source/sub/directory")
 
 
-@pytest.mark.skipif(sys.platform == "win32", reason="Skip test on Windows")
 class TestInstallTree:
     """Tests for ``filesystem.install_tree``"""
 
