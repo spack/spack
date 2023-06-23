@@ -98,14 +98,6 @@ class PyPytorchLightning(PythonPackage):
     depends_on("py-tensorboard@2.9.1:", when="@1.7:1.8.2", type=("build", "run"))
     depends_on("py-tensorboard@2.2.0:", when="@1.5:1.6", type=("build", "run"))
     depends_on("py-tensorboard@2.2.0:2.4,2.5.1:", when="@:1.4", type=("build", "run"))
-    depends_on("py-gcsfs@2021.5:", when="@1.4:1.7+extra", type=("build", "run"))
-    depends_on("py-horovod@0.21.2:0.23,0.24.1:", when="@:1.6.3+extra", type=("build", "run"))
-    depends_on("py-onnx@1.7:", when="@1.5+extra", type=("build", "run"))
-    depends_on("py-onnxruntime@1.3:", when="@:1.5+extra", type=("build", "run"))
-    depends_on("py-torchtext@0.10:", when="@1.7+extra", type=("build", "run"))
-    depends_on("py-torchtext@0.9:", when="@1.6+extra", type=("build", "run"))
-    depends_on("py-torchtext@0.7:", when="@1.5+extra", type=("build", "run"))
-    depends_on("py-torchtext@0.5:", when="@:1.4+extra", type=("build", "run"))
 
     # https://github.com/Lightning-AI/lightning/issues/16637
     conflicts("^py-torch~distributed", when="@1.9.0")
