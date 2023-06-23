@@ -481,6 +481,7 @@ categorize_arguments() {
     return_lib_dirs_list=""
     return_system_rpath_dirs_list=""
     return_rpath_dirs_list=""
+    return_opt_flag=""
 
     # Global state for keeping track of -Wl,-rpath -Wl,/path
     wl_expect_rpath=no
@@ -551,6 +552,9 @@ categorize_arguments() {
                 else
                     append return_isystem_include_dirs_list "$arg"
                 fi
+                ;;
+            -O*)
+                   return_opt_flag="$1"
                 ;;
             -I*)
                 arg="${1#-I}"
@@ -671,6 +675,7 @@ categorize_arguments "$@"
     isystem_system_include_dirs_list="$return_isystem_system_include_dirs_list"
     isystem_include_dirs_list="$return_isystem_include_dirs_list"
     other_args_list="$return_other_args_list"
+    opt_flag="$return_opt_flag"
 
 #
 # Add flags from Spack's cppflags, cflags, cxxflags, fcflags, fflags, and
@@ -748,7 +753,10 @@ unset IFS
         spack_flags_isystem_system_include_dirs_list="$return_isystem_system_include_dirs_list"
         spack_flags_isystem_include_dirs_list="$return_isystem_include_dirs_list"
         spack_flags_other_args_list="$return_other_args_list"
-
+        if [ ! ${opt_flag#-O} == "0" ]; then
+            # assume the package maintainers have a good reason
+            opt_flag="$return_opt_flag"
+        fi
 
 # On macOS insert headerpad_max_install_names linker flag
 if [ "$mode" = ld ] || [ "$mode" = ccld ]; then
@@ -802,6 +810,10 @@ esac
 # Finally, reassemble the command line.
 #
 args_list="$flags_list"
+
+if [ ! -z $opt_flag ] ; then
+    append args_list "$opt_flag"
+fi
 
 # Insert include directories just prior to any system include directories
 # NOTE: adding ${lsep} to the prefix here turns every added element into two
