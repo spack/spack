@@ -19,6 +19,7 @@ class Brion(CMakePackage):
 
     version("develop", branch="master")
     version("3.3.9", tag="3.3.9", submodules=False)
+    version("3.3.12", tag="3.3.12", submodules=False)
 
     variant("python", default=False, description="Build Python wrapping")
     variant("doc", default=False, description="Build documentation")
