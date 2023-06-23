@@ -72,7 +72,7 @@ class Ucx(AutotoolsPackage, CudaPackage):
         description="Build shared libs, static libs or both",
     )
     variant("logging", default=False, description="Enable logging")
-    variant("numa", default=False, description="Enable NUMA support")
+    variant("numa", default=True, description="Enable NUMA support")
     variant("openmp", default=True, description="Use OpenMP")
     variant(
         "opt",
