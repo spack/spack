@@ -305,11 +305,12 @@ class Hpctoolkit(AutotoolsPackage):
     @run_after("install")
     @on_package_attributes(run_tests=True)
     def check_install(self):
-        if self.spec.satisfies("@2022:"):
-            with working_dir("tests"):
-                make("check")
-        else:
-            tty.warn("spack test for hpctoolkit requires 2022.01.15 or later")
+        if not self.spec.satisfies("@2022:"):
+            tty.warn("requires 2022.01.15 or later")
+            return
+
+        with working_dir("tests"):
+            make("check")
 
     # Post-Install tests (spack test run).  These are the same tests
     # but with a different Makefile that works outside the build
@@ -319,13 +320,17 @@ class Hpctoolkit(AutotoolsPackage):
         if self.spec.satisfies("@2022:"):
             self.cache_extra_test_sources(["tests"])
 
-    def test(self):
-        test_dir = join_path(self.test_suite.current_test_cache_dir, "tests")
-        if self.spec.satisfies("@2022:"):
-            with working_dir(test_dir):
-                make("-f", "Makefile.spack", "all")
-                self.run_test(
-                    "./run-sort", status=[0], installed=False, purpose="selection sort unit test"
-                )
-        else:
-            tty.warn("spack test for hpctoolkit requires 2022.01.15 or later")
+    def test_run_sort(self):
+        """build and run selection sort unit test"""
+        if not self.spec.satisfies("@2022:"):
+            raise SkipTest("No tests exist for versions prior to 2022.01.15")
+
+        test_dir = self.test_suite.current_test_cache_dir.tests
+        with working_dir(test_dir):
+            make = which("make")
+            make("-f", "Makefile.spack", "all")
+
+            run_sort = which(join_path(".", "run-sort"))
+            assert run_sort, "run-sort is missing"
+
+            run_sort()
