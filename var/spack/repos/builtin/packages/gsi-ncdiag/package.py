@@ -10,10 +10,12 @@ class GsiNcdiag(CMakePackage):
     """GSI NetCDF Diagnostics Library and Utility Tools"""
 
     homepage = "https://github.com/NOAA-EMC/GSI-ncdiag"
-    url = "https://github.com/NOAA-EMC/GSI-ncdiag/archive/refs/tags/v1.0.0.tar.gz"
+    url = "https://github.com/NOAA-EMC/GSI-ncdiag/archive/refs/tags/v1.1.1.tar.gz"
 
     maintainers("ulmononian")
 
+    version("1.1.1", sha256="29ac8c22d2bbf11d5b437cbd53168aef99cdaa2c17d9a9c30b49fae4f7c6b1f2")
+    version("1.1.0", sha256="9195801301209d6f93890944d58ffee4e24a4e35502ab27560a8c440ee53df4c")
     version("1.0.0", sha256="7251d6139c2bc1580db5f7f019e10a4c73d188ddd52ccf21ecc9e39d50a6af51")
 
     variant("serial", default=True, description="Enable Serial NetCDF diagnostics")
