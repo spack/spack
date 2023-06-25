@@ -9,6 +9,7 @@ import socket
 import sys
 import time
 from datetime import datetime
+from pathlib import Path
 
 import llnl.util.tty as tty
 from llnl.util.lang import pretty_seconds
@@ -92,6 +93,7 @@ class OpenFileTracker(object):
         Arguments:
           path (str): path to lock file we want a filehandle for
         """
+        path = Path(path)
         # Open writable files as 'r+' so we can upgrade to write later
         os_mode, fh_mode = (os.O_RDWR | os.O_CREAT), "r+"
 
@@ -110,7 +112,7 @@ class OpenFileTracker(object):
                 raise
 
             # path does not exist -- fail if we won't be able to create it
-            parent = os.path.dirname(path) or "."
+            parent = path.parent or "."
             if not os.access(parent, os.W_OK):
                 raise CantCreateLockError(path)
 
@@ -122,7 +124,7 @@ class OpenFileTracker(object):
                 # an exclusive (write) lock on it)
                 os_mode, fh_mode = os.O_RDONLY, "r"
 
-            fd = os.open(path, os_mode)
+            fd = os.open(str(path), os_mode)
             fh = os.fdopen(fd, fh_mode)
             open_file = OpenFile(fh)
 
@@ -229,7 +231,7 @@ class Lock(object):
             desc (str): optional debug message lock description, which is
                 helpful for distinguishing between different Spack locks.
         """
-        self.path = path
+        self.path = Path(path)
         self._file = None
         self._reads = 0
         self._writes = 0
@@ -360,7 +362,7 @@ class Lock(object):
                 self._read_log_debug_data()
                 self._log_debug(
                     "{0} locked {1} [{2}:{3}] (owner={4})".format(
-                        LockType.to_str(op), self.path, self._start, self._length, self.pid
+                        LockType.to_str(op), str(self.path), self._start, self._length, self.pid
                     )
                 )
 
@@ -378,10 +380,10 @@ class Lock(object):
         return False
 
     def _ensure_parent_directory(self):
-        parent = os.path.dirname(self.path)
+        parent = self.path.parent
 
         # relative paths to lockfiles in the current directory have no parent
-        if not parent:
+        if parent == parent.parent:
             return "."
 
         try:
@@ -392,9 +394,9 @@ class Lock(object):
             # are fine if we ensure that the directory exists.
             # Python 3 allows an exist_ok parameter and ignores any OSError as long as
             # the directory exists.
-            if not (e.errno == errno.EISDIR or os.path.isdir(parent)):
+            if not (e.errno == errno.EISDIR or parent.is_dir()):
                 raise
-        return parent
+        return str(parent)
 
     def _read_log_debug_data(self):
         """Read PID and host data out of the file if it is there."""
@@ -625,7 +627,7 @@ class Lock(object):
 
     def cleanup(self):
         if self._reads == 0 and self._writes == 0:
-            os.unlink(self.path)
+            self.path.unlink()
         else:
             raise LockError("Attempting to cleanup active lock.")
 
@@ -797,7 +799,7 @@ class LockUpgradeError(LockError):
     """Raised when unable to upgrade from a read to a write lock."""
 
     def __init__(self, path):
-        msg = "Cannot upgrade lock from read to write on file: %s" % path
+        msg = "Cannot upgrade lock from read to write on file: %s" % str(path)
         super(LockUpgradeError, self).__init__(msg)
 
 
@@ -809,7 +811,7 @@ class LockROFileError(LockPermissionError):
     """Tried to take an exclusive lock on a read-only file."""
 
     def __init__(self, path):
-        msg = "Can't take write lock on read-only file: %s" % path
+        msg = "Can't take write lock on read-only file: %s" % str(path)
         super(LockROFileError, self).__init__(msg)
 
 
@@ -817,6 +819,6 @@ class CantCreateLockError(LockPermissionError):
     """Attempt to create a lock in an unwritable location."""
 
     def __init__(self, path):
-        msg = "cannot create lock '%s': " % path
+        msg = "cannot create lock '%s': " % str(path)
         msg += "file does not exist and location is not writable"
         super(LockError, self).__init__(msg)

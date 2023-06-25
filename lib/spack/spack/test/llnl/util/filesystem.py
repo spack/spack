@@ -9,6 +9,7 @@ import os
 import shutil
 import stat
 import sys
+from pathlib import Path
 
 import pytest
 
@@ -375,11 +376,16 @@ def test_recursive_search_of_headers_from_prefix(installation_dir_with_headers):
 
 if sys.platform == "win32":
     dir_list = [
-        (["C:/pfx/include/foo.h", "C:/pfx/include/subdir/foo.h"], ["C:/pfx/include"]),
-        (["C:/pfx/include/foo.h", "C:/pfx/subdir/foo.h"], ["C:/pfx/include", "C:/pfx/subdir"]),
+        (["C:/pfx/include/foo.h", "C:\\pfx\\include\\subdir\\foo.h"], ["C:\\pfx\\include"]),
+        (["C:\\pfx\\include\\foo.h", "C:\\pfx\\include\\subdir\\foo.h"], ["C:\\pfx\\include"]),
+        (["C:/pfx/include/foo.h", "C:/pfx/include/subdir/foo.h"], ["C:\\pfx\\include"]),
         (
-            ["C:/pfx/include/subdir/foo.h", "C:/pfx/subdir/foo.h"],
-            ["C:/pfx/include", "C:/pfx/subdir"],
+            ["C:\\pfx\\include\\foo.h", "C:\\pfx\\subdir\\foo.h"],
+            ["C:\\pfx\\include", "C:\\pfx\\subdir"],
+        ),
+        (
+            ["C:\\pfx\\include\\subdir\\foo.h", "C:\\pfx\\subdir\\foo.h"],
+            ["C:\\pfx\\include", "C:\\pfx\\subdir"],
         ),
     ]
 else:
@@ -461,8 +467,8 @@ def test_partition_path(path, entry, expected):
 if sys.platform == "win32":
     path_list = [
         ("", []),
-        (r".\some\sub\dir", [r".\some", r".\some\sub", r".\some\sub\dir"]),
-        (r"another\sub\dir", [r"another", r"another\sub", r"another\sub\dir"]),
+        (r".\some\sub\dir", [Path(r".\some"), Path(r".\some\sub"), Path(r".\some\sub\dir")]),
+        (r"another\sub\dir", [Path(r"another"), Path(r"another\sub"), Path(r"another\sub\dir")]),
     ]
 else:
     path_list = [

@@ -5,7 +5,6 @@
 import inspect
 import os
 import platform
-import posixpath
 import sys
 
 import pytest
@@ -337,9 +336,9 @@ def test_wrapper_variables(
         ]
     )
     cuda_include_dirs = cuda_headers.directories
-    assert posixpath.join("prefix", "include") in cuda_include_dirs
+    assert os.path.join("prefix", "include") in cuda_include_dirs
     assert (
-        posixpath.join("prefix", "include", "cuda", "std", "detail", "libcxx", "include")
+        os.path.join("prefix", "include", "cuda", "std", "detail", "libcxx", "include")
         not in cuda_include_dirs
     )
 
