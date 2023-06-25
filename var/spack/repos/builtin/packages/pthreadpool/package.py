@@ -27,7 +27,7 @@ class Pthreadpool(CMakePackage):
     resource(
         name="fxdiv",
         git="https://github.com/Maratyszcza/FXdiv.git",
-        branch="master",
+        commit="b408327ac2a15ec3e43352421954f5b1967701d1",
         destination="deps",
         placement="fxdiv",
     )
