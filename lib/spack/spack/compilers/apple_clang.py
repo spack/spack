@@ -7,8 +7,8 @@ import re
 import shutil
 
 import llnl.util.lang
+import llnl.util.symlink as symlink
 import llnl.util.tty as tty
-from llnl.util.symlink import symlink
 
 import spack.compiler
 import spack.compilers.clang
@@ -216,11 +216,11 @@ class AppleClang(spack.compilers.clang.Clang):
                 for fname in os.listdir(dev_dir):
                     if fname in bins:
                         os.unlink(os.path.join(dev_dir, fname))
-                        symlink(
+                        symlink.symlink(
                             os.path.join(spack.paths.build_env_path, "cc"),
                             os.path.join(dev_dir, fname),
                         )
 
-            symlink(developer_root, xcode_link)
+            symlink.symlink(developer_root, xcode_link)
 
         env.set("DEVELOPER_DIR", xcode_link)
