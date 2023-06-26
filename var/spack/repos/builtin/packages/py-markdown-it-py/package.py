@@ -22,7 +22,7 @@ class PyMarkdownItPy(PythonPackage):
     depends_on("python@3.6:3", when="@:2.0", type=("build", "run"))
     depends_on("py-flit-core@3.4:3", when="@2.1:", type="build")
 
-    depends_on("py-mdurl@0.1:0", when="@2:",  type=("build", "run"))
+    depends_on("py-mdurl@0.1:0", when="@2:", type=("build", "run"))
 
     # Historical dependencies
     depends_on("py-setuptools", when="@:2.0", type="build")
