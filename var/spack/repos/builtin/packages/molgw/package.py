@@ -31,7 +31,6 @@ class Molgw(MakefilePackage):
     variant("openmp", default=False, description="Build with OpenMP support")
     variant("scalapack", default=False, description="Build with ScaLAPACK support")
 
-    # dependences
     depends_on("blas")
     depends_on("lapack")
     depends_on("libxc@5:")
