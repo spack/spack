@@ -277,11 +277,13 @@ def paths_containing_libs(paths, library_names):
 def is_str_valid_path(path):
     """Return True if string 'path' could represent a legal
     path on the current filesystem and contains at least one path sep.
-    'path' does not need to be writeable - just a properly formed path.
+    'path' does not need to be writeable or exist - just a properly formed path.
     Returns false otherwise"""
-    ret = False if os.path.sep not in path else True
-    if not ret:
-        return ret
+    ret = True
+    if not isinstance(path, str):
+        return False
+    if os.path.sep not in path:
+        return False
     try:
         os.lstat(path)
     except OSError as exc:
