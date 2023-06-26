@@ -49,8 +49,6 @@ def test_relative_path_to_file_url(tmpdir):
 def test_url_join_local_paths():
     # Resolve local link against page URL
 
-    # import pdb; pdb.set_trace()
-
     # wrong:
     assert (
         url_util.join("s3://bucket/index.html", "../other-bucket/document.txt")

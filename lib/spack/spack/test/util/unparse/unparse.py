@@ -13,7 +13,7 @@ import pytest
 import spack.util.unparse
 
 pytestmark = pytest.mark.skipif(
-    True or sys.platform == "win32", reason="Test module unsupported on Windows"
+    sys.platform == "win32", reason="Test module unsupported on Windows"
 )
 
 
