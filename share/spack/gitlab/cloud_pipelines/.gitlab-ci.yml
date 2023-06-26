@@ -744,7 +744,7 @@ deprecated-ci-build:
       - sed -i.bkp s/"spack install gcc"/"spack install --cache-only --reuse gcc"/ postinstall.sh
       - diff postinstall.sh postinstall.sh.bkp || echo Done
       - /bin/bash postinstall.sh -fg
-      - spack config --scope site add "packages:all:target:\"${SPACK_TARGET_ARCH}\""
+      - spack config --scope site add "packages:all:target:[${SPACK_TARGET_ARCH}]"
   after_script:
     - - mv "${CI_PROJECT_DIR}/postinstall.sh" "${CI_PROJECT_DIR}/jobs_scratch_dir/"
 
