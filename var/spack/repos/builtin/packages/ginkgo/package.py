@@ -24,7 +24,8 @@ class Ginkgo(CMakePackage, CudaPackage, ROCmPackage):
 
     version("develop", branch="develop")
     version("master", branch="master")
-    version("1.5.0", commit="234594c92b58e2384dfb43c2d08e7f43e2b58e7a", preferred=True)  # v1.5.0
+    version("1.6.0", commit="1f1ed46e724334626f016f105213c047e16bc1ae", preferred=True)  # v1.6.0
+    version("1.5.0", commit="234594c92b58e2384dfb43c2d08e7f43e2b58e7a")  # v1.5.0
     version("1.5.0.glu_experimental", branch="glu_experimental")
     version("1.4.0", commit="f811917c1def4d0fcd8db3fe5c948ce13409e28e")  # v1.4.0
     version("1.3.0", commit="4678668c66f634169def81620a85c9a20b7cec78")  # v1.3.0
@@ -74,17 +75,15 @@ class Ginkgo(CMakePackage, CudaPackage, ROCmPackage):
     conflicts("^rocprim@4.1.0:", when="@:1.3.0")
 
     # Skip smoke tests if compatible hardware isn't found
-    patch("1.4.0_skip_invalid_smoke_tests.patch", when="@master")
     patch("1.4.0_skip_invalid_smoke_tests.patch", when="@1.4.0")
 
     # Newer DPC++ compilers use the updated SYCL 2020 standard which change
     # kernel attribute propagation rules. This doesn't work well with the
     # initial Ginkgo oneAPI support.
-    patch("1.4.0_dpcpp_use_old_standard.patch", when="+oneapi @master")
     patch("1.4.0_dpcpp_use_old_standard.patch", when="+oneapi @1.4.0")
 
     # Add missing include statement
-    patch("thrust-count-header.patch", when="+rocm @1.5.0:")
+    patch("thrust-count-header.patch", when="+rocm @1.5.0")
 
     def setup_build_environment(self, env):
         spec = self.spec
