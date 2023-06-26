@@ -71,9 +71,6 @@ class Molgw(MakefilePackage):
                 command.extend(["-m", "mpich2"])
             elif "intelmpi" in spec:
                 command.extend(["-m", "intelmpi"])
-        # only works with recent python3
-        # result = run(command,capture_output=True, text=True)
-        # return result.stdout.strip()
         result = run(command, stdout=PIPE)
         # with open("my_machine.arch", "w") as f:
         #    f.write("#" + " ".join(command) + "\n")
