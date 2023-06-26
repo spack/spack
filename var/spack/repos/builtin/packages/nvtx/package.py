@@ -42,7 +42,7 @@ class Nvtx(Package, PythonExtension):
         install("c/nvtxImportedTargets.cmake", prefix)
         install("./LICENSE.txt", prefix)
 
-        install("./nvtx-config.cmake", prefix) # added by the patch above
+        install("./nvtx-config.cmake", prefix)  # added by the patch above
 
         args = std_pip_args + ["--prefix=" + prefix, "."]
         with working_dir(self.build_directory):
