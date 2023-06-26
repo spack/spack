@@ -188,6 +188,7 @@ class Kokkos(CMakePackage, CudaPackage, ROCmPackage):
 
     # In 4.0.00 and up (including master/develop), cuda_lambda is ON by default.
     # Otherwise, it is OFF by default.
+    options_values.append("cuda_lambda")
     variant("cuda_lambda", default=True, when="@4.0.00:", description="Activate experimental lambda features")
     variant("cuda_lambda", default=False, when="@:3.7.02", description="Activate experimental lambda features")
     conflicts("+cuda_lambda", when="~cuda", msg="Must enable CUDA to use cuda_lambda")
