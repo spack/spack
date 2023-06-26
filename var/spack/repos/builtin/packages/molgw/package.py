@@ -72,9 +72,6 @@ class Molgw(MakefilePackage):
             elif "intelmpi" in spec:
                 command.extend(["-m", "intelmpi"])
         result = run(command, stdout=PIPE)
-        # with open("my_machine.arch", "w") as f:
-        #    f.write("#" + " ".join(command) + "\n")
-        #    f.write("#" + result.stdout.decode(encoding="utf-8").strip() + "\n")
         return result.stdout.decode(encoding="utf-8").strip()
 
     def edit(self, spec, prefix):
