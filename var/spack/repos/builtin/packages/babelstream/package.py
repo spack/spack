@@ -15,7 +15,7 @@ def find_model_flag(str):
     return res
 
 
-class Babelstream(CMakePackage, CudaPackage, ROCmPackage):
+class LcalBabelstream(CMakePackage, CudaPackage, ROCmPackage):
     """Measure memory transfer rates to/from global device memory on GPUs.
     This benchmark is similar in spirit, and based on, the STREAM benchmark for CPUs."""
 
@@ -24,7 +24,7 @@ class Babelstream(CMakePackage, CudaPackage, ROCmPackage):
     git = "https://github.com/UoB-HPC/BabelStream.git"
     version("4.0", sha256="a9cd39277fb15d977d468435eb9b894f79f468233f0131509aa540ffda4f5953")
     version("main", branch="main")
-    version("develop", branch="develop")
+    version("openmp", branch="openmp")
 
     maintainers("tomdeakin", "kaanolgu", "tom91136", "robj0nes")
 
@@ -71,7 +71,7 @@ class Babelstream(CMakePackage, CudaPackage, ROCmPackage):
     variant("mem", values=str, default="DEFAULT", description="Enable MEM Target for CUDA")
     # Raja Conflict
     variant(
-        "offload", values=str, default="none", description="Enable RAJA Target [CPU or NVIDIA]"
+        "offload", values=str, default="none", description="Enable RAJA Target [CPU or NVIDIA] / Offload with custom settings for OpenMP"
     )
     conflicts(
         "offload=none",
@@ -106,7 +106,8 @@ class Babelstream(CMakePackage, CudaPackage, ROCmPackage):
             SIMPLE   - Recursively split its range until it cannot be further subdivided.\
             See https://spec.oneapi.com/versions/latest/elements/oneTBB/source/algorithms.html#partitioners for more details.",
     )
-
+    #OpenMP Intel Offload 
+    variant("intel_target", values=str, default="none", description="Intel Offload target")
     # Kokkos Dependency
     depends_on("kokkos@3.7.1", when="+kokkos")
 
@@ -245,8 +246,14 @@ class Babelstream(CMakePackage, CudaPackage, ROCmPackage):
                 rocm_arch = self.spec.variants["amdgpu_target"].value
                 # the architecture value is only number so append sm_ to the name
                 args.append("-DOFFLOAD=" + " AMD:" + rocm_arch)
-            else:
+            elif ("intel_target" in self.spec.variants) and (self.spec.variants["intel_target"].value != "none"):
                 args.append("-DOFFLOAD=" + "INTEL")
+            elif "offload" in self.spec.variants and (self.spec.variants["offload"].value != "none"):
+                args.append("-DOFFLOAD=" + "ON")
+                args.append("-DOFFLOAD_FLAGS=" + self.spec.variants["offload"].value)
+            else:
+                args.append("-DOFFLOAD=" + "OFF")
+
 
         # ===================================
         #             SYCL
