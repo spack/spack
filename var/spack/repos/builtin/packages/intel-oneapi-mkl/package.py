@@ -181,8 +181,12 @@ class IntelOneapiMkl(IntelOneApiLibraryPackage):
             elif self.spec.satisfies("^openmpi"):
                 libs.append(self._xlp64_lib("libmkl_blacs_openmpi"))
             else:
-                raise RuntimeError("intel-oneapi-mpi +cluster requires one of ^intel-oneapi-mpi, ^intel-mpi, ^mpich, or ^openmpi")
-
+                raise RuntimeError(
+                    (
+                        "intel-oneapi-mpi +cluster requires one of "
+                        "^intel-oneapi-mpi, ^intel-mpi, ^mpich, or ^openmpi"
+                    )
+                )
 
         lib_path = self.component_prefix.lib.intel64
         lib_path = lib_path if isdir(lib_path) else dirname(lib_path)
