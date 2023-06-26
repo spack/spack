@@ -409,7 +409,7 @@ class Stage(object):
         if possible_filenames:
             # We use per_package_ref (package name, version and extension).
             # See mirror_archive_paths for more information.
-            return possible_filenames[len(possible_filenames) - 1]
+            return possible_filenames[-1]
 
     @property
     def archive_file(self):
