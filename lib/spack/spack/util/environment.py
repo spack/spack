@@ -776,16 +776,21 @@ class EnvironmentModifications:
                 "PS1",
                 "PS2",
                 "ENV",
-                # Environment modules v4
+                # Environment Modules or Lmod
                 "LOADEDMODULES",
                 "_LMFILES_",
-                "BASH_FUNC_module()",
                 "MODULEPATH",
-                "MODULES_(.*)",
-                r"(\w*)_mod(quar|share)",
-                # Lmod configuration
-                r"LMOD_(.*)",
                 "MODULERCFILE",
+                "BASH_FUNC_ml()",
+                "BASH_FUNC_module()",
+                # Environment Modules-specific configuration
+                "MODULESHOME",
+                "BASH_FUNC__module_raw()",
+                r"MODULES_(.*)",
+                r"__MODULES_(.*)",
+                r"(\w*)_mod(quar|share)",
+                # Lmod-specific configuration
+                r"LMOD_(.*)",
             ]
         )
 
