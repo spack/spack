@@ -40,7 +40,7 @@ from typing import Optional
 
 import llnl.util.filesystem
 import llnl.util.tty as tty
-from llnl.util.lang import dedupe
+from llnl.util.lang import dedupe, memoized
 
 import spack.build_environment
 import spack.config
@@ -671,7 +671,14 @@ class BaseContext(tengine.Context):
         # the configure option section
         return None
 
+    def modification_needs_formatting(self, modification):
+        """Returns True if environment modification entry needs to be formatted."""
+        return (
+            not isinstance(modification, (spack.util.environment.SetEnv)) or not modification.raw
+        )
+
     @tengine.context_property
+    @memoized
     def environment_modifications(self):
         """List of environment modifications to be processed."""
         # Modifications guessed by inspecting the spec prefix
@@ -733,14 +740,28 @@ class BaseContext(tengine.Context):
             _check_tokens_are_valid(x.name, message=msg)
             # Transform them
             x.name = spec.format(x.name, transform=transform)
-            try:
-                # Not every command has a value
-                x.value = spec.format(x.value)
-            except AttributeError:
-                pass
+            if self.modification_needs_formatting(x):
+                try:
+                    # Not every command has a value
+                    x.value = spec.format(x.value)
+                except AttributeError:
+                    pass
             x.name = str(x.name).replace("-", "_")
 
         return [(type(x).__name__, x) for x in env if x.name not in exclude]
+
+    @tengine.context_property
+    def has_manpath_modifications(self):
+        """True if MANPATH environment variable is modified."""
+        for modification_type, cmd in self.environment_modifications:
+            if not isinstance(
+                cmd, (spack.util.environment.PrependPath, spack.util.environment.AppendPath)
+            ):
+                continue
+            if cmd.name == "MANPATH":
+                return True
+        else:
+            return False
 
     @tengine.context_property
     def autoload(self):
