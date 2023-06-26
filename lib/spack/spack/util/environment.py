@@ -171,7 +171,11 @@ def path_put_first(var_name: str, directories: List[Path]):
 BASH_FUNCTION_FINDER = re.compile(r"BASH_FUNC_(.*?)\(\)")
 
 
-def _env_var_to_source_line(var: str, val: str) -> str:
+def _win_env_var_to_set_line(var: str, val: str) -> str:
+    return f'set "{var}={val}"'
+
+
+def _nix_env_var_to_source_line(var: str, val: str) -> str:
     if var.startswith("BASH_FUNC"):
         source_line = "function {fname}{decl}; export -f {fname}".format(
             fname=BASH_FUNCTION_FINDER.sub(r"\1", var), decl=val
@@ -179,6 +183,13 @@ def _env_var_to_source_line(var: str, val: str) -> str:
     else:
         source_line = f"{var}={double_quote_escape(val)}; export {var}"
     return source_line
+
+
+def _env_var_to_source_line(var: str, val: str) -> str:
+    if sys.platform == "win32":
+        return _win_env_var_to_set_line(var, val)
+    else:
+        return _nix_env_var_to_source_line(var, val)
 
 
 @system_path_filter(arg_slice=slice(1))
@@ -340,13 +351,20 @@ class NameValueModifier:
 
 
 class SetEnv(NameValueModifier):
-    __slots__ = ("force",)
+    __slots__ = ("force", "raw")
 
     def __init__(
-        self, name: str, value: str, *, trace: Optional[Trace] = None, force: bool = False
+        self,
+        name: str,
+        value: str,
+        *,
+        trace: Optional[Trace] = None,
+        force: bool = False,
+        raw: bool = False,
     ):
         super().__init__(name, value, trace=trace)
         self.force = force
+        self.raw = raw
 
     def execute(self, env: MutableMapping[str, str]):
         tty.debug(f"SetEnv: {self.name}={str(self.value)}", level=3)
@@ -490,15 +508,16 @@ class EnvironmentModifications:
         return Trace(filename=filename, lineno=lineno, context=current_context)
 
     @system_env_normalize
-    def set(self, name: str, value: str, *, force: bool = False):
+    def set(self, name: str, value: str, *, force: bool = False, raw: bool = False):
         """Stores a request to set an environment variable.
 
         Args:
             name: name of the environment variable
             value: value of the environment variable
             force: if True, audit will not consider this modification a warning
+            raw: if True, format of value string is skipped
         """
-        item = SetEnv(name, value, trace=self._trace(), force=force)
+        item = SetEnv(name, value, trace=self._trace(), force=force, raw=raw)
         self.env_modifications.append(item)
 
     @system_env_normalize

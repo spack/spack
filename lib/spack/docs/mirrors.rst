@@ -163,7 +163,7 @@ your site.
 Mirror environment
 ^^^^^^^^^^^^^^^^^^
 
-To create a mirror of all packages required by a concerte environment, activate the environment and call ``spack mirror create -a``.
+To create a mirror of all packages required by a concrete environment, activate the environment and call ``spack mirror create -a``.
 This is especially useful to create a mirror of an environment concretized on another machine.
 
 .. code-block:: console

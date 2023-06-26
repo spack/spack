@@ -153,6 +153,8 @@ class Hiop(CMakePackage, CudaPackage, ROCmPackage):
         args.extend(
             [
                 self.define("HIOP_BUILD_STATIC", True),
+                self.define("BLAS_FOUND", True),
+                self.define("BLAS_LIBRARIES", spec["blas"].libs),
                 self.define("LAPACK_FOUND", True),
                 self.define("LAPACK_LIBRARIES", spec["lapack"].libs + spec["blas"].libs),
                 self.define_from_variant("HIOP_BUILD_SHARED", "shared"),

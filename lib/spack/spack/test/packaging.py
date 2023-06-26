@@ -100,7 +100,7 @@ echo $PATH"""
     parser = argparse.ArgumentParser()
     buildcache.setup_parser(parser)
 
-    create_args = ["create", "-a", "-f", "-d", mirror_path, pkghash]
+    create_args = ["create", "-a", "-f", mirror_path, pkghash]
     # Create a private key to sign package with if gpg2 available
     spack.util.gpg.create(
         name="test key 1", expires="0", email="spack@googlegroups.com", comment="Spack test key"
@@ -116,7 +116,7 @@ echo $PATH"""
     # Uninstall the package
     pkg.do_uninstall(force=True)
 
-    install_args = ["install", "-a", "-f", pkghash]
+    install_args = ["install", "-f", pkghash]
     args = parser.parse_args(install_args)
     # Test install
     buildcache.buildcache(parser, args)
@@ -130,30 +130,6 @@ echo $PATH"""
     buildinfo = bindist.read_buildinfo_file(spec.prefix)
     assert buildinfo["relocate_textfiles"] == ["dummy.txt"]
     assert buildinfo["relocate_links"] == ["link_to_dummy.txt"]
-
-    # create build cache with relative path
-    create_args.insert(create_args.index("-a"), "-f")
-    create_args.insert(create_args.index("-a"), "-r")
-    args = parser.parse_args(create_args)
-    buildcache.buildcache(parser, args)
-
-    # Uninstall the package
-    pkg.do_uninstall(force=True)
-
-    args = parser.parse_args(install_args)
-    buildcache.buildcache(parser, args)
-
-    # test overwrite install
-    install_args.insert(install_args.index("-a"), "-f")
-    args = parser.parse_args(install_args)
-    buildcache.buildcache(parser, args)
-
-    files = os.listdir(spec.prefix)
-    assert "link_to_dummy.txt" in files
-    assert "dummy.txt" in files
-    #    assert os.path.realpath(
-    #        os.path.join(spec.prefix, 'link_to_dummy.txt')
-    #    ) == os.path.realpath(os.path.join(spec.prefix, 'dummy.txt'))
 
     args = parser.parse_args(["keys"])
     buildcache.buildcache(parser, args)
