@@ -671,6 +671,12 @@ class BaseContext(tengine.Context):
         # the configure option section
         return None
 
+    def modification_needs_formatting(self, modification):
+        """Returns True if environment modification entry needs to be formatted."""
+        return (
+            not isinstance(modification, (spack.util.environment.SetEnv)) or not modification.raw
+        )
+
     @tengine.context_property
     @memoized
     def environment_modifications(self):
@@ -734,11 +740,12 @@ class BaseContext(tengine.Context):
             _check_tokens_are_valid(x.name, message=msg)
             # Transform them
             x.name = spec.format(x.name, transform=transform)
-            try:
-                # Not every command has a value
-                x.value = spec.format(x.value)
-            except AttributeError:
-                pass
+            if self.modification_needs_formatting(x):
+                try:
+                    # Not every command has a value
+                    x.value = spec.format(x.value)
+                except AttributeError:
+                    pass
             x.name = str(x.name).replace("-", "_")
 
         return [(type(x).__name__, x) for x in env if x.name not in exclude]

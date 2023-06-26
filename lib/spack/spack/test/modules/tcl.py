@@ -182,6 +182,15 @@ class TestTcl(object):
         assert len([x for x in content if 'setenv MANPATH "/path/to/man"' in x]) == 1
         assert len([x for x in content if 'append-path --delim ":" MANPATH ""' in x]) == 0
 
+    @pytest.mark.regression("29578")
+    def test_setenv_raw_value(self, modulefile_content, module_configuration):
+        """Tests that we can set environment variable value without formatting it."""
+
+        module_configuration("autoload_direct")
+        content = modulefile_content("module-setenv-raw")
+
+        assert len([x for x in content if 'setenv FOO "{{name}}, {name}, {{}}, {}"' in x]) == 1
+
     def test_help_message(self, modulefile_content, module_configuration):
         """Tests the generation of module help message."""
 
