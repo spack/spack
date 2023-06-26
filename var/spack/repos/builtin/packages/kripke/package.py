@@ -35,6 +35,7 @@ class Kripke(CMakePackage, CudaPackage, ROCmPackage):
     depends_on("caliper", when="+caliper")
     depends_on("chai~examples+raja")
     depends_on("raja~exercises~examples")
+    depends_on("raja+openmp", when="+openmp")
     depends_on("umpire~examples")
 
     def cmake_args(self):
@@ -58,6 +59,9 @@ class Kripke(CMakePackage, CudaPackage, ROCmPackage):
         if "+mpi" in spec:
             args.append("-DENABLE_MPI=ON")
             args.append(self.define("CMAKE_CXX_COMPILER", self.spec["mpi"].mpicxx))
+
+        if "+openmp" in spec:
+            args.append("-DENABLE_OPENMP=ON")
 
         if "+rocm" in spec:
             # Set up the hip macros needed by the build
