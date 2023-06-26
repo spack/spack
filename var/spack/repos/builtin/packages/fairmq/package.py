@@ -41,6 +41,9 @@ class Fairmq(CMakePackage):
     # https://github.com/spack/spack/issues/14344
 
     variant(
+        "autobind", default=True, when="@1.7:", description="Override the channel autoBind default"
+    )
+    variant(
         "build_type",
         default="RelWithDebInfo",
         values=("Debug", "Release", "RelWithDebInfo"),
@@ -70,7 +73,8 @@ class Fairmq(CMakePackage):
         args = [
             self.define("DISABLE_COLOR", True),
             self.define_from_variant("BUILD_EXAMPLES", "examples"),
+            self.define_from_variant("FAIRMQ_CHANNEL_DEFAULT_AUTOBIND", "autobind"),
         ]
         if self.spec.variants["cxxstd"].value != "default":
             args.append(self.define_from_variant("CMAKE_CXX_STANDARD", "cxxstd"))
-        return args
+        return list(filter(bool, args))  # return non-falsy args
