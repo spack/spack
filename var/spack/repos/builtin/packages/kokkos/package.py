@@ -73,7 +73,6 @@ class Kokkos(CMakePackage, CudaPackage, ROCmPackage):
         "aggressive_vectorization": [False, "Aggressively vectorize loops"],
         "compiler_warnings": [False, "Print all compiler warnings"],
         "cuda_constexpr": [False, "Activate experimental constexpr features"],
-        "cuda_lambda": [False, "Activate experimental lambda features"],
         "cuda_ldg_intrinsic": [False, "Use CUDA LDG intrinsics"],
         "cuda_relocatable_device_code": [False, "Enable RDC for CUDA"],
         "cuda_uvm": [False, "Enable unified virtual memory (UVM) for CUDA"],
@@ -186,6 +185,12 @@ class Kokkos(CMakePackage, CudaPackage, ROCmPackage):
             conflicts("+%s" % opt, when="~cuda", msg="Must enable CUDA to use %s" % opt)
         dflt, desc = options_variants[opt]
         variant(opt, default=dflt, description=desc)
+
+    # In 4.0.00 and up (including master/develop), cuda_lambda is ON by default.
+    # Otherwise, it is OFF by default.
+    variant("cuda_lambda", default=True, when="@4.0.00:", description="Activate experimental lambda features")
+    variant("cuda_lambda", default=False, when="@:3.7.02", description="Activate experimental lambda features")
+    conflicts("+cuda_lambda", when="~cuda", msg="Must enable CUDA to use cuda_lambda")
 
     tpls_values = list(tpls_variants.keys())
     for tpl in tpls_values:
