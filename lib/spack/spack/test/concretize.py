@@ -18,6 +18,7 @@ import spack.concretize
 import spack.config
 import spack.deptypes as dt
 import spack.detection
+import spack.environment as ev
 import spack.error
 import spack.hash_types as ht
 import spack.platforms
@@ -25,8 +26,11 @@ import spack.repo
 import spack.solver.asp
 import spack.variant as vt
 from spack.concretize import find_spec
+from spack.main import SpackCommand
 from spack.spec import CompilerSpec, Spec
 from spack.version import Version, ver
+
+env = SpackCommand("env")
 
 
 def check_spec(abstract, concrete):
@@ -461,6 +465,37 @@ class TestConcretize:
 
     @pytest.mark.only_clingo(
         "Optional compiler propagation isn't deprecated for original concretizer"
+    )
+    @pytest.mark.parametrize("unify", [True, False, "when_possible"])
+    def test_concretize_environment_propagated_disabled_variant(self, unify, tmpdir, mutable_mock_env_path):
+        path = tmpdir.join("spack.yaml")
+
+        with tmpdir.as_cwd():
+            with open(str(path), "w") as f:
+                f.write(
+                    """\
+spack:
+  specs:
+    - hypre ~~shared ^openblas
+"""
+            )
+
+        env("create", "test", str(path))
+
+        test = ev.read("test")
+        test.unify = unify
+        test.concretize()
+
+        for spec in test.specs_by_hash.values():
+            for dep in spec.dependencies():
+                if dep.name == "openblas":
+                    assert dep.satisfies("~shared")
+                    assert dep.satisfies("^zlib ~shared")
+
+
+    @pytest.mark.skipif(
+        os.environ.get("SPACK_TEST_SOLVER") == "original",
+        reason="Optional compiler propagation isn't deprecated for original concretizer",
     )
     def test_concretize_propagate_disabled_variant(self):
         """Test a package variant value was passed from its parent."""
