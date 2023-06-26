@@ -3,10 +3,6 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-import os
-
-from llnl.util import tty
-
 from spack.package import *
 
 
@@ -21,6 +17,8 @@ class Tasmanian(CMakePackage, CudaPackage, ROCmPackage):
 
     tags = ["e4s"]
     maintainers("mkstoyanov")
+
+    test_requires_compiler = True
 
     version("develop", branch="master")
 
@@ -175,85 +173,39 @@ class Tasmanian(CMakePackage, CudaPackage, ROCmPackage):
 
         return args
 
-    # TODO: Replace this method and its 'get' use for cmake path with
-    #   join_path(self.spec['cmake'].prefix.bin, 'cmake') once stand-alone
-    #   tests can access build dependencies through self.spec['cmake'].
-    def cmake_bin(self, set=True):
-        """(Hack) Set/get cmake dependency path."""
-        filepath = join_path(self.install_test_root, "cmake_bin_path.txt")
-        if set:
-            with open(filepath, "w") as out_file:
-                cmake_bin = join_path(self.spec["cmake"].prefix.bin, "cmake")
-                out_file.write("{0}\n".format(cmake_bin))
-        elif os.path.isfile(filepath):
-            with open(filepath, "r") as in_file:
-                return in_file.read().strip()
-
     @run_after("install")
     def setup_smoke_test(self):
-        if not self.spec["cmake"].satisfies("@3.10:"):
-            tty.msg("Error tasmanian test: CMake 3.10 or higher is required")
-            return
-
         install_tree(
             self.prefix.share.Tasmanian.testing, join_path(self.install_test_root, "testing")
         )
-        self.cmake_bin(set=True)
 
-    def test(self):
-        cmake_bin = self.cmake_bin(set=False)
-
-        if not cmake_bin:
-            tty.msg("Skipping tasmanian test: cmake_bin_path.txt not found")
-            return
-
+    def test_make_test(self):
+        """build and run make(test)"""
         # using the tests copied from <prefix>/share/Tasmanian/testing
         cmake_dir = self.test_suite.current_test_cache_dir.testing
 
         options = [cmake_dir]
         if "+rocm" in self.spec:
             options.append(
-                "-DAMDDeviceLibs_DIR="
-                + join_path(self.spec["llvm-amdgpu"].prefix, "lib", "cmake", "AMDDeviceLibs")
+                f"-DAMDDeviceLibs_DIR={self.spec['llvm-amdgpu'].prefix.lib.cmake.AMDDeviceLibs}"
             )
+            options.append(f"-Damd_comgr_DIR={self.spec['comgr'].prefix.lib.cmake.amd_comgr}")
             options.append(
-                "-Damd_comgr_DIR="
-                + join_path(self.spec["comgr"].prefix, "lib", "cmake", "amd_comgr")
+                f"-Dhsa-runtime64_DIR={self.spec['hsa-rocr-dev'].prefix.lib.cmake.hsa-runtime64}"
             )
-            options.append(
-                "-Dhsa-runtime64_DIR="
-                + join_path(self.spec["hsa-rocr-dev"].prefix, "lib", "cmake", "hsa-runtime64")
-            )
-            options.append(
-                "-DHSA_HEADER=" + join_path(self.spec["hsa-rocr-dev"].prefix, "include")
-            )
-            options.append(
-                "-DCMAKE_INCLUDE_PATH="
-                + join_path(self.spec["hsa-rocr-dev"].prefix, "include", "hsa")
-            )
-            options.append(
-                "-Drocblas_DIR="
-                + join_path(self.spec["rocblas"].prefix, "lib", "cmake", "rocblas")
-            )
-            options.append(
-                "-Drocsparse_DIR="
-                + join_path(self.spec["rocsparse"].prefix, "lib", "cmake", "rocsparse")
-            )
-            options.append(
-                "-Drocsolver_DIR="
-                + join_path(self.spec["rocsolver"].prefix, "lib", "cmake", "rocsolver")
-            )
+            options.append(f"-DHSA_HEADER={self.spec['hsa-rocr-dev'].prefix.include}")
+            options.append(f"-DCMAKE_INCLUDE_PATH={self.spec['hsa-rocr-dev'].prefix.include.hsa}")
+            options.append(f"-Drocblas_DIR={self.spec['rocblas'].prefix.lib.cmake.rocblas}")
+            options.append(f"-Drocsparse_DIR={self.spec['rocsparse'].prefix.lib.cmake.rocsparse}")
+            options.append(f"-Drocsolver_DIR={self.spec['rocsolver'].prefix.lib.cmake.rocsolver}")
 
         if "+mpi" in self.spec:
             options.append("-DMPI_HOME=" + self.spec["mpi"].prefix)
 
-        if not self.run_test(cmake_bin, options=options, purpose="Generate the Makefile"):
-            tty.msg("Skipping tasmanian test: failed to generate Makefile")
-            return
+        cmake = which(self.spec["cmake"].prefix.bin.cmake)
+        cmake(*options)
 
-        if not self.run_test("make", purpose="Build test software"):
-            tty.msg("Skipping tasmanian test: failed to build test")
-            return
+        make = which("make")
+        make()
 
-        if not self.run_test("make", options=["test"], purpose="Run test"):
-            tty.msg("Failed tasmanian test: failed to run test")
+        make("test")
