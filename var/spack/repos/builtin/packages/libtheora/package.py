@@ -57,6 +57,7 @@ class AutotoolsBuilder(AutotoolsBuilder):
     def configure_args(self):
         args = []
         args += self.enable_or_disable("doc")
+        args += ["LIBS=-lm"]
         return args
 
     def autoreconf(self, pkg, spec, prefix):

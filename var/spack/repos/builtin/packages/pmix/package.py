@@ -118,7 +118,7 @@ class Pmix(AutotoolsPackage):
     def configure_args(self):
         spec = self.spec
 
-        config_args = ["--enable-shared", "--enable-static"]
+        config_args = ["--enable-shared", "--enable-static", "--disable-sphinx"]
 
         config_args.append("--with-libevent=" + spec["libevent"].prefix)
         config_args.append("--with-hwloc=" + spec["hwloc"].prefix)

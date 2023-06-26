@@ -1055,7 +1055,7 @@ spack:
     )
 
     install_cmd("archive-files")
-    buildcache_cmd("push", "-a", "-f", "-u", "--mirror-url", mirror_url, "archive-files")
+    buildcache_cmd("push", "-a", "-f", "-u", mirror_url, "archive-files")
 
     filename = str(tmpdir.join("spack.yaml"))
     with open(filename, "w") as f:
@@ -1155,8 +1155,8 @@ spack:
         second_ci_yaml = str(tmpdir.join(".gitlab-ci-2.yml"))
         with ev.read("test"):
             install_cmd()
-            buildcache_cmd("push", "-u", "--mirror-url", mirror_url, "patchelf")
-            buildcache_cmd("update-index", "--mirror-url", mirror_url, output=str)
+            buildcache_cmd("push", "-u", mirror_url, "patchelf")
+            buildcache_cmd("update-index", mirror_url, output=str)
 
             # This generate should not trigger a rebuild of patchelf, since it's in
             # the main mirror referenced in the environment.
@@ -1297,7 +1297,7 @@ spack:
             mirror_cmd("rm", "test-ci")
 
             # Test generating buildcache index while we have bin mirror
-            buildcache_cmd("update-index", "--mirror-url", mirror_url)
+            buildcache_cmd("update-index", mirror_url)
             index_path = os.path.join(buildcache_path, "index.json")
             with open(index_path) as idx_fd:
                 index_object = json.load(idx_fd)
@@ -1613,7 +1613,7 @@ spack:
                 ypfd.write(spec_json)
 
             install_cmd("--add", "--keep-stage", "-f", json_path)
-            buildcache_cmd("push", "-u", "-a", "-f", "--mirror-url", mirror_url, "callpath")
+            buildcache_cmd("push", "-u", "-a", "-f", mirror_url, "callpath")
             ci_cmd("rebuild-index")
 
             buildcache_path = os.path.join(mirror_dir.strpath, "build_cache")
@@ -1647,7 +1647,7 @@ def test_ci_generate_bootstrap_prune_dag(
     install_cmd("gcc@=12.2.0%gcc@10.2.1")
 
     # Put installed compiler in the buildcache
-    buildcache_cmd("push", "-u", "-a", "-f", "-d", mirror_dir.strpath, "gcc@12.2.0%gcc@10.2.1")
+    buildcache_cmd("push", "-u", "-a", "-f", mirror_dir.strpath, "gcc@12.2.0%gcc@10.2.1")
 
     # Now uninstall the compiler
     uninstall_cmd("-y", "gcc@12.2.0%gcc@10.2.1")
@@ -1662,7 +1662,7 @@ def test_ci_generate_bootstrap_prune_dag(
     install_cmd("--no-check-signature", "b%gcc@=12.2.0")
 
     # Put spec built with installed compiler in the buildcache
-    buildcache_cmd("push", "-u", "-a", "-f", "-d", mirror_dir.strpath, "b%gcc@12.2.0")
+    buildcache_cmd("push", "-u", "-a", "-f", mirror_dir.strpath, "b%gcc@12.2.0")
 
     # Now uninstall the spec
     uninstall_cmd("-y", "b%gcc@12.2.0")
