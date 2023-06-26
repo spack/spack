@@ -15,7 +15,7 @@ class PyBluepysnap(PythonPackage):
     pypi = "bluepysnap/bluepysnap-0.12.0.tar.gz"
 
     version("develop", branch="master")
-    version("1.0.6", sha256="78d76354b3076e2e6d5f2332ac8380086854c7890aad86d01d6f21a927f73198")
+    version("1.0.7", sha256="84f8dac041bad2e8f730089e6b20637c7af0435d8405d428434568cd7637e067")
 
     depends_on("python@3.8:", type=("build", "run"))
     depends_on("py-setuptools", type=("build", "run"))
@@ -23,7 +23,7 @@ class PyBluepysnap(PythonPackage):
 
     depends_on("py-cached-property@1.0:", type=("build", "run"))
     depends_on("py-h5py@3.0.1:3", type=("build", "run"))
-    depends_on("py-jsonschema@4", type=("build", "run"), when="@1:")
+    depends_on("py-jsonschema@4", type=("build", "run"))
     depends_on("py-libsonata@0.1.21:", type=("build", "run"))
     depends_on("py-morphio@3", type=("build", "run"))
     depends_on("py-morph-tool@2.4.3:2", type=("build", "run"))
