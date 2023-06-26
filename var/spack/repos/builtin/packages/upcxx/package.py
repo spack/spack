@@ -113,6 +113,7 @@ class Upcxx(Package, CudaPackage, ROCmPackage):
     variant("gasnet", default=False, description="Override embedded GASNet-EX version")
     depends_on("gasnet conduits=none", when="+gasnet")
 
+    depends_on("libfabric", type="build")  # for fi_info
     depends_on("mpi", when="+mpi")
     depends_on("python@2.7.5:", type=("build", "run"))
 
