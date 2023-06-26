@@ -90,6 +90,16 @@ STATUS_DEQUEUED = "dequeued"
 STATUS_REMOVED = "removed"
 
 
+def _write_timer_json(pkg, timer, cache):
+    extra_attributes = {"name": pkg.name, "cache": cache}
+    try:
+        with open(pkg.times_log_path, "w") as timelog:
+            timer.write_json(timelog, depth=-1, extra_attributes=extra_attributes)
+    except Exception as e:
+        tty.debug(e)
+        return
+
+
 class InstallAction:
     #: Don't perform an install
     NONE = 0
@@ -399,6 +409,8 @@ def _install_from_cache(
         return False
     t.stop()
     tty.debug("Successfully extracted {0} from binary cache".format(pkg_id))
+
+    _write_timer_json(pkg, t, True)
     _print_timer(pre=_log_prefix(pkg.name), pkg_id=pkg_id, timer=t)
     _print_installed_pkg(pkg.spec.prefix)
     spack.hooks.post_install(pkg.spec, explicit)
@@ -479,9 +491,9 @@ def _process_binary_cache_tarball(
 
     tty.msg("Extracting {0} from binary cache".format(package_id(pkg)))
 
-    with timer.measure("install"), spack.util.path.filter_padding():
+    with timer.measure("install") as t, spack.util.path.filter_padding():
         binary_distribution.extract_tarball(
-            pkg.spec, download_result, unsigned=unsigned, force=False
+            pkg.spec, download_result, unsigned=unsigned, force=False, timer=t
         )
 
         pkg.installed_from_binary_cache = True
@@ -985,6 +997,8 @@ class BuildTask:
         # List of uninstalled dependencies, which is used to establish
         # the priority of the build task.
         #
+        Update completion
+
         self.uninstalled_deps = set(
             pkg_id for pkg_id in self.dependencies if pkg_id not in installed
         )

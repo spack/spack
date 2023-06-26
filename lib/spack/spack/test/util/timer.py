@@ -125,10 +125,7 @@ def test_timer_write():
     assert "3.000s" in output[1]
 
     deserialized = json.loads(json_buffer.getvalue())
-    assert deserialized == {
-        "phases": [{"name": "timer", "seconds": 1.0}],
-        "total": {"seconds": 3.0},
-    }
+    assert deserialized == {"phases": [{"name": "timer", "seconds": 1.0}], "seconds": 3.0}
 
 
 def test_null_timer():
