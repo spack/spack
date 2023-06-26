@@ -24,7 +24,7 @@ class Babelstream(CMakePackage, CudaPackage, ROCmPackage):
     git = "https://github.com/UoB-HPC/BabelStream.git"
     version("4.0", sha256="a9cd39277fb15d977d468435eb9b894f79f468233f0131509aa540ffda4f5953")
     version("main", branch="main")
-    version("openmp", branch="openmp")
+    version("develop", branch="develop")
 
     maintainers("tomdeakin", "kaanolgu", "tom91136", "robj0nes")
 
