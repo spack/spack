@@ -14,14 +14,25 @@ class SstElements(AutotoolsPackage):
 
     homepage = "https://github.com/sstsimulator"
     git = "https://github.com/sstsimulator/sst-elements.git"
-    url = "https://github.com/sstsimulator/sst-elements/releases/download/v11.0.0_Final/sstelements-11.0.0.tar.gz"
+    url = "https://github.com/sstsimulator/sst-elements/releases/download/v13.0.0_Final/sstelements-13.0.0.tar.gz"
 
-    maintainers("sknigh")
+    maintainers("berquist", "naromero77")
 
+    version("13.0.0", sha256="1f6f6b403a8c1b22a27cdf2943c9e505825ee14866891e7bc944d4471b7b0321")
+    version("12.1.0", sha256="77948cf8e1f8bf8d238d475cea111c9a72b307cbf403cb429ef0426d0cf708a4")
+    version("12.0.0", sha256="d3caacf8ba621a644151e1670dfc0fd8e91b45a583699998f94312897b0eca26")
+    version("11.1.0", sha256="2dd20ecf2e0896b59eb9d65d31ef928daa0188239016216f4ad11b7e6447ca0b")
     version("11.0.0", sha256="bf265cb25afc041b74422cc5cddc8e3ae1e7c3efa3e37e699dac4e3f7629be6e")
     version("10.1.0", sha256="a790561449795dac48a84c525b8e0b09f05d0b0bff1a0da1aa2e903279a03c4a")
     version("10.0.0", sha256="ecf28ef97b27ea75be7e64cb0acb99d36773a888c1b32ba16034c62174b02693")
     version("9.1.0", sha256="e19b05aa6e59728995fc059840c79e476ba866b67887ccde7eaf52a18a1f52ca")
+    version("9.0.0", sha256="6bd0743059daecadfb9c4e8cab337e2414db5630c3e3b1f2498ba133e2691692")
+    version("8.0.0", sha256="805c3549eb6cb134d6aed38df441af9cb72c4457d48c9f14e9f2e89ba63b6e92")
+    version("7.2.0", sha256="0a8494b38e987e26aea5d7a793ed7f2dc07a64c2805d806113e9de74ccab6269")
+    version("7.1.0", sha256="c01e381d2217b745388a8871a0137bd5002b7a473f59fc5e24da8184893d93bf")
+    version("7.0.0", sha256="0c842754d506df594a643ae9562aae4e652c897298504dec0a237e730600febe")
+    version("6.1.0", sha256="baf553bf9097f674741be750184d5868af0add630865fd7f92a6d68d6fcdc0d4")
+    version("6.0.0", sha256="0ede237fa3c8f6afd1ebb497069d91260bae12d19df67a179d739c9ded535604")
 
     version("develop", branch="devel")
     version("master", branch="master")
@@ -141,3 +152,9 @@ class SstElements(AutotoolsPackage):
 
         args.append("--with-sst-core=%s" % spec["sst-core"].prefix)
         return args
+
+    def setup_run_environment(self, env):
+        """Setup runtime environment for SST Elements."""
+
+        if "+pin" in self.spec:
+            env.set("INTEL_PIN_DIRECTORY", self.spec["intel-pin"].prefix)

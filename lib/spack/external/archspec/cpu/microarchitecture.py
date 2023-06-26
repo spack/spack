@@ -268,15 +268,14 @@ class Microarchitecture:
                 return flags
 
         msg = (
-            "cannot produce optimized binary for micro-architecture '{0}'"
-            " with {1}@{2} [supported compiler versions are {3}]"
+            "cannot produce optimized binary for micro-architecture '{0}' with {1}@{2}"
         )
-        msg = msg.format(
-            self.name,
-            compiler,
-            version,
-            ", ".join([x["versions"] for x in compiler_info]),
-        )
+        if compiler_info:
+            versions = [x["versions"] for x in compiler_info]
+            msg += f' [supported compiler versions are {", ".join(versions)}]'
+        else:
+            msg += " [no supported compiler versions]"
+        msg = msg.format(self.name, compiler, version)
         raise UnsupportedMicroarchitecture(msg)
 
 

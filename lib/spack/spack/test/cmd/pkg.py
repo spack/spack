@@ -25,7 +25,7 @@ class {name}(Package):
     homepage = "http://www.example.com"
     url      = "http://www.example.com/test-1.0.tar.gz"
 
-    version('1.0', '0123456789abcdef0123456789abcdef')
+    version("1.0", md5="0123456789abcdef0123456789abcdef")
 
     def install(self, spec, prefix):
         pass
@@ -85,7 +85,15 @@ def mock_pkg_git_repo(git, tmpdir_factory):
 @pytest.fixture(scope="module")
 def mock_pkg_names():
     repo = spack.repo.path.get_repo("builtin.mock")
-    names = set(name for name in repo.all_package_names() if not name.startswith("pkg-"))
+
+    # Be sure to include virtual packages since packages with stand-alone
+    # tests may inherit additional tests from the virtuals they provide,
+    # such as packages that implement `mpi`.
+    names = set(
+        name
+        for name in repo.all_package_names(include_virtuals=True)
+        if not name.startswith("pkg-")
+    )
     return names
 
 

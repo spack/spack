@@ -23,7 +23,9 @@ class RGdalutilities(RPackage):
 
     cran = "gdalUtilities"
 
+    version("1.2.4", sha256="56d2582324977f2ae0a8bc42f740cd93b22c71eb8ee6a68b5b07083e409db8c7")
     version("1.2.1", sha256="8f5dcc0c077bf972da9d574c62c992935311afb76a97f03ace719bc6da214a9c")
     version("1.2.0", sha256="ead446f7f77f952b72b9ed80c5e415cb9d8d30cfb2439c8d1a8156fa55e2b65b")
 
     depends_on("r-sf", type=("build", "run"))
+    depends_on("r-sf@1.0-11:", type=("build", "run"), when="@1.2.4:")

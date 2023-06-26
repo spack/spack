@@ -119,7 +119,10 @@ def test_dump_environment(prepare_environment_for_tests, tmpdir):
     dumpfile_path = str(tmpdir.join("envdump.txt"))
     envutil.dump_environment(dumpfile_path)
     with open(dumpfile_path, "r") as dumpfile:
-        assert "TEST_ENV_VAR={0}; export TEST_ENV_VAR\n".format(test_paths) in list(dumpfile)
+        if sys.platform == "win32":
+            assert 'set "TEST_ENV_VAR={}"\n'.format(test_paths) in list(dumpfile)
+        else:
+            assert "TEST_ENV_VAR={0}; export TEST_ENV_VAR\n".format(test_paths) in list(dumpfile)
 
 
 def test_reverse_environment_modifications(working_env):
@@ -151,3 +154,21 @@ def test_reverse_environment_modifications(working_env):
 
     start_env.pop("UNSET")
     assert os.environ == start_env
+
+
+def test_escape_double_quotes_in_shell_modifications():
+    to_validate = envutil.EnvironmentModifications()
+
+    to_validate.set("VAR", "$PATH")
+    to_validate.append_path("VAR", "$ANOTHER_PATH")
+
+    to_validate.set("QUOTED_VAR", '"MY_VAL"')
+
+    cmds = to_validate.shell_modifications()
+
+    if sys.platform != "win32":
+        assert 'export VAR="$PATH:$ANOTHER_PATH"' in cmds
+        assert r'export QUOTED_VAR="\"MY_VAL\""' in cmds
+    else:
+        assert "export VAR=$PATH;$ANOTHER_PATH" in cmds
+        assert r'export QUOTED_VAR="MY_VAL"' in cmds

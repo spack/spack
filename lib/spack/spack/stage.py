@@ -35,6 +35,7 @@ import spack.error
 import spack.fetch_strategy as fs
 import spack.mirror
 import spack.paths
+import spack.spec
 import spack.util.lock
 import spack.util.path as sup
 import spack.util.pattern as pattern
@@ -47,6 +48,13 @@ _source_path_subdir = "spack-src"
 
 # The temporary stage name prefix.
 stage_prefix = "spack-stage-"
+
+
+def compute_stage_name(spec):
+    """Determine stage name given a spec"""
+    default_stage_structure = "spack-stage-{name}-{version}-{hash}"
+    stage_name_structure = spack.config.get("config:stage_name", default=default_stage_structure)
+    return spec.format(format_string=stage_name_structure)
 
 
 def create_stage_root(path: str) -> None:
@@ -150,7 +158,10 @@ def _resolve_paths(candidates):
 
         # Ensure the path is unique per user.
         can_path = sup.canonicalize_path(path)
-        if user not in can_path:
+        # When multiple users share a stage root, we can avoid conflicts between
+        # them by adding a per-user subdirectory.
+        # Avoid doing this on Windows to keep stage absolute path as short as possible.
+        if user not in can_path and not sys.platform == "win32":
             can_path = os.path.join(can_path, user)
 
         paths.append(can_path)

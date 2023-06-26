@@ -16,6 +16,7 @@ class Preseq(MakefilePackage):
     homepage = "https://github.com/smithlabcode/preseq"
     url = "https://github.com/smithlabcode/preseq/releases/download/v2.0.2/preseq_v2.0.2.tar.bz2"
 
+    version("2.0.3", sha256="747ddd4227515a96a45fcff0709f26130386bff3458c829c7bc1f3306b4f3d91")
     version("2.0.2", sha256="1d7ea249bf4e5826e09697256643e6a2473bc302cd455f31d4eb34c23c10b97c")
 
     depends_on("samtools")

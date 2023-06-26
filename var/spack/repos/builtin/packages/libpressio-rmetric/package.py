@@ -17,6 +17,7 @@ class LibpressioRmetric(CMakePackage):
 
     version("master", branch="master")
     # note versions <= 0.0.3 do not build with spack
+    version("0.0.7", sha256="b01df5102076412064849335c2c928a4a5ba23e1f1f515062d9166b0a7531179")
     version("0.0.6", sha256="b23a79448cd32b51a7301d6cebf4e228289712dd77dd76d86821741467e9af46")
     version("0.0.5", sha256="51eb192314ef083790dd0779864cab527845bd8de699b3a33cd065c248eae24c")
     version("0.0.4", sha256="166af5e84d7156c828a3f0dcc5bf531793ea4ec44bbf468184fbab96e1f0a91f")

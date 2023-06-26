@@ -22,6 +22,7 @@ class ROpenssl(RPackage):
 
     cran = "openssl"
 
+    version("2.0.6", sha256="77f3032a16270f0d1734f269b8d348eedc75b277812854386091143082c1b3f3")
     version("2.0.4", sha256="a1a5c65127c20c0ca3b46f2c4f4d3817276a887a231569537c1373e7740a5cec")
     version("2.0.3", sha256="7cde98520bec857f043fb6aae92334e2ae0dcd86108adc9b18ca298ec16286aa")
     version("2.0.2", sha256="862d3dc9bb69d92e36e83a7506be83443d4a4957f5f08f6617d7873c67a1f1c4")

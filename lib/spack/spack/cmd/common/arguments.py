@@ -349,11 +349,22 @@ def install_status():
         "-I",
         "--install-status",
         action="store_true",
-        default=False,
+        default=True,
         help="show install status of packages. packages can be: "
         "installed [+], missing and needed by an installed package [-], "
         "installed in and upstream instance [^], "
         "or not installed (no annotation)",
+    )
+
+
+@arg
+def no_install_status():
+    return Args(
+        "--no-install-status",
+        dest="install_status",
+        action="store_false",
+        default=True,
+        help="do not show install status annotations",
     )
 
 

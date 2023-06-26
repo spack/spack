@@ -1103,16 +1103,31 @@ Below are more details about the specifiers that you can add to specs.
 Version specifier
 ^^^^^^^^^^^^^^^^^
 
-A version specifier comes somewhere after a package name and starts
-with ``@``.  It can be a single version, e.g. ``@1.0``, ``@3``, or
-``@1.2a7``.  Or, it can be a range of versions, such as ``@1.0:1.5``
-(all versions between ``1.0`` and ``1.5``, inclusive).  Version ranges
-can be open, e.g. ``:3`` means any version up to and including ``3``.
-This would include ``3.4`` and ``3.4.2``.  ``4.2:`` means any version
-above and including ``4.2``.  Finally, a version specifier can be a
-set of arbitrary versions, such as ``@1.0,1.5,1.7`` (``1.0``, ``1.5``,
-or ``1.7``).  When you supply such a specifier to ``spack install``,
-it constrains the set of versions that Spack will install.
+A version specifier ``pkg@<specifier>`` comes after a package name
+and starts with ``@``. It can be something abstract that matches
+multiple known versions, or a specific version. During concretization,
+Spack will pick the optimal version within the spec's constraints
+according to policies set for the particular Spack installation.
+
+The version specifier can be *a specific version*, such as ``@=1.0.0`` or
+``@=1.2a7``. Or, it can be *a range of versions*, such as ``@1.0:1.5``.
+Version ranges are inclusive, so this example includes both ``1.0``
+and any ``1.5.x`` version. Version ranges can be unbounded, e.g. ``@:3``
+means any version up to and including ``3``. This would include ``3.4``
+and ``3.4.2``.  Similarly, ``@4.2:`` means any version above and including
+``4.2``.  As a short-hand, ``@3`` is equivalent to the range ``@3:3`` and
+includes any version with major version ``3``.
+
+Notice that you can distinguish between the specific version ``@=3.2`` and
+the range ``@3.2``. This is useful for packages that follow a versioning
+scheme that omits the zero patch version number: ``3.2``, ``3.2.1``,
+``3.2.2``, etc. In general it is preferable to use the range syntax
+``@3.2``, since ranges also match versions with one-off suffixes, such as
+``3.2-custom``.
+
+A version specifier can also be a list of ranges and specific versions,
+separated by commas.  For example, ``@1.0:1.5,=1.7.1`` matches any version
+in the range ``1.0:1.5`` and the specific version ``1.7.1``.
 
 For packages with a ``git`` attribute, ``git`` references
 may be specified instead of a numerical version i.e. branches, tags
@@ -1121,35 +1136,34 @@ reference provided.  Acceptable syntaxes for this are:
 
 .. code-block:: sh
 
-    # branches and tags
-   foo@git.develop # use the develop branch
-   foo@git.0.19 # use the 0.19 tag
-
     # commit hashes
    foo@abcdef1234abcdef1234abcdef1234abcdef1234    # 40 character hashes are automatically treated as git commits
    foo@git.abcdef1234abcdef1234abcdef1234abcdef1234
 
-Spack versions from git reference either have an associated version supplied by the user,
-or infer a relationship to known versions from the structure of the git repository. If an
-associated version is supplied by the user, Spack treats the git version as equivalent to that
-version for all version comparisons in the package logic (e.g. ``depends_on('foo', when='@1.5')``).
+    # branches and tags
+   foo@git.develop # use the develop branch
+   foo@git.0.19 # use the 0.19 tag
 
-The associated version can be assigned with ``[git ref]=[version]`` syntax, with the caveat that the specified version is known to Spack from either the package definition, or in the configuration preferences (i.e. ``packages.yaml``).
+Spack always needs to associate a Spack version with the git reference,
+which is used for version comparison. This Spack version is heuristically
+taken from the closest valid git tag among ancestors of the git ref.
+
+Once a Spack version is associated with a git ref, it always printed with
+the git ref.  For example, if the commit ``@git.abcdefg`` is tagged
+``0.19``, then the spec will be shown as ``@git.abcdefg=0.19``.
+
+If the git ref is not exactly a tag, then the distance to the nearest tag
+is also part of the resolved version. ``@git.abcdefg=0.19.git.8`` means
+that the commit is 8 commits away from the ``0.19`` tag.
+
+In cases where Spack cannot resolve a sensible version from a git ref,
+users can specify the Spack version to use for the git ref. This is done
+by appending ``=`` and the Spack version to the git ref. For example:
 
 .. code-block:: sh
 
    foo@git.my_ref=3.2 # use the my_ref tag or branch, but treat it as version 3.2 for version comparisons
    foo@git.abcdef1234abcdef1234abcdef1234abcdef1234=develop # use the given commit, but treat it as develop for version comparisons
-
-If an associated version is not supplied then the tags in the git repo are used to determine
-the most recent previous version known to Spack. Details about how versions are compared
-and how Spack determines if one version is less than another are discussed in the developer guide.
-
-If the version spec is not provided, then Spack will choose one
-according to policies set for the particular spack installation.  If
-the spec is ambiguous, i.e. it could match multiple versions, Spack
-will choose a version within the spec's constraints according to
-policies set for the particular Spack installation.
 
 Details about how versions are compared and how Spack determines if
 one version is less than another are discussed in the developer guide.

@@ -13,6 +13,7 @@ class Iqtree2(CMakePackage):
     homepage = "http://www.iqtree.org"
     url = "https://github.com/iqtree/iqtree2/archive/refs/tags/v2.1.2.tar.gz"
 
+    version("2.2.2", sha256="2e9ce79427b140bca5f48b31fb098f394a21a7c5116bbbada1e3eabdd6efe982")
     version("2.1.2", sha256="3aaf5ac7f60d852ac8b733fb82832c049ca48b7203a6a865e99c5af359fcca5a")
 
     depends_on("boost", type="link")

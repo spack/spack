@@ -57,6 +57,7 @@ class AutotoolsBuilder(AutotoolsBuilder):
     def configure_args(self):
         args = []
         args += self.enable_or_disable("doc")
+        args += ["LIBS=-lm"]
         return args
 
     def autoreconf(self, pkg, spec, prefix):
@@ -69,7 +70,7 @@ class AutotoolsBuilder(AutotoolsBuilder):
 
 class MSBuildBuilder(MSBuildBuilder):
     def is_64bit(self):
-        return "64" in self.pkg.spec.target.family
+        return "64" in str(self.pkg.spec.target.family)
 
     def setup_build_environment(self, env):
         spec = self.pkg.spec

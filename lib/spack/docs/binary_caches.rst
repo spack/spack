@@ -36,7 +36,7 @@ Build caches are created via:
 
 .. code-block:: console
 
-    $ spack buildcache create <path/url/mirror name> <spec>
+    $ spack buildcache push <path/url/mirror name> <spec>
 
 This command takes the locally installed spec and its dependencies, and
 creates tarballs of their install prefixes. It also generates metadata files,
@@ -48,7 +48,7 @@ Here is an example where a build cache is created in a local directory named
 
 .. code-block:: console
 
-    $ spack buildcache create --allow-root ./spack-cache ninja
+    $ spack buildcache push --allow-root ./spack-cache ninja
     ==> Pushing binary packages to file:///home/spackuser/spack/spack-cache/build_cache
 
 Not that ``ninja`` must be installed locally for this to work.
@@ -177,7 +177,7 @@ need to be adjusted for better re-locatability.
 --------------------
 
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^
-``spack buildcache create``
+``spack buildcache push``
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Create tarball of installed Spack package and all dependencies.

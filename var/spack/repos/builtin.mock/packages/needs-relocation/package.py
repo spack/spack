@@ -18,7 +18,7 @@ class NeedsRelocation(Package):
     homepage = "https://www.cmake.org"
     url = "https://cmake.org/files/v3.4/cmake-3.4.3.tar.gz"
 
-    version("0.0.0", "12345678qwertyuiasdfghjkzxcvbnm0")
+    version("0.0.0", md5="12345678qwertyuiasdfghjkzxcvbnm0")
 
     def install(self, spec, prefix):
         mkdirp(prefix.bin)

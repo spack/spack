@@ -4,6 +4,7 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 from spack.package import *
+from spack.util.environment import is_system_path
 
 
 class Libarchive(AutotoolsPackage):
@@ -109,7 +110,7 @@ class Libarchive(AutotoolsPackage):
     depends_on("libxml2", when="xar=libxml2")
     depends_on("expat", when="xar=expat")
 
-    depends_on("libiconv", when="+iconv")
+    depends_on("iconv", when="+iconv")
 
     conflicts(
         "crypto=mbedtls", when="@:3.4.1", msg="mbed TLS is only supported from libarchive 3.4.2"
@@ -119,11 +120,19 @@ class Libarchive(AutotoolsPackage):
     # The build test suite cannot be built with Intel
 
     def configure_args(self):
+        spec = self.spec
         args = ["--without-libb2"]
         args += self.with_or_without("compression")
         args += self.with_or_without("crypto")
-        args += self.with_or_without("iconv")
         args += self.with_or_without("xar")
         args += self.enable_or_disable("programs")
+
+        if "+iconv" in spec:
+            if spec["iconv"].name == "libc":
+                args.append("--without-libiconv-prefix")
+            elif not is_system_path(spec["iconv"].prefix):
+                args.append("--with-libiconv-prefix={p}".format(p=spec["iconv"].prefix))
+        else:
+            args.append("--without-iconv")
 
         return args

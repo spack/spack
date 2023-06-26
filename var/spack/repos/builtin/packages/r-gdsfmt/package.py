@@ -24,6 +24,7 @@ class RGdsfmt(RPackage):
 
     bioc = "gdsfmt"
 
+    version("1.36.0", commit="39ba0af93d499b0f9ef53f04d4f15e5436616f1a")
     version("1.34.0", commit="ab912c393d8eb6dc26f844a13422a29b9ce7265b")
     version("1.32.0", commit="06f2097cc10b1888739f86e635383a0f2ee7e208")
     version("1.30.0", commit="d27dde6a70bb2295f5bbc8961152b45ccee7a652")

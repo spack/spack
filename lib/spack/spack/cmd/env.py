@@ -4,7 +4,6 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import argparse
-import io
 import os
 import shutil
 import sys
@@ -24,10 +23,11 @@ import spack.cmd.modules
 import spack.cmd.uninstall
 import spack.config
 import spack.environment as ev
+import spack.environment.depfile as depfile
 import spack.environment.shell
 import spack.schema.env
+import spack.spec
 import spack.tengine
-import spack.traverse as traverse
 import spack.util.string as string
 from spack.util.environment import EnvironmentModifications
 
@@ -163,7 +163,7 @@ def env_activate(args):
         env = create_temp_env_directory()
         env_path = os.path.abspath(env)
         short_name = os.path.basename(env_path)
-        ev.Environment(env).write(regenerate=False)
+        ev.create_in_dir(env).write(regenerate=False)
 
     # Managed environment
     elif ev.exists(env_name_or_dir) and not args.dir:
@@ -283,7 +283,7 @@ def env_create_setup_parser(subparser):
         "envfile",
         nargs="?",
         default=None,
-        help="optional init file; can be spack.yaml or spack.lock",
+        help="either a lockfile (must end with '.json' or '.lock') or a manifest file.",
     )
 
 
@@ -292,7 +292,7 @@ def env_create(args):
         # Expand relative paths provided on the command line to the current working directory
         # This way we interpret `spack env create --with-view ./view --dir ./env` as
         # a view in $PWD/view, not $PWD/env/view. This is different from specifying a relative
-        # path in spack.yaml, which is resolved relative to the environment file.
+        # path in the manifest, which is resolved relative to the manifest file's location.
         with_view = os.path.abspath(args.with_view)
     elif args.without_view:
         with_view = False
@@ -301,40 +301,47 @@ def env_create(args):
         # object could choose to enable a view by default. False means that
         # the environment should not include a view.
         with_view = None
-    if args.envfile:
-        with open(args.envfile) as f:
-            _env_create(
-                args.create_env, f, args.dir, with_view=with_view, keep_relative=args.keep_relative
-            )
-    else:
-        _env_create(args.create_env, None, args.dir, with_view=with_view)
+
+    env = _env_create(
+        args.create_env,
+        init_file=args.envfile,
+        dir=args.dir,
+        with_view=with_view,
+        keep_relative=args.keep_relative,
+    )
+
+    # Generate views, only really useful for environments created from spack.lock files.
+    env.regenerate_views()
 
 
-def _env_create(name_or_path, init_file=None, dir=False, with_view=None, keep_relative=False):
+def _env_create(name_or_path, *, init_file=None, dir=False, with_view=None, keep_relative=False):
     """Create a new environment, with an optional yaml description.
 
     Arguments:
         name_or_path (str): name of the environment to create, or path to it
         init_file (str or file): optional initialization file -- can be
-            spack.yaml or spack.lock
+            a JSON lockfile (*.lock, *.json) or YAML manifest file
         dir (bool): if True, create an environment in a directory instead
             of a named environment
         keep_relative (bool): if True, develop paths are copied verbatim into
             the new environment file, otherwise they may be made absolute if the
             new environment is in a different location
     """
-    if dir:
-        env = ev.Environment(name_or_path, init_file, with_view, keep_relative)
-        env.write()
-        tty.msg("Created environment in %s" % env.path)
-        tty.msg("You can activate this environment with:")
-        tty.msg("  spack env activate %s" % env.path)
-    else:
-        env = ev.create(name_or_path, init_file, with_view, keep_relative)
-        env.write()
+    if not dir:
+        env = ev.create(
+            name_or_path, init_file=init_file, with_view=with_view, keep_relative=keep_relative
+        )
         tty.msg("Created environment '%s' in %s" % (name_or_path, env.path))
         tty.msg("You can activate this environment with:")
         tty.msg("  spack env activate %s" % (name_or_path))
+        return env
+
+    env = ev.create_in_dir(
+        name_or_path, init_file=init_file, with_view=with_view, keep_relative=keep_relative
+    )
+    tty.msg("Created environment in %s" % env.path)
+    tty.msg("You can activate this environment with:")
+    tty.msg("  spack env activate %s" % env.path)
     return env
 
 
@@ -351,8 +358,7 @@ def env_remove(args):
     """Remove a *named* environment.
 
     This removes an environment managed by Spack. Directory environments
-    and `spack.yaml` files embedded in repositories should be removed
-    manually.
+    and manifests embedded in repositories should be removed manually.
     """
     read_envs = []
     for env_name in args.rm_env:
@@ -431,21 +437,22 @@ def env_view_setup_parser(subparser):
 def env_view(args):
     env = ev.active_environment()
 
-    if env:
-        if args.action == ViewAction.regenerate:
-            env.regenerate_views()
-        elif args.action == ViewAction.enable:
-            if args.view_path:
-                view_path = args.view_path
-            else:
-                view_path = env.view_path_default
-            env.update_default_view(view_path)
-            env.write()
-        elif args.action == ViewAction.disable:
-            env.update_default_view(None)
-            env.write()
-    else:
+    if not env:
         tty.msg("No active environment")
+        return
+
+    if args.action == ViewAction.regenerate:
+        env.regenerate_views()
+    elif args.action == ViewAction.enable:
+        if args.view_path:
+            view_path = args.view_path
+        else:
+            view_path = env.view_path_default
+        env.update_default_view(view_path)
+        env.write()
+    elif args.action == ViewAction.disable:
+        env.update_default_view(path_or_bool=False)
+        env.write()
 
 
 #
@@ -563,7 +570,7 @@ def env_revert(args):
     # Check that both the spack.yaml and the backup exist, the inform user
     # on what is going to happen and ask for confirmation
     if not os.path.exists(manifest_file):
-        msg = "cannot fine the manifest file of the environment [file={0}]"
+        msg = "cannot find the manifest file of the environment [file={0}]"
         tty.die(msg.format(manifest_file))
     if not os.path.exists(backup_file):
         msg = "cannot find the old manifest file to be restored [file={0}]"
@@ -637,161 +644,23 @@ def env_depfile_setup_parser(subparser):
     )
 
 
-def _deptypes(use_buildcache):
-    """What edges should we follow for a given node? If it's a cache-only
-    node, then we can drop build type deps."""
-    return ("link", "run") if use_buildcache == "only" else ("build", "link", "run")
-
-
-class MakeTargetVisitor(object):
-    """This visitor produces an adjacency list of a (reduced) DAG, which
-    is used to generate Makefile targets with their prerequisites."""
-
-    def __init__(self, target, pkg_buildcache, deps_buildcache):
-        """
-        Args:
-            target: function that maps dag_hash -> make target string
-            pkg_buildcache (str): "only", "never", "auto": when "only",
-                redundant build deps of roots are dropped
-            deps_buildcache (str): same as pkg_buildcache, but for non-root specs.
-        """
-        self.adjacency_list = []
-        self.target = target
-        self.pkg_buildcache = pkg_buildcache
-        self.deps_buildcache = deps_buildcache
-        self.deptypes_root = _deptypes(pkg_buildcache)
-        self.deptypes_deps = _deptypes(deps_buildcache)
-
-    def neighbors(self, node):
-        """Produce a list of spec to follow from node"""
-        deptypes = self.deptypes_root if node.depth == 0 else self.deptypes_deps
-        return traverse.sort_edges(node.edge.spec.edges_to_dependencies(deptype=deptypes))
-
-    def build_cache_flag(self, depth):
-        setting = self.pkg_buildcache if depth == 0 else self.deps_buildcache
-        if setting == "only":
-            return "--use-buildcache=only"
-        elif setting == "never":
-            return "--use-buildcache=never"
-        return ""
-
-    def accept(self, node):
-        fmt = "{name}-{version}-{hash}"
-        tgt = node.edge.spec.format(fmt)
-        spec_str = node.edge.spec.format(
-            "{name}{@version}{%compiler}{variants}{arch=architecture}"
-        )
-        buildcache_flag = self.build_cache_flag(node.depth)
-        prereqs = " ".join([self.target(dep.spec.format(fmt)) for dep in self.neighbors(node)])
-        self.adjacency_list.append(
-            (tgt, prereqs, node.edge.spec.dag_hash(), spec_str, buildcache_flag)
-        )
-
-        # We already accepted this
-        return True
-
-
 def env_depfile(args):
     # Currently only make is supported.
     spack.cmd.require_active_env(cmd_name="env depfile")
-    env = ev.active_environment()
-
-    # Special make targets are useful when including a makefile in another, and you
-    # need to "namespace" the targets to avoid conflicts.
-    if args.make_prefix is None:
-        prefix = os.path.join(env.env_subdir_path, "makedeps")
-    else:
-        prefix = args.make_prefix
-
-    def get_target(name):
-        # The `all` and `clean` targets are phony. It doesn't make sense to
-        # have /abs/path/to/env/metadir/{all,clean} targets. But it *does* make
-        # sense to have a prefix like `env/all`, `env/clean` when they are
-        # supposed to be included
-        if name in ("all", "clean") and os.path.isabs(prefix):
-            return name
-        else:
-            return os.path.join(prefix, name)
-
-    def get_install_target(name):
-        return os.path.join(prefix, "install", name)
-
-    def get_install_deps_target(name):
-        return os.path.join(prefix, "install-deps", name)
 
     # What things do we build when running make? By default, we build the
     # root specs. If specific specs are provided as input, we build those.
-    if args.specs:
-        abstract_specs = spack.cmd.parse_specs(args.specs)
-        roots = [env.matching_spec(s) for s in abstract_specs]
-    else:
-        roots = [s for _, s in env.concretized_specs()]
-
-    # We produce a sub-DAG from the DAG induced by roots, where we drop build
-    # edges for those specs that are installed through a binary cache.
-    pkg_buildcache, dep_buildcache = args.use_buildcache
-    make_targets = MakeTargetVisitor(get_install_target, pkg_buildcache, dep_buildcache)
-    traverse.traverse_breadth_first_with_visitor(
-        roots, traverse.CoverNodesVisitor(make_targets, key=lambda s: s.dag_hash())
-    )
-
-    # Root specs without deps are the prereqs for the environment target
-    root_install_targets = [get_install_target(h.format("{name}-{version}-{hash}")) for h in roots]
-
-    all_pkg_identifiers = []
-
-    # The SPACK_PACKAGE_IDS variable is "exported", which can be used when including
-    # generated makefiles to add post-install hooks, like pushing to a buildcache,
-    # running tests, etc.
-    # NOTE: GNU Make allows directory separators in variable names, so for consistency
-    # we can namespace this variable with the same prefix as targets.
-    if args.make_prefix is None:
-        pkg_identifier_variable = "SPACK_PACKAGE_IDS"
-    else:
-        pkg_identifier_variable = os.path.join(prefix, "SPACK_PACKAGE_IDS")
-
-    # All install and install-deps targets
-    all_install_related_targets = []
-
-    # Convenience shortcuts: ensure that `make install/pkg-version-hash` triggers
-    # <absolute path to env>/.spack-env/makedeps/install/pkg-version-hash in case
-    # we don't have a custom make target prefix.
-    phony_convenience_targets = []
-
-    for tgt, _, _, _, _ in make_targets.adjacency_list:
-        all_pkg_identifiers.append(tgt)
-        all_install_related_targets.append(get_install_target(tgt))
-        all_install_related_targets.append(get_install_deps_target(tgt))
-        if args.make_prefix is None:
-            phony_convenience_targets.append(os.path.join("install", tgt))
-            phony_convenience_targets.append(os.path.join("install-deps", tgt))
-
-    buf = io.StringIO()
-
+    filter_specs = spack.cmd.parse_specs(args.specs) if args.specs else None
     template = spack.tengine.make_environment().get_template(os.path.join("depfile", "Makefile"))
-
-    rendered = template.render(
-        {
-            "all_target": get_target("all"),
-            "env_target": get_target("env"),
-            "clean_target": get_target("clean"),
-            "all_install_related_targets": " ".join(all_install_related_targets),
-            "root_install_targets": " ".join(root_install_targets),
-            "dirs_target": get_target("dirs"),
-            "environment": env.path,
-            "install_target": get_target("install"),
-            "install_deps_target": get_target("install-deps"),
-            "any_hash_target": get_target("%"),
-            "jobserver_support": "+" if args.jobserver else "",
-            "adjacency_list": make_targets.adjacency_list,
-            "phony_convenience_targets": " ".join(phony_convenience_targets),
-            "pkg_ids_variable": pkg_identifier_variable,
-            "pkg_ids": " ".join(all_pkg_identifiers),
-        }
+    model = depfile.MakefileModel.from_env(
+        ev.active_environment(),
+        filter_specs=filter_specs,
+        pkg_buildcache=depfile.UseBuildCache.from_string(args.use_buildcache[0]),
+        dep_buildcache=depfile.UseBuildCache.from_string(args.use_buildcache[1]),
+        make_prefix=args.make_prefix,
+        jobserver=args.jobserver,
     )
-
-    buf.write(rendered)
-    makefile = buf.getvalue()
+    makefile = template.render(model.to_dict())
 
     # Finally write to stdout/file.
     if args.output:

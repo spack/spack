@@ -14,6 +14,8 @@ class Bowtie2(MakefilePackage):
     homepage = "http://bowtie-bio.sourceforge.net/bowtie2/index.shtml"
     url = "http://downloads.sourceforge.net/project/bowtie-bio/bowtie2/2.3.1/bowtie2-2.3.1-source.zip"
 
+    version("2.5.1", sha256="cb6cbbbb5a7167a2f21a3d63cb9774336361f540e1ec3d8ff907f955c35f71b8")
+    version("2.4.5", sha256="d3cbd5f323393b5649aea10325d7c4b77f02035a8b204e5ac18eba95236e076a")
     version("2.4.2", sha256="4cc555eeeeb8ae2d47aaa1551f3f01b57f567a013e4e0d1f30e90f462865027e")
     version("2.4.1", sha256="566d6fb01a361883747103d797308ee4bdb70f6db7d27bfc72a520587815df22")
     version("2.3.5.1", sha256="335c8dafb1487a4a9228ef922fbce4fffba3ce8bc211e2d7085aac092155a53f")

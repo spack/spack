@@ -21,10 +21,14 @@ class Cplex(Package):
     maintainers("robgics")
 
     version(
-        "12.10.0", "cd530eb9c6d446bd18b5dc5a3d61070bfad92c3efd6565d2d8e31a2acfb496f7", expand=False
+        "12.10.0",
+        sha256="cd530eb9c6d446bd18b5dc5a3d61070bfad92c3efd6565d2d8e31a2acfb496f7",
+        expand=False,
     )
     version(
-        "12.8.0", "ce8a597a11c73a0a3d49f3fa82930c47b6ac2adf7bc6779ad197ff0355023838", expand=False
+        "12.8.0",
+        sha256="ce8a597a11c73a0a3d49f3fa82930c47b6ac2adf7bc6779ad197ff0355023838",
+        expand=False,
     )
 
     phases = ["configure", "install"]

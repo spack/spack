@@ -19,6 +19,7 @@ class Openjpeg(CMakePackage):
     homepage = "https://github.com/uclouvain/openjpeg"
     url = "https://github.com/uclouvain/openjpeg/archive/v2.3.1.tar.gz"
 
+    version("2.5.0", sha256="0333806d6adecc6f7a91243b2b839ff4d2053823634d4f6ed7a59bc87409122a")
     version("2.4.0", sha256="8702ba68b442657f11aaeb2b338443ca8d5fb95b0d845757968a7be31ef7f16d")
     version("2.3.1", sha256="63f5a4713ecafc86de51bfad89cc07bb788e9bba24ebbf0c4ca637621aadb6a9")
     version("2.3.0", sha256="3dc787c1bb6023ba846c2a0d9b1f6e179f1cd255172bde9eb75b01f1e6c7d71a")

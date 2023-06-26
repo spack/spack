@@ -55,14 +55,6 @@ class Mesa(MesonPackage):
     depends_on("expat")
     depends_on("zlib@1.2.3:")
 
-    # Override the build type variant so we can default to release
-    variant(
-        "buildtype",
-        default="release",
-        description="Meson build type",
-        values=("plain", "debug", "debugoptimized", "release", "minsize"),
-    )
-
     # Internal options
     variant("llvm", default=True, description="Enable LLVM.")
 

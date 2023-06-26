@@ -25,7 +25,7 @@ class Amdscalapack(ScalapackBase):
     """
 
     _name = "amdscalapack"
-    homepage = "https://developer.amd.com/amd-aocl/scalapack/"
+    homepage = "https://www.amd.com/en/developer/aocl/scalapack.html"
     git = "https://github.com/amd/scalapack.git"
 
     maintainers("amd-toolchain-support")

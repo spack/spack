@@ -7,6 +7,7 @@
 import contextlib
 import os.path
 import sys
+from typing import Any, Dict, Generator, MutableSequence, Sequence
 
 from llnl.util import tty
 
@@ -24,12 +25,12 @@ import spack.util.path
 _REF_COUNT = 0
 
 
-def is_bootstrapping():
+def is_bootstrapping() -> bool:
     """Return True if we are in a bootstrapping context, False otherwise."""
     return _REF_COUNT > 0
 
 
-def spec_for_current_python():
+def spec_for_current_python() -> str:
     """For bootstrapping purposes we are just interested in the Python
     minor version (all patches are ABI compatible with the same minor).
 
@@ -41,14 +42,14 @@ def spec_for_current_python():
     return f"python@{version_str}"
 
 
-def root_path():
+def root_path() -> str:
     """Root of all the bootstrap related folders"""
     return spack.util.path.canonicalize_path(
         spack.config.get("bootstrap:root", spack.paths.default_user_bootstrap_path)
     )
 
 
-def store_path():
+def store_path() -> str:
     """Path to the store used for bootstrapped software"""
     enabled = spack.config.get("bootstrap:enable", True)
     if not enabled:
@@ -59,7 +60,7 @@ def store_path():
 
 
 @contextlib.contextmanager
-def spack_python_interpreter():
+def spack_python_interpreter() -> Generator:
     """Override the current configuration to set the interpreter under
     which Spack is currently running as the only Python external spec
     available.
@@ -76,18 +77,18 @@ def spack_python_interpreter():
         yield
 
 
-def _store_path():
+def _store_path() -> str:
     bootstrap_root_path = root_path()
     return spack.util.path.canonicalize_path(os.path.join(bootstrap_root_path, "store"))
 
 
-def _config_path():
+def _config_path() -> str:
     bootstrap_root_path = root_path()
     return spack.util.path.canonicalize_path(os.path.join(bootstrap_root_path, "config"))
 
 
 @contextlib.contextmanager
-def ensure_bootstrap_configuration():
+def ensure_bootstrap_configuration() -> Generator:
     """Swap the current configuration for the one used to bootstrap Spack.
 
     The context manager is reference counted to ensure we don't swap multiple
@@ -107,7 +108,7 @@ def ensure_bootstrap_configuration():
         _REF_COUNT -= 1
 
 
-def _read_and_sanitize_configuration():
+def _read_and_sanitize_configuration() -> Dict[str, Any]:
     """Read the user configuration that needs to be reused for bootstrapping
     and remove the entries that should not be copied over.
     """
@@ -120,9 +121,11 @@ def _read_and_sanitize_configuration():
     return user_configuration
 
 
-def _bootstrap_config_scopes():
+def _bootstrap_config_scopes() -> Sequence["spack.config.ConfigScope"]:
     tty.debug("[BOOTSTRAP CONFIG SCOPE] name=_builtin")
-    config_scopes = [spack.config.InternalConfigScope("_builtin", spack.config.config_defaults)]
+    config_scopes: MutableSequence["spack.config.ConfigScope"] = [
+        spack.config.InternalConfigScope("_builtin", spack.config.config_defaults)
+    ]
     configuration_paths = (spack.config.configuration_defaults_path, ("bootstrap", _config_path()))
     for name, path in configuration_paths:
         platform = spack.platforms.host().name
@@ -137,7 +140,7 @@ def _bootstrap_config_scopes():
     return config_scopes
 
 
-def _add_compilers_if_missing():
+def _add_compilers_if_missing() -> None:
     arch = spack.spec.ArchSpec.frontend_arch()
     if not spack.compilers.compilers_for_arch(arch):
         new_compilers = spack.compilers.find_new_compilers()
@@ -146,7 +149,7 @@ def _add_compilers_if_missing():
 
 
 @contextlib.contextmanager
-def _ensure_bootstrap_configuration():
+def _ensure_bootstrap_configuration() -> Generator:
     bootstrap_store_path = store_path()
     user_configuration = _read_and_sanitize_configuration()
     with spack.environment.no_active_environment():

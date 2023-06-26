@@ -37,8 +37,7 @@ if (!$null -eq $py_path)
 
 if (!$null -eq $py_exe)
 {
-    Invoke-Expression "$py_exe $Env:SPACK_ROOT\bin\haspywin.py"
-    Invoke-Expression "$py_exe $Env:SPACK_ROOT\bin\spack external find python" | Out-Null
+    & "$py_exe" "$Env:SPACK_ROOT\bin\haspywin.py"
 }
 
 $Env:Path = "$Env:SPACK_ROOT\bin;$Env:Path"

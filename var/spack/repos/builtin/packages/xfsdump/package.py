@@ -25,8 +25,10 @@ class Xfsdump(MakefilePackage):
     depends_on("attr")
     depends_on("xfsprogs@:4.20.0")
 
-    def setup_build_environment(self, env):
-        env.append_flags("LDFLAGS", "-lintl")
+    def flag_handler(self, name, flags):
+        if name == "ldlibs" and "intl" in self.spec["gettext"].libs.names:
+            flags.append("-lintl")
+        return env_flags(name, flags)
 
     def build(self, spec, prefix):
         make(

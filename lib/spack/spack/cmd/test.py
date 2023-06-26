@@ -11,6 +11,7 @@ import os
 import re
 import shutil
 import sys
+from collections import Counter
 
 from llnl.util import lang, tty
 from llnl.util.tty import colify
@@ -236,9 +237,8 @@ def test_list(args):
     tagged = set(spack.repo.path.packages_with_tags(*args.tag)) if args.tag else set()
 
     def has_test_and_tags(pkg_class):
-        return spack.package_base.has_test_method(pkg_class) and (
-            not args.tag or pkg_class.name in tagged
-        )
+        tests = spack.install_test.test_functions(pkg_class)
+        return len(tests) and (not args.tag or pkg_class.name in tagged)
 
     if args.list_all:
         report_packages = [
@@ -358,18 +358,17 @@ def _report_suite_results(test_suite, args, constraints):
 
         tty.msg("test specs:")
 
-        failed, skipped, untested = 0, 0, 0
+        counts = Counter()
         for pkg_id in test_specs:
             if pkg_id in results:
                 status = results[pkg_id]
-                if status == "FAILED":
-                    failed += 1
-                elif status == "NO-TESTS":
-                    untested += 1
-                elif status == "SKIPPED":
-                    skipped += 1
+                # Backward-compatibility:  NO-TESTS => NO_TESTS
+                status = "NO_TESTS" if status == "NO-TESTS" else status
 
-                if args.failed and status != "FAILED":
+                status = spack.install_test.TestStatus[status]
+                counts[status] += 1
+
+                if args.failed and status != spack.install_test.TestStatus.FAILED:
                     continue
 
                 msg = "  {0} {1}".format(pkg_id, status)
@@ -381,7 +380,7 @@ def _report_suite_results(test_suite, args, constraints):
                             msg += "\n{0}".format("".join(f.readlines()))
                 tty.msg(msg)
 
-        spack.install_test.write_test_summary(failed, skipped, untested, len(test_specs))
+        spack.install_test.write_test_summary(counts)
     else:
         msg = "Test %s has no results.\n" % test_suite.name
         msg += "        Check if it is running with "

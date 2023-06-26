@@ -14,7 +14,7 @@ class Goshimmer(Package):
 
     maintainers("bernhardkaindl")
 
-    version("0.8.0", "ec515deebf0dd35ff76cd98addae9cfcbf4758ab9eb72eb0f6ff4654f2658980")
+    version("0.8.0", sha256="ec515deebf0dd35ff76cd98addae9cfcbf4758ab9eb72eb0f6ff4654f2658980")
 
     depends_on("go@1.16:", type="build")
     depends_on("snappy")

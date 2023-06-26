@@ -31,7 +31,11 @@ specs are used instead
 for further documentation regarding the spec syntax, see:
     spack help --spec
 """
-    arguments.add_common_arguments(subparser, ["long", "very_long", "install_status"])
+    arguments.add_common_arguments(subparser, ["long", "very_long"])
+
+    install_status_group = subparser.add_mutually_exclusive_group()
+    arguments.add_common_arguments(install_status_group, ["install_status", "no_install_status"])
+
     format_group = subparser.add_mutually_exclusive_group()
     format_group.add_argument(
         "-y",
@@ -80,12 +84,15 @@ for further documentation regarding the spec syntax, see:
 
 
 def spec(parser, args):
-    name_fmt = "{namespace}.{name}" if args.namespaces else "{name}"
-    fmt = "{@version}{%compiler}{compiler_flags}{variants}{arch=architecture}"
     install_status_fn = spack.spec.Spec.install_status
+
+    fmt = spack.spec.display_format
+    if args.namespaces:
+        fmt = "{namespace}." + fmt
+
     tree_kwargs = {
         "cover": args.cover,
-        "format": name_fmt + fmt,
+        "format": fmt,
         "hashlen": None if args.very_long else 7,
         "show_types": args.types,
         "status_fn": install_status_fn if args.install_status else None,

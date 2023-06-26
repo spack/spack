@@ -28,6 +28,7 @@ class Faiss(AutotoolsPackage, CMakePackage, CudaPackage):
         conditional("cmake", when="@1.7:"), conditional("autotools", when="@:1.6"), default="cmake"
     )
 
+    version("1.7.4", sha256="d9a7b31bf7fd6eb32c10b7ea7ff918160eed5be04fe63bb7b4b4b5f2bbde01ad")
     version("1.7.2", sha256="d49b4afd6a7a5b64f260a236ee9b2efb760edb08c33d5ea5610c2f078a5995ec")
     version("1.6.3", sha256="e1a41c159f0b896975fbb133e0240a233af5c9286c09a28fde6aefff5336e542")
     version("1.5.3", sha256="b24d347b0285d01c2ed663ccc7596cd0ea95071f3dd5ebb573ccfc28f15f043b")

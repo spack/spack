@@ -6,9 +6,10 @@
 import os.path
 
 from spack.package import *
+from spack.util.environment import is_system_path
 
 
-class Glib(Package):
+class Glib(MesonPackage, AutotoolsPackage):
     """GLib provides the core application building blocks for
     libraries and applications written in C.
 
@@ -25,6 +26,10 @@ class Glib(Package):
 
     maintainers("michaelkuhn")
 
+    version("2.76.3", sha256="c0be444e403d7c3184d1f394f89f0b644710b5e9331b54fa4e8b5037813ad32a")
+    version("2.76.2", sha256="24f3847857b1d8674cdb0389a36edec0f13c666cd3ce727ecd340eb9da8aca9e")
+    version("2.76.1", sha256="43dc0f6a126958f5b454136c4398eab420249c16171a769784486e25f2fda19f")
+    version("2.74.7", sha256="196ab86c27127a61b7a70c3ba6af7b97bdc01c07cd3b21abd5e778b955eccb1b")
     version("2.74.6", sha256="069cf7e51cd261eb163aaf06c8d1754c6835f31252180aff5814e5afc7757fbc")
     version("2.74.3", sha256="e9bc41ecd9690d9bc6a970cc7380119b828e5b6a4b16c393c638b3dc2b87cbcb")
     version("2.74.1", sha256="0ab981618d1db47845e56417b0d7c123f81a3427b2b9c93f5a46ff5bbb964964")
@@ -116,9 +121,17 @@ class Glib(Package):
         description="Enable tracing support",
     )
 
-    depends_on("meson@0.49.2:", when="@2.61.2:", type="build")
-    depends_on("meson@0.48.0:", when="@2.58.0:", type="build")
-    depends_on("ninja", when="@2.58.0:", type="build")
+    build_system(
+        conditional("meson", when="@2.58:"),
+        conditional("autotools", when="@:2.57"),
+        default="meson",
+    )
+
+    with when("build_system=meson"):
+        depends_on("meson@0.60.0:", when="@2.73:", type="build")
+        depends_on("meson@0.52.0:", when="@2.71:2.72", type="build")
+        depends_on("meson@0.49.2:", when="@2.61.2:2.70", type="build")
+        depends_on("meson@0.48.0:", when="@:2.61.1", type="build")
 
     depends_on("pkgconfig", type="build")
     depends_on("libffi")
@@ -143,6 +156,12 @@ class Glib(Package):
     patch("old-kernels.patch", when="@2.56.0:2.56.1 os=rhel6")
     patch("old-kernels.patch", when="@2.56.0:2.56.1 os=centos6")
     patch("old-kernels.patch", when="@2.56.0:2.56.1 os=scientific6")
+    # fix multiple definition error in gio tests for 2.76.1
+    patch(
+        "https://gitlab.gnome.org/GNOME/glib/-/merge_requests/3368.diff",
+        sha256="fa31180b55a832cbb75cc640bb115b7b092a26d7bcf0f48768de55576f0a38d3",
+        when="@2.76.1",
+    )
 
     # glib prefers the libc version of gettext, which breaks the build if the
     # external version is also found.
@@ -164,116 +183,15 @@ class Glib(Package):
         gio_tests.filter("'file' : {},", "")
         gio_tests.filter("'gdbus-peer'", "'file'")
         gio_tests.filter("'gdbus-address-get-session' : {},", "")
-        filter_file("'mkenums.py',*", "", "gobject/tests/meson.build")
+        filter_file("'mkenums.py'( : {})*,*", "", "gobject/tests/meson.build")
         filter_file("'fileutils' : {},", "", "glib/tests/meson.build")
 
     @property
     def libs(self):
         return find_libraries(["libglib*"], root=self.prefix, recursive=True)
 
-    def meson_args(self):
-        args = []
-        if self.spec.satisfies("@:2.72"):
-            args.append("-Dgettext=external")
-        if self.spec.satisfies("@2.63.5:"):
-            if "+libmount" in self.spec:
-                args.append("-Dlibmount=enabled")
-            else:
-                args.append("-Dlibmount=disabled")
-        else:
-            if "+libmount" in self.spec:
-                args.append("-Dlibmount=true")
-            else:
-                args.append("-Dlibmount=false")
-        if "libc" in self.spec:
-            args.append("-Diconv=libc")
-        else:
-            if self.spec.satisfies("@2.61.0:"):
-                args.append("-Diconv=external")
-            else:
-                args.append("-Diconv=gnu")
-        if "tracing=dtrace" in self.spec:
-            args.append("-Ddtrace=true")
-        else:
-            args.append("-Ddtrace=false")
-        if "tracing=systemtap" in self.spec:
-            args.append("-Dsystemtap=true")
-        else:
-            args.append("-Dsystemtap=false")
-        if self.spec.satisfies("@2.59.0:"):
-            args.append("-Dselinux=disabled")
-        else:
-            args.append("-Dselinux=false")
-        args.append("-Dgtk_doc=false")
-        args.append("-Dlibelf=enabled")
-        return args
 
-    def install(self, spec, prefix):
-        with working_dir("spack-build", create=True):
-            # We cannot simply do
-            #   meson('..', *std_meson_args, *self.meson_args())
-            # because that is not Python 2 compatible. Instead, collect
-            # arguments into a temporary buffer first.
-            args = []
-            args.extend(std_meson_args)
-            args.extend(self.meson_args())
-            meson("..", *args)
-            ninja("-v")
-            if self.run_tests:
-                ninja("test")
-            ninja("install")
-
-    def configure_args(self):
-        args = []
-        if "+libmount" in self.spec:
-            args.append("--enable-libmount")
-        else:
-            args.append("--disable-libmount")
-        if self.spec.satisfies("@2.53.4:"):
-            args.append(
-                "--with-python={0}".format(os.path.basename(self.spec["python"].command.path))
-            )
-        if "libc" in self.spec:
-            args.append("--with-libiconv=maybe")
-        else:
-            args.append("--with-libiconv=gnu")
-        if self.spec.satisfies("@2.56:"):
-            for value in ("dtrace", "systemtap"):
-                if ("tracing=" + value) in self.spec:
-                    args.append("--enable-" + value)
-                else:
-                    args.append("--disable-" + value)
-        else:
-            if "tracing=dtrace" in self.spec or "tracing=systemtap" in self.spec:
-                args.append("--enable-tracing")
-            else:
-                args.append("--disable-tracing")
-        # SELinux is not available in Spack, so glib should not use it.
-        args.append("--disable-selinux")
-        # glib should not use the globally installed gtk-doc. Otherwise,
-        # gtk-doc can fail with Python errors such as "ImportError: No module
-        # named site". This is due to the fact that Spack sets PYTHONHOME,
-        # which can confuse the global Python installation used by gtk-doc.
-        args.append("--disable-gtk-doc-html")
-        # glib uses gtk-doc even though it should be disabled if it can find
-        # its binaries. Override the checks to use the true binary.
-        true = which("true")
-        args.append("GTKDOC_CHECK={0}".format(true))
-        args.append("GTKDOC_CHECK_PATH={0}".format(true))
-        args.append("GTKDOC_MKPDF={0}".format(true))
-        args.append("GTKDOC_REBASE={0}".format(true))
-        return args
-
-    @when("@:2.57")
-    def install(self, spec, prefix):
-        configure("--prefix={0}".format(prefix), *self.configure_args())
-        make()
-        if self.run_tests:
-            make("check")
-        make("install")
-        if self.run_tests:
-            make("installcheck")
-
+class BaseBuilder(metaclass=spack.builder.PhaseCallbacksMeta):
     @property
     def dtrace_copy_path(self):
         return join_path(self.stage.source_path, "dtrace-copy")
@@ -339,11 +257,100 @@ class Glib(Package):
         # Packages that link to glib were also picking up -lintl from glib's
         # glib-2.0.pc file. However, packages such as py-pygobject were
         # bypassing spack's compiler wrapper for linking and thus not finding
-        # the gettext library directory. The patch below explitly adds the
+        # the gettext library directory. The patch below explicitly adds the
         # appropriate -L path.
         spec = self.spec
-        if spec.satisfies("@2.0:2"):
+        if (
+            spec.satisfies("@2.0:2")
+            and "intl" in self.spec["gettext"].libs.names
+            and not is_system_path(spec["gettext"].prefix)
+        ):
             pattern = "Libs:"
             repl = "Libs: -L{0} -Wl,-rpath={0} ".format(spec["gettext"].libs.directories[0])
             myfile = join_path(self.spec["glib"].libs.directories[0], "pkgconfig", "glib-2.0.pc")
             filter_file(pattern, repl, myfile, backup=False)
+
+
+class MesonBuilder(BaseBuilder, spack.build_systems.meson.MesonBuilder):
+    def meson_args(self):
+        args = []
+        if self.spec.satisfies("@2.63.5:"):
+            if "+libmount" in self.spec:
+                args.append("-Dlibmount=enabled")
+            else:
+                args.append("-Dlibmount=disabled")
+        else:
+            if "+libmount" in self.spec:
+                args.append("-Dlibmount=true")
+            else:
+                args.append("-Dlibmount=false")
+        if "tracing=dtrace" in self.spec:
+            args.append("-Ddtrace=true")
+        else:
+            args.append("-Ddtrace=false")
+        if "tracing=systemtap" in self.spec:
+            args.append("-Dsystemtap=true")
+        else:
+            args.append("-Dsystemtap=false")
+        if self.spec.satisfies("@2.59.0:"):
+            args.append("-Dselinux=disabled")
+        else:
+            args.append("-Dselinux=false")
+        args.append("-Dgtk_doc=false")
+        args.append("-Dlibelf=enabled")
+
+        # arguments for older versions
+        if self.spec.satisfies("@:2.72"):
+            args.append("-Dgettext=external")
+        if self.spec.satisfies("@:2.74"):
+            if self.spec["iconv"].name == "libc":
+                args.append("-Diconv=libc")
+            else:
+                if self.spec.satisfies("@2.61.0:"):
+                    args.append("-Diconv=external")
+                else:
+                    args.append("-Diconv=gnu")
+        return args
+
+
+class AutotoolsBuilder(BaseBuilder, spack.build_systems.autotools.AutotoolsBuilder):
+    def configure_args(self):
+        args = []
+        if "+libmount" in self.spec:
+            args.append("--enable-libmount")
+        else:
+            args.append("--disable-libmount")
+        if self.spec.satisfies("@2.53.4:"):
+            args.append(
+                "--with-python={0}".format(os.path.basename(self.spec["python"].command.path))
+            )
+        if self.spec["iconv"].name == "libc":
+            args.append("--with-libiconv=maybe")
+        else:
+            args.append("--with-libiconv=gnu")
+        if self.spec.satisfies("@2.56:"):
+            for value in ("dtrace", "systemtap"):
+                if ("tracing=" + value) in self.spec:
+                    args.append("--enable-" + value)
+                else:
+                    args.append("--disable-" + value)
+        else:
+            if "tracing=dtrace" in self.spec or "tracing=systemtap" in self.spec:
+                args.append("--enable-tracing")
+            else:
+                args.append("--disable-tracing")
+        # SELinux is not available in Spack, so glib should not use it.
+        args.append("--disable-selinux")
+        # glib should not use the globally installed gtk-doc. Otherwise,
+        # gtk-doc can fail with Python errors such as "ImportError: No module
+        # named site". This is due to the fact that Spack sets PYTHONHOME,
+        # which can confuse the global Python installation used by gtk-doc.
+        args.append("--disable-gtk-doc-html")
+        # glib uses gtk-doc even though it should be disabled if it can find
+        # its binaries. Override the checks to use the true binary.
+        true = which("true")
+        args.append("GTKDOC_CHECK={0}".format(true))
+        args.append("GTKDOC_CHECK_PATH={0}".format(true))
+        args.append("GTKDOC_MKPDF={0}".format(true))
+        args.append("GTKDOC_REBASE={0}".format(true))
+        return args

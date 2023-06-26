@@ -19,8 +19,6 @@ import sys
 import traceback
 import urllib.parse
 
-import ruamel.yaml.error as yaml_error
-
 import llnl.util.tty as tty
 from llnl.util.filesystem import mkdirp
 
@@ -89,11 +87,8 @@ class Mirror(object):
 
     @staticmethod
     def from_yaml(stream, name=None):
-        try:
-            data = syaml.load(stream)
-            return Mirror.from_dict(data, name)
-        except yaml_error.MarkedYAMLError as e:
-            raise syaml.SpackYAMLError("error parsing YAML mirror:", str(e)) from e
+        data = syaml.load(stream)
+        return Mirror.from_dict(data, name)
 
     @staticmethod
     def from_json(stream, name=None):
@@ -288,11 +283,8 @@ class MirrorCollection(collections.abc.Mapping):
     # TODO: this isn't called anywhere
     @staticmethod
     def from_yaml(stream, name=None):
-        try:
-            data = syaml.load(stream)
-            return MirrorCollection(data)
-        except yaml_error.MarkedYAMLError as e:
-            raise syaml.SpackYAMLError("error parsing YAML mirror collection:", str(e)) from e
+        data = syaml.load(stream)
+        return MirrorCollection(data)
 
     @staticmethod
     def from_json(stream, name=None):

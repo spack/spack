@@ -56,7 +56,7 @@ class Gmake(AutotoolsPackage, GNUMirrorPackage):
 
     tags = ["build-tools"]
 
-    executables = ["^g?make$"]
+    executables = ["^make$"]
 
     @classmethod
     def determine_version(cls, exe):
@@ -83,7 +83,4 @@ class Gmake(AutotoolsPackage, GNUMirrorPackage):
     def setup_dependent_package(self, module, dspec):
         module.make = MakeExecutable(
             self.spec.prefix.bin.make, determine_number_of_jobs(parallel=dspec.package.parallel)
-        )
-        module.gmake = MakeExecutable(
-            self.spec.prefix.bin.gmake, determine_number_of_jobs(parallel=dspec.package.parallel)
         )

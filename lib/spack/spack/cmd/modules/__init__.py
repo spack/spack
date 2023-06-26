@@ -116,21 +116,23 @@ def one_spec_or_raise(specs):
 
 
 def check_module_set_name(name):
-    modules_config = spack.config.get("modules")
-    valid_names = set(
-        [
-            key
-            for key, value in modules_config.items()
-            if isinstance(value, dict) and value.get("enable", [])
-        ]
-    )
-    if "enable" in modules_config and modules_config["enable"]:
-        valid_names.add("default")
+    modules = spack.config.get("modules")
+    if name != "prefix_inspections" and name in modules:
+        return
 
-    if name not in valid_names:
-        msg = "Cannot use invalid module set %s." % name
-        msg += "    Valid module set names are %s" % list(valid_names)
-        raise spack.config.ConfigError(msg)
+    names = [k for k in modules if k != "prefix_inspections"]
+
+    if not names:
+        raise spack.config.ConfigError(
+            f"Module set configuration is missing. Cannot use module set '{name}'"
+        )
+
+    pretty_names = "', '".join(names)
+
+    raise spack.config.ConfigError(
+        f"Cannot use invalid module set '{name}'.",
+        f"Valid module set names are: '{pretty_names}'.",
+    )
 
 
 _missing_modules_warning = (

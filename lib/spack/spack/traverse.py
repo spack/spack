@@ -18,7 +18,7 @@ EdgeAndDepth = namedtuple("EdgeAndDepth", ["edge", "depth"])
 
 
 def sort_edges(edges):
-    edges.sort(key=lambda edge: edge.spec.name)
+    edges.sort(key=lambda edge: (edge.spec.name or "", edge.spec.abstract_hash or ""))
     return edges
 
 
@@ -211,7 +211,9 @@ def get_visitor_from_args(cover, direction, deptype, key=id, visited=None, visit
 def with_artificial_edges(specs):
     """Initialize a list of edges from an imaginary root node to the root specs."""
     return [
-        EdgeAndDepth(edge=spack.spec.DependencySpec(parent=None, spec=s, deptypes=()), depth=0)
+        EdgeAndDepth(
+            edge=spack.spec.DependencySpec(parent=None, spec=s, deptypes=(), virtuals=()), depth=0
+        )
         for s in specs
     ]
 

@@ -19,7 +19,7 @@ import spack.util.crypto
 from spack.package_base import deprecated_version, preferred_version
 from spack.util.editor import editor
 from spack.util.naming import valid_fully_qualified_module_name
-from spack.version import VersionBase, ver
+from spack.version import Version
 
 description = "checksum available versions of a package"
 section = "packaging"
@@ -83,9 +83,10 @@ def checksum(parser, args):
     pkg = pkg_cls(spack.spec.Spec(args.package))
 
     url_dict = {}
-    versions = args.versions
-    if (not versions) and args.preferred:
+    if not args.versions and args.preferred:
         versions = [preferred_version(pkg)]
+    else:
+        versions = [Version(v) for v in args.versions]
 
     if versions:
         remote_versions = None
@@ -93,12 +94,6 @@ def checksum(parser, args):
             if deprecated_version(pkg, version):
                 tty.warn("Version {0} is deprecated".format(version))
 
-            version = ver(version)
-            if not isinstance(version, VersionBase):
-                tty.die(
-                    "Cannot generate checksums for version lists or "
-                    "version ranges. Use unambiguous versions."
-                )
             url = pkg.find_valid_url_for_version(version)
             if url is not None:
                 url_dict[version] = url

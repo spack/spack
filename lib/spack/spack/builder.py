@@ -130,9 +130,11 @@ def _create(pkg):
                 bases,
                 {
                     "run_tests": property(lambda x: x.wrapped_package_object.run_tests),
-                    "test_log_file": property(lambda x: x.wrapped_package_object.test_log_file),
-                    "test_failures": property(lambda x: x.wrapped_package_object.test_failures),
+                    "test_requires_compiler": property(
+                        lambda x: x.wrapped_package_object.test_requires_compiler
+                    ),
                     "test_suite": property(lambda x: x.wrapped_package_object.test_suite),
+                    "tester": property(lambda x: x.wrapped_package_object.tester),
                 },
             )
             new_cls.__module__ = package_cls.__module__
@@ -244,7 +246,8 @@ class PhaseCallbacksMeta(type):
                 callbacks_from_base = getattr(base, temporary_stage.attribute_name, None)
                 if callbacks_from_base:
                     break
-            callbacks_from_base = callbacks_from_base or []
+            else:
+                callbacks_from_base = []
 
             # Set the callbacks in this class and flush the temporary stage
             attr_dict[temporary_stage.attribute_name] = staged_callbacks[:] + callbacks_from_base

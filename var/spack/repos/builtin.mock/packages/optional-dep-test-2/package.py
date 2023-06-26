@@ -12,7 +12,7 @@ class OptionalDepTest2(Package):
     homepage = "http://www.example.com"
     url = "http://www.example.com/optional-dep-test-2-1.0.tar.gz"
 
-    version("1.0", "0123456789abcdef0123456789abcdef")
+    version("1.0", md5="0123456789abcdef0123456789abcdef")
 
     variant("odt", default=False)
     variant("mpi", default=False)

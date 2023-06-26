@@ -28,6 +28,8 @@ class Lammps(CMakePackage, CudaPackage, ROCmPackage):
     #   marked deprecated=True
     # * patch releases older than a stable release should be marked deprecated=True
     version("develop", branch="develop")
+    version("20230615", sha256="8470ed7b26ccd3728f4b44a7f1c520f1af23a648af685fd30b42b840fdfae2ff")
+    version("20230328", sha256="14f5a5c37e4b46466e90d8b35476800e66acee74999f7358f4c12dfe662bfd99")
     version("20230208", sha256="60221242145da4479e5b207d9a0eed90af4168d7a297b4dc8c0e7f2b3215602e")
     version("20221222", sha256="75372ee7ef982767fc4ed4dc95e20ddca8247419adeb0c1276c40e43d1eab955")
     version("20221103", sha256="d28517b84b157d4e46a1a64ed787b4662d8f2f5ade3f5a04bb0caed068f32f7e")
@@ -385,7 +387,7 @@ class Lammps(CMakePackage, CudaPackage, ROCmPackage):
         "kokkos": {},
         "kspace": {"default": True},
         "latboltz": {"when": "@20210702:"},
-        "latte": {"when": "@20170922:"},
+        "latte": {"when": "@20170922:20230328"},
         "lepton": {"when": "@20230208:"},
         "machdyn": {"when": "@20210702:"},
         "manifold": {"when": "@20210702:"},
@@ -533,6 +535,7 @@ class Lammps(CMakePackage, CudaPackage, ROCmPackage):
     depends_on("mpi", when="+mpi")
     depends_on("mpi", when="+mpiio")
     depends_on("fftw-api@3", when="+kspace")
+    depends_on("hipfft", when="+kspace+kokkos+rocm")
     depends_on("voropp+pic", when="+voronoi")
     depends_on("netcdf-c+mpi", when="+user-netcdf")
     depends_on("netcdf-c+mpi", when="+netcdf")
@@ -544,7 +547,7 @@ class Lammps(CMakePackage, CudaPackage, ROCmPackage):
     depends_on("latte@1.0.1", when="@:20180222+latte")
     depends_on("latte@1.1.1:", when="@20180316:20180628+latte")
     depends_on("latte@1.2.1:", when="@20180629:20200505+latte")
-    depends_on("latte@1.2.2:", when="@20200602:+latte")
+    depends_on("latte@1.2.2:", when="@20200602:20230328+latte")
     depends_on("blas", when="+latte")
     depends_on("lapack", when="+latte")
     depends_on("python", when="+python")
@@ -640,6 +643,21 @@ class Lammps(CMakePackage, CudaPackage, ROCmPackage):
         msg="ROCm builds of the GPU package not maintained prior to version 20220623",
     )
     conflicts("+intel", when="%aocc@:3.2.9999", msg="+intel with AOCC requires version 4 or newer")
+
+    # Backport of https://github.com/lammps/lammps/pull/3726
+    conflicts("+kokkos+rocm+kspace", when="@:20210929.3")
+    patch(
+        "https://github.com/lammps/lammps/commit/ebb8eee941e52c98054fdf96ea78ee4d5f606f47.patch?full_index=1",
+        sha256="3dedd807f63a21c543d1036439099f05c6031fd98e7cb1ea7825822fc074106e",
+        when="@20220623.3:20230208 +kokkos +rocm +kspace",
+    )
+
+    # Older LAMMPS does not compile with Kokkos 4.x
+    conflicts(
+        "^kokkos @4:",
+        when="@:20230615",
+        msg="LAMMPS is incompatible with Kokkos 4.x until @20230615",
+    )
 
     patch("lib.patch", when="@20170901")
     patch("660.patch", when="@20170922")
@@ -739,7 +757,7 @@ class Lammps(CMakePackage, CudaPackage, ROCmPackage):
                 args.append(self.define("FFT", "FFTW3"))
             elif "^mkl" in spec:
                 args.append(self.define("FFT", "MKL"))
-            elif "^armpl-gcc" in spec:
+            elif "^armpl-gcc" in spec or "^acfl" in spec:
                 args.append(self.define("FFT", "FFTW3"))
                 args.append(self.define("FFTW3_LIBRARY", self.spec["fftw-api"].libs[0]))
                 args.append(

@@ -80,6 +80,12 @@ def setup_parser(subparser):
         "--directory", default=None, help="specify a directory storing a group of manifest files"
     )
     read_cray_manifest.add_argument(
+        "--ignore-default-dir",
+        action="store_true",
+        default=False,
+        help="ignore the default directory of manifest files",
+    )
+    read_cray_manifest.add_argument(
         "--dry-run",
         action="store_true",
         default=False,
@@ -177,11 +183,16 @@ def external_read_cray_manifest(args):
         manifest_directory=args.directory,
         dry_run=args.dry_run,
         fail_on_error=args.fail_on_error,
+        ignore_default_dir=args.ignore_default_dir,
     )
 
 
 def _collect_and_consume_cray_manifest_files(
-    manifest_file=None, manifest_directory=None, dry_run=False, fail_on_error=False
+    manifest_file=None,
+    manifest_directory=None,
+    dry_run=False,
+    fail_on_error=False,
+    ignore_default_dir=False,
 ):
     manifest_files = []
     if manifest_file:
@@ -191,7 +202,7 @@ def _collect_and_consume_cray_manifest_files(
     if manifest_directory:
         manifest_dirs.append(manifest_directory)
 
-    if os.path.isdir(cray_manifest.default_path):
+    if not ignore_default_dir and os.path.isdir(cray_manifest.default_path):
         tty.debug(
             "Cray manifest path {0} exists: collecting all files to read.".format(
                 cray_manifest.default_path

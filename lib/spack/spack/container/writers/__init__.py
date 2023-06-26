@@ -7,12 +7,15 @@ convenience functions.
 """
 import collections
 import copy
+from typing import Optional
 
 import spack.environment as ev
+import spack.error
 import spack.schema.env
 import spack.tengine as tengine
 import spack.util.spack_yaml as syaml
-from spack.container.images import (
+
+from ..images import (
     bootstrap_template_for,
     build_info,
     checkout_command,
@@ -47,7 +50,7 @@ def create(configuration, last_phase=None):
         configuration (dict): how to generate the current recipe
         last_phase (str): last phase to be printed or None to print them all
     """
-    name = ev.config_dict(configuration)["container"]["format"]
+    name = configuration[ev.TOP_LEVEL_KEY]["container"]["format"]
     return _writer_factory[name](configuration, last_phase)
 
 
@@ -131,8 +134,11 @@ class PathContext(tengine.Context):
     directly via PATH.
     """
 
+    # Must be set by derived classes
+    template_name: Optional[str] = None
+
     def __init__(self, config, last_phase):
-        self.config = ev.config_dict(config)
+        self.config = config[ev.TOP_LEVEL_KEY]
         self.container_config = self.config["container"]
 
         # Operating system tag as written in the configuration file
@@ -145,6 +151,10 @@ class PathContext(tengine.Context):
 
         # Record the last phase
         self.last_phase = last_phase
+
+    @tengine.context_property
+    def depfile(self):
+        return self.container_config.get("depfile", False)
 
     @tengine.context_property
     def run(self):
@@ -197,12 +207,20 @@ class PathContext(tengine.Context):
     @tengine.context_property
     def os_packages_final(self):
         """Additional system packages that are needed at run-time."""
-        return self._os_packages_for_stage("final")
+        try:
+            return self._os_packages_for_stage("final")
+        except Exception as e:
+            msg = f"an error occurred while rendering the 'final' stage of the image: {e}"
+            raise spack.error.SpackError(msg) from e
 
     @tengine.context_property
     def os_packages_build(self):
         """Additional system packages that are needed at build-time."""
-        return self._os_packages_for_stage("build")
+        try:
+            return self._os_packages_for_stage("build")
+        except Exception as e:
+            msg = f"an error occurred while rendering the 'build' stage of the image: {e}"
+            raise spack.error.SpackError(msg) from e
 
     @tengine.context_property
     def os_package_update(self):
@@ -235,12 +253,23 @@ class PathContext(tengine.Context):
         if image is None:
             os_pkg_manager = os_package_manager_for(image_config["os"])
         else:
-            os_pkg_manager = self.container_config["os_packages"]["command"]
+            os_pkg_manager = self._os_pkg_manager()
 
         update, install, clean = commands_for(os_pkg_manager)
 
         Packages = collections.namedtuple("Packages", ["update", "install", "list", "clean"])
         return Packages(update=update, install=install, list=package_list, clean=clean)
+
+    def _os_pkg_manager(self):
+        try:
+            os_pkg_manager = self.container_config["os_packages"]["command"]
+        except KeyError:
+            msg = (
+                "cannot determine the OS package manager to use.\n\n\tPlease add an "
+                "appropriate 'os_packages:command' entry to the spack.yaml manifest file\n"
+            )
+            raise spack.error.SpackError(msg)
+        return os_pkg_manager
 
     @tengine.context_property
     def extra_instructions(self):
@@ -280,7 +309,8 @@ class PathContext(tengine.Context):
     def __call__(self):
         """Returns the recipe as a string"""
         env = tengine.make_environment()
-        t = env.get_template(self.template_name)
+        template_name = self.container_config.get("template", self.template_name)
+        t = env.get_template(template_name)
         return t.render(**self.to_dict())
 
 

@@ -25,7 +25,7 @@ def test_undevelop(tmpdir, config, mock_packages, mutable_mock_env_path):
         with open("spack.yaml", "w") as f:
             f.write(
                 """\
-env:
+spack:
   specs:
   - mpich
 
@@ -54,7 +54,7 @@ def test_undevelop_nonexistent(tmpdir, config, mock_packages, mutable_mock_env_p
         with open("spack.yaml", "w") as f:
             f.write(
                 """\
-env:
+spack:
   specs:
   - mpich
 

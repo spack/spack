@@ -24,6 +24,10 @@ class BigdftCore(AutotoolsPackage, CudaPackage):
     variant("scalapack", default=True, description="Enable SCALAPACK support")
     variant("openbabel", default=False, description="Enable detection of openbabel compilation")
 
+    depends_on("autoconf", type="build")
+    depends_on("automake", type="build")
+    depends_on("libtool", type="build")
+
     depends_on("python@3.0:", type=("build", "run"))
 
     depends_on("blas")
@@ -43,13 +47,7 @@ class BigdftCore(AutotoolsPackage, CudaPackage):
         depends_on("bigdft-psolver@{0}".format(vers), when="@{0}".format(vers))
         depends_on("bigdft-libabinit@{0}".format(vers), when="@{0}".format(vers))
 
-    build_directory = "bigdft"
-
-    def autoreconf(self, spec, prefix):
-        autoreconf = which("autoreconf")
-
-        with working_dir(self.build_directory):
-            autoreconf("-fi")
+    configure_directory = "bigdft"
 
     def configure_args(self):
         spec = self.spec
@@ -72,13 +70,13 @@ class BigdftCore(AutotoolsPackage, CudaPackage):
             "FCFLAGS=%s" % " ".join(openmp_flag),
             "--with-ext-linalg=%s" % " ".join(linalg),
             "--with-pyyaml-path=%s" % pyyaml,
-            "--with-futile-libs=%s" % spec["bigdft-futile"].prefix.lib,
+            "--with-futile-libs=%s" % spec["bigdft-futile"].libs.ld_flags,
             "--with-futile-incs=%s" % spec["bigdft-futile"].headers.include_flags,
-            "--with-chess-libs=%s" % spec["bigdft-chess"].prefix.lib,
+            "--with-chess-libs=%s" % spec["bigdft-chess"].libs.ld_flags,
             "--with-chess-incs=%s" % spec["bigdft-chess"].headers.include_flags,
-            "--with-psolver-libs=%s" % spec["bigdft-psolver"].prefix.lib,
+            "--with-psolver-libs=%s" % spec["bigdft-psolver"].libs.ld_flags,
             "--with-psolver-incs=%s" % spec["bigdft-psolver"].headers.include_flags,
-            "--with-libABINIT-libs=%s" % spec["bigdft-libabinit"].prefix.lib,
+            "--with-libABINIT-libs=%s" % spec["bigdft-libabinit"].libs.ld_flags,
             "--with-libABINIT-incs=%s" % spec["bigdft-libabinit"].headers.include_flags,
             "--with-libgain-libs=%s" % spec["libgain"].libs.ld_flags,
             "--with-libgain-incs=%s" % spec["libgain"].headers.include_flags,

@@ -17,7 +17,9 @@ class Gradle(Package):
     homepage = "https://gradle.org"
     url = "https://services.gradle.org/distributions/gradle-3.4-all.zip"
 
+    version("8.1.1", sha256="5625a0ae20fe000d9225d000b36909c7a0e0e8dda61c19b12da769add847c975")
     version("8.0.2", sha256="47a5bfed9ef814f90f8debcbbb315e8e7c654109acd224595ea39fca95c5d4da")
+    version("7.3", sha256="00b273629df4ce46e68df232161d5a7c4e495b9a029ce6e0420f071e21316867")
     version("7.2", sha256="a8da5b02437a60819cad23e10fc7e9cf32bcb57029d9cb277e26eeff76ce014b")
     version("7.1.1", sha256="9bb8bc05f562f2d42bdf1ba8db62f6b6fa1c3bf6c392228802cc7cb0578fe7e0")
     version("7.1", sha256="a9e356a21595348b6f04b024ed0b08ac8aea6b2ac37e6c0ef58e51549cd7b9cb")

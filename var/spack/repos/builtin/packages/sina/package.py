@@ -16,6 +16,7 @@ class Sina(CachedCMakePackage):
 
     maintainers("estebanpauli", "HaluskaR", "murray55")
 
+    version("1.13.0", sha256="4087fc63ea054fd5d6cfcd2223d33edcb910df1fad5936301591e1a9aa4d6bac")
     version("1.11.0", sha256="a080f6583101696a6354940f00646ef892e1b2f8fc3f1b1907ba1c3ade6d4b47")
     version("1.10.0", sha256="b34379ce8cc5eca5a0f16893053fac75be14c2109d1beed4c6d48e11f9b281c7")
 

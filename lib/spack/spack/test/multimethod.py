@@ -54,8 +54,8 @@ def test_no_version_match(pkg_name):
         ("^mpich2@1.2", "mpi_version", 2),
         ("^mpich@1.0", "mpi_version", 1),
         # Undefined mpi versions
-        ("^mpich@0.4", "mpi_version", 1),
-        ("^mpich@1.4", "mpi_version", 1),
+        ("^mpich@=0.4", "mpi_version", 1),
+        ("^mpich@=1.4", "mpi_version", 1),
         # Constraints on compilers with a default
         ("%gcc", "has_a_default", "gcc"),
         ("%clang", "has_a_default", "clang"),
@@ -107,11 +107,11 @@ def test_target_match(pkg_name):
         ("multimethod@2.0", "inherited_and_overridden", "base@2.0"),
         # Diamond-like inheritance (even though the MRO linearize everything)
         ("multimethod-diamond@1.0", "diamond_inheritance", "base_package"),
-        ("multimethod-base@1.0", "diamond_inheritance", "base_package"),
+        ("multimethod-base@=1.0", "diamond_inheritance", "base_package"),
         ("multimethod-diamond@2.0", "diamond_inheritance", "first_parent"),
         ("multimethod-inheritor@2.0", "diamond_inheritance", "first_parent"),
-        ("multimethod-diamond@3.0", "diamond_inheritance", "second_parent"),
-        ("multimethod-diamond-parent@3.0", "diamond_inheritance", "second_parent"),
+        ("multimethod-diamond@=3.0", "diamond_inheritance", "second_parent"),
+        ("multimethod-diamond-parent@=3.0", "diamond_inheritance", "second_parent"),
         ("multimethod-diamond@4.0", "diamond_inheritance", "subclass"),
     ],
 )

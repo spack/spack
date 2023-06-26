@@ -12,6 +12,7 @@ class Exa(Package):
     homepage = "https://the.exa.website"
     url = "https://github.com/ogham/exa/archive/v0.9.0.tar.gz"
 
+    version("0.10.1", sha256="ff0fa0bfc4edef8bdbbb3cabe6fdbd5481a71abbbcc2159f402dea515353ae7c")
     version("0.9.0", sha256="96e743ffac0512a278de9ca3277183536ee8b691a46ff200ec27e28108fef783")
 
     depends_on("rust")

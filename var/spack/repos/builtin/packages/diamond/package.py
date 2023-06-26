@@ -14,6 +14,8 @@ class Diamond(CMakePackage):
     url = "https://github.com/bbuchfink/diamond/archive/v2.0.9.tar.gz"
     maintainers("snehring")
 
+    version("2.1.7", sha256="2dcaba0e79ecb02c3d2a6816d317e714767118a9a056721643abff4c586ca95b")
+    version("2.1.6", sha256="852d27c7535d53f1ce59db0625ff23ac3bf17e57f7a3b1c46c08718f77e19c54")
     version("2.0.15", sha256="cc8e1f3fd357d286cf6585b21321bd25af69aae16ae1a8f605ea603c1886ffa4")
     version("2.0.14", sha256="3eaef2b957e4ba845eac27a2ca3249aae4259ff1fe0ff5a21b094481328fdc53")
     version("2.0.11", sha256="41f3197aaafff9c42763fb7658b67f730ebc6dd3c0533c9c3d54bd3166e93f24")

@@ -12,7 +12,7 @@ Hooks are not executed in any particular order.
 Currently the following hooks are supported:
 
     * pre_install(spec)
-    * post_install(spec)
+    * post_install(spec, explicit)
     * pre_uninstall(spec)
     * post_uninstall(spec)
     * on_install_start(spec)

@@ -13,6 +13,7 @@ class PyNilearn(PythonPackage):
     pypi = "nilearn/nilearn-0.7.1.tar.gz"
     git = "https://github.com/nilearn/nilearn"
 
+    version("0.10.1", sha256="928a364e7ed77d15d02b7f227197ea7c78f44f2fe780feb555d6d7cf9232f846")
     version("0.10.0", sha256="cc7f1068e038076527ead1bd363436f88f5e8d21e8bb57b323b30b926fc7553a")
     version("0.9.2", sha256="8da8d3835d92cd7b8a6cc92455a489d7e7f5994cf64fc71bce653e362773b9e4")
     version("0.9.0", sha256="f9c8e30adef51489910aec7724b5699de178427d3ae63873dad9b23dd321fe76")
@@ -23,10 +24,10 @@ class PyNilearn(PythonPackage):
     version("0.4.2", sha256="5049363eb6da2e7c35589477dfc79bf69929ca66de2d7ed2e9dc07acf78636f4")
 
     depends_on("python@3.7:", when="@0.10:", type=("build", "run"))
-    depends_on("python@3.6:", when="@0.8:", type=("build", "run"))
-    depends_on("python@3.5:", when="@0.6:", type=("build", "run"))
-    depends_on("python@2.7:", type=("build", "run"))
-    depends_on("py-setuptools", type="build")
+
+    depends_on("py-hatchling", when="@0.10.1:", type="build")
+    depends_on("py-hatch-vcs", when="@0.10.1:", type="build")
+    depends_on("py-setuptools", when="@:0.10.0", type="build")
 
     variant("plotting", default=False, description="Enable plotting functionalities")
 
@@ -65,6 +66,7 @@ class PyNilearn(PythonPackage):
     depends_on("py-scipy@0.19:", when="@0.6:", type=("build", "run"))
     depends_on("py-scipy@0.17:", when="@0.5:", type=("build", "run"))
     depends_on("py-scipy@0.14:", type=("build", "run"))
+    depends_on("py-packaging", when="@0.10.1:", type=("build", "run"))
 
     depends_on("py-matplotlib@3.3:", when="@0.10: +plotting", type=("build", "run"))
     depends_on("py-matplotlib@3:", when="@0.9.1: +plotting", type=("build", "run"))

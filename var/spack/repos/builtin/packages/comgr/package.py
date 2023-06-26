@@ -159,6 +159,10 @@ class Comgr(CMakePackage):
 
     root_cmakelists_dir = join_path("lib", "comgr")
 
+    def cmake_args(self):
+        args = [self.define("BUILD_TESTING", self.run_tests)]
+        return args
+
     @classmethod
     def determine_version(cls, lib):
         match = re.search(r"lib\S*\.so\.\d+\.\d+\.(\d)(\d\d)(\d\d)", lib)

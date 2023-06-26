@@ -1,3 +1,221 @@
+# v0.20.0 (2023-05-21)
+
+`v0.20.0` is a major feature release.
+
+## Features in this release
+
+1. **`requires()` directive and enhanced package requirements**
+
+   We've added some more enhancements to requirements in Spack (#36286).
+
+   There is a new `requires()` directive for packages. `requires()` is the opposite of
+   `conflicts()`. You can use it to impose constraints on this package when certain
+   conditions are met:
+
+   ```python
+   requires(
+       "%apple-clang",
+       when="platform=darwin",
+       msg="This package builds only with clang on macOS"
+   )
+   ```
+
+   More on this in [the docs](
+     https://spack.rtfd.io/en/latest/packaging_guide.html#conflicts-and-requirements).
+
+   You can also now add a `when:` clause to `requires:` in your `packages.yaml`
+   configuration or in an environment:
+
+   ```yaml
+   packages:
+     openmpi:
+       require:
+       - any_of: ["%gcc"]
+         when: "@:4.1.4"
+         message: "Only OpenMPI 4.1.5 and up can build with fancy compilers"
+   ```
+
+   More details can be found [here](
+     https://spack.readthedocs.io/en/latest/build_settings.html#package-requirements)
+
+2. **Exact versions**
+
+   Spack did not previously have a way to distinguish a version if it was a prefix of
+   some other version. For example, `@3.2` would match `3.2`, `3.2.1`, `3.2.2`, etc. You
+   can now match *exactly* `3.2` with `@=3.2`. This is useful, for example, if you need
+   to patch *only* the `3.2` version of a package. The new syntax is described in [the docs](
+     https://spack.readthedocs.io/en/latest/basic_usage.html#version-specifier).
+
+   Generally, when writing packages, you should prefer to use ranges like `@3.2` over
+   the specific versions, as this allows the concretizer more leeway when selecting
+   versions of dependencies. More details and recommendations are in the [packaging guide](
+     https://spack.readthedocs.io/en/latest/packaging_guide.html#ranges-versus-specific-versions).
+
+   See #36273 for full details on the version refactor.
+
+3. **New testing interface**
+
+   Writing package tests is now much simpler with a new [test interface](
+     https://spack.readthedocs.io/en/latest/packaging_guide.html#stand-alone-tests).
+
+   Writing a test is now as easy as adding a method that starts with `test_`:
+
+   ```python
+   class MyPackage(Package):
+       ...
+
+       def test_always_fails(self):
+           """use assert to always fail"""
+           assert False
+
+       def test_example(self):
+           """run installed example"""
+           example = which(self.prefix.bin.example)
+           example()
+    ```
+
+    You can use Python's native `assert` statement to implement your checks -- no more
+    need to fiddle with `run_test` or other test framework methods. Spack will
+    introspect the class and run `test_*` methods when you run `spack test`,
+
+4. **More stable concretization**
+
+   * Now, `spack concretize` will *only* concretize the new portions of the environment
+     and will not change existing parts of an environment unless you specify `--force`.
+     This has always been true for `unify:false`, but not for `unify:true` and
+     `unify:when_possible` environments. Now it is true for all of them (#37438, #37681).
+
+   * The concretizer has a new `--reuse-deps` argument that *only* reuses dependencies.
+     That is, it will always treat the *roots* of your environment as it would with
+     `--fresh`. This allows you to upgrade just the roots of your environment while
+     keeping everything else stable (#30990).
+
+5. **Weekly develop snapshot releases**
+
+   Since last year, we have maintained a buildcache of `develop` at
+   https://binaries.spack.io/develop, but the cache can grow to contain so many builds
+   as to be unwieldy. When we get a stable `develop` build, we snapshot the release and
+   add a corresponding tag the Spack repository. So, you can use a stack from a specific
+   day. There are now tags in the spack repository like:
+
+   * `develop-2023-05-14`
+   * `develop-2023-05-18`
+
+   that correspond to build caches like:
+
+   * https://binaries.spack.io/develop-2023-05-14/e4s
+   * https://binaries.spack.io/develop-2023-05-18/e4s
+
+   We plan to store these snapshot releases weekly.
+
+6. **Specs in buildcaches can be referenced by hash.**
+
+   * Previously, you could run `spack buildcache list` and see the hashes in
+     buildcaches, but referring to them by hash would fail.
+   * You can now run commands like `spack spec` and `spack install` and refer to
+     buildcache hashes directly, e.g. `spack install /abc123` (#35042)
+
+7. **New package and buildcache index websites**
+
+   Our public websites for searching packages have been completely revamped and updated.
+   You can check them out here:
+
+   * *Package Index*: https://packages.spack.io
+   * *Buildcache Index*: https://cache.spack.io
+
+   Both are searchable and more interactive than before. Currently major releases are
+   shown; UI for browsing `develop` snapshots is coming soon.
+
+8. **Default CMake and Meson build types are now Release**
+
+   Spack has historically defaulted to building with optimization and debugging, but
+   packages like `llvm` can be enormous with debug turned on. Our default build type for
+   all Spack packages is now `Release` (#36679, #37436). This has a number of benefits:
+
+   * much smaller binaries;
+   * higher default optimization level; and
+   * defining `NDEBUG` disables assertions, which may lead to further speedups.
+
+   You can still get the old behavior back through requirements and package preferences.
+
+## Other new commands and directives
+
+* `spack checksum` can automatically add new versions to package (#24532)
+* new command: `spack pkg grep` to easily search package files (#34388)
+* New `maintainers` directive (#35083)
+* Add `spack buildcache push` (alias to `buildcache create`) (#34861)
+* Allow using `-j` to control the parallelism of concretization (#37608)
+* Add `--exclude` option to 'spack external find' (#35013)
+
+## Other new features of note
+
+* editing: add higher-precedence `SPACK_EDITOR` environment variable
+* Many YAML formatting improvements from updating `ruamel.yaml` to the latest version
+  supporting Python 3.6. (#31091, #24885, #37008).
+* Requirements and preferences should not define (non-git) versions (#37687, #37747)
+* Environments now store spack version/commit in `spack.lock` (#32801)
+* User can specify the name of the `packages` subdirectory in repositories (#36643)
+* Add container images supporting RHEL alternatives (#36713)
+* make version(...) kwargs explicit (#36998)
+
+## Notable refactors
+
+* buildcache create: reproducible tarballs (#35623)
+* Bootstrap most of Spack dependencies using environments (#34029)
+* Split `satisfies(..., strict=True/False)` into two functions (#35681)
+* spack install: simplify behavior when inside environments (#35206)
+
+## Binary cache and stack updates
+
+* Major simplification of CI boilerplate in stacks (#34272, #36045)
+* Many improvements to our CI pipeline's reliability
+
+## Removals, Deprecations, and disablements
+* Module file generation is disabled by default; you'll need to enable it to use it (#37258)
+* Support for Python 2 was deprecated in `v0.19.0` and has been removed. `v0.20.0` only
+  supports Python 3.6 and higher.
+* Deprecated target names are no longer recognized by Spack. Use generic names instead:
+  * `graviton` is now `cortex_a72`
+  * `graviton2` is now `neoverse_n1`
+  * `graviton3` is now `neoverse_v1`
+* `blacklist` and `whitelist` in module configuration were deprecated in `v0.19.0` and are
+  removed in this release. Use `exclude` and `include` instead.
+* The `ignore=` parameter of the `extends()` directive has been removed. It was not used by
+  any builtin packages and is no longer needed to avoid conflicts in environment views (#35588).
+* Support for the old YAML buildcache format has been removed. It was deprecated in `v0.19.0` (#34347).
+* `spack find --bootstrap` has been removed. It was deprecated in `v0.19.0`. Use `spack
+  --bootstrap find` instead (#33964).
+* `spack bootstrap trust` and `spack bootstrap untrust` are now removed, having been
+  deprecated in `v0.19.0`. Use `spack bootstrap enable` and `spack bootstrap disable`.
+* The `--mirror-name`, `--mirror-url`, and `--directory` options to buildcache and
+  mirror commands were deprecated in `v0.19.0` and have now been removed. They have been
+  replaced by positional arguments (#37457).
+* Deprecate `env:` as top level environment key (#37424)
+* deprecate buildcache create --rel, buildcache install --allow-root (#37285)
+* Support for very old perl-like spec format strings (e.g., `$_$@$%@+$+$=`) has been
+  removed (#37425). This was deprecated in in `v0.15` (#10556).
+
+## Notable Bugfixes
+
+* bugfix: don't fetch package metadata for unknown concrete specs (#36990)
+* Improve package source code context display on error  (#37655)
+* Relax environment manifest filename requirements and lockfile identification criteria (#37413)
+* `installer.py`: drop build edges of installed packages by default (#36707)
+* Bugfix: package requirements with git commits (#35057, #36347)
+* Package requirements: allow single specs in requirement lists (#36258)
+* conditional variant values: allow boolean (#33939)
+* spack uninstall: follow run/link edges on --dependents (#34058)
+
+## Spack community stats
+
+* 7,179 total packages, 499 new since `v0.19.0`
+    * 329 new Python packages
+    * 31 new R packages
+* 336 people contributed to this release
+    * 317 committers to packages
+    * 62 committers to core
+
+
 # v0.19.1 (2023-02-07)
 
 ### Spack Bugfixes

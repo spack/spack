@@ -11,7 +11,7 @@ from llnl.util.filesystem import ancestor
 import spack.compiler
 import spack.compilers.apple_clang as apple_clang
 import spack.util.executable
-from spack.version import ver
+from spack.version import Version
 
 
 class Gcc(spack.compiler.Compiler):
@@ -61,47 +61,47 @@ class Gcc(spack.compiler.Compiler):
 
     @property
     def cxx98_flag(self):
-        if self.real_version < ver("6.0"):
+        if self.real_version < Version("6.0"):
             return ""
         else:
             return "-std=c++98"
 
     @property
     def cxx11_flag(self):
-        if self.real_version < ver("4.3"):
+        if self.real_version < Version("4.3"):
             raise spack.compiler.UnsupportedCompilerFlag(
                 self, "the C++11 standard", "cxx11_flag", " < 4.3"
             )
-        elif self.real_version < ver("4.7"):
+        elif self.real_version < Version("4.7"):
             return "-std=c++0x"
         else:
             return "-std=c++11"
 
     @property
     def cxx14_flag(self):
-        if self.real_version < ver("4.8"):
+        if self.real_version < Version("4.8"):
             raise spack.compiler.UnsupportedCompilerFlag(
                 self, "the C++14 standard", "cxx14_flag", "< 4.8"
             )
-        elif self.real_version < ver("4.9"):
+        elif self.real_version < Version("4.9"):
             return "-std=c++1y"
         else:
             return "-std=c++14"
 
     @property
     def cxx17_flag(self):
-        if self.real_version < ver("5.0"):
+        if self.real_version < Version("5.0"):
             raise spack.compiler.UnsupportedCompilerFlag(
                 self, "the C++17 standard", "cxx17_flag", "< 5.0"
             )
-        elif self.real_version < ver("6.0"):
+        elif self.real_version < Version("6.0"):
             return "-std=c++1z"
         else:
             return "-std=c++17"
 
     @property
     def c99_flag(self):
-        if self.real_version < ver("4.5"):
+        if self.real_version < Version("4.5"):
             raise spack.compiler.UnsupportedCompilerFlag(
                 self, "the C99 standard", "c99_flag", "< 4.5"
             )
@@ -109,7 +109,7 @@ class Gcc(spack.compiler.Compiler):
 
     @property
     def c11_flag(self):
-        if self.real_version < ver("4.7"):
+        if self.real_version < Version("4.7"):
             raise spack.compiler.UnsupportedCompilerFlag(
                 self, "the C11 standard", "c11_flag", "< 4.7"
             )
@@ -157,7 +157,7 @@ class Gcc(spack.compiler.Compiler):
             return "unknown"
 
         version = super(Gcc, cls).default_version(cc)
-        if ver(version) >= ver("7"):
+        if Version(version) >= Version("7"):
             output = spack.compiler.get_compiler_version_output(cc, "-dumpfullversion")
             version = cls.extract_version_from_output(output)
         return version
@@ -187,7 +187,7 @@ class Gcc(spack.compiler.Compiler):
         output = spack.compiler.get_compiler_version_output(fc, "-dumpversion")
         match = re.search(r"(?:GNU Fortran \(GCC\) )?([\d.]+)", output)
         version = match.group(match.lastindex) if match else "unknown"
-        if ver(version) >= ver("7"):
+        if Version(version) >= Version("7"):
             output = spack.compiler.get_compiler_version_output(fc, "-dumpfullversion")
             version = cls.extract_version_from_output(output)
         return version

@@ -52,12 +52,6 @@ class GpiSpace(CMakePackage):
         description="GPI-2 fabric to enable",
         when="+iml",
     )
-    variant(
-        "build_type",
-        default="Release",
-        values=("Debug", "Release", "RelWithDebInfo", "MinSizeRel"),
-        description="CMake build type",
-    )
 
     depends_on("cmake@3.15.0:", type="build")
     depends_on("chrpath@0.13:", type=("build", "run"))

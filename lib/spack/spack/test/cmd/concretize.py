@@ -7,6 +7,7 @@
 import pytest
 
 import spack.environment as ev
+from spack import spack_version
 from spack.main import SpackCommand
 
 pytestmark = pytest.mark.usefixtures("config", "mutable_mock_repo")
@@ -54,3 +55,6 @@ def test_concretize_root_test_dependencies_are_concretized(unify, mutable_mock_e
         add("b")
         concretize("--test", "root")
         assert e.matching_spec("test-dependency")
+
+        data = e._to_lockfile_dict()
+        assert data["spack"]["version"] == spack_version

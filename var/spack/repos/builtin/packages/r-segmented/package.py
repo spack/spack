@@ -20,6 +20,7 @@ class RSegmented(RPackage):
 
     cran = "segmented"
 
+    version("1.6-4", sha256="472c08ae3eb1c4e784aba45f3e745b0e946bef77c26fbb9f103fd35e1a349191")
     version("1.6-1", sha256="f609ca311c8ca45a7b0776b47d9df06aa175c4f17f8e7e9b33c64902ee00d56f")
     version("1.6-0", sha256="6baf7f0a4f5d37b945312d28fcbca47cc3c171d097c43a28cf7ffc998a4ce569")
     version("1.4-0", sha256="306940d3fe38588d5f52a52a217b560620b9ec9f338b32f604dfd78ffd43c276")

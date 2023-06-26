@@ -31,7 +31,7 @@ class Amdfftw(FftwBase):
     """
 
     _name = "amdfftw"
-    homepage = "https://developer.amd.com/amd-aocl/fftw/"
+    homepage = "https://www.amd.com/en/developer/aocl/fftw.html"
     url = "https://github.com/amd/amd-fftw/archive/3.0.tar.gz"
     git = "https://github.com/amd/amd-fftw.git"
 

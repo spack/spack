@@ -14,6 +14,6 @@ class Mindthegap(CMakePackage):
     homepage = "https://gatb.inria.fr/software/mind-the-gap/"
     git = "https://github.com/GATB/MindTheGap.git"
 
-    version("2.0.2", tags="v2.0.2", submodules=True)
+    version("2.0.2", tag="v2.0.2", submodules=True)
 
     depends_on("zlib")

@@ -12,6 +12,7 @@ class MpiBash(AutotoolsPackage):
     homepage = "https://github.com/lanl/MPI-Bash"
     url = "https://github.com/lanl/MPI-Bash/releases/download/v1.2/mpibash-1.2.tar.gz"
 
+    version("1.3", sha256="ab39dcc0eadce765abaf685e73d38f4351e3229fdb4302aee4b9e6e70d431d99")
     version("1.2", sha256="5c2faaa74464111205dbae4799bd89c2425810ec3708d004237b42d620c8be57")
 
     depends_on("bash@4.4:")

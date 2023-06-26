@@ -31,6 +31,8 @@ class IntelTbb(CMakePackage, MakefilePackage):
     # patches, filters and url_for_version() below as needed.
 
     version("master", branch="master")
+    version("2021.9.0", sha256="1ce48f34dada7837f510735ff1172f6e2c261b09460e3bf773b49791d247d24e")
+    version("2021.8.0", sha256="eee380323bb7ce864355ed9431f85c43955faaae9e9bce35c62b372d7ffd9f8b")
     version("2021.7.0", sha256="2cae2a80cda7d45dc7c072e4295c675fff5ad8316691f26f40539f7e7e54c0cc")
     version("2021.6.0", sha256="4897dd106d573e9dacda8509ca5af1a0e008755bf9c383ef6777ac490223031f")
     version("2021.5.0", sha256="e5b57537c741400cf6134b428fc1689a649d7d38d9bb9c1b6d64f092ea28178a")
@@ -121,6 +123,10 @@ class IntelTbb(CMakePackage, MakefilePackage):
     # source tree in 2019.6.
     patch("gcc_generic-pedantic-2019.patch", level=1, when="@2019.1:2019.5")
     patch("gcc_generic-pedantic-4.4.patch", level=1, when="@:2019.0")
+
+    # Patch and conflicts for GCC 13 support (#1031).
+    patch("gcc_13-2021.patch", when="@2021.1:")
+    conflicts("%gcc@13", when="@:2021.3")
 
     # Patch cmakeConfig.cmake.in to find the libraries where we install them.
     patch("tbb_cmakeConfig-2019.5.patch", level=0, when="@2019.5:2021.0")

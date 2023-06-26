@@ -18,6 +18,7 @@ class RDirichletmultinomial(RPackage):
 
     bioc = "DirichletMultinomial"
 
+    version("1.42.0", commit="c388536bed4bdc57724b704edec04b28acbf48db")
     version("1.40.0", commit="200176f8c72ff127788c500629b71872bc6b1f83")
     version("1.38.0", commit="b4de83d354e974fdb7cb3526d029487f24aab670")
     version("1.36.0", commit="926baff6c75cb498945c5895f25cc143c907a357")

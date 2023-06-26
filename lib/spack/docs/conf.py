@@ -149,7 +149,6 @@ graphviz_dot_args = [
 # Get nice vector graphics
 graphviz_output_format = "svg"
 
-
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ["_templates"]
 
@@ -215,8 +214,9 @@ nitpick_ignore = [
     ("py:class", "spack.repo._PrependFileLoader"),
     ("py:class", "spack.build_systems._checks.BaseBuilder"),
     # Spack classes that intersphinx is unable to resolve
-    ("py:class", "spack.version.VersionBase"),
+    ("py:class", "spack.version.StandardVersion"),
     ("py:class", "spack.spec.DependencySpec"),
+    ("py:class", "spack.install_test.Pb"),
 ]
 
 # The reST default role (used for this markup: `text`) to use for all documents.
@@ -232,30 +232,8 @@ nitpick_ignore = [
 # If true, sectionauthor and moduleauthor directives will be shown in the
 # output. They are ignored by default.
 # show_authors = False
-
-# The name of the Pygments (syntax highlighting) style to use.
-# We use our own extension of the default style with a few modifications
-from pygments.style import Style
-from pygments.styles.default import DefaultStyle
-from pygments.token import Comment, Generic, Text
-
-
-class SpackStyle(DefaultStyle):
-    styles = DefaultStyle.styles.copy()
-    background_color = "#f4f4f8"
-    styles[Generic.Output] = "#355"
-    styles[Generic.Prompt] = "bold #346ec9"
-
-
-import pkg_resources
-
-dist = pkg_resources.Distribution(__file__)
-sys.path.append(".")  # make 'conf' module findable
-ep = pkg_resources.EntryPoint.parse("spack = conf:SpackStyle", dist=dist)
-dist._ep_map = {"pygments.styles": {"plugin1": ep}}
-pkg_resources.working_set.add(dist)
-
-pygments_style = "spack"
+sys.path.append("./_pygments")
+pygments_style = "style.SpackStyle"
 
 # A list of ignored prefixes for module index sorting.
 # modindex_common_prefix = []
@@ -340,16 +318,15 @@ html_last_updated_fmt = "%b %d, %Y"
 # Output file base name for HTML help builder.
 htmlhelp_basename = "Spackdoc"
 
-
 # -- Options for LaTeX output --------------------------------------------------
 
 latex_elements = {
     # The paper size ('letterpaper' or 'a4paper').
-    #'papersize': 'letterpaper',
+    # 'papersize': 'letterpaper',
     # The font size ('10pt', '11pt' or '12pt').
-    #'pointsize': '10pt',
+    # 'pointsize': '10pt',
     # Additional stuff for the LaTeX preamble.
-    #'preamble': '',
+    # 'preamble': '',
 }
 
 # Grouping the document tree into LaTeX files. List of tuples

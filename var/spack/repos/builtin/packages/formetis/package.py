@@ -14,6 +14,8 @@ class Formetis(CMakePackage):
 
     maintainers("sethrj")
 
+    test_requires_compiler = True
+
     version("0.0.2", sha256="0067c03ca822f4a3955751acb470f21eed489256e2ec5ff24741eb2b638592f1")
 
     variant("mpi", default=False, description="Enable ParMETIS support")
@@ -53,8 +55,8 @@ class Formetis(CMakePackage):
         """The working directory for cached test sources."""
         return join_path(self.test_suite.current_test_cache_dir, self.examples_src_dir)
 
-    def test(self):
-        """Perform stand-alone/smoke tests on the installed package."""
+    def test_metis(self):
+        """build and run metis"""
         cmake_args = [
             self.define("CMAKE_PREFIX_PATH", self.prefix),
             self.define("CMAKE_Fortran_COMPILER", self.compiler.fc),
@@ -63,20 +65,11 @@ class Formetis(CMakePackage):
         if "+mpi" in self.spec:
             cmake_args.append(self.define("ParMETIS_ROOT", self.spec["parmetis"].prefix))
         cmake_args.append(self.cached_tests_work_dir)
+        cmake = which(self.spec["cmake"].prefix.bin.cmake)
+        make = which("make")
 
-        self.run_test(
-            "cmake", cmake_args, purpose="test: calling cmake", work_dir=self.cached_tests_work_dir
-        )
-
-        self.run_test(
-            "make", [], purpose="test: building the tests", work_dir=self.cached_tests_work_dir
-        )
-
-        self.run_test(
-            "metis",
-            [],
-            [],
-            purpose="test: checking the installation",
-            installed=False,
-            work_dir=self.cached_tests_work_dir,
-        )
+        with working_dir(self.cached_tests_work_dir):
+            cmake(*cmake_args)
+            make()
+            metis = which("metis")
+            metis()
