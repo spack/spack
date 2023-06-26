@@ -85,6 +85,8 @@ class Salmon(CMakePackage):
             when="@{0}".format(ver),
         )
 
+    patch("gcc13_includes.patch", level=0, when="%gcc@13:")
+
     def patch(self):
         # remove static linking to libstdc++
         filter_file("-static-libstdc++", "", "CMakeLists.txt", string=True)
