@@ -17,13 +17,14 @@ class Brayns(CMakePackage):
     version("develop", branch="develop")
     version("3.1.2", tag="3.1.2")
     version("3.2.0", tag="3.2.0")
+    version("3.2.1", tag="3.2.1")
 
     depends_on("cmake@3.15:", type="build")
     depends_on("ispc@1.18.0:", type="build")
     depends_on("ninja", type="build")
     depends_on("git", type="build")
 
-    depends_on("brion@3.3.9:")
+    depends_on("brion@3.3.12:")
     depends_on("libsonata@0.1.18:")
     depends_on("morphio@3.3.4:")
     depends_on("mvdtool@2.4.9:")
