@@ -26,9 +26,12 @@ class Nvtx(Package, PythonExtension):
 
     build_directory = "python"
 
+    # Create a nvtx-config.cmake file to make calls to find_package(nvtx) to
+    # work as expected
+    patch("nvtx-config.patch")
+
     def patch(self):
         """Patch setup.py to provide include directory."""
-
         include_dir = prefix.include
         setup = FileFilter("python/setup.py")
         setup.filter("include_dirs=include_dirs", f"include_dirs=['{include_dir}']", string=True)
@@ -37,7 +40,9 @@ class Nvtx(Package, PythonExtension):
         install_tree("c/include", prefix.include)
         install("c/CMakeLists.txt", prefix)
         install("c/nvtxImportedTargets.cmake", prefix)
-        install("./LICENSE.txt", "%s" % prefix)
+        install("./LICENSE.txt", prefix)
+
+        install("./nvtx-config.cmake", prefix) # added by the patch above
 
         args = std_pip_args + ["--prefix=" + prefix, "."]
         with working_dir(self.build_directory):
