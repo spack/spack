@@ -27,7 +27,7 @@ import archspec.cpu.schema
 import llnl.util.lang
 import llnl.util.lock
 import llnl.util.tty as tty
-from llnl.util.filesystem import copy_tree, mkdirp, remove_linked_tree, working_dir
+from llnl.util.filesystem import copy_tree, mkdirp, remove_linked_tree, touchp, working_dir
 
 import spack.binary_distribution
 import spack.caches
@@ -565,6 +565,8 @@ def mock_repo_path():
 def _pkg_install_fn(pkg, spec, prefix):
     # sanity_check_prefix requires something in the install directory
     mkdirp(prefix.bin)
+    if not os.path.exists(spec.package.build_log_path):
+        touchp(spec.package.build_log_path)
 
 
 @pytest.fixture

@@ -174,6 +174,7 @@ def _do_fake_install(pkg):
     # Install fake command
     fs.mkdirp(pkg.prefix.bin)
     fs.touch(os.path.join(pkg.prefix.bin, command))
+    fs.touchp(pkg.install_log_path)
     if sys.platform != "win32":
         chmod = which("chmod")
         chmod("+x", os.path.join(pkg.prefix.bin, command))
@@ -1984,7 +1985,9 @@ class BuildProcessInstaller(object):
         src_target = os.path.join(pkg.spec.prefix, "share", pkg.name, "src")
         tty.debug("{0} Copying source to {1}".format(self.pre, src_target))
 
-        fs.install_tree(pkg.stage.source_path, src_target)
+        fs.install_tree(
+            pkg.stage.source_path, src_target, allow_broken_symlinks=(sys.platform != "win32")
+        )
 
     def _real_install(self):
         import spack.builder

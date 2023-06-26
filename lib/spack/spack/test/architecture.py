@@ -229,6 +229,7 @@ def test_concretize_target_ranges(root_target_range, dep_target_range, result, m
         (["21.11", "21.9"], None, False),
     ],
 )
+@pytest.mark.skipif(sys.platform == "win32", reason="Cray does not use windows")
 def test_cray_platform_detection(versions, default, expected, tmpdir, monkeypatch, working_env):
     ex_path = str(tmpdir.join("fake_craype_dir"))
     fs.mkdirp(ex_path)

@@ -391,4 +391,8 @@ class Acts(CMakePackage, CudaPackage):
             cxxstd = spec["root"].variants["cxxstd"].value
             args.append("-DCMAKE_CXX_STANDARD={0}".format(cxxstd))
 
+        if "+python" in spec:
+            python = spec["python"].command.path
+            args.append("-DPython_EXECUTABLE={0}".format(python))
+
         return args

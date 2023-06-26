@@ -351,13 +351,20 @@ class NameValueModifier:
 
 
 class SetEnv(NameValueModifier):
-    __slots__ = ("force",)
+    __slots__ = ("force", "raw")
 
     def __init__(
-        self, name: str, value: str, *, trace: Optional[Trace] = None, force: bool = False
+        self,
+        name: str,
+        value: str,
+        *,
+        trace: Optional[Trace] = None,
+        force: bool = False,
+        raw: bool = False,
     ):
         super().__init__(name, value, trace=trace)
         self.force = force
+        self.raw = raw
 
     def execute(self, env: MutableMapping[str, str]):
         tty.debug(f"SetEnv: {self.name}={str(self.value)}", level=3)
@@ -501,15 +508,16 @@ class EnvironmentModifications:
         return Trace(filename=filename, lineno=lineno, context=current_context)
 
     @system_env_normalize
-    def set(self, name: str, value: str, *, force: bool = False):
+    def set(self, name: str, value: str, *, force: bool = False, raw: bool = False):
         """Stores a request to set an environment variable.
 
         Args:
             name: name of the environment variable
             value: value of the environment variable
             force: if True, audit will not consider this modification a warning
+            raw: if True, format of value string is skipped
         """
-        item = SetEnv(name, value, trace=self._trace(), force=force)
+        item = SetEnv(name, value, trace=self._trace(), force=force, raw=raw)
         self.env_modifications.append(item)
 
     @system_env_normalize
@@ -768,16 +776,21 @@ class EnvironmentModifications:
                 "PS1",
                 "PS2",
                 "ENV",
-                # Environment modules v4
+                # Environment Modules or Lmod
                 "LOADEDMODULES",
                 "_LMFILES_",
-                "BASH_FUNC_module()",
                 "MODULEPATH",
-                "MODULES_(.*)",
-                r"(\w*)_mod(quar|share)",
-                # Lmod configuration
-                r"LMOD_(.*)",
                 "MODULERCFILE",
+                "BASH_FUNC_ml()",
+                "BASH_FUNC_module()",
+                # Environment Modules-specific configuration
+                "MODULESHOME",
+                "BASH_FUNC__module_raw()",
+                r"MODULES_(.*)",
+                r"__MODULES_(.*)",
+                r"(\w*)_mod(quar|share)",
+                # Lmod-specific configuration
+                r"LMOD_(.*)",
             ]
         )
 
