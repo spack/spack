@@ -88,7 +88,7 @@ class Salmon(CMakePackage):
     patch(
         "https://github.com/COMBINE-lab/salmon/commit/ffb2a11.patch?full_index=1",
         sha256="5ed3512bae665c1d72002911ab9ee6d213f10df63019ebd9e8e0ecde03823a73",
-        when="%gcc@13:",
+        when="@:1.10.1%gcc@13:",
         level=1,
     )
 
