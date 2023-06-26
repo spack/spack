@@ -27,8 +27,12 @@ class Brayns(CMakePackage):
     depends_on("libsonata@0.1.18:")
     depends_on("morphio@3.3.4:")
     depends_on("mvdtool@2.4.9:")
-    depends_on("ospray@2.10.4")
-    depends_on("rkcommon@1.10.0")
+
+    depends_on("ospray@2.10.4", when="@:3.2.0")
+    depends_on("rkcommon@1.10.0", when="@:3.2.0")
+
+    depends_on("ospray@2.10.5:", when="@3.2.1:")
+
     depends_on("spdlog@1.9.2")
     depends_on("poco@1.12.4")
     depends_on("glm")
