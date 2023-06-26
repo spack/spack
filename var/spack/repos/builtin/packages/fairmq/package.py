@@ -15,6 +15,13 @@ class Fairmq(CMakePackage):
 
     version("dev", branch="dev", submodules=True, get_full_repo=True)
     version(
+        "1.7.0",
+        tag="v1.7.0",
+        commit="d1c99f7e150c1177dc1cab1b2adc16475cade24e",
+        submodules=True,
+        no_cache=True,
+    )
+    version(
         "1.6.0",
         tag="v1.6.0",
         commit="42d27af20fb5cbbbc0b0fdfef1c981d51a8baf87",
