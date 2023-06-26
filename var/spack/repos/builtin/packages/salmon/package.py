@@ -85,7 +85,12 @@ class Salmon(CMakePackage):
             when="@{0}".format(ver),
         )
 
-    patch("gcc13_includes.patch", level=0, when="%gcc@13:")
+    patch(
+        "https://github.com/COMBINE-lab/salmon/commit/ffb2a11.patch?full_index=1",
+        sha256="5ed3512bae665c1d72002911ab9ee6d213f10df63019ebd9e8e0ecde03823a73",
+        when="%gcc@13:",
+        level=1,
+    )
 
     def patch(self):
         # remove static linking to libstdc++
