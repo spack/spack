@@ -15,7 +15,7 @@ def find_model_flag(str):
     return res
 
 
-class LcalBabelstream(CMakePackage, CudaPackage, ROCmPackage):
+class Babelstream(CMakePackage, CudaPackage, ROCmPackage):
     """Measure memory transfer rates to/from global device memory on GPUs.
     This benchmark is similar in spirit, and based on, the STREAM benchmark for CPUs."""
 
