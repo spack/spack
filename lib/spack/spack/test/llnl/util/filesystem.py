@@ -13,7 +13,7 @@ import sys
 import pytest
 
 import llnl.util.filesystem as fs
-from llnl.util.symlink import islink, symlink
+from llnl.util.symlink import SymlinkError, _windows_can_symlink, islink, symlink
 
 import spack.paths
 
@@ -150,7 +150,6 @@ class TestInstall:
                 fs.install("source/a/*/*", "dest/1")
 
 
-@pytest.mark.skipif(sys.platform == "win32", reason="Skip test on Windows")
 class TestCopyTree:
     """Tests for ``filesystem.copy_tree``"""
 
@@ -189,7 +188,7 @@ class TestCopyTree:
     def test_symlinks_true_ignore(self, stage):
         """Test copying when specifying relative paths that should be ignored"""
         with fs.working_dir(str(stage)):
-            ignore = lambda p: p in ["c/d/e", "a"]
+            ignore = lambda p: p in [os.path.join("c", "d", "e"), "a"]
             fs.copy_tree("source", "dest", symlinks=True, ignore=ignore)
             assert not os.path.exists("dest/a")
             assert os.path.exists("dest/c/d")
@@ -231,7 +230,6 @@ class TestCopyTree:
                 fs.copy_tree("source", "source/sub/directory")
 
 
-@pytest.mark.skipif(sys.platform == "win32", reason="Skip test on Windows")
 class TestInstallTree:
     """Tests for ``filesystem.install_tree``"""
 
@@ -274,6 +272,15 @@ class TestInstallTree:
             if sys.platform != "win32":
                 assert not os.path.islink("dest/2")
             check_added_exe_permissions("source/2", "dest/2")
+
+    @pytest.mark.skipif(sys.platform == "win32", reason="Broken symlinks not allowed on Windows")
+    def test_allow_broken_symlinks(self, stage):
+        """Test installing with a broken symlink."""
+        with fs.working_dir(str(stage)):
+            symlink("nonexistant.txt", "source/broken", allow_broken_symlinks=True)
+            fs.install_tree("source", "dest", symlinks=True, allow_broken_symlinks=True)
+            assert os.path.islink("dest/broken")
+            assert not os.path.exists(os.readlink("dest/broken"))
 
     def test_glob_src(self, stage):
         """Test using a glob as the source."""
@@ -712,6 +719,9 @@ def test_is_nonsymlink_exe_with_shebang(tmpdir):
         assert not fs.is_nonsymlink_exe_with_shebang("symlink_to_executable_script")
 
 
+@pytest.mark.skipif(
+    sys.platform == "win32" and not _windows_can_symlink(), reason="Requires elevated privileges."
+)
 def test_lexists_islink_isdir(tmpdir):
     root = str(tmpdir)
 
@@ -730,19 +740,69 @@ def test_lexists_islink_isdir(tmpdir):
     with open(file, "wb") as f:
         f.write(b"file")
 
-    os.symlink("dir", symlink_to_dir)
-    os.symlink("file", symlink_to_file)
-    os.symlink("does_not_exist", dangling_symlink)
-    os.symlink("dangling_symlink", symlink_to_dangling_symlink)
-    os.symlink("symlink_to_dir", symlink_to_symlink_to_dir)
-    os.symlink("symlink_to_file", symlink_to_symlink_to_file)
+    symlink("dir", symlink_to_dir)
+    symlink("file", symlink_to_file)
+
+    with pytest.raises(SymlinkError):
+        symlink("does_not_exist", dangling_symlink)
+        symlink("dangling_symlink", symlink_to_dangling_symlink)
+
+    symlink("symlink_to_dir", symlink_to_symlink_to_dir)
+    symlink("symlink_to_file", symlink_to_symlink_to_file)
 
     assert fs.lexists_islink_isdir(dir) == (True, False, True)
     assert fs.lexists_islink_isdir(file) == (True, False, False)
     assert fs.lexists_islink_isdir(nonexistent) == (False, False, False)
     assert fs.lexists_islink_isdir(symlink_to_dir) == (True, True, True)
     assert fs.lexists_islink_isdir(symlink_to_file) == (True, True, False)
-    assert fs.lexists_islink_isdir(symlink_to_dangling_symlink) == (True, True, False)
+    assert fs.lexists_islink_isdir(symlink_to_dangling_symlink) == (False, False, False)
+    assert fs.lexists_islink_isdir(symlink_to_symlink_to_dir) == (True, True, True)
+    assert fs.lexists_islink_isdir(symlink_to_symlink_to_file) == (True, True, False)
+
+
+@pytest.mark.skipif(_windows_can_symlink(), reason="Not to be run with elevated privileges.")
+@pytest.mark.skipif(sys.platform != "win32", reason="For Windows Only")
+def test_lexists_islink_isdir__win32_base(tmpdir):
+    """Run on windows without elevated privileges to test junctions and hard links which have
+    different results from the lexists_islink_isdir method.
+    """
+    root = str(tmpdir)
+
+    # Create a directory and a file, an a bunch of symlinks.
+    dir = os.path.join(root, "dir")
+    file = os.path.join(root, "file")
+    nonexistent = os.path.join(root, "does_not_exist")
+    symlink_to_dir = os.path.join(root, "symlink_to_dir")
+    symlink_to_file = os.path.join(root, "symlink_to_file")
+    dangling_symlink = os.path.join(root, "dangling_symlink")
+    symlink_to_dangling_symlink = os.path.join(root, "symlink_to_dangling_symlink")
+    symlink_to_symlink_to_dir = os.path.join(root, "symlink_to_symlink_to_dir")
+    symlink_to_symlink_to_file = os.path.join(root, "symlink_to_symlink_to_file")
+
+    os.mkdir(dir)
+    assert fs.lexists_islink_isdir(dir) == (True, False, True)
+
+    symlink("dir", symlink_to_dir)
+    assert fs.lexists_islink_isdir(dir) == (True, False, True)
+    assert fs.lexists_islink_isdir(symlink_to_dir) == (True, True, True)
+
+    with open(file, "wb") as f:
+        f.write(b"file")
+    assert fs.lexists_islink_isdir(file) == (True, False, False)
+
+    symlink("file", symlink_to_file)
+    assert fs.lexists_islink_isdir(file) == (True, True, False)
+    assert fs.lexists_islink_isdir(symlink_to_file) == (True, True, False)
+
+    with pytest.raises(SymlinkError):
+        symlink("does_not_exist", dangling_symlink)
+        symlink("dangling_symlink", symlink_to_dangling_symlink)
+
+    symlink("symlink_to_dir", symlink_to_symlink_to_dir)
+    symlink("symlink_to_file", symlink_to_symlink_to_file)
+
+    assert fs.lexists_islink_isdir(nonexistent) == (False, False, False)
+    assert fs.lexists_islink_isdir(symlink_to_dangling_symlink) == (False, False, False)
     assert fs.lexists_islink_isdir(symlink_to_symlink_to_dir) == (True, True, True)
     assert fs.lexists_islink_isdir(symlink_to_symlink_to_file) == (True, True, False)
 
