@@ -10,9 +10,15 @@ class PyBitstring(PythonPackage):
     """Simple construction, analysis and modification of binary data."""
 
     homepage = "http://pythonhosted.org/bitstring"
-    pypi = "bitstring/bitstring-3.1.5.zip"
+    pypi = "bitstring/bitstring-3.1.6.tar.gz"
 
+    version("4.0.2", sha256="a391db8828ac4485dd5ce72c80b27ebac3e7b989631359959e310cd9729723b2")
     version("3.1.5", sha256="c163a86fcef377c314690051885d86b47419e3e1770990c212e16723c1c08faa")
 
-    # pip silently replaces distutils with setuptools
     depends_on("py-setuptools", type="build")
+    depends_on("py-bitarray@2.7.4", when="@4.1:")
+
+    def url_for_version(self, version):
+        if version < Version("3.1.6"):
+            url = "https://pypi.org/packages/source/s/bitstring/bitstring-{0}.zip"
+            return url.format(version)
