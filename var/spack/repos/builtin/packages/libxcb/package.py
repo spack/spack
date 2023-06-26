@@ -27,9 +27,11 @@ class Libxcb(AutotoolsPackage):
     depends_on("xcb-proto@1.14:", when="@1.14")
     depends_on("xcb-proto@1.13:", when="@1.13")
 
-    depends_on("python", type="build")
+    depends_on("python", type="build", when="+python")
     depends_on("pkgconfig", type="build")
     depends_on("util-macros", type="build")
+
+    variant("python", default=False, description="Build with python support.")
 
     def url_for_version(self, version):
         if version >= Version("1.14"):
