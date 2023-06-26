@@ -29,3 +29,26 @@ class Sourmash(PythonPackage):
     depends_on("py-cachetools@4:")
     depends_on("py-bitstring@3.1.9:")
     depends_on("py-importlib_metadata@3.6:", when="^python@:3.9")
+
+    def install(self, spec, prefix):
+        # build rust libs
+        cargo = Executable("cargo")
+        cargo("build", "--release")
+        # install python package
+        args = std_pip_args + ["--prefix=" + prefix, "."]
+        pip(*args)
+        # move sourmash.so into expected place
+        site_packages = join_path(
+            prefix.lib,
+            "python{0}".format(spec["python"].version.up_to(2)),
+            "site-packages",
+            "sourmash",
+        )
+        mkdirp(site_packages)
+        lib_ext = "dylib" if spec.platform == "Darwin" else "so"
+        install(
+            join_path("target", "release", "libsourmash.{}".format(lib_ext)),
+            join_path(site_packages, "_lowlevel__lib.so"),
+        )
+        # patch invalid read mode
+        filter_file(r"'(.*)'\), 130\)", r"'\1'))", join_path(site_packages, "_lowlevel.py"))
