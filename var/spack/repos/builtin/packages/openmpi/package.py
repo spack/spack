@@ -494,6 +494,7 @@ class Openmpi(AutotoolsPackage, CudaPackage):
     )
     # Variants to use internal packages
     variant("internal-hwloc", default=False, description="Use internal hwloc")
+    variant("internal-pmix", default=False, description="Use internal pmix")
 
     provides("mpi")
     provides("mpi@:2.2", when="@1.6.5")
@@ -552,9 +553,9 @@ class Openmpi(AutotoolsPackage, CudaPackage):
     # OpenMPI @2: includes a vendored version:
     # depends_on('pmix@1.1.2', when='@2.1.6')
     # depends_on('pmix@3.2.3', when='@4.1.2')
-    depends_on("pmix@1.0:1", when="@2.0:2")
-    depends_on("pmix@3.2:", when="@4.0:4")
-    depends_on("pmix@4.2:", when="@5.0:5")
+    depends_on("pmix@1.0:1", when="@2.0:2 ~internal-pmix")
+    depends_on("pmix@3.2:", when="@4.0:4 ~internal-pmix")
+    depends_on("pmix@4.2:", when="@5.0:5 ~internal-pmix")
 
     # Libevent is required when *vendored* PMIx is used
     depends_on("libevent@2:", when="@main")
@@ -959,13 +960,22 @@ class Openmpi(AutotoolsPackage, CudaPackage):
             config_args.extend(["--enable-debug"])
 
         # Package dependencies
-        for dep in ["libevent", "lustre", "pmix", "singularity", "valgrind", "zlib"]:
+        for dep in ["libevent", "lustre", "singularity", "valgrind", "zlib"]:
             if "^" + dep in spec:
                 config_args.append("--with-{0}={1}".format(dep, spec[dep].prefix))
 
+        # PMIx support
+        if spec.satisfies("+internal-pmix"):
+            config_args.append("--with-pmix=internal")
+        elif "^pmix" in spec:
+            config_args.append("--with-pmix={0}".format(spec["pmix"].prefix))
+
         # Hwloc support
-        if "^hwloc" in spec:
+        if spec.satisfies("+internal-hwloc"):
+            config_args.append("--with-hwloc=internal")
+        elif "^hwloc" in spec:
             config_args.append("--with-hwloc=" + spec["hwloc"].prefix)
+
         # Java support
         if "+java" in spec:
             config_args.extend(
