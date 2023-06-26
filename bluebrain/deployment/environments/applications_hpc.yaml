@@ -29,7 +29,6 @@ spack:
           +common: '{name}/{version}-commonmods'
           +plasticity: '{name}-plasticity/{version}'
           +ngv+metabolism: '{name}-multiscale/{version}'
-          ^petsc+complex: '{name}-complex/{version}'
   specs:
     - neuron+tests+coreneuron
     - neuron+tests+coreneuron+sympy
@@ -54,7 +53,6 @@ spack:
     - spykfunc
     - steps
     - steps@5
-    - steps@5 ^petsc+complex
     - synapsetool
     - touchdetector
     - unit-test-translator
