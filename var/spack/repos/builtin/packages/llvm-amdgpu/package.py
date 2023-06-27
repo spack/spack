@@ -23,86 +23,35 @@ class LlvmAmdgpu(CMakePackage):
 
     maintainers("srekolam", "renjithravindrankannath", "haampie")
 
+    versions_dict = {  # version: (sha256sum, deprecated)
+        "5.4.3": ("a844d3cc01613f6284a75d44db67c495ac1e9b600eacbb1eb13d2649f5d5404d", False),
+        "5.4.0": ("ff54f45a17723892cd775c1eaff9e5860527fcfd33d98759223c70e3362335bf", False),
+        "5.3.3": ("5296d5e474811c7d1e456cb6d5011db248b79b8d0512155e8a6c2aa5b5f12d38", False),
+        "5.3.0": ("4e3fcddb5b8ea8dcaa4417e0e31a9c2bbdc9e7d4ac3401635a636df32905c93e", False),
+        "5.2.3": ("1b852711aec3137b568fb65f93606d37fdcd62e06f5da3766f2ffcd4e0c646df", False),
+        "5.2.1": ("3644e927d943d61e22672422591c47a62ff83e3d87ced68439822156d8f79abf", False),
+        "5.2.0": ("0f892174111b78a02d1a00f8f46d9f80b9abb95513a7af38ecf2a5a0882fe87f", False),
+        "5.1.3": ("d236a2064363c0278f7ba1bb2ff1545ee4c52278c50640e8bb2b9cfef8a2f128", False),
+        "5.1.0": ("db5d45c4a7842a908527c1b7b8d4a40c688225a41d23cfa382eab23edfffdd10", False),
+        "5.0.2": ("99a14394b406263576ed3d8d10334de7c78d42b349109f375d178b11492eecaf", True),
+        "5.0.0": ("bca2db4aaab71541cac588d6a708fde60f0ebe744809bde8a3847044a1a77413", True),
+        "4.5.2": ("36a4f7dd961cf373b743fc679bdf622089d2a905de2cfd6fd6c9e7ff8d8ad61f", True),
+        "4.5.0": ("b71451bf26650ba06c0c5c4c7df70f13975151eaa673ef0cc77c1ab0000ccc97", True),
+        "4.3.1": ("b53c6b13be7d77dc93a7c62e4adbb414701e4e601e1af2d1e98da4ee07c9837f", True),
+        "4.3.0": ("1567d349cd3bcd2c217b3ecec2f70abccd5e9248bd2c3c9f21d4cdb44897fc87", True),
+        "4.2.0": ("751eca1d18595b565cfafa01c3cb43efb9107874865a60c80d6760ba83edb661", True),
+        "4.1.0": ("244e38d824fa7dfa8d0edf3c036b3c84e9c17a16791828e4b745a8d31eb374ae", True),
+        "4.0.0": ("aa1f80f429fded465e86bcfaef72255da1af1c5c52d58a4c979bc2f6c2da5a69", True),
+        "3.10.0": ("8262aff88c1ff6c4deb4da5a4f8cda1bf90668950e2b911f93f73edaee53b370", True),
+        "3.9.0": ("1ff14b56d10c2c44d36c3c412b190d3d8cd1bb12cfc7cd58af004c16fd9987d1", True),
+        "3.8.0": ("93a28464a4d0c1c9f4ba55e473e5d1cde4c5c0e6d087ec8a0a3aef1f5f5208e8", True),
+        "3.7.0": ("3e2542ce54b91b5c841f33d542143e0e43eae95e8785731405af29f08ace725b", True),
+        "3.5.0": ("4878fa85473b24d88edcc89938441edc85d2e8a785e567b7bd7ce274ecc2fd9c", True),
+    }
+
     version("master", branch="amd-stg-open")
-    version("5.4.3", sha256="a844d3cc01613f6284a75d44db67c495ac1e9b600eacbb1eb13d2649f5d5404d")
-    version("5.4.0", sha256="ff54f45a17723892cd775c1eaff9e5860527fcfd33d98759223c70e3362335bf")
-    version("5.3.3", sha256="5296d5e474811c7d1e456cb6d5011db248b79b8d0512155e8a6c2aa5b5f12d38")
-    version("5.3.0", sha256="4e3fcddb5b8ea8dcaa4417e0e31a9c2bbdc9e7d4ac3401635a636df32905c93e")
-    version("5.2.3", sha256="1b852711aec3137b568fb65f93606d37fdcd62e06f5da3766f2ffcd4e0c646df")
-    version("5.2.1", sha256="3644e927d943d61e22672422591c47a62ff83e3d87ced68439822156d8f79abf")
-    version("5.2.0", sha256="0f892174111b78a02d1a00f8f46d9f80b9abb95513a7af38ecf2a5a0882fe87f")
-    version("5.1.3", sha256="d236a2064363c0278f7ba1bb2ff1545ee4c52278c50640e8bb2b9cfef8a2f128")
-    version("5.1.0", sha256="db5d45c4a7842a908527c1b7b8d4a40c688225a41d23cfa382eab23edfffdd10")
-    version(
-        "5.0.2",
-        sha256="99a14394b406263576ed3d8d10334de7c78d42b349109f375d178b11492eecaf",
-        deprecated=True,
-    )
-    version(
-        "5.0.0",
-        sha256="bca2db4aaab71541cac588d6a708fde60f0ebe744809bde8a3847044a1a77413",
-        deprecated=True,
-    )
-    version(
-        "4.5.2",
-        sha256="36a4f7dd961cf373b743fc679bdf622089d2a905de2cfd6fd6c9e7ff8d8ad61f",
-        deprecated=True,
-    )
-    version(
-        "4.5.0",
-        sha256="b71451bf26650ba06c0c5c4c7df70f13975151eaa673ef0cc77c1ab0000ccc97",
-        deprecated=True,
-    )
-    version(
-        "4.3.1",
-        sha256="b53c6b13be7d77dc93a7c62e4adbb414701e4e601e1af2d1e98da4ee07c9837f",
-        deprecated=True,
-    )
-    version(
-        "4.3.0",
-        sha256="1567d349cd3bcd2c217b3ecec2f70abccd5e9248bd2c3c9f21d4cdb44897fc87",
-        deprecated=True,
-    )
-    version(
-        "4.2.0",
-        sha256="751eca1d18595b565cfafa01c3cb43efb9107874865a60c80d6760ba83edb661",
-        deprecated=True,
-    )
-    version(
-        "4.1.0",
-        sha256="244e38d824fa7dfa8d0edf3c036b3c84e9c17a16791828e4b745a8d31eb374ae",
-        deprecated=True,
-    )
-    version(
-        "4.0.0",
-        sha256="aa1f80f429fded465e86bcfaef72255da1af1c5c52d58a4c979bc2f6c2da5a69",
-        deprecated=True,
-    )
-    version(
-        "3.10.0",
-        sha256="8262aff88c1ff6c4deb4da5a4f8cda1bf90668950e2b911f93f73edaee53b370",
-        deprecated=True,
-    )
-    version(
-        "3.9.0",
-        sha256="1ff14b56d10c2c44d36c3c412b190d3d8cd1bb12cfc7cd58af004c16fd9987d1",
-        deprecated=True,
-    )
-    version(
-        "3.8.0",
-        sha256="93a28464a4d0c1c9f4ba55e473e5d1cde4c5c0e6d087ec8a0a3aef1f5f5208e8",
-        deprecated=True,
-    )
-    version(
-        "3.7.0",
-        sha256="3e2542ce54b91b5c841f33d542143e0e43eae95e8785731405af29f08ace725b",
-        deprecated=True,
-    )
-    version(
-        "3.5.0",
-        sha256="4878fa85473b24d88edcc89938441edc85d2e8a785e567b7bd7ce274ecc2fd9c",
-        deprecated=True,
-    )
+    for k, v in versions_dict.items():
+        version(k, sha256=v[0], deprecated=v[1])
 
     variant(
         "build_type",
@@ -149,7 +98,8 @@ class LlvmAmdgpu(CMakePackage):
     depends_on("perl-data-dumper", type=("build"), when="+openmp")
     depends_on("hwloc", when="+openmp")
     depends_on("elf", type="link", when="+openmp")
-    depends_on("rocm-openmp-extras", type="build", when="+openmp")
+    for ver in version_dict.keys():
+        depends_on(f"rocm-openmp-extras@{ver}", type="build", when=f"@{ver} +openmp")
 
     # Will likely only be fixed in LLVM 12 upstream
     patch("fix-system-zlib-ncurses.patch", when="@3.5.0:3.8.0")
