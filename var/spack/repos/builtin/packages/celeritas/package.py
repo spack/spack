@@ -110,7 +110,7 @@ class Celeritas(CMakePackage, CudaPackage, ROCmPackage):
     patch(
         "https://patch-diff.githubusercontent.com/raw/celeritas-project/celeritas/pull/830.patch?full_index=1",
         sha256="9ac1929a95170b497aaac76f62146f313e4b31aea7271acac354270550d0d685",
-        when="@0.3.0 ^geant4@10"
+        when="@0.3.0 ^geant4@10",
     )
 
     def cmake_args(self):
