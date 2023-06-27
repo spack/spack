@@ -1997,5 +1997,5 @@ _spack_view_check() {
 }
 
 _spack_win_system_check() {
-    SPACK_COMPREPLY="-h --help -lp --long-path -dm --developer-mode -i --install-prefix-length -a --all"
+    SPACK_COMPREPLY="-h --help -lp --long-path -dm --developer-mode -i --install-prefix-length -a --all --require --require-only"
 }
