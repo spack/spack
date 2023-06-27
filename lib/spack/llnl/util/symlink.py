@@ -17,8 +17,10 @@ from spack.util.path import system_path_filter
 if sys.platform == "win32":
     from win32file import CreateHardLink
 
+is_windows = sys.platform == "win32"
 
-def symlink(source_path: str, link_path: str, allow_broken_symlinks: bool = False):
+
+def symlink(source_path: str, link_path: str, allow_broken_symlinks: bool = not is_windows):
     """
     Create a link.
 
