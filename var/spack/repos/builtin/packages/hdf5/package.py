@@ -489,9 +489,7 @@ class Hdf5(CMakePackage):
     @classmethod
     def determine_variants(cls, exes, version):
         def is_enabled(text):
-            if text in set(["t", "true", "enabled", "yes", "1"]):
-                return True
-            return False
+            return text.lower() in ["t", "true", "enabled", "yes", "1", "on"]
 
         results = []
         for exe in exes:
