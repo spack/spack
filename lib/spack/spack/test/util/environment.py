@@ -113,18 +113,18 @@ def test_path_put_first(prepare_environment_for_tests):
     assert envutil.get_path("TEST_ENV_VAR") == expected
 
 
-def test_dump_environment(prepare_environment_for_tests, tmpdir):
+@pytest.mark.parametrize("shell", ["pwsh", "bat"] if sys.platform == "win32" else ["bash"])
+def test_dump_environment(prepare_environment_for_tests, shell_as, shell, tmpdir):
     test_paths = "/a:/b/x:/b/c"
+    import pdb; pdb.set_trace()
     os.environ["TEST_ENV_VAR"] = test_paths
     dumpfile_path = str(tmpdir.join("envdump.txt"))
     envutil.dump_environment(dumpfile_path)
     with open(dumpfile_path, "r") as dumpfile:
-        if sys.platform == "win32":
-            is_pwsh = os.environ.get("SPACK_SHELL", None) == "pwsh"
-            if is_pwsh:
-                assert "$Env:TEST_ENV_VAR={}\n".format(test_paths) in list(dumpfile)
-            else:
-                assert 'set "TEST_ENV_VAR={}"\n'.format(test_paths) in list(dumpfile)
+        if shell == "pwsh":
+            assert "$Env:TEST_ENV_VAR={}\n".format(test_paths) in list(dumpfile)
+        elif shell == "bat":
+            assert 'set "TEST_ENV_VAR={}"\n'.format(test_paths) in list(dumpfile)
         else:
             assert "TEST_ENV_VAR={0}; export TEST_ENV_VAR\n".format(test_paths) in list(dumpfile)
 
