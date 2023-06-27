@@ -98,7 +98,7 @@ class LlvmAmdgpu(CMakePackage):
     depends_on("perl-data-dumper", type=("build"), when="+openmp")
     depends_on("hwloc", when="+openmp")
     depends_on("elf", type="link", when="+openmp")
-    for ver in version_dict.keys():
+    for ver in versions_dict.keys():
         depends_on(f"rocm-openmp-extras@{ver}", type="build", when=f"@{ver} +openmp")
 
     # Will likely only be fixed in LLVM 12 upstream
