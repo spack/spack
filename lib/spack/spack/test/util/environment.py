@@ -116,7 +116,6 @@ def test_path_put_first(prepare_environment_for_tests):
 @pytest.mark.parametrize("shell", ["pwsh", "bat"] if sys.platform == "win32" else ["bash"])
 def test_dump_environment(prepare_environment_for_tests, shell_as, shell, tmpdir):
     test_paths = "/a:/b/x:/b/c"
-    import pdb; pdb.set_trace()
     os.environ["TEST_ENV_VAR"] = test_paths
     dumpfile_path = str(tmpdir.join("envdump.txt"))
     envutil.dump_environment(dumpfile_path)

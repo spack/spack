@@ -2,7 +2,6 @@
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
-import os
 import pickle
 import sys
 
@@ -34,6 +33,7 @@ def test_build_env_requires_a_spec(args):
 
 
 _out_file = "env.out"
+
 
 @pytest.mark.parametrize("shell", ["pwsh", "bat"] if sys.platform == "win32" else ["bash"])
 @pytest.mark.usefixtures("config", "mock_packages", "working_env")

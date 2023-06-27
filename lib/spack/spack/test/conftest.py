@@ -1921,6 +1921,7 @@ def default_mock_concretization(config, mock_packages, concretized_specs_cache):
 
     return _func
 
+
 @pytest.fixture
 def shell_as(shell):
     if sys.platform != "win32":
