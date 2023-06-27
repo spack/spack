@@ -323,6 +323,7 @@ class CMakeBuilder(BaseBuilder):
                  "-DSWR:STRING=avx;avx2]
 
         """
+
         # Create a list of pairs. Each pair includes a configuration
         # option and whether or not that option is activated
         def is_cmake_bool(value):
@@ -331,6 +332,7 @@ class CMakeBuilder(BaseBuilder):
             if isinstance(value, str) or isinstance(value, int):
                 return bool(re.match(r"on|yes|true|y|[1-9]", str(value), re.IGNORECASE))
             return False
+
         # helper method to ensure posix paths are passed to CMake
         def ensure_posix(string):
             if fs.is_str_valid_path(string):
