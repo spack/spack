@@ -467,7 +467,9 @@ class TestConcretize:
         "Optional compiler propagation isn't deprecated for original concretizer"
     )
     @pytest.mark.parametrize("unify", [True, False, "when_possible"])
-    def test_concretize_environment_propagated_disabled_variant(self, unify, tmpdir, mutable_mock_env_path):
+    def test_concretize_environment_propagated_disabled_variant(
+        self, unify, tmpdir, mutable_mock_env_path
+    ):
         path = tmpdir.join("spack.yaml")
 
         with tmpdir.as_cwd():
