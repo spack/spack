@@ -82,6 +82,9 @@ class KokkosKernels(CMakePackage, CudaPackage):
         variant(eti, default=deflt, description=descr)
         depends_on("kokkos+%s" % backend_required, when="+%s" % eti)
 
+    # kokkos-kernels requires KOKKOS_LAMBDA to be available since 4.0.00
+    depends_on("kokkos+cuda_lambda", when="@4.0.00:+cuda")
+
     numeric_etis = {
         "ordinals": (
             "int",
