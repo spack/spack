@@ -13,13 +13,19 @@ class PyFastapi(PythonPackage):
     homepage = "https://github.com/tiangolo/fastapi"
     pypi = "fastapi/fastapi-0.88.0.tar.gz"
 
+    version("0.98.0", sha256="0d3c18886f652038262b5898fec6b09f4ca92ee23e9d9b1d1d24e429f84bf27b")
     version("0.88.0", sha256="915bf304180a0e7c5605ec81097b7d4cd8826ff87a02bb198e336fb9f3b5ff02")
 
     variant("all", default=False, description="Build all optional dependencies")
 
+    depends_on("py-hatchling@1.13:", when="@0.98:", type="build")
     depends_on("py-hatchling", type="build")
-    depends_on("py-starlette@0.22.0", type=("build", "run"))
-    depends_on("py-pydantic@1.6.2:1.6,1.7.4:1.7,1.8.2:1", type=("build", "run"))
+    depends_on("py-starlette@0.27", when="@0.95.2:", type=("build", "run"))
+    depends_on("py-starlette@0.22.0", when="@:0.89.1", type=("build", "run"))
+    depends_on("py-pydantic@1.7.4:1", when="@0.96.1:", type=("build", "run"))
+    depends_on("py-pydantic@1.6.2:1", when="@:0.96.0", type=("build", "run"))
+
+    conflicts("^py-pydantic@1.7.0:1.7.3,1.8.0:1.8.1")
 
     with when("+all"):
         depends_on("py-httpx@0.23:", type=("build", "run"))

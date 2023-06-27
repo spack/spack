@@ -47,10 +47,6 @@ class PyPytorchLightning(PythonPackage):
     version("1.3.8", sha256="60b0a3e464d394864dae4c8d251afa7aa453644a19bb7672f5ee400343cdf7b0")
     version("1.2.10", sha256="2d8365e30ded0c20e73ce6e5b6028478ae460b8fd33727df2275666df005a301")
 
-    variant(
-        "extra", default=False, description="Install extra dependencies for full functionality"
-    )
-
     # src/pytorch_lightning/__setup__.py
     depends_on("python@3.8:", when="@2:", type=("build", "run"))
     depends_on("py-setuptools", type="build")
@@ -89,27 +85,6 @@ class PyPytorchLightning(PythonPackage):
     depends_on("py-lightning-utilities@0.3,0.4.1:", when="@1.8.4:1.8", type=("build", "run"))
     depends_on("py-lightning-utilities@0.3:", when="@1.8.0:1.8.3", type=("build", "run"))
 
-    # requirements/pytorch/extra.txt
-    with when("+extra"):
-        depends_on("py-matplotlib@3.2:", type=("build", "run"))
-        depends_on("py-omegaconf@2.0.5:", when="@1.5:", type=("build", "run"))
-        depends_on("py-omegaconf@2.0.1:", type=("build", "run"))
-        depends_on("py-hydra-core@1.0.5:", when="@1.5:", type=("build", "run"))
-        depends_on("py-hydra-core@1:", type=("build", "run"))
-        depends_on("py-jsonargparse@4.18:+signatures", when="@1.9:", type=("build", "run"))
-        depends_on("py-jsonargparse@4.15.2:+signatures", when="@1.8:", type=("build", "run"))
-        depends_on("py-jsonargparse@4.12:+signatures", when="@1.7:", type=("build", "run"))
-        depends_on("py-jsonargparse@4.7.1:+signatures", when="@1.6.2:", type=("build", "run"))
-        depends_on("py-jsonargparse@4.6:+signatures", when="@1.6.1:", type=("build", "run"))
-        depends_on("py-jsonargparse@4.3:+signatures", when="@1.6:", type=("build", "run"))
-        depends_on("py-jsonargparse@3.19.3:+signatures", when="@1.5:", type=("build", "run"))
-        depends_on("py-jsonargparse@3.17:+signatures", when="@1.4:", type=("build", "run"))
-        depends_on("py-jsonargparse@3.13.1:+signatures", when="@1.3:", type=("build", "run"))
-        depends_on("py-rich@12.3:", when="@2:", type=("build", "run"))
-        depends_on("py-rich@10.14:", when="@1.7:", type=("build", "run"))
-        depends_on("py-rich@10.2.2:", when="@1.5:", type=("build", "run"))
-        depends_on("py-tensorboardx@2.2:", when="@1.9:", type=("build", "run"))
-
     # Historical dependencies
     depends_on("py-lightning-lite@1.8.0", when="@1.8.0", type=("build", "run"))
     depends_on("py-future@0.17.1:", when="@:1.5", type=("build", "run"))
@@ -123,14 +98,6 @@ class PyPytorchLightning(PythonPackage):
     depends_on("py-tensorboard@2.9.1:", when="@1.7:1.8.2", type=("build", "run"))
     depends_on("py-tensorboard@2.2.0:", when="@1.5:1.6", type=("build", "run"))
     depends_on("py-tensorboard@2.2.0:2.4,2.5.1:", when="@:1.4", type=("build", "run"))
-    depends_on("py-gcsfs@2021.5:", when="@1.4:1.7+extra", type=("build", "run"))
-    depends_on("py-horovod@0.21.2:0.23,0.24.1:", when="@:1.6.3+extra", type=("build", "run"))
-    depends_on("py-onnx@1.7:", when="@1.5+extra", type=("build", "run"))
-    depends_on("py-onnxruntime@1.3:", when="@:1.5+extra", type=("build", "run"))
-    depends_on("py-torchtext@0.10:", when="@1.7+extra", type=("build", "run"))
-    depends_on("py-torchtext@0.9:", when="@1.6+extra", type=("build", "run"))
-    depends_on("py-torchtext@0.7:", when="@1.5+extra", type=("build", "run"))
-    depends_on("py-torchtext@0.5:", when="@:1.4+extra", type=("build", "run"))
 
     # https://github.com/Lightning-AI/lightning/issues/16637
     conflicts("^py-torch~distributed", when="@1.9.0")
