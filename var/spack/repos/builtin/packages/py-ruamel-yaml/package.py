@@ -28,7 +28,7 @@ class PyRuamelYaml(PythonPackage):
     depends_on("py-setuptools", type="build")
     # from __init__.py
     depends_on("py-ruamel-yaml-clib@0.2.7:", when="@0.17.23: ^python@:3.11", type=("build", "run"))
-    depends_on("py-ruamel-yaml-clib@0.1.2:", when="@0.16: ^python@:3.8", type=("build", "run"))
+    depends_on("py-ruamel-yaml-clib@0.1.2:", when="@0.16:0.17.22 ^python@:3.8", type=("build", "run"))
 
     @run_after("install")
     def fix_import_error(self):
