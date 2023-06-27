@@ -775,6 +775,10 @@ class PyclingoDriver(object):
         self.control.load(os.path.join(parent_dir, "concretize.lp"))
         self.control.load(os.path.join(parent_dir, "os_compatibility.lp"))
         self.control.load(os.path.join(parent_dir, "display.lp"))
+
+        if setup.use_cycle_detection:
+            self.control.load(os.path.join(parent_dir, "cycle_detection.lp"))
+
         timer.stop("load")
 
         # Grounding is the first step in the solve -- it turns our facts
@@ -893,6 +897,7 @@ class SpackSolverSetup(object):
 
         # If False allows for input specs that are not solved
         self.concretize_everything = True
+        self.use_cycle_detection = False
 
         # Set during the call to setup
         self.pkgs = None
@@ -1233,7 +1238,7 @@ class SpackSolverSetup(object):
         """
         named_cond = required_spec.copy()
         named_cond.name = named_cond.name or name
-        assert named_cond.name, "must provide name for anonymous condtions!"
+        assert named_cond.name, "must provide name for anonymous conditions!"
 
         # Check if we can emit the requirements before updating the condition ID counter.
         # In this way, if a condition can't be emitted but the exception is handled in the caller,
@@ -2591,7 +2596,7 @@ class SpecBuilder(object):
         else:
             return (-1, 0)
 
-    def build_specs(self, function_tuples):
+    def _build_specs(self, function_tuples):
         # Functions don't seem to be in particular order in output.  Sort
         # them here so that directives that build objects (like node and
         # node_compiler) are called in the right order.
@@ -2676,6 +2681,14 @@ class SpecBuilder(object):
                     spec.version.attach_git_lookup_from_package(spec.fullname)
 
         return self._specs
+
+    def build_specs(self, function_tuples):
+        try:
+            return self._build_specs(function_tuples)
+        except RecursionError as e:
+            raise CycleDetectedError(
+                "detected cycles using a fast solve, falling back to slower algorithm"
+            ) from e
 
 
 def _develop_specs_from_env(spec, env):
@@ -2778,7 +2791,12 @@ class Solver(object):
         reusable_specs.extend(self._reusable_specs(specs))
         setup = SpackSolverSetup(tests=tests)
         output = OutputConfiguration(timers=timers, stats=stats, out=out, setup_only=setup_only)
-        result, _, _ = self.driver.solve(setup, specs, reuse=reusable_specs, output=output)
+        try:
+            result, _, _ = self.driver.solve(setup, specs, reuse=reusable_specs, output=output)
+        except CycleDetectedError as e:
+            warnings.warn(e)
+            setup.use_cycle_detection = True
+            result, _, _ = self.driver.solve(setup, specs, reuse=reusable_specs, output=output)
         return result
 
     def solve_in_rounds(self, specs, out=None, timers=False, stats=False, tests=False):
@@ -2858,3 +2876,7 @@ class InternalConcretizerError(spack.error.UnsatisfiableSpecError):
         # Add attribute expected of the superclass interface
         self.required = None
         self.constraint_type = None
+
+
+class CycleDetectedError(spack.error.SpackError):
+    pass
