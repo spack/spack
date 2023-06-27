@@ -14,6 +14,7 @@ import spack.repo
 import spack.util.spack_yaml as syaml
 from spack.config import ConfigError
 from spack.spec import CompilerSpec, Spec
+from spack.util.module_cmd import ModuleCmdError
 from spack.version import Version
 
 
@@ -322,6 +323,29 @@ mpi:
         spec = Spec("mpi")
         spec.concretize()
         assert spec["mpich"].external_path == os.path.sep + os.path.join("dummy", "path")
+
+    @pytest.mark.not_on_windows("Cannot use modules on Windows")
+    def test_external_missing_module(self):
+        """Test that packages with an invalid module raises an error"""
+        conf = syaml.load_config(
+            """\
+all:
+    providers:
+        mpi: [mpich]
+mpi:
+    buildable: false
+    externals:
+    - spec: mpich@3.0.4
+      modules: [this_module_does_not_exist]
+"""
+        )
+        spack.config.set("packages", conf, scope="concretize")
+        spec = Spec("mpi")
+        # Expect errors like:
+        # - module: command not found
+        # - Unable to locate a modulefile for 'this_module_does_not_exist'
+        with pytest.raises(ModuleCmdError):
+            spec.concretize()
 
     def test_buildable_false(self):
         conf = syaml.load_config(
