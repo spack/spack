@@ -775,6 +775,8 @@ class PyclingoDriver(object):
         self.control.load(os.path.join(parent_dir, "concretize.lp"))
         self.control.load(os.path.join(parent_dir, "os_compatibility.lp"))
         self.control.load(os.path.join(parent_dir, "display.lp"))
+        if not setup.concretize_everything:
+            self.control.load(os.path.join(parent_dir, "when_possible.lp"))
         timer.stop("load")
 
         # Grounding is the first step in the solve -- it turns our facts
@@ -2306,8 +2308,8 @@ class SpackSolverSetup(object):
                         fn.literal(idx, "variant_default_value_from_cli", *clause.args[1:])
                     )
 
-        if self.concretize_everything:
-            self.gen.fact(fn.concretize_everything())
+            if self.concretize_everything:
+                self.gen.fact(fn.solve_literal(idx))
 
     def _get_versioned_specs_from_pkg_requirements(self):
         """If package requirements mention versions that are not mentioned

@@ -11,27 +11,11 @@
 % Map literal input specs to facts that drive the solve
 %-----------------------------------------------------------------------------
 
-% Give clingo the choice to solve an input spec or not
-{ literal_solved(ID) } :- literal(ID).
-literal_not_solved(ID) :- not literal_solved(ID), literal(ID).
-
-% If concretize_everything() is a fact, then we cannot have unsolved specs
-:- literal_not_solved(ID), concretize_everything.
-
-% Make a problem with "zero literals solved" unsat. This is to trigger
-% looking for solutions to the ASP problem with "errors", which results
-% in better reporting for users. See #30669 for details.
-1 { literal_solved(ID) : literal(ID) }.
-
-opt_criterion(300, "number of input specs not concretized").
-#minimize{ 0@300: #true }.
-#minimize { 1@300,ID : literal_not_solved(ID) }.
-
 % Map constraint on the literal ID to the correct PSID
-attr(Name, A1)             :- literal(LiteralID, Name, A1), literal_solved(LiteralID).
-attr(Name, A1, A2)         :- literal(LiteralID, Name, A1, A2), literal_solved(LiteralID).
-attr(Name, A1, A2, A3)     :- literal(LiteralID, Name, A1, A2, A3), literal_solved(LiteralID).
-attr(Name, A1, A2, A3, A4) :- literal(LiteralID, Name, A1, A2, A3, A4), literal_solved(LiteralID).
+attr(Name, A1)             :- literal(LiteralID, Name, A1), solve_literal(LiteralID).
+attr(Name, A1, A2)         :- literal(LiteralID, Name, A1, A2), solve_literal(LiteralID).
+attr(Name, A1, A2, A3)     :- literal(LiteralID, Name, A1, A2, A3), solve_literal(LiteralID).
+attr(Name, A1, A2, A3, A4) :- literal(LiteralID, Name, A1, A2, A3, A4), solve_literal(LiteralID).
 
 #defined concretize_everything/0.
 #defined literal/1.
@@ -1335,8 +1319,6 @@ opt_criterion(5, "non-preferred targets").
 %-----------------
 % Domain heuristic
 %-----------------
-#heuristic literal_solved(ID) : literal(ID). [1, sign]
-#heuristic literal_solved(ID) : literal(ID). [50, init]
 #heuristic attr("hash", Package, Hash) : attr("root", Package). [45, init]
 
 #heuristic attr("version", Package, Version) : version_declared(Package, Version, 0), attr("root", Package). [40, true]
