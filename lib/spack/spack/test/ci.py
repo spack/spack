@@ -46,31 +46,6 @@ def test_import_signing_key(mock_gnupghome):
     ci.import_signing_key(signing_key)
 
 
-def test_configure_compilers(mutable_config):
-    def assert_missing(config):
-        assert (
-            "install_missing_compilers" not in config
-            or config["install_missing_compilers"] is False
-        )
-
-    def assert_present(config):
-        assert (
-            "install_missing_compilers" in config and config["install_missing_compilers"] is True
-        )
-
-    original_config = spack.config.get("config")
-    assert_missing(original_config)
-
-    ci.configure_compilers("FIND_ANY", scope="site")
-
-    second_config = spack.config.get("config")
-    assert_missing(second_config)
-
-    ci.configure_compilers("INSTALL_MISSING")
-    last_config = spack.config.get("config")
-    assert_present(last_config)
-
-
 class FakeWebResponder(object):
     def __init__(self, response_code=200, content_to_read=[]):
         self._resp_code = response_code
@@ -248,7 +223,7 @@ def test_ci_workarounds():
     fake_root_spec = "x" * 544
     fake_spack_ref = "x" * 40
 
-    common_variables = {"SPACK_COMPILER_ACTION": "NONE", "SPACK_IS_PR_PIPELINE": "False"}
+    common_variables = {"SPACK_IS_PR_PIPELINE": "False"}
 
     common_before_script = [
         'git clone "https://github.com/spack/spack"',

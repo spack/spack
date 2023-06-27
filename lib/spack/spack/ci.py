@@ -28,7 +28,6 @@ from llnl.util.lang import memoized
 
 import spack
 import spack.binary_distribution as bindist
-import spack.compilers as compilers
 import spack.config as cfg
 import spack.environment as ev
 import spack.main
@@ -70,17 +69,10 @@ class TemporaryDirectory(object):
         return False
 
 
-def _is_main_phase(phase_name):
-    return True if phase_name == "specs" else False
-
-
-def get_job_name(phase, strip_compiler, spec, osarch, build_group):
+def get_job_name(spec, osarch, build_group):
     """Given the necessary parts, format the gitlab job name
 
     Arguments:
-        phase (str): Either 'specs' for the main phase, or the name of a
-            bootstrapping phase
-        strip_compiler (bool): Should compiler be stripped from job name
         spec (spack.spec.Spec): Spec job will build
         osarch: Architecture TODO: (this is a spack.spec.ArchSpec,
             but sphinx doesn't recognize the type and fails).
@@ -93,12 +85,7 @@ def get_job_name(phase, strip_compiler, spec, osarch, build_group):
     format_str = ""
     format_args = []
 
-    if phase:
-        format_str += "({{{0}}})".format(item_idx)
-        format_args.append(phase)
-        item_idx += 1
-
-    format_str += " {{{0}}}".format(item_idx)
+    format_str += "{{{0}}}".format(item_idx)
     format_args.append(spec.name)
     item_idx += 1
 
@@ -110,10 +97,9 @@ def get_job_name(phase, strip_compiler, spec, osarch, build_group):
     format_args.append(spec.version)
     item_idx += 1
 
-    if _is_main_phase(phase) is True or strip_compiler is False:
-        format_str += " {{{0}}}".format(item_idx)
-        format_args.append(spec.compiler)
-        item_idx += 1
+    format_str += " {{{0}}}".format(item_idx)
+    format_args.append(spec.compiler)
+    item_idx += 1
 
     format_str += " {{{0}}}".format(item_idx)
     format_args.append(osarch)
@@ -371,14 +357,7 @@ def _spec_matches(spec, match_string):
 
 
 def _format_job_needs(
-    phase_name,
-    strip_compilers,
-    dep_jobs,
-    osname,
-    build_group,
-    prune_dag,
-    stage_spec_dict,
-    enable_artifacts_buildcache,
+    dep_jobs, osname, build_group, prune_dag, stage_spec_dict, enable_artifacts_buildcache
 ):
     needs_list = []
     for dep_job in dep_jobs:
@@ -388,9 +367,7 @@ def _format_job_needs(
         if not prune_dag or dep_spec_info["needs_rebuild"]:
             needs_list.append(
                 {
-                    "job": get_job_name(
-                        phase_name, strip_compilers, dep_job, dep_job.architecture, build_group
-                    ),
+                    "job": get_job_name(dep_job, dep_job.architecture, build_group),
                     "artifacts": enable_artifacts_buildcache,
                 }
             )
@@ -490,17 +467,13 @@ def get_spec_filter_list(env, affected_pkgs, dependent_traverse_depth=None):
     return affected_specs
 
 
-def _build_jobs(phases, staged_phases):
-    for phase in phases:
-        phase_name = phase["name"]
-        spec_labels, dependencies, stages = staged_phases[phase_name]
-
-        for stage_jobs in stages:
-            for spec_label in stage_jobs:
-                spec_record = spec_labels[spec_label]
-                release_spec = spec_record["spec"]
-                release_spec_dag_hash = release_spec.dag_hash()
-                yield release_spec, release_spec_dag_hash
+def _build_jobs(spec_labels, stages):
+    for stage_jobs in stages:
+        for spec_label in stage_jobs:
+            spec_record = spec_labels[spec_label]
+            release_spec = spec_record["spec"]
+            release_spec_dag_hash = release_spec.dag_hash()
+            yield release_spec, release_spec_dag_hash
 
 
 def _noop(x):
@@ -524,9 +497,9 @@ class SpackCI:
     used by the CI generator(s).
     """
 
-    def __init__(self, ci_config, phases, staged_phases):
+    def __init__(self, ci_config, spec_labels, stages):
         """Given the information from the ci section of the config
-        and the job phases setup meta data needed for generating Spack
+        and the staged jobs, set up meta data needed for generating Spack
         CI IR.
         """
 
@@ -541,9 +514,6 @@ class SpackCI:
             "enable-artifacts-buildcache": self.ci_config.get(
                 "enable-artifacts-buildcache", False
             ),
-            "bootstrap": self.ci_config.get(
-                "bootstrap", []
-            ),  # This is deprecated and should be removed
             "rebuild-index": self.ci_config.get("rebuild-index", True),
             "broken-specs-url": self.ci_config.get("broken-specs-url", None),
             "broken-tests-packages": self.ci_config.get("broken-tests-packages", []),
@@ -551,7 +521,7 @@ class SpackCI:
         }
         jobs = self.ir["jobs"]
 
-        for spec, dag_hash in _build_jobs(phases, staged_phases):
+        for spec, dag_hash in _build_jobs(spec_labels, stages):
             jobs[dag_hash] = self.__init_job(spec)
 
         for name in self.named_jobs:
@@ -873,25 +843,6 @@ def generate_gitlab_ci_yaml(
     if "temporary-storage-url-prefix" in ci_config:
         temp_storage_url_prefix = ci_config["temporary-storage-url-prefix"]
 
-    bootstrap_specs = []
-    phases = []
-    if "bootstrap" in ci_config:
-        for phase in ci_config["bootstrap"]:
-            try:
-                phase_name = phase.get("name")
-                strip_compilers = phase.get("compiler-agnostic")
-            except AttributeError:
-                phase_name = phase
-                strip_compilers = False
-            phases.append({"name": phase_name, "strip-compilers": strip_compilers})
-
-            for bs in env.spec_lists[phase_name]:
-                bootstrap_specs.append(
-                    {"spec": bs, "phase-name": phase_name, "strip-compilers": strip_compilers}
-                )
-
-    phases.append({"name": "specs", "strip-compilers": False})
-
     # If a remote mirror override (alternate buildcache destination) was
     # specified, add it here in case it has already built hashes we might
     # generate.
@@ -993,33 +944,17 @@ def generate_gitlab_ci_yaml(
     except bindist.FetchCacheError as e:
         tty.warn(e)
 
-    staged_phases = {}
     try:
-        for phase in phases:
-            phase_name = phase["name"]
-            if phase_name == "specs":
-                # Anything in the "specs" of the environment are already
-                # concretized by the block at the top of this method, so we
-                # only need to find the concrete versions, and then avoid
-                # re-concretizing them needlessly later on.
-                concrete_phase_specs = [
-                    concrete
-                    for abstract, concrete in env.concretized_specs()
-                    if abstract in env.spec_lists[phase_name]
-                ]
-            else:
-                # Any specs lists in other definitions (but not in the
-                # "specs") of the environment are not yet concretized so we
-                # have to concretize them explicitly here.
-                concrete_phase_specs = env.spec_lists[phase_name]
-                with spack.concretize.disable_compiler_existence_check():
-                    for phase_spec in concrete_phase_specs:
-                        phase_spec.concretize()
-            staged_phases[phase_name] = stage_spec_jobs(
-                concrete_phase_specs,
-                check_index_only=check_index_only,
-                mirrors_to_check=mirrors_to_check,
-            )
+        concrete_env_specs = [
+            concrete
+            for abstract, concrete in env.concretized_specs()
+            if abstract in env.spec_lists["specs"]
+        ]
+        spec_labels, dependencies, stages = stage_spec_jobs(
+            concrete_env_specs,
+            check_index_only=check_index_only,
+            mirrors_to_check=mirrors_to_check,
+        )
     finally:
         # Clean up remote mirror override if enabled
         if remote_mirror_override:
@@ -1048,276 +983,189 @@ def generate_gitlab_ci_yaml(
         else:
             broken_spec_urls = web_util.list_url(broken_specs_url)
 
-    spack_ci = SpackCI(ci_config, phases, staged_phases)
+    spack_ci = SpackCI(ci_config, spec_labels, stages)
     spack_ci_ir = spack_ci.generate_ir()
 
-    for phase in phases:
-        phase_name = phase["name"]
-        strip_compilers = phase["strip-compilers"]
+    for stage_jobs in stages:
+        stage_name = "stage-{0}".format(stage_id)
+        stage_names.append(stage_name)
+        stage_id += 1
 
-        spec_labels, dependencies, stages = staged_phases[phase_name]
+        for spec_label in stage_jobs:
+            spec_record = spec_labels[spec_label]
+            release_spec = spec_record["spec"]
+            release_spec_dag_hash = release_spec.dag_hash()
 
-        for stage_jobs in stages:
-            stage_name = "stage-{0}".format(stage_id)
-            stage_names.append(stage_name)
-            stage_id += 1
-
-            for spec_label in stage_jobs:
-                spec_record = spec_labels[spec_label]
-                release_spec = spec_record["spec"]
-                release_spec_dag_hash = release_spec.dag_hash()
-
-                if prune_untouched_packages:
-                    if release_spec not in affected_specs:
-                        tty.debug(
-                            "Pruning {0}/{1}, untouched by change.".format(
-                                release_spec.name, release_spec.dag_hash()[:7]
-                            )
-                        )
-                        spec_record["needs_rebuild"] = False
-                        continue
-
-                job_object = spack_ci_ir["jobs"][release_spec_dag_hash]["attributes"]
-
-                if not job_object:
-                    tty.warn("No match found for {0}, skipping it".format(release_spec))
-                    continue
-
-                if spack_pipeline_type is not None:
-                    # For spack pipelines "public" and "protected" are reserved tags
-                    job_object["tags"] = _remove_reserved_tags(job_object.get("tags", []))
-                    if spack_pipeline_type == "spack_protected_branch":
-                        job_object["tags"].extend(["protected"])
-                    elif spack_pipeline_type == "spack_pull_request":
-                        job_object["tags"].extend(["public"])
-
-                if "script" not in job_object:
-                    raise AttributeError
-
-                def main_script_replacements(cmd):
-                    return cmd.replace("{env_dir}", rel_concrete_env_dir)
-
-                job_object["script"] = _unpack_script(
-                    job_object["script"], op=main_script_replacements
-                )
-
-                if "before_script" in job_object:
-                    job_object["before_script"] = _unpack_script(job_object["before_script"])
-
-                if "after_script" in job_object:
-                    job_object["after_script"] = _unpack_script(job_object["after_script"])
-
-                osname = str(release_spec.architecture)
-                job_name = get_job_name(
-                    phase_name, strip_compilers, release_spec, osname, build_group
-                )
-
-                compiler_action = "NONE"
-                if len(phases) > 1:
-                    compiler_action = "FIND_ANY"
-                    if _is_main_phase(phase_name):
-                        compiler_action = "INSTALL_MISSING"
-
-                job_vars = job_object.setdefault("variables", {})
-                job_vars["SPACK_JOB_SPEC_DAG_HASH"] = release_spec_dag_hash
-                job_vars["SPACK_JOB_SPEC_PKG_NAME"] = release_spec.name
-                job_vars["SPACK_COMPILER_ACTION"] = compiler_action
-
-                job_object["needs"] = []
-                if spec_label in dependencies:
-                    if enable_artifacts_buildcache:
-                        # Get dependencies transitively, so they're all
-                        # available in the artifacts buildcache.
-                        dep_jobs = [d for d in release_spec.traverse(deptype=all, root=False)]
-                    else:
-                        # In this case, "needs" is only used for scheduling
-                        # purposes, so we only get the direct dependencies.
-                        dep_jobs = []
-                        for dep_label in dependencies[spec_label]:
-                            dep_jobs.append(spec_labels[dep_label]["spec"])
-
-                    job_object["needs"].extend(
-                        _format_job_needs(
-                            phase_name,
-                            strip_compilers,
-                            dep_jobs,
-                            osname,
-                            build_group,
-                            prune_dag,
-                            spec_labels,
-                            enable_artifacts_buildcache,
-                        )
-                    )
-
-                rebuild_spec = spec_record["needs_rebuild"]
-
-                # This next section helps gitlab make sure the right
-                # bootstrapped compiler exists in the artifacts buildcache by
-                # creating an artificial dependency between this spec and its
-                # compiler.  So, if we are in the main phase, and if the
-                # compiler we are supposed to use is listed in any of the
-                # bootstrap spec lists, then we will add more dependencies to
-                # the job (that compiler and maybe it's dependencies as well).
-                if _is_main_phase(phase_name):
-                    spec_arch_family = release_spec.architecture.target.microarchitecture.family
-                    compiler_pkg_spec = compilers.pkg_spec_for_compiler(release_spec.compiler)
-                    for bs in bootstrap_specs:
-                        c_spec = bs["spec"]
-                        bs_arch = c_spec.architecture
-                        bs_arch_family = bs_arch.target.microarchitecture.family
-                        if (
-                            c_spec.intersects(compiler_pkg_spec)
-                            and bs_arch_family == spec_arch_family
-                        ):
-                            # We found the bootstrap compiler this release spec
-                            # should be built with, so for DAG scheduling
-                            # purposes, we will at least add the compiler spec
-                            # to the jobs "needs".  But if artifact buildcache
-                            # is enabled, we'll have to add all transtive deps
-                            # of the compiler as well.
-
-                            # Here we check whether the bootstrapped compiler
-                            # needs to be rebuilt.  Until compilers are proper
-                            # dependencies, we artificially force the spec to
-                            # be rebuilt if the compiler targeted to build it
-                            # needs to be rebuilt.
-                            bs_specs, _, _ = staged_phases[bs["phase-name"]]
-                            c_spec_key = _spec_deps_key(c_spec)
-                            rbld_comp = bs_specs[c_spec_key]["needs_rebuild"]
-                            rebuild_spec = rebuild_spec or rbld_comp
-                            # Also update record so dependents do not fail to
-                            # add this spec to their "needs"
-                            spec_record["needs_rebuild"] = rebuild_spec
-
-                            dep_jobs = [c_spec]
-                            if enable_artifacts_buildcache:
-                                dep_jobs = [d for d in c_spec.traverse(deptype=all)]
-
-                            job_object["needs"].extend(
-                                _format_job_needs(
-                                    bs["phase-name"],
-                                    bs["strip-compilers"],
-                                    dep_jobs,
-                                    str(bs_arch),
-                                    build_group,
-                                    prune_dag,
-                                    bs_specs,
-                                    enable_artifacts_buildcache,
-                                )
-                            )
-                        else:
-                            debug_msg = "".join(
-                                [
-                                    "Considered compiler {0} for spec ",
-                                    "{1}, but rejected it either because it was ",
-                                    "not the compiler required by the spec, or ",
-                                    "because the target arch families of the ",
-                                    "spec and the compiler did not match",
-                                ]
-                            ).format(c_spec, release_spec)
-                            tty.debug(debug_msg)
-
-                if prune_dag and not rebuild_spec and not copy_only_pipeline:
+            if prune_untouched_packages:
+                if release_spec not in affected_specs:
                     tty.debug(
-                        "Pruning {0}/{1}, does not need rebuild.".format(
-                            release_spec.name, release_spec.dag_hash()
+                        "Pruning {0}/{1}, untouched by change.".format(
+                            release_spec.name, release_spec.dag_hash()[:7]
                         )
                     )
+                    spec_record["needs_rebuild"] = False
                     continue
 
-                if broken_spec_urls is not None and release_spec_dag_hash in broken_spec_urls:
-                    known_broken_specs_encountered.append(release_spec_dag_hash)
+            job_object = spack_ci_ir["jobs"][release_spec_dag_hash]["attributes"]
 
-                # Only keep track of these if we are copying rebuilt cache entries
-                if spack_buildcache_copy:
-                    # TODO: This assumes signed version of the spec
-                    buildcache_copies[release_spec_dag_hash] = [
-                        {
-                            "src": url_util.join(
-                                buildcache_copy_src_prefix,
-                                bindist.build_cache_relative_path(),
-                                bindist.tarball_name(release_spec, ".spec.json.sig"),
-                            ),
-                            "dest": url_util.join(
-                                buildcache_copy_dest_prefix,
-                                bindist.build_cache_relative_path(),
-                                bindist.tarball_name(release_spec, ".spec.json.sig"),
-                            ),
-                        },
-                        {
-                            "src": url_util.join(
-                                buildcache_copy_src_prefix,
-                                bindist.build_cache_relative_path(),
-                                bindist.tarball_path_name(release_spec, ".spack"),
-                            ),
-                            "dest": url_util.join(
-                                buildcache_copy_dest_prefix,
-                                bindist.build_cache_relative_path(),
-                                bindist.tarball_path_name(release_spec, ".spack"),
-                            ),
-                        },
-                    ]
+            if not job_object:
+                tty.warn("No match found for {0}, skipping it".format(release_spec))
+                continue
 
-                if artifacts_root:
-                    job_object["needs"].append(
-                        {"job": generate_job_name, "pipeline": "{0}".format(parent_pipeline_id)}
+            if spack_pipeline_type is not None:
+                # For spack pipelines "public" and "protected" are reserved tags
+                job_object["tags"] = _remove_reserved_tags(job_object.get("tags", []))
+                if spack_pipeline_type == "spack_protected_branch":
+                    job_object["tags"].extend(["protected"])
+                elif spack_pipeline_type == "spack_pull_request":
+                    job_object["tags"].extend(["public"])
+
+            if "script" not in job_object:
+                raise AttributeError
+
+            def main_script_replacements(cmd):
+                return cmd.replace("{env_dir}", rel_concrete_env_dir)
+
+            job_object["script"] = _unpack_script(
+                job_object["script"], op=main_script_replacements
+            )
+
+            if "before_script" in job_object:
+                job_object["before_script"] = _unpack_script(job_object["before_script"])
+
+            if "after_script" in job_object:
+                job_object["after_script"] = _unpack_script(job_object["after_script"])
+
+            osname = str(release_spec.architecture)
+            job_name = get_job_name(release_spec, osname, build_group)
+
+            job_vars = job_object.setdefault("variables", {})
+            job_vars["SPACK_JOB_SPEC_DAG_HASH"] = release_spec_dag_hash
+            job_vars["SPACK_JOB_SPEC_PKG_NAME"] = release_spec.name
+
+            job_object["needs"] = []
+            if spec_label in dependencies:
+                if enable_artifacts_buildcache:
+                    # Get dependencies transitively, so they're all
+                    # available in the artifacts buildcache.
+                    dep_jobs = [d for d in release_spec.traverse(deptype=all, root=False)]
+                else:
+                    # In this case, "needs" is only used for scheduling
+                    # purposes, so we only get the direct dependencies.
+                    dep_jobs = []
+                    for dep_label in dependencies[spec_label]:
+                        dep_jobs.append(spec_labels[dep_label]["spec"])
+
+                job_object["needs"].extend(
+                    _format_job_needs(
+                        dep_jobs,
+                        osname,
+                        build_group,
+                        prune_dag,
+                        spec_labels,
+                        enable_artifacts_buildcache,
                     )
-
-                job_vars["SPACK_SPEC_NEEDS_REBUILD"] = str(rebuild_spec)
-
-                if cdash_handler:
-                    cdash_handler.current_spec = release_spec
-                    build_name = cdash_handler.build_name
-                    all_job_names.append(build_name)
-                    job_vars["SPACK_CDASH_BUILD_NAME"] = build_name
-
-                    build_stamp = cdash_handler.build_stamp
-                    job_vars["SPACK_CDASH_BUILD_STAMP"] = build_stamp
-
-                job_object["artifacts"] = spack.config.merge_yaml(
-                    job_object.get("artifacts", {}),
-                    {
-                        "when": "always",
-                        "paths": [
-                            rel_job_log_dir,
-                            rel_job_repro_dir,
-                            rel_job_test_dir,
-                            rel_user_artifacts_dir,
-                        ],
-                    },
                 )
 
-                if enable_artifacts_buildcache:
-                    bc_root = os.path.join(local_mirror_dir, "build_cache")
-                    job_object["artifacts"]["paths"].extend(
-                        [
-                            os.path.join(bc_root, p)
-                            for p in [
-                                bindist.tarball_name(release_spec, ".spec.json"),
-                                bindist.tarball_directory_name(release_spec),
-                            ]
-                        ]
+            rebuild_spec = spec_record["needs_rebuild"]
+
+            if prune_dag and not rebuild_spec and not copy_only_pipeline:
+                tty.debug(
+                    "Pruning {0}/{1}, does not need rebuild.".format(
+                        release_spec.name, release_spec.dag_hash()
                     )
+                )
+                continue
 
-                job_object["stage"] = stage_name
-                job_object["retry"] = {"max": 2, "when": JOB_RETRY_CONDITIONS}
-                job_object["interruptible"] = True
+            if broken_spec_urls is not None and release_spec_dag_hash in broken_spec_urls:
+                known_broken_specs_encountered.append(release_spec_dag_hash)
 
-                length_needs = len(job_object["needs"])
-                if length_needs > max_length_needs:
-                    max_length_needs = length_needs
-                    max_needs_job = job_name
+            # Only keep track of these if we are copying rebuilt cache entries
+            if spack_buildcache_copy:
+                # TODO: This assumes signed version of the spec
+                buildcache_copies[release_spec_dag_hash] = [
+                    {
+                        "src": url_util.join(
+                            buildcache_copy_src_prefix,
+                            bindist.build_cache_relative_path(),
+                            bindist.tarball_name(release_spec, ".spec.json.sig"),
+                        ),
+                        "dest": url_util.join(
+                            buildcache_copy_dest_prefix,
+                            bindist.build_cache_relative_path(),
+                            bindist.tarball_name(release_spec, ".spec.json.sig"),
+                        ),
+                    },
+                    {
+                        "src": url_util.join(
+                            buildcache_copy_src_prefix,
+                            bindist.build_cache_relative_path(),
+                            bindist.tarball_path_name(release_spec, ".spack"),
+                        ),
+                        "dest": url_util.join(
+                            buildcache_copy_dest_prefix,
+                            bindist.build_cache_relative_path(),
+                            bindist.tarball_path_name(release_spec, ".spack"),
+                        ),
+                    },
+                ]
 
-                if not copy_only_pipeline:
-                    output_object[job_name] = job_object
-                    job_id += 1
+            if artifacts_root:
+                job_object["needs"].append(
+                    {"job": generate_job_name, "pipeline": "{0}".format(parent_pipeline_id)}
+                )
+
+            job_vars["SPACK_SPEC_NEEDS_REBUILD"] = str(rebuild_spec)
+
+            if cdash_handler:
+                cdash_handler.current_spec = release_spec
+                build_name = cdash_handler.build_name
+                all_job_names.append(build_name)
+                job_vars["SPACK_CDASH_BUILD_NAME"] = build_name
+
+                build_stamp = cdash_handler.build_stamp
+                job_vars["SPACK_CDASH_BUILD_STAMP"] = build_stamp
+
+            job_object["artifacts"] = spack.config.merge_yaml(
+                job_object.get("artifacts", {}),
+                {
+                    "when": "always",
+                    "paths": [
+                        rel_job_log_dir,
+                        rel_job_repro_dir,
+                        rel_job_test_dir,
+                        rel_user_artifacts_dir,
+                    ],
+                },
+            )
+
+            if enable_artifacts_buildcache:
+                bc_root = os.path.join(local_mirror_dir, "build_cache")
+                job_object["artifacts"]["paths"].extend(
+                    [
+                        os.path.join(bc_root, p)
+                        for p in [
+                            bindist.tarball_name(release_spec, ".spec.json"),
+                            bindist.tarball_directory_name(release_spec),
+                        ]
+                    ]
+                )
+
+            job_object["stage"] = stage_name
+            job_object["retry"] = {"max": 2, "when": JOB_RETRY_CONDITIONS}
+            job_object["interruptible"] = True
+
+            length_needs = len(job_object["needs"])
+            if length_needs > max_length_needs:
+                max_length_needs = length_needs
+                max_needs_job = job_name
+
+            if not copy_only_pipeline:
+                output_object[job_name] = job_object
+                job_id += 1
 
     if print_summary:
-        for phase in phases:
-            phase_name = phase["name"]
-            tty.msg('Stages for phase "{0}"'.format(phase_name))
-            phase_stages = staged_phases[phase_name]
-            _print_staging_summary(*phase_stages)
+        _print_staging_summary(spec_labels, dependencies, stages)
 
     tty.debug("{0} build jobs generated in {1} stages".format(job_id, stage_id))
 
@@ -1574,44 +1422,6 @@ def can_verify_binaries():
     """Utility method to determin if this spack instance is capable (at
     least in theory) of verifying signed binaries."""
     return len(gpg_util.public_keys()) >= 1
-
-
-def configure_compilers(compiler_action, scope=None):
-    """Depending on the compiler_action parameter, either turn on the
-        install_missing_compilers config option, or find spack compilers,
-        or do nothing.  This is used from rebuild jobs in bootstrapping
-        pipelines, where in the bootsrapping phase we would pass
-        FIND_ANY in case of compiler-agnostic bootstrapping, while in the
-        spec building phase we would pass INSTALL_MISSING in order to get
-        spack to use the compiler which was built in the previous phase and
-        is now sitting in the binary mirror.
-
-    Arguments:
-        compiler_action (str): 'FIND_ANY', 'INSTALL_MISSING' have meanings
-            described above.  Any other value essentially results in a no-op.
-        scope (spack.config.ConfigScope): Optional.  The scope in which to look for
-            compilers, in case 'FIND_ANY' was provided.
-    """
-    if compiler_action == "INSTALL_MISSING":
-        tty.debug("Make sure bootstrapped compiler will be installed")
-        config = cfg.get("config")
-        config["install_missing_compilers"] = True
-        cfg.set("config", config)
-    elif compiler_action == "FIND_ANY":
-        tty.debug("Just find any available compiler")
-        find_args = ["find"]
-        if scope:
-            find_args.extend(["--scope", scope])
-        output = spack_compiler(*find_args)
-        tty.debug("spack compiler find")
-        tty.debug(output)
-        output = spack_compiler("list")
-        tty.debug("spack compiler list")
-        tty.debug(output)
-    else:
-        tty.debug("No compiler action to be taken")
-
-    return None
 
 
 def _push_mirror_contents(input_spec, sign_binaries, mirror_url):
