@@ -3,6 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+from llnl.util.lang import memoized
 
 from spack.package import *
 
@@ -87,6 +88,7 @@ class Gptune(CMakePackage):
         return args
 
     examples_src_dir = "examples"
+    env_script = "run_env.sh"
     src_dir = "GPTune"
     nodes = 1
     cores = 4
@@ -94,108 +96,104 @@ class Gptune(CMakePackage):
     @run_after("install")
     def cache_test_sources(self):
         """Copy the example source files after the package is installed to an
-        install test subdirectory for use during `spack test run`."""
-        self.cache_extra_test_sources([self.examples_src_dir])
-
-        # generate a custom environment set up script ONCE for the installed
+        install test subdirectory for use during `spack test run` and generate
+        the run environment script."""
+        # Generate a custom environment set up script ONCE for the installed
         # software.
         self.write_test_env_sh()
+
+        self.clone_test_examples()
+
+        self.cache_extra_test_sources([self.env_script, self.examples_src_dir])
 
     def setup_run_environment(self, env):
         env.set("GPTUNE_INSTALL_PATH", python_platlib)
 
     def write_test_env_sh(self):
-        """Generate the test run environment script for stand-alone testing."""
+        """Generate the post-install test run environment script for
+        stand-alone testing."""
         comp_name = self.compiler.name
         comp_version = str(self.compiler.version).replace(".", ",")
 
-        # TODO/TBD/TLD: What is python_platlib supposed to be?
-
         spec = self.spec
-        # Generate the run environment script after the
-        with working_dir(self.install_test_root):
-            with open("run_env.sh", "w") as envfile:
-                envfile.write('if [[ $NERSC_HOST = "cori" ]]; then\n')
-                envfile.write("    export machine=cori\n")
-                envfile.write('elif [[ $(uname -s) = "Darwin" ]]; then\n')
-                envfile.write("    export machine=mac\n")
-                envfile.write("elif [[ $(dnsdomainname) = " + '"summit.olcf.ornl.gov" ]]; then\n')
-                envfile.write("    export machine=summit\n")
-                envfile.write(
-                    'elif [[ $(cat /etc/os-release | grep "PRETTY_NAME") =='
-                    + ' *"Ubuntu"* || $(cat /etc/os-release | grep'
-                    + ' "PRETTY_NAME") == *"Debian"* ]]; then\n'
-                )
-                envfile.write("    export machine=unknownlinux\n")
-                envfile.write("fi\n")
-                envfile.write("export GPTUNEROOT=$PWD\n")
-                envfile.write(
-                    "export MPIRUN={0}\n".format(which(spec["mpi"].prefix.bin + "/mpirun"))
-                )
-                envfile.write(
-                    "export PYTHONPATH={0}:$PYTHONPATH\n".format(python_platlib + "/gptune")
-                )
-                envfile.write("export proc=$(spack arch)\n")
-                envfile.write("export mpi={0}\n".format(spec["mpi"].name))
-                envfile.write("export compiler={0}\n".format(comp_name))
-                envfile.write("export nodes={0} \n".format(self.nodes))
-                envfile.write("export cores={0} \n".format(self.cores))
-                envfile.write("export ModuleEnv=$machine-$proc-$mpi-$compiler \n")
-                envfile.write(
-                    'software_json=$(echo ",\\"software_configuration\\":'
-                    + '{\\"'
-                    + spec["blas"].name
-                    + '\\":{\\"version_split\\":'
-                    + " ["
-                    + str(spec["blas"].versions).replace(".", ",")
-                    + ']},\\"'
-                    + spec["mpi"].name
-                    + '\\":{\\"version_split\\": ['
-                    + str(spec["mpi"].versions).replace(".", ",")
-                    + ']},\\"'
-                    + spec["scalapack"].name
-                    + '\\":{\\"version_split\\": ['
-                    + str(spec["scalapack"].versions).replace(".", ",")
-                    + ']},\\"'
-                    + str(comp_name)
-                    + '\\":{\\"version_split\\": ['
-                    + str(comp_version)
-                    + ']}}") \n'
-                )
-                envfile.write(
-                    'loadable_software_json=$(echo ",\\"loadable_software_'
-                    + 'configurations\\":{\\"'
-                    + spec["blas"].name
-                    + '\\":{\\"version_split\\": ['
-                    + str(spec["blas"].versions).replace(".", ",")
-                    + ']},\\"'
-                    + spec["mpi"].name
-                    + '\\":{\\"version_split\\": ['
-                    + str(spec["mpi"].versions).replace(".", ",")
-                    + ']},\\"'
-                    + spec["scalapack"].name
-                    + '\\":{\\"version_split\\": ['
-                    + str(spec["scalapack"].versions).replace(".", ",")
-                    + ']},\\"'
-                    + str(comp_name)
-                    + '\\":{\\"version_split\\": ['
-                    + str(comp_version)
-                    + ']}}") \n'
-                )
-                envfile.write(
-                    'machine_json=$(echo ",\\"machine_configuration\\":'
-                    + '{\\"machine_name\\":\\"$machine\\",\\"$proc\\":'
-                    + '{\\"nodes\\":$nodes,\\"cores\\":$cores}}") \n'
-                )
-                envfile.write(
-                    'loadable_machine_json=$(echo ",\\"loadable_machine_'
-                    + 'configurations\\":{\\"$machine\\":{\\"$proc\\":'
-                    + '{\\"nodes\\":$nodes,\\"cores\\":$cores}}}") \n'
-                )
+        with open(self.env_script, "w") as envfile:
+            envfile.write('if [[ $NERSC_HOST = "cori" ]]; then\n')
+            envfile.write("    export machine=cori\n")
+            envfile.write('elif [[ $(uname -s) = "Darwin" ]]; then\n')
+            envfile.write("    export machine=mac\n")
+            envfile.write("elif [[ $(dnsdomainname) = " + '"summit.olcf.ornl.gov" ]]; then\n')
+            envfile.write("    export machine=summit\n")
+            envfile.write(
+                'elif [[ $(cat /etc/os-release | grep "PRETTY_NAME") =='
+                + ' *"Ubuntu"* || $(cat /etc/os-release | grep'
+                + ' "PRETTY_NAME") == *"Debian"* ]]; then\n'
+            )
+            envfile.write("    export machine=unknownlinux\n")
+            envfile.write("fi\n")
+            envfile.write("export GPTUNEROOT=$PWD\n")
+            mpirun = which(spec["mpi"].prefix.bin.mpirun)
+            envfile.write(f"export MPIRUN={mpirun}\n")
+            path = join_path(python_platlib, "gptune")
+            envfile.write(f"export PYTHONPATH={path}:$PYTHONPATH\n")
+            envfile.write("export proc=$(spack arch)\n")
+            envfile.write(f"export mpi={spec['mpi'].name}\n")
+            envfile.write(f"export compiler={comp_name}\n")
+            envfile.write(f"export nodes={self.nodes} \n")
+            envfile.write(f"export cores={self.cores} \n")
+            envfile.write("export ModuleEnv=$machine-$proc-$mpi-$compiler \n")
+            envfile.write(
+                'software_json=$(echo ",\\"software_configuration\\":'
+                + '{\\"'
+                + spec["blas"].name
+                + '\\":{\\"version_split\\":'
+                + " ["
+                + str(spec["blas"].versions).replace(".", ",")
+                + ']},\\"'
+                + spec["mpi"].name
+                + '\\":{\\"version_split\\": ['
+                + str(spec["mpi"].versions).replace(".", ",")
+                + ']},\\"'
+                + spec["scalapack"].name
+                + '\\":{\\"version_split\\": ['
+                + str(spec["scalapack"].versions).replace(".", ",")
+                + ']},\\"'
+                + str(comp_name)
+                + '\\":{\\"version_split\\": ['
+                + str(comp_version)
+                + ']}}") \n'
+            )
+            envfile.write(
+                'loadable_software_json=$(echo ",\\"loadable_software_'
+                + 'configurations\\":{\\"'
+                + spec["blas"].name
+                + '\\":{\\"version_split\\": ['
+                + str(spec["blas"].versions).replace(".", ",")
+                + ']},\\"'
+                + spec["mpi"].name
+                + '\\":{\\"version_split\\": ['
+                + str(spec["mpi"].versions).replace(".", ",")
+                + ']},\\"'
+                + spec["scalapack"].name
+                + '\\":{\\"version_split\\": ['
+                + str(spec["scalapack"].versions).replace(".", ",")
+                + ']},\\"'
+                + str(comp_name)
+                + '\\":{\\"version_split\\": ['
+                + str(comp_version)
+                + ']}}") \n'
+            )
+            envfile.write(
+                'machine_json=$(echo ",\\"machine_configuration\\":'
+                + '{\\"machine_name\\":\\"$machine\\",\\"$proc\\":'
+                + '{\\"nodes\\":$nodes,\\"cores\\":$cores}}") \n'
+            )
+            envfile.write(
+                'loadable_machine_json=$(echo ",\\"loadable_machine_'
+                + 'configurations\\":{\\"$machine\\":{\\"$proc\\":'
+                + '{\\"nodes\\":$nodes,\\"cores\\":$cores}}}") \n'
+            )
 
-            # copy the environment configuration to a non-cache directory
-            copy("run_env.sh", join_path(python_platlib, "gptune"))
-
+    @property
     def test_src_dir(self):
         return join_path(self.test_suite.current_test_cache_dir, self.examples_src_dir)
 
@@ -207,54 +205,66 @@ class Gptune(CMakePackage):
             # copy superlu-dist executables to the correct place
             example_dir = join_path("superlu_dist", "build", "EXAMPLE")
             with working_dir(join_path(self.test_src_dir, "SuperLU_DIST")):
-                # TBD: Is there anything here to remove??
-                print(os.listdir("superlu_dist"))
                 remove_linked_tree("superlu_dist")
 
                 git("clone", "https://github.com/xiaoyeli/superlu_dist.git")
                 mkdirp(example_dir)
-                copy(
-                    "-r",
-                    join_path(spec["superlu-dist"].prefix.lib, "EXAMPLE", "pddrive_spawn"),
-                    example_dir,
-                )
+                copy("-r", spec["superlu-dist"].prefix.lib.EXAMPLE.pddrive_spawn, example_dir)
 
         if "+hypre" in spec:
             # copy hypre driver executable to the correct place
             with working_dir(join_path(self.test_src_dir, "Hypre")):
-                # TBD: Is there anything here to remove?
-                print(os.listdir("hypre"))
                 remove_linked_tree("hypre")
 
                 git("clone", "https://github.com/hypre-space/hypre.git")
-                copy(
-                    "-r",
-                    join_path(spec["hypre"].prefix.bin, "ij"),
-                    join_path("hypre", "src", "test"),
-                )
+                copy("-r", spec["hypre"].prefix.bin.ij, join_path("hypre", "src", "test"))
 
-    def test_examples(self):
-        spec = self.spec
-        self.clone_test_examples()
-        # TODO: Confirm run_env.sh is automatically copied to the install test root
+    @property
+    @memoized
+    def bash(self):
+        return which("bash")
 
-        apps = ["Scalapack-PDGEQRF_RCI"]
-        if "+mpispawn" in spec:
-            apps = apps + ["GPTune-Demo", "Scalapack-PDGEQRF"]
-        if "+superlu" in spec:
-            apps = apps + ["SuperLU_DIST_RCI"]
-            if "+mpispawn" in spec:
-                apps = apps + ["SuperLU_DIST"]
-        if "+hypre" in spec:
-            if "+mpispawn" in spec:
-                apps = apps + ["Hypre"]
+    def test_scalapack_pdgeqrf_rci(self):
+        """run Scalapack-PDGEQRF_RCI examples"""
+        with working_dir(join_path(self.test_src_dir, "Scalapack-PDGEQRF_RCI")):
+            self.bash("run_examples.sh")
 
-        bash = which("bash")
-        for app in apps:
-            with test_part(
-                self,
-                "test_examples_{0}".format(app),
-                purpose="run {0}".format(app),
-                work_dir=join_path(self.test_src_dir, app),
-            ):
-                bash("run_examples.sh")
+    def test_gptune_demo(self):
+        """run GPTune-Demo examples"""
+        if "+mpispawn" not in self.spec:
+            raise SkipTest("Test requires package built with +mpispawn")
+
+        with working_dir(join_path(self.test_src_dir, "GPTune-Demo")):
+            self.bash("run_examples.sh")
+
+    def test_scalapack_pdgeqrf(self):
+        """run Scalapack-PDGEQRF examples"""
+        if "+mpispawn" not in self.spec:
+            raise SkipTest("Test requires package built with +mpispawn")
+
+        with working_dir(join_path(self.test_src_dir, "Scalapack-PDGEQRF")):
+            self.bash("run_examples.sh")
+
+    def test_scalapack_pdgeqrf_rci(self):
+        """run SuperLU_DIST_RCI examples"""
+        if "+superlu" not in self.spec:
+            raise SkipTest("Test requires package built with +superlu")
+
+        with working_dir(join_path(self.test_src_dir, "SuperLU_DIST_RCI")):
+            self.bash("run_examples.sh")
+
+    def test_superlu_dist(self):
+        """run SuperLU_DIST examples"""
+        if "+superlu+mpispawn" not in self.spec:
+            raise SkipTest("Test requires package built with +superlu+mpispawn")
+
+        with working_dir(join_path(self.test_src_dir, "SuperLU_DIST")):
+            self.bash("run_examples.sh")
+
+    def test_hypre(self):
+        """run Hypre examples"""
+        if "+hypre+mpispawn" not in self.spec:
+            raise SkipTest("Test requires package built with +hypre+mpispawn")
+
+        with working_dir(join_path(self.test_src_dir, "Hypre")):
+            self.bash("run_examples.sh")
