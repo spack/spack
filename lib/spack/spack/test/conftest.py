@@ -1925,6 +1925,7 @@ def default_mock_concretization(config, mock_packages, concretized_specs_cache):
 @pytest.fixture
 def shell_as(shell):
     if sys.platform != "win32":
+        yield
         return
     if shell not in ("pwsh", "bat"):
         raise RuntimeError("Shell must be one of supported Windows shells (pwsh|bat)")
