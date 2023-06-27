@@ -44,7 +44,7 @@ def test_symlink_source_not_exists(tmpdir):
         real_dir = os.path.join(test_dir, "real_dir")
         link_dir = os.path.join(test_dir, "link_dir")
         with pytest.raises(symlink.SymlinkError):
-            symlink.symlink(source_path=real_dir, link_path=link_dir)
+            symlink.symlink(source_path=real_dir, link_path=link_dir, allow_broken_symlinks=False)
 
 
 def test_symlink_src_relative_to_link(tmpdir):
@@ -91,12 +91,13 @@ def test_symlink_src_not_relative_to_link(tmpdir):
             symlink.symlink(
                 source_path=f"d/{os.path.basename(real_file)}",
                 link_path=f"a/{os.path.basename(link_file)}",
+                allow_broken_symlinks=False
             )
         assert not os.path.exists(link_file)
         # Check dirs
         assert not os.path.lexists(link_dir)
         with pytest.raises(symlink.SymlinkError):
-            symlink.symlink(source_path="d", link_path="a/c")
+            symlink.symlink(source_path="d", link_path="a/c", allow_broken_symlinks=False)
         assert not os.path.lexists(link_dir)
 
 
