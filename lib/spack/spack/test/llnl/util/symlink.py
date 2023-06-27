@@ -91,7 +91,7 @@ def test_symlink_src_not_relative_to_link(tmpdir):
             symlink.symlink(
                 source_path=f"d/{os.path.basename(real_file)}",
                 link_path=f"a/{os.path.basename(link_file)}",
-                allow_broken_symlinks=False
+                allow_broken_symlinks=False,
             )
         assert not os.path.exists(link_file)
         # Check dirs
