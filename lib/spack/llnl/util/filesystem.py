@@ -18,13 +18,11 @@ import stat
 import sys
 import tempfile
 from contextlib import contextmanager
-from itertools import accumulate
 from typing import Callable, Iterable, List, Match, Optional, Tuple, Union
 
-import llnl.util.symlink
 from llnl.util import tty
 from llnl.util.lang import dedupe, memoized
-from llnl.util.symlink import islink, readlink, resolve_link_target_relative_to_the_link, symlink
+from llnl.util.symlink import islink, symlink
 
 from spack.util.executable import Executable, which
 from spack.util.path import path_to_os_path, system_path_filter
@@ -103,7 +101,7 @@ if sys.version_info < (3, 7, 4):
             pass
 
         # follow symlinks (aka don't not follow symlinks)
-        follow = follow_symlinks or not (islink(src) and islink(dst))
+        follow = follow_symlinks or not (os.path.islink(src) and os.path.islink(dst))
         if follow:
             # use the real function if it exists
             def lookup(name):
@@ -171,7 +169,7 @@ def rename(src, dst):
     if sys.platform == "win32":
         # Windows path existence checks will sometimes fail on junctions/links/symlinks
         # so check for that case
-        if os.path.exists(dst) or islink(dst):
+        if os.path.exists(dst) or os.path.islink(dst):
             os.remove(dst)
     os.rename(src, dst)
 
@@ -568,7 +566,7 @@ def set_install_permissions(path):
     # If this points to a file maintained in a Spack prefix, it is assumed that
     # this function will be invoked on the target. If the file is outside a
     # Spack-maintained prefix, the permissions should not be modified.
-    if islink(path):
+    if os.path.islink(path):
         return
     if os.path.isdir(path):
         os.chmod(path, 0o755)
@@ -635,7 +633,7 @@ def chmod_x(entry, perms):
 @system_path_filter
 def copy_mode(src, dest):
     """Set the mode of dest to that of src unless it is a link."""
-    if islink(dest):
+    if os.path.islink(dest):
         return
     src_mode = os.stat(src).st_mode
     dest_mode = os.stat(dest).st_mode
@@ -722,11 +720,25 @@ def install(src, dest):
 
 
 @system_path_filter
+def resolve_link_target_relative_to_the_link(link):
+    """
+    os.path.isdir uses os.path.exists, which for links will check
+    the existence of the link target. If the link target is relative to
+    the link, we need to construct a pathname that is valid from
+    our cwd (which may not be the same as the link's directory)
+    """
+    target = os.readlink(link)
+    if os.path.isabs(target):
+        return target
+    link_dir = os.path.dirname(os.path.abspath(link))
+    return os.path.join(link_dir, target)
+
+
+@system_path_filter
 def copy_tree(
     src: str,
     dest: str,
     symlinks: bool = True,
-    allow_broken_symlinks: bool = False,
     ignore: Optional[Callable[[str], bool]] = None,
     _permissions: bool = False,
 ):
@@ -749,8 +761,6 @@ def copy_tree(
         src (str): the directory to copy
         dest (str): the destination directory
         symlinks (bool): whether or not to preserve symlinks
-        allow_broken_symlinks (bool): whether or not to allow broken (dangling) symlinks,
-            On Windows, setting this to True will raise an exception.
         ignore (typing.Callable): function indicating which files to ignore
         _permissions (bool): for internal use only
 
@@ -758,8 +768,6 @@ def copy_tree(
         IOError: if *src* does not match any files or directories
         ValueError: if *src* is a parent directory of *dest*
     """
-    if allow_broken_symlinks and sys.platform == "win32":
-        raise llnl.util.symlink.SymlinkError("Cannot allow broken symlinks on Windows!")
     if _permissions:
         tty.debug("Installing {0} to {1}".format(src, dest))
     else:
@@ -772,11 +780,6 @@ def copy_tree(
     files = glob.glob(src)
     if not files:
         raise IOError("No such file or directory: '{0}'".format(src))
-
-    # For Windows hard-links and junctions, the source path must exist to make a symlink. Add
-    # all symlinks to this list while traversing the tree, then when finished, make all
-    # symlinks at the end.
-    links = []
 
     for src in files:
         abs_src = os.path.abspath(src)
@@ -800,27 +803,21 @@ def copy_tree(
             ignore=ignore,
             follow_nonexisting=True,
         ):
-            if islink(s):
+            if os.path.islink(s):
                 link_target = resolve_link_target_relative_to_the_link(s)
                 if symlinks:
                     target = os.readlink(s)
-
-                    def escaped_path(path):
-                        return path.replace("\\", r"\\")
-
                     if os.path.isabs(target):
+
+                        def escaped_path(path):
+                            return path.replace("\\", r"\\")
+
                         new_target = re.sub(escaped_path(abs_src), escaped_path(abs_dest), target)
+                        if new_target != target:
+                            tty.debug("Redirecting link {0} to {1}".format(target, new_target))
+                            target = new_target
 
-                    else:
-                        new_target = re.sub(escaped_path(src), escaped_path(dest), target)
-
-                    if new_target != target:
-                        tty.debug("Redirecting link {0} to {1}".format(target, new_target))
-                        target = new_target
-
-                    links.append((target, d, s))
-                    continue
-
+                    symlink(target, d)
                 elif os.path.isdir(link_target):
                     mkdirp(d)
                 else:
@@ -835,15 +832,9 @@ def copy_tree(
                 set_install_permissions(d)
                 copy_mode(s, d)
 
-    for target, d, s in links:
-        symlink(target, d, allow_broken_symlinks=allow_broken_symlinks)
-        if _permissions:
-            set_install_permissions(d)
-            copy_mode(s, d)
-
 
 @system_path_filter
-def install_tree(src, dest, symlinks=True, ignore=None, allow_broken_symlinks=False):
+def install_tree(src, dest, symlinks=True, ignore=None):
     """Recursively install an entire directory tree rooted at *src*.
 
     Same as :py:func:`copy_tree` with the addition of setting proper
@@ -854,21 +845,12 @@ def install_tree(src, dest, symlinks=True, ignore=None, allow_broken_symlinks=Fa
         dest (str): the destination directory
         symlinks (bool): whether or not to preserve symlinks
         ignore (typing.Callable): function indicating which files to ignore
-        allow_broken_symlinks (bool): whether or not to allow broken (dangling) symlinks,
-            On Windows, setting this to True will raise an exception.
 
     Raises:
         IOError: if *src* does not match any files or directories
         ValueError: if *src* is a parent directory of *dest*
     """
-    copy_tree(
-        src,
-        dest,
-        symlinks=symlinks,
-        allow_broken_symlinks=allow_broken_symlinks,
-        ignore=ignore,
-        _permissions=True,
-    )
+    copy_tree(src, dest, symlinks=symlinks, ignore=ignore, _permissions=True)
 
 
 @system_path_filter
@@ -1272,12 +1254,7 @@ def traverse_tree(
     Keyword Arguments:
         order (str): Whether to do pre- or post-order traversal. Accepted
             values are 'pre' and 'post'
-        ignore (typing.Callable): function indicating which files to ignore. This will also
-            ignore symlinks if they point to an ignored file (regardless of whether the symlink
-            is explicitly ignored); note this only supports one layer of indirection (i.e. if
-            you have x -> y -> z, and z is ignored but x/y are not, then y would be ignored
-            but not x). To avoid this, make sure the ignore function also ignores the symlink
-            paths too.
+        ignore (typing.Callable): function indicating which files to ignore
         follow_nonexisting (bool): Whether to descend into directories in
             ``src`` that do not exit in ``dest``. Default is True
         follow_links (bool): Whether to descend into symlinks in ``src``
@@ -1304,22 +1281,11 @@ def traverse_tree(
         dest_child = os.path.join(dest_path, f)
         rel_child = os.path.join(rel_path, f)
 
-        # If the source path is a link and the link's source is ignored, then ignore the link too.
-        if islink(source_child) and not follow_links:
-            target = readlink(source_child)
-            all_parents = accumulate(target.split(os.sep), lambda x, y: os.path.join(x, y))
-            if any(map(ignore, all_parents)):
-                tty.warn(
-                    f"Skipping {source_path} because the source or a part of the source's "
-                    f"path is included in the ignores."
-                )
-                continue
-
         # Treat as a directory
         # TODO: for symlinks, os.path.isdir looks for the link target. If the
         # target is relative to the link, then that may not resolve properly
         # relative to our cwd - see resolve_link_target_relative_to_the_link
-        if os.path.isdir(source_child) and (follow_links or not islink(source_child)):
+        if os.path.isdir(source_child) and (follow_links or not os.path.islink(source_child)):
             # When follow_nonexisting isn't set, don't descend into dirs
             # in source that do not exist in dest
             if follow_nonexisting or os.path.exists(dest_child):
@@ -1345,34 +1311,29 @@ def traverse_tree(
 
 def lexists_islink_isdir(path):
     """Computes the tuple (lexists(path), islink(path), isdir(path)) in a minimal
-    number of stat calls on unix. Use os.path and symlink.islink methods for windows."""
-    if sys.platform == "win32":
-        if not os.path.lexists(path):
-            return False, False, False
-        return os.path.lexists(path), islink(path), os.path.isdir(path)
-    else:
-        # First try to lstat, so we know if it's a link or not.
-        try:
-            lst = os.lstat(path)
-        except (IOError, OSError):
-            return False, False, False
+    number of stat calls."""
+    # First try to lstat, so we know if it's a link or not.
+    try:
+        lst = os.lstat(path)
+    except (IOError, OSError):
+        return False, False, False
 
-        is_link = stat.S_ISLNK(lst.st_mode)
+    is_link = stat.S_ISLNK(lst.st_mode)
 
-        # Check whether file is a dir.
-        if not is_link:
-            is_dir = stat.S_ISDIR(lst.st_mode)
-            return True, is_link, is_dir
-
-        # Check whether symlink points to a dir.
-        try:
-            st = os.stat(path)
-            is_dir = stat.S_ISDIR(st.st_mode)
-        except (IOError, OSError):
-            # Dangling symlink (i.e. it lexists but not exists)
-            is_dir = False
-
+    # Check whether file is a dir.
+    if not is_link:
+        is_dir = stat.S_ISDIR(lst.st_mode)
         return True, is_link, is_dir
+
+    # Check whether symlink points to a dir.
+    try:
+        st = os.stat(path)
+        is_dir = stat.S_ISDIR(st.st_mode)
+    except (IOError, OSError):
+        # Dangling symlink (i.e. it lexists but not exists)
+        is_dir = False
+
+    return True, is_link, is_dir
 
 
 class BaseDirectoryVisitor(object):
@@ -1565,7 +1526,7 @@ def remove_if_dead_link(path):
     Parameters:
         path (str): The potential dead link
     """
-    if islink(path) and not os.path.exists(path):
+    if os.path.islink(path) and not os.path.exists(path):
         os.unlink(path)
 
 
@@ -1624,7 +1585,7 @@ def remove_linked_tree(path):
         kwargs["onerror"] = readonly_file_handler(ignore_errors=True)
 
     if os.path.exists(path):
-        if islink(path):
+        if os.path.islink(path):
             shutil.rmtree(os.path.realpath(path), **kwargs)
             os.unlink(path)
         else:
@@ -2725,7 +2686,7 @@ def remove_directory_contents(dir):
     """Remove all contents of a directory."""
     if os.path.exists(dir):
         for entry in [os.path.join(dir, entry) for entry in os.listdir(dir)]:
-            if os.path.isfile(entry) or islink(entry):
+            if os.path.isfile(entry) or os.path.islink(entry):
                 os.unlink(entry)
             else:
                 shutil.rmtree(entry)
