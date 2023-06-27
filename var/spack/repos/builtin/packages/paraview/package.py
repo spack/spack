@@ -111,6 +111,7 @@ class Paraview(CMakePackage, CudaPackage, ROCmPackage):
         ' "default" lets the build_edition make the decision.'
         ' "on" or "off" will always override the build_edition.',
     )
+    variant("ospray", default=False, description="Enable raytracing using osrpray library")
 
     conflicts("~hdf5", when="+visitbridge")
     conflicts("+adios2", when="@:5.10 ~mpi")
@@ -254,6 +255,8 @@ class Paraview(CMakePackage, CudaPackage, ROCmPackage):
     # ParaView depends on proj@8.1.0 due to changes in MR
     # https://gitlab.kitware.com/vtk/vtk/-/merge_requests/8474
     depends_on("proj@8.1.0", when="@5.11:")
+
+    depends_on("ospray@2.8:", when="+ospray")
 
     patch("stl-reader-pv440.patch", when="@4.4.0")
 
@@ -422,6 +425,12 @@ class Paraview(CMakePackage, CudaPackage, ROCmPackage):
             self.define_from_variant("PARAVIEW_ENABLE_VISITBRIDGE", "visitbridge"),
             self.define_from_variant("VISIT_BUILD_READER_Silo", "visitbridge"),
         ]
+
+        if "+ospray" in spec:
+            cmake_args.extend([
+                "-DPARAVIEW_ENABLE_RAYTRACING:BOOL=ON",
+                "-DVTKOSPRAY_ENABLE_DENOISER:BOOL=ON"
+                ])
 
         if spec.satisfies("@5.11:"):
             cmake_args.append("-DVTK_MODULE_USE_EXTERNAL_VTK_verdict:BOOL=OFF")
