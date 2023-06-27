@@ -65,7 +65,7 @@ def setup_parser(subparser):
         choices=["64", "32"],
         help="Architecture targeted by bundled Git/Python",
     )
-    python_version_group = subparser.add_argument_group("Python version and hash", required=False)
+    python_version_group = subparser.add_argument_group("Python version and hash")
     python_version_group.add_argument(
         "-pv", "--python-version", default="", help="Python version to be bundled with installer"
     )
@@ -77,7 +77,7 @@ def setup_parser(subparser):
         " must be provided if --python-version is specified",
     )
 
-    git_version_group = subparser.add_argument_group("Git version and hash", required=False)
+    git_version_group = subparser.add_argument_group("Git version and hash")
     git_version_group.add_argument(
         "-gv", "--git-version", default="", help="Git version to be bundled with installer"
     )
