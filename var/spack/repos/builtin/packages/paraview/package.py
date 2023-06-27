@@ -427,10 +427,9 @@ class Paraview(CMakePackage, CudaPackage, ROCmPackage):
         ]
 
         if "+ospray" in spec:
-            cmake_args.extend([
-                "-DPARAVIEW_ENABLE_RAYTRACING:BOOL=ON",
-                "-DVTKOSPRAY_ENABLE_DENOISER:BOOL=ON"
-                ])
+            cmake_args.extend(
+                ["-DPARAVIEW_ENABLE_RAYTRACING:BOOL=ON", "-DVTKOSPRAY_ENABLE_DENOISER:BOOL=ON"]
+            )
 
         if spec.satisfies("@5.11:"):
             cmake_args.append("-DVTK_MODULE_USE_EXTERNAL_VTK_verdict:BOOL=OFF")
