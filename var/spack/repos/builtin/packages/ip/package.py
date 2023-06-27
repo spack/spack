@@ -35,13 +35,9 @@ class Ip(CMakePackage):
         description="Set precision (_4/_d library versions)",
         when="@4.1:",
     )
-    variant("tests", default=False, description="Build tests of the library")
-
-    requires("precision=d", when="+tests precision=4")
 
     depends_on("sp")
     depends_on("sp@:2.3.3", when="@:4.0")
-    depends_on("pfunit", when="@3.3.3 +tests")
 
     def cmake_args(self):
         args = [
@@ -50,9 +46,9 @@ class Ip(CMakePackage):
         ]
 
         if self.spec.satisfies("@4:"):
-            args.append(self.define_from_variant("BUILD_TESTING", "tests"))
+            args.append(self.define("BUILD_TESTING", "NO"))
         else:
-            args.append(self.define_from_variant("ENABLE_TESTS", "tests"))
+            args.append(self.define("ENABLE_TESTS", "NO"))
 
         if self.spec.satisfies("@4.1:"):
             args.append(self.define_from_variant("BUILD_SHARED_LIBS", "shared"))
