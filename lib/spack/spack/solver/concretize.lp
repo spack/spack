@@ -54,9 +54,24 @@ unify(SetID, PackageName) :- unification_set(SetID, node(_, PackageName)).
 
 unification_set("root", PackageNode) :- attr("root", PackageNode).
 unification_set(SetID, ChildNode) :- attr("depends_on", ParentNode, ChildNode, Type), Type != "build", unification_set(SetID, ParentNode).
-unification_set("build", ChildNode) :- attr("depends_on", ParentNode, ChildNode, Type), Type == "build", unification_set("root", ParentNode).
+
+unification_set(("build", node(X, Child)), node(X, Child))
+  :- attr("depends_on", ParentNode, node(X, Child), Type),
+     Type == "build",
+     multiple_unification_sets(Child),
+     unification_set("root", ParentNode).
+
+unification_set("generic_build", node(X, Child))
+  :- attr("depends_on", ParentNode, node(X, Child), Type),
+     Type == "build",
+     not multiple_unification_sets(Child),
+     unification_set("root", ParentNode).
+
+% Any dependency of type "build" in a unification set that is not "root", stays in that unification set
 unification_set(SetID, ChildNode) :- attr("depends_on", ParentNode, ChildNode, Type), Type == "build", SetID != "root", unification_set(SetID, ParentNode).
 unification_set(SetID, VirtualNode) :- provider(PackageNode, VirtualNode), unification_set(SetID, PackageNode).
+
+#defined multiple_unification_sets/1.
 
 %----
 % Rules to break symmetry and speed-up searches
@@ -64,6 +79,11 @@ unification_set(SetID, VirtualNode) :- provider(PackageNode, VirtualNode), unifi
 
 % In the "root" unification set only ID = 0 are allowed
 :- unification_set("root", node(ID, _)), ID != 0.
+
+% In the "root" unification set we allow only packages from the link-run possible subDAG
+:- unification_set("root", node(_, Package)), not possible_in_link_run(Package), not virtual(Package).
+
+% Each node must belong to at least one unification set
 :- attr("node", PackageNode), not unification_set(_, PackageNode).
 
 % Cannot have a node with an ID, if lower ID of the same package are not used
@@ -114,10 +134,10 @@ error(100, no_value_error, Attribute, Package)
      not attr(Attribute, node(ID, Package), _).
 
 % Error when multiple attr need to be selected
-error(100, multiple_values_error, Attribute, Package)
-  :- attr("node", node(ID, Package)),
+error(100, multiple_values_error, Attribute, PackageNode)
+  :- attr("node", PackageNode),
      attr_single_value(Attribute),
-     2 { attr(Attribute, node(ID, Package), Value) }.
+     2 { attr(Attribute, PackageNode, Value) }.
 
 %-----------------------------------------------------------------------------
 % Version semantics
@@ -1018,11 +1038,6 @@ error(100, "No valid compiler version found for '{0}'", PackageNode)
 error(100, "Cannot select a single compiler for package {0}", PackageNode)
  :- attr("node", PackageNode),
     2 { attr("node_compiler_version", PackageNode, C, V) }.
-
-error(100, "Cannot concretize {0} with two compilers {1} and {2}@{3}", PackageNode, Compiler1, Compiler2, Version)
- :- attr("node_compiler", PackageNode, Compiler1),
-    attr("node_compiler_version", PackageNode, Compiler2, Version),
-    Compiler1 != Compiler2.
 
 % If the compiler of a node cannot be satisfied, raise
 error(10, "No valid compiler for {0} satisfies '%{1}'", PackageNode, Compiler)

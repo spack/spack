@@ -14,6 +14,8 @@ class PySetuptools(Package, PythonExtension):
     url = "https://files.pythonhosted.org/packages/py3/s/setuptools/setuptools-62.3.2-py3-none-any.whl"
     list_url = "https://pypi.org/simple/setuptools/"
 
+    tags = ["build-tools"]
+
     version(
         "68.0.0",
         sha256="11e52c67415a381d10d6b462ced9cfb97066179f0e871399e006c4ab101fc85f",
