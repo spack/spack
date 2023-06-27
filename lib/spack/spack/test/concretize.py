@@ -478,7 +478,7 @@ spack:
   specs:
     - hypre ~~shared ^openblas
 """
-            )
+                )
 
         env("create", "test", str(path))
 
@@ -491,7 +491,6 @@ spack:
                 if dep.name == "openblas":
                     assert dep.satisfies("~shared")
                     assert dep.satisfies("^zlib ~shared")
-
 
     @pytest.mark.skipif(
         os.environ.get("SPACK_TEST_SOLVER") == "original",
