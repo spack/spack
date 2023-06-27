@@ -463,7 +463,8 @@ class Openblas(MakefilePackage):
 
     @property
     def build_targets(self):
-        return ["-s"] + self.make_defs + ["all"]
+        # Do not build tests
+        return ["-s"] + self.make_defs + ["libs", "netlib", "shared"]
 
     @run_after("build")
     @on_package_attributes(run_tests=True)
