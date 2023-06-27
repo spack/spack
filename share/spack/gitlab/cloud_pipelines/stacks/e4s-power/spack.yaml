@@ -161,7 +161,7 @@ spack:
   - hpx max_cpu_count=512 +cuda
   - hypre +cuda
   - kokkos +wrapper +cuda
-  - kokkos-kernels +cuda ^kokkos +wrapper +cuda
+  - kokkos-kernels +cuda ^kokkos +wrapper +cuda +cuda_lambda
   - magma +cuda
   - mfem +cuda
   - mgard +serial +openmp +timing +unstructured +cuda
