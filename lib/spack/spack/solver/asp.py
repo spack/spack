@@ -1547,6 +1547,8 @@ class SpackSolverSetup:
                 self.possible_versions[spec.name].add(spec.version)
                 self.gen.newline()
 
+            self.trigger_rules(pkg_name)
+
     def preferred_variants(self, pkg_name):
         """Facts on concretization preferences, as read from packages.yaml"""
         preferences = spack.package_prefs.PackagePrefs
@@ -2347,11 +2349,23 @@ class SpackSolverSetup:
             for reusable_spec in reuse:
                 self._facts_from_concrete_spec(reusable_spec, possible)
 
-        self.gen.h1("Maximum number of nodes")
-        counter = collections.Counter(list(link_run) + list(total_build))
-        for pkg, count in sorted(counter.items()):
-            # FIXME (multiple nodes): should be count
-            self.gen.fact(fn.max_nodes(pkg, 1))
+        self.gen.h1("Generic statements on possible packages")
+        counter = collections.Counter(list(link_run) + list(total_build) + list(set(direct_build)))
+        self.gen.h2("Maximum number of nodes")
+        for pkg, count in sorted(counter.items(), key=lambda x: (x[1], x[0])):
+            count = min(count, 1)
+            self.gen.fact(fn.max_nodes(pkg, count))
+        self.gen.newline()
+
+        self.gen.h2("Build unification sets ")
+        for name in spack.repo.path.packages_with_tags("build-tools"):
+            self.gen.fact(fn.multiple_unification_sets(name))
+        self.gen.newline()
+
+        self.gen.h2("Possible package in link-run subDAG")
+        for name in sorted(link_run):
+            self.gen.fact(fn.possible_in_link_run(name))
+        self.gen.newline()
 
         self.gen.h1("Possible flags on nodes")
         for flag in spack.spec.FlagMap.valid_compiler_flags():
@@ -2747,7 +2761,7 @@ class SpecBuilder:
         else:
             return (-1, 0)
 
-    def build_specs(self, function_tuples):
+    def _build_specs(self, function_tuples):
         # Functions don't seem to be in particular order in output.  Sort
         # them here so that directives that build objects (like node and
         # node_compiler) are called in the right order.
@@ -2802,12 +2816,7 @@ class SpecBuilder:
         self.reorder_flags()
 
         # cycle detection
-        try:
-            roots = [spec.root for spec in self._specs.values() if not spec.root.installed]
-        except RecursionError as e:
-            raise CycleDetectedError(
-                "detected cycles using a fast solve, falling back to slower algorithm"
-            ) from e
+        roots = [spec.root for spec in self._specs.values() if not spec.root.installed]
 
         # inject patches -- note that we' can't use set() to unique the
         # roots here, because the specs aren't complete, and the hash
@@ -2841,6 +2850,14 @@ class SpecBuilder:
                     )
 
         return self._specs
+
+    def build_specs(self, function_tuples):
+        try:
+            return self._build_specs(function_tuples)
+        except RecursionError as e:
+            raise CycleDetectedError(
+                "detected cycles using a fast solve, falling back to slower algorithm"
+            ) from e
 
 
 def _develop_specs_from_env(spec, env):
