@@ -10,6 +10,7 @@ class PyCwlRegistry(PythonPackage):
     git = "ssh://git@bbpgitlab.epfl.ch/nse/cwl-registry.git"
 
     version("develop", branch="main")
+    version("0.3.8", tag="cwl-registry-v0.3.8")
     version("0.3.7", tag="cwl-registry-v0.3.7")
     version("0.3.6", tag="cwl-registry-v0.3.6")
 
@@ -17,10 +18,12 @@ class PyCwlRegistry(PythonPackage):
 
     depends_on("py-setuptools", type=("build", "run"))
 
+    depends_on("py-pyarrow+parquet", type=("build", "run"))
     depends_on("py-click@8.0.0:", type=("build", "run"))
     depends_on("py-voxcell", type=("build", "run"))
     depends_on("py-numpy", type=("build", "run"))
     depends_on("py-pandas", type=("build", "run"))
+
     depends_on("py-libsonata", type=("build", "run"))
     depends_on("py-nexusforge", type=("build", "run"))
     depends_on("py-bba-data-push@1.0.4:", type=("build", "run"))
