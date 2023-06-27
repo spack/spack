@@ -11,7 +11,7 @@ class KokkosKernels(CMakePackage, CudaPackage):
 
     homepage = "https://github.com/kokkos/kokkos-kernels"
     git = "https://github.com/kokkos/kokkos-kernels.git"
-    url = "https://github.com/kokkos/kokkos-kernels/archive/3.6.00.tar.gz"
+    url = "https://github.com/kokkos/kokkos-kernels/archive/4.0.00.tar.gz"
 
     tags = ["e4s"]
 
@@ -23,6 +23,8 @@ class KokkosKernels(CMakePackage, CudaPackage):
     # openssl sha256 kokkos-kernels-x.y.z.tar.gz
     version("develop", branch="develop")
     version("master", branch="master")
+    version("4.0.00", sha256="750079d0be1282d18ecd280e130ca303044ac399f1e5864488284b92f5ce0a86")
+    version("3.7.01", sha256="b2060f5894bdaf7f7d4793b90444fac260460cfa80595afcbcb955518864b446")
     version("3.7.00", sha256="51bc6db3995392065656848e2b152cfd1c3a95a951ab18a3934278113d59f32b")
     version("3.6.01", sha256="f000b156c8c0b80e85d38587907c11d9479aaf362408b812effeda5e22b24d0d")
     version("3.6.00", sha256="2753643fd643b9eed9f7d370e0ff5fa957211d08a91aa75398e31cbc9e5eb0a5")
@@ -39,6 +41,8 @@ class KokkosKernels(CMakePackage, CudaPackage):
     depends_on("kokkos")
     depends_on("kokkos@master", when="@master")
     depends_on("kokkos@develop", when="@develop")
+    depends_on("kokkos@4.0.00", when="@4.0.00")
+    depends_on("kokkos@3.7.01", when="@3.7.01")
     depends_on("kokkos@3.7.00", when="@3.7.00")
     depends_on("kokkos@3.6.01", when="@3.6.01")
     depends_on("kokkos@3.6.00", when="@3.6.00")
