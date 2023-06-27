@@ -163,7 +163,12 @@ def _py_gunzip(archive_file):
 def _system_gunzip(archive_file):
     """Returns path to gunzip'd file
     Decompresses `.gz` compressed files via system gzip"""
-    decompressed_file = os.path.basename(strip_compression_extension(archive_file, "gz"))
+    archive_file_no_ext = strip_compression_extension(archive_file, "gz")
+    if archive_file_no_ext == archive_file:
+        # the zip file has no extension. Un Unix gunzip cannot unzip onto itself
+        archive_file = archive_file + ".gz"
+        shutil.copy(archive_file_no_ext, archive_file)
+    decompressed_file = os.path.basename(archive_file_no_ext)
     working_dir = os.getcwd()
     destination_abspath = os.path.join(working_dir, decompressed_file)
     compressed_file = os.path.basename(archive_file)
