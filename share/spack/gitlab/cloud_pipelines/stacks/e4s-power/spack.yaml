@@ -185,6 +185,7 @@ spack:
   # - archer                  # llvm@8
   # - bricks                  # bricks
   # - geopm                   # geopm
+  # - hdf5-vol-daos           # hdf5-vol-daos: vhost/vhost_user.c:65:32: error: array size missing in 'vhost_message_handlers'
   # - loki                    # loki
   # - precice                 # precice
   # - pruners-ninja           # pruners-ninja
