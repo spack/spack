@@ -27,7 +27,7 @@ import archspec.cpu.schema
 import llnl.util.lang
 import llnl.util.lock
 import llnl.util.tty as tty
-from llnl.util.filesystem import copy_tree, mkdirp, remove_linked_tree, touchp, working_dir
+from llnl.util.filesystem import copy_tree, mkdirp, remove_linked_tree, working_dir
 
 import spack.binary_distribution
 import spack.caches
@@ -565,8 +565,6 @@ def mock_repo_path():
 def _pkg_install_fn(pkg, spec, prefix):
     # sanity_check_prefix requires something in the install directory
     mkdirp(prefix.bin)
-    if not os.path.exists(spec.package.build_log_path):
-        touchp(spec.package.build_log_path)
 
 
 @pytest.fixture
@@ -1922,3 +1920,21 @@ def default_mock_concretization(config, mock_packages, concretized_specs_cache):
         return concretized_specs_cache[key].copy()
 
     return _func
+
+
+@pytest.fixture
+def shell_as(shell):
+    if sys.platform != "win32":
+        yield
+        return
+    if shell not in ("pwsh", "bat"):
+        raise RuntimeError("Shell must be one of supported Windows shells (pwsh|bat)")
+    try:
+        # fetch and store old shell type
+        _shell = os.environ.get("SPACK_SHELL", None)
+        os.environ["SPACK_SHELL"] = shell
+        yield
+    finally:
+        # restore old shell if one was set
+        if _shell:
+            os.environ["SPACK_SHELL"] = _shell

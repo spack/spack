@@ -14,7 +14,7 @@ class Superlu(CMakePackage, Package):
     sparse, nonsymmetric systems of linear equations on high performance
     machines. SuperLU is designed for sequential machines."""
 
-    homepage = "https://crd-legacy.lbl.gov/~xiaoye/SuperLU/#superlu"
+    homepage = "https://portal.nersc.gov/project/sparse/superlu/"
     url = "https://github.com/xiaoyeli/superlu/archive/refs/tags/v5.3.0.tar.gz"
 
     tags = ["e4s"]

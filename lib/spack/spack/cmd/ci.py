@@ -274,7 +274,6 @@ def ci_rebuild(args):
     signing_key = os.environ.get("SPACK_SIGNING_KEY")
     job_spec_pkg_name = os.environ.get("SPACK_JOB_SPEC_PKG_NAME")
     job_spec_dag_hash = os.environ.get("SPACK_JOB_SPEC_DAG_HASH")
-    compiler_action = os.environ.get("SPACK_COMPILER_ACTION")
     spack_pipeline_type = os.environ.get("SPACK_PIPELINE_TYPE")
     remote_mirror_override = os.environ.get("SPACK_REMOTE_MIRROR_OVERRIDE")
     remote_mirror_url = os.environ.get("SPACK_REMOTE_MIRROR_URL")
@@ -295,7 +294,6 @@ def ci_rebuild(args):
     tty.debug("pipeline_artifacts_dir = {0}".format(pipeline_artifacts_dir))
     tty.debug("remote_mirror_url = {0}".format(remote_mirror_url))
     tty.debug("job_spec_pkg_name = {0}".format(job_spec_pkg_name))
-    tty.debug("compiler_action = {0}".format(compiler_action))
 
     # Query the environment manifest to find out whether we're reporting to a
     # CDash instance, and if so, gather some information from the manifest to
@@ -410,14 +408,6 @@ def ci_rebuild(args):
     # import it.
     if signing_key:
         spack_ci.import_signing_key(signing_key)
-
-    # Depending on the specifics of this job, we might need to turn on the
-    # "config:install_missing compilers" option (to build this job spec
-    # with a bootstrapped compiler), or possibly run "spack compiler find"
-    # (to build a bootstrap compiler or one of its deps in a
-    # compiler-agnostic way), or maybe do nothing at all (to build a spec
-    # using a compiler already installed on the target system).
-    spack_ci.configure_compilers(compiler_action)
 
     # Write this job's spec json into the reproduction directory, and it will
     # also be used in the generated "spack install" command to install the spec
