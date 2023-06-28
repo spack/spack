@@ -463,7 +463,8 @@ class Openblas(MakefilePackage):
 
     @property
     def build_targets(self):
-        # Do not build tests
+        # Do not build tests: see #38591
+        # And note that "shared" is allowed (but ignored) when ~shared
         return ["-s"] + self.make_defs + ["libs", "netlib", "shared"]
 
     @run_after("build")
