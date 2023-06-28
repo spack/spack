@@ -839,7 +839,7 @@ fi
 
 
 @pytest.mark.not_on_windows("Bash scripting unsupported on Windows (for now)")
-def test_compiler_flags_use_real_version(working_env, monkeypatch, tmpdir):
+def test_compiler_flags_use_real_version(working_env, tmpdir):
     # Create compiler
     gcc = str(tmpdir.join("gcc"))
     with open(gcc, "w") as f:
@@ -857,7 +857,7 @@ echo "4.4.4"
         "flags": {},
         "operating_system": "fake",
         "target": "fake",
-        "modules": ["turn_on"],
+        "modules": [],
         "environment": {},
         "extra_rpaths": [],
     }
