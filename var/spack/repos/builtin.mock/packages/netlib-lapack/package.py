@@ -14,4 +14,3 @@ class NetlibLapack(Package):
 
     provides("lapack")
     depends_on("blas")
-    depends_on("perl")

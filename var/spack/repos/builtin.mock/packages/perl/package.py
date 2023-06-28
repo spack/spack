@@ -14,5 +14,3 @@ class Perl(Package):
     extendable = True
 
     version("0.0.0", md5="abcdef1234567890abcdef1234567890")
-
-    variant("shared", default=True, description="Build a shared libperl.so library")
