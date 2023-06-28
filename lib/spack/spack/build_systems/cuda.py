@@ -102,11 +102,10 @@ class CudaPackage(PackageBase):
 
     depends_on("cuda@11.0:", when="cuda_arch=80")
     depends_on("cuda@11.1:", when="cuda_arch=86")
-
     depends_on("cuda@11.4:", when="cuda_arch=87")
-
     depends_on("cuda@11.8:", when="cuda_arch=89")
-    depends_on("cuda@11.8:", when="cuda_arch=90")
+
+    depends_on("cuda@12.0:", when="cuda_arch=90")
 
     # From the NVIDIA install guide we know of conflicts for particular
     # platforms (linux, darwin), architectures (x86, powerpc) and compilers

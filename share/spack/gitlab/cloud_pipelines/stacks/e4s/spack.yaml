@@ -128,9 +128,7 @@ spack:
   - py-jupyterhub
   - py-libensemble +mpi +nlopt
   - py-petsc4py
-  - py-warpx ^warpx dims=2
-  - py-warpx ^warpx dims=3
-  - py-warpx ^warpx dims=rz
+  - py-warpx
   - qthreads scheduler=distrib
   - quantum-espresso
   - raja
@@ -175,7 +173,7 @@ spack:
   - hpx max_cpu_count=512 +cuda
   - hypre +cuda
   - kokkos +wrapper +cuda
-  - kokkos-kernels +cuda ^kokkos +wrapper +cuda
+  - kokkos-kernels +cuda ^kokkos +wrapper +cuda +cuda_lambda
   - magma +cuda
   - mfem +cuda
   - mgard +serial +openmp +timing +unstructured +cuda

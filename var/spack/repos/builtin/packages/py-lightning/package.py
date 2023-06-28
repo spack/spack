@@ -16,15 +16,12 @@ class PyLightning(PythonPackage):
 
     maintainers("adamjstewart")
 
+    version("2.0.4", sha256="f5f5ed75a657caa8931051590ed000d46bf1b8311ae89bb17a961c3f299dbf33")
     version("2.0.3", sha256="5a70f05e40f1d7882f81eace0d4a86fe2604b423f8df42beaabd187bfdb420cf")
     version("2.0.2", sha256="fa32d671850a5be2d961c6705c927f6f48d1cf9696f61f7d865244142e684430")
     version("2.0.1", sha256="abf4f9e10b0d97348336038db79f4efc75daa2f3f81876822273023294d6ef3e")
     version("2.0.0", sha256="dfe158aa91ac139d8bdfccc7cdb627072e0052076ae9c0459c8fa12a028dbe6c")
     version("1.9.5", sha256="4a6ee1bf338f7677f04d339b84dd0c9c0fa407c3dacea366a111dc86476d4dec")
-
-    variant(
-        "extra", default=False, description="Install extra dependencies for full functionality"
-    )
 
     # src/lightning/__setup__.py
     depends_on("python@3.8:", when="@2:", type=("build", "run"))
@@ -39,8 +36,9 @@ class PyLightning(PythonPackage):
     depends_on("py-croniter@1.3", type=("build", "run"))
     depends_on("py-dateutils@:1", type=("build", "run"))
     depends_on("py-deepdiff@5.7:7", type=("build", "run"))
-    depends_on("py-fastapi@0.69:0.88", when="@2.0.3:", type=("build", "run"))
-    depends_on("py-fastapi@:0.88", type=("build", "run"))
+    depends_on("py-fastapi@0.92:1", when="@2.0.4:", type=("build", "run"))
+    depends_on("py-fastapi@0.69:0.88", when="@2.0.3", type=("build", "run"))
+    depends_on("py-fastapi@:0.88", when="@:2.0.2", type=("build", "run"))
     depends_on("py-fsspec@2022.5:2023+http", type=("build", "run"))
     depends_on("py-inquirer@2.10:4", type=("build", "run"))
     depends_on("py-lightning-cloud@0.5.34:", when="@2.0.3:", type=("build", "run"))
@@ -66,29 +64,9 @@ class PyLightning(PythonPackage):
     depends_on("py-tqdm@4.57:5", type=("build", "run"))
     depends_on("py-traitlets@5.3:6", type=("build", "run"))
     depends_on("py-typing-extensions@4:5", type=("build", "run"))
-    depends_on("py-urllib3@:2", type=("build", "run"))
+    depends_on("py-urllib3@:3", when="@2.0.4:", type=("build", "run"))
+    depends_on("py-urllib3@:2", when="@:2.0.3", type=("build", "run"))
     depends_on("py-uvicorn@:1", type=("build", "run"))
     depends_on("py-websocket-client@:2", type=("build", "run"))
     depends_on("py-websockets@:11", type=("build", "run"))
     depends_on("py-pytorch-lightning", when="@2:", type=("build", "run"))
-
-    with when("+extra"):
-        depends_on("py-aiohttp@3.8:3", type=("build", "run"))
-        depends_on("py-docker@5:6", type=("build", "run"))
-        depends_on("py-hydra-core@1.0.5:1", type=("build", "run"))
-        depends_on("py-jsonargparse@4.18:4+signatures", when="@2.0.3:", type=("build", "run"))
-        depends_on("py-jsonargparse@4.18:4", when="@2:", type=("build", "run"))
-        depends_on("py-jsonargparse@4.18:4+signatures", when="@:1", type=("build", "run"))
-        depends_on("py-lightning-fabric@1.9:", when="@2:", type=("build", "run"))
-        depends_on("py-lightning-api-access@0.0.3:", type=("build", "run"))
-        depends_on("py-matplotlib@3.2:3", type=("build", "run"))
-        depends_on("py-omegaconf@2.0.5:2", type=("build", "run"))
-        depends_on("py-panel@0.12.7:0", type=("build", "run"))
-        depends_on("py-pytorch-lightning@1.9:", when="@2:", type=("build", "run"))
-        depends_on("py-pytorch-lightning@1.8.1:", when="@:1", type=("build", "run"))
-        depends_on("py-redis@4.0.1:4", type=("build", "run"))
-        depends_on("py-rich@12.3:13", when="@2:", type=("build", "run"))
-        depends_on("py-rich@10.14:13", when="@:1", type=("build", "run"))
-        depends_on("py-s3fs@2022.5:2022", type=("build", "run"))
-        depends_on("py-streamlit@1.13:1", type=("build", "run"))
-        depends_on("py-tensorboardx@2.2:2", type=("build", "run"))
