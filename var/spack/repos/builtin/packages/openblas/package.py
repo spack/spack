@@ -217,7 +217,6 @@ class Openblas(CMakePackage, MakefilePackage):
     )
 
     depends_on("perl", type="build")
-    depends_on("cmake", when="platform=windows")
 
     build_system("cmake", "makefile", default="cmake")
 
@@ -271,18 +270,13 @@ class Openblas(CMakePackage, MakefilePackage):
         spec = self.spec
 
         # Look for openblas{symbol_suffix}
-        name = "libopenblas"
+        name = "libopenblas, openblas"
         search_shared = bool(spec.variants["shared"].value)
         suffix = spec.variants["symbol_suffix"].value
         if suffix != "none":
             name += suffix
 
         return find_libraries(name, spec.prefix, shared=search_shared, recursive=True)
-
-
-class SetupEnvironment(object):
-    def setup_build_environment(self, env):
-        pass
 
 
 class MakefileBuilder(spack.build_systems.makefile.MakefileBuilder, SetupEnvironment):

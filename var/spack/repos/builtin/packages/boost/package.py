@@ -499,13 +499,7 @@ class Boost(Package):
             # Boost may end up using gcc even though clang+gfortran is set in
             # compilers.yaml. Make sure this does not happen:
             if not spec.satisfies("%intel") and not spec.satisfies("platform=windows"):
-                # using intel-linux : : spack_cxx in user-config.jam leads to
-                # error: at project-config.jam:12
-                # error: duplicate initialization of intel-linux with the following parameters:  # noqa
-                # error: version = <unspecified>
-                # error: previous initialization at ./user-config.jam:1
-                # We also use a hack right now to get around the fact we don't have
-                # a wrapper in spack/env for cl.exe
+                # Skip this on Windows since we don't have a cl.exe wrapper in spack
                 f.write("using {0} : : {1} ;\n".format(boost_toolset_id, spack_cxx))
 
             if "+mpi" in spec:
@@ -525,7 +519,6 @@ class Boost(Package):
             if "+python" in spec:
                 f.write(self.bjam_python_line(spec))
 
-        options.append("-show-libraries")
         options.append("--prefix=%s" % prefix)
 
     def determine_b2_options(self, spec, options):
@@ -602,7 +595,6 @@ class Boost(Package):
             # --with-toolset in bootstrap.
             # (although it is not currently known if 1.76 is the earliest
             # version that requires specifying the toolset for Intel)
-            # And again, with no cl.exe/ifx wrapper this will fail on Windows
             options.extend(["toolset=%s" % self.determine_toolset(spec)])
 
         # Other C++ flags.
@@ -699,7 +691,7 @@ class Boost(Package):
         # to make Boost find the user-config.jam
         env["BOOST_BUILD_PATH"] = self.stage.source_path
 
-        bootstrap_options = []
+        bootstrap_options = ["--prefix=%s" % prefix]
         self.determine_bootstrap_options(spec, with_libs, bootstrap_options)
 
         if self.spec.satisfies("platform=windows"):
@@ -733,15 +725,13 @@ class Boost(Package):
         if jobs > 64 and spec.satisfies("@:1.58"):
             jobs = 64
 
-        b2_options = ["-j", "%s" % jobs]
+        # Windows just wants a b2 call with no args
+        b2_options = []
         if not self.spec.satisfies("platform=windows"):
+            b2_options = ["-j", "%s" % jobs]
             b2_options.append(path_to_config)
 
-        threading_opts = self.determine_b2_options(spec, b2_options)
-
-        # Windows just wants a b2 call with no args
-        if self.spec.satisfies("platform=windows"):
-            b2_options.clear()
+            threading_opts = self.determine_b2_options(spec, b2_options)
 
         # Create headers if building from a git checkout
         if "@develop" in spec:

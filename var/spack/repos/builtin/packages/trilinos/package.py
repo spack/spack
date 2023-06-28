@@ -371,12 +371,12 @@ class Trilinos(CMakePackage, CudaPackage, ROCmPackage):
     conflicts(
         "+shared",
         when="platform=windows",
-        msg="Only serial static builds are supported on Windows currently.",
+        msg="Only static builds are supported on Windows currently.",
     )
     conflicts(
         "+mpi",
         when="platform=windows",
-        msg="Only serial static builds are supported on Windows currently.",
+        msg="Only serial builds are supported on Windows currently.",
     )
 
     # ###################### Dependencies ##########################

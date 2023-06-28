@@ -6,7 +6,7 @@
 from spack.package import *
 
 
-class Pcre(CMakePackage):
+class Pcre(CMakePackage, AutotoolsPackage):
     """The PCRE package contains Perl Compatible Regular Expression
     libraries. These are useful for implementing regular expression
     pattern matching using the same syntax and semantics as Perl 5."""
@@ -36,6 +36,8 @@ class Pcre(CMakePackage):
         description="Enable support for UTF-8/16/32, " "incompatible with EBCDIC.",
     )
 
+
+class AutotoolsBuilder(spack.build_systems.cmake.AutotoolsBuilder, SetupEnvironment):
     def configure_args(self):
         args = []
 
@@ -52,6 +54,8 @@ class Pcre(CMakePackage):
 
         return args
 
+
+class CMakeBuilder(spack.build_systems.cmake.CMakeBuilder, SetupEnvironment):
     def cmake_args(self):
         args = []
 
@@ -67,9 +71,3 @@ class Pcre(CMakePackage):
             args.append("-DPCRE_SUPPORT_UNICODE_PROPERTIES:BOOL=ON")
 
         return args
-
-    def cmake(self, spec, prefix):
-        if self.spec.satisfies("platform=windows"):
-            super(Pcre, self).cmake(spec, prefix)
-        else:
-            configure("--prefix=" + prefix, *self.configure_args())
