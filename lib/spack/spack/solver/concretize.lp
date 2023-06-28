@@ -42,11 +42,11 @@ max_nodes(Package, 1) :- virtual(Package).
 :- provider(_, VirtualNode), not attr("virtual_node", VirtualNode).
 :- provider(PackageNode, _), not attr("node", PackageNode).
 
-:- attr("root", node(ID, PackageNode)), ID> root_node_id.
+:- attr("root", node(ID, PackageNode)), ID > root_node_id.
 
-% Root nodes cannot depend on non-root nodes if the dependency is "link" or "run"
-:- attr("depends_on", node(root_node_id, _), node(ID, _), "link"), ID != root_node_id.
-:- attr("depends_on", node(root_node_id, _), node(ID, _), "run"),  ID != root_node_id.
+% Nodes in the "root" unification set cannot depend on non-root nodes if the dependency is "link" or "run"
+:- attr("depends_on", node(root_node_id, Package), node(ID, _), "link"), ID != root_node_id, unification_set("root", node(root_node_id, Package)).
+:- attr("depends_on", node(root_node_id, Package), node(ID, _), "run"),  ID != root_node_id, unification_set("root", node(root_node_id, Package)).
 
 % Rules on "unification sets", i.e. on sets of nodes allowing a single configuration of any given package
 unify(SetID, PackageName) :- unification_set(SetID, node(_, PackageName)).
@@ -260,7 +260,6 @@ condition_set(PackageNode, PackageNode, link_run) :- attr("node", PackageNode).
 condition_set(PackageNode, PackageNode, link_run) :- provider(PackageNode, VirtualNode).
 condition_set(PackageNode, VirtualNode, link_run) :- provider(PackageNode, VirtualNode).
 
-:- condition_set(node(root_node_id, Package), node(ID, A1), link_run), ID > root_node_id.
 
 condition_set(ID, DependencyNode, link_run)
   :- condition_set(ID, PackageNode, link_run),
@@ -447,20 +446,22 @@ error(1, Msg)
 
 % if a package depends on a virtual, it's not external and we have a
 % provider for that virtual then it depends on the provider
-attr("depends_on", PackageNode, ProviderNode, Type)
+1 { attr("depends_on", PackageNode, ProviderNode, Type) : provider(ProviderNode, node(VirtualID, Virtual)) } 1
   :- dependency_holds(PackageNode, Virtual, Type),
-     provider(ProviderNode, node(VirtualID, Virtual)),
+     virtual(Virtual),
      not external(PackageNode).
 
 attr("virtual_on_edge", PackageNode, ProviderNode, Virtual)
   :- dependency_holds(PackageNode, Virtual, Type),
-     provider(ProviderNode, node(VirtualID, Virtual)),
+     attr("depends_on", PackageNode, ProviderNode, Type),
+     provider(ProviderNode, node(_, Virtual)),
      not external(PackageNode).
 
 % dependencies on virtuals also imply that the virtual is a virtual node
 1 { attr("virtual_node", node(0..X-1, Virtual)) : max_nodes(Virtual, X) }
   :- dependency_holds(PackageNode, Virtual, Type),
-     virtual(Virtual), not external(PackageNode).
+     virtual(Virtual),
+     not external(PackageNode).
 
 % If there's a virtual node, we must select one and only one provider.
 % The provider must be selected among the possible providers.
@@ -1242,11 +1243,8 @@ build(PackageNode) :- not attr("hash", PackageNode, _), attr("node", PackageNode
 %   200+        Shifted priorities for build nodes; correspond to priorities 0 - 99.
 %   100 - 199   Unshifted priorities. Currently only includes minimizing #builds.
 %   0   -  99   Priorities for non-built nodes.
-build_priority(PackageNode, 200) :- build(PackageNode), attr("node", PackageNode), optimize_for_reuse().
-build_priority(PackageNode, 0)   :- not build(PackageNode), attr("node", PackageNode), optimize_for_reuse().
-
-% don't adjust build priorities if reuse is not enabled
-build_priority(PackageNode, 0)   :- attr("node", PackageNode), not optimize_for_reuse().
+build_priority(PackageNode, 200) :- build(PackageNode), attr("node", PackageNode).
+build_priority(PackageNode, 0)   :- not build(PackageNode), attr("node", PackageNode).
 
 % don't assign versions from installed packages unless reuse is enabled
 % NOTE: that "installed" means the declared version was only included because
