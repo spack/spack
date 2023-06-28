@@ -108,10 +108,10 @@ def test_symlink_link_already_exists(tmpdir):
         real_dir = os.path.join(test_dir, "real_dir")
         link_dir = os.path.join(test_dir, "link_dir")
         os.mkdir(real_dir)
-        symlink.symlink(real_dir, link_dir)
+        symlink.symlink(real_dir, link_dir, allow_broken_symlinks=False)
         assert os.path.exists(link_dir)
         with pytest.raises(symlink.SymlinkError):
-            symlink.symlink(source_path=real_dir, link_path=link_dir)
+            symlink.symlink(source_path=real_dir, link_path=link_dir, allow_broken_symlinks=False)
 
 
 @pytest.mark.skipif(not symlink._windows_can_symlink(), reason="Test requires elevated privileges")
