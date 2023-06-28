@@ -27,6 +27,7 @@ class Acl(AutotoolsPackage):
     depends_on("autoconf", type="build")
     depends_on("automake", type="build")
     depends_on("libtool", type="build")
+    depends_on("bash", type="build")
     depends_on("gettext")
 
     depends_on("attr")
@@ -37,8 +38,7 @@ class Acl(AutotoolsPackage):
     # In 2.2.53 and later, the codebase provides a nice autogen script.
     @when("@2.2.53:")
     def autoreconf(self, spec, prefix):
-        autogen = Executable("./autogen.sh")
-        autogen()
+        which("bash")("./autogen.sh")
 
     # Before 2.2.53, the project's script to generate ./configure was contained in a Makefile which
     # both generated the ./configure file and then executed a hardcoded ./configure command line
