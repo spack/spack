@@ -26,56 +26,67 @@ class PyPip(Package, PythonExtension):
         "22.2.2",
         sha256="b61a374b5bc40a6e982426aede40c9b5a08ff20e640f5b56977f4f91fed1e39a",
         expand=False,
+        deprecated=True,
     )
     version(
         "22.1.2",
         sha256="a3edacb89022ef5258bf61852728bf866632a394da837ca49eb4303635835f17",
         expand=False,
+        deprecated=True,
     )
     version(
         "21.3.1",
         sha256="deaf32dcd9ab821e359cd8330786bcd077604b5c5730c0b096eda46f95c24a2d",
         expand=False,
+        deprecated=True,
     )
     version(
         "21.1.2",
         sha256="f8ea1baa693b61c8ad1c1d8715e59ab2b93cd3c4769bacab84afcc4279e7a70e",
         expand=False,
+        deprecated=True,
     )
     version(
         "20.2",
         sha256="d75f1fc98262dabf74656245c509213a5d0f52137e40e8f8ed5cc256ddd02923",
         expand=False,
+        deprecated=True,
     )
     version(
         "19.3",
         sha256="e100a7eccf085f0720b4478d3bb838e1c179b1e128ec01c0403f84e86e0e2dfb",
         expand=False,
+        deprecated=True,
     )
     version(
         "19.1.1",
         sha256="993134f0475471b91452ca029d4390dc8f298ac63a712814f101cd1b6db46676",
         expand=False,
+        deprecated=True,
     )
     version(
         "19.0.3",
         sha256="bd812612bbd8ba84159d9ddc0266b7fbce712fc9bc98c82dee5750546ec8ec64",
         expand=False,
+        deprecated=True,
     )
     version(
         "18.1",
         sha256="7909d0a0932e88ea53a7014dfd14522ffef91a464daaaf5c573343852ef98550",
         expand=False,
+        deprecated=True,
     )
     version(
         "10.0.1",
         sha256="717cdffb2833be8409433a93746744b59505f42146e8d37de6c62b430e25d6d7",
         expand=False,
+        deprecated=True,
     )
     version(
         "9.0.1",
         sha256="690b762c0a8460c303c089d5d0be034fb15a5ea2b75bdf565f40421f542fefb0",
         expand=False,
+        deprecated=True,
     )
 
     extends("python")
