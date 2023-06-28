@@ -18,7 +18,7 @@ import spack.error
 
 # This list is not exhaustive. Currently we only use load and unload
 # If we need another option that changes the environment, add it here.
-module_change_commands = ["load", "swap", "unload", "purge", "use", "unuse"]
+module_change_commands = ["load", "swap", "unload", "purge", "reset", "use", "unuse"]
 
 # This awk script is a posix alternative to `env -0`
 awk_cmd = r"""awk 'BEGIN{for(name in ENVIRON)""" r"""printf("%s=%s%c", name, ENVIRON[name], 0)}'"""
