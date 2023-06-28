@@ -7,7 +7,7 @@ compilers:
       cxx: /path/to/clang++
       f77: None
       fc: None
-    modules: 'None'
+    modules: []
     target: x86_64
 - compiler:
     spec: gcc@4.5.0
@@ -17,7 +17,7 @@ compilers:
       cxx: /path/to/g++
       f77: None
       fc: None
-    modules: 'None'
+    modules: []
     target: x86_64
 - compiler:
     spec: gcc@4.5.0
@@ -27,7 +27,7 @@ compilers:
       cxx: /path/to/g++
       f77: None
       fc: None
-    modules: 'None'
+    modules: []
     target: x86_64
 - compiler:
     spec: clang@3.3
@@ -37,7 +37,7 @@ compilers:
       cxx: /path/to/clang++
       f77: None
       fc: None
-    modules: 'None'
+    modules: []
 - compiler:
     spec: clang@3.3
     operating_system: SuSE11
@@ -46,7 +46,7 @@ compilers:
       cxx: /path/to/clang++
       f77: None
       fc: None
-    modules: 'None'
+    modules: []
     target: x86_64
 - compiler:
     spec: clang@3.3
@@ -56,7 +56,7 @@ compilers:
       cxx: /path/to/clang++
       f77: None
       fc: None
-    modules: 'None'
+    modules: []
     target: x86_64
 - compiler:
     paths:
@@ -66,7 +66,7 @@ compilers:
       fc: /path/to/gfortran
     operating_system: CNL
     spec: gcc@4.5.0
-    modules: 'None'
+    modules: []
 - compiler:
     paths:
       cc: /path/to/gcc
@@ -75,7 +75,7 @@ compilers:
       fc: /path/to/gfortran
     operating_system: SuSE11
     spec: gcc@4.5.0
-    modules: 'None'
+    modules: []
     target: x86_64
 - compiler:
     paths:
@@ -85,7 +85,7 @@ compilers:
       fc: /path/to/gfortran
     operating_system: yosemite
     spec: gcc@4.5.0
-    modules: 'None'
+    modules: []
     target: x86_64
 - compiler:
     paths:
@@ -95,7 +95,7 @@ compilers:
       fc: /path/to/gfortran
     operating_system: elcapitan
     spec: gcc@4.5.0
-    modules: 'None'
+    modules: []
     target: x86_64
 - compiler:
     spec: clang@3.3
@@ -105,7 +105,7 @@ compilers:
       cxx: /path/to/clang++
       f77: None
       fc: None
-    modules: 'None'
+    modules: []
     target: x86_64
 - compiler:
     spec: gcc@4.7.2
@@ -119,7 +119,7 @@ compilers:
       cflags: -O0 -g
       cxxflags: -O0 -g
       fflags: -O0 -g
-    modules: 'None'
+    modules: []
     target: x86_64
 - compiler:
     spec: gcc@4.4.0
@@ -129,7 +129,7 @@ compilers:
       cxx: /path/to/g++440
       f77: /path/to/gfortran440
       fc: /path/to/gfortran440
-    modules: 'None'
+    modules: []
     target: x86_64
 - compiler:
     spec: clang@3.5
@@ -142,7 +142,7 @@ compilers:
     flags:
       cflags: -O3
       cxxflags: -O3
-    modules: 'None'
+    modules: []
     target: x86_64
 - compiler:
     spec: clang@8.0.0
@@ -155,7 +155,7 @@ compilers:
     flags:
       cflags: -O3
       cxxflags: -O3
-    modules: 'None'
+    modules: []
     target: x86_64
 - compiler:
     spec: apple-clang@9.1.0
@@ -165,7 +165,7 @@ compilers:
       cxx: /path/to/clang++
       f77: None
       fc: None
-    modules: 'None'
+    modules: []
     target: x86_64
 - compiler:
     spec: gcc@10foo
@@ -175,7 +175,7 @@ compilers:
       cxx: /path/to/g++
       f77: /path/to/gfortran
       fc: /path/to/gfortran
-    modules: 'None'
+    modules: []
     target: x86_64
 - compiler:
     spec: gcc@4.4.0-special
@@ -185,7 +185,7 @@ compilers:
       cxx: /path/to/g++
       f77: /path/to/gfortran
       fc: /path/to/gfortran
-    modules: 'None'
+    modules: []
     target: x86_64
 - compiler:
     spec: clang@12.0.0
@@ -195,7 +195,7 @@ compilers:
       cxx: /path/to/clang++
       f77: None
       fc: None
-    modules: 'None'
+    modules: []
     target: aarch64
 - compiler:
     spec: gcc@10.2.1
@@ -205,7 +205,7 @@ compilers:
       cxx: /path/to/g++
       f77: None
       fc: None
-    modules: 'None'
+    modules: []
     target: aarch64
 - compiler:
     spec: clang@12.0.0
@@ -215,7 +215,7 @@ compilers:
       cxx: /path/to/clang++
       f77: None
       fc: None
-    modules: 'None'
+    modules: []
     target: aarch64
 - compiler:
     spec: gcc@10.2.1
@@ -225,7 +225,7 @@ compilers:
       cxx: /path/to/g++
       f77: None
       fc: None
-    modules: 'None'
+    modules: []
     target: aarch64
 - compiler:
     spec: gcc@10.1.0
@@ -235,7 +235,7 @@ compilers:
       cxx: /path/to/g++
       f77: None
       fc: None
-    modules: 'None'
+    modules: []
     target: aarch64
 - compiler:
     spec: gcc@11.1.0
@@ -249,7 +249,7 @@ compilers:
       cflags: -O0 -g
       cxxflags: -O0 -g
       fflags: -O0 -g
-    modules: 'None'
+    modules: []
     target: aarch64
 - compiler:
     spec: clang@12.2.0
@@ -262,7 +262,7 @@ compilers:
     flags:
       cflags: -O3
       cxxflags: -O3
-    modules: 'None'
+    modules: []
     target: aarch64
 - compiler:
     spec: gcc@10foo
@@ -272,7 +272,7 @@ compilers:
       cxx: /path/to/g++
       f77: /path/to/gfortran
       fc: /path/to/gfortran
-    modules: 'None'
+    modules: []
     target: aarch64
 - compiler:
     spec: clang@12.0.0
@@ -282,7 +282,7 @@ compilers:
       cxx: /path/to/clang++
       f77: None
       fc: None
-    modules: 'None'
+    modules: []
     target: x86_64
 - compiler:
     spec: gcc@10.2.1
@@ -292,7 +292,7 @@ compilers:
       cxx: /path/to/g++
       f77: None
       fc: None
-    modules: 'None'
+    modules: []
     target: x86_64
 - compiler:
     spec: clang@12.0.0
@@ -302,7 +302,7 @@ compilers:
       cxx: /path/to/clang++
       f77: None
       fc: None
-    modules: 'None'
+    modules: []
     target: x86_64
 - compiler:
     spec: gcc@10.2.1
@@ -312,7 +312,7 @@ compilers:
       cxx: /path/to/g++
       f77: None
       fc: None
-    modules: 'None'
+    modules: []
     target: x86_64
 - compiler:
     spec: gcc@10.1.0
@@ -322,7 +322,7 @@ compilers:
       cxx: /path/to/g++
       f77: None
       fc: None
-    modules: 'None'
+    modules: []
     target: x86_64
 - compiler:
     spec: gcc@11.1.0
@@ -336,7 +336,7 @@ compilers:
       cflags: -O0 -g
       cxxflags: -O0 -g
       fflags: -O0 -g
-    modules: 'None'
+    modules: []
     target: x86_64
 - compiler:
     spec: clang@12.2.0
@@ -349,5 +349,5 @@ compilers:
     flags:
       cflags: -O3
       cxxflags: -O3
-    modules: 'None'
+    modules: []
     target: x86_64
