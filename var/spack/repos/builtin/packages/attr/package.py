@@ -28,16 +28,14 @@ class Attr(AutotoolsPackage):
             url = "http://download.savannah.gnu.org/releases/attr/attr-{0}.src.tar.gz"
         return url.format(version)
 
+    # Ref. https://www.linuxfromscratch.org/blfs/view/7.5/postlfs/attr.html
     def configure_args(self):
         args = []
         args.append("--disable-static")
         return args
 
-    # Ref. https://www.linuxfromscratch.org/blfs/view/7.5/postlfs/attr.html
-    @when("@2.4.48:")
-    def install(self, spec, prefix):
-        make("install")
-
     @when("@:2.4.47")
     def install(self, spec, prefix):
+        make("install", "install-dev", "install-lib")
+
         make("install", "install-dev", "install-lib")

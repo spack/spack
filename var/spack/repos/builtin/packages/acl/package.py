@@ -51,14 +51,6 @@ class Acl(AutotoolsPackage):
     def autoreconf(self, spec, prefix):
         make("autoconf")
 
-    # The "make configure" target in the unpatched Makefile touched this file after executing the
-    # hardcoded ./configure command line. The purpose of this file is not documented, and this step
-    # may not be necessary.
-    @when("@:2.2.52")
-    @run_after("configure")
-    def touch_census(self):
-        touch(".census")
-
     def flag_handler(self, name, flags):
         if name == "ldlibs" and "intl" in self.spec["gettext"].libs.names:
             flags.append("-lintl")
