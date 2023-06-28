@@ -12,6 +12,7 @@ import sys
 
 import pytest
 
+import llnl.util.symlink
 import llnl.util.filesystem as fs
 from llnl.util.symlink import SymlinkError, _windows_can_symlink, islink, symlink
 
@@ -719,9 +720,7 @@ def test_is_nonsymlink_exe_with_shebang(tmpdir):
         assert not fs.is_nonsymlink_exe_with_shebang("symlink_to_executable_script")
 
 
-@pytest.mark.skipif(
-    sys.platform == "win32" and not _windows_can_symlink(), reason="Requires elevated privileges."
-)
+@pytest.mark.skipif(sys.platform == "win32", reason="Unix-only test.")
 def test_lexists_islink_isdir(tmpdir):
     root = str(tmpdir)
 
@@ -742,11 +741,8 @@ def test_lexists_islink_isdir(tmpdir):
 
     symlink("dir", symlink_to_dir)
     symlink("file", symlink_to_file)
-
-    with pytest.raises(SymlinkError):
-        symlink("does_not_exist", dangling_symlink)
-        symlink("dangling_symlink", symlink_to_dangling_symlink)
-
+    symlink("does_not_exist", dangling_symlink)
+    symlink("dangling_symlink", symlink_to_dangling_symlink)
     symlink("symlink_to_dir", symlink_to_symlink_to_dir)
     symlink("symlink_to_file", symlink_to_symlink_to_file)
 
@@ -755,56 +751,57 @@ def test_lexists_islink_isdir(tmpdir):
     assert fs.lexists_islink_isdir(nonexistent) == (False, False, False)
     assert fs.lexists_islink_isdir(symlink_to_dir) == (True, True, True)
     assert fs.lexists_islink_isdir(symlink_to_file) == (True, True, False)
-    assert fs.lexists_islink_isdir(symlink_to_dangling_symlink) == (False, False, False)
+    assert fs.lexists_islink_isdir(symlink_to_dangling_symlink) == (True, True, False)
     assert fs.lexists_islink_isdir(symlink_to_symlink_to_dir) == (True, True, True)
     assert fs.lexists_islink_isdir(symlink_to_symlink_to_file) == (True, True, False)
 
 
-@pytest.mark.skipif(_windows_can_symlink(), reason="Not to be run with elevated privileges.")
 @pytest.mark.skipif(sys.platform != "win32", reason="For Windows Only")
-def test_lexists_islink_isdir__win32_base(tmpdir):
+@pytest.mark.parametrize('win_can_symlink', [True, False])
+def test_lexists_islink_isdir_windows(tmpdir, monkeypatch, win_can_symlink):
     """Run on windows without elevated privileges to test junctions and hard links which have
     different results from the lexists_islink_isdir method.
     """
-    root = str(tmpdir)
+    if win_can_symlink and not _windows_can_symlink():
+        pytest.skip('Cannot test dev mode behavior without dev mode enabled.')
+    with tmpdir.as_cwd():
+        monkeypatch.setattr(llnl.util.symlink, '_windows_can_symlink', win_can_symlink)
+        dir = tmpdir.join("dir")
+        file = tmpdir.join("file")
+        nonexistent = tmpdir.join("does_not_exist")
+        symlink_to_dir = tmpdir.join("symlink_to_dir")
+        symlink_to_file = tmpdir.join("symlink_to_file")
+        dangling_symlink = tmpdir.join("dangling_symlink")
+        symlink_to_dangling_symlink = tmpdir.join("symlink_to_dangling_symlink")
+        symlink_to_symlink_to_dir = tmpdir.join("symlink_to_symlink_to_dir")
+        symlink_to_symlink_to_file = tmpdir.join("symlink_to_symlink_to_file")
 
-    # Create a directory and a file, an a bunch of symlinks.
-    dir = os.path.join(root, "dir")
-    file = os.path.join(root, "file")
-    nonexistent = os.path.join(root, "does_not_exist")
-    symlink_to_dir = os.path.join(root, "symlink_to_dir")
-    symlink_to_file = os.path.join(root, "symlink_to_file")
-    dangling_symlink = os.path.join(root, "dangling_symlink")
-    symlink_to_dangling_symlink = os.path.join(root, "symlink_to_dangling_symlink")
-    symlink_to_symlink_to_dir = os.path.join(root, "symlink_to_symlink_to_dir")
-    symlink_to_symlink_to_file = os.path.join(root, "symlink_to_symlink_to_file")
+        os.mkdir(dir)
+        assert fs.lexists_islink_isdir(dir) == (True, False, True)
 
-    os.mkdir(dir)
-    assert fs.lexists_islink_isdir(dir) == (True, False, True)
+        symlink("dir", symlink_to_dir)
+        assert fs.lexists_islink_isdir(dir) == (True, False, True)
+        assert fs.lexists_islink_isdir(symlink_to_dir) == (True, True, True)
 
-    symlink("dir", symlink_to_dir)
-    assert fs.lexists_islink_isdir(dir) == (True, False, True)
-    assert fs.lexists_islink_isdir(symlink_to_dir) == (True, True, True)
+        with open(file, "wb") as f:
+            f.write(b"file")
+        assert fs.lexists_islink_isdir(file) == (True, False, False)
 
-    with open(file, "wb") as f:
-        f.write(b"file")
-    assert fs.lexists_islink_isdir(file) == (True, False, False)
+        symlink("file", symlink_to_file)
+        assert fs.lexists_islink_isdir(file) == (True, True, False)
+        assert fs.lexists_islink_isdir(symlink_to_file) == (True, True, False)
 
-    symlink("file", symlink_to_file)
-    assert fs.lexists_islink_isdir(file) == (True, True, False)
-    assert fs.lexists_islink_isdir(symlink_to_file) == (True, True, False)
+        with pytest.raises(SymlinkError):
+            symlink("does_not_exist", dangling_symlink)
+            symlink("dangling_symlink", symlink_to_dangling_symlink)
 
-    with pytest.raises(SymlinkError):
-        symlink("does_not_exist", dangling_symlink)
-        symlink("dangling_symlink", symlink_to_dangling_symlink)
+        symlink("symlink_to_dir", symlink_to_symlink_to_dir)
+        symlink("symlink_to_file", symlink_to_symlink_to_file)
 
-    symlink("symlink_to_dir", symlink_to_symlink_to_dir)
-    symlink("symlink_to_file", symlink_to_symlink_to_file)
-
-    assert fs.lexists_islink_isdir(nonexistent) == (False, False, False)
-    assert fs.lexists_islink_isdir(symlink_to_dangling_symlink) == (False, False, False)
-    assert fs.lexists_islink_isdir(symlink_to_symlink_to_dir) == (True, True, True)
-    assert fs.lexists_islink_isdir(symlink_to_symlink_to_file) == (True, True, False)
+        assert fs.lexists_islink_isdir(nonexistent) == (False, False, False)
+        assert fs.lexists_islink_isdir(symlink_to_dangling_symlink) == (False, False, False)
+        assert fs.lexists_islink_isdir(symlink_to_symlink_to_dir) == (True, True, True)
+        assert fs.lexists_islink_isdir(symlink_to_symlink_to_file) == (True, True, False)
 
 
 class RegisterVisitor(fs.BaseDirectoryVisitor):
