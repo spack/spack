@@ -688,11 +688,11 @@ ml-linux-x86_64-rocm-build:
   variables:
     SPACK_CI_STACK_NAME: ml-darwin-aarch64-mps
 
-ml-darwin-aarch64-mps-generate:
+.ml-darwin-aarch64-mps-generate:
   tags: [ "macos-ventura", "apple-clang-14", "aarch64-macos" ]
   extends: [ ".ml-darwin-aarch64-mps", ".darwin-generate"]
 
-ml-darwin-aarch64-mps-build:
+.ml-darwin-aarch64-mps-build:
   extends: [ ".ml-darwin-aarch64-mps", ".build" ]
   trigger:
     include:
