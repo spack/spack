@@ -765,16 +765,16 @@ def test_lexists_islink_isdir_windows(tmpdir, monkeypatch, win_can_symlink):
     if win_can_symlink and not _windows_can_symlink():
         pytest.skip("Cannot test dev mode behavior without dev mode enabled.")
     with tmpdir.as_cwd():
-        monkeypatch.setattr(llnl.util.symlink, "_windows_can_symlink", win_can_symlink)
-        dir = tmpdir.join("dir")
-        file = tmpdir.join("file")
-        nonexistent = tmpdir.join("does_not_exist")
-        symlink_to_dir = tmpdir.join("symlink_to_dir")
-        symlink_to_file = tmpdir.join("symlink_to_file")
-        dangling_symlink = tmpdir.join("dangling_symlink")
-        symlink_to_dangling_symlink = tmpdir.join("symlink_to_dangling_symlink")
-        symlink_to_symlink_to_dir = tmpdir.join("symlink_to_symlink_to_dir")
-        symlink_to_symlink_to_file = tmpdir.join("symlink_to_symlink_to_file")
+        monkeypatch.setattr(llnl.util.symlink, "_windows_can_symlink", lambda: win_can_symlink)
+        dir = str(tmpdir.join("dir"))
+        file = str(tmpdir.join("file"))
+        nonexistent = str(tmpdir.join("does_not_exist"))
+        symlink_to_dir = str(tmpdir.join("symlink_to_dir"))
+        symlink_to_file = str(tmpdir.join("symlink_to_file"))
+        dangling_symlink = str(tmpdir.join("dangling_symlink"))
+        symlink_to_dangling_symlink = str(tmpdir.join("symlink_to_dangling_symlink"))
+        symlink_to_symlink_to_dir = str(tmpdir.join("symlink_to_symlink_to_dir"))
+        symlink_to_symlink_to_file = str(tmpdir.join("symlink_to_symlink_to_file"))
 
         os.mkdir(dir)
         assert fs.lexists_islink_isdir(dir) == (True, False, True)
@@ -788,7 +788,10 @@ def test_lexists_islink_isdir_windows(tmpdir, monkeypatch, win_can_symlink):
         assert fs.lexists_islink_isdir(file) == (True, False, False)
 
         symlink("file", symlink_to_file)
-        assert fs.lexists_islink_isdir(file) == (True, True, False)
+        if win_can_symlink:
+            assert fs.lexists_islink_isdir(file) == (True, False, False)
+        else:
+            assert fs.lexists_islink_isdir(file) == (True, True, False)
         assert fs.lexists_islink_isdir(symlink_to_file) == (True, True, False)
 
         with pytest.raises(SymlinkError):
