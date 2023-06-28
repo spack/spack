@@ -202,13 +202,7 @@ class Perl(Package):  # Perl doesn't use Autotools, it should subclass Package
             variants += "+open" if perl.returncode == 0 else "~open"
             # this is just to detect incomplete installs
             # normally perl installs Opcode.pm
-            perl(
-                "-e",
-                "use Opcode",
-                output=os.devnull,
-                error=os.devnull,
-                fail_on_error=False,
-            )
+            perl("-e", "use Opcode", output=os.devnull, error=os.devnull, fail_on_error=False)
             variants += "+opcode" if perl.returncode == 0 else "~opcode"
             return variants
 
