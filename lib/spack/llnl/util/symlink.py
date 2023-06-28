@@ -63,34 +63,35 @@ def symlink(source_path: str, link_path: str, allow_broken_symlinks: bool = not 
     if sys.platform == "win32" and allow_broken_symlinks:
         raise ValueError("allow_broken_symlinks parameter cannot be True on Windows.")
 
-    # Perform basic checks to make sure symlinking will succeed
-    if os.path.lexists(link_path):
-        raise SymlinkError(f"Link path ({link_path}) already exists. Cannot create link.")
+    if not allow_broken_symlinks:
+        # Perform basic checks to make sure symlinking will succeed
+        if os.path.lexists(link_path):
+            raise SymlinkError(f"Link path ({link_path}) already exists. Cannot create link.")
 
-    if not os.path.exists(source_path):
-        if os.path.isabs(source_path) and not allow_broken_symlinks:
-            # An absolute source path that does not exist will result in a broken link.
-            raise SymlinkError(
-                f"Source path ({source_path}) is absolute but does not exist. Resulting "
-                f"link would be broken so not making link."
-            )
-        else:
-            # os.symlink can create a link when the given source path is relative to
-            # the link path. Emulate this behavior and check to see if the source exists
-            # relative to the link patg ahead of link creation to prevent broken
-            # links from being made.
-            link_parent_dir = os.path.dirname(link_path)
-            relative_path = os.path.join(link_parent_dir, source_path)
-            if os.path.exists(relative_path):
-                # In order to work on windows, the source path needs to be modified to be
-                # relative because hardlink/junction dont resolve relative paths the same way as
-                # os.symlink. This is ignored on other operating systems.
-                win_source_path = relative_path
-            elif not allow_broken_symlinks:
+        if not os.path.exists(source_path):
+            if os.path.isabs(source_path) and not allow_broken_symlinks:
+                # An absolute source path that does not exist will result in a broken link.
                 raise SymlinkError(
-                    f"The source path ({source_path}) is not relative to the link path "
-                    f"({link_path}). Resulting link would be broken so not making link."
+                    f"Source path ({source_path}) is absolute but does not exist. Resulting "
+                    f"link would be broken so not making link."
                 )
+            else:
+                # os.symlink can create a link when the given source path is relative to
+                # the link path. Emulate this behavior and check to see if the source exists
+                # relative to the link patg ahead of link creation to prevent broken
+                # links from being made.
+                link_parent_dir = os.path.dirname(link_path)
+                relative_path = os.path.join(link_parent_dir, source_path)
+                if os.path.exists(relative_path):
+                    # In order to work on windows, the source path needs to be modified to be
+                    # relative because hardlink/junction dont resolve relative paths the same
+                    # way as os.symlink. This is ignored on other operating systems.
+                    win_source_path = relative_path
+                elif not allow_broken_symlinks:
+                    raise SymlinkError(
+                        f"The source path ({source_path}) is not relative to the link path "
+                        f"({link_path}). Resulting link would be broken so not making link."
+                    )
 
     # Create the symlink
     if sys.platform == "win32" and not _windows_can_symlink():
