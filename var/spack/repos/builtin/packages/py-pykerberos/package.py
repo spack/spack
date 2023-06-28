@@ -16,4 +16,4 @@ class PyPykerberos(PythonPackage):
 
     depends_on("py-setuptools", type="build")
 
-    depends_on("krb5", type="link")
+    depends_on("krb5", type=("build", "link"))
