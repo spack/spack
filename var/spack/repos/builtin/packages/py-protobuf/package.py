@@ -17,7 +17,7 @@ class PyProtobuf(PythonPackage):
     homepage = "https://developers.google.com/protocol-buffers/"
     pypi = "protobuf/protobuf-3.11.0.tar.gz"
 
-    variant("cpp", default=True, description="Enable the cpp implementation")
+    variant("cpp", default=True, when="@:4.21", description="Enable the cpp implementation")
 
     # Newer versions seem to require bazel to build?
     # https://github.com/protocolbuffers/protobuf/tree/main/python
