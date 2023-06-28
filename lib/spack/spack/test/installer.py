@@ -934,6 +934,7 @@ def test_setup_install_dir_grp(install_mockery, monkeypatch, capfd):
     if sys.platform == "win32":
         metadatadir = None
     # Should fail with a "not a directory" error
+    # TODO: Move to BuildTask/Task tests
     with pytest.raises(OSError, match=metadatadir):
         installer._setup_install_dir(spec.package)
 

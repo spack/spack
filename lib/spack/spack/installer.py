@@ -858,6 +858,7 @@ class PackageInstaller:
                 self.build_pq[i] = (key, task)
 
     def _add_rewire_task(self):
+        # TODO: Fill in this method
         pass
 
     def _add_init_task(
@@ -1253,9 +1254,11 @@ class PackageInstaller:
 
                 dep_id = package_id(dep_pkg)
                 if dep_id not in self.build_tasks:
-                    # Add init tasks for build dependency
+                    # TODO: Add init tasks for build dependency
                     self._add_init_task(dep_pkg, request, False, all_deps)
-
+                if dep.spec.spliced:
+                    # TODO: retrieve the build spec of the spliced spec or bona fide build deps?
+                    pass
                 # Clear any persistent failure markings _unless_ they are
                 # associated with another process in this parallel build
                 # of the spec.
@@ -1272,10 +1275,10 @@ class PackageInstaller:
                 self._check_deps_status(request)
 
             # Now add the package itself, if appropriate
-            # Add init task for build spec
+            # TODO: Add init task for build spec
             self._add_init_task(request.pkg, request, False, all_deps)
 
-            # Add a rewire tasks for spec if request.spec.spliced.
+            # TODO: Add rewire tasks for spec if request.spec.spliced.
 
         # Ensure if one request is to fail fast then all requests will.
         fail_fast = bool(request.install_args.get("fail_fast"))
@@ -1297,11 +1300,9 @@ class PackageInstaller:
             install_status: the installation status for the package"""
         # TODO: use install_status
         try:
-            rc = task.execute(self.pid)  # Why pass PID?
-            # BuildTask.execute gets most of the logic from _install_task
-            # RewireTask.execute gets the rewiring logic
-            # _add_compiler_package_to_config goes to module scope
-            # _setup_install_dir goes to BuildTask class or it goes on the generic Task class
+            rc = task.execute()
+            # TODO: RewireTask.execute gets the rewiring logic
+            # TODO: _add_compiler_package_to_config goes to module scope?
         except InstallError as e:
             # wrap exception and reraise
             raise InstallError(
@@ -1311,7 +1312,8 @@ class PackageInstaller:
                 )
         else:
             if rc == "updated_installed":  # probably just use true for this
-                self._updated_installed(task)
+                self._update_installed(task)
+            # TODO: Logic for Update Failed?
 
     def _next_is_pri0(self) -> bool:
         """
@@ -1418,7 +1420,7 @@ class PackageInstaller:
         Requeues a task that appears to be in progress by another process.
 
         Args:
-            task (BuildTask): the installation build task for a package
+            task (Task): the installation build task for a package
         """
         if task.status not in [STATUS_INSTALLED, STATUS_INSTALLING]:
             tty.debug(
@@ -1432,38 +1434,6 @@ class PackageInstaller:
         new_task.status = STATUS_INSTALLING
         self._push_task(new_task)
 
-    def _setup_install_dir(self, pkg: "spack.package_base.PackageBase") -> None:
-        """
-        Create and ensure proper access controls for the install directory.
-        Write a small metadata file with the current spack environment.
-
-        Args:
-            pkg: the package to be built and installed
-        """
-        # Move to a module level method.
-        if not os.path.exists(pkg.spec.prefix):
-            path = spack.util.path.debug_padded_filter(pkg.spec.prefix)
-            tty.debug("Creating the installation directory {0}".format(path))
-            spack.store.STORE.layout.create_install_directory(pkg.spec)
-        else:
-            # Set the proper group for the prefix
-            group = prefs.get_package_group(pkg.spec)
-            if group:
-                fs.chgrp(pkg.spec.prefix, group)
-
-            # Set the proper permissions.
-            # This has to be done after group because changing groups blows
-            # away the sticky group bit on the directory
-            mode = os.stat(pkg.spec.prefix).st_mode
-            perms = prefs.get_package_dir_permissions(pkg.spec)
-            if mode != perms:
-                os.chmod(pkg.spec.prefix, perms)
-
-            # Ensure the metadata path exists as well
-            fs.mkdirp(spack.store.STORE.layout.metadata_path(pkg.spec), mode=perms)
-
-        # Always write host environment - we assume this can change
-        spack.store.STORE.layout.write_host_environment(pkg.spec)
 
     def _update_failed(
         self, task: BuildTask, mark: bool = False, exc: Optional[BaseException] = None
@@ -1554,7 +1524,7 @@ class PackageInstaller:
 
         # Add any missing dependents to ensure proper uninstalled dependency
         # tracking when installing multiple specs
-        # Modify to make sure dependencies across rewire and build tasks are properly
+        # TODO: Modify to make sure dependencies across rewire and build tasks are properly
         tty.debug("Ensure all dependencies know all dependents across specs")
         for dep_id in all_dependencies:
             if dep_id in self.build_tasks:
@@ -2026,6 +1996,7 @@ class BuildProcessInstaller:
 
                     break
                 except Exception:
+                    # TODO: Fill in this block.
                     pass
 
             # cache debug settings
@@ -2145,12 +2116,10 @@ class OverwriteInstall:
 
 class Task:
     """Base class for representing a task for a package."""
-
     def __init__(
         self,
         pkg: "spack.package_base.PackageBase",
         request: Optional[BuildRequest],
-        compiler: bool,
         start: float,
         attempts: int,
         status: str,
@@ -2163,7 +2132,6 @@ class Task:
             pkg: the package to be built and installed
             request: the associated install request where ``None`` can be
                 used to indicate the package was explicitly requested by the user
-            compiler: whether task is for a bootstrap compiler
             start: the initial start time for the package, in seconds
             attempts: the number of attempts to install the package
             status: the installation status
@@ -2171,8 +2139,35 @@ class Task:
                 been installed so far
         """
 
-        # Package is associated with a bootstrap compiler
-        self.compiler = compiler
+        # Ensure dealing with a package that has a concrete spec
+        if not isinstance(pkg, spack.package_base.PackageBase):
+            raise ValueError("{0} must be a package".format(str(pkg)))
+
+        self.pkg = pkg
+        if not self.pkg.spec.concrete:
+            raise ValueError("{0} must have a concrete spec".format(self.pkg.name))
+
+        # The "unique" identifier for the task's package
+        self.pkg_id = package_id(self.pkg)
+
+        # The explicit build request associated with the package
+        if not isinstance(request, BuildRequest):
+            raise ValueError("{0} must have a build request".format(str(pkg)))
+
+        self.request = request
+
+        # Initialize the status to an active state.  The status is used to
+        # ensure priority queue invariants when tasks are "removed" from the
+        # queue.
+        if status == STATUS_REMOVED:
+            msg = "Cannot create a build task for {0} with status '{1}'"
+            raise InstallError(msg.format(self.pkg_id, status), pkg=pkg)
+
+        self.status = status
+
+        # Getting the PID again because it will be needed for execute functionality.
+        # TODO: Should this be cached in PackageInstaller?
+        self.pid = os.getpid()
 
         # The initial start time for processing the spec
         self.start = start
@@ -2196,22 +2191,6 @@ class Task:
             for d in self.pkg.spec.dependencies(deptype=deptypes)
             if package_id(d.package) != self.pkg_id
         )
-
-        # Handle bootstrapped compiler
-        #
-        # The bootstrapped compiler is not a dependency in the spec, but it is
-        # a dependency of the build task. Here we add it to self.dependencies
-        compiler_spec = self.pkg.spec.compiler
-        arch_spec = self.pkg.spec.architecture
-        if not spack.compilers.compilers_for_spec(compiler_spec, arch_spec=arch_spec):
-            # The compiler is in the queue, identify it as dependency
-            dep = spack.compilers.pkg_spec_for_compiler(compiler_spec)
-            dep.constrain("platform=%s" % str(arch_spec.platform))
-            dep.constrain("os=%s" % str(arch_spec.os))
-            dep.constrain("target=%s:" % arch_spec.target.microarchitecture.family.name)
-            dep.concretize()
-            dep_id = package_id(dep.package)
-            self.dependencies.add(dep_id)
 
         # List of uninstalled dependencies, which is used to establish
         # the priority of the build task.
@@ -2243,14 +2222,14 @@ class Task:
         return self.key != other.key
 
     def __repr__(self) -> str:
-        """Returns a formal representation of the build task."""
+        """Returns a formal representation of the task."""
         rep = "{0}(".format(self.__class__.__name__)
         for attr, value in self.__dict__.items():
             rep += "{0}={1}, ".format(attr, value.__repr__())
         return "{0})".format(rep.strip(", "))
 
     def __str__(self) -> str:
-        """Returns a printable version of the build task."""
+        """Returns a printable version of the task."""
         dependencies = "#dependencies={0}".format(len(self.dependencies))
         return "priority={0}, status={1}, start={2}, {3}".format(
             self.priority, self.status, self.start, dependencies
@@ -2293,6 +2272,39 @@ class Task:
                 ),
                 level=2,
             )
+
+    def _setup_install_dir(self, pkg: "spack.package_base.PackageBase") -> None:
+        """
+        Create and ensure proper access controls for the install directory.
+        Write a small metadata file with the current spack environment.
+
+        Args:
+            pkg: the package to be built and installed
+        """
+        # Move to a module level method.
+        if not os.path.exists(pkg.spec.prefix):
+            path = spack.util.path.debug_padded_filter(pkg.spec.prefix)
+            tty.debug("Creating the installation directory {0}".format(path))
+            spack.store.STORE.layout.create_install_directory(pkg.spec)
+        else:
+            # Set the proper group for the prefix
+            group = prefs.get_package_group(pkg.spec)
+            if group:
+                fs.chgrp(pkg.spec.prefix, group)
+
+            # Set the proper permissions.
+            # This has to be done after group because changing groups blows
+            # away the sticky group bit on the directory
+            mode = os.stat(pkg.spec.prefix).st_mode
+            perms = prefs.get_package_dir_permissions(pkg.spec)
+            if mode != perms:
+                os.chmod(pkg.spec.prefix, perms)
+
+            # Ensure the metadata path exists as well
+            fs.mkdirp(spack.store.STORE.layout.metadata_path(pkg.spec), mode=perms)
+
+        # Always write host environment - we assume this can change
+        spack.store.STORE.layout.write_host_environment(pkg.spec)
 
     @property
     def explicit(self) -> bool:
@@ -2342,8 +2354,43 @@ class Task:
 
 class BuildTask(Task):
     """Class for representing a build task for a package."""
+    # Consider adding pid as a parameter here:
     def __init__(self, pkg, request, compiler, start, attempts, status, installed):
-        super(BuildTask, self).__init__(pkg, request, compiler, start, attempts, status, installed)
+        super(BuildTask, self).__init__(pkg, request, start, attempts, status, installed)
+        """
+        Instantiate a build task for a package.
+
+        Args:
+            pkg (spack.package_base.PackageBase): the package to be built and installed
+            request (BuildRequest or None): the associated install request
+                 where ``None`` can be used to indicate the package was
+                 explicitly requested by the user
+            compiler (bool): whether task is for a bootstrap compiler
+            start (int): the initial start time for the package, in seconds
+            attempts (int): the number of attempts to install the package
+            status (str): the installation status
+            installed (list): the identifiers of packages that have
+                been installed so far
+        """
+
+        # Package is associated with a bootstrap compiler
+        self.compiler = compiler
+
+        # Handle bootstrapped compiler
+        #
+        # The bootstrapped compiler is not a dependency in the spec, but it is
+        # a dependency of the build task. Here we add it to self.dependencies
+        compiler_spec = self.pkg.spec.compiler
+        arch_spec = self.pkg.spec.architecture
+        if not spack.compilers.compilers_for_spec(compiler_spec, arch_spec=arch_spec):
+            # The compiler is in the queue, identify it as dependency
+            dep = spack.compilers.pkg_spec_for_compiler(compiler_spec)
+            dep.constrain("platform=%s" % str(arch_spec.platform))
+            dep.constrain("os=%s" % str(arch_spec.os))
+            dep.constrain("target=%s:" % arch_spec.target.microarchitecture.family.name)
+            dep.concretize()
+            dep_id = package_id(dep.package)
+            self.dependencies.add(dep_id)
 
     def execute(self):
         """
@@ -2412,10 +2459,12 @@ class BuildTask(Task):
             pid = "{0}: ".format(self.pid) if tty.show_pid() else ""
             tty.debug("{0}{1}".format(pid, str(e)))
             tty.debug("Package stage directory: {0}".format(pkg.stage.source_path))
+        return "updated_installed"
 
 
 class RewireTask(Task):
     """Class for representing a rewiring of splcied specs."""
+    # TODO: Implement class
     pass
 
 
