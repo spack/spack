@@ -42,59 +42,81 @@ class Papyrus(CMakePackage):
         install test subdirectory for use during `spack test run`."""
         self.cache_extra_test_sources(join_path("kv", "tests"))
 
-    def test_example(self):
-        """Run all c & c++ stand alone test"""
+    @property
+    def _lib_dir(self):
+        """Path to the installed library root."""
+        return self.prefix.lib64 if os.path.isdir(self.prefix.lib64) else self.prefix.lib
 
-        example_dir = self.test_suite.current_test_cache_dir.kv.tests
-        if not os.path.exists(example_dir):
-            raise SkipTest("Example directory is missing")
+    def _build_and_run_kv_test(self, test):
+        """build and run a kv/tests test"""
 
-        if os.path.isdir(self.prefix.lib64):
-            lib_dir = self.prefix.lib64
-        else:
-            lib_dir = self.prefix.lib
+        test_dir = join_path(self.test_suite.current_test_cache_dir.kv.tests, test)
+        if not os.path.exists(test_dir):
+            raise SkipTest(f"Example directory ({test_dir}) is missing")
 
-        example_list = [
-            "01_open_close",
-            "02_put_get",
-            "03_barrier",
-            "04_delete",
-            "05_fence",
-            "06_signal",
-            "07_consistency",
-            "08_protect",
-            "09_cache",
-            "10_checkpoint",
-            "11_restart",
-            "12_free",
-        ]
+        with working_dir(test_dir):
+            options = [
+                f"test{test}.c",
+                f"-I{self.prefix.include}",
+                f"-L{self._lib_dir}",
+                "-lpapyruskv",
+                "-g",
+                "-o",
+                test,
+                "-lpthread",
+                "-lm",
+            ]
 
-        mpicxx = which(self.spec["mpi"].mpicxx)
-        mpirun = which(self.spec["mpi"].prefix.bin.mpirun)
+            mpicxx = which(self.spec["mpi"].mpicxx)
+            mpicxx(*options)
 
-        for example in example_list:
-            test_dir = join_path(example_dir, example)
-            if not os.path.exists(test_dir):
-                raise SkipTest("{0} is missing".format(test_dir))
+            mpirun = which(self.spec["mpi"].prefix.bin.mpirun)
+            mpirun("-np", "4", test)
 
-            with test_part(
-                self,
-                f"test_example_{example}",
-                purpose=f"build and run {example}",
-                work_dir=test_dir,
-            ):
-                test_example = f"test{example}.c"
+    def test_01_open_close(self):
+        """build and run test01_open_close"""
+        self._build_and_run_kv_test("01_open_close")
 
-                mpicxx(
-                    f"{join_path(test_dir, test_example)}",
-                    f"-I{self.prefix.include}",
-                    f"-L{lib_dir}",
-                    "-lpapyruskv",
-                    "-g",
-                    "-o",
-                    example,
-                    "-lpthread",
-                    "-lm",
-                )
+    def test_02_put_get(self):
+        """build and run test02_put_get"""
+        self._build_and_run_kv_test("02_put_get")
 
-                mpirun("-np", "4", example)
+    def test_03_barrier(self):
+        """build and run test03_barrier"""
+        self._build_and_run_kv_test("03_barrier")
+
+    def test_04_delete(self):
+        """build and run test 04_delete"""
+        self._build_and_run_kv_test("04_delete")
+
+    def test_05_fence(self):
+        """build and run test05_fence"""
+        self._build_and_run_kv_test("05_fence")
+
+    def test_06_signal(self):
+        """build and run test06_signal"""
+        self._build_and_run_kv_test("06_signal")
+
+    def test_07_consistency(self):
+        """build and run test07_consistency"""
+        self._build_and_run_kv_test("07_consistency")
+
+    def test_08_protect(self):
+        """build and run test08_protect"""
+        self._build_and_run_kv_test("08_protect")
+
+    def test_09_cache(self):
+        """build and run test09_cache"""
+        self._build_and_run_kv_test("09_cache")
+
+    def test_10_checkpoint(self):
+        """build and run test10_checkpoint"""
+        self._build_and_run_kv_test("10_checkpoint")
+
+    def test_11_restart(self):
+        """build and run test11_restart"""
+        self._build_and_run_kv_test("11_restart")
+
+    def test_12_free(self):
+        """build and run test12_free"""
+        self._build_and_run_kv_test("12_free")
