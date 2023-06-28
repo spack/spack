@@ -939,7 +939,9 @@ Error=This Python is managed by Spack. To install Python packages, please try
             py = self.command
             py("-m", "ensurepip", fail_on_error=False)
             if py.returncode == 0:
-                raise SpackError("ensurepip is not respecting PEP 668 externally-managed installation!")
+                raise SpackError(
+                    "ensurepip is not respecting PEP 668 externally-managed installation!"
+                )
 
             # Ensure that readline module works
             if "+readline" in spec:
