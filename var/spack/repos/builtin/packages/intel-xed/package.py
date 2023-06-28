@@ -21,6 +21,7 @@ class IntelXed(Package):
 
     # Current versions now have actual releases and tags.
     version("main", branch="main")
+    version("2023.06.07", tag="v2023.06.07")
     version("2023.04.16", tag="v2023.04.16")
     version("2022.10.11", tag="v2022.10.11")
     version("2022.08.11", tag="v2022.08.11")
@@ -47,7 +48,7 @@ class IntelXed(Package):
     variant("pic", default=False, description="Compile with position independent code.")
 
     # The current mfile uses python3 by name.
-    depends_on("python@3.6:", type="build")
+    depends_on("python@3.7:", type="build")
 
     patch("1201-segv.patch", when="@12.0.1")
     patch("2019-python3.patch", when="@10.2019.03")
