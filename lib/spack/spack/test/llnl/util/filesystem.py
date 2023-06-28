@@ -12,8 +12,8 @@ import sys
 
 import pytest
 
-import llnl.util.symlink
 import llnl.util.filesystem as fs
+import llnl.util.symlink
 from llnl.util.symlink import SymlinkError, _windows_can_symlink, islink, symlink
 
 import spack.paths
@@ -757,15 +757,15 @@ def test_lexists_islink_isdir(tmpdir):
 
 
 @pytest.mark.skipif(sys.platform != "win32", reason="For Windows Only")
-@pytest.mark.parametrize('win_can_symlink', [True, False])
+@pytest.mark.parametrize("win_can_symlink", [True, False])
 def test_lexists_islink_isdir_windows(tmpdir, monkeypatch, win_can_symlink):
     """Run on windows without elevated privileges to test junctions and hard links which have
     different results from the lexists_islink_isdir method.
     """
     if win_can_symlink and not _windows_can_symlink():
-        pytest.skip('Cannot test dev mode behavior without dev mode enabled.')
+        pytest.skip("Cannot test dev mode behavior without dev mode enabled.")
     with tmpdir.as_cwd():
-        monkeypatch.setattr(llnl.util.symlink, '_windows_can_symlink', win_can_symlink)
+        monkeypatch.setattr(llnl.util.symlink, "_windows_can_symlink", win_can_symlink)
         dir = tmpdir.join("dir")
         file = tmpdir.join("file")
         nonexistent = tmpdir.join("does_not_exist")
