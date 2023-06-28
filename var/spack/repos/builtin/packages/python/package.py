@@ -93,6 +93,11 @@ class Python(Package):
     version("3.8.1", sha256="c7cfa39a43b994621b245e029769e9126caa2a93571cee2e743b213cceac35fb")
     version("3.8.0", sha256="f1069ad3cae8e7ec467aa98a6565a62a48ef196cb8f1455a245a08db5e1792df")
     version(
+        "3.7.17",
+        sha256="fd50161bc2a04f4c22a0971ff0f3856d98b4bf294f89740a9f06b520aae63b49",
+        deprecated=True,
+    )
+    version(
         "3.7.16",
         sha256="0cf2da07fa464636755215415909e22eb1d058817af4824bc15af8390d05fb38",
         deprecated=True,
