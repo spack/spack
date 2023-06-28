@@ -86,6 +86,13 @@ def env_activate_setup_parser(subparser):
         const="bat",
         help="print bat commands to activate the environment",
     )
+    shells.add_argument(
+        "--pwsh",
+        action="store_const",
+        dest="shell",
+        const="pwsh",
+        help="print powershell commands to activate environment",
+    )
 
     view_options = subparser.add_mutually_exclusive_group()
     view_options.add_argument(
