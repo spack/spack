@@ -3,3 +3,5 @@ concretizer:
   targets:
     granularity: microarchitectures
     host_compatible: false
+  duplicates:
+    strategy: none

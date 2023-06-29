@@ -2181,3 +2181,82 @@ class TestConcretize:
         assert len(edges) == 1 and edges[0].virtuals == ("mpi",)
         edges = spec.edges_to_dependencies(name="callpath")
         assert len(edges) == 1 and edges[0].virtuals == ()
+
+
+@pytest.fixture()
+def duplicates_test_repository():
+    builder_test_path = os.path.join(spack.paths.repos_path, "duplicates.test")
+    with spack.repo.use_repositories(builder_test_path) as mock_repo:
+        yield mock_repo
+
+
+@pytest.mark.usefixtures("mutable_config", "duplicates_test_repository")
+class TestConcretizeSeparately:
+    @pytest.mark.parametrize("strategy", ["minimal", "full"])
+    @pytest.mark.skipif(
+        os.environ.get("SPACK_TEST_SOLVER") == "original",
+        reason="Not supported by the original concretizer",
+    )
+    def test_two_gmake(self, strategy):
+        """Tests that we can concretize a spec with nodes using the same build
+        dependency pinned at different versions.
+
+        o hdf5@1.0
+        |\
+        o | pinned-gmake@1.0
+        o | gmake@3.0
+         /
+        o gmake@4.1
+
+        """
+        spack.config.config.set("concretizer:duplicates:strategy", strategy)
+        s = Spec("hdf5").concretized()
+
+        # Check that hdf5 depends on gmake@=4.1
+        hdf5_gmake = s["hdf5"].dependencies(name="gmake", deptype="build")
+        assert len(hdf5_gmake) == 1 and hdf5_gmake[0].satisfies("@=4.1")
+
+        # Check that pinned-gmake depends on gmake@=3.0
+        pinned_gmake = s["pinned-gmake"].dependencies(name="gmake", deptype="build")
+        assert len(pinned_gmake) == 1 and pinned_gmake[0].satisfies("@=3.0")
+
+    @pytest.mark.parametrize("strategy", ["minimal", "full"])
+    @pytest.mark.skipif(
+        os.environ.get("SPACK_TEST_SOLVER") == "original",
+        reason="Not supported by the original concretizer",
+    )
+    def test_two_setuptools(self, strategy):
+        """Tests that we can concretize separate build dependencies, when we are dealing
+        with extensions.
+
+        o py-shapely@1.25.0
+        |\
+        | |\
+        | o | py-setuptools@60
+        |/ /
+        | o py-numpy@1.25.0
+        |/|
+        | |\
+        | o | py-setuptools@59
+        |/ /
+        o | python@3.11.2
+        o | gmake@3.0
+         /
+        o gmake@4.1
+
+        """
+        spack.config.config.set("concretizer:duplicates:strategy", strategy)
+        s = Spec("py-shapely").concretized()
+        # Requirements on py-shapely
+        setuptools = s["py-shapely"].dependencies(name="py-setuptools", deptype="build")
+        assert len(setuptools) == 1 and setuptools[0].satisfies("@=60")
+
+        # Requirements on py-numpy
+        setuptools = s["py-numpy"].dependencies(name="py-setuptools", deptype="build")
+        assert len(setuptools) == 1 and setuptools[0].satisfies("@=59")
+        gmake = s["py-numpy"].dependencies(name="gmake", deptype="build")
+        assert len(gmake) == 1 and gmake[0].satisfies("@=4.1")
+
+        # Requirements on python
+        gmake = s["python"].dependencies(name="gmake", deptype="build")
+        assert len(gmake) == 1 and gmake[0].satisfies("@=3.0")
