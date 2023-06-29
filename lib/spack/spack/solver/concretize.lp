@@ -10,7 +10,8 @@
 #const root_node_id = 0.
 
 #const link_run = 0.
-#const direct_build = 1.
+#const direct_link_run =1.
+#const direct_build = 2.
 
 % Allow clingo to create nodes
 { attr("node", node(0..X-1, Package)) } :- max_nodes(Package, X), not virtual(Package).
@@ -58,17 +59,18 @@ unification_set(SetID, ChildNode) :- attr("depends_on", ParentNode, ChildNode, T
 unification_set(("build", node(X, Child)), node(X, Child))
   :- attr("depends_on", ParentNode, node(X, Child), Type),
      Type == "build",
+     SetID != "generic_build",
      multiple_unification_sets(Child),
-     unification_set("root", ParentNode).
+     unification_set(SetID, ParentNode).
 
 unification_set("generic_build", node(X, Child))
   :- attr("depends_on", ParentNode, node(X, Child), Type),
      Type == "build",
      not multiple_unification_sets(Child),
-     unification_set("root", ParentNode).
+     unification_set(_, ParentNode).
 
 % Any dependency of type "build" in a unification set that is not "root", stays in that unification set
-unification_set(SetID, ChildNode) :- attr("depends_on", ParentNode, ChildNode, Type), Type == "build", SetID != "root", unification_set(SetID, ParentNode).
+unification_set(SetID, ChildNode) :- attr("depends_on", ParentNode, ChildNode, Type), Type == "build", SetID == "generic_build", unification_set(SetID, ParentNode).
 unification_set(SetID, VirtualNode) :- provider(PackageNode, VirtualNode), unification_set(SetID, PackageNode).
 
 #defined multiple_unification_sets/1.
@@ -261,12 +263,19 @@ condition_set(PackageNode, PackageNode, link_run) :- provider(PackageNode, Virtu
 condition_set(PackageNode, VirtualNode, link_run) :- provider(PackageNode, VirtualNode).
 
 
-condition_set(ID, DependencyNode, link_run)
-  :- condition_set(ID, PackageNode, link_run),
-     attr("depends_on", PackageNode, DependencyNode, Type),
-     Type != "build".
-
 condition_set(PackageNode, DependencyNode, direct_build) :- condition_set(PackageNode, PackageNode, link_run), attr("depends_on", PackageNode, DependencyNode, "build").
+condition_set(PackageNode, DependencyNode, direct_link_run) :- condition_set(PackageNode, PackageNode, link_run), attr("depends_on", PackageNode, DependencyNode, Type), Type != "build".
+
+% Add transitive link_run dependencies, but only if they are not clashing with some direct dependency
+% (otherwise we might create an unsolvable problem when the transitive dependency has requirements that
+% are in conflict with the direct dependency)
+condition_set(ID, node(DependencyID, Dependency), link_run)
+  :- condition_set(ID, PackageNode, link_run),
+     PackageNode != ID, Type != "build",
+     not condition_set(ID, node(_, Dependency), direct_build),
+     not condition_set(ID, node(_, Dependency), direct_link_run),
+     attr("depends_on", PackageNode, node(DependencyID, Dependency), Type).
+
 condition_set(ID, VirtualNode, Type) :- condition_set(ID, PackageNode, Type), provider(PackageNode, VirtualNode).
 
 condition_set(ID, PackageNode) :- condition_set(ID, PackageNode, _).
