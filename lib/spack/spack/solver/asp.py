@@ -50,6 +50,8 @@ import spack.variant
 import spack.version as vn
 import spack.version.git_ref_lookup
 
+from .counter import FullDuplicatesCounter, MinimalDuplicatesCounter, NoDuplicatesCounter
+
 # these are from clingo.ast and bootstrapped later
 ASTType = None
 parse_files = None
@@ -322,6 +324,15 @@ class AspFunctionBuilder:
 
 
 fn = AspFunctionBuilder()
+
+
+def _create_counter(specs, tests):
+    strategy = spack.config.config.get("concretizer:duplicates:strategy", "none")
+    if strategy == "full":
+        return FullDuplicatesCounter(specs, tests=tests)
+    if strategy == "minimal":
+        return MinimalDuplicatesCounter(specs, tests=tests)
+    return NoDuplicatesCounter(specs, tests=tests)
 
 
 def all_compilers_in_config():
@@ -2290,33 +2301,17 @@ class SpackSolverSetup:
         # get list of all possible dependencies
         self.possible_virtuals = set(x.name for x in specs if x.virtual)
 
-        link_run_dependency_types = ("link", "run", "test")
-        dependency_types = spack.dependency.all_deptypes
-        if not self.tests:
-            link_run_dependency_types = ("link", "run")
-            dependency_types = ("link", "run", "build")
-
-        link_run = spack.package_base.possible_dependencies(
-            *specs, virtuals=self.possible_virtuals, deptype=link_run_dependency_types
-        )
-        direct_build = set()
-        for x in link_run:
-            current = spack.repo.path.get_pkg_class(x).dependencies_of_type("build")
-            direct_build.update(current)
-        total_build = spack.package_base.possible_dependencies(
-            *direct_build, virtuals=self.possible_virtuals, deptype=dependency_types
-        )
-        possible = set(link_run) | set(total_build)
+        node_counter = _create_counter(specs, tests=self.tests)
+        self.possible_virtuals = node_counter.possible_virtuals()
+        self.pkgs = node_counter.possible_dependencies()
 
         # Fail if we already know an unreachable node is requested
         for spec in specs:
             missing_deps = [
-                str(d) for d in spec.traverse() if d.name not in possible and not d.virtual
+                str(d) for d in spec.traverse() if d.name not in self.pkgs and not d.virtual
             ]
             if missing_deps:
                 raise spack.spec.InvalidDependencyError(spec.name, missing_deps)
-
-        self.pkgs = set(possible)
 
         # driver is used by all the functions below to add facts and
         # rules to generate an ASP program.
@@ -2341,31 +2336,16 @@ class SpackSolverSetup:
         self.possible_compilers = self.generate_possible_compilers(specs)
 
         self.gen.h1("Concrete input spec definitions")
-        self.define_concrete_input_specs(specs, possible)
+        self.define_concrete_input_specs(specs, self.pkgs)
 
         if reuse:
             self.gen.h1("Reusable specs")
             self.gen.fact(fn.optimize_for_reuse())
             for reusable_spec in reuse:
-                self._facts_from_concrete_spec(reusable_spec, possible)
+                self._facts_from_concrete_spec(reusable_spec, self.pkgs)
 
         self.gen.h1("Generic statements on possible packages")
-        counter = collections.Counter(list(link_run) + list(total_build) + list(set(direct_build)))
-        self.gen.h2("Maximum number of nodes")
-        for pkg, count in sorted(counter.items(), key=lambda x: (x[1], x[0])):
-            count = min(count, 1)
-            self.gen.fact(fn.max_nodes(pkg, count))
-        self.gen.newline()
-
-        self.gen.h2("Build unification sets ")
-        for name in spack.repo.path.packages_with_tags("build-tools"):
-            self.gen.fact(fn.multiple_unification_sets(name))
-        self.gen.newline()
-
-        self.gen.h2("Possible package in link-run subDAG")
-        for name in sorted(link_run):
-            self.gen.fact(fn.possible_in_link_run(name))
-        self.gen.newline()
+        node_counter.possible_packages_facts(self.gen, fn)
 
         self.gen.h1("Possible flags on nodes")
         for flag in spack.spec.FlagMap.valid_compiler_flags():
@@ -2386,7 +2366,7 @@ class SpackSolverSetup:
         self.external_packages()
 
         # traverse all specs and packages to build dict of possible versions
-        self.build_version_dict(possible)
+        self.build_version_dict(self.pkgs)
         self.add_concrete_versions_from_specs(specs, Provenance.SPEC)
         self.add_concrete_versions_from_specs(dev_specs, Provenance.DEV_SPEC)
 
@@ -2948,7 +2928,7 @@ class Solver:
         Arguments:
           specs (list): List of ``Spec`` objects to solve for.
           out: Optionally write the generate ASP program to a file-like object.
-          timers (bool): Print out coarse fimers for different solve phases.
+          timers (bool): Print out coarse timers for different solve phases.
           stats (bool): Print out detailed stats from clingo.
           tests (bool or tuple): If True, concretize test dependencies for all packages.
             If a tuple of package names, concretize test dependencies for named
