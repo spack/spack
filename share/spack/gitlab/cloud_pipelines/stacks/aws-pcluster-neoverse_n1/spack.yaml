@@ -18,9 +18,8 @@ spack:
     - openmpi
 
   specs:
-  - gcc/jttj24nibqy5jsqf34as5m63umywfa3d
   - $optimized_configs
-  - $optimized_libs
+  # - $optimized_libs
 
 
   mirrors: { "mirror": "s3://spack-binaries/develop/aws-pcluster-neoverse_n1" }

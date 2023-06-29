@@ -18,7 +18,6 @@ spack:
     - openmpi
 
   specs:
-  - gcc/yyvkvlgimaaxjhy32oa5x5eexqekrevc
   - $optimized_configs
   # - $optimized_libs
 
