@@ -15,6 +15,7 @@ class PyShroud(PythonPackage):
 
     version("develop", branch="develop")
     version("master", branch="master")
+    version("0.12.2", tag="v0.12.2")
     version("0.12.1", tag="v0.12.1")
     version("0.11.0", tag="v0.11.0")
     version("0.10.1", tag="v0.10.1")
