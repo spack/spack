@@ -8,7 +8,7 @@ spack:
     - lammps
     # - mpas-model
     - openfoam
-    # - palace
+    - palace
     # - py-devito
     # - quantum-espresso
     # - wrf
