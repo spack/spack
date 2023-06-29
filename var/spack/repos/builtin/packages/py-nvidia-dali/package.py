@@ -170,20 +170,20 @@ class PyNvidiaDali(PythonPackage):
         )
 
     cuda120_versions = (
-        "1.22.0-cuda120",
-        "1.23.0-cuda120",
-        "1.24.0-cuda120",
-        "1.25.0-cuda120",
-        "1.26.0-cuda120",
         "1.27.0-cuda120",
+        "1.26.0-cuda120",
+        "1.25.0-cuda120",
+        "1.24.0-cuda120",
+        "1.23.0-cuda120",
+        "1.22.0-cuda120",
     )
     cuda110_versions = (
-        "1.22.0-cuda110",
-        "1.23.0-cuda110",
-        "1.24.0-cuda110",
-        "1.25.0-cuda110",
-        "1.26.0-cuda110",
         "1.27.0-cuda110",
+        "1.26.0-cuda110",
+        "1.25.0-cuda110",
+        "1.24.0-cuda110",
+        "1.23.0-cuda110",
+        "1.22.0-cuda110",
     )
 
     for v in cuda120_versions:
@@ -194,6 +194,6 @@ class PyNvidiaDali(PythonPackage):
     depends_on("python@3.6:3.11", when="@1.23:", type=("build", "run"))
     depends_on("python@3.6:3.10", when="@:1.22", type=("build", "run"))
     depends_on("py-astunparse@1.6.0:", type=("build", "run"))
-    depends_on("py-gast@0.2.1:0.4.0", when="@:1.26", type=("build", "run"))
     depends_on("py-gast@0.3.3:", when="@1.27:", type=("build", "run"))
-    depends_on("py-dm-tree", when="@1.27: ^python@3.7:", type=("build", "run"))
+    depends_on("py-gast@0.2.1:0.4.0", when="@:1.26", type=("build", "run"))
+    depends_on("py-dm-tree", when="@1.27:", type=("build", "run"))
