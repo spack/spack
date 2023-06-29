@@ -34,6 +34,7 @@ class Krb5(AutotoolsPackage):
     depends_on("openssl@:1", when="@:1.19")
     depends_on("openssl")
     depends_on("gettext")
+    depends_on("findutils", type="build")
 
     variant(
         "shared", default=True, description="install shared libraries if True, static if false"

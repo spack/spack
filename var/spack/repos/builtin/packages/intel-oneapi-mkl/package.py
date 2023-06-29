@@ -183,7 +183,10 @@ class IntelOneapiMkl(IntelOneApiLibraryPackage):
         lib_path = lib_path if isdir(lib_path) else dirname(lib_path)
 
         resolved_libs = find_libraries(libs, lib_path, shared=shared)
-        if "+cluster" in self.spec:
+        # Add MPI libraries for cluster support. If MPI is not in the
+        # spec, then MKL is externally installed and application must
+        # link with MPI libaries
+        if "+cluster" in self.spec and "mpi" in self.spec:
             resolved_libs = resolved_libs + self.spec["mpi"].libs
         return resolved_libs
 

@@ -36,7 +36,7 @@ spack:
         - - cp share/spack/gitlab/cloud_pipelines/configs/config.yaml etc/spack/
           - /bin/bash "${SPACK_ARTIFACTS_ROOT}/postinstall.sh" -fg
           - rm etc/spack/config.yaml
-          - spack config --scope site add "packages:all:target:\"target=${SPACK_TARGET_ARCH}\""
+          - spack config --scope site add "packages:all:target:[${SPACK_TARGET_ARCH}]"
     - signing-job:
         before_script:
           # Do not distribute Intel & ARM binaries
