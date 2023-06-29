@@ -53,3 +53,8 @@ class RRsamtools(RPackage):
 
     # this is not a listed dependency but is needed
     depends_on("curl")
+    depends_on("zlib")
+
+    def patch(self):
+        with working_dir("src"):
+            filter_file(r"(^PKG_LIBS=)(\$\(RHTSLIB_LIBS\))", "\\1\\2 -lz", "Makevars")
