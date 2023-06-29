@@ -20,7 +20,7 @@ class PyDmTree(PythonPackage):
     maintainers("aweits")
 
     version("0.1.8", sha256="0fcaabbb14e7980377439e7140bd05552739ca5e515ecb3119f234acee4b9430")
-    version("0.1.7", sha256="a54a5794b51ba585dc62f5d19c9d907f73107d5f0569417f8866ef3f75be5134")
+    version("0.1.7", sha256="30fec8aca5b92823c0e796a2f33b875b4dccd470b57e91e6c542405c5f77fd2a")
     version("0.1.6", sha256="6776404b23b4522c01012ffb314632aba092c9541577004ab153321e87da439a")
     version("0.1.5", sha256="a951d2239111dfcc468071bc8ff792c7b1e3192cab5a3c94d33a8b2bda3127fa")
 
