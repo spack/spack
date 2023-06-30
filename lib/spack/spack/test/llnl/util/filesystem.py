@@ -516,14 +516,15 @@ def test_chgrp_dont_set_group_if_already_set(tmpdir, monkeypatch):
 
     original_stat = os.stat
 
-    def _stat(path):
+    def _stat(*args, **kwargs):
+        path = args[0]
         if path == "test-dir_chgrp_dont_set_group_if_already_set":
             return FakeStat(gid=1001)
         else:
             # Monkeypatching stat can interfere with post-test cleanup, so for
             # paths that aren't part of the test, we want the original behavior
             # of stat
-            return original_stat(path)
+            return original_stat(*args, **kwargs)
 
     monkeypatch.setattr(os, "chown", _fail)
     monkeypatch.setattr(os, "lchown", _fail)
