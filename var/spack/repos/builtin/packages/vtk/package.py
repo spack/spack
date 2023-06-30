@@ -30,7 +30,7 @@ class Vtk(CMakePackage):
     version(
         "8.2.1a",
         url="https://www.vtk.org/files/release/8.2/VTK-8.2.0.tar.gz",
-        sha256="34c3dc775261be5e45a8049155f7228b6bd668106c72a3c435d95730d17d57bb"
+        sha256="34c3dc775261be5e45a8049155f7228b6bd668106c72a3c435d95730d17d57bb",
     )
     version("8.2.0", sha256="34c3dc775261be5e45a8049155f7228b6bd668106c72a3c435d95730d17d57bb")
     version("8.1.2", sha256="0995fb36857dd76ccfb8bb07350c214d9f9099e80b1e66b4a8909311f24ff0db")
@@ -92,13 +92,12 @@ class Vtk(CMakePackage):
 
     # Fix IOADIOS2 module to work with kits
     # https://gitlab.kitware.com/vtk/vtk/-/merge_requests/8653
-    patch("vtk-adios2-module-no-kit.patch", when="@8.2.0:9.0.3")
+    patch("vtk-adios2-module-no-kit.patch", when="@9:9.0.3")
 
     # Python 3.8 compatibility for VTK 8.2
     # https://gitlab.kitware.com/vtk/vtk/-/merge_requests/6269
     # https://gitlab.kitware.com/vtk/vtk/-/merge_requests/6275
-    patch("vtk_82_python38a.patch", when="@8.2.1a")
-    patch("vtk_82_python38b.patch", when="@8.2.1a")
+    patch("vtk82_python38.patch", when="@8.2.1a")
 
     # The use of the OpenGL2 backend requires at least OpenGL Core Profile
     # version 3.2 or higher.

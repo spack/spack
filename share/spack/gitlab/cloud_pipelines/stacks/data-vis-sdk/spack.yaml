@@ -19,7 +19,7 @@ spack:
       require: target=x86_64_v3
 
   definitions:
-  - paraview_specs:
+  - paraview_visit_specs:
     - matrix:
       - - paraview
       - - +qt~osmesa ^glew gl=glx # GUI Support w/ GLX Rendering
@@ -46,6 +46,7 @@ spack:
             +sz
             +unifyfs
             +veloc
+            +visit
             +vtkm
             +zfp
       - - ~cuda ~rocm
@@ -55,15 +56,11 @@ spack:
         # - ~cuda +rocm
 
   specs:
-    # Test ParaView builds with different GL backends
+    # Test ParaView and VisIt builds with different GL backends
     - matrix:
       - [$sdk_base_spec]
-      - [$^paraview_specs]
-      - - ^hdf5@1.14 # Non-VisIt can build HDF5 1.14
-    # Test ParaView builds with differnt GL backends
-    # - matrix:
-    #   - [$sdk_base_spec]
-    #   - [$^visit_specs]
+      - [$^paraview_visit_specs]
+      #- [$^visit_specs]
 
   mirrors: { "mirror": "s3://spack-binaries/develop/data-vis-sdk" }
 
