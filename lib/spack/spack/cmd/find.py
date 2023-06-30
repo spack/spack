@@ -33,6 +33,14 @@ def setup_parser(subparser):
         help="output specs with the specified format string",
     )
     format_group.add_argument(
+        "-H",
+        "--hashes",
+        action="store_const",
+        dest="format",
+        const="/{hash}",
+        help="same as '--format /{hash}', for piping to other commands",
+    )
+    format_group.add_argument(
         "--json",
         action="store_true",
         default=False,
