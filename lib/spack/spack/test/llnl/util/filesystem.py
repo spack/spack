@@ -502,6 +502,7 @@ def test_filter_files_with_different_encodings(regex, replacement, filename, tmp
         assert replacement in f.read()
 
 
+@pytest.mark.skipif(sys.platform == "win32", reason="chgrp isn't used on Windows")
 def test_chgrp_dont_set_group_if_already_set(tmpdir, monkeypatch):
     with fs.working_dir(tmpdir):
         os.mkdir("test-dir_chgrp_dont_set_group_if_already_set")
