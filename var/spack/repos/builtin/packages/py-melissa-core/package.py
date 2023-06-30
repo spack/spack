@@ -18,6 +18,8 @@ class PyMelissaCore(PythonPackage):
     maintainers("robcaulk", "mschouler", "raffino")
 
     version("develop", branch="develop")
+    version("joss", tag="JOSS_v2")
+    version("sc23", tag="SC23")
 
     # define variants for the deep learning server (torch, tf)
     variant(
@@ -37,6 +39,7 @@ class PyMelissaCore(PythonPackage):
     depends_on("py-python-rapidjson@1.8:", type="run")
     depends_on("py-scipy@1.10.0:", type="run")
     depends_on("py-cloudpickle@2.2.0:", type="run")
+    depends_on("py-iterative-stats@0.1.0:", type="run")
     # requirements_deep_learning.txt (DL with torch)
     depends_on("py-tensorboard@2.10.0:", type="run", when="+torch")
     depends_on("py-matplotlib", type="run", when="+torch")
