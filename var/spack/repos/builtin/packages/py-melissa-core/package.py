@@ -39,7 +39,6 @@ class PyMelissaCore(PythonPackage):
     depends_on("py-python-rapidjson@1.8:", type="run")
     depends_on("py-scipy@1.10.0:", type="run")
     depends_on("py-cloudpickle@2.2.0:", type="run")
-    depends_on("py-iterative-stats@0.1.0:", type="run")
     with when("@develop"):
         depends_on("py-iterative-stats@0.1.0:", type="run")
     with when("@joss"):
