@@ -18,6 +18,7 @@ from llnl.util.filesystem import is_nonsymlink_exe_with_shebang, path_contains_s
 from llnl.util.lang import dedupe
 
 from spack.build_environment import dso_suffix, stat_suffix
+from spack.error import SpackError
 from spack.package import *
 from spack.util.environment import is_system_path
 from spack.util.prefix import Prefix
@@ -40,75 +41,346 @@ class Python(Package):
     install_targets = ["install"]
     build_targets: List[str] = []
 
-    version("3.11.2", sha256="2411c74bda5bbcfcddaf4531f66d1adc73f247f529aee981b029513aefdbf849")
-    version("3.11.1", sha256="baed518e26b337d4d8105679caf68c5c32630d702614fc174e98cb95c46bdfa4")
-    version("3.11.0", sha256="64424e96e2457abbac899b90f9530985b51eef2905951febd935f0e73414caeb")
+    version("3.11.4", sha256="85c37a265e5c9dd9f75b35f954e31fbfc10383162417285e30ad25cc073a0d63")
+    version(
+        "3.11.3",
+        sha256="1a79f3df32265d9e6625f1a0b31c28eb1594df911403d11f3320ee1da1b3e048",
+        deprecated=True,
+    )
+    version(
+        "3.11.2",
+        sha256="2411c74bda5bbcfcddaf4531f66d1adc73f247f529aee981b029513aefdbf849",
+        deprecated=True,
+    )
+    version(
+        "3.11.1",
+        sha256="baed518e26b337d4d8105679caf68c5c32630d702614fc174e98cb95c46bdfa4",
+        deprecated=True,
+    )
+    version(
+        "3.11.0",
+        sha256="64424e96e2457abbac899b90f9530985b51eef2905951febd935f0e73414caeb",
+        deprecated=True,
+    )
+    version(
+        "3.10.12",
+        sha256="a43cd383f3999a6f4a7db2062b2fc9594fefa73e175b3aedafa295a51a7bb65c",
+        preferred=True,
+    )
+    version("3.10.11", sha256="f3db31b668efa983508bd67b5712898aa4247899a346f2eb745734699ccd3859")
     version(
         "3.10.10",
         sha256="fba64559dde21ebdc953e4565e731573bb61159de8e4d4cedee70fb1196f610d",
-        preferred=True,
+        deprecated=True,
     )
-    version("3.10.9", sha256="4ccd7e46c8898f4c7862910a1703aa0e63525913a519abb2f55e26220a914d88")
-    version("3.10.8", sha256="f400c3fb394b8bef1292f6dc1292c5fadc3533039a5bc0c3e885f3e16738029a")
-    version("3.10.7", sha256="1b2e4e2df697c52d36731666979e648beeda5941d0f95740aafbf4163e5cc126")
-    version("3.10.6", sha256="848cb06a5caa85da5c45bd7a9221bb821e33fc2bdcba088c127c58fad44e6343")
-    version("3.10.5", sha256="18f57182a2de3b0be76dfc39fdcfd28156bb6dd23e5f08696f7492e9e3d0bf2d")
-    version("3.10.4", sha256="f3bcc65b1d5f1dc78675c746c98fcee823c038168fc629c5935b044d0911ad28")
-    version("3.10.3", sha256="5a3b029bad70ba2a019ebff08a65060a8b9b542ffc1a83c697f1449ecca9813b")
-    version("3.10.2", sha256="3c0ede893011319f9b0a56b44953a3d52c7abf9657c23fb4bc9ced93b86e9c97")
-    version("3.10.1", sha256="b76117670e7c5064344b9c138e141a377e686b9063f3a8a620ff674fa8ec90d3")
-    version("3.10.0", sha256="c4e0cbad57c90690cb813fb4663ef670b4d0f587d8171e2c42bd4c9245bd2758")
-    version("3.9.16", sha256="1ad539e9dbd2b42df714b69726e0693bc6b9d2d2c8e91c2e43204026605140c5")
-    version("3.9.15", sha256="48d1ccb29d5fbaf1fb8f912271d09f7450e426d4dfe95978ef6aaada70ece4d8")
-    version("3.9.14", sha256="9201836e2c16361b2b7408680502393737d44f227333fe2e5729c7d5f6041675")
-    version("3.9.13", sha256="829b0d26072a44689a6b0810f5b4a3933ee2a0b8a4bfc99d7c5893ffd4f97c44")
-    version("3.9.12", sha256="70e08462ebf265012bd2be88a63d2149d880c73e53f1712b7bbbe93750560ae8")
-    version("3.9.11", sha256="3442400072f582ac2f0df30895558f08883b416c8c7877ea55d40d00d8a93112")
-    version("3.9.10", sha256="1aa9c0702edbae8f6a2c95f70a49da8420aaa76b7889d3419c186bfc8c0e571e")
-    version("3.9.9", sha256="2cc7b67c1f3f66c571acc42479cdf691d8ed6b47bee12c9b68430413a17a44ea")
-    version("3.9.8", sha256="7447fb8bb270942d620dd24faa7814b1383b61fa99029a240025fd81c1db8283")
-    version("3.9.7", sha256="a838d3f9360d157040142b715db34f0218e535333696a5569dc6f854604eb9d1")
-    version("3.9.6", sha256="d0a35182e19e416fc8eae25a3dcd4d02d4997333e4ad1f2eee6010aadc3fe866")
-    version("3.9.5", sha256="e0fbd5b6e1ee242524430dee3c91baf4cbbaba4a72dd1674b90fda87b713c7ab")
-    version("3.9.4", sha256="66c4de16daa74a825cf9da9ddae1fe020b72c3854b73b1762011cc33f9e4592f")
-    version("3.9.3", sha256="3afeb61a45b5a2e6f1c0f621bd8cf925a4ff406099fdb3d8c97b993a5f43d048")
-    version("3.9.2", sha256="7899e8a6f7946748830d66739f2d8f2b30214dad956e56b9ba216b3de5581519")
-    version("3.9.1", sha256="29cb91ba038346da0bd9ab84a0a55a845d872c341a4da6879f462e94c741f117")
-    version("3.9.0", sha256="df796b2dc8ef085edae2597a41c1c0a63625ebd92487adaef2fed22b567873e8")
-    version("3.8.16", sha256="71ca9d935637ed2feb59e90a368361dc91eca472a90acb1d344a2e8178ccaf10")
-    version("3.8.15", sha256="924d46999df82aa2eaa1de5ca51d6800ffb56b4bf52486a28f40634e3362abc4")
-    version("3.8.14", sha256="41f959c480c59211feb55d5a28851a56c7e22d02ef91035606ebb21011723c31")
-    version("3.8.13", sha256="903b92d76354366b1d9c4434d0c81643345cef87c1600adfa36095d7b00eede4")
-    version("3.8.12", sha256="316aa33f3b7707d041e73f246efedb297a70898c4b91f127f66dc8d80c596f1a")
-    version("3.8.11", sha256="b77464ea80cec14581b86aeb7fb2ff02830e0abc7bcdc752b7b4bdfcd8f3e393")
-    version("3.8.10", sha256="b37ac74d2cbad2590e7cd0dd2b3826c29afe89a734090a87bf8c03c45066cb65")
-    version("3.8.9", sha256="9779ec1df000bf86914cdd40860b88da56c1e61db59d37784beca14a259ac9e9")
-    version("3.8.8", sha256="76c0763f048e4f9b861d24da76b7dd5c7a3ba7ec086f40caedeea359263276f7")
-    version("3.8.7", sha256="20e5a04262f0af2eb9c19240d7ec368f385788bba2d8dfba7e74b20bab4d2bac")
-    version("3.8.6", sha256="313562ee9986dc369cd678011bdfd9800ef62fbf7b1496228a18f86b36428c21")
-    version("3.8.5", sha256="015115023c382eb6ab83d512762fe3c5502fa0c6c52ffebc4831c4e1a06ffc49")
-    version("3.8.4", sha256="32c4d9817ef11793da4d0d95b3191c4db81d2e45544614e8449255ca9ae3cc18")
-    version("3.8.3", sha256="6af6d4d2e010f9655518d0fc6738c7ff7069f10a4d2fbd55509e467f092a8b90")
-    version("3.8.2", sha256="e634a7a74776c2b89516b2e013dda1728c89c8149b9863b8cea21946daf9d561")
-    version("3.8.1", sha256="c7cfa39a43b994621b245e029769e9126caa2a93571cee2e743b213cceac35fb")
-    version("3.8.0", sha256="f1069ad3cae8e7ec467aa98a6565a62a48ef196cb8f1455a245a08db5e1792df")
-    version("3.7.16", sha256="0cf2da07fa464636755215415909e22eb1d058817af4824bc15af8390d05fb38")
-    version("3.7.15", sha256="cf2993798ae8430f3af3a00d96d9fdf320719f4042f039380dca79967c25e436")
-    version("3.7.14", sha256="82b2abf8978caa61a9011d166eede831b32de9cbebc0db8162900fa23437b709")
-    version("3.7.13", sha256="e405417f50984bc5870c7e7a9f9aeb93e9d270f5ac67f667a0cd3a09439682b5")
-    version("3.7.12", sha256="33b4daaf831be19219659466d12645f87ecec6eb21d4d9f9711018a7b66cce46")
-    version("3.7.11", sha256="b4fba32182e16485d0a6022ba83c9251e6a1c14676ec243a9a07d3722cd4661a")
-    version("3.7.10", sha256="c9649ad84dc3a434c8637df6963100b2e5608697f9ba56d82e3809e4148e0975")
-    version("3.7.9", sha256="39b018bc7d8a165e59aa827d9ae45c45901739b0bbb13721e4f973f3521c166a")
-    version("3.7.8", sha256="0e25835614dc221e3ecea5831b38fa90788b5389b99b675a751414c858789ab0")
-    version("3.7.7", sha256="8c8be91cd2648a1a0c251f04ea0bb4c2a5570feb9c45eaaa2241c785585b475a")
-    version("3.7.6", sha256="aeee681c235ad336af116f08ab6563361a0c81c537072c1b309d6e4050aa2114")
-    version("3.7.5", sha256="8ecc681ea0600bbfb366f2b173f727b205bb825d93d2f0b286bc4e58d37693da")
-    version("3.7.4", sha256="d63e63e14e6d29e17490abbe6f7d17afb3db182dbd801229f14e55f4157c4ba3")
-    version("3.7.3", sha256="d62e3015f2f89c970ac52343976b406694931742fbde2fed8d1ce8ebb4e1f8ff")
-    version("3.7.2", sha256="f09d83c773b9cc72421abba2c317e4e6e05d919f9bcf34468e192b6a6c8e328d")
-    version("3.7.1", sha256="36c1b81ac29d0f8341f727ef40864d99d8206897be96be73dc34d4739c9c9f06")
-    version("3.7.0", sha256="85bb9feb6863e04fb1700b018d9d42d1caac178559ffa453d7e6a436e259fd0d")
+    version(
+        "3.10.9",
+        sha256="4ccd7e46c8898f4c7862910a1703aa0e63525913a519abb2f55e26220a914d88",
+        deprecated=True,
+    )
+    version(
+        "3.10.8",
+        sha256="f400c3fb394b8bef1292f6dc1292c5fadc3533039a5bc0c3e885f3e16738029a",
+        deprecated=True,
+    )
+    version(
+        "3.10.7",
+        sha256="1b2e4e2df697c52d36731666979e648beeda5941d0f95740aafbf4163e5cc126",
+        deprecated=True,
+    )
+    version(
+        "3.10.6",
+        sha256="848cb06a5caa85da5c45bd7a9221bb821e33fc2bdcba088c127c58fad44e6343",
+        deprecated=True,
+    )
+    version(
+        "3.10.5",
+        sha256="18f57182a2de3b0be76dfc39fdcfd28156bb6dd23e5f08696f7492e9e3d0bf2d",
+        deprecated=True,
+    )
+    version(
+        "3.10.4",
+        sha256="f3bcc65b1d5f1dc78675c746c98fcee823c038168fc629c5935b044d0911ad28",
+        deprecated=True,
+    )
+    version(
+        "3.10.3",
+        sha256="5a3b029bad70ba2a019ebff08a65060a8b9b542ffc1a83c697f1449ecca9813b",
+        deprecated=True,
+    )
+    version(
+        "3.10.2",
+        sha256="3c0ede893011319f9b0a56b44953a3d52c7abf9657c23fb4bc9ced93b86e9c97",
+        deprecated=True,
+    )
+    version(
+        "3.10.1",
+        sha256="b76117670e7c5064344b9c138e141a377e686b9063f3a8a620ff674fa8ec90d3",
+        deprecated=True,
+    )
+    version(
+        "3.10.0",
+        sha256="c4e0cbad57c90690cb813fb4663ef670b4d0f587d8171e2c42bd4c9245bd2758",
+        deprecated=True,
+    )
+    version("3.9.17", sha256="8ead58f669f7e19d777c3556b62fae29a81d7f06a7122ff9bc57f7dd82d7e014")
+    version(
+        "3.9.16",
+        sha256="1ad539e9dbd2b42df714b69726e0693bc6b9d2d2c8e91c2e43204026605140c5",
+        deprecated=True,
+    )
+    version(
+        "3.9.15",
+        sha256="48d1ccb29d5fbaf1fb8f912271d09f7450e426d4dfe95978ef6aaada70ece4d8",
+        deprecated=True,
+    )
+    version(
+        "3.9.14",
+        sha256="9201836e2c16361b2b7408680502393737d44f227333fe2e5729c7d5f6041675",
+        deprecated=True,
+    )
+    version(
+        "3.9.13",
+        sha256="829b0d26072a44689a6b0810f5b4a3933ee2a0b8a4bfc99d7c5893ffd4f97c44",
+        deprecated=True,
+    )
+    version(
+        "3.9.12",
+        sha256="70e08462ebf265012bd2be88a63d2149d880c73e53f1712b7bbbe93750560ae8",
+        deprecated=True,
+    )
+    version(
+        "3.9.11",
+        sha256="3442400072f582ac2f0df30895558f08883b416c8c7877ea55d40d00d8a93112",
+        deprecated=True,
+    )
+    version(
+        "3.9.10",
+        sha256="1aa9c0702edbae8f6a2c95f70a49da8420aaa76b7889d3419c186bfc8c0e571e",
+        deprecated=True,
+    )
+    version(
+        "3.9.9",
+        sha256="2cc7b67c1f3f66c571acc42479cdf691d8ed6b47bee12c9b68430413a17a44ea",
+        deprecated=True,
+    )
+    version(
+        "3.9.8",
+        sha256="7447fb8bb270942d620dd24faa7814b1383b61fa99029a240025fd81c1db8283",
+        deprecated=True,
+    )
+    version(
+        "3.9.7",
+        sha256="a838d3f9360d157040142b715db34f0218e535333696a5569dc6f854604eb9d1",
+        deprecated=True,
+    )
+    version(
+        "3.9.6",
+        sha256="d0a35182e19e416fc8eae25a3dcd4d02d4997333e4ad1f2eee6010aadc3fe866",
+        deprecated=True,
+    )
+    version(
+        "3.9.5",
+        sha256="e0fbd5b6e1ee242524430dee3c91baf4cbbaba4a72dd1674b90fda87b713c7ab",
+        deprecated=True,
+    )
+    version(
+        "3.9.4",
+        sha256="66c4de16daa74a825cf9da9ddae1fe020b72c3854b73b1762011cc33f9e4592f",
+        deprecated=True,
+    )
+    version(
+        "3.9.3",
+        sha256="3afeb61a45b5a2e6f1c0f621bd8cf925a4ff406099fdb3d8c97b993a5f43d048",
+        deprecated=True,
+    )
+    version(
+        "3.9.2",
+        sha256="7899e8a6f7946748830d66739f2d8f2b30214dad956e56b9ba216b3de5581519",
+        deprecated=True,
+    )
+    version(
+        "3.9.1",
+        sha256="29cb91ba038346da0bd9ab84a0a55a845d872c341a4da6879f462e94c741f117",
+        deprecated=True,
+    )
+    version(
+        "3.9.0",
+        sha256="df796b2dc8ef085edae2597a41c1c0a63625ebd92487adaef2fed22b567873e8",
+        deprecated=True,
+    )
+    version("3.8.17", sha256="def428fa6cf61b66bcde72e3d9f7d07d33b2e4226f04f9d6fce8384c055113ae")
+    version(
+        "3.8.16",
+        sha256="71ca9d935637ed2feb59e90a368361dc91eca472a90acb1d344a2e8178ccaf10",
+        deprecated=True,
+    )
+    version(
+        "3.8.15",
+        sha256="924d46999df82aa2eaa1de5ca51d6800ffb56b4bf52486a28f40634e3362abc4",
+        deprecated=True,
+    )
+    version(
+        "3.8.14",
+        sha256="41f959c480c59211feb55d5a28851a56c7e22d02ef91035606ebb21011723c31",
+        deprecated=True,
+    )
+    version(
+        "3.8.13",
+        sha256="903b92d76354366b1d9c4434d0c81643345cef87c1600adfa36095d7b00eede4",
+        deprecated=True,
+    )
+    version(
+        "3.8.12",
+        sha256="316aa33f3b7707d041e73f246efedb297a70898c4b91f127f66dc8d80c596f1a",
+        deprecated=True,
+    )
+    version(
+        "3.8.11",
+        sha256="b77464ea80cec14581b86aeb7fb2ff02830e0abc7bcdc752b7b4bdfcd8f3e393",
+        deprecated=True,
+    )
+    version(
+        "3.8.10",
+        sha256="b37ac74d2cbad2590e7cd0dd2b3826c29afe89a734090a87bf8c03c45066cb65",
+        deprecated=True,
+    )
+    version(
+        "3.8.9",
+        sha256="9779ec1df000bf86914cdd40860b88da56c1e61db59d37784beca14a259ac9e9",
+        deprecated=True,
+    )
+    version(
+        "3.8.8",
+        sha256="76c0763f048e4f9b861d24da76b7dd5c7a3ba7ec086f40caedeea359263276f7",
+        deprecated=True,
+    )
+    version(
+        "3.8.7",
+        sha256="20e5a04262f0af2eb9c19240d7ec368f385788bba2d8dfba7e74b20bab4d2bac",
+        deprecated=True,
+    )
+    version(
+        "3.8.6",
+        sha256="313562ee9986dc369cd678011bdfd9800ef62fbf7b1496228a18f86b36428c21",
+        deprecated=True,
+    )
+    version(
+        "3.8.5",
+        sha256="015115023c382eb6ab83d512762fe3c5502fa0c6c52ffebc4831c4e1a06ffc49",
+        deprecated=True,
+    )
+    version(
+        "3.8.4",
+        sha256="32c4d9817ef11793da4d0d95b3191c4db81d2e45544614e8449255ca9ae3cc18",
+        deprecated=True,
+    )
+    version(
+        "3.8.3",
+        sha256="6af6d4d2e010f9655518d0fc6738c7ff7069f10a4d2fbd55509e467f092a8b90",
+        deprecated=True,
+    )
+    version(
+        "3.8.2",
+        sha256="e634a7a74776c2b89516b2e013dda1728c89c8149b9863b8cea21946daf9d561",
+        deprecated=True,
+    )
+    version(
+        "3.8.1",
+        sha256="c7cfa39a43b994621b245e029769e9126caa2a93571cee2e743b213cceac35fb",
+        deprecated=True,
+    )
+    version(
+        "3.8.0",
+        sha256="f1069ad3cae8e7ec467aa98a6565a62a48ef196cb8f1455a245a08db5e1792df",
+        deprecated=True,
+    )
+    version("3.7.17", sha256="fd50161bc2a04f4c22a0971ff0f3856d98b4bf294f89740a9f06b520aae63b49")
+    version(
+        "3.7.16",
+        sha256="0cf2da07fa464636755215415909e22eb1d058817af4824bc15af8390d05fb38",
+        deprecated=True,
+    )
+    version(
+        "3.7.15",
+        sha256="cf2993798ae8430f3af3a00d96d9fdf320719f4042f039380dca79967c25e436",
+        deprecated=True,
+    )
+    version(
+        "3.7.14",
+        sha256="82b2abf8978caa61a9011d166eede831b32de9cbebc0db8162900fa23437b709",
+        deprecated=True,
+    )
+    version(
+        "3.7.13",
+        sha256="e405417f50984bc5870c7e7a9f9aeb93e9d270f5ac67f667a0cd3a09439682b5",
+        deprecated=True,
+    )
+    version(
+        "3.7.12",
+        sha256="33b4daaf831be19219659466d12645f87ecec6eb21d4d9f9711018a7b66cce46",
+        deprecated=True,
+    )
+    version(
+        "3.7.11",
+        sha256="b4fba32182e16485d0a6022ba83c9251e6a1c14676ec243a9a07d3722cd4661a",
+        deprecated=True,
+    )
+    version(
+        "3.7.10",
+        sha256="c9649ad84dc3a434c8637df6963100b2e5608697f9ba56d82e3809e4148e0975",
+        deprecated=True,
+    )
+    version(
+        "3.7.9",
+        sha256="39b018bc7d8a165e59aa827d9ae45c45901739b0bbb13721e4f973f3521c166a",
+        deprecated=True,
+    )
+    version(
+        "3.7.8",
+        sha256="0e25835614dc221e3ecea5831b38fa90788b5389b99b675a751414c858789ab0",
+        deprecated=True,
+    )
+    version(
+        "3.7.7",
+        sha256="8c8be91cd2648a1a0c251f04ea0bb4c2a5570feb9c45eaaa2241c785585b475a",
+        deprecated=True,
+    )
+    version(
+        "3.7.6",
+        sha256="aeee681c235ad336af116f08ab6563361a0c81c537072c1b309d6e4050aa2114",
+        deprecated=True,
+    )
+    version(
+        "3.7.5",
+        sha256="8ecc681ea0600bbfb366f2b173f727b205bb825d93d2f0b286bc4e58d37693da",
+        deprecated=True,
+    )
+    version(
+        "3.7.4",
+        sha256="d63e63e14e6d29e17490abbe6f7d17afb3db182dbd801229f14e55f4157c4ba3",
+        deprecated=True,
+    )
+    version(
+        "3.7.3",
+        sha256="d62e3015f2f89c970ac52343976b406694931742fbde2fed8d1ce8ebb4e1f8ff",
+        deprecated=True,
+    )
+    version(
+        "3.7.2",
+        sha256="f09d83c773b9cc72421abba2c317e4e6e05d919f9bcf34468e192b6a6c8e328d",
+        deprecated=True,
+    )
+    version(
+        "3.7.1",
+        sha256="36c1b81ac29d0f8341f727ef40864d99d8206897be96be73dc34d4739c9c9f06",
+        deprecated=True,
+    )
+    version(
+        "3.7.0",
+        sha256="85bb9feb6863e04fb1700b018d9d42d1caac178559ffa453d7e6a436e259fd0d",
+        deprecated=True,
+    )
 
     extendable = True
 
@@ -633,6 +905,25 @@ class Python(Package):
             install(src, self.command.path + "-gdb.py")
 
     @run_after("install")
+    def mark_externally_managed(self):
+        """Mark the newly created Python installation as externally-managed, to prevent arbitrary
+        Pip commands from causing conflicts with Spack-built packages and other such nonsense.
+        See PEP 668: https://peps.python.org/pep-0668/"""
+        with working_dir(self.config_vars["stdlib"]):
+            with open("EXTERNALLY-MANAGED", "w", encoding="utf-8") as f:
+                f.write(
+                    """\
+[externally-managed]
+Error=This Python is managed by Spack. To install Python packages, please try
+  spack install py-xyz, where xyz is the package you are trying to install.
+
+  If you wish to install a non-Spack-packaged Python package, create a virtual
+  environment using python -m venv path/to/venv. Then use
+  path/to/venv/bin/python and path/to/venv/bin/pip.
+"""
+                )
+
+    @run_after("install")
     @on_package_attributes(run_tests=True)
     def import_tests(self):
         """Test that basic Python functionality works."""
@@ -640,6 +931,18 @@ class Python(Package):
         spec = self.spec
 
         with working_dir("spack-test", create=True):
+            # Ensure that the venv and ensurepip modules are present
+            self.command("-c", "import venv")
+            self.command("-c", "import ensurepip")
+
+            # Ensure that ensurepip does not work outside of a virtual environment
+            py = self.command
+            py("-m", "ensurepip", fail_on_error=False)
+            if py.returncode == 0:
+                raise SpackError(
+                    "ensurepip is not respecting PEP 668 externally-managed installation!"
+                )
+
             # Ensure that readline module works
             if "+readline" in spec:
                 self.command("-c", "import readline")
