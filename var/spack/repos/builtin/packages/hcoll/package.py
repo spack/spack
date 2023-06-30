@@ -24,6 +24,13 @@ class Hcoll(Package):
     version("4.7.3199")  # HPC-X 2.9, UCX 1.11
     version("3.9.1927")
 
+    # ucx throws warnings when running alongside the wrong version of hcoll
+    requires("ucx@1.15", when="@4.8.3221")
+    requires("ucx@1.14", when="@4.8.3217:4.8.3220")
+    requires("ucx@1.13", when="@4.7.3208")
+    requires("ucx@1.12", when="@4.7.3202")
+    requires("ucx@1.11", when="@4.7.3199")
+
     # HCOLL needs to be added as an external package to SPACK. For this, the
     # config file packages.yaml needs to be adjusted:
     #
