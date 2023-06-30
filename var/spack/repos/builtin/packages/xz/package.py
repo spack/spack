@@ -111,18 +111,26 @@ class MSBuildBuilder(MSBuildBuilder):
 
     def install(self, pkg, spec, prefix):
         with working_dir(self.build_directory):
-            # Ensure we have libs directory
             mkdirp(prefix.lib)
+            mkdirp(prefix.bin)
             libs_to_find = []
-            if "libs=shared" in self.pkg.spec:
-                libs_to_find.extend(["*.dll", "*.lib"])
-            else:
+            dlls_to_find = []
+            if self.pkg.spec.satisfies("libs=shared"):
+                dlls_to_find.append("*.dll")
+            if self.pkg.spec.satisfies("libs=static"):
                 libs_to_find.append("*.lib")
             for lib in libs_to_find:
                 libs_to_install = glob.glob(
                     os.path.join(self.build_directory, "**", lib), recursive=True
                 )
-                for library in libs_to_install:
-                    install(library, prefix.lib)
+                for lib_to_install in libs_to_install:
+                    install(lib_to_install, prefix.lib)
+            for dll in dlls_to_find:
+                dlls_to_install = glob.glob(
+                    os.path.join(self.build_directory, "**", dll), recursive=True
+                )
+                for dll_to_install in dlls_to_install:
+                    install(dll_to_install, prefix.bin)
+
         with working_dir(pkg.stage.source_path):
             install_tree(os.path.join("src", "liblzma", "api"), prefix.include)
