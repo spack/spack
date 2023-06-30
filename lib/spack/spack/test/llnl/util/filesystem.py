@@ -514,6 +514,7 @@ def test_chgrp_dont_set_group_if_already_set(tmpdir, monkeypatch):
             self.st_gid = gid
 
     original_stat = os.stat
+
     def _stat(path):
         if path == "test-dir_chgrp_dont_set_group_if_already_set":
             return FakeStat(gid=1001)
