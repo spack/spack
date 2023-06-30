@@ -504,28 +504,33 @@ def test_filter_files_with_different_encodings(regex, replacement, filename, tmp
 
 def test_chgrp_dont_set_group_if_already_set(tmpdir, monkeypatch):
     with fs.working_dir(tmpdir):
-        os.mkdir("x")
-        stat_info = os.stat("x")
-        group = stat_info.st_gid
-        assert group
-
-    def _makedirs(path):
-        entries = os.path.split(path)
-        for i in range(len(entries)):
-            sub_path = os.path.join(entries[:i])
-            os.mkdir(sub_path)
-            fs.chgrp(sub_path, group)
+        os.mkdir("test-dir_chgrp_dont_set_group_if_already_set")
 
     def _fail(*args, **kwargs):
         raise Exception("chrgrp should not be called")
 
-    monkeypatch.setattr(fs, "chgrp", _fail)
-    #monkeypatch.setattr(os, "")
+    class FakeStat(object):
+        def __init__(self, gid):
+            self.st_gid = gid
+
+    original_stat = os.stat
+    def _stat(path):
+        if path == "test-dir_chgrp_dont_set_group_if_already_set":
+            return FakeStat(gid=1001)
+        else:
+            # Monkeypatching stat can interfere with post-test cleanup, so for
+            # paths that aren't part of the test, we want the original behavior
+            # of stat
+            return original_stat(path)
+
+    monkeypatch.setattr(os, "chown", _fail)
+    monkeypatch.setattr(os, "lchown", _fail)
+    monkeypatch.setattr(os, "stat", _stat)
 
     with fs.working_dir(tmpdir):
-        import pdb; pdb.set_trace()
-        # If this succeeds, then we didn't try to chgrp anything
-        fs.mkdirp("x/y/z")
+        with pytest.raises(Exception):
+            fs.chgrp("test-dir_chgrp_dont_set_group_if_already_set", 1002)
+        fs.chgrp("test-dir_chgrp_dont_set_group_if_already_set", 1001)
 
 
 def test_filter_files_multiple(tmpdir):
