@@ -30,7 +30,7 @@ class Papi(AutotoolsPackage, ROCmPackage):
     url = "https://icl.cs.utk.edu/projects/papi/downloads/papi-5.4.1.tar.gz"
     git = "https://github.com/icl-utk-edu/papi"
 
-    version("gragghia/smoke_tests", branch="gragghia/smoke_tests")
+    version("smoketests", branch="gragghia/smoke_tests")
     version("master", branch="master")
     version("6.0.0.1", sha256="3cd7ed50c65b0d21d66e46d0ba34cd171178af4bbf9d94e693915c1aca1e287f")
     version("6.0.0", sha256="3442709dae3405c2845b304c06a8b15395ecf4f3899a89ceb4d715103cb4055f")
@@ -183,7 +183,7 @@ class Papi(AutotoolsPackage, ROCmPackage):
             )
             fs.fix_darwin_install_name(self.prefix.lib)
 
-    test_src_dir = "smoke_tests"
+    test_src_dir = "src/smoke_tests"
 
     @run_after("install")
     def cache_test_sources(self):
@@ -194,8 +194,9 @@ class Papi(AutotoolsPackage, ROCmPackage):
     def test(self):
         test_dir = join_path(self.test_suite.current_test_cache_dir, self.test_src_dir)
         with working_dir(test_dir, create=False):
-            make()
-            self.run_test("./simple", purpose="PAPI smoke test - simple")
-            self.run_test("./threads", purpose="PAPI smoke test - threads")
-            make("clean")
+            with spack.util.environment.set_env(PAPIROOT=self.prefix):
+                make()
+                self.run_test("./simple", purpose="PAPI smoke test - simple")
+                self.run_test("./threads", purpose="PAPI smoke test - threads")
+                make("clean")
 
