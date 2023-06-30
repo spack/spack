@@ -625,24 +625,36 @@ class Petsc(Package, CudaPackage, ROCmPackage):
     def setup_build_tests(self):
         """Copy the build test files after the package is installed to an
         install test subdirectory for use during `spack test run`."""
-        if self.spec.satisfies("@3.13:"):
-            self.cache_extra_test_sources("src/ksp/ksp/tutorials")
-            self.cache_extra_test_sources("src/snes/tutorials")
+        if not self.spec.satisfies("@3.13:"):
+            tty.warn("Stand-alone tests only available for v3.13:")
+            return
 
-    def test(self):
-        # solve Poisson equation in 2D to make sure nothing is broken:
+        self.cache_extra_test_sources(
+            [join_path("src", "ksp", "ksp", "tutorials"), join_path("src", "snes", "tutorials")]
+        )
+
+    def get_runner(self):
+        """Set key environment variables and return runner and options."""
         spec = self.spec
         env["PETSC_DIR"] = self.prefix
         env["PETSC_ARCH"] = ""
         if "+mpi" in spec:
-            runexe = Executable(join_path(spec["mpi"].prefix.bin, "mpiexec")).command
+            runexe = which(spec["mpi"].prefix.bin.mpiexec)
             runopt = ["-n", "4"]
         else:
-            runexe = Executable(join_path(self.prefix, "lib/petsc/bin/petsc-mpiexec.uni")).command
+            runexe = which(join_path(self.prefix.lib.petsc.bin, "petsc-mpiexec.uni"))
             runopt = ["-n", "1"]
-        w_dir = join_path(self.install_test_root, "src/ksp/ksp/tutorials")
+        return runexe, runopt
+
+    def test_ex50(self):
+        """build and run ex50 to solve Poisson equation in 2D"""
+        # solve Poisson equation in 2D to make sure nothing is broken:
+        make = which("make")
+        runexe, runopts = self.get_runner()
+
+        w_dir = self.test_suite.current_test_cache_dir.src.ksp.ksp.tutorials
         with working_dir(w_dir):
-            testexe = ["ex50", "-da_grid_x", "4", "-da_grid_y", "4"]
+            baseopts = ["ex50", "-da_grid_x", "4", "-da_grid_y", "4"]
             testdict = {
                 None: [],
                 "+superlu-dist": ["-pc_type", "lu", "-pc_factor_mat_solver_type", "superlu_dist"],
@@ -651,40 +663,61 @@ class Petsc(Package, CudaPackage, ROCmPackage):
                 "+mkl-pardiso": ["-pc_type", "lu", "-pc_factor_mat_solver_type", "mkl_pardiso"],
             }
             make("ex50", parallel=False)
-            for feature, featureopt in testdict.items():
-                if not feature or feature in spec:
-                    self.run_test(runexe, runopt + testexe + featureopt)
-            if "+cuda" in spec:
-                make("ex7", parallel=False)
-                testexe = [
-                    "ex7",
-                    "-mat_type",
-                    "aijcusparse",
-                    "-sub_pc_factor_mat_solver_type",
-                    "cusparse",
-                    "-sub_ksp_type",
-                    "preonly",
-                    "-sub_pc_type",
-                    "ilu",
-                    "-use_gpu_aware_mpi",
-                    "0",
-                ]
-                self.run_test(runexe, runopt + testexe)
-            make("clean", parallel=False)
-        w_dir = join_path(self.install_test_root, "src/snes/tutorials")
+            for feature, featureopts in testdict.items():
+                if not feature or feature in self.spec:
+                    name = f"_{feature[1:]}" if feature else ""
+                    options = runopts + baseopts + featureopts
+                    with test_part(self, f"test_ex50{name}", purpose=f"run {options}"):
+                        runexe(*options)
+
+    def test_ex7(self):
+        """build and run ex7"""
+        if "+cuda" not in self.spec:
+            raise SkipTest("Package must be built with +cuda")
+
+        make = which("make")
+        runexe, runopts = self.get_runner()
+
+        w_dir = self.test_suite.current_test_cache_dir.src.ksp.ksp.tutorials
         with working_dir(w_dir):
-            if "+kokkos" in spec:
-                make("ex3k", parallel=False)
-                testexe = [
-                    "ex3k",
-                    "-view_initial",
-                    "-dm_vec_type",
-                    "kokkos",
-                    "-dm_mat_type",
-                    "aijkokkos",
-                    "-use_gpu_aware_mpi",
-                    "0",
-                    "-snes_monitor",
-                ]
-                self.run_test(runexe, runopt + testexe)
-            make("clean", parallel=False)
+            make("ex7", parallel=False)
+            exeopts = [
+                "ex7",
+                "-mat_type",
+                "aijcusparse",
+                "-sub_pc_factor_mat_solver_type",
+                "cusparse",
+                "-sub_ksp_type",
+                "preonly",
+                "-sub_pc_type",
+                "ilu",
+                "-use_gpu_aware_mpi",
+                "0",
+            ]
+            options = runopts + exeopts
+            runexe(*options)
+
+    def test_ex3k(self):
+        """build and run ex3k"""
+        if "+kokkos" not in self.spec:
+            raise SkipTest("Package must be built with +kokkos")
+
+        make = which("make")
+        runexe, runopts = self.get_runner()
+
+        w_dir = self.test_suite.current_test_cache_dir.src.snes.tutorials
+        with working_dir(w_dir):
+            make("ex3k", parallel=False)
+            exeopts = [
+                "ex3k",
+                "-view_initial",
+                "-dm_vec_type",
+                "kokkos",
+                "-dm_mat_type",
+                "aijkokkos",
+                "-use_gpu_aware_mpi",
+                "0",
+                "-snes_monitor",
+            ]
+            options = runopts + exeopts
+            runexe(*options)
