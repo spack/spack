@@ -26,13 +26,6 @@ class PyBlack(PythonPackage):
     version("22.3.0", sha256="35020b8886c022ced9282b51b5a875b6d1ab0c387b31a065b84db7c33085ca79")
     version("22.1.0", sha256="a7c0192d35635f6fc1174be575cb7915e92e5dd629ee79fdaf0dcfa41a80afb5")
 
-    # This is the last v21 release, and it's needed to format for Python 2.7
-    version(
-        "21.12b0",
-        sha256="77b80f693a569e2e527958459634f18df9b0ba2625ba4e0c2d5da5be42e6f2b3",
-        deprecated=True,
-    )
-
     variant("colorama", default=False, description="enable colorama support")
     variant("uvloop", default=False, description="enable uvloop support")
     variant("d", default=False, description="enable blackd HTTP server")

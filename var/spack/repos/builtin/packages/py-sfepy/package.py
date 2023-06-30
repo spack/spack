@@ -18,11 +18,6 @@ class PySfepy(PythonPackage):
     git = "https://github.com/sfepy/sfepy.git"
 
     version("2021.3", sha256="b2a760b0f3277ac223ff25821a4156b48d06b3769e6a9a3bd0bffef5a43cbe17")
-    version(
-        "2017.3",
-        sha256="d13642b7abed63b83b7eaef4dfce6e84a5afc5798bc7ffa1c413e3e44b5e5996",
-        deprecated=True,
-    )
 
     variant("petsc", default=False, description="Enable PETSc support")
     variant("slepc", default=False, description="Enable SLEPc support")
@@ -37,12 +32,12 @@ class PySfepy(PythonPackage):
     depends_on("py-sympy", type="run")
     depends_on("hdf5+hl", type="run")
     depends_on("py-tables", type="run")
-    depends_on("py-meshio", type="run", when="@2021.3")
-    depends_on("py-psutil", type="run", when="@2021.3")
-    depends_on("py-pyvista", type="run", when="@2021.3")
-    depends_on("py-opt-einsum", type="run", when="@2021.3")
-    depends_on("py-dask", type="run", when="@2021.3")
+    depends_on("py-meshio", type="run")
+    depends_on("py-psutil", type="run")
+    depends_on("py-pyvista", type="run")
+    depends_on("py-opt-einsum", type="run")
+    depends_on("py-dask", type="run")
     depends_on("py-petsc4py", type="run", when="+petsc")
-    depends_on("py-slepc4py", type="run", when="+slepc @2021.3")
-    depends_on("py-pyamg", type="run", when="+pyamg @2021.3")
-    depends_on("mumps", type="run", when="+mumps @2021.3")
+    depends_on("py-slepc4py", type="run", when="+slepc")
+    depends_on("py-pyamg", type="run", when="+pyamg")
+    depends_on("mumps", type="run", when="+mumps")
