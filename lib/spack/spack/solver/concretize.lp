@@ -1148,12 +1148,15 @@ error(100, "Compiler {1}@{2} requested for {0} cannot be found. Set install_miss
 
 % propagate flags when compiler match
 can_inherit_flags(PackageNode, DependencyNode, FlagType)
+  :- same_compiler(PackageNode, DependencyNode),
+     not attr("node_flag_set", DependencyNode, FlagType, _),
+     flag_type(FlagType).
+
+same_compiler(PackageNode, DependencyNode)
   :- depends_on(PackageNode, DependencyNode),
      node_compiler(PackageNode, CompilerID),
      node_compiler(DependencyNode, CompilerID),
-     not attr("node_flag_set", DependencyNode, FlagType, _),
-     compiler_id(CompilerID),
-     flag_type(FlagType).
+     compiler_id(CompilerID).
 
 node_flag_inherited(DependencyNode, FlagType, Flag)
   :- attr("node_flag_set", PackageNode, FlagType, Flag),
