@@ -23,4 +23,4 @@ class PyShroud(PythonPackage):
     version("0.8.0", tag="v0.8.0")
 
     depends_on("py-setuptools", type=("build", "run"))
-    depends_on("py-pyyaml@4.2b1:", type=("build", "run"))
+    depends_on("py-pyyaml@4.2:", type=("build", "run"))
