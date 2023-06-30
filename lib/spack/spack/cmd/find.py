@@ -38,7 +38,7 @@ def setup_parser(subparser):
         action="store_const",
         dest="format",
         const="/{hash}",
-        help="same as '--format /{hash}', for piping to other commands",
+        help="same as '--format /{hash}'; use with xargs or $()",
     )
     format_group.add_argument(
         "--json",
