@@ -79,9 +79,7 @@ def default_clingo_control():
     """Return a control object with the default settings used in Spack"""
     control = clingo.Control()
     control.configuration.configuration = "tweety"
-    control.configuration.solve.models = 0
     control.configuration.solver.heuristic = "Domain"
-    control.configuration.solve.parallel_mode = "1"
     control.configuration.solver.opt_strategy = "usc,one"
     return control
 
@@ -2652,7 +2650,9 @@ class SpecBuilder:
     def virtual_on_edge(self, parent_node, provider_node, virtual):
         provider = self.extract_pkg(provider_node)
         dependencies = self._specs[parent_node].edges_to_dependencies(name=provider)
-        assert len(dependencies) == 1
+        provider_spec = self._specs[provider_node]
+        dependencies = [x for x in dependencies if id(x.spec) == id(provider_spec)]
+        assert len(dependencies) == 1, f"{virtual}: {provider}"
         dependencies[0].update_virtuals((virtual,))
 
     def reorder_flags(self):
