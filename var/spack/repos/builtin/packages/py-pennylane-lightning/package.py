@@ -19,11 +19,6 @@ class PyPennylaneLightning(CMakePackage, PythonExtension):
     version("master", branch="master")
     version("0.30.0", sha256="0f4032409d20d00991b5d14fe0b2b928baca4a13c5a1b16eab91f61f9273e58d")
     version("0.29.0", sha256="da9912f0286d1a54051cc19cf8bdbdcd732795636274c95f376db72a88e52d85")
-    version(
-        "0.28.0",
-        sha256="f5849c2affb5fb57aca20feb40ca829d171b07db2304fde0a37c2332c5b09e18",
-        deprecated=True,
-    )  # on Spack v0.19.0
 
     variant("blas", default=True, description="Build with BLAS support")
     variant(
