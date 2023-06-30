@@ -502,6 +502,32 @@ def test_filter_files_with_different_encodings(regex, replacement, filename, tmp
         assert replacement in f.read()
 
 
+def test_chgrp_dont_set_group_if_already_set(tmpdir, monkeypatch):
+    with fs.working_dir(tmpdir):
+        os.mkdir("x")
+        stat_info = os.stat("x")
+        group = stat_info.st_gid
+        assert group
+
+    def _makedirs(path):
+        entries = os.path.split(path)
+        for i in range(len(entries)):
+            sub_path = os.path.join(entries[:i])
+            os.mkdir(sub_path)
+            fs.chgrp(sub_path, group)
+
+    def _fail(*args, **kwargs):
+        raise Exception("chrgrp should not be called")
+
+    monkeypatch.setattr(fs, "chgrp", _fail)
+    #monkeypatch.setattr(os, "")
+
+    with fs.working_dir(tmpdir):
+        import pdb; pdb.set_trace()
+        # If this succeeds, then we didn't try to chgrp anything
+        fs.mkdirp("x/y/z")
+
+
 def test_filter_files_multiple(tmpdir):
     # All files given as input to this test must satisfy the pre-requisite
     # that the 'replacement' string is not present in the file initially and
