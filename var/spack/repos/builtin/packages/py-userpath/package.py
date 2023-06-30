@@ -16,6 +16,6 @@ class PyUserpath(PythonPackage):
 
     depends_on("python@3.7:", type=("build", "run"))
 
-    depends_on("py-hatchling@1.17.0:", type="build")
+    depends_on("py-hatchling", type="build")
 
-    depends_on("py-click@8.1.3:", type=("build", "run"))
+    depends_on("py-click", type=("build", "run"))
