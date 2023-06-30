@@ -27,6 +27,11 @@ class Vtk(CMakePackage):
     version("9.0.3", sha256="bc3eb9625b2b8dbfecb6052a2ab091fc91405de4333b0ec68f3323815154ed8a")
     version("9.0.1", sha256="1b39a5e191c282861e7af4101eaa8585969a2de05f5646c9199a161213a622c7")
     version("9.0.0", sha256="15def4e6f84d72f82386617fe595ec124dda3cbd13ea19a0dcd91583197d8715")
+    version(
+        "8.2.1a",
+        url="https://www.vtk.org/files/release/8.2/VTK-8.2.0.tar.gz",
+        sha256="34c3dc775261be5e45a8049155f7228b6bd668106c72a3c435d95730d17d57bb"
+    )
     version("8.2.0", sha256="34c3dc775261be5e45a8049155f7228b6bd668106c72a3c435d95730d17d57bb")
     version("8.1.2", sha256="0995fb36857dd76ccfb8bb07350c214d9f9099e80b1e66b4a8909311f24ff0db")
     version("8.1.1", sha256="71a09b4340f0a9c58559fe946dc745ab68a866cf20636a41d97b6046cb736324")
@@ -66,8 +71,9 @@ class Vtk(CMakePackage):
     with when("+python"):
         # Depend on any Python, add bounds below.
         extends("python@2.7:", type=("build", "run"))
-        # Python 3.8 support from vtk 9
-        depends_on("python@:3.7", when="@:8", type=("build", "run"))
+        depends_on("python@:3.7", when="@:8.2.0", type=("build", "run"))
+        # Python 3.8 support from vtk 9 and patched 8.2
+        depends_on("python@:3.8", when="@:8.2.1a", type=("build", "run"))
         # Python 3.10 support from vtk 9.2
         depends_on("python@:3.9", when="@:9.1", type=("build", "run"))
 
@@ -87,6 +93,12 @@ class Vtk(CMakePackage):
     # Fix IOADIOS2 module to work with kits
     # https://gitlab.kitware.com/vtk/vtk/-/merge_requests/8653
     patch("vtk-adios2-module-no-kit.patch", when="@8.2.0:9.0.3")
+
+    # Python 3.8 compatibility for VTK 8.2
+    # https://gitlab.kitware.com/vtk/vtk/-/merge_requests/6269
+    # https://gitlab.kitware.com/vtk/vtk/-/merge_requests/6275
+    patch("vtk_82_python38a.patch", when="@8.2.1a")
+    patch("vtk_82_python38b.patch", when="@8.2.1a")
 
     # The use of the OpenGL2 backend requires at least OpenGL Core Profile
     # version 3.2 or higher.
