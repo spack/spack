@@ -19,8 +19,7 @@ class Pipx(PythonPackage):
     depends_on("py-hatchling@0.15.0:", type="build")
 
     depends_on("py-argcomplete@1.9.4:", type=("build", "run"))
-    # FIXME: What's the OS code for Windows in general?
-    # depends_on("py-colorama@0.4.4:", type=("build", "run"), when="os=win32")
+    depends_on("py-colorama@0.4.4:", type=("build", "run"), when="platform=Windows")
     depends_on("py-importlib-metadata@3.3.0:", type=("build", "run"), when="^python@3.7")
     depends_on("py-packaging@20.0:", type=("build", "run"))
     depends_on("py-platformdirs@2.1.0:", type=("build", "run"))
