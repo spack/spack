@@ -3,6 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 import itertools
+import pathlib
 import textwrap
 from typing import List, Optional, Tuple
 
@@ -100,9 +101,15 @@ def quote(text):
     return ['"{0}"'.format(line) for line in text]
 
 
+def posixpaths(text):
+    """Converts a path to posix style path separators"""
+    return pathlib.Path(text).as_posix()
+
+
 def _set_filters(env):
     """Sets custom filters to the template engine environment"""
     env.filters["textwrap"] = textwrap.wrap
     env.filters["prepend_to_line"] = prepend_to_line
     env.filters["join"] = "\n".join
     env.filters["quote"] = quote
+    env.filters["posixpaths"] = posixpaths

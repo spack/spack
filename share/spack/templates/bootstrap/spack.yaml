@@ -10,18 +10,18 @@ spack:
 {% for spec in environment_specs %}
     - "{{ spec }}"
 {% endfor %}
-  view: {{ environment_path }}/view
+  view: {{ environment_path|posixpaths }}/view
 
   config:
     install_tree:
-      root: {{ store_path }}
+      root: {{ store_path|posixpaths }}
 
   packages:
     python:
       buildable: false
       externals:
         - spec: "{{ python_spec }}"
-          prefix: "{{ python_prefix }}"
+          prefix: "{{ python_prefix|posixpaths }}"
 
     py-typed-ast:
       require: "+wheel"
