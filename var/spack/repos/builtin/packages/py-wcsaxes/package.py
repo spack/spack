@@ -15,7 +15,6 @@ class PyWcsaxes(PythonPackage):
 
     version("0.8", sha256="9c6addc1ec04cc99617850354b2c03dbd4099d2e43b45a81f8bc3069de9c8e83")
 
-    extends("python", ignore=r"bin/")
     depends_on("py-setuptools", type="build")
     depends_on("py-numpy", type=("build", "run"))
     depends_on("py-matplotlib", type=("build", "run"))

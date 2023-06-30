@@ -26,9 +26,21 @@ class Spectre(CMakePackage):
 
     maintainers("nilsvu")
 
-    generator = "Ninja"
+    generator("ninja")
 
     version("develop", branch="develop")
+    version(
+        "2023.06.19", sha256="f1140dfca1a9cf58f04acfe853c5597fa19c463d52b3643428e379496bff1236"
+    )
+    version(
+        "2023.05.16", sha256="9cfe585e85b63e69d1b9b3922c68d3bd83d95853b6955e706133f2aaa933bd2b"
+    )
+    version(
+        "2023.04.07", sha256="f18238788155413c4c1f73c5591f4bf60a3d331f0c926b3737a61b33c99dfb9c"
+    )
+    version(
+        "2023.03.09", sha256="d8cd3512a8477b0b9ac83141d18fc7c55280bd886c6d97b60e8ae26c16c648ab"
+    )
     version(
         "2023.02.09", sha256="cdd85aed10ea7d372a7989da16a379e684276978c1e53438cb562910601fd471"
     )
@@ -143,7 +155,6 @@ class Spectre(CMakePackage):
 
     # Build dependencies
     depends_on("cmake@3.12:", type="build")
-    depends_on("ninja", type="build")
     depends_on("python@2.7:", type="build")
 
     # Link dependencies

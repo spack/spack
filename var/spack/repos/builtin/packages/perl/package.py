@@ -12,7 +12,6 @@
 # Date: September 6, 2015
 #
 import os
-import platform
 import re
 import sys
 from contextlib import contextmanager
@@ -39,6 +38,7 @@ class Perl(Package):  # Perl doesn't use Autotools, it should subclass Package
     # explanation of version numbering scheme
 
     # Development releases (odd numbers)
+    version("5.37.9", sha256="9884fa8a4958bf9434b50f01cbfd187f9e2738f38fe1ae37f844e9950c5117c1")
     version("5.35.0", sha256="d6c0eb4763d1c73c1d18730664d43fcaf6100c31573c3b81e1504ec8f5b22708")
     version("5.33.3", sha256="4f4ba0aceb932e6cf7c05674d05e51ef759d1c97f0685dee65a8f3d190f737cd")
     version("5.31.7", sha256="d05c4e72128f95ef6ffad42728ecbbd0d9437290bf0f88268b51af011f26b57d")
@@ -152,6 +152,10 @@ class Perl(Package):  # Perl doesn't use Autotools, it should subclass Package
         # https://github.com/Perl/perl5/issues/15544 long PATH(>1000 chars) fails a test
         os.chmod("lib/perlbug.t", 0o644)
         filter_file("!/$B/", "! (/(?:$B|PATH)/)", "lib/perlbug.t")
+        # Several non-existent flags cause Intel@19.1.3 to fail
+        with when("%intel@19.1.3"):
+            os.chmod("hints/linux.sh", 0o644)
+            filter_file("-we147 -mp -no-gcc", "", "hints/linux.sh")
 
     @classmethod
     def determine_version(cls, exe):
@@ -209,7 +213,6 @@ class Perl(Package):  # Perl doesn't use Autotools, it should subclass Package
         perm = os.stat(filename).st_mode
         os.chmod(filename, perm | 0o200)
 
-    @property
     def nmake_arguments(self):
         args = []
         if self.spec.satisfies("%msvc"):
@@ -227,7 +230,7 @@ class Perl(Package):  # Perl doesn't use Autotools, it should subclass Package
         return args
 
     def is_64bit(self):
-        return platform.machine().endswith("64")
+        return "64" in str(self.spec.target.family)
 
     def configure_args(self):
         spec = self.spec
@@ -278,6 +281,12 @@ class Perl(Package):  # Perl doesn't use Autotools, it should subclass Package
         if sys.platform == "win32":
             return
         configure = Executable("./Configure")
+        # The Configure script plays with file descriptors and runs make towards the end,
+        # which results in job tokens not being released under the make jobserver. So, we
+        # disable the jobserver here, and let the Configure script execute make
+        # sequentially. There is barely any parallelism anyway; the most parallelism is
+        # in the build phase, in which the jobserver is enabled again, since we invoke make.
+        configure.add_default_env("MAKEFLAGS", "")
         configure(*self.configure_args())
 
     def build(self, spec, prefix):
@@ -300,7 +309,7 @@ class Perl(Package):  # Perl doesn't use Autotools, it should subclass Package
         if sys.platform == "win32":
             win32_dir = os.path.join(self.stage.source_path, "win32")
             with working_dir(win32_dir):
-                nmake("install", *self.nmake_arguments, ignore_quotes=True)
+                nmake("install", *self.nmake_arguments(), ignore_quotes=True)
         else:
             make("install")
 
@@ -485,16 +494,19 @@ class Perl(Package):  # Perl doesn't use Autotools, it should subclass Package
             msg = "Unable to locate {0} command in {1}"
             raise RuntimeError(msg.format(self.spec.name, self.prefix.bin))
 
-    def test(self):
-        """Smoke tests"""
-        exe = self.spec["perl"].command.name
+    def test_version(self):
+        """check version"""
+        perl = self.spec["perl"].command
+        out = perl("--version", output=str.split, error=str.split)
+        expected = ["perl", str(self.spec.version)]
+        for expect in expected:
+            assert expect in out
 
-        reason = "test: checking version is {0}".format(self.spec.version)
-        self.run_test(
-            exe, "--version", ["perl", str(self.spec.version)], installed=True, purpose=reason
-        )
-
-        reason = "test: ensuring perl runs"
+    def test_hello(self):
+        """ensure perl runs hello world"""
         msg = "Hello, World!"
-        options = ["-e", 'use warnings; use strict;\nprint("%s\n");' % msg]
-        self.run_test(exe, options, msg, installed=True, purpose=reason)
+        options = ["-e", "use warnings; use strict;\nprint('%s\n');" % msg]
+
+        perl = self.spec["perl"].command
+        out = perl(*options, output=str.split, error=str.split)
+        assert msg in out

@@ -29,6 +29,7 @@ class RGsodr(RPackage):
 
     cran = "GSODR"
 
+    version("3.1.8", sha256="f43668b14be30632086b832be83c74fa7c25e123fbce0d0203e992a0c11e7c8d")
     version("3.1.6", sha256="fbeac54e86fba1e4415b41608ca59cf50be1b421cc890eb5c5b0d6d1c9229f6a")
     version("3.1.5", sha256="37682141707d7e29fab653ccdeb154fea2c085080f686b33f1a54140608e824d")
     version("3.1.4", sha256="615ac4271b44a63064cb23632b887c60c86f4742957fc46f300423f8f75858c8")

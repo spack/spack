@@ -715,7 +715,7 @@ class BuildSystemGuesser:
                 output = tar("--exclude=*/*/*", "-tf", stage.archive_file, output=str)
             except ProcessError:
                 output = ""
-        lines = output.split("\n")
+        lines = output.splitlines()
 
         # Determine the build system based on the files contained
         # in the archive.
@@ -807,7 +807,7 @@ def get_versions(args, name):
     # Default version with hash
     hashed_versions = """\
     # FIXME: Add proper versions and checksums here.
-    # version("1.2.3", "0123456789abcdef0123456789abcdef")"""
+    # version("1.2.3", md5="0123456789abcdef0123456789abcdef")"""
 
     # Default version without hash
     unhashed_versions = """\

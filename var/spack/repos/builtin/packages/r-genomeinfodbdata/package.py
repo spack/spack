@@ -14,6 +14,11 @@ class RGenomeinfodbdata(RPackage):
     url = "https://bioconductor.org/packages/release/data/annotation/src/contrib/GenomeInfoDbData_0.99.0.tar.gz"
 
     version(
+        "1.2.10",
+        url="https://bioconductor.org/packages/3.17/data/annotation/src/contrib/GenomeInfoDbData_1.2.10.tar.gz",
+        sha256="74c5db556d163e8f512d55f5c0d8ce315fb13ac822d31b4b030c20036d58f864",
+    )
+    version(
         "1.2.9",
         url="https://bioconductor.org/packages/3.16/data/annotation/src/contrib/GenomeInfoDbData_1.2.9.tar.gz",
         sha256="e63a719a8eceefeda39fc95de83e7aa41caad39705efc712a44ab4021adc45fa",
