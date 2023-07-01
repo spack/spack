@@ -58,11 +58,13 @@ class Openrasmol(MakefilePackage):
             bash = which("bash")
             bash("./rasmol_install.sh", "--prefix={0}".format(prefix))
 
-    def test(self):
-        testdir = self.test_suite.current_test_data_dir
-        opts = []
-        opts.append("-insecure")
-        opts.append("-script")
-        opts.append(join_path(testdir, "test.rsc"))
-        opts.append(join_path(self.prefix.sample, "1crn.pdb"))
-        self.run_test("rasmol", options=opts)
+    def test_rasmol(self):
+        """run rasmol on sample"""
+        opts = [
+            "-insecure",
+            "-script",
+            join_path(self.test_suite.current_test_data_dir, "test.rsc"),
+            join_path(self.prefix.sample, "1crn.pdb"),
+        ]
+        rasmol = which(self.prefix.bin.rasmol)
+        rasmol(*opts)
