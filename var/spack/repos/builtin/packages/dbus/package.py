@@ -6,7 +6,7 @@
 from spack.package import *
 
 
-class Dbus(Package):
+class Dbus(AutotoolsPackage):
     """D-Bus is a message bus system, a simple way for applications to
     talk to one another. D-Bus supplies both a system daemon (for
     events such new hardware device printer queue ) and a
@@ -34,13 +34,12 @@ class Dbus(Package):
     depends_on("expat")
     depends_on("glib")
     depends_on("libsm")
-    depends_on("xmlto")
 
-    def install(self, spec, prefix):
-        configure("--prefix=%s" % prefix, "--disable-systemd", "--disable-launchd")
-        make()
-        make("install")
+    def configure_args(self):
+        return ["--disable-systemd", "--disable-launchd", "--disable-xml-docs"]
 
+    @run_after("install")
+    def generate_uuid(self):
         # dbus needs a machine id generated after install
-        dbus_uuidgen = Executable(join_path(prefix.bin, "dbus-uuidgen"))
+        dbus_uuidgen = Executable(self.prefix.bin.join("dbus-uuidgen"))
         dbus_uuidgen("--ensure")
