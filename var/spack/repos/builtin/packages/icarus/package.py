@@ -10,12 +10,12 @@ class Icarus(AutotoolsPackage):
     """Icarus Verilog is a Verilog simulation and synthesis tool."""
 
     homepage = "http://www.iverilog.icarus.com"
+    url = "https://github.com/steveicarus/iverilog/archive/refs/tags/v12_0.tar.gz"
+    git = "https://github.com/steveicarus/iverilog.git"
 
-    version(
-        "v10_3",
-        git="https://github.com/steveicarus/iverilog.git",
-        commit="453c5465895eaca4a792d18b75e9ec14db6ea50e",
-    )
+    version("12_0", sha256="a68cb1ef7c017ef090ebedb2bc3e39ef90ecc70a3400afb4aa94303bc3beaa7d")
+    version("11_0", sha256="6327fb900e66b46803d928b7ca439409a0dc32731d82143b20387be0833f1c95")
+    version("10_3", commit="453c5465895eaca4a792d18b75e9ec14db6ea50e")
 
     depends_on("autoconf", type="build")
     depends_on("bison", type="build")
