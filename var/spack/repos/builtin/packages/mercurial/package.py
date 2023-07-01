@@ -25,32 +25,8 @@ class Mercurial(PythonPackage):
     version("5.6.1", sha256="e55c254f4904c45226a106780e57f4279aee03368f6ff6a981d5d2a38243ffad")
     version("5.3", sha256="e57ff61d6b67695149dd451922b40aa455ab02e01711806a131a1e95c544f9b9")
 
-    # Requires Python 2, remove from Spack 0.22
-    version(
-        "5.1.2",
-        sha256="15af0b090b23649e0e53621a88dde97b55a734d7cb08b77d3df284db70d44e2e",
-        deprecated=True,
-    )
-    version(
-        "5.1.1",
-        sha256="35fc8ba5e0379c1b3affa2757e83fb0509e8ac314cbd9f1fd133cf265d16e49f",
-        deprecated=True,
-    )
-    version(
-        "4.9.1",
-        sha256="1bdd21bb87d1e05fb5cd395d488d0e0cc2f2f90ce0fd248e31a03595da5ccb47",
-        deprecated=True,
-    )
-    version(
-        "4.4.1",
-        sha256="8f2a5512d6cc2ffb08988aef639330a2f0378e4ac3ee0e1fbbdb64d9fff56246",
-        deprecated=True,
-    )
-
-    # Python
     depends_on("python+bz2+ssl+zlib", type=("build", "run"))
-    depends_on("python@2", when="@:5.1", type=("build", "run"))
-    depends_on("python@3.5:", when="@5.2:6.1", type=("build", "run"))
+    depends_on("python@3.5:", when="@5.2:", type=("build", "run"))
     depends_on("python@3.6:", when="@6.2:", type=("build", "run"))
     # Upperbounds because of forward compat issues.
     depends_on("python@:3.9", when="@:6.0.0", type=("build", "run"))
