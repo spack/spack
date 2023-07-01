@@ -12,26 +12,41 @@ class PyPyqt5(SIPPackage):
     Windows, OS X, Linux, iOS and Android. PyQt5 supports Qt v5."""
 
     homepage = "https://www.riverbankcomputing.com/software/pyqt/intro"
-    url = (
-        "https://www.riverbankcomputing.com/static/Downloads/PyQt5/5.13.0/PyQt5_gpl-5.13.0.tar.gz"
-    )
-    list_url = "https://www.riverbankcomputing.com/software/pyqt/download5"
+    url = "https://files.pythonhosted.org/packages/source/P/PyQt5/PyQt5-5.15.9.tar.gz"
+    list_url = "https://pypi.org/simple/PyQt5/"
 
     sip_module = "PyQt5.sip"
 
-    version("5.13.1", sha256="54b7f456341b89eeb3930e786837762ea67f235e886512496c4152ebe106d4af")
-    version("5.13.0", sha256="0cdbffe5135926527b61cc3692dd301cd0328dd87eeaf1313e610787c46faff9")
-    version("5.12.3", sha256="0db0fa37debab147450f9e052286f7a530404e2aaddc438e97a7dcdf56292110")
+    version("5.15.9", sha256="dc41e8401a90dc3e2b692b411bd5492ab559ae27a27424eed4bd3915564ec4c0")
+    version(
+        "5.13.1",
+        sha256="54b7f456341b89eeb3930e786837762ea67f235e886512496c4152ebe106d4af",
+        deprecated=True,
+    )
+    version(
+        "5.13.0",
+        sha256="0cdbffe5135926527b61cc3692dd301cd0328dd87eeaf1313e610787c46faff9",
+        deprecated=True,
+    )
+    version(
+        "5.12.3",
+        sha256="0db0fa37debab147450f9e052286f7a530404e2aaddc438e97a7dcdf56292110",
+        deprecated=True,
+    )
 
     # API files can be installed regardless if Qscintilla is installed or not
     variant("qsci_api", default=False, description="Install PyQt API file for QScintilla")
 
+    # pyproject.toml
+    depends_on("py-sip@6.6.2:6", type="build")
+    depends_on("py-pyqt-builder@1.14.1:1", type="build")
+
+    # PKG-INFO
+    depends_on("py-pyqt5-sip@12.11:12", type=("build", "run"))
+
     # Without opengl support, I got the following error:
     # sip: QOpenGLFramebufferObject is undefined
-    depends_on("qt@5:+opengl")
-    depends_on("python@2.6:", type=("build", "run"))
-    depends_on("py-sip module=PyQt5.sip", type=("build", "run"))
-    depends_on("py-sip@:4.19.18 module=PyQt5.sip", type=("build", "run"), when="@:5.13.0")
+    depends_on("qt@5+opengl")
 
     # https://www.riverbankcomputing.com/static/Docs/PyQt5/installation.html
     def configure_args(self):
