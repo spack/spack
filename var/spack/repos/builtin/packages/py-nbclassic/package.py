@@ -18,9 +18,7 @@ class PyNbclassic(PythonPackage):
     version("0.3.1", sha256="f920f8d09849bea7950e1017ff3bd101763a8d68f565a51ce053572e65aa7947")
 
     depends_on("py-setuptools", type="build")
-    # TODO: replace this after concretizer learns how to concretize separate build deps
-    depends_on("py-jupyter-packaging11", when="@0.3.3:", type="build")
-    # depends_on('py-jupyter-packaging@0.9:1', when='@0.3.3:', type='build')
+    depends_on("py-jupyter-packaging@0.9:0", when="@0.3.3:", type="build")
     depends_on("py-babel", when="@0.4:", type="build")
 
     depends_on("py-jinja2", when="@0.4:", type=("build", "run"))

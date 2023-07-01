@@ -50,12 +50,9 @@ class PyJupyterlab(PythonPackage):
 
     with when("@:3"):
         depends_on("py-setuptools", when="@:3", type=("build", "run"))
-        # TODO: replace this after concretizer learns how to concretize separate build deps
-        depends_on("py-jupyter-packaging11", when="@3.0.15:3", type="build")
-        depends_on("py-jupyter-packaging7", when="@3.0.0:3.0.14", type="build")
-        # depends_on('py-jupyter-packaging@0.9:0', when='@3.0.15:', type='build')
-        # depends_on('py-jupyter-packaging@0.7.3:0.7', when='@3.0.0:3.0.14',
-        #            type=('build', 'run'))
+        depends_on("py-jupyter-packaging@0.9:1", when="@3.4.8", type="build")
+        depends_on("py-jupyter-packaging@0.9:0", when="@3.0.15:3.4.2", type="build")
+        depends_on("py-jupyter-packaging@0.7.3:0.7", when="@3.0.0:3.0.14", type=("build", "run"))
         depends_on("py-pre-commit", when="@3.4:3.4.3", type="build")
 
         depends_on("py-ipython", when="@3", type=("build", "run"))
