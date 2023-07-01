@@ -19,3 +19,4 @@ class Xmlto(AutotoolsPackage):
 
     # FIXME: missing a lot of dependencies
     depends_on("libxslt")
+    depends_on("util-linux", when="platform=darwin")  # macOS getopt does not support longopts
