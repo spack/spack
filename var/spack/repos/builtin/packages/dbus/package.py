@@ -40,9 +40,7 @@ class Dbus(AutotoolsPackage):
 
     def configure_args(self):
         args = ["--disable-systemd", "--disable-launchd"]
-
-        args += [self.enable_or_disable("xml-docs", variant="xml_docs")
-
+        args += self.enable_or_disable("xml-docs", variant="xml_docs")
         return args
 
     @run_after("install")
