@@ -71,12 +71,7 @@ class UtilLinux(AutotoolsPackage):
         if self.spec.satisfies("platform=darwin"):
             # Does not build on macOS
             config_args.extend(
-                [
-                    "--disable-ipcs",
-                    "--disable-ipcrm",
-                    "--disable-wall",
-                    "--disable-libmount",
-                ]
+                ["--disable-ipcs", "--disable-ipcrm", "--disable-wall", "--disable-libmount"]
             )
 
         return config_args
