@@ -23,7 +23,7 @@ class Discotec(CMakePackage):
     variant("gene", default=False, description="Build for GENE (as task library)")
     variant("hdf5", default=True, description="Interpolation output with HDF5")
     variant("lto", default=True, description="Build with link-time optimization")
-    variant("openmp", default=False, description="Parallelize with OpenMP")
+    variant("openmp", default=True, description="Parallelize with OpenMP")
     variant("timing", default=True, description="With high-res timers")
     variant("test", default=True, description="Build Boost tests")
     variant("selalib", default=False, description="Build selalib example")
