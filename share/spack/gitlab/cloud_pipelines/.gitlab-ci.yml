@@ -746,7 +746,6 @@ deprecated-ci-build:
 .aws-pcluster-icelake:
   variables:
     SPACK_CI_STACK_NAME: aws-pcluster-icelake
-    GCC_HASH: yyvkvlgimaaxjhy32oa5x5eexqekrevc
 
 # aws-pcluster-generate-icelake:
 #   extends: [ ".linux_icelake", ".aws-pcluster-icelake", ".generate", ".tags-x86_64_v4", ".aws-pcluster-generate", ".aws-pcluster-generate-image" ]
@@ -766,7 +765,6 @@ deprecated-ci-build:
 .aws-pcluster-skylake:
   variables:
     SPACK_CI_STACK_NAME: aws-pcluster-skylake
-    GCC_HASH: yyvkvlgimaaxjhy32oa5x5eexqekrevc
 
 # aws-pcluster-generate-skylake:
 #   extends: [ ".linux_skylake", ".aws-pcluster-skylake", ".generate", ".tags-x86_64_v4", ".aws-pcluster-generate", ".aws-pcluster-generate-image" ]
@@ -786,7 +784,6 @@ deprecated-ci-build:
 .aws-pcluster-neoverse_n1:
   variables:
     SPACK_CI_STACK_NAME: aws-pcluster-neoverse_n1
-    GCC_HASH: jttj24nibqy5jsqf34as5m63umywfa3d
 
 # aws-pcluster-generate-neoverse_n1:
 #   extends: [ ".linux_neoverse_n1", ".aws-pcluster-neoverse_n1", ".generate-aarch64", ".aws-pcluster-generate", ".aws-pcluster-generate-image" ]
@@ -806,7 +803,6 @@ deprecated-ci-build:
 .aws-pcluster-neoverse_v1:
   variables:
     SPACK_CI_STACK_NAME: aws-pcluster-neoverse_v1
-    GCC_HASH: jttj24nibqy5jsqf34as5m63umywfa3d
 
 # aws-pcluster-generate-neoverse_v1:
 #   extends: [ ".linux_neoverse_v1", ".aws-pcluster-neoverse_v1", ".generate-aarch64", ".aws-pcluster-generate", ".aws-pcluster-generate-image" ]
