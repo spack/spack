@@ -52,7 +52,9 @@ class Ascent(CMakePackage, CudaPackage):
 
     version("develop", branch="develop", submodules=True)
 
-    version("0.9.1", tag="v0.9.1", submodules=True, preferred=True)
+    version("0.9.2", tag="v0.9.2", submodules=True, preferred=True)
+
+    version("0.9.1", tag="v0.9.1", submodules=True)
 
     version("0.9.0", tag="v0.9.0", submodules=True)
 
@@ -174,7 +176,7 @@ class Ascent(CMakePackage, CudaPackage):
     #######################
     # VTK-m
     #######################
-
+    depends_on("vtk-m@2.0:", when="@0.9.2: +vtkh")
     depends_on("vtk-m@1.9:1.9", when="@0.9.0: +vtkh")
 
     depends_on("vtk-m~tbb", when="@0.9.0: +vtkh")
