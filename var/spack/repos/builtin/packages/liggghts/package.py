@@ -17,7 +17,7 @@ class Liggghts(MakefilePackage):
     git = "ssh://git@github.com/CFDEMproject/LIGGGHTS-PUBLIC.git"
 
     maintainers("SofiaXu")
-    
+
     version("3.8.0", sha256="9cb2e6596f584463ac2f80e3ff7b9588b7e3638c44324635b6329df87b90ab03")
 
     variant("mpi", default=True, description="Enable MPI support")
@@ -63,9 +63,9 @@ class Liggghts(MakefilePackage):
 
         if "+mpi" in spec:
             mpi = spec["mpi"]
-            makefile.filter(r"^#(MPICXX_USER=).*", r"\1{0}".format(mpi.mpicxx))
-            makefile.filter(r"^#(MPI_INC_USER=).*", r"\1{0}".format(mpi.prefix.include))
-            makefile.filter(r"^#(MPI_LIB_USER=).*", r"\1{0}".format(mpi.prefix.lib))
+            makefile.filter(r"^#(MPICXX_USR=).*", r"\1{0}".format(mpi.mpicxx))
+            makefile.filter(r"^#(MPI_INC_USR=).*", r"\1{0}".format(mpi.prefix.include))
+            makefile.filter(r"^#(MPI_LIB_USR=).*", r"\1{0}".format(mpi.prefix.lib))
         else:
             makefile.filter(r"^(USE_MPI = ).*", r'\1"OFF"')
             # Set path to C++ compiler.
@@ -78,8 +78,8 @@ class Liggghts(MakefilePackage):
         if "+jpeg" in spec:
             jpeg = spec["jpeg"]
             makefile.filter(r"^(USE_JPG = ).*", r'\1"ON"')
-            makefile.filter(r"^#(JPG_INC_USER=-I).*", r"\1{0}".format(jpeg.prefix.include))
-            makefile.filter(r"^#(JPG_LIB_USER=-L).*", r"\1{0}".format(jpeg.prefix.lib))
+            makefile.filter(r"^#(JPG_INC_USR=-I).*", r"\1{0}".format(jpeg.prefix.include))
+            makefile.filter(r"^#(JPG_LIB_USR=-L).*", r"\1{0}".format(jpeg.prefix.lib))
 
         if "+gzip" in spec:
             makefile.filter(r"^(USE_GZIP = ).*", r'\1"ON"')
