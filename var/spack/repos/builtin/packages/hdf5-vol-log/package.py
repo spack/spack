@@ -31,7 +31,7 @@ class Hdf5VolLog(AutotoolsPackage):
 
     def configure_args(self):
         return [
-            args.append("--enable-shared"),
-            args.append("--enable-zlib"),
-            args.append("--with-mpi={}".format(self.spec["mpi"].prefix)),
+            "--enable-shared",
+            "--enable-zlib",
+            "--with-mpi={}".format(self.spec["mpi"].prefix),
         ]
