@@ -49,7 +49,7 @@ def setup_parser(subparser):
         "-g",
         "--git-installer-verbosity",
         default="",
-        choices=["SILENT", "VERYSILENT"],
+        choices=set(["SILENT", "VERYSILENT"]),
         help="Level of verbosity provided by bundled Git Installer.\
              Default is fully verbose",
         required=False,

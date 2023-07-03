@@ -482,7 +482,7 @@ class FishCompletionWriter(ArgparseCompletionWriter):
         for flags, dest, _, nargs, help in optionals:
             # Make sure we always get same order of output
             if isinstance(dest, dict):
-                dest = dest.keys()
+                dest = sorted(dest.keys())
             elif isinstance(dest, (set, frozenset)):
                 dest = sorted(dest)
 
