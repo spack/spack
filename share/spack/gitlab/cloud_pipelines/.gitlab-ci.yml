@@ -738,7 +738,6 @@ deprecated-ci-build:
       - . "/etc/profile.d/modules.sh"
       - curl -sOL "https://raw.githubusercontent.com/spack/spack-configs/main/AWS/parallelcluster/postinstall.sh"
       - sed -i -e "s/spack arch -t/echo ${SPACK_TARGET_ARCH}/g" postinstall.sh
-      - sed -i -e "s|spack install gcc|spack install /${GCC_HASH}|g" postinstall.sh
       - diff -q "/bootstrap/cloud_pipelines-config.yaml" "share/spack/gitlab/cloud_pipelines/configs/config.yaml" || echo "WARNING Install tree might have changed. You need to rebuild the pcluster-amazonlinux-2 container in spack/gitlab-runners."
       - cp "share/spack/gitlab/cloud_pipelines/configs/config.yaml" "etc/spack/"
       - /bin/bash postinstall.sh -fg
@@ -752,7 +751,6 @@ deprecated-ci-build:
 .aws-pcluster-icelake:
   variables:
     SPACK_CI_STACK_NAME: aws-pcluster-icelake
-    GCC_HASH: yyvkvlgimaaxjhy32oa5x5eexqekrevc
 
 aws-pcluster-generate-icelake:
   extends: [ ".linux_icelake", ".aws-pcluster-icelake", ".generate", ".tags-x86_64_v4", ".aws-pcluster-generate", ".aws-pcluster-generate-image" ]
@@ -772,7 +770,6 @@ aws-pcluster-build-icelake:
 .aws-pcluster-skylake:
   variables:
     SPACK_CI_STACK_NAME: aws-pcluster-skylake
-    GCC_HASH: yyvkvlgimaaxjhy32oa5x5eexqekrevc
 
 aws-pcluster-generate-skylake:
   extends: [ ".linux_skylake", ".aws-pcluster-skylake", ".generate", ".tags-x86_64_v4", ".aws-pcluster-generate", ".aws-pcluster-generate-image" ]
@@ -792,7 +789,6 @@ aws-pcluster-build-skylake:
 .aws-pcluster-neoverse_n1:
   variables:
     SPACK_CI_STACK_NAME: aws-pcluster-neoverse_n1
-    GCC_HASH: jttj24nibqy5jsqf34as5m63umywfa3d
 
 aws-pcluster-generate-neoverse_n1:
   extends: [ ".linux_neoverse_n1", ".aws-pcluster-neoverse_n1", ".generate-aarch64", ".aws-pcluster-generate", ".aws-pcluster-generate-image" ]
@@ -812,7 +808,6 @@ aws-pcluster-build-neoverse_n1:
 .aws-pcluster-neoverse_v1:
   variables:
     SPACK_CI_STACK_NAME: aws-pcluster-neoverse_v1
-    GCC_HASH: jttj24nibqy5jsqf34as5m63umywfa3d
 
 aws-pcluster-generate-neoverse_v1:
   extends: [ ".linux_neoverse_v1", ".aws-pcluster-neoverse_v1", ".generate-aarch64", ".aws-pcluster-generate", ".aws-pcluster-generate-image" ]
