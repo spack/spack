@@ -726,7 +726,7 @@ def copy_tree(
     src: str,
     dest: str,
     symlinks: bool = True,
-    allow_broken_symlinks: bool = False,
+    allow_broken_symlinks: bool = sys.platform != "win32",
     ignore: Optional[Callable[[str], bool]] = None,
     _permissions: bool = False,
 ):
@@ -750,7 +750,7 @@ def copy_tree(
         dest (str): the destination directory
         symlinks (bool): whether or not to preserve symlinks
         allow_broken_symlinks (bool): whether or not to allow broken (dangling) symlinks,
-            On Windows, setting this to True will raise an exception.
+            On Windows, setting this to True will raise an exception. Defaults to true on unix.
         ignore (typing.Callable): function indicating which files to ignore
         _permissions (bool): for internal use only
 
