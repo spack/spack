@@ -98,9 +98,9 @@ def get_matched_dict(root_dir, candidate_list, sub_candidate_list=None):
                 # There must be a unique match with the compiler in the candidate list
                 version_matches = [
                     x for x in versions if candidate in '{}@{}'.format(xdir, x)]
+                # Skip if this entry matches the name but not the version
                 if not version_matches:
-                    raise Exception("No version match for {} in {}".format(
-                        candidate, candidate_dir))
+                    continue
                 elif len(version_matches) > 1:
                     raise Exception("Multiple version matches for {} in {}: {}".format(
                         candidate, candidate_dir, version_matches))
@@ -284,9 +284,13 @@ def setup_meta_modules():
     logging.debug(os.listdir(module_dir))
     # First, check for compilers
     compiler_dict = get_matched_dict(module_dir, compiler_candidate_list)
+    if not compiler_dict:
+        raise Exception("No matching compilers found")
     logging.info(" ... stack compilers: '{}'".format(compiler_dict))
     # Then, check for mpi providers - recursively for compilers
     mpi_dict = get_matched_dict(module_dir, mpi_candidate_list, compiler_candidate_list)
+    if not mpi_dict:
+        raise Exception("No matching MPI providers found")
     logging.info(" ... stack mpi providers: '{}'".format(mpi_dict))
 
     # For some environments, there are only compiler+mpi-dependent modules,
