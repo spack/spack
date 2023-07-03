@@ -68,7 +68,7 @@ def setup_parser(subparser):
     subparser.add_argument(
         "--format",
         default="names",
-        choices=sorted(formatters),
+        choices=formatters,
         help="format to be used to print the output (default: names)",
     )
     subparser.add_argument(
