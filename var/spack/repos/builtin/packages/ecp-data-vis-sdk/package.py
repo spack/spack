@@ -161,7 +161,7 @@ class EcpDataVisSdk(BundlePackage, CudaPackage, ROCmPackage):
 
     # Need to explicitly turn off conduit hdf5_compat in order to build
     # hdf5@1.12 which is required for SDK
-    depends_on("ascent ^conduit ~hdf5_compat", when="+ascent +hdf5")
+    depends_on("conduit ~hdf5_compat", when="+ascent +hdf5")
     # Disable configuring with @develop. This should be removed after ascent
     # releases 0.8 and ascent can build with conduit@0.8: and vtk-m@1.7:
     conflicts("^ascent@develop", when="+ascent")
