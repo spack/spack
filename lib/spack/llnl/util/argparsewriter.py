@@ -29,8 +29,8 @@ class Command(object):
       - optionals: list of optional arguments (list)
       - subcommands: list of subcommand parsers (list)
     """
-    def __init__(self, prog, description, usage,
-                 positionals, optionals, subcommands):
+
+    def __init__(self, prog, description, usage, positionals, optionals, subcommands):
         self.prog = prog
         self.description = description
         self.usage = usage
@@ -71,15 +71,15 @@ class ArgparseWriter(argparse.HelpFormatter):
         """
         self.parser = parser
 
-        split_prog = parser.prog.split(' ')
+        split_prog = parser.prog.split(" ")
         split_prog[-1] = prog
-        prog = ' '.join(split_prog)
+        prog = " ".join(split_prog)
         description = parser.description
 
         fmt = parser._get_formatter()
         actions = parser._actions
         groups = parser._mutually_exclusive_groups
-        usage = fmt._format_usage(None, actions, groups, '').strip()
+        usage = fmt._format_usage(None, actions, groups, "").strip()
 
         # Go through actions and split them into optionals, positionals,
         # and subcommands
@@ -91,8 +91,8 @@ class ArgparseWriter(argparse.HelpFormatter):
                 flags = action.option_strings
                 dest_flags = fmt._format_action_invocation(action)
                 nargs = action.nargs
-                help = self._expand_help(action) if action.help else ''
-                help = help.replace('\n', ' ')
+                help = self._expand_help(action) if action.help else ""
+                help = help.replace("\n", " ")
 
                 dest = None
                 if action.choices is not None:
@@ -108,20 +108,19 @@ class ArgparseWriter(argparse.HelpFormatter):
 
                     # Look for aliases of the form 'name (alias, ...)'
                     if self.aliases:
-                        match = re.match(r'(.*) \((.*)\)', subaction.metavar)
+                        match = re.match(r"(.*) \((.*)\)", subaction.metavar)
                         if match:
-                            aliases = match.group(2).split(', ')
+                            aliases = match.group(2).split(", ")
                             for alias in aliases:
                                 subparser = action._name_parser_map[alias]
                                 subcommands.append((subparser, alias, subaction.help))
             else:
                 args = fmt._format_action_invocation(action)
-                help = self._expand_help(action) if action.help else ''
-                help = help.replace('\n', ' ')
+                help = self._expand_help(action) if action.help else ""
+                help = help.replace("\n", " ")
                 positionals.append((args, help, action.choices, action.nargs))
 
-        return Command(
-            prog, description, usage, positionals, optionals, subcommands)
+        return Command(prog, description, usage, positionals, optionals, subcommands)
 
     def format(self, cmd):
         """Returns the string representation of a single node in the
@@ -169,14 +168,13 @@ class ArgparseWriter(argparse.HelpFormatter):
                 raise
 
 
-_rst_levels = ['=', '-', '^', '~', ':', '`']
+_rst_levels = ["=", "-", "^", "~", ":", "`"]
 
 
 class ArgparseRstWriter(ArgparseWriter):
     """Write argparse output as rst sections."""
 
-    def __init__(self, prog, out=None, aliases=False,
-                 rst_levels=_rst_levels):
+    def __init__(self, prog, out=None, aliases=False, rst_levels=_rst_levels):
         """Create a new ArgparseRstWriter.
 
         Parameters:
@@ -225,11 +223,12 @@ class ArgparseRstWriter(ArgparseWriter):
 {1}
 {2}
 
-""".format(prog.replace(' ', '-'), prog,
-           self.rst_levels[self.level] * len(prog))
+""".format(
+            prog.replace(" ", "-"), prog, self.rst_levels[self.level] * len(prog)
+        )
 
     def description(self, description):
-        return description + '\n\n'
+        return description + "\n\n"
 
     def usage(self, usage):
         return """\
@@ -237,33 +236,39 @@ class ArgparseRstWriter(ArgparseWriter):
 
     {0}
 
-""".format(usage)
+""".format(
+            usage
+        )
 
     def begin_positionals(self):
-        return '\n**Positional arguments**\n\n'
+        return "\n**Positional arguments**\n\n"
 
     def positional(self, name, help):
         return """\
 {0}
   {1}
 
-""".format(name, help)
+""".format(
+            name, help
+        )
 
     def end_positionals(self):
-        return ''
+        return ""
 
     def begin_optionals(self):
-        return '\n**Optional arguments**\n\n'
+        return "\n**Optional arguments**\n\n"
 
     def optional(self, opts, help):
         return """\
 ``{0}``
   {1}
 
-""".format(opts, help)
+""".format(
+            opts, help
+        )
 
     def end_optionals(self):
-        return ''
+        return ""
 
     def begin_subcommands(self, subcommands):
         string = """
@@ -275,11 +280,10 @@ class ArgparseRstWriter(ArgparseWriter):
 """
 
         for cmd, _, _ in subcommands:
-            prog = re.sub(r'^[^ ]* ', '', cmd.prog)
-            string += '   * :ref:`{0} <{1}>`\n'.format(
-                prog, cmd.prog.replace(' ', '-'))
+            prog = re.sub(r"^[^ ]* ", "", cmd.prog)
+            string += "   * :ref:`{0} <{1}>`\n".format(prog, cmd.prog.replace(" ", "-"))
 
-        return string + '\n'
+        return string + "\n"
 
 
 class ArgparseCompletionWriter(ArgparseWriter):
@@ -314,9 +318,11 @@ class ArgparseCompletionWriter(ArgparseWriter):
         # Flatten lists of lists
         optionals = [x for xx in optionals for x in xx]
 
-        return (self.start_function(cmd.prog) +
-                self.body(positionals, optionals, subcommands) +
-                self.end_function(cmd.prog))
+        return (
+            self.start_function(cmd.prog)
+            + self.body(positionals, optionals, subcommands)
+            + self.end_function(cmd.prog)
+        )
 
     def start_function(self, prog):
         """Returns the syntax needed to begin a function definition.
@@ -327,8 +333,8 @@ class ArgparseCompletionWriter(ArgparseWriter):
         Returns:
             str: the function definition beginning
         """
-        name = prog.replace('-', '_').replace(' ', '_')
-        return '\n_{0}() {{'.format(name)
+        name = prog.replace("-", "_").replace(" ", "_")
+        return "\n_{0}() {{".format(name)
 
     def end_function(self, prog=None):
         """Returns the syntax needed to end a function definition.
@@ -339,7 +345,7 @@ class ArgparseCompletionWriter(ArgparseWriter):
         Returns:
             str: the function definition ending
         """
-        return '}\n'
+        return "}\n"
 
     def body(self, positionals, optionals, subcommands):
         """Returns the body of the function.
@@ -352,7 +358,7 @@ class ArgparseCompletionWriter(ArgparseWriter):
         Returns:
             str: the function body
         """
-        return ''
+        return ""
 
     def positionals(self, positionals):
         """Returns the syntax for reporting positional arguments.
@@ -363,7 +369,7 @@ class ArgparseCompletionWriter(ArgparseWriter):
         Returns:
             str: the syntax for positional arguments
         """
-        return ''
+        return ""
 
     def optionals(self, optionals):
         """Returns the syntax for reporting optional flags.
@@ -374,7 +380,7 @@ class ArgparseCompletionWriter(ArgparseWriter):
         Returns:
             str: the syntax for optional flags
         """
-        return ''
+        return ""
 
     def subcommands(self, subcommands):
         """Returns the syntax for reporting subcommands.
@@ -385,4 +391,4 @@ class ArgparseCompletionWriter(ArgparseWriter):
         Returns:
             str: the syntax for subcommand parsers
         """
-        return ''
+        return ""
