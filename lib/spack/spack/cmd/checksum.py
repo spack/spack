@@ -141,7 +141,7 @@ def checksum(parser, args):
     )
 
     if args.verify:
-        verify_checksums(pkg, version_hashes, url_dict)
+        verify_checksums(pkg, version_hashes)
 
     # convert dict into package.py version statements
     version_lines = get_version_lines(version_hashes, url_dict)
@@ -150,10 +150,10 @@ def checksum(parser, args):
     print()
 
     if args.add_to_package:
-        add_versions_to_package(pkg, version_hashes, url_dict)
+        add_versions_to_package(pkg, version_lines)
 
 
-def verify_checksums(pkg, version_hashes, url_dict):
+def verify_checksums(pkg, version_hashes):
     """
     Verify checksums present in version_hashes against those present
     in the package's instructions.
@@ -161,7 +161,6 @@ def verify_checksums(pkg, version_hashes, url_dict):
     Args:
         pkg (spack.package_base.PackageBase): A package class for a given package in Spack.
         version_hashes (dict): A dictionary of the form: version -> checksum.
-        url_dict (dict): A dictionary of the form: version -> URL.
 
     """
     results = []
@@ -198,15 +197,14 @@ def verify_checksums(pkg, version_hashes, url_dict):
     exit(0)
 
 
-def add_versions_to_package(pkg, version_hashes, url_dict):
+def add_versions_to_package(pkg, version_lines):
     """
     Add checksumed versions to a package's instructions and open a user's
     editor so they may double check the work of the function.
 
     Args:
         pkg (spack.package_base.PackageBase): A package class for a given package in Spack.
-        version_hashes (dict): A dictionary of the form: version -> checksum.
-        url_dict (dict): A dictionary of the form: version -> URL.
+        version_lines (str): A string of rendered version lines.
 
     """
     # Get filename and path for package
@@ -215,13 +213,9 @@ def add_versions_to_package(pkg, version_hashes, url_dict):
     version_statement_re = re.compile(r"([\t ]+version\([^\)]*\))")
     version_re = re.compile(r'[\t ]+version\("([^"]+)"[^\)]*\)')
 
-    new_version_lines = get_version_lines(version_hashes, url_dict).split("\n")
-
     # Split rendered version lines into tuple of (version, version_line)
     # We reverse sort here to make sure the versions match the version_lines
-    new_versions = [
-        (v, new_version_lines.pop(0)) for v in sorted(version_hashes.keys(), reverse=True)
-    ]
+    new_versions = [(Version(version_re.match(v).group(1)), v) for v in version_lines.split("\n")]
 
     num_versions_added = 0
 

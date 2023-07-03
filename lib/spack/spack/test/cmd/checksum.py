@@ -44,6 +44,7 @@ def test_checksum_args(arguments, expected):
         (["--preferred", "preferred-test"], "Found 1 version"),
         (["--add-to-package", "preferred-test"], "Added 0 new versions to"),
         (["--verify", "preferred-test"], "Verified 1 of 1"),
+        (["--verify", "zlib", "1.2.13"], "1.2.13  [-] No previous checksum"),
     ],
 )
 def test_checksum(arguments, expected, mock_packages, mock_clone_repo, mock_stage):
