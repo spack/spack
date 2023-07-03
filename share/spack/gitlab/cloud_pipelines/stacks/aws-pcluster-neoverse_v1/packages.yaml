@@ -1,0 +1,32 @@
+---  # Neoverse V1 packages
+packages:
+  acfl:
+    target: [aarch64]
+    compiler: [gcc]
+  gromacs:
+    require:
+      - one_of: ["gromacs %gcc ^fftw^openmpi"]
+  libfabric:
+    buildable: false
+    externals:
+      - modules:
+          - ${LIBFABRIC_MODULE}
+        spec: libfabric@${LIBFABRIC_VERSION} fabrics=efa
+  openmpi:
+    variants: ~atomics ~cuda ~cxx ~cxx_exceptions ~internal-hwloc ~java +legacylaunchers ~lustre ~memchecker +pmi +romio ~singularity +vt +wrapper-rpath fabrics=ofi schedulers=slurm
+  slurm:
+    buildable: false
+    externals:
+      - prefix: /opt/slurm/
+        spec: slurm@${SLURM_VERSION} +pmix
+  all:
+    compiler: [nvhpc, gcc, clang]
+    providers:
+      blas: [armpl-gcc, openblas]
+      fftw-api: [armpl-gcc, fftw]
+      lapack: [armpl-gcc, openblas]
+      mpi: [openmpi, mpich]
+      scalapack: [netlib-scalapack]
+    permissions:
+      read: world
+      write: user
