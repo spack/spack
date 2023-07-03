@@ -1036,8 +1036,8 @@ complete -c spack -n "__fish_spack_using_command commands" -s h -l help -d show 
 complete -c spack -n "__fish_spack_using_command commands" -l update-completion -d regenerate spack's tab completion scripts
 # ['-a', '--aliases'] -> 'aliases': 0
 complete -c spack -n "__fish_spack_using_command commands" -s a -l aliases -d include command aliases
-# ['--format'] -> ['bash', 'fish', 'names', 'rst', 'subcommands']: None
-complete -c spack -n "__fish_spack_using_command commands" -l format -r -f -a bash fish names rst subcommands
+# ['--format'] -> ['subcommands', 'rst', 'names', 'bash', 'fish']: None
+complete -c spack -n "__fish_spack_using_command commands" -l format -r -f -a subcommands rst names bash fish
 complete -c spack -n "__fish_spack_using_command commands" -l format -r -d format to be used to print the output (default: names)
 # ['--header'] -> 'header': None
 complete -c spack -n "__fish_spack_using_command commands" -l header -r -d prepend contents of FILE to the output (useful for rst format)
@@ -2045,8 +2045,8 @@ complete -c spack -n "__fish_spack_using_command list" -f -a "(__fish_spack_pack
 complete -c spack -n "__fish_spack_using_command list" -s h -l help -d show this help message and exit
 # ['-d', '--search-description'] -> 'search_description': 0
 complete -c spack -n "__fish_spack_using_command list" -s d -l search-description -d filtering will also search the description for a match
-# ['--format'] -> ['html', 'name_only', 'version_json']: None
-complete -c spack -n "__fish_spack_using_command list" -l format -r -f -a html name_only version_json
+# ['--format'] -> ['name_only', 'version_json', 'html']: None
+complete -c spack -n "__fish_spack_using_command list" -l format -r -f -a name_only version_json html
 complete -c spack -n "__fish_spack_using_command list" -l format -r -d format to be used to print the output [default: name_only]
 # ['-v', '--virtuals'] -> 'virtuals': 0
 complete -c spack -n "__fish_spack_using_command list" -s v -l virtuals -d include virtual packages in list
