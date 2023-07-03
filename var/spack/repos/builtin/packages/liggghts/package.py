@@ -30,12 +30,12 @@ class Liggghts(MakefilePackage):
     depends_on("jpeg", when="+jpeg")
     depends_on("zlib", when="+gzip")
     # patch for makefile test code
-    patch('makefile.patch')
+    patch("makefile.patch")
     # patch for clang and oneapi
-    patch('makefile-llvm-based-compiler.patch', when='%clang')
-    patch('makefile-llvm-based-compiler.patch', when='%oneapi')
+    patch("makefile-llvm-based-compiler.patch", when="%clang")
+    patch("makefile-llvm-based-compiler.patch", when="%oneapi")
     # C++17 support
-    patch('cpp-17.patch')
+    patch("cpp-17.patch")
     build_directory = "src"
     build_targets = ["auto"]
 
