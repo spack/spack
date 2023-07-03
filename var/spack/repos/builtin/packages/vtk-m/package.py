@@ -231,17 +231,22 @@ class VtkM(CMakePackage, CudaPackage, ROCmPackage):
             if "+cuda_native" in spec:
                 options.append("-DVTKm_ENABLE_CUDA:BOOL=ON")
                 options.append("-DCMAKE_CUDA_HOST_COMPILER={0}".format(env["SPACK_CXX"]))
-                if "cuda_arch" in spec.variants:
-                    cuda_value = spec.variants["cuda_arch"].value
-                    cuda_arch = cuda_value[0]
-                    if cuda_arch in gpu_name_table:
-                        vtkm_cuda_arch = gpu_name_table[cuda_arch]
-                        options.append("-DVTKm_CUDA_Architecture={0}".format(vtkm_cuda_arch))
+
+                cuda_archs = spec.variants["cuda_arch"].value
+                if spec.satisfies("@1.9.0: ^cmake@3.18:"):
+                    str_cuda_archs = ";".join(str(e) for e in cuda_archs)
+                    options.append(f"-DCMAKE_CUDA_ARCHITECTURES={str_cuda_archs}")
+
+                # Only a CUDA Arch can be set with the legacy flag
+                elif cuda_archs[0] in gpu_name_table:
+                    vtkm_cuda_arch = gpu_name_table[cuda_archs[0]]
+                    options.append(f"-DVTKm_CUDA_Architecture={vtkm_cuda_arch}")
+
                 else:
-                    # this fix is necessary if compiling platform has cuda, but
-                    # no devices (this is common for front end nodes on hpc
-                    # clusters). We choose volta as a lowest common denominator
-                    options.append("-DVTKm_CUDA_Architecture=volta")
+                    raise InstallError(
+                        f"cuda_arch={cuda_archs[0]} needs cmake>=3.18 & VTK-m>=1.9.0"
+                    )
+
             else:
                 options.append("-DVTKm_ENABLE_CUDA:BOOL=OFF")
 
