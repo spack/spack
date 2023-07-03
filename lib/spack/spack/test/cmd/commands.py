@@ -3,6 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+import difflib
 import filecmp
 import os
 import shutil
@@ -273,5 +274,16 @@ def test_updated_completion_scripts(shell, tmpdir):
     new_script = str(tmpdir.join(script))
 
     commands("--aliases", "--format", shell, "--header", header, "--update", new_script)
+
+    with open(old_script) as old:
+        with open(new_script) as new:
+            diff = difflib.unified_diff(
+                old.readlines(),
+                new.readlines(),
+                fromfile="old",
+                tofile="new",
+            )
+            for line in diff:
+                sys.stdout.write(line)
 
     assert filecmp.cmp(old_script, new_script), msg
