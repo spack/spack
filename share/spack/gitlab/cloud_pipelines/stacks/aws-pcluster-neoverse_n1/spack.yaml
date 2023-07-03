@@ -4,10 +4,10 @@ spack:
   definitions:
 
   - optimized_configs:
-    - gromacs
+    # - gromacs
     # - lammps
     # - mpas-model
-    - openfoam
+    # - openfoam
     - palace
     # - py-devito
     # - quantum-espresso
@@ -19,7 +19,7 @@ spack:
 
   specs:
   - $optimized_configs
-  - $optimized_libs
+  # - $optimized_libs
 
 
   mirrors: { "mirror": "s3://spack-binaries/develop/aws-pcluster-neoverse_n1" }

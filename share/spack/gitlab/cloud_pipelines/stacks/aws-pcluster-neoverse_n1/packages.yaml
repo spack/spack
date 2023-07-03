@@ -1,4 +1,4 @@
----  # Neoverse V1 packages
+---  # Neoverse N1 packages
 packages:
   acfl:
     target: [aarch64]

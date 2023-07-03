@@ -5,9 +5,9 @@ spack:
 
   - optimized_configs:
     # - gromacs
-    - lammps
+    # - lammps
     # - mpas-model
-    - openfoam
+    # - openfoam
     - palace
     # - py-devito
     # - quantum-espresso
