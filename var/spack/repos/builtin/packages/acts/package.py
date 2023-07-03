@@ -408,6 +408,6 @@ class Acts(CMakePackage, CudaPackage):
             python = spec["python"].command.path
             args.append("-DPython_EXECUTABLE={0}".format(python))
 
-        args.append(define_from_variant("CMAKE_CXX_STANDARD", "cxxstd"))
+        args.append(self.define_from_variant("CMAKE_CXX_STANDARD", "cxxstd"))
 
         return args
