@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -13,11 +13,7 @@ import sys
 
 import llnl.util.filesystem as fs
 import llnl.util.tty as tty
-from llnl.util.argparsewriter import (
-    ArgparseCompletionWriter,
-    ArgparseRstWriter,
-    ArgparseWriter,
-)
+from llnl.util.argparsewriter import ArgparseCompletionWriter, ArgparseRstWriter, ArgparseWriter
 from llnl.util.tty.colify import colify
 
 import spack.cmd
@@ -67,11 +63,7 @@ def setup_parser(subparser):
     )
 
     subparser.add_argument(
-        "-a",
-        "--aliases",
-        action="store_true",
-        default=False,
-        help="include command aliases",
+        "-a", "--aliases", action="store_true", default=False, help="include command aliases"
     )
     subparser.add_argument(
         "--format",

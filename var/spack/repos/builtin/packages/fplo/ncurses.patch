@@ -1,0 +1,96 @@
+diff -ur a/FPLO22.00-62/install/conf/gcc-gfortran-Linux-i386 b/FPLO22.00-62/install/conf/gcc-gfortran-Linux-i386
+--- a/FPLO22.00-62/install/conf/gcc-gfortran-Linux-i386	2022-07-03 08:48:02.000000000 -0500
++++ b/FPLO22.00-62/install/conf/gcc-gfortran-Linux-i386	2022-08-28 14:02:03.303297840 -0500
+@@ -41,7 +41,7 @@
+ #TODO: set here the curses system library
+ #      on Linux systems it must be -lncurses
+ #
+-LIBS_CURSES=" -lncurses"
++LIBS_CURSES=" -lncurses -ltinfo"
+ 
+ 
+ 
+diff -ur a/FPLO22.00-62/install/conf/gcc-gfortran-Linux-x86_64 b/FPLO22.00-62/install/conf/gcc-gfortran-Linux-x86_64
+--- a/FPLO22.00-62/install/conf/gcc-gfortran-Linux-x86_64	2022-07-03 08:48:24.000000000 -0500
++++ b/FPLO22.00-62/install/conf/gcc-gfortran-Linux-x86_64	2022-08-28 14:02:14.381306024 -0500
+@@ -42,7 +42,7 @@
+ #TODO: set here the curses system library
+ #      on Linux systems it must be -lncurses
+ #
+-LIBS_CURSES=" -lncurses"
++LIBS_CURSES=" -lncurses -ltinfo"
+ 
+ 
+ 
+diff -ur a/FPLO22.00-62/install/conf/gcc-ifort-Darwin-i386 b/FPLO22.00-62/install/conf/gcc-ifort-Darwin-i386
+--- a/FPLO22.00-62/install/conf/gcc-ifort-Darwin-i386	2021-01-19 04:09:45.000000000 -0600
++++ b/FPLO22.00-62/install/conf/gcc-ifort-Darwin-i386	2022-08-28 14:02:25.597314302 -0500
+@@ -47,7 +47,7 @@
+ #TODO: set here the curses system library
+ #      on Linux systems it must be -lncurses
+ #
+-LIBS_CURSES=" -lncurses"
++LIBS_CURSES=" -lncurses -ltinfo"
+ 
+ 
+ 
+diff -ur a/FPLO22.00-62/install/conf/gcc-ifort-Linux-i386 b/FPLO22.00-62/install/conf/gcc-ifort-Linux-i386
+--- a/FPLO22.00-62/install/conf/gcc-ifort-Linux-i386	2021-01-19 04:09:50.000000000 -0600
++++ b/FPLO22.00-62/install/conf/gcc-ifort-Linux-i386	2022-08-28 14:02:37.508323085 -0500
+@@ -47,7 +47,7 @@
+ #TODO: set here the curses system library
+ #      on Linux systems it must be -lncurses
+ #
+-LIBS_CURSES=" -lncurses"
++LIBS_CURSES=" -lncurses -ltinfo"
+ 
+ 
+ 
+diff -ur a/FPLO22.00-62/install/conf/gcc-ifort-Linux-ia64 b/FPLO22.00-62/install/conf/gcc-ifort-Linux-ia64
+--- a/FPLO22.00-62/install/conf/gcc-ifort-Linux-ia64	2021-01-19 04:09:55.000000000 -0600
++++ b/FPLO22.00-62/install/conf/gcc-ifort-Linux-ia64	2022-08-28 14:02:53.211334647 -0500
+@@ -32,7 +32,7 @@
+ #TODO: set here the curses system library
+ #      on Linux systems it must be -lncurses
+ #
+-LIBS_CURSES=" -lncurses"
++LIBS_CURSES=" -lncurses -ltinfo"
+ 
+ 
+ 
+diff -ur a/FPLO22.00-62/install/conf/gcc-ifort-Linux-x86_64 b/FPLO22.00-62/install/conf/gcc-ifort-Linux-x86_64
+--- a/FPLO22.00-62/install/conf/gcc-ifort-Linux-x86_64	2022-05-15 01:53:01.000000000 -0500
++++ b/FPLO22.00-62/install/conf/gcc-ifort-Linux-x86_64	2022-08-28 14:03:11.580348155 -0500
+@@ -49,7 +49,7 @@
+ #TODO: set here the curses system library
+ #      on Linux systems it must be -lncurses
+ #
+-LIBS_CURSES=" -lncurses"
++LIBS_CURSES=" -lncurses -ltinfo"
+ 
+ 
+ 
+diff -ur a/FPLO22.00-62/install/conf/icc-ifort-Darwin-i386 b/FPLO22.00-62/install/conf/icc-ifort-Darwin-i386
+--- a/FPLO22.00-62/install/conf/icc-ifort-Darwin-i386	2021-01-19 04:10:07.000000000 -0600
++++ b/FPLO22.00-62/install/conf/icc-ifort-Darwin-i386	2022-08-28 14:03:21.741355617 -0500
+@@ -47,7 +47,7 @@
+ #TODO: set here the curses system library
+ #      on Linux systems it must be -lncurses
+ #
+-LIBS_CURSES=" -lncurses"
++LIBS_CURSES=" -lncurses -ltinfo"
+ 
+ 
+ 
+diff -ur a/FPLO22.00-62/install/conf/icc-ifort-Darwin-x86_64 b/FPLO22.00-62/install/conf/icc-ifort-Darwin-x86_64
+--- a/FPLO22.00-62/install/conf/icc-ifort-Darwin-x86_64	2021-01-19 04:10:11.000000000 -0600
++++ b/FPLO22.00-62/install/conf/icc-ifort-Darwin-x86_64	2022-08-28 14:03:31.829363021 -0500
+@@ -49,7 +49,7 @@
+ #TODO: set here the curses system library
+ #      on Linux systems it must be -lncurses
+ #
+-LIBS_CURSES=" -lncurses"
++LIBS_CURSES=" -lncurses -ltinfo"
+ 
+ 
+ 

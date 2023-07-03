@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -6,13 +6,11 @@
 
 import os
 
-from spack.directives import depends_on, patch, variant, version
-from spack.package import Package
-from spack.util.executable import Executable
+from spack.package import *
 from spack.version import Version
 
 
-class Genie(Package):  # Genie doesn"t use Autotools
+class Genie(Package):
     """Genie is a neutrino Monte Carlo Generator."""
 
     homepage = "https://www.genie-mc.org"
@@ -21,10 +19,7 @@ class Genie(Package):  # Genie doesn"t use Autotools
 
     tags = ["neutrino", "hep"]
 
-    maintainers = [
-        # maintainer of this recipe, not affliated with the GENIE collaboration
-        "davehadley",
-    ]
+    maintainers("davehadley")
 
     version("master", branch="master")
     version("3.0.6", sha256="ab56ea85d0c1d09029254365bfe75a1427effa717389753b9e0c1b6c2eaa5eaf")
@@ -65,23 +60,28 @@ class Genie(Package):  # Genie doesn"t use Autotools
     patch("genie_disable_gopt_with_compiler_check.patch", level=0, when="@2.11:")
 
     # Flags for GENIE"s optional but disabled by default features
-    variant("atmo", default=False,
-            description="Enable GENIE Atmospheric neutrino event generation app")
-    variant("fnal", default=False,
-            description="Enables FNAL experiment-specific event generation app")
-    variant("nucleondecay", default=False,
-            description="Enable GENIE Nucleon decay event generation app")
-    variant("masterclass", default=False,
-            description="Enable GENIE neutrino masterclass app")
+    variant(
+        "atmo", default=False, description="Enable GENIE Atmospheric neutrino event generation app"
+    )
+    variant(
+        "fnal", default=False, description="Enables FNAL experiment-specific event generation app"
+    )
+    variant(
+        "nucleondecay",
+        default=False,
+        description="Enable GENIE Nucleon decay event generation app",
+    )
+    variant("masterclass", default=False, description="Enable GENIE neutrino masterclass app")
     variant("t2k", default=False, description="Enable T2K-specific generation app")
-    variant("vleextension", default=False,
-            description="Enable GENIE very low energy (1 MeV - 100 MeV) extension")
-
-    phases = ["configure", "build", "install"]
+    variant(
+        "vleextension",
+        default=False,
+        description="Enable GENIE very low energy (1 MeV - 100 MeV) extension",
+    )
 
     def url_for_version(self, version):
         url = "https://github.com/GENIE-MC/Generator/archive/R-{0}.tar.gz"
-        if version >= Version(3):
+        if version >= Version("3"):
             return url.format("{0}_{1:02d}_{2:02d}".format(*version))
         else:
             return url.format(version.underscored)
@@ -94,16 +94,11 @@ class Genie(Package):  # Genie doesn"t use Autotools
         env.set("GENIE", self.prefix)
         return super(Genie, self).setup_run_environment(env)
 
-    def configure(self, spec, prefix):
+    def install(self, spec, prefix):
         configure = Executable("./configure")
         args = self._configure_args(spec, prefix)
         configure(*args)
-
-    def build(self, spec, prefix):
-        # parallel build is not supported on GENIE 2
         self._make(parallel=spec.satisfies("@3:"))
-
-    def install(self, spec, prefix):
         # GENIE make install does not support parallel jobs
         self._make("install", parallel=False)
         # GENIE requires these files to be present at runtime, but doesn"t install them
@@ -116,9 +111,7 @@ class Genie(Package):  # Genie doesn"t use Autotools
         args = [
             "--prefix=" + prefix,
             "--with-compiler=" + os.environ["CC"],
-            "--with-libxml2-inc={0}{1}libxml2".format(
-                spec["libxml2"].prefix.include, os.sep
-            ),
+            "--with-libxml2-inc={0}{1}libxml2".format(spec["libxml2"].prefix.include, os.sep),
             "--with-libxml2-lib=" + spec["libxml2"].prefix.lib,
             "--with-log4cpp-inc=" + spec["log4cpp"].prefix.include,
             "--with-log4cpp-lib=" + spec["log4cpp"].prefix.lib,
@@ -161,8 +154,4 @@ class Genie(Package):  # Genie doesn"t use Autotools
 
     @property
     def _make_args(self):
-        return [
-            "CC=c++",
-            "CXX=c++",
-            "LD=c++",
-        ]
+        return ["CC=c++", "CXX=c++", "LD=c++"]

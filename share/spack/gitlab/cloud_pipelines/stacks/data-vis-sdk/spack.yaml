@@ -1,76 +1,75 @@
 spack:
   view: false
-  concretization: separately
-
-  config:
-    install_tree:
-      root: /home/software/spack
-      padded_length: 512
-      projections:
-        all: '{architecture}/{compiler.name}-{compiler.version}/{name}-{version}-{hash}'
-
   packages:
-    conduit:
-      version:
-        - "0.7.2"
+    cmake:
+      variants: ~ownlibs
     mesa:
-      variants: ~glx +osmesa
-    paraview:
-      variants: +osmesa
+      require: "+glx +osmesa +opengl ~opengles +llvm"
+    libosmesa:
+      require: "mesa +osmesa"
+    libglx:
+      require: "mesa +glx"
+    ospray:
+      require: "@2.8.0 +denoiser +mpi"
+    llvm:
+      require: "@14:"
+      # Minimize LLVM
+      variants: "~lldb~lld~polly~gold libunwind=none compiler-rt=none"
     all:
-      target: [x86_64]
+      require: target=x86_64_v3
 
-  # The spec will be gradually expanded to enable all the SDK components.
-  # Currently disabled: ascent, catalyst, visit
+  definitions:
+  - paraview_specs:
+    - matrix:
+      - - paraview
+      - - +qt~osmesa # GUI Support w/ GLX Rendering
+        - ~qt~osmesa # GLX Rendering
+        - ~qt+osmesa # OSMesa Rendering
+  - visit_specs:
+    - matrix:
+      - - visit
+      - - +gui~osmesa # GUI Support w/ GLX Rendering
+        - ~gui~osmesa # GLX Rendering
+        - ~gui+osmesa # OSMesa Rendering
+  - sdk_base_spec:
+    - matrix:
+      - - ecp-data-vis-sdk
+            +ascent
+            +adios2
+            +cinema
+            +darshan
+            +faodel
+            +hdf5
+            +pnetcdf
+            +sensei
+            +sz
+            +unifyfs
+            +veloc
+            +vtkm
+            +zfp
+      - - ~cuda ~rocm
+        # Current testing of GPU supported configurations
+        # is provided in the E4S stack
+        # - +cuda ~rocm
+        # - ~cuda +rocm
+
   specs:
-  - matrix:
-    - - ecp-data-vis-sdk
-          +adios2
-          +ascent
-          +cinema
-          +darshan
-          +faodel
-          +hdf5
-          +paraview
-          +pnetcdf
-          +sz
-          +unifyfs
-          +veloc
-          +vtkm
-          +zfp
+    # Test ParaView builds with different GL backends
+    - matrix:
+      - [$sdk_base_spec]
+      - [$^paraview_specs]
+      - - ^hdf5@1.14 # Non-VisIt can build HDF5 1.14
+    # Test ParaView builds with differnt GL backends
+    # - matrix:
+    #   - [$sdk_base_spec]
+    #   - [$^visit_specs]
 
-  mirrors: { "mirror": "s3://spack-binaries-develop/data-vis-sdk" }
+  mirrors: { "mirror": "s3://spack-binaries/develop/data-vis-sdk" }
 
-  gitlab-ci:
-    image: { "name": "ghcr.io/spack/e4s-ubuntu-18.04:v2021-10-18", "entrypoint": [""] }
-    script:
-      - . "./share/spack/setup-env.sh"
-      - spack --version
-      - cd ${SPACK_CONCRETE_ENV_DIR}
-      - spack env activate --without-view .
-      - spack config add "config:install_tree:projections:${SPACK_JOB_SPEC_PKG_NAME}:'morepadding/{architecture}/{compiler.name}-{compiler.version}/{name}-{version}-{hash}'"
-      - spack -d ci rebuild
-    mappings:
-      - match: [llvm]
-        runner-attributes:
-          tags: ["spack", "public", "huge", "x86_64"]
-      - match: [vtk-h, vtk-m, paraview, vtk]
-        runner-attributes:
-          tags: ["spack", "public", "xlarge", "x86_64"]
-      - match: ['@:']
-        runner-attributes:
-          tags: ["spack", "public", "large", "x86_64"]
-    temporary-storage-url-prefix: "s3://spack-binaries-prs/pipeline-storage"
-    broken-specs-url: "s3://spack-binaries-develop/broken-specs"
-    service-job-attributes:
-      image: { "name": "ghcr.io/spack/e4s-ubuntu-18.04:v2021-10-18", "entrypoint": [""] }
-      before_script:
-        - . "./share/spack/setup-env.sh"
-        - spack --version
-      tags: ["spack", "public", "medium", "x86_64"]
+  ci:
+    pipeline-gen:
+    - build-job:
+        image: { "name": "ecpe4s/ubuntu20.04-runner-x86_64:2023-01-01", "entrypoint": [""] }
 
   cdash:
-    build-group: Data and Vis SDK
-    url: https://cdash.spack.io
-    project: Spack Testing
-    site: Cloud Gitlab Infrastructure
+    build-group:: Data and Vis SDK

@@ -1,9 +1,10 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
+from spack.package import *
+from spack.util.environment import is_system_path
 
 
 class Procps(AutotoolsPackage):
@@ -12,32 +13,52 @@ class Procps(AutotoolsPackage):
     about the status of entries in its process table."""
 
     homepage = "https://gitlab.com/procps-ng/procps"
-    git      = "https://gitlab.com/procps-ng/procps.git"
+    git = "https://gitlab.com/procps-ng/procps.git"
 
-    version('master', branch='master')
-    version('3.3.15', tag='v3.3.15')
+    version("master", branch="master")
+    version("3.3.15", tag="v3.3.15")
 
-    depends_on('autoconf', type='build')
-    depends_on('automake', type='build')
-    depends_on('libtool',  type='build')
-    depends_on('m4',       type='build')
-    depends_on('pkgconfig@0.9.0:', type='build')
-    depends_on('dejagnu',  type='test')
-    depends_on('iconv')
-    depends_on('gettext')
-    depends_on('ncurses')
+    variant("nls", default=True, description="Enable Native Language Support.")
 
-    conflicts('platform=darwin', msg='procps is linux-only')
+    depends_on("autoconf", type="build")
+    depends_on("automake", type="build")
+    depends_on("libtool", type="build")
+    depends_on("m4", type="build")
+    depends_on("pkgconfig@0.9.0:", type="build")
+    depends_on("dejagnu", type="test")
+    depends_on("iconv")
+    depends_on("gettext", when="+nls")
+    depends_on("ncurses")
+
+    conflicts("platform=darwin", msg="procps is linux-only")
 
     def autoreconf(self, spec, prefix):
-        sh = which('sh')
-        sh('autogen.sh')
+        sh = which("sh")
+        sh("autogen.sh")
+
+    def flag_handler(self, name, flags):
+        if name == "ldlibs":
+            spec = self.spec
+            if "+nls" in spec and "intl" in spec["gettext"].libs.names:
+                flags.append("-lintl")
+        return self.build_system_flags(name, flags)
 
     def configure_args(self):
-        return [
-            '--with-libiconv-prefix={0}'.format(self.spec['iconv'].prefix),
-            '--with-libintl-prefix={0}'.format(self.spec['gettext'].prefix),
-            '--with-ncurses',
-            # Required to avoid libintl linking errors
-            '--disable-nls',
-        ]
+        spec = self.spec
+        args = ["--with-ncurses"]
+
+        if "+nls" in spec:
+            args.append("--enable-nls")
+            if "intl" not in spec["gettext"].libs.names:
+                args.append("--without-libintl-prefix")
+            elif not is_system_path(spec["gettext"].prefix):
+                args.append("--with-libintl-prefix=" + spec["gettext"].prefix)
+        else:
+            args.append("--disable-nls")
+
+        if spec["iconv"].name == "libc":
+            args.append("--without-libiconv-prefix")
+        elif not is_system_path(spec["iconv"].prefix):
+            args.append("--with-libiconv-prefix={0}".format(spec["iconv"].prefix))
+
+        return args

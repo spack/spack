@@ -1,0 +1,25 @@
+Allow Draco-7_5_0 to compile with intel-17.0.4 by removing components experimental and cdi_CPEloss.
+This bug is tracked at https://github.com/kokkos/mdspan/issues/16
+
+diff --git a/src/CMakeLists.txt b/src/CMakeLists.txt
+index d1aec250..9ebbf8de 100755
+--- a/src/CMakeLists.txt
++++ b/src/CMakeLists.txt
+@@ -52,7 +52,7 @@ add_dir_if_exists( c4 )           # needs ds++
+ add_dir_if_exists( cdi )          # needs ds++
+ add_dir_if_exists( compton )      # needs ds++, CSK
+ add_dir_if_exists( device )       # needs ds++
+-add_dir_if_exists( experimental ) # only the tests need ds++
++#add_dir_if_exists( experimental ) # only the tests need ds++
+ add_dir_if_exists( lapack_wrap )  # needs ds++
+ add_dir_if_exists( linear )       # needs ds++
+ add_dir_if_exists( memory )       # needs ds++
+@@ -66,7 +66,7 @@ add_dir_if_exists( viz )          # needs ds++
+ # Level 3
+ message(" ")
+ message( STATUS "Configuring Level 3 packages --" )
+-add_dir_if_exists( cdi_CPEloss )  # needs cdi, units
++#add_dir_if_exists( cdi_CPEloss )  # needs cdi, units
+ add_dir_if_exists( cdi_ipcress )  # needs cdi
+ add_dir_if_exists( cdi_ndi )      # needs ds++, rng, cdi
+ add_dir_if_exists( diagnostics )  # needs c4

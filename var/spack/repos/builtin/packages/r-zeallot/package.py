@@ -1,9 +1,9 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
+from spack.package import *
 
 
 class RZeallot(RPackage):
@@ -16,4 +16,4 @@ class RZeallot(RPackage):
 
     cran = "zeallot"
 
-    version('0.1.0', sha256='439f1213c97c8ddef9a1e1499bdf81c2940859f78b76bc86ba476cebd88ba1e9')
+    version("0.1.0", sha256="439f1213c97c8ddef9a1e1499bdf81c2940859f78b76bc86ba476cebd88ba1e9")

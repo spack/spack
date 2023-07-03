@@ -1,0 +1,11 @@
+--- a/src/serialbox-c/FortranWrapper.cpp
++++ b/src/serialbox-c/FortranWrapper.cpp
+@@ -12,6 +12,8 @@
+  *
+ \*===------------------------------------------------------------------------------------------===*/
+ 
++#include <array>
++
+ #include "serialbox-c/FortranWrapper.h"
+ #include "serialbox-c/FieldMetainfo.h"
+ #include "serialbox-c/Metainfo.h"

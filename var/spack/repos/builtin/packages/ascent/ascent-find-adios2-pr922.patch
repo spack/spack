@@ -1,0 +1,99 @@
+diff --git a/src/cmake/thirdparty/SetupADIOS.cmake b/src/cmake/thirdparty/SetupADIOS.cmake
+index 7a7f038d..4b56b7e0 100644
+--- a/src/cmake/thirdparty/SetupADIOS.cmake
++++ b/src/cmake/thirdparty/SetupADIOS.cmake
+@@ -10,32 +10,32 @@
+ #
+ ###############################################################################
+ 
+-# first Check for ADIOS_DIR
++# first Check for ADIOS_ROOT
+ 
+-if(NOT ADIOS_DIR)
+-    MESSAGE(FATAL_ERROR "ADIOS support needs explicit ADIOS_DIR")
++if(NOT ADIOS_ROOT)
++    MESSAGE(FATAL_ERROR "ADIOS support needs explicit ADIOS_ROOT")
+ endif()
+ 
+-MESSAGE(STATUS "Looking for ADIOS using ADIOS_DIR = ${ADIOS_DIR}")
++MESSAGE(STATUS "Looking for ADIOS using ADIOS_ROOT = ${ADIOS_ROOT}")
+ 
+ # CMake's FindADIOS module uses the ADIOS_ROOT env var
+-set(ADIOS_ROOT ${ADIOS_DIR})
++set(ADIOS_ROOT ${ADIOS_ROOT})
+ set(ENV{ADIOS_ROOT} ${ADIOS_ROOT})
+ 
+ # Use CMake's FindADIOS module, which uses hdf5's compiler wrappers to extract
+ # all the info about the hdf5 install
+-include(${ADIOS_DIR}/etc/FindADIOS.cmake)
++include(${ADIOS_ROOT}/etc/FindADIOS.cmake)
+ 
+-# FindADIOS sets ADIOS_DIR to it's installed CMake info if it exists
+-# we want to keep ADIOS_DIR as the root dir of the install to be
++# FindADIOS sets ADIOS_ROOT to it's installed CMake info if it exists
++# we want to keep ADIOS_ROOT as the root dir of the install to be
+ # consistent with other packages
+ 
+-set(ADIOS_DIR ${ADIOS_ROOT} CACHE PATH "" FORCE)
++set(ADIOS_ROOT ${ADIOS_ROOT} CACHE PATH "" FORCE)
+ # not sure why we need to set this, but we do
+ #set(ADIOS_FOUND TRUE CACHE PATH "" FORCE)
+ 
+ if(NOT ADIOS_FOUND)
+-    message(FATAL_ERROR "ADIOS_DIR is not a path to a valid ADIOS install")
++    message(FATAL_ERROR "ADIOS_ROOT is not a path to a valid ADIOS install")
+ endif()
+ 
+ blt_register_library(NAME adios
+diff --git a/src/cmake/thirdparty/SetupADIOS2.cmake b/src/cmake/thirdparty/SetupADIOS2.cmake
+index d93c3e5b..3133c72c 100644
+--- a/src/cmake/thirdparty/SetupADIOS2.cmake
++++ b/src/cmake/thirdparty/SetupADIOS2.cmake
+@@ -10,21 +10,39 @@
+ #
+ ###############################################################################
+ 
+-# first Check for ADIOS_DIR
+-if(NOT ADIOS2_DIR)
+-    MESSAGE(FATAL_ERROR "ADIOS2 support needs explicit ADIOS2_DIR")
++# Handle legacy usage of ADIOS2_DIR
++if (ADIOS2_DIR AND NOT ADIOS2_ROOT)
++  # If find_package(ADIOS2) has already been called this will fail
++  if (NOT EXISTS ${ADIOS2_DIR}/include)
++    get_filename_component(tmp "${ADIOS2_DIR}" DIRECTORY)
++    get_filename_component(tmp "${tmp}" DIRECTORY)
++    get_filename_component(tmp "${tmp}" DIRECTORY)
++    if (EXISTS ${tmp}/include)
++      set(ADIOS2_ROOT "${tmp}" CACHE PATH "")
++    else ()
++      message(FATAL_ERROR "Could not determine ADIOS2_ROOT from ADIOS2_DIR")
++    endif ()
++  else ()
++    set(ADIOS2_ROOT "${ADIOS2_DIR}" CACHE PATH "")
++  endif ()
++endif ()
++
++# Check for ADIOS_ROOT
++if(NOT ADIOS2_ROOT)
++    MESSAGE(FATAL_ERROR "ADIOS2 support needs explicit ADIOS2_ROOT")
+ endif()
+ 
+-MESSAGE(STATUS "Looking for ADIOS2 using ADIOS2_DIR = ${ADIOS2_DIR}")
++MESSAGE(STATUS "Looking for ADIOS2 using ADIOS2_ROOT = ${ADIOS2_ROOT}")
+ 
+-set(ADIOS2_DIR_ORIG ${ADIOS2_DIR})
++set(ADIOS2_DIR_ORIG ${ADIOS2_ROOT})
+ 
+ find_package(ADIOS2 REQUIRED
+              NO_DEFAULT_PATH
+-             PATHS ${ADIOS2_DIR}/lib/cmake/adios2)
++             PATHS ${ADIOS2_ROOT})
+ 
++# ADIOS2_DIR is set by find_package
+ message(STATUS "FOUND ADIOS2 at ${ADIOS2_DIR}")
+ 
+ blt_register_library(NAME adios2
+-                     INCLUDES ${ADIOS2_INCLUDE_DIR}
+-                     LIBRARIES ${ADIOS2_LIB_DIRS} ${ADIOS2_LIBRARIES} )
++  INCLUDES ${ADIOS2_INCLUDE_DIR}
++  LIBRARIES ${ADIOS2_LIB_DIRS} ${ADIOS2_LIBRARIES} )

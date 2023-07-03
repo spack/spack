@@ -1,9 +1,9 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
+from spack.package import *
 
 
 class RRviennacl(RPackage):
@@ -19,4 +19,4 @@ class RRviennacl(RPackage):
 
     cran = "RViennaCL"
 
-    version('1.7.1.8', sha256='adcc74537337582153d5b11d281e391e91a7f3afae116aa1b9a034ffd11b0252')
+    version("1.7.1.8", sha256="adcc74537337582153d5b11d281e391e91a7f3afae116aa1b9a034ffd11b0252")

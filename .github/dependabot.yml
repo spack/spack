@@ -5,3 +5,8 @@ updates:
     directory: "/"
     schedule:
       interval: "daily"
+  # Requirements to build documentation
+  - package-ecosystem: "pip"
+    directory: "/lib/spack/docs"
+    schedule:
+      interval: "daily"

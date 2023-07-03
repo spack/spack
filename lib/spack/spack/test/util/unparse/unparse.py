@@ -6,32 +6,24 @@ import ast
 import codecs
 import os
 import sys
+import tokenize
 
 import pytest
-import six
-
-if six.PY3:
-    import tokenize
-else:
-    from lib2to3.pgen2 import tokenize
 
 import spack.util.unparse
 
-pytestmark = pytest.mark.skipif(sys.platform == 'win32',
-                                reason="Test module unsupported on Windows")
+pytestmark = pytest.mark.skipif(
+    sys.platform == "win32", reason="Test module unsupported on Windows"
+)
 
 
 def read_pyfile(filename):
     """Read and return the contents of a Python source file (as a
     string), taking into account the file encoding."""
-    if six.PY3:
-        with open(filename, "rb") as pyfile:
-            encoding = tokenize.detect_encoding(pyfile.readline)[0]
-        with codecs.open(filename, "r", encoding=encoding) as pyfile:
-            source = pyfile.read()
-    else:
-        with open(filename, "r") as pyfile:
-            source = pyfile.read()
+    with open(filename, "rb") as pyfile:
+        encoding = tokenize.detect_encoding(pyfile.readline)[0]
+    with codecs.open(filename, "r", encoding=encoding) as pyfile:
+        source = pyfile.read()
     return source
 
 
@@ -177,8 +169,69 @@ async def f():
 """
 
 
-def assertASTEqual(ast1, ast2):
-    ast.dump(ast1) == ast.dump(ast2)
+match_literal = """\
+match status:
+    case 400:
+        return "Bad request"
+    case 404 | 418:
+        return "Not found"
+    case _:
+        return "Something's wrong with the internet"
+"""
+
+match_with_noop = """\
+match status:
+    case 400:
+        return "Bad request"
+"""
+
+match_literal_and_variable = """\
+match point:
+    case (0, 0):
+        print("Origin")
+    case (0, y):
+        print(f"Y={y}")
+    case (x, 0):
+        print(f"X={x}")
+    case (x, y):
+        print(f"X={x}, Y={y}")
+    case _:
+        raise ValueError("Not a point")
+"""
+
+
+match_classes = """\
+class Point:
+    x: int
+    y: int
+
+def location(point):
+    match point:
+        case Point(x=0, y=0):
+            print("Origin is the point's location.")
+        case Point(x=0, y=y):
+            print(f"Y={y} and the point is on the y-axis.")
+        case Point(x=x, y=0):
+            print(f"X={x} and the point is on the x-axis.")
+        case Point():
+            print("The point is located somewhere else on the plane.")
+        case _:
+            print("Not a point")
+"""
+
+match_nested = """\
+match points:
+    case []:
+        print("No points in the list.")
+    case [Point(0, 0)]:
+        print("The origin is the only point in the list.")
+    case [Point(x, y)]:
+        print(f"A single point {x}, {y} is in the list.")
+    case [Point(0, y1), Point(0, y2)]:
+        print(f"Two points on the Y axis at {y1}, {y2} are in the list.")
+    case _:
+        print("Something else is found in the list.")
+"""
 
 
 def check_ast_roundtrip(code1, filename="internal", mode="exec"):
@@ -186,41 +239,37 @@ def check_ast_roundtrip(code1, filename="internal", mode="exec"):
     code2 = spack.util.unparse.unparse(ast1)
 
     ast2 = compile(code2, filename, mode, ast.PyCF_ONLY_AST)
-    assertASTEqual(ast1, ast2)
+
+    error_msg = "Failed to roundtrip {} [mode={}]".format(filename, mode)
+    assert ast.dump(ast1) == ast.dump(ast2), error_msg
 
 
 def test_core_lib_files():
     """Roundtrip source files from the Python core libs."""
     test_directories = [
         os.path.join(
-            getattr(sys, 'real_prefix', sys.prefix),
-            'lib',
-            'python%s.%s' % sys.version_info[:2]
+            getattr(sys, "real_prefix", sys.prefix), "lib", "python%s.%s" % sys.version_info[:2]
         )
     ]
 
     names = []
     for test_dir in test_directories:
         for n in os.listdir(test_dir):
-            if n.endswith('.py') and not n.startswith('bad'):
+            if n.endswith(".py") and not n.startswith("bad"):
                 names.append(os.path.join(test_dir, n))
 
     for filename in names:
-        print('Testing %s' % filename)
+        print("Testing %s" % filename)
         source = read_pyfile(filename)
         check_ast_roundtrip(source)
 
 
-@pytest.mark.skipif(
-    sys.version_info[:2] < (3, 6), reason="Only for Python 3.6 or greater"
-)
+@pytest.mark.skipif(sys.version_info[:2] < (3, 6), reason="Only for Python 3.6 or greater")
 def test_simple_fstring():
     check_ast_roundtrip("f'{x}'")
 
 
-@pytest.mark.skipif(
-    sys.version_info[:2] < (3, 6), reason="Only for Python 3.6 or greater"
-)
+@pytest.mark.skipif(sys.version_info[:2] < (3, 6), reason="Only for Python 3.6 or greater")
 def test_fstrings():
     # See issue 25180
     check_ast_roundtrip(r"""f'{f"{0}"*3}'""")
@@ -229,23 +278,20 @@ def test_fstrings():
     check_ast_roundtrip('''f"""'end' "quote\\""""''')
 
 
-@pytest.mark.skipif(
-    sys.version_info[:2] < (3, 6), reason="Only for Python 3.6 or greater"
-)
+@pytest.mark.skipif(sys.version_info[:2] < (3, 6), reason="Only for Python 3.6 or greater")
 def test_fstrings_complicated():
     # See issue 28002
     check_ast_roundtrip("""f'''{"'"}'''""")
     check_ast_roundtrip('''f\'\'\'-{f"""*{f"+{f'.{x}.'}+"}*"""}-\'\'\'''')
-    check_ast_roundtrip(
-        '''f\'\'\'-{f"""*{f"+{f'.{x}.'}+"}*"""}-'single quote\\'\'\'\'''')
-    check_ast_roundtrip('f"""{\'\'\'\n\'\'\'}"""')
-    check_ast_roundtrip('f"""{g(\'\'\'\n\'\'\')}"""')
+    check_ast_roundtrip('''f\'\'\'-{f"""*{f"+{f'.{x}.'}+"}*"""}-'single quote\\'\'\'\'''')
+    check_ast_roundtrip("f\"\"\"{'''\n'''}\"\"\"")
+    check_ast_roundtrip("f\"\"\"{g('''\n''')}\"\"\"")
     check_ast_roundtrip('''f"a\\r\\nb"''')
     check_ast_roundtrip('''f"\\u2028{'x'}"''')
 
 
 def test_parser_modes():
-    for mode in ['exec', 'single', 'eval']:
+    for mode in ["exec", "single", "eval"]:
         check_ast_roundtrip(code_parseable_in_all_parser_modes, mode=mode)
 
 
@@ -286,16 +332,9 @@ def test_huge_float():
     check_ast_roundtrip("-1e1000j")
 
 
-@pytest.mark.skipif(not six.PY2, reason="Only works for Python 2")
-def test_min_int27():
-    check_ast_roundtrip(str(-sys.maxint - 1))
-    check_ast_roundtrip("-(%s)" % (sys.maxint + 1))
-
-
-@pytest.mark.skipif(not six.PY3, reason="Only works for Python 3")
 def test_min_int30():
-    check_ast_roundtrip(str(-2**31))
-    check_ast_roundtrip(str(-2**63))
+    check_ast_roundtrip(str(-(2**31)))
+    check_ast_roundtrip(str(-(2**63)))
 
 
 def test_imaginary_literals():
@@ -303,9 +342,6 @@ def test_imaginary_literals():
     check_ast_roundtrip("-7j")
     check_ast_roundtrip("0j")
     check_ast_roundtrip("-0j")
-    if six.PY2:
-        check_ast_roundtrip("-(7j)")
-        check_ast_roundtrip("-(0j)")
 
 
 def test_negative_zero():
@@ -336,12 +372,11 @@ def test_function_arguments():
     check_ast_roundtrip("def f(a, b = 2): pass")
     check_ast_roundtrip("def f(a = 5, b = 2): pass")
     check_ast_roundtrip("def f(*args, **kwargs): pass")
-    if six.PY3:
-        check_ast_roundtrip("def f(*, a = 1, b = 2): pass")
-        check_ast_roundtrip("def f(*, a = 1, b): pass")
-        check_ast_roundtrip("def f(*, a, b = 2): pass")
-        check_ast_roundtrip("def f(a, b = None, *, c, **kwds): pass")
-        check_ast_roundtrip("def f(a=2, *args, c=5, d, **kwds): pass")
+    check_ast_roundtrip("def f(*, a = 1, b = 2): pass")
+    check_ast_roundtrip("def f(*, a = 1, b): pass")
+    check_ast_roundtrip("def f(*, a, b = 2): pass")
+    check_ast_roundtrip("def f(a, b = None, *, c, **kwds): pass")
+    check_ast_roundtrip("def f(a=2, *args, c=5, d, **kwds): pass")
 
 
 def test_relative_import():
@@ -352,12 +387,10 @@ def test_import_many():
     check_ast_roundtrip(import_many)
 
 
-@pytest.mark.skipif(not six.PY3, reason="Only for Python 3")
 def test_nonlocal():
     check_ast_roundtrip(nonlocal_ex)
 
 
-@pytest.mark.skipif(not six.PY3, reason="Only for Python 3")
 def test_raise_from():
     check_ast_roundtrip(raise_from)
 
@@ -394,20 +427,11 @@ def test_joined_str_361():
     check_ast_roundtrip('f"{key:4}={value!a:#06x}"')
 
 
-@pytest.mark.skipif(not six.PY2, reason="Only for Python 2")
-def test_repr():
-    check_ast_roundtrip(a_repr)
-
-
-@pytest.mark.skipif(
-    sys.version_info[:2] < (3, 6),
-    reason="Only for Python 3.6 or greater"
-)
+@pytest.mark.skipif(sys.version_info[:2] < (3, 6), reason="Only for Python 3.6 or greater")
 def test_complex_f_string():
     check_ast_roundtrip(complex_f_string)
 
 
-@pytest.mark.skipif(not six.PY3, reason="Only for Python 3")
 def test_annotations():
     check_ast_roundtrip("def f(a : int): pass")
     check_ast_roundtrip("def f(a: int = 5): pass")
@@ -459,7 +483,6 @@ def test_class_decorators():
     check_ast_roundtrip(class_decorator)
 
 
-@pytest.mark.skipif(not six.PY3, reason="Only for Python 3")
 def test_class_definition():
     check_ast_roundtrip("class A(metaclass=type, *[], **{}): pass")
 
@@ -473,7 +496,6 @@ def test_try_except_finally():
     check_ast_roundtrip(try_except_finally)
 
 
-@pytest.mark.skipif(not six.PY3, reason="Only for Python 3")
 def test_starred_assignment():
     check_ast_roundtrip("a, *b, c = seq")
     check_ast_roundtrip("a, (*b, c) = seq")
@@ -525,3 +547,12 @@ def test_async_with():
 @pytest.mark.skipif(sys.version_info < (3, 5), reason="Not supported < 3.5")
 def test_async_with_as():
     check_ast_roundtrip(async_with_as)
+
+
+@pytest.mark.skipif(sys.version_info < (3, 10), reason="Not supported < 3.10")
+@pytest.mark.parametrize(
+    "literal",
+    [match_literal, match_with_noop, match_literal_and_variable, match_classes, match_nested],
+)
+def test_match_literal(literal):
+    check_ast_roundtrip(literal)

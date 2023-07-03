@@ -1,11 +1,11 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import llnl.util.tty as tty
 
-from spack import *
+from spack.package import *
 
 
 class Sarus(CMakePackage):
@@ -14,7 +14,7 @@ class Sarus(CMakePackage):
     homepage = "https://github.com/eth-cscs/sarus"
     url = "https://github.com/eth-cscs/sarus/archive/1.3.3.tar.gz"
     git = "https://github.com/eth-cscs/sarus.git"
-    maintainers = ["Madeeks", "taliaga", "teonnik"]
+    maintainers("Madeeks", "taliaga", "teonnik")
 
     version("develop", branch="develop")
     version("master", branch="master")
@@ -40,7 +40,7 @@ class Sarus(CMakePackage):
 
     depends_on("expat", type="build")
     depends_on("squashfs", type=("build", "run"))
-    depends_on("boost@1.65.0: cxxstd=11")
+    depends_on("boost@1.65.0: cxxstd=11 +program_options")
     depends_on("cpprestsdk@2.10.0:")
     depends_on("libarchive@3.4.1:")
     depends_on("rapidjson@1.2.0-2021-08-13", type="build")

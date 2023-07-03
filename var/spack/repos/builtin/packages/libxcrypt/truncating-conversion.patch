@@ -1,0 +1,13 @@
+diff --git a/lib/alg-yescrypt-opt.c b/lib/alg-yescrypt-opt.c
+index 60a6ccd..a33c6e4 100644
+--- a/lib/alg-yescrypt-opt.c
++++ b/lib/alg-yescrypt-opt.c
+@@ -514,7 +514,7 @@ static volatile uint64_t Smask2var = Smask2;
+ #define PWXFORM_SIMD(X) { \
+ 	uint64_t x; \
+ 	FORCE_REGALLOC_1 \
+-	uint32_t lo = x = EXTRACT64(X) & Smask2reg; \
++	uint32_t lo = (uint32_t)(x = ((uint64_t)EXTRACT64(X)) & Smask2reg); \
+ 	FORCE_REGALLOC_2 \
+ 	uint32_t hi = x >> 32; \
+ 	X = _mm_mul_epu32(HI32(X), X); \

@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -9,14 +9,7 @@ from .linux_distro import LinuxDistro
 from .mac_os import MacOs
 from .windows_os import WindowsOs
 
-__all__ = [
-    'OperatingSystem',
-    'LinuxDistro',
-    'MacOs',
-    'CrayFrontend',
-    'CrayBackend',
-    'WindowsOs'
-]
+__all__ = ["OperatingSystem", "LinuxDistro", "MacOs", "CrayFrontend", "CrayBackend", "WindowsOs"]
 
 #: List of all the Operating Systems known to Spack
 operating_systems = [LinuxDistro, MacOs, CrayFrontend, CrayBackend, WindowsOs]

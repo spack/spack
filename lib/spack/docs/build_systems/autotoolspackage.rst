@@ -1,13 +1,13 @@
-.. Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+.. Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
    Spack Project Developers. See the top-level COPYRIGHT file for details.
 
    SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 .. _autotoolspackage:
 
-----------------
-AutotoolsPackage
-----------------
+---------
+Autotools
+---------
 
 Autotools is a GNU build system that provides a build-script generator.
 By running the platform-independent ``./configure`` script that comes
@@ -17,7 +17,7 @@ with the package, you can generate a platform-dependent Makefile.
 Phases
 ^^^^^^
 
-The ``AutotoolsPackage`` base class comes with the following phases:
+The ``AutotoolsBuilder`` and ``AutotoolsPackage`` base classes come with the following phases:
 
 #. ``autoreconf`` - generate the configure script
 #. ``configure`` - generate the Makefiles
@@ -433,7 +433,7 @@ For example:
 .. code-block:: python
 
    variant('profiler', when='@2.0:')
-   config_args += self.with_or_without('profiler)
+   config_args += self.with_or_without('profiler')
 
 will neither add ``--with-profiler`` nor ``--without-profiler`` when the version is
 below ``2.0``.

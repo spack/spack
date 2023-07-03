@@ -1,0 +1,24 @@
+From 671217ebdd89fa6b43bb990e0aaaf87dd57a0c5c Mon Sep 17 00:00:00 2001
+From: Ryan Krattiger <ryan.krattiger@kitware.com>
+Date: Wed, 31 Aug 2022 13:58:21 -0400
+Subject: [PATCH] DIY: Add include of cstddef to DIY datatypes.hpp
+
+This is required because size_t is not defined via
+the STL headers included here.
+---
+ vtkm/thirdparty/diy/vtkmdiy/include/vtkmdiy/mpi/datatypes.hpp | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/vtkm/thirdparty/diy/vtkmdiy/include/vtkmdiy/mpi/datatypes.hpp b/vtkm/thirdparty/diy/vtkmdiy/include/vtkmdiy/mpi/datatypes.hpp
+index 24d4b3275..bec4a62d8 100644
+--- a/vtkm/thirdparty/diy/vtkmdiy/include/vtkmdiy/mpi/datatypes.hpp
++++ b/vtkm/thirdparty/diy/vtkmdiy/include/vtkmdiy/mpi/datatypes.hpp
+@@ -5,6 +5,7 @@
+ 
+ #include <vector>
+ #include <array>
++#include <cstddef>
+ 
+ namespace diy
+ {
+-- 

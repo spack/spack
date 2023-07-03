@@ -1,7 +1,10 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
+
+from spack.package import *
 
 
 class RRpsychi(RPackage):
@@ -20,8 +23,8 @@ class RRpsychi(RPackage):
     meta-analysis, even if a researcher do not report effect size in a
     published work."""
 
-    cran = 'rpsychi'
+    cran = "rpsychi"
 
-    version('0.8', sha256='9c5465f59c92431e345418aee5bc1f5bc12f843492b20ccb9f92f3bdf19a80c0')
+    version("0.8", sha256="9c5465f59c92431e345418aee5bc1f5bc12f843492b20ccb9f92f3bdf19a80c0")
 
-    depends_on('r-gtools', type=('build', 'run'))
+    depends_on("r-gtools", type=("build", "run"))

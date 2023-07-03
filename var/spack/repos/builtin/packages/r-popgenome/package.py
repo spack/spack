@@ -1,9 +1,9 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
+from spack.package import *
 
 
 class RPopgenome(RPackage):
@@ -18,10 +18,10 @@ class RPopgenome(RPackage):
 
     cran = "PopGenome"
 
-    version('2.7.5', sha256='d627b8ac87b4db6038d7349b2df20648d2fcfd48e2dafcd7f4731d1b607cbc75')
-    version('2.7.1', sha256='a84903b151528fa026ccaba42ada22cd89babbc1824afd40269b7204e488a5fa')
-    version('2.6.1', sha256='7a2922ed505fa801117a153e479d246bcf4854b91c6ab0241acc620a9d779b1c')
+    version("2.7.5", sha256="d627b8ac87b4db6038d7349b2df20648d2fcfd48e2dafcd7f4731d1b607cbc75")
+    version("2.7.1", sha256="a84903b151528fa026ccaba42ada22cd89babbc1824afd40269b7204e488a5fa")
+    version("2.6.1", sha256="7a2922ed505fa801117a153e479d246bcf4854b91c6ab0241acc620a9d779b1c")
 
-    depends_on('r@2.14.2:', type=('build', 'run'))
-    depends_on('r-ff', type=('build', 'run'))
-    depends_on('zlib')
+    depends_on("r@2.14.2:", type=("build", "run"))
+    depends_on("r-ff", type=("build", "run"))
+    depends_on("zlib")

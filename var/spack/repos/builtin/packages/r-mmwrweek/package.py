@@ -1,9 +1,9 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
+from spack.package import *
 
 
 class RMmwrweek(RPackage):
@@ -17,5 +17,5 @@ class RMmwrweek(RPackage):
 
     cran = "MMWRweek"
 
-    version('0.1.3', sha256='1aa8b687dc3340c3f277689eb0ca529e0064a4a3a66868137f2f8ab209d133d0')
-    version('0.1.1', sha256='969fd18535f3b78dd360d62d29d5f15409fc059f4af5d345abfde711e4adbc99')
+    version("0.1.3", sha256="1aa8b687dc3340c3f277689eb0ca529e0064a4a3a66868137f2f8ab209d133d0")
+    version("0.1.1", sha256="969fd18535f3b78dd360d62d29d5f15409fc059f4af5d345abfde711e4adbc99")

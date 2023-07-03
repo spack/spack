@@ -1,0 +1,21 @@
+--- a/exports/gensymbol
++++ b/exports/gensymbol
+@@ -3914,6 +3914,18 @@
+     @underscore_objs = (@underscore_objs, @misc_common_objs);
+     @no_underscore_objs = (@no_underscore_objs, @misc_common_objs);
+ 
++    foreach $objs (@underscore_objs) {
++        print "void ", $symbolprefix, $objs, $bu, $symbolsuffix, "();\n" if $objs ne "xerbla";
++    }
++
++    foreach $objs (@need_2underscore_objs) {
++        print "void ", $symbolprefix, $objs, $bu, $bu, $symbolsuffix, "();\n";
++    }
++
++    foreach $objs (@no_underscore_objs) {
++        print "void ", $symbolprefix, $objs, $symbolsuffix, "();\n";
++    }
++
+     print "int main(void){\n";
+     foreach $objs (@underscore_objs) {
+         print $symbolprefix, $objs, $bu, $symbolsuffix, "();\n" if $objs ne "xerbla";

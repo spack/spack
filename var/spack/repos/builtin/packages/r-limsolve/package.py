@@ -1,9 +1,9 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
+from spack.package import *
 
 
 class RLimsolve(RPackage):
@@ -18,9 +18,9 @@ class RLimsolve(RPackage):
 
     cran = "limSolve"
 
-    version('1.5.6', sha256='b97ea9930383634c8112cdbc42f71c4e93fe0e7bfaa8f401921835cb44cb49a0')
+    version("1.5.6", sha256="b97ea9930383634c8112cdbc42f71c4e93fe0e7bfaa8f401921835cb44cb49a0")
 
-    depends_on('r@2.10:', type=('build', 'run'))
-    depends_on('r-quadprog', type=('build', 'run'))
-    depends_on('r-lpsolve', type=('build', 'run'))
-    depends_on('r-mass', type=('build', 'run'))
+    depends_on("r@2.10:", type=("build", "run"))
+    depends_on("r-quadprog", type=("build", "run"))
+    depends_on("r-lpsolve", type=("build", "run"))
+    depends_on("r-mass", type=("build", "run"))

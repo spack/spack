@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -16,7 +16,11 @@ import spack.main
 import spack.paths
 from spack.cmd.commands import _dest_to_fish_complete, _positional_to_subroutine
 
+<<<<<<< HEAD
 commands = spack.main.SpackCommand("commands")
+=======
+commands = spack.main.SpackCommand("commands", subprocess=True)
+>>>>>>> develop
 
 parser = spack.main.make_argument_parser()
 spack.main.add_all_commands(parser)
@@ -104,17 +108,29 @@ _cmd-spack-install:
 
 
 def test_rst_with_header(tmpdir):
+<<<<<<< HEAD
+=======
+    local_commands = spack.main.SpackCommand("commands")
+>>>>>>> develop
     fake_header = "this is a header!\n\n"
 
     filename = tmpdir.join("header.txt")
     with filename.open("w") as f:
         f.write(fake_header)
 
+<<<<<<< HEAD
     out = commands("--format=rst", "--header", str(filename))
     assert out.startswith(fake_header)
 
     with pytest.raises(spack.main.SpackCommandError):
         commands("--format=rst", "--header", "asdfjhkf")
+=======
+    out = local_commands("--format=rst", "--header", str(filename))
+    assert out.startswith(fake_header)
+
+    with pytest.raises(spack.main.SpackCommandError):
+        local_commands("--format=rst", "--header", "asdfjhkf")
+>>>>>>> develop
 
 
 def test_rst_update(tmpdir):
@@ -143,9 +159,7 @@ def test_no_pipe_error():
     """Make sure we don't see any pipe errors when piping output."""
 
     proc = subprocess.Popen(
-        ["spack", "commands", "--format=rst"],
-        stdout=subprocess.PIPE,
-        stderr=subprocess.PIPE,
+        ["spack", "commands", "--format=rst"], stdout=subprocess.PIPE, stderr=subprocess.PIPE
     )
 
     # Call close() on stdout to cause a broken pipe
@@ -244,9 +258,10 @@ def test_update_completion_arg(tmpdir, monkeypatch):
 
     monkeypatch.setattr(spack.cmd.commands, "update_completion_args", mock_args)
 
+    local_commands = spack.main.SpackCommand("commands")
     # ensure things fail if --update-completion isn't specified alone
     with pytest.raises(spack.main.SpackCommandError):
-        commands("--update-completion", "-a")
+        local_commands("--update-completion", "-a")
 
     for shell in shells:
         assert "--update-completion" not in mock_files[shell].read()
@@ -275,8 +290,6 @@ def test_updated_completion_scripts(tmpdir):
         old_script = os.path.join(spack.paths.share_path, script)
         new_script = str(tmpdir.join(script))
 
-        commands(
-            "--aliases", "--format", shell, "--header", header, "--update", new_script
-        )
+        commands("--aliases", "--format", shell, "--header", header, "--update", new_script)
 
         assert filecmp.cmp(old_script, new_script), msg

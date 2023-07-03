@@ -1,9 +1,9 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
+from spack.package import *
 
 
 class RMultitaper(RPackage):
@@ -20,7 +20,7 @@ class RMultitaper(RPackage):
 
     cran = "multitaper"
 
-    version('1.0-15', sha256='837d71f3b46fbce2bea210449cf75e609f5363ff23b7808f5f115fdc51e6a3be')
-    version('1.0-14', sha256='c84c122541dc2874131446e23b212259b3b00590d701efee49e6740fd74a8d13')
+    version("1.0-15", sha256="837d71f3b46fbce2bea210449cf75e609f5363ff23b7808f5f115fdc51e6a3be")
+    version("1.0-14", sha256="c84c122541dc2874131446e23b212259b3b00590d701efee49e6740fd74a8d13")
 
-    depends_on('r@3.0:', type=('build', 'run'))
+    depends_on("r@3.0:", type=("build", "run"))

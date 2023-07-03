@@ -1,13 +1,13 @@
-.. Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+.. Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
    Spack Project Developers. See the top-level COPYRIGHT file for details.
 
    SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 .. _mirrors:
 
-=======
-Mirrors
-=======
+======================
+Mirrors (mirrors.yaml)
+======================
 
 Some sites may not have access to the internet for fetching packages.
 These sites will need a local repository of tarballs from which they
@@ -163,7 +163,7 @@ your site.
 Mirror environment
 ^^^^^^^^^^^^^^^^^^
 
-To create a mirror of all packages required by a concerte environment, activate the environment and call ``spack mirror create -a``.
+To create a mirror of all packages required by a concrete environment, activate the environment and call ``spack mirror create -a``.
 This is especially useful to create a mirror of an environment concretized on another machine.
 
 .. code-block:: console

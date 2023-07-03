@@ -1,9 +1,9 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
+from spack.package import *
 
 
 class REmmli(RPackage):
@@ -15,4 +15,4 @@ class REmmli(RPackage):
 
     cran = "EMMLi"
 
-    version('0.0.3', sha256='57c04953200d2253bc90b0035dc590179d1b959768bfa7fdac92b6bcbf9f66ac')
+    version("0.0.3", sha256="57c04953200d2253bc90b0035dc590179d1b959768bfa7fdac92b6bcbf9f66ac")

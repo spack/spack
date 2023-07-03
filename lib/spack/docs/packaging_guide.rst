@@ -1,4 +1,4 @@
-.. Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+.. Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
    Spack Project Developers. See the top-level COPYRIGHT file for details.
 
    SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -18,14 +18,16 @@ have at least some familiarity with Python, and that you've read the
 There are two key parts of Spack:
 
 #. **Specs**: expressions for describing builds of software, and
-#. **Packages**: Python modules that describe how to build
-   software according to a spec.
+#. **Packages**: Python modules that describe how to build and
+   test software according to a spec.
 
 Specs allow a user to describe a *particular* build in a way that a
 package author can understand.  Packages allow the packager to
 encapsulate the build logic for different versions, compilers,
 options, platforms, and dependency combinations in one place.
-Essentially, a package translates a spec into build logic.
+Essentially, a package translates a spec into build logic. It
+also allows the packager to write spec-specific tests of the
+installed software.
 
 Packages in Spack are written in pure Python, so you can do anything
 in Spack that you can do in Python.  Python was chosen as the
@@ -34,24 +36,164 @@ ubiquitous in the scientific software community. Second, it's a modern
 language and has many powerful features to help make package writing
 easy.
 
----------------------------
-Creating & editing packages
----------------------------
+.. warning::
+
+   As a general rule, packages should install the software *from source*.
+   The only exception is for proprietary software (e.g., vendor compilers).
+
+   If a special build system needs to be added in order to support building
+   a package from source, then the associated code and recipe should be added
+   first.
+
+
+.. _installation_procedure:
+
+--------------------------------------
+Overview of the installation procedure
+--------------------------------------
+
+Whenever Spack installs software, it goes through a series of predefined steps:
+
+.. image:: images/installation_pipeline.png
+  :scale: 60 %
+  :align: center
+
+All these steps are influenced by the metadata in each ``package.py`` and
+by the current Spack configuration.
+Since build systems are different from one another, the execution of the
+last block in the figure is further expanded in a build system specific way.
+An example for ``CMake`` is, for instance:
+
+.. image:: images/builder_phases.png
+   :align: center
+   :scale: 60 %
+
+The predefined steps for each build system are called "phases".
+In general, the name and order in which the phases will be executed can be
+obtained by either reading the API docs at :py:mod:`~.spack.build_systems`, or
+using the ``spack info`` command:
+
+.. code-block:: console
+    :emphasize-lines: 13,14
+
+    $ spack info --phases m4
+    AutotoolsPackage:    m4
+    Homepage:            https://www.gnu.org/software/m4/m4.html
+
+    Safe versions:
+        1.4.17    ftp://ftp.gnu.org/gnu/m4/m4-1.4.17.tar.gz
+
+    Variants:
+        Name       Default   Description
+
+        sigsegv    on        Build the libsigsegv dependency
+
+    Installation Phases:
+        autoreconf    configure    build    install
+
+    Build Dependencies:
+        libsigsegv
+
+    ...
+
+An extensive list of available build systems and phases is provided in :ref:`installation_process`.
+
+
+------------------------
+Writing a package recipe
+------------------------
+
+Since v0.19, Spack supports  two ways of writing a package recipe. The most commonly used is to encode both the metadata
+(directives, etc.) and the build behavior in a single class, like shown in the following example:
+
+.. code-block:: python
+
+   class Openjpeg(CMakePackage):
+       """OpenJPEG is an open-source JPEG 2000 codec written in C language"""
+
+       homepage = "https://github.com/uclouvain/openjpeg"
+       url = "https://github.com/uclouvain/openjpeg/archive/v2.3.1.tar.gz"
+
+       version("2.4.0", sha256="8702ba68b442657f11aaeb2b338443ca8d5fb95b0d845757968a7be31ef7f16d")
+
+       variant("codec", default=False, description="Build the CODEC executables")
+       depends_on("libpng", when="+codec")
+
+       def url_for_version(self, version):
+           if version >= Version("2.1.1"):
+               return super(Openjpeg, self).url_for_version(version)
+           url_fmt = "https://github.com/uclouvain/openjpeg/archive/version.{0}.tar.gz"
+           return url_fmt.format(version)
+
+       def cmake_args(self):
+           args = [
+               self.define_from_variant("BUILD_CODEC", "codec"),
+               self.define("BUILD_MJ2", False),
+               self.define("BUILD_THIRDPARTY", False),
+           ]
+           return args
+
+A package encoded with a single class is backward compatible with versions of Spack
+lower than v0.19, and so are custom repositories containing only recipes of this kind.
+The downside is that *this format doesn't allow packagers to use more than one build system in a single recipe*.
+
+To do that, we have to resort to the second way Spack has of writing packages, which involves writing a
+builder class explicitly. Using the same example as above, this reads:
+
+.. code-block:: python
+
+   class Openjpeg(CMakePackage):
+       """OpenJPEG is an open-source JPEG 2000 codec written in C language"""
+
+       homepage = "https://github.com/uclouvain/openjpeg"
+       url = "https://github.com/uclouvain/openjpeg/archive/v2.3.1.tar.gz"
+
+       version("2.4.0", sha256="8702ba68b442657f11aaeb2b338443ca8d5fb95b0d845757968a7be31ef7f16d")
+
+       variant("codec", default=False, description="Build the CODEC executables")
+       depends_on("libpng", when="+codec")
+
+       def url_for_version(self, version):
+           if version >= Version("2.1.1"):
+               return super(Openjpeg, self).url_for_version(version)
+           url_fmt = "https://github.com/uclouvain/openjpeg/archive/version.{0}.tar.gz"
+           return url_fmt.format(version)
+
+   class CMakeBuilder(spack.build_systems.cmake.CMakeBuilder):
+       def cmake_args(self):
+           args = [
+               self.define_from_variant("BUILD_CODEC", "codec"),
+               self.define("BUILD_MJ2", False),
+               self.define("BUILD_THIRDPARTY", False),
+           ]
+           return args
+
+This way of writing packages allows extending the recipe to support multiple build systems,
+see :ref:`multiple_build_systems` for more details. The downside is that recipes of this kind
+are only understood by Spack since v0.19+. More information on the internal architecture of
+Spack can be found at :ref:`package_class_structure`.
+
+.. note::
+
+   If a builder is implemented in ``package.py``, all build-specific methods must be moved
+   to the builder. This means that if you have a package like
+
+   .. code-block:: python
+
+      class Foo(CmakePackage):
+          def cmake_args(self):
+              ...
+
+   and you add a builder to the ``package.py``, you must move ``cmake_args`` to the builder.
 
 .. _cmd-spack-create:
 
-^^^^^^^^^^^^^^^^
-``spack create``
-^^^^^^^^^^^^^^^^
+---------------------
+Creating new packages
+---------------------
 
-The ``spack create`` command creates a directory with the package name and
-generates a ``package.py`` file with a boilerplate package template. If given
-a URL pointing to a tarball or other software archive, ``spack create`` is
-smart enough to determine basic information about the package, including its name
-and build system. In most cases, ``spack create`` plus a few modifications is
-all you need to get a package working.
-
-Here's an example:
+To help creating a new package Spack provides a command that generates a ``package.py``
+file in an existing repository, with a boilerplate package template. Here's an example:
 
 .. code-block:: console
 
@@ -87,30 +229,22 @@ You do not *have* to download all of the versions up front. You can
 always choose to download just one tarball initially, and run
 :ref:`cmd-spack-checksum` later if you need more versions.
 
-Let's say you download 3 tarballs:
-
-.. code-block:: console
-
-	How many would you like to checksum? (default is 1, q to abort) 3
-	==> Downloading...
-	==> Fetching https://gmplib.org/download/gmp/gmp-6.1.2.tar.bz2
-	######################################################################## 100.0%
-	==> Fetching https://gmplib.org/download/gmp/gmp-6.1.1.tar.bz2
-	######################################################################## 100.0%
-	==> Fetching https://gmplib.org/download/gmp/gmp-6.1.0.tar.bz2
-	######################################################################## 100.0%
-	==> Checksummed 3 versions of gmp:
-	==> This package looks like it uses the autotools build system
-	==> Created template for gmp package
-	==> Created package file: /Users/Adam/spack/var/spack/repos/builtin/packages/gmp/package.py
-
 Spack automatically creates a directory in the appropriate repository,
 generates a boilerplate template for your package, and opens up the new
-``package.py`` in your favorite ``$EDITOR``:
+``package.py`` in your favorite ``$EDITOR`` (see :ref:`controlling-the-editor`
+for details):
 
 .. code-block:: python
    :linenos:
 
+   # Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+   # Spack Project Developers. See the top-level COPYRIGHT file for details.
+   #
+   # SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
+   # ----------------------------------------------------------------------------
+   # If you submit this package back to Spack as a pull request,
+   # please first remove this boilerplate and all FIXME comments.
    #
    # This is a template package file for Spack.  We've put "FIXME"
    # next to all the things you'll want to change. Once you've handled
@@ -123,29 +257,26 @@ generates a boilerplate template for your package, and opens up the new
    #     spack edit gmp
    #
    # See the Spack documentation for more information on packaging.
-   # If you submit this package back to Spack as a pull request,
-   # please first remove this boilerplate and all FIXME comments.
-   #
-   from spack import *
+   # ----------------------------------------------------------------------------
+   import spack.build_systems.autotools
+   from spack.package import *
 
 
    class Gmp(AutotoolsPackage):
        """FIXME: Put a proper description of your package here."""
 
        # FIXME: Add a proper url for your package's homepage here.
-       homepage = "http://www.example.com"
-       url      = "https://gmplib.org/download/gmp/gmp-6.1.2.tar.bz2"
+       homepage = "https://www.example.com"
+       url = "https://gmplib.org/download/gmp/gmp-6.1.2.tar.bz2"
 
        # FIXME: Add a list of GitHub accounts to
        # notify when the package is updated.
-       # maintainers = ['github_user1', 'github_user2']
+       # maintainers("github_user1", "github_user2")
 
-       version('6.1.2', '8ddbb26dc3bd4e2302984debba1406a5')
-       version('6.1.1', '4c175f86e11eb32d8bf9872ca3a8e11d')
-       version('6.1.0', '86ee6e54ebfc4a90b643a65e402c4048')
+       version("6.2.1", sha256="eae9326beb4158c386e39a356818031bd28f3124cf915f8c5b1dc4c7a36b4d7c")
 
        # FIXME: Add dependencies if required.
-       # depends_on('foo')
+       # depends_on("foo")
 
        def configure_args(self):
            # FIXME: Add arguments other than --prefix
@@ -154,15 +285,16 @@ generates a boilerplate template for your package, and opens up the new
            return args
 
 The tedious stuff (creating the class, checksumming archives) has been
-done for you. You'll notice that ``spack create`` correctly detected that
-``gmp`` uses the Autotools build system. It created a new ``Gmp`` package
-that subclasses the ``AutotoolsPackage`` base class. This base class
-provides basic installation methods common to all Autotools packages:
+done for you. Spack correctly detected that ``gmp`` uses the ``autotools``
+build system, so it created a new ``Gmp`` package that subclasses the
+``AutotoolsPackage`` base class.
+
+The default installation procedure for a package subclassing the ``AutotoolsPackage``
+is to go through the typical process of:
 
 .. code-block:: bash
 
    ./configure --prefix=/path/to/installation/directory
-
    make
    make check
    make install
@@ -190,14 +322,8 @@ The rest of the tasks you need to do are as follows:
 
 #. Add a comma-separated list of maintainers.
 
-   The ``maintainers`` field is a list of GitHub accounts of people
-   who want to be notified any time the package is modified. When a
-   pull request is submitted that updates the package, these people
-   will be requested to review the PR. This is useful for developers
-   who maintain a Spack package for their own software, as well as
-   users who rely on a piece of software and want to ensure that the
-   package doesn't break. It also gives users a list of people to
-   contact for help when someone reports a build error with the package.
+   Add a list of Github accounts of people who want to be notified
+   any time the package is modified. See :ref:`package_maintainers`.
 
 #. Add ``depends_on()`` calls for the package's dependencies.
 
@@ -209,12 +335,39 @@ The rest of the tasks you need to do are as follows:
    Your new package may require specific flags during ``configure``.
    These can be added via ``configure_args``. Specifics will differ
    depending on the package and its build system.
-   :ref:`Implementing the install method <install-method>` is
+   :ref:`installation_process` is
    covered in detail later.
 
-Passing a URL to ``spack create`` is a convenient and easy way to get
-a basic package template, but what if your software is licensed and
-cannot be downloaded from a URL? You can still create a boilerplate
+
+.. _controlling-the-editor:
+
+^^^^^^^^^^^^^^^^^^^^^^^^^
+Controlling the editor
+^^^^^^^^^^^^^^^^^^^^^^^^^
+
+When Spack needs to open an editor for you (e.g., for commands like
+:ref:`cmd-spack-create` or :ref:`cmd-spack-edit`, it looks at several environment variables
+to figure out what to use. The order of precedence is:
+
+* ``SPACK_EDITOR``: highest precedence, in case you want something specific for Spack;
+* ``VISUAL``: standard environment variable for full-screen editors like ``vim`` or ``emacs``;
+* ``EDITOR``: older environment variable for your editor.
+
+You can set any of these to the command you want to run, e.g., in ``bash`` you might run
+one of these::
+
+  export VISUAL=vim
+  export EDITOR="emacs -nw"
+  export SPACK_EDITOR=nano
+
+If Spack finds none of these variables set, it will look for ``vim``, ``vi``, ``emacs``,
+``nano``, and ``notepad``, in that order.
+
+^^^^^^^^^^^^^^^^^^^^^^^^^
+Non-downloadable software
+^^^^^^^^^^^^^^^^^^^^^^^^^
+
+If your software cannot be downloaded from a URL you can still create a boilerplate
 ``package.py`` by telling ``spack create`` what name you want to use:
 
 .. code-block:: console
@@ -223,40 +376,23 @@ cannot be downloaded from a URL? You can still create a boilerplate
 
 This will create a simple ``intel`` package with an ``install()``
 method that you can craft to install your package.
-
-What if ``spack create <url>`` guessed the wrong name or build system?
-For example, if your package uses the Autotools build system but does
-not come with a ``configure`` script, Spack won't realize it uses
-Autotools. You can overwrite the old package with ``--force`` and specify
-a name with ``--name`` or a build system template to use with ``--template``:
+Likewise, you can force the build system to be used with ``--template`` and,
+in case it's needed, you can overwrite a package already in the repository
+with ``--force``:
 
 .. code-block:: console
 
    $ spack create --name gmp https://gmplib.org/download/gmp/gmp-6.1.2.tar.bz2
    $ spack create --force --template autotools https://gmplib.org/download/gmp/gmp-6.1.2.tar.bz2
 
-.. note::
-
-   If you are creating a package that uses the Autotools build system
-   but does not come with a ``configure`` script, you'll need to add an
-   ``autoreconf`` method to your package that explains how to generate
-   the ``configure`` script. You may also need the following dependencies:
-
-   .. code-block:: python
-
-      depends_on('autoconf', type='build')
-      depends_on('automake', type='build')
-      depends_on('libtool',  type='build')
-      depends_on('m4',       type='build')
-
 A complete list of available build system templates can be found by running
 ``spack create --help``.
 
 .. _cmd-spack-edit:
 
-^^^^^^^^^^^^^^
-``spack edit``
-^^^^^^^^^^^^^^
+-------------------------
+Editing existing packages
+-------------------------
 
 One of the easiest ways to learn how to write packages is to look at
 existing ones.  You can edit a package file by name with the ``spack
@@ -266,10 +402,15 @@ edit`` command:
 
    $ spack edit gmp
 
-So, if you used ``spack create`` to create a package, then saved and
-closed the resulting file, you can get back to it with ``spack edit``.
-The ``gmp`` package actually lives in
-``$SPACK_ROOT/var/spack/repos/builtin/packages/gmp/package.py``,
+If you used ``spack create`` to create a package, you can get back to
+it later with ``spack edit``. For instance, the ``gmp`` package actually
+lives in:
+
+.. code-block:: console
+
+   $ spack location -p gmp
+   ${SPACK_ROOT}/var/spack/repos/builtin/packages/gmp/package.py
+
 but ``spack edit`` provides a much simpler shortcut and saves you the
 trouble of typing the full path.
 
@@ -378,6 +519,31 @@ some examples:
 In general, you won't have to remember this naming convention because
 :ref:`cmd-spack-create` and :ref:`cmd-spack-edit` handle the details for you.
 
+.. _package_maintainers:
+
+-----------
+Maintainers
+-----------
+
+Each package in Spack may have one or more maintainers, i.e. one or more
+GitHub accounts of people who want to be notified any time the package is
+modified.
+
+When a pull request is submitted that updates the package, these people will
+be requested to review the PR. This is useful for developers who maintain a
+Spack package for their own software, as well as users who rely on a piece of
+software and want to ensure that the package doesn't break. It also gives users
+a list of people to contact for help when someone reports a build error with
+the package.
+
+To add maintainers to a package, simply declare them with the ``maintainers`` directive:
+
+.. code-block:: python
+
+   maintainers("user1", "user2")
+
+The list of maintainers is additive, and includes all the accounts eventually declared in base classes.
+
 -----------------
 Trusted Downloads
 -----------------
@@ -440,9 +606,9 @@ add a line like this in the package class:
 
        url = "http://example.com/foo-1.0.tar.gz"
 
-       version('8.2.1', '4136d7b4c04df68b686570afa26988ac')
-       version('8.2.0', '1c9f62f0778697a09d36121ead88e08e')
-       version('8.1.2', 'd47dd09ed7ae6e7fd6f9a816d7f5fdf6')
+       version("8.2.1", md5="4136d7b4c04df68b686570afa26988ac")
+       version("8.2.0", md5="1c9f62f0778697a09d36121ead88e08e")
+       version("8.1.2", md5="d47dd09ed7ae6e7fd6f9a816d7f5fdf6")
 
 Versions should be listed in descending order, from newest to oldest.
 
@@ -516,11 +682,11 @@ For example:
 
 .. code-block:: python
 
-   >>> version = Version('1.2.3')
+   >>> version = Version("1.2.3")
    >>> version.up_to(2).dashed
-   Version('1-2')
+   Version("1-2")
    >>> version.underscored.up_to(2)
-   Version('1_2')
+   Version("1_2")
 
 
 As you can see, order is not important. Just keep in mind that ``up_to()`` and
@@ -531,8 +697,8 @@ of its versions, you can add an explicit URL for a particular version:
 
 .. code-block:: python
 
-   version('8.2.1', '4136d7b4c04df68b686570afa26988ac',
-           url='http://example.com/foo-8.2.1-special-version.tar.gz')
+   version("8.2.1", md5="4136d7b4c04df68b686570afa26988ac",
+           url="http://example.com/foo-8.2.1-special-version.tar.gz")
 
 
 When you supply a custom URL for a version, Spack uses that URL
@@ -565,8 +731,8 @@ the ``urls`` attribute:
   class Foo(Package):
 
     urls = [
-        'http://example.com/foo-1.0.tar.gz',
-        'http://mirror.com/foo-1.0.tar.gz'
+        "http://example.com/foo-1.0.tar.gz",
+        "http://mirror.com/foo-1.0.tar.gz"
     ]
 
 instead of just a single ``url``. This attribute is a list of possible URLs that
@@ -593,8 +759,8 @@ executables and other custom archive types), you can add ``expand=False`` to a
 
 .. code-block:: python
 
-   version('8.2.1', '4136d7b4c04df68b686570afa26988ac',
-           url='http://example.com/foo-8.2.1-special-version.sh', expand=False)
+   version("8.2.1", md5="4136d7b4c04df68b686570afa26988ac",
+           url="http://example.com/foo-8.2.1-special-version.sh", expand=False)
 
 When ``expand`` is set to ``False``, Spack sets the current working
 directory to the directory containing the downloaded archive before it
@@ -610,7 +776,7 @@ it executable, then runs it with some arguments.
    def install(self, spec, prefix):
        set_executable(self.stage.archive_file)
        installer = Executable(self.stage.archive_file)
-       installer('--prefix=%s' % prefix, 'arg1', 'arg2', 'etc.')
+       installer("--prefix=%s" % prefix, "arg1", "arg2", "etc.")
 
 .. _deprecate:
 
@@ -637,7 +803,7 @@ you should first deprecate them using the following syntax:
 
 .. code-block:: python
 
-   version('1.2.3', sha256='...', deprecated=True)
+   version("1.2.3", sha256="...", deprecated=True)
 
 
 This has two effects. First, ``spack info`` will no longer advertise that
@@ -687,19 +853,19 @@ Version comparison
 ^^^^^^^^^^^^^^^^^^
 
 Most Spack versions are numeric, a tuple of integers; for example,
-``apex@0.1``, ``ferret@6.96`` or ``py-netcdf@1.2.3.1``.  Spack knows
-how to compare and sort numeric versions.
+``0.1``, ``6.96`` or ``1.2.3.1``.  Spack knows how to compare and sort
+numeric versions.
 
 Some Spack versions involve slight extensions of numeric syntax; for
-example, ``py-sphinx-rtd-theme@0.1.10a0``.  In this case, numbers are
+example, ``py-sphinx-rtd-theme@=0.1.10a0``.  In this case, numbers are
 always considered to be "newer" than letters.  This is for consistency
 with `RPM <https://bugzilla.redhat.com/show_bug.cgi?id=50977>`_.
 
 Spack versions may also be arbitrary non-numeric strings, for example
-``@develop``, ``@master``, ``@local``.
+``develop``, ``master``, ``local``.
 
 The order on versions is defined as follows. A version string is split
-into a list of components based on delimiters such as ``.``, ``-`` etc. 
+into a list of components based on delimiters such as ``.``, ``-`` etc.
 Lists are then ordered lexicographically, where components are ordered
 as follows:
 
@@ -754,6 +920,32 @@ use:
    will be used.
 
 
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Ranges versus specific versions
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+When specifying versions in Spack using the ``pkg@<specifier>`` syntax,
+you can use either ranges or specific versions. It is generally
+recommended to use ranges instead of specific versions when packaging
+to avoid overly constraining dependencies, patches, and conflicts.
+
+For example, ``depends_on("python@3")`` denotes a range of versions,
+allowing Spack to pick any ``3.x.y`` version for Python, while
+``depends_on("python@=3.10.1")`` restricts it to a specific version.
+
+Specific ``@=`` versions should only be used in exceptional cases, such
+as when the package has a versioning scheme that omits the zero in the
+first patch release: ``3.1``, ``3.1.1``, ``3.1.2``. In this example,
+the specifier ``@=3.1`` is the correct way to select only the ``3.1``
+version, whereas ``@3.1`` would match all those versions.
+
+Ranges are preferred even if they would only match a single version
+defined in the package. This is because users can define custom versions
+in ``packages.yaml`` that typically include a custom suffix. For example,
+if the package defines the version ``1.2.3``, the specifier ``@1.2.3``
+will also match a user-defined version ``1.2.3-custom``.
+
+
 .. _cmd-spack-checksum:
 
 ^^^^^^^^^^^^^^^^^^
@@ -791,10 +983,10 @@ file:
 .. code-block:: console
 
    ==> Checksummed new versions of libelf:
-       version('0.8.13', '4136d7b4c04df68b686570afa26988ac')
-       version('0.8.12', 'e21f8273d9f5f6d43a59878dc274fec7')
-       version('0.8.11', 'e931910b6d100f6caa32239849947fbf')
-       version('0.8.10', '9db4d36c283d9790d8fa7df1f4d7b4d9')
+       version("0.8.13", md5="4136d7b4c04df68b686570afa26988ac")
+       version("0.8.12", md5="e21f8273d9f5f6d43a59878dc274fec7")
+       version("0.8.11", md5="e931910b6d100f6caa32239849947fbf")
+       version("0.8.10", md5="9db4d36c283d9790d8fa7df1f4d7b4d9")
 
 By default, Spack will search for new tarball downloads by scraping
 the parent directory of the tarball you gave it.  So, if your tarball
@@ -946,11 +1138,11 @@ class-level tarball URL and VCS. For example:
        url      = "https://github.com/trilinos/Trilinos/archive/trilinos-release-12-12-1.tar.gz"
        git      = "https://github.com/trilinos/Trilinos.git"
 
-       version('develop', branch='develop')
-       version('master',  branch='master')
-       version('12.12.1', 'ecd4606fa332212433c98bf950a69cc7')
-       version('12.10.1', '667333dbd7c0f031d47d7c5511fd0810')
-       version('12.8.1',  '9f37f683ee2b427b5540db8a20ed6b15')
+       version("develop", branch="develop")
+       version("master",  branch="master")
+       version("12.12.1", md5="ecd4606fa332212433c98bf950a69cc7")
+       version("12.10.1", md5="667333dbd7c0f031d47d7c5511fd0810")
+       version("12.8.1",  "9f37f683ee2b427b5540db8a20ed6b15")
 
 If a package contains both a ``url`` and ``git`` class-level attribute,
 Spack decides which to use based on the arguments to the ``version()``
@@ -974,8 +1166,8 @@ than the default repo, it can be overridden with a version-specific argument.
 
           homepage = "https://bitbucket.org/gfcstanford/rockstar"
 
-          version('develop', git='https://bitbucket.org/gfcstanford/rockstar.git')
-          version('yt', hg='https://bitbucket.org/MatthewTurk/rockstar')
+          version("develop", git="https://bitbucket.org/gfcstanford/rockstar.git")
+          version("yt", hg="https://bitbucket.org/MatthewTurk/rockstar")
 
 
 .. _git-fetch:
@@ -1013,7 +1205,7 @@ Default branch
 
          git = "https://github.com/example-project/example.git"
 
-         version('develop')
+         version("develop")
 
   This download method is untrusted, and is not recommended. Aside from HTTPS,
   there is no way to verify that the repository has not been compromised, and
@@ -1026,7 +1218,7 @@ Branches
 
   .. code-block:: python
 
-     version('experimental', branch='experimental')
+     version("experimental", branch="experimental")
 
   This download method is untrusted, and is not recommended. Branches are
   moving targets, so the commit you get when you install the package likely
@@ -1037,7 +1229,7 @@ Tags
 
   .. code-block:: python
 
-     version('1.0.1', tag='v1.0.1')
+     version("1.0.1", tag="v1.0.1")
 
   This download method is untrusted, and is not recommended. Although tags
   are generally more stable than branches, Git allows tags to be moved.
@@ -1049,14 +1241,14 @@ Commits
 
   .. code-block:: python
 
-     version('2014-10-08', commit='9d38cd4e2c94c3cea97d0e2924814acc')
+     version("2014-10-08", commit="9d38cd4e2c94c3cea97d0e2924814acc")
 
   This doesn't have to be a full hash; you can abbreviate it as you'd
   expect with git:
 
   .. code-block:: python
 
-     version('2014-10-08', commit='9d38cd')
+     version("2014-10-08", commit="9d38cd")
 
   This download method *is trusted*.  It is the recommended way to
   securely download from a Git repository.
@@ -1070,13 +1262,32 @@ Commits
 
 Submodules
   You can supply ``submodules=True`` to cause Spack to fetch submodules
-  recursively along with the repository at fetch time. For more information
-  about git submodules see the manpage of git: ``man git-submodule``.
+  recursively along with the repository at fetch time.
 
   .. code-block:: python
 
-     version('1.0.1', tag='v1.0.1', submodules=True)
+     version("1.0.1", tag="v1.0.1", submodules=True)
 
+  If a package has needs more fine-grained control over submodules, define
+  ``submodules`` to be a callable function that takes the package instance as
+  its only argument.  The function should return a list of submodules to be fetched.
+
+  .. code-block:: python
+
+     def submodules(package):
+         submodules = []
+         if "+variant-1" in package.spec:
+             submodules.append("submodule_for_variant_1")
+         if "+variant-2" in package.spec:
+             submodules.append("submodule_for_variant_2")
+         return submodules
+
+
+      class MyPackage(Package):
+          version("0.1.0", submodules=submodules)
+
+  For more information about git submodules see the manpage of git: ``man
+  git-submodule``.
 
 .. _github-fetch:
 
@@ -1093,8 +1304,8 @@ checksum.
 
 .. code-block:: python
 
-       version('1.9.5.1.1', 'd035e4bc704d136db79b43ab371b27d2',
-               url='https://www.github.com/jswhit/pyproj/tarball/0be612cc9f972e38b50a90c946a9b353e2ab140f')
+       version("1.9.5.1.1", md5="d035e4bc704d136db79b43ab371b27d2",
+               url="https://www.github.com/jswhit/pyproj/tarball/0be612cc9f972e38b50a90c946a9b353e2ab140f")
 
 .. _hg-fetch:
 
@@ -1115,7 +1326,7 @@ Default branch
 
          hg = "https://bitbucket.org/example-project/example"
 
-         version('develop')
+         version("develop")
 
   This download method is untrusted, and is not recommended. As with
   Git's default fetching strategy, there is no way to verify the
@@ -1126,7 +1337,7 @@ Revisions
 
   .. code-block:: python
 
-     version('1.0', revision='v1.0')
+     version("1.0", revision="v1.0")
 
   Unlike ``git``, which has special parameters for different types of
   revisions, you can use ``revision`` for branches, tags, and commits
@@ -1154,7 +1365,7 @@ Fetching the head
 
          svn = "https://outreach.scidac.gov/svn/example/trunk"
 
-         version('develop')
+         version("develop")
 
   This download method is untrusted, and is not recommended for the
   same reasons as mentioned above.
@@ -1165,7 +1376,7 @@ Fetching a revision
 
   .. code-block:: python
 
-     version('develop', revision=128)
+     version("develop", revision=128)
 
   This download method is untrusted, and is not recommended.
 
@@ -1200,7 +1411,7 @@ Fetching the head
 
          cvs = ":pserver:outreach.scidac.gov/cvsroot%module=modulename"
 
-         version('1.1.2.4')
+         version("1.1.2.4")
 
   CVS repository locations are described using an older syntax that
   is different from today's ubiquitous URL syntax. ``:pserver:``
@@ -1219,7 +1430,7 @@ Fetching a date
 
   .. code-block:: python
 
-     version('2021.4.22', branch='branchname', date='2021-04-22')
+     version("2021.4.22", branch="branchname", date="2021-04-22")
 
   Unfortunately, CVS does not identify repository-wide commits via a
   revision or hash like Subversion, Git, or Mercurial do. This makes
@@ -1235,7 +1446,7 @@ Go
 ^^
 
 Go isn't a VCS, it is a programming language with a builtin command,
-`go get <https://golang.org/cmd/go/#hdr-Download_and_install_packages_and_dependencies>`_,
+`go get <https://pkg.go.dev/cmd/go#hdr-Add_dependencies_to_current_module_and_install_them>`_,
 that fetches packages and their dependencies automatically.
 The destination directory will be the standard stage source path.
 
@@ -1249,11 +1460,13 @@ For example:
        homepage = "https://github.com/monochromegane/the_platinum_searcher"
        go       = "github.com/monochromegane/the_platinum_searcher/..."
 
-       version('head')
+       version("head")
 
 Go cannot be used to fetch a particular commit or branch, it always
 downloads the head of the repository. This download method is untrusted,
 and is not recommended. Use another fetch strategy whenever possible.
+
+.. _variants:
 
 --------
 Variants
@@ -1278,7 +1491,7 @@ level:
     class Hdf5(AutotoolsPackage):
         ...
         variant(
-            'shared', default=True, description='Builds a shared version of the library'
+            "shared", default=True, description="Builds a shared version of the library"
         )
 
 with a default value and a description of their meaning / use in the package.
@@ -1291,11 +1504,11 @@ its value:
 
     def configure_args(self):
         ...
-        if '+shared' in self.spec:
-            extra_args.append('--enable-shared')
+        if "+shared" in self.spec:
+            extra_args.append("--enable-shared")
         else:
-            extra_args.append('--disable-shared')
-            extra_args.append('--enable-static-exec')
+            extra_args.append("--disable-shared")
+            extra_args.append("--enable-static-exec")
 
 As explained in :ref:`basic-variants` the constraint ``+shared`` means
 that the boolean variant is set to ``True``, while ``~shared`` means it is set
@@ -1308,8 +1521,8 @@ which requires to use the variant in the ``when`` argument of
 
     class Hdf5(AutotoolsPackage):
         ...
-        variant('szip', default=False, description='Enable szip support')
-        depends_on('szip', when='+szip')
+        variant("szip", default=False, description="Enable szip support")
+        depends_on("szip", when="+szip")
 
 as shown in the snippet above where ``szip`` is modeled to be an optional
 dependency of ``hdf5``.
@@ -1329,8 +1542,8 @@ directive as a tuple:
     class Blis(Package):
         ...
         variant(
-            'threads', default='none', description='Multithreading support',
-            values=('pthreads', 'openmp', 'none'), multi=False
+            "threads", default="none", description="Multithreading support",
+            values=("pthreads", "openmp", "none"), multi=False
         )
 
 In the example above the argument ``multi`` is set to ``False`` to indicate
@@ -1351,13 +1564,13 @@ specifies two or more values at the same time:
 
 Another useful note is that *Python's* ``None`` *is not allowed as a default value*
 and therefore it should not be used to denote that no feature was selected.
-Users should instead select another value, like ``'none'``, and handle it explicitly
+Users should instead select another value, like ``"none"``, and handle it explicitly
 within the package recipe if need be:
 
   .. code-block:: python
 
-      if self.spec.variants['threads'].value == 'none':
-         options.append('--no-threads')
+      if self.spec.variants["threads"].value == "none":
+         options.append("--no-threads")
 
 In cases where multiple values can be selected at the same time ``multi`` should
 be set to ``True``:
@@ -1367,19 +1580,19 @@ be set to ``True``:
     class Gcc(AutotoolsPackage):
         ...
         variant(
-            'languages', default='c,c++,fortran',
-            values=('ada', 'brig', 'c', 'c++', 'fortran',
-                    'go', 'java', 'jit', 'lto', 'objc', 'obj-c++'),
+            "languages", default="c,c++,fortran",
+            values=("ada", "brig", "c", "c++", "fortran",
+                    "go", "java", "jit", "lto", "objc", "obj-c++"),
             multi=True,
-            description='Compilers and runtime libraries to build'
+            description="Compilers and runtime libraries to build"
         )
 
 Within a package recipe a multi-valued variant is tested using a ``key=value`` syntax:
 
   .. code-block:: python
 
-    if 'languages=jit' in spec:
-        options.append('--enable-host-shared')
+    if "languages=jit" in spec:
+        options.append("--enable-host-shared")
 
 """""""""""""""""""""""""""""""""""""""""""
 Complex validation logic for variant values
@@ -1397,13 +1610,13 @@ This class is used to implement a few convenience functions, like
     class Adios(AutotoolsPackage):
         ...
         variant(
-            'staging',
-            values=any_combination_of('flexpath', 'dataspaces'),
-            description='Enable dataspaces and/or flexpath staging transports'
+            "staging",
+            values=any_combination_of("flexpath", "dataspaces"),
+            description="Enable dataspaces and/or flexpath staging transports"
         )
 
 that allows any combination of the specified values, and also allows the
-user to specify ``'none'`` (as a string) to choose none of them.
+user to specify ``"none"`` (as a string) to choose none of them.
 The objects returned by these functions can be modified at will by chaining
 method calls to change the default value, customize the error message or
 other similar operations:
@@ -1413,15 +1626,46 @@ other similar operations:
     class Mvapich2(AutotoolsPackage):
         ...
         variant(
-            'process_managers',
-            description='List of the process managers to activate',
+            "process_managers",
+            description="List of the process managers to activate",
             values=disjoint_sets(
-                ('auto',), ('slurm',), ('hydra', 'gforker', 'remshell')
+                ("auto",), ("slurm",), ("hydra", "gforker", "remshell")
             ).prohibit_empty_set().with_error(
                 "'slurm' or 'auto' cannot be activated along with "
                 "other process managers"
-            ).with_default('auto').with_non_feature_values('auto'),
+            ).with_default("auto").with_non_feature_values("auto"),
         )
+
+"""""""""""""""""""""""""""
+Conditional Possible Values
+"""""""""""""""""""""""""""
+
+There are cases where a variant may take multiple values, and the list of allowed values
+expand over time. Think for instance at the C++ standard with which we might compile
+Boost, which can take one of multiple possible values with the latest standards
+only available from a certain version on.
+
+To model a similar situation we can use *conditional possible values* in the variant declaration:
+
+.. code-block:: python
+
+   variant(
+       "cxxstd", default="98",
+       values=(
+           "98", "11", "14",
+           # C++17 is not supported by Boost < 1.63.0.
+           conditional("17", when="@1.63.0:"),
+           # C++20/2a is not support by Boost < 1.73.0
+           conditional("2a", "2b", when="@1.73.0:")
+       ),
+       multi=False,
+       description="Use the specified C++ standard when building.",
+   )
+
+The snippet above allows ``98``, ``11`` and ``14`` as unconditional possible values for the
+``cxxstd`` variant, while ``17`` requires a version greater or equal to ``1.63.0``
+and both ``2a`` and ``2b`` require a version greater or equal to ``1.73.0``.
+
 
 ^^^^^^^^^^^^^^^^^^^^
 Conditional Variants
@@ -1436,7 +1680,7 @@ be present on specs that otherwise satisfy the spec listed as the
 
    class Foo(Package):
        ...
-       variant('bar', default=False, when='@2.0:', description='help message')
+       variant("bar", default=False, when="@2.0:", description="help message")
 
 The ``when`` clause follows the same syntax and accepts the same
 values as the ``when`` argument of
@@ -1451,7 +1695,7 @@ corresponding argument:
 
 .. code-block:: python
 
-   variant('bar', default=False, sticky=True)
+   variant("bar", default=False, sticky=True)
 
 A ``sticky`` variant differs from a regular one in that it is always set
 to either:
@@ -1489,8 +1733,8 @@ For example, consider the following package:
 
    class Foo(Package):
        ...
-       variant('bar', default=False, when='@1.0', description='help1')
-       variant('bar', default=True, when='platform=darwin', description='help2')
+       variant("bar", default=False, when="@1.0", description="help1")
+       variant("bar", default=True, when="platform=darwin", description="help2")
        ...
 
 This package ``foo`` has a variant ``bar`` when the spec satisfies
@@ -1514,10 +1758,10 @@ possible to describe such a need with the ``resource`` directive :
   .. code-block:: python
 
      resource(
-        name='cargo',
-        git='https://github.com/rust-lang/cargo.git',
-        tag='0.10.0',
-        destination='cargo'
+        name="cargo",
+        git="https://github.com/rust-lang/cargo.git",
+        tag="0.10.0",
+        destination="cargo"
      )
 
 Based on the keywords present among the arguments the appropriate ``FetchStrategy``
@@ -1578,10 +1822,10 @@ For example, let's take a look at the package for the PGI compilers.
 
    # Licensing
    license_required = True
-   license_comment  = '#'
-   license_files    = ['license.dat']
-   license_vars     = ['PGROUPD_LICENSE_FILE', 'LM_LICENSE_FILE']
-   license_url      = 'http://www.pgroup.com/doc/pgiinstall.pdf'
+   license_comment  = "#"
+   license_files    = ["license.dat"]
+   license_vars     = ["PGROUPD_LICENSE_FILE", "LM_LICENSE_FILE"]
+   license_url      = "http://www.pgroup.com/doc/pgiinstall.pdf"
 
 As you can see, PGI requires a license. Its license manager, FlexNet, uses
 the ``#`` symbol to denote a comment. It expects the license file to be
@@ -1599,7 +1843,7 @@ for instructions on setting up a mirror.
 After running ``spack install pgi``, the first thing that will happen is
 Spack will create a global license file located at
 ``$SPACK_ROOT/etc/spack/licenses/pgi/license.dat``. It will then open up the
-file using the editor set in ``$EDITOR``, or vi if unset. It will look like
+file using :ref:`your favorite editor <controlling-the-editor>`. It will look like
 this:
 
 .. code-block:: sh
@@ -1673,7 +1917,7 @@ directive.  ``patch`` looks like this:
 
    class Mvapich2(Package):
        ...
-       patch('ad_lustre_rwcontig_open_source.patch', when='@1.9:')
+       patch("ad_lustre_rwcontig_open_source.patch", when="@1.9:")
 
 The first argument can be either a URL or a filename.  It specifies a
 patch file that should be applied to your source.  If the patch you
@@ -1693,8 +1937,8 @@ If you supply a URL instead of a filename, you need to supply a
 
 .. code-block:: python
 
-   patch('http://www.nwchem-sw.org/images/Tddft_mxvec20.patch',
-         sha256='252c0af58be3d90e5dc5e0d16658434c9efa5d20a5df6c10bf72c2d77f780866')
+   patch("http://www.nwchem-sw.org/images/Tddft_mxvec20.patch",
+         sha256="252c0af58be3d90e5dc5e0d16658434c9efa5d20a5df6c10bf72c2d77f780866")
 
 Spack includes the hashes of patches in its versioning information, so
 that the same package with different patches applied will have different
@@ -1717,9 +1961,9 @@ checked when patch archives are downloaded.
 
 .. code-block:: python
 
-   patch('http://www.nwchem-sw.org/images/Tddft_mxvec20.patch.gz',
-         sha256='252c0af58be3d90e5dc5e0d16658434c9efa5d20a5df6c10bf72c2d77f780866',
-         archive_sha256='4e8092a161ec6c3a1b5253176fcf33ce7ba23ee2ff27c75dbced589dabacd06e')
+   patch("http://www.nwchem-sw.org/images/Tddft_mxvec20.patch.gz",
+         sha256="252c0af58be3d90e5dc5e0d16658434c9efa5d20a5df6c10bf72c2d77f780866",
+         archive_sha256="4e8092a161ec6c3a1b5253176fcf33ce7ba23ee2ff27c75dbced589dabacd06e")
 
 ``patch`` keyword arguments are described below.
 
@@ -1808,7 +2052,7 @@ it can only be downloaded in the following form:
     #include "ad_lustre.h"
 
 Hence, the patch needs to applied in the ``src/mpi`` subdirectory, and the
-``working_dir='src/mpi'`` option would exactly do that.
+``working_dir="src/mpi"`` option would exactly do that.
 
 ^^^^^^^^^^^^^^^^^^^^^
 Patch functions
@@ -1902,7 +2146,7 @@ patches. For example, when ``dealii`` is built with ``boost@1.68.0``, it
 has to patch boost to work correctly.  If you didn't know this, you might
 wonder where the extra boost patches are coming from::
 
-  $ spack spec dealii ^boost@1.68.0 ^hdf5+fortran | grep '\^boost'
+  $ spack spec dealii ^boost@1.68.0 ^hdf5+fortran | grep "\^boost"
       ^boost@1.68.0
           ^boost@1.68.0%apple-clang@9.0.0+atomic+chrono~clanglibcpp cxxstd=default +date_time~debug+exception+filesystem+graph~icu+iostreams+locale+log+math~mpi+multithreaded~numpy patches=2ab6c72d03dec6a4ae20220a9dfd5c8c572c5294252155b85c6874d97c323199,b37164268f34f7133cbc9a4066ae98fda08adf51e1172223f6a969909216870f ~pic+program_options~python+random+regex+serialization+shared+signals~singlethreaded+system~taggedlayout+test+thread+timer~versionedlayout+wave arch=darwin-highsierra-x86_64
   $ spack resource show b37164268
@@ -1929,7 +2173,7 @@ dynamic loader where to find its dependencies at runtime. You may be
 familiar with `LD_LIBRARY_PATH
 <http://tldp.org/HOWTO/Program-Library-HOWTO/shared-libraries.html>`_
 on Linux or `DYLD_LIBRARY_PATH
-<https://developer.apple.com/library/mac/documentation/Darwin/Reference/ManPages/man1/dyld.1.html>`_
+<https://developer.apple.com/library/archive/documentation/System/Conceptual/ManPages_iPhoneOS/man3/dyld.3.html>`_
 on Mac OS X.  RPATH is similar to these paths, in that it tells
 the loader where to find libraries.  Unlike them, it is embedded in
 the binary and not set in each user's environment.
@@ -1953,9 +2197,9 @@ RPATHs in Spack are handled in one of three ways:
       class MyPackage(Package):
           ...
           def install(self, spec, prefix):
-              cmake('..', *std_cmake_args)
+              cmake("..", *std_cmake_args)
               make()
-              make('install')
+              make("install")
 
 #. If you need to modify the build to add your own RPATHs, you can
    use the ``self.rpath`` property of your package, which will
@@ -1998,7 +2242,7 @@ looks like this:
        homepage = "http://www.openssl.org"
        url      = "http://www.openssl.org/source/openssl-1.0.1h.tar.gz"
 
-       version('1.0.1h', '8d6d684a9430d5cc98a62a5d8fbda8cf')
+       version("1.0.1h", md5="8d6d684a9430d5cc98a62a5d8fbda8cf")
        depends_on("zlib")
 
        parallel = False
@@ -2095,7 +2339,7 @@ Spack makes this relatively easy.  Let's take a look at the
        url      = "http://www.prevanders.net/libdwarf-20130729.tar.gz"
        list_url = homepage
 
-       version('20130729', '4cc5e48693f7b93b7aa0261e63c0e21d')
+       version("20130729", md5="4cc5e48693f7b93b7aa0261e63c0e21d")
        ...
 
        depends_on("libelf")
@@ -2107,7 +2351,7 @@ Spack makes this relatively easy.  Let's take a look at the
 ``depends_on()``
 ^^^^^^^^^^^^^^^^
 
-The highlighted ``depends_on('libelf')`` call tells Spack that it
+The highlighted ``depends_on("libelf")`` call tells Spack that it
 needs to build and install the ``libelf`` package before it builds
 ``libdwarf``.  This means that in your ``install()`` method, you are
 guaranteed that ``libelf`` has been built and installed successfully,
@@ -2124,7 +2368,7 @@ with. For example, suppose that in the ``libdwarf`` package you write:
 
 .. code-block:: python
 
-   depends_on('libelf@0.8')
+   depends_on("libelf@0.8")
 
 Now ``libdwarf`` will require ``libelf`` at *exactly* version ``0.8``.
 You can also specify a requirement for a particular variant or for
@@ -2132,9 +2376,9 @@ specific compiler flags:
 
 .. code-block:: python
 
-   depends_on('libelf@0.8+debug')
-   depends_on('libelf debug=True')
-   depends_on('libelf cppflags="-fPIC"')
+   depends_on("libelf@0.8+debug")
+   depends_on("libelf debug=True")
+   depends_on("libelf cppflags='-fPIC'")
 
 Both users *and* package authors can use the same spec syntax to refer
 to different package configurations. Users use the spec syntax on the
@@ -2153,7 +2397,7 @@ writing a package for a legacy Python module that only works with Python
 
 .. code-block:: python
 
-   depends_on('python@2.4:2.6')
+   depends_on("python@2.4:2.6")
 
 Version ranges in Spack are *inclusive*, so ``2.4:2.6`` means any version
 greater than or equal to ``2.4`` and up to and including any ``2.6.x``. If
@@ -2162,33 +2406,41 @@ higher), this would look like:
 
 .. code-block:: python
 
-   depends_on('python@3:')
+   depends_on("python@3:")
 
 Here we leave out the upper bound. If you want to say that a package
 requires Python 2, you can similarly leave out the lower bound:
 
 .. code-block:: python
 
-   depends_on('python@:2')
+   depends_on("python@:2")
 
 Notice that we didn't use ``@:3``. Version ranges are *inclusive*, so
 ``@:3`` means "up to and including any 3.x version".
 
-What if a package can only be built with Python 2.7? You might be
-inclined to use:
+You can also simply write
 
 .. code-block:: python
 
-   depends_on('python@2.7')
+   depends_on("python@2.7")
 
-However, this would be wrong. Spack assumes that all version constraints
-are exact, so it would try to install Python not at ``2.7.18``, but
-exactly at ``2.7``, which is a non-existent version. The correct way to
-specify this would be:
+to tell Spack that the package needs Python 2.7.x. This is equivalent to
+``@2.7:2.7``.
+
+In very rare cases, you may need to specify an exact version, for example
+if you need to distinguish between ``3.2`` and ``3.2.1``:
 
 .. code-block:: python
 
-   depends_on('python@2.7.0:2.7')
+   depends_on("pkg@=3.2")
+
+But in general, you should try to use version ranges as much as possible,
+so that custom suffixes are included too. The above example can be
+rewritten in terms of ranges as follows:
+
+.. code-block:: python
+
+   depends_on("pkg@3.2:3.2.0")
 
 A spec can contain a version list of ranges and individual versions
 separated by commas. For example, if you need Boost 1.59.0 or newer,
@@ -2196,7 +2448,7 @@ but there are known issues with 1.64.0, 1.65.0, and 1.66.0, you can say:
 
 .. code-block:: python
 
-   depends_on('boost@1.59.0:1.63,1.65.1,1.67.0:')
+   depends_on("boost@1.59.0:1.63,1.65.1,1.67.0:")
 
 
 .. _dependency-types:
@@ -2210,10 +2462,10 @@ exactly what kind of a dependency you need. For example:
 
 .. code-block:: python
 
-   depends_on('cmake', type='build')
-   depends_on('py-numpy', type=('build', 'run'))
-   depends_on('libelf', type=('build', 'link'))
-   depends_on('py-pytest', type='test')
+   depends_on("cmake", type="build")
+   depends_on("py-numpy", type=("build", "run"))
+   depends_on("libelf", type=("build", "link"))
+   depends_on("py-pytest", type="test")
 
 The following dependency types are available:
 
@@ -2233,14 +2485,24 @@ The following dependency types are available:
 One of the advantages of the ``build`` dependency type is that although the
 dependency needs to be installed in order for the package to be built, it
 can be uninstalled without concern afterwards. ``link`` and ``run`` disallow
-this because uninstalling the dependency would break the package. Another
-consequence of this is that ``build``-only dependencies do not affect the
-hash of the package. The same is true for ``test`` dependencies.
+this because uninstalling the dependency would break the package.
+
+``build``, ``link``, and ``run`` dependencies all affect the hash of Spack
+packages (along with ``sha256`` sums of patches and archives used to build the
+package, and a `canonical hash <https://github.com/spack/spack/pull/28156>`_ of
+the ``package.py`` recipes). ``test`` dependencies do not affect the package
+hash, as they are only used to construct a test environment *after* building and
+installing a given package installation. Older versions of Spack did not include
+build dependencies in the hash, but this has been
+`fixed <https://github.com/spack/spack/pull/28504>`_ as of |Spack v0.18|_.
+
+.. |Spack v0.18| replace:: Spack ``v0.18``
+.. _Spack v0.18: https://github.com/spack/spack/releases/tag/v0.18.0
 
 If the dependency type is not specified, Spack uses a default of
-``('build', 'link')``. This is the common case for compiler languages.
+``("build", "link")``. This is the common case for compiler languages.
 Non-compiled packages like Python modules commonly use
-``('build', 'run')``. This means that the compiler wrappers don't need to
+``("build", "run")``. This means that the compiler wrappers don't need to
 inject the dependency's ``prefix/lib`` directory, but the package needs to
 be in ``PATH`` and ``PYTHONPATH`` during the build process and later when
 a user wants to run the package.
@@ -2256,9 +2518,9 @@ package. In that case, you could say something like:
 
 .. code-block:: python
 
-   variant('mpi', default=False, description='Enable MPI support')
+   variant("mpi", default=False, description="Enable MPI support")
 
-   depends_on('mpi', when='+mpi')
+   depends_on("mpi", when="+mpi")
 
 ``when`` can include constraints on the variant, version, compiler, etc. and
 the :mod:`syntax<spack.spec>` is the same as for Specs written on the command
@@ -2288,7 +2550,7 @@ take a patch or list of patches:
 
     class SpecialTool(Package):
         ...
-        depends_on('binutils', patches='special-binutils-feature.patch')
+        depends_on("binutils", patches="special-binutils-feature.patch")
         ...
 
 Here, the ``special-tool`` package requires a special feature in
@@ -2306,11 +2568,11 @@ If you need something more sophisticated than this, you can simply nest a
     class SpecialTool(Package):
         ...
         depends_on(
-            'binutils',
-            patches=patch('special-binutils-feature.patch',
+            "binutils",
+            patches=patch("special-binutils-feature.patch",
                           level=3,
-                          when='@:1.3'),   # condition on binutils
-            when='@2.0:')                  # condition on special-tool
+                          when="@:1.3"),   # condition on binutils
+            when="@2.0:")                  # condition on special-tool
         ...
 
 Note that there are two optional ``when`` conditions here -- one on the
@@ -2328,14 +2590,14 @@ a list for ``patches``, e.g.:
     class SpecialTool(Package):
         ...
         depends_on(
-            'binutils',
+            "binutils",
             patches=[
-                'binutils-bugfix1.patch',
-                'binutils-bugfix2.patch',
-                patch('https://example.com/special-binutils-feature.patch',
-                      sha256='252c0af58be3d90e5dc5e0d16658434c9efa5d20a5df6c10bf72c2d77f780866',
-                      when='@:1.3')],
-            when='@2.0:')
+                "binutils-bugfix1.patch",
+                "binutils-bugfix2.patch",
+                patch("https://example.com/special-binutils-feature.patch",
+                      sha256="252c0af58be3d90e5dc5e0d16658434c9efa5d20a5df6c10bf72c2d77f780866",
+                      when="@:1.3")],
+            when="@2.0:")
         ...
 
 As with ``patch`` directives, patches are applied in the order they
@@ -2362,9 +2624,9 @@ Influence how dependents are built or run
 
 Spack provides a mechanism for dependencies to influence the
 environment of their dependents by overriding  the
-:meth:`setup_dependent_run_environment <spack.package.PackageBase.setup_dependent_run_environment>`
+:meth:`setup_dependent_run_environment <spack.package_base.PackageBase.setup_dependent_run_environment>`
 or the
-:meth:`setup_dependent_build_environment <spack.package.PackageBase.setup_dependent_build_environment>`
+:meth:`setup_dependent_build_environment <spack.builder.Builder.setup_dependent_build_environment>`
 methods.
 The Qt package, for instance, uses this call:
 
@@ -2386,7 +2648,7 @@ will have the ``PYTHONPATH``, ``PYTHONHOME`` and ``PATH`` environment
 variables set appropriately before starting the installation. To make things
 even simpler the ``python setup.py`` command is also inserted into the module
 scope of dependents by overriding a third method called
-:meth:`setup_dependent_package <spack.package.PackageBase.setup_dependent_package>`
+:meth:`setup_dependent_package <spack.package_base.PackageBase.setup_dependent_package>`
 :
 
 .. literalinclude:: _spack_root/var/spack/repos/builtin/packages/python/package.py
@@ -2399,7 +2661,7 @@ like the following:
 .. code-block:: python
 
    def install(self, spec, prefix):
-       setup_py('install', '--prefix={0}'.format(prefix))
+       setup_py("install", "--prefix={0}".format(prefix))
 
 Finally the Python package takes also care of the modifications to ``PYTHONPATH``
 to allow dependencies to run correctly:
@@ -2411,9 +2673,9 @@ to allow dependencies to run correctly:
 
 .. _packaging_conflicts:
 
----------
-Conflicts
----------
+--------------------------
+Conflicts and requirements
+--------------------------
 
 Sometimes packages have known bugs, or limitations, that would prevent them
 to build e.g. against other dependencies or with certain compilers. Spack
@@ -2423,17 +2685,51 @@ Adding the following to a package:
 
 .. code-block:: python
 
-    conflicts('%intel', when='@:1.2',
-              msg='<myNicePackage> <= v1.2 cannot be built with Intel ICC, '
-                  'please use a newer release.')
+    conflicts(
+        "%intel",
+         when="@:1.2",
+         msg="<myNicePackage> <= v1.2 cannot be built with Intel ICC, "
+             "please use a newer release."
+    )
 
 we express the fact that the current package *cannot be built* with the Intel
-compiler when we are trying to install a version "<=1.2". The ``when`` argument
-can be omitted, in which case the conflict will always be active.
-Conflicts are always evaluated after the concretization step has been performed,
-and if any match is found a detailed error message is shown to the user.
-You can add an additional message via the ``msg=`` parameter to a conflict that
-provideds more specific instructions for users.
+compiler when we are trying to install a version "<=1.2".
+
+The ``when`` argument can be omitted, in which case the conflict will always be active.
+
+An optional custom error message can be added via the ``msg=`` parameter, and will be printed
+by Spack in case the conflict cannot be avoided and leads to a concretization error.
+
+Sometimes, packages allow only very specific choices and they can't use the rest. In those cases
+the ``requires`` directive can be used:
+
+.. code-block:: python
+
+    requires(
+        "%apple-clang",
+        when="platform=darwin",
+        msg="<myNicePackage> builds only with Apple-Clang on Darwin"
+    )
+
+In the example above, our package can only be built with Apple-Clang on Darwin.
+The ``requires`` directive is effectively the opposite of the ``conflicts`` directive, and takes
+the same optional ``when`` and ``msg`` arguments.
+
+If a package needs to express more complex requirements, involving more than a single spec,
+that can also be done using the ``requires`` directive. To express that a package can be built
+either with GCC or with Clang we can write:
+
+.. code-block:: python
+
+    requires(
+        "%gcc", "%clang",
+        policy="one_of"
+        msg="<myNicePackage> builds only with GCC or Clang"
+    )
+
+When using multiple specs in a ``requires`` directive, it is advised to set the ``policy=``
+argument explicitly. That argument can take either the value ``any_of`` or the value ``one_of``,
+and the semantic is the same as for :ref:`package-requirements`.
 
 .. _packaging_extensions:
 
@@ -2463,12 +2759,15 @@ extendable package:
 
    class PyNumpy(Package):
        ...
-       extends('python')
+       extends("python")
        ...
 
-Now, the ``py-numpy`` package can be used as an argument to ``spack
-activate``.  When it is activated, all the files in its prefix will be
-symbolically linked into the prefix of the python package.
+This accomplishes a few things. Firstly, the Python package can set special
+variables such as ``PYTHONPATH`` for all extensions when the run or build
+environment is set up. Secondly, filesystem views can ensure that extensions
+are put in the same prefix as their extendee. This ensures that Python in
+a view can always locate its Python packages, even without environment
+variables set.
 
 A package can only extend one other package at a time.  To support packages
 that may extend one of a list of other packages, Spack supports multiple
@@ -2480,9 +2779,9 @@ either lua or luajit, but not both:
 
    class LuaLpeg(Package):
        ...
-       variant('use_lua', default=True)
-       extends('lua', when='+use_lua')
-       extends('lua-luajit', when='~use_lua')
+       variant("use_lua", default=True)
+       extends("lua", when="+use_lua")
+       extends("lua-luajit", when="~use_lua")
        ...
 
 Now, a user can install, and activate, the ``lua-lpeg`` package for either
@@ -2500,8 +2799,8 @@ declaration:
 .. code-block:: python
 
    class Icebin(Package):
-       extends('python', when='+python')
-       depends_on('python@3:', when='+python')
+       extends("python", when="+python")
+       depends_on("python@3:", when="+python")
 
 Many packages produce Python extensions for *some* variants, but not
 others: they should extend ``python`` only if the appropriate
@@ -2511,33 +2810,9 @@ variant(s) are selected.  This may be accomplished with conditional
 .. code-block:: python
 
    class FooLib(Package):
-       variant('python', default=True, description='Build the Python extension Module')
-       extends('python', when='+python')
+       variant("python", default=True, description="Build the Python extension Module")
+       extends("python", when="+python")
        ...
-
-Sometimes, certain files in one package will conflict with those in
-another, which means they cannot both be activated (symlinked) at the
-same time.  In this case, you can tell Spack to ignore those files
-when it does the activation:
-
-.. code-block:: python
-
-   class PySncosmo(Package):
-       ...
-       # py-sncosmo binaries are duplicates of those from py-astropy
-       extends('python', ignore=r'bin/.*')
-       depends_on('py-astropy')
-       ...
-
-The code above will prevent everything in the ``$prefix/bin/`` directory
-from being linked in at activation time.
-
-.. note::
-
-   You can call *either* ``depends_on`` or ``extends`` on any one
-   package, but not both.  For example you cannot both
-   ``depends_on('python')`` and ``extends(python)`` in the same
-   package.  ``extends`` implies ``depends_on``.
 
 -----
 Views
@@ -2553,67 +2828,6 @@ binary since the real path of the Python executable is used to detect
 extensions; as a consequence python extension packages (those inheriting from
 ``PythonPackage``) likewise override ``add_files_to_view`` in order to rewrite
 shebang lines which point to the Python interpreter.
-
-^^^^^^^^^^^^^^^^^^^^^^^^^
-Activation & deactivation
-^^^^^^^^^^^^^^^^^^^^^^^^^
-
-Adding an extension to a view is referred to as an activation. If the view is
-maintained in the Spack installation prefix of the extendee this is called a
-global activation. Activations may involve updating some centralized state
-that is maintained by the extendee package, so there can be additional work
-for adding extensions compared with non-extension packages.
-
-Spack's ``Package`` class has default ``activate`` and ``deactivate``
-implementations that handle symbolically linking extensions' prefixes
-into a specified view. Extendable packages can override these methods
-to add custom activate/deactivate logic of their own.  For example,
-the ``activate`` and ``deactivate`` methods in the Python class handle
-symbolic linking of extensions, but they also handle details surrounding
-Python's ``.pth`` files, and other aspects of Python packaging.
-
-Spack's extensions mechanism is designed to be extensible, so that
-other packages (like Ruby, R, Perl, etc.)  can provide their own
-custom extension management logic, as they may not handle modules the
-same way that Python does.
-
-Let's look at Python's activate function:
-
-.. literalinclude:: _spack_root/var/spack/repos/builtin/packages/python/package.py
-   :pyobject: Python.activate
-   :linenos:
-
-This function is called on the *extendee* (Python).  It first calls
-``activate`` in the superclass, which handles symlinking the
-extension package's prefix into the specified view.  It then does
-some special handling of the ``easy-install.pth`` file, part of
-Python's setuptools.
-
-Deactivate behaves similarly to activate, but it unlinks files:
-
-.. literalinclude:: _spack_root/var/spack/repos/builtin/packages/python/package.py
-   :pyobject: Python.deactivate
-   :linenos:
-
-Both of these methods call some custom functions in the Python
-package.  See the source for Spack's Python package for details.
-
-^^^^^^^^^^^^^^^^^^^^
-Activation arguments
-^^^^^^^^^^^^^^^^^^^^
-
-You may have noticed that the ``activate`` function defined above
-takes keyword arguments.  These are the keyword arguments from
-``extends()``, and they are passed to both activate and deactivate.
-
-This capability allows an extension to customize its own activation by
-passing arguments to the extendee.  Extendees can likewise implement
-custom ``activate()`` and ``deactivate()`` functions to suit their
-needs.
-
-The only keyword argument supported by default is the ``ignore``
-argument, which can take a regex, list of regexes, or a predicate to
-determine which files *not* to symlink during activation.
 
 .. _virtual-dependencies:
 
@@ -2656,7 +2870,7 @@ supplying a ``depends_on`` call in the package definition.  For example:
        homepage = "https://github.com/hpc/mpileaks"
        url = "https://github.com/hpc/mpileaks/releases/download/v1.0/mpileaks-1.0.tar.gz"
 
-       version('1.0', '8838c574b39202a57d7c2d68692718aa')
+       version("1.0", md5="8838c574b39202a57d7c2d68692718aa")
 
        depends_on("mpi")
        depends_on("adept-utils")
@@ -2671,12 +2885,12 @@ say MPICH, we'll see something like this:
 .. code-block:: python
 
    class Mpich(Package):
-       provides('mpi')
+       provides("mpi")
        ...
 
 The ``provides("mpi")`` call tells Spack that the ``mpich`` package
 can be used to satisfy the dependency of any package that
-``depends_on('mpi')``.
+``depends_on("mpi")``.
 
 ^^^^^^^^^^^^^^^^^^^^
 Versioned Interfaces
@@ -2712,8 +2926,8 @@ how ``mpich`` calls ``provides``:
 
 .. code-block:: python
 
-   provides('mpi@:3', when='@3:')
-   provides('mpi@:1', when='@1:')
+   provides("mpi@:3", when="@3:")
+   provides("mpi@:1", when="@1:")
 
 The ``when`` argument to ``provides`` allows you to specify optional
 constraints on the *providing* package, or the *provider*.  The
@@ -2733,7 +2947,7 @@ the package ``foo`` declares this:
 
    class Foo(Package):
        ...
-       depends_on('mpi@2')
+       depends_on("mpi@2")
 
 Suppose a user invokes ``spack install`` like this:
 
@@ -2743,6 +2957,256 @@ Suppose a user invokes ``spack install`` like this:
 
 Spack will fail with a constraint violation, because the version of
 MPICH requested is too low for the ``mpi`` requirement in ``foo``.
+
+.. _custom-attributes:
+
+------------------
+Custom attributes
+------------------
+
+Often a package will need to provide attributes for dependents to query
+various details about what it provides.  While any number of custom defined
+attributes can be implemented by a package, the four specific attributes
+described below are always available on every package with default
+implementations and the ability to customize with alternate implementations
+in the case of virtual packages provided:
+
+=========== =========================================== =====================
+Attribute   Purpose                                     Default
+=========== =========================================== =====================
+``home``    The installation path for the package       ``spec.prefix``
+``command`` An executable command for the package       | ``spec.name`` found
+                                                          in
+                                                        | ``.home.bin``
+``headers`` A list of headers provided by the package   | All headers
+                                                          searched
+                                                        | recursively in
+                                                          ``.home.include``
+``libs``    A list of libraries provided by the package | ``lib{spec.name}``
+                                                          searched
+                                                        | recursively in
+                                                          ``.home`` starting
+                                                        | with ``lib``,
+                                                          ``lib64``, then the
+                                                        | rest of ``.home``
+=========== =========================================== =====================
+
+Each of these can be customized by implementing the relevant attribute
+as a ``@property`` in the package's class:
+
+.. code-block:: python
+   :linenos:
+
+   class Foo(Package):
+       ...
+       @property
+       def libs(self):
+           # The library provided by Foo is libMyFoo.so
+           return find_libraries("libMyFoo", root=self.home, recursive=True)
+
+A package may also provide a custom implementation of each attribute
+for the virtual packages it provides by implementing the
+``virtualpackagename_attributename`` property in the package's class.
+The implementation used is the first one found from:
+
+#. Specialized virtual: ``Package.virtualpackagename_attributename``
+#. Generic package: ``Package.attributename``
+#. Default
+
+The use of customized attributes is demonstrated in the next example.
+
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Example: Customized attributes for virtual packages
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Consider a package ``foo`` that can optionally provide two virtual
+packages ``bar`` and ``baz``.  When both are enabled the installation tree
+appears as follows:
+
+.. code-block:: console
+
+   include/foo.h
+   include/bar/bar.h
+   lib64/libFoo.so
+   lib64/libFooBar.so
+   baz/include/baz/baz.h
+   baz/lib/libFooBaz.so
+
+The install tree shows that ``foo`` is providing the header ``include/foo.h``
+and library ``lib64/libFoo.so`` in its install prefix.  The virtual
+package ``bar`` is providing ``include/bar/bar.h`` and library
+``lib64/libFooBar.so``, also in ``foo``'s install prefix.  The ``baz``
+package, however, is provided in the ``baz`` subdirectory of ``foo``'s
+prefix with the ``include/baz/baz.h`` header and ``lib/libFooBaz.so``
+library.  Such a package could implement the optional attributes as
+follows:
+
+.. code-block:: python
+   :linenos:
+
+   class Foo(Package):
+       ...
+       variant("bar", default=False, description="Enable the Foo implementation of bar")
+       variant("baz", default=False, description="Enable the Foo implementation of baz")
+       ...
+       provides("bar", when="+bar")
+       provides("baz", when="+baz")
+       ....
+
+       # Just the foo headers
+       @property
+       def headers(self):
+           return find_headers("foo", root=self.home.include, recursive=False)
+
+       # Just the foo libraries
+       @property
+       def libs(self):
+           return find_libraries("libFoo", root=self.home, recursive=True)
+
+       # The header provided by the bar virtual package
+       @property
+       def bar_headers(self):
+           return find_headers("bar/bar.h", root=self.home.include, recursive=False)
+
+       # The library provided by the bar virtual package
+       @property
+       def bar_libs(self):
+           return find_libraries("libFooBar", root=self.home, recursive=True)
+
+       # The baz virtual package home
+       @property
+       def baz_home(self):
+           return self.prefix.baz
+
+       # The header provided by the baz virtual package
+       @property
+       def baz_headers(self):
+           return find_headers("baz/baz", root=self.baz_home.include, recursive=False)
+
+       # The library provided by the baz virtual package
+       @property
+       def baz_libs(self):
+           return find_libraries("libFooBaz", root=self.baz_home, recursive=True)
+
+Now consider another package, ``foo-app``, depending on all three:
+
+.. code-block:: python
+   :linenos:
+
+   class FooApp(CMakePackage):
+       ...
+       depends_on("foo")
+       depends_on("bar")
+       depends_on("baz")
+
+The resulting spec objects for it's dependencies shows the result of
+the above attribute implementations:
+
+.. code-block:: python
+
+   # The core headers and libraries of the foo package
+
+   >>> spec["foo"]
+   foo@1.0%gcc@11.3.1+bar+baz arch=linux-fedora35-haswell
+   >>> spec["foo"].prefix
+   "/opt/spack/linux-fedora35-haswell/gcc-11.3.1/foo-1.0-ca3rczp5omy7dfzoqw4p7oc2yh3u7lt6"
+
+   # home defaults to the package install prefix without an explicit implementation
+   >>> spec["foo"].home
+   "/opt/spack/linux-fedora35-haswell/gcc-11.3.1/foo-1.0-ca3rczp5omy7dfzoqw4p7oc2yh3u7lt6"
+
+   # foo headers from the foo prefix
+   >>> spec["foo"].headers
+   HeaderList([
+       "/opt/spack/linux-fedora35-haswell/gcc-11.3.1/foo-1.0-ca3rczp5omy7dfzoqw4p7oc2yh3u7lt6/include/foo.h",
+   ])
+
+   # foo include directories from the foo prefix
+   >>> spec["foo"].headers.directories
+   ["/opt/spack/linux-fedora35-haswell/gcc-11.3.1/foo-1.0-ca3rczp5omy7dfzoqw4p7oc2yh3u7lt6/include"]
+
+   # foo libraries from the foo prefix
+   >>> spec["foo"].libs
+   LibraryList([
+       "/opt/spack/linux-fedora35-haswell/gcc-11.3.1/foo-1.0-ca3rczp5omy7dfzoqw4p7oc2yh3u7lt6/lib64/libFoo.so",
+   ])
+
+   # foo library directories from the foo prefix
+   >>> spec["foo"].libs.directories
+   ["/opt/spack/linux-fedora35-haswell/gcc-11.3.1/foo-1.0-ca3rczp5omy7dfzoqw4p7oc2yh3u7lt6/lib64"]
+
+.. code-block:: python
+
+   # The virtual bar package in the same prefix as foo
+
+   # bar resolves to the foo package
+   >>> spec["bar"]
+   foo@1.0%gcc@11.3.1+bar+baz arch=linux-fedora35-haswell
+   >>> spec["bar"].prefix
+   "/opt/spack/linux-fedora35-haswell/gcc-11.3.1/foo-1.0-ca3rczp5omy7dfzoqw4p7oc2yh3u7lt6"
+
+   # home defaults to the foo prefix without either a Foo.bar_home
+   # or Foo.home implementation
+   >>> spec["bar"].home
+   "/opt/spack/linux-fedora35-haswell/gcc-11.3.1/foo-1.0-ca3rczp5omy7dfzoqw4p7oc2yh3u7lt6"
+
+   # bar header in the foo prefix
+   >>> spec["bar"].headers
+   HeaderList([
+       "/opt/spack/linux-fedora35-haswell/gcc-11.3.1/foo-1.0-ca3rczp5omy7dfzoqw4p7oc2yh3u7lt6/include/bar/bar.h"
+   ])
+
+   # bar include dirs from the foo prefix
+   >>> spec["bar"].headers.directories
+   ["/opt/spack/linux-fedora35-haswell/gcc-11.3.1/foo-1.0-ca3rczp5omy7dfzoqw4p7oc2yh3u7lt6/include"]
+
+   # bar library from the foo prefix
+   >>> spec["bar"].libs
+   LibraryList([
+       "/opt/spack/linux-fedora35-haswell/gcc-11.3.1/foo-1.0-ca3rczp5omy7dfzoqw4p7oc2yh3u7lt6/lib64/libFooBar.so"
+   ])
+
+   # bar library directories from the foo prefix
+   >>> spec["bar"].libs.directories
+   ["/opt/spack/linux-fedora35-haswell/gcc-11.3.1/foo-1.0-ca3rczp5omy7dfzoqw4p7oc2yh3u7lt6/lib64"]
+
+.. code-block:: python
+
+   # The virtual baz package in a subdirectory of foo's prefix
+
+   # baz resolves to the foo package
+   >>> spec["baz"]
+   foo@1.0%gcc@11.3.1+bar+baz arch=linux-fedora35-haswell
+   >>> spec["baz"].prefix
+   "/opt/spack/linux-fedora35-haswell/gcc-11.3.1/foo-1.0-ca3rczp5omy7dfzoqw4p7oc2yh3u7lt6"
+
+   # baz_home implementation provides the subdirectory inside the foo prefix
+   >>> spec["baz"].home
+   "/opt/spack/linux-fedora35-haswell/gcc-11.3.1/foo-1.0-ca3rczp5omy7dfzoqw4p7oc2yh3u7lt6/baz"
+
+   # baz headers in the baz subdirectory of the foo prefix
+   >>> spec["baz"].headers
+   HeaderList([
+       "/opt/spack/linux-fedora35-haswell/gcc-11.3.1/foo-1.0-ca3rczp5omy7dfzoqw4p7oc2yh3u7lt6/baz/include/baz/baz.h"
+   ])
+
+   # baz include directories in the baz subdirectory of the foo prefix
+   >>> spec["baz"].headers.directories
+   [
+       "/opt/spack/linux-fedora35-haswell/gcc-11.3.1/foo-1.0-ca3rczp5omy7dfzoqw4p7oc2yh3u7lt6/baz/include"
+   ]
+
+   # baz libraries in the baz subdirectory of the foo prefix
+   >>> spec["baz"].libs
+   LibraryList([
+       "/opt/spack/linux-fedora35-haswell/gcc-11.3.1/foo-1.0-ca3rczp5omy7dfzoqw4p7oc2yh3u7lt6/baz/lib/libFooBaz.so"
+   ])
+
+   # baz library directories in the baz subdirectory of the foo porefix
+   >>> spec["baz"].libs.directories
+   [
+       "/opt/spack/linux-fedora35-haswell/gcc-11.3.1/foo-1.0-ca3rczp5omy7dfzoqw4p7oc2yh3u7lt6/baz/lib"
+   ]
 
 .. _abstract-and-concrete:
 
@@ -2894,12 +3358,12 @@ under a context manager:
 
    class Gcc(AutotoolsPackage):
 
-       with when('+nvptx'):
-           depends_on('cuda')
-           conflicts('@:6', msg='NVPTX only supported in gcc 7 and above')
-           conflicts('languages=ada')
-           conflicts('languages=brig')
-           conflicts('languages=go')
+       with when("+nvptx"):
+           depends_on("cuda")
+           conflicts("@:6", msg="NVPTX only supported in gcc 7 and above")
+           conflicts("languages=ada")
+           conflicts("languages=brig")
+           conflicts("languages=go")
 
 The snippet above is equivalent to the more verbose:
 
@@ -2907,25 +3371,25 @@ The snippet above is equivalent to the more verbose:
 
    class Gcc(AutotoolsPackage):
 
-       depends_on('cuda', when='+nvptx')
-       conflicts('@:6', when='+nvptx', msg='NVPTX only supported in gcc 7 and above')
-       conflicts('languages=ada', when='+nvptx')
-       conflicts('languages=brig', when='+nvptx')
-       conflicts('languages=go', when='+nvptx')
+       depends_on("cuda", when="+nvptx")
+       conflicts("@:6", when="+nvptx", msg="NVPTX only supported in gcc 7 and above")
+       conflicts("languages=ada", when="+nvptx")
+       conflicts("languages=brig", when="+nvptx")
+       conflicts("languages=go", when="+nvptx")
 
 Constraints stemming from the context are added to what is explicitly present in the
 ``when=`` argument of a directive, so:
 
 .. code-block:: python
 
-   with when('+elpa'):
-       depends_on('elpa+openmp', when='+openmp')
+   with when("+elpa"):
+       depends_on("elpa+openmp", when="+openmp")
 
 is equivalent to:
 
 .. code-block:: python
 
-   depends_on('elpa+openmp', when='+openmp+elpa')
+   depends_on("elpa+openmp", when="+openmp+elpa")
 
 Constraints from nested context managers are also combined together, but they are rarely
 needed or recommended.
@@ -2944,15 +3408,15 @@ cannot be loaded together in the same Python runtime:
 .. code-block:: python
 
     class A(Package):
-        variant('python', default=True, 'enable python bindings')
-        depends_on('python@2.7', when='+python')
+        variant("python", default=True, "enable python bindings")
+        depends_on("python@2.7", when="+python")
         def install(self, spec, prefix):
             # do whatever is necessary to enable/disable python
             # bindings according to variant
 
     class B(Package):
-        variant('python', default=True, 'enable python bindings')
-        depends_on('python@3.2:', when='+python')
+        variant("python", default=True, "enable python bindings")
+        depends_on("python@3.2:", when="+python")
         def install(self, spec, prefix):
             # do whatever is necessary to enable/disable python
             # bindings according to variant
@@ -2964,75 +3428,99 @@ should simply depend on the ``~python`` variant of A and B:
 .. code-block:: python
 
     class C(Package):
-        depends_on('A~python')
-        depends_on('B~python')
+        depends_on("A~python")
+        depends_on("B~python")
 
 This may require that A or B be built twice, if the user wishes to use
 the Python extensions provided by them: once for ``+python`` and once
 for ``~python``.  Other than using a little extra disk space, that
 solution has no serious problems.
 
-.. _installation_procedure:
+.. _installation_process:
 
----------------------------------------
-Implementing the installation procedure
----------------------------------------
+--------------------------------
+Overriding build system defaults
+--------------------------------
 
-The last element of a package is its **installation procedure**.  This is
-where the real work of installation happens, and it's the main part of
-the package you'll need to customize for each piece of software.
+.. note::
 
-Defining an installation procedure means overriding a set of methods or attributes
-that will be called at some point during the installation of the package.
-The package base class, usually specialized for a given build system, determines the
-actual set of entities available for overriding.
-The classes that are currently provided by Spack are:
+   If you code a single class in ``package.py`` all the functions shown in the table below
+   can be implemented with the same signature on the ``*Package`` instead of the corresponding builder.
+
+
+Most of the time the default implementation of methods or attributes in build system base classes
+is what a packager needs, and just a very few entities need to be overwritten. Typically we just
+need to override methods like ``configure_args``:
+
+.. code-block:: python
+
+   def configure_args(self):
+        args = ["--enable-cxx"] + self.enable_or_disable("libs")
+        if "libs=static" in self.spec:
+            args.append("--with-pic")
+        return args
+
+The actual set of entities available for overriding in ``package.py`` depend on
+the build system. The build systems currently supported by Spack are:
 
 +----------------------------------------------------------+----------------------------------+
-|     **Base Class**                                       |           **Purpose**            |
+|     **API docs**                                         |           **Description**        |
 +==========================================================+==================================+
-| :class:`~spack.package.Package`                          | General base class not           |
-|                                                          | specialized for any build system |
+| :class:`~spack.build_systems.generic`                    | Generic build system without any |
+|                                                          | base implementation              |
 +----------------------------------------------------------+----------------------------------+
-| :class:`~spack.build_systems.makefile.MakefilePackage`   | Specialized class for packages   |
-|                                                          | built invoking                   |
+| :class:`~spack.build_systems.makefile`                   | Specialized build system for     |
+|                                                          | software built invoking          |
 |                                                          | hand-written Makefiles           |
 +----------------------------------------------------------+----------------------------------+
-| :class:`~spack.build_systems.autotools.AutotoolsPackage` | Specialized class for packages   |
-|                                                          | built using GNU Autotools        |
+| :class:`~spack.build_systems.autotools`                  | Specialized build system for     |
+|                                                          | software built using             |
+|                                                          | GNU Autotools                    |
 +----------------------------------------------------------+----------------------------------+
-| :class:`~spack.build_systems.cmake.CMakePackage`         | Specialized class for packages   |
-|                                                          | built using CMake                |
+| :class:`~spack.build_systems.cmake`                      | Specialized build system for     |
+|                                                          | software built using CMake       |
 +----------------------------------------------------------+----------------------------------+
-| :class:`~spack.build_systems.cuda.CudaPackage`           | A helper class for packages that |
-|                                                          | use CUDA                         |
+| :class:`~spack.build_systems.maven`                      | Specialized build system for     |
+|                                                          | software built using Maven       |
 +----------------------------------------------------------+----------------------------------+
-| :class:`~spack.build_systems.qmake.QMakePackage`         | Specialized class for packages   |
-|                                                          | built using QMake                |
+| :class:`~spack.build_systems.meson`                      | Specialized build system for     |
+|                                                          | software built using Meson       |
 +----------------------------------------------------------+----------------------------------+
-| :class:`~spack.build_systems.rocm.ROCmPackage`           | A helper class for packages that |
-|                                                          | use ROCm                         |
+| :class:`~spack.build_systems.nmake`                      | Specialized build system for     |
+|                                                          | software built using NMake       |
 +----------------------------------------------------------+----------------------------------+
-| :class:`~spack.build_systems.scons.SConsPackage`         | Specialized class for packages   |
-|                                                          | built using SCons                |
+| :class:`~spack.build_systems.qmake`                      | Specialized build system for     |
+|                                                          | software built using QMake       |
 +----------------------------------------------------------+----------------------------------+
-| :class:`~spack.build_systems.waf.WafPackage`             | Specialized class for packages   |
-|                                                          | built using Waf                  |
+| :class:`~spack.build_systems.scons`                      | Specialized build system for     |
+|                                                          | software built using SCons       |
 +----------------------------------------------------------+----------------------------------+
-| :class:`~spack.build_systems.r.RPackage`                 | Specialized class for            |
+| :class:`~spack.build_systems.waf`                        | Specialized build system for     |
+|                                                          | software built using Waf         |
++----------------------------------------------------------+----------------------------------+
+| :class:`~spack.build_systems.r`                          | Specialized build system for     |
 |                                                          | R extensions                     |
 +----------------------------------------------------------+----------------------------------+
-| :class:`~spack.build_systems.octave.OctavePackage`       | Specialized class for            |
+| :class:`~spack.build_systems.octave`                     | Specialized build system for     |
 |                                                          | Octave packages                  |
 +----------------------------------------------------------+----------------------------------+
-| :class:`~spack.build_systems.python.PythonPackage`       | Specialized class for            |
+| :class:`~spack.build_systems.python`                     | Specialized build system for     |
 |                                                          | Python extensions                |
 +----------------------------------------------------------+----------------------------------+
-| :class:`~spack.build_systems.perl.PerlPackage`           | Specialized class for            |
+| :class:`~spack.build_systems.perl`                       | Specialized build system for     |
 |                                                          | Perl extensions                  |
 +----------------------------------------------------------+----------------------------------+
-| :class:`~spack.build_systems.intel.IntelPackage`         | Specialized class for licensed   |
-|                                                          | Intel software                   |
+| :class:`~spack.build_systems.ruby`                       | Specialized build system for     |
+|                                                          | Ruby extensions                  |
++----------------------------------------------------------+----------------------------------+
+| :class:`~spack.build_systems.intel`                      | Specialized build system for     |
+|                                                          | licensed Intel software          |
++----------------------------------------------------------+----------------------------------+
+| :class:`~spack.build_systems.oneapi`                     | Specialized build system for     |
+|                                                          | Intel oneAPI software            |
++----------------------------------------------------------+----------------------------------+
+| :class:`~spack.build_systems.aspell_dict`                | Specialized build system for     |
+|                                                          | Aspell dictionaries              |
 +----------------------------------------------------------+----------------------------------+
 
 
@@ -3042,55 +3530,20 @@ The classes that are currently provided by Spack are:
         for a package, as ``spack create`` will make the appropriate choice on their behalf. In those
         rare cases where manual intervention is needed we need to stress that a
         package base class depends on the *build system* being used, not the language of the package.
-        For example, a Python extension installed with CMake would ``extends('python')`` and
+        For example, a Python extension installed with CMake would ``extends("python")`` and
         subclass from :class:`~spack.build_systems.cmake.CMakePackage`.
 
-^^^^^^^^^^^^^^^^^^^^^
-Installation pipeline
-^^^^^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^^^^^^^^
+Overriding builder methods
+^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-When a user runs ``spack install``, Spack:
-
-1. Fetches an archive for the correct version of the software.
-2. Expands the archive.
-3. Sets the current working directory to the root directory of the expanded archive.
-
-Then, depending on the base class of the package under consideration, it will execute
-a certain number of **phases** that reflect the way a package of that type is usually built.
-The name and order in which the phases will be executed can be obtained either reading the API
-docs at :py:mod:`~.spack.build_systems`, or using the ``spack info`` command:
-
-.. code-block:: console
-    :emphasize-lines: 13,14
-
-    $ spack info m4
-    AutotoolsPackage:    m4
-    Homepage:            https://www.gnu.org/software/m4/m4.html
-
-    Safe versions:
-        1.4.17    ftp://ftp.gnu.org/gnu/m4/m4-1.4.17.tar.gz
-
-    Variants:
-        Name       Default   Description
-
-        sigsegv    on        Build the libsigsegv dependency
-
-    Installation Phases:
-        autoreconf    configure    build    install
-
-    Build Dependencies:
-        libsigsegv
-
-    ...
-
-
-Typically, phases have default implementations that fit most of the common cases:
+Build-system "phases" have default implementations that fit most of the common cases:
 
 .. literalinclude:: _spack_root/lib/spack/spack/build_systems/autotools.py
-    :pyobject: AutotoolsPackage.configure
+    :pyobject: AutotoolsBuilder.configure
     :linenos:
 
-It is thus just sufficient for a packager to override a few
+It is usually sufficient for a packager to override a few
 build system specific helper methods or attributes to provide, for instance,
 configure arguments:
 
@@ -3098,31 +3551,31 @@ configure arguments:
     :pyobject: M4.configure_args
     :linenos:
 
-.. note::
-    Each specific build system has a list of attributes that can be overridden to
-    fine-tune the installation of a package without overriding an entire phase. To
-    have more information on them the place to go is the API docs of the :py:mod:`~.spack.build_systems`
-    module.
+Each specific build system has a list of attributes and methods that can be overridden to
+fine-tune the installation of a package without overriding an entire phase. To
+have more information on them the place to go is the API docs of the :py:mod:`~.spack.build_systems`
+module.
 
 ^^^^^^^^^^^^^^^^^^^^^^^^^^
 Overriding an entire phase
 ^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-In extreme cases it may be necessary to override an entire phase. Regardless
-of the build system, the signature is the same. For example, the signature
-for the install phase is:
+Sometimes it is necessary to override an entire phase. If the ``package.py`` contains
+a single class recipe, see :ref:`package_class_structure`, then the signature for a
+phase is:
 
 .. code-block:: python
 
-   class Foo(Package):
+   class Openjpeg(CMakePackage):
        def install(self, spec, prefix):
            ...
 
+regardless of the build system. The arguments for the phase are:
+
 ``self``
-    For those not used to Python instance methods, this is the
-    package itself.  In this case it's an instance of ``Foo``, which
-    extends ``Package``.  For API docs on Package objects, see
-    :py:class:`Package <spack.package.Package>`.
+    This is the package object, which extends ``CMakePackage``.
+    For API docs on Package objects, see
+    :py:class:`Package <spack.package_base.PackageBase>`.
 
 ``spec``
     This is the concrete spec object created by Spack from an
@@ -3137,12 +3590,111 @@ for the install phase is:
 The arguments ``spec`` and ``prefix`` are passed only for convenience, as they always
 correspond to ``self.spec`` and ``self.spec.prefix`` respectively.
 
-As mentioned in :ref:`install-environment`, you will usually not need to refer
-to dependencies explicitly in your package file, as the compiler wrappers take care of most of
-the heavy lifting here.  There will be times, though, when you need to refer to
-the install locations of dependencies, or when you need to do something different
-depending on the version, compiler, dependencies, etc. that your package is
-built with.  These parameters give you access to this type of information.
+If the ``package.py`` encodes builders explicitly, the signature for a phase changes slightly:
+
+.. code-block:: python
+
+   class CMakeBuilder(spack.build_systems.cmake.CMakeBuilder):
+       def install(self, pkg, spec, prefix):
+           ...
+
+In this case the package is passed as the second argument, and ``self`` is the builder instance.
+
+.. _multiple_build_systems:
+
+^^^^^^^^^^^^^^^^^^^^^^
+Multiple build systems
+^^^^^^^^^^^^^^^^^^^^^^
+
+There are cases where a software actively supports two build systems, or changes build systems
+as it evolves, or needs different build systems on different platforms. Spack allows dealing with
+these cases natively, if a recipe is written using builders explicitly.
+
+For instance, software that supports two build systems unconditionally should derive from
+both ``*Package`` base classes, and declare the possible use of multiple build systems using
+a directive:
+
+.. code-block:: python
+
+   class ArpackNg(CMakePackage, AutotoolsPackage):
+
+       build_system("cmake", "autotools", default="cmake")
+
+In this case the software can be built with both ``autotools`` and ``cmake``. Since the package
+supports multiple build systems, it is necessary to declare which one is the default. The ``package.py``
+will likely contain some overriding of default builder methods:
+
+.. code-block:: python
+
+   class CMakeBuilder(spack.build_systems.cmake.CMakeBuilder):
+       def cmake_args(self):
+           pass
+
+   class AutotoolsBuilder(spack.build_systems.autotools.AutotoolsBuilder):
+       def configure_args(self):
+           pass
+
+In more complex cases it might happen that the build system changes according to certain conditions,
+for instance across versions. That can be expressed with conditional variant values:
+
+.. code-block:: python
+
+   class ArpackNg(CMakePackage, AutotoolsPackage):
+
+       build_system(
+           conditional("cmake", when="@0.64:"),
+           conditional("autotools", when="@:0.63"),
+           default="cmake",
+       )
+
+In the example the directive impose a change from ``Autotools`` to ``CMake`` going
+from ``v0.63`` to ``v0.64``.
+
+^^^^^^^^^^^^^^^^^^
+Mixin base classes
+^^^^^^^^^^^^^^^^^^
+
+Besides build systems, there are other cases where common metadata and behavior can be extracted
+and reused by many packages. For instance, packages that depend on ``Cuda`` or ``Rocm``, share
+common dependencies and constraints. To factor these attributes into a single place, Spack provides
+a few mixin classes in the ``spack.build_systems`` module:
+
++---------------------------------------------------------------+----------------------------------+
+|     **API docs**                                              |           **Description**        |
++===============================================================+==================================+
+| :class:`~spack.build_systems.cuda.CudaPackage`                | A helper class for packages that |
+|                                                               | use CUDA                         |
++---------------------------------------------------------------+----------------------------------+
+| :class:`~spack.build_systems.rocm.ROCmPackage`                | A helper class for packages that |
+|                                                               | use ROCm                         |
++---------------------------------------------------------------+----------------------------------+
+| :class:`~spack.build_systems.gnu.GNUMirrorPackage`            | A helper class for GNU packages  |
++---------------------------------------------------------------+----------------------------------+
+| :class:`~spack.build_systems.python.PythonExtension`          | A helper class for Python        |
+|                                                               | extensions                       |
++---------------------------------------------------------------+----------------------------------+
+| :class:`~spack.build_systems.sourceforge.SourceforgePackage`  | A helper class for packages      |
+|                                                               | from sourceforge.org             |
++---------------------------------------------------------------+----------------------------------+
+| :class:`~spack.build_systems.sourceware.SourcewarePackage`    | A helper class for packages      |
+|                                                               | from sourceware.org              |
++---------------------------------------------------------------+----------------------------------+
+| :class:`~spack.build_systems.xorg.XorgPackage`                | A helper class for x.org         |
+|                                                               | packages                         |
++---------------------------------------------------------------+----------------------------------+
+
+These classes should be used by adding them to the inheritance tree of the package that needs them,
+for instance:
+
+.. code-block:: python
+
+   class Cp2k(MakefilePackage, CudaPackage):
+       """CP2K is a quantum chemistry and solid state physics software package
+       that can perform atomistic simulations of solid state, liquid, molecular,
+       periodic, material, crystal, and biological systems
+       """
+
+In the example above ``Cp2k`` inherits all the conflicts and variants that ``CudaPackage`` defines.
 
 .. _install-environment:
 
@@ -3258,8 +3810,8 @@ condition is true.  You can explicitly cause the build to fail from
 
 .. code-block:: python
 
-   if spec.architecture.startswith('darwin'):
-       raise InstallError('This package does not build on Mac OS X!')
+   if spec.architecture.startswith("darwin"):
+       raise InstallError("This package does not build on Mac OS X!")
 
 .. _shell-wrappers:
 
@@ -3279,7 +3831,7 @@ to execute shell commands:
 .. code-block:: python
 
    import subprocess
-   subprocess.check_call('configure', '--prefix={0}'.format(prefix))
+   subprocess.check_call("configure", "--prefix={0}".format(prefix))
 
 We've tried to make this a bit easier by providing callable wrapper
 objects for some shell commands.  By default, ``configure``,
@@ -3290,8 +3842,8 @@ If you need other commands, you can use ``which`` to get them:
 
 .. code-block:: python
 
-   sed = which('sed')
-   sed('s/foo/bar/', filename)
+   sed = which("sed")
+   sed("s/foo/bar/", filename)
 
 The ``which`` function will search the ``PATH`` for the application.
 
@@ -3323,7 +3875,7 @@ built-in flag_handlers. The built-in flag_handlers are named
 ``inject_flags``, ``env_flags``, and ``build_system_flags``. The
 ``inject_flags`` method is the default. The ``env_flags`` method puts
 all of the flags into the environment variables that ``make`` uses as
-implicit variables ('CFLAGS', 'CXXFLAGS', etc.). The
+implicit variables ("CFLAGS", "CXXFLAGS", etc.). The
 ``build_system_flags`` method adds the flags as
 arguments to the invocation of ``configure`` or ``cmake``,
 respectively.
@@ -3384,15 +3936,15 @@ following flag handler method accomplishes that.
 .. code-block:: python
 
    def flag_handler(self, name, flags):
-       if name in ['cflags', 'cxxflags', 'cppflags']:
+       if name in ["cflags", "cxxflags", "cppflags"]:
            return (None, flags, None)
-       elif name == 'ldlibs':
-           flags.append('-lbar')
+       elif name == "ldlibs":
+           flags.append("-lbar")
        return (flags, None, None)
 
 Because these methods can pass values through environment variables,
 it is important not to override these variables unnecessarily
-(E.g. setting ``env['CFLAGS']``) in other package methods when using
+(E.g. setting ``env["CFLAGS"]``) in other package methods when using
 non-default flag handlers. In the ``setup_environment`` and
 ``setup_dependent_environment`` methods, use the ``append_flags``
 method of the ``EnvironmentModifications`` class to append values to a
@@ -3419,7 +3971,7 @@ is handy when a package supports additional variants like
 
 .. code-block:: python
 
-   variant('openmp', default=True, description="Enable OpenMP support.")
+   variant("openmp", default=True, description="Enable OpenMP support.")
 
 .. _blas_lapack_scalapack:
 
@@ -3442,28 +3994,28 @@ Package developers are requested to use this interface. Common usage cases are:
 
 .. code-block:: python
 
-   lapack_blas = spec['lapack'].libs + spec['blas'].libs
+   lapack_blas = spec["lapack"].libs + spec["blas"].libs
    options.append(
-      '--with-blas-lapack-lib={0}'.format(lapack_blas.joined())
+      "--with-blas-lapack-lib={0}".format(lapack_blas.joined())
    )
 
 2. Names of libraries and directories which contain them
 
 .. code-block:: python
 
-   blas = spec['blas'].libs
+   blas = spec["blas"].libs
    options.extend([
-     '-DBLAS_LIBRARY_NAMES={0}'.format(';'.join(blas.names)),
-     '-DBLAS_LIBRARY_DIRS={0}'.format(';'.join(blas.directories))
+     "-DBLAS_LIBRARY_NAMES={0}".format(";".join(blas.names)),
+     "-DBLAS_LIBRARY_DIRS={0}".format(";".join(blas.directories))
    ])
 
 3. Search and link flags
 
 .. code-block:: python
 
-   math_libs = spec['scalapack'].libs + spec['lapack'].libs + spec['blas'].libs
+   math_libs = spec["scalapack"].libs + spec["lapack"].libs + spec["blas"].libs
    options.append(
-     '-DMATH_LIBS:STRING={0}'.format(math_libs.ld_flags)
+     "-DMATH_LIBS:STRING={0}".format(math_libs.ld_flags)
    )
 
 
@@ -3484,7 +4036,7 @@ e.g.:
 
 .. code-block:: python
 
-   configure('--prefix={0}'.format(prefix))
+   configure("--prefix={0}".format(prefix))
 
 For the most part, prefix objects behave exactly like strings.  For
 packages that do not have their own install target, or for those that
@@ -3497,13 +4049,13 @@ yourself, e.g.:
 
    def install(self, spec, prefix):
        mkdirp(prefix.bin)
-       install('foo-tool', prefix.bin)
+       install("foo-tool", prefix.bin)
 
        mkdirp(prefix.include)
-       install('foo.h', prefix.include)
+       install("foo.h", prefix.include)
 
        mkdirp(prefix.lib)
-       install('libfoo.a', prefix.lib)
+       install("libfoo.a", prefix.lib)
 
 
 Attributes of this object are created on the fly when you request them,
@@ -3524,7 +4076,7 @@ variable name. If your file or directory contains dashes or dots, use
 
 .. code-block:: python
 
-   prefix.lib.join('libz.a')
+   prefix.lib.join("libz.a")
 
 
 .. _spec-objects:
@@ -3548,6 +4100,8 @@ special parameters to ``configure``, like
 need to supply special compiler flags depending on the compiler.  All
 of this information is available in the spec.
 
+.. _testing-specs:
+
 ^^^^^^^^^^^^^^^^^^^^^^^^
 Testing spec constraints
 ^^^^^^^^^^^^^^^^^^^^^^^^
@@ -3560,10 +4114,10 @@ do that, e.g.:
 .. code-block:: python
 
    configure_args = [
-       '--prefix={0}'.format(prefix)
+       "--prefix={0}".format(prefix)
    ]
 
-   if spec.satisfies('@1.2:1.4'):
+   if spec.satisfies("@1.2:1.4"):
        configure_args.append("CXXFLAGS='-DWITH_FEATURE'")
 
    configure(*configure_args)
@@ -3572,35 +4126,35 @@ This works for compilers, too:
 
 .. code-block:: python
 
-   if spec.satisfies('%gcc'):
-       configure_args.append('CXXFLAGS="-g3 -O3"')
-   if spec.satisfies('%intel'):
-       configure_args.append('CXXFLAGS="-xSSE2 -fast"')
+   if spec.satisfies("%gcc"):
+       configure_args.append("CXXFLAGS='-g3 -O3'")
+   if spec.satisfies("%intel"):
+       configure_args.append("CXXFLAGS='-xSSE2 -fast'")
 
 Or for combinations of spec constraints:
 
 .. code-block:: python
 
-   if spec.satisfies('@1.2%intel'):
+   if spec.satisfies("@1.2%intel"):
        tty.error("Version 1.2 breaks when using Intel compiler!")
 
 You can also do similar satisfaction tests for dependencies:
 
 .. code-block:: python
 
-   if spec.satisfies('^dyninst@8.0'):
-       configure_args.append('CXXFLAGS=-DSPECIAL_DYNINST_FEATURE')
+   if spec.satisfies("^dyninst@8.0"):
+       configure_args.append("CXXFLAGS=-DSPECIAL_DYNINST_FEATURE")
 
 This could allow you to easily work around a bug in a particular
 dependency version.
 
 You can use ``satisfies()`` to test for particular dependencies,
-e.g. ``foo.satisfies('^openmpi@1.2')`` or ``foo.satisfies('^mpich')``,
+e.g. ``foo.satisfies("^openmpi@1.2")`` or ``foo.satisfies("^mpich")``,
 or you can use Python's built-in ``in`` operator:
 
 .. code-block:: python
 
-   if 'libelf' in spec:
+   if "libelf" in spec:
        print "this package depends on libelf"
 
 This is useful for virtual dependencies, as you can easily see what
@@ -3608,12 +4162,12 @@ implementation was selected for this build:
 
 .. code-block:: python
 
-   if 'openmpi' in spec:
-       configure_args.append('--with-openmpi')
-   elif 'mpich' in spec:
-       configure_args.append('--with-mpich')
-   elif 'mvapich' in spec:
-       configure_args.append('--with-mvapich')
+   if "openmpi" in spec:
+       configure_args.append("--with-openmpi")
+   elif "mpich" in spec:
+       configure_args.append("--with-mpich")
+   elif "mvapich" in spec:
+       configure_args.append("--with-mvapich")
 
 It's also a bit more concise than satisfies.  The difference between
 the two functions is that ``satisfies()`` tests whether spec
@@ -3638,9 +4192,9 @@ platform we are installing for. If that is the case we can use conditionals:
 
 .. code-block:: python
 
-   if spec.platform == 'darwin':
+   if spec.platform == "darwin":
        # Actions that are specific to Darwin
-       args.append('--darwin-specific-flag')
+       args.append("--darwin-specific-flag")
 
 and branch based on the current spec platform. If we need to make a package directive
 conditional on the platform we can instead employ the usual spec syntax and pass the
@@ -3650,7 +4204,7 @@ corresponding constraint to the appropriate argument of that directive:
 
    class Libnl(AutotoolsPackage):
 
-       conflicts('platform=darwin', msg='libnl requires FreeBSD or Linux')
+       conflicts("platform=darwin", msg="libnl requires FreeBSD or Linux")
 
 Similar considerations are also valid for the ``os`` part of a spec's architecture.
 For instance:
@@ -3659,7 +4213,7 @@ For instance:
 
    class Glib(AutotoolsPackage)
 
-       patch('old-kernels.patch', when='os=centos6')
+       patch("old-kernels.patch", when="os=centos6")
 
 will apply the patch only when the operating system is Centos 6.
 
@@ -3670,9 +4224,9 @@ will apply the patch only when the operating system is Centos 6.
 
    .. code-block:: python
 
-      if sys.platform == 'darwin':
+      if sys.platform == "darwin":
           # Actions that are specific to Darwin
-          args.append('--darwin-specific-flag')
+          args.append("--darwin-specific-flag")
 
    querying the spec architecture's platform should be considered the preferred. The key difference
    is that a query on ``sys.platform``, or anything similar, is always bound to the host on which the
@@ -3714,8 +4268,8 @@ for supported features, for instance:
 
 .. code-block:: python
 
-   if 'avx512' in spec.target:
-       args.append('--with-avx512')
+   if "avx512" in spec.target:
+       args.append("--with-avx512")
 
 The snippet above will append the ``--with-avx512`` item to a list of arguments only if the corresponding
 feature is supported by the current target. Sometimes we need to take different actions based
@@ -3724,8 +4278,8 @@ we can check the ``family`` attribute:
 
 .. code-block:: python
 
-   if spec.target.family == 'ppc64le':
-       args.append('--enable-power')
+   if spec.target.family == "ppc64le":
+       args.append("--enable-power")
 
 Possible values for the ``family`` attribute are displayed by ``spack arch --known-targets``
 under the "Generic architectures (families)" header.
@@ -3734,8 +4288,8 @@ is compatible with a known one:
 
 .. code-block:: python
 
-   if spec.target > 'haswell':
-       args.append('--needs-at-least-haswell')
+   if spec.target > "haswell":
+       args.append("--needs-at-least-haswell")
 
 The snippet above will add an item to a list of configure options only if the current
 architecture is a superset of ``haswell`` or, said otherwise, only if the current
@@ -3761,7 +4315,7 @@ the spec:
 
 .. code-block:: python
 
-   spec['mpi']
+   spec["mpi"]
 
 The value in the brackets needs to be some package name, and spec
 needs to depend on that package, or the operation will fail.  For
@@ -3772,8 +4326,8 @@ own spec:
 
 .. code-block:: python
 
-   spec['mpi'].prefix.bin
-   spec['mpi'].version
+   spec["mpi"].prefix.bin
+   spec["mpi"].version
 
 .. _multimethods:
 
@@ -3797,12 +4351,12 @@ example:
        def install(self, prefix):
            # Do default install
 
-       @when('arch=chaos_5_x86_64_ib')
+       @when("arch=chaos_5_x86_64_ib")
        def install(self, prefix):
            # This will be executed instead of the default install if
            # the package's sys_type() is chaos_5_x86_64_ib.
 
-       @when('arch=linux-debian7-x86_64')
+       @when("arch=linux-debian7-x86_64")
        def install(self, prefix):
            # This will be executed if the package's sys_type() is
            # linux-debian7-x86_64.
@@ -3821,13 +4375,13 @@ could do something more like this:
       ...
        # virtual dependence on MPI.
        # could resolve to mpich, mpich2, OpenMPI
-       depends_on('mpi')
+       depends_on("mpi")
 
        def setup(self):
            # do nothing in the default case
            pass
 
-       @when('^openmpi')
+       @when("^openmpi")
        def setup(self):
            # do something special when this is built with OpenMPI for
            # its MPI implementations.
@@ -3844,23 +4398,23 @@ for example:
 
    class SomePackage(Package):
        ...
-       depends_on('mpi')
+       depends_on("mpi")
 
        def setup_mpi(self):
            # the default, called when no @when specs match
            pass
 
-       @when('^mpi@3:')
+       @when("^mpi@3:")
        def setup_mpi(self):
            # this will be called when mpi is version 3 or higher
            pass
 
-       @when('^mpi@2:')
+       @when("^mpi@2:")
        def setup_mpi(self):
            # this will be called when mpi is version 2 or higher
            pass
 
-       @when('^mpi@1:')
+       @when("^mpi@1:")
        def setup_mpi(self):
            # this will be called when mpi is version 1 or higher
            pass
@@ -3900,16 +4454,9 @@ In addition to invoking the right compiler, the compiler wrappers add
 flags to the compile line so that dependencies can be easily found.
 These flags are added for each dependency, if they exist:
 
-Compile-time library search paths
-* ``-L$dep_prefix/lib``
-* ``-L$dep_prefix/lib64``
-
-Runtime library search paths (RPATHs)
-* ``$rpath_flag$dep_prefix/lib``
-* ``$rpath_flag$dep_prefix/lib64``
-
-Include search paths
-* ``-I$dep_prefix/include``
+* Compile-time library search paths: ``-L$dep_prefix/lib``, ``-L$dep_prefix/lib64``
+* Runtime library search paths (RPATHs): ``$rpath_flag$dep_prefix/lib``, ``$rpath_flag$dep_prefix/lib64``
+* Include search paths: ``-I$dep_prefix/include``
 
 An example of this would be the ``libdwarf`` build, which has one
 dependency: ``libelf``.  Every call to ``cc`` in the ``libdwarf``
@@ -3956,7 +4503,7 @@ It is common for high performance computing software/packages to use the
 Message Passing Interface ( ``MPI``).  As a result of conretization, a
 given package can be built using different implementations of MPI such as
 ``Openmpi``, ``MPICH`` or ``IntelMPI``.  That is, when your package
-declares that it ``depends_on('mpi')``, it can be built with any of these
+declares that it ``depends_on("mpi")``, it can be built with any of these
 ``mpi`` implementations. In some scenarios, to configure a package, one
 has to provide it with appropriate MPI compiler wrappers such as
 ``mpicc``, ``mpic++``.  However different implementations of ``MPI`` may
@@ -3968,10 +4515,10 @@ use MPI wrappers to compile your whole build, do this in your
 
 .. code-block:: python
 
-   env['CC'] = spec['mpi'].mpicc
-   env['CXX'] = spec['mpi'].mpicxx
-   env['F77'] = spec['mpi'].mpif77
-   env['FC'] = spec['mpi'].mpifc
+   env["CC"] = spec["mpi"].mpicc
+   env["CXX"] = spec["mpi"].mpicxx
+   env["F77"] = spec["mpi"].mpif77
+   env["FC"] = spec["mpi"].mpifc
 
 That's all.  A longer explanation of why this works is below.
 
@@ -4026,19 +4573,19 @@ wrappers.  All it takes some lines like this:
 
 .. code-block:: python
 
-   env['CC'] = spec['mpi'].mpicc
-   env['CXX'] = spec['mpi'].mpicxx
-   env['F77'] = spec['mpi'].mpif77
-   env['FC'] = spec['mpi'].mpifc
+   env["CC"] = spec["mpi"].mpicc
+   env["CXX"] = spec["mpi"].mpicxx
+   env["F77"] = spec["mpi"].mpif77
+   env["FC"] = spec["mpi"].mpifc
 
 Or, if you pass CC, CXX, etc. directly to your build with, e.g.,
-`--with-cc=<path>`, you'll want to substitute `spec['mpi'].mpicc` in
+`--with-cc=<path>`, you'll want to substitute `spec["mpi"].mpicc` in
 there instead, e.g.:
 
 .. code-block:: python
 
-   configure('—prefix=%s' % prefix,
-             '—with-cc=%s' % spec['mpi'].mpicc)
+   configure("—prefix=%s" % prefix,
+             "—with-cc=%s" % spec["mpi"].mpicc)
 
 Now, you may think that doing this will lose the includes, library paths,
 and RPATHs that Spack's compiler wrapper get you, but we've actually set
@@ -4047,13 +4594,13 @@ when run from within Spack. So using the MPI wrappers should really be as
 simple as the code above.
 
 ^^^^^^^^^^^^^^^^^^^^^
-``spec['mpi']``
+``spec["mpi"]``
 ^^^^^^^^^^^^^^^^^^^^^
 
 Ok, so how does all this work?
 
 If your package has a virtual dependency like ``mpi``, then referring to
-``spec['mpi']`` within ``install()`` will get you the concrete ``mpi``
+``spec["mpi"]`` within ``install()`` will get you the concrete ``mpi``
 implementation in your dependency DAG.  That is a spec object just like
 the one passed to install, only the MPI implementations all set some
 additional properties on it to help you out.  E.g., in mvapich2, you'll
@@ -4065,7 +4612,7 @@ find this:
 That code allows the mvapich2 package to associate an ``mpicc`` property
 with the ``mvapich2`` node in the DAG, so that dependents can access it.
 ``openmpi`` and ``mpich`` do similar things.  So, no matter what MPI
-you're using, spec['mpi'].mpicc gets you the location of the MPI
+you're using, spec["mpi"].mpicc gets you the location of the MPI
 compilers. This allows us to have a fairly simple polymorphic interface
 for information about virtual dependencies like MPI.
 
@@ -4105,16 +4652,16 @@ which function like MPI wrappers.  On Cray systems, the ``CC``, ``cc``,
 and ``ftn`` wrappers ARE the MPI compiler wrappers, and it's assumed that
 you'll use them for all of your builds.  So on Cray we don't bother with
 ``mpicc``, ``mpicxx``, etc, Spack MPI implementations set
-``spec['mpi'].mpicc`` to point to Spack's wrappers, which wrap the Cray
+``spec["mpi"].mpicc`` to point to Spack's wrappers, which wrap the Cray
 wrappers, which wrap the regular compilers and include MPI flags.  That
 may seem complicated, but for packagers, that means the same code for
 using MPI wrappers will work, even on even on a Cray:
 
 .. code-block:: python
 
-   env['CC'] = spec['mpi'].mpicc
+   env["CC"] = spec["mpi"].mpicc
 
-This is because on Cray, ``spec['mpi'].mpicc`` is just ``spack_cc``.
+This is because on Cray, ``spec["mpi"].mpicc`` is just ``spack_cc``.
 
 .. _checking_an_installation:
 
@@ -4147,7 +4694,8 @@ Spack infers the status of a build based on the contents of the install
 prefix. Success is assumed if anything (e.g., a file, directory) is
 written after ``install()`` completes. Otherwise, the build is assumed
 to have failed. However, the presence of install prefix contents
-is not a sufficient indicator of success.
+is not a sufficient indicator of success so Spack supports the addition
+of tests that can be performed during `spack install` processing.
 
 Consider a simple autotools build using the following commands:
 
@@ -4171,6 +4719,16 @@ What can you do to check that the build is progressing satisfactorily?
 If there are specific files and or directories expected of a successful
 installation, you can add basic, fast ``sanity checks``. You can also add
 checks to be performed after one or more installation phases.
+
+.. note::
+
+   Build-time tests are performed when the ``--test`` option is passed
+   to ``spack install``.
+
+.. warning::
+
+   Build-time test failures result in a failed installation of the software.
+
 
 .. _sanity-checks:
 
@@ -4200,15 +4758,24 @@ that eight paths must exist within the installation prefix after the
        ...
 
        # sanity check
-       sanity_check_is_file = [join_path('bin', 'reframe')]
-       sanity_check_is_dir  = ['bin', 'config', 'docs', 'reframe', 'tutorials',
-                               'unittests', 'cscs-checks']
+       sanity_check_is_file = [join_path("bin", "reframe")]
+       sanity_check_is_dir  = ["bin", "config", "docs", "reframe", "tutorials",
+                               "unittests", "cscs-checks"]
 
-Spack will then ensure the installation created the **file**:
+When you run ``spack install`` with tests enabled, Spack will ensure that
+a successfully installed package has the required files and or directories.
+
+For example, running:
+
+.. code-block:: console
+
+   $ spack install --test=root reframe
+
+results in spack checking that the installation created the following **file**:
 
 * ``self.prefix/bin/reframe``
 
-It will also check for the existence of the following **directories**:
+and the following **directories**:
 
 * ``self.prefix/bin``
 * ``self.prefix/config``
@@ -4217,6 +4784,9 @@ It will also check for the existence of the following **directories**:
 * ``self.prefix/tutorials``
 * ``self.prefix/unittests``
 * ``self.prefix/cscs-checks``
+
+If **any** of these paths are missing, then Spack considers the installation
+to have failed.
 
 .. note::
 
@@ -4253,6 +4823,9 @@ other checks.
    * - :ref:`AutotoolsPackage <autotoolspackage>`
      - ``check`` (``make test``, ``make check``)
      - ``installcheck`` (``make installcheck``)
+   * - :ref:`CachedCMakePackage <cachedcmakepackage>`
+     - ``check`` (``make check``, ``make test``)
+     - Not applicable
    * - :ref:`CMakePackage <cmakepackage>`
      - ``check`` (``make check``, ``make test``)
      - Not applicable
@@ -4277,6 +4850,9 @@ other checks.
    * - :ref:`SIPPackage <sippackage>`
      - Not applicable
      - ``test`` (module imports)
+   * - :ref:`WafPackage <wafpackage>`
+     - ``build_test`` (must be overridden)
+     - ``install_test`` (must be overridden)
 
 For example, the ``Libelf`` package inherits from ``AutotoolsPackage``
 and its ``Makefile`` has a standard ``check`` target. So Spack will
@@ -4320,13 +4896,13 @@ phases based on the skeleton provided below.
    class YourMakefilePackage(MakefilePackage):
        ...
 
-       @run_after('build')
+       @run_after("build")
        @on_package_attributes(run_tests=True)
        def check_build(self):
             # Add your custom post-build phase tests
             pass
 
-       @run_after('install')
+       @run_after("install")
        @on_package_attributes(run_tests=True)
        def check_install(self):
             # Add your custom post-install phase tests
@@ -4347,121 +4923,340 @@ installed executable. The check is implemented as follows:
        ...
 
        # check if we can run reframe
-       @run_after('install')
+       @run_after("install")
        @on_package_attributes(run_tests=True)
        def check_list(self):
             with working_dir(self.stage.source_path):
-                reframe = Executable(join_path(self.prefix, 'bin', 'reframe'))
-                reframe('-l')
+                reframe = Executable(join_path(self.prefix, "bin", "reframe"))
+                reframe("-l")
 
 .. warning::
 
     The API for adding tests is not yet considered stable and may change
     in future releases.
 
+
+""""""""""""""""""""""""""""""""
+Checking build-time test results
+""""""""""""""""""""""""""""""""
+
+Checking the results of these tests after running ``spack install --test``
+can be done by viewing the spec's ``install-time-test-log.txt`` file whose
+location will depend on whether the spec installed successfully.
+
+A successful installation results in the build and stage logs being copied
+to the ``.spack`` subdirectory of the spec's prefix. For example,
+
+.. code-block:: console
+
+   $ spack install --test=root zlib@1.2.13
+   ...
+   [+] /home/user/spack/opt/spack/linux-rhel8-broadwell/gcc-10.3.1/zlib-1.2.13-tehu6cbsujufa2tb6pu3xvc6echjstv6
+   $ cat /home/user/spack/opt/spack/linux-rhel8-broadwell/gcc-10.3.1/zlib-1.2.13-tehu6cbsujufa2tb6pu3xvc6echjstv6/.spack/install-time-test-log.txt
+
+If the installation fails due to build-time test failures, then both logs will
+be left in the build stage directory as illustrated below:
+
+.. code-block:: console
+
+   $ spack install --test=root zlib@1.2.13
+   ...
+   See build log for details:
+     /var/tmp/user/spack-stage/spack-stage-zlib-1.2.13-lxfsivs4htfdewxe7hbi2b3tekj4make/spack-build-out.txt
+
+   $ cat /var/tmp/user/spack-stage/spack-stage-zlib-1.2.13-lxfsivs4htfdewxe7hbi2b3tekj4make/install-time-test-log.txt
+
+
 .. _cmd-spack-test:
 
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-Stand-alone (or smoke) tests
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^
+Stand-alone tests
+^^^^^^^^^^^^^^^^^
 
-While build-time tests are integrated with the installation process,
-stand-alone tests are independent of that process.  Consequently, such
-tests can be performed days, even weeks, after the software is installed.
-
-Stand-alone tests are checks that should run relatively quickly -- as
-in on the order of at most a few minutes -- and ideally execute all
-aspects of the installed software, or at least key functionality.
+While build-time tests are integrated with the build process, stand-alone
+tests are expected to run days, weeks, even months after the software is
+installed. The goal is to provide a mechanism for gaining confidence that
+packages work as installed **and** *continue* to work as the underlying
+software evolves. Packages can add and inherit stand-alone tests. The
+`spack test`` command is used to manage stand-alone testing.
 
 .. note::
 
-    Execution speed is important because these tests are intended
-    to quickly assess whether the installed software works on the
-    system.
+    Execution speed is important since these tests are intended to quickly
+    assess whether installed specs work on the system. Consequently, they
+    should run relatively quickly -- as in on the order of at most a few
+    minutes -- while ideally executing all, or at least key aspects of the
+    installed software.
 
-    Failing stand-alone tests indicate that there is no reason to
-    proceed with more resource-intensive tests.
+.. note::
 
-    Passing stand-alone (or smoke) tests can lead to more thorough
-    testing, such as extensive unit or regression tests, or tests
-    that run at scale. Spack support for more thorough testing is
-    a work in progress.
+    Failing stand-alone tests indicate problems with the installation and,
+    therefore, there is no reason to proceed with more resource-intensive
+    tests until those have been investigated.
 
-Stand-alone tests have their own test stage directory, which can be
-configured. These tests can compile or build software with the compiler
-used to build the package. They can use files cached from the build for
-testing the installation. Custom files, such as source, data, or expected
-outputs can be added for use in these tests.
+    Passing stand-alone tests indicate that more thorough testing, such
+    as running extensive unit or regression tests, or tests that run at
+    scale can proceed without wasting resources on a problematic installation.
+
+Tests are defined in the package using methods with names beginning ``test_``.
+This allows Spack to support multiple independent checks, or parts. Files
+needed for testing, such as source, data, and expected outputs, may be saved
+from the build and or stored with the package in the repository. Regardless
+of origin, these files are automatically copied to the spec's test stage
+directory prior to execution of the test method(s). Spack also provides some
+helper functions to facilitate processing.
+
+.. _configure-test-stage:
 
 """"""""""""""""""""""""""""""""""""
 Configuring the test stage directory
 """"""""""""""""""""""""""""""""""""
 
-Stand-alone tests rely on a stage directory for building, running,
-and tracking results.
-The default directory, ``~/.spack/test``, is defined in
-:ref:`etc/spack/defaults/config.yaml <config-yaml>`.
-You can configure the location in the high-level ``config`` by adding
-or changing the ``test_stage`` path in the appropriate ``config.yaml``
-file such that:
+Stand-alone tests utilize a test stage directory for building, running,
+and tracking results in the same way Spack uses a build stage directory.
+The default test stage root directory, ``~/.spack/test``, is defined in
+:ref:`etc/spack/defaults/config.yaml <config-yaml>`. This location is
+customizable by adding or changing the ``test_stage`` path in the high-level
+``config`` of the appropriate ``config.yaml`` file such that:
 
 .. code-block:: yaml
 
    config:
-     test_stage: /path/to/stage
+     test_stage: /path/to/test/stage
 
-The package can access this path **during test processing** using
-`self.test_suite.stage`.
+Packages can use the ``self.test_suite.stage`` property to access this setting.
+Other package properties that provide access to spec-specific subdirectories
+and files are described in :ref:`accessing staged files <accessing-files>`.
 
 .. note::
 
-   The test stage path is established for the entire suite. That
-   means it is the root directory for all specs being installed
-   with the same `spack test run` command. Each spec gets its
-   own stage subdirectory.
+   The test stage path is the root directory for the **entire suite**.
+   In other words, it is the root directory for **all specs** being
+   tested by the ``spack test run`` command. Each spec gets its own
+   stage subdirectory. Use ``self.test_suite.test_dir_for_spec(self.spec)``
+   to access the spec-specific test stage directory.
 
-"""""""""""""""""""""""""
-Enabling test compilation
-"""""""""""""""""""""""""
 
-Some stand-alone tests will require access to the compiler with which
-the package was built, especially for library-only packages. You must
-enable loading the package's compiler configuration by setting the
-``test_requires_compiler`` property to ``True`` for your package.
-For example:
+.. _adding-standalone-tests:
+
+""""""""""""""""""""""""
+Adding stand-alone tests
+""""""""""""""""""""""""
+
+Test recipes are defined in the package using methods with names beginning
+``test_``. This allows for the implementation of multiple independent tests.
+Each method has access to the information Spack tracks on the package, such
+as options, compilers, and dependencies, supporting the customization of tests
+to the build. Standard python ``assert`` statements and other error reporting
+mechanisms are available. Such exceptions are automatically caught and reported
+as test failures.
+
+Each test method is an implicit test part named by the method and whose
+purpose is the method's docstring. Providing a purpose gives context for
+aiding debugging. A test method may contain embedded test parts. Spack
+outputs the test name and purpose prior to running each test method and
+any embedded test parts. For example, ``MyPackage`` below provides two basic
+examples of installation tests: ``test_always_fails`` and ``test_example``.
+As the name indicates, the first always fails. The second simply runs the
+installed example.
 
 .. code-block:: python
 
    class MyPackage(Package):
        ...
 
-       test_requires_compiler = True
+       def test_always_fails(self):
+           """use assert to always fail"""
+           assert False
 
-Setting this property to ``True`` makes the compiler available in the
-test environment through the canonical environment variables (e.g.,
-``CC``, ``CXX``, ``FC``, ``F77``).
+       def test_example(self):
+           """run installed example"""
+           example = which(self.prefix.bin.example)
+           example()
+
+Output showing the identification of each test part after runnig the tests
+is illustrated below.
+
+.. code-block:: console
+
+   $ spack test run --alias mypackage mypackage@1.0
+   ==> Spack test mypackage
+   ...
+   $ spack test results -l mypackage
+   ==> Results for test suite 'mypackage':
+   ...
+   ==> [2023-03-10-16:03:56.625204] test: test_always_fails: use assert to always fail
+   ...
+   FAILED
+   ==> [2023-03-10-16:03:56.625439] test: test_example: run installed example
+   ...
+   PASSED
+
 
 .. note::
 
-   We recommend adding the property at the top of the package with the
-   other attributes, such as ``homepage`` and ``url``.
+   If ``MyPackage`` were a recipe for a library, the tests should build
+   an example or test program that is then executed.
+
+A test method can include test parts using the ``test_part`` context manager.
+Each part is treated as an independent check to allow subsequent test parts
+to execute even after a test part fails.
+
+.. _test-part:
+
+The signature for ``test_part`` is:
+
+.. code-block:: python
+
+   def test_part(pkg, test_name, purpose, work_dir=".", verbose=False):
+
+where each argument has the following meaning:
+
+* ``pkg`` is an instance of the package for the spec under test.
+
+* ``test_name`` is the name of the test part, which must start with ``test_``.
+
+* ``purpose`` is a brief description used as a heading for the test part.
+
+  Output from the test is written to a test log file allowing the test name
+  and purpose to be searched for test part confirmation and debugging.
+
+* ``work_dir`` is the path to the directory in which the test will run.
+
+  The default of ``None``, or ``"."``, corresponds to the the spec's test
+  stage (i.e., ``self.test_suite.test_dir_for_spec(self.spec)``.
+
+.. admonition:: Tests should **not** run under the installation directory.
+
+   Use of the package spec's installation directory for building and running
+   tests is **strongly** discouraged. Doing so causes permission errors for
+   shared spack instances *and* facilities that install the software in
+   read-only file systems or directories.
+
+Suppose ``MyPackage`` actually installs two examples we want to use for tests.
+These checks can be implemented as separate checks or, as illustrated below,
+embedded test parts.
+
+.. code-block:: python
+
+   class MyPackage(Package):
+       ...
+
+       def test_example(self):
+           """run installed examples"""
+           for example in ["ex1", "ex2"]:
+               with test_part(
+                   self,
+                   "test_example_{0}".format(example),
+                   purpose="run installed {0}".format(example),
+                ):
+                    exe = which(join_path(self.prefix.bin, example))
+                    exe()
+
+In this case, there will be an implicit test part for ``test_example``
+and separate sub-parts for ``ex1`` and ``ex2``. The second sub-part
+will be executed regardless of whether the first passes. The test
+log for a run where the first executable fails and the second passes
+is illustrated below.
+
+.. code-block:: console
+
+   $ spack test run --alias mypackage mypackage@1.0
+   ==> Spack test mypackage
+   ...
+   $ spack test results -l mypackage
+   ==> Results for test suite 'mypackage':
+   ...
+   ==> [2023-03-10-16:03:56.625204] test: test_example: run installed examples
+   ==> [2023-03-10-16:03:56.625439] test: test_example_ex1: run installed ex1
+   ...
+   FAILED
+   ==> [2023-03-10-16:03:56.625555] test: test_example_ex2: run installed ex2
+   ...
+   PASSED
+   ...
+
+.. warning::
+
+   Test results reporting requires that each test method and embedded
+   test part for a package have a unique name.
+
+Stand-alone tests run in an environment that provides access to information
+Spack has on how the software was built, such as build options, dependencies,
+and compilers. Build options and dependencies are accessed with the normal
+spec checks. Examples of checking :ref:`variant settings <variants>` and
+:ref:`spec constraints <testing-specs>` can be found at the provided links.
+Accessing compilers in stand-alone tests that are used by the build requires
+setting a package property as described :ref:`below <test-compilation>`.
+
+
+.. _test-compilation:
+
+"""""""""""""""""""""""""
+Enabling test compilation
+"""""""""""""""""""""""""
+
+If you want to build and run binaries in tests, then you'll need to tell
+Spack to load the package's compiler configuration. This is accomplished
+by setting the package's ``test_requires_compiler`` property to ``True``.
+
+Setting the property to ``True`` ensures access to the compiler through
+canonical environment variables (e.g., ``CC``, ``CXX``, ``FC``, ``F77``).
+It also gives access to build dependencies like ``cmake`` through their
+``spec objects`` (e.g., ``self.spec["cmake"].prefix.bin.cmake``).
+
+.. note::
+
+   The ``test_requires_compiler`` property should be added at the top of
+   the package near other attributes, such as the ``homepage`` and ``url``.
+
+Below illustrates using this feature to compile an example.
+
+.. code-block:: python
+
+   class MyLibrary(Package):
+       ...
+
+       test_requires_compiler = True
+       ...
+
+       def test_cxx_example(self):
+           """build and run cxx-example"""
+           exe = "cxx-example"
+           ...
+           cxx = which(os.environ["CXX"])
+           cxx(
+               "-L{0}".format(self.prefix.lib),
+               "-I{0}".format(self.prefix.include),
+               "{0}.cpp".format(exe),
+               "-o",
+               exe
+           )
+           cxx_example = which(exe)
+           cxx_example()
+
 
 .. _cache_extra_test_sources:
 
 """""""""""""""""""""""
-Adding build-time files
+Saving build-time files
 """""""""""""""""""""""
 
 .. note::
 
-    We highly recommend re-using build-time tests and input files
-    for testing installed software. These files are easier to keep
-    synchronized since they reside within the software's repository
-    than maintaining custom install test files with the Spack package.
+    We highly recommend re-using build-time test sources and pared down
+    input files for testing installed software. These files are easier
+    to keep synchronized with software capabilities since they reside
+    within the software's repository. 
+    
+    If that is not possible, you can add test-related files to the package
+    repository (see :ref:`adding custom files <cache_custom_files>`). It
+    will be important to maintain them so they work across listed or supported
+    versions of the package.
 
 You can use the ``cache_extra_test_sources`` method to copy directories
-and or files from the build stage directory to the package's installation
-directory.
+and or files from the source build stage directory to the package's
+installation directory.
 
 The signature for ``cache_extra_test_sources`` is:
 
@@ -4469,54 +5264,73 @@ The signature for ``cache_extra_test_sources`` is:
 
    def cache_extra_test_sources(self, srcs):
 
-where ``srcs`` is a string or a list of strings corresponding to
-the paths for the files and or subdirectories, relative to the staged
-source, that are to be copied to the corresponding relative test path
-under the prefix. All of the contents within each subdirectory will
-also be copied.
+where ``srcs`` is a string *or* a list of strings corresponding to the
+paths of subdirectories and or files needed for stand-alone testing. 
+The paths must be relative to the staged source directory. Contents of
+subdirectories and files are copied to a special test cache subdirectory
+of the installation prefix. They are automatically copied to the appropriate
+relative paths under the test stage directory prior to executing stand-alone
+tests.
 
 For example, a package method for copying everything in the ``tests``
 subdirectory plus the ``foo.c`` and ``bar.c`` files from ``examples``
-can be implemented as shown below.
-
-.. note::
-
-   The method name ``copy_test_sources`` here is for illustration
-   purposes. You are free to use a name that is more suited to your
-   package.
-
-   The key to copying the files at build time for stand-alone testing
-   is use of the ``run_after`` directive, which ensures the associated
-   files are copied **after** the provided build stage.
+and using ``foo.c`` in a test method is illustrated below.
 
 .. code-block:: python
 
-   class MyPackage(Package):
+   class MyLibPackage(Package):
        ...
 
-       @run_after('install')
-       def copy_test_sources(self):
-           srcs = ['tests',
-                   join_path('examples', 'foo.c'),
-                   join_path('examples', 'bar.c')]
+       @run_after("install")
+       def copy_test_files(self):
+           srcs = ["tests",
+                   join_path("examples", "foo.c"),
+                   join_path("examples", "bar.c")]
            self.cache_extra_test_sources(srcs)
 
+       def test_foo(self):
+           exe = "foo"
+           src_dir = join_path(
+               self.test_suite.current_test_cache_dir, "examples"
+           )
+           with working_dir(src_dir):
+               cc = which(os.environ["CC"])
+               cc(
+                   "-L{0}".format(self.prefix.lib),
+                   "-I{0}".format(self.prefix.include),
+                   "{0}.c".format(exe),
+                   "-o",
+                   exe
+               )
+               foo = which(exe)
+               foo()
+
 In this case, the method copies the associated files from the build
-stage **after** the software is installed to the package's metadata
-directory. The result is the directory and files will be cached in
-a special test subdirectory under the installation prefix.
-
-These paths are **automatically copied** to the test stage directory
-during stand-alone testing. The package's ``test`` method can access
-them using the ``self.test_suite.current_test_cache_dir`` property.
-In our example, the method would use the following paths to reference
-the copy of each entry listed in ``srcs``, respectively:
-
-* ``join_path(self.test_suite.current_test_cache_dir, 'tests')``
-* ``join_path(self.test_suite.current_test_cache_dir, 'examples', 'foo.c')``
-* ``join_path(self.test_suite.current_test_cache_dir, 'examples', 'bar.c')``
+stage, **after** the software is installed, to the package's test
+cache directory. Then ``test_foo`` builds ``foo`` using ``foo.c``
+before running the program.
 
 .. note::
+
+   The method name ``copy_test_files`` here is for illustration purposes.
+   You are free to use a name that is more suited to your package.
+
+   The key to copying files for stand-alone testing at build time is use
+   of the ``run_after`` directive, which ensures the associated files are
+   copied **after** the provided build stage where the files **and**
+   installation prefix are available.
+
+These paths are **automatically copied** from cache to the test stage
+directory prior to the execution of any stand-alone tests. Tests access
+the files using the ``self.test_suite.current_test_cache_dir`` property.
+In our example above, test methods can use the following paths to reference
+the copy of each entry listed in ``srcs``, respectively:
+
+* ``join_path(self.test_suite.current_test_cache_dir, "tests")``
+* ``join_path(self.test_suite.current_test_cache_dir, "examples", "foo.c")``
+* ``join_path(self.test_suite.current_test_cache_dir, "examples", "bar.c")``
+
+.. admonition:: Library packages should build stand-alone tests
 
     Library developers will want to build the associated tests
     against their **installed** libraries before running them.
@@ -4524,10 +5338,22 @@ the copy of each entry listed in ``srcs``, respectively:
 .. note::
 
     While source and input files are generally recommended, binaries
-    **may** also be cached by the build process for install testing.
-    Only you, as the package writer or maintainer, know whether these
-    would be appropriate for ensuring the installed software continues
-    to work as the underlying system evolves.
+    **may** also be cached by the build process. Only you, as the package
+    writer or maintainer, know whether these files would be appropriate
+    for testing the installed software weeks to months later.
+
+.. note::
+
+    If one or more of the copied files needs to be modified to reference
+    the installed software, it is recommended that those changes be made
+    to the cached files **once** in the ``copy_test_sources`` method and
+    ***after** the call to ``self.cache_extra_test_sources()``. This will
+    reduce the amount of unnecessary work in the test method **and** avoid
+    problems testing in shared instances and facility deployments.
+
+    The ``filter_file`` function can be quite useful for such changes.
+    See :ref:`file manipulation <file-manipulation>`.
+
 
 .. _cache_custom_files:
 
@@ -4535,21 +5361,46 @@ the copy of each entry listed in ``srcs``, respectively:
 Adding custom files
 """""""""""""""""""
 
-Some tests may require additional files not available from the build.
-Examples include:
+In some cases it can be useful to have files that can be used to build or
+check the results of tests.  Examples include:
 
 - test source files
 - test input files
 - test build scripts
-- expected test output
+- expected test outputs
 
-These extra files should be added to the ``test`` subdirectory of the
-package in the Spack repository.
+While obtaining such files from the software repository is preferred (see
+:ref:`adding build-time files  <cache_extra_test_sources>`), there are
+circumstances where that is not feasible (e.g., the software is not being
+actively maintained). When test files can't be obtained from the repository
+or as a supplement to files that can, Spack supports the inclusion of
+additional files under the ``test`` subdirectory of the package in the
+Spack repository.
 
-Spack will **automatically copy** the contents of that directory to the
-test staging directory for stand-alone testing. The ``test`` method can
+Spack **automatically copies** the contents of that directory to the
+test staging directory prior to running stand-alone tests. Test methods
 access those files using the ``self.test_suite.current_test_data_dir``
-property.
+property as shown below.
+
+.. code-block:: python
+
+   class MyLibrary(Package):
+       ...
+
+       test_requires_compiler = True
+       ...
+
+       def test_example(self):
+           """build and run custom-example"""
+           data_dir = self.test_suite.current_test_data_dir
+           exe = "custom-example"
+           src = datadir.join("{0}.cpp".format(exe))
+           ...
+           # TODO: Build custom-example using src and exe
+           ...
+           custom_example = which(exe)
+           custom_example()
+
 
 .. _expected_test_output_from_file:
 
@@ -4559,7 +5410,8 @@ Reading expected output from a file
 
 The helper function ``get_escaped_text_output`` is available for packages
 to retrieve and properly format the text from a file that contains the
-output that is expected when an executable is run using ``self.run_test``.
+expected output from running an executable that may contain special 
+characters.
 
 The signature for ``get_escaped_text_output`` is:
 
@@ -4570,184 +5422,84 @@ The signature for ``get_escaped_text_output`` is:
 where ``filename`` is the path to the file containing the expected output.
 
 The ``filename`` for a :ref:`custom file <cache_custom_files>` can be
-accessed and used as illustrated by a simplified version of an ``sqlite``
-package check:
+accessed by tests using the ``self.test_suite.current_test_data_dir``
+property. The example below illustrates how to read a file that was
+added to the package's ``test`` subdirectory.
 
 .. code-block:: python
+
+   import re
 
    class Sqlite(AutotoolsPackage):
        ...
 
-       def test(self):
+       def test_example(self):
+           """check example table dump"""
            test_data_dir = self.test_suite.current_test_data_dir
-           db_filename = test_data_dir.join('packages.db')
+           db_filename = test_data_dir.join("packages.db")
            ..
+           expected = get_escaped_text_output(test_data_dir.join("dump.out"))
+           sqlite3 = which(self.prefix.bin.sqlite3)
+           out = sqlite3(
+               db_filename, ".dump", output=str.split, error=str.split
+           )
+           for exp in expected:
+               assert re.search(exp, out), "Expected '{0}' in output".format(exp)
 
-           expected = get_escaped_text_output(test_data_dir.join('dump.out'))
-           self.run_test('sqlite3',
-                         [db_filename, '.dump'],
-                         expected,
-                         installed=True,
-                         purpose='test: checking dump output',
-                         skip_missing=False)
-
-Expected outputs do not have to be stored with the Spack package.
-Maintaining them with the source is actually preferable.
-
-Suppose a package's source has ``examples/foo.c`` and ``examples/foo.out``
-files that are copied for stand-alone test purposes using
-:ref:`cache_extra_test_sources <cache_extra_test_sources>` and the
-`run_test` method builds the executable ``examples/foo``. The package
-can retrieve the expected output from ``examples/foo.out`` using:
+If the file was instead copied from the ``tests`` subdirectory of the staged
+source code, the path would be obtained as shown below.
 
 .. code-block:: python
 
-   class MyFooPackage(Package):
-       ...
+       def test_example(self):
+           """check example table dump"""
+           test_cache_dir = self.test_suite.current_test_cache_dir
+           db_filename = test_cache_dir.join("packages.db")
 
-       def test(self):
-           ..
-           filename = join_path(self.test_suite.current_test_cache_dir,
-                                'examples', 'foo.out')
-           expected = get_escaped_text_output(filename)
-           ..
-
-Alternatively, suppose ``MyFooPackage`` installs tests in ``share/tests``
-and their outputs in ``share/tests/outputs``. The expected output for
-``foo``, assuming it is still called ``foo.out``, can be retrieved as
+Alternatively, if the file was copied to the ``share/tests`` subdirectory
+as part of the installation process, the test could access the path as 
 follows:
 
 .. code-block:: python
 
-   class MyFooPackage(Package):
-       ...
-
-       def test(self):
-           ..
-           filename = join_path(self.prefix.share.tests.outputs, 'foo.out')
-           expected = get_escaped_text_output(filename)
-           ..
+       def test_example(self):
+           """check example table dump"""
+           db_filename = join_path(self.prefix.share.tests, "packages.db")
 
 
-""""""""""""""""""""""""
-Adding stand-alone tests
-""""""""""""""""""""""""
+.. _check_outputs:
 
-Stand-alone tests are defined in the package's ``test`` method. The
-default ``test`` method is a no-op so you'll want to override it to
-implement the tests.
+""""""""""""""""""""""""""""""""""""
+Comparing expected to actual outputs
+""""""""""""""""""""""""""""""""""""
 
-.. note::
+The helper function ``check_outputs`` is available for packages to ensure
+the expected outputs from running an executable are contained within the
+actual outputs.
 
-   Any package method named ``test`` is automatically executed by
-   Spack when the ``spack test run`` command is performed.
-
-For example, the ``MyPackage`` package below provides a skeleton for
-the test method.
+The signature for ``check_outputs`` is:
 
 .. code-block:: python
 
-   class MyPackage(Package):
-       ...
+   def check_outputs(expected, actual):
 
-       def test(self):
-           # TODO: Add quick checks of the installed software
-           pass
+where each argument has the expected type and meaning:
 
-Stand-alone tests run in an environment that provides access to the
-package and all of its dependencies, including ``test``-type
-dependencies.
+* ``expected`` is a string or list of strings containing the expected (raw)
+  output.
 
-Standard python ``assert`` statements and other error reporting
-mechanisms can be used in the ``test`` method. Spack will report
-such errors as test failures.
+* ``actual`` is a string containing the actual output from executing the command
 
-You can implement multiple tests (or test parts) within the ``test``
-method using the ``run_test`` method. Each invocation is run separately
-in a manner that allows testing to continue after failures.
-
-The signature for ``run_test`` is:
+Invoking the method is the equivalent of:
 
 .. code-block:: python
 
-   def run_test(self, exe, options=[], expected=[], status=0,
-                installed=False, purpose='', skip_missing=False,
-                work_dir=None):
+   for check in expected:
+       if not re.search(check, actual):
+           raise RuntimeError("Expected '{0}' in output '{1}'".format(check, actual))
 
-where each argument has the following meaning:
 
-* ``exe`` is the executable to run.
-
-  If a name, the ``exe`` is required to be found in one of the paths
-  in the ``PATH`` environment variable **unless** ``skip_missing`` is
-  ``True``. Alternatively, a relative (to ``work_dir``) or fully
-  qualified path for the executable can be provided in ``exe``.
-
-  The test will fail if the resulting path is not within the prefix
-  of the package being tested **unless** ``installed`` is ``False``.
-
-* ``options`` is a list of the command line options.
-
-  Options are a list of strings to be passed to the executable when
-  it runs.
-
-  The default is ``[]``, which means no options are provided to the
-  executable.
-
-* ``expected`` is an optional list of expected output strings.
-
-  Spack requires every string in ``expected`` to be a regex matching
-  part of the output from the test run (e.g.,
-  ``expected=['completed successfully', 'converged in']``).  The
-  output can also include expected failure outputs (e.g.,
-  ``expected=['failed to converge']``).
-
-  The expected output can be :ref:`read from a file
-  <expected_test_output_from_file>`.
-
-  The default is ``expected=[]``, so Spack will not check the output.
-
-* ``status`` is the optional expected return code(s).
-
-  A list of return codes corresponding to successful execution can
-  be provided (e.g., ``status=[0,3,7]``). Support for non-zero return
-  codes allows for basic **expected failure** tests as well as different
-  return codes across versions of the software.
-
-  The default is ``status=[0]``, which corresponds to **successful**
-  execution in the sense that the executable does not exit with a
-  failure code or raise an exception.
-
-* ``installed`` is used to require ``exe`` to be within the package
-  prefix.
-
-  If ``True``, then the path for ``exe`` is required to be within the
-  package prefix; otherwise, the path is not constrained.
-
-  The default is ``False``, so the fully qualified path for ``exe``
-  does **not** need to be within the installation directory.
-
-* ``purpose`` is an optional heading describing the the test part.
-
-  Output from the test is written to a test log file so this argument
-  serves as a searchable heading in text logs to highlight the start
-  of the test part. Having a description can be helpful when debugging
-  failing tests.
-
-* ``skip_missing`` is used to determine if the test should be skipped.
-
-  If ``True``, then the test part should be skipped if the executable
-  is missing; otherwise, the executable must exist. This option can
-  be useful when test executables are removed or change as the software
-  evolves in subsequent versions.
-
-  The default is ``False``, which means the test executable must be
-  present for any installable version of the software.
-
-* ``work_dir`` is the path to the directory from which the executable
-  will run.
-
-  The default of ``None`` corresponds to the current directory (``'.'``).
+.. _accessing-files:
 
 """""""""""""""""""""""""""""""""""""""""
 Accessing package- and test-related files
@@ -4755,11 +5507,14 @@ Accessing package- and test-related files
 
 You may need to access files from one or more locations when writing
 stand-alone tests. This can happen if the software's repository does not
-include test source files or includes files but no way to build the
-executables using the installed headers and libraries. In these
-cases, you may need to reference the files relative to one or more
-root directory. The properties containing package- and test-related
-directory paths are provided in the table below.
+include test source files or includes them but has no way to build the
+executables using the installed headers and libraries. In these cases
+you may need to reference the files relative to one or more root directory.
+The table below lists relevant path properties and provides additional
+examples of their use.
+:ref:`Reading expected output <expected_test_output_from_file>` provides
+examples of accessing files saved from the software repository, package
+repository, and installation.
 
 .. list-table:: Directory-to-property mapping
    :header-rows: 1
@@ -4767,31 +5522,39 @@ directory paths are provided in the table below.
    * - Root Directory
      - Package Property
      - Example(s)
-   * - Package Installation Files
+   * - Package (Spec) Installation
      - ``self.prefix``
      - ``self.prefix.include``, ``self.prefix.lib``
-   * - Package Dependency's Files
-     - ``self.spec['<dependency-package>'].prefix``
-     - ``self.spec['trilinos'].prefix.include``
-   * - Test Suite Stage Files
+   * - Dependency Installation
+     - ``self.spec["<dependency-package>"].prefix``
+     - ``self.spec["trilinos"].prefix.include``
+   * - Test Suite Stage
      - ``self.test_suite.stage``
-     - ``join_path(self.test_suite.stage, 'results.txt')``
-   * - Staged Cached Build-time Files
+     - ``join_path(self.test_suite.stage, "results.txt")``
+   * - Spec's Test Stage
+     - ``self.test_suite.test_dir_for_spec(<spec>)``
+     - ``self.test_suite.test_dir_for_spec(self.spec)``
+   * - Current Spec's Build-time Files
      - ``self.test_suite.current_test_cache_dir``
-     - ``join_path(self.test_suite.current_test_cache_dir, 'examples', 'foo.c')``
-   * - Staged Custom Package Files
+     - ``join_path(self.test_suite.current_test_cache_dir, "examples", "foo.c")``
+   * - Current Spec's Custom Test Files
      - ``self.test_suite.current_test_data_dir``
-     - ``join_path(self.test_suite.current_test_data_dir, 'hello.f90')``
+     - ``join_path(self.test_suite.current_test_data_dir, "hello.f90")``
+
+
+.. _inheriting-tests:
 
 """"""""""""""""""""""""""""
 Inheriting stand-alone tests
 """"""""""""""""""""""""""""
 
 Stand-alone tests defined in parent (.e.g., :ref:`build-systems`) and
-virtual (e.g., :ref:`virtual-dependencies`) packages are available to
-packages that inherit from or provide interfaces for those packages,
-respectively. The table below summarizes the tests that will be included
-with those provided in the package itself when executing stand-alone tests.
+virtual (e.g., :ref:`virtual-dependencies`) packages are executed by
+packages that inherit from or provide interface implementations for those
+packages, respectively. 
+
+The table below summarizes the stand-alone tests that will be executed along
+with those implemented in the package itself.
 
 .. list-table:: Inherited/provided stand-alone tests
    :header-rows: 1
@@ -4810,87 +5573,65 @@ with those provided in the package itself when executing stand-alone tests.
    * - `Mpi
        <https://github.com/spack/spack/blob/develop/var/spack/repos/builtin/packages/mpi>`_
      - Compiles and runs ``mpi_hello`` (``c``, ``fortran``)
-   * - `PythonPackage <build_systems/pythonpackage>`
-     - Imports installed modules
+   * - :ref:`PythonPackage <pythonpackage>`
+     - Imports modules listed in the ``self.import_modules`` property with defaults derived from the tarball
+   * - :ref:`SipPackage <sippackage>`
+     - Imports modules listed in the ``self.import_modules`` property with defaults derived from the tarball
 
-These tests are very generic so it is important that package
-developers and maintainers provide additional stand-alone tests
-customized to the package.
-
-One example of a package that adds its own stand-alone (or smoke)
-tests is the `Openmpi package
-<https://github.com/spack/spack/blob/develop/var/spack/repos/builtin/packages/openmpi/package.py>`_.
-The preliminary set of tests for the package performed the
-following checks:
-
-- installed binaries with the ``--version`` option return the expected
-  version;
-- outputs from (selected) installed binaries match expectations;
-- ``make all`` succeeds when building examples that were copied from the
-  source directory during package installation; and
-- outputs from running the copied and built examples match expectations.
-
-Below is an example of running and viewing the stand-alone tests,
-where only the outputs for the first of each set are shown:
-
-.. code-block:: console
-
-   $ spack test run --alias openmpi-4.0.5 openmpi@4.0.5
-   ==> Spack test openmpi-4.0.5
-   ==> Testing package openmpi-4.0.5-eygjgve
-   $ spack test results -l openmpi-4.0.5
-   ==> Spack test openmpi-4.0.5
-   ==> Testing package openmpi-4.0.5-eygjgve
-   ==> Results for test suite 'openmpi-4.0.5':
-   ==>   openmpi-4.0.5-eygjgve PASSED
-   ==> Testing package openmpi-4.0.5-eygjgve
-   ==> [2021-04-26-17:35:20.259650] test: ensuring version of mpiCC is 8.3.1
-   ==> [2021-04-26-17:35:20.260155] '$SPACK_ROOT/opt/spack/linux-rhel7-broadwell/gcc-8.3.1/openmpi-4.0.5-eygjgvek35awfor2qaljltjind2oa67r/bin/mpiCC' '--version'
-   g++ (GCC) 8.3.1 20190311 (Red Hat 8.3.1-3)
-   Copyright (C) 2018 Free Software Foundation, Inc.
-   This is free software; see the source for copying conditions.  There is NO
-   warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
-
-   PASSED
-   ...
-   ==> [2021-04-26-17:35:20.493921] test: checking mpirun output
-   ==> [2021-04-26-17:35:20.494461] '$SPACK_ROOT/opt/spack/linux-rhel7-broadwell/gcc-8.3.1/openmpi-4.0.5-eygjgvek35awfor2qaljltjind2oa67r/bin/mpirun' '-n' '1' 'ls' '..'
-   openmpi-4.0.5-eygjgve           repo     test_suite.lock
-   openmpi-4.0.5-eygjgve-test-out.txt  results.txt
-   PASSED
-   ...
-   ==> [2021-04-26-17:35:20.630452] test: ensuring ability to build the examples
-   ==> [2021-04-26-17:35:20.630943] '/usr/bin/make' 'all'
-   mpicc -g  hello_c.c  -o hello_c
-   mpicc -g  ring_c.c  -o ring_c
-   mpicc -g  connectivity_c.c  -o connectivity_c
-   mpicc -g  spc_example.c  -o spc_example
-   ...
-   PASSED
-   ==> [2021-04-26-17:35:23.291214] test: checking hello_c example output and status (0)
-   ==> [2021-04-26-17:35:23.291841] './hello_c'
-   Hello, world, I am 0 of 1, (Open MPI v4.0.5, package: Open MPI dahlgren@quartz2300 Distribution, ident: 4.0.5, repo rev: v4.0.5, Aug 26, 2020, 114)
-   PASSED
-   ...
-   ==> [2021-04-26-17:35:24.603152] test: ensuring copied examples cleaned up
-   ==> [2021-04-26-17:35:24.603807] '/usr/bin/make' 'clean'
-   rm -f hello_c hello_cxx hello_mpifh hello_usempi hello_usempif08 hello_oshmem hello_oshmemcxx hello_oshmemfh Hello.class ring_c ring_cxx ring_mpifh ring_usempi ring_usempif08 ring_oshmem ring_oshmemfh Ring.class connectivity_c oshmem_shmalloc oshmem_circular_shift oshmem_max_reduction oshmem_strided_puts oshmem_symmetric_data spc_example *~ *.o
-   PASSED
-   ==> [2021-04-26-17:35:24.643360] test: mpicc: expect command status in [0]
-   ==> [2021-04-26-17:35:24.643834] '$SPACK_ROOT/opt/spack/linux-rhel7-broadwell/gcc-8.3.1/openmpi-4.0.5-eygjgvek35awfor2qaljltjind2oa67r/bin/mpicc' '-o' 'mpi_hello_c' '$HOME/.spack/test/hyzq5eqlqfog6fawlzxwg3prqy5vjhms/openmpi-4.0.5-eygjgve/data/mpi/mpi_hello.c'
-   PASSED
-   ==> [2021-04-26-17:35:24.776765] test: mpirun: expect command status in [0]
-   ==> [2021-04-26-17:35:24.777194] '$SPACK_ROOT/opt/spack/linux-rhel7-broadwell/gcc-8.3.1/openmpi-4.0.5-eygjgvek35awfor2qaljltjind2oa67r/bin/mpirun' '-np' '1' 'mpi_hello_c'
-   Hello world! From rank 0 of 1
-   PASSED
-   ...
-
+These tests are very basic so it is important that package developers and
+maintainers provide additional stand-alone tests customized to the package.
 
 .. warning::
 
-   The API for adding and running stand-alone tests is not yet considered
-   stable and may change drastically in future releases. Packages with
-   stand-alone tests will be refactored to match changes to the API.
+   Any package that implements a test method with the same name as an
+   inherited method overrides the inherited method. If that is not the
+   goal and you are not explicitly calling and adding functionality to
+   the inherited method for the test, then make sure that all test methods
+   and embedded test parts have unique test names.
+
+One example of a package that adds its own stand-alone tests to those
+"inherited" by the virtual package it provides an implementation for is
+the `Openmpi package
+<https://github.com/spack/spack/blob/develop/var/spack/repos/builtin/packages/openmpi/package.py>`_.
+
+Below are snippets from running and viewing the stand-alone test results
+for ``openmpi``:
+
+.. code-block:: console
+
+   $ spack test run --alias openmpi openmpi@4.1.4
+   ==> Spack test openmpi
+   ==> Testing package openmpi-4.1.4-ubmrigj
+   ============================== 1 passed of 1 spec ==============================
+
+   $ spack test results -l openmpi
+   ==> Results for test suite 'openmpi':
+   ==> test specs:
+   ==>   openmpi-4.1.4-ubmrigj PASSED
+   ==> Testing package openmpi-4.1.4-ubmrigj
+   ==> [2023-03-10-16:03:56.160361] Installing $spack/opt/spack/linux-rhel7-broadwell/gcc-8.3.1/openmpi-4.1.4-ubmrigjrqcafh3hffqcx7yz2nc5jstra/.spack/test to $test_stage/xez37ekynfbi4e7h4zdndfemzufftnym/openmpi-4.1.4-ubmrigj/cache/openmpi
+   ==> [2023-03-10-16:03:56.625204] test: test_bin: test installed binaries
+   ==> [2023-03-10-16:03:56.625439] test: test_bin_mpirun: run and check output of mpirun
+   ==> [2023-03-10-16:03:56.629807] '$spack/opt/spack/linux-rhel7-broadwell/gcc-8.3.1/openmpi-4.1.4-ubmrigjrqcafh3hffqcx7yz2nc5jstra/bin/mpirun' '-n' '1' 'ls' '..'
+   openmpi-4.1.4-ubmrigj            repo
+   openmpi-4.1.4-ubmrigj-test-out.txt  test_suite.lock
+   PASSED: test_bin_mpirun
+   ...
+   ==> [2023-03-10-16:04:01.486977] test: test_version_oshcc: ensure version of oshcc is 8.3.1
+   SKIPPED: test_version_oshcc: oshcc is not installed
+   ...
+   ==> [2023-03-10-16:04:02.215227] Completed testing
+   ==> [2023-03-10-16:04:02.215597] 
+   ======================== SUMMARY: openmpi-4.1.4-ubmrigj ========================
+   Openmpi::test_bin_mpirun .. PASSED
+   Openmpi::test_bin_ompi_info .. PASSED
+   Openmpi::test_bin_oshmem_info .. SKIPPED
+   Openmpi::test_bin_oshrun .. SKIPPED
+   Openmpi::test_bin_shmemrun .. SKIPPED
+   Openmpi::test_bin .. PASSED
+   ...
+   ============================== 1 passed of 1 spec ==============================
+
 
 .. _cmd-spack-test-list:
 
@@ -4900,11 +5641,11 @@ where only the outputs for the first of each set are shown:
 
 Packages available for install testing can be found using the
 ``spack test list`` command. The command outputs all installed
-packages that have defined ``test`` methods.
+packages that have defined stand-alone test methods.
 
 Alternatively you can use the ``--all`` option to get a list of
-all packages that have defined ``test`` methods even if they are
-not installed.
+all packages that have stand-alone test methods even if the packages
+are not installed.
 
 For more information, refer to `spack test list
 <https://spack.readthedocs.io/en/latest/command_index.html#spack-test-list>`_.
@@ -4916,22 +5657,22 @@ For more information, refer to `spack test list
 """"""""""""""""""
 
 Install tests can be run for one or more installed packages using
-the ``spack test run`` command. A ``test suite`` is created from
-the provided specs. If no specs are provided it will test all specs
-in the active environment or all specs installed in Spack if no
-environment is active.
+the ``spack test run`` command. A ``test suite`` is created for all
+of the provided specs. The command accepts the same arguments provided
+to ``spack install`` (see :ref:`sec-specs`). If no specs are provided
+the command tests all specs in the active environment or all specs
+installed in the Spack instance if no environment is active.
 
 Test suites can be named using the ``--alias`` option. Unaliased
-Test suites will use the content hash of their specs as their name.
+test suites use the content hash of their specs as their name.
 
 Some of the more commonly used debugging options are:
 
 - ``--fail-fast`` stops testing each package after the first failure
 - ``--fail-first`` stops testing packages after the first failure
 
-Test output is written to a text log file by default but ``junit``
-and ``cdash`` are outputs are available through the ``--log-format``
-option.
+Test output is written to a text log file by default though ``junit``
+and ``cdash`` are outputs available through the ``--log-format`` option.
 
 For more information, refer to `spack test run
 <https://spack.readthedocs.io/en/latest/command_index.html#spack-test-run>`_.
@@ -4944,8 +5685,8 @@ For more information, refer to `spack test run
 """"""""""""""""""""""
 
 The ``spack test results`` command shows results for all completed
-test suites. Providing the alias or content hash limits reporting
-to the corresponding test suite.
+test suites by default. The alias or content hash can be provided to
+limit reporting to the corresponding test suite.
 
 The ``--logs`` option includes the output generated by the associated
 test(s) to facilitate debugging.
@@ -4975,11 +5716,12 @@ For more information, refer to `spack test find
 """""""""""""""""""""
 
 The ``spack test remove`` command removes test suites to declutter
-the test results directory. You are prompted to confirm the removal
+the test stage directory. You are prompted to confirm the removal
 of each test suite **unless** you use the ``--yes-to-all`` option.
 
 For more information, refer to `spack test remove
 <https://spack.readthedocs.io/en/latest/command_index.html#spack-test-remove>`_.
+
 
 .. _file-manipulation:
 
@@ -5026,32 +5768,32 @@ Filtering functions
 
      .. code-block:: python
 
-        filter_file(r'^\s*CC\s*=.*',  'CC = '  + spack_cc,  'Makefile')
-        filter_file(r'^\s*CXX\s*=.*', 'CXX = ' + spack_cxx, 'Makefile')
-        filter_file(r'^\s*F77\s*=.*', 'F77 = ' + spack_f77, 'Makefile')
-        filter_file(r'^\s*FC\s*=.*',  'FC = '  + spack_fc,  'Makefile')
+        filter_file(r"^\s*CC\s*=.*",  "CC = "  + spack_cc,  "Makefile")
+        filter_file(r"^\s*CXX\s*=.*", "CXX = " + spack_cxx, "Makefile")
+        filter_file(r"^\s*F77\s*=.*", "F77 = " + spack_f77, "Makefile")
+        filter_file(r"^\s*FC\s*=.*",  "FC = "  + spack_fc,  "Makefile")
 
   #. Replacing ``#!/usr/bin/perl`` with ``#!/usr/bin/env perl`` in ``bib2xhtml``:
 
      .. code-block:: python
 
-        filter_file(r'#!/usr/bin/perl',
-                    '#!/usr/bin/env perl', prefix.bin.bib2xhtml)
+        filter_file(r"#!/usr/bin/perl",
+                    "#!/usr/bin/env perl", prefix.bin.bib2xhtml)
 
   #. Switching the compilers used by ``mpich``'s MPI wrapper scripts from
      ``cc``, etc. to the compilers used by the Spack build:
 
      .. code-block:: python
 
-        filter_file('CC="cc"', 'CC="%s"' % self.compiler.cc,
+        filter_file("CC='cc'", "CC='%s'" % self.compiler.cc,
                     prefix.bin.mpicc)
 
-        filter_file('CXX="c++"', 'CXX="%s"' % self.compiler.cxx,
+        filter_file("CXX='c++'", "CXX='%s'" % self.compiler.cxx,
                     prefix.bin.mpicxx)
 
 :py:func:`change_sed_delimiter(old_delim, new_delim, *filenames) <llnl.util.filesystem.change_sed_delimiter>`
     Some packages, like TAU, have a build system that can't install
-    into directories with, e.g. '@' in the name, because they use
+    into directories with, e.g. "@" in the name, because they use
     hard-coded ``sed`` commands in their build.
 
     ``change_sed_delimiter`` finds all ``sed`` search/replace commands
@@ -5063,9 +5805,9 @@ Filtering functions
 
     .. code-block:: python
 
-       change_sed_delimiter('@', ';', 'configure')
-       change_sed_delimiter('@', ';', 'utils/FixMakefile')
-       change_sed_delimiter('@', ';', 'utils/FixMakefile.sed.default')
+       change_sed_delimiter("@", ";", "configure")
+       change_sed_delimiter("@", ";", "utils/FixMakefile")
+       change_sed_delimiter("@", ";", "utils/FixMakefile.sed.default")
 
 ^^^^^^^^^^^^^^
 File functions
@@ -5084,7 +5826,7 @@ File functions
 
   .. code-block:: python
 
-     install('my-header.h', prefix.include)
+     install("my-header.h", prefix.include)
 
 :py:func:`join_path(*paths) <llnl.util.filesystem.join_path>`
   An alias for ``os.path.join``. This joins paths using the OS path separator.
@@ -5111,10 +5853,10 @@ File functions
 
      .. code-block:: python
 
-        with working_dir('libdwarf'):
+        with working_dir("libdwarf"):
             configure("--prefix=" + prefix, "--enable-shared")
             make()
-            install('libdwarf.a',  prefix.lib)
+            install("libdwarf.a",  prefix.lib)
 
   #. Many CMake builds require that you build "out of source", that
      is, in a subdirectory.  You can handle creating and ``cd``'ing to
@@ -5122,12 +5864,12 @@ File functions
 
      .. code-block:: python
 
-        with working_dir('spack-build', create=True):
-            cmake('..',
-                  '-DLLVM_REQUIRES_RTTI=1',
-                  '-DPYTHON_EXECUTABLE=/usr/bin/python',
-                  '-DPYTHON_INCLUDE_DIR=/usr/include/python2.6',
-                  '-DPYTHON_LIBRARY=/usr/lib64/libpython2.6.so',
+        with working_dir("spack-build", create=True):
+            cmake("..",
+                  "-DLLVM_REQUIRES_RTTI=1",
+                  "-DPYTHON_EXECUTABLE=/usr/bin/python",
+                  "-DPYTHON_INCLUDE_DIR=/usr/include/python2.6",
+                  "-DPYTHON_LIBRARY=/usr/lib64/libpython2.6.so",
                   *std_cmake_args)
             make()
             make("install")
@@ -5161,13 +5903,13 @@ specify a package level ``executables`` attribute:
 
    class Foo(Package):
        # Each string provided here is treated as a regular expression, and
-       # would match for example 'foo', 'foobar', and 'bazfoo'.
-       executables = ['foo']
+       # would match for example "foo", "foobar", and "bazfoo".
+       executables = ["foo"]
 
 This attribute must be a list of strings. Each string is a regular
-expression (e.g. 'gcc' would match 'gcc', 'gcc-8.3', 'my-weird-gcc', etc.) to
+expression (e.g. "gcc" would match "gcc", "gcc-8.3", "my-weird-gcc", etc.) to
 determine a set of system executables that might be part or this package. Note
-that to match only executables named 'gcc' the regular expression ``'^gcc$'``
+that to match only executables named "gcc" the regular expression ``"^gcc$"``
 must be used.
 
 Finally to determine the version of each executable the ``determine_version``
@@ -5243,7 +5985,7 @@ would look like:
    packages:
      gcc:
        externals:
-       - spec: 'gcc@9.0.1 languages=c,c++,fortran'
+       - spec: "gcc@9.0.1 languages=c,c++,fortran"
          prefix: /usr
          extra_attributes:
            compilers:
@@ -5255,7 +5997,7 @@ This allows us, for instance, to keep track of executables that would be named
 differently if built by Spack (e.g. ``x86_64-linux-gnu-gcc-9``
 instead of just ``gcc``).
 
-.. TODO: we need to gather some more experience on overriding 'prefix'
+.. TODO: we need to gather some more experience on overriding "prefix"
    and other special keywords in extra attributes, but as soon as we are
    confident that this is the way to go we should document the process.
    See https://github.com/spack/spack/pull/16526#issuecomment-653783204
@@ -5292,10 +6034,10 @@ would be quite complicated to do using regex only. Employing the
 .. code-block:: python
 
    class Gcc(Package):
-      executables = ['g++']
+      executables = ["g++"]
 
       def filter_detected_exes(cls, prefix, exes_in_prefix):
-         return [x for x in exes_in_prefix if 'clang' not in x]
+         return [x for x in exes_in_prefix if "clang" not in x]
 
 Another possibility that this method opens is to apply certain
 filtering logic when specific conditions are met (e.g. take some
@@ -5328,10 +6070,10 @@ in the extra attributes can implement this method like this:
 
    @classmethod
    def validate_detected_spec(cls, spec, extra_attributes):
-       """Check that 'compilers' is in the extra attributes."""
-       msg = ('the extra attribute "compilers" must be set for '
-              'the detected spec "{0}"'.format(spec))
-       assert 'compilers' in extra_attributes, msg
+       """Check that "compilers" is in the extra attributes."""
+       msg = ("the extra attribute "compilers" must be set for "
+              "the detected spec '{0}'".format(spec))
+       assert "compilers" in extra_attributes, msg
 
 or like this:
 
@@ -5339,10 +6081,10 @@ or like this:
 
    @classmethod
    def validate_detected_spec(cls, spec, extra_attributes):
-       """Check that 'compilers' is in the extra attributes."""
-       if 'compilers' not in extra_attributes:
-           msg = ('the extra attribute "compilers" must be set for '
-                  'the detected spec "{0}"'.format(spec))
+       """Check that "compilers" is in the extra attributes."""
+       if "compilers" not in extra_attributes:
+           msg = ("the extra attribute 'compilers' must be set for "
+                  "the detected spec '{0}'".format(spec))
            raise InvalidSpecDetected(msg)
 
 .. _determine_spec_details:
@@ -5387,22 +6129,22 @@ follows:
        version(...)
 
        # Each string provided here is treated as a regular expression, and
-       # would match for example 'foo', 'foobar', and 'bazfoo'.
-       executables = ['foo']
+       # would match for example "foo", "foobar", and "bazfoo".
+       executables = ["foo"]
 
        @classmethod
        def determine_spec_details(cls, prefix, exes_in_prefix):
            candidates = list(x for x in exes_in_prefix
-                             if os.path.basename(x) == 'foo')
+                             if os.path.basename(x) == "foo")
            if not candidates:
                return
            # This implementation is lazy and only checks the first candidate
            exe_path = candidates[0]
            exe = Executable(exe_path)
-           output = exe('--version', output=str, error=str)
+           output = exe("--version", output=str, error=str)
            version_str = ...  # parse output for version string
            return Spec.from_detection(
-               'foo-package@{0}'.format(version_str)
+               "foo-package@{0}".format(version_str)
            )
 
 .. _package-lifecycle:
@@ -5444,6 +6186,24 @@ Version Lists
 ^^^^^^^^^^^^^
 
 Spack packages should list supported versions with the newest first.
+
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Using ``home`` vs ``prefix``
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+``home`` and ``prefix`` are both attributes that can be queried on a
+package's dependencies, often when passing configure arguments pointing to the
+location of a dependency.  The difference is that while ``prefix`` is the
+location on disk where a concrete package resides, ``home`` is the `logical`
+location that a package resides, which may be different than ``prefix`` in
+the case of virtual packages or other special circumstances.  For most use
+cases inside a package, its dependency locations can be accessed via either
+``self.spec["foo"].home`` or ``self.spec["foo"].prefix``.  Specific packages
+that should be consumed by dependents via ``.home`` instead of ``.prefix``
+should be noted in their respective documentation.
+
+See :ref:`custom-attributes` for more details and an example implementing
+a custom ``home`` attribute.
 
 ---------------------------
 Packaging workflow commands
@@ -5767,3 +6527,82 @@ might write:
    DWARF_PREFIX = $(spack location --install-dir libdwarf)
    CXXFLAGS += -I$DWARF_PREFIX/include
    CXXFLAGS += -L$DWARF_PREFIX/lib
+
+
+.. _package_class_structure:
+
+--------------------------
+Package class architecture
+--------------------------
+
+.. note::
+
+   This section aims to provide a high-level knowledge of how the package class architecture evolved
+   in Spack, and provides some insights on the current design.
+
+Packages in Spack were originally designed to support only a single build system. The overall
+class structure for a package looked like:
+
+.. image:: images/original_package_architecture.png
+   :scale: 60 %
+   :align: center
+
+In this architecture the base class ``AutotoolsPackage`` was responsible for both the metadata
+related to the ``autotools`` build system (e.g. dependencies or variants common to all packages
+using it), and for encoding the default installation procedure.
+
+In reality, a non-negligible number of packages are either changing their build system during the evolution of the
+project, or using different build systems for different platforms. An architecture based on a single class
+requires hacks or other workarounds to deal with these cases.
+
+To support a model more adherent to reality, Spack v0.19 changed its internal design by extracting
+the attributes and methods related to building a software into a separate hierarchy:
+
+.. image:: images/builder_package_architecture.png
+   :scale: 60 %
+   :align: center
+
+In this new format each ``package.py`` contains one ``*Package`` class that gathers all the metadata,
+and one or more ``*Builder`` classes that encode the installation procedure. A specific builder object
+is created just before the software is built, so at a time where Spack knows which build system needs
+to be used for the current installation, and receives a ``package`` object during initialization.
+
+^^^^^^^^^^^^^^^^^^^^^^^^
+``build_system`` variant
+^^^^^^^^^^^^^^^^^^^^^^^^
+
+To allow imposing conditions based on the build system, each package must a have ``build_system`` variant,
+which is usually inherited from base classes. This variant allows for writing metadata that is conditional
+on the build system:
+
+.. code-block:: python
+
+   with when("build_system=cmake"):
+       depends_on("cmake", type="build")
+
+and also for selecting a specific build system from a spec literal, like in the following command:
+
+.. code-block:: console
+
+   $ spack install arpack-ng build_system=autotools
+
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Compatibility with single-class format
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Internally, Spack always uses builders to perform operations related to the installation of a specific software.
+The builders are created in the ``spack.builder.create`` function
+
+.. literalinclude:: _spack_root/lib/spack/spack/builder.py
+   :pyobject: create
+
+To achieve backward compatibility with the single-class format Spack creates in this function a special
+"adapter builder", if no custom builder is detected in the recipe:
+
+.. image:: images/adapter.png
+   :scale: 60 %
+   :align: center
+
+Overall the role of the adapter is to route access to attributes of methods first through the ``*Package``
+hierarchy, and then back to the base class builder. This is schematically shown in the diagram above, where
+the adapter role is to "emulate" a method resolution order like the one represented by the red arrows.

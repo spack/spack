@@ -1,0 +1,23 @@
+From faabde6d861497bf2bd892d8d3baf34feedaa5ba Mon Sep 17 00:00:00 2001
+From: Renjith Ravindran <Renjith.RavindranKannath@amd.com>
+Date: Thu, 20 Oct 2022 11:18:10 -0700
+Subject: [PATCH] Continue-build-in-absence-of-aql-profile-lib
+
+---
+ cmake_modules/env.cmake | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/cmake_modules/env.cmake b/cmake_modules/env.cmake
+index 2e9613b..f10d186 100644
+--- a/cmake_modules/env.cmake
++++ b/cmake_modules/env.cmake
+@@ -122,5 +122,5 @@ endif ()
+ 
+ find_library ( FIND_AQL_PROFILE_LIB "libhsa-amd-aqlprofile64.so" HINTS ${CMAKE_INSTALL_PREFIX} PATHS ${ROCM_ROOT_DIR})
+ if (  NOT FIND_AQL_PROFILE_LIB )
+-  message ( FATAL_ERROR "AQL_PROFILE not installed. Please install AQL_PROFILE" )
++  message ( "AQL_PROFILE not installed. Please install AQL_PROFILE" )
+ endif()
+-- 
+2.25.1
+

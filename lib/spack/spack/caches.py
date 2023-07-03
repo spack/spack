@@ -1,10 +1,11 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 """Caches used by Spack to store data"""
 import os
+from typing import Union
 
 import llnl.util.lang
 from llnl.util.filesystem import mkdirp
@@ -24,7 +25,7 @@ def misc_cache_location():
     Currently the ``misc_cache`` stores indexes for virtual dependency
     providers and for which packages provide which tags.
     """
-    path = spack.config.get('config:misc_cache', spack.paths.default_misc_cache_path)
+    path = spack.config.get("config:misc_cache", spack.paths.default_misc_cache_path)
     return spack.util.path.canonicalize_path(path)
 
 
@@ -34,7 +35,9 @@ def _misc_cache():
 
 
 #: Spack's cache for small data
-misc_cache = llnl.util.lang.Singleton(_misc_cache)
+misc_cache: Union[
+    spack.util.file_cache.FileCache, llnl.util.lang.Singleton
+] = llnl.util.lang.Singleton(_misc_cache)
 
 
 def fetch_cache_location():
@@ -43,7 +46,7 @@ def fetch_cache_location():
     This prevents Spack from repeatedly fetch the same files when
     building the same package different ways or multiple times.
     """
-    path = spack.config.get('config:source_cache')
+    path = spack.config.get("config:source_cache")
     if not path:
         path = spack.paths.default_fetch_cache_path
     path = spack.util.path.canonicalize_path(path)
@@ -75,9 +78,7 @@ class MirrorCache(object):
 
         cosmetic_path = os.path.join(self.root, mirror_ref.cosmetic_path)
         storage_path = os.path.join(self.root, mirror_ref.storage_path)
-        relative_dst = os.path.relpath(
-            storage_path,
-            start=os.path.dirname(cosmetic_path))
+        relative_dst = os.path.relpath(storage_path, start=os.path.dirname(cosmetic_path))
 
         if not os.path.exists(cosmetic_path):
             if os.path.lexists(cosmetic_path):
@@ -90,4 +91,6 @@ class MirrorCache(object):
 
 
 #: Spack's local cache for downloaded source archives
-fetch_cache = llnl.util.lang.Singleton(_fetch_cache)
+fetch_cache: Union[
+    spack.fetch_strategy.FsCache, llnl.util.lang.Singleton
+] = llnl.util.lang.Singleton(_fetch_cache)

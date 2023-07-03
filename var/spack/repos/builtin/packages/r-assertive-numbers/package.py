@@ -1,9 +1,9 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
+from spack.package import *
 
 
 class RAssertiveNumbers(RPackage):
@@ -16,7 +16,7 @@ class RAssertiveNumbers(RPackage):
 
     cran = "assertive.numbers"
 
-    version('0.0-2', sha256='bae18c0b9e5b960a20636e127eb738ecd8a266e5fc29d8bc5ca712498cd68349')
+    version("0.0-2", sha256="bae18c0b9e5b960a20636e127eb738ecd8a266e5fc29d8bc5ca712498cd68349")
 
-    depends_on('r@3.0.0:', type=('build', 'run'))
-    depends_on('r-assertive-base@0.0-2:', type=('build', 'run'))
+    depends_on("r@3.0.0:", type=("build", "run"))
+    depends_on("r-assertive-base@0.0-2:", type=("build", "run"))

@@ -1,4 +1,4 @@
-.. Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+.. Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
    Spack Project Developers. See the top-level COPYRIGHT file for details.
 
    SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -20,8 +20,9 @@ case you want to skip directly to specific docs:
 * :ref:`packages.yaml <build-settings>`
 * :ref:`repos.yaml <repositories>`
 
-You can also add any of these as inline configuration in ``spack.yaml``
-in an :ref:`environment <environment-configuration>`.
+You can also add any of these as inline configuration in the YAML
+manifest file (``spack.yaml``) describing an :ref:`environment
+<environment-configuration>`.
 
 -----------
 YAML Format
@@ -37,8 +38,6 @@ Here is an example ``config.yaml`` file:
 
    config:
      install_tree: $spack/opt/spack
-     module_roots:
-       lmod: $spack/share/spack/lmod
      build_stage:
        - $tempdir/$user/spack-stage
        - ~/.spack/stage
@@ -229,6 +228,9 @@ You can get the name to use for ``<platform>`` by running ``spack arch
 --platform``. The system config scope has a ``<platform>`` section for
 sites at which ``/etc`` is mounted on multiple heterogeneous machines.
 
+
+.. _config-scope-precedence:
+
 ----------------
 Scope Precedence
 ----------------
@@ -240,6 +242,11 @@ list-valued settings, Spack *prepends* higher-precedence settings to
 lower-precedence settings. Completely ignoring higher-level configuration
 options is supported with the ``::`` notation for keys (see
 :ref:`config-overrides` below).
+
+There are also special notations for string concatenation and precendense override.
+Using the ``+:`` notation  can be used to force *prepending* strings or lists. For lists, this is identical
+to the default behavior. Using the ``-:`` works similarly, but for *appending* values.
+:ref:`config-prepend-append`
 
 ^^^^^^^^^^^
 Simple keys
@@ -253,8 +260,6 @@ your configurations look like this:
 
    config:
      install_tree: $spack/opt/spack
-     module_roots:
-       lmod: $spack/share/spack/lmod
      build_stage:
        - $tempdir/$user/spack-stage
        - ~/.spack/stage
@@ -278,11 +283,50 @@ command:
    $ spack config get config
    config:
      install_tree: /some/other/directory
-     module_roots:
-       lmod: $spack/share/spack/lmod
      build_stage:
        - $tempdir/$user/spack-stage
        - ~/.spack/stage
+
+
+.. _config-prepend-append:
+
+^^^^^^^^^^^^^^^^^^^^
+String Concatenation
+^^^^^^^^^^^^^^^^^^^^
+
+Above, the user ``config.yaml`` *completely* overrides specific settings in the
+default ``config.yaml``. Sometimes, it is useful to add a suffix/prefix
+to a path or name. To do this, you can use the ``-:`` notation for *append*
+string concatenation at the end of a key in a configuration file. For example:
+
+.. code-block:: yaml
+   :emphasize-lines: 1
+   :caption: ~/.spack/config.yaml
+
+   config:
+     install_tree-: /my/custom/suffix/
+
+Spack will then append to the lower-precedence configuration under the
+``install_tree-:`` section:
+
+.. code-block:: console
+
+   $ spack config get config
+   config:
+     install_tree: /some/other/directory/my/custom/suffix
+     build_stage:
+       - $tempdir/$user/spack-stage
+       - ~/.spack/stage
+
+
+Similarly, ``+:`` can be used to *prepend* to a path or name:
+
+.. code-block:: yaml
+   :emphasize-lines: 1
+   :caption: ~/.spack/config.yaml
+
+   config:
+     install_tree+: /my/custom/suffix/
 
 
 .. _config-overrides:
@@ -345,13 +389,11 @@ higher-precedence scope is *prepended* to the defaults. ``spack config
 get config`` shows the result:
 
 .. code-block:: console
-   :emphasize-lines: 7-10
+   :emphasize-lines: 5-8
 
    $ spack config get config
    config:
      install_tree: /some/other/directory
-     module_roots:
-       lmod: $spack/share/spack/lmod
      build_stage:
        - /lustre-scratch/$user/spack
        - ~/mystage
@@ -375,13 +417,11 @@ user config looked like this:
 The merged configuration would look like this:
 
 .. code-block:: console
-   :emphasize-lines: 7-8
+   :emphasize-lines: 5-6
 
    $ spack config get config
    config:
      install_tree: /some/other/directory
-     module_roots:
-       lmod: $spack/share/spack/lmod
      build_stage:
        - /lustre-scratch/$user/spack
        - ~/mystage
@@ -404,7 +444,7 @@ are indicated at the start of the path with ``~`` or ``~user``.
 Spack-specific variables
 ^^^^^^^^^^^^^^^^^^^^^^^^
 
-Spack understands several special variables. These are:
+Spack understands over a dozen special variables. These are:
 
 * ``$env``: name of the currently active :ref:`environment <environments>`
 * ``$spack``: path to the prefix of this Spack installation
@@ -415,6 +455,19 @@ Spack understands several special variables. These are:
 * ``$user``: name of the current user
 * ``$user_cache_path``: user cache directory (``~/.spack`` unless
   :ref:`overridden <local-config-overrides>`)
+* ``$architecture``: the architecture triple of the current host, as
+  detected by Spack.
+* ``$arch``: alias for ``$architecture``.
+* ``$platform``: the platform of the current host, as detected by Spack.
+* ``$operating_system``: the operating system of the current host, as
+  detected by the ``distro`` python module.
+* ``$os``: alias for ``$operating_system``.
+* ``$target``: the ISA target for the current host, as detected by
+  ArchSpec. E.g. ``skylake`` or ``neoverse-n1``.
+* ``$target_family``. The target family for the current host, as
+  detected by ArchSpec. E.g. ``x86_64`` or ``aarch64``.
+* ``$date``: the current date in the format YYYY-MM-DD
+
 
 Note that, as with shell variables, you can write these as ``$varname``
 or with braces to distinguish the variable from surrounding characters:
@@ -502,9 +555,6 @@ account all scopes. For example, to see the fully merged
      template_dirs:
      - $spack/templates
      directory_layout: {architecture}/{compiler.name}-{compiler.version}/{name}-{version}-{hash}
-     module_roots:
-       tcl: $spack/share/spack/modules
-       lmod: $spack/share/spack/lmod
      build_stage:
      - $tempdir/$user/spack-stage
      - ~/.spack/stage
@@ -552,9 +602,6 @@ down the problem:
    /home/myuser/spack/etc/spack/defaults/config.yaml:23    template_dirs:
    /home/myuser/spack/etc/spack/defaults/config.yaml:24    - $spack/templates
    /home/myuser/spack/etc/spack/defaults/config.yaml:28    directory_layout: {architecture}/{compiler.name}-{compiler.version}/{name}-{version}-{hash}
-   /home/myuser/spack/etc/spack/defaults/config.yaml:32    module_roots:
-   /home/myuser/spack/etc/spack/defaults/config.yaml:33      tcl: $spack/share/spack/modules
-   /home/myuser/spack/etc/spack/defaults/config.yaml:34      lmod: $spack/share/spack/lmod
    /home/myuser/spack/etc/spack/defaults/config.yaml:49    build_stage:
    /home/myuser/spack/etc/spack/defaults/config.yaml:50    - $tempdir/$user/spack-stage
    /home/myuser/spack/etc/spack/defaults/config.yaml:51    - ~/.spack/stage
@@ -565,7 +612,7 @@ down the problem:
 
 You can see above that the ``build_jobs`` and ``debug`` settings are
 built in and are not overridden by a configuration file. The
-``verify_ssl`` setting comes from the ``--insceure`` option on the
+``verify_ssl`` setting comes from the ``--insecure`` option on the
 command line. ``dirty`` and ``install_tree`` come from the custom
 scopes ``./my-scope`` and ``./my-scope-2``, and all other configuration
 options come from the default configuration files that ship with Spack.

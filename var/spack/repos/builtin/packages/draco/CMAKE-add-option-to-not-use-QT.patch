@@ -1,0 +1,56 @@
+From ce2d856a516a592cf6c123d2862e9bbdaa4d6926 Mon Sep 17 00:00:00 2001
+From: Howard Pritchard <hppritcha@gmail.com>
+Date: Mon, 7 Dec 2020 13:53:45 -0700
+Subject: [PATCH] CMAKE: add option to not use QT
+
+Signed-off-by: Howard Pritchard <hppritcha@gmail.com>
+
+diff --git a/config/vendor_libraries.cmake b/config/vendor_libraries.cmake
+index 5a3e9d0c..8782170d 100644
+--- a/config/vendor_libraries.cmake
++++ b/config/vendor_libraries.cmake
+@@ -318,22 +318,27 @@ endmacro()
+ macro( setupQt )
+   message( STATUS "Looking for Qt SDK...." )
+ 
+-  # Find the QtWidgets library
+-  find_package(Qt5 COMPONENTS Widgets QUIET)
++  option (USE_QT "Build QT support for Draco" ON)
+ 
+-  if( Qt5Core_DIR )
+-    mark_as_advanced( Qt5Core_DIR Qt5Gui_DIR Qt5Gui_EGL_LIBRARY
+-      Qt5Widgets_DIR QTDIR)
+-    message( STATUS "Looking for Qt SDK....found ${Qt5Core_DIR}" )
+-  else()
+-    message( STATUS "Looking for Qt SDK....not found." )
+-  endif()
++  if( USE_QT )
++    # Find the QtWidgets library
++    find_package(Qt5 COMPONENTS Widgets QUIET)
+ 
+-  set_package_properties( Qt PROPERTIES
+-    URL "http://qt.io"
+-    DESCRIPTION "Qt is a comprehensive cross-platform C++ application framework."
+-    TYPE OPTIONAL
+-    PURPOSE "Only needed to demo qt version of draco_diagnostics." )
++    if( Qt5Core_DIR )
++      mark_as_advanced( Qt5Core_DIR Qt5Gui_DIR Qt5Gui_EGL_LIBRARY
++        Qt5Widgets_DIR QTDIR)
++      message( STATUS "Looking for Qt SDK....found ${Qt5Core_DIR}" )
++    else()
++      message( STATUS "Looking for Qt SDK....not found." )
++    endif()
++
++    set_package_properties( Qt PROPERTIES
++      URL "http://qt.io"
++      DESCRIPTION "Qt is a comprehensive cross-platform C++ application framework."
++      TYPE OPTIONAL
++      PURPOSE "Only needed to demo qt version of draco_diagnostics." )
++
++  endif()
+ 
+ endmacro()
+ 
+-- 
+2.26.2
+

@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -64,7 +64,7 @@ def prevent_cray_detection():
     """Context manager that prevents the detection of the Cray platform"""
     reset()
     try:
-        with spack.util.environment.set_env(MODULEPATH=''):
+        with spack.util.environment.set_env(MODULEPATH=""):
             yield
     finally:
         reset()

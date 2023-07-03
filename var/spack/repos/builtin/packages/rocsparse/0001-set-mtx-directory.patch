@@ -1,0 +1,32 @@
+--- a/clients/tests/CMakeLists.txt
++++ b/clients/tests/CMakeLists.txt
+@@ -33,6 +33,7 @@ if(NOT EXISTS "${CMAKE_MATRICES_DIR}")
+   # Download.
+   #
+   set(CMAKE_MATRICES_DIR ${PROJECT_BINARY_DIR}/matrices CACHE STRING "Matrices directory.")
++  file(MAKE_DIRECTORY ${CMAKE_MATRICES_DIR})
+ 
+   if(NOT TARGET rocsparse)
+     set(CONVERT_SOURCE ${CMAKE_SOURCE_DIR}/../deps/convert.cpp CACHE STRING "Convert tool mtx2csr.")
+diff --git a/cmake/ClientMatrices.cmake b/cmake/ClientMatrices.cmake
+index 871ebc4..b7fb7bc 100644
+--- a/cmake/ClientMatrices.cmake
++++ b/cmake/ClientMatrices.cmake
+@@ -99,6 +99,7 @@ foreach(i RANGE 0 ${len1})
+ 
+   # Download test matrices if not already downloaded
+   if(NOT EXISTS "${CMAKE_MATRICES_DIR}/${mat}.csr")
++    if(NOT ROCSPARSE_MTX_DIR)
+     # First try user specified mirror, if available
+     if(DEFINED ENV{ROCSPARSE_TEST_MIRROR} AND NOT $ENV{ROCSPARSE_TEST_MIRROR} STREQUAL "")
+       message("-- Downloading and extracting test matrix ${m}.tar.gz from user specified test mirror: $ENV{ROCSPARSE_TEST_MIRROR}")
+@@ -149,6 +150,9 @@ foreach(i RANGE 0 ${len1})
+       WORKING_DIRECTORY ${CMAKE_MATRICES_DIR})
+ 
+     file(RENAME ${CMAKE_MATRICES_DIR}/${mat}/${mat}.mtx ${CMAKE_MATRICES_DIR}/${mat}.mtx)
++    else()
++      file(RENAME ${ROCSPARSE_MTX_DIR}/${mat}/${mat}.mtx ${CMAKE_MATRICES_DIR}/${mat}.mtx)
++    endif()
+     execute_process(COMMAND ${PROJECT_BINARY_DIR}/mtx2csr.exe ${mat}.mtx ${mat}.csr
+       WORKING_DIRECTORY ${CMAKE_MATRICES_DIR})
+     # TODO: add 'COMMAND_ERROR_IS_FATAL ANY' once cmake supported version is 3.19
