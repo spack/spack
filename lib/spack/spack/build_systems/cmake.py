@@ -330,7 +330,7 @@ class CMakeBuilder(BaseBuilder):
             if isinstance(value, bool):
                 return True
             if isinstance(value, str) or isinstance(value, int):
-                return bool(re.match(r"on|yes|true|y|[1-9]", str(value), re.IGNORECASE))
+                return bool(re.match(r"on|yes|true|y|[1-9]$", str(value), re.IGNORECASE))
             return False
 
         # helper method to ensure posix paths are passed to CMake
