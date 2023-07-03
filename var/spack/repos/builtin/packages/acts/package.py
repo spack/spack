@@ -4,7 +4,7 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 from spack.package import *
-from spack.variant import Value, _ConditionalVariantValues
+from spack.variant import _ConditionalVariantValues
 
 
 class Acts(CMakePackage, CudaPackage):
