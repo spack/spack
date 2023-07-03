@@ -279,13 +279,20 @@ class Acts(CMakePackage, CudaPackage):
     depends_on("py-onnxruntime", when="+onnx")
     depends_on("py-pybind11 @2.6.2:", when="+python @18:")
     depends_on("py-pytest", when="+python +unit_tests")
-    depends_on("root @6.10: cxxstd=14", when="+tgeo @:0.8.0")
-    depends_on("root @6.20: cxxstd=17", when="+tgeo @0.8.1:")
+    depends_on("root @6.10:", when="+tgeo @:0.8.0")
+    depends_on("root @6.20:", when="+tgeo @0.8.1:")
     depends_on("sycl", when="+sycl")
     depends_on("vecmem@0.4: +sycl", when="+sycl")
 
     # ACTS has been using C++17 for a while, which precludes use of old GCC
     conflicts("%gcc@:7", when="@0.23:")
+    # ACTS imposes requirements on the C++ standard values used by ROOT
+    with when("^root"):
+        # Too old (after certain ACTS versions)
+        conflicts("^root cxxstd=11", msg="ACTS requires ROOT with C++ >=17")
+        conflicts("^root cxxstd=14", when="@0.8.2:", msg="ACTS requires ROOT with C++ >=17")
+        # Too new (until certain ACTS versions)
+        conflicts("^root cxxstd=20", when="@:23", msg="ACTS 24+ required for ROOT with C++20")
 
     def cmake_args(self):
         spec = self.spec
@@ -387,7 +394,7 @@ class Acts(CMakePackage, CudaPackage):
             if cuda_arch != "none":
                 args.append("-DCUDA_FLAGS=-arch=sm_{0}".format(cuda_arch[0]))
 
-        if "root" in spec:
+        if "^root" in spec:
             cxxstd = spec["root"].variants["cxxstd"].value
             args.append("-DCMAKE_CXX_STANDARD={0}".format(cxxstd))
 
