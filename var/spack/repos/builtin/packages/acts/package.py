@@ -404,12 +404,10 @@ class Acts(CMakePackage, CudaPackage):
             if cuda_arch != "none":
                 args.append("-DCUDA_FLAGS=-arch=sm_{0}".format(cuda_arch[0]))
 
-        if "^root" in spec:
-            cxxstd = spec["root"].variants["cxxstd"].value
-            args.append("-DCMAKE_CXX_STANDARD={0}".format(cxxstd))
-
         if "+python" in spec:
             python = spec["python"].command.path
             args.append("-DPython_EXECUTABLE={0}".format(python))
+
+        args.append(define_from_variant("CMAKE_CXX_STANDARD", "cxxstd"))
 
         return args
