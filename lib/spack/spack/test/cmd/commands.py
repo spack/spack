@@ -16,11 +16,7 @@ import spack.main
 import spack.paths
 from spack.cmd.commands import _dest_to_fish_complete, _positional_to_subroutine
 
-<<<<<<< HEAD
-commands = spack.main.SpackCommand("commands")
-=======
 commands = spack.main.SpackCommand("commands", subprocess=True)
->>>>>>> develop
 
 parser = spack.main.make_argument_parser()
 spack.main.add_all_commands(parser)
@@ -108,29 +104,18 @@ _cmd-spack-install:
 
 
 def test_rst_with_header(tmpdir):
-<<<<<<< HEAD
-=======
     local_commands = spack.main.SpackCommand("commands")
->>>>>>> develop
     fake_header = "this is a header!\n\n"
 
     filename = tmpdir.join("header.txt")
     with filename.open("w") as f:
         f.write(fake_header)
 
-<<<<<<< HEAD
-    out = commands("--format=rst", "--header", str(filename))
-    assert out.startswith(fake_header)
-
-    with pytest.raises(spack.main.SpackCommandError):
-        commands("--format=rst", "--header", "asdfjhkf")
-=======
     out = local_commands("--format=rst", "--header", str(filename))
     assert out.startswith(fake_header)
 
     with pytest.raises(spack.main.SpackCommandError):
         local_commands("--format=rst", "--header", "asdfjhkf")
->>>>>>> develop
 
 
 def test_rst_update(tmpdir):

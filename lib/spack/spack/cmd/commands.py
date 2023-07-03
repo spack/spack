@@ -220,10 +220,7 @@ _dest_to_fish_complete = {
     ("mirror", r"mirror"): '-f -a "(__fish_spack_mirrors)"',
     ("pkg", r"package"): '-f -a "(__fish_spack_pkg_packages)"',
     ("remove", r"specs?"): '-f -a "(__fish_spack_installed_specs)"',
-    (
-        "repo",
-        r"namespace_or_path",
-    ): '$__fish_spack_force_files -a "(__fish_spack_repos)"',
+    ("repo", r"namespace_or_path"): '$__fish_spack_force_files -a "(__fish_spack_repos)"',
     ("restage", r"specs?"): '-f -k -a "(__fish_spack_specs_or_id)"',
     ("rm", r"specs?"): '-f -a "(__fish_spack_installed_specs)"',
     ("solve", r"specs?"): '-f -k -a "(__fish_spack_specs_or_id)"',
@@ -232,18 +229,12 @@ _dest_to_fish_complete = {
     ("test-env", r"spec \[--\].*"): '-f -a "(__fish_spack_build_env_spec)"',
     ("test", r"\[?name.*"): '-f -a "(__fish_spack_tests)"',
     ("undevelop", r"specs?"): '-f -k -a "(__fish_spack_specs_or_id)"',
-    (
-        "verify",
-        r"specs_or_files",
-    ): '$__fish_spack_force_files -a "(__fish_spack_installed_specs)"',
+    ("verify", r"specs_or_files"): '$__fish_spack_force_files -a "(__fish_spack_installed_specs)"',
     ("view", r"path"): '-f -a "(__fish_complete_directories)"',
     ("", r"comment"): "-f",
     ("", r"compiler_spec"): '-f -a "(__fish_spack_installed_compilers)"',
     ("", r"config_scopes"): '-f -a "(__fish_complete_directories)"',
-    (
-        "",
-        r"sorted_profile",
-    ): '-f -a "calls ncalls cumtime cumulative filename line module"',
+    ("", r"sorted_profile"): '-f -a "calls ncalls cumtime cumulative filename line module"',
     ("", r"extendable"): '-f -a "(__fish_spack_extensions)"',
     ("", r"installed_specs?"): '-f -a "(__fish_spack_installed_specs)"',
     ("", r"job_url"): "-f",
@@ -319,9 +310,7 @@ class FishCompletionWriter(ArgparseCompletionWriter):
         """
 
         # Variables of optspecs
-        optspec_var = "__fish_spack_optspecs_" + prog.replace(" ", "_").replace(
-            "-", "_"
-        )
+        optspec_var = "__fish_spack_optspecs_" + prog.replace(" ", "_").replace("-", "_")
 
         if optionals is None:
             return "set -g %s\n" % optspec_var
@@ -447,9 +436,7 @@ class FishCompletionWriter(ArgparseCompletionWriter):
             elif isinstance(choices, (set, frozenset)):
                 choices = sorted(choices)
 
-            commands.append(
-                "# %d -> %s %r (%s): %r" % (idx, args, choices, help, nargs)
-            )
+            commands.append("# %d -> %s %r (%s): %r" % (idx, args, choices, help, nargs))
 
             head = self.complete_head(prog, idx if nargs != "..." else None)
 
@@ -524,9 +511,7 @@ class FishCompletionWriter(ArgparseCompletionWriter):
             elif nargs in [1, None, "?"]:
                 prefix += " -r"
             else:
-                commands.append(
-                    "# TODO: %s -> %r: %r not supported" % (flags, dest, nargs)
-                )
+                commands.append("# TODO: %s -> %r: %r not supported" % (flags, dest, nargs))
                 prefix += " -r"
 
             if self.is_iterable(dest):
