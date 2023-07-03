@@ -43,8 +43,10 @@ class Libxcrypt(AutotoolsPackage):
     # Some distros have incomplete perl installs, +open catches that.
     depends_on("perl@5.14.0: +open", type="build", when="@4.4.18:")
 
-    # Old versions do not build with Perl 5.38
+    # Support Perl 5.38. todo: remove patch and update depends_on
+    # range once the commit ends up in a tagged release
     depends_on("perl@:5.36", type="build", when="@:4.4.34")
+    patch("commit-95d56e0.patch", when="@4.4.35")
 
     def configure_args(self):
         args = [
