@@ -372,10 +372,10 @@ end
 
 
 function spack_runner -d "Runner function for the `spack` wrapper"
-    # Store LD_LIBRARY_PATH variables from spack shell function
+    # Store DYLD_* variables from spack shell function
     # This is necessary because MacOS System Integrity Protection clears
     # variables that affect dyld on process start.
-    for var in LD_LIBRARY_PATH DYLD_LIBRARY_PATH DYLD_FALLBACK_LIBRARY_PATH
+    for var in DYLD_LIBRARY_PATH DYLD_FALLBACK_LIBRARY_PATH
         if set -q $var
             set -gx SPACK_$var $$var
         end
