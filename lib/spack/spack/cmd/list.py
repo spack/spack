@@ -52,7 +52,7 @@ def setup_parser(subparser):
     subparser.add_argument(
         "--format",
         default="name_only",
-        choices=formatters,
+        choices=sorted(formatters),
         help="format to be used to print the output [default: name_only]",
     )
     subparser.add_argument(
