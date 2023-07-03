@@ -4,6 +4,7 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 from spack.package import *
+from spack.variant import Value, _ConditionalVariantValues
 
 
 class Acts(CMakePackage, CudaPackage):
@@ -145,6 +146,14 @@ class Acts(CMakePackage, CudaPackage):
     variant(
         "benchmarks", default=False, description="Build the performance benchmarks", when="@0.16:"
     )
+    _cxxstd_values = (conditional("14", when="@:0.8.1"), "17", conditional("20", when="@24:"))
+    variant(
+        "cxxstd",
+        default="17",
+        values=_cxxstd_values,
+        multi=False,
+        description="Use the specified C++ standard when building.",
+    )
     variant(
         "examples",
         default=False,
@@ -284,15 +293,16 @@ class Acts(CMakePackage, CudaPackage):
     depends_on("sycl", when="+sycl")
     depends_on("vecmem@0.4: +sycl", when="+sycl")
 
+    # ACTS imposes requirements on the C++ standard values used by ROOT
+    for _cxxstd in _cxxstd_values:
+        if isinstance(_cxxstd, _ConditionalVariantValues):
+            for _v in _cxxstd:
+                depends_on(f"root cxxstd={_v.value}", when=f"cxxstd={_v.value} {_v.when} ^root")
+        else:
+            depends_on(f"root cxxstd={_cxxstd}", when=f"cxxstd={_cxxstd} ^root")
+
     # ACTS has been using C++17 for a while, which precludes use of old GCC
     conflicts("%gcc@:7", when="@0.23:")
-    # ACTS imposes requirements on the C++ standard values used by ROOT
-    with when("^root"):
-        # Too old (after certain ACTS versions)
-        conflicts("^root cxxstd=11", msg="ACTS requires ROOT with C++ >=17")
-        conflicts("^root cxxstd=14", when="@0.8.2:", msg="ACTS requires ROOT with C++ >=17")
-        # Too new (until certain ACTS versions)
-        conflicts("^root cxxstd=20", when="@:23", msg="ACTS 24+ required for ROOT with C++20")
 
     def cmake_args(self):
         spec = self.spec
