@@ -172,6 +172,7 @@ def env_create(args):
     logging.debug('Creating environment from command-line args')
     stack_env = StackEnv(**stack_settings)
     stack_env.write()
+    stack_env.check_umask()
     tty.msg('Created environment {}'.format(env_dir))
 
 
