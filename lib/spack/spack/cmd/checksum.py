@@ -124,7 +124,9 @@ def checksum(parser, args):
             url_dict[version] = remote_versions[version]
 
     if len(versions) <= 0:
-        url_dict = pkg.fetch_remote_versions()
+        if remote_versions is None:
+            remote_versions = pkg.fetch_remote_versions()
+        url_dict = remote_versions
 
     if not url_dict:
         tty.die("Could not find any remote versions for {0}".format(pkg.name))
