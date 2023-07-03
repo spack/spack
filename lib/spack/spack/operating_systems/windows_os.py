@@ -8,7 +8,6 @@ import os
 import pathlib
 import platform
 import subprocess
-import sys
 
 from spack.error import SpackError
 from spack.util import windows_registry as winreg
@@ -34,71 +33,6 @@ class WindowsOs(OperatingSystem):
     10.
     """
 
-    # First Strategy: Find MSVC directories using vswhere
-    _compiler_search_paths = []
-    comp_search_paths = []
-    vs_install_paths = []
-    root = os.environ.get("ProgramFiles(x86)") or os.environ.get("ProgramFiles")
-    if root:
-        try:
-            extra_args = {"encoding": "mbcs", "errors": "strict"}
-            paths = subprocess.check_output(  # type: ignore[call-overload] # novermin
-                [
-                    os.path.join(root, "Microsoft Visual Studio", "Installer", "vswhere.exe"),
-                    "-prerelease",
-                    "-requires",
-                    "Microsoft.VisualStudio.Component.VC.Tools.x86.x64",
-                    "-property",
-                    "installationPath",
-                    "-products",
-                    "*",
-                ],
-                **extra_args,
-            ).strip()
-            vs_install_paths = paths.split("\n")
-            msvc_paths = [os.path.join(path, "VC", "Tools", "MSVC") for path in vs_install_paths]
-            for p in msvc_paths:
-                comp_search_paths.extend(glob.glob(os.path.join(p, "*", "bin", "Hostx64", "x64")))
-            if os.getenv("ONEAPI_ROOT"):
-                comp_search_paths.extend(
-                    glob.glob(
-                        os.path.join(
-                            str(os.getenv("ONEAPI_ROOT")), "compiler", "*", "windows", "bin"
-                        )
-                    )
-                )
-        except (subprocess.CalledProcessError, OSError, UnicodeDecodeError):
-            pass
-    _compiler_search_paths.extend(comp_search_paths)
-    if not _compiler_search_paths and sys.platform == "win32":
-        # Second strategy: Find MSVC via the registry
-        msft = winreg.WindowsRegistryView(
-            "SOFTWARE\\WOW6432Node\\Microsoft", winreg.HKEY.HKEY_LOCAL_MACHINE
-        )
-        vs_entries = msft.find_subkeys(r"VisualStudio_.*")
-        vs_paths = []
-
-        def clean_vs_path(path):
-            path = path.split(",")[0].lstrip("@")
-            return str(pathlib.Path(path).parent / "..\\..")
-
-        for entry in vs_entries:
-            try:
-                val = entry.get_subkey("Capabilities").get_value("ApplicationDescription").value
-                vs_paths.append(clean_vs_path(val))
-            except FileNotFoundError as e:
-                if hasattr(e, "winerror"):
-                    if e.winerror == 2:
-                        pass
-                    else:
-                        raise
-                else:
-                    raise
-
-        _compiler_search_paths.extend(vs_paths)
-    if _compiler_search_paths:
-        compiler_search_paths = _compiler_search_paths
-
     def __init__(self):
         plat_ver = windows_version()
         if plat_ver < Version("10"):
@@ -107,3 +41,74 @@ class WindowsOs(OperatingSystem):
 
     def __str__(self):
         return self.name
+
+    @property
+    def compiler_search_paths(self):
+        # First Strategy: Find MSVC directories using vswhere
+        _compiler_search_paths = []
+        vs_install_paths = []
+        root = os.environ.get("ProgramFiles(x86)") or os.environ.get("ProgramFiles")
+        if root:
+            try:
+                extra_args = {"encoding": "mbcs", "errors": "strict"}
+                paths = subprocess.check_output(  # type: ignore[call-overload] # novermin
+                    [
+                        os.path.join(root, "Microsoft Visual Studio", "Installer", "vswhere.exe"),
+                        "-prerelease",
+                        "-requires",
+                        "Microsoft.VisualStudio.Component.VC.Tools.x86.x64",
+                        "-property",
+                        "installationPath",
+                        "-products",
+                        "*",
+                    ],
+                    **extra_args,
+                ).strip()
+                vs_install_paths = paths.split("\n")
+                msvc_paths = [
+                    os.path.join(path, "VC", "Tools", "MSVC") for path in vs_install_paths
+                ]
+                for p in msvc_paths:
+                    _compiler_search_paths.extend(
+                        glob.glob(os.path.join(p, "*", "bin", "Hostx64", "x64"))
+                    )
+                if os.getenv("ONEAPI_ROOT"):
+                    _compiler_search_paths.extend(
+                        glob.glob(
+                            os.path.join(
+                                str(os.getenv("ONEAPI_ROOT")), "compiler", "*", "windows", "bin"
+                            )
+                        )
+                    )
+            except (subprocess.CalledProcessError, OSError, UnicodeDecodeError):
+                pass
+        _compiler_search_paths.extend(_compiler_search_paths)
+        if not _compiler_search_paths:
+            # Second strategy: Find MSVC via the registry
+            msft = winreg.WindowsRegistryView(
+                "SOFTWARE\\WOW6432Node\\Microsoft", winreg.HKEY.HKEY_LOCAL_MACHINE
+            )
+            vs_entries = msft.find_subkeys(r"VisualStudio_.*")
+            vs_paths = []
+
+            def clean_vs_path(path):
+                path = path.split(",")[0].lstrip("@")
+                return str(pathlib.Path(path).parent / "..\\..")
+
+            for entry in vs_entries:
+                try:
+                    val = (
+                        entry.get_subkey("Capabilities").get_value("ApplicationDescription").value
+                    )
+                    vs_paths.append(clean_vs_path(val))
+                except FileNotFoundError as e:
+                    if hasattr(e, "winerror"):
+                        if e.winerror == 2:
+                            pass
+                        else:
+                            raise
+                    else:
+                        raise
+
+            _compiler_search_paths.extend(vs_paths)
+        return _compiler_search_paths
