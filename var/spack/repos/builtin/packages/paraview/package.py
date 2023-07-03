@@ -71,6 +71,7 @@ class Paraview(CMakePackage, CudaPackage, ROCmPackage):
     variant("kits", default=True, description="Use module kits")
     variant("pagosa", default=False, description="Build the pagosa adaptor")
     variant("eyedomelighting", default=False, description="Enable Eye Dome Lighting feature")
+    variant("tbb", default=False, description="Enable multi-threaded parallelism with TBB")
     variant("adios2", default=False, description="Enable ADIOS2 support", when="@5.8:")
     variant("visitbridge", default=False, description="Enable VisItBridge support")
     variant("raytracing", default=False, description="Enable Raytracing support")
@@ -173,6 +174,8 @@ class Paraview(CMakePackage, CudaPackage, ROCmPackage):
     depends_on("openpmd-api@0.14.5: +python", when="+python +openpmd", type=("build", "run"))
     depends_on("openpmd-api +adios2", when="+openpmd +adios2", type=("build", "run"))
     depends_on("openpmd-api +hdf5", when="+openpmd +hdf5", type=("build", "run"))
+
+    depends_on("tbb", when="+tbb")
 
     depends_on("mpi", when="+mpi")
     depends_on("qt+opengl", when="@5.3.0:+qt+opengl2")
@@ -600,6 +603,9 @@ class Paraview(CMakePackage, CudaPackage, ROCmPackage):
 
         if "+eyedomelighting" in spec:
             cmake_args.append("-DPARAVIEW_BUILD_PLUGIN_EyeDomeLighting:BOOL=ON")
+
+        if "+tbb" in spec:
+            cmake_args.append("-DVTK_SMP_IMPLEMENTATION_TYPE=TBB")
 
         # Hide git from Paraview so it will not use `git describe`
         # to find its own version number
