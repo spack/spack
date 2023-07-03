@@ -349,11 +349,11 @@ class FishCompletionWriter(ArgparseCompletionWriter):
             long = [f[2:] for f in flags if f.startswith("--")]
 
             while len(short) > 0 and len(long) > 0:
-                arg = '"%s/%s%s"' % (short.pop(), long.pop(), required)
+                arg = "%s/%s%s" % (short.pop(), long.pop(), required)
             while len(short) > 0:
-                arg = '"%s/%s"' % (short.pop(), required)
+                arg = "%s/%s" % (short.pop(), required)
             while len(long) > 0:
-                arg = '"%s%s"' % (long.pop(), required)
+                arg = "%s%s" % (long.pop(), required)
 
             args.append(arg)
 
@@ -444,7 +444,7 @@ class FishCompletionWriter(ArgparseCompletionWriter):
                 # If there are choices, we provide a completion for all
                 # possible values
                 choices = " ".join(choices)
-                commands.append(head + ' -f -a "%s"' % choices)
+                commands.append(head + " -f -a %s" % choices)
             else:
                 # Otherwise, we try to find a predefined completion for it
                 value = _fish_dest_get_complete(prog, args)
@@ -518,7 +518,7 @@ class FishCompletionWriter(ArgparseCompletionWriter):
                 # If there are choices, we provide a completion for all
                 # possible values
                 choices = " ".join(dest)
-                commands.append(prefix + ' -f -a "%s"' % choices)
+                commands.append(prefix + " -f -a %s" % choices)
             else:
                 # Otherwise, we try to find a predefined completion for it
                 value = _fish_dest_get_complete(prog, dest)
@@ -527,7 +527,7 @@ class FishCompletionWriter(ArgparseCompletionWriter):
 
             if len(help) > 0:
                 help = help.split("\n")[0]
-                commands.append(prefix + ' -d "%s"' % help)
+                commands.append(prefix + " -d %s" % help)
 
         return "\n".join(commands) + "\n"
 
@@ -550,7 +550,7 @@ class FishCompletionWriter(ArgparseCompletionWriter):
 
             if help is not None and len(help) > 0:
                 help = help.split("\n")[0]
-                command += ' -d "%s"' % help
+                command += " -d %s" % help
 
             commands.append(command)
 
