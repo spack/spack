@@ -251,7 +251,7 @@ class Python(Package):
         depends_on("libnsl", when="+nis")
         depends_on("zlib@1.1.3:", when="+zlib")
         depends_on("bzip2", when="+bz2")
-        depends_on("xz", when="+lzma")
+        depends_on("xz libs=shared", when="+lzma")
         depends_on("expat", when="+pyexpat")
         depends_on("libffi", when="+ctypes")
         # https://docs.python.org/3/whatsnew/3.11.html#build-changes
