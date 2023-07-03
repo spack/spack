@@ -76,7 +76,6 @@ class UtilLinux(AutotoolsPackage):
                     "--disable-ipcrm",
                     "--disable-wall",
                     "--disable-libmount",
-                    "--enable-libuuid",
                 ]
             )
 
