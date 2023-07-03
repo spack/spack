@@ -278,10 +278,7 @@ def test_updated_completion_scripts(shell, tmpdir):
     with open(old_script) as old:
         with open(new_script) as new:
             diff = difflib.unified_diff(
-                old.readlines(),
-                new.readlines(),
-                fromfile="old",
-                tofile="new",
+                old.readlines(), new.readlines(), fromfile="old", tofile="new"
             )
             for line in diff:
                 sys.stdout.write(line)
