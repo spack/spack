@@ -55,8 +55,8 @@ with open("${compilers_yaml}",'w') as f:
 EOF
 
     # Oneapi needs extra_rpath to gcc libstdc++.so.6
-    oneapi_gcc_version=$(spack find --format '{compiler}' intel-oneapi-compilers echo | sed -e 's/=//g') && \
-        [ -n "${oneapi_gcc_version}" ] && oneapi_gcc_path=$(spack find "${oneapi_gcc_version}" | grep "${oneapi_gcc_version}" | awk '{print $2}') && \
+    oneapi_gcc_version=$(spack find --format '{compiler}' intel-oneapi-compilers | sed -e 's/=//g') && \
+        [ -n "${oneapi_gcc_version}" ] && oneapi_gcc_path=$(spack find -p "${oneapi_gcc_version}" | grep "${oneapi_gcc_version}" | awk '{print $2}') && \
         [ -d "${oneapi_gcc_path}" ] && python3 <<EOF
 import yaml
 
