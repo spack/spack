@@ -19,6 +19,9 @@ class PyBitstring(PythonPackage):
     depends_on("py-bitarray@2.7.4", when="@4.1:")
 
     def url_for_version(self, version):
+        url = "https://pypi.org/packages/source/s/bitstring/bitstring-{}.{}"
         if version < Version("3.1.6"):
-            url = "https://pypi.org/packages/source/s/bitstring/bitstring-{0}.zip"
-            return url.format(version)
+            suffix = "zip"
+        else:
+            suffix = "tar.gz"
+        return url.format(version, suffix)
