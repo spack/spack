@@ -105,7 +105,7 @@ class RepoLoader(_PrependFileLoader):
     #: Spack packages are expected to call `from spack.package import *`
     #: themselves, but we are allowing a deprecation period before breaking
     #: external repos that don't do this yet.
-    _package_prepend = "from __future__ import absolute_import;" "from spack.package import *"
+    _package_prepend = "from spack.package import *"
 
     def __init__(self, fullname, repo, package_name):
         self.repo = repo

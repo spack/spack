@@ -8,8 +8,6 @@
 In a normal Spack installation, this is invoked from the bin/spack script
 after the system path is set up.
 """
-from __future__ import print_function
-
 import argparse
 import inspect
 import io

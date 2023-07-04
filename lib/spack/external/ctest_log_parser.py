@@ -65,9 +65,6 @@ algorithms that duplicate the way CTest scrapes log files.  To keep this
 up to date with CTest, just make sure the ``*_matches`` and
 ``*_exceptions`` lists are kept up to date with CTest's build handler.
 """
-from __future__ import print_function
-from __future__ import division
-
 import re
 import math
 import multiprocessing

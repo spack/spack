@@ -25,8 +25,6 @@ exit 1
 # Line above is a shell no-op, and ends a python multi-line comment.
 # The code above runs this file with our preferred python interpreter.
 
-from __future__ import print_function
-
 import os
 import os.path
 import sys
