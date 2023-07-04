@@ -16,8 +16,3 @@ packages:
     # - aws-isc-aarch64
     #   - sse2neon
     #require: "@:999999999"
-  python:
-    # This is redundant after https://github.com/spack/spack/pull/33898
-    # but specified to allow the existance of a package.yaml for CI configs
-    require: "@3.7:"
-
