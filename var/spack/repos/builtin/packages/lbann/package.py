@@ -393,14 +393,6 @@ class Lbann(CachedCMakePackage, CudaPackage, ROCmPackage):
             if "platform=cray" in spec:
                 entries.append(cmake_cache_option("MPI_ASSUME_NO_BUILTIN_MPI", True))
 
-            cxxflags_str = " ".join(self.spec.compiler_flags["cxxflags"])
-            entries.append(
-                cmake_cache_string(
-                    "HIP_HIPCC_FLAGS",
-                    "-g -fsized-deallocation -fPIC -std=c++17 {0}".format(cxxflags_str),
-                )
-            )
-
         return entries
 
     def initconfig_package_entries(self):

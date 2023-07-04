@@ -110,7 +110,10 @@ class QtBase(QtPackage):
 
     # GUI-only dependencies
     variant(
-        "accessibility", default=True, when="+gui", description="Build with accessibility support."
+        "accessibility",
+        default=False,
+        when="+gui",
+        description="Build with accessibility support.",
     )
     variant("gtk", default=False, when="+gui", description="Build with gtkplus.")
     variant("opengl", default=False, when="+gui", description="Build with OpenGL support.")

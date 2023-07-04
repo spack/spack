@@ -402,6 +402,13 @@ class Llvm(CMakePackage, CudaPackage):
         sha256="514926d661635de47972c7d403c9c4669235aa51e22e56d44676d2a2709179b6",
         when="@8:11",
     )
+    #
+    # fix compilation against libstdc++13
+    patch(
+        "https://github.com/llvm/llvm-project/commit/1b4fdf18bc2aaa2d46bf072475dd9cbcd44a9fee.patch?full_index=1",
+        sha256="82481418766b4b949ea808d956ff3800b9a241a576370114862428bb0e25ee1f",
+        when="@14:15",
+    )
 
     # fix building of older versions of llvm with newer versions of glibc
     for compiler_rt_as in ["project", "runtime"]:
