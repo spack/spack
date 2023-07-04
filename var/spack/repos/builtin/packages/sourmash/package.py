@@ -17,7 +17,7 @@ class Sourmash(PythonPackage):
 
     depends_on("python@3.8:", type=("build", "run"))
     # build-only
-    depends_on("py-maturin@1:", type="build")
+    depends_on("py-maturin@0.14.13:0.14", type="build")
     depends_on("rust", type="build")
     # general
     depends_on("py-screed@1.1.2:")
