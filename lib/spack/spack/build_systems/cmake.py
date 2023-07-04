@@ -267,6 +267,11 @@ class CMakeBuilder(BaseBuilder):
         except KeyError:
             ipo = False
 
+        if hasattr(pkg, "fetchcontent"):
+            fetchcontent = pkg.spec.fetchcontent
+        else:
+            fetchcontent = False
+
         define = CMakeBuilder.define
         args = [
             "-G",
@@ -296,6 +301,12 @@ class CMakeBuilder(BaseBuilder):
                 define("CMAKE_PREFIX_PATH", spack.build_environment.get_cmake_prefix_path(pkg)),
             ]
         )
+
+        # Set up FetchContent isolation for recent CMake
+        if pkg.spec.satisfies("^cmake@3.11:"):
+            if isinstance(fetchcontent, bool):
+                args.append(define("FETCHCONTENT_FULLY_DISCONNECTED", not fetchcontent))
+
         return args
 
     @staticmethod
