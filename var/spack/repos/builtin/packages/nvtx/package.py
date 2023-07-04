@@ -14,7 +14,7 @@ class Nvtx(Package, PythonExtension):
 
     maintainers("thomas-bouvier")
 
-    version("main", branch="dev")
+    version("develop", branch="dev")
     version("3.1.0", sha256="dc4e4a227d04d3da46ad920dfee5f7599ac8d6b2ee1809c9067110fb1cc71ced")
 
     variant("python", default=True, description="Install Python bindings.")
