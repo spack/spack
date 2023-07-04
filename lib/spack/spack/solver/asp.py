@@ -8,6 +8,7 @@ import copy
 import enum
 import itertools
 import os
+import pathlib
 import pprint
 import re
 import types
@@ -790,9 +791,6 @@ class PyclingoDriver:
         self.control.load(os.path.join(parent_dir, "display.lp"))
         if not setup.concretize_everything:
             self.control.load(os.path.join(parent_dir, "when_possible.lp"))
-
-        if setup.use_cycle_detection:
-            self.control.load(os.path.join(parent_dir, "cycle_detection.lp"))
         timer.stop("load")
 
         # Grounding is the first step in the solve -- it turns our facts
@@ -820,6 +818,14 @@ class PyclingoDriver:
 
         timer.start("solve")
         solve_result = self.control.solve(**solve_kwargs)
+
+        if solve_result.satisfiable and self._model_has_cycles(models):
+            warnings.warn(f"cycles detected, falling back to slower algorithm [specs={specs}]")
+            self.control.load(os.path.join(parent_dir, "cycle_detection.lp"))
+            self.control.ground([("no_cycle", [])])
+            models.clear()
+            solve_result = self.control.solve(**solve_kwargs)
+
         timer.stop("solve")
 
         # once done, construct the solve result
@@ -872,6 +878,26 @@ class PyclingoDriver:
 
         return result, timer, self.control.statistics
 
+    def _model_has_cycles(self, models):
+        """Returns true if the best model has cycles in it"""
+        cycle_detection = clingo.Control()
+        parent_dir = pathlib.Path(__file__).parent
+        lp_file = parent_dir / "cycle_detection.lp"
+
+        min_cost, best_model = min(models)
+        with cycle_detection.backend() as backend:
+            for atom in best_model:
+                if atom.name == "attr" and str(atom.arguments[0]) == '"depends_on"':
+                    symbol = fn.depends_on(atom.arguments[1], atom.arguments[2])
+                    atom_id = backend.add_atom(symbol.symbol())
+                    backend.add_rule([atom_id], [], choice=False)
+
+            cycle_detection.load(str(lp_file))
+            cycle_detection.ground([("base", []), ("no_cycle", [])])
+            cycle_result = cycle_detection.solve()
+
+        return cycle_result.unsatisfiable
+
 
 class SpackSolverSetup:
     """Class to set up and run a Spack concretization solve."""
@@ -915,7 +941,6 @@ class SpackSolverSetup:
 
         # If False allows for input specs that are not solved
         self.concretize_everything = True
-        self.use_cycle_detection = False
 
         # Set during the call to setup
         self.pkgs = None
@@ -2741,7 +2766,7 @@ class SpecBuilder:
         else:
             return (-1, 0)
 
-    def _build_specs(self, function_tuples):
+    def build_specs(self, function_tuples):
         # Functions don't seem to be in particular order in output.  Sort
         # them here so that directives that build objects (like node and
         # node_compiler) are called in the right order.
@@ -2830,14 +2855,6 @@ class SpecBuilder:
                     )
 
         return self._specs
-
-    def build_specs(self, function_tuples):
-        try:
-            return self._build_specs(function_tuples)
-        except RecursionError as e:
-            raise CycleDetectedError(
-                "detected cycles using a fast solve, falling back to slower algorithm"
-            ) from e
 
 
 def _develop_specs_from_env(spec, env):
@@ -2940,12 +2957,7 @@ class Solver:
         reusable_specs.extend(self._reusable_specs(specs))
         setup = SpackSolverSetup(tests=tests)
         output = OutputConfiguration(timers=timers, stats=stats, out=out, setup_only=setup_only)
-        try:
-            result, _, _ = self.driver.solve(setup, specs, reuse=reusable_specs, output=output)
-        except CycleDetectedError as e:
-            warnings.warn(e)
-            setup.use_cycle_detection = True
-            result, _, _ = self.driver.solve(setup, specs, reuse=reusable_specs, output=output)
+        result, _, _ = self.driver.solve(setup, specs, reuse=reusable_specs, output=output)
         return result
 
     def solve_in_rounds(self, specs, out=None, timers=False, stats=False, tests=False):
@@ -3025,7 +3037,3 @@ class InternalConcretizerError(spack.error.UnsatisfiableSpecError):
         # Add attribute expected of the superclass interface
         self.required = None
         self.constraint_type = None
-
-
-class CycleDetectedError(spack.error.SpackError):
-    pass
