@@ -8,10 +8,17 @@ import copy
 import os
 import re
 import sys
+from argparse import ArgumentParser, Namespace
+from typing import IO, Any, Callable, Dict, Sequence, Set
 
 import llnl.util.filesystem as fs
 import llnl.util.tty as tty
-from llnl.util.argparsewriter import ArgparseCompletionWriter, ArgparseRstWriter, ArgparseWriter
+from llnl.util.argparsewriter import (
+    ArgparseCompletionWriter,
+    ArgparseRstWriter,
+    ArgparseWriter,
+    Command,
+)
 from llnl.util.tty.colify import colify
 
 import spack.cmd
@@ -25,12 +32,12 @@ level = "long"
 
 
 #: list of command formatters
-formatters = {}
+formatters: Dict[str, Callable[[Namespace, IO], None]] = {}
 
 
 #: standard arguments for updating completion scripts
 #: we iterate through these when called with --update-completion
-update_completion_args = {
+update_completion_args: Dict[str, Dict[str, Any]] = {
     "bash": {
         "aliases": True,
         "format": "bash",
@@ -40,13 +47,25 @@ update_completion_args = {
 }
 
 
-def formatter(func):
-    """Decorator used to register formatters"""
+def formatter(func: Callable[[Namespace, IO], None]) -> Callable[[Namespace, IO], None]:
+    """Decorator used to register formatters.
+
+    Args:
+        func: Formatting function.
+
+    Returns:
+        The same function.
+    """
     formatters[func.__name__] = func
     return func
 
 
-def setup_parser(subparser):
+def setup_parser(subparser: ArgumentParser) -> None:
+    """Set up the argument parser.
+
+    Args:
+        subparser: Preliminary argument parser.
+    """
     subparser.add_argument(
         "--update-completion",
         action="store_true",
@@ -89,18 +108,34 @@ class SpackArgparseRstWriter(ArgparseRstWriter):
 
     def __init__(
         self,
-        prog,
-        out=None,
-        aliases=False,
-        documented_commands=[],
-        rst_levels=["-", "-", "^", "~", ":", "`"],
+        prog: str,
+        out: IO = sys.stdout,
+        aliases: bool = False,
+        documented_commands: Set[str] = set(),
+        rst_levels: Sequence[str] = ["-", "-", "^", "~", ":", "`"],
     ):
-        out = sys.stdout if out is None else out
-        super(SpackArgparseRstWriter, self).__init__(prog, out, aliases, rst_levels)
+        """Initialize a new SpackArgparseRstWriter instance.
+
+        Args:
+            prog: Program name.
+            out: File object to write to.
+            aliases: Whether or not to include subparsers for aliases.
+            documented_commands: Set of commands with additional documentation.
+            rst_levels: List of characters for rst section headings.
+        """
+        super().__init__(prog, out, aliases, rst_levels)
         self.documented = documented_commands
 
-    def usage(self, *args):
-        string = super(SpackArgparseRstWriter, self).usage(*args)
+    def usage(self, usage: str) -> str:
+        """Example usage of a command.
+
+        Args:
+            usage: Command usage.
+
+        Returns:
+            Usage of a command.
+        """
+        string = super().usage(usage)
 
         cmd = self.parser.prog.replace(" ", "-")
         if cmd in self.documented:
@@ -110,11 +145,21 @@ class SpackArgparseRstWriter(ArgparseRstWriter):
 
 
 class SubcommandWriter(ArgparseWriter):
-    def format(self, cmd):
+    """Write argparse output as a list of subcommands."""
+
+    def format(self, cmd: Command) -> str:
+        """Return the string representation of a single node in the parser tree.
+
+        Args:
+            cmd: Parsed information about a command or subcommand.
+
+        Returns:
+            String representation of this subcommand.
+        """
         return "    " * self.level + cmd.prog + "\n"
 
 
-_positional_to_subroutine = {
+_positional_to_subroutine: Dict[str, str] = {
     "package": "_all_packages",
     "spec": "_all_packages",
     "filter": "_all_packages",
@@ -136,7 +181,19 @@ _positional_to_subroutine = {
 class BashCompletionWriter(ArgparseCompletionWriter):
     """Write argparse output as bash programmable tab completion."""
 
-    def body(self, positionals, optionals, subcommands):
+    def body(
+        self, positionals: Sequence[str], optionals: Sequence[str], subcommands: Sequence[str]
+    ) -> str:
+        """Return the body of the function.
+
+        Args:
+            positionals: List of positional arguments.
+            optionals: List of optional arguments.
+            subcommands: List of subcommand parsers.
+
+        Returns:
+            Function body.
+        """
         if positionals:
             return """
     if $list_options
@@ -166,7 +223,15 @@ class BashCompletionWriter(ArgparseCompletionWriter):
                 self.optionals(optionals)
             )
 
-    def positionals(self, positionals):
+    def positionals(self, positionals: Sequence[str]) -> str:
+        """Return the syntax for reporting positional arguments.
+
+        Args:
+            positionals: List of positional arguments.
+
+        Returns:
+            Syntax for positional arguments.
+        """
         # If match found, return function name
         for positional in positionals:
             for key, value in _positional_to_subroutine.items():
@@ -176,22 +241,49 @@ class BashCompletionWriter(ArgparseCompletionWriter):
         # If no matches found, return empty list
         return 'SPACK_COMPREPLY=""'
 
-    def optionals(self, optionals):
+    def optionals(self, optionals: Sequence[str]) -> str:
+        """Return the syntax for reporting optional flags.
+
+        Args:
+            optionals: List of optional arguments.
+
+        Returns:
+            Syntax for optional flags.
+        """
         return 'SPACK_COMPREPLY="{0}"'.format(" ".join(optionals))
 
-    def subcommands(self, subcommands):
+    def subcommands(self, subcommands: Sequence[str]) -> str:
+        """Return the syntax for reporting subcommands.
+
+        Args:
+            subcommands: List of subcommand parsers.
+
+        Returns:
+            Syntax for subcommand parsers
+        """
         return 'SPACK_COMPREPLY="{0}"'.format(" ".join(subcommands))
 
 
 @formatter
-def subcommands(args, out):
+def subcommands(args: Namespace, out: IO) -> None:
+    """Hierarchical tree of subcommands.
+
+    args:
+        args: Command-line arguments.
+        out: File object to write to.
+    """
     parser = spack.main.make_argument_parser()
     spack.main.add_all_commands(parser)
     writer = SubcommandWriter(parser.prog, out, args.aliases)
     writer.write(parser)
 
 
-def rst_index(out):
+def rst_index(out: IO) -> None:
+    """Generate an index of all commands.
+
+    Args:
+        out: File object to write to.
+    """
     out.write("\n")
 
     index = spack.main.index_commands()
@@ -219,13 +311,19 @@ def rst_index(out):
 
 
 @formatter
-def rst(args, out):
+def rst(args: Namespace, out: IO) -> None:
+    """ReStructuredText documentation of subcommands.
+
+    args:
+        args: Command-line arguments.
+        out: File object to write to.
+    """
     # create a parser with all commands
     parser = spack.main.make_argument_parser()
     spack.main.add_all_commands(parser)
 
     # extract cross-refs of the form `_cmd-spack-<cmd>:` from rst files
-    documented_commands = set()
+    documented_commands: Set[str] = set()
     for filename in args.rst_files:
         with open(filename) as f:
             for line in f:
@@ -243,7 +341,13 @@ def rst(args, out):
 
 
 @formatter
-def names(args, out):
+def names(args: Namespace, out: IO) -> None:
+    """Simple list of top-level commands.
+
+    args:
+        args: Command-line arguments.
+        out: File object to write to.
+    """
     commands = copy.copy(spack.cmd.all_commands())
 
     if args.aliases:
@@ -253,7 +357,13 @@ def names(args, out):
 
 
 @formatter
-def bash(args, out):
+def bash(args: Namespace, out: IO) -> None:
+    """Bash tab-completion script.
+
+    args:
+        args: Command-line arguments.
+        out: File object to write to.
+    """
     parser = spack.main.make_argument_parser()
     spack.main.add_all_commands(parser)
 
@@ -261,7 +371,13 @@ def bash(args, out):
     writer.write(parser)
 
 
-def prepend_header(args, out):
+def prepend_header(args: Namespace, out: IO) -> None:
+    """Prepend header text at the beginning of a file.
+
+    Args:
+        args: Command-line arguments.
+        out: File object to write to.
+    """
     if not args.header:
         return
 
@@ -269,10 +385,14 @@ def prepend_header(args, out):
         out.write(header.read())
 
 
-def _commands(parser, args):
+def _commands(parser: ArgumentParser, args: Namespace) -> None:
     """This is the 'regular' command, which can be called multiple times.
 
     See ``commands()`` below for ``--update-completion`` handling.
+
+    Args:
+        parser: Argument parser.
+        args: Command-line arguments.
     """
     formatter = formatters[args.format]
 
@@ -294,12 +414,15 @@ def _commands(parser, args):
         formatter(args, sys.stdout)
 
 
-def update_completion(parser, args):
+def update_completion(parser: ArgumentParser, args: Namespace) -> None:
     """Iterate through the shells and update the standard completion files.
 
     This is a convenience method to avoid calling this command many
     times, and to simplify completion update for developers.
 
+    Args:
+        parser: Argument parser.
+        args: Command-line arguments.
     """
     for shell, shell_args in update_completion_args.items():
         for attr, value in shell_args.items():
@@ -307,14 +430,20 @@ def update_completion(parser, args):
         _commands(parser, args)
 
 
-def commands(parser, args):
+def commands(parser: ArgumentParser, args: Namespace) -> None:
+    """Main function that calls formatter functions.
+
+    Args:
+        parser: Argument parser.
+        args: Command-line arguments.
+    """
     if args.update_completion:
         if args.format != "names" or any([args.aliases, args.update, args.header]):
             tty.die("--update-completion can only be specified alone.")
 
         # this runs the command multiple times with different arguments
-        return update_completion(parser, args)
+        update_completion(parser, args)
 
     else:
         # run commands normally
-        return _commands(parser, args)
+        _commands(parser, args)
