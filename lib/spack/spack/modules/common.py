@@ -294,7 +294,7 @@ def read_module_indices():
     return module_indices
 
 
-class UpstreamModuleIndex(object):
+class UpstreamModuleIndex:
     """This is responsible for taking the individual module indices of all
     upstream Spack installations and locating the module for a given spec
     based on which upstream install it is located in."""
@@ -388,7 +388,7 @@ def get_module(module_type, spec, get_full_path, module_set_name="default", requ
             return writer.layout.use_name
 
 
-class BaseConfiguration(object):
+class BaseConfiguration:
     """Manipulates the information needed to generate a module file to make
     querying easier. It needs to be sub-classed for specific module types.
     """
@@ -551,7 +551,7 @@ class BaseConfiguration(object):
         return self.conf.get("verbose")
 
 
-class BaseFileLayout(object):
+class BaseFileLayout:
     """Provides information on the layout of module files. Needs to be
     sub-classed for specific module types.
     """
@@ -821,7 +821,7 @@ def ensure_modules_are_enabled_or_warn():
     warnings.warn(msg)
 
 
-class BaseModuleFileWriter(object):
+class BaseModuleFileWriter:
     def __init__(self, spec, module_set_name, explicit=None):
         self.spec = spec
 

@@ -93,7 +93,7 @@ def fetcher(cls):
     return cls
 
 
-class FetchStrategy(object):
+class FetchStrategy:
     """Superclass of all fetch strategies."""
 
     #: The URL attribute must be specified either at the package class
@@ -1652,7 +1652,7 @@ def from_list_url(pkg):
             tty.msg("Could not determine url from list_url.")
 
 
-class FsCache(object):
+class FsCache:
     def __init__(self, root):
         self.root = os.path.abspath(root)
 

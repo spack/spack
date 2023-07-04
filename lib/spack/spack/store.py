@@ -126,7 +126,7 @@ def parse_install_tree(config_dict):
     return (root, unpadded_root, projections)
 
 
-class Store(object):
+class Store:
     """A store is a path full of installed Spack packages.
 
     Stores consist of packages installed according to a

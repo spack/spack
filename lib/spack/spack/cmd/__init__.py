@@ -147,7 +147,7 @@ def get_command(cmd_name):
     return getattr(get_module(cmd_name), pname)
 
 
-class _UnquotedFlags(object):
+class _UnquotedFlags:
     """Use a heuristic in `.extract()` to detect whether the user is trying to set
     multiple flags like the docker ENV attribute allows (e.g. 'cflags=-Os -pipe').
 

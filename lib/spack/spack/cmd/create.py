@@ -69,7 +69,7 @@ class {class_name}({base_class_name}):
 '''
 
 
-class BundlePackageTemplate(object):
+class BundlePackageTemplate:
     """
     Provides the default values to be used for a bundle package file template.
     """

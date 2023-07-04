@@ -126,7 +126,7 @@ def inverse_view_func_parser(view_type):
     return link_name
 
 
-class FilesystemView(object):
+class FilesystemView:
     """
     Governs a filesystem view that is located at certain root-directory.
 

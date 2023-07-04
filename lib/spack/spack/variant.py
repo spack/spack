@@ -23,7 +23,7 @@ from spack.util.string import comma_or
 special_variant_values = [None, "none", "*"]
 
 
-class Variant(object):
+class Variant:
     """Represents a variant in a package, as declared in the
     variant directive.
     """
@@ -230,7 +230,7 @@ def _flatten(values):
 
 
 @lang.lazy_lexicographic_ordering
-class AbstractVariant(object):
+class AbstractVariant:
     """A variant that has not yet decided who it wants to be. It behaves like
     a multi valued variant which **could** do things.
 
@@ -864,7 +864,7 @@ def disjoint_sets(*sets):
 
 
 @functools.total_ordering
-class Value(object):
+class Value:
     """Conditional value that might be used in variants."""
 
     def __init__(self, value, when):

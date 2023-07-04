@@ -205,7 +205,7 @@ def colorize_spec(spec):
 
 
 @lang.lazy_lexicographic_ordering
-class ArchSpec(object):
+class ArchSpec:
     """Aggregate the target platform, the operating system and the target microarchitecture."""
 
     @staticmethod
@@ -567,7 +567,7 @@ class ArchSpec(object):
 
 
 @lang.lazy_lexicographic_ordering
-class CompilerSpec(object):
+class CompilerSpec:
     """The CompilerSpec field represents the compiler or range of compiler
     versions that a package should be built with.  CompilerSpecs have a
     name and a version list."""
@@ -1169,7 +1169,7 @@ def _libs_default_handler(descriptor, spec, cls):
     raise spack.error.NoLibrariesError(msg.format(spec.name, home))
 
 
-class ForwardQueryToPackage(object):
+class ForwardQueryToPackage:
     """Descriptor used to forward queries from Spec to Package"""
 
     def __init__(self, attribute_name, default_handler=None):
@@ -1311,7 +1311,7 @@ class SpecBuildInterface(lang.ObjectWrapper):
 
 
 @lang.lazy_lexicographic_ordering(set_hash=False)
-class Spec(object):
+class Spec:
     #: Cache for spec's prefix, computed lazily in the corresponding property
     _prefix = None
     abstract_hash = None

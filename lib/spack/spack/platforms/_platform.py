@@ -16,7 +16,7 @@ class NoPlatformError(spack.error.SpackError):
 
 
 @llnl.util.lang.lazy_lexicographic_ordering
-class Platform(object):
+class Platform:
     """Platform is an abstract class extended by subclasses.
 
     To add a new type of platform (such as cray_xe), create a subclass and set all the

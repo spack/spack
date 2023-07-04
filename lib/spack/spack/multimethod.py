@@ -52,7 +52,7 @@ class MultiMethodMeta(type):
         super(MultiMethodMeta, cls).__init__(name, bases, attr_dict)
 
 
-class SpecMultiMethod(object):
+class SpecMultiMethod:
     """This implements a multi-method for Spack specs.  Packages are
     instantiated with a particular spec, and you may want to
     execute different versions of methods based on what the spec
@@ -153,7 +153,7 @@ class SpecMultiMethod(object):
         )
 
 
-class when(object):
+class when:
     def __init__(self, condition):
         """Can be used both as a decorator, for multimethods, or as a context
         manager to group ``when=`` arguments together.
