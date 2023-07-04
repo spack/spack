@@ -9,7 +9,7 @@ import os
 import re
 import sys
 from argparse import ArgumentParser, Namespace
-from typing import IO, Any, Callable, Dict, Sequence
+from typing import IO, Any, Callable, Dict, Sequence, Set
 
 import llnl.util.filesystem as fs
 import llnl.util.tty as tty
@@ -111,7 +111,7 @@ class SpackArgparseRstWriter(ArgparseRstWriter):
         prog: str,
         out: IO = sys.stdout,
         aliases: bool = False,
-        documented_commands: Sequence[str] = [],
+        documented_commands: Set[str] = set(),
         rst_levels: Sequence[str] = ["-", "-", "^", "~", ":", "`"],
     ):
         """Initialize a new SpackArgparseRstWriter instance.
@@ -120,7 +120,7 @@ class SpackArgparseRstWriter(ArgparseRstWriter):
             prog: Program name.
             out: File object to write to.
             aliases: Whether or not to include subparsers for aliases.
-            documented_commands: Links to additional documentation.
+            documented_commands: Set of commands with additional documentation.
             rst_levels: List of characters for rst section headings.
         """
         super().__init__(prog, out, aliases, rst_levels)
@@ -323,7 +323,7 @@ def rst(args: Namespace, out: IO) -> None:
     spack.main.add_all_commands(parser)
 
     # extract cross-refs of the form `_cmd-spack-<cmd>:` from rst files
-    documented_commands = set()
+    documented_commands: Set[str] = set()
     for filename in args.rst_files:
         with open(filename) as f:
             for line in f:
