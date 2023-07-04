@@ -9,7 +9,7 @@ import os
 import re
 import sys
 from argparse import ArgumentParser, Namespace
-from typing import IO, Any, Callable, Dict, List, Tuple
+from typing import IO, Any, Callable, Dict, Sequence, Tuple
 
 import llnl.util.filesystem as fs
 import llnl.util.tty as tty
@@ -111,8 +111,8 @@ class SpackArgparseRstWriter(ArgparseRstWriter):
         prog: str,
         out: IO = sys.stdout,
         aliases: bool = False,
-        documented_commands: List[str] = [],
-        rst_levels: List[str] = ["-", "-", "^", "~", ":", "`"],
+        documented_commands: Sequence[str] = [],
+        rst_levels: Sequence[str] = ["-", "-", "^", "~", ":", "`"],
     ):
         """Initialize a new SpackArgparseRstWriter instance.
 
@@ -183,9 +183,9 @@ class BashCompletionWriter(ArgparseCompletionWriter):
 
     def body(
         self,
-        positionals: List[Tuple[str, str]],
-        optionals: List[Tuple[List[str], str, str]],
-        subcommands: List[Tuple[ArgumentParser, str]],
+        positionals: Sequence[Tuple[str, str]],
+        optionals: Sequence[Tuple[Sequence[str], str, str]],
+        subcommands: Sequence[Tuple[ArgumentParser, str]],
     ) -> str:
         """Return the body of the function.
 
@@ -226,7 +226,7 @@ class BashCompletionWriter(ArgparseCompletionWriter):
                 self.optionals(optionals)
             )
 
-    def positionals(self, positionals: List[Tuple[str, str]]) -> str:
+    def positionals(self, positionals: Sequence[Tuple[str, str]]) -> str:
         """Return the syntax for reporting positional arguments.
 
         Args:
@@ -244,7 +244,7 @@ class BashCompletionWriter(ArgparseCompletionWriter):
         # If no matches found, return empty list
         return 'SPACK_COMPREPLY=""'
 
-    def optionals(self, optionals: List[Tuple[List[str], str, str]]) -> str:
+    def optionals(self, optionals: Sequence[Tuple[Sequence[str], str, str]]) -> str:
         """Return the syntax for reporting optional flags.
 
         Args:
@@ -255,7 +255,7 @@ class BashCompletionWriter(ArgparseCompletionWriter):
         """
         return 'SPACK_COMPREPLY="{0}"'.format(" ".join(optionals))
 
-    def subcommands(self, subcommands: List[Tuple[ArgumentParser, str]]) -> str:
+    def subcommands(self, subcommands: Sequence[Tuple[ArgumentParser, str]]) -> str:
         """Return the syntax for reporting subcommands.
 
         Args:

@@ -9,7 +9,7 @@ import io
 import re
 import sys
 from argparse import ArgumentParser
-from typing import IO, List, Optional, Tuple
+from typing import IO, Optional, Sequence, Tuple
 
 
 class Command:
@@ -25,9 +25,9 @@ class Command:
         prog: str,
         description: Optional[str],
         usage: str,
-        positionals: List[Tuple[str, str]],
-        optionals: List[Tuple[List[str], str, str]],
-        subcommands: List[Tuple[ArgumentParser, str]],
+        positionals: Sequence[Tuple[str, str]],
+        optionals: Sequence[Tuple[Sequence[str], str, str]],
+        subcommands: Sequence[Tuple[ArgumentParser, str]],
     ) -> None:
         """Initialize a new Command instance.
 
@@ -105,7 +105,7 @@ class ArgparseWriter(argparse.HelpFormatter, abc.ABC):
                     subcommands.append((subparser, subaction.dest))
 
                     # Look for aliases of the form 'name (alias, ...)'
-                    if self.aliases:
+                    if self.aliases and isinstance(subaction.metavar, str):
                         match = re.match(r"(.*) \((.*)\)", subaction.metavar)
                         if match:
                             aliases = match.group(2).split(", ")
@@ -173,7 +173,7 @@ class ArgparseRstWriter(ArgparseWriter):
         prog: str,
         out: IO = sys.stdout,
         aliases: bool = False,
-        rst_levels: List[str] = _rst_levels,
+        rst_levels: Sequence[str] = _rst_levels,
     ) -> None:
         """Initialize a new ArgparseRstWriter instance.
 
@@ -338,7 +338,7 @@ class ArgparseRstWriter(ArgparseWriter):
         """
         return ""
 
-    def begin_subcommands(self, subcommands: List[Tuple[ArgumentParser, str]]) -> str:
+    def begin_subcommands(self, subcommands: Sequence[Tuple[ArgumentParser, str]]) -> str:
         """Table with links to other subcommands.
 
         Arguments:
@@ -379,11 +379,11 @@ class ArgparseCompletionWriter(ArgparseWriter):
         assert not (cmd.positionals and cmd.subcommands)  # one or the other
 
         # We only care about the arguments/flags, not the help messages
-        positionals = []
+        positionals: Tuple[str, ...] = ()
         if cmd.positionals:
             positionals, _ = zip(*cmd.positionals)
         optionals, _, _ = zip(*cmd.optionals)
-        subcommands = []
+        subcommands: Tuple[str, ...] = ()
         if cmd.subcommands:
             _, subcommands = zip(*cmd.subcommands)
 
@@ -421,9 +421,9 @@ class ArgparseCompletionWriter(ArgparseWriter):
 
     def body(
         self,
-        positionals: List[Tuple[str, str]],
-        optionals: List[Tuple[List[str], str, str]],
-        subcommands: List[Tuple[ArgumentParser, str]],
+        positionals: Sequence[Tuple[str, str]],
+        optionals: Sequence[Tuple[Sequence[str], str, str]],
+        subcommands: Sequence[Tuple[ArgumentParser, str]],
     ) -> str:
         """Return the body of the function.
 
@@ -437,7 +437,7 @@ class ArgparseCompletionWriter(ArgparseWriter):
         """
         return ""
 
-    def positionals(self, positionals: List[Tuple[str, str]]) -> str:
+    def positionals(self, positionals: Sequence[Tuple[str, str]]) -> str:
         """Return the syntax for reporting positional arguments.
 
         Args:
@@ -448,7 +448,7 @@ class ArgparseCompletionWriter(ArgparseWriter):
         """
         return ""
 
-    def optionals(self, optionals: List[Tuple[List[str], str, str]]) -> str:
+    def optionals(self, optionals: Sequence[Tuple[Sequence[str], str, str]]) -> str:
         """Return the syntax for reporting optional flags.
 
         Args:
@@ -459,7 +459,7 @@ class ArgparseCompletionWriter(ArgparseWriter):
         """
         return ""
 
-    def subcommands(self, subcommands: List[Tuple[ArgumentParser, str]]) -> str:
+    def subcommands(self, subcommands: Sequence[Tuple[ArgumentParser, str]]) -> str:
         """Return the syntax for reporting subcommands.
 
         Args:
