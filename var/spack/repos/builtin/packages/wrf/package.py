@@ -164,6 +164,7 @@ class Wrf(Package):
 
     patch("patches/4.4/arch.postamble.patch", when="@4.4:")
     patch("patches/4.4/configure.patch", when="@4.4:4.4.2")
+    patch("patches/4.4/ifx.patch", when="@4.4: %oneapi")
 
     patch("patches/4.5/configure.patch", when="@4.5:")
     # Fix WRF to remove deprecated ADIOS2 functions
@@ -328,11 +329,17 @@ class Wrf(Package):
             config.filter("^DM_FC.*mpif90", "DM_FC = {0}".format(self.spec["mpi"].mpifc))
             config.filter("^DM_CC.*mpicc", "DM_CC = {0}".format(self.spec["mpi"].mpicc))
 
+    @run_before("configure")
+    def fortran_check(self):
+        if not self.compiler.fc:
+            msg = "cannot build WRF without a Fortran compiler"
+            raise RuntimeError(msg)
+
     def configure(self, spec, prefix):
         # Remove broken default options...
         self.do_configure_fixup()
 
-        if self.spec.compiler.name not in ["intel", "gcc", "aocc", "fj"]:
+        if self.spec.compiler.name not in ["intel", "gcc", "aocc", "fj", "oneapi"]:
             raise InstallError(
                 "Compiler %s not currently supported for WRF build." % self.spec.compiler.name
             )

@@ -12,12 +12,13 @@ class PyRfc3986(PythonPackage):
 
     homepage = "https://rfc3986.readthedocs.io/"
     pypi = "rfc3986/rfc3986-1.4.0.tar.gz"
+    git = "https://github.com/python-hyper/rfc3986.git"
 
+    version("2.0.0", sha256="97aacf9dbd4bfd829baad6e6309fa6573aaf1be3f6fa735c8ab05e46cecb261c")
     version("1.4.0", sha256="112398da31a3344dc25dbf477d8df6cb34f9278a94fee2625d89e4514be8bb9d")
 
-    depends_on("py-setuptools", type="build")
-    depends_on("py-wheel", type="build")
-
     variant("idna2008", default=False, description="Enable idna2008 Functionality")
+
+    depends_on("py-setuptools", type="build")
 
     depends_on("py-idna", when="+idna2008")
