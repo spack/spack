@@ -202,4 +202,3 @@ class Papi(AutotoolsPackage, ROCmPackage):
                 self.run_test("./simple", purpose="PAPI smoke test - simple")
                 self.run_test("./threads", purpose="PAPI smoke test - threads")
                 make("clean")
-
