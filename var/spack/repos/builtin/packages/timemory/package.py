@@ -211,7 +211,7 @@ class Timemory(CMakePackage, PythonExtension):
     depends_on("dyninst", when="+dyninst")
     depends_on("gperftools", when="+gperftools")
     depends_on("intel-parallel-studio", when="+vtune")
-    depends_on("arm-forge", when="+allinea_map")
+    depends_on("linaro-forge", when="+allinea_map")
 
     conflicts(
         "+python",
