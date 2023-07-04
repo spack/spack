@@ -51,7 +51,7 @@ def formatter(func: Callable[[Namespace, IO], None]) -> Callable[[Namespace, IO]
     """Decorator used to register formatters.
 
     Args:
-        Formatting function.
+        func: Formatting function.
 
     Returns:
         The same function.
