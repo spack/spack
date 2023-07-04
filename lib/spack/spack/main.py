@@ -855,6 +855,23 @@ def print_setup_info(*info):
             shell_set("_sp_module_prefix", "not_installed")
 
 
+def restore_macos_dyld_vars():
+    """
+    Spack mutates DYLD_* variables in `spack load` and `spack env activate`.
+    Unlike Linux, macOS SIP clears these variables in new processes, meaning
+    that os.environ["DYLD_*"] in our Python process is not the same as the user's
+    shell. Therefore, we store the user's DYLD_* variables in SPACK_DYLD_* and
+    restore them here.
+    """
+    if not sys.platform == "darwin":
+        return
+
+    for dyld_var in ("DYLD_LIBRARY_PATH", "DYLD_FALLBACK_LIBRARY_PATH"):
+        stored_var_name = f"SPACK_{dyld_var}"
+        if stored_var_name in os.environ:
+            os.environ[dyld_var] = os.environ[stored_var_name]
+
+
 def _main(argv=None):
     """Logic for the main entry point for the Spack command.
 
@@ -887,18 +904,6 @@ def _main(argv=None):
     parser.add_argument("command", nargs=argparse.REMAINDER)
     args, unknown = parser.parse_known_args(argv)
 
-    # Recover stored LD_LIBRARY_PATH variables from spack shell function
-    # This is necessary because MacOS System Integrity Protection clears
-    # (DY?)LD_LIBRARY_PATH variables on process start.
-    # Spack clears these variables before building and installing packages,
-    # but needs to know the prior state for commands like `spack load` and
-    # `spack env activate that modify the user environment.
-    recovered_vars = ("LD_LIBRARY_PATH", "DYLD_LIBRARY_PATH", "DYLD_FALLBACK_LIBRARY_PATH")
-    for var in recovered_vars:
-        stored_var_name = "SPACK_%s" % var
-        if stored_var_name in os.environ:
-            os.environ[var] = os.environ[stored_var_name]
-
     # Just print help and exit if run with no arguments at all
     no_args = (len(sys.argv) == 1) if argv is None else (len(argv) == 0)
     if no_args:
@@ -920,6 +925,9 @@ def _main(argv=None):
     # We set command line options (like --debug), then command line config
     # scopes, then environment configuration here.
     # ------------------------------------------------------------------------
+
+    # Make spack load / env activate work on macOS
+    restore_macos_dyld_vars()
 
     # make spack.config aware of any command line configuration scopes
     if args.config_scopes:
