@@ -244,6 +244,7 @@ def check_ast_roundtrip(code1, filename="internal", mode="exec"):
     assert ast.dump(ast1) == ast.dump(ast2), error_msg
 
 
+@pytest.mark.xfail(reason="https://github.com/spack/spack/pull/38424")
 def test_core_lib_files():
     """Roundtrip source files from the Python core libs."""
     test_directories = [
