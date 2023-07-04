@@ -20,7 +20,7 @@ class Sourmash(PythonPackage):
     depends_on("py-maturin@0.14.13:0.14", type="build")
     depends_on("rust", type="build")
     # general
-    depends_on("py-screed@1.1.2:")
+    depends_on("py-screed@1.1.2:1")
     depends_on("py-cffi@1.14.0:")
     depends_on("py-numpy")
     depends_on("py-matplotlib")
