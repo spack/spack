@@ -15,7 +15,7 @@ class Sourmash(PythonPackage):
 
     version("4.8.2", sha256="e0df78032e53ed88977445933ba3481dd10c7d3bd26d019511a6a4e6d7518475")
 
-    depends_on("python@3.8:")
+    depends_on("python@3.8:", type=("build", "run"))
     # build-only
     depends_on("py-maturin@1:", type="build")
     depends_on("rust", type="build")
