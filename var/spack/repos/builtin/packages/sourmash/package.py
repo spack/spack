@@ -20,15 +20,15 @@ class Sourmash(PythonPackage):
     depends_on("py-maturin@0.14.13:0.14", type="build")
     depends_on("rust", type="build")
     # general
-    depends_on("py-screed@1.1.2:1")
-    depends_on("py-cffi@1.14.0:")
-    depends_on("py-numpy")
-    depends_on("py-matplotlib")
-    depends_on("py-scipy")
-    depends_on("py-deprecation@2.0.6:")
-    depends_on("py-cachetools@4:5")
-    depends_on("py-bitstring@3.1.9:4")
-    depends_on("py-importlib_metadata@3.6:", when="^python@:3.9")
+    depends_on("py-screed@1.1.2:1", type=("build", "run"))
+    depends_on("py-cffi@1.14.0:", type=("build", "run"))
+    depends_on("py-numpy", type=("build", "run"))
+    depends_on("py-matplotlib", type=("build", "run"))
+    depends_on("py-scipy", type=("build", "run"))
+    depends_on("py-deprecation@2.0.6:", type=("build", "run"))
+    depends_on("py-cachetools@4:5", type=("build", "run"))
+    depends_on("py-bitstring@3.1.9:4", type=("build", "run"))
+    depends_on("py-importlib_metadata@3.6:", when="^python@:3.9", type=("build", "run"))
 
     def install(self, spec, prefix):
         # build rust libs
