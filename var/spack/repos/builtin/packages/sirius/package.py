@@ -302,10 +302,10 @@ class Sirius(CMakePackage, CudaPackage, ROCmPackage):
 
         args.extend(
             [
-                self.define(cm_label + "LAPACK_FOUND", "true"),
-                self.define(cm_label + "LAPACK_LIBRARIES", lapack.libs.joined(";")),
-                self.define(cm_label + "BLAS_FOUND", "true"),
-                self.define(cm_label + "BLAS_LIBRARIES", blas.libs.joined(";")),
+                self.define("LAPACK_FOUND", "true"),
+                self.define("LAPACK_LIBRARIES", lapack.libs.joined(";")),
+                self.define("BLAS_FOUND", "true"),
+                self.define("BLAS_LIBRARIES", blas.libs.joined(";")),
             ]
         )
 
