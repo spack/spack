@@ -14,5 +14,7 @@ class PyScreed(PythonPackage):
 
     version("1.1.2", sha256="734ffa7a8a645286496d895b736f91d6b2988956e2fd42358123d93ec8519b6a")
 
-    depends_on("py-setuptools", type="build")
-    depends_on("py-setuptools-scm", type="build")
+    depends_on("py-setuptools@48:", type="build")
+    depends_on("py-setuptools-scm@4:5.0.2", type="build")
+    depends_on("py-setuptools-scm-git-archive", type="build")
+    depends_on("py-wheel@0.29.0:", type="build")
