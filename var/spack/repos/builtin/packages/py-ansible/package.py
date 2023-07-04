@@ -15,7 +15,6 @@ class PyAnsible(PythonPackage):
     homepage = "https://github.com/ansible"
     url = "https://github.com/ansible/ansible/archive/v2.9.1.tar.gz"
 
-
     version("2.15.1", sha256="e39c1b7b671b5aacbc52e97ac0ea3b6ed05de3e6711dc23d0bc0cf1a746e3417")
     version("2.9.2", sha256="27673726435e8773ef031ef6ffb121b8ec75b85b07b7684454b430c3c9a848a9")
     version("2.9.1", sha256="087a7644890e27c26171b0d24fc5d64024f12201ffb81d222aaa5704987e4c12")
