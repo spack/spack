@@ -28,6 +28,7 @@ setup_spack() {
 
 patch_compilers_yaml() {
     # Graceful exit if package not found by spack
+    set +e
     set -o pipefail
     compilers_yaml="${SPACK_ROOT}/etc/spack/compilers.yaml"
     [ -f "${compilers_yaml}" ] || {

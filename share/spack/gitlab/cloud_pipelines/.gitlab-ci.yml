@@ -742,9 +742,6 @@ deprecated-ci-build:
       - rm "etc/spack/config.yaml"
       - spack config --scope site add "packages:all:target:[${SPACK_TARGET_ARCH}]"
 
-  after_script:
-    - - mv "${CI_PROJECT_DIR}/postinstall.sh" "${CI_PROJECT_DIR}/jobs_scratch_dir/"
-
 # Icelake (one pipeline per target)
 .aws-pcluster-icelake:
   variables:
