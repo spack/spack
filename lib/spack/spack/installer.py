@@ -2513,9 +2513,7 @@ class BadInstallPhase(InstallError):
     """Raised for an install phase option is not allowed for a package."""
 
     def __init__(self, pkg_name, phase):
-        super().__init__(
-            "'{0}' is not a valid phase for package {1}".format(phase, pkg_name)
-        )
+        super().__init__("'{0}' is not a valid phase for package {1}".format(phase, pkg_name))
 
 
 class ExternalPackageError(InstallError):

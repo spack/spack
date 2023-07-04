@@ -123,9 +123,7 @@ class UnsatisfiableSpecError(SpecError):
 
     def __init__(self, provided, required, constraint_type):
         # This is only the entrypoint for old concretizer errors
-        super().__init__(
-            "%s does not satisfy %s" % (provided, required)
-        )
+        super().__init__("%s does not satisfy %s" % (provided, required))
 
         self.provided = provided
         self.required = required

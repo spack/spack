@@ -834,9 +834,7 @@ class NoCompilersError(spack.error.SpackError):
 
 class UnknownCompilerError(spack.error.SpackError):
     def __init__(self, compiler_name):
-        super().__init__(
-            "Spack doesn't support the requested compiler: {0}".format(compiler_name)
-        )
+        super().__init__("Spack doesn't support the requested compiler: {0}".format(compiler_name))
 
 
 class NoCompilerForSpecError(spack.error.SpackError):
@@ -865,6 +863,4 @@ class CompilerDuplicateError(spack.error.SpackError):
 
 class CompilerSpecInsufficientlySpecificError(spack.error.SpackError):
     def __init__(self, compiler_spec):
-        super().__init__(
-            "Multiple compilers satisfy spec %s" % compiler_spec
-        )
+        super().__init__("Multiple compilers satisfy spec %s" % compiler_spec)

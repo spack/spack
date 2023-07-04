@@ -517,9 +517,7 @@ class NoOverwriteException(spack.error.SpackError):
     """Raised when a file would be overwritten"""
 
     def __init__(self, file_path):
-        super().__init__(
-            f"Refusing to overwrite the following file: {file_path}"
-        )
+        super().__init__(f"Refusing to overwrite the following file: {file_path}")
 
 
 class NoGpgException(spack.error.SpackError):

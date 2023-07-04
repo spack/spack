@@ -792,9 +792,7 @@ class NoCompilersForArchError(spack.error.SpackError):
             " operating systems and targets:\n\t" + "\n\t".join(available_os_target_strs)
         )
 
-        super().__init__(
-            err_msg, "Run 'spack compiler find' to add compilers."
-        )
+        super().__init__(err_msg, "Run 'spack compiler find' to add compilers.")
 
 
 class UnavailableCompilerVersionError(spack.error.SpackError):

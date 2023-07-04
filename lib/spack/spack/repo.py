@@ -112,9 +112,7 @@ class RepoLoader(_PrependFileLoader):
         self.package_name = package_name
         self.package_py = repo.filename_for_package_name(package_name)
         self.fullname = fullname
-        super().__init__(
-            self.fullname, self.package_py, prepend=self._package_prepend
-        )
+        super().__init__(self.fullname, self.package_py, prepend=self._package_prepend)
 
 
 class SpackNamespaceLoader(object):

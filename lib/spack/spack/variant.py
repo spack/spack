@@ -955,9 +955,7 @@ class InvalidVariantValueError(error.SpecError):
         pkg_info = ""
         if pkg is not None:
             pkg_info = ' in package "{0}"'.format(pkg.name)
-        super().__init__(
-            msg.format(variant, invalid_values, pkg_info)
-        )
+        super().__init__(msg.format(variant, invalid_values, pkg_info))
 
 
 class InvalidVariantForSpecError(error.SpecError):

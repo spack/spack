@@ -164,9 +164,7 @@ class FilePatch(Patch):
         return self._sha256
 
     def to_dict(self):
-        return llnl.util.lang.union_dicts(
-            super().to_dict(), {"relative_path": self.relative_path}
-        )
+        return llnl.util.lang.union_dicts(super().to_dict(), {"relative_path": self.relative_path})
 
 
 class UrlPatch(Patch):

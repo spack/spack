@@ -234,9 +234,7 @@ class FetchStrategyComposite(pattern.Composite):
     matches = FetchStrategy.matches
 
     def __init__(self):
-        super().__init__(
-            ["fetch", "check", "expand", "reset", "archive", "cachable", "mirror_id"]
-        )
+        super().__init__(["fetch", "check", "expand", "reset", "archive", "cachable", "mirror_id"])
 
     def source_id(self):
         component_ids = tuple(i.source_id() for i in self)
@@ -1727,6 +1725,4 @@ class NoStageError(web_util.FetchError):
     """Raised when fetch operations are called before set_stage()."""
 
     def __init__(self, method):
-        super().__init__(
-            "Must call FetchStrategy.set_stage() before calling %s" % method.__name__
-        )
+        super().__init__("Must call FetchStrategy.set_stage() before calling %s" % method.__name__)

@@ -5220,9 +5220,7 @@ class UnsupportedCompilerError(spack.error.SpecError):
     """Raised when the user asks for a compiler spack doesn't know about."""
 
     def __init__(self, compiler_name):
-        super().__init__(
-            "The '%s' compiler is not yet supported." % compiler_name
-        )
+        super().__init__("The '%s' compiler is not yet supported." % compiler_name)
 
 
 class DuplicateArchitectureError(spack.error.SpecError):
@@ -5251,9 +5249,7 @@ class NoProviderError(spack.error.SpecError):
     """
 
     def __init__(self, vpkg):
-        super().__init__(
-            "No providers found for virtual package: '%s'" % vpkg
-        )
+        super().__init__("No providers found for virtual package: '%s'" % vpkg)
         self.vpkg = vpkg
 
 
@@ -5296,18 +5292,14 @@ class UnsatisfiableCompilerFlagSpecError(spack.error.UnsatisfiableSpecError):
     """Raised when a spec variant conflicts with package constraints."""
 
     def __init__(self, provided, required):
-        super().__init__(
-            provided, required, "compiler_flags"
-        )
+        super().__init__(provided, required, "compiler_flags")
 
 
 class UnsatisfiableArchitectureSpecError(spack.error.UnsatisfiableSpecError):
     """Raised when a spec architecture conflicts with package constraints."""
 
     def __init__(self, provided, required):
-        super().__init__(
-            provided, required, "architecture"
-        )
+        super().__init__(provided, required, "architecture")
 
 
 class UnsatisfiableProviderSpecError(spack.error.UnsatisfiableSpecError):

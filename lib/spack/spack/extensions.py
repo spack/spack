@@ -188,6 +188,4 @@ class ExtensionNamingError(spack.error.SpackError):
     """
 
     def __init__(self, path):
-        super().__init__(
-            "{0} does not match the format for a Spack extension path.".format(path)
-        )
+        super().__init__("{0} does not match the format for a Spack extension path.".format(path))

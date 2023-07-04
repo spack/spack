@@ -427,9 +427,7 @@ class ExtensionAlreadyInstalledError(DirectoryLayoutError):
     """Raised when an extension is added to a package that already has it."""
 
     def __init__(self, spec, ext_spec):
-        super().__init__(
-            "%s is already installed in %s" % (ext_spec.short_spec, spec.short_spec)
-        )
+        super().__init__("%s is already installed in %s" % (ext_spec.short_spec, spec.short_spec))
 
 
 class ExtensionConflictError(DirectoryLayoutError):

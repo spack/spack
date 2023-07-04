@@ -2549,6 +2549,4 @@ class DependencyConflictError(spack.error.SpackError):
     """Raised when the dependencies cannot be flattened as asked for."""
 
     def __init__(self, conflict):
-        super().__init__(
-            "%s conflicts with another file in the flattened directory." % (conflict)
-        )
+        super().__init__("%s conflicts with another file in the flattened directory." % (conflict))
