@@ -276,7 +276,7 @@ class Sirius(CMakePackage, CudaPackage, ROCmPackage):
         cm_label = ""
         if "@7.5:" in spec:
             cm_label = "SIRIUS_"
-            
+
         args = [
             self.define_from_variant(cm_label + "USE_OPENMP", "openmp"),
             self.define_from_variant(cm_label + "USE_ELPA", "elpa"),
@@ -313,8 +313,12 @@ class Sirius(CMakePackage, CudaPackage, ROCmPackage):
             args.extend(
                 [
                     self.define(cm_label + "SCALAPACK_FOUND", "true"),
-                    self.define(cm_label + "SCALAPACK_INCLUDE_DIRS", spec["scalapack"].prefix.include),
-                    self.define(cm_label + "SCALAPACK_LIBRARIES", spec["scalapack"].libs.joined(";")),
+                    self.define(
+                        cm_label + "SCALAPACK_INCLUDE_DIRS", spec["scalapack"].prefix.include
+                    ),
+                    self.define(
+                        cm_label + "SCALAPACK_LIBRARIES", spec["scalapack"].libs.joined(";")
+                    ),
                 ]
             )
 
