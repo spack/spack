@@ -15,6 +15,8 @@ class PyAnsible(PythonPackage):
     homepage = "https://github.com/ansible"
     url = "https://github.com/ansible/ansible/archive/v2.9.1.tar.gz"
 
+
+    version("2.15.1", sha256="e39c1b7b671b5aacbc52e97ac0ea3b6ed05de3e6711dc23d0bc0cf1a746e3417")
     version("2.9.2", sha256="27673726435e8773ef031ef6ffb121b8ec75b85b07b7684454b430c3c9a848a9")
     version("2.9.1", sha256="087a7644890e27c26171b0d24fc5d64024f12201ffb81d222aaa5704987e4c12")
     version("2.9.0", sha256="a2a9b1a74f3d47b82f9ea9da10ebf3573fa10c1783b7ed9b7eb937c7052fcb13")
@@ -24,7 +26,7 @@ class PyAnsible(PythonPackage):
     version("2.7.14", sha256="92f0be1de4f9d1c0a3a35963fb853a6d7831360fd1e734cb36d601495a71770c")
     version("2.6.20", sha256="55962e79e24a67a5534bf08aa0482d5f7322ad3f112a3ebffc4a58ae02b82277")
 
-    depends_on("python@2.7:2.8,3.5:", type=("build", "run"))
+    depends_on("python", type=("build", "run"))
     depends_on("py-setuptools", type="build")
     depends_on("py-jinja2", type=("build", "run"))
     depends_on("py-pyyaml", type=("build", "run"))
