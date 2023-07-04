@@ -699,11 +699,7 @@ class IntelPackage(Package):
             omp_libs = LibraryList(omp_lib_path.strip())
 
         elif "%clang" in self.spec:
-            with self.compiler.compiler_environment():
-                omp_lib_path = Executable(self.compiler.cc)(
-                    "--print-file-name", "libomp.%s" % dso_suffix, output=str
-                )
-            omp_libs = LibraryList(omp_lib_path.strip())
+            omp_libs = LibraryList("-fopenmp=libomp")
 
         if len(omp_libs) < 1:
             raise_lib_error("Cannot locate OpenMP libraries:", omp_libnames)
