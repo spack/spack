@@ -9,7 +9,7 @@ import os
 import re
 import sys
 from argparse import ArgumentParser, Namespace
-from typing import IO, Any, Callable, Dict, Sequence, Tuple
+from typing import IO, Any, Callable, Dict, Sequence
 
 import llnl.util.filesystem as fs
 import llnl.util.tty as tty
@@ -182,10 +182,7 @@ class BashCompletionWriter(ArgparseCompletionWriter):
     """Write argparse output as bash programmable tab completion."""
 
     def body(
-        self,
-        positionals: Sequence[Tuple[str, str]],
-        optionals: Sequence[Tuple[Sequence[str], str, str]],
-        subcommands: Sequence[Tuple[ArgumentParser, str]],
+        self, positionals: Sequence[str], optionals: Sequence[str], subcommands: Sequence[str]
     ) -> str:
         """Return the body of the function.
 
@@ -226,7 +223,7 @@ class BashCompletionWriter(ArgparseCompletionWriter):
                 self.optionals(optionals)
             )
 
-    def positionals(self, positionals: Sequence[Tuple[str, str]]) -> str:
+    def positionals(self, positionals: Sequence[str]) -> str:
         """Return the syntax for reporting positional arguments.
 
         Args:
@@ -244,7 +241,7 @@ class BashCompletionWriter(ArgparseCompletionWriter):
         # If no matches found, return empty list
         return 'SPACK_COMPREPLY=""'
 
-    def optionals(self, optionals: Sequence[Tuple[Sequence[str], str, str]]) -> str:
+    def optionals(self, optionals: Sequence[str]) -> str:
         """Return the syntax for reporting optional flags.
 
         Args:
@@ -255,7 +252,7 @@ class BashCompletionWriter(ArgparseCompletionWriter):
         """
         return 'SPACK_COMPREPLY="{0}"'.format(" ".join(optionals))
 
-    def subcommands(self, subcommands: Sequence[Tuple[ArgumentParser, str]]) -> str:
+    def subcommands(self, subcommands: Sequence[str]) -> str:
         """Return the syntax for reporting subcommands.
 
         Args:

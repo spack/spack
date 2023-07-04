@@ -420,10 +420,7 @@ class ArgparseCompletionWriter(ArgparseWriter):
         return "}\n"
 
     def body(
-        self,
-        positionals: Sequence[Tuple[str, str]],
-        optionals: Sequence[Tuple[Sequence[str], str, str]],
-        subcommands: Sequence[Tuple[ArgumentParser, str]],
+        self, positionals: Sequence[str], optionals: Sequence[str], subcommands: Sequence[str]
     ) -> str:
         """Return the body of the function.
 
@@ -437,7 +434,7 @@ class ArgparseCompletionWriter(ArgparseWriter):
         """
         return ""
 
-    def positionals(self, positionals: Sequence[Tuple[str, str]]) -> str:
+    def positionals(self, positionals: Sequence[str]) -> str:
         """Return the syntax for reporting positional arguments.
 
         Args:
@@ -448,7 +445,7 @@ class ArgparseCompletionWriter(ArgparseWriter):
         """
         return ""
 
-    def optionals(self, optionals: Sequence[Tuple[Sequence[str], str, str]]) -> str:
+    def optionals(self, optionals: Sequence[str]) -> str:
         """Return the syntax for reporting optional flags.
 
         Args:
@@ -459,7 +456,7 @@ class ArgparseCompletionWriter(ArgparseWriter):
         """
         return ""
 
-    def subcommands(self, subcommands: Sequence[Tuple[ArgumentParser, str]]) -> str:
+    def subcommands(self, subcommands: Sequence[str]) -> str:
         """Return the syntax for reporting subcommands.
 
         Args:
