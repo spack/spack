@@ -58,8 +58,8 @@ class Plumed(AutotoolsPackage):
     version("2.5.2", sha256="85d10cc46e2e37c7719cf51c0931278f56c2c8f8a9d86188b2bf97c2535a2ab4")
     version("2.5.1", sha256="de309980dcfd6f6e0e70e138856f4bd9eb4d8a513906a5e6389f18a5af7f2eba")
     version("2.5.0", sha256="53e08187ec9f8af2326fa84407e34644a7c51d2af93034309fb70675eee5e4f7")
-    version("2.4.6", sha256="c22ad19f5cd36ce9fe4ba0b53158fc2a3d985c48fc04606e3f3b3e835b994cb3")
 
+    version("2.4.6", sha256="c22ad19f5cd36ce9fe4ba0b53158fc2a3d985c48fc04606e3f3b3e835b994cb3")
     version("2.4.4", sha256="1e5c24109314481fad404da97d61c7339b219e27e120c9c80bacc79c9f6a51a8")
     version("2.4.2", sha256="528ce57f1f5330480bcd403140166a4580efd2acaea39c85dfeca5e2cd649321")
     version("2.4.1", sha256="f00410ebdd739c2ddf55fcd714ff4bd88a1029e02d2fc9cea0b5fca34e0fc4eb")
@@ -210,6 +210,7 @@ class Plumed(AutotoolsPackage):
         # provided by optimized libraries due to linking order
         filter_file("-lgslcblas", "", "configure.ac")
 
+    @when("@2.5:")
     def patch(self):
         # Ensure Spack's wrappers are used to compile the Python interface
         env = (
