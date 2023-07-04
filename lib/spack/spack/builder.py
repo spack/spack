@@ -188,7 +188,7 @@ def _create(pkg):
             # Attribute containing the package wrapped in dispatcher with a `__getattr__`
             # method that will forward certain calls to the default builder.
             self.pkg_with_dispatcher = _ForwardToBaseBuilder(pkg, root_builder=self)
-            super(Adapter, self).__init__(pkg)
+            super().__init__(pkg)
 
         # These two methods don't follow the (self, spec, prefix) signature of phases nor
         # the (self) signature of methods, so they are added explicitly to avoid using a
@@ -530,9 +530,9 @@ class Builder(collections.abc.Sequence, metaclass=BuilderMeta):
                 modifications to be applied when the package is built. Package authors
                 can call methods on it to alter the build environment.
         """
-        if not hasattr(super(Builder, self), "setup_build_environment"):
+        if not hasattr(super(), "setup_build_environment"):
             return
-        super(Builder, self).setup_build_environment(env)
+        super().setup_build_environment(env)
 
     def setup_dependent_build_environment(self, env, dependent_spec):
         """Sets up the build environment of packages that depend on this one.
@@ -563,9 +563,9 @@ class Builder(collections.abc.Sequence, metaclass=BuilderMeta):
                 the dependent's state. Note that *this* package's spec is
                 available as ``self.spec``
         """
-        if not hasattr(super(Builder, self), "setup_dependent_build_environment"):
+        if not hasattr(super(), "setup_dependent_build_environment"):
             return
-        super(Builder, self).setup_dependent_build_environment(env, dependent_spec)
+        super().setup_dependent_build_environment(env, dependent_spec)
 
     def __getitem__(self, idx):
         key = self.phases[idx]

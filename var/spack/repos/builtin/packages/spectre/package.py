@@ -347,7 +347,7 @@ class Spectre(CMakePackage):
     @property
     def archive_files(self):
         # Archive the `BuildInfo.txt` file for debugging builds
-        return super(Spectre, self).archive_files + [
+        return super().archive_files + [
             join_path(self.build_directory, "BuildInfo.txt")
         ]
 

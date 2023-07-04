@@ -136,7 +136,7 @@ class IntelOneapiMkl(IntelOneApiLibraryPackage):
             return IntelOneApiStaticLibraryList(libs, system_libs)
 
     def setup_run_environment(self, env):
-        super(IntelOneapiMkl, self).setup_run_environment(env)
+        super().setup_run_environment(env)
 
         # Support RPATH injection to the library directories when the '-mkl' or '-qmkl'
         # flag of the Intel compilers are used outside the Spack build environment. We
