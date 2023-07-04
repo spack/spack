@@ -341,89 +341,89 @@ complete -c spack --erase
 
 # spack
 set -g __fish_spack_optspecs_spack h/help H/all-help color= c/config= C/config-scope= d/debug timestamp pdb e/env= D/env-dir= E/no-env use-env-repo k/insecure l/enable-locks L/disable-locks m/mock b/bootstrap p/profile sorted-profile= lines= v/verbose stacktrace backtrace V/version print-shell-vars=
-complete -c spack -n "__fish_spack_using_command_pos 0 " -f -a add -d "add a spec to an environment"
-complete -c spack -n "__fish_spack_using_command_pos 0 " -f -a arch -d "print architecture information about this machine"
-complete -c spack -n "__fish_spack_using_command_pos 0 " -f -a audit -d "audit configuration files, packages, etc."
-complete -c spack -n "__fish_spack_using_command_pos 0 " -f -a blame -d "show contributors to packages"
-complete -c spack -n "__fish_spack_using_command_pos 0 " -f -a bootstrap -d "manage bootstrap configuration"
-complete -c spack -n "__fish_spack_using_command_pos 0 " -f -a build-env -d "run a command in a spec's install environment, or dump its environment to screen or file"
-complete -c spack -n "__fish_spack_using_command_pos 0 " -f -a buildcache -d "create, download and install binary packages"
-complete -c spack -n "__fish_spack_using_command_pos 0 " -f -a cd -d "cd to spack directories in the shell"
-complete -c spack -n "__fish_spack_using_command_pos 0 " -f -a change -d "change an existing spec in an environment"
-complete -c spack -n "__fish_spack_using_command_pos 0 " -f -a checksum -d "checksum available versions of a package"
-complete -c spack -n "__fish_spack_using_command_pos 0 " -f -a ci -d "manage continuous integration pipelines"
-complete -c spack -n "__fish_spack_using_command_pos 0 " -f -a clean -d "remove temporary build files and/or downloaded archives"
-complete -c spack -n "__fish_spack_using_command_pos 0 " -f -a clone -d "create a new installation of spack in another prefix"
-complete -c spack -n "__fish_spack_using_command_pos 0 " -f -a commands -d "list available spack commands"
-complete -c spack -n "__fish_spack_using_command_pos 0 " -f -a compiler -d "manage compilers"
-complete -c spack -n "__fish_spack_using_command_pos 0 " -f -a compilers -d "list available compilers"
-complete -c spack -n "__fish_spack_using_command_pos 0 " -f -a concretize -d "concretize an environment and write a lockfile"
-complete -c spack -n "__fish_spack_using_command_pos 0 " -f -a config -d "get and set configuration options"
-complete -c spack -n "__fish_spack_using_command_pos 0 " -f -a containerize -d "creates recipes to build images for different container runtimes"
-complete -c spack -n "__fish_spack_using_command_pos 0 " -f -a create -d "create a new package file"
-complete -c spack -n "__fish_spack_using_command_pos 0 " -f -a debug -d "debugging commands for troubleshooting Spack"
-complete -c spack -n "__fish_spack_using_command_pos 0 " -f -a dependencies -d "show dependencies of a package"
-complete -c spack -n "__fish_spack_using_command_pos 0 " -f -a dependents -d "show packages that depend on another"
-complete -c spack -n "__fish_spack_using_command_pos 0 " -f -a deprecate -d "Replace one package with another via symlinks"
-complete -c spack -n "__fish_spack_using_command_pos 0 " -f -a dev-build -d "developer build: build from code in current working directory"
-complete -c spack -n "__fish_spack_using_command_pos 0 " -f -a develop -d "add a spec to an environment's dev-build information"
-complete -c spack -n "__fish_spack_using_command_pos 0 " -f -a diff -d "compare two specs"
-complete -c spack -n "__fish_spack_using_command_pos 0 " -f -a docs -d "open spack documentation in a web browser"
-complete -c spack -n "__fish_spack_using_command_pos 0 " -f -a edit -d "open package files in $EDITOR"
-complete -c spack -n "__fish_spack_using_command_pos 0 " -f -a env -d "manage virtual environments"
-complete -c spack -n "__fish_spack_using_command_pos 0 " -f -a extensions -d "list extensions for package"
-complete -c spack -n "__fish_spack_using_command_pos 0 " -f -a external -d "manage external packages in Spack configuration"
-complete -c spack -n "__fish_spack_using_command_pos 0 " -f -a fetch -d "fetch archives for packages"
-complete -c spack -n "__fish_spack_using_command_pos 0 " -f -a find -d "list and search installed packages"
-complete -c spack -n "__fish_spack_using_command_pos 0 " -f -a gc -d "remove specs that are now no longer needed"
-complete -c spack -n "__fish_spack_using_command_pos 0 " -f -a gpg -d "handle GPG actions for spack"
-complete -c spack -n "__fish_spack_using_command_pos 0 " -f -a graph -d "generate graphs of package dependency relationships"
-complete -c spack -n "__fish_spack_using_command_pos 0 " -f -a help -d "get help on spack and its commands"
-complete -c spack -n "__fish_spack_using_command_pos 0 " -f -a info -d "get detailed information on a particular package"
-complete -c spack -n "__fish_spack_using_command_pos 0 " -f -a install -d "build and install packages"
-complete -c spack -n "__fish_spack_using_command_pos 0 " -f -a license -d "list and check license headers on files in spack"
-complete -c spack -n "__fish_spack_using_command_pos 0 " -f -a list -d "list and search available packages"
-complete -c spack -n "__fish_spack_using_command_pos 0 " -f -a load -d "add package to the user environment"
-complete -c spack -n "__fish_spack_using_command_pos 0 " -f -a location -d "print out locations of packages and spack directories"
-complete -c spack -n "__fish_spack_using_command_pos 0 " -f -a log-parse -d "filter errors and warnings from build logs"
-complete -c spack -n "__fish_spack_using_command_pos 0 " -f -a maintainers -d "get information about package maintainers"
-complete -c spack -n "__fish_spack_using_command_pos 0 " -f -a make-installer -d "generate Windows installer"
-complete -c spack -n "__fish_spack_using_command_pos 0 " -f -a mark -d "mark packages as explicitly or implicitly installed"
-complete -c spack -n "__fish_spack_using_command_pos 0 " -f -a mirror -d "manage mirrors (source and binary)"
-complete -c spack -n "__fish_spack_using_command_pos 0 " -f -a module -d "generate/manage module files"
-complete -c spack -n "__fish_spack_using_command_pos 0 " -f -a patch -d "patch expanded archive sources in preparation for install"
-complete -c spack -n "__fish_spack_using_command_pos 0 " -f -a pkg -d "query packages associated with particular git revisions"
-complete -c spack -n "__fish_spack_using_command_pos 0 " -f -a providers -d "list packages that provide a particular virtual package"
-complete -c spack -n "__fish_spack_using_command_pos 0 " -f -a pydoc -d "run pydoc from within spack"
-complete -c spack -n "__fish_spack_using_command_pos 0 " -f -a python -d "launch an interpreter as spack would launch a command"
-complete -c spack -n "__fish_spack_using_command_pos 0 " -f -a reindex -d "rebuild Spack's package database"
-complete -c spack -n "__fish_spack_using_command_pos 0 " -f -a remove -d "remove specs from an environment"
-complete -c spack -n "__fish_spack_using_command_pos 0 " -f -a rm -d "remove specs from an environment"
-complete -c spack -n "__fish_spack_using_command_pos 0 " -f -a repo -d "manage package source repositories"
-complete -c spack -n "__fish_spack_using_command_pos 0 " -f -a resource -d "list downloadable resources (tarballs, repos, patches, etc.)"
-complete -c spack -n "__fish_spack_using_command_pos 0 " -f -a restage -d "revert checked out package source code"
-complete -c spack -n "__fish_spack_using_command_pos 0 " -f -a solve -d "concretize a specs using an ASP solver"
-complete -c spack -n "__fish_spack_using_command_pos 0 " -f -a spec -d "show what would be installed, given a spec"
-complete -c spack -n "__fish_spack_using_command_pos 0 " -f -a stage -d "expand downloaded archive in preparation for install"
-complete -c spack -n "__fish_spack_using_command_pos 0 " -f -a style -d "runs source code style checks on spack"
-complete -c spack -n "__fish_spack_using_command_pos 0 " -f -a tags -d "Show package tags and associated packages"
-complete -c spack -n "__fish_spack_using_command_pos 0 " -f -a test -d "run spack's tests for an install"
-complete -c spack -n "__fish_spack_using_command_pos 0 " -f -a test-env -d "run a command in a spec's test environment, or dump its environment to screen or file"
-complete -c spack -n "__fish_spack_using_command_pos 0 " -f -a tutorial -d "set up spack for our tutorial (WARNING: modifies config!)"
-complete -c spack -n "__fish_spack_using_command_pos 0 " -f -a undevelop -d "remove specs from an environment"
-complete -c spack -n "__fish_spack_using_command_pos 0 " -f -a uninstall -d "remove installed packages"
-complete -c spack -n "__fish_spack_using_command_pos 0 " -f -a unit-test -d "run spack's unit tests (wrapper around pytest)"
-complete -c spack -n "__fish_spack_using_command_pos 0 " -f -a unload -d "remove package from the user environment"
-complete -c spack -n "__fish_spack_using_command_pos 0 " -f -a url -d "debugging tool for url parsing"
-complete -c spack -n "__fish_spack_using_command_pos 0 " -f -a verify -d "Check that all spack packages are on disk as installed"
-complete -c spack -n "__fish_spack_using_command_pos 0 " -f -a versions -d "list available versions of a package"
-complete -c spack -n "__fish_spack_using_command_pos 0 " -f -a view -d "project packages to a compact naming scheme on the filesystem."
+complete -c spack -n "__fish_spack_using_command_pos 0 " -f -a "add" -d "add a spec to an environment"
+complete -c spack -n "__fish_spack_using_command_pos 0 " -f -a "arch" -d "print architecture information about this machine"
+complete -c spack -n "__fish_spack_using_command_pos 0 " -f -a "audit" -d "audit configuration files, packages, etc."
+complete -c spack -n "__fish_spack_using_command_pos 0 " -f -a "blame" -d "show contributors to packages"
+complete -c spack -n "__fish_spack_using_command_pos 0 " -f -a "bootstrap" -d "manage bootstrap configuration"
+complete -c spack -n "__fish_spack_using_command_pos 0 " -f -a "build-env" -d "run a command in a spec's install environment, or dump its environment to screen or file"
+complete -c spack -n "__fish_spack_using_command_pos 0 " -f -a "buildcache" -d "create, download and install binary packages"
+complete -c spack -n "__fish_spack_using_command_pos 0 " -f -a "cd" -d "cd to spack directories in the shell"
+complete -c spack -n "__fish_spack_using_command_pos 0 " -f -a "change" -d "change an existing spec in an environment"
+complete -c spack -n "__fish_spack_using_command_pos 0 " -f -a "checksum" -d "checksum available versions of a package"
+complete -c spack -n "__fish_spack_using_command_pos 0 " -f -a "ci" -d "manage continuous integration pipelines"
+complete -c spack -n "__fish_spack_using_command_pos 0 " -f -a "clean" -d "remove temporary build files and/or downloaded archives"
+complete -c spack -n "__fish_spack_using_command_pos 0 " -f -a "clone" -d "create a new installation of spack in another prefix"
+complete -c spack -n "__fish_spack_using_command_pos 0 " -f -a "commands" -d "list available spack commands"
+complete -c spack -n "__fish_spack_using_command_pos 0 " -f -a "compiler" -d "manage compilers"
+complete -c spack -n "__fish_spack_using_command_pos 0 " -f -a "compilers" -d "list available compilers"
+complete -c spack -n "__fish_spack_using_command_pos 0 " -f -a "concretize" -d "concretize an environment and write a lockfile"
+complete -c spack -n "__fish_spack_using_command_pos 0 " -f -a "config" -d "get and set configuration options"
+complete -c spack -n "__fish_spack_using_command_pos 0 " -f -a "containerize" -d "creates recipes to build images for different container runtimes"
+complete -c spack -n "__fish_spack_using_command_pos 0 " -f -a "create" -d "create a new package file"
+complete -c spack -n "__fish_spack_using_command_pos 0 " -f -a "debug" -d "debugging commands for troubleshooting Spack"
+complete -c spack -n "__fish_spack_using_command_pos 0 " -f -a "dependencies" -d "show dependencies of a package"
+complete -c spack -n "__fish_spack_using_command_pos 0 " -f -a "dependents" -d "show packages that depend on another"
+complete -c spack -n "__fish_spack_using_command_pos 0 " -f -a "deprecate" -d "Replace one package with another via symlinks"
+complete -c spack -n "__fish_spack_using_command_pos 0 " -f -a "dev-build" -d "developer build: build from code in current working directory"
+complete -c spack -n "__fish_spack_using_command_pos 0 " -f -a "develop" -d "add a spec to an environment's dev-build information"
+complete -c spack -n "__fish_spack_using_command_pos 0 " -f -a "diff" -d "compare two specs"
+complete -c spack -n "__fish_spack_using_command_pos 0 " -f -a "docs" -d "open spack documentation in a web browser"
+complete -c spack -n "__fish_spack_using_command_pos 0 " -f -a "edit" -d "open package files in $EDITOR"
+complete -c spack -n "__fish_spack_using_command_pos 0 " -f -a "env" -d "manage virtual environments"
+complete -c spack -n "__fish_spack_using_command_pos 0 " -f -a "extensions" -d "list extensions for package"
+complete -c spack -n "__fish_spack_using_command_pos 0 " -f -a "external" -d "manage external packages in Spack configuration"
+complete -c spack -n "__fish_spack_using_command_pos 0 " -f -a "fetch" -d "fetch archives for packages"
+complete -c spack -n "__fish_spack_using_command_pos 0 " -f -a "find" -d "list and search installed packages"
+complete -c spack -n "__fish_spack_using_command_pos 0 " -f -a "gc" -d "remove specs that are now no longer needed"
+complete -c spack -n "__fish_spack_using_command_pos 0 " -f -a "gpg" -d "handle GPG actions for spack"
+complete -c spack -n "__fish_spack_using_command_pos 0 " -f -a "graph" -d "generate graphs of package dependency relationships"
+complete -c spack -n "__fish_spack_using_command_pos 0 " -f -a "help" -d "get help on spack and its commands"
+complete -c spack -n "__fish_spack_using_command_pos 0 " -f -a "info" -d "get detailed information on a particular package"
+complete -c spack -n "__fish_spack_using_command_pos 0 " -f -a "install" -d "build and install packages"
+complete -c spack -n "__fish_spack_using_command_pos 0 " -f -a "license" -d "list and check license headers on files in spack"
+complete -c spack -n "__fish_spack_using_command_pos 0 " -f -a "list" -d "list and search available packages"
+complete -c spack -n "__fish_spack_using_command_pos 0 " -f -a "load" -d "add package to the user environment"
+complete -c spack -n "__fish_spack_using_command_pos 0 " -f -a "location" -d "print out locations of packages and spack directories"
+complete -c spack -n "__fish_spack_using_command_pos 0 " -f -a "log-parse" -d "filter errors and warnings from build logs"
+complete -c spack -n "__fish_spack_using_command_pos 0 " -f -a "maintainers" -d "get information about package maintainers"
+complete -c spack -n "__fish_spack_using_command_pos 0 " -f -a "make-installer" -d "generate Windows installer"
+complete -c spack -n "__fish_spack_using_command_pos 0 " -f -a "mark" -d "mark packages as explicitly or implicitly installed"
+complete -c spack -n "__fish_spack_using_command_pos 0 " -f -a "mirror" -d "manage mirrors (source and binary)"
+complete -c spack -n "__fish_spack_using_command_pos 0 " -f -a "module" -d "generate/manage module files"
+complete -c spack -n "__fish_spack_using_command_pos 0 " -f -a "patch" -d "patch expanded archive sources in preparation for install"
+complete -c spack -n "__fish_spack_using_command_pos 0 " -f -a "pkg" -d "query packages associated with particular git revisions"
+complete -c spack -n "__fish_spack_using_command_pos 0 " -f -a "providers" -d "list packages that provide a particular virtual package"
+complete -c spack -n "__fish_spack_using_command_pos 0 " -f -a "pydoc" -d "run pydoc from within spack"
+complete -c spack -n "__fish_spack_using_command_pos 0 " -f -a "python" -d "launch an interpreter as spack would launch a command"
+complete -c spack -n "__fish_spack_using_command_pos 0 " -f -a "reindex" -d "rebuild Spack's package database"
+complete -c spack -n "__fish_spack_using_command_pos 0 " -f -a "remove" -d "remove specs from an environment"
+complete -c spack -n "__fish_spack_using_command_pos 0 " -f -a "rm" -d "remove specs from an environment"
+complete -c spack -n "__fish_spack_using_command_pos 0 " -f -a "repo" -d "manage package source repositories"
+complete -c spack -n "__fish_spack_using_command_pos 0 " -f -a "resource" -d "list downloadable resources (tarballs, repos, patches, etc.)"
+complete -c spack -n "__fish_spack_using_command_pos 0 " -f -a "restage" -d "revert checked out package source code"
+complete -c spack -n "__fish_spack_using_command_pos 0 " -f -a "solve" -d "concretize a specs using an ASP solver"
+complete -c spack -n "__fish_spack_using_command_pos 0 " -f -a "spec" -d "show what would be installed, given a spec"
+complete -c spack -n "__fish_spack_using_command_pos 0 " -f -a "stage" -d "expand downloaded archive in preparation for install"
+complete -c spack -n "__fish_spack_using_command_pos 0 " -f -a "style" -d "runs source code style checks on spack"
+complete -c spack -n "__fish_spack_using_command_pos 0 " -f -a "tags" -d "Show package tags and associated packages"
+complete -c spack -n "__fish_spack_using_command_pos 0 " -f -a "test" -d "run spack's tests for an install"
+complete -c spack -n "__fish_spack_using_command_pos 0 " -f -a "test-env" -d "run a command in a spec's test environment, or dump its environment to screen or file"
+complete -c spack -n "__fish_spack_using_command_pos 0 " -f -a "tutorial" -d "set up spack for our tutorial (WARNING: modifies config!)"
+complete -c spack -n "__fish_spack_using_command_pos 0 " -f -a "undevelop" -d "remove specs from an environment"
+complete -c spack -n "__fish_spack_using_command_pos 0 " -f -a "uninstall" -d "remove installed packages"
+complete -c spack -n "__fish_spack_using_command_pos 0 " -f -a "unit-test" -d "run spack's unit tests (wrapper around pytest)"
+complete -c spack -n "__fish_spack_using_command_pos 0 " -f -a "unload" -d "remove package from the user environment"
+complete -c spack -n "__fish_spack_using_command_pos 0 " -f -a "url" -d "debugging tool for url parsing"
+complete -c spack -n "__fish_spack_using_command_pos 0 " -f -a "verify" -d "Check that all spack packages are on disk as installed"
+complete -c spack -n "__fish_spack_using_command_pos 0 " -f -a "versions" -d "list available versions of a package"
+complete -c spack -n "__fish_spack_using_command_pos 0 " -f -a "view" -d "project packages to a compact naming scheme on the filesystem."
 # ['-h', '--help'] -> 'help': 0
 complete -c spack -n "__fish_spack_using_command " -s h -l help -d "show this help message and exit"
 # ['-H', '--all-help'] -> 'help': 0
 complete -c spack -n "__fish_spack_using_command " -s H -l all-help -d "show help for all commands (same as spack help --all)"
 # ['--color'] -> ['always', 'never', 'auto']: None
-complete -c spack -n "__fish_spack_using_command " -l color -r -f -a always never auto
+complete -c spack -n "__fish_spack_using_command " -l color -r -f -a "always never auto"
 complete -c spack -n "__fish_spack_using_command " -l color -r -d "when to colorize output (default: auto)"
 # ['-c', '--config'] -> 'config_vars': None
 complete -c spack -n "__fish_spack_using_command " -s c -l config -r -d "add one or more custom, one off config settings."
@@ -505,10 +505,10 @@ complete -c spack -n "__fish_spack_using_command arch" -s b -l backend -d "print
 
 # spack audit
 set -g __fish_spack_optspecs_spack_audit h/help
-complete -c spack -n "__fish_spack_using_command_pos 0 audit" -f -a configs -d "audit configuration files"
-complete -c spack -n "__fish_spack_using_command_pos 0 audit" -f -a packages-https -d "check https in packages"
-complete -c spack -n "__fish_spack_using_command_pos 0 audit" -f -a packages -d "audit package recipes"
-complete -c spack -n "__fish_spack_using_command_pos 0 audit" -f -a list -d "list available checks and exits"
+complete -c spack -n "__fish_spack_using_command_pos 0 audit" -f -a "configs" -d "audit configuration files"
+complete -c spack -n "__fish_spack_using_command_pos 0 audit" -f -a "packages-https" -d "check https in packages"
+complete -c spack -n "__fish_spack_using_command_pos 0 audit" -f -a "packages" -d "audit package recipes"
+complete -c spack -n "__fish_spack_using_command_pos 0 audit" -f -a "list" -d "list available checks and exits"
 # ['-h', '--help'] -> 'help': 0
 complete -c spack -n "__fish_spack_using_command audit" -s h -l help -d "show this help message and exit"
 
@@ -555,16 +555,16 @@ complete -c spack -n "__fish_spack_using_command blame" -l json -d "output blame
 
 # spack bootstrap
 set -g __fish_spack_optspecs_spack_bootstrap h/help
-complete -c spack -n "__fish_spack_using_command_pos 0 bootstrap" -f -a now -d "Spack ready, right now!"
-complete -c spack -n "__fish_spack_using_command_pos 0 bootstrap" -f -a status -d "get the status of Spack"
-complete -c spack -n "__fish_spack_using_command_pos 0 bootstrap" -f -a enable -d "enable bootstrapping"
-complete -c spack -n "__fish_spack_using_command_pos 0 bootstrap" -f -a disable -d "disable bootstrapping"
-complete -c spack -n "__fish_spack_using_command_pos 0 bootstrap" -f -a reset -d "reset bootstrapping configuration to Spack defaults"
-complete -c spack -n "__fish_spack_using_command_pos 0 bootstrap" -f -a root -d "get/set the root bootstrap directory"
-complete -c spack -n "__fish_spack_using_command_pos 0 bootstrap" -f -a list -d "list all the sources of software to bootstrap Spack"
-complete -c spack -n "__fish_spack_using_command_pos 0 bootstrap" -f -a add -d "add a new source for bootstrapping"
-complete -c spack -n "__fish_spack_using_command_pos 0 bootstrap" -f -a remove -d "remove a bootstrapping source"
-complete -c spack -n "__fish_spack_using_command_pos 0 bootstrap" -f -a mirror -d "create a local mirror to bootstrap Spack"
+complete -c spack -n "__fish_spack_using_command_pos 0 bootstrap" -f -a "now" -d "Spack ready, right now!"
+complete -c spack -n "__fish_spack_using_command_pos 0 bootstrap" -f -a "status" -d "get the status of Spack"
+complete -c spack -n "__fish_spack_using_command_pos 0 bootstrap" -f -a "enable" -d "enable bootstrapping"
+complete -c spack -n "__fish_spack_using_command_pos 0 bootstrap" -f -a "disable" -d "disable bootstrapping"
+complete -c spack -n "__fish_spack_using_command_pos 0 bootstrap" -f -a "reset" -d "reset bootstrapping configuration to Spack defaults"
+complete -c spack -n "__fish_spack_using_command_pos 0 bootstrap" -f -a "root" -d "get/set the root bootstrap directory"
+complete -c spack -n "__fish_spack_using_command_pos 0 bootstrap" -f -a "list" -d "list all the sources of software to bootstrap Spack"
+complete -c spack -n "__fish_spack_using_command_pos 0 bootstrap" -f -a "add" -d "add a new source for bootstrapping"
+complete -c spack -n "__fish_spack_using_command_pos 0 bootstrap" -f -a "remove" -d "remove a bootstrapping source"
+complete -c spack -n "__fish_spack_using_command_pos 0 bootstrap" -f -a "mirror" -d "create a local mirror to bootstrap Spack"
 # ['-h', '--help'] -> 'help': 0
 complete -c spack -n "__fish_spack_using_command bootstrap" -s h -l help -d "show this help message and exit"
 
@@ -591,7 +591,7 @@ complete -c spack -n "__fish_spack_using_command_pos 0 bootstrap enable" -f -a "
 # ['-h', '--help'] -> 'help': 0
 complete -c spack -n "__fish_spack_using_command bootstrap enable" -s h -l help -d "show this help message and exit"
 # ['--scope'] -> ['_builtin', 'defaults', 'defaults/darwin', 'system', 'system/darwin', 'site', 'site/darwin', 'user', 'user/darwin', 'command_line']: None
-complete -c spack -n "__fish_spack_using_command bootstrap enable" -l scope -r -f -a _builtin defaults defaults/darwin system system/darwin site site/darwin user user/darwin command_line
+complete -c spack -n "__fish_spack_using_command bootstrap enable" -l scope -r -f -a "_builtin defaults defaults/darwin system system/darwin site site/darwin user user/darwin command_line"
 complete -c spack -n "__fish_spack_using_command bootstrap enable" -l scope -r -d "configuration scope to read/modify"
 
 # spack bootstrap disable
@@ -601,7 +601,7 @@ complete -c spack -n "__fish_spack_using_command_pos 0 bootstrap disable" -f -a 
 # ['-h', '--help'] -> 'help': 0
 complete -c spack -n "__fish_spack_using_command bootstrap disable" -s h -l help -d "show this help message and exit"
 # ['--scope'] -> ['_builtin', 'defaults', 'defaults/darwin', 'system', 'system/darwin', 'site', 'site/darwin', 'user', 'user/darwin', 'command_line']: None
-complete -c spack -n "__fish_spack_using_command bootstrap disable" -l scope -r -f -a _builtin defaults defaults/darwin system system/darwin site site/darwin user user/darwin command_line
+complete -c spack -n "__fish_spack_using_command bootstrap disable" -l scope -r -f -a "_builtin defaults defaults/darwin system system/darwin site site/darwin user user/darwin command_line"
 complete -c spack -n "__fish_spack_using_command bootstrap disable" -l scope -r -d "configuration scope to read/modify"
 
 # spack bootstrap reset
@@ -618,7 +618,7 @@ complete -c spack -n "__fish_spack_using_command_pos 0 bootstrap root" -f -a "(_
 # ['-h', '--help'] -> 'help': 0
 complete -c spack -n "__fish_spack_using_command bootstrap root" -s h -l help -d "show this help message and exit"
 # ['--scope'] -> ['_builtin', 'defaults', 'defaults/darwin', 'system', 'system/darwin', 'site', 'site/darwin', 'user', 'user/darwin', 'command_line']: None
-complete -c spack -n "__fish_spack_using_command bootstrap root" -l scope -r -f -a _builtin defaults defaults/darwin system system/darwin site site/darwin user user/darwin command_line
+complete -c spack -n "__fish_spack_using_command bootstrap root" -l scope -r -f -a "_builtin defaults defaults/darwin system system/darwin site site/darwin user user/darwin command_line"
 complete -c spack -n "__fish_spack_using_command bootstrap root" -l scope -r -d "configuration scope to read/modify"
 
 # spack bootstrap list
@@ -626,7 +626,7 @@ set -g __fish_spack_optspecs_spack_bootstrap_list h/help scope=
 # ['-h', '--help'] -> 'help': 0
 complete -c spack -n "__fish_spack_using_command bootstrap list" -s h -l help -d "show this help message and exit"
 # ['--scope'] -> ['_builtin', 'defaults', 'defaults/darwin', 'system', 'system/darwin', 'site', 'site/darwin', 'user', 'user/darwin', 'command_line']: None
-complete -c spack -n "__fish_spack_using_command bootstrap list" -l scope -r -f -a _builtin defaults defaults/darwin system system/darwin site site/darwin user user/darwin command_line
+complete -c spack -n "__fish_spack_using_command bootstrap list" -l scope -r -f -a "_builtin defaults defaults/darwin system system/darwin site site/darwin user user/darwin command_line"
 complete -c spack -n "__fish_spack_using_command bootstrap list" -l scope -r -d "configuration scope to read/modify"
 
 # spack bootstrap add
@@ -638,7 +638,7 @@ complete -c spack -n "__fish_spack_using_command_pos 1 bootstrap add" -f -a "(__
 # ['-h', '--help'] -> 'help': 0
 complete -c spack -n "__fish_spack_using_command bootstrap add" -s h -l help -d "show this help message and exit"
 # ['--scope'] -> ['_builtin', 'defaults', 'defaults/darwin', 'system', 'system/darwin', 'site', 'site/darwin', 'user', 'user/darwin', 'command_line']: None
-complete -c spack -n "__fish_spack_using_command bootstrap add" -l scope -r -f -a _builtin defaults defaults/darwin system system/darwin site site/darwin user user/darwin command_line
+complete -c spack -n "__fish_spack_using_command bootstrap add" -l scope -r -f -a "_builtin defaults defaults/darwin system system/darwin site site/darwin user user/darwin command_line"
 complete -c spack -n "__fish_spack_using_command bootstrap add" -l scope -r -d "configuration scope to read/modify"
 # ['--trust'] -> 'trust': 0
 complete -c spack -n "__fish_spack_using_command bootstrap add" -l trust -d "enable the source immediately upon addition"
@@ -683,19 +683,19 @@ complete -c spack -n "__fish_spack_using_command build-env" -l pickle -r -d "dum
 
 # spack buildcache
 set -g __fish_spack_optspecs_spack_buildcache h/help
-complete -c spack -n "__fish_spack_using_command_pos 0 buildcache" -f -a push -d "create a binary package and push it to a mirror"
-complete -c spack -n "__fish_spack_using_command_pos 0 buildcache" -f -a create -d "create a binary package and push it to a mirror"
-complete -c spack -n "__fish_spack_using_command_pos 0 buildcache" -f -a install -d "install from a binary package"
-complete -c spack -n "__fish_spack_using_command_pos 0 buildcache" -f -a list -d "list binary packages available from mirrors"
-complete -c spack -n "__fish_spack_using_command_pos 0 buildcache" -f -a keys -d "get public keys available on mirrors"
-complete -c spack -n "__fish_spack_using_command_pos 0 buildcache" -f -a preview -d "analyze an installed spec and reports whether executables"
-complete -c spack -n "__fish_spack_using_command_pos 0 buildcache" -f -a check -d "Check specs (either a single spec from --spec, or else the full set"
-complete -c spack -n "__fish_spack_using_command_pos 0 buildcache" -f -a download -d "Download buildcache entry from a remote mirror to local folder.  This"
-complete -c spack -n "__fish_spack_using_command_pos 0 buildcache" -f -a get-buildcache-name -d "Get name (prefix) of buildcache entries for this spec"
-complete -c spack -n "__fish_spack_using_command_pos 0 buildcache" -f -a save-specfile -d "Get full spec for dependencies, relative to root spec, and write them"
-complete -c spack -n "__fish_spack_using_command_pos 0 buildcache" -f -a sync -d "Syncs binaries (and associated metadata) from one mirror to another."
-complete -c spack -n "__fish_spack_using_command_pos 0 buildcache" -f -a update-index -d "Update a buildcache index."
-complete -c spack -n "__fish_spack_using_command_pos 0 buildcache" -f -a rebuild-index -d "Update a buildcache index."
+complete -c spack -n "__fish_spack_using_command_pos 0 buildcache" -f -a "push" -d "create a binary package and push it to a mirror"
+complete -c spack -n "__fish_spack_using_command_pos 0 buildcache" -f -a "create" -d "create a binary package and push it to a mirror"
+complete -c spack -n "__fish_spack_using_command_pos 0 buildcache" -f -a "install" -d "install from a binary package"
+complete -c spack -n "__fish_spack_using_command_pos 0 buildcache" -f -a "list" -d "list binary packages available from mirrors"
+complete -c spack -n "__fish_spack_using_command_pos 0 buildcache" -f -a "keys" -d "get public keys available on mirrors"
+complete -c spack -n "__fish_spack_using_command_pos 0 buildcache" -f -a "preview" -d "analyze an installed spec and reports whether executables"
+complete -c spack -n "__fish_spack_using_command_pos 0 buildcache" -f -a "check" -d "Check specs (either a single spec from --spec, or else the full set"
+complete -c spack -n "__fish_spack_using_command_pos 0 buildcache" -f -a "download" -d "Download buildcache entry from a remote mirror to local folder.  This"
+complete -c spack -n "__fish_spack_using_command_pos 0 buildcache" -f -a "get-buildcache-name" -d "Get name (prefix) of buildcache entries for this spec"
+complete -c spack -n "__fish_spack_using_command_pos 0 buildcache" -f -a "save-specfile" -d "Get full spec for dependencies, relative to root spec, and write them"
+complete -c spack -n "__fish_spack_using_command_pos 0 buildcache" -f -a "sync" -d "Syncs binaries (and associated metadata) from one mirror to another."
+complete -c spack -n "__fish_spack_using_command_pos 0 buildcache" -f -a "update-index" -d "Update a buildcache index."
+complete -c spack -n "__fish_spack_using_command_pos 0 buildcache" -f -a "rebuild-index" -d "Update a buildcache index."
 # ['-h', '--help'] -> 'help': 0
 complete -c spack -n "__fish_spack_using_command buildcache" -s h -l help -d "show this help message and exit"
 
@@ -719,7 +719,7 @@ complete -c spack -n "__fish_spack_using_command buildcache push" -l update-inde
 # ['--spec-file'] -> 'spec_file': None
 complete -c spack -n "__fish_spack_using_command buildcache push" -l spec-file -r -d "Create buildcache entry for spec from json or yaml file"
 # ['--only'] -> ['package', 'dependencies']: None
-complete -c spack -n "__fish_spack_using_command buildcache push" -l only -r -f -a package dependencies
+complete -c spack -n "__fish_spack_using_command buildcache push" -l only -r -f -a "package dependencies"
 complete -c spack -n "__fish_spack_using_command buildcache push" -l only -r -d "Select the buildcache mode. the default is to build a cache for the package along with all its dependencies. Alternatively, one can decide to build a cache for only the package or only the dependencies"
 
 # spack buildcache create
@@ -743,7 +743,7 @@ complete -c spack -n "__fish_spack_using_command buildcache create" -l update-in
 # ['--spec-file'] -> 'spec_file': None
 complete -c spack -n "__fish_spack_using_command buildcache create" -l spec-file -r -d "Create buildcache entry for spec from json or yaml file"
 # ['--only'] -> ['package', 'dependencies']: None
-complete -c spack -n "__fish_spack_using_command buildcache create" -l only -r -f -a package dependencies
+complete -c spack -n "__fish_spack_using_command buildcache create" -l only -r -f -a "package dependencies"
 complete -c spack -n "__fish_spack_using_command buildcache create" -l only -r -d "Select the buildcache mode. the default is to build a cache for the package along with all its dependencies. Alternatively, one can decide to build a cache for only the package or only the dependencies"
 
 # spack buildcache install
@@ -803,7 +803,7 @@ complete -c spack -n "__fish_spack_using_command buildcache check" -s m -l mirro
 # ['-o', '--output-file'] -> 'output_file': None
 complete -c spack -n "__fish_spack_using_command buildcache check" -s o -l output-file -r -d "File where rebuild info should be written"
 # ['--scope'] -> ['_builtin', 'defaults', 'defaults/darwin', 'system', 'system/darwin', 'site', 'site/darwin', 'user', 'user/darwin', 'command_line']: None
-complete -c spack -n "__fish_spack_using_command buildcache check" -l scope -r -f -a _builtin defaults defaults/darwin system system/darwin site site/darwin user user/darwin command_line
+complete -c spack -n "__fish_spack_using_command buildcache check" -l scope -r -f -a "_builtin defaults defaults/darwin system system/darwin site site/darwin user user/darwin command_line"
 complete -c spack -n "__fish_spack_using_command buildcache check" -l scope -r -d "configuration scope containing mirrors to check"
 # ['-s', '--spec'] -> 'spec': None
 complete -c spack -n "__fish_spack_using_command buildcache check" -s s -l spec -r -f -k -a "(__fish_spack_specs)"
@@ -943,10 +943,10 @@ complete -c spack -n "__fish_spack_using_command checksum" -s a -l add-to-packag
 
 # spack ci
 set -g __fish_spack_optspecs_spack_ci h/help
-complete -c spack -n "__fish_spack_using_command_pos 0 ci" -f -a generate -d "Generate jobs file from a CI-aware spack file."
-complete -c spack -n "__fish_spack_using_command_pos 0 ci" -f -a rebuild-index -d "Rebuild the buildcache index for the remote mirror."
-complete -c spack -n "__fish_spack_using_command_pos 0 ci" -f -a rebuild -d "Rebuild a spec if it is not on the remote mirror."
-complete -c spack -n "__fish_spack_using_command_pos 0 ci" -f -a reproduce-build -d "Generate instructions for reproducing the spec rebuild job."
+complete -c spack -n "__fish_spack_using_command_pos 0 ci" -f -a "generate" -d "Generate jobs file from a CI-aware spack file."
+complete -c spack -n "__fish_spack_using_command_pos 0 ci" -f -a "rebuild-index" -d "Rebuild the buildcache index for the remote mirror."
+complete -c spack -n "__fish_spack_using_command_pos 0 ci" -f -a "rebuild" -d "Rebuild a spec if it is not on the remote mirror."
+complete -c spack -n "__fish_spack_using_command_pos 0 ci" -f -a "reproduce-build" -d "Generate instructions for reproducing the spec rebuild job."
 # ['-h', '--help'] -> 'help': 0
 complete -c spack -n "__fish_spack_using_command ci" -s h -l help -d "show this help message and exit"
 
@@ -1037,7 +1037,7 @@ complete -c spack -n "__fish_spack_using_command commands" -l update-completion 
 # ['-a', '--aliases'] -> 'aliases': 0
 complete -c spack -n "__fish_spack_using_command commands" -s a -l aliases -d "include command aliases"
 # ['--format'] -> ['subcommands', 'rst', 'names', 'bash', 'fish']: None
-complete -c spack -n "__fish_spack_using_command commands" -l format -r -f -a subcommands rst names bash fish
+complete -c spack -n "__fish_spack_using_command commands" -l format -r -f -a "subcommands rst names bash fish"
 complete -c spack -n "__fish_spack_using_command commands" -l format -r -d "format to be used to print the output (default: names)"
 # ['--header'] -> 'header': None
 complete -c spack -n "__fish_spack_using_command commands" -l header -r -d "prepend contents of FILE to the output (useful for rst format)"
@@ -1046,12 +1046,12 @@ complete -c spack -n "__fish_spack_using_command commands" -l update -r -d "writ
 
 # spack compiler
 set -g __fish_spack_optspecs_spack_compiler h/help
-complete -c spack -n "__fish_spack_using_command_pos 0 compiler" -f -a find -d "search the system for compilers to add to Spack configuration"
-complete -c spack -n "__fish_spack_using_command_pos 0 compiler" -f -a add -d "search the system for compilers to add to Spack configuration"
-complete -c spack -n "__fish_spack_using_command_pos 0 compiler" -f -a remove -d "remove compiler by spec"
-complete -c spack -n "__fish_spack_using_command_pos 0 compiler" -f -a rm -d "remove compiler by spec"
-complete -c spack -n "__fish_spack_using_command_pos 0 compiler" -f -a list -d "list available compilers"
-complete -c spack -n "__fish_spack_using_command_pos 0 compiler" -f -a info -d "show compiler paths"
+complete -c spack -n "__fish_spack_using_command_pos 0 compiler" -f -a "find" -d "search the system for compilers to add to Spack configuration"
+complete -c spack -n "__fish_spack_using_command_pos 0 compiler" -f -a "add" -d "search the system for compilers to add to Spack configuration"
+complete -c spack -n "__fish_spack_using_command_pos 0 compiler" -f -a "remove" -d "remove compiler by spec"
+complete -c spack -n "__fish_spack_using_command_pos 0 compiler" -f -a "rm" -d "remove compiler by spec"
+complete -c spack -n "__fish_spack_using_command_pos 0 compiler" -f -a "list" -d "list available compilers"
+complete -c spack -n "__fish_spack_using_command_pos 0 compiler" -f -a "info" -d "show compiler paths"
 # ['-h', '--help'] -> 'help': 0
 complete -c spack -n "__fish_spack_using_command compiler" -s h -l help -d "show this help message and exit"
 
@@ -1061,7 +1061,7 @@ set -g __fish_spack_optspecs_spack_compiler_find h/help scope=
 # ['-h', '--help'] -> 'help': 0
 complete -c spack -n "__fish_spack_using_command compiler find" -s h -l help -d "show this help message and exit"
 # ['--scope'] -> ['_builtin', 'defaults', 'defaults/darwin', 'system', 'system/darwin', 'site', 'site/darwin', 'user', 'user/darwin', 'command_line']: None
-complete -c spack -n "__fish_spack_using_command compiler find" -l scope -r -f -a _builtin defaults defaults/darwin system system/darwin site site/darwin user user/darwin command_line
+complete -c spack -n "__fish_spack_using_command compiler find" -l scope -r -f -a "_builtin defaults defaults/darwin system system/darwin site site/darwin user user/darwin command_line"
 complete -c spack -n "__fish_spack_using_command compiler find" -l scope -r -d "configuration scope to modify"
 
 # spack compiler add
@@ -1070,7 +1070,7 @@ set -g __fish_spack_optspecs_spack_compiler_add h/help scope=
 # ['-h', '--help'] -> 'help': 0
 complete -c spack -n "__fish_spack_using_command compiler add" -s h -l help -d "show this help message and exit"
 # ['--scope'] -> ['_builtin', 'defaults', 'defaults/darwin', 'system', 'system/darwin', 'site', 'site/darwin', 'user', 'user/darwin', 'command_line']: None
-complete -c spack -n "__fish_spack_using_command compiler add" -l scope -r -f -a _builtin defaults defaults/darwin system system/darwin site site/darwin user user/darwin command_line
+complete -c spack -n "__fish_spack_using_command compiler add" -l scope -r -f -a "_builtin defaults defaults/darwin system system/darwin site site/darwin user user/darwin command_line"
 complete -c spack -n "__fish_spack_using_command compiler add" -l scope -r -d "configuration scope to modify"
 
 # spack compiler remove
@@ -1082,7 +1082,7 @@ complete -c spack -n "__fish_spack_using_command compiler remove" -s h -l help -
 # ['-a', '--all'] -> 'all': 0
 complete -c spack -n "__fish_spack_using_command compiler remove" -s a -l all -d "remove ALL compilers that match spec"
 # ['--scope'] -> ['_builtin', 'defaults', 'defaults/darwin', 'system', 'system/darwin', 'site', 'site/darwin', 'user', 'user/darwin', 'command_line']: None
-complete -c spack -n "__fish_spack_using_command compiler remove" -l scope -r -f -a _builtin defaults defaults/darwin system system/darwin site site/darwin user user/darwin command_line
+complete -c spack -n "__fish_spack_using_command compiler remove" -l scope -r -f -a "_builtin defaults defaults/darwin system system/darwin site site/darwin user user/darwin command_line"
 complete -c spack -n "__fish_spack_using_command compiler remove" -l scope -r -d "configuration scope to modify"
 
 # spack compiler rm
@@ -1094,7 +1094,7 @@ complete -c spack -n "__fish_spack_using_command compiler rm" -s h -l help -d "s
 # ['-a', '--all'] -> 'all': 0
 complete -c spack -n "__fish_spack_using_command compiler rm" -s a -l all -d "remove ALL compilers that match spec"
 # ['--scope'] -> ['_builtin', 'defaults', 'defaults/darwin', 'system', 'system/darwin', 'site', 'site/darwin', 'user', 'user/darwin', 'command_line']: None
-complete -c spack -n "__fish_spack_using_command compiler rm" -l scope -r -f -a _builtin defaults defaults/darwin system system/darwin site site/darwin user user/darwin command_line
+complete -c spack -n "__fish_spack_using_command compiler rm" -l scope -r -f -a "_builtin defaults defaults/darwin system system/darwin site site/darwin user user/darwin command_line"
 complete -c spack -n "__fish_spack_using_command compiler rm" -l scope -r -d "configuration scope to modify"
 
 # spack compiler list
@@ -1102,7 +1102,7 @@ set -g __fish_spack_optspecs_spack_compiler_list h/help scope=
 # ['-h', '--help'] -> 'help': 0
 complete -c spack -n "__fish_spack_using_command compiler list" -s h -l help -d "show this help message and exit"
 # ['--scope'] -> ['_builtin', 'defaults', 'defaults/darwin', 'system', 'system/darwin', 'site', 'site/darwin', 'user', 'user/darwin', 'command_line']: None
-complete -c spack -n "__fish_spack_using_command compiler list" -l scope -r -f -a _builtin defaults defaults/darwin system system/darwin site site/darwin user user/darwin command_line
+complete -c spack -n "__fish_spack_using_command compiler list" -l scope -r -f -a "_builtin defaults defaults/darwin system system/darwin site site/darwin user user/darwin command_line"
 complete -c spack -n "__fish_spack_using_command compiler list" -l scope -r -d "configuration scope to read from"
 
 # spack compiler info
@@ -1112,7 +1112,7 @@ complete -c spack -n "__fish_spack_using_command_pos 0 compiler info" -f -a "(__
 # ['-h', '--help'] -> 'help': 0
 complete -c spack -n "__fish_spack_using_command compiler info" -s h -l help -d "show this help message and exit"
 # ['--scope'] -> ['_builtin', 'defaults', 'defaults/darwin', 'system', 'system/darwin', 'site', 'site/darwin', 'user', 'user/darwin', 'command_line']: None
-complete -c spack -n "__fish_spack_using_command compiler info" -l scope -r -f -a _builtin defaults defaults/darwin system system/darwin site site/darwin user user/darwin command_line
+complete -c spack -n "__fish_spack_using_command compiler info" -l scope -r -f -a "_builtin defaults defaults/darwin system system/darwin site site/darwin user user/darwin command_line"
 complete -c spack -n "__fish_spack_using_command compiler info" -l scope -r -d "configuration scope to read from"
 
 # spack compilers
@@ -1120,7 +1120,7 @@ set -g __fish_spack_optspecs_spack_compilers h/help scope=
 # ['-h', '--help'] -> 'help': 0
 complete -c spack -n "__fish_spack_using_command compilers" -s h -l help -d "show this help message and exit"
 # ['--scope'] -> ['_builtin', 'defaults', 'defaults/darwin', 'system', 'system/darwin', 'site', 'site/darwin', 'user', 'user/darwin', 'command_line']: None
-complete -c spack -n "__fish_spack_using_command compilers" -l scope -r -f -a _builtin defaults defaults/darwin system system/darwin site site/darwin user user/darwin command_line
+complete -c spack -n "__fish_spack_using_command compilers" -l scope -r -f -a "_builtin defaults defaults/darwin system system/darwin site site/darwin user user/darwin command_line"
 complete -c spack -n "__fish_spack_using_command compilers" -l scope -r -d "configuration scope to read/modify"
 
 # spack concretize
@@ -1130,7 +1130,7 @@ complete -c spack -n "__fish_spack_using_command concretize" -s h -l help -d "sh
 # ['-f', '--force'] -> 'force': 0
 complete -c spack -n "__fish_spack_using_command concretize" -s f -l force -d "Re-concretize even if already concretized."
 # ['--test'] -> ['root', 'all']: None
-complete -c spack -n "__fish_spack_using_command concretize" -l test -r -f -a root all
+complete -c spack -n "__fish_spack_using_command concretize" -l test -r -f -a "root all"
 complete -c spack -n "__fish_spack_using_command concretize" -l test -r -d "Concretize with test dependencies. When 'root' is chosen, test dependencies are only added for the environment's root specs. When 'all' is chosen, test dependencies are enabled for all packages in the environment."
 # ['-q', '--quiet'] -> 'quiet': 0
 complete -c spack -n "__fish_spack_using_command concretize" -s q -l quiet -d "Don't print concretized specs"
@@ -1145,40 +1145,40 @@ complete -c spack -n "__fish_spack_using_command concretize" -s j -l jobs -r -d 
 
 # spack config
 set -g __fish_spack_optspecs_spack_config h/help scope=
-complete -c spack -n "__fish_spack_using_command_pos 0 config" -f -a get -d "print configuration values"
-complete -c spack -n "__fish_spack_using_command_pos 0 config" -f -a blame -d "print configuration annotated with source file:line"
-complete -c spack -n "__fish_spack_using_command_pos 0 config" -f -a edit -d "edit configuration file"
-complete -c spack -n "__fish_spack_using_command_pos 0 config" -f -a list -d "list configuration sections"
-complete -c spack -n "__fish_spack_using_command_pos 0 config" -f -a add -d "add configuration parameters"
-complete -c spack -n "__fish_spack_using_command_pos 0 config" -f -a prefer-upstream -d "set package preferences from upstream"
-complete -c spack -n "__fish_spack_using_command_pos 0 config" -f -a remove -d "remove configuration parameters"
-complete -c spack -n "__fish_spack_using_command_pos 0 config" -f -a rm -d "remove configuration parameters"
-complete -c spack -n "__fish_spack_using_command_pos 0 config" -f -a update -d "update configuration files to the latest format"
-complete -c spack -n "__fish_spack_using_command_pos 0 config" -f -a revert -d "revert configuration files to their state before update"
+complete -c spack -n "__fish_spack_using_command_pos 0 config" -f -a "get" -d "print configuration values"
+complete -c spack -n "__fish_spack_using_command_pos 0 config" -f -a "blame" -d "print configuration annotated with source file:line"
+complete -c spack -n "__fish_spack_using_command_pos 0 config" -f -a "edit" -d "edit configuration file"
+complete -c spack -n "__fish_spack_using_command_pos 0 config" -f -a "list" -d "list configuration sections"
+complete -c spack -n "__fish_spack_using_command_pos 0 config" -f -a "add" -d "add configuration parameters"
+complete -c spack -n "__fish_spack_using_command_pos 0 config" -f -a "prefer-upstream" -d "set package preferences from upstream"
+complete -c spack -n "__fish_spack_using_command_pos 0 config" -f -a "remove" -d "remove configuration parameters"
+complete -c spack -n "__fish_spack_using_command_pos 0 config" -f -a "rm" -d "remove configuration parameters"
+complete -c spack -n "__fish_spack_using_command_pos 0 config" -f -a "update" -d "update configuration files to the latest format"
+complete -c spack -n "__fish_spack_using_command_pos 0 config" -f -a "revert" -d "revert configuration files to their state before update"
 # ['-h', '--help'] -> 'help': 0
 complete -c spack -n "__fish_spack_using_command config" -s h -l help -d "show this help message and exit"
 # ['--scope'] -> ['_builtin', 'defaults', 'defaults/darwin', 'system', 'system/darwin', 'site', 'site/darwin', 'user', 'user/darwin', 'command_line']: None
-complete -c spack -n "__fish_spack_using_command config" -l scope -r -f -a _builtin defaults defaults/darwin system system/darwin site site/darwin user user/darwin command_line
+complete -c spack -n "__fish_spack_using_command config" -l scope -r -f -a "_builtin defaults defaults/darwin system system/darwin site site/darwin user user/darwin command_line"
 complete -c spack -n "__fish_spack_using_command config" -l scope -r -d "configuration scope to read/modify"
 
 # spack config get
 set -g __fish_spack_optspecs_spack_config_get h/help
 # 0 -> section ['bootstrap', 'cdash', 'ci', 'compilers', 'concretizer', 'config', 'mirrors', 'modules', 'packages', 'repos', 'upstreams'] (configuration section to print. options: compilers, concretizer, mirrors, repos, packages, modules, config, upstreams, bootstrap, ci, cdash): '?'
-complete -c spack -n "__fish_spack_using_command_pos 0 config get" -f -a bootstrap cdash ci compilers concretizer config mirrors modules packages repos upstreams
+complete -c spack -n "__fish_spack_using_command_pos 0 config get" -f -a "bootstrap cdash ci compilers concretizer config mirrors modules packages repos upstreams"
 # ['-h', '--help'] -> 'help': 0
 complete -c spack -n "__fish_spack_using_command config get" -s h -l help -d "show this help message and exit"
 
 # spack config blame
 set -g __fish_spack_optspecs_spack_config_blame h/help
 # 0 -> section ['bootstrap', 'cdash', 'ci', 'compilers', 'concretizer', 'config', 'mirrors', 'modules', 'packages', 'repos', 'upstreams'] (configuration section to print. options: compilers, concretizer, mirrors, repos, packages, modules, config, upstreams, bootstrap, ci, cdash): None
-complete -c spack -n "__fish_spack_using_command_pos 0 config blame" -f -a bootstrap cdash ci compilers concretizer config mirrors modules packages repos upstreams
+complete -c spack -n "__fish_spack_using_command_pos 0 config blame" -f -a "bootstrap cdash ci compilers concretizer config mirrors modules packages repos upstreams"
 # ['-h', '--help'] -> 'help': 0
 complete -c spack -n "__fish_spack_using_command config blame" -s h -l help -d "show this help message and exit"
 
 # spack config edit
 set -g __fish_spack_optspecs_spack_config_edit h/help print-file
 # 0 -> section ['bootstrap', 'cdash', 'ci', 'compilers', 'concretizer', 'config', 'mirrors', 'modules', 'packages', 'repos', 'upstreams'] (configuration section to edit. options: compilers, concretizer, mirrors, repos, packages, modules, config, upstreams, bootstrap, ci, cdash): '?'
-complete -c spack -n "__fish_spack_using_command_pos 0 config edit" -f -a bootstrap cdash ci compilers concretizer config mirrors modules packages repos upstreams
+complete -c spack -n "__fish_spack_using_command_pos 0 config edit" -f -a "bootstrap cdash ci compilers concretizer config mirrors modules packages repos upstreams"
 # ['-h', '--help'] -> 'help': 0
 complete -c spack -n "__fish_spack_using_command config edit" -s h -l help -d "show this help message and exit"
 # ['--print-file'] -> 'print_file': 0
@@ -1244,7 +1244,7 @@ complete -c spack -n "__fish_spack_using_command containerize" -s h -l help -d "
 # ['--list-os'] -> 'list_os': 0
 complete -c spack -n "__fish_spack_using_command containerize" -l list-os -d "list all the OS that can be used in the bootstrap phase and exit"
 # ['--last-stage'] -> ['bootstrap', 'build', 'final']: None
-complete -c spack -n "__fish_spack_using_command containerize" -l last-stage -r -f -a bootstrap build final
+complete -c spack -n "__fish_spack_using_command containerize" -l last-stage -r -f -a "bootstrap build final"
 complete -c spack -n "__fish_spack_using_command containerize" -l last-stage -r -d "last stage in the container recipe"
 
 # spack create
@@ -1257,7 +1257,7 @@ complete -c spack -n "__fish_spack_using_command create" -l keep-stage -d "don't
 # ['-n', '--name'] -> 'name': None
 complete -c spack -n "__fish_spack_using_command create" -s n -l name -r -d "name of the package to create"
 # ['-t', '--template'] -> ['autoreconf', 'autotools', 'bazel', 'bundle', 'cmake', 'generic', 'intel', 'lua', 'makefile', 'maven', 'meson', 'octave', 'perlbuild', 'perlmake', 'python', 'qmake', 'r', 'racket', 'ruby', 'scons', 'sip', 'waf']: None
-complete -c spack -n "__fish_spack_using_command create" -s t -l template -r -f -a autoreconf autotools bazel bundle cmake generic intel lua makefile maven meson octave perlbuild perlmake python qmake r racket ruby scons sip waf
+complete -c spack -n "__fish_spack_using_command create" -s t -l template -r -f -a "autoreconf autotools bazel bundle cmake generic intel lua makefile maven meson octave perlbuild perlmake python qmake r racket ruby scons sip waf"
 complete -c spack -n "__fish_spack_using_command create" -s t -l template -r -d "build system template to use. options: autoreconf, autotools, bazel, bundle, cmake, generic, intel, lua, makefile, maven, meson, octave, perlbuild, perlmake, python, qmake, r, racket, ruby, scons, sip, waf"
 # ['-r', '--repo'] -> 'repo': None
 complete -c spack -n "__fish_spack_using_command create" -s r -l repo -r -d "path to a repository where the package should be created"
@@ -1272,8 +1272,8 @@ complete -c spack -n "__fish_spack_using_command create" -s b -l batch -d "don't
 
 # spack debug
 set -g __fish_spack_optspecs_spack_debug h/help
-complete -c spack -n "__fish_spack_using_command_pos 0 debug" -f -a create-db-tarball -d "create a tarball of Spack's installation metadata"
-complete -c spack -n "__fish_spack_using_command_pos 0 debug" -f -a report -d "print information useful for bug reports"
+complete -c spack -n "__fish_spack_using_command_pos 0 debug" -f -a "create-db-tarball" -d "create a tarball of Spack's installation metadata"
+complete -c spack -n "__fish_spack_using_command_pos 0 debug" -f -a "report" -d "print information useful for bug reports"
 # ['-h', '--help'] -> 'help': 0
 complete -c spack -n "__fish_spack_using_command debug" -s h -l help -d "show this help message and exit"
 
@@ -1330,7 +1330,7 @@ complete -c spack -n "__fish_spack_using_command deprecate" -s i -l install-depr
 # ['-I', '--no-install-deprecator'] -> 'install': 0
 complete -c spack -n "__fish_spack_using_command deprecate" -s I -l no-install-deprecator -d "Deprecator spec must already be installed (default)"
 # ['-l', '--link-type'] -> ['soft', 'hard']: None
-complete -c spack -n "__fish_spack_using_command deprecate" -s l -l link-type -r -f -a soft hard
+complete -c spack -n "__fish_spack_using_command deprecate" -s l -l link-type -r -f -a "soft hard"
 complete -c spack -n "__fish_spack_using_command deprecate" -s l -l link-type -r -d "Type of filesystem link to use for deprecation (default soft)"
 
 # spack dev-build
@@ -1358,7 +1358,7 @@ complete -c spack -n "__fish_spack_using_command dev-build" -s q -l quiet -d "do
 # ['--drop-in'] -> 'shell': None
 complete -c spack -n "__fish_spack_using_command dev-build" -l drop-in -r -d "drop into a build environment in a new shell, e.g. bash, zsh"
 # ['--test'] -> ['root', 'all']: None
-complete -c spack -n "__fish_spack_using_command dev-build" -l test -r -f -a root all
+complete -c spack -n "__fish_spack_using_command dev-build" -l test -r -f -a "root all"
 complete -c spack -n "__fish_spack_using_command dev-build" -l test -r -d "If 'root' is chosen, run package tests during installation for top-level packages (but skip tests for dependencies). if 'all' is chosen, run package tests during installation for all packages. If neither are chosen, don't run tests for any packages."
 # ['-b', '--before'] -> 'before': None
 complete -c spack -n "__fish_spack_using_command dev-build" -s b -l before -r -d "phase to stop before when installing (default None)"
@@ -1431,20 +1431,20 @@ complete -c spack -n "__fish_spack_using_command edit" -s N -l namespace -r -d "
 
 # spack env
 set -g __fish_spack_optspecs_spack_env h/help
-complete -c spack -n "__fish_spack_using_command_pos 0 env" -f -a activate -d "set the current environment"
-complete -c spack -n "__fish_spack_using_command_pos 0 env" -f -a deactivate -d "deactivate any active environment in the shell"
-complete -c spack -n "__fish_spack_using_command_pos 0 env" -f -a create -d "create a new environment"
-complete -c spack -n "__fish_spack_using_command_pos 0 env" -f -a remove -d "remove an existing environment"
-complete -c spack -n "__fish_spack_using_command_pos 0 env" -f -a rm -d "remove an existing environment"
-complete -c spack -n "__fish_spack_using_command_pos 0 env" -f -a list -d "list available environments"
-complete -c spack -n "__fish_spack_using_command_pos 0 env" -f -a ls -d "list available environments"
-complete -c spack -n "__fish_spack_using_command_pos 0 env" -f -a status -d "print whether there is an active environment"
-complete -c spack -n "__fish_spack_using_command_pos 0 env" -f -a st -d "print whether there is an active environment"
-complete -c spack -n "__fish_spack_using_command_pos 0 env" -f -a loads -d "list modules for an installed environment '(see spack module loads)'"
-complete -c spack -n "__fish_spack_using_command_pos 0 env" -f -a view -d "manage a view associated with the environment"
-complete -c spack -n "__fish_spack_using_command_pos 0 env" -f -a update -d "update environments to the latest format"
-complete -c spack -n "__fish_spack_using_command_pos 0 env" -f -a revert -d "restore environments to their state before update"
-complete -c spack -n "__fish_spack_using_command_pos 0 env" -f -a depfile -d "generate a depfile from the concrete environment specs"
+complete -c spack -n "__fish_spack_using_command_pos 0 env" -f -a "activate" -d "set the current environment"
+complete -c spack -n "__fish_spack_using_command_pos 0 env" -f -a "deactivate" -d "deactivate any active environment in the shell"
+complete -c spack -n "__fish_spack_using_command_pos 0 env" -f -a "create" -d "create a new environment"
+complete -c spack -n "__fish_spack_using_command_pos 0 env" -f -a "remove" -d "remove an existing environment"
+complete -c spack -n "__fish_spack_using_command_pos 0 env" -f -a "rm" -d "remove an existing environment"
+complete -c spack -n "__fish_spack_using_command_pos 0 env" -f -a "list" -d "list available environments"
+complete -c spack -n "__fish_spack_using_command_pos 0 env" -f -a "ls" -d "list available environments"
+complete -c spack -n "__fish_spack_using_command_pos 0 env" -f -a "status" -d "print whether there is an active environment"
+complete -c spack -n "__fish_spack_using_command_pos 0 env" -f -a "st" -d "print whether there is an active environment"
+complete -c spack -n "__fish_spack_using_command_pos 0 env" -f -a "loads" -d "list modules for an installed environment '(see spack module loads)'"
+complete -c spack -n "__fish_spack_using_command_pos 0 env" -f -a "view" -d "manage a view associated with the environment"
+complete -c spack -n "__fish_spack_using_command_pos 0 env" -f -a "update" -d "update environments to the latest format"
+complete -c spack -n "__fish_spack_using_command_pos 0 env" -f -a "revert" -d "restore environments to their state before update"
+complete -c spack -n "__fish_spack_using_command_pos 0 env" -f -a "depfile" -d "generate a depfile from the concrete environment specs"
 # ['-h', '--help'] -> 'help': 0
 complete -c spack -n "__fish_spack_using_command env" -s h -l help -d "show this help message and exit"
 
@@ -1551,7 +1551,7 @@ complete -c spack -n "__fish_spack_using_command env loads" -s h -l help -d "sho
 # ['-n', '--module-set-name'] -> 'module_set_name': None
 complete -c spack -n "__fish_spack_using_command env loads" -s n -l module-set-name -r -d "module set for which to generate load operations"
 # ['-m', '--module-type'] -> ['tcl', 'lmod']: None
-complete -c spack -n "__fish_spack_using_command env loads" -s m -l module-type -r -f -a tcl lmod
+complete -c spack -n "__fish_spack_using_command env loads" -s m -l module-type -r -f -a "tcl lmod"
 complete -c spack -n "__fish_spack_using_command env loads" -s m -l module-type -r -d "type of module system to generate loads for"
 # ['--input-only'] -> 'shell': 0
 complete -c spack -n "__fish_spack_using_command env loads" -l input-only -d "generate input for module command (instead of a shell script)"
@@ -1566,7 +1566,7 @@ complete -c spack -n "__fish_spack_using_command env loads" -s r -l dependencies
 # spack env view
 set -g __fish_spack_optspecs_spack_env_view h/help
 # 0 -> {regenerate,enable,disable} ['regenerate', 'enable', 'disable'] (action to take for the environment's view): None
-complete -c spack -n "__fish_spack_using_command_pos 0 env view" -f -a regenerate enable disable
+complete -c spack -n "__fish_spack_using_command_pos 0 env view" -f -a "regenerate enable disable"
 # 1 -> view_path None (when enabling a view, optionally set the path manually): '?'
 # ['-h', '--help'] -> 'help': 0
 complete -c spack -n "__fish_spack_using_command env view" -s h -l help -d "show this help message and exit"
@@ -1604,7 +1604,7 @@ complete -c spack -n "__fish_spack_using_command env depfile" -l use-buildcache 
 # ['-o', '--output'] -> 'output': None
 complete -c spack -n "__fish_spack_using_command env depfile" -s o -l output -r -d "write the depfile to FILE rather than to stdout"
 # ['-G', '--generator'] -> ['make']: None
-complete -c spack -n "__fish_spack_using_command env depfile" -s G -l generator -r -f -a make
+complete -c spack -n "__fish_spack_using_command env depfile" -s G -l generator -r -f -a "make"
 complete -c spack -n "__fish_spack_using_command env depfile" -s G -l generator -r -d "specify the depfile type. Currently only make is supported."
 
 # spack extensions
@@ -1622,14 +1622,14 @@ complete -c spack -n "__fish_spack_using_command extensions" -s d -l deps -d "ou
 # ['-p', '--paths'] -> 'paths': 0
 complete -c spack -n "__fish_spack_using_command extensions" -s p -l paths -d "show paths to package install directories"
 # ['-s', '--show'] -> ['packages', 'installed', 'all']: None
-complete -c spack -n "__fish_spack_using_command extensions" -s s -l show -r -f -a packages installed all
+complete -c spack -n "__fish_spack_using_command extensions" -s s -l show -r -f -a "packages installed all"
 complete -c spack -n "__fish_spack_using_command extensions" -s s -l show -r -d "show only part of output"
 
 # spack external
 set -g __fish_spack_optspecs_spack_external h/help
-complete -c spack -n "__fish_spack_using_command_pos 0 external" -f -a find -d "add external packages to packages.yaml"
-complete -c spack -n "__fish_spack_using_command_pos 0 external" -f -a list -d "list detectable packages, by repository and name"
-complete -c spack -n "__fish_spack_using_command_pos 0 external" -f -a read-cray-manifest -d "consume a Spack-compatible description of externally-installed packages, including dependency relationships"
+complete -c spack -n "__fish_spack_using_command_pos 0 external" -f -a "find" -d "add external packages to packages.yaml"
+complete -c spack -n "__fish_spack_using_command_pos 0 external" -f -a "list" -d "list detectable packages, by repository and name"
+complete -c spack -n "__fish_spack_using_command_pos 0 external" -f -a "read-cray-manifest" -d "consume a Spack-compatible description of externally-installed packages, including dependency relationships"
 # ['-h', '--help'] -> 'help': 0
 complete -c spack -n "__fish_spack_using_command external" -s h -l help -d "show this help message and exit"
 
@@ -1645,7 +1645,7 @@ complete -c spack -n "__fish_spack_using_command external find" -l exclude -r -d
 # ['-p', '--path'] -> 'path': None
 complete -c spack -n "__fish_spack_using_command external find" -s p -l path -r -d "Alternative search paths for finding externals. May be repeated"
 # ['--scope'] -> ['_builtin', 'defaults', 'defaults/darwin', 'system', 'system/darwin', 'site', 'site/darwin', 'user', 'user/darwin', 'command_line']: None
-complete -c spack -n "__fish_spack_using_command external find" -l scope -r -f -a _builtin defaults defaults/darwin system system/darwin site site/darwin user user/darwin command_line
+complete -c spack -n "__fish_spack_using_command external find" -l scope -r -f -a "_builtin defaults defaults/darwin system system/darwin site site/darwin user user/darwin command_line"
 complete -c spack -n "__fish_spack_using_command external find" -l scope -r -d "configuration scope to modify"
 # ['--all'] -> 'all': 0
 complete -c spack -n "__fish_spack_using_command external find" -l all -d "search for all packages that Spack knows about"
@@ -1755,15 +1755,15 @@ complete -c spack -n "__fish_spack_using_command gc" -s y -l yes-to-all -d "assu
 
 # spack gpg
 set -g __fish_spack_optspecs_spack_gpg h/help
-complete -c spack -n "__fish_spack_using_command_pos 0 gpg" -f -a verify -d "verify a signed package"
-complete -c spack -n "__fish_spack_using_command_pos 0 gpg" -f -a trust -d "add a key to the keyring"
-complete -c spack -n "__fish_spack_using_command_pos 0 gpg" -f -a untrust -d "remove a key from the keyring"
-complete -c spack -n "__fish_spack_using_command_pos 0 gpg" -f -a sign -d "sign a package"
-complete -c spack -n "__fish_spack_using_command_pos 0 gpg" -f -a create -d "create a new key"
-complete -c spack -n "__fish_spack_using_command_pos 0 gpg" -f -a list -d "list keys available in the keyring"
-complete -c spack -n "__fish_spack_using_command_pos 0 gpg" -f -a init -d "add the default keys to the keyring"
-complete -c spack -n "__fish_spack_using_command_pos 0 gpg" -f -a export -d "export a gpg key, optionally including secret key."
-complete -c spack -n "__fish_spack_using_command_pos 0 gpg" -f -a publish -d "publish public keys to a build cache"
+complete -c spack -n "__fish_spack_using_command_pos 0 gpg" -f -a "verify" -d "verify a signed package"
+complete -c spack -n "__fish_spack_using_command_pos 0 gpg" -f -a "trust" -d "add a key to the keyring"
+complete -c spack -n "__fish_spack_using_command_pos 0 gpg" -f -a "untrust" -d "remove a key from the keyring"
+complete -c spack -n "__fish_spack_using_command_pos 0 gpg" -f -a "sign" -d "sign a package"
+complete -c spack -n "__fish_spack_using_command_pos 0 gpg" -f -a "create" -d "create a new key"
+complete -c spack -n "__fish_spack_using_command_pos 0 gpg" -f -a "list" -d "list keys available in the keyring"
+complete -c spack -n "__fish_spack_using_command_pos 0 gpg" -f -a "init" -d "add the default keys to the keyring"
+complete -c spack -n "__fish_spack_using_command_pos 0 gpg" -f -a "export" -d "export a gpg key, optionally including secret key."
+complete -c spack -n "__fish_spack_using_command_pos 0 gpg" -f -a "publish" -d "publish public keys to a build cache"
 # ['-h', '--help'] -> 'help': 0
 complete -c spack -n "__fish_spack_using_command gpg" -s h -l help -d "show this help message and exit"
 
@@ -1930,7 +1930,7 @@ complete -c spack -n "__fish_spack_using_command install" -f -k -a "(__fish_spac
 # ['-h', '--help'] -> 'help': 0
 complete -c spack -n "__fish_spack_using_command install" -s h -l help -d "show this help message and exit"
 # ['--only'] -> ['package', 'dependencies']: None
-complete -c spack -n "__fish_spack_using_command install" -l only -r -f -a package dependencies
+complete -c spack -n "__fish_spack_using_command install" -l only -r -f -a "package dependencies"
 complete -c spack -n "__fish_spack_using_command install" -l only -r -d "select the mode of installation. the default is to install the package along with all its dependencies. alternatively one can decide to install only the package or only the dependencies"
 # ['-u', '--until'] -> 'until': None
 complete -c spack -n "__fish_spack_using_command install" -s u -l until -r -d "phase to stop after when installing (default None)"
@@ -1984,10 +1984,10 @@ complete -c spack -n "__fish_spack_using_command install" -l clean -d "unset har
 # ['--dirty'] -> 'dirty': 0
 complete -c spack -n "__fish_spack_using_command install" -l dirty -d "preserve user environment in spack's build environment (danger!)"
 # ['--test'] -> ['root', 'all']: None
-complete -c spack -n "__fish_spack_using_command install" -l test -r -f -a root all
+complete -c spack -n "__fish_spack_using_command install" -l test -r -f -a "root all"
 complete -c spack -n "__fish_spack_using_command install" -l test -r -d "If 'root' is chosen, run package tests during installation for top-level packages (but skip tests for dependencies). if 'all' is chosen, run package tests during installation for all packages. If neither are chosen, don't run tests for any packages."
 # ['--log-format'] -> ['junit', 'cdash']: None
-complete -c spack -n "__fish_spack_using_command install" -l log-format -r -f -a junit cdash
+complete -c spack -n "__fish_spack_using_command install" -l log-format -r -f -a "junit cdash"
 complete -c spack -n "__fish_spack_using_command install" -l log-format -r -d "format to be used for log files"
 # ['--log-file'] -> 'log_file': None
 complete -c spack -n "__fish_spack_using_command install" -l log-file -r -d "filename for the log file. if not passed a default will be used"
@@ -2014,9 +2014,9 @@ complete -c spack -n "__fish_spack_using_command install" -l reuse-deps -d "reus
 
 # spack license
 set -g __fish_spack_optspecs_spack_license h/help root=
-complete -c spack -n "__fish_spack_using_command_pos 0 license" -f -a list-files -d "list files in spack that should have license headers"
-complete -c spack -n "__fish_spack_using_command_pos 0 license" -f -a verify -d "verify that files in spack have the right license header"
-complete -c spack -n "__fish_spack_using_command_pos 0 license" -f -a update-copyright-year -d "update copyright for the current year in all licensed files"
+complete -c spack -n "__fish_spack_using_command_pos 0 license" -f -a "list-files" -d "list files in spack that should have license headers"
+complete -c spack -n "__fish_spack_using_command_pos 0 license" -f -a "verify" -d "verify that files in spack have the right license header"
+complete -c spack -n "__fish_spack_using_command_pos 0 license" -f -a "update-copyright-year" -d "update copyright for the current year in all licensed files"
 # ['-h', '--help'] -> 'help': 0
 complete -c spack -n "__fish_spack_using_command license" -s h -l help -d "show this help message and exit"
 # ['--root'] -> 'root': None
@@ -2046,7 +2046,7 @@ complete -c spack -n "__fish_spack_using_command list" -s h -l help -d "show thi
 # ['-d', '--search-description'] -> 'search_description': 0
 complete -c spack -n "__fish_spack_using_command list" -s d -l search-description -d "filtering will also search the description for a match"
 # ['--format'] -> ['name_only', 'version_json', 'html']: None
-complete -c spack -n "__fish_spack_using_command list" -l format -r -f -a name_only version_json html
+complete -c spack -n "__fish_spack_using_command list" -l format -r -f -a "name_only version_json html"
 complete -c spack -n "__fish_spack_using_command list" -l format -r -d "format to be used to print the output [default: name_only]"
 # ['-v', '--virtuals'] -> 'virtuals': 0
 complete -c spack -n "__fish_spack_using_command list" -s v -l virtuals -d "include virtual packages in list"
@@ -2075,7 +2075,7 @@ complete -c spack -n "__fish_spack_using_command load" -l bat -d "print bat comm
 # ['--first'] -> 'load_first': 0
 complete -c spack -n "__fish_spack_using_command load" -l first -d "load the first match if multiple packages match the spec"
 # ['--only'] -> ['package', 'dependencies']: None
-complete -c spack -n "__fish_spack_using_command load" -l only -r -f -a package dependencies
+complete -c spack -n "__fish_spack_using_command load" -l only -r -f -a "package dependencies"
 complete -c spack -n "__fish_spack_using_command load" -l only -r -d "select whether to load the package and its dependencies the default is to load the package and all dependencies alternatively one can decide to load only the package or only the dependencies"
 # ['--list'] -> 'list': 0
 complete -c spack -n "__fish_spack_using_command load" -l list -d "show loaded packages: same as `spack find --loaded`"
@@ -2158,7 +2158,7 @@ complete -c spack -n "__fish_spack_using_command make-installer" -s v -l spack-v
 # ['-s', '--spack-source'] -> 'spack_source': None
 complete -c spack -n "__fish_spack_using_command make-installer" -s s -l spack-source -r -d "full path to spack source"
 # ['-g', '--git-installer-verbosity'] -> ['SILENT', 'VERYSILENT']: None
-complete -c spack -n "__fish_spack_using_command make-installer" -s g -l git-installer-verbosity -r -f -a SILENT VERYSILENT
+complete -c spack -n "__fish_spack_using_command make-installer" -s g -l git-installer-verbosity -r -f -a "SILENT VERYSILENT"
 complete -c spack -n "__fish_spack_using_command make-installer" -s g -l git-installer-verbosity -r -d "Level of verbosity provided by bundled Git Installer.             Default is fully verbose"
 
 # spack mark
@@ -2176,13 +2176,13 @@ complete -c spack -n "__fish_spack_using_command mark" -s i -l implicit -d "Mark
 
 # spack mirror
 set -g __fish_spack_optspecs_spack_mirror h/help n/no-checksum deprecated
-complete -c spack -n "__fish_spack_using_command_pos 0 mirror" -f -a create -d "Create a directory to be used as a spack mirror, and fill it with"
-complete -c spack -n "__fish_spack_using_command_pos 0 mirror" -f -a destroy -d "Given a url, recursively delete everything under it."
-complete -c spack -n "__fish_spack_using_command_pos 0 mirror" -f -a add -d "Add a mirror to Spack."
-complete -c spack -n "__fish_spack_using_command_pos 0 mirror" -f -a remove -d "Remove a mirror by name."
-complete -c spack -n "__fish_spack_using_command_pos 0 mirror" -f -a rm -d "Remove a mirror by name."
-complete -c spack -n "__fish_spack_using_command_pos 0 mirror" -f -a set-url -d "Change the URL of a mirror."
-complete -c spack -n "__fish_spack_using_command_pos 0 mirror" -f -a list -d "Print out available mirrors to the console."
+complete -c spack -n "__fish_spack_using_command_pos 0 mirror" -f -a "create" -d "Create a directory to be used as a spack mirror, and fill it with"
+complete -c spack -n "__fish_spack_using_command_pos 0 mirror" -f -a "destroy" -d "Given a url, recursively delete everything under it."
+complete -c spack -n "__fish_spack_using_command_pos 0 mirror" -f -a "add" -d "Add a mirror to Spack."
+complete -c spack -n "__fish_spack_using_command_pos 0 mirror" -f -a "remove" -d "Remove a mirror by name."
+complete -c spack -n "__fish_spack_using_command_pos 0 mirror" -f -a "rm" -d "Remove a mirror by name."
+complete -c spack -n "__fish_spack_using_command_pos 0 mirror" -f -a "set-url" -d "Change the URL of a mirror."
+complete -c spack -n "__fish_spack_using_command_pos 0 mirror" -f -a "list" -d "Print out available mirrors to the console."
 # ['-h', '--help'] -> 'help': 0
 complete -c spack -n "__fish_spack_using_command mirror" -s h -l help -d "show this help message and exit"
 # ['-n', '--no-checksum'] -> 'no_checksum': 0
@@ -2232,7 +2232,7 @@ complete -c spack -n "__fish_spack_using_command_pos 0 mirror add" -f
 # ['-h', '--help'] -> 'help': 0
 complete -c spack -n "__fish_spack_using_command mirror add" -s h -l help -d "show this help message and exit"
 # ['--scope'] -> ['_builtin', 'defaults', 'defaults/darwin', 'system', 'system/darwin', 'site', 'site/darwin', 'user', 'user/darwin', 'command_line']: None
-complete -c spack -n "__fish_spack_using_command mirror add" -l scope -r -f -a _builtin defaults defaults/darwin system system/darwin site site/darwin user user/darwin command_line
+complete -c spack -n "__fish_spack_using_command mirror add" -l scope -r -f -a "_builtin defaults defaults/darwin system system/darwin site site/darwin user user/darwin command_line"
 complete -c spack -n "__fish_spack_using_command mirror add" -l scope -r -d "configuration scope to modify"
 # ['--s3-access-key-id'] -> 's3_access_key_id': None
 complete -c spack -n "__fish_spack_using_command mirror add" -l s3-access-key-id -r -d "ID string to use to connect to this S3 mirror"
@@ -2252,7 +2252,7 @@ complete -c spack -n "__fish_spack_using_command_pos 0 mirror remove" -f -a "(__
 # ['-h', '--help'] -> 'help': 0
 complete -c spack -n "__fish_spack_using_command mirror remove" -s h -l help -d "show this help message and exit"
 # ['--scope'] -> ['_builtin', 'defaults', 'defaults/darwin', 'system', 'system/darwin', 'site', 'site/darwin', 'user', 'user/darwin', 'command_line']: None
-complete -c spack -n "__fish_spack_using_command mirror remove" -l scope -r -f -a _builtin defaults defaults/darwin system system/darwin site site/darwin user user/darwin command_line
+complete -c spack -n "__fish_spack_using_command mirror remove" -l scope -r -f -a "_builtin defaults defaults/darwin system system/darwin site site/darwin user user/darwin command_line"
 complete -c spack -n "__fish_spack_using_command mirror remove" -l scope -r -d "configuration scope to modify"
 
 # spack mirror rm
@@ -2262,7 +2262,7 @@ complete -c spack -n "__fish_spack_using_command_pos 0 mirror rm" -f -a "(__fish
 # ['-h', '--help'] -> 'help': 0
 complete -c spack -n "__fish_spack_using_command mirror rm" -s h -l help -d "show this help message and exit"
 # ['--scope'] -> ['_builtin', 'defaults', 'defaults/darwin', 'system', 'system/darwin', 'site', 'site/darwin', 'user', 'user/darwin', 'command_line']: None
-complete -c spack -n "__fish_spack_using_command mirror rm" -l scope -r -f -a _builtin defaults defaults/darwin system system/darwin site site/darwin user user/darwin command_line
+complete -c spack -n "__fish_spack_using_command mirror rm" -l scope -r -f -a "_builtin defaults defaults/darwin system system/darwin site site/darwin user user/darwin command_line"
 complete -c spack -n "__fish_spack_using_command mirror rm" -l scope -r -d "configuration scope to modify"
 
 # spack mirror set-url
@@ -2275,7 +2275,7 @@ complete -c spack -n "__fish_spack_using_command mirror set-url" -s h -l help -d
 # ['--push'] -> 'push': 0
 complete -c spack -n "__fish_spack_using_command mirror set-url" -l push -d "set only the URL used for uploading new packages"
 # ['--scope'] -> ['_builtin', 'defaults', 'defaults/darwin', 'system', 'system/darwin', 'site', 'site/darwin', 'user', 'user/darwin', 'command_line']: None
-complete -c spack -n "__fish_spack_using_command mirror set-url" -l scope -r -f -a _builtin defaults defaults/darwin system system/darwin site site/darwin user user/darwin command_line
+complete -c spack -n "__fish_spack_using_command mirror set-url" -l scope -r -f -a "_builtin defaults defaults/darwin system system/darwin site site/darwin user user/darwin command_line"
 complete -c spack -n "__fish_spack_using_command mirror set-url" -l scope -r -d "configuration scope to modify"
 # ['--s3-access-key-id'] -> 's3_access_key_id': None
 complete -c spack -n "__fish_spack_using_command mirror set-url" -l s3-access-key-id -r -d "ID string to use to connect to this S3 mirror"
@@ -2293,23 +2293,23 @@ set -g __fish_spack_optspecs_spack_mirror_list h/help scope=
 # ['-h', '--help'] -> 'help': 0
 complete -c spack -n "__fish_spack_using_command mirror list" -s h -l help -d "show this help message and exit"
 # ['--scope'] -> ['_builtin', 'defaults', 'defaults/darwin', 'system', 'system/darwin', 'site', 'site/darwin', 'user', 'user/darwin', 'command_line']: None
-complete -c spack -n "__fish_spack_using_command mirror list" -l scope -r -f -a _builtin defaults defaults/darwin system system/darwin site site/darwin user user/darwin command_line
+complete -c spack -n "__fish_spack_using_command mirror list" -l scope -r -f -a "_builtin defaults defaults/darwin system system/darwin site site/darwin user user/darwin command_line"
 complete -c spack -n "__fish_spack_using_command mirror list" -l scope -r -d "configuration scope to read from"
 
 # spack module
 set -g __fish_spack_optspecs_spack_module h/help
-complete -c spack -n "__fish_spack_using_command_pos 0 module" -f -a lmod -d "manipulate hierarchical module files"
-complete -c spack -n "__fish_spack_using_command_pos 0 module" -f -a tcl -d "manipulate non-hierarchical module files"
+complete -c spack -n "__fish_spack_using_command_pos 0 module" -f -a "lmod" -d "manipulate hierarchical module files"
+complete -c spack -n "__fish_spack_using_command_pos 0 module" -f -a "tcl" -d "manipulate non-hierarchical module files"
 # ['-h', '--help'] -> 'help': 0
 complete -c spack -n "__fish_spack_using_command module" -s h -l help -d "show this help message and exit"
 
 # spack module lmod
 set -g __fish_spack_optspecs_spack_module_lmod h/help n/name=
-complete -c spack -n "__fish_spack_using_command_pos 0 module lmod" -f -a refresh -d "regenerate module files"
-complete -c spack -n "__fish_spack_using_command_pos 0 module lmod" -f -a find -d "find module files for packages"
-complete -c spack -n "__fish_spack_using_command_pos 0 module lmod" -f -a rm -d "remove module files"
-complete -c spack -n "__fish_spack_using_command_pos 0 module lmod" -f -a loads -d "prompt the list of modules associated with a constraint"
-complete -c spack -n "__fish_spack_using_command_pos 0 module lmod" -f -a setdefault -d "set the default module file for a package"
+complete -c spack -n "__fish_spack_using_command_pos 0 module lmod" -f -a "refresh" -d "regenerate module files"
+complete -c spack -n "__fish_spack_using_command_pos 0 module lmod" -f -a "find" -d "find module files for packages"
+complete -c spack -n "__fish_spack_using_command_pos 0 module lmod" -f -a "rm" -d "remove module files"
+complete -c spack -n "__fish_spack_using_command_pos 0 module lmod" -f -a "loads" -d "prompt the list of modules associated with a constraint"
+complete -c spack -n "__fish_spack_using_command_pos 0 module lmod" -f -a "setdefault" -d "set the default module file for a package"
 # ['-h', '--help'] -> 'help': 0
 complete -c spack -n "__fish_spack_using_command module lmod" -s h -l help -d "show this help message and exit"
 # ['-n', '--name'] -> 'module_set_name': None
@@ -2373,11 +2373,11 @@ complete -c spack -n "__fish_spack_using_command module lmod setdefault" -s h -l
 
 # spack module tcl
 set -g __fish_spack_optspecs_spack_module_tcl h/help n/name=
-complete -c spack -n "__fish_spack_using_command_pos 0 module tcl" -f -a refresh -d "regenerate module files"
-complete -c spack -n "__fish_spack_using_command_pos 0 module tcl" -f -a find -d "find module files for packages"
-complete -c spack -n "__fish_spack_using_command_pos 0 module tcl" -f -a rm -d "remove module files"
-complete -c spack -n "__fish_spack_using_command_pos 0 module tcl" -f -a loads -d "prompt the list of modules associated with a constraint"
-complete -c spack -n "__fish_spack_using_command_pos 0 module tcl" -f -a setdefault -d "set the default module file for a package"
+complete -c spack -n "__fish_spack_using_command_pos 0 module tcl" -f -a "refresh" -d "regenerate module files"
+complete -c spack -n "__fish_spack_using_command_pos 0 module tcl" -f -a "find" -d "find module files for packages"
+complete -c spack -n "__fish_spack_using_command_pos 0 module tcl" -f -a "rm" -d "remove module files"
+complete -c spack -n "__fish_spack_using_command_pos 0 module tcl" -f -a "loads" -d "prompt the list of modules associated with a constraint"
+complete -c spack -n "__fish_spack_using_command_pos 0 module tcl" -f -a "setdefault" -d "set the default module file for a package"
 # ['-h', '--help'] -> 'help': 0
 complete -c spack -n "__fish_spack_using_command module tcl" -s h -l help -d "show this help message and exit"
 # ['-n', '--name'] -> 'module_set_name': None
@@ -2458,15 +2458,15 @@ complete -c spack -n "__fish_spack_using_command patch" -l reuse-deps -d "reuse 
 
 # spack pkg
 set -g __fish_spack_optspecs_spack_pkg h/help
-complete -c spack -n "__fish_spack_using_command_pos 0 pkg" -f -a add -d "add a package to the git stage with `git add`"
-complete -c spack -n "__fish_spack_using_command_pos 0 pkg" -f -a list -d "list packages associated with a particular spack git revision"
-complete -c spack -n "__fish_spack_using_command_pos 0 pkg" -f -a diff -d "compare packages available in two different git revisions"
-complete -c spack -n "__fish_spack_using_command_pos 0 pkg" -f -a added -d "show packages added since a commit"
-complete -c spack -n "__fish_spack_using_command_pos 0 pkg" -f -a changed -d "show packages changed since a commit"
-complete -c spack -n "__fish_spack_using_command_pos 0 pkg" -f -a removed -d "show packages removed since a commit"
-complete -c spack -n "__fish_spack_using_command_pos 0 pkg" -f -a grep -d "grep for strings in package.py files from all repositories"
-complete -c spack -n "__fish_spack_using_command_pos 0 pkg" -f -a source -d "dump source code for a package"
-complete -c spack -n "__fish_spack_using_command_pos 0 pkg" -f -a hash -d "dump canonical source code hash for a package spec"
+complete -c spack -n "__fish_spack_using_command_pos 0 pkg" -f -a "add" -d "add a package to the git stage with `git add`"
+complete -c spack -n "__fish_spack_using_command_pos 0 pkg" -f -a "list" -d "list packages associated with a particular spack git revision"
+complete -c spack -n "__fish_spack_using_command_pos 0 pkg" -f -a "diff" -d "compare packages available in two different git revisions"
+complete -c spack -n "__fish_spack_using_command_pos 0 pkg" -f -a "added" -d "show packages added since a commit"
+complete -c spack -n "__fish_spack_using_command_pos 0 pkg" -f -a "changed" -d "show packages changed since a commit"
+complete -c spack -n "__fish_spack_using_command_pos 0 pkg" -f -a "removed" -d "show packages removed since a commit"
+complete -c spack -n "__fish_spack_using_command_pos 0 pkg" -f -a "grep" -d "grep for strings in package.py files from all repositories"
+complete -c spack -n "__fish_spack_using_command_pos 0 pkg" -f -a "source" -d "dump source code for a package"
+complete -c spack -n "__fish_spack_using_command_pos 0 pkg" -f -a "hash" -d "dump canonical source code hash for a package spec"
 # ['-h', '--help'] -> 'help': 0
 complete -c spack -n "__fish_spack_using_command pkg" -s h -l help -d "show this help message and exit"
 
@@ -2569,7 +2569,7 @@ complete -c spack -n "__fish_spack_using_command python" -s c -r -d "command to 
 # ['-u'] -> 'unbuffered': 0
 complete -c spack -n "__fish_spack_using_command python" -s u -d "for compatibility with xdist, do not use without adding -u to the interpreter"
 # ['-i'] -> ['python', 'ipython']: None
-complete -c spack -n "__fish_spack_using_command python" -s i -r -f -a python ipython
+complete -c spack -n "__fish_spack_using_command python" -s i -r -f -a "python ipython"
 complete -c spack -n "__fish_spack_using_command python" -s i -r -d "python interpreter"
 # ['-m'] -> 'module': None
 complete -c spack -n "__fish_spack_using_command python" -s m -r -d "run library module as a script"
@@ -2609,11 +2609,11 @@ complete -c spack -n "__fish_spack_using_command rm" -s f -l force -d "remove co
 
 # spack repo
 set -g __fish_spack_optspecs_spack_repo h/help
-complete -c spack -n "__fish_spack_using_command_pos 0 repo" -f -a create -d "Create a new package repository."
-complete -c spack -n "__fish_spack_using_command_pos 0 repo" -f -a list -d "Show registered repositories and their namespaces."
-complete -c spack -n "__fish_spack_using_command_pos 0 repo" -f -a add -d "Add a package source to Spack's configuration."
-complete -c spack -n "__fish_spack_using_command_pos 0 repo" -f -a remove -d "Remove a repository from Spack's configuration."
-complete -c spack -n "__fish_spack_using_command_pos 0 repo" -f -a rm -d "Remove a repository from Spack's configuration."
+complete -c spack -n "__fish_spack_using_command_pos 0 repo" -f -a "create" -d "Create a new package repository."
+complete -c spack -n "__fish_spack_using_command_pos 0 repo" -f -a "list" -d "Show registered repositories and their namespaces."
+complete -c spack -n "__fish_spack_using_command_pos 0 repo" -f -a "add" -d "Add a package source to Spack's configuration."
+complete -c spack -n "__fish_spack_using_command_pos 0 repo" -f -a "remove" -d "Remove a repository from Spack's configuration."
+complete -c spack -n "__fish_spack_using_command_pos 0 repo" -f -a "rm" -d "Remove a repository from Spack's configuration."
 # ['-h', '--help'] -> 'help': 0
 complete -c spack -n "__fish_spack_using_command repo" -s h -l help -d "show this help message and exit"
 
@@ -2632,7 +2632,7 @@ set -g __fish_spack_optspecs_spack_repo_list h/help scope=
 # ['-h', '--help'] -> 'help': 0
 complete -c spack -n "__fish_spack_using_command repo list" -s h -l help -d "show this help message and exit"
 # ['--scope'] -> ['_builtin', 'defaults', 'defaults/darwin', 'system', 'system/darwin', 'site', 'site/darwin', 'user', 'user/darwin', 'command_line']: None
-complete -c spack -n "__fish_spack_using_command repo list" -l scope -r -f -a _builtin defaults defaults/darwin system system/darwin site site/darwin user user/darwin command_line
+complete -c spack -n "__fish_spack_using_command repo list" -l scope -r -f -a "_builtin defaults defaults/darwin system system/darwin site site/darwin user user/darwin command_line"
 complete -c spack -n "__fish_spack_using_command repo list" -l scope -r -d "configuration scope to read from"
 
 # spack repo add
@@ -2642,7 +2642,7 @@ complete -c spack -n "__fish_spack_using_command_pos 0 repo add" -f -a "(__fish_
 # ['-h', '--help'] -> 'help': 0
 complete -c spack -n "__fish_spack_using_command repo add" -s h -l help -d "show this help message and exit"
 # ['--scope'] -> ['_builtin', 'defaults', 'defaults/darwin', 'system', 'system/darwin', 'site', 'site/darwin', 'user', 'user/darwin', 'command_line']: None
-complete -c spack -n "__fish_spack_using_command repo add" -l scope -r -f -a _builtin defaults defaults/darwin system system/darwin site site/darwin user user/darwin command_line
+complete -c spack -n "__fish_spack_using_command repo add" -l scope -r -f -a "_builtin defaults defaults/darwin system system/darwin site site/darwin user user/darwin command_line"
 complete -c spack -n "__fish_spack_using_command repo add" -l scope -r -d "configuration scope to modify"
 
 # spack repo remove
@@ -2652,7 +2652,7 @@ complete -c spack -n "__fish_spack_using_command_pos 0 repo remove" $__fish_spac
 # ['-h', '--help'] -> 'help': 0
 complete -c spack -n "__fish_spack_using_command repo remove" -s h -l help -d "show this help message and exit"
 # ['--scope'] -> ['_builtin', 'defaults', 'defaults/darwin', 'system', 'system/darwin', 'site', 'site/darwin', 'user', 'user/darwin', 'command_line']: None
-complete -c spack -n "__fish_spack_using_command repo remove" -l scope -r -f -a _builtin defaults defaults/darwin system system/darwin site site/darwin user user/darwin command_line
+complete -c spack -n "__fish_spack_using_command repo remove" -l scope -r -f -a "_builtin defaults defaults/darwin system system/darwin site site/darwin user user/darwin command_line"
 complete -c spack -n "__fish_spack_using_command repo remove" -l scope -r -d "configuration scope to modify"
 
 # spack repo rm
@@ -2662,13 +2662,13 @@ complete -c spack -n "__fish_spack_using_command_pos 0 repo rm" $__fish_spack_fo
 # ['-h', '--help'] -> 'help': 0
 complete -c spack -n "__fish_spack_using_command repo rm" -s h -l help -d "show this help message and exit"
 # ['--scope'] -> ['_builtin', 'defaults', 'defaults/darwin', 'system', 'system/darwin', 'site', 'site/darwin', 'user', 'user/darwin', 'command_line']: None
-complete -c spack -n "__fish_spack_using_command repo rm" -l scope -r -f -a _builtin defaults defaults/darwin system system/darwin site site/darwin user user/darwin command_line
+complete -c spack -n "__fish_spack_using_command repo rm" -l scope -r -f -a "_builtin defaults defaults/darwin system system/darwin site site/darwin user user/darwin command_line"
 complete -c spack -n "__fish_spack_using_command repo rm" -l scope -r -d "configuration scope to modify"
 
 # spack resource
 set -g __fish_spack_optspecs_spack_resource h/help
-complete -c spack -n "__fish_spack_using_command_pos 0 resource" -f -a list -d "list all resources known to spack (currently just patches)"
-complete -c spack -n "__fish_spack_using_command_pos 0 resource" -f -a show -d "show a resource, identified by its checksum"
+complete -c spack -n "__fish_spack_using_command_pos 0 resource" -f -a "list" -d "list all resources known to spack (currently just patches)"
+complete -c spack -n "__fish_spack_using_command_pos 0 resource" -f -a "show" -d "show a resource, identified by its checksum"
 # ['-h', '--help'] -> 'help': 0
 complete -c spack -n "__fish_spack_using_command resource" -s h -l help -d "show this help message and exit"
 
@@ -2713,7 +2713,7 @@ complete -c spack -n "__fish_spack_using_command solve" -s y -l yaml -d "print c
 # ['-j', '--json'] -> 'format': 0
 complete -c spack -n "__fish_spack_using_command solve" -s j -l json -d "print concrete spec as json"
 # ['-c', '--cover'] -> ['nodes', 'edges', 'paths']: None
-complete -c spack -n "__fish_spack_using_command solve" -s c -l cover -r -f -a nodes edges paths
+complete -c spack -n "__fish_spack_using_command solve" -s c -l cover -r -f -a "nodes edges paths"
 complete -c spack -n "__fish_spack_using_command solve" -s c -l cover -r -d "how extensively to traverse the DAG (default: nodes)"
 # ['-N', '--namespaces'] -> 'namespaces': 0
 complete -c spack -n "__fish_spack_using_command solve" -s N -l namespaces -d "show fully qualified package names"
@@ -2751,7 +2751,7 @@ complete -c spack -n "__fish_spack_using_command spec" -s j -l json -d "print co
 # ['--format'] -> 'format': None
 complete -c spack -n "__fish_spack_using_command spec" -l format -r -d "print concrete spec with the specified format string"
 # ['-c', '--cover'] -> ['nodes', 'edges', 'paths']: None
-complete -c spack -n "__fish_spack_using_command spec" -s c -l cover -r -f -a nodes edges paths
+complete -c spack -n "__fish_spack_using_command spec" -s c -l cover -r -f -a "nodes edges paths"
 complete -c spack -n "__fish_spack_using_command spec" -s c -l cover -r -d "how extensively to traverse the DAG (default: nodes)"
 # ['-N', '--namespaces'] -> 'namespaces': 0
 complete -c spack -n "__fish_spack_using_command spec" -s N -l namespaces -d "show fully qualified package names"
@@ -2818,12 +2818,12 @@ complete -c spack -n "__fish_spack_using_command tags" -s a -l all -d "show pack
 
 # spack test
 set -g __fish_spack_optspecs_spack_test h/help
-complete -c spack -n "__fish_spack_using_command_pos 0 test" -f -a run -d "Run tests for the specified installed packages."
-complete -c spack -n "__fish_spack_using_command_pos 0 test" -f -a list -d "List installed packages with available tests."
-complete -c spack -n "__fish_spack_using_command_pos 0 test" -f -a find -d "Find tests that are running or have available results."
-complete -c spack -n "__fish_spack_using_command_pos 0 test" -f -a status -d "Get the current status for the specified Spack test suite(s)."
-complete -c spack -n "__fish_spack_using_command_pos 0 test" -f -a results -d "Get the results from Spack test suite(s) (default all)."
-complete -c spack -n "__fish_spack_using_command_pos 0 test" -f -a remove -d "Remove results from Spack test suite(s) (default all)."
+complete -c spack -n "__fish_spack_using_command_pos 0 test" -f -a "run" -d "Run tests for the specified installed packages."
+complete -c spack -n "__fish_spack_using_command_pos 0 test" -f -a "list" -d "List installed packages with available tests."
+complete -c spack -n "__fish_spack_using_command_pos 0 test" -f -a "find" -d "Find tests that are running or have available results."
+complete -c spack -n "__fish_spack_using_command_pos 0 test" -f -a "status" -d "Get the current status for the specified Spack test suite(s)."
+complete -c spack -n "__fish_spack_using_command_pos 0 test" -f -a "results" -d "Get the results from Spack test suite(s) (default all)."
+complete -c spack -n "__fish_spack_using_command_pos 0 test" -f -a "remove" -d "Remove results from Spack test suite(s) (default all)."
 # ['-h', '--help'] -> 'help': 0
 complete -c spack -n "__fish_spack_using_command test" -s h -l help -d "show this help message and exit"
 
@@ -2846,7 +2846,7 @@ complete -c spack -n "__fish_spack_using_command test run" -s x -l explicit -d "
 # ['--keep-stage'] -> 'keep_stage': 0
 complete -c spack -n "__fish_spack_using_command test run" -l keep-stage -d "Keep testing directory for debugging"
 # ['--log-format'] -> ['junit', 'cdash']: None
-complete -c spack -n "__fish_spack_using_command test run" -l log-format -r -f -a junit cdash
+complete -c spack -n "__fish_spack_using_command test run" -l log-format -r -f -a "junit cdash"
 complete -c spack -n "__fish_spack_using_command test run" -l log-format -r -d "format to be used for log files"
 # ['--log-file'] -> 'log_file': None
 complete -c spack -n "__fish_spack_using_command test run" -l log-file -r -d "filename for the log file. if not passed a default will be used"
@@ -3008,10 +3008,10 @@ complete -c spack -n "__fish_spack_using_command unload" -s a -l all -d "unload 
 
 # spack url
 set -g __fish_spack_optspecs_spack_url h/help
-complete -c spack -n "__fish_spack_using_command_pos 0 url" -f -a parse -d "attempt to parse a url"
-complete -c spack -n "__fish_spack_using_command_pos 0 url" -f -a list -d "list urls in all packages"
-complete -c spack -n "__fish_spack_using_command_pos 0 url" -f -a summary -d "print a summary of how well we are parsing package urls"
-complete -c spack -n "__fish_spack_using_command_pos 0 url" -f -a stats -d "print statistics on versions and checksums for all packages"
+complete -c spack -n "__fish_spack_using_command_pos 0 url" -f -a "parse" -d "attempt to parse a url"
+complete -c spack -n "__fish_spack_using_command_pos 0 url" -f -a "list" -d "list urls in all packages"
+complete -c spack -n "__fish_spack_using_command_pos 0 url" -f -a "summary" -d "print a summary of how well we are parsing package urls"
+complete -c spack -n "__fish_spack_using_command_pos 0 url" -f -a "stats" -d "print statistics on versions and checksums for all packages"
 # ['-h', '--help'] -> 'help': 0
 complete -c spack -n "__fish_spack_using_command url" -s h -l help -d "show this help message and exit"
 
@@ -3088,18 +3088,18 @@ complete -c spack -n "__fish_spack_using_command versions" -s c -l concurrency -
 
 # spack view
 set -g __fish_spack_optspecs_spack_view h/help v/verbose e/exclude= d/dependencies=
-complete -c spack -n "__fish_spack_using_command_pos 0 view" -f -a symlink -d "add package files to a filesystem view via symbolic links"
-complete -c spack -n "__fish_spack_using_command_pos 0 view" -f -a add -d "add package files to a filesystem view via symbolic links"
-complete -c spack -n "__fish_spack_using_command_pos 0 view" -f -a soft -d "add package files to a filesystem view via symbolic links"
-complete -c spack -n "__fish_spack_using_command_pos 0 view" -f -a hardlink -d "add packages files to a filesystem view via hard links"
-complete -c spack -n "__fish_spack_using_command_pos 0 view" -f -a hard -d "add packages files to a filesystem view via hard links"
-complete -c spack -n "__fish_spack_using_command_pos 0 view" -f -a copy -d "add package files to a filesystem view via copy/relocate"
-complete -c spack -n "__fish_spack_using_command_pos 0 view" -f -a relocate -d "add package files to a filesystem view via copy/relocate"
-complete -c spack -n "__fish_spack_using_command_pos 0 view" -f -a remove -d "remove packages from a filesystem view"
-complete -c spack -n "__fish_spack_using_command_pos 0 view" -f -a rm -d "remove packages from a filesystem view"
-complete -c spack -n "__fish_spack_using_command_pos 0 view" -f -a statlink -d "check status of packages in a filesystem view"
-complete -c spack -n "__fish_spack_using_command_pos 0 view" -f -a status -d "check status of packages in a filesystem view"
-complete -c spack -n "__fish_spack_using_command_pos 0 view" -f -a check -d "check status of packages in a filesystem view"
+complete -c spack -n "__fish_spack_using_command_pos 0 view" -f -a "symlink" -d "add package files to a filesystem view via symbolic links"
+complete -c spack -n "__fish_spack_using_command_pos 0 view" -f -a "add" -d "add package files to a filesystem view via symbolic links"
+complete -c spack -n "__fish_spack_using_command_pos 0 view" -f -a "soft" -d "add package files to a filesystem view via symbolic links"
+complete -c spack -n "__fish_spack_using_command_pos 0 view" -f -a "hardlink" -d "add packages files to a filesystem view via hard links"
+complete -c spack -n "__fish_spack_using_command_pos 0 view" -f -a "hard" -d "add packages files to a filesystem view via hard links"
+complete -c spack -n "__fish_spack_using_command_pos 0 view" -f -a "copy" -d "add package files to a filesystem view via copy/relocate"
+complete -c spack -n "__fish_spack_using_command_pos 0 view" -f -a "relocate" -d "add package files to a filesystem view via copy/relocate"
+complete -c spack -n "__fish_spack_using_command_pos 0 view" -f -a "remove" -d "remove packages from a filesystem view"
+complete -c spack -n "__fish_spack_using_command_pos 0 view" -f -a "rm" -d "remove packages from a filesystem view"
+complete -c spack -n "__fish_spack_using_command_pos 0 view" -f -a "statlink" -d "check status of packages in a filesystem view"
+complete -c spack -n "__fish_spack_using_command_pos 0 view" -f -a "status" -d "check status of packages in a filesystem view"
+complete -c spack -n "__fish_spack_using_command_pos 0 view" -f -a "check" -d "check status of packages in a filesystem view"
 # ['-h', '--help'] -> 'help': 0
 complete -c spack -n "__fish_spack_using_command view" -s h -l help -d "show this help message and exit"
 # ['-v', '--verbose'] -> 'verbose': 0
@@ -3107,7 +3107,7 @@ complete -c spack -n "__fish_spack_using_command view" -s v -l verbose -d "If no
 # ['-e', '--exclude'] -> 'exclude': None
 complete -c spack -n "__fish_spack_using_command view" -s e -l exclude -r -d "exclude packages with names matching the given regex pattern"
 # ['-d', '--dependencies'] -> ['true', 'false', 'yes', 'no']: None
-complete -c spack -n "__fish_spack_using_command view" -s d -l dependencies -r -f -a true false yes no
+complete -c spack -n "__fish_spack_using_command view" -s d -l dependencies -r -f -a "true false yes no"
 complete -c spack -n "__fish_spack_using_command view" -s d -l dependencies -r -d "Link/remove/list dependencies."
 
 # spack view symlink

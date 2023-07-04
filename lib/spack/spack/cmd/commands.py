@@ -444,7 +444,7 @@ class FishCompletionWriter(ArgparseCompletionWriter):
                 # If there are choices, we provide a completion for all
                 # possible values
                 choices = " ".join(choices)
-                commands.append(head + " -f -a %s" % choices)
+                commands.append(head + ' -f -a "%s"' % choices)
             else:
                 # Otherwise, we try to find a predefined completion for it
                 value = _fish_dest_get_complete(prog, args)
@@ -518,7 +518,7 @@ class FishCompletionWriter(ArgparseCompletionWriter):
                 # If there are choices, we provide a completion for all
                 # possible values
                 choices = " ".join(dest)
-                commands.append(prefix + " -f -a %s" % choices)
+                commands.append(prefix + ' -f -a "%s"' % choices)
             else:
                 # Otherwise, we try to find a predefined completion for it
                 value = _fish_dest_get_complete(prog, dest)
@@ -546,7 +546,7 @@ class FishCompletionWriter(ArgparseCompletionWriter):
         head = self.complete_head(prog, 0)
 
         for _, subcommand, help in subcommands:
-            command = head + " -f -a %s" % subcommand
+            command = head + ' -f -a "%s"' % subcommand
 
             if help is not None and len(help) > 0:
                 help = help.split("\n")[0]
