@@ -3,8 +3,6 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from __future__ import division, print_function
-
 import urllib.parse
 from collections import defaultdict
 

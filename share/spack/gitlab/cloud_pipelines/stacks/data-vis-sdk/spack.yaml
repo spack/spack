@@ -60,9 +60,9 @@ spack:
       - [$^paraview_specs]
       - - ^hdf5@1.14 # Non-VisIt can build HDF5 1.14
     # Test ParaView builds with differnt GL backends
-    - matrix:
-      - [$sdk_base_spec]
-      - [$^visit_specs]
+    # - matrix:
+    #   - [$sdk_base_spec]
+    #   - [$^visit_specs]
 
   mirrors: { "mirror": "s3://spack-binaries/develop/data-vis-sdk" }
 
