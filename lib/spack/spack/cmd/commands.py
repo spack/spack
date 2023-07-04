@@ -527,7 +527,7 @@ class FishCompletionWriter(ArgparseCompletionWriter):
 
             if len(help) > 0:
                 help = help.split("\n")[0]
-                commands.append(prefix + " -d %s" % help)
+                commands.append(prefix + ' -d "%s"' % help)
 
         return "\n".join(commands) + "\n"
 
@@ -550,7 +550,7 @@ class FishCompletionWriter(ArgparseCompletionWriter):
 
             if help is not None and len(help) > 0:
                 help = help.split("\n")[0]
-                command += " -d %s" % help
+                command += ' -d "%s"' % help
 
             commands.append(command)
 
