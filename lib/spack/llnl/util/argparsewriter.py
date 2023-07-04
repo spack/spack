@@ -5,7 +5,6 @@
 
 import abc
 import argparse
-import errno
 import io
 import re
 import sys
