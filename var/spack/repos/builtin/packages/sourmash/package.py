@@ -38,13 +38,7 @@ class Sourmash(PythonPackage):
         args = std_pip_args + ["--prefix=" + prefix, "."]
         pip(*args)
         # move sourmash.so into expected place
-        site_packages = join_path(
-            prefix.lib,
-            "python{0}".format(spec["python"].version.up_to(2)),
-            "site-packages",
-            "sourmash",
-        )
-        mkdirp(site_packages)
+        site_packages = join_path(python_platlib, "sourmash")
         lib_ext = "dylib" if spec.platform == "Darwin" else "so"
         install(
             join_path("target", "release", "libsourmash.{}".format(lib_ext)),
