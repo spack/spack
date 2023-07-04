@@ -27,7 +27,7 @@ class Sourmash(PythonPackage):
     depends_on("py-scipy")
     depends_on("py-deprecation@2.0.6:")
     depends_on("py-cachetools@4:5")
-    depends_on("py-bitstring@3.1.9:")
+    depends_on("py-bitstring@3.1.9:4")
     depends_on("py-importlib_metadata@3.6:", when="^python@:3.9")
 
     def install(self, spec, prefix):
