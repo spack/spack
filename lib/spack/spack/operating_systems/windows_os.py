@@ -43,9 +43,7 @@ class WindowsOs(OperatingSystem):
         return self.name
 
     @property
-    def compiler_search_paths(self):
-        # First Strategy: Find MSVC directories using vswhere
-        _compiler_search_paths = []
+    def vs_install_paths(self):
         vs_install_paths = []
         root = os.environ.get("ProgramFiles(x86)") or os.environ.get("ProgramFiles")
         if root:
@@ -65,24 +63,32 @@ class WindowsOs(OperatingSystem):
                     **extra_args,
                 ).strip()
                 vs_install_paths = paths.split("\n")
-                msvc_paths = [
-                    os.path.join(path, "VC", "Tools", "MSVC") for path in vs_install_paths
-                ]
-                for p in msvc_paths:
-                    _compiler_search_paths.extend(
-                        glob.glob(os.path.join(p, "*", "bin", "Hostx64", "x64"))
-                    )
-                if os.getenv("ONEAPI_ROOT"):
-                    _compiler_search_paths.extend(
-                        glob.glob(
-                            os.path.join(
-                                str(os.getenv("ONEAPI_ROOT")), "compiler", "*", "windows", "bin"
-                            )
-                        )
-                    )
             except (subprocess.CalledProcessError, OSError, UnicodeDecodeError):
                 pass
-        _compiler_search_paths.extend(_compiler_search_paths)
+        return vs_install_paths
+
+    @property
+    def msvc_paths(self):
+        return [
+                    os.path.join(path, "VC", "Tools", "MSVC") for path in self.vs_install_paths
+                ]
+
+    @property
+    def compiler_search_paths(self):
+        # First Strategy: Find MSVC directories using vswhere
+        _compiler_search_paths = []
+        for p in self.msvc_paths:
+            _compiler_search_paths.extend(
+                glob.glob(os.path.join(p, "*", "bin", "Hostx64", "x64"))
+            )
+        if os.getenv("ONEAPI_ROOT"):
+            _compiler_search_paths.extend(
+                glob.glob(
+                    os.path.join(
+                        str(os.getenv("ONEAPI_ROOT")), "compiler", "*", "windows", "bin"
+                    )
+                )
+            )
         if not _compiler_search_paths:
             # Second strategy: Find MSVC via the registry
             msft = winreg.WindowsRegistryView(
