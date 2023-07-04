@@ -2209,7 +2209,7 @@ class TestConcretizeSeparately:
         o gmake@4.1
 
         """
-        spack.config.config.set("concretizer:duplicates:strategy", strategy)
+        spack.config.CONFIG.set("concretizer:duplicates:strategy", strategy)
         s = Spec("hdf5").concretized()
 
         # Check that hdf5 depends on gmake@=4.1
@@ -2245,7 +2245,7 @@ class TestConcretizeSeparately:
         o gmake@4.1
 
         """
-        spack.config.config.set("concretizer:duplicates:strategy", strategy)
+        spack.config.CONFIG.set("concretizer:duplicates:strategy", strategy)
         s = Spec("py-shapely").concretized()
         # Requirements on py-shapely
         setuptools = s["py-shapely"].dependencies(name="py-setuptools", deptype="build")
@@ -2260,3 +2260,19 @@ class TestConcretizeSeparately:
         # Requirements on python
         gmake = s["python"].dependencies(name="gmake", deptype="build")
         assert len(gmake) == 1 and gmake[0].satisfies("@=3.0")
+
+    @pytest.mark.skipif(
+        os.environ.get("SPACK_TEST_SOLVER") == "original",
+        reason="Not supported by the original concretizer",
+    )
+    def test_solution_without_cycles(self):
+        """Tests that when we concretize a spec with cycles, a fallback kicks in to recompute
+        a solution without cycles.
+        """
+        s = Spec("cycle-a").concretized()
+        assert s["cycle-a"].satisfies("+cycle")
+        assert s["cycle-b"].satisfies("~cycle")
+
+        s = Spec("cycle-b").concretized()
+        assert s["cycle-a"].satisfies("~cycle")
+        assert s["cycle-b"].satisfies("+cycle")
