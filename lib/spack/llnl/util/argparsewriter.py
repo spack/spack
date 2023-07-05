@@ -9,7 +9,7 @@ import io
 import re
 import sys
 from argparse import ArgumentParser
-from typing import Any, IO, Iterable, List, Optional, Sequence, Tuple, Union
+from typing import IO, Any, Iterable, List, Optional, Sequence, Tuple, Union
 
 
 class Command:
@@ -27,7 +27,7 @@ class Command:
         usage: str,
         positionals: List[Tuple[str, str, Optional[Iterable[Any]], Union[int, str, None]]],
         optionals: List[Tuple[Sequence[str], List[str], str, Union[int, str, None], str]],
-        subcommands: List[Tuple[Any, str, Optional[str]]],
+        subcommands: List[Tuple[ArgumentParser, str, Optional[str]]],
     ) -> None:
         """Initialize a new Command instance.
 
@@ -345,7 +345,9 @@ class ArgparseRstWriter(ArgparseWriter):
         """
         return ""
 
-    def begin_subcommands(self, subcommands: Sequence[Tuple[ArgumentParser, str]]) -> str:
+    def begin_subcommands(
+        self, subcommands: List[Tuple[ArgumentParser, str, Optional[str]]]
+    ) -> str:
         """Table with links to other subcommands.
 
         Arguments:
