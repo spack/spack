@@ -893,7 +893,7 @@ class CMakeBuilder(spack.build_systems.cmake.CMakeBuilder):
         lapack = spec["lapack"]
         blas = spec["blas"]
 
-        if spec["blas"].name in ["intel-mkl", "intel-parallel-studio"]:
+        if blas.name in ["intel-mkl", "intel-parallel-studio"]:
             args += ["-DCP2K_BLAS_VENDOR=MKL"]
             if sys.platform == "darwin":
                 args += [
