@@ -41,8 +41,6 @@ spack:
       require: mpich
     mpich:
       require: '@4.1.1 ~wrapperrpath ~hwloc'
-    python:
-      require: '@3.7.15'
     py-cryptography:
       require: '@38.0.1'
     unzip:
