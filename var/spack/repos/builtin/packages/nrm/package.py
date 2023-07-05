@@ -14,7 +14,8 @@ class Nrm(PythonPackage):
     version("0.1.0", sha256="911a848042fa50ed216c818e0667bcd3e4219687eb5a35476b7313abe12106dc")
 
     depends_on("py-setuptools", type=("build"))
-    # pip 23.1 enforces to have a pyproject.toml
+    # using py-pip@23.1 results in
+    # ValueError: ZIP does not support timestamps before 1980
     depends_on("py-pip@:23.0", type="build")
 
     depends_on("py-six", type=("build", "run"))
