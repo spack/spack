@@ -1,0 +1,54 @@
+---  # Neoverse V1 packages
+packages:
+  acfl:
+    target: [aarch64]
+    compiler: [gcc]
+  gromacs:
+    require:
+      - one_of: ["gromacs@2021.3 %gcc ^fftw^openmpi"]
+  libfabric:
+    buildable: false
+    externals:
+      - modules:
+          - ${LIBFABRIC_MODULE}
+        spec: libfabric@${LIBFABRIC_VERSION} fabrics=efa
+  llvm:
+    variants: ~lldb
+  nvhpc:
+    compiler: [gcc]
+    target: [aarch64]
+  mpich:
+    require:
+      - one_of: ["mpich pmi=pmi2 device=ch4 netmod=ofi +slurm"]
+  openfoam:
+    require:
+      - one_of: ["openfoam %gcc ^scotch@6.0.9"]
+  openmpi:
+    variants: ~atomics ~cuda ~cxx ~cxx_exceptions ~internal-hwloc ~java +legacylaunchers ~lustre ~memchecker +pmi +romio ~singularity +vt +wrapper-rpath fabrics=ofi schedulers=slurm
+  palace:
+    require:
+      - one_of: ["palace cxxflags=\"-include cstdint\" ^fmt@9.1.0"]
+  pmix:
+    require: ["pmix@3"]
+  py-devito:
+    require:
+      - one_of: ["py-devito %gcc +mpi"]
+  quantum-espresso:
+    require:
+      - one_of: ["quantum-espresso@6.6 %gcc ^armpl-gcc"]
+  slurm:
+    buildable: false
+    externals:
+      - prefix: /opt/slurm/
+        spec: slurm@${SLURM_VERSION} +pmix
+  all:
+    compiler: [nvhpc, gcc, clang]
+    providers:
+      blas: [armpl-gcc, openblas]
+      fftw-api: [armpl-gcc, fftw]
+      lapack: [armpl-gcc, openblas]
+      mpi: [openmpi, mpich]
+      scalapack: [netlib-scalapack]
+    permissions:
+      read: world
+      write: user
