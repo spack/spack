@@ -641,7 +641,7 @@ class Cp2k(MakefilePackage, CudaPackage, CMakePackage, ROCmPackage):
             acc_flags_var = "NVFLAGS"
             cppflags += ["-D__ACC"]
             cppflags += ["-D__DBCSR_ACC"]
-            gpuver = gpu_map[spec.variants["amdgpu_target"].value]
+            gpuver = gpu_map[spec.variants["amdgpu_target"].value[0]]
 
         if "smm=libsmm" in spec:
             lib_dir = join_path("lib", self.makefile_architecture, self.makefile_version)
