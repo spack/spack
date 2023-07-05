@@ -11,7 +11,7 @@ class Odgi(CMakePackage):
 
     homepage = "https://odgi.readthedocs.io/"
     url = "https://github.com/pangenome/odgi/releases/download/v0.8.3/odgi-v0.8.3.tar.gz"
-    
+
     maintainers("tbhaxor")
 
     version("0.8.3", sha256="13a63b8ada79851fd8ce5e7638dda1a8b75ef0346a5d93552ee2179256eb81bf")
@@ -24,11 +24,11 @@ class Odgi(CMakePackage):
     version("0.7.0", sha256="c143613843f3298a04403ba71fcb30cf5c942d042a913c4217373d23500dc8b7")
     version("0.6.3", sha256="631f2afd605adfa6b5fe5d7775f49ac62f59f99234c35df8501477ad34a7c6fd")
     version("0.6.2", sha256="88b2114a42b130992c16df288012c8e59c7fd4cc405efdf9364099b2c63b8ca0")
-    
+
     # lib variants
     variant("libdivsufsort", default=False, description="Build with libdivsufsort")
     variant("sdsl-lite", default=False, description="Build with sdsl-lite")
-    
+
     # build variants
     variant("static", default=False, description="Enable static linking")
 
@@ -39,8 +39,6 @@ class Odgi(CMakePackage):
     depends_on("python+debug")
 
     def cmake_args(self):
-        args = [
-            self.define_from_variant("BUILD_STATIC", "static"),
-        ]
+        args = [self.define_from_variant("BUILD_STATIC", "static")]
 
         return args
