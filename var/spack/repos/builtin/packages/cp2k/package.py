@@ -908,11 +908,11 @@ class CMakeBuilder(spack.build_systems.cmake.CMakeBuilder):
         else:
             args.extend(
                 [
-                    self.define("CP2K_LAPACK_FOUND", "true"),
+                    self.define("CP2K_LAPACK_FOUND", True),
                     self.define("CP2K_LAPACK_LINK_LIBRARIES", lapack.libs.joined(";")),
-                    self.define("CP2K_BLAS_FOUND", "true"),
+                    self.define("CP2K_BLAS_FOUND", True),
                     self.define("CP2K_BLAS_LINK_LIBRARIES", blas.libs.joined(";")),
-                    self.define("CP2K_SCALAPACK_FOUND", "true"),
+                    self.define("CP2K_SCALAPACK_FOUND", True),
                     self.define("CP2K_SCALAPACK_INCLUDE_DIRS", spec["scalapack"].prefix.include),
                     self.define("CP2K_BLAS_VENDOR", "CUSTOM"),
                     self.define("CP2K_SCALAPACK_VENDOR", "GENERIC"),
