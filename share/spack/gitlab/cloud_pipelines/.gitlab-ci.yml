@@ -854,7 +854,7 @@ aws-pcluster-build-icelake:
 # Skylake_avx512 (one pipeline per target)
 .aws-pcluster-skylake:
   variables:
-    SPACK_CI_STACK_NAME: aws-pcluster-skylake
+    SPACK_CI_STACK_NAME: aws-pcluster-skylake_avx512
 
 aws-pcluster-generate-skylake:
   extends: [ ".linux_skylake", ".aws-pcluster-skylake", ".generate-x86_64", ".tags-x86_64_v4", ".aws-pcluster-generate", ".aws-pcluster-generate-image" ]
