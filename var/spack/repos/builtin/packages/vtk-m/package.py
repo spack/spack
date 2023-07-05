@@ -232,28 +232,28 @@ class VtkM(CMakePackage, CudaPackage, ROCmPackage):
                 options.append("-DVTKm_ENABLE_CUDA:BOOL=ON")
                 options.append("-DCMAKE_CUDA_HOST_COMPILER={0}".format(env["SPACK_CXX"]))
 
-                cuda_archs = spec.variants["cuda_arch"].value
-                if spec.satisfies("@1.9.0: ^cmake@3.18:"):
-                    str_cuda_archs = ";".join(str(e) for e in cuda_archs)
-                    options.append(f"-DCMAKE_CUDA_ARCHITECTURES={str_cuda_archs}")
-
-                # Only a CUDA Arch can be set with the legacy flag
-                elif cuda_archs[0] in gpu_name_table:
-                    vtkm_cuda_arch = gpu_name_table[cuda_archs[0]]
-                    options.append(f"-DVTKm_CUDA_Architecture={vtkm_cuda_arch}")
+                if spec.satisfies("@1.9.0:"):
+                    options.append(self.builder.define_cuda_architectures(self))
 
                 else:
-                    raise InstallError(
-                        f"cuda_arch={cuda_archs[0]} needs cmake>=3.18 & VTK-m>=1.9.0"
-                    )
+                    # VTKm_CUDA_Architecture only accepts a single CUDA arch
+                    num_cuda_arch = spec.variants["cuda_arch"].value[0]
+                    str_cuda_arch = str()
+
+                    try:
+                        str_cuda_arch = gpu_name_table[num_cuda_arch]
+                    except KeyError:
+                        raise InstallError(
+                            f"cuda_arch={num_cuda_arch} needs cmake>=3.18 & VTK-m>=1.9.0"
+                        )
+                    options.append(f"-DVTKm_CUDA_Architecture={str_cuda_arch}")
 
             else:
                 options.append("-DVTKm_ENABLE_CUDA:BOOL=OFF")
 
             # hip support
             if "+rocm" in spec:
-                archs = ",".join(self.spec.variants["amdgpu_target"].value)
-                options.append("-DCMAKE_HIP_ARCHITECTURES:STRING={0}".format(archs))
+                options.append(self.builder.define_hip_architectures(self))
 
             # openmp support
             if "+openmp" in spec:
