@@ -6,6 +6,8 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 set -e
 
+# TODO: Remove debugging output
+set -xv
 set_pcluster_defaults() {
     # Set versions of pre-installed software in packages.yaml
     [ -z "${SLURM_VERSION}" ] && SLURM_VERSION=$(strings /opt/slurm/lib/libslurm.so | grep  -e '^VERSION'  | awk '{print $2}'  | sed -e 's?"??g')
