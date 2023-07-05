@@ -2,18 +2,11 @@ spack:
   view: false
 
   definitions:
-  - compiler_specs:
-    - gcc
-    - gettext
-
-  - compiler_target:
-    - '%gcc@7.3.1 target=aarch64'
-
   - optimized_configs:
-    - gromacs
+    # - gromacs
     # - lammps
     # - mpas-model
-    - openfoam
+    # - openfoam
     - palace
     # - py-devito
     # - quantum-espresso
@@ -24,29 +17,23 @@ spack:
     - openmpi
 
   specs:
-  - matrix:
-    - - $compiler_specs
-    - - $compiler_target
   - $optimized_configs
-  - $optimized_libs
+  # - $optimized_libs
 
   ci:
     pipeline-gen:
     - build-job:
-        image: { "name": "ghcr.io/spack/pcluster-amazonlinux-2:v2023-05-25", "entrypoint": [""] }
+        image: { "name": "ghcr.io/spack/pcluster-amazonlinux-2:v2023-07-01", "entrypoint": [""] }
         tags: ["aarch64"]
         before_script:
         - - . "./share/spack/setup-env.sh"
           - . /etc/profile.d/modules.sh
           - spack --version
           - spack arch
-        # Use gcc from local container buildcache
-        - - spack buildcache rebuild-index /bootstrap/local-cache/
-          - sed -i.bkp s/"spack install gcc"/"spack install --cache-only --reuse gcc"/ /bootstrap/postinstall.sh
-          - spack mirror add local-cache /bootstrap/local-cache
-          - spack gpg trust /bootstrap/public-key
-          - diff /bootstrap/postinstall.sh /bootstrap/postinstall.sh.bkp || echo Done
-        - - /bin/bash "${SPACK_ARTIFACTS_ROOT}/postinstall.sh" -fg
+        # Use gcc from pre-installed spack store
+        - - cp share/spack/gitlab/cloud_pipelines/configs/config.yaml etc/spack/
+          - /bin/bash "${SPACK_ROOT}/share/spack/gitlab/cloud_pipelines/stacks/aws-pcluster-neoverse_n1/setup-pcluster.sh"
+          - rm etc/spack/config.yaml
           - spack config --scope site add "packages:all:target:[${SPACK_TARGET_ARCH}]"
     - signing-job:
         before_script:
