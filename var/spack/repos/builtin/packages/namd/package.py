@@ -45,7 +45,7 @@ class Namd(MakefilePackage, CudaPackage):
 
     variant(
         "interface",
-        default="none",
+        default="tcl",
         values=("none", "tcl", "python"),
         description="Enables Tcl and/or python interface",
     )
