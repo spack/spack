@@ -294,11 +294,7 @@ class Acts(CMakePackage, CudaPackage):
     # FIXME mlpack@3.1.1: required but not yet available
     # Ref: https://github.com/spack/spack/pull/38277
     # depends_on("mlpack@3.1.1:", when="+mlpack")
-    conflicts(
-        "+mlpack",
-        when="@25:",
-        msg="mlpack@3.1.1: required but not yet available",
-    )
+    conflicts("+mlpack", when="@25:", msg="mlpack@3.1.1: required but not yet available")
     depends_on("nlohmann-json @3.9.1:", when="@0.14: +json")
     depends_on("podio @0.6", when="@25: +edm4hep")
     depends_on("pythia8", when="+pythia8")
@@ -309,11 +305,7 @@ class Acts(CMakePackage, CudaPackage):
     # FIXME py-onnxruntime@1.12: required but not yet available
     # Ref: https://github.com/spack/spack/pull/37064
     # depends_on("py-onnxruntime@1.12:", when="+onnx @23.3:")
-    conflicts(
-        "+onnx",
-        when="@23.3:", 
-        msg="py-onnxruntime@1.12: required but not yet available",
-    )
+    conflicts("+onnx", when="@23.3:", msg="py-onnxruntime@1.12: required but not yet available")
     depends_on("py-pybind11 @2.6.2:", when="+python @18:")
     depends_on("py-pytest", when="+python +unit_tests")
     depends_on("root @6.10: cxxstd=14", when="+tgeo @:0.8.0")
