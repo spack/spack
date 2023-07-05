@@ -14,8 +14,6 @@ or user preferences.
 TODO: make this customizable and allow users to configure
       concretization  policies.
 """
-from __future__ import print_function
-
 import functools
 import platform
 import tempfile
