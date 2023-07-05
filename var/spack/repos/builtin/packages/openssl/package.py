@@ -399,6 +399,10 @@ class Openssl(Package):  # Uses Fake Autotools, should subclass Package
             # nvhpc segfaults NVC++-F-0000-Internal compiler error.
             # gen_llvm_expr(): unknown opcode       0  (crypto/rsa/rsa_oaep.c: 248)
             options.append("no-asm")
+        elif spec.satisfies("@3: %oneapi"):
+            # Last tested on oneapi@2023.1.0 for x86_64:
+            # crypto/md5/md5-x86_64.s:684:31: error: expected string
+            options.append("no-asm")
 
         # The default glibc provided by CentOS 7 does not provide proper
         # atomic support when using the NVIDIA compilers
