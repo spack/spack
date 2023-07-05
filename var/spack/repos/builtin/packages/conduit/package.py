@@ -410,31 +410,19 @@ class Conduit(CMakePackage):
             cfg.write(cmake_cache_entry("ENABLE_TESTS", "OFF"))
 
         # extra fun for blueos
-        if on_blueos:
-            # All of BlueOS compilers report clang due to nvcc,
-            # override to proper compiler family
-            if "xlc" in c_compiler:
-                cfg.write(cmake_cache_entry("CMAKE_C_COMPILER_ID", "XL"))
-            if "xlC" in cpp_compiler:
-                cfg.write(cmake_cache_entry("CMAKE_CXX_COMPILER_ID", "XL"))
+        if on_blueos and "+fortran" in spec and (f_compiler is not None) and ("xlf" in f_compiler):
+            # Fix missing std linker flag in xlc compiler
+            flags = "-WF,-C! -qxlf2003=polymorphic"
+            cfg.write(cmake_cache_entry("BLT_FORTRAN_FLAGS", flags))
+            # Grab lib directory for the current fortran compiler
+            libdir = os.path.join(os.path.dirname(os.path.dirname(f_compiler)), "lib")
+            rpaths = "-Wl,-rpath,{0} -Wl,-rpath,{0}64".format(libdir)
 
-            if "+fortran" in spec:
-                if "xlf" in f_compiler:
-                    cfg.write(cmake_cache_entry("CMAKE_Fortran_COMPILER_ID", "XL"))
-
-                if (f_compiler is not None) and ("xlf" in f_compiler):
-                    # Fix missing std linker flag in xlc compiler
-                    flags = "-WF,-C! -qxlf2003=polymorphic"
-                    cfg.write(cmake_cache_entry("BLT_FORTRAN_FLAGS", flags))
-                    # Grab lib directory for the current fortran compiler
-                    libdir = os.path.join(os.path.dirname(os.path.dirname(f_compiler)), "lib")
-                    rpaths = "-Wl,-rpath,{0} -Wl,-rpath,{0}64".format(libdir)
-
-                    flags = "${BLT_EXE_LINKER_FLAGS} -lstdc++ " + rpaths
-                    cfg.write(cmake_cache_entry("BLT_EXE_LINKER_FLAGS", flags))
-                    if "+shared" in spec:
-                        flags = "${CMAKE_SHARED_LINKER_FLAGS} " + rpaths
-                        cfg.write(cmake_cache_entry("CMAKE_SHARED_LINKER_FLAGS", flags))
+            flags = "${BLT_EXE_LINKER_FLAGS} -lstdc++ " + rpaths
+            cfg.write(cmake_cache_entry("BLT_EXE_LINKER_FLAGS", flags))
+            if "+shared" in spec:
+                flags = "${CMAKE_SHARED_LINKER_FLAGS} " + rpaths
+                cfg.write(cmake_cache_entry("CMAKE_SHARED_LINKER_FLAGS", flags))
 
         #######################
         # Python

@@ -251,7 +251,7 @@ class Python(Package):
         depends_on("libnsl", when="+nis")
         depends_on("zlib@1.1.3:", when="+zlib")
         depends_on("bzip2", when="+bz2")
-        depends_on("xz", when="+lzma")
+        depends_on("xz libs=shared", when="+lzma")
         depends_on("expat", when="+pyexpat")
         depends_on("libffi", when="+ctypes")
         # https://docs.python.org/3/whatsnew/3.11.html#build-changes
@@ -309,6 +309,10 @@ class Python(Package):
 
     # https://bugs.python.org/issue45405
     conflicts("@:3.7.2,3.8.0:3.8.12,3.9.0:3.9.10,3.10.0:3.10.2", when="%apple-clang@13:")
+
+    # See https://github.com/python/cpython/issues/106424
+    # datetime.now(timezone.utc) segfaults
+    conflicts("@3.9:", when="%oneapi@2022.2.1:")
 
     # Used to cache various attributes that are expensive to compute
     _config_vars: Dict[str, Dict[str, str]] = {}
