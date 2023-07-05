@@ -184,11 +184,17 @@ class Cmake(Package):
     # build, and CMake is built frequently. Also, CMake is almost always
     # a build dependency, and its libs will not interfere with others in
     # the build.
-    variant("ownlibs", default=True, description="Use CMake-provided third-party libraries")
-    variant("qt", default=False, description="Enables the build of cmake-gui")
+    variant(
+        "ownlibs",
+        default=True,
+        sticky=True,
+        description="Use CMake-provided third-party libraries",
+    )
+    variant("qt", default=False, sticky=True, description="Enables the build of cmake-gui")
     variant(
         "doc",
         default=False,
+        sticky=True,
         description="Enables the generation of html and man page documentation",
     )
     variant(
