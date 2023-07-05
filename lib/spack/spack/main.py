@@ -195,7 +195,7 @@ def index_commands():
 class SpackHelpFormatter(argparse.RawTextHelpFormatter):
     def _format_actions_usage(self, actions, groups):
         """Formatter with more concise usage strings."""
-        usage = super(SpackHelpFormatter, self)._format_actions_usage(actions, groups)
+        usage = super()._format_actions_usage(actions, groups)
 
         # Eliminate any occurrence of two or more consecutive spaces
         usage = re.sub(r"[ ]{2,}", " ", usage)
@@ -210,7 +210,7 @@ class SpackHelpFormatter(argparse.RawTextHelpFormatter):
 
     def add_arguments(self, actions):
         actions = sorted(actions, key=operator.attrgetter("option_strings"))
-        super(SpackHelpFormatter, self).add_arguments(actions)
+        super().add_arguments(actions)
 
 
 class SpackArgumentParser(argparse.ArgumentParser):
@@ -330,7 +330,7 @@ class SpackArgumentParser(argparse.ArgumentParser):
         if sys.version_info[:2] > (3, 6):
             kwargs.setdefault("required", True)
 
-        sp = super(SpackArgumentParser, self).add_subparsers(**kwargs)
+        sp = super().add_subparsers(**kwargs)
         # This monkey patching is needed for Python 3.6, which supports
         # having a required subparser but don't expose the API used above
         if sys.version_info[:2] == (3, 6):
@@ -380,7 +380,7 @@ class SpackArgumentParser(argparse.ArgumentParser):
             return self.format_help_sections(level)
         else:
             # in subparsers, self.prog is, e.g., 'spack install'
-            return super(SpackArgumentParser, self).format_help()
+            return super().format_help()
 
     def _check_value(self, action, value):
         # converted value must be one of the choices (if specified)

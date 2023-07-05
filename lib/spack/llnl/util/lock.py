@@ -770,7 +770,7 @@ class LockDowngradeError(LockError):
 
     def __init__(self, path):
         msg = "Cannot downgrade lock from write to read on file: %s" % path
-        super(LockDowngradeError, self).__init__(msg)
+        super().__init__(msg)
 
 
 class LockLimitError(LockError):
@@ -782,7 +782,7 @@ class LockTimeoutError(LockError):
 
     def __init__(self, lock_type, path, time, attempts):
         fmt = "Timed out waiting for a {} lock after {}.\n    Made {} {} on file: {}"
-        super(LockTimeoutError, self).__init__(
+        super().__init__(
             fmt.format(
                 lock_type,
                 pretty_seconds(time),
@@ -798,7 +798,7 @@ class LockUpgradeError(LockError):
 
     def __init__(self, path):
         msg = "Cannot upgrade lock from read to write on file: %s" % path
-        super(LockUpgradeError, self).__init__(msg)
+        super().__init__(msg)
 
 
 class LockPermissionError(LockError):
@@ -810,7 +810,7 @@ class LockROFileError(LockPermissionError):
 
     def __init__(self, path):
         msg = "Can't take write lock on read-only file: %s" % path
-        super(LockROFileError, self).__init__(msg)
+        super().__init__(msg)
 
 
 class CantCreateLockError(LockPermissionError):
@@ -819,4 +819,4 @@ class CantCreateLockError(LockPermissionError):
     def __init__(self, path):
         msg = "cannot create lock '%s': " % path
         msg += "file does not exist and location is not writable"
-        super(LockError, self).__init__(msg)
+        super().__init__(msg)

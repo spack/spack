@@ -152,7 +152,7 @@ class FilePatch(Patch):
             msg += "package %s.%s does not exist." % (pkg.namespace, pkg.name)
             raise ValueError(msg)
 
-        super(FilePatch, self).__init__(pkg, abs_path, level, working_dir)
+        super().__init__(pkg, abs_path, level, working_dir)
         self.path = abs_path
         self._sha256 = None
         self.ordering_key = ordering_key
@@ -164,9 +164,7 @@ class FilePatch(Patch):
         return self._sha256
 
     def to_dict(self):
-        return llnl.util.lang.union_dicts(
-            super(FilePatch, self).to_dict(), {"relative_path": self.relative_path}
-        )
+        return llnl.util.lang.union_dicts(super().to_dict(), {"relative_path": self.relative_path})
 
 
 class UrlPatch(Patch):
@@ -181,7 +179,7 @@ class UrlPatch(Patch):
     """
 
     def __init__(self, pkg, url, level=1, working_dir=".", ordering_key=None, **kwargs):
-        super(UrlPatch, self).__init__(pkg, url, level, working_dir)
+        super().__init__(pkg, url, level, working_dir)
 
         self.url = url
         self._stage = None
@@ -264,7 +262,7 @@ class UrlPatch(Patch):
         self.stage.destroy()
 
     def to_dict(self):
-        data = super(UrlPatch, self).to_dict()
+        data = super().to_dict()
         data["url"] = self.url
         if self.archive_sha256:
             data["archive_sha256"] = self.archive_sha256

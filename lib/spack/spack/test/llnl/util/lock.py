@@ -830,7 +830,7 @@ class AssertLock(lk.Lock):
     """Test lock class that marks acquire/release events."""
 
     def __init__(self, lock_path, vals):
-        super(AssertLock, self).__init__(lock_path)
+        super().__init__(lock_path)
         self.vals = vals
 
     # assert hooks for subclasses
@@ -841,25 +841,25 @@ class AssertLock(lk.Lock):
 
     def acquire_read(self, timeout=None):
         self.assert_acquire_read()
-        result = super(AssertLock, self).acquire_read(timeout)
+        result = super().acquire_read(timeout)
         self.vals["acquired_read"] = True
         return result
 
     def acquire_write(self, timeout=None):
         self.assert_acquire_write()
-        result = super(AssertLock, self).acquire_write(timeout)
+        result = super().acquire_write(timeout)
         self.vals["acquired_write"] = True
         return result
 
     def release_read(self, release_fn=None):
         self.assert_release_read()
-        result = super(AssertLock, self).release_read(release_fn)
+        result = super().release_read(release_fn)
         self.vals["released_read"] = True
         return result
 
     def release_write(self, release_fn=None):
         self.assert_release_write()
-        result = super(AssertLock, self).release_write(release_fn)
+        result = super().release_write(release_fn)
         self.vals["released_write"] = True
         return result
 

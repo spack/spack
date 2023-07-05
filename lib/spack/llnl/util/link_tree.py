@@ -430,12 +430,12 @@ class MergeConflictError(Exception):
 
 class ConflictingSpecsError(MergeConflictError):
     def __init__(self, spec_1, spec_2):
-        super(MergeConflictError, self).__init__(spec_1, spec_2)
+        super().__init__(spec_1, spec_2)
 
 
 class SingleMergeConflictError(MergeConflictError):
     def __init__(self, path):
-        super(MergeConflictError, self).__init__("Package merge blocked by file: %s" % path)
+        super().__init__("Package merge blocked by file: %s" % path)
 
 
 class MergeConflictSummary(MergeConflictError):
@@ -450,4 +450,4 @@ class MergeConflictSummary(MergeConflictError):
             msg += "\n    `{0}` and `{1}` both project to `{2}`".format(
                 conflict.src_a, conflict.src_b, conflict.dst
             )
-        super(MergeConflictSummary, self).__init__(msg)
+        super().__init__(msg)

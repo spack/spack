@@ -12,7 +12,7 @@ import spack.error
 class NoPlatformError(spack.error.SpackError):
     def __init__(self):
         msg = "Could not determine a platform for this machine"
-        super(NoPlatformError, self).__init__(msg)
+        super().__init__(msg)
 
 
 @llnl.util.lang.lazy_lexicographic_ordering

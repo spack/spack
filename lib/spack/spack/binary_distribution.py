@@ -80,7 +80,7 @@ class FetchCacheError(Exception):
         else:
             err = errors[0]
             self.message = "{0}: {1}".format(err.__class__.__name__, str(err))
-        super(FetchCacheError, self).__init__(self.message)
+        super().__init__(self.message)
 
 
 class ListMirrorSpecsError(spack.error.SpackError):
@@ -517,9 +517,7 @@ class NoOverwriteException(spack.error.SpackError):
     """Raised when a file would be overwritten"""
 
     def __init__(self, file_path):
-        super(NoOverwriteException, self).__init__(
-            f"Refusing to overwrite the following file: {file_path}"
-        )
+        super().__init__(f"Refusing to overwrite the following file: {file_path}")
 
 
 class NoGpgException(spack.error.SpackError):
@@ -528,7 +526,7 @@ class NoGpgException(spack.error.SpackError):
     """
 
     def __init__(self, msg):
-        super(NoGpgException, self).__init__(msg)
+        super().__init__(msg)
 
 
 class NoKeyException(spack.error.SpackError):
@@ -537,7 +535,7 @@ class NoKeyException(spack.error.SpackError):
     """
 
     def __init__(self, msg):
-        super(NoKeyException, self).__init__(msg)
+        super().__init__(msg)
 
 
 class PickKeyException(spack.error.SpackError):
@@ -548,7 +546,7 @@ class PickKeyException(spack.error.SpackError):
     def __init__(self, keys):
         err_msg = "Multiple keys available for signing\n%s\n" % keys
         err_msg += "Use spack buildcache create -k <key hash> to pick a key."
-        super(PickKeyException, self).__init__(err_msg)
+        super().__init__(err_msg)
 
 
 class NoVerifyException(spack.error.SpackError):
@@ -565,7 +563,7 @@ class NoChecksumException(spack.error.SpackError):
     """
 
     def __init__(self, path, size, contents, algorithm, expected, computed):
-        super(NoChecksumException, self).__init__(
+        super().__init__(
             f"{algorithm} checksum failed for {path}",
             f"Expected {expected} but got {computed}. "
             f"File size = {size} bytes. Contents = {contents!r}",
@@ -578,7 +576,7 @@ class NewLayoutException(spack.error.SpackError):
     """
 
     def __init__(self, msg):
-        super(NewLayoutException, self).__init__(msg)
+        super().__init__(msg)
 
 
 class UnsignedPackageException(spack.error.SpackError):

@@ -112,9 +112,7 @@ class RepoLoader(_PrependFileLoader):
         self.package_name = package_name
         self.package_py = repo.filename_for_package_name(package_name)
         self.fullname = fullname
-        super(RepoLoader, self).__init__(
-            self.fullname, self.package_py, prepend=self._package_prepend
-        )
+        super().__init__(self.fullname, self.package_py, prepend=self._package_prepend)
 
 
 class SpackNamespaceLoader:
@@ -326,7 +324,7 @@ class SpackNamespace(types.ModuleType):
     """Allow lazy loading of modules."""
 
     def __init__(self, namespace):
-        super(SpackNamespace, self).__init__(namespace)
+        super().__init__(namespace)
         self.__file__ = "(spack namespace)"
         self.__path__ = []
         self.__name__ = namespace
@@ -1500,7 +1498,7 @@ class UnknownPackageError(UnknownEntityError):
             else:
                 long_msg = "You may need to run 'spack clean -m'."
 
-        super(UnknownPackageError, self).__init__(msg, long_msg)
+        super().__init__(msg, long_msg)
         self.name = name
 
 
@@ -1512,14 +1510,14 @@ class UnknownNamespaceError(UnknownEntityError):
         if name == "yaml":
             long_msg = "Did you mean to specify a filename with './{}.{}'?"
             long_msg = long_msg.format(namespace, name)
-        super(UnknownNamespaceError, self).__init__(msg, long_msg)
+        super().__init__(msg, long_msg)
 
 
 class FailedConstructorError(RepoError):
     """Raised when a package's class constructor fails."""
 
     def __init__(self, name, exc_type, exc_obj, exc_tb):
-        super(FailedConstructorError, self).__init__(
+        super().__init__(
             "Class constructor failed for package '%s'." % name,
             "\nCaused by:\n"
             + ("%s: %s\n" % (exc_type.__name__, exc_obj))

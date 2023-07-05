@@ -77,7 +77,7 @@ class PyKeras(PythonPackage):
 
     def url_for_version(self, version):
         if version >= Version("2.6"):
-            return super(PyKeras, self).url_for_version(version)
+            return super().url_for_version(version)
         else:
             url = "https://pypi.io/packages/source/K/Keras/Keras-{0}.tar.gz"
             return url.format(version.dotted)

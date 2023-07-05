@@ -545,7 +545,7 @@ class PythonNameError(spack.error.SpackError):
 
     def __init__(self, name):
         self.name = name
-        super(PythonNameError, self).__init__("{0} is not a permissible Python name.".format(name))
+        super().__init__("{0} is not a permissible Python name.".format(name))
 
 
 class CommandNameError(spack.error.SpackError):
@@ -553,9 +553,7 @@ class CommandNameError(spack.error.SpackError):
 
     def __init__(self, name):
         self.name = name
-        super(CommandNameError, self).__init__(
-            "{0} is not a permissible Spack command name.".format(name)
-        )
+        super().__init__("{0} is not a permissible Spack command name.".format(name))
 
 
 ########################################

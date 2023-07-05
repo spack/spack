@@ -199,4 +199,4 @@ def read(path, apply_updates):
 
 class ManifestValidationError(spack.error.SpackError):
     def __init__(self, msg, long_msg=None):
-        super(ManifestValidationError, self).__init__(msg, long_msg)
+        super().__init__(msg, long_msg)

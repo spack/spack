@@ -2505,7 +2505,7 @@ class InstallError(spack.error.SpackError):
     """
 
     def __init__(self, message, long_msg=None, pkg=None):
-        super(InstallError, self).__init__(message, long_msg)
+        super().__init__(message, long_msg)
         self.pkg = pkg
 
 
@@ -2513,9 +2513,7 @@ class BadInstallPhase(InstallError):
     """Raised for an install phase option is not allowed for a package."""
 
     def __init__(self, pkg_name, phase):
-        super(BadInstallPhase, self).__init__(
-            "'{0}' is not a valid phase for package {1}".format(phase, pkg_name)
-        )
+        super().__init__("'{0}' is not a valid phase for package {1}".format(phase, pkg_name))
 
 
 class ExternalPackageError(InstallError):
