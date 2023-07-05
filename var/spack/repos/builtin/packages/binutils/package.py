@@ -2,6 +2,7 @@
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
+import os
 import re
 
 import spack.build_systems.autotools
@@ -110,6 +111,13 @@ class Binutils(AutotoolsPackage, GNUMirrorPackage):
         multi=True,
         description="Build shared libs, static libs or both",
     )
+    variant(
+        "compress_debug_sections",
+        default="zlib",
+        values=(conditional("zstd", when="@2.40:"), "zlib", "none"),
+        description="Enable debug section compression by default in ld, gas, gold.",
+        when="@2.26:",
+    )
 
     patch("cr16.patch", when="@:2.29.1")
     patch("update_symbol-2.26.patch", when="@2.26")
@@ -185,31 +193,36 @@ class Binutils(AutotoolsPackage, GNUMirrorPackage):
                 iflags.append("-Wl,-z,notext")
         return (iflags, None, flags)
 
-    def test(self):
-        spec_vers = str(self.spec.version)
+    def test_binaries(self):
+        binaries = [
+            "ar",
+            "c++filt",
+            "coffdump",
+            "dlltool",
+            "elfedit",
+            "gprof",
+            "ld",
+            "nm",
+            "objdump",
+            "ranlib",
+            "readelf",
+            "size",
+            "strings",
+        ]
 
-        checks = {
-            "ar": spec_vers,
-            "c++filt": spec_vers,
-            "coffdump": spec_vers,
-            "dlltool": spec_vers,
-            "elfedit": spec_vers,
-            "gprof": spec_vers,
-            "ld": spec_vers,
-            "nm": spec_vers,
-            "objdump": spec_vers,
-            "ranlib": spec_vers,
-            "readelf": spec_vers,
-            "size": spec_vers,
-            "strings": spec_vers,
-        }
+        # Since versions can have mixed separator characters after the minor
+        # version, just check the first two components
+        version = str(self.spec.version.up_to(2))
+        for _bin in binaries:
+            reason = "checking version of {0} is {1}".format(_bin, version)
+            with test_part(self, "test_binaries_{0}".format(_bin), purpose=reason):
+                installed_exe = join_path(self.prefix.bin, _bin)
+                if not os.path.exists(installed_exe):
+                    raise SkipTest("{0} is not installed".format(_bin))
 
-        for exe in checks:
-            expected = checks[exe]
-            reason = "test: ensuring version of {0} is {1}".format(exe, expected)
-            self.run_test(
-                exe, "--version", expected, installed=True, purpose=reason, skip_missing=True
-            )
+                exe = which(installed_exe)
+                out = exe("--version", output=str.split, error=str.split)
+                assert version in out
 
 
 class AutotoolsBuilder(spack.build_systems.autotools.AutotoolsBuilder):
@@ -250,6 +263,15 @@ class AutotoolsBuilder(spack.build_systems.autotools.AutotoolsBuilder):
         else:
             args.append("--disable-pgo-build")
 
+        # Compressed debug symbols by default. Note that the "default" flag only applies
+        # to 2.40: but since it is ignored in earlier versions, that is not a problem.
+        if self.spec.satisfies("compress_debug_sections=zlib"):
+            args.append("--enable-compressed-debug-sections=all")
+            args.append("--enable-default-compressed-debug-sections-algorithm=zlib")
+        elif self.spec.satisfies("compress_debug_sections=zstd"):
+            args.append("--enable-compressed-debug-sections=all")
+            args.append("--enable-default-compressed-debug-sections-algorithm=zstd")
+
         # To avoid namespace collisions with Darwin/BSD system tools,
         # prefix executables with "g", e.g., gar, gnm; see Homebrew
         # https://github.com/Homebrew/homebrew-core/blob/master/Formula/binutils.rb
@@ -269,9 +291,12 @@ class AutotoolsBuilder(spack.build_systems.autotools.AutotoolsBuilder):
         # also grab the headers from the bfd directory
         install(join_path(self.build_directory, "bfd", "*.h"), extradir)
 
-    def setup_build_environment(self, env):
-        if self.spec.satisfies("%cce"):
-            env.append_flags("LDFLAGS", "-Wl,-z,muldefs")
-
-        if "+nls" in self.spec:
-            env.append_flags("LDFLAGS", "-lintl")
+    def flag_handler(self, name, flags):
+        spec = self.spec
+        if name == "ldflags":
+            if spec.satisfies("%cce"):
+                flags.append("-Wl,-z,muldefs")
+        elif name == "ldlibs":
+            if "+nls" in self.spec and "intl" in self.spec["gettext"].libs.names:
+                flags.append("-lintl")
+        return self.build_system_flags(name, flags)

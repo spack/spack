@@ -30,13 +30,16 @@ spack:
       variants: threads=openmp
     paraview:
       require: '@5.11 ~qt+osmesa'
-    python:
-      version: [3.7.15]
     trilinos:
-      require: +amesos +amesos2 +anasazi +aztec +boost +epetra +epetraext +ifpack
-        +intrepid +intrepid2 +isorropia +kokkos +ml +minitensor +muelu +nox +piro
-        +phalanx +rol +rythmos +sacado +stk +shards +shylu +stratimikos +teko +tempus
-        +tpetra +trilinoscouplings +zoltan +zoltan2 +superlu-dist gotype=long_long
+      require:
+      - one_of: [+amesos +amesos2 +anasazi +aztec +boost +epetra +epetraext +ifpack
+            +intrepid +intrepid2 +isorropia +kokkos +minitensor +nox +piro +phalanx
+            +rol +rythmos +sacado +stk +shards +stratimikos +tempus +tpetra
+            +trilinoscouplings +zoltan]
+      - one_of: [gotype=long_long, gotype=all]
+      - one_of: [~ml ~muelu ~zoltan2 ~teko, +ml +muelu +zoltan2 +teko]
+      - one_of: [+superlu-dist, ~superlu-dist]
+      - one_of: [+shylu, ~shylu]
     xz:
       variants: +pic
     mesa:
@@ -76,6 +79,8 @@ spack:
   - gptune
   - h5bench
   - hdf5-vol-async
+  - hdf5-vol-cache
+  - hdf5-vol-log
   - heffte +fftw
   - hpctoolkit
   - hpx max_cpu_count=512 networking=mpi
@@ -90,6 +95,7 @@ spack:
   - mercury
   - metall
   - mfem
+  - mgard +serial +openmp +timing +unstructured ~cuda
   - mpark-variant
   - mpifileutils ~xattr
   - nccmp
@@ -113,9 +119,7 @@ spack:
   - py-jupyterhub
   - py-libensemble +mpi +nlopt
   - py-petsc4py
-  - py-warpx ^warpx dims=2
-  - py-warpx ^warpx dims=3
-  - py-warpx ^warpx dims=rz
+  - py-warpx
   - qthreads scheduler=distrib
   - quantum-espresso
   - raja
@@ -132,12 +136,13 @@ spack:
   - swig@4.0.2-fortran
   - tasmanian
   - tau +mpi +python
-  - trilinos@13.0.1 +belos +ifpack2 +stokhos
+  - trilinos +belos +ifpack2 +stokhos
   - turbine
   - umap
   - umpire
   - upcxx
   - wannier90
+  - xyce +mpi +shared +pymi +pymi_static_tpls ^trilinos~shylu
 
   # CUDA
   - amrex +cuda
@@ -154,9 +159,10 @@ spack:
   - hpx max_cpu_count=512 +cuda
   - hypre +cuda
   - kokkos +wrapper +cuda
-  - kokkos-kernels +cuda ^kokkos +wrapper +cuda
+  - kokkos-kernels +cuda ^kokkos +wrapper +cuda +cuda_lambda
   - magma +cuda
   - mfem +cuda
+  - mgard +serial +openmp +timing +unstructured +cuda
   - omega-h +cuda
   - papi +cuda
   - petsc +cuda
@@ -169,7 +175,7 @@ spack:
   - superlu-dist +cuda
   - tasmanian +cuda
   - tau +mpi +cuda
-  - trilinos@13.4.0 +belos +ifpack2 +stokhos +cuda
+  - "trilinos@13.4.0: +belos +ifpack2 +stokhos +cuda"
   - umpire ~shared +cuda
   - parsec +cuda
 
@@ -177,6 +183,7 @@ spack:
   # - archer                  # llvm@8
   # - bricks                  # bricks
   # - geopm                   # geopm
+  # - hdf5-vol-daos           # hdf5-vol-daos: vhost/vhost_user.c:65:32: error: array size missing in 'vhost_message_handlers'
   # - loki                    # loki
   # - precice                 # precice
   # - pruners-ninja           # pruners-ninja

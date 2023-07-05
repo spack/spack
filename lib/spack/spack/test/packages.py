@@ -23,7 +23,7 @@ def pkg_factory(name):
 
 
 @pytest.mark.usefixtures("config", "mock_packages")
-class TestPackage(object):
+class TestPackage:
     def test_load_package(self):
         spack.repo.path.get_pkg_class("mpich")
 
@@ -310,14 +310,6 @@ def test_fetch_options(version_str, digest_end, extra_options):
     assert isinstance(fetcher, spack.fetch_strategy.URLFetchStrategy)
     assert fetcher.digest == leading_zeros + digest_end
     assert fetcher.extra_options == extra_options
-
-
-def test_has_test_method_fails(capsys):
-    with pytest.raises(SystemExit):
-        spack.package_base.has_test_method("printing-package")
-
-    captured = capsys.readouterr()[1]
-    assert "is not a class" in captured
 
 
 def test_package_deprecated_version(mock_packages, mock_fetch, mock_stage):

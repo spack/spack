@@ -18,7 +18,7 @@ archspec
 
 * Homepage: https://pypi.python.org/pypi/archspec
 * Usage: Labeling, comparison and detection of microarchitectures
-* Version: 0.2.0-dev (commit f3667f95030c6573842fb5f6df0d647285597509)
+* Version: 0.2.1 (commit 9e1117bd8a2f0581bced161f2a2e8d6294d0300b)
 
 astunparse
 ----------------
@@ -101,10 +101,7 @@ ruamel.yaml
 * Usage: Used for config files. Ruamel is based on PyYAML but is more
   actively maintained and has more features, including round-tripping
   comments read from config files.
-* Version: 0.11.15 (last version supporting Python 2.6)
-* Note: This package has been slightly modified to improve Python 2.6
-  compatibility -- some ``{}`` format strings were replaced, and the
-  import for ``OrderedDict`` was tweaked.
+* Version: 0.17.21
 
 six
 ---

@@ -12,6 +12,7 @@ class PyBidsValidator(PythonPackage):
     homepage = "https://github.com/bids-standard/bids-validator"
     pypi = "bids-validator/bids-validator-1.7.2.tar.gz"
 
+    version("1.11.0", sha256="408c56748b7cf98cf7c31822f33a8d89c5e6e7db5254c345107e8d527576ff53")
     version("1.9.8", sha256="ff39799bb205f92d6f2c322f0b8eff0d1c0288f4291a0b18fce61afa4dfd7f3e")
     version("1.9.4", sha256="4bf07d375f231a2ad2f450beeb3ef6c54f93194fd993aa5157d57a8fba48ed50")
     version("1.8.9", sha256="01fcb5a8fe6de1280cdfd5b37715103ffa0bafb3c739ca7f5ffc41e46549612e")

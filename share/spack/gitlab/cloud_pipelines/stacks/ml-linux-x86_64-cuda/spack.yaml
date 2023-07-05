@@ -27,6 +27,9 @@ spack:
     - py-keras-preprocessing
     - py-keras2onnx
 
+    # MXNet
+    - mxnet
+
     # PyTorch
     - py-botorch
     - py-efficientnet-pytorch
@@ -77,7 +80,7 @@ spack:
     - xgboost
 
   mirrors:
-    mirror: s3://spack-binaries/develop/ml-linux-x86_64-cpu
+    mirror: s3://spack-binaries/develop/ml-linux-x86_64-cuda
 
   ci:
     pipeline-gen:

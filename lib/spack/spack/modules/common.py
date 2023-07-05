@@ -33,12 +33,14 @@ import copy
 import datetime
 import inspect
 import os.path
+import pathlib
 import re
+import warnings
 from typing import Optional
 
 import llnl.util.filesystem
 import llnl.util.tty as tty
-from llnl.util.lang import dedupe
+from llnl.util.lang import dedupe, memoized
 
 import spack.build_environment
 import spack.config
@@ -55,34 +57,6 @@ import spack.util.environment
 import spack.util.file_permissions as fp
 import spack.util.path
 import spack.util.spack_yaml as syaml
-
-
-def get_deprecated(dictionary, name, old_name, default):
-    """Get a deprecated property from a ``dict``.
-
-    Arguments:
-        dictionary (dict): dictionary to get a value from.
-        name (str): New name for the property. If present, supersedes ``old_name``.
-        old_name (str): Deprecated name for the property. If present, a warning
-            is printed.
-        default (object): value to return if neither name is found.
-    """
-    value = default
-
-    # always warn if old name is present
-    if old_name in dictionary:
-        value = dictionary.get(old_name, value)
-        main_msg = "`{}:` is deprecated in module config and will be removed in v0.20."
-        details = (
-            "Use `{}:` instead. You can run `spack config update` to translate your "
-            "configuration files automatically."
-        )
-        tty.warn(main_msg.format(old_name), details.format(name))
-
-    # name overrides old name if present
-    value = dictionary.get(name, value)
-
-    return value
 
 
 #: config section for this file
@@ -196,17 +170,10 @@ def merge_config_rules(configuration, spec):
     Returns:
         dict: actions to be taken on the spec passed as an argument
     """
-
-    # Get the top-level configuration for the module type we are using
-    module_specific_configuration = copy.deepcopy(configuration)
-
-    # Construct a dictionary with the actions we need to perform on the spec
-    # passed as a parameter
-
     # The keyword 'all' is always evaluated first, all the others are
     # evaluated in order of appearance in the module file
-    spec_configuration = module_specific_configuration.pop("all", {})
-    for constraint, action in module_specific_configuration.items():
+    spec_configuration = copy.deepcopy(configuration.get("all", {}))
+    for constraint, action in configuration.items():
         if spec.satisfies(constraint):
             if hasattr(constraint, "override") and constraint.override:
                 spec_configuration = {}
@@ -226,14 +193,14 @@ def merge_config_rules(configuration, spec):
     # configuration
 
     # Hash length in module files
-    hash_length = module_specific_configuration.get("hash_length", 7)
+    hash_length = configuration.get("hash_length", 7)
     spec_configuration["hash_length"] = hash_length
 
-    verbose = module_specific_configuration.get("verbose", False)
+    verbose = configuration.get("verbose", False)
     spec_configuration["verbose"] = verbose
 
     # module defaults per-package
-    defaults = module_specific_configuration.get("defaults", [])
+    defaults = configuration.get("defaults", [])
     spec_configuration["defaults"] = defaults
 
     return spec_configuration
@@ -327,7 +294,7 @@ def read_module_indices():
     return module_indices
 
 
-class UpstreamModuleIndex(object):
+class UpstreamModuleIndex:
     """This is responsible for taking the individual module indices of all
     upstream Spack installations and locating the module for a given spec
     based on which upstream install it is located in."""
@@ -421,12 +388,12 @@ def get_module(module_type, spec, get_full_path, module_set_name="default", requ
             return writer.layout.use_name
 
 
-class BaseConfiguration(object):
+class BaseConfiguration:
     """Manipulates the information needed to generate a module file to make
     querying easier. It needs to be sub-classed for specific module types.
     """
 
-    default_projections = {"all": "{name}-{version}-{compiler.name}-{compiler.version}"}
+    default_projections = {"all": "{name}/{version}-{compiler.name}-{compiler.version}"}
 
     def __init__(self, spec, module_set_name, explicit=None):
         # Module where type(self) is defined
@@ -512,18 +479,15 @@ class BaseConfiguration(object):
         conf = self.module.configuration(self.name)
 
         # Compute the list of include rules that match
-        # DEPRECATED: remove 'whitelist' in v0.20
-        include_rules = get_deprecated(conf, "include", "whitelist", [])
+        include_rules = conf.get("include", [])
         include_matches = [x for x in include_rules if spec.satisfies(x)]
 
         # Compute the list of exclude rules that match
-        # DEPRECATED: remove 'blacklist' in v0.20
-        exclude_rules = get_deprecated(conf, "exclude", "blacklist", [])
+        exclude_rules = conf.get("exclude", [])
         exclude_matches = [x for x in exclude_rules if spec.satisfies(x)]
 
         # Should I exclude the module because it's implicit?
-        # DEPRECATED: remove 'blacklist_implicits' in v0.20
-        exclude_implicits = get_deprecated(conf, "exclude_implicits", "blacklist_implicits", None)
+        exclude_implicits = conf.get("exclude_implicits", None)
         excluded_as_implicit = exclude_implicits and not self.explicit
 
         def debug_info(line_header, match_list):
@@ -568,10 +532,8 @@ class BaseConfiguration(object):
     @property
     def exclude_env_vars(self):
         """List of variables that should be left unmodified."""
-        filter = self.conf.get("filter", {})
-
-        # DEPRECATED: remove in v0.20
-        return get_deprecated(filter, "exclude_env_vars", "environment_blacklist", {})
+        filter_subsection = self.conf.get("filter", {})
+        return filter_subsection.get("exclude_env_vars", {})
 
     def _create_list_for(self, what):
         include = []
@@ -589,7 +551,7 @@ class BaseConfiguration(object):
         return self.conf.get("verbose")
 
 
-class BaseFileLayout(object):
+class BaseFileLayout:
     """Provides information on the layout of module files. Needs to be
     sub-classed for specific module types.
     """
@@ -709,7 +671,14 @@ class BaseContext(tengine.Context):
         # the configure option section
         return None
 
+    def modification_needs_formatting(self, modification):
+        """Returns True if environment modification entry needs to be formatted."""
+        return (
+            not isinstance(modification, (spack.util.environment.SetEnv)) or not modification.raw
+        )
+
     @tengine.context_property
+    @memoized
     def environment_modifications(self):
         """List of environment modifications to be processed."""
         # Modifications guessed by inspecting the spec prefix
@@ -771,14 +740,28 @@ class BaseContext(tengine.Context):
             _check_tokens_are_valid(x.name, message=msg)
             # Transform them
             x.name = spec.format(x.name, transform=transform)
-            try:
-                # Not every command has a value
-                x.value = spec.format(x.value)
-            except AttributeError:
-                pass
+            if self.modification_needs_formatting(x):
+                try:
+                    # Not every command has a value
+                    x.value = spec.format(x.value)
+                except AttributeError:
+                    pass
             x.name = str(x.name).replace("-", "_")
 
         return [(type(x).__name__, x) for x in env if x.name not in exclude]
+
+    @tengine.context_property
+    def has_manpath_modifications(self):
+        """True if MANPATH environment variable is modified."""
+        for modification_type, cmd in self.environment_modifications:
+            if not isinstance(
+                cmd, (spack.util.environment.PrependPath, spack.util.environment.AppendPath)
+            ):
+                continue
+            if cmd.name == "MANPATH":
+                return True
+        else:
+            return False
 
     @tengine.context_property
     def autoload(self):
@@ -801,7 +784,44 @@ class BaseContext(tengine.Context):
         return self.conf.verbose
 
 
-class BaseModuleFileWriter(object):
+def ensure_modules_are_enabled_or_warn():
+    """Ensures that, if a custom configuration file is found with custom configuration for the
+    default tcl module set, then tcl module file generation is enabled. Otherwise, a warning
+    is emitted.
+    """
+
+    # TODO (v0.21 - Remove this function)
+    # Check if TCL module generation is enabled, return early if it is
+    enabled = spack.config.get("modules:default:enable", [])
+    if "tcl" in enabled:
+        return
+
+    # Check if we have custom TCL module sections
+    for scope in spack.config.config.file_scopes:
+        # Skip default configuration
+        if scope.name.startswith("default"):
+            continue
+
+        data = spack.config.get("modules:default:tcl", scope=scope.name)
+        if data:
+            config_file = pathlib.Path(scope.path)
+            if not scope.name.startswith("env"):
+                config_file = config_file / "modules.yaml"
+            break
+    else:
+        return
+
+    # If we are here we have a custom "modules" section in "config_file"
+    msg = (
+        f"detected custom TCL modules configuration in {config_file}, while TCL module file "
+        f"generation for the default module set is disabled. "
+        f"In Spack v0.20 module file generation has been disabled by default. To enable "
+        f"it run:\n\n\t$ spack config add 'modules:default:enable:[tcl]'\n"
+    )
+    warnings.warn(msg)
+
+
+class BaseModuleFileWriter:
     def __init__(self, spec, module_set_name, explicit=None):
         self.spec = spec
 

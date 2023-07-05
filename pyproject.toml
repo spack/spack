@@ -222,6 +222,9 @@ drop = [
   '^pygments/lexers/(?!python|__init__|_mapping).*\.py$',
   # trim rich's markdown support
   "rich/markdown.py",
+  # ruamel.yaml installs unneded files
+  "ruamel.*.pth",
+  "pvectorc.*.so"
 ]
 
 [tool.vendoring.typing-stubs]

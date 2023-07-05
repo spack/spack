@@ -25,7 +25,7 @@ _deprecated_hash_algorithms = ["md5"]
 _hash_functions: Dict[str, Callable[[], Any]] = {}
 
 
-class DeprecatedHash(object):
+class DeprecatedHash:
     def __init__(self, hash_alg, alert_fn, disable_security_check):
         self.hash_alg = hash_alg
         self.alert_fn = alert_fn
@@ -92,7 +92,7 @@ def checksum(hashlib_algo, filename, **kwargs):
     return hasher.hexdigest()
 
 
-class Checker(object):
+class Checker:
     """A checker checks files against one particular hex digest.
     It will automatically determine what hashing algorithm
     to used based on the length of the digest it's initialized

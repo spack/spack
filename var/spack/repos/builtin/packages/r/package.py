@@ -21,8 +21,7 @@ class R(AutotoolsPackage):
 
     extendable = True
 
-    maintainers("glennpj")
-
+    version("4.3.0", sha256="45dcc48b6cf27d361020f77fde1a39209e997b81402b3663ca1c010056a6a609")
     version("4.2.2", sha256="0ff62b42ec51afa5713caee7c4fde7a0c45940ba39bef8c5c9487fef0c953df5")
     version("4.2.1", sha256="4d52db486d27848e54613d4ee977ad952ec08ce17807e1b525b10cd4436c643f")
     version("4.2.0", sha256="38eab7719b7ad095388f06aa090c5a2b202791945de60d3e2bb0eab1f5097488")
@@ -125,6 +124,7 @@ class R(AutotoolsPackage):
         prefix = self.prefix
 
         config_args = [
+            "--with-internal-tzcode",
             "--libdir={0}".format(join_path(prefix, "rlib")),
             "--enable-R-shlib",
             "--enable-BLAS-shlib",
@@ -176,6 +176,10 @@ class R(AutotoolsPackage):
         # Set FPICFLAGS for compilers except 'gcc'.
         if self.compiler.name != "gcc":
             config_args.append("FPICFLAGS={0}".format(self.compiler.cc_pic_flag))
+
+        if self.spec.satisfies("@:3.6.1 %gcc@10:"):
+            config_args.append("CFLAGS=-fcommon")
+            config_args.append("FFLAGS=-fallow-argument-mismatch")
 
         return config_args
 

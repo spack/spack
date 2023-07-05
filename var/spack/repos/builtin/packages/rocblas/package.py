@@ -135,7 +135,6 @@ class Rocblas(CMakePackage):
 
     depends_on("googletest@1.10.0:", type="test")
     depends_on("netlib-lapack@3.7.1:", type="test")
-    depends_on("llvm-amdgpu +openmp", type="test")
 
     def check(self):
         if "@4.2.0:" in self.spec:
@@ -238,6 +237,7 @@ class Rocblas(CMakePackage):
     patch("0003-Fix-rocblas-gentest.patch", when="@4.2.0:5.1")
     # Finding Python package and set command python as python3
     patch("0004-Find-python.patch", when="@5.2.0:")
+    patch("0006-Guard-use-of-OpenMP-to-make-it-optional-5.4.patch", when="@5.4:")
 
     def setup_build_environment(self, env):
         env.set("CXX", self.spec["hip"].hipcc)

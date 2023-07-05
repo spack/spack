@@ -14,6 +14,7 @@ import platform
 import re
 import socket
 import sys
+from functools import wraps
 from typing import Any, Callable, Dict, List, MutableMapping, Optional, Tuple, Union
 
 from llnl.util import tty
@@ -46,6 +47,7 @@ _SHELL_SET_STRINGS = {
     "csh": "setenv {0} {1};\n",
     "fish": "set -gx {0} {1};\n",
     "bat": 'set "{0}={1}"\n',
+    "pwsh": "$Env:{0}={1}\n",
 }
 
 
@@ -54,6 +56,7 @@ _SHELL_UNSET_STRINGS = {
     "csh": "unsetenv {0};\n",
     "fish": "set -e {0};\n",
     "bat": 'set "{0}="\n',
+    "pwsh": "Remove-Item Env:{0}\n",
 }
 
 
@@ -81,6 +84,28 @@ def double_quote_escape(s):
     # use double quotes, and escape double quotes in the string
     # the string $"b is then quoted as "$\"b"
     return '"' + s.replace('"', r"\"") + '"'
+
+
+def system_env_normalize(func):
+    """Decorator wrapping calls to system env modifications,
+    converting all env variable names to all upper case on Windows, no-op
+    on other platforms before calling env modification method.
+
+    Windows, due to a DOS holdover, treats all env variable names case
+    insensitively, however Spack's env modification class does not,
+    meaning setting `Path` and `PATH` would be distinct env operations
+    for Spack, but would cause a collision when actually performing the
+    env modification operations on the env.
+    Normalize all env names to all caps to prevent this collision from the
+    Spack side."""
+
+    @wraps(func)
+    def case_insensitive_modification(self, name: str, *args, **kwargs):
+        if sys.platform == "win32":
+            name = name.upper()
+        return func(self, name, *args, **kwargs)
+
+    return case_insensitive_modification
 
 
 def is_system_path(path: Path) -> bool:
@@ -148,7 +173,13 @@ def path_put_first(var_name: str, directories: List[Path]):
 BASH_FUNCTION_FINDER = re.compile(r"BASH_FUNC_(.*?)\(\)")
 
 
-def _env_var_to_source_line(var: str, val: str) -> str:
+def _win_env_var_to_set_line(var: str, val: str) -> str:
+    is_pwsh = os.environ.get("SPACK_SHELL", None) == "pwsh"
+    env_set_phrase = f"$Env:{var}={val}" if is_pwsh else f'set "{var}={val}"'
+    return env_set_phrase
+
+
+def _nix_env_var_to_source_line(var: str, val: str) -> str:
     if var.startswith("BASH_FUNC"):
         source_line = "function {fname}{decl}; export -f {fname}".format(
             fname=BASH_FUNCTION_FINDER.sub(r"\1", var), decl=val
@@ -156,6 +187,13 @@ def _env_var_to_source_line(var: str, val: str) -> str:
     else:
         source_line = f"{var}={double_quote_escape(val)}; export {var}"
     return source_line
+
+
+def _env_var_to_source_line(var: str, val: str) -> str:
+    if sys.platform == "win32":
+        return _win_env_var_to_set_line(var, val)
+    else:
+        return _nix_env_var_to_source_line(var, val)
 
 
 @system_path_filter(arg_slice=slice(1))
@@ -317,13 +355,20 @@ class NameValueModifier:
 
 
 class SetEnv(NameValueModifier):
-    __slots__ = ("force",)
+    __slots__ = ("force", "raw")
 
     def __init__(
-        self, name: str, value: str, *, trace: Optional[Trace] = None, force: bool = False
+        self,
+        name: str,
+        value: str,
+        *,
+        trace: Optional[Trace] = None,
+        force: bool = False,
+        raw: bool = False,
     ):
         super().__init__(name, value, trace=trace)
         self.force = force
+        self.raw = raw
 
     def execute(self, env: MutableMapping[str, str]):
         tty.debug(f"SetEnv: {self.name}={str(self.value)}", level=3)
@@ -466,17 +511,20 @@ class EnvironmentModifications:
 
         return Trace(filename=filename, lineno=lineno, context=current_context)
 
-    def set(self, name: str, value: str, *, force: bool = False):
+    @system_env_normalize
+    def set(self, name: str, value: str, *, force: bool = False, raw: bool = False):
         """Stores a request to set an environment variable.
 
         Args:
             name: name of the environment variable
             value: value of the environment variable
             force: if True, audit will not consider this modification a warning
+            raw: if True, format of value string is skipped
         """
-        item = SetEnv(name, value, trace=self._trace(), force=force)
+        item = SetEnv(name, value, trace=self._trace(), force=force, raw=raw)
         self.env_modifications.append(item)
 
+    @system_env_normalize
     def append_flags(self, name: str, value: str, sep: str = " "):
         """Stores a request to append 'flags' to an environment variable.
 
@@ -488,6 +536,7 @@ class EnvironmentModifications:
         item = AppendFlagsEnv(name, value, separator=sep, trace=self._trace())
         self.env_modifications.append(item)
 
+    @system_env_normalize
     def unset(self, name: str):
         """Stores a request to unset an environment variable.
 
@@ -497,6 +546,7 @@ class EnvironmentModifications:
         item = UnsetEnv(name, trace=self._trace())
         self.env_modifications.append(item)
 
+    @system_env_normalize
     def remove_flags(self, name: str, value: str, sep: str = " "):
         """Stores a request to remove flags from an environment variable
 
@@ -508,6 +558,7 @@ class EnvironmentModifications:
         item = RemoveFlagsEnv(name, value, separator=sep, trace=self._trace())
         self.env_modifications.append(item)
 
+    @system_env_normalize
     def set_path(self, name: str, elements: List[str], separator: str = os.pathsep):
         """Stores a request to set an environment variable to a list of paths,
         separated by a character defined in input.
@@ -520,6 +571,7 @@ class EnvironmentModifications:
         item = SetPath(name, elements, separator=separator, trace=self._trace())
         self.env_modifications.append(item)
 
+    @system_env_normalize
     def append_path(self, name: str, path: str, separator: str = os.pathsep):
         """Stores a request to append a path to list of paths.
 
@@ -531,6 +583,7 @@ class EnvironmentModifications:
         item = AppendPath(name, path, separator=separator, trace=self._trace())
         self.env_modifications.append(item)
 
+    @system_env_normalize
     def prepend_path(self, name: str, path: str, separator: str = os.pathsep):
         """Stores a request to prepend a path to list of paths.
 
@@ -542,6 +595,7 @@ class EnvironmentModifications:
         item = PrependPath(name, path, separator=separator, trace=self._trace())
         self.env_modifications.append(item)
 
+    @system_env_normalize
     def remove_path(self, name: str, path: str, separator: str = os.pathsep):
         """Stores a request to remove a path from a list of paths.
 
@@ -553,6 +607,7 @@ class EnvironmentModifications:
         item = RemovePath(name, path, separator=separator, trace=self._trace())
         self.env_modifications.append(item)
 
+    @system_env_normalize
     def deprioritize_system_paths(self, name: str, separator: str = os.pathsep):
         """Stores a request to deprioritize system paths in a path list,
         otherwise preserving the order.
@@ -564,6 +619,7 @@ class EnvironmentModifications:
         item = DeprioritizeSystemPaths(name, separator=separator, trace=self._trace())
         self.env_modifications.append(item)
 
+    @system_env_normalize
     def prune_duplicate_paths(self, name: str, separator: str = os.pathsep):
         """Stores a request to remove duplicates from a path list, otherwise
         preserving the order.
@@ -641,7 +697,7 @@ class EnvironmentModifications:
 
     def shell_modifications(
         self,
-        shell: str = "sh",
+        shell: str = "sh" if sys.platform != "win32" else os.environ.get("SPACK_SHELL", "bat"),
         explicit: bool = False,
         env: Optional[MutableMapping[str, str]] = None,
     ) -> str:
@@ -724,16 +780,21 @@ class EnvironmentModifications:
                 "PS1",
                 "PS2",
                 "ENV",
-                # Environment modules v4
+                # Environment Modules or Lmod
                 "LOADEDMODULES",
                 "_LMFILES_",
-                "BASH_FUNC_module()",
                 "MODULEPATH",
-                "MODULES_(.*)",
-                r"(\w*)_mod(quar|share)",
-                # Lmod configuration
-                r"LMOD_(.*)",
                 "MODULERCFILE",
+                "BASH_FUNC_ml()",
+                "BASH_FUNC_module()",
+                # Environment Modules-specific configuration
+                "MODULESHOME",
+                "BASH_FUNC__module_raw()",
+                r"MODULES_(.*)",
+                r"__MODULES_(.*)",
+                r"(\w*)_mod(quar|share)",
+                # Lmod-specific configuration
+                r"LMOD_(.*)",
             ]
         )
 
