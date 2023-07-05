@@ -967,7 +967,6 @@ class SpackSolverSetup:
             )
 
         for weight, declared_version in enumerate(most_to_least_preferred):
-            # TODO: self.package_fact(pkg.name).version_declared(declared_version, weight=weight)
             self.gen.fact(
                 fn.facts(
                     pkg.name,
@@ -1360,9 +1359,6 @@ class SpackSolverSetup:
             cache[imposed_spec] = (effect_id, requirements)
         effect_id, requirements = cache[imposed_spec]
         self.gen.fact(fn.facts(named_cond.name, fn.condition_effect(condition_id, effect_id)))
-
-        # FIXME: self.gen.fact(fn.imposed_constraint(condition_id, *predicate.args))
-
         return condition_id
 
     def impose(self, condition_id, imposed_spec, node=True, name=None, body=False):
@@ -2658,19 +2654,16 @@ class SpecBuilder:
             package.update_external_dependencies(self._specs.get(extendee_node, None))
 
     def depends_on(self, parent_node, dependency_node, type):
-        dependencies = self._specs[parent_node].edges_to_dependencies(name=dependency_node)
+        dependency_spec = self._specs[dependency_node]
+        edges = self._specs[parent_node].edges_to_dependencies(name=dependency_spec.name)
+        edges = [x for x in edges if id(x.spec) == id(dependency_spec)]
 
-        # TODO: assertion to be removed when cross-compilation is handled correctly
-        msg = "Current solver does not handle multiple dependency edges of the same name"
-        assert len(dependencies) < 2, msg
-
-        if not dependencies:
+        if not edges:
             self._specs[parent_node].add_dependency_edge(
                 self._specs[dependency_node], deptypes=(type,), virtuals=()
             )
         else:
-            # TODO: This assumes that each solve unifies dependencies
-            dependencies[0].update_deptypes(deptypes=(type,))
+            edges[0].update_deptypes(deptypes=(type,))
 
     def virtual_on_edge(self, parent_node, provider_node, virtual):
         provider = self.extract_pkg(provider_node)

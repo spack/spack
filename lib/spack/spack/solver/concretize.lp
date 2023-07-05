@@ -644,7 +644,6 @@ requirement_group_satisfied(node(ID, Package), X) :-
 % flags if their only source is from a requirement. This is overly-specific
 % and should use a more-generic approach like in https://github.com/spack/spack/pull/37180
 
-% FIXME (node transformation): check the following two rules for node(ID, A1)
 { attr("node_flag", node(ID, A1), A2, A3) } :-
   requirement_group_member(Y, Package, X),
   activate_requirement(node(ID, Package), X),
@@ -822,7 +821,6 @@ external_with_variant_set(node(NodeID, Package), Variant, Value)
     external(node(NodeID, Package)),
     attr("node", node(NodeID, Package)).
 
-% FIXME (node transformation): check how to define the default value
 % The default value for a variant in a package is what is prescribed:
 %
 % 1. On the command line
