@@ -843,11 +843,11 @@ class CMakeBuilder(spack.build_systems.cmake.CMakeBuilder):
 
         if spec.satisfies("+cuda") or spec.satisfies("+rocm"):
             if spec.satisfies("cuda_target"):
-                args += [self.define("CP2K_WITH_GPU", gpu_map[spec.variants["cuda_arch"].value])]
+                args += [self.define("CP2K_WITH_GPU", gpu_map[spec.variants["cuda_arch"].value[0])]
 
             if spec.satisfies("amdgpu_target"):
                 args += [
-                    self.define("CP2K_WITH_GPU", gpu_map[spec.variants["amdgpu_target"].value])
+                    self.define("CP2K_WITH_GPU", gpu_map[spec.variants["amdgpu_target"].value[0])
                 ]
 
         if spec.satisfies("+cuda"):
