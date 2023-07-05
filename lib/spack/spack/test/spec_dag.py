@@ -177,7 +177,7 @@ def test_conditional_dep_with_user_constraints(tmpdir, spec_str, expr_str, expec
 
 
 @pytest.mark.usefixtures("mutable_mock_repo", "config")
-class TestSpecDag(object):
+class TestSpecDag:
     def test_conflicting_package_constraints(self, set_dependency):
         set_dependency("mpileaks", "mpich@1.0")
         set_dependency("callpath", "mpich@2.0")

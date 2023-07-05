@@ -71,7 +71,7 @@ def variant(s):
     return spack.spec.enabled_variant_color + s + plain_format
 
 
-class VariantFormatter(object):
+class VariantFormatter:
     def __init__(self, variants):
         self.variants = variants
         self.headers = ("Name [Default]", "When", "Allowed values", "Description")

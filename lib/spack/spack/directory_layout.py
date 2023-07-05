@@ -37,7 +37,7 @@ def _check_concrete(spec):
         raise ValueError("Specs passed to a DirectoryLayout must be concrete!")
 
 
-class DirectoryLayout(object):
+class DirectoryLayout:
     """A directory layout is used to associate unique paths with specs.
     Different installations are going to want different layouts for their
     install, and they can use this to customize the nesting structure of

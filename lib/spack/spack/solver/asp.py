@@ -247,7 +247,7 @@ def specify(spec):
     return spack.spec.Spec(spec)
 
 
-class AspObject(object):
+class AspObject:
     """Object representing a piece of ASP code."""
 
 
@@ -313,7 +313,7 @@ class AspFunction(AspObject):
         return str(self)
 
 
-class AspFunctionBuilder(object):
+class AspFunctionBuilder:
     def __getattr__(self, name):
         return AspFunction(name)
 
@@ -355,7 +355,7 @@ def check_packages_exist(specs):
                 raise spack.repo.UnknownPackageError(str(s.fullname))
 
 
-class Result(object):
+class Result:
     """Result of an ASP solve."""
 
     def __init__(self, specs, asp=None):
@@ -655,7 +655,7 @@ RequirementRule = collections.namedtuple(
 )
 
 
-class PyclingoDriver(object):
+class PyclingoDriver:
     def __init__(self, cores=True):
         """Driver for the Python clingo interface.
 
@@ -853,7 +853,7 @@ class PyclingoDriver(object):
         return result, timer, self.control.statistics
 
 
-class SpackSolverSetup(object):
+class SpackSolverSetup:
     """Class to set up and run a Spack concretization solve."""
 
     def __init__(self, tests=False):
@@ -1536,7 +1536,7 @@ class SpackSolverSetup(object):
         clauses = []
 
         # TODO: do this with consistent suffixes.
-        class Head(object):
+        class Head:
             node = fn.attr("node")
             virtual_node = fn.attr("virtual_node")
             node_platform = fn.attr("node_platform_set")
@@ -1550,7 +1550,7 @@ class SpackSolverSetup(object):
             node_flag_propagate = fn.attr("node_flag_propagate")
             variant_propagate = fn.attr("variant_propagate")
 
-        class Body(object):
+        class Body:
             node = fn.attr("node")
             virtual_node = fn.attr("virtual_node")
             node_platform = fn.attr("node_platform")
@@ -2381,7 +2381,7 @@ class SpackSolverSetup(object):
         return version_specs
 
 
-class SpecBuilder(object):
+class SpecBuilder:
     """Class with actions to rebuild a spec from ASP results."""
 
     #: Regex for attributes that don't need actions b/c they aren't used to construct specs.
@@ -2696,7 +2696,7 @@ def _develop_specs_from_env(spec, env):
     spec.constrain(dev_info["spec"])
 
 
-class Solver(object):
+class Solver:
     """This is the main external interface class for solving.
 
     It manages solver configuration and preferences in one place. It sets up the solve

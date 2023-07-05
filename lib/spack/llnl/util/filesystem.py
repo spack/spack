@@ -402,7 +402,7 @@ def filter_file(
                 os.remove(backup_filename)
 
 
-class FileFilter(object):
+class FileFilter:
     """Convenience class for calling ``filter_file`` a lot."""
 
     def __init__(self, *filenames):
@@ -1338,7 +1338,7 @@ def lexists_islink_isdir(path):
     return True, is_link, is_dir
 
 
-class BaseDirectoryVisitor(object):
+class BaseDirectoryVisitor:
     """Base class and interface for :py:func:`visit_directory_tree`."""
 
     def visit_file(self, root, rel_path, depth):
@@ -2354,7 +2354,7 @@ def find_all_libraries(root, recursive=False):
     )
 
 
-class WindowsSimulatedRPath(object):
+class WindowsSimulatedRPath:
     """Class representing Windows filesystem rpath analog
 
     One instance of this class is associated with a package (only on Windows)

@@ -116,7 +116,7 @@ def test_repo(create_test_repo, monkeypatch, mock_stage):
         yield mock_repo_path
 
 
-class MakeStage(object):
+class MakeStage:
     def __init__(self, stage):
         self.stage = stage
 

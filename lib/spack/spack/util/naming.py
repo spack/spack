@@ -177,8 +177,8 @@ class InvalidFullyQualifiedModuleNameError(spack.error.SpackError):
         self.name = name
 
 
-class NamespaceTrie(object):
-    class Element(object):
+class NamespaceTrie:
+    class Element:
         def __init__(self, value):
             self.value = value
 

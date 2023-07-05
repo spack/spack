@@ -39,7 +39,7 @@ __all__ = [
 true_fn = lambda: True
 
 
-class OpenFile(object):
+class OpenFile:
     """Record for keeping track of open lockfiles (with reference counting).
 
     There's really only one ``OpenFile`` per inode, per process, but we record the
@@ -53,7 +53,7 @@ class OpenFile(object):
         self.refs = 0
 
 
-class OpenFileTracker(object):
+class OpenFileTracker:
     """Track open lockfiles, to minimize number of open file descriptors.
 
     The ``fcntl`` locks that Spack uses are associated with an inode and a process.
@@ -169,7 +169,7 @@ def _attempts_str(wait_time, nattempts):
     return " after {} and {}".format(pretty_seconds(wait_time), attempts)
 
 
-class LockType(object):
+class LockType:
     READ = 0
     WRITE = 1
 
@@ -192,7 +192,7 @@ class LockType(object):
         return op == LockType.READ or op == LockType.WRITE
 
 
-class Lock(object):
+class Lock:
     """This is an implementation of a filesystem lock using Python's lockf.
 
     In Python, ``lockf`` actually calls ``fcntl``, so this should work with
@@ -681,7 +681,7 @@ class Lock(object):
         )
 
 
-class LockTransaction(object):
+class LockTransaction:
     """Simple nested transaction context manager that uses a file lock.
 
     Arguments:

@@ -462,7 +462,7 @@ def check_for_leftover_stage_files(request, mock_stage, ignore_stage_files):
         assert not files_in_stage
 
 
-class MockCache(object):
+class MockCache:
     def store(self, copy_cmd, relative_dest):
         pass
 
@@ -470,7 +470,7 @@ class MockCache(object):
         return MockCacheFetcher()
 
 
-class MockCacheFetcher(object):
+class MockCacheFetcher:
     def fetch(self):
         raise FetchError("Mock cache always fails for tests")
 
@@ -998,7 +998,7 @@ def mock_fetch(mock_archive, monkeypatch):
     monkeypatch.setattr(spack.package_base.PackageBase, "fetcher", mock_fetcher)
 
 
-class MockLayout(object):
+class MockLayout:
     def __init__(self, root):
         self.root = root
 
@@ -1021,7 +1021,7 @@ def gen_mock_layout(tmpdir):
     yield create_layout
 
 
-class MockConfig(object):
+class MockConfig:
     def __init__(self, configuration, writer_key):
         self._configuration = configuration
         self.writer_key = writer_key
@@ -1033,7 +1033,7 @@ class MockConfig(object):
         return self.configuration(module_set_name)[self.writer_key]
 
 
-class ConfigUpdate(object):
+class ConfigUpdate:
     def __init__(self, root_for_conf, writer_mod, writer_key, monkeypatch):
         self.root_for_conf = root_for_conf
         self.writer_mod = writer_mod
@@ -1646,7 +1646,7 @@ repo:
 ##########
 
 
-class MockBundle(object):
+class MockBundle:
     has_code = False
     name = "mock-bundle"
 
@@ -1785,7 +1785,7 @@ def mock_curl_configs(mock_config_data, monkeypatch):
     """
     config_data_dir, config_files = mock_config_data
 
-    class MockCurl(object):
+    class MockCurl:
         def __init__(self):
             self.returncode = None
 

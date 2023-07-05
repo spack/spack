@@ -34,7 +34,7 @@ except ImportError:
     pass
 
 
-class ProcessController(object):
+class ProcessController:
     """Wrapper around some fundamental process control operations.
 
     This allows one process (the controller) to drive another (the
@@ -155,7 +155,7 @@ class ProcessController(object):
         self.wait(lambda: "T" not in self.proc_status())
 
 
-class PseudoShell(object):
+class PseudoShell:
     """Sets up controller and minion processes with a PTY.
 
     You can create a ``PseudoShell`` if you want to test how some

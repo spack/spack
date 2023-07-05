@@ -86,7 +86,7 @@ STATUS_DEQUEUED = "dequeued"
 STATUS_REMOVED = "removed"
 
 
-class InstallAction(object):
+class InstallAction:
     #: Don't perform an install
     NONE = 0
     #: Do a standard install
@@ -657,7 +657,7 @@ def package_id(pkg):
     return "{0}-{1}-{2}".format(pkg.name, pkg.version, pkg.spec.dag_hash())
 
 
-class TermTitle(object):
+class TermTitle:
     def __init__(self, pkg_count):
         # Counters used for showing status information in the terminal title
         self.pkg_num = 0
@@ -683,7 +683,7 @@ class TermTitle(object):
         sys.stdout.flush()
 
 
-class TermStatusLine(object):
+class TermStatusLine:
     """
     This class is used in distributed builds to inform the user that other packages are
     being installed by another process.
@@ -727,7 +727,7 @@ class TermStatusLine(object):
         sys.stdout.flush()
 
 
-class PackageInstaller(object):
+class PackageInstaller:
     """
     Class for managing the install process for a Spack instance based on a
     bottom-up DAG approach.
@@ -1867,7 +1867,7 @@ class PackageInstaller(object):
             )
 
 
-class BuildProcessInstaller(object):
+class BuildProcessInstaller:
     """This class implements the part installation that happens in the child process."""
 
     def __init__(self, pkg, install_args):
@@ -2091,7 +2091,7 @@ def build_process(pkg, install_args):
         return installer.run()
 
 
-class OverwriteInstall(object):
+class OverwriteInstall:
     def __init__(self, installer, database, task):
         self.installer = installer
         self.database = database
@@ -2122,7 +2122,7 @@ class OverwriteInstall(object):
             raise e.inner_exception
 
 
-class BuildTask(object):
+class BuildTask:
     """Class for representing the build task for a package."""
 
     def __init__(self, pkg, request, compiler, start, attempts, status, installed):
@@ -2338,7 +2338,7 @@ class BuildTask(object):
         return len(self.uninstalled_deps)
 
 
-class BuildRequest(object):
+class BuildRequest:
     """Class for representing an installation request."""
 
     def __init__(self, pkg, install_args):

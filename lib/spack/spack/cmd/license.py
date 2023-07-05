@@ -100,7 +100,7 @@ license_line_regexes = [
 ]
 
 
-class LicenseError(object):
+class LicenseError:
     def __init__(self):
         self.error_counts = defaultdict(int)
 

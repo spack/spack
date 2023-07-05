@@ -23,7 +23,7 @@ def pkg_factory(name):
 
 
 @pytest.mark.usefixtures("config", "mock_packages")
-class TestPackage(object):
+class TestPackage:
     def test_load_package(self):
         spack.repo.path.get_pkg_class("mpich")
 

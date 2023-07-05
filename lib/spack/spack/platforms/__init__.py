@@ -35,7 +35,7 @@ real_host = _host
 host = _host
 
 
-class _PickleableCallable(object):
+class _PickleableCallable:
     """Class used to pickle a callable that may substitute either
     _platform or _all_platforms. Lambda or nested functions are
     not pickleable.

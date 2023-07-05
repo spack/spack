@@ -531,7 +531,7 @@ def test_026_reindex_after_deprecate(mutable_database):
     _check_db_sanity(mutable_database)
 
 
-class ReadModify(object):
+class ReadModify:
     """Provide a function which can execute in a separate process that removes
     a spec from the database.
     """

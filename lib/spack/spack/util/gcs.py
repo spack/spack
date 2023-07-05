@@ -34,7 +34,7 @@ def gcs_client():
     return storage_client
 
 
-class GCSBucket(object):
+class GCSBucket:
     """GCS Bucket Object
     Create a wrapper object for a GCS Bucket. Provides methods to wrap spack
     related tasks, such as destroy.
@@ -153,7 +153,7 @@ class GCSBucket(object):
             sys.exit(1)
 
 
-class GCSBlob(object):
+class GCSBlob:
     """GCS Blob object
 
     Wraps some blob methods for spack functionality

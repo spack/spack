@@ -52,7 +52,7 @@ infinity_versions = ["stable", "trunk", "head", "master", "main", "develop"]
 iv_min_len = min(len(s) for s in infinity_versions)
 
 
-class VersionStrComponent(object):
+class VersionStrComponent:
     __slots__ = ["data"]
 
     def __init__(self, data):
@@ -1158,7 +1158,7 @@ class VersionLookupError(VersionError):
     """Raised for errors looking up git commits as versions."""
 
 
-class CommitLookup(object):
+class CommitLookup:
     """An object for cached lookups of git commits
 
     CommitLookup objects delegate to the misc_cache for locking. CommitLookup objects may

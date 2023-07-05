@@ -46,7 +46,7 @@ def test_dir(tmpdir):
 
 
 @pytest.mark.usefixtures("config", "mock_packages", "working_env")
-class TestTargets(object):
+class TestTargets:
     @pytest.mark.parametrize(
         "input_dir", glob.iglob(os.path.join(DATA_PATH, "make", "affirmative", "*"))
     )
@@ -94,7 +94,7 @@ class TestTargets(object):
 
 
 @pytest.mark.usefixtures("config", "mock_packages")
-class TestAutotoolsPackage(object):
+class TestAutotoolsPackage:
     def test_with_or_without(self, default_mock_concretization):
         s = default_mock_concretization("a")
         options = s.package.with_or_without("foo")
@@ -257,7 +257,7 @@ spack:
 
 
 @pytest.mark.usefixtures("config", "mock_packages")
-class TestCMakePackage(object):
+class TestCMakePackage:
     def test_cmake_std_args(self, default_mock_concretization):
         # Call the function on a CMakePackage instance
         s = default_mock_concretization("cmake-client")
@@ -313,7 +313,7 @@ class TestCMakePackage(object):
 
 
 @pytest.mark.usefixtures("config", "mock_packages")
-class TestDownloadMixins(object):
+class TestDownloadMixins:
     """Test GnuMirrorPackage, SourceforgePackage, SourcewarePackage and XorgPackage."""
 
     @pytest.mark.parametrize(

@@ -340,7 +340,7 @@ def failing_fetch_strategy():
 def search_fn():
     """Returns a search function that always succeeds."""
 
-    class _Mock(object):
+    class _Mock:
         performed_search = False
 
         def __call__(self):
@@ -385,7 +385,7 @@ def check_stage_dir_perms(prefix, path):
 
 
 @pytest.mark.usefixtures("mock_packages")
-class TestStage(object):
+class TestStage:
     stage_name = "spack-test-stage"
 
     def test_setup_and_destroy_name_with_tmp(self, mock_stage_archive):

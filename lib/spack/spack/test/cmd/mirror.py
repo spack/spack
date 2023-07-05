@@ -78,7 +78,7 @@ def test_mirror_skip_unstable(tmpdir_factory, mock_packages, config, source_for_
     )
 
 
-class MockMirrorArgs(object):
+class MockMirrorArgs:
     def __init__(
         self,
         specs=None,
@@ -260,7 +260,7 @@ def test_mirror_destroy(
 
 
 @pytest.mark.usefixtures("mock_packages")
-class TestMirrorCreate(object):
+class TestMirrorCreate:
     @pytest.mark.regression("31736", "31985")
     def test_all_specs_with_all_versions_dont_concretize(self):
         args = MockMirrorArgs(exclude_file=None, exclude_specs=None)

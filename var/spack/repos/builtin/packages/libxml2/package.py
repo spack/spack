@@ -185,7 +185,7 @@ class Libxml2(AutotoolsPackage, NMakePackage):
             xmllint("--dtdvalid", dtd_path, data_dir.join("info.xml"))
 
 
-class RunAfter(object):
+class RunAfter:
     @run_after("install")
     @on_package_attributes(run_tests=True)
     def import_module_test(self):

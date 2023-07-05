@@ -21,7 +21,7 @@ pytestmark = pytest.mark.skipif(sys.platform == "win32", reason="does not run on
 
 
 @pytest.mark.usefixtures("mutable_mock_env_path", "mock_packages", "mock_fetch", "config")
-class TestDevelop(object):
+class TestDevelop:
     def check_develop(self, env, spec, path=None):
         path = path or spec.name
 

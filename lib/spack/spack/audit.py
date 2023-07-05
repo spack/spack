@@ -60,7 +60,7 @@ CALLBACKS = {}
 GROUPS = collections.defaultdict(list)
 
 
-class Error(object):
+class Error:
     """Information on an error reported in a test."""
 
     def __init__(self, summary, details):

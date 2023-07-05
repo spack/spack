@@ -199,7 +199,7 @@ def _mirror_roots():
     ]
 
 
-class Stage(object):
+class Stage:
     """Manages a temporary stage directory for building.
 
     A Stage object is a context manager that handles a directory where
@@ -790,7 +790,7 @@ class StageComposite(pattern.Composite):
         return self[0].archive_file
 
 
-class DIYStage(object):
+class DIYStage:
     """
     Simple class that allows any directory to be a spack stage.  Consequently,
     it does not expect or require that the source path adhere to the standard

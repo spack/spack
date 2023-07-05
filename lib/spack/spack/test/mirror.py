@@ -246,7 +246,7 @@ def test_mirror_with_url_patches(mock_packages, config, monkeypatch):
         )
 
 
-class MockFetcher(object):
+class MockFetcher:
     """Mock fetcher object which implements the necessary functionality for
     testing MirrorCache
     """

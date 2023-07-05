@@ -22,7 +22,7 @@ pytestmark = pytest.mark.skipif(sys.platform == "win32", reason="does not run on
 
 
 @pytest.mark.usefixtures("config", "mock_packages", "mock_module_filename")
-class TestTcl(object):
+class TestTcl:
     def test_simple_case(self, modulefile_content, module_configuration):
         """Tests the generation of a simple Tcl module file."""
 

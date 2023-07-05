@@ -881,7 +881,7 @@ class Openfoam(Package):
 # -----------------------------------------------------------------------------
 
 
-class OpenfoamArch(object):
+class OpenfoamArch:
     """OpenfoamArch represents architecture/compiler settings for OpenFOAM.
     The string representation is WM_OPTIONS.
 

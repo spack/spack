@@ -266,7 +266,7 @@ def mpi_multiproc_test(*functions):
     include = comm.rank < len(functions)
     subcomm = comm.Split(include)
 
-    class subcomm_barrier(object):
+    class subcomm_barrier:
         """Stand-in for multiproc barrier for MPI-parallel jobs."""
 
         def wait(self):
@@ -296,7 +296,7 @@ multiproc_test = mpi_multiproc_test if mpi else local_multiproc_test
 #
 # Process snippets below can be composed into tests.
 #
-class AcquireWrite(object):
+class AcquireWrite:
     def __init__(self, lock_path, start=0, length=0):
         self.lock_path = lock_path
         self.start = start
@@ -313,7 +313,7 @@ class AcquireWrite(object):
         barrier.wait()  # hold the lock until timeout in other procs.
 
 
-class AcquireRead(object):
+class AcquireRead:
     def __init__(self, lock_path, start=0, length=0):
         self.lock_path = lock_path
         self.start = start
@@ -330,7 +330,7 @@ class AcquireRead(object):
         barrier.wait()  # hold the lock until timeout in other procs.
 
 
-class TimeoutWrite(object):
+class TimeoutWrite:
     def __init__(self, lock_path, start=0, length=0):
         self.lock_path = lock_path
         self.start = start
@@ -348,7 +348,7 @@ class TimeoutWrite(object):
         barrier.wait()
 
 
-class TimeoutRead(object):
+class TimeoutRead:
     def __init__(self, lock_path, start=0, length=0):
         self.lock_path = lock_path
         self.start = start
@@ -691,7 +691,7 @@ def test_upgrade_read_to_write_fails_with_readonly_file(private_lock_path):
         lk.file_tracker.release_by_stat(os.stat(private_lock_path))
 
 
-class ComplexAcquireAndRelease(object):
+class ComplexAcquireAndRelease:
     def __init__(self, lock_path):
         self.lock_path = lock_path
 
@@ -987,7 +987,7 @@ def test_transaction_with_context_manager(lock_path, transaction, type):
             assert vals["entered_ctx"]
             assert vals["exited_ctx"]
 
-    class TestContextManager(object):
+    class TestContextManager:
         def __enter__(self):
             vals["entered_ctx"] = True
 
@@ -1188,7 +1188,7 @@ def test_nested_reads(lock_path):
                     assert vals["read"] == 1
 
 
-class LockDebugOutput(object):
+class LockDebugOutput:
     def __init__(self, lock_path):
         self.lock_path = lock_path
         self.host = socket.gethostname()

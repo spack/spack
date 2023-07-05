@@ -125,7 +125,7 @@ def preferred_version(pkg):
     return max(pkg.versions, key=key_fn)
 
 
-class WindowsRPath(object):
+class WindowsRPath:
     """Collection of functionality surrounding Windows RPATH specific features
 
     This is essentially meaningless for all other platforms
@@ -175,7 +175,7 @@ class WindowsRPath(object):
 detectable_packages = collections.defaultdict(list)
 
 
-class DetectablePackageMeta(object):
+class DetectablePackageMeta:
     """Check if a package is detectable and add default implementations
     for the detection function.
     """
@@ -365,7 +365,7 @@ def on_package_attributes(**attr_dict):
     return _execute_under_condition
 
 
-class PackageViewMixin(object):
+class PackageViewMixin:
     """This collects all functionality related to adding installed Spack
     package to views. Packages can customize how they are added to views by
     overriding these functions.

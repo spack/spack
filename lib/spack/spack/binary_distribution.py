@@ -87,7 +87,7 @@ class ListMirrorSpecsError(spack.error.SpackError):
     """Raised when unable to retrieve list of specs from the mirror"""
 
 
-class BinaryCacheIndex(object):
+class BinaryCacheIndex:
     """
     The BinaryCacheIndex tracks what specs are available on (usually remote)
     binary caches.
@@ -2337,7 +2337,7 @@ def download_single_spec(concrete_spec, destination, mirror_url=None):
     return download_buildcache_entry(files_to_fetch, mirror_url)
 
 
-class BinaryCacheQuery(object):
+class BinaryCacheQuery:
     """Callable object to query if a spec is in a binary cache"""
 
     def __init__(self, all_architectures):

@@ -117,7 +117,7 @@ class RepoLoader(_PrependFileLoader):
         )
 
 
-class SpackNamespaceLoader(object):
+class SpackNamespaceLoader:
     def create_module(self, spec):
         return SpackNamespace(spec.name)
 
@@ -125,7 +125,7 @@ class SpackNamespaceLoader(object):
         module.__loader__ = self
 
 
-class ReposFinder(object):
+class ReposFinder:
     """MetaPathFinder class that loads a Python module corresponding to a Spack package
 
     Return a loader based on the inspection of the current global repository list.
@@ -542,7 +542,7 @@ class PatchIndexer(Indexer):
         self.index.update_package(pkg_fullname)
 
 
-class RepoIndex(object):
+class RepoIndex:
     """Container class that manages a set of Indexers for a Repo.
 
     This class is responsible for checking packages in a repository for
@@ -641,7 +641,7 @@ class RepoIndex(object):
         return indexer.index
 
 
-class RepoPath(object):
+class RepoPath:
     """A RepoPath is a list of repos that function as one.
 
     It functions exactly like a Repo, but it operates on the combined
@@ -903,7 +903,7 @@ class RepoPath(object):
         return self.exists(pkg_name)
 
 
-class Repo(object):
+class Repo:
     """Class representing a package repository in the filesystem.
 
     Each package repository must have a top-level configuration file
@@ -1421,7 +1421,7 @@ def use_repositories(*paths_and_repos, **kwargs):
         path = saved
 
 
-class MockRepositoryBuilder(object):
+class MockRepositoryBuilder:
     """Build a mock repository in a directory"""
 
     def __init__(self, root_directory, namespace=None):

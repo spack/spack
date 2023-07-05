@@ -22,7 +22,7 @@ def sort_edges(edges):
     return edges
 
 
-class BaseVisitor(object):
+class BaseVisitor:
     """A simple visitor that accepts all edges unconditionally and follows all
     edges to dependencies of a given ``deptype``."""
 
@@ -46,7 +46,7 @@ class BaseVisitor(object):
         return sort_edges(item.edge.spec.edges_to_dependencies(deptype=self.deptype))
 
 
-class ReverseVisitor(object):
+class ReverseVisitor:
     """A visitor that reverses the arrows in the DAG, following dependents."""
 
     def __init__(self, visitor, deptype="all"):
@@ -65,7 +65,7 @@ class ReverseVisitor(object):
         )
 
 
-class CoverNodesVisitor(object):
+class CoverNodesVisitor:
     """A visitor that traverses each node once."""
 
     def __init__(self, visitor, key=id, visited=None):
@@ -88,7 +88,7 @@ class CoverNodesVisitor(object):
         return self.visitor.neighbors(item)
 
 
-class CoverEdgesVisitor(object):
+class CoverEdgesVisitor:
     """A visitor that traverses all edges once."""
 
     def __init__(self, visitor, key=id, visited=None):
@@ -110,7 +110,7 @@ class CoverEdgesVisitor(object):
         return self.visitor.neighbors(item)
 
 
-class TopoVisitor(object):
+class TopoVisitor:
     """Visitor that can be used in :py:func:`depth-first traversal
     <spack.traverse.traverse_depth_first_with_visitor>` to generate
     a topologically ordered list of specs.

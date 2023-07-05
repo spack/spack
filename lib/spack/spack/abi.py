@@ -13,7 +13,7 @@ from spack.spec import CompilerSpec
 from spack.util.executable import Executable, ProcessError
 
 
-class ABI(object):
+class ABI:
     """This class provides methods to test ABI compatibility between specs.
     The current implementation is rather rough and could be improved."""
 

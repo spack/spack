@@ -48,7 +48,7 @@ _abi: Union[spack.abi.ABI, llnl.util.lang.Singleton] = llnl.util.lang.Singleton(
 
 
 @functools.total_ordering
-class reverse_order(object):
+class reverse_order:
     """Helper for creating key functions.
 
     This is a wrapper that inverts the sense of the natural
@@ -65,7 +65,7 @@ class reverse_order(object):
         return other.value < self.value
 
 
-class Concretizer(object):
+class Concretizer:
     """You can subclass this class to override some of the default
     concretization strategies, or you can override all of them.
     """

@@ -51,7 +51,7 @@ def apply_patch(stage, patch_path, level=1, working_dir="."):
         patch("-s", "-p", str(level), "-i", patch_path, "-d", working_dir)
 
 
-class Patch(object):
+class Patch:
     """Base class for patches.
 
     Arguments:
@@ -310,7 +310,7 @@ def from_dict(dictionary, repository=None):
         raise ValueError("Invalid patch dictionary: %s" % dictionary)
 
 
-class PatchCache(object):
+class PatchCache:
     """Index of patches used in a repository, by sha256 hash.
 
     This allows us to look up patches without loading all packages.  It's
