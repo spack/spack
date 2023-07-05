@@ -38,7 +38,7 @@ class PySetuptoolsScm(PythonPackage):
     depends_on("py-setuptools@34.4:", type=("build", "run"))
     depends_on("py-toml", when="+toml @:6.1.0", type=("build", "run"))
     depends_on("py-tomli@1:", when="+toml @6.1.0:", type=("build", "run"))
-    depends_on("py-tomli@1:", when="@7.0:", type=("build", "run"))
+    depends_on("py-tomli@1:", when="@7.0", type=("build", "run"))
     depends_on("py-tomli@1:", when="@7.1: ^python@:3.10", type=("build", "run"))
     depends_on("py-typing-extensions", when="@7:", type=("build", "run"))
     depends_on("py-importlib-metadata", when="@7: ^python@:3.7", type=("build", "run"))
