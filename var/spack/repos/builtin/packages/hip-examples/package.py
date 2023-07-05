@@ -44,6 +44,7 @@ class HipExamples(Package):
                                     "RecursiveGaussian_Input.bmp",
                                     join_path(prefix, "RecursiveGaussian_Input.bmp"),
                                 )
+
     def test_examples(self):
         """
         run all hip example binaries
@@ -61,4 +62,3 @@ class HipExamples(Package):
                 ):
                     exe = which(file_path)
                     exe()
-
