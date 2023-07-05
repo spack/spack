@@ -13,8 +13,6 @@ get tests done quickly, not to avoid high CPU usage.
 
 Note: The functionality in this module is unsupported on Windows
 """
-from __future__ import print_function
-
 import multiprocessing
 import os
 import re
