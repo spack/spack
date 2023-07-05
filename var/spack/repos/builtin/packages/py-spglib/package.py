@@ -10,7 +10,7 @@ class PySpglib(PythonPackage):
     """Python bindings for C library for finding and handling
     crystal symmetries."""
 
-    homepage = "http://spglib.github.io/spglib"
+    homepage = "https://spglib.readthedocs.io/en/latest/"
     pypi = "spglib/spglib-1.9.9.18.tar.gz"
     git = "https://github.com/spglib/spglib.git"
 
