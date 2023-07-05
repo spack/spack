@@ -226,12 +226,6 @@ class Acts(CMakePackage, CudaPackage):
         when="@19.4.0:24 +examples",
     )
     variant(
-        "edm4hep",
-        default=False,
-        description="Build the EDM4hep examples",
-        when="@19.4.0:24 +examples",
-    )
-    variant(
         "geant4",
         default=False,
         description="Build the Geant4-based examples",
