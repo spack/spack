@@ -9,7 +9,7 @@ import io
 import re
 import sys
 from argparse import ArgumentParser
-from typing import IO, Optional, Sequence, Tuple
+from typing import Any, IO, Iterable, List, Optional, Sequence, Tuple, Union
 
 
 class Command:
@@ -25,9 +25,9 @@ class Command:
         prog: str,
         description: Optional[str],
         usage: str,
-        positionals: Sequence[Tuple[str, str, Sequence[str], str]],
-        optionals: Sequence[Tuple[Sequence[str], Sequence[str], str, str]],
-        subcommands: Sequence[Tuple[ArgumentParser, str, str]],
+        positionals: List[Tuple[str, str, Optional[Iterable[Any]], Union[int, str, None]]],
+        optionals: List[Tuple[Sequence[str], List[str], str, Union[int, str, None], str]],
+        subcommands: List[Tuple[Any, str, Optional[str]]],
     ) -> None:
         """Initialize a new Command instance.
 
