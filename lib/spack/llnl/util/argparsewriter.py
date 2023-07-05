@@ -25,9 +25,9 @@ class Command:
         prog: str,
         description: Optional[str],
         usage: str,
-        positionals: Sequence[Tuple[str, str]],
-        optionals: Sequence[Tuple[Sequence[str], str, str]],
-        subcommands: Sequence[Tuple[ArgumentParser, str]],
+        positionals: Sequence[Tuple[str, str, Sequence[str], str]],
+        optionals: Sequence[Tuple[Sequence[str], Sequence[str], str, str]],
+        subcommands: Sequence[Tuple[ArgumentParser, str, str]],
     ) -> None:
         """Initialize a new Command instance.
 
@@ -100,11 +100,10 @@ class ArgparseWriter(argparse.HelpFormatter, abc.ABC):
                 help = self._expand_help(action) if action.help else ""
                 help = help.replace("\n", " ")
 
-                dest = None
                 if action.choices is not None:
                     dest = [str(choice) for choice in action.choices]
                 else:
-                    dest = action.dest
+                    dest = [action.dest]
 
                 optionals.append((flags, dest, dest_flags, nargs, help))
             elif isinstance(action, argparse._SubParsersAction):
