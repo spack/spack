@@ -63,7 +63,7 @@ def create(pkg):
     return _BUILDERS[id(pkg)]
 
 
-class _PhaseAdapter(object):
+class _PhaseAdapter:
     def __init__(self, builder, phase_fn):
         self.builder = builder
         self.phase_fn = phase_fn
@@ -115,7 +115,7 @@ def _create(pkg):
     # package. The semantic should be the same as the method in the base builder were still
     # present in the base class of the package.
 
-    class _ForwardToBaseBuilder(object):
+    class _ForwardToBaseBuilder:
         def __init__(self, wrapped_pkg_object, root_builder):
             self.wrapped_package_object = wrapped_pkg_object
             self.root_builder = root_builder
@@ -388,7 +388,7 @@ class _PackageAdapterMeta(BuilderMeta):
         return super(_PackageAdapterMeta, mcs).__new__(mcs, name, bases, attr_dict)
 
 
-class InstallationPhase(object):
+class InstallationPhase:
     """Manages a single phase of the installation.
 
     This descriptor stores at creation time the name of the method it should

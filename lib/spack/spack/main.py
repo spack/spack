@@ -651,7 +651,7 @@ def _invoke_command(command, parser, args, unknown_args):
     return 0 if return_val is None else return_val
 
 
-class SpackCommand(object):
+class SpackCommand:
     """Callable object that invokes a spack command (for testing).
 
     Example usage::

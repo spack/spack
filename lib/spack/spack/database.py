@@ -135,7 +135,7 @@ class InstallStatus(str):
     pass
 
 
-class InstallStatuses(object):
+class InstallStatuses:
     INSTALLED = InstallStatus("installed")
     DEPRECATED = InstallStatus("deprecated")
     MISSING = InstallStatus("missing")
@@ -162,7 +162,7 @@ class InstallStatuses(object):
             return query_arg
 
 
-class InstallRecord(object):
+class InstallRecord:
     """A record represents one installation in the DB.
 
     The record keeps track of the spec for the installation, its
@@ -253,7 +253,7 @@ class ForbiddenLockError(SpackError):
     """Raised when an upstream DB attempts to acquire a lock"""
 
 
-class ForbiddenLock(object):
+class ForbiddenLock:
     def __getattribute__(self, name):
         raise ForbiddenLockError("Cannot access attribute '{0}' of lock".format(name))
 
@@ -307,7 +307,7 @@ _query_docstring = """
         """
 
 
-class Database(object):
+class Database:
 
     """Per-process lock objects for each install prefix."""
 

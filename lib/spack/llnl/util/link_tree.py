@@ -285,7 +285,7 @@ class DestinationMergeVisitor(BaseDirectoryVisitor):
         self.visit_file(root, rel_path, depth)
 
 
-class LinkTree(object):
+class LinkTree:
     """Class to create trees of symbolic links from a source directory.
 
     LinkTree objects are constructed with a source root.  Their

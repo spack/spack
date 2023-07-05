@@ -369,7 +369,7 @@ def compiler_specs_for_arch(arch_spec, scope=None):
     return [c.spec for c in compilers_for_arch(arch_spec, scope)]
 
 
-class CacheReference(object):
+class CacheReference:
     """This acts as a hashable reference to any object (regardless of whether
     the object itself is hashable) and also prevents the object from being
     garbage-collected (so if two CacheReference objects are equal, they

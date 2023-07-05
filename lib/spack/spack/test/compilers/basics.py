@@ -23,7 +23,7 @@ from spack.util.executable import ProcessError
 @pytest.fixture()
 def make_args_for_version(monkeypatch):
     def _factory(version, path="/usr/bin/gcc"):
-        class MockOs(object):
+        class MockOs:
             pass
 
         compiler_name = "gcc"
@@ -838,7 +838,7 @@ def test_apple_clang_setup_environment(mock_executable, monkeypatch):
     Xcode on MacOS.
     """
 
-    class MockPackage(object):
+    class MockPackage:
         use_xcode = False
 
     apple_clang_cls = spack.compilers.class_for_compiler_name("apple-clang")
@@ -937,7 +937,7 @@ def test_xcode_not_available(xcode_select_output, mock_executable, monkeypatch):
     )
     env = spack.util.environment.EnvironmentModifications()
 
-    class MockPackage(object):
+    class MockPackage:
         use_xcode = True
 
     pkg = MockPackage()

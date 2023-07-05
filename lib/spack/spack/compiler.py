@@ -189,7 +189,7 @@ def in_system_subdirectory(path):
     return any(path_contains_subdirectory(path, x) for x in system_dirs)
 
 
-class Compiler(object):
+class Compiler:
     """This class encapsulates a Spack "compiler", which includes C,
     C++, and Fortran compilers.  Subclasses should implement
     support for specific compilers, their possible names, arguments,

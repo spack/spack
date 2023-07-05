@@ -57,7 +57,7 @@ spack_compiler = spack.main.SpackCommand("compiler")
 PushResult = namedtuple("PushResult", "success url")
 
 
-class TemporaryDirectory(object):
+class TemporaryDirectory:
     def __init__(self):
         self.temporary_directory = tempfile.mkdtemp()
 
@@ -471,7 +471,7 @@ def _unpack_script(script_section, op=_noop):
     return script
 
 
-class RebuildDecision(object):
+class RebuildDecision:
     def __init__(self):
         self.rebuild = True
         self.mirrors = []
@@ -2128,7 +2128,7 @@ def run_standalone_tests(**kwargs):
     tty.debug("spack test exited {0}".format(exit_code))
 
 
-class CDashHandler(object):
+class CDashHandler:
     """
     Class for managing CDash data and processing.
     """

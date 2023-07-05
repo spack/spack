@@ -75,7 +75,7 @@ class ELF_CONSTANTS:
     SHT_STRTAB = 3
 
 
-class ElfFile(object):
+class ElfFile:
     """Parsed ELF file."""
 
     __slots__ = [

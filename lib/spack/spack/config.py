@@ -111,7 +111,7 @@ scopes_metavar = "{defaults,system,site,user}[/PLATFORM] or env:ENVIRONMENT"
 overrides_base_name = "overrides-"
 
 
-class ConfigScope(object):
+class ConfigScope:
     """This class represents a configuration scope.
 
     A scope is one directory containing named configuration files.
@@ -382,7 +382,7 @@ def _config_mutator(method):
     return _method
 
 
-class Configuration(object):
+class Configuration:
     """A full Spack configuration, from a hierarchy of config files.
 
     This class makes it easy to add a new scope on top of an existing one.
