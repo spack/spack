@@ -170,19 +170,19 @@ class NetlibLapack(CMakePackage):
     @when("+shared")
     def cmake(self, spec, prefix):
         for self._building_shared in (False, True):
-            super(NetlibLapack, self).cmake(spec, prefix)
+            super().cmake(spec, prefix)
 
     @when("+shared")
     def build(self, spec, prefix):
         for self._building_shared in (False, True):
-            super(NetlibLapack, self).build(spec, prefix)
+            super().build(spec, prefix)
 
     @when("+shared")
     def install(self, spec, prefix):
         for self._building_shared in (False, True):
-            super(NetlibLapack, self).install(spec, prefix)
+            super().install(spec, prefix)
 
     @when("+shared")
     def check(self):
         for self._building_shared in (False, True):
-            super(NetlibLapack, self).check()
+            super().check()

@@ -85,11 +85,11 @@ class Pfunit(CMakePackage):
 
     # The maximum rank of an array in the Fortran 2008 standard is 15
     max_rank = 15
-    allowed_array_ranks = tuple(str(i) for i in range(1, max_rank + 1))
+    allowed_array_ranks = tuple(str(i) for i in range(3, max_rank + 1))
 
     variant(
         "max_array_rank",
-        default=5,
+        default="5",
         values=allowed_array_ranks,
         description="Max rank for assertion overloads (higher values may be slower to build)",
     )

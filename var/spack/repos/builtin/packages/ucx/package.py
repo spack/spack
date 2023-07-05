@@ -72,6 +72,7 @@ class Ucx(AutotoolsPackage, CudaPackage):
         description="Build shared libs, static libs or both",
     )
     variant("logging", default=False, description="Enable logging")
+    variant("numa", default=True, when="@:1.14", description="Enable NUMA support")
     variant("openmp", default=True, description="Use OpenMP")
     variant(
         "opt",
@@ -126,7 +127,7 @@ class Ucx(AutotoolsPackage, CudaPackage):
     depends_on("knem", when="+knem")
     depends_on("libfuse@3:", when="+vfs")
     depends_on("maven", when="+java")
-    depends_on("numactl")
+    depends_on("numactl", when="+numa")
     depends_on("pkgconfig", type="build")
     depends_on("rdma-core", when="+rdmacm")
     depends_on("rdma-core", when="+verbs")
@@ -162,6 +163,7 @@ class Ucx(AutotoolsPackage, CudaPackage):
         spec = self.spec
         args = ["--without-go", "--disable-doxygen-doc"]  # todo  # todo
 
+        args += self.enable_or_disable("numa")
         args += self.enable_or_disable("assertions")
         args.append("--enable-compiler-opt=" + self.spec.variants["opt"].value)
         args += self.with_or_without("java", activation_value="prefix")

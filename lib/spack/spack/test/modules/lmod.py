@@ -44,7 +44,7 @@ def provider(request):
 
 
 @pytest.mark.usefixtures("config", "mock_packages")
-class TestLmod(object):
+class TestLmod:
     @pytest.mark.regression("37788")
     @pytest.mark.parametrize("modules_config", ["core_compilers", "core_compilers_at_equal"])
     def test_layout_for_specs_compiled_with_core_compilers(
@@ -166,6 +166,46 @@ class TestLmod(object):
         assert len([x for x in content if 'remove_path("SEMICOLON", "bar", ";")' in x]) == 1
         assert len([x for x in content if 'append_path("SPACE", "qux", " ")' in x]) == 1
         assert len([x for x in content if 'remove_path("SPACE", "qux", " ")' in x]) == 1
+
+    @pytest.mark.regression("11355")
+    def test_manpath_setup(self, modulefile_content, module_configuration):
+        """Tests specific setup of MANPATH environment variable."""
+
+        module_configuration("autoload_direct")
+
+        # no manpath set by module
+        content = modulefile_content("mpileaks")
+        assert len([x for x in content if 'append_path("MANPATH", "", ":")' in x]) == 0
+
+        # manpath set by module with prepend_path
+        content = modulefile_content("module-manpath-prepend")
+        assert (
+            len([x for x in content if 'prepend_path("MANPATH", "/path/to/man", ":")' in x]) == 1
+        )
+        assert (
+            len([x for x in content if 'prepend_path("MANPATH", "/path/to/share/man", ":")' in x])
+            == 1
+        )
+        assert len([x for x in content if 'append_path("MANPATH", "", ":")' in x]) == 1
+
+        # manpath set by module with append_path
+        content = modulefile_content("module-manpath-append")
+        assert len([x for x in content if 'append_path("MANPATH", "/path/to/man", ":")' in x]) == 1
+        assert len([x for x in content if 'append_path("MANPATH", "", ":")' in x]) == 1
+
+        # manpath set by module with setenv
+        content = modulefile_content("module-manpath-setenv")
+        assert len([x for x in content if 'setenv("MANPATH", "/path/to/man")' in x]) == 1
+        assert len([x for x in content if 'append_path("MANPATH", "", ":")' in x]) == 0
+
+    @pytest.mark.regression("29578")
+    def test_setenv_raw_value(self, modulefile_content, module_configuration):
+        """Tests that we can set environment variable value without formatting it."""
+
+        module_configuration("autoload_direct")
+        content = modulefile_content("module-setenv-raw")
+
+        assert len([x for x in content if 'setenv("FOO", "{{name}}, {name}, {{}}, {}")' in x]) == 1
 
     def test_help_message(self, modulefile_content, module_configuration):
         """Tests the generation of module help message."""

@@ -22,7 +22,7 @@ pytestmark = pytest.mark.skipif(sys.platform == "win32", reason="does not run on
 
 
 @pytest.mark.usefixtures("config", "mock_packages", "mock_module_filename")
-class TestTcl(object):
+class TestTcl:
     def test_simple_case(self, modulefile_content, module_configuration):
         """Tests the generation of a simple Tcl module file."""
 
@@ -37,6 +37,11 @@ class TestTcl(object):
         module_configuration("autoload_direct")
         content = modulefile_content(mpileaks_spec_string)
 
+        assert (
+            len([x for x in content if "if {![info exists ::env(LMOD_VERSION_MAJOR)]} {" in x])
+            == 1
+        )
+        assert len([x for x in content if "depends-on " in x]) == 2
         assert len([x for x in content if "module load " in x]) == 2
 
         # dtbuild1 has
@@ -46,6 +51,11 @@ class TestTcl(object):
         # Just make sure the 'build' dependency is not there
         content = modulefile_content("dtbuild1")
 
+        assert (
+            len([x for x in content if "if {![info exists ::env(LMOD_VERSION_MAJOR)]} {" in x])
+            == 1
+        )
+        assert len([x for x in content if "depends-on " in x]) == 2
         assert len([x for x in content if "module load " in x]) == 2
 
         # The configuration file sets the verbose keyword to False
@@ -58,6 +68,11 @@ class TestTcl(object):
         module_configuration("autoload_all")
         content = modulefile_content(mpileaks_spec_string)
 
+        assert (
+            len([x for x in content if "if {![info exists ::env(LMOD_VERSION_MAJOR)]} {" in x])
+            == 1
+        )
+        assert len([x for x in content if "depends-on " in x]) == 5
         assert len([x for x in content if "module load " in x]) == 5
 
         # dtbuild1 has
@@ -67,6 +82,11 @@ class TestTcl(object):
         # Just make sure the 'build' dependency is not there
         content = modulefile_content("dtbuild1")
 
+        assert (
+            len([x for x in content if "if {![info exists ::env(LMOD_VERSION_MAJOR)]} {" in x])
+            == 1
+        )
+        assert len([x for x in content if "depends-on " in x]) == 2
         assert len([x for x in content if "module load " in x]) == 2
 
     def test_prerequisites_direct(self, modulefile_content, module_configuration):
@@ -103,6 +123,7 @@ class TestTcl(object):
         assert len([x for x in content if x.startswith("prepend-path CMAKE_PREFIX_PATH")]) == 0
         assert len([x for x in content if 'setenv FOO "foo"' in x]) == 0
         assert len([x for x in content if "unsetenv BAR" in x]) == 0
+        assert len([x for x in content if "depends-on foo/bar" in x]) == 1
         assert len([x for x in content if "module load foo/bar" in x]) == 1
         assert len([x for x in content if "setenv LIBDWARF_ROOT" in x]) == 1
 
@@ -120,6 +141,55 @@ class TestTcl(object):
         assert len([x for x in content if 'remove-path --delim ";" SEMICOLON "bar"' in x]) == 1
         assert len([x for x in content if 'append-path --delim " " SPACE "qux"' in x]) == 1
         assert len([x for x in content if 'remove-path --delim " " SPACE "qux"' in x]) == 1
+
+    @pytest.mark.regression("11355")
+    def test_manpath_setup(self, modulefile_content, module_configuration):
+        """Tests specific setup of MANPATH environment variable."""
+
+        module_configuration("autoload_direct")
+
+        # no manpath set by module
+        content = modulefile_content("mpileaks")
+        assert len([x for x in content if 'append-path --delim ":" MANPATH ""' in x]) == 0
+
+        # manpath set by module with prepend-path
+        content = modulefile_content("module-manpath-prepend")
+        assert (
+            len([x for x in content if 'prepend-path --delim ":" MANPATH "/path/to/man"' in x])
+            == 1
+        )
+        assert (
+            len(
+                [
+                    x
+                    for x in content
+                    if 'prepend-path --delim ":" MANPATH "/path/to/share/man"' in x
+                ]
+            )
+            == 1
+        )
+        assert len([x for x in content if 'append-path --delim ":" MANPATH ""' in x]) == 1
+
+        # manpath set by module with append-path
+        content = modulefile_content("module-manpath-append")
+        assert (
+            len([x for x in content if 'append-path --delim ":" MANPATH "/path/to/man"' in x]) == 1
+        )
+        assert len([x for x in content if 'append-path --delim ":" MANPATH ""' in x]) == 1
+
+        # manpath set by module with setenv
+        content = modulefile_content("module-manpath-setenv")
+        assert len([x for x in content if 'setenv MANPATH "/path/to/man"' in x]) == 1
+        assert len([x for x in content if 'append-path --delim ":" MANPATH ""' in x]) == 0
+
+    @pytest.mark.regression("29578")
+    def test_setenv_raw_value(self, modulefile_content, module_configuration):
+        """Tests that we can set environment variable value without formatting it."""
+
+        module_configuration("autoload_direct")
+        content = modulefile_content("module-setenv-raw")
+
+        assert len([x for x in content if 'setenv FOO "{{name}}, {name}, {{}}, {}"' in x]) == 1
 
     def test_help_message(self, modulefile_content, module_configuration):
         """Tests the generation of module help message."""
@@ -394,10 +464,16 @@ class TestTcl(object):
 
         # Test the mpileaks that should have the autoloaded dependencies
         content = modulefile_content("mpileaks ^mpich2")
+        assert len([x for x in content if "depends-on " in x]) == 2
         assert len([x for x in content if "module load " in x]) == 2
 
         # Test the mpileaks that should NOT have the autoloaded dependencies
         content = modulefile_content("mpileaks ^mpich")
+        assert (
+            len([x for x in content if "if {![info exists ::env(LMOD_VERSION_MAJOR)]} {" in x])
+            == 0
+        )
+        assert len([x for x in content if "depends-on " in x]) == 0
         assert len([x for x in content if "module load " in x]) == 0
 
     def test_modules_no_arch(self, factory, module_configuration):

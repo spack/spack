@@ -224,7 +224,7 @@ def _windows_drive():
     return drive
 
 
-class WindowsCompilerExternalPaths(object):
+class WindowsCompilerExternalPaths:
     @staticmethod
     def find_windows_compiler_root_paths():
         """Helper for Windows compiler installation root discovery
@@ -260,7 +260,7 @@ class WindowsCompilerExternalPaths(object):
         )
 
 
-class WindowsKitExternalPaths(object):
+class WindowsKitExternalPaths:
     if sys.platform == "win32":
         plat_major_ver = str(winOs.windows_version()[0])
 

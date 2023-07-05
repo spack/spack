@@ -62,7 +62,7 @@ def _url_or_path_to_url(url_or_path: str) -> str:
     return url_util.path_to_file_url(spack.util.path.canonicalize_path(url_or_path))
 
 
-class Mirror(object):
+class Mirror:
     """Represents a named location for storing source tarballs and binary
     packages.
 
@@ -371,7 +371,7 @@ Spack not to expand it with the following syntax:
     return ext
 
 
-class MirrorReference(object):
+class MirrorReference:
     """A ``MirrorReference`` stores the relative paths where you can store a
     package/resource in a mirror directory.
 
@@ -597,7 +597,7 @@ def remove(name, scope):
     tty.msg("Removed mirror %s." % name)
 
 
-class MirrorStats(object):
+class MirrorStats:
     def __init__(self):
         self.present = {}
         self.new = {}
@@ -693,4 +693,4 @@ class MirrorError(spack.error.SpackError):
     """Superclass of all mirror-creation related errors."""
 
     def __init__(self, msg, long_msg=None):
-        super(MirrorError, self).__init__(msg, long_msg)
+        super().__init__(msg, long_msg)

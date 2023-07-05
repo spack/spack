@@ -17,7 +17,6 @@ class Mxnet(CMakePackage, CudaPackage, PythonExtension):
     maintainers("adamjstewart")
 
     version("master", branch="master", submodules=True)
-    version("1.master", branch="v1.x", submodules=True, deprecated=True)
     version("1.9.1", sha256="11ea61328174d8c29b96f341977e03deb0bf4b0c37ace658f93e38d9eb8c9322")
     version("1.9.0", sha256="a2a99cf604d57094269cacdfc4066492b2dc886593ee02b862e034f6180f712d")
     version("1.8.0", sha256="95aff985895aba409c08d5514510ae38b88490cfb6281ab3a5ff0f5826c8db54")
@@ -67,7 +66,7 @@ class Mxnet(CMakePackage, CudaPackage, PythonExtension):
     conflicts("+nccl", when="~cuda")
     conflicts("platform=darwin target=aarch64:", when="@:1")
 
-    patch("openblas-1.7.0.patch", when="@1.7.0:1.master")
+    patch("openblas-1.7.0.patch", when="@1.7.0:1")
     patch("openblas-1.6.0.patch", when="@1.6.0")
     patch("cmake_cuda_flags.patch", when="@1.6:1.7")
     patch("parallell_shuffle.patch", when="@1.6.0")
@@ -92,9 +91,9 @@ class Mxnet(CMakePackage, CudaPackage, PythonExtension):
             self.define("BLAS_LIBRARIES", self.spec["blas"].libs[0]),
         ]
 
-        if self.spec.satisfies("@:1.8"):
+        if self.spec.satisfies("@:1"):
             args.append(self.define_from_variant("USE_MKLDNN", "mkldnn"))
-        elif self.spec.satisfies("@1.9:"):
+        elif self.spec.satisfies("@2:"):
             args.append(self.define_from_variant("USE_ONEDNN", "mkldnn"))
             args.append(self.define("USE_CUTENSOR", False))
 
