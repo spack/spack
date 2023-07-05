@@ -13,11 +13,11 @@ class PlacementAlgorithm(PythonPackage):
     git = "ssh://git@bbpgitlab.epfl.ch/nse/placement-algorithm.git"
 
     version("develop", branch="main")
-    version("2.3.0", tag="placement-algorithm-v2.3.0")
+    version("2.3.1", tag="placement-algorithm-v2.3.1")
 
     build_directory = "python"
 
-    depends_on("python@3.6:", type=("build", "run"))
+    depends_on("python@3.7:", type=("build", "run"))
     depends_on("py-setuptools", type=("build", "run"))
 
     depends_on("py-jsonschema@3.2.0:", type=("build", "run"))
