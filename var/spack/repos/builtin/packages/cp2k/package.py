@@ -173,13 +173,13 @@ class Cp2k(MakefilePackage, CudaPackage, CMakePackage, ROCmPackage):
             )
 
     with when("+libxc"):
-        depends_on("pkgconfig", type="build", when="@7.0:")
-        depends_on("libxc@2.2.2:3", when="@:5", type="build")
-        depends_on("libxc@4.0.3:4", when="@6.0:6.9", type="build")
+        depends_on("pkgconfig", when="@7.0:")
+        depends_on("libxc@2.2.2:3", when="@:5")
+        depends_on("libxc@4.0.3:4", when="@6.0:6.9")
         depends_on("libxc@4.0.3:4", when="@7.0:8.1")
         depends_on("libxc@5.1.3:5.1", when="@8.2:8")
-        depends_on("libxc@5.1.7:5.1", when="@9:2022")
-        depends_on("libxc@6:6.1", when="@2023:", type=("build"))
+        depends_on("libxc@5.1.7:5.1", when="@9:2022.2")
+        depends_on("libxc@6.1:", when="@2023.1:")
 
     with when("+mpi"):
         depends_on("mpi@2:")
@@ -187,7 +187,7 @@ class Cp2k(MakefilePackage, CudaPackage, CMakePackage, ROCmPackage):
         depends_on("scalapack")
 
     with when("+cosma"):
-        depends_on("cosma+scalapack", type=("build"))
+        depends_on("cosma+scalapack")
         depends_on("cosma@2.5.1:", when="@9:")
         depends_on("cosma@2.6.3:", when="@master:")
         depends_on("cosma+cuda", when="+cuda")
@@ -231,29 +231,29 @@ class Cp2k(MakefilePackage, CudaPackage, CMakePackage, ROCmPackage):
         conflicts("@:6")
 
     with when("+libvori"):
-        depends_on("libvori@201219:", when="@8.1", type=("build"))
-        depends_on("libvori@210412:", when="@8.2:", type=("build"))
-        depends_on("libvori@220621:", when="@2023.1:", type=("build"))
+        depends_on("libvori@201219:", when="@8.1")
+        depends_on("libvori@210412:", when="@8.2:")
+        depends_on("libvori@220621:", when="@2023.1:")
         # libvori support was introduced in 8+
         conflicts("@:7")
 
     # the bundled libcusmm uses numpy in the parameter prediction (v7+)
     # which is written using Python 3
-    depends_on("py-numpy", when="@7:+cuda", type="build")
-    depends_on("python@3.6:", when="@7:+cuda", type="build")
+    depends_on("py-numpy", when="@7:+cuda")
+    depends_on("python@3.6:", when="@7:+cuda")
 
     depends_on("spglib", when="+spglib")
 
     # Apparently cp2k@4.1 needs an "experimental" version of libwannier.a
     # which is only available contacting the developer directly. See INSTALL
     # in the stage of cp2k@4.1
-    depends_on("wannier90", when="@3.0+mpi", type="build")
+    depends_on("wannier90", when="@3.0+mpi")
 
     with when("build_system=cmake"):
         depends_on("dbcsr")
-        depends_on("dbcsr+openmp", when="+openmp", type=("build"))
-        depends_on("dbcsr+cuda", when="+cuda", type=("build"))
-        depends_on("dbcsr+rocm", when="+rocm", type=("build"))
+        depends_on("dbcsr+openmp", when="+openmp")
+        depends_on("dbcsr+cuda", when="+cuda")
+        depends_on("dbcsr+rocm", when="+rocm")
 
     # CP2K needs compiler specific compilation flags, e.g. optflags
     conflicts("%apple-clang")
