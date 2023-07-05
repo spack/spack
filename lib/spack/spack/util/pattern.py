@@ -131,4 +131,4 @@ class Args(Bunch):
     """Subclass of Bunch to write argparse args more naturally."""
 
     def __init__(self, *flags, **kwargs):
-        super(Args, self).__init__(flags=tuple(flags), kwargs=kwargs)
+        super().__init__(flags=tuple(flags), kwargs=kwargs)

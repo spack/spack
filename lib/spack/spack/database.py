@@ -1667,7 +1667,7 @@ class InvalidDatabaseVersionError(SpackError):
             f"you need a newer Spack version to read the DB in '{database.root}'. "
             f"{self.database_version_message}"
         )
-        super(InvalidDatabaseVersionError, self).__init__(msg)
+        super().__init__(msg)
 
     @property
     def database_version_message(self):

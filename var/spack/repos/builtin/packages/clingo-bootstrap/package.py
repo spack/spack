@@ -50,7 +50,7 @@ class ClingoBootstrap(Clingo):
         return self.define("CLINGO_BUILD_PY_SHARED", "OFF")
 
     def cmake_args(self):
-        args = super(ClingoBootstrap, self).cmake_args()
+        args = super().cmake_args()
         args.extend(
             [
                 # Avoid building the clingo executable

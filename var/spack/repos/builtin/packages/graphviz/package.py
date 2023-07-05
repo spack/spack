@@ -152,7 +152,7 @@ class Graphviz(AutotoolsPackage):
 
     def setup_build_environment(self, env):
         # Set MACOSX_DEPLOYMENT_TARGET to 10.x due to old configure
-        super(Graphviz, self).setup_build_environment(env)
+        super().setup_build_environment(env)
 
         if "+quartz" in self.spec:
             env.set("OBJC", self.compiler.cc)

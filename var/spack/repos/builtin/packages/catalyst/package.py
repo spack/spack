@@ -86,7 +86,7 @@ class Catalyst(CMakePackage):
     def do_stage(self, mirror_only=False):
         """Unpacks and expands the fetched tarball.
         Then, generate the catalyst source files."""
-        super(Catalyst, self).do_stage(mirror_only)
+        super().do_stage(mirror_only)
 
         # extract the catalyst part
         catalyst_script = os.path.join(self.stage.source_path, "Catalyst", "catalyze.py")

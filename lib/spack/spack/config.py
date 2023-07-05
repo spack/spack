@@ -182,7 +182,7 @@ class SingleFileScope(ConfigScope):
                        config:
                          install_tree: $spack/opt/spack
         """
-        super(SingleFileScope, self).__init__(name, path)
+        super().__init__(name, path)
         self._raw_data = None
         self.schema = schema
         self.yaml_path = yaml_path or []
@@ -310,7 +310,7 @@ class InternalConfigScope(ConfigScope):
     """
 
     def __init__(self, name, data=None):
-        super(InternalConfigScope, self).__init__(name, None)
+        super().__init__(name, None)
         self.sections = syaml.syaml_dict()
 
         if data:
@@ -1495,7 +1495,7 @@ class ConfigFormatError(ConfigError):
             location += ":%d" % line
 
         message = "%s: %s" % (location, validation_error.message)
-        super(ConfigError, self).__init__(message)
+        super().__init__(message)
 
     def _get_mark(self, validation_error, data):
         """Get the file/line mark fo a validation error from a Spack YAML file."""

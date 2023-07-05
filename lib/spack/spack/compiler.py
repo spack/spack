@@ -673,17 +673,17 @@ class CompilerAccessError(spack.error.SpackError):
     def __init__(self, compiler, paths):
         msg = "Compiler '%s' has executables that are missing" % compiler.spec
         msg += " or are not executable: %s" % paths
-        super(CompilerAccessError, self).__init__(msg)
+        super().__init__(msg)
 
 
 class InvalidCompilerError(spack.error.SpackError):
     def __init__(self):
-        super(InvalidCompilerError, self).__init__("Compiler has no executables.")
+        super().__init__("Compiler has no executables.")
 
 
 class UnsupportedCompilerFlag(spack.error.SpackError):
     def __init__(self, compiler, feature, flag_name, ver_string=None):
-        super(UnsupportedCompilerFlag, self).__init__(
+        super().__init__(
             "{0} ({1}) does not support {2} (as compiler.{3}).".format(
                 compiler.name, ver_string if ver_string else compiler.version, feature, flag_name
             ),

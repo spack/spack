@@ -120,7 +120,7 @@ class PackageTemplate(BundlePackageTemplate):
     url_line = '    url = "{url}"'
 
     def __init__(self, name, url, versions):
-        super(PackageTemplate, self).__init__(name, versions)
+        super().__init__(name, versions)
 
         self.url_def = self.url_line.format(url=url)
 
@@ -198,7 +198,7 @@ class LuaPackageTemplate(PackageTemplate):
             # Make it more obvious that we are renaming the package
             tty.msg("Changing package name from {0} to lua-{0}".format(name))
             name = "lua-{0}".format(name)
-        super(LuaPackageTemplate, self).__init__(name, url, *args, **kwargs)
+        super().__init__(name, url, *args, **kwargs)
 
 
 class MesonPackageTemplate(PackageTemplate):
@@ -306,7 +306,7 @@ class RacketPackageTemplate(PackageTemplate):
             tty.msg("Changing package name from {0} to rkt-{0}".format(name))
             name = "rkt-{0}".format(name)
         self.body_def = self.body_def.format(name[4:])
-        super(RacketPackageTemplate, self).__init__(name, url, *args, **kwargs)
+        super().__init__(name, url, *args, **kwargs)
 
 
 class PythonPackageTemplate(PackageTemplate):
@@ -398,7 +398,7 @@ class PythonPackageTemplate(PackageTemplate):
                 + self.url_line
             )
 
-        super(PythonPackageTemplate, self).__init__(name, url, *args, **kwargs)
+        super().__init__(name, url, *args, **kwargs)
 
 
 class RPackageTemplate(PackageTemplate):
@@ -437,7 +437,7 @@ class RPackageTemplate(PackageTemplate):
         if bioc:
             self.url_line = '    url = "{0}"\n' '    bioc = "{1}"'.format(url, r_name)
 
-        super(RPackageTemplate, self).__init__(name, url, *args, **kwargs)
+        super().__init__(name, url, *args, **kwargs)
 
 
 class PerlmakePackageTemplate(PackageTemplate):
@@ -464,7 +464,7 @@ class PerlmakePackageTemplate(PackageTemplate):
             tty.msg("Changing package name from {0} to perl-{0}".format(name))
             name = "perl-{0}".format(name)
 
-        super(PerlmakePackageTemplate, self).__init__(name, *args, **kwargs)
+        super().__init__(name, *args, **kwargs)
 
 
 class PerlbuildPackageTemplate(PerlmakePackageTemplate):
@@ -497,7 +497,7 @@ class OctavePackageTemplate(PackageTemplate):
             tty.msg("Changing package name from {0} to octave-{0}".format(name))
             name = "octave-{0}".format(name)
 
-        super(OctavePackageTemplate, self).__init__(name, *args, **kwargs)
+        super().__init__(name, *args, **kwargs)
 
 
 class RubyPackageTemplate(PackageTemplate):
@@ -525,7 +525,7 @@ class RubyPackageTemplate(PackageTemplate):
             tty.msg("Changing package name from {0} to ruby-{0}".format(name))
             name = "ruby-{0}".format(name)
 
-        super(RubyPackageTemplate, self).__init__(name, *args, **kwargs)
+        super().__init__(name, *args, **kwargs)
 
 
 class MakefilePackageTemplate(PackageTemplate):
@@ -570,7 +570,7 @@ class SIPPackageTemplate(PackageTemplate):
             tty.msg("Changing package name from {0} to py-{0}".format(name))
             name = "py-{0}".format(name)
 
-        super(SIPPackageTemplate, self).__init__(name, *args, **kwargs)
+        super().__init__(name, *args, **kwargs)
 
 
 templates = {

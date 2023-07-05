@@ -148,7 +148,7 @@ class MakeExecutable(Executable):
 
     def __init__(self, name, jobs, **kwargs):
         supports_jobserver = kwargs.pop("supports_jobserver", True)
-        super(MakeExecutable, self).__init__(name, **kwargs)
+        super().__init__(name, **kwargs)
         self.supports_jobserver = supports_jobserver
         self.jobs = jobs
 
@@ -175,7 +175,7 @@ class MakeExecutable(Executable):
             if jobs_env_jobs is not None:
                 kwargs["extra_env"] = {jobs_env: str(jobs_env_jobs)}
 
-        return super(MakeExecutable, self).__call__(*args, **kwargs)
+        return super().__call__(*args, **kwargs)
 
 
 def _on_cray():
@@ -1332,7 +1332,7 @@ class ChildError(InstallError):
     build_errors = [("spack.util.executable", "ProcessError")]
 
     def __init__(self, msg, module, classname, traceback_string, log_name, log_type, context):
-        super(ChildError, self).__init__(msg)
+        super().__init__(msg)
         self.module = module
         self.name = classname
         self.traceback = traceback_string

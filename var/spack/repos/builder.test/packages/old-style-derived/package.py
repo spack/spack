@@ -18,4 +18,4 @@ class OldStyleDerived(spack.pkg.builder.test.old_style_autotools.OldStyleAutotoo
     version("1.0", md5="0123456789abcdef0123456789abcdef")
 
     def configure_args(self):
-        return ["--with-bar"] + super(OldStyleDerived, self).configure_args()
+        return ["--with-bar"] + super().configure_args()

@@ -89,7 +89,7 @@ class CMakeBuilder(spack.build_systems.cmake.CMakeBuilder):
         ]
 
     def install(self, pkg, spec, prefix):
-        super(CMakeBuilder, self).install(pkg, spec, prefix)
+        super().install(pkg, spec, prefix)
         python_builder = spack.build_systems.python.PythonPipBuilder(pkg)
         python_builder.install(pkg, spec, prefix)
 

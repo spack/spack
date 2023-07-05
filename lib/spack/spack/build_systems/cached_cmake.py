@@ -312,7 +312,7 @@ class CachedCMakeBuilder(CMakeBuilder):
 
     @property
     def std_cmake_args(self):
-        args = super(CachedCMakeBuilder, self).std_cmake_args
+        args = super().std_cmake_args
         args.extend(["-C", self.cache_path])
         return args
 

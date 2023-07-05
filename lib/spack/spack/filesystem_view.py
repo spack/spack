@@ -255,7 +255,7 @@ class YamlFilesystemView(FilesystemView):
     """
 
     def __init__(self, root, layout, **kwargs):
-        super(YamlFilesystemView, self).__init__(root, layout, **kwargs)
+        super().__init__(root, layout, **kwargs)
 
         # Super class gets projections from the kwargs
         # YAML specific to get projections from YAML file
@@ -637,7 +637,7 @@ class SimpleFilesystemView(FilesystemView):
     were added."""
 
     def __init__(self, root, layout, **kwargs):
-        super(SimpleFilesystemView, self).__init__(root, layout, **kwargs)
+        super().__init__(root, layout, **kwargs)
 
     def _sanity_check_view_projection(self, specs):
         """A very common issue is that we end up with two specs of the same

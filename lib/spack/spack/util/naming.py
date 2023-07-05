@@ -163,7 +163,7 @@ class InvalidModuleNameError(spack.error.SpackError):
     """Raised when we encounter a bad module name."""
 
     def __init__(self, name):
-        super(InvalidModuleNameError, self).__init__("Invalid module name: " + name)
+        super().__init__("Invalid module name: " + name)
         self.name = name
 
 
@@ -171,9 +171,7 @@ class InvalidFullyQualifiedModuleNameError(spack.error.SpackError):
     """Raised when we encounter a bad full package name."""
 
     def __init__(self, name):
-        super(InvalidFullyQualifiedModuleNameError, self).__init__(
-            "Invalid fully qualified package name: " + name
-        )
+        super().__init__("Invalid fully qualified package name: " + name)
         self.name = name
 
 

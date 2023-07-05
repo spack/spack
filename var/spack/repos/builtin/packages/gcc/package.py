@@ -628,7 +628,7 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage):
             "7.1.0"
         ):
             self.gnu_mirror_path = self.gnu_mirror_path.replace("xz", "bz2")
-        return super(Gcc, self).url_for_version(version)
+        return super().url_for_version(version)
 
     def patch(self):
         spec = self.spec

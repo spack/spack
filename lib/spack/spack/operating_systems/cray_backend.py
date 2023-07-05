@@ -86,9 +86,9 @@ class CrayBackend(LinuxDistro):
             # distro.linux_distribution, while still calling __init__
             # methods further up the MRO, we skip LinuxDistro in the MRO and
             # call the OperatingSystem superclass __init__ method
-            super(LinuxDistro, self).__init__(name, version)
+            super().__init__(name, version)
         else:
-            super(CrayBackend, self).__init__()
+            super().__init__()
         self.modulecmd = module
 
     def __str__(self):

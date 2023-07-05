@@ -125,7 +125,7 @@ default_compiler_entry = {
 # Fake up a mock compiler where everything is defaulted.
 class MockCompiler(Compiler):
     def __init__(self):
-        super(MockCompiler, self).__init__(
+        super().__init__(
             cspec="badcompiler@1.0.0",
             operating_system=default_compiler_entry["operating_system"],
             target=None,
@@ -142,7 +142,7 @@ class MockCompiler(Compiler):
         # Mock os.path.isdir so the link paths don't have to exist
         old_isdir = os.path.isdir
         os.path.isdir = lambda x: True
-        ret = super(MockCompiler, self)._get_compiler_link_paths(paths)
+        ret = super()._get_compiler_link_paths(paths)
         os.path.isdir = old_isdir
         return ret
 

@@ -73,7 +73,7 @@ class Openexr(CMakePackage):
     @property
     def build_directory(self):
         if self.spec.satisfies("@3:"):
-            return super(Openexr, self).build_directory
+            return super().build_directory
         else:
             return "."
 

@@ -59,7 +59,7 @@ class Cray(Platform):
           configuration file "targets.yaml" with keys 'front_end', 'back_end'
           scanning /etc/bash/bashrc.local for back_end only
         """
-        super(Cray, self).__init__("cray")
+        super().__init__("cray")
 
         # Make all craype targets available.
         for target in self._avail_targets():

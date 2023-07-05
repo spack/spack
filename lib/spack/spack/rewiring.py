@@ -126,14 +126,14 @@ class RewireError(spack.error.SpackError):
     """Raised when something goes wrong with rewiring."""
 
     def __init__(self, message, long_msg=None):
-        super(RewireError, self).__init__(message, long_msg)
+        super().__init__(message, long_msg)
 
 
 class PackageNotInstalledError(RewireError):
     """Raised when the build_spec for a splice was not installed."""
 
     def __init__(self, spliced_spec, build_spec, dep):
-        super(PackageNotInstalledError, self).__init__(
+        super().__init__(
             """Rewire of {0}
             failed due to missing install of build spec {1}
             for spec {2}""".format(

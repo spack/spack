@@ -44,14 +44,14 @@ class Busco(PythonPackage):
         if self.spec.satisfies("@4.1.3:"):
             install_tree("bin", prefix.bin)
             install_tree("config", prefix.config)
-            super(Busco, self).install(spec, prefix)
+            super().install(spec, prefix)
         if self.spec.satisfies("@3.0.1"):
             with working_dir("scripts"):
                 mkdirp(prefix.bin)
                 install("generate_plot.py", prefix.bin)
                 install("run_BUSCO.py", prefix.bin)
             install_tree("config", prefix.config)
-            super(Busco, self).install(spec, prefix)
+            super().install(spec, prefix)
         if self.spec.satisfies("@2.0.1"):
             mkdirp(prefix.bin)
             install("BUSCO.py", prefix.bin)

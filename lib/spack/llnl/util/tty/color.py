@@ -68,7 +68,7 @@ class ColorParseError(Exception):
     """Raised when a color format fails to parse."""
 
     def __init__(self, message):
-        super(ColorParseError, self).__init__(message)
+        super().__init__(message)
 
 
 # Text styles for ansi codes

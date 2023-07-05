@@ -705,7 +705,7 @@ class Cp2k(MakefilePackage, CudaPackage):
         # Apparently the Makefile bases its paths on PWD
         # so we need to set PWD = self.build_directory
         with spack.util.environment.set_env(PWD=self.build_directory):
-            super(Cp2k, self).build(spec, prefix)
+            super().build(spec, prefix)
 
             with working_dir(self.build_directory):
                 make("libcp2k", *self.build_targets)

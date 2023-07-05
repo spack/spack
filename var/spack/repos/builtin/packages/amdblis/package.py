@@ -43,7 +43,7 @@ class Amdblis(BlisBase):
 
     def configure_args(self):
         spec = self.spec
-        args = super(Amdblis, self).configure_args()
+        args = super().configure_args()
 
         if spec.satisfies("+ilp64"):
             args.append("--blas-int-size=64")
@@ -62,7 +62,7 @@ class Amdblis(BlisBase):
         return args
 
     def config_args(self):
-        config_args = super(Amdblis, self).config_args()
+        config_args = super().config_args()
 
         # "amdzen" - A fat binary or multiarchitecture binary
         # support for 3.1 release onwards

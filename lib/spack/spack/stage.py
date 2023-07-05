@@ -674,16 +674,16 @@ class Stage:
 
 class ResourceStage(Stage):
     def __init__(self, url_or_fetch_strategy, root, resource, **kwargs):
-        super(ResourceStage, self).__init__(url_or_fetch_strategy, **kwargs)
+        super().__init__(url_or_fetch_strategy, **kwargs)
         self.root_stage = root
         self.resource = resource
 
     def restage(self):
-        super(ResourceStage, self).restage()
+        super().restage()
         self._add_to_root_stage()
 
     def expand_archive(self):
-        super(ResourceStage, self).expand_archive()
+        super().expand_archive()
         self._add_to_root_stage()
 
     def _add_to_root_stage(self):
@@ -744,7 +744,7 @@ class StageComposite(pattern.Composite):
     #
 
     def __init__(self):
-        super(StageComposite, self).__init__(
+        super().__init__(
             [
                 "fetch",
                 "create",

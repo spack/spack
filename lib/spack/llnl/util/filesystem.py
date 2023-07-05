@@ -1892,7 +1892,7 @@ class HeaderList(FileList):
     include_regex = re.compile(r"(.*?)(\binclude\b)(.*)")
 
     def __init__(self, files):
-        super(HeaderList, self).__init__(files)
+        super().__init__(files)
 
         self._macro_definitions = []
         self._directories = None
@@ -1918,7 +1918,7 @@ class HeaderList(FileList):
         """Default computation of directories based on the list of
         header files.
         """
-        dir_list = super(HeaderList, self).directories
+        dir_list = super().directories
         values = []
         for d in dir_list:
             # If the path contains a subdirectory named 'include' then stop

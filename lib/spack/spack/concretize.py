@@ -792,9 +792,7 @@ class NoCompilersForArchError(spack.error.SpackError):
             " operating systems and targets:\n\t" + "\n\t".join(available_os_target_strs)
         )
 
-        super(NoCompilersForArchError, self).__init__(
-            err_msg, "Run 'spack compiler find' to add compilers."
-        )
+        super().__init__(err_msg, "Run 'spack compiler find' to add compilers.")
 
 
 class UnavailableCompilerVersionError(spack.error.SpackError):
@@ -806,7 +804,7 @@ class UnavailableCompilerVersionError(spack.error.SpackError):
         if arch:
             err_msg += " for operating system {0} and target {1}.".format(arch.os, arch.target)
 
-        super(UnavailableCompilerVersionError, self).__init__(
+        super().__init__(
             err_msg,
             "Run 'spack compiler find' to add compilers or "
             "'spack compilers' to see which compilers are already recognized"
@@ -819,7 +817,7 @@ class NoValidVersionError(spack.error.SpackError):
     particular spec."""
 
     def __init__(self, spec):
-        super(NoValidVersionError, self).__init__(
+        super().__init__(
             "There are no valid versions for %s that match '%s'" % (spec.name, spec.versions)
         )
 
@@ -830,7 +828,7 @@ class InsufficientArchitectureInfoError(spack.error.SpackError):
     system"""
 
     def __init__(self, spec, archs):
-        super(InsufficientArchitectureInfoError, self).__init__(
+        super().__init__(
             "Cannot determine necessary architecture information for '%s': %s"
             % (spec.name, str(archs))
         )
@@ -846,4 +844,4 @@ class NoBuildError(spack.error.SpecError):
             "The spec\n    '%s'\n    is configured as not buildable, "
             "and no matching external installs were found"
         )
-        super(NoBuildError, self).__init__(msg % spec)
+        super().__init__(msg % spec)

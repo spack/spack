@@ -693,4 +693,4 @@ class MirrorError(spack.error.SpackError):
     """Superclass of all mirror-creation related errors."""
 
     def __init__(self, msg, long_msg=None):
-        super(MirrorError, self).__init__(msg, long_msg)
+        super().__init__(msg, long_msg)

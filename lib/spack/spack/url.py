@@ -916,7 +916,7 @@ class UrlParseError(spack.error.SpackError):
     """Raised when the URL module can't parse something correctly."""
 
     def __init__(self, msg, path):
-        super(UrlParseError, self).__init__(msg)
+        super().__init__(msg)
         self.path = path
 
 
@@ -924,13 +924,11 @@ class UndetectableVersionError(UrlParseError):
     """Raised when we can't parse a version from a string."""
 
     def __init__(self, path):
-        super(UndetectableVersionError, self).__init__("Couldn't detect version in: " + path, path)
+        super().__init__("Couldn't detect version in: " + path, path)
 
 
 class UndetectableNameError(UrlParseError):
     """Raised when we can't parse a package name from a string."""
 
     def __init__(self, path):
-        super(UndetectableNameError, self).__init__(
-            "Couldn't parse package name in: " + path, path
-        )
+        super().__init__("Couldn't parse package name in: " + path, path)

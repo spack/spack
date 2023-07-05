@@ -153,7 +153,7 @@ class Mesa(MesonPackage):
         if self.spec.satisfies("%intel"):
             if name == "cflags":
                 flags.append("-std=c99")
-        return super(Mesa, self).flag_handler(name, flags)
+        return super().flag_handler(name, flags)
 
     @property
     def libglx_headers(self):

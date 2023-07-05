@@ -275,14 +275,14 @@ class MultiMethodError(spack.error.SpackError):
     """Superclass for multimethod dispatch errors"""
 
     def __init__(self, message):
-        super(MultiMethodError, self).__init__(message)
+        super().__init__(message)
 
 
 class NoSuchMethodError(spack.error.SpackError):
     """Raised when we can't find a version of a multi-method."""
 
     def __init__(self, cls, method_name, spec, possible_specs):
-        super(NoSuchMethodError, self).__init__(
+        super().__init__(
             "Package %s does not support %s called with %s.  Options are: %s"
             % (cls.__name__, method_name, spec, ", ".join(str(s) for s in possible_specs))
         )

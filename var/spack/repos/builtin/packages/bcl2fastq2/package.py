@@ -70,7 +70,7 @@ class Bcl2fastq2(Package):
         # wrap (decorate) the standard expand_archive step with a
         # helper, then call the real do_stage().
         self.stage.expand_archive = self.unpack_it(self.stage.expand_archive)
-        super(Bcl2fastq2, self).do_stage(mirror_only)
+        super().do_stage(mirror_only)
 
     def unpack_it(self, f):
         def wrap():
