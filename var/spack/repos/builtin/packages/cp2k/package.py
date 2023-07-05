@@ -875,10 +875,9 @@ class CMakeBuilder(spack.build_systems.cmake.CMakeBuilder):
         ]
 
         # we force the use elpa openmp threading support. might need to be revisited though
-        if (spec.satisfies("+openmp") and spec.satisfies("+elpa")) or spec.satisfies(
-            "^elpa+openmp"
-        ):
-            args += ["-DCP2K_ENABLE_ELPA_OPENMP_SUPPORT=ON"]
+        args += [self.define("CP2K_ENABLE_ELPA_OPENMP_SUPPORT",
+                 (spec.satisfies("+openmp") and spec.satisfies("+elpa")) or
+                 spec.satisfies("^elpa+openmp"))]
 
         if "spla" in spec and (spec.satisfies("+cuda") or spec.satisfies("+rocm")):
             args += ["-DCP2K_USE_SPLA_GEMM_OFFLOADING=ON"]
