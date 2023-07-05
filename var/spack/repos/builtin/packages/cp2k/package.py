@@ -623,7 +623,8 @@ class Cp2k(MakefilePackage, CudaPackage, CMakePackage, ROCmPackage):
                     cppflags += ["-D__PW_CUDA"]
                     libs += ["-lcufft", "-lcublas"]
 
-            gpuver = gpu_map[spec.variants["cuda_arch"].value]
+            cuda_arch = spec.variants["cuda_arch"].value[0]
+            gpuver = gpu_map[cuda_arch]
             if cuda_arch == "35" and spec.satisfies("+cuda_arch_35_k20x"):
                 gpuver = "K20X"
 
