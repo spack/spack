@@ -22,9 +22,9 @@ spack:
   - paraview_specs:
     - matrix:
       - - paraview
-      - - +qt~osmesa # GUI Support w/ GLX Rendering
-        - ~qt~osmesa # GLX Rendering
-        - ~qt+osmesa # OSMesa Rendering
+      - - +qt~osmesa ^glew gl=glx # GUI Support w/ GLX Rendering
+        - ~qt~osmesa ^glew gl=glx # GLX Rendering
+        - ~qt+osmesa ^glew gl=osmesa # OSMesa Rendering
   - visit_specs:
     - matrix:
       - - visit
@@ -40,6 +40,7 @@ spack:
             +darshan
             +faodel
             +hdf5
+            +paraview
             +pnetcdf
             +sensei
             +sz
