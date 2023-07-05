@@ -50,6 +50,7 @@ class Papi(AutotoolsPackage, ROCmPackage):
     variant("cuda", default=False, description="Enable CUDA support")
     variant("nvml", default=False, description="Enable NVML support")
     variant("rocm_smi", default=False, description="Enable ROCm SMI support")
+    variant("rdpmc", default=True, description="Enable x86 rdpmc support")
 
     variant("shared", default=True, description="Build shared libraries")
     # PAPI requires building static libraries, so there is no "static" variant
@@ -145,6 +146,9 @@ class Papi(AutotoolsPackage, ROCmPackage):
 
         if "+static_tools" in spec:
             options.append("--with-static-tools")
+
+        if "-rdpmc" in spec:
+            options.append("--disable-perfevent-rdpmc")
 
         return options
 
