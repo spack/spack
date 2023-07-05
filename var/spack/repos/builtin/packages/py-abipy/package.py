@@ -20,7 +20,6 @@ class PyAbipy(PythonPackage):
     variant("ipython", default=False, when="0.2.0", description="Build IPython support")
 
     depends_on("py-setuptools", type="build")
-    depends_on("py-cython", type="build")
     # in newer pip versions --install-option does not exist
     depends_on("py-pip@:23.0", when="+ipython", type="build")
 
@@ -55,7 +54,7 @@ class PyAbipy(PythonPackage):
 
     # Historical dependencies
     depends_on("py-six", when="@:0.6", type=("build", "run"))
-    depends_on("py-html2text", when="@:0.6",  type=("build", "run"))
+    depends_on("py-html2text", when="@:0.6", type=("build", "run"))
     depends_on("py-prettytable", when="@:0.5", type=("build", "run"))
 
     @when("0.2.0")
