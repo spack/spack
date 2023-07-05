@@ -44,12 +44,21 @@ class HipExamples(Package):
                                     "RecursiveGaussian_Input.bmp",
                                     join_path(prefix, "RecursiveGaussian_Input.bmp"),
                                 )
+    def test_examples(self):
+        """
+        run all hip example binaries
+        """
 
-    def test(self):
         os.environ["LD_LIBRARY_PATH"] = self.spec["rocm-openmp-extras"].prefix.lib
-        test_dir = self.spec["hip-examples"].prefix
-        with working_dir(test_dir, create=True):
-            for file in os.listdir("."):
-                if os.path.isfile(file) and os.access(file, os.X_OK):
-                    print("Executing test binary: " + file)
-                    self.run_test(file)
+        test_dir = self.prefix
+        for file_name in os.listdir(test_dir):
+            file_path = join_path(test_dir, file_name)
+            if os.path.isfile(file_path) and os.access(file_path, os.X_OK):
+                with test_part(
+                    self,
+                    "test_example_{0}".format(file_name),
+                    purpose="run installed {0}".format(file_name),
+                ):
+                    exe = which(file_path)
+                    exe()
+
