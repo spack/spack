@@ -127,6 +127,11 @@ class Hdf5(CMakePackage):
         preferred=True,
     )
     version(
+        "1.8.23",
+        sha256="37fa4eb6cd0e181eb49a10d54611cb00700e9537f805d03e6853503afe5abc27",
+        preferred=True,
+    )
+    version(
         "1.8.22",
         sha256="8406d96d9355ef8961d2739fb8fd5474ad4cdf52f3cfac657733defd9709bfaa",
         preferred=True,
