@@ -864,12 +864,7 @@ class CMakeBuilder(spack.build_systems.cmake.CMakeBuilder):
             self.define_from_variant("CP2K_USE_SPLA", "spla"),
             self.define_from_variant("CP2K_USE_COSMA", "cosma"),
             self.define_from_variant("CP2K_USE_LIBXC", "libxc"),
-        ]
-
-        if spec.satisfies("+pytorch"):
-            args += ["-DCP2K_USE_LIBTORCH=ON"]
-
-        args += [
+            self.define_from_variant("CP2K_USE_LIBTORCH", "pytorch"),
             self.define_from_variant("CP2K_USE_METIS", "pexsi"),
             self.define_from_variant("CP2K_USE_SUPERLU", "pexsi"),
             self.define_from_variant("CP2K_USE_PLUMED", "plumed"),
