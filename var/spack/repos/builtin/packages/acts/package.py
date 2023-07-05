@@ -290,7 +290,7 @@ class Acts(CMakePackage, CudaPackage):
     # depends_on("mlpack@3.1.1:", when="+mlpack")
     conflicts("+mlpack", when="@25:", msg="mlpack@3.1.1: required but not yet available")
     depends_on("nlohmann-json @3.9.1:", when="@0.14: +json")
-    depends_on("podio @0.6", when="@25: +edm4hep")
+    depends_on("podio @0.6:", when="@25: +edm4hep")
     depends_on("pythia8", when="+pythia8")
     depends_on("python", when="+python")
     depends_on("python@3.8:", when="+python @19.11:19")
