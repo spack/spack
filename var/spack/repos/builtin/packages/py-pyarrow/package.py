@@ -42,7 +42,7 @@ class PyPyarrow(PythonPackage, CudaPackage):
     depends_on("py-cython", type="build")
     depends_on("py-cython@0.29:", type="build", when="@0.15.0:")
     depends_on("py-cython@0.29.22:", type="build", when="@8.0.0:")
-    # in newer pip versions --install-options does not exist
+    # in newer pip versions --install-option does not exist
     depends_on("py-pip@:23.0", type="build")
 
     depends_on("py-numpy@1.14:", type=("build", "run"), when="@0.15.0:")

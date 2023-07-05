@@ -20,7 +20,7 @@ class PyQiskitAer(PythonPackage, CudaPackage):
     depends_on("python@3.6:", type=("build", "run"), when="@0.9.1")
     depends_on("python@3.7:", type=("build", "run"), when="@0.11.1")
     depends_on("py-setuptools@40.1.0:", type="build")
-    # in newer pip versions --install-options does not exist
+    # in newer pip versions --install-option does not exist
     depends_on("py-pip@:23.0", type="build")
     depends_on("py-numpy@1.16.3:", type=("build", "run"))
     depends_on("py-pybind11@2.6:", type="build")
