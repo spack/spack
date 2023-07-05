@@ -15,6 +15,7 @@ class PyAstropy(PythonPackage):
 
     homepage = "https://astropy.org/"
     pypi = "astropy/astropy-4.0.1.post1.tar.gz"
+    git = "https://github.com/astropy/astropy.git"
 
     version("5.1", sha256="1db1b2c7eddfc773ca66fa33bd07b25d5b9c3b5eee2b934e0ca277fa5b1b7b7e")
     version(
@@ -29,13 +30,11 @@ class PyAstropy(PythonPackage):
 
     # Required dependencies
     depends_on("python@3.8:", when="@5.1:", type=("build", "run"))
-    depends_on("python@3.6:", when="@4.0:", type=("build", "run"))
-    depends_on("python@3.5:", when="@3.0:", type=("build", "run"))
-    depends_on("python@2.7:2.8,3.4:", when="@2.0:", type=("build", "run"))
-    depends_on("python@2.7:2.8,3.3:", when="@1.2:", type=("build", "run"))
-    depends_on("python@2.6:", type=("build", "run"))
     depends_on("py-setuptools", type="build")
     depends_on("py-cython@0.29.13:", type="build")
+    # in newer pip versions --install-options does not exist
+    depends_on("py-pip@:23.0", type="build")
+
     depends_on("py-numpy@1.18:", when="@5.1:", type=("build", "run"))
     depends_on("py-numpy@1.16:", when="@4.0:", type=("build", "run"))
     depends_on("py-numpy@1.13:", when="@3.1:", type=("build", "run"))
@@ -50,6 +49,12 @@ class PyAstropy(PythonPackage):
     depends_on("py-cython@0.29.30", when="@5.1:", type="build")
     depends_on("py-extension-helpers", when="@5.1:", type="build")
     depends_on("pkgconfig", type="build")
+
+    depends_on("py-pytest@7:", type="test")
+    depends_on("py-pytest-doctestplus@0.12:", type="test")
+    depends_on("py-pytest-astropy-header@0.2.1:", type="test")
+    depends_on("py-pytest-astropy@0.10:", type="test")
+    depends_on("py-pytest-xdist", type="test")
 
     # Optional dependencies
     depends_on("py-scipy@0.18:", when="+extras", type=("build", "run"))
@@ -100,3 +105,12 @@ class PyAstropy(PythonPackage):
     def install_test(self):
         with working_dir("spack-test", create=True):
             python("-c", "import astropy; astropy.test()")
+
+    @property
+    def skip_modules(self):
+        modules = []
+
+        if self.spec.satisfies("~extras"):
+            modules.append("astropy.visualization.wcsaxes")
+
+        return modules
