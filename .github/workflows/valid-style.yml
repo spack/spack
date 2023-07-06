@@ -1,11 +1,20 @@
 name: style
 
 on:
+  push:
+    branches:
+      - develop
+      - releases/**
+      - jcsda_emc_spack_stack
+      - release/**
+  pull_request:
+    branches:
+      - develop
+      - releases/**
+      - jcsda_emc_spack_stack
+      - release/**
+  workflow_dispatch:
   workflow_call:
-    inputs:
-      with_coverage:
-        required: true
-        type: string
 
 concurrency:
   group: style-${{github.ref}}-${{github.event.pull_request.number || github.run_number}}
@@ -13,24 +22,6 @@ concurrency:
 
 
 jobs:
-  # Validate that the code can be run on all the Python versions
-  # supported by Spack
-  validate:
-    runs-on: ubuntu-latest
-    steps:
-    - uses: actions/checkout@8f4b7f84864484a7bf31766abe9204da3cbe65b3 # @v2
-    - uses: actions/setup-python@d27e3f3d7c64b4bbf8e4abfb9b63b83e846e0435 # @v2
-      with:
-        python-version: '3.11'
-        cache: 'pip'
-    - name: Install Python Packages
-      run: |
-        pip install --upgrade pip
-        pip install --upgrade vermin
-    - name: vermin (Spack's Core)
-      run: vermin --backport importlib --backport argparse --violations --backport typing -t=3.6- -vvv lib/spack/spack/ lib/spack/llnl/ bin/
-    - name: vermin (Repositories)
-      run: vermin --backport importlib --backport argparse --violations --backport typing -t=3.6- -vvv var/spack/repos
   # Run style checks on the files that have been changed
   style:
     runs-on: ubuntu-latest
@@ -53,33 +44,3 @@ jobs:
     - name: Run style tests
       run: |
           share/spack/qa/run-style-tests
-  audit:
-    uses: ./.github/workflows/audit.yaml
-    with:
-      with_coverage: ${{ inputs.with_coverage }}
-      python_version: '3.11'
-  # Check that spack can bootstrap the development environment on Python 3.6 - RHEL8
-  bootstrap-dev-rhel8:
-    runs-on: ubuntu-latest
-    container: registry.access.redhat.com/ubi8/ubi
-    steps:
-      - name: Install dependencies
-        run: |
-          dnf install -y \
-              bzip2 curl file gcc-c++ gcc gcc-gfortran git gnupg2 gzip \
-              make patch tcl unzip which xz
-      - uses: actions/checkout@8f4b7f84864484a7bf31766abe9204da3cbe65b3 # @v2
-      - name: Setup repo and non-root user
-        run: |
-          git --version
-          git fetch --unshallow
-          . .github/workflows/setup_git.sh
-          useradd spack-test
-          chown -R spack-test .
-      - name: Bootstrap Spack development environment
-        shell: runuser -u spack-test -- bash {0}
-        run: |
-          source share/spack/setup-env.sh
-          spack -d bootstrap now --dev
-          spack style -t black
-          spack unit-test -V
