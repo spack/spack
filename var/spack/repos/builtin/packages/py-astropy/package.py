@@ -32,7 +32,7 @@ class PyAstropy(PythonPackage):
     depends_on("python@3.8:", when="@5.1:", type=("build", "run"))
     depends_on("py-setuptools", type="build")
     depends_on("py-cython@0.29.13:", type="build")
-    # in newer pip versions --install-options does not exist
+    # in newer pip versions --install-option does not exist
     depends_on("py-pip@:23.0", type="build")
 
     depends_on("py-numpy@1.18:", when="@5.1:", type=("build", "run"))
