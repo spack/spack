@@ -257,7 +257,6 @@ def _py_lzma(archive_file):
     Decompress lzma compressed .xz files via python lzma module"""
     if check_extension(archive_file, "txz"):
         decompressed_file = os.path.basename(strip_extension(archive_file, "txz"))
-        decompressed_file += ".tar"
     else:
         decompressed_file = os.path.basename(strip_extension(archive_file, "xz"))
     archive_out = os.path.join(os.getcwd(), decompressed_file)
