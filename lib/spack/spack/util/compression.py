@@ -77,7 +77,7 @@ def _system_untar(archive_file):
         archive_file (str): absolute path to the archive to be extracted.
         Can be one of .tar(.[gz|bz2|xz|Z]) or .(tgz|tbz|tbz2|txz).
     """
-    archive_file_no_ext = strip_extension(archive_file, "tar")
+    archive_file_no_ext = strip_extension(archive_file)
     outfile = os.path.basename(archive_file_no_ext)
     if archive_file_no_ext == archive_file:
         # the archive file has no extension. Tar on windows cannot untar onto itself
@@ -163,7 +163,7 @@ def _py_gunzip(archive_file):
 def _system_gunzip(archive_file):
     """Returns path to gunzip'd file
     Decompresses `.gz` compressed files via system gzip"""
-    archive_file_no_ext = strip_compression_extension(archive_file, "gz")
+    archive_file_no_ext = strip_compression_extension(archive_file)
     if archive_file_no_ext == archive_file:
         # the zip file has no extension. On Unix gunzip cannot unzip onto itself
         archive_file = archive_file + ".gz"
