@@ -758,7 +758,7 @@ def _version_constraints_are_satisfiable_by_some_version_in_repo(pkgs, error_cls
                 )
             except Exception:
                 summary = (
-                    "{0}: dependency on {1} cannot be satisfied " "by known versions of {1.name}"
+                    "{0}: dependency on {1} cannot be satisfied by known versions of {1.name}"
                 ).format(pkg_name, s)
                 details = ["happening in " + filename]
                 if dependency_pkg_cls is not None:
@@ -768,6 +768,52 @@ def _version_constraints_are_satisfiable_by_some_version_in_repo(pkgs, error_cls
                         )
                     )
                 errors.append(error_cls(summary=summary, details=details))
+
+    return errors
+
+
+@package_directives
+def _conflicts_on_non_declared_dependencies(pkgs, error_cls):
+    """Report conflicts on non-declared dependencies"""
+    errors = []
+    for pkg_name in pkgs:
+        pkg_cls = spack.repo.PATH.get_pkg_class(pkg_name)
+        declared_virtuals = set()
+        declared_dependencies = set(
+            pkg_cls.possible_dependencies(transitive=False, virtuals=declared_virtuals)
+        )
+        declared_dependencies.update(declared_virtuals)
+
+        for conflict, triggers in pkg_cls.conflicts.items():
+            for trigger, _ in triggers:
+                conflict_merged_spec = spack.spec.Spec(conflict)
+                try:
+                    conflict_merged_spec.constrain(trigger)
+                except Exception:
+                    summary = f"cannot analyze a conflict directive in {pkg_name}"
+                    errors.append(
+                        error_cls(
+                            summary=summary,
+                            details=[f"condition: {conflict}", f"trigger: {trigger}"],
+                        )
+                    )
+                if conflict_merged_spec.name not in (None, pkg_name):
+                    summary = (
+                        f'{pkg_name}: conflict("{conflict}", when="{trigger}")'
+                        f" misses a leading ^ symbol"
+                    )
+                    errors.append(error_cls(summary=summary, details=[f"should be ^{conflict}"]))
+
+                pkg_names = [x.name for x in conflict_merged_spec.traverse() if x.name is not None]
+                non_declared = [x for x in pkg_names if x not in declared_dependencies]
+                if non_declared:
+                    summary = (
+                        f'{pkg_name}: conflict("{conflict}", when="{trigger}")\' is on '
+                        f"a non-declared dependency"
+                    )
+                    errors.append(
+                        error_cls(summary=summary, details=[f"{','.join(non_declared)}"])
+                    )
 
     return errors
 
