@@ -20,6 +20,8 @@ class Onednn(CMakePackage):
     maintainers("adamjstewart")
 
     version("master", branch="master")
+    version("3.0", sha256="b93ac6d12651c060e65086396d85191dabecfbc01f30eb1f139c6dd56bf6e34c")
+    version("2.7.3", sha256="a50993aa6265b799b040fe745e0010502f9f7103cc53a9525d59646aef006633")
     version("2.5.2", sha256="11d50235afa03571dc70bb6d96a98bfb5d9b53e8c00cc2bfbde78588bd01f6a3")
     version("2.1-rc", sha256="13d293e7368a8fdd8dd3c11c73352cf5f564398658dd027ce0acde947440b4cb")
     version("2.0", sha256="922b42c3ea7a7122a77c61568dc4512aa8130c264c0489283c989919d1f59a6d")
@@ -75,22 +77,38 @@ class Onednn(CMakePackage):
         "cpu_runtime",
         default=default_cpu_runtime,
         description="CPU threading runtime to use",
-        values=("omp", "tbb", "seq"),
+        values=(
+            conditional("none", when="@2.3:"),
+            "omp",
+            "tbb",
+            "seq",
+            conditional("threadpool", when="@1.4:"),
+            conditional("dpcpp", when="@2:"),
+            conditional("sycl", when="@2:"),
+        ),
         multi=False,
     )
     variant(
         "gpu_runtime",
         default="none",
         description="Runtime to use for GPU engines",
-        values=("ocl", "none"),
+        values=("ocl", "none", conditional("dpcpp", when="@2:"), conditional("sycl", when="@2:")),
         multi=False,
+    )
+    variant(
+        "acl", default=False, description="Use Arm Compute Library", when="@1.7: target=aarch64:"
     )
 
     # https://github.com/oneapi-src/oneDNN#requirements-for-building-from-source
+    depends_on("cmake@2.8.12:", when="@2.3:", type="build")
     depends_on("cmake@2.8.11:", type="build")
     depends_on("tbb@2017:", when="cpu_runtime=tbb")
     depends_on("llvm-openmp", when="%apple-clang cpu_runtime=omp")
     depends_on("opencl@1.2:", when="gpu_runtime=ocl")
+    depends_on("armcomputelibrary", when="+acl")
+    depends_on("tbb", when="cpu_runtime=sycl")
+    depends_on("opencl@1.2:", when="gpu_runtime=sycl")
+    depends_on("oneapi-level-zero", when="gpu_runtime=sycl")
 
     def cmake_args(self):
         args = [
@@ -125,4 +143,10 @@ class Onednn(CMakePackage):
         if self.spec.satisfies("gpu_runtime=ocl"):
             args.append("-DOPENCLROOT=" + self.spec["opencl"].prefix)
 
+        args.append(self.define_from_variant("DNNL_AARCH64_USE_ACL", "acl"))
+
         return args
+
+    def setup_build_environment(self, env):
+        if self.spec.satisfies("+acl"):
+            env.set("ACL_ROOT_DIR", self.spec["armcomputelibrary"].prefix)

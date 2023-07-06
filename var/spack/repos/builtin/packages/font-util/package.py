@@ -12,6 +12,7 @@ class FontUtil(AutotoolsPackage, XorgPackage):
     homepage = "https://cgit.freedesktop.org/xorg/font/util"
     xorg_mirror_path = "font/font-util-1.3.1.tar.gz"
 
+    version("1.4.0", sha256="30b90fe52347916be9b08f95f717f17c9c1f58bef8cabb49014d0fdd2b0df643")
     version("1.3.2", sha256="f115a3735604de1e852a4bf669be0269d8ce8f21f8e0e74ec5934b31dadc1e76")
     version("1.3.1", sha256="34ebb0c9c14e0a392cdd5ea055c92489ad88d55ae148b2f1cfded0f3f63f2b5b")
 

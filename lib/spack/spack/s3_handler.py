@@ -30,7 +30,7 @@ class WrapStream(BufferedReader):
             raw.seekable = lambda: False
             raw.closed = False
             raw.flush = lambda: None
-        super(WrapStream, self).__init__(raw)
+        super().__init__(raw)
 
     def detach(self):
         self.raw = None

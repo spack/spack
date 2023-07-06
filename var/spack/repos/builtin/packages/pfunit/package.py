@@ -19,6 +19,7 @@ class Pfunit(CMakePackage):
 
     maintainers("mathomp4", "tclune")
 
+    version("4.7.0", sha256="5faf52d0ab8589b3cd3ea488b34a65dc931f70c07aaa7bf4f209b18af2b38e4e")
     version("4.6.3", sha256="a43a64c4338be57fdbe1cae1a89e277196f10931bc1f73418a463e05e5e7b2d1")
     version("4.6.2", sha256="fd302a1f7a131b38e18bc31ede69a216e580c640152e5e313f5a1e084669a950")
     version("4.6.1", sha256="19de22ff0542ca900aaf2957407f24d7dadaccd993ea210beaf22032d3095add")
@@ -84,11 +85,11 @@ class Pfunit(CMakePackage):
 
     # The maximum rank of an array in the Fortran 2008 standard is 15
     max_rank = 15
-    allowed_array_ranks = tuple(str(i) for i in range(1, max_rank + 1))
+    allowed_array_ranks = tuple(str(i) for i in range(3, max_rank + 1))
 
     variant(
         "max_array_rank",
-        default=5,
+        default="5",
         values=allowed_array_ranks,
         description="Max rank for assertion overloads (higher values may be slower to build)",
     )
@@ -147,7 +148,7 @@ class Pfunit(CMakePackage):
         spec = self.spec
         args = [
             self.define("Python_EXECUTABLE", spec["python"].command),
-            self.define_from_variant("BUILD_SHARED_LIBS", False),
+            self.define("BUILD_SHARED_LIBS", False),
             self.define("CMAKE_Fortran_MODULE_DIRECTORY", spec.prefix.include),
             self.define_from_variant("ENABLE_BUILD_DOXYGEN", "docs"),
             self.define("ENABLE_TESTS", self.run_tests),

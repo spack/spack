@@ -31,6 +31,8 @@ class Qt(Package):
 
     phases = ["configure", "build", "install"]
 
+    version("5.15.10", sha256="b545cb83c60934adc9a6bbd27e2af79e5013de77d46f5b9f5bb2a3c762bf55ca")
+    version("5.15.9", sha256="26d5f36134db03abe4a6db794c7570d729c92a3fc1b0bf9b1c8f86d0573cd02f")
     version("5.15.8", sha256="776a9302c336671f9406a53bd30b8e36f825742b2ec44a57c08217bff0fa86b9")
     version("5.15.7", sha256="8a71986676a3f37a198a9113acedbfd5bc5606a459b6b85816d951458adbe9a0")
     version("5.15.6", sha256="ebc77d27934b70b25b3dc34fbec7c4471eb451848e891c42b32409ea30fe309f")
@@ -335,7 +337,7 @@ class Qt(Package):
         env.prepend_path("QT_PLUGIN_PATH", self.prefix.plugins)
 
     def setup_dependent_package(self, module, dependent_spec):
-        module.qmake = Executable(join_path(self.spec.prefix.bin, "qmake"))
+        module.qmake = Executable(self.spec.prefix.bin.qmake)
 
     def get_mkspec(self):
         """Determine the mkspecs root directory and QT platform."""
@@ -367,10 +369,11 @@ class Qt(Package):
     # webkit requires libintl (gettext), but does not test for it
     # correctly, so add it here.
     def flag_handler(self, name, flags):
-        if "+webkit" in self.spec and name == "ldlibs":
-            flags.append("-lintl")
-
-        return (flags, None, None)
+        if self.name == "ldlibs":
+            spec = self.spec
+            if "+webkit" in spec and "intl" in spec["gettext"].libs.names:
+                flags.append("-lintl")
+        return self.inject_flags(name, flags)
 
     @when("@4 platform=darwin")
     def patch(self):

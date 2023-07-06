@@ -10,6 +10,8 @@ import sys
 import tempfile
 
 import llnl.util.tty as tty
+import llnl.util.tty.color as clr
+from llnl.util.lang import elide_list
 
 import spack.binary_distribution as bindist
 import spack.cmd
@@ -40,72 +42,32 @@ def setup_parser(subparser):
     setup_parser.parser = subparser
     subparsers = subparser.add_subparsers(help="buildcache sub-commands")
 
-    create = subparsers.add_parser("create", help=create_fn.__doc__)
-    create.add_argument(
-        "-r",
-        "--rel",
-        action="store_true",
-        help="make all rpaths relative before creating tarballs.",
+    push = subparsers.add_parser("push", aliases=["create"], help=push_fn.__doc__)
+    push.add_argument("-f", "--force", action="store_true", help="overwrite tarball if it exists.")
+    push.add_argument(
+        "-u", "--unsigned", action="store_true", help="push unsigned buildcache tarballs"
     )
-    create.add_argument(
-        "-f", "--force", action="store_true", help="overwrite tarball if it exists."
-    )
-    create.add_argument(
-        "-u",
-        "--unsigned",
-        action="store_true",
-        help="create unsigned buildcache tarballs for testing",
-    )
-    create.add_argument(
+    push.add_argument(
         "-a",
         "--allow-root",
         action="store_true",
         help="allow install root string in binary files after RPATH substitution",
     )
-    create.add_argument(
+    push.add_argument(
         "-k", "--key", metavar="key", type=str, default=None, help="Key for signing."
     )
-    output = create.add_mutually_exclusive_group(required=False)
-    # TODO: remove from Spack 0.21
-    output.add_argument(
-        "-d",
-        "--directory",
-        metavar="directory",
-        dest="mirror_flag",
-        type=arguments.mirror_directory,
-        help="local directory where buildcaches will be written. (deprecated)",
-    )
-    # TODO: remove from Spack 0.21
-    output.add_argument(
-        "-m",
-        "--mirror-name",
-        metavar="mirror-name",
-        dest="mirror_flag",
-        type=arguments.mirror_name,
-        help="name of the mirror where buildcaches will be written. (deprecated)",
-    )
-    # TODO: remove from Spack 0.21
-    output.add_argument(
-        "--mirror-url",
-        metavar="mirror-url",
-        dest="mirror_flag",
-        type=arguments.mirror_url,
-        help="URL of the mirror where buildcaches will be written. (deprecated)",
-    )
-    # Unfortunately we cannot add this to the mutually exclusive group above,
-    # because we have further positional arguments.
-    # TODO: require from Spack 0.21
-    create.add_argument("mirror", type=str, help="Mirror name, path, or URL.", nargs="?")
-    create.add_argument(
+    push.add_argument("mirror", type=str, help="Mirror name, path, or URL.")
+    push.add_argument(
+        "--update-index",
         "--rebuild-index",
         action="store_true",
         default=False,
         help="Regenerate buildcache index after building package(s)",
     )
-    create.add_argument(
+    push.add_argument(
         "--spec-file", default=None, help="Create buildcache entry for spec from json or yaml file"
     )
-    create.add_argument(
+    push.add_argument(
         "--only",
         default="package,dependencies",
         dest="things_to_install",
@@ -118,8 +80,8 @@ def setup_parser(subparser):
             " or only the dependencies"
         ),
     )
-    arguments.add_common_arguments(create, ["specs"])
-    create.set_defaults(func=create_fn)
+    arguments.add_common_arguments(push, ["specs"])
+    push.set_defaults(func=push_fn)
 
     install = subparsers.add_parser("install", help=install_fn.__doc__)
     install.add_argument(
@@ -127,12 +89,6 @@ def setup_parser(subparser):
     )
     install.add_argument(
         "-m", "--multiple", action="store_true", help="allow all matching packages "
-    )
-    install.add_argument(
-        "-a",
-        "--allow-root",
-        action="store_true",
-        help="allow install root string in binary files after RPATH substitution",
     )
     install.add_argument(
         "-u",
@@ -268,113 +224,30 @@ def setup_parser(subparser):
     # Sync buildcache entries from one mirror to another
     sync = subparsers.add_parser("sync", help=sync_fn.__doc__)
     sync.add_argument(
-        "--manifest-glob",
-        default=None,
-        help="A quoted glob pattern identifying copy manifest files",
+        "--manifest-glob", help="A quoted glob pattern identifying copy manifest files"
     )
-    source = sync.add_mutually_exclusive_group(required=False)
-    # TODO: remove in Spack 0.21
-    source.add_argument(
-        "--src-directory",
-        metavar="DIRECTORY",
-        dest="src_mirror_flag",
-        type=arguments.mirror_directory,
-        help="Source mirror as a local file path (deprecated)",
-    )
-    # TODO: remove in Spack 0.21
-    source.add_argument(
-        "--src-mirror-name",
-        metavar="MIRROR_NAME",
-        dest="src_mirror_flag",
-        type=arguments.mirror_name,
-        help="Name of the source mirror (deprecated)",
-    )
-    # TODO: remove in Spack 0.21
-    source.add_argument(
-        "--src-mirror-url",
-        metavar="MIRROR_URL",
-        dest="src_mirror_flag",
-        type=arguments.mirror_url,
-        help="URL of the source mirror (deprecated)",
-    )
-    # TODO: only support this in 0.21
-    source.add_argument(
+    sync.add_argument(
         "src_mirror",
         metavar="source mirror",
         type=arguments.mirror_name_or_url,
-        help="Source mirror name, path, or URL",
         nargs="?",
+        help="Source mirror name, path, or URL",
     )
-    dest = sync.add_mutually_exclusive_group(required=False)
-    # TODO: remove in Spack 0.21
-    dest.add_argument(
-        "--dest-directory",
-        metavar="DIRECTORY",
-        dest="dest_mirror_flag",
-        type=arguments.mirror_directory,
-        help="Destination mirror as a local file path (deprecated)",
-    )
-    # TODO: remove in Spack 0.21
-    dest.add_argument(
-        "--dest-mirror-name",
-        metavar="MIRROR_NAME",
-        type=arguments.mirror_name,
-        dest="dest_mirror_flag",
-        help="Name of the destination mirror (deprecated)",
-    )
-    # TODO: remove in Spack 0.21
-    dest.add_argument(
-        "--dest-mirror-url",
-        metavar="MIRROR_URL",
-        dest="dest_mirror_flag",
-        type=arguments.mirror_url,
-        help="URL of the destination mirror (deprecated)",
-    )
-    # TODO: only support this in 0.21
-    dest.add_argument(
+    sync.add_argument(
         "dest_mirror",
         metavar="destination mirror",
         type=arguments.mirror_name_or_url,
-        help="Destination mirror name, path, or URL",
         nargs="?",
+        help="Destination mirror name, path, or URL",
     )
     sync.set_defaults(func=sync_fn)
 
     # Update buildcache index without copying any additional packages
-    update_index = subparsers.add_parser("update-index", help=update_index_fn.__doc__)
-    update_index_out = update_index.add_mutually_exclusive_group(required=True)
-    # TODO: remove in Spack 0.21
-    update_index_out.add_argument(
-        "-d",
-        "--directory",
-        metavar="directory",
-        dest="mirror_flag",
-        type=arguments.mirror_directory,
-        help="local directory where buildcaches will be written (deprecated)",
+    update_index = subparsers.add_parser(
+        "update-index", aliases=["rebuild-index"], help=update_index_fn.__doc__
     )
-    # TODO: remove in Spack 0.21
-    update_index_out.add_argument(
-        "-m",
-        "--mirror-name",
-        metavar="mirror-name",
-        dest="mirror_flag",
-        type=arguments.mirror_name,
-        help="name of the mirror where buildcaches will be written (deprecated)",
-    )
-    # TODO: remove in Spack 0.21
-    update_index_out.add_argument(
-        "--mirror-url",
-        metavar="mirror-url",
-        dest="mirror_flag",
-        type=arguments.mirror_url,
-        help="URL of the mirror where buildcaches will be written (deprecated)",
-    )
-    # TODO: require from Spack 0.21
-    update_index_out.add_argument(
-        "mirror",
-        type=arguments.mirror_name_or_url,
-        help="Destination mirror name, path, or URL",
-        nargs="?",
+    update_index.add_argument(
+        "mirror", type=arguments.mirror_name_or_url, help="Destination mirror name, path, or URL"
     )
     update_index.add_argument(
         "-k",
@@ -432,48 +305,68 @@ def _concrete_spec_from_args(args):
     return Spec.from_specfile(specfile_path)
 
 
-def create_fn(args):
+def push_fn(args):
     """create a binary package and push it to a mirror"""
-    if args.mirror_flag:
-        mirror = args.mirror_flag
-    elif not args.mirror:
-        raise ValueError("No mirror provided")
-    else:
-        mirror = arguments.mirror_name_or_url(args.mirror)
-
-    if args.mirror_flag:
-        tty.warn(
-            "Using flags to specify mirrors is deprecated and will be removed in "
-            "Spack 0.21, use positional arguments instead."
-        )
-
-    # TODO: remove this in 0.21. If we have mirror_flag, the first
-    # spec is in the positional mirror arg due to argparse limitations.
-    specs = args.specs
-    if args.mirror_flag and args.mirror:
-        specs.insert(0, args.mirror)
+    mirror = arguments.mirror_name_or_url(args.mirror)
 
     url = mirror.push_url
 
-    matches = _matching_specs(specs, args.spec_file)
-
-    msg = "Pushing binary packages to {0}/build_cache".format(url)
-    tty.msg(msg)
-    kwargs = {
-        "key": args.key,
-        "force": args.force,
-        "relative": args.rel,
-        "unsigned": args.unsigned,
-        "allow_root": args.allow_root,
-        "regenerate_index": args.rebuild_index,
-    }
-    bindist.push(
-        matches,
-        url,
-        include_root="package" in args.things_to_install,
-        include_dependencies="dependencies" in args.things_to_install,
-        **kwargs,
+    specs = bindist.specs_to_be_packaged(
+        _matching_specs(args.specs, args.spec_file),
+        root="package" in args.things_to_install,
+        dependencies="dependencies" in args.things_to_install,
     )
+
+    # When pushing multiple specs, print the url once ahead of time, as well as how
+    # many specs are being pushed.
+    if len(specs) > 1:
+        tty.info(f"Selected {len(specs)} specs to push to {url}")
+
+    skipped = []
+
+    # tty printing
+    color = clr.get_color_when()
+    format_spec = lambda s: s.format("{name}{@version}{/hash:7}", color=color)
+    total_specs = len(specs)
+    digits = len(str(total_specs))
+
+    for i, spec in enumerate(specs):
+        try:
+            bindist.push_or_raise(
+                spec,
+                url,
+                bindist.PushOptions(
+                    force=args.force,
+                    unsigned=args.unsigned,
+                    allow_root=args.allow_root,
+                    key=args.key,
+                    regenerate_index=args.update_index,
+                ),
+            )
+
+            if total_specs > 1:
+                msg = f"[{i+1:{digits}}/{total_specs}] Pushed {format_spec(spec)}"
+            else:
+                msg = f"Pushed {format_spec(spec)} to {url}"
+
+            tty.info(msg)
+
+        except bindist.NoOverwriteException:
+            skipped.append(format_spec(spec))
+
+    if skipped:
+        if len(specs) == 1:
+            tty.info("The spec is already in the buildcache. Use --force to overwrite it.")
+        elif len(skipped) == len(specs):
+            tty.info("All specs are already in the buildcache. Use --force to overwite them.")
+        else:
+            tty.info(
+                "The following {} specs were skipped as they already exist in the buildcache:\n"
+                "    {}\n"
+                "    Use --force to overwrite them.".format(
+                    len(skipped), ", ".join(elide_list(skipped, 5))
+                )
+            )
 
 
 def install_fn(args):
@@ -484,9 +377,7 @@ def install_fn(args):
     query = bindist.BinaryCacheQuery(all_architectures=args.otherarch)
     matches = spack.store.find(args.specs, multiple=args.multiple, query_fn=query)
     for match in matches:
-        bindist.install_single_spec(
-            match, allow_root=args.allow_root, unsigned=args.unsigned, force=args.force
-        )
+        bindist.install_single_spec(match, unsigned=args.unsigned, force=args.force)
 
 
 def list_fn(args):
@@ -498,11 +389,11 @@ def list_fn(args):
 
     if not args.allarch:
         arch = spack.spec.Spec.default_arch()
-        specs = [s for s in specs if s.satisfies(arch)]
+        specs = [s for s in specs if s.intersects(arch)]
 
     if args.specs:
         constraints = set(args.specs)
-        specs = [s for s in specs if any(s.satisfies(c) for c in constraints)]
+        specs = [s for s in specs if any(s.intersects(c) for c in constraints)]
     if sys.stdout.isatty():
         builds = len(specs)
         tty.msg("%s." % plural(builds, "cached build"))
@@ -666,21 +557,11 @@ def sync_fn(args):
         manifest_copy(glob.glob(args.manifest_glob))
         return 0
 
-    # If no manifest_glob, require a source and dest mirror.
-    # TODO: Simplify in Spack 0.21
-    if not (args.src_mirror_flag or args.src_mirror) or not (
-        args.dest_mirror_flag or args.dest_mirror
-    ):
-        raise ValueError("Source and destination mirror are required.")
+    if args.src_mirror is None or args.dest_mirror is None:
+        tty.die("Provide mirrors to sync from and to.")
 
-    if args.src_mirror_flag or args.dest_mirror_flag:
-        tty.warn(
-            "Using flags to specify mirrors is deprecated and will be removed in "
-            "Spack 0.21, use positional arguments instead."
-        )
-
-    src_mirror = args.src_mirror_flag if args.src_mirror_flag else args.src_mirror
-    dest_mirror = args.dest_mirror_flag if args.dest_mirror_flag else args.dest_mirror
+    src_mirror = args.src_mirror
+    dest_mirror = args.dest_mirror
 
     src_mirror_url = src_mirror.fetch_url
     dest_mirror_url = dest_mirror.push_url
@@ -759,13 +640,7 @@ def update_index(mirror: spack.mirror.Mirror, update_keys=False):
 
 def update_index_fn(args):
     """Update a buildcache index."""
-    if args.mirror_flag:
-        tty.warn(
-            "Using flags to specify mirrors is deprecated and will be removed in "
-            "Spack 0.21, use positional arguments instead."
-        )
-    mirror = args.mirror_flag if args.mirror_flag else args.mirror
-    update_index(mirror, update_keys=args.keys)
+    update_index(args.mirror, update_keys=args.keys)
 
 
 def buildcache(parser, args):

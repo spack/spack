@@ -28,8 +28,6 @@ from spack.util.path import system_path_filter
 
 __all__ = ["Compiler"]
 
-is_windows = sys.platform == "win32"
-
 
 @llnl.util.lang.memoized
 def _get_compiler_version_output(compiler_path, version_arg, ignore_errors=()):
@@ -191,7 +189,7 @@ def in_system_subdirectory(path):
     return any(path_contains_subdirectory(path, x) for x in system_dirs)
 
 
-class Compiler(object):
+class Compiler:
     """This class encapsulates a Spack "compiler", which includes C,
     C++, and Fortran compilers.  Subclasses should implement
     support for specific compilers, their possible names, arguments,
@@ -598,7 +596,7 @@ class Compiler(object):
         suffixes = [""]
         # Windows compilers generally have an extension of some sort
         # as do most files on Windows, handle that case here
-        if is_windows:
+        if sys.platform == "win32":
             ext = r"\.(?:exe|bat)"
             cls_suf = [suf + ext for suf in cls.suffixes]
             ext_suf = [ext]
@@ -675,17 +673,17 @@ class CompilerAccessError(spack.error.SpackError):
     def __init__(self, compiler, paths):
         msg = "Compiler '%s' has executables that are missing" % compiler.spec
         msg += " or are not executable: %s" % paths
-        super(CompilerAccessError, self).__init__(msg)
+        super().__init__(msg)
 
 
 class InvalidCompilerError(spack.error.SpackError):
     def __init__(self):
-        super(InvalidCompilerError, self).__init__("Compiler has no executables.")
+        super().__init__("Compiler has no executables.")
 
 
 class UnsupportedCompilerFlag(spack.error.SpackError):
     def __init__(self, compiler, feature, flag_name, ver_string=None):
-        super(UnsupportedCompilerFlag, self).__init__(
+        super().__init__(
             "{0} ({1}) does not support {2} (as compiler.{3}).".format(
                 compiler.name, ver_string if ver_string else compiler.version, feature, flag_name
             ),

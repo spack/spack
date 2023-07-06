@@ -7,6 +7,7 @@ import os
 import re
 import sys
 
+from spack.build_environment import dso_suffix
 from spack.package import *
 
 
@@ -25,6 +26,7 @@ class Mpich(AutotoolsPackage, CudaPackage, ROCmPackage):
     executables = ["^mpichversion$"]
 
     version("develop", submodules=True)
+    version("4.1.1", sha256="ee30471b35ef87f4c88f871a5e2ad3811cd9c4df32fd4f138443072ff4284ca2")
     version("4.1", sha256="8b1ec63bc44c7caa2afbb457bc5b3cd4a70dbe46baba700123d67c48dc5ab6a0")
     version("4.0.3", sha256="17406ea90a6ed4ecd5be39c9ddcbfac9343e6ab4f77ac4e8c5ebe4a3e3b6c501")
     version("4.0.2", sha256="5a42f1a889d4a2d996c26e48cbf9c595cbf4316c6814f7c181e3320d21dedd42")
@@ -174,18 +176,16 @@ with '-Wl,-commons,use_dylibs' and without
     # fix MPI_Barrier segmentation fault
     # see https://lists.mpich.org/pipermail/discuss/2016-May/004764.html
     # and https://lists.mpich.org/pipermail/discuss/2016-June/004768.html
-    patch("mpich32_clang.patch", when="@3.2:3.2.0%clang")
-    patch("mpich32_clang.patch", when="@3.2:3.2.0%apple-clang")
+    patch("mpich32_clang.patch", when="@=3.2%clang")
+    patch("mpich32_clang.patch", when="@=3.2%apple-clang")
 
     # Fix SLURM node list parsing
     # See https://github.com/pmodels/mpich/issues/3572
     # and https://github.com/pmodels/mpich/pull/3578
-    # Even though there is no version 3.3.0, we need to specify 3.3:3.3.0 in
-    # the when clause, otherwise the patch will be applied to 3.3.1, too.
     patch(
         "https://github.com/pmodels/mpich/commit/b324d2de860a7a2848dc38aefb8c7627a72d2003.patch?full_index=1",
         sha256="5f48d2dd8cc9f681cf710b864f0d9b00c599f573a75b1e1391de0a3d697eba2d",
-        when="@3.3:3.3.0",
+        when="@=3.3",
     )
 
     # Fix reduce operations for unsigned integers
@@ -379,21 +379,23 @@ with '-Wl,-commons,use_dylibs' and without
             results.append(" ".join(variants))
         return results
 
+    def flag_handler(self, name, flags):
+        if name == "fflags":
+            # https://bugzilla.redhat.com/show_bug.cgi?id=1795817
+            # https://github.com/spack/spack/issues/17934
+            # TODO: we should add the flag depending on the real Fortran compiler spec and not the
+            #  toolchain spec, which might be mixed.
+            if any(self.spec.satisfies(s) for s in ["%gcc@10:", "%apple-clang@11:", "%clang@11:"]):
+                # Note that the flag is not needed to build the package starting version 4.1
+                # (see https://github.com/pmodels/mpich/pull/5840) but we keep adding the flag here
+                # to avoid its presence in the MPI compiler wrappers.
+                flags.append("-fallow-argument-mismatch")
+
+        return flags, None, None
+
     def setup_build_environment(self, env):
         env.unset("F90")
         env.unset("F90FLAGS")
-
-        # https://bugzilla.redhat.com/show_bug.cgi?id=1795817
-        if self.spec.satisfies("%gcc@10:"):
-            env.set("FFLAGS", "-fallow-argument-mismatch")
-            env.set("FCFLAGS", "-fallow-argument-mismatch")
-        # Same fix but for macOS - avoids issue #17934
-        if self.spec.satisfies("%apple-clang@11:"):
-            env.set("FFLAGS", "-fallow-argument-mismatch")
-            env.set("FCFLAGS", "-fallow-argument-mismatch")
-        if self.spec.satisfies("%clang@11:"):
-            env.set("FFLAGS", "-fallow-argument-mismatch")
-            env.set("FCFLAGS", "-fallow-argument-mismatch")
 
         if "pmi=cray" in self.spec:
             env.set("CRAY_PMI_INCLUDE_OPTS", "-I" + self.spec["cray-pmi"].headers.directories[0])
@@ -598,27 +600,47 @@ with '-Wl,-commons,use_dylibs' and without
         install test subdirectory for use during `spack test run`."""
         self.cache_extra_test_sources(["examples", join_path("test", "mpi")])
 
-    def run_mpich_test(self, example_dir, exe):
-        """Run stand alone tests"""
+    def mpi_launcher(self):
+        """Determine the appropriate launcher."""
+        commands = [
+            join_path(self.spec.prefix.bin, "mpirun"),
+            join_path(self.spec.prefix.bin, "mpiexec"),
+        ]
+        if "+slurm" in self.spec:
+            commands.insert(0, join_path(self.spec["slurm"].prefix.bin))
+        return which(*commands)
 
-        test_dir = join_path(self.test_suite.current_test_cache_dir, example_dir)
-        exe_source = join_path(test_dir, "{0}.c".format(exe))
+    def run_mpich_test(self, subdir, exe, num_procs=1):
+        """Compile and run the test program."""
+        path = self.test_suite.current_test_cache_dir.join(subdir)
+        with working_dir(path):
+            src = f"{exe}.c"
+            if not os.path.isfile(src):
+                raise SkipTest(f"{src} is missing")
 
-        if not os.path.isfile(exe_source):
-            print("Skipping {0} test".format(exe))
-            return
+            mpicc = which(os.environ["MPICC"])
+            mpicc("-Wall", "-g", "-o", exe, src)
+            if num_procs > 1:
+                launcher = self.mpi_launcher()
+                if launcher is not None:
+                    launcher("-n", str(num_procs), exe)
+                    return
 
-        self.run_test(
-            self.prefix.bin.mpicc,
-            options=[exe_source, "-Wall", "-g", "-o", exe],
-            purpose="test: generate {0} file".format(exe),
-            work_dir=test_dir,
-        )
+            test_exe = which(exe)
+            test_exe()
 
-        self.run_test(exe, purpose="test: run {0} example".format(exe), work_dir=test_dir)
-
-    def test(self):
-        self.run_mpich_test(join_path("test", "mpi", "init"), "finalized")
-        self.run_mpich_test(join_path("test", "mpi", "basic"), "sendrecv")
-        self.run_mpich_test(join_path("test", "mpi", "perf"), "manyrma")
+    def test_cpi(self):
+        """build and run cpi"""
         self.run_mpich_test("examples", "cpi")
+
+    def test_finalized(self):
+        """build and run finalized"""
+        self.run_mpich_test(join_path("test", "mpi", "init"), "finalized")
+
+    def test_manyrma(self):
+        """build and run manyrma"""
+        self.run_mpich_test(join_path("test", "mpi", "perf"), "manyrma", 2)
+
+    def test_sendrecv(self):
+        """build and run sendrecv"""
+        self.run_mpich_test(join_path("test", "mpi", "basic"), "sendrecv", 2)

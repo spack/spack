@@ -15,11 +15,13 @@ class Podio(CMakePackage):
     url = "https://github.com/AIDASoft/podio/archive/v00-09-02.tar.gz"
     git = "https://github.com/AIDASoft/podio.git"
 
-    maintainers("vvolkl", "drbenmorgan")
+    maintainers("vvolkl", "drbenmorgan", "jmcarcell")
 
     tags = ["hep", "key4hep"]
 
     version("master", branch="master")
+    version("0.16.5", sha256="42135e4d0e11be6f0d88748799fa2ec985514d4b4c979a10a56a00a378f65ee0")
+    version("0.16.3", sha256="d8208f98496af68ca8d02d302f428aab510e50d07575b90c3477fff7e499335b")
     version("0.16.2", sha256="faf7167290faf322f23c734adff19904b10793b5ab14e1dfe90ce257c225114b")
     version("0.16.1", sha256="23cd8dfd00f9cd5ae0b473ae3279fa2c22a2d90fb6c07b37d56e63a80dd76ab2")
     version("0.16", sha256="4e149c2c9be9f9ca3a6d863498bb0f642dda1a43a19ac1afe7f99854ded5c510")
@@ -103,7 +105,9 @@ class Podio(CMakePackage):
     depends_on("py-pyyaml", type=("build", "run"))
     depends_on("py-jinja2@2.10.1:", type=("build", "run"), when="@0.12.0:")
     depends_on("sio", type=("build", "link"), when="+sio")
-    depends_on("catch2@3.0.1:", type=("test"), when="@0.13:")
+    depends_on("catch2@3.0.1:", type=("test"), when="@0.13:0.16.5")
+    depends_on("catch2@3.1:", type=("test"), when="@0.16.6:")
+    depends_on("py-tabulate", type=("run", "test"), when="@0.16.6:")
 
     conflicts("+sio", when="@:0.12", msg="sio support requires at least podio@0.13")
 

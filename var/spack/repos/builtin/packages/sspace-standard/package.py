@@ -23,7 +23,7 @@ class SspaceStandard(Package):
     url = "file://{0}/41SSPACE-STANDARD-3.0_linux-x86_64.tar.gz".format(os.getcwd())
     manual_download = True
 
-    version("3.0", "7e171b4861b9d514e80aafc3d9cdf554")
+    version("3.0", md5="7e171b4861b9d514e80aafc3d9cdf554")
 
     depends_on("perl+threads", type=("build", "run"))
     depends_on("perl-perl4-corelibs", type=("build", "run"))

@@ -16,7 +16,7 @@ class ScineXtb(CMakePackage):
     git = "https://github.com/qcscine/xtb_wrapper.git"
 
     version("master", branch="master")
-    version("1.0.2", "9beb1103467f3cfd9ad33beb2f3ec650bc3e6dc7094876774be3cc4e6f210487")
+    version("1.0.2", sha256="9beb1103467f3cfd9ad33beb2f3ec650bc3e6dc7094876774be3cc4e6f210487")
 
     resource(
         name="dev",

@@ -265,10 +265,7 @@ def test_install_commit(mock_git_version_info, install_mockery, mock_packages, m
     )
 
     # Use the earliest commit in the respository
-    commit = commits[-1]
-    spec = spack.spec.Spec("git-test-commit@%s" % commit)
-    spec.concretize()
-    print(spec)
+    spec = Spec(f"git-test-commit@{commits[-1]}").concretized()
     spec.package.do_install()
 
     # Ensure first commit file contents were written
@@ -276,7 +273,7 @@ def test_install_commit(mock_git_version_info, install_mockery, mock_packages, m
     assert filename in installed
     with open(spec.prefix.bin.join(filename), "r") as f:
         content = f.read().strip()
-    assert content == "[]"  # contents are weird for another test
+    assert content == "[0]"  # contents are weird for another test
 
 
 def test_install_overwrite_multiple(
@@ -793,12 +790,13 @@ def test_install_no_add_in_env(tmpdir, mock_fetch, install_mockery, mutable_mock
     #         ^b
     #     a
     #         ^b
-    e = ev.create("test")
+    e = ev.create("test", with_view=False)
     e.add("mpileaks")
     e.add("libelf@0.8.10")  # so env has both root and dep libelf specs
     e.add("a")
     e.add("a ~bvv")
     e.concretize()
+    e.write()
     env_specs = e.all_specs()
 
     a_spec = None
@@ -829,14 +827,11 @@ def test_install_no_add_in_env(tmpdir, mock_fetch, install_mockery, mutable_mock
         # Assert using --no-add with a spec not in the env fails
         inst_out = install("--no-add", "boost", fail_on_error=False, output=str)
 
-        assert "You can add it to the environment with 'spack add " in inst_out
+        assert "You can add specs to the environment with 'spack add " in inst_out
 
-        # Without --add, ensure that install fails if the spec matches more
-        # than one root
-        with pytest.raises(ev.SpackEnvironmentError) as err:
-            inst_out = install("a", output=str)
-
-        assert "a matches multiple specs in the env" in str(err)
+        # Without --add, ensure that two packages "a" get installed
+        inst_out = install("a", output=str)
+        assert len([x for x in e.all_specs() if x.installed and x.name == "a"]) == 2
 
         # Install an unambiguous dependency spec (that already exists as a dep
         # in the environment) and make sure it gets installed (w/ deps),
@@ -944,10 +939,10 @@ def test_compiler_bootstrap(
 ):
     monkeypatch.setattr(spack.concretize.Concretizer, "check_for_compiler_existence", False)
     spack.config.set("config:install_missing_compilers", True)
-    assert CompilerSpec("gcc@12.0") not in compilers.all_compiler_specs()
+    assert CompilerSpec("gcc@=12.0") not in compilers.all_compiler_specs()
 
     # Test succeeds if it does not raise an error
-    install("a%gcc@12.0")
+    install("a%gcc@=12.0")
 
 
 def test_compiler_bootstrap_from_binary_mirror(
@@ -968,17 +963,17 @@ def test_compiler_bootstrap_from_binary_mirror(
     mirror_url = "file://{0}".format(mirror_dir.strpath)
 
     # Install a compiler, because we want to put it in a buildcache
-    install("gcc@10.2.0")
+    install("gcc@=10.2.0")
 
     # Put installed compiler in the buildcache
-    buildcache("create", "-u", "-a", "-f", "-d", mirror_dir.strpath, "gcc@10.2.0")
+    buildcache("push", "-u", "-a", "-f", mirror_dir.strpath, "gcc@10.2.0")
 
     # Now uninstall the compiler
     uninstall("-y", "gcc@10.2.0")
 
     monkeypatch.setattr(spack.concretize.Concretizer, "check_for_compiler_existence", False)
     spack.config.set("config:install_missing_compilers", True)
-    assert CompilerSpec("gcc@10.2.0") not in compilers.all_compiler_specs()
+    assert CompilerSpec("gcc@=10.2.0") not in compilers.all_compiler_specs()
 
     # Configure the mirror where we put that buildcache w/ the compiler
     mirror("add", "test-mirror", mirror_url)
@@ -986,7 +981,7 @@ def test_compiler_bootstrap_from_binary_mirror(
     # Now make sure that when the compiler is installed from binary mirror,
     # it also gets configured as a compiler.  Test succeeds if it does not
     # raise an error
-    install("--no-check-signature", "--cache-only", "--only", "dependencies", "b%gcc@10.2.0")
+    install("--no-check-signature", "--cache-only", "--only", "dependencies", "b%gcc@=10.2.0")
     install("--no-cache", "--only", "package", "b%gcc@10.2.0")
 
 
@@ -1002,11 +997,11 @@ def test_compiler_bootstrap_already_installed(
     monkeypatch.setattr(spack.concretize.Concretizer, "check_for_compiler_existence", False)
     spack.config.set("config:install_missing_compilers", True)
 
-    assert CompilerSpec("gcc@12.0") not in compilers.all_compiler_specs()
+    assert CompilerSpec("gcc@=12.0") not in compilers.all_compiler_specs()
 
     # Test succeeds if it does not raise an error
-    install("gcc@12.0")
-    install("a%gcc@12.0")
+    install("gcc@=12.0")
+    install("a%gcc@=12.0")
 
 
 def test_install_fails_no_args(tmpdir):
@@ -1077,11 +1072,18 @@ def test_install_empty_env(
     ],
 )
 def test_installation_fail_tests(install_mockery, mock_fetch, name, method):
+    """Confirm build-time tests with unknown methods fail."""
     output = install("--test=root", "--no-cache", name, fail_on_error=False)
 
+    # Check that there is a single test failure reported
+    assert output.count("TestFailure: 1 test failed") == 1
+
+    # Check that the method appears twice: no attribute error and in message
     assert output.count(method) == 2
     assert output.count("method not implemented") == 1
-    assert output.count("TestFailure: 1 tests failed") == 1
+
+    # Check that the path to the test log file is also output
+    assert "See test log for details" in output
 
 
 def test_install_use_buildcache(
@@ -1136,7 +1138,7 @@ def test_install_use_buildcache(
 
     # Populate the buildcache
     install(package_name)
-    buildcache("create", "-u", "-a", "-f", "-d", mirror_dir.strpath, package_name, dependency_name)
+    buildcache("push", "-u", "-a", "-f", mirror_dir.strpath, package_name, dependency_name)
 
     # Uninstall the all of the packages for clean slate
     uninstall("-y", "-a")
@@ -1177,6 +1179,6 @@ def test_report_filename_for_cdash(install_mockery_mutable_config, mock_fetch):
     args = parser.parse_args(
         ["--cdash-upload-url", "https://blahblah/submit.php?project=debugging", "a"]
     )
-    _, specs = spack.cmd.install.specs_from_cli(args, {})
+    specs = spack.cmd.install.concrete_specs_from_cli(args, {})
     filename = spack.cmd.install.report_filename(args, specs)
     assert filename != "https://blahblah/submit.php?project=debugging"
