@@ -21,7 +21,9 @@ class Regale(CMakePackage):
     variant("shared", default=True, description="Build shared libraries")
 
     def cmake_args(self):
-        args = []
-        args += [self.define_from_variant("REGALE_EXAMPLES", "examples")]
-        args += [self.define_from_variant("BUILD_SHARED_LIBS", "shared")]
+        args = [
+            self.define_from_variant("REGALE_EXAMPLES", "examples"),
+            self.define_from_variant("BUILD_SHARED_LIBS", "shared")
+        ]
+        
         return args
