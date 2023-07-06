@@ -6,7 +6,7 @@
 from spack.package import *
 
 
-class PyPyNvtx(PythonPackage):
+class PyPynvtx(PythonPackage):
     """A thin python wrapper for the nvToolsExt (NVTX) library, using
     pybind11. This wrapper is meant to be as thin as possible -- so
     only provides minimal support. Currently supported features are:
