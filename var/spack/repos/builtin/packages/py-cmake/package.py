@@ -22,6 +22,8 @@ class PyCmake(PythonPackage):
     depends_on("ninja", type="build")
     depends_on("py-scikit-build@0.12:", type="build")
     depends_on("py-setuptools@42:", type="build")
+    # in newer pip versions --install-option does not exist
+    depends_on("py-pip@:23.0", type="build")
     depends_on("git", type="build")
     depends_on("cmake@3.22.2", type=("build", "link", "run"), when="@3.22.2")
     depends_on("cmake@3.21.4", type=("build", "link", "run"), when="@3.21.4")
