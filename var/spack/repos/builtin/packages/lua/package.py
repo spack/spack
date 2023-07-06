@@ -8,6 +8,8 @@ import os
 
 import spack.build_environment
 from spack.package import *
+import spack.build_systems.cmake
+import spack.build_systems.makefile
 from spack.util.executable import Executable
 
 
@@ -194,7 +196,7 @@ class LuaImplPackage(MakefilePackage):
         module.luarocks = Executable(self.spec.prefix.bin.luarocks)
 
 
-class Lua(LuaImplPackage):
+class Lua(LuaImplPackage, CMakePackage, MakefilePackage):
     """The Lua programming language interpreter and library."""
 
     homepage = "https://www.lua.org"
@@ -231,12 +233,16 @@ class Lua(LuaImplPackage):
     depends_on("ncurses+termlib")
     depends_on("readline")
 
+    build_system("cmake", "makefile", default="makefile")
+
     patch(
         "http://lua.2524044.n2.nabble.com/attachment/7666421/0/pkg-config.patch",
         sha256="208316c2564bdd5343fa522f3b230d84bd164058957059838df7df56876cb4ae",
         when="+pcfile @:5.3.9999",
     )
 
+
+class MakefileBuilder(spack.build_systems.makefile.MakefileBuilder):
     def build(self, spec, prefix):
         if spec.satisfies("platform=darwin"):
             target = "macosx"
@@ -290,3 +296,6 @@ class Lua(LuaImplPackage):
                 join_path(self.prefix.lib, "pkgconfig", versioned_pc_file_name),
                 join_path(self.prefix.lib, "pkgconfig", "lua.pc"),
             )
+
+class CMakeBuilder(spack.build_systems.cmake.CMakeBuilder):
+    """"""
