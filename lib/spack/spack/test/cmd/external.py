@@ -399,6 +399,7 @@ def test_use_tags_for_detection(command_args, mock_executable, mutable_config, m
 
 
 @pytest.mark.regression("38733")
+@pytest.mark.skipif(sys.platform == "win32", reason="the test uses bash scripts")
 def test_failures_in_scanning_do_not_result_in_an_error(
     mock_executable, monkeypatch, mutable_config
 ):
