@@ -19,7 +19,7 @@ class Cmake(Package):
     homepage = "https://www.cmake.org"
     url = "https://github.com/Kitware/CMake/releases/download/v3.19.0/cmake-3.19.0.tar.gz"
     git = "https://gitlab.kitware.com/cmake/cmake.git"
-    maintainers("chuckatkins")
+    maintainers("chuckatkins", "johnwparent")
 
     tags = ["build-tools", "windows"]
 
