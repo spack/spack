@@ -116,6 +116,10 @@ To build lammps with oneAPI compiler from this environment just run::
 
   spack install lammps
 
+Compiled binaries can be find using::
+
+  spack cd -i lammps
+
 You can do the same for all other applications from this environment.
 
 
