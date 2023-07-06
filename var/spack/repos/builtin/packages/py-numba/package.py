@@ -52,4 +52,4 @@ class PyNumba(PythonPackage):
 
     # Version 6.0.0 of llvm had a hidden symbol which breaks numba at runtime.
     # See https://reviews.llvm.org/D44140
-    conflicts("^llvm@6.0.0")
+    # conflicts("^llvm@6.0.0")

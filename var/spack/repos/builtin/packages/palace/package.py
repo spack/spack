@@ -95,8 +95,8 @@ class Palace(CMakePackage):
         depends_on("arpack-ng~shared", when="~shared")
 
     # Conflicts: Palace always builds its own internal MFEM, GSLIB
-    conflicts("^mfem", msg="Palace builds its own internal MFEM")
-    conflicts("^gslib", msg="Palace builds its own internal GSLIB")
+    # conflicts("^mfem", msg="Palace builds its own internal MFEM")
+    # conflicts("^gslib", msg="Palace builds its own internal GSLIB")
 
     # More dependency variant conflicts
     conflicts("^hypre+int64", msg="Palace uses HYPRE's mixedint option for 64 bit integers")
