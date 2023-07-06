@@ -3,8 +3,9 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-import re  # To get the variant name after (+)
 import os
+import re  # To get the variant name after (+)
+
 from spack.package import *
 
 
@@ -338,7 +339,7 @@ class Babelstream(CMakePackage, CudaPackage, ROCmPackage):
                     args.append("-DOpenCL_LIBRARY=" + rocm_dir + "/lib64/libOpenCL.so")
                 elif "intel" in self.spec.variants["backend"].value:
                     # extracting the inter compiler package version
-                    path_to_intel_compiler = os.path.basename(self.spec["intel-oneapi-compilers"].prefix))
+                    path_to_intel_compiler = os.path.basename(self.spec["intel-oneapi-compilers"].prefix)
                     comp_version = find_package_version(path_to_intel_compiler)
                     intel_lib = (
                         self.spec["intel-oneapi-compilers"].prefix
