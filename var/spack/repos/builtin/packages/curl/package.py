@@ -270,6 +270,7 @@ class Curl(NMakePackage, AutotoolsPackage):
             )
             # curl queries pkgconfig for openssl compilation flags
             depends_on("pkgconfig", type="build")
+    variant("rebuildme", default=True, description="CI testing")
 
     conflicts("platform=cray", when="tls=secure_transport", msg="Only supported on macOS")
     conflicts("platform=linux", when="tls=secure_transport", msg="Only supported on macOS")
