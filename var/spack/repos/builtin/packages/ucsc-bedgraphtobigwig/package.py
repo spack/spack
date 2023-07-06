@@ -24,7 +24,7 @@ class UcscBedgraphtobigwig(Package):
     # MySQL removed the type my_bool, while mariadb didn't.
     # https://groups.google.com/a/soe.ucsc.edu/g/genome/c/mIT6fe9l99g
     depends_on("mysql-client")
-    conflicts("mysql@8.0.0:")
+    conflicts("^mysql@8.0.0:")
 
     def setup_build_environment(self, env):
         env.set("MYSQLLIBS", "-lmysqlclient")
