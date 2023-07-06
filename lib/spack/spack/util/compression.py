@@ -82,7 +82,7 @@ def _system_untar(archive_file):
     if archive_file_no_ext == archive_file:
         # the archive file has no extension. Tar on windows cannot untar onto itself
         archive_file = archive_file_no_ext + ".tar"
-        shutil.copy(archive_file_no_ext, archive_file)
+        shutil.move(archive_file_no_ext, archive_file)
     tar = which("tar", required=True)
     tar.add_default_arg("-oxf")
     tar(archive_file)
@@ -165,9 +165,9 @@ def _system_gunzip(archive_file):
     Decompresses `.gz` compressed files via system gzip"""
     archive_file_no_ext = strip_compression_extension(archive_file, "gz")
     if archive_file_no_ext == archive_file:
-        # the zip file has no extension. Un Unix gunzip cannot unzip onto itself
+        # the zip file has no extension. On Unix gunzip cannot unzip onto itself
         archive_file = archive_file + ".gz"
-        shutil.copy(archive_file_no_ext, archive_file)
+        shutil.move(archive_file_no_ext, archive_file)
     decompressed_file = os.path.basename(archive_file_no_ext)
     working_dir = os.getcwd()
     destination_abspath = os.path.join(working_dir, decompressed_file)
