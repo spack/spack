@@ -41,7 +41,7 @@ spack:
       - zfp
 
   mirrors:
-    mirror: "s3://spack-binaries/develop/radiuss"
+    mirror: "s3://spack-binaries/releases/v0.20/radiuss"
 
   specs:
   - matrix:

@@ -44,7 +44,7 @@ spack:
     - - $compiler
     - - $target
 
-  mirrors: { "mirror": "s3://spack-binaries/develop/radiuss-aws" }
+  mirrors: { "mirror": "s3://spack-binaries/releases/v0.20/radiuss-aws" }
 
   ci:
     pipeline-gen:

@@ -21,7 +21,7 @@ spack:
   - readline
 
   mirrors:
-    mirror: s3://spack-binaries/develop/deprecated
+    mirror: s3://spack-binaries/releases/v0.20/deprecated
   gitlab-ci:
     broken-tests-packages:
     - gptune

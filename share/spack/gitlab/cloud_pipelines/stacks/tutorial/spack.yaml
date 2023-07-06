@@ -50,7 +50,7 @@ spack:
   - $gcc_spack_built_packages
 
   mirrors:
-    mirror: s3://spack-binaries/develop/tutorial
+    mirror: s3://spack-binaries/releases/v0.20/tutorial
   ci:
     pipeline-gen:
     - build-job:

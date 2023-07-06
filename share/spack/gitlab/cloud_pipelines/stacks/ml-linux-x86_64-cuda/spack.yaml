@@ -80,7 +80,7 @@ spack:
     - xgboost
 
   mirrors:
-    mirror: s3://spack-binaries/develop/ml-linux-x86_64-cuda
+    mirror: s3://spack-binaries/releases/v0.20/ml-linux-x86_64-cuda
 
   ci:
     pipeline-gen:

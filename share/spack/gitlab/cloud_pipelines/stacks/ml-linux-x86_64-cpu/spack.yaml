@@ -77,7 +77,7 @@ spack:
     - xgboost
 
   mirrors:
-    mirror: s3://spack-binaries/develop/ml-linux-x86_64-cpu
+    mirror: s3://spack-binaries/releases/v0.20/ml-linux-x86_64-cpu
 
   ci:
     pipeline-gen:

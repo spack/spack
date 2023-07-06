@@ -207,7 +207,7 @@ spack:
   # bricks: VSBrick-7pt.py-Scalar-8x8x8-1:30:3: error: 'vfloat512' was not declared in this scope
 
 
-  mirrors: { "mirror": "s3://spack-binaries/develop/e4s-power" }
+  mirrors: { "mirror": "s3://spack-binaries/releases/v0.20/e4s-power" }
 
   ci:
     pipeline-gen:
