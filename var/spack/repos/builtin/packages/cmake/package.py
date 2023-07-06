@@ -218,9 +218,12 @@ class Cmake(Package):
     # and its conflicts with OpenSSL.
     depends_on("curl")
 
+    # When using curl, cmake defaults to using system zlib too, probably because
+    # curl already depends on zlib. Therefore, also unconditionaly depend on zlib.
+    depends_on("zlib")
+
     with when("~ownlibs"):
         depends_on("expat")
-        depends_on("zlib")
         # expat/zlib are used in CMake/CTest, so why not require them in libarchive.
         depends_on("libarchive@3.1.0: xar=expat compression=zlib")
         depends_on("libarchive@3.3.3:", when="@3.15.0:")
