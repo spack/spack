@@ -286,9 +286,6 @@ class Curl(NMakePackage, AutotoolsPackage):
     depends_on("libssh", when="+libssh")
     depends_on("krb5", when="+gssapi")
 
-    # curl queries pkgconfig for openssl compilation flags
-    depends_on("pkgconfig", type="build")
-
     # https://github.com/curl/curl/pull/9054
     patch("easy-lock-sched-header.patch", when="@7.84.0")
 
@@ -446,7 +443,7 @@ class NMakeBuilder(NMakeBuilder):
         args.append("WITH_PREFIX=%s" % self.prefix + "\\")
         return args
 
-    def install(self, spec, prefix):
+    def install(self, pkg, spec, prefix):
         # Spack's env CC and CXX values will cause an error
         # if there is a path in the space, and escaping with
         # double quotes raises a syntax issues, instead
