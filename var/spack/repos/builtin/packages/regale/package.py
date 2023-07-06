@@ -24,6 +24,4 @@ class Regale(CMakePackage):
         args = []
         args += [self.define_from_variant("REGALE_EXAMPLES", "examples")]
         args += [self.define_from_variant("BUILD_SHARED_LIBS", "shared")]
-        # Remove empty strings
-        args = [arg for arg in args if arg]
         return args
