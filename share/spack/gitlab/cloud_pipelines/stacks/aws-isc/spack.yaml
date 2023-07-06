@@ -143,7 +143,7 @@ spack:
     - - $target
 
 
-  mirrors: { "mirror": "s3://spack-binaries/develop/aws-isc" }
+  mirrors: { "mirror": "s3://spack-binaries/releases/v0.20/aws-isc" }
 
   ci:
     pipeline-gen:

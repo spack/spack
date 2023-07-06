@@ -232,7 +232,7 @@ spack:
   # CUDA failures
   #- parsec +cuda                 # parsec/mca/device/cuda/transfer.c:168: multiple definition of `parsec_CUDA_d2h_max_flows';
 
-  mirrors: { "mirror": "s3://spack-binaries/develop/e4s" }
+  mirrors: { "mirror": "s3://spack-binaries/releases/v0.20/e4s" }
 
   ci:
     pipeline-gen:

@@ -263,7 +263,7 @@ spack:
   # SKIPPED
   # - flecsi                                # dependency pfunit marks oneapi as an unsupported compiler
 
-  mirrors: { "mirror": "s3://spack-binaries/develop/e4s-oneapi" }
+  mirrors: { "mirror": "s3://spack-binaries/releases/v0.20/e4s-oneapi" }
 
   ci:
     pipeline-gen:

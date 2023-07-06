@@ -24,7 +24,7 @@ spack:
     - - $easy_specs
     - - $arch
 
-  mirrors: { "mirror": "s3://spack-binaries/develop/e4s-mac" }
+  mirrors: { "mirror": "s3://spack-binaries/releases/v0.20/e4s-mac" }
 
   ci:
     pipeline-gen:

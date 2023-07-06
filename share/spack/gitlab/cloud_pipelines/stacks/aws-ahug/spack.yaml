@@ -222,7 +222,7 @@ spack:
     - - $compiler
     - - $target
 
-  mirrors: { "mirror": "s3://spack-binaries/develop/aws-ahug" }
+  mirrors: { "mirror": "s3://spack-binaries/releases/v0.20/aws-ahug" }
 
   ci:
     pipeline-gen:
