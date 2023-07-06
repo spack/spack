@@ -212,6 +212,7 @@ spack:
         image: ecpe4s/ubuntu20.04-runner-ppc64le:2023-01-01
         before_script-:
         - spack -p list --count  # this is just to see if setting up caches takes forever
+        - spack -p list --count  # and this is to check how things are on a "warm" cache
 
   cdash:
     build-group: E4S Power
