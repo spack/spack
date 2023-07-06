@@ -241,6 +241,7 @@ class Cp2k(MakefilePackage, CudaPackage, CMakePackage, ROCmPackage):
     # which is written using Python 3
     depends_on("py-numpy", when="@7:+cuda")
     depends_on("python@3.6:", when="@7:+cuda")
+    depends_on("py-fypp")
 
     depends_on("spglib", when="+spglib")
 
@@ -268,6 +269,16 @@ class Cp2k(MakefilePackage, CudaPackage, CMakePackage, ROCmPackage):
     # versions. Instead just mark all unsupported cuda archs as conflicting.
 
     supported_cuda_arch_list = ("35", "37", "60", "70", "80")
+    supported_rocm_arch_list = (
+        "60",
+        "70",
+        "80",
+        "gfx906",
+        "gfx908",
+        "gfx90a",
+        "gfx90a:xnack-",
+        "gfx90a:xnack+",
+    )
     gpu_map = {
         "35": "K40",
         "37": "K80",
@@ -277,16 +288,25 @@ class Cp2k(MakefilePackage, CudaPackage, CMakePackage, ROCmPackage):
         "gfx906": "Mi50",
         "gfx908": "Mi100",
         "gfx90a": "Mi250",
+        "gfx90a:xnack-": "Mi250",
+        "gfx90a:xnack+": "Mi250",
     }
     cuda_msg = "cp2k only supports cuda_arch {0}".format(supported_cuda_arch_list)
+    rocm_msg = "cp2k only supports andgpu_target {0}".format(supported_rocm_arch_list)
 
     conflicts("+cuda", when="cuda_arch=none")
-    # rocm already returns an error if amdgpu_target is not defined
+
+    # ROCm already emits an error if +rocm amdgpu_target=none is given
 
     with when("+cuda"):
         for arch in CudaPackage.cuda_arch_values:
             if arch not in supported_cuda_arch_list:
                 conflicts("+cuda", when="cuda_arch={0}".format(arch), msg=cuda_msg)
+
+    with when("+rocm"):
+        for arch in ROCmPackage.amdgpu_targets:
+            if arch not in supported_rocm_arch_list:
+                conflicts("+rocm", when="amdgpu_target={0}".format(arch), msg=rocm_msg)
 
     # Fix 2- and 3-center integral calls to libint
     patch(
@@ -833,29 +853,36 @@ class CMakeBuilder(spack.build_systems.cmake.CMakeBuilder):
 
     def cmake_args(self):
         spec = self.spec
-
-        if "+cuda" in spec and len(spec.variants["cuda_arch"].value) > 1:
-            raise InstallError("CP2K supports only one cuda_arch at a time")
-
-        if "+rocm" in spec and len(spec.variants["amdgpu_target"].value) > 1:
-            raise InstallError("CP2K supports only one amdgpu_arch at a time")
-
         args = []
 
-        if spec.satisfies("+cuda") or spec.satisfies("+rocm"):
-            if spec.satisfies("cuda_target"):
-                args += [self.define("CP2K_WITH_GPU", gpu_map[spec.variants["cuda_arch"].value[0])]
+        gpu_map = {
+            "35": "K40",
+            "37": "K80",
+            "60": "P100",
+            "70": "V100",
+            "80": "A100",
+            "gfx906": "Mi50",
+            "gfx908": "Mi100",
+            "gfx90a": "Mi250",
+            "gfx90a:xnack-": "Mi250",
+            "gfx90a:xnack+": "Mi250",
+        }
 
-            if spec.satisfies("amdgpu_target"):
-                args += [
-                    self.define("CP2K_WITH_GPU", gpu_map[spec.variants["amdgpu_target"].value[0])
-                ]
+        if "+cuda" in spec:
+            if (len(spec.variants["cuda_arch"].value) > 1) or spec.satisfies("cuda_arch=none"):
+                raise InstallError("CP2K supports only one cuda_arch at a time.")
+            else:
+                gpu_ver = gpu_map[spec.variants["cuda_arch"].value[0]]
+                args += ["-DCP2K_USE_ACCEL=CUDA"]
+                args += [self.define("CP2K_WITH_GPU", gpu_ver)]
 
-        if spec.satisfies("+cuda"):
-            args += ["-DCP2K_USE_ACCEL=cuda"]
-
-        if spec.satisfies("+rocm"):
-            args += ["-DCP2K_USE_ACCEL=hip"]
+        if "+rocm" in spec:
+            if len(spec.variants["amdgpu_target"].value) > 1:
+                raise InstallError("CP2K supports only one amdgpu_target at a time")
+            else:
+                gpu_ver = gpu_map[spec.variants["amdgpu_target"].value[0]]
+                args += ["-DCP2K_USE_ACCEL=HIP"]
+                args += [self.define("CP2K_WITH_GPU", gpu_ver)]
 
         args += [
             self.define_from_variant("CP2K_ENABLE_REGTESTS", "enable_regtests"),
@@ -876,9 +903,13 @@ class CMakeBuilder(spack.build_systems.cmake.CMakeBuilder):
         ]
 
         # we force the use elpa openmp threading support. might need to be revisited though
-        args += [self.define("CP2K_ENABLE_ELPA_OPENMP_SUPPORT",
-                 (spec.satisfies("+openmp") and spec.satisfies("+elpa")) or
-                 spec.satisfies("^elpa+openmp"))]
+        args += [
+            self.define(
+                "CP2K_ENABLE_ELPA_OPENMP_SUPPORT",
+                (spec.satisfies("+openmp") and spec.satisfies("+elpa"))
+                or spec.satisfies("^elpa+openmp"),
+            )
+        ]
 
         if "spla" in spec and (spec.satisfies("+cuda") or spec.satisfies("+rocm")):
             args += ["-DCP2K_USE_SPLA_GEMM_OFFLOADING=ON"]
@@ -893,7 +924,7 @@ class CMakeBuilder(spack.build_systems.cmake.CMakeBuilder):
         lapack = spec["lapack"]
         blas = spec["blas"]
 
-        if blas.name in ["intel-mkl", "intel-parallel-studio"]:
+        if blas.name in ["intel-mkl", "intel-parallel-studio", "intel-oneapi-mkl"]:
             args += ["-DCP2K_BLAS_VENDOR=MKL"]
             if sys.platform == "darwin":
                 args += [
