@@ -32,6 +32,7 @@ import heapq
 import io
 import itertools
 import os
+import random
 import shutil
 import sys
 import time
@@ -1082,8 +1083,7 @@ class PackageInstaller:
 
         if lock_type == "read":
             # Wait until the other process finishes if there are no more
-            # build tasks with priority 0 (i.e., with no uninstalled
-            # dependencies).
+            # build tasks with no uninstalled dependencies.
             no_p0 = len(self.build_tasks) == 0 or not self._next_is_pri0()
             timeout = None if no_p0 else 3
         else:
@@ -1308,7 +1308,8 @@ class PackageInstaller:
 
     def _next_is_pri0(self):
         """
-        Determine if the next build task has priority 0
+        Determine if the next build task has has no remaining uninstalled
+        dependencies.
 
         Return:
             True if it does, False otherwise
@@ -2219,6 +2220,12 @@ class BuildTask:
 
         # Ensure key sequence-related properties are updated accordingly.
         self.attempts = 0
+
+        # Random number in [0, 1) to allow parallel installs a chance of more
+        # quickly finding the next package to install.
+        # (See the discussion in PR #33387.)
+        self.random = random.random()
+
         self._update()
 
     def __eq__(self, other):
@@ -2321,8 +2328,8 @@ class BuildTask:
 
     @property
     def key(self):
-        """The key is the tuple (# uninstalled dependencies, sequence)."""
-        return (self.priority, self.sequence)
+        """The key is the tuple (# uninstalled dependencies, # attempts, random number)."""
+        return (self.priority, self.attempts, self.random)
 
     def next_attempt(self, installed):
         """Create a new, updated task for the next installation attempt."""
