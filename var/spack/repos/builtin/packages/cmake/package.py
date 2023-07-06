@@ -215,12 +215,14 @@ class Cmake(Package):
         depends_on("expat")
         depends_on("zlib")
         # expat/zlib are used in CMake/CTest, so why not require them in libarchive.
-        depends_on("libarchive@3.1.0: xar=expat compression=zlib")
-        depends_on("libarchive@3.3.3:", when="@3.15.0:")
-        depends_on("libuv@1.0.0:1.10", when="@3.7.0:3.10.3")
-        depends_on("libuv@1.10.0:1.10", when="@3.11.0:3.11")
-        depends_on("libuv@1.10.0:", when="@3.12.0:")
-        depends_on("rhash", when="@3.8.0:")
+        for plat in ["darwin", "cray", "linux"]:
+            with when("platform=%s" % plat):
+                depends_on("libarchive@3.1.0: xar=expat compression=zlib")
+                depends_on("libarchive@3.3.3:", when="@3.15.0:")
+                depends_on("libuv@1.0.0:1.10", when="@3.7.0:3.10.3")
+                depends_on("libuv@1.10.0:1.10", when="@3.11.0:3.11")
+                depends_on("libuv@1.10.0:", when="@3.12.0:")
+                depends_on("rhash", when="@3.8.0:")
 
     for plat in ["darwin", "linux", "cray"]:
         with when("+ownlibs platform=%s" % plat):
@@ -234,9 +236,6 @@ class Cmake(Package):
         depends_on("python@2.7.11:", type="build")
         depends_on("py-sphinx", type="build")
 
-    # TODO: update curl package to build with Windows SSL implementation
-    # at which point we can build with +ownlibs on Windows
-    conflicts("~ownlibs", when="platform=windows")
     # Cannot build with Intel, should be fixed in 3.6.2
     # https://gitlab.kitware.com/cmake/cmake/issues/16226
     patch("intel-c-gnu11.patch", when="@3.6.0:3.6.1")
