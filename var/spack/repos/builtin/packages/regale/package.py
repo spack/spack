@@ -23,7 +23,7 @@ class Regale(CMakePackage):
     def cmake_args(self):
         args = [
             self.define_from_variant("REGALE_EXAMPLES", "examples"),
-            self.define_from_variant("BUILD_SHARED_LIBS", "shared")
+            self.define_from_variant("BUILD_SHARED_LIBS", "shared"),
         ]
-        
+
         return args
