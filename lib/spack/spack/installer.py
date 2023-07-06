@@ -94,7 +94,7 @@ def _write_timer_json(pkg, timer, cache):
     extra_attributes = {"name": pkg.name, "cache": cache}
     try:
         with open(pkg.times_log_path, "w") as timelog:
-            timer.write_json(timelog, depth=-1, extra_attributes=extra_attributes)
+            timer.write_json(timelog, extra_attributes=extra_attributes)
     except Exception as e:
         tty.debug(e)
         return
@@ -491,9 +491,9 @@ def _process_binary_cache_tarball(
 
     tty.msg("Extracting {0} from binary cache".format(package_id(pkg)))
 
-    with timer.measure("install") as t, spack.util.path.filter_padding():
+    with timer.measure("install"), spack.util.path.filter_padding():
         binary_distribution.extract_tarball(
-            pkg.spec, download_result, unsigned=unsigned, force=False, timer=t
+            pkg.spec, download_result, unsigned=unsigned, force=False, timer=timer
         )
 
         pkg.installed_from_binary_cache = True
