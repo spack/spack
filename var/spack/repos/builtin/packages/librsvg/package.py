@@ -22,15 +22,27 @@ class Librsvg(AutotoolsPackage):
 
     depends_on("gobject-introspection", type="build")
     depends_on("pkgconfig", type="build")
-    depends_on("rust", type="build", when="@2.41:")
+    # rust minimal version from NEWS file and upper bound because "Unaligned
+    # references to packed fields are a hard error" starting from 1.69
+    depends_on("rust@1.40:1.68", when="@2.50:", type="build")
+    depends_on("rust", when="@2.41:", type="build")
     depends_on("gtk-doc", type="build", when="+doc")
-    depends_on("cairo+gobject")
-    depends_on("gdk-pixbuf")
-    depends_on("glib")
-    depends_on("libcroco")
-    depends_on("pango")
+
+    # requirements according to `configure` file
+    depends_on("cairo@1.16:+gobject", when="@2.50:")
+    depends_on("cairo@1.15.12:+gobject", when="@2.44.14:")
+    depends_on("cairo@1.2.0:+gobject")
+    depends_on("libcroco@0.6.1:", when="@:2.44.14")
+    depends_on("gdk-pixbuf@2.20:")
+    depends_on("glib@2.50:", when="@2.50:")
+    depends_on("glib@2.48:", when="@2.44.14:")
+    depends_on("glib@2.12:")
+    depends_on("harfbuzz@2:", when="@2.50:")
+    depends_on("libxml2@2.9:")
+    depends_on("pango@1.46:", when="@2.51:")
+    depends_on("pango@1.38:")
+
     depends_on("libffi")
-    depends_on("libxml2")
     depends_on("shared-mime-info")
 
     def url_for_version(self, version):
