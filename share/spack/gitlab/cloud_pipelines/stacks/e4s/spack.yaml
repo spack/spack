@@ -70,6 +70,7 @@ spack:
   - charliecloud
   - conduit
   - datatransferkit
+  - dealii
   - dyninst
   - ecp-data-vis-sdk ~cuda ~rocm +adios2 +ascent +cinema +darshan +faodel +hdf5 +paraview +pnetcdf +sz +unifyfs +veloc ~visit +vtkm +zfp ^hdf5@1.14
   - exaworks
@@ -127,9 +128,7 @@ spack:
   - py-jupyterhub
   - py-libensemble +mpi +nlopt
   - py-petsc4py
-  - py-warpx ^warpx dims=2
-  - py-warpx ^warpx dims=3
-  - py-warpx ^warpx dims=rz
+  - py-warpx
   - qthreads scheduler=distrib
   - quantum-espresso
   - raja

@@ -45,6 +45,18 @@ def provider(request):
 
 @pytest.mark.usefixtures("config", "mock_packages")
 class TestLmod(object):
+    @pytest.mark.regression("37788")
+    @pytest.mark.parametrize("modules_config", ["core_compilers", "core_compilers_at_equal"])
+    def test_layout_for_specs_compiled_with_core_compilers(
+        self, modules_config, module_configuration, factory
+    ):
+        """Tests that specs compiled with core compilers are in the 'Core' folder. Also tests that
+        we can use both ``compiler@version`` and ``compiler@=version`` to specify a core compiler.
+        """
+        module_configuration(modules_config)
+        module, spec = factory("libelf%clang@12.0.0")
+        assert "Core" in module.layout.available_path_parts
+
     def test_file_layout(self, compiler, provider, factory, module_configuration):
         """Tests the layout of files in the hierarchy is the one expected."""
         module_configuration("complex_hierarchy")
@@ -61,7 +73,7 @@ class TestLmod(object):
         # is transformed to r"Core" if the compiler is listed among core
         # compilers
         # Check that specs listed as core_specs are transformed to "Core"
-        if compiler == "clang@=3.3" or spec_string == "mpich@3.0.1":
+        if compiler == "clang@=12.0.0" or spec_string == "mpich@3.0.1":
             assert "Core" in layout.available_path_parts
         else:
             assert compiler.replace("@=", "/") in layout.available_path_parts
@@ -154,6 +166,46 @@ class TestLmod(object):
         assert len([x for x in content if 'remove_path("SEMICOLON", "bar", ";")' in x]) == 1
         assert len([x for x in content if 'append_path("SPACE", "qux", " ")' in x]) == 1
         assert len([x for x in content if 'remove_path("SPACE", "qux", " ")' in x]) == 1
+
+    @pytest.mark.regression("11355")
+    def test_manpath_setup(self, modulefile_content, module_configuration):
+        """Tests specific setup of MANPATH environment variable."""
+
+        module_configuration("autoload_direct")
+
+        # no manpath set by module
+        content = modulefile_content("mpileaks")
+        assert len([x for x in content if 'append_path("MANPATH", "", ":")' in x]) == 0
+
+        # manpath set by module with prepend_path
+        content = modulefile_content("module-manpath-prepend")
+        assert (
+            len([x for x in content if 'prepend_path("MANPATH", "/path/to/man", ":")' in x]) == 1
+        )
+        assert (
+            len([x for x in content if 'prepend_path("MANPATH", "/path/to/share/man", ":")' in x])
+            == 1
+        )
+        assert len([x for x in content if 'append_path("MANPATH", "", ":")' in x]) == 1
+
+        # manpath set by module with append_path
+        content = modulefile_content("module-manpath-append")
+        assert len([x for x in content if 'append_path("MANPATH", "/path/to/man", ":")' in x]) == 1
+        assert len([x for x in content if 'append_path("MANPATH", "", ":")' in x]) == 1
+
+        # manpath set by module with setenv
+        content = modulefile_content("module-manpath-setenv")
+        assert len([x for x in content if 'setenv("MANPATH", "/path/to/man")' in x]) == 1
+        assert len([x for x in content if 'append_path("MANPATH", "", ":")' in x]) == 0
+
+    @pytest.mark.regression("29578")
+    def test_setenv_raw_value(self, modulefile_content, module_configuration):
+        """Tests that we can set environment variable value without formatting it."""
+
+        module_configuration("autoload_direct")
+        content = modulefile_content("module-setenv-raw")
+
+        assert len([x for x in content if 'setenv("FOO", "{{name}}, {name}, {{}}, {}")' in x]) == 1
 
     def test_help_message(self, modulefile_content, module_configuration):
         """Tests the generation of module help message."""

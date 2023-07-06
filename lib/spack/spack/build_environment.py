@@ -589,7 +589,6 @@ def set_module_variables_for_package(pkg):
 
     # TODO: make these build deps that can be installed if not found.
     m.make = MakeExecutable("make", jobs)
-    m.gmake = MakeExecutable("gmake", jobs)
     m.ninja = MakeExecutable("ninja", jobs, supports_jobserver=False)
     # TODO: johnwparent: add package or builder support to define these build tools
     # for now there is no entrypoint for builders to define these on their
@@ -1374,7 +1373,7 @@ class ChildError(InstallError):
             test_log = join_path(os.path.dirname(self.log_name), spack_install_test_log)
             if os.path.isfile(test_log):
                 out.write("\nSee test log for details:\n")
-                out.write("  {0}n".format(test_log))
+                out.write("  {0}\n".format(test_log))
 
         return out.getvalue()
 

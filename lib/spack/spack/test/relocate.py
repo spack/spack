@@ -62,7 +62,7 @@ def source_file(tmpdir, is_relocatable):
         src = tmpdir.join("relocatable.c")
         shutil.copy(template_src, str(src))
     else:
-        template_dirs = [os.path.join(spack.paths.test_path, "data", "templates")]
+        template_dirs = (os.path.join(spack.paths.test_path, "data", "templates"),)
         env = spack.tengine.make_environment(template_dirs)
         template = env.get_template("non_relocatable.c")
         text = template.render({"prefix": spack.store.layout.root})
@@ -173,14 +173,6 @@ def test_ensure_binary_is_relocatable(source_file, is_relocatable):
     assert relocatable == is_relocatable
 
 
-@pytest.mark.requires_executables("patchelf", "strings", "file")
-@skip_unless_linux
-def test_patchelf_is_relocatable():
-    patchelf = os.path.realpath(spack.relocate._patchelf())
-    assert llnl.util.filesystem.is_exe(patchelf)
-    spack.relocate.ensure_binary_is_relocatable(patchelf)
-
-
 @skip_unless_linux
 def test_ensure_binary_is_relocatable_errors(tmpdir):
     # The file passed in as argument must exist...
@@ -239,30 +231,6 @@ def test_make_relative_paths(start_path, path_root, paths, expected):
 def test_normalize_relative_paths(start_path, relative_paths, expected):
     normalized = spack.relocate._normalize_relative_paths(start_path, relative_paths)
     assert normalized == expected
-
-
-def test_set_elf_rpaths(mock_patchelf):
-    # Try to relocate a mock version of patchelf and check
-    # the call made to patchelf itself
-    patchelf = mock_patchelf("echo $@")
-    rpaths = ["/usr/lib", "/usr/lib64", "/opt/local/lib"]
-    output = spack.relocate._set_elf_rpaths(patchelf, rpaths)
-
-    # Assert that the arguments of the call to patchelf are as expected
-    assert "--force-rpath" in output
-    assert "--set-rpath " + ":".join(rpaths) in output
-    assert patchelf in output
-
-
-@skip_unless_linux
-def test_set_elf_rpaths_warning(mock_patchelf):
-    # Mock a failing patchelf command and ensure it warns users
-    patchelf = mock_patchelf("exit 1")
-    rpaths = ["/usr/lib", "/usr/lib64", "/opt/local/lib"]
-    # To avoid using capfd in order to check if the warning was triggered
-    # here we just check that output is not set
-    output = spack.relocate._set_elf_rpaths(patchelf, rpaths)
-    assert output is None
 
 
 @pytest.mark.requires_executables("patchelf", "strings", "file", "gcc")

@@ -25,6 +25,11 @@ class Picard(Package):
     # They started distributing a single jar file at v2.6.0, prior to
     # that it was a .zip file with multiple .jar and .so files
     version(
+        "3.0.0",
+        sha256="0d5e28ab301fad3b02030d01923888129ba82c5f722ac5ccb2d418ab76ac5499",
+        expand=False,
+    )
+    version(
         "2.26.2",
         sha256="99fab1699a735fd048a05975a243774f1cc99e87a9b28311d4aa872d06390474",
         expand=False,
@@ -151,7 +156,8 @@ class Picard(Package):
     )
     version("1.140", sha256="0d27287217413db6b846284c617d502eaa578662dcb054a7017083eab9c54438")
 
-    depends_on("java@8:", type="run")
+    depends_on("java@17:", type="run", when="@3.0.0:")
+    depends_on("java@8:", type="run", when="@:2.27.5")
 
     def install(self, spec, prefix):
         mkdirp(prefix.bin)
