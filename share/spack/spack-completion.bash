@@ -563,7 +563,7 @@ _spack_buildcache_save_specfile() {
 _spack_buildcache_sync() {
     if $list_options
     then
-        SPACK_COMPREPLY="-h --help --manifest-glob"
+        SPACK_COMPREPLY="-h --help --manifest-glob --only-verified"
     else
         SPACK_COMPREPLY=""
     fi

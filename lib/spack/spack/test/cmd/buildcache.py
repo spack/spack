@@ -4,6 +4,7 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import errno
+import json
 import os
 import platform
 import shutil
@@ -180,6 +181,7 @@ def test_buildcache_sync(
     mock_fetch,
     mock_stage,
     tmpdir,
+    capsys,
 ):
     """
     Make sure buildcache sync works in an environment-aware manner, ignoring
@@ -240,9 +242,44 @@ def test_buildcache_sync(
         mirror("add", "src", src_mirror_url)
         mirror("add", "dest", dest_mirror_url)
 
+        # First test the --only-verified option
+        buildcache("sync", "src", "dest", "--only-verified")
+        assert not os.path.exists(dest_mirror_dir)
+
         buildcache("sync", "src", "dest")
 
         verify_mirror_contents()
+        shutil.rmtree(dest_mirror_dir)
+
+        # Test the --manifest-glob option
+        rel_spack_path = spack.binary_distribution.tarball_path_name(s, ".spack")
+        rel_spec_path = spack.binary_distribution.tarball_name(s, ".spec.json")
+        manifest_data = {}
+        manifest_data[s.dag_hash()] = [
+            {
+                "src": os.path.join(src_mirror_url, "build_cache", rel_spec_path),
+                "dest": os.path.join(dest_mirror_url, "build_cache", rel_spec_path),
+            },
+            {
+                "src": os.path.join(src_mirror_url, "build_cache", rel_spack_path),
+                "dest": os.path.join(dest_mirror_url, "build_cache", rel_spack_path),
+            },
+        ]
+        manifest_dir = working_dir.join("copy_specs").strpath
+        os.makedirs(manifest_dir)
+        manifest_file = os.path.join(manifest_dir, "manifest.json")
+        with open(manifest_file, "w") as f:
+            f.write(json.dumps(manifest_data))
+
+        buildcache("sync", "src", "dest", "--manifest-glob", "{0}/*.json".format(manifest_dir))
+        buildcache("update-index", "dest")
+
+        with capsys.disabled():
+            output = buildcache("list")
+
+        assert "libdwarf" in output
+        assert "libelf" not in output
+        assert "trivial-install-test-package" not in output
 
 
 def test_buildcache_create_install(

@@ -5,9 +5,9 @@
 import glob
 import json
 import os
-import shutil
 import sys
 import tempfile
+from typing import List
 
 import llnl.util.tty as tty
 import llnl.util.tty.color as clr
@@ -223,6 +223,12 @@ def setup_parser(subparser):
     sync = subparsers.add_parser("sync", help=sync_fn.__doc__)
     sync.add_argument(
         "--manifest-glob", help="a quoted glob pattern identifying copy manifest files"
+    )
+    sync.add_argument(
+        "--only-verified",
+        default=False,
+        action="store_true",
+        help="Only copy specs whose signature can be verified by a trusted key",
     )
     sync.add_argument(
         "src_mirror",
@@ -517,38 +523,65 @@ def save_specfile_fn(args):
     )
 
 
-def copy_buildcache_file(src_url, dest_url, local_path=None):
-    """Copy from source url to destination url"""
-    tmpdir = None
+def copy_buildcache_file(src_url: str, dest_url: str, only_verified: bool = False) -> bool:
+    """copy from source url to destination url
 
-    if not local_path:
-        tmpdir = tempfile.mkdtemp()
-        local_path = os.path.join(tmpdir, os.path.basename(src_url))
+    Arguments:
+        src_url: Url of source file.
+        dest_url: Url of desired target.
+
+    Optional Arguments:
+        only_verified: If True, only copy builcache entries (.spec.json[.sig] +
+            .spack pairs) if the spec file is signed and the signature can be
+            verified.
+
+    Returns:
+        bool: Return True if file was transferred, False otherwise.
+    """
+    tmpdir = tempfile.mkdtemp()
+    local_path = os.path.join(tmpdir, os.path.basename(src_url))
+    temp_stage = Stage(src_url, path=tmpdir)
+    transferred = False
 
     try:
-        temp_stage = Stage(src_url, path=os.path.dirname(local_path))
-        try:
-            temp_stage.create()
-            temp_stage.fetch()
-            web_util.push_to_url(local_path, dest_url, keep_original=True)
-        except web_util.FetchError as e:
-            # Expected, since we have to try all the possible extensions
-            tty.debug("no such file: {0}".format(src_url))
-            tty.debug(e)
-        finally:
-            temp_stage.destroy()
+        temp_stage.create()
+        temp_stage.fetch()
+
+        if only_verified:
+            spack.util.gpg.verify(local_path, suppress_warnings=True)
+
+        tty.debug("Copying {0} to {1}".format(src_url, dest_url))
+        web_util.push_to_url(local_path, dest_url, keep_original=True)
+        transferred = True
+    except spack.util.executable.ProcessError as pe:
+        # gpg methods all seem to raise only ProcessError, any such error
+        # means we could not verify the signature and thus, did not
+        # transfer the file
+        tty.debug("could not verify: {0}".format(src_url))
+        tty.debug(pe)
+    except web_util.FetchError as e:
+        # Expected, since we have to try all the possible extensions
+        tty.debug("could not fetch: {0}".format(src_url))
+        tty.debug(e)
     finally:
-        if tmpdir and os.path.exists(tmpdir):
-            shutil.rmtree(tmpdir)
+        temp_stage.destroy()
+
+    return transferred
 
 
 def sync_fn(args):
     """sync binaries (and associated metadata) from one mirror to another
 
-    requires an active environment in order to know which specs to sync
+    requires an active environment in order to know which specs to sync,
+    unless manifest file(s) are provided indicating exactly what to copy.
+
+    Arguments:
+        src (str): Source mirror URL
+        dest (str): Destination mirror URL
+        only_verified (bool): Only copy entries that are property signed
     """
     if args.manifest_glob:
-        manifest_copy(glob.glob(args.manifest_glob))
+        manifest_copy(glob.glob(args.manifest_glob), only_verified=args.only_verified)
         return 0
 
     if args.src_mirror is None or args.dest_mirror is None:
@@ -570,40 +603,62 @@ def sync_fn(args):
     )
 
     build_cache_dir = bindist.build_cache_relative_path()
-    buildcache_rel_paths = []
+    archive_rel_paths = []
+    meta_rel_paths = []
 
     tty.debug("Syncing the following specs:")
     for s in env.all_specs():
         tty.debug("  {0}{1}: {2}".format("* " if s in env.roots() else "  ", s.name, s.dag_hash()))
 
-        buildcache_rel_paths.extend(
-            [
-                os.path.join(build_cache_dir, bindist.tarball_path_name(s, ".spack")),
-                os.path.join(build_cache_dir, bindist.tarball_name(s, ".spec.json.sig")),
-                os.path.join(build_cache_dir, bindist.tarball_name(s, ".spec.json")),
-                os.path.join(build_cache_dir, bindist.tarball_name(s, ".spec.yaml")),
-            ]
+        archive_rel_paths.append(
+            os.path.join(build_cache_dir, bindist.tarball_path_name(s, ".spack"))
         )
 
-    tmpdir = tempfile.mkdtemp()
+        meta_rel_paths.append(
+            (
+                os.path.join(build_cache_dir, bindist.tarball_name(s, ".spec.json.sig")),
+                os.path.join(build_cache_dir, bindist.tarball_name(s, ".spec.json")),
+            )
+        )
 
-    try:
-        for rel_path in buildcache_rel_paths:
-            src_url = url_util.join(src_mirror_url, rel_path)
-            local_path = os.path.join(tmpdir, rel_path)
-            dest_url = url_util.join(dest_mirror_url, rel_path)
+    for meta_paths, archive_path in zip(meta_rel_paths, archive_rel_paths):
+        # Attempt to sync the metadata file, exit loop upon first success
+        meta_success = False
+        for meta_path in meta_paths:
+            meta_src_url = url_util.join(src_mirror_url, meta_path)
+            meta_dest_url = url_util.join(dest_mirror_url, meta_path)
+            if copy_buildcache_file(meta_src_url, meta_dest_url, only_verified=args.only_verified):
+                meta_success = True
+                break
 
-            tty.debug("Copying {0} to {1} via {2}".format(src_url, dest_url, local_path))
-            copy_buildcache_file(src_url, dest_url, local_path=local_path)
-    finally:
-        shutil.rmtree(tmpdir)
+        archive_src_url = url_util.join(src_mirror_url, archive_path)
+        archive_dest_url = url_util.join(dest_mirror_url, archive_path)
+
+        # Don't bother to sync the archive if we could not sync the metadata
+        if meta_success:
+            copy_buildcache_file(archive_src_url, archive_dest_url)
+        else:
+            tty.debug(
+                "Skipping archive {0} because metadata was not transferred".format(archive_src_url)
+            )
 
 
-def manifest_copy(manifest_file_list):
-    """Read manifest files containing information about specific specs to copy
+def manifest_copy(manifest_file_list: List[str], only_verified: bool = False):
+    """copy only the urls listed in the provided manifest files
+
+    read manifest files containing information about specific specs to copy
     from source to destination, remove duplicates since any binary packge for
     a given hash should be the same as any other, and copy all files specified
-    in the manifest files."""
+    in the manifest files.
+
+    Arguments:
+        manifest_file_list: List of manifest file paths
+
+    Optional Arguments:
+        only_verified: If True, only copy builcache entries (.spec.json[.sig] +
+            .spack pairs) if the spec file is signed and the signature can be
+            verified.
+    """
     deduped_manifest = {}
 
     for manifest_path in manifest_file_list:
@@ -614,9 +669,31 @@ def manifest_copy(manifest_file_list):
                 deduped_manifest[spec_hash] = copy_list
 
     for spec_hash, copy_list in deduped_manifest.items():
+        meta_src, meta_dst, archive_src, archive_dst = (None, None, None, None)
+        # figure out which src/dest pair is the metadata and which is the archive
         for copy_file in copy_list:
-            tty.debug("copying {0} to {1}".format(copy_file["src"], copy_file["dest"]))
-            copy_buildcache_file(copy_file["src"], copy_file["dest"])
+            src_url = copy_file["src"]
+            if src_url.endswith(".spec.json.sig") or src_url.endswith(".spec.json"):
+                meta_src = src_url
+                meta_dst = copy_file["dest"]
+            elif src_url.endswith(".spack"):
+                archive_src = src_url
+                archive_dst = copy_file["dest"]
+
+        if not meta_src or not archive_src:
+            tty.debug("missing 'src' spec file or archive for {0}".format(spec_hash))
+            continue
+
+        if not meta_dst or not archive_dst:
+            tty.debug("missing 'dest' spec file or archive for {0}".format(spec_hash))
+            continue
+
+        if copy_buildcache_file(meta_src, meta_dst, only_verified=only_verified):
+            copy_buildcache_file(archive_src, archive_dst)
+        else:
+            tty.debug(
+                "Skipping archive {0} because metadata was not transferred".format(archive_src)
+            )
 
 
 def update_index(mirror: spack.mirror.Mirror, update_keys=False):
