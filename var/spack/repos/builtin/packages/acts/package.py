@@ -286,10 +286,7 @@ class Acts(CMakePackage, CudaPackage):
     depends_on("hepmc3 @3.2.1:", when="+hepmc3")
     depends_on("heppdt", when="+hepmc3 @:4.0")
     depends_on("intel-tbb @2020.1:", when="+examples +tbb")
-    # FIXME mlpack@3.1.1: required but not yet available
-    # Ref: https://github.com/spack/spack/pull/38277
-    # depends_on("mlpack@3.1.1:", when="+mlpack")
-    conflicts("+mlpack", when="@25:", msg="mlpack@3.1.1: required but not yet available")
+    depends_on("mlpack@3.1.1:", when="+mlpack")
     depends_on("nlohmann-json @3.9.1:", when="@0.14: +json")
     depends_on("podio @0.6:", when="@25: +edm4hep")
     depends_on("pythia8", when="+pythia8")
