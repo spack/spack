@@ -818,6 +818,13 @@ def checksum_tarball(file):
     return hasher.hexdigest()
 
 
+def _url_etag_group(url):
+    if isinstance(url, str):
+        parsed_url = urllib.parse.urlparse(url)
+
+    return "{0}://{1}".format(parsed_url.sheme, parsed_url.netloc)
+
+
 def select_signing_key(key=None):
     if key is None:
         keys = spack.util.gpg.signing_keys()
@@ -1289,8 +1296,21 @@ def _build_tarball_in_stage_dir(spec: Spec, out_url: str, stage_dir: str, option
     # get the sha256 checksum of the tarball
     checksum = checksum_tarball(tarfile_path)
 
-    # add sha256 checksum to spec.json
+    # push tarball to remote mirror
+    # do this first in order to attempt to get an etag for the uploaded resource
+    spackfile_etag = web_util.push_to_url(
+        spackfile_path,
+        remote_spackfile_path,
+        keep_original=False,
+        # For S3 buckets, enable the extra checksum SHA256 attribute
+        extra_args={"ChecksumAlgorithm": "SHA256"},
+    )
+    # Try to get the ETag of the uploaded tarball. This must happen after uploading the
+    # tarball since it is not possible to pre-compute the resource etag
+    if spackfile_etag:
+        etag_group = _url_etag_group(remote_spackfile_path)
 
+    # add sha256 checksum to spec.json
     with open(spec_file, "r") as inputfile:
         content = inputfile.read()
         if spec_file.endswith(".json"):
@@ -1301,6 +1321,9 @@ def _build_tarball_in_stage_dir(spec: Spec, out_url: str, stage_dir: str, option
     bchecksum = {}
     bchecksum["hash_algorithm"] = "sha256"
     bchecksum["hash"] = checksum
+    # Store the etag if it was found
+    if spackfile_etag:
+        bchecksum["etag"] = {etag_group: spackfile_etag}
     spec_dict["binary_cache_checksum"] = bchecksum
     # Add original install prefix relative to layout root to spec.json.
     # This will be used to determine is the directory layout has changed.
@@ -1320,8 +1343,7 @@ def _build_tarball_in_stage_dir(spec: Spec, out_url: str, stage_dir: str, option
         key = select_signing_key(options.key)
         sign_specfile(key, options.force, specfile_path)
 
-    # push tarball and signed spec json to remote mirror
-    web_util.push_to_url(spackfile_path, remote_spackfile_path, keep_original=False)
+    # push signed spec json to remote mirror
     web_util.push_to_url(
         signed_specfile_path if not options.unsigned else specfile_path,
         remote_signed_specfile_path if not options.unsigned else remote_specfile_path,
