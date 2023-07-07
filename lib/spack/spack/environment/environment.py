@@ -1955,13 +1955,18 @@ class Environment:
         roots *without* associated user spec"""
         return [root for _, root in self.concretized_specs()]
 
-    def get_by_hash(self, dag_hash):
-        matches = {}
-        roots = [self.specs_by_hash[h] for h in self.concretized_order]
-        for spec in spack.traverse.traverse_nodes(roots, key=lambda s: s.dag_hash()):
+    def get_by_hash(self, dag_hash: str) -> List[Spec]:
+        # If it's not a prefix we can early exit
+        early_exit = len(dag_hash) == 32
+        matches = []
+        for spec in traverse.traverse_nodes(
+            self.concrete_roots(), key=traverse.by_dag_hash, order="breadth"
+        ):
             if spec.dag_hash().startswith(dag_hash):
-                matches[spec.dag_hash()] = spec
-        return list(matches.values())
+                matches.append(spec)
+                if early_exit:
+                    break
+        return matches
 
     def get_one_by_hash(self, dag_hash):
         """Returns the single spec from the environment which matches the
