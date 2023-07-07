@@ -896,8 +896,7 @@ class CMakeBuilder(spack.build_systems.cmake.CMakeBuilder):
         args += [
             self.define(
                 "CP2K_ENABLE_ELPA_OPENMP_SUPPORT",
-                (spec.satisfies("+openmp") and spec.satisfies("+elpa"))
-                or spec.satisfies("^elpa+openmp"),
+                ("+elpa +openmp" in spec) or ("^elpa +openmp" in spec),
             )
         ]
 
