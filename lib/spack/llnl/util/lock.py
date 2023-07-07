@@ -323,7 +323,7 @@ class Lock:
             )
         )
 
-        poll_intervals = iter(Lock._poll_interval_generator())
+        poll_intervals = iter(Lock._poll_interval_generator(_wait_times=[0.1, 0.1, 0.1]))
         start_time = time.time()
         num_attempts = 0
         while (not timeout) or (time.time() - start_time) < timeout:
