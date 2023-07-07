@@ -23,6 +23,7 @@ class PyNanobind(PythonPackage):
     maintainers("ma595")
 
     version("master", branch="master", submodules=True)
+    version("1.4.0", tag="v1.4.0", submodules=True)
     version("1.2.0", tag="v1.2.0", submodules=True)
 
     depends_on("python@3.8:", type=("build", "run"))
