@@ -22,6 +22,7 @@ class Cgns(CMakePackage):
 
     version("develop", branch="develop")
     version("master", branch="master")
+    version("4.4.0", sha256="3b0615d1e6b566aa8772616ba5fd9ca4eca1a600720e36eadd914be348925fe2")
     version("4.3.0", sha256="7709eb7d99731dea0dd1eff183f109eaef8d9556624e3fbc34dc5177afc0a032")
     version("4.2.0", sha256="090ec6cb0916d90c16790183fc7c2bd2bd7e9a5e3764b36c8196ba37bf1dc817")
     version("4.1.2", sha256="951653956f509b8a64040f1440c77f5ee0e6e2bf0a9eef1248d370f60a400050")
