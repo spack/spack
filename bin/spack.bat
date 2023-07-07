@@ -189,19 +189,19 @@ goto :end_switch
 
 :case_load
 if not defined _sp_args (
-      python "%spack%" load --help
-      exit /B 0
+   python "%spack%" load --help
+   exit /B 0
 )
 
 :: If args contain --sh, --csh, or -h/--help: just execute.
 if defined _sp_args (
-    if NOT %_sp_args%==%_sp_args:--help=% (
+    if "%sp_args%"=="%_sp_args:--help=%" (
         goto :default_case
-    ) else if NOT %_sp_args%==%_sp_args: -h=% (
+    ) else if "%_sp_args%"=="%_sp_args: -h=%" (
         goto :default_case
-    ) else if NOT %_sp_args%==%_sp_args:--bat=% (
+    ) else if "%_sp_args%"=="%_sp_args:--bat=%" (
         goto :default_case
-    ) else if NOT %_sp_args%==%_sp_args:--list=% (
+    ) else if "%_sp_args%"=="%_sp_args:--list=%" (
         goto :default_case
     )
 )
