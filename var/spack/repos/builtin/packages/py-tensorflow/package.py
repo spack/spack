@@ -947,9 +947,6 @@ class PyTensorflow(Package, CudaPackage, ROCmPackage, PythonExtension):
             # removed in bazel 3.6
             args.append("--incompatible_no_support_tools_in_action_inputs=false")
 
-        if spec.satisfies("@2.9: platform=darwin"):
-            args.append("--macos_sdk_version={}".format(macos_version()))
-
         # See .bazelrc for when each config flag is supported
         if spec.satisfies("@1.12.1:"):
             if "+mkl" in spec:
