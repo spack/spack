@@ -10,10 +10,11 @@ class TiledMm(CMakePackage, CudaPackage, ROCmPackage):
     """Matrix multiplication on GPUs for matrices stored on a CPU. Similar to cublasXt,
     but ported to both NVIDIA and AMD GPUs."""
 
-    maintainers = ["mtaillefumier", "simonpintarelli"]
     homepage = "https://github.com/eth-cscs/Tiled-MM/"
     url = "https://github.com/eth-cscs/Tiled-MM/archive/refs/tags/v2.0.tar.gz"
     git = "https://github.com/eth-cscs/Tiled-MM.git"
+
+    maintainers("mtaillefumier", "simonpintarelli", "RMeli")
 
     version("master", branch="master")
     version("2.2", sha256="6d0b49c9588ece744166822fd44a7bc5bec3dc666b836de8bf4bf1a7bb675aac")
@@ -33,8 +34,8 @@ class TiledMm(CMakePackage, CudaPackage, ROCmPackage):
     def cmake_args(self):
         args = [
             self.define_from_variant("BUILD_SHARED_LIBS", "shared"),
-            self.define_from_variant("TIELDMM_WITH_EXAMPLES", "examples"),
-            self.define_from_variant("TIELDMM_WITH_TESTS", "tests"),
+            self.define_from_variant("TILEDMM_WITH_EXAMPLES", "examples"),
+            self.define_from_variant("TILEDMM_WITH_TESTS", "tests"),
         ]
 
         if "+rocm" in self.spec:
