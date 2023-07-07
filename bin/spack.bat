@@ -189,10 +189,8 @@ goto :end_switch
 
 :case_load
 if not defined _sp_args (
-   if not defined _sp_flags (
       python "%spack%" load --help
       exit /B 0
-   )
 )
 
 :: If args contain --sh, --csh, or -h/--help: just execute.
