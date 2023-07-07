@@ -27,13 +27,13 @@ def test_manpath_trailing_colon(
     if sys.platform == "win32":
         bat_out = load("--bat", "--only", "package", "mpileaks")
         lines = bat_out.split("\n")
-        assert any(re.match(r'set "MANPATH=.*:"', ln) for ln in lines)
+        assert any(re.match(r'set "MANPATH=.*;"', ln) for ln in lines)
 
         os.environ["MANPATH"] = "/tmp/man;"
 
         bat_out = load("--bat", "--only", "package", "mpileaks")
         lines = bat_out.split("\n")
-        assert any(re.match(r'set "MANPATH=.*;/tmp/man;:', ln) for ln in lines)
+        assert any(re.match(r'set "MANPATH=.*;/tmp/man;', ln) for ln in lines)
     else:
         sh_out = load("--sh", "--only", "package", "mpileaks")
         lines = sh_out.split("\n")
