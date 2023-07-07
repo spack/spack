@@ -89,7 +89,7 @@ class Cp2k(MakefilePackage, CudaPackage, CMakePackage, ROCmPackage):
         " relevant when CUDA or ROCM are enabled",
     )
     variant("pytorch", default=False, description="Enable libtorch support")
-    variant("quip", default=False, description=("Enable quip support"))
+    variant("quip", default=False, description="Enable quip support")
 
     variant(
         "enable_regtests",
