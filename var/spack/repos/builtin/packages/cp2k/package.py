@@ -269,16 +269,7 @@ class Cp2k(MakefilePackage, CudaPackage, CMakePackage, ROCmPackage):
     # versions. Instead just mark all unsupported cuda archs as conflicting.
 
     supported_cuda_arch_list = ("35", "37", "60", "70", "80")
-    supported_rocm_arch_list = (
-        "60",
-        "70",
-        "80",
-        "gfx906",
-        "gfx908",
-        "gfx90a",
-        "gfx90a:xnack-",
-        "gfx90a:xnack+",
-    )
+    supported_rocm_arch_list = ("gfx906", "gfx908", "gfx90a", "gfx90a:xnack-", "gfx90a:xnack+")
     gpu_map = {
         "35": "K40",
         "37": "K80",
