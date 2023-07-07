@@ -125,8 +125,6 @@ class QtBase(QtPackage):
     depends_on("zstd")
     with when("platform=linux"):
         depends_on("libdrm")
-
-    with when("platform=linux"):
         depends_on("at-spi2-core", when="+accessibility")
     depends_on("dbus", when="+dbus")
     depends_on("gl", when="+opengl")
@@ -144,9 +142,9 @@ class QtBase(QtPackage):
             depends_on("libxrender")
 
     with when("+network"):
+        depends_on("openssl")
         with when("platform=linux"):
             depends_on("libproxy")
-        depends_on("openssl")
 
     # Qt6 requires newer compilers: see https://github.com/spack/spack/issues/34418
     conflicts("%gcc@:7")
@@ -219,9 +217,9 @@ class QtBase(QtPackage):
         if "+dbus" in spec:
             features.append("dbus_linked")
         if "+network" in spec:
-            features += ["openssl_linked", "openssl"]
+            features.extend(["openssl_linked", "openssl"])
             if sys.platform == "linux":
-                features += ["libproxy"]
+                features.append("libproxy")
         for k in features:
             define("FEATURE_" + k, True)
 
