@@ -262,12 +262,7 @@ class PyTensorflow(Package, CudaPackage, ROCmPackage, PythonExtension):
     # https://github.com/protocolbuffers/protobuf/issues/10051
     # https://github.com/tensorflow/tensorflow/issues/56266
     depends_on("py-protobuf@:3.19", type=("build", "run"), when="@:2.11")
-    depends_on("py-protobuf+cpp", type=("build", "run"))
-    depends_on("protobuf@:3.21.9", when="@:2.12")
-    depends_on("protobuf@:3.19", when="@:2.11")
-    depends_on("protobuf@:3.17", when="@:2.11")
-    depends_on("protobuf@:3.12", when="@:2.4")
-    depends_on("protobuf", type=("build", "run"))
+    depends_on("py-protobuf", type=("build", "run"))
     depends_on("py-setuptools", type=("build", "run"))
     depends_on("py-six@1.12:", type=("build", "run"), when="@2.1:2.3,2.7:")
     depends_on("py-six@1.15", type=("build", "run"), when="@2.4:2.6")
@@ -322,6 +317,8 @@ class PyTensorflow(Package, CudaPackage, ROCmPackage, PythonExtension):
 
     # Undocumented dependencies
     depends_on("py-requests", type=("build", "run"))
+    # https://github.com/tensorflow/tensorflow/issues/60179#issuecomment-1491238631
+    depends_on("coreutils", when="@2.13: platform=darwin", type="build")
 
     # No longer a dependency in latest versions
     depends_on("py-astor@0.6:", type=("build", "run"), when="@1.6:2.1")
@@ -754,67 +751,6 @@ class PyTensorflow(Package, CudaPackage, ROCmPackage, PythonExtension):
         #       stay at least also OSX compatible
         tmp_path = tempfile.mkdtemp(prefix="spack")
         env.set("TEST_TMPDIR", tmp_path)
-
-        env.set("TF_SYSTEM_LIBS", "com_google_protobuf")
-        if spec.satisfies("@:2.3"):
-            # NOTE: INCLUDEDIR is not just relevant to protobuf
-            # see third_party/systemlibs/jsoncpp.BUILD
-            env.set("INCLUDEDIR", spec["protobuf"].prefix.include)
-
-    def patch(self):
-        filter_file(
-            '"-U_FORTIFY_SOURCE",',
-            '"-U_FORTIFY_SOURCE", "-I%s",' % self.spec["protobuf"].prefix.include,
-            "third_party/gpus/crosstool/BUILD.rocm.tpl",
-        )
-        if self.spec.satisfies("@2.12:"):
-            filter_file(
-                'genproto_deps.append("@com_google_protobuf//:well_known_types_py_pb2_genproto")',
-                "pass",
-                "tensorflow/tsl/platform/default/build_config.bzl",
-                string=True,
-            )
-        if self.spec.satisfies("@2.11:"):
-            filter_file(
-                "deps = protodeps + well_known_proto_libs(),",
-                "deps = protodeps,",
-                "tensorflow/tsl/platform/default/build_config.bzl",
-                string=True,
-            )
-        if self.spec.satisfies("@2.3:2.10"):
-            filter_file(
-                "deps = protodeps + well_known_proto_libs(),",
-                "deps = protodeps,",
-                "tensorflow/core/platform/default/build_config.bzl",
-                string=True,
-            )
-        if self.spec.satisfies("@2.4.0:2.5"):
-            text = """
-def protobuf_deps():
-    pass
-"""
-            with open("third_party/systemlibs/protobuf_deps.bzl", "w") as f:
-                f.write(text)
-
-            if self.spec.satisfies("@2.5.0"):
-                file_to_patch = "tensorflow/workspace2.bzl"
-            else:
-                file_to_patch = "tensorflow/workspace.bzl"
-
-            filter_file(
-                '"//third_party/systemlibs:protobuf.bzl": "protobuf.bzl",',
-                '"//third_party/systemlibs:protobuf.bzl": "protobuf.bzl",\n'
-                '"//third_party/systemlibs:protobuf_deps.bzl": "protobuf_deps.bzl",',  # noqa: E501
-                file_to_patch,
-                string=True,
-            )
-
-        # Set protobuf path
-        filter_file(
-            r"(^build:linux --define=PROTOBUF_INCLUDE_PATH=).*",
-            r"\1{0}".format(self.spec["protobuf"].prefix.include),
-            ".bazelrc",
-        )
 
     def configure(self, spec, prefix):
         # NOTE: configure script is interactive. If you set the appropriate
