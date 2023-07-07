@@ -868,7 +868,7 @@ class CMakeBuilder(spack.build_systems.cmake.CMakeBuilder):
 
         if "+rocm" in spec:
             if len(spec.variants["amdgpu_target"].value) > 1:
-                raise InstallError("CP2K supports only one amdgpu_target at a time")
+                raise InstallError("CP2K supports only one amdgpu_target at a time.")
             else:
                 gpu_ver = gpu_map[spec.variants["amdgpu_target"].value[0]]
                 args += ["-DCP2K_USE_ACCEL=HIP"]
