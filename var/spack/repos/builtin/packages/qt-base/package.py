@@ -144,7 +144,7 @@ class QtBase(QtPackage):
             depends_on("libxrender")
 
     with when("+network"):
-        if not bool(MACOS_VERSION):
+        with when("platform=linux"):
             depends_on("libproxy")
         depends_on("openssl")
 
@@ -220,7 +220,7 @@ class QtBase(QtPackage):
             features.append("dbus_linked")
         if "+network" in spec:
             features += ["openssl_linked", "openssl"]
-            if not bool(MACOS_VERSION):
+            if sys.platform == "linux":
                 features += ["libproxy"]
         for k in features:
             define("FEATURE_" + k, True)
