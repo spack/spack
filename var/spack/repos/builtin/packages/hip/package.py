@@ -22,7 +22,7 @@ class Hip(CMakePackage):
     tags = ["rocm"]
 
     maintainers("srekolam", "renjithravindrankannath", "haampie")
-    libraries = ["libamdhip64"]
+    executables = ["^hipconfig$"]
 
     version("master", branch="master")
 
@@ -173,7 +173,7 @@ class Hip(CMakePackage):
             depends_on("roctracer-dev-api@" + ver, when="@" + ver)
 
         for ver in ["5.4.0", "5.4.3"]:
-            depends_on("hipify-clang", when="@" + ver)
+            depends_on("hipify-clang@" + ver, when="@" + ver)
         # hipcc likes to add `-lnuma` by default :(
         # ref https://github.com/ROCm-Developer-Tools/HIP/pull/2202
         depends_on("numactl", when="@3.7.0:")
@@ -403,15 +403,21 @@ class Hip(CMakePackage):
         return paths
 
     @classmethod
-    def determine_version(cls, lib):
-        match = re.search(r"lib\S*\.so\.\d+\.\d+\.(\d)(\d\d)(\d\d)", lib)
-        if match:
-            ver = "{0}.{1}.{2}".format(
-                int(match.group(1)), int(match.group(2)), int(match.group(3))
-            )
-        else:
-            ver = None
-        return ver
+    def determine_version(cls, exe):
+        output = Executable(exe)(output=str, error=str)
+        match = re.search(r"ROCM_PATH\s+: \S+/rocm-(\d+\.\d+\.\d+)", output)
+        return Version(match.group(1)) if match else None
+
+    @classmethod
+    def determine_variants(cls, exes, version):
+        variants = []
+        for exe in exes:
+            variants = []
+            output = Executable(exe)(output=str, error=str)
+            if re.search(r"HIP_RUNTIME  : rocclr", output):
+                variants.append("+rocm")
+
+        return variants
 
     def set_variables(self, env):
         if self.spec.satisfies("+rocm"):
