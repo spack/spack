@@ -858,6 +858,9 @@ class GitFetchStrategy(VCSFetchStrategy):
                 )
 
             with working_dir(dest):
+                # By defaults, on all references are fetched by the clone
+                fetch_args = ["fetch", "origin", commit]
+                git(*fetch_args)
                 checkout_args = ["checkout", commit]
                 if not debug:
                     checkout_args.insert(1, "--quiet")
