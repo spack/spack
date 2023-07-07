@@ -212,9 +212,7 @@ class Cmake(Package):
         "See: https://gitlab.kitware.com/cmake/cmake/-/issues/21135",
     )
 
-    # Vendored dependencies do not build with nvhpc; it's also more
-    # transparent to patch Spack's versions of CMake's dependencies.
-    conflicts("+ownlibs %nvhpc")
+    requires("~ownlibs", when="%nvhpc", msg="vendored dependencies do not build with nvhpc")
 
     with when("~ownlibs"):
         depends_on("curl")
