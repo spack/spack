@@ -396,3 +396,30 @@ def test_use_tags_for_detection(command_args, mock_executable, mutable_config, m
     assert "The following specs have been" in output
     assert "cmake" in output
     assert "openssl" not in output
+
+
+@pytest.mark.regression("38733")
+@pytest.mark.skipif(sys.platform == "win32", reason="the test uses bash scripts")
+def test_failures_in_scanning_do_not_result_in_an_error(
+    mock_executable, monkeypatch, mutable_config
+):
+    """Tests that scanning paths with wrong permissions, won't cause `external find` to error."""
+    cmake_exe1 = mock_executable(
+        "cmake", output="echo cmake version 3.19.1", subdir=("first", "bin")
+    )
+    cmake_exe2 = mock_executable(
+        "cmake", output="echo cmake version 3.23.3", subdir=("second", "bin")
+    )
+
+    # Remove access from the first directory executable
+    cmake_exe1.parent.chmod(0o600)
+
+    value = os.pathsep.join([str(cmake_exe1.parent), str(cmake_exe2.parent)])
+    monkeypatch.setenv("PATH", value)
+
+    output = external("find", "cmake")
+    assert external.returncode == 0
+    assert "The following specs have been" in output
+    assert "cmake" in output
+    assert "3.23.3" in output
+    assert "3.19.1" not in output
