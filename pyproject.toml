@@ -146,7 +146,23 @@ ignore_missing_imports = true
   # arguments, which don't work in 3.7, which causes mypy to bail out early if you have
   # numpy installed.
   [[tool.mypy.overrides]]
-  module = 'numpy'
+  module = [
+      'IPython',
+      'altgraph',
+      'attr',
+      'boto3',
+      'botocore',
+      'distro',
+      'jinja2',
+      'jsonschema',
+      'macholib',
+      'markupsafe',
+      'numpy',
+      'pyristent',
+      'pytest',
+      'ruamel.yaml',
+      'six',
+  ]
   follow_imports = 'skip'
   follow_imports_for_stubs = true
 
