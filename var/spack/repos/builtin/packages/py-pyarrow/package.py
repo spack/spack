@@ -30,6 +30,8 @@ class PyPyarrow(PythonPackage, CudaPackage):
     variant("orc", default=False, description="Build with orc support")
     variant("dataset", default=True, description="Build with Dataset support")
 
+    conflicts("~parquet", when="+dataset")
+
     depends_on("cmake@3.0.0:", type="build")
     depends_on("pkgconfig", type="build")
     depends_on("python@3.5:", type=("build", "run"), when="@0.17:")
