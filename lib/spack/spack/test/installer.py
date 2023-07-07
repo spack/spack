@@ -813,7 +813,7 @@ def test_install_task_add_compiler(install_mockery, monkeypatch, capfd):
 
     # Preclude any meaningful side-effects
     monkeypatch.setattr(spack.package_base.PackageBase, "unit_test_check", _true)
-    monkeypatch.setattr(inst.PackageInstaller, "_setup_install_dir", _noop)
+    monkeypatch.setattr(inst.BuildTask, "_setup_install_dir", _noop)
     monkeypatch.setattr(spack.build_environment, "start_build_process", _noop)
     monkeypatch.setattr(spack.database.Database, "add", _noop)
     monkeypatch.setattr(spack.compilers, "add_compilers_to_config", _add)
@@ -909,6 +909,44 @@ def test_cleanup_all_tasks(install_mockery, monkeypatch):
     assert len(installer.build_tasks) == 1
 
 
+# def test_setup_install_dir_grp(install_mockery, monkeypatch, capfd):
+#     """Test _setup_install_dir's group change."""
+#     mock_group = "mockgroup"
+#     mock_chgrp_msg = "Changing group for {0} to {1}"
+
+#     def _get_group(spec):
+#         return mock_group
+
+#     def _chgrp(path, group, follow_symlinks=True):
+#         tty.msg(mock_chgrp_msg.format(path, group))
+
+#     monkeypatch.setattr(prefs, "get_package_group", _get_group)
+#     monkeypatch.setattr(fs, "chgrp", _chgrp)
+
+#     const_arg = installer_args(["trivial-install-test-package"], {})
+#     installer = create_installer(const_arg)
+#     spec = installer.build_requests[0].pkg.spec
+#     pkg_id = installer.build_requests[0].pkg_id
+
+#     fs.touchp(spec.prefix)
+#     metadatadir = spack.store.layout.metadata_path(spec)
+#     # Regex matching with Windows style paths typically fails
+#     # so we skip the match check here
+#     if sys.platform == "win32":
+#         metadatadir = None
+#     # Should fail with a "not a directory" error
+#     # TODO: Move to BuildTask/Task tests
+#     with pytest.raises(OSError, match=metadatadir):
+#         for req in installer.build_tasks:
+#             print(req)
+#         installer.build_tasks[pkg_id]._setup_install_dir(spec.package)
+
+#     out = str(capfd.readouterr()[0])
+
+#     expected_msg = mock_chgrp_msg.format(spec.prefix, mock_group)
+#     assert expected_msg in out
+
+
 def test_setup_install_dir_grp(install_mockery, monkeypatch, capfd):
     """Test _setup_install_dir's group change."""
     mock_group = "mockgroup"
@@ -923,9 +961,10 @@ def test_setup_install_dir_grp(install_mockery, monkeypatch, capfd):
     monkeypatch.setattr(prefs, "get_package_group", _get_group)
     monkeypatch.setattr(fs, "chgrp", _chgrp)
 
-    const_arg = installer_args(["trivial-install-test-package"], {})
-    installer = create_installer(const_arg)
-    spec = installer.build_requests[0].pkg.spec
+    build_task = create_build_task(
+        spack.spec.Spec("trivial-install-test-package").concretized().package
+    )
+    spec = build_task.request.pkg.spec
 
     fs.touchp(spec.prefix)
     metadatadir = spack.store.STORE.layout.metadata_path(spec)
@@ -936,7 +975,7 @@ def test_setup_install_dir_grp(install_mockery, monkeypatch, capfd):
     # Should fail with a "not a directory" error
     # TODO: Move to BuildTask/Task tests
     with pytest.raises(OSError, match=metadatadir):
-        installer._setup_install_dir(spec.package)
+        build_task._setup_install_dir(spec.package)
 
     out = str(capfd.readouterr()[0])
 

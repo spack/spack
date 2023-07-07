@@ -275,6 +275,13 @@ def _do_fake_install(pkg: "spack.package_base.PackageBase") -> None:
     dump_packages(pkg.spec, packages_dir)
 
 
+def _add_compiler_package_to_config(pkg):
+    compiler_search_prefix = getattr(pkg, "compiler_search_prefix", pkg.spec.prefix)
+    spack.compilers.add_compilers_to_config(
+        spack.compilers.find_compilers([compiler_search_prefix])
+    )
+
+
 def _packages_needed_to_bootstrap_compiler(
     compiler: "spack.spec.CompilerSpec", architecture: "spack.spec.ArchSpec", pkgs: list
 ) -> List[Tuple["spack.package_base.PackageBase", bool]]:
@@ -1256,7 +1263,7 @@ class PackageInstaller:
                 if dep_id not in self.build_tasks:
                     # TODO: Add init tasks for build dependency
                     self._add_init_task(dep_pkg, request, False, all_deps)
-                if dep.spec.spliced:
+                if dep.spliced:
                     # TODO: retrieve the build spec of the spliced spec or bona fide build deps?
                     pass
                 # Clear any persistent failure markings _unless_ they are
@@ -1284,12 +1291,6 @@ class PackageInstaller:
         fail_fast = bool(request.install_args.get("fail_fast"))
         self.fail_fast = self.fail_fast or fail_fast
 
-    def _add_compiler_package_to_config(self, pkg: "spack.package_base.PackageBase") -> None:
-        compiler_search_prefix = getattr(pkg, "compiler_search_prefix", pkg.spec.prefix)
-        spack.compilers.add_compilers_to_config(
-            spack.compilers.find_compilers([compiler_search_prefix])
-        )
-
     def _install_task(self, task: BuildTask, install_status: InstallStatus) -> None:
         """
         Perform the installation of the requested spec and/or dependency
@@ -1299,21 +1300,22 @@ class PackageInstaller:
             task: the installation build task for a package
             install_status: the installation status for the package"""
         # TODO: use install_status
-        try:
-            rc = task.execute()
-            # TODO: RewireTask.execute gets the rewiring logic
-            # TODO: _add_compiler_package_to_config goes to module scope?
-        except InstallError as e:
-            # wrap exception and reraise
-            raise InstallError(
-                    "Cannot proceed with {0}: {1}".format(
-                        self.pid, e.msg
-                    )
-                )
-        else:
-            if rc == "updated_installed":  # probably just use true for this
-                self._update_installed(task)
-            # TODO: Logic for Update Failed?
+        # try:
+        rc = task.execute()
+        # TODO: RewireTask.execute gets the rewiring logic
+        # DONE: _add_compiler_package_to_config goes to module scope?
+        # except InstallError as e:
+        #     # wrap exception and reraise
+        #     raise InstallError(
+        #             "Cannot proceed with {0}: {1}".format(
+        #                 self.pid, e.message
+        #             )
+        #         )
+        # else:
+        if rc == "updated_installed":  # probably just use true for this
+            self._update_installed(task)
+        # TODO: Logic for Update Failed?
+
 
     def _next_is_pri0(self) -> bool:
         """
@@ -1697,7 +1699,7 @@ class PackageInstaller:
 
                     # It's an already installed compiler, add it to the config
                     if task.compiler:
-                        self._add_compiler_package_to_config(pkg)
+                        _add_compiler_package_to_config(pkg)
 
                 else:
                     # At this point we've failed to get a write or a read
@@ -2354,6 +2356,7 @@ class Task:
 
 class BuildTask(Task):
     """Class for representing a build task for a package."""
+
     # Consider adding pid as a parameter here:
     def __init__(self, pkg, request, compiler, start, attempts, status, installed):
         super(BuildTask, self).__init__(pkg, request, start, attempts, status, installed)
@@ -2417,10 +2420,9 @@ class BuildTask(Task):
 
         # Use the binary cache if requested
         if self.use_cache and _install_from_cache(pkg, self.cache_only, self.explicit, unsigned):
-            self.pkg._update_installed(self)
             if self.compiler:
-                self._add_compiler_package_to_config(pkg)
-            return
+                _add_compiler_package_to_config(pkg)
+            return "updated_installed"
 
         pkg.run_tests = tests is True or tests and pkg.name in tests
 
@@ -2451,7 +2453,7 @@ class BuildTask(Task):
 
             # If a compiler, ensure it is added to the configuration
             if self.compiler:
-                self._add_compiler_package_to_config(pkg)
+                _add_compiler_package_to_config(pkg)
         except spack.build_environment.StopPhase as e:
             # A StopPhase exception means that do_install was asked to
             # stop early from clients, and is not an error at this point
@@ -2464,6 +2466,7 @@ class BuildTask(Task):
 
 class RewireTask(Task):
     """Class for representing a rewiring of splcied specs."""
+
     # TODO: Implement class
     pass
 
