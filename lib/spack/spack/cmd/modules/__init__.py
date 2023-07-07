@@ -168,18 +168,17 @@ def loads(module_type, specs, args, out=None):
                 ]
             )
 
+    # Make a list of tuples (spec, module) for each module associated with each spec
     modules = list(
-        (
-            spec,
-            spack.modules.common.get_module(
-                module_type,
-                spec,
-                get_full_path=False,
-                module_set_name=args.module_set_name,
-                required=False,
-            ),
-        )
+        (spec, module)
         for spec in specs
+        for module in spack.modules.common.get_modules(
+            module_type,
+            spec,
+            get_full_path=False,
+            module_set_name=args.module_set_name,
+            required=False,
+        )
     )
 
     module_commands = {"tcl": "module load ", "lmod": "module load "}
@@ -219,19 +218,20 @@ def find(module_type, specs, args):
         dependency_specs_to_retrieve = []
 
     try:
-        modules = [
-            spack.modules.common.get_module(
+        modules = list(
+            module
+            for spec in dependency_specs_to_retrieve
+            for module in spack.modules.common.get_modules(
                 module_type,
                 spec,
                 args.full_path,
                 module_set_name=args.module_set_name,
                 required=False,
             )
-            for spec in dependency_specs_to_retrieve
-        ]
+        )
 
-        modules.append(
-            spack.modules.common.get_module(
+        modules.extend(
+            spack.modules.common.get_modules(
                 module_type,
                 single_spec,
                 args.full_path,
@@ -306,9 +306,11 @@ def refresh(module_type, specs, args):
 
     cls = spack.modules.module_types[module_type]
 
-    # Skip unknown packages.
+    # Skip unknown packages and filter external modules
     writers = [
-        cls(spec, args.module_set_name) for spec in specs if spack.repo.path.exists(spec.name)
+        cls(spec, args.module_set_name)
+        for spec in specs
+        if (spack.repo.path.exists(spec.name) and not spec.external_modules)
     ]
 
     # Filter excluded packages early

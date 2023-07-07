@@ -327,12 +327,15 @@ class UpstreamModuleIndex:
             return None
 
 
-def get_module(module_type, spec, get_full_path, module_set_name="default", required=True):
-    """Retrieve the module file for a given spec and module type.
+def get_modules(module_type, spec, get_full_path, module_set_name="default", required=True):
+    """Retrieve the module file(s) for a given spec and module type.
 
-    Retrieve the module file for the given spec if it is available. If the
-    module is not available, this will raise an exception unless the module
+    Retrieve the module file(s) for the given spec if it is available. If the
+    module(s) is not available, this will raise an exception unless the module
     is excluded or if the spec is installed upstream.
+
+    Currently only external packages may have multiple module files associated
+    with one spec.
 
     Args:
         module_type: the type of module we want to retrieve (e.g. lmod)
@@ -347,7 +350,7 @@ def get_module(module_type, spec, get_full_path, module_set_name="default", requ
             for which to retrieve the module.
 
     Returns:
-        The module name or path. May return ``None`` if the module is not
+        List of module names or paths. May return ``[None]`` if the module is not
         available.
     """
     try:
@@ -357,12 +360,25 @@ def get_module(module_type, spec, get_full_path, module_set_name="default", requ
     if upstream:
         module = spack.modules.common.upstream_module_index.upstream_module(spec, module_type)
         if not module:
-            return None
+            return [None]
 
         if get_full_path:
-            return module.path
+            return [module.path]
         else:
-            return module.use_name
+            return [module.use_name]
+    elif spec.external_modules:
+        conf = spack.modules.module_config_types[module_type](spec, module_set_name)
+        if conf.excluded:
+            if required:
+                tty.debug("The module configuration has excluded {0}: " "omitting it".format(spec))
+            else:
+                return [None]
+
+        if get_full_path:
+            err_msg = "Cannot retrieve full path to an external module"
+            raise NotImplementedError(err_msg)
+        else:
+            return spec.external_modules
     else:
         writer = spack.modules.module_types[module_type](spec, module_set_name)
         if not os.path.isfile(writer.layout.filename):
@@ -380,12 +396,12 @@ def get_module(module_type, spec, get_full_path, module_set_name="default", requ
                     )
                 )
             else:
-                return None
+                return [None]
 
         if get_full_path:
-            return writer.layout.filename
+            return [writer.layout.filename]
         else:
-            return writer.layout.use_name
+            return [writer.layout.use_name]
 
 
 class BaseConfiguration:
@@ -776,7 +792,15 @@ class BaseContext(tengine.Context):
         m = self.conf.module
         name = self.conf.name
         explicit = self.conf.explicit
-        return [m.make_layout(x, name, explicit).use_name for x in getattr(self.conf, what)]
+        external_modules = []
+        local_modules = []
+        for spec in getattr(self.conf, what):
+            if spec.external_modules:
+                external_modules.extend(spec.external_modules)
+            else:
+                local_modules.append(m.make_layout(spec, name, explicit).use_name)
+
+        return external_modules + local_modules
 
     @tengine.context_property
     def verbose(self):
@@ -951,6 +975,12 @@ class BaseModuleFileWriter:
 
     def remove(self):
         """Deletes the module file."""
+
+        # Don't delete external modules
+        if self.spec.external_modules:
+            err_msg = "Can't delete external modulefile for {0}!"
+            raise spack.error.SpackError(err_msg.format(self.spec))
+
         mod_file = self.layout.filename
         if os.path.exists(mod_file):
             try:
