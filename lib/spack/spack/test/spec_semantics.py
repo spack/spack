@@ -24,7 +24,7 @@ from spack.variant import (
 
 
 @pytest.mark.usefixtures("config", "mock_packages")
-class TestSpecSemantics(object):
+class TestSpecSemantics:
     """Test satisfies(), intersects(), constrain() and other semantic operations on specs."""
 
     @pytest.mark.parametrize(
@@ -754,7 +754,7 @@ class TestSpecSemantics(object):
     def test_errors_in_variant_directive(self):
         variant = spack.directives.variant.__wrapped__
 
-        class Pkg(object):
+        class Pkg:
             name = "PKG"
 
         # We can't use names that are reserved by Spack

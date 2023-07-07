@@ -4,6 +4,7 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 from spack.package import *
+from spack.variant import _ConditionalVariantValues
 
 
 class Acts(CMakePackage, CudaPackage):
@@ -145,6 +146,14 @@ class Acts(CMakePackage, CudaPackage):
     variant(
         "benchmarks", default=False, description="Build the performance benchmarks", when="@0.16:"
     )
+    _cxxstd_values = (conditional("14", when="@:0.8.1"), "17", conditional("20", when="@24:"))
+    variant(
+        "cxxstd",
+        default="17",
+        values=_cxxstd_values,
+        multi=False,
+        description="Use the specified C++ standard when building.",
+    )
     variant(
         "examples",
         default=False,
@@ -279,10 +288,18 @@ class Acts(CMakePackage, CudaPackage):
     depends_on("py-onnxruntime", when="+onnx")
     depends_on("py-pybind11 @2.6.2:", when="+python @18:")
     depends_on("py-pytest", when="+python +unit_tests")
-    depends_on("root @6.10: cxxstd=14", when="+tgeo @:0.8.0")
-    depends_on("root @6.20: cxxstd=17", when="+tgeo @0.8.1:")
+    depends_on("root @6.10:", when="+tgeo @:0.8.0")
+    depends_on("root @6.20:", when="+tgeo @0.8.1:")
     depends_on("sycl", when="+sycl")
     depends_on("vecmem@0.4: +sycl", when="+sycl")
+
+    # ACTS imposes requirements on the C++ standard values used by ROOT
+    for _cxxstd in _cxxstd_values:
+        if isinstance(_cxxstd, _ConditionalVariantValues):
+            for _v in _cxxstd:
+                depends_on(f"root cxxstd={_v.value}", when=f"cxxstd={_v.value} {_v.when} ^root")
+        else:
+            depends_on(f"root cxxstd={_cxxstd}", when=f"cxxstd={_cxxstd} ^root")
 
     # ACTS has been using C++17 for a while, which precludes use of old GCC
     conflicts("%gcc@:7", when="@0.23:")
@@ -387,12 +404,10 @@ class Acts(CMakePackage, CudaPackage):
             if cuda_arch != "none":
                 args.append("-DCUDA_FLAGS=-arch=sm_{0}".format(cuda_arch[0]))
 
-        if "root" in spec:
-            cxxstd = spec["root"].variants["cxxstd"].value
-            args.append("-DCMAKE_CXX_STANDARD={0}".format(cxxstd))
-
         if "+python" in spec:
             python = spec["python"].command.path
             args.append("-DPython_EXECUTABLE={0}".format(python))
+
+        args.append(self.define_from_variant("CMAKE_CXX_STANDARD", "cxxstd"))
 
         return args

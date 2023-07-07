@@ -347,7 +347,7 @@ class Lbann(CachedCMakePackage, CudaPackage, ROCmPackage):
 
     def initconfig_compiler_entries(self):
         spec = self.spec
-        entries = super(Lbann, self).initconfig_compiler_entries()
+        entries = super().initconfig_compiler_entries()
         entries.append(cmake_cache_string("CMAKE_CXX_STANDARD", "17"))
         if not spec.satisfies("^cmake@3.23.0"):
             # There is a bug with using Ninja generator in this version
@@ -368,7 +368,7 @@ class Lbann(CachedCMakePackage, CudaPackage, ROCmPackage):
 
     def initconfig_hardware_entries(self):
         spec = self.spec
-        entries = super(Lbann, self).initconfig_hardware_entries()
+        entries = super().initconfig_hardware_entries()
 
         if "+cuda" in spec:
             if self.spec.satisfies("%clang"):
