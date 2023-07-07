@@ -6,7 +6,6 @@
 import sys
 import tempfile
 
-from spack.operating_systems.mac_os import macos_version
 from spack.package import *
 
 
