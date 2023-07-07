@@ -1,0 +1,141 @@
+diff --git a/CMakeLists.txt b/CMakeLists.txt
+new file mode 100644
+index 0000000..4e39ba4
+--- /dev/null
++++ b/CMakeLists.txt
+@@ -0,0 +1,41 @@
++cmake_minimum_required(VERSION 3.12)
++
++project(Lua C)
++set(Lua_VERSION_MAJOR 5)
++set(Lua_VERSION_MINOR 4)
++set(Lua_VERSION_PATCH 6)
++
++option(BUILD_SHARED_LIBS "If true, CMake will build and install a shared library" ON)
++
++add_subdirectory(src)
++
++# Intallation
++
++# Install man pages
++install(FILES doc/lua.1 doc/luac.1 DESTINATION man)
++
++# Export installation
++install(EXPORT LuaTargets
++    FILE LuaTargets.cmake
++    DESTINATION lib/cmake/Lua
++)
++include(CMakePackageConfigHelpers)
++configure_package_config_file(${CMAKE_CURRENT_SOURCE_DIR}/cmake/LuaConfig.cmake.in
++  "${CMAKE_CURRENT_BINARY_DIR}/LuaConfig.cmake"
++  INSTALL_DESTINATION "lib/cmake/Lua"
++  NO_SET_AND_CHECK_MACRO
++  NO_CHECK_REQUIRED_COMPONENTS_MACRO
++)
++write_basic_package_version_file(
++  "${CMAKE_CURRENT_BINARY_DIR}/LuaConfigVersion.cmake"
++  VERSION "${Lua_VERSION_MAJOR}.${Lua_VERSION_MINOR}.${Lua_VERSION_PATCH}"
++  COMPATIBILITY AnyNewerVersion
++)
++install(FILES
++  ${CMAKE_CURRENT_BINARY_DIR}/LuaConfig.cmake
++  ${CMAKE_CURRENT_BINARY_DIR}/LuaConfigVersion.cmake
++  DESTINATION lib/cmake/Lua
++)
++export(EXPORT LuaTargets
++  FILE "${CMAKE_CURRENT_BINARY_DIR}/LuaTargets.cmake"
++)
+diff --git a/cmake/LuaConfig.cmake.in b/cmake/LuaConfig.cmake.in
+new file mode 100644
+index 0000000..dfd53b7
+--- /dev/null
++++ b/cmake/LuaConfig.cmake.in
+@@ -0,0 +1,3 @@
++@PACKAGE_INIT@
++
++include ( "${CMAKE_CURRENT_LIST_DIR}/LuaTargets.cmake" )
+\ No newline at end of file
+diff --git a/src/CMakeLists.txt b/src/CMakeLists.txt
+new file mode 100644
+index 0000000..6cba945
+--- /dev/null
++++ b/src/CMakeLists.txt
+@@ -0,0 +1,78 @@
++set(LUA_LIB_SOURCES lapi.c
++                    lcode.c
++                    lctype.c
++                    ldebug.c
++                    ldo.c
++                    ldump.c
++                    lfunc.c
++                    lgc.c
++                    llex.c
++                    lmem.c
++                    lobject.c
++                    lopcodes.c
++                    lparser.c
++                    lstate.c
++                    lstring.c
++                    ltable.c
++                    ltm.c
++                    lundump.c
++                    lvm.c
++                    lzio.c
++                    lauxlib.c
++                    lbaselib.c
++                    lcorolib.c
++                    ldblib.c
++                    liolib.c
++                    lmathlib.c
++                    loadlib.c
++                    loslib.c
++                    lstrlib.c
++                    ltablib.c
++                    lutf8lib.c
++                    linit.c
++    )
++
++
++# Create object library shared between all libs so we only need to compile sources once
++add_library(luaobj OBJECT ${LUA_LIB_SOURCES})
++# Lua static library - liblua
++add_library(liblua_static STATIC $<TARGET_OBJECTS:luaobj>)
++set_target_properties(liblua_static
++    PROPERTIES OUTPUT_NAME liblua
++)
++list(APPEND LuaExportTargets liblua_static)
++# If enabled, shared lua library lua
++if(BUILD_SHARED_LIBS)
++    add_library(liblua SHARED $<TARGET_OBJECTS:luaobj>)
++    target_compile_definitions(liblua PUBLIC $<$<BOOL:WIN32>:LUA_BUILD_AS_DLL>)
++    set_target_properties(liblua
++        PROPERTIES OUTPUT_NAME lua
++    )
++    list(APPEND LuaExportTargets liblua)
++endif()
++
++# Lua interpreter - lua
++add_executable(lua lua.c)
++target_link_libraries(lua PUBLIC liblua_static)
++list(APPEND LuaExportTargets lua)
++
++# Lua compiler - luac
++add_executable(luac luac.c)
++target_link_libraries(luac PRIVATE liblua_static)
++list(APPEND LuaExportTargets luac)
++
++# install header files
++install(FILES lua.h
++              luaconf.h
++              lauxlib.h
++              lua.hpp
++        DESTINATION include
++)
++# install targets defined in this scope
++install(TARGETS ${LuaExportTargets}
++    EXPORT LuaTargets
++    RUNTIME DESTINATION bin
++    LIBRARY DESTINATION lib
++    ARCHIVE DESTINATION lib
++    INCLUDES DESTINATION include
++)

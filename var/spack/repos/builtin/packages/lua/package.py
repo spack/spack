@@ -55,7 +55,8 @@ class LuaImplPackage(MakefilePackage):
         return os.path.join("share", self.lua_dir_name, self.__verdir())
 
     # luarocks needs unzip for some packages (e.g. lua-luaposix)
-    depends_on("unzip", type="run")
+    for plat in ["linux", "cray", "darwin"]:
+        depends_on("unzip", type="run", when=f"platform={plat}")
 
     # luarocks needs a fetcher (curl/wget), unfortunately I have not found
     # how to force a choice for curl or wget, but curl seems the default.
@@ -229,9 +230,9 @@ class Lua(LuaImplPackage, CMakePackage, MakefilePackage):
     provides("lua-lang@5.2", when="@5.2:5.2.99")
     provides("lua-lang@5.3", when="@5.3:5.3.99")
     provides("lua-lang@5.4", when="@5.4:5.4.99")
-
-    depends_on("ncurses+termlib")
-    depends_on("readline")
+    for plat in ["cray", "darwin", "linux"]:
+        depends_on("ncurses+termlib", when=f"platform={plat}")
+        depends_on("readline", when=f"platform={plat}")
 
     build_system("cmake", "makefile", default="makefile")
 
@@ -240,6 +241,7 @@ class Lua(LuaImplPackage, CMakePackage, MakefilePackage):
         sha256="208316c2564bdd5343fa522f3b230d84bd164058957059838df7df56876cb4ae",
         when="+pcfile @:5.3.9999",
     )
+    patch("lua_cmake.patch", when="platform=windows build_system=cmake")
 
 
 class MakefileBuilder(spack.build_systems.makefile.MakefileBuilder):
@@ -298,4 +300,5 @@ class MakefileBuilder(spack.build_systems.makefile.MakefileBuilder):
             )
 
 class CMakeBuilder(spack.build_systems.cmake.CMakeBuilder):
-    """"""
+    def cmake_args(self):
+        return [self.define("BUILD_SHARED_LIBS", True)]
