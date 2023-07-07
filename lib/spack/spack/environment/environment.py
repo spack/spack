@@ -39,7 +39,6 @@ import spack.spec
 import spack.stage
 import spack.store
 import spack.subprocess_context
-import spack.traverse
 import spack.user_environment as uenv
 import spack.util.cpus
 import spack.util.environment
@@ -51,6 +50,7 @@ import spack.util.spack_json as sjson
 import spack.util.spack_yaml as syaml
 import spack.util.url
 import spack.version
+from spack import traverse
 from spack.filesystem_view import SimpleFilesystemView, inverse_view_func_parser, view_func_parser
 from spack.installer import PackageInstaller
 from spack.schema.env import TOP_LEVEL_KEY
@@ -636,18 +636,16 @@ class ViewDescriptor:
         From the list of concretized user specs in the environment, flatten
         the dags, and filter selected, installed specs, remove duplicates on dag hash.
         """
-        dag_hash = lambda spec: spec.dag_hash()
-
         # With deps, requires traversal
         if self.link == "all" or self.link == "run":
             deptype = ("run") if self.link == "run" else ("link", "run")
             specs = list(
-                spack.traverse.traverse_nodes(
-                    concretized_root_specs, deptype=deptype, key=dag_hash
+                traverse.traverse_nodes(
+                    concretized_root_specs, deptype=deptype, key=traverse.by_dag_hash
                 )
             )
         else:
-            specs = list(dedupe(concretized_root_specs, key=dag_hash))
+            specs = list(dedupe(concretized_root_specs, key=traverse.by_dag_hash))
 
         # Filter selected, installed specs
         with spack.store.db.read_transaction():
@@ -1925,7 +1923,7 @@ class Environment:
     def all_specs(self):
         """Return all specs, even those a user spec would shadow."""
         roots = [self.specs_by_hash[h] for h in self.concretized_order]
-        specs = [s for s in spack.traverse.traverse_nodes(roots, lambda s: s.dag_hash())]
+        specs = [s for s in traverse.traverse_nodes(roots, key=traverse.by_dag_hash)]
         specs.sort()
         return specs
 
@@ -1989,10 +1987,9 @@ class Environment:
 
     def all_matching_specs(self, *specs: spack.spec.Spec) -> List[Spec]:
         """Returns all concretized specs in the environment satisfying any of the input specs"""
-        key = lambda s: s.dag_hash()
         return [
             s
-            for s in spack.traverse.traverse_nodes(self.concrete_roots(), key=key)
+            for s in traverse.traverse_nodes(self.concrete_roots(), key=traverse.by_dag_hash)
             if any(s.satisfies(t) for t in specs)
         ]
 
@@ -2017,9 +2014,9 @@ class Environment:
         env_root_to_user = {root.dag_hash(): user for user, root in self.concretized_specs()}
         root_matches, dep_matches = [], []
 
-        for env_spec in spack.traverse.traverse_nodes(
+        for env_spec in traverse.traverse_nodes(
             specs=[root for _, root in self.concretized_specs()],
-            key=lambda s: s.dag_hash(),
+            key=traverse.by_dag_hash,
             order="breadth",
         ):
             if not env_spec.satisfies(spec):
@@ -2093,8 +2090,8 @@ class Environment:
 
         if recurse_dependencies:
             specs.extend(
-                spack.traverse.traverse_nodes(
-                    specs, root=False, deptype=("link", "run"), key=lambda s: s.dag_hash()
+                traverse.traverse_nodes(
+                    specs, root=False, deptype=("link", "run"), key=traverse.by_dag_hash
                 )
             )
 
@@ -2103,9 +2100,7 @@ class Environment:
     def _to_lockfile_dict(self):
         """Create a dictionary to store a lockfile for this environment."""
         concrete_specs = {}
-        for s in spack.traverse.traverse_nodes(
-            self.specs_by_hash.values(), key=lambda s: s.dag_hash()
-        ):
+        for s in traverse.traverse_nodes(self.specs_by_hash.values(), key=traverse.by_dag_hash):
             spec_dict = s.node_dict_with_hashes(hash=ht.dag_hash)
             # Assumes no legacy formats, since this was just created.
             spec_dict[ht.dag_hash.name] = s.dag_hash()
@@ -2262,7 +2257,7 @@ class Environment:
 
     def update_environment_repository(self) -> None:
         """Updates the repository associated with the environment."""
-        for spec in spack.traverse.traverse_nodes(self.new_specs):
+        for spec in traverse.traverse_nodes(self.new_specs):
             if not spec.concrete:
                 raise ValueError("specs passed to environment.write() must be concrete!")
 
