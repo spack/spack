@@ -66,8 +66,7 @@ class PyAstropy(PythonPackage):
         depends_on("py-certifi", when="@4.3:", type=("build", "run"))
         depends_on("py-dask+array", when="@4.1:", type=("build", "run"))
         depends_on("py-h5py", type=("build", "run"))
-        # py-pyarrow only builds when parquet variant enabled
-        depends_on("py-pyarrow+parquet@5:", when="@5:", type=("build", "run"))
+        depends_on("py-pyarrow@5:", when="@5:", type=("build", "run"))
         depends_on("py-beautifulsoup4", type=("build", "run"))
         depends_on("py-html5lib", type=("build", "run"))
         depends_on("py-bleach", type=("build", "run"))
