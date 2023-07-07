@@ -426,32 +426,6 @@ def _is_dev_spec_and_has_changed(spec):
     return mtime > record.installation_time
 
 
-def _spec_needs_overwrite(spec, changed_dev_specs):
-    """Check whether the current spec needs to be overwritten because either it has
-    changed itself or one of its dependencies have changed
-    """
-    # if it's not installed, we don't need to overwrite it
-    if not spec.installed:
-        return False
-
-    # If the spec itself has changed this is a trivial decision
-    if spec in changed_dev_specs:
-        return True
-
-    # if spec and all deps aren't dev builds, we don't need to overwrite it
-    if not any(spec.satisfies(c) for c in ("dev_path=*", "^dev_path=*")):
-        return False
-
-    # If any dep needs overwrite, or any dep is missing and is a dev build then
-    # overwrite this package
-    if any(
-        ((not dep.installed) and dep.satisfies("dev_path=*"))
-        or _spec_needs_overwrite(dep, changed_dev_specs)
-        for dep in spec.traverse(root=False)
-    ):
-        return True
-
-
 def _error_on_nonempty_view_dir(new_root):
     """Defensively error when the target view path already exists and is not an
     empty directory. This usually happens when the view symlink was removed, but
@@ -1806,17 +1780,29 @@ class Environment:
         self.specs_by_hash[h] = concrete
 
     def _get_overwrite_specs(self):
-        # Collect all specs in the environment first before checking which ones
-        # to rebuild to avoid checking the same specs multiple times
-        specs_to_check = set()
-        for dag_hash in self.concretized_order:
-            root_spec = self.specs_by_hash[dag_hash]
-            specs_to_check.update(root_spec.traverse(root=True))
+        # Find all dev specs that were modified.
+        changed_dev_specs = [
+            s
+            for s in traverse.traverse_nodes(
+                self.concrete_roots(), order="breadth", key=traverse.by_dag_hash
+            )
+            if _is_dev_spec_and_has_changed(s)
+        ]
 
-        changed_dev_specs = set(s for s in specs_to_check if _is_dev_spec_and_has_changed(s))
-
+        # Collect their hashes, and the hashes of their installed parents.
+        # Notice: with order=breadth all changed dev specs are at depth 0,
+        # even if they occur as parents of one another.
         return [
-            s.dag_hash() for s in specs_to_check if _spec_needs_overwrite(s, changed_dev_specs)
+            spec.dag_hash()
+            for depth, spec in traverse.traverse_nodes(
+                changed_dev_specs,
+                root=True,
+                order="breadth",
+                depth=True,
+                direction="parents",
+                key=traverse.by_dag_hash,
+            )
+            if depth == 0 or spec.installed
         ]
 
     def _install_log_links(self, spec):
