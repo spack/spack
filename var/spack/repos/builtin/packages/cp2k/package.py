@@ -85,7 +85,8 @@ class Cp2k(MakefilePackage, CudaPackage, CMakePackage, ROCmPackage):
     variant(
         "spla",
         default=False,
-        description="Use SPLA off-loading functionality. Only relevant when CUDA or ROCM are enabled",
+        description="Use SPLA off-loading functionality. Only relevant when CUDA or ROCM"
+        " are enabled",
     )
     variant("pytorch", default=False, description="Enable libtorch support")
     variant("quip", default=False, description="Enable quip support")
