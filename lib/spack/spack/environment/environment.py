@@ -1956,7 +1956,7 @@ class Environment:
         return [root for _, root in self.concretized_specs()]
 
     def get_by_hash(self, dag_hash: str) -> List[Spec]:
-        # If it's not a prefix we can early exit
+        # If it's not a partial hash prefix we can early exit
         early_exit = len(dag_hash) == 32
         matches = []
         for spec in traverse.traverse_nodes(
