@@ -39,7 +39,6 @@ import spack.spec
 import spack.stage
 import spack.store
 import spack.subprocess_context
-import spack.traverse
 import spack.user_environment as uenv
 import spack.util.cpus
 import spack.util.environment
@@ -51,6 +50,7 @@ import spack.util.spack_json as sjson
 import spack.util.spack_yaml as syaml
 import spack.util.url
 import spack.version
+from spack import traverse
 from spack.filesystem_view import SimpleFilesystemView, inverse_view_func_parser, view_func_parser
 from spack.installer import PackageInstaller
 from spack.schema.env import TOP_LEVEL_KEY
@@ -426,32 +426,6 @@ def _is_dev_spec_and_has_changed(spec):
     return mtime > record.installation_time
 
 
-def _spec_needs_overwrite(spec, changed_dev_specs):
-    """Check whether the current spec needs to be overwritten because either it has
-    changed itself or one of its dependencies have changed
-    """
-    # if it's not installed, we don't need to overwrite it
-    if not spec.installed:
-        return False
-
-    # If the spec itself has changed this is a trivial decision
-    if spec in changed_dev_specs:
-        return True
-
-    # if spec and all deps aren't dev builds, we don't need to overwrite it
-    if not any(spec.satisfies(c) for c in ("dev_path=*", "^dev_path=*")):
-        return False
-
-    # If any dep needs overwrite, or any dep is missing and is a dev build then
-    # overwrite this package
-    if any(
-        ((not dep.installed) and dep.satisfies("dev_path=*"))
-        or _spec_needs_overwrite(dep, changed_dev_specs)
-        for dep in spec.traverse(root=False)
-    ):
-        return True
-
-
 def _error_on_nonempty_view_dir(new_root):
     """Defensively error when the target view path already exists and is not an
     empty directory. This usually happens when the view symlink was removed, but
@@ -636,18 +610,16 @@ class ViewDescriptor:
         From the list of concretized user specs in the environment, flatten
         the dags, and filter selected, installed specs, remove duplicates on dag hash.
         """
-        dag_hash = lambda spec: spec.dag_hash()
-
         # With deps, requires traversal
         if self.link == "all" or self.link == "run":
             deptype = ("run") if self.link == "run" else ("link", "run")
             specs = list(
-                spack.traverse.traverse_nodes(
-                    concretized_root_specs, deptype=deptype, key=dag_hash
+                traverse.traverse_nodes(
+                    concretized_root_specs, deptype=deptype, key=traverse.by_dag_hash
                 )
             )
         else:
-            specs = list(dedupe(concretized_root_specs, key=dag_hash))
+            specs = list(dedupe(concretized_root_specs, key=traverse.by_dag_hash))
 
         # Filter selected, installed specs
         with spack.store.db.read_transaction():
@@ -1808,17 +1780,29 @@ class Environment:
         self.specs_by_hash[h] = concrete
 
     def _get_overwrite_specs(self):
-        # Collect all specs in the environment first before checking which ones
-        # to rebuild to avoid checking the same specs multiple times
-        specs_to_check = set()
-        for dag_hash in self.concretized_order:
-            root_spec = self.specs_by_hash[dag_hash]
-            specs_to_check.update(root_spec.traverse(root=True))
+        # Find all dev specs that were modified.
+        changed_dev_specs = [
+            s
+            for s in traverse.traverse_nodes(
+                self.concrete_roots(), order="breadth", key=traverse.by_dag_hash
+            )
+            if _is_dev_spec_and_has_changed(s)
+        ]
 
-        changed_dev_specs = set(s for s in specs_to_check if _is_dev_spec_and_has_changed(s))
-
+        # Collect their hashes, and the hashes of their installed parents.
+        # Notice: with order=breadth all changed dev specs are at depth 0,
+        # even if they occur as parents of one another.
         return [
-            s.dag_hash() for s in specs_to_check if _spec_needs_overwrite(s, changed_dev_specs)
+            spec.dag_hash()
+            for depth, spec in traverse.traverse_nodes(
+                changed_dev_specs,
+                root=True,
+                order="breadth",
+                depth=True,
+                direction="parents",
+                key=traverse.by_dag_hash,
+            )
+            if depth == 0 or spec.installed
         ]
 
     def _install_log_links(self, spec):
@@ -1925,7 +1909,7 @@ class Environment:
     def all_specs(self):
         """Return all specs, even those a user spec would shadow."""
         roots = [self.specs_by_hash[h] for h in self.concretized_order]
-        specs = [s for s in spack.traverse.traverse_nodes(roots, lambda s: s.dag_hash())]
+        specs = [s for s in traverse.traverse_nodes(roots, key=traverse.by_dag_hash)]
         specs.sort()
         return specs
 
@@ -1971,13 +1955,18 @@ class Environment:
         roots *without* associated user spec"""
         return [root for _, root in self.concretized_specs()]
 
-    def get_by_hash(self, dag_hash):
-        matches = {}
-        roots = [self.specs_by_hash[h] for h in self.concretized_order]
-        for spec in spack.traverse.traverse_nodes(roots, key=lambda s: s.dag_hash()):
+    def get_by_hash(self, dag_hash: str) -> List[Spec]:
+        # If it's not a partial hash prefix we can early exit
+        early_exit = len(dag_hash) == 32
+        matches = []
+        for spec in traverse.traverse_nodes(
+            self.concrete_roots(), key=traverse.by_dag_hash, order="breadth"
+        ):
             if spec.dag_hash().startswith(dag_hash):
-                matches[spec.dag_hash()] = spec
-        return list(matches.values())
+                matches.append(spec)
+                if early_exit:
+                    break
+        return matches
 
     def get_one_by_hash(self, dag_hash):
         """Returns the single spec from the environment which matches the
@@ -1989,11 +1978,14 @@ class Environment:
 
     def all_matching_specs(self, *specs: spack.spec.Spec) -> List[Spec]:
         """Returns all concretized specs in the environment satisfying any of the input specs"""
-        key = lambda s: s.dag_hash()
+        # Look up abstract hashes ahead of time, to avoid O(n^2) traversal.
+        specs = [s.lookup_hash() for s in specs]
+
+        # Avoid double lookup by directly calling _satisfies.
         return [
             s
-            for s in spack.traverse.traverse_nodes(self.concrete_roots(), key=key)
-            if any(s.satisfies(t) for t in specs)
+            for s in traverse.traverse_nodes(self.concrete_roots(), key=traverse.by_dag_hash)
+            if any(s._satisfies(t) for t in specs)
         ]
 
     @spack.repo.autospec
@@ -2017,9 +2009,9 @@ class Environment:
         env_root_to_user = {root.dag_hash(): user for user, root in self.concretized_specs()}
         root_matches, dep_matches = [], []
 
-        for env_spec in spack.traverse.traverse_nodes(
+        for env_spec in traverse.traverse_nodes(
             specs=[root for _, root in self.concretized_specs()],
-            key=lambda s: s.dag_hash(),
+            key=traverse.by_dag_hash,
             order="breadth",
         ):
             if not env_spec.satisfies(spec):
@@ -2093,8 +2085,8 @@ class Environment:
 
         if recurse_dependencies:
             specs.extend(
-                spack.traverse.traverse_nodes(
-                    specs, root=False, deptype=("link", "run"), key=lambda s: s.dag_hash()
+                traverse.traverse_nodes(
+                    specs, root=False, deptype=("link", "run"), key=traverse.by_dag_hash
                 )
             )
 
@@ -2103,9 +2095,7 @@ class Environment:
     def _to_lockfile_dict(self):
         """Create a dictionary to store a lockfile for this environment."""
         concrete_specs = {}
-        for s in spack.traverse.traverse_nodes(
-            self.specs_by_hash.values(), key=lambda s: s.dag_hash()
-        ):
+        for s in traverse.traverse_nodes(self.specs_by_hash.values(), key=traverse.by_dag_hash):
             spec_dict = s.node_dict_with_hashes(hash=ht.dag_hash)
             # Assumes no legacy formats, since this was just created.
             spec_dict[ht.dag_hash.name] = s.dag_hash()
@@ -2262,7 +2252,7 @@ class Environment:
 
     def update_environment_repository(self) -> None:
         """Updates the repository associated with the environment."""
-        for spec in spack.traverse.traverse_nodes(self.new_specs):
+        for spec in traverse.traverse_nodes(self.new_specs):
             if not spec.concrete:
                 raise ValueError("specs passed to environment.write() must be concrete!")
 
