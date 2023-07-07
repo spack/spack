@@ -23,7 +23,7 @@ spack:
           - py-minis-validation
           - py-morphio
           - py-morph-tool
-          - py-morphology-repair-workflow
+          - py-neuror
           - py-region-grower
           - py-cwl-registry
   packages:
@@ -57,7 +57,7 @@ spack:
     - py-entity-management
     - py-minis-validation
     - py-morphio
-    - py-morphology-repair-workflow
+    - py-neuror
     - py-morph-tool
     - py-region-grower
     - py-cwl-registry
