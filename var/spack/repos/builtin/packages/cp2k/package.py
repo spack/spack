@@ -638,7 +638,7 @@ class Cp2k(MakefilePackage, CudaPackage, CMakePackage, ROCmPackage):
             if cuda_arch == "35" and spec.satisfies("+cuda_arch_35_k20x"):
                 gpuver = "K20X"
 
-        if spec.satisfies(+rocm) and spec.satisfies("@2022:"):
+        if "@2022: +rocm" in spec:
             libs += [
                 "-L{}".format(spec["rocm"].libs.directories[0]),
                 "-L{}/stubs".format(spec["rocm"].libs.directories[0]),
