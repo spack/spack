@@ -26,6 +26,7 @@ class Ior(AutotoolsPackage):
 
     variant("hdf5", default=False, description="support IO with HDF5 backend")
     variant("ncmpi", default=False, description="support IO with NCMPI backend")
+    variant("ime", default=False, description="support IO with IME backend")
 
     depends_on("autoconf", type="build")
     depends_on("automake", type="build")
@@ -54,14 +55,9 @@ class Ior(AutotoolsPackage):
         env["CC"] = spec["mpi"].mpicc
 
         if "+hdf5" in spec:
-            config_args.append("--with-hdf5")
             config_args.append("CFLAGS=-D H5_USE_16_API")
-        else:
-            config_args.append("--without-hdf5")
 
-        if "+ncmpi" in spec:
-            config_args.append("--with-ncmpi")
-        else:
-            config_args.append("--without-ncmpi")
+        for config_arg in ["hdf5", "ime", "ncmpi"]:
+            config_args.extend(self.with_or_without(config_arg))
 
         return config_args
