@@ -262,7 +262,6 @@ class PyTensorflow(Package, CudaPackage, ROCmPackage, PythonExtension):
     # https://github.com/protocolbuffers/protobuf/issues/10051
     # https://github.com/tensorflow/tensorflow/issues/56266
     depends_on("py-protobuf@:3.19", type=("build", "run"), when="@:2.11")
-    depends_on("py-protobuf", type=("build", "run"))
     depends_on("py-setuptools", type=("build", "run"))
     depends_on("py-six@1.12:", type=("build", "run"), when="@2.1:2.3,2.7:")
     depends_on("py-six@1.15", type=("build", "run"), when="@2.4:2.6")
