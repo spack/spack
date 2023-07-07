@@ -26,10 +26,8 @@ class PyNanobind(PythonPackage):
     version("1.2.0", tag="v1.2.0", submodules=True)
 
     depends_on("python@3.8:", type=("build", "run"))
-    depends_on("py-pip", type="build")
-    depends_on("py-wheel", type="build")
     depends_on("py-setuptools@42:", type="build")
-    depends_on("py-pytest", type="test")
-    depends_on("py-scikit-build", type="run")
+    depends_on("py-scikit-build", type="build")
 
-    depends_on("cmake@3.17:", type="run")
+    depends_on("py-cmake@3.17:")
+    depends_on("py-ninja")
