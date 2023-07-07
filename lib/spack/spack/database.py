@@ -1216,7 +1216,7 @@ class Database:
             match = self.query_one(spec, **kwargs)
             if match:
                 return match.dag_hash()
-            raise KeyError("No such spec in database! %s" % spec)
+            raise KeyError("No such spec in database!")
         return key
 
     @_autospec
