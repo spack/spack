@@ -552,3 +552,8 @@ def traverse_tree(specs, cover="nodes", deptype="all", key=id, depth_first=True)
         return traverse_breadth_first_tree_nodes(None, edges)
 
     return traverse_edges(specs, order="pre", cover=cover, deptype=deptype, key=key, depth=True)
+
+
+def by_dag_hash(s: "spack.spec.Spec") -> str:
+    """Used very often as a key function for traversals."""
+    return s.dag_hash()
