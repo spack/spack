@@ -1,0 +1,11 @@
+--- a/Wrapping/Generators/Python/itkTypes.py	2020-12-08 09:59:30.000000000 -0600
++++ b/Wrapping/Generators/Python/itkTypes.py	2023-03-24 15:22:47.087028871 -0500
+@@ -75,7 +75,7 @@
+     SS = itkCType("signed short", "SS", np.int16)
+     SI = itkCType("signed int", "SI", np.int32)
+     SLL = itkCType("signed long long", "SLL", np.int64)
+-    B = itkCType("bool", "B", np.bool)
++    B = itkCType("bool", "B", np.bool_)
+ else:
+     F = itkCType("float", "F")
+     D = itkCType("double", "D")
