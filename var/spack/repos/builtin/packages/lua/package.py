@@ -7,9 +7,9 @@ import glob
 import os
 
 import spack.build_environment
-from spack.package import *
 import spack.build_systems.cmake
 import spack.build_systems.makefile
+from spack.package import *
 from spack.util.executable import Executable
 
 
@@ -298,6 +298,7 @@ class MakefileBuilder(spack.build_systems.makefile.MakefileBuilder):
                 join_path(self.prefix.lib, "pkgconfig", versioned_pc_file_name),
                 join_path(self.prefix.lib, "pkgconfig", "lua.pc"),
             )
+
 
 class CMakeBuilder(spack.build_systems.cmake.CMakeBuilder):
     def cmake_args(self):
