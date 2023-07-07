@@ -282,7 +282,7 @@ class Cp2k(MakefilePackage, CudaPackage, CMakePackage, ROCmPackage):
         "gfx90a:xnack+": "Mi250",
     }
     cuda_msg = "cp2k only supports cuda_arch {0}".format(supported_cuda_arch_list)
-    rocm_msg = "cp2k only supports andgpu_target {0}".format(supported_rocm_arch_list)
+    rocm_msg = "cp2k only supports amdgpu_target {0}".format(supported_rocm_arch_list)
 
     conflicts("+cuda", when="cuda_arch=none")
 
