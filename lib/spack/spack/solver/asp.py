@@ -2391,6 +2391,7 @@ class SpecBuilder:
                 r"^.*_propagate$",
                 r"^.*_satisfies$",
                 r"^.*_set$",
+                r"^node_compiler$",
                 r"^package_hash$",
                 r"^root$",
                 r"^virtual_node$",
