@@ -10,14 +10,14 @@ class PyPyqt6(SIPPackage):
     """PyQt6 is a comprehensive set of Python bindings for Qt v6."""
 
     homepage = "https://www.riverbankcomputing.com/software/pyqt/"
-    url = "https://files.pythonhosted.org/packages/source/P/PyQt6/PyQt6-6.4.0.tar.gz"
+    url = "https://files.pythonhosted.org/packages/source/P/PyQt6/PyQt6-6.5.1.tar.gz"
     list_url = "https://pypi.org/simple/PyQt6/"
 
-    version("6.4.0", sha256="91392469be1f491905fa9e78fa4e4059a89ab616ddf2ecfd525bc1d65c26bb93")
+    version("6.5.1", sha256="e166a0568c27bcc8db00271a5043936226690b6a4a74ce0a5caeb408040a97c3")
 
     # pyproject.toml
     depends_on("py-sip@6.5:6", type="build")
-    depends_on("py-pyqt-builder@1.11:1", type="build")
+    depends_on("py-pyqt-builder@1.15:1", type="build")
 
     # PKG-INFO
     depends_on("py-pyqt6-sip@13.4:13", type=("build", "run"))
