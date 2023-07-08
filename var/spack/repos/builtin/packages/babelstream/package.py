@@ -15,9 +15,9 @@ def find_model_flag(str):
         return ""
     return res
 
-def find_package_version( s):
+def find_package_version(s):
     try:
-        start = s.index( "-" ) + len( "-" )
+        start = s.index( "-", s.index( "-", s.index( "-" ) + len( "-" ) ) )
         end = s.index( "-", start )
         return s[start:end]
     except ValueError:
@@ -222,7 +222,14 @@ class Babelstream(CMakePackage, CudaPackage, ROCmPackage):
         std_list = ["+stddata", "+stdindices", "+stdranges"]
         if spec_string.startswith(tuple(std_list)):
             args.append("-DCMAKE_CXX_COMPILER=" + self.compiler.cxx)
-
+            if "offload" in self.spec.variants:
+                cuda_arch_list = self.spec.variants["offload"].value
+                # the architecture value is only number so append sm_ to the name
+                cuda_arch = "cc" + cuda_arch_list[0]
+                args.append("-DNVHPC_OFFLOAD=" + cuda_arch)
+                # cuda_dir = self.spec["cuda"].prefix
+                # cuda_comp = cuda_dir + "/bin/nvcc"
+                # args.append("-DCMAKE_CUDA_COMPILER=" + cuda_comp)
         # ===================================
         #             CUDA
         # ===================================
