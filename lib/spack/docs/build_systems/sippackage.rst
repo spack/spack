@@ -78,19 +78,6 @@ arguments to the configure phase, you can use:
 
 A list of valid options can be found by running ``sip-build --help``.
 
-^^^^^^^^^^^^^^^^^^^^^^
-Building out of source
-^^^^^^^^^^^^^^^^^^^^^^
-
-By default, Spack builds every ``SIPPackage`` in a ``spack-build``
-sub-directory. If, for whatever reason, you would like to build in a
-different sub-directory, simply override ``build_directory`` like so:
-
-.. code-block:: python
-
-   build_directory = "my-build"
-
-
 ^^^^^^^
 Testing
 ^^^^^^^
