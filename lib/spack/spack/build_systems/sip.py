@@ -130,7 +130,7 @@ class SIPBuilder(BaseBuilder):
         "build_directory",
     )
 
-    build_directory = "build"
+    build_directory = "spack-build"
 
     def configure(self, pkg, spec, prefix):
         """Configure the package."""
