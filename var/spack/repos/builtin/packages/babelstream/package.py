@@ -23,6 +23,7 @@ def find_package_version(s):
     except ValueError:
         return ""
 
+
 class Babelstream(CMakePackage, CudaPackage, ROCmPackage):
     """Measure memory transfer rates to/from global device memory on GPUs.
     This benchmark is similar in spirit, and based on, the STREAM benchmark for CPUs."""
@@ -179,7 +180,7 @@ class Babelstream(CMakePackage, CudaPackage, ROCmPackage):
     def cmake_args(self):
         # convert spec to string to work on it
         spec_string = str(self.spec)
-        
+
         # take only the first portion of the spec until space
         spec_string_truncate = spec_string.split(" ", 1)[0]
         model_list = find_model_flag(spec_string_truncate)  # Prints out ['cuda', 'thrust']
@@ -346,11 +347,15 @@ class Babelstream(CMakePackage, CudaPackage, ROCmPackage):
                     args.append("-DOpenCL_LIBRARY=" + rocm_dir + "/lib64/libOpenCL.so")
                 elif "intel" in self.spec.variants["backend"].value:
                     # extracting the inter compiler package version
-                    path_to_intel_compiler = os.path.basename(self.spec["intel-oneapi-compilers"].prefix)
+                    path_to_intel_compiler = os.path.basename(
+                        self.spec["intel-oneapi-compilers"].prefix
+                    )
                     comp_version = find_package_version(path_to_intel_compiler)
                     intel_lib = (
                         self.spec["intel-oneapi-compilers"].prefix
-                        + "/compiler/" + comp_version + "/linux/lib/libOpenCL.so"
+                        + "/compiler/"
+                        + comp_version
+                        + "/linux/lib/libOpenCL.so"
                     )
                     args.append("-DOpenCL_LIBRARY=" + intel_lib)
                 elif "pocl" in self.spec.variants["backend"].value:
