@@ -15,10 +15,11 @@ def find_model_flag(str):
         return ""
     return res
 
+
 def find_package_version(s):
     try:
-        start = s.index( "-", s.index( "-", s.index( "-" ) + len( "-" ) ) )
-        end = s.index( "-", start )
+        start = s.index("-", s.index("-", s.index("-") + len("-")))
+        end = s.index("-", start)
         return s[start:end]
     except ValueError:
         return ""
