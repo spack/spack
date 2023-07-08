@@ -12,10 +12,10 @@ class PyPyqt5(SIPPackage):
     Windows, OS X, Linux, iOS and Android. PyQt5 supports Qt v5."""
 
     homepage = "https://www.riverbankcomputing.com/software/pyqt/intro"
-    url = "https://files.pythonhosted.org/packages/source/P/PyQt5/PyQt5-5.15.7.tar.gz"
+    url = "https://files.pythonhosted.org/packages/source/P/PyQt5/PyQt5-5.15.9.tar.gz"
     list_url = "https://pypi.org/simple/PyQt5/"
 
-    version("5.15.7", sha256="755121a52b3a08cb07275c10ebb96576d36e320e572591db16cfdbc558101594")
+    version("5.15.9", sha256="dc41e8401a90dc3e2b692b411bd5492ab559ae27a27424eed4bd3915564ec4c0")
     version(
         "5.13.1",
         sha256="54b7f456341b89eeb3930e786837762ea67f235e886512496c4152ebe106d4af",
@@ -33,8 +33,8 @@ class PyPyqt5(SIPPackage):
     )
 
     # pyproject.toml
-    depends_on("py-sip@6.4:6", type="build")
-    depends_on("py-pyqt-builder@1.9:1", type="build")
+    depends_on("py-sip@6.6.2:6", type="build")
+    depends_on("py-pyqt-builder@1.14.1:1", type="build")
 
     # PKG-INFO
     depends_on("py-pyqt5-sip@12.11:12", type=("build", "run"))
