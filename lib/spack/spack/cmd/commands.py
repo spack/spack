@@ -9,7 +9,7 @@ import os
 import re
 import sys
 from argparse import ArgumentParser, Namespace
-from typing import IO, Any, Callable, Dict, Sequence, Set
+from typing import IO, Any, Callable, Dict, Iterable, List, Optional, Sequence, Set, Tuple, Union
 
 import llnl.util.filesystem as fs
 import llnl.util.tty as tty
@@ -271,7 +271,7 @@ class BashCompletionWriter(ArgparseCompletionWriter):
 
 
 # Map argument destination names to their complete commands
-# Earlier item in the have higher precedence
+# Earlier items in the list have higher precedence
 _dest_to_fish_complete = {
     ("activate", r"view"): '-f -a "(__fish_complete_directories)"',
     ("bootstrap root", r"path"): '-f -a "(__fish_complete_directories)"',
@@ -335,7 +335,16 @@ _dest_to_fish_complete = {
 }
 
 
-def _fish_dest_get_complete(prog, dest):
+def _fish_dest_get_complete(prog: str, dest: str) -> Optional[str]:
+    """Map from subcommand to autocompletion argument.
+
+    Args:
+        prog: Program name.
+        dest: Destination.
+
+    Returns:
+        Autocompletion argument.
+    """
     s = prog.split(None, 1)
     subcmd = s[1] if len(s) == 2 else ""
 
@@ -348,20 +357,15 @@ def _fish_dest_get_complete(prog, dest):
 class FishCompletionWriter(ArgparseCompletionWriter):
     """Write argparse output as bash programmable tab completion."""
 
-    def format(self, cmd):
-        """Returns the string representation of a single node in the
-        parser tree.
+    def format(self, cmd: Command) -> str:
+        """Return the string representation of a single node in the parser tree.
 
-        Override this in subclasses to define how each subcommand
-        should be displayed.
-
-        Parameters:
-            (Command): parsed information about a command or subcommand
+        Args:
+            cmd: Parsed information about a command or subcommand.
 
         Returns:
-            str: the string representation of this subcommand
+            String representation of a node.
         """
-
         assert cmd.optionals  # we should always at least have -h, --help
         assert not (cmd.positionals and cmd.subcommands)  # one or the other
 
@@ -377,17 +381,20 @@ class FishCompletionWriter(ArgparseCompletionWriter):
             + self.complete(cmd.prog, positionals, optionals, subcommands)
         )
 
-    def optspecs(self, prog, optionals):
+    def optspecs(
+        self,
+        prog: str,
+        optionals: List[Tuple[Sequence[str], List[str], str, Union[int, str, None], str]],
+    ) -> str:
         """Read the optionals and return the command to set optspec.
 
-        Parameters:
-            prog (str): the command name
-            optionals (list): list of optional arguments
+        Args:
+            prog: Program name.
+            optionals: List of optional arguments.
 
         Returns:
-            (str) command to set optspec variable
+            Command to set optspec variable.
         """
-
         # Variables of optspecs
         optspec_var = "__fish_spack_optspecs_" + prog.replace(" ", "_").replace("-", "_")
 
@@ -444,21 +451,28 @@ class FishCompletionWriter(ArgparseCompletionWriter):
         return "set -g %s %s\n" % (optspec_var, args)
 
     @staticmethod
-    def is_iterable(arg):
+    def is_iterable(arg: Any) -> bool:
+        """Check if a variable is iterable.
+
+        Args:
+            arg: Variable to check.
+
+        Returns:
+            True if variable is iterable, else False.
+        """
         return isinstance(arg, (list, tuple, set, frozenset))
 
     @staticmethod
-    def complete_head(prog, positional=None):
-        """Returns the head of the completion command.
+    def complete_head(prog: str, positional: Optional[str]) -> str:
+        """Return the head of the completion command.
 
-        Parameters:
-            prog (str): the full command name
-            positional (str or None): if given, it is the position after command
+        Args:
+            prog: Program name.
+            positionals: Optional positional argument.
 
         Returns:
-            (str) the head of the completion command
+            Head of the completion command.
         """
-
         # Split command and subcommand
         s = prog.split(None, 1)
         subcmd = s[1] if len(s) == 2 else ""
@@ -469,19 +483,24 @@ class FishCompletionWriter(ArgparseCompletionWriter):
             ret = 'complete -c %s -n "__fish_spack_using_command_pos %d %s"'
             return ret % (s[0], positional, subcmd)
 
-    def complete(self, prog, positionals, optionals, subcommands):
-        """Returns all the completion commands.
+    def complete(
+        self,
+        prog: str,
+        positionals: List[Tuple[str, str, Optional[Iterable[Any]], Union[int, str, None]]],
+        optionals: List[Tuple[Sequence[str], List[str], str, Union[int, str, None], str]],
+        subcommands: List[Tuple[ArgumentParser, str, Optional[str]]],
+    ) -> str:
+        """Return all the completion commands.
 
-        Parameters:
-            prog (str): the full command name
-            positionals (list): list of positional arguments
-            optionals (list): list of optional arguments
-            subcommands (list): list of subcommands
+        Args:
+            prog: Program name.
+            positionals: List of positional arguments.
+            optionals: List of optional arguments.
+            subcommands: List of subcommand parsers.
 
         Returns:
-            (str) the completion command
+            Completion command.
         """
-
         commands = []
 
         if positionals:
@@ -495,17 +514,20 @@ class FishCompletionWriter(ArgparseCompletionWriter):
 
         return "".join(commands)
 
-    def positionals(self, prog, positionals):
-        """Returns the completion for positional arguments.
+    def positionals(
+        self,
+        prog: str,
+        positionals: List[Tuple[str, str, Optional[Iterable[Any]], Union[int, str, None]]],
+    ) -> str:
+        """Return the completion for positional arguments.
 
-        Parameters:
-            prog (str): the full command name
-            positionals (list): list of positional arguments
+        Args:
+            prog: Program name.
+            positionals: List of positional arguments.
 
         Returns:
-            (str) the completion command
+            Completion command.
         """
-
         commands = []
 
         for idx, (args, help, choices, nargs) in enumerate(positionals):
@@ -532,29 +554,31 @@ class FishCompletionWriter(ArgparseCompletionWriter):
 
         return "\n".join(commands) + "\n"
 
-    def prog_comment(self, prog):
-        """Returns a comment line for the command.
+    def prog_comment(self, prog: str) -> str:
+        """Return a comment line for the command.
 
-        Parameters:
-            prog (str): the full command name
+        Args:
+            prog: Program name.
 
         Returns:
-            (str) the comment line
+            Comment line.
         """
-
         return "\n# %s\n" % prog
 
-    def optionals(self, prog, optionals):
-        """Returns the completion for optional arguments.
+    def optionals(
+        self,
+        prog: str,
+        optionals: List[Tuple[Sequence[str], List[str], str, Union[int, str, None], str]],
+    ) -> str:
+        """Return the completion for optional arguments.
 
-        Parameters:
-            prog (str): the full command name
-            optionals (list): list of optional arguments
+        Args:
+            prog: Program name.
+            optionals: List of optional arguments.
 
         Returns:
-            (str) the completion command
+            Completion command.
         """
-
         commands = []
         head = self.complete_head(prog)
 
@@ -610,17 +634,18 @@ class FishCompletionWriter(ArgparseCompletionWriter):
 
         return "\n".join(commands) + "\n"
 
-    def subcommands(self, prog, subcommands):
-        """Returns the completion for subcommands.
+    def subcommands(
+        self, prog: str, subcommands: List[Tuple[ArgumentParser, str, Optional[str]]]
+    ) -> str:
+        """Return the completion for subcommands.
 
-        Parameters:
-            prog (str): the full command name
-            subcommands (list): list of subcommands
+        Args:
+            prog: Program name.
+            subcommands: List of subcommand parsers.
 
         Returns:
-            (str) the completion command
+            Completion command.
         """
-
         commands = []
         head = self.complete_head(prog, 0)
 
