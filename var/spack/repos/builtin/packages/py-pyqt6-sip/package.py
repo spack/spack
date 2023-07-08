@@ -10,8 +10,8 @@ class PyPyqt6Sip(PythonPackage):
     """The sip module support for PyQt6."""
 
     homepage = "https://www.riverbankcomputing.com/software/sip/"
-    pypi = "PyQt6-sip/PyQt6_sip-13.4.0.tar.gz"
+    pypi = "PyQt6-sip/PyQt6_sip-13.5.1.tar.gz"
 
-    version("13.4.0", sha256="6d87a3ee5872d7511b76957d68a32109352caf3b7a42a01d9ee20032b350d979")
+    version("13.5.1", sha256="d1e9141752966669576d04b37ba0b122abbc41cc9c35493751028d7d91c4dd49")
 
     depends_on("py-setuptools@30.3:", type="build")
