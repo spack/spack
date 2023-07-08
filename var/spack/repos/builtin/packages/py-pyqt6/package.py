@@ -25,6 +25,12 @@ class PyPyqt6(SIPPackage):
     # README
     depends_on("qt-base@6")
 
+    def setup_build_environment(self, env):
+        # Detected system locale encoding (US-ASCII, locale "C") is not UTF-8.
+        # Qt shall use a UTF-8 locale ("UTF-8") instead. If this causes problems,
+        # reconfigure your locale. See the locale(1) manual for more information.
+        env.set("LC_ALL", "en_US.UTF-8")
+
     def configure_args(self):
         # https://www.riverbankcomputing.com/static/Docs/PyQt6/installation.html
         return ["--confirm-license", "--no-make", "--qmake", self.spec["qt-base"].prefix.bin.qmake]
