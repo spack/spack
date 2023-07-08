@@ -23,15 +23,16 @@ class PyPyqt4(SIPPackage):
         deprecated=True,
     )
 
+    # API files can be installed regardless if QScintilla is installed or not
+    variant("qsci_api", default=False, description="Install PyQt API file for QScintilla")
+
     # Requires distutils
     depends_on("python@:3.11", type=("build", "link", "run"))
 
+    depends_on("qt@4.1:4")
+
     # configure-ng.py
     depends_on("py-sip@4.19.12:4.19.18 module=PyQt4.sip")
-
-    # README
-    depends_on("qt@4")
-    depends_on("qt@4.1:", when="@4.12.3")
 
     build_directory = "."
 
@@ -57,6 +58,8 @@ class PyPyqt4(SIPPackage):
             "--stubsdir",
             join_path(python_platlib, "PyQt4"),
         ]
+        if "+qsci_api" in self.spec:
+            args.extend(["--qsci-api", "--qsci-api-destdir", self.prefix.share.qsci])
         return args
 
     def configure(self, spec, prefix):
