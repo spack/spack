@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -8,8 +8,6 @@
 In a normal Spack installation, this is invoked from the bin/spack script
 after the system path is set up.
 """
-from __future__ import print_function
-
 import argparse
 import inspect
 import io
@@ -45,7 +43,7 @@ import spack.spec
 import spack.store
 import spack.util.debug
 import spack.util.environment
-import spack.util.executable as exe
+import spack.util.git
 import spack.util.path
 from spack.error import SpackError
 
@@ -126,6 +124,36 @@ def add_all_commands(parser):
         parser.add_command(cmd)
 
 
+def get_spack_commit():
+    """Get the Spack git commit sha.
+
+    Returns:
+        (str or None) the commit sha if available, otherwise None
+    """
+    git_path = os.path.join(spack.paths.prefix, ".git")
+    if not os.path.exists(git_path):
+        return None
+
+    git = spack.util.git.git()
+    if not git:
+        return None
+
+    rev = git(
+        "-C",
+        spack.paths.prefix,
+        "rev-parse",
+        "HEAD",
+        output=str,
+        error=os.devnull,
+        fail_on_error=False,
+    )
+    if git.returncode != 0:
+        return None
+
+    match = re.match(r"[a-f\d]{7,}$", rev)
+    return match.group(0) if match else None
+
+
 def get_version():
     """Get a descriptive version of this instance of Spack.
 
@@ -134,25 +162,9 @@ def get_version():
     The commit sha is only added when available.
     """
     version = spack.spack_version
-    git_path = os.path.join(spack.paths.prefix, ".git")
-    if os.path.exists(git_path):
-        git = exe.which("git")
-        if not git:
-            return version
-        rev = git(
-            "-C",
-            spack.paths.prefix,
-            "rev-parse",
-            "HEAD",
-            output=str,
-            error=os.devnull,
-            fail_on_error=False,
-        )
-        if git.returncode != 0:
-            return version
-        match = re.match(r"[a-f\d]{7,}$", rev)
-        if match:
-            version += " ({0})".format(match.group(0))
+    commit = get_spack_commit()
+    if commit:
+        version += " ({0})".format(commit)
 
     return version
 
@@ -183,7 +195,7 @@ def index_commands():
 class SpackHelpFormatter(argparse.RawTextHelpFormatter):
     def _format_actions_usage(self, actions, groups):
         """Formatter with more concise usage strings."""
-        usage = super(SpackHelpFormatter, self)._format_actions_usage(actions, groups)
+        usage = super()._format_actions_usage(actions, groups)
 
         # Eliminate any occurrence of two or more consecutive spaces
         usage = re.sub(r"[ ]{2,}", " ", usage)
@@ -198,7 +210,7 @@ class SpackHelpFormatter(argparse.RawTextHelpFormatter):
 
     def add_arguments(self, actions):
         actions = sorted(actions, key=operator.attrgetter("option_strings"))
-        super(SpackHelpFormatter, self).add_arguments(actions)
+        super().add_arguments(actions)
 
 
 class SpackArgumentParser(argparse.ArgumentParser):
@@ -318,7 +330,7 @@ class SpackArgumentParser(argparse.ArgumentParser):
         if sys.version_info[:2] > (3, 6):
             kwargs.setdefault("required", True)
 
-        sp = super(SpackArgumentParser, self).add_subparsers(**kwargs)
+        sp = super().add_subparsers(**kwargs)
         # This monkey patching is needed for Python 3.6, which supports
         # having a required subparser but don't expose the API used above
         if sys.version_info[:2] == (3, 6):
@@ -368,7 +380,7 @@ class SpackArgumentParser(argparse.ArgumentParser):
             return self.format_help_sections(level)
         else:
             # in subparsers, self.prog is, e.g., 'spack install'
-            return super(SpackArgumentParser, self).format_help()
+            return super().format_help()
 
     def _check_value(self, action, value):
         # converted value must be one of the choices (if specified)
@@ -459,7 +471,7 @@ def make_argument_parser(**kwargs):
         dest="env_dir",
         metavar="DIR",
         action="store",
-        help="run with an environment directory (ignore named environments)",
+        help="run with an environment directory (ignore managed environments)",
     )
     env_group.add_argument(
         "-E",
@@ -575,7 +587,7 @@ def setup_main_options(args):
     if args.debug:
         spack.util.debug.register_interrupt_handler()
         spack.config.set("config:debug", True, scope="command_line")
-        spack.util.environment.tracing_enabled = True
+        spack.util.environment.TRACING_ENABLED = True
 
     if args.timestamp:
         tty.set_timestamp(True)
@@ -605,6 +617,10 @@ def setup_main_options(args):
     for config_var in args.config_vars or []:
         spack.config.add(fullpath=config_var, scope="command_line")
 
+    # On Windows10 console handling for ASCI/VT100 sequences is not
+    # on by default. Turn on before we try to write to console
+    # with color
+    color.try_enable_terminal_color_on_windows()
     # when to use color (takes always, auto, or never)
     color.set_color_when(args.color)
 
@@ -635,7 +651,7 @@ def _invoke_command(command, parser, args, unknown_args):
     return 0 if return_val is None else return_val
 
 
-class SpackCommand(object):
+class SpackCommand:
     """Callable object that invokes a spack command (for testing).
 
     Example usage::
@@ -839,6 +855,23 @@ def print_setup_info(*info):
             shell_set("_sp_module_prefix", "not_installed")
 
 
+def restore_macos_dyld_vars():
+    """
+    Spack mutates DYLD_* variables in `spack load` and `spack env activate`.
+    Unlike Linux, macOS SIP clears these variables in new processes, meaning
+    that os.environ["DYLD_*"] in our Python process is not the same as the user's
+    shell. Therefore, we store the user's DYLD_* variables in SPACK_DYLD_* and
+    restore them here.
+    """
+    if not sys.platform == "darwin":
+        return
+
+    for dyld_var in ("DYLD_LIBRARY_PATH", "DYLD_FALLBACK_LIBRARY_PATH"):
+        stored_var_name = f"SPACK_{dyld_var}"
+        if stored_var_name in os.environ:
+            os.environ[dyld_var] = os.environ[stored_var_name]
+
+
 def _main(argv=None):
     """Logic for the main entry point for the Spack command.
 
@@ -871,18 +904,6 @@ def _main(argv=None):
     parser.add_argument("command", nargs=argparse.REMAINDER)
     args, unknown = parser.parse_known_args(argv)
 
-    # Recover stored LD_LIBRARY_PATH variables from spack shell function
-    # This is necessary because MacOS System Integrity Protection clears
-    # (DY?)LD_LIBRARY_PATH variables on process start.
-    # Spack clears these variables before building and installing packages,
-    # but needs to know the prior state for commands like `spack load` and
-    # `spack env activate that modify the user environment.
-    recovered_vars = ("LD_LIBRARY_PATH", "DYLD_LIBRARY_PATH", "DYLD_FALLBACK_LIBRARY_PATH")
-    for var in recovered_vars:
-        stored_var_name = "SPACK_%s" % var
-        if stored_var_name in os.environ:
-            os.environ[var] = os.environ[stored_var_name]
-
     # Just print help and exit if run with no arguments at all
     no_args = (len(sys.argv) == 1) if argv is None else (len(argv) == 0)
     if no_args:
@@ -904,6 +925,9 @@ def _main(argv=None):
     # We set command line options (like --debug), then command line config
     # scopes, then environment configuration here.
     # ------------------------------------------------------------------------
+
+    # Make spack load / env activate work on macOS
+    restore_macos_dyld_vars()
 
     # make spack.config aware of any command line configuration scopes
     if args.config_scopes:

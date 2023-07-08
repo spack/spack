@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -13,7 +13,7 @@ class Hdf5VfdGds(CMakePackage, CudaPackage):
     homepage = "https://github.com/hpc-io/vfd-gds"
     url = "https://github.com/hpc-io/vfd-gds/archive/refs/tags/1.0.1.tar.gz"
     git = "https://github.com/hpc-io/vfd-gds.git"
-    maintainers = ["hyoklee", "lrknox"]
+    maintainers("hyoklee", "lrknox")
 
     # Versions
     version("master", branch="master")
@@ -27,13 +27,11 @@ class Hdf5VfdGds(CMakePackage, CudaPackage):
     # system can obtaion via `find_library`.  Packaging issues fixed in 11.7.1.
     conflicts("^cuda@:11.7.0")
     depends_on("cmake@3.12:", type="build")
-    depends_on("hdf5@1.13.0:")
+    depends_on("hdf5@1.14.0:")
 
     def cmake_args(self):
         # CMake options
-        args = [
-            self.define("BUILD_TESTING", self.run_tests),
-        ]
+        args = [self.define("BUILD_TESTING", self.run_tests)]
 
         return args
 

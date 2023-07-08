@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -14,7 +14,7 @@ class Sarus(CMakePackage):
     homepage = "https://github.com/eth-cscs/sarus"
     url = "https://github.com/eth-cscs/sarus/archive/1.3.3.tar.gz"
     git = "https://github.com/eth-cscs/sarus.git"
-    maintainers = ["Madeeks", "taliaga", "teonnik"]
+    maintainers("Madeeks", "taliaga", "teonnik")
 
     version("develop", branch="develop")
     version("master", branch="master")

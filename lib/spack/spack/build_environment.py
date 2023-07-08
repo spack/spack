@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -43,6 +43,7 @@ import types
 from typing import List, Tuple
 
 import llnl.util.tty as tty
+from llnl.util.filesystem import join_path
 from llnl.util.lang import dedupe
 from llnl.util.symlink import symlink
 from llnl.util.tty.color import cescape, colorize
@@ -53,7 +54,6 @@ import spack.build_systems.meson
 import spack.build_systems.python
 import spack.builder
 import spack.config
-import spack.install_test
 import spack.main
 import spack.package_base
 import spack.paths
@@ -66,16 +66,17 @@ import spack.user_environment
 import spack.util.path
 import spack.util.pattern
 from spack.error import NoHeadersError, NoLibrariesError
+from spack.install_test import spack_install_test_log
 from spack.installer import InstallError
 from spack.util.cpus import cpus_available
 from spack.util.environment import (
+    SYSTEM_DIRS,
     EnvironmentModifications,
     env_flag,
     filter_system_paths,
     get_path,
     inspect_path,
     is_system_path,
-    system_dirs,
     validate,
 )
 from spack.util.executable import Executable
@@ -147,7 +148,7 @@ class MakeExecutable(Executable):
 
     def __init__(self, name, jobs, **kwargs):
         supports_jobserver = kwargs.pop("supports_jobserver", True)
-        super(MakeExecutable, self).__init__(name, **kwargs)
+        super().__init__(name, **kwargs)
         self.supports_jobserver = supports_jobserver
         self.jobs = jobs
 
@@ -174,7 +175,7 @@ class MakeExecutable(Executable):
             if jobs_env_jobs is not None:
                 kwargs["extra_env"] = {jobs_env: str(jobs_env_jobs)}
 
-        return super(MakeExecutable, self).__call__(*args, **kwargs)
+        return super().__call__(*args, **kwargs)
 
 
 def _on_cray():
@@ -397,7 +398,7 @@ def set_compiler_environment_variables(pkg, env):
 
     env.set("SPACK_COMPILER_SPEC", str(spec.compiler))
 
-    env.set("SPACK_SYSTEM_DIRS", ":".join(system_dirs))
+    env.set("SPACK_SYSTEM_DIRS", ":".join(SYSTEM_DIRS))
 
     compiler.setup_custom_environment(pkg, env)
 
@@ -485,7 +486,13 @@ def set_wrapper_variables(pkg, env):
             query = pkg.spec[dep.name]
             dep_link_dirs = list()
             try:
+                # In some circumstances (particularly for externals) finding
+                # libraries packages can be time consuming, so indicate that
+                # we are performing this operation (and also report when it
+                # finishes).
+                tty.debug("Collecting libraries for {0}".format(dep.name))
                 dep_link_dirs.extend(query.libs.directories)
+                tty.debug("Libraries for {0} have been collected.".format(dep.name))
             except NoLibrariesError:
                 tty.debug("No libraries found for {0}".format(dep.name))
 
@@ -582,16 +589,20 @@ def set_module_variables_for_package(pkg):
 
     # TODO: make these build deps that can be installed if not found.
     m.make = MakeExecutable("make", jobs)
-    m.gmake = MakeExecutable("gmake", jobs)
     m.ninja = MakeExecutable("ninja", jobs, supports_jobserver=False)
+    # TODO: johnwparent: add package or builder support to define these build tools
+    # for now there is no entrypoint for builders to define these on their
+    # own
+    if sys.platform == "win32":
+        m.nmake = Executable("nmake")
+        m.msbuild = Executable("msbuild")
+        # analog to configure for win32
+        m.cscript = Executable("cscript")
 
     # Find the configure script in the archive path
     # Don't use which for this; we want to find it in the current dir.
     m.configure = Executable("./configure")
 
-    if sys.platform == "win32":
-        m.nmake = Executable("nmake")
-        m.msbuild = Executable("msbuild")
     # Standard CMake arguments
     m.std_cmake_args = spack.build_systems.cmake.CMakeBuilder.std_args(pkg)
     m.std_meson_args = spack.build_systems.meson.MesonBuilder.std_args(pkg)
@@ -767,7 +778,9 @@ def setup_package(pkg, dirty, context="build"):
         set_compiler_environment_variables(pkg, env_mods)
         set_wrapper_variables(pkg, env_mods)
 
+    tty.debug("setup_package: grabbing modifications from dependencies")
     env_mods.extend(modifications_from_dependencies(pkg.spec, context, custom_mods_only=False))
+    tty.debug("setup_package: collected all modifications from dependencies")
 
     # architecture specific setup
     platform = spack.platforms.by_name(pkg.spec.architecture.platform)
@@ -775,6 +788,7 @@ def setup_package(pkg, dirty, context="build"):
     platform.setup_platform_environment(pkg, env_mods)
 
     if context == "build":
+        tty.debug("setup_package: setup build environment for root")
         builder = spack.builder.create(pkg)
         builder.setup_build_environment(env_mods)
 
@@ -785,6 +799,7 @@ def setup_package(pkg, dirty, context="build"):
                 " includes and omit it when invoked with '--cflags'."
             )
     elif context == "test":
+        tty.debug("setup_package: setup test environment for root")
         env_mods.extend(
             inspect_path(
                 pkg.spec.prefix,
@@ -801,6 +816,7 @@ def setup_package(pkg, dirty, context="build"):
     # Load modules on an already clean environment, just before applying Spack's
     # own environment modifications. This ensures Spack controls CC/CXX/... variables.
     if need_compiler:
+        tty.debug("setup_package: loading compiler modules")
         for mod in pkg.compiler.modules:
             load_module(mod)
 
@@ -938,6 +954,7 @@ def modifications_from_dependencies(
             _make_runnable(dep, env)
 
     def add_modifications_for_dep(dep):
+        tty.debug("Adding env modifications for {0}".format(dep.name))
         # Some callers of this function only want the custom modifications.
         # For callers that want both custom and default modifications, we want
         # to perform the default modifications here (this groups custom
@@ -963,6 +980,7 @@ def modifications_from_dependencies(
                 builder.setup_dependent_build_environment(env, spec)
             else:
                 dpkg.setup_dependent_run_environment(env, spec)
+        tty.debug("Added env modifications for {0}".format(dep.name))
 
     # Note that we want to perform environment modifications in a fixed order.
     # The Spec.traverse method provides this: i.e. in addition to
@@ -1011,7 +1029,6 @@ def get_cmake_prefix_path(pkg):
 def _setup_pkg_and_run(
     serialized_pkg, function, kwargs, child_pipe, input_multiprocess_fd, jsfd1, jsfd2
 ):
-
     context = kwargs.get("context", "build")
 
     try:
@@ -1058,19 +1075,18 @@ def _setup_pkg_and_run(
                 # 'pkg' is not defined yet
                 pass
         elif context == "test":
-            logfile = os.path.join(
-                pkg.test_suite.stage, spack.install_test.TestSuite.test_log_name(pkg.spec)
-            )
+            logfile = os.path.join(pkg.test_suite.stage, pkg.test_suite.test_log_name(pkg.spec))
 
         error_msg = str(exc)
         if isinstance(exc, (spack.multimethod.NoSuchMethodError, AttributeError)):
+            process = "test the installation" if context == "test" else "build from sources"
             error_msg = (
-                "The '{}' package cannot find an attribute while trying to build "
-                "from sources. This might be due to a change in Spack's package format "
+                "The '{}' package cannot find an attribute while trying to {}. "
+                "This might be due to a change in Spack's package format "
                 "to support multiple build-systems for a single package. You can fix this "
-                "by updating the build recipe, and you can also report the issue as a bug. "
+                "by updating the {} recipe, and you can also report the issue as a bug. "
                 "More information at https://spack.readthedocs.io/en/latest/packaging_guide.html#installation-procedure"
-            ).format(pkg.name)
+            ).format(pkg.name, process, context)
             error_msg = colorize("@*R{{{}}}".format(error_msg))
             error_msg = "{}\n\n{}".format(str(exc), error_msg)
 
@@ -1199,6 +1215,9 @@ def start_build_process(pkg, function, kwargs):
     return child_result
 
 
+CONTEXT_BASES = (spack.package_base.PackageBase, spack.build_systems._checks.BaseBuilder)
+
+
 def get_package_context(traceback, context=3):
     """Return some context for an error message when the build fails.
 
@@ -1227,32 +1246,38 @@ def get_package_context(traceback, context=3):
 
     stack = make_stack(traceback)
 
+    basenames = tuple(base.__name__ for base in CONTEXT_BASES)
     for tb in stack:
         frame = tb.tb_frame
         if "self" in frame.f_locals:
-            # Find the first proper subclass of PackageBase.
+            # Find the first proper subclass of the PackageBase or BaseBuilder, but
+            # don't provide context if the code is actually in the base classes.
             obj = frame.f_locals["self"]
-            if isinstance(obj, spack.package_base.PackageBase):
+            func = getattr(obj, tb.tb_frame.f_code.co_name, "")
+            if func:
+                typename, *_ = func.__qualname__.partition(".")
+
+            if isinstance(obj, CONTEXT_BASES) and typename not in basenames:
                 break
     else:
         return None
 
     # We found obj, the Package implementation we care about.
     # Point out the location in the install method where we failed.
-    lines = [
-        "{0}:{1:d}, in {2}:".format(
-            inspect.getfile(frame.f_code),
-            frame.f_lineno - 1,  # subtract 1 because f_lineno is 0-indexed
-            frame.f_code.co_name,
-        )
-    ]
+    filename = inspect.getfile(frame.f_code)
+    lineno = frame.f_lineno
+    if os.path.basename(filename) == "package.py":
+        # subtract 1 because we inject a magic import at the top of package files.
+        # TODO: get rid of the magic import.
+        lineno -= 1
+
+    lines = ["{0}:{1:d}, in {2}:".format(filename, lineno, frame.f_code.co_name)]
 
     # Build a message showing context in the install method.
     sourcelines, start = inspect.getsourcelines(frame)
 
     # Calculate lineno of the error relative to the start of the function.
-    # Subtract 1 because f_lineno is 0-indexed.
-    fun_lineno = frame.f_lineno - start - 1
+    fun_lineno = lineno - start
     start_ctx = max(0, fun_lineno - context)
     sourcelines = sourcelines[start_ctx : fun_lineno + context + 1]
 
@@ -1307,7 +1332,7 @@ class ChildError(InstallError):
     build_errors = [("spack.util.executable", "ProcessError")]
 
     def __init__(self, msg, module, classname, traceback_string, log_name, log_type, context):
-        super(ChildError, self).__init__(msg)
+        super().__init__(msg)
         self.module = module
         self.name = classname
         self.traceback = traceback_string
@@ -1342,6 +1367,13 @@ class ChildError(InstallError):
         if have_log:
             out.write("See {0} log for details:\n".format(self.log_type))
             out.write("  {0}\n".format(self.log_name))
+
+        # Also output the test log path IF it exists
+        if self.context != "test":
+            test_log = join_path(os.path.dirname(self.log_name), spack_install_test_log)
+            if os.path.isfile(test_log):
+                out.write("\nSee test log for details:\n")
+                out.write("  {0}\n".format(test_log))
 
         return out.getvalue()
 

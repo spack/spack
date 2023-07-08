@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -11,8 +11,9 @@ class FuseOverlayfs(AutotoolsPackage):
 
     homepage = "https://github.com/containers/fuse-overlayfs"
     url = "https://github.com/containers/fuse-overlayfs/archive/v1.1.2.tar.gz"
-    maintainers = ["haampie"]
+    maintainers("haampie")
 
+    version("1.10", sha256="4351eaed7cf26a5012c14c6e0fc883ef65a7b5dcc95ba129ce485904106c25a9")
     version("1.7.1", sha256="fe2c076aed7b8669e7970301a99c0b197759b611035d8199de4c0add7d2fb2b4")
     version("1.7", sha256="e4d9a794d270e237a38e7ced95af95ad15268e0584eab981ed7c7b3758b95995")
     version("1.6", sha256="5606c5c1e4e0d7063f3f50a72c906f23b7a505784d20dc40fff9e4b2b802d5f4")

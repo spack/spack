@@ -1,9 +1,7 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
-
-from __future__ import print_function
 
 import codecs
 import errno
@@ -17,6 +15,7 @@ import sys
 import traceback
 import urllib.parse
 from html.parser import HTMLParser
+from pathlib import Path, PurePosixPath
 from urllib.error import URLError
 from urllib.request import HTTPSHandler, Request, build_opener
 
@@ -50,9 +49,10 @@ def _urlopen():
     without_ssl = build_opener(s3, gcs, HTTPSHandler(context=ssl._create_unverified_context()))
 
     # And dynamically dispatch based on the config:verify_ssl.
-    def dispatch_open(*args, **kwargs):
+    def dispatch_open(fullurl, data=None, timeout=None):
         opener = with_ssl if spack.config.get("config:verify_ssl", True) else without_ssl
-        return opener.open(*args, **kwargs)
+        timeout = timeout or spack.config.get("config:connect_timeout", 10)
+        return opener.open(fullurl, data, timeout)
 
     return dispatch_open
 
@@ -74,7 +74,7 @@ class LinkParser(HTMLParser):
     links.  Good enough for a really simple spider."""
 
     def __init__(self):
-        HTMLParser.__init__(self)
+        super().__init__()
         self.links = []
 
     def handle_starttag(self, tag, attrs):
@@ -84,16 +84,30 @@ class LinkParser(HTMLParser):
                     self.links.append(val)
 
 
+class IncludeFragmentParser(HTMLParser):
+    """This parser takes an HTML page and selects the include-fragments,
+    used on GitHub, https://github.github.io/include-fragment-element."""
+
+    def __init__(self):
+        super().__init__()
+        self.links = []
+
+    def handle_starttag(self, tag, attrs):
+        if tag == "include-fragment":
+            for attr, val in attrs:
+                if attr == "src":
+                    self.links.append(val)
+
+
 def read_from_url(url, accept_content_type=None):
     if isinstance(url, str):
         url = urllib.parse.urlparse(url)
 
     # Timeout in seconds for web requests
-    timeout = spack.config.get("config:connect_timeout", 10)
     request = Request(url.geturl(), headers={"User-Agent": SPACK_USER_AGENT})
 
     try:
-        response = urlopen(request, timeout=timeout)
+        response = urlopen(request)
     except URLError as err:
         raise SpackWebError("Download failed: {}".format(str(err)))
 
@@ -483,7 +497,8 @@ def list_url(url, recursive=False):
 
     if local_path:
         if recursive:
-            return list(_iter_local_prefix(local_path))
+            # convert backslash to forward slash as required for URLs
+            return [str(PurePosixPath(Path(p))) for p in list(_iter_local_prefix(local_path))]
         return [
             subpath
             for subpath in os.listdir(local_path)
@@ -550,9 +565,38 @@ def spider(root_urls, depth=0, concurrency=32):
             page = codecs.getreader("utf-8")(response).read()
             pages[response_url] = page
 
-            # Parse out the links in the page
+            # Parse out the include-fragments in the page
+            # https://github.github.io/include-fragment-element
+            include_fragment_parser = IncludeFragmentParser()
+            include_fragment_parser.feed(page)
+
+            fragments = set()
+            while include_fragment_parser.links:
+                raw_link = include_fragment_parser.links.pop()
+                abs_link = url_util.join(response_url, raw_link.strip(), resolve_href=True)
+
+                try:
+                    # This seems to be text/html, though text/fragment+html is also used
+                    fragment_response_url, _, fragment_response = read_from_url(
+                        abs_link, "text/html"
+                    )
+                except Exception as e:
+                    msg = f"Error reading fragment: {(type(e), str(e))}:{traceback.format_exc()}"
+                    tty.debug(msg)
+
+                if not fragment_response_url or not fragment_response:
+                    continue
+
+                fragment = codecs.getreader("utf-8")(fragment_response).read()
+                fragments.add(fragment)
+
+                pages[fragment_response_url] = fragment
+
+            # Parse out the links in the page and all fragments
             link_parser = LinkParser()
             link_parser.feed(page)
+            for fragment in fragments:
+                link_parser.feed(fragment)
 
             while link_parser.links:
                 raw_link = link_parser.links.pop()
@@ -694,7 +738,8 @@ def find_versions_of_archive(
 
         # We'll be a bit more liberal and just look for the archive
         # part, not the full path.
-        url_regex = os.path.basename(url_regex)
+        # this is a URL so it is a posixpath even on Windows
+        url_regex = PurePosixPath(url_regex).name
 
         # We need to add a / to the beginning of the regex to prevent
         # Spack from picking up similarly named packages like:
@@ -783,6 +828,36 @@ def get_header(headers, header_name):
         raise
 
 
+def parse_etag(header_value):
+    """Parse a strong etag from an ETag: <value> header value.
+    We don't allow for weakness indicators because it's unclear
+    what that means for cache invalidation."""
+    if header_value is None:
+        return None
+
+    # First follow rfc7232 section 2.3 mostly:
+    #  ETag       = entity-tag
+    #  entity-tag = [ weak ] opaque-tag
+    #  weak       = %x57.2F ; "W/", case-sensitive
+    #  opaque-tag = DQUOTE *etagc DQUOTE
+    #  etagc      = %x21 / %x23-7E / obs-text
+    #             ; VCHAR except double quotes, plus obs-text
+    # obs-text    = %x80-FF
+
+    # That means quotes are required.
+    valid = re.match(r'"([\x21\x23-\x7e\x80-\xFF]+)"$', header_value)
+    if valid:
+        return valid.group(1)
+
+    # However, not everybody adheres to the RFC (some servers send
+    # wrong etags, but also s3:// is simply a different standard).
+    # In that case, it's common that quotes are omitted, everything
+    # else stays the same.
+    valid = re.match(r"([\x21\x23-\x7e\x80-\xFF]+)$", header_value)
+
+    return valid.group(1) if valid else None
+
+
 class FetchError(spack.error.SpackError):
     """Superclass for fetch-related errors."""
 
@@ -795,7 +870,5 @@ class NoNetworkConnectionError(SpackWebError):
     """Raised when an operation can't get an internet connection."""
 
     def __init__(self, message, url):
-        super(NoNetworkConnectionError, self).__init__(
-            "No network connection: " + str(message), "URL was: " + str(url)
-        )
+        super().__init__("No network connection: " + str(message), "URL was: " + str(url))
         self.url = url

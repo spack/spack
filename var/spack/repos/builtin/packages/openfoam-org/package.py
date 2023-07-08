@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -61,6 +61,7 @@ class OpenfoamOrg(Package):
     and owner of the OPENFOAM trademark.
     """
 
+    maintainers("kjrstory")
     homepage = "https://www.openfoam.org/"
     baseurl = "https://github.com/OpenFOAM"
     url = "https://github.com/OpenFOAM/OpenFOAM-4.x/archive/version-4.1.tar.gz"
@@ -307,9 +308,7 @@ class OpenfoamOrg(Package):
             }
 
         if "+metis" in spec:
-            self.etc_config["metis"] = {
-                "METIS_ARCH_PATH": spec["metis"].prefix,
-            }
+            self.etc_config["metis"] = {"METIS_ARCH_PATH": spec["metis"].prefix}
 
         # Write prefs files according to the configuration.
         # Only need prefs.sh for building, but install both for end-users

@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -249,7 +249,7 @@ def view(parser, args):
             *specs,
             with_dependencies=with_dependencies,
             exclude=args.exclude,
-            with_dependents=not args.no_remove_dependents
+            with_dependents=not args.no_remove_dependents,
         )
 
     elif args.action in actions_status:

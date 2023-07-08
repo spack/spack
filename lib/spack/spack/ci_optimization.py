@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -43,7 +43,6 @@ def matches(obj, proto):
         return all((key in obj and matches(obj[key], val)) for key, val in proto.items())
 
     if isinstance(obj, collections.abc.Sequence) and not isinstance(obj, str):
-
         if not (isinstance(proto, collections.abc.Sequence) and not isinstance(proto, str)):
             return False
 

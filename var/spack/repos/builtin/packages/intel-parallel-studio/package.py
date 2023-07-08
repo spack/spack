@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -15,7 +15,7 @@ class IntelParallelStudio(IntelPackage):
 
     homepage = "https://software.intel.com/en-us/intel-parallel-studio-xe"
 
-    maintainers = ["rscohn2"]
+    maintainers("rscohn2")
 
     depends_on("patchelf", type="build")
 
@@ -596,7 +596,7 @@ class IntelParallelStudio(IntelPackage):
         )
 
     def setup_run_environment(self, env):
-        super(IntelParallelStudio, self).setup_run_environment(env)
+        super().setup_run_environment(env)
 
         for name, value in self.mpi_compiler_wrappers.items():
             env.set(name, value)

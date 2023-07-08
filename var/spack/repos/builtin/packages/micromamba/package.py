@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -21,19 +21,16 @@ class Micromamba(CMakePackage):
     homepage = "https://mamba.readthedocs.io/"
     url = "https://github.com/mamba-org/mamba/archive/micromamba-1.1.0.tar.gz"
 
-    maintainers = ["charmoniumQ"]
+    maintainers("charmoniumQ")
 
+    version("1.4.2", sha256="dce034908d02d991c5e9aadeb9d01f139d027ba199aaeb1d47d543e3f24895d1")
     version("1.1.0", sha256="e2392cd90221234ae8ea92b37f40829fbe36d80278056269aa1994a5efe7f530")
 
     variant(
         "linkage",
         default="dynamic",
         description=f"See MICROMAMBA_LINKAGE in {linkage_url}.",
-        values=(
-            "dynamic",
-            "static",
-            # "full_static",
-        ),
+        values=("dynamic", conditional("static", when="@1.1.0")),
         multi=False,
     )
 
@@ -60,6 +57,9 @@ class Micromamba(CMakePackage):
         # https://github.com/mamba-org/mamba/blob/micromamba-1.0.0/micromamba/src/common_options.hpp#L12
         depends_on("cli11@2.2:", type="link")
 
+        depends_on("zstd build_system=cmake", type="link", when="@1.4.0:")
+
+        # 1.4.2 made the static build the old "full_static" build and it needs some work.
     with when("linkage=static"):
         # When linkage is static, BUILD_STATIC=ON
         # and then

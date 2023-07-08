@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -14,7 +14,7 @@ class Cabana(CMakePackage):
     git = "https://github.com/ECP-copa/Cabana.git"
     url = "https://github.com/ECP-copa/Cabana/archive/0.5.0.tar.gz"
 
-    maintainers = ["junghans", "streeve", "sslattery"]
+    maintainers("junghans", "streeve", "sslattery")
 
     tags = ["e4s", "ecp"]
 
@@ -36,6 +36,7 @@ class Cabana(CMakePackage):
     variant("arborx", default=False, description="Build with ArborX support")
     variant("heffte", default=False, description="Build with heFFTe support")
     variant("hypre", default=False, description="Build with HYPRE support")
+    variant("silo", default=False, description="Build with SILO support")
     variant("cajita", default=False, description="Build Cajita subpackage")
     variant("testing", default=False, description="Build unit tests")
     variant("examples", default=False, description="Build tutorial examples")
@@ -44,7 +45,7 @@ class Cabana(CMakePackage):
     depends_on("cmake@3.9:", type="build", when="@:0.4.0")
     depends_on("cmake@3.16:", type="build", when="@0.5.0:")
     depends_on("googletest", type="build", when="testing")
-    _versions = {":0.2.0": "-legacy", "0.3.0": "@3.1:", "0.4.0": "@3.2:", "0.5.0": "@3.2:"}
+    _versions = {":0.2": "-legacy", "0.3:": "@3.1:", "0.4:": "@3.2:", "master": "@3.4:"}
     for _version in _versions:
         _kk_version = _versions[_version]
         for _backend in _kokkos_backends:
@@ -62,6 +63,7 @@ class Cabana(CMakePackage):
     # compatibilty to later minor versions.
     depends_on("heffte@2.0.0", when="@0.4.0+heffte")
     depends_on("heffte@2.1.0", when="@0.5.0:+heffte")
+    depends_on("silo", when="@0.5.0:+silo")
     depends_on("mpi", when="+mpi")
 
     conflicts("+cajita ~mpi")
@@ -73,7 +75,7 @@ class Cabana(CMakePackage):
         options = [self.define_from_variant("BUILD_SHARED_LIBS", "shared")]
 
         enable = ["CAJITA", "TESTING", "EXAMPLES", "PERFORMANCE_TESTING"]
-        require = ["ARBORX", "HEFFTE", "HYPRE"]
+        require = ["ARBORX", "HEFFTE", "HYPRE", "SILO"]
 
         # These variables were removed in 0.3.0 (where backends are
         # automatically used from Kokkos)

@@ -1,10 +1,9 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import argparse
-import sys
 
 import pytest
 
@@ -12,8 +11,6 @@ import spack.cmd.info
 from spack.main import SpackCommand
 
 info = SpackCommand("info")
-
-pytestmark = pytest.mark.skipif(sys.platform == "win32", reason="Not yet implemented on Windows")
 
 
 @pytest.fixture(scope="module")
@@ -59,11 +56,7 @@ def test_info_noversion(mock_packages, print_buffer):
 
 
 @pytest.mark.parametrize(
-    "pkg_query,expected",
-    [
-        ("zlib", "False"),
-        ("gcc", "True (version, variants)"),
-    ],
+    "pkg_query,expected", [("zlib", "False"), ("gcc", "True (version, variants)")]
 )
 def test_is_externally_detectable(pkg_query, expected, parser, print_buffer):
     args = parser.parse_args(["--detectable", pkg_query])

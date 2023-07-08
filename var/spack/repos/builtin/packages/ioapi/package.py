@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -13,7 +13,7 @@ class Ioapi(MakefilePackage):
 
     homepage = "https://www.cmascenter.org/ioapi/"
     url = "https://www.cmascenter.org/ioapi/download/ioapi-3.2.tar.gz"
-    maintainers = ["omsai"]
+    maintainers("omsai")
     # This checksum is somewhat meaningless because upstream updates the tarball
     # without incrementing the version despite requests no to do this.
     # Therefore the checksum fails everytime upstream silently updates the

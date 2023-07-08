@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -12,7 +12,7 @@ class Thermo4pfm(CMakePackage):
     homepage = "https://github.com/ORNL/Thermo4PFM"
     url = "https://github.com/ORNL/Thermo4PFM/archive/refs/tags/v1.1.1.tar.gz"
 
-    maintainers = ["jeanlucf22"]
+    maintainers("jeanlucf22")
 
     version("1.1.1", sha256="cff3c83405224a39bb34c57e444e208e94c6782d84303acd0588d1dfa61513a1")
 

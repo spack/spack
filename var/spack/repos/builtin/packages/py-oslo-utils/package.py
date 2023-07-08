@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -16,7 +16,7 @@ class PyOsloUtils(PythonPackage):
     homepage = "https://docs.openstack.org/oslo.utils/"
     pypi = "oslo.utils/oslo.utils-4.9.2.tar.gz"
 
-    maintainers = ["haampie"]
+    maintainers("haampie")
 
     version("4.9.2", sha256="20db285734ff6c3b50d5a6afcb2790ade0c7ba02fbc876feed43733f2c41a5c9")
 

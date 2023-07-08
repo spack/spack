@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -184,7 +184,7 @@ class Mumps(Package):
         makefile_conf.append("FC_PIC_FLAG={0}".format(fpic))
         makefile_conf.append("CC_PIC_FLAG={0}".format(cpic))
 
-        opt_level = "3" if using_xl else ""
+        opt_level = "3" if using_xl else "2"
 
         optc = ["-O{0}".format(opt_level)]
         optf = ["-O{0}".format(opt_level)]

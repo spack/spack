@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -14,11 +14,11 @@ class Pastix(CMakePackage, CudaPackage):
     homepage = "https://gitlab.inria.fr/solverstack/pastix/blob/master/README.md"
     url = "https://files.inria.fr/pastix/releases/v6/pastix-6.2.2.tar.gz"
     git = "https://gitlab.inria.fr/solverstack/pastix.git"
-    maintainers = ["fpruvost", "mfaverge", "ramet"]
+    maintainers("fpruvost", "mfaverge", "ramet")
 
     version("master", branch="master", submodules=True)
-    version("6.2.2", "cce9a1fe4678b5733c9f1a5a52f77b040eadc3e254418c6fb03d8ab37dede508")
-    version("6.2.1", "b680cbfc265df8cba18d3a7093fcc02e260198c4a2d6a86d1e684bb291e309dd")
+    version("6.2.2", sha256="cce9a1fe4678b5733c9f1a5a52f77b040eadc3e254418c6fb03d8ab37dede508")
+    version("6.2.1", sha256="b680cbfc265df8cba18d3a7093fcc02e260198c4a2d6a86d1e684bb291e309dd")
 
     # cmake's specific
     variant("shared", default=True, description="Build Pastix as a shared library")

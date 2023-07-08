@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -14,7 +14,7 @@ class Trexio(AutotoolsPackage):
     url = "https://github.com/TREX-CoE/trexio/releases/download/v2.2.0/trexio-2.2.0.tar.gz"
 
     # notify when the package is updated.
-    maintainers = ["q-posev", "scemama"]
+    maintainers("q-posev", "scemama")
 
     version("master", branch="master")
     version("2.2.0", sha256="e6340c424fcea18ae0b643a5707e16005c7576ee21a5aac679fbc132d70b36d9")
@@ -36,7 +36,6 @@ class Trexio(AutotoolsPackage):
     # Append -lhdf5_hl to LIBS when hdf5 variant is activated
     # or use --without-hdf5 option otherwise.
     def configure_args(self):
-
         config_args = []
         if "+hdf5" in self.spec:
             config_args.append("LIBS=-lhdf5_hl")

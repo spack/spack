@@ -1,9 +1,7 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
-from __future__ import print_function
-
 import contextlib
 import multiprocessing
 import os
@@ -13,7 +11,7 @@ import traceback
 from .cpus import cpus_available
 
 
-class ErrorFromWorker(object):
+class ErrorFromWorker:
     """Wrapper class to report an error from a worker process"""
 
     def __init__(self, exc_cls, exc, tb):
@@ -39,7 +37,7 @@ class ErrorFromWorker(object):
         return self.error_message
 
 
-class Task(object):
+class Task:
     """Wrapped task that trap every Exception and return it as an
     ErrorFromWorker object.
 

@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -27,6 +27,8 @@ class Abinit(AutotoolsPackage):
     homepage = "https://www.abinit.org/"
     url = "https://www.abinit.org/sites/default/files/packages/abinit-8.6.3.tar.gz"
 
+    version("9.8.4", sha256="a086d5045f0093b432e6a044d5f71f7edf5a41a62d67b3677cb0751d330c564a")
+    version("9.8.3", sha256="de823878aea2c20098f177524fbb4b60de9b1b5971b2e835ec244dfa3724589b")
     version("9.6.1", sha256="b6a12760fd728eb4aacca431ae12150609565bedbaa89763f219fcd869f79ac6")
     version("9.4.2", sha256="d40886f5c8b138bb4aa1ca05da23388eb70a682790cfe5020ecce4db1b1a76bc")
     version("8.10.3", sha256="ed626424b4472b93256622fbb9c7645fa3ffb693d4b444b07d488771ea7eaa75")
@@ -71,11 +73,14 @@ class Abinit(AutotoolsPackage):
     depends_on("netcdf-c~mpi", when="~mpi")
     depends_on("hdf5+mpi", when="+mpi")
     depends_on("hdf5~mpi", when="~mpi")
+    # constrain version of hdf5
+    depends_on("hdf5@:1.8", when="@9:")
     depends_on("wannier90+shared", when="+wannier90+mpi")
 
     # constrain libxc version
     depends_on("libxc")
     depends_on("libxc@:2", when="@:8")
+    depends_on("libxc@:5", when="@9.8:")
 
     # libxml2
     depends_on("libxml2", when="@9:+libxml2")
@@ -125,7 +130,6 @@ class Abinit(AutotoolsPackage):
     patch("fix_for_fujitsu.v9.patch", when="@9: %fj")
 
     def configure_args(self):
-
         spec = self.spec
 
         options = []
@@ -158,6 +162,10 @@ class Abinit(AutotoolsPackage):
                     ]
                 )
         else:
+            if "@:9.8" in spec:
+                oapp("--with-fftw={0}".format(spec["fftw-api"].prefix))
+                oapp("--with-hdf5={0}".format(spec["hdf5"].prefix))
+
             if "@:8" in spec:
                 oapp("--with-dft-flavor=atompaw+libxc")
             else:

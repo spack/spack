@@ -1,9 +1,7 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
-
-from __future__ import print_function
 
 import os
 import re
@@ -16,19 +14,10 @@ import spack.repo
 import spack.stage
 import spack.util.web
 from spack.spec import Spec
-from spack.url import (
-    UndetectableNameError,
-    UndetectableVersionError,
-    parse_name,
-    parse_version,
-)
+from spack.url import UndetectableNameError, UndetectableVersionError, parse_name, parse_version
 from spack.util.editor import editor
 from spack.util.executable import ProcessError, which
-from spack.util.naming import (
-    mod_to_class,
-    simplify_name,
-    valid_fully_qualified_module_name,
-)
+from spack.util.naming import mod_to_class, simplify_name, valid_fully_qualified_module_name
 
 description = "create a new package file"
 section = "packaging"
@@ -36,7 +25,7 @@ level = "short"
 
 
 package_template = '''\
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -70,7 +59,7 @@ class {class_name}({base_class_name}):
 
     # FIXME: Add a list of GitHub accounts to
     # notify when the package is updated.
-    # maintainers = ["github_user1", "github_user2"]
+    # maintainers("github_user1", "github_user2")
 
 {versions}
 
@@ -80,7 +69,7 @@ class {class_name}({base_class_name}):
 '''
 
 
-class BundlePackageTemplate(object):
+class BundlePackageTemplate:
     """
     Provides the default values to be used for a bundle package file template.
     """
@@ -131,7 +120,7 @@ class PackageTemplate(BundlePackageTemplate):
     url_line = '    url = "{url}"'
 
     def __init__(self, name, url, versions):
-        super(PackageTemplate, self).__init__(name, versions)
+        super().__init__(name, versions)
 
         self.url_def = self.url_line.format(url=url)
 
@@ -209,7 +198,7 @@ class LuaPackageTemplate(PackageTemplate):
             # Make it more obvious that we are renaming the package
             tty.msg("Changing package name from {0} to lua-{0}".format(name))
             name = "lua-{0}".format(name)
-        super(LuaPackageTemplate, self).__init__(name, url, *args, **kwargs)
+        super().__init__(name, url, *args, **kwargs)
 
 
 class MesonPackageTemplate(PackageTemplate):
@@ -317,7 +306,7 @@ class RacketPackageTemplate(PackageTemplate):
             tty.msg("Changing package name from {0} to rkt-{0}".format(name))
             name = "rkt-{0}".format(name)
         self.body_def = self.body_def.format(name[4:])
-        super(RacketPackageTemplate, self).__init__(name, url, *args, **kwargs)
+        super().__init__(name, url, *args, **kwargs)
 
 
 class PythonPackageTemplate(PackageTemplate):
@@ -409,7 +398,7 @@ class PythonPackageTemplate(PackageTemplate):
                 + self.url_line
             )
 
-        super(PythonPackageTemplate, self).__init__(name, url, *args, **kwargs)
+        super().__init__(name, url, *args, **kwargs)
 
 
 class RPackageTemplate(PackageTemplate):
@@ -448,7 +437,7 @@ class RPackageTemplate(PackageTemplate):
         if bioc:
             self.url_line = '    url = "{0}"\n' '    bioc = "{1}"'.format(url, r_name)
 
-        super(RPackageTemplate, self).__init__(name, url, *args, **kwargs)
+        super().__init__(name, url, *args, **kwargs)
 
 
 class PerlmakePackageTemplate(PackageTemplate):
@@ -475,7 +464,7 @@ class PerlmakePackageTemplate(PackageTemplate):
             tty.msg("Changing package name from {0} to perl-{0}".format(name))
             name = "perl-{0}".format(name)
 
-        super(PerlmakePackageTemplate, self).__init__(name, *args, **kwargs)
+        super().__init__(name, *args, **kwargs)
 
 
 class PerlbuildPackageTemplate(PerlmakePackageTemplate):
@@ -508,7 +497,7 @@ class OctavePackageTemplate(PackageTemplate):
             tty.msg("Changing package name from {0} to octave-{0}".format(name))
             name = "octave-{0}".format(name)
 
-        super(OctavePackageTemplate, self).__init__(name, *args, **kwargs)
+        super().__init__(name, *args, **kwargs)
 
 
 class RubyPackageTemplate(PackageTemplate):
@@ -536,7 +525,7 @@ class RubyPackageTemplate(PackageTemplate):
             tty.msg("Changing package name from {0} to ruby-{0}".format(name))
             name = "ruby-{0}".format(name)
 
-        super(RubyPackageTemplate, self).__init__(name, *args, **kwargs)
+        super().__init__(name, *args, **kwargs)
 
 
 class MakefilePackageTemplate(PackageTemplate):
@@ -581,7 +570,7 @@ class SIPPackageTemplate(PackageTemplate):
             tty.msg("Changing package name from {0} to py-{0}".format(name))
             name = "py-{0}".format(name)
 
-        super(SIPPackageTemplate, self).__init__(name, *args, **kwargs)
+        super().__init__(name, *args, **kwargs)
 
 
 templates = {
@@ -724,7 +713,7 @@ class BuildSystemGuesser:
                 output = tar("--exclude=*/*/*", "-tf", stage.archive_file, output=str)
             except ProcessError:
                 output = ""
-        lines = output.split("\n")
+        lines = output.splitlines()
 
         # Determine the build system based on the files contained
         # in the archive.
@@ -816,7 +805,7 @@ def get_versions(args, name):
     # Default version with hash
     hashed_versions = """\
     # FIXME: Add proper versions and checksums here.
-    # version("1.2.3", "0123456789abcdef0123456789abcdef")"""
+    # version("1.2.3", md5="0123456789abcdef0123456789abcdef")"""
 
     # Default version without hash
     unhashed_versions = """\

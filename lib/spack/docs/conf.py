@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -36,7 +36,7 @@ link_name = os.path.abspath("_spack_root")
 if not os.path.exists(link_name):
     os.symlink(os.path.abspath("../../.."), link_name, target_is_directory=True)
 sys.path.insert(0, os.path.abspath("_spack_root/lib/spack/external"))
-sys.path.insert(0, os.path.abspath("_spack_root/lib/spack/external/pytest-fallback"))
+sys.path.insert(0, os.path.abspath("_spack_root/lib/spack/external/_vendoring"))
 sys.path.append(os.path.abspath("_spack_root/lib/spack/"))
 
 # Add the Spack bin directory to the path so that we can use its output in docs.
@@ -74,12 +74,21 @@ apidoc_args = [
     "--force",  # Overwrite existing files
     "--no-toc",  # Don't create a table of contents file
     "--output-dir=.",  # Directory to place all output
+    "--module-first",  # emit module docs before submodule docs
 ]
-sphinx_apidoc(apidoc_args + ["_spack_root/lib/spack/spack"])
+sphinx_apidoc(
+    apidoc_args
+    + [
+        "_spack_root/lib/spack/spack",
+        "_spack_root/lib/spack/spack/test/*.py",
+        "_spack_root/lib/spack/spack/test/cmd/*.py",
+    ]
+)
 sphinx_apidoc(apidoc_args + ["_spack_root/lib/spack/llnl"])
 
 # Enable todo items
 todo_include_todos = True
+
 
 #
 # Disable duplicate cross-reference warnings.
@@ -88,9 +97,7 @@ class PatchedPythonDomain(PythonDomain):
     def resolve_xref(self, env, fromdocname, builder, typ, target, node, contnode):
         if "refspecific" in node:
             del node["refspecific"]
-        return super(PatchedPythonDomain, self).resolve_xref(
-            env, fromdocname, builder, typ, target, node, contnode
-        )
+        return super().resolve_xref(env, fromdocname, builder, typ, target, node, contnode)
 
 
 #
@@ -140,7 +147,6 @@ graphviz_dot_args = [
 # Get nice vector graphics
 graphviz_output_format = "svg"
 
-
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ["_templates"]
 
@@ -155,7 +161,7 @@ master_doc = "index"
 
 # General information about the project.
 project = "Spack"
-copyright = "2013-2021, Lawrence Livermore National Laboratory."
+copyright = "2013-2023, Lawrence Livermore National Laboratory."
 
 # The version info for the project you're documenting, acts as replacement for
 # |version| and |release|, also used in various other places throughout the
@@ -200,12 +206,15 @@ nitpick_ignore = [
     ("py:class", "_frozen_importlib_external.SourceFileLoader"),
     ("py:class", "clingo.Control"),
     ("py:class", "six.moves.urllib.parse.ParseResult"),
+    ("py:class", "TextIO"),
     # Spack classes that are private and we don't want to expose
     ("py:class", "spack.provider_index._IndexBase"),
     ("py:class", "spack.repo._PrependFileLoader"),
     ("py:class", "spack.build_systems._checks.BaseBuilder"),
     # Spack classes that intersphinx is unable to resolve
-    ("py:class", "spack.version.VersionBase"),
+    ("py:class", "spack.version.StandardVersion"),
+    ("py:class", "spack.spec.DependencySpec"),
+    ("py:class", "spack.install_test.Pb"),
 ]
 
 # The reST default role (used for this markup: `text`) to use for all documents.
@@ -221,30 +230,8 @@ nitpick_ignore = [
 # If true, sectionauthor and moduleauthor directives will be shown in the
 # output. They are ignored by default.
 # show_authors = False
-
-# The name of the Pygments (syntax highlighting) style to use.
-# We use our own extension of the default style with a few modifications
-from pygments.style import Style
-from pygments.styles.default import DefaultStyle
-from pygments.token import Comment, Generic, Text
-
-
-class SpackStyle(DefaultStyle):
-    styles = DefaultStyle.styles.copy()
-    background_color = "#f4f4f8"
-    styles[Generic.Output] = "#355"
-    styles[Generic.Prompt] = "bold #346ec9"
-
-
-import pkg_resources
-
-dist = pkg_resources.Distribution(__file__)
-sys.path.append(".")  # make 'conf' module findable
-ep = pkg_resources.EntryPoint.parse("spack = conf:SpackStyle", dist=dist)
-dist._ep_map = {"pygments.styles": {"plugin1": ep}}
-pkg_resources.working_set.add(dist)
-
-pygments_style = "spack"
+sys.path.append("./_pygments")
+pygments_style = "style.SpackStyle"
 
 # A list of ignored prefixes for module index sorting.
 # modindex_common_prefix = []
@@ -329,23 +316,20 @@ html_last_updated_fmt = "%b %d, %Y"
 # Output file base name for HTML help builder.
 htmlhelp_basename = "Spackdoc"
 
-
 # -- Options for LaTeX output --------------------------------------------------
 
 latex_elements = {
     # The paper size ('letterpaper' or 'a4paper').
-    #'papersize': 'letterpaper',
+    # 'papersize': 'letterpaper',
     # The font size ('10pt', '11pt' or '12pt').
-    #'pointsize': '10pt',
+    # 'pointsize': '10pt',
     # Additional stuff for the LaTeX preamble.
-    #'preamble': '',
+    # 'preamble': '',
 }
 
 # Grouping the document tree into LaTeX files. List of tuples
 # (source start file, target name, title, author, documentclass [howto/manual]).
-latex_documents = [
-    ("index", "Spack.tex", "Spack Documentation", "Todd Gamblin", "manual"),
-]
+latex_documents = [("index", "Spack.tex", "Spack Documentation", "Todd Gamblin", "manual")]
 
 # The name of an image file (relative to this directory) to place at the top of
 # the title page.
@@ -392,7 +376,7 @@ texinfo_documents = [
         "Spack",
         "One line description of project.",
         "Miscellaneous",
-    ),
+    )
 ]
 
 # Documents to append as an appendix to all manuals.
@@ -408,6 +392,4 @@ texinfo_documents = [
 # -- Extension configuration -------------------------------------------------
 
 # sphinx.ext.intersphinx
-intersphinx_mapping = {
-    "python": ("https://docs.python.org/3", None),
-}
+intersphinx_mapping = {"python": ("https://docs.python.org/3", None)}

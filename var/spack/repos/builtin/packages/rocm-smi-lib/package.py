@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -7,6 +7,7 @@
 import os
 import re
 import shutil
+import subprocess
 
 from spack.package import *
 
@@ -17,14 +18,17 @@ class RocmSmiLib(CMakePackage):
 
     homepage = "https://github.com/RadeonOpenCompute/rocm_smi_lib"
     git = "https://github.com/RadeonOpenCompute/rocm_smi_lib.git"
-    url = "https://github.com/RadeonOpenCompute/rocm_smi_lib/archive/rocm-5.3.0.tar.gz"
+    url = "https://github.com/RadeonOpenCompute/rocm_smi_lib/archive/rocm-5.4.3.tar.gz"
     tags = ["rocm"]
 
-    maintainers = ["srekolam", "renjithravindrankannath"]
+    maintainers("srekolam", "renjithravindrankannath")
     libraries = ["librocm_smi64"]
 
     version("master", branch="master")
 
+    version("5.4.3", sha256="34d550272e420684230ceb7845aefcef79b155e51cf9ec55e31fdba2a4ed177b")
+    version("5.4.0", sha256="4b110c9ec104ec39fc458b1b6f693662ab75395b75ed402b671d8e58c7ae63fe")
+    version("5.3.3", sha256="c2c2a377c2e84f0c40297a97b6060dddc49183c2771b833ebe91ed98a98e4119")
     version("5.3.0", sha256="8f72ad825a021d5199fb73726b4975f20682beb966e0ec31b53132bcd56c5408")
     version("5.2.3", sha256="fcf4f75a8daeca81ecb107989712c5f3776ee11e6eed870cb93efbf66ff1c384")
     version("5.2.1", sha256="07ad3be6f8c7d3f0a1b8b79950cd7839fb82972cef373dccffdbda32a3aca760")
@@ -116,7 +120,11 @@ class RocmSmiLib(CMakePackage):
     patch("disable_pdf_generation_with_doxygen_and_latex.patch", when="@4.5.2:")
 
     def cmake_args(self):
-        return [self.define_from_variant("BUILD_SHARED_LIBS", "shared")]
+        args = [
+            self.define_from_variant("BUILD_SHARED_LIBS", "shared"),
+            self.define("CMAKE_INSTALL_LIBDIR", self.prefix.lib),
+        ]
+        return args
 
     @classmethod
     def determine_version(cls, lib):
@@ -137,3 +145,69 @@ class RocmSmiLib(CMakePackage):
             shutil.rmtree(self.prefix.rocm_smi)
             os.remove(join_path(self.prefix.bin, "rsmiBindings.py"))
             symlink("../bindings/rsmiBindings.py", join_path(self.prefix.bin, "rsmiBindings.py"))
+
+    test_src_dir = "tests/rocm_smi_test"
+
+    @run_after("install")
+    def cache_test_sources(self):
+        """Copy the tests source files after the package is installed to an
+        install test subdirectory for use during `spack test run`."""
+        if self.spec.satisfies("@:5.1.0"):
+            return
+        self.cache_extra_test_sources([self.test_src_dir])
+
+    def test(self):
+        if self.spec.satisfies("@:5.1.0"):
+            print("Skipping: stand-alone tests")
+            return
+        exclude = "rsmitst.exclude"
+        TOPOLOGY_SYSFS_DIR = "/sys/devices/virtual/kfd/kfd/topology/nodes"
+        test_dir = join_path(self.test_suite.current_test_cache_dir, self.test_src_dir)
+        with working_dir(test_dir, create=True):
+            cmake_bin = join_path(self.spec["cmake"].prefix.bin, "cmake")
+            prefixes = ";".join([self.spec["rocm-smi-lib"].prefix])
+            cc_options = [
+                "-DCMAKE_PREFIX_PATH=" + prefixes,
+                "-DROCM_DIR=" + self.spec["rocm-smi-lib"].prefix,
+                ".",
+            ]
+            self.run_test(cmake_bin, cc_options)
+            make()
+
+            # Since rsmitst internally attempts to run for every gpu the exclude test list will
+            # be the union of all the excludes for all the devices on the system
+            disabled_tests = ""
+            if os.path.exists(TOPOLOGY_SYSFS_DIR):
+                for file in os.listdir(TOPOLOGY_SYSFS_DIR):
+                    name_file = os.path.join(TOPOLOGY_SYSFS_DIR, str(file), "name")
+                    if os.path.exists(name_file):
+                        with open(name_file, "r") as f:
+                            node = f.readline().strip("\n")
+                            if node:
+                                cmd = "source " + exclude + ' && echo "${FILTER[' + node + ']}"'
+                                node_tests = subprocess.check_output(
+                                    cmd, shell=True, executable="/bin/bash"
+                                )
+                                node_tests = node_tests.decode("utf-8").strip("\n")
+                                if node_tests:
+                                    disabled_tests = disabled_tests + node_tests + ":"
+
+            # disable tests under virtualization
+            cmd = "source " + exclude + ' && echo "${FILTER[virtualization]}"'
+            virtualization_tests = subprocess.check_output(cmd, shell=True, executable="/bin/bash")
+            virtualization_tests = virtualization_tests.decode("utf-8").strip("\n")
+            disabled_tests = disabled_tests + virtualization_tests
+
+            # disable test that requires --privileged permissions
+            privileged_tests = ":".join(
+                [
+                    "rsmitstReadWrite.TestPerfLevelReadWrite",
+                    "rsmitstReadWrite.TestFrequenciesReadWrite",
+                    "rsmitstReadWrite.TestPciReadWrite",
+                    "rsmitstReadWrite.TestPerfCntrReadWrite",
+                ]
+            )
+            disabled_tests = disabled_tests + ":" + privileged_tests
+
+            self.run_test("rsmitst64", "--gtest_filter=-" + disabled_tests)
+            make("clean")

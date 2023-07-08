@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -12,7 +12,7 @@ class Chaco(CMakePackage):
     homepage = "https://gitlab.com/truchas/tpl-forks/chaco"
     git = "https://gitlab.com/truchas/tpl-forks/chaco.git"
 
-    maintainers = ["pbrady"]
+    maintainers("pbrady")
 
     version("develop", branch="truchas")
     version("2020-07-16", commit="92a877b381933d12b02507413897f696d81b4682", preferred=True)

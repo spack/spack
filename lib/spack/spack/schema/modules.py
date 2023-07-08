@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -17,7 +17,7 @@ import spack.schema.projections
 #: THIS NEEDS TO BE UPDATED FOR EVERY NEW KEYWORD THAT
 #: IS ADDED IMMEDIATELY BELOW THE MODULE TYPE ATTRIBUTE
 spec_regex = (
-    r"(?!hierarchy|core_specs|verbose|hash_length|defaults|"
+    r"(?!hierarchy|core_specs|verbose|hash_length|defaults|filter_hierarchy_specs|"
     r"whitelist|blacklist|"  # DEPRECATED: remove in 0.20.
     r"include|exclude|"  # use these more inclusive/consistent options
     r"projections|naming_scheme|core_compilers|all)(^\w[\w-]*)"
@@ -110,10 +110,7 @@ module_config_properties = {
     "arch_folder": {"type": "boolean"},
     "roots": {
         "type": "object",
-        "properties": {
-            "tcl": {"type": "string"},
-            "lmod": {"type": "string"},
-        },
+        "properties": {"tcl": {"type": "string"}, "lmod": {"type": "string"}},
     },
     "enable": {
         "type": "array",
@@ -130,6 +127,10 @@ module_config_properties = {
                     "core_compilers": array_of_strings,
                     "hierarchy": array_of_strings,
                     "core_specs": array_of_strings,
+                    "filter_hierarchy_specs": {
+                        "type": "object",
+                        "patternProperties": {spec_regex: array_of_strings},
+                    },
                 },
             },  # Specific lmod extensions
         ]
@@ -165,7 +166,7 @@ properties = {
                     # prefix-relative path to be inspected for existence
                     r"^[\w-]*": array_of_strings
                 },
-            },
+            }
         },
         "patternProperties": {
             valid_module_set_name: {
@@ -173,7 +174,7 @@ properties = {
                 "default": {},
                 "additionalProperties": False,
                 "properties": module_config_properties,
-            },
+            }
         },
     }
 }
@@ -186,57 +187,3 @@ schema = {
     "additionalProperties": False,
     "properties": properties,
 }
-
-
-# deprecated keys and their replacements
-exclude_include_translations = {
-    "whitelist": "include",
-    "blacklist": "exclude",
-    "blacklist_implicits": "exclude_implicits",
-    "environment_blacklist": "exclude_env_vars",
-}
-
-
-def update_keys(data, key_translations):
-    """Change blacklist/whitelist to exclude/include.
-
-    Arguments:
-        data (dict): data from a valid modules configuration.
-        key_translations (dict): A dictionary of keys to translate to
-            their respective values.
-
-    Return:
-        (bool) whether anything was changed in data
-    """
-    changed = False
-
-    if isinstance(data, dict):
-        keys = list(data.keys())
-        for key in keys:
-            value = data[key]
-
-            translation = key_translations.get(key)
-            if translation:
-                data[translation] = data.pop(key)
-                changed = True
-
-            changed |= update_keys(value, key_translations)
-
-    elif isinstance(data, list):
-        for elt in data:
-            changed |= update_keys(elt, key_translations)
-
-    return changed
-
-
-def update(data):
-    """Update the data in place to remove deprecated properties.
-
-    Args:
-        data (dict): dictionary to be updated
-
-    Returns:
-        True if data was changed, False otherwise
-    """
-    # translate blacklist/whitelist to exclude/include
-    return update_keys(data, exclude_include_translations)

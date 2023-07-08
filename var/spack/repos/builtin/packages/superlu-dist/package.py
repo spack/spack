@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -16,7 +16,7 @@ class SuperluDist(CMakePackage, CudaPackage, ROCmPackage):
 
     tags = ["e4s"]
 
-    maintainers = ["xiaoye", "gchavez2", "balay", "pghysels", "liuyangzhuan"]
+    maintainers("xiaoye", "gchavez2", "balay", "pghysels", "liuyangzhuan")
 
     version("develop", branch="master")
     version("amd", branch="amd")
@@ -101,16 +101,6 @@ class SuperluDist(CMakePackage, CudaPackage, ROCmPackage):
             [spec["parmetis"].prefix.include, spec["metis"].prefix.include],
         )
 
-        if (spec.satisfies("%xl") or spec.satisfies("%xl_r")) and spec.satisfies("@:6.1.1"):
-            append_define("CMAKE_C_FLAGS", "-DNoChange")
-        if spec.satisfies("%oneapi"):
-            #
-            # 2022 and later  Intel OneAPI compilers throws errors compiling
-            # some of the non ISO C99 compliant code in this package
-            # see https://reviews.llvm.org/D122983
-            #
-            append_define("CMAKE_C_FLAGS", "-Wno-error=implicit-function-declaration")
-
         append_define("XSDK_INDEX_SIZE", "64" if "+int64" in spec else "32")
 
         append_from_variant("enable_openmp", "openmp")
@@ -133,6 +123,10 @@ class SuperluDist(CMakePackage, CudaPackage, ROCmPackage):
                     "HIP_HIPCC_FLAGS", "--amdgpu-target=" + ",".join(rocm_archs) + " -I/" + mpiinc
                 )
 
+        # Workaround for linking issue on Mac:
+        if spec.satisfies("%apple-clang"):
+            append_define("CMAKE_Fortran_COMPILER", spec["mpi"].mpifc)
+
         append_from_variant("BUILD_SHARED_LIBS", "shared")
         return cmake_args
 
@@ -142,7 +136,20 @@ class SuperluDist(CMakePackage, CudaPackage, ROCmPackage):
             flags.append(self.compiler.cxx11_flag)
         if name == "cflags" and "%pgi" not in self.spec:
             flags.append("-std=c99")
-        if name == "cflags" and self.spec.satisfies("%oneapi"):
+        if (
+            name == "cflags"
+            and (self.spec.satisfies("%xl") or self.spec.satisfies("%xl_r"))
+            and self.spec.satisfies("@:6.1.1")
+        ):
+            flags.append("-DNoChange")
+        if name == "cflags" and (
+            self.spec.satisfies("%oneapi") or self.spec.satisfies("%arm@23.04:")
+        ):
+            #
+            # 2022 and later Intel OneAPI compilers and Arm compilers version 23.04 and later
+            # throw errors compiling some of the non ISO C99 compliant code in this package
+            # see https://reviews.llvm.org/D122983
+            #
             flags.append("-Wno-error=implicit-function-declaration")
         return (None, None, flags)
 
@@ -154,26 +161,17 @@ class SuperluDist(CMakePackage, CudaPackage, ROCmPackage):
         install test subdirectory for use during `spack test run`."""
         self.cache_extra_test_sources([self.examples_src_dir])
 
-    def test(self):
-        test_dir = join_path(self.install_test_root, self.examples_src_dir)
+    def test_pddrive(self):
+        """run cached pddrive"""
+        if not self.spec.satisfies("@7.2.0:"):
+            raise SkipTest("Test is only available for v7.2.0 on")
+
+        test_dir = join_path(self.test_suite.current_test_cache_dir, self.examples_src_dir)
         superludriver = join_path(self.prefix.lib, "EXAMPLE", "pddrive")
-        with working_dir(test_dir, create=False):
+
+        with working_dir(test_dir):
             # Smoke test input parameters: -r 2 -c 2 g20.rua
             test_args = ["-n", "4", superludriver, "-r", "2", "-c", "2", "g20.rua"]
             # Find the correct mpirun command
             mpiexe_f = which("srun", "mpirun", "mpiexec")
-            if mpiexe_f:
-                if self.spec.satisfies("@7.2.0:"):
-                    self.run_test(
-                        mpiexe_f.command,
-                        test_args,
-                        work_dir=".",
-                        purpose="superlu-dist smoke test",
-                    )
-                else:
-                    self.run_test(
-                        "echo",
-                        options=["skip test"],
-                        work_dir=".",
-                        purpose="superlu-dist smoke test",
-                    )
+            mpiexe_f(*test_args)

@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -22,6 +22,14 @@ class Mmseqs2(CMakePackage):
 
     depends_on("zstd")
     depends_on("mpi", when="+mpi")
+
+    # patch to support building with gcc@13:
+    patch(
+        "https://github.com/soedinglab/MMseqs2/commit/3e43617.patch?full_index=1",
+        sha256="673737ac545260e7800ca191c6eee14feef3318d9cfa5005db32bd2ab3c006fe",
+        when="%gcc@13:",
+        level=1,
+    )
 
     # apple-clang will build with +openmp with llvm-openmp as a dependency
     # however when running with real data, it threw segmentation faults

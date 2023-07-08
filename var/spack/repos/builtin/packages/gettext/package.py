@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -6,6 +6,7 @@
 import re
 
 from spack.package import *
+from spack.util.environment import is_system_path
 
 
 class Gettext(AutotoolsPackage, GNUMirrorPackage):
@@ -14,7 +15,7 @@ class Gettext(AutotoolsPackage, GNUMirrorPackage):
     homepage = "https://www.gnu.org/software/gettext/"
     gnu_mirror_path = "gettext/gettext-0.20.1.tar.xz"
 
-    maintainers = ["michaelkuhn"]
+    maintainers("michaelkuhn")
 
     executables = [r"^gettext$"]
 
@@ -78,7 +79,6 @@ class Gettext(AutotoolsPackage, GNUMirrorPackage):
         config_args = [
             "--disable-java",
             "--disable-csharp",
-            "--with-libiconv-prefix={0}".format(spec["iconv"].prefix),
             "--with-included-glib",
             "--with-included-gettext",
             "--with-included-libcroco",
@@ -86,6 +86,11 @@ class Gettext(AutotoolsPackage, GNUMirrorPackage):
             "--with-lispdir=%s/emacs/site-lisp/gettext" % self.prefix.share,
             "--without-cvs",
         ]
+
+        if self.spec["iconv"].name == "libc":
+            config_args.append("--without-libiconv-prefix")
+        elif not is_system_path(self.spec["iconv"].prefix):
+            config_args.append("--with-libiconv-prefix=" + self.spec["iconv"].prefix)
 
         if "+curses" in spec:
             config_args.append("--with-ncurses-prefix={0}".format(spec["ncurses"].prefix))

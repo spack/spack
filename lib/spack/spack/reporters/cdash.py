@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -12,6 +12,7 @@ import re
 import socket
 import time
 import xml.sax.saxutils
+from typing import Dict, Optional
 from urllib.parse import urlencode
 from urllib.request import HTTPHandler, Request, build_opener
 
@@ -22,17 +23,16 @@ import spack.build_environment
 import spack.fetch_strategy
 import spack.package_base
 import spack.platforms
+import spack.util.git
 from spack.error import SpackError
-from spack.reporter import Reporter
-from spack.reporters.extract import extract_test_parts
 from spack.util.crypto import checksum
-from spack.util.executable import which
 from spack.util.log_parse import parse_log_events
 
-__all__ = ["CDash"]
+from .base import Reporter
+from .extract import extract_test_parts
 
 # Mapping Spack phases to the corresponding CTest/CDash phase.
-map_phases_to_cdash = {
+MAP_PHASES_TO_CDASH = {
     "autoreconf": "configure",
     "cmake": "configure",
     "configure": "configure",
@@ -42,8 +42,13 @@ map_phases_to_cdash = {
 }
 
 # Initialize data structures common to each phase's report.
-cdash_phases = set(map_phases_to_cdash.values())
-cdash_phases.add("update")
+CDASH_PHASES = set(MAP_PHASES_TO_CDASH.values())
+CDASH_PHASES.add("update")
+
+
+CDashConfiguration = collections.namedtuple(
+    "CDashConfiguration", ["upload_url", "packages", "build", "site", "buildstamp", "track"]
+)
 
 
 def build_stamp(track, timestamp):
@@ -64,13 +69,13 @@ class CDash(Reporter):
     CDash instance hosted at https://mydomain.com/cdash.
     """
 
-    def __init__(self, args):
-        Reporter.__init__(self, args)
+    def __init__(self, configuration: CDashConfiguration):
+        #: Set to False if any error occurs when building the CDash report
         self.success = True
-        # Posixpath is used here to support the underlying template enginge
-        # Jinja2, which expects `/` path separators
-        self.template_dir = posixpath.join("reports", "cdash")
-        self.cdash_upload_url = args.cdash_upload_url
+
+        # Jinja2 expects `/` path separators
+        self.template_dir = "reports/cdash"
+        self.cdash_upload_url = configuration.upload_url
 
         if self.cdash_upload_url:
             self.buildid_regexp = re.compile("<buildId>([0-9]+)</buildId>")
@@ -81,34 +86,21 @@ class CDash(Reporter):
             tty.verbose("Using CDash auth token from environment")
             self.authtoken = os.environ.get("SPACK_CDASH_AUTH_TOKEN")
 
-        if getattr(args, "spec", ""):
-            packages = args.spec
-        elif getattr(args, "specs", ""):
-            packages = args.specs
-        elif getattr(args, "package", ""):
-            # Ensure CI 'spack test run' can output CDash results
-            packages = args.package
-        else:
-            packages = []
-            for file in args.specfiles:
-                with open(file, "r") as f:
-                    s = spack.spec.Spec.from_yaml(f)
-                    packages.append(s.format())
-        self.install_command = " ".join(packages)
-        self.base_buildname = args.cdash_build or self.install_command
-        self.site = args.cdash_site or socket.gethostname()
+        self.install_command = " ".join(configuration.packages)
+        self.base_buildname = configuration.build or self.install_command
+        self.site = configuration.site or socket.gethostname()
         self.osname = platform.system()
         self.osrelease = platform.release()
         self.target = spack.platforms.host().target("default_target")
         self.endtime = int(time.time())
         self.buildstamp = (
-            args.cdash_buildstamp
-            if args.cdash_buildstamp
-            else build_stamp(args.cdash_track, self.endtime)
+            configuration.buildstamp
+            if configuration.buildstamp
+            else build_stamp(configuration.track, self.endtime)
         )
-        self.buildIds = collections.OrderedDict()
+        self.buildIds: Dict[str, str] = {}
         self.revision = ""
-        git = which("git")
+        git = spack.util.git.git()
         with working_dir(spack.paths.spack_root):
             self.revision = git("rev-parse", "HEAD", output=str).strip()
         self.generator = "spack-{0}".format(spack.main.get_version())
@@ -121,15 +113,15 @@ class CDash(Reporter):
             else self.base_buildname
         )
 
-    def build_report_for_package(self, directory_name, package, duration):
+    def build_report_for_package(self, report_dir, package, duration):
         if "stdout" not in package:
-            # Skip reporting on packages that did not generate any output.
+            # Skip reporting on packages that do not generate output.
             return
 
         self.current_package_name = package["name"]
         self.buildname = self.report_build_name(self.current_package_name)
-        report_data = self.initialize_report(directory_name)
-        for phase in cdash_phases:
+        report_data = self.initialize_report(report_dir)
+        for phase in CDASH_PHASES:
             report_data[phase] = {}
             report_data[phase]["loglines"] = []
             report_data[phase]["status"] = 0
@@ -149,10 +141,10 @@ class CDash(Reporter):
                 match = self.phase_regexp.search(line)
             if match:
                 current_phase = match.group(1)
-                if current_phase not in map_phases_to_cdash:
+                if current_phase not in MAP_PHASES_TO_CDASH:
                     current_phase = ""
                     continue
-                cdash_phase = map_phases_to_cdash[current_phase]
+                cdash_phase = MAP_PHASES_TO_CDASH[current_phase]
                 if cdash_phase not in phases_encountered:
                     phases_encountered.append(cdash_phase)
                 report_data[cdash_phase]["loglines"].append(
@@ -223,7 +215,7 @@ class CDash(Reporter):
                 report_file_name = package["name"] + "_" + report_name
             else:
                 report_file_name = report_name
-            phase_report = os.path.join(directory_name, report_file_name)
+            phase_report = os.path.join(report_dir, report_file_name)
 
             with codecs.open(phase_report, "w", "utf-8") as f:
                 env = spack.tengine.make_environment()
@@ -239,13 +231,13 @@ class CDash(Reporter):
                 f.write(t.render(report_data))
             self.upload(phase_report)
 
-    def build_report(self, directory_name, input_data):
+    def build_report(self, report_dir, specs):
         # Do an initial scan to determine if we are generating reports for more
         # than one package. When we're only reporting on a single package we
         # do not explicitly include the package's name in the CDash build name.
-        self.multipe_packages = False
+        self.multiple_packages = False
         num_packages = 0
-        for spec in input_data["specs"]:
+        for spec in specs:
             # Do not generate reports for packages that were installed
             # from the binary cache.
             spec["packages"] = [
@@ -263,75 +255,13 @@ class CDash(Reporter):
                 break
 
         # Generate reports for each package in each spec.
-        for spec in input_data["specs"]:
+        for spec in specs:
             duration = 0
             if "time" in spec:
                 duration = int(spec["time"])
             for package in spec["packages"]:
-                self.build_report_for_package(directory_name, package, duration)
+                self.build_report_for_package(report_dir, package, duration)
         self.finalize_report()
-
-    def extract_ctest_test_data(self, package, phases, report_data):
-        """Extract ctest test data for the package."""
-        # Track the phases we perform so we know what reports to create.
-        # We always report the update step because this is how we tell CDash
-        # what revision of Spack we are using.
-        assert "update" in phases
-
-        for phase in phases:
-            report_data[phase] = {}
-            report_data[phase]["loglines"] = []
-            report_data[phase]["status"] = 0
-            report_data[phase]["endtime"] = self.endtime
-
-        # Generate a report for this package.
-        # The first line just says "Testing package name-hash"
-        report_data["test"]["loglines"].append(
-            str("{0} output for {1}:".format("test", package["name"]))
-        )
-        for line in package["stdout"].splitlines()[1:]:
-            report_data["test"]["loglines"].append(xml.sax.saxutils.escape(line))
-
-        for phase in phases:
-            report_data[phase]["starttime"] = self.starttime
-            report_data[phase]["log"] = "\n".join(report_data[phase]["loglines"])
-            errors, warnings = parse_log_events(report_data[phase]["loglines"])
-            # Cap the number of errors and warnings at 50 each.
-            errors = errors[0:49]
-            warnings = warnings[0:49]
-
-            if phase == "test":
-                # Convert log output from ASCII to Unicode and escape for XML.
-                def clean_log_event(event):
-                    event = vars(event)
-                    event["text"] = xml.sax.saxutils.escape(event["text"])
-                    event["pre_context"] = xml.sax.saxutils.escape("\n".join(event["pre_context"]))
-                    event["post_context"] = xml.sax.saxutils.escape(
-                        "\n".join(event["post_context"])
-                    )
-                    # source_file and source_line_no are either strings or
-                    # the tuple (None,).  Distinguish between these two cases.
-                    if event["source_file"][0] is None:
-                        event["source_file"] = ""
-                        event["source_line_no"] = ""
-                    else:
-                        event["source_file"] = xml.sax.saxutils.escape(event["source_file"])
-                    return event
-
-                # Convert errors to warnings if the package reported success.
-                if package["result"] == "success":
-                    warnings = errors + warnings
-                    errors = []
-
-                report_data[phase]["errors"] = []
-                report_data[phase]["warnings"] = []
-                for error in errors:
-                    report_data[phase]["errors"].append(clean_log_event(error))
-                for warning in warnings:
-                    report_data[phase]["warnings"].append(clean_log_event(warning))
-
-            if phase == "update":
-                report_data[phase]["revision"] = self.revision
 
     def extract_standalone_test_data(self, package, phases, report_data):
         """Extract stand-alone test outputs for the package."""
@@ -343,13 +273,13 @@ class CDash(Reporter):
         testing["generator"] = self.generator
         testing["parts"] = extract_test_parts(package["name"], package["stdout"].splitlines())
 
-    def report_test_data(self, directory_name, package, phases, report_data):
+    def report_test_data(self, report_dir, package, phases, report_data):
         """Generate and upload the test report(s) for the package."""
         for phase in phases:
             # Write the report.
             report_name = phase.capitalize() + ".xml"
-            report_file_name = package["name"] + "_" + report_name
-            phase_report = os.path.join(directory_name, report_file_name)
+            report_file_name = "_".join([package["name"], package["id"], report_name])
+            phase_report = os.path.join(report_dir, report_file_name)
 
             with codecs.open(phase_report, "w", "utf-8") as f:
                 env = spack.tengine.make_environment()
@@ -367,7 +297,7 @@ class CDash(Reporter):
             tty.debug("Preparing to upload {0}".format(phase_report))
             self.upload(phase_report)
 
-    def test_report_for_package(self, directory_name, package, duration, ctest_parsing=False):
+    def test_report_for_package(self, report_dir, package, duration):
         if "stdout" not in package:
             # Skip reporting on packages that did not generate any output.
             tty.debug("Skipping report for {0}: No generated output".format(package["name"]))
@@ -381,50 +311,48 @@ class CDash(Reporter):
             self.buildname = self.report_build_name(self.current_package_name)
         self.starttime = self.endtime - duration
 
-        report_data = self.initialize_report(directory_name)
+        report_data = self.initialize_report(report_dir)
         report_data["hostname"] = socket.gethostname()
-        if ctest_parsing:
-            phases = ["test", "update"]
-            self.extract_ctest_test_data(package, phases, report_data)
-        else:
-            phases = ["testing"]
-            self.extract_standalone_test_data(package, phases, report_data)
+        phases = ["testing"]
+        self.extract_standalone_test_data(package, phases, report_data)
 
-        self.report_test_data(directory_name, package, phases, report_data)
+        self.report_test_data(report_dir, package, phases, report_data)
 
-    def test_report(self, directory_name, input_data):
+    def test_report(self, report_dir, specs):
         """Generate reports for each package in each spec."""
         tty.debug("Processing test report")
-        for spec in input_data["specs"]:
+        for spec in specs:
             duration = 0
             if "time" in spec:
                 duration = int(spec["time"])
             for package in spec["packages"]:
-                self.test_report_for_package(
-                    directory_name,
-                    package,
-                    duration,
-                    input_data["ctest-parsing"],
-                )
+                self.test_report_for_package(report_dir, package, duration)
 
         self.finalize_report()
 
-    def test_skipped_report(self, directory_name, spec, reason=None):
+    def test_skipped_report(
+        self, report_dir: str, spec: spack.spec.Spec, reason: Optional[str] = None
+    ):
+        """Explicitly report spec as being skipped (e.g., CI).
+
+        Examples are the installation failed or the package is known to have
+        broken tests.
+
+        Args:
+            report_dir: directory where the report is to be written
+            spec: spec being tested
+            reason: optional reason the test is being skipped
+        """
         output = "Skipped {0} package".format(spec.name)
         if reason:
             output += "\n{0}".format(reason)
 
-        package = {
-            "name": spec.name,
-            "id": spec.dag_hash(),
-            "result": "skipped",
-            "stdout": output,
-        }
-        self.test_report_for_package(directory_name, package, duration=0.0, ctest_parsing=False)
+        package = {"name": spec.name, "id": spec.dag_hash(), "result": "skipped", "stdout": output}
+        self.test_report_for_package(report_dir, package, duration=0.0)
 
-    def concretization_report(self, directory_name, msg):
+    def concretization_report(self, report_dir, msg):
         self.buildname = self.base_buildname
-        report_data = self.initialize_report(directory_name)
+        report_data = self.initialize_report(report_dir)
         report_data["update"] = {}
         report_data["update"]["starttime"] = self.endtime
         report_data["update"]["endtime"] = self.endtime
@@ -434,7 +362,7 @@ class CDash(Reporter):
         env = spack.tengine.make_environment()
         update_template = posixpath.join(self.template_dir, "Update.xml")
         t = env.get_template(update_template)
-        output_filename = os.path.join(directory_name, "Update.xml")
+        output_filename = os.path.join(report_dir, "Update.xml")
         with open(output_filename, "w") as f:
             f.write(t.render(report_data))
         # We don't have a current package when reporting on concretization
@@ -444,9 +372,9 @@ class CDash(Reporter):
         self.success = False
         self.finalize_report()
 
-    def initialize_report(self, directory_name):
-        if not os.path.exists(directory_name):
-            os.mkdir(directory_name)
+    def initialize_report(self, report_dir):
+        if not os.path.exists(report_dir):
+            os.mkdir(report_dir)
         report_data = {}
         report_data["buildname"] = self.buildname
         report_data["buildstamp"] = self.buildstamp

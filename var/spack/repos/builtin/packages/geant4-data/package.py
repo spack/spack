@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -14,12 +14,13 @@ class Geant4Data(BundlePackage):
 
     homepage = "http://geant4.cern.ch"
 
-    maintainers = ["drbenmorgan"]
+    maintainers("drbenmorgan")
 
     tags = ["hep"]
 
     version("11.1.0")
     version("11.0.0")
+    version("10.7.4")
     version("10.7.3")
     version("10.7.2")
     version("10.7.1")
@@ -78,12 +79,8 @@ class Geant4Data(BundlePackage):
             "g4incl@1.0",
             "g4ensdfstate@2.3",
         ],
-        "10.7.1:10.7": [
-            "g4particlexs@3.1.1",
-        ],
-        "10.7.0": [
-            "g4particlexs@3.1",
-        ],
+        "10.7.1:10.7": ["g4particlexs@3.1.1"],
+        "10.7.0": ["g4particlexs@3.1"],
         "10.6.0:10.6": [
             "g4ndl@4.6",
             "g4emlow@7.9.1",
@@ -121,12 +118,8 @@ class Geant4Data(BundlePackage):
             "g4abla@3.1",
             "g4ensdfstate@2.2",
         ],
-        "10.4.2:10.4": [
-            "g4realsurface@2.1.1",
-        ],
-        "10.4.0:10.4.1": [
-            "g4realsurface@2.1",
-        ],
+        "10.4.2:10.4": ["g4realsurface@2.1.1"],
+        "10.4.0:10.4.1": ["g4realsurface@2.1"],
         "10.3.0:10.3": [
             "g4ndl@4.5",
             "g4emlow@6.50",
@@ -137,14 +130,8 @@ class Geant4Data(BundlePackage):
             "g4abla@3.0",
             "g4ensdfstate@2.1",
         ],
-        "10.3.1:10.3": [
-            "g4photonevaporation@4.3.2",
-            "g4radioactivedecay@5.1.1",
-        ],
-        "10.3.0": [
-            "g4photonevaporation@4.3",
-            "g4radioactivedecay@5.1",
-        ],
+        "10.3.1:10.3": ["g4photonevaporation@4.3.2", "g4radioactivedecay@5.1.1"],
+        "10.3.0": ["g4photonevaporation@4.3", "g4radioactivedecay@5.1"],
     }
 
     for _vers, _dsets in _datasets.items():

@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -17,7 +17,7 @@ class MiopenTensile(CMakePackage):
     url = "https://github.com/ROCmSoftwarePlatform/MIOpentensile/archive/rocm-5.0.0.tar.gz"
     tags = ["rocm"]
 
-    maintainers = ["srekolam"]
+    maintainers("srekolam")
     libraries = ["libMIOpenTensile"]
 
     version("5.1.0", sha256="f1ae57bd4df8c154357b3f17caf0cfd5f80ba16ffff67bf6219a56f1eb5f897d")

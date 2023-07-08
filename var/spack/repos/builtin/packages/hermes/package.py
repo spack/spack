@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -14,7 +14,7 @@ class Hermes(CMakePackage):
     homepage = "http://www.cs.iit.edu/~scs/assets/projects/Hermes/Hermes.html"
     git = "https://github.com/HDFGroup/hermes.git"
 
-    maintainers = ["hyoklee"]
+    maintainers("hyoklee")
 
     version("master", branch="master")
     version(
@@ -30,7 +30,7 @@ class Hermes(CMakePackage):
     depends_on("glpk")
     depends_on("glog@0.4.0:")
     depends_on("mpi")
-    depends_on("hdf5@1.13.0:", when="+vfd")
+    depends_on("hdf5@1.14.0:", when="+vfd")
     depends_on("yaml-cpp")
 
     def cmake_args(self):

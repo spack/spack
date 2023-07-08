@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -19,7 +19,7 @@ class Prrte(AutotoolsPackage):
     homepage = "https://pmix.org"
     url = "https://github.com/pmix/prrte/releases/download/v1.0.0/prrte-1.0.0.tar.bz2"
     git = "https://github.com/pmix/prrte.git"
-    maintainers = ["rhc54"]
+    maintainers("rhc54")
 
     version("develop", branch="master")
     version("1.0.0", sha256="a9b3715e059c10ed091bd6e3a0d8896f7752e43ee731abcc95fb962e67132a2d")
@@ -33,6 +33,7 @@ class Prrte(AutotoolsPackage):
     depends_on("automake", type=("build"))
     depends_on("libtool", type=("build"))
     depends_on("flex", type=("build"))
+    depends_on("pkgconfig", type="build")
 
     def autoreconf(self, spec, prefix):
         # If configure exists nothing needs to be done
@@ -43,9 +44,8 @@ class Prrte(AutotoolsPackage):
             perl("autogen.pl")
 
     def configure_args(self):
-
         spec = self.spec
-        config_args = ["--enable-shared", "--enable-static"]
+        config_args = ["--enable-shared", "--enable-static", "--disable-sphinx"]
 
         # libevent
         config_args.append("--with-libevent={0}".format(spec["libevent"].prefix))

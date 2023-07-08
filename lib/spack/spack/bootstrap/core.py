@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -29,6 +29,7 @@ import os
 import os.path
 import sys
 import uuid
+from typing import Any, Callable, Dict, List, Optional, Tuple
 
 from llnl.util import tty
 from llnl.util.lang import GroupedExceptionHandler
@@ -52,12 +53,7 @@ import spack.util.spack_yaml
 import spack.util.url
 import spack.version
 
-from ._common import (
-    _executables_in_store,
-    _python_import,
-    _root_spec,
-    _try_import_from_store,
-)
+from ._common import _executables_in_store, _python_import, _root_spec, _try_import_from_store
 from .config import spack_python_interpreter, spec_for_current_python
 
 #: Name of the file containing metadata about the bootstrapping source
@@ -70,12 +66,15 @@ IS_WINDOWS = sys.platform == "win32"
 _bootstrap_methods = {}
 
 
-def bootstrapper(bootstrapper_type):
+ConfigDictionary = Dict[str, Any]
+
+
+def bootstrapper(bootstrapper_type: str):
     """Decorator to register classes implementing bootstrapping
     methods.
 
     Args:
-        bootstrapper_type (str): string identifying the class
+        bootstrapper_type: string identifying the class
     """
 
     def _register(cls):
@@ -90,55 +89,48 @@ class Bootstrapper:
 
     config_scope_name = ""
 
-    def __init__(self, conf):
+    def __init__(self, conf: ConfigDictionary) -> None:
         self.conf = conf
         self.name = conf["name"]
-        self.url = conf["info"]["url"]
         self.metadata_dir = spack.util.path.canonicalize_path(conf["metadata"])
 
-    @property
-    def mirror_url(self):
-        """Mirror url associated with this bootstrapper"""
-        # Absolute paths
-        if os.path.isabs(self.url):
-            return spack.util.url.format(self.url)
-
-        # Check for :// and assume it's an url if we find it
-        if "://" in self.url:
-            return self.url
-
-        # Otherwise, it's a relative path
-        return spack.util.url.format(os.path.join(self.metadata_dir, self.url))
+        # Promote (relative) paths to file urls
+        url = conf["info"]["url"]
+        if spack.util.url.is_path_instead_of_url(url):
+            if not os.path.isabs(url):
+                url = os.path.join(self.metadata_dir, url)
+            url = spack.util.url.path_to_file_url(url)
+        self.url = url
 
     @property
-    def mirror_scope(self):
+    def mirror_scope(self) -> spack.config.InternalConfigScope:
         """Mirror scope to be pushed onto the bootstrapping configuration when using
         this bootstrapper.
         """
         return spack.config.InternalConfigScope(
-            self.config_scope_name, {"mirrors:": {self.name: self.mirror_url}}
+            self.config_scope_name, {"mirrors:": {self.name: self.url}}
         )
 
-    def try_import(self, module: str, abstract_spec_str: str):  # pylint: disable=unused-argument
+    def try_import(self, module: str, abstract_spec_str: str) -> bool:
         """Try to import a Python module from a spec satisfying the abstract spec
         passed as argument.
 
         Args:
-            module (str): Python module name to try importing
-            abstract_spec_str (str): abstract spec that can provide the Python module
+            module: Python module name to try importing
+            abstract_spec_str: abstract spec that can provide the Python module
 
         Return:
             True if the Python module could be imported, False otherwise
         """
         return False
 
-    def try_search_path(self, executables, abstract_spec_str):  # pylint: disable=unused-argument
+    def try_search_path(self, executables: Tuple[str], abstract_spec_str: str) -> bool:
         """Try to search some executables in the prefix of specs satisfying the abstract
         spec passed as argument.
 
         Args:
-            executables (list of str): executables to be found
-            abstract_spec_str (str): abstract spec that can provide the Python module
+            executables: executables to be found
+            abstract_spec_str: abstract spec that can provide the Python module
 
         Return:
             True if the executables are found, False otherwise
@@ -150,13 +142,15 @@ class Bootstrapper:
 class BuildcacheBootstrapper(Bootstrapper):
     """Install the software needed during bootstrapping from a buildcache."""
 
-    def __init__(self, conf):
+    def __init__(self, conf) -> None:
         super().__init__(conf)
-        self.last_search = None
+        self.last_search: Optional[ConfigDictionary] = None
         self.config_scope_name = f"bootstrap_buildcache-{uuid.uuid4()}"
 
     @staticmethod
-    def _spec_and_platform(abstract_spec_str):
+    def _spec_and_platform(
+        abstract_spec_str: str,
+    ) -> Tuple[spack.spec.Spec, spack.platforms.Platform]:
         """Return the spec object and platform we need to use when
         querying the buildcache.
 
@@ -169,7 +163,7 @@ class BuildcacheBootstrapper(Bootstrapper):
         bincache_platform = spack.platforms.real_host()
         return abstract_spec, bincache_platform
 
-    def _read_metadata(self, package_name):
+    def _read_metadata(self, package_name: str) -> Any:
         """Return metadata about the given package."""
         json_filename = f"{package_name}.json"
         json_dir = self.metadata_dir
@@ -178,7 +172,13 @@ class BuildcacheBootstrapper(Bootstrapper):
             data = json.load(stream)
         return data
 
-    def _install_by_hash(self, pkg_hash, pkg_sha256, index, bincache_platform):
+    def _install_by_hash(
+        self,
+        pkg_hash: str,
+        pkg_sha256: str,
+        index: List[spack.spec.Spec],
+        bincache_platform: spack.platforms.Platform,
+    ) -> None:
         index_spec = next(x for x in index if x.dag_hash() == pkg_hash)
         # Reconstruct the compiler that we need to use for bootstrapping
         compiler_entry = {
@@ -200,10 +200,16 @@ class BuildcacheBootstrapper(Bootstrapper):
                 matches = spack.store.find([spec_str], multiple=False, query_fn=query)
                 for match in matches:
                     spack.binary_distribution.install_root_node(
-                        match, allow_root=True, unsigned=True, force=True, sha256=pkg_sha256
+                        match, unsigned=True, force=True, sha256=pkg_sha256
                     )
 
-    def _install_and_test(self, abstract_spec, bincache_platform, bincache_data, test_fn):
+    def _install_and_test(
+        self,
+        abstract_spec: spack.spec.Spec,
+        bincache_platform: spack.platforms.Platform,
+        bincache_data,
+        test_fn,
+    ) -> bool:
         # Ensure we see only the buildcache being used to bootstrap
         with spack.config.override(self.mirror_scope):
             # This index is currently needed to get the compiler used to build some
@@ -219,7 +225,7 @@ class BuildcacheBootstrapper(Bootstrapper):
                 # This will be None for things that don't depend on python
                 python_spec = item.get("python", None)
                 # Skip specs which are not compatible
-                if not abstract_spec.satisfies(candidate_spec):
+                if not abstract_spec.intersects(candidate_spec):
                     continue
 
                 if python_spec is not None and python_spec not in abstract_spec:
@@ -228,13 +234,14 @@ class BuildcacheBootstrapper(Bootstrapper):
                 for _, pkg_hash, pkg_sha256 in item["binaries"]:
                     self._install_by_hash(pkg_hash, pkg_sha256, index, bincache_platform)
 
-                info = {}
+                info: ConfigDictionary = {}
                 if test_fn(query_spec=abstract_spec, query_info=info):
                     self.last_search = info
                     return True
         return False
 
-    def try_import(self, module, abstract_spec_str):
+    def try_import(self, module: str, abstract_spec_str: str) -> bool:
+        info: ConfigDictionary
         test_fn, info = functools.partial(_try_import_from_store, module), {}
         if test_fn(query_spec=abstract_spec_str, query_info=info):
             return True
@@ -246,7 +253,8 @@ class BuildcacheBootstrapper(Bootstrapper):
         data = self._read_metadata(module)
         return self._install_and_test(abstract_spec, bincache_platform, data, test_fn)
 
-    def try_search_path(self, executables, abstract_spec_str):
+    def try_search_path(self, executables: Tuple[str], abstract_spec_str: str) -> bool:
+        info: ConfigDictionary
         test_fn, info = functools.partial(_executables_in_store, executables), {}
         if test_fn(query_spec=abstract_spec_str, query_info=info):
             self.last_search = info
@@ -262,13 +270,13 @@ class BuildcacheBootstrapper(Bootstrapper):
 class SourceBootstrapper(Bootstrapper):
     """Install the software needed during bootstrapping from sources."""
 
-    def __init__(self, conf):
+    def __init__(self, conf) -> None:
         super().__init__(conf)
-        self.last_search = None
+        self.last_search: Optional[ConfigDictionary] = None
         self.config_scope_name = f"bootstrap_source-{uuid.uuid4()}"
 
-    def try_import(self, module, abstract_spec_str):
-        info = {}
+    def try_import(self, module: str, abstract_spec_str: str) -> bool:
+        info: ConfigDictionary = {}
         if _try_import_from_store(module, abstract_spec_str, query_info=info):
             self.last_search = info
             return True
@@ -304,8 +312,8 @@ class SourceBootstrapper(Bootstrapper):
             return True
         return False
 
-    def try_search_path(self, executables, abstract_spec_str):
-        info = {}
+    def try_search_path(self, executables: Tuple[str], abstract_spec_str: str) -> bool:
+        info: ConfigDictionary = {}
         if _executables_in_store(executables, abstract_spec_str, query_info=info):
             self.last_search = info
             return True
@@ -334,20 +342,20 @@ class SourceBootstrapper(Bootstrapper):
         return False
 
 
-def create_bootstrapper(conf):
+def create_bootstrapper(conf: ConfigDictionary):
     """Return a bootstrap object built according to the configuration argument"""
     btype = conf["type"]
     return _bootstrap_methods[btype](conf)
 
 
-def source_is_enabled_or_raise(conf):
+def source_is_enabled_or_raise(conf: ConfigDictionary):
     """Raise ValueError if the source is not enabled for bootstrapping"""
     trusted, name = spack.config.get("bootstrap:trusted"), conf["name"]
     if not trusted.get(name, False):
         raise ValueError("source is not trusted")
 
 
-def ensure_module_importable_or_raise(module, abstract_spec=None):
+def ensure_module_importable_or_raise(module: str, abstract_spec: Optional[str] = None):
     """Make the requested module available for import, or raise.
 
     This function tries to import a Python module in the current interpreter
@@ -357,8 +365,8 @@ def ensure_module_importable_or_raise(module, abstract_spec=None):
     on first success.
 
     Args:
-        module (str): module to be imported in the current interpreter
-        abstract_spec (str): abstract spec that might provide the module. If not
+        module: module to be imported in the current interpreter
+        abstract_spec: abstract spec that might provide the module. If not
             given it defaults to "module"
 
     Raises:
@@ -395,7 +403,11 @@ def ensure_module_importable_or_raise(module, abstract_spec=None):
     raise ImportError(msg)
 
 
-def ensure_executables_in_path_or_raise(executables, abstract_spec, cmd_check=None):
+def ensure_executables_in_path_or_raise(
+    executables: list,
+    abstract_spec: str,
+    cmd_check: Optional[Callable[[spack.util.executable.Executable], bool]] = None,
+):
     """Ensure that some executables are in path or raise.
 
     Args:
@@ -461,7 +473,7 @@ def ensure_executables_in_path_or_raise(executables, abstract_spec, cmd_check=No
     raise RuntimeError(msg)
 
 
-def _add_externals_if_missing():
+def _add_externals_if_missing() -> None:
     search_list = [
         # clingo
         spack.repo.path.get_pkg_class("cmake"),
@@ -475,41 +487,41 @@ def _add_externals_if_missing():
     spack.detection.update_configuration(detected_packages, scope="bootstrap")
 
 
-def clingo_root_spec():
+def clingo_root_spec() -> str:
     """Return the root spec used to bootstrap clingo"""
     return _root_spec("clingo-bootstrap@spack+python")
 
 
-def ensure_clingo_importable_or_raise():
+def ensure_clingo_importable_or_raise() -> None:
     """Ensure that the clingo module is available for import."""
     ensure_module_importable_or_raise(module="clingo", abstract_spec=clingo_root_spec())
 
 
-def gnupg_root_spec():
+def gnupg_root_spec() -> str:
     """Return the root spec used to bootstrap GnuPG"""
     return _root_spec("gnupg@2.3:")
 
 
-def ensure_gpg_in_path_or_raise():
+def ensure_gpg_in_path_or_raise() -> None:
     """Ensure gpg or gpg2 are in the PATH or raise."""
     return ensure_executables_in_path_or_raise(
         executables=["gpg2", "gpg"], abstract_spec=gnupg_root_spec()
     )
 
 
-def patchelf_root_spec():
+def patchelf_root_spec() -> str:
     """Return the root spec used to bootstrap patchelf"""
     # 0.13.1 is the last version not to require C++17.
     return _root_spec("patchelf@0.13.1:")
 
 
-def verify_patchelf(patchelf):
+def verify_patchelf(patchelf: "spack.util.executable.Executable") -> bool:
     """Older patchelf versions can produce broken binaries, so we
     verify the version here.
 
     Arguments:
 
-        patchelf (spack.util.executable.Executable): patchelf executable
+        patchelf: patchelf executable
     """
     out = patchelf("--version", output=str, error=os.devnull, fail_on_error=False).strip()
     if patchelf.returncode != 0:
@@ -524,7 +536,7 @@ def verify_patchelf(patchelf):
     return version >= spack.version.Version("0.13.1")
 
 
-def ensure_patchelf_in_path_or_raise():
+def ensure_patchelf_in_path_or_raise() -> None:
     """Ensure patchelf is in the PATH or raise."""
     # The old concretizer is not smart and we're doing its job: if the latest patchelf
     # does not concretize because the compiler doesn't support C++17, we try to
@@ -541,7 +553,7 @@ def ensure_patchelf_in_path_or_raise():
         )
 
 
-def ensure_core_dependencies():
+def ensure_core_dependencies() -> None:
     """Ensure the presence of all the core dependencies."""
     if sys.platform.lower() == "linux":
         ensure_patchelf_in_path_or_raise()
@@ -550,16 +562,16 @@ def ensure_core_dependencies():
     ensure_clingo_importable_or_raise()
 
 
-def all_core_root_specs():
+def all_core_root_specs() -> List[str]:
     """Return a list of all the core root specs that may be used to bootstrap Spack"""
     return [clingo_root_spec(), gnupg_root_spec(), patchelf_root_spec()]
 
 
-def bootstrapping_sources(scope=None):
+def bootstrapping_sources(scope: Optional[str] = None):
     """Return the list of configured sources of software for bootstrapping Spack
 
     Args:
-        scope (str or None): if a valid configuration scope is given, return the
+        scope: if a valid configuration scope is given, return the
             list only from that scope
     """
     source_configs = spack.config.get("bootstrap:sources", default=None, scope=scope)

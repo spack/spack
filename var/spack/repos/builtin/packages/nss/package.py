@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -16,6 +16,7 @@ class Nss(MakefilePackage):
     homepage = "https://developer.mozilla.org/en-US/docs/Mozilla/Projects/NSS"
     url = "https://ftp.mozilla.org/pub/security/nss/releases/NSS_3_67_RTM/src/nss-3.67.tar.gz"
 
+    version("3.87", sha256="68a1894496d3d158babc75f8a5dda3f55b7c1560573936e3b101a10fa4ac152d")
     version("3.75", sha256="fd571507827284644f4dd522a032acda2286835f6683ed22a1c2d3878cc58582")
     version("3.73", sha256="566d3a68da9b10d7da9ef84eb4fe182f8f04e20d85c55d1bf360bb2c0096d8e5")
     # Everything before 3.73 is vulnerable (CVE-2021-43527)
@@ -43,17 +44,19 @@ class Nss(MakefilePackage):
         # We cannot use nss_build_all because this will try to build nspr.
         targets = ["all", "latest"]
 
-        targets.append("CCC={}".format(spack_cxx))
-        targets.append("USE_64=1")
-        targets.append("BUILD_OPT=1")
+        targets.extend(
+            [
+                "CCC={}".format(spack_cxx),
+                "USE_64=1",
+                "BUILD_OPT=1",
+                "NSS_USE_SYSTEM_SQLITE=1",
+                "NSS_ENABLE_WERROR=0",
+                "NSS_DISABLE_GTESTS=1",
+            ]
+        )
 
         for var in ("DIST", "SOURCE_PREFIX", "SOURCE_MD_DIR"):
             targets.append("{0}={1}".format(var, join_path(self.stage.source_path, "dist")))
-
-        targets.append("NSS_USE_SYSTEM_SQLITE=1")
-
-        if self.spec.satisfies("%gcc@10:"):
-            targets.append("NSS_ENABLE_WERROR=0")
 
         return targets
 

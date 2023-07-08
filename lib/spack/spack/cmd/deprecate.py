@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -13,8 +13,6 @@ place.
 It is up to the user to ensure binary compatibility between the deprecated
 installation and its deprecator.
 """
-from __future__ import print_function
-
 import argparse
 import os
 
@@ -33,12 +31,7 @@ section = "admin"
 level = "long"
 
 # Arguments for display_specs when we find ambiguity
-display_args = {
-    "long": True,
-    "show_flags": True,
-    "variants": True,
-    "indent": 4,
-}
+display_args = {"long": True, "show_flags": True, "variants": True, "indent": 4}
 
 
 def setup_parser(sp):

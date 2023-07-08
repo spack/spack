@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -62,7 +62,7 @@ class Zlib(MakefilePackage, Package):
         return find_libraries(["libz"], root=self.prefix, recursive=True, shared=shared)
 
 
-class SetupEnvironment(object):
+class SetupEnvironment:
     def setup_build_environment(self, env):
         if "+pic" in self.spec:
             env.append_flags("CFLAGS", self.pkg.compiler.cc_pic_flag)
@@ -116,9 +116,9 @@ class MakefileBuilder(spack.build_systems.makefile.MakefileBuilder, SetupEnviron
 
 
 class GenericBuilder(spack.build_systems.generic.GenericBuilder, SetupEnvironment):
-    def install(self, spec, prefix):
+    def install(self, pkg, spec, prefix):
         nmake("-f" "win32\\Makefile.msc")
-        build_dir = self.pkg.stage.source_path
+        build_dir = pkg.stage.source_path
         install_tree = {
             "bin": glob.glob(os.path.join(build_dir, "*.dll")),
             "lib": glob.glob(os.path.join(build_dir, "*.lib")),
@@ -138,4 +138,4 @@ class GenericBuilder(spack.build_systems.generic.GenericBuilder, SetupEnvironmen
                 for file in tree[inst_dir]:
                     install(file, install_dst)
 
-        installtree(self.prefix, install_tree)
+        installtree(prefix, install_tree)

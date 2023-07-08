@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -14,7 +14,7 @@ class PyRadicalUtils(PythonPackage):
     git = "https://github.com/radical-cybertools/radical.utils.git"
     pypi = "radical.utils/radical.utils-1.20.0.tar.gz"
 
-    maintainers = ["andre-merzky"]
+    maintainers("andre-merzky")
 
     version("develop", branch="devel")
     version("1.20.0", sha256="9b39dd616d70c387fb3f97d3510a506bac92c159b6482c3aebd3d11eeaeebcc9")
@@ -31,17 +31,6 @@ class PyRadicalUtils(PythonPackage):
     version("1.8.4", sha256="4777ba20e9f881bf3e73ad917638fdeca5a4b253d57ed7b321a07f670e3f737b")
     version("1.8.0", sha256="8582c65593f51d394fc263c6354ec5ad9cc7173369dcedfb2eef4f5e8146cf03")
     version("1.6.7", sha256="552f6c282f960ccd9d2401d686b0b3bfab35dfa94a26baeb2d3b4e45211f05a9")
-
-    version(
-        "0.45",
-        sha256="1333cff1a69532e51d4484fbac3fad6b172d415d2055a3141117c7cf8bdee6c5",
-        deprecated=True,
-    )
-    version(
-        "0.41.1",
-        sha256="582900e0434f49b69885a89bc65dc787362756e1014d52a4afac0bb61bcaa3ce",
-        deprecated=True,
-    )
 
     depends_on("py-radical-gtod", type=("build", "run"), when="@:1.13")
 

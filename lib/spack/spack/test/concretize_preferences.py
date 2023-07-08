@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -13,7 +13,7 @@ import spack.package_prefs
 import spack.repo
 import spack.util.spack_yaml as syaml
 from spack.config import ConfigError
-from spack.spec import Spec
+from spack.spec import CompilerSpec, Spec
 from spack.version import Version
 
 
@@ -61,7 +61,7 @@ def assert_variant_values(spec, **variants):
 
 
 @pytest.mark.usefixtures("concretize_scope", "mock_packages")
-class TestConcretizePreferences(object):
+class TestConcretizePreferences:
     @pytest.mark.parametrize(
         "package_name,variant_value,expected_results",
         [
@@ -109,10 +109,13 @@ class TestConcretizePreferences(object):
     )
     def test_preferred_compilers(self, compiler_str, spec_str):
         """Test preferred compilers are applied correctly"""
-        spec = spack.spec.Spec(spec_str)
+        spec = Spec(spec_str)
         update_packages(spec.name, "compiler", [compiler_str])
         spec.concretize()
-        assert spec.compiler == spack.spec.CompilerSpec(compiler_str)
+        # note: lhs has concrete compiler version, rhs still abstract.
+        # Could be made more strict by checking for equality with `gcc@=4.5.0`
+        # etc.
+        assert spec.compiler.satisfies(CompilerSpec(compiler_str))
 
     def test_preferred_target(self, mutable_mock_repo):
         """Test preferred targets are applied correctly"""
@@ -149,7 +152,9 @@ class TestConcretizePreferences(object):
         assert spec.version == Version("2.2")
 
     def test_preferred_versions_mixed_version_types(self):
-        update_packages("mixedversions", "version", ["2.0"])
+        if spack.config.get("config:concretizer") == "original":
+            pytest.skip("This behavior is not enforced for the old concretizer")
+        update_packages("mixedversions", "version", ["=2.0"])
         spec = concretize("mixedversions")
         assert spec.version == Version("2.0")
 
@@ -225,6 +230,29 @@ mpileaks:
         spec.concretize()
         assert spec.version == Version("3.5.0")
 
+    def test_preferred_undefined_raises(self):
+        """Preference should not specify an undefined version"""
+        if spack.config.get("config:concretizer") == "original":
+            pytest.xfail("This behavior is not enforced for the old concretizer")
+
+        update_packages("python", "version", ["3.5.0.1"])
+        spec = Spec("python")
+        with pytest.raises(spack.config.ConfigError):
+            spec.concretize()
+
+    def test_preferred_truncated(self):
+        """Versions without "=" are treated as version ranges: if there is
+        a satisfying version defined in the package.py, we should use that
+        (don't define a new version).
+        """
+        if spack.config.get("config:concretizer") == "original":
+            pytest.skip("This behavior is not enforced for the old concretizer")
+
+        update_packages("python", "version", ["3.5"])
+        spec = Spec("python")
+        spec.concretize()
+        assert spec.satisfies("@3.5.1")
+
     def test_develop(self):
         """Test concretization with develop-like versions"""
         spec = Spec("develop-test")
@@ -277,6 +305,7 @@ mpich:
 
         The specific code for parsing the module is tested elsewhere.
         This just tests that the preference is accounted for"""
+
         # make sure this doesn't give us an external first.
         def mock_module(cmd, module):
             return "prepend-path PATH /dummy/path"

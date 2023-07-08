@@ -1,9 +1,7 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
-
-from __future__ import print_function
 
 import sys
 
@@ -27,12 +25,7 @@ error_message = """You can either:
 """
 
 # Arguments for display_specs when we find ambiguity
-display_args = {
-    "long": True,
-    "show_flags": False,
-    "variants": False,
-    "indent": 4,
-}
+display_args = {"long": True, "show_flags": False, "variants": False, "indent": 4}
 
 
 def setup_parser(subparser):

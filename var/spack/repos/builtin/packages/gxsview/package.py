@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -18,8 +18,14 @@ class Gxsview(QMakePackage):
     url = "https://www.nmri.go.jp/study/research_organization/risk/gxsview/download/gxsview-2021.07.01-src.zip"
 
     # Support email for questions ohnishi@m.mpat.go.jp
-    maintainers = ["cessenat"]
+    maintainers("cessenat")
 
+    version(
+        "2023.05.29", sha256="1e768fd7afd22198b7f73adeb42f4ccf7e0ff68996a3843b1ea138225c4c1da3"
+    )
+    version(
+        "2022.11.04", sha256="28c299e4f87836b93e4a42934777364a166e35d305050ee5623a1b7cbc0ab561"
+    )
     version(
         "2022.05.09", sha256="c052797aee1fa9588574b28e6cf24d8ca9135c9a20cd86d134a58a7bbcbde67b"
     )

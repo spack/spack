@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -9,9 +9,9 @@ import spack.error
 import spack.repo
 from spack.config import ConfigError
 from spack.util.path import canonicalize_path
-from spack.version import VersionList
+from spack.version import Version
 
-_lesser_spec_types = {"compiler": spack.spec.CompilerSpec, "version": VersionList}
+_lesser_spec_types = {"compiler": spack.spec.CompilerSpec, "version": Version}
 
 
 def _spec_type(component):
@@ -19,7 +19,7 @@ def _spec_type(component):
     return _lesser_spec_types.get(component, spack.spec.Spec)
 
 
-class PackagePrefs(object):
+class PackagePrefs:
     """Defines the sort order for a set of specs.
 
     Spack's package preference implementation uses PackagePrefss to
@@ -73,7 +73,7 @@ class PackagePrefs(object):
         # integer is the index of the first spec in order that satisfies
         # spec, or it's a number larger than any position in the order.
         match_index = next(
-            (i for i, s in enumerate(spec_order) if spec.satisfies(s)), len(spec_order)
+            (i for i, s in enumerate(spec_order) if spec.intersects(s)), len(spec_order)
         )
         if match_index < len(spec_order) and spec_order[match_index] == spec:
             # If this is called with multiple specs that all satisfy the same
@@ -185,7 +185,7 @@ def spec_externals(spec):
                 ),
                 extra_attributes=entry.get("extra_attributes", {}),
             )
-            if external_spec.satisfies(spec):
+            if external_spec.intersects(spec):
                 external_specs.append(external_spec)
 
     # Defensively copy returned specs

@@ -1,9 +1,10 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 from spack.package import *
+from spack.variant import _ConditionalVariantValues
 
 
 class Acts(CMakePackage, CudaPackage):
@@ -32,13 +33,20 @@ class Acts(CMakePackage, CudaPackage):
     homepage = "https://acts.web.cern.ch/ACTS/"
     git = "https://github.com/acts-project/acts.git"
     list_url = "https://github.com/acts-project/acts/releases/"
-    maintainers = ["HadrienG2"]
+    maintainers("HadrienG2")
 
     tags = ["hep"]
 
     # Supported Acts versions
     version("main", branch="main")
     version("master", branch="main", deprecated=True)  # For compatibility
+    version("23.2.1", commit="a9fe5167d4d3b6b53b28d3b17060a5f3e380cf3a", submodules=True)
+    version("23.2.0", commit="bc3120d23a72cfdd0ea8f9a0997f59caf311672b", submodules=True)
+    version("23.1.0", commit="4479f182a37650a538344f749b967d6f757bdf60", submodules=True)
+    version("23.0.0", commit="5af1b1b5feb8ca8f4c2c69106a1b9ef612c70d9c", submodules=True)
+    version("22.0.1", commit="a4ac99dd72828c5eb3fac06e146f3391958fca8c", submodules=True)
+    version("22.0.0", commit="0fb6f8d2ace65338915451201e9ceb6cee11fb5e", submodules=True)
+    version("21.1.1", commit="8ae825de246e8e574d05d9eaf05ba4a937c69aa9", submodules=True)
     version("21.1.0", commit="3b4b5c741c8541491d496a36b917b00b344d52d1", submodules=True)
     version("21.0.0", commit="d8cb0fac3a44e1d44595a481f977df9bd70195fb", submodules=True)
     version("20.3.0", commit="b1859b322744cb033328fd57d9e74fb5326aa56b", submodules=True)
@@ -138,6 +146,14 @@ class Acts(CMakePackage, CudaPackage):
     variant(
         "benchmarks", default=False, description="Build the performance benchmarks", when="@0.16:"
     )
+    _cxxstd_values = (conditional("14", when="@:0.8.1"), "17", conditional("20", when="@24:"))
+    variant(
+        "cxxstd",
+        default="17",
+        values=_cxxstd_values,
+        multi=False,
+        description="Use the specified C++ standard when building.",
+    )
     variant(
         "examples",
         default=False,
@@ -198,12 +214,7 @@ class Acts(CMakePackage, CudaPackage):
         description="Enable memory profiling using gperftools",
         when="@19.3:",
     )
-    variant(
-        "sycl",
-        default=False,
-        description="Build the SyCL plugin",
-        when="@1:",
-    )
+    variant("sycl", default=False, description="Build the SyCL plugin", when="@1:")
     variant("tgeo", default=False, description="Build the TGeo plugin", when="+identification")
 
     # Variants that only affect Acts examples for now
@@ -237,12 +248,7 @@ class Acts(CMakePackage, CudaPackage):
         description="Build python bindings for the examples",
         when="@14: +examples",
     )
-    variant(
-        "svg",
-        default=False,
-        description="Build ActSVG display plugin",
-        when="@20.1:",
-    )
+    variant("svg", default=False, description="Build ActSVG display plugin", when="@20.1:")
     variant(
         "tbb",
         default=True,
@@ -253,7 +259,8 @@ class Acts(CMakePackage, CudaPackage):
 
     # Build dependencies
     depends_on("acts-dd4hep", when="@19 +dd4hep")
-    depends_on("actsvg", when="@20.1: +svg")
+    depends_on("actsvg@0.4.20:", when="@20.1: +svg")
+    depends_on("actsvg@0.4.28:", when="@23.2: +svg")
     depends_on("autodiff @0.6:", when="@17: +autodiff")
     depends_on("autodiff @0.5.11:0.5.99", when="@1.2:16 +autodiff")
     depends_on("boost @1.62:1.69 +program_options +test", when="@:0.10.3")
@@ -267,6 +274,7 @@ class Acts(CMakePackage, CudaPackage):
     depends_on("eigen @3.3.7:3.3.99", when="@:15.0")
     depends_on("geant4", when="+fatras_geant4")
     depends_on("geant4", when="+geant4")
+    depends_on("git-lfs", when="@12.0.0:")
     depends_on("gperftools", when="+profilecpu")
     depends_on("gperftools", when="+profilemem")
     depends_on("hepmc3 @3.2.1:", when="+hepmc3")
@@ -277,13 +285,21 @@ class Acts(CMakePackage, CudaPackage):
     depends_on("python", when="+python")
     depends_on("python@3.8:", when="+python @19.11:19")
     depends_on("python@3.8:", when="+python @21:")
-    depends_on("py-onnx-runtime", when="+onnx")
+    depends_on("py-onnxruntime", when="+onnx")
     depends_on("py-pybind11 @2.6.2:", when="+python @18:")
     depends_on("py-pytest", when="+python +unit_tests")
-    depends_on("root @6.10: cxxstd=14", when="+tgeo @:0.8.0")
-    depends_on("root @6.20: cxxstd=17", when="+tgeo @0.8.1:")
+    depends_on("root @6.10:", when="+tgeo @:0.8.0")
+    depends_on("root @6.20:", when="+tgeo @0.8.1:")
     depends_on("sycl", when="+sycl")
     depends_on("vecmem@0.4: +sycl", when="+sycl")
+
+    # ACTS imposes requirements on the C++ standard values used by ROOT
+    for _cxxstd in _cxxstd_values:
+        if isinstance(_cxxstd, _ConditionalVariantValues):
+            for _v in _cxxstd:
+                depends_on(f"root cxxstd={_v.value}", when=f"cxxstd={_v.value} {_v.when} ^root")
+        else:
+            depends_on(f"root cxxstd={_cxxstd}", when=f"cxxstd={_cxxstd} ^root")
 
     # ACTS has been using C++17 for a while, which precludes use of old GCC
     conflicts("%gcc@:7", when="@0.23:")
@@ -335,6 +351,7 @@ class Acts(CMakePackage, CudaPackage):
             cmake_variant("FATRAS", "fatras"),
             cmake_variant("FATRAS_GEANT4", "fatras_geant4"),
             example_cmake_variant("GEANT4", "geant4"),
+            plugin_cmake_variant("GEANT4", "geant4"),
             example_cmake_variant("HEPMC3", "hepmc3"),
             plugin_cmake_variant("IDENTIFICATION", "identification"),
             cmake_variant(integration_tests_label, "integration_tests"),
@@ -387,8 +404,10 @@ class Acts(CMakePackage, CudaPackage):
             if cuda_arch != "none":
                 args.append("-DCUDA_FLAGS=-arch=sm_{0}".format(cuda_arch[0]))
 
-        if "root" in spec:
-            cxxstd = spec["root"].variants["cxxstd"].value
-            args.append("-DCMAKE_CXX_STANDARD={0}".format(cxxstd))
+        if "+python" in spec:
+            python = spec["python"].command.path
+            args.append("-DPython_EXECUTABLE={0}".format(python))
+
+        args.append(self.define_from_variant("CMAKE_CXX_STANDARD", "cxxstd"))
 
         return args

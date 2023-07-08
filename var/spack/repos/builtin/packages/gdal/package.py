@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -9,7 +9,7 @@ import sys
 from spack.build_systems.autotools import AutotoolsBuilder
 from spack.build_systems.cmake import CMakeBuilder
 from spack.package import *
-from spack.util.environment import filter_system_paths
+from spack.util.environment import filter_system_paths, is_system_path
 
 
 class Gdal(CMakePackage, AutotoolsPackage, PythonExtension):
@@ -28,8 +28,12 @@ class Gdal(CMakePackage, AutotoolsPackage, PythonExtension):
     list_url = "https://download.osgeo.org/gdal/"
     list_depth = 1
 
-    maintainers = ["adamjstewart"]
+    maintainers("adamjstewart")
 
+    version("3.7.0", sha256="af4b26a6b6b3509ae9ccf1fcc5104f7fe015ef2110f5ba13220816398365adce")
+    version("3.6.4", sha256="889894cfff348c04ac65b462f629d03efc53ea56cf04de7662fbe81a364e3df1")
+    version("3.6.3", sha256="3cccbed883b1fb99b913966aa3a650ad930e7c3afc714f5823f9754176ee49ea")
+    version("3.6.2", sha256="35f40d2e08061b342513cdcddc2b997b3814ef8254514f0ef1e8bc7aa56cf681")
     version("3.6.1", sha256="68f1c03547ff7152289789db7f67ee634167c9b7bfec4872b88406b236f9c230")
     version("3.6.0", sha256="f7afa4aa8d32d0799e011a9f573c6a67e9471f78e70d3d0d0b45b45c8c0c1a94")
     version("3.5.3", sha256="d32223ddf145aafbbaec5ccfa5dbc164147fb3348a3413057f9b1600bb5b3890")
@@ -201,7 +205,7 @@ class Gdal(CMakePackage, AutotoolsPackage, PythonExtension):
         when="@2.1:",
         description="Used for linear interpolation of gdal_grid",
     )
-    variant("rasdaman", default=False, description="Required for Rasdaman driver")
+    variant("rasdaman", default=False, when="@:3.6", description="Required for Rasdaman driver")
     variant(
         "rasterlite2", default=False, when="@2.2:", description="Required for RasterLite2 driver"
     )
@@ -229,14 +233,12 @@ class Gdal(CMakePackage, AutotoolsPackage, PythonExtension):
 
     # Build system
     build_system(
-        conditional("cmake", when="@3.5:"),
-        conditional("autotools", when="@:3.5"),
-        default="cmake",
+        conditional("cmake", when="@3.5:"), conditional("autotools", when="@:3.5"), default="cmake"
     )
 
     with when("build_system=cmake"):
+        generator("ninja")
         depends_on("cmake@3.9:", type="build")
-        depends_on("ninja", type="build")
 
     with when("build_system=autotools"):
         depends_on("gmake", type="build")
@@ -380,6 +382,9 @@ class Gdal(CMakePackage, AutotoolsPackage, PythonExtension):
     depends_on("php", type=("build", "link", "run"), when="+php")
     depends_on("swig", type="build", when="+php")
 
+    # https://gdal.org/development/rfc/rfc88_googletest.html
+    depends_on("googletest@1.10:", type="test")
+
     # https://trac.osgeo.org/gdal/wiki/SupportedCompilers
     msg = "GDAL requires C++11 support"
     conflicts("%gcc@:4.8.0", msg=msg)
@@ -463,8 +468,6 @@ class Gdal(CMakePackage, AutotoolsPackage, PythonExtension):
 
 
 class CMakeBuilder(CMakeBuilder):
-    generator = "Ninja"
-
     def cmake_args(self):
         # https://gdal.org/build_hints.html
         args = [
@@ -628,7 +631,6 @@ class AutotoolsBuilder(AutotoolsBuilder):
             self.with_or_without("hdf4", package="hdf"),
             self.with_or_without("hdf5", package="hdf5"),
             self.with_or_without("hdfs", package="hadoop"),
-            self.with_or_without("libiconv-prefix", variant="iconv", package="iconv"),
             self.with_or_without("idb", package="idb"),
             self.with_or_without("ingres", package="ingres"),
             self.with_or_without("jasper", package="jasper"),
@@ -682,6 +684,11 @@ class AutotoolsBuilder(AutotoolsBuilder):
             self.with_or_without("perl"),
             self.with_or_without("php"),
         ]
+        if "+iconv" in self.spec:
+            if self.spec["iconv"].name == "libc":
+                args.append("--without-libiconv-prefix")
+            elif not is_system_path(self.spec["iconv"].prefix):
+                args.append("--with-libiconv-prefix=" + self.spec["iconv"].prefix)
 
         # Renamed or modified flags
         if self.spec.satisfies("@3:"):

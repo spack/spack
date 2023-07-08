@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -14,7 +14,7 @@ class PyColorcet(PythonPackage):
     homepage = "https://colorcet.holoviz.org/index.html"
     pypi = "colorcet/colorcet-3.0.0.tar.gz"
 
-    maintainers = ["vvolkl"]
+    maintainers("vvolkl")
 
     version("3.0.0", sha256="21c522346a7aa81a603729f2996c22ac3f7822f4c8c303c59761e27d2dfcf3db")
 

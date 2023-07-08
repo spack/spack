@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -13,7 +13,7 @@ class PySpherical(PythonPackage):
     homepage = "https://github.com/moble/spherical"
     pypi = "spherical/spherical-1.0.10.tar.gz"
 
-    maintainers = ["nilsvu", "moble"]
+    maintainers("nilsvu", "moble")
 
     version("1.0.10", sha256="a7f1d902aa89fd51174a0c69b2379c352d229bf7e088907e8eb4461ad227d95f")
 

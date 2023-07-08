@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -46,30 +46,12 @@ SectionHeader = namedtuple(
 
 ProgramHeader32 = namedtuple(
     "ProgramHeader32",
-    [
-        "p_type",
-        "p_offset",
-        "p_vaddr",
-        "p_paddr",
-        "p_filesz",
-        "p_memsz",
-        "p_flags",
-        "p_align",
-    ],
+    ["p_type", "p_offset", "p_vaddr", "p_paddr", "p_filesz", "p_memsz", "p_flags", "p_align"],
 )
 
 ProgramHeader64 = namedtuple(
     "ProgramHeader64",
-    [
-        "p_type",
-        "p_flags",
-        "p_offset",
-        "p_vaddr",
-        "p_paddr",
-        "p_filesz",
-        "p_memsz",
-        "p_align",
-    ],
+    ["p_type", "p_flags", "p_offset", "p_vaddr", "p_paddr", "p_filesz", "p_memsz", "p_align"],
 )
 
 
@@ -93,7 +75,7 @@ class ELF_CONSTANTS:
     SHT_STRTAB = 3
 
 
-class ElfFile(object):
+class ElfFile:
     """Parsed ELF file."""
 
     __slots__ = [
@@ -514,10 +496,9 @@ class ElfDynamicSectionUpdateFailed(Exception):
     def __init__(self, old, new):
         self.old = old
         self.new = new
-        super(ElfDynamicSectionUpdateFailed, self).__init__(
+        super().__init__(
             "New rpath {} is longer than old rpath {}".format(
-                new.decode("utf-8"),
-                old.decode("utf-8"),
+                new.decode("utf-8"), old.decode("utf-8")
             )
         )
 

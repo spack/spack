@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -29,6 +29,7 @@ chosen, test dependencies are enabled for all packages in the environment.""",
     )
 
     spack.cmd.common.arguments.add_concretizer_args(subparser)
+    spack.cmd.common.arguments.add_common_arguments(subparser, ["jobs"])
 
 
 def concretize(parser, args):

@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -72,7 +72,7 @@ class WindowsOs(OperatingSystem):
         plat_ver = windows_version()
         if plat_ver < Version("10"):
             raise SpackError("Spack is not supported on Windows versions older than 10")
-        super(WindowsOs, self).__init__("windows{}".format(plat_ver), plat_ver)
+        super().__init__("windows{}".format(plat_ver), plat_ver)
 
     def __str__(self):
         return self.name

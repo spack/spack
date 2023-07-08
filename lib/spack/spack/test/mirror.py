@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -104,35 +104,25 @@ def test_url_mirror(mock_archive):
     repos.clear()
 
 
-@pytest.mark.skipif(not which("git"), reason="requires git to be installed")
-def test_git_mirror(mock_git_repository):
+def test_git_mirror(git, mock_git_repository):
     set_up_package("git-test", mock_git_repository, "git")
     check_mirror()
     repos.clear()
 
 
-@pytest.mark.skipif(
-    not which("svn") or not which("svnadmin"), reason="requires subversion to be installed"
-)
 def test_svn_mirror(mock_svn_repository):
     set_up_package("svn-test", mock_svn_repository, "svn")
     check_mirror()
     repos.clear()
 
 
-@pytest.mark.skipif(not which("hg"), reason="requires mercurial to be installed")
 def test_hg_mirror(mock_hg_repository):
     set_up_package("hg-test", mock_hg_repository, "hg")
     check_mirror()
     repos.clear()
 
 
-@pytest.mark.skipif(
-    not all([which("svn"), which("hg"), which("git")]),
-    reason="requires subversion, git, and mercurial to be installed",
-)
 def test_all_mirror(mock_git_repository, mock_svn_repository, mock_hg_repository, mock_archive):
-
     set_up_package("git-test", mock_git_repository, "git")
     set_up_package("svn-test", mock_svn_repository, "svn")
     set_up_package("hg-test", mock_hg_repository, "hg")
@@ -142,13 +132,7 @@ def test_all_mirror(mock_git_repository, mock_svn_repository, mock_hg_repository
 
 
 @pytest.mark.parametrize(
-    "mirror",
-    [
-        spack.mirror.Mirror(
-            "https://example.com/fetch",
-            "https://example.com/push",
-        ),
-    ],
+    "mirror", [spack.mirror.Mirror("https://example.com/fetch", "https://example.com/push")]
 )
 def test_roundtrip_mirror(mirror):
     mirror_yaml = mirror.to_yaml()
@@ -161,11 +145,9 @@ def test_roundtrip_mirror(mirror):
     "invalid_yaml", ["playing_playlist: {{ action }} playlist {{ playlist_name }}"]
 )
 def test_invalid_yaml_mirror(invalid_yaml):
-    with pytest.raises(SpackYAMLError) as e:
+    with pytest.raises(SpackYAMLError, match="error parsing YAML") as e:
         spack.mirror.Mirror.from_yaml(invalid_yaml)
-    exc_msg = str(e.value)
-    assert exc_msg.startswith("error parsing YAML mirror:")
-    assert invalid_yaml in exc_msg
+    assert invalid_yaml in str(e.value)
 
 
 @pytest.mark.parametrize("invalid_json, error_message", [("{13:", "Expecting property name")])
@@ -183,11 +165,10 @@ def test_invalid_json_mirror(invalid_json, error_message):
         spack.mirror.MirrorCollection(
             mirrors={
                 "example-mirror": spack.mirror.Mirror(
-                    "https://example.com/fetch",
-                    "https://example.com/push",
-                ).to_dict(),
-            },
-        ),
+                    "https://example.com/fetch", "https://example.com/push"
+                ).to_dict()
+            }
+        )
     ],
 )
 def test_roundtrip_mirror_collection(mirror_collection):
@@ -201,11 +182,9 @@ def test_roundtrip_mirror_collection(mirror_collection):
     "invalid_yaml", ["playing_playlist: {{ action }} playlist {{ playlist_name }}"]
 )
 def test_invalid_yaml_mirror_collection(invalid_yaml):
-    with pytest.raises(SpackYAMLError) as e:
+    with pytest.raises(SpackYAMLError, match="error parsing YAML") as e:
         spack.mirror.MirrorCollection.from_yaml(invalid_yaml)
-    exc_msg = str(e.value)
-    assert exc_msg.startswith("error parsing YAML mirror collection:")
-    assert invalid_yaml in exc_msg
+    assert invalid_yaml in str(e.value)
 
 
 @pytest.mark.parametrize("invalid_json, error_message", [("{13:", "Expecting property name")])
@@ -218,7 +197,7 @@ def test_invalid_json_mirror_collection(invalid_json, error_message):
 
 
 def test_mirror_archive_paths_no_version(mock_packages, config, mock_archive):
-    spec = Spec("trivial-install-test-package@nonexistingversion").concretized()
+    spec = Spec("trivial-install-test-package@=nonexistingversion").concretized()
     fetcher = spack.fetch_strategy.URLFetchStrategy(mock_archive.url)
     spack.mirror.mirror_archive_paths(fetcher, "per-package-ref", spec)
 
@@ -267,7 +246,7 @@ def test_mirror_with_url_patches(mock_packages, config, monkeypatch):
         )
 
 
-class MockFetcher(object):
+class MockFetcher:
     """Mock fetcher object which implements the necessary functionality for
     testing MirrorCache
     """
@@ -302,8 +281,8 @@ def test_mirror_cache_symlinks(tmpdir):
 @pytest.mark.parametrize(
     "specs,expected_specs",
     [
-        (["a"], ["a@1.0", "a@2.0"]),
-        (["a", "brillig"], ["a@1.0", "a@2.0", "brillig@1.0.0", "brillig@2.0.0"]),
+        (["a"], ["a@=1.0", "a@=2.0"]),
+        (["a", "brillig"], ["a@=1.0", "a@=2.0", "brillig@=1.0.0", "brillig@=2.0.0"]),
     ],
 )
 def test_get_all_versions(specs, expected_specs):

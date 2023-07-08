@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -9,7 +9,7 @@ from spack.pkg.builtin.clingo import Clingo
 class ClingoBootstrap(Clingo):
     """Clingo with some options used for bootstrapping"""
 
-    maintainers = ["alalazo"]
+    maintainers("alalazo")
 
     variant("build_type", default="Release", values=("Release",), description="CMake build type")
 
@@ -50,11 +50,11 @@ class ClingoBootstrap(Clingo):
         return self.define("CLINGO_BUILD_PY_SHARED", "OFF")
 
     def cmake_args(self):
-        args = super(ClingoBootstrap, self).cmake_args()
+        args = super().cmake_args()
         args.extend(
             [
                 # Avoid building the clingo executable
-                self.define("CLINGO_BUILD_APPS", "OFF"),
+                self.define("CLINGO_BUILD_APPS", "OFF")
             ]
         )
         return args

@@ -1,9 +1,7 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
-
-from __future__ import division
 
 import collections.abc
 import contextlib
@@ -198,7 +196,7 @@ def memoized(func):
         except TypeError as e:
             # TypeError is raised when indexing into a dict if the key is unhashable.
             raise UnhashableArguments(
-                "args + kwargs '{}' was not hashable for function '{}'".format(key, func.__name__),
+                "args + kwargs '{}' was not hashable for function '{}'".format(key, func.__name__)
             ) from e
 
     return _memoized_function
@@ -237,6 +235,7 @@ def decorator_with_or_without_args(decorator):
         @decorator
 
     """
+
     # See https://stackoverflow.com/questions/653368 for more on this
     @functools.wraps(decorator)
     def new_dec(*args, **kwargs):
@@ -741,6 +740,18 @@ def pretty_string_to_date(date_str, now=None):
     raise ValueError(msg)
 
 
+def pretty_seconds_formatter(seconds):
+    if seconds >= 1:
+        multiplier, unit = 1, "s"
+    elif seconds >= 1e-3:
+        multiplier, unit = 1e3, "ms"
+    elif seconds >= 1e-6:
+        multiplier, unit = 1e6, "us"
+    else:
+        multiplier, unit = 1e9, "ns"
+    return lambda s: "%.3f%s" % (multiplier * s, unit)
+
+
 def pretty_seconds(seconds):
     """Seconds to string with appropriate units
 
@@ -750,23 +761,15 @@ def pretty_seconds(seconds):
     Returns:
         str: Time string with units
     """
-    if seconds >= 1:
-        value, unit = seconds, "s"
-    elif seconds >= 1e-3:
-        value, unit = seconds * 1e3, "ms"
-    elif seconds >= 1e-6:
-        value, unit = seconds * 1e6, "us"
-    else:
-        value, unit = seconds * 1e9, "ns"
-    return "%.3f%s" % (value, unit)
+    return pretty_seconds_formatter(seconds)(seconds)
 
 
 class RequiredAttributeError(ValueError):
     def __init__(self, message):
-        super(RequiredAttributeError, self).__init__(message)
+        super().__init__(message)
 
 
-class ObjectWrapper(object):
+class ObjectWrapper:
     """Base class that wraps an object. Derived classes can add new behavior
     while staying undercover.
 
@@ -793,7 +796,7 @@ class ObjectWrapper(object):
         self.__dict__ = wrapped_object.__dict__
 
 
-class Singleton(object):
+class Singleton:
     """Simple wrapper for lazily initialized singleton objects."""
 
     def __init__(self, factory):
@@ -840,7 +843,7 @@ class Singleton(object):
         return repr(self.instance)
 
 
-class LazyReference(object):
+class LazyReference:
     """Lazily evaluated reference to part of a singleton."""
 
     def __init__(self, ref_function):
@@ -886,8 +889,8 @@ def load_module_from_file(module_name, module_path):
 
     # This recipe is adapted from https://stackoverflow.com/a/67692/771663
 
-    spec = importlib.util.spec_from_file_location(module_name, module_path)  # novm
-    module = importlib.util.module_from_spec(spec)  # novm
+    spec = importlib.util.spec_from_file_location(module_name, module_path)
+    module = importlib.util.module_from_spec(spec)
     # The module object needs to exist in sys.modules before the
     # loader executes the module code.
     #
@@ -938,7 +941,7 @@ def star(func):
     return _wrapper
 
 
-class Devnull(object):
+class Devnull:
     """Null stream with less overhead than ``os.devnull``.
 
     See https://stackoverflow.com/a/2929954.
@@ -986,10 +989,8 @@ def enum(**kwargs):
 
 
 def stable_partition(
-    input_iterable,  # type: Iterable
-    predicate_fn,  # type: Callable[[Any], bool]
-):
-    # type: (...) -> Tuple[List[Any], List[Any]]
+    input_iterable: Iterable, predicate_fn: Callable[[Any], bool]
+) -> Tuple[List[Any], List[Any]]:
     """Partition the input iterable according to a custom predicate.
 
     Args:
@@ -1057,27 +1058,24 @@ class TypedMutableSequence(collections.abc.MutableSequence):
         return str(self.data)
 
 
-class GroupedExceptionHandler(object):
+class GroupedExceptionHandler:
     """A generic mechanism to coalesce multiple exceptions and preserve tracebacks."""
 
     def __init__(self):
-        self.exceptions = []  # type: List[Tuple[str, Exception, List[str]]]
+        self.exceptions: List[Tuple[str, Exception, List[str]]] = []
 
     def __bool__(self):
         """Whether any exceptions were handled."""
         return bool(self.exceptions)
 
-    def forward(self, context):
-        # type: (str) -> GroupedExceptionForwarder
+    def forward(self, context: str) -> "GroupedExceptionForwarder":
         """Return a contextmanager which extracts tracebacks and prefixes a message."""
         return GroupedExceptionForwarder(context, self)
 
-    def _receive_forwarded(self, context, exc, tb):
-        # type: (str, Exception, List[str]) -> None
+    def _receive_forwarded(self, context: str, exc: Exception, tb: List[str]):
         self.exceptions.append((context, exc, tb))
 
-    def grouped_message(self, with_tracebacks=True):
-        # type: (bool) -> str
+    def grouped_message(self, with_tracebacks: bool = True) -> str:
         """Print out an error message coalescing all the forwarded errors."""
         each_exception_message = [
             "{0} raised {1}: {2}{3}".format(
@@ -1091,12 +1089,11 @@ class GroupedExceptionHandler(object):
         return "due to the following failures:\n{0}".format("\n".join(each_exception_message))
 
 
-class GroupedExceptionForwarder(object):
+class GroupedExceptionForwarder:
     """A contextmanager to capture exceptions and forward them to a
     GroupedExceptionHandler."""
 
-    def __init__(self, context, handler):
-        # type: (str, GroupedExceptionHandler) -> None
+    def __init__(self, context: str, handler: GroupedExceptionHandler):
         self._context = context
         self._handler = handler
 
@@ -1105,18 +1102,14 @@ class GroupedExceptionForwarder(object):
 
     def __exit__(self, exc_type, exc_value, tb):
         if exc_value is not None:
-            self._handler._receive_forwarded(
-                self._context,
-                exc_value,
-                traceback.format_tb(tb),
-            )
+            self._handler._receive_forwarded(self._context, exc_value, traceback.format_tb(tb))
 
         # Suppress any exception from being re-raised:
         # https://docs.python.org/3/reference/datamodel.html#object.__exit__.
         return True
 
 
-class classproperty(object):
+class classproperty:
     """Non-data descriptor to evaluate a class-level property. The function that performs
     the evaluation is injected at creation time and take an instance (could be None) and
     an owner (i.e. the class that originated the instance)

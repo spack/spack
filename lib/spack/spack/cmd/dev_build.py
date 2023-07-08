@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -107,7 +107,7 @@ def dev_build(self, args):
             "  Use `spack create` to create a new package",
         )
 
-    if not spec.versions.concrete:
+    if not spec.versions.concrete_range_as_version:
         tty.die(
             "spack dev-build spec must have a single, concrete version. "
             "Did you forget a package version number?"

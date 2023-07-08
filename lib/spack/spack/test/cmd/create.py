@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -143,11 +143,7 @@ def test_create_template(mock_test_repo, args, name, expected):
 
 
 @pytest.mark.parametrize(
-    "name,expected",
-    [
-        (" ", "name must be provided"),
-        ("bad#name", "name can only contain"),
-    ],
+    "name,expected", [(" ", "name must be provided"), ("bad#name", "name can only contain")]
 )
 def test_create_template_bad_name(mock_test_repo, name, expected):
     """Test template creation with bad name options."""
@@ -184,11 +180,7 @@ def test_build_system_guesser_octave():
 
 
 @pytest.mark.parametrize(
-    "url,expected",
-    [
-        ("testname", "testname"),
-        ("file://example.com/archive.tar.gz", "archive"),
-    ],
+    "url,expected", [("testname", "testname"), ("file://example.com/archive.tar.gz", "archive")]
 )
 def test_get_name_urls(url, expected):
     """Test get_name with different URLs."""

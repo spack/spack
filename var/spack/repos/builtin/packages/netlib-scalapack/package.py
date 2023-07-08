@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -12,13 +12,6 @@ class ScalapackBase(CMakePackage):
     """Base class for building ScaLAPACK, shared with the AMD optimized version
     of the library in the 'amdscalapack' package.
     """
-
-    variant(
-        "build_type",
-        default="Release",
-        description="CMake build type",
-        values=("Debug", "Release", "RelWithDebInfo", "MinSizeRel"),
-    )
 
     variant("shared", default=True, description="Build the shared library version")
     variant("pic", default=False, description="Build position independent code")
@@ -44,6 +37,8 @@ class ScalapackBase(CMakePackage):
         sha256="072b006e485f0ca4cba56096912a986e4d3da73aae51c2205928aa5eb842cefd",
         when="@2.2.0",
     )
+    # From Homebrew, integrated @upstream in different form over multiple commits
+    patch("fix-build-macos.patch", when="@2.2.0")
 
     def flag_handler(self, name, flags):
         iflags = []
@@ -87,7 +82,12 @@ class ScalapackBase(CMakePackage):
         # Work around errors of the form:
         #   error: implicit declaration of function 'BI_smvcopy' is
         #   invalid in C99 [-Werror,-Wimplicit-function-declaration]
-        if spec.satisfies("%clang") or spec.satisfies("%apple-clang") or spec.satisfies("%oneapi"):
+        if (
+            spec.satisfies("%clang")
+            or spec.satisfies("%apple-clang")
+            or spec.satisfies("%oneapi")
+            or spec.satisfies("%arm")
+        ):
             c_flags.append("-Wno-error=implicit-function-declaration")
 
         options.append(self.define("CMAKE_C_FLAGS", " ".join(c_flags)))

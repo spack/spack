@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -46,7 +46,7 @@ def test_dir(tmpdir):
 
 
 @pytest.mark.usefixtures("config", "mock_packages", "working_env")
-class TestTargets(object):
+class TestTargets:
     @pytest.mark.parametrize(
         "input_dir", glob.iglob(os.path.join(DATA_PATH, "make", "affirmative", "*"))
     )
@@ -94,7 +94,7 @@ class TestTargets(object):
 
 
 @pytest.mark.usefixtures("config", "mock_packages")
-class TestAutotoolsPackage(object):
+class TestAutotoolsPackage:
     def test_with_or_without(self, default_mock_concretization):
         s = default_mock_concretization("a")
         options = s.package.with_or_without("foo")
@@ -257,7 +257,7 @@ spack:
 
 
 @pytest.mark.usefixtures("config", "mock_packages")
-class TestCMakePackage(object):
+class TestCMakePackage:
     def test_cmake_std_args(self, default_mock_concretization):
         # Call the function on a CMakePackage instance
         s = default_mock_concretization("cmake-client")
@@ -268,16 +268,18 @@ class TestCMakePackage(object):
         s = default_mock_concretization("mpich")
         assert spack.build_systems.cmake.CMakeBuilder.std_args(s.package)
 
-    def test_cmake_bad_generator(self, monkeypatch, default_mock_concretization):
+    def test_cmake_bad_generator(self, default_mock_concretization):
         s = default_mock_concretization("cmake-client")
-        monkeypatch.setattr(type(s.package), "generator", "Yellow Sticky Notes", raising=False)
         with pytest.raises(spack.package_base.InstallError):
-            s.package.builder.std_cmake_args
+            spack.build_systems.cmake.CMakeBuilder.std_args(
+                s.package, generator="Yellow Sticky Notes"
+            )
 
     def test_cmake_secondary_generator(self, default_mock_concretization):
         s = default_mock_concretization("cmake-client")
-        s.package.generator = "CodeBlocks - Unix Makefiles"
-        assert s.package.builder.std_cmake_args
+        assert spack.build_systems.cmake.CMakeBuilder.std_args(
+            s.package, generator="CodeBlocks - Unix Makefiles"
+        )
 
     def test_define(self, default_mock_concretization):
         s = default_mock_concretization("cmake-client")
@@ -311,7 +313,7 @@ class TestCMakePackage(object):
 
 
 @pytest.mark.usefixtures("config", "mock_packages")
-class TestDownloadMixins(object):
+class TestDownloadMixins:
     """Test GnuMirrorPackage, SourceforgePackage, SourcewarePackage and XorgPackage."""
 
     @pytest.mark.parametrize(

@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -12,8 +12,9 @@ class Libgcrypt(AutotoolsPackage):
     homepage = "https://gnupg.org/software/libgcrypt/index.html"
     url = "https://gnupg.org/ftp/gcrypt/libgcrypt/libgcrypt-1.8.5.tar.bz2"
 
-    maintainers = ["alalazo"]
+    maintainers("alalazo")
 
+    version("1.10.2", sha256="3b9c02a004b68c256add99701de00b383accccf37177e0d6c58289664cce0c03")
     version("1.10.1", sha256="ef14ae546b0084cd84259f61a55e07a38c3b53afc0f546bffcef2f01baffe9de")
     version("1.10.0", sha256="6a00f5c05caa4c4acc120c46b63857da0d4ff61dc4b4b03933fa8d46013fae81")
     version("1.9.4", sha256="ea849c83a72454e3ed4267697e8ca03390aee972ab421e7df69dfe42b65caaf7")
@@ -30,6 +31,16 @@ class Libgcrypt(AutotoolsPackage):
     version("1.6.2", sha256="de084492a6b38cdb27b67eaf749ceba76bf7029f63a9c0c3c1b05c88c9885c4c")
 
     depends_on("libgpg-error@1.25:")
+
+    def flag_handler(self, name, flags):
+        # We should not inject optimization flags through the wrapper, because
+        # the jitter entropy code should never be compiled with optimization
+        # flags, and the build system ensures that
+        return (None, flags, None)
+
+    # 1.10.2 fails on macOS when trying to use the Linux getrandom() call
+    # https://dev.gnupg.org/T6442
+    patch("rndgetentropy_no_getrandom.patch", when="@=1.10.2 platform=darwin")
 
     def check(self):
         # Without this hack, `make check` fails on macOS when SIP is enabled

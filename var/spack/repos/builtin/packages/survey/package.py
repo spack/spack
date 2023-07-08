@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -30,10 +30,12 @@ class Survey(CMakePackage):
     homepage = "http://www.trenzasynergy.com"
     git = "ssh://git@gitlab.com/trenza/survey.git"
 
-    maintainers = ["jgalarowicz"]
+    maintainers("jgalarowicz")
 
     version("master", branch="master")
-    version("1.0.6", branch="1.0.6")
+    version("1.0.8", branch="1.0.8")
+    version("1.0.7", tag="1.0.7")
+    version("1.0.6", tag="1.0.6")
     version("1.0.5", tag="1.0.5")
     version("1.0.4", tag="1.0.4")
     version("1.0.3", tag="1.0.3")
@@ -78,6 +80,7 @@ class Survey(CMakePackage):
     depends_on("py-matplotlib", type=("build", "run"), when="@1.0.3:")
     depends_on("py-more-itertools", type=("build", "run"), when="@1.0.4:")
     depends_on("py-versioneer", type=("build", "run"), when="@1.0.5:")
+    depends_on("py-filelock", type=("build", "run"), when="@1.0.7:")
 
     extends("python")
 

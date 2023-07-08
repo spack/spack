@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -28,5 +28,5 @@ class RLobstr(RPackage):
     depends_on("r-prettyunits", type=("build", "run"), when="@1.1.2:")
     depends_on("r-rlang@0.3.0:", type=("build", "run"))
     depends_on("r-rlang@1.0.0:", type=("build", "run"), when="@1.1.2:")
-    depends_on("r-rcpp", type=("build", "run"))
-    depends_on("r-rcpp", when="@:1.1.1")
+
+    depends_on("r-rcpp", type=("build", "run"), when="@:1.1.1")

@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -20,10 +20,16 @@ class IntelOneapiInspector(IntelOneApiPackage):
 
     """
 
-    maintainers = ["rscohn2"]
+    maintainers("rscohn2")
 
     homepage = "https://software.intel.com/content/www/us/en/develop/tools/oneapi/components/inspector.html"
 
+    version(
+        "2023.1.0",
+        url="https://registrationcenter-download.intel.com/akdlm/IRC_NAS/5e922b71-d701-4a88-b447-eb88fcb630e2/l_inspector_oneapi_p_2023.1.0.43486_offline.sh",
+        sha256="e41b31978c445faeccc1b3820a987746f922bae0bbfcf6cbafe082beede4e712",
+        expand=False,
+    )
     version(
         "2023.0.0",
         url="https://registrationcenter-download.intel.com/akdlm/irc_nas/19125/l_inspector_oneapi_p_2023.0.0.25340_offline.sh",

@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -14,12 +14,16 @@ class MiopenHip(CMakePackage):
 
     homepage = "https://github.com/ROCmSoftwarePlatform/MIOpen"
     git = "https://github.com/ROCmSoftwarePlatform/MIOpen.git"
-    url = "https://github.com/ROCmSoftwarePlatform/MIOpen/archive/rocm-5.2.3.tar.gz"
+    url = "https://github.com/ROCmSoftwarePlatform/MIOpen/archive/rocm-5.4.3.tar.gz"
     tags = ["rocm"]
 
-    maintainers = ["srekolam", "renjithravindrankannath"]
+    maintainers("srekolam", "renjithravindrankannath")
     libraries = ["libMIOpen"]
 
+    version("5.4.3", sha256="37ffe2ed3d7942da8ea2f6bdb85c7a2f58e3ccd31767db158a322769d3604efd")
+    version("5.4.0", sha256="b4153791f9eeee4cbc5534bc6ad8b32c0947bcd38e08b77ebe144065a4fa5456")
+    version("5.3.3", sha256="7efc98215d23a2caaf212378c37e9a6484f54a4ed3e9660719286e4f287d3715")
+    version("5.3.0", sha256="c5819f593d71beeda2eb24b89182912240cc40f83b2b8f9de695a8e230aa4ea6")
     version("5.2.3", sha256="28747847446955b3bab24f7fc65c1a6b863a12f12ad3a35e0312072482d38122")
     version("5.2.1", sha256="0977a8876d41bbd2fa268341c93892f35878d7efc1711194ad87582f877ff500")
     version("5.2.0", sha256="5fda69426e81df9f8fb6658e579176b9c4fcce3516fc8488d3cfd2b6f6f2b3b4")
@@ -117,6 +121,7 @@ class MiopenHip(CMakePackage):
     depends_on("zlib", when="@3.9.0:")
 
     patch("0001-Add-rocm-path-and-rocm-device-lib-path-flags.patch", when="@3.9.0:5.0.2")
+    patch("miopen-hip-include-nlohmann-include-directory.patch", when="@5.4.0:")
 
     for ver in [
         "3.5.0",
@@ -138,14 +143,22 @@ class MiopenHip(CMakePackage):
         "5.2.0",
         "5.2.1",
         "5.2.3",
+        "5.3.0",
+        "5.3.3",
+        "5.4.0",
+        "5.4.3",
     ]:
         depends_on("rocm-cmake@%s:" % ver, type="build", when="@" + ver)
         depends_on("hip@" + ver, when="@" + ver)
         depends_on("rocm-clang-ocl@" + ver, when="@" + ver)
         depends_on("rocblas@" + ver, when="@" + ver)
 
-    for ver in ["5.1.0", "5.1.3", "5.2.0", "5.2.1", "5.2.3"]:
+    for ver in ["5.1.0", "5.1.3", "5.2.0", "5.2.1", "5.2.3", "5.3.0", "5.3.3"]:
         depends_on("mlirmiopen@" + ver, when="@" + ver)
+
+    for ver in ["5.4.0", "5.4.3"]:
+        depends_on("rocmlir@" + ver, when="@" + ver)
+        depends_on("nlohmann-json", type="link")
 
     def setup_build_environment(self, env):
         if "@3.9.0:" in self.spec:
@@ -187,7 +200,14 @@ class MiopenHip(CMakePackage):
             self.define("HIP_PREFIX_PATH", spec["hip"].prefix),
             self.define("DEVICELIBS_PREFIX_PATH", self.get_bitcode_dir()),
         ]
-        if self.spec.satisfies("@5.1.0:"):
+        if self.spec.satisfies("@5.1.0:5.3"):
             mlir_inc = spec["mlirmiopen"].prefix.include
             args.append(self.define("CMAKE_CXX_FLAGS", "-I{0}".format(mlir_inc)))
+        # TODO: need to turn on composable-kernel to on at a later date
+        # requires a new recipe for composable-kernel
+        if self.spec.satisfies("@5.4.0:"):
+            args.append(self.define("MIOPEN_USE_COMPOSABLEKERNEL", "OFF"))
+            args.append(
+                "-DNLOHMANN_JSON_INCLUDE={0}".format(self.spec["nlohmann-json"].prefix.include)
+            )
         return args

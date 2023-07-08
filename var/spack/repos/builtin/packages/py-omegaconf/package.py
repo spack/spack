@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -13,15 +13,16 @@ class PyOmegaconf(PythonPackage):
     """
 
     homepage = "https://github.com/omry/omegaconf"
-    url = "https://github.com/omry/omegaconf/archive/refs/tags/v2.1.0.tar.gz"
+    pypi = "omegaconf/omegaconf-2.3.0.tar.gz"
 
-    maintainers = ["calebrob6"]
+    maintainers("calebrob6")
 
-    version("2.1.0", sha256="0168f962822b7059c7553c4346541596ea48c0b542628d41a348a12eeaf971ff")
+    version("2.3.0", sha256="d5d4b6d29955cc50ad50c46dc269bcd92c6e00f5f90d23ab5fee7bfca4ba4cc7")
+    version("2.1.0", sha256="a08aec03a63c66449b550b85d70238f4dee9c6c4a0541d6a98845dcfeb12439d")
 
-    depends_on("python@3.6:", type=("build", "run"))
     depends_on("py-setuptools", type="build")
-    depends_on("py-pytest-runner", type="build")
-    depends_on("py-antlr4-python3-runtime@4.8", type=("build", "run"))
+    depends_on("py-pytest-runner", when="@2.1", type="build")
+    depends_on("py-antlr4-python3-runtime@4.9", when="@2.3:", type=("build", "run"))
+    depends_on("py-antlr4-python3-runtime@4.8", when="@2.1", type=("build", "run"))
     depends_on("py-pyyaml@5.1.0:", type=("build", "run"))
     depends_on("java", type="build")

@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -18,7 +18,7 @@ class Spack(Package):
     homepage = "https://spack.io/"
     git = "https://github.com/spack/spack.git"
     url = "https://github.com/spack/spack/releases/download/v0.16.2/spack-0.16.2.tar.gz"
-    maintainers = ["haampie"]
+    maintainers("haampie")
 
     version("develop", branch="develop")
     version("0.18.1", sha256="d1491374ce280653ee0bc48cd80527d06860b886af8b0d4a7cf1d0a2309191b7")
@@ -71,9 +71,8 @@ class Spack(Package):
     depends_on("lmod@7.5.12:", type="run", when="@0.18:")
 
     # Buildcache
-    # We just need the 'strings' executable, we don't want to install
-    # binutil's linkers.
-    depends_on("binutils~plugins~gold~libiberty~nls~headers~lto~ld~gas~interwork", type="run")
+    # We really just need the 'strings' from binutils
+    depends_on("binutils", type="run")
     depends_on("gnupg", type="run")
     depends_on("patchelf", type="run", when="platform=linux")
     depends_on("patchelf", type="run", when="platform=cray")

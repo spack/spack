@@ -1,9 +1,7 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
-
-from __future__ import print_function
 
 import os
 
@@ -76,6 +74,14 @@ def setup_parser(subparser):
         help="location of the named or current environment",
     )
 
+    subparser.add_argument(
+        "--first",
+        action="store_true",
+        default=False,
+        dest="find_first",
+        help="use the first match if multiple packages match the spec",
+    )
+
     arguments.add_common_arguments(subparser, ["spec"])
 
 
@@ -95,7 +101,7 @@ def location(parser, args):
             spack.cmd.require_active_env("location -e")
             path = ev.active_environment().path
         else:
-            # Get named environment path
+            # Get path of requested environment
             if not ev.exists(args.location_env):
                 tty.die("no such environment: '%s'" % args.location_env)
             path = ev.root(args.location_env)
@@ -121,7 +127,7 @@ def location(parser, args):
     # install_dir command matches against installed specs.
     if args.install_dir:
         env = ev.active_environment()
-        spec = spack.cmd.disambiguate_spec(specs[0], env)
+        spec = spack.cmd.disambiguate_spec(specs[0], env, first=args.find_first)
         print(spec.prefix)
         return
 

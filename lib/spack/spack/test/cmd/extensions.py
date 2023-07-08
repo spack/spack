@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -15,14 +15,7 @@ extensions = SpackCommand("extensions")
 
 @pytest.fixture
 def python_database(mock_packages, mutable_database):
-    specs = [
-        Spec(s).concretized()
-        for s in [
-            "python",
-            "py-extension1",
-            "py-extension2",
-        ]
-    ]
+    specs = [Spec(s).concretized() for s in ["python", "py-extension1", "py-extension2"]]
 
     for spec in specs:
         spec.package.do_install(fake=True, explicit=True)

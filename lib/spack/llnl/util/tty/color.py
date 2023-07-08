@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -59,8 +59,6 @@ The console can be reset later to plain text with '@.'.
 
 To output an @, use '@@'.  To output a } inside braces, use '}}'.
 """
-from __future__ import unicode_literals
-
 import re
 import sys
 from contextlib import contextmanager
@@ -70,7 +68,7 @@ class ColorParseError(Exception):
     """Raised when a color format fails to parse."""
 
     def __init__(self, message):
-        super(ColorParseError, self).__init__(message)
+        super().__init__(message)
 
 
 # Text styles for ansi codes
@@ -105,6 +103,64 @@ color_when_values = {"always": True, "auto": None, "never": False}
 # Force color; None: Only color if stdout is a tty
 # True: Always colorize output, False: Never colorize output
 _force_color = None
+
+
+def try_enable_terminal_color_on_windows():
+    """Turns coloring in Windows terminal by enabling VTP in Windows consoles (CMD/PWSH/CONHOST)
+    Method based on the link below
+    https://learn.microsoft.com/en-us/windows/console/console-virtual-terminal-sequences#example-of-enabling-virtual-terminal-processing
+
+    Note: No-op on non windows platforms
+    """
+    if sys.platform == "win32":
+        import ctypes
+        import msvcrt
+        from ctypes import wintypes
+
+        try:
+            ENABLE_VIRTUAL_TERMINAL_PROCESSING = 0x0004
+            DISABLE_NEWLINE_AUTO_RETURN = 0x0008
+            kernel32 = ctypes.WinDLL("kernel32")
+
+            def _err_check(result, func, args):
+                if not result:
+                    raise ctypes.WinError(ctypes.get_last_error())
+                return args
+
+            kernel32.GetConsoleMode.errcheck = _err_check
+            kernel32.GetConsoleMode.argtypes = (
+                wintypes.HANDLE,  # hConsoleHandle, i.e. GetStdHandle output type
+                ctypes.POINTER(wintypes.DWORD),  # result of GetConsoleHandle
+            )
+            kernel32.SetConsoleMode.errcheck = _err_check
+            kernel32.SetConsoleMode.argtypes = (
+                wintypes.HANDLE,  # hConsoleHandle, i.e. GetStdHandle output type
+                wintypes.DWORD,  # result of GetConsoleHandle
+            )
+            # Use conout$ here to handle a redirectired stdout/get active console associated
+            # with spack
+            with open(r"\\.\CONOUT$", "w") as conout:
+                # Link above would use kernel32.GetStdHandle(-11) however this would not handle
+                # a redirected stdout appropriately, so we always refer to the current CONSOLE out
+                # which is defined as conout$ on Windows.
+                # linked example is follow more or less to the letter beyond this point
+                con_handle = msvcrt.get_osfhandle(conout.fileno())
+                dw_orig_mode = wintypes.DWORD()
+                kernel32.GetConsoleMode(con_handle, ctypes.byref(dw_orig_mode))
+                dw_new_mode_request = (
+                    ENABLE_VIRTUAL_TERMINAL_PROCESSING | DISABLE_NEWLINE_AUTO_RETURN
+                )
+                dw_new_mode = dw_new_mode_request | dw_orig_mode.value
+                kernel32.SetConsoleMode(con_handle, wintypes.DWORD(dw_new_mode))
+        except OSError:
+            # We failed to enable color support for associated console
+            # report and move on but spack will no longer attempt to
+            # color
+            global _force_color
+            _force_color = False
+            from . import debug
+
+            debug("Unable to support color on Windows terminal")
 
 
 def _color_when_value(when):
@@ -147,7 +203,7 @@ def color_when(value):
     set_color_when(old_value)
 
 
-class match_to_ansi(object):
+class match_to_ansi:
     def __init__(self, color=True, enclose=False):
         self.color = _color_when_value(color)
         self.enclose = enclose
@@ -263,7 +319,7 @@ def cescape(string):
     return string
 
 
-class ColorStream(object):
+class ColorStream:
     def __init__(self, stream, color=None):
         self._stream = stream
         self._color = color

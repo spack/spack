@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -20,10 +20,8 @@ spack.main.add_all_commands(parser)
 
 
 def test_format_not_overridden():
-    writer = aw.ArgparseWriter("spack")
-
-    with pytest.raises(NotImplementedError):
-        writer.write(parser)
+    with pytest.raises(TypeError):
+        aw.ArgparseWriter("spack")
 
 
 def test_completion_format_not_overridden():

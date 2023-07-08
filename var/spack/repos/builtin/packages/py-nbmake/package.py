@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -12,6 +12,10 @@ class PyNbmake(PythonPackage):
     homepage = "https://github.com/treebeardtech/nbmake"
     pypi = "nbmake/nbmake-0.5.tar.gz"
 
+    version("1.4.1", sha256="7f602ba5195e80e4f2527944bb06d3b4df0d1520e73ba66126b51132b1f646ea")
+    version("1.4", sha256="2d3b97b83a8a378d5d828ad7b5412e509b82ed883662af16533236c909cfa20a")
+    version("1.3.5", sha256="95d4716928171120fae562e69440989a636e2af8616c829573e9574f5bea30db")
+    version("1.3.4", sha256="70464b131b25dc91bd80bc79806673bd9e694b0d353a42402b7359c10c890350")
     version("1.3.3", sha256="0982e1e2c26b2fda7bac10f35b242c2b9b9b2574456975da158da05b0092888f")
     version("1.3.2", sha256="763ee648962a8706808ad3e780e314e6a79b168cf2edbb3b026987ee7bbf57be")
     version("1.3.1", sha256="e77f98e7d21e618bef1ba1c30904ce48657f934ebe359502c85a229184fbdfc8")

@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -16,3 +16,6 @@ class Distbench(MakefilePackage):
     version("1.0rc4", sha256="adc8da85890219800207d0d4cd7ffd63193d2c4007dba7c44cf545cc13675ff7")
 
     depends_on("bazel", type="build")
+
+    def patch(self):
+        filter_file("bazel build", f"bazel build --jobs={make_jobs}", "Makefile", string=True)

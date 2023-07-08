@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -25,10 +25,10 @@ class Lapackpp(CMakePackage, CudaPackage, ROCmPackage):
     by the Innovative Computing Laboratory at the University of Tennessee,
     Knoxville."""
 
-    homepage = "https://bitbucket.org/icl/lapackpp"
+    homepage = "https://github.com/icl-utk-edu/lapackpp"
     git = homepage
-    url = "https://bitbucket.org/icl/lapackpp/downloads/lapackpp-2020.09.00.tar.gz"
-    maintainers = ["teonnik", "Sely85", "G-Ragghianti", "mgates3"]
+    url = "https://github.com/icl-utk-edu/lapackpp/releases/download/v2023.01.00/lapackpp-2023.01.00.tar.gz"
+    maintainers("teonnik", "Sely85", "G-Ragghianti", "mgates3")
 
     version("master", branch="master")
     version(
@@ -53,7 +53,7 @@ class Lapackpp(CMakePackage, CudaPackage, ROCmPackage):
     variant("shared", default=True, description="Build shared library")
 
     # Match each LAPACK++ version to a specific BLAS++ version
-    for (lpp_ver, bpp_ver) in _versions:
+    for lpp_ver, bpp_ver in _versions:
         depends_on("blaspp@" + bpp_ver, when="@" + lpp_ver)
 
     depends_on("blaspp ~cuda", when="~cuda")

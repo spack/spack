@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -18,7 +18,7 @@ class PyScikitBuild(PythonPackage):
     homepage = "https://scikit-build.readthedocs.io/en/latest/"
     pypi = "scikit-build/scikit-build-0.15.0.tar.gz"
 
-    maintainers = ["coreyjadams"]
+    maintainers("coreyjadams")
 
     version("0.15.0", sha256="e723cd0f3489a042370b9ea988bbb9cfd7725e8b25b20ca1c7981821fcf65fb9")
     version("0.12.0", sha256="f851382c469bcd9a8c98b1878bcfdd13b68556279d2fd9a329be41956ae5a7fe")

@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -11,7 +11,7 @@ class Libxcrypt(AutotoolsPackage):
 
     homepage = "https://github.com/besser82/libxcrypt"
     url = "https://github.com/besser82/libxcrypt/releases/download/v4.4.30/libxcrypt-4.4.30.tar.xz"
-    maintainers = ["haampie"]
+    maintainers("haampie")
 
     def url_for_version(self, version):
         if version <= Version("4.4.17"):
@@ -20,6 +20,8 @@ class Libxcrypt(AutotoolsPackage):
             version, version
         )
 
+    version("4.4.35", sha256="a8c935505b55f1df0d17f8bfd59468c7c6709a1d31831b0f8e3e045ab8fd455d")
+    version("4.4.34", sha256="bb3f467af21c48046ce662186eb2ddf078ca775c441fdf1c3628448a3833a230")
     version("4.4.33", sha256="e87acf9c652c573a4713d5582159f98f305d56ed5f754ce64f57d4194d6b3a6f")
     version("4.4.32", sha256="0613f9bd51d713f8bb79fa10705b68d2ab705c3be4c4fc119f0a96bdc72256c4")
     version("4.4.31", sha256="c0181b6a8eea83850cfe7783119bf71fddbde69adddda1d15747ba433d5c57ba")
@@ -31,6 +33,20 @@ class Libxcrypt(AutotoolsPackage):
     variant("obsolete_api", default=False, when="@4.4.30:")
 
     patch("truncating-conversion.patch", when="@4.4.30")
+
+    with when("@:4.4.17"):
+        depends_on("autoconf", type="build")
+        depends_on("automake@1.14:", type="build")
+        depends_on("libtool", type="build")
+        depends_on("m4", type="build")
+
+    # Some distros have incomplete perl installs, +open catches that.
+    depends_on("perl@5.14.0: +open", type="build", when="@4.4.18:")
+
+    # Support Perl 5.38. todo: remove patch and update depends_on
+    # range once the commit ends up in a tagged release
+    depends_on("perl@:5.36", type="build", when="@:4.4.34")
+    patch("commit-95d56e0.patch", when="@4.4.35")
 
     def configure_args(self):
         args = [
@@ -45,9 +61,3 @@ class Libxcrypt(AutotoolsPackage):
     @property
     def libs(self):
         return find_libraries("libcrypt", root=self.prefix, recursive=True)
-
-    with when("@:4.4.17"):
-        depends_on("autoconf", type="build")
-        depends_on("automake@1.14:", type="build")
-        depends_on("libtool", type="build")
-        depends_on("m4", type="build")

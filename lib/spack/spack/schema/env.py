@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -10,12 +10,13 @@
 """
 from llnl.util.lang import union_dicts
 
+import spack.schema.gitlab_ci  # DEPRECATED
 import spack.schema.merged
 import spack.schema.packages
 import spack.schema.projections
 
-#: legal first keys in the schema
-keys = ("spack", "env")
+#: Top level key in a manifest file
+TOP_LEVEL_KEY = "spack"
 
 spec_list_schema = {
     "type": "array",
@@ -28,12 +29,7 @@ spec_list_schema = {
                 "properties": {
                     "matrix": {
                         "type": "array",
-                        "items": {
-                            "type": "array",
-                            "items": {
-                                "type": "string",
-                            },
-                        },
+                        "items": {"type": "array", "items": {"type": "string"}},
                     },
                     "exclude": {"type": "array", "items": {"type": "string"}},
                 },
@@ -51,21 +47,19 @@ schema = {
     "title": "Spack environment file schema",
     "type": "object",
     "additionalProperties": False,
-    "patternProperties": {
-        "^env|spack$": {
+    "properties": {
+        "spack": {
             "type": "object",
             "default": {},
             "additionalProperties": False,
             "properties": union_dicts(
+                # Include deprecated "gitlab-ci" section
+                spack.schema.gitlab_ci.properties,
                 # merged configuration scope schemas
                 spack.schema.merged.properties,
                 # extra environment schema properties
                 {
-                    "include": {
-                        "type": "array",
-                        "default": [],
-                        "items": {"type": "string"},
-                    },
+                    "include": {"type": "array", "default": [], "items": {"type": "string"}},
                     "develop": {
                         "type": "object",
                         "default": {},
@@ -78,7 +72,7 @@ schema = {
                                     "spec": {"type": "string"},
                                     "path": {"type": "string"},
                                 },
-                            },
+                            }
                         },
                     },
                     "definitions": {
@@ -139,6 +133,15 @@ def update(data):
     Returns:
         True if data was changed, False otherwise
     """
+
+    import spack.ci
+
+    if "gitlab-ci" in data:
+        data["ci"] = data.pop("gitlab-ci")
+
+    if "ci" in data:
+        return spack.ci.translate_deprecated_config(data["ci"])
+
     # There are not currently any deprecated attributes in this section
     # that have not been removed
     return False

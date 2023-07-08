@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -52,12 +52,6 @@ class Sollve(CMakePackage):
         default=False,
         description="Build all supported targets, default targets "
         "<current arch>,NVPTX,AMDGPU,CppBackend",
-    )
-    variant(
-        "build_type",
-        default="Release",
-        description="CMake build type",
-        values=("Debug", "Release", "RelWithDebInfo", "MinSizeRel"),
     )
     variant("omp_tsan", default=False, description="Build with OpenMP capable thread sanitizer")
     variant("python", default=False, description="Install python bindings")

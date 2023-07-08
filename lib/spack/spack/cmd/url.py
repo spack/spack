@@ -1,9 +1,7 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
-
-from __future__ import division, print_function
 
 import urllib.parse
 from collections import defaultdict
@@ -106,12 +104,7 @@ def setup_parser(subparser):
 
 
 def url(parser, args):
-    action = {
-        "parse": url_parse,
-        "list": url_list,
-        "summary": url_summary,
-        "stats": url_stats,
-    }
+    action = {"parse": url_parse, "list": url_list, "summary": url_summary, "stats": url_stats}
 
     action[args.subcommand](args)
 
@@ -295,7 +288,7 @@ def url_stats(args):
     # dictionary of issue type -> package -> descriptions
     issues = defaultdict(lambda: defaultdict(lambda: []))
 
-    class UrlStats(object):
+    class UrlStats:
         def __init__(self):
             self.total = 0
             self.schemes = defaultdict(lambda: 0)

@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -40,11 +40,7 @@ class Libwebp(AutotoolsPackage):
 
     def configure_args(self):
         # TODO: add variants and dependencies for these
-        args = [
-            "--disable-gl",
-            "--disable-sdl",
-            "--disable-wic",
-        ]
+        args = ["--disable-gl", "--disable-sdl", "--disable-wic"]
 
         args += self.enable_or_disable("gif")
         args += self.enable_or_disable("jpeg")

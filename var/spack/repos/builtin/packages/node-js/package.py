@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -17,7 +17,7 @@ class NodeJs(Package):
     list_url = "https://nodejs.org/dist/"
     list_depth = 1
 
-    maintainers = ["cosmicexplorer"]
+    maintainers("cosmicexplorer")
 
     # Current (latest features) - odd major number
     version("19.2.0", sha256="aac9d1a366fb57d68f4639f9204d1de5d6387656959a97ed929a5ba9e62c033a")
