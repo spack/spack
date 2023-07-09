@@ -1326,7 +1326,7 @@ class Environment:
 
         # Remove concrete specs that no longer correlate to a user spec
         for spec in set(self.concretized_user_specs) - set(self.user_specs):
-            self.deconcretize(spec)
+            self.deconcretize(spec, concrete=False)
 
         # Pick the right concretization strategy
         if self.unify == "when_possible":
@@ -1341,11 +1341,29 @@ class Environment:
         msg = "concretization strategy not implemented [{0}]"
         raise SpackEnvironmentError(msg.format(self.unify))
 
-    def deconcretize(self, spec):
+    def deconcretize(self, spec, concrete=True):
+        # If concrete, find all instances of concrete spec
+        # Else, find single instance of user spec
+        # the distinction is only relevant if multiple roots concretize
+        # to the same spec
+
         # spec has to be a root of the environment
-        index = self.concretized_user_specs.index(spec)
-        dag_hash = self.concretized_order.pop(index)
-        del self.concretized_user_specs[index]
+        if concrete:
+            dag_hash = spec.dag_hash()
+            indices = [
+                i
+                for i in range(len(self.concretized_order))
+                if self.concretized_order[i] == dag_hash
+            ]
+
+            for index in indices:
+                del self.concretized_order[index]
+                del self.concretized_user_specs[index]
+        else:
+            index = self.concretized_user_specs.index(spec)
+            dag_hash = self.concretized_order.pop(index)
+
+            del self.concretized_user_specs[index]
 
         # If this was the only user spec that concretized to this concrete spec, remove it
         if dag_hash not in self.concretized_order:
