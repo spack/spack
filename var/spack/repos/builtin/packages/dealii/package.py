@@ -26,6 +26,7 @@ class Dealii(CMakePackage, CudaPackage):
     generator("ninja")
 
     version("master", branch="master")
+    version("9.5.0", sha256="a81f41565f0d3a22d491ee687957dd48053225da72e8d6d628d210358f4a0464")
     version("9.4.2", sha256="45a76cb400bfcff25cc2d9093d9a5c91545c8367985e6798811c5e9d2a6a6fd4")
     version("9.4.1", sha256="bfe5e4bf069159f93feb0f78529498bfee3da35baf5a9c6852aa59d7ea7c7a48")
     version("9.4.0", sha256="238677006cd9173658e5b69cdd1861f800556982db6005a3cc5eb8329cc1e36c")
@@ -70,10 +71,12 @@ class Dealii(CMakePackage, CudaPackage):
         values=("default", "11", "14", "17"),
     )
     variant("doc", default=False, description="Compile with documentation")
-    variant("examples", default=True, description="Compile tutorial programs")
+    variant("examples", default=True, description="Install tutorial programs")
+    variant("examples_compile", default=True, description="Compile tutorial programs")
     variant("int64", default=False, description="Compile with 64 bit indices support")
     variant("mpi", default=True, description="Compile with MPI")
     variant("optflags", default=False, description="Compile using additional optimization flags")
+    variant("platform-introspection", default=True, description="Enable platform introspection")
     variant("python", default=False, description="Compile with Python bindings")
 
     # Package variants
@@ -86,6 +89,7 @@ class Dealii(CMakePackage, CudaPackage):
     variant("gmsh", default=True, description="Compile with GMSH")
     variant("gsl", default=True, description="Compile with GSL")
     variant("hdf5", default=True, description="Compile with HDF5 (only with MPI)")
+    variant("kokkos", default=True, when="@9.5:", description="Compile with Kokkos")
     variant("metis", default=True, description="Compile with Metis")
     variant("muparser", default=True, description="Compile with muParser")
     variant("nanoflann", default=False, description="Compile with Nanoflann")
@@ -98,14 +102,15 @@ class Dealii(CMakePackage, CudaPackage):
     variant("slepc", default=True, description="Compile with Slepc (only with Petsc and MPI)")
     variant("symengine", default=True, description="Compile with SymEngine")
     variant("simplex", default=True, description="Compile with Simplex support")
-    # TODO @9.3: enable by default, when we know what to do
-    # variant('taskflow',  default=False,
-    #        description='Compile with multi-threading via Taskflow')
-    # TODO @9.3: disable by default
-    # (NB: only if tbb is removed in 9.3, as planned!!!)
+    variant(
+        "taskflow",
+        default=True,
+        when="@9.6:",
+        description="Compile with multi-threading via Taskflow",
+    )
     variant("threads", default=True, description="Compile with multi-threading via TBB")
     variant("trilinos", default=True, description="Compile with Trilinos (only with MPI)")
-    variant("platform-introspection", default=True, description="Enable platform introspection")
+    variant("vtk", default=True, when="@9.6:", description="Compile with VTK")
 
     # Required dependencies: Light version
     depends_on("blas")
@@ -179,6 +184,8 @@ class Dealii(CMakePackage, CudaPackage):
     # TODO: next line fixes concretization with petsc
     depends_on("hdf5+mpi+hl+fortran", when="+hdf5+mpi+petsc")
     depends_on("hdf5+mpi+hl", when="+hdf5+mpi~petsc")
+    depends_on("kokkos@3.7:", when="@9.5:+kokkos~trilinos")
+    depends_on("kokkos@3.7:+cuda+wrapper", when="@9.5:+kokkos~trilinos+cuda")
     # TODO: concretizer bug. The two lines mimic what comes from PETSc
     # but we should not need it
     depends_on("metis@5:+int64", when="+metis+int64")
@@ -198,7 +205,7 @@ class Dealii(CMakePackage, CudaPackage):
     depends_on("sundials@:3~pthread", when="@9.0:9.2+sundials")
     depends_on("sundials@5:5.8", when="@9.3:9.3.3+sundials")
     depends_on("sundials@5:", when="@9.3.4:+sundials")
-    # depends_on('taskflow',         when='@9.3:+taskflow')
+    depends_on("taskflow", when="@9.6:+taskflow")
     depends_on("trilinos gotype=int", when="+trilinos@12.18.1:")
     # TODO: next line fixes concretization with trilinos and adol-c
     depends_on("trilinos~exodus", when="@9.0:+adol-c+trilinos")
@@ -222,12 +229,15 @@ class Dealii(CMakePackage, CudaPackage):
     # do not require +rol to make concretization of xsdk possible
     depends_on("trilinos+amesos+aztec+epetra+ifpack+ml+muelu+sacado", when="+trilinos")
     depends_on("trilinos~hypre", when="+trilinos+int64")
-    # TODO: temporary disable Tpetra when using CUDA due to
-    # namespace "Kokkos::Impl" has no member "cuda_abort"
-    depends_on(
-        "trilinos@master+rol~amesos2~ifpack2~intrepid2~kokkos~tpetra~zoltan2",
-        when="+trilinos+cuda",
-    )
+    # If this passess CI, we can remove it.
+    # # TODO: temporary disable Tpetra when using CUDA due to
+    # # namespace "Kokkos::Impl" has no member "cuda_abort"
+    # depends_on(
+    #     "trilinos@master+rol~amesos2~ifpack2~intrepid2~kokkos~tpetra~zoltan2",
+    #     when="+trilinos+cuda",
+    # )
+    depends_on("trilinos+cuda", when="@9.5:+trilinos+cuda")
+    depends_on("vtk", when="@9.6:+vtk")
 
     # Explicitly provide a destructor in BlockVector,
     # otherwise deal.II may fail to build with Intel compilers.
@@ -296,6 +306,12 @@ class Dealii(CMakePackage, CudaPackage):
         msg="CGAL requires the C++ standard to be set explicitly to 17 or later.",
     )
 
+    conflicts(
+        "cxxstd=14",
+        when="@9.6:",
+        msg="Deal.II 9.6 onwards requires the C++ standard to be set to 17 or later.",
+    )
+
     # Interfaces added in 8.5.0:
     for p in ["gsl", "python"]:
         conflicts(
@@ -327,11 +343,21 @@ class Dealii(CMakePackage, CudaPackage):
         )
 
     # interfaces added in 9.3.0:
-    for p in ["simplex", "arborx"]:  # , 'taskflow']:
+    for p in ["simplex", "arborx"]:
         conflicts(
             "+{0}".format(p),
             when="@:9.2",
             msg="The interface to {0} is supported from version 9.3.0 "
+            "onwards. Please explicitly disable this variant "
+            "via ~{0}".format(p),
+        )
+
+    # interfaces added after 9.5.0:
+    for p in ["vtk", "taskflow"]:
+        conflicts(
+            "+{0}".format(p),
+            when="@:9.5",
+            msg="The interface to {0} is supported from version 9.6.0 "
             "onwards. Please explicitly disable this variant "
             "via ~{0}".format(p),
         )
@@ -432,6 +458,7 @@ class Dealii(CMakePackage, CudaPackage):
 
         # Examples / tutorial programs
         options.append(self.define_from_variant("DEAL_II_COMPONENT_EXAMPLES", "examples"))
+        options.append(self.define_from_variant("DEAL_II_COMPILE_EXAMPLES", "examples_compile"))
 
         # Enforce the specified C++ standard
         if spec.variants["cxxstd"].value != "default":
@@ -542,23 +569,25 @@ class Dealii(CMakePackage, CudaPackage):
         # Optional dependencies for which library names are the same as CMake
         # variables:
         for library in (
+            "arborx",
+            "assimp",
+            "cgal",
+            "ginkgo",
+            "gmsh",
             "gsl",
             "hdf5",
+            "metis",
+            "muparser",
+            "nanoflann",
             "p4est",
             "petsc",
             "slepc",
-            "trilinos",
-            "metis",
             "sundials",
-            "nanoflann",
-            "assimp",
-            "gmsh",
-            "muparser",
             "symengine",
-            "ginkgo",
-            "arborx",
-            "cgal",
-        ):  # 'taskflow'):
+            "taskflow",
+            "trilinos",
+            "vtk",
+        ):
             options.append(
                 self.define_from_variant("DEAL_II_WITH_{0}".format(library.upper()), library)
             )
