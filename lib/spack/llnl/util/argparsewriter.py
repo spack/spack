@@ -98,7 +98,7 @@ class ArgparseWriter(argparse.HelpFormatter, abc.ABC):
                 dest_flags = fmt._format_action_invocation(action)
                 nargs = action.nargs
                 help = self._expand_help(action) if action.help else ""
-                help = help.replace("\n", " ")
+                help = help.split("\n")[0]
 
                 if action.choices is not None:
                     dest = [str(choice) for choice in action.choices]
@@ -110,7 +110,7 @@ class ArgparseWriter(argparse.HelpFormatter, abc.ABC):
                 for subaction in action._choices_actions:
                     subparser = action._name_parser_map[subaction.dest]
                     help = self._expand_help(subaction) if subaction.help else ""
-                    help = help.replace("\n", " ")
+                    help = help.split("\n")[0]
                     subcommands.append((subparser, subaction.dest, help))
 
                     # Look for aliases of the form 'name (alias, ...)'
@@ -121,12 +121,12 @@ class ArgparseWriter(argparse.HelpFormatter, abc.ABC):
                             for alias in aliases:
                                 subparser = action._name_parser_map[alias]
                                 help = self._expand_help(subaction) if subaction.help else ""
-                                help = help.replace("\n", " ")
+                                help = help.split("\n")[0]
                                 subcommands.append((subparser, alias, help))
             else:
                 args = fmt._format_action_invocation(action)
                 help = self._expand_help(action) if action.help else ""
-                help = help.replace("\n", " ")
+                help = help.split("\n")[0]
                 positionals.append((args, action.choices, action.nargs, help))
 
         return Command(prog, description, usage, positionals, optionals, subcommands)

@@ -474,7 +474,7 @@ complete -c spack -n "__fish_spack_using_command " -s p -l profile -f -a "spack_
 complete -c spack -n "__fish_spack_using_command " -s p -l profile -d "profile execution using cProfile"
 # ['--sorted-profile'] -> ['sorted_profile']: None
 complete -c spack -n "__fish_spack_using_command " -l sorted-profile -r -f -a "sorted_profile"
-complete -c spack -n "__fish_spack_using_command " -l sorted-profile -r -d "profile and sort by one or more of: [calls, ncalls, cumtime, cumulative, filename, line, module]"
+complete -c spack -n "__fish_spack_using_command " -l sorted-profile -r -d "profile and sort by one or more of:"
 # ['--lines'] -> ['lines']: None
 complete -c spack -n "__fish_spack_using_command " -l lines -r -f -a "lines"
 complete -c spack -n "__fish_spack_using_command " -l lines -r -d "lines of profile output or 'all' (default: 20)"
@@ -754,12 +754,12 @@ complete -c spack -n "__fish_spack_using_command_pos 0 buildcache" -f -a "create
 complete -c spack -n "__fish_spack_using_command_pos 0 buildcache" -f -a "install" -d "install from a binary package"
 complete -c spack -n "__fish_spack_using_command_pos 0 buildcache" -f -a "list" -d "list binary packages available from mirrors"
 complete -c spack -n "__fish_spack_using_command_pos 0 buildcache" -f -a "keys" -d "get public keys available on mirrors"
-complete -c spack -n "__fish_spack_using_command_pos 0 buildcache" -f -a "preview" -d "analyze an installed spec and reports whether executables     and libraries are relocatable     "
-complete -c spack -n "__fish_spack_using_command_pos 0 buildcache" -f -a "check" -d "Check specs (either a single spec from --spec, or else the full set     of release specs) against remote binary mirror(s) to see if any need     to be rebuilt.  This command uses the process exit code to indicate     its result, specifically, if the exit code is non-zero, then at least     one of the indicated specs needs to be rebuilt.     "
-complete -c spack -n "__fish_spack_using_command_pos 0 buildcache" -f -a "download" -d "Download buildcache entry from a remote mirror to local folder.  This     command uses the process exit code to indicate its result, specifically,     a non-zero exit code indicates that the command failed to download at     least one of the required buildcache components."
+complete -c spack -n "__fish_spack_using_command_pos 0 buildcache" -f -a "preview" -d "analyze an installed spec and reports whether executables"
+complete -c spack -n "__fish_spack_using_command_pos 0 buildcache" -f -a "check" -d "Check specs (either a single spec from --spec, or else the full set"
+complete -c spack -n "__fish_spack_using_command_pos 0 buildcache" -f -a "download" -d "Download buildcache entry from a remote mirror to local folder.  This"
 complete -c spack -n "__fish_spack_using_command_pos 0 buildcache" -f -a "get-buildcache-name" -d "Get name (prefix) of buildcache entries for this spec"
-complete -c spack -n "__fish_spack_using_command_pos 0 buildcache" -f -a "save-specfile" -d "Get full spec for dependencies, relative to root spec, and write them     to files in the specified output directory.  Uses exit code to signal     success or failure.  An exit code of zero means the command was likely     successful.  If any errors or exceptions are encountered, or if expected     command-line arguments are not provided, then the exit code will be     non-zero.     "
-complete -c spack -n "__fish_spack_using_command_pos 0 buildcache" -f -a "sync" -d "Syncs binaries (and associated metadata) from one mirror to another.     Requires an active environment in order to know which specs to sync.      Args:         src (str): Source mirror URL         dest (str): Destination mirror URL     "
+complete -c spack -n "__fish_spack_using_command_pos 0 buildcache" -f -a "save-specfile" -d "Get full spec for dependencies, relative to root spec, and write them"
+complete -c spack -n "__fish_spack_using_command_pos 0 buildcache" -f -a "sync" -d "Syncs binaries (and associated metadata) from one mirror to another."
 complete -c spack -n "__fish_spack_using_command_pos 0 buildcache" -f -a "update-index" -d "Update a buildcache index."
 complete -c spack -n "__fish_spack_using_command_pos 0 buildcache" -f -a "rebuild-index" -d "Update a buildcache index."
 # ['-h', '--help'] -> ['help']: 0
@@ -1086,13 +1086,13 @@ complete -c spack -n "__fish_spack_using_command ci generate" -s h -l help -f -a
 complete -c spack -n "__fish_spack_using_command ci generate" -s h -l help -d "show this help message and exit"
 # ['--output-file'] -> ['output_file']: None
 complete -c spack -n "__fish_spack_using_command ci generate" -l output-file -r -f -a "output_file"
-complete -c spack -n "__fish_spack_using_command ci generate" -l output-file -r -d "pathname for the generated gitlab ci yaml file   Path to the file where generated jobs file should be written. Default is .gitlab-ci.yml in the root of the repository."
+complete -c spack -n "__fish_spack_using_command ci generate" -l output-file -r -d "pathname for the generated gitlab ci yaml file"
 # ['--copy-to'] -> ['copy_to']: None
 complete -c spack -n "__fish_spack_using_command ci generate" -l copy-to -r -f -a "copy_to"
-complete -c spack -n "__fish_spack_using_command ci generate" -l copy-to -r -d "path to additional directory for job files   This option provides an absolute path to a directory where the generated jobs yaml file should be copied. Default is not to copy."
+complete -c spack -n "__fish_spack_using_command ci generate" -l copy-to -r -d "path to additional directory for job files"
 # ['--optimize'] -> ['optimize']: 0
 complete -c spack -n "__fish_spack_using_command ci generate" -l optimize -f -a "optimize"
-complete -c spack -n "__fish_spack_using_command ci generate" -l optimize -d "(Experimental) optimize the gitlab yaml file for size   Run the generated document through a series of optimization passes designed to reduce the size of the generated file."
+complete -c spack -n "__fish_spack_using_command ci generate" -l optimize -d "(Experimental) optimize the gitlab yaml file for size"
 # ['--dependencies'] -> ['dependencies']: 0
 complete -c spack -n "__fish_spack_using_command ci generate" -l dependencies -f -a "dependencies"
 complete -c spack -n "__fish_spack_using_command ci generate" -l dependencies -d "(Experimental) disable DAG scheduling; use  "plain" dependencies."
@@ -1101,16 +1101,16 @@ complete -c spack -n "__fish_spack_using_command ci generate" -l buildcache-dest
 complete -c spack -n "__fish_spack_using_command ci generate" -l buildcache-destination -r -d "Override the mirror configured in the environment (spack.yaml) in order to push binaries from the generated pipeline to a different location."
 # ['--prune-dag'] -> ['prune_dag']: 0
 complete -c spack -n "__fish_spack_using_command ci generate" -l prune-dag -f -a "prune_dag"
-complete -c spack -n "__fish_spack_using_command ci generate" -l prune-dag -d "skip up-to-date specs   Do not generate jobs for specs that are up-to-date on the mirror."
+complete -c spack -n "__fish_spack_using_command ci generate" -l prune-dag -d "skip up-to-date specs"
 # ['--no-prune-dag'] -> ['prune_dag']: 0
 complete -c spack -n "__fish_spack_using_command ci generate" -l no-prune-dag -f -a "prune_dag"
-complete -c spack -n "__fish_spack_using_command ci generate" -l no-prune-dag -d "process up-to-date specs   Generate jobs for specs even when they are up-to-date on the mirror."
+complete -c spack -n "__fish_spack_using_command ci generate" -l no-prune-dag -d "process up-to-date specs"
 # ['--check-index-only'] -> ['index_only']: 0
 complete -c spack -n "__fish_spack_using_command ci generate" -l check-index-only -f -a "index_only"
-complete -c spack -n "__fish_spack_using_command ci generate" -l check-index-only -d "only check spec state from buildcache indices   Spack always checks specs against configured binary mirrors, regardless of the DAG pruning option.   If enabled, Spack will assume all remote buildcache indices are up-to-date when assessing whether the spec on the mirror, if present, is up-to-date. This has the benefit of reducing pipeline generation time but at the potential cost of needlessly rebuilding specs when the indices are outdated.   If not enabled, Spack will fetch remote spec files directly to assess whether the spec on the mirror is up-to-date."
+complete -c spack -n "__fish_spack_using_command ci generate" -l check-index-only -d "only check spec state from buildcache indices"
 # ['--artifacts-root'] -> ['artifacts_root']: None
 complete -c spack -n "__fish_spack_using_command ci generate" -l artifacts-root -r -f -a "artifacts_root"
-complete -c spack -n "__fish_spack_using_command ci generate" -l artifacts-root -r -d "path to the root of the artifacts directory   If provided, concrete environment files (spack.yaml, spack.lock) will be generated under this directory. Their location will be passed to generated child jobs through the SPACK_CONCRETE_ENVIRONMENT_PATH variable."
+complete -c spack -n "__fish_spack_using_command ci generate" -l artifacts-root -r -d "path to the root of the artifacts directory"
 
 # spack ci rebuild-index
 set -g __fish_spack_optspecs_spack_ci_rebuild_index h/help
@@ -1302,7 +1302,7 @@ complete -c spack -n "__fish_spack_using_command concretize" -s f -l force -f -a
 complete -c spack -n "__fish_spack_using_command concretize" -s f -l force -d "Re-concretize even if already concretized."
 # ['--test'] -> ['root', 'all']: None
 complete -c spack -n "__fish_spack_using_command concretize" -l test -r -f -a "root all"
-complete -c spack -n "__fish_spack_using_command concretize" -l test -r -d "Concretize with test dependencies. When 'root' is chosen, test dependencies are only added for the environment's root specs. When 'all' is chosen, test dependencies are enabled for all packages in the environment."
+complete -c spack -n "__fish_spack_using_command concretize" -l test -r -d "Concretize with test dependencies. When 'root' is chosen, test"
 # ['-q', '--quiet'] -> ['quiet']: 0
 complete -c spack -n "__fish_spack_using_command concretize" -s q -l quiet -f -a "quiet"
 complete -c spack -n "__fish_spack_using_command concretize" -s q -l quiet -d "Don't print concretized specs"
@@ -1507,7 +1507,7 @@ complete -c spack -n "__fish_spack_using_command dependencies" -s t -l transitiv
 complete -c spack -n "__fish_spack_using_command dependencies" -s t -l transitive -d "show all transitive dependencies"
 # ['--deptype'] -> ['deptype']: None
 complete -c spack -n "__fish_spack_using_command dependencies" -l deptype -r -f -a "deptype"
-complete -c spack -n "__fish_spack_using_command dependencies" -l deptype -r -d "comma-separated list of deptypes to traverse default=build,link,run,test"
+complete -c spack -n "__fish_spack_using_command dependencies" -l deptype -r -d "comma-separated list of deptypes to traverse"
 # ['-V', '--no-expand-virtuals'] -> ['expand_virtuals']: 0
 complete -c spack -n "__fish_spack_using_command dependencies" -s V -l no-expand-virtuals -f -a "expand_virtuals"
 complete -c spack -n "__fish_spack_using_command dependencies" -s V -l no-expand-virtuals -d "do not expand virtual dependencies"
@@ -1588,7 +1588,7 @@ complete -c spack -n "__fish_spack_using_command dev-build" -l drop-in -r -f -a 
 complete -c spack -n "__fish_spack_using_command dev-build" -l drop-in -r -d "drop into a build environment in a new shell, e.g. bash, zsh"
 # ['--test'] -> ['root', 'all']: None
 complete -c spack -n "__fish_spack_using_command dev-build" -l test -r -f -a "root all"
-complete -c spack -n "__fish_spack_using_command dev-build" -l test -r -d "If 'root' is chosen, run package tests during installation for top-level packages (but skip tests for dependencies). if 'all' is chosen, run package tests during installation for all packages. If neither are chosen, don't run tests for any packages."
+complete -c spack -n "__fish_spack_using_command dev-build" -l test -r -d "If 'root' is chosen, run package tests during"
 # ['-b', '--before'] -> ['before']: None
 complete -c spack -n "__fish_spack_using_command dev-build" -s b -l before -r -f -a "before"
 complete -c spack -n "__fish_spack_using_command dev-build" -s b -l before -r -d "phase to stop before when installing (default None)"
@@ -2253,7 +2253,7 @@ complete -c spack -n "__fish_spack_using_command graph" -s i -l installed -f -a 
 complete -c spack -n "__fish_spack_using_command graph" -s i -l installed -d "graph installed specs, or specs in the active env (implies --dot)"
 # ['--deptype'] -> ['deptype']: None
 complete -c spack -n "__fish_spack_using_command graph" -l deptype -r -f -a "deptype"
-complete -c spack -n "__fish_spack_using_command graph" -l deptype -r -d "comma-separated list of deptypes to traverse default=build,link,run,test"
+complete -c spack -n "__fish_spack_using_command graph" -l deptype -r -d "comma-separated list of deptypes to traverse"
 
 # spack help
 set -g __fish_spack_optspecs_spack_help h/help a/all spec
@@ -2316,7 +2316,7 @@ complete -c spack -n "__fish_spack_using_command install" -s h -l help -f -a "he
 complete -c spack -n "__fish_spack_using_command install" -s h -l help -d "show this help message and exit"
 # ['--only'] -> ['package', 'dependencies']: None
 complete -c spack -n "__fish_spack_using_command install" -l only -r -f -a "package dependencies"
-complete -c spack -n "__fish_spack_using_command install" -l only -r -d "select the mode of installation. the default is to install the package along with all its dependencies. alternatively one can decide to install only the package or only the dependencies"
+complete -c spack -n "__fish_spack_using_command install" -l only -r -d "select the mode of installation."
 # ['-u', '--until'] -> ['until']: None
 complete -c spack -n "__fish_spack_using_command install" -s u -l until -r -f -a "until"
 complete -c spack -n "__fish_spack_using_command install" -s u -l until -r -d "phase to stop after when installing (default None)"
@@ -2349,10 +2349,10 @@ complete -c spack -n "__fish_spack_using_command install" -l cache-only -f -a "c
 complete -c spack -n "__fish_spack_using_command install" -l cache-only -d "only install package from binary mirrors"
 # ['--use-buildcache'] -> ['use_buildcache']: None
 complete -c spack -n "__fish_spack_using_command install" -l use-buildcache -r -f -a "use_buildcache"
-complete -c spack -n "__fish_spack_using_command install" -l use-buildcache -r -d "select the mode of buildcache for the 'package' and 'dependencies'. Default: package:auto,dependencies:auto - `auto` behaves like --use-cache - `only` behaves like --cache-only - `never` behaves like --no-cache "
+complete -c spack -n "__fish_spack_using_command install" -l use-buildcache -r -d "select the mode of buildcache for the 'package' and 'dependencies'."
 # ['--include-build-deps'] -> ['include_build_deps']: 0
 complete -c spack -n "__fish_spack_using_command install" -l include-build-deps -f -a "include_build_deps"
-complete -c spack -n "__fish_spack_using_command install" -l include-build-deps -d "include build deps when installing from cache, which is useful for CI pipeline troubleshooting"
+complete -c spack -n "__fish_spack_using_command install" -l include-build-deps -d "include build deps when installing from cache,"
 # ['--no-check-signature'] -> ['unsigned']: 0
 complete -c spack -n "__fish_spack_using_command install" -l no-check-signature -f -a "unsigned"
 complete -c spack -n "__fish_spack_using_command install" -l no-check-signature -d "do not check signatures of binary packages"
@@ -2382,7 +2382,7 @@ complete -c spack -n "__fish_spack_using_command install" -l add -f -a "add"
 complete -c spack -n "__fish_spack_using_command install" -l add -d "(with environment) add spec to the environment as a root."
 # ['--no-add'] -> ['add']: 0
 complete -c spack -n "__fish_spack_using_command install" -l no-add -f -a "add"
-complete -c spack -n "__fish_spack_using_command install" -l no-add -d "(with environment) do not add spec to the environment as a root (the default behavior)."
+complete -c spack -n "__fish_spack_using_command install" -l no-add -d "(with environment) do not add spec to the environment as a"
 # ['-f', '--file'] -> ['specfiles']: None
 complete -c spack -n "__fish_spack_using_command install" -s f -l file -r -f -a "specfiles"
 complete -c spack -n "__fish_spack_using_command install" -s f -l file -r -d "install from file. Read specs to install from .yaml files"
@@ -2394,7 +2394,7 @@ complete -c spack -n "__fish_spack_using_command install" -l dirty -f -a "dirty"
 complete -c spack -n "__fish_spack_using_command install" -l dirty -d "preserve user environment in spack's build environment (danger!)"
 # ['--test'] -> ['root', 'all']: None
 complete -c spack -n "__fish_spack_using_command install" -l test -r -f -a "root all"
-complete -c spack -n "__fish_spack_using_command install" -l test -r -d "If 'root' is chosen, run package tests during installation for top-level packages (but skip tests for dependencies). if 'all' is chosen, run package tests during installation for all packages. If neither are chosen, don't run tests for any packages."
+complete -c spack -n "__fish_spack_using_command install" -l test -r -d "If 'root' is chosen, run package tests during"
 # ['--log-format'] -> ['junit', 'cdash']: None
 complete -c spack -n "__fish_spack_using_command install" -l log-format -r -f -a "junit cdash"
 complete -c spack -n "__fish_spack_using_command install" -l log-format -r -d "format to be used for log files"
@@ -2512,7 +2512,7 @@ complete -c spack -n "__fish_spack_using_command load" -l first -f -a "load_firs
 complete -c spack -n "__fish_spack_using_command load" -l first -d "load the first match if multiple packages match the spec"
 # ['--only'] -> ['package', 'dependencies']: None
 complete -c spack -n "__fish_spack_using_command load" -l only -r -f -a "package dependencies"
-complete -c spack -n "__fish_spack_using_command load" -l only -r -d "select whether to load the package and its dependencies the default is to load the package and all dependencies alternatively one can decide to load only the package or only the dependencies"
+complete -c spack -n "__fish_spack_using_command load" -l only -r -d "select whether to load the package and its dependencies"
 # ['--list'] -> ['list']: 0
 complete -c spack -n "__fish_spack_using_command load" -l list -f -a "list"
 complete -c spack -n "__fish_spack_using_command load" -l list -d "show loaded packages: same as `spack find --loaded`"
@@ -2636,7 +2636,7 @@ complete -c spack -n "__fish_spack_using_command mark" -s i -l implicit -d "Mark
 
 # spack mirror
 set -g __fish_spack_optspecs_spack_mirror h/help n/no-checksum deprecated
-complete -c spack -n "__fish_spack_using_command_pos 0 mirror" -f -a "create" -d "Create a directory to be used as a spack mirror, and fill it with     package archives.     "
+complete -c spack -n "__fish_spack_using_command_pos 0 mirror" -f -a "create" -d "Create a directory to be used as a spack mirror, and fill it with"
 complete -c spack -n "__fish_spack_using_command_pos 0 mirror" -f -a "destroy" -d "Given a url, recursively delete everything under it."
 complete -c spack -n "__fish_spack_using_command_pos 0 mirror" -f -a "add" -d "Add a mirror to Spack."
 complete -c spack -n "__fish_spack_using_command_pos 0 mirror" -f -a "remove" -d "Remove a mirror by name."
@@ -3270,7 +3270,7 @@ complete -c spack -n "__fish_spack_using_command solve" -s h -l help -f -a "help
 complete -c spack -n "__fish_spack_using_command solve" -s h -l help -d "show this help message and exit"
 # ['--show'] -> ['show']: None
 complete -c spack -n "__fish_spack_using_command solve" -l show -r -f -a "show"
-complete -c spack -n "__fish_spack_using_command solve" -l show -r -d "select outputs: comma-separated list of:    asp          asp program text   opt          optimization criteria for best model   output       raw clingo output   solutions    models found by asp program   all          all of the above"
+complete -c spack -n "__fish_spack_using_command solve" -l show -r -d "select outputs: comma-separated list of: "
 # ['-l', '--long'] -> ['long']: 0
 complete -c spack -n "__fish_spack_using_command solve" -s l -l long -f -a "long"
 complete -c spack -n "__fish_spack_using_command solve" -s l -l long -d "show dependency hashes as well as versions"

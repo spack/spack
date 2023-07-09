@@ -677,8 +677,7 @@ class FishCompletionWriter(ArgparseWriter):
                 if value is not None:
                     commands.append(prefix + " " + value)
 
-            if len(help) > 0:
-                help = help.split("\n")[0]
+            if help:
                 commands.append(prefix + ' -d "%s"' % help)
 
         return "\n".join(commands) + "\n"
