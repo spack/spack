@@ -1682,4 +1682,7 @@ class NoSuchSpecError(KeyError):
         super().__init__(spec)
 
     def __str__(self):
+        # This exception is raised frequently, and almost always
+        # caught, so ensure we don't pay the cost of Spec.__str__
+        # unless the exception is actually printed.
         return f"No such spec in database: {self.spec}"
