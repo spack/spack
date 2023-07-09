@@ -27,7 +27,7 @@ class Command:
         usage: str,
         positionals: List[Tuple[str, Optional[Iterable[Any]], Union[int, str, None], str]],
         optionals: List[Tuple[Sequence[str], List[str], str, Union[int, str, None], str]],
-        subcommands: List[Tuple[ArgumentParser, str, Optional[str]]],
+        subcommands: List[Tuple[ArgumentParser, str, str]],
     ) -> None:
         """Initialize a new Command instance.
 
@@ -349,9 +349,7 @@ class ArgparseRstWriter(ArgparseWriter):
         """
         return ""
 
-    def begin_subcommands(
-        self, subcommands: List[Tuple[ArgumentParser, str, Optional[str]]]
-    ) -> str:
+    def begin_subcommands(self, subcommands: List[Tuple[ArgumentParser, str, str]]) -> str:
         """Table with links to other subcommands.
 
         Arguments:

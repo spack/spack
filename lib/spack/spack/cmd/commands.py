@@ -500,19 +500,7 @@ class FishCompletionWriter(ArgparseWriter):
         return "set -g %s %s\n" % (optspec_var, args)
 
     @staticmethod
-    def is_iterable(arg: Any) -> bool:
-        """Check if a variable is iterable.
-
-        Args:
-            arg: Variable to check.
-
-        Returns:
-            True if variable is iterable, else False.
-        """
-        return isinstance(arg, (list, tuple, set, frozenset))
-
-    @staticmethod
-    def complete_head(prog: str, positional: Optional[str] = None) -> str:
+    def complete_head(prog: str, positional: Optional[int] = None) -> str:
         """Return the head of the completion command.
 
         Args:
@@ -537,7 +525,7 @@ class FishCompletionWriter(ArgparseWriter):
         prog: str,
         positionals: List[Tuple[str, Optional[Iterable[Any]], Union[int, str, None], str]],
         optionals: List[Tuple[Sequence[str], List[str], str, Union[int, str, None], str]],
-        subcommands: List[Tuple[ArgumentParser, str, Optional[str]]],
+        subcommands: List[Tuple[ArgumentParser, str, str]],
     ) -> str:
         """Return all the completion commands.
 
@@ -590,7 +578,7 @@ class FishCompletionWriter(ArgparseWriter):
 
             head = self.complete_head(prog, idx if nargs != "..." else None)
 
-            if self.is_iterable(choices):
+            if choices is not None:
                 # If there are choices, we provide a completion for all
                 # possible values
                 choices = " ".join(choices)
@@ -666,7 +654,7 @@ class FishCompletionWriter(ArgparseWriter):
                 commands.append("# TODO: %s -> %r: %r not supported" % (flags, dest, nargs))
                 prefix += " -r"
 
-            if self.is_iterable(dest):
+            if dest is not None:
                 # If there are choices, we provide a completion for all
                 # possible values
                 choices = " ".join(dest)
@@ -683,9 +671,7 @@ class FishCompletionWriter(ArgparseWriter):
 
         return "\n".join(commands) + "\n"
 
-    def subcommands(
-        self, prog: str, subcommands: List[Tuple[ArgumentParser, str, Optional[str]]]
-    ) -> str:
+    def subcommands(self, prog: str, subcommands: List[Tuple[ArgumentParser, str, str]]) -> str:
         """Return the completion for subcommands.
 
         Args:
