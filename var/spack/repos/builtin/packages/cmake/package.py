@@ -318,8 +318,8 @@ class Cmake(Package):
 
     def bootstrap_args(self):
         spec = self.spec
-        self.generator = make
         args = []
+        self.generator = make
 
         # The Intel compiler isn't able to deal with noinline member functions of
         # template classes defined in headers.  As such it outputs
@@ -374,7 +374,7 @@ class Cmake(Package):
 
         args.extend(
             [
-                "-DCMAKE_BUILD_TYPE={0}".format(self.spec.variants["build_type"].value),
+                f"-DCMAKE_BUILD_TYPE={self.spec.variants['build_type'].value}",
                 # Install CMake correctly, even if `spack install` runs
                 # inside a ctest environment
                 "-DCMake_TEST_INSTALL=OFF",
