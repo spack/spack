@@ -322,60 +322,60 @@ class BashCompletionWriter(ArgparseWriter):
 # Map argument destination names to their complete commands
 # Earlier items in the list have higher precedence
 _dest_to_fish_complete = {
-    ("activate", r"view"): '-f -a "(__fish_complete_directories)"',
-    ("bootstrap root", r"path"): '-f -a "(__fish_complete_directories)"',
-    ("mirror add", r"mirror"): "-f",
-    ("repo add", r"path"): '-f -a "(__fish_complete_directories)"',
-    ("test find", r"filter"): '-f -a "(__fish_spack_tests)"',
-    ("bootstrap", r"name"): '-f -a "(__fish_spack_bootstrap_names)"',
-    ("buildcache create", r"key"): '-f -a "(__fish_spack_gpg_keys)"',
+    ("activate", "view"): '-f -a "(__fish_complete_directories)"',
+    ("bootstrap root", "path"): '-f -a "(__fish_complete_directories)"',
+    ("mirror add", "mirror"): "-f",
+    ("repo add", "path"): '-f -a "(__fish_complete_directories)"',
+    ("test find", "filter"): '-f -a "(__fish_spack_tests)"',
+    ("bootstrap", "name"): '-f -a "(__fish_spack_bootstrap_names)"',
+    ("buildcache create", "key"): '-f -a "(__fish_spack_gpg_keys)"',
     ("build-env", r"spec \[--\].*"): '-f -a "(__fish_spack_build_env_spec)"',
-    ("checksum", r"package"): '-f -a "(__fish_spack_packages)"',
+    ("checksum", "package"): '-f -a "(__fish_spack_packages)"',
     (
         "checksum",
-        r"versions",
+        "versions",
     ): "-f -a '(__fish_spack_package_versions $__fish_spack_argparse_argv[1])'",
-    ("config", r"path"): '-f -a "(__fish_spack_colon_path)"',
-    ("config", r"section"): '-f -a "(__fish_spack_config_sections)"',
-    ("develop", r"specs?"): '-f -k -a "(__fish_spack_specs_or_id)"',
-    ("diff", r"specs?"): '-f -a "(__fish_spack_installed_specs)"',
-    ("gpg sign", r"output"): '-f -a "(__fish_complete_directories)"',
-    ("gpg", r"keys?"): '-f -a "(__fish_spack_gpg_keys)"',
-    ("graph", r"specs?"): '-f -k -a "(__fish_spack_specs_or_id)"',
-    ("help", r"help_command"): '-f -a "(__fish_spack_commands)"',
-    ("list", r"filter"): '-f -a "(__fish_spack_packages)"',
-    ("mirror", r"mirror"): '-f -a "(__fish_spack_mirrors)"',
-    ("pkg", r"package"): '-f -a "(__fish_spack_pkg_packages)"',
-    ("remove", r"specs?"): '-f -a "(__fish_spack_installed_specs)"',
-    ("repo", r"namespace_or_path"): '$__fish_spack_force_files -a "(__fish_spack_repos)"',
-    ("restage", r"specs?"): '-f -k -a "(__fish_spack_specs_or_id)"',
-    ("rm", r"specs?"): '-f -a "(__fish_spack_installed_specs)"',
-    ("solve", r"specs?"): '-f -k -a "(__fish_spack_specs_or_id)"',
-    ("spec", r"specs?"): '-f -k -a "(__fish_spack_specs_or_id)"',
-    ("stage", r"specs?"): '-f -k -a "(__fish_spack_specs_or_id)"',
+    ("config", "path"): '-f -a "(__fish_spack_colon_path)"',
+    ("config", "section"): '-f -a "(__fish_spack_config_sections)"',
+    ("develop", "specs?"): '-f -k -a "(__fish_spack_specs_or_id)"',
+    ("diff", "specs?"): '-f -a "(__fish_spack_installed_specs)"',
+    ("gpg sign", "output"): '-f -a "(__fish_complete_directories)"',
+    ("gpg", "keys?"): '-f -a "(__fish_spack_gpg_keys)"',
+    ("graph", "specs?"): '-f -k -a "(__fish_spack_specs_or_id)"',
+    ("help", "help_command"): '-f -a "(__fish_spack_commands)"',
+    ("list", "filter"): '-f -a "(__fish_spack_packages)"',
+    ("mirror", "mirror"): '-f -a "(__fish_spack_mirrors)"',
+    ("pkg", "package"): '-f -a "(__fish_spack_pkg_packages)"',
+    ("remove", "specs?"): '-f -a "(__fish_spack_installed_specs)"',
+    ("repo", "namespace_or_path"): '$__fish_spack_force_files -a "(__fish_spack_repos)"',
+    ("restage", "specs?"): '-f -k -a "(__fish_spack_specs_or_id)"',
+    ("rm", "specs?"): '-f -a "(__fish_spack_installed_specs)"',
+    ("solve", "specs?"): '-f -k -a "(__fish_spack_specs_or_id)"',
+    ("spec", "specs?"): '-f -k -a "(__fish_spack_specs_or_id)"',
+    ("stage", "specs?"): '-f -k -a "(__fish_spack_specs_or_id)"',
     ("test-env", r"spec \[--\].*"): '-f -a "(__fish_spack_build_env_spec)"',
     ("test", r"\[?name.*"): '-f -a "(__fish_spack_tests)"',
-    ("undevelop", r"specs?"): '-f -k -a "(__fish_spack_specs_or_id)"',
-    ("verify", r"specs_or_files"): '$__fish_spack_force_files -a "(__fish_spack_installed_specs)"',
-    ("view", r"path"): '-f -a "(__fish_complete_directories)"',
-    ("", r"comment"): "-f",
-    ("", r"compiler_spec"): '-f -a "(__fish_spack_installed_compilers)"',
-    ("", r"config_scopes"): '-f -a "(__fish_complete_directories)"',
-    ("", r"extendable"): '-f -a "(__fish_spack_extensions)"',
-    ("", r"installed_specs?"): '-f -a "(__fish_spack_installed_specs)"',
-    ("", r"job_url"): "-f",
-    ("", r"location_env"): '-f -a "(__fish_complete_directories)"',
-    ("", r"pytest_args"): '-f -a "(__fish_spack_unit_tests)"',
-    ("", r"package_or_file"): '$__fish_spack_force_files -a "(__fish_spack_packages)"',
-    ("", r"package_or_user"): '-f -a "(__fish_spack_packages)"',
-    ("", r"package"): '-f -a "(__fish_spack_packages)"',
-    ("", r"PKG"): '-f -a "(__fish_spack_packages)"',
-    ("", r"prefix"): '-f -a "(__fish_complete_directories)"',
+    ("undevelop", "specs?"): '-f -k -a "(__fish_spack_specs_or_id)"',
+    ("verify", "specs_or_files"): '$__fish_spack_force_files -a "(__fish_spack_installed_specs)"',
+    ("view", "path"): '-f -a "(__fish_complete_directories)"',
+    ("", "comment"): "-f",
+    ("", "compiler_spec"): '-f -a "(__fish_spack_installed_compilers)"',
+    ("", "config_scopes"): '-f -a "(__fish_complete_directories)"',
+    ("", "extendable"): '-f -a "(__fish_spack_extensions)"',
+    ("", "installed_specs?"): '-f -a "(__fish_spack_installed_specs)"',
+    ("", "job_url"): "-f",
+    ("", "location_env"): '-f -a "(__fish_complete_directories)"',
+    ("", "pytest_args"): '-f -a "(__fish_spack_unit_tests)"',
+    ("", "package_or_file"): '$__fish_spack_force_files -a "(__fish_spack_packages)"',
+    ("", "package_or_user"): '-f -a "(__fish_spack_packages)"',
+    ("", "package"): '-f -a "(__fish_spack_packages)"',
+    ("", "PKG"): '-f -a "(__fish_spack_packages)"',
+    ("", "prefix"): '-f -a "(__fish_complete_directories)"',
     ("", r"rev\d?"): '-f -a "(__fish_spack_git_rev)"',
-    ("", r"specs?"): '-f -k -a "(__fish_spack_specs)"',
-    ("", r"tags?"): '-f -a "(__fish_spack_tags)"',
-    ("", r"virtual_package"): '-f -a "(__fish_spack_providers)"',
-    ("", r"working_dir"): '-f -a "(__fish_complete_directories)"',
+    ("", "specs?"): '-f -k -a "(__fish_spack_specs)"',
+    ("", "tags?"): '-f -a "(__fish_spack_tags)"',
+    ("", "virtual_package"): '-f -a "(__fish_spack_providers)"',
+    ("", "working_dir"): '-f -a "(__fish_complete_directories)"',
     ("", r"(\w*_)?env"): '-f -a "(__fish_spack_environments)"',
     ("", r"(\w*_)?dir(ectory)?"): '-f -a "(__fish_spack_environments)"',
     ("", r"(\w*_)?mirror_name"): '-f -a "(__fish_spack_mirrors)"',
@@ -427,6 +427,24 @@ class FishCompletionWriter(ArgparseWriter):
             + self.optspecs(cmd.prog, optionals)
             + self.complete(cmd.prog, positionals, optionals, subcommands)
         )
+
+    def _quote(self, string: str) -> str:
+        """Quote string and escape special characters if necessary.
+
+        Args:
+            string: Input string.
+
+        Returns:
+            Quoted string.
+        """
+        # Goal here is to match fish_indent behavior
+
+        # Strings without spaces (or other special characters) do not need to be escaped
+        if not any([sub in string for sub in [" ", "'", '"']]):
+            return string
+
+        string = string.replace("'", r"\'")
+        return f"'{string}'"
 
     def optspecs(
         self,
@@ -575,7 +593,7 @@ class FishCompletionWriter(ArgparseWriter):
 
             if choices is not None:
                 # If there are choices, we provide a completion for all possible values.
-                commands.append(head + ' -f -a "%s"' % " ".join(choices))
+                commands.append(head + " -f -a %s" % self._quote(" ".join(choices)))
             else:
                 # Otherwise, we try to find a predefined completion for it
                 value = _fish_dest_get_complete(prog, args)
@@ -649,7 +667,7 @@ class FishCompletionWriter(ArgparseWriter):
 
             if dest is not None:
                 # If there are choices, we provide a completion for all possible values.
-                commands.append(prefix + ' -f -a "%s"' % " ".join(dest))
+                commands.append(prefix + " -f -a %s" % self._quote(" ".join(dest)))
             else:
                 # Otherwise, we try to find a predefined completion for it
                 value = _fish_dest_get_complete(prog, dest)
@@ -657,7 +675,7 @@ class FishCompletionWriter(ArgparseWriter):
                     commands.append(prefix + " " + value)
 
             if help:
-                commands.append(prefix + ' -d "%s"' % help)
+                commands.append(prefix + " -d %s" % self._quote(help))
 
         return "\n".join(commands) + "\n"
 
@@ -675,11 +693,11 @@ class FishCompletionWriter(ArgparseWriter):
         head = self.complete_head(prog, 0)
 
         for _, subcommand, help in subcommands:
-            command = head + ' -f -a "%s"' % subcommand
+            command = head + " -f -a %s" % self._quote(subcommand)
 
             if help is not None and len(help) > 0:
                 help = help.split("\n")[0]
-                command += ' -d "%s"' % help
+                command += " -d %s" % self._quote(help)
 
             commands.append(command)
 
