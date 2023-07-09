@@ -28,7 +28,6 @@ def test_read_unicode(tmpdir, working_env):
         with open(script_name, "w") as f:
             f.write(
                 """#!{0}
-from __future__ import print_function
 print(u'\\xc3')
 """.format(
                     sys.executable

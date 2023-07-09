@@ -14,6 +14,7 @@ class RRbgl(RPackage):
 
     bioc = "RBGL"
 
+    version("1.76.0", commit="18b7cc5f002435aa83e8b693e7bf269fc0b096a5")
     version("1.74.0", commit="e698db897b719992a8c0747138735c0e7d9dfb21")
     version("1.72.0", commit="a86f3102f2795e1ffb530bb061247e3a42ca22f7")
     version("1.70.0", commit="9cfd5fdad4f1f438ff748317f32e822aede8921b")

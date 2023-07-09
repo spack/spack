@@ -176,3 +176,10 @@ class IntelOneapiMpi(IntelOneApiLibraryPackage):
                 self.component_prefix.bin.join(wrapper),
                 backup=False,
             )
+
+    @run_after("install")
+    def fixup_prefix(self):
+        self.symlink_dir(self.component_prefix.include, self.prefix.include)
+        self.symlink_dir(self.component_prefix.lib, self.prefix.lib)
+        self.symlink_dir(self.component_prefix.lib.release, self.prefix.lib)
+        self.symlink_dir(self.component_prefix.bin, self.prefix.bin)

@@ -16,6 +16,7 @@ class PySlepc4py(PythonPackage):
     maintainers("joseeroman", "balay")
 
     version("main", branch="main")
+    version("3.19.1", sha256="68303f4acef8efc0542ab288a19159d0e6cdf313726f573e0bea2edb3d2c9595")
     version("3.19.0", sha256="ae84d33cce259c1d6ff64308b2f819d1c0f7b018e048f9049ec6d5be15614ba5")
     version("3.18.3", sha256="93c978f115683900a575026111ff2abe6f3ce4de8c21eec53c07dfd97ea43c85")
     version("3.18.2", sha256="402297fd8e583ed2618d2cba05e5cae8e9d0a2c3943812a1a138f431ef3479b3")
@@ -40,6 +41,7 @@ class PySlepc4py(PythonPackage):
     depends_on("py-cython@0.29.32:", when="^python@3.11:", type="build")
     depends_on("py-cython@0.24:", type="build")
     depends_on("py-setuptools", type="build")
+    depends_on("py-numpy", type=("build", "run"))
 
     depends_on("py-petsc4py", type=("build", "run"))
     depends_on("py-petsc4py@main", when="@main", type=("build", "run"))

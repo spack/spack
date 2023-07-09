@@ -15,6 +15,7 @@ class Zstr(Package):
 
     maintainers("bvanessen")
 
+    version("1.0.7", sha256="8d2ddae68ff7bd0a6fce6150a8f52ad9ce1bed2c4056c8846f4dec4f2dc60819")
     version("1.0.4", sha256="a594a3a9c192a6d9e93f9585910d41f7ee6791eb7c454d40c922656324b3058e")
     version("1.0.3", sha256="d42f1b08e4c3a26e3b42433691d32765015cf89f089ae075b1acb819ccba585f")
     version("1.0.2", sha256="b4c2d72f0f222b72985fc6c2bd2bd9c1fc353d2e4c8c12186fd87229107a442b")

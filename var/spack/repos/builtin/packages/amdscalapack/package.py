@@ -49,7 +49,7 @@ class Amdscalapack(ScalapackBase):
 
     def cmake_args(self):
         """cmake_args function"""
-        args = super(Amdscalapack, self).cmake_args()
+        args = super().cmake_args()
         spec = self.spec
 
         if spec.satisfies("%gcc@10:"):

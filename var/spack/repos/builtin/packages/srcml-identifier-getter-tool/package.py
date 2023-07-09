@@ -21,6 +21,6 @@ class SrcmlIdentifierGetterTool(CMakePackage):
     depends_on("lzma")
 
     def install(self, spec, prefix):
-        super(SrcmlIdentifierGetterTool, self).install(spec, prefix)
+        super().install(spec, prefix)
         mkdir(prefix.bin)
         install(join_path(self.build_directory, "bin", "grabidentifiers"), prefix.bin)

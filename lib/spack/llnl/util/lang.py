@@ -3,8 +3,6 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from __future__ import division
-
 import collections.abc
 import contextlib
 import functools
@@ -768,10 +766,10 @@ def pretty_seconds(seconds):
 
 class RequiredAttributeError(ValueError):
     def __init__(self, message):
-        super(RequiredAttributeError, self).__init__(message)
+        super().__init__(message)
 
 
-class ObjectWrapper(object):
+class ObjectWrapper:
     """Base class that wraps an object. Derived classes can add new behavior
     while staying undercover.
 
@@ -798,7 +796,7 @@ class ObjectWrapper(object):
         self.__dict__ = wrapped_object.__dict__
 
 
-class Singleton(object):
+class Singleton:
     """Simple wrapper for lazily initialized singleton objects."""
 
     def __init__(self, factory):
@@ -845,7 +843,7 @@ class Singleton(object):
         return repr(self.instance)
 
 
-class LazyReference(object):
+class LazyReference:
     """Lazily evaluated reference to part of a singleton."""
 
     def __init__(self, ref_function):
@@ -943,7 +941,7 @@ def star(func):
     return _wrapper
 
 
-class Devnull(object):
+class Devnull:
     """Null stream with less overhead than ``os.devnull``.
 
     See https://stackoverflow.com/a/2929954.
@@ -1060,7 +1058,7 @@ class TypedMutableSequence(collections.abc.MutableSequence):
         return str(self.data)
 
 
-class GroupedExceptionHandler(object):
+class GroupedExceptionHandler:
     """A generic mechanism to coalesce multiple exceptions and preserve tracebacks."""
 
     def __init__(self):
@@ -1091,7 +1089,7 @@ class GroupedExceptionHandler(object):
         return "due to the following failures:\n{0}".format("\n".join(each_exception_message))
 
 
-class GroupedExceptionForwarder(object):
+class GroupedExceptionForwarder:
     """A contextmanager to capture exceptions and forward them to a
     GroupedExceptionHandler."""
 
@@ -1111,7 +1109,7 @@ class GroupedExceptionForwarder(object):
         return True
 
 
-class classproperty(object):
+class classproperty:
     """Non-data descriptor to evaluate a class-level property. The function that performs
     the evaluation is injected at creation time and take an instance (could be None) and
     an owner (i.e. the class that originated the instance)

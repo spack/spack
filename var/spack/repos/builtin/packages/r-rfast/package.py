@@ -21,6 +21,7 @@ class RRfast(RPackage):
 
     cran = "Rfast"
 
+    version("2.0.7", sha256="8f86159a4760a7124e1c91ae0b022c7e496f81590ea4e4af702bea44e8dedf8f")
     version("2.0.6", sha256="34694b5c67ce8fcbdc90aac2ac80a74d4b66515f383e6301aea7c020009ebe7f")
     version("2.0.4", sha256="959907e36e24620c07ec282b203b40214f4914f4928c07ee6491043c27af31d9")
 

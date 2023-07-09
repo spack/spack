@@ -6,8 +6,6 @@
 """
 Routines for printing columnar output.  See ``colify()`` for more information.
 """
-from __future__ import division, unicode_literals
-
 import io
 import os
 import sys

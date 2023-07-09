@@ -39,7 +39,7 @@ __all__ = [
 true_fn = lambda: True
 
 
-class OpenFile(object):
+class OpenFile:
     """Record for keeping track of open lockfiles (with reference counting).
 
     There's really only one ``OpenFile`` per inode, per process, but we record the
@@ -53,7 +53,7 @@ class OpenFile(object):
         self.refs = 0
 
 
-class OpenFileTracker(object):
+class OpenFileTracker:
     """Track open lockfiles, to minimize number of open file descriptors.
 
     The ``fcntl`` locks that Spack uses are associated with an inode and a process.
@@ -169,7 +169,7 @@ def _attempts_str(wait_time, nattempts):
     return " after {} and {}".format(pretty_seconds(wait_time), attempts)
 
 
-class LockType(object):
+class LockType:
     READ = 0
     WRITE = 1
 
@@ -192,7 +192,7 @@ class LockType(object):
         return op == LockType.READ or op == LockType.WRITE
 
 
-class Lock(object):
+class Lock:
     """This is an implementation of a filesystem lock using Python's lockf.
 
     In Python, ``lockf`` actually calls ``fcntl``, so this should work with
@@ -681,7 +681,7 @@ class Lock(object):
         )
 
 
-class LockTransaction(object):
+class LockTransaction:
     """Simple nested transaction context manager that uses a file lock.
 
     Arguments:
@@ -770,7 +770,7 @@ class LockDowngradeError(LockError):
 
     def __init__(self, path):
         msg = "Cannot downgrade lock from write to read on file: %s" % path
-        super(LockDowngradeError, self).__init__(msg)
+        super().__init__(msg)
 
 
 class LockLimitError(LockError):
@@ -782,7 +782,7 @@ class LockTimeoutError(LockError):
 
     def __init__(self, lock_type, path, time, attempts):
         fmt = "Timed out waiting for a {} lock after {}.\n    Made {} {} on file: {}"
-        super(LockTimeoutError, self).__init__(
+        super().__init__(
             fmt.format(
                 lock_type,
                 pretty_seconds(time),
@@ -798,7 +798,7 @@ class LockUpgradeError(LockError):
 
     def __init__(self, path):
         msg = "Cannot upgrade lock from read to write on file: %s" % path
-        super(LockUpgradeError, self).__init__(msg)
+        super().__init__(msg)
 
 
 class LockPermissionError(LockError):
@@ -810,7 +810,7 @@ class LockROFileError(LockPermissionError):
 
     def __init__(self, path):
         msg = "Can't take write lock on read-only file: %s" % path
-        super(LockROFileError, self).__init__(msg)
+        super().__init__(msg)
 
 
 class CantCreateLockError(LockPermissionError):
@@ -819,4 +819,4 @@ class CantCreateLockError(LockPermissionError):
     def __init__(self, path):
         msg = "cannot create lock '%s': " % path
         msg += "file does not exist and location is not writable"
-        super(LockError, self).__init__(msg)
+        super().__init__(msg)

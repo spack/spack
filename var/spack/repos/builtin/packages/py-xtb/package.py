@@ -15,7 +15,7 @@ class PyXtb(PythonPackage):
 
     maintainers("awvwgk")
 
-    version("22.1", "7a59e7b783fc6e8b7328f55211de681e535a83991b07c4bab73494063f5e9018")
+    version("22.1", sha256="7a59e7b783fc6e8b7328f55211de681e535a83991b07c4bab73494063f5e9018")
 
     depends_on("pkgconfig", type="build")
     depends_on("python@3.7:", type=("build", "run"))

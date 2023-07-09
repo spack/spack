@@ -17,5 +17,6 @@ class RNleqslv(RPackage):
 
     cran = "nleqslv"
 
+    version("3.3.4", sha256="2783e7525bcd155dd8cedf5a41b7db65cd1fa0e095cd937371448316f3930fcf")
     version("3.3.3", sha256="2e46dfce95ddfd7ed5208413ee41f6bdf1ae18414fb1d0c146d9da3af12ac633")
     version("3.3.2", sha256="f54956cf67f9970bb3c6803684c84a27ac78165055745e444efc45cfecb63fed")

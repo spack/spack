@@ -28,6 +28,7 @@ class Systemtap(AutotoolsPackage):
     depends_on("py-setuptools", type="build")
     depends_on("python", type=("build", "run"))
 
-    def configure_args(self):
-        args = ["LDFLAGS=-lintl"]
-        return args
+    def flag_handler(self, name, flags):
+        if name == "ldlibs" and "intl" in self.spec["gettext"].libs.names:
+            flags.append("-lintl")
+        return self.build_system_flags(name, flags)

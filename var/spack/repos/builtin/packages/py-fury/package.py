@@ -21,7 +21,6 @@ class PyFury(PythonPackage):
     depends_on("vtk+python@8.1.2:8,9.0.1:", type=("build", "run"))
     depends_on("pil@5.4.1:", type=("build", "run"))
 
-    depends_on("py-codecov", type="test")
     depends_on("py-coverage", type="test")
     depends_on("py-flake8", type="test")
     depends_on("py-pytest", type="test")

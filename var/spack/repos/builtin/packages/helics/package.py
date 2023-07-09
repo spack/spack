@@ -44,12 +44,6 @@ class Helics(CMakePackage):
     version("2.4.2", sha256="957856f06ed6d622f05dfe53df7768bba8fe2336d841252f5fac8345070fa5cb")
     version("2.4.1", sha256="ac077e9efe466881ea366721cb31fb37ea0e72a881a717323ba4f3cdda338be4")
 
-    variant(
-        "build_type",
-        default="Release",
-        description="CMake build type",
-        values=("Debug", "Release", "RelWithDebInfo", "MinSizeRel"),
-    )
     variant("apps", default=True, description="Install the HELICS apps executables")
     variant("apps_lib", default=True, description="Install the HELICS apps library")
     variant("benchmarks", default=False, description="Install the HELICS benchmarks")

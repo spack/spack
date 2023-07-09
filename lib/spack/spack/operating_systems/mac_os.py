@@ -152,7 +152,7 @@ class MacOs(OperatingSystem):
 
         mac_ver = str(version.up_to(part))
         name = mac_releases.get(mac_ver, "macos")
-        super(MacOs, self).__init__(name, mac_ver)
+        super().__init__(name, mac_ver)
 
     def __str__(self):
         return self.name

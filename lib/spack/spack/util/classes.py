@@ -2,10 +2,6 @@
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
-
-# Need this because of spack.util.string
-from __future__ import absolute_import
-
 import inspect
 
 import llnl.util.tty as tty

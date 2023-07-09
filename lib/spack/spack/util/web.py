@@ -3,8 +3,6 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from __future__ import print_function
-
 import codecs
 import errno
 import multiprocessing.pool
@@ -17,6 +15,7 @@ import sys
 import traceback
 import urllib.parse
 from html.parser import HTMLParser
+from pathlib import Path, PurePosixPath
 from urllib.error import URLError
 from urllib.request import HTTPSHandler, Request, build_opener
 
@@ -75,13 +74,28 @@ class LinkParser(HTMLParser):
     links.  Good enough for a really simple spider."""
 
     def __init__(self):
-        HTMLParser.__init__(self)
+        super().__init__()
         self.links = []
 
     def handle_starttag(self, tag, attrs):
         if tag == "a":
             for attr, val in attrs:
                 if attr == "href":
+                    self.links.append(val)
+
+
+class IncludeFragmentParser(HTMLParser):
+    """This parser takes an HTML page and selects the include-fragments,
+    used on GitHub, https://github.github.io/include-fragment-element."""
+
+    def __init__(self):
+        super().__init__()
+        self.links = []
+
+    def handle_starttag(self, tag, attrs):
+        if tag == "include-fragment":
+            for attr, val in attrs:
+                if attr == "src":
                     self.links.append(val)
 
 
@@ -483,7 +497,8 @@ def list_url(url, recursive=False):
 
     if local_path:
         if recursive:
-            return list(_iter_local_prefix(local_path))
+            # convert backslash to forward slash as required for URLs
+            return [str(PurePosixPath(Path(p))) for p in list(_iter_local_prefix(local_path))]
         return [
             subpath
             for subpath in os.listdir(local_path)
@@ -550,9 +565,38 @@ def spider(root_urls, depth=0, concurrency=32):
             page = codecs.getreader("utf-8")(response).read()
             pages[response_url] = page
 
-            # Parse out the links in the page
+            # Parse out the include-fragments in the page
+            # https://github.github.io/include-fragment-element
+            include_fragment_parser = IncludeFragmentParser()
+            include_fragment_parser.feed(page)
+
+            fragments = set()
+            while include_fragment_parser.links:
+                raw_link = include_fragment_parser.links.pop()
+                abs_link = url_util.join(response_url, raw_link.strip(), resolve_href=True)
+
+                try:
+                    # This seems to be text/html, though text/fragment+html is also used
+                    fragment_response_url, _, fragment_response = read_from_url(
+                        abs_link, "text/html"
+                    )
+                except Exception as e:
+                    msg = f"Error reading fragment: {(type(e), str(e))}:{traceback.format_exc()}"
+                    tty.debug(msg)
+
+                if not fragment_response_url or not fragment_response:
+                    continue
+
+                fragment = codecs.getreader("utf-8")(fragment_response).read()
+                fragments.add(fragment)
+
+                pages[fragment_response_url] = fragment
+
+            # Parse out the links in the page and all fragments
             link_parser = LinkParser()
             link_parser.feed(page)
+            for fragment in fragments:
+                link_parser.feed(fragment)
 
             while link_parser.links:
                 raw_link = link_parser.links.pop()
@@ -694,7 +738,8 @@ def find_versions_of_archive(
 
         # We'll be a bit more liberal and just look for the archive
         # part, not the full path.
-        url_regex = os.path.basename(url_regex)
+        # this is a URL so it is a posixpath even on Windows
+        url_regex = PurePosixPath(url_regex).name
 
         # We need to add a / to the beginning of the regex to prevent
         # Spack from picking up similarly named packages like:
@@ -825,7 +870,5 @@ class NoNetworkConnectionError(SpackWebError):
     """Raised when an operation can't get an internet connection."""
 
     def __init__(self, message, url):
-        super(NoNetworkConnectionError, self).__init__(
-            "No network connection: " + str(message), "URL was: " + str(url)
-        )
+        super().__init__("No network connection: " + str(message), "URL was: " + str(url))
         self.url = url

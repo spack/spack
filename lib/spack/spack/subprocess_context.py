@@ -47,7 +47,7 @@ def serialize(obj):
     return serialized_obj
 
 
-class SpackTestProcess(object):
+class SpackTestProcess:
     def __init__(self, fn):
         self.fn = fn
 
@@ -60,7 +60,7 @@ class SpackTestProcess(object):
         return multiprocessing.Process(target=self._restore_and_run, args=(self.fn, test_state))
 
 
-class PackageInstallContext(object):
+class PackageInstallContext:
     """Captures the in-memory process state of a package installation that
     needs to be transmitted to a child process.
     """
@@ -85,7 +85,7 @@ class PackageInstallContext(object):
         return pkg
 
 
-class TestState(object):
+class TestState:
     """Spack tests may modify state that is normally read from disk in memory;
     this object is responsible for properly serializing that state to be
     applied to a subprocess. This isn't needed outside of a testing environment
@@ -116,7 +116,7 @@ class TestState(object):
             self.test_patches.restore()
 
 
-class TestPatches(object):
+class TestPatches:
     def __init__(self, module_patches, class_patches):
         self.module_patches = list((x, y, serialize(z)) for (x, y, z) in module_patches)
         self.class_patches = list((x, y, serialize(z)) for (x, y, z) in class_patches)

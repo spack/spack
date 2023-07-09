@@ -18,6 +18,8 @@ class Sz(CMakePackage, AutotoolsPackage):
     tags = ["e4s"]
 
     version("master", branch="master")
+    version("2.1.12.5", sha256="32a820daf6019156a777300389d2392e4498a5c9daffce7be754cd0a5ba8729c")
+    version("2.1.12.4", sha256="4ae242e8821a96b7a4571bb5df6a3c78742d375f80cccbd5d46c4bac255b3c08")
     version("2.1.12.2", sha256="427e263e1fed1b0a56e13e0aff8e6a19c6d78d5f35dd16856876c70ab6066dc6")
     version("2.1.12", sha256="3712b2cd7170d1511569e48a208f02dfb72ecd7ad053c321e2880b9083e150de")
     version("2.1.11.1", sha256="e6fa5c969b012782b1e5e9fbd1cd7d1c0ace908d9ec982e78b2910ec5c2161ac")
@@ -75,6 +77,8 @@ class Sz(CMakePackage, AutotoolsPackage):
     depends_on("netcdf-c", when="+netcdf")
     depends_on("cmake@3.13:", type="build")
     depends_on("cunit", type="test")
+
+    conflicts("%clang@15:", when="@:2.1.12.4+hdf5")
 
     patch("ctags-only-if-requested.patch", when="@2.1.8.1:2.1.8.3")
 

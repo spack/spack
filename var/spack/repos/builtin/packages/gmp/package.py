@@ -37,6 +37,10 @@ class Gmp(AutotoolsPackage, GNUMirrorPackage):
     )
     variant("cxx", default=True, description="Enable C++ support")
 
+    # avoid using register x18 on aarch64 machines to prevent segfaults
+    # https://gmplib.org/repo/gmp/raw-rev/5f32dbc41afc
+    patch("avoid-x18.diff", when="@6.2.1")
+
     # gmp's configure script seems to be broken; it sometimes misdetects
     # shared library support. Regenerating it fixes the issue.
     force_autoreconf = True

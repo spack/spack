@@ -25,7 +25,8 @@ class Babelstream(CMakePackage, CudaPackage, ROCmPackage):
     version("4.0", sha256="a9cd39277fb15d977d468435eb9b894f79f468233f0131509aa540ffda4f5953")
     version("main", branch="main")
     version("develop", branch="develop")
-    maintainers = ["tomdeakin", "kaanolgu" "tom91136", "robj0nes"]
+
+    maintainers("tomdeakin", "kaanolgu", "tom91136", "robj0nes")
 
     # Languages
     # Also supported variants are cuda and rocm (for HIP)

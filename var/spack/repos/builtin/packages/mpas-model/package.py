@@ -163,6 +163,8 @@ class MpasModel(MakefilePackage):
         make(*self.target("init_atmosphere", "all"), parallel=True)
         mkdir("bin")
         copy("init_atmosphere_model", "bin")
+        copy("namelist.init_atmosphere", "bin")
+        copy("streams.init_atmosphere", "bin")
         make(*self.target("init_atmosphere", "clean"))
         make(*self.target("atmosphere", "all"), parallel=True)
         copy("atmosphere_model", "bin")

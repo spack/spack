@@ -16,7 +16,7 @@ class Rocmlir(CMakePackage):
     git = "https://github.com/ROCmSoftwarePlatform/rocMLIR.git"
     url = "https://github.com/ROCmSoftwarePlatform/rocMLIR/archive/refs/tags/rocm-5.4.3.tar.gz"
 
-    maintainers = ["srekolam"]
+    maintainers("srekolam")
 
     version("5.4.3", sha256="c0ba0f565e1c6614c9e6091a24cbef67b734a29e4a4ed7a8a57dc43f58ed8d53")
     version("5.4.0", sha256="3823f455ee392118c3281e27d45fa0e5381f3c4070eb4e06ba13bc6b34a90a60")

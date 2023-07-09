@@ -15,8 +15,6 @@ class Mumax(MakefilePackage, CudaPackage):
     homepage = "https://mumax.github.io"
     url = "https://github.com/mumax/3/archive/v3.10.tar.gz"
 
-    maintainers("glennpj")
-
     version(
         "3.10",
         sha256="42c858661cec3896685ff4babea11e711f71fd6ea37d20c2bed7e4a918702caa",
@@ -59,7 +57,7 @@ class Mumax(MakefilePackage, CudaPackage):
         return join_path(self.gopath, "src/github.com/mumax/3")
 
     def do_stage(self, mirror_only=False):
-        super(Mumax, self).do_stage(mirror_only)
+        super().do_stage(mirror_only)
         if not os.path.exists(self.mumax_gopath_dir):
             # Need to move source to $GOPATH and then symlink the original
             # stage directory

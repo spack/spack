@@ -52,8 +52,8 @@ class Eigenexa(AutotoolsPackage):
         """Save off benchmark files for stand-alone tests."""
         self.cache_extra_test_sources("benchmark")
 
-    def test(self):
-        """Perform stand-alone/smoke tests using pre-built benchmarks."""
+    def test_benchmarks(self):
+        """run benchmark checks"""
         # NOTE: This package would ideally build the test program using
         #   the installed software *each* time the tests are run since
         #   this package installs a library.
@@ -61,20 +61,17 @@ class Eigenexa(AutotoolsPackage):
         test_cache_dir = join_path(self.test_suite.current_test_cache_dir, "benchmark")
         test_data_dir = self.test_suite.current_test_data_dir
 
-        opts = [
-            "run-test.sh",
-            self.spec["mpi"].prefix.bin.mpirun,
-            "-n",
-            "1",
-            join_path(test_cache_dir, "eigenexa_benchmark"),
-            "-f",
-            join_path(test_cache_dir, "IN"),
-        ]
-        env["OMP_NUM_THREADS"] = "1"
-        self.run_test(
-            "sh",
-            options=opts,
-            expected="EigenExa Test Passed !",
-            purpose="test: running benchmark checks",
-            work_dir=test_data_dir,
-        )
+        with working_dir(test_data_dir):
+            opts = [
+                "run-test.sh",
+                self.spec["mpi"].prefix.bin.mpirun,
+                "-n",
+                "1",
+                join_path(test_cache_dir, "eigenexa_benchmark"),
+                "-f",
+                join_path(test_cache_dir, "IN"),
+            ]
+            env["OMP_NUM_THREADS"] = "1"
+            sh = which("sh")
+            out = sh(*opts, output=str.split, error=str.split)
+            assert "EigenExa Test Passed !" in out

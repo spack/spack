@@ -104,7 +104,6 @@ class SingularityEos(CMakePackage, CudaPackage):
     for _flag in ("~mpi", "+mpi"):
         depends_on("hdf5~cxx+hl" + _flag, when=_flag)
         depends_on("py-h5py" + _flag, when="@:1.6.2 " + _flag)
-        depends_on("kokkos-nvcc-wrapper" + _flag, when="+cuda+kokkos" + _flag)
 
     def flag_handler(self, name, flags):
         if name == "fflags":

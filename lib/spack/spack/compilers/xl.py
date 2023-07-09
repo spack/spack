@@ -6,7 +6,7 @@
 import os
 
 from spack.compiler import Compiler, UnsupportedCompilerFlag
-from spack.version import ver
+from spack.version import Version
 
 
 class Xl(Compiler):
@@ -51,24 +51,24 @@ class Xl(Compiler):
 
     @property
     def cxx11_flag(self):
-        if self.real_version < ver("13.1"):
+        if self.real_version < Version("13.1"):
             raise UnsupportedCompilerFlag(self, "the C++11 standard", "cxx11_flag", "< 13.1")
         else:
             return "-qlanglvl=extended0x"
 
     @property
     def c99_flag(self):
-        if self.real_version >= ver("13.1.1"):
+        if self.real_version >= Version("13.1.1"):
             return "-std=gnu99"
-        if self.real_version >= ver("10.1"):
+        if self.real_version >= Version("10.1"):
             return "-qlanglvl=extc99"
         raise UnsupportedCompilerFlag(self, "the C99 standard", "c99_flag", "< 10.1")
 
     @property
     def c11_flag(self):
-        if self.real_version >= ver("13.1.2"):
+        if self.real_version >= Version("13.1.2"):
             return "-std=gnu11"
-        if self.real_version >= ver("12.1"):
+        if self.real_version >= Version("12.1"):
             return "-qlanglvl=extc1x"
         raise UnsupportedCompilerFlag(self, "the C11 standard", "c11_flag", "< 12.1")
 
@@ -76,7 +76,7 @@ class Xl(Compiler):
     def cxx14_flag(self):
         # .real_version does not have the "y.z" component of "w.x.y.z", which
         # is required to distinguish whether support is available
-        if self.version >= ver("16.1.1.8"):
+        if self.version >= Version("16.1.1.8"):
             return "-std=c++14"
         raise UnsupportedCompilerFlag(self, "the C++14 standard", "cxx14_flag", "< 16.1.1.8")
 

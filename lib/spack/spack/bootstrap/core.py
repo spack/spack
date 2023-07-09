@@ -200,7 +200,7 @@ class BuildcacheBootstrapper(Bootstrapper):
                 matches = spack.store.find([spec_str], multiple=False, query_fn=query)
                 for match in matches:
                     spack.binary_distribution.install_root_node(
-                        match, allow_root=True, unsigned=True, force=True, sha256=pkg_sha256
+                        match, unsigned=True, force=True, sha256=pkg_sha256
                     )
 
     def _install_and_test(

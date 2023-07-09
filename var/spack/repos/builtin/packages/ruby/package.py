@@ -101,7 +101,7 @@ class Ruby(AutotoolsPackage, NMakePackage):
         module.rake = Executable(self.prefix.bin.rake)
 
 
-class SetupEnvironment(object):
+class SetupEnvironment:
     def setup_dependent_build_environment(self, env, dependent_spec):
         # TODO: do this only for actual extensions.
         # Set GEM_PATH to include dependent gem directories

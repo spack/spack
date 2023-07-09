@@ -19,7 +19,7 @@ class Cubist(MakefilePackage):
     homepage = "https://www.rulequest.com"
     url = "https://www.rulequest.com/GPL/Cubist.tgz"
 
-    version("2.07", "f2b20807cd3275e775c42263a4efd3f50df6e495a8b6dc8989ea2d41b973ac1a")
+    version("2.07", sha256="f2b20807cd3275e775c42263a4efd3f50df6e495a8b6dc8989ea2d41b973ac1a")
 
     def edit(self, spec, prefix):
         makefile = FileFilter("Makefile")

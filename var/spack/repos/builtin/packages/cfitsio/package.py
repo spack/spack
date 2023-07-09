@@ -33,7 +33,7 @@ class Cfitsio(AutotoolsPackage):
 
     def url_for_version(self, version):
         if version >= Version("3.47"):
-            return super(Cfitsio, self).url_for_version(version)
+            return super().url_for_version(version)
 
         url = "http://heasarc.gsfc.nasa.gov/FTP/software/fitsio/c/cfitsio{0}0.tar.gz"
         return url.format(version.joined)

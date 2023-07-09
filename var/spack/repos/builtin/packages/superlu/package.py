@@ -4,8 +4,6 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 import os
 
-from llnl.util import tty
-
 import spack.build_systems.cmake
 import spack.build_systems.generic
 from spack.package import *
@@ -16,12 +14,19 @@ class Superlu(CMakePackage, Package):
     sparse, nonsymmetric systems of linear equations on high performance
     machines. SuperLU is designed for sequential machines."""
 
-    homepage = "https://crd-legacy.lbl.gov/~xiaoye/SuperLU/#superlu"
+    homepage = "https://portal.nersc.gov/project/sparse/superlu/"
     url = "https://github.com/xiaoyeli/superlu/archive/refs/tags/v5.3.0.tar.gz"
 
     tags = ["e4s"]
 
-    version("5.3.0", sha256="3e464afa77335de200aeb739074a11e96d9bef6d0b519950cfa6684c4be1f350")
+    test_requires_compiler = True
+
+    version("6.0.0", sha256="5c199eac2dc57092c337cfea7e422053e8f8229f24e029825b0950edd1d17e8e")
+    version(
+        "5.3.0",
+        sha256="3e464afa77335de200aeb739074a11e96d9bef6d0b519950cfa6684c4be1f350",
+        preferred=True,
+    )
     version("5.2.2", sha256="470334a72ba637578e34057f46948495e601a5988a602604f5576367e606a28c")
     version("5.2.1", sha256="28fb66d6107ee66248d5cf508c79de03d0621852a0ddeba7301801d3d859f463")
     version(
@@ -38,7 +43,7 @@ class Superlu(CMakePackage, Package):
     )
 
     build_system(
-        conditional("cmake", when="@5:"), conditional("autotools", when="@:4"), default="cmake"
+        conditional("cmake", when="@5:"), conditional("generic", when="@:4"), default="cmake"
     )
 
     variant("pic", default=True, description="Build with position independent code")
@@ -50,115 +55,85 @@ class Superlu(CMakePackage, Package):
         msg="Older SuperLU is incompatible with newer compilers",
     )
 
-    test_requires_compiler = True
-
-    # Pre-cmake installation method
     examples_src_dir = "EXAMPLE"
-    make_hdr_file = "make.inc"
 
+    def test_example(self):
+        """build and run test example"""
+        test_dir = join_path(self.test_suite.current_test_cache_dir, self.examples_src_dir)
+        test_exe = "superlu"
+        test_src = f"{test_exe}.c"
+
+        if not os.path.isfile(join_path(test_dir, test_src)):
+            raise SkipTest(f"Cached {test_src} is missing")
+
+        with working_dir(test_dir):
+            args = []
+            if self.version < Version("5.2.2"):
+                args.append("HEADER=" + self.prefix.include)
+            args.append(test_exe)
+
+            make = which("make")
+            make(*args)
+
+            superlu = which(test_exe)
+            superlu()
+
+
+class BaseBuilder(metaclass=spack.builder.PhaseCallbacksMeta):
     @run_after("install")
-    def cache_test_sources(self):
-        """Copy the example source files after the package is installed to an
-        install test subdirectory for use during `spack test run`."""
+    def setup_standalone_tests(self):
+        """Set up and copy example source files after the package is installed
+        to an install test subdirectory for use during `spack test run`."""
+        makefile = join_path(self.pkg.examples_src_dir, "Makefile")
+
         if self.spec.satisfies("@5.2.2:"):
             # Include dir was hardcoded in 5.2.2
             filter_file(
-                r"INCLUDEDIR  = -I\.\./SRC",
-                "INCLUDEDIR = -I" + self.prefix.include,
-                join_path(self.examples_src_dir, "Makefile"),
+                r"INCLUDEDIR  = -I\.\./SRC", "INCLUDEDIR = -I" + self.prefix.include, makefile
             )
 
-        self.cache_extra_test_sources(self.examples_src_dir)
-
-    def _generate_make_hdr_for_test(self):
+        # Create the example makefile's include file and ensure the new file
+        # is the one use.
+        filename = "make.inc"
         config_args = []
+        if self.spec.satisfies("@5:"):
+            lib = "libsuperlu.a"
+        else:
+            config_args.append("PLAT       = _x86_64")
+            lib = f"libsuperlu_{self.spec.version}.a"
+        config_args.extend(self._make_hdr_for_test(lib))
 
-        # Define make.inc file
-        config_args.extend(
-            [
-                "SuperLUroot = {0}".format(self.prefix),
-                "SUPERLULIB = {0}/libsuperlu.a".format(self.prefix.lib),
-                "BLASLIB    = {0}".format(self.spec["blas"].libs.ld_flags),
-                "TMGLIB     = libtmglib.a",
-                "LIBS       = $(SUPERLULIB) $(BLASLIB)",
-                "ARCH       = ar",
-                "ARCHFLAGS  = cr",
-                "RANLIB     = {0}".format("ranlib" if which("ranlib") else "echo"),
-                "CC         = {0}".format(env["CC"]),
-                "FORTRAN    = {0}".format(env["FC"]),
-                "LOADER     = {0}".format(env["CC"]),
-                "CFLAGS     = -O3 -DNDEBUG -DUSE_VENDOR_BLAS -DPRNTlevel=0 -DAdd_",
-                "NOOPTS     = -O0",
-            ]
-        )
-
-        return config_args
-
-    # Pre-cmake configuration
-    @when("@:4")
-    def _generate_make_hdr_for_test(self):
-        config_args = []
-
-        # Define make.inc file
-        config_args.extend(
-            [
-                "PLAT       = _x86_64",
-                "SuperLUroot = {0}".format(self.prefix),
-                "SUPERLULIB = {0}/libsuperlu_{1}.a".format(self.prefix.lib, self.spec.version),
-                "BLASLIB    = {0}".format(self.spec["blas"].libs.ld_flags),
-                "TMGLIB     = libtmglib.a",
-                "LIBS       = $(SUPERLULIB) $(BLASLIB)",
-                "ARCH       = ar",
-                "ARCHFLAGS  = cr",
-                "RANLIB     = {0}".format("ranlib" if which("ranlib") else "echo"),
-                "CC         = {0}".format(env["CC"]),
-                "FORTRAN    = {0}".format(env["FC"]),
-                "LOADER     = {0}".format(env["CC"]),
-                "CFLAGS     = -O3 -DNDEBUG -DUSE_VENDOR_BLAS -DPRNTlevel=0 -DAdd_",
-                "NOOPTS     = -O0",
-            ]
-        )
-
-        return config_args
-
-    def run_superlu_test(self, test_dir, exe, args):
-        if not self.run_test(
-            "make",
-            options=args,
-            purpose="test: compile {0} example".format(exe),
-            work_dir=test_dir,
-        ):
-            tty.warn("Skipping test: failed to compile example")
-            return
-
-        if not self.run_test(exe, purpose="test: run {0} example".format(exe), work_dir=test_dir):
-            tty.warn("Skipping test: failed to run example")
-
-    def test(self):
-        config_args = self._generate_make_hdr_for_test()
-
-        # Write configuration options to make.inc file
-        make_file_inc = join_path(self.test_suite.current_test_cache_dir, self.make_hdr_file)
-        with open(make_file_inc, "w") as inc:
+        with open(join_path(self.pkg.examples_src_dir, filename), "w") as inc:
             for option in config_args:
-                inc.write("{0}\n".format(option))
+                inc.write(f"{option}\n")
 
-        args = []
-        if self.version < Version("5.2.2"):
-            args.append("HEADER=" + self.prefix.include)
-        args.append("superlu")
+        # change the path in the example's Makefile to the file written above
+        filter_file(r"include \.\./" + filename, "include ./" + filename, makefile)
 
-        test_dir = join_path(self.test_suite.current_test_cache_dir, self.examples_src_dir)
-        exe = "superlu"
+        # Cache the examples directory for use by stand-alone tests
+        self.pkg.cache_extra_test_sources(self.pkg.examples_src_dir)
 
-        if not os.path.isfile(join_path(test_dir, "{0}.c".format(exe))):
-            tty.warn("Skipping superlu test:" "missing file {0}.c".format(exe))
-            return
+    def _make_hdr_for_test(self, lib):
+        """Standard configure arguments for make.inc"""
+        ranlib = "ranlib" if which("ranlib") else "echo"
+        return [
+            f"SuperLUroot = {self.prefix}",
+            f"SUPERLULIB = {self.prefix.lib}/{lib}",
+            f"BLASLIB    = {self.spec['blas'].libs.ld_flags}",
+            "TMGLIB     = libtmglib.a",
+            "LIBS       = $(SUPERLULIB) $(BLASLIB)",
+            "ARCH       = ar",
+            "ARCHFLAGS  = cr",
+            f"RANLIB     = {ranlib}",
+            f"CC         = {env['CC']}",
+            f"FORTRAN    = {env['FC']}",
+            f"LOADER     = {env['CC']}",
+            "CFLAGS     = -O3 -DNDEBUG -DUSE_VENDOR_BLAS -DPRNTlevel=0 -DAdd_",
+            "NOOPTS     = -O0",
+        ]
 
-        self.run_superlu_test(test_dir, exe, args)
 
-
-class CMakeBuilder(spack.build_systems.cmake.CMakeBuilder):
+class CMakeBuilder(BaseBuilder, spack.build_systems.cmake.CMakeBuilder):
     def cmake_args(self):
         if self.pkg.version > Version("5.2.1"):
             _blaslib_key = "enable_internal_blaslib"
@@ -173,7 +148,7 @@ class CMakeBuilder(spack.build_systems.cmake.CMakeBuilder):
         return args
 
 
-class GenericBuilder(spack.build_systems.generic.GenericBuilder):
+class GenericBuilder(BaseBuilder, spack.build_systems.generic.GenericBuilder):
     def install(self, pkg, spec, prefix):
         """Use autotools before version 5"""
         # Define make.inc file

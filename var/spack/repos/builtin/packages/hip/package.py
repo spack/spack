@@ -172,6 +172,8 @@ class Hip(CMakePackage):
             depends_on("rocminfo@" + ver, when="@" + ver)
             depends_on("roctracer-dev-api@" + ver, when="@" + ver)
 
+        for ver in ["5.4.0", "5.4.3"]:
+            depends_on("hipify-clang", when="@" + ver)
         # hipcc likes to add `-lnuma` by default :(
         # ref https://github.com/ROCm-Developer-Tools/HIP/pull/2202
         depends_on("numactl", when="@3.7.0:")
@@ -322,6 +324,7 @@ class Hip(CMakePackage):
         patch("0005-Disable-tests-4.1.0.patch", when="@4.1.0:4.3.2")
 
     patch("Add_missing_open_cl_header_file_for_4.3.0.patch", when="@4.3.0:4.3.2")
+    patch("0014-hip-test-file-reorg-5.4.0.patch", when="@5.4.0:")
 
     @property
     def root_cmakelists_dir(self):
@@ -376,6 +379,9 @@ class Hip(CMakePackage):
                 "rocminfo": rocm_prefix,
                 "rocm-device-libs": rocm_prefix,
             }
+
+            if self.spec.satisfies("@5.4:"):
+                paths["hipify-clang"] = rocm_prefix
         else:
             paths = {
                 "hip-path": self.spec.prefix,
@@ -385,6 +391,9 @@ class Hip(CMakePackage):
                 "rocminfo": self.spec["rocminfo"].prefix,
                 "rocm-device-libs": self.spec["llvm-amdgpu"].prefix,
             }
+
+            if self.spec.satisfies("@5.4:"):
+                paths["hipify-clang"] = self.spec["hipify-clang"].prefix
 
         if "@:3.8.0" in self.spec:
             paths["bitcode"] = paths["rocm-device-libs"].lib
@@ -413,6 +422,8 @@ class Hip(CMakePackage):
             # Used in hipcc, but only useful when hip is external, since only then
             # there is a common prefix /opt/rocm-x.y.z.
             env.set("ROCM_PATH", paths["rocm-path"])
+            if self.spec.satisfies("@5.4:"):
+                env.set("HIPIFY_CLANG_PATH", paths["hipify-clang"])
 
             # hipcc recognizes HIP_PLATFORM == hcc and HIP_COMPILER == clang, even
             # though below we specified HIP_PLATFORM=rocclr and HIP_COMPILER=clang

@@ -42,6 +42,7 @@ class ArpackNg(CMakePackage, AutotoolsPackage):
     build_system("cmake", "autotools", default="cmake")
 
     version("develop", branch="master")
+    version("3.9.0", sha256="24f2a2b259992d3c797d80f626878aa8e2ed5009d549dad57854bbcfb95e1ed0")
     version("3.8.0", sha256="ada5aeb3878874383307239c9235b716a8a170c6d096a6625bfd529844df003d")
     version("3.7.0", sha256="972e3fc3cd0b9d6b5a737c9bf6fd07515c0d6549319d4ffb06970e64fa3cc2d6")
     version("3.6.3", sha256="64f3551e5a2f8497399d82af3076b6a33bf1bc95fc46bbcabe66442db366f453")

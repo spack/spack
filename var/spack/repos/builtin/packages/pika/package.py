@@ -17,6 +17,9 @@ class Pika(CMakePackage, CudaPackage, ROCmPackage):
     git = "https://github.com/pika-org/pika.git"
     maintainers("msimberg", "albestro", "teonnik", "aurianer")
 
+    version("0.16.0", sha256="59f2baec91cc9bf71ca96d21d0da1ec0092bf59da106efa51789089e0d7adcbb")
+    version("0.15.1", sha256="b68b87cf956ad1448f5c2327a72ba4d9fb339ecabeabb0a87b8ea819457e293b")
+    version("0.15.0", sha256="4ecd5b64bd8067283a161e1aeacfbab7658d89fe1504b788fd3236298fe66b00")
     version("0.14.0", sha256="c0fc10a3c2c24bccbdc292c22a3373a2ad579583ee9d8bd31aaf1755e49958a4")
     version("0.13.0", sha256="67e0843141fb711787e71171a7a669c9cdb9587e4afd851ee2b0339a62b9a254")
     version("0.12.0", sha256="daa1422eb73d6a897ce7b8ff8022e09e7b0fec83d92728ed941a92e57dec5da3")
@@ -87,6 +90,9 @@ class Pika(CMakePackage, CudaPackage, ROCmPackage):
     # Other dependencies
     depends_on("boost@1.71:")
     depends_on("fmt@9:", when="@0.11:")
+    # https://github.com/pika-org/pika/issues/686
+    conflicts("fmt@10:", when="@:0.15 +cuda")
+    conflicts("fmt@10:", when="@:0.15 +rocm")
     depends_on("hwloc@1.11.5:")
 
     depends_on("gperftools", when="malloc=tcmalloc")
@@ -144,6 +150,11 @@ class Pika(CMakePackage, CudaPackage, ROCmPackage):
     # Patches
     patch("transform_mpi_includes.patch", when="@0.3.0 +mpi")
     patch("mimalloc_no_version_requirement.patch", when="@:0.5 malloc=mimalloc")
+    patch("generic_context_allocate_guard_0_13_14.patch", when="@0.13:0.14 platform=darwin")
+    patch("generic_context_allocate_guard_0_10_12.patch", when="@0.10:0.12 platform=darwin")
+    patch("posix_stack_non_executable_0_13.patch", when="@0.13 platform=darwin")
+    patch("posix_stack_non_executable_0_6_0_12.patch", when="@0.6:0.12 platform=darwin")
+    patch("posix_stack_non_executable_0_1_0_5.patch", when="@:0.5 platform=darwin")
 
     # Fix missing template instantiation on macOS
     patch(

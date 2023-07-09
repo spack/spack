@@ -544,6 +544,7 @@ def _static_edges(specs, deptype):
                     spack.spec.Spec(parent_name),
                     spack.spec.Spec(dependency_name),
                     deptypes=deptype,
+                    virtuals=(),
                 )
 
 

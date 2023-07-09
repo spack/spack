@@ -75,7 +75,7 @@ class ELF_CONSTANTS:
     SHT_STRTAB = 3
 
 
-class ElfFile(object):
+class ElfFile:
     """Parsed ELF file."""
 
     __slots__ = [
@@ -496,7 +496,7 @@ class ElfDynamicSectionUpdateFailed(Exception):
     def __init__(self, old, new):
         self.old = old
         self.new = new
-        super(ElfDynamicSectionUpdateFailed, self).__init__(
+        super().__init__(
             "New rpath {} is longer than old rpath {}".format(
                 new.decode("utf-8"), old.decode("utf-8")
             )

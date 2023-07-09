@@ -1,5 +1,11 @@
 #!/bin/bash
 
+dry_run=yes
+
+# use 'dev-build' in "$mfem_src_dir":
+spack_dev_build=no
+mfem_src_dir=$HOME/mfem-spack
+
 # Set a compiler to test with, e.g. '%gcc', '%clang', etc.
 compiler=''
 cuda_arch="70"
@@ -8,14 +14,15 @@ rocm_arch="gfx908"
 spack_jobs=''
 # spack_jobs='-j 128'
 
-mfem='mfem@4.5.0'${compiler}
-mfem_dev='mfem@develop'${compiler}
+mfem='mfem@4.5.2'${compiler}
+# mfem_dev='mfem@develop'${compiler}
+mfem_dev='mfem@4.5.2'${compiler}
 
 backends='+occa+raja+libceed'
 backends_specs='^occa~cuda ^raja~openmp'
 
-# help the concrtizer find suitable hdf5 version (conduit constraint)
-hdf5_spec='^hdf5@1.8.19:1.8'
+# ~fortran is needed for Cray Fortran linking with tcmalloc*
+conduit_spec='^conduit~fortran'
 # petsc spec
 petsc_spec='^petsc+suite-sparse+mumps'
 petsc_spec_cuda='^petsc+cuda+suite-sparse+mumps'
@@ -24,7 +31,7 @@ superlu_spec_cuda='^superlu-dist+cuda cuda_arch='"${cuda_arch}"
 superlu_spec_rocm='^superlu-dist+rocm amdgpu_target='"${rocm_arch}"
 # strumpack spec without cuda (use version > 6.3.1)
 strumpack_spec='^strumpack~slate~openmp~cuda'
-strumpack_cuda_spec='^strumpack~slate~openmp'
+strumpack_cuda_spec='^strumpack+cuda~slate~openmp'
 strumpack_rocm_spec='^strumpack+rocm~slate~openmp~cuda'
 
 builds=(
@@ -33,28 +40,27 @@ builds=(
     ${mfem}'~mpi~metis~zlib'
     ${mfem}"$backends"'+superlu-dist+strumpack+suite-sparse+petsc+slepc+gslib \
         +sundials+pumi+mpfr+netcdf+zlib+gnutls+libunwind+conduit+ginkgo+hiop \
-        '"$backends_specs $strumpack_spec $petsc_spec $hdf5_spec"
+        '"$backends_specs $strumpack_spec $petsc_spec $conduit_spec"
     ${mfem}'~mpi \
         '"$backends"'+suite-sparse+sundials+gslib+mpfr+netcdf \
         +zlib+gnutls+libunwind+conduit+ginkgo+hiop \
-        '"$backends_specs $hdf5_spec"' ^sundials~mpi'
+        '"$backends_specs $conduit_spec"' ^sundials~mpi'
 
     # develop version, shared builds:
     ${mfem_dev}'+shared~static'
     ${mfem_dev}'+shared~static~mpi~metis~zlib'
     # NOTE: Shared build with +gslib works on mac but not on linux
-    # TODO: add back '+gslib' when the above NOTE
-    #       is addressed.
+    # TODO: add back '+gslib' when the above NOTE is addressed.
     ${mfem_dev}'+shared~static \
         '"$backends"'+superlu-dist+strumpack+suite-sparse+petsc+slepc \
         +sundials+pumi+mpfr+netcdf+zlib+gnutls+libunwind+conduit+ginkgo+hiop \
-        '"$backends_specs $strumpack_spec $petsc_spec $hdf5_spec"
+        '"$backends_specs $strumpack_spec $petsc_spec $conduit_spec"
     # NOTE: Shared build with +gslib works on mac but not on linux
     # TODO: add back '+gslib' when the above NOTE is addressed.
     ${mfem_dev}'+shared~static~mpi \
         '"$backends"'+suite-sparse+sundials+mpfr+netcdf \
         +zlib+gnutls+libunwind+conduit+ginkgo+hiop \
-        '"$backends_specs $hdf5_spec"' ^sundials~mpi'
+        '"$backends_specs $conduit_spec"' ^sundials~mpi'
 )
 
 builds2=(
@@ -72,14 +78,17 @@ builds2=(
     ${mfem}'+netcdf'
     ${mfem}'+mpfr'
     ${mfem}'+gnutls'
-    ${mfem}'+conduit~mpi'
-    ${mfem}'+conduit'
+    ${mfem}'+conduit~mpi'" $conduit_spec"
+    ${mfem}'+conduit'" $conduit_spec"
     ${mfem}'+umpire'
     ${mfem}'+petsc'" $petsc_spec"
     ${mfem}'+petsc+slepc'" $petsc_spec"
     ${mfem}'+ginkgo'
     ${mfem}'+hiop'
     ${mfem}'+threadsafe'
+    # hypre+int64 requires 64-bit blas+lapack
+    # ${mfem}' ^hypre+int64'
+    ${mfem}' ^hypre+mixedint'
     #
     # develop version
     ${mfem_dev}"$backends $backends_specs"
@@ -95,14 +104,17 @@ builds2=(
     ${mfem_dev}'+netcdf'
     ${mfem_dev}'+mpfr'
     ${mfem_dev}'+gnutls'
-    ${mfem_dev}'+conduit~mpi'
-    ${mfem_dev}'+conduit'
+    ${mfem_dev}'+conduit~mpi'" $conduit_spec"
+    ${mfem_dev}'+conduit'" $conduit_spec"
     ${mfem_dev}'+umpire'
     ${mfem_dev}'+petsc'" $petsc_spec"
     ${mfem_dev}'+petsc+slepc'" $petsc_spec"
     ${mfem_dev}'+ginkgo'
     ${mfem_dev}'+hiop'
     ${mfem_dev}'+threadsafe'
+    # hypre+int64 requires 64-bit blas+lapack
+    # ${mfem_dev}' ^hypre+int64'
+    ${mfem_dev}' ^hypre+mixedint'
 )
 
 
@@ -126,22 +138,19 @@ builds_cuda=(
         +superlu-dist+strumpack+suite-sparse+gslib+petsc+slepc \
         +sundials+pumi+mpfr+netcdf+zlib+gnutls+libunwind+conduit+ginkgo+hiop \
         ^raja+cuda+openmp ^hiop+shared'" $strumpack_cuda_spec"' \
-        '"$superlu_spec_cuda $petsc_spec_cuda $hdf5_spec"
+        '"$superlu_spec_cuda $petsc_spec_cuda $conduit_spec"
 
     # hypre with cuda:
     # TODO: restore '+libceed' when the libCEED CUDA unit tests take less time.
-    # TODO: restore '+superlu-dist $superlu_spec_cuda' when we support it with
-    #       '^hypre+cuda'.
-    # TODO: add back "+strumpack $strumpack_cuda_spec" when it's supported.
     # TODO: add back "+petsc+slepc $petsc_spec_cuda" when it works.
     # NOTE: PETSc tests may need PETSC_OPTIONS="-use_gpu_aware_mpi 0"
     # TODO: add back "+sundials" when it's supported with '^hypre+cuda'.
     # TODO: remove "^hiop+shared" when the default static build is fixed.
     ${mfem}'+cuda+openmp+raja+occa cuda_arch='"${cuda_arch}"' \
-        +suite-sparse+gslib \
+        +superlu-dist+strumpack+suite-sparse+gslib \
         +pumi+mpfr+netcdf+zlib+gnutls+libunwind+conduit+ginkgo+hiop \
         ^raja+cuda+openmp ^hiop+shared ^hypre+cuda \
-        '"$hdf5_spec"
+        '" $superlu_spec_cuda $strumpack_cuda_spec $conduit_spec"
 
     #
     # same builds as above with ${mfem_dev}
@@ -166,22 +175,19 @@ builds_cuda=(
         +superlu-dist+strumpack+suite-sparse+gslib+petsc+slepc \
         +sundials+pumi+mpfr+netcdf+zlib+gnutls+libunwind+conduit+ginkgo+hiop \
         ^raja+cuda+openmp ^hiop+shared'" $strumpack_cuda_spec"' \
-        '"$superlu_spec_cuda $petsc_spec_cuda $hdf5_spec"
+        '"$superlu_spec_cuda $petsc_spec_cuda $conduit_spec"
 
     # hypre with cuda:
     # TODO: restore '+libceed' when the libCEED CUDA unit tests take less time.
-    # TODO: restore '+superlu-dist $superlu_spec_cuda' when we support it with
-    #       '^hypre+cuda'.
-    # TODO: add back "+strumpack $strumpack_cuda_spec" when it's supported.
     # TODO: add back "+petsc+slepc $petsc_spec_cuda" when it works.
     # NOTE: PETSc tests may need PETSC_OPTIONS="-use_gpu_aware_mpi 0"
     # TODO: add back "+sundials" when it's supported with '^hypre+cuda'.
     # TODO: remove "^hiop+shared" when the default static build is fixed.
     ${mfem_dev}'+cuda+openmp+raja+occa cuda_arch='"${cuda_arch}"' \
-        +suite-sparse+gslib \
+        +superlu-dist+strumpack+suite-sparse+gslib \
         +pumi+mpfr+netcdf+zlib+gnutls+libunwind+conduit+ginkgo+hiop \
         ^raja+cuda+openmp ^hiop+shared ^hypre+cuda \
-        '"$hdf5_spec"
+        '"$superlu_spec_cuda $strumpack_cuda_spec $conduit_spec"
 )
 
 
@@ -194,35 +200,30 @@ builds_rocm=(
 
     # hypre with rocm:
     ${mfem}'+rocm+raja+occa+libceed amdgpu_target='"${rocm_arch}"' \
-        ^raja+rocm~openmp ^occa~cuda ^hypre+rocm'
+        ^raja+rocm~openmp ^occa~cuda~openmp ^hypre+rocm'
 
     # hypre without rocm:
     # TODO: add "+petsc+slepc $petsc_spec_rocm" when it is supported.
-    # TODO: add back '+conduit' when it is no longer linked with tcmalloc*.
     # TODO: add back '+hiop' when it is no longer linked with tcmalloc* through
     #       its magma dependency.
     # TODO: add back '+ginkgo' when the Ginkgo example works.
     ${mfem}'+rocm+openmp+raja+occa+libceed amdgpu_target='"${rocm_arch}"' \
         +superlu-dist+strumpack+suite-sparse+gslib \
-        +sundials+pumi+mpfr+netcdf+zlib+gnutls+libunwind \
+        +sundials+pumi+mpfr+netcdf+zlib+gnutls+libunwind+conduit \
         ^raja+rocm~openmp ^occa~cuda'" $strumpack_rocm_spec"' \
-        '"$superlu_spec_rocm $hdf5_spec"
+        '"$superlu_spec_rocm $conduit_spec"
 
     # hypre with rocm:
-    # TODO: restore '+superlu-dist $superlu_spec_rocm' when we support it with
-    #       '^hypre+rocm'.
-    # TODO: add back "+strumpack $strumpack_rocm_spec" when it's supported.
     # TODO: add back "+petsc+slepc $petsc_spec_rocm" when it works.
-    # TODO: add back '+conduit' when it is no longer linked with tcmalloc*.
     # TODO: add back '+hiop' when it is no longer linked with tcmalloc* through
     #       its magma dependency.
     # TODO: add back '+ginkgo' when the Ginkgo example works.
     # TODO: add back "+sundials" when it's supported with '^hypre+rocm'.
     ${mfem}'+rocm+openmp+raja+occa+libceed amdgpu_target='"${rocm_arch}"' \
-        +suite-sparse+gslib \
-        +pumi+mpfr+netcdf+zlib+gnutls+libunwind \
+        +superlu-dist+strumpack+suite-sparse+gslib \
+        +pumi+mpfr+netcdf+zlib+gnutls+libunwind+conduit \
         ^raja+rocm~openmp ^occa~cuda ^hypre+rocm \
-        '"$hdf5_spec"
+        '"$strumpack_rocm_spec $superlu_spec_rocm $conduit_spec"
 
     #
     # same builds as above with ${mfem_dev}
@@ -244,19 +245,51 @@ run_builds=("${builds[@]}" "${builds2[@]}")
 # PETSc CUDA tests on Lassen need this:
 # export PETSC_OPTIONS="-use_gpu_aware_mpi 0"
 
+# spack files to clean in "$mfem_src_dir" when using 'dev-build'
+clean_files=(
+    .spack_no_patches
+    install-time-test-log.txt
+    spack-build-\*.txt
+)
+if [[ "$spack_dev_build" != "yes" ]]; then
+    spack_action=(install)
+else
+    spack_action=(dev-build -q -d "$mfem_src_dir")
+fi
+TIMEFORMAT=$'real: %3Rs (%lR)  user: %3Us  sys: %3Ss  %%cpu: %P'
+
+# main loop over specs:
 for bld in "${run_builds[@]}"; do
     eval bbb="\"${bld}\""
 
     printf "\n%s\n" "${SEP}"
     printf "    %s\n" "${bld}"
     printf "%s\n" "${SEP}"
-    spack spec --fresh -I $bbb || exit 1
-    printf "%s\n" "${sep}"
-    spack install $spack_jobs --fresh --test=root $bbb || exit 2
 
-    # echo ./bin/spack spec --fresh -I $bbb
-    # echo ./bin/spack install $spack_jobs --fresh --test=root $bbb
-    # echo
+    if [[ "$dry_run" != "yes" ]]; then
+
+        if [[ "$spack_dev_build" == "yes" ]]; then
+            echo "Cleaning $mfem_src_dir ..."
+            (cd "$mfem_src_dir" && make distclean && rm -f ${clean_files[@]})
+            printf "%s\n" "${sep}"
+        fi
+        time ./bin/spack spec --fresh -I $bbb || exit 1
+        printf "%s\n" "${sep}"
+        time ./bin/spack "${spack_action[@]}" $spack_jobs \
+            --fresh --test=root $bbb || exit 2
+
+    else # dry run
+
+        if [[ "$spack_dev_build" == "yes" ]]; then
+            printf '(cd "'"$mfem_src_dir"'" && make distclean && rm -f'
+            printf " %s)\n" "${clean_files[*]}"
+        fi
+        echo time ./bin/spack spec --fresh -I $bbb
+        echo time ./bin/spack "${spack_action[@]}" $spack_jobs \
+            --fresh --test=root $bbb
+        echo
+
+    fi
 done
 
 # Uninstall all mfem builds:

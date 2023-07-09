@@ -57,7 +57,7 @@ class Gchp(CMakePackage):
         return args
 
     def install(self, spec, prefix):
-        super(Gchp, self).install(spec, prefix)
+        super().install(spec, prefix)
         # Preserve source code in prefix for two reasons:
         # 1. Run directory creation occurs independently of code compilation,
         # possibly multiple times depending on user needs,

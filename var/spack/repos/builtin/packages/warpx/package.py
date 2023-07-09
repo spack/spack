@@ -17,7 +17,7 @@ class Warpx(CMakePackage):
     """
 
     homepage = "https://ecp-warpx.github.io"
-    url = "https://github.com/ECP-WarpX/WarpX/archive/refs/tags/23.03.tar.gz"
+    url = "https://github.com/ECP-WarpX/WarpX/archive/refs/tags/23.06.tar.gz"
     git = "https://github.com/ECP-WarpX/WarpX.git"
 
     maintainers("ax3l", "dpgrote", "MaxThevenet", "RemiLehe")
@@ -25,6 +25,9 @@ class Warpx(CMakePackage):
 
     # NOTE: if you update the versions here, also see py-warpx
     version("develop", branch="development")
+    version("23.06", sha256="75fcac949220c44dce04de581860c9a2caa31a0eee8aa7d49455fa5fc928514b")
+    version("23.05", sha256="34306a98fdb1f5f44ab4fb92f35966bfccdcf1680a722aa773af2b59a3060d73")
+    version("23.04", sha256="e5b285c73e13a0d922eba5d83760c168d4fd388e54a519830003b2e692dab823")
     version("23.03", sha256="e1274aaa2a2c83d599d61c6e4c426db4ed5d4c5dc61a2002715783a6c4843718")
     version("23.02", sha256="a6c63ebc38cbd224422259a814be501ac79a3b734dab7f59500b6957cddaaac1")
     version("23.01", sha256="e853d01c20ea00c8ddedfa82a31a11d9d91a7f418d37d7f064cf8a241ea4da0c")
@@ -68,6 +71,15 @@ class Warpx(CMakePackage):
         values=("1", "2", "3", "rz"),
         multi=False,
         description="Number of spatial dimensions",
+        when="@:23.05",
+    )
+    variant(
+        "dims",
+        default="1,2,rz,3",
+        values=("1", "2", "3", "rz"),
+        multi=True,
+        description="Number of spatial dimensions",
+        when="@23.06:",
     )
     variant("eb", default=False, description="Embedded boundary support (in development)")
     variant("lib", default=True, description="Build WarpX as a shared library")
@@ -184,7 +196,7 @@ class Warpx(CMakePackage):
             self.define_from_variant("WarpX_ASCENT", "ascent"),
             self.define_from_variant("WarpX_SENSEI", "sensei"),
             "-DWarpX_COMPUTE={0}".format(spec.variants["compute"].value.upper()),
-            "-DWarpX_DIMS={0}".format(spec.variants["dims"].value.upper()),
+            "-DWarpX_DIMS={0}".format(";".join(spec.variants["dims"].value).upper()),
             self.define_from_variant("WarpX_EB", "eb"),
             self.define_from_variant("WarpX_LIB", "lib"),
             self.define_from_variant("WarpX_MPI", "mpi"),
@@ -214,50 +226,56 @@ class Warpx(CMakePackage):
     @property
     def libs(self):
         libsuffix = {"1": "1d", "2": "2d", "3": "3d", "rz": "rz"}
-        dims = self.spec.variants["dims"].value
-        libs = find_libraries(
-            ["libwarpx." + libsuffix[dims]], root=self.prefix, recursive=True, shared=True
-        )
-        libs += find_libraries(
-            ["libablastr"], root=self.prefix, recursive=True, shared=self.spec.variants["shared"]
-        )
+        libs = []
+        for dim in self.spec.variants["dims"].value:
+            libs += find_libraries(
+                ["libwarpx." + libsuffix[dim]], root=self.prefix, recursive=True, shared=True
+            )
+            libs += find_libraries(
+                ["libablastr"],
+                root=self.prefix,
+                recursive=True,
+                shared=self.spec.variants["shared"],
+            )
         return libs
 
     # WarpX has many examples to serve as a suitable smoke check. One
     # that is typical was chosen here
     examples_src_dir = "Examples/Physics_applications/laser_acceleration/"
 
-    def _get_input_options(self, post_install):
+    def _get_input_options(self, dim, post_install):
         spec = self.spec
         examples_dir = join_path(
             self.install_test_root if post_install else self.stage.source_path,
             self.examples_src_dir,
         )
-        dims = spec.variants["dims"].value
         inputs_nD = {"1": "inputs_1d", "2": "inputs_2d", "3": "inputs_3d", "rz": "inputs_rz"}
         if spec.satisfies("@:21.12"):
             inputs_nD["rz"] = "inputs_2d_rz"
-        inputs = join_path(examples_dir, inputs_nD[dims])
+        inputs = join_path(examples_dir, inputs_nD[dim])
 
         cli_args = [inputs, "max_step=50", "diag1.intervals=10"]
         # test openPMD output if compiled in
         if "+openpmd" in spec:
             cli_args.append("diag1.format=openpmd")
             # RZ: New openPMD thetaMode output
-            if dims == "rz" and spec.satisfies("@22.04:"):
+            if dim == "rz" and spec.satisfies("@22.04:"):
                 cli_args.append("diag1.fields_to_plot=Er Et Ez Br Bt Bz jr jt jz rho")
         return cli_args
 
     def check(self):
         """Checks after the build phase"""
-        if "+app" not in self.spec:
+        spec = self.spec
+        if "+app" not in spec:
             print("WarpX check skipped: requires variant +app")
             return
 
         with working_dir("spack-check", create=True):
-            cli_args = self._get_input_options(False)
-            warpx = Executable(join_path(self.build_directory, "bin/warpx"))
-            warpx(*cli_args)
+            for dim in spec.variants["dims"].value:
+                cli_args = self._get_input_options(dim, False)
+                exe_nD = {"1": "warpx.1d", "2": "warpx.2d", "3": "warpx.3d", "rz": "warpx.rz"}
+                warpx = Executable(join_path(self.build_directory, "bin/" + exe_nD[dim]))
+                warpx(*cli_args)
 
     @run_after("install")
     def copy_test_sources(self):
@@ -272,9 +290,16 @@ class Warpx(CMakePackage):
             return
 
         # our executable names are a variant-dependent and naming evolves
-        exe = find(self.prefix.bin, "warpx.*", recursive=False)[0]
+        for dim in self.spec.variants["dims"].value:
+            exe_nD = {"1": "warpx.1d", "2": "warpx.2d", "3": "warpx.3d", "rz": "warpx.rz"}
+            exe = find(self.prefix.bin, exe_nD[dim] + ".*", recursive=False)[0]
 
-        cli_args = self._get_input_options(True)
-        self.run_test(
-            exe, cli_args, [], installed=True, purpose="Smoke test for WarpX", skip_missing=False
-        )
+            cli_args = self._get_input_options(dim, True)
+            self.run_test(
+                exe,
+                cli_args,
+                [],
+                installed=True,
+                purpose="Smoke test for WarpX",
+                skip_missing=False,
+            )

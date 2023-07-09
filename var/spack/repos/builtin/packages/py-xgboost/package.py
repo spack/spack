@@ -36,6 +36,9 @@ class PyXgboost(PythonPackage):
     depends_on("python@3.7:", when="@1.6:", type=("build", "run"))
     depends_on("python@3.6:", type=("build", "run"))
     depends_on("py-setuptools", type=("build"))
+    # in newer pip versions --install-option does not exist
+    depends_on("py-pip@:23.0", type="build")
+
     depends_on("py-numpy", type=("build", "run"))
     depends_on("py-scipy", type=("build", "run"))
 

@@ -94,3 +94,8 @@ class IntelOneapiTbb(IntelOneApiLibraryPackage):
     @property
     def component_dir(self):
         return "tbb"
+
+    @run_after("install")
+    def fixup_prefix(self):
+        self.symlink_dir(self.component_prefix.include, self.prefix.include)
+        self.symlink_dir(self.component_prefix.lib, self.prefix.lib)

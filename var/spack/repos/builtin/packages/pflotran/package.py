@@ -37,6 +37,9 @@ class Pflotran(AutotoolsPackage):
     depends_on("petsc@3.10:+hdf5+metis", when="@xsdk-0.4.0")
     depends_on("petsc@3.8.0:+hdf5+metis", when="@xsdk-0.3.0")
 
+    # https://github.com/spack/spack/pull/37579#issuecomment-1545998141
+    conflicts("^hdf5@1.14.1", when="%oneapi")
+
     def build(self, spec, prefix):
         if spec.satisfies("+rxn"):
             with working_dir("src/pflotran"):

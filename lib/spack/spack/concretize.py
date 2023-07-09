@@ -14,8 +14,6 @@ or user preferences.
 TODO: make this customizable and allow users to configure
       concretization  policies.
 """
-from __future__ import print_function
-
 import functools
 import platform
 import tempfile
@@ -41,7 +39,7 @@ import spack.util.path
 import spack.variant as vt
 from spack.config import config
 from spack.package_prefs import PackagePrefs, is_spec_buildable, spec_externals
-from spack.version import Version, VersionList, VersionRange, ver
+from spack.version import ClosedOpenRange, VersionList, ver
 
 #: impements rudimentary logic for ABI compatibility
 _abi: Union[spack.abi.ABI, llnl.util.lang.Singleton] = llnl.util.lang.Singleton(
@@ -50,7 +48,7 @@ _abi: Union[spack.abi.ABI, llnl.util.lang.Singleton] = llnl.util.lang.Singleton(
 
 
 @functools.total_ordering
-class reverse_order(object):
+class reverse_order:
     """Helper for creating key functions.
 
     This is a wrapper that inverts the sense of the natural
@@ -67,7 +65,7 @@ class reverse_order(object):
         return other.value < self.value
 
 
-class Concretizer(object):
+class Concretizer:
     """You can subclass this class to override some of the default
     concretization strategies, or you can override all of them.
     """
@@ -219,7 +217,7 @@ class Concretizer(object):
             # Respect order listed in packages.yaml
             -yaml_prefs(v),
             # The preferred=True flag (packages or packages.yaml or both?)
-            pkg_versions.get(Version(v)).get("preferred", False),
+            pkg_versions.get(v).get("preferred", False),
             # ------- Regular case: use latest non-develop version by default.
             # Avoid @develop version, which would otherwise be the "largest"
             # in straight version comparisons
@@ -246,11 +244,12 @@ class Concretizer(object):
                 raise NoValidVersionError(spec)
             else:
                 last = spec.versions[-1]
-                if isinstance(last, VersionRange):
-                    if last.end:
-                        spec.versions = ver([last.end])
+                if isinstance(last, ClosedOpenRange):
+                    range_as_version = VersionList([last]).concrete_range_as_version
+                    if range_as_version:
+                        spec.versions = ver([range_as_version])
                     else:
-                        spec.versions = ver([last.start])
+                        raise NoValidVersionError(spec)
                 else:
                     spec.versions = ver([last])
 
@@ -793,9 +792,7 @@ class NoCompilersForArchError(spack.error.SpackError):
             " operating systems and targets:\n\t" + "\n\t".join(available_os_target_strs)
         )
 
-        super(NoCompilersForArchError, self).__init__(
-            err_msg, "Run 'spack compiler find' to add compilers."
-        )
+        super().__init__(err_msg, "Run 'spack compiler find' to add compilers.")
 
 
 class UnavailableCompilerVersionError(spack.error.SpackError):
@@ -807,7 +804,7 @@ class UnavailableCompilerVersionError(spack.error.SpackError):
         if arch:
             err_msg += " for operating system {0} and target {1}.".format(arch.os, arch.target)
 
-        super(UnavailableCompilerVersionError, self).__init__(
+        super().__init__(
             err_msg,
             "Run 'spack compiler find' to add compilers or "
             "'spack compilers' to see which compilers are already recognized"
@@ -820,7 +817,7 @@ class NoValidVersionError(spack.error.SpackError):
     particular spec."""
 
     def __init__(self, spec):
-        super(NoValidVersionError, self).__init__(
+        super().__init__(
             "There are no valid versions for %s that match '%s'" % (spec.name, spec.versions)
         )
 
@@ -831,7 +828,7 @@ class InsufficientArchitectureInfoError(spack.error.SpackError):
     system"""
 
     def __init__(self, spec, archs):
-        super(InsufficientArchitectureInfoError, self).__init__(
+        super().__init__(
             "Cannot determine necessary architecture information for '%s': %s"
             % (spec.name, str(archs))
         )
@@ -847,4 +844,4 @@ class NoBuildError(spack.error.SpecError):
             "The spec\n    '%s'\n    is configured as not buildable, "
             "and no matching external installs were found"
         )
-        super(NoBuildError, self).__init__(msg % spec)
+        super().__init__(msg % spec)

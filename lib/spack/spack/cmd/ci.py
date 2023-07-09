@@ -9,6 +9,7 @@ import shutil
 
 import llnl.util.filesystem as fs
 import llnl.util.tty as tty
+import llnl.util.tty.color as clr
 
 import spack.binary_distribution as bindist
 import spack.ci as spack_ci
@@ -227,7 +228,7 @@ def ci_reindex(args):
     Use the active, gitlab-enabled environment to rebuild the buildcache
     index for the associated mirror."""
     env = spack.cmd.require_active_env(cmd_name="ci rebuild-index")
-    yaml_root = ev.config_dict(env.yaml)
+    yaml_root = env.manifest[ev.TOP_LEVEL_KEY]
 
     if "mirrors" not in yaml_root or len(yaml_root["mirrors"].values()) < 1:
         tty.die("spack ci rebuild-index requires an env containing a mirror")
@@ -273,7 +274,6 @@ def ci_rebuild(args):
     signing_key = os.environ.get("SPACK_SIGNING_KEY")
     job_spec_pkg_name = os.environ.get("SPACK_JOB_SPEC_PKG_NAME")
     job_spec_dag_hash = os.environ.get("SPACK_JOB_SPEC_DAG_HASH")
-    compiler_action = os.environ.get("SPACK_COMPILER_ACTION")
     spack_pipeline_type = os.environ.get("SPACK_PIPELINE_TYPE")
     remote_mirror_override = os.environ.get("SPACK_REMOTE_MIRROR_OVERRIDE")
     remote_mirror_url = os.environ.get("SPACK_REMOTE_MIRROR_URL")
@@ -294,7 +294,6 @@ def ci_rebuild(args):
     tty.debug("pipeline_artifacts_dir = {0}".format(pipeline_artifacts_dir))
     tty.debug("remote_mirror_url = {0}".format(remote_mirror_url))
     tty.debug("job_spec_pkg_name = {0}".format(job_spec_pkg_name))
-    tty.debug("compiler_action = {0}".format(compiler_action))
 
     # Query the environment manifest to find out whether we're reporting to a
     # CDash instance, and if so, gather some information from the manifest to
@@ -409,14 +408,6 @@ def ci_rebuild(args):
     # import it.
     if signing_key:
         spack_ci.import_signing_key(signing_key)
-
-    # Depending on the specifics of this job, we might need to turn on the
-    # "config:install_missing compilers" option (to build this job spec
-    # with a bootstrapped compiler), or possibly run "spack compiler find"
-    # (to build a bootstrap compiler or one of its deps in a
-    # compiler-agnostic way), or maybe do nothing at all (to build a spec
-    # using a compiler already installed on the target system).
-    spack_ci.configure_compilers(compiler_action)
 
     # Write this job's spec json into the reproduction directory, and it will
     # also be used in the generated "spack install" command to install the spec
@@ -670,13 +661,20 @@ def ci_rebuild(args):
     # outside of the pipeline environment.
     if install_exit_code == 0:
         if buildcache_mirror_url or pipeline_mirror_url:
-            spack_ci.create_buildcache(
-                env=env,
+            for result in spack_ci.create_buildcache(
+                input_spec=job_spec,
                 buildcache_mirror_url=buildcache_mirror_url,
                 pipeline_mirror_url=pipeline_mirror_url,
                 pr_pipeline=spack_is_pr_pipeline,
-                json_path=job_spec_json_path,
-            )
+            ):
+                msg = tty.msg if result.success else tty.warn
+                msg(
+                    "{} {} to {}".format(
+                        "Pushed" if result.success else "Failed to push",
+                        job_spec.format("{name}{@version}{/hash:7}", color=clr.get_color_when()),
+                        result.url,
+                    )
+                )
 
         # If this is a develop pipeline, check if the spec that we just built is
         # on the broken-specs list. If so, remove it.

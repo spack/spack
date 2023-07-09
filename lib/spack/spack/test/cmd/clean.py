@@ -24,7 +24,7 @@ pytestmark = pytest.mark.skipif(sys.platform == "win32", reason="does not run on
 def mock_calls_for_clean(monkeypatch):
     counts = {}
 
-    class Counter(object):
+    class Counter:
         def __init__(self, name):
             self.name = name
             counts[name] = 0

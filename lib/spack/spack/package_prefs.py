@@ -9,9 +9,9 @@ import spack.error
 import spack.repo
 from spack.config import ConfigError
 from spack.util.path import canonicalize_path
-from spack.version import VersionList
+from spack.version import Version
 
-_lesser_spec_types = {"compiler": spack.spec.CompilerSpec, "version": VersionList}
+_lesser_spec_types = {"compiler": spack.spec.CompilerSpec, "version": Version}
 
 
 def _spec_type(component):
@@ -19,7 +19,7 @@ def _spec_type(component):
     return _lesser_spec_types.get(component, spack.spec.Spec)
 
 
-class PackagePrefs(object):
+class PackagePrefs:
     """Defines the sort order for a set of specs.
 
     Spack's package preference implementation uses PackagePrefss to

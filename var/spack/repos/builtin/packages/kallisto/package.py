@@ -57,7 +57,7 @@ class Kallisto(CMakePackage):
         """Call the original std_cmake_args and then filter the verbose
         setting.
         """
-        a = super(Kallisto, self).std_cmake_args
+        a = super().std_cmake_args
         if self.spec.satisfies("@0.44.0:"):
             args = [i for i in a if i != "-DCMAKE_VERBOSE_MAKEFILE:BOOL=ON"]
             if self.spec.satisfies("@0.46.2:"):

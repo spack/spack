@@ -3,7 +3,6 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-import itertools
 import sys
 
 import pytest
@@ -19,7 +18,7 @@ uninstall = SpackCommand("uninstall")
 install = SpackCommand("install")
 
 
-class MockArgs(object):
+class MockArgs:
     def __init__(self, packages, all=False, force=False, dependents=False):
         self.packages = packages
         self.all = all
@@ -58,14 +57,11 @@ def test_correct_installed_dependents(mutable_database):
     callpath.package.do_uninstall(force=True)
 
     # Retrieve all dependent hashes
-    inside_dpts, outside_dpts = spack.cmd.uninstall.installed_runtime_dependents(
-        dependencies, None
-    )
-    dependent_hashes = [s.dag_hash() for s in itertools.chain(*outside_dpts.values())]
-    set_dependent_hashes = set(dependent_hashes)
+    dependents = spack.cmd.uninstall.installed_dependents(dependencies)
+    assert dependents
 
-    # We dont have an env, so this should be empty.
-    assert not inside_dpts
+    dependent_hashes = [s.dag_hash() for s in dependents]
+    set_dependent_hashes = set(dependent_hashes)
 
     # Assert uniqueness
     assert len(dependent_hashes) == len(set_dependent_hashes)
@@ -211,7 +207,7 @@ def test_in_memory_consistency_when_uninstalling(mutable_database, monkeypatch):
 # Note: I want to use https://docs.pytest.org/en/7.1.x/how-to/skipping.html#skip-all-test-functions-of-a-class-or-module
 # the style formatter insists on separating these two lines.
 @pytest.mark.skipif(sys.platform == "win32", reason="Envs unsupported on Windows")
-class TestUninstallFromEnv(object):
+class TestUninstallFromEnv:
     """Tests an installation with two environments e1 and e2, which each have
     shared package installations:
 

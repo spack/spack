@@ -29,7 +29,7 @@ def add_o3_to_build_system_cflags(pkg, name, flags):
 
 
 @pytest.mark.usefixtures("config", "mock_packages")
-class TestFlagHandlers(object):
+class TestFlagHandlers:
     def test_no_build_system_flags(self, temp_env):
         # Test that both autotools and cmake work getting no build_system flags
         s1 = spack.spec.Spec("cmake-client").concretized()

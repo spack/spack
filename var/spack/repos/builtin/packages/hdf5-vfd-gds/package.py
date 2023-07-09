@@ -27,7 +27,7 @@ class Hdf5VfdGds(CMakePackage, CudaPackage):
     # system can obtaion via `find_library`.  Packaging issues fixed in 11.7.1.
     conflicts("^cuda@:11.7.0")
     depends_on("cmake@3.12:", type="build")
-    depends_on("hdf5@1.13.0:")
+    depends_on("hdf5@1.14.0:")
 
     def cmake_args(self):
         # CMake options

@@ -16,6 +16,7 @@ class Mrchem(CMakePackage):
 
     maintainers("robertodr", "stigrj", "ilfreddy")
 
+    version("1.1.2", sha256="b4e74ad5ee89fc5e8a7329474cf0fa93155423f93a1f95c8c2888f7c53e353ea")
     version("1.0.0", sha256="9cdda4d30b2baabb26400742f78ef8f3fc50a54f5218c8b6071b0cbfbed746c3")
     version("0.2.2", sha256="7519cc104c7df51eea8902c225aac6ecce2ac4ff30765145e502342d5bf3d96b")
     version("0.2.1", sha256="c1d0da5fefae356d9746f8ee761a94f6f6cd8b735a8309a4048ad6b8943ad242")

@@ -91,27 +91,20 @@ class Fortrilinos(CMakePackage):
         install test subdirectory for use during `spack test run`."""
         self.cache_extra_test_sources([self.examples_src_dir])
 
-    def test(self):
-        """Perform stand-alone/smoke tests using installed package."""
+    def test_installation(self):
+        """build and run ctest against the installed software"""
         cmake_args = [
             self.define("CMAKE_PREFIX_PATH", self.prefix),
             self.define("CMAKE_CXX_COMPILER", self.compiler.cxx),
             self.define("CMAKE_Fortran_COMPILER", self.compiler.fc),
             self.cached_tests_work_dir,
         ]
-        self.run_test(
-            "cmake", cmake_args, purpose="test: calling cmake", work_dir=self.cached_tests_work_dir
-        )
+        cmake = which(self.spec["cmake"].prefix.bin.cmake)
+        ctest = which("ctest")
+        make = which("make")
 
-        self.run_test(
-            "make", [], purpose="test: calling make", work_dir=self.cached_tests_work_dir
-        )
-
-        self.run_test(
-            "ctest",
-            ["-V"],
-            ["100% tests passed"],
-            installed=False,
-            purpose="test: testing the installation",
-            work_dir=self.cached_tests_work_dir,
-        )
+        with working_dir(self.cached_tests_work_dir, create=True):
+            cmake(*cmake_args)
+            make()
+            out = ctest("-V", output=str.split, error=str.split)
+            assert "100% tests passed" in out

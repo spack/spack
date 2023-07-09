@@ -15,7 +15,12 @@ class XmlrpcC(AutotoolsPackage):
 
     version("1.51.06", sha256="06dcd87d9c88374559369ffbe83b3139cf41418c1a2d03f20e08808085f89fd0")
 
-    @when("target=aarch64:")
+    variant("curl", default=False, description="Build the XMLRPC curl client")
+    depends_on("curl", when="+curl")
+
     def configure_args(self):
-        args = ["--build=arm-linux"]
+        args = self.enable_or_disable("curl-client", variant="curl")
+        if self.spec.target.family == "aarch64":
+            args.append("--build=arm-linux")
+
         return args

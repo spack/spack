@@ -73,7 +73,7 @@ class Amdlibflame(LibflameBase):
 
     def configure_args(self):
         """configure_args function"""
-        args = super(Amdlibflame, self).configure_args()
+        args = super().configure_args()
 
         # From 3.2 version, amd optimized flags are encapsulated under:
         # enable-amd-flags for gcc compiler

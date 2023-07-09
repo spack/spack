@@ -21,13 +21,6 @@ class Fftx(CMakePackage, CudaPackage, ROCmPackage):
     version("main", branch="main")
     version("1.0.3", sha256="b5ff275facce4a2fbabd0aecc65dd55b744794f2e07cd8cfa91363001c664896")
 
-    variant(
-        "build_type",
-        default="Release",
-        values=("Debug", "Release", "RelWithDebInfo", "MinSizeRel"),
-        description="The build type to build",
-    )
-
     depends_on("spiral-software")
     depends_on("spiral-package-fftx")
     depends_on("spiral-package-simt")

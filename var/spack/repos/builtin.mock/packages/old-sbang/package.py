@@ -13,7 +13,7 @@ class OldSbang(Package):
     homepage = "https://www.example.com"
     url = "https://www.example.com/old-sbang.tar.gz"
 
-    version("1.0.0", "0123456789abcdef0123456789abcdef")
+    version("1.0.0", md5="0123456789abcdef0123456789abcdef")
 
     def install(self, spec, prefix):
         mkdirp(prefix.bin)

@@ -38,6 +38,7 @@ class Libtiff(CMakePackage, AutotoolsPackage):
 
     maintainers("adamjstewart")
 
+    version("4.5.0", sha256="c7a1d9296649233979fa3eacffef3fa024d73d05d589cb622727b5b08c423464")
     version("4.4.0", sha256="917223b37538959aca3b790d2d73aa6e626b688e02dcda272aec24c2f498abed")
     version("4.3.0", sha256="0e46e5acb087ce7d1ac53cf4f56a09b221537fc86dfc5daaad1c2e89e1b37ac8")
     version("4.2.0", sha256="eb0484e568ead8fa23b513e9b0041df7e327f4ee2d22db5a533929dfc19633cb")
@@ -73,6 +74,9 @@ class Libtiff(CMakePackage, AutotoolsPackage):
     variant("webp", default=False, description="use libwebp", when="@4.0.10:")
 
     build_system(conditional("cmake", when="@4.0.5:"), "autotools", default="cmake")
+
+    variant("shared", default=True, description="Build shared")
+    variant("pic", default=False, description="Enable position-independent code (PIC)")
 
     with when("build_system=cmake"):
         depends_on("cmake@3.9:", when="@4.3:", type="build")
@@ -110,6 +114,9 @@ class Libtiff(CMakePackage, AutotoolsPackage):
 class CMakeBuilder(CMakeBuilder):
     def cmake_args(self):
         args = [self.define_from_variant(var) for var in VARIANTS]
+        args.append("-Dsphinx=OFF")
+        args += [self.define_from_variant("BUILD_SHARED_LIBS", "shared")]
+        args += [self.define_from_variant("CMAKE_POSITION_INDEPENDENT_CODE", "pic")]
 
         # Remove empty strings
         args = [arg for arg in args if arg]
@@ -122,5 +129,10 @@ class AutotoolsBuilder(AutotoolsBuilder):
         args = []
         for var in VARIANTS:
             args.extend(self.enable_or_disable(var))
+
+        args.append("--disable-sphinx")
+
+        args.extend(self.enable_or_disable("shared"))
+        args.extend(self.with_or_without("pic"))
 
         return args

@@ -24,8 +24,6 @@ class Heasoft(AutotoolsPackage):
     homepage = "https://heasarc.gsfc.nasa.gov/docs/software/lheasoft/"
     url = "https://heasarc.gsfc.nasa.gov/FTP/software/lheasoft/lheasoft6.29/heasoft-6.29src.tar.gz"
 
-    maintainers("glennpj")
-
     version("6.30", sha256="7f828f6050809653319f94d715c1b6815fbc09adfdcb61f2f0f1d7a6af10684a")
     version("6.29", sha256="534fec04baa2586326fd7240805f2606620f3b7d7078a80fdd95c9c1177c9e68")
 

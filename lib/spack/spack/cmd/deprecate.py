@@ -13,8 +13,6 @@ place.
 It is up to the user to ensure binary compatibility between the deprecated
 installation and its deprecator.
 """
-from __future__ import print_function
-
 import argparse
 import os
 

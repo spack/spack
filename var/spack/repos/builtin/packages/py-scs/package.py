@@ -31,6 +31,10 @@ class PyScs(PythonPackage, CudaPackage):
     depends_on("py-numpy@1.7:", type=("build", "run"))
     depends_on("py-scipy@0.13.2:", type=("build", "run"))
 
+    # in newer pip versions --install-option does not exist
+    # technically only the variants need this restriction
+    depends_on("py-pip@:23.0", type="build")
+
     def install_options(self, spec, prefix):
         args = []
         if (

@@ -18,6 +18,7 @@ class RGviz(RPackage):
 
     bioc = "Gviz"
 
+    version("1.44.0", commit="e70aaa7dd27df8482ee854395475a87ec2121279")
     version("1.42.0", commit="4eddb688bca3fdeb65fd536d653d7ba7f7976121")
     version("1.40.1", commit="d21843710cd05135353de5cd4ce4d35cdd333b7c")
     version("1.38.3", commit="c4b352a16455a5744533c511e59354977814cb9e")
@@ -32,6 +33,7 @@ class RGviz(RPackage):
     depends_on("r@4.0:", type=("build", "run"), when="@1.34.0:")
     depends_on("r@4.1:", type=("build", "run"), when="@1.38.3:")
     depends_on("r@4.2:", type=("build", "run"), when="@1.40.1:")
+    depends_on("r@4.3:", type=("build", "run"), when="@1.44.0:")
     depends_on("r-s4vectors@0.9.25:", type=("build", "run"))
     depends_on("r-iranges@1.99.18:", type=("build", "run"))
     depends_on("r-genomicranges@1.17.20:", type=("build", "run"))

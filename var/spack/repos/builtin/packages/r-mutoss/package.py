@@ -15,6 +15,7 @@ class RMutoss(RPackage):
 
     cran = "mutoss"
 
+    version("0.1-13", sha256="b60f6fcdce44dc60c7d34c6510047f756f1442366a3566661b22aae12f4ff141")
     version("0.1-12", sha256="2889ae3d502157592697124eb86adc14911e2b7fdaa7204743a376b1eeb967fa")
 
     depends_on("r@2.10.0:", type=("build", "run"))

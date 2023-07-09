@@ -3,31 +3,24 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-import llnl.util.tty as tty
+from llnl.util import tty
 
 import spack.config
 import spack.modules
-import spack.modules.common
 
 
 def _for_each_enabled(spec, method_name, explicit=None):
     """Calls a method for each enabled module"""
+    spack.modules.ensure_modules_are_enabled_or_warn()
     set_names = set(spack.config.get("modules", {}).keys())
-    # If we have old-style modules enabled, we put those in the default set
-    old_default_enabled = spack.config.get("modules:enable")
-    if old_default_enabled:
-        set_names.add("default")
     for name in set_names:
         enabled = spack.config.get("modules:%s:enable" % name)
-        if name == "default":
-            # combine enabled modules from default and old format
-            enabled = spack.config.merge_yaml(old_default_enabled, enabled)
         if not enabled:
             tty.debug("NO MODULE WRITTEN: list of enabled module files is empty")
             continue
 
-        for type in enabled:
-            generator = spack.modules.module_types[type](spec, name, explicit)
+        for module_type in enabled:
+            generator = spack.modules.module_types[module_type](spec, name, explicit)
             try:
                 getattr(generator, method_name)()
             except RuntimeError as e:

@@ -12,6 +12,7 @@ class PyKornia(PythonPackage):
     homepage = "https://www.kornia.org/"
     pypi = "kornia/kornia-0.5.10.tar.gz"
 
+    version("0.6.12", sha256="e30bd3d830226f7a159dff1f7757c6200e8f27d1333f06e9d2f98bdb33ce18d3")
     version("0.6.11", sha256="ba77198f2c2e4044c87e4503ff277aadbfc0db20495da5a5289663f380b4be32")
     version("0.6.10", sha256="00b4e8990b5ccdc589e3ecc2613446623b0ffb2fe1db5598aac55513b4016903")
     version("0.6.9", sha256="b756bba0db8d47046417fa72271b2d648c570ec6f1d61e1805e6a36911f63bb9")

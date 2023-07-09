@@ -15,7 +15,12 @@ import os
 import pytest
 
 import spack
+import spack.cmd
+import spack.compilers
+import spack.config
 import spack.cray_manifest as cray_manifest
+import spack.spec
+import spack.store
 from spack.cray_manifest import compiler_from_entry, entries_to_specs
 
 example_x_json_str = """\
@@ -66,7 +71,7 @@ example_compiler_entry = """\
 """
 
 
-class JsonSpecEntry(object):
+class JsonSpecEntry:
     def __init__(self, name, hash, prefix, version, arch, compiler, dependencies, parameters):
         self.name = name
         self.hash = hash
@@ -93,7 +98,7 @@ class JsonSpecEntry(object):
         return (self.name, {"hash": self.hash, "type": list(deptypes)})
 
 
-class JsonArchEntry(object):
+class JsonArchEntry:
     def __init__(self, platform, os, target):
         self.platform = platform
         self.os = os
@@ -103,7 +108,7 @@ class JsonArchEntry(object):
         return {"platform": self.platform, "platform_os": self.os, "target": {"name": self.target}}
 
 
-class JsonCompilerEntry(object):
+class JsonCompilerEntry:
     def __init__(self, name, version, arch=None, executables=None):
         self.name = name
         self.version = version
@@ -348,7 +353,7 @@ def test_read_cray_manifest_twice_no_compiler_duplicates(
 ):
     if spack.config.get("config:concretizer") == "clingo":
         pytest.skip(
-            "The ASP-based concretizer is currently picky about " " OS matching and will fail."
+            "The ASP-based concretizer is currently picky about OS matching and will fail."
         )
 
     with tmpdir.as_cwd():
@@ -362,7 +367,7 @@ def test_read_cray_manifest_twice_no_compiler_duplicates(
 
         compilers = spack.compilers.all_compilers()
         filtered = list(
-            c for c in compilers if c.spec == spack.spec.CompilerSpec("gcc@10.2.0.cray")
+            c for c in compilers if c.spec == spack.spec.CompilerSpec("gcc@=10.2.0.cray")
         )
         assert len(filtered) == 1
 

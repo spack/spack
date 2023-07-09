@@ -13,12 +13,19 @@ class Catch2(CMakePackage):
     homepage = "https://github.com/catchorg/Catch2"
     url = "https://github.com/catchorg/Catch2/archive/v2.13.10.tar.gz"
     git = "https://github.com/catchorg/Catch2.git"
-    maintainers("ax3l", "AndrewGaspar")
+    maintainers("ax3l")
 
     # In-Development
     version("develop", branch="devel")
 
     # Releases
+    version("3.3.2", sha256="8361907f4d9bff3ae7c1edb027f813659f793053c99b67837a0c0375f065bae2")
+    version("3.3.1", sha256="d90351cdc55421f640c553cfc0875a8c834428679444e8062e9187d05b18aace")
+    version("3.3.0", sha256="fe2f29a54ca775c2dd04bb97ffb79d398e6210e3caa174348b5cd3b7e4ca887d")
+    version("3.2.1", sha256="4613d3e8142b672159fcae252a4860d72c8cf8e2df5043b1ae3541db9ef5d73c")
+    version("3.2.0", sha256="feee04647e28ac3cbeff46cb42abc8ee2d8d5f646d36e3fb3ba274b8c69a58ea")
+    version("3.1.1", sha256="2106bccfec18c8ce673623d56780220e38527dd8f283ccba26aa4b8758737d0e")
+    version("3.1.0", sha256="c252b2d9537e18046d8b82535069d2567f77043f8e644acf9a9fffc22ea6e6f7")
     version("3.0.1", sha256="8c4173c68ae7da1b5b505194a0c2d6f1b2aef4ec1e3e7463bde451f26bbaf4e7")
     version(
         "3.0.0-preview4", sha256="2458d47d923b65ab611656cb7669d1810bcc4faa62e4c054a7405b1914cd4aee"
@@ -27,6 +34,7 @@ class Catch2(CMakePackage):
         "3.0.0-preview3", sha256="06a4f903858f21c553e988f8b76c9c6915d1f95f95512d6a58c421e02a2c4975"
     )
     version("2.13.10", sha256="d54a712b7b1d7708bc7a819a8e6e47b2fde9536f487b89ccbca295072a7d9943")
+    version("2.13.9", sha256="06dbc7620e3b96c2b69d57bf337028bf245a211b3cddb843835bfe258f427a52")
     version("2.13.8", sha256="b9b592bd743c09f13ee4bf35fc30eeee2748963184f6bea836b146e6cc2a585a")
     version("2.13.7", sha256="3cdb4138a072e4c0290034fe22d9f0a80d3bcfb8d7a8a5c49ad75d3a5da24fae")
     version("2.13.6", sha256="48dfbb77b9193653e4e72df9633d2e0383b9b625a47060759668480fdf24fbd4")

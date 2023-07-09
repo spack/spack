@@ -46,10 +46,10 @@ import spack.spec
 import spack.store
 import spack.util.lock as lk
 import spack.util.spack_json as sjson
+import spack.version as vn
 from spack.directory_layout import DirectoryLayoutError, InconsistentInstallDirectoryError
 from spack.error import SpackError
 from spack.util.crypto import bit_length
-from spack.version import Version
 
 # TODO: Provide an API automatically retyring a build after detecting and
 # TODO: clearing a failure.
@@ -60,7 +60,7 @@ _db_dirname = ".spack-db"
 # DB version.  This is stuck in the DB file to track changes in format.
 # Increment by one when the database format changes.
 # Versions before 5 were not integers.
-_db_version = Version("6")
+_db_version = vn.Version("7")
 
 # For any version combinations here, skip reindex when upgrading.
 # Reindexing can take considerable time and is not always necessary.
@@ -70,8 +70,9 @@ _skip_reindex = [
     # only difference is that v5 can contain "deprecated_for"
     # fields.  So, skip the reindex for this transition. The new
     # version is saved to disk the first time the DB is written.
-    (Version("0.9.3"), Version("5")),
-    (Version("5"), Version("6")),
+    (vn.Version("0.9.3"), vn.Version("5")),
+    (vn.Version("5"), vn.Version("6")),
+    (vn.Version("6"), vn.Version("7")),
 ]
 
 # Default timeout for spack database locks in seconds or None (no timeout).
@@ -105,7 +106,11 @@ default_install_record_fields = [
 
 
 def reader(version):
-    reader_cls = {Version("5"): spack.spec.SpecfileV1, Version("6"): spack.spec.SpecfileV3}
+    reader_cls = {
+        vn.Version("5"): spack.spec.SpecfileV1,
+        vn.Version("6"): spack.spec.SpecfileV3,
+        vn.Version("7"): spack.spec.SpecfileV4,
+    }
     return reader_cls[version]
 
 
@@ -130,7 +135,7 @@ class InstallStatus(str):
     pass
 
 
-class InstallStatuses(object):
+class InstallStatuses:
     INSTALLED = InstallStatus("installed")
     DEPRECATED = InstallStatus("deprecated")
     MISSING = InstallStatus("missing")
@@ -157,7 +162,7 @@ class InstallStatuses(object):
             return query_arg
 
 
-class InstallRecord(object):
+class InstallRecord:
     """A record represents one installation in the DB.
 
     The record keeps track of the spec for the installation, its
@@ -248,7 +253,7 @@ class ForbiddenLockError(SpackError):
     """Raised when an upstream DB attempts to acquire a lock"""
 
 
-class ForbiddenLock(object):
+class ForbiddenLock:
     def __getattribute__(self, name):
         raise ForbiddenLockError("Cannot access attribute '{0}' of lock".format(name))
 
@@ -302,7 +307,7 @@ _query_docstring = """
         """
 
 
-class Database(object):
+class Database:
 
     """Per-process lock objects for each install prefix."""
 
@@ -694,8 +699,7 @@ class Database(object):
             spec_dict[hash.name] = hash_key
 
         # Build spec from dict first.
-        spec = spec_reader.from_node_dict(spec_dict)
-        return spec
+        return spec_reader.from_node_dict(spec_dict)
 
     def db_for_spec_hash(self, hash_key):
         with self.read_transaction():
@@ -744,7 +748,9 @@ class Database(object):
             spec_node_dict = spec_node_dict[spec.name]
         if "dependencies" in spec_node_dict:
             yaml_deps = spec_node_dict["dependencies"]
-            for dname, dhash, dtypes, _ in spec_reader.read_specfile_dep_specs(yaml_deps):
+            for dname, dhash, dtypes, _, virtuals in spec_reader.read_specfile_dep_specs(
+                yaml_deps
+            ):
                 # It is important that we always check upstream installations
                 # in the same order, and that we always check the local
                 # installation first: if a downstream Spack installs a package
@@ -767,7 +773,7 @@ class Database(object):
                     tty.warn(msg)
                     continue
 
-                spec._add_dependency(child, deptypes=dtypes)
+                spec._add_dependency(child, deptypes=dtypes, virtuals=virtuals)
 
     def _read_from_file(self, filename):
         """Fill database from file, do not maintain old data.
@@ -798,10 +804,9 @@ class Database(object):
         installs = db["installs"]
 
         # TODO: better version checking semantics.
-        version = Version(db["version"])
-        spec_reader = reader(version)
+        version = vn.Version(db["version"])
         if version > _db_version:
-            raise InvalidDatabaseVersionError(_db_version, version)
+            raise InvalidDatabaseVersionError(self, _db_version, version)
         elif version < _db_version:
             if not any(old == version and new == _db_version for old, new in _skip_reindex):
                 tty.warn(
@@ -815,10 +820,14 @@ class Database(object):
                     for k, v in self._data.items()
                 )
 
+        spec_reader = reader(version)
+
         def invalid_record(hash_key, error):
-            msg = "Invalid record in Spack database: " "hash: %s, cause: %s: %s"
-            msg %= (hash_key, type(error).__name__, str(error))
-            raise CorruptDatabaseError(msg, self._index_path)
+            return CorruptDatabaseError(
+                f"Invalid record in Spack database: hash: {hash_key}, cause: "
+                f"{type(error).__name__}: {error}",
+                self._index_path,
+            )
 
         # Build up the database in three passes:
         #
@@ -846,7 +855,7 @@ class Database(object):
                 if not spec.external and "installed" in rec and rec["installed"]:
                     installed_prefixes.add(rec["path"])
             except Exception as e:
-                invalid_record(hash_key, e)
+                raise invalid_record(hash_key, e) from e
 
         # Pass 2: Assign dependencies once all specs are created.
         for hash_key in data:
@@ -855,7 +864,7 @@ class Database(object):
             except MissingDependenciesError:
                 raise
             except Exception as e:
-                invalid_record(hash_key, e)
+                raise invalid_record(hash_key, e) from e
 
         # Pass 3: Mark all specs concrete.  Specs representing real
         # installations must be explicitly marked.
@@ -1170,7 +1179,7 @@ class Database(object):
             for dep in spec.edges_to_dependencies(deptype=_tracked_deps):
                 dkey = dep.spec.dag_hash()
                 upstream, record = self.query_by_spec_hash(dkey)
-                new_spec._add_dependency(record.spec, deptypes=dep.deptypes)
+                new_spec._add_dependency(record.spec, deptypes=dep.deptypes, virtuals=dep.virtuals)
                 if not upstream:
                     record.ref_count += 1
 
@@ -1207,7 +1216,7 @@ class Database(object):
             match = self.query_one(spec, **kwargs)
             if match:
                 return match.dag_hash()
-            raise KeyError("No such spec in database! %s" % spec)
+            raise NoSuchSpecError(spec)
         return key
 
     @_autospec
@@ -1641,7 +1650,7 @@ class CorruptDatabaseError(SpackError):
 
 
 class NonConcreteSpecAddError(SpackError):
-    """Raised when attemptint to add non-concrete spec to DB."""
+    """Raised when attempting to add non-concrete spec to DB."""
 
 
 class MissingDependenciesError(SpackError):
@@ -1649,8 +1658,31 @@ class MissingDependenciesError(SpackError):
 
 
 class InvalidDatabaseVersionError(SpackError):
-    def __init__(self, expected, found):
-        super(InvalidDatabaseVersionError, self).__init__(
-            "Expected database version %s but found version %s." % (expected, found),
-            "`spack reindex` may fix this, or you may need a newer " "Spack version.",
+    """Exception raised when the database metadata is newer than current Spack."""
+
+    def __init__(self, database, expected, found):
+        self.expected = expected
+        self.found = found
+        msg = (
+            f"you need a newer Spack version to read the DB in '{database.root}'. "
+            f"{self.database_version_message}"
         )
+        super().__init__(msg)
+
+    @property
+    def database_version_message(self):
+        return f"The expected DB version is '{self.expected}', but '{self.found}' was found."
+
+
+class NoSuchSpecError(KeyError):
+    """Raised when a spec is not found in the database."""
+
+    def __init__(self, spec):
+        self.spec = spec
+        super().__init__(spec)
+
+    def __str__(self):
+        # This exception is raised frequently, and almost always
+        # caught, so ensure we don't pay the cost of Spec.__str__
+        # unless the exception is actually printed.
+        return f"No such spec in database: {self.spec}"

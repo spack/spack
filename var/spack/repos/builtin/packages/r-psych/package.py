@@ -27,6 +27,7 @@ class RPsych(RPackage):
 
     cran = "psych"
 
+    version("2.3.3", sha256="94a9f3c39f8243573752709b89eb8068e11dbe809f86ecf0225fb429556efb6f")
     version("2.2.9", sha256="4cd518bff387fef95067696b0a0b323310e6f4a063c3d242f2a50bcb17675571")
     version("2.2.5", sha256="dcc3f9b30ed44dfd1de0366295a308e0b52959eb7ac9cb3bc3f32dc5b15fc321")
     version("2.1.9", sha256="1475e03a17f1ae6837834f01c2472aed68887c89d90a84a3e09a532ce218500c")

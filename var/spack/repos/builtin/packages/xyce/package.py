@@ -25,22 +25,15 @@ class Xyce(CMakePackage):
     maintainers("kuberry", "tbird2001")
 
     version("master", branch="master")
-    version("7.6.0", "fc25557e2edc82adbe0436a15fca2929a2f9ab08ddf91f1a47aab5e8b27ec88c")
-    version("7.5.0", "854d7d5e19e0ee2138d1f20f10f8f27f2bebb94ec81c157040955cff7250dacd")
-    version("7.4.0", "2d6bc1b7377834b2e0bf50131e96728c5be83dbb3548e765bb48911067c87c91")
-    version("7.3.0", "43869a70967f573ff6f00451db3f4642684834bdad1fd3926380e3789016b446")
-    version("7.2.0", "cf49705278ecda46373784bb24925cb97f9017b6adff49e4416de146bdd6a4b5")
+    version("7.6.0", sha256="fc25557e2edc82adbe0436a15fca2929a2f9ab08ddf91f1a47aab5e8b27ec88c")
+    version("7.5.0", sha256="854d7d5e19e0ee2138d1f20f10f8f27f2bebb94ec81c157040955cff7250dacd")
+    version("7.4.0", sha256="2d6bc1b7377834b2e0bf50131e96728c5be83dbb3548e765bb48911067c87c91")
+    version("7.3.0", sha256="43869a70967f573ff6f00451db3f4642684834bdad1fd3926380e3789016b446")
+    version("7.2.0", sha256="cf49705278ecda46373784bb24925cb97f9017b6adff49e4416de146bdd6a4b5")
 
     depends_on("cmake@3.13:", type="build")
     depends_on("flex")
     depends_on("bison")
-
-    variant(
-        "build_type",
-        default="Release",
-        description="CMake build type",
-        values=("Debug", "Release", "RelWithDebInfo", "MinSizeRel"),
-    )
 
     variant("mpi", default=True, description="Enable MPI support")
     depends_on("mpi", when="+mpi")
@@ -126,6 +119,13 @@ class Xyce(CMakePackage):
 
         # HDF5
         depends_on("hdf5~shared", when="^hdf5")
+
+    # fix MPI issue
+    patch(
+        "450-mpich-xyce.patch",
+        sha256="e91063d22afeeff01e6c572cef2ac2e3abea27b2fcb5a7e6ac5f41e4734a556d",
+        when="@:7.6,master",
+    )
 
     # fix RPATH issue on mac
     patch(

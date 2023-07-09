@@ -18,6 +18,7 @@ class LibjpegTurbo(CMakePackage, AutotoolsPackage):
     homepage = "https://libjpeg-turbo.org/"
     url = "https://github.com/libjpeg-turbo/libjpeg-turbo/archive/2.0.3.tar.gz"
 
+    version("2.1.5", sha256="254f3642b04e309fee775123133c6464181addc150499561020312ec61c1bf7c")
     version("2.1.4", sha256="a78b05c0d8427a90eb5b4eb08af25309770c8379592bb0b8a863373128e6143f")
     version("2.1.3", sha256="dbda0c685942aa3ea908496592491e5ec8160d2cf1ec9d5fd5470e50768e7859")
     version("2.1.2", sha256="e7fdc8a255c45bc8fbd9aa11c1a49c23092fcd7379296aeaeb14d3343a3d1bed")

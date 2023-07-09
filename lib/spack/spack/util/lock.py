@@ -31,27 +31,27 @@ class Lock(llnl.util.lock.Lock):
     """
 
     def __init__(self, *args, **kwargs):
-        super(Lock, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
         self._enable = spack.config.get("config:locks", sys.platform != "win32")
 
     def _lock(self, op, timeout=0):
         if self._enable:
-            return super(Lock, self)._lock(op, timeout)
+            return super()._lock(op, timeout)
         else:
             return 0, 0
 
     def _unlock(self):
         """Unlock call that always succeeds."""
         if self._enable:
-            super(Lock, self)._unlock()
+            super()._unlock()
 
     def _debug(self, *args):
         if self._enable:
-            super(Lock, self)._debug(*args)
+            super()._debug(*args)
 
     def cleanup(self, *args):
         if self._enable:
-            super(Lock, self).cleanup(*args)
+            super().cleanup(*args)
 
 
 def check_lock_safety(path):

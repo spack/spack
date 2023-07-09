@@ -17,6 +17,9 @@ class Opencoarrays(CMakePackage):
     homepage = "http://www.opencoarrays.org/"
     url = "https://github.com/sourceryinstitute/OpenCoarrays/releases/download/2.2.0/OpenCoarrays-2.2.0.tar.gz"
 
+    version("2.10.1", sha256="b04b8fa724e7e4e5addbab68d81d701414e713ab915bafdf1597ec5dd9590cd4")
+    version("2.9.3", sha256="eeee0b3be665022ab6838c523ddab4af9c948d4147afd6cd7bc01f028583cfe1")
+    version("2.9.2", sha256="6c200ca49808c75b0a2dfa984304643613b6bc77cc0044bee093f9afe03698f7")
     version("2.7.1", sha256="d74ee914f94de1c396b96bbad2cf43d68f29fcc87460fcc0db6582e6ae691588")
     version("2.2.0", sha256="9311547a85a21853111f1e8555ceab4593731c6fd9edb64cfb9588805f9d1a0d")
     version("1.8.10", sha256="69b61d2d3b171a294702efbddc8a602824e35a3c49ee394b41d7fb887001501a")

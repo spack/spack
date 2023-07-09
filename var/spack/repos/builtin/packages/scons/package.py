@@ -15,6 +15,7 @@ class Scons(PythonPackage):
 
     tags = ["build-tools", "windows"]
 
+    version("4.5.2", sha256="813360b2bce476bc9cc12a0f3a22d46ce520796b352557202cb07d3e402f5458")
     version("4.5.1", sha256="9daeabe4d87ba2bd4ea15410765fc1ed2d931b723e4dc730a487a3911b9a1738")
     version("4.4.0", sha256="7703c4e9d2200b4854a31800c1dbd4587e1fa86e75f58795c740bcfa7eca7eaa")
     version("4.3.0", sha256="d47081587e3675cc168f1f54f0d74a69b328a2fc90ec4feb85f728677419b879")

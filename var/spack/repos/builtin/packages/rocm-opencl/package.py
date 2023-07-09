@@ -3,6 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+import os
 import re
 
 from spack.package import *
@@ -229,7 +230,7 @@ class RocmOpencl(CMakePackage):
         return (flags, None, None)
 
     def cmake_args(self):
-        args = ["-DUSE_COMGR_LIBRARY=yes"]
+        args = ["-DUSE_COMGR_LIBRARY=yes", "-DBUILD_TESTS=ON"]
         if self.spec.satisfies("@:4.3.0"):
             "-DROCclr_DIR={0}".format(self.spec["hip-rocclr"].prefix),
             "-DLIBROCclr_STATIC_DIR={0}/lib".format
@@ -251,3 +252,14 @@ class RocmOpencl(CMakePackage):
         config_file_name = "amdocl64_30800.icd"
         with open(join_path(vendor_config_path, config_file_name), "w") as f:
             f.write("libamdocl64.so")
+
+    test_src_dir = "tests/ocltst"
+
+    def test(self):
+        test_dir = join_path(self.spec["rocm-opencl"].prefix, self.test_src_dir)
+        with working_dir(test_dir, create=True):
+            os.environ["LD_LIBRARY_PATH"] += os.pathsep + test_dir
+            args = ["-m", "liboclruntime.so", "-A", "oclruntime.exclude"]
+            self.run_test("ocltst", args)
+            args = ["-m", "liboclperf.so", "-A", "oclperf.exclude"]
+            self.run_test("ocltst", args)

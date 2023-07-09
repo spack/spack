@@ -16,6 +16,7 @@ class Rmgdft(CMakePackage):
     maintainers("elbriggs")
     tags = ["ecp", "ecp-apps"]
     version("master", branch="master")
+    version("5.2.0", tag="v5.2.0")
     version("5.0.5", tag="v5.0.5")
     version("5.0.4", tag="v5.0.4")
     version("5.0.1", tag="v5.0.1")
@@ -58,7 +59,7 @@ class Rmgdft(CMakePackage):
 
     depends_on("cmake", type="build")
     depends_on("boost+filesystem+iostreams+thread+program_options+system", type="build")
-    depends_on("boost@1.61.0:1.71.0")
+    depends_on("boost@1.61.0:1.82.0")
     depends_on("fftw-api@3")
     depends_on("mpi")
     depends_on("hdf5")
