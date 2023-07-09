@@ -1216,7 +1216,7 @@ class Database:
             match = self.query_one(spec, **kwargs)
             if match:
                 return match.dag_hash()
-            raise KeyError("No such spec in database! %s" % spec)
+            raise NoSuchSpecError(spec)
         return key
 
     @_autospec
@@ -1672,3 +1672,17 @@ class InvalidDatabaseVersionError(SpackError):
     @property
     def database_version_message(self):
         return f"The expected DB version is '{self.expected}', but '{self.found}' was found."
+
+
+class NoSuchSpecError(KeyError):
+    """Raised when a spec is not found in the database."""
+
+    def __init__(self, spec):
+        self.spec = spec
+        super().__init__(spec)
+
+    def __str__(self):
+        # This exception is raised frequently, and almost always
+        # caught, so ensure we don't pay the cost of Spec.__str__
+        # unless the exception is actually printed.
+        return f"No such spec in database: {self.spec}"
