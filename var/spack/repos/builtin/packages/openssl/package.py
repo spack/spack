@@ -412,7 +412,6 @@ class Openssl(Package):  # Uses Fake Autotools, should subclass Package
         # Make a flag for shared library builds
         base_args = [
             "--prefix=%s" % prefix,
-            "--libdir=lib",  # fix inconsistency with lib/lib64.
             "--openssldir=%s" % join_path(prefix, "etc", "openssl"),
         ]
         if spec.satisfies("platform=windows"):

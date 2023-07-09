@@ -39,6 +39,12 @@ class Libssh2(AutotoolsPackage, CMakePackage):
     depends_on("zlib")
     depends_on("xz")
 
+    # libssh2 adds its own deps in the pc file even when doing shared linking,
+    # and fails to prepend the -L flags, which is causing issues in libgit2, as
+    # it tries to locate e.g. libssl in the dirs of the pc file's -L flags, and
+    # cannot find the lib.
+    patch("pr-1114.patch", when="@1.7:")
+
 
 class CMakeBuilder(spack.build_systems.cmake.CMakeBuilder):
     def cmake_args(self):
