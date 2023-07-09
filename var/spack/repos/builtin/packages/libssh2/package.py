@@ -33,7 +33,7 @@ class Libssh2(AutotoolsPackage, CMakePackage):
 
     with when("crypto=openssl"):
         depends_on("openssl")
-        depends_on("openssl@:2", when="@:1.9")
+        depends_on("openssl@:1", when="@:1.9")
 
     depends_on("mbedtls@:2 +pic", when="crypto=mbedtls")
     depends_on("zlib")
