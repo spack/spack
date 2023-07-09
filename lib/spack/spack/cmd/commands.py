@@ -451,26 +451,17 @@ class FishCompletionWriter(ArgparseWriter):
         # Build optspec by iterating over options
         args = []
 
-        # Record not actually supported options
-        comment = ""
-
         for flags, dest, _, nargs, _ in optionals:
             if len(flags) == 0:
                 continue
 
             required = ""
 
-            # Because nargs '?' is treated differently in fish,
-            # we treat it as required.
-            # Also, because multi-argument options are not supported,
-            # we treat it like one argument and leave a comment.
+            # Because nargs '?' is treated differently in fish, we treat it as required.
+            # Because multi-argument options are not supported, we treat it like one argument.
+            required = "="
             if nargs == 0:
-                pass
-            elif nargs in [1, None, "?"]:
-                required = "="
-            else:
-                required = "="
-                comment += "\n# TODO: %s -> %r: %r not supported" % (flags, dest, nargs)
+                required = ""
 
             # Pair short options with long options
 
@@ -580,8 +571,6 @@ class FishCompletionWriter(ArgparseWriter):
                         valid_choices.append(choice)
                 choices = valid_choices
 
-            commands.append("# %d -> %s %r (%s): %r" % (idx, args, choices, help, nargs))
-
             head = self.complete_head(prog, idx if nargs != "..." else None)
 
             if choices is not None:
@@ -638,8 +627,6 @@ class FishCompletionWriter(ArgparseWriter):
                         valid_choices.append(choice)
                 dest = valid_choices
 
-            commands.append("# %s -> %r: %r" % (flags, dest, nargs))
-
             # To provide description for optionals, and also possible values,
             # we need to use two split completion command.
             # Otherwise, each option will have same description.
@@ -655,15 +642,9 @@ class FishCompletionWriter(ArgparseWriter):
                     assert len(short) == 1
                     prefix += " -s %s" % short
 
-            # Check if option require argument
-            # Currently multi-argument options are not supported,
-            # so we treat it like one argument and leave a comment
-            if nargs == 0:
-                pass
-            elif nargs in [1, None, "?"]:
-                prefix += " -r"
-            else:
-                commands.append("# TODO: %s -> %r: %r not supported" % (flags, dest, nargs))
+            # Check if option require argument.
+            # Currently multi-argument options are not supported, so we treat it like one argument.
+            if nargs != 0:
                 prefix += " -r"
 
             if dest is not None:
