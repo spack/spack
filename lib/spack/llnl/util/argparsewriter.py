@@ -97,7 +97,11 @@ class ArgparseWriter(argparse.HelpFormatter, abc.ABC):
                 flags = action.option_strings
                 dest_flags = fmt._format_action_invocation(action)
                 nargs = action.nargs
-                help = self._expand_help(action) if action.help else ""
+                help = (
+                    self._expand_help(action)
+                    if action.help and action.help != argparse.SUPPRESS
+                    else ""
+                )
                 help = help.split("\n")[0]
 
                 if action.choices is not None:
@@ -109,7 +113,11 @@ class ArgparseWriter(argparse.HelpFormatter, abc.ABC):
             elif isinstance(action, argparse._SubParsersAction):
                 for subaction in action._choices_actions:
                     subparser = action._name_parser_map[subaction.dest]
-                    help = self._expand_help(subaction) if subaction.help else ""
+                    help = (
+                        self._expand_help(subaction)
+                        if subaction.help and action.help != argparse.SUPPRESS
+                        else ""
+                    )
                     help = help.split("\n")[0]
                     subcommands.append((subparser, subaction.dest, help))
 
@@ -120,12 +128,20 @@ class ArgparseWriter(argparse.HelpFormatter, abc.ABC):
                             aliases = match.group(2).split(", ")
                             for alias in aliases:
                                 subparser = action._name_parser_map[alias]
-                                help = self._expand_help(subaction) if subaction.help else ""
+                                help = (
+                                    self._expand_help(subaction)
+                                    if subaction.help and action.help != argparse.SUPPRESS
+                                    else ""
+                                )
                                 help = help.split("\n")[0]
                                 subcommands.append((subparser, alias, help))
             else:
                 args = fmt._format_action_invocation(action)
-                help = self._expand_help(action) if action.help else ""
+                help = (
+                    self._expand_help(action)
+                    if action.help and action.help != argparse.SUPPRESS
+                    else ""
+                )
                 help = help.split("\n")[0]
                 positionals.append((args, action.choices, action.nargs, help))
 

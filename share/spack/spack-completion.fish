@@ -2195,7 +2195,6 @@ complete -c spack -n "__fish_spack_using_command gpg init" -s h -l help -f -a "h
 complete -c spack -n "__fish_spack_using_command gpg init" -s h -l help -d "show this help message and exit"
 # ['--from'] -> ['import_dir']: None
 complete -c spack -n "__fish_spack_using_command gpg init" -l from -r -f -a "import_dir"
-complete -c spack -n "__fish_spack_using_command gpg init" -l from -r -d "==SUPPRESS=="
 
 # spack gpg export
 set -g __fish_spack_optspecs_spack_gpg_export h/help secret
@@ -2406,19 +2405,14 @@ complete -c spack -n "__fish_spack_using_command install" -l help-cdash -f -a "h
 complete -c spack -n "__fish_spack_using_command install" -l help-cdash -d "Show usage instructions for CDash reporting"
 # ['--cdash-upload-url'] -> ['cdash_upload_url']: None
 complete -c spack -n "__fish_spack_using_command install" -l cdash-upload-url -r -f -a "cdash_upload_url"
-complete -c spack -n "__fish_spack_using_command install" -l cdash-upload-url -r -d "==SUPPRESS=="
 # ['--cdash-build'] -> ['cdash_build']: None
 complete -c spack -n "__fish_spack_using_command install" -l cdash-build -r -f -a "cdash_build"
-complete -c spack -n "__fish_spack_using_command install" -l cdash-build -r -d "==SUPPRESS=="
 # ['--cdash-site'] -> ['cdash_site']: None
 complete -c spack -n "__fish_spack_using_command install" -l cdash-site -r -f -a "cdash_site"
-complete -c spack -n "__fish_spack_using_command install" -l cdash-site -r -d "==SUPPRESS=="
 # ['--cdash-track'] -> ['cdash_track']: None
 complete -c spack -n "__fish_spack_using_command install" -l cdash-track -r -f -a "cdash_track"
-complete -c spack -n "__fish_spack_using_command install" -l cdash-track -r -d "==SUPPRESS=="
 # ['--cdash-buildstamp'] -> ['cdash_buildstamp']: None
 complete -c spack -n "__fish_spack_using_command install" -l cdash-buildstamp -r -f -a "cdash_buildstamp"
-complete -c spack -n "__fish_spack_using_command install" -l cdash-buildstamp -r -d "==SUPPRESS=="
 # ['-y', '--yes-to-all'] -> ['yes_to_all']: 0
 complete -c spack -n "__fish_spack_using_command install" -s y -l yes-to-all -f -a "yes_to_all"
 complete -c spack -n "__fish_spack_using_command install" -s y -l yes-to-all -d "assume "yes" is the answer to every confirmation request"
@@ -3477,19 +3471,14 @@ complete -c spack -n "__fish_spack_using_command test run" -l log-file -r -f -a 
 complete -c spack -n "__fish_spack_using_command test run" -l log-file -r -d "filename for the log file. if not passed a default will be used"
 # ['--cdash-upload-url'] -> ['cdash_upload_url']: None
 complete -c spack -n "__fish_spack_using_command test run" -l cdash-upload-url -r -f -a "cdash_upload_url"
-complete -c spack -n "__fish_spack_using_command test run" -l cdash-upload-url -r -d "==SUPPRESS=="
 # ['--cdash-build'] -> ['cdash_build']: None
 complete -c spack -n "__fish_spack_using_command test run" -l cdash-build -r -f -a "cdash_build"
-complete -c spack -n "__fish_spack_using_command test run" -l cdash-build -r -d "==SUPPRESS=="
 # ['--cdash-site'] -> ['cdash_site']: None
 complete -c spack -n "__fish_spack_using_command test run" -l cdash-site -r -f -a "cdash_site"
-complete -c spack -n "__fish_spack_using_command test run" -l cdash-site -r -d "==SUPPRESS=="
 # ['--cdash-track'] -> ['cdash_track']: None
 complete -c spack -n "__fish_spack_using_command test run" -l cdash-track -r -f -a "cdash_track"
-complete -c spack -n "__fish_spack_using_command test run" -l cdash-track -r -d "==SUPPRESS=="
 # ['--cdash-buildstamp'] -> ['cdash_buildstamp']: None
 complete -c spack -n "__fish_spack_using_command test run" -l cdash-buildstamp -r -f -a "cdash_buildstamp"
-complete -c spack -n "__fish_spack_using_command test run" -l cdash-buildstamp -r -d "==SUPPRESS=="
 # ['--help-cdash'] -> ['help_cdash']: 0
 complete -c spack -n "__fish_spack_using_command test run" -l help-cdash -f -a "help_cdash"
 complete -c spack -n "__fish_spack_using_command test run" -l help-cdash -d "Show usage instructions for CDash reporting"
