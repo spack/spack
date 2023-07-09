@@ -210,10 +210,20 @@ class Cmake(Package):
     # transparent to patch Spack's versions of CMake's dependencies.
     conflicts("+ownlibs %nvhpc")
 
+    # Use Spack's curl even if +ownlibs, since that allows us to make use of
+    # the conflicts on the curl package for TLS libs like OpenSSL.
+    # In the past we let CMake build a vendored copy of curl, but had to
+    # provide Spack's TLS libs anyways, which is not flexible, and actually
+    # leads to issues where we have to keep track of the vendored curl version
+    # and its conflicts with OpenSSL.
+    depends_on("curl")
+
+    # When using curl, cmake defaults to using system zlib too, probably because
+    # curl already depends on zlib. Therefore, also unconditionaly depend on zlib.
+    depends_on("zlib")
+
     with when("~ownlibs"):
-        depends_on("curl")
         depends_on("expat")
-        depends_on("zlib")
         # expat/zlib are used in CMake/CTest, so why not require them in libarchive.
         depends_on("libarchive@3.1.0: xar=expat compression=zlib")
         depends_on("libarchive@3.3.3:", when="@3.15.0:")
@@ -221,11 +231,6 @@ class Cmake(Package):
         depends_on("libuv@1.10.0:1.10", when="@3.11.0:3.11")
         depends_on("libuv@1.10.0:", when="@3.12.0:")
         depends_on("rhash", when="@3.8.0:")
-
-    for plat in ["darwin", "linux", "cray"]:
-        with when("+ownlibs platform=%s" % plat):
-            depends_on("openssl")
-            depends_on("openssl@:1.0", when="@:3.6.9")
 
     depends_on("qt", when="+qt")
     depends_on("ncurses", when="+ncurses")
@@ -311,11 +316,6 @@ class Cmake(Package):
                 flags.append(self.compiler.cxx11_flag)
         return (flags, None, None)
 
-    def setup_build_environment(self, env):
-        spec = self.spec
-        if "+ownlibs" in spec and "platform=windows" not in spec:
-            env.set("OPENSSL_ROOT_DIR", spec["openssl"].prefix)
-
     def bootstrap_args(self):
         spec = self.spec
         args = []
@@ -355,6 +355,9 @@ class Cmake(Package):
                     # use CMake-provided library to avoid circular dependency
                     args.append("--no-system-jsoncpp")
 
+            # Whatever +/~ownlibs, use system curl.
+            args.append("--system-curl")
+
             if "+qt" in spec:
                 args.append("--qt-gui")
             else:
@@ -369,21 +372,15 @@ class Cmake(Package):
         else:
             args.append("-DCMAKE_INSTALL_PREFIX=%s" % self.prefix)
 
-        args.append("-DCMAKE_BUILD_TYPE={0}".format(self.spec.variants["build_type"].value))
-
-        # Install CMake correctly, even if `spack install` runs
-        # inside a ctest environment
-        args.append("-DCMake_TEST_INSTALL=OFF")
-
-        # When building our own private copy of curl we still require an
-        # external openssl.
-        if "+ownlibs" in spec:
-            if "platform=windows" in spec:
-                args.append("-DCMAKE_USE_OPENSSL=OFF")
-            else:
-                args.append("-DCMAKE_USE_OPENSSL=ON")
-
-        args.append("-DBUILD_CursesDialog=%s" % str("+ncurses" in spec))
+        args.extend(
+            [
+                f"-DCMAKE_BUILD_TYPE={self.spec.variants['build_type'].value}",
+                # Install CMake correctly, even if `spack install` runs
+                # inside a ctest environment
+                "-DCMake_TEST_INSTALL=OFF",
+                f"-DBUILD_CursesDialog={'ON' if '+ncurses' in spec else 'OFF'}",
+            ]
+        )
 
         # Make CMake find its own dependencies.
         rpaths = spack.build_environment.get_rpaths(self)

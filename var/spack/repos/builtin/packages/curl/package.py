@@ -278,7 +278,13 @@ class Curl(NMakePackage, AutotoolsPackage):
     depends_on("mbedtls@2: +pic", when="@7.79: tls=mbedtls")
     depends_on("mbedtls@:2 +pic", when="@:7.78 tls=mbedtls")
     depends_on("nss", when="tls=nss")
-    depends_on("openssl", when="tls=openssl")
+
+    with when("tls=openssl"):
+        depends_on("openssl")
+        # Since https://github.com/curl/curl/commit/ee36e86ce8f77a017c49b8312814c33f4b969565
+        # there is OpenSSL 3 detection.
+        depends_on("openssl@:1", when="@:7.76")
+
     depends_on("libidn2", when="+libidn2")
     depends_on("zlib")
     depends_on("nghttp2", when="+nghttp2")
