@@ -13,12 +13,7 @@ from typing import IO, Any, Callable, Dict, Iterable, List, Optional, Sequence, 
 
 import llnl.util.filesystem as fs
 import llnl.util.tty as tty
-from llnl.util.argparsewriter import (
-    ArgparseCompletionWriter,
-    ArgparseRstWriter,
-    ArgparseWriter,
-    Command,
-)
+from llnl.util.argparsewriter import ArgparseRstWriter, ArgparseWriter, Command
 from llnl.util.tty.colify import colify
 
 import spack.cmd
@@ -184,8 +179,62 @@ _positional_to_subroutine: Dict[str, str] = {
 }
 
 
-class BashCompletionWriter(ArgparseCompletionWriter):
+class BashCompletionWriter(ArgparseWriter):
     """Write argparse output as bash programmable tab completion."""
+
+    def format(self, cmd: Command) -> str:
+        """Return the string representation of a single node in the parser tree.
+
+        Args:
+            cmd: Parsed information about a command or subcommand.
+
+        Returns:
+            String representation of this subcommand.
+        """
+
+        assert cmd.optionals  # we should always at least have -h, --help
+        assert not (cmd.positionals and cmd.subcommands)  # one or the other
+
+        # We only care about the arguments/flags, not the help messages
+        positionals: Tuple[str, ...] = ()
+        if cmd.positionals:
+            positionals, _, _, _ = zip(*cmd.positionals)
+        optionals, _, _, _, _ = zip(*cmd.optionals)
+        subcommands: Tuple[str, ...] = ()
+        if cmd.subcommands:
+            _, subcommands, _ = zip(*cmd.subcommands)
+
+        # Flatten lists of lists
+        optionals = [x for xx in optionals for x in xx]
+
+        return (
+            self.start_function(cmd.prog)
+            + self.body(positionals, optionals, subcommands)
+            + self.end_function(cmd.prog)
+        )
+
+    def start_function(self, prog: str) -> str:
+        """Return the syntax needed to begin a function definition.
+
+        Args:
+            prog: Program name.
+
+        Returns:
+            Function definition beginning.
+        """
+        name = prog.replace("-", "_").replace(" ", "_")
+        return "\n_{0}() {{".format(name)
+
+    def end_function(self, prog: str) -> str:
+        """Return the syntax needed to end a function definition.
+
+        Args:
+            prog: Program name
+
+        Returns:
+            Function definition ending.
+        """
+        return "}\n"
 
     def body(
         self, positionals: Sequence[str], optionals: Sequence[str], subcommands: Sequence[str]
@@ -354,7 +403,7 @@ def _fish_dest_get_complete(prog: str, dest: str) -> Optional[str]:
     return None
 
 
-class FishCompletionWriter(ArgparseCompletionWriter):
+class FishCompletionWriter(ArgparseWriter):
     """Write argparse output as bash programmable tab completion."""
 
     def format(self, cmd: Command) -> str:
