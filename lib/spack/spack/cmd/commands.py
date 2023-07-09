@@ -463,7 +463,7 @@ class FishCompletionWriter(ArgparseCompletionWriter):
         return isinstance(arg, (list, tuple, set, frozenset))
 
     @staticmethod
-    def complete_head(prog: str, positional: Optional[str]) -> str:
+    def complete_head(prog: str, positional: Optional[str] = None) -> str:
         """Return the head of the completion command.
 
         Args:
@@ -486,7 +486,7 @@ class FishCompletionWriter(ArgparseCompletionWriter):
     def complete(
         self,
         prog: str,
-        positionals: List[Tuple[str, str, Optional[Iterable[Any]], Union[int, str, None]]],
+        positionals: List[Tuple[str, Optional[Iterable[Any]], Union[int, str, None], str]],
         optionals: List[Tuple[Sequence[str], List[str], str, Union[int, str, None], str]],
         subcommands: List[Tuple[ArgumentParser, str, Optional[str]]],
     ) -> str:
@@ -517,7 +517,7 @@ class FishCompletionWriter(ArgparseCompletionWriter):
     def positionals(
         self,
         prog: str,
-        positionals: List[Tuple[str, str, Optional[Iterable[Any]], Union[int, str, None]]],
+        positionals: List[Tuple[str, Optional[Iterable[Any]], Union[int, str, None], str]],
     ) -> str:
         """Return the completion for positional arguments.
 
@@ -530,7 +530,7 @@ class FishCompletionWriter(ArgparseCompletionWriter):
         """
         commands = []
 
-        for idx, (args, help, choices, nargs) in enumerate(positionals):
+        for idx, (args, choices, nargs, help) in enumerate(positionals):
             # Make sure we always get same order of output
             if isinstance(choices, dict):
                 choices = sorted(choices.keys())

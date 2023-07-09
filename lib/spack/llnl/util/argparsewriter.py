@@ -25,7 +25,7 @@ class Command:
         prog: str,
         description: Optional[str],
         usage: str,
-        positionals: List[Tuple[str, str, Optional[Iterable[Any]], Union[int, str, None]]],
+        positionals: List[Tuple[str, Optional[Iterable[Any]], Union[int, str, None], str]],
         optionals: List[Tuple[Sequence[str], List[str], str, Union[int, str, None], str]],
         subcommands: List[Tuple[ArgumentParser, str, Optional[str]]],
     ) -> None:
@@ -123,7 +123,7 @@ class ArgparseWriter(argparse.HelpFormatter, abc.ABC):
                 args = fmt._format_action_invocation(action)
                 help = self._expand_help(action) if action.help else ""
                 help = help.replace("\n", " ")
-                positionals.append((args, help, action.choices, action.nargs))
+                positionals.append((args, action.choices, action.nargs, help))
 
         return Command(prog, description, usage, positionals, optionals, subcommands)
 
@@ -212,7 +212,7 @@ class ArgparseRstWriter(ArgparseWriter):
 
         if cmd.positionals:
             string.write(self.begin_positionals())
-            for args, help, choices, nargs in cmd.positionals:
+            for args, choices, nargs, help in cmd.positionals:
                 string.write(self.positional(args, help))
             string.write(self.end_positionals())
 
