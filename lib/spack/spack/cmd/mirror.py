@@ -55,13 +55,13 @@ def setup_parser(subparser):
     )
     create_parser.add_argument(
         "--exclude-specs",
-        help="specs which Spack should not try to add to a mirror" " (specified on command line)",
+        help="specs which Spack should not try to add to a mirror (specified on command line)",
     )
 
     create_parser.add_argument(
         "--skip-unstable-versions",
         action="store_true",
-        help="don't cache versions unless they identify a stable (unchanging)" " source code",
+        help="don't cache versions unless they identify a stable (unchanging) source code",
     )
     create_parser.add_argument(
         "-D", "--dependencies", action="store_true", help="also fetch all dependencies"
@@ -144,7 +144,7 @@ def setup_parser(subparser):
 
 
 def mirror_add(args):
-    """Add a mirror to Spack."""
+    """add a mirror to Spack"""
     if (
         args.s3_access_key_id
         or args.s3_access_key_secret
@@ -168,12 +168,12 @@ def mirror_add(args):
 
 
 def mirror_remove(args):
-    """Remove a mirror by name."""
+    """remove a mirror by name"""
     spack.mirror.remove(args.name, args.scope)
 
 
 def mirror_set_url(args):
-    """Change the URL of a mirror."""
+    """change the URL of a mirror"""
     url = args.url
     mirrors = spack.config.get("mirrors", scope=args.scope)
     if not mirrors:
@@ -242,7 +242,7 @@ def mirror_set_url(args):
 
 
 def mirror_list(args):
-    """Print out available mirrors to the console."""
+    """print out available mirrors to the console"""
 
     mirrors = spack.mirror.MirrorCollection(scope=args.scope)
     if not mirrors:
@@ -395,9 +395,7 @@ def process_mirror_stats(present, mirrored, error):
 
 
 def mirror_create(args):
-    """Create a directory to be used as a spack mirror, and fill it with
-    package archives.
-    """
+    """create a directory to be used as a spack mirror, and fill it with package archives"""
     if args.specs and args.all:
         raise SpackError(
             "cannot specify specs on command line if you chose to mirror all specs with '--all'"
@@ -470,7 +468,7 @@ def create_mirror_for_all_specs_inside_environment(path, skip_unstable_versions,
 
 
 def mirror_destroy(args):
-    """Given a url, recursively delete everything under it."""
+    """given a url, recursively delete everything under it"""
     mirror_url = None
 
     if args.mirror_name:
