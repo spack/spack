@@ -754,12 +754,12 @@ complete -c spack -n "__fish_spack_using_command_pos 0 buildcache" -f -a "create
 complete -c spack -n "__fish_spack_using_command_pos 0 buildcache" -f -a "install" -d "install from a binary package"
 complete -c spack -n "__fish_spack_using_command_pos 0 buildcache" -f -a "list" -d "list binary packages available from mirrors"
 complete -c spack -n "__fish_spack_using_command_pos 0 buildcache" -f -a "keys" -d "get public keys available on mirrors"
-complete -c spack -n "__fish_spack_using_command_pos 0 buildcache" -f -a "preview" -d "analyze an installed spec and reports whether executables"
-complete -c spack -n "__fish_spack_using_command_pos 0 buildcache" -f -a "check" -d "Check specs (either a single spec from --spec, or else the full set"
-complete -c spack -n "__fish_spack_using_command_pos 0 buildcache" -f -a "download" -d "Download buildcache entry from a remote mirror to local folder.  This"
+complete -c spack -n "__fish_spack_using_command_pos 0 buildcache" -f -a "preview" -d "analyze an installed spec and reports whether executables     and libraries are relocatable     "
+complete -c spack -n "__fish_spack_using_command_pos 0 buildcache" -f -a "check" -d "Check specs (either a single spec from --spec, or else the full set     of release specs) against remote binary mirror(s) to see if any need     to be rebuilt.  This command uses the process exit code to indicate     its result, specifically, if the exit code is non-zero, then at least     one of the indicated specs needs to be rebuilt.     "
+complete -c spack -n "__fish_spack_using_command_pos 0 buildcache" -f -a "download" -d "Download buildcache entry from a remote mirror to local folder.  This     command uses the process exit code to indicate its result, specifically,     a non-zero exit code indicates that the command failed to download at     least one of the required buildcache components."
 complete -c spack -n "__fish_spack_using_command_pos 0 buildcache" -f -a "get-buildcache-name" -d "Get name (prefix) of buildcache entries for this spec"
-complete -c spack -n "__fish_spack_using_command_pos 0 buildcache" -f -a "save-specfile" -d "Get full spec for dependencies, relative to root spec, and write them"
-complete -c spack -n "__fish_spack_using_command_pos 0 buildcache" -f -a "sync" -d "Syncs binaries (and associated metadata) from one mirror to another."
+complete -c spack -n "__fish_spack_using_command_pos 0 buildcache" -f -a "save-specfile" -d "Get full spec for dependencies, relative to root spec, and write them     to files in the specified output directory.  Uses exit code to signal     success or failure.  An exit code of zero means the command was likely     successful.  If any errors or exceptions are encountered, or if expected     command-line arguments are not provided, then the exit code will be     non-zero.     "
+complete -c spack -n "__fish_spack_using_command_pos 0 buildcache" -f -a "sync" -d "Syncs binaries (and associated metadata) from one mirror to another.     Requires an active environment in order to know which specs to sync.      Args:         src (str): Source mirror URL         dest (str): Destination mirror URL     "
 complete -c spack -n "__fish_spack_using_command_pos 0 buildcache" -f -a "update-index" -d "Update a buildcache index."
 complete -c spack -n "__fish_spack_using_command_pos 0 buildcache" -f -a "rebuild-index" -d "Update a buildcache index."
 # ['-h', '--help'] -> ['help']: 0
@@ -2636,7 +2636,7 @@ complete -c spack -n "__fish_spack_using_command mark" -s i -l implicit -d "Mark
 
 # spack mirror
 set -g __fish_spack_optspecs_spack_mirror h/help n/no-checksum deprecated
-complete -c spack -n "__fish_spack_using_command_pos 0 mirror" -f -a "create" -d "Create a directory to be used as a spack mirror, and fill it with"
+complete -c spack -n "__fish_spack_using_command_pos 0 mirror" -f -a "create" -d "Create a directory to be used as a spack mirror, and fill it with     package archives.     "
 complete -c spack -n "__fish_spack_using_command_pos 0 mirror" -f -a "destroy" -d "Given a url, recursively delete everything under it."
 complete -c spack -n "__fish_spack_using_command_pos 0 mirror" -f -a "add" -d "Add a mirror to Spack."
 complete -c spack -n "__fish_spack_using_command_pos 0 mirror" -f -a "remove" -d "Remove a mirror by name."

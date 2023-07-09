@@ -109,7 +109,9 @@ class ArgparseWriter(argparse.HelpFormatter, abc.ABC):
             elif isinstance(action, argparse._SubParsersAction):
                 for subaction in action._choices_actions:
                     subparser = action._name_parser_map[subaction.dest]
-                    subcommands.append((subparser, subaction.dest, subaction.help))
+                    help = self._expand_help(subaction) if subaction.help else ""
+                    help = help.replace("\n", " ")
+                    subcommands.append((subparser, subaction.dest, help))
 
                     # Look for aliases of the form 'name (alias, ...)'
                     if self.aliases and isinstance(subaction.metavar, str):
@@ -118,7 +120,9 @@ class ArgparseWriter(argparse.HelpFormatter, abc.ABC):
                             aliases = match.group(2).split(", ")
                             for alias in aliases:
                                 subparser = action._name_parser_map[alias]
-                                subcommands.append((subparser, alias, subaction.help))
+                                help = self._expand_help(subaction) if subaction.help else ""
+                                help = help.replace("\n", " ")
+                                subcommands.append((subparser, alias, help))
             else:
                 args = fmt._format_action_invocation(action)
                 help = self._expand_help(action) if action.help else ""
