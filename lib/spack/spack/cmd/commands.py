@@ -574,15 +574,21 @@ class FishCompletionWriter(ArgparseWriter):
             elif isinstance(choices, (set, frozenset)):
                 choices = sorted(choices)
 
+            # Remove platform-specific choices to avoid hard-coding the platform.
+            if choices is not None:
+                valid_choices = []
+                for choice in choices:
+                    if spack.platforms.host().name not in choice:
+                        valid_choices.append(choice)
+                choices = valid_choices
+
             commands.append("# %d -> %s %r (%s): %r" % (idx, args, choices, help, nargs))
 
             head = self.complete_head(prog, idx if nargs != "..." else None)
 
             if choices is not None:
-                # If there are choices, we provide a completion for all
-                # possible values
-                choices = " ".join(choices)
-                commands.append(head + ' -f -a "%s"' % choices)
+                # If there are choices, we provide a completion for all possible values.
+                commands.append(head + ' -f -a "%s"' % " ".join(choices))
             else:
                 # Otherwise, we try to find a predefined completion for it
                 value = _fish_dest_get_complete(prog, args)
@@ -626,6 +632,14 @@ class FishCompletionWriter(ArgparseWriter):
             elif isinstance(dest, (set, frozenset)):
                 dest = sorted(dest)
 
+            # Remove platform-specific choices to avoid hard-coding the platform.
+            if dest is not None:
+                valid_choices = []
+                for choice in dest:
+                    if spack.platforms.host().name not in choice:
+                        valid_choices.append(choice)
+                dest = valid_choices
+
             commands.append("# %s -> %r: %r" % (flags, dest, nargs))
 
             # To provide description for optionals, and also possible values,
@@ -655,10 +669,8 @@ class FishCompletionWriter(ArgparseWriter):
                 prefix += " -r"
 
             if dest is not None:
-                # If there are choices, we provide a completion for all
-                # possible values
-                choices = " ".join(dest)
-                commands.append(prefix + ' -f -a "%s"' % choices)
+                # If there are choices, we provide a completion for all possible values.
+                commands.append(prefix + ' -f -a "%s"' % " ".join(dest))
             else:
                 # Otherwise, we try to find a predefined completion for it
                 value = _fish_dest_get_complete(prog, dest)

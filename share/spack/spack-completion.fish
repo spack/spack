@@ -637,8 +637,8 @@ complete -c spack -n "__fish_spack_using_command_pos 0 bootstrap enable" -f -a "
 # ['-h', '--help'] -> ['help']: 0
 complete -c spack -n "__fish_spack_using_command bootstrap enable" -s h -l help -f -a "help"
 complete -c spack -n "__fish_spack_using_command bootstrap enable" -s h -l help -d "show this help message and exit"
-# ['--scope'] -> ['_builtin', 'defaults', 'defaults/darwin', 'system', 'system/darwin', 'site', 'site/darwin', 'user', 'user/darwin', 'command_line']: None
-complete -c spack -n "__fish_spack_using_command bootstrap enable" -l scope -r -f -a "_builtin defaults defaults/darwin system system/darwin site site/darwin user user/darwin command_line"
+# ['--scope'] -> ['_builtin', 'defaults', 'system', 'site', 'user', 'command_line']: None
+complete -c spack -n "__fish_spack_using_command bootstrap enable" -l scope -r -f -a "_builtin defaults system site user command_line"
 complete -c spack -n "__fish_spack_using_command bootstrap enable" -l scope -r -d "configuration scope to read/modify"
 
 # spack bootstrap disable
@@ -648,8 +648,8 @@ complete -c spack -n "__fish_spack_using_command_pos 0 bootstrap disable" -f -a 
 # ['-h', '--help'] -> ['help']: 0
 complete -c spack -n "__fish_spack_using_command bootstrap disable" -s h -l help -f -a "help"
 complete -c spack -n "__fish_spack_using_command bootstrap disable" -s h -l help -d "show this help message and exit"
-# ['--scope'] -> ['_builtin', 'defaults', 'defaults/darwin', 'system', 'system/darwin', 'site', 'site/darwin', 'user', 'user/darwin', 'command_line']: None
-complete -c spack -n "__fish_spack_using_command bootstrap disable" -l scope -r -f -a "_builtin defaults defaults/darwin system system/darwin site site/darwin user user/darwin command_line"
+# ['--scope'] -> ['_builtin', 'defaults', 'system', 'site', 'user', 'command_line']: None
+complete -c spack -n "__fish_spack_using_command bootstrap disable" -l scope -r -f -a "_builtin defaults system site user command_line"
 complete -c spack -n "__fish_spack_using_command bootstrap disable" -l scope -r -d "configuration scope to read/modify"
 
 # spack bootstrap reset
@@ -668,8 +668,8 @@ complete -c spack -n "__fish_spack_using_command_pos 0 bootstrap root" -f -a "(_
 # ['-h', '--help'] -> ['help']: 0
 complete -c spack -n "__fish_spack_using_command bootstrap root" -s h -l help -f -a "help"
 complete -c spack -n "__fish_spack_using_command bootstrap root" -s h -l help -d "show this help message and exit"
-# ['--scope'] -> ['_builtin', 'defaults', 'defaults/darwin', 'system', 'system/darwin', 'site', 'site/darwin', 'user', 'user/darwin', 'command_line']: None
-complete -c spack -n "__fish_spack_using_command bootstrap root" -l scope -r -f -a "_builtin defaults defaults/darwin system system/darwin site site/darwin user user/darwin command_line"
+# ['--scope'] -> ['_builtin', 'defaults', 'system', 'site', 'user', 'command_line']: None
+complete -c spack -n "__fish_spack_using_command bootstrap root" -l scope -r -f -a "_builtin defaults system site user command_line"
 complete -c spack -n "__fish_spack_using_command bootstrap root" -l scope -r -d "configuration scope to read/modify"
 
 # spack bootstrap list
@@ -677,8 +677,8 @@ set -g __fish_spack_optspecs_spack_bootstrap_list h/help scope=
 # ['-h', '--help'] -> ['help']: 0
 complete -c spack -n "__fish_spack_using_command bootstrap list" -s h -l help -f -a "help"
 complete -c spack -n "__fish_spack_using_command bootstrap list" -s h -l help -d "show this help message and exit"
-# ['--scope'] -> ['_builtin', 'defaults', 'defaults/darwin', 'system', 'system/darwin', 'site', 'site/darwin', 'user', 'user/darwin', 'command_line']: None
-complete -c spack -n "__fish_spack_using_command bootstrap list" -l scope -r -f -a "_builtin defaults defaults/darwin system system/darwin site site/darwin user user/darwin command_line"
+# ['--scope'] -> ['_builtin', 'defaults', 'system', 'site', 'user', 'command_line']: None
+complete -c spack -n "__fish_spack_using_command bootstrap list" -l scope -r -f -a "_builtin defaults system site user command_line"
 complete -c spack -n "__fish_spack_using_command bootstrap list" -l scope -r -d "configuration scope to read/modify"
 
 # spack bootstrap add
@@ -690,8 +690,8 @@ complete -c spack -n "__fish_spack_using_command_pos 1 bootstrap add" -f -a "(__
 # ['-h', '--help'] -> ['help']: 0
 complete -c spack -n "__fish_spack_using_command bootstrap add" -s h -l help -f -a "help"
 complete -c spack -n "__fish_spack_using_command bootstrap add" -s h -l help -d "show this help message and exit"
-# ['--scope'] -> ['_builtin', 'defaults', 'defaults/darwin', 'system', 'system/darwin', 'site', 'site/darwin', 'user', 'user/darwin', 'command_line']: None
-complete -c spack -n "__fish_spack_using_command bootstrap add" -l scope -r -f -a "_builtin defaults defaults/darwin system system/darwin site site/darwin user user/darwin command_line"
+# ['--scope'] -> ['_builtin', 'defaults', 'system', 'site', 'user', 'command_line']: None
+complete -c spack -n "__fish_spack_using_command bootstrap add" -l scope -r -f -a "_builtin defaults system site user command_line"
 complete -c spack -n "__fish_spack_using_command bootstrap add" -l scope -r -d "configuration scope to read/modify"
 # ['--trust'] -> ['trust']: 0
 complete -c spack -n "__fish_spack_using_command bootstrap add" -l trust -f -a "trust"
@@ -900,8 +900,8 @@ complete -c spack -n "__fish_spack_using_command buildcache check" -s m -l mirro
 # ['-o', '--output-file'] -> ['output_file']: None
 complete -c spack -n "__fish_spack_using_command buildcache check" -s o -l output-file -r -f -a "output_file"
 complete -c spack -n "__fish_spack_using_command buildcache check" -s o -l output-file -r -d "File where rebuild info should be written"
-# ['--scope'] -> ['_builtin', 'defaults', 'defaults/darwin', 'system', 'system/darwin', 'site', 'site/darwin', 'user', 'user/darwin', 'command_line']: None
-complete -c spack -n "__fish_spack_using_command buildcache check" -l scope -r -f -a "_builtin defaults defaults/darwin system system/darwin site site/darwin user user/darwin command_line"
+# ['--scope'] -> ['_builtin', 'defaults', 'system', 'site', 'user', 'command_line']: None
+complete -c spack -n "__fish_spack_using_command buildcache check" -l scope -r -f -a "_builtin defaults system site user command_line"
 complete -c spack -n "__fish_spack_using_command buildcache check" -l scope -r -d "configuration scope containing mirrors to check"
 # ['-s', '--spec'] -> ['spec']: None
 complete -c spack -n "__fish_spack_using_command buildcache check" -s s -l spec -r -f -a "spec"
@@ -1221,8 +1221,8 @@ set -g __fish_spack_optspecs_spack_compiler_find h/help scope=
 # ['-h', '--help'] -> ['help']: 0
 complete -c spack -n "__fish_spack_using_command compiler find" -s h -l help -f -a "help"
 complete -c spack -n "__fish_spack_using_command compiler find" -s h -l help -d "show this help message and exit"
-# ['--scope'] -> ['_builtin', 'defaults', 'defaults/darwin', 'system', 'system/darwin', 'site', 'site/darwin', 'user', 'user/darwin', 'command_line']: None
-complete -c spack -n "__fish_spack_using_command compiler find" -l scope -r -f -a "_builtin defaults defaults/darwin system system/darwin site site/darwin user user/darwin command_line"
+# ['--scope'] -> ['_builtin', 'defaults', 'system', 'site', 'user', 'command_line']: None
+complete -c spack -n "__fish_spack_using_command compiler find" -l scope -r -f -a "_builtin defaults system site user command_line"
 complete -c spack -n "__fish_spack_using_command compiler find" -l scope -r -d "configuration scope to modify"
 
 # spack compiler add
@@ -1231,8 +1231,8 @@ set -g __fish_spack_optspecs_spack_compiler_add h/help scope=
 # ['-h', '--help'] -> ['help']: 0
 complete -c spack -n "__fish_spack_using_command compiler add" -s h -l help -f -a "help"
 complete -c spack -n "__fish_spack_using_command compiler add" -s h -l help -d "show this help message and exit"
-# ['--scope'] -> ['_builtin', 'defaults', 'defaults/darwin', 'system', 'system/darwin', 'site', 'site/darwin', 'user', 'user/darwin', 'command_line']: None
-complete -c spack -n "__fish_spack_using_command compiler add" -l scope -r -f -a "_builtin defaults defaults/darwin system system/darwin site site/darwin user user/darwin command_line"
+# ['--scope'] -> ['_builtin', 'defaults', 'system', 'site', 'user', 'command_line']: None
+complete -c spack -n "__fish_spack_using_command compiler add" -l scope -r -f -a "_builtin defaults system site user command_line"
 complete -c spack -n "__fish_spack_using_command compiler add" -l scope -r -d "configuration scope to modify"
 
 # spack compiler remove
@@ -1245,8 +1245,8 @@ complete -c spack -n "__fish_spack_using_command compiler remove" -s h -l help -
 # ['-a', '--all'] -> ['all']: 0
 complete -c spack -n "__fish_spack_using_command compiler remove" -s a -l all -f -a "all"
 complete -c spack -n "__fish_spack_using_command compiler remove" -s a -l all -d "remove ALL compilers that match spec"
-# ['--scope'] -> ['_builtin', 'defaults', 'defaults/darwin', 'system', 'system/darwin', 'site', 'site/darwin', 'user', 'user/darwin', 'command_line']: None
-complete -c spack -n "__fish_spack_using_command compiler remove" -l scope -r -f -a "_builtin defaults defaults/darwin system system/darwin site site/darwin user user/darwin command_line"
+# ['--scope'] -> ['_builtin', 'defaults', 'system', 'site', 'user', 'command_line']: None
+complete -c spack -n "__fish_spack_using_command compiler remove" -l scope -r -f -a "_builtin defaults system site user command_line"
 complete -c spack -n "__fish_spack_using_command compiler remove" -l scope -r -d "configuration scope to modify"
 
 # spack compiler rm
@@ -1259,8 +1259,8 @@ complete -c spack -n "__fish_spack_using_command compiler rm" -s h -l help -d "s
 # ['-a', '--all'] -> ['all']: 0
 complete -c spack -n "__fish_spack_using_command compiler rm" -s a -l all -f -a "all"
 complete -c spack -n "__fish_spack_using_command compiler rm" -s a -l all -d "remove ALL compilers that match spec"
-# ['--scope'] -> ['_builtin', 'defaults', 'defaults/darwin', 'system', 'system/darwin', 'site', 'site/darwin', 'user', 'user/darwin', 'command_line']: None
-complete -c spack -n "__fish_spack_using_command compiler rm" -l scope -r -f -a "_builtin defaults defaults/darwin system system/darwin site site/darwin user user/darwin command_line"
+# ['--scope'] -> ['_builtin', 'defaults', 'system', 'site', 'user', 'command_line']: None
+complete -c spack -n "__fish_spack_using_command compiler rm" -l scope -r -f -a "_builtin defaults system site user command_line"
 complete -c spack -n "__fish_spack_using_command compiler rm" -l scope -r -d "configuration scope to modify"
 
 # spack compiler list
@@ -1268,8 +1268,8 @@ set -g __fish_spack_optspecs_spack_compiler_list h/help scope=
 # ['-h', '--help'] -> ['help']: 0
 complete -c spack -n "__fish_spack_using_command compiler list" -s h -l help -f -a "help"
 complete -c spack -n "__fish_spack_using_command compiler list" -s h -l help -d "show this help message and exit"
-# ['--scope'] -> ['_builtin', 'defaults', 'defaults/darwin', 'system', 'system/darwin', 'site', 'site/darwin', 'user', 'user/darwin', 'command_line']: None
-complete -c spack -n "__fish_spack_using_command compiler list" -l scope -r -f -a "_builtin defaults defaults/darwin system system/darwin site site/darwin user user/darwin command_line"
+# ['--scope'] -> ['_builtin', 'defaults', 'system', 'site', 'user', 'command_line']: None
+complete -c spack -n "__fish_spack_using_command compiler list" -l scope -r -f -a "_builtin defaults system site user command_line"
 complete -c spack -n "__fish_spack_using_command compiler list" -l scope -r -d "configuration scope to read from"
 
 # spack compiler info
@@ -1279,8 +1279,8 @@ complete -c spack -n "__fish_spack_using_command_pos 0 compiler info" -f -a "(__
 # ['-h', '--help'] -> ['help']: 0
 complete -c spack -n "__fish_spack_using_command compiler info" -s h -l help -f -a "help"
 complete -c spack -n "__fish_spack_using_command compiler info" -s h -l help -d "show this help message and exit"
-# ['--scope'] -> ['_builtin', 'defaults', 'defaults/darwin', 'system', 'system/darwin', 'site', 'site/darwin', 'user', 'user/darwin', 'command_line']: None
-complete -c spack -n "__fish_spack_using_command compiler info" -l scope -r -f -a "_builtin defaults defaults/darwin system system/darwin site site/darwin user user/darwin command_line"
+# ['--scope'] -> ['_builtin', 'defaults', 'system', 'site', 'user', 'command_line']: None
+complete -c spack -n "__fish_spack_using_command compiler info" -l scope -r -f -a "_builtin defaults system site user command_line"
 complete -c spack -n "__fish_spack_using_command compiler info" -l scope -r -d "configuration scope to read from"
 
 # spack compilers
@@ -1288,8 +1288,8 @@ set -g __fish_spack_optspecs_spack_compilers h/help scope=
 # ['-h', '--help'] -> ['help']: 0
 complete -c spack -n "__fish_spack_using_command compilers" -s h -l help -f -a "help"
 complete -c spack -n "__fish_spack_using_command compilers" -s h -l help -d "show this help message and exit"
-# ['--scope'] -> ['_builtin', 'defaults', 'defaults/darwin', 'system', 'system/darwin', 'site', 'site/darwin', 'user', 'user/darwin', 'command_line']: None
-complete -c spack -n "__fish_spack_using_command compilers" -l scope -r -f -a "_builtin defaults defaults/darwin system system/darwin site site/darwin user user/darwin command_line"
+# ['--scope'] -> ['_builtin', 'defaults', 'system', 'site', 'user', 'command_line']: None
+complete -c spack -n "__fish_spack_using_command compilers" -l scope -r -f -a "_builtin defaults system site user command_line"
 complete -c spack -n "__fish_spack_using_command compilers" -l scope -r -d "configuration scope to read/modify"
 
 # spack concretize
@@ -1334,8 +1334,8 @@ complete -c spack -n "__fish_spack_using_command_pos 0 config" -f -a "revert" -d
 # ['-h', '--help'] -> ['help']: 0
 complete -c spack -n "__fish_spack_using_command config" -s h -l help -f -a "help"
 complete -c spack -n "__fish_spack_using_command config" -s h -l help -d "show this help message and exit"
-# ['--scope'] -> ['_builtin', 'defaults', 'defaults/darwin', 'system', 'system/darwin', 'site', 'site/darwin', 'user', 'user/darwin', 'command_line']: None
-complete -c spack -n "__fish_spack_using_command config" -l scope -r -f -a "_builtin defaults defaults/darwin system system/darwin site site/darwin user user/darwin command_line"
+# ['--scope'] -> ['_builtin', 'defaults', 'system', 'site', 'user', 'command_line']: None
+complete -c spack -n "__fish_spack_using_command config" -l scope -r -f -a "_builtin defaults system site user command_line"
 complete -c spack -n "__fish_spack_using_command config" -l scope -r -d "configuration scope to read/modify"
 
 # spack config get
@@ -1951,8 +1951,8 @@ complete -c spack -n "__fish_spack_using_command external find" -l exclude -r -d
 # ['-p', '--path'] -> ['path']: None
 complete -c spack -n "__fish_spack_using_command external find" -s p -l path -r -f -a "path"
 complete -c spack -n "__fish_spack_using_command external find" -s p -l path -r -d "Alternative search paths for finding externals. May be repeated"
-# ['--scope'] -> ['_builtin', 'defaults', 'defaults/darwin', 'system', 'system/darwin', 'site', 'site/darwin', 'user', 'user/darwin', 'command_line']: None
-complete -c spack -n "__fish_spack_using_command external find" -l scope -r -f -a "_builtin defaults defaults/darwin system system/darwin site site/darwin user user/darwin command_line"
+# ['--scope'] -> ['_builtin', 'defaults', 'system', 'site', 'user', 'command_line']: None
+complete -c spack -n "__fish_spack_using_command external find" -l scope -r -f -a "_builtin defaults system site user command_line"
 complete -c spack -n "__fish_spack_using_command external find" -l scope -r -d "configuration scope to modify"
 # ['--all'] -> ['all']: 0
 complete -c spack -n "__fish_spack_using_command external find" -l all -f -a "all"
@@ -2705,8 +2705,8 @@ complete -c spack -n "__fish_spack_using_command_pos 0 mirror add" -f
 # ['-h', '--help'] -> ['help']: 0
 complete -c spack -n "__fish_spack_using_command mirror add" -s h -l help -f -a "help"
 complete -c spack -n "__fish_spack_using_command mirror add" -s h -l help -d "show this help message and exit"
-# ['--scope'] -> ['_builtin', 'defaults', 'defaults/darwin', 'system', 'system/darwin', 'site', 'site/darwin', 'user', 'user/darwin', 'command_line']: None
-complete -c spack -n "__fish_spack_using_command mirror add" -l scope -r -f -a "_builtin defaults defaults/darwin system system/darwin site site/darwin user user/darwin command_line"
+# ['--scope'] -> ['_builtin', 'defaults', 'system', 'site', 'user', 'command_line']: None
+complete -c spack -n "__fish_spack_using_command mirror add" -l scope -r -f -a "_builtin defaults system site user command_line"
 complete -c spack -n "__fish_spack_using_command mirror add" -l scope -r -d "configuration scope to modify"
 # ['--s3-access-key-id'] -> ['s3_access_key_id']: None
 complete -c spack -n "__fish_spack_using_command mirror add" -l s3-access-key-id -r -f -a "s3_access_key_id"
@@ -2731,8 +2731,8 @@ complete -c spack -n "__fish_spack_using_command_pos 0 mirror remove" -f -a "(__
 # ['-h', '--help'] -> ['help']: 0
 complete -c spack -n "__fish_spack_using_command mirror remove" -s h -l help -f -a "help"
 complete -c spack -n "__fish_spack_using_command mirror remove" -s h -l help -d "show this help message and exit"
-# ['--scope'] -> ['_builtin', 'defaults', 'defaults/darwin', 'system', 'system/darwin', 'site', 'site/darwin', 'user', 'user/darwin', 'command_line']: None
-complete -c spack -n "__fish_spack_using_command mirror remove" -l scope -r -f -a "_builtin defaults defaults/darwin system system/darwin site site/darwin user user/darwin command_line"
+# ['--scope'] -> ['_builtin', 'defaults', 'system', 'site', 'user', 'command_line']: None
+complete -c spack -n "__fish_spack_using_command mirror remove" -l scope -r -f -a "_builtin defaults system site user command_line"
 complete -c spack -n "__fish_spack_using_command mirror remove" -l scope -r -d "configuration scope to modify"
 
 # spack mirror rm
@@ -2742,8 +2742,8 @@ complete -c spack -n "__fish_spack_using_command_pos 0 mirror rm" -f -a "(__fish
 # ['-h', '--help'] -> ['help']: 0
 complete -c spack -n "__fish_spack_using_command mirror rm" -s h -l help -f -a "help"
 complete -c spack -n "__fish_spack_using_command mirror rm" -s h -l help -d "show this help message and exit"
-# ['--scope'] -> ['_builtin', 'defaults', 'defaults/darwin', 'system', 'system/darwin', 'site', 'site/darwin', 'user', 'user/darwin', 'command_line']: None
-complete -c spack -n "__fish_spack_using_command mirror rm" -l scope -r -f -a "_builtin defaults defaults/darwin system system/darwin site site/darwin user user/darwin command_line"
+# ['--scope'] -> ['_builtin', 'defaults', 'system', 'site', 'user', 'command_line']: None
+complete -c spack -n "__fish_spack_using_command mirror rm" -l scope -r -f -a "_builtin defaults system site user command_line"
 complete -c spack -n "__fish_spack_using_command mirror rm" -l scope -r -d "configuration scope to modify"
 
 # spack mirror set-url
@@ -2757,8 +2757,8 @@ complete -c spack -n "__fish_spack_using_command mirror set-url" -s h -l help -d
 # ['--push'] -> ['push']: 0
 complete -c spack -n "__fish_spack_using_command mirror set-url" -l push -f -a "push"
 complete -c spack -n "__fish_spack_using_command mirror set-url" -l push -d "set only the URL used for uploading new packages"
-# ['--scope'] -> ['_builtin', 'defaults', 'defaults/darwin', 'system', 'system/darwin', 'site', 'site/darwin', 'user', 'user/darwin', 'command_line']: None
-complete -c spack -n "__fish_spack_using_command mirror set-url" -l scope -r -f -a "_builtin defaults defaults/darwin system system/darwin site site/darwin user user/darwin command_line"
+# ['--scope'] -> ['_builtin', 'defaults', 'system', 'site', 'user', 'command_line']: None
+complete -c spack -n "__fish_spack_using_command mirror set-url" -l scope -r -f -a "_builtin defaults system site user command_line"
 complete -c spack -n "__fish_spack_using_command mirror set-url" -l scope -r -d "configuration scope to modify"
 # ['--s3-access-key-id'] -> ['s3_access_key_id']: None
 complete -c spack -n "__fish_spack_using_command mirror set-url" -l s3-access-key-id -r -f -a "s3_access_key_id"
@@ -2781,8 +2781,8 @@ set -g __fish_spack_optspecs_spack_mirror_list h/help scope=
 # ['-h', '--help'] -> ['help']: 0
 complete -c spack -n "__fish_spack_using_command mirror list" -s h -l help -f -a "help"
 complete -c spack -n "__fish_spack_using_command mirror list" -s h -l help -d "show this help message and exit"
-# ['--scope'] -> ['_builtin', 'defaults', 'defaults/darwin', 'system', 'system/darwin', 'site', 'site/darwin', 'user', 'user/darwin', 'command_line']: None
-complete -c spack -n "__fish_spack_using_command mirror list" -l scope -r -f -a "_builtin defaults defaults/darwin system system/darwin site site/darwin user user/darwin command_line"
+# ['--scope'] -> ['_builtin', 'defaults', 'system', 'site', 'user', 'command_line']: None
+complete -c spack -n "__fish_spack_using_command mirror list" -l scope -r -f -a "_builtin defaults system site user command_line"
 complete -c spack -n "__fish_spack_using_command mirror list" -l scope -r -d "configuration scope to read from"
 
 # spack module
@@ -3192,8 +3192,8 @@ set -g __fish_spack_optspecs_spack_repo_list h/help scope=
 # ['-h', '--help'] -> ['help']: 0
 complete -c spack -n "__fish_spack_using_command repo list" -s h -l help -f -a "help"
 complete -c spack -n "__fish_spack_using_command repo list" -s h -l help -d "show this help message and exit"
-# ['--scope'] -> ['_builtin', 'defaults', 'defaults/darwin', 'system', 'system/darwin', 'site', 'site/darwin', 'user', 'user/darwin', 'command_line']: None
-complete -c spack -n "__fish_spack_using_command repo list" -l scope -r -f -a "_builtin defaults defaults/darwin system system/darwin site site/darwin user user/darwin command_line"
+# ['--scope'] -> ['_builtin', 'defaults', 'system', 'site', 'user', 'command_line']: None
+complete -c spack -n "__fish_spack_using_command repo list" -l scope -r -f -a "_builtin defaults system site user command_line"
 complete -c spack -n "__fish_spack_using_command repo list" -l scope -r -d "configuration scope to read from"
 
 # spack repo add
@@ -3203,8 +3203,8 @@ complete -c spack -n "__fish_spack_using_command_pos 0 repo add" -f -a "(__fish_
 # ['-h', '--help'] -> ['help']: 0
 complete -c spack -n "__fish_spack_using_command repo add" -s h -l help -f -a "help"
 complete -c spack -n "__fish_spack_using_command repo add" -s h -l help -d "show this help message and exit"
-# ['--scope'] -> ['_builtin', 'defaults', 'defaults/darwin', 'system', 'system/darwin', 'site', 'site/darwin', 'user', 'user/darwin', 'command_line']: None
-complete -c spack -n "__fish_spack_using_command repo add" -l scope -r -f -a "_builtin defaults defaults/darwin system system/darwin site site/darwin user user/darwin command_line"
+# ['--scope'] -> ['_builtin', 'defaults', 'system', 'site', 'user', 'command_line']: None
+complete -c spack -n "__fish_spack_using_command repo add" -l scope -r -f -a "_builtin defaults system site user command_line"
 complete -c spack -n "__fish_spack_using_command repo add" -l scope -r -d "configuration scope to modify"
 
 # spack repo remove
@@ -3214,8 +3214,8 @@ complete -c spack -n "__fish_spack_using_command_pos 0 repo remove" $__fish_spac
 # ['-h', '--help'] -> ['help']: 0
 complete -c spack -n "__fish_spack_using_command repo remove" -s h -l help -f -a "help"
 complete -c spack -n "__fish_spack_using_command repo remove" -s h -l help -d "show this help message and exit"
-# ['--scope'] -> ['_builtin', 'defaults', 'defaults/darwin', 'system', 'system/darwin', 'site', 'site/darwin', 'user', 'user/darwin', 'command_line']: None
-complete -c spack -n "__fish_spack_using_command repo remove" -l scope -r -f -a "_builtin defaults defaults/darwin system system/darwin site site/darwin user user/darwin command_line"
+# ['--scope'] -> ['_builtin', 'defaults', 'system', 'site', 'user', 'command_line']: None
+complete -c spack -n "__fish_spack_using_command repo remove" -l scope -r -f -a "_builtin defaults system site user command_line"
 complete -c spack -n "__fish_spack_using_command repo remove" -l scope -r -d "configuration scope to modify"
 
 # spack repo rm
@@ -3225,8 +3225,8 @@ complete -c spack -n "__fish_spack_using_command_pos 0 repo rm" $__fish_spack_fo
 # ['-h', '--help'] -> ['help']: 0
 complete -c spack -n "__fish_spack_using_command repo rm" -s h -l help -f -a "help"
 complete -c spack -n "__fish_spack_using_command repo rm" -s h -l help -d "show this help message and exit"
-# ['--scope'] -> ['_builtin', 'defaults', 'defaults/darwin', 'system', 'system/darwin', 'site', 'site/darwin', 'user', 'user/darwin', 'command_line']: None
-complete -c spack -n "__fish_spack_using_command repo rm" -l scope -r -f -a "_builtin defaults defaults/darwin system system/darwin site site/darwin user user/darwin command_line"
+# ['--scope'] -> ['_builtin', 'defaults', 'system', 'site', 'user', 'command_line']: None
+complete -c spack -n "__fish_spack_using_command repo rm" -l scope -r -f -a "_builtin defaults system site user command_line"
 complete -c spack -n "__fish_spack_using_command repo rm" -l scope -r -d "configuration scope to modify"
 
 # spack resource
