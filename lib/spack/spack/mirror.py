@@ -168,6 +168,7 @@ class Mirror:
         if not data:
             return False
 
+        # If we only update a URL, there's typically no need to expand things to a dict.
         set_url = data["url"] if len(data) == 1 and "url" in data else None
 
         if direction is None:
@@ -186,12 +187,12 @@ class Mirror:
             # And update the dictionary accordingly.
             return self._update_connection_dict(self._data, data)
 
-        # Otherwise, add push/fetch entry -- might need to update the top-level entry
-        # if it's a trivial URL.
+        # Otherwise, update the fetch / push entry; turn top-level
+        # url string into a dict if necessary.
         if isinstance(self._data, str):
             self._data = {"url": self._data}
 
-        # Create a new fetch/push entry if necessary
+        # Create a new fetch / push entry if necessary
         if direction not in self._data:
             # Keep config minimal if we're just setting the URL.
             if set_url:
