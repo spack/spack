@@ -17,7 +17,9 @@ class PyGluoncv(PythonPackage):
     pypi = "gluoncv/gluoncv-0.6.0.tar.gz"
     git = "https://github.com/dmlc/gluon-cv.git"
 
-    version("0.10.5.post0", sha256="4598b9612e8b459a5a14ebeffedefcdae4a5700302a91f9b99fc82e9b08928a5")
+    version(
+        "0.10.5.post0", sha256="4598b9612e8b459a5a14ebeffedefcdae4a5700302a91f9b99fc82e9b08928a5"
+    )
     version("0.6.0", sha256="313848b939c30e9e4c0040078421c02e32a350b8ebf2a966313fd893d7b3bdf6")
 
     depends_on("py-setuptools", type="build")
