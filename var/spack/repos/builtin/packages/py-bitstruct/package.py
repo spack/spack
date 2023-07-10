@@ -9,7 +9,7 @@ from spack.package import *
 class PyBitstruct(PythonPackage):
     """This module is intended to have a similar interface as the python
     struct module, but working on bits instead of primitive data types
-    (char, int, …)"""
+    (char, int, ...)"""
 
     homepage = "https://github.com/eerimoq/bitstruct"
     pypi = "bitstruct/bitstruct-8.17.0.tar.gz"
