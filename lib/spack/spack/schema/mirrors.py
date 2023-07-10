@@ -12,6 +12,7 @@
 #: Common properties for connection specification
 connection = {
     "url": {"type": "string"},
+    # todo: replace this with named keys "username" / "password" or "id" / "secret"
     "access_pair": {
         "type": "array",
         "items": {"type": ["string", "null"], "minItems": 2, "maxItems": 2},
@@ -22,21 +23,28 @@ connection = {
 }
 
 #: Mirror connection inside pull/push keys
-mirror_conection = {
-    "type": "object",
-    "additionalProperties": False,
-    "required": ["url"],
-    "properties": {**connection},  # type: ignore
+fetch_and_push = {
+    "anyOf": [
+        {"type": "string"},
+        {
+            "type": "object",
+            "additionalProperties": False,
+            "properties": {**connection},  # type: ignore
+        },
+    ]
 }
 
 #: Mirror connection when no pull/push keys are set
-top_level_mirror_connection = {
+mirror_entry = {
     "type": "object",
     "additionalProperties": False,
+    "anyOf": [{"required": ["url"]}, {"required": ["fetch"]}, {"required": ["pull"]}],
     "required": ["url"],
     "properties": {
         "source": {"type": "boolean"},
         "binary": {"type": "boolean"},
+        "fetch": fetch_and_push,
+        "push": fetch_and_push,
         **connection,  # type: ignore
     },
 }
@@ -47,23 +55,7 @@ properties = {
         "type": "object",
         "default": {},
         "additionalProperties": False,
-        "patternProperties": {
-            r"\w[\w-]*": {
-                "anyOf": [
-                    {"type": "string"},
-                    top_level_mirror_connection,
-                    {
-                        "type": "object",
-                        "required": ["fetch", "push"],
-                        "additionalProperties": False,
-                        "properties": {
-                            "fetch": {"anyOf": [{"type": "string"}, mirror_conection]},
-                            "push": {"anyOf": [{"type": "string"}, mirror_conection]},
-                        },
-                    },
-                ]
-            }
-        },
+        "patternProperties": {r"\w[\w-]*": {"anyOf": [{"type": "string"}, mirror_entry]}},
     }
 }
 
