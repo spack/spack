@@ -12,6 +12,7 @@ class Librsvg(AutotoolsPackage):
     homepage = "https://wiki.gnome.org/Projects/LibRsvg"
     url = "https://download.gnome.org/sources/librsvg/2.44/librsvg-2.44.14.tar.xz"
 
+    version("2.56.2", sha256="3ec3c4d8f73e0ba4b9130026969e8371c092b734298d36e2fdb3eb4afcec1200")
     version("2.51.0", sha256="89d32e38445025e1b1d9af3dd9d3aeb9f6fce527aeecbecf38b369b34c80c038")
     version("2.50.2", sha256="6211f271ce4cd44a7318190d36712e9cea384a933d3e3570004edeb210a056d3")
     version("2.50.0", sha256="b3fadba240f09b9c9898ab20cb7311467243e607cf8f928b7c5f842474ee3df4")
@@ -22,9 +23,11 @@ class Librsvg(AutotoolsPackage):
 
     depends_on("gobject-introspection", type="build")
     depends_on("pkgconfig", type="build")
-    # rust minimal version from NEWS file and upper bound because "Unaligned
-    # references to packed fields are a hard error" starting from 1.69
-    depends_on("rust@1.40:1.68", when="@2.50:", type="build")
+    # rust minimal version from NEWS file
+    depends_on("rust@1.65:", when="@2.56.1:", type="build")
+    # upper bound because "Unaligned references to packed fields are a hard
+    # error" starting from 1.69
+    depends_on("rust@1.40:1.68", when="@2.50:2.51", type="build")
     depends_on("rust", when="@2.41:", type="build")
     depends_on("gtk-doc", type="build", when="+doc")
 
