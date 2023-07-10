@@ -72,7 +72,7 @@ arguments to the configure phase, you can use:
 
 .. code-block:: python
 
-   def configure_args(self, spec, prefix):
+   def configure_args(self):
        return ['--no-python-dbus']
 
 

@@ -123,7 +123,7 @@ def mock_git_version_info(git, tmpdir, override_git_repos_cache_path):
        o second commit (v1.0)
        o first commit
 
-    The repo consists of a single file, in which the Version._cmp representation
+    The repo consists of a single file, in which the GitVersion._ref_version representation
     of each commit is expressed as a string.
 
     Important attributes of the repo for test coverage are: multiple branches,
@@ -175,7 +175,7 @@ def mock_git_version_info(git, tmpdir, override_git_repos_cache_path):
 
         # Add two commits and a tag on 1.x branch
         git("checkout", "-b", "1.x")
-        write_file(filename, "[1, 0, '', 1]")
+        write_file(filename, "[1, 0, 'git', 1]")
         commit("first 1.x commit")
         commits.append(latest_commit())
 
@@ -186,7 +186,7 @@ def mock_git_version_info(git, tmpdir, override_git_repos_cache_path):
 
         # Add two commits and a tag on main branch
         git("checkout", main)
-        write_file(filename, "[1, 0, '', 1]")
+        write_file(filename, "[1, 0, 'git', 1]")
         commit("third main commit")
         commits.append(latest_commit())
         write_file(filename, "[2, 0]")
@@ -196,7 +196,7 @@ def mock_git_version_info(git, tmpdir, override_git_repos_cache_path):
 
         # Add two more commits on 1.x branch to ensure we aren't cheating by using time
         git("checkout", "1.x")
-        write_file(filename, "[1, 1, '', 1]")
+        write_file(filename, "[1, 1, 'git', 1]")
         commit("third 1.x commit")
         commits.append(latest_commit())
         write_file(filename, "[1, 2]")
@@ -462,7 +462,7 @@ def check_for_leftover_stage_files(request, mock_stage, ignore_stage_files):
         assert not files_in_stage
 
 
-class MockCache(object):
+class MockCache:
     def store(self, copy_cmd, relative_dest):
         pass
 
@@ -470,7 +470,7 @@ class MockCache(object):
         return MockCacheFetcher()
 
 
-class MockCacheFetcher(object):
+class MockCacheFetcher:
     def fetch(self):
         raise FetchError("Mock cache always fails for tests")
 
@@ -770,7 +770,7 @@ def concretize_scope(mutable_config, tmpdir):
         spack.config.ConfigScope("concretize", str(tmpdir.join("concretize")))
     )
 
-    yield
+    yield str(tmpdir.join("concretize"))
 
     mutable_config.pop_scope()
     spack.repo.path._provider_index = None
@@ -998,7 +998,7 @@ def mock_fetch(mock_archive, monkeypatch):
     monkeypatch.setattr(spack.package_base.PackageBase, "fetcher", mock_fetcher)
 
 
-class MockLayout(object):
+class MockLayout:
     def __init__(self, root):
         self.root = root
 
@@ -1021,7 +1021,7 @@ def gen_mock_layout(tmpdir):
     yield create_layout
 
 
-class MockConfig(object):
+class MockConfig:
     def __init__(self, configuration, writer_key):
         self._configuration = configuration
         self.writer_key = writer_key
@@ -1033,7 +1033,7 @@ class MockConfig(object):
         return self.configuration(module_set_name)[self.writer_key]
 
 
-class ConfigUpdate(object):
+class ConfigUpdate:
     def __init__(self, root_for_conf, writer_mod, writer_key, monkeypatch):
         self.root_for_conf = root_for_conf
         self.writer_mod = writer_mod
@@ -1646,7 +1646,7 @@ repo:
 ##########
 
 
-class MockBundle(object):
+class MockBundle:
     has_code = False
     name = "mock-bundle"
 
@@ -1669,22 +1669,21 @@ def clear_directive_functions():
 
 
 @pytest.fixture
-def mock_executable(tmpdir):
+def mock_executable(tmp_path):
     """Factory to create a mock executable in a temporary directory that
     output a custom string when run.
     """
-    import jinja2
-
     shebang = "#!/bin/sh\n" if sys.platform != "win32" else "@ECHO OFF"
 
     def _factory(name, output, subdir=("bin",)):
-        f = tmpdir.ensure(*subdir, dir=True).join(name)
+        executable_dir = tmp_path.joinpath(*subdir)
+        executable_dir.mkdir(parents=True, exist_ok=True)
+        executable_path = executable_dir / name
         if sys.platform == "win32":
-            f += ".bat"
-        t = jinja2.Template("{{ shebang }}{{ output }}\n")
-        f.write(t.render(shebang=shebang, output=output))
-        f.chmod(0o755)
-        return str(f)
+            executable_path = executable_dir / (name + ".bat")
+        executable_path.write_text(f"{ shebang }{ output }\n")
+        executable_path.chmod(0o755)
+        return executable_path
 
     return _factory
 
@@ -1786,7 +1785,7 @@ def mock_curl_configs(mock_config_data, monkeypatch):
     """
     config_data_dir, config_files = mock_config_data
 
-    class MockCurl(object):
+    class MockCurl:
         def __init__(self):
             self.returncode = None
 
@@ -1921,3 +1920,21 @@ def default_mock_concretization(config, mock_packages, concretized_specs_cache):
         return concretized_specs_cache[key].copy()
 
     return _func
+
+
+@pytest.fixture
+def shell_as(shell):
+    if sys.platform != "win32":
+        yield
+        return
+    if shell not in ("pwsh", "bat"):
+        raise RuntimeError("Shell must be one of supported Windows shells (pwsh|bat)")
+    try:
+        # fetch and store old shell type
+        _shell = os.environ.get("SPACK_SHELL", None)
+        os.environ["SPACK_SHELL"] = shell
+        yield
+    finally:
+        # restore old shell if one was set
+        if _shell:
+            os.environ["SPACK_SHELL"] = _shell

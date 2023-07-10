@@ -3,8 +3,6 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from __future__ import print_function
-
 import os
 import sys
 
@@ -31,6 +29,17 @@ def setup_parser(subparser):
         "namespace",
         help="namespace to identify packages in the repository. " "defaults to the directory name",
         nargs="?",
+    )
+    create_parser.add_argument(
+        "-d",
+        "--subdirectory",
+        action="store",
+        dest="subdir",
+        default=spack.repo.packages_dir_name,
+        help=(
+            "subdirectory to store packages in the repository."
+            " Default 'packages'. Use an empty string for no subdirectory."
+        ),
     )
 
     # List
@@ -70,7 +79,7 @@ def setup_parser(subparser):
 
 def repo_create(args):
     """Create a new package repository."""
-    full_path, namespace = spack.repo.create_repo(args.directory, args.namespace)
+    full_path, namespace = spack.repo.create_repo(args.directory, args.namespace, args.subdir)
     tty.msg("Created repo with namespace '%s'." % namespace)
     tty.msg("To register it with spack, run this command:", "spack repo add %s" % full_path)
 

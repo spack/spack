@@ -28,7 +28,7 @@ class Sed(AutotoolsPackage, GNUMirrorPackage):
             self.gnu_mirror_path = "sed/sed-{0}.tar.bz2".format(version)
         elif version < Version("4.2"):
             self.gnu_mirror_path = "sed/sed-{0}.tar.gz".format(version)
-        return super(Sed, self).url_for_version(version)
+        return super().url_for_version(version)
 
     @classmethod
     def determine_version(cls, exe):

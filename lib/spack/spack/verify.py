@@ -14,6 +14,7 @@ import spack.filesystem_view
 import spack.store
 import spack.util.file_permissions as fp
 import spack.util.spack_json as sjson
+from spack.package_base import spack_times_log
 
 
 def compute_hash(path: str, block_size: int = 1048576) -> str:
@@ -161,6 +162,10 @@ def check_spec_manifest(spec):
             if path == manifest_file:
                 continue
 
+            # Do not check the install times log file.
+            if entry == spack_times_log:
+                continue
+
             data = manifest.pop(path, {})
             results += check_entry(path, data)
 
@@ -172,7 +177,7 @@ def check_spec_manifest(spec):
     return results
 
 
-class VerificationResults(object):
+class VerificationResults:
     def __init__(self):
         self.errors = {}
 

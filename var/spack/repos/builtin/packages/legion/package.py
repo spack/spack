@@ -70,6 +70,9 @@ class Legion(CMakePackage, ROCmPackage):
     depends_on("kokkos@3.3.01:~cuda", when="+kokkos~cuda")
     depends_on("kokkos@3.3.01:~cuda+openmp", when="+kokkos+openmp")
 
+    # https://github.com/spack/spack/issues/37232#issuecomment-1553376552
+    patch("hip-offload-arch.patch", when="@23.03.0 +rocm")
+
     # HIP specific
     variant(
         "hip_hijack",
@@ -278,7 +281,7 @@ class Legion(CMakePackage, ROCmPackage):
     def setup_build_environment(self, build_env):
         spec = self.spec
         if "+rocm" in spec:
-            build_env.set("HIP_PATH", spec["hip"].prefix)
+            build_env.set("HIP_PATH", "{0}/hip".format(spec["hip"].prefix))
 
     def cmake_args(self):
         spec = self.spec

@@ -24,6 +24,7 @@ class PyTorch(PythonPackage, CudaPackage, ROCmPackage):
     import_modules = ["torch", "torch.autograd", "torch.nn", "torch.utils"]
 
     version("master", branch="master", submodules=True)
+    version("2.0.1", tag="v2.0.1", submodules=True)
     version("2.0.0", tag="v2.0.0", submodules=True)
     version("1.13.1", tag="v1.13.1", submodules=True)
     version("1.13.0", tag="v1.13.0", submodules=True)
@@ -386,6 +387,20 @@ class PyTorch(PythonPackage, CudaPackage, ROCmPackage):
         sha256="8e6e9a44e0533ba4303a95a651b1934e5d73632cab08cc7d5a9435e1e64aa424",
         when="@:1",
         working_dir="third_party/gloo",
+    )
+
+    # Some missing includes
+    # See: https://github.com/pytorch/pytorch/pull/100036
+    patch(
+        "https://patch-diff.githubusercontent.com/raw/pytorch/pytorch/pull/100036.patch?full_index=1",
+        sha256="65060b54c31196b26dcff29bbb178fd17d5677e8481a2a06002c0ca4dd37b3d0",
+        when="@2.0.0:2.0.1",
+    )
+    # See: https://github.com/pytorch/pytorch/pull/100049
+    patch(
+        "https://patch-diff.githubusercontent.com/raw/pytorch/pytorch/pull/100049.patch?full_index=1",
+        sha256="673056141c0ea6ff4411f65a26f1a9d7a7c49ad8fe034a01ef0d56ba8a7a9386",
+        when="@2.0.0:2.0.1",
     )
 
     @when("@1.5.0:")

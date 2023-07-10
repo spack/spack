@@ -26,8 +26,6 @@ import types
 import uuid
 from typing import Dict, Union
 
-import ruamel.yaml as yaml
-
 import llnl.util.filesystem as fs
 import llnl.util.lang
 import llnl.util.tty as tty
@@ -44,6 +42,7 @@ import spack.util.file_cache
 import spack.util.git
 import spack.util.naming as nm
 import spack.util.path
+import spack.util.spack_yaml as syaml
 
 #: Package modules are imported as spack.pkg.<repo-namespace>.<pkg-name>
 ROOT_PYTHON_NAMESPACE = "spack.pkg"
@@ -106,19 +105,17 @@ class RepoLoader(_PrependFileLoader):
     #: Spack packages are expected to call `from spack.package import *`
     #: themselves, but we are allowing a deprecation period before breaking
     #: external repos that don't do this yet.
-    _package_prepend = "from __future__ import absolute_import;" "from spack.package import *"
+    _package_prepend = "from spack.package import *"
 
     def __init__(self, fullname, repo, package_name):
         self.repo = repo
         self.package_name = package_name
         self.package_py = repo.filename_for_package_name(package_name)
         self.fullname = fullname
-        super(RepoLoader, self).__init__(
-            self.fullname, self.package_py, prepend=self._package_prepend
-        )
+        super().__init__(self.fullname, self.package_py, prepend=self._package_prepend)
 
 
-class SpackNamespaceLoader(object):
+class SpackNamespaceLoader:
     def create_module(self, spec):
         return SpackNamespace(spec.name)
 
@@ -126,7 +123,7 @@ class SpackNamespaceLoader(object):
         module.__loader__ = self
 
 
-class ReposFinder(object):
+class ReposFinder:
     """MetaPathFinder class that loads a Python module corresponding to a Spack package
 
     Return a loader based on the inspection of the current global repository list.
@@ -327,7 +324,7 @@ class SpackNamespace(types.ModuleType):
     """Allow lazy loading of modules."""
 
     def __init__(self, namespace):
-        super(SpackNamespace, self).__init__(namespace)
+        super().__init__(namespace)
         self.__file__ = "(spack namespace)"
         self.__path__ = []
         self.__name__ = namespace
@@ -543,7 +540,7 @@ class PatchIndexer(Indexer):
         self.index.update_package(pkg_fullname)
 
 
-class RepoIndex(object):
+class RepoIndex:
     """Container class that manages a set of Indexers for a Repo.
 
     This class is responsible for checking packages in a repository for
@@ -642,7 +639,7 @@ class RepoIndex(object):
         return indexer.index
 
 
-class RepoPath(object):
+class RepoPath:
     """A RepoPath is a list of repos that function as one.
 
     It functions exactly like a Repo, but it operates on the combined
@@ -904,7 +901,7 @@ class RepoPath(object):
         return self.exists(pkg_name)
 
 
-class Repo(object):
+class Repo:
     """Class representing a package repository in the filesystem.
 
     Each package repository must have a top-level configuration file
@@ -936,12 +933,6 @@ class Repo(object):
         self.config_file = os.path.join(self.root, repo_config_name)
         check(os.path.isfile(self.config_file), "No %s found in '%s'" % (repo_config_name, root))
 
-        self.packages_path = os.path.join(self.root, packages_dir_name)
-        check(
-            os.path.isdir(self.packages_path),
-            "No directory '%s' found in '%s'" % (packages_dir_name, root),
-        )
-
         # Read configuration and validate namespace
         config = self._read_config()
         check(
@@ -961,6 +952,13 @@ class Repo(object):
 
         # Keep name components around for checking prefixes.
         self._names = self.full_namespace.split(".")
+
+        packages_dir = config.get("subdirectory", packages_dir_name)
+        self.packages_path = os.path.join(self.root, packages_dir)
+        check(
+            os.path.isdir(self.packages_path),
+            "No directory '%s' found in '%s'" % (packages_dir, root),
+        )
 
         # These are internal cache variables.
         self._modules = {}
@@ -1008,7 +1006,7 @@ class Repo(object):
         """Check for a YAML config file in this db's root directory."""
         try:
             with open(self.config_file) as reponame_file:
-                yaml_data = yaml.load(reponame_file)
+                yaml_data = syaml.load(reponame_file)
 
                 if (
                     not yaml_data
@@ -1063,14 +1061,21 @@ class Repo(object):
                 "Repository %s does not contain package %s." % (self.namespace, spec.fullname)
             )
 
-        # Install patch files needed by the package.
+        package_path = self.filename_for_package_name(spec.name)
+        if not os.path.exists(package_path):
+            # Spec has no files (e.g., package, patches) to copy
+            tty.debug(f"{spec.name} does not have a package to dump")
+            return
+
+        # Install patch files needed by the (concrete) package.
         fs.mkdirp(path)
-        for patch in itertools.chain.from_iterable(spec.package.patches.values()):
-            if patch.path:
-                if os.path.exists(patch.path):
-                    fs.install(patch.path, path)
-                else:
-                    tty.warn("Patch file did not exist: %s" % patch.path)
+        if spec.concrete:
+            for patch in itertools.chain.from_iterable(spec.package.patches.values()):
+                if patch.path:
+                    if os.path.exists(patch.path):
+                        fs.install(patch.path, path)
+                    else:
+                        tty.warn("Patch file did not exist: %s" % patch.path)
 
         # Install the package.py file itself.
         fs.install(self.filename_for_package_name(spec.name), path)
@@ -1151,7 +1156,7 @@ class Repo(object):
 
     def package_path(self, name):
         """Get path to package.py file for this repo."""
-        return os.path.join(self.root, packages_dir_name, name, package_file_name)
+        return os.path.join(self.packages_path, name, package_file_name)
 
     def all_package_paths(self):
         for name in self.all_package_names():
@@ -1232,7 +1237,10 @@ class Repo(object):
         try:
             module = importlib.import_module(fullname)
         except ImportError:
-            raise UnknownPackageError(pkg_name)
+            raise UnknownPackageError(fullname)
+        except Exception as e:
+            msg = f"cannot load package '{pkg_name}' from the '{self.namespace}' repository: {e}"
+            raise RepoError(msg) from e
 
         cls = getattr(module, class_name)
         if not inspect.isclass(cls):
@@ -1288,7 +1296,7 @@ class Repo(object):
 RepoType = Union[Repo, RepoPath]
 
 
-def create_repo(root, namespace=None):
+def create_repo(root, namespace=None, subdir=packages_dir_name):
     """Create a new repository in root with the specified namespace.
 
     If the namespace is not provided, use basename of root.
@@ -1319,12 +1327,14 @@ def create_repo(root, namespace=None):
 
     try:
         config_path = os.path.join(root, repo_config_name)
-        packages_path = os.path.join(root, packages_dir_name)
+        packages_path = os.path.join(root, subdir)
 
         fs.mkdirp(packages_path)
         with open(config_path, "w") as config:
             config.write("repo:\n")
-            config.write("  namespace: '%s'\n" % namespace)
+            config.write(f"  namespace: '{namespace}'\n")
+            if subdir != packages_dir_name:
+                config.write(f"  subdirectory: '{subdir}'\n")
 
     except (IOError, OSError) as e:
         # try to clean up.
@@ -1409,7 +1419,7 @@ def use_repositories(*paths_and_repos, **kwargs):
         path = saved
 
 
-class MockRepositoryBuilder(object):
+class MockRepositoryBuilder:
     """Build a mock repository in a directory"""
 
     def __init__(self, root_directory, namespace=None):
@@ -1488,7 +1498,7 @@ class UnknownPackageError(UnknownEntityError):
             else:
                 long_msg = "You may need to run 'spack clean -m'."
 
-        super(UnknownPackageError, self).__init__(msg, long_msg)
+        super().__init__(msg, long_msg)
         self.name = name
 
 
@@ -1500,14 +1510,14 @@ class UnknownNamespaceError(UnknownEntityError):
         if name == "yaml":
             long_msg = "Did you mean to specify a filename with './{}.{}'?"
             long_msg = long_msg.format(namespace, name)
-        super(UnknownNamespaceError, self).__init__(msg, long_msg)
+        super().__init__(msg, long_msg)
 
 
 class FailedConstructorError(RepoError):
     """Raised when a package's class constructor fails."""
 
     def __init__(self, name, exc_type, exc_obj, exc_tb):
-        super(FailedConstructorError, self).__init__(
+        super().__init__(
             "Class constructor failed for package '%s'." % name,
             "\nCaused by:\n"
             + ("%s: %s\n" % (exc_type.__name__, exc_obj))

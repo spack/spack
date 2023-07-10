@@ -124,7 +124,7 @@ class CMakeBuilder(BaseBuilder, cmake.CMakeBuilder):
             self.define_from_variant("ENABLE_TIFF", "tiff"),
             self.define_from_variant("ENABLE_CURL", "curl"),
         ]
-        if self.spec.satisfies("@6:"):
+        if self.spec.satisfies("@6:") and self.pkg.run_tests:
             args.append(self.define("USE_EXTERNAL_GTEST", True))
         return args
 
