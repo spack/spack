@@ -143,6 +143,73 @@ class Mirror:
         """Get the valid, canonicalized fetch URL"""
         return self.get_url("push")
 
+    def _update_connection_dict(self, current_data: dict, new_data: dict):
+        changed = False
+        for key, value in new_data.items():
+            if current_data.get(key) != value:
+                current_data[key] = value
+                changed = True
+        return changed
+
+    def update(self, data: dict, direction: Optional[str]) -> bool:
+        """Modify the mirror with the given data. This takes care
+        of expanding trivial mirror definitions by URL to something more
+        rich with a dict if necessary
+
+        Args:
+            data (dict): The data to update the mirror with.
+            direction (str): The direction to update the mirror in (fetch
+                or push or None for top-level update)
+
+        Returns:
+            bool: True if the mirror was updated, False otherwise."""
+
+        # Modify the top-level entry when no direction is given.
+        if not data:
+            return False
+
+        set_url = data["url"] if len(data) == 1 and "url" in data else None
+
+        if direction is None:
+            # First deal with the case where the current top-level entry is just a string.
+            if isinstance(self._data, str):
+                # Can we replace that string with something new?
+                if set_url:
+                    if self._data != set_url:
+                        self._data = set_url
+                        return True
+                    return False
+
+                # Otherwise promote to a dict
+                self._data = {"url": self._data}
+
+            # And update the dictionary accordingly.
+            return self._update_connection_dict(self._data, data)
+
+        # Otherwise, add push/fetch entry -- might need to update the top-level entry
+        # if it's a trivial URL.
+        if isinstance(self._data, str):
+            self._data = {"url": self._data}
+
+        # Create a new fetch/push entry if necessary
+        if direction not in self._data:
+            self._data[direction] = {}
+
+        entry = self._data[direction]
+
+        # Keep the entry simple if we're just swapping out the URL.
+        if isinstance(entry, str):
+            if set_url:
+                if entry != set_url:
+                    self._data[direction] = set_url
+                    return True
+                return False
+
+            # Otherwise promote to a dict
+            self._data[direction] = {"url": entry}
+
+        return self._update_connection_dict(self._data[direction], data)
+
     def _get_value(self, attribute: str, direction: str):
         """Returns the most specific value for a given attribute (either push/fetch or global)"""
         if direction not in ("fetch", "push"):
