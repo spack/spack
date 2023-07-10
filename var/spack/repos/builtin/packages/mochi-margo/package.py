@@ -14,7 +14,7 @@ class MochiMargo(AutotoolsPackage):
     git = "https://github.com/mochi-hpc/mochi-margo.git"
     url = "https://github.com/mochi-hpc/mochi-margo/archive/v0.9.tar.gz"
 
-    maintainers("carns", "mdorier", "fbudin69500", "chuckatkins")
+    maintainers("carns", "mdorier", "fbudin69500")
 
     version("main", branch="main")
     version("0.14.0", sha256="ff0e3fa786630b63280606243c35f1ea3a25fa2ba6f08bf9065cab9fcc7fa1c7")
