@@ -119,7 +119,7 @@ class Mirror:
         url = fetch if fetch == push else f"fetch: {fetch}. push: {push}"
         source = "s" if self.source else " "
         binary = "b" if self.binary else " "
-        print(f"[{source}{binary}] {self.name: <{max_len}} : {url}")
+        print(f"[{source}{binary}] {self.name: <{max_len}} {url}")
 
     @property
     def name(self):
