@@ -281,7 +281,7 @@ class Legion(CMakePackage, ROCmPackage):
     def setup_build_environment(self, build_env):
         spec = self.spec
         if "+rocm" in spec:
-            build_env.set("HIP_PATH", spec["hip"].prefix)
+            build_env.set("HIP_PATH", "{0}/hip".format(spec["hip"].prefix))
 
     def cmake_args(self):
         spec = self.spec
