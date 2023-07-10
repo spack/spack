@@ -116,10 +116,10 @@ class Mirror:
     def display(self, max_len=0):
         fetch, push = self.fetch_url, self.push_url
         # don't print the same URL twice
-        url = fetch if fetch == push else f"fetch: {fetch}. push: {push}"
+        url = fetch if fetch == push else f"fetch: {fetch} push: {push}"
         source = "s" if self.source else " "
         binary = "b" if self.binary else " "
-        print(f"[{source}{binary}] {self.name: <{max_len}} {url}")
+        print(f"{self.name: <{max_len}} [{source}{binary}] {url}")
 
     @property
     def name(self):
