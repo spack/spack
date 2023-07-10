@@ -64,50 +64,18 @@ class OpenfoamOrg(Package):
     maintainers("kjrstory")
     homepage = "https://www.openfoam.org/"
     baseurl = "https://github.com/OpenFOAM"
-    url = "https://github.com/OpenFOAM/OpenFOAM-4.x/archive/version-4.1.tar.gz"
+    url = "https://github.com/OpenFOAM/OpenFOAM-6/archive/version-6.tar.gz"
     git = "https://github.com/OpenFOAM/OpenFOAM-dev.git"
 
     version("develop", branch="master")
-    version(
-        "10",
-        sha256="59d712ba798ca44b989b6ac50bcb7c534eeccb82bcf961e10ec19fc8d84000cf",
-        url=baseurl + "/OpenFOAM-10/archive/version-10.tar.gz",
-    )
-    version(
-        "9",
-        sha256="0c48fb56e2fbb4dd534112811364d3b2dc12106e670a6486b361e4f864b435ee",
-        url=baseurl + "/OpenFOAM-9/archive/version-9.tar.gz",
-    )
-    version(
-        "8",
-        sha256="94ba11cbaaa12fbb5b356e01758df403ac8832d69da309a5d79f76f42eb008fc",
-        url=baseurl + "/OpenFOAM-8/archive/version-8.tar.gz",
-    )
-    version(
-        "7",
-        sha256="12389cf092dc032372617785822a597aee434a50a62db2a520ab35ba5a7548b5",
-        url=baseurl + "/OpenFOAM-7/archive/version-7.tar.gz",
-    )
-    version(
-        "6",
-        sha256="32a6af4120e691ca2df29c5b9bd7bc7a3e11208947f9bccf6087cfff5492f025",
-        url=baseurl + "/OpenFOAM-6/archive/version-6.tar.gz",
-    )
-    version(
-        "5.0",
-        sha256="9057d6a8bb9fa18802881feba215215699065e0b3c5cdd0c0e84cb29c9916c89",
-        url=baseurl + "/OpenFOAM-5.x/archive/version-5.0.tar.gz",
-    )
-    version(
-        "4.1",
-        sha256="2de18de64e7abdb1b649ad8e9d2d58b77a2b188fb5bcb6f7c2a038282081fd31",
-        url=baseurl + "/OpenFOAM-4.x/archive/version-4.1.tar.gz",
-    )
-    version(
-        "2.4.0",
-        sha256="9529aa7441b64210c400c019dcb2e0410fcfd62a6f62d23b6c5994c4753c4465",
-        url=baseurl + "/OpenFOAM-2.4.x/archive/version-2.4.0.tar.gz",
-    )
+    version("10", sha256="59d712ba798ca44b989b6ac50bcb7c534eeccb82bcf961e10ec19fc8d84000cf")
+    version("9", sha256="0c48fb56e2fbb4dd534112811364d3b2dc12106e670a6486b361e4f864b435ee")
+    version("8", sha256="94ba11cbaaa12fbb5b356e01758df403ac8832d69da309a5d79f76f42eb008fc")
+    version("7", sha256="12389cf092dc032372617785822a597aee434a50a62db2a520ab35ba5a7548b5")
+    version("6", sha256="32a6af4120e691ca2df29c5b9bd7bc7a3e11208947f9bccf6087cfff5492f025")
+    version("5.0", sha256="9057d6a8bb9fa18802881feba215215699065e0b3c5cdd0c0e84cb29c9916c89")
+    version("4.1", sha256="2de18de64e7abdb1b649ad8e9d2d58b77a2b188fb5bcb6f7c2a038282081fd31")
+    version("2.4.0", sha256="9529aa7441b64210c400c019dcb2e0410fcfd62a6f62d23b6c5994c4753c4465")
     version(
         "2.3.1",
         sha256="2bbcf4d5932397c2087a9b6d7eeee6d2b1350c8ea4f455415f05e7cd94d9e5ba",
@@ -172,6 +140,25 @@ class OpenfoamOrg(Package):
     #
 
     # Some user config settings
+
+    def url_for_version(self, version):
+        """If the version number is 5.0 or lower, the returned URL includes
+        the ".x" suffix in the OpenFOAM directory name to reflect
+        the old directory naming convention for these versions.
+
+        """
+        if version == Version("2.3.1"):
+            return "http://downloads.sourceforge.net/foam/OpenFOAM-2.3.1.tgz"
+        elif version <= Version("5.0"):
+            version_prefix = str(version.up_to(-1)) + ".x"
+        else:
+            version_prefix = version
+
+        url = "https://github.com/OpenFOAM/OpenFOAM-{}/archive/version-{}.tar.gz".format(
+            version_prefix, version
+        )
+        return url
+
     @property
     def config(self):
         settings = {
