@@ -114,7 +114,10 @@ class Mirror:
         return self._data
 
     def display(self, max_len=0):
-        print(self)
+        fetch, push = self.fetch_url, self.push_url
+        # don't print the same URL twice
+        url = fetch if fetch == push else f"fetch: {fetch}. push: {push}"
+        print(f"{self.name: <{max_len}} : {url}")
 
     @property
     def name(self):
