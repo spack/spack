@@ -526,7 +526,7 @@ class FishCompletionWriter(ArgparseWriter):
 
         if index is None:
             return "complete -c %s -n '__fish_spack_using_command %s'" % (s[0], subcmd)
-        elif nargs == "...":
+        elif nargs == argparse.REMAINDER:
             head = "complete -c %s -n '__fish_spack_using_command_pos_remainder %d %s'"
         else:
             head = "complete -c %s -n '__fish_spack_using_command_pos %d %s'"
