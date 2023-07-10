@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -15,17 +15,17 @@ set -l fish_version (string split '.' $FISH_VERSION)
 if test $fish_version[1] -lt 3
     if test $fish_version[1] -eq 3
         and test $fish_version[2] -lt 2
-        echo "Fish version is older than 3.2.0. Some completion features may not work"
+        echo 'Fish version is older than 3.2.0. Some completion features may not work'
         set -g __fish_spack_force_files
     else
-        echo "This script requires fish version 3.0 or later"
+        echo 'This script requires fish version 3.0 or later'
         exit 1
     end
 else
     set -g __fish_spack_force_files -F
 end
 
-# The following global variables are used as cache of `__fish_spack_argparse`
+# The following global variables are used as a cache of `__fish_spack_argparse`
 
 # Cached command line
 set -g __fish_spack_argparse_cache_line
@@ -36,23 +36,22 @@ set -g __fish_spack_argparse_argv
 # Return value
 set -g __fish_spack_argparse_return
 
-# Spack command generates a optspec variable $__fish_spack_optspecs_<command>
-# We find if command exists, and echo the optspec variable name.
-function __fish_spack_get_optspecs -d "Get optspecs of spack command"
+# Spack command generates an optspec variable $__fish_spack_optspecs_<command>.
+# We check if this command exists, and echo the optspec variable name.
+function __fish_spack_get_optspecs -d 'Get optspecs of spack command'
     # Convert arguments to replace ' ' and '-' by '_'
     set -l cmd_var (string replace -ra -- '[ -]' '_' $argv | string join '_')
     # Set optspec variable name
     set -l optspecs_var __fish_spack_optspecs_$cmd_var
     # Query if variable $$optspecs_var exists
     set -q $optspecs_var; or return 1
-    # If it exists, echo all optspecs line by line
-    # String join return 1 if no join performed,
-    # so we return 0 in such case
+    # If it exists, echo all optspecs line by line.
+    # String join returns 1 if no join was performed, so we return 0 in such case.
     string join \n $$optspecs_var; or return 0
 end
 
-# Parse arguments of command line, save results to global variables,
-# and all found flags to __flsh_spack_flag_<flag>.
+# Parse command-line arguments, save results to global variables,
+# and add found flags to __fish_spack_flag_<flag>.
 # Returns 1 if help flag is found.
 function __fish_spack_argparse
     # Figure out if the current invocation already has a command.
@@ -64,7 +63,7 @@ function __fish_spack_argparse
         return $__fish_spack_argparse_return
     end
 
-    # Clear all found flags in last run
+    # Clear all flags found in last run
     set -g | string replace -rf -- '^(__fish_spack_flag_\w+)(.*?)$' 'set -ge $1' | source
 
     # Set default return value to 0, indicating success
@@ -85,17 +84,15 @@ function __fish_spack_argparse
         # If command has no arguments, continue
         set -q optspecs[1]; or continue
 
-        # Parse arguments. argparse set variable _flag_<flag> if flag is found
-        # we find all these variables and
-        # set them to global variable __fish_spack_flag_<flag>
+        # Parse arguments. Set variable _flag_<flag> if flag is found.
+        # We find all these variables and set them to the global variable __fish_spack_flag_<flag>.
         argparse -i -s $optspecs -- $args 2>/dev/null; or break
         set -l | string replace -rf -- '^(_flag_.*)$' 'set -g __fish_spack$1' | source
 
         # Set args to not parsed arguments
         set args $argv
 
-        # If command has help flag, we don't need to
-        # parse more so short circuit
+        # If command has help flag, we don't need to parse more so short circuit
         if set -q _flag_help
             set -g __fish_spack_argparse_return 1
             break
@@ -127,9 +124,7 @@ function __fish_spack_using_command_pos
     test (count $__fish_spack_argparse_argv) = $argv[1]
 end
 
-# Spack commands
-#
-# Everything below here is auto-generated.
+# Helper functions for subcommands
 
 function __fish_spack_bootstrap_names
     if set -q __fish_spack_flag_scope
@@ -196,7 +191,7 @@ function __fish_spack_installed_compilers
 end
 
 function __fish_spack_installed_packages
-    spack find --no-groups --format "{name}" | uniq
+    spack find --no-groups --format '{name}' | uniq
 end
 
 function __fish_spack_installed_specs
@@ -204,7 +199,7 @@ function __fish_spack_installed_specs
     __fish_spack_installed_specs_id
     and return
 
-    spack find --no-groups --format "{name}@{version}"
+    spack find --no-groups --format '{name}@{version}'
 end
 
 function __fish_spack_installed_specs_id
@@ -265,9 +260,9 @@ function __fish_spack_specs
     # Currently we can only match '@' after a package name
     set -l package
 
-    # Match ^ followig package name
+    # Match ^ following package name
     if string match -rq -- '^(?<pre>.*?\^)[\w\.+~-]*$' $token
-        # Package name is the nearest, assuming first character is always a letter or dight
+        # Package name is the nearest, assuming first character is always a letter or digit
         set packages (string match -ar -- '^[\w-]+' $__fish_spack_argparse_argv $token)
         set package $packages[-1]
 
@@ -303,7 +298,7 @@ function __fish_spack_specs
 end
 
 function __fish_spack_specs_or_id
-    # Try match local hash first
+    # Try to match local hash first
     __fish_spack_installed_specs_id
     and return
 
@@ -337,4 +332,9 @@ function __fish_spack_yamls
     end
 end
 
+# Reset existing completions
 complete -c spack --erase
+
+# Spack commands
+#
+# Everything below here is auto-generated.
