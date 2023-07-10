@@ -519,7 +519,7 @@ complete -c spack -n '__fish_spack_using_command audit configs' -s h -l help -d 
 
 # spack audit packages-https
 set -g __fish_spack_optspecs_spack_audit_packages_https h/help all
-complete -c spack -n '__fish_spack_using_command_pos 0 audit packages-https' -f -a '(__fish_spack_packages)'
+complete -c spack -n '__fish_spack_using_command_pos_remainder 0 audit packages-https' -f -a '(__fish_spack_packages)'
 complete -c spack -n '__fish_spack_using_command audit packages-https' -s h -l help -f -a help
 complete -c spack -n '__fish_spack_using_command audit packages-https' -s h -l help -d 'show this help message and exit'
 complete -c spack -n '__fish_spack_using_command audit packages-https' -l all -f -a check_all
@@ -527,7 +527,7 @@ complete -c spack -n '__fish_spack_using_command audit packages-https' -l all -d
 
 # spack audit packages
 set -g __fish_spack_optspecs_spack_audit_packages h/help
-complete -c spack -n '__fish_spack_using_command_pos 0 audit packages' -f -a '(__fish_spack_packages)'
+complete -c spack -n '__fish_spack_using_command_pos_remainder 0 audit packages' -f -a '(__fish_spack_packages)'
 complete -c spack -n '__fish_spack_using_command audit packages' -s h -l help -f -a help
 complete -c spack -n '__fish_spack_using_command audit packages' -s h -l help -d 'show this help message and exit'
 
@@ -1424,7 +1424,7 @@ complete -c spack -n '__fish_spack_using_command env create' -l with-view -r -d 
 
 # spack env remove
 set -g __fish_spack_optspecs_spack_env_remove h/help y/yes-to-all
-complete -c spack -n '__fish_spack_using_command_pos 0 env remove' -f -a '(__fish_spack_environments)'
+complete -c spack -n '__fish_spack_using_command_pos_remainder 0 env remove' -f -a '(__fish_spack_environments)'
 complete -c spack -n '__fish_spack_using_command env remove' -s h -l help -f -a help
 complete -c spack -n '__fish_spack_using_command env remove' -s h -l help -d 'show this help message and exit'
 complete -c spack -n '__fish_spack_using_command env remove' -s y -l yes-to-all -f -a yes_to_all
@@ -1432,7 +1432,7 @@ complete -c spack -n '__fish_spack_using_command env remove' -s y -l yes-to-all 
 
 # spack env rm
 set -g __fish_spack_optspecs_spack_env_rm h/help y/yes-to-all
-complete -c spack -n '__fish_spack_using_command_pos 0 env rm' -f -a '(__fish_spack_environments)'
+complete -c spack -n '__fish_spack_using_command_pos_remainder 0 env rm' -f -a '(__fish_spack_environments)'
 complete -c spack -n '__fish_spack_using_command env rm' -s h -l help -f -a help
 complete -c spack -n '__fish_spack_using_command env rm' -s h -l help -d 'show this help message and exit'
 complete -c spack -n '__fish_spack_using_command env rm' -s y -l yes-to-all -f -a yes_to_all
@@ -1678,7 +1678,7 @@ complete -c spack -n '__fish_spack_using_command gpg trust' -s h -l help -d 'sho
 
 # spack gpg untrust
 set -g __fish_spack_optspecs_spack_gpg_untrust h/help signing
-complete -c spack -n '__fish_spack_using_command_pos 0 gpg untrust' -f -a '(__fish_spack_gpg_keys)'
+complete -c spack -n '__fish_spack_using_command_pos_remainder 0 gpg untrust' -f -a '(__fish_spack_gpg_keys)'
 complete -c spack -n '__fish_spack_using_command gpg untrust' -s h -l help -f -a help
 complete -c spack -n '__fish_spack_using_command gpg untrust' -s h -l help -d 'show this help message and exit'
 complete -c spack -n '__fish_spack_using_command gpg untrust' -l signing -f -a signing
@@ -1727,7 +1727,7 @@ complete -c spack -n '__fish_spack_using_command gpg init' -l from -r -f -a impo
 
 # spack gpg export
 set -g __fish_spack_optspecs_spack_gpg_export h/help secret
-complete -c spack -n '__fish_spack_using_command_pos 1 gpg export' -f -a '(__fish_spack_gpg_keys)'
+complete -c spack -n '__fish_spack_using_command_pos_remainder 1 gpg export' -f -a '(__fish_spack_gpg_keys)'
 complete -c spack -n '__fish_spack_using_command gpg export' -s h -l help -f -a help
 complete -c spack -n '__fish_spack_using_command gpg export' -s h -l help -d 'show this help message and exit'
 complete -c spack -n '__fish_spack_using_command gpg export' -l secret -f -a secret
@@ -1735,7 +1735,7 @@ complete -c spack -n '__fish_spack_using_command gpg export' -l secret -d 'expor
 
 # spack gpg publish
 set -g __fish_spack_optspecs_spack_gpg_publish h/help d/directory= m/mirror-name= mirror-url= rebuild-index
-complete -c spack -n '__fish_spack_using_command_pos 0 gpg publish' -f -a '(__fish_spack_gpg_keys)'
+complete -c spack -n '__fish_spack_using_command_pos_remainder 0 gpg publish' -f -a '(__fish_spack_gpg_keys)'
 complete -c spack -n '__fish_spack_using_command gpg publish' -s h -l help -f -a help
 complete -c spack -n '__fish_spack_using_command gpg publish' -s h -l help -d 'show this help message and exit'
 complete -c spack -n '__fish_spack_using_command gpg publish' -s d -l directory -r -f -a directory
@@ -2296,7 +2296,7 @@ complete -c spack -n '__fish_spack_using_command pkg' -s h -l help -d 'show this
 
 # spack pkg add
 set -g __fish_spack_optspecs_spack_pkg_add h/help
-complete -c spack -n '__fish_spack_using_command_pos 0 pkg add' -f -a '(__fish_spack_pkg_packages)'
+complete -c spack -n '__fish_spack_using_command_pos_remainder 0 pkg add' -f -a '(__fish_spack_pkg_packages)'
 complete -c spack -n '__fish_spack_using_command pkg add' -s h -l help -f -a help
 complete -c spack -n '__fish_spack_using_command pkg add' -s h -l help -d 'show this help message and exit'
 
@@ -2358,7 +2358,7 @@ complete -c spack -n '__fish_spack_using_command pkg hash' -s h -l help -d 'show
 
 # spack providers
 set -g __fish_spack_optspecs_spack_providers h/help
-complete -c spack -n '__fish_spack_using_command_pos 0 providers' -f -a '(__fish_spack_providers)'
+complete -c spack -n '__fish_spack_using_command_pos_remainder 0 providers' -f -a '(__fish_spack_providers)'
 complete -c spack -n '__fish_spack_using_command providers' -s h -l help -f -a help
 complete -c spack -n '__fish_spack_using_command providers' -s h -l help -d 'show this help message and exit'
 
@@ -2600,7 +2600,7 @@ complete -c spack -n '__fish_spack_using_command style' -s s -l skip -r -d 'spec
 
 # spack tags
 set -g __fish_spack_optspecs_spack_tags h/help i/installed a/all
-complete -c spack -n '__fish_spack_using_command_pos 0 tags' -f -a '(__fish_spack_tags)'
+complete -c spack -n '__fish_spack_using_command_pos_remainder 0 tags' -f -a '(__fish_spack_tags)'
 complete -c spack -n '__fish_spack_using_command tags' -s h -l help -f -a help
 complete -c spack -n '__fish_spack_using_command tags' -s h -l help -d 'show this help message and exit'
 complete -c spack -n '__fish_spack_using_command tags' -s i -l installed -f -a installed
@@ -2654,7 +2654,7 @@ complete -c spack -n '__fish_spack_using_command test run' -l dirty -d 'preserve
 
 # spack test list
 set -g __fish_spack_optspecs_spack_test_list h/help a/all
-complete -c spack -n '__fish_spack_using_command_pos 0 test list' -f -a '(__fish_spack_tags)'
+complete -c spack -n '__fish_spack_using_command_pos_remainder 0 test list' -f -a '(__fish_spack_tags)'
 complete -c spack -n '__fish_spack_using_command test list' -s h -l help -f -a help
 complete -c spack -n '__fish_spack_using_command test list' -s h -l help -d 'show this help message and exit'
 complete -c spack -n '__fish_spack_using_command test list' -s a -l all -f -a list_all
@@ -2885,7 +2885,7 @@ complete -c spack -n '__fish_spack_using_command view' -s d -l dependencies -r -
 # spack view symlink
 set -g __fish_spack_optspecs_spack_view_symlink h/help projection-file= i/ignore-conflicts
 complete -c spack -n '__fish_spack_using_command_pos 0 view symlink' -f -a '(__fish_complete_directories)'
-complete -c spack -n '__fish_spack_using_command_pos 1 view symlink' -f -k -a '(__fish_spack_specs)'
+complete -c spack -n '__fish_spack_using_command_pos_remainder 1 view symlink' -f -k -a '(__fish_spack_specs)'
 complete -c spack -n '__fish_spack_using_command view symlink' -s h -l help -f -a help
 complete -c spack -n '__fish_spack_using_command view symlink' -s h -l help -d 'show this help message and exit'
 complete -c spack -n '__fish_spack_using_command view symlink' -l projection-file -r -f -a projection_file
@@ -2895,7 +2895,7 @@ complete -c spack -n '__fish_spack_using_command view symlink' -s i -l ignore-co
 # spack view add
 set -g __fish_spack_optspecs_spack_view_add h/help projection-file= i/ignore-conflicts
 complete -c spack -n '__fish_spack_using_command_pos 0 view add' -f -a '(__fish_complete_directories)'
-complete -c spack -n '__fish_spack_using_command_pos 1 view add' -f -k -a '(__fish_spack_specs)'
+complete -c spack -n '__fish_spack_using_command_pos_remainder 1 view add' -f -k -a '(__fish_spack_specs)'
 complete -c spack -n '__fish_spack_using_command view add' -s h -l help -f -a help
 complete -c spack -n '__fish_spack_using_command view add' -s h -l help -d 'show this help message and exit'
 complete -c spack -n '__fish_spack_using_command view add' -l projection-file -r -f -a projection_file
@@ -2905,7 +2905,7 @@ complete -c spack -n '__fish_spack_using_command view add' -s i -l ignore-confli
 # spack view soft
 set -g __fish_spack_optspecs_spack_view_soft h/help projection-file= i/ignore-conflicts
 complete -c spack -n '__fish_spack_using_command_pos 0 view soft' -f -a '(__fish_complete_directories)'
-complete -c spack -n '__fish_spack_using_command_pos 1 view soft' -f -k -a '(__fish_spack_specs)'
+complete -c spack -n '__fish_spack_using_command_pos_remainder 1 view soft' -f -k -a '(__fish_spack_specs)'
 complete -c spack -n '__fish_spack_using_command view soft' -s h -l help -f -a help
 complete -c spack -n '__fish_spack_using_command view soft' -s h -l help -d 'show this help message and exit'
 complete -c spack -n '__fish_spack_using_command view soft' -l projection-file -r -f -a projection_file
@@ -2915,7 +2915,7 @@ complete -c spack -n '__fish_spack_using_command view soft' -s i -l ignore-confl
 # spack view hardlink
 set -g __fish_spack_optspecs_spack_view_hardlink h/help projection-file= i/ignore-conflicts
 complete -c spack -n '__fish_spack_using_command_pos 0 view hardlink' -f -a '(__fish_complete_directories)'
-complete -c spack -n '__fish_spack_using_command_pos 1 view hardlink' -f -k -a '(__fish_spack_specs)'
+complete -c spack -n '__fish_spack_using_command_pos_remainder 1 view hardlink' -f -k -a '(__fish_spack_specs)'
 complete -c spack -n '__fish_spack_using_command view hardlink' -s h -l help -f -a help
 complete -c spack -n '__fish_spack_using_command view hardlink' -s h -l help -d 'show this help message and exit'
 complete -c spack -n '__fish_spack_using_command view hardlink' -l projection-file -r -f -a projection_file
@@ -2925,7 +2925,7 @@ complete -c spack -n '__fish_spack_using_command view hardlink' -s i -l ignore-c
 # spack view hard
 set -g __fish_spack_optspecs_spack_view_hard h/help projection-file= i/ignore-conflicts
 complete -c spack -n '__fish_spack_using_command_pos 0 view hard' -f -a '(__fish_complete_directories)'
-complete -c spack -n '__fish_spack_using_command_pos 1 view hard' -f -k -a '(__fish_spack_specs)'
+complete -c spack -n '__fish_spack_using_command_pos_remainder 1 view hard' -f -k -a '(__fish_spack_specs)'
 complete -c spack -n '__fish_spack_using_command view hard' -s h -l help -f -a help
 complete -c spack -n '__fish_spack_using_command view hard' -s h -l help -d 'show this help message and exit'
 complete -c spack -n '__fish_spack_using_command view hard' -l projection-file -r -f -a projection_file
@@ -2935,7 +2935,7 @@ complete -c spack -n '__fish_spack_using_command view hard' -s i -l ignore-confl
 # spack view copy
 set -g __fish_spack_optspecs_spack_view_copy h/help projection-file= i/ignore-conflicts
 complete -c spack -n '__fish_spack_using_command_pos 0 view copy' -f -a '(__fish_complete_directories)'
-complete -c spack -n '__fish_spack_using_command_pos 1 view copy' -f -k -a '(__fish_spack_specs)'
+complete -c spack -n '__fish_spack_using_command_pos_remainder 1 view copy' -f -k -a '(__fish_spack_specs)'
 complete -c spack -n '__fish_spack_using_command view copy' -s h -l help -f -a help
 complete -c spack -n '__fish_spack_using_command view copy' -s h -l help -d 'show this help message and exit'
 complete -c spack -n '__fish_spack_using_command view copy' -l projection-file -r -f -a projection_file
@@ -2945,7 +2945,7 @@ complete -c spack -n '__fish_spack_using_command view copy' -s i -l ignore-confl
 # spack view relocate
 set -g __fish_spack_optspecs_spack_view_relocate h/help projection-file= i/ignore-conflicts
 complete -c spack -n '__fish_spack_using_command_pos 0 view relocate' -f -a '(__fish_complete_directories)'
-complete -c spack -n '__fish_spack_using_command_pos 1 view relocate' -f -k -a '(__fish_spack_specs)'
+complete -c spack -n '__fish_spack_using_command_pos_remainder 1 view relocate' -f -k -a '(__fish_spack_specs)'
 complete -c spack -n '__fish_spack_using_command view relocate' -s h -l help -f -a help
 complete -c spack -n '__fish_spack_using_command view relocate' -s h -l help -d 'show this help message and exit'
 complete -c spack -n '__fish_spack_using_command view relocate' -l projection-file -r -f -a projection_file
@@ -2955,7 +2955,7 @@ complete -c spack -n '__fish_spack_using_command view relocate' -s i -l ignore-c
 # spack view remove
 set -g __fish_spack_optspecs_spack_view_remove h/help no-remove-dependents a/all
 complete -c spack -n '__fish_spack_using_command_pos 0 view remove' -f -a '(__fish_complete_directories)'
-complete -c spack -n '__fish_spack_using_command_pos 1 view remove' -f -k -a '(__fish_spack_specs)'
+complete -c spack -n '__fish_spack_using_command_pos_remainder 1 view remove' -f -k -a '(__fish_spack_specs)'
 complete -c spack -n '__fish_spack_using_command view remove' -s h -l help -f -a help
 complete -c spack -n '__fish_spack_using_command view remove' -s h -l help -d 'show this help message and exit'
 complete -c spack -n '__fish_spack_using_command view remove' -l no-remove-dependents -f -a no_remove_dependents
@@ -2966,7 +2966,7 @@ complete -c spack -n '__fish_spack_using_command view remove' -s a -l all -d 'ac
 # spack view rm
 set -g __fish_spack_optspecs_spack_view_rm h/help no-remove-dependents a/all
 complete -c spack -n '__fish_spack_using_command_pos 0 view rm' -f -a '(__fish_complete_directories)'
-complete -c spack -n '__fish_spack_using_command_pos 1 view rm' -f -k -a '(__fish_spack_specs)'
+complete -c spack -n '__fish_spack_using_command_pos_remainder 1 view rm' -f -k -a '(__fish_spack_specs)'
 complete -c spack -n '__fish_spack_using_command view rm' -s h -l help -f -a help
 complete -c spack -n '__fish_spack_using_command view rm' -s h -l help -d 'show this help message and exit'
 complete -c spack -n '__fish_spack_using_command view rm' -l no-remove-dependents -f -a no_remove_dependents
@@ -2977,20 +2977,20 @@ complete -c spack -n '__fish_spack_using_command view rm' -s a -l all -d 'act on
 # spack view statlink
 set -g __fish_spack_optspecs_spack_view_statlink h/help
 complete -c spack -n '__fish_spack_using_command_pos 0 view statlink' -f -a '(__fish_complete_directories)'
-complete -c spack -n '__fish_spack_using_command_pos 1 view statlink' -f -k -a '(__fish_spack_specs)'
+complete -c spack -n '__fish_spack_using_command_pos_remainder 1 view statlink' -f -k -a '(__fish_spack_specs)'
 complete -c spack -n '__fish_spack_using_command view statlink' -s h -l help -f -a help
 complete -c spack -n '__fish_spack_using_command view statlink' -s h -l help -d 'show this help message and exit'
 
 # spack view status
 set -g __fish_spack_optspecs_spack_view_status h/help
 complete -c spack -n '__fish_spack_using_command_pos 0 view status' -f -a '(__fish_complete_directories)'
-complete -c spack -n '__fish_spack_using_command_pos 1 view status' -f -k -a '(__fish_spack_specs)'
+complete -c spack -n '__fish_spack_using_command_pos_remainder 1 view status' -f -k -a '(__fish_spack_specs)'
 complete -c spack -n '__fish_spack_using_command view status' -s h -l help -f -a help
 complete -c spack -n '__fish_spack_using_command view status' -s h -l help -d 'show this help message and exit'
 
 # spack view check
 set -g __fish_spack_optspecs_spack_view_check h/help
 complete -c spack -n '__fish_spack_using_command_pos 0 view check' -f -a '(__fish_complete_directories)'
-complete -c spack -n '__fish_spack_using_command_pos 1 view check' -f -k -a '(__fish_spack_specs)'
+complete -c spack -n '__fish_spack_using_command_pos_remainder 1 view check' -f -k -a '(__fish_spack_specs)'
 complete -c spack -n '__fish_spack_using_command view check' -s h -l help -f -a help
 complete -c spack -n '__fish_spack_using_command view check' -s h -l help -d 'show this help message and exit'
