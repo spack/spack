@@ -52,7 +52,7 @@ class Openssh(AutotoolsPackage):
         "gssapi", default=True, description="Enable authentication via Kerberos through GSSAPI"
     )
 
-    depends_on("krb5", when="+gssapi")
+    depends_on("krb5+shared", when="+gssapi")
     depends_on("openssl@:1.0", when="@:7.7p1")
     depends_on("openssl")
     depends_on("libedit")

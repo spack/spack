@@ -12,11 +12,11 @@ import spack.error
 class NoPlatformError(spack.error.SpackError):
     def __init__(self):
         msg = "Could not determine a platform for this machine"
-        super(NoPlatformError, self).__init__(msg)
+        super().__init__(msg)
 
 
 @llnl.util.lang.lazy_lexicographic_ordering
-class Platform(object):
+class Platform:
     """Platform is an abstract class extended by subclasses.
 
     To add a new type of platform (such as cray_xe), create a subclass and set all the

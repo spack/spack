@@ -6,6 +6,7 @@
 import re
 
 from spack.package import *
+from spack.util.environment import is_system_path
 
 
 class Subversion(AutotoolsPackage):
@@ -21,6 +22,7 @@ class Subversion(AutotoolsPackage):
 
     tags = ["build-tools"]
 
+    version("1.14.2", sha256="fd826afad03db7a580722839927dc664f3e93398fe88b66905732c8530971353")
     version("1.14.1", sha256="dee2796abaa1f5351e6cc2a60b1917beb8238af548b20d3e1ec22760ab2f0cad")
     version("1.14.0", sha256="ef3d1147535e41874c304fb5b9ea32745fbf5d7faecf2ce21d4115b567e937d0")
     version("1.13.0", sha256="daad440c03b8a86fcca804ea82217bb1902cfcae1b7d28c624143c58dcb96931")
@@ -36,7 +38,6 @@ class Subversion(AutotoolsPackage):
     variant("perl", default=False, description="Build with Perl bindings")
     variant("apxs", default=True, description="Build with APXS")
     variant("nls", default=True, description="Enable Native Language Support")
-    variant("pic", default=False, description="Enable position-independent code")
 
     depends_on("apr")
     depends_on("apr-util")
@@ -103,21 +104,16 @@ class Subversion(AutotoolsPackage):
             args.append("APXS=no")
 
         if "+nls" in spec:
-            ldflags = [spec["gettext"].libs.search_flags]
-            # Using .libs.link_flags is the canonical way to add these arguments,
-            # but since libintl is much smaller than the rest and also the only
-            # necessary one, we specify it by hand here.
-            libs = ["-lintl"]
-            if spec["gettext"].satisfies("~shared"):
-                ldflags.append(spec["iconv"].libs.search_flags)
-                libs.append(spec["iconv"].libs.link_flags)
-            args.append("LDFLAGS=%s" % " ".join(ldflags))
-            args.append("LIBS=%s" % " ".join(libs))
             args.append("--enable-nls")
+            if "intl" in spec["gettext"].libs.names:
+                # Using .libs.link_flags is the canonical way to add these arguments,
+                # but since libintl is much smaller than the rest and also the only
+                # necessary one, we would specify it by hand here
+                args.append("LIBS=-lintl")
+                if not is_system_path(spec["gettext"].prefix):
+                    args.append("LDFLAGS={0}".format(spec["gettext"].libs.search_flags))
         else:
             args.append("--disable-nls")
-
-        args.extend(self.with_or_without("pic"))
 
         return args
 

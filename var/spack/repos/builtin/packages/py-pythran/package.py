@@ -34,7 +34,8 @@ class PyPythran(PythonPackage):
 
     depends_on("py-setuptools", type="build")
     depends_on("py-ply@3.4:", type=("build", "run"))
-    depends_on("py-gast@0.5", when="@0.9.12:", type=("build", "run"))
+    # upper bound due to https://github.com/scipy/scipy/issues/18390
+    depends_on("py-gast@0.5:0.5.3", when="@0.9.12:", type=("build", "run"))
     depends_on("py-gast@0.4", when="@0.9.7:0.9.11", type=("build", "run"))
     depends_on("py-gast@0.3.3:0.3", when="@0.9.6", type=("build", "run"))
     depends_on("py-gast@0.3:", when="@0.9.4:0.9.5", type=("build", "run"))

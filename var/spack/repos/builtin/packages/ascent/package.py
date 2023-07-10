@@ -52,7 +52,11 @@ class Ascent(CMakePackage, CudaPackage):
 
     version("develop", branch="develop", submodules=True)
 
-    version("0.9.0", tag="v0.9.0", submodules=True, preferred=True)
+    version("0.9.2", tag="v0.9.2", submodules=True, preferred=True)
+
+    version("0.9.1", tag="v0.9.1", submodules=True)
+
+    version("0.9.0", tag="v0.9.0", submodules=True)
 
     version("0.8.0", tag="v0.8.0", submodules=True)
 
@@ -88,6 +92,7 @@ class Ascent(CMakePackage, CudaPackage):
     variant("dray", default=False, description="Build with Devil Ray support")
     variant("adios2", default=False, description="Build Adios2 filter support")
     variant("fides", default=False, description="Build Fides filter support")
+    variant("occa", default=False, description="Build with OCCA support")
 
     # caliper
     variant("caliper", default=False, description="Build Caliper support")
@@ -114,6 +119,9 @@ class Ascent(CMakePackage, CudaPackage):
     # patch for finding Conduit python more reliably
     # https://github.com/Alpine-DAV/ascent/pull/935
     patch("ascent-find-conduit-python-pr935.patch", when="@0.8.0")
+    # patch for finding RAJA more reliably
+    # https://github.com/Alpine-DAV/ascent/pull/1123
+    patch("ascent-find-raja-pr1123.patch", when="@0.9.0")
 
     ##########################################################################
     # package dependencies
@@ -168,18 +176,18 @@ class Ascent(CMakePackage, CudaPackage):
     #######################
     # VTK-m
     #######################
-
-    depends_on("vtk-m@1.9:", when="@0.9.0:")
+    depends_on("vtk-m@2.0:", when="@0.9.2: +vtkh")
+    depends_on("vtk-m@1.9:1.9", when="@0.9.0: +vtkh")
 
     depends_on("vtk-m~tbb", when="@0.9.0: +vtkh")
-    depends_on("vtk-m+openmp", when="@0.9.0: +vtkh+openmp")
-    depends_on("vtk-m~openmp", when="@0.9.0: +vtkh~openmp")
     depends_on("vtk-m+openmp", when="@0.9.0: +vtkh+openmp")
     depends_on("vtk-m~openmp", when="@0.9.0: +vtkh~openmp")
     depends_on("vtk-m~cuda", when="@0.9.0: +vtkh~cuda")
     depends_on("vtk-m+cuda", when="@0.9.0: +vtkh+cuda")
     depends_on("vtk-m+fpic", when="@0.8.0: +vtkh")
     depends_on("vtk-m~shared+fpic", when="@0.8.0: +vtkh~shared")
+    # Ascent defaults to C++11
+    depends_on("kokkos std=11", when="+vtkh ^vtk-m +kokkos")
 
     #######################
     # VTK-h
@@ -187,7 +195,7 @@ class Ascent(CMakePackage, CudaPackage):
     # Ascent 0.9.0 includes VTK-h, prior to 0.9.0
     # VTK-h was developed externally
     depends_on("vtk-h@:0.7", when="@:0.7 +vtkh")
-    depends_on("vtk-h@0.8.1:", when="@0.8: +vtkh")
+    depends_on("vtk-h@0.8.1:", when="@0.8:0.8 +vtkh")
     # propagate relevent variants to vtk-h
     depends_on("vtk-h+openmp", when="@:0.8.0 +vtkh+openmp")
     depends_on("vtk-h~openmp", when="@:0.8.0 +vtkh~openmp")
@@ -207,6 +215,9 @@ class Ascent(CMakePackage, CudaPackage):
     depends_on("mfem~mpi", when="+mfem~mpi")
     depends_on("mfem+shared", when="+mfem+shared")
     depends_on("mfem~shared", when="+mfem~shared")
+
+    # occa
+    depends_on("occa", when="+occa")
 
     # fides
     depends_on("fides", when="+fides")
@@ -255,6 +266,9 @@ class Ascent(CMakePackage, CudaPackage):
     ###########
     conflicts(
         "+shared", when="@:0.7 +cuda", msg="Ascent needs to be built with ~shared for CUDA builds."
+    )
+    conflicts(
+        "~fides", when="@0.9: +adios2", msg="Ascent >= 0.9 assumes FIDES when building ADIOS2"
     )
 
     def setup_build_environment(self, env):
@@ -606,6 +620,15 @@ class Ascent(CMakePackage, CudaPackage):
             cfg.write(cmake_cache_entry("MFEM_DIR", spec["mfem"].prefix))
         else:
             cfg.write("# mfem not built by spack \n")
+
+        #######################
+        # OCCA
+        #######################
+        if "+occa" in spec:
+            cfg.write("# occa from spack \n")
+            cfg.write(cmake_cache_entry("OCCA_DIR", spec["occa"].prefix))
+        else:
+            cfg.write("# occa not built by spack \n")
 
         #######################
         # Devil Ray

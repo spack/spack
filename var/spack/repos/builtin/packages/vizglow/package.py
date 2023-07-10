@@ -24,7 +24,7 @@ class Vizglow(Package):
 
     version(
         "2.2alpha20",
-        "2bef890c66f3a44aaf96f7c96788c89e",
+        md5="2bef890c66f3a44aaf96f7c96788c89e",
         expand=False,
         url="file://{0}/VizGlow_v2.2alpha20-Linux-x86_64-R09December2016-Install".format(
             os.getcwd()
@@ -32,7 +32,7 @@ class Vizglow(Package):
     )
     version(
         "2.2alpha17",
-        "1de268564363e0ee86f9ffff1c3b82e1",
+        md5="1de268564363e0ee86f9ffff1c3b82e1",
         expand=False,
         url="file://{0}/VizGlow_v2.2alpha17-R21November2016-Linux-x86_64-Install".format(
             os.getcwd()
@@ -40,7 +40,7 @@ class Vizglow(Package):
     )
     version(
         "2.2alpha15",
-        "be2b5044f30f2b2c3bbe87a0037bf228",
+        md5="be2b5044f30f2b2c3bbe87a0037bf228",
         expand=False,
         url="file://{0}/VizGlow_v2.2alpha15-Linux-x86_64-R31October2016-Install".format(
             os.getcwd()

@@ -36,10 +36,7 @@ import os
 import re
 import sys
 from contextlib import contextmanager
-from typing import Dict, List, Optional
-
-import ruamel.yaml as yaml
-from ruamel.yaml.error import MarkedYAMLError
+from typing import Dict, List, Optional, Union
 
 import llnl.util.lang
 import llnl.util.tty as tty
@@ -84,7 +81,7 @@ section_schemas = {
 # Same as above, but including keys for environments
 # this allows us to unify config reading between configs and environments
 all_schemas = copy.deepcopy(section_schemas)
-all_schemas.update(dict((key, spack.schema.env.schema) for key in spack.schema.env.keys))
+all_schemas.update({spack.schema.env.TOP_LEVEL_KEY: spack.schema.env.schema})
 
 #: Path to the default configuration
 configuration_defaults_path = ("defaults", os.path.join(spack.paths.etc_path, "defaults"))
@@ -114,15 +111,7 @@ scopes_metavar = "{defaults,system,site,user}[/PLATFORM] or env:ENVIRONMENT"
 overrides_base_name = "overrides-"
 
 
-def first_existing(dictionary, keys):
-    """Get the value of the first key in keys that is in the dictionary."""
-    try:
-        return next(k for k in keys if k in dictionary)
-    except StopIteration:
-        raise KeyError("None of %s is in dict!" % str(keys))
-
-
-class ConfigScope(object):
+class ConfigScope:
     """This class represents a configuration scope.
 
     A scope is one directory containing named configuration files.
@@ -162,8 +151,8 @@ class ConfigScope(object):
             mkdirp(self.path)
             with open(filename, "w") as f:
                 syaml.dump_config(data, stream=f, default_flow_style=False)
-        except (yaml.YAMLError, IOError) as e:
-            raise ConfigFileError("Error writing to config file: '%s'" % str(e))
+        except (syaml.SpackYAMLError, IOError) as e:
+            raise ConfigFileError(f"cannot write to '{filename}'") from e
 
     def clear(self):
         """Empty cached config information."""
@@ -193,7 +182,7 @@ class SingleFileScope(ConfigScope):
                        config:
                          install_tree: $spack/opt/spack
         """
-        super(SingleFileScope, self).__init__(name, path)
+        super().__init__(name, path)
         self._raw_data = None
         self.schema = schema
         self.yaml_path = yaml_path or []
@@ -292,8 +281,8 @@ class SingleFileScope(ConfigScope):
                 syaml.dump_config(data_to_write, stream=f, default_flow_style=False)
             rename(tmp, self.path)
 
-        except (yaml.YAMLError, IOError) as e:
-            raise ConfigFileError("Error writing to config file: '%s'" % str(e))
+        except (syaml.SpackYAMLError, IOError) as e:
+            raise ConfigFileError(f"cannot write to config file {str(e)}") from e
 
     def __repr__(self):
         return "<SingleFileScope: %s: %s>" % (self.name, self.path)
@@ -321,7 +310,7 @@ class InternalConfigScope(ConfigScope):
     """
 
     def __init__(self, name, data=None):
-        super(InternalConfigScope, self).__init__(name, None)
+        super().__init__(name, None)
         self.sections = syaml.syaml_dict()
 
         if data:
@@ -393,7 +382,7 @@ def _config_mutator(method):
     return _method
 
 
-class Configuration(object):
+class Configuration:
     """A full Spack configuration, from a hierarchy of config files.
 
     This class makes it easy to add a new scope on top of an existing one.
@@ -543,16 +532,14 @@ class Configuration(object):
         scope = self._validate_scope(scope)  # get ConfigScope object
 
         # manually preserve comments
-        need_comment_copy = section in scope.sections and scope.sections[section] is not None
+        need_comment_copy = section in scope.sections and scope.sections[section]
         if need_comment_copy:
-            comments = getattr(
-                scope.sections[section][section], yaml.comments.Comment.attrib, None
-            )
+            comments = syaml.extract_comments(scope.sections[section][section])
 
         # read only the requested section's data.
         scope.sections[section] = syaml.syaml_dict({section: update_data})
         if need_comment_copy and comments:
-            setattr(scope.sections[section][section], yaml.comments.Comment.attrib, comments)
+            syaml.set_comments(scope.sections[section][section], data_comments=comments)
 
         scope._write_section(section)
 
@@ -705,8 +692,8 @@ class Configuration(object):
             data = syaml.syaml_dict()
             data[section] = self.get_config(section)
             syaml.dump_config(data, stream=sys.stdout, default_flow_style=False, blame=blame)
-        except (yaml.YAMLError, IOError):
-            raise ConfigError("Error reading configuration: %s" % section)
+        except (syaml.SpackYAMLError, IOError) as e:
+            raise ConfigError(f"cannot read '{section}' configuration") from e
 
 
 @contextmanager
@@ -838,17 +825,15 @@ def _config():
 
 
 #: This is the singleton configuration instance for Spack.
-config = llnl.util.lang.Singleton(_config)
+config: Union[Configuration, llnl.util.lang.Singleton] = llnl.util.lang.Singleton(_config)
 
 
 def add_from_file(filename, scope=None):
     """Add updates to a config from a filename"""
-    import spack.environment as ev
-
-    # Get file as config dict
+    # Extract internal attributes, if we are dealing with an environment
     data = read_config_file(filename)
-    if any(k in data for k in spack.schema.env.keys):
-        data = ev.config_dict(data)
+    if spack.schema.env.TOP_LEVEL_KEY in data:
+        data = data[spack.schema.env.TOP_LEVEL_KEY]
 
     # update all sections from config dict
     # We have to iterate on keys to keep overrides from the file
@@ -960,19 +945,9 @@ def validate(data, schema, filename=None):
     """
     import jsonschema
 
-    # validate a copy to avoid adding defaults
+    # Validate a copy to avoid adding defaults
     # This allows us to round-trip data without adding to it.
-    test_data = copy.deepcopy(data)
-
-    if isinstance(test_data, yaml.comments.CommentedMap):
-        # HACK to fully copy ruamel CommentedMap that doesn't provide copy
-        # method. Especially necessary for environments
-        setattr(
-            test_data,
-            yaml.comments.Comment.attrib,
-            getattr(data, yaml.comments.Comment.attrib, yaml.comments.Comment()),
-        )
-
+    test_data = syaml.deepcopy(data)
     try:
         spack.schema.Validator(schema).validate(test_data)
     except jsonschema.ValidationError as e:
@@ -1020,21 +995,13 @@ def read_config_file(filename, schema=None):
         return data
 
     except StopIteration:
-        raise ConfigFileError("Config file is empty or is not a valid YAML dict: %s" % filename)
+        raise ConfigFileError(f"Config file is empty or is not a valid YAML dict: {filename}")
 
-    except MarkedYAMLError as e:
-        msg = "Error parsing yaml"
-        mark = e.context_mark if e.context_mark else e.problem_mark
-        if mark:
-            line, column = mark.line, mark.column
-            msg += ": near %s, %s, %s" % (mark.name, str(line), str(column))
-        else:
-            msg += ": %s" % (filename)
-        msg += ": %s" % (e.problem)
-        raise ConfigFileError(msg)
+    except syaml.SpackYAMLError as e:
+        raise ConfigFileError(str(e)) from e
 
     except IOError as e:
-        raise ConfigFileError("Error reading configuration file %s: %s" % (filename, str(e)))
+        raise ConfigFileError(f"Error reading configuration file {filename}: {str(e)}") from e
 
 
 def _override(string):
@@ -1090,8 +1057,8 @@ def _mark_internal(data, name):
         d = syaml.syaml_type(data)
 
     if syaml.markable(d):
-        d._start_mark = yaml.Mark(name, None, None, None, None, None)
-        d._end_mark = yaml.Mark(name, None, None, None, None, None)
+        d._start_mark = syaml.name_mark(name)
+        d._end_mark = syaml.name_mark(name)
 
     return d
 
@@ -1376,17 +1343,11 @@ def use_configuration(*scopes_or_paths):
     configuration = _config_from(scopes_or_paths)
     config.clear_caches(), configuration.clear_caches()
 
-    # Save and clear the current compiler cache
-    saved_compiler_cache = spack.compilers._cache_config_file
-    spack.compilers._cache_config_file = []
-
     saved_config, config = config, configuration
 
     try:
         yield configuration
     finally:
-        # Restore previous config files
-        spack.compilers._cache_config_file = saved_compiler_cache
         config = saved_config
 
 
@@ -1534,7 +1495,7 @@ class ConfigFormatError(ConfigError):
             location += ":%d" % line
 
         message = "%s: %s" % (location, validation_error.message)
-        super(ConfigError, self).__init__(message)
+        super().__init__(message)
 
     def _get_mark(self, validation_error, data):
         """Get the file/line mark fo a validation error from a Spack YAML file."""

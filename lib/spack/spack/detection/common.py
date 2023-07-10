@@ -112,10 +112,15 @@ def path_to_dict(search_paths):
     # Reverse order of search directories so that a lib in the first
     # entry overrides later entries
     for search_path in reversed(search_paths):
-        for lib in os.listdir(search_path):
-            lib_path = os.path.join(search_path, lib)
-            if llnl.util.filesystem.is_readable_file(lib_path):
-                path_to_lib[lib_path] = lib
+        try:
+            for lib in os.listdir(search_path):
+                lib_path = os.path.join(search_path, lib)
+                if llnl.util.filesystem.is_readable_file(lib_path):
+                    path_to_lib[lib_path] = lib
+        except OSError as e:
+            msg = f"cannot scan '{search_path}' for external software: {str(e)}"
+            llnl.util.tty.debug(msg)
+
     return path_to_lib
 
 
@@ -218,11 +223,13 @@ def update_configuration(detected_packages, scope=None, buildable=True):
 
 
 def _windows_drive():
-    """Return Windows drive string"""
-    return os.environ["HOMEDRIVE"]
+    """Return Windows drive string extracted from PROGRAMFILES
+    env var, which is garunteed to be defined for all logins"""
+    drive = re.match(r"([a-zA-Z]:)", os.environ["PROGRAMFILES"]).group(1)
+    return drive
 
 
-class WindowsCompilerExternalPaths(object):
+class WindowsCompilerExternalPaths:
     @staticmethod
     def find_windows_compiler_root_paths():
         """Helper for Windows compiler installation root discovery
@@ -258,7 +265,7 @@ class WindowsCompilerExternalPaths(object):
         )
 
 
-class WindowsKitExternalPaths(object):
+class WindowsKitExternalPaths:
     if sys.platform == "win32":
         plat_major_ver = str(winOs.windows_version()[0])
 

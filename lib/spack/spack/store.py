@@ -20,6 +20,7 @@ debugging easier.
 import contextlib
 import os
 import re
+from typing import Union
 
 import llnl.util.lang
 import llnl.util.tty as tty
@@ -125,7 +126,7 @@ def parse_install_tree(config_dict):
     return (root, unpadded_root, projections)
 
 
-class Store(object):
+class Store:
     """A store is a path full of installed Spack packages.
 
     Stores consist of packages installed according to a
@@ -196,7 +197,7 @@ def _store():
 
 
 #: Singleton store instance
-store = llnl.util.lang.Singleton(_store)
+store: Union[Store, llnl.util.lang.Singleton] = llnl.util.lang.Singleton(_store)
 
 
 def _store_root():

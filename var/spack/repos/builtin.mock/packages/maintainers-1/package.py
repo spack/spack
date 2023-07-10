@@ -14,4 +14,4 @@ class Maintainers1(Package):
 
     maintainers("user1", "user2")
 
-    version("1.0", "0123456789abcdef0123456789abcdef")
+    version("1.0", md5="0123456789abcdef0123456789abcdef")

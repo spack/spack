@@ -78,7 +78,7 @@ def test_mirror_skip_unstable(tmpdir_factory, mock_packages, config, source_for_
     )
 
 
-class MockMirrorArgs(object):
+class MockMirrorArgs:
     def __init__(
         self,
         specs=None,
@@ -235,7 +235,7 @@ def test_mirror_destroy(
 
     # Put a binary package in a buildcache
     install("--no-cache", spec_name)
-    buildcache("create", "-u", "-a", "-f", "-d", mirror_dir.strpath, spec_name)
+    buildcache("push", "-u", "-a", "-f", mirror_dir.strpath, spec_name)
 
     contents = os.listdir(mirror_dir.strpath)
     assert "build_cache" in contents
@@ -245,7 +245,7 @@ def test_mirror_destroy(
 
     assert not os.path.exists(mirror_dir.strpath)
 
-    buildcache("create", "-u", "-a", "-f", "-d", mirror_dir.strpath, spec_name)
+    buildcache("push", "-u", "-a", "-f", mirror_dir.strpath, spec_name)
 
     contents = os.listdir(mirror_dir.strpath)
     assert "build_cache" in contents
@@ -260,7 +260,7 @@ def test_mirror_destroy(
 
 
 @pytest.mark.usefixtures("mock_packages")
-class TestMirrorCreate(object):
+class TestMirrorCreate:
     @pytest.mark.regression("31736", "31985")
     def test_all_specs_with_all_versions_dont_concretize(self):
         args = MockMirrorArgs(exclude_file=None, exclude_specs=None)

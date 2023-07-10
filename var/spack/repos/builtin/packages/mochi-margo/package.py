@@ -14,9 +14,10 @@ class MochiMargo(AutotoolsPackage):
     git = "https://github.com/mochi-hpc/mochi-margo.git"
     url = "https://github.com/mochi-hpc/mochi-margo/archive/v0.9.tar.gz"
 
-    maintainers("carns", "mdorier", "fbudin69500", "chuckatkins")
+    maintainers("carns", "mdorier", "fbudin69500")
 
     version("main", branch="main")
+    version("0.14.0", sha256="ff0e3fa786630b63280606243c35f1ea3a25fa2ba6f08bf9065cab9fcc7fa1c7")
     version("0.13.1", sha256="cff1decb94089cd0f9c0930b02092838679827b09ce4a2f3a359d59caee28782")
     version("0.13", sha256="9a5a4aa81ceb10e010fbad6c7bb8d39d082fe6e61ed33b2b2d2b056917f401d8")
     version("0.12.1", sha256="ff9d0f8722aff17737cd63f27758314b2ed78e518cd45d1fb9f0e3b7ccbcef50")
@@ -64,6 +65,10 @@ class MochiMargo(AutotoolsPackage):
     # "breadcrumb" support not available in mercury-1.0
     depends_on("mercury@1.0.0:", type=("build", "link", "run"), when="@:0.5.1")
     depends_on("mercury@2.0.0:", type=("build", "link", "run"), when="@0.5.2:")
+
+    # Fix pthread detection
+    # https://github.com/mochi-hpc/mochi-margo/pull/177
+    patch("mochi-margo-pthreads.patch", when="@0.9:0.9.7")
 
     def autoreconf(self, spec, prefix):
         sh = which("sh")
