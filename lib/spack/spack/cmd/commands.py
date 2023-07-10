@@ -507,12 +507,15 @@ class FishCompletionWriter(ArgparseWriter):
         return "set -g %s %s\n" % (optspec_var, args)
 
     @staticmethod
-    def complete_head(prog: str, positional: Optional[int] = None) -> str:
+    def complete_head(
+        prog: str, index: Optional[int] = None, nargs: Optional[Union[int, str]] = None
+    ) -> str:
         """Return the head of the completion command.
 
         Args:
             prog: Program name.
-            positionals: Optional positional argument.
+            index: Index of positional argument.
+            nargs: Number of arguments.
 
         Returns:
             Head of the completion command.
@@ -521,11 +524,13 @@ class FishCompletionWriter(ArgparseWriter):
         s = prog.split(None, 1)
         subcmd = s[1] if len(s) == 2 else ""
 
-        if positional is None:
+        if index is None:
             return "complete -c %s -n '__fish_spack_using_command %s'" % (s[0], subcmd)
+        elif nargs == "...":
+            head = "complete -c %s -n '__fish_spack_using_command_pos_remainder %d %s'"
         else:
-            ret = "complete -c %s -n '__fish_spack_using_command_pos %d %s'"
-            return ret % (s[0], positional, subcmd)
+            head = "complete -c %s -n '__fish_spack_using_command_pos %d %s'"
+        return head % (s[0], index, subcmd)
 
     def complete(
         self,
@@ -589,7 +594,7 @@ class FishCompletionWriter(ArgparseWriter):
                         valid_choices.append(choice)
                 choices = valid_choices
 
-            head = self.complete_head(prog, idx if nargs != "..." else None)
+            head = self.complete_head(prog, idx, nargs)
 
             if choices is not None:
                 # If there are choices, we provide a completion for all possible values.

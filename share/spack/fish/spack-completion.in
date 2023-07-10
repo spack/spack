@@ -121,7 +121,14 @@ function __fish_spack_using_command_pos
     __fish_spack_using_command $argv[2..-1]
     or return
 
-    test (count $__fish_spack_argparse_argv) = $argv[1]
+    test (count $__fish_spack_argparse_argv) -eq $argv[1]
+end
+
+function __fish_spack_using_command_pos_remainder
+    __fish_spack_using_command $argv[2..-1]
+    or return
+
+    test (count $__fish_spack_argparse_argv) -ge $argv[1]
 end
 
 # Helper functions for subcommands
