@@ -358,3 +358,8 @@ def test_update_connection_params(direction):
             "endpoint_url": "https://example.com",
         },
     }
+
+    assert m.get_access_pair(direction) == ["username", "password"]
+    assert m.get_access_token(direction) == "token"
+    assert m.get_profile(direction) == "profile"
+    assert m.get_endpoint_url(direction) == "https://example.com"
