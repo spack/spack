@@ -237,7 +237,7 @@ def test_update_completion_arg(shell, tmpdir, monkeypatch):
     with open(real_args[shell]["update"]) as old:
         old_file = old.read()
         with open(mock_args[shell]["update"], "w") as mock:
-            mock.write(old_file.replace("--update-completion", ""))
+            mock.write(old_file.replace("update-completion", ""))
 
     monkeypatch.setattr(spack.cmd.commands, "update_completion_args", mock_args)
 
@@ -247,9 +247,9 @@ def test_update_completion_arg(shell, tmpdir, monkeypatch):
         local_commands("--update-completion", "-a")
 
     # ensure arg is restored
-    assert "--update-completion" not in mock_outfile.read()
+    assert "update-completion" not in mock_outfile.read()
     local_commands("--update-completion")
-    assert "--update-completion" in mock_outfile.read()
+    assert "update-completion" in mock_outfile.read()
 
 
 # Note: this test is never expected to be supported on Windows
