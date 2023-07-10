@@ -21,6 +21,8 @@ class PyMinkowskiengine(PythonPackage, CudaPackage):
     depends_on("py-pybind11", type="link")
     # in newer pip versions --install-option does not exist
     depends_on("py-pip@:23.0", type="build")
+    # According to the documentation other BLAS should be possible too, but
+    # they didn't work, see https://github.com/spack/spack/pull/38742
     depends_on("openblas")
 
     depends_on("py-numpy", type=("build", "run"))
