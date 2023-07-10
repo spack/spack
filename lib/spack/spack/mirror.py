@@ -151,7 +151,7 @@ class Mirror:
                 changed = True
         return changed
 
-    def update(self, data: dict, direction: Optional[str]) -> bool:
+    def update(self, data: dict, direction: Optional[str] = None) -> bool:
         """Modify the mirror with the given data. This takes care
         of expanding trivial mirror definitions by URL to something more
         rich with a dict if necessary
@@ -193,6 +193,10 @@ class Mirror:
 
         # Create a new fetch/push entry if necessary
         if direction not in self._data:
+            # Keep config minimal if we're just setting the URL.
+            if set_url:
+                self._data[direction] = set_url
+                return True
             self._data[direction] = {}
 
         entry = self._data[direction]

@@ -296,3 +296,65 @@ def test_get_all_versions(specs, expected_specs):
     output_list = [str(x) for x in output_list]
     # Compare sets since order is not important
     assert set(output_list) == set(expected_specs)
+
+
+def test_update_1():
+    # No change
+    m = spack.mirror.Mirror("https://example.com")
+    assert not m.update({"url": "https://example.com"})
+    assert m.to_dict() == "https://example.com"
+
+
+def test_update_2():
+    # Change URL, shouldn't expand to {"url": ...} dict.
+    m = spack.mirror.Mirror("https://example.com")
+    assert m.update({"url": "https://example.org"})
+    assert m.to_dict() == "https://example.org"
+    assert m.fetch_url == "https://example.org"
+    assert m.push_url == "https://example.org"
+
+
+def test_update_3():
+    # Change fetch url, ensure minimal config
+    m = spack.mirror.Mirror("https://example.com")
+    assert m.update({"url": "https://example.org"}, "fetch")
+    assert m.to_dict() == {"url": "https://example.com", "fetch": "https://example.org"}
+    assert m.fetch_url == "https://example.org"
+    assert m.push_url == "https://example.com"
+
+
+def test_update_4():
+    # Change push url, ensure minimal config
+    m = spack.mirror.Mirror("https://example.com")
+    assert m.update({"url": "https://example.org"}, "push")
+    assert m.to_dict() == {"url": "https://example.com", "push": "https://example.org"}
+    assert m.push_url == "https://example.org"
+    assert m.fetch_url == "https://example.com"
+
+
+@pytest.mark.parametrize("direction", ["fetch", "push"])
+def test_update_connection_params(direction):
+    """Test whether new connection params expand the mirror config to a dict."""
+    m = spack.mirror.Mirror("https://example.com")
+
+    assert m.update(
+        {
+            "url": "http://example.org",
+            "access_pair": ["username", "password"],
+            "access_token": "token",
+            "profile": "profile",
+            "endpoint_url": "https://example.com",
+        },
+        direction,
+    )
+
+    assert m.to_dict() == {
+        "url": "https://example.com",
+        direction: {
+            "url": "http://example.org",
+            "access_pair": ["username", "password"],
+            "access_token": "token",
+            "profile": "profile",
+            "endpoint_url": "https://example.com",
+        },
+    }
