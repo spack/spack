@@ -1346,7 +1346,7 @@ _spack_mirror_set_url() {
 _spack_mirror_set() {
     if $list_options
     then
-        SPACK_COMPREPLY="-h --help --push --fetch --url --scope --s3-access-key-id --s3-access-key-secret --s3-access-token --s3-profile --s3-endpoint-url"
+        SPACK_COMPREPLY="-h --help --push --fetch --binary --no-binary --source --no-source --url --scope --s3-access-key-id --s3-access-key-secret --s3-access-token --s3-profile --s3-endpoint-url"
     else
         _mirrors
     fi

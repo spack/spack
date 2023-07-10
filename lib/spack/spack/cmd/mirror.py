@@ -145,6 +145,20 @@ def setup_parser(subparser):
     set_parser_push_or_fetch.add_argument(
         "--fetch", action="store_true", help="modify just the fetch connection details"
     )
+    set_parser_binary = set_parser.add_mutually_exclusive_group(required=False)
+    set_parser_binary.add_argument(
+        "--binary", action="store_true", help="define the mirror as a binary mirror"
+    )
+    set_parser_binary.add_argument(
+        "--no-binary", action="store_true", help="disable the mirror for binaries"
+    )
+    set_parser_source = set_parser.add_mutually_exclusive_group(required=False)
+    set_parser_source.add_argument(
+        "--source", action="store_true", help="define the mirror as a source mirror"
+    )
+    set_parser_source.add_argument(
+        "--no-source", action="store_true", help="disable the mirror for sources"
+    )
     set_parser.add_argument("--url", help="url of mirror directory from 'spack mirror create'")
     set_parser.add_argument(
         "--scope",
@@ -214,6 +228,16 @@ def _configure_mirror(args):
         changes["profile"] = args.s3_profile
     if args.s3_endpoint_url:
         changes["endpoint_url"] = args.s3_endpoint_url
+
+    # argparse cannot distinguish between --binary and --no-binary when same dest :(
+    if getattr(args, "binary"):
+        changes["binary"] = True
+    if getattr(args, "no_binary"):
+        changes["binary"] = False
+    if getattr(args, "source"):
+        changes["source"] = True
+    if getattr(args, "no_source"):
+        changes["source"] = False
 
     changed = entry.update(changes, direction)
 

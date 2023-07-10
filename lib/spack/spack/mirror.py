@@ -143,11 +143,14 @@ class Mirror:
         """Get the valid, canonicalized fetch URL"""
         return self.get_url("push")
 
-    def _update_connection_dict(self, current_data: dict, new_data: dict):
+    def _update_connection_dict(self, current_data: dict, new_data: dict, top_level: bool):
+        keys = ("url", "access_pair", "access_token", "profile", "endpoint_url")
+        if top_level:
+            keys += ("binary", "source")
         changed = False
-        for key, value in new_data.items():
-            if current_data.get(key) != value:
-                current_data[key] = value
+        for key in keys:
+            if key in new_data and current_data.get(key) != new_data[key]:
+                current_data[key] = new_data[key]
                 changed = True
         return changed
 
@@ -185,7 +188,7 @@ class Mirror:
                 self._data = {"url": self._data}
 
             # And update the dictionary accordingly.
-            return self._update_connection_dict(self._data, data)
+            return self._update_connection_dict(self._data, data, top_level=True)
 
         # Otherwise, update the fetch / push entry; turn top-level
         # url string into a dict if necessary.
@@ -213,7 +216,7 @@ class Mirror:
             # Otherwise promote to a dict
             self._data[direction] = {"url": entry}
 
-        return self._update_connection_dict(self._data[direction], data)
+        return self._update_connection_dict(self._data[direction], data, top_level=False)
 
     def _get_value(self, attribute: str, direction: str):
         """Returns the most specific value for a given attribute (either push/fetch or global)"""

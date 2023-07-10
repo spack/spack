@@ -348,3 +348,43 @@ class TestMirrorCreate:
         args = MockMirrorArgs(specs=input_specs, versions_per_spec=nversions)
         specs = spack.cmd.mirror.concrete_specs_from_user(args)
         assert all(s.concrete for s in specs)
+
+
+def test_mirror_set_1(mutable_config):
+    """Test the mirror set command"""
+    mirror("add", "example", "http://example.com")
+    mirror("set", "example", "--no-binary", "--source")
+
+    assert spack.config.get("mirrors:example") == {
+        "url": "http://example.com",
+        "source": True,
+        "binary": False,
+    }
+
+    mirror("set", "example", "--binary", "--no-source")
+    assert spack.config.get("mirrors:example") == {
+        "url": "http://example.com",
+        "source": False,
+        "binary": True,
+    }
+
+
+def test_mirror_set_2(mutable_config):
+    """Test the mirror set command"""
+    mirror("add", "example", "http://example.com")
+    mirror(
+        "set",
+        "example",
+        "--push",
+        "--url",
+        "http://example2.com",
+        "--s3-access-key-id",
+        "username",
+        "--s3-access-key-secret",
+        "password",
+    )
+
+    assert spack.config.get("mirrors:example") == {
+        "url": "http://example.com",
+        "push": {"url": "http://example2.com", "access_pair": ["username", "password"]},
+    }
