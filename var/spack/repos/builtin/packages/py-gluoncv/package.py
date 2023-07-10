@@ -35,5 +35,3 @@ class PyGluoncv(PythonPackage):
     depends_on("py-pandas", when="@0.9:", type=("build", "run"))
     depends_on("py-pyyaml", when="@0.9:", type=("build", "run"))
     depends_on("py-autocfg", when="@0.9:", type=("build", "run"))
-
-    patch("no-unicode-readme.patch", when="@0.6.0")
