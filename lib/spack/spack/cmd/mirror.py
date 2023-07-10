@@ -230,13 +230,14 @@ def _configure_mirror(args):
         changes["endpoint_url"] = args.s3_endpoint_url
 
     # argparse cannot distinguish between --binary and --no-binary when same dest :(
-    if getattr(args, "binary"):
+    # notice that set-url does not have these args, so getattr
+    if getattr(args, "binary", None):
         changes["binary"] = True
-    if getattr(args, "no_binary"):
+    if getattr(args, "no_binary", None):
         changes["binary"] = False
-    if getattr(args, "source"):
+    if getattr(args, "source", None):
         changes["source"] = True
-    if getattr(args, "no_source"):
+    if getattr(args, "no_source", None):
         changes["source"] = False
 
     changed = entry.update(changes, direction)
