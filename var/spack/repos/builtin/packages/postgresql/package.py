@@ -57,7 +57,7 @@ class Postgresql(AutotoolsPackage):
     depends_on("libedit", when="lineedit=libedit")
     depends_on("openssl")
     depends_on("tcl", when="+tcl")
-    depends_on("perl", when="+perl")
+    depends_on("perl+opcode", when="+perl")
     depends_on("python", when="+python")
     depends_on("libxml2", when="+xml")
 
