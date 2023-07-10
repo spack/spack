@@ -18,6 +18,7 @@ import os.path
 import sys
 import traceback
 import urllib.parse
+from typing import Optional, Union
 
 import llnl.util.tty as tty
 from llnl.util.filesystem import mkdirp
@@ -62,7 +63,7 @@ class Mirror:
     to them. These two URLs are usually the same.
     """
 
-    def __init__(self, data: dict, name=None):
+    def __init__(self, data: Union[str, dict], name: Optional[str] = None):
         self._data = data
         self._name = name
 
@@ -92,7 +93,9 @@ class Mirror:
             )
         return Mirror(url)
 
-    def __eq__(self, other: "Mirror"):
+    def __eq__(self, other):
+        if not isinstance(other, Mirror):
+            return NotImplemented
         return self._data == other._data and self._name == other._name
 
     def __str__(self):
@@ -118,16 +121,12 @@ class Mirror:
         return self._name or "<unnamed>"
 
     @property
-    def _trivial(self):
-        return isinstance(self._data, str)
-
-    @property
     def binary(self):
-        return self._trivial or self._data.get("binary", True)
+        return isinstance(self._data, str) or self._data.get("binary", True)
 
     @property
     def source(self):
-        return self._trivial or self._data.get("source", True)
+        return isinstance(self._data, str) or self._data.get("source", True)
 
     @property
     def fetch_url(self):
@@ -144,7 +143,7 @@ class Mirror:
         if direction not in ("fetch", "push"):
             raise ValueError(f"direction must be either 'fetch' or 'push', not {direction}")
 
-        if self._trivial:
+        if isinstance(self._data, str):
             return None
 
         # Either a string (url) or a dictionary, we care about the dict here.
@@ -156,12 +155,12 @@ class Mirror:
 
         return self._data.get(direction, {}).get(attribute, None)
 
-    def get_url(self, direction):
+    def get_url(self, direction: str):
         if direction not in ("fetch", "push"):
             raise ValueError(f"direction must be either 'fetch' or 'push', not {direction}")
 
         # Whole mirror config is just a url.
-        if self._trivial:
+        if isinstance(self._data, str):
             return _url_or_path_to_url(self._data)
 
         # Default value
@@ -176,7 +175,7 @@ class Mirror:
             elif "url" in info:
                 url = info["url"]
 
-        return _url_or_path_to_url(url)
+        return _url_or_path_to_url(url) if url else None
 
     def get_access_token(self, direction: str):
         return self._get_value("access_token", direction)
