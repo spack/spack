@@ -15,6 +15,7 @@ class Morphio(CMakePackage):
 
     version("develop", submodules=True)
 
+    version("3.3.6", sha256="0f2e55470d92a3d89f2141ae905ee104fd16257b93dafb90682d90171de2f4e6")
     version("3.3.5", sha256="9e6cfebaea32080131b2b08a4a32dfbe92b18427a3e557861e27c4131f7542ac")
     version("3.3.4", sha256="b70c6884e9b835560501f798c75c9cc7eaf3162cba1d930b5a9b854bb9ea60dc")
     version("3.3.3", sha256="f6d91970cfd734b2e5fb8f9239a0bfa00519fe082dd8e403e4cc204dbdf0a9fa")
