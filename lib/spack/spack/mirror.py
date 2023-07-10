@@ -18,7 +18,6 @@ import os.path
 import sys
 import traceback
 import urllib.parse
-from typing import Any, Union
 
 import llnl.util.tty as tty
 from llnl.util.filesystem import mkdirp
@@ -39,20 +38,6 @@ from spack.version import VersionList
 
 #: What schemes do we support
 supported_url_schemes = ("file", "http", "https", "sftp", "ftp", "s3", "gs")
-
-#: Mirror connection keys
-mirror_connection_keys = ("url", "access_pair", "access_token", "profile", "endpoint_url")
-
-
-def _display_mirror_entry(size, name, url, type_=None, source=True, binary=True):
-    if type_:
-        type_ = "".join((" (", type_, ")"))
-    else:
-        type_ = ""
-
-    source_or_binary = "[{}{}] ".format("s" if source else " ", "b" if binary else " ")
-
-    print("%s%-*s%s%s" % (source_or_binary, size + 4, name, url, type_))
 
 
 def _url_or_path_to_url(url_or_path: str) -> str:
@@ -77,45 +62,24 @@ class Mirror:
     to them. These two URLs are usually the same.
     """
 
-    def __init__(self, fetch_url, push_url=None, name=None, source=True, binary=True):
-        self._fetch_url = fetch_url
-        self._push_url = push_url
+    def __init__(self, data: dict, name=None):
+        self._data = data
         self._name = name
-
-        # What type of mirror is this: source, binary, or both.
-        self._source = source
-        self._binary = binary
-
-    def __eq__(self, other):
-        return (
-            self._fetch_url == other._fetch_url
-            and self._push_url == other._push_url
-            and self._source == other._source
-            and self._binary == other._binary
-        )
-
-    def to_json(self, stream=None):
-        return sjson.dump(self.to_dict(), stream)
-
-    def to_yaml(self, stream=None):
-        return syaml.dump(self.to_dict(), stream)
 
     @staticmethod
     def from_yaml(stream, name=None):
-        data = syaml.load(stream)
-        return Mirror.from_dict(data, name)
+        return Mirror(syaml.load(stream), name)
 
     @staticmethod
     def from_json(stream, name=None):
         try:
-            d = sjson.load(stream)
-            return Mirror.from_dict(d, name)
+            return Mirror(sjson.load(stream), name)
         except Exception as e:
             raise sjson.SpackJSONError("error parsing JSON mirror:", str(e)) from e
 
     @staticmethod
     def from_local_path(path: str):
-        return Mirror(fetch_url=url_util.path_to_file_url(path))
+        return Mirror(url_util.path_to_file_url(path))
 
     @staticmethod
     def from_url(url: str):
@@ -126,212 +90,126 @@ class Mirror:
                     url, ", ".join(supported_url_schemes)
                 )
             )
-        return Mirror(fetch_url=url)
+        return Mirror(url)
 
-    def to_dict(self):
-        # Keep it a key-value pair <name>: <url> when possible.
-        if isinstance(self._fetch_url, str) and self._push_url is None:
-            return self._fetch_url
-
-        if self._push_url is None:
-            return syaml_dict([("fetch", self._fetch_url), ("push", self._fetch_url)])
-        else:
-            return syaml_dict([("fetch", self._fetch_url), ("push", self._push_url)])
-
-    @staticmethod
-    def from_dict(d: Union[str, dict], name=None):
-        # There are three different formats
-
-        # 1: just a URL
-        if isinstance(d, str):
-            return Mirror(d, name=name)
-
-        # 2: common url for fetch and push
-        elif "fetch" not in d:
-            # Take only the relevant key value pairs for connection; requires a url field.
-            fetch: Any = {k: d[k] for k in mirror_connection_keys if k in d}
-            push: Any = None
-
-        # 3: separate connection data for fetch and push (either dict or just url string)
-        else:
-            if isinstance(d["fetch"], str):
-                fetch = d["fetch"]
-            else:
-                fetch = {k: d["fetch"][k] for k in mirror_connection_keys if k in d["fetch"]}
-            if isinstance(d["push"], str):
-                push = d["push"]
-            else:
-                push = {k: d["push"][k] for k in mirror_connection_keys if k in d["push"]}
-
-        return Mirror(
-            fetch_url=fetch,
-            push_url=push,
-            name=name,
-            source=d.get("source", True),
-            binary=d.get("binary", True),
-        )
-
-    def display(self, max_len=0):
-        if self._push_url is None:
-            _display_mirror_entry(
-                max_len, self._name, self.fetch_url, source=self.source, binary=self.binary
-            )
-        else:
-            _display_mirror_entry(
-                max_len,
-                self._name,
-                self.fetch_url,
-                "fetch",
-                source=self.source,
-                binary=self.binary,
-            )
-            _display_mirror_entry(
-                max_len, self._name, self.push_url, "push", source=self.source, binary=self.binary
-            )
+    def __eq__(self, other: "Mirror"):
+        return self._data == other._data and self._name == other._name
 
     def __str__(self):
-        name = self._name
-        if name is None:
-            name = ""
-        else:
-            name = ' "%s"' % name
-
-        if self._push_url is None:
-            return "[Mirror%s (%s)]" % (name, self._fetch_url)
-
-        return "[Mirror%s (fetch: %s, push: %s)]" % (name, self._fetch_url, self._push_url)
+        return f"{self._name}: {self.push_url} {self.fetch_url}"
 
     def __repr__(self):
-        return "".join(
-            (
-                "Mirror(",
-                ", ".join(
-                    "%s=%s" % (k, repr(v))
-                    for k, v in (
-                        ("fetch_url", self._fetch_url),
-                        ("push_url", self._push_url),
-                        ("name", self._name),
-                        ("source", self._source),
-                        ("binary", self._binary),
-                    )
-                    if k == "fetch_url" or v
-                ),
-                ")",
-            )
-        )
+        return f"Mirror(name={self._name!r}, data={self._data!r})"
+
+    def to_json(self, stream=None):
+        return sjson.dump(self.to_dict(), stream)
+
+    def to_yaml(self, stream=None):
+        return syaml.dump(self.to_dict(), stream)
+
+    def to_dict(self):
+        return self._data
+
+    def display(self, max_len=0):
+        print(self)
 
     @property
     def name(self):
         return self._name or "<unnamed>"
 
     @property
+    def _trivial(self):
+        return isinstance(self._data, str)
+
+    @property
     def binary(self):
-        return self._binary
+        return self._trivial or self._data.get("binary", True)
 
     @property
     def source(self):
-        return self._source
-
-    def get_profile(self, url_type):
-        if isinstance(self._fetch_url, dict):
-            if url_type == "push":
-                return self._push_url.get("profile", None)
-            return self._fetch_url.get("profile", None)
-        else:
-            return None
-
-    def set_profile(self, url_type, profile):
-        if url_type == "push":
-            self._push_url["profile"] = profile
-        else:
-            self._fetch_url["profile"] = profile
-
-    def get_access_pair(self, url_type):
-        if isinstance(self._fetch_url, dict):
-            if url_type == "push":
-                return self._push_url.get("access_pair", None)
-            return self._fetch_url.get("access_pair", None)
-        else:
-            return None
-
-    def set_access_pair(self, url_type, connection_tuple):
-        if url_type == "push":
-            self._push_url["access_pair"] = connection_tuple
-        else:
-            self._fetch_url["access_pair"] = connection_tuple
-
-    def get_endpoint_url(self, url_type):
-        if isinstance(self._fetch_url, dict):
-            if url_type == "push":
-                return self._push_url.get("endpoint_url", None)
-            return self._fetch_url.get("endpoint_url", None)
-        else:
-            return None
-
-    def set_endpoint_url(self, url_type, url):
-        if url_type == "push":
-            self._push_url["endpoint_url"] = url
-        else:
-            self._fetch_url["endpoint_url"] = url
-
-    def get_access_token(self, url_type):
-        if isinstance(self._fetch_url, dict):
-            if url_type == "push":
-                return self._push_url.get("access_token", None)
-            return self._fetch_url.get("access_token", None)
-        else:
-            return None
-
-    def set_access_token(self, url_type, connection_token):
-        if url_type == "push":
-            self._push_url["access_token"] = connection_token
-        else:
-            self._fetch_url["access_token"] = connection_token
+        return self._trivial or self._data.get("source", True)
 
     @property
     def fetch_url(self):
         """Get the valid, canonicalized fetch URL"""
-        url_or_path = (
-            self._fetch_url if isinstance(self._fetch_url, str) else self._fetch_url["url"]
-        )
-        return _url_or_path_to_url(url_or_path)
-
-    @fetch_url.setter
-    def fetch_url(self, url):
-        self._fetch_url["url"] = url
-        self._normalize()
+        return self.get_url("fetch")
 
     @property
     def push_url(self):
-        """Get the valid, canonicalized push URL. Returns fetch URL if no custom
-        push URL is defined"""
-        if self._push_url is None:
-            return self.fetch_url
-        url_or_path = self._push_url if isinstance(self._push_url, str) else self._push_url["url"]
-        return _url_or_path_to_url(url_or_path)
+        """Get the valid, canonicalized fetch URL"""
+        return self.get_url("push")
 
-    @push_url.setter
-    def push_url(self, url):
-        self._push_url["url"] = url
-        self._normalize()
+    def _get_value(self, attribute: str, direction: str):
+        """Returns the most specific value for a given attribute (either push/fetch or global)"""
+        if direction not in ("fetch", "push"):
+            raise ValueError(f"direction must be either 'fetch' or 'push', not {direction}")
 
-    def _normalize(self):
-        if self._push_url is not None and self._push_url == self._fetch_url:
-            self._push_url = None
+        if self._trivial:
+            return None
+
+        # Either a string (url) or a dictionary, we care about the dict here.
+        value = self._data.get(direction, {})
+
+        # Return top-level entry if only a URL was set.
+        if isinstance(value, str):
+            return self._data.get(attribute, None)
+
+        return self._data.get(direction, {}).get(attribute, None)
+
+    def get_url(self, direction):
+        if direction not in ("fetch", "push"):
+            raise ValueError(f"direction must be either 'fetch' or 'push', not {direction}")
+
+        # Whole mirror config is just a url.
+        if self._trivial:
+            return _url_or_path_to_url(self._data)
+
+        # Default value
+        url = self._data.get("url")
+
+        # Override it with a direction-specific value
+        if direction in self._data:
+            # Either a url as string or a dict with url key
+            info = self._data[direction]
+            if isinstance(info, str):
+                url = info
+            elif "url" in info:
+                url = info["url"]
+
+        return _url_or_path_to_url(url)
+
+    def get_access_token(self, direction: str):
+        return self._get_value("access_token", direction)
+
+    def get_access_pair(self, direction: str):
+        return self._get_value("access_pair", direction)
+
+    def get_profile(self, direction: str):
+        return self._get_value("profile", direction)
+
+    def get_endpoint_url(self, direction: str):
+        return self._get_value("endpoint_url", direction)
 
 
 class MirrorCollection(collections.abc.Mapping):
     """A mapping of mirror names to mirrors."""
 
-    def __init__(self, mirrors=None, scope=None):
-        self._mirrors = collections.OrderedDict(
-            (name, Mirror.from_dict(mirror, name))
+    def __init__(self, mirrors=None, scope=None, binary=any, source=any):
+
+        self._mirrors = {
+            name: Mirror(data=mirror, name=name)
             for name, mirror in (
                 mirrors.items()
                 if mirrors is not None
                 else spack.config.get("mirrors", scope=scope).items()
             )
-        )
+        }
+
+        if source is not any:
+            self._mirrors = {k: v for k, v in self._mirrors.items() if v.source == source}
+
+        if binary is not any:
+            self._mirrors = {k: v for k, v in self._mirrors.items() if v.binary == binary}
 
     def __eq__(self, other):
         return self._mirrors == other._mirrors
@@ -387,7 +265,7 @@ class MirrorCollection(collections.abc.Mapping):
         result = self.get(name_or_url)
 
         if result is None:
-            result = Mirror(fetch_url=name_or_url)
+            result = Mirror(fetch=name_or_url)
 
         return result
 
@@ -638,24 +516,8 @@ def remove(name, scope):
     if name not in mirrors:
         tty.die("No mirror with name %s" % name)
 
-    old_value = mirrors.pop(name)
+    mirrors.pop(name)
     spack.config.set("mirrors", mirrors, scope=scope)
-
-    debug_msg_url = "url %s"
-    debug_msg = ["Removed mirror %s with"]
-    values = [name]
-
-    try:
-        fetch_value = old_value["fetch"]
-        push_value = old_value["push"]
-
-        debug_msg.extend(("fetch", debug_msg_url, "and push", debug_msg_url))
-        values.extend((fetch_value, push_value))
-    except TypeError:
-        debug_msg.append(debug_msg_url)
-        values.append(old_value)
-
-    tty.debug(" ".join(debug_msg) % tuple(values))
     tty.msg("Removed mirror %s." % name)
 
 

@@ -39,7 +39,6 @@ mirror_entry = {
     "type": "object",
     "additionalProperties": False,
     "anyOf": [{"required": ["url"]}, {"required": ["fetch"]}, {"required": ["pull"]}],
-    "required": ["url"],
     "properties": {
         "source": {"type": "boolean"},
         "binary": {"type": "boolean"},

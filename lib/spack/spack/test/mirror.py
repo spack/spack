@@ -132,9 +132,14 @@ def test_all_mirror(mock_git_repository, mock_svn_repository, mock_hg_repository
 
 
 @pytest.mark.parametrize(
-    "mirror", [spack.mirror.Mirror("https://example.com/fetch", "https://example.com/push")]
+    "mirror",
+    [
+        spack.mirror.Mirror(
+            {"fetch": "https://example.com/fetch", "push": "https://example.com/push"}
+        )
+    ],
 )
-def test_roundtrip_mirror(mirror):
+def test_roundtrip_mirror(mirror: spack.mirror.Mirror):
     mirror_yaml = mirror.to_yaml()
     assert spack.mirror.Mirror.from_yaml(mirror_yaml) == mirror
     mirror_json = mirror.to_json()

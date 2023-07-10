@@ -161,7 +161,7 @@ def mirror_add(args):
             connection["profile"] = args.s3_profile
         if args.s3_endpoint_url:
             connection["endpoint_url"] = args.s3_endpoint_url
-        mirror = spack.mirror.Mirror(fetch_url=connection, push_url=connection, name=args.name)
+        mirror = spack.mirror.Mirror(connection, name=args.name)
     else:
         mirror = spack.mirror.Mirror(args.url, name=args.name)
     spack.mirror.add(mirror, args.scope)
