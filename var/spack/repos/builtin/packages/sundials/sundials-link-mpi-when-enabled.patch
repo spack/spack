@@ -6,7 +6,7 @@ index 96c18b94c..9c2f2a867 100644
        ${SUNDIALS_SOURCE_DIR}/include/nvector/nvector_mpimanyvector.h
      INCLUDE_SUBDIR
        nvector
-+    LINK_LIBRARIES MPI::MPI_C
++    LINK_LIBRARIES PUBLIC MPI::MPI_C
      OBJECT_LIBRARIES
        sundials_generic_obj
      COMPILE_DEFINITIONS
@@ -18,7 +18,7 @@ index b6ca27136..b36f525d8 100644
      ${SUNDIALS_SOURCE_DIR}/include/nvector/nvector_mpiplusx.h
    INCLUDE_SUBDIR
      nvector
-+  LINK_LIBRARIES MPI::MPI_C
++  LINK_LIBRARIES PUBLIC MPI::MPI_C
    OBJECT_LIBRARIES
      sundials_generic_obj
      sundials_nvecmpimanyvector_obj
@@ -30,7 +30,7 @@ index d5d2e28a5..a1f05db62 100644
      ${SUNDIALS_SOURCE_DIR}/include/nvector/nvector_parallel.h
    INCLUDE_SUBDIR
      nvector
-+  LINK_LIBRARIES MPI::MPI_C
++  LINK_LIBRARIES PUBLIC MPI::MPI_C
    OBJECT_LIBRARIES
      sundials_generic_obj
    OUTPUT_NAME
