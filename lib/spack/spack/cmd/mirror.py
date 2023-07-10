@@ -195,15 +195,15 @@ def mirror_remove(args):
     spack.mirror.remove(args.name, args.scope)
 
 
-def _configure_mirror(mirror, args):
+def _configure_mirror(args):
     mirrors = spack.config.get("mirrors", scope=args.scope)
 
     if args.name not in mirrors:
         tty.die(f"No mirror found with name {args.name}.")
 
     entry = spack.mirror.Mirror(mirrors[args.name], args.name)
+    direction = "fetch" if args.fetch else "push" if args.push else None
     changes = {}
-
     if args.url:
         changes["url"] = args.url
     if args.s3_access_key_id and args.s3_access_key_secret:
@@ -215,15 +215,11 @@ def _configure_mirror(mirror, args):
     if args.s3_endpoint_url:
         changes["endpoint_url"] = args.s3_endpoint_url
 
-    direction = "fetch" if args.fetch else "push" if args.push else None
     changed = entry.update(changes, direction)
 
     if changed:
+        mirrors[args.name] = entry.to_dict()
         spack.config.set("mirrors", mirrors, scope=args.scope)
-        tty.msg(
-            "Changed%s url or connection information for mirror %s."
-            % ((" (push)" if args.push else ""), args.name)
-        )
     else:
         tty.msg("No changes made to mirror %s." % args.name)
 

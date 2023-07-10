@@ -149,7 +149,7 @@ def test_mirror_crud(mutable_config, capsys):
         assert "No changes made" in output
 
         output = mirror("set-url", "--push", "mirror", "s3://spack-public")
-        assert "Changed (push) url" in output
+        assert not output
 
         # no-op
         output = mirror("set-url", "--push", "mirror", "s3://spack-public")

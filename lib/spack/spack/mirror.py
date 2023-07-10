@@ -175,10 +175,10 @@ class Mirror:
             if isinstance(self._data, str):
                 # Can we replace that string with something new?
                 if set_url:
-                    if self._data != set_url:
-                        self._data = set_url
-                        return True
-                    return False
+                    if self._data == set_url:
+                        return False
+                    self._data = set_url
+                    return True
 
                 # Otherwise promote to a dict
                 self._data = {"url": self._data}
@@ -204,10 +204,10 @@ class Mirror:
         # Keep the entry simple if we're just swapping out the URL.
         if isinstance(entry, str):
             if set_url:
-                if entry != set_url:
-                    self._data[direction] = set_url
-                    return True
-                return False
+                if entry == set_url:
+                    return False
+                self._data[direction] = set_url
+                return True
 
             # Otherwise promote to a dict
             self._data[direction] = {"url": entry}
