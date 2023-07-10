@@ -130,7 +130,10 @@ class HsakmtRoct(CMakePackage):
             return ["install"]
 
     def cmake_args(self):
-        return [self.define_from_variant("BUILD_SHARED_LIBS", "shared")]
+        args = [self.define_from_variant("BUILD_SHARED_LIBS", "shared")]
+        if self.spec.satisfies("@5.4.3:"):
+            args.append("-DCMAKE_INSTALL_LIBDIR=lib")
+        return args
 
     @run_after("install")
     @on_package_attributes(run_tests=True)
