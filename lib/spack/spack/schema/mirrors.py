@@ -6,7 +6,7 @@
 """Schema for mirrors.yaml configuration file.
 
 .. literalinclude:: _spack_root/lib/spack/spack/schema/mirrors.py
-   :lines: 12-78
+   :lines: 12-69
 """
 
 #: Common properties for connection specification
