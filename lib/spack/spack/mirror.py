@@ -270,7 +270,6 @@ class MirrorCollection(collections.abc.Mapping):
     """A mapping of mirror names to mirrors."""
 
     def __init__(self, mirrors=None, scope=None, binary=any, source=any):
-
         self._mirrors = {
             name: Mirror(data=mirror, name=name)
             for name, mirror in (
