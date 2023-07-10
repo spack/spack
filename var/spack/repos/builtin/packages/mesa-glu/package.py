@@ -50,6 +50,11 @@ class MesaGlu(AutotoolsPackage):
 
         return args
 
+    def flag_handler(self, name, flags):
+        if name == "cxxflags" and self.spec.satisfies("%clang@16:"):
+            flags.append("-Wno-register")
+        return (flags, None, None)
+
     @property
     def libs(self):
         return find_libraries("libGLU", self.prefix, recursive=True)
