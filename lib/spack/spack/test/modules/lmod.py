@@ -91,7 +91,7 @@ class TestLmod:
             # It's a user, not a provider, so create the provider string
             # DH* 20230710
             # original spack code:
-            #service_part = layout.spec["mpi"].format("{name}/{version}-{hash:7}")
+            # service_part = layout.spec["mpi"].format("{name}/{version}-{hash:7}")
             if hash_length > 0:
                 short_hash = hash[:hash_length]
                 service_part = layout.spec["mpi"].format("{name}/{version}-{short_hash}")

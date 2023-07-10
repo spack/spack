@@ -26,7 +26,7 @@ class Mpich(AutotoolsPackage, CudaPackage, ROCmPackage):
     executables = ["^mpichversion$"]
 
     def url_for_version(self, version):
-        if (version >= Version("4.0")):
+        if version >= Version("4.0"):
             url = "https://github.com/pmodels/mpich/releases/download/v{0}/mpich-{0}.tar.gz"
         else:
             url = "https://www.mpich.org/static/downloads/{0}/mpich-{0}.tar.gz"
@@ -391,8 +391,11 @@ with '-Wl,-commons,use_dylibs' and without
             # https://bugzilla.redhat.com/show_bug.cgi?id=1795817
             # https://github.com/spack/spack/issues/17934
             if "gfortran" in self.compiler.fc:
-                gfortran_major_version = int(spack.compiler.get_compiler_version_output(
-                    self.compiler.fc, "-dumpversion").split(".")[0])
+                gfortran_major_version = int(
+                    spack.compiler.get_compiler_version_output(
+                        self.compiler.fc, "-dumpversion"
+                    ).split(".")[0]
+                )
                 # Note that the flag is not needed to build the package starting version 4.1
                 # (see https://github.com/pmodels/mpich/pull/5840) but we keep adding the flag here
                 # to avoid its presence in the MPI compiler wrappers.

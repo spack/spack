@@ -61,7 +61,7 @@ class Ip(CMakePackage):
     def cmake_args(self):
         args = [
             self.define_from_variant("OPENMP", "openmp"),
-            self.define_from_variant("CMAKE_POSITION_INDEPENDENT_CODE", "pic")
+            self.define_from_variant("CMAKE_POSITION_INDEPENDENT_CODE", "pic"),
         ]
 
         return args

@@ -748,9 +748,8 @@ class AutotoolsBuilder(AutotoolsBuilder):
             libs.append("-liconv")
 
         if ldflags or libs:
-            args.append("LDFLAGS=%s" % " ".join(ldflags+libs))
+            args.append("LDFLAGS=%s" % " ".join(ldflags + libs))
             args.append("LIBS=%s" % " ".join(libs))
-
 
         # Remove empty strings
         args = [arg for arg in args if arg]

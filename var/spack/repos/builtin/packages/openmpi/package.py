@@ -511,7 +511,7 @@ class Openmpi(AutotoolsPackage, CudaPackage):
         description="""Build shared libraries and programs
 built with the mpicc/mpifort/etc. compiler wrappers
 with '-Wl,-commons,use_dylibs' and without
-'-Wl,-flat_namespace'."""
+'-Wl,-flat_namespace'.""",
     )
 
     provides("mpi")
@@ -1068,22 +1068,26 @@ with '-Wl,-commons,use_dylibs' and without
                 config_args.append("--disable-wrapper-runpath")
 
             # Add extra_rpaths and implicit_rpaths into the wrappers.
-            if wrapper_ldflags and any(self.compiler.linker_arg
-                                       in x for x in wrapper_ldflags):
+            if wrapper_ldflags and any(self.compiler.linker_arg in x for x in wrapper_ldflags):
                 for i in range(len(wrapper_ldflags)):
                     if wrapper_ldflags[i].startswith(self.compiler.linker_arg):
-                        rpaths = ",".join(self.compiler.extra_rpaths +
-                                          self.compiler.implicit_rpaths())
+                        rpaths = ",".join(
+                            self.compiler.extra_rpaths + self.compiler.implicit_rpaths()
+                        )
                         # Remove leading '-Wl'
                         rpaths = (self.compiler.cc_rpath_arg + rpaths).lstrip(
-                            self.compiler.linker_arg)
+                            self.compiler.linker_arg
+                        )
                         wrapper_ldflags[i] += "{}".format(rpaths)
             else:
-                wrapper_ldflags.extend([
-                    self.compiler.cc_rpath_arg + path
-                    for path in itertools.chain(
-                        self.compiler.extra_rpaths,
-                        self.compiler.implicit_rpaths())])
+                wrapper_ldflags.extend(
+                    [
+                        self.compiler.cc_rpath_arg + path
+                        for path in itertools.chain(
+                            self.compiler.extra_rpaths, self.compiler.implicit_rpaths()
+                        )
+                    ]
+                )
         else:
             config_args.append("--disable-wrapper-rpath")
             config_args.append("--disable-wrapper-runpath")

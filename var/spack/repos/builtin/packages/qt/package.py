@@ -517,8 +517,12 @@ class Qt(Package):
     @when("~shared")
     @run_before("configure")
     def patch(self):
-        filter_file("libs-only-L", "libs-only-L --static", "qtbase/mkspecs/features/qt_configure.prf")
-        filter_file("libs-only-l", "libs-only-l --static", "qtbase/mkspecs/features/qt_configure.prf")
+        filter_file(
+            "libs-only-L", "libs-only-L --static", "qtbase/mkspecs/features/qt_configure.prf"
+        )
+        filter_file(
+            "libs-only-l", "libs-only-l --static", "qtbase/mkspecs/features/qt_configure.prf"
+        )
 
     def _dep_appender_factory(self, config_args):
         spec = self.spec

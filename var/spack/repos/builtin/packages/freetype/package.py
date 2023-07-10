@@ -57,6 +57,7 @@ class Freetype(AutotoolsPackage, CMakePackage):
         headers.directories = [self.prefix.include.freetype2]
         return headers
 
+
 class AutotoolsBuilder(AutotoolsBuilder):
     def configure_args(self):
         args = [
@@ -75,6 +76,7 @@ class AutotoolsBuilder(AutotoolsBuilder):
     def setup_build_environment(self, env):
         if self.spec.satisfies("+pic"):
             env.set("CFLAGS", "-fPIC")
+
 
 class CMakeBuilder(CMakeBuilder):
     def cmake_args(self):

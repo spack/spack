@@ -180,21 +180,17 @@ class PyNumpy(PythonPackage):
             # Newer/other flavors of Cray systems using the Intel compilers directly
             # (icc, ...), therefore use this workaround only if "cc" is used.
             if self.compiler.cc == "cc":
-                gcc_version = Version(spack.compiler.get_compiler_version_output(
-                                      "gcc", "-dumpversion"))
+                gcc_version = Version(
+                    spack.compiler.get_compiler_version_output("gcc", "-dumpversion")
+                )
                 # Note that this only returns the major versions on some systems,
                 # to be on the safe side add a guard here to prevent versions <6
                 if gcc_version < Version("6"):
                     raise InstallError("Cannot determine minor version of gcc on Cray")
             else:
-                p1 = subprocess.Popen(
-                    [self.compiler.cc, "-v"],
-                    stderr=subprocess.PIPE
-                )
+                p1 = subprocess.Popen([self.compiler.cc, "-v"], stderr=subprocess.PIPE)
                 p2 = subprocess.Popen(
-                    ["grep", "compatibility"],
-                    stdin=p1.stderr,
-                    stdout=subprocess.PIPE
+                    ["grep", "compatibility"], stdin=p1.stderr, stdout=subprocess.PIPE
                 )
                 p1.stderr.close()
                 out, err = p2.communicate()
@@ -204,12 +200,15 @@ class PyNumpy(PythonPackage):
                 try:
                     gcc_version = Version(out.split()[5].decode("utf-8"))
                 except IndexError:
-                    gcc_version = Version(spack.compiler.get_compiler_version_output(
-                                          "gcc", "-dumpversion"))
+                    gcc_version = Version(
+                        spack.compiler.get_compiler_version_output("gcc", "-dumpversion")
+                    )
             if gcc_version < Version("4.8"):
-                raise InstallError("The GCC version that the Intel compiler "
-                                   "uses must be >= 4.8. The GCC in use is "
-                                   "{0}".format(gcc_version))
+                raise InstallError(
+                    "The GCC version that the Intel compiler "
+                    "uses must be >= 4.8. The GCC in use is "
+                    "{0}".format(gcc_version)
+                )
             if gcc_version <= Version("5.1"):
                 flags.append(self.compiler.c99_flag)
 

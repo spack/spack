@@ -20,7 +20,7 @@ class PyH5py(PythonPackage):
     # the commend below, and it's like in main spack
     # Version 3.8.0 seems to be broken or configured incorrectly, it's only building
     # and installing the cpython extension, but none of the actual Python modules.
-    #version("3.8.0", sha256="6fead82f0c4000cf38d53f9c030780d81bfa0220218aee13b90b7701c937d95f")
+    # version("3.8.0", sha256="6fead82f0c4000cf38d53f9c030780d81bfa0220218aee13b90b7701c937d95f")
     # *DH 20230710
     version("3.7.0", sha256="3fcf37884383c5da64846ab510190720027dca0768def34dd8dcb659dbe5cbf3")
     version("3.6.0", sha256="8752d2814a92aba4e2b2a5922d2782d0029102d99caaf3c201a566bc0b40db29")

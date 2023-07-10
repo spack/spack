@@ -100,7 +100,7 @@ class GobjectIntrospection(MesonPackage, AutotoolsPackage):
                 libs.append("-lfreetype")
             ldflags.append("-L%s" % cairo["pixman"].prefix.lib)
             libs.append("-lpixman-1")
-            env.set("CFLAGS", " ".join(ldflags)+" "+" ".join(libs))
+            env.set("CFLAGS", " ".join(ldflags) + " " + " ".join(libs))
 
     def setup_run_environment(self, env):
         env.prepend_path("GI_TYPELIB_PATH", join_path(self.prefix.lib, "girepository-1.0"))

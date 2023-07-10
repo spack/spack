@@ -402,7 +402,7 @@ class Cmake(Package):
                         "libz",
                         self.spec["zlib"].prefix.lib,
                         shared=self.spec["zlib"].satisfies("+shared"),
-                    )
+                    ),
                 )
             )
 

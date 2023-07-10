@@ -30,9 +30,7 @@ class G2c(CMakePackage):
     depends_on("openjpeg", when="+openjpeg")
 
     def cmake_args(self):
-        args = [
-            self.define_from_variant("CMAKE_POSITION_INDEPENDENT_CODE", "pic")
-        ]
+        args = [self.define_from_variant("CMAKE_POSITION_INDEPENDENT_CODE", "pic")]
 
         return args
 

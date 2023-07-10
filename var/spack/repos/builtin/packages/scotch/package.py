@@ -38,7 +38,11 @@ class Scotch(CMakePackage, MakefilePackage):
 
     build_system(conditional("cmake", when="@7:"), "makefile", default="cmake")
     variant("threads", default=True, description="use POSIX Pthreads within Scotch and PT-Scotch")
-    variant("mpi_thread", default=True, description="use multi-threaded algorithms in conjunction with MPI")
+    variant(
+        "mpi_thread",
+        default=True,
+        description="use multi-threaded algorithms in conjunction with MPI",
+    )
     variant("mpi", default=True, description="Compile parallel libraries")
     variant("compression", default=True, description="May use compressed files")
     variant("esmumps", default=False, description="Compile esmumps (needed by mumps)")
