@@ -60,7 +60,7 @@ new file mode 100644
 index 0000000..6cba945
 --- /dev/null
 +++ b/src/CMakeLists.txt
-@@ -0,0 +1,79 @@
+@@ -0,0 +1,80 @@
 +set(LUA_LIB_SOURCES lapi.c
 +                    lcode.c
 +                    lctype.c
@@ -129,6 +129,7 @@ index 0000000..6cba945
 +install(FILES lua.h
 +              luaconf.h
 +              lauxlib.h
++              lualib.h
 +              lua.hpp
 +        DESTINATION include
 +)
