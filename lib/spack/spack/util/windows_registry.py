@@ -272,7 +272,7 @@ class WindowsRegistryView:
             queue = self.reg.subkeys
             for key in queue:
                 if stop_condition(key):
-                    if collect_found:
+                    if collect_all_matching:
                         collection.append(key)
                     else:
                         return key
@@ -319,7 +319,7 @@ class WindowsRegistryView:
         if recursive:
             kwargs["search_key"] = WindowsRegistryView.KeyMatchConditions.name_matcher(subkey_name)
         else:
-            kwargs["direct_subkey"] =  subkey_name
+            kwargs["direct_subkey"] = subkey_name
         return self._find_subkey_s(**kwargs)
 
     def find_matching_subkey(self, subkey_name, recursive=True):
@@ -337,9 +337,11 @@ class WindowsRegistryView:
         """
         kwargs = {}
         if recursive:
-            kwargs["search_key"] = WindowsRegistryView.KeyMatchConditions.regex_matcher(subkey_name)
+            kwargs["search_key"] = WindowsRegistryView.KeyMatchConditions.regex_matcher(
+                subkey_name
+            )
         else:
-            kwargs["direct_subkey"] =  subkey_name
+            kwargs["direct_subkey"] = subkey_name
         return self._find_subkey_s(**kwargs)
 
     def find_subkeys(self, subkey_name, recursive=True):
@@ -356,9 +358,11 @@ class WindowsRegistryView:
         """
         kwargs = {"collect_found": True}
         if recursive:
-            kwargs["search_key"] = WindowsRegistryView.KeyMatchConditions.regex_matcher(subkey_name)
+            kwargs["search_key"] = WindowsRegistryView.KeyMatchConditions.regex_matcher(
+                subkey_name
+            )
         else:
-            kwargs["direct_subkey"] =  subkey_name
+            kwargs["direct_subkey"] = subkey_name
         return self._find_subkey_s(**kwargs)
 
     def find_value(self, val_name, recursive=True):
