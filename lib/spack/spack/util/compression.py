@@ -255,10 +255,7 @@ def _win_compressed_tarball_handler(decompressor):
 def _py_lzma(archive_file):
     """Returns path to decompressed .xz files
     Decompress lzma compressed .xz files via python lzma module"""
-    if check_extension(archive_file, "txz"):
-        decompressed_file = os.path.basename(strip_extension(archive_file, "txz"))
-    else:
-        decompressed_file = os.path.basename(strip_extension(archive_file, "xz"))
+    decompressed_file = os.path.basename(strip_compression_extension(archive_file, "xz"))
     archive_out = os.path.join(os.getcwd(), decompressed_file)
     with open(archive_out, "wb") as ar:
         with lzma.open(archive_file) as lar:
