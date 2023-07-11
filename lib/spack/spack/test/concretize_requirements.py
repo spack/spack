@@ -88,6 +88,28 @@ class U(Package):
 )
 
 
+_pkgt = (
+    "t",
+    """\
+class T(Package):
+    version('2.1')
+    version('2.0')
+
+    depends_on('u', when='@2.1:')
+""",
+)
+
+
+_pkgu = (
+    "u",
+    """\
+class U(Package):
+    version('1.1')
+    version('1.0')
+""",
+)
+
+
 @pytest.fixture
 def create_test_repo(tmpdir, mutable_config):
     repo_path = str(tmpdir)
