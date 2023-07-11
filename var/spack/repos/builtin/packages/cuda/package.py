@@ -27,15 +27,15 @@ preferred_ver = "11.8.0"
 _versions = {
     "12.2.0": {
         "Linux-aarch64": (
-            "73e1d0e97c7fa686efe7e00fb1e5f179372c4eec8e14d4f44ab58d5f6cf57f63",
+            "9c90d79bb63952cd30f1f57f9f8fe11e7a8967bba6f824df45d3464b5d37e5d8",
             "https://developer.download.nvidia.com/compute/cuda/12.2.0/local_installers/cuda_12.2.0_535.54.03_linux_sbsa.run",
         ),
         "Linux-x86_64": (
-            "60bea2fc0fac95574015f865355afbf599422ec2c85554f5f052b292711a4bca",
+            "ecf3d2afadcbac029f0f4505785810d52d006e4b87ba79ff3f984336a2bbf518",
             "https://developer.download.nvidia.com/compute/cuda/12.2.0/local_installers/cuda_12.2.0_535.54.03_linux.run",
         ),
         "Linux-ppc64le": (
-            "9e0e494d945634fe8ad3e12d7b91806aa4220ed27487bb211030d651b27c67a9",
+            "f7b5fde5f727b51c380c6199200d0525e8585475944ff8ad2791d06734f54230",
             "https://developer.download.nvidia.com/compute/cuda/12.2.0/local_installers/cuda_12.2.0_535.54.03_linux_ppc64le.run",
         ),
     },
