@@ -66,6 +66,7 @@ def install_kwargs_from_args(args):
         "unsigned": args.unsigned,
         "install_deps": ("dependencies" in args.things_to_install),
         "install_package": ("package" in args.things_to_install),
+        "timer_summary_file": args.timer_summary_file,
     }
 
 
@@ -88,6 +89,9 @@ def setup_parser(subparser):
         help="phase to stop after when installing (default None)",
     )
     arguments.add_common_arguments(subparser, ["jobs"])
+    subparser.add_argument(
+        "--timer-summary-file", help="File to record the top level install timer summary"
+    )
     subparser.add_argument(
         "--overwrite",
         action="store_true",

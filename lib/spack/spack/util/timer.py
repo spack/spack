@@ -20,7 +20,7 @@ from llnl.util.lang import pretty_seconds_formatter
 import spack.util.spack_json as sjson
 
 TimerEvent = collections.namedtuple("TimerEvent", ("time", "running", "label"))
-TimeTracker = collections.namedtuple("TimeTracker", ("total", "start"))
+TimeTracker = collections.namedtuple("TimeTracker", ("total", "start", "count", "path"))
 
 #: name for the global timer (used in start(), stop(), duration() without arguments)
 global_timer_name = "_global"
@@ -141,15 +141,27 @@ class Timer(BaseTimer):
             if event.running:
                 if event.label not in self._timer_stack:
                     self._timer_stack.append(event.label)
-                tracker = self._timers.get(event.label, TimeTracker(0.0, event.time))
-                self._timers[event.label] = TimeTracker(tracker.total, event.time)
+                # Only start the timer if it is on top of the stack
+                # restart doesn't work after a subtimer is started
+                if event.label == self._timer_stack[-1]:
+                    timer_path = "/".join(self._timer_stack[1:])
+                    tracker = self._timers.get(
+                        event.label, TimeTracker(0.0, event.time, 0, timer_path)
+                    )
+                    assert tracker.path == timer_path
+                    self._timers[event.label] = TimeTracker(
+                        tracker.total, event.time, tracker.count, tracker.path
+                    )
             else:  # if not event.running:
                 if event.label in self._timer_stack:
                     index = self._timer_stack.index(event.label)
                     for label in self._timer_stack[index:]:
                         tracker = self._timers[label]
                         self._timers[label] = TimeTracker(
-                            tracker.total + (event.time - tracker.start), None
+                            tracker.total + (event.time - tracker.start),
+                            None,
+                            tracker.count + 1,
+                            tracker.path,
                         )
                     self._timer_stack = self._timer_stack[: max(0, index)]
         # clear events
@@ -161,12 +173,21 @@ class Timer(BaseTimer):
         data = {
             "total": self._timers[global_timer_name].total,
             "phases": [
-                {"name": phase, "seconds": self._timers[phase].total} for phase in self.phases
+                {
+                    "name": phase,
+                    "path": self._timers[phase].path,
+                    "seconds": self._timers[phase].total,
+                    "count": self._timers[phase].count,
+                }
+                for phase in self.phases
             ],
         }
         if extra_attributes:
             data.update(extra_attributes)
-        out.write(sjson.dump(data))
+        if out:
+            out.write(sjson.dump(data))
+        else:
+            return data
 
     def write_tty(self, out=sys.stdout):
         """Write a human-readable summary of timings (depth is 1)"""

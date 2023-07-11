@@ -2023,11 +2023,14 @@ class PackageInstaller:
         # enabled, so that the output does not get cluttered.
         term_status = TermStatusLine(enabled=sys.stdout.isatty() and not tty.is_debug())
 
+        t = timer.Timer()
+
         while self.build_pq:
             task = self._pop_task()
             if task is None:
                 continue
 
+            t.start("task")
             spack.hooks.on_install_start(task.request.pkg.spec)
             install_args = task.request.install_args
             keep_prefix = install_args.get("keep_prefix")
@@ -2073,6 +2076,7 @@ class PackageInstaller:
             # some package likely depends on it.
             if not task.explicit:
                 if _handle_external_and_upstream(pkg, False):
+                    t.stop("task")
                     term_status.clear()
                     self._flag_installed(pkg, task.dependents)
                     continue
@@ -2092,6 +2096,7 @@ class PackageInstaller:
                 if self.fail_fast:
                     raise InstallError(fail_fast_err, pkg=pkg)
 
+                t.stop("task")
                 continue
 
             # Attempt to get a write lock.  If we can't get the lock then
@@ -2100,18 +2105,20 @@ class PackageInstaller:
             # other process may be hung).
             install_status.set_term_title("Acquiring lock for {0}".format(pkg.name))
             term_status.add(pkg_id)
+            t.start("aquire_lock")
             ltype, lock = self._ensure_locked("write", pkg)
             if lock is None:
                 # Attempt to get a read lock instead.  If this fails then
                 # another process has a write lock so must be (un)installing
                 # the spec (or that process is hung).
                 ltype, lock = self._ensure_locked("read", pkg)
-
+            t.stop("aquire_lock")
             # Requeue the spec if we cannot get at least a read lock so we
             # can check the status presumably established by another process
             # -- failed, installed, or uninstalled -- on the next pass.
             if lock is None:
                 self._requeue_task(task, install_status)
+                t.stop("task")
                 continue
 
             term_status.clear()
@@ -2130,7 +2137,9 @@ class PackageInstaller:
                 # Downgrade to a read lock to preclude other processes from
                 # uninstalling the package until we're done installing its
                 # dependents.
+                t.start("aquire_lock")
                 ltype, lock = self._ensure_locked("read", pkg)
+                t.stop("aquire_lock")
                 if lock is not None:
                     self._update_installed(task)
                     path = spack.util.path.debug_padded_filter(pkg.prefix)
@@ -2151,6 +2160,7 @@ class PackageInstaller:
                     # or uninstalled -- on the next pass.
                     self.installed.remove(pkg_id)
                     self._requeue_task(task, install_status)
+                t.stop("task")
                 continue
 
             # Having a read lock on an uninstalled pkg may mean another
@@ -2164,10 +2174,12 @@ class PackageInstaller:
             if ltype == "read":
                 lock.release_read()
                 self._requeue_task(task, install_status)
+                t.stop("task")
                 continue
 
             # Proceed with the installation since we have an exclusive write
             # lock on the package.
+            t.start("install")
             install_status.set_term_title("Installing {0}".format(pkg.name))
             try:
                 action = self._install_action(task)
@@ -2187,6 +2199,7 @@ class PackageInstaller:
                 keep_prefix = keep_prefix or (stop_before_phase is None and last_phase is None)
 
             except KeyboardInterrupt as exc:
+                t.stop("install")
                 # The build has been terminated with a Ctrl-C so terminate
                 # regardless of the number of remaining specs.
                 err = "Failed to install {0} due to {1}: {2}"
@@ -2195,6 +2208,7 @@ class PackageInstaller:
                 raise
 
             except binary_distribution.NoChecksumException as exc:
+                t.stop("install")
                 if task.cache_only:
                     raise
 
@@ -2205,9 +2219,11 @@ class PackageInstaller:
                 # this overrides a full method, which is ugly.
                 task.use_cache = False  # type: ignore[misc]
                 self._requeue_task(task, install_status)
+                t.stop("task")
                 continue
 
             except (Exception, SystemExit) as exc:
+                t.stop("install")
                 self._update_failed(task, True, exc)
                 spack.hooks.on_install_failure(task.request.pkg.spec)
 
@@ -2237,6 +2253,7 @@ class PackageInstaller:
                     failed_explicits.append((pkg, pkg_id, str(exc)))
 
             finally:
+                t.stop("install")
                 # Remove the install prefix if anything went wrong during
                 # install.
                 if not keep_prefix and not action == InstallAction.OVERWRITE:
@@ -2250,6 +2267,7 @@ class PackageInstaller:
             # Perform basic task cleanup for the installed spec to
             # include downgrading the write to a read lock
             self._cleanup_task(pkg)
+            t.stop("task")
 
         # Cleanup, which includes releasing all of the read locks
         self._cleanup_all_tasks()
@@ -2261,6 +2279,18 @@ class PackageInstaller:
             for request in self.build_requests
             if request.install_args.get("install_package") and request.pkg_id not in self.installed
         ]
+
+        t.stop()
+
+        phases = ["{}: {}.".format(p.capitalize(), _hms(t.duration(p))) for p in t.phases]
+        phases.append("Total: {}".format(_hms(t.duration())))
+        tty.msg("Installer time summary", "  ".join(phases))
+
+        if self.build_requests:
+            timer_summary_file = self.build_requests[0].install_args.get("timer_summary_file")
+            if timer_summary_file:
+                with open(timer_summary_file, "w") as fd:
+                    t.write_json(out=fd, extra_attributes={"name": "install_all"})
 
         if failed_explicits or missing:
             for _, pkg_id, err in failed_explicits:

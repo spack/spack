@@ -536,6 +536,7 @@ def ci_rebuild(args):
 
     # Arguments when installing the root from sources
     root_install_args = install_args + [
+        "--timer-summary-file=$PWD/install_timers.json",
         "--keep-stage",
         "--only=package",
         "--use-buildcache=package:never,dependencies:only",
