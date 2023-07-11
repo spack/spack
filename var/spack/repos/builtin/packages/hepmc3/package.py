@@ -38,6 +38,14 @@ class Hepmc3(CMakePackage):
         default=False,
         description="Install interfaces for some Monte-Carlo Event Gens",
     )
+    variant(
+        "cxxstd",
+        default="17",
+        values=("17", "20", "23"),
+        multi=False,
+        sticky=True,
+        description="C++ standard",
+    )
 
     depends_on("cmake@2.8.9:", type="build")
     depends_on("root", when="+rootio")
@@ -52,6 +60,9 @@ class Hepmc3(CMakePackage):
             "-DHEPMC3_ENABLE_PYTHON={0}".format(spec.satisfies("+python")),
             "-DHEPMC3_ENABLE_ROOTIO={0}".format(spec.satisfies("+rootio")),
             "-DHEPMC3_INSTALL_INTERFACES={0}".format(spec.satisfies("+interfaces")),
+            self.define("HEPMC_CXX_STANDARD",spec.variants["cxxstd"].value),
+            self.define("CMAKE_CXX_STANDARD",spec.variants["cxxstd"].value),
+            self.define("CMAKE_CXX_FLAGS", "-std=c++{}".format(spec.variants["cxxstd"].value)),
         ]
 
         if self.spec.satisfies("+python"):

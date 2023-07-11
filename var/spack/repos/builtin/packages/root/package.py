@@ -228,6 +228,7 @@ class Root(CMakePackage):
 
     # X-Graphics
     depends_on("libx11", when="+x")
+    depends_on("xproto", when="+x")
     depends_on("libxext", when="+x")
     depends_on("libxft", when="+x")
     depends_on("libxpm", when="+x")
