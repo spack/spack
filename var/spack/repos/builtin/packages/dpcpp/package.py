@@ -39,6 +39,7 @@ class Dpcpp(CMakePackage):
     variant("shared", default=False, description="build shared libraries")
     variant("remangle_libclc", default=True, description="remangle libclc gen. variants")
     variant("lld", default=False, description="use LLD linker for build")
+    variant("fusion", default=True, description="Enable the kernel fusion JIT compiler")
 
     depends_on("cmake@3.16.2:", type="build")
     depends_on("ninja@1.10.0:", type="build")
@@ -56,12 +57,15 @@ class Dpcpp(CMakePackage):
 
         if "+openmp" in self.spec:
             llvm_external_projects += ";openmp"
+        if "+fusion" in self.spec:
+            llvm_external_projects += ";sycl-fusion"
 
         sycl_dir = os.path.join(self.stage.source_path, "sycl")
         spirv_dir = os.path.join(self.stage.source_path, "llvm-spirv")
         xpti_dir = os.path.join(self.stage.source_path, "xpti")
         xptifw_dir = os.path.join(self.stage.source_path, "xptifw")
         libdevice_dir = os.path.join(self.stage.source_path, "libdevice")
+        fusion_dir = os.path.join(self.stage.source_path, "sycl-fusion")
         llvm_enable_projects = "clang;" + llvm_external_projects
         libclc_targets_to_build = ""
         sycl_build_pi_hip_platform = self.spec.variants["hip-platform"].value
@@ -95,6 +99,7 @@ class Dpcpp(CMakePackage):
             self.define("XPTI_SOURCE_DIR", xpti_dir),
             self.define("LLVM_EXTERNAL_XPTIFW_SOURCE_DIR", xptifw_dir),
             self.define("LLVM_EXTERNAL_LIBDEVICE_SOURCE_DIR", libdevice_dir),
+            self.define("LLVM_EXTERNAL_SYCL_FUSION_SOURCE_DIR", fusion_dir),
             self.define("LLVM_ENABLE_PROJECTS", llvm_enable_projects),
             self.define("LIBCLC_TARGETS_TO_BUILD", libclc_targets_to_build),
             self.define("LLVM_BUILD_TOOLS", True),
@@ -108,6 +113,7 @@ class Dpcpp(CMakePackage):
             self.define("SYCL_ENABLE_XPTI_TRACING", "ON"),
             self.define_from_variant("LLVM_ENABLE_LLD", "lld"),
             self.define_from_variant("SYCL_BUILD_PI_ESIMD_CPU", "esimd-cpu"),
+            self.define_from_variant("SYCL_ENABLE_KERNEL_FUSION", "fusion"),
         ]
 
         if is_cuda or (is_hip and sycl_build_pi_hip_platform == "NVIDIA"):
