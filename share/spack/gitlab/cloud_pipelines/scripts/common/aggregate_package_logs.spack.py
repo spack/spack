@@ -1,3 +1,4 @@
+#!/usr/bin/env spack-python
 """
 This script is meant to be run using:
     `spack python aggregate_logs.spack.py`
@@ -17,6 +18,7 @@ if __name__ == "__main__":
     from argparse import ArgumentParser
 
     import spack.config as cfg
+    import spack.environment as ev
 
     parser = ArgumentParser("aggregate_logs")
     parser.add_argument("output_file")
@@ -28,8 +30,9 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     if not args.prefix:
-        cfg.add_from_file(args.config)
-        prefix = cfg.get("config")["install_root"]["prefix"]
+        tmp_env = ev.create("_", init_file=args.config)
+        ev.activate(tmp_env)
+        prefix = cfg.get("config:install_tree:root")
     else:
         prefix = args.prefix
 
