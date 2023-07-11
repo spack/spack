@@ -38,6 +38,11 @@ class Dpcpp(CMakePackage):
     variant("shared-libs", default=False, description="build shared libraries")
     variant("lld", default=False, description="use LLD linker for build")
     variant("fusion", default=True, description="Enable the kernel fusion JIT compiler")
+    variant("security_flags", 
+            default="none", 
+            values=("none", "default", "sanitize"), 
+            multi=False,
+            description="Enables security flags for compile & link")
 
     depends_on("cmake@3.16.2:", type="build")
     depends_on("ninja@1.10.0:", type="build")
@@ -57,6 +62,7 @@ class Dpcpp(CMakePackage):
 
         if self.spec.platform != "darwin":
             llvm_external_projects += ";libdevice"
+
         if "+fusion" in self.spec:
             llvm_external_projects += ";sycl-fusion"
 
@@ -126,6 +132,7 @@ class Dpcpp(CMakePackage):
             self.define_from_variant("XPTI_ENABLE_WERROR", "werror"),
             self.define("SYCL_ENABLE_PLUGINS", sycl_enabled_plugins),
             self.define_from_variant("SYCL_ENABLE_KERNEL_FUSION", "fusion"),
+            self.define_from_variant("EXTRA_SECURITY_FLAGS", "security_flags"),
         ]
 
         if is_cuda or (is_hip and sycl_build_pi_hip_platform == "NVIDIA"):
