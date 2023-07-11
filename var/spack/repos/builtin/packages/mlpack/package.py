@@ -70,7 +70,7 @@ class Mlpack(CMakePackage):
     def cmake_args(self):
         args = [
             self.define("BUILD_CLI_EXECUTABLES", True),
-            self.define_from_variant("BUILD_GO_BINDINGS", "go"),
+            # self.define_from_variant("BUILD_GO_BINDINGS", "go"),
             self.define_from_variant("BUILD_JULIA_BINDINGS", "julia"),
             self.define_from_variant("BUILD_PYTHON_BINDINGS", "python"),
             self.define_from_variant("BUILD_R_BINDINGS", "r"),
