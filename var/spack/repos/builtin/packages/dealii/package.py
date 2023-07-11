@@ -26,6 +26,7 @@ class Dealii(CMakePackage, CudaPackage):
     generator("ninja")
 
     version("master", branch="master")
+    version("9.5.0", sha256="a81f41565f0d3a22d491ee687957dd48053225da72e8d6d628d210358f4a0464")
     version("9.4.2", sha256="45a76cb400bfcff25cc2d9093d9a5c91545c8367985e6798811c5e9d2a6a6fd4")
     version("9.4.1", sha256="bfe5e4bf069159f93feb0f78529498bfee3da35baf5a9c6852aa59d7ea7c7a48")
     version("9.4.0", sha256="238677006cd9173658e5b69cdd1861f800556982db6005a3cc5eb8329cc1e36c")
@@ -86,6 +87,7 @@ class Dealii(CMakePackage, CudaPackage):
     variant("gmsh", default=True, description="Compile with GMSH")
     variant("gsl", default=True, description="Compile with GSL")
     variant("hdf5", default=True, description="Compile with HDF5 (only with MPI)")
+    variant("kokkos", default=True, description="Compile with Kokkos")
     variant("metis", default=True, description="Compile with Metis")
     variant("muparser", default=True, description="Compile with muParser")
     variant("nanoflann", default=False, description="Compile with Nanoflann")
@@ -179,6 +181,7 @@ class Dealii(CMakePackage, CudaPackage):
     # TODO: next line fixes concretization with petsc
     depends_on("hdf5+mpi+hl+fortran", when="+hdf5+mpi+petsc")
     depends_on("hdf5+mpi+hl", when="+hdf5+mpi~petsc")
+    depends_on("kokkos@3.7:", when="@9.5:+kokkos~trilinos")
     # TODO: concretizer bug. The two lines mimic what comes from PETSc
     # but we should not need it
     depends_on("metis@5:+int64", when="+metis+int64")
@@ -332,6 +335,16 @@ class Dealii(CMakePackage, CudaPackage):
             "+{0}".format(p),
             when="@:9.2",
             msg="The interface to {0} is supported from version 9.3.0 "
+            "onwards. Please explicitly disable this variant "
+            "via ~{0}".format(p),
+        )
+
+    # interfaces added in 9.5.0:
+    for p in ["kokkos"]:
+        conflicts(
+            "+{0}".format(p),
+            when="@:9.4",
+            msg="The interface to {0} is supported from version 9.5.0 "
             "onwards. Please explicitly disable this variant "
             "via ~{0}".format(p),
         )
@@ -559,6 +572,7 @@ class Dealii(CMakePackage, CudaPackage):
             "symengine",
             "ginkgo",
             "arborx",
+            "kokkos",
             "cgal",
         ):  # 'taskflow'):
             options.append(
