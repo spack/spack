@@ -11,11 +11,12 @@ class Rocprim(CMakePackage):
 
     homepage = "https://github.com/ROCmSoftwarePlatform/rocPRIM"
     git = "https://github.com/ROCmSoftwarePlatform/rocPRIM.git"
-    url = "https://github.com/ROCmSoftwarePlatform/rocPRIM/archive/rocm-5.4.0.tar.gz"
+    url = "https://github.com/ROCmSoftwarePlatform/rocPRIM/archive/rocm-5.4.3.tar.gz"
     tags = ["rocm"]
 
     maintainers("cgmb", "srekolam", "renjithravindrankannath")
 
+    version("5.4.3", sha256="7be6314a46195912d3203e7e59cb8880a46ed7c1fd221e92fadedd20532e0e48")
     version("5.4.0", sha256="1740dca11c70ed350995331c292f7e3cb86273614e4a5ce9f0ea64dea5364318")
     version("5.3.3", sha256="21a6b352ad3f5b2b7d05a5ed55e612feb3c5c19d34fdb8f80260b6d25af18b2d")
     version("5.3.0", sha256="4885bd662b038c6e9f058a756fd838203dbd00227bfef6adaf31496010b100e4")
@@ -108,6 +109,7 @@ class Rocprim(CMakePackage):
     depends_on("cmake@3.10.2:", type="build", when="@4.2.0:")
     depends_on("cmake@3.5.1:", type="build")
     depends_on("numactl", type="link", when="@3.7.0:")
+    depends_on("googletest@1.10.0:", type="test")
 
     for ver in [
         "3.5.0",
@@ -132,6 +134,7 @@ class Rocprim(CMakePackage):
         "5.3.0",
         "5.3.3",
         "5.4.0",
+        "5.4.3",
     ]:
         depends_on("hip@" + ver, when="@" + ver)
         depends_on("comgr@" + ver, when="@" + ver)
@@ -147,8 +150,8 @@ class Rocprim(CMakePackage):
 
     def cmake_args(self):
         args = [
-            self.define("ONLY_INSTALL", "ON"),
-            self.define("BUILD_TEST", "OFF"),
+            self.define("ONLY_INSTALL", (not self.run_tests)),
+            self.define("BUILD_TEST", self.run_tests),
             self.define("BUILD_BENCHMARK", "OFF"),
             self.define("BUILD_EXAMPLE", "OFF"),
         ]

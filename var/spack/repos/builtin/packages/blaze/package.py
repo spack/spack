@@ -96,12 +96,9 @@ class Blaze(CMakePackage):
                     self.define("BLAZE_SHARED_MEMORY_PARALLELIZATION", True),
                     self.define(
                         "BLAZE_SMP_THREADS",
-                        {
-                            "openmp": "OpenMP",
-                            "cpp11": "C++11",
-                            "boost": "Boost",
-                            "hpx": "HPX",
-                        }[self.spec.variants["smp"].value],
+                        {"openmp": "OpenMP", "cpp11": "C++11", "boost": "Boost", "hpx": "HPX"}[
+                            self.spec.variants["smp"].value
+                        ],
                     ),
                 ]
             )

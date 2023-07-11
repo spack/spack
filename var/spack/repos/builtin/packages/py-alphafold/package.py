@@ -37,12 +37,6 @@ class PyAlphafold(PythonPackage, CudaPackage):
     depends_on("py-immutabledict@2.0.0:", type=("build", "run"))
     depends_on("py-jax@0.2.14:", type=("build", "run"), when="@2.1.1")
     depends_on("py-jax@0.3.17:", type=("build", "run"), when="@2.2.4")
-    for arch in CudaPackage.cuda_arch_values:
-        depends_on(
-            "py-jax+cuda cuda_arch={0}".format(arch),
-            type=("build", "run"),
-            when="cuda_arch={0}".format(arch),
-        )
     depends_on("py-ml-collections@0.1.0:", type=("build", "run"))
     depends_on("py-numpy@1.19.5:", type=("build", "run"), when="@2.1.1")
     depends_on("py-numpy@1.21.6:", type=("build", "run"), when="@2.2.4")

@@ -41,7 +41,6 @@ class FftwBase(AutotoolsPackage):
 
     @property
     def libs(self):
-
         # Reduce repetitions of entries
         query_parameters = list(llnl.util.lang.dedupe(self.spec.last_query.extra_parameters))
 

@@ -20,6 +20,7 @@ class Dyninst(CMakePackage):
     tags = ["e4s"]
 
     version("master", branch="master")
+    version("12.3.0", sha256="956b0378d2badb765a7e677c0b66c0b8b8cacca7631222bfe7a27b369abf7dd4")
     version("12.2.1", sha256="c304af3c6191e92acd27350fd9b7b02899767a0e38abb3a08a378abe01d1ef01")
     version("12.2.0", sha256="84c37efc1b220110af03f8fbb6ab295628b445c873b5115db91b64443e445a5d")
     version("12.1.0", sha256="c71c0caed12b0b65bbbd09896d0b25dde3b9062b5b2eb8426c86baa50e7af2fb")
@@ -53,6 +54,7 @@ class Dyninst(CMakePackage):
     depends_on("boost@1.61.0:" + boost_libs, when="@10.1.0:")
     depends_on("boost@1.61.0:1.69" + boost_libs, when="@:10.0")
     depends_on("boost@1.67.0:" + boost_libs, when="@11.0.0:")
+    depends_on("boost@1.70.0:" + boost_libs, when="@12:")
 
     depends_on("libiberty+pic")
 
@@ -73,6 +75,7 @@ class Dyninst(CMakePackage):
     # package layout. Need to use tbb provided config instead.
     conflicts("intel-tbb@2021.1:")
     conflicts("intel-oneapi-tbb@2021.1:")
+    conflicts("intel-parallel-studio", when="@12.0.0:")
     depends_on("tbb@2018.6.0:", when="@10.0.0:")
 
     depends_on("cmake@3.4.0:", type="build", when="@10.1.0:")
@@ -84,18 +87,10 @@ class Dyninst(CMakePackage):
     patch("v9.3.2-auto.patch", when="@9.3.2 %gcc@:4.7")
     patch("tribool.patch", when="@9.3.0:10.0.0 ^boost@1.69:")
 
+    requires("%gcc", msg="dyninst builds only with GCC")
+
     # No Mac support (including apple-clang)
     conflicts("platform=darwin", msg="macOS is not supported")
-
-    # We currently only build with gcc
-    conflicts("%clang")
-    conflicts("%arm")
-    conflicts("%cce")
-    conflicts("%fj")
-    conflicts("%intel")
-    conflicts("%pgi")
-    conflicts("%xl")
-    conflicts("%xl_r")
 
     # Version 11.0 requires a C++11-compliant ABI
     conflicts("%gcc@:5", when="@11.0.0:")
@@ -188,3 +183,12 @@ class Dyninst(CMakePackage):
                 args.append("-DENABLE_STATIC_LIBS=NO")
 
         return args
+
+    def test_ptls(self):
+        """Run parseThat on /bin/ls to rewrite with basic instrumentation"""
+        parseThat = which(self.prefix.bin.parseThat)
+        os.environ["DYNINSTAPI_RT_LIB"] = join_path(self.prefix.lib, "libdyninstAPI_RT.so")
+        parseThat(
+            "--binary-edit={0:s}".format(join_path(self.test_suite.stage, "ls.rewritten")),
+            "/bin/ls",
+        )

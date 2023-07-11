@@ -12,10 +12,7 @@ class OphidiaPrimitives(AutotoolsPackage):
     homepage = "https://github.com/OphidiaBigData/ophidia-primitives"
     url = "https://github.com/OphidiaBigData/ophidia-primitives/archive/refs/tags/v1.7.1.tar.gz"
     maintainers("eldoo", "SoniaScard")
-    version(
-        "1.7.1",
-        sha256="efec5248dca8fb766abcd536344eefbe2e970fb551f03454a968e59e2df69116",
-    )
+    version("1.7.1", sha256="efec5248dca8fb766abcd536344eefbe2e970fb551f03454a968e59e2df69116")
 
     depends_on("autoconf", type="build")
     depends_on("automake", type="build")
@@ -33,9 +30,6 @@ class OphidiaPrimitives(AutotoolsPackage):
         autoreconf("--install", "--verbose", "--force")
 
     def configure_args(self):
-        args = [
-            "--with-gsl-lib-path={0}".format(self.spec["gsl"].prefix.lib),
-            "--with-gsl-header-path={0}".format(self.spec["gsl"].prefix.include),
-        ]
+        args = ["--with-matheval-path={0}".format(self.spec["libmatheval"].prefix.lib)]
 
         return args

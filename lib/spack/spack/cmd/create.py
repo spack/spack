@@ -16,19 +16,10 @@ import spack.repo
 import spack.stage
 import spack.util.web
 from spack.spec import Spec
-from spack.url import (
-    UndetectableNameError,
-    UndetectableVersionError,
-    parse_name,
-    parse_version,
-)
+from spack.url import UndetectableNameError, UndetectableVersionError, parse_name, parse_version
 from spack.util.editor import editor
 from spack.util.executable import ProcessError, which
-from spack.util.naming import (
-    mod_to_class,
-    simplify_name,
-    valid_fully_qualified_module_name,
-)
+from spack.util.naming import mod_to_class, simplify_name, valid_fully_qualified_module_name
 
 description = "create a new package file"
 section = "packaging"
@@ -724,7 +715,7 @@ class BuildSystemGuesser:
                 output = tar("--exclude=*/*/*", "-tf", stage.archive_file, output=str)
             except ProcessError:
                 output = ""
-        lines = output.split("\n")
+        lines = output.splitlines()
 
         # Determine the build system based on the files contained
         # in the archive.
@@ -816,7 +807,7 @@ def get_versions(args, name):
     # Default version with hash
     hashed_versions = """\
     # FIXME: Add proper versions and checksums here.
-    # version("1.2.3", "0123456789abcdef0123456789abcdef")"""
+    # version("1.2.3", md5="0123456789abcdef0123456789abcdef")"""
 
     # Default version without hash
     unhashed_versions = """\

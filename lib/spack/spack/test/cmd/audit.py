@@ -35,7 +35,6 @@ def test_audit_configs(mutable_config, mock_packages):
 
 
 def test_audit_packages_https(mutable_config, mock_packages):
-
     # Without providing --all should fail
     audit("packages-https", fail_on_error=False)
     # The mock configuration has duplicate definitions of some compilers

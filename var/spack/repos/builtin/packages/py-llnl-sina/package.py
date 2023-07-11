@@ -24,12 +24,7 @@ class PyLlnlSina(PythonPackage):
     git = "https://github.com/LLNL/Sina.git"
 
     # notify when the package is updated.
-    maintainers(
-        "HaluskaR",
-        "estebanpauli",
-        "murray55",
-        "doutriaux1",
-    )
+    maintainers("HaluskaR", "estebanpauli", "murray55", "doutriaux1")
     version("1.11.0", tag="v1.11.0")
     version("1.10.0", tag="v1.10.0")
 

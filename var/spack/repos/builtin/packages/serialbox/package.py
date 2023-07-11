@@ -109,15 +109,8 @@ class Serialbox(CMakePackage):
 
         query2libraries = {
             tuple(): ["libSerialboxCore"],
-            ("c", "fortran"): [
-                "libSerialboxFortran",
-                "libSerialboxC",
-                "libSerialboxCore",
-            ],
-            ("c",): [
-                "libSerialboxC",
-                "libSerialboxCore",
-            ],
+            ("c", "fortran"): ["libSerialboxFortran", "libSerialboxC", "libSerialboxCore"],
+            ("c",): ["libSerialboxC", "libSerialboxCore"],
             ("fortran",): ["libSerialboxFortran", "libSerialboxC", "libSerialboxCore"],
         }
 

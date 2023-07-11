@@ -118,7 +118,7 @@ make another change, test that change, etc.  We use `pytest
 <http://pytest.org/>`_ as our tests framework, and these types of
 arguments are just passed to the ``pytest`` command underneath. See `the
 pytest docs
-<http://doc.pytest.org/en/latest/usage.html#specifying-tests-selecting-tests>`_
+<https://doc.pytest.org/en/latest/how-to/usage.html#specifying-which-tests-to-run>`_
 for more details on test selection syntax.
 
 ``spack unit-test`` has a few special options that can help you
@@ -147,7 +147,7 @@ you want to know about.  For example, to see just the tests in
 
 You can also combine any of these options with a ``pytest`` keyword
 search.  See the `pytest usage docs
-<https://docs.pytest.org/en/stable/usage.html#specifying-tests-selecting-tests>`_:
+<https://doc.pytest.org/en/latest/how-to/usage.html#specifying-which-tests-to-run>`_
 for more details on test selection syntax. For example, to see the names of all tests that have "spec"
 or "concretize" somewhere in their names:
 

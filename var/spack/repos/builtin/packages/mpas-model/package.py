@@ -115,20 +115,9 @@ class MpasModel(MakefilePackage):
             )
             cppflags.append("-DUNDERSCORE")
         elif satisfies("%fj"):
-            fflags.extend(
-                [
-                    "-Free",
-                    "-Fwide",
-                    "-CcdRR8",
-                ]
-            )
+            fflags.extend(["-Free", "-Fwide", "-CcdRR8"])
         elif satisfies("%intel"):
-            fflags.extend(
-                [
-                    "-convert big_endian",
-                    "-FR",
-                ]
-            )
+            fflags.extend(["-convert big_endian", "-FR"])
             if satisfies("precision=double"):
                 fflags.extend(["-r8"])
 
@@ -174,6 +163,8 @@ class MpasModel(MakefilePackage):
         make(*self.target("init_atmosphere", "all"), parallel=True)
         mkdir("bin")
         copy("init_atmosphere_model", "bin")
+        copy("namelist.init_atmosphere", "bin")
+        copy("streams.init_atmosphere", "bin")
         make(*self.target("init_atmosphere", "clean"))
         make(*self.target("atmosphere", "all"), parallel=True)
         copy("atmosphere_model", "bin")

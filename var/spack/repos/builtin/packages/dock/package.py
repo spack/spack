@@ -33,12 +33,7 @@ class Dock(Package):
             env.set("MPICH_HOME", self.spec["mpi"].prefix)
 
     def install(self, spec, prefix):
-        compiler_targets = {
-            "gcc": "gnu",
-            "intel": "intel",
-            "pgi": "pgi",
-            "sgi": "sgi",
-        }
+        compiler_targets = {"gcc": "gnu", "intel": "intel", "pgi": "pgi", "sgi": "sgi"}
 
         if self.compiler.name not in compiler_targets:
             template = "Unsupported compiler {0}! Supported compilers: {1}"

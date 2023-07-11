@@ -45,12 +45,18 @@ jobs:
                      [leap15, 'linux/amd64,linux/arm64,linux/ppc64le', 'opensuse/leap:15'],
                      [ubuntu-bionic, 'linux/amd64,linux/arm64,linux/ppc64le', 'ubuntu:18.04'],
                      [ubuntu-focal, 'linux/amd64,linux/arm64,linux/ppc64le', 'ubuntu:20.04'],
-                     [ubuntu-jammy, 'linux/amd64,linux/arm64,linux/ppc64le', 'ubuntu:22.04']]
+                     [ubuntu-jammy, 'linux/amd64,linux/arm64,linux/ppc64le', 'ubuntu:22.04'],
+                     [almalinux8, 'linux/amd64,linux/arm64,linux/ppc64le', 'almalinux:8'],
+                     [almalinux9, 'linux/amd64,linux/arm64,linux/ppc64le', 'almalinux:9'],
+                     [rockylinux8, 'linux/amd64,linux/arm64', 'rockylinux:8'],
+                     [rockylinux9, 'linux/amd64,linux/arm64', 'rockylinux:9'],
+                     [fedora37, 'linux/amd64,linux/arm64,linux/ppc64le', 'fedora:37'],
+                     [fedora38, 'linux/amd64,linux/arm64,linux/ppc64le', 'fedora:38']]
     name: Build ${{ matrix.dockerfile[0] }}
     if: github.repository == 'spack/spack'
     steps:
       - name: Checkout
-        uses: actions/checkout@ac593985615ec2ede58e132d2e21d2b1cbd6127c # @v2
+        uses: actions/checkout@c85c95e3d7251135ab7dc9ce3241c5835cc595a9 # @v2
 
       - name: Set Container Tag Normal (Nightly)
         run: |
@@ -86,13 +92,13 @@ jobs:
           path: dockerfiles
 
       - name: Set up QEMU
-        uses: docker/setup-qemu-action@e81a89b1732b9c48d79cd809d8d81d79c4647a18 # @v1
+        uses: docker/setup-qemu-action@2b82ce82d56a2a04d2637cd93a637ae1b359c0a7 # @v1
 
       - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@f03ac48505955848960e80bbb68046aa35c7b9e7 # @v1
+        uses: docker/setup-buildx-action@ecf95283f03858871ff00b787d79c419715afc34 # @v1
 
       - name: Log in to GitHub Container Registry
-        uses: docker/login-action@f4ef78c080cd8ba55a85445d5b36e214a81df20a # @v1
+        uses: docker/login-action@465a07811f14bebb1938fbed4728c6a1ff8901fc # @v1
         with:
           registry: ghcr.io
           username: ${{ github.actor }}
@@ -100,13 +106,13 @@ jobs:
 
       - name: Log in to DockerHub
         if: github.event_name != 'pull_request'
-        uses: docker/login-action@f4ef78c080cd8ba55a85445d5b36e214a81df20a # @v1
+        uses: docker/login-action@465a07811f14bebb1938fbed4728c6a1ff8901fc # @v1
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
       - name: Build & Deploy ${{ matrix.dockerfile[0] }}
-        uses: docker/build-push-action@3b5e8027fcad23fda98b2e3ac259d8d67585f671 # @v2
+        uses: docker/build-push-action@2eb1c1961a95fc15694676618e422e8ba1d63825 # @v2
         with:
           context: dockerfiles/${{ matrix.dockerfile[0] }}
           platforms: ${{ matrix.dockerfile[1] }}

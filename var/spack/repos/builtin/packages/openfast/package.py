@@ -16,6 +16,9 @@ class Openfast(CMakePackage):
 
     version("develop", branch="dev")
     version("master", branch="main")
+    version("3.4.1", tag="v3.4.1")
+    version("3.4.0", tag="v3.4.0")
+    version("3.3.0", tag="v3.3.0")
     version("3.2.1", tag="v3.2.1")
     version("3.2.0", tag="v3.2.0")
     version("3.1.0", tag="v3.1.0")
@@ -98,18 +101,10 @@ class Openfast(CMakePackage):
                 options.extend([self.define("NETCDF_ROOT", spec["netcdf-c"].prefix)])
 
         if "~shared" in spec:
-            options.extend(
-                [
-                    self.define("HDF5_USE_STATIC_LIBRARIES", True),
-                ]
-            )
+            options.extend([self.define("HDF5_USE_STATIC_LIBRARIES", True)])
 
         if "+openmp" in spec:
-            options.extend(
-                [
-                    self.define("OPENMP", True),
-                ]
-            )
+            options.extend([self.define("OPENMP", True)])
 
         return options
 

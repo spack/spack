@@ -14,12 +14,14 @@ class Openblas(MakefilePackage):
     """OpenBLAS: An optimized BLAS library"""
 
     homepage = "https://www.openblas.net"
-    url = "https://github.com/xianyi/OpenBLAS/archive/v0.2.19.tar.gz"
+    url = "https://github.com/xianyi/OpenBLAS/releases/download/v0.2.19/OpenBLAS-0.2.19.tar.gz"
     git = "https://github.com/xianyi/OpenBLAS.git"
 
     libraries = ["libopenblas"]
 
     version("develop", branch="develop")
+    version("0.3.23", sha256="5d9491d07168a5d00116cdc068a40022c3455bf9293c7cb86a65b1054d7e5114")
+    version("0.3.22", sha256="7fa9685926ba4f27cfe513adbf9af64d6b6b63f9dcabb37baefad6a65ff347a7")
     version("0.3.21", sha256="f36ba3d7a60e7c8bcc54cd9aaa9b1223dd42eaf02c811791c37e8ca707c241ca")
     version("0.3.20", sha256="8495c9affc536253648e942908e88e097f2ec7753ede55aca52e5dead3029e3c")
     version("0.3.19", sha256="947f51bfe50c2a0749304fbe373e00e7637600b0a47b78a51382aeb30ca08562")
@@ -212,7 +214,7 @@ class Openblas(MakefilePackage):
         spec = self.spec
         iflags = []
         if name == "cflags":
-            if spec.satisfies("@0.3.20: %oneapi"):
+            if spec.satisfies("@0.3.20: %oneapi") or spec.satisfies("@0.3.20: %arm"):
                 iflags.append("-Wno-error=implicit-function-declaration")
         return (iflags, None, None)
 
@@ -339,6 +341,15 @@ class Openblas(MakefilePackage):
 
         return args
 
+    def setup_build_environment(self, env):
+        # When building OpenBLAS with threads=openmp, `make all`
+        # runs tests, so we set the max number of threads at runtime
+        # accordingly
+        if self.spec.satisfies("threads=openmp"):
+            env.set("OMP_NUM_THREADS", str(make_jobs))
+        elif self.spec.satisfies("threads=pthreads"):
+            env.set("OPENBLAS_NUM_THREADS", str(make_jobs))
+
     @property
     def make_defs(self):
         # Configure fails to pick up fortran from FC=/abs/path/to/fc, but
@@ -422,6 +433,10 @@ class Openblas(MakefilePackage):
         if self.spec.satisfies("+bignuma"):
             make_defs.append("BIGNUMA=1")
 
+        # Avoid that NUM_THREADS gets initialized with the host's number of CPUs.
+        if self.spec.satisfies("threads=openmp") or self.spec.satisfies("threads=pthreads"):
+            make_defs.append("NUM_THREADS=512")
+
         return make_defs
 
     @property
@@ -448,13 +463,9 @@ class Openblas(MakefilePackage):
 
     @property
     def build_targets(self):
-        targets = ["libs", "netlib"]
-
-        # Build shared if variant is set.
-        if "+shared" in self.spec:
-            targets += ["shared"]
-
-        return self.make_defs + targets
+        # Do not build tests: see #38591
+        # And note that "shared" is allowed (but ignored) when ~shared
+        return ["-s"] + self.make_defs + ["libs", "netlib", "shared"]
 
     @run_after("build")
     @on_package_attributes(run_tests=True)
@@ -463,10 +474,7 @@ class Openblas(MakefilePackage):
 
     @property
     def install_targets(self):
-        make_args = [
-            "install",
-            "PREFIX={0}".format(self.prefix),
-        ]
+        make_args = ["install", "PREFIX={0}".format(self.prefix)]
         return make_args + self.make_defs
 
     @run_after("install")

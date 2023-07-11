@@ -51,8 +51,7 @@ class LuaLuajitOpenresty(LuaImplPackage):
         # Catalina and higher produce a non-functional luajit unless this is set
         if spec.satisfies("platform=darwin"):
             src_makefile.filter(
-                "^.XCFLAGS.= -DLUAJIT_ENABLE_GC64",
-                "XCFLAGS+= -DLUAJIT_ENABLE_GC64",
+                "^.XCFLAGS.= -DLUAJIT_ENABLE_GC64", "XCFLAGS+= -DLUAJIT_ENABLE_GC64"
             )
         # Linking with the C++ compiler is a dirty hack to deal with the fact
         # that unwinding symbols are not included by libc, this is necessary

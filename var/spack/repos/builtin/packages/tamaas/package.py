@@ -74,8 +74,6 @@ class Tamaas(SConsPackage):
         ]
 
         if spec.satisfies("+python"):
-            args += [
-                "PYBIND11_ROOT={}".format(spec["py-pybind11"].prefix),
-            ]
+            args += ["PYBIND11_ROOT={}".format(spec["py-pybind11"].prefix)]
 
         return args

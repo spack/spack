@@ -14,12 +14,12 @@ class Mpich2(Package):
 
     tags = ["tag1", "tag3"]
 
-    version("1.5", "9c5d5d4fe1e17dd12153f40bc5b6dbc0")
-    version("1.4", "0123456789abcdef0123456789abcdef")
-    version("1.3", "0123456789abcdef0123456789abcdef")
-    version("1.2", "0123456789abcdef0123456789abcdef")
-    version("1.1", "0123456789abcdef0123456789abcdef")
-    version("1.0", "0123456789abcdef0123456789abcdef")
+    version("1.5", md5="9c5d5d4fe1e17dd12153f40bc5b6dbc0")
+    version("1.4", md5="0123456789abcdef0123456789abcdef")
+    version("1.3", md5="0123456789abcdef0123456789abcdef")
+    version("1.2", md5="0123456789abcdef0123456789abcdef")
+    version("1.1", md5="0123456789abcdef0123456789abcdef")
+    version("1.0", md5="0123456789abcdef0123456789abcdef")
 
     provides("mpi@:2.0")
     provides("mpi@:2.1", when="@1.1:")

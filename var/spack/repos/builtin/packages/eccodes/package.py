@@ -82,19 +82,15 @@ class Eccodes(CMakePackage):
 
     variant(
         "definitions",
-        values=disjoint_sets(
-            ("auto",),
-            ("default",) + tuple(_definitions.keys()),
-        ).with_default("auto"),
+        values=disjoint_sets(("auto",), ("default",) + tuple(_definitions.keys())).with_default(
+            "auto"
+        ),
         description="List of definitions to install",
     )
 
     variant(
         "samples",
-        values=disjoint_sets(
-            ("auto",),
-            ("default",),
-        ).with_default("auto"),
+        values=disjoint_sets(("auto",), ("default",)).with_default("auto"),
         description="List of samples to install",
     )
 

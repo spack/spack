@@ -17,12 +17,16 @@ class IntelOneapiMpi(IntelOneApiLibraryPackage):
 
     """
 
-    maintainers(
-        "rscohn2",
-    )
+    maintainers("rscohn2")
 
     homepage = "https://software.intel.com/content/www/us/en/develop/tools/oneapi/components/mpi-library.html"
 
+    version(
+        "2021.9.0",
+        url="https://registrationcenter-download.intel.com/akdlm/IRC_NAS/718d6f8f-2546-4b36-b97b-bc58d5482ebf/l_mpi_oneapi_p_2021.9.0.43482_offline.sh",
+        sha256="5c170cdf26901311408809ced28498b630a494428703685203ceef6e62735ef8",
+        expand=False,
+    )
     version(
         "2021.8.0",
         url="https://registrationcenter-download.intel.com/akdlm/irc_nas/19131/l_mpi_oneapi_p_2021.8.0.25329_offline.sh",
@@ -172,3 +176,10 @@ class IntelOneapiMpi(IntelOneApiLibraryPackage):
                 self.component_prefix.bin.join(wrapper),
                 backup=False,
             )
+
+    @run_after("install")
+    def fixup_prefix(self):
+        self.symlink_dir(self.component_prefix.include, self.prefix.include)
+        self.symlink_dir(self.component_prefix.lib, self.prefix.lib)
+        self.symlink_dir(self.component_prefix.lib.release, self.prefix.lib)
+        self.symlink_dir(self.component_prefix.bin, self.prefix.bin)

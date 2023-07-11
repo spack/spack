@@ -18,7 +18,7 @@ class Cbtf(CMakePackage):
     homepage = "https://sourceforge.net/p/cbtf/wiki/Home"
     git = "https://github.com/OpenSpeedShop/cbtf.git"
 
-    maintainers = ["jgalarowicz"]
+    maintainers("jgalarowicz")
 
     version("develop", branch="master")
     version("1.9.4.1", branch="1.9.4.1")
@@ -66,7 +66,6 @@ class Cbtf(CMakePackage):
     build_directory = "build_cbtf"
 
     def cmake_args(self):
-
         spec = self.spec
 
         # Boost_NO_SYSTEM_PATHS  Set to TRUE to suppress searching
@@ -77,7 +76,6 @@ class Cbtf(CMakePackage):
         compile_flags = "-O2 -g -Wall"
 
         if spec.satisfies("+runtime"):
-
             # Install message tag include file for use in Intel MIC
             # cbtf-krell build
             # FIXME

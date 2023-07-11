@@ -17,6 +17,7 @@ class PyBlack(PythonPackage):
 
     maintainers("adamjstewart")
 
+    version("23.3.0", sha256="1c7b8d606e728a41ea1ccbd7264677e494e87cf630e399262ced92d4a8dac940")
     version("23.1.0", sha256="b0bd97bea8903f5a2ba7219257a44e3f1f9d00073d6cc1add68f0beec69692ac")
     version("22.12.0", sha256="229351e5a18ca30f447bf724d007f890f97e13af070bb6ad4c0a441cd7596a2f")
     version("22.10.0", sha256="f513588da599943e0cde4e32cc9879e825d58720d6557062d1098c5ad80080e1")
@@ -24,13 +25,6 @@ class PyBlack(PythonPackage):
     version("22.6.0", sha256="6c6d39e28aed379aec40da1c65434c77d75e65bb59a1e1c283de545fb4e7c6c9")
     version("22.3.0", sha256="35020b8886c022ced9282b51b5a875b6d1ab0c387b31a065b84db7c33085ca79")
     version("22.1.0", sha256="a7c0192d35635f6fc1174be575cb7915e92e5dd629ee79fdaf0dcfa41a80afb5")
-
-    # This is the last v21 release, and it's needed to format for Python 2.7
-    version(
-        "21.12b0",
-        sha256="77b80f693a569e2e527958459634f18df9b0ba2625ba4e0c2d5da5be42e6f2b3",
-        deprecated=True,
-    )
 
     variant("colorama", default=False, description="enable colorama support")
     variant("uvloop", default=False, description="enable uvloop support")

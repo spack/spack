@@ -37,11 +37,7 @@ class Spiner(CMakePackage, CudaPackage):
     # When overriding/overloading varaints, the last variant is always used, except for
     # "when" clauses. Therefore, call the whens FIRST then the non-whens.
     # https://spack.readthedocs.io/en/latest/packaging_guide.html#overriding-variants
-    variant(
-        "kokkos",
-        default=False,
-        description="Enable kokkos",
-    )
+    variant("kokkos", default=False, description="Enable kokkos")
     variant("openmp", default=False, description="Enable openmp kokkos backend")
 
     variant("hdf5", default=False, description="Enable hdf5")

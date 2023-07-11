@@ -18,28 +18,16 @@ image_schema = {
             "type": "object",
             "properties": {
                 "name": {"type": "string"},
-                "entrypoint": {
-                    "type": "array",
-                    "items": {
-                        "type": "string",
-                    },
-                },
+                "entrypoint": {"type": "array", "items": {"type": "string"}},
             },
         },
-    ],
+    ]
 }
 
 runner_attributes_schema_items = {
     "image": image_schema,
     "tags": {"type": "array", "items": {"type": "string"}},
-    "variables": {
-        "type": "object",
-        "patternProperties": {
-            r"[\w\d\-_\.]+": {
-                "type": "string",
-            },
-        },
-    },
+    "variables": {"type": "object", "patternProperties": {r"[\w\d\-_\.]+": {"type": "string"}}},
     "before_script": {"type": "array", "items": {"type": "string"}},
     "script": {"type": "array", "items": {"type": "string"}},
     "after_script": {"type": "array", "items": {"type": "string"}},
@@ -56,9 +44,7 @@ remove_attributes_schema = {
     "type": "object",
     "additionalProperties": False,
     "required": ["tags"],
-    "properties": {
-        "tags": {"type": "array", "items": {"type": "string"}},
-    },
+    "properties": {"tags": {"type": "array", "items": {"type": "string"}}},
 }
 
 
@@ -69,24 +55,17 @@ core_shared_properties = union_dicts(
             "type": "array",
             "items": {
                 "anyOf": [
-                    {
-                        "type": "string",
-                    },
+                    {"type": "string"},
                     {
                         "type": "object",
                         "additionalProperties": False,
                         "required": ["name"],
                         "properties": {
-                            "name": {
-                                "type": "string",
-                            },
-                            "compiler-agnostic": {
-                                "type": "boolean",
-                                "default": False,
-                            },
+                            "name": {"type": "string"},
+                            "compiler-agnostic": {"type": "boolean", "default": False},
                         },
                     },
-                ],
+                ]
             },
         },
         "match_behavior": {"type": "string", "enum": ["first", "merge"], "default": "first"},
@@ -97,12 +76,7 @@ core_shared_properties = union_dicts(
                 "additionalProperties": False,
                 "required": ["match"],
                 "properties": {
-                    "match": {
-                        "type": "array",
-                        "items": {
-                            "type": "string",
-                        },
-                    },
+                    "match": {"type": "array", "items": {"type": "string"}},
                     "remove-attributes": remove_attributes_schema,
                     "runner-attributes": runner_selector_schema,
                 },
@@ -112,12 +86,7 @@ core_shared_properties = union_dicts(
         "signing-job-attributes": runner_selector_schema,
         "rebuild-index": {"type": "boolean"},
         "broken-specs-url": {"type": "string"},
-        "broken-tests-packages": {
-            "type": "array",
-            "items": {
-                "type": "string",
-            },
-        },
+        "broken-tests-packages": {"type": "array", "items": {"type": "string"}},
     },
 )
 
@@ -128,12 +97,7 @@ gitlab_ci_properties = {
             "additionalProperties": False,
             "required": ["mappings"],
             "properties": union_dicts(
-                core_shared_properties,
-                {
-                    "enable-artifacts-buildcache": {
-                        "type": "boolean",
-                    },
-                },
+                core_shared_properties, {"enable-artifacts-buildcache": {"type": "boolean"}}
             ),
         },
         {
@@ -141,21 +105,14 @@ gitlab_ci_properties = {
             "additionalProperties": False,
             "required": ["mappings"],
             "properties": union_dicts(
-                core_shared_properties,
-                {
-                    "temporary-storage-url-prefix": {
-                        "type": "string",
-                    },
-                },
+                core_shared_properties, {"temporary-storage-url-prefix": {"type": "string"}}
             ),
         },
     ]
 }
 
 #: Properties for inclusion in other schemas
-properties = {
-    "gitlab-ci": gitlab_ci_properties,
-}
+properties = {"gitlab-ci": gitlab_ci_properties}
 
 #: Full schema with metadata
 schema = {

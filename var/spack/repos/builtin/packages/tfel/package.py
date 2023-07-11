@@ -133,7 +133,6 @@ class Tfel(CMakePackage):
     conflicts("%gcc@:7", when="@4:")
 
     def cmake_args(self):
-
         args = []
 
         args.append("-DUSE_EXTERNAL_COMPILER_FLAGS=ON")

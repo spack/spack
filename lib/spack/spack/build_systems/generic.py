@@ -38,10 +38,7 @@ class GenericBuilder(BaseBuilder):
     legacy_methods: Tuple[str, ...] = ()
 
     #: Names associated with package attributes in the old build-system format
-    legacy_attributes: Tuple[str, ...] = (
-        "archive_files",
-        "install_time_test_callbacks",
-    )
+    legacy_attributes: Tuple[str, ...] = ("archive_files", "install_time_test_callbacks")
 
     #: Callback names for post-install phase tests
     install_time_test_callbacks = []

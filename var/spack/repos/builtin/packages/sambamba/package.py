@@ -17,11 +17,7 @@ class Sambamba(Package):
     depends_on("ldc~shared", type=("build", "link"))
     depends_on("python", type="build")
 
-    resource(
-        name="undeaD",
-        git="https://github.com/dlang/undeaD.git",
-        tag="v1.0.7",
-    )
+    resource(name="undeaD", git="https://github.com/dlang/undeaD.git", tag="v1.0.7")
 
     patch("Makefile.patch")
     parallel = False

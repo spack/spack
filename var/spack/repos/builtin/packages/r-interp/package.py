@@ -30,9 +30,11 @@ class RInterp(RPackage):
 
     cran = "interp"
 
+    version("1.1-4", sha256="4f7b5d388132a4d76e8635e2a7c4fa0d705df2b49e7d108faa16ce2236e34d06")
     version("1.1-3", sha256="b74e606b38cfb02985c1f9e3e45093620f76c0307b1b0b4058761e871eb5fa3f")
 
     depends_on("r@3.5.0:", type=("build", "run"))
+
     depends_on("r-rcpp@0.12.9:", type=("build", "run"))
     depends_on("r-deldir", type=("build", "run"))
     depends_on("r-rcppeigen", type=("build", "run"))

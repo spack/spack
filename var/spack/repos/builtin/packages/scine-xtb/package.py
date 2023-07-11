@@ -16,13 +16,19 @@ class ScineXtb(CMakePackage):
     git = "https://github.com/qcscine/xtb_wrapper.git"
 
     version("master", branch="master")
-    version("1.0.2", "9beb1103467f3cfd9ad33beb2f3ec650bc3e6dc7094876774be3cc4e6f210487")
+    version("1.0.2", sha256="9beb1103467f3cfd9ad33beb2f3ec650bc3e6dc7094876774be3cc4e6f210487")
 
     resource(
         name="dev",
         url="https://github.com/qcscine/development-utils/archive/refs/tags/5.0.1.tar.gz",
         sha256="089ca500fc191e04a968ea166d2fe80178b227bc2e6d3926523fa2eee5f6492d",
         placement="_dev",
+    )
+
+    patch(
+        "https://raw.githubusercontent.com/conda-forge/scine-xtb-feedstock/4ac2b70/recipe/patches/pkgconfig.patch",
+        level=1,
+        sha256="8650abf9dca269f62b60733aabfac0681d9d1cfd721bec728752fb4cbca44452",
     )
 
     variant("python", default=False, description="Build Python extension module")

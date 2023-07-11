@@ -18,7 +18,6 @@ class DeconseqStandalone(Package):
     depends_on("perl@5:")
 
     def install(self, spec, prefix):
-
         filter_file(r"#!/usr/bin/perl", "#!/usr/bin/env perl", "deconseq.pl")
         filter_file(r"#!/usr/bin/perl", "#!/usr/bin/env perl", "splitFasta.pl")
 

@@ -77,10 +77,7 @@ class ProcessController(object):
     def get_canon_echo_attrs(self):
         """Get echo and canon attributes of the terminal of controller_fd."""
         cfg = termios.tcgetattr(self.controller_fd)
-        return (
-            bool(cfg[3] & termios.ICANON),
-            bool(cfg[3] & termios.ECHO),
-        )
+        return (bool(cfg[3] & termios.ICANON), bool(cfg[3] & termios.ECHO))
 
     def horizontal_line(self, name):
         """Labled horizontal line for debugging."""
@@ -92,11 +89,7 @@ class ProcessController(object):
         if self.debug:
             canon, echo = self.get_canon_echo_attrs()
             sys.stderr.write(
-                "canon: %s, echo: %s\n"
-                % (
-                    "on" if canon else "off",
-                    "on" if echo else "off",
-                )
+                "canon: %s, echo: %s\n" % ("on" if canon else "off", "on" if echo else "off")
             )
             sys.stderr.write("input: %s\n" % self.input_on())
             sys.stderr.write("bg: %s\n" % self.background())

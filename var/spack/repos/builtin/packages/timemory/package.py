@@ -61,15 +61,9 @@ class Timemory(CMakePackage, PythonExtension):
     variant("vtune", default=False, description="Enable VTune support")
     variant("upcxx", default=False, description="Enable UPC++ support")
     variant("gotcha", default=False, description="Enable GOTCHA support")
+    variant("likwid", default=False, description="Enable LIKWID CPU marker API support (perfmon)")
     variant(
-        "likwid",
-        default=False,
-        description="Enable LIKWID CPU marker API support (perfmon)",
-    )
-    variant(
-        "likwid_nvmon",
-        default=False,
-        description="Enable LIKWID GPU marker API support (nvmon)",
+        "likwid_nvmon", default=False, description="Enable LIKWID GPU marker API support (nvmon)"
     )
     variant("caliper", default=False, description="Enable Caliper support")
     variant("dyninst", default=False, description="Build dynamic instrumentation tools")
@@ -172,16 +166,10 @@ class Timemory(CMakePackage, PythonExtension):
         "but larger memory consumption",
     )
     variant(
-        "mpip_library",
-        default=False,
-        description="Build stand-alone timemory-mpip GOTCHA library",
+        "mpip_library", default=False, description="Build stand-alone timemory-mpip GOTCHA library"
     )
     variant("ompt", default=False, description=("Enable OpenMP tools support"))
-    variant(
-        "ompt_library",
-        default=False,
-        description="Build stand-alone timemory-ompt library",
-    )
+    variant("ompt_library", default=False, description="Build stand-alone timemory-ompt library")
     variant("allinea_map", default=False, description="Enable Allinea ARM-MAP support")
     variant(
         "require_packages",
@@ -244,25 +232,17 @@ class Timemory(CMakePackage, PythonExtension):
         msg="+kokkos_build_config requires +tools+kokkos_tools",
     )
     conflicts(
-        "tls_model=local-dynamic",
-        when="+python",
-        msg="+python require tls_model=global-dynamic",
+        "tls_model=local-dynamic", when="+python", msg="+python require tls_model=global-dynamic"
     )
     conflicts(
-        "tls_model=initial-exec",
-        when="+python",
-        msg="+python require tls_model=global-dynamic",
+        "tls_model=initial-exec", when="+python", msg="+python require tls_model=global-dynamic"
     )
     conflicts(
-        "tls_model=local-exec",
-        when="+python",
-        msg="+python require tls_model=global-dynamic",
+        "tls_model=local-exec", when="+python", msg="+python require tls_model=global-dynamic"
     )
     conflicts("+nccl", when="~gotcha", msg="+nccl requires +gotcha")
     conflicts(
-        "+nccl",
-        when="~shared~static",
-        msg="+nccl requires building shared or static libraries",
+        "+nccl", when="~shared~static", msg="+nccl requires building shared or static libraries"
     )
     conflicts("+mpip_library", when="~mpi", msg="+mpip_library requires +mpi")
     conflicts("+mpip_library", when="~gotcha", msg="+mpip_library requires +gotcha")

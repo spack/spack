@@ -13,11 +13,12 @@ class RocmTensile(CMakePackage):
 
     homepage = "https://github.com/ROCmSoftwarePlatform/Tensile/"
     git = "https://github.com/ROCmSoftwarePlatform/Tensile.git"
-    url = "https://github.com/ROCmSoftwarePlatform/Tensile/archive/rocm-5.4.0.tar.gz"
+    url = "https://github.com/ROCmSoftwarePlatform/Tensile/archive/rocm-5.4.3.tar.gz"
     tags = ["rocm"]
 
     maintainers("srekolam", "renjithravindrankannath", "haampie")
 
+    version("5.4.3", sha256="a4c5e62edd33ea6b8528eb3f017a14c28eaa67c540f5c9023f6a245340198b0f")
     version("5.4.0", sha256="2da9c1df3c6d9b44afdad621ef59a03389fb1a38a61a8b8bad9c9991b97157eb")
     version("5.3.3", sha256="ecb99243edf1cd2bb5e953915a7dae7867c3cdb0cd8ed15b8618aaaeb2bd7b29")
     version("5.3.0", sha256="05c546986549154e6c7b4f57a0b3bfd5cb223d2393c206ff1702f89454c832f4")
@@ -151,13 +152,15 @@ class RocmTensile(CMakePackage):
         "5.3.0",
         "5.3.3",
         "5.4.0",
+        "5.4.3",
     ]:
         depends_on("rocm-cmake@" + ver, type="build", when="@" + ver)
         depends_on("hip@" + ver, when="@" + ver)
         depends_on("comgr@" + ver, when="@" + ver)
-        depends_on("llvm-amdgpu@" + ver, when="@" + ver + "+openmp")
-        depends_on("llvm-amdgpu@" + ver + "~openmp", when="@" + ver + "~openmp")
         depends_on("rocminfo@" + ver, type="build", when="@" + ver)
+
+    for ver in ["5.1.0", "5.1.3", "5.2.0", "5.2.1", "5.2.3", "5.3.0", "5.3.3", "5.4.0", "5.4.3"]:
+        depends_on("rocm-openmp-extras@" + ver, when="@" + ver)
 
     for ver in ["3.5.0", "3.7.0", "3.8.0", "3.9.0"]:
         depends_on("rocm-smi@" + ver, type="build", when="@" + ver)
@@ -180,6 +183,7 @@ class RocmTensile(CMakePackage):
         "5.3.0",
         "5.3.3",
         "5.4.0",
+        "5.4.3",
     ]:
         depends_on("rocm-smi-lib@" + ver, type="build", when="@" + ver)
 
@@ -188,6 +192,7 @@ class RocmTensile(CMakePackage):
     # Not yet landed in 3.7.0, nor 3.8.0.
     patch("0001-fix-compile-error.patch", when="@3.7.0:3.8.0")
     patch("0002-require-openmp-when-tensile-use-openmp-is-on.patch", when="@3.9.0:4.0.0")
+    patch("0003-require-openmp-extras-when-tensile-use-openmp.patch", when="@5.1.0:")
 
     def setup_build_environment(self, env):
         env.set("CXX", self.spec["hip"].hipcc)
@@ -212,12 +217,18 @@ class RocmTensile(CMakePackage):
             self.define("Tensile_LOGIC", "asm_full"),
             self.define("Tensile_CODE_OBJECT_VERSION", "V3"),
             self.define("Boost_USE_STATIC_LIBS", "OFF"),
-            self.define("TENSILE_USE_OPENMP", "OFF"),
             self.define("BUILD_WITH_TENSILE_HOST", "ON" if "@3.7.0:" in self.spec else "OFF"),
         ]
 
         if "@3.7.0:" in self.spec:
             args.append(self.define("Tensile_LIBRARY_FORMAT", "msgpack"))
+        if "@5.1.0:" in self.spec:
+            args.append(self.define("TENSILE_USE_OPENMP", "ON")),
+            args.append(
+                self.define("ROCM_OPENMP_EXTRAS_DIR", self.spec["rocm-openmp-extras"].prefix)
+            ),
+        else:
+            args.append(self.define("TENSILE_USE_OPENMP", "OFF")),
 
         args.append(self.define("Tensile_ARCHITECTURE", self.get_gpulist_for_tensile_support()))
 

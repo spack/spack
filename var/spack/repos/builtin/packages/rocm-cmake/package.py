@@ -13,13 +13,13 @@ class RocmCmake(CMakePackage):
 
     homepage = "https://github.com/RadeonOpenCompute/rocm-cmake"
     git = "https://github.com/RadeonOpenCompute/rocm-cmake.git"
-    url = "https://github.com/RadeonOpenCompute/rocm-cmake/archive/rocm-5.4.0.tar.gz"
+    url = "https://github.com/RadeonOpenCompute/rocm-cmake/archive/rocm-5.4.3.tar.gz"
     tags = ["rocm"]
 
     maintainers("srekolam", "renjithravindrankannath")
 
     version("master", branch="master")
-
+    version("5.4.3", sha256="c185b3a10d191d73b76770ca0f9d6bdc355ee91fe0c9016a3779c9cfe042ba0f")
     version("5.4.0", sha256="617faa9a1e51db3c7a59bd0393e054ab67e57be357d59cb0cd9b677f47824946")
     version("5.3.3", sha256="3e527f99db52e301ab4f1b994029585951e2ae685f0cdfb7b8529c72f4b77af4")
     version("5.3.0", sha256="659a8327f13e6786103dd562d3632e89a51244548fca081f46c753857cf09d04")
@@ -108,3 +108,26 @@ class RocmCmake(CMakePackage):
 
     depends_on("cmake@3:", type="build")
     depends_on("cmake@3.6:", type="build", when="@4.1.0:")
+
+    test_src_dir = "test"
+
+    @run_after("install")
+    def cache_test_sources(self):
+        """Copy the tests source files after the package is installed to an
+        install test subdirectory for use during `spack test run`."""
+        if self.spec.satisfies("@:5.1.0"):
+            return
+        self.cache_extra_test_sources([self.test_src_dir])
+
+    def test(self):
+        if self.spec.satisfies("@:5.1.0"):
+            print("Skipping: stand-alone tests")
+            return
+        test_dir = join_path(self.test_suite.current_test_cache_dir, self.test_src_dir)
+        with working_dir(test_dir, create=True):
+            cmake_bin = join_path(self.spec["cmake"].prefix.bin, "cmake")
+            prefixes = ";".join([self.spec["rocm-cmake"].prefix])
+            cc_options = ["-DCMAKE_PREFIX_PATH=" + prefixes, "."]
+            self.run_test(cmake_bin, cc_options)
+            make()
+            make("clean")

@@ -307,9 +307,7 @@ class OpenfoamOrg(Package):
             }
 
         if "+metis" in spec:
-            self.etc_config["metis"] = {
-                "METIS_ARCH_PATH": spec["metis"].prefix,
-            }
+            self.etc_config["metis"] = {"METIS_ARCH_PATH": spec["metis"].prefix}
 
         # Write prefs files according to the configuration.
         # Only need prefs.sh for building, but install both for end-users

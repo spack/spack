@@ -96,20 +96,10 @@ class Gtkplus(MesonPackage):
         args = std_meson_args
 
         if self.spec.satisfies("platform=darwin"):
-            args.extend(
-                [
-                    "-Dx11_backend=false",
-                    "-Dquartz_backend=true",
-                ]
-            )
+            args.extend(["-Dx11_backend=false", "-Dquartz_backend=true"])
 
         args.extend(
-            [
-                "-Dgtk_doc=false",
-                "-Dman=false",
-                "-Dintrospection=true",
-                "-Dwayland_backend=false",
-            ]
+            ["-Dgtk_doc=false", "-Dman=false", "-Dintrospection=true", "-Dwayland_backend=false"]
         )
 
         return args

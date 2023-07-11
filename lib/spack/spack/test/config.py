@@ -74,7 +74,7 @@ def env_yaml(tmpdir):
     with open(env_yaml, "w") as f:
         f.write(
             """\
-env:
+spack:
     config:
         verify_ssl: False
         dirty: False
@@ -145,10 +145,7 @@ a_comps = {
         {
             "compiler": {
                 "paths": {"cc": "/gcc422", "cxx": "/g++422", "f77": "gfortran", "fc": "gfortran"},
-                "flags": {
-                    "cppflags": "-O0 -fpic",
-                    "fflags": "-f77",
-                },
+                "flags": {"cppflags": "-O0 -fpic", "fflags": "-f77"},
                 "modules": None,
                 "spec": "gcc@4.2.2",
                 "operating_system": "CNL10",
@@ -191,10 +188,7 @@ b_comps = {
         {
             "compiler": {
                 "paths": {"cc": "/icc123", "cxx": "/icp123", "f77": "ifort", "fc": "ifort"},
-                "flags": {
-                    "cppflags": "-O3",
-                    "fflags": "-f77rtl",
-                },
+                "flags": {"cppflags": "-O3", "fflags": "-f77rtl"},
                 "modules": None,
                 "spec": "icc@12.3",
                 "operating_system": "CNL10",
@@ -298,7 +292,6 @@ def test_add_config_path_with_enumerated_type(mutable_config):
 
 
 def test_add_config_filename(mock_low_high_config, tmpdir):
-
     config_yaml = tmpdir.join("config-filename.yaml")
     config_yaml.ensure()
     with config_yaml.open("w") as f:
@@ -586,21 +579,9 @@ def test_read_config_override_list(mock_low_high_config, write_config_file):
 
 def test_ordereddict_merge_order():
     """ "Test that source keys come before dest keys in merge_yaml results."""
-    source = syaml.syaml_dict(
-        [
-            ("k1", "v1"),
-            ("k2", "v2"),
-            ("k3", "v3"),
-        ]
-    )
+    source = syaml.syaml_dict([("k1", "v1"), ("k2", "v2"), ("k3", "v3")])
 
-    dest = syaml.syaml_dict(
-        [
-            ("k4", "v4"),
-            ("k3", "WRONG"),
-            ("k5", "v5"),
-        ]
-    )
+    dest = syaml.syaml_dict([("k4", "v4"), ("k3", "WRONG"), ("k5", "v5")])
 
     result = spack.config.merge_yaml(dest, source)
     assert "WRONG" not in result.values()
@@ -657,11 +638,7 @@ def test_mark_internal():
             "int": 6,
             "numbers": [1, 2, 3],
             "string": "foo",
-            "dict": {
-                "more_numbers": [1, 2, 3],
-                "another_string": "foo",
-                "another_int": 7,
-            },
+            "dict": {"more_numbers": [1, 2, 3], "another_string": "foo", "another_int": 7},
         }
     }
 
@@ -700,13 +677,7 @@ def test_internal_config_from_data():
     # add an internal config initialized from an inline dict
     config.push_scope(
         spack.config.InternalConfigScope(
-            "_builtin",
-            {
-                "config": {
-                    "verify_ssl": False,
-                    "build_jobs": 6,
-                }
-            },
+            "_builtin", {"config": {"verify_ssl": False, "build_jobs": 6}}
         )
     )
 
@@ -719,13 +690,7 @@ def test_internal_config_from_data():
     # push one on top and see what happens.
     config.push_scope(
         spack.config.InternalConfigScope(
-            "higher",
-            {
-                "config": {
-                    "checksum": True,
-                    "verify_ssl": True,
-                }
-            },
+            "higher", {"config": {"checksum": True, "verify_ssl": True}}
         )
     )
 
@@ -953,7 +918,7 @@ config:
 
 
 def test_single_file_scope(config, env_yaml):
-    scope = spack.config.SingleFileScope("env", env_yaml, spack.schema.env.schema, ["env"])
+    scope = spack.config.SingleFileScope("env", env_yaml, spack.schema.env.schema, ["spack"])
 
     with spack.config.override(scope):
         # from the single-file config
@@ -978,7 +943,7 @@ def test_single_file_scope_section_override(tmpdir, config):
     with open(env_yaml, "w") as f:
         f.write(
             """\
-env:
+spack:
     config:
         verify_ssl: False
     packages::
@@ -989,7 +954,7 @@ env:
 """
         )
 
-    scope = spack.config.SingleFileScope("env", env_yaml, spack.schema.env.schema, ["env"])
+    scope = spack.config.SingleFileScope("env", env_yaml, spack.schema.env.schema, ["spack"])
 
     with spack.config.override(scope):
         # from the single-file config
@@ -1050,7 +1015,7 @@ def test_bad_env_yaml(tmpdir):
         check_schema(
             spack.schema.env.schema,
             """\
-env:
+spack:
     foobar:
         verify_ssl: False
         dirty: False
@@ -1204,7 +1169,7 @@ def test_license_dir_config(mutable_config, mock_packages):
 
 @pytest.mark.regression("22547")
 def test_single_file_scope_cache_clearing(env_yaml):
-    scope = spack.config.SingleFileScope("env", env_yaml, spack.schema.env.schema, ["env"])
+    scope = spack.config.SingleFileScope("env", env_yaml, spack.schema.env.schema, ["spack"])
     # Check that we can retrieve data from the single file scope
     before = scope.get_section("config")
     assert before
@@ -1336,13 +1301,7 @@ def test_config_collect_urls(mutable_empty_config, mock_spider_configs, url, isf
     ],
 )
 def test_config_fetch_remote_configs(
-    tmpdir,
-    mutable_empty_config,
-    mock_collect_urls,
-    mock_curl_configs,
-    url,
-    isfile,
-    fail,
+    tmpdir, mutable_empty_config, mock_collect_urls, mock_curl_configs, url, isfile, fail
 ):
     def _has_content(filename):
         # The first element of all configuration files for this test happen to
@@ -1399,10 +1358,7 @@ def mock_collect_urls(mock_config_data, monkeypatch):
 
 @pytest.mark.parametrize(
     "url,skip",
-    [
-        (github_url.format("tree"), True),
-        ("{0}/compilers.yaml".format(gitlab_url), True),
-    ],
+    [(github_url.format("tree"), True), ("{0}/compilers.yaml".format(gitlab_url), True)],
 )
 def test_config_fetch_remote_configs_skip(
     tmpdir, mutable_empty_config, mock_collect_urls, mock_curl_configs, url, skip
@@ -1458,5 +1414,5 @@ def test_config_file_read_invalid_yaml(tmpdir, mutable_empty_config):
     with open(filename, "w") as f:
         f.write("spack:\nview")
 
-    with pytest.raises(spack.config.ConfigFileError, match="parsing yaml"):
+    with pytest.raises(spack.config.ConfigFileError, match="parsing YAML"):
         spack.config.read_config_file(filename)

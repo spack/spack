@@ -31,7 +31,7 @@ class Amdfftw(FftwBase):
     """
 
     _name = "amdfftw"
-    homepage = "https://developer.amd.com/amd-aocl/fftw/"
+    homepage = "https://www.amd.com/en/developer/aocl/fftw.html"
     url = "https://github.com/amd/amd-fftw/archive/3.0.tar.gz"
     git = "https://github.com/amd/amd-fftw.git"
 
@@ -240,7 +240,6 @@ class Amdfftw(FftwBase):
         # Different precisions must be configured and compiled one at a time
         configure = Executable("../configure")
         for precision in self.selected_precisions:
-
             opts = (enable_precision[precision] or []) + options[:]
 
             # SIMD optimizations are available only for float and double

@@ -5,19 +5,20 @@
 import collections
 import collections.abc
 import errno
+import fnmatch
 import glob
 import hashlib
 import itertools
 import numbers
 import os
+import posixpath
 import re
 import shutil
 import stat
 import sys
 import tempfile
 from contextlib import contextmanager
-from sys import platform as _platform
-from typing import Callable, List, Match, Optional, Tuple, Union
+from typing import Callable, Iterable, List, Match, Optional, Tuple, Union
 
 from llnl.util import tty
 from llnl.util.lang import dedupe, memoized
@@ -26,9 +27,7 @@ from llnl.util.symlink import islink, symlink
 from spack.util.executable import Executable, which
 from spack.util.path import path_to_os_path, system_path_filter
 
-is_windows = _platform == "win32"
-
-if not is_windows:
+if sys.platform != "win32":
     import grp
     import pwd
 else:
@@ -84,9 +83,77 @@ __all__ = [
     "visit_directory_tree",
 ]
 
+if sys.version_info < (3, 7, 4):
+    # monkeypatch shutil.copystat to fix PermissionError when copying read-only
+    # files on Lustre when using Python < 3.7.4
+
+    def copystat(src, dst, follow_symlinks=True):
+        """Copy file metadata
+        Copy the permission bits, last access time, last modification time, and
+        flags from `src` to `dst`. On Linux, copystat() also copies the "extended
+        attributes" where possible. The file contents, owner, and group are
+        unaffected. `src` and `dst` are path names given as strings.
+        If the optional flag `follow_symlinks` is not set, symlinks aren't
+        followed if and only if both `src` and `dst` are symlinks.
+        """
+
+        def _nop(args, ns=None, follow_symlinks=None):
+            pass
+
+        # follow symlinks (aka don't not follow symlinks)
+        follow = follow_symlinks or not (os.path.islink(src) and os.path.islink(dst))
+        if follow:
+            # use the real function if it exists
+            def lookup(name):
+                return getattr(os, name, _nop)
+
+        else:
+            # use the real function only if it exists
+            # *and* it supports follow_symlinks
+            def lookup(name):
+                fn = getattr(os, name, _nop)
+                if sys.version_info >= (3, 3):
+                    if fn in os.supports_follow_symlinks:  # novermin
+                        return fn
+                return _nop
+
+        st = lookup("stat")(src, follow_symlinks=follow)
+        mode = stat.S_IMODE(st.st_mode)
+        lookup("utime")(dst, ns=(st.st_atime_ns, st.st_mtime_ns), follow_symlinks=follow)
+
+        # We must copy extended attributes before the file is (potentially)
+        # chmod()'ed read-only, otherwise setxattr() will error with -EACCES.
+        shutil._copyxattr(src, dst, follow_symlinks=follow)
+
+        try:
+            lookup("chmod")(dst, mode, follow_symlinks=follow)
+        except NotImplementedError:
+            # if we got a NotImplementedError, it's because
+            #   * follow_symlinks=False,
+            #   * lchown() is unavailable, and
+            #   * either
+            #       * fchownat() is unavailable or
+            #       * fchownat() doesn't implement AT_SYMLINK_NOFOLLOW.
+            #         (it returned ENOSUP.)
+            # therefore we're out of options--we simply cannot chown the
+            # symlink.  give up, suppress the error.
+            # (which is what shutil always did in this circumstance.)
+            pass
+        if hasattr(st, "st_flags"):
+            try:
+                lookup("chflags")(dst, st.st_flags, follow_symlinks=follow)
+            except OSError as why:
+                for err in "EOPNOTSUPP", "ENOTSUP":
+                    if hasattr(errno, err) and why.errno == getattr(errno, err):
+                        break
+                else:
+                    raise
+
+    shutil.copystat = copystat
+
 
 def getuid():
-    if is_windows:
+    if sys.platform == "win32":
         import ctypes
 
         if ctypes.windll.shell32.IsUserAnAdmin() == 0:
@@ -99,7 +166,7 @@ def getuid():
 @system_path_filter
 def rename(src, dst):
     # On Windows, os.rename will fail if the destination file already exists
-    if is_windows:
+    if sys.platform == "win32":
         # Windows path existence checks will sometimes fail on junctions/links/symlinks
         # so check for that case
         if os.path.exists(dst) or os.path.islink(dst):
@@ -128,7 +195,7 @@ def _get_mime_type():
     """Generate method to call `file` system command to aquire mime type
     for a specified path
     """
-    if is_windows:
+    if sys.platform == "win32":
         # -h option (no-dereference) does not exist in Windows
         return file_command("-b", "--mime-type")
     else:
@@ -268,7 +335,6 @@ def filter_file(
         regex = re.escape(regex)
     filenames = path_to_os_path(*filenames)
     for filename in filenames:
-
         msg = 'FILTER FILE: {0} [replacing "{1}"]'
         tty.debug(msg.format(filename, regex))
 
@@ -484,7 +550,7 @@ def get_owner_uid(path, err_msg=None):
     else:
         p_stat = os.stat(path)
 
-    if _platform != "win32":
+    if sys.platform != "win32":
         owner_uid = p_stat.st_uid
     else:
         sid = win32security.GetFileSecurity(
@@ -517,7 +583,7 @@ def group_ids(uid=None):
     Returns:
         (list of int): gids of groups the user is a member of
     """
-    if is_windows:
+    if sys.platform == "win32":
         tty.warn("Function is not supported on Windows")
         return []
 
@@ -537,7 +603,7 @@ def group_ids(uid=None):
 @system_path_filter(arg_slice=slice(1))
 def chgrp(path, group, follow_symlinks=True):
     """Implement the bash chgrp function on a single path"""
-    if is_windows:
+    if sys.platform == "win32":
         raise OSError("Function 'chgrp' is not supported on Windows")
 
     if isinstance(group, str):
@@ -1064,7 +1130,7 @@ def open_if_filename(str_or_file, mode="r"):
 @system_path_filter
 def touch(path):
     """Creates an empty file at the specified path."""
-    if is_windows:
+    if sys.platform == "win32":
         perms = os.O_WRONLY | os.O_CREAT
     else:
         perms = os.O_WRONLY | os.O_CREAT | os.O_NONBLOCK | os.O_NOCTTY
@@ -1126,7 +1192,7 @@ def temp_cwd():
             yield tmp_dir
     finally:
         kwargs = {}
-        if is_windows:
+        if sys.platform == "win32":
             kwargs["ignore_errors"] = False
             kwargs["onerror"] = readonly_file_handler(ignore_errors=True)
         shutil.rmtree(tmp_dir, **kwargs)
@@ -1220,7 +1286,6 @@ def traverse_tree(
         # target is relative to the link, then that may not resolve properly
         # relative to our cwd - see resolve_link_target_relative_to_the_link
         if os.path.isdir(source_child) and (follow_links or not os.path.islink(source_child)):
-
             # When follow_nonexisting isn't set, don't descend into dirs
             # in source that do not exist in dest
             if follow_nonexisting or os.path.exists(dest_child):
@@ -1372,7 +1437,7 @@ def visit_directory_tree(root, visitor, rel_path="", depth=0):
         try:
             isdir = f.is_dir()
         except OSError as e:
-            if is_windows and hasattr(e, "winerror") and e.winerror == 5 and islink:
+            if sys.platform == "win32" and hasattr(e, "winerror") and e.winerror == 5 and islink:
                 # if path is a symlink, determine destination and
                 # evaluate file vs directory
                 link_target = resolve_link_target_relative_to_the_link(f)
@@ -1481,11 +1546,11 @@ def readonly_file_handler(ignore_errors=False):
     """
 
     def error_remove_readonly(func, path, exc):
-        if not is_windows:
+        if sys.platform != "win32":
             raise RuntimeError("This method should only be invoked on Windows")
         excvalue = exc[1]
         if (
-            is_windows
+            sys.platform == "win32"
             and func in (os.rmdir, os.remove, os.unlink)
             and excvalue.errno == errno.EACCES
         ):
@@ -1515,7 +1580,7 @@ def remove_linked_tree(path):
 
     # Windows readonly files cannot be removed by Python
     # directly.
-    if is_windows:
+    if sys.platform == "win32":
         kwargs["ignore_errors"] = False
         kwargs["onerror"] = readonly_file_handler(ignore_errors=True)
 
@@ -1608,6 +1673,38 @@ def fix_darwin_install_name(path):
                     break
 
 
+def find_first(root: str, files: Union[Iterable[str], str], bfs_depth: int = 2) -> Optional[str]:
+    """Find the first file matching a pattern.
+
+    The following
+
+    .. code-block:: console
+
+       $ find /usr -name 'abc*' -o -name 'def*' -quit
+
+    is equivalent to:
+
+    >>> find_first("/usr", ["abc*", "def*"])
+
+    Any glob pattern supported by fnmatch can be used.
+
+    The search order of this method is breadth-first over directories,
+    until depth bfs_depth, after which depth-first search is used.
+
+    Parameters:
+        root (str): The root directory to start searching from
+        files (str or Iterable): File pattern(s) to search for
+        bfs_depth (int): (advanced) parameter that specifies at which
+            depth to switch to depth-first search.
+
+    Returns:
+        str or None: The matching file or None when no file is found.
+    """
+    if isinstance(files, str):
+        files = [files]
+    return FindFirstFile(root, *files, bfs_depth=bfs_depth).find()
+
+
 def find(root, files, recursive=True):
     """Search for ``files`` starting from the ``root`` directory.
 
@@ -1662,7 +1759,6 @@ def find(root, files, recursive=True):
 
 @system_path_filter
 def _find_recursive(root, search_files):
-
     # The variable here is **on purpose** a defaultdict. The idea is that
     # we want to poke the filesystem as little as possible, but still maintain
     # stability in the order of the answer. Thus we are recording each library
@@ -2030,7 +2126,7 @@ class LibraryList(FileList):
             # on non Windows platform
             # Windows valid library extensions are:
             # ['.dll', '.lib']
-            valid_exts = [".dll", ".lib"] if is_windows else [".dylib", ".so", ".a"]
+            valid_exts = [".dll", ".lib"] if sys.platform == "win32" else [".dylib", ".so", ".a"]
             for ext in valid_exts:
                 i = name.rfind(ext)
                 if i != -1:
@@ -2178,7 +2274,7 @@ def find_libraries(libraries, root, shared=True, recursive=False, runtime=True):
         message = message.format(find_libraries.__name__, type(libraries))
         raise TypeError(message)
 
-    if is_windows:
+    if sys.platform == "win32":
         static_ext = "lib"
         # For linking (runtime=False) you need the .lib files regardless of
         # whether you are doing a shared or static link
@@ -2210,7 +2306,7 @@ def find_libraries(libraries, root, shared=True, recursive=False, runtime=True):
     # finally search all of root recursively. The search stops when the first
     # match is found.
     common_lib_dirs = ["lib", "lib64"]
-    if is_windows:
+    if sys.platform == "win32":
         common_lib_dirs.extend(["bin", "Lib"])
 
     for subdir in common_lib_dirs:
@@ -2345,7 +2441,7 @@ class WindowsSimulatedRPath(object):
             # For py2 compatibility, we have to catch the specific Windows error code
             # associate with trying to create a file that already exists (winerror 183)
             except OSError as e:
-                if e.winerror == 183:
+                if sys.platform == "win32" and (e.winerror == 183 or e.errno == errno.EEXIST):
                     # We have either already symlinked or we are encoutering a naming clash
                     # either way, we don't want to overwrite existing libraries
                     already_linked = islink(dest_file)
@@ -2633,3 +2729,130 @@ def temporary_dir(
             yield tmp_dir
     finally:
         remove_directory_contents(tmp_dir)
+
+
+def filesummary(path, print_bytes=16) -> Tuple[int, bytes]:
+    """Create a small summary of the given file. Does not error
+    when file does not exist.
+
+    Args:
+        print_bytes (int): Number of bytes to print from start/end of file
+
+    Returns:
+        Tuple of size and byte string containing first n .. last n bytes.
+        Size is 0 if file cannot be read."""
+    try:
+        n = print_bytes
+        with open(path, "rb") as f:
+            size = os.fstat(f.fileno()).st_size
+            if size <= 2 * n:
+                short_contents = f.read(2 * n)
+            else:
+                short_contents = f.read(n)
+                f.seek(-n, 2)
+                short_contents += b"..." + f.read(n)
+        return size, short_contents
+    except OSError:
+        return 0, b""
+
+
+class FindFirstFile:
+    """Uses hybrid iterative deepening to locate the first matching
+    file. Up to depth ``bfs_depth`` it uses iterative deepening, which
+    mimics breadth-first with the same memory footprint as depth-first
+    search, after which it switches to ordinary depth-first search using
+    ``os.walk``."""
+
+    def __init__(self, root: str, *file_patterns: str, bfs_depth: int = 2):
+        """Create a small summary of the given file. Does not error
+        when file does not exist.
+
+        Args:
+            root (str): directory in which to recursively search
+            file_patterns (str): glob file patterns understood by fnmatch
+            bfs_depth (int): until this depth breadth-first traversal is used,
+                when no match is found, the mode is switched to depth-first search.
+        """
+        self.root = root
+        self.bfs_depth = bfs_depth
+        self.match: Callable
+
+        # normcase is trivial on posix
+        regex = re.compile("|".join(fnmatch.translate(os.path.normcase(p)) for p in file_patterns))
+
+        # On case sensitive filesystems match against normcase'd paths.
+        if os.path is posixpath:
+            self.match = regex.match
+        else:
+            self.match = lambda p: regex.match(os.path.normcase(p))
+
+    def find(self) -> Optional[str]:
+        """Run the file search
+
+        Returns:
+            str or None: path of the matching file
+        """
+        self.file = None
+
+        # First do iterative deepening (i.e. bfs through limited depth dfs)
+        for i in range(self.bfs_depth + 1):
+            if self._find_at_depth(self.root, i):
+                return self.file
+
+        # Then fall back to depth-first search
+        return self._find_dfs()
+
+    def _find_at_depth(self, path, max_depth, depth=0) -> bool:
+        """Returns True when done. Notice search can be done
+        either because a file was found, or because it recursed
+        through all directories."""
+        try:
+            entries = os.scandir(path)
+        except OSError:
+            return True
+
+        done = True
+
+        with entries:
+            # At max depth we look for matching files.
+            if depth == max_depth:
+                for f in entries:
+                    # Exit on match
+                    if self.match(f.name):
+                        self.file = os.path.join(path, f.name)
+                        return True
+
+                    # is_dir should not require a stat call, so it's a good optimization.
+                    if self._is_dir(f):
+                        done = False
+                return done
+
+            # At lower depth only recurse into subdirs
+            for f in entries:
+                if not self._is_dir(f):
+                    continue
+
+                # If any subdir is not fully traversed, we're not done yet.
+                if not self._find_at_depth(os.path.join(path, f.name), max_depth, depth + 1):
+                    done = False
+
+                # Early exit when we've found something.
+                if self.file:
+                    return True
+
+            return done
+
+    def _is_dir(self, f: os.DirEntry) -> bool:
+        """Returns True when f is dir we can enter (and not a symlink)."""
+        try:
+            return f.is_dir(follow_symlinks=False)
+        except OSError:
+            return False
+
+    def _find_dfs(self) -> Optional[str]:
+        """Returns match or None"""
+        for dirpath, _, filenames in os.walk(self.root):
+            for file in filenames:
+                if self.match(file):
+                    return os.path.join(dirpath, file)
+        return None

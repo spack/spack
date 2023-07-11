@@ -55,14 +55,6 @@ class Mesa(MesonPackage):
     depends_on("expat")
     depends_on("zlib@1.2.3:")
 
-    # Override the build type variant so we can default to release
-    variant(
-        "buildtype",
-        default="release",
-        description="Meson build type",
-        values=("plain", "debug", "debugoptimized", "release", "minsize"),
-    )
-
     # Internal options
     variant("llvm", default=True, description="Enable LLVM.")
 
@@ -73,14 +65,7 @@ class Mesa(MesonPackage):
     variant(
         "swr",
         values=spack.variant.DisjointSetsOfValues(
-            ("none",),
-            ("auto",),
-            (
-                "avx",
-                "avx2",
-                "knl",
-                "skx",
-            ),
+            ("none",), ("auto",), ("avx", "avx2", "knl", "skx")
         )
         .with_non_feature_values("auto")
         .with_non_feature_values("none")

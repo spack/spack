@@ -104,11 +104,7 @@ class SuperluMt(Package):
         )
 
         if "+int64" in spec:
-            config.extend(
-                [
-                    "CFLAGS    += -D_LONGINT",
-                ]
-            )
+            config.extend(["CFLAGS    += -D_LONGINT"])
 
         if "+pic" in spec:
             config.extend(

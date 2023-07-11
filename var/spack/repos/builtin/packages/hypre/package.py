@@ -24,6 +24,7 @@ class Hypre(AutotoolsPackage, CudaPackage, ROCmPackage):
     test_requires_compiler = True
 
     version("develop", branch="master")
+    version("2.28.0", sha256="2eea68740cdbc0b49a5e428f06ad7af861d1e169ce6a12d2cf0aa2fc28c4a2ae")
     version("2.27.0", sha256="507a3d036bb1ac21a55685ae417d769dd02009bde7e09785d0ae7446b4ae1f98")
     version("2.26.0", sha256="c214084bddc61a06f3758d82947f7f831e76d7e3edeac2c78bb82d597686e05d")
     version("2.25.0", sha256="f9fc8371d91239fca694284dab17175bfda3821d7b7a871fd2e8f9d5930f303c")
@@ -74,6 +75,7 @@ class Hypre(AutotoolsPackage, CudaPackage, ROCmPackage):
     variant("gptune", default=False, description="Add the GPTune hookup code")
     variant("umpire", default=False, description="Enable Umpire support")
     variant("sycl", default=False, description="Enable SYCL support")
+    variant("caliper", default=False, description="Enable Caliper support")
 
     # Patch to add gptune hookup codes
     patch("ij_gptune.patch", when="+gptune@2.19.0")
@@ -90,6 +92,10 @@ class Hypre(AutotoolsPackage, CudaPackage, ROCmPackage):
     # Patch to get config flags right
     patch("detect-compiler.patch", when="@2.15.0:2.20.0")
 
+    @when("@2.26.0")
+    def patch(self):  # fix sequential compilation in 'src/seq_mv'
+        filter_file("\tmake", "\t$(MAKE)", "src/seq_mv/Makefile")
+
     depends_on("mpi", when="+mpi")
     depends_on("blas")
     depends_on("lapack")
@@ -99,6 +105,8 @@ class Hypre(AutotoolsPackage, CudaPackage, ROCmPackage):
     depends_on("rocrand", when="+rocm")
     depends_on("rocprim", when="+rocm")
     depends_on("umpire", when="+umpire")
+    depends_on("caliper", when="+caliper")
+
     for sm_ in CudaPackage.cuda_arch_values:
         depends_on(
             "umpire+cuda cuda_arch={0}".format(sm_), when="+umpire+cuda cuda_arch={0}".format(sm_)
@@ -212,16 +220,15 @@ class Hypre(AutotoolsPackage, CudaPackage, ROCmPackage):
             else:
                 configure_args.append("--with-umpire")
 
+        if "+caliper" in spec:
+            configure_args.append("--with-caliper")
+            configure_args.append("--with-caliper-include=%s" % spec["caliper"].prefix.include)
+            configure_args.append("--with-caliper-lib=%s" % spec["caliper"].libs)
+
         configure_args.extend(self.enable_or_disable("debug"))
 
         if "+cuda" in spec:
-            configure_args.extend(
-                [
-                    "--with-cuda",
-                    "--enable-curand",
-                    "--enable-cusparse",
-                ]
-            )
+            configure_args.extend(["--with-cuda", "--enable-curand", "--enable-cusparse"])
             cuda_arch_vals = spec.variants["cuda_arch"].value
             if cuda_arch_vals:
                 cuda_arch_sorted = list(sorted(cuda_arch_vals, reverse=True))
@@ -234,13 +241,7 @@ class Hypre(AutotoolsPackage, CudaPackage, ROCmPackage):
             else:
                 configure_args.append("--enable-cub")
         else:
-            configure_args.extend(
-                [
-                    "--without-cuda",
-                    "--disable-curand",
-                    "--disable-cusparse",
-                ]
-            )
+            configure_args.extend(["--without-cuda", "--disable-curand", "--disable-cusparse"])
             if "@:2.20.99" in spec:
                 configure_args.append("--disable-cub")
 
@@ -264,13 +265,7 @@ class Hypre(AutotoolsPackage, CudaPackage, ROCmPackage):
                 rocm_arch = rocm_arch_sorted[0]
                 configure_args.append("--with-gpu-arch={0}".format(rocm_arch))
         else:
-            configure_args.extend(
-                [
-                    "--without-hip",
-                    "--disable-rocrand",
-                    "--disable-rocsparse",
-                ]
-            )
+            configure_args.extend(["--without-hip", "--disable-rocrand", "--disable-rocsparse"])
 
         if "+sycl" in spec:
             configure_args.append("--with-scyl")

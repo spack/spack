@@ -113,10 +113,7 @@ class PerlFth(Package):
                     fthfile.filter("#!/usr/bin/env perl", mstr, backup=False)
 
         # Adds a Makefile with an rsync rule
-        makefile_inc = [
-            "RSYNC_OPTS = -avuzL",
-            "RSYNC = rsync",
-        ]
+        makefile_inc = ["RSYNC_OPTS = -avuzL", "RSYNC = rsync"]
         makefile_inc.append("install:")
         makefile_inc.append("\t$(RSYNC) $(RSYNC_OPTS) . %s" % prefix)
         makefile_inc.append("")

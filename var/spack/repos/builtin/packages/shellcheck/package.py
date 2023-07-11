@@ -13,7 +13,7 @@ _versions = {
         "linux-aarch64": "179c579ef3481317d130adebede74a34dbbc2df961a70916dd4039ebf0735fae",
         "linux-armv6hf": "03deed9ded9dd66434ccf9649815bcde7d275d6c9f6dcf665b83391673512c75",
         "linux-x86_64": "700324c6dd0ebea0117591c6cc9d7350d9c7c5c287acbad7630fa17b1d4d9e2f",
-    },
+    }
 }
 
 

@@ -195,7 +195,7 @@ def test_update_completion_arg(tmpdir, monkeypatch):
             "format": "bash",
             "header": str(mock_infile),
             "update": str(mock_bashfile),
-        },
+        }
     }
 
     # make a mock completion file missing the --update-completion argument

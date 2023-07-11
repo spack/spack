@@ -21,15 +21,16 @@ import spack.multimethod
 import spack.package_base
 import spack.spec
 import spack.store
-from spack.directives import build_system, depends_on, extends
+from spack.directives import build_system, depends_on, extends, maintainers
 from spack.error import NoHeadersError, NoLibrariesError, SpecError
+from spack.install_test import test_part
 from spack.version import Version
 
 from ._checks import BaseBuilder, execute_install_time_tests
 
 
 class PythonExtension(spack.package_base.PackageBase):
-    maintainers = ["adamjstewart"]
+    maintainers("adamjstewart", "pradyunsg")
 
     @property
     def import_modules(self):
@@ -113,6 +114,9 @@ class PythonExtension(spack.package_base.PackageBase):
         return conflicts
 
     def add_files_to_view(self, view, merge_map, skip_if_exists=True):
+        if not self.extendee_spec:
+            return super().add_files_to_view(view, merge_map, skip_if_exists)
+
         bin_dir = self.spec.prefix.bin
         python_prefix = self.extendee_spec.prefix
         python_is_external = self.extendee_spec.external
@@ -164,65 +168,20 @@ class PythonExtension(spack.package_base.PackageBase):
 
         view.remove_files(to_remove)
 
-    def test(self):
+    def test_imports(self):
         """Attempts to import modules of the installed package."""
 
         # Make sure we are importing the installed modules,
         # not the ones in the source directory
+        python = inspect.getmodule(self).python.path
         for module in self.import_modules:
-            self.run_test(
-                inspect.getmodule(self).python.path,
-                ["-c", "import {0}".format(module)],
-                purpose="checking import of {0}".format(module),
+            with test_part(
+                self,
+                f"test_imports_{module}",
+                purpose=f"checking import of {module}",
                 work_dir="spack-test",
-            )
-
-
-class PythonPackage(PythonExtension):
-    """Specialized class for packages that are built using pip."""
-
-    #: Package name, version, and extension on PyPI
-    pypi: Optional[str] = None
-
-    maintainers = ["adamjstewart", "pradyunsg"]
-
-    # To be used in UI queries that require to know which
-    # build-system class we are using
-    build_system_class = "PythonPackage"
-    #: Legacy buildsystem attribute used to deserialize and install old specs
-    legacy_buildsystem = "python_pip"
-
-    #: Callback names for install-time test
-    install_time_test_callbacks = ["test"]
-
-    build_system("python_pip")
-
-    with spack.multimethod.when("build_system=python_pip"):
-        extends("python")
-        depends_on("py-pip", type="build")
-        # FIXME: technically wheel is only needed when building from source, not when
-        # installing a downloaded wheel, but I don't want to add wheel as a dep to every
-        # package manually
-        depends_on("py-wheel", type="build")
-
-    py_namespace: Optional[str] = None
-
-    @lang.classproperty
-    def homepage(cls):
-        if cls.pypi:
-            name = cls.pypi.split("/")[0]
-            return "https://pypi.org/project/" + name + "/"
-
-    @lang.classproperty
-    def url(cls):
-        if cls.pypi:
-            return "https://files.pythonhosted.org/packages/source/" + cls.pypi[0] + "/" + cls.pypi
-
-    @lang.classproperty
-    def list_url(cls):
-        if cls.pypi:
-            name = cls.pypi.split("/")[0]
-            return "https://pypi.org/simple/" + name + "/"
+            ):
+                python("-c", f"import {module}")
 
     def update_external_dependencies(self, extendee_spec=None):
         """
@@ -267,7 +226,52 @@ class PythonPackage(PythonExtension):
 
                     python.external_path = self.spec.external_path
                     python._mark_concrete()
-            self.spec.add_dependency_edge(python, deptypes=("build", "link", "run"))
+            self.spec.add_dependency_edge(python, deptypes=("build", "link", "run"), virtuals=())
+
+
+class PythonPackage(PythonExtension):
+    """Specialized class for packages that are built using pip."""
+
+    #: Package name, version, and extension on PyPI
+    pypi: Optional[str] = None
+
+    # To be used in UI queries that require to know which
+    # build-system class we are using
+    build_system_class = "PythonPackage"
+    #: Legacy buildsystem attribute used to deserialize and install old specs
+    legacy_buildsystem = "python_pip"
+
+    #: Callback names for install-time test
+    install_time_test_callbacks = ["test"]
+
+    build_system("python_pip")
+
+    with spack.multimethod.when("build_system=python_pip"):
+        extends("python")
+        depends_on("py-pip", type="build")
+        # FIXME: technically wheel is only needed when building from source, not when
+        # installing a downloaded wheel, but I don't want to add wheel as a dep to every
+        # package manually
+        depends_on("py-wheel", type="build")
+
+    py_namespace: Optional[str] = None
+
+    @lang.classproperty
+    def homepage(cls):
+        if cls.pypi:
+            name = cls.pypi.split("/")[0]
+            return "https://pypi.org/project/" + name + "/"
+
+    @lang.classproperty
+    def url(cls):
+        if cls.pypi:
+            return "https://files.pythonhosted.org/packages/source/" + cls.pypi[0] + "/" + cls.pypi
+
+    @lang.classproperty
+    def list_url(cls):
+        if cls.pypi:
+            name = cls.pypi.split("/")[0]
+            return "https://pypi.org/simple/" + name + "/"
 
     def get_external_python_for_prefix(self):
         """
@@ -289,7 +293,7 @@ class PythonPackage(PythonExtension):
 
         python_external_config = spack.config.get("packages:python:externals", [])
         python_externals_configured = [
-            spack.spec.Spec(item["spec"])
+            spack.spec.parse_with_version_concrete(item["spec"])
             for item in python_external_config
             if item["prefix"] == self.spec.external_path
         ]

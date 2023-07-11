@@ -26,7 +26,7 @@ class Openspeedshop(CMakePackage):
     homepage = "http://www.openspeedshop.org"
     git = "https://github.com/OpenSpeedShop/openspeedshop.git"
 
-    maintainers = ["jgalarowicz"]
+    maintainers("jgalarowicz")
 
     version("develop", branch="master")
     version("2.4.2.1", branch="2.4.2.1")
@@ -187,7 +187,6 @@ class Openspeedshop(CMakePackage):
         cmake_options.extend(cray_login_node_options)
 
     def cmake_args(self):
-
         spec = self.spec
 
         compile_flags = "-O2 -g -Wall"
@@ -215,7 +214,6 @@ class Openspeedshop(CMakePackage):
                 cmake_args.extend(["-DCBTF_ARGONAVIS_DIR=%s" % spec["cbtf-argonavis"].prefix])
 
         else:
-
             # Appends base options to cmake_args
             self.set_defaultbase_cmake_options(spec, cmake_args)
             guitype = self.spec.variants["gui"].value

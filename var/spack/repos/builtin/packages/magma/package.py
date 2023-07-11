@@ -23,6 +23,7 @@ class Magma(CMakePackage, CudaPackage, ROCmPackage):
     test_requires_compiler = True
 
     version("master", branch="master")
+    version("2.7.1", sha256="d9c8711c047a38cae16efde74bee2eb3333217fd2711e1e9b8606cbbb4ae1a50")
     version("2.7.0", sha256="fda1cbc4607e77cacd8feb1c0f633c5826ba200a018f647f1c5436975b39fd18")
     version("2.6.2", sha256="75b554dab00903e2d10b972c913e50e7f88cbc62f3ae432b5a086c7e4eda0a71")
     version("2.6.1", sha256="6cd83808c6e8bc7a44028e05112b3ab4e579bcc73202ed14733f66661127e213")
@@ -45,6 +46,7 @@ class Magma(CMakePackage, CudaPackage, ROCmPackage):
     depends_on("cuda@8:", when="@2.5.1: +cuda")  # See PR #14471
     depends_on("hipblas", when="+rocm")
     depends_on("hipsparse", when="+rocm")
+    depends_on("python", when="@master", type="build")
 
     conflicts("~cuda", when="~rocm", msg="Either CUDA or HIP support must be enabled")
     conflicts("+rocm", when="+cuda", msg="CUDA must be disabled to support HIP (ROCm)")
@@ -130,6 +132,8 @@ class Magma(CMakePackage, CudaPackage, ROCmPackage):
             sep = "" if "@:2.2.0" in spec else "_"
             capabilities = " ".join("sm{0}{1}".format(sep, i) for i in cuda_arch)
             options.append(define("GPU_TARGET", capabilities))
+            archs = ";".join("%s" % i for i in cuda_arch)
+            options.append(define("CMAKE_CUDA_ARCHITECTURES", archs))
 
         if "@2.5.0" in spec:
             options.append(define("MAGMA_SPARSE", False))

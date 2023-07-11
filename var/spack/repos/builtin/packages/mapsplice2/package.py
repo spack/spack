@@ -15,10 +15,7 @@ class Mapsplice2(MakefilePackage):
     homepage = "http://www.netlab.uky.edu/p/bioinfo/MapSplice2"
     url = "https://protocols.netlab.uky.edu/~zeng/MapSplice-v2.2.1.zip"
 
-    version(
-        "2.2.1",
-        sha256="4f3c1cb49ba0abcfc952de5946ee0b56db28c51f4f4d4f5abca66b4461ca7d05",
-    )
+    version("2.2.1", sha256="4f3c1cb49ba0abcfc952de5946ee0b56db28c51f4f4d4f5abca66b4461ca7d05")
 
     patch("Makefile.patch")
     patch("mapsplice_ebwt.patch")
@@ -31,12 +28,7 @@ class Mapsplice2(MakefilePackage):
     def edit(self, spec, prefix):
         for iscan in find(
             "src",
-            [
-                "SamRec.*",
-                "AlignmentHandler.cpp",
-                "JunctionHandler.cpp",
-                "FusionSamRec.*",
-            ],
+            ["SamRec.*", "AlignmentHandler.cpp", "JunctionHandler.cpp", "FusionSamRec.*"],
             recursive=True,
         ):
             m = FileFilter(iscan)

@@ -22,7 +22,9 @@ class Root(CMakePackage):
 
     tags = ["hep"]
 
-    maintainers("chissg", "HadrienG2", "drbenmorgan", "vvolkl")
+    maintainers(
+        "drbenmorgan", "gartung", "greenc-FNAL", "HadrienG2", "marcmengel", "vitodb", "vvolkl"
+    )
 
     # ###################### Versions ##########################
 
@@ -32,6 +34,9 @@ class Root(CMakePackage):
     # Development version (when more recent than production).
 
     # Production version
+    version("6.28.04", sha256="70f7f86a0cd5e3f2a0befdc59942dd50140d990ab264e8e56c7f17f6bfe9c965")
+    version("6.28.02", sha256="6643c07710e68972b00227c68b20b1016fec16f3fba5f44a571fa1ce5bb42faa")
+    version("6.28.00", sha256="afa1c5c06d0915411cb9492e474ea9ab12b09961a358e7e559013ed63b5d8084")
     version("6.26.10", sha256="8e56bec397104017aa54f9eb554de7a1a134474fe0b3bb0f43a70fc4fabd625f")
     version("6.26.08", sha256="4dda043e7918b40743ad0299ddd8d526b7078f0a3822fd06066df948af47940e")
     version("6.26.06", sha256="b1f73c976a580a5c56c8c8a0152582a1dfc560b4dd80e1b7545237b65e6c89cb")
@@ -131,7 +136,12 @@ class Root(CMakePackage):
     )
     variant("gsl", default=True, description="Enable linking against shared libraries for GSL")
     variant("http", default=False, description="Enable HTTP server support")
-    variant("jemalloc", default=False, description="Enable using the jemalloc allocator")
+    variant(
+        "jemalloc",
+        when="@:6.28",
+        default=False,
+        description="Enable using the jemalloc allocator (deprecated in 6.28)",
+    )
     variant("math", default=True, description="Build the new libMathMore extended math library")
     variant(
         "memstat",
@@ -177,10 +187,7 @@ class Root(CMakePackage):
         "vmc", when="@:6.25", default=False, description="Enable the Virtual Monte Carlo interface"
     )
     variant(
-        "webgui",
-        default=True,
-        description="Enable web-based UI components of ROOT",
-        when="+root7",
+        "webgui", default=True, description="Enable web-based UI components of ROOT", when="+root7"
     )
     variant("x", default=True, description="Enable set of graphical options")
     variant("xml", default=True, description="Enable XML parser interface")
@@ -200,6 +207,8 @@ class Root(CMakePackage):
 
     depends_on("cmake@3.4.3:", type="build", when="@:6.16")
     depends_on("cmake@3.9:", type="build", when="@6.18.00:")
+    depends_on("cmake@3.16:", type="build", when="@6.26.00:")
+    depends_on("cmake@3.19:", type="build", when="@6.28.00: platform=darwin")
     depends_on("pkgconfig", type="build")
 
     depends_on("blas")
@@ -276,7 +285,8 @@ class Root(CMakePackage):
     )
     # depends_on('intel-tbb@:2021.0', when='@:6.22 ^intel-tbb')
     depends_on("unuran", when="+unuran")
-    depends_on("vc", when="+vc")
+    depends_on("vc@1.0:", when="@6.07.04: +vc")
+    depends_on("vc@1.3.0:", when="@6.09.02: +vc")
     depends_on("vdt", when="+vdt")
     depends_on("veccore", when="+veccore")
     depends_on("libxml2", when="+xml")
@@ -306,8 +316,8 @@ class Root(CMakePackage):
     conflicts("+tmva", when="~gsl", msg="TVMA requires GSL")
     conflicts("+tmva", when="~mlp", msg="TVMA requires MLP")
     conflicts("cxxstd=11", when="+root7", msg="root7 requires at least C++14")
-    conflicts("cxxstd=11", when="@6.25.02:", msg="This version of root " "requires at least C++14")
-    conflicts("cxxstd=20", when="@:6.25.01", msg="C++20 support was added " "in 6.25.02")
+    conflicts("cxxstd=11", when="@6.25.02:", msg="This version of root requires at least C++14")
+    conflicts("cxxstd=20", when="@:6.28.02", msg="C++20 support requires at least version 6.28.04")
 
     # See https://github.com/root-project/root/issues/11128
     conflicts("%clang@16:", when="@:6.26.07", msg="clang 16+ support was added in 6.26.08")
@@ -398,8 +408,11 @@ class Root(CMakePackage):
         _add_variant(v, f, ("qt", "qtgsi"), "+qt4")
         _add_variant(v, f, "r", "+r")
         _add_variant(v, f, "roofit", "+roofit")
-        _add_variant(v, f, ("root7", "webgui"), "+webgui")  # for root version >= 6.18.00
-        _add_variant(v, f, ("root7", "webui"), "+webgui")  # for root version <= 6.17.02
+        # webui feature renamed to webgui in 6.18
+        if Version(version_str).satisfies("@6.18:"):
+            _add_variant(v, f, ("root7", "webgui"), "+webgui")
+        else:
+            _add_variant(v, f, ("root7", "webui"), "+webgui")
         _add_variant(v, f, "rpath", "+rpath")
         _add_variant(v, f, "shadowpw", "+shadow")
         _add_variant(v, f, "spectrum", "+spectrum")
@@ -508,7 +521,6 @@ class Root(CMakePackage):
             define_from_variant("gl2ps", "opengl"),
             define("glite", False),
             define("globus", False),
-            define_from_variant("gsl_shared", "gsl"),
             define_from_variant("gviz", "graphviz"),
             define("hdfs", False),
             define_from_variant("http"),  # See conflicts
@@ -575,12 +587,7 @@ class Root(CMakePackage):
 
         if sys.platform == "darwin" and self.compiler.cc == "gcc":
             cflags = "-D__builtin_unreachable=__builtin_trap"
-            options.extend(
-                [
-                    define("CMAKE_C_FLAGS", cflags),
-                    define("CMAKE_CXX_FLAGS", cflags),
-                ]
-            )
+            options.extend([define("CMAKE_C_FLAGS", cflags), define("CMAKE_CXX_FLAGS", cflags)])
 
         # Method for selecting C++ standard depends on ROOT version
         if self.spec.satisfies("@6.18.00:"):

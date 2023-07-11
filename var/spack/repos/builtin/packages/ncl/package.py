@@ -135,7 +135,6 @@ class Ncl(Package):
         filter_file("^#!/bin/csh", "#!{0}".format(csh), *files)
 
     def install(self, spec, prefix):
-
         if (self.compiler.fc is None) or (self.compiler.cc is None):
             raise InstallError("NCL package requires both " "C and Fortran compilers.")
 

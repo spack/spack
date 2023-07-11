@@ -7,7 +7,6 @@ from spack.package import *
 
 
 class BaseWithDirectives(Package):
-
     depends_on("cmake", type="build")
     depends_on("mpi")
     variant("openblas", description="Activates openblas", default=True)
@@ -26,7 +25,7 @@ class SimpleInheritance(BaseWithDirectives):
     homepage = "http://www.example.com"
     url = "http://www.example.com/simple-1.0.tar.gz"
 
-    version("1.0", "0123456789abcdef0123456789abcdef")
+    version("1.0", md5="0123456789abcdef0123456789abcdef")
 
     depends_on("openblas", when="+openblas")
     provides("lapack", when="+openblas")

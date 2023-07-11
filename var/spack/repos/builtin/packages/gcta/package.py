@@ -53,10 +53,7 @@ class Gcta(CMakePackage):
         if self.spec.satisfies("@1.94.0beta:"):
             spectra = self.spec["spectra"].prefix.include
             boost = self.spec["boost"].prefix.include
-            deps = [
-                self.define("SPECTRA_LIB", spectra),
-                self.define("BOOST_LIB", boost),
-            ]
+            deps = [self.define("SPECTRA_LIB", spectra), self.define("BOOST_LIB", boost)]
             args.extend(deps)
 
         if self.spec.satisfies("target=x86_64:"):

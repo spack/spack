@@ -21,6 +21,7 @@ class Vtk(CMakePackage):
 
     maintainers("chuckatkins", "danlipsa")
 
+    version("9.2.6", sha256="06fc8d49c4e56f498c40fcb38a563ed8d4ec31358d0101e8988f0bb4d539dd12")
     version("9.2.2", sha256="1c5b0a2be71fac96ff4831af69e350f7a0ea3168981f790c000709dcf9121075")
     version("9.1.0", sha256="8fed42f4f8f1eb8083107b68eaa9ad71da07110161a3116ad807f43e5ca5ce96")
     version("9.0.3", sha256="bc3eb9625b2b8dbfecb6052a2ab091fc91405de4333b0ec68f3323815154ed8a")
@@ -209,10 +210,7 @@ class Vtk(CMakePackage):
         # spack-built versions whenever possible but there are exceptions.
         if spec.satisfies("@:8"):
             cmake_args.extend(
-                [
-                    "-DVTK_USE_SYSTEM_LIBRARIES:BOOL=ON",
-                    "-DVTK_USE_SYSTEM_LIBHARU=OFF",
-                ]
+                ["-DVTK_USE_SYSTEM_LIBRARIES:BOOL=ON", "-DVTK_USE_SYSTEM_LIBHARU=OFF"]
             )
             if spec.satisfies("@:8.0"):
                 cmake_args.append("-DVTK_USE_SYSTEM_GL2PS=OFF")
