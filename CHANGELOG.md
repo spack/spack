@@ -1,3 +1,21 @@
+# v0.20.1 (2023-07-10)
+
+## Spack Bugfixes
+
+- Spec removed from an environment where not actually removed if `--force` was not given (#37877)
+- Speed-up module file generation (#37739)
+- Hotfix for a few recipes that treat CMake as a link dependency (#35816)
+- Fix re-running stand-alone test a second time, which was getting a trailing spurious failure (#37840)
+- Fixed reading JSON manifest on Cray, reporting non-concrete specs (#37909)
+- Fixed a few bugs when generating Dockerfiles from Spack (#37766,#37769)
+- Fixed a few long-standing bugs when generating module files (#36678,#38347,#38465,#38455)
+- Fixed issues with building Python extensions using an external Python (#38186)
+- Fixed compiler removal from command line (#38057)
+- Show external status as [e] (#33792)
+- Backported `archspec` fixes (#37793)
+- Improved a few error messages (#37791)
+
+
 # v0.20.0 (2023-05-21)
 
 `v0.20.0` is a major feature release.
