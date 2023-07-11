@@ -36,6 +36,7 @@ class Apptainer(SingularityBase):
     version("1.0.2", sha256="2d7a9d0a76d5574459d249c3415e21423980d9154ce85e8c34b0600782a7dfd3")
 
     depends_on("go@1.17.5:", when="@1.1.0:")
+    depends_on("squashfuse", type="run")
 
     singularity_org = "apptainer"
     singularity_name = "apptainer"

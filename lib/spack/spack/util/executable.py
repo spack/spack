@@ -17,7 +17,7 @@ from spack.util.path import Path, format_os_path, path_to_os_path, system_path_f
 __all__ = ["Executable", "which", "ProcessError"]
 
 
-class Executable(object):
+class Executable:
     """Class representing a program that can be run on the command line."""
 
     def __init__(self, name):

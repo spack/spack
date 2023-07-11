@@ -214,7 +214,7 @@ goto :end_switch
 if defined _sp_args (
     if NOT "%_sp_args%"=="%_sp_args:--help=%" (
         goto :default_case
-    ) else if NOT "%_sp_args%"=="%_sp_args: -h=%" (
+    ) else if NOT "%_sp_args%"=="%_sp_args:-h=%" (
         goto :default_case
     ) else if NOT "%_sp_args%"=="%_sp_args:--bat=%" (
         goto :default_case

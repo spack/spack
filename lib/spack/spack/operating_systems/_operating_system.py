@@ -8,7 +8,7 @@ import spack.util.spack_yaml as syaml
 
 
 @llnl.util.lang.lazy_lexicographic_ordering
-class OperatingSystem(object):
+class OperatingSystem:
     """Base class for all the Operating Systems.
 
     On a multiple architecture machine, the architecture spec field can be set to

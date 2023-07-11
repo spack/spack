@@ -935,7 +935,7 @@ _spack_env() {
 _spack_env_activate() {
     if $list_options
     then
-        SPACK_COMPREPLY="-h --help --sh --csh --fish --bat -v --with-view -V --without-view -p --prompt --temp -d --dir"
+        SPACK_COMPREPLY="-h --help --sh --csh --fish --bat --pwsh -v --with-view -V --without-view -p --prompt --temp -d --dir"
     else
         _environments
     fi
@@ -1075,7 +1075,7 @@ _spack_fetch() {
 _spack_find() {
     if $list_options
     then
-        SPACK_COMPREPLY="-h --help --format --json -d --deps -p --paths --groups --no-groups -l --long -L --very-long -t --tag -c --show-concretized -f --show-flags --show-full-compiler -x --explicit -X --implicit -u --unknown -m --missing -v --variants --loaded -M --only-missing --deprecated --only-deprecated -N --namespace --start-date --end-date"
+        SPACK_COMPREPLY="-h --help --format -H --hashes --json -d --deps -p --paths --groups --no-groups -l --long -L --very-long -t --tag -c --show-concretized -f --show-flags --show-full-compiler -x --explicit -X --implicit -u --unknown -m --missing -v --variants --loaded -M --only-missing --deprecated --only-deprecated -N --namespace --start-date --end-date"
     else
         _installed_packages
     fi

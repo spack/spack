@@ -77,7 +77,7 @@ class Msvc(Compiler):
     def __init__(self, *args, **kwargs):
         new_pth = [pth if pth else get_valid_fortran_pth(args[0].version) for pth in args[3]]
         args[3][:] = new_pth
-        super(Msvc, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
         if os.getenv("ONEAPI_ROOT"):
             # If this found, it sets all the vars
             self.setvarsfile = os.path.join(os.getenv("ONEAPI_ROOT"), "setvars.bat")
