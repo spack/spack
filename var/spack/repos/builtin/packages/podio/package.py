@@ -91,7 +91,8 @@ class Podio(CMakePackage):
         description="Use the specified C++ standard when building.",
     )
     variant("sio", default=False, description="Build the SIO I/O backend")
-    variant("rntuple", default=False, description="Build the RNTuple I/O backend")
+    variant("rntuple", default=False, when="@0.16.6:",
+            description="Build the RNTuple I/O backend")
 
     # cpack config throws an error on some systems
     patch("cpack.patch", when="@:0.10.0")
