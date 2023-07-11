@@ -23,7 +23,7 @@ RUN dnf update -y \
         python3.11-setuptools \
         unzip \
  && python3.11 -m ensurepip \
- && pip3 install boto3 \
+ && pip3.11 install boto3 \
  && rm -rf /var/cache/dnf \
  && dnf clean all
 {% endblock %}
