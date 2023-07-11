@@ -91,6 +91,7 @@ class Podio(CMakePackage):
         description="Use the specified C++ standard when building.",
     )
     variant("sio", default=False, description="Build the SIO I/O backend")
+    variant("rntuple", default=False, description="Build the RNTuple I/O backend")
 
     # cpack config throws an error on some systems
     patch("cpack.patch", when="@:0.10.0")
@@ -99,6 +100,7 @@ class Podio(CMakePackage):
 
     depends_on("root@6.08.06: cxxstd=17", when="cxxstd=17")
     depends_on("root@6.25.02: cxxstd=20", when="cxxstd=20")
+    depends_on("root@6.28.04:", when="+rntuple")
 
     depends_on("cmake@3.8:", type="build")
     depends_on("python", type=("build", "run"))
@@ -114,6 +116,7 @@ class Podio(CMakePackage):
     def cmake_args(self):
         args = [
             self.define_from_variant("ENABLE_SIO", "sio"),
+            self.define_from_variant("ENABLE_RNTUPLE", "rntuple"),
             self.define("CMAKE_CXX_STANDARD", self.spec.variants["cxxstd"].value),
             self.define("BUILD_TESTING", self.run_tests),
         ]
