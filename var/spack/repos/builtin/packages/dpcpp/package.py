@@ -21,6 +21,7 @@ class Dpcpp(CMakePackage):
     version("2021.12", commit="27f59d8906fcc8aece7ff6aa570ccdee52168c2d")
 
     maintainers("ravil-mobile")
+    
     variant("cuda", default=False, description="switch from OpenCL to CUDA")
     variant("rocm", default=False, description="switch from OpenCL to ROCm")
     variant(
@@ -64,15 +65,7 @@ class Dpcpp(CMakePackage):
         llvm_enable_projects = "clang;" + llvm_external_projects
         libclc_targets_to_build = ""
         sycl_build_pi_rocm_platform = self.spec.variants["rocm-platform"].value
-
-        if self.spec.satisfies("target=x86_64:"):
-            llvm_targets_to_build = "X86"
-        elif self.spec.satisfies("target=aarch64:"):
-            llvm_targets_to_build = "ARM;AArch64"
-        else:
-            raise InstallError(
-                "target is not supported. " "This package only works on x86_64 or aarch64"
-            )
+        llvm_targets_to_build = get_llvm_targets_to_build(self.spec.target.family)
 
         is_cuda = "+cuda" in self.spec
         is_rocm = "+rocm" in self.spec
@@ -163,3 +156,17 @@ class Dpcpp(CMakePackage):
         if "+cuda" in self.spec or sycl_build_pi_rocm_platform == "NVIDIA":
             env.prepend_path("PATH", self.spec["cuda"].prefix.bin)
             env.set("CUDA_TOOLKIT_ROOT_DIR", self.spec["cuda"].prefix)
+
+def get_llvm_targets_to_build(family):
+    host_target = ""
+    if family in ("x86", "x86_64"):
+        host_target = "X86"
+    elif family == "arm":
+        host_target = "ARM"
+    elif family == "aarch64":
+        host_target = "AArch64"
+    elif family in ("sparc", "sparc64"):
+        host_target = "Sparc"
+    elif family in ("ppc64", "ppc64le", "ppc", "ppcle"):
+        host_target = "PowerPC"
+    return host_target
