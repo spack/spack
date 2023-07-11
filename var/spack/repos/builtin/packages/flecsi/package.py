@@ -134,7 +134,7 @@ class Flecsi(CMakePackage, CudaPackage, ROCmPackage):
     depends_on("legion+hdf5", when="backend=legion +hdf5 @2.0:")
     depends_on("legion +kokkos +cuda", when="backend=legion +kokkos +cuda @2.0:")
     depends_on("hdf5@1.10.7:", when="backend=legion +hdf5 @2.0:")
-    depends_on("hpx@1.3.0 cxxstd=17 malloc=system", when="backend=hpx @2.0:")
+    depends_on("hpx@1.8.1: cxxstd=17 malloc=system", when="backend=hpx @2.0:")
     depends_on("mpi", when="@2.0:")
     depends_on("mpich@3.4.1:", when="@2.0: ^mpich")
     depends_on("openmpi@4.1.0:", when="@2.0: ^openmpi")
