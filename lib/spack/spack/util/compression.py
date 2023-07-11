@@ -81,7 +81,7 @@ def _system_untar(archive_file):
     outfile = os.path.basename(archive_file_no_ext)
     if archive_file_no_ext == archive_file:
         # the archive file has no extension. Tar on windows cannot untar onto itself
-        archive_file = archive_file_no_ext + ".tar"
+        archive_file = archive_file_no_ext + "-input"
         shutil.move(archive_file_no_ext, archive_file)
     tar = which("tar", required=True)
     tar.add_default_arg("-oxf")
