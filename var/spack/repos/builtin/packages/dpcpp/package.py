@@ -52,6 +52,8 @@ class Dpcpp(CMakePackage):
 
     def cmake_args(self):
         llvm_external_projects = "sycl;llvm-spirv;opencl;libdevice;xpti;xptifw"
+        libclc_amd_target_names = ';amdgcn--amdhsa'
+        libclc_nvidia_target_names = ';nvptx64--nvidiacl'
 
         if "+fusion" in self.spec:
             llvm_external_projects += ";sycl-fusion"
@@ -82,17 +84,17 @@ class Dpcpp(CMakePackage):
 
         if is_cuda:
             llvm_targets_to_build += ";NVPTX"
-            libclc_targets_to_build = "nvptx64--;nvptx64--nvidiacl"
+            libclc_targets_to_build = libclc_nvidia_target_names
             libclc_gen_remangled_variants = 'ON'
             sycl_enabled_plugins += ";cuda"
 
         if is_hip:
             if sycl_build_pi_hip_platform == "AMD":
                 llvm_targets_to_build += ";AMDGPU"
-                libclc_targets_to_build += ";amdgcn--;amdgcn--amdhsa"
+                libclc_targets_to_build += libclc_amd_target_names
             elif sycl_build_pi_hip_platform and not is_cuda:
                 llvm_targets_to_build += ";NVPTX"
-                libclc_targets_to_build += ";nvptx64--;nvptx64--nvidiacl"
+                libclc_targets_to_build += libclc_nvidia_target_names
             libclc_gen_remangled_variants = 'ON'
             sycl_enabled_plugins += ";hip"
 
