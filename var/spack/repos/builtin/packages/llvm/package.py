@@ -885,6 +885,10 @@ class Llvm(CMakePackage, CudaPackage):
         if self.spec.satisfies("~code_signing platform=darwin"):
             cmake_args.append(define("LLDB_USE_SYSTEM_DEBUGSERVER", True))
 
+        # LLDB test suite requires libc++
+        if "libcxx=none" in spec:
+            cmake_args.append(define("LLDB_INCLUDE_TESTS", False))
+
         # Enable building with CLT [and not require full Xcode]
         # https://github.com/llvm/llvm-project/issues/57037
         if self.spec.satisfies("@15.0.0: platform=darwin"):
