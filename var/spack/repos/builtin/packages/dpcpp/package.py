@@ -35,7 +35,6 @@ class Dpcpp(CMakePackage):
     variant("assertions", default=False, description="build with assertions")
     variant("docs", default=False, description="build Doxygen documentation")
     variant("werror", default=False, description="treat warnings as errors")
-    variant("remangle_libclc", default=True, description="remangle libclc gen. variants")
     variant("shared-libs", default=False, description="build shared libraries")
     variant("lld", default=False, description="use LLD linker for build")
     variant("fusion", default=True, description="Enable the kernel fusion JIT compiler")
@@ -65,9 +64,10 @@ class Dpcpp(CMakePackage):
         fusion_dir = os.path.join(self.stage.source_path, "sycl-fusion")
         llvm_enable_projects = "clang;" + llvm_external_projects
         libclc_targets_to_build = ""
+        libclc_gen_remangled_variants = 'OFF'
         sycl_build_pi_hip_platform = self.spec.variants["hip-platform"].value
-        llvm_targets_to_build = get_llvm_targets_to_build(self.spec.target.family)
         sycl_enabled_plugins = "opencl"
+        llvm_targets_to_build = get_llvm_targets_to_build(self.spec.target.family)
         
         if self.spec.platform != "darwin":
             sycl_enabled_plugins += ";level_zero"
@@ -83,6 +83,7 @@ class Dpcpp(CMakePackage):
         if is_cuda:
             llvm_targets_to_build += ";NVPTX"
             libclc_targets_to_build = "nvptx64--;nvptx64--nvidiacl"
+            libclc_gen_remangled_variants = 'ON'
             sycl_enabled_plugins += ";cuda"
 
         if is_hip:
@@ -92,6 +93,7 @@ class Dpcpp(CMakePackage):
             elif sycl_build_pi_hip_platform and not is_cuda:
                 llvm_targets_to_build += ";NVPTX"
                 libclc_targets_to_build += ";nvptx64--;nvptx64--nvidiacl"
+            libclc_gen_remangled_variants = 'ON'
             sycl_enabled_plugins += ";hip"
 
         args = [
@@ -108,10 +110,10 @@ class Dpcpp(CMakePackage):
             self.define("LLVM_ENABLE_PROJECTS", llvm_enable_projects),
             self.define("LIBCLC_TARGETS_TO_BUILD", libclc_targets_to_build),
             self.define("LLVM_BUILD_TOOLS", True),
+            self.define("LIBCLC_GENERATE_REMANGLED_VARIANTS", libclc_gen_remangled_variants),
             self.define_from_variant("SYCL_BUILD_PI_HIP_PLATFORM", "hip-platform"),
             self.define_from_variant("SYCL_ENABLE_WERROR", "werror"),
             self.define("SYCL_INCLUDE_TESTS", True),
-            self.define_from_variant("LIBCLC_GENERATE_REMANGLED_VARIANTS", "remangle_libclc"),
             self.define_from_variant("LLVM_ENABLE_DOXYGEN", "docs"),
             self.define_from_variant("LLVM_ENABLE_SPHINX", "docs"),
             self.define_from_variant("BUILD_SHARED_LIBS", "shared-libs"),
