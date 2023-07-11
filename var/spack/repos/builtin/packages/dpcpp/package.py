@@ -70,6 +70,10 @@ class Dpcpp(CMakePackage):
         libclc_targets_to_build = ""
         sycl_build_pi_hip_platform = self.spec.variants["hip-platform"].value
         llvm_targets_to_build = get_llvm_targets_to_build(self.spec.target.family)
+        sycl_enabled_plugins = "opencl"
+        
+        if self.spec.platform != "darwin":
+            sycl_enabled_plugins += ";level_zero"
 
         is_cuda = "+cuda" in self.spec
         is_hip = "+hip" in self.spec
@@ -80,6 +84,7 @@ class Dpcpp(CMakePackage):
         if is_cuda:
             llvm_targets_to_build += ";NVPTX"
             libclc_targets_to_build = "nvptx64--;nvptx64--nvidiacl"
+            sycl_enabled_plugins += ";cuda"
 
         if is_hip:
             if sycl_build_pi_hip_platform == "AMD":
@@ -88,6 +93,7 @@ class Dpcpp(CMakePackage):
             elif sycl_build_pi_hip_platform and not is_cuda:
                 llvm_targets_to_build += ";NVPTX"
                 libclc_targets_to_build += ";nvptx64--;nvptx64--nvidiacl"
+            sycl_enabled_plugins += ";hip"
 
         args = [
             self.define_from_variant("LLVM_ENABLE_ASSERTIONS", "assertions"),
@@ -113,6 +119,7 @@ class Dpcpp(CMakePackage):
             self.define("SYCL_ENABLE_XPTI_TRACING", "ON"),
             self.define_from_variant("LLVM_ENABLE_LLD", "lld"),
             self.define_from_variant("SYCL_BUILD_PI_ESIMD_CPU", "esimd-cpu"),
+            self.define("SYCL_ENABLE_PLUGINS", sycl_enabled_plugins),
             self.define_from_variant("SYCL_ENABLE_KERNEL_FUSION", "fusion"),
         ]
 
