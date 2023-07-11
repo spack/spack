@@ -287,7 +287,8 @@ class WindowsRegistryView:
         Args:
             direct_subkey (str): string representing subkey to be searched for.
                                  Cannot be provided alongside `search_key`.
-            search_key (str): regex string represeting a subkey name structure to be matched against.
+            search_key (str): regex string represeting a subkey name structure
+                              to be matched against.
                               Cannot be provided alongside `direct_subkey`
             collect_found (bool): No-op if `direct_subkey` is specified
         Return:
