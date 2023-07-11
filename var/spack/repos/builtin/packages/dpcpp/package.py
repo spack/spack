@@ -32,7 +32,7 @@ class Dpcpp(CMakePackage):
         description="choose HIP backend",
     )
     variant("openmp", default=False, description="build with OpenMP without target offloading")
-    variant("esimd-cpu", default=False, description="build with ESIMD_CPU support")
+    variant("esimd-emulator", default=False, description="build with ESIMD emulation support")
     variant("assertions", default=False, description="build with assertions")
     variant("docs", default=False, description="build Doxygen documentation")
     variant("werror", default=False, description="treat warnings as errors")
@@ -78,6 +78,8 @@ class Dpcpp(CMakePackage):
         is_cuda = "+cuda" in self.spec
         is_hip = "+hip" in self.spec
 
+        if "+esimd-emulator" in self.spec:
+            sycl_enabled_plugins += ";esimd_emulator"
         if is_cuda or is_hip:
             llvm_enable_projects += ";libclc"
 
@@ -118,7 +120,6 @@ class Dpcpp(CMakePackage):
             self.define_from_variant("BUILD_SHARED_LIBS", "shared"),
             self.define("SYCL_ENABLE_XPTI_TRACING", "ON"),
             self.define_from_variant("LLVM_ENABLE_LLD", "lld"),
-            self.define_from_variant("SYCL_BUILD_PI_ESIMD_CPU", "esimd-cpu"),
             self.define("SYCL_ENABLE_PLUGINS", sycl_enabled_plugins),
             self.define_from_variant("SYCL_ENABLE_KERNEL_FUSION", "fusion"),
         ]
