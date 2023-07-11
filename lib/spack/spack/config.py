@@ -38,6 +38,8 @@ import sys
 from contextlib import contextmanager
 from typing import Dict, List, Optional, Union
 
+import ruamel.yaml as yaml
+
 import llnl.util.lang
 import llnl.util.tty as tty
 from llnl.util.filesystem import mkdirp, rename
