@@ -23,13 +23,13 @@ class Dpcpp(CMakePackage):
     maintainers("ravil-mobile")
     
     variant("cuda", default=False, description="switch from OpenCL to CUDA")
-    variant("rocm", default=False, description="switch from OpenCL to ROCm")
+    variant("hip", default=False, description="switch from OpenCL to HIP")
     variant(
-        "rocm-platform",
+        "hip-platform",
         default="AMD",
         values=("AMD", "NVIDIA"),
         multi=False,
-        description="choose ROCm backend",
+        description="choose HIP backend",
     )
     variant("openmp", default=False, description="build with OpenMP without target offloading")
     variant("esimd-cpu", default=False, description="build with ESIMD_CPU support")
@@ -64,24 +64,24 @@ class Dpcpp(CMakePackage):
         libdevice_dir = os.path.join(self.stage.source_path, "libdevice")
         llvm_enable_projects = "clang;" + llvm_external_projects
         libclc_targets_to_build = ""
-        sycl_build_pi_rocm_platform = self.spec.variants["rocm-platform"].value
+        sycl_build_pi_hip_platform = self.spec.variants["hip-platform"].value
         llvm_targets_to_build = get_llvm_targets_to_build(self.spec.target.family)
 
         is_cuda = "+cuda" in self.spec
-        is_rocm = "+rocm" in self.spec
+        is_hip = "+hip" in self.spec
 
-        if is_cuda or is_rocm:
+        if is_cuda or is_hip:
             llvm_enable_projects += ";libclc"
 
         if is_cuda:
             llvm_targets_to_build += ";NVPTX"
             libclc_targets_to_build = "nvptx64--;nvptx64--nvidiacl"
 
-        if is_rocm:
-            if sycl_build_pi_rocm_platform == "AMD":
+        if is_hip:
+            if sycl_build_pi_hip_platform == "AMD":
                 llvm_targets_to_build += ";AMDGPU"
                 libclc_targets_to_build += ";amdgcn--;amdgcn--amdhsa"
-            elif sycl_build_pi_rocm_platform and not is_cuda:
+            elif sycl_build_pi_hip_platform and not is_cuda:
                 llvm_targets_to_build += ";NVPTX"
                 libclc_targets_to_build += ";nvptx64--;nvptx64--nvidiacl"
 
@@ -97,10 +97,8 @@ class Dpcpp(CMakePackage):
             self.define("LLVM_EXTERNAL_LIBDEVICE_SOURCE_DIR", libdevice_dir),
             self.define("LLVM_ENABLE_PROJECTS", llvm_enable_projects),
             self.define("LIBCLC_TARGETS_TO_BUILD", libclc_targets_to_build),
-            self.define_from_variant("SYCL_BUILD_PI_CUDA", "cuda"),
-            self.define_from_variant("SYCL_BUILD_PI_ROCM", "rocm"),
-            self.define("SYCL_BUILD_PI_ROCM_PLATFORM", sycl_build_pi_rocm_platform),
             self.define("LLVM_BUILD_TOOLS", True),
+            self.define_from_variant("SYCL_BUILD_PI_HIP_PLATFORM", "hip-platform"),
             self.define_from_variant("SYCL_ENABLE_WERROR", "werror"),
             self.define("SYCL_INCLUDE_TESTS", True),
             self.define_from_variant("LIBCLC_GENERATE_REMANGLED_VARIANTS", "remangle_libclc"),
@@ -112,7 +110,7 @@ class Dpcpp(CMakePackage):
             self.define_from_variant("SYCL_BUILD_PI_ESIMD_CPU", "esimd-cpu"),
         ]
 
-        if is_cuda or (is_rocm and sycl_build_pi_rocm_platform == "NVIDIA"):
+        if is_cuda or (is_hip and sycl_build_pi_hip_platform == "NVIDIA"):
             args.append(self.define("CUDA_TOOLKIT_ROOT_DIR", self.spec["cuda"].prefix))
 
         if "+openmp" in self.spec:
@@ -152,8 +150,8 @@ class Dpcpp(CMakePackage):
             env.prepend_path(var, self.prefix.include)
             env.prepend_path(var, self.prefix.include.sycl)
 
-        sycl_build_pi_rocm_platform = self.spec.variants["rocm-platform"].value
-        if "+cuda" in self.spec or sycl_build_pi_rocm_platform == "NVIDIA":
+        sycl_build_pi_hip_platform = self.spec.variants["hip-platform"].value
+        if "+cuda" in self.spec or sycl_build_pi_hip_platform == "NVIDIA":
             env.prepend_path("PATH", self.spec["cuda"].prefix.bin)
             env.set("CUDA_TOOLKIT_ROOT_DIR", self.spec["cuda"].prefix)
 
