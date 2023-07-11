@@ -22,7 +22,7 @@ class XcbProto(AutotoolsPackage):
 
     extends("python", when="+python")
 
-    variant("python", default=False, description="Build with python support.")
+    variant("python", default=False, description="Build with spack managed python.")
 
     patch("xcb-proto-1.12-schema-1.patch", when="@1.12")
 

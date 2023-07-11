@@ -31,7 +31,7 @@ class Libxcb(AutotoolsPackage):
     depends_on("pkgconfig", type="build")
     depends_on("util-macros", type="build")
 
-    variant("python", default=False, description="Build with python support.")
+    variant("python", default=False, description="Build with spack managed python.")
 
     def url_for_version(self, version):
         if version >= Version("1.14"):
