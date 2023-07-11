@@ -133,6 +133,7 @@ class Flecsi(CMakePackage, CudaPackage, ROCmPackage):
     depends_on("legion+shared", when="backend=legion +shared @2.0:")
     depends_on("legion+hdf5", when="backend=legion +hdf5 @2.0:")
     depends_on("legion +kokkos +cuda", when="backend=legion +kokkos +cuda @2.0:")
+    depends_on("legion +kokkos +rocm", when="backend=legion +kokkos +rocm @2.0:")
     depends_on("hdf5@1.10.7:", when="backend=legion +hdf5 @2.0:")
     depends_on("hpx@1.8.1: cxxstd=17 malloc=system", when="backend=hpx @2.0:")
     depends_on("mpi", when="@2.0:")
@@ -156,6 +157,10 @@ class Flecsi(CMakePackage, CudaPackage, ROCmPackage):
     # Propagate amdgpu_target requirement to dependencies
     for _flag in ROCmPackage.amdgpu_targets:
         depends_on("kokkos amdgpu_target=" + _flag, when="+kokkos +rocm amdgpu_target=" + _flag)
+        depends_on(
+            "legion amdgpu_target=" + _flag,
+            when="backend=legion +rocm amdgpu_target=" + _flag + " @2.0:",
+        )
 
     conflicts("%gcc@:8", when="@2.1:")
 
