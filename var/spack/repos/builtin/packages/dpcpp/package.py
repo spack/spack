@@ -31,7 +31,6 @@ class Dpcpp(CMakePackage):
         multi=False,
         description="choose HIP backend",
     )
-    variant("openmp", default=False, description="build with OpenMP without target offloading")
     variant("esimd-emulator", default=False, description="build with ESIMD emulation support")
     variant("assertions", default=False, description="build with assertions")
     variant("docs", default=False, description="build Doxygen documentation")
@@ -55,8 +54,6 @@ class Dpcpp(CMakePackage):
     def cmake_args(self):
         llvm_external_projects = "sycl;llvm-spirv;opencl;libdevice;xpti;xptifw"
 
-        if "+openmp" in self.spec:
-            llvm_external_projects += ";openmp"
         if "+fusion" in self.spec:
             llvm_external_projects += ";sycl-fusion"
 
@@ -126,15 +123,6 @@ class Dpcpp(CMakePackage):
 
         if is_cuda or (is_hip and sycl_build_pi_hip_platform == "NVIDIA"):
             args.append(self.define("CUDA_TOOLKIT_ROOT_DIR", self.spec["cuda"].prefix))
-
-        if "+openmp" in self.spec:
-            omp_dir = os.path.join(self.stage.source_path, "openmp")
-            args.extend(
-                [
-                    self.define("LLVM_EXTERNAL_OPENMP_SOURCE_DIR", omp_dir),
-                    self.define("OPENMP_ENABLE_LIBOMPTARGET", False),
-                ]
-            )
 
         if self.compiler.name == "gcc":
             gcc_prefix = ancestor(self.compiler.cc, 2)
