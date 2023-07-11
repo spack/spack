@@ -48,22 +48,23 @@ class Hepmc3(CMakePackage):
 
     def cmake_args(self):
         spec = self.spec
+        from_variant = self.define_from_variant
         args = [
-            "-DHEPMC3_ENABLE_PYTHON={0}".format(spec.satisfies("+python")),
-            "-DHEPMC3_ENABLE_ROOTIO={0}".format(spec.satisfies("+rootio")),
-            "-DHEPMC3_INSTALL_INTERFACES={0}".format(spec.satisfies("+interfaces")),
+            from_variant("HEPMC3_ENABLE_PYTHON", "python"),
+            from_variant("HEPMC3_ENABLE_ROOTIO", "rootio"),
+            from_variant("HEPMC3_INSTALL_INTERFACES", "interfaces"),
         ]
 
         if self.spec.satisfies("+python"):
             py_ver = spec["python"].version.up_to(2)
             args.extend(
                 [
-                    "-DHEPMC3_PYTHON_VERSIONS={0}".format(py_ver),
-                    "-DHEPMC3_Python_SITEARCH{0}={1}".format(py_ver.joined, python_platlib),
+                    from_variant("HEPMC3_PYTHON_VERSIONS", str(py_ver)),
+                    from_variant("HEPMC3_Python_SITEARCH" + py_ver.joined, python_platlib),
                 ]
             )
 
         if self.spec.satisfies("+rootio"):
-            args.append("-DROOT_DIR={0}".format(self.spec["root"].prefix))
-        args.append("-DHEPMC3_ENABLE_TEST={0}".format(self.run_tests))
+            args.append(self.define("ROOT_DIR", self.spec["root"].prefix))
+        args.append(self.define("HEPMC3_ENABLE_TEST", self.run_tests))
         return args
