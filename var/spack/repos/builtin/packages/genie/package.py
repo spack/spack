@@ -58,6 +58,8 @@ class Genie(Package):
     # GENIE Makefile's think that the spack compiler is invalid.
     # Disables this check.
     patch("genie_disable_gopt_with_compiler_check.patch", level=0, when="@2.11:")
+    patch("GENIE-Generator.patch")
+    patch("GENIE-Reweight.patch")
 
     # Flags for GENIE"s optional but disabled by default features
     variant(

@@ -1,0 +1,10 @@
+--- GENIE-Reweight/src/RwCalculators/GReWeightINuke.h
++++ GENIE-Reweight/src/RwCalculators/GReWeightINuke.h
+@@ -47,6 +47,7 @@
+ 
+ namespace genie {
+ 
++ class GHepParticle;
+  class HAIntranuke2018;
+ 
+ namespace rew   {

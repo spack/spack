@@ -1,0 +1,31 @@
+diff -Naur GENIE-Generator/src/Framework/Messenger/Messenger.h GENIE-Generator/src/Framework/Messenger/Messenger.h
+--- GENIE-Generator/src/Framework/Messenger/Messenger.h	2023-03-10 08:40:23.000000000 -0600
++++ GENIE-Generator/src/Framework/Messenger/Messenger.h	2023-03-20 18:44:11.213250122 -0500
+@@ -109,6 +109,7 @@
+ */
+ #ifndef HIDE_GENIE_MSG_LOG_MACROS
+ 
++#ifndef HIDE_GENIE_LOG_XXX
+ #define LOG_FATAL(stream) \
+           (*Messenger::Instance())(stream) \
+                << log4cpp::Priority::FATAL << "[n] <" \
+@@ -148,6 +149,7 @@
+           (*Messenger::Instance())(stream) \
+                << log4cpp::Priority::DEBUG << "[n] <" \
+                << __FILE__ << "::" << __FUNCTION__ << " (" << __LINE__ << ")> : "
++#endif
+ 
+ #endif // HIDE_GENIE_MSG_LOG_MACROS
+ 
+diff -Naur GENIE-Generator/src/Physics/NuclearDeExcitation/NucDeExcitationSim.cxx GENIE-Generator/src/Physics/NuclearDeExcitation/NucDeExcitationSim.cxx
+--- GENIE-Generator/src/Physics/NuclearDeExcitation/NucDeExcitationSim.cxx	2023-03-10 08:40:23.000000000 -0600
++++ GENIE-Generator/src/Physics/NuclearDeExcitation/NucDeExcitationSim.cxx	2023-03-20 18:45:07.995827324 -0500
+@@ -410,7 +410,7 @@
+     //>
+     double p32Elv = 0.0020;
+     //>
+-    int ns12 = 8;
++    const int ns12 = 8;
+     double s12Elv[ns12] = {0.0005, 0.0007, 0.0017, 0.0021, 0.0033, 0.0035, 0.0047, 0.0063};
+     //double s12Plv[ns12] = {0.21, 0.295, 0.14, 0.26, 0.14, 0.2, 0.03, 0.03};
+     // the above multiply by 0.2
