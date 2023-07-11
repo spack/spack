@@ -161,10 +161,7 @@ def setup_parser(subparser):
         default=os.path.join(os.getcwd(), "ci_reproduction"),
     )
     reproduce.add_argument(
-        "-s",
-        "--autostart",
-        help="Run docker reproducer automatically",
-        action="store_true",
+        "-s", "--autostart", help="Run docker reproducer automatically", action="store_true"
     )
     gpg_group = reproduce.add_mutually_exclusive_group(required=False)
     gpg_group.add_argument(
