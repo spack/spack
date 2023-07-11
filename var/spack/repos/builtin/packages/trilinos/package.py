@@ -372,6 +372,7 @@ class Trilinos(CMakePackage, CudaPackage, ROCmPackage):
 
     #
     depends_on("cgns", when="+exodus")
+    depends_on("cmake@3.23:", type="build", when="@14.0.0:")
     depends_on("hdf5+hl", when="+hdf5")
     depends_on("hypre~internal-superlu~int64", when="+hypre")
     depends_on("kokkos-nvcc-wrapper", when="+wrapper")
