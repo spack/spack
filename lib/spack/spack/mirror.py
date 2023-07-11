@@ -273,7 +273,24 @@ class Mirror:
 class MirrorCollection(collections.abc.Mapping):
     """A mapping of mirror names to mirrors."""
 
-    def __init__(self, mirrors=None, scope=None, binary=any, source=any):
+    def __init__(
+        self,
+        mirrors=None,
+        scope=None,
+        binary: Optional[bool] = None,
+        source: Optional[bool] = None,
+    ):
+        """Initialize a mirror collection.
+
+        Args:
+            mirrors: A name-to-mirror mapping to initialize the collection with.
+            scope: The scope to use when looking up mirrors from the config.
+            binary: If True, only include binary mirrors.
+                    If False, omit binary mirrors.
+                    If None, do not filter on binary mirrors.
+            source: If True, only include source mirrors.
+                    If False, omit source mirrors.
+                    If None, do not filter on source mirrors."""
         self._mirrors = {
             name: Mirror(data=mirror, name=name)
             for name, mirror in (
@@ -283,10 +300,10 @@ class MirrorCollection(collections.abc.Mapping):
             )
         }
 
-        if source is not any:
+        if source is not None:
             self._mirrors = {k: v for k, v in self._mirrors.items() if v.source == source}
 
-        if binary is not any:
+        if binary is not None:
             self._mirrors = {k: v for k, v in self._mirrors.items() if v.binary == binary}
 
     def __eq__(self, other):
