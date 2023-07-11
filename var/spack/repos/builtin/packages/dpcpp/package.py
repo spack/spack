@@ -51,10 +51,12 @@ class Dpcpp(CMakePackage):
     root_cmakelists_dir = "llvm"
 
     def cmake_args(self):
-        llvm_external_projects = "sycl;llvm-spirv;opencl;libdevice;xpti;xptifw"
+        llvm_external_projects = "sycl;llvm-spirv;opencl;xpti;xptifw"
         libclc_amd_target_names = ';amdgcn--amdhsa'
         libclc_nvidia_target_names = ';nvptx64--nvidiacl'
 
+        if self.spec.platform != "darwin":
+            llvm_external_projects += ";libdevice"
         if "+fusion" in self.spec:
             llvm_external_projects += ";sycl-fusion"
 
