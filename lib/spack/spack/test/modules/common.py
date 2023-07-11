@@ -82,7 +82,7 @@ def test_modules_default_symlink(
     assert not os.path.lexists(link_path)
 
 
-class MockDb(object):
+class MockDb:
     def __init__(self, db_ids, spec_hash_to_db):
         self.upstream_dbs = db_ids
         self.spec_hash_to_db = spec_hash_to_db
@@ -91,7 +91,7 @@ class MockDb(object):
         return self.spec_hash_to_db.get(spec_hash)
 
 
-class MockSpec(object):
+class MockSpec:
     def __init__(self, unique_id):
         self.unique_id = unique_id
 

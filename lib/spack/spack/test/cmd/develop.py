@@ -21,7 +21,7 @@ pytestmark = pytest.mark.skipif(sys.platform == "win32", reason="does not run on
 
 
 @pytest.mark.usefixtures("mutable_mock_env_path", "mock_packages", "mock_fetch", "config")
-class TestDevelop(object):
+class TestDevelop:
     def check_develop(self, env, spec, path=None):
         path = path or spec.name
 
@@ -32,7 +32,7 @@ class TestDevelop(object):
         assert dev_specs_entry["spec"] == str(spec)
 
         # check yaml representation
-        yaml = ev.config_dict(env.manifest)
+        yaml = env.manifest[ev.TOP_LEVEL_KEY]
         assert spec.name in yaml["develop"]
         yaml_entry = yaml["develop"][spec.name]
         assert yaml_entry["spec"] == str(spec)

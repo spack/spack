@@ -13,12 +13,18 @@ class UfsUtils(CMakePackage):
     This is related to NOAA's NCEPLIBS project."""
 
     homepage = "https://noaa-emcufs-utils.readthedocs.io/en/latest/"
-    url = "https://github.com/NOAA-EMC/UFS_UTILS/archive/refs/tags/ufs_utils_1_6_0.tar.gz"
+    url = "https://github.com/NOAA-EMC/UFS_UTILS/archive/refs/tags/ufs_utils_1_7_0.tar.gz"
+    git = "https://github.com/ufs-community/UFS_UTILS"
 
     maintainers("t-brown", "edwardhartnett", "AlexanderRichert-NOAA", "Hang-Lei-NOAA")
 
-    version("1_6_0", sha256="829ba4b50162e4202f96ec92a65b9fa824f71db65d2b63b70822db07d061cd92")
+    version("1.10.0", tag="ufs_utils_1_10_0", submodules=True)
+    version("1.9.0", tag="ufs_utils_1_9_0", submodules=True)
+    version("1.8.0", tag="ufs_utils_1_8_0", submodules=True)
+    version("1.7.0", tag="ufs_utils_1_7_0", submodules=True)
 
+    depends_on("mpi")
+    depends_on("cmake@3.23:")
     depends_on("bacio")
     depends_on("esmf")
     depends_on("g2")
@@ -32,8 +38,7 @@ class UfsUtils(CMakePackage):
     depends_on("sfcio")
     depends_on("sigio")
     depends_on("sp")
-    depends_on("w3nco")
-    depends_on("wgrib2")
+    depends_on("w3emc")
     depends_on("zlib")
 
     def cmake_args(self):

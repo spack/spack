@@ -61,7 +61,7 @@ def assert_variant_values(spec, **variants):
 
 
 @pytest.mark.usefixtures("concretize_scope", "mock_packages")
-class TestConcretizePreferences(object):
+class TestConcretizePreferences:
     @pytest.mark.parametrize(
         "package_name,variant_value,expected_results",
         [

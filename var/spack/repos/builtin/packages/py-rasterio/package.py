@@ -20,6 +20,7 @@ class PyRasterio(PythonPackage):
     maintainers("adamjstewart")
 
     version("master", branch="master")
+    version("1.3.8", sha256="ffdd18e78efdf8ad5861065fd812a66dd34264293317ff6540a078ea891cdef8")
     version("1.3.7", sha256="abfdcb8f10210b8fad939f40d545d6c47e9e3b5cf4a43773ca8dd11c58204304")
     version("1.3.6", sha256="c8b90eb10e16102d1ab0334a7436185f295de1c07f0d197e206d1c005fc33905")
     version("1.3.5", sha256="92358c3d4d5d6f3c7cd2812c8832d5175abce02b11bc101ac9548ff07163e8e2")
